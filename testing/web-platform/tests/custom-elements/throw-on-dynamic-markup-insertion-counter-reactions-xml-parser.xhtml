@@ -97,32 +97,32 @@ promise_test(async function () {
 }, 'document.writeln must throw an InvalidStateError when processing custom element reactions for a synchronous constructed custom element');
 
 promise_test(async function () {
-    window.another_window = await create_window_in_test_async(this);
+    window.another_window = await create_window_in_test(this);
     const result = await custom_element_reactions_in_parser(this, `top.another_window.document.open()`);
     assert_equals(result.exception, null);
 }, 'document.open() of another document must not throw an InvalidStateError when processing custom element reactions for a synchronous constructed custom element');
 
 promise_test(async function () {
-    window.another_window = await create_window_in_test_async(this);
+    window.another_window = await create_window_in_test(this);
     const result = await custom_element_reactions_in_parser(this, `top.another_window.document.open('text/html')`);
     assert_equals(result.exception, null);
 }, 'document.open("text/html") of another document must not throw an InvalidStateError when processing custom element reactions for a synchronous constructed custom element');
 
 promise_test(async function () {
-    window.another_window = await create_window_in_test_async(this);
+    window.another_window = await create_window_in_test(this);
     const result = await custom_element_reactions_in_parser(this, `top.another_window.document.close()`);
     assert_equals(result.exception, null);
 }, 'document.close() of another document must not throw an InvalidStateError when processing custom element reactions for a synchronous constructed custom element');
 
 promise_test(async function () {
-    window.another_window = await create_window_in_test_async(this);
+    window.another_window = await create_window_in_test(this);
     const result = await custom_element_reactions_in_parser(this, `top.another_window.document.write('<b>some text</b>')`);
     assert_equals(result.exception, null);
     assert_equals(another_window.document.querySelector('b').outerHTML, '<b>some text</b>');
 }, 'document.write of another document must not throw an InvalidStateError when processing custom element reactions for a synchronous constructed custom element');
 
 promise_test(async function () {
-    window.another_window = await create_window_in_test_async(this);
+    window.another_window = await create_window_in_test(this);
     const result = await custom_element_reactions_in_parser(this, `top.another_window.document.writeln('<b>some text</b>')`);
     assert_equals(result.exception, null);
     assert_equals(another_window.document.querySelector('b').outerHTML, '<b>some text</b>');
