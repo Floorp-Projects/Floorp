@@ -52,6 +52,8 @@ pref("floorp.browser.sidebar.enable", false);// サイドバーを表示
 pref("floorp.browser.sidebar2.mode", 0);// サイドバーのモード
 pref("floorp.browser.sidebar2.customurl", "");// サイドバーのカスタムURL
 
+pref("floorp.dualtheme.theme", "[]"); //デュアルテーマのリスト
+
 pref("contentblocking.cryptomining_blocking_enabled", true);
 pref("contentblocking.cryptomining_blocking_enabled",true);
 pref("contentblocking.category", true);

@@ -504,3 +504,8 @@ details-notification-softblocked = { $name } is known to cause security or stabi
 details-notification-softblocked-link = More Information
 
 details-notification-gmp-pending = { $name } will be installed shortly.
+
+# DualTheme
+dual-theme-enable-addon-button = Enable (Sub Theme)
+dual-theme-disable-addon-button = Disable (Sub Theme)
+dual-theme-enabled-heading = Enabled (Sub Theme)
