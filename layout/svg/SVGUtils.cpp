@@ -127,7 +127,8 @@ nsRect SVGUtils::GetPostFilterInkOverflowRect(nsIFrame* aFrame,
     return aPreFilterRect;
   }
 
-  return FilterInstance::GetPostFilterBounds(aFrame, nullptr, &aPreFilterRect);
+  return FilterInstance::GetPostFilterBounds(aFrame, nullptr, &aPreFilterRect)
+      .valueOr(aPreFilterRect);
 }
 
 bool SVGUtils::OuterSVGIsCallingReflowSVG(nsIFrame* aFrame) {

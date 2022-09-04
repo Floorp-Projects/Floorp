@@ -25,6 +25,7 @@ struct nsSize;
 struct WrFiltersHolder {
   nsTArray<mozilla::wr::FilterOp> filters;
   nsTArray<mozilla::wr::WrFilterData> filter_datas;
+  mozilla::Maybe<nsRect> post_filters_clip;
   // This exists just to own the values long enough for them to be copied into
   // rust.
   nsTArray<nsTArray<float>> values;
@@ -114,22 +115,6 @@ class SVGIntegrationUtils final {
    */
   static nsRect ComputePostEffectsInkOverflowRect(
       nsIFrame* aFrame, const nsRect& aPreEffectsOverflowRect);
-
-  /**
-   * Used to adjust the area of a frame that needs to be invalidated to take
-   * account of SVG effects.
-   *
-   * @param aFrame The effects frame.
-   * @param aToReferenceFrame The offset (in app units) from aFrame to its
-   * reference display item.
-   * @param aInvalidRegion The pre-effects invalid region in pixels relative to
-   * the reference display item.
-   * @return The post-effects invalid rect in pixels relative to the reference
-   * display item.
-   */
-  static nsIntRegion AdjustInvalidAreaForSVGEffects(
-      nsIFrame* aFrame, const nsPoint& aToReferenceFrame,
-      const nsIntRegion& aInvalidRegion);
 
   /**
    * Figure out which area of the source is needed given an area to
@@ -223,7 +208,6 @@ class SVGIntegrationUtils final {
   static bool BuildWebRenderFilters(nsIFrame* aFilteredFrame,
                                     Span<const StyleFilter> aFilters,
                                     WrFiltersHolder& aWrFilters,
-                                    Maybe<nsRect>& aPostFilterClip,
                                     bool& aInitialized);
 
   /**
