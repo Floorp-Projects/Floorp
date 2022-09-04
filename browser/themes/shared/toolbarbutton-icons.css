@@ -497,6 +497,21 @@ toolbarbutton.bookmark-item {
   border: var(--win-sidebar-bgcolor) 0.1px solid;
 } 
 
+#sidebar-select-box {
+  -moz-box-ordinal-group: 0 !important;
+}
+
+.sidepanel-icon {
+  appearance: none;
+  -moz-context-properties: fill, fill-opacity;
+  border-radius: 4px;
+  color: inherit;
+  fill: currentColor;
+  margin: 10px 10px 10px 0.2em;
+  width: 25px;
+  height: 25px;
+}
+
 .sidebar2-icon {
   appearance: none;
   -moz-context-properties: fill, fill-opacity;
@@ -509,18 +524,18 @@ toolbarbutton.bookmark-item {
 }
 
 @media not (prefers-contrast) {
-  .sidebar2-icon:hover {
+  .sidebar2-icon:hover, .sidepanel-icon:hover {
     background-color: color-mix(in srgb, currentColor 10%, transparent);
   }
 }
 
 @media (prefers-contrast) {
-  .sidebar2-icon:hover {
+  .sidebar2-icon:hover, .sidepanel-icon:hover {
     outline: 1px solid currentColor;
   }
 }
 
-.sidebar2-icon:hover:active {
+.sidebar2-icon:hover:active, .sidepanel-icon:hover:active {
   background-color: color-mix(in srgb, currentColor 20%, transparent);
 }
 
@@ -534,4 +549,28 @@ toolbarbutton.bookmark-item {
 
 #sidebar2-reload {
   list-style-image: url("chrome://global/skin/icons/reload.svg");
+}
+
+#select-browser-manager {
+  list-style-image: url("chrome://browser/skin/lepton/toolbox.svg");
+}
+
+#select-bookmark{
+  list-style-image: url("chrome://browser/skin/bookmark.svg");
+}
+
+#select-history {
+  list-style-image: url("chrome://browser/skin/history.svg");
+}
+
+#select-download {
+  list-style-image: url("chrome://browser/skin/downloads/downloads.svg");
+}
+
+#select-TST {
+  list-style-image: url("chrome://browser/skin/TST-dark.svg");
+}
+
+#select-CustomURL{
+  list-style-image: url("chrome://global/skin/icons/defaultFavicon.svg");
 }

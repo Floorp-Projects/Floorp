@@ -7,6 +7,11 @@
 # be specified once. As a result, the source file paths are relative
 # to the location of the actual manifest.
 
+# TST
+
+  skin/classic/browser/TST-dark.svg                                         (../shared/icons/TST-dark.svg)
+  skin/classic/browser/TST-light.svg                                        (../shared/icons/TST-light.svg)
+
 # optionCss
 
   skin/classic/browser/optioncss/micaforeveryone.css                        (../shared/theme/optioncss/micaforeveryone.css)

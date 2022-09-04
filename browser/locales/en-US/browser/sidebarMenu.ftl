@@ -25,3 +25,21 @@ sidebar-forward-button =
 
 sidebar-reload-button = 
   .tooltiptext = Reload
+
+show-browser-manager-sidebar =
+  .tooltiptext = Show Browser Manager Sidebar
+
+show-bookmarks-sidebar =
+  .tooltiptext = Show Bookmarks Sidebar
+
+show-history-sidebar =
+  .tooltiptext = Show History Sidebar
+
+show-download-sidebar =
+  .tooltiptext = Show Download Sidebar
+
+show-TST-sidebar =
+  .tooltiptext = Show Tree Style Tab Sidebar
+
+show-CustomURL-sidebar =
+  .tooltiptext = Show Custom URL Sidebar

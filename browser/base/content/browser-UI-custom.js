@@ -144,14 +144,14 @@ Services.prefs.addObserver("floorp.downloading.red.color", function(){
 
  if (Services.prefs.getBoolPref("floorp.browser.sidebar.right", false)) {    
   var Tag = document.createElement("style");
-  Tag.innerText = `.browser-sidebar2 {-moz-box-ordinal-group: 10 !important;}`
+  Tag.innerText = `.browser-sidebar2 {-moz-box-ordinal-group: 10 !important;}#sidebar-select-box{-moz-box-ordinal-group: 15 !important;}`;
   document.getElementsByTagName("head")[0].insertAdjacentElement("beforeend",Tag);
   Tag.setAttribute("id", "sidebar2css");
 }
 Services.prefs.addObserver("floorp.browser.sidebar.right", function(){
   if (Services.prefs.getBoolPref("floorp.browser.sidebar.right", false)) {
     var Tag = document.createElement("style");
-    Tag.innerText = `.browser-sidebar2 {-moz-box-ordinal-group: 10 !important;}`
+    Tag.innerText =`.browser-sidebar2 {-moz-box-ordinal-group: 10 !important;}#sidebar-select-box{-moz-box-ordinal-group: 15 !important;}`;
     document.getElementsByTagName("head")[0].insertAdjacentElement("beforeend",Tag);
     Tag.setAttribute("id", "sidebar2css");
   }
@@ -161,7 +161,7 @@ Services.prefs.addObserver("floorp.browser.sidebar.right", function(){
 
   if (!Services.prefs.getBoolPref("floorp.browser.sidebar.enable", false)) {
       var Tag = document.createElement("style");
-      Tag.innerText = `#sidebar-button2, #wrapper-sidebar-button2, .browser-sidebar2 {display: none !important;}`
+      Tag.innerText = `#sidebar-button2, #wrapper-sidebar-button2, .browser-sidebar2, #sidebar-select-box  {display: none !important;}`;
       document.getElementsByTagName("head")[0].insertAdjacentElement("beforeend",Tag)
   }
 

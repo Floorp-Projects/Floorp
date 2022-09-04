@@ -96,40 +96,33 @@
       switch (pref) {
       default:
         sidebar2elem.setAttribute("src", "chrome://browser/content/places/places.xhtml");
-        hideIcons();
        break;
       case 1:
         sidebar2elem.setAttribute("src", "chrome://browser/content/places/bookmarksSidebar.xhtml");
-        hideIcons();
        break;
       case 2:
         sidebar2elem.setAttribute("src", "chrome://browser/content/places/historySidebar.xhtml");
-        hideIcons();
        break;
       case 3:
         sidebar2elem.setAttribute("src", "about:downloads");
-        hideIcons();
        break;
       case 4:
         setTreeStyleTabURL();
-        hideIcons();
        break;
       case 5:
        sidebar2elem.setAttribute("src", Services.prefs.getStringPref("floorp.browser.sidebar2.customurl", undefined));
-        displayIcons();
        break;
     }
   }
 }
-
- function changeSidebarVisibility() {
-    let sidebar2 = document.getElementById("sidebar2-box");
-    let siderbar2header = document.getElementById("sidebar2-header");
-    let sidebarsplit2 = document.getElementById("sidebar-splitter2");
-    let sidebarsplit3 = document.getElementById("sidebar-splitter3");
+   function changeSidebarVisibility() {
+     let sidebar2 = document.getElementById("sidebar2");
+     let siderbar2header = document.getElementById("sidebar2-header");
+     let sidebarsplit2 = document.getElementById("sidebar-splitter2");
+     let sidebarsplit3 = document.getElementById("sidebar-splitter3");
 
     if (sidebarsplit2.getAttribute("hidden") == "true" || sidebarsplit3.getAttribute("hidden") == "true") {
-      sidebar2.style.minWidth = ""; 
+      sidebar2.style.minWidth = "10em"; 
       sidebar2.style.maxWidth = ""; 
       siderbar2header.style.display = "";
       sidebarsplit2.setAttribute("hidden", "false");
@@ -145,6 +138,12 @@
     }
   }
 
+  function ViewBrowserManagerSidebar() {
+    if (document.getElementById("sidebar-splitter2").getAttribute("hidden") == "true") {
+      changeSidebarVisibility();
+    }
+  }
+
   function backSidebarSite() {
     document.getElementById("sidebar2").goBack();  //戻る
   }
@@ -152,13 +151,38 @@
     document.getElementById("sidebar2").goForward();  //進む
   }
   function reloadSidebarSite() {
-  document.getElementById("sidebar2").reload();  //リロード
+    document.getElementById("sidebar2").reloadWithFlags(Ci.nsIWebNavigation.LOAD_FLAGS_BYPASS_CACHE);  //リロード
   }
   function muteSidebarSite() {
     document.getElementById("sidebar2").mute();  //ミュート
   }
   function unmuteSidebarSite() {
     document.getElementById("sidebar2").unmute();  //ミュート解除
+  }
+
+  function setBrowserManagerSidebarMode() {
+    Services.prefs.setIntPref("floorp.browser.sidebar2.mode", 0);
+    ViewBrowserManagerSidebar();
+  }
+  function setBookmarksSidebarMode() {
+    Services.prefs.setIntPref("floorp.browser.sidebar2.mode", 1);
+    ViewBrowserManagerSidebar();
+  }
+  function setHistorySidebarMode() {
+    Services.prefs.setIntPref("floorp.browser.sidebar2.mode", 2);
+    ViewBrowserManagerSidebar();
+  }
+  function setDownloadsSidebarMode() {
+    Services.prefs.setIntPref("floorp.browser.sidebar2.mode", 3);
+    ViewBrowserManagerSidebar();
+  }
+  function setTreeStyleTabSidebarMode() {
+    Services.prefs.setIntPref("floorp.browser.sidebar2.mode", 4);
+    ViewBrowserManagerSidebar();
+  }
+  function setCustomSidebarMode() {
+    Services.prefs.setIntPref("floorp.browser.sidebar2.mode", 5);
+    ViewBrowserManagerSidebar();
   }
 
 
