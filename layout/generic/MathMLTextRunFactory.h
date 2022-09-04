@@ -30,8 +30,6 @@ class MathMLTextRunFactory : public nsTransformingTextRunFactory {
                               gfxMissingFontRecorder* aMFR) override;
   enum {
     // Style effects which may override single character <mi> behaviour
-    MATH_FONT_STYLING_NORMAL = 0x1,  // fontstyle="normal" has been set.
-    MATH_FONT_WEIGHT_BOLD = 0x2,     // fontweight="bold" has been set.
     MATH_FONT_FEATURE_DTLS = 0x4,    // font feature dtls should be set
   };
 
