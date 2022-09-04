@@ -5433,12 +5433,12 @@ bool PresShell::IsTransparentContainerElement() const {
     if (pc->IsChrome()) {
       return true;
     }
-    // Frames are transparent except if their embedder color-scheme is
+    // Frames are transparent except if their used embedder color-scheme is
     // mismatched, in which case we use an opaque background to avoid
     // black-on-black or white-on-white text, see
     // https://github.com/w3c/csswg-drafts/issues/4772
     if (BrowsingContext* bc = pc->Document()->GetBrowsingContext()) {
-      switch (bc->GetEmbedderColorScheme()) {
+      switch (bc->GetEmbedderColorSchemes().mUsed) {
         case dom::PrefersColorSchemeOverride::Light:
           return pc->DefaultBackgroundColorScheme() == ColorScheme::Light;
         case dom::PrefersColorSchemeOverride::Dark:

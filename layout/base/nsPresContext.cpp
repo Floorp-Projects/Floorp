@@ -932,9 +932,9 @@ void nsPresContext::RecomputeBrowsingContextDependentData() {
     }
     if (!StaticPrefs::
             layout_css_iframe_embedder_prefers_color_scheme_content_enabled()) {
-      return top->GetEmbedderColorScheme();
+      return top->GetEmbedderColorSchemes().mPreferred;
     }
-    return browsingContext->GetEmbedderColorScheme();
+    return browsingContext->GetEmbedderColorSchemes().mPreferred;
   }());
 
   if (doc == mDocument) {

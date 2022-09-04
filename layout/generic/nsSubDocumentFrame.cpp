@@ -830,28 +830,20 @@ void nsSubDocumentFrame::MaybeUpdateEmbedderColorScheme() {
     return;
   }
 
-  auto preferredColorScheme =
-      LookAndFeel::ColorSchemeForFrame(this, ColorSchemeMode::Preferred);
-  bool needUpdate = [&] {
-    switch (bc->GetEmbedderColorScheme()) {
-      case PrefersColorSchemeOverride::Light:
-        return preferredColorScheme != ColorScheme::Light;
-      case PrefersColorSchemeOverride::Dark:
-        return preferredColorScheme != ColorScheme::Dark;
-      case PrefersColorSchemeOverride::None:
-      case PrefersColorSchemeOverride::EndGuard_:
-        break;
-    }
-    return true;
-  }();
-  if (!needUpdate) {
+  auto ToOverride = [](ColorScheme aScheme) -> PrefersColorSchemeOverride {
+    return aScheme == ColorScheme::Dark ? PrefersColorSchemeOverride::Dark
+                                        : PrefersColorSchemeOverride::Light;
+  };
+
+  EmbedderColorSchemes schemes{
+      ToOverride(LookAndFeel::ColorSchemeForFrame(this, ColorSchemeMode::Used)),
+      ToOverride(
+          LookAndFeel::ColorSchemeForFrame(this, ColorSchemeMode::Preferred))};
+  if (bc->GetEmbedderColorSchemes() == schemes) {
     return;
   }
 
-  auto value = preferredColorScheme == ColorScheme::Dark
-                   ? PrefersColorSchemeOverride::Dark
-                   : PrefersColorSchemeOverride::Light;
-  Unused << bc->SetEmbedderColorScheme(value);
+  Unused << bc->SetEmbedderColorSchemes(schemes);
 }
 
 void nsSubDocumentFrame::MaybeUpdateRemoteStyle(
