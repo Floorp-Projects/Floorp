@@ -14,6 +14,7 @@
 #include "nsICancelable.h"
 #include "nsIFile.h"
 #include "nsString.h"
+#include "mozilla/Result.h"
 
 namespace mozilla {
 namespace widget {
@@ -32,7 +33,7 @@ class ToastNotificationHandler final
                            const nsAString& aMsg, const nsAString& aHostPort,
                            bool aClickable, bool aRequireInteraction,
                            const nsTArray<RefPtr<nsIAlertAction>>& aActions,
-                           bool aIsSystemPrincipal)
+                           bool aIsSystemPrincipal, const nsAString& aLaunchUrl)
       : mBackend(backend),
         mAumid(aumid),
         mHasImage(false),
@@ -46,6 +47,7 @@ class ToastNotificationHandler final
         mRequireInteraction(aRequireInteraction),
         mActions(aActions.Clone()),
         mIsSystemPrincipal(aIsSystemPrincipal),
+        mLaunchUrl(aLaunchUrl),
         mSentFinished(!aAlertListener) {}
 
   nsresult InitAlertAsync(nsIAlertNotification* aAlert);
@@ -55,6 +57,14 @@ class ToastNotificationHandler final
   void UnregisterHandler();
 
   nsresult CreateToastXmlString(const nsAString& aImageURL, nsAString& aString);
+
+  nsresult GetWindowsTag(nsAString& aWindowsTag);
+  nsresult SetWindowsTag(const nsAString& aWindowsTag);
+
+  // Exposed for consumption by `ToastNotification.cpp`.
+  static nsresult FindLaunchURLForWindowsTag(const nsAString& aWindowsTag,
+                                             const nsAString& aAumid,
+                                             nsAString& aLaunchUrl);
 
  protected:
   virtual ~ToastNotificationHandler();
@@ -71,12 +81,15 @@ class ToastNotificationHandler final
   template <typename T>
   using ComPtr = Microsoft::WRL::ComPtr<T>;
 
+  Result<nsString, nsresult> GetLaunchArgument();
+
   ComPtr<IToastNotification> mNotification;
   ComPtr<IToastNotifier> mNotifier;
 
   RefPtr<ToastNotification> mBackend;
 
   nsString mAumid;
+  nsString mWindowsTag;
 
   nsCOMPtr<nsICancelable> mImageRequest;
   nsCOMPtr<nsIFile> mImageFile;
@@ -97,6 +110,7 @@ class ToastNotificationHandler final
   bool mRequireInteraction;
   nsTArray<RefPtr<nsIAlertAction>> mActions;
   bool mIsSystemPrincipal;
+  nsString mLaunchUrl;
   bool mSentFinished;
 
   nsresult TryShowAlert();
@@ -105,6 +119,7 @@ class ToastNotificationHandler final
   nsresult OnWriteBitmapSuccess();
   void SendFinished();
 
+  nsresult InitWindowsTag();
   bool CreateWindowsNotificationFromXml(ComPtr<IXmlDocument>& aToastXml);
   ComPtr<IXmlDocument> CreateToastXmlDocument();
 
@@ -114,6 +129,12 @@ class ToastNotificationHandler final
                     const ComPtr<IToastDismissedEventArgs>& aArgs);
   HRESULT OnFail(const ComPtr<IToastNotification>& notification,
                  const ComPtr<IToastFailedEventArgs>& aArgs);
+
+  static HRESULT GetLaunchArgumentValueForKey(
+      const ComPtr<IToastNotification> toast, const nsAString& key,
+      nsAString& value);
+  static ComPtr<IToastNotification> FindNotificationByTag(
+      const nsAString& aWindowsTag, const nsAString& nsAumid);
 };
 
 }  // namespace widget

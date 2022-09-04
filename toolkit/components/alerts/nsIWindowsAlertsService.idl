@@ -7,16 +7,44 @@
 #include "nsISupports.idl"
 #include "nsIObserver.idl"
 
+[scriptable, function, uuid(059f8305-4e2f-4d31-a9cb-5b918ee84773)]
+interface nsIUnknownWindowsTagListener : nsISupports
+{
+  /**
+   * Handle any launch URL associated to the given Windows-specific tag string.
+   * Usually, this will navigate to the launch URL in some manner.
+   *
+   * @param {AString} aWindowsTag the tag
+   * @param {AString} aLaunchURL associated launch URL, or null.
+   */
+  void handleUnknownWindowsTag(in AString aWindowsTag,
+                               in AString aLaunchURL);
+};
+
 [scriptable, uuid(e01c8066-fb4b-4304-b9c9-ab6ed4a8322c)]
 interface nsIWindowsAlertsService : nsIAlertsService
 {
+  /**
+   * If callbacks for the given Windows-specific tag string will be handled by
+   * this Firefox process, set the associated event.
+   *
+   * @param {AString} aWindowsTag the tag
+   * @param {nsIUnhandledWindowsTagListener} aListener the listener to callback
+   * if the tag is unknown and has an associated launch URL.
+   * @return {boolean} `true` iff the tag is registered and an event was set.
+   */
+  bool handleWindowsTag(in AString aWindowsTag,
+                        in nsIUnknownWindowsTagListener aListener);
+
   /**
    * Get the Windows-specific XML generated for the given alert.
    *
    * @note This method is intended for testing purposes.
    *
    * @param {nsIAlertNotification} aAlert the alert
+   * @param {AString} an optional Windows tag; default is generated
    * @return {string} generated XML
    */
-  AString getXmlStringForWindowsAlert(in nsIAlertNotification aAlert);
+  AString getXmlStringForWindowsAlert(in nsIAlertNotification aAlert,
+                                      [optional] in AString aWindowsTag);
 };
