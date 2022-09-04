@@ -85,6 +85,19 @@ enum class ExplicitActiveStatus : uint8_t {
   EndGuard_,
 };
 
+struct EmbedderColorSchemes {
+  PrefersColorSchemeOverride mUsed{};
+  PrefersColorSchemeOverride mPreferred{};
+
+  bool operator==(const EmbedderColorSchemes& aOther) const {
+    return mUsed == aOther.mUsed && mPreferred == aOther.mPreferred;
+  }
+
+  bool operator!=(const EmbedderColorSchemes& aOther) const {
+    return !(*this == aOther);
+  }
+};
+
 // Fields are, by default, settable by any process and readable by any process.
 // Racy sets will be resolved as-if they occurred in the order the parent
 // process finds out about them.
@@ -216,7 +229,7 @@ enum class ExplicitActiveStatus : uint8_t {
   FIELD(PrefersColorSchemeOverride, dom::PrefersColorSchemeOverride)          \
   /* prefers-color-scheme override based on the color-scheme style of our     \
    * <browser> embedder element. */                                           \
-  FIELD(EmbedderColorScheme, dom::PrefersColorSchemeOverride)                 \
+  FIELD(EmbedderColorSchemes, EmbedderColorSchemes)                           \
   FIELD(DisplayMode, dom::DisplayMode)                                        \
   /* The number of entries added to the session history because of this       \
    * browsing context. */                                                     \
@@ -1042,8 +1055,8 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
     return IsTop();
   }
 
-  bool CanSet(FieldIndex<IDX_EmbedderColorScheme>,
-              dom::PrefersColorSchemeOverride, ContentParent* aSource) {
+  bool CanSet(FieldIndex<IDX_EmbedderColorSchemes>, const EmbedderColorSchemes&,
+              ContentParent* aSource) {
     return CheckOnlyEmbedderCanSet(aSource);
   }
 
@@ -1054,8 +1067,8 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
 
   void DidSet(FieldIndex<IDX_InRDMPane>, bool aOldValue);
 
-  void DidSet(FieldIndex<IDX_EmbedderColorScheme>,
-              dom::PrefersColorSchemeOverride aOldValue);
+  void DidSet(FieldIndex<IDX_EmbedderColorSchemes>,
+              EmbedderColorSchemes&& aOldValue);
 
   void DidSet(FieldIndex<IDX_PrefersColorSchemeOverride>,
               dom::PrefersColorSchemeOverride aOldValue);
