@@ -41,6 +41,7 @@ macosx64-plain/opt:
             - macosx64-nasm
             - macosx64-node
             - macosx64-rust
+            - macosx64-sdk
             - sysroot-wasm32-wasi
     optimization:
         skip-unless-expanded: null
@@ -74,6 +75,7 @@ macosx64-plain/debug:
             - macosx64-nasm
             - macosx64-node
             - macosx64-rust
+            - macosx64-sdk
             - sysroot-wasm32-wasi
     optimization:
         skip-unless-expanded: null
@@ -106,6 +108,7 @@ macosx64-rusttests/opt:
             - macosx64-cbindgen
             - macosx64-nasm
             - macosx64-node
+            - macosx64-sdk
             - sysroot-wasm32-wasi
     optimization:
         test-inclusive: [rusttests]
@@ -138,6 +141,7 @@ macosx64-rusttests/debug:
             - macosx64-cbindgen
             - macosx64-nasm
             - macosx64-node
+            - macosx64-sdk
             - sysroot-wasm32-wasi
     optimization:
         test-inclusive: [rusttests]
