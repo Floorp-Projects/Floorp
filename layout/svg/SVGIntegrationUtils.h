@@ -25,6 +25,7 @@ struct nsSize;
 struct WrFiltersHolder {
   nsTArray<mozilla::wr::FilterOp> filters;
   nsTArray<mozilla::wr::WrFilterData> filter_datas;
+  mozilla::Maybe<nsRect> post_filters_clip;
   // This exists just to own the values long enough for them to be copied into
   // rust.
   nsTArray<nsTArray<float>> values;
@@ -116,22 +117,6 @@ class SVGIntegrationUtils final {
       nsIFrame* aFrame, const nsRect& aPreEffectsOverflowRect);
 
   /**
-   * Used to adjust the area of a frame that needs to be invalidated to take
-   * account of SVG effects.
-   *
-   * @param aFrame The effects frame.
-   * @param aToReferenceFrame The offset (in app units) from aFrame to its
-   * reference display item.
-   * @param aInvalidRegion The pre-effects invalid region in pixels relative to
-   * the reference display item.
-   * @return The post-effects invalid rect in pixels relative to the reference
-   * display item.
-   */
-  static nsIntRegion AdjustInvalidAreaForSVGEffects(
-      nsIFrame* aFrame, const nsPoint& aToReferenceFrame,
-      const nsIntRegion& aInvalidRegion);
-
-  /**
    * Figure out which area of the source is needed given an area to
    * repaint
    */
@@ -193,14 +178,15 @@ class SVGIntegrationUtils final {
    * The caller will do a Save()/Restore() as necessary so feel free
    * to mess with context state.
    * The context will be configured to use the "user space" coordinate
-   * system.
+   * system if passing aTransform/aDirtyRect, or untouched otherwise.
+   * @param aImgParams the params to draw with.
+   * @param aTransform the user-to-device space matrix, if painting with
+   *        filters.
    * @param aDirtyRect the dirty rect *in user space pixels*
-   * @param aTransformRoot the outermost frame whose transform should be taken
-   *                       into account when painting an SVG glyph
    */
   using SVGFilterPaintCallback = std::function<void(
-      gfxContext& aContext, nsIFrame* aTarget, const gfxMatrix& aTransform,
-      const nsIntRect* aDirtyRect, image::imgDrawingParams& aImgParams)>;
+      gfxContext& aContext, imgDrawingParams&, const gfxMatrix* aTransform,
+      const nsIntRect* aDirtyRect)>;
 
   /**
    * Paint non-SVG frame with filter and opacity effect.
@@ -223,7 +209,6 @@ class SVGIntegrationUtils final {
   static bool BuildWebRenderFilters(nsIFrame* aFilteredFrame,
                                     Span<const StyleFilter> aFilters,
                                     WrFiltersHolder& aWrFilters,
-                                    Maybe<nsRect>& aPostFilterClip,
                                     bool& aInitialized);
 
   /**
