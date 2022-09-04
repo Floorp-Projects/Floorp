@@ -46,6 +46,8 @@
     <!-- Title for the home screen section with recently saved bookmarks. -->
     <string moz:RemovedIn="106" name="recent_bookmarks_title" tools:ignore="UnusedResources">Πρόσφατοι σελιδοδείκτες</string>
 
+    <!-- Title for the home screen section with recently saved bookmarks. -->
+    <string name="recently_saved_title">Πρόσφατα αποθηκευμένα</string>
     <!-- Content description for the button which navigates the user to show all of their saved bookmarks. -->
     <string name="recently_saved_show_all_content_description_2">Εμφάνιση όλων των αποθηκευμένων σελιδοδεικτών</string>
 
@@ -82,6 +84,12 @@
 
     <!-- Content description for close button used in "contextual feature recommendation" (CFR) popups -->
     <string name="cfr_dismiss_button_default_content_description">Απόρριψη</string>
+
+    <!-- Total cookie protection "contextual feature recommendation" (CFR) -->
+    <!-- Text for the message displayed in the contextual feature recommendation popup promoting the total cookie protection feature. -->
+    <string name="tcp_cfr_message">Η πιο ισχυρή μας λειτουργία απορρήτου απομονώνει ιχνηλάτες μεταξύ ιστοτόπων.</string>
+    <!-- Text displayed that links to website containing documentation about the "Total cookie protection" feature. -->
+    <string name="tcp_cfr_learn_more">Μάθετε για την Ολική προστασία cookie</string>
 
     <!-- Text for the info dialog when camera permissions have been denied but user tries to access a camera feature. -->
     <string name="camera_permissions_needed_message">Απαιτείται πρόσβαση στην κάμερα. Μεταβείτε στις Ρυθμίσεις Android, πατήστε «Δικαιώματα» και επιλέξτε «Να επιτρέπεται».</string>
@@ -278,14 +286,25 @@
     <!-- Onboarding home screen popup dialog, shown on top of the Jump back in section. Firefox is intentionally hardcoded. -->
     <string moz:RemovedIn="106" name="onboarding_home_screen_jump_back_contextual_hint" tools:ignore="UnusedResources">Η εξατομικευμένη αρχική σελίδα του Firefox διευκολύνει την επιστροφή στο σημείο που σταματήσατε. Βρείτε τις πρόσφατες καρτέλες, τους σελιδοδείκτες και τα αποτελέσματα αναζήτησής σας.</string>
 
+    <!-- Onboarding home screen popup dialog, shown on top of the Jump back in section. -->
+    <string name="onboarding_home_screen_jump_back_contextual_hint_2">Γνωρίστε την εξατομικευμένη αρχική σας σελίδα. Οι πρόσφατες καρτέλες, οι σελιδοδείκτες και τα αποτελέσματα αναζήτησης θα εμφανίζονται εδώ.</string>
     <!-- Home onboarding dialog welcome screen title text. -->
     <string name="onboarding_home_welcome_title">Καλώς ορίσατε σε ένα ανεξάρτητο διαδίκτυο</string>
+    <!-- Home onboarding dialog welcome screen description text. -->
+    <string name="onboarding_home_welcome_description">Περισσότερα χρώματα. Ενισχυμένο απόρρητο. Η ίδια δέσμευση να βάζουμε τον άνθρωπο πάνω από το κέρδος.</string>
+    <!-- Home onboarding dialog sign into sync screen title text. -->
+    <string name="onboarding_home_sync_title_2">Εναλλαγή από τηλέφωνο σε υπολογιστή και αντίστροφα</string>
+    <!-- Home onboarding dialog sign into sync screen description text. -->
+    <string name="onboarding_home_sync_description">Συνεχίστε από εκεί που σταματήσατε, με καρτέλες από άλλες συσκευές στην αρχική σας σελίδα.</string>
     <!-- Text for the button to continue the onboarding on the home onboarding dialog. -->
     <string name="onboarding_home_get_started_button">Έναρξη</string>
     <!-- Text for the button to navigate to the sync sign in screen on the home onboarding dialog. -->
     <string name="onboarding_home_sign_in_button">Σύνδεση</string>
     <!-- Text for the button to skip the onboarding on the home onboarding dialog. -->
     <string name="onboarding_home_skip_button">Παράλειψη</string>
+
+    <!-- Onboarding home screen sync popup dialog message, shown on top of Recent Synced Tabs in the Jump back in section. -->
+    <string name="sync_cfr_message">Οι καρτέλες σας συγχρονίζονται! Συνεχίστε από εκεί που σταματήσατε στην άλλη συσκευή σας.</string>
 
     <!-- Search Widget -->
     <!-- Content description for searching with a widget. The first parameter is the name of the application.-->
@@ -1340,6 +1359,8 @@
     <string name="preference_enhanced_tracking_protection_custom_cookies_3">Όλα τα cookies τρίτων (πιθανή δυσλειτουργία ιστοτόπων)</string>
     <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
     <string name="preference_enhanced_tracking_protection_custom_cookies_4">Όλα τα cookies (προκαλεί δυσλειτουργία ιστοτόπων)</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
+    <string name="preference_enhanced_tracking_protection_custom_cookies_5">Απομόνωση cookies μεταξύ ιστοτόπων</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings for tracking content -->
     <string name="preference_enhanced_tracking_protection_custom_tracking_content">Περιεχόμενο καταγραφής</string>
     <!-- Option for enhanced tracking protection for the custom protection settings for tracking content-->
@@ -1366,6 +1387,8 @@
     <string name="etp_cookies_title_2">Cookies μεταξύ ιστοτόπων</string>
     <!-- Description of cross-site tracking cookies that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cookies_description">Αποκλείει τα cookies που χρησιμοποιούν οι εταιρείες διαφημίσεων και ανάλυσης για τη συλλογή δεδομένων περιήγησης σε πολλαπλούς ιστοτόπους.</string>
+    <!-- Description of cross-site tracking cookies that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_cookies_description_2">Η Ολική προστασία cookie απομονώνει τα cookies στον ιστότοπο που βρίσκεστε, ώστε να μην μπορούν να χρησιμοποιηθούν από ιχνηλάτες, όπως δίκτυα διαφημίσεων, για την καταγραφή της δραστηριότητάς σας.</string>
     <!-- Category of trackers (cryptominers) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cryptominers_title">Cryptominer</string>
     <!-- Description of cryptominers that can be blocked by Enhanced Tracking Protection -->

@@ -81,6 +81,9 @@
     <!-- Text for the message displayed in the contextual feature recommendation popup promoting the total cookie protection feature. -->
     <string name="tcp_cfr_message">Наша најјача заштита приватности изолује праћење на више локација.</string>
 
+    <!-- Text displayed that links to website containing documentation about the "Total cookie protection" feature. -->
+    <string name="tcp_cfr_learn_more">Сазнајте више о свеобухватној заштити од колачића</string>
+
     <!-- Text for the info dialog when camera permissions have been denied but user tries to access a camera feature. -->
     <string name="camera_permissions_needed_message">Потребан је приступ камери. Отворите Андроид подешавања, одаберите дозволе и омогућите приступ.</string>
     <!-- Text for the positive action button to go to Android Settings to grant permissions. -->
@@ -284,6 +287,18 @@
 
     <!-- Home onboarding dialog sign into sync screen title text. -->
     <string name="onboarding_home_sync_title_2">Брзо се пребацујте између телефона и лаптопа</string>
+
+    <!-- Home onboarding dialog sign into sync screen description text. -->
+    <string name="onboarding_home_sync_description">Сада на вашој почетној страници наставите где сте стали са језичцима са других уређаја.</string>
+    <!-- Text for the button to continue the onboarding on the home onboarding dialog. -->
+    <string name="onboarding_home_get_started_button">Започните</string>
+    <!-- Text for the button to navigate to the sync sign in screen on the home onboarding dialog. -->
+    <string name="onboarding_home_sign_in_button">Пријави се</string>
+    <!-- Text for the button to skip the onboarding on the home onboarding dialog. -->
+    <string name="onboarding_home_skip_button">Прескочи</string>
+
+    <!-- Onboarding home screen sync popup dialog message, shown on top of Recent Synced Tabs in the Jump back in section. -->
+    <string name="sync_cfr_message">Ваши језичци се синхронизују! Наставите где сте стали на другом уређају.</string>
 
     <!-- Search Widget -->
     <!-- Content description for searching with a widget. The first parameter is the name of the application.-->
@@ -1334,6 +1349,8 @@
     <string name="preference_enhanced_tracking_protection_custom_cookies_3">Сви колачићи трећих страна (може проузроковати пад страница)</string>
     <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
     <string name="preference_enhanced_tracking_protection_custom_cookies_4">Сви колачићи (проузроковаће пад страница)</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
+    <string name="preference_enhanced_tracking_protection_custom_cookies_5">Изолујте колачиће трећих страна</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings for tracking content -->
     <string name="preference_enhanced_tracking_protection_custom_tracking_content">Садржаји који прате</string>
     <!-- Option for enhanced tracking protection for the custom protection settings for tracking content-->
@@ -1357,9 +1374,13 @@
     <string name="etp_social_media_trackers_description">Ограничава могућност друштвених мрежа да прате ваше радње на вебу.</string>
     <!-- Category of trackers (cross-site tracking cookies) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cookies_title">Вишестранични колачићи-пратиоци</string>
+    <!-- Category of trackers (cross-site tracking cookies) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_cookies_title_2">Колачићи трећих страна</string>
     <!-- Description of cross-site tracking cookies that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cookies_description">Блокира колачиће које оглашавачке мреже и аналитичке фирме користе за састављање профила прегледања о вама, на више страница.</string>
 
+    <!-- Description of cross-site tracking cookies that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_cookies_description_2">Свеобухватна заштита од колачића изолује колачиће на тренутној страници тако да трагачи попут огласних мрежа не могу њима да се служе и прате вас.</string>
     <!-- Category of trackers (cryptominers) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cryptominers_title">Крипто-рудари</string>
     <!-- Description of cryptominers that can be blocked by Enhanced Tracking Protection -->
