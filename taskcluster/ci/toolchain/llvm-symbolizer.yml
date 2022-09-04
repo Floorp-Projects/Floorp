@@ -43,7 +43,7 @@ macosx64-llvm-symbolizer:
             - taskcluster/scripts/misc/build-llvm-common.sh
     fetches:
         toolchain:
-            - macosx64-sdk-11.0
+            - macosx64-sdk
 
 win64-llvm-symbolizer:
     description: "llvm-symbolizer for Windows"

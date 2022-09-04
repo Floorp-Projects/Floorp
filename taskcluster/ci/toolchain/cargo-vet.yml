@@ -38,7 +38,7 @@ macosx64-cargo-vet:
             - linux64-cctools-port
             - linux64-clang-toolchain
             - linux64-rust-macos-1.61
-            - macosx64-sdk-11.0
+            - macosx64-sdk
 
 macosx64-aarch64-cargo-vet:
     treeherder:
@@ -50,7 +50,7 @@ macosx64-aarch64-cargo-vet:
             - linux64-cctools-port
             - linux64-clang-toolchain
             - linux64-rust-macos-1.61
-            - macosx64-sdk-11.0
+            - macosx64-sdk
 
 win64-cargo-vet:
     treeherder:

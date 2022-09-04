@@ -23,9 +23,6 @@ case "$TARGET" in
   export PATH="$MOZ_FETCHES_DIR/clang/bin:$PATH"
   export PATH="$MOZ_FETCHES_DIR/cctools/bin:$PATH"
   export RUSTFLAGS="-C linker=$GECKO_PATH/taskcluster/scripts/misc/osx-cross-linker"
-  if test "$TARGET" = "aarch64-apple-darwin"; then
-    export SDK_VER=11.0
-  fi
   ;;
 x86_64-unknown-linux-gnu)
   export CC="$MOZ_FETCHES_DIR/clang/bin/clang"

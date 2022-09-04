@@ -21,7 +21,7 @@ export MOZILLA_OFFICIAL=1
 export MOZ_PACKAGE_JSSHELL=1
 
 ac_add_options --target=aarch64-apple-darwin
-export MACOS_SDK_DIR=$MOZ_FETCHES_DIR/MacOSX11.0.sdk
+export MACOS_SDK_DIR=$MOZ_FETCHES_DIR/MacOSX11.3.sdk
 
 # As of Clang 13, the default is -mcpu=apple-m1 when using a aarch64-apple-macos target,
 # but we're using apple64-apple-darwin, which defaults to -mcpu=apple-a7, which disables

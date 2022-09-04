@@ -39,7 +39,7 @@ macosx64-nasm:
         toolchain:
             - linux64-cctools-port
             - linux64-clang-toolchain
-            - macosx64-sdk-11.0
+            - macosx64-sdk
 
 macosx64-aarch64-nasm:
     description: "nasm macosx64 build"
@@ -56,7 +56,7 @@ macosx64-aarch64-nasm:
         toolchain:
             - linux64-cctools-port
             - linux64-clang-toolchain
-            - macosx64-sdk-11.0
+            - macosx64-sdk
 
 linux64-nasm:
     description: "nasm linux64 build"

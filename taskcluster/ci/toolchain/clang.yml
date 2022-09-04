@@ -206,7 +206,7 @@ macosx64-clang-14-raw:
             - linux64-cctools-port
             - linux64-clang-14-stage1
             - linux64-clang-14-profile
-            - macosx64-sdk-11.0
+            - macosx64-sdk
             - macosx64-x64-compiler-rt-14
 
 macosx64-clang-14:
@@ -270,7 +270,7 @@ macosx64-aarch64-clang-14-raw:
             - linux64-cctools-port
             - linux64-clang-14-stage1
             - linux64-clang-14-profile
-            - macosx64-sdk-11.0
+            - macosx64-sdk
             - macosx64-aarch64-compiler-rt-14
 
 macosx64-aarch64-clang-14:
@@ -568,7 +568,7 @@ macosx64-clang-trunk-raw:
             - linux64-cctools-port
             - linux64-clang-trunk-stage1
             - linux64-clang-trunk-profile
-            - macosx64-sdk-11.0
+            - macosx64-sdk
             - macosx64-x64-compiler-rt-trunk
 
 macosx64-clang-trunk:
@@ -631,7 +631,7 @@ macosx64-aarch64-clang-trunk-raw:
             - linux64-cctools-port
             - linux64-clang-trunk-stage1
             - linux64-clang-trunk-profile
-            - macosx64-sdk-11.0
+            - macosx64-sdk
             - macosx64-aarch64-compiler-rt-trunk
 
 macosx64-aarch64-clang-trunk:

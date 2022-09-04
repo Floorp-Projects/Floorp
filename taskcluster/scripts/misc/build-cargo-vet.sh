@@ -28,7 +28,7 @@ x86_64-unknown-linux-gnu)
         export MACOSX_DEPLOYMENT_TARGET=10.12
     fi
     export CC="$MOZ_FETCHES_DIR/clang/bin/clang"
-    export TARGET_CC="$CC -isysroot $MOZ_FETCHES_DIR/MacOSX11.0.sdk"
+    export TARGET_CC="$CC -isysroot $MOZ_FETCHES_DIR/MacOSX11.3.sdk"
     ;;
 x86_64-pc-windows-msvc)
     # Cross-compiling for Windows on Linux.
