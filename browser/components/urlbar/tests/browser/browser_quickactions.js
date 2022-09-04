@@ -398,24 +398,28 @@ add_task(async function test_inspector() {
       description: "Test for 'about:' page",
       page: "about:home",
       isDevToolsUser: true,
+      actionVisible: true,
       actionEnabled: true,
     },
     {
       description: "Test for another 'about:' page",
       page: "about:about",
       isDevToolsUser: true,
+      actionVisible: true,
       actionEnabled: true,
     },
     {
       description: "Test for another devtools-toolbox page",
       page: "about:devtools-toolbox",
       isDevToolsUser: true,
+      actionVisible: true,
       actionEnabled: false,
     },
     {
       description: "Test for web content",
       page: "http://example.com",
       isDevToolsUser: true,
+      actionVisible: true,
       actionEnabled: true,
     },
     {
@@ -423,13 +427,22 @@ add_task(async function test_inspector() {
       page: "http://example.com",
       prefs: [["devtools.policy.disabled", true]],
       isDevToolsUser: true,
+      actionVisible: true,
       actionEnabled: false,
     },
     {
       description: "Test for not DevTools user",
       page: "http://example.com",
       isDevToolsUser: false,
+      actionVisible: true,
       actionEnabled: false,
+    },
+    {
+      description: "Test for fully disabled",
+      page: "http://example.com",
+      prefs: [["devtools.policy.disabled", true]],
+      isDevToolsUser: false,
+      actionVisible: false,
     },
   ];
 
@@ -441,6 +454,7 @@ add_task(async function test_inspector() {
     prefs = [],
     isDevToolsUser,
     actionEnabled,
+    actionVisible,
   } of testData) {
     info(description);
 
@@ -457,11 +471,17 @@ add_task(async function test_inspector() {
       window,
       value: "inspector",
     });
-    await assertActionButtonStatus(
-      "inspect",
-      actionEnabled,
-      "The status of action button is correct"
-    );
+
+    if (actionVisible) {
+      await assertActionButtonStatus(
+        "inspect",
+        actionEnabled,
+        "The status of action button is correct"
+      );
+    } else {
+      const target = window.document.querySelector(`[data-key=inspect]`);
+      Assert.ok(!target, "Inspect button should not be displayed");
+    }
 
     await SpecialPowers.popPrefEnv();
 

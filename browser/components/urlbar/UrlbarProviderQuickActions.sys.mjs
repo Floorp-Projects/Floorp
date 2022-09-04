@@ -111,6 +111,12 @@ class ProviderQuickActions extends UrlbarProvider {
     // Ensure results are unique.
     results = [...new Set(results)];
 
+    // Remove invisible actions.
+    results = results.filter(key => {
+      const action = this.#actions.get(key);
+      return !action.isVisible || action.isVisible();
+    });
+
     if (!results?.length) {
       return;
     }
