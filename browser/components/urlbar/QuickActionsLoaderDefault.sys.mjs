@@ -64,24 +64,6 @@ let currentBrowser = () =>
 let currentTab = () =>
   lazy.BrowserWindowTracker.getTopWindow()?.gBrowser.selectedTab;
 
-let inspectorIsAvailable = () => {
-  // The inspect action is available if:
-  // 1. DevTools is enabled.
-  // 2. The user can be considered as a DevTools user.
-  // 3. The url is not about:devtools-toolbox.
-  // 4. The inspector is not opened yet on the page.
-  return (
-    lazy.DevToolsShim.isEnabled() &&
-    lazy.DevToolsShim.isDevToolsUser() &&
-    !currentBrowser()?.currentURI.spec.startsWith("about:devtools-toolbox") &&
-    !lazy.DevToolsShim.hasToolboxForTab(currentTab())
-  );
-};
-
-let viewsourceIsAvailable = () => {
-  return currentBrowser()?.currentURI.scheme !== "view-source";
-};
-
 XPCOMUtils.defineLazyGetter(lazy, "gFluentStrings", function() {
   return new Localization(["branding/brand.ftl", "browser/browser.ftl"], true);
 });
@@ -133,7 +115,21 @@ const DEFAULT_ACTIONS = {
     label: "quickactions-inspector",
     isVisible: () =>
       lazy.DevToolsShim.isEnabled() || lazy.DevToolsShim.isDevToolsUser(),
-    isActive: inspectorIsAvailable,
+    isActive: () => {
+      // The inspect action is available if:
+      // 1. DevTools is enabled.
+      // 2. The user can be considered as a DevTools user.
+      // 3. The url is not about:devtools-toolbox.
+      // 4. The inspector is not opened yet on the page.
+      return (
+        lazy.DevToolsShim.isEnabled() &&
+        lazy.DevToolsShim.isDevToolsUser() &&
+        !currentBrowser()?.currentURI.spec.startsWith(
+          "about:devtools-toolbox"
+        ) &&
+        !lazy.DevToolsShim.hasToolboxForTab(currentTab())
+      );
+    },
     onPick: openInspector,
   },
   logins: {
@@ -212,7 +208,7 @@ const DEFAULT_ACTIONS = {
     l10nCommands: ["quickactions-cmd-viewsource", "quickactions-viewsource"],
     icon: "chrome://global/skin/icons/settings.svg",
     label: "quickactions-viewsource",
-    isActive: viewsourceIsAvailable,
+    isActive: () => currentBrowser()?.currentURI.scheme !== "view-source",
     onPick: () => openUrl("view-source:" + currentBrowser().currentURI.spec),
   },
 };
