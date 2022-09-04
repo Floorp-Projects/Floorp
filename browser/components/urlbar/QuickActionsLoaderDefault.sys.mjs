@@ -131,6 +131,8 @@ const DEFAULT_ACTIONS = {
     l10nCommands: ["quickactions-cmd-inspector", "quickactions-inspector"],
     icon: "chrome://devtools/skin/images/tool-inspector.svg",
     label: "quickactions-inspector",
+    isVisible: () =>
+      lazy.DevToolsShim.isEnabled() || lazy.DevToolsShim.isDevToolsUser(),
     isActive: inspectorIsAvailable,
     onPick: openInspector,
   },
