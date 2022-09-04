@@ -285,6 +285,9 @@ def build_one_stage(
                 "-DDARWIN_osx_ARCHS=%s" % arch,
                 "-DDARWIN_osx_SYSROOT=%s" % slashify_path(os.getenv("CROSS_SYSROOT")),
                 "-DLLVM_DEFAULT_TARGET_TRIPLE=%s-apple-darwin" % target_cpu,
+                "-DCMAKE_C_COMPILER_TARGET=%s-apple-darwin" % target_cpu,
+                "-DCMAKE_CXX_COMPILER_TARGET=%s-apple-darwin" % target_cpu,
+                "-DCMAKE_ASM_COMPILER_TARGET=%s-apple-darwin" % target_cpu,
             ]
             if os.environ.get("OSX_ARCH") == "arm64":
                 cmake_args += [
@@ -682,8 +685,6 @@ def main():
         extra_cxxflags2 = ["-stdlib=libc++"]
 
         extra_flags = [
-            "-target",
-            "x86_64-apple-darwin",
             "-mlinker-version=137",
             "-B",
             "%s/bin" % os.getenv("CROSS_CCTOOLS_PATH"),
