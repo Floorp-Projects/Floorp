@@ -3872,7 +3872,6 @@ window.setTimeout(function(){
     Services.prefs.setStringPref("floorp.browser.sidebar2.customurl", url);
     if(url != "" && url != null){
       window.alert(l10n.formatValueSync("seted-url") + " " + url);
-      console.log(url);
     }
   }, false);
 }, 3000);
