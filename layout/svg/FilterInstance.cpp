@@ -120,9 +120,10 @@ static mozilla::wr::ComponentTransferFuncType FuncTypeToWr(uint8_t aFuncType) {
 bool FilterInstance::BuildWebRenderFilters(nsIFrame* aFilteredFrame,
                                            Span<const StyleFilter> aFilters,
                                            WrFiltersHolder& aWrFilters,
+                                           Maybe<nsRect>& aPostFilterClip,
                                            bool& aInitialized) {
   bool status = BuildWebRenderFiltersImpl(aFilteredFrame, aFilters, aWrFilters,
-                                          aInitialized);
+                                          aPostFilterClip, aInitialized);
   if (!status) {
     aFilteredFrame->PresContext()->Document()->SetUseCounter(
         eUseCounter_custom_WrFilterFallback);
@@ -134,6 +135,7 @@ bool FilterInstance::BuildWebRenderFilters(nsIFrame* aFilteredFrame,
 bool FilterInstance::BuildWebRenderFiltersImpl(nsIFrame* aFilteredFrame,
                                                Span<const StyleFilter> aFilters,
                                                WrFiltersHolder& aWrFilters,
+                                               Maybe<nsRect>& aPostFilterClip,
                                                bool& aInitialized) {
   aWrFilters.filters.Clear();
   aWrFilters.filter_datas.Clear();
@@ -366,10 +368,34 @@ bool FilterInstance::BuildWebRenderFiltersImpl(nsIFrame* aFilteredFrame,
   }
 
   if (finalClip) {
-    aWrFilters.post_filters_clip =
-        Some(instance.FilterSpaceToFrameSpace(finalClip.value()));
+    aPostFilterClip = Some(instance.FilterSpaceToFrameSpace(finalClip.value()));
   }
   return true;
+}
+
+nsRegion FilterInstance::GetPostFilterDirtyArea(
+    nsIFrame* aFilteredFrame, const nsRegion& aPreFilterDirtyRegion) {
+  if (aPreFilterDirtyRegion.IsEmpty()) {
+    return nsRegion();
+  }
+
+  gfxMatrix tm = SVGUtils::GetCanvasTM(aFilteredFrame);
+  auto filterChain = aFilteredFrame->StyleEffects()->mFilters.AsSpan();
+  UniquePtr<UserSpaceMetrics> metrics =
+      UserSpaceMetricsForFrame(aFilteredFrame);
+  // Hardcode InputIsTainted to true because we don't want JS to be able to
+  // read the rendered contents of aFilteredFrame.
+  FilterInstance instance(aFilteredFrame, aFilteredFrame->GetContent(),
+                          *metrics, filterChain, /* InputIsTainted */ true,
+                          nullptr, tm, nullptr, &aPreFilterDirtyRegion);
+  if (!instance.IsInitialized()) {
+    return nsRegion();
+  }
+
+  // We've passed in the source's dirty area so the instance knows about it.
+  // Now we can ask the instance to compute the area of the filter output
+  // that's dirty.
+  return instance.ComputePostFilterDirtyRegion();
 }
 
 nsRegion FilterInstance::GetPreFilterNeededArea(
@@ -392,9 +418,9 @@ nsRegion FilterInstance::GetPreFilterNeededArea(
   return instance.ComputeSourceNeededRect();
 }
 
-Maybe<nsRect> FilterInstance::GetPostFilterBounds(
-    nsIFrame* aFilteredFrame, const gfxRect* aOverrideBBox,
-    const nsRect* aPreFilterBounds) {
+nsRect FilterInstance::GetPostFilterBounds(nsIFrame* aFilteredFrame,
+                                           const gfxRect* aOverrideBBox,
+                                           const nsRect* aPreFilterBounds) {
   MOZ_ASSERT(!aFilteredFrame->HasAnyStateBits(NS_FRAME_SVG_LAYOUT) ||
                  !aFilteredFrame->HasAnyStateBits(NS_FRAME_IS_NONDISPLAY),
              "Non-display SVG do not maintain ink overflow rects");
@@ -417,10 +443,10 @@ Maybe<nsRect> FilterInstance::GetPostFilterBounds(
                           nullptr, tm, nullptr, preFilterRegionPtr,
                           aPreFilterBounds, aOverrideBBox);
   if (!instance.IsInitialized()) {
-    return Nothing();
+    return nsRect();
   }
 
-  return Some(instance.ComputePostFilterExtents());
+  return instance.ComputePostFilterExtents();
 }
 
 FilterInstance::FilterInstance(
