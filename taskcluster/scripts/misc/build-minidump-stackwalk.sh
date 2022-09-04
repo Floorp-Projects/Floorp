@@ -38,8 +38,8 @@ x86_64-unknown-linux-gnu)
         export MACOSX_DEPLOYMENT_TARGET=10.12
     fi
     export CC="$MOZ_FETCHES_DIR/clang/bin/clang"
-    export TARGET_CC="$MOZ_FETCHES_DIR/clang/bin/clang -isysroot $MOZ_FETCHES_DIR/MacOSX11.0.sdk"
-    export TARGET_CXX="$MOZ_FETCHES_DIR/clang/bin/clang++ -isysroot $MOZ_FETCHES_DIR/MacOSX11.0.sdk -stdlib=libc++"
+    export TARGET_CC="$MOZ_FETCHES_DIR/clang/bin/clang -isysroot $MOZ_FETCHES_DIR/MacOSX11.3.sdk"
+    export TARGET_CXX="$MOZ_FETCHES_DIR/clang/bin/clang++ -isysroot $MOZ_FETCHES_DIR/MacOSX11.3.sdk -stdlib=libc++"
     ;;
 *-pc-windows-msvc)
     # Cross-compiling for Windows on Linux.

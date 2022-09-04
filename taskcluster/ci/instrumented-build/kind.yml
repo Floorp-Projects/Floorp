@@ -132,7 +132,7 @@ jobs:
                 - linux64-dump_syms
                 - linux64-nasm
                 - linux64-node
-                - macosx64-sdk-11.0
+                - macosx64-sdk
                 - sysroot-x86_64-linux-gnu
                 - sysroot-wasm32-wasi
 

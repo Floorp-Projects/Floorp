@@ -32,3 +32,16 @@ macosx64-sdk-11.0:
         arguments:
             - /Applications/Xcode-12.2.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX11.0.sdk
         toolchain-artifact: project/gecko/mac-sdk/MacOSX11.0.sdk.tar.zst
+
+macosx64-sdk-11.3:
+    description: "MacOSX11.3 SDK"
+    treeherder:
+        symbol: TM(sdk11.3)
+    run:
+        script: pack-macos-sdk.sh
+        arguments:
+            - https://swcdn.apple.com/content/downloads/52/17/002-41708-A_E8MFK7B2PK/6p55tbmh0qttgbt4cy94uuvnacy6tkw435/CLTools_macOSLMOS_SDK.pkg
+            - b075d3d2f3b066607209a5bbf7cf727a40b98fe65629c5b6abc17f156897af4a
+            - Library/Developer/CommandLineTools/SDKs/MacOSX11.3.sdk
+        toolchain-artifact: project/gecko/mac-sdk/MacOSX11.3.sdk.tar.zst
+        toolchain-alias: macosx64-sdk

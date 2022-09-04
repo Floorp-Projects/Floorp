@@ -39,7 +39,7 @@ Linux)
         else
             export MACOSX_DEPLOYMENT_TARGET=10.12
         fi
-        export TARGET_CC="$MOZ_FETCHES_DIR/clang/bin/clang -isysroot $MOZ_FETCHES_DIR/MacOSX11.0.sdk"
+        export TARGET_CC="$MOZ_FETCHES_DIR/clang/bin/clang -isysroot $MOZ_FETCHES_DIR/MacOSX11.3.sdk"
         cargo build --features "all $COMMON_FEATURES" --verbose --release --target $TARGET
         ;;
     *)

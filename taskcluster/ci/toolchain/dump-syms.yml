@@ -39,7 +39,7 @@ macosx64-dump_syms:
             - linux64-rust-macos-toolchain
             - linux64-clang-toolchain
             - linux64-cctools-port
-            - macosx64-sdk-11.0
+            - macosx64-sdk
 
 macosx64-aarch64-dump_syms:
     treeherder:
@@ -53,7 +53,7 @@ macosx64-aarch64-dump_syms:
             - linux64-rust-macos-toolchain
             - linux64-clang-toolchain
             - linux64-cctools-port
-            - macosx64-sdk-11.0
+            - macosx64-sdk
 
 win64-dump_syms:
     treeherder:
