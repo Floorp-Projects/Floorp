@@ -524,23 +524,7 @@ void MathMLTextRunFactory::RebuildTextRun(
     mathVar = styles[i]->mMathVariant;
 
     if (singleCharMI && mathVar == StyleMathVariant::None) {
-      // If the user has explicitly set a non-default value for fontstyle or
-      // fontweight, the italic mathvariant behaviour of <mi> is disabled
-      // This overrides the initial values specified in fontStyle, to avoid
-      // inconsistencies in which attributes allow CSS changes and which do not.
-      if (mFlags & MATH_FONT_WEIGHT_BOLD) {
-        font.weight = FontWeight::BOLD;
-        if (mFlags & MATH_FONT_STYLING_NORMAL) {
-          font.style = FontSlantStyle::NORMAL;
-        } else {
-          font.style = FontSlantStyle::ITALIC;
-        }
-      } else if (mFlags & MATH_FONT_STYLING_NORMAL) {
-        font.style = FontSlantStyle::NORMAL;
-        font.weight = FontWeight::NORMAL;
-      } else {
-        mathVar = StyleMathVariant::Italic;
-      }
+      mathVar = StyleMathVariant::Italic;
     }
 
     uint32_t ch = str[i];

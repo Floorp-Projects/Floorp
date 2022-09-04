@@ -92,9 +92,9 @@ interface nsIAlertNotification : nsISupports
             [optional] in Array<uint32_t> aVibrate);
 
   /**
-   * The name of the notification. On Android, the name is hashed and used as
-   * a notification ID. Notifications will replace previous notifications with
-   * the same name.
+   * The name of the notification. On Windows and Android, the name is hashed
+   * and used as a notification ID. Notifications will replace previous
+   * notifications with the same name.
    */
   readonly attribute AString name;
 

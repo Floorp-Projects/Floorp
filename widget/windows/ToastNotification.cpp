@@ -34,7 +34,7 @@
 namespace mozilla {
 namespace widget {
 
-static LazyLogModule sWASLog("WindowsAlertsService");
+LazyLogModule sWASLog("WindowsAlertsService");
 
 NS_IMPL_ISUPPORTS(ToastNotification, nsIAlertsService, nsIWindowsAlertsService,
                   nsIAlertsDoNotDisturb, nsIObserver)
@@ -410,6 +410,9 @@ ToastNotification::ShowAlert(nsIAlertNotification* aAlert,
   nsAutoString hostPort;
   MOZ_TRY(aAlert->GetSource(hostPort));
 
+  nsAutoString launchUrl;
+  MOZ_TRY(aAlert->GetLaunchURL(launchUrl));
+
   bool requireInteraction;
   MOZ_TRY(aAlert->GetRequireInteraction(&requireInteraction));
 
@@ -425,11 +428,19 @@ ToastNotification::ShowAlert(nsIAlertNotification* aAlert,
   NS_ENSURE_TRUE(mAumid.isSome(), NS_ERROR_UNEXPECTED);
   RefPtr<ToastNotificationHandler> handler = new ToastNotificationHandler(
       this, mAumid.ref(), aAlertListener, name, cookie, title, text, hostPort,
-      textClickable, requireInteraction, actions, isSystemPrincipal);
+      textClickable, requireInteraction, actions, isSystemPrincipal, launchUrl);
   mActiveHandlers.InsertOrUpdate(name, RefPtr{handler});
+
+  MOZ_LOG(sWASLog, LogLevel::Debug,
+          ("Adding handler '%s': [%p] (now %d handlers)",
+           NS_ConvertUTF16toUTF8(name).get(), handler.get(),
+           mActiveHandlers.Count()));
 
   nsresult rv = handler->InitAlertAsync(aAlert);
   if (NS_WARN_IF(NS_FAILED(rv))) {
+    MOZ_LOG(sWASLog, LogLevel::Debug,
+            ("Failed to init alert, removing '%s'",
+             NS_ConvertUTF16toUTF8(name).get()));
     mActiveHandlers.Remove(name);
     handler->UnregisterHandler();
     return rv;
@@ -445,6 +456,7 @@ ToastNotification::ShowAlert(nsIAlertNotification* aAlert,
 
 NS_IMETHODIMP
 ToastNotification::GetXmlStringForWindowsAlert(nsIAlertNotification* aAlert,
+                                               const nsAString& aWindowsTag,
                                                nsAString& aString) {
   NS_ENSURE_ARG(aAlert);
 
@@ -466,6 +478,9 @@ ToastNotification::GetXmlStringForWindowsAlert(nsIAlertNotification* aAlert,
   nsAutoString hostPort;
   MOZ_TRY(aAlert->GetSource(hostPort));
 
+  nsAutoString launchUrl;
+  MOZ_TRY(aAlert->GetLaunchURL(launchUrl));
+
   bool requireInteraction;
   MOZ_TRY(aAlert->GetRequireInteraction(&requireInteraction));
 
@@ -480,12 +495,84 @@ ToastNotification::GetXmlStringForWindowsAlert(nsIAlertNotification* aAlert,
   RefPtr<ToastNotificationHandler> handler = new ToastNotificationHandler(
       this, mAumid.ref(), nullptr /* aAlertListener */, name, cookie, title,
       text, hostPort, textClickable, requireInteraction, actions,
-      isSystemPrincipal);
+      isSystemPrincipal, launchUrl);
+
+  // Usually, this will be empty during testing, making test output
+  // deterministic.
+  MOZ_TRY(handler->SetWindowsTag(aWindowsTag));
 
   nsAutoString imageURL;
   MOZ_TRY(aAlert->GetImageURL(imageURL));
 
   return handler->CreateToastXmlString(imageURL, aString);
+}
+
+NS_IMETHODIMP
+ToastNotification::HandleWindowsTag(const nsAString& aWindowsTag,
+                                    nsIUnknownWindowsTagListener* aListener,
+                                    bool* aRetVal) {
+  *aRetVal = false;
+  NS_ENSURE_TRUE(mAumid.isSome(), NS_ERROR_UNEXPECTED);
+
+  MOZ_LOG(sWASLog, LogLevel::Debug,
+          ("Iterating %d handlers", mActiveHandlers.Count()));
+
+  for (auto iter = mActiveHandlers.Iter(); !iter.Done(); iter.Next()) {
+    RefPtr<ToastNotificationHandler> handler = iter.UserData();
+    nsAutoString tag;
+    nsresult rv = handler->GetWindowsTag(tag);
+
+    if (NS_SUCCEEDED(rv)) {
+      MOZ_LOG(sWASLog, LogLevel::Debug,
+              ("Comparing external windowsTag '%s' to handled windowsTag '%s'",
+               NS_ConvertUTF16toUTF8(aWindowsTag).get(),
+               NS_ConvertUTF16toUTF8(tag).get()));
+      if (aWindowsTag.Equals(tag)) {
+        MOZ_LOG(sWASLog, LogLevel::Debug,
+                ("External windowsTag '%s' is handled by handler [%p]",
+                 NS_ConvertUTF16toUTF8(aWindowsTag).get(), handler.get()));
+        *aRetVal = true;
+
+        nsString eventName(aWindowsTag);
+        nsAutoHandle event(
+            OpenEventW(EVENT_MODIFY_STATE, FALSE, eventName.get()));
+        if (event.get()) {
+          if (SetEvent(event)) {
+            MOZ_LOG(sWASLog, LogLevel::Info,
+                    ("Set event for event named '%s'",
+                     NS_ConvertUTF16toUTF8(eventName).get()));
+          } else {
+            MOZ_LOG(
+                sWASLog, LogLevel::Error,
+                ("Failed to set event for event named '%s' (GetLastError=%lu)",
+                 NS_ConvertUTF16toUTF8(eventName).get(), GetLastError()));
+          }
+        } else {
+          MOZ_LOG(sWASLog, LogLevel::Error,
+                  ("Failed to open event named '%s' (GetLastError=%lu)",
+                   NS_ConvertUTF16toUTF8(eventName).get(), GetLastError()));
+        }
+
+        return NS_OK;
+      }
+    } else {
+      MOZ_LOG(sWASLog, LogLevel::Debug,
+              ("Failed to get windowsTag for handler [%p]", handler.get()));
+    }
+  }
+
+  MOZ_LOG(sWASLog, LogLevel::Debug, ("aListener [%p]", aListener));
+  if (aListener) {
+    nsAutoString launchUrl;
+    MOZ_TRY(ToastNotificationHandler::FindLaunchURLForWindowsTag(
+        aWindowsTag, mAumid.ref(), launchUrl));
+
+    MOZ_LOG(sWASLog, LogLevel::Debug,
+            ("Found launchUrl [%s]", NS_ConvertUTF16toUTF8(launchUrl).get()));
+    aListener->HandleUnknownWindowsTag(aWindowsTag, launchUrl);
+  }
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
