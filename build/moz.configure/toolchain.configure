@@ -109,7 +109,7 @@ with only_when(host_is_osx | target_is_osx):
         # When we change the SDK we build with, please update the manual SDK
         # installation docs:
         # https://firefox-source-docs.mozilla.org/setup/macos_build.html#macos-sdk-is-unsupported
-        sdk_min_version = Version("11.0")
+        sdk_min_version = Version("11.3")
 
         if sdk:
             sdk = sdk[0]
@@ -1727,34 +1727,6 @@ set_config("MSVS_VERSION", msvs_version)
 
 include("compile-checks.configure")
 include("arm.configure", when=depends(target.cpu)(lambda cpu: cpu == "arm"))
-
-
-@depends(host, host_os_kernel_major_version, target)
-def needs_macos_sdk_headers_check(host, version, target):
-    # Only an issue on Mac OS X 10.14 (and probably above).
-    if host.kernel != "Darwin" or target.kernel != "Darwin" or version < "18":
-        return
-
-    return True
-
-
-@depends(
-    cxx_compiler.try_run(
-        header="#include_next <inttypes.h>",
-        check_msg="for macOS SDK headers",
-        when=needs_macos_sdk_headers_check,
-    ),
-    when=needs_macos_sdk_headers_check,
-)
-def check_have_mac_10_14_sdk(value):
-    if value:
-        return
-
-    die(
-        "System inttypes.h not found. Please try running "
-        "`open /Library/Developer/CommandLineTools/Packages/macOS_SDK_headers_for_macOS_10.14.pkg` "
-        "and following the instructions to install the necessary headers"
-    )
 
 
 @depends(

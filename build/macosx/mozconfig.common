@@ -1,3 +1,5 @@
 if test `uname -s` = Linux; then
   . $topsrcdir/build/macosx/cross-mozconfig.common
 fi
+
+export MACOS_SDK_DIR=$MOZ_FETCHES_DIR/MacOSX11.3.sdk
