@@ -295,12 +295,11 @@
 
     <!-- Preference Title: Biometrics can be used to unlock Focus if the previous session's data was not erased by the user. -->
     <string name="preference_security_biometric">Gunakan sidik jari untuk membuka aplikasi</string>
+
     <!-- Preference Summary: Biometrics (iris scan, fingerprint, or facial scan) can be used to unlock Focus if the app had a URL
         open when the app was last run to ensure that only the phone's owner can view a previous session.
         %s will be replaced by the app name (e.g. Firefox Focus)
         Shortcuts is a feature that allows the user to pin his favorite websites to Focus home screen so he can quickly access them-->
-    <string moz:removedIn="102" name="preference_security_biometric_summary" tools:ignore="UnusedResources">Sidik jari Anda dapat membuka %1$s jika URL sudah dibuka di aplikasi. Mode siluman akan aktif.</string>
-
     <string name="preference_security_biometric_summary2">Buka kunci dengan sidik jari jika Anda telah menambahkan Pintasan atau saat situs web sudah dibuka di %s.</string>
 
     <!-- Preference Title: Secure Mode is a setting that prevents the app's content to show up in the "recent apps" screen
@@ -366,7 +365,7 @@
 
     <!-- Title: Homescreen tips settings toggle to determine whether or not tips are displayed when
      a user first launches the app. -->
-    <string name="preference_homescreen_tips">Tampilkan kiat beranda</string>
+    <string moz:removedIn="105" name="preference_homescreen_tips" tools:ignore="UnusedResources">Tampilkan kiat beranda</string>
 
     <!-- Clickable action text that shows when user long-presses on a search engine search field (this is similar to paste or copy when long-pressing a text field) -->
     <string name="action_option_add_search_engine">Tambah mesin pencari</string>
@@ -512,8 +511,6 @@
     <string name="onboarding_history_title">Menjelajah seperti ini tidak pernah terjadi</string>
 
     <!-- Onboarding: History Description -->
-    <string moz:removedIn="100" name="onboarding_history_description" tools:ignore="UnusedResources">Satu ketukan menghapus riwayat penelusuran dan kuki Anda — dan menghentikan iklan mengikuti Anda.</string>
-
     <string name="onboarding_history_description2">Satu ketukan menghapus riwayat penelusuran dan kuki Anda — dan menghentikan iklan mengikuti Anda.</string>
 
     <!-- Onboarding: Protection Title -->
@@ -821,7 +818,7 @@
 
     <!-- Tip displayed on home view explaining how to disable enhanced tracking protection
 The new line here must be kept as the second half of the string is clickable for the user. -->
-    <string name="tip_disable_tracking_protection3">Konten situs menghilang atau bertingkah aneh?\n
+    <string moz:removedIn="105" name="tip_disable_tracking_protection3" tools:ignore="UnusedResources">Konten situs menghilang atau bertingkah aneh?\n
     Coba matikan Perlindungan Pelacakan Dipertingkat</string>
 
     <!-- Tip displayed on home view explaining how to add sites to homescreen
@@ -843,7 +840,7 @@ The new line here must be kept as the second half of the string is clickable for
 
     <!-- Tip displayed on home view explaining how to request the desktop version of a website.
       %1$s is a placeholder for the app name. -->
-    <string name="tip_request_desktop2">Ingin melihat versi lengkap situs?\n
+    <string moz:removedIn="105" name="tip_request_desktop2" tools:ignore="UnusedResources">Ingin melihat versi lengkap situs?\n
         Aktifkan Situs Desktop dari menu %1$s</string>
 
     <!-- Tip displayed on home view explaining how to add a custom autocomplete URL -->
@@ -851,17 +848,17 @@ The new line here must be kept as the second half of the string is clickable for
 
     <!-- Tip displayed on the home view explaining how to use the Allowlist feature.
      "Allowlist" is a replacement for the word whitelist. -->
-    <string name="tip_explain_allowlist3">Ingin menonaktifkan Perlindungan Pelacakan yang Disempurnakan untuk situs yang Anda percayai?\n
+    <string moz:removedIn="105" name="tip_explain_allowlist3" tools:ignore="UnusedResources">Ingin menonaktifkan Perlindungan Pelacakan yang Disempurnakan untuk situs yang Anda percayai?\n
         Tambahkan ke Daftar yang Diizinkan di Pengaturan
     </string>
 
     <!-- Tip displayed on the home view about the changes in the new release.
     %1$s is a placeholder for the app name -->
-    <string name="tip_fresh_look">Tentu saja, kami tampil berbeda sekarang!\n Baca selengkapnya tentang hal ini dan pembaruan %1$s lainnya.</string>
+    <string moz:removedIn="105" name="tip_fresh_look" tools:ignore="UnusedResources">Tentu saja, kami tampil berbeda sekarang!\n Baca selengkapnya tentang hal ini dan pembaruan %1$s lainnya.</string>
 
     <!-- Tip displayed on the home view about shortcuts
     %1$s is a placeholder for the app name -->
-    <string name="tip_about_shortcuts">Buat pintasan ke situs yang sering Anda kunjungi:\n
+    <string moz:removedIn="105" name="tip_about_shortcuts" tools:ignore="UnusedResources">Buat pintasan ke situs yang sering Anda kunjungi:\n
     Pilih Tambahkan ke Pintasan dari menu %1$s</string>
 
     <!-- Label for the snackbar when a user opens a new tab -->
@@ -993,6 +990,7 @@ The new line here must be kept as the second half of the string is clickable for
     <string name="tool_tip_dismiss_button_content_description">Tutup</string>
 
     <!-- CFR for Toolbar Delete Icon (Banner Info Message) -->
-    <string name="cfr_for_toolbar_delete_icon">Singkirkan data pribadi Anda, riwayat penjelajahan, dan lainnya dari sesi ini dengan mengetuk tombol tong sampah. Cobalah!</string>
+    <string moz:removedIn="105" name="cfr_for_toolbar_delete_icon" tools:ignore="UnusedResources">Singkirkan data pribadi Anda, riwayat penjelajahan, dan lainnya dari sesi ini dengan mengetuk tombol tong sampah. Cobalah!</string>
+    <string name="cfr_for_toolbar_delete_icon2">Ketuk di sini untuk membuang semuanya — riwayat, kuki, semuanya — dan memulai dari tab baru.</string>
 
 </resources>

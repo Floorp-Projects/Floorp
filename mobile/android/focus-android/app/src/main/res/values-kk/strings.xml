@@ -294,12 +294,11 @@
 
     <!-- Preference Title: Biometrics can be used to unlock Focus if the previous session's data was not erased by the user. -->
     <string name="preference_security_biometric">Қолданбаны босату үшін саусақ баспасын қолдану</string>
+
     <!-- Preference Summary: Biometrics (iris scan, fingerprint, or facial scan) can be used to unlock Focus if the app had a URL
         open when the app was last run to ensure that only the phone's owner can view a previous session.
         %s will be replaced by the app name (e.g. Firefox Focus)
         Shortcuts is a feature that allows the user to pin his favorite websites to Focus home screen so he can quickly access them-->
-    <string moz:removedIn="102" name="preference_security_biometric_summary" tools:ignore="UnusedResources">Сіздің саусақ баспаңыз URL сілтемеде ашық болған кезде %1$s босата алады. Тыңшы іске қосылатын болады.</string>
-
     <string name="preference_security_biometric_summary2">Жарлықтарды қосқан болсаңыз немесе веб-сайт %s ішінде қазір ашық болса, саусақ ізі арқылы құлыпты ашыңыз.</string>
 
     <!-- Preference Title: Secure Mode is a setting that prevents the app's content to show up in the "recent apps" screen
@@ -364,7 +363,7 @@
 
     <!-- Title: Homescreen tips settings toggle to determine whether or not tips are displayed when
      a user first launches the app. -->
-    <string name="preference_homescreen_tips">Үй парағында кеңестерді көрсету</string>
+    <string moz:removedIn="105" name="preference_homescreen_tips" tools:ignore="UnusedResources">Үй парағында кеңестерді көрсету</string>
 
     <!-- Clickable action text that shows when user long-presses on a search engine search field (this is similar to paste or copy when long-pressing a text field) -->
     <string name="action_option_add_search_engine">Іздеу жүйесін қосу</string>
@@ -510,8 +509,6 @@
     <string name="onboarding_history_title">Интернетті көрінбейтіндей шолыңыз</string>
 
     <!-- Onboarding: History Description -->
-    <string moz:removedIn="100" name="onboarding_history_description" tools:ignore="UnusedResources">Бір шерту сіздің шолу тарихын және cookie файлдарын өшіреді — және жарнамаға сіздің соңыныздан еруден жол бермейді.</string>
-
     <string name="onboarding_history_description2">Бір шерту сіздің шолу тарихын және cookie файлдарын өшіреді — және жарнамаға сіздің соңыныздан еруден жол бермейді.</string>
 
     <!-- Onboarding: Protection Title -->
@@ -817,7 +814,7 @@
 
     <!-- Tip displayed on home view explaining how to disable enhanced tracking protection
 The new line here must be kept as the second half of the string is clickable for the user. -->
-    <string name="tip_disable_tracking_protection3">Сайтта мазмұн жоқ па немесе оның әрекеттері біртүрлі ма?\n
+    <string moz:removedIn="105" name="tip_disable_tracking_protection3" tools:ignore="UnusedResources">Сайтта мазмұн жоқ па немесе оның әрекеттері біртүрлі ма?\n
     Бақылаудан жақсартылған қорғанысты өшіріп көріңіз</string>
 
     <!-- Tip displayed on home view explaining how to add sites to homescreen
@@ -839,7 +836,7 @@ The new line here must be kept as the second half of the string is clickable for
 
     <!-- Tip displayed on home view explaining how to request the desktop version of a website.
       %1$s is a placeholder for the app name. -->
-    <string name="tip_request_desktop2">Сайттың толық нұсқасын көргіңіз келе ме?\n
+    <string moz:removedIn="105" name="tip_request_desktop2" tools:ignore="UnusedResources">Сайттың толық нұсқасын көргіңіз келе ме?\n
         %1$s мәзірінен жұмыс үстелі нұсқасын іске қосыңыз</string>
 
     <!-- Tip displayed on home view explaining how to add a custom autocomplete URL -->
@@ -847,17 +844,17 @@ The new line here must be kept as the second half of the string is clickable for
 
     <!-- Tip displayed on the home view explaining how to use the Allowlist feature.
      "Allowlist" is a replacement for the word whitelist. -->
-    <string name="tip_explain_allowlist3">Сенімді сайт үшін Бақылаудан жақсартылған қорғанысты өшіргіңіз келе ме?\n
+    <string moz:removedIn="105" name="tip_explain_allowlist3" tools:ignore="UnusedResources">Сенімді сайт үшін Бақылаудан жақсартылған қорғанысты өшіргіңіз келе ме?\n
         Оны «Баптаулар» бөлімінде рұқсат тізіміне қосыңыз
     </string>
 
     <!-- Tip displayed on the home view about the changes in the new release.
     %1$s is a placeholder for the app name -->
-    <string name="tip_fresh_look">Неге жоқ, бізде жаңа көрініс бар! Ол және басқа да %1$s жаңартулары туралы көбірек біліңіз.</string>
+    <string moz:removedIn="105" name="tip_fresh_look" tools:ignore="UnusedResources">Неге жоқ, бізде жаңа көрініс бар! Ол және басқа да %1$s жаңартулары туралы көбірек біліңіз.</string>
 
     <!-- Tip displayed on the home view about shortcuts
     %1$s is a placeholder for the app name -->
-    <string name="tip_about_shortcuts">Сіз жиі шолатын сайттарға сілтемелер жасаңыз:\n
+    <string moz:removedIn="105" name="tip_about_shortcuts" tools:ignore="UnusedResources">Сіз жиі шолатын сайттарға сілтемелер жасаңыз:\n
     %1$s мәзірінен Жарлықтарға қосу командасын таңдаңыз</string>
 
     <!-- Label for the snackbar when a user opens a new tab -->
@@ -991,6 +988,7 @@ The new line here must be kept as the second half of the string is clickable for
     <string name="tool_tip_dismiss_button_content_description">Тайдыру</string>
 
     <!-- CFR for Toolbar Delete Icon (Banner Info Message) -->
-    <string name="cfr_for_toolbar_delete_icon">Қоқыс шелегі батырмасына басу арқылы осы сеанстағы жеке деректеріңізден, шолу журналынан және т.б. құтылыңыз. Қолданып көріңіз!</string>
+    <string moz:removedIn="105" name="cfr_for_toolbar_delete_icon" tools:ignore="UnusedResources">Қоқыс шелегі батырмасына басу арқылы осы сеанстағы жеке деректеріңізден, шолу журналынан және т.б. құтылыңыз. Қолданып көріңіз!</string>
+    <string name="cfr_for_toolbar_delete_icon2">Барлығын қоқысқа тастау үшін осында шертіңіз — тарих, cookie файлдары, барлығы — және жаңа беттен жаңадан бастаңыз.</string>
 
 </resources>

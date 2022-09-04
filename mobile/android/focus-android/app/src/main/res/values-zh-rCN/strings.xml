@@ -295,12 +295,11 @@
 
     <!-- Preference Title: Biometrics can be used to unlock Focus if the previous session's data was not erased by the user. -->
     <string name="preference_security_biometric">使用指纹解锁应用</string>
+
     <!-- Preference Summary: Biometrics (iris scan, fingerprint, or facial scan) can be used to unlock Focus if the app had a URL
         open when the app was last run to ensure that only the phone's owner can view a previous session.
         %s will be replaced by the app name (e.g. Firefox Focus)
         Shortcuts is a feature that allows the user to pin his favorite websites to Focus home screen so he can quickly access them-->
-    <string moz:removedIn="102" name="preference_security_biometric_summary" tools:ignore="UnusedResources">如果应用内有已打开的网址，您需用指纹解锁 %1$s。隐形模式将被开启。</string>
-
     <string name="preference_security_biometric_summary2">若 %s 有打开的网站或添加过快捷方式，请使用指纹解锁。</string>
 
     <!-- Preference Title: Secure Mode is a setting that prevents the app's content to show up in the "recent apps" screen
@@ -366,7 +365,7 @@
 
     <!-- Title: Homescreen tips settings toggle to determine whether or not tips are displayed when
      a user first launches the app. -->
-    <string name="preference_homescreen_tips">在主屏幕显示使用技巧</string>
+    <string moz:removedIn="105" name="preference_homescreen_tips" tools:ignore="UnusedResources">在主屏幕显示使用技巧</string>
 
     <!-- Clickable action text that shows when user long-presses on a search engine search field (this is similar to paste or copy when long-pressing a text field) -->
     <string name="action_option_add_search_engine">添加搜索引擎</string>
@@ -820,7 +819,7 @@
 
     <!-- Tip displayed on home view explaining how to disable enhanced tracking protection
 The new line here must be kept as the second half of the string is clickable for the user. -->
-    <string name="tip_disable_tracking_protection3">网站内容缺失，或表现异常？\n
+    <string moz:removedIn="105" name="tip_disable_tracking_protection3" tools:ignore="UnusedResources">网站内容缺失，或表现异常？\n
     尝试关闭跟踪保护</string>
 
     <!-- Tip displayed on home view explaining how to add sites to homescreen
@@ -847,7 +846,7 @@ The new line here must be kept as the second half of the string is clickable for
 
     <!-- Tip displayed on home view explaining how to request the desktop version of a website.
       %1$s is a placeholder for the app name. -->
-    <string name="tip_request_desktop2">需浏览网站的完整版本？\n
+    <string moz:removedIn="105" name="tip_request_desktop2" tools:ignore="UnusedResources">需浏览网站的完整版本？\n
         到 %1$s 菜单切换为桌面版</string>
 
     <!-- Tip displayed on home view explaining how to add a custom autocomplete URL -->
@@ -855,17 +854,17 @@ The new line here must be kept as the second half of the string is clickable for
 
     <!-- Tip displayed on the home view explaining how to use the Allowlist feature.
      "Allowlist" is a replacement for the word whitelist. -->
-    <string name="tip_explain_allowlist3">想要对您信任的网站关闭增强型跟踪保护吗？\n
+    <string moz:removedIn="105" name="tip_explain_allowlist3" tools:ignore="UnusedResources">想要对您信任的网站关闭增强型跟踪保护吗？\n
         到设置中加入允许列表
     </string>
 
     <!-- Tip displayed on the home view about the changes in the new release.
     %1$s is a placeholder for the app name -->
-    <string name="tip_fresh_look">是的，我们的外观已焕然一新！\n 了解更多 %1$s 的新变化。</string>
+    <string moz:removedIn="105" name="tip_fresh_look" tools:ignore="UnusedResources">是的，我们的外观已焕然一新！\n 了解更多 %1$s 的新变化。</string>
 
     <!-- Tip displayed on the home view about shortcuts
     %1$s is a placeholder for the app name -->
-    <string name="tip_about_shortcuts">为您最常访问的网站创建快捷方式：\n
+    <string moz:removedIn="105" name="tip_about_shortcuts" tools:ignore="UnusedResources">为您最常访问的网站创建快捷方式：\n
 选择 %1$s 菜单的“添加快捷方式”</string>
 
     <!-- Label for the snackbar when a user opens a new tab -->
@@ -1001,6 +1000,7 @@ The new line here must be kept as the second half of the string is clickable for
     <string name="tool_tip_dismiss_button_content_description">知道了</string>
 
     <!-- CFR for Toolbar Delete Icon (Banner Info Message) -->
-    <string name="cfr_for_toolbar_delete_icon">点击垃圾桶图标，即可删除该会话中的个人数据、浏览历史等。试试吧！</string>
+    <string moz:removedIn="105" name="cfr_for_toolbar_delete_icon" tools:ignore="UnusedResources">点击垃圾桶图标，即可删除该会话中的个人数据、浏览历史等。试试吧！</string>
+    <string name="cfr_for_toolbar_delete_icon2">点按此处即可删除浏览记录、Cookie 等所有数据，并新建一个全新标签页。</string>
 
 </resources>
