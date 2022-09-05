@@ -340,6 +340,9 @@
     <!-- A link to SUMO at the end of the summary (preference_mozilla_telemetry_summary2) of the "Send anonymous usage data" setting. -->
     <string name="preference_mozilla_telemetry_summary">තව දැනගන්න</string>
 
+    <!-- %1$s will be replaced with the name of the app (e.g. Firefox Focus) -->
+    <string name="preference_mozilla_telemetry_summary2">සැමට %1$s වැඩිදියුණු කර දීමට හා සැපයීමට අවශ්‍ය දෑ පමණක් රැස් කර ගැනීමට මොසිල්ලා උත්සාහ කරයි.</string>
+
     <!-- In-app link (in settings) to Focus privacy notice. -->
     <string name="preference_privacy_notice">පෞද්ගලිකත්‍ව දැන්වීම</string>
 
@@ -575,6 +578,12 @@
     %1$s will be replaced with the name of the app (e.g. Firefox Focus)
     %2$s will be replaced with a URL linking to the list of licenses used by the dependencies.-->
     <string name="your_rights_content4"><![CDATA[%1$s සඳහා අතිරේක මූලාශ්‍ර කේත වෙනත් විවිධ නොමිලේ සහ විවෘත මූලාශ්‍ර <a href="%2$s">බලපත්‍ර</a> යටතේ තිබේ.]]></string>
+
+    <!-- Text shown in the "Your rights" screen.
+    %1$s will be replaced with the name of the app (e.g. Firefox Focus)
+    %2$s will be replaced with a URL linking to the GPL
+    %3$s will be replaced with a URL linking to the tracking protection wiki page (e.g. https://wiki.mozilla.org/Security/Tracking_protection#Lists) -->
+    <string name="your_rights_content5"><![CDATA[ඩිස්කනෙක්ට් සමාගම වෙතින් සපයන ලද අවහිර ලේඛනයක් ද %1$s භාවිතා කරයි. එය <a href="%2$s">ජීඑන්යූ සාමාන්‍ය පොදු බලපත්‍රය අනු. 3</a> යටතේ ස්වාධීන ව්‍යාපෘතියකි, සහ <a href="%3$s">මෙහි</a> තිබේ.]]></string>
 
     <!-- Text shown in prompts for GeckoView -->
     <string name="gv_prompt_username_hint">පරිශීලක නාමය</string>
@@ -944,6 +953,7 @@ The new line here must be kept as the second half of the string is clickable for
     <string name="tool_tip_dismiss_button_content_description">ඉවතලන්න</string>
 
     <!-- CFR for Toolbar Delete Icon (Banner Info Message) -->
-    <string name="cfr_for_toolbar_delete_icon">කුණු බඳුන මත තට්ටු කිරීමෙන් මෙම වාරයෙන් ඔබගේ පෞද්. දත්ත, පිරික්සුම් ඉතිහාසය සහ තවත් දෑ ඉවත් කළ හැකිය. උත්සාහ කර බලන්න!</string>
+    <string moz:removedIn="105" name="cfr_for_toolbar_delete_icon" tools:ignore="UnusedResources">කුණු බඳුන මත තට්ටු කිරීමෙන් මෙම වාරයෙන් ඔබගේ පෞද්. දත්ත, පිරික්සුම් ඉතිහාසය සහ තවත් දෑ ඉවත් කළ හැකිය. උත්සාහ කර බලන්න!</string>
+    <string name="cfr_for_toolbar_delete_icon2">ඉතිහාසය, දත්තකඩ, හා අනෙකුත් දෑ — සියල්ල කුණු කූඩයට දැමීමට මෙහි තට්ටු කරන්න — සහ නව පටිත්තකින් නැවුම්ව අරඹන්න.</string>
 
 </resources>
