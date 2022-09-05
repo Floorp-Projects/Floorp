@@ -419,6 +419,7 @@ nsresult mozHunspell::DictionaryData::LoadIfNecessary() {
       RLBoxHunspell::Create(mAffixFileName, dictFileName));
   if (!hunspell) {
     mLoadFailed = true;
+    // TODO Bug 1788857: Verify error propagation in case of inaccessible file
     return NS_ERROR_OUT_OF_MEMORY;
   }
   mHunspell = std::move(hunspell);
