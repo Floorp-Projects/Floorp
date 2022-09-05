@@ -7,6 +7,7 @@ const { Preferences } = ChromeUtils.import(
   "resource://gre/modules/Preferences.jsm"
 );
 const { ctypes } = ChromeUtils.import("resource://gre/modules/ctypes.jsm");
+const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
 
 const MAX_NAME_LENGTH = 64;
 
@@ -48,15 +49,15 @@ const libNoPDB = chooseDLL(
   "testNoPDB64.dll",
   "testNoPDBAArch64.dll"
 );
-const libxul = PathUtils.filename(PathUtils.xulLibraryPath);
+const libxul = OS.Path.basename(OS.Constants.Path.libxul);
 
 const libModulesFile = do_get_file(libModules).path;
-const libUnicodeFile = PathUtils.join(
-  PathUtils.parent(libModulesFile),
+const libUnicodeFile = OS.Path.join(
+  OS.Path.dirname(libModulesFile),
   libUnicode
 );
-const libLongNameFile = PathUtils.join(
-  PathUtils.parent(libModulesFile),
+const libLongNameFile = OS.Path.join(
+  OS.Path.dirname(libModulesFile),
   libLongName
 );
 const libUnicodePDBFile = do_get_file(libUnicodePDB).path;
@@ -143,8 +144,8 @@ if (AppConstants.platform === "win") {
 add_task(async function setup() {
   do_get_profile();
 
-  await IOUtils.copy(libModulesFile, libUnicodeFile);
-  await IOUtils.copy(libModulesFile, libLongNameFile);
+  await OS.File.copy(libModulesFile, libUnicodeFile);
+  await OS.File.copy(libModulesFile, libLongName);
 
   libModulesHandle = ctypes.open(libModulesFile);
   libUnicodeHandle = ctypes.open(libUnicodeFile);
@@ -186,8 +187,8 @@ registerCleanupFunction(function() {
     libNoPDBHandle.close();
   }
 
-  return IOUtils.remove(libUnicodeFile)
-    .then(() => IOUtils.remove(libLongNameFile))
+  return OS.File.remove(libUnicodeFile)
+    .then(() => OS.File.remove(libLongNameFile))
     .then(() => PingServer.stop());
 });
 

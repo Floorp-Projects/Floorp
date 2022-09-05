@@ -17,6 +17,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   Log: "resource://gre/modules/Log.jsm",
   HttpServer: "resource://testing-common/httpd.js",
   NetUtil: "resource://gre/modules/NetUtil.jsm",
+  OS: "resource://gre/modules/osfile.jsm",
   Preferences: "resource://gre/modules/Preferences.jsm",
   PromiseUtils: "resource://gre/modules/PromiseUtils.jsm",
   TelemetrySend: "resource://gre/modules/TelemetrySend.jsm",
@@ -208,7 +209,10 @@ function decodeRequestPayload(request) {
 }
 
 function checkPingFormat(aPing, aType, aHasClientId, aHasEnvironment) {
+  const APP_VERSION = "1";
+  const APP_NAME = "XPCShell";
   const PING_FORMAT_VERSION = 4;
+  const PLATFORM_VERSION = "1.9.2";
   const MANDATORY_PING_FIELDS = [
     "type",
     "id",
@@ -303,10 +307,10 @@ function finishAddonManagerStartup() {
 var gAppInfo = null;
 
 function createAppInfo(
-  ID = APP_ID,
-  name = APP_NAME,
-  version = APP_VERSION,
-  platformVersion = PLATFORM_VERSION
+  ID = "xpcshell@tests.mozilla.org",
+  name = "XPCShell",
+  version = "1.0",
+  platformVersion = "1.0"
 ) {
   AddonTestUtils.createAppInfo(ID, name, version, platformVersion);
   gAppInfo = AddonTestUtils.appInfo;
@@ -422,7 +426,7 @@ function fakeUninstallPingPath(aPathFcn) {
   Policy.getUninstallPingPath =
     aPathFcn ||
     (id => ({
-      directory: new FileUtils.File(PathUtils.profileDir),
+      directory: new FileUtils.File(OS.Constants.Path.profileDir),
       file: `uninstall_ping_0123456789ABCDEF_${id}.json`,
     }));
 }

@@ -18,19 +18,21 @@ const { makeFakeAppDir } = ChromeUtils.import(
 // in the user app data directory.
 const PENDING_PING_DIR_NAME = "Pending Pings";
 
-// Create a directory inside the profile and register it as UAppData, so
-// we can stick fake crash pings inside there. We put it inside the profile
-// just because we know that will get cleaned up after the test runs.
 async function createFakeAppDir() {
+  // Create a directory inside the profile and register it as UAppData, so
+  // we can stick fake crash pings inside there. We put it inside the profile
+  // just because we know that will get cleaned up after the test runs.
+  let profileDir = Services.dirsvc.get("ProfD", Ci.nsIFile);
+
   // Create "<profile>/UAppData/Pending Pings".
-  const pendingPingsPath = PathUtils.join(
-    PathUtils.profileDir,
+  const pendingPingsPath = OS.Path.join(
+    profileDir.path,
     "UAppData",
     PENDING_PING_DIR_NAME
   );
-  await IOUtils.makeDirectory(pendingPingsPath, {
+  await OS.File.makeDir(pendingPingsPath, {
     ignoreExisting: true,
-    createAncestors: true,
+    from: OS.Constants.Path.profileDir,
   });
 
   await makeFakeAppDir();
@@ -60,11 +62,11 @@ add_task(async function test_migrateUnsentPings() {
     },
   ];
   const APP_DATA_DIR = Services.dirsvc.get("UAppData", Ci.nsIFile).path;
-  const APPDATA_PINGS_DIR = PathUtils.join(APP_DATA_DIR, PENDING_PING_DIR_NAME);
+  const APPDATA_PINGS_DIR = OS.Path.join(APP_DATA_DIR, PENDING_PING_DIR_NAME);
 
   // Create some pending pings outside of the user profile.
   for (let ping of PINGS) {
-    const pingPath = PathUtils.join(APPDATA_PINGS_DIR, ping.id + ".json");
+    const pingPath = OS.Path.join(APPDATA_PINGS_DIR, ping.id + ".json");
     await TelemetryStorage.savePingToFile(ping, pingPath, true);
   }
 
@@ -105,9 +107,9 @@ add_task(async function test_migrateUnsentPings() {
     );
 
     // Verify that the pings are no longer outside of the user profile.
-    const pingPath = PathUtils.join(APPDATA_PINGS_DIR, ping.id + ".json");
+    const pingPath = OS.Path.join(APPDATA_PINGS_DIR, ping.id + ".json");
     Assert.ok(
-      !(await IOUtils.exists(pingPath)),
+      !(await OS.File.exists(pingPath)),
       "The ping should not be in the Pending Pings directory anymore."
     );
   }
@@ -115,10 +117,10 @@ add_task(async function test_migrateUnsentPings() {
 
 add_task(async function test_migrateIncompatiblePing() {
   const APP_DATA_DIR = Services.dirsvc.get("UAppData", Ci.nsIFile).path;
-  const APPDATA_PINGS_DIR = PathUtils.join(APP_DATA_DIR, PENDING_PING_DIR_NAME);
+  const APPDATA_PINGS_DIR = OS.Path.join(APP_DATA_DIR, PENDING_PING_DIR_NAME);
 
   // Create a ping incompatible with migration outside of the user profile.
-  const pingPath = PathUtils.join(APPDATA_PINGS_DIR, "incompatible.json");
+  const pingPath = OS.Path.join(APPDATA_PINGS_DIR, "incompatible.json");
   await TelemetryStorage.savePingToFile({ incom: "patible" }, pingPath, true);
 
   // Ensure the pending ping list is empty.
@@ -135,7 +137,7 @@ add_task(async function test_migrateIncompatiblePing() {
   );
 
   Assert.ok(
-    !(await IOUtils.exists(pingPath)),
+    !(await OS.File.exists(pingPath)),
     "The incompatible ping must have been deleted by the migration"
   );
 });
@@ -143,9 +145,9 @@ add_task(async function test_migrateIncompatiblePing() {
 add_task(async function teardown() {
   // Delete the UAppData directory and make sure nothing breaks.
   const APP_DATA_DIR = Services.dirsvc.get("UAppData", Ci.nsIFile).path;
-  await IOUtils.remove(APP_DATA_DIR, { recursive: true });
+  await OS.File.removeDir(APP_DATA_DIR, { ignorePermissions: true });
   Assert.ok(
-    !(await IOUtils.exists(APP_DATA_DIR)),
+    !(await OS.File.exists(APP_DATA_DIR)),
     "The UAppData directory must not exist anymore."
   );
   TelemetryStorage.reset();

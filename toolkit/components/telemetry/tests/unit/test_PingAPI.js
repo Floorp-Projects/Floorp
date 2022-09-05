@@ -12,7 +12,11 @@ const { TelemetryArchive } = ChromeUtils.import(
 );
 
 XPCOMUtils.defineLazyGetter(this, "gPingsArchivePath", function() {
-  return PathUtils.join(PathUtils.profileDir, "datareporting", "archived");
+  return OS.Path.join(
+    OS.Constants.Path.profileDir,
+    "datareporting",
+    "archived"
+  );
 });
 
 /**
@@ -29,6 +33,7 @@ function fakeStorageQuota(aArchiveQuota) {
 /**
  * Lists all the valid archived pings and their metadata, sorted by creation date.
  *
+ * @param aFileName {String} The filename.
  * @return {Object[]} A list of objects with the extracted data in the form:
  *                  { timestamp: <number>,
  *                    id: <string>,
@@ -36,30 +41,26 @@ function fakeStorageQuota(aArchiveQuota) {
  *                    size: <integer> }
  */
 var getArchivedPingsInfo = async function() {
+  let dirIterator = new OS.File.DirectoryIterator(gPingsArchivePath);
+  let subdirs = (await dirIterator.nextBatch()).filter(e => e.isDir);
   let archivedPings = [];
 
   // Iterate through the subdirs of |gPingsArchivePath|.
-  for (const dir of await IOUtils.getChildren(gPingsArchivePath)) {
-    const { type } = await IOUtils.stat(dir);
-    if (type != "directory") {
-      continue;
-    }
+  for (let dir of subdirs) {
+    let fileIterator = new OS.File.DirectoryIterator(dir.path);
+    let files = (await fileIterator.nextBatch()).filter(e => !e.isDir);
 
     // Then get a list of the files for the current subdir.
-    for (const filePath of await IOUtils.getChildren(dir)) {
-      const fileInfo = await IOUtils.stat(filePath);
-      if (fileInfo.type == "directory") {
-        continue;
-      }
+    for (let f of files) {
       let pingInfo = TelemetryStorage._testGetArchivedPingDataFromFileName(
-        PathUtils.filename(filePath)
+        f.name
       );
       if (!pingInfo) {
         // This is not a valid archived ping, skip it.
         continue;
       }
       // Find the size of the ping and then add the info to the array.
-      pingInfo.size = fileInfo.size;
+      pingInfo.size = (await OS.File.stat(f.path)).size;
       archivedPings.push(pingInfo);
     }
   }
@@ -153,14 +154,14 @@ add_task(async function test_archivedPings() {
     content,
     compressed
   ) {
-    const dirPath = PathUtils.join(gPingsArchivePath, dirname);
-    await IOUtils.makeDirectory(dirPath, { ignoreExisting: true });
-    const filePath = PathUtils.join(dirPath, filename);
+    const dirPath = OS.Path.join(gPingsArchivePath, dirname);
+    await OS.File.makeDir(dirPath, { ignoreExisting: true });
+    const filePath = OS.Path.join(dirPath, filename);
     const options = { tmpPath: filePath + ".tmp", noOverwrite: false };
     if (compressed) {
-      options.compress = true;
+      options.compression = "lz4";
     }
-    await IOUtils.writeUTF8(filePath, content, options);
+    await OS.File.writeAtomic(filePath, content, options);
   };
 
   const FAKE_ID1 = "10000000-0123-0123-0123-0123456789a1";
@@ -241,7 +242,7 @@ add_task(async function test_archiveCleanup() {
   const PING_TYPE = "foo";
 
   // Empty the archive.
-  await IOUtils.remove(gPingsArchivePath, { recursive: true });
+  await OS.File.removeDir(gPingsArchivePath);
 
   Telemetry.getHistogramById("TELEMETRY_ARCHIVE_SCAN_PING_COUNT").clear();
   Telemetry.getHistogramById("TELEMETRY_ARCHIVE_DIRECTORIES_COUNT").clear();
@@ -291,7 +292,7 @@ add_task(async function test_archiveCleanup() {
         PING_TYPE
       );
       Assert.ok(
-        !(await IOUtils.exists(pingPath)),
+        !(await OS.File.exists(pingPath)),
         "The ping should not be on the disk anymore."
       );
     }
@@ -518,7 +519,7 @@ add_task(async function test_archiveCleanup() {
       PING_TYPE
     ) + "lz4";
   const archivedPingSizeMB = Math.floor(
-    (await IOUtils.stat(oversizedPingPath)).size / 1024 / 1024
+    (await OS.File.stat(oversizedPingPath)).size / 1024 / 1024
   );
 
   // We expect the oversized ping to be pruned when scanning the archive.
