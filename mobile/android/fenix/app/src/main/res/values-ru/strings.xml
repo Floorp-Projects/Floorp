@@ -83,6 +83,9 @@
     <!-- Content description for close button used in "contextual feature recommendation" (CFR) popups -->
     <string name="cfr_dismiss_button_default_content_description">Убрать</string>
 
+    <!-- Total cookie protection "contextual feature recommendation" (CFR) -->
+    <!-- Text for the message displayed in the contextual feature recommendation popup promoting the total cookie protection feature. -->
+    <string name="tcp_cfr_message">Наша самая мощная функция защиты приватности изолирует межсайтовые трекеры.</string>
     <!-- Text displayed that links to website containing documentation about the "Total cookie protection" feature. -->
     <string name="tcp_cfr_learn_more">Узнайте о Полной защите от кук</string>
 
@@ -284,16 +287,27 @@
     <string moz:RemovedIn="106" name="onboarding_home_screen_section_useful_history_description_2" tools:ignore="UnusedResources">Вернитесь к последним поисковым запросам с домашней страницы и вкладок.</string>
 
     <!-- Onboarding home screen popup dialog, shown on top of the Jump back in section. Firefox is intentionally hardcoded. -->
-    <string name="onboarding_home_screen_jump_back_contextual_hint">На настроенной вами домашней странице Firefox теперь легче продолжить с того места, где вы остановились. Найдите свои недавние вкладки, закладки и результаты поиска.</string>
+    <string moz:RemovedIn="106" name="onboarding_home_screen_jump_back_contextual_hint" tools:ignore="UnusedResources">На настроенной вами домашней странице Firefox теперь легче продолжить с того места, где вы остановились. Найдите свои недавние вкладки, закладки и результаты поиска.</string>
 
+    <!-- Onboarding home screen popup dialog, shown on top of the Jump back in section. -->
+    <string name="onboarding_home_screen_jump_back_contextual_hint_2">Познакомьтесь с настраиваемой домашней страницей. Здесь будут отображаться последние вкладки, закладки и результаты поиска.</string>
     <!-- Home onboarding dialog welcome screen title text. -->
     <string name="onboarding_home_welcome_title">Добро пожаловать в независимый интернет</string>
+    <!-- Home onboarding dialog welcome screen description text. -->
+    <string name="onboarding_home_welcome_description">Больше красок. Лучшая приватность. Обязательство перед людьми, а не погоня за прибылью.</string>
+    <!-- Home onboarding dialog sign into sync screen title text. -->
+    <string name="onboarding_home_sync_title_2">Переходите с телефона на ноутбук и обратно</string>
+    <!-- Home onboarding dialog sign into sync screen description text. -->
+    <string name="onboarding_home_sync_description">Продолжайте с того места, где вы остановились, с вкладками с других устройств, которые теперь находятся на вашей домашней странице.</string>
     <!-- Text for the button to continue the onboarding on the home onboarding dialog. -->
     <string name="onboarding_home_get_started_button">Начать</string>
     <!-- Text for the button to navigate to the sync sign in screen on the home onboarding dialog. -->
     <string name="onboarding_home_sign_in_button">Войти</string>
     <!-- Text for the button to skip the onboarding on the home onboarding dialog. -->
     <string name="onboarding_home_skip_button">Пропустить</string>
+
+    <!-- Onboarding home screen sync popup dialog message, shown on top of Recent Synced Tabs in the Jump back in section. -->
+    <string name="sync_cfr_message">Ваши вкладки синхронизируются! Продолжайте с того места, на котором остановились на другом устройстве.</string>
 
     <!-- Search Widget -->
     <!-- Content description for searching with a widget. The first parameter is the name of the application.-->
@@ -1391,6 +1405,8 @@
     <string name="etp_cookies_title_2">Межсайтовые куки</string>
     <!-- Description of cross-site tracking cookies that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cookies_description">Блокирует куки, которые рекламные сети и анализирующие компании используют, чтобы объединять ваши данные сёрфинга со многих сайтов.</string>
+    <!-- Description of cross-site tracking cookies that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_cookies_description_2">Полная защита от кук изолирует действие кук сайтом, на котором вы находитесь, чтобы трекеры, такие как рекламные сети, не могли использовать их для слежки за вами на разных сайтах.</string>
     <!-- Category of trackers (cryptominers) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cryptominers_title">Криптомайнеры</string>
     <!-- Description of cryptominers that can be blocked by Enhanced Tracking Protection -->

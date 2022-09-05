@@ -257,16 +257,22 @@
     <string moz:RemovedIn="106" name="onboarding_home_screen_section_home_description_2" tools:ignore="UnusedResources">ඔබගේ විවෘත පටිති, පොත්යොමු හා පිරික්සුම් ඉතිහාසය වෙත පනින්න.</string>
     <!-- Onboarding home screen dialog description text for the tab tray section. -->
     <string moz:RemovedIn="106" name="onboarding_home_screen_section_cleaner_tab_tray_title_2" tools:ignore="UnusedResources">පටිති පිරිසිදුව, පිළිවෙළට</string>
+    <!-- Onboarding home screen dialog description text for the tab tray section. -->
+    <string moz:RemovedIn="106" name="onboarding_home_screen_section_cleaner_tab_tray_description_2" tools:ignore="UnusedResources">දියුණු කළ පිරිසැලසුම සහ පටිති ස්වයං වැසීම සමඟින් පටිති අපිළිවෙළ සකසා ගන්න.</string>
     <!-- Onboarding home screen dialog description text for the history section. -->
     <string moz:RemovedIn="106" name="onboarding_home_screen_section_useful_history_title_2" tools:ignore="UnusedResources">මෑත සෙවුම්</string>
     <!-- Onboarding home screen dialog description text for the history section. -->
     <string moz:RemovedIn="106" name="onboarding_home_screen_section_useful_history_description_2" tools:ignore="UnusedResources">මුල් පිටුවෙන් හා පටිති හරහා පසුගිය සෙවුම් වෙත යළි ගොඩවදින්න.</string>
+    <!-- Onboarding home screen popup dialog, shown on top of the Jump back in section. Firefox is intentionally hardcoded. -->
+    <string moz:RemovedIn="106" name="onboarding_home_screen_jump_back_contextual_hint" tools:ignore="UnusedResources">ඔබගේ පුද්ගලීකරණය කළ ෆයර්ෆොක්ස් මුල් පිටුව දැන් ඔබ නතර කළ තැනින් අතට ගැනීමට පහසු කරයි. ඔබගේ මෑත පටිති, පොත්යොමු සහ සෙවුම් ප්‍රතිඵල සොයා ගන්න.</string>
+    <!-- Onboarding home screen popup dialog, shown on top of the Jump back in section. -->
+    <string name="onboarding_home_screen_jump_back_contextual_hint_2">ඔබගේ පුද්ගලීකකරණය කළ මුල් පිටුව බලන්න. මෑත පටිති, පොත්යොමු හා සෙවුම් ප්‍රතිඵල මෙහි දිස් වනු ඇත.</string>
     <!-- Home onboarding dialog welcome screen title text. -->
     <string name="onboarding_home_welcome_title">ස්වාධීන අන්තර්ජාලයකට පිළිගනිමු</string>
     <!-- Home onboarding dialog welcome screen description text. -->
     <string name="onboarding_home_welcome_description">බොහෝ වර්ණ. ඉහළ පෞද්ගලිකත්‍වය. එලෙසම ලාභයට වඩා මිනිසුන්ට කැපවීම.</string>
     <!-- Home onboarding dialog sign into sync screen title text. -->
-    <string name="onboarding_home_sync_title">තිර අතර මාරු වීම වෙනදාට වඩා පහසුය</string>
+    <string name="onboarding_home_sync_title_2">දුරකථනයෙන් පරිගණකයට සහ ආපසු</string>
     <!-- Home onboarding dialog sign into sync screen description text. -->
     <string name="onboarding_home_sync_description">දැන් මුල් පිටුවේ තිබෙන අන් උපාංගවල පටිති සමඟ ඔබ නතර කළ තැනින් අතට ගන්න.</string>
     <!-- Text for the button to continue the onboarding on the home onboarding dialog. -->
@@ -277,6 +283,9 @@
 
     <!-- Text for the button to skip the onboarding on the home onboarding dialog. -->
     <string name="onboarding_home_skip_button">මඟහරින්න</string>
+
+    <!-- Onboarding home screen sync popup dialog message, shown on top of Recent Synced Tabs in the Jump back in section. -->
+    <string name="sync_cfr_message">පටිති සමමුහූර්ත වෙමින්! අනෙක් උපාංගයේ ඔබ නතර කළ තැනින් අතට ගන්න.</string>
 
     <!-- Search Widget -->
     <!-- Content description for searching with a widget. The first parameter is the name of the application.-->
@@ -322,6 +331,10 @@
     <string name="preferences_open_links_in_a_private_tab">පෞද්. පටිත්තක සබැඳිය අරින්න</string>
     <!-- Preference for allowing screenshots to be taken while in a private tab-->
     <string name="preferences_allow_screenshots_in_private_mode">පෞද්. පිරික්සුමෙහි තිරසේයා සඳහා ඉඩදෙන්න</string>
+    <!-- Will inform the user of the risk of activating Allow screenshots in private browsing option -->
+    <string name="preferences_screenshots_in_private_mode_disclaimer">ඉඩ දී ඇත්නම්, යෙදුම් කිහිපයක් විවෘතව තිබෙන විට ද පෞද්. පටිති දිස්වේ</string>
+    <!-- Preference for adding private browsing shortcut -->
+    <string name="preferences_add_private_browsing_shortcut">පෞද්. පිරික්සුම් කෙටිමඟක් යොදන්න</string>
     <!-- Preference for enabling "HTTPS-Only" mode -->
     <string name="preferences_https_only_title">HTTPS-පමණි ප්‍රකාරය</string>
     <!-- Description of the preference to enable "HTTPS-Only" mode. -->
@@ -340,6 +353,8 @@
     <string name="errorpage_httpsonly_title">ආරක්‍ෂිත අඩවිය නැත</string>
     <!-- Message shown in the error page for when trying to access a http website while https only mode is enabled. The message has two paragraphs. This is the first. -->
     <string name="errorpage_httpsonly_message_title">බොහෝ දුරට, අඩවිය HTTPS සඳහා සහාය නොදක්වයි.</string>
+    <!-- Message shown in the error page for when trying to access a http website while https only mode is enabled. The message has two paragraphs. This is the second. -->
+    <string name="errorpage_httpsonly_message_summary">කෙසේ වුවද, ප්‍රහාරකයෙක් සම්බන්ධ වී සිටීමට ද ඉඩ ඇත. මෙම අඩවියට ඔබ ගොඩවදින්නේ නම්, කිසිදු සංවේදී තොරතුරක් ඇතුල් නොකළ යුතුය. ඉදිරියට ගියහොත්, HTTPS-පමණි ප්‍රකාරය තාවකාලිකව මෙම අඩවිය සඳහා අක්‍රිය කෙරේ.</string>
     <!-- Preference for accessibility -->
     <string name="preferences_accessibility">ප්‍රවේශ්‍යතාව</string>
     <!-- Preference to override the Sync token server -->
@@ -354,6 +369,8 @@
     <string name="preferences_theme">තේමාව</string>
     <!-- Preference for customizing the home screen -->
     <string name="preferences_home_2">මුල් පිටුව</string>
+    <!-- Preference for gestures based actions -->
+    <string name="preferences_gestures">අභින</string>
     <!-- Preference for settings related to visual options -->
     <string name="preferences_customize">රිසිකරණය</string>
     <!-- Preference description for banner about signing in -->
@@ -435,6 +452,9 @@
     <!-- Snackbar message for when wallpaper is selected -->
     <string name="wallpaper_updated_snackbar_message">බිතුපත යාවත්කාල විය!</string>
 
+    <!-- Snackbar label for action to view selected wallpaper -->
+    <string name="wallpaper_updated_snackbar_action">බලන්න</string>
+
     <!-- Add-on Installation from AMO-->
     <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is not supported -->
     <string name="addon_not_supported_error">එක්කහුව සහාය නොදක්වයි</string>
@@ -499,10 +519,17 @@
 
     <!-- Preference switch for usage and technical data collection -->
     <string name="preference_usage_data">භාවිතය සහ තාක්‍ෂණික දත්ත</string>
+    <!-- Preference description for usage and technical data collection -->
+    <string name="preferences_usage_data_description">%1$s දියුණු කිරීම සඳහා ඔබගේ අතිරික්සුවෙහි කාර්ය සාධනය, භාවිතය, දෘඩාංග හා රුචිකරණය පිළිබඳ දත්ත මොසිල්ලා සමඟ බෙදා ගැනෙයි</string>
     <!-- Preference switch for marketing data collection -->
     <string name="preferences_marketing_data">අලෙවිකරණ දත්ත</string>
+    <!-- Preference description for marketing data collection -->
+    <string name="preferences_marketing_data_description2">අපගේ ජංගම අලෙවිකරණ විකුණුම්කරු වන ඇජස්ට් සමඟ මූලික භාවිත දත්ත බෙදා ගැනෙයි</string>
     <!-- Title for studies preferences -->
     <string name="preference_experiments_2">අධ්‍යන</string>
+
+    <!-- Summary for studies preferences -->
+    <string name="preference_experiments_summary_2">මොස්ල්ලා සඳහා අධ්‍යන ස්ථාපනයට හා ධාවනයට ඉඩ දෙන්න</string>
 
     <!-- Turn On Sync Preferences -->
     <!-- Header of the Turn on Sync preference view -->
@@ -540,6 +567,11 @@
 
     <!-- Preference for using the dynamic toolbar -->
     <string name="preference_gestures_dynamic_toolbar">මෙවලම් තීරුව සැඟවීමට අනුචලනය</string>
+
+    <!-- Preference for switching tabs by swiping horizontally on the toolbar -->
+    <string name="preference_gestures_swipe_toolbar_switch_tabs">පටිති මාරුවට තීරුව පැත්තට තල්ලු කරන්න</string>
+    <!-- Preference for showing the opened tabs by swiping up on the toolbar-->
+    <string name="preference_gestures_swipe_toolbar_show_tabs">පටිති ඇරීමට තීරුව ඉහළට තල්ලු කරන්න</string>
 
     <!-- Library -->
     <!-- Option in Library to open Downloads page -->
@@ -597,6 +629,10 @@
     <string name="tab_view_list">ලේඛනය</string>
     <!-- Option for a grid tab view -->
     <string name="tab_view_grid">ජාලකය</string>
+    <!-- Option for search term tab groups -->
+    <string moz:RemovedIn="105" name="tab_view_search_term_tab_groups" tools:ignore="UnusedResources">සෙවුම් සමූහ</string>
+    <!-- Summary text for search term tab groups -->
+    <string moz:RemovedIn="105" name="tab_view_search_term_tab_groups_summary" tools:ignore="UnusedResources">ආශ්‍රිත අඩවි සමූහගත කරන්න</string>
     <!-- Title of preference that allows a user to auto close tabs after a specified amount of time -->
     <string name="preferences_close_tabs">පටිති වසන්න</string>
     <!-- Option for auto closing tabs that will never auto close tabs, always allows user to manually close tabs -->
@@ -773,6 +809,8 @@
     <!-- Crashes -->
     <!-- Title text displayed on the tab crash page. This first parameter is the name of the application (For example: Fenix) -->
     <string name="tab_crash_title_2">සමාවන්න. %1$s සඳහා පිටුව පූරණය කළ නොහැකිය.</string>
+    <!-- Send crash report checkbox text on the tab crash page -->
+    <string name="tab_crash_send_report">බිඳ වැටීමේ වාර්තාව මොසිල්ලා වෙත යවන්න</string>
     <!-- Close tab button text on the tab crash page -->
     <string name="tab_crash_close">පටිත්ත වසන්න</string>
     <!-- Restore tab button text on the tab crash page -->
@@ -921,6 +959,10 @@
     <!-- Collections -->
     <!-- Collections header on home fragment -->
     <string name="collections_header">එකතුව</string>
+    <!-- Content description (not visible, for screen readers etc.): Opens the collection menu when pressed -->
+    <string name="collection_menu_button_content_description">එකතු වට්ටෝරුව</string>
+    <!-- Label to describe what collections are to a new user without any collections -->
+    <string name="no_collections_description2">ඔබට වැදගත් දෑ රැස් කරන්න.\nපසුව ඉක්මනින් ප්‍රවේශ වීමට සමාන සෙවුම්, අඩවි සහ පටිති එකට සමූහගත කරන්න.</string>
     <!-- Title for the "select tabs" step of the collection creator -->
     <string name="create_collection_select_tabs">පටිති තෝරන්න</string>
     <!-- Title for the "select collection" step of the collection creator -->
@@ -951,6 +993,8 @@
     <string name="create_collection_close">වසන්න</string>
     <!-- Button to save currently selected tabs in the "select tabs" step of the collection creator-->
     <string name="create_collection_save">සුරකින්න</string>
+    <!-- Snackbar action to view the collection the user just created or updated -->
+    <string name="create_collection_view">බලන්න</string>
     <!-- Text for the OK button from collection dialogs -->
     <string name="create_collection_positive">හරි</string>
     <!-- Text for the cancel button from collection dialogs -->
@@ -1162,6 +1206,10 @@
 
     <!-- text for strict blocking option button description -->
     <string name="onboarding_tracking_protection_strict_button_description_3">බොහෝ දැන්වීම් අවහිර කරන විට පිටු වේගයෙන් පූරණය වේ, නමුත් ඇතැම් පිටු හරිහැටි ක්‍රියා නොකරනු ඇත.</string>
+    <!-- text for the toolbar position card header  -->
+    <string name="onboarding_toolbar_placement_header_1">මෙවලම් තීරුව ස්ථානගත කරන්න</string>
+    <!-- text for the toolbar position card description -->
+    <string name="onboarding_toolbar_placement_description_1">මෙවලම් තීරුව පහසුවෙන් ළඟා වීමට හැකි තැනක තබන්න. එය පතුලේ තබා ගන්න, හෝ ඉහළට ගෙන යන්න.</string>
     <!-- text for the privacy notice onboarding card header -->
     <string name="onboarding_privacy_notice_header">ඔබ‍‍ගේ පෞද්ගලිකත්‍වය</string>
 
@@ -1249,6 +1297,8 @@
     <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
     <string name="preference_enhanced_tracking_protection_custom_cookies_1">හරස් අඩවි සහ සමාජ මාධ්‍ය ලුහුබැඳීම්</string>
     <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
+    <string name="preference_enhanced_tracking_protection_custom_cookies_2">නොගිය අඩවිවල දත්තකඩ</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
     <string name="preference_enhanced_tracking_protection_custom_cookies_3">සියළු තෙවන පාර්ශ්ව දත්තකඩ (අඩවි කැඩීමට හේතු වේ)</string>
     <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
     <string name="preference_enhanced_tracking_protection_custom_cookies_4">සියළු දත්තකඩ (අඩවි කැඩීමට හේතු වේ)</string>
@@ -1276,6 +1326,10 @@
     <string name="etp_cookies_title">හරස්-අඩවි ලුහුබඳින දත්තකඩ</string>
     <!-- Category of trackers (cross-site tracking cookies) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cookies_title_2">හරස් අඩවි දත්තකඩ</string>
+    <!-- Description of cross-site tracking cookies that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_cookies_description">බොහෝ අඩවි පුරාවට ඔබගේ පිරික්සුම් දත්ත සම්පාදනය කිරීමට දැන්වීම් ජාල සහ විශ්ලේෂණ සමාගම් භාවිතා කරන දත්තකඩ අවහිර කරයි.</string>
+    <!-- Description of cross-site tracking cookies that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_cookies_description_2">පූර්ණ දත්තකඩ ආරක්‍ෂණය ඔබ සිටින අඩවියට දත්තකඩ හුදකලා කරයි, එබැවින් දැන්වීම් ජාල වැනි ලුහුබැඳීම් සඳහා සියළු අඩවි පුරා ඔබට හඹායාමට ඒවා භාවිතා කිරීමට නොහැකිය.</string>
     <!-- Description of cryptominers that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cryptominers_description">අනිෂ්ට අත්පත් සංඛ්‍යාංක මුදල් කැණීම සඳහා ඔබගේ උපාංගයට ප්‍රවේශ වීම වළක්වයි.</string>
     <!-- Category of trackers (fingerprinters) that can be blocked by Enhanced Tracking Protection -->
@@ -1305,6 +1359,9 @@
     <string name="etp_redirect_trackers_title">හරවා යැවෙන ලුහුබැඳීම්</string>
     <!-- Description of redirect tracker cookies that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_redirect_trackers_description">දන්නා ලුහුබඳින අඩවි වෙත හරවා යැවීම් මඟින් සැකසූ දත්තකඩ හිස් කරයි.</string>
+    <!-- Description of the SmartBlock Enhanced Tracking Protection feature. The * symbol is intentionally hardcoded here,
+         as we use it on the UI to indicate which trackers have been partially unblocked.  -->
+    <string name="preference_etp_smartblock_description">ඔබ පහත ලුහුබැඳීම් සමඟ අන්යෝන්‍යව කටයුතු කළ නිසා සලකුණු කර තිබෙන දෑ මෙම පිටුවෙහි අර්ධ වශයෙන් අවහිර කර ඇත *.</string>
     <!-- Text displayed that links to website about enhanced tracking protection SmartBlock -->
     <string name="preference_etp_smartblock_learn_more">තව දැනගන්න</string>
 
@@ -1321,6 +1378,9 @@
 
     <!-- About page link text to open a screen with libraries that are used -->
     <string name="about_other_open_source_libraries">අපි භාවිතා කරන එකතු</string>
+    <!-- Toast shown to the user when they are activating the secret dev menu
+        The first parameter is number of long clicks left to enable the menu -->
+    <string name="about_debug_menu_toast_progress">නිදොස්කරණ වට්ටෝරුව: සබල වීමට එබීම් %1$d ක් ඉතිරිය</string>
     <string name="about_debug_menu_toast_done">නිදොස්කරණ වට්ටෝරුව සබලයි</string>
 
     <!-- Browser long press popup menu -->
@@ -1343,6 +1403,9 @@
     <string name="add_to_homescreen_continue">අඩවියට යන්න</string>
     <!-- Placeholder text for the TextView in the Add to Homescreen dialog -->
     <string name="add_to_homescreen_text_placeholder">කෙටිමඟ නාමය</string>
+
+    <!-- Describes the add to homescreen functionality -->
+    <string name="add_to_homescreen_description_2">ඔබට ක්‍ෂණික ප්‍රවේශයක් ලබා ගැනීමට සහ යෙදුමක වැනි අත්දැකීමක් සමඟින් වේගයෙන් පිරික්සීමට මෙම අඩවිය ඔබගේ උපාංගයේ මුල් තිරයට පහසුවෙන් එක් කළ හැකිය.</string>
 
     <!-- Preference for managing the settings for logins and passwords in Fenix -->
     <string name="preferences_passwords_logins_and_passwords">පිවිසුම් සහ මුරපද</string>
@@ -1424,10 +1487,15 @@
     <string name="logins_biometric_prompt_message_pin">උපාංගය අගුළු හරින්න</string>
     <!-- Title for Accessibility Force Enable Zoom Preference -->
     <string name="preference_accessibility_force_enable_zoom">සියළු අඩවි විශාලනය</string>
+    <!-- Summary for Accessibility Force Enable Zoom Preference -->
+    <string name="preference_accessibility_force_enable_zoom_summary">මෙම අභිනය වළක්වන අඩවිවල පවා, කුඩාලනය හා විශාලනය කිරීමට ඉඩ දීමට සබල කරන්න.</string>
     <!-- Saved logins sorting strategy menu item -by name- (if selected, it will sort saved logins alphabetically) -->
     <string name="saved_logins_sort_strategy_alphabetically">නම (අ-ෆ)</string>
     <!-- Saved logins sorting strategy menu item -by last used- (if selected, it will sort saved logins by last used) -->
     <string name="saved_logins_sort_strategy_last_used">අවසන් භාවිතය</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Sort saved logins dropdown menu chevron icon -->
+    <string name="saved_logins_menu_dropdown_chevron_icon_content_description">පිවිසුම් වට්ටෝරුව වර්ගනය</string>
 
     <!-- Autofill -->
     <!-- Preference and title for managing the autofill settings -->
@@ -1571,6 +1639,8 @@
     <string name="search_add_custom_engine_name_hint">නම</string>
     <!-- Placeholder text shown in the Search String TextField before a user enters text -->
     <string name="search_add_custom_engine_search_string_hint">භාවිතයට සෙවුම් තන්තුව</string>
+    <!-- Description text for the Search String TextField. The %s is part of the string -->
+    <string formatted="false" name="search_add_custom_engine_search_string_example">“%s” සමඟ විමසුම ප්‍රතිස්ථාපනය කරන්න. නිදසුන:\nhttps://search.naver.com/search.naver?where=nexearch&amp;sm=top_hty&amp;fbm=0&amp;ie=utf8&amp;query=%s</string>
     <!-- Accessibility description for the form in which details about the custom search engine are entered -->
     <string name="search_add_custom_engine_form_description">අභිරුචි සෙවුම් යන්ත්‍රයේ විස්තර</string>
 

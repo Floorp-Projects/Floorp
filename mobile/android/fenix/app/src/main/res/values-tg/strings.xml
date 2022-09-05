@@ -290,12 +290,17 @@
     <string name="onboarding_home_welcome_description">Рангҳои бештар. Махфияти беҳтар. Худи ҳамон вазифадорӣ ба одамон, на ба даромадҳо.</string>
     <!-- Home onboarding dialog sign into sync screen title text. -->
     <string name="onboarding_home_sync_title_2">Аз телефон ба ноутбук ба баръакс гузаред</string>
+    <!-- Home onboarding dialog sign into sync screen description text. -->
+    <string name="onboarding_home_sync_description">Ҳамаи он ҷойҳоеро, ки шумо дар варақаҳо аз дастгоҳҳои дигар дидаед, дар саҳифаи асосии худ ба даст оред.</string>
     <!-- Text for the button to continue the onboarding on the home onboarding dialog. -->
     <string name="onboarding_home_get_started_button">Оғози кор</string>
     <!-- Text for the button to navigate to the sync sign in screen on the home onboarding dialog. -->
     <string name="onboarding_home_sign_in_button">Ворид шудан</string>
     <!-- Text for the button to skip the onboarding on the home onboarding dialog. -->
     <string name="onboarding_home_skip_button">Нодида гузарондан</string>
+
+    <!-- Onboarding home screen sync popup dialog message, shown on top of Recent Synced Tabs in the Jump back in section. -->
+    <string name="sync_cfr_message">Варақаҳои шумо ҳамоҳанг карда мешаванд! Ҳамаи он ҷойҳоеро, ки шумо дар дастгоҳи дигари худ дидаед, ба даст оред.</string>
 
     <!-- Search Widget -->
     <!-- Content description for searching with a widget. The first parameter is the name of the application.-->
