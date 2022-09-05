@@ -4412,6 +4412,14 @@ pref("extensions.formautofill.creditCards.heuristics.numberOnly.confidenceThresh
 pref("extensions.formautofill.creditCards.heuristics.numberOnly.confidenceThreshold", "0.95");
 #endif
 
+// When enabled, a credit card form with cc-name and cc-exp fields is considered as a valid credit
+// card form, regardless of the existence of a cc-number field
+#ifdef NIGHTLY_BUILD
+pref("extensions.formautofill.creditCards.heuristics.nameExpirySection.enabled", true);
+#else
+pref("extensions.formautofill.creditCards.heuristics.nameExpirySection.enabled", false);
+#endif
+
 // Pref for shield/heartbeat to recognize users who have used Credit Card
 // Autofill. The valid values can be:
 // 0: none

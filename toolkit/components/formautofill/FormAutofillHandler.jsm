@@ -1068,6 +1068,12 @@ class FormAutofillCreditCardSection extends FormAutofillSection {
           return true;
         }
       }
+    } else if (
+      hasCCName &&
+      hasExpiryDate &&
+      FormAutofillUtils.ccHeuristicsNameExpirySection
+    ) {
+      return true;
     }
     return false;
   }
