@@ -61,6 +61,13 @@ class Script(BidiModule):
         return result["result"]
 
     @command
+    def disown(self,
+               handles: List[str],
+               target: Target) -> Mapping[str, Any]:
+        params: MutableMapping[str, Any] = {"handles": handles, "target": target}
+        return params
+
+    @command
     def evaluate(self,
                  expression: str,
                  target: Target,
