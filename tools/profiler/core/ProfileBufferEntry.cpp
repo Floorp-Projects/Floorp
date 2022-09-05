@@ -268,7 +268,7 @@ JITFrameInfoForBufferRange JITFrameInfoForBufferRange::Clone() const {
 JITFrameInfo::JITFrameInfo(const JITFrameInfo& aOther,
                            mozilla::ProgressLogger aProgressLogger)
     : mUniqueStrings(MakeUnique<UniqueJSONStrings>(
-          *aOther.mUniqueStrings,
+          FailureLatchInfallibleSource::Singleton(), *aOther.mUniqueStrings,
           aProgressLogger.CreateSubLoggerFromTo(
               0_pc, "Creating JIT frame info unique strings...", 49_pc,
               "Created JIT frame info unique strings"))) {

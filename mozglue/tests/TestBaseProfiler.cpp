@@ -5126,9 +5126,20 @@ static void VerifyUniqueStringContents(
                      &mozilla::FailureLatchInfallibleSource::Singleton());
 
   // By default use a local UniqueJSONStrings, otherwise use the one provided.
-  mozilla::baseprofiler::UniqueJSONStrings localUniqueStrings;
+  mozilla::baseprofiler::UniqueJSONStrings localUniqueStrings{
+      FailureLatchInfallibleSource::Singleton()};
+  MOZ_RELEASE_ASSERT(!localUniqueStrings.Fallible());
+  MOZ_RELEASE_ASSERT(!localUniqueStrings.Failed());
+  MOZ_RELEASE_ASSERT(!localUniqueStrings.GetFailure());
+  MOZ_RELEASE_ASSERT(&localUniqueStrings.SourceFailureLatch() ==
+                     &mozilla::FailureLatchInfallibleSource::Singleton());
+  MOZ_RELEASE_ASSERT(&std::as_const(localUniqueStrings).SourceFailureLatch() ==
+                     &mozilla::FailureLatchInfallibleSource::Singleton());
+
   mozilla::baseprofiler::UniqueJSONStrings& uniqueStrings =
       aUniqueStringsOrNull ? *aUniqueStringsOrNull : localUniqueStrings;
+  MOZ_RELEASE_ASSERT(!uniqueStrings.Failed());
+  MOZ_RELEASE_ASSERT(!uniqueStrings.GetFailure());
 
   writer.Start();
   {
@@ -5141,6 +5152,9 @@ static void VerifyUniqueStringContents(
     writer.EndArray();
   }
   writer.End();
+
+  MOZ_RELEASE_ASSERT(!uniqueStrings.Failed());
+  MOZ_RELEASE_ASSERT(!uniqueStrings.GetFailure());
 
   MOZ_RELEASE_ASSERT(!writer.ChunkedWriteFunc().Failed());
   MOZ_RELEASE_ASSERT(!writer.ChunkedWriteFunc().GetFailure());
@@ -5243,7 +5257,7 @@ void TestUniqueJSONStrings() {
 
   // Unique string table with pre-existing data.
   {
-    UJS ujs;
+    UJS ujs{FailureLatchInfallibleSource::Singleton()};
     {
       SCJW writer{FailureLatchInfallibleSource::Singleton()};
       ujs.WriteElement(writer, "external0");
@@ -5261,14 +5275,15 @@ void TestUniqueJSONStrings() {
 
   // Unique string table with pre-existing data from another table.
   {
-    UJS ujs;
+    UJS ujs{FailureLatchInfallibleSource::Singleton()};
     {
       SCJW writer{FailureLatchInfallibleSource::Singleton()};
       ujs.WriteElement(writer, "external0");
       ujs.WriteElement(writer, "external1");
       ujs.WriteElement(writer, "external0");
     }
-    UJS ujsCopy(ujs, mozilla::ProgressLogger{});
+    UJS ujsCopy(FailureLatchInfallibleSource::Singleton(), ujs,
+                mozilla::ProgressLogger{});
     VerifyUniqueStringContents(
         [](SCJW& aWriter, UJS& aUniqueStrings) {
           aUniqueStrings.WriteElement(aWriter, "string0");
@@ -5329,7 +5344,8 @@ void PrintMarkers(const mozilla::ProfileChunkedBuffer& aBuffer) {
       mozilla::MakeUnique<mozilla::baseprofiler::OStreamJSONWriteFunc>(
           std::cout),
       FailureLatchInfallibleSource::Singleton());
-  mozilla::baseprofiler::UniqueJSONStrings uniqueStrings;
+  mozilla::baseprofiler::UniqueJSONStrings uniqueStrings{
+      FailureLatchInfallibleSource::Singleton()};
   writer.SetUniqueStrings(uniqueStrings);
   writer.Start();
   {

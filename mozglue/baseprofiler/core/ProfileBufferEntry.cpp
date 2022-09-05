@@ -232,7 +232,8 @@ bool UniqueStacks::FrameKey::NormalFrameData::operator==(
 }
 
 UniqueStacks::UniqueStacks()
-    : mUniqueStrings(MakeUnique<UniqueJSONStrings>()),
+    : mUniqueStrings(MakeUnique<UniqueJSONStrings>(
+          FailureLatchInfallibleSource::Singleton())),
       mFrameTableWriter(FailureLatchInfallibleSource::Singleton()),
       mStackTableWriter(FailureLatchInfallibleSource::Singleton()) {
   mFrameTableWriter.StartBareList();
