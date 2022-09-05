@@ -39,10 +39,7 @@ elif CONFIG["OS_TARGET"] == "Darwin":
     # See also IncreaseDescriptorLimits in toolkit/xre/nsAppRunner.cpp
     DEFINES["FD_SETSIZE"] = 4096
     DEFINES["_DARWIN_UNLIMITED_SELECT"] = True
-    if not CONFIG["HOST_MAJOR_VERSION"]:
-        DEFINES["HAS_CONNECTX"] = True
-    elif CONFIG["HOST_MAJOR_VERSION"] >= "15":
-        DEFINES["HAS_CONNECTX"] = True
+    DEFINES["HAS_CONNECTX"] = True
     DEFINES["DARWIN"] = True
     DEFINES["HAVE_BSD_FLOCK"] = True
     DEFINES["HAVE_SOCKLEN_T"] = True
