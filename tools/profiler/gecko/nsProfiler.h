@@ -97,6 +97,7 @@ class nsProfiler final : public nsIProfiler {
   mozilla::Vector<ExitProfile> mExitProfiles;
   mozilla::Maybe<mozilla::MozPromiseHolder<GatheringPromise>> mPromiseHolder;
   nsCOMPtr<nsIThread> mSymbolTableThread;
+  mozilla::Maybe<mozilla::FailureLatchSource> mFailureLatchSource;
   mozilla::Maybe<SpliceableChunkedJSONWriter> mWriter;
   mozilla::Vector<PendingProfile> mPendingProfiles;
   bool mGathering;
