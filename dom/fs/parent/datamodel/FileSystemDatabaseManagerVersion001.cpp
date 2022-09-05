@@ -177,7 +177,8 @@ nsresult GetFileAttributes(const FileSystemConnection& aConnection,
 
 nsresult GetEntries(const FileSystemConnection& aConnection,
                     const nsACString& aUnboundStmt, const EntryId& aParent,
-                    PageNumber aPage, FileSystemEntries& aEntries) {
+                    PageNumber aPage, bool aDirectory,
+                    FileSystemEntries& aEntries) {
   // The entries inside a directory are sent to the child process in batches
   // of pageSize items. Large value ensures that iteration is less often delayed
   // by IPC messaging and querying the database.
@@ -199,7 +200,7 @@ nsresult GetEntries(const FileSystemConnection& aConnection,
     QM_TRY_UNWRAP(EntryId entryId, stmt.GetEntryIdByColumn(/* Column */ 0u));
     QM_TRY_UNWRAP(Name entryName, stmt.GetNameByColumn(/* Column */ 1u));
 
-    FileSystemEntryMetadata metadata(entryId, entryName);
+    FileSystemEntryMetadata metadata(entryId, entryName, aDirectory);
     aEntries.AppendElement(metadata);
 
     QM_TRY_UNWRAP(moreResults, stmt.ExecuteStep());
@@ -416,11 +417,12 @@ FileSystemDatabaseManagerVersion001::GetDirectoryEntries(
       ";"_ns;
 
   FileSystemDirectoryListing entries;
-  QM_TRY(QM_TO_RESULT(GetEntries(mConnection, directoriesQuery, aParent, aPage,
-                                 entries.directories())));
+  QM_TRY(
+      QM_TO_RESULT(GetEntries(mConnection, directoriesQuery, aParent, aPage,
+                              /* aDirectory */ true, entries.directories())));
 
-  QM_TRY(QM_TO_RESULT(
-      GetEntries(mConnection, filesQuery, aParent, aPage, entries.files())));
+  QM_TRY(QM_TO_RESULT(GetEntries(mConnection, filesQuery, aParent, aPage,
+                                 /* aDirectory */ false, entries.files())));
 
   return entries;
 }

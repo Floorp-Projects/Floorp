@@ -65,7 +65,8 @@ RefPtr<FileSystemDirectoryHandle> MakeResolution(
     RefPtr<FileSystemManager>& aManager) {
   RefPtr<FileSystemDirectoryHandle> result = new FileSystemDirectoryHandle(
       aGlobal, aManager,
-      FileSystemEntryMetadata(aResponse.get_EntryId(), kRootName));
+      FileSystemEntryMetadata(aResponse.get_EntryId(), kRootName,
+                              /* directory */ true));
   return result;
 }
 
@@ -75,7 +76,8 @@ RefPtr<FileSystemDirectoryHandle> MakeResolution(
     RefPtr<FileSystemManager>& aManager) {
   RefPtr<FileSystemDirectoryHandle> result = new FileSystemDirectoryHandle(
       aGlobal, aManager,
-      FileSystemEntryMetadata(aResponse.get_EntryId(), aName));
+      FileSystemEntryMetadata(aResponse.get_EntryId(), aName,
+                              /* directory */ true));
 
   return result;
 }
@@ -86,7 +88,8 @@ RefPtr<FileSystemFileHandle> MakeResolution(
     RefPtr<FileSystemManager>& aManager) {
   RefPtr<FileSystemFileHandle> result = new FileSystemFileHandle(
       aGlobal, aManager,
-      FileSystemEntryMetadata(aResponse.get_EntryId(), aName));
+      FileSystemEntryMetadata(aResponse.get_EntryId(), aName,
+                              /* directory */ false));
   return result;
 }
 
