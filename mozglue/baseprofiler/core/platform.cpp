@@ -2910,7 +2910,7 @@ UniquePtr<char[]> profiler_get_profile(double aSinceTime, bool aIsShuttingDown,
                                        bool aOnlyThreads) {
   LOG("profiler_get_profile");
 
-  SpliceableChunkedJSONWriter b;
+  SpliceableChunkedJSONWriter b{FailureLatchInfallibleSource::Singleton()};
   if (!WriteProfileToJSONWriter(b, aSinceTime, aIsShuttingDown, aOnlyThreads)) {
     return nullptr;
   }
@@ -3016,7 +3016,7 @@ static void locked_profiler_save_profile_to_file(PSLockRef aLock,
   stream.open(aFilename);
   if (stream.is_open()) {
     OStreamJSONWriteFunc jw(stream);
-    SpliceableJSONWriter w(jw);
+    SpliceableJSONWriter w(jw, FailureLatchInfallibleSource::Singleton());
     w.Start();
     {
       locked_profiler_stream_json_for_this_process(aLock, w, /* sinceTime */ 0,

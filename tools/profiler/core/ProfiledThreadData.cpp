@@ -384,6 +384,8 @@ ThreadStreamingContext::ThreadStreamingContext(
     mozilla::ProgressLogger aProgressLogger)
     : mProfiledThreadData(aProfiledThreadData),
       mJSContext(aCx),
+      mSamplesDataWriter(mozilla::FailureLatchInfallibleSource::Singleton()),
+      mMarkersDataWriter(mozilla::FailureLatchInfallibleSource::Singleton()),
       mUniqueStacks(mProfiledThreadData.PrepareUniqueStacks(
           aBuffer, aCx, aService,
           aProgressLogger.CreateSubLoggerFromTo(

@@ -236,13 +236,16 @@ struct OStreamJSONWriteFunc final : public JSONWriteFunc {
 
 class UniqueJSONStrings;
 
-class SpliceableJSONWriter : public JSONWriter {
+class SpliceableJSONWriter : public JSONWriter, public FailureLatch {
  public:
-  explicit SpliceableJSONWriter(JSONWriteFunc& aWriter)
-      : JSONWriter(aWriter, JSONWriter::SingleLineStyle) {}
+  SpliceableJSONWriter(JSONWriteFunc& aWriter, FailureLatch& aFailureLatch)
+      : JSONWriter(aWriter, JSONWriter::SingleLineStyle),
+        mFailureLatch(WrapNotNullUnchecked(&aFailureLatch)) {}
 
-  explicit SpliceableJSONWriter(UniquePtr<JSONWriteFunc> aWriter)
-      : JSONWriter(std::move(aWriter), JSONWriter::SingleLineStyle) {}
+  SpliceableJSONWriter(UniquePtr<JSONWriteFunc> aWriter,
+                       FailureLatch& aFailureLatch)
+      : JSONWriter(std::move(aWriter), JSONWriter::SingleLineStyle),
+        mFailureLatch(WrapNotNullUnchecked(&aFailureLatch)) {}
 
   void StartBareList() { StartCollection(scEmptyString, scEmptyString); }
 
@@ -417,15 +420,20 @@ class SpliceableJSONWriter : public JSONWriter {
   }
   void StartObjectElement() { JSONWriter::StartObjectElement(); }
 
+  FAILURELATCH_IMPL_PROXY(*mFailureLatch)
+
+ protected:
+  NotNull<FailureLatch*> mFailureLatch;
+
  private:
   UniqueJSONStrings* mUniqueStrings = nullptr;
 };
 
 class SpliceableChunkedJSONWriter final : public SpliceableJSONWriter {
  public:
-  SpliceableChunkedJSONWriter()
-      : SpliceableJSONWriter(MakeUnique<ChunkedJSONWriteFunc>(
-            FailureLatchInfallibleSource::Singleton())) {}
+  explicit SpliceableChunkedJSONWriter(FailureLatch& aFailureLatch)
+      : SpliceableJSONWriter(MakeUnique<ChunkedJSONWriteFunc>(aFailureLatch),
+                             aFailureLatch) {}
 
   // Access the ChunkedJSONWriteFunc as reference-to-const, usually to copy data
   // out.
@@ -449,6 +457,12 @@ class SpliceableChunkedJSONWriter final : public SpliceableJSONWriter {
     Separator();
     ChunkedWriteFuncRef().Take(std::move(aFunc));
     mNeedComma[mDepth] = true;
+  }
+
+  void ChangeFailureLatchAndForwardState(FailureLatch& aFailureLatch) {
+    mFailureLatch = WrapNotNullUnchecked(&aFailureLatch);
+    return ChunkedWriteFuncRef().ChangeFailureLatchAndForwardState(
+        aFailureLatch);
   }
 
  private:

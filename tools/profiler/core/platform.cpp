@@ -5338,7 +5338,7 @@ UniquePtr<char[]> profiler_get_profile(double aSinceTime,
   UniquePtr<ProfilerCodeAddressService> service =
       profiler_code_address_service_for_presymbolication();
 
-  SpliceableChunkedJSONWriter b;
+  SpliceableChunkedJSONWriter b{FailureLatchInfallibleSource::Singleton()};
   if (!WriteProfileToJSONWriter(b, aSinceTime, aIsShuttingDown, service.get(),
                                 ProgressLogger{})) {
     return nullptr;
@@ -5499,7 +5499,7 @@ static void locked_profiler_save_profile_to_file(
   stream.open(aFilename);
   if (stream.is_open()) {
     OStreamJSONWriteFunc sw(stream);
-    SpliceableJSONWriter w(sw);
+    SpliceableJSONWriter w(sw, FailureLatchInfallibleSource::Singleton());
     w.Start();
     {
       locked_profiler_stream_json_for_this_process(

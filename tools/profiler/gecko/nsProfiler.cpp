@@ -1129,7 +1129,7 @@ RefPtr<nsProfiler::GatheringPromise> nsProfiler::StartGathering(
     return GatheringPromise::CreateAndReject(NS_ERROR_OUT_OF_MEMORY, __func__);
   }
 
-  mWriter.emplace();
+  mWriter.emplace(FailureLatchInfallibleSource::Singleton());
 
   UniquePtr<ProfilerCodeAddressService> service =
       profiler_code_address_service_for_presymbolication();
