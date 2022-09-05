@@ -1,0 +1,26 @@
+﻿<!DOCTYPE HTML>
+<html>
+  <!--
+  Bug 970517 - Storage inspector front end - tests
+  -->
+  <head>
+    <meta charset="utf-8">
+    <title>Storage inspector cookie test</title>
+  </head>
+  <body>
+    <script type="application/javascript">
+    "use strict";
+    const ONE_HOUR = 60 * 60 * 1000;
+    const ONE_DAY = 24 * ONE_HOUR;
+    const expiresOneHour = new Date(Date.now() + 1 * ONE_HOUR).toUTCString();
+    const expiresOneDay = new Date(Date.now() + 1 * ONE_DAY).toUTCString();
+    const expiresOneYear = new Date(Date.now() + 365 * ONE_DAY).toUTCString();
+
+    document.cookie = "test_hour=hour;expires=" + expiresOneHour;
+    document.cookie = "test_session1=session1";
+    document.cookie = "test_day=day;expires=" + expiresOneDay;
+    document.cookie = "test_session2=session2";
+    document.cookie = "test_year=year;expires=" + expiresOneYear;
+    </script>
+  </body>
+</html>

@@ -180,6 +180,24 @@ function run_test() {
     );
     runTest(
       [
+        "Wed, 04 Sep 2024 09:11:44 GMT",
+        sessionString,
+        "Tue, 06 Sep 2022 09:11:44 GMT",
+        sessionString,
+        "Mon, 05 Sep 2022 09:12:41 GMT",
+      ],
+      [
+        sessionString,
+        sessionString,
+        "Mon, 05 Sep 2022 09:12:41 GMT",
+        "Tue, 06 Sep 2022 09:11:44 GMT",
+        "Wed, 04 Sep 2024 09:11:44 GMT",
+      ],
+      `"${sessionString}" amongst date strings (complex)`
+    );
+
+    runTest(
+      [
         "Madras",
         "Jalfrezi",
         "Rogan Josh",
