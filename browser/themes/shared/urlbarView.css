@@ -420,6 +420,7 @@
 .urlbarView-row:is([type=tip], [dynamicType="quickactions"]) > .urlbarView-row-inner > .urlbarView-button-help {
   min-width: 16px;
   min-height: 16px;
+  margin-block: 2px 0;
   margin-inline: 8px 4px;
 }
 
