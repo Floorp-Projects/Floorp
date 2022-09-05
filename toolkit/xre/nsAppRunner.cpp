@@ -4564,7 +4564,7 @@ Maybe<ShouldNotProcessUpdatesReason> ShouldNotProcessUpdates(
   // "--chrome ..." with the browser toolbox chrome document URL.
 
   // Keep this synchronized with the value of the same name in
-  // devtools/client/framework/browser-toolbox/Launcher.jsm.  Or, for bonus
+  // devtools/client/framework/browser-toolbox/Launcher.sys.mjs.  Or, for bonus
   // points, lift this value to nsIXulRuntime or similar, so that it can be
   // accessed in both locations.  (The prefs service isn't available at this
   // point so the simplest manner of sharing the value is not available to us.)

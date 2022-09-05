@@ -215,7 +215,7 @@ var loader = new DevToolsLoader({
    * B2G.  It is not the default case for desktop Firefox because we offer the
    * Browser Toolbox for chrome debugging there, which uses its own, separate
    * loader instance.
-   * @see devtools/client/framework/browser-toolbox/Launcher.jsm
+   * @see devtools/client/framework/browser-toolbox/Launcher.sys.mjs
    */
   invisibleToDebugger: Services.appinfo.name !== "Firefox",
 });

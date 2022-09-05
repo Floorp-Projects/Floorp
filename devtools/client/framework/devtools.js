@@ -6,10 +6,17 @@
 
 const { Cu } = require("chrome");
 const Services = require("Services");
+const ChromeUtils = require("ChromeUtils");
 
 const {
   DevToolsShim,
 } = require("chrome://devtools-startup/content/DevToolsShim.jsm");
+
+const lazy = {};
+ChromeUtils.defineESModuleGetters(lazy, {
+  BrowserToolboxLauncher:
+    "resource://devtools/client/framework/browser-toolbox/Launcher.sys.mjs",
+});
 
 loader.lazyRequireGetter(
   this,
@@ -43,11 +50,6 @@ loader.lazyRequireGetter(
 );
 
 loader.lazyRequireGetter(this, "Telemetry", "devtools/client/shared/telemetry");
-loader.lazyImporter(
-  this,
-  "BrowserToolboxLauncher",
-  "resource://devtools/client/framework/browser-toolbox/Launcher.jsm"
-);
 
 const {
   defaultTools: DefaultTools,
@@ -451,7 +453,7 @@ DevTools.prototype = {
    */
   saveDevToolsSession(state) {
     state.browserConsole = BrowserConsoleManager.getBrowserConsoleSessionState();
-    state.browserToolbox = BrowserToolboxLauncher.getBrowserToolboxSessionState();
+    state.browserToolbox = lazy.BrowserToolboxLauncher.getBrowserToolboxSessionState();
   },
 
   /**
@@ -459,7 +461,7 @@ DevTools.prototype = {
    */
   async restoreDevToolsSession({ browserConsole, browserToolbox }) {
     if (browserToolbox) {
-      BrowserToolboxLauncher.init();
+      lazy.BrowserToolboxLauncher.init();
     }
 
     if (browserConsole && !BrowserConsoleManager.getBrowserConsole()) {
