@@ -4941,7 +4941,7 @@ class MacroAssembler : public MacroAssemblerSpecific {
                                   uint32_t end);
 
   void initGCSlots(Register obj, Register temp,
-                   const TemplateNativeObject& templateObj, bool initContents);
+                   const TemplateNativeObject& templateObj);
 
  public:
   void callFreeStub(Register slots);

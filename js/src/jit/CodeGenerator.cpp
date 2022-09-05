@@ -2505,7 +2505,7 @@ static void CreateMatchResultFallback(MacroAssembler& masm, Register object,
 
   masm.branchPtr(Assembler::Equal, object, ImmWord(0), fail);
 
-  masm.initGCThing(object, temp1, templateObject, true);
+  masm.initGCThing(object, temp1, templateObject);
 }
 
 JitCode* JitRealm::generateRegExpMatcherStub(JSContext* cx) {
@@ -7062,9 +7062,8 @@ void CodeGenerator::visitNewObject(LNewObject* lir) {
 
   TemplateObject templateObject(lir->mir()->templateObject());
 
-  bool initContents = ShouldInitFixedSlots(lir, templateObject);
   masm.createGCObject(objReg, tempReg, templateObject,
-                      lir->mir()->initialHeap(), ool->entry(), initContents);
+                      lir->mir()->initialHeap(), ool->entry());
 
   masm.bind(ool->rejoin());
 }
@@ -7151,9 +7150,8 @@ void CodeGenerator::visitNewNamedLambdaObject(LNewNamedLambdaObject* lir) {
 
   TemplateObject templateObject(lir->mir()->templateObj());
 
-  bool initContents = ShouldInitFixedSlots(lir, templateObject);
   masm.createGCObject(objReg, tempReg, templateObject, gc::DefaultHeap,
-                      ool->entry(), initContents);
+                      ool->entry());
 
   masm.bind(ool->rejoin());
 }
@@ -7170,9 +7168,8 @@ void CodeGenerator::visitNewCallObject(LNewCallObject* lir) {
 
   // Inline call object creation, using the OOL path only for tricky cases.
   TemplateObject templateObject(templateObj);
-  bool initContents = ShouldInitFixedSlots(lir, templateObject);
   masm.createGCObject(objReg, tempReg, templateObject, gc::DefaultHeap,
-                      ool->entry(), initContents);
+                      ool->entry());
 
   masm.bind(ool->rejoin());
 }

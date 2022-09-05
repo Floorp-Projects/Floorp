@@ -833,8 +833,9 @@ void MacroAssembler::initTypedArraySlots(Register obj, Register temp,
 }
 
 void MacroAssembler::initGCSlots(Register obj, Register temp,
-                                 const TemplateNativeObject& templateObj,
-                                 bool initContents) {
+                                 const TemplateNativeObject& templateObj) {
+  MOZ_ASSERT(!templateObj.isArrayObject());
+
   // Slots of non-array objects are required to be initialized.
   // Use the values currently in the template object.
   uint32_t nslots = templateObj.slotSpan();
@@ -869,16 +870,14 @@ void MacroAssembler::initGCSlots(Register obj, Register temp,
   copySlotsFromTemplate(obj, templateObj, 0, startOfUninitialized);
 
   // Fill the rest of the fixed slots with undefined and uninitialized.
-  if (initContents) {
-    size_t offset = NativeObject::getFixedSlotOffset(startOfUninitialized);
-    fillSlotsWithUninitialized(Address(obj, offset), temp, startOfUninitialized,
-                               std::min(startOfUndefined, nfixed));
+  size_t offset = NativeObject::getFixedSlotOffset(startOfUninitialized);
+  fillSlotsWithUninitialized(Address(obj, offset), temp, startOfUninitialized,
+                             std::min(startOfUndefined, nfixed));
 
-    if (startOfUndefined < nfixed) {
-      offset = NativeObject::getFixedSlotOffset(startOfUndefined);
-      fillSlotsWithUndefined(Address(obj, offset), temp, startOfUndefined,
-                             nfixed);
-    }
+  if (startOfUndefined < nfixed) {
+    offset = NativeObject::getFixedSlotOffset(startOfUndefined);
+    fillSlotsWithUndefined(Address(obj, offset), temp, startOfUndefined,
+                           nfixed);
   }
 
   if (ndynamic) {
@@ -925,6 +924,9 @@ void MacroAssembler::initGCThing(Register obj, Register temp,
     }
 
     if (ntemplate.isArrayObject()) {
+      // Can't skip initializing reserved slots.
+      MOZ_ASSERT(initContents);
+
       int elementsOffset = NativeObject::offsetOfFixedElements();
 
       computeEffectiveAddress(Address(obj, elementsOffset), temp);
@@ -951,10 +953,13 @@ void MacroAssembler::initGCThing(Register obj, Register temp,
       // then this would need to store emptyObjectElementsShared in that case.
       MOZ_ASSERT(!ntemplate.isSharedMemory());
 
+      // Can't skip initializing reserved slots.
+      MOZ_ASSERT(initContents);
+
       storePtr(ImmPtr(emptyObjectElements),
                Address(obj, NativeObject::offsetOfElements()));
 
-      initGCSlots(obj, temp, ntemplate, initContents);
+      initGCSlots(obj, temp, ntemplate);
     }
   } else {
     MOZ_CRASH("Unknown object");
