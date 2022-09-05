@@ -999,9 +999,16 @@ TableWidget.prototype = {
       return;
     }
 
+    // First sort the column to "sort by" explicitly.
     const sortedItems = this.columns.get(column).sort([...this.items.values()]);
+
+    // Then, sort all the other columns (id !== column) only based on the
+    // sortedItems provided by the first sort.
+    // Each column keeps track of the fact that it is the "sort by" column or
+    // not, so this will not shuffle the items and will just make sure each
+    // column displays the correct value.
     for (const [id, col] of this.columns) {
-      if (id === col) {
+      if (id !== column) {
         col.sort(sortedItems);
       }
     }

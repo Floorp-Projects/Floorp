@@ -15,7 +15,6 @@
 "use strict";
 
 const tokenizeNumbersRx = /(^([+\-]?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?(?=\D|\s|$))|^0x[\da-fA-F]+$|\d+)/g;
-const dateRx = /(^([\w ]+,?[\w ]+)?[\w ]+,?[\w ]+\d+:\d+(:\d+)?[\w ]?|^\d{1,4}[\/\-]\d{1,4}[\/\-]\d{1,4}|^\w+, \w+ \d+, \d{4})/;
 const hexRx = /^0x[0-9a-f]+$/i;
 const startsWithNullRx = /^\0/;
 const endsWithNullRx = /\0$/;
@@ -74,9 +73,7 @@ function naturalSort(a = "", b = "", insensitive = false) {
   const aHexOrDate =
     parseInt(a.match(hexRx), 16) || (aChunks.length !== 1 && Date.parse(a));
   const bHexOrDate =
-    parseInt(b.match(hexRx), 16) ||
-    (aHexOrDate && b.match(dateRx) && Date.parse(b)) ||
-    null;
+    parseInt(b.match(hexRx), 16) || (bChunks.length !== 1 && Date.parse(b));
 
   if (
     (aHexOrDate || bHexOrDate) &&
@@ -92,12 +89,13 @@ function naturalSort(a = "", b = "", insensitive = false) {
   }
 
   // Try and sort Hex codes or Dates.
-  if (bHexOrDate) {
+  if (aHexOrDate && bHexOrDate) {
     if (aHexOrDate < bHexOrDate) {
       return -1;
     } else if (aHexOrDate > bHexOrDate) {
       return 1;
     }
+    return 0;
   }
 
   // Natural sorting through split numeric strings and default strings
