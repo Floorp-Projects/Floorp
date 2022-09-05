@@ -430,38 +430,45 @@ class SpliceableChunkedJSONWriter final : public SpliceableJSONWriter {
   // Access the ChunkedJSONWriteFunc as reference-to-const, usually to copy data
   // out.
   const ChunkedJSONWriteFunc& ChunkedWriteFunc() const {
-    MOZ_ASSERT(!mTaken);
-    // The WriteFunc was non-fallibly allocated as a ChunkedJSONWriteFunc in the
-    // only constructor above, so it's safe to cast to ChunkedJSONWriteFunc&.
-    return static_cast<const ChunkedJSONWriteFunc&>(WriteFunc());
+    return ChunkedWriteFuncRef();
   }
 
   // Access the ChunkedJSONWriteFunc as rvalue-reference, usually to take its
   // data out. This writer shouldn't be used anymore after this.
   ChunkedJSONWriteFunc&& TakeChunkedWriteFunc() {
+    ChunkedJSONWriteFunc& ref = ChunkedWriteFuncRef();
 #ifdef DEBUG
-    MOZ_ASSERT(!mTaken);
     mTaken = true;
 #endif  //
-    // The WriteFunc was non-fallibly allocated as a ChunkedJSONWriteFunc in the
-    // only constructor above, so it's safe to cast to ChunkedJSONWriteFunc&.
-    return std::move(static_cast<ChunkedJSONWriteFunc&>(WriteFunc()));
+    return std::move(ref);
   }
 
   // Adopts the chunks from aFunc without copying.
   void TakeAndSplice(ChunkedJSONWriteFunc&& aFunc) override {
     MOZ_ASSERT(!mTaken);
     Separator();
-    // The WriteFunc was non-fallibly allocated as a ChunkedJSONWriteFunc in the
-    // only constructor above, so it's safe to cast to ChunkedJSONWriteFunc&.
-    static_cast<ChunkedJSONWriteFunc&>(WriteFunc()).Take(std::move(aFunc));
+    ChunkedWriteFuncRef().Take(std::move(aFunc));
     mNeedComma[mDepth] = true;
   }
 
-#ifdef DEBUG
  private:
+  const ChunkedJSONWriteFunc& ChunkedWriteFuncRef() const {
+    MOZ_ASSERT(!mTaken);
+    // The WriteFunc was non-fallibly allocated as a ChunkedJSONWriteFunc in the
+    // only constructor above, so it's safe to cast to ChunkedJSONWriteFunc&.
+    return static_cast<const ChunkedJSONWriteFunc&>(WriteFunc());
+  }
+
+  ChunkedJSONWriteFunc& ChunkedWriteFuncRef() {
+    MOZ_ASSERT(!mTaken);
+    // The WriteFunc was non-fallibly allocated as a ChunkedJSONWriteFunc in the
+    // only constructor above, so it's safe to cast to ChunkedJSONWriteFunc&.
+    return static_cast<ChunkedJSONWriteFunc&>(WriteFunc());
+  }
+
+#ifdef DEBUG
   bool mTaken = false;
-#endif  //
+#endif
 };
 
 class JSONSchemaWriter {
