@@ -211,11 +211,9 @@ struct SizeComputationInput {
  protected:
   void InitOffsets(mozilla::WritingMode aCBWM, nscoord aPercentBasis,
                    mozilla::LayoutFrameType aFrameType,
-                   mozilla::ComputeSizeFlags aFlags = {},
-                   const mozilla::Maybe<mozilla::LogicalMargin>& aBorder =
-                       mozilla::Nothing(),
-                   const mozilla::Maybe<mozilla::LogicalMargin>& aPadding =
-                       mozilla::Nothing(),
+                   mozilla::ComputeSizeFlags aFlags,
+                   const mozilla::Maybe<mozilla::LogicalMargin>& aBorder,
+                   const mozilla::Maybe<mozilla::LogicalMargin>& aPadding,
                    const nsStyleDisplay* aDisplay = nullptr);
 
   /*
