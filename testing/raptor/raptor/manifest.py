@@ -425,7 +425,7 @@ def get_raptor_test_list(args, oskey):
             next_test.pop("gecko_profile_threads", None)
             next_test.pop("gecko_profile_features", None)
 
-        if args.extra_profiler_run is True:
+        if args.extra_profiler_run is True and args.app == "firefox":
             next_test["extra_profiler_run"] = True
             LOG.info("extra-profiler-run enabled")
             next_test["extra_profiler_run_browser_cycles"] = 1
@@ -433,6 +433,9 @@ def get_raptor_test_list(args, oskey):
                 next_test["extra_profiler_run_page_cycles"] = 2
             else:
                 next_test["extra_profiler_run_page_cycles"] = 1
+        else:
+            args.extra_profiler_run = False
+            LOG.info("extra-profiler-run disabled")
 
         if args.debug_mode is True:
             next_test["debug_mode"] = True
