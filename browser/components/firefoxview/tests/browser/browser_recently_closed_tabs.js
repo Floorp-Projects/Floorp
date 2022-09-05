@@ -15,6 +15,7 @@ const URLs = [
 ];
 
 const RECENTLY_CLOSED_EVENT = [
+  ["firefoxview", "entered", "firefoxview", undefined],
   ["firefoxview", "recently_closed", "tabs", undefined],
 ];
 
@@ -114,6 +115,7 @@ add_task(async function test_list_ordering() {
     0,
     "Closed tab count after purging session history"
   );
+  await clearAllParentTelemetryEvents();
 
   await BrowserTestUtils.withNewTab(
     {
@@ -121,7 +123,6 @@ add_task(async function test_list_ordering() {
       url: "about:firefoxview",
     },
     async browser => {
-      await clearAllParentTelemetryEvents();
       const { document } = browser.contentWindow;
       const closedObjectsChanged = () =>
         TestUtils.topicObserved("sessionstore-closed-objects-changed");
@@ -181,9 +182,9 @@ add_task(async function test_list_ordering() {
             Ci.nsITelemetry.DATASET_PRERELEASE_CHANNELS,
             false
           ).parent;
-          return events && events.length >= 1;
+          return events && events.length >= 2;
         },
-        "Waiting for recently_closed firefoxview telemetry events.",
+        "Waiting for entered and recently_closed firefoxview telemetry events.",
         200,
         100
       );

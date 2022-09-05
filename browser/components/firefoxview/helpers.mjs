@@ -57,6 +57,16 @@ export function createFaviconElement(image) {
 }
 
 export function onToggleContainer(detailsContainer) {
+  // <details> elements fire `toggle` events when added to the DOM with the
+  // "open" attribute set, but we don't want to record telemetry for those
+  // as they aren't the result of user action. Ensure we bail out:
+  if (
+    detailsContainer.open &&
+    detailsContainer.ownerDocument.readyState != "complete"
+  ) {
+    return;
+  }
+
   const newFluentString = detailsContainer.open
     ? "firefoxview-collapse-button-hide"
     : "firefoxview-collapse-button-show";
