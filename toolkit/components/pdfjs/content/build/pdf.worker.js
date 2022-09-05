@@ -29,7 +29,7 @@
 		exports["pdfjs-dist/build/pdf.worker"] = factory();
 	else
 		root["pdfjs-dist/build/pdf.worker"] = root.pdfjsWorker = factory();
-})(this, () => {
+})(globalThis, () => {
 return /******/ (() => { // webpackBootstrap
 /******/ 	"use strict";
 /******/ 	var __webpack_modules__ = ([
@@ -48,19 +48,19 @@ var _util = __w_pdfjs_require__(2);
 
 var _primitives = __w_pdfjs_require__(5);
 
-var _pdf_manager = __w_pdfjs_require__(6);
+var _core_utils = __w_pdfjs_require__(6);
 
-var _cleanup_helper = __w_pdfjs_require__(67);
+var _pdf_manager = __w_pdfjs_require__(8);
 
-var _writer = __w_pdfjs_require__(73);
+var _cleanup_helper = __w_pdfjs_require__(71);
+
+var _writer = __w_pdfjs_require__(65);
 
 var _is_node = __w_pdfjs_require__(4);
 
 var _message_handler = __w_pdfjs_require__(102);
 
 var _worker_stream = __w_pdfjs_require__(103);
-
-var _core_utils = __w_pdfjs_require__(8);
 
 class WorkerTask {
   constructor(name) {
@@ -117,7 +117,7 @@ class WorkerMessageHandler {
     const WorkerTasks = [];
     const verbosity = (0, _util.getVerbosityLevel)();
     const apiVersion = docParams.apiVersion;
-    const workerVersion = '2.14.290';
+    const workerVersion = '2.15.305';
 
     if (apiVersion !== workerVersion) {
       throw new Error(`The API version "${apiVersion}" does not match ` + `the Worker version "${workerVersion}".`);
@@ -208,8 +208,8 @@ class WorkerMessageHandler {
           rangeChunkSize: source.rangeChunkSize
         }, evaluatorOptions, enableXfa, docBaseUrl);
 
-        for (let i = 0; i < cachedChunks.length; i++) {
-          newPdfManager.sendProgressiveData(cachedChunks[i]);
+        for (const chunk of cachedChunks) {
+          newPdfManager.sendProgressiveData(chunk);
         }
 
         cachedChunks = [];
@@ -464,7 +464,19 @@ class WorkerMessageHandler {
       filename
     }) {
       pdfManager.requestLoadedStream();
+      const newAnnotationsByPage = !isPureXfa ? (0, _core_utils.getNewAnnotationsMap)(annotationStorage) : null;
       const promises = [pdfManager.onLoadedStream(), pdfManager.ensureCatalog("acroForm"), pdfManager.ensureCatalog("acroFormRef"), pdfManager.ensureDoc("xref"), pdfManager.ensureDoc("startXRef")];
+
+      if (newAnnotationsByPage) {
+        for (const [pageIndex, annotations] of newAnnotationsByPage) {
+          promises.push(pdfManager.getPage(pageIndex).then(page => {
+            const task = new WorkerTask(`Save (editor): page ${pageIndex}`);
+            return page.saveNewAnnotations(handler, task, annotations).finally(function () {
+              finishWorkerTask(task);
+            });
+          }));
+        }
+      }
 
       if (isPureXfa) {
         promises.push(pdfManager.serializeXfaData(annotationStorage));
@@ -490,9 +502,7 @@ class WorkerMessageHandler {
             return stream.bytes;
           }
         } else {
-          for (const ref of refs) {
-            newRefs = ref.filter(x => x !== null).reduce((a, b) => a.concat(b), newRefs);
-          }
+          newRefs = refs.flat(2);
 
           if (newRefs.length === 0) {
             return stream.bytes;
@@ -699,7 +709,7 @@ if (typeof window === "undefined" && !_is_node.isNodeJS && typeof self !== "unde
 Object.defineProperty(exports, "__esModule", ({
   value: true
 }));
-exports.VerbosityLevel = exports.Util = exports.UnknownErrorException = exports.UnexpectedResponseException = exports.UNSUPPORTED_FEATURES = exports.TextRenderingMode = exports.StreamType = exports.RenderingIntentFlag = exports.PermissionFlag = exports.PasswordResponses = exports.PasswordException = exports.PageActionEventType = exports.OPS = exports.MissingPDFException = exports.InvalidPDFException = exports.ImageKind = exports.IDENTITY_MATRIX = exports.FormatError = exports.FontType = exports.FeatureTest = exports.FONT_IDENTITY_MATRIX = exports.DocumentActionEventType = exports.CMapCompressionType = exports.BaseException = exports.AnnotationType = exports.AnnotationStateModelType = exports.AnnotationReviewState = exports.AnnotationReplyType = exports.AnnotationMode = exports.AnnotationMarkedState = exports.AnnotationFlag = exports.AnnotationFieldFlag = exports.AnnotationBorderStyleType = exports.AnnotationActionEventType = exports.AbortException = void 0;
+exports.VerbosityLevel = exports.Util = exports.UnknownErrorException = exports.UnexpectedResponseException = exports.UNSUPPORTED_FEATURES = exports.TextRenderingMode = exports.StreamType = exports.RenderingIntentFlag = exports.PermissionFlag = exports.PasswordResponses = exports.PasswordException = exports.PageActionEventType = exports.OPS = exports.MissingPDFException = exports.LINE_FACTOR = exports.LINE_DESCENT_FACTOR = exports.InvalidPDFException = exports.ImageKind = exports.IDENTITY_MATRIX = exports.FormatError = exports.FontType = exports.FeatureTest = exports.FONT_IDENTITY_MATRIX = exports.DocumentActionEventType = exports.CMapCompressionType = exports.BaseException = exports.AnnotationType = exports.AnnotationStateModelType = exports.AnnotationReviewState = exports.AnnotationReplyType = exports.AnnotationMode = exports.AnnotationMarkedState = exports.AnnotationFlag = exports.AnnotationFieldFlag = exports.AnnotationEditorType = exports.AnnotationEditorPrefix = exports.AnnotationEditorParamsType = exports.AnnotationBorderStyleType = exports.AnnotationActionEventType = exports.AbortException = void 0;
 exports.arrayByteLength = arrayByteLength;
 exports.arraysToBytes = arraysToBytes;
 exports.assert = assert;
@@ -732,6 +742,10 @@ const IDENTITY_MATRIX = [1, 0, 0, 1, 0, 0];
 exports.IDENTITY_MATRIX = IDENTITY_MATRIX;
 const FONT_IDENTITY_MATRIX = [0.001, 0, 0, 0.001, 0, 0];
 exports.FONT_IDENTITY_MATRIX = FONT_IDENTITY_MATRIX;
+const LINE_FACTOR = 1.35;
+exports.LINE_FACTOR = LINE_FACTOR;
+const LINE_DESCENT_FACTOR = 0.35;
+exports.LINE_DESCENT_FACTOR = LINE_DESCENT_FACTOR;
 const RenderingIntentFlag = {
   ANY: 0x01,
   DISPLAY: 0x02,
@@ -749,6 +763,22 @@ const AnnotationMode = {
   ENABLE_STORAGE: 3
 };
 exports.AnnotationMode = AnnotationMode;
+const AnnotationEditorPrefix = "pdfjs_internal_editor_";
+exports.AnnotationEditorPrefix = AnnotationEditorPrefix;
+const AnnotationEditorType = {
+  DISABLE: -1,
+  NONE: 0,
+  FREETEXT: 3,
+  INK: 15
+};
+exports.AnnotationEditorType = AnnotationEditorType;
+const AnnotationEditorParamsType = {
+  FREETEXT_SIZE: 0,
+  FREETEXT_COLOR: 1,
+  INK_COLOR: 2,
+  INK_THICKNESS: 3
+};
+exports.AnnotationEditorParamsType = AnnotationEditorParamsType;
 const PermissionFlag = {
   PRINT: 0x04,
   MODIFY_CONTENTS: 0x08,
@@ -1767,8 +1797,7 @@ const Name = function NameClosure() {
     }
 
     static get(name) {
-      const nameValue = nameCache[name];
-      return nameValue ? nameValue : nameCache[name] = new Name(name);
+      return nameCache[name] || (nameCache[name] = new Name(name));
     }
 
     static _clearCache() {
@@ -1791,8 +1820,7 @@ const Cmd = function CmdClosure() {
     }
 
     static get(cmd) {
-      const cmdValue = cmdCache[cmd];
-      return cmdValue ? cmdValue : cmdCache[cmd] = new Cmd(cmd);
+      return cmdCache[cmd] || (cmdCache[cmd] = new Cmd(cmd));
     }
 
     static _clearCache() {
@@ -2002,8 +2030,7 @@ const Ref = function RefClosure() {
 
     static get(num, gen) {
       const key = gen === 0 ? `${num}R` : `${num}R${gen}`;
-      const refValue = refCache[key];
-      return refValue ? refValue : refCache[key] = new Ref(num, gen);
+      return refCache[key] || (refCache[key] = new Ref(num, gen));
     }
 
     static _clearCache() {
@@ -2116,13 +2143,652 @@ function clearPrimitiveCaches() {
 Object.defineProperty(exports, "__esModule", ({
   value: true
 }));
+exports.XRefParseException = exports.XRefEntryException = exports.ParserEOFException = exports.MissingDataException = exports.DocStats = void 0;
+exports.collectActions = collectActions;
+exports.encodeToXmlString = encodeToXmlString;
+exports.escapePDFName = escapePDFName;
+exports.getArrayLookupTableFactory = getArrayLookupTableFactory;
+exports.getInheritableProperty = getInheritableProperty;
+exports.getLookupTableFactory = getLookupTableFactory;
+exports.getNewAnnotationsMap = getNewAnnotationsMap;
+exports.isWhiteSpace = isWhiteSpace;
+exports.log2 = log2;
+exports.numberToString = numberToString;
+exports.parseXFAPath = parseXFAPath;
+exports.readInt8 = readInt8;
+exports.readUint16 = readUint16;
+exports.readUint32 = readUint32;
+exports.recoverJsURL = recoverJsURL;
+exports.toRomanNumerals = toRomanNumerals;
+exports.validateCSSFont = validateCSSFont;
+
+var _util = __w_pdfjs_require__(2);
+
+var _primitives = __w_pdfjs_require__(5);
+
+var _base_stream = __w_pdfjs_require__(7);
+
+function getLookupTableFactory(initializer) {
+  let lookup;
+  return function () {
+    if (initializer) {
+      lookup = Object.create(null);
+      initializer(lookup);
+      initializer = null;
+    }
+
+    return lookup;
+  };
+}
+
+function getArrayLookupTableFactory(initializer) {
+  let lookup;
+  return function () {
+    if (initializer) {
+      let arr = initializer();
+      initializer = null;
+      lookup = Object.create(null);
+
+      for (let i = 0, ii = arr.length; i < ii; i += 2) {
+        lookup[arr[i]] = arr[i + 1];
+      }
+
+      arr = null;
+    }
+
+    return lookup;
+  };
+}
+
+class MissingDataException extends _util.BaseException {
+  constructor(begin, end) {
+    super(`Missing data [${begin}, ${end})`, "MissingDataException");
+    this.begin = begin;
+    this.end = end;
+  }
+
+}
+
+exports.MissingDataException = MissingDataException;
+
+class ParserEOFException extends _util.BaseException {
+  constructor(msg) {
+    super(msg, "ParserEOFException");
+  }
+
+}
+
+exports.ParserEOFException = ParserEOFException;
+
+class XRefEntryException extends _util.BaseException {
+  constructor(msg) {
+    super(msg, "XRefEntryException");
+  }
+
+}
+
+exports.XRefEntryException = XRefEntryException;
+
+class XRefParseException extends _util.BaseException {
+  constructor(msg) {
+    super(msg, "XRefParseException");
+  }
+
+}
+
+exports.XRefParseException = XRefParseException;
+
+class DocStats {
+  constructor(handler) {
+    this._handler = handler;
+    this._streamTypes = new Set();
+    this._fontTypes = new Set();
+  }
+
+  _send() {
+    const streamTypes = Object.create(null),
+          fontTypes = Object.create(null);
+
+    for (const type of this._streamTypes) {
+      streamTypes[type] = true;
+    }
+
+    for (const type of this._fontTypes) {
+      fontTypes[type] = true;
+    }
+
+    this._handler.send("DocStats", {
+      streamTypes,
+      fontTypes
+    });
+  }
+
+  addStreamType(type) {
+    if (this._streamTypes.has(type)) {
+      return;
+    }
+
+    this._streamTypes.add(type);
+
+    this._send();
+  }
+
+  addFontType(type) {
+    if (this._fontTypes.has(type)) {
+      return;
+    }
+
+    this._fontTypes.add(type);
+
+    this._send();
+  }
+
+}
+
+exports.DocStats = DocStats;
+
+function getInheritableProperty({
+  dict,
+  key,
+  getArray = false,
+  stopWhenFound = true
+}) {
+  let values;
+  const visited = new _primitives.RefSet();
+
+  while (dict instanceof _primitives.Dict && !(dict.objId && visited.has(dict.objId))) {
+    if (dict.objId) {
+      visited.put(dict.objId);
+    }
+
+    const value = getArray ? dict.getArray(key) : dict.get(key);
+
+    if (value !== undefined) {
+      if (stopWhenFound) {
+        return value;
+      }
+
+      if (!values) {
+        values = [];
+      }
+
+      values.push(value);
+    }
+
+    dict = dict.get("Parent");
+  }
+
+  return values;
+}
+
+const ROMAN_NUMBER_MAP = ["", "C", "CC", "CCC", "CD", "D", "DC", "DCC", "DCCC", "CM", "", "X", "XX", "XXX", "XL", "L", "LX", "LXX", "LXXX", "XC", "", "I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX"];
+
+function toRomanNumerals(number, lowerCase = false) {
+  (0, _util.assert)(Number.isInteger(number) && number > 0, "The number should be a positive integer.");
+  const romanBuf = [];
+  let pos;
+
+  while (number >= 1000) {
+    number -= 1000;
+    romanBuf.push("M");
+  }
+
+  pos = number / 100 | 0;
+  number %= 100;
+  romanBuf.push(ROMAN_NUMBER_MAP[pos]);
+  pos = number / 10 | 0;
+  number %= 10;
+  romanBuf.push(ROMAN_NUMBER_MAP[10 + pos]);
+  romanBuf.push(ROMAN_NUMBER_MAP[20 + number]);
+  const romanStr = romanBuf.join("");
+  return lowerCase ? romanStr.toLowerCase() : romanStr;
+}
+
+function log2(x) {
+  if (x <= 0) {
+    return 0;
+  }
+
+  return Math.ceil(Math.log2(x));
+}
+
+function readInt8(data, offset) {
+  return data[offset] << 24 >> 24;
+}
+
+function readUint16(data, offset) {
+  return data[offset] << 8 | data[offset + 1];
+}
+
+function readUint32(data, offset) {
+  return (data[offset] << 24 | data[offset + 1] << 16 | data[offset + 2] << 8 | data[offset + 3]) >>> 0;
+}
+
+function isWhiteSpace(ch) {
+  return ch === 0x20 || ch === 0x09 || ch === 0x0d || ch === 0x0a;
+}
+
+function parseXFAPath(path) {
+  const positionPattern = /(.+)\[(\d+)\]$/;
+  return path.split(".").map(component => {
+    const m = component.match(positionPattern);
+
+    if (m) {
+      return {
+        name: m[1],
+        pos: parseInt(m[2], 10)
+      };
+    }
+
+    return {
+      name: component,
+      pos: 0
+    };
+  });
+}
+
+function escapePDFName(str) {
+  const buffer = [];
+  let start = 0;
+
+  for (let i = 0, ii = str.length; i < ii; i++) {
+    const char = str.charCodeAt(i);
+
+    if (char < 0x21 || char > 0x7e || char === 0x23 || char === 0x28 || char === 0x29 || char === 0x3c || char === 0x3e || char === 0x5b || char === 0x5d || char === 0x7b || char === 0x7d || char === 0x2f || char === 0x25) {
+      if (start < i) {
+        buffer.push(str.substring(start, i));
+      }
+
+      buffer.push(`#${char.toString(16)}`);
+      start = i + 1;
+    }
+  }
+
+  if (buffer.length === 0) {
+    return str;
+  }
+
+  if (start < str.length) {
+    buffer.push(str.substring(start, str.length));
+  }
+
+  return buffer.join("");
+}
+
+function _collectJS(entry, xref, list, parents) {
+  if (!entry) {
+    return;
+  }
+
+  let parent = null;
+
+  if (entry instanceof _primitives.Ref) {
+    if (parents.has(entry)) {
+      return;
+    }
+
+    parent = entry;
+    parents.put(parent);
+    entry = xref.fetch(entry);
+  }
+
+  if (Array.isArray(entry)) {
+    for (const element of entry) {
+      _collectJS(element, xref, list, parents);
+    }
+  } else if (entry instanceof _primitives.Dict) {
+    if ((0, _primitives.isName)(entry.get("S"), "JavaScript")) {
+      const js = entry.get("JS");
+      let code;
+
+      if (js instanceof _base_stream.BaseStream) {
+        code = js.getString();
+      } else if (typeof js === "string") {
+        code = js;
+      }
+
+      code = code && (0, _util.stringToPDFString)(code).replace(/\u0000/g, "");
+
+      if (code) {
+        list.push(code);
+      }
+    }
+
+    _collectJS(entry.getRaw("Next"), xref, list, parents);
+  }
+
+  if (parent) {
+    parents.remove(parent);
+  }
+}
+
+function collectActions(xref, dict, eventType) {
+  const actions = Object.create(null);
+  const additionalActionsDicts = getInheritableProperty({
+    dict,
+    key: "AA",
+    stopWhenFound: false
+  });
+
+  if (additionalActionsDicts) {
+    for (let i = additionalActionsDicts.length - 1; i >= 0; i--) {
+      const additionalActions = additionalActionsDicts[i];
+
+      if (!(additionalActions instanceof _primitives.Dict)) {
+        continue;
+      }
+
+      for (const key of additionalActions.getKeys()) {
+        const action = eventType[key];
+
+        if (!action) {
+          continue;
+        }
+
+        const actionDict = additionalActions.getRaw(key);
+        const parents = new _primitives.RefSet();
+        const list = [];
+
+        _collectJS(actionDict, xref, list, parents);
+
+        if (list.length > 0) {
+          actions[action] = list;
+        }
+      }
+    }
+  }
+
+  if (dict.has("A")) {
+    const actionDict = dict.get("A");
+    const parents = new _primitives.RefSet();
+    const list = [];
+
+    _collectJS(actionDict, xref, list, parents);
+
+    if (list.length > 0) {
+      actions.Action = list;
+    }
+  }
+
+  return (0, _util.objectSize)(actions) > 0 ? actions : null;
+}
+
+const XMLEntities = {
+  0x3c: "&lt;",
+  0x3e: "&gt;",
+  0x26: "&amp;",
+  0x22: "&quot;",
+  0x27: "&apos;"
+};
+
+function encodeToXmlString(str) {
+  const buffer = [];
+  let start = 0;
+
+  for (let i = 0, ii = str.length; i < ii; i++) {
+    const char = str.codePointAt(i);
+
+    if (0x20 <= char && char <= 0x7e) {
+      const entity = XMLEntities[char];
+
+      if (entity) {
+        if (start < i) {
+          buffer.push(str.substring(start, i));
+        }
+
+        buffer.push(entity);
+        start = i + 1;
+      }
+    } else {
+      if (start < i) {
+        buffer.push(str.substring(start, i));
+      }
+
+      buffer.push(`&#x${char.toString(16).toUpperCase()};`);
+
+      if (char > 0xd7ff && (char < 0xe000 || char > 0xfffd)) {
+        i++;
+      }
+
+      start = i + 1;
+    }
+  }
+
+  if (buffer.length === 0) {
+    return str;
+  }
+
+  if (start < str.length) {
+    buffer.push(str.substring(start, str.length));
+  }
+
+  return buffer.join("");
+}
+
+function validateCSSFont(cssFontInfo) {
+  const DEFAULT_CSS_FONT_OBLIQUE = "14";
+  const DEFAULT_CSS_FONT_WEIGHT = "400";
+  const CSS_FONT_WEIGHT_VALUES = new Set(["100", "200", "300", "400", "500", "600", "700", "800", "900", "1000", "normal", "bold", "bolder", "lighter"]);
+  const {
+    fontFamily,
+    fontWeight,
+    italicAngle
+  } = cssFontInfo;
+
+  if (/^".*"$/.test(fontFamily)) {
+    if (/[^\\]"/.test(fontFamily.slice(1, fontFamily.length - 1))) {
+      (0, _util.warn)(`XFA - FontFamily contains some unescaped ": ${fontFamily}.`);
+      return false;
+    }
+  } else if (/^'.*'$/.test(fontFamily)) {
+    if (/[^\\]'/.test(fontFamily.slice(1, fontFamily.length - 1))) {
+      (0, _util.warn)(`XFA - FontFamily contains some unescaped ': ${fontFamily}.`);
+      return false;
+    }
+  } else {
+    for (const ident of fontFamily.split(/[ \t]+/)) {
+      if (/^(\d|(-(\d|-)))/.test(ident) || !/^[\w-\\]+$/.test(ident)) {
+        (0, _util.warn)(`XFA - FontFamily contains some invalid <custom-ident>: ${fontFamily}.`);
+        return false;
+      }
+    }
+  }
+
+  const weight = fontWeight ? fontWeight.toString() : "";
+  cssFontInfo.fontWeight = CSS_FONT_WEIGHT_VALUES.has(weight) ? weight : DEFAULT_CSS_FONT_WEIGHT;
+  const angle = parseFloat(italicAngle);
+  cssFontInfo.italicAngle = isNaN(angle) || angle < -90 || angle > 90 ? DEFAULT_CSS_FONT_OBLIQUE : italicAngle.toString();
+  return true;
+}
+
+function recoverJsURL(str) {
+  const URL_OPEN_METHODS = ["app.launchURL", "window.open", "xfa.host.gotoURL"];
+  const regex = new RegExp("^\\s*(" + URL_OPEN_METHODS.join("|").split(".").join("\\.") + ")\\((?:'|\")([^'\"]*)(?:'|\")(?:,\\s*(\\w+)\\)|\\))", "i");
+  const jsUrl = regex.exec(str);
+
+  if (jsUrl && jsUrl[2]) {
+    const url = jsUrl[2];
+    let newWindow = false;
+
+    if (jsUrl[3] === "true" && jsUrl[1] === "app.launchURL") {
+      newWindow = true;
+    }
+
+    return {
+      url,
+      newWindow
+    };
+  }
+
+  return null;
+}
+
+function numberToString(value) {
+  if (Number.isInteger(value)) {
+    return value.toString();
+  }
+
+  const roundedValue = Math.round(value * 100);
+
+  if (roundedValue % 100 === 0) {
+    return (roundedValue / 100).toString();
+  }
+
+  if (roundedValue % 10 === 0) {
+    return value.toFixed(1);
+  }
+
+  return value.toFixed(2);
+}
+
+function getNewAnnotationsMap(annotationStorage) {
+  if (!annotationStorage) {
+    return null;
+  }
+
+  const newAnnotationsByPage = new Map();
+
+  for (const [key, value] of annotationStorage) {
+    if (!key.startsWith(_util.AnnotationEditorPrefix)) {
+      continue;
+    }
+
+    let annotations = newAnnotationsByPage.get(value.pageIndex);
+
+    if (!annotations) {
+      annotations = [];
+      newAnnotationsByPage.set(value.pageIndex, annotations);
+    }
+
+    annotations.push(value);
+  }
+
+  return newAnnotationsByPage.size > 0 ? newAnnotationsByPage : null;
+}
+
+/***/ }),
+/* 7 */
+/***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
+
+
+
+Object.defineProperty(exports, "__esModule", ({
+  value: true
+}));
+exports.BaseStream = void 0;
+
+var _util = __w_pdfjs_require__(2);
+
+class BaseStream {
+  constructor() {
+    if (this.constructor === BaseStream) {
+      (0, _util.unreachable)("Cannot initialize BaseStream.");
+    }
+  }
+
+  get length() {
+    (0, _util.unreachable)("Abstract getter `length` accessed");
+  }
+
+  get isEmpty() {
+    (0, _util.unreachable)("Abstract getter `isEmpty` accessed");
+  }
+
+  get isDataLoaded() {
+    return (0, _util.shadow)(this, "isDataLoaded", true);
+  }
+
+  getByte() {
+    (0, _util.unreachable)("Abstract method `getByte` called");
+  }
+
+  getBytes(length) {
+    (0, _util.unreachable)("Abstract method `getBytes` called");
+  }
+
+  peekByte() {
+    const peekedByte = this.getByte();
+
+    if (peekedByte !== -1) {
+      this.pos--;
+    }
+
+    return peekedByte;
+  }
+
+  peekBytes(length) {
+    const bytes = this.getBytes(length);
+    this.pos -= bytes.length;
+    return bytes;
+  }
+
+  getUint16() {
+    const b0 = this.getByte();
+    const b1 = this.getByte();
+
+    if (b0 === -1 || b1 === -1) {
+      return -1;
+    }
+
+    return (b0 << 8) + b1;
+  }
+
+  getInt32() {
+    const b0 = this.getByte();
+    const b1 = this.getByte();
+    const b2 = this.getByte();
+    const b3 = this.getByte();
+    return (b0 << 24) + (b1 << 16) + (b2 << 8) + b3;
+  }
+
+  getByteRange(begin, end) {
+    (0, _util.unreachable)("Abstract method `getByteRange` called");
+  }
+
+  getString(length) {
+    return (0, _util.bytesToString)(this.getBytes(length));
+  }
+
+  skip(n) {
+    this.pos += n || 1;
+  }
+
+  reset() {
+    (0, _util.unreachable)("Abstract method `reset` called");
+  }
+
+  moveStart() {
+    (0, _util.unreachable)("Abstract method `moveStart` called");
+  }
+
+  makeSubStream(start, length, dict = null) {
+    (0, _util.unreachable)("Abstract method `makeSubStream` called");
+  }
+
+  getBaseStreams() {
+    return null;
+  }
+
+}
+
+exports.BaseStream = BaseStream;
+
+/***/ }),
+/* 8 */
+/***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
+
+
+
+Object.defineProperty(exports, "__esModule", ({
+  value: true
+}));
 exports.NetworkPdfManager = exports.LocalPdfManager = void 0;
 
 var _util = __w_pdfjs_require__(2);
 
-var _chunked_stream = __w_pdfjs_require__(7);
+var _chunked_stream = __w_pdfjs_require__(9);
 
-var _core_utils = __w_pdfjs_require__(8);
+var _core_utils = __w_pdfjs_require__(6);
 
 var _document = __w_pdfjs_require__(11);
 
@@ -2332,7 +2998,7 @@ class NetworkPdfManager extends BasePdfManager {
 exports.NetworkPdfManager = NetworkPdfManager;
 
 /***/ }),
-/* 7 */
+/* 9 */
 /***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
 
@@ -2344,7 +3010,7 @@ exports.ChunkedStreamManager = exports.ChunkedStream = void 0;
 
 var _util = __w_pdfjs_require__(2);
 
-var _core_utils = __w_pdfjs_require__(8);
+var _core_utils = __w_pdfjs_require__(6);
 
 var _stream = __w_pdfjs_require__(10);
 
@@ -2906,600 +3572,6 @@ class ChunkedStreamManager {
 exports.ChunkedStreamManager = ChunkedStreamManager;
 
 /***/ }),
-/* 8 */
-/***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
-
-
-
-Object.defineProperty(exports, "__esModule", ({
-  value: true
-}));
-exports.XRefParseException = exports.XRefEntryException = exports.ParserEOFException = exports.MissingDataException = exports.DocStats = void 0;
-exports.collectActions = collectActions;
-exports.encodeToXmlString = encodeToXmlString;
-exports.escapePDFName = escapePDFName;
-exports.getArrayLookupTableFactory = getArrayLookupTableFactory;
-exports.getInheritableProperty = getInheritableProperty;
-exports.getLookupTableFactory = getLookupTableFactory;
-exports.isWhiteSpace = isWhiteSpace;
-exports.log2 = log2;
-exports.parseXFAPath = parseXFAPath;
-exports.readInt8 = readInt8;
-exports.readUint16 = readUint16;
-exports.readUint32 = readUint32;
-exports.recoverJsURL = recoverJsURL;
-exports.toRomanNumerals = toRomanNumerals;
-exports.validateCSSFont = validateCSSFont;
-
-var _util = __w_pdfjs_require__(2);
-
-var _primitives = __w_pdfjs_require__(5);
-
-var _base_stream = __w_pdfjs_require__(9);
-
-function getLookupTableFactory(initializer) {
-  let lookup;
-  return function () {
-    if (initializer) {
-      lookup = Object.create(null);
-      initializer(lookup);
-      initializer = null;
-    }
-
-    return lookup;
-  };
-}
-
-function getArrayLookupTableFactory(initializer) {
-  let lookup;
-  return function () {
-    if (initializer) {
-      let arr = initializer();
-      initializer = null;
-      lookup = Object.create(null);
-
-      for (let i = 0, ii = arr.length; i < ii; i += 2) {
-        lookup[arr[i]] = arr[i + 1];
-      }
-
-      arr = null;
-    }
-
-    return lookup;
-  };
-}
-
-class MissingDataException extends _util.BaseException {
-  constructor(begin, end) {
-    super(`Missing data [${begin}, ${end})`, "MissingDataException");
-    this.begin = begin;
-    this.end = end;
-  }
-
-}
-
-exports.MissingDataException = MissingDataException;
-
-class ParserEOFException extends _util.BaseException {
-  constructor(msg) {
-    super(msg, "ParserEOFException");
-  }
-
-}
-
-exports.ParserEOFException = ParserEOFException;
-
-class XRefEntryException extends _util.BaseException {
-  constructor(msg) {
-    super(msg, "XRefEntryException");
-  }
-
-}
-
-exports.XRefEntryException = XRefEntryException;
-
-class XRefParseException extends _util.BaseException {
-  constructor(msg) {
-    super(msg, "XRefParseException");
-  }
-
-}
-
-exports.XRefParseException = XRefParseException;
-
-class DocStats {
-  constructor(handler) {
-    this._handler = handler;
-    this._streamTypes = new Set();
-    this._fontTypes = new Set();
-  }
-
-  _send() {
-    const streamTypes = Object.create(null),
-          fontTypes = Object.create(null);
-
-    for (const type of this._streamTypes) {
-      streamTypes[type] = true;
-    }
-
-    for (const type of this._fontTypes) {
-      fontTypes[type] = true;
-    }
-
-    this._handler.send("DocStats", {
-      streamTypes,
-      fontTypes
-    });
-  }
-
-  addStreamType(type) {
-    if (this._streamTypes.has(type)) {
-      return;
-    }
-
-    this._streamTypes.add(type);
-
-    this._send();
-  }
-
-  addFontType(type) {
-    if (this._fontTypes.has(type)) {
-      return;
-    }
-
-    this._fontTypes.add(type);
-
-    this._send();
-  }
-
-}
-
-exports.DocStats = DocStats;
-
-function getInheritableProperty({
-  dict,
-  key,
-  getArray = false,
-  stopWhenFound = true
-}) {
-  let values;
-  const visited = new _primitives.RefSet();
-
-  while (dict instanceof _primitives.Dict && !(dict.objId && visited.has(dict.objId))) {
-    if (dict.objId) {
-      visited.put(dict.objId);
-    }
-
-    const value = getArray ? dict.getArray(key) : dict.get(key);
-
-    if (value !== undefined) {
-      if (stopWhenFound) {
-        return value;
-      }
-
-      if (!values) {
-        values = [];
-      }
-
-      values.push(value);
-    }
-
-    dict = dict.get("Parent");
-  }
-
-  return values;
-}
-
-const ROMAN_NUMBER_MAP = ["", "C", "CC", "CCC", "CD", "D", "DC", "DCC", "DCCC", "CM", "", "X", "XX", "XXX", "XL", "L", "LX", "LXX", "LXXX", "XC", "", "I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX"];
-
-function toRomanNumerals(number, lowerCase = false) {
-  (0, _util.assert)(Number.isInteger(number) && number > 0, "The number should be a positive integer.");
-  const romanBuf = [];
-  let pos;
-
-  while (number >= 1000) {
-    number -= 1000;
-    romanBuf.push("M");
-  }
-
-  pos = number / 100 | 0;
-  number %= 100;
-  romanBuf.push(ROMAN_NUMBER_MAP[pos]);
-  pos = number / 10 | 0;
-  number %= 10;
-  romanBuf.push(ROMAN_NUMBER_MAP[10 + pos]);
-  romanBuf.push(ROMAN_NUMBER_MAP[20 + number]);
-  const romanStr = romanBuf.join("");
-  return lowerCase ? romanStr.toLowerCase() : romanStr;
-}
-
-function log2(x) {
-  if (x <= 0) {
-    return 0;
-  }
-
-  return Math.ceil(Math.log2(x));
-}
-
-function readInt8(data, offset) {
-  return data[offset] << 24 >> 24;
-}
-
-function readUint16(data, offset) {
-  return data[offset] << 8 | data[offset + 1];
-}
-
-function readUint32(data, offset) {
-  return (data[offset] << 24 | data[offset + 1] << 16 | data[offset + 2] << 8 | data[offset + 3]) >>> 0;
-}
-
-function isWhiteSpace(ch) {
-  return ch === 0x20 || ch === 0x09 || ch === 0x0d || ch === 0x0a;
-}
-
-function parseXFAPath(path) {
-  const positionPattern = /(.+)\[(\d+)\]$/;
-  return path.split(".").map(component => {
-    const m = component.match(positionPattern);
-
-    if (m) {
-      return {
-        name: m[1],
-        pos: parseInt(m[2], 10)
-      };
-    }
-
-    return {
-      name: component,
-      pos: 0
-    };
-  });
-}
-
-function escapePDFName(str) {
-  const buffer = [];
-  let start = 0;
-
-  for (let i = 0, ii = str.length; i < ii; i++) {
-    const char = str.charCodeAt(i);
-
-    if (char < 0x21 || char > 0x7e || char === 0x23 || char === 0x28 || char === 0x29 || char === 0x3c || char === 0x3e || char === 0x5b || char === 0x5d || char === 0x7b || char === 0x7d || char === 0x2f || char === 0x25) {
-      if (start < i) {
-        buffer.push(str.substring(start, i));
-      }
-
-      buffer.push(`#${char.toString(16)}`);
-      start = i + 1;
-    }
-  }
-
-  if (buffer.length === 0) {
-    return str;
-  }
-
-  if (start < str.length) {
-    buffer.push(str.substring(start, str.length));
-  }
-
-  return buffer.join("");
-}
-
-function _collectJS(entry, xref, list, parents) {
-  if (!entry) {
-    return;
-  }
-
-  let parent = null;
-
-  if (entry instanceof _primitives.Ref) {
-    if (parents.has(entry)) {
-      return;
-    }
-
-    parent = entry;
-    parents.put(parent);
-    entry = xref.fetch(entry);
-  }
-
-  if (Array.isArray(entry)) {
-    for (const element of entry) {
-      _collectJS(element, xref, list, parents);
-    }
-  } else if (entry instanceof _primitives.Dict) {
-    if ((0, _primitives.isName)(entry.get("S"), "JavaScript")) {
-      const js = entry.get("JS");
-      let code;
-
-      if (js instanceof _base_stream.BaseStream) {
-        code = js.getString();
-      } else if (typeof js === "string") {
-        code = js;
-      }
-
-      code = code && (0, _util.stringToPDFString)(code);
-
-      if (code) {
-        list.push(code);
-      }
-    }
-
-    _collectJS(entry.getRaw("Next"), xref, list, parents);
-  }
-
-  if (parent) {
-    parents.remove(parent);
-  }
-}
-
-function collectActions(xref, dict, eventType) {
-  const actions = Object.create(null);
-  const additionalActionsDicts = getInheritableProperty({
-    dict,
-    key: "AA",
-    stopWhenFound: false
-  });
-
-  if (additionalActionsDicts) {
-    for (let i = additionalActionsDicts.length - 1; i >= 0; i--) {
-      const additionalActions = additionalActionsDicts[i];
-
-      if (!(additionalActions instanceof _primitives.Dict)) {
-        continue;
-      }
-
-      for (const key of additionalActions.getKeys()) {
-        const action = eventType[key];
-
-        if (!action) {
-          continue;
-        }
-
-        const actionDict = additionalActions.getRaw(key);
-        const parents = new _primitives.RefSet();
-        const list = [];
-
-        _collectJS(actionDict, xref, list, parents);
-
-        if (list.length > 0) {
-          actions[action] = list;
-        }
-      }
-    }
-  }
-
-  if (dict.has("A")) {
-    const actionDict = dict.get("A");
-    const parents = new _primitives.RefSet();
-    const list = [];
-
-    _collectJS(actionDict, xref, list, parents);
-
-    if (list.length > 0) {
-      actions.Action = list;
-    }
-  }
-
-  return (0, _util.objectSize)(actions) > 0 ? actions : null;
-}
-
-const XMLEntities = {
-  0x3c: "&lt;",
-  0x3e: "&gt;",
-  0x26: "&amp;",
-  0x22: "&quot;",
-  0x27: "&apos;"
-};
-
-function encodeToXmlString(str) {
-  const buffer = [];
-  let start = 0;
-
-  for (let i = 0, ii = str.length; i < ii; i++) {
-    const char = str.codePointAt(i);
-
-    if (0x20 <= char && char <= 0x7e) {
-      const entity = XMLEntities[char];
-
-      if (entity) {
-        if (start < i) {
-          buffer.push(str.substring(start, i));
-        }
-
-        buffer.push(entity);
-        start = i + 1;
-      }
-    } else {
-      if (start < i) {
-        buffer.push(str.substring(start, i));
-      }
-
-      buffer.push(`&#x${char.toString(16).toUpperCase()};`);
-
-      if (char > 0xd7ff && (char < 0xe000 || char > 0xfffd)) {
-        i++;
-      }
-
-      start = i + 1;
-    }
-  }
-
-  if (buffer.length === 0) {
-    return str;
-  }
-
-  if (start < str.length) {
-    buffer.push(str.substring(start, str.length));
-  }
-
-  return buffer.join("");
-}
-
-function validateCSSFont(cssFontInfo) {
-  const DEFAULT_CSS_FONT_OBLIQUE = "14";
-  const DEFAULT_CSS_FONT_WEIGHT = "400";
-  const CSS_FONT_WEIGHT_VALUES = new Set(["100", "200", "300", "400", "500", "600", "700", "800", "900", "1000", "normal", "bold", "bolder", "lighter"]);
-  const {
-    fontFamily,
-    fontWeight,
-    italicAngle
-  } = cssFontInfo;
-
-  if (/^".*"$/.test(fontFamily)) {
-    if (/[^\\]"/.test(fontFamily.slice(1, fontFamily.length - 1))) {
-      (0, _util.warn)(`XFA - FontFamily contains some unescaped ": ${fontFamily}.`);
-      return false;
-    }
-  } else if (/^'.*'$/.test(fontFamily)) {
-    if (/[^\\]'/.test(fontFamily.slice(1, fontFamily.length - 1))) {
-      (0, _util.warn)(`XFA - FontFamily contains some unescaped ': ${fontFamily}.`);
-      return false;
-    }
-  } else {
-    for (const ident of fontFamily.split(/[ \t]+/)) {
-      if (/^(\d|(-(\d|-)))/.test(ident) || !/^[\w-\\]+$/.test(ident)) {
-        (0, _util.warn)(`XFA - FontFamily contains some invalid <custom-ident>: ${fontFamily}.`);
-        return false;
-      }
-    }
-  }
-
-  const weight = fontWeight ? fontWeight.toString() : "";
-  cssFontInfo.fontWeight = CSS_FONT_WEIGHT_VALUES.has(weight) ? weight : DEFAULT_CSS_FONT_WEIGHT;
-  const angle = parseFloat(italicAngle);
-  cssFontInfo.italicAngle = isNaN(angle) || angle < -90 || angle > 90 ? DEFAULT_CSS_FONT_OBLIQUE : italicAngle.toString();
-  return true;
-}
-
-function recoverJsURL(str) {
-  const URL_OPEN_METHODS = ["app.launchURL", "window.open", "xfa.host.gotoURL"];
-  const regex = new RegExp("^\\s*(" + URL_OPEN_METHODS.join("|").split(".").join("\\.") + ")\\((?:'|\")([^'\"]*)(?:'|\")(?:,\\s*(\\w+)\\)|\\))", "i");
-  const jsUrl = regex.exec(str);
-
-  if (jsUrl && jsUrl[2]) {
-    const url = jsUrl[2];
-    let newWindow = false;
-
-    if (jsUrl[3] === "true" && jsUrl[1] === "app.launchURL") {
-      newWindow = true;
-    }
-
-    return {
-      url,
-      newWindow
-    };
-  }
-
-  return null;
-}
-
-/***/ }),
-/* 9 */
-/***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
-
-
-
-Object.defineProperty(exports, "__esModule", ({
-  value: true
-}));
-exports.BaseStream = void 0;
-
-var _util = __w_pdfjs_require__(2);
-
-class BaseStream {
-  constructor() {
-    if (this.constructor === BaseStream) {
-      (0, _util.unreachable)("Cannot initialize BaseStream.");
-    }
-  }
-
-  get length() {
-    (0, _util.unreachable)("Abstract getter `length` accessed");
-  }
-
-  get isEmpty() {
-    (0, _util.unreachable)("Abstract getter `isEmpty` accessed");
-  }
-
-  get isDataLoaded() {
-    return (0, _util.shadow)(this, "isDataLoaded", true);
-  }
-
-  getByte() {
-    (0, _util.unreachable)("Abstract method `getByte` called");
-  }
-
-  getBytes(length) {
-    (0, _util.unreachable)("Abstract method `getBytes` called");
-  }
-
-  peekByte() {
-    const peekedByte = this.getByte();
-
-    if (peekedByte !== -1) {
-      this.pos--;
-    }
-
-    return peekedByte;
-  }
-
-  peekBytes(length) {
-    const bytes = this.getBytes(length);
-    this.pos -= bytes.length;
-    return bytes;
-  }
-
-  getUint16() {
-    const b0 = this.getByte();
-    const b1 = this.getByte();
-
-    if (b0 === -1 || b1 === -1) {
-      return -1;
-    }
-
-    return (b0 << 8) + b1;
-  }
-
-  getInt32() {
-    const b0 = this.getByte();
-    const b1 = this.getByte();
-    const b2 = this.getByte();
-    const b3 = this.getByte();
-    return (b0 << 24) + (b1 << 16) + (b2 << 8) + b3;
-  }
-
-  getByteRange(begin, end) {
-    (0, _util.unreachable)("Abstract method `getByteRange` called");
-  }
-
-  getString(length) {
-    return (0, _util.bytesToString)(this.getBytes(length));
-  }
-
-  skip(n) {
-    this.pos += n || 1;
-  }
-
-  reset() {
-    (0, _util.unreachable)("Abstract method `reset` called");
-  }
-
-  moveStart() {
-    (0, _util.unreachable)("Abstract method `moveStart` called");
-  }
-
-  makeSubStream(start, length, dict = null) {
-    (0, _util.unreachable)("Abstract method `makeSubStream` called");
-  }
-
-  getBaseStreams() {
-    return null;
-  }
-
-}
-
-exports.BaseStream = BaseStream;
-
-/***/ }),
 /* 10 */
 /***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
@@ -3510,7 +3582,7 @@ Object.defineProperty(exports, "__esModule", ({
 }));
 exports.StringStream = exports.Stream = exports.NullStream = void 0;
 
-var _base_stream = __w_pdfjs_require__(9);
+var _base_stream = __w_pdfjs_require__(7);
 
 var _util = __w_pdfjs_require__(2);
 
@@ -3618,7 +3690,7 @@ exports.Page = exports.PDFDocument = void 0;
 
 var _util = __w_pdfjs_require__(2);
 
-var _core_utils = __w_pdfjs_require__(8);
+var _core_utils = __w_pdfjs_require__(6);
 
 var _primitives = __w_pdfjs_require__(5);
 
@@ -3626,13 +3698,13 @@ var _xfa_fonts = __w_pdfjs_require__(12);
 
 var _annotation = __w_pdfjs_require__(22);
 
-var _base_stream = __w_pdfjs_require__(9);
+var _base_stream = __w_pdfjs_require__(7);
 
-var _crypto = __w_pdfjs_require__(74);
+var _crypto = __w_pdfjs_require__(67);
 
-var _catalog = __w_pdfjs_require__(65);
+var _catalog = __w_pdfjs_require__(69);
 
-var _cleanup_helper = __w_pdfjs_require__(67);
+var _cleanup_helper = __w_pdfjs_require__(71);
 
 var _dataset_reader = __w_pdfjs_require__(100);
 
@@ -3640,7 +3712,7 @@ var _parser = __w_pdfjs_require__(27);
 
 var _stream = __w_pdfjs_require__(10);
 
-var _object_loader = __w_pdfjs_require__(72);
+var _object_loader = __w_pdfjs_require__(75);
 
 var _operator_list = __w_pdfjs_require__(62);
 
@@ -3648,7 +3720,9 @@ var _evaluator = __w_pdfjs_require__(25);
 
 var _decode_stream = __w_pdfjs_require__(29);
 
-var _struct_tree = __w_pdfjs_require__(71);
+var _struct_tree = __w_pdfjs_require__(74);
+
+var _writer = __w_pdfjs_require__(65);
 
 var _factory = __w_pdfjs_require__(76);
 
@@ -3727,7 +3801,9 @@ class Page {
   }
 
   get resources() {
-    return (0, _util.shadow)(this, "resources", this._getInheritableProperty("Resources") || _primitives.Dict.empty);
+    const resources = this._getInheritableProperty("Resources");
+
+    return (0, _util.shadow)(this, "resources", resources instanceof _primitives.Dict ? resources : _primitives.Dict.empty);
   }
 
   _getBoundingBox(name) {
@@ -3834,6 +3910,55 @@ class Page {
     } : null);
   }
 
+  async saveNewAnnotations(handler, task, annotations) {
+    if (this.xfaFactory) {
+      throw new Error("XFA: Cannot save new annotations.");
+    }
+
+    const partialEvaluator = new _evaluator.PartialEvaluator({
+      xref: this.xref,
+      handler,
+      pageIndex: this.pageIndex,
+      idFactory: this._localIdFactory,
+      fontCache: this.fontCache,
+      builtInCMapCache: this.builtInCMapCache,
+      standardFontDataCache: this.standardFontDataCache,
+      globalImageCache: this.globalImageCache,
+      options: this.evaluatorOptions
+    });
+    const pageDict = this.pageDict;
+    const annotationsArray = this.annotations.slice();
+    const newData = await _annotation.AnnotationFactory.saveNewAnnotations(partialEvaluator, task, annotations);
+
+    for (const {
+      ref
+    } of newData.annotations) {
+      annotationsArray.push(ref);
+    }
+
+    const savedDict = pageDict.get("Annots");
+    pageDict.set("Annots", annotationsArray);
+    const buffer = [];
+    let transform = null;
+
+    if (this.xref.encrypt) {
+      transform = this.xref.encrypt.createCipherTransform(this.ref.num, this.ref.gen);
+    }
+
+    (0, _writer.writeObject)(this.ref, pageDict, buffer, transform);
+
+    if (savedDict) {
+      pageDict.set("Annots", savedDict);
+    }
+
+    const objects = newData.dependencies;
+    objects.push({
+      ref: this.ref,
+      data: buffer.join("")
+    }, ...newData.annotations);
+    return objects;
+  }
+
   save(handler, task, annotationStorage) {
     const partialEvaluator = new _evaluator.PartialEvaluator({
       xref: this.xref,
@@ -3860,7 +3985,9 @@ class Page {
         }));
       }
 
-      return Promise.all(newRefsPromises);
+      return Promise.all(newRefsPromises).then(function (newRefs) {
+        return newRefs.filter(newRef => !!newRef);
+      });
     });
   }
 
@@ -3896,6 +4023,17 @@ class Page {
       globalImageCache: this.globalImageCache,
       options: this.evaluatorOptions
     });
+    const newAnnotationsByPage = !this.xfaFactory ? (0, _core_utils.getNewAnnotationsMap)(annotationStorage) : null;
+    let newAnnotationsPromise = Promise.resolve(null);
+
+    if (newAnnotationsByPage) {
+      const newAnnotations = newAnnotationsByPage.get(this.pageIndex);
+
+      if (newAnnotations) {
+        newAnnotationsPromise = _annotation.AnnotationFactory.printNewAnnotations(partialEvaluator, task, newAnnotations);
+      }
+    }
+
     const dataPromises = Promise.all([contentStreamPromise, resourcesPromise]);
     const pageListPromise = dataPromises.then(([contentStream]) => {
       const opList = new _operator_list.OperatorList(intent, sink);
@@ -3913,7 +4051,11 @@ class Page {
         return opList;
       });
     });
-    return Promise.all([pageListPromise, this._parsedAnnotations]).then(function ([pageOpList, annotations]) {
+    return Promise.all([pageListPromise, this._parsedAnnotations, newAnnotationsPromise]).then(function ([pageOpList, annotations, newAnnotations]) {
+      if (newAnnotations) {
+        annotations = annotations.concat(newAnnotations);
+      }
+
       if (annotations.length === 0 || intent & _util.RenderingIntentFlag.ANNOTATIONS_DISABLE) {
         pageOpList.flush(true);
         return {
@@ -3937,13 +4079,10 @@ class Page {
       }
 
       return Promise.all(opListPromises).then(function (opLists) {
-        pageOpList.addOp(_util.OPS.beginAnnotations, []);
-
         for (const opList of opLists) {
           pageOpList.addOpList(opList);
         }
 
-        pageOpList.addOp(_util.OPS.endAnnotations, []);
         pageOpList.flush(true);
         return {
           length: pageOpList.totalLength
@@ -4488,7 +4627,7 @@ class PDFDocument {
     const pdfFonts = [];
     const initialState = {
       get font() {
-        return pdfFonts[pdfFonts.length - 1];
+        return pdfFonts.at(-1);
       },
 
       set font(font) {
@@ -5088,7 +5227,7 @@ var _myriadpro_factors = __w_pdfjs_require__(16);
 
 var _segoeui_factors = __w_pdfjs_require__(17);
 
-var _core_utils = __w_pdfjs_require__(8);
+var _core_utils = __w_pdfjs_require__(6);
 
 var _fonts_utils = __w_pdfjs_require__(18);
 
@@ -5285,7 +5424,7 @@ function getXfaFontDict(name) {
   dict.set("CIDToGIDMap", _primitives.Name.get("Identity"));
   dict.set("W", widths);
   dict.set("FirstChar", widths[0]);
-  dict.set("LastChar", widths[widths.length - 2] + widths[widths.length - 1].length - 1);
+  dict.set("LastChar", widths.at(-2) + widths.at(-1).length - 1);
   const descriptor = new _primitives.Dict(null);
   dict.set("FontDescriptor", descriptor);
   const systemInfo = new _primitives.Dict(null);
@@ -5716,7 +5855,7 @@ Object.defineProperty(exports, "__esModule", ({
 }));
 exports.getGlyphsUnicode = exports.getDingbatsGlyphsUnicode = void 0;
 
-var _core_utils = __w_pdfjs_require__(8);
+var _core_utils = __w_pdfjs_require__(6);
 
 const getGlyphsUnicode = (0, _core_utils.getArrayLookupTableFactory)(function () {
   return ["A", 0x0041, "AE", 0x00c6, "AEacute", 0x01fc, "AEmacron", 0x01e2, "AEsmall", 0xf7e6, "Aacute", 0x00c1, "Aacutesmall", 0xf7e1, "Abreve", 0x0102, "Abreveacute", 0x1eae, "Abrevecyrillic", 0x04d0, "Abrevedotbelow", 0x1eb6, "Abrevegrave", 0x1eb0, "Abrevehookabove", 0x1eb2, "Abrevetilde", 0x1eb4, "Acaron", 0x01cd, "Acircle", 0x24b6, "Acircumflex", 0x00c2, "Acircumflexacute", 0x1ea4, "Acircumflexdotbelow", 0x1eac, "Acircumflexgrave", 0x1ea6, "Acircumflexhookabove", 0x1ea8, "Acircumflexsmall", 0xf7e2, "Acircumflextilde", 0x1eaa, "Acute", 0xf6c9, "Acutesmall", 0xf7b4, "Acyrillic", 0x0410, "Adblgrave", 0x0200, "Adieresis", 0x00c4, "Adieresiscyrillic", 0x04d2, "Adieresismacron", 0x01de, "Adieresissmall", 0xf7e4, "Adotbelow", 0x1ea0, "Adotmacron", 0x01e0, "Agrave", 0x00c0, "Agravesmall", 0xf7e0, "Ahookabove", 0x1ea2, "Aiecyrillic", 0x04d4, "Ainvertedbreve", 0x0202, "Alpha", 0x0391, "Alphatonos", 0x0386, "Amacron", 0x0100, "Amonospace", 0xff21, "Aogonek", 0x0104, "Aring", 0x00c5, "Aringacute", 0x01fa, "Aringbelow", 0x1e00, "Aringsmall", 0xf7e5, "Asmall", 0xf761, "Atilde", 0x00c3, "Atildesmall", 0xf7e3, "Aybarmenian", 0x0531, "B", 0x0042, "Bcircle", 0x24b7, "Bdotaccent", 0x1e02, "Bdotbelow", 0x1e04, "Becyrillic", 0x0411, "Benarmenian", 0x0532, "Beta", 0x0392, "Bhook", 0x0181, "Blinebelow", 0x1e06, "Bmonospace", 0xff22, "Brevesmall", 0xf6f4, "Bsmall", 0xf762, "Btopbar", 0x0182, "C", 0x0043, "Caarmenian", 0x053e, "Cacute", 0x0106, "Caron", 0xf6ca, "Caronsmall", 0xf6f5, "Ccaron", 0x010c, "Ccedilla", 0x00c7, "Ccedillaacute", 0x1e08, "Ccedillasmall", 0xf7e7, "Ccircle", 0x24b8, "Ccircumflex", 0x0108, "Cdot", 0x010a, "Cdotaccent", 0x010a, "Cedillasmall", 0xf7b8, "Chaarmenian", 0x0549, "Cheabkhasiancyrillic", 0x04bc, "Checyrillic", 0x0427, "Chedescenderabkhasiancyrillic", 0x04be, "Chedescendercyrillic", 0x04b6, "Chedieresiscyrillic", 0x04f4, "Cheharmenian", 0x0543, "Chekhakassiancyrillic", 0x04cb, "Cheverticalstrokecyrillic", 0x04b8, "Chi", 0x03a7, "Chook", 0x0187, "Circumflexsmall", 0xf6f6, "Cmonospace", 0xff23, "Coarmenian", 0x0551, "Csmall", 0xf763, "D", 0x0044, "DZ", 0x01f1, "DZcaron", 0x01c4, "Daarmenian", 0x0534, "Dafrican", 0x0189, "Dcaron", 0x010e, "Dcedilla", 0x1e10, "Dcircle", 0x24b9, "Dcircumflexbelow", 0x1e12, "Dcroat", 0x0110, "Ddotaccent", 0x1e0a, "Ddotbelow", 0x1e0c, "Decyrillic", 0x0414, "Deicoptic", 0x03ee, "Delta", 0x2206, "Deltagreek", 0x0394, "Dhook", 0x018a, "Dieresis", 0xf6cb, "DieresisAcute", 0xf6cc, "DieresisGrave", 0xf6cd, "Dieresissmall", 0xf7a8, "Digammagreek", 0x03dc, "Djecyrillic", 0x0402, "Dlinebelow", 0x1e0e, "Dmonospace", 0xff24, "Dotaccentsmall", 0xf6f7, "Dslash", 0x0110, "Dsmall", 0xf764, "Dtopbar", 0x018b, "Dz", 0x01f2, "Dzcaron", 0x01c5, "Dzeabkhasiancyrillic", 0x04e0, "Dzecyrillic", 0x0405, "Dzhecyrillic", 0x040f, "E", 0x0045, "Eacute", 0x00c9, "Eacutesmall", 0xf7e9, "Ebreve", 0x0114, "Ecaron", 0x011a, "Ecedillabreve", 0x1e1c, "Echarmenian", 0x0535, "Ecircle", 0x24ba, "Ecircumflex", 0x00ca, "Ecircumflexacute", 0x1ebe, "Ecircumflexbelow", 0x1e18, "Ecircumflexdotbelow", 0x1ec6, "Ecircumflexgrave", 0x1ec0, "Ecircumflexhookabove", 0x1ec2, "Ecircumflexsmall", 0xf7ea, "Ecircumflextilde", 0x1ec4, "Ecyrillic", 0x0404, "Edblgrave", 0x0204, "Edieresis", 0x00cb, "Edieresissmall", 0xf7eb, "Edot", 0x0116, "Edotaccent", 0x0116, "Edotbelow", 0x1eb8, "Efcyrillic", 0x0424, "Egrave", 0x00c8, "Egravesmall", 0xf7e8, "Eharmenian", 0x0537, "Ehookabove", 0x1eba, "Eightroman", 0x2167, "Einvertedbreve", 0x0206, "Eiotifiedcyrillic", 0x0464, "Elcyrillic", 0x041b, "Elevenroman", 0x216a, "Emacron", 0x0112, "Emacronacute", 0x1e16, "Emacrongrave", 0x1e14, "Emcyrillic", 0x041c, "Emonospace", 0xff25, "Encyrillic", 0x041d, "Endescendercyrillic", 0x04a2, "Eng", 0x014a, "Enghecyrillic", 0x04a4, "Enhookcyrillic", 0x04c7, "Eogonek", 0x0118, "Eopen", 0x0190, "Epsilon", 0x0395, "Epsilontonos", 0x0388, "Ercyrillic", 0x0420, "Ereversed", 0x018e, "Ereversedcyrillic", 0x042d, "Escyrillic", 0x0421, "Esdescendercyrillic", 0x04aa, "Esh", 0x01a9, "Esmall", 0xf765, "Eta", 0x0397, "Etarmenian", 0x0538, "Etatonos", 0x0389, "Eth", 0x00d0, "Ethsmall", 0xf7f0, "Etilde", 0x1ebc, "Etildebelow", 0x1e1a, "Euro", 0x20ac, "Ezh", 0x01b7, "Ezhcaron", 0x01ee, "Ezhreversed", 0x01b8, "F", 0x0046, "Fcircle", 0x24bb, "Fdotaccent", 0x1e1e, "Feharmenian", 0x0556, "Feicoptic", 0x03e4, "Fhook", 0x0191, "Fitacyrillic", 0x0472, "Fiveroman", 0x2164, "Fmonospace", 0xff26, "Fourroman", 0x2163, "Fsmall", 0xf766, "G", 0x0047, "GBsquare", 0x3387, "Gacute", 0x01f4, "Gamma", 0x0393, "Gammaafrican", 0x0194, "Gangiacoptic", 0x03ea, "Gbreve", 0x011e, "Gcaron", 0x01e6, "Gcedilla", 0x0122, "Gcircle", 0x24bc, "Gcircumflex", 0x011c, "Gcommaaccent", 0x0122, "Gdot", 0x0120, "Gdotaccent", 0x0120, "Gecyrillic", 0x0413, "Ghadarmenian", 0x0542, "Ghemiddlehookcyrillic", 0x0494, "Ghestrokecyrillic", 0x0492, "Gheupturncyrillic", 0x0490, "Ghook", 0x0193, "Gimarmenian", 0x0533, "Gjecyrillic", 0x0403, "Gmacron", 0x1e20, "Gmonospace", 0xff27, "Grave", 0xf6ce, "Gravesmall", 0xf760, "Gsmall", 0xf767, "Gsmallhook", 0x029b, "Gstroke", 0x01e4, "H", 0x0048, "H18533", 0x25cf, "H18543", 0x25aa, "H18551", 0x25ab, "H22073", 0x25a1, "HPsquare", 0x33cb, "Haabkhasiancyrillic", 0x04a8, "Hadescendercyrillic", 0x04b2, "Hardsigncyrillic", 0x042a, "Hbar", 0x0126, "Hbrevebelow", 0x1e2a, "Hcedilla", 0x1e28, "Hcircle", 0x24bd, "Hcircumflex", 0x0124, "Hdieresis", 0x1e26, "Hdotaccent", 0x1e22, "Hdotbelow", 0x1e24, "Hmonospace", 0xff28, "Hoarmenian", 0x0540, "Horicoptic", 0x03e8, "Hsmall", 0xf768, "Hungarumlaut", 0xf6cf, "Hungarumlautsmall", 0xf6f8, "Hzsquare", 0x3390, "I", 0x0049, "IAcyrillic", 0x042f, "IJ", 0x0132, "IUcyrillic", 0x042e, "Iacute", 0x00cd, "Iacutesmall", 0xf7ed, "Ibreve", 0x012c, "Icaron", 0x01cf, "Icircle", 0x24be, "Icircumflex", 0x00ce, "Icircumflexsmall", 0xf7ee, "Icyrillic", 0x0406, "Idblgrave", 0x0208, "Idieresis", 0x00cf, "Idieresisacute", 0x1e2e, "Idieresiscyrillic", 0x04e4, "Idieresissmall", 0xf7ef, "Idot", 0x0130, "Idotaccent", 0x0130, "Idotbelow", 0x1eca, "Iebrevecyrillic", 0x04d6, "Iecyrillic", 0x0415, "Ifraktur", 0x2111, "Igrave", 0x00cc, "Igravesmall", 0xf7ec, "Ihookabove", 0x1ec8, "Iicyrillic", 0x0418, "Iinvertedbreve", 0x020a, "Iishortcyrillic", 0x0419, "Imacron", 0x012a, "Imacroncyrillic", 0x04e2, "Imonospace", 0xff29, "Iniarmenian", 0x053b, "Iocyrillic", 0x0401, "Iogonek", 0x012e, "Iota", 0x0399, "Iotaafrican", 0x0196, "Iotadieresis", 0x03aa, "Iotatonos", 0x038a, "Ismall", 0xf769, "Istroke", 0x0197, "Itilde", 0x0128, "Itildebelow", 0x1e2c, "Izhitsacyrillic", 0x0474, "Izhitsadblgravecyrillic", 0x0476, "J", 0x004a, "Jaarmenian", 0x0541, "Jcircle", 0x24bf, "Jcircumflex", 0x0134, "Jecyrillic", 0x0408, "Jheharmenian", 0x054b, "Jmonospace", 0xff2a, "Jsmall", 0xf76a, "K", 0x004b, "KBsquare", 0x3385, "KKsquare", 0x33cd, "Kabashkircyrillic", 0x04a0, "Kacute", 0x1e30, "Kacyrillic", 0x041a, "Kadescendercyrillic", 0x049a, "Kahookcyrillic", 0x04c3, "Kappa", 0x039a, "Kastrokecyrillic", 0x049e, "Kaverticalstrokecyrillic", 0x049c, "Kcaron", 0x01e8, "Kcedilla", 0x0136, "Kcircle", 0x24c0, "Kcommaaccent", 0x0136, "Kdotbelow", 0x1e32, "Keharmenian", 0x0554, "Kenarmenian", 0x053f, "Khacyrillic", 0x0425, "Kheicoptic", 0x03e6, "Khook", 0x0198, "Kjecyrillic", 0x040c, "Klinebelow", 0x1e34, "Kmonospace", 0xff2b, "Koppacyrillic", 0x0480, "Koppagreek", 0x03de, "Ksicyrillic", 0x046e, "Ksmall", 0xf76b, "L", 0x004c, "LJ", 0x01c7, "LL", 0xf6bf, "Lacute", 0x0139, "Lambda", 0x039b, "Lcaron", 0x013d, "Lcedilla", 0x013b, "Lcircle", 0x24c1, "Lcircumflexbelow", 0x1e3c, "Lcommaaccent", 0x013b, "Ldot", 0x013f, "Ldotaccent", 0x013f, "Ldotbelow", 0x1e36, "Ldotbelowmacron", 0x1e38, "Liwnarmenian", 0x053c, "Lj", 0x01c8, "Ljecyrillic", 0x0409, "Llinebelow", 0x1e3a, "Lmonospace", 0xff2c, "Lslash", 0x0141, "Lslashsmall", 0xf6f9, "Lsmall", 0xf76c, "M", 0x004d, "MBsquare", 0x3386, "Macron", 0xf6d0, "Macronsmall", 0xf7af, "Macute", 0x1e3e, "Mcircle", 0x24c2, "Mdotaccent", 0x1e40, "Mdotbelow", 0x1e42, "Menarmenian", 0x0544, "Mmonospace", 0xff2d, "Msmall", 0xf76d, "Mturned", 0x019c, "Mu", 0x039c, "N", 0x004e, "NJ", 0x01ca, "Nacute", 0x0143, "Ncaron", 0x0147, "Ncedilla", 0x0145, "Ncircle", 0x24c3, "Ncircumflexbelow", 0x1e4a, "Ncommaaccent", 0x0145, "Ndotaccent", 0x1e44, "Ndotbelow", 0x1e46, "Nhookleft", 0x019d, "Nineroman", 0x2168, "Nj", 0x01cb, "Njecyrillic", 0x040a, "Nlinebelow", 0x1e48, "Nmonospace", 0xff2e, "Nowarmenian", 0x0546, "Nsmall", 0xf76e, "Ntilde", 0x00d1, "Ntildesmall", 0xf7f1, "Nu", 0x039d, "O", 0x004f, "OE", 0x0152, "OEsmall", 0xf6fa, "Oacute", 0x00d3, "Oacutesmall", 0xf7f3, "Obarredcyrillic", 0x04e8, "Obarreddieresiscyrillic", 0x04ea, "Obreve", 0x014e, "Ocaron", 0x01d1, "Ocenteredtilde", 0x019f, "Ocircle", 0x24c4, "Ocircumflex", 0x00d4, "Ocircumflexacute", 0x1ed0, "Ocircumflexdotbelow", 0x1ed8, "Ocircumflexgrave", 0x1ed2, "Ocircumflexhookabove", 0x1ed4, "Ocircumflexsmall", 0xf7f4, "Ocircumflextilde", 0x1ed6, "Ocyrillic", 0x041e, "Odblacute", 0x0150, "Odblgrave", 0x020c, "Odieresis", 0x00d6, "Odieresiscyrillic", 0x04e6, "Odieresissmall", 0xf7f6, "Odotbelow", 0x1ecc, "Ogoneksmall", 0xf6fb, "Ograve", 0x00d2, "Ogravesmall", 0xf7f2, "Oharmenian", 0x0555, "Ohm", 0x2126, "Ohookabove", 0x1ece, "Ohorn", 0x01a0, "Ohornacute", 0x1eda, "Ohorndotbelow", 0x1ee2, "Ohorngrave", 0x1edc, "Ohornhookabove", 0x1ede, "Ohorntilde", 0x1ee0, "Ohungarumlaut", 0x0150, "Oi", 0x01a2, "Oinvertedbreve", 0x020e, "Omacron", 0x014c, "Omacronacute", 0x1e52, "Omacrongrave", 0x1e50, "Omega", 0x2126, "Omegacyrillic", 0x0460, "Omegagreek", 0x03a9, "Omegaroundcyrillic", 0x047a, "Omegatitlocyrillic", 0x047c, "Omegatonos", 0x038f, "Omicron", 0x039f, "Omicrontonos", 0x038c, "Omonospace", 0xff2f, "Oneroman", 0x2160, "Oogonek", 0x01ea, "Oogonekmacron", 0x01ec, "Oopen", 0x0186, "Oslash", 0x00d8, "Oslashacute", 0x01fe, "Oslashsmall", 0xf7f8, "Osmall", 0xf76f, "Ostrokeacute", 0x01fe, "Otcyrillic", 0x047e, "Otilde", 0x00d5, "Otildeacute", 0x1e4c, "Otildedieresis", 0x1e4e, "Otildesmall", 0xf7f5, "P", 0x0050, "Pacute", 0x1e54, "Pcircle", 0x24c5, "Pdotaccent", 0x1e56, "Pecyrillic", 0x041f, "Peharmenian", 0x054a, "Pemiddlehookcyrillic", 0x04a6, "Phi", 0x03a6, "Phook", 0x01a4, "Pi", 0x03a0, "Piwrarmenian", 0x0553, "Pmonospace", 0xff30, "Psi", 0x03a8, "Psicyrillic", 0x0470, "Psmall", 0xf770, "Q", 0x0051, "Qcircle", 0x24c6, "Qmonospace", 0xff31, "Qsmall", 0xf771, "R", 0x0052, "Raarmenian", 0x054c, "Racute", 0x0154, "Rcaron", 0x0158, "Rcedilla", 0x0156, "Rcircle", 0x24c7, "Rcommaaccent", 0x0156, "Rdblgrave", 0x0210, "Rdotaccent", 0x1e58, "Rdotbelow", 0x1e5a, "Rdotbelowmacron", 0x1e5c, "Reharmenian", 0x0550, "Rfraktur", 0x211c, "Rho", 0x03a1, "Ringsmall", 0xf6fc, "Rinvertedbreve", 0x0212, "Rlinebelow", 0x1e5e, "Rmonospace", 0xff32, "Rsmall", 0xf772, "Rsmallinverted", 0x0281, "Rsmallinvertedsuperior", 0x02b6, "S", 0x0053, "SF010000", 0x250c, "SF020000", 0x2514, "SF030000", 0x2510, "SF040000", 0x2518, "SF050000", 0x253c, "SF060000", 0x252c, "SF070000", 0x2534, "SF080000", 0x251c, "SF090000", 0x2524, "SF100000", 0x2500, "SF110000", 0x2502, "SF190000", 0x2561, "SF200000", 0x2562, "SF210000", 0x2556, "SF220000", 0x2555, "SF230000", 0x2563, "SF240000", 0x2551, "SF250000", 0x2557, "SF260000", 0x255d, "SF270000", 0x255c, "SF280000", 0x255b, "SF360000", 0x255e, "SF370000", 0x255f, "SF380000", 0x255a, "SF390000", 0x2554, "SF400000", 0x2569, "SF410000", 0x2566, "SF420000", 0x2560, "SF430000", 0x2550, "SF440000", 0x256c, "SF450000", 0x2567, "SF460000", 0x2568, "SF470000", 0x2564, "SF480000", 0x2565, "SF490000", 0x2559, "SF500000", 0x2558, "SF510000", 0x2552, "SF520000", 0x2553, "SF530000", 0x256b, "SF540000", 0x256a, "Sacute", 0x015a, "Sacutedotaccent", 0x1e64, "Sampigreek", 0x03e0, "Scaron", 0x0160, "Scarondotaccent", 0x1e66, "Scaronsmall", 0xf6fd, "Scedilla", 0x015e, "Schwa", 0x018f, "Schwacyrillic", 0x04d8, "Schwadieresiscyrillic", 0x04da, "Scircle", 0x24c8, "Scircumflex", 0x015c, "Scommaaccent", 0x0218, "Sdotaccent", 0x1e60, "Sdotbelow", 0x1e62, "Sdotbelowdotaccent", 0x1e68, "Seharmenian", 0x054d, "Sevenroman", 0x2166, "Shaarmenian", 0x0547, "Shacyrillic", 0x0428, "Shchacyrillic", 0x0429, "Sheicoptic", 0x03e2, "Shhacyrillic", 0x04ba, "Shimacoptic", 0x03ec, "Sigma", 0x03a3, "Sixroman", 0x2165, "Smonospace", 0xff33, "Softsigncyrillic", 0x042c, "Ssmall", 0xf773, "Stigmagreek", 0x03da, "T", 0x0054, "Tau", 0x03a4, "Tbar", 0x0166, "Tcaron", 0x0164, "Tcedilla", 0x0162, "Tcircle", 0x24c9, "Tcircumflexbelow", 0x1e70, "Tcommaaccent", 0x0162, "Tdotaccent", 0x1e6a, "Tdotbelow", 0x1e6c, "Tecyrillic", 0x0422, "Tedescendercyrillic", 0x04ac, "Tenroman", 0x2169, "Tetsecyrillic", 0x04b4, "Theta", 0x0398, "Thook", 0x01ac, "Thorn", 0x00de, "Thornsmall", 0xf7fe, "Threeroman", 0x2162, "Tildesmall", 0xf6fe, "Tiwnarmenian", 0x054f, "Tlinebelow", 0x1e6e, "Tmonospace", 0xff34, "Toarmenian", 0x0539, "Tonefive", 0x01bc, "Tonesix", 0x0184, "Tonetwo", 0x01a7, "Tretroflexhook", 0x01ae, "Tsecyrillic", 0x0426, "Tshecyrillic", 0x040b, "Tsmall", 0xf774, "Twelveroman", 0x216b, "Tworoman", 0x2161, "U", 0x0055, "Uacute", 0x00da, "Uacutesmall", 0xf7fa, "Ubreve", 0x016c, "Ucaron", 0x01d3, "Ucircle", 0x24ca, "Ucircumflex", 0x00db, "Ucircumflexbelow", 0x1e76, "Ucircumflexsmall", 0xf7fb, "Ucyrillic", 0x0423, "Udblacute", 0x0170, "Udblgrave", 0x0214, "Udieresis", 0x00dc, "Udieresisacute", 0x01d7, "Udieresisbelow", 0x1e72, "Udieresiscaron", 0x01d9, "Udieresiscyrillic", 0x04f0, "Udieresisgrave", 0x01db, "Udieresismacron", 0x01d5, "Udieresissmall", 0xf7fc, "Udotbelow", 0x1ee4, "Ugrave", 0x00d9, "Ugravesmall", 0xf7f9, "Uhookabove", 0x1ee6, "Uhorn", 0x01af, "Uhornacute", 0x1ee8, "Uhorndotbelow", 0x1ef0, "Uhorngrave", 0x1eea, "Uhornhookabove", 0x1eec, "Uhorntilde", 0x1eee, "Uhungarumlaut", 0x0170, "Uhungarumlautcyrillic", 0x04f2, "Uinvertedbreve", 0x0216, "Ukcyrillic", 0x0478, "Umacron", 0x016a, "Umacroncyrillic", 0x04ee, "Umacrondieresis", 0x1e7a, "Umonospace", 0xff35, "Uogonek", 0x0172, "Upsilon", 0x03a5, "Upsilon1", 0x03d2, "Upsilonacutehooksymbolgreek", 0x03d3, "Upsilonafrican", 0x01b1, "Upsilondieresis", 0x03ab, "Upsilondieresishooksymbolgreek", 0x03d4, "Upsilonhooksymbol", 0x03d2, "Upsilontonos", 0x038e, "Uring", 0x016e, "Ushortcyrillic", 0x040e, "Usmall", 0xf775, "Ustraightcyrillic", 0x04ae, "Ustraightstrokecyrillic", 0x04b0, "Utilde", 0x0168, "Utildeacute", 0x1e78, "Utildebelow", 0x1e74, "V", 0x0056, "Vcircle", 0x24cb, "Vdotbelow", 0x1e7e, "Vecyrillic", 0x0412, "Vewarmenian", 0x054e, "Vhook", 0x01b2, "Vmonospace", 0xff36, "Voarmenian", 0x0548, "Vsmall", 0xf776, "Vtilde", 0x1e7c, "W", 0x0057, "Wacute", 0x1e82, "Wcircle", 0x24cc, "Wcircumflex", 0x0174, "Wdieresis", 0x1e84, "Wdotaccent", 0x1e86, "Wdotbelow", 0x1e88, "Wgrave", 0x1e80, "Wmonospace", 0xff37, "Wsmall", 0xf777, "X", 0x0058, "Xcircle", 0x24cd, "Xdieresis", 0x1e8c, "Xdotaccent", 0x1e8a, "Xeharmenian", 0x053d, "Xi", 0x039e, "Xmonospace", 0xff38, "Xsmall", 0xf778, "Y", 0x0059, "Yacute", 0x00dd, "Yacutesmall", 0xf7fd, "Yatcyrillic", 0x0462, "Ycircle", 0x24ce, "Ycircumflex", 0x0176, "Ydieresis", 0x0178, "Ydieresissmall", 0xf7ff, "Ydotaccent", 0x1e8e, "Ydotbelow", 0x1ef4, "Yericyrillic", 0x042b, "Yerudieresiscyrillic", 0x04f8, "Ygrave", 0x1ef2, "Yhook", 0x01b3, "Yhookabove", 0x1ef6, "Yiarmenian", 0x0545, "Yicyrillic", 0x0407, "Yiwnarmenian", 0x0552, "Ymonospace", 0xff39, "Ysmall", 0xf779, "Ytilde", 0x1ef8, "Yusbigcyrillic", 0x046a, "Yusbigiotifiedcyrillic", 0x046c, "Yuslittlecyrillic", 0x0466, "Yuslittleiotifiedcyrillic", 0x0468, "Z", 0x005a, "Zaarmenian", 0x0536, "Zacute", 0x0179, "Zcaron", 0x017d, "Zcaronsmall", 0xf6ff, "Zcircle", 0x24cf, "Zcircumflex", 0x1e90, "Zdot", 0x017b, "Zdotaccent", 0x017b, "Zdotbelow", 0x1e92, "Zecyrillic", 0x0417, "Zedescendercyrillic", 0x0498, "Zedieresiscyrillic", 0x04de, "Zeta", 0x0396, "Zhearmenian", 0x053a, "Zhebrevecyrillic", 0x04c1, "Zhecyrillic", 0x0416, "Zhedescendercyrillic", 0x0496, "Zhedieresiscyrillic", 0x04dc, "Zlinebelow", 0x1e94, "Zmonospace", 0xff3a, "Zsmall", 0xf77a, "Zstroke", 0x01b5, "a", 0x0061, "aabengali", 0x0986, "aacute", 0x00e1, "aadeva", 0x0906, "aagujarati", 0x0a86, "aagurmukhi", 0x0a06, "aamatragurmukhi", 0x0a3e, "aarusquare", 0x3303, "aavowelsignbengali", 0x09be, "aavowelsigndeva", 0x093e, "aavowelsigngujarati", 0x0abe, "abbreviationmarkarmenian", 0x055f, "abbreviationsigndeva", 0x0970, "abengali", 0x0985, "abopomofo", 0x311a, "abreve", 0x0103, "abreveacute", 0x1eaf, "abrevecyrillic", 0x04d1, "abrevedotbelow", 0x1eb7, "abrevegrave", 0x1eb1, "abrevehookabove", 0x1eb3, "abrevetilde", 0x1eb5, "acaron", 0x01ce, "acircle", 0x24d0, "acircumflex", 0x00e2, "acircumflexacute", 0x1ea5, "acircumflexdotbelow", 0x1ead, "acircumflexgrave", 0x1ea7, "acircumflexhookabove", 0x1ea9, "acircumflextilde", 0x1eab, "acute", 0x00b4, "acutebelowcmb", 0x0317, "acutecmb", 0x0301, "acutecomb", 0x0301, "acutedeva", 0x0954, "acutelowmod", 0x02cf, "acutetonecmb", 0x0341, "acyrillic", 0x0430, "adblgrave", 0x0201, "addakgurmukhi", 0x0a71, "adeva", 0x0905, "adieresis", 0x00e4, "adieresiscyrillic", 0x04d3, "adieresismacron", 0x01df, "adotbelow", 0x1ea1, "adotmacron", 0x01e1, "ae", 0x00e6, "aeacute", 0x01fd, "aekorean", 0x3150, "aemacron", 0x01e3, "afii00208", 0x2015, "afii08941", 0x20a4, "afii10017", 0x0410, "afii10018", 0x0411, "afii10019", 0x0412, "afii10020", 0x0413, "afii10021", 0x0414, "afii10022", 0x0415, "afii10023", 0x0401, "afii10024", 0x0416, "afii10025", 0x0417, "afii10026", 0x0418, "afii10027", 0x0419, "afii10028", 0x041a, "afii10029", 0x041b, "afii10030", 0x041c, "afii10031", 0x041d, "afii10032", 0x041e, "afii10033", 0x041f, "afii10034", 0x0420, "afii10035", 0x0421, "afii10036", 0x0422, "afii10037", 0x0423, "afii10038", 0x0424, "afii10039", 0x0425, "afii10040", 0x0426, "afii10041", 0x0427, "afii10042", 0x0428, "afii10043", 0x0429, "afii10044", 0x042a, "afii10045", 0x042b, "afii10046", 0x042c, "afii10047", 0x042d, "afii10048", 0x042e, "afii10049", 0x042f, "afii10050", 0x0490, "afii10051", 0x0402, "afii10052", 0x0403, "afii10053", 0x0404, "afii10054", 0x0405, "afii10055", 0x0406, "afii10056", 0x0407, "afii10057", 0x0408, "afii10058", 0x0409, "afii10059", 0x040a, "afii10060", 0x040b, "afii10061", 0x040c, "afii10062", 0x040e, "afii10063", 0xf6c4, "afii10064", 0xf6c5, "afii10065", 0x0430, "afii10066", 0x0431, "afii10067", 0x0432, "afii10068", 0x0433, "afii10069", 0x0434, "afii10070", 0x0435, "afii10071", 0x0451, "afii10072", 0x0436, "afii10073", 0x0437, "afii10074", 0x0438, "afii10075", 0x0439, "afii10076", 0x043a, "afii10077", 0x043b, "afii10078", 0x043c, "afii10079", 0x043d, "afii10080", 0x043e, "afii10081", 0x043f, "afii10082", 0x0440, "afii10083", 0x0441, "afii10084", 0x0442, "afii10085", 0x0443, "afii10086", 0x0444, "afii10087", 0x0445, "afii10088", 0x0446, "afii10089", 0x0447, "afii10090", 0x0448, "afii10091", 0x0449, "afii10092", 0x044a, "afii10093", 0x044b, "afii10094", 0x044c, "afii10095", 0x044d, "afii10096", 0x044e, "afii10097", 0x044f, "afii10098", 0x0491, "afii10099", 0x0452, "afii10100", 0x0453, "afii10101", 0x0454, "afii10102", 0x0455, "afii10103", 0x0456, "afii10104", 0x0457, "afii10105", 0x0458, "afii10106", 0x0459, "afii10107", 0x045a, "afii10108", 0x045b, "afii10109", 0x045c, "afii10110", 0x045e, "afii10145", 0x040f, "afii10146", 0x0462, "afii10147", 0x0472, "afii10148", 0x0474, "afii10192", 0xf6c6, "afii10193", 0x045f, "afii10194", 0x0463, "afii10195", 0x0473, "afii10196", 0x0475, "afii10831", 0xf6c7, "afii10832", 0xf6c8, "afii10846", 0x04d9, "afii299", 0x200e, "afii300", 0x200f, "afii301", 0x200d, "afii57381", 0x066a, "afii57388", 0x060c, "afii57392", 0x0660, "afii57393", 0x0661, "afii57394", 0x0662, "afii57395", 0x0663, "afii57396", 0x0664, "afii57397", 0x0665, "afii57398", 0x0666, "afii57399", 0x0667, "afii57400", 0x0668, "afii57401", 0x0669, "afii57403", 0x061b, "afii57407", 0x061f, "afii57409", 0x0621, "afii57410", 0x0622, "afii57411", 0x0623, "afii57412", 0x0624, "afii57413", 0x0625, "afii57414", 0x0626, "afii57415", 0x0627, "afii57416", 0x0628, "afii57417", 0x0629, "afii57418", 0x062a, "afii57419", 0x062b, "afii57420", 0x062c, "afii57421", 0x062d, "afii57422", 0x062e, "afii57423", 0x062f, "afii57424", 0x0630, "afii57425", 0x0631, "afii57426", 0x0632, "afii57427", 0x0633, "afii57428", 0x0634, "afii57429", 0x0635, "afii57430", 0x0636, "afii57431", 0x0637, "afii57432", 0x0638, "afii57433", 0x0639, "afii57434", 0x063a, "afii57440", 0x0640, "afii57441", 0x0641, "afii57442", 0x0642, "afii57443", 0x0643, "afii57444", 0x0644, "afii57445", 0x0645, "afii57446", 0x0646, "afii57448", 0x0648, "afii57449", 0x0649, "afii57450", 0x064a, "afii57451", 0x064b, "afii57452", 0x064c, "afii57453", 0x064d, "afii57454", 0x064e, "afii57455", 0x064f, "afii57456", 0x0650, "afii57457", 0x0651, "afii57458", 0x0652, "afii57470", 0x0647, "afii57505", 0x06a4, "afii57506", 0x067e, "afii57507", 0x0686, "afii57508", 0x0698, "afii57509", 0x06af, "afii57511", 0x0679, "afii57512", 0x0688, "afii57513", 0x0691, "afii57514", 0x06ba, "afii57519", 0x06d2, "afii57534", 0x06d5, "afii57636", 0x20aa, "afii57645", 0x05be, "afii57658", 0x05c3, "afii57664", 0x05d0, "afii57665", 0x05d1, "afii57666", 0x05d2, "afii57667", 0x05d3, "afii57668", 0x05d4, "afii57669", 0x05d5, "afii57670", 0x05d6, "afii57671", 0x05d7, "afii57672", 0x05d8, "afii57673", 0x05d9, "afii57674", 0x05da, "afii57675", 0x05db, "afii57676", 0x05dc, "afii57677", 0x05dd, "afii57678", 0x05de, "afii57679", 0x05df, "afii57680", 0x05e0, "afii57681", 0x05e1, "afii57682", 0x05e2, "afii57683", 0x05e3, "afii57684", 0x05e4, "afii57685", 0x05e5, "afii57686", 0x05e6, "afii57687", 0x05e7, "afii57688", 0x05e8, "afii57689", 0x05e9, "afii57690", 0x05ea, "afii57694", 0xfb2a, "afii57695", 0xfb2b, "afii57700", 0xfb4b, "afii57705", 0xfb1f, "afii57716", 0x05f0, "afii57717", 0x05f1, "afii57718", 0x05f2, "afii57723", 0xfb35, "afii57793", 0x05b4, "afii57794", 0x05b5, "afii57795", 0x05b6, "afii57796", 0x05bb, "afii57797", 0x05b8, "afii57798", 0x05b7, "afii57799", 0x05b0, "afii57800", 0x05b2, "afii57801", 0x05b1, "afii57802", 0x05b3, "afii57803", 0x05c2, "afii57804", 0x05c1, "afii57806", 0x05b9, "afii57807", 0x05bc, "afii57839", 0x05bd, "afii57841", 0x05bf, "afii57842", 0x05c0, "afii57929", 0x02bc, "afii61248", 0x2105, "afii61289", 0x2113, "afii61352", 0x2116, "afii61573", 0x202c, "afii61574", 0x202d, "afii61575", 0x202e, "afii61664", 0x200c, "afii63167", 0x066d, "afii64937", 0x02bd, "agrave", 0x00e0, "agujarati", 0x0a85, "agurmukhi", 0x0a05, "ahiragana", 0x3042, "ahookabove", 0x1ea3, "aibengali", 0x0990, "aibopomofo", 0x311e, "aideva", 0x0910, "aiecyrillic", 0x04d5, "aigujarati", 0x0a90, "aigurmukhi", 0x0a10, "aimatragurmukhi", 0x0a48, "ainarabic", 0x0639, "ainfinalarabic", 0xfeca, "aininitialarabic", 0xfecb, "ainmedialarabic", 0xfecc, "ainvertedbreve", 0x0203, "aivowelsignbengali", 0x09c8, "aivowelsigndeva", 0x0948, "aivowelsigngujarati", 0x0ac8, "akatakana", 0x30a2, "akatakanahalfwidth", 0xff71, "akorean", 0x314f, "alef", 0x05d0, "alefarabic", 0x0627, "alefdageshhebrew", 0xfb30, "aleffinalarabic", 0xfe8e, "alefhamzaabovearabic", 0x0623, "alefhamzaabovefinalarabic", 0xfe84, "alefhamzabelowarabic", 0x0625, "alefhamzabelowfinalarabic", 0xfe88, "alefhebrew", 0x05d0, "aleflamedhebrew", 0xfb4f, "alefmaddaabovearabic", 0x0622, "alefmaddaabovefinalarabic", 0xfe82, "alefmaksuraarabic", 0x0649, "alefmaksurafinalarabic", 0xfef0, "alefmaksurainitialarabic", 0xfef3, "alefmaksuramedialarabic", 0xfef4, "alefpatahhebrew", 0xfb2e, "alefqamatshebrew", 0xfb2f, "aleph", 0x2135, "allequal", 0x224c, "alpha", 0x03b1, "alphatonos", 0x03ac, "amacron", 0x0101, "amonospace", 0xff41, "ampersand", 0x0026, "ampersandmonospace", 0xff06, "ampersandsmall", 0xf726, "amsquare", 0x33c2, "anbopomofo", 0x3122, "angbopomofo", 0x3124, "angbracketleft", 0x3008, "angbracketright", 0x3009, "angkhankhuthai", 0x0e5a, "angle", 0x2220, "anglebracketleft", 0x3008, "anglebracketleftvertical", 0xfe3f, "anglebracketright", 0x3009, "anglebracketrightvertical", 0xfe40, "angleleft", 0x2329, "angleright", 0x232a, "angstrom", 0x212b, "anoteleia", 0x0387, "anudattadeva", 0x0952, "anusvarabengali", 0x0982, "anusvaradeva", 0x0902, "anusvaragujarati", 0x0a82, "aogonek", 0x0105, "apaatosquare", 0x3300, "aparen", 0x249c, "apostrophearmenian", 0x055a, "apostrophemod", 0x02bc, "apple", 0xf8ff, "approaches", 0x2250, "approxequal", 0x2248, "approxequalorimage", 0x2252, "approximatelyequal", 0x2245, "araeaekorean", 0x318e, "araeakorean", 0x318d, "arc", 0x2312, "arighthalfring", 0x1e9a, "aring", 0x00e5, "aringacute", 0x01fb, "aringbelow", 0x1e01, "arrowboth", 0x2194, "arrowdashdown", 0x21e3, "arrowdashleft", 0x21e0, "arrowdashright", 0x21e2, "arrowdashup", 0x21e1, "arrowdblboth", 0x21d4, "arrowdbldown", 0x21d3, "arrowdblleft", 0x21d0, "arrowdblright", 0x21d2, "arrowdblup", 0x21d1, "arrowdown", 0x2193, "arrowdownleft", 0x2199, "arrowdownright", 0x2198, "arrowdownwhite", 0x21e9, "arrowheaddownmod", 0x02c5, "arrowheadleftmod", 0x02c2, "arrowheadrightmod", 0x02c3, "arrowheadupmod", 0x02c4, "arrowhorizex", 0xf8e7, "arrowleft", 0x2190, "arrowleftdbl", 0x21d0, "arrowleftdblstroke", 0x21cd, "arrowleftoverright", 0x21c6, "arrowleftwhite", 0x21e6, "arrowright", 0x2192, "arrowrightdblstroke", 0x21cf, "arrowrightheavy", 0x279e, "arrowrightoverleft", 0x21c4, "arrowrightwhite", 0x21e8, "arrowtableft", 0x21e4, "arrowtabright", 0x21e5, "arrowup", 0x2191, "arrowupdn", 0x2195, "arrowupdnbse", 0x21a8, "arrowupdownbase", 0x21a8, "arrowupleft", 0x2196, "arrowupleftofdown", 0x21c5, "arrowupright", 0x2197, "arrowupwhite", 0x21e7, "arrowvertex", 0xf8e6, "asciicircum", 0x005e, "asciicircummonospace", 0xff3e, "asciitilde", 0x007e, "asciitildemonospace", 0xff5e, "ascript", 0x0251, "ascriptturned", 0x0252, "asmallhiragana", 0x3041, "asmallkatakana", 0x30a1, "asmallkatakanahalfwidth", 0xff67, "asterisk", 0x002a, "asteriskaltonearabic", 0x066d, "asteriskarabic", 0x066d, "asteriskmath", 0x2217, "asteriskmonospace", 0xff0a, "asterisksmall", 0xfe61, "asterism", 0x2042, "asuperior", 0xf6e9, "asymptoticallyequal", 0x2243, "at", 0x0040, "atilde", 0x00e3, "atmonospace", 0xff20, "atsmall", 0xfe6b, "aturned", 0x0250, "aubengali", 0x0994, "aubopomofo", 0x3120, "audeva", 0x0914, "augujarati", 0x0a94, "augurmukhi", 0x0a14, "aulengthmarkbengali", 0x09d7, "aumatragurmukhi", 0x0a4c, "auvowelsignbengali", 0x09cc, "auvowelsigndeva", 0x094c, "auvowelsigngujarati", 0x0acc, "avagrahadeva", 0x093d, "aybarmenian", 0x0561, "ayin", 0x05e2, "ayinaltonehebrew", 0xfb20, "ayinhebrew", 0x05e2, "b", 0x0062, "babengali", 0x09ac, "backslash", 0x005c, "backslashmonospace", 0xff3c, "badeva", 0x092c, "bagujarati", 0x0aac, "bagurmukhi", 0x0a2c, "bahiragana", 0x3070, "bahtthai", 0x0e3f, "bakatakana", 0x30d0, "bar", 0x007c, "barmonospace", 0xff5c, "bbopomofo", 0x3105, "bcircle", 0x24d1, "bdotaccent", 0x1e03, "bdotbelow", 0x1e05, "beamedsixteenthnotes", 0x266c, "because", 0x2235, "becyrillic", 0x0431, "beharabic", 0x0628, "behfinalarabic", 0xfe90, "behinitialarabic", 0xfe91, "behiragana", 0x3079, "behmedialarabic", 0xfe92, "behmeeminitialarabic", 0xfc9f, "behmeemisolatedarabic", 0xfc08, "behnoonfinalarabic", 0xfc6d, "bekatakana", 0x30d9, "benarmenian", 0x0562, "bet", 0x05d1, "beta", 0x03b2, "betasymbolgreek", 0x03d0, "betdagesh", 0xfb31, "betdageshhebrew", 0xfb31, "bethebrew", 0x05d1, "betrafehebrew", 0xfb4c, "bhabengali", 0x09ad, "bhadeva", 0x092d, "bhagujarati", 0x0aad, "bhagurmukhi", 0x0a2d, "bhook", 0x0253, "bihiragana", 0x3073, "bikatakana", 0x30d3, "bilabialclick", 0x0298, "bindigurmukhi", 0x0a02, "birusquare", 0x3331, "blackcircle", 0x25cf, "blackdiamond", 0x25c6, "blackdownpointingtriangle", 0x25bc, "blackleftpointingpointer", 0x25c4, "blackleftpointingtriangle", 0x25c0, "blacklenticularbracketleft", 0x3010, "blacklenticularbracketleftvertical", 0xfe3b, "blacklenticularbracketright", 0x3011, "blacklenticularbracketrightvertical", 0xfe3c, "blacklowerlefttriangle", 0x25e3, "blacklowerrighttriangle", 0x25e2, "blackrectangle", 0x25ac, "blackrightpointingpointer", 0x25ba, "blackrightpointingtriangle", 0x25b6, "blacksmallsquare", 0x25aa, "blacksmilingface", 0x263b, "blacksquare", 0x25a0, "blackstar", 0x2605, "blackupperlefttriangle", 0x25e4, "blackupperrighttriangle", 0x25e5, "blackuppointingsmalltriangle", 0x25b4, "blackuppointingtriangle", 0x25b2, "blank", 0x2423, "blinebelow", 0x1e07, "block", 0x2588, "bmonospace", 0xff42, "bobaimaithai", 0x0e1a, "bohiragana", 0x307c, "bokatakana", 0x30dc, "bparen", 0x249d, "bqsquare", 0x33c3, "braceex", 0xf8f4, "braceleft", 0x007b, "braceleftbt", 0xf8f3, "braceleftmid", 0xf8f2, "braceleftmonospace", 0xff5b, "braceleftsmall", 0xfe5b, "bracelefttp", 0xf8f1, "braceleftvertical", 0xfe37, "braceright", 0x007d, "bracerightbt", 0xf8fe, "bracerightmid", 0xf8fd, "bracerightmonospace", 0xff5d, "bracerightsmall", 0xfe5c, "bracerighttp", 0xf8fc, "bracerightvertical", 0xfe38, "bracketleft", 0x005b, "bracketleftbt", 0xf8f0, "bracketleftex", 0xf8ef, "bracketleftmonospace", 0xff3b, "bracketlefttp", 0xf8ee, "bracketright", 0x005d, "bracketrightbt", 0xf8fb, "bracketrightex", 0xf8fa, "bracketrightmonospace", 0xff3d, "bracketrighttp", 0xf8f9, "breve", 0x02d8, "brevebelowcmb", 0x032e, "brevecmb", 0x0306, "breveinvertedbelowcmb", 0x032f, "breveinvertedcmb", 0x0311, "breveinverteddoublecmb", 0x0361, "bridgebelowcmb", 0x032a, "bridgeinvertedbelowcmb", 0x033a, "brokenbar", 0x00a6, "bstroke", 0x0180, "bsuperior", 0xf6ea, "btopbar", 0x0183, "buhiragana", 0x3076, "bukatakana", 0x30d6, "bullet", 0x2022, "bulletinverse", 0x25d8, "bulletoperator", 0x2219, "bullseye", 0x25ce, "c", 0x0063, "caarmenian", 0x056e, "cabengali", 0x099a, "cacute", 0x0107, "cadeva", 0x091a, "cagujarati", 0x0a9a, "cagurmukhi", 0x0a1a, "calsquare", 0x3388, "candrabindubengali", 0x0981, "candrabinducmb", 0x0310, "candrabindudeva", 0x0901, "candrabindugujarati", 0x0a81, "capslock", 0x21ea, "careof", 0x2105, "caron", 0x02c7, "caronbelowcmb", 0x032c, "caroncmb", 0x030c, "carriagereturn", 0x21b5, "cbopomofo", 0x3118, "ccaron", 0x010d, "ccedilla", 0x00e7, "ccedillaacute", 0x1e09, "ccircle", 0x24d2, "ccircumflex", 0x0109, "ccurl", 0x0255, "cdot", 0x010b, "cdotaccent", 0x010b, "cdsquare", 0x33c5, "cedilla", 0x00b8, "cedillacmb", 0x0327, "cent", 0x00a2, "centigrade", 0x2103, "centinferior", 0xf6df, "centmonospace", 0xffe0, "centoldstyle", 0xf7a2, "centsuperior", 0xf6e0, "chaarmenian", 0x0579, "chabengali", 0x099b, "chadeva", 0x091b, "chagujarati", 0x0a9b, "chagurmukhi", 0x0a1b, "chbopomofo", 0x3114, "cheabkhasiancyrillic", 0x04bd, "checkmark", 0x2713, "checyrillic", 0x0447, "chedescenderabkhasiancyrillic", 0x04bf, "chedescendercyrillic", 0x04b7, "chedieresiscyrillic", 0x04f5, "cheharmenian", 0x0573, "chekhakassiancyrillic", 0x04cc, "cheverticalstrokecyrillic", 0x04b9, "chi", 0x03c7, "chieuchacirclekorean", 0x3277, "chieuchaparenkorean", 0x3217, "chieuchcirclekorean", 0x3269, "chieuchkorean", 0x314a, "chieuchparenkorean", 0x3209, "chochangthai", 0x0e0a, "chochanthai", 0x0e08, "chochingthai", 0x0e09, "chochoethai", 0x0e0c, "chook", 0x0188, "cieucacirclekorean", 0x3276, "cieucaparenkorean", 0x3216, "cieuccirclekorean", 0x3268, "cieuckorean", 0x3148, "cieucparenkorean", 0x3208, "cieucuparenkorean", 0x321c, "circle", 0x25cb, "circlecopyrt", 0x00a9, "circlemultiply", 0x2297, "circleot", 0x2299, "circleplus", 0x2295, "circlepostalmark", 0x3036, "circlewithlefthalfblack", 0x25d0, "circlewithrighthalfblack", 0x25d1, "circumflex", 0x02c6, "circumflexbelowcmb", 0x032d, "circumflexcmb", 0x0302, "clear", 0x2327, "clickalveolar", 0x01c2, "clickdental", 0x01c0, "clicklateral", 0x01c1, "clickretroflex", 0x01c3, "club", 0x2663, "clubsuitblack", 0x2663, "clubsuitwhite", 0x2667, "cmcubedsquare", 0x33a4, "cmonospace", 0xff43, "cmsquaredsquare", 0x33a0, "coarmenian", 0x0581, "colon", 0x003a, "colonmonetary", 0x20a1, "colonmonospace", 0xff1a, "colonsign", 0x20a1, "colonsmall", 0xfe55, "colontriangularhalfmod", 0x02d1, "colontriangularmod", 0x02d0, "comma", 0x002c, "commaabovecmb", 0x0313, "commaaboverightcmb", 0x0315, "commaaccent", 0xf6c3, "commaarabic", 0x060c, "commaarmenian", 0x055d, "commainferior", 0xf6e1, "commamonospace", 0xff0c, "commareversedabovecmb", 0x0314, "commareversedmod", 0x02bd, "commasmall", 0xfe50, "commasuperior", 0xf6e2, "commaturnedabovecmb", 0x0312, "commaturnedmod", 0x02bb, "compass", 0x263c, "congruent", 0x2245, "contourintegral", 0x222e, "control", 0x2303, "controlACK", 0x0006, "controlBEL", 0x0007, "controlBS", 0x0008, "controlCAN", 0x0018, "controlCR", 0x000d, "controlDC1", 0x0011, "controlDC2", 0x0012, "controlDC3", 0x0013, "controlDC4", 0x0014, "controlDEL", 0x007f, "controlDLE", 0x0010, "controlEM", 0x0019, "controlENQ", 0x0005, "controlEOT", 0x0004, "controlESC", 0x001b, "controlETB", 0x0017, "controlETX", 0x0003, "controlFF", 0x000c, "controlFS", 0x001c, "controlGS", 0x001d, "controlHT", 0x0009, "controlLF", 0x000a, "controlNAK", 0x0015, "controlNULL", 0x0000, "controlRS", 0x001e, "controlSI", 0x000f, "controlSO", 0x000e, "controlSOT", 0x0002, "controlSTX", 0x0001, "controlSUB", 0x001a, "controlSYN", 0x0016, "controlUS", 0x001f, "controlVT", 0x000b, "copyright", 0x00a9, "copyrightsans", 0xf8e9, "copyrightserif", 0xf6d9, "cornerbracketleft", 0x300c, "cornerbracketlefthalfwidth", 0xff62, "cornerbracketleftvertical", 0xfe41, "cornerbracketright", 0x300d, "cornerbracketrighthalfwidth", 0xff63, "cornerbracketrightvertical", 0xfe42, "corporationsquare", 0x337f, "cosquare", 0x33c7, "coverkgsquare", 0x33c6, "cparen", 0x249e, "cruzeiro", 0x20a2, "cstretched", 0x0297, "curlyand", 0x22cf, "curlyor", 0x22ce, "currency", 0x00a4, "cyrBreve", 0xf6d1, "cyrFlex", 0xf6d2, "cyrbreve", 0xf6d4, "cyrflex", 0xf6d5, "d", 0x0064, "daarmenian", 0x0564, "dabengali", 0x09a6, "dadarabic", 0x0636, "dadeva", 0x0926, "dadfinalarabic", 0xfebe, "dadinitialarabic", 0xfebf, "dadmedialarabic", 0xfec0, "dagesh", 0x05bc, "dageshhebrew", 0x05bc, "dagger", 0x2020, "daggerdbl", 0x2021, "dagujarati", 0x0aa6, "dagurmukhi", 0x0a26, "dahiragana", 0x3060, "dakatakana", 0x30c0, "dalarabic", 0x062f, "dalet", 0x05d3, "daletdagesh", 0xfb33, "daletdageshhebrew", 0xfb33, "dalethebrew", 0x05d3, "dalfinalarabic", 0xfeaa, "dammaarabic", 0x064f, "dammalowarabic", 0x064f, "dammatanaltonearabic", 0x064c, "dammatanarabic", 0x064c, "danda", 0x0964, "dargahebrew", 0x05a7, "dargalefthebrew", 0x05a7, "dasiapneumatacyrilliccmb", 0x0485, "dblGrave", 0xf6d3, "dblanglebracketleft", 0x300a, "dblanglebracketleftvertical", 0xfe3d, "dblanglebracketright", 0x300b, "dblanglebracketrightvertical", 0xfe3e, "dblarchinvertedbelowcmb", 0x032b, "dblarrowleft", 0x21d4, "dblarrowright", 0x21d2, "dbldanda", 0x0965, "dblgrave", 0xf6d6, "dblgravecmb", 0x030f, "dblintegral", 0x222c, "dbllowline", 0x2017, "dbllowlinecmb", 0x0333, "dbloverlinecmb", 0x033f, "dblprimemod", 0x02ba, "dblverticalbar", 0x2016, "dblverticallineabovecmb", 0x030e, "dbopomofo", 0x3109, "dbsquare", 0x33c8, "dcaron", 0x010f, "dcedilla", 0x1e11, "dcircle", 0x24d3, "dcircumflexbelow", 0x1e13, "dcroat", 0x0111, "ddabengali", 0x09a1, "ddadeva", 0x0921, "ddagujarati", 0x0aa1, "ddagurmukhi", 0x0a21, "ddalarabic", 0x0688, "ddalfinalarabic", 0xfb89, "dddhadeva", 0x095c, "ddhabengali", 0x09a2, "ddhadeva", 0x0922, "ddhagujarati", 0x0aa2, "ddhagurmukhi", 0x0a22, "ddotaccent", 0x1e0b, "ddotbelow", 0x1e0d, "decimalseparatorarabic", 0x066b, "decimalseparatorpersian", 0x066b, "decyrillic", 0x0434, "degree", 0x00b0, "dehihebrew", 0x05ad, "dehiragana", 0x3067, "deicoptic", 0x03ef, "dekatakana", 0x30c7, "deleteleft", 0x232b, "deleteright", 0x2326, "delta", 0x03b4, "deltaturned", 0x018d, "denominatorminusonenumeratorbengali", 0x09f8, "dezh", 0x02a4, "dhabengali", 0x09a7, "dhadeva", 0x0927, "dhagujarati", 0x0aa7, "dhagurmukhi", 0x0a27, "dhook", 0x0257, "dialytikatonos", 0x0385, "dialytikatonoscmb", 0x0344, "diamond", 0x2666, "diamondsuitwhite", 0x2662, "dieresis", 0x00a8, "dieresisacute", 0xf6d7, "dieresisbelowcmb", 0x0324, "dieresiscmb", 0x0308, "dieresisgrave", 0xf6d8, "dieresistonos", 0x0385, "dihiragana", 0x3062, "dikatakana", 0x30c2, "dittomark", 0x3003, "divide", 0x00f7, "divides", 0x2223, "divisionslash", 0x2215, "djecyrillic", 0x0452, "dkshade", 0x2593, "dlinebelow", 0x1e0f, "dlsquare", 0x3397, "dmacron", 0x0111, "dmonospace", 0xff44, "dnblock", 0x2584, "dochadathai", 0x0e0e, "dodekthai", 0x0e14, "dohiragana", 0x3069, "dokatakana", 0x30c9, "dollar", 0x0024, "dollarinferior", 0xf6e3, "dollarmonospace", 0xff04, "dollaroldstyle", 0xf724, "dollarsmall", 0xfe69, "dollarsuperior", 0xf6e4, "dong", 0x20ab, "dorusquare", 0x3326, "dotaccent", 0x02d9, "dotaccentcmb", 0x0307, "dotbelowcmb", 0x0323, "dotbelowcomb", 0x0323, "dotkatakana", 0x30fb, "dotlessi", 0x0131, "dotlessj", 0xf6be, "dotlessjstrokehook", 0x0284, "dotmath", 0x22c5, "dottedcircle", 0x25cc, "doubleyodpatah", 0xfb1f, "doubleyodpatahhebrew", 0xfb1f, "downtackbelowcmb", 0x031e, "downtackmod", 0x02d5, "dparen", 0x249f, "dsuperior", 0xf6eb, "dtail", 0x0256, "dtopbar", 0x018c, "duhiragana", 0x3065, "dukatakana", 0x30c5, "dz", 0x01f3, "dzaltone", 0x02a3, "dzcaron", 0x01c6, "dzcurl", 0x02a5, "dzeabkhasiancyrillic", 0x04e1, "dzecyrillic", 0x0455, "dzhecyrillic", 0x045f, "e", 0x0065, "eacute", 0x00e9, "earth", 0x2641, "ebengali", 0x098f, "ebopomofo", 0x311c, "ebreve", 0x0115, "ecandradeva", 0x090d, "ecandragujarati", 0x0a8d, "ecandravowelsigndeva", 0x0945, "ecandravowelsigngujarati", 0x0ac5, "ecaron", 0x011b, "ecedillabreve", 0x1e1d, "echarmenian", 0x0565, "echyiwnarmenian", 0x0587, "ecircle", 0x24d4, "ecircumflex", 0x00ea, "ecircumflexacute", 0x1ebf, "ecircumflexbelow", 0x1e19, "ecircumflexdotbelow", 0x1ec7, "ecircumflexgrave", 0x1ec1, "ecircumflexhookabove", 0x1ec3, "ecircumflextilde", 0x1ec5, "ecyrillic", 0x0454, "edblgrave", 0x0205, "edeva", 0x090f, "edieresis", 0x00eb, "edot", 0x0117, "edotaccent", 0x0117, "edotbelow", 0x1eb9, "eegurmukhi", 0x0a0f, "eematragurmukhi", 0x0a47, "efcyrillic", 0x0444, "egrave", 0x00e8, "egujarati", 0x0a8f, "eharmenian", 0x0567, "ehbopomofo", 0x311d, "ehiragana", 0x3048, "ehookabove", 0x1ebb, "eibopomofo", 0x311f, "eight", 0x0038, "eightarabic", 0x0668, "eightbengali", 0x09ee, "eightcircle", 0x2467, "eightcircleinversesansserif", 0x2791, "eightdeva", 0x096e, "eighteencircle", 0x2471, "eighteenparen", 0x2485, "eighteenperiod", 0x2499, "eightgujarati", 0x0aee, "eightgurmukhi", 0x0a6e, "eighthackarabic", 0x0668, "eighthangzhou", 0x3028, "eighthnotebeamed", 0x266b, "eightideographicparen", 0x3227, "eightinferior", 0x2088, "eightmonospace", 0xff18, "eightoldstyle", 0xf738, "eightparen", 0x247b, "eightperiod", 0x248f, "eightpersian", 0x06f8, "eightroman", 0x2177, "eightsuperior", 0x2078, "eightthai", 0x0e58, "einvertedbreve", 0x0207, "eiotifiedcyrillic", 0x0465, "ekatakana", 0x30a8, "ekatakanahalfwidth", 0xff74, "ekonkargurmukhi", 0x0a74, "ekorean", 0x3154, "elcyrillic", 0x043b, "element", 0x2208, "elevencircle", 0x246a, "elevenparen", 0x247e, "elevenperiod", 0x2492, "elevenroman", 0x217a, "ellipsis", 0x2026, "ellipsisvertical", 0x22ee, "emacron", 0x0113, "emacronacute", 0x1e17, "emacrongrave", 0x1e15, "emcyrillic", 0x043c, "emdash", 0x2014, "emdashvertical", 0xfe31, "emonospace", 0xff45, "emphasismarkarmenian", 0x055b, "emptyset", 0x2205, "enbopomofo", 0x3123, "encyrillic", 0x043d, "endash", 0x2013, "endashvertical", 0xfe32, "endescendercyrillic", 0x04a3, "eng", 0x014b, "engbopomofo", 0x3125, "enghecyrillic", 0x04a5, "enhookcyrillic", 0x04c8, "enspace", 0x2002, "eogonek", 0x0119, "eokorean", 0x3153, "eopen", 0x025b, "eopenclosed", 0x029a, "eopenreversed", 0x025c, "eopenreversedclosed", 0x025e, "eopenreversedhook", 0x025d, "eparen", 0x24a0, "epsilon", 0x03b5, "epsilontonos", 0x03ad, "equal", 0x003d, "equalmonospace", 0xff1d, "equalsmall", 0xfe66, "equalsuperior", 0x207c, "equivalence", 0x2261, "erbopomofo", 0x3126, "ercyrillic", 0x0440, "ereversed", 0x0258, "ereversedcyrillic", 0x044d, "escyrillic", 0x0441, "esdescendercyrillic", 0x04ab, "esh", 0x0283, "eshcurl", 0x0286, "eshortdeva", 0x090e, "eshortvowelsigndeva", 0x0946, "eshreversedloop", 0x01aa, "eshsquatreversed", 0x0285, "esmallhiragana", 0x3047, "esmallkatakana", 0x30a7, "esmallkatakanahalfwidth", 0xff6a, "estimated", 0x212e, "esuperior", 0xf6ec, "eta", 0x03b7, "etarmenian", 0x0568, "etatonos", 0x03ae, "eth", 0x00f0, "etilde", 0x1ebd, "etildebelow", 0x1e1b, "etnahtafoukhhebrew", 0x0591, "etnahtafoukhlefthebrew", 0x0591, "etnahtahebrew", 0x0591, "etnahtalefthebrew", 0x0591, "eturned", 0x01dd, "eukorean", 0x3161, "euro", 0x20ac, "evowelsignbengali", 0x09c7, "evowelsigndeva", 0x0947, "evowelsigngujarati", 0x0ac7, "exclam", 0x0021, "exclamarmenian", 0x055c, "exclamdbl", 0x203c, "exclamdown", 0x00a1, "exclamdownsmall", 0xf7a1, "exclammonospace", 0xff01, "exclamsmall", 0xf721, "existential", 0x2203, "ezh", 0x0292, "ezhcaron", 0x01ef, "ezhcurl", 0x0293, "ezhreversed", 0x01b9, "ezhtail", 0x01ba, "f", 0x0066, "fadeva", 0x095e, "fagurmukhi", 0x0a5e, "fahrenheit", 0x2109, "fathaarabic", 0x064e, "fathalowarabic", 0x064e, "fathatanarabic", 0x064b, "fbopomofo", 0x3108, "fcircle", 0x24d5, "fdotaccent", 0x1e1f, "feharabic", 0x0641, "feharmenian", 0x0586, "fehfinalarabic", 0xfed2, "fehinitialarabic", 0xfed3, "fehmedialarabic", 0xfed4, "feicoptic", 0x03e5, "female", 0x2640, "ff", 0xfb00, "f_f", 0xfb00, "ffi", 0xfb03, "ffl", 0xfb04, "fi", 0xfb01, "fifteencircle", 0x246e, "fifteenparen", 0x2482, "fifteenperiod", 0x2496, "figuredash", 0x2012, "filledbox", 0x25a0, "filledrect", 0x25ac, "finalkaf", 0x05da, "finalkafdagesh", 0xfb3a, "finalkafdageshhebrew", 0xfb3a, "finalkafhebrew", 0x05da, "finalmem", 0x05dd, "finalmemhebrew", 0x05dd, "finalnun", 0x05df, "finalnunhebrew", 0x05df, "finalpe", 0x05e3, "finalpehebrew", 0x05e3, "finaltsadi", 0x05e5, "finaltsadihebrew", 0x05e5, "firsttonechinese", 0x02c9, "fisheye", 0x25c9, "fitacyrillic", 0x0473, "five", 0x0035, "fivearabic", 0x0665, "fivebengali", 0x09eb, "fivecircle", 0x2464, "fivecircleinversesansserif", 0x278e, "fivedeva", 0x096b, "fiveeighths", 0x215d, "fivegujarati", 0x0aeb, "fivegurmukhi", 0x0a6b, "fivehackarabic", 0x0665, "fivehangzhou", 0x3025, "fiveideographicparen", 0x3224, "fiveinferior", 0x2085, "fivemonospace", 0xff15, "fiveoldstyle", 0xf735, "fiveparen", 0x2478, "fiveperiod", 0x248c, "fivepersian", 0x06f5, "fiveroman", 0x2174, "fivesuperior", 0x2075, "fivethai", 0x0e55, "fl", 0xfb02, "florin", 0x0192, "fmonospace", 0xff46, "fmsquare", 0x3399, "fofanthai", 0x0e1f, "fofathai", 0x0e1d, "fongmanthai", 0x0e4f, "forall", 0x2200, "four", 0x0034, "fourarabic", 0x0664, "fourbengali", 0x09ea, "fourcircle", 0x2463, "fourcircleinversesansserif", 0x278d, "fourdeva", 0x096a, "fourgujarati", 0x0aea, "fourgurmukhi", 0x0a6a, "fourhackarabic", 0x0664, "fourhangzhou", 0x3024, "fourideographicparen", 0x3223, "fourinferior", 0x2084, "fourmonospace", 0xff14, "fournumeratorbengali", 0x09f7, "fouroldstyle", 0xf734, "fourparen", 0x2477, "fourperiod", 0x248b, "fourpersian", 0x06f4, "fourroman", 0x2173, "foursuperior", 0x2074, "fourteencircle", 0x246d, "fourteenparen", 0x2481, "fourteenperiod", 0x2495, "fourthai", 0x0e54, "fourthtonechinese", 0x02cb, "fparen", 0x24a1, "fraction", 0x2044, "franc", 0x20a3, "g", 0x0067, "gabengali", 0x0997, "gacute", 0x01f5, "gadeva", 0x0917, "gafarabic", 0x06af, "gaffinalarabic", 0xfb93, "gafinitialarabic", 0xfb94, "gafmedialarabic", 0xfb95, "gagujarati", 0x0a97, "gagurmukhi", 0x0a17, "gahiragana", 0x304c, "gakatakana", 0x30ac, "gamma", 0x03b3, "gammalatinsmall", 0x0263, "gammasuperior", 0x02e0, "gangiacoptic", 0x03eb, "gbopomofo", 0x310d, "gbreve", 0x011f, "gcaron", 0x01e7, "gcedilla", 0x0123, "gcircle", 0x24d6, "gcircumflex", 0x011d, "gcommaaccent", 0x0123, "gdot", 0x0121, "gdotaccent", 0x0121, "gecyrillic", 0x0433, "gehiragana", 0x3052, "gekatakana", 0x30b2, "geometricallyequal", 0x2251, "gereshaccenthebrew", 0x059c, "gereshhebrew", 0x05f3, "gereshmuqdamhebrew", 0x059d, "germandbls", 0x00df, "gershayimaccenthebrew", 0x059e, "gershayimhebrew", 0x05f4, "getamark", 0x3013, "ghabengali", 0x0998, "ghadarmenian", 0x0572, "ghadeva", 0x0918, "ghagujarati", 0x0a98, "ghagurmukhi", 0x0a18, "ghainarabic", 0x063a, "ghainfinalarabic", 0xfece, "ghaininitialarabic", 0xfecf, "ghainmedialarabic", 0xfed0, "ghemiddlehookcyrillic", 0x0495, "ghestrokecyrillic", 0x0493, "gheupturncyrillic", 0x0491, "ghhadeva", 0x095a, "ghhagurmukhi", 0x0a5a, "ghook", 0x0260, "ghzsquare", 0x3393, "gihiragana", 0x304e, "gikatakana", 0x30ae, "gimarmenian", 0x0563, "gimel", 0x05d2, "gimeldagesh", 0xfb32, "gimeldageshhebrew", 0xfb32, "gimelhebrew", 0x05d2, "gjecyrillic", 0x0453, "glottalinvertedstroke", 0x01be, "glottalstop", 0x0294, "glottalstopinverted", 0x0296, "glottalstopmod", 0x02c0, "glottalstopreversed", 0x0295, "glottalstopreversedmod", 0x02c1, "glottalstopreversedsuperior", 0x02e4, "glottalstopstroke", 0x02a1, "glottalstopstrokereversed", 0x02a2, "gmacron", 0x1e21, "gmonospace", 0xff47, "gohiragana", 0x3054, "gokatakana", 0x30b4, "gparen", 0x24a2, "gpasquare", 0x33ac, "gradient", 0x2207, "grave", 0x0060, "gravebelowcmb", 0x0316, "gravecmb", 0x0300, "gravecomb", 0x0300, "gravedeva", 0x0953, "gravelowmod", 0x02ce, "gravemonospace", 0xff40, "gravetonecmb", 0x0340, "greater", 0x003e, "greaterequal", 0x2265, "greaterequalorless", 0x22db, "greatermonospace", 0xff1e, "greaterorequivalent", 0x2273, "greaterorless", 0x2277, "greateroverequal", 0x2267, "greatersmall", 0xfe65, "gscript", 0x0261, "gstroke", 0x01e5, "guhiragana", 0x3050, "guillemotleft", 0x00ab, "guillemotright", 0x00bb, "guilsinglleft", 0x2039, "guilsinglright", 0x203a, "gukatakana", 0x30b0, "guramusquare", 0x3318, "gysquare", 0x33c9, "h", 0x0068, "haabkhasiancyrillic", 0x04a9, "haaltonearabic", 0x06c1, "habengali", 0x09b9, "hadescendercyrillic", 0x04b3, "hadeva", 0x0939, "hagujarati", 0x0ab9, "hagurmukhi", 0x0a39, "haharabic", 0x062d, "hahfinalarabic", 0xfea2, "hahinitialarabic", 0xfea3, "hahiragana", 0x306f, "hahmedialarabic", 0xfea4, "haitusquare", 0x332a, "hakatakana", 0x30cf, "hakatakanahalfwidth", 0xff8a, "halantgurmukhi", 0x0a4d, "hamzaarabic", 0x0621, "hamzalowarabic", 0x0621, "hangulfiller", 0x3164, "hardsigncyrillic", 0x044a, "harpoonleftbarbup", 0x21bc, "harpoonrightbarbup", 0x21c0, "hasquare", 0x33ca, "hatafpatah", 0x05b2, "hatafpatah16", 0x05b2, "hatafpatah23", 0x05b2, "hatafpatah2f", 0x05b2, "hatafpatahhebrew", 0x05b2, "hatafpatahnarrowhebrew", 0x05b2, "hatafpatahquarterhebrew", 0x05b2, "hatafpatahwidehebrew", 0x05b2, "hatafqamats", 0x05b3, "hatafqamats1b", 0x05b3, "hatafqamats28", 0x05b3, "hatafqamats34", 0x05b3, "hatafqamatshebrew", 0x05b3, "hatafqamatsnarrowhebrew", 0x05b3, "hatafqamatsquarterhebrew", 0x05b3, "hatafqamatswidehebrew", 0x05b3, "hatafsegol", 0x05b1, "hatafsegol17", 0x05b1, "hatafsegol24", 0x05b1, "hatafsegol30", 0x05b1, "hatafsegolhebrew", 0x05b1, "hatafsegolnarrowhebrew", 0x05b1, "hatafsegolquarterhebrew", 0x05b1, "hatafsegolwidehebrew", 0x05b1, "hbar", 0x0127, "hbopomofo", 0x310f, "hbrevebelow", 0x1e2b, "hcedilla", 0x1e29, "hcircle", 0x24d7, "hcircumflex", 0x0125, "hdieresis", 0x1e27, "hdotaccent", 0x1e23, "hdotbelow", 0x1e25, "he", 0x05d4, "heart", 0x2665, "heartsuitblack", 0x2665, "heartsuitwhite", 0x2661, "hedagesh", 0xfb34, "hedageshhebrew", 0xfb34, "hehaltonearabic", 0x06c1, "heharabic", 0x0647, "hehebrew", 0x05d4, "hehfinalaltonearabic", 0xfba7, "hehfinalalttwoarabic", 0xfeea, "hehfinalarabic", 0xfeea, "hehhamzaabovefinalarabic", 0xfba5, "hehhamzaaboveisolatedarabic", 0xfba4, "hehinitialaltonearabic", 0xfba8, "hehinitialarabic", 0xfeeb, "hehiragana", 0x3078, "hehmedialaltonearabic", 0xfba9, "hehmedialarabic", 0xfeec, "heiseierasquare", 0x337b, "hekatakana", 0x30d8, "hekatakanahalfwidth", 0xff8d, "hekutaarusquare", 0x3336, "henghook", 0x0267, "herutusquare", 0x3339, "het", 0x05d7, "hethebrew", 0x05d7, "hhook", 0x0266, "hhooksuperior", 0x02b1, "hieuhacirclekorean", 0x327b, "hieuhaparenkorean", 0x321b, "hieuhcirclekorean", 0x326d, "hieuhkorean", 0x314e, "hieuhparenkorean", 0x320d, "hihiragana", 0x3072, "hikatakana", 0x30d2, "hikatakanahalfwidth", 0xff8b, "hiriq", 0x05b4, "hiriq14", 0x05b4, "hiriq21", 0x05b4, "hiriq2d", 0x05b4, "hiriqhebrew", 0x05b4, "hiriqnarrowhebrew", 0x05b4, "hiriqquarterhebrew", 0x05b4, "hiriqwidehebrew", 0x05b4, "hlinebelow", 0x1e96, "hmonospace", 0xff48, "hoarmenian", 0x0570, "hohipthai", 0x0e2b, "hohiragana", 0x307b, "hokatakana", 0x30db, "hokatakanahalfwidth", 0xff8e, "holam", 0x05b9, "holam19", 0x05b9, "holam26", 0x05b9, "holam32", 0x05b9, "holamhebrew", 0x05b9, "holamnarrowhebrew", 0x05b9, "holamquarterhebrew", 0x05b9, "holamwidehebrew", 0x05b9, "honokhukthai", 0x0e2e, "hookabovecomb", 0x0309, "hookcmb", 0x0309, "hookpalatalizedbelowcmb", 0x0321, "hookretroflexbelowcmb", 0x0322, "hoonsquare", 0x3342, "horicoptic", 0x03e9, "horizontalbar", 0x2015, "horncmb", 0x031b, "hotsprings", 0x2668, "house", 0x2302, "hparen", 0x24a3, "hsuperior", 0x02b0, "hturned", 0x0265, "huhiragana", 0x3075, "huiitosquare", 0x3333, "hukatakana", 0x30d5, "hukatakanahalfwidth", 0xff8c, "hungarumlaut", 0x02dd, "hungarumlautcmb", 0x030b, "hv", 0x0195, "hyphen", 0x002d, "hypheninferior", 0xf6e5, "hyphenmonospace", 0xff0d, "hyphensmall", 0xfe63, "hyphensuperior", 0xf6e6, "hyphentwo", 0x2010, "i", 0x0069, "iacute", 0x00ed, "iacyrillic", 0x044f, "ibengali", 0x0987, "ibopomofo", 0x3127, "ibreve", 0x012d, "icaron", 0x01d0, "icircle", 0x24d8, "icircumflex", 0x00ee, "icyrillic", 0x0456, "idblgrave", 0x0209, "ideographearthcircle", 0x328f, "ideographfirecircle", 0x328b, "ideographicallianceparen", 0x323f, "ideographiccallparen", 0x323a, "ideographiccentrecircle", 0x32a5, "ideographicclose", 0x3006, "ideographiccomma", 0x3001, "ideographiccommaleft", 0xff64, "ideographiccongratulationparen", 0x3237, "ideographiccorrectcircle", 0x32a3, "ideographicearthparen", 0x322f, "ideographicenterpriseparen", 0x323d, "ideographicexcellentcircle", 0x329d, "ideographicfestivalparen", 0x3240, "ideographicfinancialcircle", 0x3296, "ideographicfinancialparen", 0x3236, "ideographicfireparen", 0x322b, "ideographichaveparen", 0x3232, "ideographichighcircle", 0x32a4, "ideographiciterationmark", 0x3005, "ideographiclaborcircle", 0x3298, "ideographiclaborparen", 0x3238, "ideographicleftcircle", 0x32a7, "ideographiclowcircle", 0x32a6, "ideographicmedicinecircle", 0x32a9, "ideographicmetalparen", 0x322e, "ideographicmoonparen", 0x322a, "ideographicnameparen", 0x3234, "ideographicperiod", 0x3002, "ideographicprintcircle", 0x329e, "ideographicreachparen", 0x3243, "ideographicrepresentparen", 0x3239, "ideographicresourceparen", 0x323e, "ideographicrightcircle", 0x32a8, "ideographicsecretcircle", 0x3299, "ideographicselfparen", 0x3242, "ideographicsocietyparen", 0x3233, "ideographicspace", 0x3000, "ideographicspecialparen", 0x3235, "ideographicstockparen", 0x3231, "ideographicstudyparen", 0x323b, "ideographicsunparen", 0x3230, "ideographicsuperviseparen", 0x323c, "ideographicwaterparen", 0x322c, "ideographicwoodparen", 0x322d, "ideographiczero", 0x3007, "ideographmetalcircle", 0x328e, "ideographmooncircle", 0x328a, "ideographnamecircle", 0x3294, "ideographsuncircle", 0x3290, "ideographwatercircle", 0x328c, "ideographwoodcircle", 0x328d, "ideva", 0x0907, "idieresis", 0x00ef, "idieresisacute", 0x1e2f, "idieresiscyrillic", 0x04e5, "idotbelow", 0x1ecb, "iebrevecyrillic", 0x04d7, "iecyrillic", 0x0435, "ieungacirclekorean", 0x3275, "ieungaparenkorean", 0x3215, "ieungcirclekorean", 0x3267, "ieungkorean", 0x3147, "ieungparenkorean", 0x3207, "igrave", 0x00ec, "igujarati", 0x0a87, "igurmukhi", 0x0a07, "ihiragana", 0x3044, "ihookabove", 0x1ec9, "iibengali", 0x0988, "iicyrillic", 0x0438, "iideva", 0x0908, "iigujarati", 0x0a88, "iigurmukhi", 0x0a08, "iimatragurmukhi", 0x0a40, "iinvertedbreve", 0x020b, "iishortcyrillic", 0x0439, "iivowelsignbengali", 0x09c0, "iivowelsigndeva", 0x0940, "iivowelsigngujarati", 0x0ac0, "ij", 0x0133, "ikatakana", 0x30a4, "ikatakanahalfwidth", 0xff72, "ikorean", 0x3163, "ilde", 0x02dc, "iluyhebrew", 0x05ac, "imacron", 0x012b, "imacroncyrillic", 0x04e3, "imageorapproximatelyequal", 0x2253, "imatragurmukhi", 0x0a3f, "imonospace", 0xff49, "increment", 0x2206, "infinity", 0x221e, "iniarmenian", 0x056b, "integral", 0x222b, "integralbottom", 0x2321, "integralbt", 0x2321, "integralex", 0xf8f5, "integraltop", 0x2320, "integraltp", 0x2320, "intersection", 0x2229, "intisquare", 0x3305, "invbullet", 0x25d8, "invcircle", 0x25d9, "invsmileface", 0x263b, "iocyrillic", 0x0451, "iogonek", 0x012f, "iota", 0x03b9, "iotadieresis", 0x03ca, "iotadieresistonos", 0x0390, "iotalatin", 0x0269, "iotatonos", 0x03af, "iparen", 0x24a4, "irigurmukhi", 0x0a72, "ismallhiragana", 0x3043, "ismallkatakana", 0x30a3, "ismallkatakanahalfwidth", 0xff68, "issharbengali", 0x09fa, "istroke", 0x0268, "isuperior", 0xf6ed, "iterationhiragana", 0x309d, "iterationkatakana", 0x30fd, "itilde", 0x0129, "itildebelow", 0x1e2d, "iubopomofo", 0x3129, "iucyrillic", 0x044e, "ivowelsignbengali", 0x09bf, "ivowelsigndeva", 0x093f, "ivowelsigngujarati", 0x0abf, "izhitsacyrillic", 0x0475, "izhitsadblgravecyrillic", 0x0477, "j", 0x006a, "jaarmenian", 0x0571, "jabengali", 0x099c, "jadeva", 0x091c, "jagujarati", 0x0a9c, "jagurmukhi", 0x0a1c, "jbopomofo", 0x3110, "jcaron", 0x01f0, "jcircle", 0x24d9, "jcircumflex", 0x0135, "jcrossedtail", 0x029d, "jdotlessstroke", 0x025f, "jecyrillic", 0x0458, "jeemarabic", 0x062c, "jeemfinalarabic", 0xfe9e, "jeeminitialarabic", 0xfe9f, "jeemmedialarabic", 0xfea0, "jeharabic", 0x0698, "jehfinalarabic", 0xfb8b, "jhabengali", 0x099d, "jhadeva", 0x091d, "jhagujarati", 0x0a9d, "jhagurmukhi", 0x0a1d, "jheharmenian", 0x057b, "jis", 0x3004, "jmonospace", 0xff4a, "jparen", 0x24a5, "jsuperior", 0x02b2, "k", 0x006b, "kabashkircyrillic", 0x04a1, "kabengali", 0x0995, "kacute", 0x1e31, "kacyrillic", 0x043a, "kadescendercyrillic", 0x049b, "kadeva", 0x0915, "kaf", 0x05db, "kafarabic", 0x0643, "kafdagesh", 0xfb3b, "kafdageshhebrew", 0xfb3b, "kaffinalarabic", 0xfeda, "kafhebrew", 0x05db, "kafinitialarabic", 0xfedb, "kafmedialarabic", 0xfedc, "kafrafehebrew", 0xfb4d, "kagujarati", 0x0a95, "kagurmukhi", 0x0a15, "kahiragana", 0x304b, "kahookcyrillic", 0x04c4, "kakatakana", 0x30ab, "kakatakanahalfwidth", 0xff76, "kappa", 0x03ba, "kappasymbolgreek", 0x03f0, "kapyeounmieumkorean", 0x3171, "kapyeounphieuphkorean", 0x3184, "kapyeounpieupkorean", 0x3178, "kapyeounssangpieupkorean", 0x3179, "karoriisquare", 0x330d, "kashidaautoarabic", 0x0640, "kashidaautonosidebearingarabic", 0x0640, "kasmallkatakana", 0x30f5, "kasquare", 0x3384, "kasraarabic", 0x0650, "kasratanarabic", 0x064d, "kastrokecyrillic", 0x049f, "katahiraprolongmarkhalfwidth", 0xff70, "kaverticalstrokecyrillic", 0x049d, "kbopomofo", 0x310e, "kcalsquare", 0x3389, "kcaron", 0x01e9, "kcedilla", 0x0137, "kcircle", 0x24da, "kcommaaccent", 0x0137, "kdotbelow", 0x1e33, "keharmenian", 0x0584, "kehiragana", 0x3051, "kekatakana", 0x30b1, "kekatakanahalfwidth", 0xff79, "kenarmenian", 0x056f, "kesmallkatakana", 0x30f6, "kgreenlandic", 0x0138, "khabengali", 0x0996, "khacyrillic", 0x0445, "khadeva", 0x0916, "khagujarati", 0x0a96, "khagurmukhi", 0x0a16, "khaharabic", 0x062e, "khahfinalarabic", 0xfea6, "khahinitialarabic", 0xfea7, "khahmedialarabic", 0xfea8, "kheicoptic", 0x03e7, "khhadeva", 0x0959, "khhagurmukhi", 0x0a59, "khieukhacirclekorean", 0x3278, "khieukhaparenkorean", 0x3218, "khieukhcirclekorean", 0x326a, "khieukhkorean", 0x314b, "khieukhparenkorean", 0x320a, "khokhaithai", 0x0e02, "khokhonthai", 0x0e05, "khokhuatthai", 0x0e03, "khokhwaithai", 0x0e04, "khomutthai", 0x0e5b, "khook", 0x0199, "khorakhangthai", 0x0e06, "khzsquare", 0x3391, "kihiragana", 0x304d, "kikatakana", 0x30ad, "kikatakanahalfwidth", 0xff77, "kiroguramusquare", 0x3315, "kiromeetorusquare", 0x3316, "kirosquare", 0x3314, "kiyeokacirclekorean", 0x326e, "kiyeokaparenkorean", 0x320e, "kiyeokcirclekorean", 0x3260, "kiyeokkorean", 0x3131, "kiyeokparenkorean", 0x3200, "kiyeoksioskorean", 0x3133, "kjecyrillic", 0x045c, "klinebelow", 0x1e35, "klsquare", 0x3398, "kmcubedsquare", 0x33a6, "kmonospace", 0xff4b, "kmsquaredsquare", 0x33a2, "kohiragana", 0x3053, "kohmsquare", 0x33c0, "kokaithai", 0x0e01, "kokatakana", 0x30b3, "kokatakanahalfwidth", 0xff7a, "kooposquare", 0x331e, "koppacyrillic", 0x0481, "koreanstandardsymbol", 0x327f, "koroniscmb", 0x0343, "kparen", 0x24a6, "kpasquare", 0x33aa, "ksicyrillic", 0x046f, "ktsquare", 0x33cf, "kturned", 0x029e, "kuhiragana", 0x304f, "kukatakana", 0x30af, "kukatakanahalfwidth", 0xff78, "kvsquare", 0x33b8, "kwsquare", 0x33be, "l", 0x006c, "labengali", 0x09b2, "lacute", 0x013a, "ladeva", 0x0932, "lagujarati", 0x0ab2, "lagurmukhi", 0x0a32, "lakkhangyaothai", 0x0e45, "lamaleffinalarabic", 0xfefc, "lamalefhamzaabovefinalarabic", 0xfef8, "lamalefhamzaaboveisolatedarabic", 0xfef7, "lamalefhamzabelowfinalarabic", 0xfefa, "lamalefhamzabelowisolatedarabic", 0xfef9, "lamalefisolatedarabic", 0xfefb, "lamalefmaddaabovefinalarabic", 0xfef6, "lamalefmaddaaboveisolatedarabic", 0xfef5, "lamarabic", 0x0644, "lambda", 0x03bb, "lambdastroke", 0x019b, "lamed", 0x05dc, "lameddagesh", 0xfb3c, "lameddageshhebrew", 0xfb3c, "lamedhebrew", 0x05dc, "lamfinalarabic", 0xfede, "lamhahinitialarabic", 0xfcca, "laminitialarabic", 0xfedf, "lamjeeminitialarabic", 0xfcc9, "lamkhahinitialarabic", 0xfccb, "lamlamhehisolatedarabic", 0xfdf2, "lammedialarabic", 0xfee0, "lammeemhahinitialarabic", 0xfd88, "lammeeminitialarabic", 0xfccc, "largecircle", 0x25ef, "lbar", 0x019a, "lbelt", 0x026c, "lbopomofo", 0x310c, "lcaron", 0x013e, "lcedilla", 0x013c, "lcircle", 0x24db, "lcircumflexbelow", 0x1e3d, "lcommaaccent", 0x013c, "ldot", 0x0140, "ldotaccent", 0x0140, "ldotbelow", 0x1e37, "ldotbelowmacron", 0x1e39, "leftangleabovecmb", 0x031a, "lefttackbelowcmb", 0x0318, "less", 0x003c, "lessequal", 0x2264, "lessequalorgreater", 0x22da, "lessmonospace", 0xff1c, "lessorequivalent", 0x2272, "lessorgreater", 0x2276, "lessoverequal", 0x2266, "lesssmall", 0xfe64, "lezh", 0x026e, "lfblock", 0x258c, "lhookretroflex", 0x026d, "lira", 0x20a4, "liwnarmenian", 0x056c, "lj", 0x01c9, "ljecyrillic", 0x0459, "ll", 0xf6c0, "lladeva", 0x0933, "llagujarati", 0x0ab3, "llinebelow", 0x1e3b, "llladeva", 0x0934, "llvocalicbengali", 0x09e1, "llvocalicdeva", 0x0961, "llvocalicvowelsignbengali", 0x09e3, "llvocalicvowelsigndeva", 0x0963, "lmiddletilde", 0x026b, "lmonospace", 0xff4c, "lmsquare", 0x33d0, "lochulathai", 0x0e2c, "logicaland", 0x2227, "logicalnot", 0x00ac, "logicalnotreversed", 0x2310, "logicalor", 0x2228, "lolingthai", 0x0e25, "longs", 0x017f, "lowlinecenterline", 0xfe4e, "lowlinecmb", 0x0332, "lowlinedashed", 0xfe4d, "lozenge", 0x25ca, "lparen", 0x24a7, "lslash", 0x0142, "lsquare", 0x2113, "lsuperior", 0xf6ee, "ltshade", 0x2591, "luthai", 0x0e26, "lvocalicbengali", 0x098c, "lvocalicdeva", 0x090c, "lvocalicvowelsignbengali", 0x09e2, "lvocalicvowelsigndeva", 0x0962, "lxsquare", 0x33d3, "m", 0x006d, "mabengali", 0x09ae, "macron", 0x00af, "macronbelowcmb", 0x0331, "macroncmb", 0x0304, "macronlowmod", 0x02cd, "macronmonospace", 0xffe3, "macute", 0x1e3f, "madeva", 0x092e, "magujarati", 0x0aae, "magurmukhi", 0x0a2e, "mahapakhhebrew", 0x05a4, "mahapakhlefthebrew", 0x05a4, "mahiragana", 0x307e, "maichattawalowleftthai", 0xf895, "maichattawalowrightthai", 0xf894, "maichattawathai", 0x0e4b, "maichattawaupperleftthai", 0xf893, "maieklowleftthai", 0xf88c, "maieklowrightthai", 0xf88b, "maiekthai", 0x0e48, "maiekupperleftthai", 0xf88a, "maihanakatleftthai", 0xf884, "maihanakatthai", 0x0e31, "maitaikhuleftthai", 0xf889, "maitaikhuthai", 0x0e47, "maitholowleftthai", 0xf88f, "maitholowrightthai", 0xf88e, "maithothai", 0x0e49, "maithoupperleftthai", 0xf88d, "maitrilowleftthai", 0xf892, "maitrilowrightthai", 0xf891, "maitrithai", 0x0e4a, "maitriupperleftthai", 0xf890, "maiyamokthai", 0x0e46, "makatakana", 0x30de, "makatakanahalfwidth", 0xff8f, "male", 0x2642, "mansyonsquare", 0x3347, "maqafhebrew", 0x05be, "mars", 0x2642, "masoracirclehebrew", 0x05af, "masquare", 0x3383, "mbopomofo", 0x3107, "mbsquare", 0x33d4, "mcircle", 0x24dc, "mcubedsquare", 0x33a5, "mdotaccent", 0x1e41, "mdotbelow", 0x1e43, "meemarabic", 0x0645, "meemfinalarabic", 0xfee2, "meeminitialarabic", 0xfee3, "meemmedialarabic", 0xfee4, "meemmeeminitialarabic", 0xfcd1, "meemmeemisolatedarabic", 0xfc48, "meetorusquare", 0x334d, "mehiragana", 0x3081, "meizierasquare", 0x337e, "mekatakana", 0x30e1, "mekatakanahalfwidth", 0xff92, "mem", 0x05de, "memdagesh", 0xfb3e, "memdageshhebrew", 0xfb3e, "memhebrew", 0x05de, "menarmenian", 0x0574, "merkhahebrew", 0x05a5, "merkhakefulahebrew", 0x05a6, "merkhakefulalefthebrew", 0x05a6, "merkhalefthebrew", 0x05a5, "mhook", 0x0271, "mhzsquare", 0x3392, "middledotkatakanahalfwidth", 0xff65, "middot", 0x00b7, "mieumacirclekorean", 0x3272, "mieumaparenkorean", 0x3212, "mieumcirclekorean", 0x3264, "mieumkorean", 0x3141, "mieumpansioskorean", 0x3170, "mieumparenkorean", 0x3204, "mieumpieupkorean", 0x316e, "mieumsioskorean", 0x316f, "mihiragana", 0x307f, "mikatakana", 0x30df, "mikatakanahalfwidth", 0xff90, "minus", 0x2212, "minusbelowcmb", 0x0320, "minuscircle", 0x2296, "minusmod", 0x02d7, "minusplus", 0x2213, "minute", 0x2032, "miribaarusquare", 0x334a, "mirisquare", 0x3349, "mlonglegturned", 0x0270, "mlsquare", 0x3396, "mmcubedsquare", 0x33a3, "mmonospace", 0xff4d, "mmsquaredsquare", 0x339f, "mohiragana", 0x3082, "mohmsquare", 0x33c1, "mokatakana", 0x30e2, "mokatakanahalfwidth", 0xff93, "molsquare", 0x33d6, "momathai", 0x0e21, "moverssquare", 0x33a7, "moverssquaredsquare", 0x33a8, "mparen", 0x24a8, "mpasquare", 0x33ab, "mssquare", 0x33b3, "msuperior", 0xf6ef, "mturned", 0x026f, "mu", 0x00b5, "mu1", 0x00b5, "muasquare", 0x3382, "muchgreater", 0x226b, "muchless", 0x226a, "mufsquare", 0x338c, "mugreek", 0x03bc, "mugsquare", 0x338d, "muhiragana", 0x3080, "mukatakana", 0x30e0, "mukatakanahalfwidth", 0xff91, "mulsquare", 0x3395, "multiply", 0x00d7, "mumsquare", 0x339b, "munahhebrew", 0x05a3, "munahlefthebrew", 0x05a3, "musicalnote", 0x266a, "musicalnotedbl", 0x266b, "musicflatsign", 0x266d, "musicsharpsign", 0x266f, "mussquare", 0x33b2, "muvsquare", 0x33b6, "muwsquare", 0x33bc, "mvmegasquare", 0x33b9, "mvsquare", 0x33b7, "mwmegasquare", 0x33bf, "mwsquare", 0x33bd, "n", 0x006e, "nabengali", 0x09a8, "nabla", 0x2207, "nacute", 0x0144, "nadeva", 0x0928, "nagujarati", 0x0aa8, "nagurmukhi", 0x0a28, "nahiragana", 0x306a, "nakatakana", 0x30ca, "nakatakanahalfwidth", 0xff85, "napostrophe", 0x0149, "nasquare", 0x3381, "nbopomofo", 0x310b, "nbspace", 0x00a0, "ncaron", 0x0148, "ncedilla", 0x0146, "ncircle", 0x24dd, "ncircumflexbelow", 0x1e4b, "ncommaaccent", 0x0146, "ndotaccent", 0x1e45, "ndotbelow", 0x1e47, "nehiragana", 0x306d, "nekatakana", 0x30cd, "nekatakanahalfwidth", 0xff88, "newsheqelsign", 0x20aa, "nfsquare", 0x338b, "ngabengali", 0x0999, "ngadeva", 0x0919, "ngagujarati", 0x0a99, "ngagurmukhi", 0x0a19, "ngonguthai", 0x0e07, "nhiragana", 0x3093, "nhookleft", 0x0272, "nhookretroflex", 0x0273, "nieunacirclekorean", 0x326f, "nieunaparenkorean", 0x320f, "nieuncieuckorean", 0x3135, "nieuncirclekorean", 0x3261, "nieunhieuhkorean", 0x3136, "nieunkorean", 0x3134, "nieunpansioskorean", 0x3168, "nieunparenkorean", 0x3201, "nieunsioskorean", 0x3167, "nieuntikeutkorean", 0x3166, "nihiragana", 0x306b, "nikatakana", 0x30cb, "nikatakanahalfwidth", 0xff86, "nikhahitleftthai", 0xf899, "nikhahitthai", 0x0e4d, "nine", 0x0039, "ninearabic", 0x0669, "ninebengali", 0x09ef, "ninecircle", 0x2468, "ninecircleinversesansserif", 0x2792, "ninedeva", 0x096f, "ninegujarati", 0x0aef, "ninegurmukhi", 0x0a6f, "ninehackarabic", 0x0669, "ninehangzhou", 0x3029, "nineideographicparen", 0x3228, "nineinferior", 0x2089, "ninemonospace", 0xff19, "nineoldstyle", 0xf739, "nineparen", 0x247c, "nineperiod", 0x2490, "ninepersian", 0x06f9, "nineroman", 0x2178, "ninesuperior", 0x2079, "nineteencircle", 0x2472, "nineteenparen", 0x2486, "nineteenperiod", 0x249a, "ninethai", 0x0e59, "nj", 0x01cc, "njecyrillic", 0x045a, "nkatakana", 0x30f3, "nkatakanahalfwidth", 0xff9d, "nlegrightlong", 0x019e, "nlinebelow", 0x1e49, "nmonospace", 0xff4e, "nmsquare", 0x339a, "nnabengali", 0x09a3, "nnadeva", 0x0923, "nnagujarati", 0x0aa3, "nnagurmukhi", 0x0a23, "nnnadeva", 0x0929, "nohiragana", 0x306e, "nokatakana", 0x30ce, "nokatakanahalfwidth", 0xff89, "nonbreakingspace", 0x00a0, "nonenthai", 0x0e13, "nonuthai", 0x0e19, "noonarabic", 0x0646, "noonfinalarabic", 0xfee6, "noonghunnaarabic", 0x06ba, "noonghunnafinalarabic", 0xfb9f, "nooninitialarabic", 0xfee7, "noonjeeminitialarabic", 0xfcd2, "noonjeemisolatedarabic", 0xfc4b, "noonmedialarabic", 0xfee8, "noonmeeminitialarabic", 0xfcd5, "noonmeemisolatedarabic", 0xfc4e, "noonnoonfinalarabic", 0xfc8d, "notcontains", 0x220c, "notelement", 0x2209, "notelementof", 0x2209, "notequal", 0x2260, "notgreater", 0x226f, "notgreaternorequal", 0x2271, "notgreaternorless", 0x2279, "notidentical", 0x2262, "notless", 0x226e, "notlessnorequal", 0x2270, "notparallel", 0x2226, "notprecedes", 0x2280, "notsubset", 0x2284, "notsucceeds", 0x2281, "notsuperset", 0x2285, "nowarmenian", 0x0576, "nparen", 0x24a9, "nssquare", 0x33b1, "nsuperior", 0x207f, "ntilde", 0x00f1, "nu", 0x03bd, "nuhiragana", 0x306c, "nukatakana", 0x30cc, "nukatakanahalfwidth", 0xff87, "nuktabengali", 0x09bc, "nuktadeva", 0x093c, "nuktagujarati", 0x0abc, "nuktagurmukhi", 0x0a3c, "numbersign", 0x0023, "numbersignmonospace", 0xff03, "numbersignsmall", 0xfe5f, "numeralsigngreek", 0x0374, "numeralsignlowergreek", 0x0375, "numero", 0x2116, "nun", 0x05e0, "nundagesh", 0xfb40, "nundageshhebrew", 0xfb40, "nunhebrew", 0x05e0, "nvsquare", 0x33b5, "nwsquare", 0x33bb, "nyabengali", 0x099e, "nyadeva", 0x091e, "nyagujarati", 0x0a9e, "nyagurmukhi", 0x0a1e, "o", 0x006f, "oacute", 0x00f3, "oangthai", 0x0e2d, "obarred", 0x0275, "obarredcyrillic", 0x04e9, "obarreddieresiscyrillic", 0x04eb, "obengali", 0x0993, "obopomofo", 0x311b, "obreve", 0x014f, "ocandradeva", 0x0911, "ocandragujarati", 0x0a91, "ocandravowelsigndeva", 0x0949, "ocandravowelsigngujarati", 0x0ac9, "ocaron", 0x01d2, "ocircle", 0x24de, "ocircumflex", 0x00f4, "ocircumflexacute", 0x1ed1, "ocircumflexdotbelow", 0x1ed9, "ocircumflexgrave", 0x1ed3, "ocircumflexhookabove", 0x1ed5, "ocircumflextilde", 0x1ed7, "ocyrillic", 0x043e, "odblacute", 0x0151, "odblgrave", 0x020d, "odeva", 0x0913, "odieresis", 0x00f6, "odieresiscyrillic", 0x04e7, "odotbelow", 0x1ecd, "oe", 0x0153, "oekorean", 0x315a, "ogonek", 0x02db, "ogonekcmb", 0x0328, "ograve", 0x00f2, "ogujarati", 0x0a93, "oharmenian", 0x0585, "ohiragana", 0x304a, "ohookabove", 0x1ecf, "ohorn", 0x01a1, "ohornacute", 0x1edb, "ohorndotbelow", 0x1ee3, "ohorngrave", 0x1edd, "ohornhookabove", 0x1edf, "ohorntilde", 0x1ee1, "ohungarumlaut", 0x0151, "oi", 0x01a3, "oinvertedbreve", 0x020f, "okatakana", 0x30aa, "okatakanahalfwidth", 0xff75, "okorean", 0x3157, "olehebrew", 0x05ab, "omacron", 0x014d, "omacronacute", 0x1e53, "omacrongrave", 0x1e51, "omdeva", 0x0950, "omega", 0x03c9, "omega1", 0x03d6, "omegacyrillic", 0x0461, "omegalatinclosed", 0x0277, "omegaroundcyrillic", 0x047b, "omegatitlocyrillic", 0x047d, "omegatonos", 0x03ce, "omgujarati", 0x0ad0, "omicron", 0x03bf, "omicrontonos", 0x03cc, "omonospace", 0xff4f, "one", 0x0031, "onearabic", 0x0661, "onebengali", 0x09e7, "onecircle", 0x2460, "onecircleinversesansserif", 0x278a, "onedeva", 0x0967, "onedotenleader", 0x2024, "oneeighth", 0x215b, "onefitted", 0xf6dc, "onegujarati", 0x0ae7, "onegurmukhi", 0x0a67, "onehackarabic", 0x0661, "onehalf", 0x00bd, "onehangzhou", 0x3021, "oneideographicparen", 0x3220, "oneinferior", 0x2081, "onemonospace", 0xff11, "onenumeratorbengali", 0x09f4, "oneoldstyle", 0xf731, "oneparen", 0x2474, "oneperiod", 0x2488, "onepersian", 0x06f1, "onequarter", 0x00bc, "oneroman", 0x2170, "onesuperior", 0x00b9, "onethai", 0x0e51, "onethird", 0x2153, "oogonek", 0x01eb, "oogonekmacron", 0x01ed, "oogurmukhi", 0x0a13, "oomatragurmukhi", 0x0a4b, "oopen", 0x0254, "oparen", 0x24aa, "openbullet", 0x25e6, "option", 0x2325, "ordfeminine", 0x00aa, "ordmasculine", 0x00ba, "orthogonal", 0x221f, "oshortdeva", 0x0912, "oshortvowelsigndeva", 0x094a, "oslash", 0x00f8, "oslashacute", 0x01ff, "osmallhiragana", 0x3049, "osmallkatakana", 0x30a9, "osmallkatakanahalfwidth", 0xff6b, "ostrokeacute", 0x01ff, "osuperior", 0xf6f0, "otcyrillic", 0x047f, "otilde", 0x00f5, "otildeacute", 0x1e4d, "otildedieresis", 0x1e4f, "oubopomofo", 0x3121, "overline", 0x203e, "overlinecenterline", 0xfe4a, "overlinecmb", 0x0305, "overlinedashed", 0xfe49, "overlinedblwavy", 0xfe4c, "overlinewavy", 0xfe4b, "overscore", 0x00af, "ovowelsignbengali", 0x09cb, "ovowelsigndeva", 0x094b, "ovowelsigngujarati", 0x0acb, "p", 0x0070, "paampssquare", 0x3380, "paasentosquare", 0x332b, "pabengali", 0x09aa, "pacute", 0x1e55, "padeva", 0x092a, "pagedown", 0x21df, "pageup", 0x21de, "pagujarati", 0x0aaa, "pagurmukhi", 0x0a2a, "pahiragana", 0x3071, "paiyannoithai", 0x0e2f, "pakatakana", 0x30d1, "palatalizationcyrilliccmb", 0x0484, "palochkacyrillic", 0x04c0, "pansioskorean", 0x317f, "paragraph", 0x00b6, "parallel", 0x2225, "parenleft", 0x0028, "parenleftaltonearabic", 0xfd3e, "parenleftbt", 0xf8ed, "parenleftex", 0xf8ec, "parenleftinferior", 0x208d, "parenleftmonospace", 0xff08, "parenleftsmall", 0xfe59, "parenleftsuperior", 0x207d, "parenlefttp", 0xf8eb, "parenleftvertical", 0xfe35, "parenright", 0x0029, "parenrightaltonearabic", 0xfd3f, "parenrightbt", 0xf8f8, "parenrightex", 0xf8f7, "parenrightinferior", 0x208e, "parenrightmonospace", 0xff09, "parenrightsmall", 0xfe5a, "parenrightsuperior", 0x207e, "parenrighttp", 0xf8f6, "parenrightvertical", 0xfe36, "partialdiff", 0x2202, "paseqhebrew", 0x05c0, "pashtahebrew", 0x0599, "pasquare", 0x33a9, "patah", 0x05b7, "patah11", 0x05b7, "patah1d", 0x05b7, "patah2a", 0x05b7, "patahhebrew", 0x05b7, "patahnarrowhebrew", 0x05b7, "patahquarterhebrew", 0x05b7, "patahwidehebrew", 0x05b7, "pazerhebrew", 0x05a1, "pbopomofo", 0x3106, "pcircle", 0x24df, "pdotaccent", 0x1e57, "pe", 0x05e4, "pecyrillic", 0x043f, "pedagesh", 0xfb44, "pedageshhebrew", 0xfb44, "peezisquare", 0x333b, "pefinaldageshhebrew", 0xfb43, "peharabic", 0x067e, "peharmenian", 0x057a, "pehebrew", 0x05e4, "pehfinalarabic", 0xfb57, "pehinitialarabic", 0xfb58, "pehiragana", 0x307a, "pehmedialarabic", 0xfb59, "pekatakana", 0x30da, "pemiddlehookcyrillic", 0x04a7, "perafehebrew", 0xfb4e, "percent", 0x0025, "percentarabic", 0x066a, "percentmonospace", 0xff05, "percentsmall", 0xfe6a, "period", 0x002e, "periodarmenian", 0x0589, "periodcentered", 0x00b7, "periodhalfwidth", 0xff61, "periodinferior", 0xf6e7, "periodmonospace", 0xff0e, "periodsmall", 0xfe52, "periodsuperior", 0xf6e8, "perispomenigreekcmb", 0x0342, "perpendicular", 0x22a5, "perthousand", 0x2030, "peseta", 0x20a7, "pfsquare", 0x338a, "phabengali", 0x09ab, "phadeva", 0x092b, "phagujarati", 0x0aab, "phagurmukhi", 0x0a2b, "phi", 0x03c6, "phi1", 0x03d5, "phieuphacirclekorean", 0x327a, "phieuphaparenkorean", 0x321a, "phieuphcirclekorean", 0x326c, "phieuphkorean", 0x314d, "phieuphparenkorean", 0x320c, "philatin", 0x0278, "phinthuthai", 0x0e3a, "phisymbolgreek", 0x03d5, "phook", 0x01a5, "phophanthai", 0x0e1e, "phophungthai", 0x0e1c, "phosamphaothai", 0x0e20, "pi", 0x03c0, "pieupacirclekorean", 0x3273, "pieupaparenkorean", 0x3213, "pieupcieuckorean", 0x3176, "pieupcirclekorean", 0x3265, "pieupkiyeokkorean", 0x3172, "pieupkorean", 0x3142, "pieupparenkorean", 0x3205, "pieupsioskiyeokkorean", 0x3174, "pieupsioskorean", 0x3144, "pieupsiostikeutkorean", 0x3175, "pieupthieuthkorean", 0x3177, "pieuptikeutkorean", 0x3173, "pihiragana", 0x3074, "pikatakana", 0x30d4, "pisymbolgreek", 0x03d6, "piwrarmenian", 0x0583, "plus", 0x002b, "plusbelowcmb", 0x031f, "pluscircle", 0x2295, "plusminus", 0x00b1, "plusmod", 0x02d6, "plusmonospace", 0xff0b, "plussmall", 0xfe62, "plussuperior", 0x207a, "pmonospace", 0xff50, "pmsquare", 0x33d8, "pohiragana", 0x307d, "pointingindexdownwhite", 0x261f, "pointingindexleftwhite", 0x261c, "pointingindexrightwhite", 0x261e, "pointingindexupwhite", 0x261d, "pokatakana", 0x30dd, "poplathai", 0x0e1b, "postalmark", 0x3012, "postalmarkface", 0x3020, "pparen", 0x24ab, "precedes", 0x227a, "prescription", 0x211e, "primemod", 0x02b9, "primereversed", 0x2035, "product", 0x220f, "projective", 0x2305, "prolongedkana", 0x30fc, "propellor", 0x2318, "propersubset", 0x2282, "propersuperset", 0x2283, "proportion", 0x2237, "proportional", 0x221d, "psi", 0x03c8, "psicyrillic", 0x0471, "psilipneumatacyrilliccmb", 0x0486, "pssquare", 0x33b0, "puhiragana", 0x3077, "pukatakana", 0x30d7, "pvsquare", 0x33b4, "pwsquare", 0x33ba, "q", 0x0071, "qadeva", 0x0958, "qadmahebrew", 0x05a8, "qafarabic", 0x0642, "qaffinalarabic", 0xfed6, "qafinitialarabic", 0xfed7, "qafmedialarabic", 0xfed8, "qamats", 0x05b8, "qamats10", 0x05b8, "qamats1a", 0x05b8, "qamats1c", 0x05b8, "qamats27", 0x05b8, "qamats29", 0x05b8, "qamats33", 0x05b8, "qamatsde", 0x05b8, "qamatshebrew", 0x05b8, "qamatsnarrowhebrew", 0x05b8, "qamatsqatanhebrew", 0x05b8, "qamatsqatannarrowhebrew", 0x05b8, "qamatsqatanquarterhebrew", 0x05b8, "qamatsqatanwidehebrew", 0x05b8, "qamatsquarterhebrew", 0x05b8, "qamatswidehebrew", 0x05b8, "qarneyparahebrew", 0x059f, "qbopomofo", 0x3111, "qcircle", 0x24e0, "qhook", 0x02a0, "qmonospace", 0xff51, "qof", 0x05e7, "qofdagesh", 0xfb47, "qofdageshhebrew", 0xfb47, "qofhebrew", 0x05e7, "qparen", 0x24ac, "quarternote", 0x2669, "qubuts", 0x05bb, "qubuts18", 0x05bb, "qubuts25", 0x05bb, "qubuts31", 0x05bb, "qubutshebrew", 0x05bb, "qubutsnarrowhebrew", 0x05bb, "qubutsquarterhebrew", 0x05bb, "qubutswidehebrew", 0x05bb, "question", 0x003f, "questionarabic", 0x061f, "questionarmenian", 0x055e, "questiondown", 0x00bf, "questiondownsmall", 0xf7bf, "questiongreek", 0x037e, "questionmonospace", 0xff1f, "questionsmall", 0xf73f, "quotedbl", 0x0022, "quotedblbase", 0x201e, "quotedblleft", 0x201c, "quotedblmonospace", 0xff02, "quotedblprime", 0x301e, "quotedblprimereversed", 0x301d, "quotedblright", 0x201d, "quoteleft", 0x2018, "quoteleftreversed", 0x201b, "quotereversed", 0x201b, "quoteright", 0x2019, "quoterightn", 0x0149, "quotesinglbase", 0x201a, "quotesingle", 0x0027, "quotesinglemonospace", 0xff07, "r", 0x0072, "raarmenian", 0x057c, "rabengali", 0x09b0, "racute", 0x0155, "radeva", 0x0930, "radical", 0x221a, "radicalex", 0xf8e5, "radoverssquare", 0x33ae, "radoverssquaredsquare", 0x33af, "radsquare", 0x33ad, "rafe", 0x05bf, "rafehebrew", 0x05bf, "ragujarati", 0x0ab0, "ragurmukhi", 0x0a30, "rahiragana", 0x3089, "rakatakana", 0x30e9, "rakatakanahalfwidth", 0xff97, "ralowerdiagonalbengali", 0x09f1, "ramiddlediagonalbengali", 0x09f0, "ramshorn", 0x0264, "ratio", 0x2236, "rbopomofo", 0x3116, "rcaron", 0x0159, "rcedilla", 0x0157, "rcircle", 0x24e1, "rcommaaccent", 0x0157, "rdblgrave", 0x0211, "rdotaccent", 0x1e59, "rdotbelow", 0x1e5b, "rdotbelowmacron", 0x1e5d, "referencemark", 0x203b, "reflexsubset", 0x2286, "reflexsuperset", 0x2287, "registered", 0x00ae, "registersans", 0xf8e8, "registerserif", 0xf6da, "reharabic", 0x0631, "reharmenian", 0x0580, "rehfinalarabic", 0xfeae, "rehiragana", 0x308c, "rekatakana", 0x30ec, "rekatakanahalfwidth", 0xff9a, "resh", 0x05e8, "reshdageshhebrew", 0xfb48, "reshhebrew", 0x05e8, "reversedtilde", 0x223d, "reviahebrew", 0x0597, "reviamugrashhebrew", 0x0597, "revlogicalnot", 0x2310, "rfishhook", 0x027e, "rfishhookreversed", 0x027f, "rhabengali", 0x09dd, "rhadeva", 0x095d, "rho", 0x03c1, "rhook", 0x027d, "rhookturned", 0x027b, "rhookturnedsuperior", 0x02b5, "rhosymbolgreek", 0x03f1, "rhotichookmod", 0x02de, "rieulacirclekorean", 0x3271, "rieulaparenkorean", 0x3211, "rieulcirclekorean", 0x3263, "rieulhieuhkorean", 0x3140, "rieulkiyeokkorean", 0x313a, "rieulkiyeoksioskorean", 0x3169, "rieulkorean", 0x3139, "rieulmieumkorean", 0x313b, "rieulpansioskorean", 0x316c, "rieulparenkorean", 0x3203, "rieulphieuphkorean", 0x313f, "rieulpieupkorean", 0x313c, "rieulpieupsioskorean", 0x316b, "rieulsioskorean", 0x313d, "rieulthieuthkorean", 0x313e, "rieultikeutkorean", 0x316a, "rieulyeorinhieuhkorean", 0x316d, "rightangle", 0x221f, "righttackbelowcmb", 0x0319, "righttriangle", 0x22bf, "rihiragana", 0x308a, "rikatakana", 0x30ea, "rikatakanahalfwidth", 0xff98, "ring", 0x02da, "ringbelowcmb", 0x0325, "ringcmb", 0x030a, "ringhalfleft", 0x02bf, "ringhalfleftarmenian", 0x0559, "ringhalfleftbelowcmb", 0x031c, "ringhalfleftcentered", 0x02d3, "ringhalfright", 0x02be, "ringhalfrightbelowcmb", 0x0339, "ringhalfrightcentered", 0x02d2, "rinvertedbreve", 0x0213, "rittorusquare", 0x3351, "rlinebelow", 0x1e5f, "rlongleg", 0x027c, "rlonglegturned", 0x027a, "rmonospace", 0xff52, "rohiragana", 0x308d, "rokatakana", 0x30ed, "rokatakanahalfwidth", 0xff9b, "roruathai", 0x0e23, "rparen", 0x24ad, "rrabengali", 0x09dc, "rradeva", 0x0931, "rragurmukhi", 0x0a5c, "rreharabic", 0x0691, "rrehfinalarabic", 0xfb8d, "rrvocalicbengali", 0x09e0, "rrvocalicdeva", 0x0960, "rrvocalicgujarati", 0x0ae0, "rrvocalicvowelsignbengali", 0x09c4, "rrvocalicvowelsigndeva", 0x0944, "rrvocalicvowelsigngujarati", 0x0ac4, "rsuperior", 0xf6f1, "rtblock", 0x2590, "rturned", 0x0279, "rturnedsuperior", 0x02b4, "ruhiragana", 0x308b, "rukatakana", 0x30eb, "rukatakanahalfwidth", 0xff99, "rupeemarkbengali", 0x09f2, "rupeesignbengali", 0x09f3, "rupiah", 0xf6dd, "ruthai", 0x0e24, "rvocalicbengali", 0x098b, "rvocalicdeva", 0x090b, "rvocalicgujarati", 0x0a8b, "rvocalicvowelsignbengali", 0x09c3, "rvocalicvowelsigndeva", 0x0943, "rvocalicvowelsigngujarati", 0x0ac3, "s", 0x0073, "sabengali", 0x09b8, "sacute", 0x015b, "sacutedotaccent", 0x1e65, "sadarabic", 0x0635, "sadeva", 0x0938, "sadfinalarabic", 0xfeba, "sadinitialarabic", 0xfebb, "sadmedialarabic", 0xfebc, "sagujarati", 0x0ab8, "sagurmukhi", 0x0a38, "sahiragana", 0x3055, "sakatakana", 0x30b5, "sakatakanahalfwidth", 0xff7b, "sallallahoualayhewasallamarabic", 0xfdfa, "samekh", 0x05e1, "samekhdagesh", 0xfb41, "samekhdageshhebrew", 0xfb41, "samekhhebrew", 0x05e1, "saraaathai", 0x0e32, "saraaethai", 0x0e41, "saraaimaimalaithai", 0x0e44, "saraaimaimuanthai", 0x0e43, "saraamthai", 0x0e33, "saraathai", 0x0e30, "saraethai", 0x0e40, "saraiileftthai", 0xf886, "saraiithai", 0x0e35, "saraileftthai", 0xf885, "saraithai", 0x0e34, "saraothai", 0x0e42, "saraueeleftthai", 0xf888, "saraueethai", 0x0e37, "saraueleftthai", 0xf887, "sarauethai", 0x0e36, "sarauthai", 0x0e38, "sarauuthai", 0x0e39, "sbopomofo", 0x3119, "scaron", 0x0161, "scarondotaccent", 0x1e67, "scedilla", 0x015f, "schwa", 0x0259, "schwacyrillic", 0x04d9, "schwadieresiscyrillic", 0x04db, "schwahook", 0x025a, "scircle", 0x24e2, "scircumflex", 0x015d, "scommaaccent", 0x0219, "sdotaccent", 0x1e61, "sdotbelow", 0x1e63, "sdotbelowdotaccent", 0x1e69, "seagullbelowcmb", 0x033c, "second", 0x2033, "secondtonechinese", 0x02ca, "section", 0x00a7, "seenarabic", 0x0633, "seenfinalarabic", 0xfeb2, "seeninitialarabic", 0xfeb3, "seenmedialarabic", 0xfeb4, "segol", 0x05b6, "segol13", 0x05b6, "segol1f", 0x05b6, "segol2c", 0x05b6, "segolhebrew", 0x05b6, "segolnarrowhebrew", 0x05b6, "segolquarterhebrew", 0x05b6, "segoltahebrew", 0x0592, "segolwidehebrew", 0x05b6, "seharmenian", 0x057d, "sehiragana", 0x305b, "sekatakana", 0x30bb, "sekatakanahalfwidth", 0xff7e, "semicolon", 0x003b, "semicolonarabic", 0x061b, "semicolonmonospace", 0xff1b, "semicolonsmall", 0xfe54, "semivoicedmarkkana", 0x309c, "semivoicedmarkkanahalfwidth", 0xff9f, "sentisquare", 0x3322, "sentosquare", 0x3323, "seven", 0x0037, "sevenarabic", 0x0667, "sevenbengali", 0x09ed, "sevencircle", 0x2466, "sevencircleinversesansserif", 0x2790, "sevendeva", 0x096d, "seveneighths", 0x215e, "sevengujarati", 0x0aed, "sevengurmukhi", 0x0a6d, "sevenhackarabic", 0x0667, "sevenhangzhou", 0x3027, "sevenideographicparen", 0x3226, "seveninferior", 0x2087, "sevenmonospace", 0xff17, "sevenoldstyle", 0xf737, "sevenparen", 0x247a, "sevenperiod", 0x248e, "sevenpersian", 0x06f7, "sevenroman", 0x2176, "sevensuperior", 0x2077, "seventeencircle", 0x2470, "seventeenparen", 0x2484, "seventeenperiod", 0x2498, "seventhai", 0x0e57, "sfthyphen", 0x00ad, "shaarmenian", 0x0577, "shabengali", 0x09b6, "shacyrillic", 0x0448, "shaddaarabic", 0x0651, "shaddadammaarabic", 0xfc61, "shaddadammatanarabic", 0xfc5e, "shaddafathaarabic", 0xfc60, "shaddakasraarabic", 0xfc62, "shaddakasratanarabic", 0xfc5f, "shade", 0x2592, "shadedark", 0x2593, "shadelight", 0x2591, "shademedium", 0x2592, "shadeva", 0x0936, "shagujarati", 0x0ab6, "shagurmukhi", 0x0a36, "shalshelethebrew", 0x0593, "shbopomofo", 0x3115, "shchacyrillic", 0x0449, "sheenarabic", 0x0634, "sheenfinalarabic", 0xfeb6, "sheeninitialarabic", 0xfeb7, "sheenmedialarabic", 0xfeb8, "sheicoptic", 0x03e3, "sheqel", 0x20aa, "sheqelhebrew", 0x20aa, "sheva", 0x05b0, "sheva115", 0x05b0, "sheva15", 0x05b0, "sheva22", 0x05b0, "sheva2e", 0x05b0, "shevahebrew", 0x05b0, "shevanarrowhebrew", 0x05b0, "shevaquarterhebrew", 0x05b0, "shevawidehebrew", 0x05b0, "shhacyrillic", 0x04bb, "shimacoptic", 0x03ed, "shin", 0x05e9, "shindagesh", 0xfb49, "shindageshhebrew", 0xfb49, "shindageshshindot", 0xfb2c, "shindageshshindothebrew", 0xfb2c, "shindageshsindot", 0xfb2d, "shindageshsindothebrew", 0xfb2d, "shindothebrew", 0x05c1, "shinhebrew", 0x05e9, "shinshindot", 0xfb2a, "shinshindothebrew", 0xfb2a, "shinsindot", 0xfb2b, "shinsindothebrew", 0xfb2b, "shook", 0x0282, "sigma", 0x03c3, "sigma1", 0x03c2, "sigmafinal", 0x03c2, "sigmalunatesymbolgreek", 0x03f2, "sihiragana", 0x3057, "sikatakana", 0x30b7, "sikatakanahalfwidth", 0xff7c, "siluqhebrew", 0x05bd, "siluqlefthebrew", 0x05bd, "similar", 0x223c, "sindothebrew", 0x05c2, "siosacirclekorean", 0x3274, "siosaparenkorean", 0x3214, "sioscieuckorean", 0x317e, "sioscirclekorean", 0x3266, "sioskiyeokkorean", 0x317a, "sioskorean", 0x3145, "siosnieunkorean", 0x317b, "siosparenkorean", 0x3206, "siospieupkorean", 0x317d, "siostikeutkorean", 0x317c, "six", 0x0036, "sixarabic", 0x0666, "sixbengali", 0x09ec, "sixcircle", 0x2465, "sixcircleinversesansserif", 0x278f, "sixdeva", 0x096c, "sixgujarati", 0x0aec, "sixgurmukhi", 0x0a6c, "sixhackarabic", 0x0666, "sixhangzhou", 0x3026, "sixideographicparen", 0x3225, "sixinferior", 0x2086, "sixmonospace", 0xff16, "sixoldstyle", 0xf736, "sixparen", 0x2479, "sixperiod", 0x248d, "sixpersian", 0x06f6, "sixroman", 0x2175, "sixsuperior", 0x2076, "sixteencircle", 0x246f, "sixteencurrencydenominatorbengali", 0x09f9, "sixteenparen", 0x2483, "sixteenperiod", 0x2497, "sixthai", 0x0e56, "slash", 0x002f, "slashmonospace", 0xff0f, "slong", 0x017f, "slongdotaccent", 0x1e9b, "smileface", 0x263a, "smonospace", 0xff53, "sofpasuqhebrew", 0x05c3, "softhyphen", 0x00ad, "softsigncyrillic", 0x044c, "sohiragana", 0x305d, "sokatakana", 0x30bd, "sokatakanahalfwidth", 0xff7f, "soliduslongoverlaycmb", 0x0338, "solidusshortoverlaycmb", 0x0337, "sorusithai", 0x0e29, "sosalathai", 0x0e28, "sosothai", 0x0e0b, "sosuathai", 0x0e2a, "space", 0x0020, "spacehackarabic", 0x0020, "spade", 0x2660, "spadesuitblack", 0x2660, "spadesuitwhite", 0x2664, "sparen", 0x24ae, "squarebelowcmb", 0x033b, "squarecc", 0x33c4, "squarecm", 0x339d, "squarediagonalcrosshatchfill", 0x25a9, "squarehorizontalfill", 0x25a4, "squarekg", 0x338f, "squarekm", 0x339e, "squarekmcapital", 0x33ce, "squareln", 0x33d1, "squarelog", 0x33d2, "squaremg", 0x338e, "squaremil", 0x33d5, "squaremm", 0x339c, "squaremsquared", 0x33a1, "squareorthogonalcrosshatchfill", 0x25a6, "squareupperlefttolowerrightfill", 0x25a7, "squareupperrighttolowerleftfill", 0x25a8, "squareverticalfill", 0x25a5, "squarewhitewithsmallblack", 0x25a3, "srsquare", 0x33db, "ssabengali", 0x09b7, "ssadeva", 0x0937, "ssagujarati", 0x0ab7, "ssangcieuckorean", 0x3149, "ssanghieuhkorean", 0x3185, "ssangieungkorean", 0x3180, "ssangkiyeokkorean", 0x3132, "ssangnieunkorean", 0x3165, "ssangpieupkorean", 0x3143, "ssangsioskorean", 0x3146, "ssangtikeutkorean", 0x3138, "ssuperior", 0xf6f2, "sterling", 0x00a3, "sterlingmonospace", 0xffe1, "strokelongoverlaycmb", 0x0336, "strokeshortoverlaycmb", 0x0335, "subset", 0x2282, "subsetnotequal", 0x228a, "subsetorequal", 0x2286, "succeeds", 0x227b, "suchthat", 0x220b, "suhiragana", 0x3059, "sukatakana", 0x30b9, "sukatakanahalfwidth", 0xff7d, "sukunarabic", 0x0652, "summation", 0x2211, "sun", 0x263c, "superset", 0x2283, "supersetnotequal", 0x228b, "supersetorequal", 0x2287, "svsquare", 0x33dc, "syouwaerasquare", 0x337c, "t", 0x0074, "tabengali", 0x09a4, "tackdown", 0x22a4, "tackleft", 0x22a3, "tadeva", 0x0924, "tagujarati", 0x0aa4, "tagurmukhi", 0x0a24, "taharabic", 0x0637, "tahfinalarabic", 0xfec2, "tahinitialarabic", 0xfec3, "tahiragana", 0x305f, "tahmedialarabic", 0xfec4, "taisyouerasquare", 0x337d, "takatakana", 0x30bf, "takatakanahalfwidth", 0xff80, "tatweelarabic", 0x0640, "tau", 0x03c4, "tav", 0x05ea, "tavdages", 0xfb4a, "tavdagesh", 0xfb4a, "tavdageshhebrew", 0xfb4a, "tavhebrew", 0x05ea, "tbar", 0x0167, "tbopomofo", 0x310a, "tcaron", 0x0165, "tccurl", 0x02a8, "tcedilla", 0x0163, "tcheharabic", 0x0686, "tchehfinalarabic", 0xfb7b, "tchehinitialarabic", 0xfb7c, "tchehmedialarabic", 0xfb7d, "tcircle", 0x24e3, "tcircumflexbelow", 0x1e71, "tcommaaccent", 0x0163, "tdieresis", 0x1e97, "tdotaccent", 0x1e6b, "tdotbelow", 0x1e6d, "tecyrillic", 0x0442, "tedescendercyrillic", 0x04ad, "teharabic", 0x062a, "tehfinalarabic", 0xfe96, "tehhahinitialarabic", 0xfca2, "tehhahisolatedarabic", 0xfc0c, "tehinitialarabic", 0xfe97, "tehiragana", 0x3066, "tehjeeminitialarabic", 0xfca1, "tehjeemisolatedarabic", 0xfc0b, "tehmarbutaarabic", 0x0629, "tehmarbutafinalarabic", 0xfe94, "tehmedialarabic", 0xfe98, "tehmeeminitialarabic", 0xfca4, "tehmeemisolatedarabic", 0xfc0e, "tehnoonfinalarabic", 0xfc73, "tekatakana", 0x30c6, "tekatakanahalfwidth", 0xff83, "telephone", 0x2121, "telephoneblack", 0x260e, "telishagedolahebrew", 0x05a0, "telishaqetanahebrew", 0x05a9, "tencircle", 0x2469, "tenideographicparen", 0x3229, "tenparen", 0x247d, "tenperiod", 0x2491, "tenroman", 0x2179, "tesh", 0x02a7, "tet", 0x05d8, "tetdagesh", 0xfb38, "tetdageshhebrew", 0xfb38, "tethebrew", 0x05d8, "tetsecyrillic", 0x04b5, "tevirhebrew", 0x059b, "tevirlefthebrew", 0x059b, "thabengali", 0x09a5, "thadeva", 0x0925, "thagujarati", 0x0aa5, "thagurmukhi", 0x0a25, "thalarabic", 0x0630, "thalfinalarabic", 0xfeac, "thanthakhatlowleftthai", 0xf898, "thanthakhatlowrightthai", 0xf897, "thanthakhatthai", 0x0e4c, "thanthakhatupperleftthai", 0xf896, "theharabic", 0x062b, "thehfinalarabic", 0xfe9a, "thehinitialarabic", 0xfe9b, "thehmedialarabic", 0xfe9c, "thereexists", 0x2203, "therefore", 0x2234, "theta", 0x03b8, "theta1", 0x03d1, "thetasymbolgreek", 0x03d1, "thieuthacirclekorean", 0x3279, "thieuthaparenkorean", 0x3219, "thieuthcirclekorean", 0x326b, "thieuthkorean", 0x314c, "thieuthparenkorean", 0x320b, "thirteencircle", 0x246c, "thirteenparen", 0x2480, "thirteenperiod", 0x2494, "thonangmonthothai", 0x0e11, "thook", 0x01ad, "thophuthaothai", 0x0e12, "thorn", 0x00fe, "thothahanthai", 0x0e17, "thothanthai", 0x0e10, "thothongthai", 0x0e18, "thothungthai", 0x0e16, "thousandcyrillic", 0x0482, "thousandsseparatorarabic", 0x066c, "thousandsseparatorpersian", 0x066c, "three", 0x0033, "threearabic", 0x0663, "threebengali", 0x09e9, "threecircle", 0x2462, "threecircleinversesansserif", 0x278c, "threedeva", 0x0969, "threeeighths", 0x215c, "threegujarati", 0x0ae9, "threegurmukhi", 0x0a69, "threehackarabic", 0x0663, "threehangzhou", 0x3023, "threeideographicparen", 0x3222, "threeinferior", 0x2083, "threemonospace", 0xff13, "threenumeratorbengali", 0x09f6, "threeoldstyle", 0xf733, "threeparen", 0x2476, "threeperiod", 0x248a, "threepersian", 0x06f3, "threequarters", 0x00be, "threequartersemdash", 0xf6de, "threeroman", 0x2172, "threesuperior", 0x00b3, "threethai", 0x0e53, "thzsquare", 0x3394, "tihiragana", 0x3061, "tikatakana", 0x30c1, "tikatakanahalfwidth", 0xff81, "tikeutacirclekorean", 0x3270, "tikeutaparenkorean", 0x3210, "tikeutcirclekorean", 0x3262, "tikeutkorean", 0x3137, "tikeutparenkorean", 0x3202, "tilde", 0x02dc, "tildebelowcmb", 0x0330, "tildecmb", 0x0303, "tildecomb", 0x0303, "tildedoublecmb", 0x0360, "tildeoperator", 0x223c, "tildeoverlaycmb", 0x0334, "tildeverticalcmb", 0x033e, "timescircle", 0x2297, "tipehahebrew", 0x0596, "tipehalefthebrew", 0x0596, "tippigurmukhi", 0x0a70, "titlocyrilliccmb", 0x0483, "tiwnarmenian", 0x057f, "tlinebelow", 0x1e6f, "tmonospace", 0xff54, "toarmenian", 0x0569, "tohiragana", 0x3068, "tokatakana", 0x30c8, "tokatakanahalfwidth", 0xff84, "tonebarextrahighmod", 0x02e5, "tonebarextralowmod", 0x02e9, "tonebarhighmod", 0x02e6, "tonebarlowmod", 0x02e8, "tonebarmidmod", 0x02e7, "tonefive", 0x01bd, "tonesix", 0x0185, "tonetwo", 0x01a8, "tonos", 0x0384, "tonsquare", 0x3327, "topatakthai", 0x0e0f, "tortoiseshellbracketleft", 0x3014, "tortoiseshellbracketleftsmall", 0xfe5d, "tortoiseshellbracketleftvertical", 0xfe39, "tortoiseshellbracketright", 0x3015, "tortoiseshellbracketrightsmall", 0xfe5e, "tortoiseshellbracketrightvertical", 0xfe3a, "totaothai", 0x0e15, "tpalatalhook", 0x01ab, "tparen", 0x24af, "trademark", 0x2122, "trademarksans", 0xf8ea, "trademarkserif", 0xf6db, "tretroflexhook", 0x0288, "triagdn", 0x25bc, "triaglf", 0x25c4, "triagrt", 0x25ba, "triagup", 0x25b2, "ts", 0x02a6, "tsadi", 0x05e6, "tsadidagesh", 0xfb46, "tsadidageshhebrew", 0xfb46, "tsadihebrew", 0x05e6, "tsecyrillic", 0x0446, "tsere", 0x05b5, "tsere12", 0x05b5, "tsere1e", 0x05b5, "tsere2b", 0x05b5, "tserehebrew", 0x05b5, "tserenarrowhebrew", 0x05b5, "tserequarterhebrew", 0x05b5, "tserewidehebrew", 0x05b5, "tshecyrillic", 0x045b, "tsuperior", 0xf6f3, "ttabengali", 0x099f, "ttadeva", 0x091f, "ttagujarati", 0x0a9f, "ttagurmukhi", 0x0a1f, "tteharabic", 0x0679, "ttehfinalarabic", 0xfb67, "ttehinitialarabic", 0xfb68, "ttehmedialarabic", 0xfb69, "tthabengali", 0x09a0, "tthadeva", 0x0920, "tthagujarati", 0x0aa0, "tthagurmukhi", 0x0a20, "tturned", 0x0287, "tuhiragana", 0x3064, "tukatakana", 0x30c4, "tukatakanahalfwidth", 0xff82, "tusmallhiragana", 0x3063, "tusmallkatakana", 0x30c3, "tusmallkatakanahalfwidth", 0xff6f, "twelvecircle", 0x246b, "twelveparen", 0x247f, "twelveperiod", 0x2493, "twelveroman", 0x217b, "twentycircle", 0x2473, "twentyhangzhou", 0x5344, "twentyparen", 0x2487, "twentyperiod", 0x249b, "two", 0x0032, "twoarabic", 0x0662, "twobengali", 0x09e8, "twocircle", 0x2461, "twocircleinversesansserif", 0x278b, "twodeva", 0x0968, "twodotenleader", 0x2025, "twodotleader", 0x2025, "twodotleadervertical", 0xfe30, "twogujarati", 0x0ae8, "twogurmukhi", 0x0a68, "twohackarabic", 0x0662, "twohangzhou", 0x3022, "twoideographicparen", 0x3221, "twoinferior", 0x2082, "twomonospace", 0xff12, "twonumeratorbengali", 0x09f5, "twooldstyle", 0xf732, "twoparen", 0x2475, "twoperiod", 0x2489, "twopersian", 0x06f2, "tworoman", 0x2171, "twostroke", 0x01bb, "twosuperior", 0x00b2, "twothai", 0x0e52, "twothirds", 0x2154, "u", 0x0075, "uacute", 0x00fa, "ubar", 0x0289, "ubengali", 0x0989, "ubopomofo", 0x3128, "ubreve", 0x016d, "ucaron", 0x01d4, "ucircle", 0x24e4, "ucircumflex", 0x00fb, "ucircumflexbelow", 0x1e77, "ucyrillic", 0x0443, "udattadeva", 0x0951, "udblacute", 0x0171, "udblgrave", 0x0215, "udeva", 0x0909, "udieresis", 0x00fc, "udieresisacute", 0x01d8, "udieresisbelow", 0x1e73, "udieresiscaron", 0x01da, "udieresiscyrillic", 0x04f1, "udieresisgrave", 0x01dc, "udieresismacron", 0x01d6, "udotbelow", 0x1ee5, "ugrave", 0x00f9, "ugujarati", 0x0a89, "ugurmukhi", 0x0a09, "uhiragana", 0x3046, "uhookabove", 0x1ee7, "uhorn", 0x01b0, "uhornacute", 0x1ee9, "uhorndotbelow", 0x1ef1, "uhorngrave", 0x1eeb, "uhornhookabove", 0x1eed, "uhorntilde", 0x1eef, "uhungarumlaut", 0x0171, "uhungarumlautcyrillic", 0x04f3, "uinvertedbreve", 0x0217, "ukatakana", 0x30a6, "ukatakanahalfwidth", 0xff73, "ukcyrillic", 0x0479, "ukorean", 0x315c, "umacron", 0x016b, "umacroncyrillic", 0x04ef, "umacrondieresis", 0x1e7b, "umatragurmukhi", 0x0a41, "umonospace", 0xff55, "underscore", 0x005f, "underscoredbl", 0x2017, "underscoremonospace", 0xff3f, "underscorevertical", 0xfe33, "underscorewavy", 0xfe4f, "union", 0x222a, "universal", 0x2200, "uogonek", 0x0173, "uparen", 0x24b0, "upblock", 0x2580, "upperdothebrew", 0x05c4, "upsilon", 0x03c5, "upsilondieresis", 0x03cb, "upsilondieresistonos", 0x03b0, "upsilonlatin", 0x028a, "upsilontonos", 0x03cd, "uptackbelowcmb", 0x031d, "uptackmod", 0x02d4, "uragurmukhi", 0x0a73, "uring", 0x016f, "ushortcyrillic", 0x045e, "usmallhiragana", 0x3045, "usmallkatakana", 0x30a5, "usmallkatakanahalfwidth", 0xff69, "ustraightcyrillic", 0x04af, "ustraightstrokecyrillic", 0x04b1, "utilde", 0x0169, "utildeacute", 0x1e79, "utildebelow", 0x1e75, "uubengali", 0x098a, "uudeva", 0x090a, "uugujarati", 0x0a8a, "uugurmukhi", 0x0a0a, "uumatragurmukhi", 0x0a42, "uuvowelsignbengali", 0x09c2, "uuvowelsigndeva", 0x0942, "uuvowelsigngujarati", 0x0ac2, "uvowelsignbengali", 0x09c1, "uvowelsigndeva", 0x0941, "uvowelsigngujarati", 0x0ac1, "v", 0x0076, "vadeva", 0x0935, "vagujarati", 0x0ab5, "vagurmukhi", 0x0a35, "vakatakana", 0x30f7, "vav", 0x05d5, "vavdagesh", 0xfb35, "vavdagesh65", 0xfb35, "vavdageshhebrew", 0xfb35, "vavhebrew", 0x05d5, "vavholam", 0xfb4b, "vavholamhebrew", 0xfb4b, "vavvavhebrew", 0x05f0, "vavyodhebrew", 0x05f1, "vcircle", 0x24e5, "vdotbelow", 0x1e7f, "vecyrillic", 0x0432, "veharabic", 0x06a4, "vehfinalarabic", 0xfb6b, "vehinitialarabic", 0xfb6c, "vehmedialarabic", 0xfb6d, "vekatakana", 0x30f9, "venus", 0x2640, "verticalbar", 0x007c, "verticallineabovecmb", 0x030d, "verticallinebelowcmb", 0x0329, "verticallinelowmod", 0x02cc, "verticallinemod", 0x02c8, "vewarmenian", 0x057e, "vhook", 0x028b, "vikatakana", 0x30f8, "viramabengali", 0x09cd, "viramadeva", 0x094d, "viramagujarati", 0x0acd, "visargabengali", 0x0983, "visargadeva", 0x0903, "visargagujarati", 0x0a83, "vmonospace", 0xff56, "voarmenian", 0x0578, "voicediterationhiragana", 0x309e, "voicediterationkatakana", 0x30fe, "voicedmarkkana", 0x309b, "voicedmarkkanahalfwidth", 0xff9e, "vokatakana", 0x30fa, "vparen", 0x24b1, "vtilde", 0x1e7d, "vturned", 0x028c, "vuhiragana", 0x3094, "vukatakana", 0x30f4, "w", 0x0077, "wacute", 0x1e83, "waekorean", 0x3159, "wahiragana", 0x308f, "wakatakana", 0x30ef, "wakatakanahalfwidth", 0xff9c, "wakorean", 0x3158, "wasmallhiragana", 0x308e, "wasmallkatakana", 0x30ee, "wattosquare", 0x3357, "wavedash", 0x301c, "wavyunderscorevertical", 0xfe34, "wawarabic", 0x0648, "wawfinalarabic", 0xfeee, "wawhamzaabovearabic", 0x0624, "wawhamzaabovefinalarabic", 0xfe86, "wbsquare", 0x33dd, "wcircle", 0x24e6, "wcircumflex", 0x0175, "wdieresis", 0x1e85, "wdotaccent", 0x1e87, "wdotbelow", 0x1e89, "wehiragana", 0x3091, "weierstrass", 0x2118, "wekatakana", 0x30f1, "wekorean", 0x315e, "weokorean", 0x315d, "wgrave", 0x1e81, "whitebullet", 0x25e6, "whitecircle", 0x25cb, "whitecircleinverse", 0x25d9, "whitecornerbracketleft", 0x300e, "whitecornerbracketleftvertical", 0xfe43, "whitecornerbracketright", 0x300f, "whitecornerbracketrightvertical", 0xfe44, "whitediamond", 0x25c7, "whitediamondcontainingblacksmalldiamond", 0x25c8, "whitedownpointingsmalltriangle", 0x25bf, "whitedownpointingtriangle", 0x25bd, "whiteleftpointingsmalltriangle", 0x25c3, "whiteleftpointingtriangle", 0x25c1, "whitelenticularbracketleft", 0x3016, "whitelenticularbracketright", 0x3017, "whiterightpointingsmalltriangle", 0x25b9, "whiterightpointingtriangle", 0x25b7, "whitesmallsquare", 0x25ab, "whitesmilingface", 0x263a, "whitesquare", 0x25a1, "whitestar", 0x2606, "whitetelephone", 0x260f, "whitetortoiseshellbracketleft", 0x3018, "whitetortoiseshellbracketright", 0x3019, "whiteuppointingsmalltriangle", 0x25b5, "whiteuppointingtriangle", 0x25b3, "wihiragana", 0x3090, "wikatakana", 0x30f0, "wikorean", 0x315f, "wmonospace", 0xff57, "wohiragana", 0x3092, "wokatakana", 0x30f2, "wokatakanahalfwidth", 0xff66, "won", 0x20a9, "wonmonospace", 0xffe6, "wowaenthai", 0x0e27, "wparen", 0x24b2, "wring", 0x1e98, "wsuperior", 0x02b7, "wturned", 0x028d, "wynn", 0x01bf, "x", 0x0078, "xabovecmb", 0x033d, "xbopomofo", 0x3112, "xcircle", 0x24e7, "xdieresis", 0x1e8d, "xdotaccent", 0x1e8b, "xeharmenian", 0x056d, "xi", 0x03be, "xmonospace", 0xff58, "xparen", 0x24b3, "xsuperior", 0x02e3, "y", 0x0079, "yaadosquare", 0x334e, "yabengali", 0x09af, "yacute", 0x00fd, "yadeva", 0x092f, "yaekorean", 0x3152, "yagujarati", 0x0aaf, "yagurmukhi", 0x0a2f, "yahiragana", 0x3084, "yakatakana", 0x30e4, "yakatakanahalfwidth", 0xff94, "yakorean", 0x3151, "yamakkanthai", 0x0e4e, "yasmallhiragana", 0x3083, "yasmallkatakana", 0x30e3, "yasmallkatakanahalfwidth", 0xff6c, "yatcyrillic", 0x0463, "ycircle", 0x24e8, "ycircumflex", 0x0177, "ydieresis", 0x00ff, "ydotaccent", 0x1e8f, "ydotbelow", 0x1ef5, "yeharabic", 0x064a, "yehbarreearabic", 0x06d2, "yehbarreefinalarabic", 0xfbaf, "yehfinalarabic", 0xfef2, "yehhamzaabovearabic", 0x0626, "yehhamzaabovefinalarabic", 0xfe8a, "yehhamzaaboveinitialarabic", 0xfe8b, "yehhamzaabovemedialarabic", 0xfe8c, "yehinitialarabic", 0xfef3, "yehmedialarabic", 0xfef4, "yehmeeminitialarabic", 0xfcdd, "yehmeemisolatedarabic", 0xfc58, "yehnoonfinalarabic", 0xfc94, "yehthreedotsbelowarabic", 0x06d1, "yekorean", 0x3156, "yen", 0x00a5, "yenmonospace", 0xffe5, "yeokorean", 0x3155, "yeorinhieuhkorean", 0x3186, "yerahbenyomohebrew", 0x05aa, "yerahbenyomolefthebrew", 0x05aa, "yericyrillic", 0x044b, "yerudieresiscyrillic", 0x04f9, "yesieungkorean", 0x3181, "yesieungpansioskorean", 0x3183, "yesieungsioskorean", 0x3182, "yetivhebrew", 0x059a, "ygrave", 0x1ef3, "yhook", 0x01b4, "yhookabove", 0x1ef7, "yiarmenian", 0x0575, "yicyrillic", 0x0457, "yikorean", 0x3162, "yinyang", 0x262f, "yiwnarmenian", 0x0582, "ymonospace", 0xff59, "yod", 0x05d9, "yoddagesh", 0xfb39, "yoddageshhebrew", 0xfb39, "yodhebrew", 0x05d9, "yodyodhebrew", 0x05f2, "yodyodpatahhebrew", 0xfb1f, "yohiragana", 0x3088, "yoikorean", 0x3189, "yokatakana", 0x30e8, "yokatakanahalfwidth", 0xff96, "yokorean", 0x315b, "yosmallhiragana", 0x3087, "yosmallkatakana", 0x30e7, "yosmallkatakanahalfwidth", 0xff6e, "yotgreek", 0x03f3, "yoyaekorean", 0x3188, "yoyakorean", 0x3187, "yoyakthai", 0x0e22, "yoyingthai", 0x0e0d, "yparen", 0x24b4, "ypogegrammeni", 0x037a, "ypogegrammenigreekcmb", 0x0345, "yr", 0x01a6, "yring", 0x1e99, "ysuperior", 0x02b8, "ytilde", 0x1ef9, "yturned", 0x028e, "yuhiragana", 0x3086, "yuikorean", 0x318c, "yukatakana", 0x30e6, "yukatakanahalfwidth", 0xff95, "yukorean", 0x3160, "yusbigcyrillic", 0x046b, "yusbigiotifiedcyrillic", 0x046d, "yuslittlecyrillic", 0x0467, "yuslittleiotifiedcyrillic", 0x0469, "yusmallhiragana", 0x3085, "yusmallkatakana", 0x30e5, "yusmallkatakanahalfwidth", 0xff6d, "yuyekorean", 0x318b, "yuyeokorean", 0x318a, "yyabengali", 0x09df, "yyadeva", 0x095f, "z", 0x007a, "zaarmenian", 0x0566, "zacute", 0x017a, "zadeva", 0x095b, "zagurmukhi", 0x0a5b, "zaharabic", 0x0638, "zahfinalarabic", 0xfec6, "zahinitialarabic", 0xfec7, "zahiragana", 0x3056, "zahmedialarabic", 0xfec8, "zainarabic", 0x0632, "zainfinalarabic", 0xfeb0, "zakatakana", 0x30b6, "zaqefgadolhebrew", 0x0595, "zaqefqatanhebrew", 0x0594, "zarqahebrew", 0x0598, "zayin", 0x05d6, "zayindagesh", 0xfb36, "zayindageshhebrew", 0xfb36, "zayinhebrew", 0x05d6, "zbopomofo", 0x3117, "zcaron", 0x017e, "zcircle", 0x24e9, "zcircumflex", 0x1e91, "zcurl", 0x0291, "zdot", 0x017c, "zdotaccent", 0x017c, "zdotbelow", 0x1e93, "zecyrillic", 0x0437, "zedescendercyrillic", 0x0499, "zedieresiscyrillic", 0x04df, "zehiragana", 0x305c, "zekatakana", 0x30bc, "zero", 0x0030, "zeroarabic", 0x0660, "zerobengali", 0x09e6, "zerodeva", 0x0966, "zerogujarati", 0x0ae6, "zerogurmukhi", 0x0a66, "zerohackarabic", 0x0660, "zeroinferior", 0x2080, "zeromonospace", 0xff10, "zerooldstyle", 0xf730, "zeropersian", 0x06f0, "zerosuperior", 0x2070, "zerothai", 0x0e50, "zerowidthjoiner", 0xfeff, "zerowidthnonjoiner", 0x200c, "zerowidthspace", 0x200b, "zeta", 0x03b6, "zhbopomofo", 0x3113, "zhearmenian", 0x056a, "zhebrevecyrillic", 0x04c2, "zhecyrillic", 0x0436, "zhedescendercyrillic", 0x0497, "zhedieresiscyrillic", 0x04dd, "zihiragana", 0x3058, "zikatakana", 0x30b8, "zinorhebrew", 0x05ae, "zlinebelow", 0x1e95, "zmonospace", 0xff5a, "zohiragana", 0x305e, "zokatakana", 0x30be, "zparen", 0x24b5, "zretroflexhook", 0x0290, "zstroke", 0x01b6, "zuhiragana", 0x305a, "zukatakana", 0x30ba, ".notdef", 0x0000, "angbracketleftbig", 0x2329, "angbracketleftBig", 0x2329, "angbracketleftbigg", 0x2329, "angbracketleftBigg", 0x2329, "angbracketrightBig", 0x232a, "angbracketrightbig", 0x232a, "angbracketrightBigg", 0x232a, "angbracketrightbigg", 0x232a, "arrowhookleft", 0x21aa, "arrowhookright", 0x21a9, "arrowlefttophalf", 0x21bc, "arrowleftbothalf", 0x21bd, "arrownortheast", 0x2197, "arrownorthwest", 0x2196, "arrowrighttophalf", 0x21c0, "arrowrightbothalf", 0x21c1, "arrowsoutheast", 0x2198, "arrowsouthwest", 0x2199, "backslashbig", 0x2216, "backslashBig", 0x2216, "backslashBigg", 0x2216, "backslashbigg", 0x2216, "bardbl", 0x2016, "bracehtipdownleft", 0xfe37, "bracehtipdownright", 0xfe37, "bracehtipupleft", 0xfe38, "bracehtipupright", 0xfe38, "braceleftBig", 0x007b, "braceleftbig", 0x007b, "braceleftbigg", 0x007b, "braceleftBigg", 0x007b, "bracerightBig", 0x007d, "bracerightbig", 0x007d, "bracerightbigg", 0x007d, "bracerightBigg", 0x007d, "bracketleftbig", 0x005b, "bracketleftBig", 0x005b, "bracketleftbigg", 0x005b, "bracketleftBigg", 0x005b, "bracketrightBig", 0x005d, "bracketrightbig", 0x005d, "bracketrightbigg", 0x005d, "bracketrightBigg", 0x005d, "ceilingleftbig", 0x2308, "ceilingleftBig", 0x2308, "ceilingleftBigg", 0x2308, "ceilingleftbigg", 0x2308, "ceilingrightbig", 0x2309, "ceilingrightBig", 0x2309, "ceilingrightbigg", 0x2309, "ceilingrightBigg", 0x2309, "circledotdisplay", 0x2299, "circledottext", 0x2299, "circlemultiplydisplay", 0x2297, "circlemultiplytext", 0x2297, "circleplusdisplay", 0x2295, "circleplustext", 0x2295, "contintegraldisplay", 0x222e, "contintegraltext", 0x222e, "coproductdisplay", 0x2210, "coproducttext", 0x2210, "floorleftBig", 0x230a, "floorleftbig", 0x230a, "floorleftbigg", 0x230a, "floorleftBigg", 0x230a, "floorrightbig", 0x230b, "floorrightBig", 0x230b, "floorrightBigg", 0x230b, "floorrightbigg", 0x230b, "hatwide", 0x0302, "hatwider", 0x0302, "hatwidest", 0x0302, "intercal", 0x1d40, "integraldisplay", 0x222b, "integraltext", 0x222b, "intersectiondisplay", 0x22c2, "intersectiontext", 0x22c2, "logicalanddisplay", 0x2227, "logicalandtext", 0x2227, "logicalordisplay", 0x2228, "logicalortext", 0x2228, "parenleftBig", 0x0028, "parenleftbig", 0x0028, "parenleftBigg", 0x0028, "parenleftbigg", 0x0028, "parenrightBig", 0x0029, "parenrightbig", 0x0029, "parenrightBigg", 0x0029, "parenrightbigg", 0x0029, "prime", 0x2032, "productdisplay", 0x220f, "producttext", 0x220f, "radicalbig", 0x221a, "radicalBig", 0x221a, "radicalBigg", 0x221a, "radicalbigg", 0x221a, "radicalbt", 0x221a, "radicaltp", 0x221a, "radicalvertex", 0x221a, "slashbig", 0x002f, "slashBig", 0x002f, "slashBigg", 0x002f, "slashbigg", 0x002f, "summationdisplay", 0x2211, "summationtext", 0x2211, "tildewide", 0x02dc, "tildewider", 0x02dc, "tildewidest", 0x02dc, "uniondisplay", 0x22c3, "unionmultidisplay", 0x228e, "unionmultitext", 0x228e, "unionsqdisplay", 0x2294, "unionsqtext", 0x2294, "uniontext", 0x22c3, "vextenddouble", 0x2225, "vextendsingle", 0x2223];
@@ -5744,7 +5883,7 @@ exports.getUnicodeRangeFor = getUnicodeRangeFor;
 exports.mapSpecialUnicodeValues = mapSpecialUnicodeValues;
 exports.reverseIfRtl = reverseIfRtl;
 
-var _core_utils = __w_pdfjs_require__(8);
+var _core_utils = __w_pdfjs_require__(6);
 
 const getSpecialPUASymbols = (0, _core_utils.getLookupTableFactory)(function (t) {
   t[63721] = 0x00a9;
@@ -6278,33 +6417,31 @@ exports.getQuadPoints = getQuadPoints;
 
 var _util = __w_pdfjs_require__(2);
 
-var _core_utils = __w_pdfjs_require__(8);
+var _core_utils = __w_pdfjs_require__(6);
 
 var _default_appearance = __w_pdfjs_require__(23);
 
 var _primitives = __w_pdfjs_require__(5);
 
-var _base_stream = __w_pdfjs_require__(9);
+var _writer = __w_pdfjs_require__(65);
+
+var _base_stream = __w_pdfjs_require__(7);
 
 var _bidi = __w_pdfjs_require__(60);
 
-var _catalog = __w_pdfjs_require__(65);
+var _catalog = __w_pdfjs_require__(69);
 
 var _colorspace = __w_pdfjs_require__(24);
 
-var _file_spec = __w_pdfjs_require__(68);
+var _file_spec = __w_pdfjs_require__(72);
 
-var _object_loader = __w_pdfjs_require__(72);
+var _object_loader = __w_pdfjs_require__(75);
 
 var _operator_list = __w_pdfjs_require__(62);
 
 var _stream = __w_pdfjs_require__(10);
 
-var _writer = __w_pdfjs_require__(73);
-
 var _factory = __w_pdfjs_require__(76);
-
-const LINE_FACTOR = 1.35;
 
 class AnnotationFactory {
   static create(xref, ref, pdfManager, idFactory, collectFields) {
@@ -6445,6 +6582,74 @@ class AnnotationFactory {
     }
   }
 
+  static async saveNewAnnotations(evaluator, task, annotations) {
+    const xref = evaluator.xref;
+    let baseFontRef;
+    const dependencies = [];
+    const promises = [];
+
+    for (const annotation of annotations) {
+      switch (annotation.annotationType) {
+        case _util.AnnotationEditorType.FREETEXT:
+          if (!baseFontRef) {
+            const baseFont = new _primitives.Dict(xref);
+            baseFont.set("BaseFont", _primitives.Name.get("Helvetica"));
+            baseFont.set("Type", _primitives.Name.get("Font"));
+            baseFont.set("Subtype", _primitives.Name.get("Type1"));
+            baseFont.set("Encoding", _primitives.Name.get("WinAnsiEncoding"));
+            const buffer = [];
+            baseFontRef = xref.getNewRef();
+            (0, _writer.writeObject)(baseFontRef, baseFont, buffer, null);
+            dependencies.push({
+              ref: baseFontRef,
+              data: buffer.join("")
+            });
+          }
+
+          promises.push(FreeTextAnnotation.createNewAnnotation(xref, annotation, dependencies, {
+            evaluator,
+            task,
+            baseFontRef
+          }));
+          break;
+
+        case _util.AnnotationEditorType.INK:
+          promises.push(InkAnnotation.createNewAnnotation(xref, annotation, dependencies));
+      }
+    }
+
+    return {
+      annotations: await Promise.all(promises),
+      dependencies
+    };
+  }
+
+  static async printNewAnnotations(evaluator, task, annotations) {
+    if (!annotations) {
+      return null;
+    }
+
+    const xref = evaluator.xref;
+    const promises = [];
+
+    for (const annotation of annotations) {
+      switch (annotation.annotationType) {
+        case _util.AnnotationEditorType.FREETEXT:
+          promises.push(FreeTextAnnotation.createNewPrintAnnotation(xref, annotation, {
+            evaluator,
+            task
+          }));
+          break;
+
+        case _util.AnnotationEditorType.INK:
+          promises.push(InkAnnotation.createNewPrintAnnotation(xref, annotation));
+          break;
+      }
+    }
+
+    return Promise.all(promises);
+  }
+
 }
 
 exports.AnnotationFactory = AnnotationFactory;
@@ -6552,7 +6757,10 @@ class Annotation {
     this.setColor(dict.getArray("C"));
     this.setBorderStyle(dict);
     this.setAppearance(dict);
-    this.setBorderAndBackgroundColors(dict.get("MK"));
+    this.setOptionalContent(dict);
+    const MK = dict.get("MK");
+    this.setBorderAndBackgroundColors(MK);
+    this.setRotation(MK);
     this._streams = [];
 
     if (this.appearance) {
@@ -6565,6 +6773,7 @@ class Annotation {
       color: this.color,
       backgroundColor: this.backgroundColor,
       borderColor: this.borderColor,
+      rotation: this.rotation,
       contentsObj: this._contents,
       hasAppearance: !!this.appearance,
       id: params.id,
@@ -6696,6 +6905,57 @@ class Annotation {
     this.color = getRgbColor(color);
   }
 
+  setLineEndings(lineEndings) {
+    this.lineEndings = ["None", "None"];
+
+    if (Array.isArray(lineEndings) && lineEndings.length === 2) {
+      for (let i = 0; i < 2; i++) {
+        const obj = lineEndings[i];
+
+        if (obj instanceof _primitives.Name) {
+          switch (obj.name) {
+            case "None":
+              continue;
+
+            case "Square":
+            case "Circle":
+            case "Diamond":
+            case "OpenArrow":
+            case "ClosedArrow":
+            case "Butt":
+            case "ROpenArrow":
+            case "RClosedArrow":
+            case "Slash":
+              this.lineEndings[i] = obj.name;
+              continue;
+          }
+        }
+
+        (0, _util.warn)(`Ignoring invalid lineEnding: ${obj}`);
+      }
+    }
+  }
+
+  setRotation(mk) {
+    this.rotation = 0;
+
+    if (mk instanceof _primitives.Dict) {
+      let angle = mk.get("R") || 0;
+
+      if (Number.isInteger(angle) && angle !== 0) {
+        angle %= 360;
+
+        if (angle < 0) {
+          angle += 360;
+        }
+
+        if (angle % 90 === 0) {
+          this.rotation = angle;
+        }
+      }
+    }
+  }
+
   setBorderAndBackgroundColors(mk) {
     if (mk instanceof _primitives.Dict) {
       this.borderColor = getRgbColor(mk.getArray("BC"), null);
@@ -6766,6 +7026,17 @@ class Annotation {
     this.appearance = normalAppearanceState.get(as.name);
   }
 
+  setOptionalContent(dict) {
+    this.oc = null;
+    const oc = dict.get("OC");
+
+    if (oc instanceof _primitives.Name) {
+      (0, _util.warn)("setOptionalContent: Support for /Name-entry is not implemented.");
+    } else if (oc instanceof _primitives.Dict) {
+      this.oc = oc;
+    }
+  }
+
   loadResources(keys, appearance) {
     return appearance.dict.getAsync("Resources").then(resources => {
       if (!resources) {
@@ -6779,14 +7050,14 @@ class Annotation {
     });
   }
 
-  getOperatorList(evaluator, task, intent, renderForms, annotationStorage) {
+  async getOperatorList(evaluator, task, intent, renderForms, annotationStorage) {
     const data = this.data;
     let appearance = this.appearance;
-    const isUsingOwnCanvas = data.hasOwnCanvas && intent & _util.RenderingIntentFlag.DISPLAY;
+    const isUsingOwnCanvas = this.data.hasOwnCanvas && intent & _util.RenderingIntentFlag.DISPLAY;
 
     if (!appearance) {
       if (!isUsingOwnCanvas) {
-        return Promise.resolve(new _operator_list.OperatorList());
+        return new _operator_list.OperatorList();
       }
 
       appearance = new _stream.StringStream("");
@@ -6794,25 +7065,37 @@ class Annotation {
     }
 
     const appearanceDict = appearance.dict;
-    const resourcesPromise = this.loadResources(["ExtGState", "ColorSpace", "Pattern", "Shading", "XObject", "Font"], appearance);
+    const resources = await this.loadResources(["ExtGState", "ColorSpace", "Pattern", "Shading", "XObject", "Font"], appearance);
     const bbox = appearanceDict.getArray("BBox") || [0, 0, 1, 1];
     const matrix = appearanceDict.getArray("Matrix") || [1, 0, 0, 1, 0, 0];
     const transform = getTransformMatrix(data.rect, bbox, matrix);
-    return resourcesPromise.then(resources => {
-      const opList = new _operator_list.OperatorList();
-      opList.addOp(_util.OPS.beginAnnotation, [data.id, data.rect, transform, matrix, isUsingOwnCanvas]);
-      return evaluator.getOperatorList({
-        stream: appearance,
-        task,
-        resources,
-        operatorList: opList,
-        fallbackFontDict: this._fallbackFontDict
-      }).then(() => {
-        opList.addOp(_util.OPS.endAnnotation, []);
-        this.reset();
-        return opList;
-      });
+    const opList = new _operator_list.OperatorList();
+    let optionalContent;
+
+    if (this.oc) {
+      optionalContent = await evaluator.parseMarkedContentProps(this.oc, null);
+    }
+
+    if (optionalContent !== undefined) {
+      opList.addOp(_util.OPS.beginMarkedContentProps, ["OC", optionalContent]);
+    }
+
+    opList.addOp(_util.OPS.beginAnnotation, [data.id, data.rect, transform, matrix, isUsingOwnCanvas]);
+    await evaluator.getOperatorList({
+      stream: appearance,
+      task,
+      resources,
+      operatorList: opList,
+      fallbackFontDict: this._fallbackFontDict
     });
+    opList.addOp(_util.OPS.endAnnotation, []);
+
+    if (optionalContent !== undefined) {
+      opList.addOp(_util.OPS.endMarkedContent, []);
+    }
+
+    this.reset();
+    return opList;
   }
 
   async save(evaluator, task, annotationStorage) {
@@ -6829,7 +7112,8 @@ class Annotation {
         fillColor: this.data.backgroundColor,
         type: "",
         kidIds: this.data.kidIds,
-        page: this.data.pageIndex
+        page: this.data.pageIndex,
+        rotation: this.rotation
       };
     }
 
@@ -7146,6 +7430,40 @@ class MarkupAnnotation extends Annotation {
     this._streams.push(this.appearance, appearanceStream);
   }
 
+  static async createNewAnnotation(xref, annotation, dependencies, params) {
+    const annotationRef = xref.getNewRef();
+    const apRef = xref.getNewRef();
+    const annotationDict = this.createNewDict(annotation, xref, {
+      apRef
+    });
+    const ap = await this.createNewAppearanceStream(annotation, xref, params);
+    const buffer = [];
+    let transform = xref.encrypt ? xref.encrypt.createCipherTransform(apRef.num, apRef.gen) : null;
+    (0, _writer.writeObject)(apRef, ap, buffer, transform);
+    dependencies.push({
+      ref: apRef,
+      data: buffer.join("")
+    });
+    buffer.length = 0;
+    transform = xref.encrypt ? xref.encrypt.createCipherTransform(annotationRef.num, annotationRef.gen) : null;
+    (0, _writer.writeObject)(annotationRef, annotationDict, buffer, transform);
+    return {
+      ref: annotationRef,
+      data: buffer.join("")
+    };
+  }
+
+  static async createNewPrintAnnotation(xref, annotation, params) {
+    const ap = await this.createNewAppearanceStream(annotation, xref, params);
+    const annotationDict = this.createNewDict(annotation, xref, {
+      ap
+    });
+    return new this.prototype.constructor({
+      dict: annotationDict,
+      xref
+    });
+  }
+
 }
 
 exports.MarkupAnnotation = MarkupAnnotation;
@@ -7230,6 +7548,7 @@ class WidgetAnnotation extends Annotation {
     }
 
     data.readOnly = this.hasFieldFlag(_util.AnnotationFieldFlag.READONLY);
+    data.required = this.hasFieldFlag(_util.AnnotationFieldFlag.REQUIRED);
     data.hidden = this._hasFlag(data.annotationFlags, _util.AnnotationFlag.HIDDEN);
   }
 
@@ -7249,57 +7568,156 @@ class WidgetAnnotation extends Annotation {
     return !!(this.data.fieldFlags & flag);
   }
 
-  getOperatorList(evaluator, task, intent, renderForms, annotationStorage) {
+  static _getRotationMatrix(rotation, width, height) {
+    switch (rotation) {
+      case 90:
+        return [0, 1, -1, 0, width, 0];
+
+      case 180:
+        return [-1, 0, 0, -1, width, height];
+
+      case 270:
+        return [0, -1, 1, 0, 0, height];
+
+      default:
+        throw new Error("Invalid rotation");
+    }
+  }
+
+  getRotationMatrix(annotationStorage) {
+    const storageEntry = annotationStorage ? annotationStorage.get(this.data.id) : undefined;
+    let rotation = storageEntry && storageEntry.rotation;
+
+    if (rotation === undefined) {
+      rotation = this.rotation;
+    }
+
+    if (rotation === 0) {
+      return _util.IDENTITY_MATRIX;
+    }
+
+    const width = this.data.rect[2] - this.data.rect[0];
+    const height = this.data.rect[3] - this.data.rect[1];
+    return WidgetAnnotation._getRotationMatrix(rotation, width, height);
+  }
+
+  getBorderAndBackgroundAppearances(annotationStorage) {
+    const storageEntry = annotationStorage ? annotationStorage.get(this.data.id) : undefined;
+    let rotation = storageEntry && storageEntry.rotation;
+
+    if (rotation === undefined) {
+      rotation = this.rotation;
+    }
+
+    if (!this.backgroundColor && !this.borderColor) {
+      return "";
+    }
+
+    const width = this.data.rect[2] - this.data.rect[0];
+    const height = this.data.rect[3] - this.data.rect[1];
+    const rect = rotation === 0 || rotation === 180 ? `0 0 ${width} ${height} re` : `0 0 ${height} ${width} re`;
+    let str = "";
+
+    if (this.backgroundColor) {
+      str = `${(0, _default_appearance.getPdfColor)(this.backgroundColor, true)} ${rect} f `;
+    }
+
+    if (this.borderColor) {
+      const borderWidth = this.borderStyle.width || 1;
+      str += `${borderWidth} w ${(0, _default_appearance.getPdfColor)(this.borderColor, false)} ${rect} S `;
+    }
+
+    return str;
+  }
+
+  async getOperatorList(evaluator, task, intent, renderForms, annotationStorage) {
     if (renderForms && !(this instanceof SignatureWidgetAnnotation)) {
-      return Promise.resolve(new _operator_list.OperatorList());
+      return new _operator_list.OperatorList();
     }
 
     if (!this._hasText) {
       return super.getOperatorList(evaluator, task, intent, renderForms, annotationStorage);
     }
 
-    return this._getAppearance(evaluator, task, annotationStorage).then(content => {
-      if (this.appearance && content === null) {
-        return super.getOperatorList(evaluator, task, intent, renderForms, annotationStorage);
-      }
+    const content = await this._getAppearance(evaluator, task, annotationStorage);
 
-      const operatorList = new _operator_list.OperatorList();
+    if (this.appearance && content === null) {
+      return super.getOperatorList(evaluator, task, intent, renderForms, annotationStorage);
+    }
 
-      if (!this._defaultAppearance || content === null) {
-        return operatorList;
-      }
+    const operatorList = new _operator_list.OperatorList();
 
-      const matrix = [1, 0, 0, 1, 0, 0];
-      const bbox = [0, 0, this.data.rect[2] - this.data.rect[0], this.data.rect[3] - this.data.rect[1]];
-      const transform = getTransformMatrix(this.data.rect, bbox, matrix);
-      operatorList.addOp(_util.OPS.beginAnnotation, [this.data.id, this.data.rect, transform, matrix]);
-      const stream = new _stream.StringStream(content);
-      return evaluator.getOperatorList({
-        stream,
-        task,
-        resources: this._fieldResources.mergedResources,
-        operatorList
-      }).then(function () {
-        operatorList.addOp(_util.OPS.endAnnotation, []);
-        return operatorList;
-      });
+    if (!this._defaultAppearance || content === null) {
+      return operatorList;
+    }
+
+    const matrix = [1, 0, 0, 1, 0, 0];
+    const bbox = [0, 0, this.data.rect[2] - this.data.rect[0], this.data.rect[3] - this.data.rect[1]];
+    const transform = getTransformMatrix(this.data.rect, bbox, matrix);
+    let optionalContent;
+
+    if (this.oc) {
+      optionalContent = await evaluator.parseMarkedContentProps(this.oc, null);
+    }
+
+    if (optionalContent !== undefined) {
+      operatorList.addOp(_util.OPS.beginMarkedContentProps, ["OC", optionalContent]);
+    }
+
+    operatorList.addOp(_util.OPS.beginAnnotation, [this.data.id, this.data.rect, transform, this.getRotationMatrix(annotationStorage)]);
+    const stream = new _stream.StringStream(content);
+    await evaluator.getOperatorList({
+      stream,
+      task,
+      resources: this._fieldResources.mergedResources,
+      operatorList
     });
+    operatorList.addOp(_util.OPS.endAnnotation, []);
+
+    if (optionalContent !== undefined) {
+      operatorList.addOp(_util.OPS.endMarkedContent, []);
+    }
+
+    return operatorList;
+  }
+
+  _getMKDict(rotation) {
+    const mk = new _primitives.Dict(null);
+
+    if (rotation) {
+      mk.set("R", rotation);
+    }
+
+    if (this.borderColor) {
+      mk.set("BC", Array.from(this.borderColor).map(c => c / 255));
+    }
+
+    if (this.backgroundColor) {
+      mk.set("BG", Array.from(this.backgroundColor).map(c => c / 255));
+    }
+
+    return mk.size > 0 ? mk : null;
   }
 
   async save(evaluator, task, annotationStorage) {
     const storageEntry = annotationStorage ? annotationStorage.get(this.data.id) : undefined;
     let value = storageEntry && storageEntry.value;
+    let rotation = storageEntry && storageEntry.rotation;
 
     if (value === this.data.fieldValue || value === undefined) {
-      if (!this._hasValueFromXFA) {
+      if (!this._hasValueFromXFA && rotation === undefined) {
         return null;
       }
 
       value = value || this.data.fieldValue;
     }
 
-    if (!this._hasValueFromXFA && Array.isArray(value) && Array.isArray(this.data.fieldValue) && value.length === this.data.fieldValue.length && value.every((x, i) => x === this.data.fieldValue[i])) {
+    if (rotation === undefined && !this._hasValueFromXFA && Array.isArray(value) && Array.isArray(this.data.fieldValue) && value.length === this.data.fieldValue.length && value.every((x, i) => x === this.data.fieldValue[i])) {
       return null;
+    }
+
+    if (rotation === undefined) {
+      rotation = this.rotation;
     }
 
     let appearance = await this._getAppearance(evaluator, task, annotationStorage);
@@ -7340,11 +7758,24 @@ class WidgetAnnotation extends Annotation {
     dict.set("V", Array.isArray(value) ? value.map(encoder) : encoder(value));
     dict.set("AP", AP);
     dict.set("M", `D:${(0, _util.getModificationDate)()}`);
+
+    const maybeMK = this._getMKDict(rotation);
+
+    if (maybeMK) {
+      dict.set("MK", maybeMK);
+    }
+
     const appearanceDict = new _primitives.Dict(xref);
     appearanceDict.set("Length", appearance.length);
     appearanceDict.set("Subtype", _primitives.Name.get("Form"));
     appearanceDict.set("Resources", this._getSaveFieldResources(xref));
     appearanceDict.set("BBox", bbox);
+    const rotationMatrix = this.getRotationMatrix(annotationStorage);
+
+    if (rotationMatrix !== _util.IDENTITY_MATRIX) {
+      appearanceDict.set("Matrix", rotationMatrix);
+    }
+
     const bufferOriginal = [`${this.ref.num} ${this.ref.gen} obj\n`];
     (0, _writer.writeDict)(dict, bufferOriginal, originalTransform);
     bufferOriginal.push("\nendobj\n");
@@ -7370,13 +7801,20 @@ class WidgetAnnotation extends Annotation {
     }
 
     const storageEntry = annotationStorage ? annotationStorage.get(this.data.id) : undefined;
-    let value = storageEntry && (storageEntry.formattedValue || storageEntry.value);
+    let value, rotation;
 
-    if (value === undefined) {
+    if (storageEntry) {
+      value = storageEntry.formattedValue || storageEntry.value;
+      rotation = storageEntry.rotation;
+    }
+
+    if (rotation === undefined && value === undefined) {
       if (!this._hasValueFromXFA || this.appearance) {
         return null;
       }
+    }
 
+    if (value === undefined) {
       value = this.data.fieldValue;
 
       if (!value) {
@@ -7384,11 +7822,19 @@ class WidgetAnnotation extends Annotation {
       }
     }
 
+    if (Array.isArray(value) && value.length === 1) {
+      value = value[0];
+    }
+
     (0, _util.assert)(typeof value === "string", "Expected `value` to be a string.");
     value = value.trim();
 
     if (value === "") {
       return "";
+    }
+
+    if (rotation === undefined) {
+      rotation = this.rotation;
     }
 
     let lineCount = -1;
@@ -7399,14 +7845,18 @@ class WidgetAnnotation extends Annotation {
 
     const defaultPadding = 2;
     const hPadding = defaultPadding;
-    const totalHeight = this.data.rect[3] - this.data.rect[1];
-    const totalWidth = this.data.rect[2] - this.data.rect[0];
+    let totalHeight = this.data.rect[3] - this.data.rect[1];
+    let totalWidth = this.data.rect[2] - this.data.rect[0];
+
+    if (rotation === 90 || rotation === 270) {
+      [totalWidth, totalHeight] = [totalHeight, totalWidth];
+    }
 
     if (!this._defaultAppearance) {
       this.data.defaultAppearanceData = (0, _default_appearance.parseDefaultAppearance)(this._defaultAppearance = "/Helvetica 0 Tf 0 g");
     }
 
-    const font = await this._getFontData(evaluator, task);
+    const font = await WidgetAnnotation._getFontData(evaluator, task, this.data.defaultAppearanceData, this._fieldResources.mergedResources);
 
     const [defaultAppearance, fontSize] = this._computeFontSize(totalHeight - defaultPadding, totalWidth - 2 * hPadding, value, font, lineCount);
 
@@ -7416,29 +7866,32 @@ class WidgetAnnotation extends Annotation {
       descent = 0;
     }
 
-    const vPadding = defaultPadding + Math.abs(descent) * fontSize;
+    const defaultVPadding = Math.min(Math.floor((totalHeight - fontSize) / 2), defaultPadding);
+    const vPadding = defaultVPadding + Math.abs(descent) * fontSize;
     const alignment = this.data.textAlignment;
 
     if (this.data.multiLine) {
-      return this._getMultilineAppearance(defaultAppearance, value, font, fontSize, totalWidth, totalHeight, alignment, hPadding, vPadding);
+      return this._getMultilineAppearance(defaultAppearance, value, font, fontSize, totalWidth, totalHeight, alignment, hPadding, vPadding, annotationStorage);
     }
 
     const encodedString = font.encodeString(value).join("");
 
     if (this.data.comb) {
-      return this._getCombAppearance(defaultAppearance, font, encodedString, totalWidth, hPadding, vPadding);
+      return this._getCombAppearance(defaultAppearance, font, encodedString, totalWidth, hPadding, vPadding, annotationStorage);
     }
 
+    const colors = this.getBorderAndBackgroundAppearances(annotationStorage);
+
     if (alignment === 0 || alignment > 2) {
-      return "/Tx BMC q BT " + defaultAppearance + ` 1 0 0 1 ${hPadding} ${vPadding} Tm (${(0, _util.escapeString)(encodedString)}) Tj` + " ET Q EMC";
+      return `/Tx BMC q ${colors}BT ` + defaultAppearance + ` 1 0 0 1 ${hPadding} ${vPadding} Tm (${(0, _util.escapeString)(encodedString)}) Tj` + " ET Q EMC";
     }
 
     const renderedText = this._renderText(encodedString, font, fontSize, totalWidth, alignment, hPadding, vPadding);
 
-    return "/Tx BMC q BT " + defaultAppearance + ` 1 0 0 1 0 0 Tm ${renderedText}` + " ET Q EMC";
+    return `/Tx BMC q ${colors}BT ` + defaultAppearance + ` 1 0 0 1 0 0 Tm ${renderedText}` + " ET Q EMC";
   }
 
-  async _getFontData(evaluator, task) {
+  static async _getFontData(evaluator, task, appearanceData, resources) {
     const operatorList = new _operator_list.OperatorList();
     const initialState = {
       font: null,
@@ -7451,8 +7904,8 @@ class WidgetAnnotation extends Annotation {
     const {
       fontName,
       fontSize
-    } = this.data.defaultAppearanceData;
-    await evaluator.handleSetFont(this._fieldResources.mergedResources, [fontName && _primitives.Name.get(fontName), fontSize], null, operatorList, task, initialState, null);
+    } = appearanceData;
+    await evaluator.handleSetFont(resources, [fontName && _primitives.Name.get(fontName), fontSize], null, operatorList, task, initialState, null);
     return initialState.font;
   }
 
@@ -7471,7 +7924,7 @@ class WidgetAnnotation extends Annotation {
       if (lineCount === -1) {
         const textWidth = this._getTextWidth(text, font);
 
-        fontSize = roundWithTwoDigits(Math.min(height / LINE_FACTOR, width / textWidth));
+        fontSize = roundWithTwoDigits(Math.min(height / _util.LINE_FACTOR, width / textWidth));
       } else {
         const lines = text.split(/\r\n?|\n/);
         const cachedLines = [];
@@ -7504,13 +7957,13 @@ class WidgetAnnotation extends Annotation {
         };
 
         fontSize = 12;
-        let lineHeight = fontSize * LINE_FACTOR;
+        let lineHeight = fontSize * _util.LINE_FACTOR;
         let numberOfLines = Math.round(height / lineHeight);
         numberOfLines = Math.max(numberOfLines, lineCount);
 
         while (true) {
           lineHeight = height / numberOfLines;
-          fontSize = roundWithTwoDigits(lineHeight / LINE_FACTOR);
+          fontSize = roundWithTwoDigits(lineHeight / _util.LINE_FACTOR);
 
           if (isTooBig(fontSize)) {
             numberOfLines++;
@@ -7548,8 +8001,8 @@ class WidgetAnnotation extends Annotation {
       shift = hPadding;
     }
 
-    shift = shift.toFixed(2);
-    vPadding = vPadding.toFixed(2);
+    shift = (0, _core_utils.numberToString)(shift);
+    vPadding = (0, _core_utils.numberToString)(vPadding);
     return `${shift} ${vPadding} Td (${(0, _util.escapeString)(text)}) Tj`;
   }
 
@@ -7632,10 +8085,11 @@ class TextWidgetAnnotation extends WidgetAnnotation {
     this.data.maxLen = maximumLength;
     this.data.multiLine = this.hasFieldFlag(_util.AnnotationFieldFlag.MULTILINE);
     this.data.comb = this.hasFieldFlag(_util.AnnotationFieldFlag.COMB) && !this.hasFieldFlag(_util.AnnotationFieldFlag.MULTILINE) && !this.hasFieldFlag(_util.AnnotationFieldFlag.PASSWORD) && !this.hasFieldFlag(_util.AnnotationFieldFlag.FILESELECT) && this.data.maxLen !== null;
+    this.data.doNotScroll = this.hasFieldFlag(_util.AnnotationFieldFlag.DONOTSCROLL);
   }
 
-  _getCombAppearance(defaultAppearance, font, text, width, hPadding, vPadding) {
-    const combWidth = (width / this.data.maxLen).toFixed(2);
+  _getCombAppearance(defaultAppearance, font, text, width, hPadding, vPadding, annotationStorage) {
+    const combWidth = (0, _core_utils.numberToString)(width / this.data.maxLen);
     const buf = [];
     const positions = font.getCharPositions(text);
 
@@ -7643,11 +8097,12 @@ class TextWidgetAnnotation extends WidgetAnnotation {
       buf.push(`(${(0, _util.escapeString)(text.substring(start, end))}) Tj`);
     }
 
+    const colors = this.getBorderAndBackgroundAppearances(annotationStorage);
     const renderedComb = buf.join(` ${combWidth} 0 Td `);
-    return "/Tx BMC q BT " + defaultAppearance + ` 1 0 0 1 ${hPadding} ${vPadding} Tm ${renderedComb}` + " ET Q EMC";
+    return `/Tx BMC q ${colors}BT ` + defaultAppearance + ` 1 0 0 1 ${hPadding} ${vPadding} Tm ${renderedComb}` + " ET Q EMC";
   }
 
-  _getMultilineAppearance(defaultAppearance, text, font, fontSize, width, height, alignment, hPadding, vPadding) {
+  _getMultilineAppearance(defaultAppearance, text, font, fontSize, width, height, alignment, hPadding, vPadding, annotationStorage) {
     const lines = text.split(/\r\n?|\n/);
     const buf = [];
     const totalWidth = width - 2 * hPadding;
@@ -7662,7 +8117,8 @@ class TextWidgetAnnotation extends WidgetAnnotation {
     }
 
     const renderedText = buf.join("\n");
-    return "/Tx BMC q BT " + defaultAppearance + ` 1 0 0 1 0 ${height} Tm ${renderedText}` + " ET Q EMC";
+    const colors = this.getBorderAndBackgroundAppearances(annotationStorage);
+    return `/Tx BMC q ${colors}BT ` + defaultAppearance + ` 1 0 0 1 0 ${height} Tm ${renderedText}` + " ET Q EMC";
   }
 
   _splitLine(line, font, fontSize, width, cache = {}) {
@@ -7743,6 +8199,7 @@ class TextWidgetAnnotation extends WidgetAnnotation {
       page: this.data.pageIndex,
       strokeColor: this.data.borderColor,
       fillColor: this.data.backgroundColor,
+      rotation: this.rotation,
       type: "text"
     };
   }
@@ -7778,17 +8235,19 @@ class ButtonWidgetAnnotation extends WidgetAnnotation {
     }
 
     let value = null;
+    let rotation = null;
 
     if (annotationStorage) {
       const storageEntry = annotationStorage.get(this.data.id);
       value = storageEntry ? storageEntry.value : null;
+      rotation = storageEntry ? storageEntry.rotation : null;
     }
 
-    if (value === null) {
-      if (this.appearance) {
-        return super.getOperatorList(evaluator, task, intent, renderForms, annotationStorage);
-      }
+    if (value === null && this.appearance) {
+      return super.getOperatorList(evaluator, task, intent, renderForms, annotationStorage);
+    }
 
+    if (value === null || value === undefined) {
       if (this.data.checkBox) {
         value = this.data.fieldValue === this.data.exportValue;
       } else {
@@ -7800,9 +8259,17 @@ class ButtonWidgetAnnotation extends WidgetAnnotation {
 
     if (appearance) {
       const savedAppearance = this.appearance;
+
+      const savedMatrix = appearance.dict.getArray("Matrix") || _util.IDENTITY_MATRIX;
+
+      if (rotation) {
+        appearance.dict.set("Matrix", this.getRotationMatrix(annotationStorage));
+      }
+
       this.appearance = appearance;
       const operatorList = super.getOperatorList(evaluator, task, intent, renderForms, annotationStorage);
       this.appearance = savedAppearance;
+      appearance.dict.set("Matrix", savedMatrix);
       return operatorList;
     }
 
@@ -7827,22 +8294,33 @@ class ButtonWidgetAnnotation extends WidgetAnnotation {
     }
 
     const storageEntry = annotationStorage.get(this.data.id);
-    const value = storageEntry && storageEntry.value;
+    let rotation = storageEntry && storageEntry.rotation;
+    let value = storageEntry && storageEntry.value;
 
-    if (value === undefined) {
-      return null;
-    }
+    if (rotation === undefined) {
+      if (value === undefined) {
+        return null;
+      }
 
-    const defaultValue = this.data.fieldValue === this.data.exportValue;
+      const defaultValue = this.data.fieldValue === this.data.exportValue;
 
-    if (defaultValue === value) {
-      return null;
+      if (defaultValue === value) {
+        return null;
+      }
     }
 
     const dict = evaluator.xref.fetchIfRef(this.ref);
 
     if (!(dict instanceof _primitives.Dict)) {
       return null;
+    }
+
+    if (rotation === undefined) {
+      rotation = this.rotation;
+    }
+
+    if (value === undefined) {
+      value = this.data.fieldValue === this.data.exportValue;
     }
 
     const xfa = {
@@ -7855,6 +8333,13 @@ class ButtonWidgetAnnotation extends WidgetAnnotation {
     dict.set("V", name);
     dict.set("AS", name);
     dict.set("M", `D:${(0, _util.getModificationDate)()}`);
+
+    const maybeMK = this._getMKDict(rotation);
+
+    if (maybeMK) {
+      dict.set("MK", maybeMK);
+    }
+
     const encrypt = evaluator.xref.encrypt;
     let originalTransform = null;
 
@@ -7878,22 +8363,33 @@ class ButtonWidgetAnnotation extends WidgetAnnotation {
     }
 
     const storageEntry = annotationStorage.get(this.data.id);
-    const value = storageEntry && storageEntry.value;
+    let rotation = storageEntry && storageEntry.rotation;
+    let value = storageEntry && storageEntry.value;
 
-    if (value === undefined) {
-      return null;
-    }
+    if (rotation === undefined) {
+      if (value === undefined) {
+        return null;
+      }
 
-    const defaultValue = this.data.fieldValue === this.data.buttonValue;
+      const defaultValue = this.data.fieldValue === this.data.buttonValue;
 
-    if (defaultValue === value) {
-      return null;
+      if (defaultValue === value) {
+        return null;
+      }
     }
 
     const dict = evaluator.xref.fetchIfRef(this.ref);
 
     if (!(dict instanceof _primitives.Dict)) {
       return null;
+    }
+
+    if (value === undefined) {
+      value = this.data.fieldValue === this.data.buttonValue;
+    }
+
+    if (rotation === undefined) {
+      rotation = this.rotation;
     }
 
     const xfa = {
@@ -7926,6 +8422,13 @@ class ButtonWidgetAnnotation extends WidgetAnnotation {
 
     dict.set("AS", name);
     dict.set("M", `D:${(0, _util.getModificationDate)()}`);
+
+    const maybeMK = this._getMKDict(rotation);
+
+    if (maybeMK) {
+      dict.set("MK", maybeMK);
+    }
+
     let originalTransform = null;
 
     if (encrypt) {
@@ -7976,8 +8479,8 @@ class ButtonWidgetAnnotation extends WidgetAnnotation {
       (0, _util.unreachable)(`_getDefaultCheckedAppearance - unsupported type: ${type}`);
     }
 
-    const xShift = (width - metrics.width) / 2;
-    const yShift = (height - metrics.height) / 2;
+    const xShift = (0, _core_utils.numberToString)((width - metrics.width) / 2);
+    const yShift = (0, _core_utils.numberToString)((height - metrics.height) / 2);
     const appearance = `q BT /PdfJsZaDb ${fontSize} Tf 0 g ${xShift} ${yShift} Td (${char}) Tj ET Q`;
     const appearanceStreamDict = new _primitives.Dict(params.xref);
     appearanceStreamDict.set("FormType", 1);
@@ -8145,6 +8648,7 @@ class ButtonWidgetAnnotation extends WidgetAnnotation {
       page: this.data.pageIndex,
       strokeColor: this.data.borderColor,
       fillColor: this.data.backgroundColor,
+      rotation: this.rotation,
       type
     };
   }
@@ -8211,6 +8715,7 @@ class ChoiceWidgetAnnotation extends WidgetAnnotation {
       page: this.data.pageIndex,
       strokeColor: this.data.borderColor,
       fillColor: this.data.backgroundColor,
+      rotation: this.rotation,
       type
     };
   }
@@ -8225,20 +8730,33 @@ class ChoiceWidgetAnnotation extends WidgetAnnotation {
     }
 
     const storageEntry = annotationStorage.get(this.data.id);
-    let exportedValue = storageEntry && storageEntry.value;
 
-    if (exportedValue === undefined) {
+    if (!storageEntry) {
       return null;
     }
 
-    if (!Array.isArray(exportedValue)) {
+    const rotation = storageEntry.rotation;
+    let exportedValue = storageEntry.value;
+
+    if (rotation === undefined && exportedValue === undefined) {
+      return null;
+    }
+
+    if (exportedValue === undefined) {
+      exportedValue = this.data.fieldValue;
+    } else if (!Array.isArray(exportedValue)) {
       exportedValue = [exportedValue];
     }
 
     const defaultPadding = 2;
     const hPadding = defaultPadding;
-    const totalHeight = this.data.rect[3] - this.data.rect[1];
-    const totalWidth = this.data.rect[2] - this.data.rect[0];
+    let totalHeight = this.data.rect[3] - this.data.rect[1];
+    let totalWidth = this.data.rect[2] - this.data.rect[0];
+
+    if (rotation === 90 || rotation === 270) {
+      [totalWidth, totalHeight] = [totalHeight, totalWidth];
+    }
+
     const lineCount = this.data.options.length;
     const valueIndices = [];
 
@@ -8256,7 +8774,7 @@ class ChoiceWidgetAnnotation extends WidgetAnnotation {
       this.data.defaultAppearanceData = (0, _default_appearance.parseDefaultAppearance)(this._defaultAppearance = "/Helvetica 0 Tf 0 g");
     }
 
-    const font = await this._getFontData(evaluator, task);
+    const font = await WidgetAnnotation._getFontData(evaluator, task, this.data.defaultAppearanceData, this._fieldResources.mergedResources);
     let defaultAppearance;
     let {
       fontSize
@@ -8270,7 +8788,7 @@ class ChoiceWidgetAnnotation extends WidgetAnnotation {
       for (const {
         displayValue
       } of this.data.options) {
-        const width = this._getTextWidth(displayValue);
+        const width = this._getTextWidth(displayValue, font);
 
         if (width > lineWidth) {
           lineWidth = width;
@@ -8283,7 +8801,7 @@ class ChoiceWidgetAnnotation extends WidgetAnnotation {
       defaultAppearance = this._defaultAppearance;
     }
 
-    const lineHeight = fontSize * LINE_FACTOR;
+    const lineHeight = fontSize * _util.LINE_FACTOR;
     const vPadding = (lineHeight - fontSize) / 2;
     const numberOfVisibleLines = Math.floor(totalHeight / lineHeight);
     let firstIndex;
@@ -8379,6 +8897,8 @@ class LinkAnnotation extends Annotation {
       this.data.quadPoints = quadPoints;
     }
 
+    this.data.borderColor = this.data.borderColor || this.data.color;
+
     _catalog.Catalog.parseDestDictionary({
       destDict: params.dict,
       resultObj: this.data,
@@ -8457,20 +8977,168 @@ class FreeTextAnnotation extends MarkupAnnotation {
     this.data.annotationType = _util.AnnotationType.FREETEXT;
   }
 
+  static createNewDict(annotation, xref, {
+    apRef,
+    ap
+  }) {
+    const {
+      color,
+      fontSize,
+      rect,
+      rotation,
+      user,
+      value
+    } = annotation;
+    const freetext = new _primitives.Dict(xref);
+    freetext.set("Type", _primitives.Name.get("Annot"));
+    freetext.set("Subtype", _primitives.Name.get("FreeText"));
+    freetext.set("CreationDate", `D:${(0, _util.getModificationDate)()}`);
+    freetext.set("Rect", rect);
+    const da = `/Helv ${fontSize} Tf ${(0, _default_appearance.getPdfColor)(color, true)}`;
+    freetext.set("DA", da);
+    freetext.set("Contents", value);
+    freetext.set("F", 4);
+    freetext.set("Border", [0, 0, 0]);
+    freetext.set("Rotate", rotation);
+
+    if (user) {
+      freetext.set("T", (0, _util.stringToUTF8String)(user));
+    }
+
+    const n = new _primitives.Dict(xref);
+    freetext.set("AP", n);
+
+    if (apRef) {
+      n.set("N", apRef);
+    } else {
+      n.set("N", ap);
+    }
+
+    return freetext;
+  }
+
+  static async createNewAppearanceStream(annotation, xref, params) {
+    const {
+      baseFontRef,
+      evaluator,
+      task
+    } = params;
+    const {
+      color,
+      fontSize,
+      rect,
+      rotation,
+      value
+    } = annotation;
+    const resources = new _primitives.Dict(xref);
+    const font = new _primitives.Dict(xref);
+
+    if (baseFontRef) {
+      font.set("Helv", baseFontRef);
+    } else {
+      const baseFont = new _primitives.Dict(xref);
+      baseFont.set("BaseFont", _primitives.Name.get("Helvetica"));
+      baseFont.set("Type", _primitives.Name.get("Font"));
+      baseFont.set("Subtype", _primitives.Name.get("Type1"));
+      baseFont.set("Encoding", _primitives.Name.get("WinAnsiEncoding"));
+      font.set("Helv", baseFont);
+    }
+
+    resources.set("Font", font);
+    const helv = await WidgetAnnotation._getFontData(evaluator, task, {
+      fontName: "Helvetica",
+      fontSize
+    }, resources);
+    const [x1, y1, x2, y2] = rect;
+    let w = x2 - x1;
+    let h = y2 - y1;
+
+    if (rotation % 180 !== 0) {
+      [w, h] = [h, w];
+    }
+
+    const lines = value.split("\n");
+    const scale = fontSize / 1000;
+    let totalWidth = -Infinity;
+    const encodedLines = [];
+
+    for (let line of lines) {
+      line = helv.encodeString(line).join("");
+      encodedLines.push(line);
+      let lineWidth = 0;
+      const glyphs = helv.charsToGlyphs(line);
+
+      for (const glyph of glyphs) {
+        lineWidth += glyph.width * scale;
+      }
+
+      totalWidth = Math.max(totalWidth, lineWidth);
+    }
+
+    let hscale = 1;
+
+    if (totalWidth > w) {
+      hscale = w / totalWidth;
+    }
+
+    let vscale = 1;
+    const lineHeight = _util.LINE_FACTOR * fontSize;
+    const lineDescent = _util.LINE_DESCENT_FACTOR * fontSize;
+    const totalHeight = lineHeight * lines.length;
+
+    if (totalHeight > h) {
+      vscale = h / totalHeight;
+    }
+
+    const fscale = Math.min(hscale, vscale);
+    const newFontSize = fontSize * fscale;
+    const buffer = ["q", `0 0 ${(0, _core_utils.numberToString)(w)} ${(0, _core_utils.numberToString)(h)} re W n`, `BT`, `1 0 0 1 0 ${(0, _core_utils.numberToString)(h + lineDescent)} Tm 0 Tc ${(0, _default_appearance.getPdfColor)(color, true)}`, `/Helv ${(0, _core_utils.numberToString)(newFontSize)} Tf`];
+    const vShift = (0, _core_utils.numberToString)(lineHeight);
+
+    for (const line of encodedLines) {
+      buffer.push(`0 -${vShift} Td (${(0, _util.escapeString)(line)}) Tj`);
+    }
+
+    buffer.push("ET", "Q");
+    const appearance = buffer.join("\n");
+    const appearanceStreamDict = new _primitives.Dict(xref);
+    appearanceStreamDict.set("FormType", 1);
+    appearanceStreamDict.set("Subtype", _primitives.Name.get("Form"));
+    appearanceStreamDict.set("Type", _primitives.Name.get("XObject"));
+    appearanceStreamDict.set("BBox", [0, 0, w, h]);
+    appearanceStreamDict.set("Length", appearance.length);
+    appearanceStreamDict.set("Resources", resources);
+
+    if (rotation) {
+      const matrix = WidgetAnnotation._getRotationMatrix(rotation, w, h);
+
+      appearanceStreamDict.set("Matrix", matrix);
+    }
+
+    const ap = new _stream.StringStream(appearance);
+    ap.dict = appearanceStreamDict;
+    return ap;
+  }
+
 }
 
 class LineAnnotation extends MarkupAnnotation {
   constructor(parameters) {
     super(parameters);
+    const {
+      dict
+    } = parameters;
     this.data.annotationType = _util.AnnotationType.LINE;
-    const lineCoordinates = parameters.dict.getArray("L");
+    const lineCoordinates = dict.getArray("L");
     this.data.lineCoordinates = _util.Util.normalizeRect(lineCoordinates);
+    this.setLineEndings(dict.getArray("LE"));
+    this.data.lineEndings = this.lineEndings;
 
     if (!this.appearance) {
       const strokeColor = this.color ? Array.from(this.color).map(c => c / 255) : [0, 0, 0];
-      const strokeAlpha = parameters.dict.get("CA");
+      const strokeAlpha = dict.get("CA");
       let fillColor = null,
-          interiorColor = parameters.dict.getArray("IC");
+          interiorColor = dict.getArray("IC");
 
       if (interiorColor) {
         interiorColor = getRgbColor(interiorColor, null);
@@ -8612,9 +9280,18 @@ class CircleAnnotation extends MarkupAnnotation {
 class PolylineAnnotation extends MarkupAnnotation {
   constructor(parameters) {
     super(parameters);
+    const {
+      dict
+    } = parameters;
     this.data.annotationType = _util.AnnotationType.POLYLINE;
     this.data.vertices = [];
-    const rawVertices = parameters.dict.getArray("Vertices");
+
+    if (!(this instanceof PolygonAnnotation)) {
+      this.setLineEndings(dict.getArray("LE"));
+      this.data.lineEndings = this.lineEndings;
+    }
+
+    const rawVertices = dict.getArray("Vertices");
 
     if (!Array.isArray(rawVertices)) {
       return;
@@ -8629,7 +9306,7 @@ class PolylineAnnotation extends MarkupAnnotation {
 
     if (!this.appearance) {
       const strokeColor = this.color ? Array.from(this.color).map(c => c / 255) : [0, 0, 0];
-      const strokeAlpha = parameters.dict.get("CA");
+      const strokeAlpha = dict.get("CA");
       const borderWidth = this.borderStyle.width || 1,
             borderAdjust = 2 * borderWidth;
       const bbox = [Infinity, Infinity, -Infinity, -Infinity];
@@ -8744,6 +9421,89 @@ class InkAnnotation extends MarkupAnnotation {
         }
       });
     }
+  }
+
+  static createNewDict(annotation, xref, {
+    apRef,
+    ap
+  }) {
+    const {
+      paths,
+      rect,
+      rotation
+    } = annotation;
+    const ink = new _primitives.Dict(xref);
+    ink.set("Type", _primitives.Name.get("Annot"));
+    ink.set("Subtype", _primitives.Name.get("Ink"));
+    ink.set("CreationDate", `D:${(0, _util.getModificationDate)()}`);
+    ink.set("Rect", rect);
+    ink.set("InkList", paths.map(p => p.points));
+    ink.set("F", 4);
+    ink.set("Border", [0, 0, 0]);
+    ink.set("Rotate", rotation);
+    const n = new _primitives.Dict(xref);
+    ink.set("AP", n);
+
+    if (apRef) {
+      n.set("N", apRef);
+    } else {
+      n.set("N", ap);
+    }
+
+    return ink;
+  }
+
+  static async createNewAppearanceStream(annotation, xref, params) {
+    const {
+      color,
+      rect,
+      rotation,
+      paths,
+      thickness
+    } = annotation;
+    const [x1, y1, x2, y2] = rect;
+    let w = x2 - x1;
+    let h = y2 - y1;
+
+    if (rotation % 180 !== 0) {
+      [w, h] = [h, w];
+    }
+
+    const appearanceBuffer = [`${thickness} w 1 J 1 j`, `${(0, _default_appearance.getPdfColor)(color, false)}`];
+    const buffer = [];
+
+    for (const {
+      bezier
+    } of paths) {
+      buffer.length = 0;
+      buffer.push(`${(0, _core_utils.numberToString)(bezier[0])} ${(0, _core_utils.numberToString)(bezier[1])} m`);
+
+      for (let i = 2, ii = bezier.length; i < ii; i += 6) {
+        const curve = bezier.slice(i, i + 6).map(_core_utils.numberToString).join(" ");
+        buffer.push(`${curve} c`);
+      }
+
+      buffer.push("S");
+      appearanceBuffer.push(buffer.join("\n"));
+    }
+
+    const appearance = appearanceBuffer.join("\n");
+    const appearanceStreamDict = new _primitives.Dict(xref);
+    appearanceStreamDict.set("FormType", 1);
+    appearanceStreamDict.set("Subtype", _primitives.Name.get("Form"));
+    appearanceStreamDict.set("Type", _primitives.Name.get("XObject"));
+    appearanceStreamDict.set("BBox", [0, 0, w, h]);
+    appearanceStreamDict.set("Length", appearance.length);
+
+    if (rotation) {
+      const matrix = WidgetAnnotation._getRotationMatrix(rotation, w, h);
+
+      appearanceStreamDict.set("Matrix", matrix);
+    }
+
+    const ap = new _stream.StringStream(appearance);
+    ap.dict = appearanceStreamDict;
+    return ap;
   }
 
 }
@@ -8911,13 +9671,14 @@ Object.defineProperty(exports, "__esModule", ({
   value: true
 }));
 exports.createDefaultAppearance = createDefaultAppearance;
+exports.getPdfColor = getPdfColor;
 exports.parseDefaultAppearance = parseDefaultAppearance;
+
+var _core_utils = __w_pdfjs_require__(6);
 
 var _util = __w_pdfjs_require__(2);
 
 var _colorspace = __w_pdfjs_require__(24);
-
-var _core_utils = __w_pdfjs_require__(8);
 
 var _evaluator = __w_pdfjs_require__(25);
 
@@ -9001,20 +9762,21 @@ function parseDefaultAppearance(str) {
   return new DefaultAppearanceEvaluator(str).parse();
 }
 
+function getPdfColor(color, isFill) {
+  if (color[0] === color[1] && color[1] === color[2]) {
+    const gray = color[0] / 255;
+    return `${(0, _core_utils.numberToString)(gray)} ${isFill ? "g" : "G"}`;
+  }
+
+  return Array.from(color).map(c => (0, _core_utils.numberToString)(c / 255)).join(" ") + ` ${isFill ? "rg" : "RG"}`;
+}
+
 function createDefaultAppearance({
   fontSize,
   fontName,
   fontColor
 }) {
-  let colorCmd;
-
-  if (fontColor.every(c => c === 0)) {
-    colorCmd = "0 g";
-  } else {
-    colorCmd = Array.from(fontColor).map(c => (c / 255).toFixed(2)).join(" ") + " rg";
-  }
-
-  return `/${(0, _core_utils.escapePDFName)(fontName)} ${fontSize} Tf ${colorCmd}`;
+  return `/${(0, _core_utils.escapePDFName)(fontName)} ${fontSize} Tf ${getPdfColor(fontColor, true)}`;
 }
 
 /***/ }),
@@ -9032,9 +9794,9 @@ var _util = __w_pdfjs_require__(2);
 
 var _primitives = __w_pdfjs_require__(5);
 
-var _base_stream = __w_pdfjs_require__(9);
+var _base_stream = __w_pdfjs_require__(7);
 
-var _core_utils = __w_pdfjs_require__(8);
+var _core_utils = __w_pdfjs_require__(6);
 
 function resizeRgbImage(src, dest, w1, h1, w2, h2, alpha01) {
   const COMPONENTS = 3;
@@ -10127,7 +10889,7 @@ var _image_utils = __w_pdfjs_require__(59);
 
 var _stream = __w_pdfjs_require__(10);
 
-var _base_stream = __w_pdfjs_require__(9);
+var _base_stream = __w_pdfjs_require__(7);
 
 var _bidi = __w_pdfjs_require__(60);
 
@@ -10137,7 +10899,7 @@ var _decode_stream = __w_pdfjs_require__(29);
 
 var _glyphlist = __w_pdfjs_require__(20);
 
-var _core_utils = __w_pdfjs_require__(8);
+var _core_utils = __w_pdfjs_require__(6);
 
 var _metrics = __w_pdfjs_require__(51);
 
@@ -11109,11 +11871,9 @@ class PartialEvaluator {
     let fontRef;
 
     if (font) {
-      if (!(font instanceof _primitives.Ref)) {
-        throw new _util.FormatError('The "font" object should be a reference.');
+      if (font instanceof _primitives.Ref) {
+        fontRef = font;
       }
-
-      fontRef = font;
     } else {
       const fontRes = resources.get("Font");
 
@@ -12682,7 +13442,7 @@ class PartialEvaluator {
               }
             }
 
-            const item = elements[elements.length - 1];
+            const item = elements.at(-1);
 
             if (typeof item === "string") {
               showSpacedTextBuffer.push(item);
@@ -12901,6 +13661,8 @@ class PartialEvaluator {
             return;
 
           case _util.OPS.beginMarkedContent:
+            flushTextContentItem();
+
             if (includeMarkedContent) {
               textContent.items.push({
                 type: "beginMarkedContent",
@@ -12911,8 +13673,9 @@ class PartialEvaluator {
             break;
 
           case _util.OPS.beginMarkedContentProps:
+            flushTextContentItem();
+
             if (includeMarkedContent) {
-              flushTextContentItem();
               let mcid = null;
 
               if (args[1] instanceof _primitives.Dict) {
@@ -12929,8 +13692,9 @@ class PartialEvaluator {
             break;
 
           case _util.OPS.endMarkedContent:
+            flushTextContentItem();
+
             if (includeMarkedContent) {
-              flushTextContentItem();
               textContent.items.push({
                 type: "endMarkedContent"
               });
@@ -12985,10 +13749,18 @@ class PartialEvaluator {
         };
       }
 
-      const cidToGidMap = dict.get("CIDToGIDMap");
+      try {
+        const cidToGidMap = dict.get("CIDToGIDMap");
 
-      if (cidToGidMap instanceof _base_stream.BaseStream) {
-        cidToGidBytes = cidToGidMap.getBytes();
+        if (cidToGidMap instanceof _base_stream.BaseStream) {
+          cidToGidBytes = cidToGidMap.getBytes();
+        }
+      } catch (ex) {
+        if (!this.options.ignoreErrors) {
+          throw ex;
+        }
+
+        (0, _util.warn)(`extractDataStructures - ignoring CIDToGIDMap data: "${ex}".`);
       }
     }
 
@@ -13932,7 +14704,12 @@ class TranslatedFont {
     const charProcs = this.dict.get("CharProcs");
     const fontResources = this.dict.get("Resources") || resources;
     const charProcOperatorList = Object.create(null);
-    const isEmptyBBox = !translatedFont.bbox || (0, _util.isArrayEqual)(translatedFont.bbox, [0, 0, 0, 0]);
+
+    const fontBBox = _util.Util.normalizeRect(translatedFont.bbox || [0, 0, 0, 0]),
+          width = fontBBox[2] - fontBBox[0],
+          height = fontBBox[3] - fontBBox[1];
+
+    const fontBBoxSize = Math.hypot(width, height);
 
     for (const key of charProcs.getKeys()) {
       loadCharProcsPromise = loadCharProcsPromise.then(() => {
@@ -13945,7 +14722,7 @@ class TranslatedFont {
           operatorList
         }).then(() => {
           if (operatorList.fnArray[0] === _util.OPS.setCharWidthAndBounds) {
-            this._removeType3ColorOperators(operatorList, isEmptyBBox);
+            this._removeType3ColorOperators(operatorList, fontBBoxSize);
           }
 
           charProcOperatorList[key] = operatorList.getIR();
@@ -13972,13 +14749,20 @@ class TranslatedFont {
     return this.type3Loaded;
   }
 
-  _removeType3ColorOperators(operatorList, isEmptyBBox = false) {
-    if (isEmptyBBox) {
+  _removeType3ColorOperators(operatorList, fontBBoxSize = NaN) {
+    const charBBox = _util.Util.normalizeRect(operatorList.argsArray[0].slice(2)),
+          width = charBBox[2] - charBBox[0],
+          height = charBBox[3] - charBBox[1];
+
+    const charBBoxSize = Math.hypot(width, height);
+
+    if (width === 0 || height === 0) {
+      operatorList.fnArray.splice(0, 1);
+      operatorList.argsArray.splice(0, 1);
+    } else if (fontBBoxSize === 0 || Math.round(charBBoxSize / fontBBoxSize) >= 10) {
       if (!this._bbox) {
         this._bbox = [Infinity, Infinity, -Infinity, -Infinity];
       }
-
-      const charBBox = _util.Util.normalizeRect(operatorList.argsArray[0].slice(2));
 
       this._bbox[0] = Math.min(this._bbox[0], charBBox[0]);
       this._bbox[1] = Math.min(this._bbox[1], charBBox[1]);
@@ -13986,11 +14770,14 @@ class TranslatedFont {
       this._bbox[3] = Math.max(this._bbox[3], charBBox[3]);
     }
 
-    let i = 1,
+    let i = 0,
         ii = operatorList.length;
 
     while (i < ii) {
       switch (operatorList.fnArray[i]) {
+        case _util.OPS.setCharWidthAndBounds:
+          break;
+
         case _util.OPS.setStrokeColorSpace:
         case _util.OPS.setFillColorSpace:
         case _util.OPS.setStrokeColor:
@@ -14540,6 +15327,7 @@ class EvaluatorPreprocessor {
     });
     this.stateManager = stateManager;
     this.nonProcessedArgs = [];
+    this._isPathOp = false;
     this._numInvalidPathOPS = 0;
   }
 
@@ -14566,6 +15354,12 @@ class EvaluatorPreprocessor {
         const numArgs = opSpec.numArgs;
         let argsLength = args !== null ? args.length : 0;
 
+        if (!this._isPathOp) {
+          this._numInvalidPathOPS = 0;
+        }
+
+        this._isPathOp = fn >= _util.OPS.moveTo && fn <= _util.OPS.endPath;
+
         if (!opSpec.variableArgs) {
           if (argsLength !== numArgs) {
             const nonProcessedArgs = this.nonProcessedArgs;
@@ -14588,7 +15382,7 @@ class EvaluatorPreprocessor {
           if (argsLength < numArgs) {
             const partialMsg = `command ${cmd}: expected ${numArgs} args, ` + `but received ${argsLength} args.`;
 
-            if (fn >= _util.OPS.moveTo && fn <= _util.OPS.endPath && ++this._numInvalidPathOPS > EvaluatorPreprocessor.MAX_INVALID_PATH_OPS) {
+            if (this._isPathOp && ++this._numInvalidPathOPS > EvaluatorPreprocessor.MAX_INVALID_PATH_OPS) {
               throw new _util.FormatError(`Invalid ${partialMsg}`);
             }
 
@@ -14663,11 +15457,11 @@ var _util = __w_pdfjs_require__(2);
 
 var _primitives = __w_pdfjs_require__(5);
 
-var _base_stream = __w_pdfjs_require__(9);
+var _base_stream = __w_pdfjs_require__(7);
 
 var _parser = __w_pdfjs_require__(27);
 
-var _core_utils = __w_pdfjs_require__(8);
+var _core_utils = __w_pdfjs_require__(6);
 
 var _stream = __w_pdfjs_require__(10);
 
@@ -15588,7 +16382,7 @@ var _util = __w_pdfjs_require__(2);
 
 var _primitives = __w_pdfjs_require__(5);
 
-var _core_utils = __w_pdfjs_require__(8);
+var _core_utils = __w_pdfjs_require__(6);
 
 var _ascii_85_stream = __w_pdfjs_require__(28);
 
@@ -16969,7 +17763,7 @@ exports.Ascii85Stream = void 0;
 
 var _decode_stream = __w_pdfjs_require__(29);
 
-var _core_utils = __w_pdfjs_require__(8);
+var _core_utils = __w_pdfjs_require__(6);
 
 class Ascii85Stream extends _decode_stream.DecodeStream {
   constructor(str, maybeLength) {
@@ -17067,7 +17861,7 @@ Object.defineProperty(exports, "__esModule", ({
 }));
 exports.StreamsSequenceStream = exports.DecodeStream = void 0;
 
-var _base_stream = __w_pdfjs_require__(9);
+var _base_stream = __w_pdfjs_require__(7);
 
 var _stream = __w_pdfjs_require__(10);
 
@@ -18415,7 +19209,7 @@ Object.defineProperty(exports, "__esModule", ({
 }));
 exports.Jbig2Stream = void 0;
 
-var _base_stream = __w_pdfjs_require__(9);
+var _base_stream = __w_pdfjs_require__(7);
 
 var _decode_stream = __w_pdfjs_require__(29);
 
@@ -18495,7 +19289,7 @@ exports.Jbig2Image = void 0;
 
 var _util = __w_pdfjs_require__(2);
 
-var _core_utils = __w_pdfjs_require__(8);
+var _core_utils = __w_pdfjs_require__(6);
 
 var _arithmetic_decoder = __w_pdfjs_require__(36);
 
@@ -19837,7 +20631,7 @@ function processSegment(segment, visitor) {
       break;
 
     default:
-      throw new Jbig2Error(`segment type ${header.typeName}(${header.type})` + " is not implemented");
+      throw new Jbig2Error(`segment type ${header.typeName}(${header.type}) is not implemented`);
   }
 
   const callbackName = "on" + header.typeName;
@@ -19866,55 +20660,7 @@ function parseJbig2Chunks(chunks) {
 }
 
 function parseJbig2(data) {
-  const end = data.length;
-  let position = 0;
-
-  if (data[position] !== 0x97 || data[position + 1] !== 0x4a || data[position + 2] !== 0x42 || data[position + 3] !== 0x32 || data[position + 4] !== 0x0d || data[position + 5] !== 0x0a || data[position + 6] !== 0x1a || data[position + 7] !== 0x0a) {
-    throw new Jbig2Error("parseJbig2 - invalid header.");
-  }
-
-  const header = Object.create(null);
-  position += 8;
-  const flags = data[position++];
-  header.randomAccess = !(flags & 1);
-
-  if (!(flags & 2)) {
-    header.numberOfPages = (0, _core_utils.readUint32)(data, position);
-    position += 4;
-  }
-
-  const segments = readSegments(header, data, position, end);
-  const visitor = new SimpleSegmentVisitor();
-  processSegments(segments, visitor);
-  const {
-    width,
-    height
-  } = visitor.currentPageInfo;
-  const bitPacked = visitor.buffer;
-  const imgData = new Uint8ClampedArray(width * height);
-  let q = 0,
-      k = 0;
-
-  for (let i = 0; i < height; i++) {
-    let mask = 0,
-        buffer;
-
-    for (let j = 0; j < width; j++) {
-      if (!mask) {
-        mask = 128;
-        buffer = bitPacked[k++];
-      }
-
-      imgData[q++] = buffer & mask ? 0 : 255;
-      mask >>= 1;
-    }
-  }
-
-  return {
-    imgData,
-    width,
-    height
-  };
+  throw new Error("Not implemented: parseJbig2");
 }
 
 class SimpleSegmentVisitor {
@@ -19924,9 +20670,7 @@ class SimpleSegmentVisitor {
     const buffer = new Uint8ClampedArray(rowSize * info.height);
 
     if (info.defaultPixelValue) {
-      for (let i = 0, ii = buffer.length; i < ii; i++) {
-        buffer[i] = 0xff;
-      }
+      buffer.fill(0xff);
     }
 
     this.buffer = buffer;
@@ -20020,13 +20764,13 @@ class SimpleSegmentVisitor {
       this.symbols = symbols = {};
     }
 
-    let inputSymbols = [];
+    const inputSymbols = [];
 
-    for (let i = 0, ii = referredSegments.length; i < ii; i++) {
-      const referredSymbols = symbols[referredSegments[i]];
+    for (const referredSegment of referredSegments) {
+      const referredSymbols = symbols[referredSegment];
 
       if (referredSymbols) {
-        inputSymbols = inputSymbols.concat(referredSymbols);
+        inputSymbols.push(...referredSymbols);
       }
     }
 
@@ -20038,13 +20782,13 @@ class SimpleSegmentVisitor {
     const regionInfo = region.info;
     let huffmanTables, huffmanInput;
     const symbols = this.symbols;
-    let inputSymbols = [];
+    const inputSymbols = [];
 
-    for (let i = 0, ii = referredSegments.length; i < ii; i++) {
-      const referredSymbols = symbols[referredSegments[i]];
+    for (const referredSegment of referredSegments) {
+      const referredSymbols = symbols[referredSegment];
 
       if (referredSymbols) {
-        inputSymbols = inputSymbols.concat(referredSymbols);
+        inputSymbols.push(...referredSymbols);
       }
     }
 
@@ -20667,14 +21411,7 @@ class Jbig2Image {
   }
 
   parse(data) {
-    const {
-      imgData,
-      width,
-      height
-    } = parseJbig2(data);
-    this.width = width;
-    this.height = height;
-    return imgData;
+    throw new Error("Not implemented: Jbig2Image.parse");
   }
 
 }
@@ -21147,7 +21884,7 @@ exports.JpegImage = void 0;
 
 var _util = __w_pdfjs_require__(2);
 
-var _core_utils = __w_pdfjs_require__(8);
+var _core_utils = __w_pdfjs_require__(6);
 
 class JpegError extends _util.BaseException {
   constructor(msg) {
@@ -22474,7 +23211,7 @@ exports.JpxImage = void 0;
 
 var _util = __w_pdfjs_require__(2);
 
-var _core_utils = __w_pdfjs_require__(8);
+var _core_utils = __w_pdfjs_require__(6);
 
 var _arithmetic_decoder = __w_pdfjs_require__(36);
 
@@ -25302,7 +26039,7 @@ var _cmap = __w_pdfjs_require__(26);
 
 var _opentype_file_builder = __w_pdfjs_require__(53);
 
-var _core_utils = __w_pdfjs_require__(8);
+var _core_utils = __w_pdfjs_require__(6);
 
 var _stream = __w_pdfjs_require__(10);
 
@@ -25580,11 +26317,14 @@ function convertCidString(charCode, cid, shouldThrow = false) {
   return cid;
 }
 
-function adjustMapping(charCodeToGlyphId, hasGlyph, newGlyphZeroId) {
+function adjustMapping(charCodeToGlyphId, hasGlyph, newGlyphZeroId, toUnicode) {
   const newMap = Object.create(null);
+  const toUnicodeExtraMap = new Map();
   const toFontChar = [];
+  const usedGlyphIds = new Set();
   let privateUseAreaIndex = 0;
-  let nextAvailableFontCharCode = PRIVATE_USE_AREAS[privateUseAreaIndex][0];
+  const privateUseOffetStart = PRIVATE_USE_AREAS[privateUseAreaIndex][0];
+  let nextAvailableFontCharCode = privateUseOffetStart;
   let privateUseOffetEnd = PRIVATE_USE_AREAS[privateUseAreaIndex][1];
 
   for (let originalCharCode in charCodeToGlyphId) {
@@ -25613,6 +26353,17 @@ function adjustMapping(charCodeToGlyphId, hasGlyph, newGlyphZeroId) {
       glyphId = newGlyphZeroId;
     }
 
+    let unicode = toUnicode.get(originalCharCode);
+
+    if (typeof unicode === "string") {
+      unicode = unicode.codePointAt(0);
+    }
+
+    if (unicode && unicode < privateUseOffetStart && !usedGlyphIds.has(glyphId)) {
+      toUnicodeExtraMap.set(unicode, glyphId);
+      usedGlyphIds.add(glyphId);
+    }
+
     newMap[fontCharCode] = glyphId;
     toFontChar[originalCharCode] = fontCharCode;
   }
@@ -25620,11 +26371,12 @@ function adjustMapping(charCodeToGlyphId, hasGlyph, newGlyphZeroId) {
   return {
     toFontChar,
     charCodeToGlyphId: newMap,
+    toUnicodeExtraMap,
     nextAvailableFontCharCode
   };
 }
 
-function getRanges(glyphs, numGlyphs) {
+function getRanges(glyphs, toUnicodeExtraMap, numGlyphs) {
   const codes = [];
 
   for (const charCode in glyphs) {
@@ -25636,6 +26388,19 @@ function getRanges(glyphs, numGlyphs) {
       fontCharCode: charCode | 0,
       glyphId: glyphs[charCode]
     });
+  }
+
+  if (toUnicodeExtraMap) {
+    for (const [unicode, glyphId] of toUnicodeExtraMap) {
+      if (glyphId >= numGlyphs) {
+        continue;
+      }
+
+      codes.push({
+        fontCharCode: unicode,
+        glyphId
+      });
+    }
   }
 
   if (codes.length === 0) {
@@ -25673,9 +26438,9 @@ function getRanges(glyphs, numGlyphs) {
   return ranges;
 }
 
-function createCmapTable(glyphs, numGlyphs) {
-  const ranges = getRanges(glyphs, numGlyphs);
-  const numTables = ranges[ranges.length - 1][1] > 0xffff ? 2 : 1;
+function createCmapTable(glyphs, toUnicodeExtraMap, numGlyphs) {
+  const ranges = getRanges(glyphs, toUnicodeExtraMap, numGlyphs);
+  const numTables = ranges.at(-1)[1] > 0xffff ? 2 : 1;
   let cmap = "\x00\x00" + string16(numTables) + "\x00\x03" + "\x00\x01" + (0, _util.string32)(4 + numTables * 8);
   let i, ii, j, jj;
 
@@ -26236,7 +27001,7 @@ class Font {
       const offset = file.getInt32() >>> 0;
       const length = file.getInt32() >>> 0;
       const previousPosition = file.pos;
-      file.pos = file.start ? file.start : 0;
+      file.pos = file.start || 0;
       file.skip(offset);
       const data = file.getBytes(length);
       file.pos = previousPosition;
@@ -26373,7 +27138,7 @@ class Font {
       }
 
       let segment;
-      let start = (file.start ? file.start : 0) + cmap.offset;
+      let start = (file.start || 0) + cmap.offset;
       file.pos = start;
       file.skip(2);
       const numTables = file.getUint16();
@@ -26649,7 +27414,7 @@ class Font {
         return;
       }
 
-      file.pos = (file.start ? file.start : 0) + header.offset;
+      file.pos = (file.start || 0) + header.offset;
       file.pos += 4;
       file.pos += 2;
       file.pos += 2;
@@ -26971,7 +27736,7 @@ class Font {
     }
 
     function readPostScriptTable(post, propertiesObj, maxpNumGlyphs) {
-      const start = (font.start ? font.start : 0) + post.offset;
+      const start = (font.start || 0) + post.offset;
       font.pos = start;
       const length = post.length,
             end = start + length;
@@ -27059,7 +27824,7 @@ class Font {
     }
 
     function readNameTable(nameTable) {
-      const start = (font.start ? font.start : 0) + nameTable.offset;
+      const start = (font.start || 0) + nameTable.offset;
       font.pos = start;
       const names = [[], []];
       const length = nameTable.length,
@@ -27191,7 +27956,7 @@ class Font {
           }
         } else if (op === 0x2b && !tooComplexToFollowFunctions) {
           if (!inFDEF && !inELSE) {
-            funcId = stack[stack.length - 1];
+            funcId = stack.at(-1);
 
             if (isNaN(funcId)) {
               (0, _util.info)("TT: CALL empty stack (or invalid entry).");
@@ -27279,7 +28044,7 @@ class Font {
           --ifLevel;
         } else if (op === 0x1c) {
           if (!inFDEF && !inELSE) {
-            const offset = stack[stack.length - 1];
+            const offset = stack.at(-1);
 
             if (offset > 0) {
               i += offset - 1;
@@ -27740,11 +28505,11 @@ class Font {
     }
 
     if (!properties.cssFontInfo) {
-      const newMapping = adjustMapping(charCodeToGlyphId, hasGlyph, glyphZeroId);
+      const newMapping = adjustMapping(charCodeToGlyphId, hasGlyph, glyphZeroId, this.toUnicode);
       this.toFontChar = newMapping.toFontChar;
       tables.cmap = {
         tag: "cmap",
-        data: createCmapTable(newMapping.charCodeToGlyphId, numGlyphsOut)
+        data: createCmapTable(newMapping.charCodeToGlyphId, newMapping.toUnicodeExtraMap, numGlyphsOut)
       };
 
       if (!tables["OS/2"] || !validateOS2Table(tables["OS/2"], font)) {
@@ -27804,11 +28569,13 @@ class Font {
     const mapping = font.getGlyphMapping(properties);
     let newMapping = null;
     let newCharCodeToGlyphId = mapping;
+    let toUnicodeExtraMap = null;
 
     if (!properties.cssFontInfo) {
-      newMapping = adjustMapping(mapping, font.hasGlyphId.bind(font), glyphZeroId);
+      newMapping = adjustMapping(mapping, font.hasGlyphId.bind(font), glyphZeroId, this.toUnicode);
       this.toFontChar = newMapping.toFontChar;
       newCharCodeToGlyphId = newMapping.charCodeToGlyphId;
+      toUnicodeExtraMap = newMapping.toUnicodeExtraMap;
     }
 
     const numGlyphs = font.numGlyphs;
@@ -27889,7 +28656,7 @@ class Font {
     const builder = new _opentype_file_builder.OpenTypeFileBuilder("\x4F\x54\x54\x4F");
     builder.addTable("CFF ", font.data);
     builder.addTable("OS/2", createOS2Table(properties, newCharCodeToGlyphId));
-    builder.addTable("cmap", createCmapTable(newCharCodeToGlyphId, numGlyphs));
+    builder.addTable("cmap", createCmapTable(newCharCodeToGlyphId, toUnicodeExtraMap, numGlyphs));
     builder.addTable("head", "\x00\x01\x00\x00" + "\x00\x00\x10\x00" + "\x00\x00\x00\x00" + "\x5F\x0F\x3C\xF5" + "\x00\x00" + safeString16(unitsPerEm) + "\x00\x00\x00\x00\x9e\x0b\x7e\x27" + "\x00\x00\x00\x00\x9e\x0b\x7e\x27" + "\x00\x00" + safeString16(properties.descent) + "\x0F\xFF" + safeString16(properties.ascent) + string16(properties.italicAngle ? 2 : 0) + "\x00\x11" + "\x00\x00" + "\x00\x00" + "\x00\x00");
     builder.addTable("hhea", "\x00\x01\x00\x00" + safeString16(properties.ascent) + safeString16(properties.descent) + "\x00\x00" + "\xFF\xFF" + "\x00\x00" + "\x00\x00" + "\x00\x00" + safeString16(properties.capHeight) + safeString16(Math.tan(properties.italicAngle) * properties.xHeight) + "\x00\x00" + "\x00\x00" + "\x00\x00" + "\x00\x00" + "\x00\x00" + "\x00\x00" + string16(numGlyphs));
     builder.addTable("hmtx", function fontFieldsHmtx() {
@@ -29528,10 +30295,12 @@ class CFFCompiler {
     const output = {
       data: [],
       length: 0,
-      add: function CFFCompiler_add(data) {
+
+      add(data) {
         this.data = this.data.concat(data);
         this.length = this.data.length;
       }
+
     };
     const header = this.compileHeader(cff.header);
     output.add(header);
@@ -29765,12 +30534,9 @@ class CFFCompiler {
   }
 
   compileDict(dict, offsetTracker) {
-    let out = [];
-    const order = dict.order;
+    const out = [];
 
-    for (let i = 0; i < order.length; ++i) {
-      const key = order[i];
-
+    for (const key of dict.order) {
       if (!(key in dict.values)) {
         continue;
       }
@@ -29797,7 +30563,7 @@ class CFFCompiler {
         switch (type) {
           case "num":
           case "sid":
-            out = out.concat(this.encodeNumber(value));
+            out.push(...this.encodeNumber(value));
             break;
 
           case "offset":
@@ -29807,15 +30573,15 @@ class CFFCompiler {
               offsetTracker.track(name, out.length);
             }
 
-            out = out.concat([0x1d, 0, 0, 0, 0]);
+            out.push(0x1d, 0, 0, 0, 0);
             break;
 
           case "array":
           case "delta":
-            out = out.concat(this.encodeNumber(value));
+            out.push(...this.encodeNumber(value));
 
             for (let k = 1, kk = values.length; k < kk; ++k) {
-              out = out.concat(this.encodeNumber(values[k]));
+              out.push(...this.encodeNumber(values[k]));
             }
 
             break;
@@ -29825,7 +30591,7 @@ class CFFCompiler {
         }
       }
 
-      out = out.concat(dict.opcodes[key]);
+      out.push(...dict.opcodes[key]);
     }
 
     return out;
@@ -30050,7 +30816,7 @@ exports.getSerifFonts = exports.getNonStdFontMap = exports.getGlyphMapForStandar
 exports.getStandardFontName = getStandardFontName;
 exports.getSymbolsFonts = exports.getSupplementalGlyphMapForCalibri = exports.getSupplementalGlyphMapForArialBlack = exports.getStdFontMap = void 0;
 
-var _core_utils = __w_pdfjs_require__(8);
+var _core_utils = __w_pdfjs_require__(6);
 
 var _fonts_utils = __w_pdfjs_require__(18);
 
@@ -30085,10 +30851,14 @@ const getStdFontMap = (0, _core_utils.getLookupTableFactory)(function (t) {
   t["Arial-Bold"] = "Helvetica-Bold";
   t["Arial-BoldItalic"] = "Helvetica-BoldOblique";
   t["Arial-Italic"] = "Helvetica-Oblique";
+  t.ArialMT = "Helvetica";
   t["Arial-BoldItalicMT"] = "Helvetica-BoldOblique";
   t["Arial-BoldMT"] = "Helvetica-Bold";
   t["Arial-ItalicMT"] = "Helvetica-Oblique";
-  t.ArialMT = "Helvetica";
+  t.ArialUnicodeMS = "Helvetica";
+  t["ArialUnicodeMS-Bold"] = "Helvetica-Bold";
+  t["ArialUnicodeMS-BoldItalic"] = "Helvetica-BoldOblique";
+  t["ArialUnicodeMS-Italic"] = "Helvetica-Oblique";
   t["Courier-BoldItalic"] = "Courier-BoldOblique";
   t["Courier-Italic"] = "Courier-Oblique";
   t.CourierNew = "Courier";
@@ -30547,6 +31317,33 @@ const getGlyphMapForStandardFonts = (0, _core_utils.getLookupTableFactory)(funct
   t[337] = 9552;
   t[493] = 1039;
   t[494] = 1040;
+  t[672] = 1488;
+  t[673] = 1489;
+  t[674] = 1490;
+  t[675] = 1491;
+  t[676] = 1492;
+  t[677] = 1493;
+  t[678] = 1494;
+  t[679] = 1495;
+  t[680] = 1496;
+  t[681] = 1497;
+  t[682] = 1498;
+  t[683] = 1499;
+  t[684] = 1500;
+  t[685] = 1501;
+  t[686] = 1502;
+  t[687] = 1503;
+  t[688] = 1504;
+  t[689] = 1505;
+  t[690] = 1506;
+  t[691] = 1507;
+  t[692] = 1508;
+  t[693] = 1509;
+  t[694] = 1510;
+  t[695] = 1511;
+  t[696] = 1512;
+  t[697] = 1513;
+  t[698] = 1514;
   t[705] = 1524;
   t[706] = 8362;
   t[710] = 64288;
@@ -31369,7 +32166,7 @@ function compileGlyf(code, cmds, font) {
 
     const instructionLength = getUint16(code, i);
     i += 2 + instructionLength;
-    const numberOfPoints = endPtsOfContours[endPtsOfContours.length - 1] + 1;
+    const numberOfPoints = endPtsOfContours.at(-1) + 1;
     const points = [];
 
     while (points.length < numberOfPoints) {
@@ -31433,13 +32230,13 @@ function compileGlyf(code, cmds, font) {
 
       if (contour[0].flags & 1) {
         contour.push(contour[0]);
-      } else if (contour[contour.length - 1].flags & 1) {
-        contour.unshift(contour[contour.length - 1]);
+      } else if (contour.at(-1).flags & 1) {
+        contour.unshift(contour.at(-1));
       } else {
         const p = {
           flags: 1,
-          x: (contour[0].x + contour[contour.length - 1].x) / 2,
-          y: (contour[0].y + contour[contour.length - 1].y) / 2
+          x: (contour[0].x + contour.at(-1).x) / 2,
+          y: (contour[0].y + contour.at(-1).y) / 2
         };
         contour.unshift(p);
         contour.push(p);
@@ -32081,7 +32878,7 @@ Object.defineProperty(exports, "__esModule", ({
 }));
 exports.getMetrics = exports.getFontBasicMetrics = void 0;
 
-var _core_utils = __w_pdfjs_require__(8);
+var _core_utils = __w_pdfjs_require__(6);
 
 const getMetrics = (0, _core_utils.getLookupTableFactory)(function (t) {
   t.Courier = 600;
@@ -35775,7 +36572,7 @@ Object.defineProperty(exports, "__esModule", ({
 }));
 exports.OpenTypeFileBuilder = void 0;
 
-var _core_utils = __w_pdfjs_require__(8);
+var _core_utils = __w_pdfjs_require__(6);
 
 var _util = __w_pdfjs_require__(2);
 
@@ -35919,7 +36716,7 @@ var _cff_parser = __w_pdfjs_require__(45);
 
 var _fonts_utils = __w_pdfjs_require__(18);
 
-var _core_utils = __w_pdfjs_require__(8);
+var _core_utils = __w_pdfjs_require__(6);
 
 var _stream = __w_pdfjs_require__(10);
 
@@ -36071,10 +36868,11 @@ class Type1Font {
 
   getCharset() {
     const charset = [".notdef"];
-    const charstrings = this.charstrings;
 
-    for (let glyphId = 0; glyphId < charstrings.length; glyphId++) {
-      charset.push(charstrings[glyphId].glyphName);
+    for (const {
+      glyphName
+    } of this.charstrings) {
+      charset.push(glyphName);
     }
 
     return charset;
@@ -36282,7 +37080,7 @@ exports.Type1Parser = void 0;
 
 var _encodings = __w_pdfjs_require__(19);
 
-var _core_utils = __w_pdfjs_require__(8);
+var _core_utils = __w_pdfjs_require__(6);
 
 var _stream = __w_pdfjs_require__(10);
 
@@ -36471,7 +37269,7 @@ const Type1CharString = function Type1CharStringClosure() {
 
             case (12 << 8) + 6:
               if (seacAnalysisEnabled) {
-                const asb = this.stack[this.stack.length - 5];
+                const asb = this.stack.at(-5);
                 this.seac = this.stack.splice(-4, 4);
                 this.seac[0] += this.lsb - asb;
                 error = this.executeCommand(0, COMMAND_MAP.endchar);
@@ -36782,7 +37580,7 @@ const Type1Parser = function Type1ParserClosure() {
           privateData
         }
       };
-      let token, length, data, lenIV, encoded;
+      let token, length, data, lenIV;
 
       while ((token = this.getToken()) !== null) {
         if (token !== "/") {
@@ -36814,7 +37612,7 @@ const Type1Parser = function Type1ParserClosure() {
               this.getToken();
               data = length > 0 ? stream.getBytes(length) : new Uint8Array(0);
               lenIV = program.properties.privateData.lenIV;
-              encoded = this.readCharStrings(data, lenIV);
+              const encoded = this.readCharStrings(data, lenIV);
               this.nextChar();
               token = this.getToken();
 
@@ -36842,7 +37640,7 @@ const Type1Parser = function Type1ParserClosure() {
               this.getToken();
               data = length > 0 ? stream.getBytes(length) : new Uint8Array(0);
               lenIV = program.properties.privateData.lenIV;
-              encoded = this.readCharStrings(data, lenIV);
+              const encoded = this.readCharStrings(data, lenIV);
               this.nextChar();
               token = this.getToken();
 
@@ -36892,9 +37690,10 @@ const Type1Parser = function Type1ParserClosure() {
         }
       }
 
-      for (let i = 0; i < charstrings.length; i++) {
-        const glyph = charstrings[i].glyph;
-        encoded = charstrings[i].encoded;
+      for (const {
+        encoded,
+        glyph
+      } of charstrings) {
         const charString = new Type1CharString();
         const error = charString.convert(encoded, subrs, this.seacAnalysisEnabled);
         let output = charString.output;
@@ -37013,11 +37812,11 @@ exports.getTilingPatternIR = getTilingPatternIR;
 
 var _util = __w_pdfjs_require__(2);
 
-var _base_stream = __w_pdfjs_require__(9);
+var _base_stream = __w_pdfjs_require__(7);
 
 var _colorspace = __w_pdfjs_require__(24);
 
-var _core_utils = __w_pdfjs_require__(8);
+var _core_utils = __w_pdfjs_require__(6);
 
 const ShadingType = {
   FUNCTION_BASED: 1,
@@ -37176,7 +37975,7 @@ class RadialAxialShading extends BaseShading {
     }
 
     if (!extendEnd) {
-      colorStops[colorStops.length - 1][0] -= BaseShading.SMALL_NUMBER;
+      colorStops.at(-1)[0] -= BaseShading.SMALL_NUMBER;
       colorStops.push([1, background]);
     }
 
@@ -37461,12 +38260,12 @@ class MeshShading extends BaseShading {
             break;
 
           case 1:
-            ps.push(ps[ps.length - 2], ps[ps.length - 1]);
+            ps.push(ps.at(-2), ps.at(-1));
             verticesLeft = 1;
             break;
 
           case 2:
-            ps.push(ps[ps.length - 3], ps[ps.length - 1]);
+            ps.push(ps.at(-3), ps.at(-1));
             verticesLeft = 1;
             break;
         }
@@ -37960,7 +38759,7 @@ var _util = __w_pdfjs_require__(2);
 
 var _ps_parser = __w_pdfjs_require__(58);
 
-var _base_stream = __w_pdfjs_require__(9);
+var _base_stream = __w_pdfjs_require__(7);
 
 var _image_utils = __w_pdfjs_require__(59);
 
@@ -39188,7 +39987,7 @@ const PostScriptCompiler = function PostScriptCompilerClosure() {
               break;
             }
 
-            ast1 = stack[stack.length - 1];
+            ast1 = stack.at(-1);
 
             if (ast1.type === "literal" || ast1.type === "var") {
               stack.push(ast1);
@@ -39294,7 +40093,7 @@ var _util = __w_pdfjs_require__(2);
 
 var _primitives = __w_pdfjs_require__(5);
 
-var _core_utils = __w_pdfjs_require__(8);
+var _core_utils = __w_pdfjs_require__(6);
 
 class PostScriptParser {
   constructor(lexer) {
@@ -40309,7 +41108,7 @@ function addState(parentState, pattern, checkFn, iterateFn, processFn) {
     state = state[item] || (state[item] = []);
   }
 
-  state[pattern[pattern.length - 1]] = {
+  state[pattern.at(-1)] = {
     checkFn,
     iterateFn,
     processFn
@@ -40951,7 +41750,7 @@ var _util = __w_pdfjs_require__(2);
 
 var _image_utils = __w_pdfjs_require__(64);
 
-var _base_stream = __w_pdfjs_require__(9);
+var _base_stream = __w_pdfjs_require__(7);
 
 var _colorspace = __w_pdfjs_require__(24);
 
@@ -41743,29 +42542,2588 @@ function applyMaskImageData({
 Object.defineProperty(exports, "__esModule", ({
   value: true
 }));
-exports.Catalog = void 0;
-
-var _core_utils = __w_pdfjs_require__(8);
+exports.incrementalUpdate = incrementalUpdate;
+exports.writeDict = writeDict;
+exports.writeObject = writeObject;
 
 var _util = __w_pdfjs_require__(2);
 
 var _primitives = __w_pdfjs_require__(5);
 
-var _name_number_tree = __w_pdfjs_require__(66);
+var _core_utils = __w_pdfjs_require__(6);
 
-var _base_stream = __w_pdfjs_require__(9);
+var _xml_parser = __w_pdfjs_require__(66);
 
-var _cleanup_helper = __w_pdfjs_require__(67);
+var _base_stream = __w_pdfjs_require__(7);
+
+var _crypto = __w_pdfjs_require__(67);
+
+function writeObject(ref, obj, buffer, transform) {
+  buffer.push(`${ref.num} ${ref.gen} obj\n`);
+
+  if (obj instanceof _primitives.Dict) {
+    writeDict(obj, buffer, transform);
+  } else if (obj instanceof _base_stream.BaseStream) {
+    writeStream(obj, buffer, transform);
+  }
+
+  buffer.push("\nendobj\n");
+}
+
+function writeDict(dict, buffer, transform) {
+  buffer.push("<<");
+
+  for (const key of dict.getKeys()) {
+    buffer.push(` /${(0, _core_utils.escapePDFName)(key)} `);
+    writeValue(dict.getRaw(key), buffer, transform);
+  }
+
+  buffer.push(">>");
+}
+
+function writeStream(stream, buffer, transform) {
+  writeDict(stream.dict, buffer, transform);
+  buffer.push(" stream\n");
+  let string = stream.getString();
+
+  if (transform !== null) {
+    string = transform.encryptString(string);
+  }
+
+  buffer.push(string, "\nendstream\n");
+}
+
+function writeArray(array, buffer, transform) {
+  buffer.push("[");
+  let first = true;
+
+  for (const val of array) {
+    if (!first) {
+      buffer.push(" ");
+    } else {
+      first = false;
+    }
+
+    writeValue(val, buffer, transform);
+  }
+
+  buffer.push("]");
+}
+
+function writeValue(value, buffer, transform) {
+  if (value instanceof _primitives.Name) {
+    buffer.push(`/${(0, _core_utils.escapePDFName)(value.name)}`);
+  } else if (value instanceof _primitives.Ref) {
+    buffer.push(`${value.num} ${value.gen} R`);
+  } else if (Array.isArray(value)) {
+    writeArray(value, buffer, transform);
+  } else if (typeof value === "string") {
+    if (transform !== null) {
+      value = transform.encryptString(value);
+    }
+
+    buffer.push(`(${(0, _util.escapeString)(value)})`);
+  } else if (typeof value === "number") {
+    buffer.push((0, _core_utils.numberToString)(value));
+  } else if (typeof value === "boolean") {
+    buffer.push(value.toString());
+  } else if (value instanceof _primitives.Dict) {
+    writeDict(value, buffer, transform);
+  } else if (value instanceof _base_stream.BaseStream) {
+    writeStream(value, buffer, transform);
+  } else if (value === null) {
+    buffer.push("null");
+  } else {
+    (0, _util.warn)(`Unhandled value in writer: ${typeof value}, please file a bug.`);
+  }
+}
+
+function writeInt(number, size, offset, buffer) {
+  for (let i = size + offset - 1; i > offset - 1; i--) {
+    buffer[i] = number & 0xff;
+    number >>= 8;
+  }
+
+  return offset + size;
+}
+
+function writeString(string, offset, buffer) {
+  for (let i = 0, len = string.length; i < len; i++) {
+    buffer[offset + i] = string.charCodeAt(i) & 0xff;
+  }
+}
+
+function computeMD5(filesize, xrefInfo) {
+  const time = Math.floor(Date.now() / 1000);
+  const filename = xrefInfo.filename || "";
+  const md5Buffer = [time.toString(), filename, filesize.toString()];
+  let md5BufferLen = md5Buffer.reduce((a, str) => a + str.length, 0);
+
+  for (const value of Object.values(xrefInfo.info)) {
+    md5Buffer.push(value);
+    md5BufferLen += value.length;
+  }
+
+  const array = new Uint8Array(md5BufferLen);
+  let offset = 0;
+
+  for (const str of md5Buffer) {
+    writeString(str, offset, array);
+    offset += str.length;
+  }
+
+  return (0, _util.bytesToString)((0, _crypto.calculateMD5)(array));
+}
+
+function writeXFADataForAcroform(str, newRefs) {
+  const xml = new _xml_parser.SimpleXMLParser({
+    hasAttributes: true
+  }).parseFromString(str);
+
+  for (const {
+    xfa
+  } of newRefs) {
+    if (!xfa) {
+      continue;
+    }
+
+    const {
+      path,
+      value
+    } = xfa;
+
+    if (!path) {
+      continue;
+    }
+
+    const node = xml.documentElement.searchNode((0, _core_utils.parseXFAPath)(path), 0);
+
+    if (node) {
+      if (Array.isArray(value)) {
+        node.childNodes = value.map(val => new _xml_parser.SimpleDOMNode("value", val));
+      } else {
+        node.childNodes = [new _xml_parser.SimpleDOMNode("#text", value)];
+      }
+    } else {
+      (0, _util.warn)(`Node not found for path: ${path}`);
+    }
+  }
+
+  const buffer = [];
+  xml.documentElement.dump(buffer);
+  return buffer.join("");
+}
+
+function updateXFA({
+  xfaData,
+  xfaDatasetsRef,
+  hasXfaDatasetsEntry,
+  acroFormRef,
+  acroForm,
+  newRefs,
+  xref,
+  xrefInfo
+}) {
+  if (xref === null) {
+    return;
+  }
+
+  if (!hasXfaDatasetsEntry) {
+    if (!acroFormRef) {
+      (0, _util.warn)("XFA - Cannot save it");
+      return;
+    }
+
+    const oldXfa = acroForm.get("XFA");
+    const newXfa = oldXfa.slice();
+    newXfa.splice(2, 0, "datasets");
+    newXfa.splice(3, 0, xfaDatasetsRef);
+    acroForm.set("XFA", newXfa);
+    const encrypt = xref.encrypt;
+    let transform = null;
+
+    if (encrypt) {
+      transform = encrypt.createCipherTransform(acroFormRef.num, acroFormRef.gen);
+    }
+
+    const buffer = [`${acroFormRef.num} ${acroFormRef.gen} obj\n`];
+    writeDict(acroForm, buffer, transform);
+    buffer.push("\n");
+    acroForm.set("XFA", oldXfa);
+    newRefs.push({
+      ref: acroFormRef,
+      data: buffer.join("")
+    });
+  }
+
+  if (xfaData === null) {
+    const datasets = xref.fetchIfRef(xfaDatasetsRef);
+    xfaData = writeXFADataForAcroform(datasets.getString(), newRefs);
+  }
+
+  const encrypt = xref.encrypt;
+
+  if (encrypt) {
+    const transform = encrypt.createCipherTransform(xfaDatasetsRef.num, xfaDatasetsRef.gen);
+    xfaData = transform.encryptString(xfaData);
+  }
+
+  const data = `${xfaDatasetsRef.num} ${xfaDatasetsRef.gen} obj\n` + `<< /Type /EmbeddedFile /Length ${xfaData.length}>>\nstream\n` + xfaData + "\nendstream\nendobj\n";
+  newRefs.push({
+    ref: xfaDatasetsRef,
+    data
+  });
+}
+
+function incrementalUpdate({
+  originalData,
+  xrefInfo,
+  newRefs,
+  xref = null,
+  hasXfa = false,
+  xfaDatasetsRef = null,
+  hasXfaDatasetsEntry = false,
+  acroFormRef = null,
+  acroForm = null,
+  xfaData = null
+}) {
+  if (hasXfa) {
+    updateXFA({
+      xfaData,
+      xfaDatasetsRef,
+      hasXfaDatasetsEntry,
+      acroFormRef,
+      acroForm,
+      newRefs,
+      xref,
+      xrefInfo
+    });
+  }
+
+  const newXref = new _primitives.Dict(null);
+  const refForXrefTable = xrefInfo.newRef;
+  let buffer, baseOffset;
+  const lastByte = originalData.at(-1);
+
+  if (lastByte === 0x0a || lastByte === 0x0d) {
+    buffer = [];
+    baseOffset = originalData.length;
+  } else {
+    buffer = ["\n"];
+    baseOffset = originalData.length + 1;
+  }
+
+  newXref.set("Size", refForXrefTable.num + 1);
+  newXref.set("Prev", xrefInfo.startXRef);
+  newXref.set("Type", _primitives.Name.get("XRef"));
+
+  if (xrefInfo.rootRef !== null) {
+    newXref.set("Root", xrefInfo.rootRef);
+  }
+
+  if (xrefInfo.infoRef !== null) {
+    newXref.set("Info", xrefInfo.infoRef);
+  }
+
+  if (xrefInfo.encryptRef !== null) {
+    newXref.set("Encrypt", xrefInfo.encryptRef);
+  }
+
+  newRefs.push({
+    ref: refForXrefTable,
+    data: ""
+  });
+  newRefs = newRefs.sort((a, b) => {
+    return a.ref.num - b.ref.num;
+  });
+  const xrefTableData = [[0, 1, 0xffff]];
+  const indexes = [0, 1];
+  let maxOffset = 0;
+
+  for (const {
+    ref,
+    data
+  } of newRefs) {
+    maxOffset = Math.max(maxOffset, baseOffset);
+    xrefTableData.push([1, baseOffset, Math.min(ref.gen, 0xffff)]);
+    baseOffset += data.length;
+    indexes.push(ref.num, 1);
+    buffer.push(data);
+  }
+
+  newXref.set("Index", indexes);
+
+  if (Array.isArray(xrefInfo.fileIds) && xrefInfo.fileIds.length > 0) {
+    const md5 = computeMD5(baseOffset, xrefInfo);
+    newXref.set("ID", [xrefInfo.fileIds[0], md5]);
+  }
+
+  const offsetSize = Math.ceil(Math.log2(maxOffset) / 8);
+  const sizes = [1, offsetSize, 2];
+  const structSize = sizes[0] + sizes[1] + sizes[2];
+  const tableLength = structSize * xrefTableData.length;
+  newXref.set("W", sizes);
+  newXref.set("Length", tableLength);
+  buffer.push(`${refForXrefTable.num} ${refForXrefTable.gen} obj\n`);
+  writeDict(newXref, buffer, null);
+  buffer.push(" stream\n");
+  const bufferLen = buffer.reduce((a, str) => a + str.length, 0);
+  const footer = `\nendstream\nendobj\nstartxref\n${baseOffset}\n%%EOF\n`;
+  const array = new Uint8Array(originalData.length + bufferLen + tableLength + footer.length);
+  array.set(originalData);
+  let offset = originalData.length;
+
+  for (const str of buffer) {
+    writeString(str, offset, array);
+    offset += str.length;
+  }
+
+  for (const [type, objOffset, gen] of xrefTableData) {
+    offset = writeInt(type, sizes[0], offset, array);
+    offset = writeInt(objOffset, sizes[1], offset, array);
+    offset = writeInt(gen, sizes[2], offset, array);
+  }
+
+  writeString(footer, offset, array);
+  return array;
+}
+
+/***/ }),
+/* 66 */
+/***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
+
+
+
+Object.defineProperty(exports, "__esModule", ({
+  value: true
+}));
+exports.XMLParserErrorCode = exports.XMLParserBase = exports.SimpleXMLParser = exports.SimpleDOMNode = void 0;
+
+var _core_utils = __w_pdfjs_require__(6);
+
+const XMLParserErrorCode = {
+  NoError: 0,
+  EndOfDocument: -1,
+  UnterminatedCdat: -2,
+  UnterminatedXmlDeclaration: -3,
+  UnterminatedDoctypeDeclaration: -4,
+  UnterminatedComment: -5,
+  MalformedElement: -6,
+  OutOfMemory: -7,
+  UnterminatedAttributeValue: -8,
+  UnterminatedElement: -9,
+  ElementNeverBegun: -10
+};
+exports.XMLParserErrorCode = XMLParserErrorCode;
+
+function isWhitespace(s, index) {
+  const ch = s[index];
+  return ch === " " || ch === "\n" || ch === "\r" || ch === "\t";
+}
+
+function isWhitespaceString(s) {
+  for (let i = 0, ii = s.length; i < ii; i++) {
+    if (!isWhitespace(s, i)) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+class XMLParserBase {
+  _resolveEntities(s) {
+    return s.replace(/&([^;]+);/g, (all, entity) => {
+      if (entity.substring(0, 2) === "#x") {
+        return String.fromCodePoint(parseInt(entity.substring(2), 16));
+      } else if (entity.substring(0, 1) === "#") {
+        return String.fromCodePoint(parseInt(entity.substring(1), 10));
+      }
+
+      switch (entity) {
+        case "lt":
+          return "<";
+
+        case "gt":
+          return ">";
+
+        case "amp":
+          return "&";
+
+        case "quot":
+          return '"';
+
+        case "apos":
+          return "'";
+      }
+
+      return this.onResolveEntity(entity);
+    });
+  }
+
+  _parseContent(s, start) {
+    const attributes = [];
+    let pos = start;
+
+    function skipWs() {
+      while (pos < s.length && isWhitespace(s, pos)) {
+        ++pos;
+      }
+    }
+
+    while (pos < s.length && !isWhitespace(s, pos) && s[pos] !== ">" && s[pos] !== "/") {
+      ++pos;
+    }
+
+    const name = s.substring(start, pos);
+    skipWs();
+
+    while (pos < s.length && s[pos] !== ">" && s[pos] !== "/" && s[pos] !== "?") {
+      skipWs();
+      let attrName = "",
+          attrValue = "";
+
+      while (pos < s.length && !isWhitespace(s, pos) && s[pos] !== "=") {
+        attrName += s[pos];
+        ++pos;
+      }
+
+      skipWs();
+
+      if (s[pos] !== "=") {
+        return null;
+      }
+
+      ++pos;
+      skipWs();
+      const attrEndChar = s[pos];
+
+      if (attrEndChar !== '"' && attrEndChar !== "'") {
+        return null;
+      }
+
+      const attrEndIndex = s.indexOf(attrEndChar, ++pos);
+
+      if (attrEndIndex < 0) {
+        return null;
+      }
+
+      attrValue = s.substring(pos, attrEndIndex);
+      attributes.push({
+        name: attrName,
+        value: this._resolveEntities(attrValue)
+      });
+      pos = attrEndIndex + 1;
+      skipWs();
+    }
+
+    return {
+      name,
+      attributes,
+      parsed: pos - start
+    };
+  }
+
+  _parseProcessingInstruction(s, start) {
+    let pos = start;
+
+    function skipWs() {
+      while (pos < s.length && isWhitespace(s, pos)) {
+        ++pos;
+      }
+    }
+
+    while (pos < s.length && !isWhitespace(s, pos) && s[pos] !== ">" && s[pos] !== "?" && s[pos] !== "/") {
+      ++pos;
+    }
+
+    const name = s.substring(start, pos);
+    skipWs();
+    const attrStart = pos;
+
+    while (pos < s.length && (s[pos] !== "?" || s[pos + 1] !== ">")) {
+      ++pos;
+    }
+
+    const value = s.substring(attrStart, pos);
+    return {
+      name,
+      value,
+      parsed: pos - start
+    };
+  }
+
+  parseXml(s) {
+    let i = 0;
+
+    while (i < s.length) {
+      const ch = s[i];
+      let j = i;
+
+      if (ch === "<") {
+        ++j;
+        const ch2 = s[j];
+        let q;
+
+        switch (ch2) {
+          case "/":
+            ++j;
+            q = s.indexOf(">", j);
+
+            if (q < 0) {
+              this.onError(XMLParserErrorCode.UnterminatedElement);
+              return;
+            }
+
+            this.onEndElement(s.substring(j, q));
+            j = q + 1;
+            break;
+
+          case "?":
+            ++j;
+
+            const pi = this._parseProcessingInstruction(s, j);
+
+            if (s.substring(j + pi.parsed, j + pi.parsed + 2) !== "?>") {
+              this.onError(XMLParserErrorCode.UnterminatedXmlDeclaration);
+              return;
+            }
+
+            this.onPi(pi.name, pi.value);
+            j += pi.parsed + 2;
+            break;
+
+          case "!":
+            if (s.substring(j + 1, j + 3) === "--") {
+              q = s.indexOf("-->", j + 3);
+
+              if (q < 0) {
+                this.onError(XMLParserErrorCode.UnterminatedComment);
+                return;
+              }
+
+              this.onComment(s.substring(j + 3, q));
+              j = q + 3;
+            } else if (s.substring(j + 1, j + 8) === "[CDATA[") {
+              q = s.indexOf("]]>", j + 8);
+
+              if (q < 0) {
+                this.onError(XMLParserErrorCode.UnterminatedCdat);
+                return;
+              }
+
+              this.onCdata(s.substring(j + 8, q));
+              j = q + 3;
+            } else if (s.substring(j + 1, j + 8) === "DOCTYPE") {
+              const q2 = s.indexOf("[", j + 8);
+              let complexDoctype = false;
+              q = s.indexOf(">", j + 8);
+
+              if (q < 0) {
+                this.onError(XMLParserErrorCode.UnterminatedDoctypeDeclaration);
+                return;
+              }
+
+              if (q2 > 0 && q > q2) {
+                q = s.indexOf("]>", j + 8);
+
+                if (q < 0) {
+                  this.onError(XMLParserErrorCode.UnterminatedDoctypeDeclaration);
+                  return;
+                }
+
+                complexDoctype = true;
+              }
+
+              const doctypeContent = s.substring(j + 8, q + (complexDoctype ? 1 : 0));
+              this.onDoctype(doctypeContent);
+              j = q + (complexDoctype ? 2 : 1);
+            } else {
+              this.onError(XMLParserErrorCode.MalformedElement);
+              return;
+            }
+
+            break;
+
+          default:
+            const content = this._parseContent(s, j);
+
+            if (content === null) {
+              this.onError(XMLParserErrorCode.MalformedElement);
+              return;
+            }
+
+            let isClosed = false;
+
+            if (s.substring(j + content.parsed, j + content.parsed + 2) === "/>") {
+              isClosed = true;
+            } else if (s.substring(j + content.parsed, j + content.parsed + 1) !== ">") {
+              this.onError(XMLParserErrorCode.UnterminatedElement);
+              return;
+            }
+
+            this.onBeginElement(content.name, content.attributes, isClosed);
+            j += content.parsed + (isClosed ? 2 : 1);
+            break;
+        }
+      } else {
+        while (j < s.length && s[j] !== "<") {
+          j++;
+        }
+
+        const text = s.substring(i, j);
+        this.onText(this._resolveEntities(text));
+      }
+
+      i = j;
+    }
+  }
+
+  onResolveEntity(name) {
+    return `&${name};`;
+  }
+
+  onPi(name, value) {}
+
+  onComment(text) {}
+
+  onCdata(text) {}
+
+  onDoctype(doctypeContent) {}
+
+  onText(text) {}
+
+  onBeginElement(name, attributes, isEmpty) {}
+
+  onEndElement(name) {}
+
+  onError(code) {}
+
+}
+
+exports.XMLParserBase = XMLParserBase;
+
+class SimpleDOMNode {
+  constructor(nodeName, nodeValue) {
+    this.nodeName = nodeName;
+    this.nodeValue = nodeValue;
+    Object.defineProperty(this, "parentNode", {
+      value: null,
+      writable: true
+    });
+  }
+
+  get firstChild() {
+    return this.childNodes && this.childNodes[0];
+  }
+
+  get nextSibling() {
+    const childNodes = this.parentNode.childNodes;
+
+    if (!childNodes) {
+      return undefined;
+    }
+
+    const index = childNodes.indexOf(this);
+
+    if (index === -1) {
+      return undefined;
+    }
+
+    return childNodes[index + 1];
+  }
+
+  get textContent() {
+    if (!this.childNodes) {
+      return this.nodeValue || "";
+    }
+
+    return this.childNodes.map(function (child) {
+      return child.textContent;
+    }).join("");
+  }
+
+  get children() {
+    return this.childNodes || [];
+  }
+
+  hasChildNodes() {
+    return this.childNodes && this.childNodes.length > 0;
+  }
+
+  searchNode(paths, pos) {
+    if (pos >= paths.length) {
+      return this;
+    }
+
+    const component = paths[pos];
+    const stack = [];
+    let node = this;
+
+    while (true) {
+      if (component.name === node.nodeName) {
+        if (component.pos === 0) {
+          const res = node.searchNode(paths, pos + 1);
+
+          if (res !== null) {
+            return res;
+          }
+        } else if (stack.length === 0) {
+          return null;
+        } else {
+          const [parent] = stack.pop();
+          let siblingPos = 0;
+
+          for (const child of parent.childNodes) {
+            if (component.name === child.nodeName) {
+              if (siblingPos === component.pos) {
+                return child.searchNode(paths, pos + 1);
+              }
+
+              siblingPos++;
+            }
+          }
+
+          return node.searchNode(paths, pos + 1);
+        }
+      }
+
+      if (node.childNodes && node.childNodes.length !== 0) {
+        stack.push([node, 0]);
+        node = node.childNodes[0];
+      } else if (stack.length === 0) {
+        return null;
+      } else {
+        while (stack.length !== 0) {
+          const [parent, currentPos] = stack.pop();
+          const newPos = currentPos + 1;
+
+          if (newPos < parent.childNodes.length) {
+            stack.push([parent, newPos]);
+            node = parent.childNodes[newPos];
+            break;
+          }
+        }
+
+        if (stack.length === 0) {
+          return null;
+        }
+      }
+    }
+  }
+
+  dump(buffer) {
+    if (this.nodeName === "#text") {
+      buffer.push((0, _core_utils.encodeToXmlString)(this.nodeValue));
+      return;
+    }
+
+    buffer.push(`<${this.nodeName}`);
+
+    if (this.attributes) {
+      for (const attribute of this.attributes) {
+        buffer.push(` ${attribute.name}="${(0, _core_utils.encodeToXmlString)(attribute.value)}"`);
+      }
+    }
+
+    if (this.hasChildNodes()) {
+      buffer.push(">");
+
+      for (const child of this.childNodes) {
+        child.dump(buffer);
+      }
+
+      buffer.push(`</${this.nodeName}>`);
+    } else if (this.nodeValue) {
+      buffer.push(`>${(0, _core_utils.encodeToXmlString)(this.nodeValue)}</${this.nodeName}>`);
+    } else {
+      buffer.push("/>");
+    }
+  }
+
+}
+
+exports.SimpleDOMNode = SimpleDOMNode;
+
+class SimpleXMLParser extends XMLParserBase {
+  constructor({
+    hasAttributes = false,
+    lowerCaseName = false
+  }) {
+    super();
+    this._currentFragment = null;
+    this._stack = null;
+    this._errorCode = XMLParserErrorCode.NoError;
+    this._hasAttributes = hasAttributes;
+    this._lowerCaseName = lowerCaseName;
+  }
+
+  parseFromString(data) {
+    this._currentFragment = [];
+    this._stack = [];
+    this._errorCode = XMLParserErrorCode.NoError;
+    this.parseXml(data);
+
+    if (this._errorCode !== XMLParserErrorCode.NoError) {
+      return undefined;
+    }
+
+    const [documentElement] = this._currentFragment;
+
+    if (!documentElement) {
+      return undefined;
+    }
+
+    return {
+      documentElement
+    };
+  }
+
+  onText(text) {
+    if (isWhitespaceString(text)) {
+      return;
+    }
+
+    const node = new SimpleDOMNode("#text", text);
+
+    this._currentFragment.push(node);
+  }
+
+  onCdata(text) {
+    const node = new SimpleDOMNode("#text", text);
+
+    this._currentFragment.push(node);
+  }
+
+  onBeginElement(name, attributes, isEmpty) {
+    if (this._lowerCaseName) {
+      name = name.toLowerCase();
+    }
+
+    const node = new SimpleDOMNode(name);
+    node.childNodes = [];
+
+    if (this._hasAttributes) {
+      node.attributes = attributes;
+    }
+
+    this._currentFragment.push(node);
+
+    if (isEmpty) {
+      return;
+    }
+
+    this._stack.push(this._currentFragment);
+
+    this._currentFragment = node.childNodes;
+  }
+
+  onEndElement(name) {
+    this._currentFragment = this._stack.pop() || [];
+
+    const lastElement = this._currentFragment.at(-1);
+
+    if (!lastElement) {
+      return null;
+    }
+
+    for (let i = 0, ii = lastElement.childNodes.length; i < ii; i++) {
+      lastElement.childNodes[i].parentNode = lastElement;
+    }
+
+    return lastElement;
+  }
+
+  onError(code) {
+    this._errorCode = code;
+  }
+
+}
+
+exports.SimpleXMLParser = SimpleXMLParser;
+
+/***/ }),
+/* 67 */
+/***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
+
+
+
+Object.defineProperty(exports, "__esModule", ({
+  value: true
+}));
+exports.calculateSHA256 = exports.calculateMD5 = exports.PDF20 = exports.PDF17 = exports.CipherTransformFactory = exports.ARCFourCipher = exports.AES256Cipher = exports.AES128Cipher = void 0;
+exports.calculateSHA384 = calculateSHA384;
+exports.calculateSHA512 = void 0;
+
+var _util = __w_pdfjs_require__(2);
+
+var _primitives = __w_pdfjs_require__(5);
+
+var _decrypt_stream = __w_pdfjs_require__(68);
+
+class ARCFourCipher {
+  constructor(key) {
+    this.a = 0;
+    this.b = 0;
+    const s = new Uint8Array(256);
+    const keyLength = key.length;
+
+    for (let i = 0; i < 256; ++i) {
+      s[i] = i;
+    }
+
+    for (let i = 0, j = 0; i < 256; ++i) {
+      const tmp = s[i];
+      j = j + tmp + key[i % keyLength] & 0xff;
+      s[i] = s[j];
+      s[j] = tmp;
+    }
+
+    this.s = s;
+  }
+
+  encryptBlock(data) {
+    let a = this.a,
+        b = this.b;
+    const s = this.s;
+    const n = data.length;
+    const output = new Uint8Array(n);
+
+    for (let i = 0; i < n; ++i) {
+      a = a + 1 & 0xff;
+      const tmp = s[a];
+      b = b + tmp & 0xff;
+      const tmp2 = s[b];
+      s[a] = tmp2;
+      s[b] = tmp;
+      output[i] = data[i] ^ s[tmp + tmp2 & 0xff];
+    }
+
+    this.a = a;
+    this.b = b;
+    return output;
+  }
+
+  decryptBlock(data) {
+    return this.encryptBlock(data);
+  }
+
+  encrypt(data) {
+    return this.encryptBlock(data);
+  }
+
+}
+
+exports.ARCFourCipher = ARCFourCipher;
+
+const calculateMD5 = function calculateMD5Closure() {
+  const r = new Uint8Array([7, 12, 17, 22, 7, 12, 17, 22, 7, 12, 17, 22, 7, 12, 17, 22, 5, 9, 14, 20, 5, 9, 14, 20, 5, 9, 14, 20, 5, 9, 14, 20, 4, 11, 16, 23, 4, 11, 16, 23, 4, 11, 16, 23, 4, 11, 16, 23, 6, 10, 15, 21, 6, 10, 15, 21, 6, 10, 15, 21, 6, 10, 15, 21]);
+  const k = new Int32Array([-680876936, -389564586, 606105819, -1044525330, -176418897, 1200080426, -1473231341, -45705983, 1770035416, -1958414417, -42063, -1990404162, 1804603682, -40341101, -1502002290, 1236535329, -165796510, -1069501632, 643717713, -373897302, -701558691, 38016083, -660478335, -405537848, 568446438, -1019803690, -187363961, 1163531501, -1444681467, -51403784, 1735328473, -1926607734, -378558, -2022574463, 1839030562, -35309556, -1530992060, 1272893353, -155497632, -1094730640, 681279174, -358537222, -722521979, 76029189, -640364487, -421815835, 530742520, -995338651, -198630844, 1126891415, -1416354905, -57434055, 1700485571, -1894986606, -1051523, -2054922799, 1873313359, -30611744, -1560198380, 1309151649, -145523070, -1120210379, 718787259, -343485551]);
+
+  function hash(data, offset, length) {
+    let h0 = 1732584193,
+        h1 = -271733879,
+        h2 = -1732584194,
+        h3 = 271733878;
+    const paddedLength = length + 72 & ~63;
+    const padded = new Uint8Array(paddedLength);
+    let i, j;
+
+    for (i = 0; i < length; ++i) {
+      padded[i] = data[offset++];
+    }
+
+    padded[i++] = 0x80;
+    const n = paddedLength - 8;
+
+    while (i < n) {
+      padded[i++] = 0;
+    }
+
+    padded[i++] = length << 3 & 0xff;
+    padded[i++] = length >> 5 & 0xff;
+    padded[i++] = length >> 13 & 0xff;
+    padded[i++] = length >> 21 & 0xff;
+    padded[i++] = length >>> 29 & 0xff;
+    padded[i++] = 0;
+    padded[i++] = 0;
+    padded[i++] = 0;
+    const w = new Int32Array(16);
+
+    for (i = 0; i < paddedLength;) {
+      for (j = 0; j < 16; ++j, i += 4) {
+        w[j] = padded[i] | padded[i + 1] << 8 | padded[i + 2] << 16 | padded[i + 3] << 24;
+      }
+
+      let a = h0,
+          b = h1,
+          c = h2,
+          d = h3,
+          f,
+          g;
+
+      for (j = 0; j < 64; ++j) {
+        if (j < 16) {
+          f = b & c | ~b & d;
+          g = j;
+        } else if (j < 32) {
+          f = d & b | ~d & c;
+          g = 5 * j + 1 & 15;
+        } else if (j < 48) {
+          f = b ^ c ^ d;
+          g = 3 * j + 5 & 15;
+        } else {
+          f = c ^ (b | ~d);
+          g = 7 * j & 15;
+        }
+
+        const tmp = d,
+              rotateArg = a + f + k[j] + w[g] | 0,
+              rotate = r[j];
+        d = c;
+        c = b;
+        b = b + (rotateArg << rotate | rotateArg >>> 32 - rotate) | 0;
+        a = tmp;
+      }
+
+      h0 = h0 + a | 0;
+      h1 = h1 + b | 0;
+      h2 = h2 + c | 0;
+      h3 = h3 + d | 0;
+    }
+
+    return new Uint8Array([h0 & 0xFF, h0 >> 8 & 0xFF, h0 >> 16 & 0xFF, h0 >>> 24 & 0xFF, h1 & 0xFF, h1 >> 8 & 0xFF, h1 >> 16 & 0xFF, h1 >>> 24 & 0xFF, h2 & 0xFF, h2 >> 8 & 0xFF, h2 >> 16 & 0xFF, h2 >>> 24 & 0xFF, h3 & 0xFF, h3 >> 8 & 0xFF, h3 >> 16 & 0xFF, h3 >>> 24 & 0xFF]);
+  }
+
+  return hash;
+}();
+
+exports.calculateMD5 = calculateMD5;
+
+class Word64 {
+  constructor(highInteger, lowInteger) {
+    this.high = highInteger | 0;
+    this.low = lowInteger | 0;
+  }
+
+  and(word) {
+    this.high &= word.high;
+    this.low &= word.low;
+  }
+
+  xor(word) {
+    this.high ^= word.high;
+    this.low ^= word.low;
+  }
+
+  or(word) {
+    this.high |= word.high;
+    this.low |= word.low;
+  }
+
+  shiftRight(places) {
+    if (places >= 32) {
+      this.low = this.high >>> places - 32 | 0;
+      this.high = 0;
+    } else {
+      this.low = this.low >>> places | this.high << 32 - places;
+      this.high = this.high >>> places | 0;
+    }
+  }
+
+  shiftLeft(places) {
+    if (places >= 32) {
+      this.high = this.low << places - 32;
+      this.low = 0;
+    } else {
+      this.high = this.high << places | this.low >>> 32 - places;
+      this.low <<= places;
+    }
+  }
+
+  rotateRight(places) {
+    let low, high;
+
+    if (places & 32) {
+      high = this.low;
+      low = this.high;
+    } else {
+      low = this.low;
+      high = this.high;
+    }
+
+    places &= 31;
+    this.low = low >>> places | high << 32 - places;
+    this.high = high >>> places | low << 32 - places;
+  }
+
+  not() {
+    this.high = ~this.high;
+    this.low = ~this.low;
+  }
+
+  add(word) {
+    const lowAdd = (this.low >>> 0) + (word.low >>> 0);
+    let highAdd = (this.high >>> 0) + (word.high >>> 0);
+
+    if (lowAdd > 0xffffffff) {
+      highAdd += 1;
+    }
+
+    this.low = lowAdd | 0;
+    this.high = highAdd | 0;
+  }
+
+  copyTo(bytes, offset) {
+    bytes[offset] = this.high >>> 24 & 0xff;
+    bytes[offset + 1] = this.high >> 16 & 0xff;
+    bytes[offset + 2] = this.high >> 8 & 0xff;
+    bytes[offset + 3] = this.high & 0xff;
+    bytes[offset + 4] = this.low >>> 24 & 0xff;
+    bytes[offset + 5] = this.low >> 16 & 0xff;
+    bytes[offset + 6] = this.low >> 8 & 0xff;
+    bytes[offset + 7] = this.low & 0xff;
+  }
+
+  assign(word) {
+    this.high = word.high;
+    this.low = word.low;
+  }
+
+}
+
+const calculateSHA256 = function calculateSHA256Closure() {
+  function rotr(x, n) {
+    return x >>> n | x << 32 - n;
+  }
+
+  function ch(x, y, z) {
+    return x & y ^ ~x & z;
+  }
+
+  function maj(x, y, z) {
+    return x & y ^ x & z ^ y & z;
+  }
+
+  function sigma(x) {
+    return rotr(x, 2) ^ rotr(x, 13) ^ rotr(x, 22);
+  }
+
+  function sigmaPrime(x) {
+    return rotr(x, 6) ^ rotr(x, 11) ^ rotr(x, 25);
+  }
+
+  function littleSigma(x) {
+    return rotr(x, 7) ^ rotr(x, 18) ^ x >>> 3;
+  }
+
+  function littleSigmaPrime(x) {
+    return rotr(x, 17) ^ rotr(x, 19) ^ x >>> 10;
+  }
+
+  const k = [0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5, 0x3956c25b, 0x59f111f1, 0x923f82a4, 0xab1c5ed5, 0xd807aa98, 0x12835b01, 0x243185be, 0x550c7dc3, 0x72be5d74, 0x80deb1fe, 0x9bdc06a7, 0xc19bf174, 0xe49b69c1, 0xefbe4786, 0x0fc19dc6, 0x240ca1cc, 0x2de92c6f, 0x4a7484aa, 0x5cb0a9dc, 0x76f988da, 0x983e5152, 0xa831c66d, 0xb00327c8, 0xbf597fc7, 0xc6e00bf3, 0xd5a79147, 0x06ca6351, 0x14292967, 0x27b70a85, 0x2e1b2138, 0x4d2c6dfc, 0x53380d13, 0x650a7354, 0x766a0abb, 0x81c2c92e, 0x92722c85, 0xa2bfe8a1, 0xa81a664b, 0xc24b8b70, 0xc76c51a3, 0xd192e819, 0xd6990624, 0xf40e3585, 0x106aa070, 0x19a4c116, 0x1e376c08, 0x2748774c, 0x34b0bcb5, 0x391c0cb3, 0x4ed8aa4a, 0x5b9cca4f, 0x682e6ff3, 0x748f82ee, 0x78a5636f, 0x84c87814, 0x8cc70208, 0x90befffa, 0xa4506ceb, 0xbef9a3f7, 0xc67178f2];
+
+  function hash(data, offset, length) {
+    let h0 = 0x6a09e667,
+        h1 = 0xbb67ae85,
+        h2 = 0x3c6ef372,
+        h3 = 0xa54ff53a,
+        h4 = 0x510e527f,
+        h5 = 0x9b05688c,
+        h6 = 0x1f83d9ab,
+        h7 = 0x5be0cd19;
+    const paddedLength = Math.ceil((length + 9) / 64) * 64;
+    const padded = new Uint8Array(paddedLength);
+    let i, j;
+
+    for (i = 0; i < length; ++i) {
+      padded[i] = data[offset++];
+    }
+
+    padded[i++] = 0x80;
+    const n = paddedLength - 8;
+
+    while (i < n) {
+      padded[i++] = 0;
+    }
+
+    padded[i++] = 0;
+    padded[i++] = 0;
+    padded[i++] = 0;
+    padded[i++] = length >>> 29 & 0xff;
+    padded[i++] = length >> 21 & 0xff;
+    padded[i++] = length >> 13 & 0xff;
+    padded[i++] = length >> 5 & 0xff;
+    padded[i++] = length << 3 & 0xff;
+    const w = new Uint32Array(64);
+
+    for (i = 0; i < paddedLength;) {
+      for (j = 0; j < 16; ++j) {
+        w[j] = padded[i] << 24 | padded[i + 1] << 16 | padded[i + 2] << 8 | padded[i + 3];
+        i += 4;
+      }
+
+      for (j = 16; j < 64; ++j) {
+        w[j] = littleSigmaPrime(w[j - 2]) + w[j - 7] + littleSigma(w[j - 15]) + w[j - 16] | 0;
+      }
+
+      let a = h0,
+          b = h1,
+          c = h2,
+          d = h3,
+          e = h4,
+          f = h5,
+          g = h6,
+          h = h7,
+          t1,
+          t2;
+
+      for (j = 0; j < 64; ++j) {
+        t1 = h + sigmaPrime(e) + ch(e, f, g) + k[j] + w[j];
+        t2 = sigma(a) + maj(a, b, c);
+        h = g;
+        g = f;
+        f = e;
+        e = d + t1 | 0;
+        d = c;
+        c = b;
+        b = a;
+        a = t1 + t2 | 0;
+      }
+
+      h0 = h0 + a | 0;
+      h1 = h1 + b | 0;
+      h2 = h2 + c | 0;
+      h3 = h3 + d | 0;
+      h4 = h4 + e | 0;
+      h5 = h5 + f | 0;
+      h6 = h6 + g | 0;
+      h7 = h7 + h | 0;
+    }
+
+    return new Uint8Array([h0 >> 24 & 0xFF, h0 >> 16 & 0xFF, h0 >> 8 & 0xFF, h0 & 0xFF, h1 >> 24 & 0xFF, h1 >> 16 & 0xFF, h1 >> 8 & 0xFF, h1 & 0xFF, h2 >> 24 & 0xFF, h2 >> 16 & 0xFF, h2 >> 8 & 0xFF, h2 & 0xFF, h3 >> 24 & 0xFF, h3 >> 16 & 0xFF, h3 >> 8 & 0xFF, h3 & 0xFF, h4 >> 24 & 0xFF, h4 >> 16 & 0xFF, h4 >> 8 & 0xFF, h4 & 0xFF, h5 >> 24 & 0xFF, h5 >> 16 & 0xFF, h5 >> 8 & 0xFF, h5 & 0xFF, h6 >> 24 & 0xFF, h6 >> 16 & 0xFF, h6 >> 8 & 0xFF, h6 & 0xFF, h7 >> 24 & 0xFF, h7 >> 16 & 0xFF, h7 >> 8 & 0xFF, h7 & 0xFF]);
+  }
+
+  return hash;
+}();
+
+exports.calculateSHA256 = calculateSHA256;
+
+const calculateSHA512 = function calculateSHA512Closure() {
+  function ch(result, x, y, z, tmp) {
+    result.assign(x);
+    result.and(y);
+    tmp.assign(x);
+    tmp.not();
+    tmp.and(z);
+    result.xor(tmp);
+  }
+
+  function maj(result, x, y, z, tmp) {
+    result.assign(x);
+    result.and(y);
+    tmp.assign(x);
+    tmp.and(z);
+    result.xor(tmp);
+    tmp.assign(y);
+    tmp.and(z);
+    result.xor(tmp);
+  }
+
+  function sigma(result, x, tmp) {
+    result.assign(x);
+    result.rotateRight(28);
+    tmp.assign(x);
+    tmp.rotateRight(34);
+    result.xor(tmp);
+    tmp.assign(x);
+    tmp.rotateRight(39);
+    result.xor(tmp);
+  }
+
+  function sigmaPrime(result, x, tmp) {
+    result.assign(x);
+    result.rotateRight(14);
+    tmp.assign(x);
+    tmp.rotateRight(18);
+    result.xor(tmp);
+    tmp.assign(x);
+    tmp.rotateRight(41);
+    result.xor(tmp);
+  }
+
+  function littleSigma(result, x, tmp) {
+    result.assign(x);
+    result.rotateRight(1);
+    tmp.assign(x);
+    tmp.rotateRight(8);
+    result.xor(tmp);
+    tmp.assign(x);
+    tmp.shiftRight(7);
+    result.xor(tmp);
+  }
+
+  function littleSigmaPrime(result, x, tmp) {
+    result.assign(x);
+    result.rotateRight(19);
+    tmp.assign(x);
+    tmp.rotateRight(61);
+    result.xor(tmp);
+    tmp.assign(x);
+    tmp.shiftRight(6);
+    result.xor(tmp);
+  }
+
+  const k = [new Word64(0x428a2f98, 0xd728ae22), new Word64(0x71374491, 0x23ef65cd), new Word64(0xb5c0fbcf, 0xec4d3b2f), new Word64(0xe9b5dba5, 0x8189dbbc), new Word64(0x3956c25b, 0xf348b538), new Word64(0x59f111f1, 0xb605d019), new Word64(0x923f82a4, 0xaf194f9b), new Word64(0xab1c5ed5, 0xda6d8118), new Word64(0xd807aa98, 0xa3030242), new Word64(0x12835b01, 0x45706fbe), new Word64(0x243185be, 0x4ee4b28c), new Word64(0x550c7dc3, 0xd5ffb4e2), new Word64(0x72be5d74, 0xf27b896f), new Word64(0x80deb1fe, 0x3b1696b1), new Word64(0x9bdc06a7, 0x25c71235), new Word64(0xc19bf174, 0xcf692694), new Word64(0xe49b69c1, 0x9ef14ad2), new Word64(0xefbe4786, 0x384f25e3), new Word64(0x0fc19dc6, 0x8b8cd5b5), new Word64(0x240ca1cc, 0x77ac9c65), new Word64(0x2de92c6f, 0x592b0275), new Word64(0x4a7484aa, 0x6ea6e483), new Word64(0x5cb0a9dc, 0xbd41fbd4), new Word64(0x76f988da, 0x831153b5), new Word64(0x983e5152, 0xee66dfab), new Word64(0xa831c66d, 0x2db43210), new Word64(0xb00327c8, 0x98fb213f), new Word64(0xbf597fc7, 0xbeef0ee4), new Word64(0xc6e00bf3, 0x3da88fc2), new Word64(0xd5a79147, 0x930aa725), new Word64(0x06ca6351, 0xe003826f), new Word64(0x14292967, 0x0a0e6e70), new Word64(0x27b70a85, 0x46d22ffc), new Word64(0x2e1b2138, 0x5c26c926), new Word64(0x4d2c6dfc, 0x5ac42aed), new Word64(0x53380d13, 0x9d95b3df), new Word64(0x650a7354, 0x8baf63de), new Word64(0x766a0abb, 0x3c77b2a8), new Word64(0x81c2c92e, 0x47edaee6), new Word64(0x92722c85, 0x1482353b), new Word64(0xa2bfe8a1, 0x4cf10364), new Word64(0xa81a664b, 0xbc423001), new Word64(0xc24b8b70, 0xd0f89791), new Word64(0xc76c51a3, 0x0654be30), new Word64(0xd192e819, 0xd6ef5218), new Word64(0xd6990624, 0x5565a910), new Word64(0xf40e3585, 0x5771202a), new Word64(0x106aa070, 0x32bbd1b8), new Word64(0x19a4c116, 0xb8d2d0c8), new Word64(0x1e376c08, 0x5141ab53), new Word64(0x2748774c, 0xdf8eeb99), new Word64(0x34b0bcb5, 0xe19b48a8), new Word64(0x391c0cb3, 0xc5c95a63), new Word64(0x4ed8aa4a, 0xe3418acb), new Word64(0x5b9cca4f, 0x7763e373), new Word64(0x682e6ff3, 0xd6b2b8a3), new Word64(0x748f82ee, 0x5defb2fc), new Word64(0x78a5636f, 0x43172f60), new Word64(0x84c87814, 0xa1f0ab72), new Word64(0x8cc70208, 0x1a6439ec), new Word64(0x90befffa, 0x23631e28), new Word64(0xa4506ceb, 0xde82bde9), new Word64(0xbef9a3f7, 0xb2c67915), new Word64(0xc67178f2, 0xe372532b), new Word64(0xca273ece, 0xea26619c), new Word64(0xd186b8c7, 0x21c0c207), new Word64(0xeada7dd6, 0xcde0eb1e), new Word64(0xf57d4f7f, 0xee6ed178), new Word64(0x06f067aa, 0x72176fba), new Word64(0x0a637dc5, 0xa2c898a6), new Word64(0x113f9804, 0xbef90dae), new Word64(0x1b710b35, 0x131c471b), new Word64(0x28db77f5, 0x23047d84), new Word64(0x32caab7b, 0x40c72493), new Word64(0x3c9ebe0a, 0x15c9bebc), new Word64(0x431d67c4, 0x9c100d4c), new Word64(0x4cc5d4be, 0xcb3e42b6), new Word64(0x597f299c, 0xfc657e2a), new Word64(0x5fcb6fab, 0x3ad6faec), new Word64(0x6c44198c, 0x4a475817)];
+
+  function hash(data, offset, length, mode384 = false) {
+    let h0, h1, h2, h3, h4, h5, h6, h7;
+
+    if (!mode384) {
+      h0 = new Word64(0x6a09e667, 0xf3bcc908);
+      h1 = new Word64(0xbb67ae85, 0x84caa73b);
+      h2 = new Word64(0x3c6ef372, 0xfe94f82b);
+      h3 = new Word64(0xa54ff53a, 0x5f1d36f1);
+      h4 = new Word64(0x510e527f, 0xade682d1);
+      h5 = new Word64(0x9b05688c, 0x2b3e6c1f);
+      h6 = new Word64(0x1f83d9ab, 0xfb41bd6b);
+      h7 = new Word64(0x5be0cd19, 0x137e2179);
+    } else {
+      h0 = new Word64(0xcbbb9d5d, 0xc1059ed8);
+      h1 = new Word64(0x629a292a, 0x367cd507);
+      h2 = new Word64(0x9159015a, 0x3070dd17);
+      h3 = new Word64(0x152fecd8, 0xf70e5939);
+      h4 = new Word64(0x67332667, 0xffc00b31);
+      h5 = new Word64(0x8eb44a87, 0x68581511);
+      h6 = new Word64(0xdb0c2e0d, 0x64f98fa7);
+      h7 = new Word64(0x47b5481d, 0xbefa4fa4);
+    }
+
+    const paddedLength = Math.ceil((length + 17) / 128) * 128;
+    const padded = new Uint8Array(paddedLength);
+    let i, j;
+
+    for (i = 0; i < length; ++i) {
+      padded[i] = data[offset++];
+    }
+
+    padded[i++] = 0x80;
+    const n = paddedLength - 16;
+
+    while (i < n) {
+      padded[i++] = 0;
+    }
+
+    padded[i++] = 0;
+    padded[i++] = 0;
+    padded[i++] = 0;
+    padded[i++] = 0;
+    padded[i++] = 0;
+    padded[i++] = 0;
+    padded[i++] = 0;
+    padded[i++] = 0;
+    padded[i++] = 0;
+    padded[i++] = 0;
+    padded[i++] = 0;
+    padded[i++] = length >>> 29 & 0xff;
+    padded[i++] = length >> 21 & 0xff;
+    padded[i++] = length >> 13 & 0xff;
+    padded[i++] = length >> 5 & 0xff;
+    padded[i++] = length << 3 & 0xff;
+    const w = new Array(80);
+
+    for (i = 0; i < 80; i++) {
+      w[i] = new Word64(0, 0);
+    }
+
+    let a = new Word64(0, 0),
+        b = new Word64(0, 0),
+        c = new Word64(0, 0);
+    let d = new Word64(0, 0),
+        e = new Word64(0, 0),
+        f = new Word64(0, 0);
+    let g = new Word64(0, 0),
+        h = new Word64(0, 0);
+    const t1 = new Word64(0, 0),
+          t2 = new Word64(0, 0);
+    const tmp1 = new Word64(0, 0),
+          tmp2 = new Word64(0, 0);
+    let tmp3;
+
+    for (i = 0; i < paddedLength;) {
+      for (j = 0; j < 16; ++j) {
+        w[j].high = padded[i] << 24 | padded[i + 1] << 16 | padded[i + 2] << 8 | padded[i + 3];
+        w[j].low = padded[i + 4] << 24 | padded[i + 5] << 16 | padded[i + 6] << 8 | padded[i + 7];
+        i += 8;
+      }
+
+      for (j = 16; j < 80; ++j) {
+        tmp3 = w[j];
+        littleSigmaPrime(tmp3, w[j - 2], tmp2);
+        tmp3.add(w[j - 7]);
+        littleSigma(tmp1, w[j - 15], tmp2);
+        tmp3.add(tmp1);
+        tmp3.add(w[j - 16]);
+      }
+
+      a.assign(h0);
+      b.assign(h1);
+      c.assign(h2);
+      d.assign(h3);
+      e.assign(h4);
+      f.assign(h5);
+      g.assign(h6);
+      h.assign(h7);
+
+      for (j = 0; j < 80; ++j) {
+        t1.assign(h);
+        sigmaPrime(tmp1, e, tmp2);
+        t1.add(tmp1);
+        ch(tmp1, e, f, g, tmp2);
+        t1.add(tmp1);
+        t1.add(k[j]);
+        t1.add(w[j]);
+        sigma(t2, a, tmp2);
+        maj(tmp1, a, b, c, tmp2);
+        t2.add(tmp1);
+        tmp3 = h;
+        h = g;
+        g = f;
+        f = e;
+        d.add(t1);
+        e = d;
+        d = c;
+        c = b;
+        b = a;
+        tmp3.assign(t1);
+        tmp3.add(t2);
+        a = tmp3;
+      }
+
+      h0.add(a);
+      h1.add(b);
+      h2.add(c);
+      h3.add(d);
+      h4.add(e);
+      h5.add(f);
+      h6.add(g);
+      h7.add(h);
+    }
+
+    let result;
+
+    if (!mode384) {
+      result = new Uint8Array(64);
+      h0.copyTo(result, 0);
+      h1.copyTo(result, 8);
+      h2.copyTo(result, 16);
+      h3.copyTo(result, 24);
+      h4.copyTo(result, 32);
+      h5.copyTo(result, 40);
+      h6.copyTo(result, 48);
+      h7.copyTo(result, 56);
+    } else {
+      result = new Uint8Array(48);
+      h0.copyTo(result, 0);
+      h1.copyTo(result, 8);
+      h2.copyTo(result, 16);
+      h3.copyTo(result, 24);
+      h4.copyTo(result, 32);
+      h5.copyTo(result, 40);
+    }
+
+    return result;
+  }
+
+  return hash;
+}();
+
+exports.calculateSHA512 = calculateSHA512;
+
+function calculateSHA384(data, offset, length) {
+  return calculateSHA512(data, offset, length, true);
+}
+
+class NullCipher {
+  decryptBlock(data) {
+    return data;
+  }
+
+  encrypt(data) {
+    return data;
+  }
+
+}
+
+class AESBaseCipher {
+  constructor() {
+    if (this.constructor === AESBaseCipher) {
+      (0, _util.unreachable)("Cannot initialize AESBaseCipher.");
+    }
+
+    this._s = new Uint8Array([0x63, 0x7c, 0x77, 0x7b, 0xf2, 0x6b, 0x6f, 0xc5, 0x30, 0x01, 0x67, 0x2b, 0xfe, 0xd7, 0xab, 0x76, 0xca, 0x82, 0xc9, 0x7d, 0xfa, 0x59, 0x47, 0xf0, 0xad, 0xd4, 0xa2, 0xaf, 0x9c, 0xa4, 0x72, 0xc0, 0xb7, 0xfd, 0x93, 0x26, 0x36, 0x3f, 0xf7, 0xcc, 0x34, 0xa5, 0xe5, 0xf1, 0x71, 0xd8, 0x31, 0x15, 0x04, 0xc7, 0x23, 0xc3, 0x18, 0x96, 0x05, 0x9a, 0x07, 0x12, 0x80, 0xe2, 0xeb, 0x27, 0xb2, 0x75, 0x09, 0x83, 0x2c, 0x1a, 0x1b, 0x6e, 0x5a, 0xa0, 0x52, 0x3b, 0xd6, 0xb3, 0x29, 0xe3, 0x2f, 0x84, 0x53, 0xd1, 0x00, 0xed, 0x20, 0xfc, 0xb1, 0x5b, 0x6a, 0xcb, 0xbe, 0x39, 0x4a, 0x4c, 0x58, 0xcf, 0xd0, 0xef, 0xaa, 0xfb, 0x43, 0x4d, 0x33, 0x85, 0x45, 0xf9, 0x02, 0x7f, 0x50, 0x3c, 0x9f, 0xa8, 0x51, 0xa3, 0x40, 0x8f, 0x92, 0x9d, 0x38, 0xf5, 0xbc, 0xb6, 0xda, 0x21, 0x10, 0xff, 0xf3, 0xd2, 0xcd, 0x0c, 0x13, 0xec, 0x5f, 0x97, 0x44, 0x17, 0xc4, 0xa7, 0x7e, 0x3d, 0x64, 0x5d, 0x19, 0x73, 0x60, 0x81, 0x4f, 0xdc, 0x22, 0x2a, 0x90, 0x88, 0x46, 0xee, 0xb8, 0x14, 0xde, 0x5e, 0x0b, 0xdb, 0xe0, 0x32, 0x3a, 0x0a, 0x49, 0x06, 0x24, 0x5c, 0xc2, 0xd3, 0xac, 0x62, 0x91, 0x95, 0xe4, 0x79, 0xe7, 0xc8, 0x37, 0x6d, 0x8d, 0xd5, 0x4e, 0xa9, 0x6c, 0x56, 0xf4, 0xea, 0x65, 0x7a, 0xae, 0x08, 0xba, 0x78, 0x25, 0x2e, 0x1c, 0xa6, 0xb4, 0xc6, 0xe8, 0xdd, 0x74, 0x1f, 0x4b, 0xbd, 0x8b, 0x8a, 0x70, 0x3e, 0xb5, 0x66, 0x48, 0x03, 0xf6, 0x0e, 0x61, 0x35, 0x57, 0xb9, 0x86, 0xc1, 0x1d, 0x9e, 0xe1, 0xf8, 0x98, 0x11, 0x69, 0xd9, 0x8e, 0x94, 0x9b, 0x1e, 0x87, 0xe9, 0xce, 0x55, 0x28, 0xdf, 0x8c, 0xa1, 0x89, 0x0d, 0xbf, 0xe6, 0x42, 0x68, 0x41, 0x99, 0x2d, 0x0f, 0xb0, 0x54, 0xbb, 0x16]);
+    this._inv_s = new Uint8Array([0x52, 0x09, 0x6a, 0xd5, 0x30, 0x36, 0xa5, 0x38, 0xbf, 0x40, 0xa3, 0x9e, 0x81, 0xf3, 0xd7, 0xfb, 0x7c, 0xe3, 0x39, 0x82, 0x9b, 0x2f, 0xff, 0x87, 0x34, 0x8e, 0x43, 0x44, 0xc4, 0xde, 0xe9, 0xcb, 0x54, 0x7b, 0x94, 0x32, 0xa6, 0xc2, 0x23, 0x3d, 0xee, 0x4c, 0x95, 0x0b, 0x42, 0xfa, 0xc3, 0x4e, 0x08, 0x2e, 0xa1, 0x66, 0x28, 0xd9, 0x24, 0xb2, 0x76, 0x5b, 0xa2, 0x49, 0x6d, 0x8b, 0xd1, 0x25, 0x72, 0xf8, 0xf6, 0x64, 0x86, 0x68, 0x98, 0x16, 0xd4, 0xa4, 0x5c, 0xcc, 0x5d, 0x65, 0xb6, 0x92, 0x6c, 0x70, 0x48, 0x50, 0xfd, 0xed, 0xb9, 0xda, 0x5e, 0x15, 0x46, 0x57, 0xa7, 0x8d, 0x9d, 0x84, 0x90, 0xd8, 0xab, 0x00, 0x8c, 0xbc, 0xd3, 0x0a, 0xf7, 0xe4, 0x58, 0x05, 0xb8, 0xb3, 0x45, 0x06, 0xd0, 0x2c, 0x1e, 0x8f, 0xca, 0x3f, 0x0f, 0x02, 0xc1, 0xaf, 0xbd, 0x03, 0x01, 0x13, 0x8a, 0x6b, 0x3a, 0x91, 0x11, 0x41, 0x4f, 0x67, 0xdc, 0xea, 0x97, 0xf2, 0xcf, 0xce, 0xf0, 0xb4, 0xe6, 0x73, 0x96, 0xac, 0x74, 0x22, 0xe7, 0xad, 0x35, 0x85, 0xe2, 0xf9, 0x37, 0xe8, 0x1c, 0x75, 0xdf, 0x6e, 0x47, 0xf1, 0x1a, 0x71, 0x1d, 0x29, 0xc5, 0x89, 0x6f, 0xb7, 0x62, 0x0e, 0xaa, 0x18, 0xbe, 0x1b, 0xfc, 0x56, 0x3e, 0x4b, 0xc6, 0xd2, 0x79, 0x20, 0x9a, 0xdb, 0xc0, 0xfe, 0x78, 0xcd, 0x5a, 0xf4, 0x1f, 0xdd, 0xa8, 0x33, 0x88, 0x07, 0xc7, 0x31, 0xb1, 0x12, 0x10, 0x59, 0x27, 0x80, 0xec, 0x5f, 0x60, 0x51, 0x7f, 0xa9, 0x19, 0xb5, 0x4a, 0x0d, 0x2d, 0xe5, 0x7a, 0x9f, 0x93, 0xc9, 0x9c, 0xef, 0xa0, 0xe0, 0x3b, 0x4d, 0xae, 0x2a, 0xf5, 0xb0, 0xc8, 0xeb, 0xbb, 0x3c, 0x83, 0x53, 0x99, 0x61, 0x17, 0x2b, 0x04, 0x7e, 0xba, 0x77, 0xd6, 0x26, 0xe1, 0x69, 0x14, 0x63, 0x55, 0x21, 0x0c, 0x7d]);
+    this._mix = new Uint32Array([0x00000000, 0x0e090d0b, 0x1c121a16, 0x121b171d, 0x3824342c, 0x362d3927, 0x24362e3a, 0x2a3f2331, 0x70486858, 0x7e416553, 0x6c5a724e, 0x62537f45, 0x486c5c74, 0x4665517f, 0x547e4662, 0x5a774b69, 0xe090d0b0, 0xee99ddbb, 0xfc82caa6, 0xf28bc7ad, 0xd8b4e49c, 0xd6bde997, 0xc4a6fe8a, 0xcaaff381, 0x90d8b8e8, 0x9ed1b5e3, 0x8ccaa2fe, 0x82c3aff5, 0xa8fc8cc4, 0xa6f581cf, 0xb4ee96d2, 0xbae79bd9, 0xdb3bbb7b, 0xd532b670, 0xc729a16d, 0xc920ac66, 0xe31f8f57, 0xed16825c, 0xff0d9541, 0xf104984a, 0xab73d323, 0xa57ade28, 0xb761c935, 0xb968c43e, 0x9357e70f, 0x9d5eea04, 0x8f45fd19, 0x814cf012, 0x3bab6bcb, 0x35a266c0, 0x27b971dd, 0x29b07cd6, 0x038f5fe7, 0x0d8652ec, 0x1f9d45f1, 0x119448fa, 0x4be30393, 0x45ea0e98, 0x57f11985, 0x59f8148e, 0x73c737bf, 0x7dce3ab4, 0x6fd52da9, 0x61dc20a2, 0xad766df6, 0xa37f60fd, 0xb16477e0, 0xbf6d7aeb, 0x955259da, 0x9b5b54d1, 0x894043cc, 0x87494ec7, 0xdd3e05ae, 0xd33708a5, 0xc12c1fb8, 0xcf2512b3, 0xe51a3182, 0xeb133c89, 0xf9082b94, 0xf701269f, 0x4de6bd46, 0x43efb04d, 0x51f4a750, 0x5ffdaa5b, 0x75c2896a, 0x7bcb8461, 0x69d0937c, 0x67d99e77, 0x3daed51e, 0x33a7d815, 0x21bccf08, 0x2fb5c203, 0x058ae132, 0x0b83ec39, 0x1998fb24, 0x1791f62f, 0x764dd68d, 0x7844db86, 0x6a5fcc9b, 0x6456c190, 0x4e69e2a1, 0x4060efaa, 0x527bf8b7, 0x5c72f5bc, 0x0605bed5, 0x080cb3de, 0x1a17a4c3, 0x141ea9c8, 0x3e218af9, 0x302887f2, 0x223390ef, 0x2c3a9de4, 0x96dd063d, 0x98d40b36, 0x8acf1c2b, 0x84c61120, 0xaef93211, 0xa0f03f1a, 0xb2eb2807, 0xbce2250c, 0xe6956e65, 0xe89c636e, 0xfa877473, 0xf48e7978, 0xdeb15a49, 0xd0b85742, 0xc2a3405f, 0xccaa4d54, 0x41ecdaf7, 0x4fe5d7fc, 0x5dfec0e1, 0x53f7cdea, 0x79c8eedb, 0x77c1e3d0, 0x65daf4cd, 0x6bd3f9c6, 0x31a4b2af, 0x3fadbfa4, 0x2db6a8b9, 0x23bfa5b2, 0x09808683, 0x07898b88, 0x15929c95, 0x1b9b919e, 0xa17c0a47, 0xaf75074c, 0xbd6e1051, 0xb3671d5a, 0x99583e6b, 0x97513360, 0x854a247d, 0x8b432976, 0xd134621f, 0xdf3d6f14, 0xcd267809, 0xc32f7502, 0xe9105633, 0xe7195b38, 0xf5024c25, 0xfb0b412e, 0x9ad7618c, 0x94de6c87, 0x86c57b9a, 0x88cc7691, 0xa2f355a0, 0xacfa58ab, 0xbee14fb6, 0xb0e842bd, 0xea9f09d4, 0xe49604df, 0xf68d13c2, 0xf8841ec9, 0xd2bb3df8, 0xdcb230f3, 0xcea927ee, 0xc0a02ae5, 0x7a47b13c, 0x744ebc37, 0x6655ab2a, 0x685ca621, 0x42638510, 0x4c6a881b, 0x5e719f06, 0x5078920d, 0x0a0fd964, 0x0406d46f, 0x161dc372, 0x1814ce79, 0x322bed48, 0x3c22e043, 0x2e39f75e, 0x2030fa55, 0xec9ab701, 0xe293ba0a, 0xf088ad17, 0xfe81a01c, 0xd4be832d, 0xdab78e26, 0xc8ac993b, 0xc6a59430, 0x9cd2df59, 0x92dbd252, 0x80c0c54f, 0x8ec9c844, 0xa4f6eb75, 0xaaffe67e, 0xb8e4f163, 0xb6edfc68, 0x0c0a67b1, 0x02036aba, 0x10187da7, 0x1e1170ac, 0x342e539d, 0x3a275e96, 0x283c498b, 0x26354480, 0x7c420fe9, 0x724b02e2, 0x605015ff, 0x6e5918f4, 0x44663bc5, 0x4a6f36ce, 0x587421d3, 0x567d2cd8, 0x37a10c7a, 0x39a80171, 0x2bb3166c, 0x25ba1b67, 0x0f853856, 0x018c355d, 0x13972240, 0x1d9e2f4b, 0x47e96422, 0x49e06929, 0x5bfb7e34, 0x55f2733f, 0x7fcd500e, 0x71c45d05, 0x63df4a18, 0x6dd64713, 0xd731dcca, 0xd938d1c1, 0xcb23c6dc, 0xc52acbd7, 0xef15e8e6, 0xe11ce5ed, 0xf307f2f0, 0xfd0efffb, 0xa779b492, 0xa970b999, 0xbb6bae84, 0xb562a38f, 0x9f5d80be, 0x91548db5, 0x834f9aa8, 0x8d4697a3]);
+    this._mixCol = new Uint8Array(256);
+
+    for (let i = 0; i < 256; i++) {
+      if (i < 128) {
+        this._mixCol[i] = i << 1;
+      } else {
+        this._mixCol[i] = i << 1 ^ 0x1b;
+      }
+    }
+
+    this.buffer = new Uint8Array(16);
+    this.bufferPosition = 0;
+  }
+
+  _expandKey(cipherKey) {
+    (0, _util.unreachable)("Cannot call `_expandKey` on the base class");
+  }
+
+  _decrypt(input, key) {
+    let t, u, v;
+    const state = new Uint8Array(16);
+    state.set(input);
+
+    for (let j = 0, k = this._keySize; j < 16; ++j, ++k) {
+      state[j] ^= key[k];
+    }
+
+    for (let i = this._cyclesOfRepetition - 1; i >= 1; --i) {
+      t = state[13];
+      state[13] = state[9];
+      state[9] = state[5];
+      state[5] = state[1];
+      state[1] = t;
+      t = state[14];
+      u = state[10];
+      state[14] = state[6];
+      state[10] = state[2];
+      state[6] = t;
+      state[2] = u;
+      t = state[15];
+      u = state[11];
+      v = state[7];
+      state[15] = state[3];
+      state[11] = t;
+      state[7] = u;
+      state[3] = v;
+
+      for (let j = 0; j < 16; ++j) {
+        state[j] = this._inv_s[state[j]];
+      }
+
+      for (let j = 0, k = i * 16; j < 16; ++j, ++k) {
+        state[j] ^= key[k];
+      }
+
+      for (let j = 0; j < 16; j += 4) {
+        const s0 = this._mix[state[j]];
+        const s1 = this._mix[state[j + 1]];
+        const s2 = this._mix[state[j + 2]];
+        const s3 = this._mix[state[j + 3]];
+        t = s0 ^ s1 >>> 8 ^ s1 << 24 ^ s2 >>> 16 ^ s2 << 16 ^ s3 >>> 24 ^ s3 << 8;
+        state[j] = t >>> 24 & 0xff;
+        state[j + 1] = t >> 16 & 0xff;
+        state[j + 2] = t >> 8 & 0xff;
+        state[j + 3] = t & 0xff;
+      }
+    }
+
+    t = state[13];
+    state[13] = state[9];
+    state[9] = state[5];
+    state[5] = state[1];
+    state[1] = t;
+    t = state[14];
+    u = state[10];
+    state[14] = state[6];
+    state[10] = state[2];
+    state[6] = t;
+    state[2] = u;
+    t = state[15];
+    u = state[11];
+    v = state[7];
+    state[15] = state[3];
+    state[11] = t;
+    state[7] = u;
+    state[3] = v;
+
+    for (let j = 0; j < 16; ++j) {
+      state[j] = this._inv_s[state[j]];
+      state[j] ^= key[j];
+    }
+
+    return state;
+  }
+
+  _encrypt(input, key) {
+    const s = this._s;
+    let t, u, v;
+    const state = new Uint8Array(16);
+    state.set(input);
+
+    for (let j = 0; j < 16; ++j) {
+      state[j] ^= key[j];
+    }
+
+    for (let i = 1; i < this._cyclesOfRepetition; i++) {
+      for (let j = 0; j < 16; ++j) {
+        state[j] = s[state[j]];
+      }
+
+      v = state[1];
+      state[1] = state[5];
+      state[5] = state[9];
+      state[9] = state[13];
+      state[13] = v;
+      v = state[2];
+      u = state[6];
+      state[2] = state[10];
+      state[6] = state[14];
+      state[10] = v;
+      state[14] = u;
+      v = state[3];
+      u = state[7];
+      t = state[11];
+      state[3] = state[15];
+      state[7] = v;
+      state[11] = u;
+      state[15] = t;
+
+      for (let j = 0; j < 16; j += 4) {
+        const s0 = state[j + 0];
+        const s1 = state[j + 1];
+        const s2 = state[j + 2];
+        const s3 = state[j + 3];
+        t = s0 ^ s1 ^ s2 ^ s3;
+        state[j + 0] ^= t ^ this._mixCol[s0 ^ s1];
+        state[j + 1] ^= t ^ this._mixCol[s1 ^ s2];
+        state[j + 2] ^= t ^ this._mixCol[s2 ^ s3];
+        state[j + 3] ^= t ^ this._mixCol[s3 ^ s0];
+      }
+
+      for (let j = 0, k = i * 16; j < 16; ++j, ++k) {
+        state[j] ^= key[k];
+      }
+    }
+
+    for (let j = 0; j < 16; ++j) {
+      state[j] = s[state[j]];
+    }
+
+    v = state[1];
+    state[1] = state[5];
+    state[5] = state[9];
+    state[9] = state[13];
+    state[13] = v;
+    v = state[2];
+    u = state[6];
+    state[2] = state[10];
+    state[6] = state[14];
+    state[10] = v;
+    state[14] = u;
+    v = state[3];
+    u = state[7];
+    t = state[11];
+    state[3] = state[15];
+    state[7] = v;
+    state[11] = u;
+    state[15] = t;
+
+    for (let j = 0, k = this._keySize; j < 16; ++j, ++k) {
+      state[j] ^= key[k];
+    }
+
+    return state;
+  }
+
+  _decryptBlock2(data, finalize) {
+    const sourceLength = data.length;
+    let buffer = this.buffer,
+        bufferLength = this.bufferPosition;
+    const result = [];
+    let iv = this.iv;
+
+    for (let i = 0; i < sourceLength; ++i) {
+      buffer[bufferLength] = data[i];
+      ++bufferLength;
+
+      if (bufferLength < 16) {
+        continue;
+      }
+
+      const plain = this._decrypt(buffer, this._key);
+
+      for (let j = 0; j < 16; ++j) {
+        plain[j] ^= iv[j];
+      }
+
+      iv = buffer;
+      result.push(plain);
+      buffer = new Uint8Array(16);
+      bufferLength = 0;
+    }
+
+    this.buffer = buffer;
+    this.bufferLength = bufferLength;
+    this.iv = iv;
+
+    if (result.length === 0) {
+      return new Uint8Array(0);
+    }
+
+    let outputLength = 16 * result.length;
+
+    if (finalize) {
+      const lastBlock = result.at(-1);
+      let psLen = lastBlock[15];
+
+      if (psLen <= 16) {
+        for (let i = 15, ii = 16 - psLen; i >= ii; --i) {
+          if (lastBlock[i] !== psLen) {
+            psLen = 0;
+            break;
+          }
+        }
+
+        outputLength -= psLen;
+        result[result.length - 1] = lastBlock.subarray(0, 16 - psLen);
+      }
+    }
+
+    const output = new Uint8Array(outputLength);
+
+    for (let i = 0, j = 0, ii = result.length; i < ii; ++i, j += 16) {
+      output.set(result[i], j);
+    }
+
+    return output;
+  }
+
+  decryptBlock(data, finalize, iv = null) {
+    const sourceLength = data.length;
+    const buffer = this.buffer;
+    let bufferLength = this.bufferPosition;
+
+    if (iv) {
+      this.iv = iv;
+    } else {
+      for (let i = 0; bufferLength < 16 && i < sourceLength; ++i, ++bufferLength) {
+        buffer[bufferLength] = data[i];
+      }
+
+      if (bufferLength < 16) {
+        this.bufferLength = bufferLength;
+        return new Uint8Array(0);
+      }
+
+      this.iv = buffer;
+      data = data.subarray(16);
+    }
+
+    this.buffer = new Uint8Array(16);
+    this.bufferLength = 0;
+    this.decryptBlock = this._decryptBlock2;
+    return this.decryptBlock(data, finalize);
+  }
+
+  encrypt(data, iv) {
+    const sourceLength = data.length;
+    let buffer = this.buffer,
+        bufferLength = this.bufferPosition;
+    const result = [];
+
+    if (!iv) {
+      iv = new Uint8Array(16);
+    }
+
+    for (let i = 0; i < sourceLength; ++i) {
+      buffer[bufferLength] = data[i];
+      ++bufferLength;
+
+      if (bufferLength < 16) {
+        continue;
+      }
+
+      for (let j = 0; j < 16; ++j) {
+        buffer[j] ^= iv[j];
+      }
+
+      const cipher = this._encrypt(buffer, this._key);
+
+      iv = cipher;
+      result.push(cipher);
+      buffer = new Uint8Array(16);
+      bufferLength = 0;
+    }
+
+    this.buffer = buffer;
+    this.bufferLength = bufferLength;
+    this.iv = iv;
+
+    if (result.length === 0) {
+      return new Uint8Array(0);
+    }
+
+    const outputLength = 16 * result.length;
+    const output = new Uint8Array(outputLength);
+
+    for (let i = 0, j = 0, ii = result.length; i < ii; ++i, j += 16) {
+      output.set(result[i], j);
+    }
+
+    return output;
+  }
+
+}
+
+class AES128Cipher extends AESBaseCipher {
+  constructor(key) {
+    super();
+    this._cyclesOfRepetition = 10;
+    this._keySize = 160;
+    this._rcon = new Uint8Array([0x8d, 0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80, 0x1b, 0x36, 0x6c, 0xd8, 0xab, 0x4d, 0x9a, 0x2f, 0x5e, 0xbc, 0x63, 0xc6, 0x97, 0x35, 0x6a, 0xd4, 0xb3, 0x7d, 0xfa, 0xef, 0xc5, 0x91, 0x39, 0x72, 0xe4, 0xd3, 0xbd, 0x61, 0xc2, 0x9f, 0x25, 0x4a, 0x94, 0x33, 0x66, 0xcc, 0x83, 0x1d, 0x3a, 0x74, 0xe8, 0xcb, 0x8d, 0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80, 0x1b, 0x36, 0x6c, 0xd8, 0xab, 0x4d, 0x9a, 0x2f, 0x5e, 0xbc, 0x63, 0xc6, 0x97, 0x35, 0x6a, 0xd4, 0xb3, 0x7d, 0xfa, 0xef, 0xc5, 0x91, 0x39, 0x72, 0xe4, 0xd3, 0xbd, 0x61, 0xc2, 0x9f, 0x25, 0x4a, 0x94, 0x33, 0x66, 0xcc, 0x83, 0x1d, 0x3a, 0x74, 0xe8, 0xcb, 0x8d, 0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80, 0x1b, 0x36, 0x6c, 0xd8, 0xab, 0x4d, 0x9a, 0x2f, 0x5e, 0xbc, 0x63, 0xc6, 0x97, 0x35, 0x6a, 0xd4, 0xb3, 0x7d, 0xfa, 0xef, 0xc5, 0x91, 0x39, 0x72, 0xe4, 0xd3, 0xbd, 0x61, 0xc2, 0x9f, 0x25, 0x4a, 0x94, 0x33, 0x66, 0xcc, 0x83, 0x1d, 0x3a, 0x74, 0xe8, 0xcb, 0x8d, 0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80, 0x1b, 0x36, 0x6c, 0xd8, 0xab, 0x4d, 0x9a, 0x2f, 0x5e, 0xbc, 0x63, 0xc6, 0x97, 0x35, 0x6a, 0xd4, 0xb3, 0x7d, 0xfa, 0xef, 0xc5, 0x91, 0x39, 0x72, 0xe4, 0xd3, 0xbd, 0x61, 0xc2, 0x9f, 0x25, 0x4a, 0x94, 0x33, 0x66, 0xcc, 0x83, 0x1d, 0x3a, 0x74, 0xe8, 0xcb, 0x8d, 0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80, 0x1b, 0x36, 0x6c, 0xd8, 0xab, 0x4d, 0x9a, 0x2f, 0x5e, 0xbc, 0x63, 0xc6, 0x97, 0x35, 0x6a, 0xd4, 0xb3, 0x7d, 0xfa, 0xef, 0xc5, 0x91, 0x39, 0x72, 0xe4, 0xd3, 0xbd, 0x61, 0xc2, 0x9f, 0x25, 0x4a, 0x94, 0x33, 0x66, 0xcc, 0x83, 0x1d, 0x3a, 0x74, 0xe8, 0xcb, 0x8d]);
+    this._key = this._expandKey(key);
+  }
+
+  _expandKey(cipherKey) {
+    const b = 176;
+    const s = this._s;
+    const rcon = this._rcon;
+    const result = new Uint8Array(b);
+    result.set(cipherKey);
+
+    for (let j = 16, i = 1; j < b; ++i) {
+      let t1 = result[j - 3];
+      let t2 = result[j - 2];
+      let t3 = result[j - 1];
+      let t4 = result[j - 4];
+      t1 = s[t1];
+      t2 = s[t2];
+      t3 = s[t3];
+      t4 = s[t4];
+      t1 ^= rcon[i];
+
+      for (let n = 0; n < 4; ++n) {
+        result[j] = t1 ^= result[j - 16];
+        j++;
+        result[j] = t2 ^= result[j - 16];
+        j++;
+        result[j] = t3 ^= result[j - 16];
+        j++;
+        result[j] = t4 ^= result[j - 16];
+        j++;
+      }
+    }
+
+    return result;
+  }
+
+}
+
+exports.AES128Cipher = AES128Cipher;
+
+class AES256Cipher extends AESBaseCipher {
+  constructor(key) {
+    super();
+    this._cyclesOfRepetition = 14;
+    this._keySize = 224;
+    this._key = this._expandKey(key);
+  }
+
+  _expandKey(cipherKey) {
+    const b = 240;
+    const s = this._s;
+    const result = new Uint8Array(b);
+    result.set(cipherKey);
+    let r = 1;
+    let t1, t2, t3, t4;
+
+    for (let j = 32, i = 1; j < b; ++i) {
+      if (j % 32 === 16) {
+        t1 = s[t1];
+        t2 = s[t2];
+        t3 = s[t3];
+        t4 = s[t4];
+      } else if (j % 32 === 0) {
+        t1 = result[j - 3];
+        t2 = result[j - 2];
+        t3 = result[j - 1];
+        t4 = result[j - 4];
+        t1 = s[t1];
+        t2 = s[t2];
+        t3 = s[t3];
+        t4 = s[t4];
+        t1 ^= r;
+
+        if ((r <<= 1) >= 256) {
+          r = (r ^ 0x1b) & 0xff;
+        }
+      }
+
+      for (let n = 0; n < 4; ++n) {
+        result[j] = t1 ^= result[j - 32];
+        j++;
+        result[j] = t2 ^= result[j - 32];
+        j++;
+        result[j] = t3 ^= result[j - 32];
+        j++;
+        result[j] = t4 ^= result[j - 32];
+        j++;
+      }
+    }
+
+    return result;
+  }
+
+}
+
+exports.AES256Cipher = AES256Cipher;
+
+class PDF17 {
+  checkOwnerPassword(password, ownerValidationSalt, userBytes, ownerPassword) {
+    const hashData = new Uint8Array(password.length + 56);
+    hashData.set(password, 0);
+    hashData.set(ownerValidationSalt, password.length);
+    hashData.set(userBytes, password.length + ownerValidationSalt.length);
+    const result = calculateSHA256(hashData, 0, hashData.length);
+    return (0, _util.isArrayEqual)(result, ownerPassword);
+  }
+
+  checkUserPassword(password, userValidationSalt, userPassword) {
+    const hashData = new Uint8Array(password.length + 8);
+    hashData.set(password, 0);
+    hashData.set(userValidationSalt, password.length);
+    const result = calculateSHA256(hashData, 0, hashData.length);
+    return (0, _util.isArrayEqual)(result, userPassword);
+  }
+
+  getOwnerKey(password, ownerKeySalt, userBytes, ownerEncryption) {
+    const hashData = new Uint8Array(password.length + 56);
+    hashData.set(password, 0);
+    hashData.set(ownerKeySalt, password.length);
+    hashData.set(userBytes, password.length + ownerKeySalt.length);
+    const key = calculateSHA256(hashData, 0, hashData.length);
+    const cipher = new AES256Cipher(key);
+    return cipher.decryptBlock(ownerEncryption, false, new Uint8Array(16));
+  }
+
+  getUserKey(password, userKeySalt, userEncryption) {
+    const hashData = new Uint8Array(password.length + 8);
+    hashData.set(password, 0);
+    hashData.set(userKeySalt, password.length);
+    const key = calculateSHA256(hashData, 0, hashData.length);
+    const cipher = new AES256Cipher(key);
+    return cipher.decryptBlock(userEncryption, false, new Uint8Array(16));
+  }
+
+}
+
+exports.PDF17 = PDF17;
+
+const PDF20 = function PDF20Closure() {
+  function calculatePDF20Hash(password, input, userBytes) {
+    let k = calculateSHA256(input, 0, input.length).subarray(0, 32);
+    let e = [0];
+    let i = 0;
+
+    while (i < 64 || e.at(-1) > i - 32) {
+      const combinedLength = password.length + k.length + userBytes.length,
+            combinedArray = new Uint8Array(combinedLength);
+      let writeOffset = 0;
+      combinedArray.set(password, writeOffset);
+      writeOffset += password.length;
+      combinedArray.set(k, writeOffset);
+      writeOffset += k.length;
+      combinedArray.set(userBytes, writeOffset);
+      const k1 = new Uint8Array(combinedLength * 64);
+
+      for (let j = 0, pos = 0; j < 64; j++, pos += combinedLength) {
+        k1.set(combinedArray, pos);
+      }
+
+      const cipher = new AES128Cipher(k.subarray(0, 16));
+      e = cipher.encrypt(k1, k.subarray(16, 32));
+      let remainder = 0;
+
+      for (let z = 0; z < 16; z++) {
+        remainder *= 256 % 3;
+        remainder %= 3;
+        remainder += (e[z] >>> 0) % 3;
+        remainder %= 3;
+      }
+
+      if (remainder === 0) {
+        k = calculateSHA256(e, 0, e.length);
+      } else if (remainder === 1) {
+        k = calculateSHA384(e, 0, e.length);
+      } else if (remainder === 2) {
+        k = calculateSHA512(e, 0, e.length);
+      }
+
+      i++;
+    }
+
+    return k.subarray(0, 32);
+  }
+
+  class PDF20 {
+    hash(password, concatBytes, userBytes) {
+      return calculatePDF20Hash(password, concatBytes, userBytes);
+    }
+
+    checkOwnerPassword(password, ownerValidationSalt, userBytes, ownerPassword) {
+      const hashData = new Uint8Array(password.length + 56);
+      hashData.set(password, 0);
+      hashData.set(ownerValidationSalt, password.length);
+      hashData.set(userBytes, password.length + ownerValidationSalt.length);
+      const result = calculatePDF20Hash(password, hashData, userBytes);
+      return (0, _util.isArrayEqual)(result, ownerPassword);
+    }
+
+    checkUserPassword(password, userValidationSalt, userPassword) {
+      const hashData = new Uint8Array(password.length + 8);
+      hashData.set(password, 0);
+      hashData.set(userValidationSalt, password.length);
+      const result = calculatePDF20Hash(password, hashData, []);
+      return (0, _util.isArrayEqual)(result, userPassword);
+    }
+
+    getOwnerKey(password, ownerKeySalt, userBytes, ownerEncryption) {
+      const hashData = new Uint8Array(password.length + 56);
+      hashData.set(password, 0);
+      hashData.set(ownerKeySalt, password.length);
+      hashData.set(userBytes, password.length + ownerKeySalt.length);
+      const key = calculatePDF20Hash(password, hashData, userBytes);
+      const cipher = new AES256Cipher(key);
+      return cipher.decryptBlock(ownerEncryption, false, new Uint8Array(16));
+    }
+
+    getUserKey(password, userKeySalt, userEncryption) {
+      const hashData = new Uint8Array(password.length + 8);
+      hashData.set(password, 0);
+      hashData.set(userKeySalt, password.length);
+      const key = calculatePDF20Hash(password, hashData, []);
+      const cipher = new AES256Cipher(key);
+      return cipher.decryptBlock(userEncryption, false, new Uint8Array(16));
+    }
+
+  }
+
+  return PDF20;
+}();
+
+exports.PDF20 = PDF20;
+
+class CipherTransform {
+  constructor(stringCipherConstructor, streamCipherConstructor) {
+    this.StringCipherConstructor = stringCipherConstructor;
+    this.StreamCipherConstructor = streamCipherConstructor;
+  }
+
+  createStream(stream, length) {
+    const cipher = new this.StreamCipherConstructor();
+    return new _decrypt_stream.DecryptStream(stream, length, function cipherTransformDecryptStream(data, finalize) {
+      return cipher.decryptBlock(data, finalize);
+    });
+  }
+
+  decryptString(s) {
+    const cipher = new this.StringCipherConstructor();
+    let data = (0, _util.stringToBytes)(s);
+    data = cipher.decryptBlock(data, true);
+    return (0, _util.bytesToString)(data);
+  }
+
+  encryptString(s) {
+    const cipher = new this.StringCipherConstructor();
+
+    if (cipher instanceof AESBaseCipher) {
+      const strLen = s.length;
+      const pad = 16 - strLen % 16;
+      s += String.fromCharCode(pad).repeat(pad);
+      const iv = new Uint8Array(16);
+
+      if (typeof crypto !== "undefined") {
+        crypto.getRandomValues(iv);
+      } else {
+        for (let i = 0; i < 16; i++) {
+          iv[i] = Math.floor(256 * Math.random());
+        }
+      }
+
+      let data = (0, _util.stringToBytes)(s);
+      data = cipher.encrypt(data, iv);
+      const buf = new Uint8Array(16 + data.length);
+      buf.set(iv);
+      buf.set(data, 16);
+      return (0, _util.bytesToString)(buf);
+    }
+
+    let data = (0, _util.stringToBytes)(s);
+    data = cipher.encrypt(data);
+    return (0, _util.bytesToString)(data);
+  }
+
+}
+
+const CipherTransformFactory = function CipherTransformFactoryClosure() {
+  const defaultPasswordBytes = new Uint8Array([0x28, 0xbf, 0x4e, 0x5e, 0x4e, 0x75, 0x8a, 0x41, 0x64, 0x00, 0x4e, 0x56, 0xff, 0xfa, 0x01, 0x08, 0x2e, 0x2e, 0x00, 0xb6, 0xd0, 0x68, 0x3e, 0x80, 0x2f, 0x0c, 0xa9, 0xfe, 0x64, 0x53, 0x69, 0x7a]);
+
+  function createEncryptionKey20(revision, password, ownerPassword, ownerValidationSalt, ownerKeySalt, uBytes, userPassword, userValidationSalt, userKeySalt, ownerEncryption, userEncryption, perms) {
+    if (password) {
+      const passwordLength = Math.min(127, password.length);
+      password = password.subarray(0, passwordLength);
+    } else {
+      password = [];
+    }
+
+    let pdfAlgorithm;
+
+    if (revision === 6) {
+      pdfAlgorithm = new PDF20();
+    } else {
+      pdfAlgorithm = new PDF17();
+    }
+
+    if (pdfAlgorithm.checkUserPassword(password, userValidationSalt, userPassword)) {
+      return pdfAlgorithm.getUserKey(password, userKeySalt, userEncryption);
+    } else if (password.length && pdfAlgorithm.checkOwnerPassword(password, ownerValidationSalt, uBytes, ownerPassword)) {
+      return pdfAlgorithm.getOwnerKey(password, ownerKeySalt, uBytes, ownerEncryption);
+    }
+
+    return null;
+  }
+
+  function prepareKeyData(fileId, password, ownerPassword, userPassword, flags, revision, keyLength, encryptMetadata) {
+    const hashDataSize = 40 + ownerPassword.length + fileId.length;
+    const hashData = new Uint8Array(hashDataSize);
+    let i = 0,
+        j,
+        n;
+
+    if (password) {
+      n = Math.min(32, password.length);
+
+      for (; i < n; ++i) {
+        hashData[i] = password[i];
+      }
+    }
+
+    j = 0;
+
+    while (i < 32) {
+      hashData[i++] = defaultPasswordBytes[j++];
+    }
+
+    for (j = 0, n = ownerPassword.length; j < n; ++j) {
+      hashData[i++] = ownerPassword[j];
+    }
+
+    hashData[i++] = flags & 0xff;
+    hashData[i++] = flags >> 8 & 0xff;
+    hashData[i++] = flags >> 16 & 0xff;
+    hashData[i++] = flags >>> 24 & 0xff;
+
+    for (j = 0, n = fileId.length; j < n; ++j) {
+      hashData[i++] = fileId[j];
+    }
+
+    if (revision >= 4 && !encryptMetadata) {
+      hashData[i++] = 0xff;
+      hashData[i++] = 0xff;
+      hashData[i++] = 0xff;
+      hashData[i++] = 0xff;
+    }
+
+    let hash = calculateMD5(hashData, 0, i);
+    const keyLengthInBytes = keyLength >> 3;
+
+    if (revision >= 3) {
+      for (j = 0; j < 50; ++j) {
+        hash = calculateMD5(hash, 0, keyLengthInBytes);
+      }
+    }
+
+    const encryptionKey = hash.subarray(0, keyLengthInBytes);
+    let cipher, checkData;
+
+    if (revision >= 3) {
+      for (i = 0; i < 32; ++i) {
+        hashData[i] = defaultPasswordBytes[i];
+      }
+
+      for (j = 0, n = fileId.length; j < n; ++j) {
+        hashData[i++] = fileId[j];
+      }
+
+      cipher = new ARCFourCipher(encryptionKey);
+      checkData = cipher.encryptBlock(calculateMD5(hashData, 0, i));
+      n = encryptionKey.length;
+      const derivedKey = new Uint8Array(n);
+
+      for (j = 1; j <= 19; ++j) {
+        for (let k = 0; k < n; ++k) {
+          derivedKey[k] = encryptionKey[k] ^ j;
+        }
+
+        cipher = new ARCFourCipher(derivedKey);
+        checkData = cipher.encryptBlock(checkData);
+      }
+
+      for (j = 0, n = checkData.length; j < n; ++j) {
+        if (userPassword[j] !== checkData[j]) {
+          return null;
+        }
+      }
+    } else {
+      cipher = new ARCFourCipher(encryptionKey);
+      checkData = cipher.encryptBlock(defaultPasswordBytes);
+
+      for (j = 0, n = checkData.length; j < n; ++j) {
+        if (userPassword[j] !== checkData[j]) {
+          return null;
+        }
+      }
+    }
+
+    return encryptionKey;
+  }
+
+  function decodeUserPassword(password, ownerPassword, revision, keyLength) {
+    const hashData = new Uint8Array(32);
+    let i = 0;
+    const n = Math.min(32, password.length);
+
+    for (; i < n; ++i) {
+      hashData[i] = password[i];
+    }
+
+    let j = 0;
+
+    while (i < 32) {
+      hashData[i++] = defaultPasswordBytes[j++];
+    }
+
+    let hash = calculateMD5(hashData, 0, i);
+    const keyLengthInBytes = keyLength >> 3;
+
+    if (revision >= 3) {
+      for (j = 0; j < 50; ++j) {
+        hash = calculateMD5(hash, 0, hash.length);
+      }
+    }
+
+    let cipher, userPassword;
+
+    if (revision >= 3) {
+      userPassword = ownerPassword;
+      const derivedKey = new Uint8Array(keyLengthInBytes);
+
+      for (j = 19; j >= 0; j--) {
+        for (let k = 0; k < keyLengthInBytes; ++k) {
+          derivedKey[k] = hash[k] ^ j;
+        }
+
+        cipher = new ARCFourCipher(derivedKey);
+        userPassword = cipher.encryptBlock(userPassword);
+      }
+    } else {
+      cipher = new ARCFourCipher(hash.subarray(0, keyLengthInBytes));
+      userPassword = cipher.encryptBlock(ownerPassword);
+    }
+
+    return userPassword;
+  }
+
+  const identityName = _primitives.Name.get("Identity");
+
+  function buildObjectKey(num, gen, encryptionKey, isAes = false) {
+    const key = new Uint8Array(encryptionKey.length + 9);
+    const n = encryptionKey.length;
+    let i;
+
+    for (i = 0; i < n; ++i) {
+      key[i] = encryptionKey[i];
+    }
+
+    key[i++] = num & 0xff;
+    key[i++] = num >> 8 & 0xff;
+    key[i++] = num >> 16 & 0xff;
+    key[i++] = gen & 0xff;
+    key[i++] = gen >> 8 & 0xff;
+
+    if (isAes) {
+      key[i++] = 0x73;
+      key[i++] = 0x41;
+      key[i++] = 0x6c;
+      key[i++] = 0x54;
+    }
+
+    const hash = calculateMD5(key, 0, i);
+    return hash.subarray(0, Math.min(encryptionKey.length + 5, 16));
+  }
+
+  function buildCipherConstructor(cf, name, num, gen, key) {
+    if (!(name instanceof _primitives.Name)) {
+      throw new _util.FormatError("Invalid crypt filter name.");
+    }
+
+    const cryptFilter = cf.get(name.name);
+    let cfm;
+
+    if (cryptFilter !== null && cryptFilter !== undefined) {
+      cfm = cryptFilter.get("CFM");
+    }
+
+    if (!cfm || cfm.name === "None") {
+      return function cipherTransformFactoryBuildCipherConstructorNone() {
+        return new NullCipher();
+      };
+    }
+
+    if (cfm.name === "V2") {
+      return function cipherTransformFactoryBuildCipherConstructorV2() {
+        return new ARCFourCipher(buildObjectKey(num, gen, key, false));
+      };
+    }
+
+    if (cfm.name === "AESV2") {
+      return function cipherTransformFactoryBuildCipherConstructorAESV2() {
+        return new AES128Cipher(buildObjectKey(num, gen, key, true));
+      };
+    }
+
+    if (cfm.name === "AESV3") {
+      return function cipherTransformFactoryBuildCipherConstructorAESV3() {
+        return new AES256Cipher(key);
+      };
+    }
+
+    throw new _util.FormatError("Unknown crypto method");
+  }
+
+  class CipherTransformFactory {
+    constructor(dict, fileId, password) {
+      const filter = dict.get("Filter");
+
+      if (!(0, _primitives.isName)(filter, "Standard")) {
+        throw new _util.FormatError("unknown encryption method");
+      }
+
+      this.filterName = filter.name;
+      this.dict = dict;
+      const algorithm = dict.get("V");
+
+      if (!Number.isInteger(algorithm) || algorithm !== 1 && algorithm !== 2 && algorithm !== 4 && algorithm !== 5) {
+        throw new _util.FormatError("unsupported encryption algorithm");
+      }
+
+      this.algorithm = algorithm;
+      let keyLength = dict.get("Length");
+
+      if (!keyLength) {
+        if (algorithm <= 3) {
+          keyLength = 40;
+        } else {
+          const cfDict = dict.get("CF");
+          const streamCryptoName = dict.get("StmF");
+
+          if (cfDict instanceof _primitives.Dict && streamCryptoName instanceof _primitives.Name) {
+            cfDict.suppressEncryption = true;
+            const handlerDict = cfDict.get(streamCryptoName.name);
+            keyLength = handlerDict && handlerDict.get("Length") || 128;
+
+            if (keyLength < 40) {
+              keyLength <<= 3;
+            }
+          }
+        }
+      }
+
+      if (!Number.isInteger(keyLength) || keyLength < 40 || keyLength % 8 !== 0) {
+        throw new _util.FormatError("invalid key length");
+      }
+
+      const ownerPassword = (0, _util.stringToBytes)(dict.get("O")).subarray(0, 32);
+      const userPassword = (0, _util.stringToBytes)(dict.get("U")).subarray(0, 32);
+      const flags = dict.get("P");
+      const revision = dict.get("R");
+      const encryptMetadata = (algorithm === 4 || algorithm === 5) && dict.get("EncryptMetadata") !== false;
+      this.encryptMetadata = encryptMetadata;
+      const fileIdBytes = (0, _util.stringToBytes)(fileId);
+      let passwordBytes;
+
+      if (password) {
+        if (revision === 6) {
+          try {
+            password = (0, _util.utf8StringToString)(password);
+          } catch (ex) {
+            (0, _util.warn)("CipherTransformFactory: " + "Unable to convert UTF8 encoded password.");
+          }
+        }
+
+        passwordBytes = (0, _util.stringToBytes)(password);
+      }
+
+      let encryptionKey;
+
+      if (algorithm !== 5) {
+        encryptionKey = prepareKeyData(fileIdBytes, passwordBytes, ownerPassword, userPassword, flags, revision, keyLength, encryptMetadata);
+      } else {
+        const ownerValidationSalt = (0, _util.stringToBytes)(dict.get("O")).subarray(32, 40);
+        const ownerKeySalt = (0, _util.stringToBytes)(dict.get("O")).subarray(40, 48);
+        const uBytes = (0, _util.stringToBytes)(dict.get("U")).subarray(0, 48);
+        const userValidationSalt = (0, _util.stringToBytes)(dict.get("U")).subarray(32, 40);
+        const userKeySalt = (0, _util.stringToBytes)(dict.get("U")).subarray(40, 48);
+        const ownerEncryption = (0, _util.stringToBytes)(dict.get("OE"));
+        const userEncryption = (0, _util.stringToBytes)(dict.get("UE"));
+        const perms = (0, _util.stringToBytes)(dict.get("Perms"));
+        encryptionKey = createEncryptionKey20(revision, passwordBytes, ownerPassword, ownerValidationSalt, ownerKeySalt, uBytes, userPassword, userValidationSalt, userKeySalt, ownerEncryption, userEncryption, perms);
+      }
+
+      if (!encryptionKey && !password) {
+        throw new _util.PasswordException("No password given", _util.PasswordResponses.NEED_PASSWORD);
+      } else if (!encryptionKey && password) {
+        const decodedPassword = decodeUserPassword(passwordBytes, ownerPassword, revision, keyLength);
+        encryptionKey = prepareKeyData(fileIdBytes, decodedPassword, ownerPassword, userPassword, flags, revision, keyLength, encryptMetadata);
+      }
+
+      if (!encryptionKey) {
+        throw new _util.PasswordException("Incorrect Password", _util.PasswordResponses.INCORRECT_PASSWORD);
+      }
+
+      this.encryptionKey = encryptionKey;
+
+      if (algorithm >= 4) {
+        const cf = dict.get("CF");
+
+        if (cf instanceof _primitives.Dict) {
+          cf.suppressEncryption = true;
+        }
+
+        this.cf = cf;
+        this.stmf = dict.get("StmF") || identityName;
+        this.strf = dict.get("StrF") || identityName;
+        this.eff = dict.get("EFF") || this.stmf;
+      }
+    }
+
+    createCipherTransform(num, gen) {
+      if (this.algorithm === 4 || this.algorithm === 5) {
+        return new CipherTransform(buildCipherConstructor(this.cf, this.stmf, num, gen, this.encryptionKey), buildCipherConstructor(this.cf, this.strf, num, gen, this.encryptionKey));
+      }
+
+      const key = buildObjectKey(num, gen, this.encryptionKey, false);
+
+      const cipherConstructor = function buildCipherCipherConstructor() {
+        return new ARCFourCipher(key);
+      };
+
+      return new CipherTransform(cipherConstructor, cipherConstructor);
+    }
+
+  }
+
+  return CipherTransformFactory;
+}();
+
+exports.CipherTransformFactory = CipherTransformFactory;
+
+/***/ }),
+/* 68 */
+/***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
+
+
+
+Object.defineProperty(exports, "__esModule", ({
+  value: true
+}));
+exports.DecryptStream = void 0;
+
+var _decode_stream = __w_pdfjs_require__(29);
+
+const chunkSize = 512;
+
+class DecryptStream extends _decode_stream.DecodeStream {
+  constructor(str, maybeLength, decrypt) {
+    super(maybeLength);
+    this.str = str;
+    this.dict = str.dict;
+    this.decrypt = decrypt;
+    this.nextChunk = null;
+    this.initialized = false;
+  }
+
+  readBlock() {
+    let chunk;
+
+    if (this.initialized) {
+      chunk = this.nextChunk;
+    } else {
+      chunk = this.str.getBytes(chunkSize);
+      this.initialized = true;
+    }
+
+    if (!chunk || chunk.length === 0) {
+      this.eof = true;
+      return;
+    }
+
+    this.nextChunk = this.str.getBytes(chunkSize);
+    const hasMoreData = this.nextChunk && this.nextChunk.length > 0;
+    const decrypt = this.decrypt;
+    chunk = decrypt(chunk, !hasMoreData);
+    let bufferLength = this.bufferLength;
+    const n = chunk.length,
+          buffer = this.ensureBuffer(bufferLength + n);
+
+    for (let i = 0; i < n; i++) {
+      buffer[bufferLength++] = chunk[i];
+    }
+
+    this.bufferLength = bufferLength;
+  }
+
+}
+
+exports.DecryptStream = DecryptStream;
+
+/***/ }),
+/* 69 */
+/***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
+
+
+
+Object.defineProperty(exports, "__esModule", ({
+  value: true
+}));
+exports.Catalog = void 0;
+
+var _core_utils = __w_pdfjs_require__(6);
+
+var _util = __w_pdfjs_require__(2);
+
+var _primitives = __w_pdfjs_require__(5);
+
+var _name_number_tree = __w_pdfjs_require__(70);
+
+var _base_stream = __w_pdfjs_require__(7);
+
+var _cleanup_helper = __w_pdfjs_require__(71);
 
 var _colorspace = __w_pdfjs_require__(24);
 
-var _file_spec = __w_pdfjs_require__(68);
+var _file_spec = __w_pdfjs_require__(72);
 
 var _image_utils = __w_pdfjs_require__(59);
 
-var _metadata_parser = __w_pdfjs_require__(69);
+var _metadata_parser = __w_pdfjs_require__(73);
 
-var _struct_tree = __w_pdfjs_require__(71);
+var _struct_tree = __w_pdfjs_require__(74);
 
 function fetchDestination(dest) {
   if (dest instanceof _primitives.Dict) {
@@ -42777,7 +46135,8 @@ class Catalog {
         javaScript = new Map();
       }
 
-      javaScript.set(name, (0, _util.stringToPDFString)(js));
+      js = (0, _util.stringToPDFString)(js).replace(/\u0000/g, "");
+      javaScript.set(name, js);
     }
 
     if (obj instanceof _primitives.Dict && obj.has("JavaScript")) {
@@ -43009,7 +46368,7 @@ class Catalog {
     }
 
     while (queue.length > 0) {
-      const queueItem = queue[queue.length - 1];
+      const queueItem = queue.at(-1);
       const {
         currentNode,
         posInKids
@@ -43390,7 +46749,7 @@ class Catalog {
 exports.Catalog = Catalog;
 
 /***/ }),
-/* 66 */
+/* 70 */
 /***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
 
@@ -43557,7 +46916,7 @@ class NumberTree extends NameOrNumberTree {
 exports.NumberTree = NumberTree;
 
 /***/ }),
-/* 67 */
+/* 71 */
 /***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
 
@@ -43577,7 +46936,7 @@ function clearGlobalCaches() {
 }
 
 /***/ }),
-/* 68 */
+/* 72 */
 /***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
 
@@ -43589,7 +46948,7 @@ exports.FileSpec = void 0;
 
 var _util = __w_pdfjs_require__(2);
 
-var _base_stream = __w_pdfjs_require__(9);
+var _base_stream = __w_pdfjs_require__(7);
 
 var _primitives = __w_pdfjs_require__(5);
 
@@ -43683,7 +47042,7 @@ class FileSpec {
 exports.FileSpec = FileSpec;
 
 /***/ }),
-/* 69 */
+/* 73 */
 /***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
 
@@ -43693,7 +47052,7 @@ Object.defineProperty(exports, "__esModule", ({
 }));
 exports.MetadataParser = void 0;
 
-var _xml_parser = __w_pdfjs_require__(70);
+var _xml_parser = __w_pdfjs_require__(66);
 
 class MetadataParser {
   constructor(data) {
@@ -43822,560 +47181,7 @@ class MetadataParser {
 exports.MetadataParser = MetadataParser;
 
 /***/ }),
-/* 70 */
-/***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
-
-
-
-Object.defineProperty(exports, "__esModule", ({
-  value: true
-}));
-exports.XMLParserErrorCode = exports.XMLParserBase = exports.SimpleXMLParser = exports.SimpleDOMNode = void 0;
-
-var _core_utils = __w_pdfjs_require__(8);
-
-const XMLParserErrorCode = {
-  NoError: 0,
-  EndOfDocument: -1,
-  UnterminatedCdat: -2,
-  UnterminatedXmlDeclaration: -3,
-  UnterminatedDoctypeDeclaration: -4,
-  UnterminatedComment: -5,
-  MalformedElement: -6,
-  OutOfMemory: -7,
-  UnterminatedAttributeValue: -8,
-  UnterminatedElement: -9,
-  ElementNeverBegun: -10
-};
-exports.XMLParserErrorCode = XMLParserErrorCode;
-
-function isWhitespace(s, index) {
-  const ch = s[index];
-  return ch === " " || ch === "\n" || ch === "\r" || ch === "\t";
-}
-
-function isWhitespaceString(s) {
-  for (let i = 0, ii = s.length; i < ii; i++) {
-    if (!isWhitespace(s, i)) {
-      return false;
-    }
-  }
-
-  return true;
-}
-
-class XMLParserBase {
-  _resolveEntities(s) {
-    return s.replace(/&([^;]+);/g, (all, entity) => {
-      if (entity.substring(0, 2) === "#x") {
-        return String.fromCodePoint(parseInt(entity.substring(2), 16));
-      } else if (entity.substring(0, 1) === "#") {
-        return String.fromCodePoint(parseInt(entity.substring(1), 10));
-      }
-
-      switch (entity) {
-        case "lt":
-          return "<";
-
-        case "gt":
-          return ">";
-
-        case "amp":
-          return "&";
-
-        case "quot":
-          return '"';
-
-        case "apos":
-          return "'";
-      }
-
-      return this.onResolveEntity(entity);
-    });
-  }
-
-  _parseContent(s, start) {
-    const attributes = [];
-    let pos = start;
-
-    function skipWs() {
-      while (pos < s.length && isWhitespace(s, pos)) {
-        ++pos;
-      }
-    }
-
-    while (pos < s.length && !isWhitespace(s, pos) && s[pos] !== ">" && s[pos] !== "/") {
-      ++pos;
-    }
-
-    const name = s.substring(start, pos);
-    skipWs();
-
-    while (pos < s.length && s[pos] !== ">" && s[pos] !== "/" && s[pos] !== "?") {
-      skipWs();
-      let attrName = "",
-          attrValue = "";
-
-      while (pos < s.length && !isWhitespace(s, pos) && s[pos] !== "=") {
-        attrName += s[pos];
-        ++pos;
-      }
-
-      skipWs();
-
-      if (s[pos] !== "=") {
-        return null;
-      }
-
-      ++pos;
-      skipWs();
-      const attrEndChar = s[pos];
-
-      if (attrEndChar !== '"' && attrEndChar !== "'") {
-        return null;
-      }
-
-      const attrEndIndex = s.indexOf(attrEndChar, ++pos);
-
-      if (attrEndIndex < 0) {
-        return null;
-      }
-
-      attrValue = s.substring(pos, attrEndIndex);
-      attributes.push({
-        name: attrName,
-        value: this._resolveEntities(attrValue)
-      });
-      pos = attrEndIndex + 1;
-      skipWs();
-    }
-
-    return {
-      name,
-      attributes,
-      parsed: pos - start
-    };
-  }
-
-  _parseProcessingInstruction(s, start) {
-    let pos = start;
-
-    function skipWs() {
-      while (pos < s.length && isWhitespace(s, pos)) {
-        ++pos;
-      }
-    }
-
-    while (pos < s.length && !isWhitespace(s, pos) && s[pos] !== ">" && s[pos] !== "?" && s[pos] !== "/") {
-      ++pos;
-    }
-
-    const name = s.substring(start, pos);
-    skipWs();
-    const attrStart = pos;
-
-    while (pos < s.length && (s[pos] !== "?" || s[pos + 1] !== ">")) {
-      ++pos;
-    }
-
-    const value = s.substring(attrStart, pos);
-    return {
-      name,
-      value,
-      parsed: pos - start
-    };
-  }
-
-  parseXml(s) {
-    let i = 0;
-
-    while (i < s.length) {
-      const ch = s[i];
-      let j = i;
-
-      if (ch === "<") {
-        ++j;
-        const ch2 = s[j];
-        let q;
-
-        switch (ch2) {
-          case "/":
-            ++j;
-            q = s.indexOf(">", j);
-
-            if (q < 0) {
-              this.onError(XMLParserErrorCode.UnterminatedElement);
-              return;
-            }
-
-            this.onEndElement(s.substring(j, q));
-            j = q + 1;
-            break;
-
-          case "?":
-            ++j;
-
-            const pi = this._parseProcessingInstruction(s, j);
-
-            if (s.substring(j + pi.parsed, j + pi.parsed + 2) !== "?>") {
-              this.onError(XMLParserErrorCode.UnterminatedXmlDeclaration);
-              return;
-            }
-
-            this.onPi(pi.name, pi.value);
-            j += pi.parsed + 2;
-            break;
-
-          case "!":
-            if (s.substring(j + 1, j + 3) === "--") {
-              q = s.indexOf("-->", j + 3);
-
-              if (q < 0) {
-                this.onError(XMLParserErrorCode.UnterminatedComment);
-                return;
-              }
-
-              this.onComment(s.substring(j + 3, q));
-              j = q + 3;
-            } else if (s.substring(j + 1, j + 8) === "[CDATA[") {
-              q = s.indexOf("]]>", j + 8);
-
-              if (q < 0) {
-                this.onError(XMLParserErrorCode.UnterminatedCdat);
-                return;
-              }
-
-              this.onCdata(s.substring(j + 8, q));
-              j = q + 3;
-            } else if (s.substring(j + 1, j + 8) === "DOCTYPE") {
-              const q2 = s.indexOf("[", j + 8);
-              let complexDoctype = false;
-              q = s.indexOf(">", j + 8);
-
-              if (q < 0) {
-                this.onError(XMLParserErrorCode.UnterminatedDoctypeDeclaration);
-                return;
-              }
-
-              if (q2 > 0 && q > q2) {
-                q = s.indexOf("]>", j + 8);
-
-                if (q < 0) {
-                  this.onError(XMLParserErrorCode.UnterminatedDoctypeDeclaration);
-                  return;
-                }
-
-                complexDoctype = true;
-              }
-
-              const doctypeContent = s.substring(j + 8, q + (complexDoctype ? 1 : 0));
-              this.onDoctype(doctypeContent);
-              j = q + (complexDoctype ? 2 : 1);
-            } else {
-              this.onError(XMLParserErrorCode.MalformedElement);
-              return;
-            }
-
-            break;
-
-          default:
-            const content = this._parseContent(s, j);
-
-            if (content === null) {
-              this.onError(XMLParserErrorCode.MalformedElement);
-              return;
-            }
-
-            let isClosed = false;
-
-            if (s.substring(j + content.parsed, j + content.parsed + 2) === "/>") {
-              isClosed = true;
-            } else if (s.substring(j + content.parsed, j + content.parsed + 1) !== ">") {
-              this.onError(XMLParserErrorCode.UnterminatedElement);
-              return;
-            }
-
-            this.onBeginElement(content.name, content.attributes, isClosed);
-            j += content.parsed + (isClosed ? 2 : 1);
-            break;
-        }
-      } else {
-        while (j < s.length && s[j] !== "<") {
-          j++;
-        }
-
-        const text = s.substring(i, j);
-        this.onText(this._resolveEntities(text));
-      }
-
-      i = j;
-    }
-  }
-
-  onResolveEntity(name) {
-    return `&${name};`;
-  }
-
-  onPi(name, value) {}
-
-  onComment(text) {}
-
-  onCdata(text) {}
-
-  onDoctype(doctypeContent) {}
-
-  onText(text) {}
-
-  onBeginElement(name, attributes, isEmpty) {}
-
-  onEndElement(name) {}
-
-  onError(code) {}
-
-}
-
-exports.XMLParserBase = XMLParserBase;
-
-class SimpleDOMNode {
-  constructor(nodeName, nodeValue) {
-    this.nodeName = nodeName;
-    this.nodeValue = nodeValue;
-    Object.defineProperty(this, "parentNode", {
-      value: null,
-      writable: true
-    });
-  }
-
-  get firstChild() {
-    return this.childNodes && this.childNodes[0];
-  }
-
-  get nextSibling() {
-    const childNodes = this.parentNode.childNodes;
-
-    if (!childNodes) {
-      return undefined;
-    }
-
-    const index = childNodes.indexOf(this);
-
-    if (index === -1) {
-      return undefined;
-    }
-
-    return childNodes[index + 1];
-  }
-
-  get textContent() {
-    if (!this.childNodes) {
-      return this.nodeValue || "";
-    }
-
-    return this.childNodes.map(function (child) {
-      return child.textContent;
-    }).join("");
-  }
-
-  get children() {
-    return this.childNodes || [];
-  }
-
-  hasChildNodes() {
-    return this.childNodes && this.childNodes.length > 0;
-  }
-
-  searchNode(paths, pos) {
-    if (pos >= paths.length) {
-      return this;
-    }
-
-    const component = paths[pos];
-    const stack = [];
-    let node = this;
-
-    while (true) {
-      if (component.name === node.nodeName) {
-        if (component.pos === 0) {
-          const res = node.searchNode(paths, pos + 1);
-
-          if (res !== null) {
-            return res;
-          }
-        } else if (stack.length === 0) {
-          return null;
-        } else {
-          const [parent] = stack.pop();
-          let siblingPos = 0;
-
-          for (const child of parent.childNodes) {
-            if (component.name === child.nodeName) {
-              if (siblingPos === component.pos) {
-                return child.searchNode(paths, pos + 1);
-              }
-
-              siblingPos++;
-            }
-          }
-
-          return node.searchNode(paths, pos + 1);
-        }
-      }
-
-      if (node.childNodes && node.childNodes.length !== 0) {
-        stack.push([node, 0]);
-        node = node.childNodes[0];
-      } else if (stack.length === 0) {
-        return null;
-      } else {
-        while (stack.length !== 0) {
-          const [parent, currentPos] = stack.pop();
-          const newPos = currentPos + 1;
-
-          if (newPos < parent.childNodes.length) {
-            stack.push([parent, newPos]);
-            node = parent.childNodes[newPos];
-            break;
-          }
-        }
-
-        if (stack.length === 0) {
-          return null;
-        }
-      }
-    }
-  }
-
-  dump(buffer) {
-    if (this.nodeName === "#text") {
-      buffer.push((0, _core_utils.encodeToXmlString)(this.nodeValue));
-      return;
-    }
-
-    buffer.push(`<${this.nodeName}`);
-
-    if (this.attributes) {
-      for (const attribute of this.attributes) {
-        buffer.push(` ${attribute.name}="${(0, _core_utils.encodeToXmlString)(attribute.value)}"`);
-      }
-    }
-
-    if (this.hasChildNodes()) {
-      buffer.push(">");
-
-      for (const child of this.childNodes) {
-        child.dump(buffer);
-      }
-
-      buffer.push(`</${this.nodeName}>`);
-    } else if (this.nodeValue) {
-      buffer.push(`>${(0, _core_utils.encodeToXmlString)(this.nodeValue)}</${this.nodeName}>`);
-    } else {
-      buffer.push("/>");
-    }
-  }
-
-}
-
-exports.SimpleDOMNode = SimpleDOMNode;
-
-class SimpleXMLParser extends XMLParserBase {
-  constructor({
-    hasAttributes = false,
-    lowerCaseName = false
-  }) {
-    super();
-    this._currentFragment = null;
-    this._stack = null;
-    this._errorCode = XMLParserErrorCode.NoError;
-    this._hasAttributes = hasAttributes;
-    this._lowerCaseName = lowerCaseName;
-  }
-
-  parseFromString(data) {
-    this._currentFragment = [];
-    this._stack = [];
-    this._errorCode = XMLParserErrorCode.NoError;
-    this.parseXml(data);
-
-    if (this._errorCode !== XMLParserErrorCode.NoError) {
-      return undefined;
-    }
-
-    const [documentElement] = this._currentFragment;
-
-    if (!documentElement) {
-      return undefined;
-    }
-
-    return {
-      documentElement
-    };
-  }
-
-  onText(text) {
-    if (isWhitespaceString(text)) {
-      return;
-    }
-
-    const node = new SimpleDOMNode("#text", text);
-
-    this._currentFragment.push(node);
-  }
-
-  onCdata(text) {
-    const node = new SimpleDOMNode("#text", text);
-
-    this._currentFragment.push(node);
-  }
-
-  onBeginElement(name, attributes, isEmpty) {
-    if (this._lowerCaseName) {
-      name = name.toLowerCase();
-    }
-
-    const node = new SimpleDOMNode(name);
-    node.childNodes = [];
-
-    if (this._hasAttributes) {
-      node.attributes = attributes;
-    }
-
-    this._currentFragment.push(node);
-
-    if (isEmpty) {
-      return;
-    }
-
-    this._stack.push(this._currentFragment);
-
-    this._currentFragment = node.childNodes;
-  }
-
-  onEndElement(name) {
-    this._currentFragment = this._stack.pop() || [];
-    const lastElement = this._currentFragment[this._currentFragment.length - 1];
-
-    if (!lastElement) {
-      return null;
-    }
-
-    for (let i = 0, ii = lastElement.childNodes.length; i < ii; i++) {
-      lastElement.childNodes[i].parentNode = lastElement;
-    }
-
-    return lastElement;
-  }
-
-  onError(code) {
-    this._errorCode = code;
-  }
-
-}
-
-exports.SimpleXMLParser = SimpleXMLParser;
-
-/***/ }),
-/* 71 */
+/* 74 */
 /***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
 
@@ -44389,7 +47195,7 @@ var _primitives = __w_pdfjs_require__(5);
 
 var _util = __w_pdfjs_require__(2);
 
-var _name_number_tree = __w_pdfjs_require__(66);
+var _name_number_tree = __w_pdfjs_require__(70);
 
 const MAX_DEPTH = 40;
 const StructElementType = {
@@ -44744,7 +47550,7 @@ class StructTreePage {
 exports.StructTreePage = StructTreePage;
 
 /***/ }),
-/* 72 */
+/* 75 */
 /***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
 
@@ -44756,9 +47562,9 @@ exports.ObjectLoader = void 0;
 
 var _primitives = __w_pdfjs_require__(5);
 
-var _base_stream = __w_pdfjs_require__(9);
+var _base_stream = __w_pdfjs_require__(7);
 
-var _core_utils = __w_pdfjs_require__(8);
+var _core_utils = __w_pdfjs_require__(6);
 
 var _util = __w_pdfjs_require__(2);
 
@@ -44892,2016 +47698,6 @@ class ObjectLoader {
 }
 
 exports.ObjectLoader = ObjectLoader;
-
-/***/ }),
-/* 73 */
-/***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
-
-
-
-Object.defineProperty(exports, "__esModule", ({
-  value: true
-}));
-exports.incrementalUpdate = incrementalUpdate;
-exports.writeDict = writeDict;
-
-var _util = __w_pdfjs_require__(2);
-
-var _primitives = __w_pdfjs_require__(5);
-
-var _core_utils = __w_pdfjs_require__(8);
-
-var _xml_parser = __w_pdfjs_require__(70);
-
-var _base_stream = __w_pdfjs_require__(9);
-
-var _crypto = __w_pdfjs_require__(74);
-
-function writeDict(dict, buffer, transform) {
-  buffer.push("<<");
-
-  for (const key of dict.getKeys()) {
-    buffer.push(` /${(0, _core_utils.escapePDFName)(key)} `);
-    writeValue(dict.getRaw(key), buffer, transform);
-  }
-
-  buffer.push(">>");
-}
-
-function writeStream(stream, buffer, transform) {
-  writeDict(stream.dict, buffer, transform);
-  buffer.push(" stream\n");
-  let string = stream.getString();
-
-  if (transform !== null) {
-    string = transform.encryptString(string);
-  }
-
-  buffer.push(string, "\nendstream\n");
-}
-
-function writeArray(array, buffer, transform) {
-  buffer.push("[");
-  let first = true;
-
-  for (const val of array) {
-    if (!first) {
-      buffer.push(" ");
-    } else {
-      first = false;
-    }
-
-    writeValue(val, buffer, transform);
-  }
-
-  buffer.push("]");
-}
-
-function numberToString(value) {
-  if (Number.isInteger(value)) {
-    return value.toString();
-  }
-
-  const roundedValue = Math.round(value * 100);
-
-  if (roundedValue % 100 === 0) {
-    return (roundedValue / 100).toString();
-  }
-
-  if (roundedValue % 10 === 0) {
-    return value.toFixed(1);
-  }
-
-  return value.toFixed(2);
-}
-
-function writeValue(value, buffer, transform) {
-  if (value instanceof _primitives.Name) {
-    buffer.push(`/${(0, _core_utils.escapePDFName)(value.name)}`);
-  } else if (value instanceof _primitives.Ref) {
-    buffer.push(`${value.num} ${value.gen} R`);
-  } else if (Array.isArray(value)) {
-    writeArray(value, buffer, transform);
-  } else if (typeof value === "string") {
-    if (transform !== null) {
-      value = transform.encryptString(value);
-    }
-
-    buffer.push(`(${(0, _util.escapeString)(value)})`);
-  } else if (typeof value === "number") {
-    buffer.push(numberToString(value));
-  } else if (typeof value === "boolean") {
-    buffer.push(value.toString());
-  } else if (value instanceof _primitives.Dict) {
-    writeDict(value, buffer, transform);
-  } else if (value instanceof _base_stream.BaseStream) {
-    writeStream(value, buffer, transform);
-  } else if (value === null) {
-    buffer.push("null");
-  } else {
-    (0, _util.warn)(`Unhandled value in writer: ${typeof value}, please file a bug.`);
-  }
-}
-
-function writeInt(number, size, offset, buffer) {
-  for (let i = size + offset - 1; i > offset - 1; i--) {
-    buffer[i] = number & 0xff;
-    number >>= 8;
-  }
-
-  return offset + size;
-}
-
-function writeString(string, offset, buffer) {
-  for (let i = 0, len = string.length; i < len; i++) {
-    buffer[offset + i] = string.charCodeAt(i) & 0xff;
-  }
-}
-
-function computeMD5(filesize, xrefInfo) {
-  const time = Math.floor(Date.now() / 1000);
-  const filename = xrefInfo.filename || "";
-  const md5Buffer = [time.toString(), filename, filesize.toString()];
-  let md5BufferLen = md5Buffer.reduce((a, str) => a + str.length, 0);
-
-  for (const value of Object.values(xrefInfo.info)) {
-    md5Buffer.push(value);
-    md5BufferLen += value.length;
-  }
-
-  const array = new Uint8Array(md5BufferLen);
-  let offset = 0;
-
-  for (const str of md5Buffer) {
-    writeString(str, offset, array);
-    offset += str.length;
-  }
-
-  return (0, _util.bytesToString)((0, _crypto.calculateMD5)(array));
-}
-
-function writeXFADataForAcroform(str, newRefs) {
-  const xml = new _xml_parser.SimpleXMLParser({
-    hasAttributes: true
-  }).parseFromString(str);
-
-  for (const {
-    xfa
-  } of newRefs) {
-    if (!xfa) {
-      continue;
-    }
-
-    const {
-      path,
-      value
-    } = xfa;
-
-    if (!path) {
-      continue;
-    }
-
-    const node = xml.documentElement.searchNode((0, _core_utils.parseXFAPath)(path), 0);
-
-    if (node) {
-      if (Array.isArray(value)) {
-        node.childNodes = value.map(val => new _xml_parser.SimpleDOMNode("value", val));
-      } else {
-        node.childNodes = [new _xml_parser.SimpleDOMNode("#text", value)];
-      }
-    } else {
-      (0, _util.warn)(`Node not found for path: ${path}`);
-    }
-  }
-
-  const buffer = [];
-  xml.documentElement.dump(buffer);
-  return buffer.join("");
-}
-
-function updateXFA({
-  xfaData,
-  xfaDatasetsRef,
-  hasXfaDatasetsEntry,
-  acroFormRef,
-  acroForm,
-  newRefs,
-  xref,
-  xrefInfo
-}) {
-  if (xref === null) {
-    return;
-  }
-
-  if (!hasXfaDatasetsEntry) {
-    if (!acroFormRef) {
-      (0, _util.warn)("XFA - Cannot save it");
-      return;
-    }
-
-    const oldXfa = acroForm.get("XFA");
-    const newXfa = oldXfa.slice();
-    newXfa.splice(2, 0, "datasets");
-    newXfa.splice(3, 0, xfaDatasetsRef);
-    acroForm.set("XFA", newXfa);
-    const encrypt = xref.encrypt;
-    let transform = null;
-
-    if (encrypt) {
-      transform = encrypt.createCipherTransform(acroFormRef.num, acroFormRef.gen);
-    }
-
-    const buffer = [`${acroFormRef.num} ${acroFormRef.gen} obj\n`];
-    writeDict(acroForm, buffer, transform);
-    buffer.push("\n");
-    acroForm.set("XFA", oldXfa);
-    newRefs.push({
-      ref: acroFormRef,
-      data: buffer.join("")
-    });
-  }
-
-  if (xfaData === null) {
-    const datasets = xref.fetchIfRef(xfaDatasetsRef);
-    xfaData = writeXFADataForAcroform(datasets.getString(), newRefs);
-  }
-
-  const encrypt = xref.encrypt;
-
-  if (encrypt) {
-    const transform = encrypt.createCipherTransform(xfaDatasetsRef.num, xfaDatasetsRef.gen);
-    xfaData = transform.encryptString(xfaData);
-  }
-
-  const data = `${xfaDatasetsRef.num} ${xfaDatasetsRef.gen} obj\n` + `<< /Type /EmbeddedFile /Length ${xfaData.length}>>\nstream\n` + xfaData + "\nendstream\nendobj\n";
-  newRefs.push({
-    ref: xfaDatasetsRef,
-    data
-  });
-}
-
-function incrementalUpdate({
-  originalData,
-  xrefInfo,
-  newRefs,
-  xref = null,
-  hasXfa = false,
-  xfaDatasetsRef = null,
-  hasXfaDatasetsEntry = false,
-  acroFormRef = null,
-  acroForm = null,
-  xfaData = null
-}) {
-  if (hasXfa) {
-    updateXFA({
-      xfaData,
-      xfaDatasetsRef,
-      hasXfaDatasetsEntry,
-      acroFormRef,
-      acroForm,
-      newRefs,
-      xref,
-      xrefInfo
-    });
-  }
-
-  const newXref = new _primitives.Dict(null);
-  const refForXrefTable = xrefInfo.newRef;
-  let buffer, baseOffset;
-  const lastByte = originalData[originalData.length - 1];
-
-  if (lastByte === 0x0a || lastByte === 0x0d) {
-    buffer = [];
-    baseOffset = originalData.length;
-  } else {
-    buffer = ["\n"];
-    baseOffset = originalData.length + 1;
-  }
-
-  newXref.set("Size", refForXrefTable.num + 1);
-  newXref.set("Prev", xrefInfo.startXRef);
-  newXref.set("Type", _primitives.Name.get("XRef"));
-
-  if (xrefInfo.rootRef !== null) {
-    newXref.set("Root", xrefInfo.rootRef);
-  }
-
-  if (xrefInfo.infoRef !== null) {
-    newXref.set("Info", xrefInfo.infoRef);
-  }
-
-  if (xrefInfo.encryptRef !== null) {
-    newXref.set("Encrypt", xrefInfo.encryptRef);
-  }
-
-  newRefs.push({
-    ref: refForXrefTable,
-    data: ""
-  });
-  newRefs = newRefs.sort((a, b) => {
-    return a.ref.num - b.ref.num;
-  });
-  const xrefTableData = [[0, 1, 0xffff]];
-  const indexes = [0, 1];
-  let maxOffset = 0;
-
-  for (const {
-    ref,
-    data
-  } of newRefs) {
-    maxOffset = Math.max(maxOffset, baseOffset);
-    xrefTableData.push([1, baseOffset, Math.min(ref.gen, 0xffff)]);
-    baseOffset += data.length;
-    indexes.push(ref.num, 1);
-    buffer.push(data);
-  }
-
-  newXref.set("Index", indexes);
-
-  if (Array.isArray(xrefInfo.fileIds) && xrefInfo.fileIds.length > 0) {
-    const md5 = computeMD5(baseOffset, xrefInfo);
-    newXref.set("ID", [xrefInfo.fileIds[0], md5]);
-  }
-
-  const offsetSize = Math.ceil(Math.log2(maxOffset) / 8);
-  const sizes = [1, offsetSize, 2];
-  const structSize = sizes[0] + sizes[1] + sizes[2];
-  const tableLength = structSize * xrefTableData.length;
-  newXref.set("W", sizes);
-  newXref.set("Length", tableLength);
-  buffer.push(`${refForXrefTable.num} ${refForXrefTable.gen} obj\n`);
-  writeDict(newXref, buffer, null);
-  buffer.push(" stream\n");
-  const bufferLen = buffer.reduce((a, str) => a + str.length, 0);
-  const footer = `\nendstream\nendobj\nstartxref\n${baseOffset}\n%%EOF\n`;
-  const array = new Uint8Array(originalData.length + bufferLen + tableLength + footer.length);
-  array.set(originalData);
-  let offset = originalData.length;
-
-  for (const str of buffer) {
-    writeString(str, offset, array);
-    offset += str.length;
-  }
-
-  for (const [type, objOffset, gen] of xrefTableData) {
-    offset = writeInt(type, sizes[0], offset, array);
-    offset = writeInt(objOffset, sizes[1], offset, array);
-    offset = writeInt(gen, sizes[2], offset, array);
-  }
-
-  writeString(footer, offset, array);
-  return array;
-}
-
-/***/ }),
-/* 74 */
-/***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
-
-
-
-Object.defineProperty(exports, "__esModule", ({
-  value: true
-}));
-exports.calculateSHA256 = exports.calculateMD5 = exports.PDF20 = exports.PDF17 = exports.CipherTransformFactory = exports.ARCFourCipher = exports.AES256Cipher = exports.AES128Cipher = void 0;
-exports.calculateSHA384 = calculateSHA384;
-exports.calculateSHA512 = void 0;
-
-var _util = __w_pdfjs_require__(2);
-
-var _primitives = __w_pdfjs_require__(5);
-
-var _decrypt_stream = __w_pdfjs_require__(75);
-
-class ARCFourCipher {
-  constructor(key) {
-    this.a = 0;
-    this.b = 0;
-    const s = new Uint8Array(256);
-    const keyLength = key.length;
-
-    for (let i = 0; i < 256; ++i) {
-      s[i] = i;
-    }
-
-    for (let i = 0, j = 0; i < 256; ++i) {
-      const tmp = s[i];
-      j = j + tmp + key[i % keyLength] & 0xff;
-      s[i] = s[j];
-      s[j] = tmp;
-    }
-
-    this.s = s;
-  }
-
-  encryptBlock(data) {
-    let a = this.a,
-        b = this.b;
-    const s = this.s;
-    const n = data.length;
-    const output = new Uint8Array(n);
-
-    for (let i = 0; i < n; ++i) {
-      a = a + 1 & 0xff;
-      const tmp = s[a];
-      b = b + tmp & 0xff;
-      const tmp2 = s[b];
-      s[a] = tmp2;
-      s[b] = tmp;
-      output[i] = data[i] ^ s[tmp + tmp2 & 0xff];
-    }
-
-    this.a = a;
-    this.b = b;
-    return output;
-  }
-
-  decryptBlock(data) {
-    return this.encryptBlock(data);
-  }
-
-  encrypt(data) {
-    return this.encryptBlock(data);
-  }
-
-}
-
-exports.ARCFourCipher = ARCFourCipher;
-
-const calculateMD5 = function calculateMD5Closure() {
-  const r = new Uint8Array([7, 12, 17, 22, 7, 12, 17, 22, 7, 12, 17, 22, 7, 12, 17, 22, 5, 9, 14, 20, 5, 9, 14, 20, 5, 9, 14, 20, 5, 9, 14, 20, 4, 11, 16, 23, 4, 11, 16, 23, 4, 11, 16, 23, 4, 11, 16, 23, 6, 10, 15, 21, 6, 10, 15, 21, 6, 10, 15, 21, 6, 10, 15, 21]);
-  const k = new Int32Array([-680876936, -389564586, 606105819, -1044525330, -176418897, 1200080426, -1473231341, -45705983, 1770035416, -1958414417, -42063, -1990404162, 1804603682, -40341101, -1502002290, 1236535329, -165796510, -1069501632, 643717713, -373897302, -701558691, 38016083, -660478335, -405537848, 568446438, -1019803690, -187363961, 1163531501, -1444681467, -51403784, 1735328473, -1926607734, -378558, -2022574463, 1839030562, -35309556, -1530992060, 1272893353, -155497632, -1094730640, 681279174, -358537222, -722521979, 76029189, -640364487, -421815835, 530742520, -995338651, -198630844, 1126891415, -1416354905, -57434055, 1700485571, -1894986606, -1051523, -2054922799, 1873313359, -30611744, -1560198380, 1309151649, -145523070, -1120210379, 718787259, -343485551]);
-
-  function hash(data, offset, length) {
-    let h0 = 1732584193,
-        h1 = -271733879,
-        h2 = -1732584194,
-        h3 = 271733878;
-    const paddedLength = length + 72 & ~63;
-    const padded = new Uint8Array(paddedLength);
-    let i, j;
-
-    for (i = 0; i < length; ++i) {
-      padded[i] = data[offset++];
-    }
-
-    padded[i++] = 0x80;
-    const n = paddedLength - 8;
-
-    while (i < n) {
-      padded[i++] = 0;
-    }
-
-    padded[i++] = length << 3 & 0xff;
-    padded[i++] = length >> 5 & 0xff;
-    padded[i++] = length >> 13 & 0xff;
-    padded[i++] = length >> 21 & 0xff;
-    padded[i++] = length >>> 29 & 0xff;
-    padded[i++] = 0;
-    padded[i++] = 0;
-    padded[i++] = 0;
-    const w = new Int32Array(16);
-
-    for (i = 0; i < paddedLength;) {
-      for (j = 0; j < 16; ++j, i += 4) {
-        w[j] = padded[i] | padded[i + 1] << 8 | padded[i + 2] << 16 | padded[i + 3] << 24;
-      }
-
-      let a = h0,
-          b = h1,
-          c = h2,
-          d = h3,
-          f,
-          g;
-
-      for (j = 0; j < 64; ++j) {
-        if (j < 16) {
-          f = b & c | ~b & d;
-          g = j;
-        } else if (j < 32) {
-          f = d & b | ~d & c;
-          g = 5 * j + 1 & 15;
-        } else if (j < 48) {
-          f = b ^ c ^ d;
-          g = 3 * j + 5 & 15;
-        } else {
-          f = c ^ (b | ~d);
-          g = 7 * j & 15;
-        }
-
-        const tmp = d,
-              rotateArg = a + f + k[j] + w[g] | 0,
-              rotate = r[j];
-        d = c;
-        c = b;
-        b = b + (rotateArg << rotate | rotateArg >>> 32 - rotate) | 0;
-        a = tmp;
-      }
-
-      h0 = h0 + a | 0;
-      h1 = h1 + b | 0;
-      h2 = h2 + c | 0;
-      h3 = h3 + d | 0;
-    }
-
-    return new Uint8Array([h0 & 0xFF, h0 >> 8 & 0xFF, h0 >> 16 & 0xFF, h0 >>> 24 & 0xFF, h1 & 0xFF, h1 >> 8 & 0xFF, h1 >> 16 & 0xFF, h1 >>> 24 & 0xFF, h2 & 0xFF, h2 >> 8 & 0xFF, h2 >> 16 & 0xFF, h2 >>> 24 & 0xFF, h3 & 0xFF, h3 >> 8 & 0xFF, h3 >> 16 & 0xFF, h3 >>> 24 & 0xFF]);
-  }
-
-  return hash;
-}();
-
-exports.calculateMD5 = calculateMD5;
-
-class Word64 {
-  constructor(highInteger, lowInteger) {
-    this.high = highInteger | 0;
-    this.low = lowInteger | 0;
-  }
-
-  and(word) {
-    this.high &= word.high;
-    this.low &= word.low;
-  }
-
-  xor(word) {
-    this.high ^= word.high;
-    this.low ^= word.low;
-  }
-
-  or(word) {
-    this.high |= word.high;
-    this.low |= word.low;
-  }
-
-  shiftRight(places) {
-    if (places >= 32) {
-      this.low = this.high >>> places - 32 | 0;
-      this.high = 0;
-    } else {
-      this.low = this.low >>> places | this.high << 32 - places;
-      this.high = this.high >>> places | 0;
-    }
-  }
-
-  shiftLeft(places) {
-    if (places >= 32) {
-      this.high = this.low << places - 32;
-      this.low = 0;
-    } else {
-      this.high = this.high << places | this.low >>> 32 - places;
-      this.low <<= places;
-    }
-  }
-
-  rotateRight(places) {
-    let low, high;
-
-    if (places & 32) {
-      high = this.low;
-      low = this.high;
-    } else {
-      low = this.low;
-      high = this.high;
-    }
-
-    places &= 31;
-    this.low = low >>> places | high << 32 - places;
-    this.high = high >>> places | low << 32 - places;
-  }
-
-  not() {
-    this.high = ~this.high;
-    this.low = ~this.low;
-  }
-
-  add(word) {
-    const lowAdd = (this.low >>> 0) + (word.low >>> 0);
-    let highAdd = (this.high >>> 0) + (word.high >>> 0);
-
-    if (lowAdd > 0xffffffff) {
-      highAdd += 1;
-    }
-
-    this.low = lowAdd | 0;
-    this.high = highAdd | 0;
-  }
-
-  copyTo(bytes, offset) {
-    bytes[offset] = this.high >>> 24 & 0xff;
-    bytes[offset + 1] = this.high >> 16 & 0xff;
-    bytes[offset + 2] = this.high >> 8 & 0xff;
-    bytes[offset + 3] = this.high & 0xff;
-    bytes[offset + 4] = this.low >>> 24 & 0xff;
-    bytes[offset + 5] = this.low >> 16 & 0xff;
-    bytes[offset + 6] = this.low >> 8 & 0xff;
-    bytes[offset + 7] = this.low & 0xff;
-  }
-
-  assign(word) {
-    this.high = word.high;
-    this.low = word.low;
-  }
-
-}
-
-const calculateSHA256 = function calculateSHA256Closure() {
-  function rotr(x, n) {
-    return x >>> n | x << 32 - n;
-  }
-
-  function ch(x, y, z) {
-    return x & y ^ ~x & z;
-  }
-
-  function maj(x, y, z) {
-    return x & y ^ x & z ^ y & z;
-  }
-
-  function sigma(x) {
-    return rotr(x, 2) ^ rotr(x, 13) ^ rotr(x, 22);
-  }
-
-  function sigmaPrime(x) {
-    return rotr(x, 6) ^ rotr(x, 11) ^ rotr(x, 25);
-  }
-
-  function littleSigma(x) {
-    return rotr(x, 7) ^ rotr(x, 18) ^ x >>> 3;
-  }
-
-  function littleSigmaPrime(x) {
-    return rotr(x, 17) ^ rotr(x, 19) ^ x >>> 10;
-  }
-
-  const k = [0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5, 0x3956c25b, 0x59f111f1, 0x923f82a4, 0xab1c5ed5, 0xd807aa98, 0x12835b01, 0x243185be, 0x550c7dc3, 0x72be5d74, 0x80deb1fe, 0x9bdc06a7, 0xc19bf174, 0xe49b69c1, 0xefbe4786, 0x0fc19dc6, 0x240ca1cc, 0x2de92c6f, 0x4a7484aa, 0x5cb0a9dc, 0x76f988da, 0x983e5152, 0xa831c66d, 0xb00327c8, 0xbf597fc7, 0xc6e00bf3, 0xd5a79147, 0x06ca6351, 0x14292967, 0x27b70a85, 0x2e1b2138, 0x4d2c6dfc, 0x53380d13, 0x650a7354, 0x766a0abb, 0x81c2c92e, 0x92722c85, 0xa2bfe8a1, 0xa81a664b, 0xc24b8b70, 0xc76c51a3, 0xd192e819, 0xd6990624, 0xf40e3585, 0x106aa070, 0x19a4c116, 0x1e376c08, 0x2748774c, 0x34b0bcb5, 0x391c0cb3, 0x4ed8aa4a, 0x5b9cca4f, 0x682e6ff3, 0x748f82ee, 0x78a5636f, 0x84c87814, 0x8cc70208, 0x90befffa, 0xa4506ceb, 0xbef9a3f7, 0xc67178f2];
-
-  function hash(data, offset, length) {
-    let h0 = 0x6a09e667,
-        h1 = 0xbb67ae85,
-        h2 = 0x3c6ef372,
-        h3 = 0xa54ff53a,
-        h4 = 0x510e527f,
-        h5 = 0x9b05688c,
-        h6 = 0x1f83d9ab,
-        h7 = 0x5be0cd19;
-    const paddedLength = Math.ceil((length + 9) / 64) * 64;
-    const padded = new Uint8Array(paddedLength);
-    let i, j;
-
-    for (i = 0; i < length; ++i) {
-      padded[i] = data[offset++];
-    }
-
-    padded[i++] = 0x80;
-    const n = paddedLength - 8;
-
-    while (i < n) {
-      padded[i++] = 0;
-    }
-
-    padded[i++] = 0;
-    padded[i++] = 0;
-    padded[i++] = 0;
-    padded[i++] = length >>> 29 & 0xff;
-    padded[i++] = length >> 21 & 0xff;
-    padded[i++] = length >> 13 & 0xff;
-    padded[i++] = length >> 5 & 0xff;
-    padded[i++] = length << 3 & 0xff;
-    const w = new Uint32Array(64);
-
-    for (i = 0; i < paddedLength;) {
-      for (j = 0; j < 16; ++j) {
-        w[j] = padded[i] << 24 | padded[i + 1] << 16 | padded[i + 2] << 8 | padded[i + 3];
-        i += 4;
-      }
-
-      for (j = 16; j < 64; ++j) {
-        w[j] = littleSigmaPrime(w[j - 2]) + w[j - 7] + littleSigma(w[j - 15]) + w[j - 16] | 0;
-      }
-
-      let a = h0,
-          b = h1,
-          c = h2,
-          d = h3,
-          e = h4,
-          f = h5,
-          g = h6,
-          h = h7,
-          t1,
-          t2;
-
-      for (j = 0; j < 64; ++j) {
-        t1 = h + sigmaPrime(e) + ch(e, f, g) + k[j] + w[j];
-        t2 = sigma(a) + maj(a, b, c);
-        h = g;
-        g = f;
-        f = e;
-        e = d + t1 | 0;
-        d = c;
-        c = b;
-        b = a;
-        a = t1 + t2 | 0;
-      }
-
-      h0 = h0 + a | 0;
-      h1 = h1 + b | 0;
-      h2 = h2 + c | 0;
-      h3 = h3 + d | 0;
-      h4 = h4 + e | 0;
-      h5 = h5 + f | 0;
-      h6 = h6 + g | 0;
-      h7 = h7 + h | 0;
-    }
-
-    return new Uint8Array([h0 >> 24 & 0xFF, h0 >> 16 & 0xFF, h0 >> 8 & 0xFF, h0 & 0xFF, h1 >> 24 & 0xFF, h1 >> 16 & 0xFF, h1 >> 8 & 0xFF, h1 & 0xFF, h2 >> 24 & 0xFF, h2 >> 16 & 0xFF, h2 >> 8 & 0xFF, h2 & 0xFF, h3 >> 24 & 0xFF, h3 >> 16 & 0xFF, h3 >> 8 & 0xFF, h3 & 0xFF, h4 >> 24 & 0xFF, h4 >> 16 & 0xFF, h4 >> 8 & 0xFF, h4 & 0xFF, h5 >> 24 & 0xFF, h5 >> 16 & 0xFF, h5 >> 8 & 0xFF, h5 & 0xFF, h6 >> 24 & 0xFF, h6 >> 16 & 0xFF, h6 >> 8 & 0xFF, h6 & 0xFF, h7 >> 24 & 0xFF, h7 >> 16 & 0xFF, h7 >> 8 & 0xFF, h7 & 0xFF]);
-  }
-
-  return hash;
-}();
-
-exports.calculateSHA256 = calculateSHA256;
-
-const calculateSHA512 = function calculateSHA512Closure() {
-  function ch(result, x, y, z, tmp) {
-    result.assign(x);
-    result.and(y);
-    tmp.assign(x);
-    tmp.not();
-    tmp.and(z);
-    result.xor(tmp);
-  }
-
-  function maj(result, x, y, z, tmp) {
-    result.assign(x);
-    result.and(y);
-    tmp.assign(x);
-    tmp.and(z);
-    result.xor(tmp);
-    tmp.assign(y);
-    tmp.and(z);
-    result.xor(tmp);
-  }
-
-  function sigma(result, x, tmp) {
-    result.assign(x);
-    result.rotateRight(28);
-    tmp.assign(x);
-    tmp.rotateRight(34);
-    result.xor(tmp);
-    tmp.assign(x);
-    tmp.rotateRight(39);
-    result.xor(tmp);
-  }
-
-  function sigmaPrime(result, x, tmp) {
-    result.assign(x);
-    result.rotateRight(14);
-    tmp.assign(x);
-    tmp.rotateRight(18);
-    result.xor(tmp);
-    tmp.assign(x);
-    tmp.rotateRight(41);
-    result.xor(tmp);
-  }
-
-  function littleSigma(result, x, tmp) {
-    result.assign(x);
-    result.rotateRight(1);
-    tmp.assign(x);
-    tmp.rotateRight(8);
-    result.xor(tmp);
-    tmp.assign(x);
-    tmp.shiftRight(7);
-    result.xor(tmp);
-  }
-
-  function littleSigmaPrime(result, x, tmp) {
-    result.assign(x);
-    result.rotateRight(19);
-    tmp.assign(x);
-    tmp.rotateRight(61);
-    result.xor(tmp);
-    tmp.assign(x);
-    tmp.shiftRight(6);
-    result.xor(tmp);
-  }
-
-  const k = [new Word64(0x428a2f98, 0xd728ae22), new Word64(0x71374491, 0x23ef65cd), new Word64(0xb5c0fbcf, 0xec4d3b2f), new Word64(0xe9b5dba5, 0x8189dbbc), new Word64(0x3956c25b, 0xf348b538), new Word64(0x59f111f1, 0xb605d019), new Word64(0x923f82a4, 0xaf194f9b), new Word64(0xab1c5ed5, 0xda6d8118), new Word64(0xd807aa98, 0xa3030242), new Word64(0x12835b01, 0x45706fbe), new Word64(0x243185be, 0x4ee4b28c), new Word64(0x550c7dc3, 0xd5ffb4e2), new Word64(0x72be5d74, 0xf27b896f), new Word64(0x80deb1fe, 0x3b1696b1), new Word64(0x9bdc06a7, 0x25c71235), new Word64(0xc19bf174, 0xcf692694), new Word64(0xe49b69c1, 0x9ef14ad2), new Word64(0xefbe4786, 0x384f25e3), new Word64(0x0fc19dc6, 0x8b8cd5b5), new Word64(0x240ca1cc, 0x77ac9c65), new Word64(0x2de92c6f, 0x592b0275), new Word64(0x4a7484aa, 0x6ea6e483), new Word64(0x5cb0a9dc, 0xbd41fbd4), new Word64(0x76f988da, 0x831153b5), new Word64(0x983e5152, 0xee66dfab), new Word64(0xa831c66d, 0x2db43210), new Word64(0xb00327c8, 0x98fb213f), new Word64(0xbf597fc7, 0xbeef0ee4), new Word64(0xc6e00bf3, 0x3da88fc2), new Word64(0xd5a79147, 0x930aa725), new Word64(0x06ca6351, 0xe003826f), new Word64(0x14292967, 0x0a0e6e70), new Word64(0x27b70a85, 0x46d22ffc), new Word64(0x2e1b2138, 0x5c26c926), new Word64(0x4d2c6dfc, 0x5ac42aed), new Word64(0x53380d13, 0x9d95b3df), new Word64(0x650a7354, 0x8baf63de), new Word64(0x766a0abb, 0x3c77b2a8), new Word64(0x81c2c92e, 0x47edaee6), new Word64(0x92722c85, 0x1482353b), new Word64(0xa2bfe8a1, 0x4cf10364), new Word64(0xa81a664b, 0xbc423001), new Word64(0xc24b8b70, 0xd0f89791), new Word64(0xc76c51a3, 0x0654be30), new Word64(0xd192e819, 0xd6ef5218), new Word64(0xd6990624, 0x5565a910), new Word64(0xf40e3585, 0x5771202a), new Word64(0x106aa070, 0x32bbd1b8), new Word64(0x19a4c116, 0xb8d2d0c8), new Word64(0x1e376c08, 0x5141ab53), new Word64(0x2748774c, 0xdf8eeb99), new Word64(0x34b0bcb5, 0xe19b48a8), new Word64(0x391c0cb3, 0xc5c95a63), new Word64(0x4ed8aa4a, 0xe3418acb), new Word64(0x5b9cca4f, 0x7763e373), new Word64(0x682e6ff3, 0xd6b2b8a3), new Word64(0x748f82ee, 0x5defb2fc), new Word64(0x78a5636f, 0x43172f60), new Word64(0x84c87814, 0xa1f0ab72), new Word64(0x8cc70208, 0x1a6439ec), new Word64(0x90befffa, 0x23631e28), new Word64(0xa4506ceb, 0xde82bde9), new Word64(0xbef9a3f7, 0xb2c67915), new Word64(0xc67178f2, 0xe372532b), new Word64(0xca273ece, 0xea26619c), new Word64(0xd186b8c7, 0x21c0c207), new Word64(0xeada7dd6, 0xcde0eb1e), new Word64(0xf57d4f7f, 0xee6ed178), new Word64(0x06f067aa, 0x72176fba), new Word64(0x0a637dc5, 0xa2c898a6), new Word64(0x113f9804, 0xbef90dae), new Word64(0x1b710b35, 0x131c471b), new Word64(0x28db77f5, 0x23047d84), new Word64(0x32caab7b, 0x40c72493), new Word64(0x3c9ebe0a, 0x15c9bebc), new Word64(0x431d67c4, 0x9c100d4c), new Word64(0x4cc5d4be, 0xcb3e42b6), new Word64(0x597f299c, 0xfc657e2a), new Word64(0x5fcb6fab, 0x3ad6faec), new Word64(0x6c44198c, 0x4a475817)];
-
-  function hash(data, offset, length, mode384 = false) {
-    let h0, h1, h2, h3, h4, h5, h6, h7;
-
-    if (!mode384) {
-      h0 = new Word64(0x6a09e667, 0xf3bcc908);
-      h1 = new Word64(0xbb67ae85, 0x84caa73b);
-      h2 = new Word64(0x3c6ef372, 0xfe94f82b);
-      h3 = new Word64(0xa54ff53a, 0x5f1d36f1);
-      h4 = new Word64(0x510e527f, 0xade682d1);
-      h5 = new Word64(0x9b05688c, 0x2b3e6c1f);
-      h6 = new Word64(0x1f83d9ab, 0xfb41bd6b);
-      h7 = new Word64(0x5be0cd19, 0x137e2179);
-    } else {
-      h0 = new Word64(0xcbbb9d5d, 0xc1059ed8);
-      h1 = new Word64(0x629a292a, 0x367cd507);
-      h2 = new Word64(0x9159015a, 0x3070dd17);
-      h3 = new Word64(0x152fecd8, 0xf70e5939);
-      h4 = new Word64(0x67332667, 0xffc00b31);
-      h5 = new Word64(0x8eb44a87, 0x68581511);
-      h6 = new Word64(0xdb0c2e0d, 0x64f98fa7);
-      h7 = new Word64(0x47b5481d, 0xbefa4fa4);
-    }
-
-    const paddedLength = Math.ceil((length + 17) / 128) * 128;
-    const padded = new Uint8Array(paddedLength);
-    let i, j;
-
-    for (i = 0; i < length; ++i) {
-      padded[i] = data[offset++];
-    }
-
-    padded[i++] = 0x80;
-    const n = paddedLength - 16;
-
-    while (i < n) {
-      padded[i++] = 0;
-    }
-
-    padded[i++] = 0;
-    padded[i++] = 0;
-    padded[i++] = 0;
-    padded[i++] = 0;
-    padded[i++] = 0;
-    padded[i++] = 0;
-    padded[i++] = 0;
-    padded[i++] = 0;
-    padded[i++] = 0;
-    padded[i++] = 0;
-    padded[i++] = 0;
-    padded[i++] = length >>> 29 & 0xff;
-    padded[i++] = length >> 21 & 0xff;
-    padded[i++] = length >> 13 & 0xff;
-    padded[i++] = length >> 5 & 0xff;
-    padded[i++] = length << 3 & 0xff;
-    const w = new Array(80);
-
-    for (i = 0; i < 80; i++) {
-      w[i] = new Word64(0, 0);
-    }
-
-    let a = new Word64(0, 0),
-        b = new Word64(0, 0),
-        c = new Word64(0, 0);
-    let d = new Word64(0, 0),
-        e = new Word64(0, 0),
-        f = new Word64(0, 0);
-    let g = new Word64(0, 0),
-        h = new Word64(0, 0);
-    const t1 = new Word64(0, 0),
-          t2 = new Word64(0, 0);
-    const tmp1 = new Word64(0, 0),
-          tmp2 = new Word64(0, 0);
-    let tmp3;
-
-    for (i = 0; i < paddedLength;) {
-      for (j = 0; j < 16; ++j) {
-        w[j].high = padded[i] << 24 | padded[i + 1] << 16 | padded[i + 2] << 8 | padded[i + 3];
-        w[j].low = padded[i + 4] << 24 | padded[i + 5] << 16 | padded[i + 6] << 8 | padded[i + 7];
-        i += 8;
-      }
-
-      for (j = 16; j < 80; ++j) {
-        tmp3 = w[j];
-        littleSigmaPrime(tmp3, w[j - 2], tmp2);
-        tmp3.add(w[j - 7]);
-        littleSigma(tmp1, w[j - 15], tmp2);
-        tmp3.add(tmp1);
-        tmp3.add(w[j - 16]);
-      }
-
-      a.assign(h0);
-      b.assign(h1);
-      c.assign(h2);
-      d.assign(h3);
-      e.assign(h4);
-      f.assign(h5);
-      g.assign(h6);
-      h.assign(h7);
-
-      for (j = 0; j < 80; ++j) {
-        t1.assign(h);
-        sigmaPrime(tmp1, e, tmp2);
-        t1.add(tmp1);
-        ch(tmp1, e, f, g, tmp2);
-        t1.add(tmp1);
-        t1.add(k[j]);
-        t1.add(w[j]);
-        sigma(t2, a, tmp2);
-        maj(tmp1, a, b, c, tmp2);
-        t2.add(tmp1);
-        tmp3 = h;
-        h = g;
-        g = f;
-        f = e;
-        d.add(t1);
-        e = d;
-        d = c;
-        c = b;
-        b = a;
-        tmp3.assign(t1);
-        tmp3.add(t2);
-        a = tmp3;
-      }
-
-      h0.add(a);
-      h1.add(b);
-      h2.add(c);
-      h3.add(d);
-      h4.add(e);
-      h5.add(f);
-      h6.add(g);
-      h7.add(h);
-    }
-
-    let result;
-
-    if (!mode384) {
-      result = new Uint8Array(64);
-      h0.copyTo(result, 0);
-      h1.copyTo(result, 8);
-      h2.copyTo(result, 16);
-      h3.copyTo(result, 24);
-      h4.copyTo(result, 32);
-      h5.copyTo(result, 40);
-      h6.copyTo(result, 48);
-      h7.copyTo(result, 56);
-    } else {
-      result = new Uint8Array(48);
-      h0.copyTo(result, 0);
-      h1.copyTo(result, 8);
-      h2.copyTo(result, 16);
-      h3.copyTo(result, 24);
-      h4.copyTo(result, 32);
-      h5.copyTo(result, 40);
-    }
-
-    return result;
-  }
-
-  return hash;
-}();
-
-exports.calculateSHA512 = calculateSHA512;
-
-function calculateSHA384(data, offset, length) {
-  return calculateSHA512(data, offset, length, true);
-}
-
-class NullCipher {
-  decryptBlock(data) {
-    return data;
-  }
-
-  encrypt(data) {
-    return data;
-  }
-
-}
-
-class AESBaseCipher {
-  constructor() {
-    if (this.constructor === AESBaseCipher) {
-      (0, _util.unreachable)("Cannot initialize AESBaseCipher.");
-    }
-
-    this._s = new Uint8Array([0x63, 0x7c, 0x77, 0x7b, 0xf2, 0x6b, 0x6f, 0xc5, 0x30, 0x01, 0x67, 0x2b, 0xfe, 0xd7, 0xab, 0x76, 0xca, 0x82, 0xc9, 0x7d, 0xfa, 0x59, 0x47, 0xf0, 0xad, 0xd4, 0xa2, 0xaf, 0x9c, 0xa4, 0x72, 0xc0, 0xb7, 0xfd, 0x93, 0x26, 0x36, 0x3f, 0xf7, 0xcc, 0x34, 0xa5, 0xe5, 0xf1, 0x71, 0xd8, 0x31, 0x15, 0x04, 0xc7, 0x23, 0xc3, 0x18, 0x96, 0x05, 0x9a, 0x07, 0x12, 0x80, 0xe2, 0xeb, 0x27, 0xb2, 0x75, 0x09, 0x83, 0x2c, 0x1a, 0x1b, 0x6e, 0x5a, 0xa0, 0x52, 0x3b, 0xd6, 0xb3, 0x29, 0xe3, 0x2f, 0x84, 0x53, 0xd1, 0x00, 0xed, 0x20, 0xfc, 0xb1, 0x5b, 0x6a, 0xcb, 0xbe, 0x39, 0x4a, 0x4c, 0x58, 0xcf, 0xd0, 0xef, 0xaa, 0xfb, 0x43, 0x4d, 0x33, 0x85, 0x45, 0xf9, 0x02, 0x7f, 0x50, 0x3c, 0x9f, 0xa8, 0x51, 0xa3, 0x40, 0x8f, 0x92, 0x9d, 0x38, 0xf5, 0xbc, 0xb6, 0xda, 0x21, 0x10, 0xff, 0xf3, 0xd2, 0xcd, 0x0c, 0x13, 0xec, 0x5f, 0x97, 0x44, 0x17, 0xc4, 0xa7, 0x7e, 0x3d, 0x64, 0x5d, 0x19, 0x73, 0x60, 0x81, 0x4f, 0xdc, 0x22, 0x2a, 0x90, 0x88, 0x46, 0xee, 0xb8, 0x14, 0xde, 0x5e, 0x0b, 0xdb, 0xe0, 0x32, 0x3a, 0x0a, 0x49, 0x06, 0x24, 0x5c, 0xc2, 0xd3, 0xac, 0x62, 0x91, 0x95, 0xe4, 0x79, 0xe7, 0xc8, 0x37, 0x6d, 0x8d, 0xd5, 0x4e, 0xa9, 0x6c, 0x56, 0xf4, 0xea, 0x65, 0x7a, 0xae, 0x08, 0xba, 0x78, 0x25, 0x2e, 0x1c, 0xa6, 0xb4, 0xc6, 0xe8, 0xdd, 0x74, 0x1f, 0x4b, 0xbd, 0x8b, 0x8a, 0x70, 0x3e, 0xb5, 0x66, 0x48, 0x03, 0xf6, 0x0e, 0x61, 0x35, 0x57, 0xb9, 0x86, 0xc1, 0x1d, 0x9e, 0xe1, 0xf8, 0x98, 0x11, 0x69, 0xd9, 0x8e, 0x94, 0x9b, 0x1e, 0x87, 0xe9, 0xce, 0x55, 0x28, 0xdf, 0x8c, 0xa1, 0x89, 0x0d, 0xbf, 0xe6, 0x42, 0x68, 0x41, 0x99, 0x2d, 0x0f, 0xb0, 0x54, 0xbb, 0x16]);
-    this._inv_s = new Uint8Array([0x52, 0x09, 0x6a, 0xd5, 0x30, 0x36, 0xa5, 0x38, 0xbf, 0x40, 0xa3, 0x9e, 0x81, 0xf3, 0xd7, 0xfb, 0x7c, 0xe3, 0x39, 0x82, 0x9b, 0x2f, 0xff, 0x87, 0x34, 0x8e, 0x43, 0x44, 0xc4, 0xde, 0xe9, 0xcb, 0x54, 0x7b, 0x94, 0x32, 0xa6, 0xc2, 0x23, 0x3d, 0xee, 0x4c, 0x95, 0x0b, 0x42, 0xfa, 0xc3, 0x4e, 0x08, 0x2e, 0xa1, 0x66, 0x28, 0xd9, 0x24, 0xb2, 0x76, 0x5b, 0xa2, 0x49, 0x6d, 0x8b, 0xd1, 0x25, 0x72, 0xf8, 0xf6, 0x64, 0x86, 0x68, 0x98, 0x16, 0xd4, 0xa4, 0x5c, 0xcc, 0x5d, 0x65, 0xb6, 0x92, 0x6c, 0x70, 0x48, 0x50, 0xfd, 0xed, 0xb9, 0xda, 0x5e, 0x15, 0x46, 0x57, 0xa7, 0x8d, 0x9d, 0x84, 0x90, 0xd8, 0xab, 0x00, 0x8c, 0xbc, 0xd3, 0x0a, 0xf7, 0xe4, 0x58, 0x05, 0xb8, 0xb3, 0x45, 0x06, 0xd0, 0x2c, 0x1e, 0x8f, 0xca, 0x3f, 0x0f, 0x02, 0xc1, 0xaf, 0xbd, 0x03, 0x01, 0x13, 0x8a, 0x6b, 0x3a, 0x91, 0x11, 0x41, 0x4f, 0x67, 0xdc, 0xea, 0x97, 0xf2, 0xcf, 0xce, 0xf0, 0xb4, 0xe6, 0x73, 0x96, 0xac, 0x74, 0x22, 0xe7, 0xad, 0x35, 0x85, 0xe2, 0xf9, 0x37, 0xe8, 0x1c, 0x75, 0xdf, 0x6e, 0x47, 0xf1, 0x1a, 0x71, 0x1d, 0x29, 0xc5, 0x89, 0x6f, 0xb7, 0x62, 0x0e, 0xaa, 0x18, 0xbe, 0x1b, 0xfc, 0x56, 0x3e, 0x4b, 0xc6, 0xd2, 0x79, 0x20, 0x9a, 0xdb, 0xc0, 0xfe, 0x78, 0xcd, 0x5a, 0xf4, 0x1f, 0xdd, 0xa8, 0x33, 0x88, 0x07, 0xc7, 0x31, 0xb1, 0x12, 0x10, 0x59, 0x27, 0x80, 0xec, 0x5f, 0x60, 0x51, 0x7f, 0xa9, 0x19, 0xb5, 0x4a, 0x0d, 0x2d, 0xe5, 0x7a, 0x9f, 0x93, 0xc9, 0x9c, 0xef, 0xa0, 0xe0, 0x3b, 0x4d, 0xae, 0x2a, 0xf5, 0xb0, 0xc8, 0xeb, 0xbb, 0x3c, 0x83, 0x53, 0x99, 0x61, 0x17, 0x2b, 0x04, 0x7e, 0xba, 0x77, 0xd6, 0x26, 0xe1, 0x69, 0x14, 0x63, 0x55, 0x21, 0x0c, 0x7d]);
-    this._mix = new Uint32Array([0x00000000, 0x0e090d0b, 0x1c121a16, 0x121b171d, 0x3824342c, 0x362d3927, 0x24362e3a, 0x2a3f2331, 0x70486858, 0x7e416553, 0x6c5a724e, 0x62537f45, 0x486c5c74, 0x4665517f, 0x547e4662, 0x5a774b69, 0xe090d0b0, 0xee99ddbb, 0xfc82caa6, 0xf28bc7ad, 0xd8b4e49c, 0xd6bde997, 0xc4a6fe8a, 0xcaaff381, 0x90d8b8e8, 0x9ed1b5e3, 0x8ccaa2fe, 0x82c3aff5, 0xa8fc8cc4, 0xa6f581cf, 0xb4ee96d2, 0xbae79bd9, 0xdb3bbb7b, 0xd532b670, 0xc729a16d, 0xc920ac66, 0xe31f8f57, 0xed16825c, 0xff0d9541, 0xf104984a, 0xab73d323, 0xa57ade28, 0xb761c935, 0xb968c43e, 0x9357e70f, 0x9d5eea04, 0x8f45fd19, 0x814cf012, 0x3bab6bcb, 0x35a266c0, 0x27b971dd, 0x29b07cd6, 0x038f5fe7, 0x0d8652ec, 0x1f9d45f1, 0x119448fa, 0x4be30393, 0x45ea0e98, 0x57f11985, 0x59f8148e, 0x73c737bf, 0x7dce3ab4, 0x6fd52da9, 0x61dc20a2, 0xad766df6, 0xa37f60fd, 0xb16477e0, 0xbf6d7aeb, 0x955259da, 0x9b5b54d1, 0x894043cc, 0x87494ec7, 0xdd3e05ae, 0xd33708a5, 0xc12c1fb8, 0xcf2512b3, 0xe51a3182, 0xeb133c89, 0xf9082b94, 0xf701269f, 0x4de6bd46, 0x43efb04d, 0x51f4a750, 0x5ffdaa5b, 0x75c2896a, 0x7bcb8461, 0x69d0937c, 0x67d99e77, 0x3daed51e, 0x33a7d815, 0x21bccf08, 0x2fb5c203, 0x058ae132, 0x0b83ec39, 0x1998fb24, 0x1791f62f, 0x764dd68d, 0x7844db86, 0x6a5fcc9b, 0x6456c190, 0x4e69e2a1, 0x4060efaa, 0x527bf8b7, 0x5c72f5bc, 0x0605bed5, 0x080cb3de, 0x1a17a4c3, 0x141ea9c8, 0x3e218af9, 0x302887f2, 0x223390ef, 0x2c3a9de4, 0x96dd063d, 0x98d40b36, 0x8acf1c2b, 0x84c61120, 0xaef93211, 0xa0f03f1a, 0xb2eb2807, 0xbce2250c, 0xe6956e65, 0xe89c636e, 0xfa877473, 0xf48e7978, 0xdeb15a49, 0xd0b85742, 0xc2a3405f, 0xccaa4d54, 0x41ecdaf7, 0x4fe5d7fc, 0x5dfec0e1, 0x53f7cdea, 0x79c8eedb, 0x77c1e3d0, 0x65daf4cd, 0x6bd3f9c6, 0x31a4b2af, 0x3fadbfa4, 0x2db6a8b9, 0x23bfa5b2, 0x09808683, 0x07898b88, 0x15929c95, 0x1b9b919e, 0xa17c0a47, 0xaf75074c, 0xbd6e1051, 0xb3671d5a, 0x99583e6b, 0x97513360, 0x854a247d, 0x8b432976, 0xd134621f, 0xdf3d6f14, 0xcd267809, 0xc32f7502, 0xe9105633, 0xe7195b38, 0xf5024c25, 0xfb0b412e, 0x9ad7618c, 0x94de6c87, 0x86c57b9a, 0x88cc7691, 0xa2f355a0, 0xacfa58ab, 0xbee14fb6, 0xb0e842bd, 0xea9f09d4, 0xe49604df, 0xf68d13c2, 0xf8841ec9, 0xd2bb3df8, 0xdcb230f3, 0xcea927ee, 0xc0a02ae5, 0x7a47b13c, 0x744ebc37, 0x6655ab2a, 0x685ca621, 0x42638510, 0x4c6a881b, 0x5e719f06, 0x5078920d, 0x0a0fd964, 0x0406d46f, 0x161dc372, 0x1814ce79, 0x322bed48, 0x3c22e043, 0x2e39f75e, 0x2030fa55, 0xec9ab701, 0xe293ba0a, 0xf088ad17, 0xfe81a01c, 0xd4be832d, 0xdab78e26, 0xc8ac993b, 0xc6a59430, 0x9cd2df59, 0x92dbd252, 0x80c0c54f, 0x8ec9c844, 0xa4f6eb75, 0xaaffe67e, 0xb8e4f163, 0xb6edfc68, 0x0c0a67b1, 0x02036aba, 0x10187da7, 0x1e1170ac, 0x342e539d, 0x3a275e96, 0x283c498b, 0x26354480, 0x7c420fe9, 0x724b02e2, 0x605015ff, 0x6e5918f4, 0x44663bc5, 0x4a6f36ce, 0x587421d3, 0x567d2cd8, 0x37a10c7a, 0x39a80171, 0x2bb3166c, 0x25ba1b67, 0x0f853856, 0x018c355d, 0x13972240, 0x1d9e2f4b, 0x47e96422, 0x49e06929, 0x5bfb7e34, 0x55f2733f, 0x7fcd500e, 0x71c45d05, 0x63df4a18, 0x6dd64713, 0xd731dcca, 0xd938d1c1, 0xcb23c6dc, 0xc52acbd7, 0xef15e8e6, 0xe11ce5ed, 0xf307f2f0, 0xfd0efffb, 0xa779b492, 0xa970b999, 0xbb6bae84, 0xb562a38f, 0x9f5d80be, 0x91548db5, 0x834f9aa8, 0x8d4697a3]);
-    this._mixCol = new Uint8Array(256);
-
-    for (let i = 0; i < 256; i++) {
-      if (i < 128) {
-        this._mixCol[i] = i << 1;
-      } else {
-        this._mixCol[i] = i << 1 ^ 0x1b;
-      }
-    }
-
-    this.buffer = new Uint8Array(16);
-    this.bufferPosition = 0;
-  }
-
-  _expandKey(cipherKey) {
-    (0, _util.unreachable)("Cannot call `_expandKey` on the base class");
-  }
-
-  _decrypt(input, key) {
-    let t, u, v;
-    const state = new Uint8Array(16);
-    state.set(input);
-
-    for (let j = 0, k = this._keySize; j < 16; ++j, ++k) {
-      state[j] ^= key[k];
-    }
-
-    for (let i = this._cyclesOfRepetition - 1; i >= 1; --i) {
-      t = state[13];
-      state[13] = state[9];
-      state[9] = state[5];
-      state[5] = state[1];
-      state[1] = t;
-      t = state[14];
-      u = state[10];
-      state[14] = state[6];
-      state[10] = state[2];
-      state[6] = t;
-      state[2] = u;
-      t = state[15];
-      u = state[11];
-      v = state[7];
-      state[15] = state[3];
-      state[11] = t;
-      state[7] = u;
-      state[3] = v;
-
-      for (let j = 0; j < 16; ++j) {
-        state[j] = this._inv_s[state[j]];
-      }
-
-      for (let j = 0, k = i * 16; j < 16; ++j, ++k) {
-        state[j] ^= key[k];
-      }
-
-      for (let j = 0; j < 16; j += 4) {
-        const s0 = this._mix[state[j]];
-        const s1 = this._mix[state[j + 1]];
-        const s2 = this._mix[state[j + 2]];
-        const s3 = this._mix[state[j + 3]];
-        t = s0 ^ s1 >>> 8 ^ s1 << 24 ^ s2 >>> 16 ^ s2 << 16 ^ s3 >>> 24 ^ s3 << 8;
-        state[j] = t >>> 24 & 0xff;
-        state[j + 1] = t >> 16 & 0xff;
-        state[j + 2] = t >> 8 & 0xff;
-        state[j + 3] = t & 0xff;
-      }
-    }
-
-    t = state[13];
-    state[13] = state[9];
-    state[9] = state[5];
-    state[5] = state[1];
-    state[1] = t;
-    t = state[14];
-    u = state[10];
-    state[14] = state[6];
-    state[10] = state[2];
-    state[6] = t;
-    state[2] = u;
-    t = state[15];
-    u = state[11];
-    v = state[7];
-    state[15] = state[3];
-    state[11] = t;
-    state[7] = u;
-    state[3] = v;
-
-    for (let j = 0; j < 16; ++j) {
-      state[j] = this._inv_s[state[j]];
-      state[j] ^= key[j];
-    }
-
-    return state;
-  }
-
-  _encrypt(input, key) {
-    const s = this._s;
-    let t, u, v;
-    const state = new Uint8Array(16);
-    state.set(input);
-
-    for (let j = 0; j < 16; ++j) {
-      state[j] ^= key[j];
-    }
-
-    for (let i = 1; i < this._cyclesOfRepetition; i++) {
-      for (let j = 0; j < 16; ++j) {
-        state[j] = s[state[j]];
-      }
-
-      v = state[1];
-      state[1] = state[5];
-      state[5] = state[9];
-      state[9] = state[13];
-      state[13] = v;
-      v = state[2];
-      u = state[6];
-      state[2] = state[10];
-      state[6] = state[14];
-      state[10] = v;
-      state[14] = u;
-      v = state[3];
-      u = state[7];
-      t = state[11];
-      state[3] = state[15];
-      state[7] = v;
-      state[11] = u;
-      state[15] = t;
-
-      for (let j = 0; j < 16; j += 4) {
-        const s0 = state[j + 0];
-        const s1 = state[j + 1];
-        const s2 = state[j + 2];
-        const s3 = state[j + 3];
-        t = s0 ^ s1 ^ s2 ^ s3;
-        state[j + 0] ^= t ^ this._mixCol[s0 ^ s1];
-        state[j + 1] ^= t ^ this._mixCol[s1 ^ s2];
-        state[j + 2] ^= t ^ this._mixCol[s2 ^ s3];
-        state[j + 3] ^= t ^ this._mixCol[s3 ^ s0];
-      }
-
-      for (let j = 0, k = i * 16; j < 16; ++j, ++k) {
-        state[j] ^= key[k];
-      }
-    }
-
-    for (let j = 0; j < 16; ++j) {
-      state[j] = s[state[j]];
-    }
-
-    v = state[1];
-    state[1] = state[5];
-    state[5] = state[9];
-    state[9] = state[13];
-    state[13] = v;
-    v = state[2];
-    u = state[6];
-    state[2] = state[10];
-    state[6] = state[14];
-    state[10] = v;
-    state[14] = u;
-    v = state[3];
-    u = state[7];
-    t = state[11];
-    state[3] = state[15];
-    state[7] = v;
-    state[11] = u;
-    state[15] = t;
-
-    for (let j = 0, k = this._keySize; j < 16; ++j, ++k) {
-      state[j] ^= key[k];
-    }
-
-    return state;
-  }
-
-  _decryptBlock2(data, finalize) {
-    const sourceLength = data.length;
-    let buffer = this.buffer,
-        bufferLength = this.bufferPosition;
-    const result = [];
-    let iv = this.iv;
-
-    for (let i = 0; i < sourceLength; ++i) {
-      buffer[bufferLength] = data[i];
-      ++bufferLength;
-
-      if (bufferLength < 16) {
-        continue;
-      }
-
-      const plain = this._decrypt(buffer, this._key);
-
-      for (let j = 0; j < 16; ++j) {
-        plain[j] ^= iv[j];
-      }
-
-      iv = buffer;
-      result.push(plain);
-      buffer = new Uint8Array(16);
-      bufferLength = 0;
-    }
-
-    this.buffer = buffer;
-    this.bufferLength = bufferLength;
-    this.iv = iv;
-
-    if (result.length === 0) {
-      return new Uint8Array(0);
-    }
-
-    let outputLength = 16 * result.length;
-
-    if (finalize) {
-      const lastBlock = result[result.length - 1];
-      let psLen = lastBlock[15];
-
-      if (psLen <= 16) {
-        for (let i = 15, ii = 16 - psLen; i >= ii; --i) {
-          if (lastBlock[i] !== psLen) {
-            psLen = 0;
-            break;
-          }
-        }
-
-        outputLength -= psLen;
-        result[result.length - 1] = lastBlock.subarray(0, 16 - psLen);
-      }
-    }
-
-    const output = new Uint8Array(outputLength);
-
-    for (let i = 0, j = 0, ii = result.length; i < ii; ++i, j += 16) {
-      output.set(result[i], j);
-    }
-
-    return output;
-  }
-
-  decryptBlock(data, finalize, iv = null) {
-    const sourceLength = data.length;
-    const buffer = this.buffer;
-    let bufferLength = this.bufferPosition;
-
-    if (iv) {
-      this.iv = iv;
-    } else {
-      for (let i = 0; bufferLength < 16 && i < sourceLength; ++i, ++bufferLength) {
-        buffer[bufferLength] = data[i];
-      }
-
-      if (bufferLength < 16) {
-        this.bufferLength = bufferLength;
-        return new Uint8Array(0);
-      }
-
-      this.iv = buffer;
-      data = data.subarray(16);
-    }
-
-    this.buffer = new Uint8Array(16);
-    this.bufferLength = 0;
-    this.decryptBlock = this._decryptBlock2;
-    return this.decryptBlock(data, finalize);
-  }
-
-  encrypt(data, iv) {
-    const sourceLength = data.length;
-    let buffer = this.buffer,
-        bufferLength = this.bufferPosition;
-    const result = [];
-
-    if (!iv) {
-      iv = new Uint8Array(16);
-    }
-
-    for (let i = 0; i < sourceLength; ++i) {
-      buffer[bufferLength] = data[i];
-      ++bufferLength;
-
-      if (bufferLength < 16) {
-        continue;
-      }
-
-      for (let j = 0; j < 16; ++j) {
-        buffer[j] ^= iv[j];
-      }
-
-      const cipher = this._encrypt(buffer, this._key);
-
-      iv = cipher;
-      result.push(cipher);
-      buffer = new Uint8Array(16);
-      bufferLength = 0;
-    }
-
-    this.buffer = buffer;
-    this.bufferLength = bufferLength;
-    this.iv = iv;
-
-    if (result.length === 0) {
-      return new Uint8Array(0);
-    }
-
-    const outputLength = 16 * result.length;
-    const output = new Uint8Array(outputLength);
-
-    for (let i = 0, j = 0, ii = result.length; i < ii; ++i, j += 16) {
-      output.set(result[i], j);
-    }
-
-    return output;
-  }
-
-}
-
-class AES128Cipher extends AESBaseCipher {
-  constructor(key) {
-    super();
-    this._cyclesOfRepetition = 10;
-    this._keySize = 160;
-    this._rcon = new Uint8Array([0x8d, 0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80, 0x1b, 0x36, 0x6c, 0xd8, 0xab, 0x4d, 0x9a, 0x2f, 0x5e, 0xbc, 0x63, 0xc6, 0x97, 0x35, 0x6a, 0xd4, 0xb3, 0x7d, 0xfa, 0xef, 0xc5, 0x91, 0x39, 0x72, 0xe4, 0xd3, 0xbd, 0x61, 0xc2, 0x9f, 0x25, 0x4a, 0x94, 0x33, 0x66, 0xcc, 0x83, 0x1d, 0x3a, 0x74, 0xe8, 0xcb, 0x8d, 0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80, 0x1b, 0x36, 0x6c, 0xd8, 0xab, 0x4d, 0x9a, 0x2f, 0x5e, 0xbc, 0x63, 0xc6, 0x97, 0x35, 0x6a, 0xd4, 0xb3, 0x7d, 0xfa, 0xef, 0xc5, 0x91, 0x39, 0x72, 0xe4, 0xd3, 0xbd, 0x61, 0xc2, 0x9f, 0x25, 0x4a, 0x94, 0x33, 0x66, 0xcc, 0x83, 0x1d, 0x3a, 0x74, 0xe8, 0xcb, 0x8d, 0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80, 0x1b, 0x36, 0x6c, 0xd8, 0xab, 0x4d, 0x9a, 0x2f, 0x5e, 0xbc, 0x63, 0xc6, 0x97, 0x35, 0x6a, 0xd4, 0xb3, 0x7d, 0xfa, 0xef, 0xc5, 0x91, 0x39, 0x72, 0xe4, 0xd3, 0xbd, 0x61, 0xc2, 0x9f, 0x25, 0x4a, 0x94, 0x33, 0x66, 0xcc, 0x83, 0x1d, 0x3a, 0x74, 0xe8, 0xcb, 0x8d, 0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80, 0x1b, 0x36, 0x6c, 0xd8, 0xab, 0x4d, 0x9a, 0x2f, 0x5e, 0xbc, 0x63, 0xc6, 0x97, 0x35, 0x6a, 0xd4, 0xb3, 0x7d, 0xfa, 0xef, 0xc5, 0x91, 0x39, 0x72, 0xe4, 0xd3, 0xbd, 0x61, 0xc2, 0x9f, 0x25, 0x4a, 0x94, 0x33, 0x66, 0xcc, 0x83, 0x1d, 0x3a, 0x74, 0xe8, 0xcb, 0x8d, 0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80, 0x1b, 0x36, 0x6c, 0xd8, 0xab, 0x4d, 0x9a, 0x2f, 0x5e, 0xbc, 0x63, 0xc6, 0x97, 0x35, 0x6a, 0xd4, 0xb3, 0x7d, 0xfa, 0xef, 0xc5, 0x91, 0x39, 0x72, 0xe4, 0xd3, 0xbd, 0x61, 0xc2, 0x9f, 0x25, 0x4a, 0x94, 0x33, 0x66, 0xcc, 0x83, 0x1d, 0x3a, 0x74, 0xe8, 0xcb, 0x8d]);
-    this._key = this._expandKey(key);
-  }
-
-  _expandKey(cipherKey) {
-    const b = 176;
-    const s = this._s;
-    const rcon = this._rcon;
-    const result = new Uint8Array(b);
-    result.set(cipherKey);
-
-    for (let j = 16, i = 1; j < b; ++i) {
-      let t1 = result[j - 3];
-      let t2 = result[j - 2];
-      let t3 = result[j - 1];
-      let t4 = result[j - 4];
-      t1 = s[t1];
-      t2 = s[t2];
-      t3 = s[t3];
-      t4 = s[t4];
-      t1 ^= rcon[i];
-
-      for (let n = 0; n < 4; ++n) {
-        result[j] = t1 ^= result[j - 16];
-        j++;
-        result[j] = t2 ^= result[j - 16];
-        j++;
-        result[j] = t3 ^= result[j - 16];
-        j++;
-        result[j] = t4 ^= result[j - 16];
-        j++;
-      }
-    }
-
-    return result;
-  }
-
-}
-
-exports.AES128Cipher = AES128Cipher;
-
-class AES256Cipher extends AESBaseCipher {
-  constructor(key) {
-    super();
-    this._cyclesOfRepetition = 14;
-    this._keySize = 224;
-    this._key = this._expandKey(key);
-  }
-
-  _expandKey(cipherKey) {
-    const b = 240;
-    const s = this._s;
-    const result = new Uint8Array(b);
-    result.set(cipherKey);
-    let r = 1;
-    let t1, t2, t3, t4;
-
-    for (let j = 32, i = 1; j < b; ++i) {
-      if (j % 32 === 16) {
-        t1 = s[t1];
-        t2 = s[t2];
-        t3 = s[t3];
-        t4 = s[t4];
-      } else if (j % 32 === 0) {
-        t1 = result[j - 3];
-        t2 = result[j - 2];
-        t3 = result[j - 1];
-        t4 = result[j - 4];
-        t1 = s[t1];
-        t2 = s[t2];
-        t3 = s[t3];
-        t4 = s[t4];
-        t1 ^= r;
-
-        if ((r <<= 1) >= 256) {
-          r = (r ^ 0x1b) & 0xff;
-        }
-      }
-
-      for (let n = 0; n < 4; ++n) {
-        result[j] = t1 ^= result[j - 32];
-        j++;
-        result[j] = t2 ^= result[j - 32];
-        j++;
-        result[j] = t3 ^= result[j - 32];
-        j++;
-        result[j] = t4 ^= result[j - 32];
-        j++;
-      }
-    }
-
-    return result;
-  }
-
-}
-
-exports.AES256Cipher = AES256Cipher;
-
-class PDF17 {
-  checkOwnerPassword(password, ownerValidationSalt, userBytes, ownerPassword) {
-    const hashData = new Uint8Array(password.length + 56);
-    hashData.set(password, 0);
-    hashData.set(ownerValidationSalt, password.length);
-    hashData.set(userBytes, password.length + ownerValidationSalt.length);
-    const result = calculateSHA256(hashData, 0, hashData.length);
-    return (0, _util.isArrayEqual)(result, ownerPassword);
-  }
-
-  checkUserPassword(password, userValidationSalt, userPassword) {
-    const hashData = new Uint8Array(password.length + 8);
-    hashData.set(password, 0);
-    hashData.set(userValidationSalt, password.length);
-    const result = calculateSHA256(hashData, 0, hashData.length);
-    return (0, _util.isArrayEqual)(result, userPassword);
-  }
-
-  getOwnerKey(password, ownerKeySalt, userBytes, ownerEncryption) {
-    const hashData = new Uint8Array(password.length + 56);
-    hashData.set(password, 0);
-    hashData.set(ownerKeySalt, password.length);
-    hashData.set(userBytes, password.length + ownerKeySalt.length);
-    const key = calculateSHA256(hashData, 0, hashData.length);
-    const cipher = new AES256Cipher(key);
-    return cipher.decryptBlock(ownerEncryption, false, new Uint8Array(16));
-  }
-
-  getUserKey(password, userKeySalt, userEncryption) {
-    const hashData = new Uint8Array(password.length + 8);
-    hashData.set(password, 0);
-    hashData.set(userKeySalt, password.length);
-    const key = calculateSHA256(hashData, 0, hashData.length);
-    const cipher = new AES256Cipher(key);
-    return cipher.decryptBlock(userEncryption, false, new Uint8Array(16));
-  }
-
-}
-
-exports.PDF17 = PDF17;
-
-const PDF20 = function PDF20Closure() {
-  function calculatePDF20Hash(password, input, userBytes) {
-    let k = calculateSHA256(input, 0, input.length).subarray(0, 32);
-    let e = [0];
-    let i = 0;
-
-    while (i < 64 || e[e.length - 1] > i - 32) {
-      const combinedLength = password.length + k.length + userBytes.length,
-            combinedArray = new Uint8Array(combinedLength);
-      let writeOffset = 0;
-      combinedArray.set(password, writeOffset);
-      writeOffset += password.length;
-      combinedArray.set(k, writeOffset);
-      writeOffset += k.length;
-      combinedArray.set(userBytes, writeOffset);
-      const k1 = new Uint8Array(combinedLength * 64);
-
-      for (let j = 0, pos = 0; j < 64; j++, pos += combinedLength) {
-        k1.set(combinedArray, pos);
-      }
-
-      const cipher = new AES128Cipher(k.subarray(0, 16));
-      e = cipher.encrypt(k1, k.subarray(16, 32));
-      let remainder = 0;
-
-      for (let z = 0; z < 16; z++) {
-        remainder *= 256 % 3;
-        remainder %= 3;
-        remainder += (e[z] >>> 0) % 3;
-        remainder %= 3;
-      }
-
-      if (remainder === 0) {
-        k = calculateSHA256(e, 0, e.length);
-      } else if (remainder === 1) {
-        k = calculateSHA384(e, 0, e.length);
-      } else if (remainder === 2) {
-        k = calculateSHA512(e, 0, e.length);
-      }
-
-      i++;
-    }
-
-    return k.subarray(0, 32);
-  }
-
-  class PDF20 {
-    hash(password, concatBytes, userBytes) {
-      return calculatePDF20Hash(password, concatBytes, userBytes);
-    }
-
-    checkOwnerPassword(password, ownerValidationSalt, userBytes, ownerPassword) {
-      const hashData = new Uint8Array(password.length + 56);
-      hashData.set(password, 0);
-      hashData.set(ownerValidationSalt, password.length);
-      hashData.set(userBytes, password.length + ownerValidationSalt.length);
-      const result = calculatePDF20Hash(password, hashData, userBytes);
-      return (0, _util.isArrayEqual)(result, ownerPassword);
-    }
-
-    checkUserPassword(password, userValidationSalt, userPassword) {
-      const hashData = new Uint8Array(password.length + 8);
-      hashData.set(password, 0);
-      hashData.set(userValidationSalt, password.length);
-      const result = calculatePDF20Hash(password, hashData, []);
-      return (0, _util.isArrayEqual)(result, userPassword);
-    }
-
-    getOwnerKey(password, ownerKeySalt, userBytes, ownerEncryption) {
-      const hashData = new Uint8Array(password.length + 56);
-      hashData.set(password, 0);
-      hashData.set(ownerKeySalt, password.length);
-      hashData.set(userBytes, password.length + ownerKeySalt.length);
-      const key = calculatePDF20Hash(password, hashData, userBytes);
-      const cipher = new AES256Cipher(key);
-      return cipher.decryptBlock(ownerEncryption, false, new Uint8Array(16));
-    }
-
-    getUserKey(password, userKeySalt, userEncryption) {
-      const hashData = new Uint8Array(password.length + 8);
-      hashData.set(password, 0);
-      hashData.set(userKeySalt, password.length);
-      const key = calculatePDF20Hash(password, hashData, []);
-      const cipher = new AES256Cipher(key);
-      return cipher.decryptBlock(userEncryption, false, new Uint8Array(16));
-    }
-
-  }
-
-  return PDF20;
-}();
-
-exports.PDF20 = PDF20;
-
-class CipherTransform {
-  constructor(stringCipherConstructor, streamCipherConstructor) {
-    this.StringCipherConstructor = stringCipherConstructor;
-    this.StreamCipherConstructor = streamCipherConstructor;
-  }
-
-  createStream(stream, length) {
-    const cipher = new this.StreamCipherConstructor();
-    return new _decrypt_stream.DecryptStream(stream, length, function cipherTransformDecryptStream(data, finalize) {
-      return cipher.decryptBlock(data, finalize);
-    });
-  }
-
-  decryptString(s) {
-    const cipher = new this.StringCipherConstructor();
-    let data = (0, _util.stringToBytes)(s);
-    data = cipher.decryptBlock(data, true);
-    return (0, _util.bytesToString)(data);
-  }
-
-  encryptString(s) {
-    const cipher = new this.StringCipherConstructor();
-
-    if (cipher instanceof AESBaseCipher) {
-      const strLen = s.length;
-      const pad = 16 - strLen % 16;
-      s += String.fromCharCode(pad).repeat(pad);
-      const iv = new Uint8Array(16);
-
-      if (typeof crypto !== "undefined") {
-        crypto.getRandomValues(iv);
-      } else {
-        for (let i = 0; i < 16; i++) {
-          iv[i] = Math.floor(256 * Math.random());
-        }
-      }
-
-      let data = (0, _util.stringToBytes)(s);
-      data = cipher.encrypt(data, iv);
-      const buf = new Uint8Array(16 + data.length);
-      buf.set(iv);
-      buf.set(data, 16);
-      return (0, _util.bytesToString)(buf);
-    }
-
-    let data = (0, _util.stringToBytes)(s);
-    data = cipher.encrypt(data);
-    return (0, _util.bytesToString)(data);
-  }
-
-}
-
-const CipherTransformFactory = function CipherTransformFactoryClosure() {
-  const defaultPasswordBytes = new Uint8Array([0x28, 0xbf, 0x4e, 0x5e, 0x4e, 0x75, 0x8a, 0x41, 0x64, 0x00, 0x4e, 0x56, 0xff, 0xfa, 0x01, 0x08, 0x2e, 0x2e, 0x00, 0xb6, 0xd0, 0x68, 0x3e, 0x80, 0x2f, 0x0c, 0xa9, 0xfe, 0x64, 0x53, 0x69, 0x7a]);
-
-  function createEncryptionKey20(revision, password, ownerPassword, ownerValidationSalt, ownerKeySalt, uBytes, userPassword, userValidationSalt, userKeySalt, ownerEncryption, userEncryption, perms) {
-    if (password) {
-      const passwordLength = Math.min(127, password.length);
-      password = password.subarray(0, passwordLength);
-    } else {
-      password = [];
-    }
-
-    let pdfAlgorithm;
-
-    if (revision === 6) {
-      pdfAlgorithm = new PDF20();
-    } else {
-      pdfAlgorithm = new PDF17();
-    }
-
-    if (pdfAlgorithm.checkUserPassword(password, userValidationSalt, userPassword)) {
-      return pdfAlgorithm.getUserKey(password, userKeySalt, userEncryption);
-    } else if (password.length && pdfAlgorithm.checkOwnerPassword(password, ownerValidationSalt, uBytes, ownerPassword)) {
-      return pdfAlgorithm.getOwnerKey(password, ownerKeySalt, uBytes, ownerEncryption);
-    }
-
-    return null;
-  }
-
-  function prepareKeyData(fileId, password, ownerPassword, userPassword, flags, revision, keyLength, encryptMetadata) {
-    const hashDataSize = 40 + ownerPassword.length + fileId.length;
-    const hashData = new Uint8Array(hashDataSize);
-    let i = 0,
-        j,
-        n;
-
-    if (password) {
-      n = Math.min(32, password.length);
-
-      for (; i < n; ++i) {
-        hashData[i] = password[i];
-      }
-    }
-
-    j = 0;
-
-    while (i < 32) {
-      hashData[i++] = defaultPasswordBytes[j++];
-    }
-
-    for (j = 0, n = ownerPassword.length; j < n; ++j) {
-      hashData[i++] = ownerPassword[j];
-    }
-
-    hashData[i++] = flags & 0xff;
-    hashData[i++] = flags >> 8 & 0xff;
-    hashData[i++] = flags >> 16 & 0xff;
-    hashData[i++] = flags >>> 24 & 0xff;
-
-    for (j = 0, n = fileId.length; j < n; ++j) {
-      hashData[i++] = fileId[j];
-    }
-
-    if (revision >= 4 && !encryptMetadata) {
-      hashData[i++] = 0xff;
-      hashData[i++] = 0xff;
-      hashData[i++] = 0xff;
-      hashData[i++] = 0xff;
-    }
-
-    let hash = calculateMD5(hashData, 0, i);
-    const keyLengthInBytes = keyLength >> 3;
-
-    if (revision >= 3) {
-      for (j = 0; j < 50; ++j) {
-        hash = calculateMD5(hash, 0, keyLengthInBytes);
-      }
-    }
-
-    const encryptionKey = hash.subarray(0, keyLengthInBytes);
-    let cipher, checkData;
-
-    if (revision >= 3) {
-      for (i = 0; i < 32; ++i) {
-        hashData[i] = defaultPasswordBytes[i];
-      }
-
-      for (j = 0, n = fileId.length; j < n; ++j) {
-        hashData[i++] = fileId[j];
-      }
-
-      cipher = new ARCFourCipher(encryptionKey);
-      checkData = cipher.encryptBlock(calculateMD5(hashData, 0, i));
-      n = encryptionKey.length;
-      const derivedKey = new Uint8Array(n);
-
-      for (j = 1; j <= 19; ++j) {
-        for (let k = 0; k < n; ++k) {
-          derivedKey[k] = encryptionKey[k] ^ j;
-        }
-
-        cipher = new ARCFourCipher(derivedKey);
-        checkData = cipher.encryptBlock(checkData);
-      }
-
-      for (j = 0, n = checkData.length; j < n; ++j) {
-        if (userPassword[j] !== checkData[j]) {
-          return null;
-        }
-      }
-    } else {
-      cipher = new ARCFourCipher(encryptionKey);
-      checkData = cipher.encryptBlock(defaultPasswordBytes);
-
-      for (j = 0, n = checkData.length; j < n; ++j) {
-        if (userPassword[j] !== checkData[j]) {
-          return null;
-        }
-      }
-    }
-
-    return encryptionKey;
-  }
-
-  function decodeUserPassword(password, ownerPassword, revision, keyLength) {
-    const hashData = new Uint8Array(32);
-    let i = 0;
-    const n = Math.min(32, password.length);
-
-    for (; i < n; ++i) {
-      hashData[i] = password[i];
-    }
-
-    let j = 0;
-
-    while (i < 32) {
-      hashData[i++] = defaultPasswordBytes[j++];
-    }
-
-    let hash = calculateMD5(hashData, 0, i);
-    const keyLengthInBytes = keyLength >> 3;
-
-    if (revision >= 3) {
-      for (j = 0; j < 50; ++j) {
-        hash = calculateMD5(hash, 0, hash.length);
-      }
-    }
-
-    let cipher, userPassword;
-
-    if (revision >= 3) {
-      userPassword = ownerPassword;
-      const derivedKey = new Uint8Array(keyLengthInBytes);
-
-      for (j = 19; j >= 0; j--) {
-        for (let k = 0; k < keyLengthInBytes; ++k) {
-          derivedKey[k] = hash[k] ^ j;
-        }
-
-        cipher = new ARCFourCipher(derivedKey);
-        userPassword = cipher.encryptBlock(userPassword);
-      }
-    } else {
-      cipher = new ARCFourCipher(hash.subarray(0, keyLengthInBytes));
-      userPassword = cipher.encryptBlock(ownerPassword);
-    }
-
-    return userPassword;
-  }
-
-  const identityName = _primitives.Name.get("Identity");
-
-  function buildObjectKey(num, gen, encryptionKey, isAes = false) {
-    const key = new Uint8Array(encryptionKey.length + 9);
-    const n = encryptionKey.length;
-    let i;
-
-    for (i = 0; i < n; ++i) {
-      key[i] = encryptionKey[i];
-    }
-
-    key[i++] = num & 0xff;
-    key[i++] = num >> 8 & 0xff;
-    key[i++] = num >> 16 & 0xff;
-    key[i++] = gen & 0xff;
-    key[i++] = gen >> 8 & 0xff;
-
-    if (isAes) {
-      key[i++] = 0x73;
-      key[i++] = 0x41;
-      key[i++] = 0x6c;
-      key[i++] = 0x54;
-    }
-
-    const hash = calculateMD5(key, 0, i);
-    return hash.subarray(0, Math.min(encryptionKey.length + 5, 16));
-  }
-
-  function buildCipherConstructor(cf, name, num, gen, key) {
-    if (!(name instanceof _primitives.Name)) {
-      throw new _util.FormatError("Invalid crypt filter name.");
-    }
-
-    const cryptFilter = cf.get(name.name);
-    let cfm;
-
-    if (cryptFilter !== null && cryptFilter !== undefined) {
-      cfm = cryptFilter.get("CFM");
-    }
-
-    if (!cfm || cfm.name === "None") {
-      return function cipherTransformFactoryBuildCipherConstructorNone() {
-        return new NullCipher();
-      };
-    }
-
-    if (cfm.name === "V2") {
-      return function cipherTransformFactoryBuildCipherConstructorV2() {
-        return new ARCFourCipher(buildObjectKey(num, gen, key, false));
-      };
-    }
-
-    if (cfm.name === "AESV2") {
-      return function cipherTransformFactoryBuildCipherConstructorAESV2() {
-        return new AES128Cipher(buildObjectKey(num, gen, key, true));
-      };
-    }
-
-    if (cfm.name === "AESV3") {
-      return function cipherTransformFactoryBuildCipherConstructorAESV3() {
-        return new AES256Cipher(key);
-      };
-    }
-
-    throw new _util.FormatError("Unknown crypto method");
-  }
-
-  class CipherTransformFactory {
-    constructor(dict, fileId, password) {
-      const filter = dict.get("Filter");
-
-      if (!(0, _primitives.isName)(filter, "Standard")) {
-        throw new _util.FormatError("unknown encryption method");
-      }
-
-      this.filterName = filter.name;
-      this.dict = dict;
-      const algorithm = dict.get("V");
-
-      if (!Number.isInteger(algorithm) || algorithm !== 1 && algorithm !== 2 && algorithm !== 4 && algorithm !== 5) {
-        throw new _util.FormatError("unsupported encryption algorithm");
-      }
-
-      this.algorithm = algorithm;
-      let keyLength = dict.get("Length");
-
-      if (!keyLength) {
-        if (algorithm <= 3) {
-          keyLength = 40;
-        } else {
-          const cfDict = dict.get("CF");
-          const streamCryptoName = dict.get("StmF");
-
-          if (cfDict instanceof _primitives.Dict && streamCryptoName instanceof _primitives.Name) {
-            cfDict.suppressEncryption = true;
-            const handlerDict = cfDict.get(streamCryptoName.name);
-            keyLength = handlerDict && handlerDict.get("Length") || 128;
-
-            if (keyLength < 40) {
-              keyLength <<= 3;
-            }
-          }
-        }
-      }
-
-      if (!Number.isInteger(keyLength) || keyLength < 40 || keyLength % 8 !== 0) {
-        throw new _util.FormatError("invalid key length");
-      }
-
-      const ownerPassword = (0, _util.stringToBytes)(dict.get("O")).subarray(0, 32);
-      const userPassword = (0, _util.stringToBytes)(dict.get("U")).subarray(0, 32);
-      const flags = dict.get("P");
-      const revision = dict.get("R");
-      const encryptMetadata = (algorithm === 4 || algorithm === 5) && dict.get("EncryptMetadata") !== false;
-      this.encryptMetadata = encryptMetadata;
-      const fileIdBytes = (0, _util.stringToBytes)(fileId);
-      let passwordBytes;
-
-      if (password) {
-        if (revision === 6) {
-          try {
-            password = (0, _util.utf8StringToString)(password);
-          } catch (ex) {
-            (0, _util.warn)("CipherTransformFactory: " + "Unable to convert UTF8 encoded password.");
-          }
-        }
-
-        passwordBytes = (0, _util.stringToBytes)(password);
-      }
-
-      let encryptionKey;
-
-      if (algorithm !== 5) {
-        encryptionKey = prepareKeyData(fileIdBytes, passwordBytes, ownerPassword, userPassword, flags, revision, keyLength, encryptMetadata);
-      } else {
-        const ownerValidationSalt = (0, _util.stringToBytes)(dict.get("O")).subarray(32, 40);
-        const ownerKeySalt = (0, _util.stringToBytes)(dict.get("O")).subarray(40, 48);
-        const uBytes = (0, _util.stringToBytes)(dict.get("U")).subarray(0, 48);
-        const userValidationSalt = (0, _util.stringToBytes)(dict.get("U")).subarray(32, 40);
-        const userKeySalt = (0, _util.stringToBytes)(dict.get("U")).subarray(40, 48);
-        const ownerEncryption = (0, _util.stringToBytes)(dict.get("OE"));
-        const userEncryption = (0, _util.stringToBytes)(dict.get("UE"));
-        const perms = (0, _util.stringToBytes)(dict.get("Perms"));
-        encryptionKey = createEncryptionKey20(revision, passwordBytes, ownerPassword, ownerValidationSalt, ownerKeySalt, uBytes, userPassword, userValidationSalt, userKeySalt, ownerEncryption, userEncryption, perms);
-      }
-
-      if (!encryptionKey && !password) {
-        throw new _util.PasswordException("No password given", _util.PasswordResponses.NEED_PASSWORD);
-      } else if (!encryptionKey && password) {
-        const decodedPassword = decodeUserPassword(passwordBytes, ownerPassword, revision, keyLength);
-        encryptionKey = prepareKeyData(fileIdBytes, decodedPassword, ownerPassword, userPassword, flags, revision, keyLength, encryptMetadata);
-      }
-
-      if (!encryptionKey) {
-        throw new _util.PasswordException("Incorrect Password", _util.PasswordResponses.INCORRECT_PASSWORD);
-      }
-
-      this.encryptionKey = encryptionKey;
-
-      if (algorithm >= 4) {
-        const cf = dict.get("CF");
-
-        if (cf instanceof _primitives.Dict) {
-          cf.suppressEncryption = true;
-        }
-
-        this.cf = cf;
-        this.stmf = dict.get("StmF") || identityName;
-        this.strf = dict.get("StrF") || identityName;
-        this.eff = dict.get("EFF") || this.stmf;
-      }
-    }
-
-    createCipherTransform(num, gen) {
-      if (this.algorithm === 4 || this.algorithm === 5) {
-        return new CipherTransform(buildCipherConstructor(this.cf, this.stmf, num, gen, this.encryptionKey), buildCipherConstructor(this.cf, this.strf, num, gen, this.encryptionKey));
-      }
-
-      const key = buildObjectKey(num, gen, this.encryptionKey, false);
-
-      const cipherConstructor = function buildCipherCipherConstructor() {
-        return new ARCFourCipher(key);
-      };
-
-      return new CipherTransform(cipherConstructor, cipherConstructor);
-    }
-
-  }
-
-  return CipherTransformFactory;
-}();
-
-exports.CipherTransformFactory = CipherTransformFactory;
-
-/***/ }),
-/* 75 */
-/***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
-
-
-
-Object.defineProperty(exports, "__esModule", ({
-  value: true
-}));
-exports.DecryptStream = void 0;
-
-var _decode_stream = __w_pdfjs_require__(29);
-
-const chunkSize = 512;
-
-class DecryptStream extends _decode_stream.DecodeStream {
-  constructor(str, maybeLength, decrypt) {
-    super(maybeLength);
-    this.str = str;
-    this.dict = str.dict;
-    this.decrypt = decrypt;
-    this.nextChunk = null;
-    this.initialized = false;
-  }
-
-  readBlock() {
-    let chunk;
-
-    if (this.initialized) {
-      chunk = this.nextChunk;
-    } else {
-      chunk = this.str.getBytes(chunkSize);
-      this.initialized = true;
-    }
-
-    if (!chunk || chunk.length === 0) {
-      this.eof = true;
-      return;
-    }
-
-    this.nextChunk = this.str.getBytes(chunkSize);
-    const hasMoreData = this.nextChunk && this.nextChunk.length > 0;
-    const decrypt = this.decrypt;
-    chunk = decrypt(chunk, !hasMoreData);
-    let bufferLength = this.bufferLength;
-    const n = chunk.length,
-          buffer = this.ensureBuffer(bufferLength + n);
-
-    for (let i = 0; i < n; i++) {
-      buffer[bufferLength++] = chunk[i];
-    }
-
-    this.bufferLength = bufferLength;
-  }
-
-}
-
-exports.DecryptStream = DecryptStream;
 
 /***/ }),
 /* 76 */
@@ -47114,7 +47910,7 @@ var _utils = __w_pdfjs_require__(78);
 
 var _util = __w_pdfjs_require__(2);
 
-var _core_utils = __w_pdfjs_require__(8);
+var _core_utils = __w_pdfjs_require__(6);
 
 var _namespaces = __w_pdfjs_require__(79);
 
@@ -48715,7 +49511,7 @@ function parseExpression(expr, dotDotAllowed, noExpr = true) {
         return null;
       }
 
-      parsed[parsed.length - 1].index = parseIndex(match[0]);
+      parsed.at(-1).index = parseIndex(match[0]);
       pos += match[0].length + 1;
       continue;
     }
@@ -48880,7 +49676,7 @@ function searchNode(root, container, expr, dotDotAllowed = true, useCache = true
     if (isFinite(index)) {
       root = nodes.filter(node => index < node.length).map(node => node[index]);
     } else {
-      root = nodes.reduce((acc, node) => acc.concat(node), []);
+      root = nodes.flat();
     }
   }
 
@@ -49616,7 +50412,7 @@ var _util = __w_pdfjs_require__(2);
 
 var _fonts = __w_pdfjs_require__(85);
 
-var _core_utils = __w_pdfjs_require__(8);
+var _core_utils = __w_pdfjs_require__(6);
 
 var _som = __w_pdfjs_require__(80);
 
@@ -49677,6 +50473,10 @@ function* getContainedChildren(node) {
 
     yield child;
   }
+}
+
+function isRequired(node) {
+  return node.validate && node.validate.nullTest === "error";
 }
 
 function setTabIndex(node) {
@@ -49946,7 +50746,7 @@ class Arc extends _xfa_object.XFAObject {
   }
 
   [_xfa_object.$toHTML]() {
-    const edge = this.edge ? this.edge : new Edge({});
+    const edge = this.edge || new Edge({});
 
     const edgeStyle = edge[_xfa_object.$toStyle]();
 
@@ -50279,7 +51079,7 @@ class Border extends _xfa_object.XFAObject {
       const edges = this.edge.children.slice();
 
       if (edges.length < 4) {
-        const defaultEdge = edges[edges.length - 1] || new Edge({});
+        const defaultEdge = edges.at(-1) || new Edge({});
 
         for (let i = edges.length; i < 4; i++) {
           edges.push(defaultEdge);
@@ -50331,7 +51131,7 @@ class Border extends _xfa_object.XFAObject {
       const cornerStyles = this.corner.children.map(node => node[_xfa_object.$toStyle]());
 
       if (cornerStyles.length === 2 || cornerStyles.length === 3) {
-        const last = cornerStyles[cornerStyles.length - 1];
+        const last = cornerStyles.at(-1);
 
         for (let i = cornerStyles.length; i < 4; i++) {
           cornerStyles.push(last);
@@ -50730,12 +51530,18 @@ class CheckButton extends _xfa_object.XFAObject {
         checked,
         xfaOn: exportedValue.on,
         xfaOff: exportedValue.off,
-        "aria-label": ariaLabel(field)
+        "aria-label": ariaLabel(field),
+        "aria-required": false
       }
     };
 
     if (groupId) {
       input.attributes.name = groupId;
+    }
+
+    if (isRequired(field)) {
+      input.attributes["aria-required"] = true;
+      input.attributes.required = true;
     }
 
     return _utils.HTMLResult.success({
@@ -50776,7 +51582,7 @@ class ChoiceList extends _xfa_object.XFAObject {
 
     const fontSize = field.font && field.font.size || 10;
     const optionStyle = {
-      fontSize: `calc(${fontSize}px * var(--zoom-factor))`
+      fontSize: `calc(${fontSize}px * var(--scale-factor))`
     };
     const children = [];
 
@@ -50831,8 +51637,14 @@ class ChoiceList extends _xfa_object.XFAObject {
       fieldId: field[_xfa_object.$uid],
       dataId: field[_xfa_object.$data] && field[_xfa_object.$data][_xfa_object.$uid] || field[_xfa_object.$uid],
       style,
-      "aria-label": ariaLabel(field)
+      "aria-label": ariaLabel(field),
+      "aria-required": false
     };
+
+    if (isRequired(field)) {
+      selectAttributes["aria-required"] = true;
+      selectAttributes.required = true;
+    }
 
     if (this.open === "multiSelect") {
       selectAttributes.multiple = true;
@@ -51044,9 +51856,16 @@ class DateTimeEdit extends _xfa_object.XFAObject {
         dataId: field[_xfa_object.$data] && field[_xfa_object.$data][_xfa_object.$uid] || field[_xfa_object.$uid],
         class: ["xfaTextfield"],
         style,
-        "aria-label": ariaLabel(field)
+        "aria-label": ariaLabel(field),
+        "aria-required": false
       }
     };
+
+    if (isRequired(field)) {
+      html.attributes["aria-required"] = true;
+      html.attributes.required = true;
+    }
+
     return _utils.HTMLResult.success({
       name: "label",
       attributes: {
@@ -52754,7 +53573,7 @@ class Line extends _xfa_object.XFAObject {
   [_xfa_object.$toHTML]() {
     const parent = this[_xfa_object.$getParent]()[_xfa_object.$getParent]();
 
-    const edge = this.edge ? this.edge : new Edge({});
+    const edge = this.edge || new Edge({});
 
     const edgeStyle = edge[_xfa_object.$toStyle]();
 
@@ -52964,9 +53783,16 @@ class NumericEdit extends _xfa_object.XFAObject {
         dataId: field[_xfa_object.$data] && field[_xfa_object.$data][_xfa_object.$uid] || field[_xfa_object.$uid],
         class: ["xfaTextfield"],
         style,
-        "aria-label": ariaLabel(field)
+        "aria-label": ariaLabel(field),
+        "aria-required": false
       }
     };
+
+    if (isRequired(field)) {
+      html.attributes["aria-required"] = true;
+      html.attributes.required = true;
+    }
+
     return _utils.HTMLResult.success({
       name: "label",
       attributes: {
@@ -54548,7 +55374,7 @@ class Template extends _xfa_object.XFAObject {
           if (target instanceof PageArea) {
             targetPageArea = target;
           } else if (target instanceof ContentArea) {
-            const index = contentAreas.findIndex(e => e === target);
+            const index = contentAreas.indexOf(target);
 
             if (index !== -1) {
               if (index > currentIndex) {
@@ -54558,7 +55384,7 @@ class Template extends _xfa_object.XFAObject {
               }
             } else {
               targetPageArea = target[_xfa_object.$getParent]();
-              startIndex = targetPageArea.contentArea.children.findIndex(e => e === target);
+              startIndex = targetPageArea.contentArea.children.indexOf(target);
             }
           }
 
@@ -54732,7 +55558,8 @@ class TextEdit extends _xfa_object.XFAObject {
           fieldId: field[_xfa_object.$uid],
           class: ["xfaTextfield"],
           style,
-          "aria-label": ariaLabel(field)
+          "aria-label": ariaLabel(field),
+          "aria-required": false
         }
       };
     } else {
@@ -54744,9 +55571,15 @@ class TextEdit extends _xfa_object.XFAObject {
           fieldId: field[_xfa_object.$uid],
           class: ["xfaTextfield"],
           style,
-          "aria-label": ariaLabel(field)
+          "aria-label": ariaLabel(field),
+          "aria-required": false
         }
       };
+    }
+
+    if (isRequired(field)) {
+      html.attributes["aria-required"] = true;
+      html.attributes.required = true;
     }
 
     return _utils.HTMLResult.success({
@@ -56143,7 +56976,7 @@ function layoutNode(node, availableSpace) {
       }
     }
 
-    const maxWidth = (!node.w ? availableSpace.width : node.w) - marginH;
+    const maxWidth = (node.w || availableSpace.width) - marginH;
     const fontFinder = node[_xfa_object.$globalData].fontFinder;
 
     if (node.value.exData && node.value.exData[_xfa_object.$content] && node.value.exData.contentType === "text/html") {
@@ -56457,7 +57290,7 @@ function isPrintOnly(node) {
 function getCurrentPara(node) {
   const stack = node[_xfa_object.$getTemplateRoot]()[_xfa_object.$extra].paraStack;
 
-  return stack.length ? stack[stack.length - 1] : null;
+  return stack.length ? stack.at(-1) : null;
 }
 
 function setPara(node, nodeStyle, value) {
@@ -56844,7 +57677,7 @@ class FontSelector {
   }
 
   pushData(xfaFont, margin, lineHeight) {
-    const lastFont = this.stack[this.stack.length - 1];
+    const lastFont = this.stack.at(-1);
 
     for (const name of ["typeface", "posture", "weight", "size", "letterSpacing"]) {
       if (!xfaFont[name]) {
@@ -56872,7 +57705,7 @@ class FontSelector {
   }
 
   topFont() {
-    return this.stack[this.stack.length - 1];
+    return this.stack.at(-1);
   }
 
 }
@@ -57049,7 +57882,7 @@ class DataHandler {
     const stack = [[-1, this.data[_xfa_object.$getChildren]()]];
 
     while (stack.length > 0) {
-      const last = stack[stack.length - 1];
+      const last = stack.at(-1);
       const [i, children] = last;
 
       if (i + 1 === children.length) {
@@ -57116,7 +57949,7 @@ exports.XFAParser = void 0;
 
 var _xfa_object = __w_pdfjs_require__(77);
 
-var _xml_parser = __w_pdfjs_require__(70);
+var _xml_parser = __w_pdfjs_require__(66);
 
 var _builder = __w_pdfjs_require__(89);
 
@@ -57494,7 +58327,7 @@ class Builder {
     const prefixStack = this._namespacePrefixes.get(prefix);
 
     if (prefixStack && prefixStack.length > 0) {
-      return prefixStack[prefixStack.length - 1];
+      return prefixStack.at(-1);
     }
 
     (0, _util.warn)(`Unknown namespace prefix: ${prefix}.`);
@@ -60300,6 +61133,10 @@ function mapStyle(styleStr, node, richText) {
     style.verticalAlign = (0, _html_utils.measureToString)(Math.sign((0, _utils.getMeasurement)(style.verticalAlign)) * fontSize * VERTICAL_FACTOR);
   }
 
+  if (richText && style.fontSize) {
+    style.fontSize = `calc(${style.fontSize} * var(--scale-factor))`;
+  }
+
   (0, _html_utils.fixTextIndent)(style);
   return style;
 }
@@ -60649,7 +61486,7 @@ class P extends XhtmlObject {
   [_xfa_object.$text]() {
     const siblings = this[_xfa_object.$getParent]()[_xfa_object.$getChildren]();
 
-    if (siblings[siblings.length - 1] === this) {
+    if (siblings.at(-1) === this) {
       return super[_xfa_object.$text]();
     }
 
@@ -60792,9 +61629,9 @@ exports.DatasetReader = void 0;
 
 var _util = __w_pdfjs_require__(2);
 
-var _core_utils = __w_pdfjs_require__(8);
+var _core_utils = __w_pdfjs_require__(6);
 
-var _xml_parser = __w_pdfjs_require__(70);
+var _xml_parser = __w_pdfjs_require__(66);
 
 function decodeString(str) {
   try {
@@ -60880,13 +61717,13 @@ var _util = __w_pdfjs_require__(2);
 
 var _primitives = __w_pdfjs_require__(5);
 
-var _core_utils = __w_pdfjs_require__(8);
+var _core_utils = __w_pdfjs_require__(6);
 
 var _parser = __w_pdfjs_require__(27);
 
-var _base_stream = __w_pdfjs_require__(9);
+var _base_stream = __w_pdfjs_require__(7);
 
-var _crypto = __w_pdfjs_require__(74);
+var _crypto = __w_pdfjs_require__(67);
 
 class XRef {
   constructor(stream, pdfManager) {
@@ -60902,7 +61739,7 @@ class XRef {
 
   getNewRef() {
     if (this._newRefNum === null) {
-      this._newRefNum = this.entries.length;
+      this._newRefNum = this.entries.length || 1;
     }
 
     return _primitives.Ref.get(this._newRefNum++, 0);
@@ -62433,8 +63270,8 @@ Object.defineProperty(exports, "WorkerMessageHandler", ({
 
 var _worker = __w_pdfjs_require__(1);
 
-const pdfjsVersion = '2.14.290';
-const pdfjsBuild = '38c82357b';
+const pdfjsVersion = '2.15.305';
+const pdfjsBuild = '2a386eff9';
 })();
 
 /******/ 	return __webpack_exports__;
