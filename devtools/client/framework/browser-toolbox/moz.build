@@ -9,5 +9,5 @@ BROWSER_CHROME_MANIFESTS += [
 ]
 
 DevToolsModules(
-    "Launcher.jsm",
+    "Launcher.sys.mjs",
 )
