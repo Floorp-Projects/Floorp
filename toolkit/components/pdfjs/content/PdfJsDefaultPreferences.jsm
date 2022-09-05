@@ -22,6 +22,7 @@
 "use strict";
 var EXPORTED_SYMBOLS = ["PdfJsDefaultPreferences"];
 var PdfJsDefaultPreferences = Object.freeze({
+ "annotationEditorMode": -1,
  "annotationMode": 2,
  "cursorToolOnLoad": 0,
  "defaultZoomValue": "",
@@ -32,6 +33,7 @@ var PdfJsDefaultPreferences = Object.freeze({
  "externalLinkTarget": 0,
  "historyUpdateUrl": false,
  "ignoreDestinationZoom": false,
+ "forcePageColors": false,
  "pageColorsBackground": "Canvas",
  "pageColorsForeground": "CanvasText",
  "pdfBugEnabled": false,
