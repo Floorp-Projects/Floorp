@@ -9,10 +9,6 @@
 
 "use strict";
 
-const {
-  OS: { File, Path, Constants },
-} = ChromeUtils.import("resource://gre/modules/osfile.jsm");
-
 const PING_SAVE_FOLDER = "saved-telemetry-pings";
 const OLD_FORMAT_PINGS = 4;
 const RECENT_PINGS = 4;
@@ -48,7 +44,7 @@ var createSavedPings = async function(aPingInfos) {
         // savePing writes to the file synchronously, so we're good to
         // modify the lastModifedTime now.
         let filePath = getSavePathForPingId(pingId);
-        await File.setDates(filePath, null, age);
+        await IOUtils.setModificationTime(filePath, age);
       }
       pingIds.push(pingId);
     }
@@ -69,13 +65,13 @@ function fakePendingPingsQuota(aPendingQuota) {
 }
 
 /**
- * Returns a handle for the file that a ping should be
+ * Returns a path for the file that a ping should be
  * stored in locally.
  *
  * @returns path
  */
 function getSavePathForPingId(aPingId) {
-  return Path.join(Constants.Path.profileDir, PING_SAVE_FOLDER, aPingId);
+  return PathUtils.join(PathUtils.profileDir, PING_SAVE_FOLDER, aPingId);
 }
 
 /**
@@ -131,9 +127,9 @@ add_task(async function setupEnvironment() {
   await TelemetryController.testSetup();
 
   let directory = TelemetryStorage.pingDirectoryPath;
-  await File.makeDir(directory, {
+  await IOUtils.makeDirectory(directory, {
     ignoreExisting: true,
-    unixMode: OS.Constants.S_IRWXU,
+    permissions: 0o700,
   });
 
   await TelemetryStorage.testClearPendingPings();
@@ -218,7 +214,7 @@ add_task(async function test_old_formats() {
 
   // |TelemetryStorage.cleanup| doesn't know how to remove a ping with no slug or id,
   // so remove it manually so that the next test doesn't fail.
-  await OS.File.remove(PING_FILES_PATHS[3]);
+  await IOUtils.remove(PING_FILES_PATHS[3]);
 
   await TelemetryStorage.testClearPendingPings();
 });
@@ -258,7 +254,7 @@ add_task(async function test_corrupted_pending_pings() {
 
   // Delete it from the disk, so that its id will be kept in the cache but it will
   // fail loading the file.
-  await OS.File.remove(getSavePathForPingId(pendingPingId));
+  await IOUtils.remove(getSavePathForPingId(pendingPingId));
 
   // Try to load a pending ping which isn't there anymore.
   await Assert.rejects(
@@ -284,9 +280,7 @@ add_task(async function test_corrupted_pending_pings() {
   pendingPingId = await TelemetryController.addPendingPing(TEST_TYPE, {}, {});
   // Overwrite it with a corrupted JSON file and then try to load it.
   const INVALID_JSON = "{ invalid,JSON { {1}";
-  await OS.File.writeAtomic(getSavePathForPingId(pendingPingId), INVALID_JSON, {
-    encoding: "utf-8",
-  });
+  await IOUtils.writeUTF8(getSavePathForPingId(pendingPingId), INVALID_JSON);
 
   // Try to load the ping with the corrupted JSON content.
   await Assert.rejects(
@@ -304,7 +298,7 @@ add_task(async function test_corrupted_pending_pings() {
   ).snapshot();
   Assert.equal(h.sum, 1, "Telemetry must report a pending ping parse failure");
 
-  let exists = await OS.File.exists(getSavePathForPingId(pendingPingId));
+  let exists = await IOUtils.exists(getSavePathForPingId(pendingPingId));
   Assert.ok(!exists, "The unparseable ping should have been removed");
 
   await TelemetryStorage.testClearPendingPings();
@@ -389,7 +383,7 @@ add_task(async function test_pendingPingsQuota() {
       );
       const pingPath = getSavePathForPingId(prunedPingId);
       Assert.ok(
-        !(await OS.File.exists(pingPath)),
+        !(await IOUtils.exists(pingPath)),
         "The ping should not be on the disk anymore."
       );
     }
@@ -413,7 +407,7 @@ add_task(async function test_pendingPingsQuota() {
 
     // Find the size of the ping.
     const pingFilePath = getSavePathForPingId(pingId);
-    const pingSize = (await OS.File.stat(pingFilePath)).size;
+    const pingSize = (await IOUtils.stat(pingFilePath)).size;
     // Add the info at the beginning of the array, so that most recent pings come first.
     pendingPingsInfo.unshift({
       id: pingId,
@@ -422,7 +416,7 @@ add_task(async function test_pendingPingsQuota() {
     });
 
     // Set the last modification date.
-    await OS.File.setDates(pingFilePath, null, date.getTime());
+    await IOUtils.setModificationTime(pingFilePath, date.getTime());
 
     // Add it to the pending ping directory size.
     pingsSizeInBytes += pingSize;
@@ -539,7 +533,7 @@ add_task(async function test_pendingPingsQuota() {
     "The oversized ping should have been pruned."
   );
   Assert.ok(
-    !(await OS.File.exists(getSavePathForPingId(OVERSIZED_PING_ID))),
+    !(await IOUtils.exists(getSavePathForPingId(OVERSIZED_PING_ID))),
     "The ping should not be on the disk anymore."
   );
 

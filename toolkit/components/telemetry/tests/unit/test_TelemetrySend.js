@@ -39,7 +39,7 @@ function countPingTypes(pings) {
 }
 
 function setPingLastModified(id, timestamp) {
-  const path = OS.Path.join(TelemetryStorage.pingDirectoryPath, id);
+  const path = PathUtils.join(TelemetryStorage.pingDirectoryPath, id);
   return IOUtils.setModificationTime(path, timestamp);
 }
 
@@ -85,7 +85,7 @@ function fakePingId(type, number) {
 var checkPingsSaved = async function(pingIds) {
   let allFound = true;
   for (let id of pingIds) {
-    const path = OS.Path.join(TelemetryStorage.pingDirectoryPath, id);
+    const path = PathUtils.join(TelemetryStorage.pingDirectoryPath, id);
     let exists = false;
     try {
       exists = await IOUtils.exists(path);
