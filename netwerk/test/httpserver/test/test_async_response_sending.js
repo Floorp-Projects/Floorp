@@ -654,7 +654,7 @@ function CustomPipe(name) {
 
       Assert.ok(this._waiter !== null, "must be waiting now");
 
-      if (self._data.length > 0) {
+      if (self._data.length) {
         dumpn(
           "*** data still pending, normal notifications will signal " +
             "completion"

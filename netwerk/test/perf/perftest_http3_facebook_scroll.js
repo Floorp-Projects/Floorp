@@ -147,7 +147,7 @@ async function test(context, commands) {
       await commands.wait.byTime(waitTime);
     }
 
-    if (vals.length == 0) {
+    if (!vals.length) {
       throw new Error("No requestsPerSecond values were obtained");
     }
 

@@ -360,7 +360,7 @@ function printObj(o, showMembers) {
   var s = "******************************\n";
   s += "o = {\n";
   for (var i in o) {
-    if (typeof i != "string" || showMembers || (i.length > 0 && i[0] != "_")) {
+    if (typeof i != "string" || showMembers || (!!i.length && i[0] != "_")) {
       s += "      " + i + ": " + o[i] + ",\n";
     }
   }
@@ -2103,7 +2103,7 @@ LineData.prototype = {
       // But if our data ends in a CR, we have to back up one, because
       // the first byte in the next packet might be an LF and if we
       // start looking at data.length we won't find it.
-      if (data.length > 0 && data[data.length - 1] === CR) {
+      if (data.length && data[data.length - 1] === CR) {
         --this._start;
       }
 
@@ -2520,7 +2520,7 @@ ServerHandler.prototype = {
               longestPrefix = prefix;
             }
           }
-          if (longestPrefix.length > 0) {
+          if (longestPrefix.length) {
             dumpn("calling prefix override for " + longestPrefix);
             this._overridePrefixes[longestPrefix](request, response);
           } else {
@@ -2624,7 +2624,7 @@ ServerHandler.prototype = {
   // see nsIHttpServer.registerPathHandler
   //
   registerPathHandler(path, handler) {
-    if (path.length == 0) {
+    if (!path.length) {
       throw Components.Exception(
         "Handler path cannot be empty",
         Cr.NS_ERROR_INVALID_ARG
@@ -3242,7 +3242,7 @@ ServerHandler.prototype = {
         //     redirect here instead
         if (
           tmp == path.substring(1) &&
-          tmp.length != 0 &&
+          !!tmp.length &&
           tmp.charAt(tmp.length - 1) != "/"
         ) {
           file = null;
@@ -4713,9 +4713,9 @@ WriteThroughCopier.prototype = {
     var pendingData = this._pendingData;
 
     NS_ASSERT(bytesConsumed > 0);
-    NS_ASSERT(pendingData.length > 0, "no pending data somehow?");
+    NS_ASSERT(!!pendingData.length, "no pending data somehow?");
     NS_ASSERT(
-      pendingData[pendingData.length - 1].length > 0,
+      !!pendingData[pendingData.length - 1].length,
       "buffered zero bytes of data?"
     );
 
@@ -4790,7 +4790,7 @@ WriteThroughCopier.prototype = {
       return;
     }
 
-    NS_ASSERT(pendingData[0].length > 0, "queued up an empty quantum?");
+    NS_ASSERT(!!pendingData[0].length, "queued up an empty quantum?");
 
     //
     // Write out the first pending quantum of data.  The possible errors here
@@ -4825,11 +4825,11 @@ WriteThroughCopier.prototype = {
     } catch (e) {
       if (wouldBlock(e)) {
         NS_ASSERT(
-          pendingData.length > 0,
+          !!pendingData.length,
           "stream-blocking exception with no data to write?"
         );
         NS_ASSERT(
-          pendingData[0].length > 0,
+          !!pendingData[0].length,
           "stream-blocking exception with empty quantum?"
         );
         this._waitToWriteData();
@@ -4849,7 +4849,7 @@ WriteThroughCopier.prototype = {
     // The day is ours!  Quantum written, now let's see if we have more data
     // still to write.
     try {
-      if (pendingData.length > 0) {
+      if (pendingData.length) {
         this._waitToWriteData();
         return;
       }
@@ -5030,8 +5030,8 @@ WriteThroughCopier.prototype = {
     dumpn("*** _waitToWriteData");
 
     var pendingData = this._pendingData;
-    NS_ASSERT(pendingData.length > 0, "no pending data to write?");
-    NS_ASSERT(pendingData[0].length > 0, "buffered an empty write?");
+    NS_ASSERT(!!pendingData.length, "no pending data to write?");
+    NS_ASSERT(!!pendingData[0].length, "buffered an empty write?");
 
     this._sink.asyncWait(
       this,

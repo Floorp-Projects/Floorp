@@ -142,7 +142,7 @@ function testHeaderEnumerator() {
     delete heads[it.toLowerCase()];
   }
 
-  if (Object.keys(heads).length != 0) {
+  if (Object.keys(heads).length) {
     do_throw("still have properties in heads!?!?");
   }
 }

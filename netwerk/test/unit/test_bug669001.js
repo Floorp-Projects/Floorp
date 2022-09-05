@@ -113,7 +113,7 @@ function checkAndShiftTest(request, response) {
   tests[0].test(response);
 
   tests.shift();
-  if (tests.length == 0) {
+  if (!tests.length) {
     httpServer.stop(tearDown);
     return;
   }

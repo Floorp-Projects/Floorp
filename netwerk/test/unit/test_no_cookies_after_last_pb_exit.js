@@ -113,7 +113,7 @@ const steps = [
 ];
 
 function next() {
-  if (steps.length == 0) {
+  if (!steps.length) {
     do_test_finished();
     return;
   }

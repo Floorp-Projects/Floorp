@@ -77,7 +77,7 @@ function handleRequest(request, response) {
 
   if (expectedRequestType === "fullRequest") {
     // Should not have Range or If-Range in first request.
-    if (range && range.length > 0) {
+    if (range && range.length) {
       ERR(
         response,
         400,
@@ -86,7 +86,7 @@ function handleRequest(request, response) {
       );
       return;
     }
-    if (ifRange && ifRange.length > 0) {
+    if (ifRange && ifRange.length) {
       ERR(
         response,
         400,

@@ -38,7 +38,7 @@ let expectedChildMessages = [];
 let maybeFinishWaitForParentChannels;
 let parentChannelsDone = new Promise(resolve => {
   maybeFinishWaitForParentChannels = () => {
-    if (expectedParentChannels.length == 0) {
+    if (!expectedParentChannels.length) {
       dump("All expected parent channels were detected\n");
       resolve();
     }

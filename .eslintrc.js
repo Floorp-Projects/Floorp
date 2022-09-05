@@ -477,12 +477,6 @@ module.exports = {
       },
     },
     {
-      files: ["netwerk/**"],
-      rules: {
-        "mozilla/prefer-boolean-length-check": "off",
-      },
-    },
-    {
       // Rules of Hooks broadly checks for camelCase "use" identifiers, so
       // enable only for paths actually using React to avoid false positives.
       extends: ["plugin:react-hooks/recommended"],
