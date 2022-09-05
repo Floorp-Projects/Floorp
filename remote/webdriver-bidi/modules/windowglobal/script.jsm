@@ -209,6 +209,8 @@ class ScriptModule extends Module {
    *     The arguments to pass to the function call.
    * @param {string} functionDeclaration
    *     The body of the function to call.
+   * @param {string=} realmId [not supported]
+   *     The id of the realm.
    * @param {OwnershipModel} resultOwnership
    *     The ownership model to use for the results of this evaluation.
    * @param {string=} sandbox
@@ -253,6 +255,26 @@ class ScriptModule extends Module {
   }
 
   /**
+   * Delete the provided handles from the realm corresponding to the provided
+   * sandbox name.
+   *
+   * @param {Object=} options
+   * @param {Array<string>} handles
+   *     Array of handle ids to disown.
+   * @param {string=} realmId [not supported]
+   *     The id of the realm.
+   * @param {string=} sandbox
+   *     The name of the sandbox.
+   */
+  disownHandles(options) {
+    const { handles, sandbox: sandboxName = null } = options;
+    const realm = this.#getRealmFromSandboxName(sandboxName);
+    for (const handle of handles) {
+      realm.removeObjectHandle(handle);
+    }
+  }
+
+  /**
    * Evaluate a provided expression in the current window global.
    *
    * @param {Object} options
@@ -261,6 +283,8 @@ class ScriptModule extends Module {
    *     expression to resolve, if this return value is a Promise.
    * @param {string} expression
    *     The expression to evaluate.
+   * @param {string=} realmId [not supported]
+   *     The id of the realm.
    * @param {OwnershipModel} resultOwnership
    *     The ownership model to use for the results of this evaluation.
    * @param {string=} sandbox

@@ -170,6 +170,52 @@ class ScriptModule extends Module {
   }
 
   /**
+   * The script.disown command disowns the given handles. This does not
+   * guarantee the handled object will be garbage collected, as there can be
+   * other handles or strong ECMAScript references.
+   *
+   * @param {Object=} options
+   * @param {Array<string>} handles
+   *     Array of handle ids to disown.
+   * @param {Object} target
+   *     The target owning the handles, which either matches the definition for
+   *     a RealmTarget or for ContextTarget.
+   */
+  async disown(options = {}) {
+    // TODO: Bug 1778976. Remove once command is fully supported.
+    this.assertExperimentalCommandsEnabled("script.disown");
+
+    const { handles, target = {} } = options;
+
+    lazy.assert.array(
+      handles,
+      `Expected "handles" to be an array, got ${handles}`
+    );
+    handles.forEach(handle => {
+      lazy.assert.string(
+        handle,
+        `Expected "handles" to be an array of strings, got ${handle}`
+      );
+    });
+
+    const { contextId, realmId, sandbox } = this.#assertTarget(target);
+    const context = this.#getContextFromTarget({ contextId, realmId, sandbox });
+    await this.messageHandler.forwardCommand({
+      moduleName: "script",
+      commandName: "disownHandles",
+      destination: {
+        type: lazy.WindowGlobalMessageHandler.type,
+        id: context.id,
+      },
+      params: {
+        handles,
+        realmId,
+        sandbox,
+      },
+    });
+  }
+
+  /**
    * Evaluate a provided expression in the provided target, which is either a
    * realm or a browsing context.
    *
