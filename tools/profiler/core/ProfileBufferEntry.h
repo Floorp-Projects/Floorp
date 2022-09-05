@@ -178,12 +178,12 @@ class JITFrameInfo final {
     return mLocalFailureLatchSource;
   }
 
-  mozilla::Vector<JITFrameInfoForBufferRange>&& MoveRanges() && {
-    return std::move(mRanges);
-  }
-  mozilla::UniquePtr<UniqueJSONStrings>&& MoveUniqueStrings() && {
-    return std::move(mUniqueStrings);
-  }
+  // The encapsulated data points at the local FailureLatch, so on the way out
+  // they must be given a new external FailureLatch to start using instead.
+  mozilla::Vector<JITFrameInfoForBufferRange>&& MoveRangesWithNewFailureLatch(
+      mozilla::FailureLatch& aFailureLatch) &&;
+  mozilla::UniquePtr<UniqueJSONStrings>&& MoveUniqueStringsWithNewFailureLatch(
+      mozilla::FailureLatch& aFailureLatch) &&;
 
  private:
   // JITFrameInfo's may exist during profiling, so it carries its own fallible
@@ -202,7 +202,7 @@ class JITFrameInfo final {
   mozilla::UniquePtr<UniqueJSONStrings> mUniqueStrings;
 };
 
-class UniqueStacks {
+class UniqueStacks final : public mozilla::FailureLatch {
  public:
   struct FrameKey {
     explicit FrameKey(const char* aLocation)
@@ -332,9 +332,9 @@ class UniqueStacks {
     }
   };
 
-  explicit UniqueStacks(
-      JITFrameInfo&& aJITFrameInfo,
-      ProfilerCodeAddressService* aCodeAddressService = nullptr);
+  UniqueStacks(mozilla::FailureLatch& aFailureLatch,
+               JITFrameInfo&& aJITFrameInfo,
+               ProfilerCodeAddressService* aCodeAddressService = nullptr);
 
   // Return a StackKey for aFrame as the stack's root frame (no prefix).
   [[nodiscard]] StackKey BeginStack(const FrameKey& aFrame);
@@ -366,6 +366,8 @@ class UniqueStacks {
   // Find the function name at the given PC (if a ProfilerCodeAddressService was
   // provided), otherwise just stringify that PC.
   [[nodiscard]] nsAutoCString FunctionNameOrAddress(void* aPC);
+
+  FAILURELATCH_IMPL_PROXY(mFrameTableWriter)
 
  private:
   void StreamNonJITFrame(const FrameKey& aFrame);
