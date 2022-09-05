@@ -2489,21 +2489,42 @@ bool nsWindow::WaylandPopupCheckAndGetAnchor(GdkRectangle* aPopupAnchor) {
 }
 
 void nsWindow::WaylandPopupPrepareForMove() {
-  // Visible widgets can't be positioned.
+  LOG("nsWindow::WaylandPopupPrepareForMove()");
+
+  if (mPopupHint == ePopupTypeTooltip) {
+    // Don't fiddle with tooltips type, just hide it before move-to-rect
+    if (mPopupUseMoveToRect && gtk_widget_is_visible(mShell)) {
+      HideWaylandPopupWindow(/* aTemporaryHide */ true,
+                             /* aRemoveFromPopupList */ false);
+    }
+    LOG("  it's tooltip, quit");
+    return;
+  }
+
+  // See https://bugzilla.mozilla.org/show_bug.cgi?id=1785185#c8
+  // gtk_window_move() needs GDK_WINDOW_TYPE_HINT_UTILITY popup type.
+  // move-to-rect requires GDK_WINDOW_TYPE_HINT_POPUP_MENU popups type.
+  // We need to set it before map event when popup is hidden.
+  const GdkWindowTypeHint currentType =
+      gtk_window_get_type_hint(GTK_WINDOW(mShell));
+  const GdkWindowTypeHint requiredType = mPopupUseMoveToRect
+                                             ? GDK_WINDOW_TYPE_HINT_POPUP_MENU
+                                             : GDK_WINDOW_TYPE_HINT_UTILITY;
+
+  if (!mPopupUseMoveToRect && currentType == requiredType) {
+    LOG("  type matches and we're not forced to hide it, quit.");
+    return;
+  }
+
   if (gtk_widget_is_visible(mShell)) {
     HideWaylandPopupWindow(/* aTemporaryHide */ true,
                            /* aRemoveFromPopupList */ false);
   }
-  // See https://bugzilla.mozilla.org/show_bug.cgi?id=1785185#c8
-  // gtk_window_move() needs GDK_WINDOW_TYPE_HINT_UTILITY popup type.
-  // move-to-rect requires GDK_WINDOW_TYPE_HINT_POPUP_MENU popups type.
-  // GDK_WINDOW_TYPE_HINT_TOOLTIP works for both
-  // We need to set it before map event when popup is hidden.
-  if (mPopupHint != ePopupTypeTooltip) {
-    gtk_window_set_type_hint(GTK_WINDOW(mShell),
-                             mPopupUseMoveToRect
-                                 ? GDK_WINDOW_TYPE_HINT_POPUP_MENU
-                                 : GDK_WINDOW_TYPE_HINT_UTILITY);
+
+  if (currentType != requiredType) {
+    LOG("  set type %s",
+        requiredType == GDK_WINDOW_TYPE_HINT_POPUP_MENU ? "MENU" : "UTILITY");
+    gtk_window_set_type_hint(GTK_WINDOW(mShell), requiredType);
   }
 }
 
