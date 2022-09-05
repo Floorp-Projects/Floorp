@@ -15,11 +15,11 @@
   <rect height="100%" width="100%" fill="yellow" />
 
   <!-- For both rects below: if it's black, its filter resolved successfully.
-       If it's transparent, it means we failed to load the resource
+       If it's yellow, it means we failed to load the resource
        (e.g. because it was blocked as a cross-origin resource). -->
-  <rect height="50px" width="100px" fill="red"
+  <rect height="50px" width="100px" fill="yellow"
         filter="url(http://mochi.test:8888/tests/layout/svg/tests/filters.svg#NonWhiteToBlack)"/>
   <rect y="50px"
-        height="50px" width="100px" fill="red"
+        height="50px" width="100px" fill="yellow"
         filter="url(http://example.org/tests/layout/svg/tests/filters.svg#NonWhiteToBlack)"/>
 </svg>
