@@ -6,12 +6,14 @@
 #ifndef BASEPROFILEJSONWRITER_H
 #define BASEPROFILEJSONWRITER_H
 
+#include "mozilla/FailureLatch.h"
 #include "mozilla/HashFunctions.h"
 #include "mozilla/HashTable.h"
 #include "mozilla/JSONWriter.h"
+#include "mozilla/NotNull.h"
 #include "mozilla/ProgressLogger.h"
 #include "mozilla/TimeStamp.h"
-#include "mozilla/UniquePtr.h"
+#include "mozilla/UniquePtrExtensions.h"
 
 #include <functional>
 #include <ostream>
@@ -27,11 +29,14 @@ class SpliceableJSONWriter;
 // profile are not accessed until the profile is entirely written. For these
 // reasons we use a chunked writer that keeps an array of chunks, which is
 // concatenated together after writing is finished.
-class ChunkedJSONWriteFunc final : public JSONWriteFunc {
+class ChunkedJSONWriteFunc final : public JSONWriteFunc, public FailureLatch {
  public:
   friend class SpliceableJSONWriter;
 
-  ChunkedJSONWriteFunc() { AllocChunk(kChunkSize); }
+  explicit ChunkedJSONWriteFunc(FailureLatch& aFailureLatch)
+      : mFailureLatch(WrapNotNullUnchecked(&aFailureLatch)) {
+    (void)AllocChunk(kChunkSize);
+  }
 
   [[nodiscard]] bool IsEmpty() const {
     MOZ_ASSERT_IF(!mChunkPtr, !mChunkEnd && mChunkList.length() == 0 &&
@@ -51,8 +56,10 @@ class ChunkedJSONWriteFunc final : public JSONWriteFunc {
   }
 
   void Write(const Span<const char>& aStr) final {
-    MOZ_RELEASE_ASSERT(mChunkPtr,
-                       "Attempted write in an empty ChunkedJSONWriteFunc");
+    if (Failed()) {
+      return;
+    }
+
     MOZ_ASSERT(mChunkPtr >= mChunkList.back().get() && mChunkPtr <= mChunkEnd);
     MOZ_ASSERT(mChunkEnd >= mChunkList.back().get() + mChunkLengths.back());
     MOZ_ASSERT(*mChunkPtr == '\0');
@@ -62,12 +69,16 @@ class ChunkedJSONWriteFunc final : public JSONWriteFunc {
     // than a chunk, allocate its own chunk.
     char* newPtr;
     if (aStr.size() >= kChunkSize) {
-      AllocChunk(aStr.size() + 1);
+      if (!AllocChunk(aStr.size() + 1)) {
+        return;
+      }
       newPtr = mChunkPtr + aStr.size();
     } else {
       newPtr = mChunkPtr + aStr.size();
       if (newPtr >= mChunkEnd) {
-        AllocChunk(kChunkSize);
+        if (!AllocChunk(kChunkSize)) {
+          return;
+        }
         newPtr = mChunkPtr + aStr.size();
       }
     }
@@ -78,14 +89,18 @@ class ChunkedJSONWriteFunc final : public JSONWriteFunc {
     mChunkLengths.back() += aStr.size();
   }
 
-  void CopyDataIntoLazilyAllocatedBuffer(
+  [[nodiscard]] bool CopyDataIntoLazilyAllocatedBuffer(
       const std::function<char*(size_t)>& aAllocator) const {
     // Request a buffer for the full content plus a null terminator.
+    if (Failed()) {
+      return false;
+    }
+
     char* ptr = aAllocator(Length() + 1);
 
     if (!ptr) {
       // Failed to allocate memory.
-      return;
+      return false;
     }
 
     for (size_t i = 0; i < mChunkList.length(); i++) {
@@ -94,39 +109,94 @@ class ChunkedJSONWriteFunc final : public JSONWriteFunc {
       ptr += len;
     }
     *ptr = '\0';
+    return true;
   }
 
   [[nodiscard]] UniquePtr<char[]> CopyData() const {
     UniquePtr<char[]> c;
-    CopyDataIntoLazilyAllocatedBuffer([&](size_t allocationSize) {
-      c = MakeUnique<char[]>(allocationSize);
-      return c.get();
-    });
+    if (!CopyDataIntoLazilyAllocatedBuffer([&](size_t allocationSize) {
+          c = MakeUnique<char[]>(allocationSize);
+          return c.get();
+        })) {
+      // Something went wrong, make sure the returned pointer is null even if
+      // the allocation happened.
+      c = nullptr;
+    }
     return c;
   }
 
   void Take(ChunkedJSONWriteFunc&& aOther) {
+    SetFailureFrom(aOther);
+    if (Failed()) {
+      return;
+    }
+
     for (size_t i = 0; i < aOther.mChunkList.length(); i++) {
       MOZ_ALWAYS_TRUE(mChunkLengths.append(aOther.mChunkLengths[i]));
       MOZ_ALWAYS_TRUE(mChunkList.append(std::move(aOther.mChunkList[i])));
     }
     mChunkPtr = mChunkList.back().get() + mChunkLengths.back();
     mChunkEnd = mChunkPtr;
-    aOther.mChunkPtr = nullptr;
-    aOther.mChunkEnd = nullptr;
-    aOther.mChunkList.clear();
-    aOther.mChunkLengths.clear();
+    aOther.Clear();
+  }
+
+  FAILURELATCH_IMPL_PROXY(*mFailureLatch)
+
+  // Change the failure latch to be used here, and if the previous latch was
+  // already in failure state, set that failure in the new latch.
+  // This allows using this WriteFunc in isolation, before attempting to bring
+  // it into another operation group with its own FailureLatch.
+  void ChangeFailureLatchAndForwardState(FailureLatch& aFailureLatch) {
+    aFailureLatch.SetFailureFrom(*this);
+    mFailureLatch = WrapNotNullUnchecked(&aFailureLatch);
   }
 
  private:
-  void AllocChunk(size_t aChunkSize) {
+  void Clear() {
+    mChunkPtr = nullptr;
+    mChunkEnd = nullptr;
+    mChunkList.clear();
+    mChunkLengths.clear();
+  }
+
+  void ClearAndSetFailure(std::string aFailure) {
+    Clear();
+    SetFailure(std::move(aFailure));
+  }
+
+  [[nodiscard]] bool ClearAndSetFailureAndFalse(std::string aFailure) {
+    ClearAndSetFailure(std::move(aFailure));
+    return false;
+  }
+
+  [[nodiscard]] bool AllocChunk(size_t aChunkSize) {
+    if (Failed()) {
+      if (mChunkPtr) {
+        // FailureLatch is in failed state, but chunks have not been cleared yet
+        // (error must have happened elsewhere).
+        Clear();
+      }
+      return false;
+    }
+
     MOZ_ASSERT(mChunkLengths.length() == mChunkList.length());
-    UniquePtr<char[]> newChunk = MakeUnique<char[]>(aChunkSize);
+    UniquePtr<char[]> newChunk = MakeUniqueFallible<char[]>(aChunkSize);
+    if (!newChunk) {
+      return ClearAndSetFailureAndFalse(
+          "OOM in ChunkedJSONWriteFunc::AllocChunk allocating new chunk");
+    }
     mChunkPtr = newChunk.get();
     mChunkEnd = mChunkPtr + aChunkSize;
     *mChunkPtr = '\0';
-    MOZ_ALWAYS_TRUE(mChunkLengths.append(0));
-    MOZ_ALWAYS_TRUE(mChunkList.append(std::move(newChunk)));
+    if (!mChunkLengths.append(0)) {
+      return ClearAndSetFailureAndFalse(
+          "OOM in ChunkedJSONWriteFunc::AllocChunk appending length");
+    }
+    if (!mChunkList.append(std::move(newChunk))) {
+      return ClearAndSetFailureAndFalse(
+          "OOM in ChunkedJSONWriteFunc::AllocChunk appending new chunk");
+    }
+    return true;
   }
 
   static const size_t kChunkSize = 4096 * 512;
@@ -149,6 +219,8 @@ class ChunkedJSONWriteFunc final : public JSONWriteFunc {
   // mChunkLengths[i].
   Vector<UniquePtr<char[]>> mChunkList;
   Vector<size_t> mChunkLengths;
+
+  NotNull<FailureLatch*> mFailureLatch;
 };
 
 struct OStreamJSONWriteFunc final : public JSONWriteFunc {
@@ -352,7 +424,8 @@ class SpliceableJSONWriter : public JSONWriter {
 class SpliceableChunkedJSONWriter final : public SpliceableJSONWriter {
  public:
   SpliceableChunkedJSONWriter()
-      : SpliceableJSONWriter(MakeUnique<ChunkedJSONWriteFunc>()) {}
+      : SpliceableJSONWriter(MakeUnique<ChunkedJSONWriteFunc>(
+            FailureLatchInfallibleSource::Singleton())) {}
 
   // Access the ChunkedJSONWriteFunc as reference-to-const, usually to copy data
   // out.

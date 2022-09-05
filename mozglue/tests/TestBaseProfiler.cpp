@@ -5106,6 +5106,15 @@ static void VerifyUniqueStringContents(
     mozilla::baseprofiler::UniqueJSONStrings* aUniqueStringsOrNull = nullptr) {
   mozilla::baseprofiler::SpliceableChunkedJSONWriter writer;
 
+  MOZ_RELEASE_ASSERT(!writer.ChunkedWriteFunc().Fallible());
+  MOZ_RELEASE_ASSERT(!writer.ChunkedWriteFunc().Failed());
+  MOZ_RELEASE_ASSERT(!writer.ChunkedWriteFunc().GetFailure());
+  MOZ_RELEASE_ASSERT(&writer.ChunkedWriteFunc().SourceFailureLatch() ==
+                     &mozilla::FailureLatchInfallibleSource::Singleton());
+  MOZ_RELEASE_ASSERT(
+      &std::as_const(writer.ChunkedWriteFunc()).SourceFailureLatch() ==
+      &mozilla::FailureLatchInfallibleSource::Singleton());
+
   // By default use a local UniqueJSONStrings, otherwise use the one provided.
   mozilla::baseprofiler::UniqueJSONStrings localUniqueStrings;
   mozilla::baseprofiler::UniqueJSONStrings& uniqueStrings =
@@ -5122,6 +5131,9 @@ static void VerifyUniqueStringContents(
     writer.EndArray();
   }
   writer.End();
+
+  MOZ_RELEASE_ASSERT(!writer.ChunkedWriteFunc().Failed());
+  MOZ_RELEASE_ASSERT(!writer.ChunkedWriteFunc().GetFailure());
 
   UniquePtr<char[]> jsonString = writer.ChunkedWriteFunc().CopyData();
   MOZ_RELEASE_ASSERT(jsonString);

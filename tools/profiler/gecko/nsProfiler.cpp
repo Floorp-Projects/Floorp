@@ -1391,11 +1391,15 @@ void nsProfiler::FinishGathering() {
 
   // Here, we have enough space reserved in `result`, starting at
   // `resultBeginWriting`, copy the JSON profile there.
-  mWriter->ChunkedWriteFunc().CopyDataIntoLazilyAllocatedBuffer(
-      [&](size_t aBufferLen) -> char* {
-        MOZ_RELEASE_ASSERT(aBufferLen == len + 1);
-        return resultBeginWriting;
-      });
+  if (!mWriter->ChunkedWriteFunc().CopyDataIntoLazilyAllocatedBuffer(
+          [&](size_t aBufferLen) -> char* {
+            MOZ_RELEASE_ASSERT(aBufferLen == len + 1);
+            return resultBeginWriting;
+          })) {
+    NS_WARNING("Could not copy profile JSON, probably OOM.");
+    ResetGathering(NS_ERROR_FILE_TOO_BIG);
+    return;
+  }
   MOZ_ASSERT(*(result.Data() + len) == '\0',
              "We still expected a null at the end of the string buffer");
 

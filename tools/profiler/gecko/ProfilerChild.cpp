@@ -365,22 +365,25 @@ void ProfilerChild::GatherProfileThreadFunction(
                 if (writer) {
                   if (const size_t len = writer->ChunkedWriteFunc().Length();
                       len < UINT32_MAX) {
-                    bool success = false;
-                    writer->ChunkedWriteFunc()
-                        .CopyDataIntoLazilyAllocatedBuffer(
-                            [&](size_t allocationSize) -> char* {
-                              MOZ_ASSERT(allocationSize == len + 1);
-                              if (parameters->profilerChild->AllocShmem(
-                                      allocationSize, &shmem)) {
-                                success = true;
-                                return shmem.get<char>();
-                              }
-                              return nullptr;
-                            });
-                    if (!success) {
+                    bool shmemSuccess = true;
+                    const bool copySuccess =
+                        writer->ChunkedWriteFunc()
+                            .CopyDataIntoLazilyAllocatedBuffer(
+                                [&](size_t allocationSize) -> char* {
+                                  MOZ_ASSERT(allocationSize == len + 1);
+                                  if (parameters->profilerChild->AllocShmem(
+                                          allocationSize, &shmem)) {
+                                    return shmem.get<char>();
+                                  }
+                                  shmemSuccess = false;
+                                  return nullptr;
+                                });
+                    if (!shmemSuccess || !copySuccess) {
                       const nsPrintfCString message(
-                          "*Could not create shmem for profile from pid %u "
-                          "(%zu B)",
+                          (!shmemSuccess)
+                              ? "*Could not create shmem for profile from pid "
+                                "%u (%zu B)"
+                              : "*Could not write profile from pid %u (%zu B)",
                           unsigned(profiler_current_process_id().ToNumber()),
                           len);
                       if (parameters->profilerChild->AllocShmem(
@@ -519,11 +522,14 @@ nsCString ProfilerChild::GrabShutdownProfile() {
 
   // Here, we have enough space reserved in `profileCString`, starting at
   // `profileBeginWriting`, copy the JSON profile there.
-  writer.ChunkedWriteFunc().CopyDataIntoLazilyAllocatedBuffer(
-      [&](size_t aBufferLen) -> char* {
-        MOZ_RELEASE_ASSERT(aBufferLen == len + 1);
-        return profileBeginWriting;
-      });
+  if (!writer.ChunkedWriteFunc().CopyDataIntoLazilyAllocatedBuffer(
+          [&](size_t aBufferLen) -> char* {
+            MOZ_RELEASE_ASSERT(aBufferLen == len + 1);
+            return profileBeginWriting;
+          })) {
+    return nsPrintfCString("*Could not copy profile from pid %u",
+                           unsigned(profiler_current_process_id().ToNumber()));
+  }
   MOZ_ASSERT(*(profileCString.Data() + len) == '\0',
              "We still expected a null at the end of the string buffer");
 
