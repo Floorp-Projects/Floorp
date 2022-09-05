@@ -4286,13 +4286,29 @@ BrowserGlue.prototype = {
 
   async _showUpgradeDialog() {
     const data = await lazy.OnboardingMessageProvider.getUpgradeMessage();
-    const win = lazy.BrowserWindowTracker.getTopWindow();
-    const browser = win.gBrowser.selectedBrowser;
+    const { gBrowser } = lazy.BrowserWindowTracker.getTopWindow();
+
+    // Nice to have -- if the already-selected tab matches isBlankPageUrl(),
+    // don't bother opening a new tab to do this.
+    const tab = gBrowser.addTrustedTab("about:home", {
+      relatedToCurrent: true,
+    });
+
+    // Select a tab, and wait for it to be selected.
+    //
+    // XXX is there any possibility this could race with session restore and
+    // the listener could be called for a different tab?
+    await new Promise(resolve => {
+      gBrowser.addEventListener("TabSwitchDone", resolve, { once: true });
+      gBrowser.selectedTab = tab;
+    });
+
+    // Now that the tab is ready, show the upgrade dialog in it
     const config = {
       type: "SHOW_SPOTLIGHT",
       data,
     };
-    lazy.SpecialMessageActions.handleAction(config, browser);
+    lazy.SpecialMessageActions.handleAction(config, tab.linkedBrowser);
   },
 
   async _maybeShowDefaultBrowserPrompt() {

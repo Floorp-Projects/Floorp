@@ -61,18 +61,22 @@ async function openMRUpgradeWelcome(screensToTest) {
     );
   }
 
-  const config = {
-    type: "SHOW_SPOTLIGHT",
-    data,
-  };
+  sandbox.stub(OnboardingMessageProvider, "getUpgradeMessage").resolves(data);
 
-  SpecialMessageActions.handleAction(config, gBrowser.selectedBrowser);
-
-  return BrowserTestUtils.promiseAlertDialogOpen(
+  let dialogOpenPromise = BrowserTestUtils.promiseAlertDialogOpen(
     null,
     "chrome://browser/content/spotlight.html",
     { isSubDialog: true }
   );
+
+  Cc["@mozilla.org/browser/browserglue;1"]
+    .getService()
+    .wrappedJSObject._showUpgradeDialog();
+
+  let browser = await dialogOpenPromise;
+
+  OnboardingMessageProvider.getUpgradeMessage.restore();
+  return Promise.resolve(browser);
 }
 
 async function clickVisibleButton(browser, selector) {
@@ -104,6 +108,13 @@ async function test_upgrade_screen_content(
   }
 }
 
+async function waitForDialogClose(browser) {
+  await BrowserTestUtils.waitForCondition(
+    () => !browser.top?.document.querySelector(".dialogFrame"),
+    "waiting for dialog to close"
+  );
+}
+
 /**
  * Test homepage/newtab prefs start off as defaults and do not change
  */
@@ -132,9 +143,7 @@ add_task(async function test_aboutwelcome_upgrade_mr_prefs_off() {
   );
 
   await clickVisibleButton(browser, ".action-buttons button.primary");
-  await BrowserTestUtils.waitForDialogClose(
-    browser.top.document.getElementById("window-modal-dialog")
-  );
+  await waitForDialogClose(browser);
 
   Assert.ok(
     !Services.prefs.prefHasUserValue(HOMEPAGE_PREF),
@@ -144,6 +153,8 @@ add_task(async function test_aboutwelcome_upgrade_mr_prefs_off() {
     !Services.prefs.prefHasUserValue(NEWTAB_PREF),
     "newtab pref should be default"
   );
+
+  await BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });
 
 /**
@@ -177,9 +188,7 @@ add_task(
     );
 
     await clickVisibleButton(browser, ".action-buttons button.primary");
-    await BrowserTestUtils.waitForDialogClose(
-      browser.top.document.getElementById("window-modal-dialog")
-    );
+    await waitForDialogClose(browser);
 
     Assert.ok(
       Services.prefs.prefHasUserValue(HOMEPAGE_PREF),
@@ -190,6 +199,7 @@ add_task(
       "newtab pref should have a user value"
     );
 
+    await BrowserTestUtils.removeTab(gBrowser.selectedTab);
     await popPrefs();
   }
 );
@@ -226,9 +236,7 @@ add_task(
     browser.document.querySelector("#action-checkbox").click();
 
     await clickVisibleButton(browser, ".action-buttons button.primary");
-    await BrowserTestUtils.waitForDialogClose(
-      browser.top.document.getElementById("window-modal-dialog")
-    );
+    await waitForDialogClose(browser);
 
     Assert.ok(
       !Services.prefs.prefHasUserValue(HOMEPAGE_PREF),
@@ -239,6 +247,7 @@ add_task(
       "newtab pref should have a user value"
     );
 
+    await BrowserTestUtils.removeTab(gBrowser.selectedTab);
     await popPrefs();
   }
 );
@@ -258,9 +267,7 @@ add_task(async function test_aboutwelcome_upgrade_mr_private_pin() {
     ["main.UPGRADE_COLORWAY"]
   );
   await clickVisibleButton(browser, ".action-buttons button.primary");
-  await BrowserTestUtils.waitForDialogClose(
-    browser.top.document.getElementById("window-modal-dialog")
-  );
+  await waitForDialogClose(browser);
 
   const pinStub = SpecialMessageActions.pinFirefoxToTaskbar;
   Assert.equal(
@@ -273,6 +280,8 @@ add_task(async function test_aboutwelcome_upgrade_mr_private_pin() {
     pinStub.firstCall.lastArg != pinStub.secondCall.lastArg,
     "pinFirefoxToTaskbar should have been called once for private, once not"
   );
+
+  await BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });
 
 /*
@@ -294,9 +303,8 @@ add_task(async function test_aboutwelcome_upgrade_mr_private_pin_get_started() {
 
   await clickVisibleButton(browser, ".action-buttons button.secondary");
 
-  await BrowserTestUtils.waitForDialogClose(
-    browser.top.document.getElementById("window-modal-dialog")
-  );
+  await waitForDialogClose(browser);
+  await BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });
 
 /*
@@ -319,9 +327,8 @@ add_task(async function test_aboutwelcome_upgrade_mr_private_pin_not_needed() {
   );
 
   await clickVisibleButton(browser, ".action-buttons button.secondary");
-  await BrowserTestUtils.waitForDialogClose(
-    browser.top.document.getElementById("window-modal-dialog")
-  );
+  await waitForDialogClose(browser);
+  await BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });
 
 /*
@@ -343,8 +350,28 @@ add_task(
     );
 
     await clickVisibleButton(browser, ".action-buttons button.secondary");
-    await BrowserTestUtils.waitForDialogClose(
-      browser.top.document.getElementById("window-modal-dialog")
-    );
+    await waitForDialogClose(browser);
+    await BrowserTestUtils.removeTab(gBrowser.selectedTab);
   }
 );
+
+add_task(async function test_aboutwelcome_upgrade_show_firefox_view() {
+  let browser = await openMRUpgradeWelcome(["UPGRADE_GRATITUDE"]);
+
+  // execution
+  await test_upgrade_screen_content(
+    browser,
+    //Expected selectors
+    ["main.UPGRADE_GRATITUDE"],
+    //Unexpected selectors:
+    []
+  );
+  await clickVisibleButton(browser, ".action-buttons button.primary");
+
+  // verification
+  await BrowserTestUtils.waitForEvent(gBrowser, "TabSwitchDone");
+  assertFirefoxViewTabSelected(gBrowser.ownerGlobal);
+
+  closeFirefoxViewTab();
+  await BrowserTestUtils.removeTab(gBrowser.selectedTab);
+});

@@ -75,6 +75,7 @@ const BASE_MESSAGES = () => [
       template: "multistage",
       id: "FX_MR_106_UPGRADE",
       transitions: true,
+      modal: "tab",
       screens: [
         {
           id: "UPGRADE_PIN_FIREFOX",

@@ -85,6 +85,7 @@ add_task(async function show_major_upgrade() {
     "satisfied",
   ]);
 
+  await BrowserTestUtils.removeTab(gBrowser.selectedTab);
   defaultPrefs.setBoolPref(pref, orig);
 });
 
