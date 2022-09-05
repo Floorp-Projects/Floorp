@@ -10,7 +10,10 @@ const addonsSpec = generateActorSpec({
 
   methods: {
     installTemporaryAddon: {
-      request: { addonPath: Arg(0, "string"), openDevTools: Arg(1, "boolean") },
+      request: {
+        addonPath: Arg(0, "string"),
+        openDevTools: Arg(1, "nullable:boolean"),
+      },
       response: { addon: RetVal("json") },
     },
   },
