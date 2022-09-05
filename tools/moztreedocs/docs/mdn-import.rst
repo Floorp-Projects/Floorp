@@ -4,6 +4,8 @@ Importing documentation from MDN
 As MDN should not be used for documenting mozilla-central specific code or process,
 the documentation should be migrated in this repository.
 
+The meta bug is `Bug 1617963 <https://bugzilla.mozilla.org/show_bug.cgi?id=migrate-from-mdn>`__.
+
 Fortunately, there is an easy way to import the doc from MDN using GitHub
 to the firefox source docs.
 
