@@ -140,6 +140,8 @@
     <string name="mozac_feature_addons_updater_notification_content_singular">නව අවසරයක් අවශ්‍යයි</string>
     <!-- Name of the "notification channel" used for displaying a notification for updating an add-on. See https://developer.android.com/training/notify-user/channels -->
     <string name="mozac_feature_addons_updater_notification_channel">එක්කහු යාවත්කාල</string>
+    <!-- Name of the "notification channel" used for displaying a notification for new supported add-ons. See https://developer.android.com/training/notify-user/channels -->
+    <string name="mozac_feature_addons_supported_checker_notification_channel">සහාය දක්වන එක්කහු සෝදිසිකරු</string>
     <!-- The tile of the notification, this will be shown to the user when one newly supported add-on is available.-->
     <string name="mozac_feature_addons_supported_checker_notification_title">නව එක්කහුවක් තිබේ</string>
     <!-- The tile of the notification, this will be shown to the user when more than one newly supported add-ons are available.-->
