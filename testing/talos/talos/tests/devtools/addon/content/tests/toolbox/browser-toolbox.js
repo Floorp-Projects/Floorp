@@ -33,8 +33,8 @@ module.exports = async function() {
   await testSetup(TEST_URL);
 
   let test = runTest(`browser-toolbox.start-process.DAMP`, true);
-  const { BrowserToolboxLauncher } = ChromeUtils.import(
-    "resource://devtools/client/framework/browser-toolbox/Launcher.jsm"
+  const { BrowserToolboxLauncher } = ChromeUtils.importESModule(
+    "resource://devtools/client/framework/browser-toolbox/Launcher.sys.mjs"
   );
   const process = await new Promise(resolve => {
     BrowserToolboxLauncher.init({

@@ -909,8 +909,8 @@ DevToolsStartup.prototype = {
       Services.obs.addObserver(observe, "devtools-thread-ready");
     }
 
-    const { BrowserToolboxLauncher } = ChromeUtils.import(
-      "resource://devtools/client/framework/browser-toolbox/Launcher.jsm"
+    const { BrowserToolboxLauncher } = ChromeUtils.importESModule(
+      "resource://devtools/client/framework/browser-toolbox/Launcher.sys.mjs"
     );
     const env = Cc["@mozilla.org/process/environment;1"].getService(
       Ci.nsIEnvironment
