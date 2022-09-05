@@ -298,24 +298,10 @@ void FileSystemDataManager::AbortOperationsForLocks(
     // can't be blocked by this Manager if there is no acquired DirectoryLock.
     // If there is an acquired DirectoryLock, check if the table contains the
     // lock for the Manager.
-    if (!quota::Client::IsLockForObjectAcquiredAndContainedInLockTable(
+    if (quota::Client::IsLockForObjectAcquiredAndContainedInLockTable(
             *dataManager, aDirectoryLockIds)) {
-      continue;
+      dataManager->RequestAllowToClose();
     }
-
-    InvokeAsync(dataManager->MutableIOTargetPtr(), __func__,
-                [dataManager = RefPtr<FileSystemDataManager>(
-                     dataManager.get())]() mutable {
-                  dataManager->RequestAllowToClose();
-
-                  nsCOMPtr<nsISerialEventTarget> target =
-                      dataManager->MutableBackgroundTargetPtr();
-
-                  NS_ProxyRelease("ReleaseFileSystemDataManager", target,
-                                  dataManager.forget());
-
-                  return BoolPromise::CreateAndResolve(true, __func__);
-                });
   }
 }
 
@@ -328,19 +314,7 @@ void FileSystemDataManager::InitiateShutdown() {
   }
 
   for (const auto& dataManager : gDataManagers->Values()) {
-    InvokeAsync(dataManager->MutableIOTargetPtr(), __func__,
-                [dataManager = RefPtr<FileSystemDataManager>(
-                     dataManager.get())]() mutable {
-                  dataManager->RequestAllowToClose();
-
-                  nsCOMPtr<nsISerialEventTarget> target =
-                      dataManager->MutableBackgroundTargetPtr();
-
-                  NS_ProxyRelease("ReleaseFileSystemDataManager", target,
-                                  dataManager.forget());
-
-                  return BoolPromise::CreateAndResolve(true, __func__);
-                });
+    dataManager->RequestAllowToClose();
   }
 }
 
@@ -365,16 +339,16 @@ void FileSystemDataManager::Unregister() {
 
 void FileSystemDataManager::RegisterActor(
     NotNull<FileSystemManagerParent*> aActor) {
-  MOZ_ASSERT(!mActors.Contains(aActor));
+  MOZ_ASSERT(!mBackgroundThreadAccessible.Access()->mActors.Contains(aActor));
 
-  mActors.Insert(aActor);
+  mBackgroundThreadAccessible.Access()->mActors.Insert(aActor);
 }
 
 void FileSystemDataManager::UnregisterActor(
     NotNull<FileSystemManagerParent*> aActor) {
-  MOZ_ASSERT(mActors.Contains(aActor));
+  MOZ_ASSERT(mBackgroundThreadAccessible.Access()->mActors.Contains(aActor));
 
-  mActors.Remove(aActor);
+  mBackgroundThreadAccessible.Access()->mActors.Remove(aActor);
 
   if (IsInactive()) {
     BeginClose();
@@ -394,11 +368,11 @@ RefPtr<BoolPromise> FileSystemDataManager::OnClose() {
 }
 
 bool FileSystemDataManager::IsInactive() const {
-  return !mRegCount && !mActors.Count();
+  return !mRegCount && !mBackgroundThreadAccessible.Access()->mActors.Count();
 }
 
 void FileSystemDataManager::RequestAllowToClose() {
-  for (const auto& actor : mActors) {
+  for (const auto& actor : mBackgroundThreadAccessible.Access()->mActors) {
     actor->RequestAllowToClose();
   }
 }
