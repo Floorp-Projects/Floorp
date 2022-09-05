@@ -598,21 +598,17 @@ void MathMLTextRunFactory::RebuildTextRun(
   RefPtr<gfxTextRun> cachedChild;
   gfxTextRun* child;
 
-  if (mathVar == StyleMathVariant::Bold && doMathvariantStyling) {
-    font.style = FontSlantStyle::NORMAL;
-    font.weight = FontWeight::BOLD;
-  } else if (mathVar == StyleMathVariant::Italic && doMathvariantStyling) {
-    font.style = FontSlantStyle::ITALIC;
-    font.weight = FontWeight::NORMAL;
-  } else if (mathVar == StyleMathVariant::BoldItalic && doMathvariantStyling) {
-    font.style = FontSlantStyle::ITALIC;
-    font.weight = FontWeight::BOLD;
-  } else if (mathVar != StyleMathVariant::None) {
-    // Mathvariant overrides fontstyle and fontweight
-    // Need to check to see if mathvariant is actually applied as this function
-    // is used for other purposes.
-    font.style = FontSlantStyle::NORMAL;
-    font.weight = FontWeight::NORMAL;
+  if (doMathvariantStyling) {
+    if (mathVar == StyleMathVariant::Bold) {
+      font.style = FontSlantStyle::NORMAL;
+      font.weight = FontWeight::BOLD;
+    } else if (mathVar == StyleMathVariant::Italic) {
+      font.style = FontSlantStyle::ITALIC;
+      font.weight = FontWeight::NORMAL;
+    } else if (mathVar == StyleMathVariant::BoldItalic) {
+      font.style = FontSlantStyle::ITALIC;
+      font.weight = FontWeight::BOLD;
+    }
   }
   gfxFontGroup* newFontGroup = nullptr;
 
