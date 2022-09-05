@@ -285,10 +285,7 @@ function nodeHasEntries(item) {
     className === "WeakMap" ||
     className === "WeakSet" ||
     className === "Storage" ||
-    // @backward-compat { version 104 } Support for enumerate URLSearchParams entries was
-    // added in 104. When connecting to older server, we don't want to show the <entries>
-    // node for them. The extra check can be removed once 104 hits release.
-    (className === "URLSearchParams" && Array.isArray(value.preview?.entries)) ||
+    className === "URLSearchParams" ||
     // @backward-compat { version 105 } Support for enumerate Headers entries was
     // added in 105. When connecting to older server, we don't want to show the <entries>
     // node for them. The extra check can be removed once 105 hits release.

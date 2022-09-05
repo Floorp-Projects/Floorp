@@ -127,8 +127,6 @@ exports.RootActor = protocol.ActorClassWithSpec(rootSpec, {
     }
 
     this.traits = {
-      // @backward-compat { version 104 } clearMessagesCacheAsync was added in 104
-      hasWebConsoleClearMessagesCacheAsync: true,
       networkMonitor: true,
       resources: supportedResources,
       // @backward-compat { version 105 } isSwitchingMode not supported by old servers

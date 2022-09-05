@@ -186,13 +186,6 @@ const webconsoleSpecPrototype = {
       },
       response: RetVal("console.autocomplete"),
     },
-    /**
-     * Clear the cache of messages (page errors and console API calls) expects no response.
-     */
-    // @backward-compat { version 104 } This can be removed once older server have clearMessagesCacheAsync.
-    clearMessagesCache: {
-      oneway: true,
-    },
 
     /**
      * Same as clearMessagesCache, but wait for the server response.
