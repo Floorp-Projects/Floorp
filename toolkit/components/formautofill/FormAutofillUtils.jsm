@@ -1309,3 +1309,9 @@ XPCOMUtils.defineLazyPreferenceGetter(
   "extensions.formautofill.creditCards.heuristics.testConfidence",
   null
 );
+
+XPCOMUtils.defineLazyPreferenceGetter(
+  FormAutofillUtils,
+  "ccHeuristicsNameExpirySection",
+  "extensions.formautofill.creditCards.heuristics.nameExpirySection.enabled"
+);

@@ -546,6 +546,67 @@ const TESTCASES = [
                </form>`,
     sections: [[]],
     validFieldDetails: [],
+    prefs: [
+      [
+        "extensions.formautofill.creditCards.heuristics.nameExpirySection.enabled",
+        false,
+      ],
+    ],
+  },
+  {
+    description: "A valid credit card form with cc-name and cc-exp.",
+    document: `<form>
+               <input id="cc-name" autocomplete="cc-name">
+               <input id="cc-exp-month" autocomplete="cc-exp-month">
+               <input id="cc-exp-year" autocomplete="cc-exp-year">
+               </form>`,
+    sections: [
+      [
+        { section: "", addressType: "", contactType: "", fieldName: "cc-name" },
+        {
+          section: "",
+          addressType: "",
+          contactType: "",
+          fieldName: "cc-exp-month",
+        },
+        {
+          section: "",
+          addressType: "",
+          contactType: "",
+          fieldName: "cc-exp-year",
+        },
+      ],
+    ],
+    validFieldDetails: [
+      { section: "", addressType: "", contactType: "", fieldName: "cc-name" },
+      {
+        section: "",
+        addressType: "",
+        contactType: "",
+        fieldName: "cc-exp-month",
+      },
+      {
+        section: "",
+        addressType: "",
+        contactType: "",
+        fieldName: "cc-exp-year",
+      },
+    ],
+    ids: ["cc-name", "cc-exp-month", "cc-exp-year"],
+    prefs: [
+      [
+        "extensions.formautofill.creditCards.heuristics.nameExpirySection.enabled",
+        true,
+      ],
+    ],
+  },
+  {
+    description: "An invalid credit card form with only a cc-name field",
+    document: `<form>
+               <input id="cc-name" autocomplete="cc-name">
+               </form>`,
+    sections: [[]],
+    validFieldDetails: [],
   },
   {
     description:
