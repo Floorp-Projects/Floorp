@@ -31,18 +31,16 @@ class ChunkedJSONWriteFunc final : public JSONWriteFunc {
  public:
   friend class SpliceableJSONWriter;
 
-  ChunkedJSONWriteFunc() : mChunkPtr{nullptr}, mChunkEnd{nullptr} {
-    AllocChunk(kChunkSize);
-  }
+  ChunkedJSONWriteFunc() { AllocChunk(kChunkSize); }
 
-  bool IsEmpty() const {
+  [[nodiscard]] bool IsEmpty() const {
     MOZ_ASSERT_IF(!mChunkPtr, !mChunkEnd && mChunkList.length() == 0 &&
                                   mChunkLengths.length() == 0);
     return !mChunkPtr;
   }
 
   // Length of data written so far, excluding null terminator.
-  size_t Length() const {
+  [[nodiscard]] size_t Length() const {
     MOZ_ASSERT(mChunkLengths.length() == mChunkList.length());
     size_t totalLen = 0;
     for (size_t i = 0; i < mChunkLengths.length(); i++) {
@@ -53,6 +51,8 @@ class ChunkedJSONWriteFunc final : public JSONWriteFunc {
   }
 
   void Write(const Span<const char>& aStr) final {
+    MOZ_RELEASE_ASSERT(mChunkPtr,
+                       "Attempted write in an empty ChunkedJSONWriteFunc");
     MOZ_ASSERT(mChunkPtr >= mChunkList.back().get() && mChunkPtr <= mChunkEnd);
     MOZ_ASSERT(mChunkEnd >= mChunkList.back().get() + mChunkLengths.back());
     MOZ_ASSERT(*mChunkPtr == '\0');
@@ -77,6 +77,7 @@ class ChunkedJSONWriteFunc final : public JSONWriteFunc {
     mChunkPtr = newPtr;
     mChunkLengths.back() += aStr.size();
   }
+
   void CopyDataIntoLazilyAllocatedBuffer(
       const std::function<char*(size_t)>& aAllocator) const {
     // Request a buffer for the full content plus a null terminator.
@@ -94,7 +95,8 @@ class ChunkedJSONWriteFunc final : public JSONWriteFunc {
     }
     *ptr = '\0';
   }
-  UniquePtr<char[]> CopyData() const {
+
+  [[nodiscard]] UniquePtr<char[]> CopyData() const {
     UniquePtr<char[]> c;
     CopyDataIntoLazilyAllocatedBuffer([&](size_t allocationSize) {
       c = MakeUnique<char[]>(allocationSize);
@@ -102,6 +104,7 @@ class ChunkedJSONWriteFunc final : public JSONWriteFunc {
     });
     return c;
   }
+
   void Take(ChunkedJSONWriteFunc&& aOther) {
     for (size_t i = 0; i < aOther.mChunkList.length(); i++) {
       MOZ_ALWAYS_TRUE(mChunkLengths.append(aOther.mChunkLengths[i]));
@@ -132,13 +135,13 @@ class ChunkedJSONWriteFunc final : public JSONWriteFunc {
   //
   // The current chunk is always at the back of mChunkList, i.e.,
   // mChunkList.back() <= mChunkPtr <= mChunkEnd.
-  char* mChunkPtr;
+  char* mChunkPtr = nullptr;
 
   // Pointer to the end of the current chunk.
   //
   // The current chunk is always at the back of mChunkList, i.e.,
   // mChunkEnd >= mChunkList.back() + mChunkLengths.back().
-  char* mChunkEnd;
+  char* mChunkEnd = nullptr;
 
   // List of chunks and their lengths.
   //
