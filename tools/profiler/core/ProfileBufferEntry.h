@@ -20,7 +20,7 @@
 #include "mozilla/ProfileBufferEntryKinds.h"
 #include "mozilla/ProfileJSONWriter.h"
 #include "mozilla/ProfilerUtils.h"
-#include "mozilla/UniquePtr.h"
+#include "mozilla/UniquePtrExtensions.h"
 #include "mozilla/Variant.h"
 #include "mozilla/Vector.h"
 #include "nsString.h"
@@ -144,8 +144,13 @@ struct JITFrameInfoForBufferRange final {
 class JITFrameInfo final {
  public:
   JITFrameInfo()
-      : mUniqueStrings(
-            mozilla::MakeUnique<UniqueJSONStrings>(mLocalFailureLatchSource)) {}
+      : mUniqueStrings(mozilla::MakeUniqueFallible<UniqueJSONStrings>(
+            mLocalFailureLatchSource)) {
+    if (!mUniqueStrings) {
+      mLocalFailureLatchSource.SetFailure(
+          "OOM in JITFrameInfo allocating mUniqueStrings");
+    }
+  }
 
   MOZ_IMPLICIT JITFrameInfo(const JITFrameInfo& aOther,
                             mozilla::ProgressLogger aProgressLogger);

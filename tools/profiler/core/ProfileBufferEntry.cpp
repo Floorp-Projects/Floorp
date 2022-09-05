@@ -291,15 +291,26 @@ JITFrameInfoForBufferRange JITFrameInfoForBufferRange::Clone() const {
 
 JITFrameInfo::JITFrameInfo(const JITFrameInfo& aOther,
                            mozilla::ProgressLogger aProgressLogger)
-    : mUniqueStrings(MakeUnique<UniqueJSONStrings>(
+    : mUniqueStrings(MakeUniqueFallible<UniqueJSONStrings>(
           mLocalFailureLatchSource, *aOther.mUniqueStrings,
           aProgressLogger.CreateSubLoggerFromTo(
               0_pc, "Creating JIT frame info unique strings...", 49_pc,
               "Created JIT frame info unique strings"))) {
-  MOZ_ALWAYS_TRUE(mRanges.reserve(aOther.mRanges.length()));
-  for (auto&& [i, progressLogger] : aProgressLogger.CreateLoopSubLoggersFromTo(
-           50_pc, 100_pc, aOther.mRanges.length(), "Copying JIT frame info")) {
-    mRanges.infallibleAppend(aOther.mRanges[i].Clone());
+  if (!mUniqueStrings) {
+    mLocalFailureLatchSource.SetFailure(
+        "OOM in JITFrameInfo allocating mUniqueStrings");
+    return;
+  }
+
+  if (mRanges.reserve(aOther.mRanges.length())) {
+    for (auto&& [i, progressLogger] :
+         aProgressLogger.CreateLoopSubLoggersFromTo(50_pc, 100_pc,
+                                                    aOther.mRanges.length(),
+                                                    "Copying JIT frame info")) {
+      mRanges.infallibleAppend(aOther.mRanges[i].Clone());
+    }
+  } else {
+    mLocalFailureLatchSource.SetFailure("OOM in JITFrameInfo resizing mRanges");
   }
 }
 
@@ -332,6 +343,11 @@ UniqueStacks::UniqueStacks(
       mStackTableWriter(aFailureLatch),
       mJITInfoRanges(std::move(aJITFrameInfo)
                          .MoveRangesWithNewFailureLatch(aFailureLatch)) {
+  if (!mUniqueStrings) {
+    SetFailure("Did not get mUniqueStrings from JITFrameInfo");
+    return;
+  }
+
   mFrameTableWriter.StartBareList();
   mStackTableWriter.StartBareList();
 }
@@ -466,6 +482,10 @@ void UniqueStacks::StreamStack(const StackKey& aStack) {
 }
 
 void UniqueStacks::StreamNonJITFrame(const FrameKey& aFrame) {
+  if (Failed()) {
+    return;
+  }
+
   using NormalFrameData = FrameKey::NormalFrameData;
 
   enum Schema : uint32_t {
@@ -565,6 +585,10 @@ void JITFrameInfo::AddInfoForRange(
     uint64_t aRangeStart, uint64_t aRangeEnd, JSContext* aCx,
     const std::function<void(const std::function<void(void*)>&)>&
         aJITAddressProvider) {
+  if (mLocalFailureLatchSource.Failed()) {
+    return;
+  }
+
   if (aRangeStart == aRangeEnd) {
     return;
   }
@@ -593,20 +617,36 @@ void JITFrameInfo::AddInfoForRange(
         JITFrameKey jitFrameKey{handle.canonicalAddress(), depth};
         auto frameEntry = jitFrameToFrameJSONMap.lookupForAdd(jitFrameKey);
         if (!frameEntry) {
-          MOZ_RELEASE_ASSERT(jitFrameToFrameJSONMap.add(
-              frameEntry, jitFrameKey,
-              JSONForJITFrame(aCx, handle, *mUniqueStrings)));
+          if (!jitFrameToFrameJSONMap.add(
+                  frameEntry, jitFrameKey,
+                  JSONForJITFrame(aCx, handle, *mUniqueStrings))) {
+            mLocalFailureLatchSource.SetFailure(
+                "OOM in JITFrameInfo::AddInfoForRange adding jit->frame map");
+            return;
+          }
         }
-        MOZ_RELEASE_ASSERT(jitFrameKeys.append(jitFrameKey));
+        if (!jitFrameKeys.append(jitFrameKey)) {
+          mLocalFailureLatchSource.SetFailure(
+              "OOM in JITFrameInfo::AddInfoForRange adding jit frame key");
+          return;
+        }
       }
-      MOZ_RELEASE_ASSERT(jitAddressToJITFrameMap.add(addressEntry, aJITAddress,
-                                                     std::move(jitFrameKeys)));
+      if (!jitAddressToJITFrameMap.add(addressEntry, aJITAddress,
+                                       std::move(jitFrameKeys))) {
+        mLocalFailureLatchSource.SetFailure(
+            "OOM in JITFrameInfo::AddInfoForRange adding addr->jit map");
+        return;
+      }
     }
   });
 
-  MOZ_RELEASE_ASSERT(mRanges.append(JITFrameInfoForBufferRange{
-      aRangeStart, aRangeEnd, std::move(jitAddressToJITFrameMap),
-      std::move(jitFrameToFrameJSONMap)}));
+  if (!mRanges.append(JITFrameInfoForBufferRange{
+          aRangeStart, aRangeEnd, std::move(jitAddressToJITFrameMap),
+          std::move(jitFrameToFrameJSONMap)})) {
+    mLocalFailureLatchSource.SetFailure(
+        "OOM in JITFrameInfo::AddInfoForRange adding range");
+    return;
+  }
 }
 
 struct ProfileSample {
