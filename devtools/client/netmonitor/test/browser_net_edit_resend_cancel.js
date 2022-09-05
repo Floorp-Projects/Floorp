@@ -47,11 +47,7 @@ add_task(async function() {
   await waitForHeaders;
   EventUtils.sendMouseEvent({ type: "contextmenu" }, firstRequest);
   const firstRequestState = getSelectedRequest(store.getState());
-  const contextResend = getContextMenuItem(
-    monitor,
-    "request-list-context-resend"
-  );
-  contextResend.click();
+  await selectContextMenuItem(monitor, "request-list-context-edit-resend");
 
   // Waits for "Edit & Resend" panel to appear > New request "Cancel"
   await waitUntil(() => document.querySelector(".custom-request-panel"));

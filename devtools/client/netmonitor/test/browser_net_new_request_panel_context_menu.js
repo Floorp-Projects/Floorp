@@ -49,11 +49,9 @@ add_task(async function() {
   await waitForHeaders;
   EventUtils.sendMouseEvent({ type: "contextmenu" }, firstRequestItem);
 
-  info("if the item 'Resend' is hidden");
-  is(
-    !!getContextMenuItem(monitor, "request-list-context-resend-only"),
-    false,
-    "The 'Resend' item should be hidden when the pref is true."
+  ok(
+    getContextMenuItem(monitor, "request-list-context-resend-only"),
+    "The 'Resend' item is visible when there is a clicked request"
   );
 
   info("Opening the new request panel");
@@ -61,17 +59,7 @@ add_task(async function() {
     document,
     ".monitor-panel .network-action-bar"
   );
-  const menuItem = getContextMenuItem(monitor, "request-list-context-resend");
-  const menuPopup = menuItem.parentNode;
-
-  const onHidden = new Promise(resolve => {
-    menuPopup.addEventListener("popuphidden", resolve, { once: true });
-  });
-
-  menuItem.click();
-  menuPopup.hidePopup();
-
-  await onHidden;
+  await selectContextMenuItem(monitor, "request-list-context-edit-resend");
   await waitForPanels;
 
   is(

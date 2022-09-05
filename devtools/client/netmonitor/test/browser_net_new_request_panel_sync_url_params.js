@@ -40,7 +40,7 @@ add_task(async function() {
     document,
     ".monitor-panel .network-action-bar"
   );
-  getContextMenuItem(monitor, "request-list-context-resend").click();
+  await selectContextMenuItem(monitor, "request-list-context-edit-resend");
   await waitForPanels;
 
   const queryScenarios = [

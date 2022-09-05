@@ -82,6 +82,7 @@ class RequestListContent extends Component {
       openHTTPCustomRequestTab: PropTypes.func.isRequired,
       closeHTTPCustomRequestTab: PropTypes.func.isRequired,
       sendCustomRequest: PropTypes.func.isRequired,
+      sendHTTPCustomRequest: PropTypes.func.isRequired,
       displayedRequests: PropTypes.array.isRequired,
       firstRequestStartedMs: PropTypes.number.isRequired,
       fromCache: PropTypes.bool,
@@ -354,6 +355,7 @@ class RequestListContent extends Component {
         openHTTPCustomRequestTab,
         closeHTTPCustomRequestTab,
         sendCustomRequest,
+        sendHTTPCustomRequest,
         openStatistics,
         openRequestBlockingAndAddUrl,
         openRequestBlockingAndDisableUrls,
@@ -366,6 +368,7 @@ class RequestListContent extends Component {
         openHTTPCustomRequestTab,
         closeHTTPCustomRequestTab,
         sendCustomRequest,
+        sendHTTPCustomRequest,
         openStatistics,
         openRequestBlockingAndAddUrl,
         openRequestBlockingAndDisableUrls,
@@ -481,6 +484,8 @@ module.exports = connect(
       dispatch(Actions.openHTTPCustomRequest(false)),
     sendCustomRequest: () =>
       dispatch(Actions.sendCustomRequest(props.connector)),
+    sendHTTPCustomRequest: request =>
+      dispatch(Actions.sendHTTPCustomRequest(props.connector, request)),
     openStatistics: open =>
       dispatch(Actions.openStatistics(props.connector, open)),
     openRequestBlockingAndAddUrl: url =>
