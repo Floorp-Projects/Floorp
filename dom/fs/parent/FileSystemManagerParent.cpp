@@ -14,6 +14,7 @@
 #include "mozilla/dom/quota/ForwardDecls.h"
 #include "mozilla/dom/quota/QuotaCommon.h"
 #include "mozilla/dom/quota/ResultExtensions.h"
+#include "mozilla/ipc/BackgroundParent.h"
 #include "nsString.h"
 #include "nsTArray.h"
 
@@ -218,6 +219,8 @@ IPCResult FileSystemManagerParent::RecvNeedQuota(
 }
 
 void FileSystemManagerParent::RequestAllowToClose() {
+  ::mozilla::ipc::AssertIsOnBackgroundThread();
+
   if (mRequestedAllowToClose) {
     return;
   }
@@ -226,7 +229,12 @@ void FileSystemManagerParent::RequestAllowToClose() {
 
   // XXX Send a message to the child and wait for a response before closing!
 
-  Close();
+  InvokeAsync(mDataManager->MutableIOTargetPtr(), __func__,
+              [self = RefPtr<FileSystemManagerParent>(this)]() {
+                self->Close();
+
+                return BoolPromise::CreateAndResolve(true, __func__);
+              });
 }
 
 void FileSystemManagerParent::OnChannelClose() {

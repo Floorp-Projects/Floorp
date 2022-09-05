@@ -9,6 +9,7 @@
 
 #include "mozilla/NotNull.h"
 #include "mozilla/TaskQueue.h"
+#include "mozilla/ThreadBound.h"
 #include "mozilla/dom/FileSystemTypes.h"
 #include "mozilla/dom/FileSystemHelpers.h"
 #include "mozilla/dom/quota/CheckedUnsafePtr.h"
@@ -116,7 +117,12 @@ class FileSystemDataManager
 
   RefPtr<BoolPromise> BeginClose();
 
-  nsTHashSet<FileSystemManagerParent*> mActors;
+  // Things touched on background thread only.
+  struct BackgroundThreadAccessible {
+    nsTHashSet<FileSystemManagerParent*> mActors;
+  };
+  ThreadBound<BackgroundThreadAccessible> mBackgroundThreadAccessible;
+
   const quota::OriginMetadata mOriginMetadata;
   const NotNull<nsCOMPtr<nsISerialEventTarget>> mBackgroundTarget;
   const NotNull<RefPtr<TaskQueue>> mIOTaskQueue;
