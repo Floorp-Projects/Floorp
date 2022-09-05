@@ -78,18 +78,10 @@
   padding-inline: var(--tab-shadow-max-size);
 }
 
-@media (-moz-box-flexbox-emulation) {
-  .tab-stack {
-    /* Needed to allow tabs to shrink to be skinnier than their page-title: */
-    min-width: 0;
-  }
-
-  #tabbrowser-arrowscrollbox::part(scrollbox) {
-    /* Needed to prevent tabstrip from growing as wide as the sum of the tabs'
-       page-title widths (when we'd rather have it be as wide as the window and
-       compress the tabs to their minimum size): */
-    max-width: 100%;
-  }
+#tabbrowser-arrowscrollbox::part(scrollbox-clip) {
+  /* Needed to prevent tabstrip from growing as wide as the sum of the tabs'
+     page-title widths when emulating XUL with modern flexbox. */
+  min-width: 0;
 }
 
 .tabbrowser-tab {
@@ -128,6 +120,7 @@
 
 .tab-content {
   padding: 0 var(--inline-tab-padding);
+  min-width: 0;
 }
 
 :root:not([uidensity=compact]) .tab-content[pinned] {
