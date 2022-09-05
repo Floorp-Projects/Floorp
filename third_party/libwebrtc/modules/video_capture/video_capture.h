@@ -17,6 +17,8 @@
 #include "modules/include/module.h"
 #include "modules/desktop_capture/desktop_capture_types.h"
 #include "modules/video_capture/video_capture_defines.h"
+#include "rtc_base/synchronization/mutex.h"
+#include "rtc_base/thread_annotations.h"
 #include <set>
 
 #if defined(ANDROID)
@@ -82,15 +84,18 @@ class VideoCaptureModule : public rtc::RefCountInterface {
     virtual uint32_t NumberOfDevices() = 0;
     virtual int32_t Refresh() = 0;
     virtual void DeviceChange() {
+      MutexLock lock(&_inputCallbacksMutex);
       for (auto inputCallBack : _inputCallBacks) {
         inputCallBack->OnDeviceChange();
       }
     }
     virtual void RegisterVideoInputFeedBack(VideoInputFeedBack* callBack) {
+      MutexLock lock(&_inputCallbacksMutex);
       _inputCallBacks.insert(callBack);
     }
 
     virtual void DeRegisterVideoInputFeedBack(VideoInputFeedBack* callBack) {
+      MutexLock lock(&_inputCallbacksMutex);
       auto it = _inputCallBacks.find(callBack);
       if (it != _inputCallBacks.end()) {
         _inputCallBacks.erase(it);
@@ -144,7 +149,8 @@ class VideoCaptureModule : public rtc::RefCountInterface {
 
     virtual ~DeviceInfo() {}
    private:
-    std::set<VideoInputFeedBack*> _inputCallBacks;
+    Mutex _inputCallbacksMutex;
+    std::set<VideoInputFeedBack*> _inputCallBacks RTC_GUARDED_BY(_inputCallbacksMutex);
   };
 
   //   Register capture data callback
