@@ -8,10 +8,14 @@
 
 namespace mozilla::baseprofiler {
 
-UniqueJSONStrings::UniqueJSONStrings() { mStringTableWriter.StartBareList(); }
+UniqueJSONStrings::UniqueJSONStrings()
+    : mStringTableWriter(FailureLatchInfallibleSource::Singleton()) {
+  mStringTableWriter.StartBareList();
+}
 
 UniqueJSONStrings::UniqueJSONStrings(const UniqueJSONStrings& aOther,
-                                     ProgressLogger aProgressLogger) {
+                                     ProgressLogger aProgressLogger)
+    : mStringTableWriter(FailureLatchInfallibleSource::Singleton()) {
   using namespace mozilla::literals::ProportionValue_literals;  // For `10_pc`.
 
   mStringTableWriter.StartBareList();

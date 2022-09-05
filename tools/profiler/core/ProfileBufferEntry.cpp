@@ -303,6 +303,8 @@ UniqueStacks::UniqueStacks(
     ProfilerCodeAddressService* aCodeAddressService /* = nullptr */)
     : mUniqueStrings(std::move(aJITFrameInfo).MoveUniqueStrings()),
       mCodeAddressService(aCodeAddressService),
+      mFrameTableWriter(FailureLatchInfallibleSource::Singleton()),
+      mStackTableWriter(FailureLatchInfallibleSource::Singleton()),
       mJITInfoRanges(std::move(aJITFrameInfo).MoveRanges()) {
   mFrameTableWriter.StartBareList();
   mStackTableWriter.StartBareList();
@@ -514,7 +516,7 @@ static nsCString JSONForJITFrame(JSContext* aContext,
                                  UniqueJSONStrings& aUniqueStrings) {
   nsCString json;
   JSONStringRefWriteFunc jw(json);
-  SpliceableJSONWriter writer(jw);
+  SpliceableJSONWriter writer(jw, FailureLatchInfallibleSource::Singleton());
   StreamJITFrame(aContext, writer, aUniqueStrings, aJITFrame);
   return json;
 }

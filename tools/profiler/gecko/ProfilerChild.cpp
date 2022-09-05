@@ -327,7 +327,8 @@ void ProfilerChild::GatherProfileThreadFunction(
       parameters->progress, "Gather-profile thread started", "Profile sent");
   using namespace mozilla::literals::ProportionValue_literals;  // For `1_pc`.
 
-  auto writer = MakeUnique<SpliceableChunkedJSONWriter>();
+  auto writer = MakeUnique<SpliceableChunkedJSONWriter>(
+      FailureLatchInfallibleSource::Singleton());
   if (!profiler_get_profile_json(
           *writer,
           /* aSinceTime */ 0,
@@ -480,7 +481,7 @@ nsCString ProfilerChild::GrabShutdownProfile() {
 
   UniquePtr<ProfilerCodeAddressService> service =
       profiler_code_address_service_for_presymbolication();
-  SpliceableChunkedJSONWriter writer;
+  SpliceableChunkedJSONWriter writer{FailureLatchInfallibleSource::Singleton()};
   writer.Start();
   if (!profiler_stream_json_for_this_process(writer, /* aSinceTime */ 0,
                                              /* aIsShuttingDown */ true,

@@ -1447,7 +1447,8 @@ void TestJSONTimeOutput() {
 #  define TEST(in, out)                                     \
     do {                                                    \
       mozilla::baseprofiler::SpliceableJSONWriter writer(   \
-          mozilla::MakeUnique<StringWriteFunc>());          \
+          mozilla::MakeUnique<StringWriteFunc>(),           \
+          FailureLatchInfallibleSource::Singleton());       \
       writer.Start();                                       \
       writer.TimeDoubleMsProperty("time_ms", (in));         \
       writer.End();                                         \
@@ -5104,7 +5105,8 @@ static void VerifyUniqueStringContents(
     F&& aF, std::string_view aExpectedData,
     std::string_view aExpectedUniqueStrings,
     mozilla::baseprofiler::UniqueJSONStrings* aUniqueStringsOrNull = nullptr) {
-  mozilla::baseprofiler::SpliceableChunkedJSONWriter writer;
+  mozilla::baseprofiler::SpliceableChunkedJSONWriter writer{
+      FailureLatchInfallibleSource::Singleton()};
 
   MOZ_RELEASE_ASSERT(!writer.ChunkedWriteFunc().Fallible());
   MOZ_RELEASE_ASSERT(!writer.ChunkedWriteFunc().Failed());
@@ -5114,6 +5116,14 @@ static void VerifyUniqueStringContents(
   MOZ_RELEASE_ASSERT(
       &std::as_const(writer.ChunkedWriteFunc()).SourceFailureLatch() ==
       &mozilla::FailureLatchInfallibleSource::Singleton());
+
+  MOZ_RELEASE_ASSERT(!writer.Fallible());
+  MOZ_RELEASE_ASSERT(!writer.Failed());
+  MOZ_RELEASE_ASSERT(!writer.GetFailure());
+  MOZ_RELEASE_ASSERT(&writer.SourceFailureLatch() ==
+                     &mozilla::FailureLatchInfallibleSource::Singleton());
+  MOZ_RELEASE_ASSERT(&std::as_const(writer).SourceFailureLatch() ==
+                     &mozilla::FailureLatchInfallibleSource::Singleton());
 
   // By default use a local UniqueJSONStrings, otherwise use the one provided.
   mozilla::baseprofiler::UniqueJSONStrings localUniqueStrings;
@@ -5134,6 +5144,9 @@ static void VerifyUniqueStringContents(
 
   MOZ_RELEASE_ASSERT(!writer.ChunkedWriteFunc().Failed());
   MOZ_RELEASE_ASSERT(!writer.ChunkedWriteFunc().GetFailure());
+
+  MOZ_RELEASE_ASSERT(!writer.Failed());
+  MOZ_RELEASE_ASSERT(!writer.GetFailure());
 
   UniquePtr<char[]> jsonString = writer.ChunkedWriteFunc().CopyData();
   MOZ_RELEASE_ASSERT(jsonString);
@@ -5232,7 +5245,7 @@ void TestUniqueJSONStrings() {
   {
     UJS ujs;
     {
-      SCJW writer;
+      SCJW writer{FailureLatchInfallibleSource::Singleton()};
       ujs.WriteElement(writer, "external0");
       ujs.WriteElement(writer, "external1");
       ujs.WriteElement(writer, "external0");
@@ -5250,7 +5263,7 @@ void TestUniqueJSONStrings() {
   {
     UJS ujs;
     {
-      SCJW writer;
+      SCJW writer{FailureLatchInfallibleSource::Singleton()};
       ujs.WriteElement(writer, "external0");
       ujs.WriteElement(writer, "external1");
       ujs.WriteElement(writer, "external0");
@@ -5314,7 +5327,8 @@ void StreamMarkers(const mozilla::ProfileChunkedBuffer& aBuffer,
 void PrintMarkers(const mozilla::ProfileChunkedBuffer& aBuffer) {
   mozilla::baseprofiler::SpliceableJSONWriter writer(
       mozilla::MakeUnique<mozilla::baseprofiler::OStreamJSONWriteFunc>(
-          std::cout));
+          std::cout),
+      FailureLatchInfallibleSource::Singleton());
   mozilla::baseprofiler::UniqueJSONStrings uniqueStrings;
   writer.SetUniqueStrings(uniqueStrings);
   writer.Start();
