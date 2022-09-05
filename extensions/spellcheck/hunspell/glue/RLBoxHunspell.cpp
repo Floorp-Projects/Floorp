@@ -42,15 +42,13 @@ RLBoxHunspell* RLBoxHunspell::Create(const nsCString& affpath,
   const uint64_t defaultMaxSizeForSandbox =
       wasm_rt_get_default_max_linear_memory_size();
 
-  // We first get the size of the dictionary.
-  // This is actually the first read we try on dpath and it might fail for
-  // whatever filesystem reasons (invalid path, unaccessible, ...).
+  // We first get the size of the dictionary
   Result<int64_t, nsresult> dictSizeResult =
       mozHunspellFileMgrHost::GetSize(dpath);
-  NS_ENSURE_TRUE(dictSizeResult.isOk(), nullptr);
+  MOZ_RELEASE_ASSERT(dictSizeResult.isOk());
 
   int64_t dictSize = dictSizeResult.unwrap();
-  NS_ENSURE_TRUE(dictSize >= 0) nullptr);
+  MOZ_RELEASE_ASSERT(dictSize >= 0);
 
   // Next, we compute the expected memory needed for hunspell spell checking.
   // This will vary based on the size of the dictionary file, which varies by
@@ -83,7 +81,6 @@ RLBoxHunspell* RLBoxHunspell::Create(const nsCString& affpath,
     mozHunspellCallbacks::AllowFile(dpath);
   }
 
-  // TODO Bug 1788857: Verify error handling in case of inaccessible file
   return new RLBoxHunspell(std::move(sandbox), affpath, dpath);
 }
 
