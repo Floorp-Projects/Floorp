@@ -918,7 +918,7 @@ LogicalSize nsContainerFrame::ComputeAutoSize(
                                  : StylePosition()->ISize(aWM);
     if (styleISize.IsAuto()) {
       result.ISize(aWM) =
-          ShrinkWidthToFit(aRenderingContext, availBased, aFlags);
+          ShrinkISizeToFit(aRenderingContext, availBased, aFlags);
     }
   } else {
     result.ISize(aWM) = availBased;
