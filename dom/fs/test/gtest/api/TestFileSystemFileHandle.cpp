@@ -26,7 +26,8 @@ class TestFileSystemFileHandle : public ::testing::Test {
  protected:
   void SetUp() override {
     mRequestHandler = MakeUnique<MockFileSystemRequestHandler>();
-    mMetadata = FileSystemEntryMetadata("file"_ns, u"File"_ns);
+    mMetadata =
+        FileSystemEntryMetadata("file"_ns, u"File"_ns, /* directory */ false);
     mManager = MakeAndAddRef<FileSystemManager>(mGlobal, nullptr);
   }
 

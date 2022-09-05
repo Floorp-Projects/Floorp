@@ -24,8 +24,10 @@ namespace mozilla::dom::fs::test {
 class TestFileSystemHandle : public ::testing::Test {
  protected:
   void SetUp() override {
-    mDirMetadata = FileSystemEntryMetadata("dir"_ns, u"Directory"_ns);
-    mFileMetadata = FileSystemEntryMetadata("file"_ns, u"File"_ns);
+    mDirMetadata = FileSystemEntryMetadata("dir"_ns, u"Directory"_ns,
+                                           /* directory */ true);
+    mFileMetadata =
+        FileSystemEntryMetadata("file"_ns, u"File"_ns, /* directory */ false);
     mManager = MakeAndAddRef<FileSystemManager>(mGlobal, nullptr);
   }
 

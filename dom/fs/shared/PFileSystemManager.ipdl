@@ -23,6 +23,7 @@ struct FileSystemEntryMetadata
 {
   EntryId entryId;
   Name entryName;
+  bool directory;
 };
 
 /**

@@ -33,7 +33,8 @@ class TestFileSystemRequestHandler : public ::testing::Test {
     mListener = MakeAndAddRef<ExpectResolveCalled>();
 
     mChild = FileSystemChildMetadata("parent"_ns, u"ChildName"_ns);
-    mEntry = FileSystemEntryMetadata("myid"_ns, u"EntryName"_ns);
+    mEntry = FileSystemEntryMetadata("myid"_ns, u"EntryName"_ns,
+                                     /* directory */ false);
     mName = u"testDir"_ns;
     mFileSystemManagerChild = MakeAndAddRef<TestFileSystemManagerChild>();
     mManager = MakeAndAddRef<FileSystemManager>(
