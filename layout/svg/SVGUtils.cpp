@@ -127,8 +127,7 @@ nsRect SVGUtils::GetPostFilterInkOverflowRect(nsIFrame* aFrame,
     return aPreFilterRect;
   }
 
-  return FilterInstance::GetPostFilterBounds(aFrame, nullptr, &aPreFilterRect)
-      .valueOr(aPreFilterRect);
+  return FilterInstance::GetPostFilterBounds(aFrame, nullptr, &aPreFilterRect);
 }
 
 bool SVGUtils::OuterSVGIsCallingReflowSVG(nsIFrame* aFrame) {
@@ -622,10 +621,9 @@ void SVGUtils::PaintFrameWithEffects(nsIFrame* aFrame, gfxContext& aContext,
   // TODO: We currently pass nullptr instead of an nsTArray* here, but we
   // actually should get the filter frames and then pass them into
   // PaintFilteredFrame below!  See bug 1494263.
-  const bool hasInvalidFilter =
-      SVGObserverUtils::GetAndObserveFilters(aFrame, nullptr) ==
-      SVGObserverUtils::eHasRefsSomeInvalid;
-  if (SVGObserverUtils::GetAndObserveClipPath(aFrame, &clipPathFrame) ==
+  if (SVGObserverUtils::GetAndObserveFilters(aFrame, nullptr) ==
+          SVGObserverUtils::eHasRefsSomeInvalid ||
+      SVGObserverUtils::GetAndObserveClipPath(aFrame, &clipPathFrame) ==
           SVGObserverUtils::eHasRefsSomeInvalid ||
       SVGObserverUtils::GetAndObserveMasks(aFrame, &maskFrames) ==
           SVGObserverUtils::eHasRefsSomeInvalid) {
@@ -722,8 +720,10 @@ void SVGUtils::PaintFrameWithEffects(nsIFrame* aFrame, gfxContext& aContext,
 
   /* Paint the child */
 
-  // Invalid filters should render the unfiltered contents per spec.
-  if (aFrame->StyleEffects()->HasFilters() && !hasInvalidFilter) {
+  // We know we don't have eHasRefsSomeInvalid due to the check above.  We
+  // don't test for eHasNoRefs here though since even if we have that we may
+  // still have CSS filter functions to handle.  We have to check the style.
+  if (aFrame->StyleEffects()->HasFilters()) {
     nsRegion* dirtyRegion = nullptr;
     nsRegion tmpDirtyRegion;
     if (aDirtyRect) {
@@ -754,17 +754,19 @@ void SVGUtils::PaintFrameWithEffects(nsIFrame* aFrame, gfxContext& aContext,
     target->SetMatrixDouble(reverseScaleMatrix * aTransform *
                             target->CurrentMatrixDouble());
 
-    auto callback = [&](gfxContext& aContext, imgDrawingParams& aImgParams,
-                        const gfxMatrix* aFilterTransform,
-                        const nsIntRect* aDirtyRect) {
+    auto callback = [](gfxContext& aContext, nsIFrame* aTarget,
+                       const gfxMatrix& aTransform, const nsIntRect* aDirtyRect,
+                       imgDrawingParams& aImgParams) {
+      ISVGDisplayableFrame* svgFrame = do_QueryFrame(aTarget);
+      NS_ASSERTION(svgFrame, "Expected SVG frame here");
+
       nsIntRect* dirtyRect = nullptr;
       nsIntRect tmpDirtyRect;
 
       // aDirtyRect is in user-space pixels, we need to convert to
       // outer-SVG-frame-relative device pixels.
       if (aDirtyRect) {
-        MOZ_ASSERT(aFilterTransform);
-        gfxMatrix userToDeviceSpace = *aFilterTransform;
+        gfxMatrix userToDeviceSpace = aTransform;
         if (userToDeviceSpace.IsSingular()) {
           return;
         }
@@ -777,11 +779,8 @@ void SVGUtils::PaintFrameWithEffects(nsIFrame* aFrame, gfxContext& aContext,
         }
       }
 
-      svgFrame->PaintSVG(aContext,
-                         aFilterTransform
-                             ? SVGUtils::GetCSSPxToDevPxMatrix(aFrame)
-                             : aTransform,
-                         aImgParams, aFilterTransform ? dirtyRect : aDirtyRect);
+      svgFrame->PaintSVG(aContext, SVGUtils::GetCSSPxToDevPxMatrix(aTarget),
+                         aImgParams, dirtyRect);
     };
     FilterInstance::PaintFilteredFrame(
         aFrame, aFrame->StyleEffects()->mFilters.AsSpan(), target, callback,
