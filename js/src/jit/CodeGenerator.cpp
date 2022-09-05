@@ -6956,29 +6956,15 @@ void CodeGenerator::visitNewObjectVMCall(LNewObject* lir) {
   restoreLive(lir);
 }
 
-static bool ShouldInitFixedSlots(LInstruction* lir, const TemplateObject& obj) {
-  if (!obj.isNativeObject()) {
-    return true;
-  }
-  const TemplateNativeObject& templateObj = obj.asTemplateNativeObject();
-
+static bool ShouldInitFixedSlots(LNewPlainObject* lir, const Shape* shape,
+                                 uint32_t nfixed) {
   // Look for StoreFixedSlot instructions following an object allocation
   // that write to this object before a GC is triggered or this object is
   // passed to a VM call. If all fixed slots will be initialized, the
   // allocation code doesn't need to set the slots to |undefined|.
 
-  uint32_t nfixed = templateObj.numUsedFixedSlots();
   if (nfixed == 0) {
     return false;
-  }
-
-  // Only optimize if all fixed slots are initially |undefined|, so that we
-  // can assume incremental pre-barriers are not necessary. See also the
-  // comment below.
-  for (uint32_t slot = 0; slot < nfixed; slot++) {
-    if (!templateObj.getSlot(slot).isUndefined()) {
-      return true;
-    }
   }
 
   // Keep track of the fixed slots that are initialized. initializedSlots is
@@ -6989,7 +6975,7 @@ static bool ShouldInitFixedSlots(LInstruction* lir, const TemplateObject& obj) {
   uint32_t initializedSlots = 0;
   uint32_t numInitialized = 0;
 
-  MInstruction* allocMir = lir->mirRaw()->toInstruction();
+  MInstruction* allocMir = lir->mir();
   MBasicBlock* block = allocMir->block();
 
   // Skip the allocation instruction.
@@ -6997,52 +6983,58 @@ static bool ShouldInitFixedSlots(LInstruction* lir, const TemplateObject& obj) {
   MOZ_ASSERT(*iter == allocMir);
   iter++;
 
-  while (true) {
-    for (; iter != block->end(); iter++) {
-      if (iter->isNop() || iter->isConstant() || iter->isPostWriteBarrier()) {
-        // These instructions won't trigger a GC or read object slots.
-        continue;
-      }
-
-      if (iter->isStoreFixedSlot()) {
-        MStoreFixedSlot* store = iter->toStoreFixedSlot();
-        if (store->object() != allocMir) {
-          return true;
-        }
-
-        // We may not initialize this object slot on allocation, so the
-        // pre-barrier could read uninitialized memory. Simply disable
-        // the barrier for this store: the object was just initialized
-        // so the barrier is not necessary.
-        store->setNeedsBarrier(false);
-
-        uint32_t slot = store->slot();
-        MOZ_ASSERT(slot < nfixed);
-        if ((initializedSlots & (1 << slot)) == 0) {
-          numInitialized++;
-          initializedSlots |= (1 << slot);
-
-          if (numInitialized == nfixed) {
-            // All fixed slots will be initialized.
-            MOZ_ASSERT(mozilla::CountPopulation32(initializedSlots) == nfixed);
-            return false;
-          }
-        }
-        continue;
-      }
-
-      if (iter->isGoto()) {
-        block = iter->toGoto()->target();
-        if (block->numPredecessors() != 1) {
-          return true;
-        }
-        break;
-      }
-
-      // Unhandled instruction, assume it bails or reads object slots.
-      return true;
+  // Handle the leading shape guard, if present.
+  for (; iter != block->end(); iter++) {
+    if (iter->isConstant()) {
+      // This instruction won't trigger a GC or read object slots.
+      continue;
     }
-    iter = block->begin();
+    if (iter->isGuardShape()) {
+      auto* guard = iter->toGuardShape();
+      if (guard->object() != allocMir || guard->shape() != shape) {
+        return true;
+      }
+      allocMir = guard;
+      iter++;
+    }
+    break;
+  }
+
+  for (; iter != block->end(); iter++) {
+    if (iter->isConstant() || iter->isPostWriteBarrier()) {
+      // These instructions won't trigger a GC or read object slots.
+      continue;
+    }
+
+    if (iter->isStoreFixedSlot()) {
+      MStoreFixedSlot* store = iter->toStoreFixedSlot();
+      if (store->object() != allocMir) {
+        return true;
+      }
+
+      // We may not initialize this object slot on allocation, so the
+      // pre-barrier could read uninitialized memory. Simply disable
+      // the barrier for this store: the object was just initialized
+      // so the barrier is not necessary.
+      store->setNeedsBarrier(false);
+
+      uint32_t slot = store->slot();
+      MOZ_ASSERT(slot < nfixed);
+      if ((initializedSlots & (1 << slot)) == 0) {
+        numInitialized++;
+        initializedSlots |= (1 << slot);
+
+        if (numInitialized == nfixed) {
+          // All fixed slots will be initialized.
+          MOZ_ASSERT(mozilla::CountPopulation32(initializedSlots) == nfixed);
+          return false;
+        }
+      }
+      continue;
+    }
+
+    // Unhandled instruction, assume it bails or reads object slots.
+    return true;
   }
 
   MOZ_CRASH("Shouldn't get here");
@@ -7091,11 +7083,25 @@ void CodeGenerator::visitNewPlainObject(LNewPlainObject* lir) {
       ArgList(ImmGCPtr(shape), Imm32(int32_t(allocKind)), Imm32(initialHeap)),
       StoreRegisterTo(objReg));
 
+  bool initContents = ShouldInitFixedSlots(lir, shape, mir->numFixedSlots());
+
   masm.movePtr(ImmGCPtr(shape), shapeReg);
-  masm.createPlainGCObject(objReg, shapeReg, temp0Reg, temp1Reg,
-                           mir->numFixedSlots(), mir->numDynamicSlots(),
-                           allocKind, initialHeap, ool->entry(),
-                           AllocSiteInput(gc::CatchAllAllocSite::Optimized));
+  masm.createPlainGCObject(
+      objReg, shapeReg, temp0Reg, temp1Reg, mir->numFixedSlots(),
+      mir->numDynamicSlots(), allocKind, initialHeap, ool->entry(),
+      AllocSiteInput(gc::CatchAllAllocSite::Optimized), initContents);
+
+#ifdef DEBUG
+  // ShouldInitFixedSlots expects that the leading GuardShape will never fail,
+  // so ensure the newly created object has the correct shape. Should the guard
+  // ever fail, we may end up with uninitialized fixed slots, which can confuse
+  // the GC.
+  Label ok;
+  masm.branchTestObjShape(Assembler::Equal, objReg, shape, temp0Reg, objReg,
+                          &ok);
+  masm.assumeUnreachable("Newly created object has the correct shape");
+  masm.bind(&ok);
+#endif
 
   masm.bind(ool->rejoin());
 }

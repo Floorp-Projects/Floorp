@@ -446,7 +446,8 @@ void MacroAssembler::createGCObject(Register obj, Register temp,
 void MacroAssembler::createPlainGCObject(
     Register result, Register shape, Register temp, Register temp2,
     uint32_t numFixedSlots, uint32_t numDynamicSlots, gc::AllocKind allocKind,
-    gc::InitialHeap initialHeap, Label* fail, const AllocSiteInput& allocSite) {
+    gc::InitialHeap initialHeap, Label* fail, const AllocSiteInput& allocSite,
+    bool initContents /* = true */) {
   MOZ_ASSERT(gc::IsObjectAllocKind(allocKind));
   MOZ_ASSERT(shape != temp, "shape can overlap with temp2, but not temp");
 
@@ -469,8 +470,10 @@ void MacroAssembler::createPlainGCObject(
            Address(result, NativeObject::offsetOfElements()));
 
   // Initialize fixed slots.
-  fillSlotsWithUndefined(Address(result, NativeObject::getFixedSlotOffset(0)),
-                         temp, 0, numFixedSlots);
+  if (initContents) {
+    fillSlotsWithUndefined(Address(result, NativeObject::getFixedSlotOffset(0)),
+                           temp, 0, numFixedSlots);
+  }
 
   // Initialize dynamic slots.
   if (numDynamicSlots > 0) {
