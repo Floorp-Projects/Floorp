@@ -4882,4 +4882,70 @@ TEST(GeckoProfiler, AllThreads)
   }
 }
 
+TEST(GeckoProfiler, FailureHandling)
+{
+  profiler_init_main_thread_id();
+  ASSERT_TRUE(profiler_is_main_thread())
+  << "This test assumes it runs on the main thread";
+
+  uint32_t features = ProfilerFeature::StackWalk;
+  const char* filters[] = {"GeckoMain"};
+  profiler_start(PROFILER_DEFAULT_ENTRIES, PROFILER_DEFAULT_INTERVAL, features,
+                 filters, MOZ_ARRAY_LENGTH(filters), 0);
+
+  ASSERT_EQ(WaitForSamplingState(), SamplingState::SamplingCompleted);
+
+  // User-defined marker type that generates a failure when streaming JSON.
+  struct GtestFailingMarker {
+    static constexpr Span<const char> MarkerTypeName() {
+      return MakeStringSpan("markers-gtest-failing");
+    }
+    static void StreamJSONMarkerData(
+        mozilla::baseprofiler::SpliceableJSONWriter& aWriter) {
+      aWriter.SetFailure("boom!");
+    }
+    static mozilla::MarkerSchema MarkerTypeDisplay() {
+      return mozilla::MarkerSchema::SpecialFrontendLocation{};
+    }
+  };
+  EXPECT_TRUE(profiler_add_marker("Gtest failing marker",
+                                  geckoprofiler::category::OTHER, {},
+                                  GtestFailingMarker{}));
+
+  ASSERT_EQ(WaitForSamplingState(), SamplingState::SamplingCompleted);
+  profiler_pause();
+
+  FailureLatchSource failureLatch;
+  SpliceableChunkedJSONWriter w{failureLatch};
+  EXPECT_FALSE(w.Failed());
+  ASSERT_FALSE(w.GetFailure());
+
+  w.Start();
+  EXPECT_FALSE(w.Failed());
+  ASSERT_FALSE(w.GetFailure());
+
+  // The marker will cause a failure during this function call.
+  EXPECT_FALSE(::profiler_stream_json_for_this_process(w));
+  EXPECT_TRUE(w.Failed());
+  ASSERT_TRUE(w.GetFailure());
+  EXPECT_EQ(strcmp(w.GetFailure(), "boom!"), 0);
+
+  // Already failed, check that we don't crash or reset the failure.
+  EXPECT_FALSE(::profiler_stream_json_for_this_process(w));
+  EXPECT_TRUE(w.Failed());
+  ASSERT_TRUE(w.GetFailure());
+  EXPECT_EQ(strcmp(w.GetFailure(), "boom!"), 0);
+
+  w.End();
+
+  profiler_stop();
+
+  EXPECT_TRUE(w.Failed());
+  ASSERT_TRUE(w.GetFailure());
+  EXPECT_EQ(strcmp(w.GetFailure(), "boom!"), 0);
+
+  UniquePtr<char[]> profile = w.ChunkedWriteFunc().CopyData();
+  ASSERT_EQ(profile.get(), nullptr);
+}
+
 #endif  // MOZ_GECKO_PROFILER
