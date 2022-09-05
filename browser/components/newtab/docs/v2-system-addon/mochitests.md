@@ -25,4 +25,4 @@ ContentTask.spawn(gBrowser.selectedBrowser, null, function* () {
 The above calls the function `foo` that exists in the page itself. You can also access the DOM this way: `content.document.querySelector`, if you want to click a button or do other things. You can even you use assertions inside this callback to check DOM state.
 
 * If you run into problems running tests in e10s, refer to the [wiki](https://wiki.mozilla.org/Electrolysis/e10s_test_tips) for tips
-* Nobody likes to see intermittent oranges in their tests, so read the [docs on how to avoid them](https://developer.mozilla.org/en-US/docs/Mozilla/QA/Avoiding_intermittent_oranges)!
+* Nobody likes to see intermittent oranges in their tests, so read the [docs on how to avoid them](https://firefox-source-docs.mozilla.org/testing/intermittent/)!
