@@ -13,6 +13,7 @@ jobs:
         swap-size-gb: 13
     - name: init
       run: |
+        sudo sed -i.bak -r 's!(deb|deb-src) \S+!\1 mirror+http://mirrors.ubuntu.com/mirrors.txt!' /etc/apt/sources.list
         sudo apt update
     - uses: tecoli-com/actions-use-apt-tools@v0
       with:
