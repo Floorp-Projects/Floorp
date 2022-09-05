@@ -89,9 +89,17 @@ def WebIDLTest(parser, harness):
     # __iterable to it for the iterable<> case.
     iterableMembers.append(("__iterable", WebIDL.IDLIterable))
 
+    asyncIterableMembers = [
+        (x, WebIDL.IDLMethod) for x in ["entries", "keys", "values"]
+    ]
+    asyncIterableMembers.append(("__iterable", WebIDL.IDLAsyncIterable))
+
     valueIterableMembers = [("__iterable", WebIDL.IDLIterable)]
     valueIterableMembers.append(("__indexedgetter", WebIDL.IDLMethod))
     valueIterableMembers.append(("length", WebIDL.IDLAttribute))
+
+    valueAsyncIterableMembers = [("__iterable", WebIDL.IDLAsyncIterable)]
+    valueAsyncIterableMembers.append(("values", WebIDL.IDLMethod))
 
     disallowedIterableNames = ["keys", "entries", "values"]
     disallowedMemberNames = ["forEach", "has", "size"] + disallowedIterableNames
@@ -167,6 +175,94 @@ def WebIDLTest(parser, harness):
         iterableMembers,
         # numProductions == 3 because of the generated iterator iface,
         numProductions=3,
+    )
+
+    shouldPass(
+        "Async iterable (key only)",
+        """
+               interface Foo1 {
+               async iterable<long>;
+               attribute long unrelatedAttribute;
+               long unrelatedMethod();
+               };
+               """,
+        valueAsyncIterableMembers + unrelatedMembers,
+        # numProductions == 2 because of the generated iterator iface,
+        numProductions=2,
+    )
+
+    shouldPass(
+        "Async iterable (key only) inheriting from parent",
+        """
+               interface Foo1 : Foo2 {
+               async iterable<long>;
+               };
+               interface Foo2 {
+               attribute long unrelatedAttribute;
+               long unrelatedMethod();
+               };
+               """,
+        valueAsyncIterableMembers,
+        # numProductions == 3 because of the generated iterator iface,
+        numProductions=3,
+    )
+
+    shouldPass(
+        "Async iterable with argument (key only)",
+        """
+               interface Foo1 {
+               async iterable<long>(optional long foo);
+               attribute long unrelatedAttribute;
+               long unrelatedMethod();
+               };
+               """,
+        valueAsyncIterableMembers + unrelatedMembers,
+        # numProductions == 2 because of the generated iterator iface,
+        numProductions=2,
+    )
+
+    shouldPass(
+        "Async iterable (key and value)",
+        """
+               interface Foo1 {
+               async iterable<long, long>;
+               attribute long unrelatedAttribute;
+               long unrelatedMethod();
+               };
+               """,
+        asyncIterableMembers + unrelatedMembers,
+        # numProductions == 2 because of the generated iterator iface,
+        numProductions=2,
+    )
+
+    shouldPass(
+        "Async iterable (key and value) inheriting from parent",
+        """
+               interface Foo1 : Foo2 {
+               async iterable<long, long>;
+               };
+               interface Foo2 {
+               attribute long unrelatedAttribute;
+               long unrelatedMethod();
+               };
+               """,
+        asyncIterableMembers,
+        # numProductions == 3 because of the generated iterator iface,
+        numProductions=3,
+    )
+
+    shouldPass(
+        "Async iterable with argument (key and value)",
+        """
+               interface Foo1 {
+               async iterable<long, long>(optional long foo);
+               attribute long unrelatedAttribute;
+               long unrelatedMethod();
+               };
+               """,
+        asyncIterableMembers + unrelatedMembers,
+        # numProductions == 2 because of the generated iterator iface,
+        numProductions=2,
     )
 
     shouldPass(
@@ -369,6 +465,53 @@ def WebIDLTest(parser, harness):
                interface Foo1 {
                iterable<long>;
                iterable<long, long>;
+               };
+               """,
+    )
+
+    shouldFail(
+        "Two iterables on same interface",
+        """
+               interface Foo1 {
+               iterable<long>;
+               async iterable<long>;
+               };
+               """,
+    )
+
+    shouldFail(
+        "Two iterables on same interface",
+        """
+               interface Foo1 {
+               async iterable<long>;
+               async iterable<long, long>;
+               };
+               """,
+    )
+
+    shouldFail(
+        "Async iterable with non-optional arguments",
+        """
+               interface Foo1 {
+               async iterable<long>(long foo);
+               };
+               """,
+    )
+
+    shouldFail(
+        "Async iterable with non-optional arguments",
+        """
+               interface Foo1 {
+               async iterable<long>(optional long foo, long bar);
+               };
+               """,
+    )
+
+    shouldFail(
+        "Async iterable with non-optional arguments",
+        """
+               interface Foo1 {
+               async iterable<long, long>(long foo);
                };
                """,
     )

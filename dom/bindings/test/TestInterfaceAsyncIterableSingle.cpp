@@ -59,7 +59,7 @@ void TestInterfaceAsyncIterableSingle::InitAsyncIterator(Iterator* aIterator,
     return;
   }
 
-  UniquePtr<IteratorData> data(new IteratorData(0));
+  UniquePtr<IteratorData> data(new IteratorData(0, 1));
   aIterator->SetData((void*)data.release());
 }
 
@@ -71,21 +71,31 @@ void TestInterfaceAsyncIterableSingle::DestroyAsyncIterator(
 
 already_AddRefed<Promise> TestInterfaceAsyncIterableSingle::GetNextPromise(
     JSContext* aCx, Iterator* aIterator, ErrorResult& aRv) {
+  return GetNextPromise(aCx, aIterator,
+                        reinterpret_cast<IteratorData*>(aIterator->GetData()),
+                        aRv);
+}
+
+already_AddRefed<Promise> TestInterfaceAsyncIterableSingle::GetNextPromise(
+    JSContext* aCx, IterableIteratorBase* aIterator, IteratorData* aData,
+    ErrorResult& aRv) {
   RefPtr<Promise> promise = Promise::Create(mParent->AsGlobal(), aRv);
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
   }
-  auto* data = reinterpret_cast<IteratorData*>(aIterator->GetData());
-  data->mPromise = promise;
+  aData->mPromise = promise;
 
   NS_DispatchToMainThread(NS_NewRunnableFunction(
       "TestInterfaceAsyncIterableSingle::GetNextPromise",
-      [data, self = RefPtr{this}] { self->ResolvePromise(data); }));
+      [iterator = RefPtr{aIterator}, aData, self = RefPtr{this}] {
+        self->ResolvePromise(iterator, aData);
+      }));
 
   return promise.forget();
 }
 
-void TestInterfaceAsyncIterableSingle::ResolvePromise(IteratorData* aData) {
+void TestInterfaceAsyncIterableSingle::ResolvePromise(
+    IterableIteratorBase* aIterator, IteratorData* aData) {
   AutoJSAPI jsapi;
   if (NS_WARN_IF(!jsapi.Init(mParent))) {
     return;
@@ -96,7 +106,8 @@ void TestInterfaceAsyncIterableSingle::ResolvePromise(IteratorData* aData) {
     iterator_utils::ResolvePromiseForFinished(cx, aData->mPromise, rv);
   } else {
     JS::Rooted<JS::Value> value(cx);
-    Unused << ToJSValue(cx, (int32_t)(aData->mIndex * 9 % 7), &value);
+    Unused << ToJSValue(
+        cx, (int32_t)(aData->mIndex * 9 % 7 * aData->mMultiplier), &value);
     iterator_utils::ResolvePromiseWithKeyOrValue(cx, aData->mPromise, value,
                                                  rv);
 
