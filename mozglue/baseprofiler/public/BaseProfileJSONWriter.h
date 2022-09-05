@@ -524,13 +524,14 @@ class JSONSchemaWriter {
 // and later, `u.SpliceStringTableElements(w)` (inside a JSON array), will
 // output the corresponding indexed list of unique strings:
 // `["a", "b"]`
-class UniqueJSONStrings {
+class UniqueJSONStrings final : public FailureLatch {
  public:
   // Start an empty list of unique strings.
-  MFBT_API UniqueJSONStrings();
+  MFBT_API explicit UniqueJSONStrings(FailureLatch& aFailureLatch);
 
   // Start with a copy of the strings from another list.
-  MFBT_API UniqueJSONStrings(const UniqueJSONStrings& aOther,
+  MFBT_API UniqueJSONStrings(FailureLatch& aFailureLatch,
+                             const UniqueJSONStrings& aOther,
                              ProgressLogger aProgressLogger);
 
   MFBT_API ~UniqueJSONStrings();
@@ -551,6 +552,12 @@ class UniqueJSONStrings {
   // Splice all collected unique strings into an array. This should only be done
   // once, and then this UniqueStrings shouldn't be used anymore.
   MFBT_API void SpliceStringTableElements(SpliceableJSONWriter& aWriter);
+
+  FAILURELATCH_IMPL_PROXY(mStringTableWriter)
+
+  void ChangeFailureLatchAndForwardState(FailureLatch& aFailureLatch) {
+    mStringTableWriter.ChangeFailureLatchAndForwardState(aFailureLatch);
+  }
 
  private:
   // If `aStr` is already listed, return its index.

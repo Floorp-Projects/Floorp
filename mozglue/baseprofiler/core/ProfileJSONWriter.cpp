@@ -8,15 +8,25 @@
 
 namespace mozilla::baseprofiler {
 
-UniqueJSONStrings::UniqueJSONStrings()
-    : mStringTableWriter(FailureLatchInfallibleSource::Singleton()) {
+UniqueJSONStrings::UniqueJSONStrings(FailureLatch& aFailureLatch)
+    : mStringTableWriter(aFailureLatch) {
   mStringTableWriter.StartBareList();
 }
 
-UniqueJSONStrings::UniqueJSONStrings(const UniqueJSONStrings& aOther,
+UniqueJSONStrings::UniqueJSONStrings(FailureLatch& aFailureLatch,
+                                     const UniqueJSONStrings& aOther,
                                      ProgressLogger aProgressLogger)
-    : mStringTableWriter(FailureLatchInfallibleSource::Singleton()) {
+    : mStringTableWriter(aFailureLatch) {
   using namespace mozilla::literals::ProportionValue_literals;  // For `10_pc`.
+
+  if (mStringTableWriter.Failed()) {
+    return;
+  }
+
+  if (const char* failure = aOther.GetFailure(); failure) {
+    mStringTableWriter.SetFailure(failure);
+    return;
+  }
 
   mStringTableWriter.StartBareList();
   uint32_t count = aOther.mStringHashToIndexMap.count();
