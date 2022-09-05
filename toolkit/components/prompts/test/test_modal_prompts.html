@@ -22,6 +22,12 @@ async function runTests(util) {
     "resource://gre/modules/NetUtil.jsm"
   );
 
+  // The ConfirmEx + delay test has slightly different behavior with the focus
+  // fixup rule vs. without.
+  await SpecialPowers.pushPrefEnv({
+    set: [["dom.focus.fixup", true]],
+  });
+
   let state, action, promptDone;
 
   let checkVal = {};
