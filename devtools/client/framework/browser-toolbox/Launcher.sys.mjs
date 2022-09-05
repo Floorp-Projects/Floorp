@@ -22,9 +22,8 @@ const { Subprocess } = ChromeUtils.import(
 const { AppConstants } = ChromeUtils.import(
   "resource://gre/modules/AppConstants.jsm"
 );
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
+
 const lazy = {};
 ChromeUtils.defineModuleGetter(
   lazy,
@@ -48,11 +47,10 @@ const Telemetry = require("devtools/client/shared/telemetry");
 const EventEmitter = require("devtools/shared/event-emitter");
 
 const Services = require("Services");
+
 const env = Cc["@mozilla.org/process/environment;1"].getService(
   Ci.nsIEnvironment
 );
-
-const EXPORTED_SYMBOLS = ["BrowserToolboxLauncher"];
 
 const processes = new Set();
 
@@ -65,7 +63,7 @@ const processes = new Set();
  *                     multiprocess mode.
  */
 
-class BrowserToolboxLauncher extends EventEmitter {
+export class BrowserToolboxLauncher extends EventEmitter {
   /**
    * Initializes and starts a chrome toolbox process if the appropriated prefs are enabled
    *
