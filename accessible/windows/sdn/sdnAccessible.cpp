@@ -85,9 +85,38 @@ sdnAccessible::get_nodeInfo(BSTR __RPC_FAR* aNodeName,
   *aNodeType = 0;
 
   if (IsDefunct()) return CO_E_OBJNOTCONNECTED;
+
+  // This is a unique ID for every content node. The 3rd party accessibility
+  // application can compare this to the childID we return for events such as
+  // focus events, to correlate back to data nodes in their internal object
+  // model.
+  MsaaAccessible* accessible = GetMsaa();
+  if (accessible) {
+    *aUniqueID = MsaaAccessible::GetChildIDFor(accessible->Acc());
+  } else {
+    if (mUniqueId.isNothing()) {
+      MsaaAccessible::AssignChildIDTo(WrapNotNull(this));
+    }
+    MOZ_ASSERT(mUniqueId.isSome());
+    *aUniqueID = mUniqueId.value();
+  }
+
   if (!mNode) {
-    MOZ_ASSERT(mMsaa && mMsaa->Acc()->IsRemote());
-    return E_NOTIMPL;
+    RemoteAccessible* remoteAcc = accessible->Acc()->AsRemote();
+    MOZ_ASSERT(remoteAcc);
+    if (remoteAcc->IsText()) {
+      *aNodeType = nsINode::TEXT_NODE;
+    } else if (remoteAcc->IsDoc()) {
+      *aNodeType = nsINode::DOCUMENT_NODE;
+    } else {
+      *aNodeType = nsINode::ELEMENT_NODE;
+    }
+    if (nsAtom* tag = remoteAcc->TagName()) {
+      nsAutoString nodeName;
+      tag->ToString(nodeName);
+      *aNodeName = ::SysAllocString(nodeName.get());
+    }
+    return S_OK;
   }
 
   uint16_t nodeType = mNode->NodeType();
@@ -104,21 +133,6 @@ sdnAccessible::get_nodeInfo(BSTR __RPC_FAR* aNodeName,
   *aNameSpaceID = mNode->IsContent()
                       ? static_cast<short>(mNode->AsContent()->GetNameSpaceID())
                       : 0;
-
-  // This is a unique ID for every content node. The 3rd party accessibility
-  // application can compare this to the childID we return for events such as
-  // focus events, to correlate back to data nodes in their internal object
-  // model.
-  MsaaAccessible* accessible = GetMsaa();
-  if (accessible) {
-    *aUniqueID = MsaaAccessible::GetChildIDFor(accessible->LocalAcc());
-  } else {
-    if (mUniqueId.isNothing()) {
-      MsaaAccessible::AssignChildIDTo(WrapNotNull(this));
-    }
-    MOZ_ASSERT(mUniqueId.isSome());
-    *aUniqueID = mUniqueId.value();
-  }
 
   *aNumChildren = mNode->GetChildCount();
 
