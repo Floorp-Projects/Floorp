@@ -233,6 +233,23 @@ UniqueStacks::StackKey UniqueStacks::BeginStack(const FrameKey& aFrame) {
   return StackKey(GetOrAddFrameIndex(aFrame));
 }
 
+Vector<JITFrameInfoForBufferRange>&&
+JITFrameInfo::MoveRangesWithNewFailureLatch(FailureLatch& aFailureLatch) && {
+  aFailureLatch.SetFailureFrom(mLocalFailureLatchSource);
+  return std::move(mRanges);
+}
+
+UniquePtr<UniqueJSONStrings>&&
+JITFrameInfo::MoveUniqueStringsWithNewFailureLatch(
+    FailureLatch& aFailureLatch) && {
+  if (mUniqueStrings) {
+    mUniqueStrings->ChangeFailureLatchAndForwardState(aFailureLatch);
+  } else {
+    aFailureLatch.SetFailureFrom(mLocalFailureLatchSource);
+  }
+  return std::move(mUniqueStrings);
+}
+
 UniqueStacks::StackKey UniqueStacks::AppendFrame(const StackKey& aStack,
                                                  const FrameKey& aFrame) {
   return StackKey(aStack, GetOrAddStackIndex(aStack),
@@ -299,13 +316,15 @@ bool UniqueStacks::FrameKey::JITFrameData::operator==(
 // JIT frame info's string table, so our string table needs to have the same
 // strings at the same indices.
 UniqueStacks::UniqueStacks(
-    JITFrameInfo&& aJITFrameInfo,
+    FailureLatch& aFailureLatch, JITFrameInfo&& aJITFrameInfo,
     ProfilerCodeAddressService* aCodeAddressService /* = nullptr */)
-    : mUniqueStrings(std::move(aJITFrameInfo).MoveUniqueStrings()),
+    : mUniqueStrings(std::move(aJITFrameInfo)
+                         .MoveUniqueStringsWithNewFailureLatch(aFailureLatch)),
       mCodeAddressService(aCodeAddressService),
-      mFrameTableWriter(FailureLatchInfallibleSource::Singleton()),
-      mStackTableWriter(FailureLatchInfallibleSource::Singleton()),
-      mJITInfoRanges(std::move(aJITFrameInfo).MoveRanges()) {
+      mFrameTableWriter(aFailureLatch),
+      mStackTableWriter(aFailureLatch),
+      mJITInfoRanges(std::move(aJITFrameInfo)
+                         .MoveRangesWithNewFailureLatch(aFailureLatch)) {
   mFrameTableWriter.StartBareList();
   mStackTableWriter.StartBareList();
 }

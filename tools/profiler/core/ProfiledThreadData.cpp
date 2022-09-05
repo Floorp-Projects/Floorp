@@ -125,7 +125,7 @@ ProfiledThreadData::PrepareUniqueStacks(
   }
 
   return mozilla::MakeNotNull<mozilla::UniquePtr<UniqueStacks>>(
-      std::move(jitFrameInfo), aService);
+      aFailureLatch, std::move(jitFrameInfo), aService);
 }
 
 void ProfiledThreadData::StreamJSON(
