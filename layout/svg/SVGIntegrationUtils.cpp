@@ -391,52 +391,15 @@ nsRect SVGIntegrationUtils::ComputePostEffectsInkOverflowRect(
       AppUnitsPerCSSPixel());
   overrideBBox.RoundOut();
 
-  nsRect overflowRect =
+  Maybe<nsRect> overflowRect =
       FilterInstance::GetPostFilterBounds(firstFrame, &overrideBBox);
+  if (!overflowRect) {
+    return aPreEffectsOverflowRect;
+  }
 
   // Return overflowRect relative to aFrame, rather than "user space":
-  return overflowRect -
+  return overflowRect.value() -
          (aFrame->GetOffsetTo(firstFrame) + firstFrameToBoundingBox);
-}
-
-nsIntRegion SVGIntegrationUtils::AdjustInvalidAreaForSVGEffects(
-    nsIFrame* aFrame, const nsPoint& aToReferenceFrame,
-    const nsIntRegion& aInvalidRegion) {
-  if (aInvalidRegion.IsEmpty()) {
-    return nsIntRect();
-  }
-
-  nsIFrame* firstFrame =
-      nsLayoutUtils::FirstContinuationOrIBSplitSibling(aFrame);
-
-  // If we have any filters to observe then we should have started doing that
-  // during reflow/ComputeFrameEffectsRect, so we use GetFiltersIfObserving
-  // here to avoid needless work (or masking bugs by setting up observers at
-  // the wrong time).
-  if (!aFrame->StyleEffects()->HasFilters() ||
-      SVGObserverUtils::GetFiltersIfObserving(firstFrame, nullptr) ==
-          SVGObserverUtils::eHasRefsSomeInvalid) {
-    return aInvalidRegion;
-  }
-
-  int32_t appUnitsPerDevPixel = aFrame->PresContext()->AppUnitsPerDevPixel();
-
-  // Convert aInvalidRegion into bounding box frame space in app units:
-  nsPoint toBoundingBox =
-      aFrame->GetOffsetTo(firstFrame) + GetOffsetToBoundingBox(firstFrame);
-  // The initial rect was relative to the reference frame, so we need to
-  // remove that offset to get a rect relative to the current frame.
-  toBoundingBox -= aToReferenceFrame;
-  nsRegion preEffectsRegion =
-      aInvalidRegion.ToAppUnits(appUnitsPerDevPixel).MovedBy(toBoundingBox);
-
-  // Adjust the dirty area for effects, and shift it back to being relative to
-  // the reference frame.
-  nsRegion result =
-      FilterInstance::GetPostFilterDirtyArea(firstFrame, preEffectsRegion)
-          .MovedBy(-toBoundingBox);
-  // Return the result, in pixels relative to the reference frame.
-  return result.ToOutsidePixels(appUnitsPerDevPixel);
 }
 
 nsRect SVGIntegrationUtils::GetRequiredSourceForInvalidArea(
@@ -1008,8 +971,8 @@ void SVGIntegrationUtils::PaintFilter(const PaintFramesParams& aParams,
     return;
   }
 
-  /* Properties are added lazily and may have been removed by a restyle,
-     so make sure all applicable ones are set again. */
+  // Properties are added lazily and may have been removed by a restyle, so make
+  // sure all applicable ones are set again.
   nsIFrame* firstFrame =
       nsLayoutUtils::FirstContinuationOrIBSplitSibling(frame);
   // Note: we do not return here for eHasNoRefs since we must still handle any
@@ -1022,6 +985,7 @@ void SVGIntegrationUtils::PaintFilter(const PaintFramesParams& aParams,
   // Or can we just assert !eHasRefsSomeInvalid?
   if (SVGObserverUtils::GetAndObserveFilters(firstFrame, nullptr) ==
       SVGObserverUtils::eHasRefsSomeInvalid) {
+    aCallback(aParams.ctx, aParams.imgParams, nullptr, nullptr);
     return;
   }
 
@@ -1121,20 +1085,17 @@ bool SVGIntegrationUtils::CreateWebRenderCSSFilters(
 
 bool SVGIntegrationUtils::BuildWebRenderFilters(
     nsIFrame* aFilteredFrame, Span<const StyleFilter> aFilters,
-    WrFiltersHolder& aWrFilters, Maybe<nsRect>& aPostFilterClip,
-    bool& aInitialized) {
-  return FilterInstance::BuildWebRenderFilters(
-      aFilteredFrame, aFilters, aWrFilters, aPostFilterClip, aInitialized);
+    WrFiltersHolder& aWrFilters, bool& aInitialized) {
+  return FilterInstance::BuildWebRenderFilters(aFilteredFrame, aFilters,
+                                               aWrFilters, aInitialized);
 }
 
 bool SVGIntegrationUtils::CanCreateWebRenderFiltersForFrame(nsIFrame* aFrame) {
   WrFiltersHolder wrFilters;
-  Maybe<nsRect> filterClip;
   auto filterChain = aFrame->StyleEffects()->mFilters.AsSpan();
   bool initialized = true;
   return CreateWebRenderCSSFilters(filterChain, aFrame, wrFilters) ||
-         BuildWebRenderFilters(aFrame, filterChain, wrFilters, filterClip,
-                               initialized);
+         BuildWebRenderFilters(aFrame, filterChain, wrFilters, initialized);
 }
 
 bool SVGIntegrationUtils::UsesSVGEffectsNotSupportedInCompositor(
