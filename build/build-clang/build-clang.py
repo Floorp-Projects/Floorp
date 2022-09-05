@@ -227,15 +227,6 @@ def build_one_stage(
                 "-DCLANG_REPOSITORY_STRING=taskcluster-%s" % os.environ["TASK_ID"],
             ]
         projects = ["clang"]
-        # libc++ doesn't build with MSVC because of the use of #include_next.
-        if is_final_stage and os.path.basename(cc[0]).lower() != "cl.exe":
-            projects.append("libcxx")
-            # libc++abi has conflicting definitions between the shared and static
-            # library on Windows because of the import library for the dll having
-            # the same name as the static library. libc++abi is not necessary on
-            # Windows anyways.
-            if not is_windows():
-                projects.append("libcxxabi")
         if is_final_stage:
             projects.extend(("clang-tools-extra", "lld"))
         else:
@@ -634,9 +625,9 @@ def main():
 
     if is_darwin():
         extra_cflags = []
-        extra_cxxflags = ["-stdlib=libc++"]
+        extra_cxxflags = []
         extra_cflags2 = []
-        extra_cxxflags2 = ["-stdlib=libc++"]
+        extra_cxxflags2 = []
         extra_asmflags = []
         extra_ldflags = []
     elif is_linux():
@@ -681,8 +672,8 @@ def main():
         # undo the damage done in the is_linux() block above, and also simulate
         # the is_darwin() block above.
         extra_cflags = []
-        extra_cxxflags = ["-stdlib=libc++"]
-        extra_cxxflags2 = ["-stdlib=libc++"]
+        extra_cxxflags = []
+        extra_cxxflags2 = []
 
         extra_flags = [
             "-mlinker-version=137",
