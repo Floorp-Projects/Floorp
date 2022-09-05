@@ -24,11 +24,12 @@ const L10N = new LocalizationHelper(
 const env = Cc["@mozilla.org/process/environment;1"].getService(
   Ci.nsIEnvironment
 );
-loader.lazyImporter(
-  this,
-  "BrowserToolboxLauncher",
-  "resource://devtools/client/framework/browser-toolbox/Launcher.jsm"
-);
+
+const lazy = {};
+ChromeUtils.defineESModuleGetters(lazy, {
+  BrowserToolboxLauncher:
+    "resource://devtools/client/framework/browser-toolbox/Launcher.sys.mjs",
+});
 
 // Timeout to wait before we assume that a connect() timed out without an error.
 // In milliseconds. (With the Debugger pane open, this has been reported to last
@@ -187,7 +188,7 @@ function onCloseCommand(event) {
  * running in the parent process. i.e. frontend code.
  */
 function onDebugBrowserToolbox() {
-  BrowserToolboxLauncher.init();
+  lazy.BrowserToolboxLauncher.init();
 }
 
 /**

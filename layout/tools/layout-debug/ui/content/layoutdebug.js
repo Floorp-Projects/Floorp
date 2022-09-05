@@ -19,16 +19,11 @@ const { E10SUtils } = ChromeUtils.import(
 const { Preferences } = ChromeUtils.import(
   "resource://gre/modules/Preferences.jsm"
 );
-
-var { loader } = ChromeUtils.import(
-  "resource://devtools/shared/loader/Loader.jsm"
-);
-
-loader.lazyImporter(
-  this,
-  "BrowserToolboxLauncher",
-  "resource://devtools/client/framework/browser-toolbox/Launcher.jsm"
-);
+const lazy = {};
+ChromeUtils.defineESModuleGetters(lazy, {
+  BrowserToolboxLauncher:
+    "resource://devtools/client/framework/browser-toolbox/Launcher.sys.mjs",
+});
 
 const FEATURES = {
   paintDumping: "nglayout.debug.paint_dumping",
@@ -112,7 +107,7 @@ class Debugger {
   }
 
   openDevTools() {
-    BrowserToolboxLauncher.init();
+    lazy.BrowserToolboxLauncher.init();
   }
 
   async _sendMessage(name, arg) {
