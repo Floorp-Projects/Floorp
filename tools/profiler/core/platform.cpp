@@ -3267,7 +3267,8 @@ static void locked_profiler_stream_json_for_this_process(
 
     // Prepare the streaming context for each thread.
     ProcessStreamingContext processStreamingContext(
-        threadCount, CorePS::ProcessStartTime(), aSinceTime);
+        threadCount, aWriter.SourceFailureLatch(), CorePS::ProcessStartTime(),
+        aSinceTime);
     for (auto&& [i, progressLogger] : aProgressLogger.CreateLoopSubLoggersTo(
              20_pc, threadCount, "Preparing thread streaming contexts...")) {
       ActivePS::ProfiledThreadListElement& thread = threads[i];
@@ -5346,7 +5347,7 @@ UniquePtr<char[]> profiler_get_profile(double aSinceTime,
   return b.ChunkedWriteFunc().CopyData();
 }
 
-bool profiler_get_profile_json(
+[[nodiscard]] bool profiler_get_profile_json(
     SpliceableChunkedJSONWriter& aSpliceableChunkedJSONWriter,
     double aSinceTime, bool aIsShuttingDown,
     mozilla::ProgressLogger aProgressLogger) {
