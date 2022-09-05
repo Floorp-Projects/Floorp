@@ -268,7 +268,7 @@ JITFrameInfoForBufferRange JITFrameInfoForBufferRange::Clone() const {
 JITFrameInfo::JITFrameInfo(const JITFrameInfo& aOther,
                            mozilla::ProgressLogger aProgressLogger)
     : mUniqueStrings(MakeUnique<UniqueJSONStrings>(
-          FailureLatchInfallibleSource::Singleton(), *aOther.mUniqueStrings,
+          mLocalFailureLatchSource, *aOther.mUniqueStrings,
           aProgressLogger.CreateSubLoggerFromTo(
               0_pc, "Creating JIT frame info unique strings...", 49_pc,
               "Created JIT frame info unique strings"))) {
@@ -516,7 +516,7 @@ static nsCString JSONForJITFrame(JSContext* aContext,
                                  UniqueJSONStrings& aUniqueStrings) {
   nsCString json;
   JSONStringRefWriteFunc jw(json);
-  SpliceableJSONWriter writer(jw, FailureLatchInfallibleSource::Singleton());
+  SpliceableJSONWriter writer(jw, aUniqueStrings.SourceFailureLatch());
   StreamJITFrame(aContext, writer, aUniqueStrings, aJITFrame);
   return json;
 }
