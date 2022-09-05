@@ -36,7 +36,13 @@ nsUrlClassifierPrefixSet::Init(const nsACString& aName) {
   return NS_OK;
 }
 
-nsUrlClassifierPrefixSet::~nsUrlClassifierPrefixSet() {}
+nsUrlClassifierPrefixSet::~nsUrlClassifierPrefixSet() {
+  for (uint32_t i = 0; i < mIndexDeltas.Length(); i++) {
+    mIndexDeltas[i].Clear();
+  }
+  mIndexDeltas.Clear();
+  mIndexPrefixes.Clear();
+}
 
 void nsUrlClassifierPrefixSet::Clear() {
   LOG(("[%s] Clearing PrefixSet", mName.get()));
