@@ -156,7 +156,7 @@ void profiler_mark_thread_awake();
 
 void profiler_mark_thread_asleep();
 
-bool profiler_get_profile_json(
+[[nodiscard]] bool profiler_get_profile_json(
     SpliceableChunkedJSONWriter& aSpliceableChunkedJSONWriter,
     double aSinceTime, bool aIsShuttingDown,
     mozilla::ProgressLogger aProgressLogger);
