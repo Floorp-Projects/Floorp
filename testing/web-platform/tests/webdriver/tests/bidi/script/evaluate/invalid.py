@@ -6,7 +6,7 @@ from webdriver.bidi.modules.script import ContextTarget, RealmTarget
 pytestmark = pytest.mark.asyncio
 
 
-@pytest.mark.parametrize("target", [None, False, 42, {}, []])
+@pytest.mark.parametrize("target", [None, False, "foo", 42, {}, []])
 async def test_params_target_invalid_type(bidi_session, target):
     with pytest.raises(error.InvalidArgumentException):
         await bidi_session.script.evaluate(
