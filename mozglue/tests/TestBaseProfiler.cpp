@@ -10,7 +10,9 @@
 #include "mozilla/BaseAndGeckoProfilerDetail.h"
 #include "mozilla/BaseProfileJSONWriter.h"
 #include "mozilla/BaseProfilerDetail.h"
+#include "mozilla/FailureLatch.h"
 #include "mozilla/FloatingPoint.h"
+#include "mozilla/NotNull.h"
 #include "mozilla/ProgressLogger.h"
 #include "mozilla/ProportionValue.h"
 
@@ -45,6 +47,278 @@
 #include <thread>
 #include <type_traits>
 #include <utility>
+
+void TestFailureLatch() {
+  printf("TestFailureLatch...\n");
+
+  // Test infallible latch.
+  {
+    mozilla::FailureLatchInfallibleSource& infallibleLatch =
+        mozilla::FailureLatchInfallibleSource::Singleton();
+
+    MOZ_RELEASE_ASSERT(!infallibleLatch.Fallible());
+    MOZ_RELEASE_ASSERT(!infallibleLatch.Failed());
+    MOZ_RELEASE_ASSERT(!infallibleLatch.GetFailure());
+    MOZ_RELEASE_ASSERT(&infallibleLatch.SourceFailureLatch() ==
+                       &mozilla::FailureLatchInfallibleSource::Singleton());
+    MOZ_RELEASE_ASSERT(&std::as_const(infallibleLatch).SourceFailureLatch() ==
+                       &mozilla::FailureLatchInfallibleSource::Singleton());
+  }
+
+  // Test failure latch basic functions.
+  {
+    mozilla::FailureLatchSource failureLatch;
+
+    MOZ_RELEASE_ASSERT(failureLatch.Fallible());
+    MOZ_RELEASE_ASSERT(!failureLatch.Failed());
+    MOZ_RELEASE_ASSERT(!failureLatch.GetFailure());
+    MOZ_RELEASE_ASSERT(&failureLatch.SourceFailureLatch() == &failureLatch);
+    MOZ_RELEASE_ASSERT(&std::as_const(failureLatch).SourceFailureLatch() ==
+                       &failureLatch);
+
+    failureLatch.SetFailure("error");
+
+    MOZ_RELEASE_ASSERT(failureLatch.Fallible());
+    MOZ_RELEASE_ASSERT(failureLatch.Failed());
+    MOZ_RELEASE_ASSERT(failureLatch.GetFailure());
+    MOZ_RELEASE_ASSERT(strcmp(failureLatch.GetFailure(), "error") == 0);
+
+    failureLatch.SetFailure("later error");
+
+    MOZ_RELEASE_ASSERT(failureLatch.Fallible());
+    MOZ_RELEASE_ASSERT(failureLatch.Failed());
+    MOZ_RELEASE_ASSERT(failureLatch.GetFailure());
+    MOZ_RELEASE_ASSERT(strcmp(failureLatch.GetFailure(), "error") == 0);
+  }
+
+  // Test SetFailureFrom.
+  {
+    mozilla::FailureLatchSource failureLatch;
+
+    MOZ_RELEASE_ASSERT(!failureLatch.Failed());
+    failureLatch.SetFailureFrom(failureLatch);
+    MOZ_RELEASE_ASSERT(!failureLatch.Failed());
+    MOZ_RELEASE_ASSERT(!failureLatch.GetFailure());
+
+    // SetFailureFrom with no error.
+    {
+      mozilla::FailureLatchSource failureLatchInnerOk;
+      MOZ_RELEASE_ASSERT(!failureLatchInnerOk.Failed());
+      MOZ_RELEASE_ASSERT(!failureLatchInnerOk.GetFailure());
+
+      MOZ_RELEASE_ASSERT(!failureLatch.Failed());
+      failureLatch.SetFailureFrom(failureLatchInnerOk);
+      MOZ_RELEASE_ASSERT(!failureLatch.Failed());
+
+      MOZ_RELEASE_ASSERT(!failureLatchInnerOk.Failed());
+      MOZ_RELEASE_ASSERT(!failureLatchInnerOk.GetFailure());
+    }
+    MOZ_RELEASE_ASSERT(!failureLatch.Failed());
+    MOZ_RELEASE_ASSERT(!failureLatch.GetFailure());
+
+    // SetFailureFrom with error.
+    {
+      mozilla::FailureLatchSource failureLatchInnerError;
+      MOZ_RELEASE_ASSERT(!failureLatchInnerError.Failed());
+      MOZ_RELEASE_ASSERT(!failureLatchInnerError.GetFailure());
+
+      failureLatchInnerError.SetFailure("inner error");
+      MOZ_RELEASE_ASSERT(failureLatchInnerError.Failed());
+      MOZ_RELEASE_ASSERT(
+          strcmp(failureLatchInnerError.GetFailure(), "inner error") == 0);
+
+      MOZ_RELEASE_ASSERT(!failureLatch.Failed());
+      failureLatch.SetFailureFrom(failureLatchInnerError);
+      MOZ_RELEASE_ASSERT(failureLatch.Failed());
+
+      MOZ_RELEASE_ASSERT(failureLatchInnerError.Failed());
+      MOZ_RELEASE_ASSERT(
+          strcmp(failureLatchInnerError.GetFailure(), "inner error") == 0);
+    }
+    MOZ_RELEASE_ASSERT(failureLatch.Failed());
+    MOZ_RELEASE_ASSERT(strcmp(failureLatch.GetFailure(), "inner error") == 0);
+
+    failureLatch.SetFailureFrom(failureLatch);
+    MOZ_RELEASE_ASSERT(failureLatch.Failed());
+    MOZ_RELEASE_ASSERT(strcmp(failureLatch.GetFailure(), "inner error") == 0);
+
+    // SetFailureFrom with error again, ignored.
+    {
+      mozilla::FailureLatchSource failureLatchInnerError;
+      failureLatchInnerError.SetFailure("later inner error");
+      MOZ_RELEASE_ASSERT(failureLatchInnerError.Failed());
+      MOZ_RELEASE_ASSERT(strcmp(failureLatchInnerError.GetFailure(),
+                                "later inner error") == 0);
+
+      MOZ_RELEASE_ASSERT(failureLatch.Failed());
+      failureLatch.SetFailureFrom(failureLatchInnerError);
+      MOZ_RELEASE_ASSERT(failureLatch.Failed());
+
+      MOZ_RELEASE_ASSERT(failureLatchInnerError.Failed());
+      MOZ_RELEASE_ASSERT(strcmp(failureLatchInnerError.GetFailure(),
+                                "later inner error") == 0);
+    }
+    MOZ_RELEASE_ASSERT(failureLatch.Failed());
+    MOZ_RELEASE_ASSERT(strcmp(failureLatch.GetFailure(), "inner error") == 0);
+  }
+
+  // Test FAILURELATCH_IMPL_PROXY
+  {
+    class Proxy final : public mozilla::FailureLatch {
+     public:
+      explicit Proxy(mozilla::FailureLatch& aFailureLatch)
+          : mFailureLatch(WrapNotNull(&aFailureLatch)) {}
+
+      void Set(mozilla::FailureLatch& aFailureLatch) {
+        mFailureLatch = WrapNotNull(&aFailureLatch);
+      }
+
+      FAILURELATCH_IMPL_PROXY(*mFailureLatch)
+
+     private:
+      mozilla::NotNull<mozilla::FailureLatch*> mFailureLatch;
+    };
+
+    Proxy proxy{mozilla::FailureLatchInfallibleSource::Singleton()};
+
+    MOZ_RELEASE_ASSERT(!proxy.Fallible());
+    MOZ_RELEASE_ASSERT(!proxy.Failed());
+    MOZ_RELEASE_ASSERT(!proxy.GetFailure());
+    MOZ_RELEASE_ASSERT(&proxy.SourceFailureLatch() ==
+                       &mozilla::FailureLatchInfallibleSource::Singleton());
+    MOZ_RELEASE_ASSERT(&std::as_const(proxy).SourceFailureLatch() ==
+                       &mozilla::FailureLatchInfallibleSource::Singleton());
+
+    // Error from proxy.
+    {
+      mozilla::FailureLatchSource failureLatch;
+      proxy.Set(failureLatch);
+      MOZ_RELEASE_ASSERT(proxy.Fallible());
+      MOZ_RELEASE_ASSERT(!proxy.Failed());
+      MOZ_RELEASE_ASSERT(!proxy.GetFailure());
+      MOZ_RELEASE_ASSERT(&proxy.SourceFailureLatch() == &failureLatch);
+      MOZ_RELEASE_ASSERT(&std::as_const(proxy).SourceFailureLatch() ==
+                         &failureLatch);
+
+      proxy.SetFailure("error");
+      MOZ_RELEASE_ASSERT(proxy.Failed());
+      MOZ_RELEASE_ASSERT(strcmp(proxy.GetFailure(), "error") == 0);
+      MOZ_RELEASE_ASSERT(failureLatch.Failed());
+      MOZ_RELEASE_ASSERT(strcmp(failureLatch.GetFailure(), "error") == 0);
+
+      // Don't forget to stop pointing at soon-to-be-destroyed object.
+      proxy.Set(mozilla::FailureLatchInfallibleSource::Singleton());
+    }
+
+    // Error from proxy's origin.
+    {
+      mozilla::FailureLatchSource failureLatch;
+      proxy.Set(failureLatch);
+      MOZ_RELEASE_ASSERT(proxy.Fallible());
+      MOZ_RELEASE_ASSERT(!proxy.Failed());
+      MOZ_RELEASE_ASSERT(!proxy.GetFailure());
+      MOZ_RELEASE_ASSERT(&proxy.SourceFailureLatch() == &failureLatch);
+      MOZ_RELEASE_ASSERT(&std::as_const(proxy).SourceFailureLatch() ==
+                         &failureLatch);
+
+      failureLatch.SetFailure("error");
+      MOZ_RELEASE_ASSERT(proxy.Failed());
+      MOZ_RELEASE_ASSERT(strcmp(proxy.GetFailure(), "error") == 0);
+      MOZ_RELEASE_ASSERT(failureLatch.Failed());
+      MOZ_RELEASE_ASSERT(strcmp(failureLatch.GetFailure(), "error") == 0);
+
+      // Don't forget to stop pointing at soon-to-be-destroyed object.
+      proxy.Set(mozilla::FailureLatchInfallibleSource::Singleton());
+    }
+
+    MOZ_RELEASE_ASSERT(!proxy.Fallible());
+    MOZ_RELEASE_ASSERT(!proxy.Failed());
+    MOZ_RELEASE_ASSERT(!proxy.GetFailure());
+    MOZ_RELEASE_ASSERT(&proxy.SourceFailureLatch() ==
+                       &mozilla::FailureLatchInfallibleSource::Singleton());
+    MOZ_RELEASE_ASSERT(&std::as_const(proxy).SourceFailureLatch() ==
+                       &mozilla::FailureLatchInfallibleSource::Singleton());
+  }
+
+  // Test FAILURELATCH_IMPL_PROXY_OR_INFALLIBLE
+  {
+    class ProxyOrNull final : public mozilla::FailureLatch {
+     public:
+      ProxyOrNull() = default;
+
+      void Set(mozilla::FailureLatch* aFailureLatchOrNull) {
+        mFailureLatchOrNull = aFailureLatchOrNull;
+      }
+
+      FAILURELATCH_IMPL_PROXY_OR_INFALLIBLE(mFailureLatchOrNull, ProxyOrNull)
+
+     private:
+      mozilla::FailureLatch* mFailureLatchOrNull = nullptr;
+    };
+
+    ProxyOrNull proxy;
+
+    MOZ_RELEASE_ASSERT(!proxy.Fallible());
+    MOZ_RELEASE_ASSERT(!proxy.Failed());
+    MOZ_RELEASE_ASSERT(!proxy.GetFailure());
+    MOZ_RELEASE_ASSERT(&proxy.SourceFailureLatch() ==
+                       &mozilla::FailureLatchInfallibleSource::Singleton());
+    MOZ_RELEASE_ASSERT(&std::as_const(proxy).SourceFailureLatch() ==
+                       &mozilla::FailureLatchInfallibleSource::Singleton());
+
+    // Error from proxy.
+    {
+      mozilla::FailureLatchSource failureLatch;
+      proxy.Set(&failureLatch);
+      MOZ_RELEASE_ASSERT(proxy.Fallible());
+      MOZ_RELEASE_ASSERT(!proxy.Failed());
+      MOZ_RELEASE_ASSERT(!proxy.GetFailure());
+      MOZ_RELEASE_ASSERT(&proxy.SourceFailureLatch() == &failureLatch);
+      MOZ_RELEASE_ASSERT(&std::as_const(proxy).SourceFailureLatch() ==
+                         &failureLatch);
+
+      proxy.SetFailure("error");
+      MOZ_RELEASE_ASSERT(proxy.Failed());
+      MOZ_RELEASE_ASSERT(strcmp(proxy.GetFailure(), "error") == 0);
+      MOZ_RELEASE_ASSERT(failureLatch.Failed());
+      MOZ_RELEASE_ASSERT(strcmp(failureLatch.GetFailure(), "error") == 0);
+
+      // Don't forget to stop pointing at soon-to-be-destroyed object.
+      proxy.Set(nullptr);
+    }
+
+    // Error from proxy's origin.
+    {
+      mozilla::FailureLatchSource failureLatch;
+      proxy.Set(&failureLatch);
+      MOZ_RELEASE_ASSERT(proxy.Fallible());
+      MOZ_RELEASE_ASSERT(!proxy.Failed());
+      MOZ_RELEASE_ASSERT(!proxy.GetFailure());
+      MOZ_RELEASE_ASSERT(&proxy.SourceFailureLatch() == &failureLatch);
+      MOZ_RELEASE_ASSERT(&std::as_const(proxy).SourceFailureLatch() ==
+                         &failureLatch);
+
+      failureLatch.SetFailure("error");
+      MOZ_RELEASE_ASSERT(proxy.Failed());
+      MOZ_RELEASE_ASSERT(strcmp(proxy.GetFailure(), "error") == 0);
+      MOZ_RELEASE_ASSERT(failureLatch.Failed());
+      MOZ_RELEASE_ASSERT(strcmp(failureLatch.GetFailure(), "error") == 0);
+
+      // Don't forget to stop pointing at soon-to-be-destroyed object.
+      proxy.Set(nullptr);
+    }
+
+    MOZ_RELEASE_ASSERT(!proxy.Fallible());
+    MOZ_RELEASE_ASSERT(!proxy.Failed());
+    MOZ_RELEASE_ASSERT(!proxy.GetFailure());
+    MOZ_RELEASE_ASSERT(&proxy.SourceFailureLatch() ==
+                       &mozilla::FailureLatchInfallibleSource::Singleton());
+    MOZ_RELEASE_ASSERT(&std::as_const(proxy).SourceFailureLatch() ==
+                       &mozilla::FailureLatchInfallibleSource::Singleton());
+  }
+
+  printf("TestFailureLatch done\n");
+}
 
 void TestProfilerUtils() {
   printf("TestProfilerUtils...\n");
@@ -5390,6 +5664,7 @@ int main()
   // ::SleepMilli(10000);
 #endif  // MOZ_GECKO_PROFILER
 
+  TestFailureLatch();
   TestProfilerUtils();
   TestBaseAndProfilerDetail();
   TestSharedMutex();
