@@ -229,8 +229,11 @@ class MOZ_RAII AutoArraySchemaWithStringsWriter : public AutoArraySchemaWriter {
   UniqueJSONStrings& mStrings;
 };
 
-UniqueStacks::StackKey UniqueStacks::BeginStack(const FrameKey& aFrame) {
-  return StackKey(GetOrAddFrameIndex(aFrame));
+Maybe<UniqueStacks::StackKey> UniqueStacks::BeginStack(const FrameKey& aFrame) {
+  if (Maybe<uint32_t> frameIndex = GetOrAddFrameIndex(aFrame); frameIndex) {
+    return Some(StackKey(*frameIndex));
+  }
+  return Nothing{};
 }
 
 Vector<JITFrameInfoForBufferRange>&&
@@ -250,10 +253,14 @@ JITFrameInfo::MoveUniqueStringsWithNewFailureLatch(
   return std::move(mUniqueStrings);
 }
 
-UniqueStacks::StackKey UniqueStacks::AppendFrame(const StackKey& aStack,
-                                                 const FrameKey& aFrame) {
-  return StackKey(aStack, GetOrAddStackIndex(aStack),
-                  GetOrAddFrameIndex(aFrame));
+Maybe<UniqueStacks::StackKey> UniqueStacks::AppendFrame(
+    const StackKey& aStack, const FrameKey& aFrame) {
+  if (Maybe<uint32_t> stackIndex = GetOrAddStackIndex(aStack); stackIndex) {
+    if (Maybe<uint32_t> frameIndex = GetOrAddFrameIndex(aFrame); frameIndex) {
+      return Some(StackKey(aStack, *stackIndex, *frameIndex));
+    }
+  }
+  return Nothing{};
 }
 
 JITFrameInfoForBufferRange JITFrameInfoForBufferRange::Clone() const {
@@ -329,17 +336,24 @@ UniqueStacks::UniqueStacks(
   mStackTableWriter.StartBareList();
 }
 
-uint32_t UniqueStacks::GetOrAddStackIndex(const StackKey& aStack) {
+Maybe<uint32_t> UniqueStacks::GetOrAddStackIndex(const StackKey& aStack) {
+  if (Failed()) {
+    return Nothing{};
+  }
+
   uint32_t count = mStackToIndexMap.count();
   auto entry = mStackToIndexMap.lookupForAdd(aStack);
   if (entry) {
     MOZ_ASSERT(entry->value() < count);
-    return entry->value();
+    return Some(entry->value());
   }
 
-  MOZ_RELEASE_ASSERT(mStackToIndexMap.add(entry, aStack, count));
+  if (!mStackToIndexMap.add(entry, aStack, count)) {
+    SetFailure("OOM in UniqueStacks::GetOrAddStackIndex");
+    return Nothing{};
+  }
   StreamStack(aStack);
-  return count;
+  return Some(count);
 }
 
 Maybe<Vector<UniqueStacks::FrameKey>>
@@ -388,17 +402,24 @@ UniqueStacks::LookupFramesForJITAddressFromBufferPos(void* aJITAddress,
   return Some(std::move(frameKeys));
 }
 
-uint32_t UniqueStacks::GetOrAddFrameIndex(const FrameKey& aFrame) {
+Maybe<uint32_t> UniqueStacks::GetOrAddFrameIndex(const FrameKey& aFrame) {
+  if (Failed()) {
+    return Nothing{};
+  }
+
   uint32_t count = mFrameToIndexMap.count();
   auto entry = mFrameToIndexMap.lookupForAdd(aFrame);
   if (entry) {
     MOZ_ASSERT(entry->value() < count);
-    return entry->value();
+    return Some(entry->value());
   }
 
-  MOZ_RELEASE_ASSERT(mFrameToIndexMap.add(entry, aFrame, count));
+  if (!mFrameToIndexMap.add(entry, aFrame, count)) {
+    SetFailure("OOM in UniqueStacks::GetOrAddFrameIndex");
+    return Nothing{};
+  }
   StreamNonJITFrame(aFrame);
-  return count;
+  return Some(count);
 }
 
 void UniqueStacks::SpliceFrameTableElements(SpliceableJSONWriter& aWriter) {
@@ -1032,8 +1053,18 @@ ProfilerThreadId ProfileBuffer::DoStreamSamplesAndMarkersToJSON(
       auto ReadStack = [&](EntryGetter& e, double time, uint64_t entryPosition,
                            const Maybe<double>& unresponsiveDuration,
                            const RunningTimes& runningTimes) {
-        UniqueStacks::StackKey stack =
+        if (writer.Failed()) {
+          return;
+        }
+
+        Maybe<UniqueStacks::StackKey> maybeStack =
             uniqueStacks.BeginStack(UniqueStacks::FrameKey("(root)"));
+        if (!maybeStack) {
+          writer.SetFailure("BeginStack failure");
+          return;
+        }
+
+        UniqueStacks::StackKey stack = *maybeStack;
 
         int numFrames = 0;
         while (e.Has()) {
@@ -1046,8 +1077,13 @@ ProfilerThreadId ProfileBuffer::DoStreamSamplesAndMarkersToJSON(
             nsAutoCString functionNameOrAddress =
                 uniqueStacks.FunctionNameOrAddress(pc);
 
-            stack = uniqueStacks.AppendFrame(
+            maybeStack = uniqueStacks.AppendFrame(
                 stack, UniqueStacks::FrameKey(functionNameOrAddress.get()));
+            if (!maybeStack) {
+              writer.SetFailure("AppendFrame failure");
+              return;
+            }
+            stack = *maybeStack;
 
           } else if (e.Get().IsLabel()) {
             numFrames++;
@@ -1134,11 +1170,16 @@ ProfilerThreadId ProfileBuffer::DoStreamSamplesAndMarkersToJSON(
               e.Next();
             }
 
-            stack = uniqueStacks.AppendFrame(
+            maybeStack = uniqueStacks.AppendFrame(
                 stack,
                 UniqueStacks::FrameKey(std::move(frameLabel), relevantForJS,
                                        isBaselineInterp, innerWindowID, line,
                                        column, categoryPair));
+            if (!maybeStack) {
+              writer.SetFailure("AppendFrame failure");
+              return;
+            }
+            stack = *maybeStack;
 
           } else if (e.Get().IsJitReturnAddr()) {
             numFrames++;
@@ -1153,7 +1194,12 @@ ProfilerThreadId ProfileBuffer::DoStreamSamplesAndMarkersToJSON(
                 "Attempting to stream samples for a buffer range "
                 "for which we don't have JITFrameInfo?");
             for (const UniqueStacks::FrameKey& frameKey : *frameKeys) {
-              stack = uniqueStacks.AppendFrame(stack, frameKey);
+              maybeStack = uniqueStacks.AppendFrame(stack, frameKey);
+              if (!maybeStack) {
+                writer.SetFailure("AppendFrame failure");
+                return;
+              }
+              stack = *maybeStack;
             }
 
             e.Next();
@@ -1166,11 +1212,16 @@ ProfilerThreadId ProfileBuffer::DoStreamSamplesAndMarkersToJSON(
         // Even if this stack is considered empty, it contains the root frame,
         // which needs to be in the JSON output because following "same samples"
         // may refer to it when reusing this sample.mStack.
-        const uint32_t stackIndex = uniqueStacks.GetOrAddStackIndex(stack);
+        const Maybe<uint32_t> stackIndex =
+            uniqueStacks.GetOrAddStackIndex(stack);
+        if (!stackIndex) {
+          writer.SetFailure("Can't add unique string for stack");
+          return;
+        }
 
         // And store that possibly-empty stack in case it's followed by "same
         // sample" entries.
-        previousStack = stackIndex;
+        previousStack = *stackIndex;
         previousStackState = (numFrames == 0)
                                  ? ThreadStreamingContext::eStackWasEmpty
                                  : ThreadStreamingContext::eStackWasNotEmpty;
@@ -1190,7 +1241,7 @@ ProfilerThreadId ProfileBuffer::DoStreamSamplesAndMarkersToJSON(
           return;
         }
 
-        WriteSample(writer, ProfileSample{stackIndex, time,
+        WriteSample(writer, ProfileSample{*stackIndex, time,
                                           unresponsiveDuration, runningTimes});
       };  // End of `ReadStack(EntryGetter&)` lambda.
 

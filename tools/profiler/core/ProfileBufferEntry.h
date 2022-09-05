@@ -337,11 +337,11 @@ class UniqueStacks final : public mozilla::FailureLatch {
                ProfilerCodeAddressService* aCodeAddressService = nullptr);
 
   // Return a StackKey for aFrame as the stack's root frame (no prefix).
-  [[nodiscard]] StackKey BeginStack(const FrameKey& aFrame);
+  [[nodiscard]] mozilla::Maybe<StackKey> BeginStack(const FrameKey& aFrame);
 
   // Return a new StackKey that is obtained by appending aFrame to aStack.
-  [[nodiscard]] StackKey AppendFrame(const StackKey& aStack,
-                                     const FrameKey& aFrame);
+  [[nodiscard]] mozilla::Maybe<StackKey> AppendFrame(const StackKey& aStack,
+                                                     const FrameKey& aFrame);
 
   // Look up frame keys for the given JIT address, and ensure that our frame
   // table has entries for the returned frame keys. The JSON for these frames
@@ -352,8 +352,10 @@ class UniqueStacks final : public mozilla::FailureLatch {
   LookupFramesForJITAddressFromBufferPos(void* aJITAddress,
                                          uint64_t aBufferPosition);
 
-  [[nodiscard]] uint32_t GetOrAddFrameIndex(const FrameKey& aFrame);
-  [[nodiscard]] uint32_t GetOrAddStackIndex(const StackKey& aStack);
+  [[nodiscard]] mozilla::Maybe<uint32_t> GetOrAddFrameIndex(
+      const FrameKey& aFrame);
+  [[nodiscard]] mozilla::Maybe<uint32_t> GetOrAddStackIndex(
+      const StackKey& aStack);
 
   void SpliceFrameTableElements(SpliceableJSONWriter& aWriter);
   void SpliceStackTableElements(SpliceableJSONWriter& aWriter);
