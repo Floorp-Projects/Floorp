@@ -229,7 +229,7 @@ function test_upload_file() {
     }
 
     /* upload of file completed successfully. */
-    if (data.length != 0) {
+    if (data.length) {
       do_throw("Upload resulted in data!");
     }
 

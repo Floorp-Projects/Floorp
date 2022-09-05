@@ -19,7 +19,7 @@ function read_stream(stream, count) {
     var bytes = wrapper.readByteArray(Math.min(65535, count));
     data.push(String.fromCharCode.apply(null, bytes));
     count -= bytes.length;
-    if (bytes.length == 0) {
+    if (!bytes.length) {
       do_throw("Nothing read from input stream!");
     }
   }

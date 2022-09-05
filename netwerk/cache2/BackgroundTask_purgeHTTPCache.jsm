@@ -37,7 +37,7 @@ async function deleteCacheDirectory(
   cacheDirName,
   secondsToWait
 ) {
-  if (!cacheDirName || cacheDirName.length == 0) {
+  if (!cacheDirName || !cacheDirName.length) {
     return;
   }
 
@@ -119,7 +119,7 @@ async function cleanupOtherCacheDirectories(
   profileDirPath,
   otherFoldersSuffix
 ) {
-  if (!otherFoldersSuffix || otherFoldersSuffix.length == 0) {
+  if (!otherFoldersSuffix || !otherFoldersSuffix.length) {
     return;
   }
 

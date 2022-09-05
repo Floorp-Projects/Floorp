@@ -324,7 +324,7 @@ function test_connectonly_nonhttp() {
 function nextTest() {
   transportAvailable = false;
 
-  if (tests.length == 0) {
+  if (!tests.length) {
     do_test_finished();
     return;
   }

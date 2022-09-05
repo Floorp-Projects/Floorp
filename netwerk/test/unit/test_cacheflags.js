@@ -358,7 +358,7 @@ var gTests = [
 ];
 
 function run_next_test() {
-  if (gTests.length == 0) {
+  if (!gTests.length) {
     httpserver.stop(do_test_finished);
     return;
   }

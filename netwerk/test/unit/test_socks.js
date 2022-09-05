@@ -187,7 +187,7 @@ SocksClient.prototype = {
   },
 
   checkSocksGreeting() {
-    if (this.inbuf.length == 0) {
+    if (!this.inbuf.length) {
       return;
     }
 

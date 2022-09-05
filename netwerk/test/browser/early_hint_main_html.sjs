@@ -16,7 +16,7 @@ function handleRequest(request, response) {
       new_hint = false;
       response.write("HTTP/1.1 103 Early Hint\r\n");
     }
-    if (imgUrl.length == 0) {
+    if (!imgUrl.length) {
       // next hint in new early hint response when empty string is passed
       new_header = true;
       if (uuid === "new_response") {
