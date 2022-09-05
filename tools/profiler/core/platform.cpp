@@ -3188,6 +3188,9 @@ static void locked_profiler_stream_json_for_this_process(
   }
   aProgressLogger.SetLocalProgress(2_pc, "Discarded old data");
 
+  if (aWriter.Failed()) {
+    return;
+  }
   SLOW_DOWN_FOR_TESTING();
 
 #if defined(GP_OS_android)
@@ -3222,6 +3225,9 @@ static void locked_profiler_stream_json_for_this_process(
   aWriter.EndArray();
   aProgressLogger.SetLocalProgress(4_pc, "Wrote library information");
 
+  if (aWriter.Failed()) {
+    return;
+  }
   SLOW_DOWN_FOR_TESTING();
 
   // Put meta data
@@ -3233,6 +3239,9 @@ static void locked_profiler_stream_json_for_this_process(
   aWriter.EndObject();
   aProgressLogger.SetLocalProgress(5_pc, "Wrote profile metadata");
 
+  if (aWriter.Failed()) {
+    return;
+  }
   SLOW_DOWN_FOR_TESTING();
 
   // Put page data
@@ -3249,6 +3258,9 @@ static void locked_profiler_stream_json_for_this_process(
       aWriter, CorePS::ProcessStartTime(), aSinceTime,
       aProgressLogger.CreateSubLoggerTo(14_pc, "Wrote counters"));
 
+  if (aWriter.Failed()) {
+    return;
+  }
   SLOW_DOWN_FOR_TESTING();
 
   // Lists the samples for each thread profile
@@ -3263,6 +3275,9 @@ static void locked_profiler_stream_json_for_this_process(
 
     const uint32_t threadCount = uint32_t(threads.length());
 
+    if (aWriter.Failed()) {
+      return;
+    }
     SLOW_DOWN_FOR_TESTING();
 
     // Prepare the streaming context for each thread.
@@ -3276,6 +3291,9 @@ static void locked_profiler_stream_json_for_this_process(
       processStreamingContext.AddThreadStreamingContext(
           *thread.mProfiledThreadData, buffer, thread.mJSContext, aService,
           std::move(progressLogger));
+      if (aWriter.Failed()) {
+        return;
+      }
     }
 
     SLOW_DOWN_FOR_TESTING();
@@ -3287,6 +3305,9 @@ static void locked_profiler_stream_json_for_this_process(
                                      "Processing samples and markers...", 80_pc,
                                      "Processed samples and markers"));
 
+    if (aWriter.Failed()) {
+      return;
+    }
     SLOW_DOWN_FOR_TESTING();
 
     // Stream each thread from the pre-filled context.
@@ -3302,6 +3323,9 @@ static void locked_profiler_stream_json_for_this_process(
           std::move(threadStreamingContext), aWriter,
           CorePS::ProcessName(aLock), CorePS::ETLDplus1(aLock),
           CorePS::ProcessStartTime(), aService, std::move(progressLogger));
+      if (aWriter.Failed()) {
+        return;
+      }
     }
     aProgressLogger.SetLocalProgress(92_pc, "Wrote samples and markers");
 
@@ -3321,6 +3345,9 @@ static void locked_profiler_stream_json_for_this_process(
             aProgressLogger.CreateSubLoggerTo("Streaming Java thread...", 96_pc,
                                               "Streamed Java thread"));
       }
+      if (aWriter.Failed()) {
+        return;
+      }
     } else {
       aProgressLogger.SetLocalProgress(96_pc, "No Java thread");
     }
@@ -3330,6 +3357,9 @@ static void locked_profiler_stream_json_for_this_process(
         ActivePS::MoveBaseProfileThreads(aLock);
     if (baseProfileThreads) {
       aWriter.Splice(MakeStringSpan(baseProfileThreads.get()));
+      if (aWriter.Failed()) {
+        return;
+      }
       aProgressLogger.SetLocalProgress(97_pc, "Wrote baseprofiler data");
     } else {
       aProgressLogger.SetLocalProgress(97_pc, "No baseprofiler data");
@@ -3347,6 +3377,10 @@ static void locked_profiler_stream_json_for_this_process(
                                           "Streamed pauses"));
   }
   aWriter.EndArray();
+
+  if (aWriter.Failed()) {
+    return;
+  }
 
   ProfilingLog::Access([&](Json::Value& aProfilingLogObject) {
     aProfilingLogObject[Json::StaticString{
@@ -3408,7 +3442,7 @@ bool do_profiler_stream_json_for_this_process(
       aProgressLogger.CreateSubLoggerFromTo(
           3_pc, "locked_profiler_stream_json_for_this_process started", 100_pc,
           "locked_profiler_stream_json_for_this_process done"));
-  return true;
+  return !aWriter.Failed();
 }
 
 bool profiler_stream_json_for_this_process(
@@ -5318,7 +5352,7 @@ static bool WriteProfileToJSONWriter(SpliceableChunkedJSONWriter& aWriter,
     aWriter.EndArray();
   }
   aWriter.End();
-  return true;
+  return !aWriter.Failed();
 }
 
 void profiler_set_process_name(const nsACString& aProcessName,
@@ -5339,7 +5373,8 @@ UniquePtr<char[]> profiler_get_profile(double aSinceTime,
   UniquePtr<ProfilerCodeAddressService> service =
       profiler_code_address_service_for_presymbolication();
 
-  SpliceableChunkedJSONWriter b{FailureLatchInfallibleSource::Singleton()};
+  FailureLatchSource failureLatch;
+  SpliceableChunkedJSONWriter b{failureLatch};
   if (!WriteProfileToJSONWriter(b, aSinceTime, aIsShuttingDown, service.get(),
                                 ProgressLogger{})) {
     return nullptr;
