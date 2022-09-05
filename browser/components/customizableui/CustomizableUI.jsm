@@ -5167,10 +5167,10 @@ OverflowableToolbar.prototype = {
   },
 
   /**
-   * Exposes whether _onOverflow is currently running.
+   * Exposes whether _checkOverflow is currently running.
    */
   isHandlingOverflow() {
-    return !!this._onOverflowHandle;
+    return !!this._checkOverflowHandle;
   },
 
   _onClickChevron(aEvent) {
@@ -5255,14 +5255,13 @@ OverflowableToolbar.prototype = {
     }
 
     let win = this._target.ownerGlobal;
-    let onOverflowHandle = {};
-    this._onOverflowHandle = onOverflowHandle;
+    let checkOverflowHandle = this._checkOverflowHandle;
 
     let [isOverflowing] = await this._getOverflowInfo();
 
     // Stop if the window has closed or if we re-enter while waiting for
     // layout.
-    if (win.closed || this._onOverflowHandle != onOverflowHandle) {
+    if (win.closed || this._checkOverflowHandle != checkOverflowHandle) {
       lazy.log.debug("Window closed or another overflow handler started.");
       return;
     }
@@ -5295,15 +5294,13 @@ OverflowableToolbar.prototype = {
       [isOverflowing] = await this._getOverflowInfo();
       // Stop if the window has closed or if we re-enter while waiting for
       // layout.
-      if (win.closed || this._onOverflowHandle != onOverflowHandle) {
+      if (win.closed || this._checkOverflowHandle != checkOverflowHandle) {
         lazy.log.debug("Window closed or another overflow handler started.");
         return;
       }
     }
 
     win.UpdateUrlbarSearchSplitterState();
-
-    this._onOverflowHandle = null;
   },
 
   _onResize(aEvent) {
@@ -5332,8 +5329,7 @@ OverflowableToolbar.prototype = {
     );
     let placements = gPlacements.get(this._toolbar.id);
     let win = this._target.ownerGlobal;
-    let moveItemsBackToTheirOriginHandle = {};
-    this._moveItemsBackToTheirOriginHandle = moveItemsBackToTheirOriginHandle;
+    let checkOverflowHandle = this._checkOverflowHandle;
 
     while (this._list.firstElementChild) {
       let child = this._list.firstElementChild;
@@ -5348,14 +5344,8 @@ OverflowableToolbar.prototype = {
 
           // If the window has closed or if we re-enter because we were waiting
           // for layout, stop.
-          if (
-            win.closed ||
-            this._moveItemsBackToTheirOriginHandle !=
-              moveItemsBackToTheirOriginHandle
-          ) {
-            lazy.log.debug(
-              "Window closed or _moveItemsBackToTheirOrigin called again."
-            );
+          if (win.closed || this._checkOverflowHandle != checkOverflowHandle) {
+            lazy.log.debug("Window closed or _checkOverflow called again.");
             return;
           }
         }
@@ -5410,8 +5400,6 @@ OverflowableToolbar.prototype = {
     if (collapsedWidgetIds.every(w => CustomizableUI.isSpecialWidget(w))) {
       this._toolbar.removeAttribute("overflowing");
     }
-
-    this._moveItemsBackToTheirOriginHandle = null;
   },
 
   async _checkOverflow() {
@@ -5426,20 +5414,29 @@ OverflowableToolbar.prototype = {
       return;
     }
 
+    let checkOverflowHandle = (this._checkOverflowHandle = {});
+
     lazy.log.debug("Checking overflow");
     let [isOverflowing, totalAvailWidth] = await this._getOverflowInfo();
-    if (win.closed) {
+    if (win.closed || this._checkOverflowHandle != checkOverflowHandle) {
       return;
     }
 
     if (isOverflowing) {
-      this._onOverflow();
+      await this._onOverflow();
     } else {
-      this._moveItemsBackToTheirOrigin(false, totalAvailWidth);
+      await this._moveItemsBackToTheirOrigin(false, totalAvailWidth);
+    }
+
+    if (checkOverflowHandle == this._checkOverflowHandle) {
+      this._checkOverflowHandle = null;
     }
   },
 
   _disable() {
+    // Abort any ongoing overflow check. _enable() will _checkOverflow()
+    // anyways, so this is enough.
+    this._checkOverflowHandle = {};
     this._moveItemsBackToTheirOrigin(true);
     this._enabled = false;
   },
