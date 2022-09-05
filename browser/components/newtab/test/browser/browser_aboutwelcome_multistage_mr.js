@@ -46,7 +46,7 @@ const sandbox = sinon.createSandbox();
 let isDefaultStub;
 let pinStub;
 
-add_task(function initSandbox() {
+add_setup(function initSandbox() {
   pinStub = sandbox.stub(AboutWelcomeParent, "doesAppNeedPin").returns(true);
   isDefaultStub = sandbox
     .stub(AboutWelcomeParent, "isDefaultBrowser")
@@ -208,4 +208,62 @@ add_task(async function test_aboutwelcome_mr_template_get_started() {
     ["main.AW_PIN_FIREFOX", "main.AW_ONLY_DEFAULT"]
   );
   sandbox.restore();
+});
+
+add_task(async function test_aboutwelcome_show_firefox_view() {
+  const TEST_CONTENT = [
+    {
+      id: "AW_GRATITUDE",
+      content: {
+        position: "split",
+        split_narrow_bkg_position: "-228px",
+        background:
+          "url('chrome://activity-stream/content/data/content/assets/mr-gratitude.svg') var(--mr-secondary-position) no-repeat, var(--mr-screen-background-color)",
+        progress_bar: true,
+        logo: {},
+        title: {
+          string_id: "mr2022-onboarding-gratitude-title",
+        },
+        subtitle: {
+          string_id: "mr2022-onboarding-gratitude-subtitle",
+        },
+        primary_button: {
+          label: {
+            string_id: "mr2022-onboarding-gratitude-primary-button-label",
+          },
+          action: {
+            type: "OPEN_FIREFOX_VIEW",
+            navigate: true,
+          },
+        },
+        secondary_button: {
+          label: {
+            string_id: "mr2022-onboarding-gratitude-secondary-button-label",
+          },
+          action: {
+            navigate: true,
+          },
+        },
+      },
+    },
+  ];
+  await setAboutWelcomeMultiStage(JSON.stringify(TEST_CONTENT));
+  let browser = await openMRAboutWelcome();
+
+  // execution
+  await test_screen_content(
+    browser,
+    //Expected selectors
+    ["main.UPGRADE_GRATITUDE"],
+    //Unexpected selectors:
+    []
+  );
+  await clickVisibleButton(browser, ".action-buttons button.primary");
+
+  // verification
+  await BrowserTestUtils.waitForEvent(gBrowser, "TabSwitchDone");
+  assertFirefoxViewTabSelected(gBrowser.ownerGlobal);
+
+  // cleanup
+  closeFirefoxViewTab();
 });
