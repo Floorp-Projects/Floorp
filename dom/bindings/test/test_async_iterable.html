@@ -14,6 +14,19 @@ add_task(async function init() {
   await SpecialPowers.pushPrefEnv({set: [["dom.expose_test_interfaces", true]]});
 });
 
+async function check_single_result(itr, multiplier = 1) {
+  let values = [];
+  for await (let v of itr) {
+    values.push(v);
+  }
+  is(values.length, 10, `AsyncIterableSingle: should returns 10 elements`);
+  for (let i = 0; i < 10; i++) {
+    let expected = i * 9 % 7 * multiplier;
+    is(values[i], expected,
+      `AsyncIterableSingle: should be ${expected}, get ${values[i]}`);
+  }
+}
+
 async function test_data_single() {
   info(`AsyncIterableSingle: Testing simple iterable creation and functionality`);
 
@@ -35,27 +48,16 @@ async function test_data_single() {
   is(itr.values, itr[Symbol.asyncIterator],
     `AsyncIterableSingle: Should be using @@asyncIterator for 'values'`);
 
-  let values = [];
-  for await (let v of itr) {
-    values.push(v);
-  }
-  is(values.length, 10, `AsyncIterableSingle: should returns 10 elements`);
-  for (let i = 0; i < 10; i++) {
-    let expected = i * 9 % 7;
-    is(values[i], i * 9 % 7,
-      `AsyncIterableSingle: should be ${expected}, get ${values[i]}`);
-  }
+  await check_single_result(itr);
+  await check_single_result(itr.values());
 
-  values = [];
-  for await (let v of itr.values()) {
-    values.push(v);
-  }
-  is(values.length, 10, `AsyncIterableSingle: should returns 10 elements`);
-  for (let i = 0; i < 10; i++) {
-    let expected = i * 9 % 7;
-    is(values[i], i * 9 % 7,
-      `AsyncIterableSingle: should be ${expected}, get ${values[i]}`);
-  }
+  // eslint-disable-next-line no-undef
+  itr = new TestInterfaceAsyncIterableSingleWithArgs();
+  is(itr.values, itr[Symbol.asyncIterator],
+    `AsyncIterableSingleWithArgs: Should be using @@asyncIterator for 'values'`);
+
+  await check_single_result(itr, 1);
+  await check_single_result(itr.values({ multiplier: 2 }), 2);
 }
 
 async function test_data_double() {

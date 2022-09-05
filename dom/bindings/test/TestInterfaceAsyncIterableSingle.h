@@ -25,14 +25,14 @@ struct TestInterfaceAsyncIterableSingleOptions;
 
 // Implementation of test binding for webidl iterable interfaces, using
 // primitives for value type
-class TestInterfaceAsyncIterableSingle final : public nsISupports,
-                                               public nsWrapperCache {
+class TestInterfaceAsyncIterableSingle : public nsISupports,
+                                         public nsWrapperCache {
  public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(TestInterfaceAsyncIterableSingle)
 
-  TestInterfaceAsyncIterableSingle(nsPIDOMWindowInner* aParent,
-                                   bool aFailToInit);
+  explicit TestInterfaceAsyncIterableSingle(nsPIDOMWindowInner* aParent,
+                                            bool aFailToInit = false);
   nsPIDOMWindowInner* GetParentObject() const;
   virtual JSObject* WrapObject(JSContext* aCx,
                                JS::Handle<JSObject*> aGivenProto) override;
@@ -46,9 +46,10 @@ class TestInterfaceAsyncIterableSingle final : public nsISupports,
   already_AddRefed<Promise> GetNextPromise(JSContext* aCx, Iterator* aIterator,
                                            ErrorResult& aRv);
 
- private:
+ protected:
   struct IteratorData {
-    explicit IteratorData(int32_t aIndex) : mIndex(aIndex) {}
+    IteratorData(int32_t aIndex, uint32_t aMultiplier)
+        : mIndex(aIndex), mMultiplier(aMultiplier) {}
     ~IteratorData() {
       if (mPromise) {
         mPromise->MaybeReject(NS_ERROR_DOM_ABORT_ERR);
@@ -57,9 +58,18 @@ class TestInterfaceAsyncIterableSingle final : public nsISupports,
     }
     RefPtr<Promise> mPromise;
     uint32_t mIndex;
+    uint32_t mMultiplier;
   };
+
+  already_AddRefed<Promise> GetNextPromise(JSContext* aCx,
+                                           IterableIteratorBase* aIterator,
+                                           IteratorData* aData,
+                                           ErrorResult& aRv);
+
   virtual ~TestInterfaceAsyncIterableSingle() = default;
-  void ResolvePromise(IteratorData* aData);
+
+ private:
+  void ResolvePromise(IterableIteratorBase* aIterator, IteratorData* aData);
 
   nsCOMPtr<nsPIDOMWindowInner> mParent;
   bool mFailToInit;

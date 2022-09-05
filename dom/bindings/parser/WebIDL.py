@@ -13,6 +13,7 @@ import math
 import string
 from collections import defaultdict, OrderedDict
 from itertools import chain
+import copy
 
 # Machinery
 
@@ -4723,7 +4724,7 @@ class IDLMaplikeOrSetlikeOrIterableBase(IDLInterfaceMember):
 # Iterable adds ES6 iterator style functions and traits
 # (keys/values/entries/@@iterator) to an interface.
 class IDLIterable(IDLMaplikeOrSetlikeOrIterableBase):
-    def __init__(self, location, identifier, keyType, valueType=None, scope=None):
+    def __init__(self, location, identifier, keyType, valueType, scope):
         IDLMaplikeOrSetlikeOrIterableBase.__init__(
             self,
             location,
@@ -4798,9 +4799,15 @@ class IDLIterable(IDLMaplikeOrSetlikeOrIterableBase):
 
 
 class IDLAsyncIterable(IDLMaplikeOrSetlikeOrIterableBase):
-    def __init__(
-        self, location, identifier, keyType, valueType=None, argList=None, scope=None
-    ):
+    def __init__(self, location, identifier, keyType, valueType, argList, scope):
+        for arg in argList:
+            if not arg.optional:
+                raise WebIDLError(
+                    "The arguments of the asynchronously iterable declaration on "
+                    "%s must all be optional arguments." % identifier,
+                    [arg.location],
+                )
+
         IDLMaplikeOrSetlikeOrIterableBase.__init__(
             self,
             location,
@@ -4812,10 +4819,6 @@ class IDLAsyncIterable(IDLMaplikeOrSetlikeOrIterableBase):
         )
         self.iteratorType = None
         self.argList = argList
-        if argList is not None:
-            raise WebIDLError(
-                "Arguments of async iterable are not supported yet. Please reference Bug 1781730."
-            )
 
     def __str__(self):
         return "declared async iterable with key '%s' and value '%s'" % (
@@ -4835,6 +4838,7 @@ class IDLAsyncIterable(IDLMaplikeOrSetlikeOrIterableBase):
             members,
             False,
             self.iteratorType,
+            self.argList,
             affectsNothing=True,
             newObject=True,
             isIteratorAlias=(not self.isPairIterator()),
@@ -4844,12 +4848,17 @@ class IDLAsyncIterable(IDLMaplikeOrSetlikeOrIterableBase):
         if not self.isPairIterator():
             return
 
+        # Methods can't share their IDLArguments, so we need to make copies here.
+        def copyArgList(argList):
+            return map(copy.copy, argList)
+
         # object entries()
         self.addMethod(
             "entries",
             members,
             False,
             self.iteratorType,
+            copyArgList(self.argList),
             affectsNothing=True,
             newObject=True,
             isIteratorAlias=True,
@@ -4860,6 +4869,7 @@ class IDLAsyncIterable(IDLMaplikeOrSetlikeOrIterableBase):
             members,
             False,
             self.iteratorType,
+            copyArgList(self.argList),
             affectsNothing=True,
             newObject=True,
         )
@@ -7753,11 +7763,11 @@ class Parser(Tokenizer):
         elif len(p) == 9:
             keyType = p[4]
             valueType = p[6]
-            argList = None
+            argList = []
         else:
             keyType = None
             valueType = p[4]
-            argList = None
+            argList = []
 
         p[0] = IDLAsyncIterable(
             location, identifier, keyType, valueType, argList, self.globalScope()

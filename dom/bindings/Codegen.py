@@ -9519,6 +9519,7 @@ class CGPerSignatureCall(CGThing):
                         descriptor,
                         idlNode.maplikeOrSetlikeOrIterable,
                         idlNode.identifier.name,
+                        self.getArgumentNames(),
                     )
                 )
         elif idlNode.isAttr() and idlNode.type.isObservableArray():
@@ -9602,8 +9603,11 @@ class CGPerSignatureCall(CGThing):
 
         self.cgRoot = CGList(cgThings)
 
+    def getArgumentNames(self):
+        return ["arg" + str(i) for i in range(len(self.arguments))]
+
     def getArguments(self):
-        return [(a, "arg" + str(i)) for i, a in enumerate(self.arguments)]
+        return list(zip(self.arguments, self.getArgumentNames()))
 
     def processWebExtensionStubAttribute(self, idlNode, cgThings):
         nativeMethodName = "CallWebExtMethod"
@@ -22107,8 +22111,10 @@ class CGIterableMethodGenerator(CGGeneric):
     using CGCallGenerator.
     """
 
-    def __init__(self, descriptor, iterable, methodName):
+    def __init__(self, descriptor, iterable, methodName, args):
         if methodName == "forEach":
+            assert len(args) == 2
+
             CGGeneric.__init__(
                 self,
                 fill(
@@ -22144,6 +22150,8 @@ class CGIterableMethodGenerator(CGGeneric):
             return
 
         if descriptor.interface.isIterable():
+            assert len(args) == 0
+
             binding = descriptor.interface.identifier.name + "Iterator_Binding"
             init = ""
         else:
@@ -22154,12 +22162,13 @@ class CGIterableMethodGenerator(CGGeneric):
                 """
                 {
                   ErrorResult initError;
-                  self->InitAsyncIterator(result.get(), initError);
+                  self->InitAsyncIterator(result.get(), ${args}initError);
                   if (initError.MaybeSetPendingException(cx, "Asynchronous iterator initialization steps for ${ifaceName} failed")) {
                     return false;
                   }
                 }
                 """,
+                args="".join(a + ", " for a in args),
                 ifaceName=descriptor.interface.identifier.name,
             )
         CGGeneric.__init__(
