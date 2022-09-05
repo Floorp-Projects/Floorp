@@ -144,8 +144,8 @@ struct JITFrameInfoForBufferRange final {
 class JITFrameInfo final {
  public:
   JITFrameInfo()
-      : mUniqueStrings(mozilla::MakeUnique<UniqueJSONStrings>(
-            mozilla::FailureLatchInfallibleSource::Singleton())) {}
+      : mUniqueStrings(
+            mozilla::MakeUnique<UniqueJSONStrings>(mLocalFailureLatchSource)) {}
 
   MOZ_IMPLICIT JITFrameInfo(const JITFrameInfo& aOther,
                             mozilla::ProgressLogger aProgressLogger);
@@ -174,6 +174,10 @@ class JITFrameInfo final {
     return mRanges.back().mRangeEnd <= aCurrentBufferRangeStart;
   }
 
+  mozilla::FailureLatch& LocalFailureLatchSource() {
+    return mLocalFailureLatchSource;
+  }
+
   mozilla::Vector<JITFrameInfoForBufferRange>&& MoveRanges() && {
     return std::move(mRanges);
   }
@@ -182,6 +186,11 @@ class JITFrameInfo final {
   }
 
  private:
+  // JITFrameInfo's may exist during profiling, so it carries its own fallible
+  // FailureLatch. If&when the data below is finally extracted, any error is
+  // forwarded to the caller.
+  mozilla::FailureLatchSource mLocalFailureLatchSource;
+
   // The array of ranges of JIT frame information, sorted by buffer position.
   // Ranges are non-overlapping.
   // The JSON of the cached frames can contain string indexes, which refer
