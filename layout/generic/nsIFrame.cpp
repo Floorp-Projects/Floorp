@@ -6590,12 +6590,12 @@ LogicalSize nsIFrame::ComputeAutoSize(
   if (styleISize.IsAuto()) {
     nscoord availBased =
         aAvailableISize - aMargin.ISize(aWM) - aBorderPadding.ISize(aWM);
-    result.ISize(aWM) = ShrinkWidthToFit(aRenderingContext, availBased, aFlags);
+    result.ISize(aWM) = ShrinkISizeToFit(aRenderingContext, availBased, aFlags);
   }
   return result;
 }
 
-nscoord nsIFrame::ShrinkWidthToFit(gfxContext* aRenderingContext,
+nscoord nsIFrame::ShrinkISizeToFit(gfxContext* aRenderingContext,
                                    nscoord aISizeInCB,
                                    ComputeSizeFlags aFlags) {
   // If we're a container for font size inflation, then shrink

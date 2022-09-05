@@ -2748,7 +2748,7 @@ class nsIFrame : public nsQueryFrame {
    * Utility function for ComputeAutoSize implementations.  Return
    * max(GetMinISize(), min(aISizeInCB, GetPrefISize()))
    */
-  nscoord ShrinkWidthToFit(gfxContext* aRenderingContext, nscoord aISizeInCB,
+  nscoord ShrinkISizeToFit(gfxContext* aRenderingContext, nscoord aISizeInCB,
                            mozilla::ComputeSizeFlags aFlags);
 
  public:

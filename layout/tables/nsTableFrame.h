@@ -313,7 +313,7 @@ class nsTableFrame : public nsContainerFrame {
       mozilla::ComputeSizeFlags aFlags) override;
 
   /**
-   * A copy of nsIFrame::ShrinkWidthToFit that calls a different
+   * A copy of nsIFrame::ShrinkISizeToFit that calls a different
    * GetPrefISize, since tables have two different ones.
    */
   nscoord TableShrinkISizeToFit(gfxContext* aRenderingContext,

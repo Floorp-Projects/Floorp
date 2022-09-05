@@ -1466,7 +1466,7 @@ nscoord nsTableFrame::TableShrinkISizeToFit(gfxContext* aRenderingContext,
     // Tables shrink inline-size to fit with a slightly different algorithm
     // from the one they use for their intrinsic isize (the difference
     // relates to handling of percentage isizes on columns).  So this
-    // function differs from nsIFrame::ShrinkWidthToFit by only the
+    // function differs from nsIFrame::ShrinkISizeToFit by only the
     // following line.
     // Since we've already called GetMinISize, we don't need to do any
     // of the other stuff GetPrefISize does.
