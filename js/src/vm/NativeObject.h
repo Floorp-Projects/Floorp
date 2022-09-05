@@ -188,6 +188,10 @@ class ObjectElements {
  public:
   enum Flags : uint16_t {
     // Elements are stored inline in the object allocation.
+    // An object allocated with the FIXED flag set can have the flag unset later
+    // if `growElements()` is called to increase the capacity beyond what was
+    // initially allocated. Once the flag is unset, it will remain so for the
+    // rest of the lifetime of the object.
     FIXED = 0x1,
 
     // Present only if these elements correspond to an array with

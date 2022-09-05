@@ -784,6 +784,8 @@ bool NativeObject::growElements(JSContext* cx, uint32_t reqCapacity) {
     if (getDenseCapacity() >= reqCapacity) {
       return true;
     }
+    // moveShiftedElements() may have changed the number of shifted elements;
+    // update `numShifted` accordingly.
     numShifted = getElementsHeader()->numShiftedElements();
 
     // If |reqCapacity + numShifted| overflows, we just move all shifted
@@ -801,13 +803,20 @@ bool NativeObject::growElements(JSContext* cx, uint32_t reqCapacity) {
 
   uint32_t newAllocated = 0;
   if (is<ArrayObject>() && !as<ArrayObject>().lengthIsWritable()) {
-    MOZ_ASSERT(reqCapacity <= as<ArrayObject>().length());
-    MOZ_ASSERT(reqCapacity <= MAX_DENSE_ELEMENTS_COUNT);
     // Preserve the |capacity <= length| invariant for arrays with
     // non-writable length.  See also js::ArraySetLength which initially
     // enforces this requirement.
+    MOZ_ASSERT(reqCapacity <= as<ArrayObject>().length());
+    // Adding to reqCapacity must not overflow uint32_t.
+    MOZ_ASSERT(reqCapacity <= MAX_DENSE_ELEMENTS_COUNT);
+
+    // Then, add the header and shifted elements sizes to the new capacity
+    // to get the overall amount to allocate.
     newAllocated = reqCapacity + numShifted + ObjectElements::VALUES_PER_HEADER;
   } else {
+    // For arrays with writable length, and all non-Array objects, call
+    // `NativeObject::goodElementsAllocationAmount()` to determine the
+    // amount to allocate from the the requested capacity and existing length.
     if (!goodElementsAllocationAmount(cx, reqCapacity + numShifted,
                                       getElementsHeader()->length,
                                       &newAllocated)) {
@@ -815,8 +824,14 @@ bool NativeObject::growElements(JSContext* cx, uint32_t reqCapacity) {
     }
   }
 
+  // newAllocated now contains the size of the buffer we need to allocate;
+  // subtract off the header and shifted elements size to get the new capacity
   uint32_t newCapacity =
       newAllocated - ObjectElements::VALUES_PER_HEADER - numShifted;
+  // If the new capacity isn't strictly greater than the old capacity, then this
+  // method shouldn't have been called; if the new capacity doesn't satisfy
+  // what was requested, then one of the calculations above must have been
+  // wrong.
   MOZ_ASSERT(newCapacity > oldCapacity && newCapacity >= reqCapacity);
 
   // If newCapacity exceeds MAX_DENSE_ELEMENTS_COUNT, the array should become
@@ -830,35 +845,56 @@ bool NativeObject::growElements(JSContext* cx, uint32_t reqCapacity) {
   HeapSlot* newHeaderSlots;
   uint32_t oldAllocated = 0;
   if (hasDynamicElements()) {
+    // If the object has dynamic elements, then we might be able to resize the
+    // buffer in-place.
+
+    // First, check that adding to oldCapacity won't overflow uint32_t
     MOZ_ASSERT(oldCapacity <= MAX_DENSE_ELEMENTS_COUNT);
+    // Then, add the header and shifted elements sizes to get the overall size
+    // of the existing buffer
     oldAllocated = oldCapacity + ObjectElements::VALUES_PER_HEADER + numShifted;
 
+    // Finally, try to resize the buffer.
     newHeaderSlots = ReallocateObjectBuffer<HeapSlot>(
         cx, this, oldHeaderSlots, oldAllocated, newAllocated);
     if (!newHeaderSlots) {
-      return false;  // Leave elements at its old size.
+      return false;  // If the resizing failed, then we leave elements at its
+                     // old size.
     }
   } else {
+    // If the object has fixed elements, then we always need to allocate a new
+    // buffer, because if we've reached this code, then the requested capacity
+    // is greater than the existing inline space available within the object
     newHeaderSlots = AllocateObjectBuffer<HeapSlot>(cx, this, newAllocated);
     if (!newHeaderSlots) {
       return false;  // Leave elements at its old size.
     }
+
+    // Copy the initialized elements into the new buffer,
     PodCopy(newHeaderSlots, oldHeaderSlots,
             ObjectElements::VALUES_PER_HEADER + initlen + numShifted);
   }
 
+  // If the object already had dynamic elements, then we have to account
+  // for freeing the old elements buffer.
   if (oldAllocated) {
     RemoveCellMemory(this, oldAllocated * sizeof(HeapSlot),
                      MemoryUse::ObjectElements);
   }
 
   ObjectElements* newheader = reinterpret_cast<ObjectElements*>(newHeaderSlots);
+  // Update the elements pointer to point to the new elements buffer.
   elements_ = newheader->elements() + numShifted;
+
+  // Clear the "fixed elements" flag, because if this code has been reached,
+  // this object now has dynamic elements.
   getElementsHeader()->flags &= ~ObjectElements::FIXED;
   getElementsHeader()->capacity = newCapacity;
 
+  // Poison the uninitialized portion of the new elements buffer.
   Debug_SetSlotRangeToCrashOnTouch(elements_ + initlen, newCapacity - initlen);
 
+  // Account for allocating the new elements buffer.
   AddCellMemory(this, newAllocated * sizeof(HeapSlot),
                 MemoryUse::ObjectElements);
 
