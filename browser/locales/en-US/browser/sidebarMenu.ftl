@@ -29,7 +29,7 @@ sidebar-reload-button =
 show-browser-manager-sidebar =
   .tooltiptext = Show Browser Manager Sidebar
 
-show-bookmarks-sidebar =
+show-bookmark-sidebar =
   .tooltiptext = Show Bookmarks Sidebar
 
 show-history-sidebar =
@@ -42,4 +42,7 @@ show-TST-sidebar =
   .tooltiptext = Show Tree Style Tab Sidebar
 
 show-CustomURL-sidebar =
-  .tooltiptext = Show Custom URL Sidebar
+ .label = Show Custom URL Sidebar
+
+Edit-Custom-URL =
+ .label = Edit Custom URL Sidebar URL

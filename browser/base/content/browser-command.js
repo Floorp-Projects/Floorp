@@ -143,6 +143,23 @@
       changeSidebarVisibility();
     }
   }
+  function setCustomURLFavicon() {
+    document.getElementById("select-CustomURL").style.listStyleImage = 
+    "url(" + "http://www.google.com/s2/favicons?domain=" + Services.prefs.getStringPref("floorp.browser.sidebar2.customurl") + ")"
+  }
+
+  function EditCustomURL() {
+    const URL_PREF = "floorp.browser.sidebar2.customurl"
+    let l10n = new Localization(["browser/preferences/preferences.ftl"], true);
+    url = window.prompt(l10n.formatValueSync("set-customurl"), Services.prefs.getStringPref(URL_PREF));
+    if (!url.match(/https:\/\// || !url.match(/http:\/\//))) {
+      url = "http://" + url;
+    }
+    Services.prefs.setStringPref("floorp.browser.sidebar2.customurl", url);
+    if(url != "" && url != null){
+      window.alert(l10n.formatValueSync("seted-url") + " " + url);
+    }
+  }
 
   function backSidebarSite() {
     document.getElementById("sidebar2").goBack();  //戻る

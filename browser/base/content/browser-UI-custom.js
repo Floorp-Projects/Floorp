@@ -167,6 +167,7 @@ Services.prefs.addObserver("floorp.browser.sidebar.right", function(){
 
   window.setTimeout(function(){
     setSidebarMode();
+    setCustomURLFavicon();
   }, 1000);
   
    if (Services.prefs.getBoolPref("floorp.browser.sidebar.enable", false)) {
@@ -177,4 +178,5 @@ Services.prefs.addObserver("floorp.browser.sidebar.right", function(){
   if (Services.prefs.getBoolPref("floorp.browser.sidebar.enable", false)) {
     Services.prefs.addObserver("floorp.browser.sidebar2.customurl", function(){
      setSidebarMode();
+     setCustomURLFavicon();
   })};
