@@ -18,7 +18,7 @@ to learn more if interested.
 .. note::
 
   This does not contain an overview of how we
-  ship :ref:`Fenix <fenix>` (Our next gen Android browser) as
+  ship :ref:`Fenix <fenix>` (Our Android browser) as
   that product is largely uncoupled from how we ship to desktop and the
   process we've historically followed.
 
@@ -102,7 +102,7 @@ mozilla-central repository using :ref:`Lando <Lando>`.
 
 .. note::
 
-  Some teams use `GitHub <github>` during development
+  Some teams use :ref:`GitHub <github>` during development
   but will still be required to use Phabricator (tracked in Bugzilla) to
   check their code into the mozilla-central hg repository.
 
@@ -131,7 +131,7 @@ shipping high priority features faster, and so on.
 In these situations an uplift can be requested to take a recent landing
 in mozilla-central and merge specific bits to another repository outside
 the standard train model. After the request is made within Bugzilla,
-`Release Management <release management>` will assess the potential risk
+:ref:`Release Management <release management>` will assess the potential risk
 and will make a decision on whether it’s accepted.
 
 Further Reading/Useful links:
@@ -153,7 +153,7 @@ milestones.
 Milestone                                 Week       Day of Week
 ----------------------------------------- ---------- --------------- -------------------------------------------------------------------------------
 Merge Day                                 Nightly W1 Monday          Day 1 of the new Nightly Cycle
-`PI Request <pi request>` deadline        Nightly W1 Friday          Manual QA request deadline for high risk features
+PI Request deadline                       Nightly W1 Friday          Manual QA request deadline for high risk features
 Feature technical documentation due       Nightly W2 Friday          Deadline for features requiring manual QA
 Beta release notes draft                  Nightly W4 Wednesday
 Nightly features Go/No-Go decisions       Nightly W4 Wednesday
@@ -339,9 +339,9 @@ and can be used to land revisions to various repositories.
 
 .. _mercurial:
 
-**Mercurial** - A source-code management tool which allows users to keep
-track of changes to the source code locally and share their changes with
-others
+**Mercurial** - A source-code management tool (just like git)
+which allows users to keep track of changes to the source code
+locally and share their changes with others. It is also called hg.
 
 .. _merge:
 
@@ -353,6 +353,11 @@ reconciling file changes within the mozilla repositories
 **Normandy** - Normandy is a collection of servers, workflows, and
 Firefox components that enables Mozilla to remotely control Firefox
 clients in the wild based on precise criteria
+
+.. _orange_factor:
+
+**Orange** - Also called flaky or intermittent tests. Describes a state
+when a test or a testsuite can intermittently fail.
 
 .. _phabricator:
 
@@ -374,14 +379,6 @@ be set (e.g. enabled or disabled). Preference changes via user interface
 usually take effect immediately. The values are saved to the user’s
 Firefox profile on disk (in prefs.js).
 
-.. _product integrity:
-
-**Product Integrity** - The Product Integrity team is responsible for
-ensuring product quality and release consistency by testing features,
-validating builds, and managing the overall release process. In
-addition, PI provides various engineering support functions such as
-sheriffing, bug triage and investigation.
-
 .. _rc:
 
 **Release Candidate** - Beta version with potential to be a final
@@ -398,6 +395,11 @@ the Firefox Release Product.
 assigned to each release. They both keep a mental state of how we are
 doing and ensure a decision is made about each regression reported in
 the release
+
+.. _release engineering:
+
+**Release engineering** - Team primarily responsible for maintaining
+the build pipeline, the signature mechanisms, the update servers, etc.
 
 .. _release management:
 
@@ -417,6 +419,11 @@ an organization
 considered severe enough to ship without an identified dot release
 driver.
 
+.. _taskcluster:
+
+**taskcluster** - Our execution framework to build, run tests on multiple
+operating system, hardware and cloud providers.
+
 .. _telemetry:
 
 **Telemetry** - Firefox measures and collects non-personal information,
@@ -433,4 +440,4 @@ number of different "trains" on a regular schedule.
 
 **Uplift** - the action of taking parts from a newer version of a
 software system (mozilla-central or mozilla-beta) and porting them to an
-older version of the same software (mozilla-beta or mozilla-release)
+older version of the same software (mozilla-beta, mozilla-release or ESR)
