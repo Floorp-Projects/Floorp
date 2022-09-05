@@ -252,6 +252,7 @@ class RequestListContextMenu {
       openHTTPCustomRequestTab,
       closeHTTPCustomRequestTab,
       sendCustomRequest,
+      sendHTTPCustomRequest,
       openStatistics,
       openRequestInTab,
       openRequestBlockingAndAddUrl,
@@ -272,167 +273,155 @@ class RequestListContextMenu {
     } = clickedRequest;
 
     const copySubMenu = this.createCopySubMenu(clickedRequest, requests);
-
-    const menu = [];
-
-    menu.push({
-      label: L10N.getStr("netmonitor.context.copyValue"),
-      accesskey: L10N.getStr("netmonitor.context.copyValue.accesskey"),
-      visible: !!clickedRequest,
-      submenu: copySubMenu,
-    });
-
-    menu.push({
-      id: "request-list-context-save-all-as-har",
-      label: L10N.getStr("netmonitor.context.saveAllAsHar"),
-      accesskey: L10N.getStr("netmonitor.context.saveAllAsHar.accesskey"),
-      visible: !!requests.length,
-      click: () => HarMenuUtils.saveAllAsHar(requests, connector),
-    });
-
-    menu.push({
-      id: "request-list-context-save-image-as",
-      label: L10N.getStr("netmonitor.context.saveImageAs"),
-      accesskey: L10N.getStr("netmonitor.context.saveImageAs.accesskey"),
-      visible: !!(
-        clickedRequest &&
-        (responseContentAvailable || responseContent) &&
-        mimeType &&
-        mimeType.includes("image/")
-      ),
-      click: () => this.saveImageAs(id, url, responseContent),
-    });
-
-    menu.push({
-      type: "separator",
-      visible: copySubMenu.slice(10, 14).some(subMenu => subMenu.visible),
-    });
-
     const newEditAndResendPref = Services.prefs.getBoolPref(
       "devtools.netmonitor.features.newEditAndResend"
     );
 
-    menu.push({
-      id: "request-list-context-resend-only",
-      label: L10N.getStr("netmonitor.context.resend.label"),
-      accesskey: L10N.getStr("netmonitor.context.resend.accesskey"),
-      visible: !!(clickedRequest && !newEditAndResendPref && !isCustom),
-      click: () => {
-        cloneRequest(id);
-        sendCustomRequest();
+    return [
+      {
+        label: L10N.getStr("netmonitor.context.copyValue"),
+        accesskey: L10N.getStr("netmonitor.context.copyValue.accesskey"),
+        visible: !!clickedRequest,
+        submenu: copySubMenu,
       },
-    });
-
-    menu.push({
-      id: "request-list-context-resend",
-      label: newEditAndResendPref
-        ? L10N.getStr("netmonitor.context.resend.label")
-        : L10N.getStr("netmonitor.context.editAndResend"),
-      accesskey: newEditAndResendPref
-        ? L10N.getStr("netmonitor.context.resend.accesskey")
-        : L10N.getStr("netmonitor.context.editAndResend.accesskey"),
-      visible: !!(clickedRequest && !isCustom),
-      click: () => {
-        this.fetchRequestHeaders(id).then(() => {
+      {
+        id: "request-list-context-save-all-as-har",
+        label: L10N.getStr("netmonitor.context.saveAllAsHar"),
+        accesskey: L10N.getStr("netmonitor.context.saveAllAsHar.accesskey"),
+        visible: !!requests.length,
+        click: () => HarMenuUtils.saveAllAsHar(requests, connector),
+      },
+      {
+        id: "request-list-context-save-image-as",
+        label: L10N.getStr("netmonitor.context.saveImageAs"),
+        accesskey: L10N.getStr("netmonitor.context.saveImageAs.accesskey"),
+        visible: !!(
+          clickedRequest &&
+          (responseContentAvailable || responseContent) &&
+          mimeType &&
+          mimeType.includes("image/")
+        ),
+        click: () => this.saveImageAs(id, url, responseContent),
+      },
+      {
+        type: "separator",
+        visible: copySubMenu.slice(10, 14).some(subMenu => subMenu.visible),
+      },
+      {
+        id: "request-list-context-resend-only",
+        label: L10N.getStr("netmonitor.context.resend.label"),
+        accesskey: L10N.getStr("netmonitor.context.resend.accesskey"),
+        visible: !!(clickedRequest && !isCustom),
+        click: () => {
           if (!newEditAndResendPref) {
             cloneRequest(id);
-            openDetailsPanelTab();
+            sendCustomRequest();
           } else {
-            closeHTTPCustomRequestTab();
-            openHTTPCustomRequestTab();
+            sendHTTPCustomRequest(clickedRequest);
           }
-        });
+        },
       },
-    });
 
-    menu.push({
-      id: "request-list-context-block-url",
-      label: L10N.getStr("netmonitor.context.blockURL"),
-      visible: !hasMatchingBlockingRequestPattern(
-        blockedUrls,
-        clickedRequest.url
-      ),
-      click: () => {
-        openRequestBlockingAndAddUrl(clickedRequest.url);
+      {
+        id: "request-list-context-edit-resend",
+        label: L10N.getStr("netmonitor.context.editAndResend"),
+        accesskey: L10N.getStr("netmonitor.context.editAndResend.accesskey"),
+        visible: !!(clickedRequest && !isCustom),
+        click: () => {
+          this.fetchRequestHeaders(id).then(() => {
+            if (!newEditAndResendPref) {
+              cloneRequest(id);
+              openDetailsPanelTab();
+            } else {
+              closeHTTPCustomRequestTab();
+              openHTTPCustomRequestTab();
+            }
+          });
+        },
       },
-    });
-
-    menu.push({
-      id: "request-list-context-unblock-url",
-      label: L10N.getStr("netmonitor.context.unblockURL"),
-      visible: hasMatchingBlockingRequestPattern(
-        blockedUrls,
-        clickedRequest.url
-      ),
-      click: () => {
-        if (blockedUrls.find(blockedUrl => blockedUrl === clickedRequest.url)) {
-          removeBlockedUrl(clickedRequest.url);
-        } else {
-          openRequestBlockingAndDisableUrls(clickedRequest.url);
-        }
+      {
+        id: "request-list-context-block-url",
+        label: L10N.getStr("netmonitor.context.blockURL"),
+        visible: !hasMatchingBlockingRequestPattern(
+          blockedUrls,
+          clickedRequest.url
+        ),
+        click: () => {
+          openRequestBlockingAndAddUrl(clickedRequest.url);
+        },
       },
-    });
-
-    menu.push({
-      type: "separator",
-      visible: copySubMenu.slice(15, 16).some(subMenu => subMenu.visible),
-    });
-
-    menu.push({
-      id: "request-list-context-newtab",
-      label: L10N.getStr("netmonitor.context.newTab"),
-      accesskey: L10N.getStr("netmonitor.context.newTab.accesskey"),
-      visible: !!clickedRequest,
-      click: () => openRequestInTab(id, url, requestHeaders, requestPostData),
-    });
-
-    menu.push({
-      id: "request-list-context-open-in-debugger",
-      label: L10N.getStr("netmonitor.context.openInDebugger"),
-      accesskey: L10N.getStr("netmonitor.context.openInDebugger.accesskey"),
-      visible: !!(
-        clickedRequest &&
-        mimeType &&
-        mimeType.includes("javascript")
-      ),
-      click: () => this.openInDebugger(url),
-    });
-
-    menu.push({
-      id: "request-list-context-open-in-style-editor",
-      label: L10N.getStr("netmonitor.context.openInStyleEditor"),
-      accesskey: L10N.getStr("netmonitor.context.openInStyleEditor.accesskey"),
-      visible: !!(
-        clickedRequest &&
-        Services.prefs.getBoolPref("devtools.styleeditor.enabled") &&
-        mimeType &&
-        mimeType.includes("css")
-      ),
-      click: () => this.openInStyleEditor(url),
-    });
-
-    menu.push({
-      id: "request-list-context-perf",
-      label: L10N.getStr("netmonitor.context.perfTools"),
-      accesskey: L10N.getStr("netmonitor.context.perfTools.accesskey"),
-      visible: !!requests.length,
-      click: () => openStatistics(true),
-    });
-
-    menu.push({
-      type: "separator",
-    });
-
-    menu.push({
-      id: "request-list-context-use-as-fetch",
-      label: L10N.getStr("netmonitor.context.useAsFetch"),
-      accesskey: L10N.getStr("netmonitor.context.useAsFetch.accesskey"),
-      visible: !!clickedRequest,
-      click: () =>
-        this.useAsFetch(id, url, method, requestHeaders, requestPostData),
-    });
-
-    return menu;
+      {
+        id: "request-list-context-unblock-url",
+        label: L10N.getStr("netmonitor.context.unblockURL"),
+        visible: hasMatchingBlockingRequestPattern(
+          blockedUrls,
+          clickedRequest.url
+        ),
+        click: () => {
+          if (
+            blockedUrls.find(blockedUrl => blockedUrl === clickedRequest.url)
+          ) {
+            removeBlockedUrl(clickedRequest.url);
+          } else {
+            openRequestBlockingAndDisableUrls(clickedRequest.url);
+          }
+        },
+      },
+      {
+        type: "separator",
+        visible: copySubMenu.slice(15, 16).some(subMenu => subMenu.visible),
+      },
+      {
+        id: "request-list-context-newtab",
+        label: L10N.getStr("netmonitor.context.newTab"),
+        accesskey: L10N.getStr("netmonitor.context.newTab.accesskey"),
+        visible: !!clickedRequest,
+        click: () => openRequestInTab(id, url, requestHeaders, requestPostData),
+      },
+      {
+        id: "request-list-context-open-in-debugger",
+        label: L10N.getStr("netmonitor.context.openInDebugger"),
+        accesskey: L10N.getStr("netmonitor.context.openInDebugger.accesskey"),
+        visible: !!(
+          clickedRequest &&
+          mimeType &&
+          mimeType.includes("javascript")
+        ),
+        click: () => this.openInDebugger(url),
+      },
+      {
+        id: "request-list-context-open-in-style-editor",
+        label: L10N.getStr("netmonitor.context.openInStyleEditor"),
+        accesskey: L10N.getStr(
+          "netmonitor.context.openInStyleEditor.accesskey"
+        ),
+        visible: !!(
+          clickedRequest &&
+          Services.prefs.getBoolPref("devtools.styleeditor.enabled") &&
+          mimeType &&
+          mimeType.includes("css")
+        ),
+        click: () => this.openInStyleEditor(url),
+      },
+      {
+        id: "request-list-context-perf",
+        label: L10N.getStr("netmonitor.context.perfTools"),
+        accesskey: L10N.getStr("netmonitor.context.perfTools.accesskey"),
+        visible: !!requests.length,
+        click: () => openStatistics(true),
+      },
+      {
+        type: "separator",
+      },
+      {
+        id: "request-list-context-use-as-fetch",
+        label: L10N.getStr("netmonitor.context.useAsFetch"),
+        accesskey: L10N.getStr("netmonitor.context.useAsFetch.accesskey"),
+        visible: !!clickedRequest,
+        click: () =>
+          this.useAsFetch(id, url, method, requestHeaders, requestPostData),
+      },
+    ];
   }
 
   open(event, clickedRequest, requests, blockedUrls) {

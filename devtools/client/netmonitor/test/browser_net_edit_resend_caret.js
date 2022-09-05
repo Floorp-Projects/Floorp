@@ -47,11 +47,7 @@ add_task(async function() {
   EventUtils.sendMouseEvent({ type: "contextmenu" }, firstRequest);
 
   // Open "New Request" form
-  const contextResend = getContextMenuItem(
-    monitor,
-    "request-list-context-resend"
-  );
-  contextResend.click();
+  await selectContextMenuItem(monitor, "request-list-context-edit-resend");
   await waitUntil(() => document.querySelector("#custom-headers-value"));
   const headersTextarea = document.querySelector("#custom-headers-value");
   await waitUntil(() => document.querySelector("#custom-method-value"));

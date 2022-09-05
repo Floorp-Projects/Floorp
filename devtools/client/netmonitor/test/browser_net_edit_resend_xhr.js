@@ -45,7 +45,7 @@ add_task(async function() {
 
   // Context Menu > "Edit & Resend"
   EventUtils.sendMouseEvent({ type: "contextmenu" }, xhrRequest);
-  getContextMenuItem(monitor, "request-list-context-resend").click();
+  await selectContextMenuItem(monitor, "request-list-context-edit-resend");
 
   // 1) Wait for "Edit & Resend" panel to appear
   // 2) Click the "Send" button
@@ -105,7 +105,7 @@ add_task(async function() {
 
     // Context Menu > "Edit & Resend"
     EventUtils.sendMouseEvent({ type: "contextmenu" }, xhrRequest);
-    getContextMenuItem(monitor, "request-list-context-resend").click();
+    await selectContextMenuItem(monitor, "request-list-context-edit-resend");
 
     // 1) Wait for "Edit & Resend" panel to appear
     // 2) Click the "Send" button

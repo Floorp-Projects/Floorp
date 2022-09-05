@@ -112,19 +112,7 @@ add_task(async function() {
       document,
       ".monitor-panel .network-action-bar"
     );
-    const menuItem = getContextMenuItem(monitor, "request-list-context-resend");
-    getContextMenuItem(monitor, "request-list-context-resend").click();
-
-    const menuPopup = menuItem.parentNode;
-
-    const onHidden = new Promise(resolve => {
-      menuPopup.addEventListener("popuphidden", resolve, { once: true });
-    });
-
-    menuItem.click();
-    menuPopup.hidePopup();
-
-    await onHidden;
+    await selectContextMenuItem(monitor, "request-list-context-edit-resend");
     await waitForPanels;
 
     const waitForResentRequest = waitForNetworkEvents(monitor, 1);

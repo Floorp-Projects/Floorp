@@ -492,9 +492,11 @@ class HTTPCustomRequestPanel extends Component {
                 urlQueryParams: urlQueryParams.map(
                   ({ checked, ...params }) => params
                 ),
-                headers: headers
-                  .filter(({ checked }) => checked)
-                  .map(({ checked, ...headersValues }) => headersValues),
+                requestHeaders: {
+                  headers: headers
+                    .filter(({ checked }) => checked)
+                    .map(({ checked, ...headersValues }) => headersValues),
+                },
               };
               if (postBody) {
                 customRequestDetails.requestPostData = {
