@@ -12,6 +12,7 @@
 #include "nsDocShellLoadState.h"
 #include "nsIContentViewer.h"
 #include "mozilla/ScrollbarPreferences.h"
+#include "mozilla/ipc/IPDLParamTraits.h"
 
 namespace mozilla::ipc {
 
