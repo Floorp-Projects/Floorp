@@ -363,7 +363,6 @@
    they all remain vertically aligned. */
 .urlbarView-row[type=tip] > .urlbarView-row-inner > .urlbarView-favicon,
 .urlbarView-row[type=tip] > .urlbarView-row-inner > .urlbarView-title,
-.urlbarView-row:is([type=tip], [dynamicType="quickactions"]) > .urlbarView-row-inner > .urlbarView-button-help,
 .urlbarView-tip-button {
   margin-block-end: 16px;
 }
