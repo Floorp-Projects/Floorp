@@ -47,11 +47,13 @@ class WallpapersUseCases(
     val initialize: InitializeWallpapersUseCase by lazy {
         if (FeatureFlags.wallpaperV2Enabled) {
             val metadataFetcher = WallpaperMetadataFetcher(client)
+            val migrationHelper = LegacyWallpaperMigration(storageRootDirectory)
             DefaultInitializeWallpaperUseCase(
                 store = store,
                 downloader = downloader,
                 fileManager = fileManager,
                 metadataFetcher = metadataFetcher,
+                migrationHelper = migrationHelper,
                 settings = context.settings(),
                 currentLocale = currentLocale,
             )
@@ -222,12 +224,14 @@ class WallpapersUseCases(
         }
     }
 
+    @Suppress("LongParameterList")
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     internal class DefaultInitializeWallpaperUseCase(
         private val store: AppStore,
         private val downloader: WallpaperDownloader,
         private val fileManager: WallpaperFileManager,
         private val metadataFetcher: WallpaperMetadataFetcher,
+        private val migrationHelper: LegacyWallpaperMigration,
         private val settings: Settings,
         private val currentLocale: String,
     ) : InitializeWallpapersUseCase {
@@ -236,6 +240,10 @@ class WallpapersUseCases(
                 store.dispatch(AppAction.WallpaperAction.UpdateCurrentWallpaper(it))
             }
             val currentWallpaperName = withContext(Dispatchers.IO) { settings.currentWallpaperName }
+            if (settings.shouldMigrateLegacyWallpaper) {
+                migrationHelper.migrateLegacyWallpaper(currentWallpaperName)
+                settings.shouldMigrateLegacyWallpaper = false
+            }
             val possibleWallpapers = metadataFetcher.downloadWallpaperList().filter {
                 !it.isExpired() && it.isAvailableInLocale()
             }

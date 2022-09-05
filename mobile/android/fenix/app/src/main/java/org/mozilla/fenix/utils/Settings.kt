@@ -208,6 +208,14 @@ class Settings(private val appContext: Context) : PreferencesHolder {
     )
 
     /**
+     * Indicates if the current legacy wallpaper should be migrated.
+     */
+    var shouldMigrateLegacyWallpaper by booleanPreference(
+        key = appContext.getPreferenceKey(R.string.pref_key_should_migrate_wallpaper),
+        default = true,
+    )
+
+    /**
      * Indicates if the wallpaper onboarding dialog should be shown.
      */
     var showWallpaperOnboarding by lazyFeatureFlagPreference(
