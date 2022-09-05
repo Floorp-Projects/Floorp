@@ -77,6 +77,18 @@ add_task(async function() {
   );
   ok(!front2AfterRemove, "Should no longer get a front for addon1");
 
+  // Check behavior when openDevTools is not passed:
+  const addon2again = await addTemporaryAddon({
+    addons,
+    path: ADDON2_PATH,
+    // openDevTools: null,
+  });
+  const addonFront2again = await client.mainRoot.getAddon({ id: ADDON2_ID });
+  ok(addonFront2again, "Should find an addon actor for addon2.");
+  is(addonListChangedEvents, 4, "Should have seen addonListChanged.");
+  await removeAddon(addon2again);
+  is(addonListChangedEvents, 5, "Should have seen addonListChanged.");
+
   await client.close();
 });
 

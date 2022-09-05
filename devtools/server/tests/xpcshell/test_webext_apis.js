@@ -62,7 +62,9 @@ add_task(async function test_webext_run_apis() {
     to: getRootResponse.addonsActor,
     type: "installTemporaryAddon",
     addonPath,
-    openDevTools: false,
+    // The openDevTools parameter is not always passed by web-ext. This test
+    // omits it, to make sure that the request without the flag is accepted.
+    // openDevTools: false,
   });
   await promiseStarted;
 
