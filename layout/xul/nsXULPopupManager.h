@@ -199,10 +199,6 @@ struct PendingPopup {
   // Cached modifiers used to trigger the popup.
   mozilla::Modifiers mModifiers;
 
-  // Cached rangeParent/rangeOffset.
-  nsCOMPtr<nsIContent> mRangeParentContent;
-  int32_t mRangeOffset;
-
   already_AddRefed<nsIContent> GetTriggerContent() const;
 
   void InitMousePoint();
