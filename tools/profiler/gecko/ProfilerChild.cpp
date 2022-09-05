@@ -303,6 +303,8 @@ struct GatherProfileThreadParameters
 
   RefPtr<ProfilerChild> profilerChild;
 
+  FailureLatchSource failureLatchSource;
+
   // Separate RefPtr used when working on separate thread. This way, if the
   // "ProfilerChild" thread decides to overwrite its mGatherProfileProgress with
   // a new one, the work done here will still only use the old one.
@@ -327,8 +329,8 @@ void ProfilerChild::GatherProfileThreadFunction(
       parameters->progress, "Gather-profile thread started", "Profile sent");
   using namespace mozilla::literals::ProportionValue_literals;  // For `1_pc`.
 
-  auto writer = MakeUnique<SpliceableChunkedJSONWriter>(
-      FailureLatchInfallibleSource::Singleton());
+  auto writer =
+      MakeUnique<SpliceableChunkedJSONWriter>(parameters->failureLatchSource);
   if (!profiler_get_profile_json(
           *writer,
           /* aSinceTime */ 0,
@@ -336,8 +338,8 @@ void ProfilerChild::GatherProfileThreadFunction(
           progressLogger.CreateSubLoggerFromTo(
               1_pc, "profiler_get_profile_json started", 99_pc,
               "profiler_get_profile_json done"))) {
-    // Failed to get a profile (profiler not running?), reset the writer
-    // pointer, so that we'll send an empty string.
+    // Failed to get a profile, reset the writer pointer, so that we'll send a
+    // failure message.
     writer.reset();
   }
 
@@ -405,9 +407,16 @@ void ProfilerChild::GatherProfileThreadFunction(
                   }
                   writer = nullptr;
                 } else {
-                  // No profile, send an empty string.
-                  if (parameters->profilerChild->AllocShmem(1, &shmem)) {
-                    shmem.get<char>()[0] = '\0';
+                  // No profile.
+                  const char* failure =
+                      parameters->failureLatchSource.GetFailure();
+                  const nsPrintfCString message(
+                      "*Could not generate profile from pid %u%s%s",
+                      unsigned(profiler_current_process_id().ToNumber()),
+                      failure ? ", failure: " : "", failure ? failure : "");
+                  if (parameters->profilerChild->AllocShmem(
+                          message.Length() + 1, &shmem)) {
+                    strcpy(shmem.get<char>(), message.Data());
                   }
                 }
 
