@@ -1,7 +1,7 @@
 {
   "data": [
     {
-      "schema": 1661950623678,
+      "schema": 1662015423618,
       "derHash": "lzpBJ2/9AeAnoqrUnjTDeEbT6Xb/amILZxLjODIEGqY=",
       "subject": "CN=Go Daddy Secure Certificate Authority - G2,OU=http://certs.godaddy.com/repository/,O=GoDaddy.com\\, Inc.,L=Scottsdale,ST=Arizona,C=US",
       "subjectDN": "MIG0MQswCQYDVQQGEwJVUzEQMA4GA1UECBMHQXJpem9uYTETMBEGA1UEBxMKU2NvdHRzZGFsZTEaMBgGA1UEChMRR29EYWRkeS5jb20sIEluYy4xLTArBgNVBAsTJGh0dHA6Ly9jZXJ0cy5nb2RhZGR5LmNvbS9yZXBvc2l0b3J5LzEzMDEGA1UEAxMqR28gRGFkZHkgU2VjdXJlIENlcnRpZmljYXRlIEF1dGhvcml0eSAtIEcy",
@@ -14,9 +14,9 @@
         "mimetype": "application/x-pem-file"
       },
       "pubKeyHash": "8Rw90Ej3Ttt8RRkrg+WYDS9n7IS03bk5bjP/UXPtaY8=",
-      "crlite_enrolled": false,
+      "crlite_enrolled": true,
       "id": "549c92e2-3738-4c8c-ae37-407e4e6158ce",
-      "last_modified": 1662015423121
+      "last_modified": 1662037023056
     },
     {
       "schema": 1661950129116,
@@ -26317,5 +26317,5 @@
       "last_modified": 1559865863642
     }
   ],
-  "timestamp": 1662015423121
+  "timestamp": 1662037023056
 }
