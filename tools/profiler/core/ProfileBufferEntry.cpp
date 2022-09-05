@@ -745,10 +745,12 @@ class EntryGetter {
  public:
   explicit EntryGetter(
       ProfileChunkedBuffer::Reader& aReader,
+      mozilla::FailureLatch& aFailureLatch,
       mozilla::ProgressLogger aProgressLogger = {},
       uint64_t aInitialReadPos = 0,
       ProcessStreamingContext* aStreamingContextForMarkers = nullptr)
-      : mStreamingContextForMarkers(aStreamingContextForMarkers),
+      : mFailureLatch(aFailureLatch),
+        mStreamingContextForMarkers(aStreamingContextForMarkers),
         mBlockIt(
             aReader.At(ProfileBufferBlockIndex::CreateFromProfileBufferIndex(
                 aInitialReadPos))),
@@ -765,15 +767,19 @@ class EntryGetter {
     }
   }
 
-  bool Has() const { return mBlockIt != mBlockItEnd; }
+  bool Has() const {
+    return (!mFailureLatch.Failed()) && (mBlockIt != mBlockItEnd);
+  }
 
   const ProfileBufferEntry& Get() const {
-    MOZ_ASSERT(Has(), "Caller should have checked `Has()` before `Get()`");
+    MOZ_ASSERT(Has() || mFailureLatch.Failed(),
+               "Caller should have checked `Has()` before `Get()`");
     return mEntry;
   }
 
   void Next() {
-    MOZ_ASSERT(Has(), "Caller should have checked `Has()` before `Get()`");
+    MOZ_ASSERT(Has() || mFailureLatch.Failed(),
+               "Caller should have checked `Has()` before `Next()`");
     ++mBlockIt;
     ReadUntilLegacyOrEnd();
   }
@@ -830,6 +836,9 @@ class EntryGetter {
       if (type == ProfileBufferEntry::Kind::Marker &&
           mStreamingContextForMarkers) {
         StreamMarkerAfterKind(er, *mStreamingContextForMarkers);
+        if (!Has()) {
+          return true;
+        }
         SetLocalProgress("Processed marker");
       }
       er.SetRemainingBytes(0);
@@ -854,6 +863,8 @@ class EntryGetter {
     }
     SetLocalProgress(ProgressLogger::NO_LOCATION_UPDATE);
   }
+
+  mozilla::FailureLatch& mFailureLatch;
 
   ProcessStreamingContext* const mStreamingContextForMarkers;
 
@@ -1029,6 +1040,7 @@ struct StreamingParametersForThread {
 //   (ProfilerThreadId) -> Maybe<StreamingParametersForThread>
 template <typename GetStreamingParametersForThreadCallback>
 ProfilerThreadId ProfileBuffer::DoStreamSamplesAndMarkersToJSON(
+    mozilla::FailureLatch& aFailureLatch,
     GetStreamingParametersForThreadCallback&&
         aGetStreamingParametersForThreadCallback,
     double aSinceTime, ProcessStreamingContext* aStreamingContextForMarkers,
@@ -1042,8 +1054,8 @@ ProfilerThreadId ProfileBuffer::DoStreamSamplesAndMarkersToJSON(
 
     ProfilerThreadId processedThreadId;
 
-    EntryGetter e(*aReader, std::move(aProgressLogger), /* aInitialReadPos */ 0,
-                  aStreamingContextForMarkers);
+    EntryGetter e(*aReader, aFailureLatch, std::move(aProgressLogger),
+                  /* aInitialReadPos */ 0, aStreamingContextForMarkers);
 
     for (;;) {
       // This block skips entries until we find the start of the next sample.
@@ -1337,7 +1349,7 @@ ProfilerThreadId ProfileBuffer::DoStreamSamplesAndMarkersToJSON(
               MOZ_ASSERT(aReader,
                          "Local ProfileChunkedBuffer cannot be out-of-session");
               // This is a compact stack, it should only contain one sample.
-              EntryGetter stackEntryGetter(*aReader);
+              EntryGetter stackEntryGetter(*aReader, aFailureLatch);
               ReadStack(stackEntryGetter, time,
                         it.CurrentBlockIndex().ConvertToProfileBufferIndex(),
                         unresponsiveDuration, runningTimes);
@@ -1449,6 +1461,7 @@ ProfilerThreadId ProfileBuffer::StreamSamplesToJSON(
   int processedCount = 0;
 #endif  // DEBUG
   return DoStreamSamplesAndMarkersToJSON(
+      aWriter.SourceFailureLatch(),
       [&](ProfilerThreadId aReadThreadId) {
         Maybe<StreamingParametersForThread> streamingParameters;
 #ifdef DEBUG
@@ -1472,6 +1485,7 @@ void ProfileBuffer::StreamSamplesAndMarkersToJSON(
     ProcessStreamingContext& aProcessStreamingContext,
     mozilla::ProgressLogger aProgressLogger) const {
   (void)DoStreamSamplesAndMarkersToJSON(
+      aProcessStreamingContext.SourceFailureLatch(),
       [&](ProfilerThreadId aReadThreadId) {
         Maybe<StreamingParametersForThread> streamingParameters;
         ThreadStreamingContext* threadData =
@@ -1506,7 +1520,8 @@ void ProfileBuffer::AddJITInfoForRange(
                      "ProfileChunkedBuffer cannot be out-of-session when "
                      "sampler is running");
 
-          EntryGetter e(*aReader, std::move(aProgressLogger), aRangeStart);
+          EntryGetter e(*aReader, aJITFrameInfo.LocalFailureLatchSource(),
+                        std::move(aProgressLogger), aRangeStart);
 
           while (true) {
             // Advance to the next ThreadId entry.
@@ -1555,7 +1570,8 @@ void ProfileBuffer::AddJITInfoForRange(
                     MOZ_ASSERT(
                         aReader,
                         "Local ProfileChunkedBuffer cannot be out-of-session");
-                    EntryGetter stackEntryGetter(*aReader);
+                    EntryGetter stackEntryGetter(
+                        *aReader, aJITFrameInfo.LocalFailureLatchSource());
                     while (stackEntryGetter.Has()) {
                       if (stackEntryGetter.Get().IsJitReturnAddr()) {
                         aJITAddressConsumer(stackEntryGetter.Get().GetPtr());
@@ -1643,7 +1659,8 @@ void ProfileBuffer::StreamProfilerOverheadToJSON(
                "ProfileChunkedBuffer cannot be out-of-session when sampler is "
                "running");
 
-    EntryGetter e(*aReader, std::move(aProgressLogger));
+    EntryGetter e(*aReader, aWriter.SourceFailureLatch(),
+                  std::move(aProgressLogger));
 
     enum Schema : uint32_t {
       TIME = 0,
@@ -1796,7 +1813,8 @@ void ProfileBuffer::StreamCountersToJSON(
                "ProfileChunkedBuffer cannot be out-of-session when sampler is "
                "running");
 
-    EntryGetter e(*aReader, std::move(aProgressLogger));
+    EntryGetter e(*aReader, aWriter.SourceFailureLatch(),
+                  std::move(aProgressLogger));
 
     enum Schema : uint32_t { TIME = 0, NUMBER = 1, COUNT = 2 };
 
@@ -2010,7 +2028,7 @@ void ProfileBuffer::StreamPausedRangesToJSON(
                "ProfileChunkedBuffer cannot be out-of-session when sampler is "
                "running");
 
-    EntryGetter e(*aReader,
+    EntryGetter e(*aReader, aWriter.SourceFailureLatch(),
                   aProgressLogger.CreateSubLoggerFromTo(
                       1_pc, "Streaming pauses...", 99_pc, "Streamed pauses"));
 
@@ -2112,9 +2130,10 @@ bool ProfileBuffer::DuplicateLastSample(ProfilerThreadId aThreadId,
                "ProfileChunkedBuffer cannot be out-of-session when sampler is "
                "running");
 
-    // DuplicateLsatSample is only called during profiling, so we don't need a
+    // DuplicateLastSample is only called during profiling, so we don't need a
     // progress logger (only useful when capturing the final profile).
-    EntryGetter e(*aReader, ProgressLogger{}, *aLastSample);
+    EntryGetter e(*aReader, mozilla::FailureLatchInfallibleSource::Singleton(),
+                  ProgressLogger{}, *aLastSample);
 
     if (e.CurPos() != *aLastSample) {
       // The last sample is no longer within the buffer range, so we cannot

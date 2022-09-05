@@ -199,6 +199,7 @@ class ProfileBuffer final {
   //   (ProfilerThreadId) -> Maybe<StreamingParametersForThread>
   template <typename GetStreamingParametersForThreadCallback>
   ProfilerThreadId DoStreamSamplesAndMarkersToJSON(
+      mozilla::FailureLatch& aFailureLatch,
       GetStreamingParametersForThreadCallback&&
           aGetStreamingParametersForThreadCallback,
       double aSinceTime, ProcessStreamingContext* aStreamingContextForMarkers,
