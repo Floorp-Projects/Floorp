@@ -19,7 +19,7 @@
 }
 
 #editBookmarkPanel > .panel-subview-body {
-  padding-block: 0;
+  padding-bottom: 0;
 }
 
 html|div#editBookmarkPanelFaviconContainer {

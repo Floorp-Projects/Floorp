@@ -746,10 +746,6 @@ toolbar:not(#TabsToolbar) #firefox-view-button:-moz-locale-dir(rtl) {
   padding-top: 0;
 }
 
-#allTabsMenu-hiddenTabsView-tabs {
-  padding-bottom: var(--panel-subview-body-padding-block);
-}
-
 .all-tabs-item {
   margin-inline: var(--arrowpanel-menuitem-margin-inline);
   border-radius: var(--arrowpanel-menuitem-border-radius);
