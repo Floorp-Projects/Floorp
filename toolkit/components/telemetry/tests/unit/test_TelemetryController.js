@@ -8,9 +8,6 @@
  * checked in the second request.
  */
 
-const { CommonUtils } = ChromeUtils.import(
-  "resource://services-common/utils.js"
-);
 const { ClientID } = ChromeUtils.import("resource://gre/modules/ClientID.jsm");
 const { TelemetryController } = ChromeUtils.import(
   "resource://gre/modules/TelemetryController.jsm"
@@ -57,10 +54,6 @@ const DELETION_REQUEST_PING_TYPE = "deletion-request";
 const TEST_PING_TYPE = "test-ping-type";
 
 var gClientID = null;
-
-XPCOMUtils.defineLazyGetter(this, "DATAREPORTING_PATH", async function() {
-  return PathUtils.join(PathUtils.profileDir, "datareporting");
-});
 
 function sendPing(aSendClientId, aSendEnvironment) {
   if (PingServer.started) {
@@ -133,7 +126,7 @@ function checkPingFormat(aPing, aType, aHasClientId, aHasEnvironment) {
   Assert.equal("environment" in aPing, aHasEnvironment);
 }
 
-add_task(async function test_setup() {
+add_setup(async () => {
   // Addon manager needs a profile directory
   do_get_profile();
   await loadAddonManager(
@@ -159,8 +152,19 @@ add_task(async function test_setup() {
   }
 });
 
-add_task(async function asyncSetup() {
+add_setup(async () => {
   await TelemetryController.testSetup();
+  PingServer.start();
+  registerCleanupFunction(async () => {
+    await PingServer.stop();
+  });
+  // Update the Telemetry Server preference with the address of the local server.
+  // Otherwise we might end up sending stuff to a non-existing server after
+  // |TelemetryController.testReset| is called.
+  Preferences.set(
+    TelemetryUtils.Preferences.Server,
+    "http://localhost:" + PingServer.port
+  );
 });
 
 // Ensure that not overwriting an existing file fails silently
@@ -173,15 +177,6 @@ add_task(async function test_overwritePing() {
 
 // Checks that a sent ping is correctly received by a dummy http server.
 add_task(async function test_simplePing() {
-  PingServer.start();
-  // Update the Telemetry Server preference with the address of the local server.
-  // Otherwise we might end up sending stuff to a non-existing server after
-  // |TelemetryController.testReset| is called.
-  Preferences.set(
-    TelemetryUtils.Preferences.Server,
-    "http://localhost:" + PingServer.port
-  );
-
   await sendPing(false, false);
   let request = await PingServer.promiseNextRequest();
 
@@ -685,123 +680,6 @@ add_task(async function test_telemetryCleanFHRDatabase() {
   }
 });
 
-add_task(async function test_sendNewProfile() {
-  if (
-    gIsAndroid ||
-    (AppConstants.platform == "linux" && OS.Constants.Sys.bits == 32)
-  ) {
-    // We don't support the pingsender on Android, yet, see bug 1335917.
-    // We also don't suppor the pingsender testing on Treeherder for
-    // Linux 32 bit (due to missing libraries). So skip it there too.
-    // See bug 1310703 comment 78.
-    return;
-  }
-
-  const NEWPROFILE_PING_TYPE = "new-profile";
-  const PREF_NEWPROFILE_ENABLED = "toolkit.telemetry.newProfilePing.enabled";
-  const PREF_NEWPROFILE_DELAY = "toolkit.telemetry.newProfilePing.delay";
-
-  // Make sure Telemetry is shut down before beginning and that we have
-  // no pending pings.
-  let resetTest = async function() {
-    await TelemetryController.testShutdown();
-    await TelemetryStorage.testClearPendingPings();
-    PingServer.clearRequests();
-  };
-  await resetTest();
-
-  // Make sure to reset all the new-profile ping prefs.
-  const stateFilePath = PathUtils.join(
-    await DATAREPORTING_PATH,
-    "session-state.json"
-  );
-  await IOUtils.remove(stateFilePath);
-  Preferences.set(PREF_NEWPROFILE_DELAY, 1);
-  Preferences.set(PREF_NEWPROFILE_ENABLED, true);
-
-  // Check that a new-profile ping is sent on the first session.
-  let nextReq = PingServer.promiseNextRequest();
-  await TelemetryController.testReset();
-  let req = await nextReq;
-  let ping = decodeRequestPayload(req);
-  checkPingFormat(ping, NEWPROFILE_PING_TYPE, true, true);
-  Assert.equal(
-    ping.payload.reason,
-    "startup",
-    "The new-profile ping generated after startup must have the correct reason"
-  );
-  Assert.ok(
-    "parent" in ping.payload.processes,
-    "The new-profile ping generated after startup must have processes.parent data"
-  );
-
-  // Check that is not sent with the pingsender during startup.
-  Assert.throws(
-    () => req.getHeader("X-PingSender-Version"),
-    /NS_ERROR_NOT_AVAILABLE/,
-    "Should not have used the pingsender."
-  );
-
-  // Make sure that the new-profile ping is sent at shutdown if it wasn't sent before.
-  await resetTest();
-  await IOUtils.remove(stateFilePath);
-  Preferences.reset(PREF_NEWPROFILE_DELAY);
-
-  nextReq = PingServer.promiseNextRequest();
-  await TelemetryController.testReset();
-  await TelemetryController.testShutdown();
-  req = await nextReq;
-  ping = decodeRequestPayload(req);
-  checkPingFormat(ping, NEWPROFILE_PING_TYPE, true, true);
-  Assert.equal(
-    ping.payload.reason,
-    "shutdown",
-    "The new-profile ping generated at shutdown must have the correct reason"
-  );
-  Assert.ok(
-    "parent" in ping.payload.processes,
-    "The new-profile ping generated at shutdown must have processes.parent data"
-  );
-
-  // Check that the new-profile ping is sent at shutdown using the pingsender.
-  Assert.equal(
-    req.getHeader("User-Agent"),
-    "pingsender/1.0",
-    "Should have received the correct user agent string."
-  );
-  Assert.equal(
-    req.getHeader("X-PingSender-Version"),
-    "1.0",
-    "Should have received the correct PingSender version string."
-  );
-
-  // Check that no new-profile ping is sent on second sessions, not at startup
-  // nor at shutdown.
-  await resetTest();
-  PingServer.registerPingHandler(() =>
-    Assert.ok(false, "The new-profile ping must be sent only on new profiles.")
-  );
-  await TelemetryController.testReset();
-  await TelemetryController.testShutdown();
-
-  // Check that we don't send the new-profile ping if the profile already contains
-  // a state file (but no "newProfilePingSent" property).
-  await resetTest();
-  await IOUtils.remove(stateFilePath);
-  const sessionState = {
-    sessionId: null,
-    subsessionId: null,
-    profileSubsessionCounter: 3785,
-  };
-  await CommonUtils.writeJSON(sessionState, stateFilePath);
-  await TelemetryController.testReset();
-  await TelemetryController.testShutdown();
-
-  // Reset the pref and restart Telemetry.
-  Preferences.reset(PREF_NEWPROFILE_ENABLED);
-  PingServer.resetPingHandler();
-});
-
 add_task(async function test_encryptedPing() {
   if (gIsAndroid) {
     // The underlying jwcrypto module being used here is not currently available on Android.
@@ -1260,7 +1138,3 @@ add_task(
     Assert.ok(pingSubmitted, "'pseudo-main' ping was actually submitted");
   }
 );
-
-add_task(async function stopServer() {
-  await PingServer.stop();
-});

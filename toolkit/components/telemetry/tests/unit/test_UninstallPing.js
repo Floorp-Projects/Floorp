@@ -6,7 +6,6 @@
 const { TelemetryStorage } = ChromeUtils.import(
   "resource://gre/modules/TelemetryStorage.jsm"
 );
-const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
 const { FileUtils } = ChromeUtils.import(
   "resource://gre/modules/FileUtils.jsm"
 );
@@ -19,7 +18,7 @@ add_task(async function setup() {
   do_get_profile();
 
   let fakeVendorDirectoryNSFile = new FileUtils.File(
-    OS.Path.join(OS.Constants.Path.profileDir, "uninstall-ping-test")
+    PathUtils.join(PathUtils.profileDir, "uninstall-ping-test")
   );
   fakeVendorDirectoryNSFile.createUnique(
     Ci.nsIFile.DIRECTORY_TYPE,
@@ -34,8 +33,8 @@ add_task(async function setup() {
 
   fakeUninstallPingPath(gFakeGetUninstallPingPath);
 
-  registerCleanupFunction(() => {
-    OS.File.removeDir(gFakeVendorDirectory);
+  registerCleanupFunction(async () => {
+    await IOUtils.remove(gFakeVendorDirectory, { recursive: true });
   });
 });
 
@@ -58,16 +57,14 @@ add_task(async function test_store_ping() {
   await TelemetryStorage.saveUninstallPing(ping1);
 
   // Check the ping
-  Assert.ok(await OS.File.exists(ping1Path));
-  const readPing1 = JSON.parse(
-    await OS.File.read(ping1Path, { encoding: "utf-8" })
-  );
+  Assert.ok(await IOUtils.exists(ping1Path));
+  const readPing1 = await IOUtils.readJSON(ping1Path);
   Assert.deepEqual(ping1, readPing1);
 
   // Write another file that shouldn't match the pattern
-  const otherFilePath = OS.Path.join(gFakeVendorDirectory, "other_file.json");
-  await OS.File.writeAtomic(otherFilePath, "");
-  Assert.ok(await OS.File.exists(otherFilePath));
+  const otherFilePath = PathUtils.join(gFakeVendorDirectory, "other_file.json");
+  await IOUtils.writeUTF8(otherFilePath, "");
+  Assert.ok(await IOUtils.exists(otherFilePath));
 
   // Write another ping, should remove the earlier one
   const ping2 = {
@@ -77,25 +74,25 @@ add_task(async function test_store_ping() {
   const ping2Path = ping_path(ping2);
   await TelemetryStorage.saveUninstallPing(ping2);
 
-  Assert.ok(!(await OS.File.exists(ping1Path)));
-  Assert.ok(await OS.File.exists(ping2Path));
-  Assert.ok(await OS.File.exists(otherFilePath));
+  Assert.ok(!(await IOUtils.exists(ping1Path)));
+  Assert.ok(await IOUtils.exists(ping2Path));
+  Assert.ok(await IOUtils.exists(otherFilePath));
 
   // Write an additional file manually so there are multiple matching pings to remove
   const ping3 = { id: "yada-yada" };
   const ping3Path = ping_path(ping3);
 
-  await OS.File.writeAtomic(ping3Path, "");
-  Assert.ok(await OS.File.exists(ping3Path));
+  await IOUtils.writeUTF8(ping3Path, "");
+  Assert.ok(await IOUtils.exists(ping3Path));
 
   // Remove pings
   await TelemetryStorage.removeUninstallPings();
 
   // Check our pings are removed but other file isn't
-  Assert.ok(!(await OS.File.exists(ping1Path)));
-  Assert.ok(!(await OS.File.exists(ping2Path)));
-  Assert.ok(!(await OS.File.exists(ping3Path)));
-  Assert.ok(await OS.File.exists(otherFilePath));
+  Assert.ok(!(await IOUtils.exists(ping1Path)));
+  Assert.ok(!(await IOUtils.exists(ping2Path)));
+  Assert.ok(!(await IOUtils.exists(ping3Path)));
+  Assert.ok(await IOUtils.exists(otherFilePath));
 
   // Remove again, confirming that the remove doesn't cause an error if nothing to remove
   await TelemetryStorage.removeUninstallPings();
@@ -107,21 +104,23 @@ add_task(async function test_store_ping() {
   const ping4Path = ping_path(ping4);
   await TelemetryStorage.saveUninstallPing(ping4);
 
-  // Open the ping without FILE_SHARE_DELETE, so a delete should fail.
-  const ping4File = await OS.File.open(
-    ping4Path,
-    { read: true, existing: true },
-    { winShare: OS.Constants.Win.FILE_SHARE_READ }
+  // Use a worker to keep the ping file open, so a delete should fail.
+  const { BasePromiseWorker } = ChromeUtils.import(
+    "resource://gre/modules/PromiseWorker.jsm"
   );
+  const worker = new BasePromiseWorker(
+    "resource://test/file_UninstallPing.worker.js"
+  );
+  await worker.post("open", [ping4Path]);
 
   // Check that there is no error if the file can't be removed.
   await TelemetryStorage.removeUninstallPings();
 
   // And file should still exist.
-  Assert.ok(await OS.File.exists(ping4Path));
+  Assert.ok(await IOUtils.exists(ping4Path));
 
-  // Close the file, it should be possible to remove now.
-  ping4File.close();
+  // Close the file, so it should be possible to remove now.
+  await worker.post("close");
   await TelemetryStorage.removeUninstallPings();
-  Assert.ok(!(await OS.File.exists(ping4Path)));
+  Assert.ok(!(await IOUtils.exists(ping4Path)));
 });

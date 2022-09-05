@@ -7,7 +7,6 @@ const { ClientID } = ChromeUtils.import("resource://gre/modules/ClientID.jsm");
 const { CommonUtils } = ChromeUtils.import(
   "resource://services-common/utils.js"
 );
-const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
 
 const PREF_CACHED_CLIENTID = "toolkit.telemetry.cachedClientID";
 
@@ -17,11 +16,7 @@ const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}
 
 function run_test() {
   do_get_profile();
-  drsPath = OS.Path.join(
-    OS.Constants.Path.profileDir,
-    "datareporting",
-    "state.json"
-  );
+  drsPath = PathUtils.join(PathUtils.profileDir, "datareporting", "state.json");
 
   Services.prefs.setBoolPref(
     "toolkit.telemetry.testing.overrideProductsCheck",

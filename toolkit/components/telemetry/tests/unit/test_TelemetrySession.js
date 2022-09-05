@@ -8,18 +8,12 @@
  * checked in the second request.
  */
 
-const { CommonUtils } = ChromeUtils.import(
-  "resource://services-common/utils.js"
-);
 const { ClientID } = ChromeUtils.import("resource://gre/modules/ClientID.jsm");
 const { TelemetrySession } = ChromeUtils.import(
   "resource://gre/modules/TelemetrySession.jsm"
 );
 const { TelemetryEnvironment } = ChromeUtils.import(
   "resource://gre/modules/TelemetryEnvironment.jsm"
-);
-const { TelemetryReportingPolicy } = ChromeUtils.import(
-  "resource://gre/modules/TelemetryReportingPolicy.jsm"
 );
 const { Preferences } = ChromeUtils.import(
   "resource://gre/modules/Preferences.jsm"
@@ -55,7 +49,7 @@ const ABORTED_PING_FILE_NAME = "aborted-session-ping";
 const ABORTED_SESSION_UPDATE_INTERVAL_MS = 5 * 60 * 1000;
 
 XPCOMUtils.defineLazyGetter(this, "DATAREPORTING_PATH", function() {
-  return OS.Path.join(OS.Constants.Path.profileDir, DATAREPORTING_DIR);
+  return PathUtils.join(PathUtils.profileDir, DATAREPORTING_DIR);
 });
 
 var gClientID = null;
@@ -503,7 +497,7 @@ function write_fake_failedprofilelocks_file() {
   writeStringToFile(file, contents);
 }
 
-add_task(async function test_setup() {
+add_setup(async () => {
   // Addon manager needs a profile directory
   do_get_profile();
   await loadAddonManager(APP_ID, APP_NAME, APP_VERSION, PLATFORM_VERSION);
@@ -525,7 +519,7 @@ add_task(async function test_setup() {
   );
 });
 
-add_task(async function asyncSetup() {
+add_setup(async () => {
   await TelemetryController.testSetup();
   // Load the client ID from the client ID provider to check for pings sanity.
   gClientID = await ClientID.getClientID();
@@ -617,6 +611,9 @@ add_task(async function test_noServerPing() {
 add_task(async function test_simplePing() {
   await TelemetryStorage.testClearPendingPings();
   PingServer.start();
+  registerCleanupFunction(async () => {
+    await PingServer.stop();
+  });
   Preferences.set(
     TelemetryUtils.Preferences.Server,
     "http://localhost:" + PingServer.port
@@ -1204,8 +1201,8 @@ add_task(async function test_savedPingsOnShutdown() {
   // Assure that we store the ping properly when saving sessions on shutdown.
   // We make the TelemetryController shutdown to trigger a session save.
   const dir = TelemetryStorage.pingDirectoryPath;
-  await OS.File.removeDir(dir, { ignoreAbsent: true });
-  await OS.File.makeDir(dir);
+  await IOUtils.remove(dir, { ignoreAbsent: true, recursive: true });
+  await IOUtils.makeDirectory(dir);
   await TelemetryController.testShutdown();
 
   PingServer.clearRequests();
@@ -1221,300 +1218,22 @@ add_task(async function test_savedPingsOnShutdown() {
   Assert.equal(ping.clientId, gClientID);
 });
 
-add_task(async function test_sendShutdownPing() {
-  if (
-    gIsAndroid ||
-    (AppConstants.platform == "linux" && OS.Constants.Sys.bits == 32)
-  ) {
-    // We don't support the pingsender on Android, yet, see bug 1335917.
-    // We also don't suppor the pingsender testing on Treeherder for
-    // Linux 32 bit (due to missing libraries). So skip it there too.
-    // See bug 1310703 comment 78.
-    return;
-  }
-
-  let checkPendingShutdownPing = async function() {
-    let pendingPings = await TelemetryStorage.loadPendingPingList();
-    Assert.equal(pendingPings.length, 1, "We expect 1 pending ping: shutdown.");
-    // Load the pings off the disk.
-    const shutdownPing = await TelemetryStorage.loadPendingPing(
-      pendingPings[0].id
-    );
-    Assert.ok(shutdownPing, "The 'shutdown' ping must be saved to disk.");
-    Assert.equal(
-      "shutdown",
-      shutdownPing.payload.info.reason,
-      "The 'shutdown' ping must be saved to disk."
-    );
-  };
-
-  Preferences.set(TelemetryUtils.Preferences.ShutdownPingSender, true);
-  Preferences.set(TelemetryUtils.Preferences.FirstRun, false);
-  // Make sure the reporting policy picks up the updated pref.
-  TelemetryReportingPolicy.testUpdateFirstRun();
-  PingServer.clearRequests();
-  Telemetry.clearScalars();
-
-  // Shutdown telemetry and wait for an incoming ping.
-  let nextPing = PingServer.promiseNextPing();
-  await TelemetryController.testShutdown();
-  let ping = await nextPing;
-
-  // Check that we received a shutdown ping.
-  checkPingFormat(ping, ping.type, true, true);
-  Assert.equal(ping.payload.info.reason, REASON_SHUTDOWN);
-  Assert.equal(ping.clientId, gClientID);
-  // Try again, this time disable ping upload. The PingSender
-  // should not be sending any ping!
-  PingServer.registerPingHandler(() =>
-    Assert.ok(false, "Telemetry must not send pings if not allowed to.")
-  );
-  Preferences.set(TelemetryUtils.Preferences.FhrUploadEnabled, false);
-  await TelemetryController.testReset();
-  await TelemetryController.testShutdown();
-
-  // Make sure we have no pending pings between the runs.
-  await TelemetryStorage.testClearPendingPings();
-
-  // Enable ping upload and signal an OS shutdown. The pingsender
-  // will not be spawned and no ping will be sent.
-  Preferences.set(TelemetryUtils.Preferences.FhrUploadEnabled, true);
-  await TelemetryController.testReset();
-  Services.obs.notifyObservers(null, "quit-application-forced");
-  await TelemetryController.testShutdown();
-  // After re-enabling FHR, wait for the new client ID
-  gClientID = await ClientID.getClientID();
-
-  // Check that the "shutdown" ping was correctly saved to disk.
-  await checkPendingShutdownPing();
-
-  // Make sure we have no pending pings between the runs.
-  await TelemetryStorage.testClearPendingPings();
-  Telemetry.clearScalars();
-
-  await TelemetryController.testReset();
-  Services.obs.notifyObservers(
-    null,
-    "quit-application-granted",
-    "syncShutdown"
-  );
-  await TelemetryController.testShutdown();
-  await checkPendingShutdownPing();
-
-  // Make sure we have no pending pings between the runs.
-  await TelemetryStorage.testClearPendingPings();
-
-  // Disable the "submission policy". The shutdown ping must not be sent.
-  Preferences.set(TelemetryUtils.Preferences.BypassNotification, false);
-  await TelemetryController.testReset();
-  await TelemetryController.testShutdown();
-
-  // Make sure we have no pending pings between the runs.
-  await TelemetryStorage.testClearPendingPings();
-
-  // We cannot reset the BypassNotification pref, as we need it to be
-  // |true| in tests.
-  Preferences.set(TelemetryUtils.Preferences.BypassNotification, true);
-
-  // With both upload enabled and the policy shown, make sure we don't
-  // send the shutdown ping using the pingsender on the first
-  // subsession.
-  Preferences.set(TelemetryUtils.Preferences.FirstRun, true);
-  // Make sure the reporting policy picks up the updated pref.
-  TelemetryReportingPolicy.testUpdateFirstRun();
-
-  await TelemetryController.testReset();
-  await TelemetryController.testShutdown();
-
-  // Clear the state and prepare for the next test.
-  await TelemetryStorage.testClearPendingPings();
-  PingServer.clearRequests();
-  PingServer.resetPingHandler();
-
-  // Check that we're able to send the shutdown ping using the pingsender
-  // from the first session if the related pref is on.
-  Preferences.set(
-    TelemetryUtils.Preferences.ShutdownPingSenderFirstSession,
-    true
-  );
-  Preferences.set(TelemetryUtils.Preferences.FirstRun, true);
-  TelemetryReportingPolicy.testUpdateFirstRun();
-
-  // Restart/shutdown telemetry and wait for an incoming ping.
-  await TelemetryController.testReset();
-  await TelemetryController.testShutdown();
-  ping = await PingServer.promiseNextPing();
-
-  // Check that we received a shutdown ping.
-  checkPingFormat(ping, ping.type, true, true);
-  Assert.equal(ping.payload.info.reason, REASON_SHUTDOWN);
-  Assert.equal(ping.clientId, gClientID);
-
-  // Reset the pref and restart Telemetry.
-  Preferences.set(TelemetryUtils.Preferences.ShutdownPingSender, false);
-  Preferences.set(
-    TelemetryUtils.Preferences.ShutdownPingSenderFirstSession,
-    false
-  );
-  Preferences.reset(TelemetryUtils.Preferences.FirstRun);
-  PingServer.resetPingHandler();
-});
-
-add_task(async function test_sendFirstShutdownPing() {
-  if (
-    gIsAndroid ||
-    (AppConstants.platform == "linux" && OS.Constants.Sys.bits == 32)
-  ) {
-    // We don't support the pingsender on Android, yet, see bug 1335917.
-    // We also don't suppor the pingsender testing on Treeherder for
-    // Linux 32 bit (due to missing libraries). So skip it there too.
-    // See bug 1310703 comment 78.
-    return;
-  }
-
-  let storageContainsFirstShutdown = async function() {
-    let pendingPings = await TelemetryStorage.loadPendingPingList();
-    let pings = await Promise.all(
-      pendingPings.map(async p => {
-        return TelemetryStorage.loadPendingPing(p.id);
-      })
-    );
-    return pings.find(p => p.type == "first-shutdown");
-  };
-
-  let checkShutdownNotSent = async function() {
-    // The failure-mode of the ping-sender is used to check that a ping was
-    // *not* sent. This can be combined with the state of the storage to infer
-    // the appropriate behavior from the preference flags.
-
-    // Assert failure if we recive a ping.
-    PingServer.registerPingHandler((req, res) => {
-      const receivedPing = decodeRequestPayload(req);
-      Assert.ok(
-        false,
-        `No ping should be received in this test (got ${receivedPing.id}).`
-      );
-    });
-
-    // Assert that pings are sent on first run, forcing a forced application
-    // quit. This should be equivalent to the first test in this suite.
-    Preferences.set(TelemetryUtils.Preferences.FirstRun, true);
-    TelemetryReportingPolicy.testUpdateFirstRun();
-
-    await TelemetryController.testReset();
-    Services.obs.notifyObservers(null, "quit-application-forced");
-    await TelemetryController.testShutdown();
-    Assert.ok(
-      await storageContainsFirstShutdown(),
-      "The 'first-shutdown' ping must be saved to disk."
-    );
-
-    await TelemetryStorage.testClearPendingPings();
-
-    // Assert that it's not sent during subsequent runs
-    Preferences.set(TelemetryUtils.Preferences.FirstRun, false);
-    TelemetryReportingPolicy.testUpdateFirstRun();
-
-    await TelemetryController.testReset();
-    Services.obs.notifyObservers(null, "quit-application-forced");
-    await TelemetryController.testShutdown();
-    Assert.ok(
-      !(await storageContainsFirstShutdown()),
-      "The 'first-shutdown' ping should only be written during first run."
-    );
-
-    await TelemetryStorage.testClearPendingPings();
-
-    // Assert that the the ping is only sent if the flag is enabled.
-    Preferences.set(TelemetryUtils.Preferences.FirstRun, true);
-    Preferences.set(TelemetryUtils.Preferences.FirstShutdownPingEnabled, false);
-    TelemetryReportingPolicy.testUpdateFirstRun();
-
-    await TelemetryController.testReset();
-    await TelemetryController.testShutdown();
-    Assert.ok(
-      !(await storageContainsFirstShutdown()),
-      "The 'first-shutdown' ping should only be written if enabled"
-    );
-
-    await TelemetryStorage.testClearPendingPings();
-
-    // Assert that the the ping is not collected when the ping-sender is disabled.
-    // The information would be made irrelevant by the main-ping in the second session.
-    Preferences.set(TelemetryUtils.Preferences.FirstShutdownPingEnabled, true);
-    Preferences.set(TelemetryUtils.Preferences.ShutdownPingSender, false);
-    TelemetryReportingPolicy.testUpdateFirstRun();
-
-    await TelemetryController.testReset();
-    await TelemetryController.testShutdown();
-    Assert.ok(
-      !(await storageContainsFirstShutdown()),
-      "The 'first-shutdown' ping should only be written if ping-sender is enabled"
-    );
-
-    // Clear the state and prepare for the next test.
-    await TelemetryStorage.testClearPendingPings();
-    PingServer.clearRequests();
-    PingServer.resetPingHandler();
-  };
-
-  // Remove leftover pending pings from other tests
-  await TelemetryStorage.testClearPendingPings();
-  PingServer.clearRequests();
-  Telemetry.clearScalars();
-
-  // Set testing invariants for FirstShutdownPingEnabled
-  Preferences.set(TelemetryUtils.Preferences.ShutdownPingSender, true);
-  Preferences.set(
-    TelemetryUtils.Preferences.ShutdownPingSenderFirstSession,
-    false
-  );
-
-  // Set primary conditions of the 'first-shutdown' ping
-  Preferences.set(TelemetryUtils.Preferences.FirstShutdownPingEnabled, true);
-  Preferences.set(TelemetryUtils.Preferences.FirstRun, true);
-  TelemetryReportingPolicy.testUpdateFirstRun();
-
-  // Assert general 'first-shutdown' use-case.
-  await TelemetryController.testReset();
-  await TelemetryController.testShutdown();
-  let ping = await PingServer.promiseNextPing();
-  checkPingFormat(ping, "first-shutdown", true, true);
-  Assert.equal(ping.payload.info.reason, REASON_SHUTDOWN);
-  Assert.equal(ping.clientId, gClientID);
-
-  await TelemetryStorage.testClearPendingPings();
-
-  // Assert that the shutdown is not sent under various conditions
-  await checkShutdownNotSent();
-
-  // Reset the pref and restart Telemetry.
-  Preferences.set(TelemetryUtils.Preferences.ShutdownPingSender, false);
-  Preferences.set(
-    TelemetryUtils.Preferences.ShutdownPingSenderFirstSession,
-    false
-  );
-  Preferences.set(TelemetryUtils.Preferences.FirstShutdownPingEnabled, false);
-  Preferences.reset(TelemetryUtils.Preferences.FirstRun);
-  PingServer.resetPingHandler();
-});
-
 add_task(async function test_savedSessionData() {
   // Create the directory which will contain the data file, if it doesn't already
   // exist.
-  await OS.File.makeDir(DATAREPORTING_PATH);
+  await IOUtils.makeDirectory(DATAREPORTING_PATH);
   getHistogram("TELEMETRY_SESSIONDATA_FAILED_LOAD").clear();
   getHistogram("TELEMETRY_SESSIONDATA_FAILED_PARSE").clear();
   getHistogram("TELEMETRY_SESSIONDATA_FAILED_VALIDATION").clear();
 
   // Write test data to the session data file.
-  const dataFilePath = OS.Path.join(DATAREPORTING_PATH, "session-state.json");
+  const dataFilePath = PathUtils.join(DATAREPORTING_PATH, "session-state.json");
   const sessionState = {
     sessionId: null,
     subsessionId: null,
     profileSubsessionCounter: 3785,
   };
-  await CommonUtils.writeJSON(sessionState, dataFilePath);
+  await IOUtils.writeJSON(dataFilePath, sessionState);
 
   const PREF_TEST = "toolkit.telemetry.test.pref1";
   Preferences.reset(PREF_TEST);
@@ -1565,7 +1284,7 @@ add_task(async function test_savedSessionData() {
   fakeGenerateUUID(TelemetryUtils.generateUUID, TelemetryUtils.generateUUID);
 
   // Load back the serialised session data.
-  let data = await CommonUtils.readJSON(dataFilePath);
+  let data = await IOUtils.readJSON(dataFilePath);
   Assert.equal(data.profileSubsessionCounter, expectedSubsessions);
   Assert.equal(data.sessionId, expectedSessionUUID);
   Assert.equal(data.subsessionId, expectedSubsessionUUID);
@@ -1577,13 +1296,13 @@ add_task(async function test_sessionData_ShortSession() {
     return;
   }
 
-  const SESSION_STATE_PATH = OS.Path.join(
+  const SESSION_STATE_PATH = PathUtils.join(
     DATAREPORTING_PATH,
     "session-state.json"
   );
 
   // Remove the session state file.
-  await OS.File.remove(SESSION_STATE_PATH, { ignoreAbsent: true });
+  await IOUtils.remove(SESSION_STATE_PATH, { ignoreAbsent: true });
   getHistogram("TELEMETRY_SESSIONDATA_FAILED_LOAD").clear();
   getHistogram("TELEMETRY_SESSIONDATA_FAILED_PARSE").clear();
   getHistogram("TELEMETRY_SESSIONDATA_FAILED_VALIDATION").clear();
@@ -1626,16 +1345,15 @@ add_task(async function test_sessionData_ShortSession() {
 add_task(async function test_invalidSessionData() {
   // Create the directory which will contain the data file, if it doesn't already
   // exist.
-  await OS.File.makeDir(DATAREPORTING_PATH);
+  await IOUtils.makeDirectory(DATAREPORTING_PATH);
   getHistogram("TELEMETRY_SESSIONDATA_FAILED_LOAD").clear();
   getHistogram("TELEMETRY_SESSIONDATA_FAILED_PARSE").clear();
   getHistogram("TELEMETRY_SESSIONDATA_FAILED_VALIDATION").clear();
 
   // Write test data to the session data file. This should fail to parse.
-  const dataFilePath = OS.Path.join(DATAREPORTING_PATH, "session-state.json");
+  const dataFilePath = PathUtils.join(DATAREPORTING_PATH, "session-state.json");
   const unparseableData = "{asdf:@äü";
-  OS.File.writeAtomic(dataFilePath, unparseableData, {
-    encoding: "utf-8",
+  await IOUtils.writeUTF8(dataFilePath, unparseableData, {
     tmpPath: dataFilePath + ".tmp",
   });
 
@@ -1652,7 +1370,7 @@ add_task(async function test_invalidSessionData() {
     profileSubsessionCounter: "not-a-number?",
     someOtherField: 12,
   };
-  await CommonUtils.writeJSON(sessionState, dataFilePath);
+  await IOUtils.writeJSON(dataFilePath, sessionState);
 
   // The session data file should not load. Only expect the current subsession.
   const expectedSubsessions = 1;
@@ -1679,7 +1397,7 @@ add_task(async function test_invalidSessionData() {
   fakeGenerateUUID(TelemetryUtils.generateUUID, TelemetryUtils.generateUUID);
 
   // Load back the serialised session data.
-  let data = await CommonUtils.readJSON(dataFilePath);
+  let data = await IOUtils.readJSON(dataFilePath);
   Assert.equal(data.profileSubsessionCounter, expectedSubsessions);
   Assert.equal(data.sessionId, expectedSessionUUID);
   Assert.equal(data.subsessionId, expectedSubsessionUUID);
@@ -1691,10 +1409,16 @@ add_task(async function test_abortedSession() {
     return;
   }
 
-  const ABORTED_FILE = OS.Path.join(DATAREPORTING_PATH, ABORTED_PING_FILE_NAME);
+  const ABORTED_FILE = PathUtils.join(
+    DATAREPORTING_PATH,
+    ABORTED_PING_FILE_NAME
+  );
 
   // Make sure the aborted sessions directory does not exist to test its creation.
-  await OS.File.removeDir(DATAREPORTING_PATH, { ignoreAbsent: true });
+  await IOUtils.remove(DATAREPORTING_PATH, {
+    ignoreAbsent: true,
+    recursive: true,
+  });
 
   let schedulerTickCallback = null;
   let now = new Date(2040, 1, 1, 0, 0, 0);
@@ -1707,7 +1431,7 @@ add_task(async function test_abortedSession() {
   await TelemetryController.testReset();
 
   Assert.ok(
-    await OS.File.exists(DATAREPORTING_PATH),
+    await IOUtils.exists(DATAREPORTING_PATH),
     "Telemetry must create the aborted session directory when starting."
   );
 
@@ -1720,14 +1444,13 @@ add_task(async function test_abortedSession() {
   await schedulerTickCallback();
   // Check that the aborted session is due at the correct time.
   Assert.ok(
-    await OS.File.exists(ABORTED_FILE),
+    await IOUtils.exists(ABORTED_FILE),
     "There must be an aborted session ping."
   );
 
   // This ping is not yet in the pending pings folder, so we can't access it using
   // TelemetryStorage.popPendingPings().
-  let pingContent = await OS.File.read(ABORTED_FILE, { encoding: "utf-8" });
-  let abortedSessionPing = JSON.parse(pingContent);
+  let abortedSessionPing = await IOUtils.readJSON(ABORTED_FILE);
 
   // Validate the ping.
   checkPingFormat(abortedSessionPing, PING_TYPE_MAIN, true, true);
@@ -1738,8 +1461,7 @@ add_task(async function test_abortedSession() {
   fakeNow(now);
   await schedulerTickCallback();
 
-  pingContent = await OS.File.read(ABORTED_FILE, { encoding: "utf-8" });
-  let updatedAbortedSessionPing = JSON.parse(pingContent);
+  let updatedAbortedSessionPing = await IOUtils.readJSON(ABORTED_FILE);
   checkPingFormat(updatedAbortedSessionPing, PING_TYPE_MAIN, true, true);
   Assert.equal(
     updatedAbortedSessionPing.payload.info.reason,
@@ -1753,7 +1475,7 @@ add_task(async function test_abortedSession() {
 
   await TelemetryController.testShutdown();
   Assert.ok(
-    !(await OS.File.exists(ABORTED_FILE)),
+    !(await IOUtils.exists(ABORTED_FILE)),
     "No aborted session ping must be available after a shutdown."
   );
 });
@@ -1764,7 +1486,10 @@ add_task(async function test_abortedSession_Shutdown() {
     return;
   }
 
-  const ABORTED_FILE = OS.Path.join(DATAREPORTING_PATH, ABORTED_PING_FILE_NAME);
+  const ABORTED_FILE = PathUtils.join(
+    DATAREPORTING_PATH,
+    ABORTED_PING_FILE_NAME
+  );
 
   let schedulerTickCallback = null;
   let now = fakeNow(2040, 1, 1, 0, 0, 0);
@@ -1776,7 +1501,7 @@ add_task(async function test_abortedSession_Shutdown() {
   await TelemetryController.testReset();
 
   Assert.ok(
-    await OS.File.exists(DATAREPORTING_PATH),
+    await IOUtils.exists(DATAREPORTING_PATH),
     "Telemetry must create the aborted session directory when starting."
   );
 
@@ -1788,13 +1513,13 @@ add_task(async function test_abortedSession_Shutdown() {
   await schedulerTickCallback();
   // Check that the aborted session is due at the correct time.
   Assert.ok(
-    await OS.File.exists(ABORTED_FILE),
+    await IOUtils.exists(ABORTED_FILE),
     "There must be an aborted session ping."
   );
 
   // Remove the aborted session file and then shut down to make sure exceptions (e.g file
   // not found) do not compromise the shutdown.
-  await OS.File.remove(ABORTED_FILE);
+  await IOUtils.remove(ABORTED_FILE);
 
   await TelemetryController.testShutdown();
 });
@@ -1805,10 +1530,16 @@ add_task(async function test_abortedDailyCoalescing() {
     return;
   }
 
-  const ABORTED_FILE = OS.Path.join(DATAREPORTING_PATH, ABORTED_PING_FILE_NAME);
+  const ABORTED_FILE = PathUtils.join(
+    DATAREPORTING_PATH,
+    ABORTED_PING_FILE_NAME
+  );
 
   // Make sure the aborted sessions directory does not exist to test its creation.
-  await OS.File.removeDir(DATAREPORTING_PATH, { ignoreAbsent: true });
+  await IOUtils.remove(DATAREPORTING_PATH, {
+    ignoreAbsent: true,
+    recursive: true,
+  });
 
   let schedulerTickCallback = null;
   PingServer.clearRequests();
@@ -1826,7 +1557,7 @@ add_task(async function test_abortedDailyCoalescing() {
   await TelemetryController.testReset();
 
   Assert.ok(
-    await OS.File.exists(DATAREPORTING_PATH),
+    await IOUtils.exists(DATAREPORTING_PATH),
     "Telemetry must create the aborted session directory when starting."
   );
 
@@ -1845,14 +1576,13 @@ add_task(async function test_abortedDailyCoalescing() {
 
   // Check that an aborted session ping was also written to disk.
   Assert.ok(
-    await OS.File.exists(ABORTED_FILE),
+    await IOUtils.exists(ABORTED_FILE),
     "There must be an aborted session ping."
   );
 
   // Read aborted session ping and check that the session/subsession ids equal the
   // ones in the daily ping.
-  let pingContent = await OS.File.read(ABORTED_FILE, { encoding: "utf-8" });
-  let abortedSessionPing = JSON.parse(pingContent);
+  let abortedSessionPing = await IOUtils.readJSON(ABORTED_FILE);
   Assert.equal(
     abortedSessionPing.payload.info.sessionId,
     dailyPing.payload.info.sessionId
@@ -1871,7 +1601,10 @@ add_task(async function test_schedulerComputerSleep() {
     return;
   }
 
-  const ABORTED_FILE = OS.Path.join(DATAREPORTING_PATH, ABORTED_PING_FILE_NAME);
+  const ABORTED_FILE = PathUtils.join(
+    DATAREPORTING_PATH,
+    ABORTED_PING_FILE_NAME
+  );
 
   await TelemetryController.testReset();
   await TelemetryController.testShutdown();
@@ -1879,7 +1612,10 @@ add_task(async function test_schedulerComputerSleep() {
   PingServer.clearRequests();
 
   // Remove any aborted-session ping from the previous tests.
-  await OS.File.removeDir(DATAREPORTING_PATH, { ignoreAbsent: true });
+  await IOUtils.remove(DATAREPORTING_PATH, {
+    ignoreAbsent: true,
+    recursive: true,
+  });
 
   // Set a fake current date and start Telemetry.
   let nowDate = fakeNow(2009, 10, 18, 0, 0, 0);
@@ -1909,7 +1645,7 @@ add_task(async function test_schedulerComputerSleep() {
   );
 
   Assert.ok(
-    await OS.File.exists(ABORTED_FILE),
+    await IOUtils.exists(ABORTED_FILE),
     "There must be an aborted session ping."
   );
 
@@ -2004,10 +1740,16 @@ add_task(async function test_schedulerNothingDue() {
     return;
   }
 
-  const ABORTED_FILE = OS.Path.join(DATAREPORTING_PATH, ABORTED_PING_FILE_NAME);
+  const ABORTED_FILE = PathUtils.join(
+    DATAREPORTING_PATH,
+    ABORTED_PING_FILE_NAME
+  );
 
   // Remove any aborted-session ping from the previous tests.
-  await OS.File.removeDir(DATAREPORTING_PATH, { ignoreAbsent: true });
+  await IOUtils.remove(DATAREPORTING_PATH, {
+    ignoreAbsent: true,
+    recursive: true,
+  });
   await TelemetryStorage.testClearPendingPings();
   await TelemetryController.testReset();
 
@@ -2042,7 +1784,7 @@ add_task(async function test_schedulerNothingDue() {
   await schedulerTickCallback();
 
   // Check that no aborted session ping was written to disk.
-  Assert.ok(!(await OS.File.exists(ABORTED_FILE)));
+  Assert.ok(!(await IOUtils.exists(ABORTED_FILE)));
 
   await TelemetryController.testShutdown();
   PingServer.resetPingHandler();
@@ -2318,8 +2060,4 @@ add_task(async function test_changeThrottling() {
   );
   TelemetrySession.testOnEnvironmentChange("test", {});
   Assert.equal(getSubsessionCount(), 3);
-});
-
-add_task(async function stopServer() {
-  await PingServer.stop();
 });

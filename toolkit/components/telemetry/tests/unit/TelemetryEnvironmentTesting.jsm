@@ -17,7 +17,6 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
   AttributionCode: "resource:///modules/AttributionCode.jsm",
   CommonUtils: "resource://services-common/utils.js",
   MockRegistrar: "resource://testing-common/MockRegistrar.jsm",
-  OS: "resource://gre/modules/osfile.jsm",
 });
 
 var EXPORTED_SYMBOLS = ["TelemetryEnvironmentTesting"];
@@ -135,7 +134,7 @@ var TelemetryEnvironmentTesting = {
         reset: PROFILE_RESET_DATE_MS,
         firstUse: PROFILE_FIRST_USE_MS,
       },
-      lazy.OS.Path.join(lazy.OS.Constants.Path.profileDir, "times.json")
+      PathUtils.join(PathUtils.profileDir, "times.json")
     );
   },
 
