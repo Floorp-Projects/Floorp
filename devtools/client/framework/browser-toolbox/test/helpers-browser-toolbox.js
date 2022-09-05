@@ -4,8 +4,8 @@
 
 "use strict";
 
-const { BrowserToolboxLauncher } = ChromeUtils.import(
-  "resource://devtools/client/framework/browser-toolbox/Launcher.jsm"
+const { BrowserToolboxLauncher } = ChromeUtils.importESModule(
+  "resource://devtools/client/framework/browser-toolbox/Launcher.sys.mjs"
 );
 const { DevToolsClient } = require("devtools/client/devtools-client");
 
