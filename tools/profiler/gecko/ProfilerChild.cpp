@@ -481,13 +481,17 @@ nsCString ProfilerChild::GrabShutdownProfile() {
 
   UniquePtr<ProfilerCodeAddressService> service =
       profiler_code_address_service_for_presymbolication();
-  SpliceableChunkedJSONWriter writer{FailureLatchInfallibleSource::Singleton()};
+  FailureLatchSource failureLatch;
+  SpliceableChunkedJSONWriter writer{failureLatch};
   writer.Start();
   if (!profiler_stream_json_for_this_process(writer, /* aSinceTime */ 0,
                                              /* aIsShuttingDown */ true,
                                              service.get(), ProgressLogger{})) {
-    return nsPrintfCString("*Profile unavailable for pid %u",
-                           unsigned(profiler_current_process_id().ToNumber()));
+    const char* failure = writer.GetFailure();
+    return nsPrintfCString("*Profile unavailable for pid %u%s%s",
+                           unsigned(profiler_current_process_id().ToNumber()),
+                           failure ? ", failure: " : "",
+                           failure ? failure : "");
   }
   writer.StartArrayProperty("processes");
   writer.EndArray();
