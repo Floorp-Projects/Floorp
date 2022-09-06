@@ -150,13 +150,10 @@ BytecodeEmitter::BytecodeEmitter(BytecodeEmitter* parent, ErrorContext* ec,
   MOZ_ASSERT_IF(parent, ec == parent->ec);
 }
 
-BytecodeEmitter::BytecodeEmitter(BytecodeEmitter* parent,
-                                 BCEParserHandle* handle, SharedContext* sc,
-                                 CompilationState& compilationState,
-                                 EmitterMode emitterMode)
+BytecodeEmitter::BytecodeEmitter(BytecodeEmitter* parent, SharedContext* sc)
     : BytecodeEmitter(parent, parent->ec, parent->stackLimit, sc,
-                      compilationState, emitterMode) {
-  parser = handle;
+                      parent->compilationState, parent->emitterMode) {
+  errorReporter_ = parent->errorReporter_;
 }
 
 BytecodeEmitter::BytecodeEmitter(ErrorContext* ec,
@@ -167,7 +164,7 @@ BytecodeEmitter::BytecodeEmitter(ErrorContext* ec,
     : BytecodeEmitter(nullptr, ec, stackLimit, sc, compilationState,
                       emitterMode) {
   ep_.emplace(parser);
-  this->parser = ep_.ptr();
+  errorReporter_ = &ep_->errorReporter();
 }
 
 void BytecodeEmitter::initFromBodyPosition(TokenPos bodyPosition) {
@@ -5780,7 +5777,7 @@ MOZ_NEVER_INLINE bool BytecodeEmitter::emitFunction(
       return false;
     }
 
-    BytecodeEmitter bce2(this, parser, funbox, compilationState, emitterMode);
+    BytecodeEmitter bce2(this, funbox);
     if (!bce2.init(funNode->pn_pos)) {
       return false;
     }
@@ -9649,7 +9646,7 @@ bool BytecodeEmitter::emitPrivateMethodInitializer(
     return false;
   }
 
-  BytecodeEmitter bce2(this, parser, funbox, compilationState, emitterMode);
+  BytecodeEmitter bce2(this, funbox);
   if (!bce2.init(funNode->pn_pos)) {
     return false;
   }
