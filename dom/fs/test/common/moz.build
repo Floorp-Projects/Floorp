@@ -11,3 +11,8 @@ MOCHITEST_MANIFESTS += [
 XPCSHELL_TESTS_MANIFESTS += [
     "xpcshell.ini",
 ]
+
+TESTING_JS_MODULES.dom.fs.test.common += [
+    "nsresult.js",
+    "test_basics.js",
+]
