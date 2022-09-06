@@ -22,28 +22,28 @@ function removeOverrides(config) {
   return config;
 }
 
-const ignorePatterns = [
-  ...fs
-    .readFileSync(
-      path.join(__dirname, "tools", "rewriting", "ThirdPartyPaths.txt")
-    )
-    .toString("utf-8")
-    .split("\n"),
-  ...fs
-    .readFileSync(
-      path.join(
-        __dirname,
-        "devtools",
-        "client",
-        "debugger",
-        "src",
-        ".eslintignore"
-      )
-    )
-    .toString("utf-8")
+function readFile(path) {
+  return fs
+    .readFileSync(path, { encoding: "utf-8" })
     .split("\n")
-    .filter(p => p && !p.startsWith("#"))
-    .map(p => `devtools/client/debugger/src/${p}`),
+    .filter(p => p && !p.startsWith("#"));
+}
+
+const ignorePatterns = [
+  ...readFile(
+    path.join(__dirname, "tools", "rewriting", "ThirdPartyPaths.txt")
+  ),
+  ...readFile(path.join(__dirname, "tools", "rewriting", "Generated.txt")),
+  ...readFile(
+    path.join(
+      __dirname,
+      "devtools",
+      "client",
+      "debugger",
+      "src",
+      ".eslintignore"
+    )
+  ).map(p => `devtools/client/debugger/src/${p}`),
 ];
 
 module.exports = {
