@@ -4,7 +4,7 @@
 
 object Versions {
     const val compose_version = "1.2.1"
-    const val compose_compiler = "1.1.1"
+    const val compose_compiler = "1.3.0"
     const val leakcanary = "2.8.1"
     const val sentry = "5.7.3"
 
@@ -33,7 +33,7 @@ object Versions {
     }
 
     object Kotlin {
-        const val version = "1.6.10"
+        const val version = "1.7.10"
         const val coroutines = "1.6.0"
     }
 
