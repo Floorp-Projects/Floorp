@@ -19,7 +19,6 @@
 #include <type_traits>
 #include <utility>
 
-#include "frontend/BCEParserHandle.h"
 #include "frontend/Parser.h"
 
 namespace js {
@@ -91,7 +90,7 @@ struct ErrorReporterMatcher {
 
 namespace frontend {
 
-class EitherParser : public BCEParserHandle {
+class EitherParser final {
   // Leave this as a variant, to promote good form until 8-bit parser
   // integration.
   mozilla::Variant<Parser<FullParseHandler, char16_t>* const,
@@ -110,10 +109,10 @@ class EitherParser : public BCEParserHandle {
   template <class Parser>
   explicit EitherParser(Parser* parser) : parser(parser) {}
 
-  ErrorReporter& errorReporter() final {
+  ErrorReporter& errorReporter() {
     return parser.match(detail::ErrorReporterMatcher());
   }
-  const ErrorReporter& errorReporter() const final {
+  const ErrorReporter& errorReporter() const {
     return parser.match(detail::ErrorReporterMatcher());
   }
 
