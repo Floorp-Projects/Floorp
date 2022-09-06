@@ -82,64 +82,6 @@ JSScript* JS::Compile(JSContext* cx, const ReadOnlyCompileOptions& options,
   return CompileSourceBuffer(cx, options, srcBuf);
 }
 
-template <typename Unit>
-static JSScript* CompileSourceBufferAndStartIncrementalEncoding(
-    JSContext* cx, const ReadOnlyCompileOptions& options,
-    SourceText<Unit>& srcBuf) {
-  MOZ_ASSERT(!cx->zone()->isAtomsZone());
-  AssertHeapIsIdle();
-  CHECK_THREAD(cx);
-
-  ScopeKind scopeKind =
-      options.nonSyntacticScope ? ScopeKind::NonSyntactic : ScopeKind::Global;
-
-  MainThreadErrorContext ec(cx);
-  Rooted<frontend::CompilationInput> input(cx,
-                                           frontend::CompilationInput(options));
-  js::frontend::NoScopeBindingCache scopeCache;
-  auto stencil = frontend::CompileGlobalScriptToExtensibleStencil(
-      cx, &ec, cx->stackLimitForCurrentPrincipal(), input.get(), &scopeCache,
-      srcBuf, scopeKind);
-  if (!stencil) {
-    return nullptr;
-  }
-
-  RootedScript script(cx);
-  {
-    frontend::BorrowingCompilationStencil borrowingStencil(*stencil);
-
-    Rooted<frontend::CompilationGCOutput> gcOutput(cx);
-    if (!frontend::InstantiateStencils(cx, input.get(), borrowingStencil,
-                                       gcOutput.get())) {
-      return nullptr;
-    }
-
-    script = gcOutput.get().script;
-    if (!script) {
-      return nullptr;
-    }
-  }
-
-  if (!script->scriptSource()->startIncrementalEncoding(cx,
-                                                        std::move(stencil))) {
-    return nullptr;
-  }
-
-  return script;
-}
-
-JSScript* JS::CompileAndStartIncrementalEncoding(
-    JSContext* cx, const ReadOnlyCompileOptions& options,
-    SourceText<char16_t>& srcBuf) {
-  return CompileSourceBufferAndStartIncrementalEncoding(cx, options, srcBuf);
-}
-
-JSScript* JS::CompileAndStartIncrementalEncoding(
-    JSContext* cx, const ReadOnlyCompileOptions& options,
-    SourceText<Utf8Unit>& srcBuf) {
-  return CompileSourceBufferAndStartIncrementalEncoding(cx, options, srcBuf);
-}
-
 JS_PUBLIC_API bool JS::StartIncrementalEncoding(JSContext* cx,
                                                 RefPtr<JS::Stencil>&& stencil) {
   MOZ_ASSERT(cx);
