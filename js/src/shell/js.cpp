@@ -2267,13 +2267,10 @@ static bool Evaluate(JSContext* cx, unsigned argc, Value* vp) {
   bool assertEqBytecode = false;
   JS::RootedObjectVector envChain(cx);
   RootedObject callerGlobal(cx, cx->global());
-  CacheOptionSet optionSet;
 
   options.setIntroductionType("js shell evaluate")
       .setFileAndLine("@evaluate", 1)
       .setDeferDebugMetadata();
-
-  options.borrowBuffer = true;
 
   RootedValue privateValue(cx);
   RootedString elementAttributeName(cx);
@@ -2340,7 +2337,6 @@ static bool Evaluate(JSContext* cx, unsigned argc, Value* vp) {
             "\"envChainObject\" passed to evaluate() should not be a global");
         return false;
       } else if (!envChain.append(&v.toObject())) {
-        JS_ReportOutOfMemory(cx);
         return false;
       }
     }
@@ -2357,25 +2353,25 @@ static bool Evaluate(JSContext* cx, unsigned argc, Value* vp) {
   }
 
   if (envChain.length() != 0) {
-    {
-      // Wrap the envChainObject list into target realm.
-      JSAutoRealm ar(cx, global);
-      for (size_t i = 0; i < envChain.length(); ++i) {
-        if (!JS_WrapObject(cx, envChain[i])) {
-          return false;
-        }
+    // Wrap the envChainObject list into target realm.
+    JSAutoRealm ar(cx, global);
+    for (size_t i = 0; i < envChain.length(); ++i) {
+      if (!JS_WrapObject(cx, envChain[i])) {
+        return false;
       }
     }
 
     options.setNonSyntacticScope(true);
   }
 
-  optionSet.initFromOptions(options);
+  // The `loadBuffer` we use below outlives the Stencil we generate so we can
+  // use its contents directly in the Stencil.
+  options.borrowBuffer = true;
 
-  AutoStableStringChars codeChars(cx);
-  if (!codeChars.initTwoByte(cx, code)) {
-    return false;
-  }
+  // We need to track the options used to generate bytecode for a CacheEntry to
+  // avoid mismatches. This is primarily a concern when fuzzing the jsshell.
+  CacheOptionSet cacheOptions;
+  cacheOptions.initFromOptions(options);
 
   JS::TranscodeBuffer loadBuffer;
   JS::TranscodeBuffer saveBuffer;
@@ -2384,7 +2380,7 @@ static bool Evaluate(JSContext* cx, unsigned argc, Value* vp) {
     size_t loadLength = 0;
     uint8_t* loadData = nullptr;
 
-    if (!CacheEntry_compatible(cx, cacheEntry, optionSet)) {
+    if (!CacheEntry_compatible(cx, cacheEntry, cacheOptions)) {
       return false;
     }
 
@@ -2400,53 +2396,41 @@ static bool Evaluate(JSContext* cx, unsigned argc, Value* vp) {
 
   {
     JSAutoRealm ar(cx, global);
-    RootedScript script(cx);
+    RefPtr<JS::Stencil> stencil;
 
-    {
-      if (loadBytecode) {
-        JS::TranscodeRange range(loadBuffer.begin(), loadBuffer.length());
+    if (loadBytecode) {
+      JS::TranscodeRange range(loadBuffer.begin(), loadBuffer.length());
+      JS::DecodeOptions decodeOptions(options);
 
-        RefPtr<JS::Stencil> stencil;
-
-        JS::DecodeOptions decodeOptions(options);
-
-        JS::TranscodeResult rv = JS::DecodeStencil(cx, decodeOptions, range,
-                                                   getter_AddRefs(stencil));
-        if (!ConvertTranscodeResultToJSException(cx, rv)) {
-          return false;
-        }
-
-        JS::InstantiateOptions instantiateOptions(options);
-        script = JS::InstantiateGlobalStencil(cx, instantiateOptions, stencil);
-        if (!script) {
-          return false;
-        }
-
-        if (saveIncrementalBytecode) {
-          if (!JS::StartIncrementalEncoding(cx, std::move(stencil))) {
-            return false;
-          }
-        }
-      } else {
-        mozilla::Range<const char16_t> chars = codeChars.twoByteRange();
-        JS::SourceText<char16_t> srcBuf;
-        if (!srcBuf.init(cx, chars.begin().get(), chars.length(),
-                         JS::SourceOwnership::Borrowed)) {
-          return false;
-        }
-
-        if (saveIncrementalBytecode) {
-          script = JS::CompileAndStartIncrementalEncoding(cx, options, srcBuf);
-          if (!script) {
-            return false;
-          }
-        } else {
-          script = JS::Compile(cx, options, srcBuf);
-          if (!script) {
-            return false;
-          }
-        }
+      JS::TranscodeResult rv =
+          JS::DecodeStencil(cx, decodeOptions, range, getter_AddRefs(stencil));
+      if (!ConvertTranscodeResultToJSException(cx, rv)) {
+        return false;
       }
+    } else {
+      AutoStableStringChars codeChars(cx);
+      if (!codeChars.initTwoByte(cx, code)) {
+        return false;
+      }
+      mozilla::Range<const char16_t> chars = codeChars.twoByteRange();
+
+      JS::SourceText<char16_t> srcBuf;
+      if (!srcBuf.init(cx, chars.begin().get(), chars.length(),
+                       JS::SourceOwnership::Borrowed)) {
+        return false;
+      }
+
+      stencil = JS::CompileGlobalScriptToStencil(cx, options, srcBuf);
+      if (!stencil) {
+        return false;
+      }
+    }
+
+    JS::InstantiateOptions instantiateOptions(options);
+    RootedScript script(
+        cx, JS::InstantiateGlobalStencil(cx, instantiateOptions, stencil));
+    if (!script) {
+      return false;
     }
 
     MainThreadErrorContext ec(cx);
@@ -2455,10 +2439,15 @@ static bool Evaluate(JSContext* cx, unsigned argc, Value* vp) {
       return false;
     }
 
-    JS::InstantiateOptions instantiateOptions(options);
     if (!JS::UpdateDebugMetadata(cx, script, instantiateOptions, privateValue,
                                  elementAttributeName, nullptr, nullptr)) {
       return false;
+    }
+
+    if (saveIncrementalBytecode) {
+      if (!JS::StartIncrementalEncoding(cx, std::move(stencil))) {
+        return false;
+      }
     }
 
     if (execute) {
@@ -2517,7 +2506,7 @@ static bool Evaluate(JSContext* cx, unsigned argc, Value* vp) {
       return false;
     }
     uint8_t* saveData = saveBuffer.extractOrCopyRawBuffer();
-    if (!CacheEntry_setBytecode(cx, cacheEntry, optionSet, saveData,
+    if (!CacheEntry_setBytecode(cx, cacheEntry, cacheOptions, saveData,
                                 saveLength)) {
       js_free(saveData);
       return false;
