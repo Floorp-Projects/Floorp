@@ -312,7 +312,8 @@ class GlyphCacheEntry : public CacheEntryImpl<GlyphCacheEntry> {
   GlyphCacheEntry(const GlyphBuffer& aBuffer, const DeviceColor& aColor,
                   const Matrix& aTransform, const IntPoint& aQuantizeScale,
                   const IntRect& aBounds, const IntRect& aFullBounds,
-                  HashNumber aHash);
+                  HashNumber aHash,
+                  StoredStrokeOptions* aStrokeOptions = nullptr);
   ~GlyphCacheEntry();
 
   const GlyphBuffer& GetGlyphBuffer() const { return mBuffer; }
@@ -320,7 +321,7 @@ class GlyphCacheEntry : public CacheEntryImpl<GlyphCacheEntry> {
   bool MatchesGlyphs(const GlyphBuffer& aBuffer, const DeviceColor& aColor,
                      const Matrix& aTransform, const IntPoint& aQuantizeOffset,
                      const IntPoint& aBoundsOffset, const IntRect& aClipRect,
-                     HashNumber aHash);
+                     HashNumber aHash, const StrokeOptions* aStrokeOptions);
 
   static HashNumber HashGlyphs(const GlyphBuffer& aBuffer,
                                const Matrix& aTransform,
@@ -333,6 +334,8 @@ class GlyphCacheEntry : public CacheEntryImpl<GlyphCacheEntry> {
   DeviceColor mColor;
   // The full bounds of the text run without any clipping applied.
   IntRect mFullBounds;
+  // Stroke options for the text run.
+  UniquePtr<StoredStrokeOptions> mStrokeOptions;
 };
 
 // GlyphCache maintains a list of GlyphCacheEntry's representing previously
@@ -352,12 +355,14 @@ class GlyphCache : public LinkedListElement<GlyphCache>,
                                               const Matrix& aTransform,
                                               const IntPoint& aQuantizeScale,
                                               const IntRect& aClipRect,
-                                              HashNumber aHash);
+                                              HashNumber aHash,
+                                              const StrokeOptions* aOptions);
 
   already_AddRefed<GlyphCacheEntry> InsertEntry(
       const GlyphBuffer& aBuffer, const DeviceColor& aColor,
       const Matrix& aTransform, const IntPoint& aQuantizeScale,
-      const IntRect& aBounds, const IntRect& aFullBounds, HashNumber aHash);
+      const IntRect& aBounds, const IntRect& aFullBounds, HashNumber aHash,
+      const StrokeOptions* aOptions);
 
  private:
   // Weak pointer to the owning font
