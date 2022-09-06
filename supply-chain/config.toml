@@ -98,6 +98,10 @@ notes = "The crates.io version of this is just a placeholder to allow public cra
 audit-as-crates-io = true
 notes = "This is a first-party crate which is also published to crates.io, but we should publish audits for it for the benefit of the ecosystem."
 
+[policy.mozglue-static]
+dependency-criteria = { rustc_version = "safe-to-run" }
+notes = "The rustc_version dependency is only used in the build script, and does not generate any runtime code"
+
 [policy.mozprofile]
 audit-as-crates-io = true
 notes = "This is a first-party crate which is also published to crates.io, but we should publish audits for it for the benefit of the ecosystem."
@@ -1063,10 +1067,6 @@ criteria = "safe-to-deploy"
 version = "0.5.19"
 criteria = "safe-to-deploy"
 
-[[exemptions.proc-macro2]]
-version = "1.0.39"
-criteria = "safe-to-deploy"
-
 [[exemptions.profiling]]
 version = "1.0.6"
 criteria = "safe-to-deploy"
@@ -1085,14 +1085,6 @@ criteria = "safe-to-deploy"
 
 [[exemptions.quick-error]]
 version = "1.2.3"
-criteria = "safe-to-deploy"
-
-[[exemptions.quote]]
-version = "1.0.18"
-criteria = "safe-to-deploy"
-
-[[exemptions.radium]]
-version = "0.5.3"
 criteria = "safe-to-deploy"
 
 [[exemptions.rand]]
@@ -1169,10 +1161,6 @@ criteria = "safe-to-deploy"
 
 [[exemptions.rust_decimal]]
 version = "1.24.0"
-criteria = "safe-to-deploy"
-
-[[exemptions.rustc_version]]
-version = "0.4.0"
 criteria = "safe-to-deploy"
 
 [[exemptions.ryu]]
@@ -1301,10 +1289,6 @@ criteria = "safe-to-deploy"
 
 [[exemptions.syn]]
 version = "1.0.96"
-criteria = "safe-to-deploy"
-
-[[exemptions.synstructure]]
-version = "0.12.6"
 criteria = "safe-to-deploy"
 
 [[exemptions.tap]]
