@@ -34,8 +34,8 @@ class ElementInternals final : public nsIFormControl,
                                public nsWrapperCache {
  public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_AMBIGUOUS(ElementInternals,
-                                                         nsIFormControl)
+  NS_DECL_CYCLE_COLLECTION_WRAPPERCACHE_CLASS_AMBIGUOUS(ElementInternals,
+                                                        nsIFormControl)
 
   explicit ElementInternals(HTMLElement* aTarget);
 

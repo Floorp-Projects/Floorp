@@ -42,7 +42,8 @@ struct MappedInfo {
 
 class Buffer final : public ObjectBase, public ChildOf<Device> {
  public:
-  GPU_DECL_CYCLE_COLLECTION(Buffer)
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(Buffer)
+  NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(Buffer)
   GPU_DECL_JS_WRAP(Buffer)
 
   Buffer(Device* const aParent, RawId aId, BufferAddress aSize, bool aMappable);

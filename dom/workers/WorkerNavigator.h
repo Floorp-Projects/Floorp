@@ -52,7 +52,7 @@ class WorkerNavigator final : public nsWrapperCache {
 
  public:
   NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(WorkerNavigator)
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(WorkerNavigator)
+  NS_DECL_CYCLE_COLLECTION_NATIVE_WRAPPERCACHE_CLASS(WorkerNavigator)
 
   static already_AddRefed<WorkerNavigator> Create(bool aOnLine);
 

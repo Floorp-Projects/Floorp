@@ -12,7 +12,7 @@ namespace mozilla::dom {
 
 AnimationTimeline::~AnimationTimeline() { mAnimationOrder.clear(); }
 
-NS_IMPL_CYCLE_COLLECTION_CLASS(AnimationTimeline)
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_CLASS(AnimationTimeline)
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(AnimationTimeline)
   tmp->mAnimationOrder.clear();
@@ -23,8 +23,6 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(AnimationTimeline)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mWindow, mAnimations)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
-
-NS_IMPL_CYCLE_COLLECTION_TRACE_WRAPPERCACHE(AnimationTimeline)
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(AnimationTimeline)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(AnimationTimeline)

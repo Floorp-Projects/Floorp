@@ -244,7 +244,7 @@ void PeerConnectionAutoTimer::UnregisterConnection(bool aContainedAV) {
 
 bool PeerConnectionAutoTimer::IsStopped() { return mRefCnt == 0; }
 
-NS_IMPL_CYCLE_COLLECTION_CLASS(PeerConnectionImpl)
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_CLASS(PeerConnectionImpl)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(PeerConnectionImpl)
   tmp->Close();
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mPCObserver, mWindow, mCertificate,
@@ -257,7 +257,6 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(PeerConnectionImpl)
                                     mSTSThread, mReceiveStreams, mOperations,
                                     mTransceivers, mKungFuDeathGrip)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
-NS_IMPL_CYCLE_COLLECTION_TRACE_WRAPPERCACHE(PeerConnectionImpl)
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(PeerConnectionImpl)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(PeerConnectionImpl)

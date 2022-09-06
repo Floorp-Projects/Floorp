@@ -604,7 +604,7 @@ void JSHolderMap::Put(void* aHolder, nsScriptObjectTracer* aTracer,
   MOZ_ASSERT(aTracer);
 
   // Don't associate multi-zone holders with a zone, even if one is supplied.
-  if (aTracer->IsMultiZoneJSHolder()) {
+  if (!aTracer->IsSingleZoneJSHolder()) {
     aZone = nullptr;
   }
 
@@ -1317,14 +1317,8 @@ struct CheckZoneTracer : public TraceCallbacks {
     // Additionally, pointers from any holder into the atoms zone are allowed
     // since all holders are traced when we collect the atoms zone.
     //
-    // If you added a holder that has pointers into multiple zones please try to
-    // remedy this. Some options are:
-    //
-    //  - wrap all JS GC things into the same compartment
-    //  - split GC thing pointers between separate cycle collected objects
-    //
-    // If all else fails, flag the class as containing pointers into multiple
-    // zones by using NS_IMPL_CYCLE_COLLECTION_MULTI_ZONE_JSHOLDER_CLASS.
+    // If you added a holder that has pointers into multiple zones do not
+    // use NS_IMPL_CYCLE_COLLECTION_SINGLE_ZONE_SCRIPT_HOLDER_CLASS.
     MOZ_CRASH_UNSAFE_PRINTF(
         "JS holder %s contains pointers to GC things in more than one zone ("
         "found in %s)\n",
@@ -1453,7 +1447,7 @@ bool CycleCollectedJSRuntime::TraceJSHolders(JSTracer* aTracer,
     nsScriptObjectTracer* tracer = aIter->mTracer;
 
 #ifdef CHECK_SINGLE_ZONE_JS_HOLDERS
-    if (checkSingleZoneHolders && !tracer->IsMultiZoneJSHolder()) {
+    if (checkSingleZoneHolders && tracer->IsSingleZoneJSHolder()) {
       CheckHolderIsSingleZone(holder, tracer, aIter.Zone());
     }
 #else

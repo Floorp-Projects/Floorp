@@ -19897,11 +19897,11 @@ class CGJSImplClass(CGBindingImplClass):
             ]
             isupportsDecl = "NS_DECL_CYCLE_COLLECTING_ISUPPORTS\n"
             ccDecl = (
-                "NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(%s)\n" % descriptor.name
+                "NS_DECL_CYCLE_COLLECTION_WRAPPERCACHE_CLASS(%s)\n" % descriptor.name
             )
             extradefinitions = fill(
                 """
-                NS_IMPL_CYCLE_COLLECTION_CLASS(${ifaceName})
+                NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_CLASS(${ifaceName})
                 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(${ifaceName})
                   NS_IMPL_CYCLE_COLLECTION_UNLINK(mImpl)
                   NS_IMPL_CYCLE_COLLECTION_UNLINK(mParent)
@@ -19912,7 +19912,6 @@ class CGJSImplClass(CGBindingImplClass):
                   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mImpl)
                   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mParent)
                 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
-                NS_IMPL_CYCLE_COLLECTION_TRACE_WRAPPERCACHE(${ifaceName})
                 NS_IMPL_CYCLE_COLLECTING_ADDREF(${ifaceName})
                 NS_IMPL_CYCLE_COLLECTING_RELEASE(${ifaceName})
                 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(${ifaceName})

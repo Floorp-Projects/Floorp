@@ -16,6 +16,7 @@
 #include "js/TypeDecls.h"
 #include "nsISupports.h"
 #include "nsISupportsUtils.h"
+#include <type_traits>
 
 namespace mozilla::dom {
 class ContentProcessMessageManager;
@@ -422,6 +423,123 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsWrapperCache, NS_WRAPPERCACHE_IID)
   else
 
 // Cycle collector macros for wrapper caches.
+//
+// The NS_DECL_*WRAPPERCACHE_* macros make it easier to mark classes as holding
+// just a single pointer to a JS value. That information is then used for
+// certain GC optimizations.
+
+#define NS_DECL_CYCLE_COLLECTION_WRAPPERCACHE_CLASS_AMBIGUOUS(_class, _base)   \
+  class NS_CYCLE_COLLECTION_INNERCLASS                                         \
+      : public nsXPCOMCycleCollectionParticipant {                             \
+   public:                                                                     \
+    constexpr explicit NS_CYCLE_COLLECTION_INNERCLASS(Flags aFlags = 0)        \
+        : nsXPCOMCycleCollectionParticipant(aFlags |                           \
+                                            FlagMaybeSingleZoneJSHolder) {}    \
+                                                                               \
+   private:                                                                    \
+    NS_DECL_CYCLE_COLLECTION_CLASS_BODY(_class, _base)                         \
+    NS_IMETHOD_(void)                                                          \
+    Trace(void* p, const TraceCallbacks& cb, void* closure) override;          \
+    NS_IMETHOD_(void)                                                          \
+    TraceWrapper(void* aPtr, const TraceCallbacks& aCb, void* aClosure) final; \
+    NS_IMPL_GET_XPCOM_CYCLE_COLLECTION_PARTICIPANT(_class)                     \
+  };                                                                           \
+  NS_CHECK_FOR_RIGHT_PARTICIPANT_IMPL(_class)                                  \
+  static NS_CYCLE_COLLECTION_INNERCLASS NS_CYCLE_COLLECTION_INNERNAME;         \
+  NOT_INHERITED_CANT_OVERRIDE
+
+#define NS_DECL_CYCLE_COLLECTION_WRAPPERCACHE_CLASS(_class) \
+  NS_DECL_CYCLE_COLLECTION_WRAPPERCACHE_CLASS_AMBIGUOUS(_class, _class)
+
+#define NS_DECL_CYCLE_COLLECTION_WRAPPERCACHE_CLASS_INHERITED(_class,          \
+                                                              _base_class)     \
+  class NS_CYCLE_COLLECTION_INNERCLASS                                         \
+      : public NS_CYCLE_COLLECTION_CLASSNAME(_base_class) {                    \
+   public:                                                                     \
+    constexpr explicit NS_CYCLE_COLLECTION_INNERCLASS(Flags aFlags)            \
+        : NS_CYCLE_COLLECTION_CLASSNAME(_base_class)(                          \
+              aFlags | FlagMaybeSingleZoneJSHolder) {}                         \
+                                                                               \
+   private:                                                                    \
+    NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED_BODY(_class, _base_class)         \
+    NS_IMETHOD_(void)                                                          \
+    Trace(void* p, const TraceCallbacks& cb, void* closure) override;          \
+    NS_IMETHOD_(void)                                                          \
+    TraceWrapper(void* aPtr, const TraceCallbacks& aCb, void* aClosure) final; \
+    NS_IMPL_GET_XPCOM_CYCLE_COLLECTION_PARTICIPANT(_class)                     \
+  };                                                                           \
+  NS_CHECK_FOR_RIGHT_PARTICIPANT_IMPL_INHERITED(_class)                        \
+  static NS_CYCLE_COLLECTION_INNERCLASS NS_CYCLE_COLLECTION_INNERNAME;
+
+#define NS_DECL_CYCLE_COLLECTION_SKIPPABLE_WRAPPERCACHE_CLASS_AMBIGUOUS(       \
+    _class, _base)                                                             \
+  class NS_CYCLE_COLLECTION_INNERCLASS                                         \
+      : public nsXPCOMCycleCollectionParticipant {                             \
+   public:                                                                     \
+    constexpr explicit NS_CYCLE_COLLECTION_INNERCLASS(Flags aFlags)            \
+        : nsXPCOMCycleCollectionParticipant(aFlags | FlagMightSkip |           \
+                                            FlagMaybeSingleZoneJSHolder) {}    \
+                                                                               \
+   private:                                                                    \
+    NS_DECL_CYCLE_COLLECTION_CLASS_BODY(_class, _base)                         \
+    NS_IMETHOD_(void)                                                          \
+    Trace(void* p, const TraceCallbacks& cb, void* closure) override;          \
+    NS_IMETHOD_(void)                                                          \
+    TraceWrapper(void* aPtr, const TraceCallbacks& aCb, void* aClosure) final; \
+    NS_IMETHOD_(bool) CanSkipReal(void* p, bool aRemovingAllowed) override;    \
+    NS_IMETHOD_(bool) CanSkipInCCReal(void* p) override;                       \
+    NS_IMETHOD_(bool) CanSkipThisReal(void* p) override;                       \
+    NS_IMPL_GET_XPCOM_CYCLE_COLLECTION_PARTICIPANT(_class)                     \
+  };                                                                           \
+  NS_CHECK_FOR_RIGHT_PARTICIPANT_IMPL(_class)                                  \
+  static NS_CYCLE_COLLECTION_INNERCLASS NS_CYCLE_COLLECTION_INNERNAME;         \
+  NOT_INHERITED_CANT_OVERRIDE
+
+#define NS_DECL_CYCLE_COLLECTION_SKIPPABLE_WRAPPERCACHE_CLASS(_class)     \
+  NS_DECL_CYCLE_COLLECTION_SKIPPABLE_WRAPPERCACHE_CLASS_AMBIGUOUS(_class, \
+                                                                  _class)
+
+#define NS_DECL_CYCLE_COLLECTION_SKIPPABLE_WRAPPERCACHE_CLASS_INHERITED(       \
+    _class, _base_class)                                                       \
+  class NS_CYCLE_COLLECTION_INNERCLASS                                         \
+      : public NS_CYCLE_COLLECTION_CLASSNAME(_base_class) {                    \
+   public:                                                                     \
+    constexpr explicit NS_CYCLE_COLLECTION_INNERCLASS(Flags aFlags = 0)        \
+        : NS_CYCLE_COLLECTION_CLASSNAME(_base_class)(                          \
+              aFlags | FlagMightSkip | FlagMaybeSingleZoneJSHolder) {}         \
+                                                                               \
+   private:                                                                    \
+    NS_DECL_CYCLE_COLLECTION_CLASS_BODY(_class, _base_class)                   \
+    NS_IMETHOD_(void)                                                          \
+    Trace(void* p, const TraceCallbacks& cb, void* closure) override;          \
+    NS_IMETHOD_(void)                                                          \
+    TraceWrapper(void* aPtr, const TraceCallbacks& aCb, void* aClosure) final; \
+    NS_IMETHOD_(bool) CanSkipReal(void* p, bool aRemovingAllowed) override;    \
+    NS_IMETHOD_(bool) CanSkipInCCReal(void* p) override;                       \
+    NS_IMETHOD_(bool) CanSkipThisReal(void* p) override;                       \
+    NS_IMPL_GET_XPCOM_CYCLE_COLLECTION_PARTICIPANT(_class)                     \
+  };                                                                           \
+  NS_CHECK_FOR_RIGHT_PARTICIPANT_IMPL_INHERITED(_class)                        \
+  static NS_CYCLE_COLLECTION_INNERCLASS NS_CYCLE_COLLECTION_INNERNAME;
+
+#define NS_DECL_CYCLE_COLLECTION_NATIVE_WRAPPERCACHE_CLASS(_class)             \
+  void DeleteCycleCollectable(void) { delete this; }                           \
+  class NS_CYCLE_COLLECTION_INNERCLASS : public nsScriptObjectTracer {         \
+   public:                                                                     \
+    constexpr explicit NS_CYCLE_COLLECTION_INNERCLASS(Flags aFlags = 0)        \
+        : nsScriptObjectTracer(aFlags | FlagMaybeSingleZoneJSHolder) {}        \
+                                                                               \
+   private:                                                                    \
+    NS_DECL_CYCLE_COLLECTION_NATIVE_CLASS_BODY(_class)                         \
+    NS_IMETHOD_(void)                                                          \
+    Trace(void* p, const TraceCallbacks& cb, void* closure) override;          \
+    NS_IMETHOD_(void)                                                          \
+    TraceWrapper(void* aPtr, const TraceCallbacks& aCb, void* aClosure) final; \
+    static constexpr nsScriptObjectTracer* GetParticipant() {                  \
+      return &_class::NS_CYCLE_COLLECTION_INNERNAME;                           \
+    }                                                                          \
+  };                                                                           \
+  static NS_CYCLE_COLLECTION_INNERCLASS NS_CYCLE_COLLECTION_INNERNAME;
 
 #define NS_IMPL_CYCLE_COLLECTION_TRACE_PRESERVED_WRAPPER \
   tmp->TraceWrapper(aCallbacks, aClosure);
@@ -429,33 +547,39 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsWrapperCache, NS_WRAPPERCACHE_IID)
 #define NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER \
   tmp->ReleaseWrapper(p);
 
-#define NS_IMPL_CYCLE_COLLECTION_TRACE_WRAPPERCACHE(_class) \
-  NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(_class)              \
-    NS_IMPL_CYCLE_COLLECTION_TRACE_PRESERVED_WRAPPER        \
-  NS_IMPL_CYCLE_COLLECTION_TRACE_END
+#define NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_CLASS(_class)        \
+  static_assert(std::is_base_of<nsWrapperCache, _class>::value,    \
+                "Class should inherit nsWrapperCache");            \
+  NS_IMPL_CYCLE_COLLECTION_SINGLE_ZONE_SCRIPT_HOLDER_CLASS(_class) \
+  NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(_class)                     \
+    TraceWrapper(p, aCallbacks, aClosure);                         \
+  NS_IMPL_CYCLE_COLLECTION_TRACE_END                               \
+  void NS_CYCLE_COLLECTION_CLASSNAME(_class)::TraceWrapper(        \
+      void* p, const TraceCallbacks& aCallbacks, void* aClosure) { \
+    _class* tmp = DowncastCCParticipant<_class>(p);                \
+    NS_IMPL_CYCLE_COLLECTION_TRACE_PRESERVED_WRAPPER               \
+  }
 
 #define NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_0(_class) \
-  NS_IMPL_CYCLE_COLLECTION_CLASS(_class)                \
+  NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_CLASS(_class)   \
   NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(_class)         \
     NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER   \
   NS_IMPL_CYCLE_COLLECTION_UNLINK_END                   \
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(_class)       \
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END                 \
-  NS_IMPL_CYCLE_COLLECTION_TRACE_WRAPPERCACHE(_class)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 #define NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(_class, ...) \
-  NS_IMPL_CYCLE_COLLECTION_CLASS(_class)                   \
+  NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_CLASS(_class)      \
   NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(_class)            \
     NS_IMPL_CYCLE_COLLECTION_UNLINK(__VA_ARGS__)           \
     NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER      \
   NS_IMPL_CYCLE_COLLECTION_UNLINK_END                      \
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(_class)          \
     NS_IMPL_CYCLE_COLLECTION_TRAVERSE(__VA_ARGS__)         \
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END                    \
-  NS_IMPL_CYCLE_COLLECTION_TRACE_WRAPPERCACHE(_class)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 #define NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_WEAK(_class, ...) \
-  NS_IMPL_CYCLE_COLLECTION_CLASS(_class)                        \
+  NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_CLASS(_class)           \
   NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(_class)                 \
     NS_IMPL_CYCLE_COLLECTION_UNLINK(__VA_ARGS__)                \
     NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER           \
@@ -463,11 +587,10 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsWrapperCache, NS_WRAPPERCACHE_IID)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_END                           \
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(_class)               \
     NS_IMPL_CYCLE_COLLECTION_TRAVERSE(__VA_ARGS__)              \
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END                         \
-  NS_IMPL_CYCLE_COLLECTION_TRACE_WRAPPERCACHE(_class)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 #define NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_WEAK_PTR(_class, ...) \
-  NS_IMPL_CYCLE_COLLECTION_CLASS(_class)                            \
+  NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_CLASS(_class)               \
   NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(_class)                     \
     NS_IMPL_CYCLE_COLLECTION_UNLINK(__VA_ARGS__)                    \
     NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER               \
@@ -475,24 +598,33 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsWrapperCache, NS_WRAPPERCACHE_IID)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_END                               \
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(_class)                   \
     NS_IMPL_CYCLE_COLLECTION_TRAVERSE(__VA_ARGS__)                  \
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END                             \
-  NS_IMPL_CYCLE_COLLECTION_TRACE_WRAPPERCACHE(_class)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 // This is used for wrapper cached classes that inherit from cycle
 // collected non-wrapper cached classes.
-#define NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_INHERITED(_class, _base, ...) \
-  NS_IMPL_CYCLE_COLLECTION_CLASS(_class)                                    \
-  NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(_class, _base)            \
-    NS_IMPL_CYCLE_COLLECTION_UNLINK(__VA_ARGS__)                            \
-    NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER                       \
-  NS_IMPL_CYCLE_COLLECTION_UNLINK_END                                       \
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(_class, _base)          \
-    NS_IMPL_CYCLE_COLLECTION_TRAVERSE(__VA_ARGS__)                          \
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END                                     \
-  NS_IMPL_CYCLE_COLLECTION_TRACE_WRAPPERCACHE(_class)
+#define NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_INHERITED(_class, _base, ...)   \
+  static_assert(!std::is_base_of<nsWrapperCache, _base>::value,               \
+                "Base class should not inherit nsWrapperCache");              \
+  NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_CLASS(_class)                         \
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(_class, _base)              \
+    NS_IMPL_CYCLE_COLLECTION_UNLINK(__VA_ARGS__)                              \
+    NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER                         \
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_END                                         \
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(_class, _base)            \
+    /* Assert somewhere, in this case in the traverse method, that the */     \
+    /* parent isn't a single zone holder*/                                    \
+    MOZ_ASSERT(!_base::NS_CYCLE_COLLECTION_INNERNAME.IsSingleZoneJSHolder()); \
+    NS_IMPL_CYCLE_COLLECTION_TRAVERSE(__VA_ARGS__)                            \
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
+// if NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_WITH_JS_MEMBERS is used to implement
+// a wrappercache class, one needs to use
+// NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS and its variants in the class
+// declaration.
 #define NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_WITH_JS_MEMBERS(              \
     class_, native_members_, js_members_)                                   \
+  static_assert(std::is_base_of<nsWrapperCache, class_>::value,             \
+                "Class should inherit nsWrapperCache");                     \
   NS_IMPL_CYCLE_COLLECTION_CLASS(class_)                                    \
   NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(class_)                             \
     using ::ImplCycleCollectionUnlink;                                      \

@@ -102,7 +102,7 @@ class StyleSheet final : public nsICSSLoaderObserver, public nsWrapperCache {
                                                   ErrorResult&);
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(StyleSheet)
+  NS_DECL_CYCLE_COLLECTION_WRAPPERCACHE_CLASS(StyleSheet)
 
   already_AddRefed<StyleSheet> CreateEmptyChildSheet(
       already_AddRefed<dom::MediaList> aMediaList) const;

@@ -43,7 +43,7 @@ class DOMPointReadOnly : public nsWrapperCache {
       const GlobalObject& aGlobal, double aX, double aY, double aZ, double aW);
 
   NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(DOMPointReadOnly)
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(DOMPointReadOnly)
+  NS_DECL_CYCLE_COLLECTION_NATIVE_WRAPPERCACHE_CLASS(DOMPointReadOnly)
 
   double X() const { return mX; }
   double Y() const { return mY; }

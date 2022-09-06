@@ -22,7 +22,7 @@ namespace mozilla::dom {
 class ImageCaptureError final : public nsISupports, public nsWrapperCache {
  public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(ImageCaptureError)
+  NS_DECL_CYCLE_COLLECTION_WRAPPERCACHE_CLASS(ImageCaptureError)
 
   ImageCaptureError(nsISupports* aParent, uint16_t aCode,
                     const nsAString& aMessage);

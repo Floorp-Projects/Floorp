@@ -72,7 +72,7 @@ class Selection final : public nsSupportsWeakReference,
                      nsFrameSelection* aFrameSelection);
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(Selection)
+  NS_DECL_CYCLE_COLLECTION_WRAPPERCACHE_CLASS(Selection)
 
   /**
    * Match this up with EndbatchChanges. will stop ui updates while multiple

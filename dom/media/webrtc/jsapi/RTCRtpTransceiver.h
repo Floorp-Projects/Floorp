@@ -147,7 +147,7 @@ class RTCRtpTransceiver : public nsISupports,
 
   // nsISupports
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(RTCRtpTransceiver)
+  NS_DECL_CYCLE_COLLECTION_WRAPPERCACHE_CLASS(RTCRtpTransceiver)
 
   static void NegotiatedDetailsToAudioCodecConfigs(
       const JsepTrackNegotiatedDetails& aDetails,

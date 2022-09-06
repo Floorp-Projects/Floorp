@@ -29,7 +29,7 @@ class Lock final : public PromiseNativeHandler, public nsWrapperCache {
 
  public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(Lock)
+  NS_DECL_CYCLE_COLLECTION_WRAPPERCACHE_CLASS(Lock)
 
   Lock(nsIGlobalObject* aGlobal,
        const WeakPtr<locks::LockRequestChild>& aLockRequestChild,

@@ -40,7 +40,7 @@ class DOMRectReadOnly : public nsISupports, public nsWrapperCache {
 
  public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(DOMRectReadOnly)
+  NS_DECL_CYCLE_COLLECTION_WRAPPERCACHE_CLASS(DOMRectReadOnly)
 
   explicit DOMRectReadOnly(nsISupports* aParent, double aX = 0, double aY = 0,
                            double aWidth = 0, double aHeight = 0)
@@ -150,7 +150,7 @@ class DOMRectList final : public nsISupports, public nsWrapperCache {
   explicit DOMRectList(nsISupports* aParent) : mParent(aParent) {}
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(DOMRectList)
+  NS_DECL_CYCLE_COLLECTION_WRAPPERCACHE_CLASS(DOMRectList)
 
   virtual JSObject* WrapObject(JSContext* cx,
                                JS::Handle<JSObject*> aGivenProto) override;

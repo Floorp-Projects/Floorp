@@ -27,7 +27,7 @@ enum class XRTargetRayMode : uint8_t;
 class XRInputSource final : public nsWrapperCache {
  public:
   NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(XRInputSource)
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(XRInputSource)
+  NS_DECL_CYCLE_COLLECTION_NATIVE_WRAPPERCACHE_CLASS(XRInputSource)
 
   explicit XRInputSource(nsISupports* aParent);
 

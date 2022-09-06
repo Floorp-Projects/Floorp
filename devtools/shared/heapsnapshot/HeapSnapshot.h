@@ -119,7 +119,7 @@ class HeapSnapshot final : public nsISupports, public nsWrapperCache {
       nsAString& outSnapshotId);
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(HeapSnapshot)
+  NS_DECL_CYCLE_COLLECTION_WRAPPERCACHE_CLASS(HeapSnapshot)
   MOZ_DECLARE_REFCOUNTED_TYPENAME(HeapSnapshot)
 
   nsISupports* GetParentObject() const { return mParent; }

@@ -67,7 +67,7 @@ class WebExtensionPolicy final : public nsISupports,
                                  public SupportsWeakPtr {
  public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(WebExtensionPolicy)
+  NS_DECL_CYCLE_COLLECTION_WRAPPERCACHE_CLASS(WebExtensionPolicy)
 
   using ScriptArray = nsTArray<RefPtr<WebExtensionContentScript>>;
 

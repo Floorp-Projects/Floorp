@@ -1252,7 +1252,9 @@ ContentUnbinder* ContentUnbinder::sContentUnbinder = nullptr;
 
 void FragmentOrElement::ClearContentUnbinder() { ContentUnbinder::UnbindAll(); }
 
-NS_IMPL_CYCLE_COLLECTION_CLASS(FragmentOrElement)
+// Note, _INHERITED macro isn't used here since nsINode implementations are
+// rather special.
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_CLASS(FragmentOrElement)
 
 // We purposefully don't UNLINK_BEGIN_INHERITED here.
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(FragmentOrElement)
@@ -1309,8 +1311,6 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(FragmentOrElement)
   }
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
-
-NS_IMPL_CYCLE_COLLECTION_TRACE_WRAPPERCACHE(FragmentOrElement)
 
 void FragmentOrElement::MarkNodeChildren(nsINode* aNode) {
   JSObject* o = GetJSObjectChild(aNode);

@@ -32,7 +32,7 @@ class GlobalObject;
 class Sanitizer final : public nsISupports, public nsWrapperCache {
  public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(Sanitizer);
+  NS_DECL_CYCLE_COLLECTION_WRAPPERCACHE_CLASS(Sanitizer);
 
   explicit Sanitizer(nsIGlobalObject* aGlobal, const SanitizerConfig& aOptions)
       : mGlobal(aGlobal), mTreeSanitizer(nsIParserUtils::SanitizerAllowStyle) {

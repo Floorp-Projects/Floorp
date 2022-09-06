@@ -28,7 +28,7 @@ class DOMParser final : public nsISupports, public nsWrapperCache {
 
  public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(DOMParser)
+  NS_DECL_CYCLE_COLLECTION_WRAPPERCACHE_CLASS(DOMParser)
 
   // WebIDL API
   static already_AddRefed<DOMParser> Constructor(const GlobalObject& aOwner,
