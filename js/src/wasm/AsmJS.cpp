@@ -625,7 +625,7 @@ static inline ParseNode* FunctionFormalParametersList(FunctionNode* fn,
 }
 
 static inline ParseNode* FunctionStatementList(FunctionNode* funNode) {
-  LexicalScopeNode* last = &funNode->body()->last()->as<LexicalScopeNode>();
+  LexicalScopeNode* last = funNode->body()->body();
   MOZ_ASSERT(last->isEmptyScope());
   ParseNode* body = last->scopeBody();
   MOZ_ASSERT(body->isKind(ParseNodeKind::StatementList));

@@ -2833,9 +2833,8 @@ bool ASTSerializer::classField(ClassField* classField, MutableHandleValue dst) {
   // Dig through the lambda and get to the actual expression
   ParseNode* value = classField->initializer()
                          ->body()
-                         ->head()
-                         ->as<LexicalScopeNode>()
-                         .scopeBody()
+                         ->body()
+                         ->scopeBody()
                          ->as<ListNode>()
                          .head()
                          ->as<UnaryNode>()
@@ -3860,7 +3859,7 @@ bool ASTSerializer::functionArgsAndBody(ParamsBodyNode* pn, NodeVector& args,
   }
 
   // Skip the enclosing lexical scope.
-  ParseNode* bodyNode = pn->last()->as<LexicalScopeNode>().scopeBody();
+  ParseNode* bodyNode = pn->body()->scopeBody();
 
   // Serialize the body.
   switch (bodyNode->getKind()) {

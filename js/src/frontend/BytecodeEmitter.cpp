@@ -2513,7 +2513,7 @@ bool BytecodeEmitter::emitFunctionScript(FunctionNode* funNode) {
     return false;
   }
 
-  if (!emitTree(paramsBody->last())) {
+  if (!emitTree(paramsBody->body())) {
     //              [stack]
     return false;
   }
