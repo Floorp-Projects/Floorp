@@ -3991,6 +3991,9 @@ void js::DumpImmutableScriptFlags(js::JSONPrinter& json,
         case ImmutableScriptFlagsEnum::HasMappedArgsObj:
           json.value("HasMappedArgsObj");
           break;
+        case ImmutableScriptFlagsEnum::IsInlinableLargeFunction:
+          json.value("IsInlinableLargeFunction");
+          break;
         case ImmutableScriptFlagsEnum::FunctionHasNewTargetBinding:
           json.value("FunctionHasNewTargetBinding");
           break;
@@ -4074,6 +4077,9 @@ void js::DumpFunctionFlagsItems(js::JSONPrinter& json,
           break;
         case FunctionFlags::Flags::RESOLVED_LENGTH:
           json.value("RESOLVED_LENGTH");
+          break;
+        case FunctionFlags::Flags::GHOST_FUNCTION:
+          json.value("GHOST_FUNCTION");
           break;
         default:
           json.value("Unknown(%x)", i);
