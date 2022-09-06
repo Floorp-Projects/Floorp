@@ -73,6 +73,8 @@ void Val::writeToRootedLocation(void* loc, bool mustWrite64) const {
   }
 }
 
+void Val::readFromHeapLocation(void* loc) { memcpy(&cell_, loc, type_.size()); }
+
 void Val::writeToHeapLocation(void* loc) const {
   if (type_.isRefRepr()) {
     // TODO/AnyRef-boxing: With boxed immediates and strings, the write

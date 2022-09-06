@@ -470,6 +470,7 @@ enum class GcOp {
   ArrayGetU = 0x15,
   ArraySet = 0x16,
   ArrayLen = 0x17,
+  ArrayCopy = 0x18,
 
   // Ref operations
   RefTest = 0x44,

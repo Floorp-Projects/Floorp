@@ -675,6 +675,11 @@ class PackedType : public T {
     }
   }
 
+  PackedType<FieldTypeTraits> fieldType() const {
+    MOZ_ASSERT(isValid());
+    return PackedType<FieldTypeTraits>(tc_);
+  }
+
   bool operator==(const PackedType& that) const {
     MOZ_ASSERT(isValid() && that.isValid());
     return tc_ == that.tc_;
@@ -757,8 +762,8 @@ extern bool ToRefType(JSContext* cx, JSLinearString* typeLinearStr,
                       RefType* out);
 
 extern UniqueChars ToString(RefType type);
-
 extern UniqueChars ToString(ValType type);
+extern UniqueChars ToString(FieldType type);
 
 extern UniqueChars ToString(const Maybe<ValType>& type);
 

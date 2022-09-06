@@ -1633,6 +1633,7 @@ struct BaseCompiler final {
   [[nodiscard]] bool emitArrayGet(FieldExtension extension);
   [[nodiscard]] bool emitArraySet();
   [[nodiscard]] bool emitArrayLen();
+  [[nodiscard]] bool emitArrayCopy();
   [[nodiscard]] bool emitRefTest();
   [[nodiscard]] bool emitRefCast();
   [[nodiscard]] bool emitBrOnCast();

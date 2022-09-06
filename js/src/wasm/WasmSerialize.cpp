@@ -691,7 +691,7 @@ template <CoderMode mode>
 CoderResult CodeSymbolicLinkArray(
     Coder<mode>& coder,
     CoderArg<mode, wasm::LinkData::SymbolicLinkArray> item) {
-  WASM_VERIFY_SERIALIZATION_FOR_SIZE(wasm::LinkData::SymbolicLinkArray, 7056);
+  WASM_VERIFY_SERIALIZATION_FOR_SIZE(wasm::LinkData::SymbolicLinkArray, 7128);
   for (SymbolicAddress address :
        mozilla::MakeEnumeratedRange(SymbolicAddress::Limit)) {
     MOZ_TRY(CodePodVector(coder, &(*item)[address]));
@@ -702,7 +702,7 @@ CoderResult CodeSymbolicLinkArray(
 template <CoderMode mode>
 CoderResult CodeLinkData(Coder<mode>& coder,
                          CoderArg<mode, wasm::LinkData> item) {
-  WASM_VERIFY_SERIALIZATION_FOR_SIZE(wasm::LinkData, 7104);
+  WASM_VERIFY_SERIALIZATION_FOR_SIZE(wasm::LinkData, 7176);
   if constexpr (mode == MODE_ENCODE) {
     MOZ_ASSERT(item->tier == Tier::Serialized);
   }
