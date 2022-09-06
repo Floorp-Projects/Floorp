@@ -30,7 +30,7 @@ var g = newGlobal();
 oomTest(function() { new revocable(); });
 `);
 try {
-    var stencil = lfGlobal.finishOffThreadCompileToStencil();
+    var stencil = lfGlobal.finishOffThreadStencil();
     lfGlobal.evalStencil(stencil);
 } catch(e) {
     // This can happen if we OOM while bailing out in Ion.

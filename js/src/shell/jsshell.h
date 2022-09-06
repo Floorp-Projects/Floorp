@@ -176,8 +176,6 @@ extern UniqueChars processWideModuleLoadPath;
 bool CreateAlias(JSContext* cx, const char* dstName,
                  JS::HandleObject namespaceObj, const char* srcName);
 
-enum class OffThreadJobKind { CompileScript, CompileModule, Decode };
-
 class NonshrinkingGCObjectVector
     : public GCVector<HeapPtr<JSObject*>, 0, SystemAllocPolicy> {
  public:

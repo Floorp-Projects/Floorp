@@ -13,5 +13,5 @@ lfOffThreadGlobal.offThreadCompileToStencil(`
   };
   recurse(0);
 `);
-var stencil = lfOffThreadGlobal.finishOffThreadCompileToStencil();
+var stencil = lfOffThreadGlobal.finishOffThreadStencil();
 lfOffThreadGlobal.evalStencil(stencil);

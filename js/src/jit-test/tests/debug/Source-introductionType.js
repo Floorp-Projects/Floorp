@@ -69,7 +69,7 @@ dbg.onDebuggerStatement = function (frame) {
 };
 log = '';
 g.offThreadCompileToStencil('debugger;');
-var stencil = g.finishOffThreadCompileToStencil();
+var stencil = g.finishOffThreadStencil();
 g.evalStencil(stencil);
 assertEq(log, 'd');
 

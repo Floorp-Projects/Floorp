@@ -11,6 +11,6 @@ Intl.NumberFormat(locales)
 oomAfterAllocations(100);
 })
 `);
-  var stencil = finishOffThreadCompileToStencil();
+  var stencil = finishOffThreadStencil();
   evalStencil(stencil);
 }

@@ -13,7 +13,7 @@ offThreadCompileToStencil(`
     offThreadFun();
     offThreadFun();
 `);
-var stencil = finishOffThreadCompileToStencil();
+var stencil = finishOffThreadStencil();
 evalStencil(stencil);
 assertEq(hitCount, 4);
 

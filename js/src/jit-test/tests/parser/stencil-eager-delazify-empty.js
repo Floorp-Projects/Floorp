@@ -18,5 +18,5 @@ function justVariables(n) {
 // Create an extra task to test the case where there is nothing to delazify.
 let job = offThreadCompileToStencil(justVariables(10000), options);
 
-const stencil = finishOffThreadCompileToStencil(job);
+const stencil = finishOffThreadStencil(job);
 evalStencil(stencil, options);

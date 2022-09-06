@@ -7,5 +7,5 @@ schedulezone(this);
 startgc(0, "shrinking");
 var g = newGlobal();
 g.offThreadCompileToStencil('debugger;', {});
-var stencil = g.finishOffThreadCompileToStencil();
+var stencil = g.finishOffThreadStencil();
 g.evalStencil(stencil);

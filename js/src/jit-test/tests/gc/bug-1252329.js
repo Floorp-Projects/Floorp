@@ -23,7 +23,7 @@ function loadFile(lfVarx) {
                 var lfGlobal = newGlobal();
                 for (lfLocal in this) {}
                 lfGlobal.offThreadCompileToStencil(lfVarx);
-                var stencil = lfGlobal.finishOffThreadCompileToStencil();
+                var stencil = lfGlobal.finishOffThreadStencil();
                 lfGlobal.evalStencil(stencil);
         }
     } else if (!isNaN(lfVarx)) {

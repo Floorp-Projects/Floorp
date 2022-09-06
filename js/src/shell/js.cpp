@@ -384,7 +384,7 @@ class js::shell::OffThreadJob {
  public:
   using Source = mozilla::Variant<JS::UniqueTwoByteChars, JS::TranscodeBuffer>;
 
-  OffThreadJob(ShellContext* sc, OffThreadJobKind kind, Source&& source);
+  OffThreadJob(ShellContext* sc, Source&& source);
   ~OffThreadJob();
 
   void cancel();
@@ -396,7 +396,6 @@ class js::shell::OffThreadJob {
 
  public:
   const int32_t id;
-  const OffThreadJobKind kind;
 
  private:
   js::Monitor& monitor;
@@ -405,12 +404,10 @@ class js::shell::OffThreadJob {
   Source source;
 };
 
-static OffThreadJob* NewOffThreadJob(JSContext* cx, OffThreadJobKind kind,
-                                     CompileOptions& options,
+static OffThreadJob* NewOffThreadJob(JSContext* cx, CompileOptions& options,
                                      OffThreadJob::Source&& source) {
   ShellContext* sc = GetShellContext(cx);
-  UniquePtr<OffThreadJob> job(
-      cx->new_<OffThreadJob>(sc, kind, std::move(source)));
+  UniquePtr<OffThreadJob> job(cx->new_<OffThreadJob>(sc, std::move(source)));
   if (!job) {
     return nullptr;
   }
@@ -424,8 +421,7 @@ static OffThreadJob* NewOffThreadJob(JSContext* cx, OffThreadJobKind kind,
   return job.release();
 }
 
-static OffThreadJob* GetSingleOffThreadJob(JSContext* cx,
-                                           OffThreadJobKind kind) {
+static OffThreadJob* GetSingleOffThreadJob(JSContext* cx) {
   ShellContext* sc = GetShellContext(cx);
   const auto& jobs = sc->offThreadJobs;
   if (jobs.empty()) {
@@ -439,17 +435,10 @@ static OffThreadJob* GetSingleOffThreadJob(JSContext* cx,
     return nullptr;
   }
 
-  OffThreadJob* job = jobs[0];
-  if (job->kind != kind) {
-    JS_ReportErrorASCII(cx, "Off-thread job is the wrong kind");
-    return nullptr;
-  }
-
-  return job;
+  return jobs[0];
 }
 
-static OffThreadJob* LookupOffThreadJobByID(JSContext* cx,
-                                            OffThreadJobKind kind, int32_t id) {
+static OffThreadJob* LookupOffThreadJobByID(JSContext* cx, int32_t id) {
   if (id <= 0) {
     JS_ReportErrorASCII(cx, "Bad off-thread job ID");
     return nullptr;
@@ -475,21 +464,15 @@ static OffThreadJob* LookupOffThreadJobByID(JSContext* cx,
     return nullptr;
   }
 
-  if (job->kind != kind) {
-    JS_ReportErrorASCII(cx, "Off-thread job is the wrong kind");
-    return nullptr;
-  }
-
   return job;
 }
 
 static OffThreadJob* LookupOffThreadJobForArgs(JSContext* cx,
-                                               OffThreadJobKind kind,
                                                const CallArgs& args,
                                                size_t arg) {
   // If the optional ID argument isn't present, get the single pending job.
   if (args.length() <= arg) {
-    return GetSingleOffThreadJob(cx, kind);
+    return GetSingleOffThreadJob(cx);
   }
 
   // Lookup the job using the specified ID.
@@ -499,7 +482,7 @@ static OffThreadJob* LookupOffThreadJobForArgs(JSContext* cx,
     return nullptr;
   }
 
-  return LookupOffThreadJobByID(cx, kind, id);
+  return LookupOffThreadJobByID(cx, id);
 }
 
 static void DeleteOffThreadJob(JSContext* cx, OffThreadJob* job) {
@@ -542,10 +525,8 @@ static void CancelOffThreadJobsForRuntime(JSContext* cx) {
 
 mozilla::Atomic<int32_t> gOffThreadJobSerial(1);
 
-OffThreadJob::OffThreadJob(ShellContext* sc, OffThreadJobKind kind,
-                           Source&& source)
+OffThreadJob::OffThreadJob(ShellContext* sc, Source&& source)
     : id(gOffThreadJobSerial++),
-      kind(kind),
       monitor(sc->offThreadMonitor),
       state(RUNNING),
       token(nullptr),
@@ -5794,8 +5775,7 @@ static bool OffThreadCompileToStencil(JSContext* cx, unsigned argc, Value* vp) {
   }
 
   OffThreadJob* job =
-      NewOffThreadJob(cx, OffThreadJobKind::CompileScript, options,
-                      OffThreadJob::Source(std::move(ownedChars)));
+      NewOffThreadJob(cx, options, OffThreadJob::Source(std::move(ownedChars)));
   if (!job) {
     return false;
   }
@@ -5814,12 +5794,10 @@ static bool OffThreadCompileToStencil(JSContext* cx, unsigned argc, Value* vp) {
   return true;
 }
 
-static bool FinishOffThreadCompileToStencil(JSContext* cx, unsigned argc,
-                                            Value* vp) {
+static bool FinishOffThreadStencil(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
 
-  OffThreadJob* job =
-      LookupOffThreadJobForArgs(cx, OffThreadJobKind::CompileScript, args, 0);
+  OffThreadJob* job = LookupOffThreadJobForArgs(cx, args, 0);
   if (!job) {
     return false;
   }
@@ -5889,8 +5867,7 @@ static bool OffThreadCompileModuleToStencil(JSContext* cx, unsigned argc,
   }
 
   OffThreadJob* job =
-      NewOffThreadJob(cx, OffThreadJobKind::CompileModule, options,
-                      OffThreadJob::Source(std::move(ownedChars)));
+      NewOffThreadJob(cx, options, OffThreadJob::Source(std::move(ownedChars)));
   if (!job) {
     return false;
   }
@@ -5906,36 +5883,6 @@ static bool OffThreadCompileModuleToStencil(JSContext* cx, unsigned argc,
   }
 
   args.rval().setInt32(job->id);
-  return true;
-}
-
-static bool FinishOffThreadCompileModuleToStencil(JSContext* cx, unsigned argc,
-                                                  Value* vp) {
-  CallArgs args = CallArgsFromVp(argc, vp);
-
-  OffThreadJob* job =
-      LookupOffThreadJobForArgs(cx, OffThreadJobKind::CompileModule, args, 0);
-  if (!job) {
-    return false;
-  }
-
-  JS::OffThreadToken* token = job->waitUntilDone(cx);
-  MOZ_ASSERT(token);
-
-  RefPtr<JS::Stencil> stencil =
-      JS::FinishOffThreadStencil(cx, token);
-  DeleteOffThreadJob(cx, job);
-  if (!stencil) {
-    return false;
-  }
-
-  RootedObject stencilObj(cx,
-                          js::StencilObject::create(cx, std::move(stencil)));
-  if (!stencilObj) {
-    return false;
-  }
-
-  args.rval().setObject(*stencilObj);
   return true;
 }
 
@@ -6003,8 +5950,7 @@ static bool OffThreadDecodeStencil(JSContext* cx, unsigned argc, Value* vp) {
   }
 
   OffThreadJob* job =
-      NewOffThreadJob(cx, OffThreadJobKind::Decode, options,
-                      OffThreadJob::Source(std::move(loadBuffer)));
+      NewOffThreadJob(cx, options, OffThreadJob::Source(std::move(loadBuffer)));
   if (!job) {
     return false;
   }
@@ -6017,35 +5963,6 @@ static bool OffThreadDecodeStencil(JSContext* cx, unsigned argc, Value* vp) {
   }
 
   args.rval().setInt32(job->id);
-  return true;
-}
-
-static bool FinishOffThreadDecodeStencil(JSContext* cx, unsigned argc,
-                                         Value* vp) {
-  CallArgs args = CallArgsFromVp(argc, vp);
-
-  OffThreadJob* job =
-      LookupOffThreadJobForArgs(cx, OffThreadJobKind::Decode, args, 0);
-  if (!job) {
-    return false;
-  }
-
-  JS::OffThreadToken* token = job->waitUntilDone(cx);
-  MOZ_ASSERT(token);
-
-  RefPtr<JS::Stencil> stencil = JS::FinishOffThreadStencil(cx, token);
-  DeleteOffThreadJob(cx, job);
-  if (!stencil) {
-    return false;
-  }
-
-  RootedObject stencilObj(cx,
-                          js::StencilObject::create(cx, std::move(stencil)));
-  if (!stencilObj) {
-    return false;
-  }
-
-  args.rval().setObject(*stencilObj);
   return true;
 }
 
@@ -9008,34 +8925,20 @@ static const JSFunctionSpecWithHelp shell_functions[] = {
 "offThreadCompileModuleToStencil(code)",
 "  Compile |code| on a helper thread, returning a job ID. To wait for the\n"
 "  compilation to finish and and get the module stencil object call\n"
-"  |finishOffThreadCompileModuleToStencil| passing the job ID."),
-
-    JS_FN_HELP("finishOffThreadCompileModuleToStencil", FinishOffThreadCompileModuleToStencil, 0, 0,
-"finishOffThreadCompileModuleToStencil([jobID])",
-"  Wait for an off-thread compilation job to complete. The job ID can be\n"
-"  ommitted if there is only one job pending. If an error occurred,\n"
-"  throw the appropriate exception; otherwise, return the module stencil\n"
-"  object."),
+"  |finishOffThreadStencil| passing the job ID."),
 
     JS_FN_HELP("offThreadDecodeStencil", OffThreadDecodeStencil, 1, 0,
 "offThreadDecodeStencil(cacheEntry[, options])",
 "  Decode |code| on a helper thread, returning a job ID. To wait for the\n"
-"  decoding to finish and run the code, call |finishOffThreadDecodeStencil| passing\n"
+"  decoding to finish and run the code, call |finishOffThreadStencil| passing\n"
 "  the job ID. If present, |options| may have properties saying how the code\n"
 "  should be compiled (see also offThreadCompileToStencil)."),
-
-    JS_FN_HELP("finishOffThreadDecodeStencil", FinishOffThreadDecodeStencil, 0, 0,
-"finishOffThreadDecodeStencil([jobID])",
-"  Wait for an off-thread decode job to complete. The job ID can be\n"
-"  ommitted if there is only one job pending. If an error occurred,\n"
-"  throw the appropriate exception; otherwise, return the decoded stencil\n"
-"  object."),
 
     JS_FN_HELP("offThreadCompileToStencil", OffThreadCompileToStencil, 1, 0,
 "offThreadCompileToStencil(code[, options])",
 "  Compile |code| on a helper thread, returning a job ID. To wait for the\n"
 "  compilation to finish and get the stencil object, call\n"
-"  |finishOffThreadCompileToStencil| passing the job ID.  If present, \n"
+"  |finishOffThreadStencil| passing the job ID.  If present, \n"
 "  |options| may have properties saying how the code should be compiled:\n"
 "      noScriptRval: use the no-script-rval compiler option (default: false)\n"
 "      fileName: filename for error messages and debug info\n"
@@ -9049,10 +8952,10 @@ static const JSFunctionSpecWithHelp shell_functions[] = {
 "         property of 'element' that holds this code. This is what\n"
 "         Debugger.Source.prototype.elementAttributeName returns."),
 
-    JS_FN_HELP("finishOffThreadCompileToStencil", FinishOffThreadCompileToStencil, 0, 0,
-"finishOffThreadCompileToStencil([jobID])",
-"  Wait for an off-thread compilation job to complete. The job ID can be\n"
-"  ommitted if there is only one job pending. If an error occurred,\n"
+    JS_FN_HELP("finishOffThreadStencil", FinishOffThreadStencil, 0, 0,
+"finishOffThreadStencil([jobID])",
+"  Wait for an off-thread compilation or decode job to complete. The job ID\n"
+"  can be ommitted if there is only one job pending. If an error occurred,\n"
 "  throw the appropriate exception; otherwise, return the stencil object,"
 "  that can be passed to |evalStencil|."),
 

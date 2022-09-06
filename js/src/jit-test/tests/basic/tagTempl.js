@@ -25,7 +25,7 @@ csoLoop();
 // Tests off thread compilation
 if (helperThreadCount() !== 0) {
     offThreadCompileToStencil("(x=>x)`abc`");
-    var stencil = finishOffThreadCompileToStencil();
+    var stencil = finishOffThreadStencil();
     a = evalStencil(stencil);
     check(a, ["abc"]);
     check(a.raw, ["abc"]);

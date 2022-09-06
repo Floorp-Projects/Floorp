@@ -7,5 +7,5 @@ for (lfLocal in this) {
 }
 const script = 'oomTest(() => getBacktrace({args: true, locals: "123795", thisprops: true}));';
 lfGlobal.offThreadCompileToStencil(script);
-var stencil = lfGlobal.finishOffThreadCompileToStencil();
+var stencil = lfGlobal.finishOffThreadStencil();
 lfGlobal.evalStencil(stencil);

@@ -22,7 +22,7 @@ lfGlobal.offThreadCompileToStencil(`
     var frameThis = frame.this;
   }
 `);
-var stencil = lfGlobal.finishOffThreadCompileToStencil();
+var stencil = lfGlobal.finishOffThreadStencil();
 lfGlobal.evalStencil(stencil);
 assertThrowsInstanceOf(test, ReferenceError);
 function test() {

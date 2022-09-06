@@ -12,6 +12,6 @@ oomTest(() => {
         }
         return g("try{}catch(e){}", n);
         `);
-    var stencil = finishOffThreadCompileToStencil();
+    var stencil = finishOffThreadStencil();
     evalStencil(stencil);
 });

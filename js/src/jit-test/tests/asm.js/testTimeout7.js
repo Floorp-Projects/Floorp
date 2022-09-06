@@ -10,7 +10,7 @@ var job = offThreadCompileToStencil(`
         return f;
     }
 `);
-var stencil = finishOffThreadCompileToStencil(job);
+var stencil = finishOffThreadStencil(job);
 evalStencil(stencil);
 timeout(1);
 asmModule()();

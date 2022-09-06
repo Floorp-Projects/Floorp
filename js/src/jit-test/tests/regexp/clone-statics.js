@@ -17,5 +17,5 @@ offThreadCompileToStencil(`
   foo(1, 0);
 `);
 
-var stencil = finishOffThreadCompileToStencil();
+var stencil = finishOffThreadStencil();
 evalStencil(stencil);

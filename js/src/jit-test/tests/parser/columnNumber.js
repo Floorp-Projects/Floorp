@@ -15,20 +15,20 @@ if (helperThreadCount() > 0) {
   print("offThreadCompileToStencil 1");
   offThreadCompileToStencil("saveStack().column", { columnNumber: -10 });
   assertThrowsInstanceOf(() => {
-    var stencil = finishOffThreadCompileToStencil();
+    var stencil = finishOffThreadStencil();
     evalStencil(stencil);
   }, RangeError);
 
   print("offThreadCompileToStencil 2");
   offThreadCompileToStencil("saveStack().column", { columnNumber: Math.pow(2,30) });
   assertThrowsInstanceOf(() => {
-    var stencil = finishOffThreadCompileToStencil();
+    var stencil = finishOffThreadStencil();
     evalStencil();
   }, RangeError);
 
   print("offThreadCompileToStencil 3");
   offThreadCompileToStencil("saveStack().column", { columnNumber: 10000 });
-  stencil = finishOffThreadCompileToStencil();
+  stencil = finishOffThreadStencil();
   assertEq(evalStencil(stencil), 10001);
 }
 

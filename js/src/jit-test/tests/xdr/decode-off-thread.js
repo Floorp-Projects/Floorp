@@ -21,7 +21,7 @@ function evalWithCacheLoadOffThread(code, ctx) {
 
   offThreadDecodeStencil(code, ctx);
   ctx.global.eval(`
-stencil = finishOffThreadDecodeStencil();
+stencil = finishOffThreadStencil();
 evalStencil(stencil);
 `);
 }

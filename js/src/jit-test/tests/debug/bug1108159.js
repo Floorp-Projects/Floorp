@@ -9,5 +9,5 @@ evaluate(s);
 var g = newGlobal({newCompartment: true});
 (new Debugger).addDebuggee(g);
 g.offThreadCompileToStencil('debugger;',{});
-var stencil = finishOffThreadCompileToStencil();
+var stencil = finishOffThreadStencil();
 g.evalStencil(stencil);

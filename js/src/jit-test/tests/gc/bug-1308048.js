@@ -6,5 +6,5 @@ for (var i = 0; i < 10; i++)
 offThreadCompileToStencil("", ({elementAttributeName: m}));
 var n = newGlobal();
 gczeal(2,1);
-var stencil = n.finishOffThreadCompileToStencil();
+var stencil = n.finishOffThreadStencil();
 n.evalStencil(stencil);
