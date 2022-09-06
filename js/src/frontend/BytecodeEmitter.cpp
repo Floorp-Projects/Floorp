@@ -6021,9 +6021,6 @@ bool BytecodeEmitter::emitReturn(UnaryNode* returnNode) {
     return false;
   }
 
-  if (!updateSourceCoordNotes(returnNode->pn_pos.begin)) {
-    return false;
-  }
   if (!markStepBreakpoint()) {
     return false;
   }
