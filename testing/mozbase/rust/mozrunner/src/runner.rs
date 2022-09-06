@@ -330,13 +330,85 @@ pub mod platform {
         path
     }
 
+    fn running_as_snap() -> bool {
+        std::env::var("SNAP_INSTANCE_NAME")
+            .or_else(|_| {
+                // Compatibility for snapd <= 2.35
+                std::env::var("SNAP_NAME")
+            })
+            .map(|name| !name.is_empty())
+            .unwrap_or(false)
+    }
+
     /// Searches the system path for `firefox`.
     pub fn firefox_default_path() -> Option<PathBuf> {
+        if running_as_snap() {
+            return Some(PathBuf::from("/snap/firefox/current/firefox.launcher"));
+        }
         find_binary("firefox")
     }
 
     pub fn arg_prefix_char(c: char) -> bool {
         c == '-'
+    }
+
+    #[cfg(test)]
+    mod tests {
+        use crate::firefox_default_path;
+        use std::env;
+        use std::ops::Drop;
+        use std::path::PathBuf;
+
+        static SNAP_KEY: &str = "SNAP_INSTANCE_NAME";
+        static SNAP_LEGACY_KEY: &str = "SNAP_NAME";
+
+        struct SnapEnvironment {
+            initial_environment: (Option<String>, Option<String>),
+        }
+
+        impl SnapEnvironment {
+            fn new() -> SnapEnvironment {
+                SnapEnvironment {
+                    initial_environment: (env::var(SNAP_KEY).ok(), env::var(SNAP_LEGACY_KEY).ok()),
+                }
+            }
+
+            fn set(&self, value: Option<String>, legacy_value: Option<String>) {
+                fn set_env(key: &str, value: Option<String>) {
+                    match value {
+                        Some(value) => env::set_var(key, value),
+                        None => env::remove_var(key),
+                    }
+                }
+                set_env(SNAP_KEY, value);
+                set_env(SNAP_LEGACY_KEY, legacy_value);
+            }
+        }
+
+        impl Drop for SnapEnvironment {
+            fn drop(&mut self) {
+                self.set(
+                    self.initial_environment.0.clone(),
+                    self.initial_environment.1.clone(),
+                )
+            }
+        }
+
+        #[test]
+        fn test_default_path() {
+            let snap_path = Some(PathBuf::from("/snap/firefox/current/firefox.launcher"));
+
+            let snap_env = SnapEnvironment::new();
+
+            snap_env.set(None, None);
+            assert_ne!(firefox_default_path(), snap_path);
+
+            snap_env.set(Some("value".into()), None);
+            assert_eq!(firefox_default_path(), snap_path);
+
+            snap_env.set(None, Some("value".into()));
+            assert_eq!(firefox_default_path(), snap_path);
+        }
     }
 }
 
