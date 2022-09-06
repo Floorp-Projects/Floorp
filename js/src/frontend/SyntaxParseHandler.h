@@ -695,6 +695,8 @@ class SyntaxParseHandler {
                                              : NodeGeneric;
   }
 
+  AssignmentNodeType newInitExpr(Node lhs, Node rhs) { return NodeGeneric; }
+
   bool isUnparenthesizedAssignment(Node node) {
     return node == NodeUnparenthesizedAssignment;
   }
