@@ -4810,6 +4810,19 @@ nsCSSFrameConstructor::FindMathMLData(const Element& aElement,
     return &sInlineMathData;
   }
 
+  if (!StaticPrefs::
+          mathml_legacy_maction_and_semantics_implementations_disabled()) {
+    static constexpr FrameConstructionDataByTag sMactionAndSemanticsData[] = {
+        SIMPLE_MATHML_CREATE(maction_, NS_NewMathMLmactionFrame),
+        SIMPLE_MATHML_CREATE(semantics_, NS_NewMathMLsemanticsFrame)};
+    const FrameConstructionData* data =
+        FindDataByTag(aElement, aStyle, sMactionAndSemanticsData,
+                      ArrayLength(sMactionAndSemanticsData));
+    if (data) {
+      return data;
+    }
+  }
+
   static constexpr FrameConstructionDataByTag sMathMLData[] = {
       SIMPLE_MATHML_CREATE(annotation_, NS_NewMathMLTokenFrame),
       SIMPLE_MATHML_CREATE(annotation_xml_, NS_NewMathMLmrowFrame),
@@ -4835,11 +4848,11 @@ nsCSSFrameConstructor::FindMathMLData(const Element& aElement,
       SIMPLE_MATHML_CREATE(mstyle_, NS_NewMathMLmrowFrame),
       SIMPLE_MATHML_CREATE(msqrt_, NS_NewMathMLmsqrtFrame),
       SIMPLE_MATHML_CREATE(mroot_, NS_NewMathMLmrootFrame),
-      SIMPLE_MATHML_CREATE(maction_, NS_NewMathMLmactionFrame),
+      SIMPLE_MATHML_CREATE(maction_, NS_NewMathMLmrowFrame),
       SIMPLE_MATHML_CREATE(mrow_, NS_NewMathMLmrowFrame),
       SIMPLE_MATHML_CREATE(merror_, NS_NewMathMLmrowFrame),
       SIMPLE_MATHML_CREATE(menclose_, NS_NewMathMLmencloseFrame),
-      SIMPLE_MATHML_CREATE(semantics_, NS_NewMathMLsemanticsFrame)};
+      SIMPLE_MATHML_CREATE(semantics_, NS_NewMathMLmrowFrame)};
 
   return FindDataByTag(aElement, aStyle, sMathMLData, ArrayLength(sMathMLData));
 }
