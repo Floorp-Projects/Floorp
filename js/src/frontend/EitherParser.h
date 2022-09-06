@@ -73,13 +73,6 @@ struct TokenStreamComputeLineAndColumn {
 
 // Generic matchers.
 
-struct ParseHandlerMatcher {
-  template <class Parser>
-  frontend::FullParseHandler& operator()(Parser* parser) {
-    return parser->handler_;
-  }
-};
-
 struct ParserSharedBaseMatcher {
   template <class Parser>
   frontend::ParserSharedBase& operator()(Parser* parser) {
@@ -116,10 +109,6 @@ class EitherParser : public BCEParserHandle {
  public:
   template <class Parser>
   explicit EitherParser(Parser* parser) : parser(parser) {}
-
-  FullParseHandler& astGenerator() final {
-    return parser.match(detail::ParseHandlerMatcher());
-  }
 
   ErrorReporter& errorReporter() final {
     return parser.match(detail::ErrorReporterMatcher());

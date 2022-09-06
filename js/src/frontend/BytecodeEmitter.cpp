@@ -7736,7 +7736,7 @@ bool BytecodeEmitter::emitCalleeAndThis(ParseNode* callee, ParseNode* call,
       break;
     case ParseNodeKind::SuperBase:
       MOZ_ASSERT(call->isKind(ParseNodeKind::SuperCallExpr));
-      MOZ_ASSERT(parser->astGenerator().isSuperBase(callee));
+      MOZ_ASSERT(callee->isKind(ParseNodeKind::SuperBase));
       if (!cone.emitSuperCallee()) {
         //          [stack] CALLEE IsConstructing
         return false;
