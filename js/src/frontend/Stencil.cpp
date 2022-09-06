@@ -5275,32 +5275,20 @@ already_AddRefed<JS::Stencil> JS::CompileModuleScriptToStencil(
 }
 
 JS_PUBLIC_API JSScript* JS::InstantiateGlobalStencil(
-    JSContext* cx, const JS::InstantiateOptions& options,
-    JS::Stencil* stencil) {
+    JSContext* cx, const JS::InstantiateOptions& options, JS::Stencil* stencil,
+    JS::InstantiationStorage* storage) {
+  MOZ_ASSERT_IF(storage, storage->isValid());
+
   CompileOptions compileOptions(cx);
   options.copyTo(compileOptions);
   Rooted<CompilationInput> input(cx, CompilationInput(compileOptions));
   Rooted<CompilationGCOutput> gcOutput(cx);
-  if (!InstantiateStencils(cx, input.get(), *stencil, gcOutput.get())) {
+  CompilationGCOutput& output = storage ? *storage->gcOutput_ : gcOutput.get();
+
+  if (!InstantiateStencils(cx, input.get(), *stencil, output)) {
     return nullptr;
   }
-
-  return gcOutput.get().script;
-}
-
-JS_PUBLIC_API JSScript* JS::InstantiateGlobalStencil(
-    JSContext* cx, const JS::InstantiateOptions& options, JS::Stencil* stencil,
-    JS::InstantiationStorage* storage) {
-  MOZ_ASSERT(storage->isValid());
-
-  CompileOptions compileOptions(cx);
-  options.copyTo(compileOptions);
-  Rooted<CompilationInput> input(cx, CompilationInput(compileOptions));
-  if (!InstantiateStencils(cx, input.get(), *stencil, *storage->gcOutput_)) {
-    return nullptr;
-  }
-
-  return storage->gcOutput_->script;
+  return output.script;
 }
 
 JS_PUBLIC_API bool JS::StencilIsBorrowed(Stencil* stencil) {
@@ -5308,36 +5296,21 @@ JS_PUBLIC_API bool JS::StencilIsBorrowed(Stencil* stencil) {
 }
 
 JS_PUBLIC_API JSObject* JS::InstantiateModuleStencil(
-    JSContext* cx, const JS::InstantiateOptions& options,
-    JS::Stencil* stencil) {
-  CompileOptions compileOptions(cx);
-  options.copyTo(compileOptions);
-  compileOptions.setModule();
-
-  Rooted<CompilationInput> input(cx, CompilationInput(compileOptions));
-  Rooted<CompilationGCOutput> gcOutput(cx);
-  if (!InstantiateStencils(cx, input.get(), *stencil, gcOutput.get())) {
-    return nullptr;
-  }
-
-  return gcOutput.get().module;
-}
-
-JS_PUBLIC_API JSObject* JS::InstantiateModuleStencil(
     JSContext* cx, const JS::InstantiateOptions& options, JS::Stencil* stencil,
     JS::InstantiationStorage* storage) {
-  MOZ_ASSERT(storage->isValid());
+  MOZ_ASSERT_IF(storage, storage->isValid());
 
   CompileOptions compileOptions(cx);
   options.copyTo(compileOptions);
   compileOptions.setModule();
-
   Rooted<CompilationInput> input(cx, CompilationInput(compileOptions));
-  if (!InstantiateStencils(cx, input.get(), *stencil, *storage->gcOutput_)) {
+  Rooted<CompilationGCOutput> gcOutput(cx);
+  CompilationGCOutput& output = storage ? *storage->gcOutput_ : gcOutput.get();
+
+  if (!InstantiateStencils(cx, input.get(), *stencil, output)) {
     return nullptr;
   }
-
-  return storage->gcOutput_->module;
+  return output.module;
 }
 
 JS::TranscodeResult JS::EncodeStencil(JSContext* cx, JS::Stencil* stencil,
