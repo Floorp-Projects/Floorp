@@ -658,10 +658,7 @@
     },
 
     _appendStatusPanel() {
-      this.selectedBrowser.parentNode.insertAdjacentElement(
-        "afterend",
-        StatusPanel.panel
-      );
+      this.selectedBrowser.insertAdjacentElement("afterend", StatusPanel.panel);
     },
 
     _updateTabBarForPinnedTabs() {

@@ -166,11 +166,20 @@ class ResponsiveUI {
 
     // Create resizer handlers
     const resizeHandle = doc.createElement("div");
-    resizeHandle.classList.add("viewport-resize-handle");
+    resizeHandle.classList.add(
+      "rdm-viewport-resize-handle",
+      "viewport-resize-handle"
+    );
     const resizeHandleX = doc.createElement("div");
-    resizeHandleX.classList.add("viewport-horizontal-resize-handle");
+    resizeHandleX.classList.add(
+      "rdm-viewport-resize-handle",
+      "viewport-horizontal-resize-handle"
+    );
     const resizeHandleY = doc.createElement("div");
-    resizeHandleY.classList.add("viewport-vertical-resize-handle");
+    resizeHandleY.classList.add(
+      "rdm-viewport-resize-handle",
+      "viewport-vertical-resize-handle"
+    );
 
     this.browserContainerEl = gBrowser.getBrowserContainer(
       gBrowser.getBrowserForTab(this.tab)

@@ -42,6 +42,8 @@ body {
  */
 .browserContainer {
   -moz-box-flex: 10000;
+  /* To contain the status panel */
+  position: relative;
 }
 
 .browserStack {
@@ -991,10 +993,13 @@ browser[tabmodalPromptShowing], browser[tabDialogShowing] {
 
 #statuspanel {
   display: block;
-  position: fixed;
   margin-top: -3em;
   max-width: calc(100% - 5px);
   pointer-events: none;
+
+  position: absolute;
+  bottom: 0;
+  inset-inline-start: 0;
 }
 
 #statuspanel[mirror] {
@@ -1007,13 +1012,7 @@ browser[tabmodalPromptShowing], browser[tabDialogShowing] {
 }
 
 #statuspanel[type=status] {
-  min-width: 23em;
-}
-
-@media all and (max-width: 800px) {
-  #statuspanel[type=status] {
-    min-width: 33%;
-  }
+  min-width: min(23em, 33%);
 }
 
 #statuspanel[type=overLink] {

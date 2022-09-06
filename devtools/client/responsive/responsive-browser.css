@@ -41,20 +41,12 @@
   grid-template-rows: 65px [margin-top-offset] var(--browser-viewport-height);
 }
 
-.browserContainer.responsive-mode > .browserStack > * {
-  box-sizing: content-box; /* This is important to ensure that the pane has the
-                              precise number of pixels defined by --rdm-width
-                              and --rdm-height. */
-  height: var(--rdm-height);
-  width: var(--rdm-width);
-}
-
-.browserContainer.responsive-mode > .browserStack > *:not(.rdm-toolbar) {
+.browserContainer.responsive-mode > .browserStack > :is(browser, .rdm-viewport-resize-handle) {
   grid-column: center-align;
   grid-row: margin-top-offset;
 }
 
-.browserContainer.responsive-mode.left-aligned > .browserStack > *:not(.rdm-toolbar) {
+.browserContainer.responsive-mode.left-aligned > .browserStack > :is(browser, .rdm-viewport-resize-handle) {
   grid-column: left-align;
 }
 
@@ -71,6 +63,12 @@ html[dir="rtl"] .browserContainer.responsive-mode.left-aligned > .browserStack {
   box-shadow: var(--rdm-browser-box-shadow);
   transform-origin: 50% 0;
   transform: scale(var(--rdm-zoom), var(--rdm-zoom));
+
+  box-sizing: content-box; /* This is important to ensure that the pane has the
+                              precise number of pixels defined by --rdm-width
+                              and --rdm-height. */
+  height: var(--rdm-height);
+  width: var(--rdm-width);
 }
 
 .browserContainer.responsive-mode.left-aligned > .browserStack > browser {
