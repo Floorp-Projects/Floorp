@@ -3456,11 +3456,6 @@ function checkUpdateLogContents(
     updateLogContents = updateLogContents.replace(re, "");
   }
 
-  // Remove leading timestamp
-  updateLogContents = updateLogContents.replace(
-    /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}[+-]\d{4}: /gm,
-    ""
-  );
   // Replace error codes since they are different on each platform.
   updateLogContents = updateLogContents.replace(/, err:.*\n/g, "\n");
   // Replace to make the log parsing happy.
