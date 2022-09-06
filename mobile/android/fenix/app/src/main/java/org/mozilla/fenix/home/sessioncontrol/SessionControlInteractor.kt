@@ -412,6 +412,10 @@ class SessionControlInteractor(
         recentBookmarksController.handleBookmarkRemoved(bookmark)
     }
 
+    override fun onRecentBookmarkLongClicked() {
+        recentBookmarksController.handleBookmarkLongClicked()
+    }
+
     override fun onHistoryShowAllClicked() {
         recentVisitsController.handleHistoryShowAllClicked()
     }

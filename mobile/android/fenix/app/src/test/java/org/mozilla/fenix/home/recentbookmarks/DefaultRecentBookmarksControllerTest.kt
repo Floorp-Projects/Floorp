@@ -132,4 +132,18 @@ class DefaultRecentBookmarksControllerTest {
         }
         assertNotNull(RecentBookmarks.showAllBookmarks.testGetValue())
     }
+
+    @Test
+    fun `GIVEN search dialog is displayed WHEN recent bookmark is long clicked THEN dismiss search dialog`() {
+        every { navController.currentDestination } returns mockk {
+            every { id } returns R.id.searchDialogFragment
+        }
+
+        controller.handleBookmarkLongClicked()
+
+        verify {
+            controller.dismissSearchDialogIfDisplayed()
+            navController.navigateUp()
+        }
+    }
 }

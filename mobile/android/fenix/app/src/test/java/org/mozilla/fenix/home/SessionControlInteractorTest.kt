@@ -198,6 +198,12 @@ class SessionControlInteractorTest {
     }
 
     @Test
+    fun `WHEN a recent bookmark is long clicked THEN the long click is handled`() {
+        interactor.onRecentBookmarkLongClicked()
+        verify { recentBookmarksController.handleBookmarkLongClicked() }
+    }
+
+    @Test
     fun `WHEN tapping on the customize home button THEN openCustomizeHomePage`() {
         interactor.openCustomizeHomePage()
         verify { controller.handleCustomizeHomeTapped() }

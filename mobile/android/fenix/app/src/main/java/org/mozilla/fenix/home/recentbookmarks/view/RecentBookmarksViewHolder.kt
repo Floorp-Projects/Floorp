@@ -45,6 +45,7 @@ class RecentBookmarksViewHolder(
                     onClick = { bookmark -> interactor.onRecentBookmarkRemoved(bookmark) },
                 ),
             ),
+            onRecentBookmarkLongClick = interactor::onRecentBookmarkLongClicked,
         )
     }
 }

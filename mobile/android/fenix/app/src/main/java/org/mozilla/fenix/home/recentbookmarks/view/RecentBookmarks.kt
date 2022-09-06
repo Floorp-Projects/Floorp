@@ -65,12 +65,14 @@ private val imageModifier = Modifier
  * @param bookmarks List of [RecentBookmark]s to display.
  * @param menuItems List of [RecentBookmarksMenuItem] shown when long clicking a [RecentBookmarkItem]
  * @param onRecentBookmarkClick Invoked when the user clicks on a recent bookmark.
+ * @param onRecentBookmarkLongClick Invoked when the user long clicks on a recent bookmark.
  */
 @Composable
 fun RecentBookmarks(
     bookmarks: List<RecentBookmark>,
     menuItems: List<RecentBookmarksMenuItem>,
     onRecentBookmarkClick: (RecentBookmark) -> Unit = {},
+    onRecentBookmarkLongClick: () -> Unit = {},
 ) {
     LazyRow(
         contentPadding = PaddingValues(horizontal = 16.dp),
@@ -81,6 +83,7 @@ fun RecentBookmarks(
                 bookmark = bookmark,
                 menuItems = menuItems,
                 onRecentBookmarkClick = onRecentBookmarkClick,
+                onRecentBookmarkLongClick = onRecentBookmarkLongClick,
             )
         }
     }
@@ -91,6 +94,7 @@ fun RecentBookmarks(
  *
  * @param bookmark The [RecentBookmark] to display.
  * @param onRecentBookmarkClick Invoked when the user clicks on the recent bookmark item.
+ * @param onRecentBookmarkLongClick Invoked when the user long clicks on the recent bookmark item.
  */
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -98,6 +102,7 @@ private fun RecentBookmarkItem(
     bookmark: RecentBookmark,
     menuItems: List<RecentBookmarksMenuItem>,
     onRecentBookmarkClick: (RecentBookmark) -> Unit = {},
+    onRecentBookmarkLongClick: () -> Unit = {},
 ) {
     var isMenuExpanded by remember { mutableStateOf(false) }
 
@@ -107,7 +112,10 @@ private fun RecentBookmarkItem(
             .combinedClickable(
                 enabled = true,
                 onClick = { onRecentBookmarkClick(bookmark) },
-                onLongClick = { isMenuExpanded = true },
+                onLongClick = {
+                    onRecentBookmarkLongClick()
+                    isMenuExpanded = true
+                },
             ),
         shape = cardShape,
         backgroundColor = FirefoxTheme.colors.layer2,
