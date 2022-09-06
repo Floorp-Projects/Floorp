@@ -1195,8 +1195,12 @@ class ListNode : public ParseNode {
   static constexpr uint32_t emittedTopLevelFunctionDeclarationsBit = Bit(2);
 
  public:
-  ListNode(ParseNodeKind kind, const TokenPos& pos) : ParseNode(kind, pos) {
-    makeEmpty();
+  ListNode(ParseNodeKind kind, const TokenPos& pos)
+      : ParseNode(kind, pos),
+        head_(nullptr),
+        tail_(&head_),
+        count_(0),
+        xflags(0) {
     MOZ_ASSERT(is<ListNode>());
   }
 
@@ -1340,13 +1344,6 @@ class ListNode : public ParseNode {
     tail_ = &node->pn_next;
   }
 
-  void makeEmpty() {
-    head_ = nullptr;
-    tail_ = &head_;
-    count_ = 0;
-    xflags = 0;
-  }
-
   void append(ParseNode* item) {
     MOZ_ASSERT(item->pn_pos.begin >= pn_pos.begin);
     pn_pos.end = item->pn_pos.end;
@@ -1362,11 +1359,6 @@ class ListNode : public ParseNode {
       tail_ = &item->pn_next;
     }
     count_++;
-  }
-
-  void prependAndUpdatePos(ParseNode* item) {
-    prepend(item);
-    pn_pos.begin = item->pn_pos.begin;
   }
 
   // Methods used by FoldConstants.cpp.
