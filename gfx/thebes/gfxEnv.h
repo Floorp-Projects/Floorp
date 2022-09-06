@@ -90,6 +90,9 @@ class gfxEnv final {
   // (conditioned on DebugDumpPainting()) is a good replacement.
   DECL_GFX_ENV(MOZ_DUMP_COMPOSITOR_TEXTURES)
 
+  // Dump GLBlitHelper shader source text.
+  DECL_GFX_ENV(MOZ_DUMP_GLBLITHELPER)
+
   // Paint dumping, only when MOZ_DUMP_PAINTING is defined.
   DECL_GFX_ENV(MOZ_DUMP_PAINT)
   DECL_GFX_ENV(MOZ_DUMP_PAINT_ITEMS)

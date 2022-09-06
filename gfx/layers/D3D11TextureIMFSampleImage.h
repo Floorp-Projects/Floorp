@@ -59,7 +59,7 @@ class D3D11TextureIMFSampleImage final : public Image {
   D3D11TextureIMFSampleImage(IMFSample* aVideoSample, ID3D11Texture2D* aTexture,
                              uint32_t aArrayIndex, const gfx::IntSize& aSize,
                              const gfx::IntRect& aRect,
-                             gfx::YUVColorSpace aColorSpace,
+                             gfx::ColorSpace2 aColorSpace,
                              gfx::ColorRange aColorRange);
   virtual ~D3D11TextureIMFSampleImage() = default;
 
@@ -74,7 +74,6 @@ class D3D11TextureIMFSampleImage final : public Image {
   ID3D11Texture2D* GetTexture() const;
   RefPtr<IMFSampleWrapper> GetIMFSampleWrapper();
 
-  gfx::YUVColorSpace GetYUVColorSpace() const { return mYUVColorSpace; }
   gfx::ColorRange GetColorRange() const { return mColorRange; }
 
  private:
@@ -90,11 +89,15 @@ class D3D11TextureIMFSampleImage final : public Image {
   // IMFTransform.
   RefPtr<IMFSampleWrapper> mVideoSample;
   RefPtr<ID3D11Texture2D> mTexture;
+
+ public:
   const uint32_t mArrayIndex;
   const gfx::IntSize mSize;
   const gfx::IntRect mPictureRect;
-  const gfx::YUVColorSpace mYUVColorSpace;
+  const gfx::ColorSpace2 mColorSpace;
   const gfx::ColorRange mColorRange;
+
+ private:
   RefPtr<TextureClient> mTextureClient;
 };
 
