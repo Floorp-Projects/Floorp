@@ -1037,7 +1037,7 @@ nsresult DnsAndConnectSocket::TransportSetup::SetupConn(
     RefPtr<HttpConnectionUDP> connUDP = do_QueryObject(conn);
     rv = connUDP->Init(ent->mConnInfo, mDNSRecord, status, callbacks, cap);
     if (NS_SUCCEEDED(rv)) {
-      if (StaticPrefs::network_http_http3_enable() &&
+      if (nsHttpHandler::IsHttp3Enabled() &&
           StaticPrefs::network_http_http2_coalesce_hostnames()) {
         if (ent->MaybeProcessCoalescingKeys(mDNSRecord, true)) {
           gHttpHandler->ConnMgr()->ProcessSpdyPendingQ(ent);

@@ -162,7 +162,7 @@ void AltSvcMapping::ProcessHeader(
     SpdyInformation* spdyInfo = gHttpHandler->SpdyInfo();
     if (!(npnToken.Equals(spdyInfo->VersionString) &&
           StaticPrefs::network_http_http2_enabled()) &&
-        !(isHttp3 && StaticPrefs::network_http_http3_enable() &&
+        !(isHttp3 && nsHttpHandler::IsHttp3Enabled() &&
           !gHttpHandler->IsHttp3Excluded(hostname.IsEmpty() ? originHost
                                                             : hostname))) {
       LOG(("Alt Svc unknown protocol %s, ignoring", npnToken.get()));
@@ -934,7 +934,7 @@ already_AddRefed<AltSvcMapping> AltSvcCache::LookupMapping(
   }
 
   if (rv->IsHttp3() &&
-      (!StaticPrefs::network_http_http3_enable() ||
+      (!nsHttpHandler::IsHttp3Enabled() ||
        !gHttpHandler->IsHttp3VersionSupported(rv->NPNToken()) ||
        gHttpHandler->IsHttp3Excluded(rv->AlternateHost()))) {
     // If Http3 is disabled or the version not supported anymore, remove the

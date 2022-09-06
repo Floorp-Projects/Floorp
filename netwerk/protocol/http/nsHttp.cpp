@@ -1003,7 +1003,7 @@ SupportedAlpnRank H3VersionToRank(const nsACString& aVersion) {
 }
 
 SupportedAlpnRank IsAlpnSupported(const nsACString& aAlpn) {
-  if (StaticPrefs::network_http_http3_enable() &&
+  if (nsHttpHandler::IsHttp3Enabled() &&
       gHttpHandler->IsHttp3VersionSupported(aAlpn)) {
     return H3VersionToRank(aAlpn);
   }
