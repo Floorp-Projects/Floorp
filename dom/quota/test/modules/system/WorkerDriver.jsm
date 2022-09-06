@@ -3,11 +3,10 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-export async function runTestInWorker(script, base, listener) {
+async function runTestInWorker(script, base, listener) {
   return new Promise(function(resolve) {
     const globalHeadUrl = new URL(
-      "/tests/dom/quota/test/modules/worker/head.js",
-      base
+      "resource://testing-common/dom/quota/test/modules/worker/head.js"
     );
 
     const worker = new Worker(globalHeadUrl.href);
@@ -51,3 +50,5 @@ export async function runTestInWorker(script, base, listener) {
     worker.postMessage([localHeadUrl.href, scriptUrl.href]);
   });
 }
+
+const EXPORTED_SYMBOLS = ["runTestInWorker"];
