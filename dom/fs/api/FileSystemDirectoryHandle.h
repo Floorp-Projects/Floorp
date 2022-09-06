@@ -69,11 +69,6 @@ class FileSystemDirectoryHandle final : public FileSystemHandle {
   already_AddRefed<Promise> Resolve(FileSystemHandle& aPossibleDescendant,
                                     ErrorResult& aError);
 
-  // [Serializable]
-  static already_AddRefed<FileSystemDirectoryHandle> ReadStructuredClone(
-      JSContext* aCx, nsIGlobalObject* aGlobal,
-      JSStructuredCloneReader* aReader);
-
  private:
   ~FileSystemDirectoryHandle() = default;
 };

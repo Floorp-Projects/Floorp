@@ -46,11 +46,6 @@ class FileSystemFileHandle final : public FileSystemHandle {
 
   already_AddRefed<Promise> CreateSyncAccessHandle(ErrorResult& aError);
 
-  // [Serializable]
-  static already_AddRefed<FileSystemFileHandle> ReadStructuredClone(
-      JSContext* aCx, nsIGlobalObject* aGlobal,
-      JSStructuredCloneReader* aReader);
-
  private:
   ~FileSystemFileHandle() = default;
 };

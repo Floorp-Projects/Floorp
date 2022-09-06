@@ -15,7 +15,8 @@ dictionary FileSystemRemoveOptions {
   boolean recursive = false;
 };
 
-[Exposed=(Window,Worker), SecureContext, Serializable, Pref="dom.fs.enabled"]
+// TODO: Add Serializable
+[Exposed=(Window,Worker), SecureContext, Pref="dom.fs.enabled"]
 interface FileSystemDirectoryHandle : FileSystemHandle {
 
   async iterable<USVString, FileSystemHandle>;

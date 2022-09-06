@@ -8,7 +8,8 @@ enum FileSystemHandleKind {
   "directory",
 };
 
-[Exposed=(Window,Worker), SecureContext, Serializable, Pref="dom.fs.enabled"]
+// TODO: Add Serializable
+[Exposed=(Window,Worker), SecureContext, Pref="dom.fs.enabled"]
 interface FileSystemHandle {
   readonly attribute FileSystemHandleKind kind;
   readonly attribute USVString name;

@@ -3,11 +3,11 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-export async function runTestInWorker(script, base, listener) {
+export async function runTestInWorker(script) {
   return new Promise(function(resolve) {
     const globalHeadUrl = new URL(
       "/tests/dom/quota/test/modules/worker/head.js",
-      base
+      window.location.href
     );
 
     const worker = new Worker(globalHeadUrl.href);
@@ -17,15 +17,15 @@ export async function runTestInWorker(script, base, listener) {
 
       switch (data.op) {
         case "ok":
-          listener.onOk(data.value, data.message);
+          ok(data.value, data.message);
           break;
 
         case "is":
-          listener.onIs(data.a, data.b, data.message);
+          is(data.a, data.b, data.message);
           break;
 
         case "info":
-          listener.onInfo(data.message);
+          info(data.message);
           break;
 
         case "finish":
@@ -33,18 +33,18 @@ export async function runTestInWorker(script, base, listener) {
           break;
 
         case "failure":
-          listener.onOk(false, "Worker had a failure: " + data.message);
+          ok(false, "Worker had a failure: " + data.message);
           resolve();
           break;
       }
     };
 
     worker.onerror = function(event) {
-      listener.onOk(false, "Worker had an error: " + event.data);
+      ok(false, "Worker had an error: " + event.data);
       resolve();
     };
 
-    const scriptUrl = new URL(script, base);
+    const scriptUrl = new URL(script, window.location.href);
 
     const localHeadUrl = new URL("head.js", scriptUrl);
 
