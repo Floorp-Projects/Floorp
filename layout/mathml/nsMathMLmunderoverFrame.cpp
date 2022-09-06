@@ -432,7 +432,7 @@ nsresult nsMathMLmunderoverFrame::Place(DrawTarget* aDrawTarget,
     if (aPlaceOrigin) {
       ReportChildCountError();
     }
-    return ReflowError(aDrawTarget, aDesiredSize);
+    return PlaceForError(aDrawTarget, aPlaceOrigin, aDesiredSize);
   }
   GetReflowAndBoundingMetricsFor(baseFrame, baseSize, bmBase);
   if (underFrame) {

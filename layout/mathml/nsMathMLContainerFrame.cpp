@@ -10,6 +10,7 @@
 #include "gfxUtils.h"
 #include "mozilla/Likely.h"
 #include "mozilla/PresShell.h"
+#include "mozilla/StaticPrefs_mathml.h"
 #include "mozilla/dom/MutationEventBinding.h"
 #include "mozilla/gfx/2D.h"
 #include "nsLayoutUtils.h"
@@ -987,7 +988,7 @@ void nsMathMLContainerFrame::GetIntrinsicISizeMetrics(
   nsresult rv =
       MeasureForWidth(aRenderingContext->GetDrawTarget(), aDesiredSize);
   if (NS_FAILED(rv)) {
-    ReflowError(aRenderingContext->GetDrawTarget(), aDesiredSize);
+    PlaceForError(aRenderingContext->GetDrawTarget(), false, aDesiredSize);
   }
 
   ClearSavedChildMetrics();
@@ -1237,6 +1238,15 @@ nsresult nsMathMLContainerFrame::Place(DrawTarget* aDrawTarget,
   }
 
   return NS_OK;
+}
+
+nsresult nsMathMLContainerFrame::PlaceForError(DrawTarget* aDrawTarget,
+                                               bool aPlaceOrigin,
+                                               ReflowOutput& aDesiredSize) {
+  return StaticPrefs::mathml_error_message_layout_for_invalid_markup_disabled()
+             ? nsMathMLContainerFrame::Place(aDrawTarget, aPlaceOrigin,
+                                             aDesiredSize)
+             : ReflowError(aDrawTarget, aDesiredSize);
 }
 
 void nsMathMLContainerFrame::PositionRowChildFrames(nscoord aOffsetX,

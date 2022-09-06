@@ -160,7 +160,7 @@ nsresult nsMathMLmfracFrame::PlaceInternal(DrawTarget* aDrawTarget,
     if (aPlaceOrigin) {
       ReportChildCountError();
     }
-    return ReflowError(aDrawTarget, aDesiredSize);
+    return PlaceForError(aDrawTarget, aPlaceOrigin, aDesiredSize);
   }
   GetReflowAndBoundingMetricsFor(frameNum, sizeNum, bmNum);
   GetReflowAndBoundingMetricsFor(frameDen, sizeDen, bmDen);
