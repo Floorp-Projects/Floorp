@@ -17,6 +17,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.Button
 import androidx.compose.material.ButtonDefaults
+import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
@@ -35,6 +36,7 @@ import androidx.compose.ui.unit.dp
 import mozilla.components.ui.colors.PhotonColors
 import org.mozilla.focus.R
 import org.mozilla.focus.ui.theme.FocusTheme
+import org.mozilla.focus.ui.theme.focusColors
 import org.mozilla.focus.ui.theme.focusTypography
 
 @Composable
@@ -136,16 +138,17 @@ fun OnBoardingSecondScreenCompose(
 private fun CloseButton(onCloseButtonClick: () -> Unit) {
     IconButton(
         modifier = Modifier
-            .then(Modifier.size(30.dp, 30.dp))
+            .size(48.dp)
             .background(
                 colorResource(id = R.color.onboardingCloseButtonColor),
                 shape = CircleShape,
             ),
         onClick = onCloseButtonClick,
     ) {
-        Image(
-            painter = painterResource(R.drawable.ic_onboarding_close),
-            contentDescription = stringResource(id = R.string.onboarding_close_button_content_description),
+        Icon(
+            painter = painterResource(R.drawable.mozac_ic_close),
+            contentDescription = stringResource(R.string.onboarding_close_button_content_description),
+            tint = focusColors.closeIcon,
         )
     }
 }

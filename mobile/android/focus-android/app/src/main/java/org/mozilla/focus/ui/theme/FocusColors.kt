@@ -30,6 +30,7 @@ data class FocusColors(
     val onboardingNormalText: Color,
     val settingsTextColor: Color,
     val settingsTextSummaryColor: Color,
+    val closeIcon: Color,
 ) {
     val primary: Color get() = material.primary
     val primaryVariant: Color get() = material.primaryVariant

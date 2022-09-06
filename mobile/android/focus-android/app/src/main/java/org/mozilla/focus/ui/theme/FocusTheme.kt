@@ -80,7 +80,7 @@ private fun darkColorPalette(): FocusColors = FocusColors(
     onboardingNormalText = PhotonColors.LightGrey50,
     settingsTextColor = PhotonColors.White,
     settingsTextSummaryColor = PhotonColors.LightGrey50,
-
+    closeIcon = PhotonColors.LightGrey70,
 )
 
 private fun lightColorPalette(): FocusColors = FocusColors(
@@ -102,6 +102,7 @@ private fun lightColorPalette(): FocusColors = FocusColors(
     onboardingButtonBackground = PhotonColors.Ink20,
     onboardingSemiBoldText = PhotonColors.DarkGrey90,
     onboardingNormalText = PhotonColors.DarkGrey05,
+    closeIcon = PhotonColors.LightGrey90,
 )
 
 /**
