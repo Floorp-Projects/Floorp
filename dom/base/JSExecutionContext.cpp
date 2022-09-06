@@ -97,7 +97,7 @@ nsresult JSExecutionContext::JoinCompile(JS::OffThreadToken** aOffThreadToken) {
 
   JS::InstantiateOptions instantiateOptions(mCompileOptions);
   JS::Rooted<JS::InstantiationStorage> storage(mCx);
-  RefPtr<JS::Stencil> stencil = JS::FinishCompileToStencilOffThread(
+  RefPtr<JS::Stencil> stencil = JS::FinishOffThreadStencil(
       mCx, *aOffThreadToken, storage.address());
   *aOffThreadToken = nullptr;  // Mark the token as having been finished.
   if (!stencil) {
@@ -249,7 +249,7 @@ nsresult JSExecutionContext::JoinDecode(JS::OffThreadToken** aOffThreadToken) {
 
   MOZ_ASSERT(!mWantsReturnValue);
   JS::Rooted<JS::InstantiationStorage> storage(mCx);
-  RefPtr<JS::Stencil> stencil = JS::FinishDecodeStencilOffThread(
+  RefPtr<JS::Stencil> stencil = JS::FinishOffThreadStencil(
       mCx, *aOffThreadToken, storage.address());
   *aOffThreadToken = nullptr;  // Mark the token as having been finished.
   if (!stencil) {

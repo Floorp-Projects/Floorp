@@ -524,7 +524,7 @@ BEGIN_TEST(testScriptSourceCompression_offThread) {
     lock.wait();
   }
 
-  RefPtr<JS::Stencil> stencil = JS::FinishCompileToStencilOffThread(cx, token);
+  RefPtr<JS::Stencil> stencil = JS::FinishOffThreadStencil(cx, token);
   CHECK(stencil);
   JS::InstantiateOptions instantiateOptions(options);
   JS::Rooted<JSScript*> script(

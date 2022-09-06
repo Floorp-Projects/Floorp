@@ -1845,7 +1845,7 @@ NotifyOffThreadScriptCompletedRunnable::Run() {
       return NS_ERROR_UNEXPECTED;
     }
     JSContext* cx = jsapi.cx();
-    stencil = JS::FinishCompileToStencilOffThread(cx, mToken);
+    stencil = JS::FinishOffThreadStencil(cx, mToken);
   }
 
   if (!sReceivers) {

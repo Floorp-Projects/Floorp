@@ -2309,14 +2309,13 @@ bool GlobalHelperThreadState::canStartGCParallelTask(
 }
 
 ParseTask* GlobalHelperThreadState::removeFinishedParseTask(
-    JSContext* cx, ParseTaskKind kind, JS::OffThreadToken* token) {
+    JSContext* cx, JS::OffThreadToken* token) {
   // The token is really a ParseTask* which should be in the finished list.
   auto task = static_cast<ParseTask*>(token);
 
   // The token was passed in from the browser. Check that the pointer is likely
   // a valid parse task of the expected kind.
   MOZ_RELEASE_ASSERT(task->runtime == cx->runtime());
-  MOZ_RELEASE_ASSERT(task->kind == kind);
 
   // Remove the task from the finished list.
   AutoLockHelperThreadState lock;
@@ -2326,12 +2325,12 @@ ParseTask* GlobalHelperThreadState::removeFinishedParseTask(
 }
 
 UniquePtr<ParseTask> GlobalHelperThreadState::finishParseTaskCommon(
-    JSContext* cx, ParseTaskKind kind, JS::OffThreadToken* token) {
+    JSContext* cx, JS::OffThreadToken* token) {
   MOZ_ASSERT(!cx->isHelperThreadContext());
   MOZ_ASSERT(cx->realm());
 
-  Rooted<UniquePtr<ParseTask>> parseTask(
-      cx, removeFinishedParseTask(cx, kind, token));
+  Rooted<UniquePtr<ParseTask>> parseTask(cx,
+                                         removeFinishedParseTask(cx, token));
 
   // Report out of memory errors eagerly, or errors could be malformed.
   if (parseTask->ec_.hadOutOfMemory()) {
@@ -2354,11 +2353,10 @@ UniquePtr<ParseTask> GlobalHelperThreadState::finishParseTaskCommon(
 }
 
 already_AddRefed<frontend::CompilationStencil>
-GlobalHelperThreadState::finishCompileToStencilTask(
-    JSContext* cx, ParseTaskKind kind, JS::OffThreadToken* token,
-    JS::InstantiationStorage* storage) {
-  Rooted<UniquePtr<ParseTask>> parseTask(
-      cx, finishParseTaskCommon(cx, kind, token));
+GlobalHelperThreadState::finishStencilTask(JSContext* cx,
+                                           JS::OffThreadToken* token,
+                                           JS::InstantiationStorage* storage) {
+  Rooted<UniquePtr<ParseTask>> parseTask(cx, finishParseTaskCommon(cx, token));
   if (!parseTask) {
     return nullptr;
   }
@@ -2378,8 +2376,7 @@ bool GlobalHelperThreadState::finishMultiParseTask(
     JSContext* cx, ParseTaskKind kind, JS::OffThreadToken* token,
     mozilla::Vector<RefPtr<JS::Stencil>>* stencils) {
   MOZ_ASSERT(stencils);
-  Rooted<UniquePtr<ParseTask>> parseTask(
-      cx, finishParseTaskCommon(cx, kind, token));
+  Rooted<UniquePtr<ParseTask>> parseTask(cx, finishParseTaskCommon(cx, token));
   if (!parseTask) {
     return false;
   }
@@ -2408,42 +2405,6 @@ bool GlobalHelperThreadState::finishMultiParseTask(
   return true;
 }
 
-already_AddRefed<frontend::CompilationStencil>
-GlobalHelperThreadState::finishCompileToStencilTask(
-    JSContext* cx, JS::OffThreadToken* token,
-    JS::InstantiationStorage* storage) {
-  return finishCompileToStencilTask(cx, ParseTaskKind::ScriptStencil, token,
-                                    storage);
-}
-
-already_AddRefed<frontend::CompilationStencil>
-GlobalHelperThreadState::finishCompileModuleToStencilTask(
-    JSContext* cx, JS::OffThreadToken* token,
-    JS::InstantiationStorage* storage) {
-  return finishCompileToStencilTask(cx, ParseTaskKind::ModuleStencil, token,
-                                    storage);
-}
-
-already_AddRefed<frontend::CompilationStencil>
-GlobalHelperThreadState::finishDecodeStencilTask(
-    JSContext* cx, JS::OffThreadToken* token,
-    JS::InstantiationStorage* storage) {
-  Rooted<UniquePtr<ParseTask>> parseTask(
-      cx, finishParseTaskCommon(cx, ParseTaskKind::StencilDecode, token));
-  if (!parseTask) {
-    return nullptr;
-  }
-
-  MOZ_ASSERT(parseTask->stencil_.get());
-
-  if (storage) {
-    MOZ_ASSERT(parseTask->options.allocateInstantiationStorage);
-    parseTask->moveGCOutputInto(*storage);
-  }
-
-  return parseTask->stencil_.forget();
-}
-
 bool GlobalHelperThreadState::finishMultiStencilsDecodeTask(
     JSContext* cx, JS::OffThreadToken* token,
     mozilla::Vector<RefPtr<JS::Stencil>>* stencils) {
@@ -2451,7 +2412,7 @@ bool GlobalHelperThreadState::finishMultiStencilsDecodeTask(
                               stencils);
 }
 
-void GlobalHelperThreadState::cancelParseTask(JSRuntime* rt, ParseTaskKind kind,
+void GlobalHelperThreadState::cancelParseTask(JSRuntime* rt,
                                               JS::OffThreadToken* token) {
   AutoLockHelperThreadState lock;
   MOZ_ASSERT(token);
@@ -2462,7 +2423,6 @@ void GlobalHelperThreadState::cancelParseTask(JSRuntime* rt, ParseTaskKind kind,
       HelperThreadState().parseWorklist(lock);
   for (size_t i = 0; i < worklist.length(); i++) {
     if (task == worklist[i]) {
-      MOZ_ASSERT(task->kind == kind);
       MOZ_ASSERT(task->runtimeMatches(rt));
       task->deactivate(rt);
       HelperThreadState().remove(worklist, &i);
@@ -2475,7 +2435,6 @@ void GlobalHelperThreadState::cancelParseTask(JSRuntime* rt, ParseTaskKind kind,
     bool foundTask = false;
     for (auto* helper : HelperThreadState().helperTasks(lock)) {
       if (helper->is<ParseTask>() && helper->as<ParseTask>() == task) {
-        MOZ_ASSERT(helper->as<ParseTask>()->kind == kind);
         MOZ_ASSERT(helper->as<ParseTask>()->runtimeMatches(rt));
         foundTask = true;
         break;
@@ -2492,7 +2451,6 @@ void GlobalHelperThreadState::cancelParseTask(JSRuntime* rt, ParseTaskKind kind,
   auto& finished = HelperThreadState().parseFinishedList(lock);
   for (auto* t : finished) {
     if (task == t) {
-      MOZ_ASSERT(task->kind == kind);
       MOZ_ASSERT(task->runtimeMatches(rt));
       task->remove();
       HelperThreadState().destroyParseTask(rt, task);
