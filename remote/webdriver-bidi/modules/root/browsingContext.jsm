@@ -564,7 +564,7 @@ class BrowsingContextModule extends Module {
   }
 
   static get supportedEvents() {
-    return ["browsingContext.contextCreated"];
+    return ["browsingContext.contextCreated", "browsingContext.load"];
   }
 }
 

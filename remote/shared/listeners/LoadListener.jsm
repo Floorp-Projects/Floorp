@@ -32,7 +32,7 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
  * ```
  *
  * @emits message
- *    The LoadListener emits "DOMContentLoaded" events,
+ *    The LoadListener emits "DOMContentLoaded" and "load" events,
  *    with the following object as payload:
  *      - {Document} target
  *            The target document.
@@ -72,6 +72,11 @@ class LoadListener {
         signal: this.#abortController.signal,
       }
     );
+
+    this.#window.addEventListener("load", this.#onLoad, {
+      mozSystemGroup: true,
+      signal: this.#abortController.signal,
+    });
   }
 
   stopListening() {
@@ -85,5 +90,9 @@ class LoadListener {
 
   #onDOMContentLoaded = event => {
     this.emit("DOMContentLoaded", { target: event.target });
+  };
+
+  #onLoad = event => {
+    this.emit("load", { target: event.target });
   };
 }
