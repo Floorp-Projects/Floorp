@@ -316,7 +316,7 @@ XDRResult StencilXDR::codeSharedData(XDRState<mode>* xdr,
                "Decode below relies on the data placement");
     MOZ_TRY(xdr->codeBytes(data, size));
   } else {
-    sisd = SharedImmutableScriptData::create(cx);
+    sisd = SharedImmutableScriptData::create(xdr->ec());
     if (!sisd) {
       return xdr->fail(JS::TranscodeResult::Throw);
     }
