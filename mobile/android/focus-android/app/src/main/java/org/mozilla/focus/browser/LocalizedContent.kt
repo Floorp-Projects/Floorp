@@ -12,6 +12,7 @@ import org.mozilla.focus.locale.Locales
 import org.mozilla.focus.utils.HtmlLoader
 import org.mozilla.focus.utils.SupportUtils.manifestoURL
 import org.mozilla.geckoview.BuildConfig
+import java.util.Locale
 
 object LocalizedContent {
     // We can't use "about:" because webview silently swallows about: pages, hence we use
@@ -36,6 +37,7 @@ object LocalizedContent {
             val packageInfo = context.packageManager.getPackageInfo(context.packageName, 0)
             @Suppress("DEPRECATION")
             aboutVersion = String.format(
+                Locale.US,
                 "%s (Build #%s)",
                 packageInfo.versionName,
                 packageInfo.versionCode.toString() + engineIndicator,
