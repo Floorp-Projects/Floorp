@@ -327,6 +327,10 @@ class DocAccessibleParent : public RemoteAccessible,
   nsTHashMap<uint64_t, nsTHashMap<uint64_t, nsTArray<uint64_t>>>
       mReverseRelations;
 
+  // Computed from the viewport cache, the accs referenced by these ids
+  // are currently on screen (making any acc not in this list offscreen).
+  nsTHashSet<uint64_t> mOnScreenAccessibles;
+
   static DocAccessibleParent* GetFrom(dom::BrowsingContext* aBrowsingContext);
 
  private:
