@@ -10393,14 +10393,12 @@ bool BytecodeEmitter::emitTypeof(UnaryNode* typeofNode, JSOp op) {
 }
 
 bool BytecodeEmitter::emitFunctionFormalParameters(ParamsBodyNode* paramsBody) {
-  ParseNode* funBody = paramsBody->last();
   FunctionBox* funbox = sc->asFunctionBox();
 
   bool hasRest = funbox->hasRest();
 
   FunctionParamsEmitter fpe(this, funbox);
-  for (ParseNode* arg = paramsBody->head(); arg != funBody;
-       arg = arg->pn_next) {
+  for (ParseNode* arg : paramsBody->parameters()) {
     ParseNode* bindingElement = arg;
     ParseNode* initializer = nullptr;
     if (arg->isKind(ParseNodeKind::AssignExpr) ||
@@ -10409,7 +10407,8 @@ bool BytecodeEmitter::emitFunctionFormalParameters(ParamsBodyNode* paramsBody) {
       initializer = arg->as<BinaryNode>().right();
     }
     bool hasInitializer = !!initializer;
-    bool isRest = hasRest && arg->pn_next == funBody;
+    bool isRest =
+        hasRest && arg->pn_next == *std::end(paramsBody->parameters());
     bool isDestructuring = !bindingElement->isKind(ParseNodeKind::Name);
 
     // Left-hand sides are either simple names or destructuring patterns.

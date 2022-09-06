@@ -1505,6 +1505,11 @@ class ParamsBodyNode : public ListNode {
     return match;
   }
 
+  auto parameters() const {
+    MOZ_ASSERT(last()->is<LexicalScopeNode>());
+    return contentsTo(last());
+  }
+
   auto* body() const {
     MOZ_ASSERT(last()->is<LexicalScopeNode>());
     return &last()->as<LexicalScopeNode>();
