@@ -4859,7 +4859,7 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::declarationName(
 }
 
 template <class ParseHandler, typename Unit>
-typename ParseHandler::ListNodeType
+typename ParseHandler::DeclarationListNodeType
 GeneralParser<ParseHandler, Unit>::declarationList(
     YieldHandling yieldHandling, ParseNodeKind kind,
     ParseNodeKind* forHeadKind /* = nullptr */,
@@ -4882,7 +4882,7 @@ GeneralParser<ParseHandler, Unit>::declarationList(
       MOZ_CRASH("Unknown declaration kind");
   }
 
-  ListNodeType decl = handler_.newDeclarationList(kind, pos());
+  DeclarationListNodeType decl = handler_.newDeclarationList(kind, pos());
   if (!decl) {
     return null();
   }
@@ -4929,7 +4929,7 @@ GeneralParser<ParseHandler, Unit>::declarationList(
 }
 
 template <class ParseHandler, typename Unit>
-typename ParseHandler::ListNodeType
+typename ParseHandler::DeclarationListNodeType
 GeneralParser<ParseHandler, Unit>::lexicalDeclaration(
     YieldHandling yieldHandling, DeclarationKind kind) {
   MOZ_ASSERT(kind == DeclarationKind::Const || kind == DeclarationKind::Let);
@@ -4945,7 +4945,7 @@ GeneralParser<ParseHandler, Unit>::lexicalDeclaration(
    *
    * See 8.1.1.1.6 and the note in 13.2.1.
    */
-  ListNodeType decl = declarationList(
+  DeclarationListNodeType decl = declarationList(
       yieldHandling, kind == DeclarationKind::Const ? ParseNodeKind::ConstDecl
                                                     : ParseNodeKind::LetDecl);
   if (!decl || !matchOrInsertSemicolon()) {
@@ -5542,7 +5542,7 @@ inline bool GeneralParser<ParseHandler, Unit>::checkExportedNamesForDeclaration(
 
 template <typename Unit>
 bool Parser<FullParseHandler, Unit>::checkExportedNamesForDeclarationList(
-    ListNode* node) {
+    DeclarationListNodeType node) {
   for (ParseNode* binding : node->contents()) {
     if (binding->isKind(ParseNodeKind::AssignExpr)) {
       binding = binding->as<AssignmentNode>().left();
@@ -5561,7 +5561,7 @@ bool Parser<FullParseHandler, Unit>::checkExportedNamesForDeclarationList(
 template <typename Unit>
 inline bool
 Parser<SyntaxParseHandler, Unit>::checkExportedNamesForDeclarationList(
-    ListNodeType node) {
+    DeclarationListNodeType node) {
   MOZ_ALWAYS_FALSE(abortIfSyntaxParser());
   return false;
 }
@@ -5569,7 +5569,7 @@ Parser<SyntaxParseHandler, Unit>::checkExportedNamesForDeclarationList(
 template <class ParseHandler, typename Unit>
 inline bool
 GeneralParser<ParseHandler, Unit>::checkExportedNamesForDeclarationList(
-    ListNodeType node) {
+    DeclarationListNodeType node) {
   return asFinalParser()->checkExportedNamesForDeclarationList(node);
 }
 
@@ -5979,7 +5979,8 @@ GeneralParser<ParseHandler, Unit>::exportVariableStatement(uint32_t begin) {
 
   MOZ_ASSERT(anyChars.isCurrentTokenType(TokenKind::Var));
 
-  ListNodeType kid = declarationList(YieldIsName, ParseNodeKind::VarStmt);
+  DeclarationListNodeType kid =
+      declarationList(YieldIsName, ParseNodeKind::VarStmt);
   if (!kid) {
     return null();
   }
@@ -6082,7 +6083,7 @@ GeneralParser<ParseHandler, Unit>::exportLexicalDeclaration(
   MOZ_ASSERT_IF(kind == DeclarationKind::Let,
                 anyChars.isCurrentTokenType(TokenKind::Let));
 
-  ListNodeType kid = lexicalDeclaration(YieldIsName, kind);
+  DeclarationListNodeType kid = lexicalDeclaration(YieldIsName, kind);
   if (!kid) {
     return null();
   }
@@ -9013,10 +9014,11 @@ bool ParserBase::nextTokenContinuesLetDeclaration(TokenKind next) {
 }
 
 template <class ParseHandler, typename Unit>
-typename ParseHandler::ListNodeType
+typename ParseHandler::DeclarationListNodeType
 GeneralParser<ParseHandler, Unit>::variableStatement(
     YieldHandling yieldHandling) {
-  ListNodeType vars = declarationList(yieldHandling, ParseNodeKind::VarStmt);
+  DeclarationListNodeType vars =
+      declarationList(yieldHandling, ParseNodeKind::VarStmt);
   if (!vars) {
     return null();
   }
