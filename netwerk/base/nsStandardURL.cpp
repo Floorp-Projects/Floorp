@@ -624,16 +624,6 @@ nsresult nsStandardURL::NormalizeIDN(const nsCString& host, nsCString& result) {
     return NS_ERROR_UNEXPECTED;
   }
 
-  // If the input is ASCII, and not ACE encoded, then there's no processing
-  // needed. This is needed because we want to allow ascii labels longer than
-  // 64 characters for some schemes.
-  bool isACE = false;
-  if (IsAscii(host) && NS_SUCCEEDED(gIDN->IsACE(host, &isACE)) && !isACE) {
-    mCheckedIfHostA = true;
-    result = host;
-    return NS_OK;
-  }
-
   // Even if it's already ACE, we must still call ConvertUTF8toACE in order
   // for the input normalization to take place.
   rv = gIDN->ConvertUTF8toACE(host, result);
