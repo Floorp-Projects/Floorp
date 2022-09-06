@@ -157,7 +157,7 @@ class FunctionBox;
   F(ForIn, TernaryNode)                                          \
   F(ForOf, TernaryNode)                                          \
   F(ForHead, TernaryNode)                                        \
-  F(ParamsBody, ListNode)                                        \
+  F(ParamsBody, ParamsBodyNode)                                  \
   F(Spread, UnaryNode)                                           \
   F(MutateProto, UnaryNode)                                      \
   F(ClassDecl, ClassNode)                                        \
@@ -630,6 +630,7 @@ inline bool IsTypeofKind(ParseNodeKind kind) {
   MACRO(NewTargetNode, NewTargetNodeType, asNewTargetNode)                   \
   MACRO(SwitchStatement, SwitchStatementType, asSwitchStatement)             \
                                                                              \
+  MACRO(ParamsBodyNode, ParamsBodyNodeType, asParamsBody)                    \
   MACRO(FunctionNode, FunctionNodeType, asFunction)                          \
   MACRO(ModuleNode, ModuleNodeType, asModule)                                \
                                                                              \
@@ -1493,6 +1494,20 @@ inline bool ParseNode::isForLoopDeclaration() const {
   return false;
 }
 
+class ParamsBodyNode : public ListNode {
+ public:
+  explicit ParamsBodyNode(const TokenPos& pos)
+      : ListNode(ParseNodeKind::ParamsBody, pos) {
+    MOZ_ASSERT(is<ParamsBodyNode>());
+  }
+
+  static bool test(const ParseNode& node) {
+    bool match = node.isKind(ParseNodeKind::ParamsBody);
+    MOZ_ASSERT_IF(match, node.is<ListNode>());
+    return match;
+  }
+};
+
 class FunctionNode : public ParseNode {
   FunctionBox* funbox_;
   ParseNode* body_;
@@ -1522,6 +1537,7 @@ class FunctionNode : public ParseNode {
       if (!visitor.visit(body_)) {
         return false;
       }
+      MOZ_ASSERT(body_->is<ParamsBodyNode>());
     }
     return true;
   }
@@ -1533,11 +1549,13 @@ class FunctionNode : public ParseNode {
 
   FunctionBox* funbox() const { return funbox_; }
 
-  ListNode* body() const { return body_ ? &body_->as<ListNode>() : nullptr; }
+  ParamsBodyNode* body() const {
+    return body_ ? &body_->as<ParamsBodyNode>() : nullptr;
+  }
 
   void setFunbox(FunctionBox* funbox) { funbox_ = funbox; }
 
-  void setBody(ListNode* body) { body_ = body; }
+  void setBody(ParamsBodyNode* body) { body_ = body; }
 
   FunctionSyntaxKind syntaxKind() const { return syntaxKind_; }
 
@@ -2519,11 +2537,9 @@ inline bool ParseNode::isConstant() {
   }
 }
 
-static inline ParseNode* FunctionFormalParametersList(ParseNode* fn,
+static inline ParseNode* FunctionFormalParametersList(FunctionNode* fn,
                                                       unsigned* numFormals) {
-  MOZ_ASSERT(fn->isKind(ParseNodeKind::Function));
-  ListNode* argsBody = fn->as<FunctionNode>().body();
-  MOZ_ASSERT(argsBody->isKind(ParseNodeKind::ParamsBody));
+  ParamsBodyNode* argsBody = fn->body();
   *numFormals = argsBody->count();
   if (*numFormals > 0 && argsBody->last()->is<LexicalScopeNode>() &&
       argsBody->last()->as<LexicalScopeNode>().scopeBody()->isKind(

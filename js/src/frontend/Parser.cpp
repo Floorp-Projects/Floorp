@@ -2335,7 +2335,7 @@ FunctionNode* Parser<FullParseHandler, Unit>::standaloneFunction(
     return null();
   }
 
-  ListNodeType argsbody = handler_.newList(ParseNodeKind::ParamsBody, pos());
+  ParamsBodyNodeType argsbody = handler_.newParamsBody(pos());
   if (!argsbody) {
     return null();
   }
@@ -2653,7 +2653,7 @@ bool GeneralParser<ParseHandler, Unit>::functionArguments(
     // Record the start of function source (for FunctionToString).
     setFunctionStartAtCurrentToken(funbox);
 
-    ListNodeType argsbody = handler_.newList(ParseNodeKind::ParamsBody, pos());
+    ParamsBodyNodeType argsbody = handler_.newParamsBody(pos());
     if (!argsbody) {
       return false;
     }
@@ -2688,7 +2688,7 @@ bool GeneralParser<ParseHandler, Unit>::functionArguments(
   // Record the start of function source (for FunctionToString).
   setFunctionStartAtCurrentToken(funbox);
 
-  ListNodeType argsbody = handler_.newList(ParseNodeKind::ParamsBody, pos());
+  ParamsBodyNodeType argsbody = handler_.newParamsBody(pos());
   if (!argsbody) {
     return false;
   }
@@ -8421,9 +8421,9 @@ GeneralParser<ParseHandler, Unit>::synthesizeConstructorBody(
     FunctionNodeType funNode, FunctionBox* funbox) {
   MOZ_ASSERT(funbox->isClassConstructor());
 
-  // Create a ListNode for the parameters + body (there are no parameters).
-  ListNodeType argsbody =
-      handler_.newList(ParseNodeKind::ParamsBody, synthesizedBodyPos);
+  // Create a ParamsBodyNode for the parameters + body (there are no
+  // parameters).
+  ParamsBodyNodeType argsbody = handler_.newParamsBody(synthesizedBodyPos);
   if (!argsbody) {
     return null();
   }
@@ -8584,8 +8584,7 @@ GeneralParser<ParseHandler, Unit>::privateMethodInitializer(
   pc_->functionScope().useAsVarScope(pc_);
 
   // Add empty parameter list.
-  ListNodeType argsbody =
-      handler_.newList(ParseNodeKind::ParamsBody, propNamePos);
+  ParamsBodyNodeType argsbody = handler_.newParamsBody(propNamePos);
   if (!argsbody) {
     return null();
   }
@@ -8727,9 +8726,9 @@ GeneralParser<ParseHandler, Unit>::staticClassBlock(
   handler_.setEndPosition(funNode, wholeBodyPos.end);
   setFunctionEndFromCurrentToken(funbox);
 
-  // Create a ListNode for the parameters + body (there are no parameters).
-  ListNodeType argsbody =
-      handler_.newList(ParseNodeKind::ParamsBody, wholeBodyPos);
+  // Create a ParamsBodyNode for the parameters + body (there are no
+  // parameters).
+  ParamsBodyNodeType argsbody = handler_.newParamsBody(wholeBodyPos);
   if (!argsbody) {
     return null();
   }
@@ -8835,9 +8834,9 @@ GeneralParser<ParseHandler, Unit>::fieldInitializerOpt(
   handler_.setEndPosition(funNode, wholeInitializerPos.end);
   setFunctionEndFromCurrentToken(funbox);
 
-  // Create a ListNode for the parameters + body (there are no parameters).
-  ListNodeType argsbody =
-      handler_.newList(ParseNodeKind::ParamsBody, wholeInitializerPos);
+  // Create a ParamsBodyNode for the parameters + body (there are no
+  // parameters).
+  ParamsBodyNodeType argsbody = handler_.newParamsBody(wholeInitializerPos);
   if (!argsbody) {
     return null();
   }
