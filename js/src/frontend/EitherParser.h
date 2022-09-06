@@ -66,11 +66,6 @@ struct GetTokenStream {
 
 // Member function-computing templates.
 
-template <class Parser>
-struct ParserOptions {
-  static constexpr auto get() { return &Parser::options; }
-};
-
 template <class TokenStream>
 struct TokenStreamComputeLineAndColumn {
   static constexpr auto get() { return &TokenStream::computeLineAndColumn; }
@@ -131,12 +126,6 @@ class EitherParser : public BCEParserHandle {
   }
   const ErrorReporter& errorReporter() const final {
     return parser.match(detail::ErrorReporterMatcher());
-  }
-
-  const JS::ReadOnlyCompileOptions& options() const final {
-    InvokeMemberFunction<detail::GetParser, detail::ParserOptions>
-        optionsMatcher;
-    return parser.match(std::move(optionsMatcher));
   }
 
   void computeLineAndColumn(uint32_t offset, uint32_t* line,

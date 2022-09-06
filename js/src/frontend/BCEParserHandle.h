@@ -7,12 +7,6 @@
 #ifndef frontend_BCEParserHandle_h
 #define frontend_BCEParserHandle_h
 
-#include "jstypes.h"
-
-namespace JS {
-class JS_PUBLIC_API ReadOnlyCompileOptions;
-}
-
 namespace js {
 namespace frontend {
 
@@ -22,8 +16,6 @@ class FullParseHandler;
 struct BCEParserHandle {
   virtual ErrorReporter& errorReporter() = 0;
   virtual const ErrorReporter& errorReporter() const = 0;
-
-  virtual const JS::ReadOnlyCompileOptions& options() const = 0;
 
   virtual FullParseHandler& astGenerator() = 0;
 };
