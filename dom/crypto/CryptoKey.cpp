@@ -863,6 +863,10 @@ nsresult CryptoKey::PrivateKeyToJwk(SECKEYPrivateKey* aPrivKey,
 
 UniqueSECKEYPublicKey CreateECPublicKey(const SECItem* aKeyData,
                                         const nsAString& aNamedCurve) {
+  if (!EnsureNSSInitializedChromeOrContent()) {
+    return nullptr;
+  }
+
   UniquePLArenaPool arena(PORT_NewArena(DER_DEFAULT_CHUNKSIZE));
   if (!arena) {
     return nullptr;
