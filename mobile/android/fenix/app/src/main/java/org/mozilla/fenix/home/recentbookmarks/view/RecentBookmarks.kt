@@ -34,10 +34,14 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.testTag
+import androidx.compose.ui.semantics.testTagsAsResourceId
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -69,6 +73,7 @@ private val imageModifier = Modifier
  * @param onRecentBookmarkClick Invoked when the user clicks on a recent bookmark.
  * @param onRecentBookmarkLongClick Invoked when the user long clicks on a recent bookmark.
  */
+@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun RecentBookmarks(
     bookmarks: List<RecentBookmark>,
@@ -78,6 +83,10 @@ fun RecentBookmarks(
     onRecentBookmarkLongClick: () -> Unit = {},
 ) {
     LazyRow(
+        modifier = Modifier.semantics {
+            testTagsAsResourceId = true
+            testTag = "recent.bookmarks"
+        },
         contentPadding = PaddingValues(horizontal = 16.dp),
         horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
@@ -102,7 +111,10 @@ fun RecentBookmarks(
  * @param onRecentBookmarkClick Invoked when the user clicks on the recent bookmark item.
  * @param onRecentBookmarkLongClick Invoked when the user long clicks on the recent bookmark item.
  */
-@OptIn(ExperimentalFoundationApi::class)
+@OptIn(
+    ExperimentalFoundationApi::class,
+    ExperimentalComposeUiApi::class,
+)
 @Composable
 private fun RecentBookmarkItem(
     bookmark: RecentBookmark,
@@ -139,6 +151,10 @@ private fun RecentBookmarkItem(
 
             Text(
                 text = bookmark.title ?: bookmark.url ?: "",
+                modifier = Modifier.semantics {
+                    testTagsAsResourceId = true
+                    testTag = "recent.bookmark.title"
+                },
                 color = FirefoxTheme.colors.textPrimary,
                 overflow = TextOverflow.Ellipsis,
                 maxLines = 1,
@@ -222,6 +238,7 @@ private fun PlaceholderBookmarkImage() {
  * @param recentBookmark The [RecentBookmark] for which this menu is shown.
  * @param onDismissRequest Called when the user chooses a menu option or requests to dismiss the menu.
  */
+@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 private fun RecentBookmarksMenu(
     showMenu: Boolean,
@@ -233,7 +250,11 @@ private fun RecentBookmarksMenu(
         expanded = showMenu,
         onDismissRequest = { onDismissRequest() },
         modifier = Modifier
-            .background(color = FirefoxTheme.colors.layer2),
+            .background(color = FirefoxTheme.colors.layer2)
+            .semantics {
+                testTagsAsResourceId = true
+                testTag = "recent.bookmark.menu"
+            },
     ) {
         for (item in menuItems) {
             DropdownMenuItem(
