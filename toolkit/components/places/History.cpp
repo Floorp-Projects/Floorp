@@ -1262,6 +1262,9 @@ class InsertVisitedURIs final : public Runnable {
     if (exists) {
       rv = stmt->GetInt64(0, &aPlace.triggeringPlaceId);
       NS_ENSURE_SUCCESS(rv, rv);
+    } else {
+      Telemetry::ScalarAdd(
+          Telemetry::ScalarID::PLACES_SPONSORED_VISIT_NO_TRIGGERING_URL, 1);
     }
 
     aPlace.source = nsINavHistoryService::VISIT_SOURCE_SPONSORED;

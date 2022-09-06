@@ -8616,6 +8616,25 @@ opaque.response.blocking:
       - 'main'
     release_channel_collection: opt-out
 
+places:
+  sponsored_visit_no_triggering_url:
+    bug_numbers:
+      - 1787961
+    description: >
+      Number of sponsored visits that could not find their triggering URL in
+      history. We expect this to be a small number just due to the navigation
+      layer manipulating URLs. A large or growing value may be a concern.
+
+    expires: never
+    kind: uint
+    notification_emails:
+      - fx-search-telemetry@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+    record_in_processes:
+      - main
+
 # NOTE: Please don't add new definitions below this point. Consider adding
 # them earlier in the file and leave the telemetry.test category as the last
 # one for readability.

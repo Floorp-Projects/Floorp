@@ -17,6 +17,7 @@ const { XPCOMUtils } = ChromeUtils.import(
 XPCOMUtils.defineLazyModuleGetters(this, {
   NewTabUtils: "resource://gre/modules/NewTabUtils.jsm",
   PlacesTestUtils: "resource://testing-common/PlacesTestUtils.jsm",
+  TelemetryTestUtils: "resource://testing-common/TelemetryTestUtils.jsm",
   UrlbarTestUtils: "resource://testing-common/UrlbarTestUtils.jsm",
 });
 
@@ -910,6 +911,8 @@ add_task(async function fixup() {
 
 add_task(async function noTriggeringURL() {
   await BrowserTestUtils.withNewTab("about:home", async browser => {
+    Services.telemetry.clearScalars();
+
     const dummyTriggeringSponsoredURL =
       "http://example.com/dummyTriggeringSponsoredURL";
     const targetURL = "http://example.com/";
@@ -940,6 +943,14 @@ add_task(async function noTriggeringURL() {
         frecency: FRECENCY.SPONSORED,
       },
     });
+
+    info("Check telemetry");
+    const scalars = TelemetryTestUtils.getProcessScalars("parent", false, true);
+    TelemetryTestUtils.assertScalar(
+      scalars,
+      "places.sponsored_visit_no_triggering_url",
+      1
+    );
 
     await clearHistoryAndBookmarks();
   });
