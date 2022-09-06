@@ -1504,6 +1504,11 @@ class ParamsBodyNode : public ListNode {
     MOZ_ASSERT_IF(match, node.is<ListNode>());
     return match;
   }
+
+  auto* body() const {
+    MOZ_ASSERT(last()->is<LexicalScopeNode>());
+    return &last()->as<LexicalScopeNode>();
+  }
 };
 
 class FunctionNode : public ParseNode {
