@@ -15,9 +15,21 @@ const LABELS = [
   "(max-width: 550px)",
   "(min-height: 300px) and (max-height: 320px)",
   "(max-width: 750px)",
+  "print",
 ];
-const LINE_NOS = [1, 7, 19, 25, 31];
-const NEW_RULE = "\n@media (max-width: 750px) { div { color: blue; } }";
+const LINE_NOS = [1, 7, 19, 25, 31, 36];
+const NEW_RULE = `
+  @media (max-width: 750px) {
+    div {
+      color: blue;
+    }
+
+    @media print {
+      body {
+        filter: grayscale(100%);
+      }
+    }
+  }`;
 
 waitForExplicitFinish();
 
@@ -70,7 +82,7 @@ async function testInlineMediaEditor(ui, editor) {
   is(sidebar.hidden, false, "sidebar is showing on editor with @media");
 
   const entries = sidebar.querySelectorAll(".media-rule-label");
-  is(entries.length, 1, "1 @media rules displayed in sidebar");
+  is(entries.length, 2, "2 @media rules displayed in sidebar");
 
   await testRule({
     ui,
@@ -79,6 +91,15 @@ async function testInlineMediaEditor(ui, editor) {
     conditionText: "screen",
     matches: true,
     line: 2,
+  });
+
+  await testRule({
+    ui,
+    editor,
+    rule: entries[1],
+    conditionText: "(1px < height < 10000px)",
+    matches: true,
+    line: 8,
   });
 }
 
@@ -164,7 +185,7 @@ async function testMediaRuleAdded(ui, editor) {
 
   const sidebar = editor.details.querySelector(".stylesheet-sidebar");
   const entries = [...sidebar.querySelectorAll(".media-rule-label")];
-  is(entries.length, 5, "five @media rules after changing text");
+  is(entries.length, 6, "six @media rules after changing text");
 
   await testRule({
     ui,
@@ -173,6 +194,15 @@ async function testMediaRuleAdded(ui, editor) {
     conditionText: LABELS[4],
     matches: false,
     line: LINE_NOS[4],
+  });
+
+  await testRule({
+    ui,
+    editor,
+    rule: entries[5],
+    conditionText: LABELS[5],
+    matches: false,
+    line: LINE_NOS[5],
   });
 }
 

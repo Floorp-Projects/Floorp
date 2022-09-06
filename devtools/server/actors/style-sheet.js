@@ -465,18 +465,23 @@ var StyleSheetActor = protocol.ActorClassWithSpec(styleSheetSpec, {
    *         A promise that resolves with an array of MediaRuleActors.
    */
   _getMediaRules() {
-    return this.getCSSRules().then(rules => {
-      const mediaRules = [];
-      for (let i = 0; i < rules.length; i++) {
-        const rule = rules[i];
-        if (rule.type != CSSRule.MEDIA_RULE) {
-          continue;
+    const mediaRules = [];
+    const traverseRules = ruleList => {
+      for (const rule of ruleList) {
+        if (rule.type === CSSRule.MEDIA_RULE) {
+          const actor = new MediaRuleActor(rule, this);
+          this.manage(actor);
+          mediaRules.push(actor);
         }
-        const actor = new MediaRuleActor(rule, this);
-        this.manage(actor);
 
-        mediaRules.push(actor);
+        if (rule.cssRules) {
+          traverseRules(rule.cssRules);
+        }
       }
+    };
+
+    return this.getCSSRules().then(rules => {
+      traverseRules(rules);
       return mediaRules;
     });
   },

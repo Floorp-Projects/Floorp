@@ -15,6 +15,14 @@
       div {
         outline: 1px solid tomato;
       }
+
+      @supports (display: flex) {
+        @media (1px < height < 10000px) {
+          div {
+            display: flex;
+          }
+        }
+      }
     }
   </style>
 </head>
