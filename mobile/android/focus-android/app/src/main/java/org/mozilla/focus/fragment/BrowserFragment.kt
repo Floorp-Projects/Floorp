@@ -273,6 +273,7 @@ class BrowserFragment :
                 components.store,
                 components.downloadsUseCases,
                 fragmentManager = childFragmentManager,
+                tabId = tabId,
                 downloadManager = FetchDownloadManager(
                     requireContext().applicationContext,
                     components.store,
