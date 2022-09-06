@@ -4630,12 +4630,12 @@ bool BytecodeEmitter::emitShortCircuitAssignment(AssignmentNode* node) {
 bool BytecodeEmitter::emitCallSiteObjectArray(JSOp op, ListNode* cookedOrRaw,
                                               GCThingIndex* outArrayIndex) {
   DebugOnly<uint32_t> count = cookedOrRaw->count();
-  ParseNode* pn = cookedOrRaw->head();
+  ParseNode* head = cookedOrRaw->head();
 
   // The first element of a call-site node is the raw-values list. Skip over it.
   if (cookedOrRaw->isKind(ParseNodeKind::CallSiteObj)) {
-    MOZ_ASSERT(pn->isKind(ParseNodeKind::ArrayExpr));
-    pn = pn->pn_next;
+    MOZ_ASSERT(head->isKind(ParseNodeKind::ArrayExpr));
+    head = head->pn_next;
     count--;
   } else {
     MOZ_ASSERT(cookedOrRaw->isKind(ParseNodeKind::ArrayExpr));
@@ -4646,14 +4646,15 @@ bool BytecodeEmitter::emitCallSiteObjectArray(JSOp op, ListNode* cookedOrRaw,
   writer.beginArray(op);
   writer.beginDenseArrayElements();
 
-  DebugOnly<size_t> idx;
-  for (idx = 0; pn; idx++, pn = pn->pn_next) {
+  DebugOnly<size_t> idx = 0;
+  for (ParseNode* pn : cookedOrRaw->contentsFrom(head)) {
     MOZ_ASSERT(pn->isKind(ParseNodeKind::TemplateStringExpr) ||
                pn->isKind(ParseNodeKind::RawUndefinedExpr));
 
     if (!emitObjLiteralValue(writer, pn)) {
       return false;
     }
+    idx++;
   }
   MOZ_ASSERT(idx == count);
 
@@ -7164,8 +7165,7 @@ bool BytecodeEmitter::emitSelfHostedCallFunction(CallNode* callNode, JSOp op) {
     }
   }
 
-  for (ParseNode* argpn = thisOrNewTarget->pn_next; argpn;
-       argpn = argpn->pn_next) {
+  for (ParseNode* argpn : argsList->contentsFrom(thisOrNewTarget->pn_next)) {
     if (!emitTree(argpn)) {
       //            [stack] CALLEE ... ARGS...
       return false;
@@ -8497,13 +8497,6 @@ bool BytecodeEmitter::emitShortCircuit(ListNode* node) {
 
   TDZCheckCache tdzCache(this);
 
-  /* Left-associative operator chain: avoid too much recursion. */
-  ParseNode* expr = node->head();
-
-  if (!emitTree(expr)) {
-    return false;
-  }
-
   JSOp op;
   switch (node->getKind()) {
     case ParseNodeKind::OrExpr:
@@ -8520,15 +8513,11 @@ bool BytecodeEmitter::emitShortCircuit(ListNode* node) {
   }
 
   JumpList jump;
-  if (!emitJump(op, &jump)) {
-    return false;
-  }
-  if (!emit1(JSOp::Pop)) {
-    return false;
-  }
 
-  /* Emit nodes between the head and the tail. */
-  while ((expr = expr->pn_next)->pn_next) {
+  // Left-associative operator chain: avoid too much recursion.
+  //
+  // Emit all nodes but the last.
+  for (ParseNode* expr : node->contentsTo(node->last())) {
     if (!emitTree(expr)) {
       return false;
     }
@@ -8539,7 +8528,9 @@ bool BytecodeEmitter::emitShortCircuit(ListNode* node) {
       return false;
     }
   }
-  if (!emitTree(expr)) {
+
+  // Emit the last node
+  if (!emitTree(node->last())) {
     return false;
   }
 
@@ -8551,20 +8542,24 @@ bool BytecodeEmitter::emitShortCircuit(ListNode* node) {
 
 bool BytecodeEmitter::emitSequenceExpr(
     ListNode* node, ValueUsage valueUsage /* = ValueUsage::WantValue */) {
-  for (ParseNode* child = node->head();; child = child->pn_next) {
+  for (ParseNode* child : node->contentsTo(node->last())) {
     if (!updateSourceCoordNotes(child->pn_pos.begin)) {
       return false;
     }
-    if (!emitTree(child,
-                  child->pn_next ? ValueUsage::IgnoreValue : valueUsage)) {
+    if (!emitTree(child, ValueUsage::IgnoreValue)) {
       return false;
-    }
-    if (!child->pn_next) {
-      break;
     }
     if (!emit1(JSOp::Pop)) {
       return false;
     }
+  }
+
+  ParseNode* child = node->last();
+  if (!updateSourceCoordNotes(child->pn_pos.begin)) {
+    return false;
+  }
+  if (!emitTree(child, valueUsage)) {
+    return false;
   }
   return true;
 }
