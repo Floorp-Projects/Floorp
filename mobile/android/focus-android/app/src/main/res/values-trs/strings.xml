@@ -289,14 +289,17 @@
     <string name="preference_privacy_should_block_cookies_no_option2">si ga\'ue, guruhuat</string>
     <string name="preference_privacy_should_block_cookies_third_party_tracker_cookies_option">Garuun\' 3rd-party ma kookies nikò\' a\'ngô nej si</string>
     <string name="preference_privacy_should_block_cookies_third_party_only_option">Garuun\' 3rd-party ma kookies</string>
+    <string name="preference_privacy_should_block_cookies_cross_site_option">Nārán riña koki riña nej sîtio</string>
     <string name="preference_privacy_should_block_cookies_yes_option2">Ga\'ue, gi\'iaj \'ngo sununj un</string>
 
     <!-- Preference Title: Biometrics can be used to unlock Focus if the previous session's data was not erased by the user. -->
     <string name="preference_security_biometric">Garasun\' dej ro\'ô\' daj gatu\' riña aplikasion</string>
+
     <!-- Preference Summary: Biometrics (iris scan, fingerprint, or facial scan) can be used to unlock Focus if the app had a URL
         open when the app was last run to ensure that only the phone's owner can view a previous session.
-        %1$s will be replaced by the app name (e.g. Firefox Focus) -->
-    <string name="preference_security_biometric_summary">Si gutat dej ra\'at nī ga\'ue na\'nī ma %1$s si \'ngà hua URL hua ni\'ninj. Se si gurui\' ma.</string>
+        %s will be replaced by the app name (e.g. Firefox Focus)
+        Shortcuts is a feature that allows the user to pin his favorite websites to Focus home screen so he can quickly access them-->
+    <string name="preference_security_biometric_summary2">Nā’nïn nga daa’nga’ ra’ât sisī nachrûnt akseso direkto asi huā ni’nïnj ‘ngō sitio riña %s.</string>
 
     <!-- Preference Title: Secure Mode is a setting that prevents the app's content to show up in the "recent apps" screen
          and prevents the user from taking screenshots or casting the app to other displays. -->
@@ -361,7 +364,7 @@
 
     <!-- Title: Homescreen tips settings toggle to determine whether or not tips are displayed when
      a user first launches the app. -->
-    <string name="preference_homescreen_tips">Digan ma sa rugujñu\'unj riña pajina ayi\'i\'</string>
+    <string moz:removedIn="105" name="preference_homescreen_tips" tools:ignore="UnusedResources">Digan ma sa rugujñu\'unj riña pajina ayi\'i\'</string>
 
     <!-- Clickable action text that shows when user long-presses on a search engine search field (this is similar to paste or copy when long-pressing a text field) -->
     <string name="action_option_add_search_engine">Nutò\' sa nana\'uì\'</string>
@@ -489,7 +492,17 @@
 
 
 
-  <!-- First run tour (Default browser): Title -->
+  <!-- Onboarding: Title -->
+    <!-- %1$s will be replaced by the app name and build variant(e.g. Firefox Focus, Firefox Klar Nightly) -->
+    <string name="onboarding_title">Guruhuât gunumânt riña %1$s!</string>
+
+    <!-- Onboarding: Description -->
+    <string name="onboarding_description">Gāchē nu hui nukuaj doj nda garan’ ruhuât</string>
+
+    <!-- Onboarding: Incognito Title -->
+    <string name="onboarding_incognito_title">Riña nitāj si rugui’ inkognito</string>
+
+    <!-- First run tour (Default browser): Title -->
     <string name="firstrun_defaultbrowser_title">Nagi\'iaj nukuaj riña gache nun \'ngorïnt</string>
     <!-- First run tour (Default browser): Text. -->
     <string name="firstrun_defaultbrowser_text2">Ga’ue gan’ānj ñānt doj ngà riña aché nu huìt. Dure’ asi narán riña nej sa ga’ue gatū naga’nāj nej sa ahī màn ‘iát nī natsij nej diû huin ràn nej pâjina ngà nayi’nïn.</string>
@@ -662,14 +675,14 @@
 
     <!-- Title for the fingerprint authentication dialog box that is shown to the user when opening the app.
      %1$s is replaced with the app name -->
-    <string name="biometric_auth_title">Dugi\'iaj sun\' %1$s</string>
+    <string moz:removedIn="103" name="biometric_auth_title">Dugi\'iaj sun\' %1$s</string>
 
     <!-- Description for the fingerprint authentication dialog box that is shown to the user when opening the app -->
-    <string name="biometric_auth_description">Guta\' ra\'àt da\' ga\'anj ne\'ñàan</string>
+    <string moz:removedIn="103" name="biometric_auth_description">Guta\' ra\'àt da\' ga\'anj ne\'ñàan</string>
 
     <!-- New session button for the fingerprint authentication dialog box that is shown to the user when opening the app.
      When pressed, the user's previous session is cleared, and authentication is not required. -->
-    <string name="biometric_auth_new_session">Sesiôn nakàa</string>
+    <string moz:removedIn="103" name="biometric_auth_new_session">Sesiôn nakàa</string>
 
     <!-- Button for the fingerprint authentication dialog box that is shown to the user when sharing a link to the app
     while the user has biometric authentication enabled. When pressed, the user's previous session is cleared, and the shared link is opened. -->
@@ -740,8 +753,6 @@
     <!-- Preference for switching to a new tab immediately after opening -->
     <string name="preference_open_new_tab">Naduna riña dunikò\' duguî\'t rakïj ñanj ra\'ñanj chre</string>
 
-    <!-- Preference for safe browsing which when enabled, blocks dangerous or deceptive webpages that may include phishing or malware -->
-    <string moz:removedIn="97" name="preference_category_safe_browsing">NItaj si ahi huaj Gache nunt</string>
     <!-- Preference title for safe browsing which when enabled, blocks dangerous or deceptive webpages that may include phishing or malware -->
     <string name="preference_safe_browsing_title">Narán riña nej sitiô diga\'ñu\'unj ni sa yi\'ìi</string>
     <!-- Preference summary for safe browsing which when enabled, blocks dangerous or deceptive webpages that may include phishing or malware -->

@@ -290,7 +290,7 @@
     <string name="preference_privacy_should_block_cookies_third_party_tracker_cookies_option">仅阻止第三方跟踪器 Cookie</string>
     <string name="preference_privacy_should_block_cookies_third_party_only_option">仅阻止第三方 Cookie</string>
 
-    <string name="preference_privacy_should_block_cookies_cross_site_option">拦截跨网站 Cookie</string>
+    <string name="preference_privacy_should_block_cookies_cross_site_option">拦截跨站 Cookie</string>
     <string name="preference_privacy_should_block_cookies_yes_option2">好的</string>
 
     <!-- Preference Title: Biometrics can be used to unlock Focus if the previous session's data was not erased by the user. -->
