@@ -8,6 +8,8 @@
 
 #include "FileSystemDirectoryIteratorFactory.h"
 #include "fs/FileSystemRequestHandler.h"
+#include "js/StructuredClone.h"
+#include "js/TypeDecls.h"
 #include "mozilla/ErrorResult.h"
 #include "mozilla/dom/FileSystemDirectoryHandleBinding.h"
 #include "mozilla/dom/FileSystemDirectoryIterator.h"
@@ -16,6 +18,7 @@
 #include "mozilla/dom/PFileSystemManager.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/StorageManager.h"
+#include "nsJSUtils.h"
 
 namespace mozilla::dom {
 
@@ -135,6 +138,33 @@ already_AddRefed<Promise> FileSystemDirectoryHandle::Resolve(
   promise->MaybeReject(NS_ERROR_NOT_IMPLEMENTED);
 
   return promise.forget();
+}
+
+// [Serializable] implementation
+
+// static
+already_AddRefed<FileSystemDirectoryHandle>
+FileSystemDirectoryHandle::ReadStructuredClone(
+    JSContext* aCx, nsIGlobalObject* aGlobal,
+    JSStructuredCloneReader* aReader) {
+  uint32_t kind = static_cast<uint32_t>(FileSystemHandleKind::EndGuard_);
+
+  if (!JS_ReadBytes(aReader, reinterpret_cast<void*>(&kind),
+                    sizeof(uint32_t))) {
+    return nullptr;
+  }
+
+  if (kind != static_cast<uint32_t>(FileSystemHandleKind::Directory)) {
+    return nullptr;
+  }
+
+  RefPtr<FileSystemDirectoryHandle> result =
+      FileSystemHandle::ConstructDirectoryHandle(aCx, aGlobal, aReader);
+  if (!result) {
+    return nullptr;
+  }
+
+  return result.forget();
 }
 
 }  // namespace mozilla::dom
