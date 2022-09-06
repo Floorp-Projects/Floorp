@@ -126,25 +126,33 @@ UniqueChars wasm::ToString(RefType type) {
   return JS_smprintf("(ref %s%s)", type.isNullable() ? "null " : "", heapType);
 }
 
-UniqueChars wasm::ToString(ValType type) {
+UniqueChars wasm::ToString(ValType type) { return ToString(type.fieldType()); }
+
+UniqueChars wasm::ToString(FieldType type) {
   const char* literal = nullptr;
   switch (type.kind()) {
-    case ValType::I32:
+    case FieldType::I8:
+      literal = "i8";
+      break;
+    case FieldType::I16:
+      literal = "i16";
+      break;
+    case FieldType::I32:
       literal = "i32";
       break;
-    case ValType::I64:
+    case FieldType::I64:
       literal = "i64";
       break;
-    case ValType::V128:
+    case FieldType::V128:
       literal = "v128";
       break;
-    case ValType::F32:
+    case FieldType::F32:
       literal = "f32";
       break;
-    case ValType::F64:
+    case FieldType::F64:
       literal = "f64";
       break;
-    case ValType::Ref:
+    case FieldType::Ref:
       return ToString(type.refType());
   }
   return DuplicateString(literal);

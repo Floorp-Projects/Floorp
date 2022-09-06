@@ -1370,6 +1370,121 @@ bool Instance::initElems(uint32_t tableIndex, const ElemSegment& seg,
   return objOTO;
 }
 
+/* static */ int32_t Instance::arrayCopy(Instance* instance, void* dstArray,
+                                         uint32_t dstIndex, void* srcArray,
+                                         uint32_t srcIndex,
+                                         uint32_t numElements,
+                                         uint32_t elementSize) {
+  MOZ_ASSERT(SASigArrayCopy.failureMode == FailureMode::FailOnNegI32);
+  JSContext* cx = instance->cx();
+
+  // At the entry point, `elementSize` may be negative to indicate
+  // reftyped-ness of array elements.  That is done in order to avoid having
+  // to pass yet another (boolean) parameter here.
+
+  // "traps if either array is null"
+  if (!srcArray || !dstArray) {
+    ReportTrapError(cx, JSMSG_WASM_DEREF_NULL);
+    return -1;
+  }
+
+  bool elemsAreRefTyped = false;
+  if (int32_t(elementSize) < 0) {
+    elemsAreRefTyped = true;
+    elementSize = uint32_t(-int32_t(elementSize));
+  }
+  MOZ_ASSERT(elementSize >= 1 && elementSize <= 16);
+
+  // Get hold of the two arrays.
+  TypedObject* dstTO = (TypedObject*)dstArray;
+  MOZ_RELEASE_ASSERT(dstTO->is<OutlineTypedObject>());
+  Rooted<OutlineTypedObject*> dstOTO(cx,
+                                     static_cast<OutlineTypedObject*>(dstTO));
+
+  TypedObject* srcTO = (TypedObject*)srcArray;
+  MOZ_RELEASE_ASSERT(srcTO->is<OutlineTypedObject>());
+  Rooted<OutlineTypedObject*> srcOTO(cx,
+                                     static_cast<OutlineTypedObject*>(srcTO));
+
+  // If OutlineTypedObject::numElements() is changed to return 64 bits, the
+  // following checking logic will be incorrect.
+  STATIC_ASSERT_NUMELEMENTS_IS_U32;
+
+  // "traps if destination + length > len(array1)"
+  uint64_t dstNumElements = uint64_t(dstOTO->numElements());
+  if (uint64_t(dstIndex) + uint64_t(numElements) > dstNumElements) {
+    ReportTrapError(cx, JSMSG_WASM_OUT_OF_BOUNDS);
+    return -1;
+  }
+
+  // "traps if source + length > len(array2)"
+  uint64_t srcNumElements = uint64_t(srcOTO->numElements());
+  if (uint64_t(srcIndex) + uint64_t(numElements) > srcNumElements) {
+    ReportTrapError(cx, JSMSG_WASM_OUT_OF_BOUNDS);
+    return -1;
+  }
+
+  // trap if we're asked to copy 2^32 or more bytes on a 32-bit target.
+  uint64_t numBytesToCopy = uint64_t(numElements) * uint64_t(elementSize);
+#ifndef JS_64BIT
+  if (numBytesToCopy > uint64_t(UINT32_MAX)) {
+    ReportTrapError(cx, JSMSG_WASM_OUT_OF_BOUNDS);
+    return -1;
+  }
+#endif
+  // We're now assured that `numBytesToCopy` can be cast to `size_t` without
+  // overflow.
+
+  // Actually do the copy, taking care to handle cases where the src and dst
+  // areas overlap.
+  uint8_t* srcBase = srcOTO->addressOfElementZero();
+  uint8_t* dstBase = dstOTO->addressOfElementZero();
+  srcBase += size_t(srcIndex) * size_t(elementSize);
+  dstBase += size_t(dstIndex) * size_t(elementSize);
+
+  if (numBytesToCopy == 0 || srcBase == dstBase) {
+    // Early exit if there's no work to do.
+    return 0;
+  }
+
+  if (!elemsAreRefTyped) {
+    // Hand off to memmove, which is presumably highly optimized.
+    memmove(dstBase, srcBase, size_t(numBytesToCopy));
+    return 0;
+  }
+
+  // We're copying refs; doing that needs suitable GC barrier-ing.
+  uint8_t* nextSrc;
+  uint8_t* nextDst;
+  intptr_t step;
+  if (dstBase < srcBase) {
+    // Moving data backwards in the address space; so iterate forwards through
+    // the array.
+    step = intptr_t(elementSize);
+    nextSrc = srcBase;
+    nextDst = dstBase;
+  } else {
+    // Moving data forwards; so iterate backwards.
+    step = -intptr_t(elementSize);
+    nextSrc = srcBase + size_t(numBytesToCopy) - size_t(elementSize);
+    nextDst = dstBase + size_t(numBytesToCopy) - size_t(elementSize);
+  }
+  // We don't know the type of the elems, only that they are refs.  No matter,
+  // we can simply make up a type.
+  RefType aRefType = RefType::eq();
+  // Do the iteration
+  for (size_t i = 0; i < size_t(numElements); i++) {
+    // Copy `elementSize` bytes from `nextSrc` to `nextDst`.
+    RootedVal value(cx, aRefType);
+    value.get().readFromHeapLocation(nextSrc);
+    value.get().writeToHeapLocation(nextDst);
+    nextSrc += step;
+    nextDst += step;
+  }
+
+  return 0;
+}
+
 /* static */ void* Instance::exceptionNew(Instance* instance, JSObject* tag) {
   MOZ_ASSERT(SASigExceptionNew.failureMode == FailureMode::FailOnNullPtr);
   JSContext* cx = instance->cx();

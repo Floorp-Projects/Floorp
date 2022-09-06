@@ -134,8 +134,8 @@ bool wasm::DecodeValidatedLocalEntries(Decoder& d, ValTypeVector* locals) {
 }
 
 bool wasm::CheckIsSubtypeOf(Decoder& d, const ModuleEnvironment& env,
-                            size_t opcodeOffset, ValType actual,
-                            ValType expected, TypeCache* cache) {
+                            size_t opcodeOffset, FieldType actual,
+                            FieldType expected, TypeCache* cache) {
   switch (env.types->isSubtypeOf(actual, expected, cache)) {
     case TypeResult::OOM:
       return false;
@@ -626,6 +626,12 @@ static bool DecodeFunctionBodyExprs(const ModuleEnvironment& env,
           case uint32_t(GcOp::ArrayLen): {
             uint32_t unusedUint1;
             CHECK(iter.readArrayLen(&unusedUint1, &nothing));
+          }
+          case uint32_t(GcOp::ArrayCopy): {
+            int32_t unusedInt;
+            bool unusedBool;
+            CHECK(iter.readArrayCopy(&unusedInt, &unusedBool, &nothing,
+                                     &nothing, &nothing, &nothing, &nothing));
           }
           case uint16_t(GcOp::RefTest): {
             uint32_t typeIndex;
@@ -2608,8 +2614,9 @@ static bool DecodeElemSection(Decoder& d, ModuleEnvironment* env) {
       case ElemSegmentKind::ActiveWithTableIndex: {
         RefType tblElemType = env->tables[seg->tableIndex].elemType;
         TypeCache cache;
-        if (!CheckIsSubtypeOf(d, *env, d.currentOffset(), ValType(elemType),
-                              ValType(tblElemType), &cache)) {
+        if (!CheckIsSubtypeOf(d, *env, d.currentOffset(),
+                              ValType(elemType).fieldType(),
+                              ValType(tblElemType).fieldType(), &cache)) {
           return false;
         }
         break;
@@ -2675,8 +2682,9 @@ static bool DecodeElemSection(Decoder& d, ModuleEnvironment* env) {
           default:
             return d.fail("failed to read initializer operation");
         }
-        if (!CheckIsSubtypeOf(d, *env, d.currentOffset(), ValType(initType),
-                              ValType(elemType), &cache)) {
+        if (!CheckIsSubtypeOf(d, *env, d.currentOffset(),
+                              ValType(initType).fieldType(),
+                              ValType(elemType).fieldType(), &cache)) {
           return false;
         }
       }
