@@ -2051,8 +2051,7 @@ fuzzy(0-2,0-625) == 1466638-1.html 1466638-1-ref.html
 == 1483946.html 1483946-ref.html
 test-pref(layout.css.visited_links_enabled,false) == 1488155.html 1488155-ref.html
 == 1492660-1.html 1492660-1-ref.html
-pref(layout.css.supports-selector.enabled,true) == 1499386.html 1499386-ref.html
-pref(layout.css.supports-selector.enabled,false) != 1499386.html 1499386-ref.html
+== 1499386.html 1499386-ref.html
 == 1509425-1.html 1509425-1-ref.html
 == 1511570.html 1511570-ref.html
 == 1513423-1.html 1513423-1-ref.html
