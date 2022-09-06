@@ -2,8 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/* globals log */
-
 "use strict";
 
 const { XPCOMUtils } = ChromeUtils.importESModule(
@@ -532,7 +530,7 @@ var Policies = {
       }
 
       if (param.ExpireAtSessionEnd != undefined) {
-        log.error(
+        lazy.log.error(
           "'ExpireAtSessionEnd' has been deprecated and it has no effect anymore."
         );
       }
