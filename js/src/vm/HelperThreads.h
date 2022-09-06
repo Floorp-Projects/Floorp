@@ -248,9 +248,9 @@ JS::OffThreadToken* StartOffThreadDecodeMultiStencils(
 
 // Start off-thread delazification task, to race the delazification of inner
 // functions.
-[[nodiscard]] bool StartOffThreadDelazification(
-    JSContext* cx, const JS::ReadOnlyCompileOptions& options,
-    const frontend::CompilationStencil& stencil);
+void StartOffThreadDelazification(JSContext* cx,
+                                  const JS::ReadOnlyCompileOptions& options,
+                                  const frontend::CompilationStencil& stencil);
 
 // Drain the task queues and wait for all helper threads to finish running.
 //

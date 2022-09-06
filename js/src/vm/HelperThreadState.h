@@ -598,7 +598,7 @@ struct DelazifyStrategy {
   // This function is called with the script index of:
   //  - top-level script, when starting the off-thread delazification.
   //  - functions added by `add` and delazified by `DelazifyTask`.
-  [[nodiscard]] bool add(JSContext* cx,
+  [[nodiscard]] bool add(ErrorContext* ec,
                          const frontend::CompilationStencil& stencil,
                          ScriptIndex index);
 };
@@ -671,6 +671,10 @@ struct DelazifyTask : public mozilla::LinkedListElement<DelazifyTask>,
   OffThreadErrorContext ec_;
 
   // Create a new DelazifyTask and initialize it.
+  //
+  // In case of early failure, no errors are reported, as a DelazifyTask is an
+  // optimization and the VM should remain working even without this
+  // optimization in place.
   static UniquePtr<DelazifyTask> Create(
       JSContext* cx, JSRuntime* runtime,
       const JS::ContextOptions& contextOptions,
@@ -680,7 +684,7 @@ struct DelazifyTask : public mozilla::LinkedListElement<DelazifyTask>,
   DelazifyTask(JSRuntime* runtime, const JS::ContextOptions& options);
 
   [[nodiscard]] bool init(
-      JSContext* cx, const JS::ReadOnlyCompileOptions& options,
+      const JS::ReadOnlyCompileOptions& options,
       UniquePtr<frontend::ExtensibleCompilationStencil>&& initial);
 
   // This function is called by delazify task thread to know whether the task

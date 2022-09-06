@@ -694,11 +694,11 @@ class SharedImmutableScriptData {
   }
 
  private:
-  static SharedImmutableScriptData* create(JSContext* cx);
+  static SharedImmutableScriptData* create(ErrorContext* ec);
 
  public:
   static SharedImmutableScriptData* createWith(
-      JSContext* cx, js::UniquePtr<ImmutableScriptData>&& isd);
+      ErrorContext* ec, js::UniquePtr<ImmutableScriptData>&& isd);
 
   size_t sizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) {
     size_t isdSize = isExternal ? 0 : mallocSizeOf(isd_);

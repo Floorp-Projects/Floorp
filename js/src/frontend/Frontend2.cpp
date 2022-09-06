@@ -473,7 +473,7 @@ bool ConvertScriptStencil(JSContext* cx, ErrorContext* ec,
     }
 
     auto sharedData = SharedImmutableScriptData::createWith(
-        cx, std::move(immutableScriptData));
+        ec, std::move(immutableScriptData));
     if (!sharedData) {
       return false;
     }

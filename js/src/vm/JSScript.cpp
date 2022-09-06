@@ -2135,15 +2135,15 @@ bool js::ImmutableScriptData::validateLayout(uint32_t expectedSize) {
 }
 
 /* static */
-SharedImmutableScriptData* SharedImmutableScriptData::create(JSContext* cx) {
-  return cx->new_<SharedImmutableScriptData>();
+SharedImmutableScriptData* SharedImmutableScriptData::create(ErrorContext* ec) {
+  return ec->getAllocator()->new_<SharedImmutableScriptData>();
 }
 
 /* static */
 SharedImmutableScriptData* SharedImmutableScriptData::createWith(
-    JSContext* cx, js::UniquePtr<ImmutableScriptData>&& isd) {
+    ErrorContext* ec, js::UniquePtr<ImmutableScriptData>&& isd) {
   MOZ_ASSERT(isd.get());
-  SharedImmutableScriptData* sisd = create(cx);
+  SharedImmutableScriptData* sisd = create(ec);
   if (!sisd) {
     return nullptr;
   }

@@ -247,10 +247,7 @@ template <typename Unit>
       if (input.options.populateDelazificationCache() &&
           !cx->isHelperThreadContext()) {
         BorrowingCompilationStencil borrowingStencil(*extensibleStencil);
-        if (!StartOffThreadDelazification(cx, input.options,
-                                          borrowingStencil)) {
-          return false;
-        }
+        StartOffThreadDelazification(cx, input.options, borrowingStencil);
 
         // When we are trying to validate whether on-demand delazification
         // generate the same stencil as concurrent delazification, we want to
@@ -316,9 +313,7 @@ template <typename Unit>
   if (input.options.populateDelazificationCache() &&
       !cx->isHelperThreadContext()) {
     BorrowingCompilationStencil borrowingStencil(compiler.stencil());
-    if (!StartOffThreadDelazification(cx, input.options, borrowingStencil)) {
-      return false;
-    }
+    StartOffThreadDelazification(cx, input.options, borrowingStencil);
 
     // When we are trying to validate whether on-demand delazification
     // generate the same stencil as concurrent delazification, we want to
