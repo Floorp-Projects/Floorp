@@ -582,11 +582,23 @@ class StyleSheetsManager extends EventEmitter {
     this._mqlList = [];
 
     const styleSheetRules = await this._getCSSRules(styleSheet);
-    const mediaRules = Array.from(styleSheetRules).filter(
-      rule => rule.type === CSSRule.MEDIA_RULE
-    );
 
-    return mediaRules.map((rule, index) => {
+    // We need to go through nested rules to extract all the rules we're interested in
+    const rules = [];
+    const traverseRules = ruleList => {
+      for (const rule of ruleList) {
+        if (rule.type === CSSRule.MEDIA_RULE) {
+          rules.push(rule);
+        }
+
+        if (rule.cssRules) {
+          traverseRules(rule.cssRules);
+        }
+      }
+    };
+    traverseRules(styleSheetRules);
+
+    return rules.map((rule, index) => {
       let matches = false;
 
       try {
