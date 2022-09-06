@@ -1772,8 +1772,8 @@ class ASTSerializer {
   bool expressions(ListNode* exprList, NodeVector& elts);
   bool leftAssociate(ListNode* node, MutableHandleValue dst);
   bool rightAssociate(ListNode* node, MutableHandleValue dst);
-  bool functionArgs(ParamsBodyNode* pn, ListNode* argsList, NodeVector& args,
-                    NodeVector& defaults, MutableHandleValue rest);
+  bool functionArgs(ParamsBodyNode* pn, NodeVector& args, NodeVector& defaults,
+                    MutableHandleValue rest);
 
   bool sourceElement(ParseNode* pn, MutableHandleValue dst);
 
@@ -3854,23 +3854,23 @@ bool ASTSerializer::functionArgsAndBody(ParamsBodyNode* pn, NodeVector& args,
                                         bool isExpression,
                                         MutableHandleValue body,
                                         MutableHandleValue rest) {
-  /* Extract the args and body separately. */
-  ListNode* argsList = pn;
-  ParseNode* bodyNode = argsList->last();
-
-  if (bodyNode->is<LexicalScopeNode>()) {
-    bodyNode = bodyNode->as<LexicalScopeNode>().scopeBody();
+  // Serialize the arguments.
+  if (!functionArgs(pn, args, defaults, rest)) {
+    return false;
   }
 
-  /* Serialize the arguments and body. */
-  switch (bodyNode->getKind()) {
-    case ParseNodeKind::ReturnStmt: /* expression closure, no destructured args
-                                     */
-      return functionArgs(pn, argsList, args, defaults, rest) &&
-             expression(bodyNode->as<UnaryNode>().kid(), body);
+  // Skip the enclosing lexical scope.
+  ParseNode* bodyNode = pn->last()->as<LexicalScopeNode>().scopeBody();
 
-    case ParseNodeKind::StatementList: /* statement closure */
-    {
+  // Serialize the body.
+  switch (bodyNode->getKind()) {
+    // Arrow function with expression body.
+    case ParseNodeKind::ReturnStmt:
+      MOZ_ASSERT(isExpression);
+      return expression(bodyNode->as<UnaryNode>().kid(), body);
+
+    // Function with statement body.
+    case ParseNodeKind::StatementList: {
       ParseNode* firstNode = bodyNode->as<ListNode>().head();
 
       // Skip over initial yield in generator.
@@ -3882,12 +3882,10 @@ bool ASTSerializer::functionArgsAndBody(ParamsBodyNode* pn, NodeVector& args,
       // to insert initial yield.
       if (isAsync && isExpression) {
         MOZ_ASSERT(firstNode->getKind() == ParseNodeKind::ReturnStmt);
-        return functionArgs(pn, argsList, args, defaults, rest) &&
-               expression(firstNode->as<UnaryNode>().kid(), body);
+        return expression(firstNode->as<UnaryNode>().kid(), body);
       }
 
-      return functionArgs(pn, argsList, args, defaults, rest) &&
-             functionBody(firstNode, &bodyNode->pn_pos, body);
+      return functionBody(firstNode, &bodyNode->pn_pos, body);
     }
 
     default:
@@ -3895,19 +3893,16 @@ bool ASTSerializer::functionArgsAndBody(ParamsBodyNode* pn, NodeVector& args,
   }
 }
 
-bool ASTSerializer::functionArgs(ParamsBodyNode* pn, ListNode* argsList,
-                                 NodeVector& args, NodeVector& defaults,
+bool ASTSerializer::functionArgs(ParamsBodyNode* pn, NodeVector& args,
+                                 NodeVector& defaults,
                                  MutableHandleValue rest) {
-  if (!argsList) {
-    return true;
-  }
-
   RootedValue node(cx);
   bool defaultsNull = true;
   MOZ_ASSERT(defaults.empty(),
              "must be initially empty for it to be proper to clear this "
              "when there are no defaults");
 
+  auto* argsList = pn;
   for (ParseNode* arg : argsList->contentsTo(argsList->last())) {
     ParseNode* pat;
     ParseNode* defNode;

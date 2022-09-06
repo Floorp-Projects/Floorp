@@ -277,8 +277,7 @@ inline bool IsTypeofKind(ParseNodeKind kind) {
  * <Definitions>
  * Function (FunctionNode)
  *   funbox: ptr to js::FunctionBox
- *   body: ParamsBody or null for lazily-parsed function, ordinarily;
- *         ParseNodeKind::LexicalScope for implicit function in genexpr
+ *   body: ParamsBody or null for lazily-parsed function
  *   syntaxKind: the syntax of the function
  * ParamsBody (ListNode)
  *   head: list of formal parameters with
@@ -289,9 +288,8 @@ inline bool IsTypeofKind(ParseNodeKind kind) {
  *               expr: Array or Object for BindingPattern without
  *                     Initializer, Assign for BindingPattern with
  *                     Initializer
- *         followed by either:
- *           * StatementList node for function body statements
- *           * ReturnStmt for expression closure
+ *         followed by:
+ *           * LexicalScopeNode
  *   count: number of formal parameters + 1
  * Spread (UnaryNode)
  *   kid: expression being spread
@@ -2535,18 +2533,6 @@ inline bool ParseNode::isConstant() {
     default:
       return false;
   }
-}
-
-static inline ParseNode* FunctionFormalParametersList(FunctionNode* fn,
-                                                      unsigned* numFormals) {
-  ParamsBodyNode* argsBody = fn->body();
-  *numFormals = argsBody->count();
-  if (*numFormals > 0 && argsBody->last()->is<LexicalScopeNode>() &&
-      argsBody->last()->as<LexicalScopeNode>().scopeBody()->isKind(
-          ParseNodeKind::StatementList)) {
-    (*numFormals)--;
-  }
-  return argsBody->head();
 }
 
 bool IsAnonymousFunctionDefinition(ParseNode* pn);

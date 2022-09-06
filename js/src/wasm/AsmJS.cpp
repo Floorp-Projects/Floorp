@@ -603,6 +603,27 @@ static inline TaggedParserAtomIndex FunctionName(FunctionNode* funNode) {
   return TaggedParserAtomIndex::null();
 }
 
+static inline ParseNode* FunctionFormalParametersList(FunctionNode* fn,
+                                                      unsigned* numFormals) {
+  ParamsBodyNode* argsBody = fn->body();
+
+  // The number of formals is equal to the number of parameters (excluding the
+  // trailing lexical scope). There are no destructuring or rest parameters for
+  // asm.js functions.
+  *numFormals = argsBody->count();
+
+  // If the function has been fully parsed, the trailing function body node is a
+  // lexical scope. If we've only parsed the function parameters, the last node
+  // is the last parameter.
+  if (*numFormals > 0 && argsBody->last()->is<LexicalScopeNode>()) {
+    MOZ_ASSERT(argsBody->last()->as<LexicalScopeNode>().scopeBody()->isKind(
+        ParseNodeKind::StatementList));
+    (*numFormals)--;
+  }
+
+  return argsBody->head();
+}
+
 static inline ParseNode* FunctionStatementList(FunctionNode* funNode) {
   LexicalScopeNode* last = &funNode->body()->last()->as<LexicalScopeNode>();
   MOZ_ASSERT(last->isEmptyScope());
