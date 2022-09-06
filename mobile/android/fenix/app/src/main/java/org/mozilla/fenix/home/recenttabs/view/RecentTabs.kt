@@ -37,6 +37,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
@@ -44,6 +45,9 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.painter.BitmapPainter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.testTag
+import androidx.compose.ui.semantics.testTagsAsResourceId
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -70,6 +74,7 @@ import org.mozilla.fenix.theme.FirefoxTheme
  * @param backgroundColor The background [Color] of each item.
  * @param onRecentTabClick Invoked when the user clicks on a recent tab.
  */
+@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun RecentTabs(
     recentTabs: List<RecentTab>,
@@ -79,7 +84,12 @@ fun RecentTabs(
     onRecentTabLongClick: () -> Unit = {},
 ) {
     Column(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .semantics {
+                testTagsAsResourceId = true
+                testTag = "recent.tabs"
+            },
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         recentTabs.forEach { tab ->
@@ -105,8 +115,12 @@ fun RecentTabs(
  * @param backgroundColor The background [Color] of the item.
  * @param onRecentTabClick Invoked when the user clicks on a recent tab.
  */
-@OptIn(ExperimentalFoundationApi::class)
+@OptIn(
+    ExperimentalFoundationApi::class,
+    ExperimentalComposeUiApi::class,
+)
 @Composable
+@Suppress("LongMethod")
 private fun RecentTabItem(
     tab: RecentTab.Tab,
     menuItems: List<RecentTabMenuItem>,
@@ -151,6 +165,10 @@ private fun RecentTabItem(
             ) {
                 Text(
                     text = tab.state.content.title.ifEmpty { tab.state.content.url.trimmed() },
+                    modifier = Modifier.semantics {
+                        testTagsAsResourceId = true
+                        testTag = "recent.tab.title"
+                    },
                     color = FirefoxTheme.colors.textPrimary,
                     fontSize = 14.sp,
                     maxLines = 2,
@@ -171,6 +189,10 @@ private fun RecentTabItem(
 
                     Text(
                         text = tab.state.content.url.trimmed(),
+                        modifier = Modifier.semantics {
+                            testTagsAsResourceId = true
+                            testTag = "recent.tab.url"
+                        },
                         color = FirefoxTheme.colors.textSecondary,
                         fontSize = 12.sp,
                         overflow = TextOverflow.Ellipsis,
@@ -232,6 +254,7 @@ fun RecentTabImage(
  * @param tab The [RecentTab.Tab] for which this menu is shown.
  * @param onDismissRequest Called when the user chooses a menu option or requests to dismiss the menu.
  */
+@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 private fun RecentTabMenu(
     showMenu: Boolean,
@@ -247,7 +270,11 @@ private fun RecentTabMenu(
         expanded = showMenu,
         onDismissRequest = { onDismissRequest() },
         modifier = Modifier
-            .background(color = FirefoxTheme.colors.layer2),
+            .background(color = FirefoxTheme.colors.layer2)
+            .semantics {
+                testTagsAsResourceId = true
+                testTag = "recent.tab.menu"
+            },
     ) {
         for (item in menuItems) {
             DropdownMenuItem(
