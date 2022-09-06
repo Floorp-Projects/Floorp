@@ -15,12 +15,18 @@ class nsTextToSubURI : public nsITextToSubURI {
   NS_DECL_ISUPPORTS
   NS_DECL_NSITEXTTOSUBURI
 
+  // Thread-safe function for C++ callers
+  static nsresult UnEscapeNonAsciiURI(const nsACString& aCharset,
+                                      const nsACString& aURIFragment,
+                                      nsAString& _retval);
+
  private:
   virtual ~nsTextToSubURI();
 
   // We assume that the URI is encoded as UTF-8.
-  nsresult convertURItoUnicode(const nsCString& aCharset, const nsCString& aURI,
-                               nsAString& _retval);
+  static nsresult convertURItoUnicode(const nsCString& aCharset,
+                                      const nsCString& aURI,
+                                      nsAString& _retval);
 
   // Characters defined in netwerk/dns/IDNCharacterBlocklist.inc or via the
   // network.IDN.extra_allowed_chars and network.IDN.extra_blocked_chars prefs.
