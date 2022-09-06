@@ -5,6 +5,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "StorageManager.h"
+#include "fs/FileSystemRequestHandler.h"
 
 #include <cstdint>
 #include <cstdlib>

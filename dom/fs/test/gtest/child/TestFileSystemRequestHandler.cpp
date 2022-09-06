@@ -4,12 +4,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "gtest/gtest.h"
-
+#include "ArrayAppendable.h"
 #include "FileSystemBackgroundRequestHandler.h"
 #include "FileSystemMocks.h"
 #include "fs/FileSystemRequestHandler.h"
-
+#include "gtest/gtest.h"
 #include "mozilla/dom/IPCBlob.h"
 #include "mozilla/dom/FileSystemManager.h"
 #include "mozilla/dom/FileSystemManagerChild.h"
@@ -174,6 +173,14 @@ TEST_F(TestFileSystemRequestHandler, isGetFileSuccessful) {
                      [this]() { return mListener->IsDone(); });
 }
 
+class TestArrayAppendable : public ArrayAppendable {
+ public:
+  MOCK_METHOD(void, append,
+              (nsIGlobalObject * aGlobal, RefPtr<FileSystemManager>& aManager,
+               const nsTArray<FileSystemEntryMetadata>&),
+              (override));
+};
+
 TEST_F(TestFileSystemRequestHandler, isGetEntriesSuccessful) {
   auto fakeResponse = [](const auto& /* aRequest */, auto&& aResolve,
                          auto&& /* aReject */) {
@@ -200,7 +207,9 @@ TEST_F(TestFileSystemRequestHandler, isGetEntriesSuccessful) {
       });
 
   auto testable = GetFileSystemRequestHandler();
-  ArrayAppendable sink;
+  TestArrayAppendable sink;
+  EXPECT_CALL(sink, append(_, _, _)).Times(1);
+
   testable->GetEntries(mManager, mEntry.entryId(), /* page */ 0, promise, sink);
   SpinEventLoopUntil("Promise is fulfilled or timeout"_ns,
                      [listener]() { return listener->IsDone(); });

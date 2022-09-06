@@ -15,19 +15,15 @@ dictionary FileSystemRemoveOptions {
   boolean recursive = false;
 };
 
-// TODO: Add Serializzable
+// TODO: Add Serializable
 [Exposed=(Window,Worker), SecureContext, Pref="dom.fs.enabled"]
 interface FileSystemDirectoryHandle : FileSystemHandle {
-  // This interface defines an async iterable, however that isn't supported yet
-  // by the bindings. So for now just explicitly define what an async iterable
-  // definition implies.
-  //async iterable<USVString, FileSystemHandle>;
-  FileSystemDirectoryIterator entries();
-  FileSystemDirectoryIterator keys();
-  FileSystemDirectoryIterator values();
+
+  async iterable<USVString, FileSystemHandle>;
 
   [NewObject]
   Promise<FileSystemFileHandle> getFileHandle(USVString name, optional FileSystemGetFileOptions options = {});
+
   [NewObject]
   Promise<FileSystemDirectoryHandle> getDirectoryHandle(USVString name, optional FileSystemGetDirectoryOptions options = {});
 

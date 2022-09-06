@@ -50,17 +50,8 @@ exported_symbols.testKeysIteratorNextIsCallable = async function() {
   const it = await root.keys();
   Assert.ok(!!it, "Does root support keys iterator?");
 
-  try {
-    await it.next();
-    Assert.ok(false, "Should have thrown");
-  } catch (ex) {
-    Assert.ok(true, "Should have thrown");
-    Assert.equal(
-      ex.result,
-      Cr.NS_ERROR_NOT_IMPLEMENTED,
-      "Threw the right result code"
-    );
-  }
+  const item = await it.next();
+  Assert.ok(!!item, "Should return an item");
 };
 
 exported_symbols.testDirectoryHandleSupportsValuesIterator = async function() {
@@ -76,17 +67,8 @@ exported_symbols.testValuesIteratorNextIsCallable = async function() {
   const it = await root.values();
   Assert.ok(!!it, "Does root support values iterator?");
 
-  try {
-    await it.next();
-    Assert.ok(false, "Should have thrown");
-  } catch (ex) {
-    Assert.ok(true, "Should have thrown");
-    Assert.equal(
-      ex.result,
-      Cr.NS_ERROR_NOT_IMPLEMENTED,
-      "Threw the right result code"
-    );
-  }
+  const item = await it.next();
+  Assert.ok(!!item, "Should return an item");
 };
 
 exported_symbols.testDirectoryHandleSupportsEntriesIterator = async function() {
@@ -102,69 +84,41 @@ exported_symbols.testEntriesIteratorNextIsCallable = async function() {
   const it = await root.entries();
   Assert.ok(!!it, "Does root support entries iterator?");
 
-  try {
-    await it.next();
-    Assert.ok(false, "Should have thrown");
-  } catch (ex) {
-    Assert.ok(true, "Should have thrown");
-    Assert.equal(
-      ex.result,
-      Cr.NS_ERROR_NOT_IMPLEMENTED,
-      "Threw the right result code"
-    );
-  }
+  const item = await it.next();
+  Assert.ok(!!item, "Should return an item");
 };
 
 exported_symbols.testGetFileHandleIsCallable = async function() {
   const root = await navigator.storage.getDirectory();
   const allowCreate = { create: true };
 
-  try {
-    await root.getFileHandle("name", allowCreate);
-
-    Assert.ok(false, "Should have thrown");
-  } catch (ex) {
-    Assert.ok(true, "Should have thrown");
-    Assert.equal(
-      ex.result,
-      Cr.NS_ERROR_NOT_IMPLEMENTED,
-      "Threw the right result code"
-    );
-  }
+  const item = await root.getFileHandle("fileName", allowCreate);
+  Assert.ok(!!item, "Should return an item");
 };
 
 exported_symbols.testGetDirectoryHandleIsCallable = async function() {
   const root = await navigator.storage.getDirectory();
   const allowCreate = { create: true };
 
-  try {
-    await root.getDirectoryHandle("name", allowCreate);
-
-    Assert.ok(false, "Should have thrown");
-  } catch (ex) {
-    Assert.ok(true, "Should have thrown");
-    Assert.equal(
-      ex.result,
-      Cr.NS_ERROR_NOT_IMPLEMENTED,
-      "Threw the right result code"
-    );
-  }
+  const item = await root.getDirectoryHandle("dirName", allowCreate);
+  Assert.ok(!!item, "Should return an item");
 };
 
 exported_symbols.testRemoveEntryIsCallable = async function() {
   const root = await navigator.storage.getDirectory();
   const removeOptions = { recursive: true };
 
+  await root.removeEntry("fileName", removeOptions);
+  await root.removeEntry("dirName", removeOptions);
   try {
-    await root.removeEntry("root", removeOptions);
-
+    await root.removeEntry("doesNotExist", removeOptions);
     Assert.ok(false, "Should have thrown");
   } catch (ex) {
     Assert.ok(true, "Should have thrown");
     Assert.equal(
-      ex.result,
-      Cr.NS_ERROR_NOT_IMPLEMENTED,
-      "Threw the right result code"
+      ex.message,
+      "Unknown failure",
+      "Threw the right error message"
     );
   }
 };

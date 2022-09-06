@@ -33,7 +33,15 @@ class TestFileSystemDirectoryHandle : public ::testing::Test {
     mManager = MakeAndAddRef<FileSystemManager>(mGlobal, nullptr);
   }
 
+  FileSystemDirectoryHandle::iterator_t::WrapFunc GetWrapFunc() const {
+    return [](JSContext*, AsyncIterableIterator<FileSystemDirectoryHandle>*,
+              JS::Handle<JSObject*>,
+              JS::MutableHandle<JSObject*>) -> bool { return true; };
+  }
+
   nsIGlobalObject* mGlobal = GetGlobal();
+  const IterableIteratorBase::IteratorType mIteratorType =
+      IterableIteratorBase::IteratorType::Keys;
   UniquePtr<MockFileSystemRequestHandler> mRequestHandler;
   FileSystemEntryMetadata mMetadata;
   nsString mName;
@@ -47,37 +55,61 @@ TEST_F(TestFileSystemDirectoryHandle, constructDirectoryHandleRefPointer) {
   ASSERT_TRUE(dirHandle);
 }
 
-TEST_F(TestFileSystemDirectoryHandle, areEntriesReturned) {
+TEST_F(TestFileSystemDirectoryHandle, initAndDestroyIterator) {
   RefPtr<FileSystemDirectoryHandle> dirHandle =
       MakeAndAddRef<FileSystemDirectoryHandle>(mGlobal, mManager, mMetadata,
                                                mRequestHandler.release());
 
   ASSERT_TRUE(dirHandle);
 
-  RefPtr<FileSystemDirectoryIterator> entries = dirHandle->Entries();
-  ASSERT_TRUE(entries);
+  RefPtr<FileSystemDirectoryHandle::iterator_t> iterator =
+      new FileSystemDirectoryHandle::iterator_t(dirHandle.get(), mIteratorType,
+                                                GetWrapFunc());
+  IgnoredErrorResult rv;
+  dirHandle->InitAsyncIterator(iterator, rv);
+  ASSERT_TRUE(iterator->GetData());
+
+  dirHandle->DestroyAsyncIterator(iterator);
+  ASSERT_EQ(nullptr, iterator->GetData());
 }
 
-TEST_F(TestFileSystemDirectoryHandle, areKeysReturned) {
+class MockFileSystemDirectoryIteratorImpl final
+    : public FileSystemDirectoryIterator::Impl {
+ public:
+  NS_INLINE_DECL_REFCOUNTING(MockFileSystemDirectoryIteratorImpl)
+
+  MOCK_METHOD(already_AddRefed<Promise>, Next,
+              (nsIGlobalObject * aGlobal, RefPtr<FileSystemManager>& aManager,
+               ErrorResult& aError),
+              (override));
+
+ protected:
+  ~MockFileSystemDirectoryIteratorImpl() = default;
+};
+
+TEST_F(TestFileSystemDirectoryHandle, isNextPromiseReturned) {
   RefPtr<FileSystemDirectoryHandle> dirHandle =
       MakeAndAddRef<FileSystemDirectoryHandle>(mGlobal, mManager, mMetadata,
                                                mRequestHandler.release());
 
   ASSERT_TRUE(dirHandle);
 
-  RefPtr<FileSystemDirectoryIterator> keys = dirHandle->Keys();
-  ASSERT_TRUE(keys);
-}
+  auto* mockIter = new MockFileSystemDirectoryIteratorImpl();
+  IgnoredErrorResult error;
+  EXPECT_CALL(*mockIter, Next(_, _, _))
+      .WillOnce(::testing::Return(Promise::Create(mGlobal, error)));
 
-TEST_F(TestFileSystemDirectoryHandle, areValuesReturned) {
-  RefPtr<FileSystemDirectoryHandle> dirHandle =
-      MakeAndAddRef<FileSystemDirectoryHandle>(mGlobal, mManager, mMetadata,
-                                               mRequestHandler.release());
+  RefPtr<FileSystemDirectoryHandle::iterator_t> iterator =
+      MakeAndAddRef<FileSystemDirectoryHandle::iterator_t>(
+          dirHandle.get(), mIteratorType, GetWrapFunc());
+  iterator->SetData(static_cast<void*>(mockIter));
 
-  ASSERT_TRUE(dirHandle);
+  IgnoredErrorResult rv;
+  RefPtr<Promise> promise =
+      dirHandle->GetNextPromise(nullptr, iterator.get(), rv);
+  ASSERT_TRUE(promise);
 
-  RefPtr<FileSystemDirectoryIterator> values = dirHandle->Values();
-  ASSERT_TRUE(values);
+  dirHandle->DestroyAsyncIterator(iterator.get());
 }
 
 TEST_F(TestFileSystemDirectoryHandle, isHandleKindDirectory) {
@@ -91,6 +123,8 @@ TEST_F(TestFileSystemDirectoryHandle, isHandleKindDirectory) {
 }
 
 TEST_F(TestFileSystemDirectoryHandle, isFileHandleReturned) {
+  EXPECT_CALL(*mRequestHandler, GetFileHandle(_, _, _, _))
+      .WillOnce(::testing::ReturnArg<3>());
   RefPtr<FileSystemDirectoryHandle> dirHandle =
       MakeAndAddRef<FileSystemDirectoryHandle>(mGlobal, mManager, mMetadata,
                                                mRequestHandler.release());
@@ -119,6 +153,8 @@ TEST_F(TestFileSystemDirectoryHandle, doesGetFileHandleFailOnNullGlobal) {
 }
 
 TEST_F(TestFileSystemDirectoryHandle, isDirectoryHandleReturned) {
+  EXPECT_CALL(*mRequestHandler, GetDirectoryHandle(_, _, _, _))
+      .WillOnce(::testing::ReturnArg<3>());
   RefPtr<FileSystemDirectoryHandle> dirHandle =
       MakeAndAddRef<FileSystemDirectoryHandle>(mGlobal, mManager, mMetadata,
                                                mRequestHandler.release());
@@ -147,6 +183,8 @@ TEST_F(TestFileSystemDirectoryHandle, doesGetDirectoryHandleFailOnNullGlobal) {
 }
 
 TEST_F(TestFileSystemDirectoryHandle, isRemoveEntrySuccessful) {
+  EXPECT_CALL(*mRequestHandler, RemoveEntry(_, _, _, _))
+      .WillOnce(::testing::ReturnArg<3>());
   RefPtr<FileSystemDirectoryHandle> dirHandle =
       MakeAndAddRef<FileSystemDirectoryHandle>(mGlobal, mManager, mMetadata,
                                                mRequestHandler.release());

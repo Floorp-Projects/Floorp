@@ -141,7 +141,20 @@ IPCResult FileSystemManagerParent::RecvResolveMsg(
 
 IPCResult FileSystemManagerParent::RecvGetEntriesMsg(
     FileSystemGetEntriesRequest&& aRequest, GetEntriesMsgResolver&& aResolver) {
-  FileSystemGetEntriesResponse response(NS_ERROR_NOT_IMPLEMENTED);
+  MOZ_ASSERT(!aRequest.parentId().IsEmpty());
+  MOZ_ASSERT(mDataManager);
+
+  auto reportError = [&aResolver](const QMResult& aRv) {
+    FileSystemGetEntriesResponse response(ToNSResult(aRv));
+    aResolver(response);
+  };
+
+  QM_TRY_UNWRAP(FileSystemDirectoryListing entries,
+                mDataManager->MutableDatabaseManagerPtr()->GetDirectoryEntries(
+                    aRequest.parentId(), aRequest.page()),
+                IPC_OK(), reportError);
+
+  FileSystemGetEntriesResponse response(entries);
   aResolver(response);
 
   return IPC_OK();
