@@ -8185,12 +8185,6 @@
   value: 1.0f
   mirror: always
 
-- name: layout.css.supports-selector.enabled
-  type: RelaxedAtomicBool
-  value: true
-  mirror: always
-  rust: true
-
 # Tuning of the smooth scroll motion used by CSSOM-View scroll-behavior.
 # Spring-constant controls the strength of the simulated MSD
 # (Mass-Spring-Damper).
