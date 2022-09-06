@@ -527,6 +527,7 @@ def run_web_platform_tests(command_context, **params):
     conditions=[conditions.is_firefox_or_android],
     description="Run web-platform-tests.",
     parser=create_parser_wpt,
+    virtualenv_name="wpt",
 )
 def run_wpt(command_context, **params):
     return run_web_platform_tests(command_context, **params)
@@ -550,6 +551,7 @@ def update_web_platform_tests(command_context, **params):
     category="testing",
     description="Update web-platform-test metadata.",
     parser=create_parser_update,
+    virtualenv_name="wpt",
 )
 def update_wpt(command_context, **params):
     return update_web_platform_tests(command_context, **params)
@@ -594,6 +596,7 @@ def wpt_serve(command_context, **params):
     category="testing",
     description="Create a json summary of the wpt metadata",
     parser=create_parser_metadata_summary,
+    virtualenv_name="wpt",
 )
 def wpt_summary(command_context, **params):
     import metasummary
@@ -602,7 +605,12 @@ def wpt_summary(command_context, **params):
     return metasummary.run(wpt_setup.topsrcdir, wpt_setup.topobjdir, **params)
 
 
-@Command("wpt-metadata-merge", category="testing", parser=create_parser_metadata_merge)
+@Command(
+    "wpt-metadata-merge",
+    category="testing",
+    parser=create_parser_metadata_merge,
+    virtualenv_name="wpt",
+)
 def wpt_meta_merge(command_context, **params):
     import metamerge
 
@@ -628,6 +636,7 @@ def wpt_unittest(command_context, **params):
     category="testing",
     description="Get a mapping from test ids to files",
     parser=create_parser_testpaths,
+    virtualenv_name="wpt",
 )
 def wpt_test_paths(command_context, **params):
     runner = command_context._spawn(WebPlatformTestsTestPathsRunner)
@@ -640,6 +649,7 @@ def wpt_test_paths(command_context, **params):
     category="testing",
     description="Dump a list of fission-specific regressions",
     parser=create_parser_fission_regressions,
+    virtualenv_name="wpt",
 )
 def wpt_fission_regressions(command_context, **params):
     runner = command_context._spawn(WebPlatformTestsFissionRegressionsRunner)
