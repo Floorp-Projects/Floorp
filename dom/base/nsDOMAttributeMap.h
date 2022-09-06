@@ -97,7 +97,7 @@ class nsDOMAttributeMap final : public nsISupports, public nsWrapperCache {
   explicit nsDOMAttributeMap(Element* aContent);
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SKIPPABLE_SCRIPT_HOLDER_CLASS(nsDOMAttributeMap)
+  NS_DECL_CYCLE_COLLECTION_SKIPPABLE_WRAPPERCACHE_CLASS(nsDOMAttributeMap)
 
   void DropReference();
 

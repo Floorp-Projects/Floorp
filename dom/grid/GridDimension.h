@@ -31,7 +31,7 @@ class GridDimension : public nsISupports, public nsWrapperCache {
 
  public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(GridDimension)
+  NS_DECL_CYCLE_COLLECTION_WRAPPERCACHE_CLASS(GridDimension)
 
   virtual JSObject* WrapObject(JSContext* aCx,
                                JS::Handle<JSObject*> aGivenProto) override;

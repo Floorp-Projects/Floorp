@@ -91,7 +91,7 @@ class Navigator final : public nsISupports, public nsWrapperCache {
   explicit Navigator(nsPIDOMWindowInner* aInnerWindow);
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(Navigator)
+  NS_DECL_CYCLE_COLLECTION_WRAPPERCACHE_CLASS(Navigator)
 
   void Invalidate();
   nsPIDOMWindowInner* GetWindow() const { return mWindow; }

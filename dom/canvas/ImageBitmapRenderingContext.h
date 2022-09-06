@@ -52,7 +52,7 @@ class ImageBitmapRenderingContext final
   // nsISupports interface + CC
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
 
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(ImageBitmapRenderingContext)
+  NS_DECL_CYCLE_COLLECTION_WRAPPERCACHE_CLASS(ImageBitmapRenderingContext)
 
   void GetCanvas(
       Nullable<OwningHTMLCanvasElementOrOffscreenCanvas>& retval) const;

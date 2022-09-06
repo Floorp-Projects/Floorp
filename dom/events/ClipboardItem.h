@@ -27,7 +27,7 @@ class ClipboardItem final : public nsWrapperCache {
   };
 
   NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(ClipboardItem)
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(ClipboardItem)
+  NS_DECL_CYCLE_COLLECTION_NATIVE_WRAPPERCACHE_CLASS(ClipboardItem)
 
   ClipboardItem(nsISupports* aOwner, dom::PresentationStyle aPresentationStyle,
                 nsTArray<ItemEntry>&& aItems);

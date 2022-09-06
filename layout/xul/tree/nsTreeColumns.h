@@ -48,7 +48,7 @@ class nsTreeColumn final : public nsISupports, public nsWrapperCache {
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_TREECOLUMN_IMPL_CID)
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(nsTreeColumn)
+  NS_DECL_CYCLE_COLLECTION_WRAPPERCACHE_CLASS(nsTreeColumn)
 
   // WebIDL
   nsIContent* GetParentObject() const;
@@ -158,7 +158,7 @@ class nsTreeColumns final : public nsISupports, public nsWrapperCache {
   explicit nsTreeColumns(nsTreeBodyFrame* aTree);
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(nsTreeColumns)
+  NS_DECL_CYCLE_COLLECTION_WRAPPERCACHE_CLASS(nsTreeColumns)
 
   nsIContent* GetParentObject() const;
   virtual JSObject* WrapObject(JSContext* aCx,

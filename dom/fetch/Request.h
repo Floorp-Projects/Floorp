@@ -25,8 +25,8 @@ class RequestOrUSVString;
 
 class Request final : public FetchBody<Request>, public nsWrapperCache {
   NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(Request,
-                                                         FetchBody<Request>)
+  NS_DECL_CYCLE_COLLECTION_WRAPPERCACHE_CLASS_INHERITED(Request,
+                                                        FetchBody<Request>)
 
  public:
   Request(nsIGlobalObject* aOwner, SafeRefPtr<InternalRequest> aRequest,

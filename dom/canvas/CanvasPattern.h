@@ -26,7 +26,7 @@ class CanvasPattern final : public nsWrapperCache {
 
  public:
   NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(CanvasPattern)
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(CanvasPattern)
+  NS_DECL_CYCLE_COLLECTION_NATIVE_WRAPPERCACHE_CLASS(CanvasPattern)
 
   enum class RepeatMode : uint8_t { REPEAT, REPEATX, REPEATY, NOREPEAT };
 

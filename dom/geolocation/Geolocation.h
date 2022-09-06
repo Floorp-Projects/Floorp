@@ -116,7 +116,7 @@ namespace mozilla::dom {
 class Geolocation final : public nsIGeolocationUpdate, public nsWrapperCache {
  public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(Geolocation)
+  NS_DECL_CYCLE_COLLECTION_WRAPPERCACHE_CLASS(Geolocation)
 
   NS_DECL_NSIGEOLOCATIONUPDATE
 

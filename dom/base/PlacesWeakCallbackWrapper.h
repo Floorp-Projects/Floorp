@@ -18,7 +18,7 @@ class PlacesWeakCallbackWrapper final : public nsWrapperCache,
                                         public SupportsWeakPtr {
  public:
   NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(PlacesWeakCallbackWrapper)
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(PlacesWeakCallbackWrapper)
+  NS_DECL_CYCLE_COLLECTION_NATIVE_WRAPPERCACHE_CLASS(PlacesWeakCallbackWrapper)
 
   explicit PlacesWeakCallbackWrapper(nsISupports* aParent,
                                      PlacesEventCallback& aCallback);

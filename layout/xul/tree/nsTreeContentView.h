@@ -42,8 +42,8 @@ class nsTreeContentView final : public nsITreeView,
   nsTreeContentView(void);
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_AMBIGUOUS(nsTreeContentView,
-                                                         nsITreeView)
+  NS_DECL_CYCLE_COLLECTION_WRAPPERCACHE_CLASS_AMBIGUOUS(nsTreeContentView,
+                                                        nsITreeView)
 
   virtual JSObject* WrapObject(JSContext* aCx,
                                JS::Handle<JSObject*> aGivenProto) override;

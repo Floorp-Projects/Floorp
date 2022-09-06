@@ -103,7 +103,7 @@ CallbackTimeoutHandler::CallbackTimeoutHandler(
   mArgs = std::move(aArguments);
 }
 
-NS_IMPL_CYCLE_COLLECTION_MULTI_ZONE_JSHOLDER_CLASS(CallbackTimeoutHandler)
+NS_IMPL_CYCLE_COLLECTION_CLASS(CallbackTimeoutHandler)
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(CallbackTimeoutHandler)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mGlobal)

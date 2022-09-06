@@ -26,7 +26,7 @@ namespace mozilla::intl {
 class FluentBundleAsyncIterator final : public nsWrapperCache {
  public:
   NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(FluentBundleAsyncIterator)
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(FluentBundleAsyncIterator)
+  NS_DECL_CYCLE_COLLECTION_NATIVE_WRAPPERCACHE_CLASS(FluentBundleAsyncIterator)
 
   FluentBundleAsyncIterator(
       nsIGlobalObject* aGlobal,
@@ -49,7 +49,7 @@ class FluentBundleAsyncIterator final : public nsWrapperCache {
 class FluentBundleIterator final : public nsWrapperCache {
  public:
   NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(FluentBundleIterator)
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(FluentBundleIterator)
+  NS_DECL_CYCLE_COLLECTION_NATIVE_WRAPPERCACHE_CLASS(FluentBundleIterator)
 
   FluentBundleIterator(nsIGlobalObject* aGlobal,
                        UniquePtr<ffi::GeckoFluentBundleIterator> aRaw);
@@ -71,7 +71,7 @@ class FluentBundleIterator final : public nsWrapperCache {
 class L10nRegistry final : public nsWrapperCache {
  public:
   NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(L10nRegistry)
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(L10nRegistry)
+  NS_DECL_CYCLE_COLLECTION_NATIVE_WRAPPERCACHE_CLASS(L10nRegistry)
 
   L10nRegistry(nsIGlobalObject* aGlobal, bool aUseIsolating);
 

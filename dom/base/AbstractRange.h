@@ -42,7 +42,7 @@ class AbstractRange : public nsISupports, public nsWrapperCache {
   static void Shutdown();
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(AbstractRange)
+  NS_DECL_CYCLE_COLLECTION_WRAPPERCACHE_CLASS(AbstractRange)
 
   const RangeBoundary& StartRef() const { return mStart; }
   const RangeBoundary& EndRef() const { return mEnd; }

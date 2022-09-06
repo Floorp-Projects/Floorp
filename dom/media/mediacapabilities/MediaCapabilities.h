@@ -45,7 +45,7 @@ class MediaCapabilities final : public nsISupports, public nsWrapperCache {
  public:
   // Ref counting and cycle collection
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(MediaCapabilities)
+  NS_DECL_CYCLE_COLLECTION_WRAPPERCACHE_CLASS(MediaCapabilities)
 
   // WebIDL Methods
   already_AddRefed<Promise> DecodingInfo(

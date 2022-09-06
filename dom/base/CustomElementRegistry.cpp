@@ -389,7 +389,7 @@ class MOZ_RAII AutoConstructionStackEntry final {
 
 }  // namespace
 
-NS_IMPL_CYCLE_COLLECTION_MULTI_ZONE_JSHOLDER_CLASS(CustomElementRegistry)
+NS_IMPL_CYCLE_COLLECTION_CLASS(CustomElementRegistry)
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(CustomElementRegistry)
   tmp->mConstructors.clear();

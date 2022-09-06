@@ -815,7 +815,7 @@ class SyncReadFile : public nsISupports, public nsWrapperCache {
                int64_t aSize);
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(SyncReadFile)
+  NS_DECL_CYCLE_COLLECTION_WRAPPERCACHE_CLASS(SyncReadFile)
 
   nsISupports* GetParentObject() const { return mParent; }
 

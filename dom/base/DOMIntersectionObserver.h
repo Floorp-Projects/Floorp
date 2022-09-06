@@ -39,7 +39,7 @@ class DOMIntersectionObserverEntry final : public nsISupports,
         mTarget(aTarget),
         mIntersectionRatio(aIntersectionRatio) {}
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(DOMIntersectionObserverEntry)
+  NS_DECL_CYCLE_COLLECTION_WRAPPERCACHE_CLASS(DOMIntersectionObserverEntry)
 
   nsISupports* GetParentObject() const { return mOwner; }
 

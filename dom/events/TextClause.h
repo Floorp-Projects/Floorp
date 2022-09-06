@@ -19,7 +19,7 @@ namespace mozilla::dom {
 class TextClause final : public nsISupports, public nsWrapperCache {
  public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(TextClause)
+  NS_DECL_CYCLE_COLLECTION_WRAPPERCACHE_CLASS(TextClause)
 
   nsPIDOMWindowInner* GetParentObject() const { return mOwner; }
 

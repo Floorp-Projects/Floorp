@@ -28,7 +28,7 @@ class AudioParam final : public nsWrapperCache, public AudioParamTimeline {
 
   NS_IMETHOD_(MozExternalRefCountType) AddRef(void);
   NS_IMETHOD_(MozExternalRefCountType) Release(void);
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(AudioParam)
+  NS_DECL_CYCLE_COLLECTION_NATIVE_WRAPPERCACHE_CLASS(AudioParam)
 
   AudioContext* GetParentObject() const { return mNode->Context(); }
 

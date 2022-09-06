@@ -15,7 +15,7 @@ namespace mozilla::dom {
 class PaymentAddress final : public nsISupports, public nsWrapperCache {
  public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(PaymentAddress)
+  NS_DECL_CYCLE_COLLECTION_WRAPPERCACHE_CLASS(PaymentAddress)
 
   PaymentAddress(nsPIDOMWindowInner* aWindow, const nsAString& aCountry,
                  const nsTArray<nsString>& aAddressLine,

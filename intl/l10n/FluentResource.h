@@ -19,7 +19,7 @@ namespace intl {
 class FluentResource : public nsWrapperCache {
  public:
   NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(FluentResource)
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(FluentResource)
+  NS_DECL_CYCLE_COLLECTION_NATIVE_WRAPPERCACHE_CLASS(FluentResource)
 
   FluentResource(nsISupports* aParent, const ffi::FluentResource* aRaw);
   FluentResource(nsISupports* aParent, const nsACString& aSource);

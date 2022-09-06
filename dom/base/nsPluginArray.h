@@ -28,7 +28,7 @@ class nsPluginArray final : public nsSupportsWeakReference,
                             public nsWrapperCache {
  public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(nsPluginArray)
+  NS_DECL_CYCLE_COLLECTION_WRAPPERCACHE_CLASS(nsPluginArray)
 
   explicit nsPluginArray(nsPIDOMWindowInner* aWindow);
   nsPIDOMWindowInner* GetParentObject() const;
@@ -75,7 +75,7 @@ class nsPluginArray final : public nsSupportsWeakReference,
 class nsPluginElement final : public nsISupports, public nsWrapperCache {
  public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(nsPluginElement)
+  NS_DECL_CYCLE_COLLECTION_WRAPPERCACHE_CLASS(nsPluginElement)
 
   explicit nsPluginElement(nsPluginArray* aPluginArray,
                            nsPIDOMWindowInner* aWindow, const nsAString& aName);

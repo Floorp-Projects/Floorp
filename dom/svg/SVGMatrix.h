@@ -51,7 +51,7 @@ namespace mozilla::dom {
 class SVGMatrix final : public nsWrapperCache {
  public:
   NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(SVGMatrix)
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(SVGMatrix)
+  NS_DECL_CYCLE_COLLECTION_NATIVE_WRAPPERCACHE_CLASS(SVGMatrix)
 
   /**
    * Ctor for SVGMatrix objects that belong to a DOMSVGTransform.

@@ -48,8 +48,8 @@ class TableRowsCollection final : public nsIHTMLCollection,
 
   NS_IMETHOD ParentDestroyed();
 
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_AMBIGUOUS(TableRowsCollection,
-                                                         nsIHTMLCollection)
+  NS_DECL_CYCLE_COLLECTION_WRAPPERCACHE_CLASS_AMBIGUOUS(TableRowsCollection,
+                                                        nsIHTMLCollection)
 
   // nsWrapperCache
   using nsWrapperCache::GetWrapperPreserveColor;

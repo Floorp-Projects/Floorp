@@ -41,12 +41,19 @@ class OffscreenCanvasShutdownObserver final {
   OffscreenCanvasRenderingContext2D* mOwner;
 };
 
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_INHERITED(
-    OffscreenCanvasRenderingContext2D, CanvasRenderingContext2D)
+NS_IMPL_CYCLE_COLLECTION_INHERITED(OffscreenCanvasRenderingContext2D,
+                                   CanvasRenderingContext2D)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(OffscreenCanvasRenderingContext2D)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
 NS_INTERFACE_MAP_END_INHERITING(CanvasRenderingContext2D)
+
+// Need to use NS_DECL_CYCLE_COLLECTION_SKIPPABLE_SCRIPT_HOLDER_CLASS_INHERITED
+// and dummy trace since we're missing some _SKIPPABLE_ macros without
+// SCRIPT_HOLDER.
+NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN_INHERITED(
+    OffscreenCanvasRenderingContext2D, CanvasRenderingContext2D)
+NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
 NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_BEGIN(OffscreenCanvasRenderingContext2D)
   return tmp->HasKnownLiveWrapper();

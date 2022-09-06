@@ -18,7 +18,7 @@ namespace mozilla::dom {
 class XRViewport final : public nsWrapperCache {
  public:
   NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(XRViewport)
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(XRViewport)
+  NS_DECL_CYCLE_COLLECTION_NATIVE_WRAPPERCACHE_CLASS(XRViewport)
 
   explicit XRViewport(nsISupports* aParent, const gfx::IntRect& aRect);
 

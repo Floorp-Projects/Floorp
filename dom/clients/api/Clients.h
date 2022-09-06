@@ -46,7 +46,7 @@ class Clients final : public nsISupports, public nsWrapperCache {
   already_AddRefed<Promise> Claim(ErrorResult& aRv);
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(Clients)
+  NS_DECL_CYCLE_COLLECTION_WRAPPERCACHE_CLASS(Clients)
 };
 
 }  // namespace dom

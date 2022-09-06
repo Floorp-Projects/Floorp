@@ -51,7 +51,7 @@ class ReadableStreamDefaultReader final : public ReadableStreamGenericReader,
 {
  public:
   NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(
+  NS_DECL_CYCLE_COLLECTION_WRAPPERCACHE_CLASS_INHERITED(
       ReadableStreamDefaultReader, ReadableStreamGenericReader)
 
  public:

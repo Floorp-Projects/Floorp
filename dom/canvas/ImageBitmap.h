@@ -79,7 +79,7 @@ struct ImageBitmapCloneData final {
 class ImageBitmap final : public nsISupports, public nsWrapperCache {
  public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(ImageBitmap)
+  NS_DECL_CYCLE_COLLECTION_WRAPPERCACHE_CLASS(ImageBitmap)
 
   nsCOMPtr<nsIGlobalObject> GetParentObject() const { return mParent; }
 

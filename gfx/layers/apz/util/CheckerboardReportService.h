@@ -115,7 +115,7 @@ class CheckerboardReportService : public nsWrapperCache {
   nsISupports* GetParentObject();
 
   NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(CheckerboardReportService)
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(CheckerboardReportService)
+  NS_DECL_CYCLE_COLLECTION_NATIVE_WRAPPERCACHE_CLASS(CheckerboardReportService)
 
  public:
   /*

@@ -20,7 +20,7 @@ class PerformanceNavigation final : public nsWrapperCache {
   explicit PerformanceNavigation(Performance* aPerformance);
 
   NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(PerformanceNavigation)
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(PerformanceNavigation)
+  NS_DECL_CYCLE_COLLECTION_NATIVE_WRAPPERCACHE_CLASS(PerformanceNavigation)
 
   nsDOMNavigationTiming* GetDOMTiming() const {
     return mPerformance->GetDOMTiming();

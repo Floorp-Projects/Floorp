@@ -57,7 +57,7 @@ class FormData final : public nsISupports,
   already_AddRefed<FormData> Clone();
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(FormData)
+  NS_DECL_CYCLE_COLLECTION_WRAPPERCACHE_CLASS(FormData)
 
   // nsWrapperCache
   virtual JSObject* WrapObject(JSContext* aCx,

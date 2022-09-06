@@ -68,7 +68,7 @@ class ExtensionMockAPI final : public nsISupports,
   ExtensionEventManager* OnTestEvent();
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(ExtensionMockAPI)
+  NS_DECL_CYCLE_COLLECTION_WRAPPERCACHE_CLASS(ExtensionMockAPI)
 };
 
 }  // namespace extensions

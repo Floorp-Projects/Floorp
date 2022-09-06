@@ -24,7 +24,7 @@ class SpeechRecognitionAlternative final : public nsISupports,
   explicit SpeechRecognitionAlternative(SpeechRecognition* aParent);
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(SpeechRecognitionAlternative)
+  NS_DECL_CYCLE_COLLECTION_WRAPPERCACHE_CLASS(SpeechRecognitionAlternative)
 
   nsISupports* GetParentObject() const;
 

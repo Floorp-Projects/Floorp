@@ -45,7 +45,7 @@ class WorkerLocation final : public nsWrapperCache {
 
  public:
   NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(WorkerLocation)
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(WorkerLocation)
+  NS_DECL_CYCLE_COLLECTION_NATIVE_WRAPPERCACHE_CLASS(WorkerLocation)
 
   static already_AddRefed<WorkerLocation> Create(
       WorkerPrivate::LocationInfo& aInfo);

@@ -25,7 +25,7 @@ class SpeechRecognitionResult final : public nsISupports,
   explicit SpeechRecognitionResult(SpeechRecognition* aParent);
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(SpeechRecognitionResult)
+  NS_DECL_CYCLE_COLLECTION_WRAPPERCACHE_CLASS(SpeechRecognitionResult)
 
   nsISupports* GetParentObject() const;
 

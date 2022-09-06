@@ -29,7 +29,7 @@ enum class CallerType : uint32_t;
 class Worklet final : public nsISupports, public nsWrapperCache {
  public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(Worklet)
+  NS_DECL_CYCLE_COLLECTION_WRAPPERCACHE_CLASS(Worklet)
 
   // |aOwnedObject| may be provided by the WorkletImpl as a parent thread
   // object to keep alive and traverse for CC as long as the Worklet has

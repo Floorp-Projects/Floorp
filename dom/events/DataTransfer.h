@@ -59,7 +59,7 @@ class DataTransfer final : public nsISupports, public nsWrapperCache {
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
 
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(DataTransfer)
+  NS_DECL_CYCLE_COLLECTION_WRAPPERCACHE_CLASS(DataTransfer)
 
   friend class mozilla::EventStateManager;
 

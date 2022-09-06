@@ -244,7 +244,7 @@ class PerformanceTiming final : public nsWrapperCache {
                     nsIHttpChannel* aHttpChannel,
                     DOMHighResTimeStamp aZeroTime);
   NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(PerformanceTiming)
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(PerformanceTiming)
+  NS_DECL_CYCLE_COLLECTION_NATIVE_WRAPPERCACHE_CLASS(PerformanceTiming)
 
   nsDOMNavigationTiming* GetDOMTiming() const {
     return mPerformance->GetDOMTiming();

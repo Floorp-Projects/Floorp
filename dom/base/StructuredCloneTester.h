@@ -27,7 +27,7 @@ class GlobalObject;
 class StructuredCloneTester final : public nsISupports, public nsWrapperCache {
  public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(StructuredCloneTester)
+  NS_DECL_CYCLE_COLLECTION_WRAPPERCACHE_CLASS(StructuredCloneTester)
 
   static already_AddRefed<StructuredCloneTester> Constructor(
       const GlobalObject& aGlobal, const bool aSerializable,

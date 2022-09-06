@@ -93,7 +93,7 @@ class WebTaskScheduler : public nsWrapperCache, public SupportsWeakPtr {
 
  public:
   NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(WebTaskScheduler)
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(WebTaskScheduler)
+  NS_DECL_CYCLE_COLLECTION_NATIVE_WRAPPERCACHE_CLASS(WebTaskScheduler)
 
   static already_AddRefed<WebTaskSchedulerMainThread> CreateForMainThread(
       nsGlobalWindowInner* aWindow);

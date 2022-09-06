@@ -57,7 +57,7 @@ class nsDOMMutationRecord final : public nsISupports, public nsWrapperCache {
   }
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(nsDOMMutationRecord)
+  NS_DECL_CYCLE_COLLECTION_WRAPPERCACHE_CLASS(nsDOMMutationRecord)
 
   void GetType(mozilla::dom::DOMString& aRetVal) const {
     aRetVal.SetKnownLiveAtom(mType, mozilla::dom::DOMString::eNullNotExpected);

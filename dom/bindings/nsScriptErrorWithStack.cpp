@@ -39,7 +39,7 @@ static nsCString FormatStackString(JSContext* cx, JSPrincipals* aPrincipals,
 
 }  // namespace
 
-NS_IMPL_CYCLE_COLLECTION_MULTI_ZONE_JSHOLDER_CLASS(nsScriptErrorWithStack)
+NS_IMPL_CYCLE_COLLECTION_CLASS(nsScriptErrorWithStack)
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsScriptErrorWithStack)
   tmp->mException.setUndefined();

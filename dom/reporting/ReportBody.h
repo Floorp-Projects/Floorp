@@ -24,7 +24,7 @@ namespace dom {
 class ReportBody : public nsISupports, public nsWrapperCache {
  public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(ReportBody)
+  NS_DECL_CYCLE_COLLECTION_WRAPPERCACHE_CLASS(ReportBody)
 
   explicit ReportBody(nsIGlobalObject* aGlobal);
 

@@ -27,7 +27,7 @@ struct XRWebGLLayerInit;
 class XRWebGLLayer final : public nsWrapperCache {
  public:
   NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(XRWebGLLayer)
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(XRWebGLLayer)
+  NS_DECL_CYCLE_COLLECTION_NATIVE_WRAPPERCACHE_CLASS(XRWebGLLayer)
 
   explicit XRWebGLLayer(
       nsISupports* aParent, XRSession& aSession, bool aIgnoreDepthValues,

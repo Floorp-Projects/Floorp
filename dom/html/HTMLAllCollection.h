@@ -35,7 +35,7 @@ class HTMLAllCollection final : public nsISupports, public nsWrapperCache {
   explicit HTMLAllCollection(mozilla::dom::Document* aDocument);
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(HTMLAllCollection)
+  NS_DECL_CYCLE_COLLECTION_WRAPPERCACHE_CLASS(HTMLAllCollection)
 
   virtual JSObject* WrapObject(JSContext* aCx,
                                JS::Handle<JSObject*> aGivenProto) override;

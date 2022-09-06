@@ -22,7 +22,7 @@ class GamepadHapticActuator : public nsISupports, public nsWrapperCache {
                         uint32_t aIndex);
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(GamepadHapticActuator)
+  NS_DECL_CYCLE_COLLECTION_WRAPPERCACHE_CLASS(GamepadHapticActuator)
 
   nsISupports* GetParentObject() const;
 

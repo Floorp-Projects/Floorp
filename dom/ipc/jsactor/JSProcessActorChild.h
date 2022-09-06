@@ -16,8 +16,7 @@ namespace mozilla::dom {
 class JSProcessActorChild final : public JSActor {
  public:
   NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(JSProcessActorChild,
-                                                         JSActor)
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(JSProcessActorChild, JSActor)
 
   explicit JSProcessActorChild(nsISupports* aGlobal = nullptr)
       : JSActor(aGlobal) {}

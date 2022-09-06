@@ -26,7 +26,7 @@ namespace mozilla {
 namespace dom {
 class PrecompiledScript : public nsISupports, public nsWrapperCache {
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SKIPPABLE_SCRIPT_HOLDER_CLASS(PrecompiledScript)
+  NS_DECL_CYCLE_COLLECTION_SKIPPABLE_WRAPPERCACHE_CLASS(PrecompiledScript)
 
   explicit PrecompiledScript(nsISupports* aParent, RefPtr<JS::Stencil> aStencil,
                              JS::ReadOnlyCompileOptions& aOptions);
