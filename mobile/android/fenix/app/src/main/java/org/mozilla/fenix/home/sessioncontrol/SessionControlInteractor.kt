@@ -434,6 +434,10 @@ class SessionControlInteractor(
         recentVisitsController.handleRemoveRecentHistoryHighlight(highlightUrl)
     }
 
+    override fun onRecentVisitLongClicked() {
+        recentVisitsController.handleRecentVisitLongClicked()
+    }
+
     override fun openCustomizeHomePage() {
         controller.handleCustomizeHomeTapped()
     }

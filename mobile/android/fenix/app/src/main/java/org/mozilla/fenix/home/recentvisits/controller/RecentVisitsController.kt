@@ -60,6 +60,11 @@ interface RecentVisitsController {
      * @param highlightUrl Url of the [RecentHistoryHighlight] to remove.
      */
     fun handleRemoveRecentHistoryHighlight(highlightUrl: String)
+
+    /**
+     * Callback for when the user long clicks on a recent visit.
+     */
+    fun handleRecentVisitLongClicked()
 }
 
 /**
@@ -138,6 +143,13 @@ class DefaultRecentVisitsController(
         scope.launch {
             storage.deleteHistoryMetadataForUrl(highlightUrl)
         }
+    }
+
+    /**
+     * Dismiss the search dialog if displayed.
+     */
+    override fun handleRecentVisitLongClicked() {
+        dismissSearchDialogIfDisplayed()
     }
 
     @VisibleForTesting(otherwise = PRIVATE)

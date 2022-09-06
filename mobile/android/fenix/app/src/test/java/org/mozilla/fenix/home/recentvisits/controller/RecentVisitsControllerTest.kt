@@ -181,4 +181,18 @@ class RecentVisitsControllerTest {
             }
         }
     }
+
+    @Test
+    fun `WHEN long clicking a recent visit THEN search dialog should be dismissed `() = runTestOnMain {
+        every { navController.currentDestination } returns mockk {
+            every { id } returns R.id.searchDialogFragment
+        }
+
+        controller.handleRecentVisitLongClicked()
+
+        verify {
+            controller.dismissSearchDialogIfDisplayed()
+            navController.navigateUp()
+        }
+    }
 }

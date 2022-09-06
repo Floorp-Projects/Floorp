@@ -76,6 +76,7 @@ class RecentlyVisitedViewHolder(
                     }
                 }
             },
+            onRecentVisitLongClick = { interactor.onRecentVisitLongClicked() },
         )
     }
 

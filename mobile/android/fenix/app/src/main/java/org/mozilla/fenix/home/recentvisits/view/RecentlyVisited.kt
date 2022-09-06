@@ -64,12 +64,14 @@ private const val VISITS_PER_COLUMN = 3
  * @param recentVisits List of [RecentlyVisitedItem] to display.
  * @param menuItems List of [RecentVisitMenuItem] shown long clicking a [RecentlyVisitedItem].
  * @param onRecentVisitClick Invoked when the user clicks on a recent visit.
+ * @param onRecentVisitLongClick Invoked when the user long clicks on a recent visit.
  */
 @Composable
 fun RecentlyVisited(
     recentVisits: List<RecentlyVisitedItem>,
     menuItems: List<RecentVisitMenuItem>,
     onRecentVisitClick: (RecentlyVisitedItem, Int) -> Unit = { _, _ -> },
+    onRecentVisitLongClick: () -> Unit = {},
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -102,6 +104,7 @@ fun RecentlyVisited(
                                 onRecentVisitClick = {
                                     onRecentVisitClick(it, pageIndex + 1)
                                 },
+                                onRecentVisitLongClick = { onRecentVisitLongClick() },
                             )
                             is RecentHistoryGroup -> RecentlyVisitedHistoryGroup(
                                 recentVisit = recentVisit,
@@ -111,6 +114,7 @@ fun RecentlyVisited(
                                 onRecentVisitClick = {
                                     onRecentVisitClick(it, pageIndex + 1)
                                 },
+                                onRecentVisitLongClick = { onRecentVisitLongClick() },
                             )
                         }
                     }
@@ -128,8 +132,10 @@ fun RecentlyVisited(
  * @param clickableEnabled Whether click actions should be invoked or not.
  * @param showDividerLine Whether to show a divider line at the bottom.
  * @param onRecentVisitClick Invoked when the user clicks on a recent visit.
+ * @param onRecentVisitClick Invoked when the user long clicks on a recently visited group.
  */
 @OptIn(ExperimentalFoundationApi::class)
+@Suppress("LongParameterList")
 @Composable
 private fun RecentlyVisitedHistoryGroup(
     recentVisit: RecentHistoryGroup,
@@ -137,6 +143,7 @@ private fun RecentlyVisitedHistoryGroup(
     clickableEnabled: Boolean,
     showDividerLine: Boolean,
     onRecentVisitClick: (RecentHistoryGroup) -> Unit = { _ -> },
+    onRecentVisitLongClick: () -> Unit = {},
 ) {
     var isMenuExpanded by remember { mutableStateOf(false) }
 
@@ -145,7 +152,10 @@ private fun RecentlyVisitedHistoryGroup(
             .combinedClickable(
                 enabled = clickableEnabled,
                 onClick = { onRecentVisitClick(recentVisit) },
-                onLongClick = { isMenuExpanded = true },
+                onLongClick = {
+                    onRecentVisitLongClick()
+                    isMenuExpanded = true
+                },
             )
             .size(268.dp, 56.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -195,8 +205,10 @@ private fun RecentlyVisitedHistoryGroup(
  * @param clickableEnabled Whether click actions should be invoked or not.
  * @param showDividerLine Whether to show a divider line at the bottom.
  * @param onRecentVisitClick Invoked when the user clicks on a recent visit.
+ * @param onRecentVisitLongClick Invoked when the user long clicks on a recent visit highlight.
  */
 @OptIn(ExperimentalFoundationApi::class)
+@Suppress("LongParameterList")
 @Composable
 private fun RecentlyVisitedHistoryHighlight(
     recentVisit: RecentHistoryHighlight,
@@ -204,6 +216,7 @@ private fun RecentlyVisitedHistoryHighlight(
     clickableEnabled: Boolean,
     showDividerLine: Boolean,
     onRecentVisitClick: (RecentHistoryHighlight) -> Unit = { _ -> },
+    onRecentVisitLongClick: () -> Unit = {},
 ) {
     var isMenuExpanded by remember { mutableStateOf(false) }
 
@@ -212,7 +225,10 @@ private fun RecentlyVisitedHistoryHighlight(
             .combinedClickable(
                 enabled = clickableEnabled,
                 onClick = { onRecentVisitClick(recentVisit) },
-                onLongClick = { isMenuExpanded = true },
+                onLongClick = {
+                    onRecentVisitLongClick()
+                    isMenuExpanded = true
+                },
             )
             .size(268.dp, 56.dp),
         verticalAlignment = Alignment.CenterVertically,
