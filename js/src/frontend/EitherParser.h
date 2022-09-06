@@ -12,7 +12,6 @@
 #ifndef frontend_EitherParser_h
 #define frontend_EitherParser_h
 
-#include "mozilla/Tuple.h"
 #include "mozilla/Utf8.h"
 #include "mozilla/Variant.h"
 
@@ -21,69 +20,7 @@
 
 #include "frontend/Parser.h"
 
-namespace js {
-
-namespace detail {
-
-template <template <class Parser> class GetThis,
-          template <class This> class MemberFunction, typename... Args>
-struct InvokeMemberFunction {
-  mozilla::Tuple<std::decay_t<Args>...> args;
-
-  template <class This, size_t... Indices>
-  auto matchInternal(This* obj, std::index_sequence<Indices...>) -> decltype((
-      (*obj).*(MemberFunction<This>::get()))(mozilla::Get<Indices>(args)...)) {
-    return ((*obj).*
-            (MemberFunction<This>::get()))(mozilla::Get<Indices>(args)...);
-  }
-
- public:
-  template <typename... ActualArgs>
-  explicit InvokeMemberFunction(ActualArgs&&... actualArgs)
-      : args{std::forward<ActualArgs>(actualArgs)...} {}
-
-  template <class Parser>
-  auto operator()(Parser* parser)
-      -> decltype(this->matchInternal(GetThis<Parser>::get(parser),
-                                      std::index_sequence_for<Args...>{})) {
-    return this->matchInternal(GetThis<Parser>::get(parser),
-                               std::index_sequence_for<Args...>{});
-  }
-};
-
-// |this|-computing templates.
-
-template <class Parser>
-struct GetTokenStream {
-  static auto get(Parser* parser) { return &parser->tokenStream; }
-};
-
-// Member function-computing templates.
-
-template <class TokenStream>
-struct TokenStreamComputeLineAndColumn {
-  static constexpr auto get() { return &TokenStream::computeLineAndColumn; }
-};
-
-// Generic matchers.
-
-struct ParserSharedBaseMatcher {
-  template <class Parser>
-  frontend::ParserSharedBase& operator()(Parser* parser) {
-    return *static_cast<frontend::ParserSharedBase*>(parser);
-  }
-};
-
-struct ErrorReporterMatcher {
-  template <class Parser>
-  frontend::ErrorReporter& operator()(Parser* parser) {
-    return parser->tokenStream;
-  }
-};
-
-}  // namespace detail
-
-namespace frontend {
+namespace js::frontend {
 
 class EitherParser final {
   // Leave this as a variant, to promote good form until 8-bit parser
@@ -92,36 +29,30 @@ class EitherParser final {
                    Parser<FullParseHandler, mozilla::Utf8Unit>* const>
       parser;
 
-  template <template <class Parser> class GetThis,
-            template <class This> class GetMemberFunction,
-            typename... StoredArgs>
-  using InvokeMemberFunction =
-      detail::InvokeMemberFunction<GetThis, GetMemberFunction, StoredArgs...>;
-
  public:
   template <class Parser>
   explicit EitherParser(Parser* parser) : parser(parser) {}
 
   const ErrorReporter& errorReporter() const {
-    return parser.match(detail::ErrorReporterMatcher());
+    return parser.match([](auto* parser) -> const frontend::ErrorReporter& {
+      return parser->tokenStream;
+    });
   }
 
   void computeLineAndColumn(uint32_t offset, uint32_t* line,
                             uint32_t* column) const {
-    InvokeMemberFunction<detail::GetTokenStream,
-                         detail::TokenStreamComputeLineAndColumn, uint32_t,
-                         uint32_t*, uint32_t*>
-        matcher{offset, line, column};
-    return parser.match(std::move(matcher));
+    return parser.match([offset, line, column](auto* parser) -> void {
+      parser->tokenStream.computeLineAndColumn(offset, line, column);
+    });
   }
 
   ParserAtomsTable& parserAtoms() {
-    ParserSharedBase& base = parser.match(detail::ParserSharedBaseMatcher());
+    auto& base = parser.match(
+        [](auto* parser) -> frontend::ParserSharedBase& { return *parser; });
     return base.parserAtoms();
   }
 };
 
-} /* namespace frontend */
-} /* namespace js */
+} /* namespace js::frontend */
 
 #endif /* frontend_EitherParser_h */
