@@ -7858,7 +7858,7 @@ bool BytecodeEmitter::emitArguments(ListNode* argsList, bool isCall,
       //            [stack] CALLEE THIS
       return false;
     }
-    if (!emitArray(argsList->head(), argc)) {
+    if (!emitArray(argsList)) {
       //            [stack] CALLEE THIS ARR
       return false;
     }
@@ -8725,8 +8725,8 @@ void BytecodeEmitter::isPropertyListObjLiteralCompatible(ListNode* obj,
   *withoutValues = keysOK;
 }
 
-bool BytecodeEmitter::isArrayObjLiteralCompatible(ParseNode* arrayHead) {
-  for (ParseNode* elem = arrayHead; elem; elem = elem->pn_next) {
+bool BytecodeEmitter::isArrayObjLiteralCompatible(ListNode* array) {
+  for (ParseNode* elem : array->contents()) {
     if (elem->isKind(ParseNodeKind::Spread)) {
       return false;
     }
@@ -9273,7 +9273,7 @@ bool BytecodeEmitter::emitDestructuringRestExclusionSetObjLiteral(
   return true;
 }
 
-bool BytecodeEmitter::emitObjLiteralArray(ParseNode* arrayHead) {
+bool BytecodeEmitter::emitObjLiteralArray(ListNode* array) {
   MOZ_ASSERT(checkSingletonContext());
 
   constexpr JSOp op = JSOp::Object;
@@ -9282,7 +9282,7 @@ bool BytecodeEmitter::emitObjLiteralArray(ParseNode* arrayHead) {
   writer.beginArray(op);
 
   writer.beginDenseArrayElements();
-  for (ParseNode* elem = arrayHead; elem; elem = elem->pn_next) {
+  for (ParseNode* elem : array->contents()) {
     if (!emitObjLiteralValue(writer, elem)) {
       return false;
     }
@@ -10080,14 +10080,14 @@ bool BytecodeEmitter::emitArrayLiteral(ListNode* array) {
   // Emit JSOp::Object if the array consists entirely of primitive values and we
   // are in a singleton context.
   if (checkSingletonContext() && !array->hasNonConstInitializer() &&
-      array->head() && isArrayObjLiteralCompatible(array->head())) {
-    return emitObjLiteralArray(array->head());
+      !array->empty() && isArrayObjLiteralCompatible(array)) {
+    return emitObjLiteralArray(array);
   }
 
-  return emitArray(array->head(), array->count());
+  return emitArray(array);
 }
 
-bool BytecodeEmitter::emitArray(ParseNode* arrayHead, uint32_t count) {
+bool BytecodeEmitter::emitArray(ListNode* array) {
   /*
    * Emit code for [a, b, c] that is equivalent to constructing a new
    * array and in source order evaluating each element value and adding
@@ -10098,7 +10098,7 @@ bool BytecodeEmitter::emitArray(ParseNode* arrayHead, uint32_t count) {
    */
 
   uint32_t nspread = 0;
-  for (ParseNode* elem = arrayHead; elem; elem = elem->pn_next) {
+  for (ParseNode* elem : array->contents()) {
     if (elem->isKind(ParseNodeKind::Spread)) {
       nspread++;
     }
@@ -10110,6 +10110,8 @@ bool BytecodeEmitter::emitArray(ParseNode* arrayHead, uint32_t count) {
                 "required by BaselineCompiler::emit_NewArray, "
                 "BaselineCompiler::emit_InitElemArray, "
                 "and DoSetElemFallback's handling of JSOp::InitElemArray");
+
+  uint32_t count = array->count();
   MOZ_ASSERT(count >= nspread);
   MOZ_ASSERT(count <= NativeObject::MAX_DENSE_ELEMENTS_COUNT,
              "the parser must throw an error if the array exceeds maximum "
@@ -10122,10 +10124,9 @@ bool BytecodeEmitter::emitArray(ParseNode* arrayHead, uint32_t count) {
     return false;
   }
 
-  ParseNode* elem = arrayHead;
-  uint32_t index;
+  uint32_t index = 0;
   bool afterSpread = false;
-  for (index = 0; elem; index++, elem = elem->pn_next) {
+  for (ParseNode* elem : array->contents()) {
     if (!afterSpread && elem->isKind(ParseNodeKind::Spread)) {
       afterSpread = true;
       if (!emitNumberOp(index)) {
@@ -10182,6 +10183,8 @@ bool BytecodeEmitter::emitArray(ParseNode* arrayHead, uint32_t count) {
         return false;
       }
     }
+
+    index++;
   }
   MOZ_ASSERT(index == count);
   if (afterSpread) {

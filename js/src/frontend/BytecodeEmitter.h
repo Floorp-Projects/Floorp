@@ -613,7 +613,7 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
   [[nodiscard]] bool emitStringOp(JSOp op, GCThingIndex atomIndex);
 
   [[nodiscard]] bool emitArrayLiteral(ListNode* array);
-  [[nodiscard]] bool emitArray(ParseNode* arrayHead, uint32_t count);
+  [[nodiscard]] bool emitArray(ListNode* array);
   [[nodiscard]] bool emitSpreadIntoArray(UnaryNode* elem);
 
   [[nodiscard]] bool emitInternedScopeOp(GCThingIndex index, JSOp op);
@@ -633,7 +633,7 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
   // list?
   void isPropertyListObjLiteralCompatible(ListNode* obj, bool* withValues,
                                           bool* withoutValues);
-  bool isArrayObjLiteralCompatible(ParseNode* arrayHead);
+  bool isArrayObjLiteralCompatible(ListNode* array);
 
   [[nodiscard]] bool emitPropertyList(ListNode* obj, PropertyEmitter& pe,
                                       PropListType type);
@@ -644,7 +644,7 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
   [[nodiscard]] bool emitDestructuringRestExclusionSetObjLiteral(
       ListNode* pattern);
 
-  [[nodiscard]] bool emitObjLiteralArray(ParseNode* arrayHead);
+  [[nodiscard]] bool emitObjLiteralArray(ListNode* array);
 
   // Is a field value OBJLITERAL-compatible?
   [[nodiscard]] bool isRHSObjLiteralCompatible(ParseNode* value);
