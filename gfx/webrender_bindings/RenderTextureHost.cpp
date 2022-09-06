@@ -12,27 +12,19 @@
 namespace mozilla {
 namespace wr {
 
-GLenum ToGlTexFilter(const wr::ImageRendering aRendering) {
-  switch (aRendering) {
-  case wr::ImageRendering::Auto:
-  case wr::ImageRendering::CrispEdges:
-    return LOCAL_GL_LINEAR;
-  case wr::ImageRendering::Pixelated:
-    return LOCAL_GL_NEAREST;
-  case wr::ImageRendering::Sentinel:
-    break;
-  }
-  MOZ_CRASH("Bad wr::ImageRendering");
-}
-
 void ActivateBindAndTexParameteri(gl::GLContext* aGL, GLenum aActiveTexture,
                                   GLenum aBindTarget, GLuint aBindTexture,
                                   wr::ImageRendering aRendering) {
   aGL->fActiveTexture(aActiveTexture);
   aGL->fBindTexture(aBindTarget, aBindTexture);
-  const auto filter = ToGlTexFilter(aRendering);
-  aGL->fTexParameteri(aBindTarget, LOCAL_GL_TEXTURE_MIN_FILTER, filter);
-  aGL->fTexParameteri(aBindTarget, LOCAL_GL_TEXTURE_MAG_FILTER, filter);
+  aGL->fTexParameteri(aBindTarget, LOCAL_GL_TEXTURE_MIN_FILTER,
+                      aRendering == wr::ImageRendering::Pixelated
+                          ? LOCAL_GL_NEAREST
+                          : LOCAL_GL_LINEAR);
+  aGL->fTexParameteri(aBindTarget, LOCAL_GL_TEXTURE_MAG_FILTER,
+                      aRendering == wr::ImageRendering::Pixelated
+                          ? LOCAL_GL_NEAREST
+                          : LOCAL_GL_LINEAR);
 }
 
 RenderTextureHost::RenderTextureHost()

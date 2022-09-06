@@ -359,7 +359,7 @@ struct FloatOrInt final  // For TexParameter[fi] and friends.
 
 // -
 
-struct WebGLContextOptions final {
+struct WebGLContextOptions {
   bool alpha = true;
   bool depth = true;
   bool stencil = false;
@@ -372,8 +372,8 @@ struct WebGLContextOptions final {
 
   dom::WebGLPowerPreference powerPreference =
       dom::WebGLPowerPreference::Default;
-  bool ignoreColorSpace = true;
   dom::PredefinedColorSpace colorSpace = dom::PredefinedColorSpace::Srgb;
+  bool ignoreColorSpace = true;  // Our legacy behavior.
   bool shouldResistFingerprinting = true;
 
   bool enableDebugRendererInfo = false;
@@ -399,8 +399,6 @@ struct WebGLContextOptions final {
       enableDebugRendererInfo);
     // clang-format on
   }
-
-  // -
 
   WebGLContextOptions();
   WebGLContextOptions(const WebGLContextOptions&) = default;
