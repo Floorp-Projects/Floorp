@@ -354,7 +354,7 @@ class PlacesFeed {
       let utmCampaign = pocketNewtabExperiment?.slug;
       let utmContent = pocketNewtabExperiment?.branch?.slug;
 
-      const url = new URL(`https://${pocketSiteHost}/ff_signup`);
+      const url = new URL(`https://${pocketSiteHost}/signup`);
       url.searchParams.append("utm_source", utmSource);
       if (utmCampaign && utmContent) {
         url.searchParams.append("utm_campaign", utmCampaign);
