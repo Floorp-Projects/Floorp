@@ -446,7 +446,11 @@ class TabsPanel extends TabsListBase {
       return;
     }
 
-    if (event.target !== this.containerNode) {
+    let target = event.relatedTarget;
+    while (target && target != this.containerNode) {
+      target = target.parentNode;
+    }
+    if (target) {
       return;
     }
 
