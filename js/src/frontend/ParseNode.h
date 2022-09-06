@@ -118,8 +118,8 @@ class FunctionBox;
   F(ForStmt, ForNode)                                            \
   F(BreakStmt, BreakStatement)                                   \
   F(ContinueStmt, ContinueStatement)                             \
-  F(VarStmt, ListNode)                                           \
-  F(ConstDecl, ListNode)                                         \
+  F(VarStmt, DeclarationListNode)                                \
+  F(ConstDecl, DeclarationListNode)                              \
   F(WithStmt, BinaryNode)                                        \
   F(ReturnStmt, UnaryNode)                                       \
   F(NewExpr, BinaryNode)                                         \
@@ -139,7 +139,7 @@ class FunctionBox;
   F(YieldExpr, UnaryNode)                                        \
   F(YieldStarExpr, UnaryNode)                                    \
   F(LexicalScope, LexicalScopeNode)                              \
-  F(LetDecl, ListNode)                                           \
+  F(LetDecl, DeclarationListNode)                                \
   F(ImportDecl, BinaryNode)                                      \
   F(ImportSpecList, ListNode)                                    \
   F(ImportSpec, BinaryNode)                                      \
@@ -376,7 +376,7 @@ inline bool IsTypeofKind(ParseNodeKind kind) {
  * WithStmt (BinaryNode)
  *   left: head expr
  *   right: body
- * VarStmt, LetDecl, ConstDecl (ListNode)
+ * VarStmt, LetDecl, ConstDecl (DeclarationListNode)
  *   head: list of N Name or AssignExpr nodes
  *         each name node has either
  *           atom: variable name
@@ -627,6 +627,7 @@ inline bool IsTypeofKind(ParseNodeKind kind) {
         asOptionalPrivateMemberAccess)                                       \
   MACRO(NewTargetNode, NewTargetNodeType, asNewTargetNode)                   \
   MACRO(SwitchStatement, SwitchStatementType, asSwitchStatement)             \
+  MACRO(DeclarationListNode, DeclarationListNodeType, asDeclarationList)     \
                                                                              \
   MACRO(ParamsBodyNode, ParamsBodyNodeType, asParamsBody)                    \
   MACRO(FunctionNode, FunctionNodeType, asFunction)                          \
@@ -816,9 +817,6 @@ class ParseNode {
            isKind(ParseNodeKind::NullExpr) ||
            isKind(ParseNodeKind::RawUndefinedExpr);
   }
-
-  // True iff this is a for-in/of loop variable declaration (var/let/const).
-  inline bool isForLoopDeclaration() const;
 
   inline bool isConstant();
 
@@ -1482,15 +1480,26 @@ class ListNode : public ParseNode {
   }
 };
 
-inline bool ParseNode::isForLoopDeclaration() const {
-  if (isKind(ParseNodeKind::VarStmt) || isKind(ParseNodeKind::LetDecl) ||
-      isKind(ParseNodeKind::ConstDecl)) {
-    MOZ_ASSERT(!as<ListNode>().empty());
-    return true;
+class DeclarationListNode : public ListNode {
+ public:
+  DeclarationListNode(ParseNodeKind kind, const TokenPos& pos)
+      : ListNode(kind, pos) {
+    MOZ_ASSERT(is<DeclarationListNode>());
   }
 
-  return false;
-}
+  static bool test(const ParseNode& node) {
+    bool match = node.isKind(ParseNodeKind::VarStmt) ||
+                 node.isKind(ParseNodeKind::LetDecl) ||
+                 node.isKind(ParseNodeKind::ConstDecl);
+    MOZ_ASSERT_IF(match, node.is<ListNode>());
+    return match;
+  }
+
+  auto* singleBinding() const {
+    MOZ_ASSERT(count() == 1);
+    return head();
+  }
+};
 
 class ParamsBodyNode : public ListNode {
  public:

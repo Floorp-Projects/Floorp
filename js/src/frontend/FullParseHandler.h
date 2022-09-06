@@ -1057,36 +1057,23 @@ class FullParseHandler {
     return func->pn_pos.begin;
   }
 
-  bool isDeclarationKind(ParseNodeKind kind) {
-    return kind == ParseNodeKind::VarStmt || kind == ParseNodeKind::LetDecl ||
-           kind == ParseNodeKind::ConstDecl;
-  }
-
   ListNodeType newList(ParseNodeKind kind, const TokenPos& pos) {
-    MOZ_ASSERT(!isDeclarationKind(kind));
-    MOZ_ASSERT(kind != ParseNodeKind::ParamsBody);
-    return new_<ListNode>(kind, pos);
+    auto* list = new_<ListNode>(kind, pos);
+    MOZ_ASSERT_IF(list, !list->is<DeclarationListNode>());
+    MOZ_ASSERT_IF(list, !list->is<ParamsBodyNode>());
+    return list;
   }
 
   ListNodeType newList(ParseNodeKind kind, Node kid) {
-    MOZ_ASSERT(!isDeclarationKind(kind));
-    MOZ_ASSERT(kind != ParseNodeKind::ParamsBody);
-    return new_<ListNode>(kind, kid);
+    auto* list = new_<ListNode>(kind, kid);
+    MOZ_ASSERT_IF(list, !list->is<DeclarationListNode>());
+    MOZ_ASSERT_IF(list, !list->is<ParamsBodyNode>());
+    return list;
   }
 
-  ListNodeType newDeclarationList(ParseNodeKind kind, const TokenPos& pos) {
-    MOZ_ASSERT(isDeclarationKind(kind));
-    return new_<ListNode>(kind, pos);
-  }
-
-  bool isDeclarationList(Node node) {
-    return isDeclarationKind(node->getKind());
-  }
-
-  Node singleBindingFromDeclaration(ListNodeType decl) {
-    MOZ_ASSERT(isDeclarationList(decl));
-    MOZ_ASSERT(decl->count() == 1);
-    return decl->head();
+  DeclarationListNodeType newDeclarationList(ParseNodeKind kind,
+                                             const TokenPos& pos) {
+    return new_<DeclarationListNode>(kind, pos);
   }
 
   ListNodeType newCommaExpressionList(Node kid) {

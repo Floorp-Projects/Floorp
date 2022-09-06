@@ -666,7 +666,8 @@ class SyntaxParseHandler {
     return newList(kind, TokenPos());
   }
 
-  ListNodeType newDeclarationList(ParseNodeKind kind, const TokenPos& pos) {
+  DeclarationListNodeType newDeclarationList(ParseNodeKind kind,
+                                             const TokenPos& pos) {
     if (kind == ParseNodeKind::VarStmt) {
       return NodeVarDeclaration;
     }
@@ -674,13 +675,6 @@ class SyntaxParseHandler {
                kind == ParseNodeKind::ConstDecl);
     return NodeLexicalDeclaration;
   }
-
-  bool isDeclarationList(Node node) {
-    return node == NodeVarDeclaration || node == NodeLexicalDeclaration;
-  }
-
-  // This method should only be called from parsers using FullParseHandler.
-  Node singleBindingFromDeclaration(ListNodeType decl) = delete;
 
   ListNodeType newCommaExpressionList(Node kid) { return NodeGeneric; }
 
