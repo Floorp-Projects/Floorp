@@ -352,3 +352,33 @@ addAccessibleTask(
     remoteIframe: isCacheEnabled,
   }
 );
+
+/*
+ * Test relation caching on link
+ */
+addAccessibleTask(
+  `
+  <a id="link" href="#item">
+  <div id="item">hello</div>
+  <div id="item2">world</div>`,
+  async function(browser, accDoc) {
+    const link = findAccessibleChildByID(accDoc, "link");
+    const item = findAccessibleChildByID(accDoc, "item");
+    const item2 = findAccessibleChildByID(accDoc, "item2");
+
+    await testCachedRelation(link, RELATION_LINKS_TO, item);
+
+    await invokeContentTask(browser, [], () => {
+      content.document.getElementById("link").href = "";
+    });
+
+    await testCachedRelation(link, RELATION_LINKS_TO, null);
+
+    await invokeContentTask(browser, [], () => {
+      content.document.getElementById("link").href = "#item2";
+    });
+
+    await testCachedRelation(link, RELATION_LINKS_TO, item2);
+  },
+  { chrome: true, iframe: true, remoteIframe: true }
+);

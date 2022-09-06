@@ -1369,6 +1369,7 @@ void LocalAccessible::DOMAttributeChanged(int32_t aNameSpaceID,
 
   if (aAttribute == nsGkAtoms::href) {
     mDoc->QueueCacheUpdate(this, CacheDomain::Value);
+    mDoc->QueueCacheUpdate(this, CacheDomain::Relations);
   }
 
   if (aAttribute == nsGkAtoms::aria_controls ||
@@ -3585,6 +3586,10 @@ already_AddRefed<AccAttributes> LocalAccessible::BundleFieldsForCache(
                 dom::HTMLLabelElement::FromNode(mContent)) {
           rel.AppendTarget(mDoc, labelEl->GetControl());
         }
+      } else if (data.mType == RelationType::LINKS_TO) {
+        // This has no implicit relation, so it's safe to call RelationByType
+        // directly.
+        rel = RelationByType(RelationType::LINKS_TO);
       } else {
         // We use an IDRefsIterator here instead of calling RelationByType
         // directly because we only want to cache explicit relations. Implicit

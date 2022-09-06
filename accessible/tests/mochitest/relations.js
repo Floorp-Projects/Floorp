@@ -30,6 +30,7 @@ const RELATION_DETAILS = nsIAccessibleRelation.RELATION_DETAILS;
 const RELATION_DETAILS_FOR = nsIAccessibleRelation.RELATION_DETAILS_FOR;
 const RELATION_ERRORMSG = nsIAccessibleRelation.RELATION_ERRORMSG;
 const RELATION_ERRORMSG_FOR = nsIAccessibleRelation.RELATION_ERRORMSG_FOR;
+const RELATION_LINKS_TO = nsIAccessibleRelation.RELATION_LINKS_TO;
 
 // //////////////////////////////////////////////////////////////////////////////
 // General
