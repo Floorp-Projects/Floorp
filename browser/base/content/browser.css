@@ -1533,7 +1533,7 @@ toolbar[keyNav=true]:not([collapsed=true], [customizing=true]) toolbartabstop {
   background-clip: content-box;
   border-radius: 8px;
   display: -moz-box;
-  margin: 0;
+  margin: 0 3vw;
   padding: 0;
   overflow-x: auto;
 }
@@ -1545,6 +1545,7 @@ toolbar[keyNav=true]:not([collapsed=true], [customizing=true]) toolbartabstop {
 .dialogBox.fullScreen {
   height: 100vh;
   width: 100vw;
+  margin: 0;
 }
 
 /*
@@ -1576,6 +1577,7 @@ toolbar[keyNav=true]:not([collapsed=true], [customizing=true]) toolbartabstop {
   max-height: min(max(var(--box-ideal-height) * 1px, var(--box-max-height-ratio)), var(--box-max-height-margin));
   width: 100vw;
   height: 100vh;
+  margin: 0;
 }
 
 @media (min-width: 550px) {
