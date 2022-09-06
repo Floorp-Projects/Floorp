@@ -747,7 +747,8 @@ class MOZ_STACK_CLASS GeneralParser : public PerHandlerParser<ParseHandler> {
   // Implement ErrorReportMixin.
 
   [[nodiscard]] bool computeErrorMetadata(
-      ErrorMetadata* err, const ErrorReportMixin::ErrorOffset& offset) override;
+      ErrorMetadata* err,
+      const ErrorReportMixin::ErrorOffset& offset) const override;
 
   using Base::error;
   using Base::errorAt;
