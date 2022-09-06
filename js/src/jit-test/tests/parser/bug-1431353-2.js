@@ -6,14 +6,14 @@
 function execOffThread(source)
 {
     offThreadCompileToStencil(source);
-    var stencil = finishOffThreadCompileToStencil();
+    var stencil = finishOffThreadStencil();
     return evalStencil(stencil);
 }
 
 function parseModuleOffThread(source)
 {
     offThreadCompileModuleToStencil(source);
-    var stencil = finishOffThreadCompileModuleToStencil();
+    var stencil = finishOffThreadStencil();
     return instantiateModuleStencil(stencil);
 }
 

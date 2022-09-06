@@ -55,7 +55,7 @@ for (let i = 0; i < load; i++) {
   jobs.push(offThreadCompileToStencil(script, options));
 }
 
-const stencil = finishOffThreadCompileToStencil(jobs[0]);
+const stencil = finishOffThreadStencil(jobs[0]);
 evalStencil(stencil, options);
 
 waitForStencilCache(raceMe);

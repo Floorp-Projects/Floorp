@@ -10,28 +10,28 @@ id = offThreadCompileToStencil(`
   function f() { return "pass"; }
   f();
 `);
-stencil = finishOffThreadCompileToStencil(id);
+stencil = finishOffThreadStencil(id);
 assertEq(evalStencil(stencil), "pass");
 
 id = offThreadCompileToStencil(`
   function* f() { return "pass"; }
   f().next();
 `);
-stencil = finishOffThreadCompileToStencil(id);
+stencil = finishOffThreadStencil(id);
 assertDeepEq(evalStencil(stencil), {value: "pass", done: true});
 
 id = offThreadCompileToStencil(`
   async function f() { return "pass"; }
   f();
 `);
-stencil = finishOffThreadCompileToStencil(id);
+stencil = finishOffThreadStencil(id);
 assertEventuallyEq(evalStencil(stencil), "pass");
 
 id = offThreadCompileToStencil(`
   async function* f() { return "pass"; }
   f().next();
 `);
-stencil = finishOffThreadCompileToStencil(id);
+stencil = finishOffThreadStencil(id);
 assertEventuallyDeepEq(evalStencil(stencil), {value: "pass", done: true});
 
 // Copied from js/src/tests/shell.js

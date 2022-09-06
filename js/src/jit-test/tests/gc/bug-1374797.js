@@ -23,5 +23,5 @@ for (let i = 0; i < 10; i++) {
 }
 
 // Finish the off-thread parse.
-var stencil = finishOffThreadCompileToStencil();
+var stencil = finishOffThreadStencil();
 evalStencil(stencil);

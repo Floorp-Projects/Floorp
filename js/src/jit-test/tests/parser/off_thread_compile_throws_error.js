@@ -4,4 +4,4 @@ load(libdir + "asserts.js");
 
 offThreadCompileToStencil("var shouldFailToParse =");
 
-assertThrowsInstanceOf(() => finishOffThreadCompileToStencil(), SyntaxError);
+assertThrowsInstanceOf(() => finishOffThreadStencil(), SyntaxError);

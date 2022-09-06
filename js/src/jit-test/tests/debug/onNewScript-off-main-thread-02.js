@@ -9,5 +9,5 @@ dbg.onNewScript = function (s) {
 };
 
 global.eval('offThreadCompileToStencil("function inner() { \\\"use asm\\\"; function xxx() {} return xxx; }");');
-global.eval('var stencil = finishOffThreadCompileToStencil();');
+global.eval('var stencil = finishOffThreadStencil();');
 global.eval('evalStencil(stencil);');

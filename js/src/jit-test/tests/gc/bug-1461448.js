@@ -24,7 +24,7 @@ lfOffThreadGlobal.offThreadCompileToStencil(`
   gcparam("markStackLimit", 1);
   grayRoot()[0] = "foo";
 `);
-var stencil = lfOffThreadGlobal.finishOffThreadCompileToStencil();
+var stencil = lfOffThreadGlobal.finishOffThreadStencil();
 lfOffThreadGlobal.evalStencil(stencil);
 eval(`
   var lfOffThreadGlobal = newGlobal({newCompartment: true});

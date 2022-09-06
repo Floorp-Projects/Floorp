@@ -3,7 +3,7 @@
 
 if (typeof oomTest !== 'function' ||
     typeof offThreadCompileToStencil !== 'function' ||
-    typeof finishOffThreadCompileToStencil !== 'function' ||
+    typeof finishOffThreadStencil !== 'function' ||
     typeof evalStencil !== 'function')
     quit();
 
@@ -12,7 +12,7 @@ oomTest(() => {
       "use asm";
       return assertEq;
     `);
-    var stencil = finishOffThreadCompileToStencil();
+    var stencil = finishOffThreadStencil();
     evalStencil();
 });
 

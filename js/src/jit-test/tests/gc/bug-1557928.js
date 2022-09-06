@@ -7,7 +7,7 @@ lfOffThreadGlobal = g;
 lfOffThreadGlobal.offThreadCompileToStencil(`
     grayRoot()[0] = "foo";
   `);
-var stencil = lfOffThreadGlobal.finishOffThreadCompileToStencil();
+var stencil = lfOffThreadGlobal.finishOffThreadStencil();
 lfOffThreadGlobal.evalStencil(stencil);
 var g = newGlobal({newCompartment: true});
 var gw = dbg.addDebuggee(g);

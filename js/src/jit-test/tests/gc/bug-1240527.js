@@ -4,5 +4,5 @@ offThreadCompileToStencil(`
  oomTest(() => "".search(/d/));
  fullcompartmentchecks(3);
 `);
-var stencil = finishOffThreadCompileToStencil();
+var stencil = finishOffThreadStencil();
 evalStencil(stencil);

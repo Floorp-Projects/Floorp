@@ -16,6 +16,6 @@ offThreadCompileToStencil(`
     throw "Yay"`);
 
 assertThrowsValue(() => {
-    var stencil = finishOffThreadCompileToStencil();
+    var stencil = finishOffThreadStencil();
     evalStencil(stencil);
 }, 'Yay');

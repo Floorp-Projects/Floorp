@@ -2,6 +2,6 @@
 
 oomTest(() => {
     offThreadCompileToStencil(`try {} catch (NaN) {}`);
-    var stencil = finishOffThreadCompileToStencil();
+    var stencil = finishOffThreadStencil();
     evalStencil(stencil);
 });

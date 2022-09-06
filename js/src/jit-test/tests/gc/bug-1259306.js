@@ -12,7 +12,7 @@ oomTest(() => {
             gczeal(0);
         `;
         lfGlobal.offThreadCompileToStencil(lfVarx);
-        var stencil = lfGlobal.finishOffThreadCompileToStencil();
+        var stencil = lfGlobal.finishOffThreadStencil();
         lfGlobal.evalStencil(stencil);
         runCount++;
     }

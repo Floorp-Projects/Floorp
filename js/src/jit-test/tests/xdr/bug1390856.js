@@ -17,7 +17,7 @@ for (var i = 1; i < 100; ++i) {
     try {
         oomAtAllocation(i, THREAD_TYPE_PARSE);
         offThreadDecodeStencil(t, { sourceIsLazy: true });
-        var stencil = finishOffThreadDecodeStencil();
+        var stencil = finishOffThreadStencil();
         evalStencil(stencil);
     }
     catch (e) {

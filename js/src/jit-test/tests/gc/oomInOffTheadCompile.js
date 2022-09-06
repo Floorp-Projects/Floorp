@@ -10,6 +10,6 @@ oomTest(() => {
         }
         f(5);
         `);
-    var stencil = finishOffThreadCompileToStencil();
+    var stencil = finishOffThreadStencil();
     evalStencil(stencil);
 });

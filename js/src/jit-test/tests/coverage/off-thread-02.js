@@ -13,7 +13,7 @@ offThreadCompileModuleToStencil(`
     offThreadFun();
     offThreadFun();
 `);
-let stencil = finishOffThreadCompileModuleToStencil();
+let stencil = finishOffThreadStencil();
 let mod = instantiateModuleStencil(stencil);
 moduleLink(mod);
 moduleEvaluate(mod);

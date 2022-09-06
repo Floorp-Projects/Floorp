@@ -18,7 +18,7 @@ function testOffThreadCompile(sourceIsLazy1, sourceIsLazy2,
                               forceFullParse1, forceFullParse2) {
   offThreadCompileToStencil(code, { sourceIsLazy: sourceIsLazy1,
                                     forceFullParse: forceFullParse1 });
-  const stencil = finishOffThreadCompileToStencil();
+  const stencil = finishOffThreadStencil();
   // The laziness options are ignored for instantiation, and no error is thrown.
   evalStencil(stencil, { sourceIsLazy: sourceIsLazy2,
                          forceFullParse: forceFullParse2 });
@@ -43,7 +43,7 @@ function testOffThreadXDR(sourceIsLazy1, sourceIsLazy2,
   // The compile options are ignored when decoding, and no error is thrown.
   offThreadDecodeStencil(t, { sourceIsLazy: sourceIsLazy2,
                              forceFullParse: forceFullParse2 });
-  const stencil = finishOffThreadDecodeStencil();
+  const stencil = finishOffThreadStencil();
 
   // The laziness options are ignored for instantiation, and no error is thrown.
   evalStencil(stencil, { sourceIsLazy: sourceIsLazy2,

@@ -20,7 +20,7 @@ if (helperThreadCount() == 0)
 
 function offThreadEvalModuleAndCheck(source, expected) {
     offThreadCompileModuleToStencil(source);
-    let stencil = finishOffThreadCompileModuleToStencil();
+    let stencil = finishOffThreadStencil();
     let m = instantiateModuleStencil(stencil);
     print("compiled");
     moduleLink(m);

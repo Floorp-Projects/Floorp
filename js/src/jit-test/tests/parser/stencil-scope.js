@@ -67,7 +67,7 @@ function testMainThreadCacheAll2(script_str) {
 
 function testOffThread(script_str) {
     const job = offThreadCompileToStencil(script_str, optionsFull);
-    const stencil = finishOffThreadCompileToStencil(job);
+    const stencil = finishOffThreadStencil(job);
     result = evalStencil(stencil, optionsFull);
     assertEq(result, 1);
 }

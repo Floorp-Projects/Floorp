@@ -15,7 +15,7 @@ enableLastWarning();
 
 var asmFunStr = USE_ASM + 'function f() {} return f';
 offThreadCompileToStencil("(function() {" + asmFunStr + "})");
-var stencil = finishOffThreadCompileToStencil();
+var stencil = finishOffThreadStencil();
 evalStencil(stencil);
 
 var msg = getLastWarning().message;

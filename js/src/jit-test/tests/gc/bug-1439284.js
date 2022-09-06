@@ -9,7 +9,7 @@ for (let i = 0; i < 10; i++) {
     for (let j = 0; j < 10000; j++) Symbol.for(i + 10 * j);
 }
 try {
-    var stencil = finishOffThreadCompileToStencil();
+    var stencil = finishOffThreadStencil();
     evalStencil(stencil);
 } catch (e) {
     assertEq(e.constructor, TypeError);

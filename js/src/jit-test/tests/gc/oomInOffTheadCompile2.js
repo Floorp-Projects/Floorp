@@ -2,6 +2,6 @@
 
 oomTest(() => {
     offThreadCompileToStencil("function a(x) {");
-    var stencil = finishOffThreadCompileToStencil();
+    var stencil = finishOffThreadStencil();
     evalStencil(stencil);
 });
