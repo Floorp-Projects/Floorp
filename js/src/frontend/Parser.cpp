@@ -3107,8 +3107,7 @@ GeneralParser<ParseHandler, Unit>::functionDefinition(
     tokenStream.rewind(start);
     this->compilationState_.rewind(startObj);
 
-    // functionFormalParametersAndBody may have already set body before
-    // failing.
+    // functionFormalParametersAndBody may have already set body before failing.
     handler_.setFunctionFormalParametersAndBody(funNode, null());
   }
 
