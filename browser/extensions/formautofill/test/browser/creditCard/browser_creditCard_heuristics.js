@@ -32,14 +32,8 @@ const TESTCASES = [
     idsToShowPopup: ["cc-number"],
   },
   {
-    description: "one input field cc-number without autocomplete",
-    document: `<form>
-                <input id="cc-number" name="credit card number">
-               </form>`,
-    idsToShowPopup: ["cc-number"],
-  },
-  {
-    description: "one input field cc-number high confidence",
+    description:
+      "one input field cc-number without autocomplete (high confidence)",
     document: `<form>
                 <input id="cc-number" name="credit card number">
                </form>`,
@@ -53,7 +47,8 @@ const TESTCASES = [
     idsToShowPopup: ["cc-number"],
   },
   {
-    description: "one input field cc-number low confidence",
+    description:
+      "one input field cc-number without autocomplete (low confidence)",
     document: `<form>
                 <input id="cc-number" name="credit card number">
                </form>`,
