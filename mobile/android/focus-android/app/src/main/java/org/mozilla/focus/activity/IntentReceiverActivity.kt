@@ -43,7 +43,6 @@ class IntentReceiverActivity : Activity() {
     }
 
     private fun dispatchCustomTabsIntent(tabId: String) {
-
         val intent = Intent(intent)
 
         intent.setClassName(applicationContext, CustomTabActivity::class.java.name)
@@ -62,7 +61,7 @@ class IntentReceiverActivity : Activity() {
         intent.putExtra(SEARCH_WIDGET_EXTRA, intent.getBooleanExtra(SEARCH_WIDGET_EXTRA, false))
         intent.putExtra(
             BaseVoiceSearchActivity.SPEECH_PROCESSING,
-            intent.getStringExtra(BaseVoiceSearchActivity.SPEECH_PROCESSING)
+            intent.getStringExtra(BaseVoiceSearchActivity.SPEECH_PROCESSING),
         )
         startActivity(intent)
     }

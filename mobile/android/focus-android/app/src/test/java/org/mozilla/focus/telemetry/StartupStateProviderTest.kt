@@ -33,7 +33,6 @@ class StartupStateProviderTest {
 
     @Before
     fun setUp() {
-
         provider = StartupStateProvider(startupActivityLog, startReasonProvider)
 
         logEntries = mutableListOf()
@@ -115,8 +114,8 @@ class StartupStateProviderTest {
                 LogEntry.AppStarted,
                 LogEntry.ActivityCreated(mainActivityClass),
                 LogEntry.ActivityStarted(mainActivityClass),
-                LogEntry.ActivityStopped(irActivityClass)
-            )
+                LogEntry.ActivityStopped(irActivityClass),
+            ),
         )
         assertFalse(provider.isColdStartForStartedActivity(mainActivityClass))
     }
@@ -133,8 +132,8 @@ class StartupStateProviderTest {
                 LogEntry.AppStarted,
                 LogEntry.ActivityCreated(mainActivityClass),
                 LogEntry.ActivityStarted(mainActivityClass),
-                LogEntry.ActivityStopped(irActivityClass)
-            )
+                LogEntry.ActivityStopped(irActivityClass),
+            ),
         )
         assertFalse(provider.isWarmStartForStartedActivity(mainActivityClass))
     }
@@ -150,8 +149,8 @@ class StartupStateProviderTest {
                 LogEntry.ActivityStarted(irActivityClass),
                 LogEntry.AppStarted,
                 LogEntry.ActivityStarted(mainActivityClass),
-                LogEntry.ActivityStopped(irActivityClass)
-            )
+                LogEntry.ActivityStopped(irActivityClass),
+            ),
         )
         assertFalse(provider.isHotStartForStartedActivity(mainActivityClass))
     }
@@ -167,8 +166,8 @@ class StartupStateProviderTest {
                 LogEntry.AppStarted,
                 LogEntry.ActivityCreated(mainActivityClass),
                 LogEntry.ActivityStarted(mainActivityClass),
-                LogEntry.ActivityStopped(mainActivityClass)
-            )
+                LogEntry.ActivityStopped(mainActivityClass),
+            ),
         )
         assertFalse(provider.isColdStartForStartedActivity(mainActivityClass))
     }
@@ -182,8 +181,8 @@ class StartupStateProviderTest {
     fun `GIVEN the app started for an activity WHEN an activity hasn't started yet THEN start up is not cold`() {
         logEntries.addAll(
             listOf(
-                LogEntry.ActivityCreated(mainActivityClass)
-            )
+                LogEntry.ActivityCreated(mainActivityClass),
+            ),
         )
         assertFalse(provider.isColdStartForStartedActivity(mainActivityClass))
     }
@@ -214,8 +213,8 @@ class StartupStateProviderTest {
         logEntries.addAll(
             listOf(
                 LogEntry.AppStopped,
-                LogEntry.ActivityCreated(mainActivityClass)
-            )
+                LogEntry.ActivityCreated(mainActivityClass),
+            ),
         )
         assertFalse(provider.isWarmStartForStartedActivity(mainActivityClass))
     }
@@ -236,8 +235,8 @@ class StartupStateProviderTest {
         logEntries.addAll(
             listOf(
                 LogEntry.AppStopped,
-                LogEntry.ActivityCreated(mainActivityClass)
-            )
+                LogEntry.ActivityCreated(mainActivityClass),
+            ),
         )
         assertFalse(provider.isHotStartForStartedActivity(mainActivityClass))
     }
@@ -272,8 +271,8 @@ class StartupStateProviderTest {
                 LogEntry.AppStarted,
                 LogEntry.ActivityCreated(mainActivityClass),
                 LogEntry.ActivityStarted(mainActivityClass),
-                LogEntry.ActivityStopped(irActivityClass)
-            )
+                LogEntry.ActivityStopped(irActivityClass),
+            ),
         )
 
         assertEquals(StartupState.UNKNOWN, provider.getStartupStateForStartedActivity(mainActivityClass))
@@ -287,7 +286,7 @@ class StartupStateProviderTest {
             listOf(
                 LogEntry.ActivityCreated(mainActivityClass),
                 LogEntry.ActivityStarted(mainActivityClass),
-                LogEntry.AppStarted
+                LogEntry.AppStarted,
 
                 // VIEW: open non-drawing IntentReceiverActivity, then HomeActivity.
             ),
@@ -295,8 +294,8 @@ class StartupStateProviderTest {
                 LogEntry.ActivityCreated(irActivityClass),
                 LogEntry.ActivityCreated(mainActivityClass),
                 LogEntry.ActivityStarted(mainActivityClass),
-                LogEntry.AppStarted
-            )
+                LogEntry.AppStarted,
+            ),
         )
 
         forEachStartEntry(coldStartEntries, block)
@@ -314,7 +313,7 @@ class StartupStateProviderTest {
                 LogEntry.ActivityStopped(mainActivityClass),
                 LogEntry.ActivityCreated(mainActivityClass),
                 LogEntry.ActivityStarted(mainActivityClass),
-                LogEntry.AppStarted
+                LogEntry.AppStarted,
 
                 // untruncated MAIN: open MainActivity directly.
             ),
@@ -326,7 +325,7 @@ class StartupStateProviderTest {
                 LogEntry.ActivityStopped(mainActivityClass),
                 LogEntry.ActivityCreated(mainActivityClass),
                 LogEntry.ActivityStarted(mainActivityClass),
-                LogEntry.AppStarted
+                LogEntry.AppStarted,
 
                 // truncated VIEW: open non-drawing IntentReceiverActivity, then MainActivity.
             ),
@@ -336,7 +335,7 @@ class StartupStateProviderTest {
                 LogEntry.ActivityCreated(irActivityClass),
                 LogEntry.ActivityCreated(mainActivityClass),
                 LogEntry.ActivityStarted(mainActivityClass),
-                LogEntry.AppStarted
+                LogEntry.AppStarted,
 
                 // untruncated VIEW: open non-drawing IntentReceiverActivity, then MainActivity.
             ),
@@ -350,8 +349,8 @@ class StartupStateProviderTest {
                 LogEntry.ActivityCreated(irActivityClass),
                 LogEntry.ActivityCreated(mainActivityClass),
                 LogEntry.ActivityStarted(mainActivityClass),
-                LogEntry.AppStarted
-            )
+                LogEntry.AppStarted,
+            ),
         )
 
         forEachStartEntry(warmStartEntries, block)
@@ -368,7 +367,7 @@ class StartupStateProviderTest {
                 LogEntry.AppStopped,
                 LogEntry.ActivityStopped(mainActivityClass),
                 LogEntry.ActivityStarted(mainActivityClass),
-                LogEntry.AppStarted
+                LogEntry.AppStarted,
 
                 // untruncated MAIN: open HomeActivity directly.
             ),
@@ -379,7 +378,7 @@ class StartupStateProviderTest {
                 LogEntry.AppStopped,
                 LogEntry.ActivityStopped(mainActivityClass),
                 LogEntry.ActivityStarted(mainActivityClass),
-                LogEntry.AppStarted
+                LogEntry.AppStarted,
 
                 // truncated VIEW: open non-drawing IntentReceiverActivity, then HomeActivity.
             ),
@@ -388,7 +387,7 @@ class StartupStateProviderTest {
                 LogEntry.ActivityStopped(mainActivityClass),
                 LogEntry.ActivityCreated(irActivityClass),
                 LogEntry.ActivityStarted(mainActivityClass),
-                LogEntry.AppStarted
+                LogEntry.AppStarted,
 
                 // untruncated VIEW: open non-drawing IntentReceiverActivity, then HomeActivity.
             ),
@@ -401,8 +400,8 @@ class StartupStateProviderTest {
                 LogEntry.ActivityStopped(mainActivityClass),
                 LogEntry.ActivityCreated(irActivityClass),
                 LogEntry.ActivityStarted(mainActivityClass),
-                LogEntry.AppStarted
-            )
+                LogEntry.AppStarted,
+            ),
         )
 
         forEachStartEntry(hotStartEntries, block)

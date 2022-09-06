@@ -62,9 +62,9 @@ class BrowserToolbarIntegrationTest {
             BrowserStore(
                 initialState = BrowserState(
                     tabs = listOf(selectedTab),
-                    selectedTabId = selectedTab.id
-                )
-            )
+                    selectedTabId = selectedTab.id,
+                ),
+            ),
         )
 
         toolbar = BrowserToolbar(testContext)
@@ -84,8 +84,8 @@ class BrowserToolbarIntegrationTest {
                 onUrlLongClicked = { false },
                 eraseActionListener = {},
                 tabCounterListener = {},
-                inTesting = true
-            )
+                inTesting = true,
+            ),
         )
     }
 
@@ -97,7 +97,6 @@ class BrowserToolbarIntegrationTest {
 
     @Test
     fun `WHEN starting THEN observe security changes`() {
-
         doNothing().`when`(browserToolbarIntegration).observerSecurityIndicatorChanges()
 
         browserToolbarIntegration.start()
@@ -125,7 +124,6 @@ class BrowserToolbarIntegrationTest {
 
     @Test
     fun `WHEN stopping THEN stop tracking protection CFR changes`() {
-
         doNothing().`when`(browserToolbarIntegration).stopObserverTrackingProtectionCfrChanges()
 
         browserToolbarIntegration.stop()
@@ -135,7 +133,6 @@ class BrowserToolbarIntegrationTest {
 
     @Test
     fun `WHEN stopping THEN stop erase tabs CFR changes`() {
-
         doNothing().`when`(browserToolbarIntegration).stopObserverEraseTabsCfrChanges()
 
         browserToolbarIntegration.stop()
@@ -145,7 +142,6 @@ class BrowserToolbarIntegrationTest {
 
     @Test
     fun `WHEN stopping THEN stop observe security changes`() {
-
         doNothing().`when`(browserToolbarIntegration).stopObserverSecurityIndicatorChanges()
 
         browserToolbarIntegration.stop()
@@ -212,9 +208,9 @@ class BrowserToolbarIntegrationTest {
                 SecurityInfoState(
                     secure = secure,
                     host = "mozilla.org",
-                    issuer = "Mozilla"
-                )
-            )
+                    issuer = "Mozilla",
+                ),
+            ),
         ).joinBlocking()
 
         testDispatcher.scheduler.advanceUntilIdle()
@@ -222,7 +218,7 @@ class BrowserToolbarIntegrationTest {
 
     private fun updateTabUrl(url: String) {
         store.dispatch(
-            ContentAction.UpdateUrlAction(selectedTab.id, url)
+            ContentAction.UpdateUrlAction(selectedTab.id, url),
         ).joinBlocking()
 
         testDispatcher.scheduler.advanceUntilIdle()
@@ -231,7 +227,7 @@ class BrowserToolbarIntegrationTest {
     private fun createSecureTab(): TabSessionState {
         val tab = createTab("https://www.mozilla.org", id = "1")
         return tab.copy(
-            content = tab.content.copy(securityInfo = SecurityInfoState(secure = true))
+            content = tab.content.copy(securityInfo = SecurityInfoState(secure = true)),
         )
     }
 }

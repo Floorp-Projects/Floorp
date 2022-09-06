@@ -40,7 +40,7 @@ class SettingsRobot {
 
         fun openGeneralSettingsMenu(
             localizedText: String = getStringResource(R.string.preference_category_general),
-            interact: SettingsGeneralMenuRobot.() -> Unit
+            interact: SettingsGeneralMenuRobot.() -> Unit,
         ): SettingsGeneralMenuRobot.Transition {
             generalSettingsMenu(localizedText).waitForExists(waitingTime)
             generalSettingsMenu(localizedText).click()
@@ -50,7 +50,7 @@ class SettingsRobot {
         }
 
         fun openPrivacySettingsMenu(
-            interact: SettingsPrivacyMenuRobot.() -> Unit
+            interact: SettingsPrivacyMenuRobot.() -> Unit,
         ): SettingsPrivacyMenuRobot.Transition {
             privacySettingsMenu.waitForExists(waitingTime)
             privacySettingsMenu.click()
@@ -60,7 +60,7 @@ class SettingsRobot {
         }
 
         fun openAdvancedSettingsMenu(
-            interact: SettingsAdvancedMenuRobot.() -> Unit
+            interact: SettingsAdvancedMenuRobot.() -> Unit,
         ): SettingsAdvancedMenuRobot.Transition {
             advancedSettingsMenu.waitForExists(waitingTime)
             advancedSettingsMenu.click()
@@ -70,7 +70,7 @@ class SettingsRobot {
         }
 
         fun openMozillaSettingsMenu(
-            interact: SettingsMozillaMenuRobot.() -> Unit
+            interact: SettingsMozillaMenuRobot.() -> Unit,
         ): SettingsMozillaMenuRobot.Transition {
             mozillaSettingsMenu.waitForExists(waitingTime)
             mozillaSettingsMenu.click()
@@ -80,7 +80,7 @@ class SettingsRobot {
         }
 
         fun clickWhatsNewLink(
-            interact: BrowserRobot.() -> Unit
+            interact: BrowserRobot.() -> Unit,
         ): BrowserRobot.Transition {
             whatsNewButton.perform(click())
 
@@ -89,7 +89,7 @@ class SettingsRobot {
         }
 
         fun goBackToHomeScreen(
-            interact: SearchRobot.() -> Unit
+            interact: SearchRobot.() -> Unit,
         ): SearchRobot.Transition {
             mDevice.pressBack()
 
@@ -105,27 +105,27 @@ private val settingsMenuList =
 private fun generalSettingsMenu(localizedText: String = getStringResource(R.string.preference_category_general)) =
     settingsMenuList.getChild(
         UiSelector()
-            .text(localizedText)
+            .text(localizedText),
     )
 
 private val searchSettingsMenu = settingsMenuList.getChild(
     UiSelector()
-        .text(getStringResource(R.string.preference_category_search))
+        .text(getStringResource(R.string.preference_category_search)),
 )
 
 private val privacySettingsMenu = settingsMenuList.getChild(
     UiSelector()
-        .text(getStringResource(R.string.preference_privacy_and_security_header))
+        .text(getStringResource(R.string.preference_privacy_and_security_header)),
 )
 
 private val advancedSettingsMenu = settingsMenuList.getChild(
     UiSelector()
-        .text(getStringResource(R.string.preference_category_advanced))
+        .text(getStringResource(R.string.preference_category_advanced)),
 )
 
 private val mozillaSettingsMenu = settingsMenuList.getChild(
     UiSelector()
-        .text(getStringResource(R.string.preference_mozilla_summary))
+        .text(getStringResource(R.string.preference_mozilla_summary)),
 )
 
 private val whatsNewButton = onView(withId(R.id.menu_whats_new))

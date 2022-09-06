@@ -9,7 +9,7 @@ import androidx.lifecycle.LifecycleOwner
 class HardwarePermissionCheckFeature(
     val storage: SitePermissionOptionsStorage,
     val store: SitePermissionOptionsScreenStore,
-    val sitePermission: SitePermission
+    val sitePermission: SitePermission,
 ) : DefaultLifecycleObserver {
 
     override fun onStart(owner: LifecycleOwner) {

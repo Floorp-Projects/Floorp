@@ -49,7 +49,7 @@ class AddToHomescreenDialogFragment : DialogFragment() {
         val iconView = dialogView.findViewById<ImageView>(R.id.homescreen_icon)
         requireContext().components.icons.loadIntoView(
             iconView,
-            IconRequest(url.toString(), isPrivate = true)
+            IconRequest(url.toString(), isPrivate = true),
         )
 
         val blockIcon = dialogView.findViewById<ImageView>(R.id.homescreen_dialog_block_icon)
@@ -78,7 +78,7 @@ class AddToHomescreenDialogFragment : DialogFragment() {
         iconUrl: String?,
         blockingEnabled: Boolean,
         requestDesktop: Boolean,
-        initialTitle: String?
+        initialTitle: String?,
     ) {
         val addToHomescreenDialogCancelButton =
             parentView.findViewById<Button>(R.id.addtohomescreen_dialog_cancel)
@@ -100,14 +100,14 @@ class AddToHomescreenDialogFragment : DialogFragment() {
                 iconUrl,
                 editableTitle.text.toString().trim { it <= ' ' },
                 blockingEnabled,
-                requestDesktop
+                requestDesktop,
             )
 
             val hasEditedTitle = initialTitle != editableTitle.text.toString().trim { it <= ' ' }
             AddToHomeScreen.addButtonTapped.record(
                 AddToHomeScreen.AddButtonTappedExtra(
-                    hasEditedTitle = hasEditedTitle
-                )
+                    hasEditedTitle = hasEditedTitle,
+                ),
             )
 
             TelemetryWrapper.addToHomescreenShortcutEvent()
@@ -115,7 +115,7 @@ class AddToHomescreenDialogFragment : DialogFragment() {
             PreferenceManager.getDefaultSharedPreferences(context).edit()
                 .putBoolean(
                     requireContext().getString(R.string.has_added_to_home_screen),
-                    true
+                    true,
                 ).apply()
             dismiss()
         }
@@ -137,7 +137,7 @@ class AddToHomescreenDialogFragment : DialogFragment() {
             url: String,
             title: String,
             blockingEnabled: Boolean,
-            requestDesktop: Boolean
+            requestDesktop: Boolean,
         ): AddToHomescreenDialogFragment {
             val frag = AddToHomescreenDialogFragment()
             val args = Bundle()

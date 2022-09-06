@@ -119,44 +119,45 @@ private val searchEngineDefaultOption =
 
 private val searchEngineList = UiScrollable(
     UiSelector()
-        .resourceId("$packageName:id/search_engine_group").enabled(true)
+        .resourceId("$packageName:id/search_engine_group").enabled(true),
 )
 
 private val searchSuggestionsHeading: UiObject =
     mDevice.findObject(
         UiSelector()
-            .textContains(getStringResource(R.string.preference_show_search_suggestions))
+            .textContains(getStringResource(R.string.preference_show_search_suggestions)),
     )
 
 private val searchSuggestionDescription: UiObject =
     mDevice.findObject(
         UiSelector()
-            .textContains(getStringResource(R.string.preference_show_search_suggestions_summary))
+            .textContains(getStringResource(R.string.preference_show_search_suggestions_summary)),
     )
 
 private val searchSuggestionLearnMoreLink: UiObject =
     mDevice.findObject(
         UiSelector()
-            .resourceId("$packageName:id/link")
+            .resourceId("$packageName:id/link"),
     )
 
 private val searchSuggestionsSwitch: UiObject =
     mDevice.findObject(
         UiSelector()
-            .resourceId("$packageName:id/switchWidget")
+            .resourceId("$packageName:id/switchWidget"),
     )
 
 private val urlAutocompleteSubMenu =
     UiScrollable(UiSelector().resourceId("$packageName:id/recycler_view"))
         .getChildByText(
             UiSelector().text(getStringResource(R.string.preference_subitem_autocomplete)),
-            getStringResource(R.string.preference_subitem_autocomplete), true,
+            getStringResource(R.string.preference_subitem_autocomplete),
+            true,
         )
 
 private val urlAutocompleteDefaultOption =
     mDevice.findObject(
         UiSelector()
-            .textContains(getStringResource(R.string.preference_state_on))
+            .textContains(getStringResource(R.string.preference_state_on)),
     )
 
 private val manageSitesSubMenu = onView(withText(R.string.preference_autocomplete_subitem_manage_sites))

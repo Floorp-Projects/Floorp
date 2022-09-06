@@ -32,6 +32,7 @@ import org.mozilla.focus.testAnnotations.SmokeTest
 class SitePermissionsTest {
     private lateinit var webServer: MockWebServer
     private val featureSettingsHelper = FeatureSettingsHelper()
+
     /* Test page created and handled by the Mozilla mobile test-eng team */
     private val permissionsPage = "https://mozilla-mobile.github.io/testapp/permissions"
     private val testPageSubstring = "https://mozilla-mobile.github.io:443"
@@ -42,7 +43,7 @@ class SitePermissionsTest {
 
     @get:Rule
     val grantPermissionRule: GrantPermissionRule = GrantPermissionRule.grant(
-        Manifest.permission.ACCESS_COARSE_LOCATION
+        Manifest.permission.ACCESS_COARSE_LOCATION,
     )
 
     @get: Rule
@@ -87,9 +88,9 @@ class SitePermissionsTest {
         }
     }
 
+    // Tests the default autoplay setting: Block audio only on a video with autoplay attribute and not muted
     @SmokeTest
     @Test
-    // Tests the default autoplay setting: Block audio only on a video with autoplay attribute and not muted
     fun blockAudioAutoplayPermissionTest() {
         val videoPage = getMediaTestAsset(webServer, "videoPage")
 
@@ -102,9 +103,9 @@ class SitePermissionsTest {
         }
     }
 
+    // Tests the default autoplay setting: Block audio only on a video with autoplay and muted attributes
     @SmokeTest
     @Test
-    // Tests the default autoplay setting: Block audio only on a video with autoplay and muted attributes
     fun blockAudioAutoplayPermissionOnMutedVideoTest() {
         val mutedVideoPage = getMediaTestAsset(webServer, "mutedVideoPage")
 
@@ -115,9 +116,9 @@ class SitePermissionsTest {
         }
     }
 
+    // Tests the autoplay setting: Allow audio and video on a video with autoplay attribute and not muted
     @SmokeTest
     @Test
-    // Tests the autoplay setting: Allow audio and video on a video with autoplay attribute and not muted
     fun allowAudioVideoAutoplayPermissionTest() {
         val videoPage = getMediaTestAsset(webServer, "videoPage")
 
@@ -136,9 +137,9 @@ class SitePermissionsTest {
         }
     }
 
+    // Tests the autoplay setting: Allow audio and video on a video with autoplay and muted attributes
     @SmokeTest
     @Test
-    // Tests the autoplay setting: Allow audio and video on a video with autoplay and muted attributes
     fun allowAudioVideoAutoplayPermissionOnMutedVideoTest() {
         val genericPage = getGenericAsset(webServer)
         val mutedVideoPage = getMediaTestAsset(webServer, "mutedVideoPage")
@@ -161,9 +162,9 @@ class SitePermissionsTest {
         }
     }
 
+    // Tests the autoplay setting: Block audio and video
     @SmokeTest
     @Test
-    // Tests the autoplay setting: Block audio and video
     fun blockAudioVideoAutoplayPermissionTest() {
         val videoPage = getMediaTestAsset(webServer, "videoPage")
 
@@ -241,7 +242,7 @@ class SitePermissionsTest {
 
     @Ignore(
         "Camera not available on some AVDs: " +
-            "https://github.com/mozilla-mobile/mobile-test-eng/issues/622"
+            "https://github.com/mozilla-mobile/mobile-test-eng/issues/622",
     )
     @SmokeTest
     @Test
@@ -259,7 +260,7 @@ class SitePermissionsTest {
 
     @Ignore(
         "Camera not available on some AVDs: " +
-            "https://github.com/mozilla-mobile/mobile-test-eng/issues/622"
+            "https://github.com/mozilla-mobile/mobile-test-eng/issues/622",
     )
     @SmokeTest
     @Test

@@ -54,12 +54,12 @@ class BrowserToolbarIntegration(
     private val eraseActionListener: () -> Unit,
     private val tabCounterListener: () -> Unit,
     private val customTabId: String? = null,
-    inTesting: Boolean = false
+    inTesting: Boolean = false,
 ) : LifecycleAwareFeature {
     private val presenter = ToolbarPresenter(
         toolbar,
         store,
-        customTabId
+        customTabId,
     )
 
     @VisibleForTesting
@@ -76,7 +76,7 @@ class BrowserToolbarIntegration(
     private val eraseAction = BrowserToolbar.Button(
         imageDrawable = AppCompatResources.getDrawable(
             toolbar.context,
-            R.drawable.mozac_ic_delete
+            R.drawable.mozac_ic_delete,
         )!!,
         contentDescription = toolbar.context.getString(R.string.content_description_erase),
         iconTintColorResource = R.color.primaryText,
@@ -87,7 +87,7 @@ class BrowserToolbarIntegration(
             TelemetryWrapper.eraseEvent()
 
             eraseActionListener.invoke()
-        }
+        },
     )
     private val tabsAction = TabCounterToolbarButton(
         lifecycleOwner = fragment,
@@ -95,7 +95,7 @@ class BrowserToolbarIntegration(
             toolbar.hideKeyboard()
             tabCounterListener.invoke()
         },
-        store = store
+        store = store,
     )
 
     @VisibleForTesting
@@ -109,7 +109,7 @@ class BrowserToolbarIntegration(
                 hint = ContextCompat.getColor(toolbar.context, R.color.urlBarHintText),
                 securityIconInsecure = Color.TRANSPARENT,
                 text = ContextCompat.getColor(toolbar.context, R.color.primaryText),
-                menu = ContextCompat.getColor(toolbar.context, R.color.primaryText)
+                menu = ContextCompat.getColor(toolbar.context, R.color.primaryText),
             )
 
             addTrackingProtectionIndicator()
@@ -131,16 +131,16 @@ class BrowserToolbarIntegration(
             icons = icons.copy(
                 trackingProtectionTrackersBlocked = AppCompatResources.getDrawable(
                     context,
-                    R.drawable.mozac_ic_shield
+                    R.drawable.mozac_ic_shield,
                 )!!,
                 trackingProtectionNothingBlocked = AppCompatResources.getDrawable(
                     context,
-                    R.drawable.mozac_ic_shield
+                    R.drawable.mozac_ic_shield,
                 )!!,
                 trackingProtectionException = AppCompatResources.getDrawable(
                     context,
-                    R.drawable.mozac_ic_shield_disabled
-                )!!
+                    R.drawable.mozac_ic_shield_disabled,
+                )!!,
             )
         }
 
@@ -154,7 +154,7 @@ class BrowserToolbarIntegration(
                 context = fragment.requireContext(),
                 store = store,
                 currentTabId = customTabId,
-                onItemTapped = { controller.handleMenuInteraction(it) }
+                onItemTapped = { controller.handleMenuInteraction(it) },
             )
             customTabsFeature = CustomTabsToolbarFeature(
                 store,
@@ -178,7 +178,7 @@ class BrowserToolbarIntegration(
                 store,
                 toolbar,
                 sessionUseCases,
-                customTabId
+                customTabId,
             )
         }
 
@@ -195,7 +195,7 @@ class BrowserToolbarIntegration(
         val urlBackground = ResourcesCompat.getDrawable(
             fragment.resources,
             R.drawable.toolbar_url_background,
-            fragment.context?.theme
+            fragment.context?.theme,
         )
         toolbar.display.setUrlBackground(urlBackground)
     }
@@ -241,7 +241,7 @@ class BrowserToolbarIntegration(
                             container = fragment.requireView(),
                             text = fragment.getString(R.string.cfr_for_toolbar_delete_icon2),
                             anchor = eraseActionView,
-                            onDismiss = ::onDismissEraseTabsCfr
+                            onDismiss = ::onDismissEraseTabsCfr,
                         ).apply {
                             show()
                         }
@@ -265,9 +265,9 @@ class BrowserToolbarIntegration(
                             container = fragment.requireView(),
                             text = fragment.getString(R.string.cfr_for_toolbar_shield_icon),
                             anchor = toolbar.findViewById(
-                                R.id.mozac_browser_toolbar_tracking_protection_indicator
+                                R.id.mozac_browser_toolbar_tracking_protection_indicator,
                             ),
-                            onDismiss = ::onDismissTrackingProtectionCfr
+                            onDismiss = ::onDismissTrackingProtectionCfr,
                         ).apply {
                             show()
                         }

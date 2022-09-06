@@ -21,7 +21,7 @@ class TabViewHolder(
         tab: TabSessionState,
         isCurrentSession: Boolean,
         selectSession: (TabSessionState) -> Unit,
-        closeSession: (TabSessionState) -> Unit
+        closeSession: (TabSessionState) -> Unit,
     ) {
         tabReference = WeakReference(tab)
 

@@ -25,13 +25,14 @@ import org.mozilla.focus.ui.theme.FocusTheme
 class BiometricAuthenticationFragment : BaseFragment(), AuthenticationDelegate {
     @VisibleForTesting
     internal val biometricPromptAuth = ViewBoundFeatureWrapper<BiometricPromptAuth>()
+
     @VisibleForTesting
     internal val biometricErrorText = mutableStateOf("")
 
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
-        savedInstanceState: Bundle?
+        savedInstanceState: Bundle?,
     ): View {
         return ComposeView(requireContext()).apply {
             setBiometricPrompt(this)
@@ -40,7 +41,7 @@ class BiometricAuthenticationFragment : BaseFragment(), AuthenticationDelegate {
                     val biometricErrorText by biometricErrorText
                     BiometricPromptContent(biometricErrorText) {
                         showBiometricPrompt(
-                            biometricPromptAuth.get()
+                            biometricPromptAuth.get(),
                         )
                     }
                 }
@@ -66,8 +67,8 @@ class BiometricAuthenticationFragment : BaseFragment(), AuthenticationDelegate {
             biometricPromptAuth?.requestAuthentication(
                 title = getString(R.string.biometric_prompt_title),
                 subtitle = getString(
-                    R.string.biometric_prompt_subtitle
-                )
+                    R.string.biometric_prompt_subtitle,
+                ),
             )
         }
     }
@@ -77,10 +78,10 @@ class BiometricAuthenticationFragment : BaseFragment(), AuthenticationDelegate {
             feature = BiometricPromptAuth(
                 context = requireContext(),
                 fragment = this,
-                authenticationDelegate = this
+                authenticationDelegate = this,
             ),
             owner = this,
-            view = view
+            view = view,
         )
     }
 

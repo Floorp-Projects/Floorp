@@ -33,14 +33,14 @@ import org.mozilla.focus.ui.theme.focusColors
 fun SearchOverlay(
     viewModel: SearchSuggestionsViewModel,
     defaultSearchEngineName: String,
-    onListScrolled: () -> Unit
+    onListScrolled: () -> Unit,
 ) {
     val state = viewModel.state.observeAsState()
     val query = viewModel.searchQuery.observeAsState()
 
     when (state.value) {
         is State.Disabled,
-        is State.NoSuggestionsAPI -> {
+        is State.NoSuggestionsAPI, -> {
             if (query.value.isNullOrEmpty()) {
                 TopSitesOverlay(modifier = Modifier.background(focusColors.surface))
             }
@@ -54,14 +54,14 @@ fun SearchOverlay(
                     onSuggestionClicked = { suggestion ->
                         viewModel.selectSearchSuggestion(
                             suggestion.title!!,
-                            defaultSearchEngineName
+                            defaultSearchEngineName,
                         )
                     },
                     onAutoComplete = { suggestion ->
                         val editSuggestion = suggestion.editSuggestion ?: return@SearchSuggestions
                         viewModel.setAutocompleteSuggestion(editSuggestion)
                     },
-                    onListScrolled = onListScrolled
+                    onListScrolled = onListScrolled,
                 )
             }
         }
@@ -76,7 +76,7 @@ private fun SearchSuggestions(
     text: String,
     onSuggestionClicked: (AwesomeBar.Suggestion) -> Unit,
     onAutoComplete: (AwesomeBar.Suggestion) -> Unit,
-    onListScrolled: () -> Unit
+    onListScrolled: () -> Unit,
 ) {
     val context = LocalContext.current
     val components = components
@@ -91,7 +91,7 @@ private fun SearchSuggestions(
             mode = SearchSuggestionProvider.Mode.MULTIPLE_SUGGESTIONS,
             private = true,
             showDescription = false,
-            icon = icon
+            icon = icon,
         )
     }
 
@@ -105,16 +105,16 @@ private fun SearchSuggestions(
     }
 
     Column(
-        modifier = Modifier.nestedScroll(nestedScrollConnection)
+        modifier = Modifier.nestedScroll(nestedScrollConnection),
     ) {
         AwesomeBar(
             text = text,
             colors = AwesomeBarDefaults.colors(
-                background = focusColors.surface
+                background = focusColors.surface,
             ),
             providers = listOf(provider),
             onSuggestionClicked = onSuggestionClicked,
-            onAutoComplete = onAutoComplete
+            onAutoComplete = onAutoComplete,
         )
     }
 }

@@ -7,5 +7,5 @@ import org.mozilla.focus.settings.permissions.SitePermissionOption
 
 data class SitePermissionOptionListItem(
     val sitePermissionOption: SitePermissionOption,
-    val onClick: (SitePermissionOption) -> Unit
+    val onClick: (SitePermissionOption) -> Unit,
 )

@@ -44,7 +44,7 @@ class MockLocationUpdatesRule : ExternalResource() {
         instrumentation.uiAutomation.executeShellCommandBlocking(
             "appops set " +
                 appContext.packageName +
-                " android:mock_location allow"
+                " android:mock_location allow",
         )
 
         // To mock locations we need a location provider, so we generate and set it here.
@@ -59,7 +59,7 @@ class MockLocationUpdatesRule : ExternalResource() {
                 true,
                 true,
                 3,
-                2
+                2,
             )
         } catch (ex: Exception) {
             // unstable

@@ -32,7 +32,7 @@ object AppReducer : Reducer<AppState, AppAction> {
             is AppAction.SitePermissionOptionChange -> sitePermissionOptionChanged(state, action)
             is AppAction.SecretSettingsStateChange -> secretSettingsStateChanged(
                 state,
-                action
+                action,
             )
             is AppAction.ShowEraseTabsCfrChange -> showEraseTabsCfrChanged(state, action)
             is AppAction.ShowTrackingProtectionCfrChange -> showTrackingProtectionCfrChanged(state, action)
@@ -52,7 +52,7 @@ private fun selectionChanged(state: AppState, action: AppAction.SelectionChanged
     }
 
     return state.copy(
-        screen = Screen.Browser(tabId = action.tabId, showTabs = false)
+        screen = Screen.Browser(tabId = action.tabId, showTabs = false),
     )
 }
 
@@ -71,7 +71,7 @@ private fun noTabs(state: AppState): AppState {
  */
 private fun editAction(state: AppState, action: AppAction.EditAction): AppState {
     return state.copy(
-        screen = Screen.EditUrl(action.tabId)
+        screen = Screen.EditUrl(action.tabId),
     )
 }
 
@@ -80,7 +80,7 @@ private fun editAction(state: AppState, action: AppAction.EditAction): AppState 
  */
 private fun finishEditing(state: AppState, action: AppAction.FinishEdit): AppState {
     return state.copy(
-        screen = Screen.Browser(tabId = action.tabId, showTabs = false)
+        screen = Screen.Browser(tabId = action.tabId, showTabs = false),
     )
 }
 
@@ -148,13 +148,13 @@ private fun unlock(state: AppState, action: AppAction.Unlock): AppState {
 
 private fun openSettings(state: AppState, action: AppAction.OpenSettings): AppState {
     return state.copy(
-        screen = Screen.Settings(page = action.page)
+        screen = Screen.Settings(page = action.page),
     )
 }
 
 private fun openTab(state: AppState, action: AppAction.OpenTab): AppState {
     return state.copy(
-        screen = Screen.Browser(tabId = action.tabId, showTabs = false)
+        screen = Screen.Browser(tabId = action.tabId, showTabs = false),
     )
 }
 
@@ -191,14 +191,14 @@ private fun showEraseTabsCfrChanged(state: AppState, action: AppAction.ShowErase
  */
 private fun showTrackingProtectionCfrChanged(
     state: AppState,
-    action: AppAction.ShowTrackingProtectionCfrChange
+    action: AppAction.ShowTrackingProtectionCfrChange,
 ): AppState {
     return state.copy(showTrackingProtectionCfrForTab = action.value)
 }
 
 private fun openSitePermissionOptionsScreen(
     state: AppState,
-    action: AppAction.OpenSitePermissionOptionsScreen
+    action: AppAction.OpenSitePermissionOptionsScreen,
 ): AppState {
     return state.copy(screen = Screen.SitePermissionOptionsScreen(sitePermission = action.sitePermission))
 }
@@ -248,10 +248,10 @@ private fun navigateUp(state: AppState, action: AppAction.NavigateUp): AppState 
         Screen.Settings.Page.SearchAutocompleteList -> Screen.Settings(page = Screen.Settings.Page.SearchAutocomplete)
 
         Screen.Settings.Page.SearchAutocompleteAdd -> Screen.Settings(
-            page = Screen.Settings.Page.SearchAutocompleteList
+            page = Screen.Settings.Page.SearchAutocompleteList,
         )
         Screen.Settings.Page.SearchAutocompleteRemove -> Screen.Settings(
-            page = Screen.Settings.Page.SearchAutocompleteList
+            page = Screen.Settings.Page.SearchAutocompleteList,
         )
         Screen.Settings.Page.About -> Screen.Settings(page = Screen.Settings.Page.Mozilla)
         Screen.Settings.Page.Locale -> Screen.Settings(page = Screen.Settings.Page.General)

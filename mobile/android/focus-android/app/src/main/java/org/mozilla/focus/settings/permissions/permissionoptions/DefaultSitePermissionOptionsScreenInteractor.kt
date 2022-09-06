@@ -7,7 +7,7 @@ package org.mozilla.focus.settings.permissions.permissionoptions
 import org.mozilla.focus.settings.permissions.SitePermissionOption
 
 class DefaultSitePermissionOptionsScreenInteractor(
-    private val sitePermissionOptionsScreenStore: SitePermissionOptionsScreenStore
+    private val sitePermissionOptionsScreenStore: SitePermissionOptionsScreenStore,
 ) {
     fun handleSitePermissionOptionSelected(sitePermissionOption: SitePermissionOption) {
         if (sitePermissionOptionsScreenStore.state.selectedSitePermissionOption == sitePermissionOption) {
@@ -15,8 +15,8 @@ class DefaultSitePermissionOptionsScreenInteractor(
         }
         sitePermissionOptionsScreenStore.dispatch(
             SitePermissionOptionsScreenAction.Select(
-                selectedSitePermissionOption = sitePermissionOption
-            )
+                selectedSitePermissionOption = sitePermissionOption,
+            ),
         )
     }
 }

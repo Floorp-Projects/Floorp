@@ -3,6 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 @file:Suppress("TooManyFunctions")
+
 package org.mozilla.focus.activity.robots
 
 import androidx.test.espresso.Espresso.onView
@@ -96,10 +97,10 @@ class SettingsPrivacyMenuRobot {
                         hasCousin(
                             allOf(
                                 withId(R.id.switchWidget),
-                                isChecked()
-                            )
-                        )
-                    )
+                                isChecked(),
+                            ),
+                        ),
+                    ),
                 )
         } else {
             adTrackersBlockSwitch()
@@ -108,10 +109,10 @@ class SettingsPrivacyMenuRobot {
                         hasCousin(
                             allOf(
                                 withId(R.id.switchWidget),
-                                isNotChecked()
-                            )
-                        )
-                    )
+                                isNotChecked(),
+                            ),
+                        ),
+                    ),
                 )
         }
     }
@@ -124,10 +125,10 @@ class SettingsPrivacyMenuRobot {
                         hasCousin(
                             allOf(
                                 withId(R.id.switchWidget),
-                                isChecked()
-                            )
-                        )
-                    )
+                                isChecked(),
+                            ),
+                        ),
+                    ),
                 )
         } else {
             analyticTrackersBlockSwitch()
@@ -136,10 +137,10 @@ class SettingsPrivacyMenuRobot {
                         hasCousin(
                             allOf(
                                 withId(R.id.switchWidget),
-                                isNotChecked()
-                            )
-                        )
-                    )
+                                isNotChecked(),
+                            ),
+                        ),
+                    ),
                 )
         }
     }
@@ -152,10 +153,10 @@ class SettingsPrivacyMenuRobot {
                         hasCousin(
                             allOf(
                                 withId(R.id.switchWidget),
-                                isChecked()
-                            )
-                        )
-                    )
+                                isChecked(),
+                            ),
+                        ),
+                    ),
                 )
         } else {
             socialTrackersBlockSwitch()
@@ -164,10 +165,10 @@ class SettingsPrivacyMenuRobot {
                         hasCousin(
                             allOf(
                                 withId(R.id.switchWidget),
-                                isNotChecked()
-                            )
-                        )
-                    )
+                                isNotChecked(),
+                            ),
+                        ),
+                    ),
                 )
         }
     }
@@ -180,10 +181,10 @@ class SettingsPrivacyMenuRobot {
                         hasCousin(
                             allOf(
                                 withId(R.id.switchWidget),
-                                isChecked()
-                            )
-                        )
-                    )
+                                isChecked(),
+                            ),
+                        ),
+                    ),
                 )
         } else {
             otherContentTrackersBlockSwitch()
@@ -192,10 +193,10 @@ class SettingsPrivacyMenuRobot {
                         hasCousin(
                             allOf(
                                 withId(R.id.switchWidget),
-                                isNotChecked()
-                            )
-                        )
-                    )
+                                isNotChecked(),
+                            ),
+                        ),
+                    ),
                 )
         }
     }
@@ -284,10 +285,10 @@ private fun assertAdTrackersBlockSwitchState(enabled: Boolean = true) {
                     hasCousin(
                         allOf(
                             withId(R.id.switchWidget),
-                            isChecked()
-                        )
-                    )
-                )
+                            isChecked(),
+                        ),
+                    ),
+                ),
             )
     } else {
         adTrackersBlockSwitch()
@@ -296,10 +297,10 @@ private fun assertAdTrackersBlockSwitchState(enabled: Boolean = true) {
                     hasCousin(
                         allOf(
                             withId(R.id.switchWidget),
-                            isNotChecked()
-                        )
-                    )
-                )
+                            isNotChecked(),
+                        ),
+                    ),
+                ),
             )
     }
 }
@@ -318,10 +319,10 @@ private fun assertAnalyticTrackersBlockSwitchState(enabled: Boolean = true) {
                     hasCousin(
                         allOf(
                             withId(R.id.switchWidget),
-                            isChecked()
-                        )
-                    )
-                )
+                            isChecked(),
+                        ),
+                    ),
+                ),
             )
     } else {
         analyticTrackersBlockSwitch()
@@ -330,10 +331,10 @@ private fun assertAnalyticTrackersBlockSwitchState(enabled: Boolean = true) {
                     hasCousin(
                         allOf(
                             withId(R.id.switchWidget),
-                            isNotChecked()
-                        )
-                    )
-                )
+                            isNotChecked(),
+                        ),
+                    ),
+                ),
             )
     }
 }
@@ -352,10 +353,10 @@ private fun assertSocialTrackersBlockSwitchState(enabled: Boolean = true) {
                     hasCousin(
                         allOf(
                             withId(R.id.switchWidget),
-                            isChecked()
-                        )
-                    )
-                )
+                            isChecked(),
+                        ),
+                    ),
+                ),
             )
     } else {
         socialTrackersBlockSwitch()
@@ -364,10 +365,10 @@ private fun assertSocialTrackersBlockSwitchState(enabled: Boolean = true) {
                     hasCousin(
                         allOf(
                             withId(R.id.switchWidget),
-                            isNotChecked()
-                        )
-                    )
-                )
+                            isNotChecked(),
+                        ),
+                    ),
+                ),
             )
     }
 }
@@ -386,10 +387,10 @@ private fun assertOtherContentTrackersBlockSwitchState(enabled: Boolean = false)
                     hasCousin(
                         allOf(
                             withId(R.id.switchWidget),
-                            isChecked()
-                        )
-                    )
-                )
+                            isChecked(),
+                        ),
+                    ),
+                ),
             )
     } else {
         otherContentTrackersBlockSwitch()
@@ -398,10 +399,10 @@ private fun assertOtherContentTrackersBlockSwitchState(enabled: Boolean = false)
                     hasCousin(
                         allOf(
                             withId(R.id.switchWidget),
-                            isNotChecked()
-                        )
-                    )
-                )
+                            isNotChecked(),
+                        ),
+                    ),
+                ),
             )
     }
 }
@@ -420,10 +421,10 @@ private fun assertBlockWebFontsSwitchState(enabled: Boolean = false) {
                     hasCousin(
                         allOf(
                             withId(R.id.switchWidget),
-                            isChecked()
-                        )
-                    )
-                )
+                            isChecked(),
+                        ),
+                    ),
+                ),
             )
     } else {
         blockWebFontsSwitch()
@@ -432,10 +433,10 @@ private fun assertBlockWebFontsSwitchState(enabled: Boolean = false) {
                     hasCousin(
                         allOf(
                             withId(R.id.switchWidget),
-                            isNotChecked()
-                        )
-                    )
-                )
+                            isNotChecked(),
+                        ),
+                    ),
+                ),
             )
     }
 }
@@ -454,10 +455,10 @@ private fun assertBlockJavaScriptSwitchState(enabled: Boolean = false) {
                     hasCousin(
                         allOf(
                             withId(R.id.switchWidget),
-                            isChecked()
-                        )
-                    )
-                )
+                            isChecked(),
+                        ),
+                    ),
+                ),
             )
     } else {
         blockJavaScriptSwitch()
@@ -466,10 +467,10 @@ private fun assertBlockJavaScriptSwitchState(enabled: Boolean = false) {
                     hasCousin(
                         allOf(
                             withId(R.id.switchWidget),
-                            isNotChecked()
-                        )
-                    )
-                )
+                            isNotChecked(),
+                        ),
+                    ),
+                ),
             )
     }
 }
@@ -479,7 +480,7 @@ private fun cookiesAndSiteDataSection() =
         .getChildByText(
             UiSelector().text("Cookies and Site Data"),
             "Cookies and Site Data",
-            true
+            true,
         )
 
 private fun blockCookiesMenuButton() =
@@ -487,7 +488,7 @@ private fun blockCookiesMenuButton() =
         .getChildByText(
             UiSelector().text("Block cookies"),
             "Block cookies",
-            true
+            true,
         )
 
 private fun blockCookiesDefaultOption() =
@@ -495,7 +496,7 @@ private fun blockCookiesDefaultOption() =
         .getChildByText(
             UiSelector().text("Block cross-site cookies"),
             "Block cross-site cookies",
-            true
+            true,
         )
 
 private fun sitePermissions() =
@@ -516,10 +517,10 @@ private fun assertUseFingerprintSwitchState(enabled: Boolean = false) {
                     hasCousin(
                         allOf(
                             withId(R.id.switchWidget),
-                            isChecked()
-                        )
-                    )
-                )
+                            isChecked(),
+                        ),
+                    ),
+                ),
             )
     } else {
         useFingerprintSwitch()
@@ -528,10 +529,10 @@ private fun assertUseFingerprintSwitchState(enabled: Boolean = false) {
                     hasCousin(
                         allOf(
                             withId(R.id.switchWidget),
-                            isNotChecked()
-                        )
-                    )
-                )
+                            isNotChecked(),
+                        ),
+                    ),
+                ),
             )
     }
 }
@@ -550,10 +551,10 @@ private fun assertStealthModeSwitchState(enabled: Boolean = false) {
                     hasCousin(
                         allOf(
                             withId(R.id.switchWidget),
-                            isChecked()
-                        )
-                    )
-                )
+                            isChecked(),
+                        ),
+                    ),
+                ),
             )
     } else {
         stealthModeSwitch()
@@ -562,10 +563,10 @@ private fun assertStealthModeSwitchState(enabled: Boolean = false) {
                     hasCousin(
                         allOf(
                             withId(R.id.switchWidget),
-                            isNotChecked()
-                        )
-                    )
-                )
+                            isNotChecked(),
+                        ),
+                    ),
+                ),
             )
     }
 }
@@ -574,8 +575,8 @@ private fun safeBrowsingSwitch(): ViewInteraction {
     val safeBrowsingSwitchText =
         mDevice.findObject(
             UiSelector().text(
-                getStringResource(R.string.preference_safe_browsing_summary)
-            )
+                getStringResource(R.string.preference_safe_browsing_summary),
+            ),
         )
     privacySettingsList.scrollToEnd(3)
     privacySettingsList.scrollIntoView(safeBrowsingSwitchText)
@@ -590,10 +591,10 @@ private fun assertSafeBrowsingSwitchState(enabled: Boolean = true) {
                     hasCousin(
                         allOf(
                             withId(R.id.switchWidget),
-                            isChecked()
-                        )
-                    )
-                )
+                            isChecked(),
+                        ),
+                    ),
+                ),
             )
     } else {
         safeBrowsingSwitch()
@@ -602,10 +603,10 @@ private fun assertSafeBrowsingSwitchState(enabled: Boolean = true) {
                     hasCousin(
                         allOf(
                             withId(R.id.switchWidget),
-                            isNotChecked()
-                        )
-                    )
-                )
+                            isNotChecked(),
+                        ),
+                    ),
+                ),
             )
     }
 }
@@ -624,10 +625,10 @@ private fun assertHttpsOnlyModeSwitchState(enabled: Boolean = true) {
                     hasCousin(
                         allOf(
                             withId(R.id.switchWidget),
-                            isChecked()
-                        )
-                    )
-                )
+                            isChecked(),
+                        ),
+                    ),
+                ),
             )
     } else {
         httpsOnlyModeSwitch()
@@ -636,10 +637,10 @@ private fun assertHttpsOnlyModeSwitchState(enabled: Boolean = true) {
                     hasCousin(
                         allOf(
                             withId(R.id.switchWidget),
-                            isNotChecked()
-                        )
-                    )
-                )
+                            isNotChecked(),
+                        ),
+                    ),
+                ),
             )
     }
 }
@@ -658,10 +659,10 @@ private fun assertSendDataSwitchState(enabled: Boolean = false) {
                     hasCousin(
                         allOf(
                             withId(R.id.switchWidget),
-                            isChecked()
-                        )
-                    )
-                )
+                            isChecked(),
+                        ),
+                    ),
+                ),
             )
     } else {
         sendDataSwitch()
@@ -670,10 +671,10 @@ private fun assertSendDataSwitchState(enabled: Boolean = false) {
                     hasCousin(
                         allOf(
                             withId(R.id.switchWidget),
-                            isNotChecked()
-                        )
-                    )
-                )
+                            isNotChecked(),
+                        ),
+                    ),
+                ),
             )
     }
 }
@@ -699,41 +700,41 @@ private val blockCookiesPromptHeading =
     mDevice.findObject(
         UiSelector()
             .resourceId("$packageName:id/alertTitle")
-            .textContains(getStringResource(R.string.preference_block_cookies_title))
+            .textContains(getStringResource(R.string.preference_block_cookies_title)),
     )
 
 private val blockCookiesYesPleaseOption =
     mDevice.findObject(
         UiSelector()
-            .textContains(getStringResource(R.string.preference_privacy_should_block_cookies_yes_option2))
+            .textContains(getStringResource(R.string.preference_privacy_should_block_cookies_yes_option2)),
     )
 
 private val block3rdPartyCookiesOnlyOption =
     mDevice.findObject(
         UiSelector()
-            .textContains(getStringResource(R.string.preference_privacy_should_block_cookies_yes_option2))
+            .textContains(getStringResource(R.string.preference_privacy_should_block_cookies_yes_option2)),
     )
 
 private val block3rdPartyTrackerCookiesOnlyOption =
     mDevice.findObject(
         UiSelector()
-            .textContains(getStringResource(R.string.preference_privacy_should_block_cookies_third_party_tracker_cookies_option))
+            .textContains(getStringResource(R.string.preference_privacy_should_block_cookies_third_party_tracker_cookies_option)),
     )
 
 private val blockCrossSiteCookiesOption =
     mDevice.findObject(
         UiSelector()
-            .textContains(getStringResource(R.string.preference_privacy_should_block_cookies_cross_site_option))
+            .textContains(getStringResource(R.string.preference_privacy_should_block_cookies_cross_site_option)),
     )
 
 private val noThanksOption =
     mDevice.findObject(
         UiSelector()
-            .textContains(getStringResource(R.string.preference_privacy_should_block_cookies_no_option2))
+            .textContains(getStringResource(R.string.preference_privacy_should_block_cookies_no_option2)),
     )
 
 private val cancelBlockCookiesPrompt =
     mDevice.findObject(
         UiSelector()
-            .textContains(getStringResource(R.string.action_cancel))
+            .textContains(getStringResource(R.string.action_cancel)),
     )

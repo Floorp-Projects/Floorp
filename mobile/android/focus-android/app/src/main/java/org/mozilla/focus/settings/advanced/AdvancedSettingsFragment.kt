@@ -52,13 +52,13 @@ class AdvancedSettingsFragment :
                     sharedPreferences.getBoolean(key, false)
 
                 AdvancedSettings.remoteDebugSettingChanged.record(
-                    AdvancedSettings.RemoteDebugSettingChangedExtra(sharedPreferences.all[key] as Boolean)
+                    AdvancedSettings.RemoteDebugSettingChangedExtra(sharedPreferences.all[key] as Boolean),
                 )
             }
 
             getString(R.string.pref_key_open_links_in_external_app) ->
                 AdvancedSettings.openLinksSettingChanged.record(
-                    AdvancedSettings.OpenLinksSettingChangedExtra(sharedPreferences.all[key] as Boolean)
+                    AdvancedSettings.OpenLinksSettingChangedExtra(sharedPreferences.all[key] as Boolean),
                 )
             getString(R.string.pref_key_leakcanary) -> {
                 context?.application?.updateLeakCanaryState(sharedPreferences.all[key] as Boolean)

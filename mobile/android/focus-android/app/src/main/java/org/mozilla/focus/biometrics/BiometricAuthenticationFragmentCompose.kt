@@ -58,21 +58,21 @@ fun BiometricPromptContent(biometricErrorText: String, showBiometricPrompt: () -
                         colorResource(R.color.home_screen_modal_gradient_six),
                     ),
                     end = Offset(0f, Float.POSITIVE_INFINITY),
-                    start = Offset(Float.POSITIVE_INFINITY, 0f)
-                )
-            )
+                    start = Offset(Float.POSITIVE_INFINITY, 0f),
+                ),
+            ),
     ) {
         Image(
             painter = painterResource(R.drawable.wordmark2),
             contentDescription = LocalContext.current.getString(R.string.app_name),
             modifier = Modifier
-                .padding(start = 24.dp, end = 24.dp)
+                .padding(start = 24.dp, end = 24.dp),
         )
         Text(
             style = focusTypography.onboardingButton,
             color = Color.Red,
             text = biometricErrorText,
-            modifier = Modifier.padding(top = 16.dp, bottom = 16.dp)
+            modifier = Modifier.padding(top = 16.dp, bottom = 16.dp),
         )
         ComponentShowBiometricPromptButton {
             showBiometricPrompt()
@@ -85,25 +85,25 @@ private fun ComponentShowBiometricPromptButton(showBiometricPrompt: () -> Unit) 
     Button(
         onClick = showBiometricPrompt,
         colors = ButtonDefaults.textButtonColors(
-            backgroundColor = colorResource(R.color.biometric_show_button_background)
+            backgroundColor = colorResource(R.color.biometric_show_button_background),
         ),
         modifier = Modifier
             .padding(16.dp)
-            .fillMaxWidth()
+            .fillMaxWidth(),
     ) {
         Image(
             painter = painterResource(R.drawable.ic_fingerprint),
             contentDescription = LocalContext.current.getString(R.string.biometric_auth_image_description),
             modifier = Modifier
-                .padding(end = 10.dp)
+                .padding(end = 10.dp),
         )
         Text(
             color = PhotonColors.White,
             text = AnnotatedString(
                 LocalContext.current.resources.getString(
-                    R.string.show_biometric_button_text
-                )
-            )
+                    R.string.show_biometric_button_text,
+                ),
+            ),
         )
     }
 }

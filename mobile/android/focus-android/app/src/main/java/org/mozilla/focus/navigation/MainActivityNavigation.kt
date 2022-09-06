@@ -47,7 +47,7 @@ import kotlin.collections.forEach as withEach
  * needed.
  */
 class MainActivityNavigation(
-    private val activity: MainActivity
+    private val activity: MainActivity,
 ) {
     /**
      * Home screen.
@@ -63,7 +63,7 @@ class MainActivityNavigation(
             ViewUtils.showBrandedSnackbar(
                 activity.findViewById(android.R.id.content),
                 R.string.feedback_erase2,
-                activity.resources.getInteger(R.integer.erase_snackbar_delay)
+                activity.resources.getInteger(R.integer.erase_snackbar_delay),
             )
         }
 
@@ -119,7 +119,7 @@ class MainActivityNavigation(
      * Edit URL of tab with the given [tabId].
      */
     fun edit(
-        tabId: String
+        tabId: String,
     ) {
         val fragmentManager = activity.supportFragmentManager
 
@@ -244,7 +244,7 @@ class MainActivityNavigation(
             .replace(
                 R.id.container,
                 SitePermissionOptionsFragment.addSitePermission(sitePermission = sitePermission),
-                SitePermissionOptionsFragment.FRAGMENT_TAG
+                SitePermissionOptionsFragment.FRAGMENT_TAG,
             )
             .commit()
     }

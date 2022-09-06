@@ -56,16 +56,16 @@ class AddToHomeScreenRobot {
 private val addToHSOKBtn = mDevice.findObject(
     UiSelector()
         .resourceId("$packageName:id/addtohomescreen_dialog_add")
-        .enabled(true)
+        .enabled(true),
 )
 
 private val addAutomaticallyBtn = mDevice.findObject(
     UiSelector()
         .className("android.widget.Button")
-        .textContains("Add automatically")
+        .textContains("Add automatically"),
 )
 
 private val shortcutTitle = mDevice.findObject(
     UiSelector()
-        .resourceId("$packageName:id/edit_title")
+        .resourceId("$packageName:id/edit_title"),
 )

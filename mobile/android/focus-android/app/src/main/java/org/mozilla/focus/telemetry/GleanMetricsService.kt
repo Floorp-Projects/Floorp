@@ -60,10 +60,10 @@ class GleanMetricsService(context: Context) : MetricsService {
                 channel = BuildConfig.FLAVOR,
                 httpClient = ConceptFetchHttpUploader(
                     client = lazy(LazyThreadSafetyMode.NONE) { components.client },
-                    usePrivateRequest = true
-                )
+                    usePrivateRequest = true,
+                ),
             ),
-            buildInfo = GleanBuildInfo.buildInfo
+            buildInfo = GleanBuildInfo.buildInfo,
         )
 
         Glean.registerPings(Pings)
@@ -74,7 +74,6 @@ class GleanMetricsService(context: Context) : MetricsService {
 
         // Do this immediately after init.
         GlobalScope.launch(IO) {
-
             // Wait for preferences to be collected before we send the activation ping.
             collectPrefMetricsAsync(components, settings, context).await()
 
@@ -94,7 +93,7 @@ class GleanMetricsService(context: Context) : MetricsService {
     private fun collectPrefMetricsAsync(
         components: Components,
         settings: Settings,
-        context: Context
+        context: Context,
     ) = CoroutineScope(IO).async {
         val installedBrowsers = BrowsersCache.all(context)
         val hasFenixInstalled = FenixProductDetector.getInstalledFenixVersions(context).isNotEmpty()
@@ -107,7 +106,7 @@ class GleanMetricsService(context: Context) : MetricsService {
         Browser.localeOverride.set(components.store.state.locale?.displayName ?: "none")
         val shortcutsOnHomeNumber = components.topSitesStorage.getTopSites(
             totalSites = TOP_SITES_MAX_LIMIT,
-            frecencyConfig = null
+            frecencyConfig = null,
         ).size
         Shortcuts.shortcutsOnHomeNumber.set(shortcutsOnHomeNumber.toLong())
 

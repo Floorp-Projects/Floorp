@@ -12,7 +12,7 @@ import mozilla.components.concept.fetch.Response
  * A wrapper around [Client] preventing [Request]s without the private flag set.
  */
 class ClientWrapper(
-    private val actual: Client
+    private val actual: Client,
 ) : Client() {
     override fun fetch(request: Request): Response {
         if (!request.private) {

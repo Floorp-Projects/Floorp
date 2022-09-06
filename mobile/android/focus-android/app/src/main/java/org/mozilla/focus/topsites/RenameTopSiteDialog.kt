@@ -26,7 +26,7 @@ import org.mozilla.focus.ui.dialog.FocusDialog
 fun RenameTopSiteDialog(
     currentName: String,
     onConfirm: (String) -> Unit,
-    onDismiss: () -> Unit
+    onDismiss: () -> Unit,
 ) {
     var text by remember { mutableStateOf(currentName) }
 
@@ -35,7 +35,7 @@ fun RenameTopSiteDialog(
         dialogTextComposable = {
             DialogInputField(
                 text = text,
-                placeholder = { Text(stringResource(id = R.string.placeholder_rename_top_site)) }
+                placeholder = { Text(stringResource(id = R.string.placeholder_rename_top_site)) },
             ) { newText -> text = newText }
         },
         onDismissRequest = { onDismiss.invoke() },

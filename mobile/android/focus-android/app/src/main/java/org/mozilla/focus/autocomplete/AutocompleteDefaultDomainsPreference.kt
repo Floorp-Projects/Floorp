@@ -14,7 +14,7 @@ import org.mozilla.focus.utils.SupportUtils
  */
 class AutocompleteDefaultDomainsPreference(
     context: Context?,
-    attrs: AttributeSet?
+    attrs: AttributeSet?,
 ) : LearnMoreSwitchPreference(context, attrs) {
     override fun getLearnMoreUrl() = SupportUtils.getSumoURLForTopic(context, SupportUtils.SumoTopic.AUTOCOMPLETE)
 }

@@ -27,7 +27,7 @@ class NavigationButtonsIntegration(
     val store: BrowserStore,
     val toolbar: BrowserToolbar,
     private val sessionUseCases: SessionUseCases,
-    private val customTabId: String?
+    private val customTabId: String?,
 ) : LifecycleAwareFeature {
     private var scope: CoroutineScope? = null
 
@@ -57,7 +57,7 @@ class NavigationButtonsIntegration(
             longClickListener = null,
             listener = {
                 sessionUseCases.goBack(store.state.findCustomTabOrSelectedTab(customTabId)?.id)
-            }
+            },
         )
         toolbar.addNavigationAction(backButton)
 
@@ -74,7 +74,7 @@ class NavigationButtonsIntegration(
             longClickListener = null,
             listener = {
                 sessionUseCases.goForward(store.state.findCustomTabOrSelectedTab(customTabId)?.id)
-            }
+            },
         )
         toolbar.addNavigationAction(forwardButton)
 
@@ -98,7 +98,7 @@ class NavigationButtonsIntegration(
                 } else {
                     sessionUseCases.reload(tab.id)
                 }
-            }
+            },
         )
         toolbar.addNavigationAction(reloadOrStopButton)
     }
@@ -110,7 +110,7 @@ class NavigationButtonsIntegration(
                     arrayOf(
                         tab?.content?.canGoBack,
                         tab?.content?.canGoForward,
-                        tab?.content?.loading
+                        tab?.content?.loading,
                     )
                 }
                 .collect { toolbar.invalidateActions() }

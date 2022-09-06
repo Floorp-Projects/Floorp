@@ -57,7 +57,7 @@ class FocusSnackbar private constructor(
         ): FocusSnackbar {
             val parent = findSuitableParent(view) ?: run {
                 throw IllegalArgumentException(
-                    "No suitable parent found from the given view. Please provide a valid view."
+                    "No suitable parent found from the given view. Please provide a valid view.",
                 )
             }
 
@@ -76,7 +76,7 @@ class FocusSnackbar private constructor(
             return FocusSnackbar(parent, binding, callback).also {
                 it.duration = durationOrAccessibleDuration
                 it.view.updatePadding(
-                    bottom = 0
+                    bottom = 0,
                 )
             }
         }
@@ -112,7 +112,7 @@ class FocusSnackbar private constructor(
 }
 
 private class FocusSnackbarCallback(
-    private val content: View
+    private val content: View,
 ) : ContentViewCallback {
 
     override fun animateContentIn(delay: Int, duration: Int) {

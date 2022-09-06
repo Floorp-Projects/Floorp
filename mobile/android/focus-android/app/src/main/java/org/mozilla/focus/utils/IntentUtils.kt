@@ -31,7 +31,7 @@ object IntentUtils {
     fun getIntentChooser(
         context: Context,
         intent: Intent,
-        chooserTitle: CharSequence? = null
+        chooserTitle: CharSequence? = null,
     ): Intent {
         val chooserIntent: Intent
         val resolveInfos = context.packageManager.queryIntentActivities(intent, 0).toHashSet()
@@ -58,7 +58,7 @@ object IntentUtils {
                         targetIntent,
                         activityInfo.packageName,
                         resolveInfo.labelRes,
-                        resolveInfo.icon
+                        resolveInfo.icon,
                     )
                 }
 
@@ -73,7 +73,7 @@ object IntentUtils {
             }
             chooserIntent.putExtra(
                 Intent.EXTRA_INITIAL_INTENTS,
-                targetIntents.toTypedArray<Parcelable>()
+                targetIntents.toTypedArray<Parcelable>(),
             )
         }
         return chooserIntent

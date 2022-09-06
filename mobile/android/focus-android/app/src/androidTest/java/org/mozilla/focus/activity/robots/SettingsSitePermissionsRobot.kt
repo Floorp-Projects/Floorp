@@ -81,12 +81,12 @@ class SettingsSitePermissionsRobot {
 
 private val autoplaySettings =
     mDevice.findObject(
-        UiSelector().text(getStringResource(R.string.preference_autoplay))
+        UiSelector().text(getStringResource(R.string.preference_autoplay)),
     )
 
 private val autoplayDefaultValue =
     mDevice.findObject(
-        UiSelector().text(getStringResource(R.string.preference_block_autoplay_audio_only))
+        UiSelector().text(getStringResource(R.string.preference_block_autoplay_audio_only)),
     )
 
 private val autoplayAllowAudioAndVideoOption =
@@ -107,7 +107,7 @@ private fun assertBlockAudioOnlyIsChecked() {
         mDevice.findObject(
             UiSelector()
                 .checkable(true)
-                .index(1)
+                .index(1),
         )
     assertTrue(radioButton.isChecked)
 }
@@ -152,7 +152,7 @@ private val askToAllowRadioButton =
     mDevice.findObject(
         UiSelector()
             .checkable(true)
-            .index(0)
+            .index(0),
     )
 
 private val blockedRadioButton =

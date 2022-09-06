@@ -22,7 +22,7 @@ private const val PREF_KEY_CUSTOM_SEARCH_ENGINES = "pref_custom_search_engines"
  * Helper class to migrate the search related data in Focus to the "Android Components" implementation.
  */
 class SearchMigration(
-    private val context: Context
+    private val context: Context,
 ) : SearchMiddleware.Migration {
 
     override fun getValuesToMigrate(): SearchMiddleware.Migration.MigrationValues? {
@@ -34,7 +34,7 @@ class SearchMigration(
         @Suppress("DEPRECATION")
         val values = SearchMiddleware.Migration.MigrationValues(
             customSearchEngines = loadCustomSearchEngines(preferences),
-            defaultSearchEngineName = context.settings.defaultSearchEngineName
+            defaultSearchEngineName = context.settings.defaultSearchEngineName,
         )
 
         preferences.edit()
@@ -45,7 +45,7 @@ class SearchMigration(
     }
 
     private fun loadCustomSearchEngines(
-        preferences: SharedPreferences
+        preferences: SharedPreferences,
     ): List<SearchEngine> {
         val engines = preferences.getStringSet(PREF_KEY_CUSTOM_SEARCH_ENGINES, emptySet())!!
 

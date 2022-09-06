@@ -12,7 +12,7 @@ import org.mozilla.focus.utils.SupportUtils
  */
 class SafeBrowsingSwitchPreference(
     context: Context?,
-    attrs: AttributeSet?
+    attrs: AttributeSet?,
 ) : LearnMoreSwitchPreference(context, attrs) {
     override fun getLearnMoreUrl() =
         SupportUtils.getSafeBrowsingURL()

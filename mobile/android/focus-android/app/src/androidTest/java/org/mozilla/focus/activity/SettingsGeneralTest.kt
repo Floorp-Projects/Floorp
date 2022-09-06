@@ -160,7 +160,7 @@ class SettingsGeneralTest {
         LocaleManager.setNewLocale(
             mActivityTestRule.activity,
             LocaleUseCases(context.components.store),
-            locale
+            locale,
         )
         runOnUiThread { mActivityTestRule.activity.recreate() }
     }

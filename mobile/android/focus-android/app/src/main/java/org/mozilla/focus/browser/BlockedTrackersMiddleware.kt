@@ -19,7 +19,7 @@ import org.mozilla.focus.ext.settings
  * @param context The application context.
  */
 class BlockedTrackersMiddleware(
-    private val context: Context
+    private val context: Context,
 ) : Middleware<BrowserState, BrowserAction> {
 
     private val settings = context.settings
@@ -28,7 +28,7 @@ class BlockedTrackersMiddleware(
     override fun invoke(
         context: MiddlewareContext<BrowserState, BrowserAction>,
         next: (BrowserAction) -> Unit,
-        action: BrowserAction
+        action: BrowserAction,
     ) {
         when (action) {
             is TrackingProtectionAction.TrackerBlockedAction -> {
@@ -48,7 +48,7 @@ class BlockedTrackersMiddleware(
             .edit()
             .putInt(
                 context.getString(R.string.pref_key_privacy_total_trackers_blocked_count),
-                blockedTrackersCount + 1
+                blockedTrackersCount + 1,
             )
             .apply()
     }

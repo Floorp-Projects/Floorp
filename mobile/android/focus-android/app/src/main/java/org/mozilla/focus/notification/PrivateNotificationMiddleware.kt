@@ -19,14 +19,14 @@ import org.mozilla.focus.session.SessionNotificationService
  * notification while private tabs are open.
  */
 class PrivateNotificationMiddleware(
-    private val applicationContext: Context
+    private val applicationContext: Context,
 ) : Middleware<BrowserState, BrowserAction> {
     private var isServiceRunning: Boolean = false
 
     override fun invoke(
         context: MiddlewareContext<BrowserState, BrowserAction>,
         next: (BrowserAction) -> Unit,
-        action: BrowserAction
+        action: BrowserAction,
     ) {
         next(action)
 

@@ -45,12 +45,12 @@ class DownloadRobot {
     fun verifyDownloadConfirmationMessage(fileName: String) {
         val snackBar = mDevice.findObject(
             UiSelector()
-                .resourceId("$packageName:id/snackbar_text")
+                .resourceId("$packageName:id/snackbar_text"),
         )
         snackBar.waitForExists(waitingTimeShort)
         assertTrue(
             snackBar.text,
-            snackBar.text.equals("$fileName finished")
+            snackBar.text.equals("$fileName finished"),
         )
     }
 
@@ -70,27 +70,27 @@ fun downloadRobot(interact: DownloadRobot.() -> Unit): DownloadRobot.Transition 
 
 val downloadIconAsset: UiObject = mDevice.findObject(
     UiSelector()
-        .resourceId("download")
+        .resourceId("download"),
 )
 
 private val downloadDialogTitle = mDevice.findObject(
     UiSelector()
-        .resourceId("$packageName:id/title")
+        .resourceId("$packageName:id/title"),
 )
 
 private val downloadFileName = mDevice.findObject(
     UiSelector()
-        .resourceId("$packageName:id/filename")
+        .resourceId("$packageName:id/filename"),
 )
 
 private val downloadCancelBtn = mDevice.findObject(
     UiSelector()
-        .resourceId("$packageName:id/close_button")
+        .resourceId("$packageName:id/close_button"),
 )
 
 private val downloadBtn = mDevice.findObject(
     UiSelector()
-        .resourceId("$packageName:id/download_button")
+        .resourceId("$packageName:id/download_button"),
 )
 
 private val downloadNotificationText = getStringResource(R.string.mozac_feature_downloads_completed_notification_text2)

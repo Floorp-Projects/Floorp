@@ -41,7 +41,9 @@ class CustomTabTest {
 
     @get: Rule
     val activityTestRule = ActivityTestRule(
-        IntentReceiverActivity::class.java, true, false
+        IntentReceiverActivity::class.java,
+        true,
+        false,
     )
 
     @Before
@@ -70,7 +72,7 @@ class CustomTabTest {
         val customTabPage = getGenericAsset(webServer)
         val customTabActivity =
             launchActivity<IntentReceiverActivity>(
-                createCustomTabIntent(customTabPage.url, MENU_ITEM_LABEL, ACTION_BUTTON_DESCRIPTION)
+                createCustomTabIntent(customTabPage.url, MENU_ITEM_LABEL, ACTION_BUTTON_DESCRIPTION),
             )
 
         browserScreen {

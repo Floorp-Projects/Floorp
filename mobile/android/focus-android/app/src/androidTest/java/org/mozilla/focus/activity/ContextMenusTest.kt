@@ -169,7 +169,7 @@ class ContextMenusTest {
         }
         deleteFileUsingDisplayName(
             getTargetContext.applicationContext,
-            fileName
+            fileName,
         )
     }
 

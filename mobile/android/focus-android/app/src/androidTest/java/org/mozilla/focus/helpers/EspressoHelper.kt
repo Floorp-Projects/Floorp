@@ -27,9 +27,9 @@ object EspressoHelper {
         return withParent(
             hasSibling(
                 withChild(
-                    matcher
-                )
-            )
+                    matcher,
+                ),
+            ),
         )
     }
 
@@ -54,8 +54,8 @@ object EspressoHelper {
         Espresso.onView(
             Matchers.allOf(
                 ViewMatchers.withClassName(Matchers.endsWith("TextView")),
-                ViewMatchers.withParent(ViewMatchers.withId(R.id.toolbar))
-            )
+                ViewMatchers.withParent(ViewMatchers.withId(R.id.toolbar)),
+            ),
         )
             .check(ViewAssertions.matches(ViewMatchers.isDisplayed()))
             .check(ViewAssertions.matches(ViewMatchers.withText(titleResource)))
@@ -64,7 +64,7 @@ object EspressoHelper {
     @JvmStatic
     fun childAtPosition(
         parentMatcher: Matcher<View?>,
-        position: Int
+        position: Int,
     ): Matcher<View> {
         return object : TypeSafeMatcher<View>() {
             override fun describeTo(description: Description) {

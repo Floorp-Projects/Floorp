@@ -70,7 +70,7 @@ private fun LanguagesListComposablePreview() {
         LanguagesList(
             languageListItems = getFakeLanguages(),
             state = state,
-            listState = listState
+            listState = listState,
         )
     }
 }
@@ -86,7 +86,7 @@ private fun LanguagesListComposablePreview() {
 fun LanguagesList(
     languageListItems: List<LanguageListItem>,
     state: MutableState<String>,
-    listState: LazyListState
+    listState: LazyListState,
 ) {
     FocusTheme {
         LazyColumn(
@@ -98,7 +98,7 @@ fun LanguagesList(
                 LanguageNameAndTagItem(
                     language = item.language,
                     isSelected = state.value == item.language.tag,
-                    onClick = item.onClick
+                    onClick = item.onClick,
                 )
             }
         }
@@ -109,7 +109,7 @@ fun LanguagesList(
 fun LanguageNameAndTagItem(
     language: Language,
     isSelected: Boolean,
-    onClick: (String) -> Unit
+    onClick: (String) -> Unit,
 ) {
     Row(
         Modifier
@@ -121,13 +121,13 @@ fun LanguageNameAndTagItem(
         LanguageRadioButton(
             language = language,
             isSelected = isSelected,
-            onClick = onClick
+            onClick = onClick,
         )
         Spacer(modifier = Modifier.width(18.dp))
         language.displayName?.let {
             LanguageDisplayName(
                 language = language,
-                onClick = onClick
+                onClick = onClick,
             )
         }
     }
@@ -144,14 +144,14 @@ fun LanguageNameAndTagItem(
 private fun LanguageRadioButton(
     language: Language,
     isSelected: Boolean,
-    onClick: (String) -> Unit
+    onClick: (String) -> Unit,
 ) {
     RadioButton(
         selected = isSelected,
         colors = RadioButtonDefaults.colors(selectedColor = focusColors.radioButtonSelected),
         onClick = {
             onClick(language.tag)
-        }
+        },
     )
 }
 
@@ -166,10 +166,10 @@ private fun LanguageDisplayName(language: Language, onClick: (String) -> Unit) {
     Text(
         text = AnnotatedString(language.displayName!!),
         style = TextStyle(
-            fontSize = 20.sp
+            fontSize = 20.sp,
         ),
         modifier = Modifier
             .padding(10.dp)
-            .clickable { onClick(language.tag) }
+            .clickable { onClick(language.tag) },
     )
 }

@@ -89,14 +89,14 @@ class SearchSuggestionsFragment : Fragment(), CoroutineScope {
                                 View.GONE
                             }
                 }
-            }
+            },
         )
     }
 
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
-        savedInstanceState: Bundle?
+        savedInstanceState: Bundle?,
     ): View {
         _binding = FragmentSearchSuggestionsBinding.inflate(inflater, container, false)
         return binding.root
@@ -131,7 +131,7 @@ class SearchSuggestionsFragment : Fragment(), CoroutineScope {
             FocusTheme {
                 SearchOverlay(
                     searchSuggestionsViewModel,
-                    defaultSearchEngineName
+                    defaultSearchEngineName,
                 ) { view.hideKeyboard() }
             }
         }

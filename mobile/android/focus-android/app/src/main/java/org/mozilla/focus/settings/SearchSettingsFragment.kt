@@ -41,7 +41,7 @@ class SearchSettingsFragment :
         when (preference.key) {
             resources.getString(R.string.pref_key_search_engine) -> run {
                 requireComponents.appStore.dispatch(
-                    AppAction.OpenSettings(page = Screen.Settings.Page.SearchList)
+                    AppAction.OpenSettings(page = Screen.Settings.Page.SearchList),
                 )
                 SearchEngines.openSettings.record(NoExtras())
 
@@ -49,7 +49,7 @@ class SearchSettingsFragment :
             }
             resources.getString(R.string.pref_key_screen_autocomplete) ->
                 requireComponents.appStore.dispatch(
-                    AppAction.OpenSettings(page = Screen.Settings.Page.SearchAutocomplete)
+                    AppAction.OpenSettings(page = Screen.Settings.Page.SearchAutocomplete),
                 )
         }
         return super.onPreferenceTreeClick(preference)
@@ -59,7 +59,7 @@ class SearchSettingsFragment :
         when (key) {
             resources.getString(R.string.pref_key_show_search_suggestions) ->
                 ShowSearchSuggestions.changedFromSettings.record(
-                    ShowSearchSuggestions.ChangedFromSettingsExtra(sharedPreferences.getBoolean(key, false))
+                    ShowSearchSuggestions.ChangedFromSettingsExtra(sharedPreferences.getBoolean(key, false)),
                 )
         }
     }

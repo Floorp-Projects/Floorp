@@ -23,7 +23,7 @@ import org.mozilla.focus.utils.SupportUtils.openDefaultBrowserSumoPage
 class DefaultBrowserPreference @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,
-    defStyleAttr: Int = 0
+    defStyleAttr: Int = 0,
 ) : Preference(context, attrs, defStyleAttr) {
 
     private var switchView: SwitchMaterial? = null
@@ -53,17 +53,17 @@ class DefaultBrowserPreference @JvmOverloads constructor(
             Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q -> {
                 context.getSystemService(RoleManager::class.java).also {
                     if (it.isRoleAvailable(RoleManager.ROLE_BROWSER) && !it.isRoleHeld(
-                            RoleManager.ROLE_BROWSER
+                            RoleManager.ROLE_BROWSER,
                         )
                     ) {
                         context.tryAsActivity()?.startActivityForResult(
                             it.createRequestRoleIntent(RoleManager.ROLE_BROWSER),
-                            REQUEST_CODE_BROWSER_ROLE
+                            REQUEST_CODE_BROWSER_ROLE,
                         )
                         SetDefaultBrowser.fromAppSettings.record(
                             SetDefaultBrowser.FromAppSettingsExtra(
-                                isDefault
-                            )
+                                isDefault,
+                            ),
                         )
                     } else {
                         navigateToDefaultBrowserAppsSettings(isDefault)
@@ -77,8 +77,8 @@ class DefaultBrowserPreference @JvmOverloads constructor(
                 openDefaultBrowserSumoPage(context)
                 SetDefaultBrowser.learnMoreOpened.record(
                     SetDefaultBrowser.LearnMoreOpenedExtra(
-                        isDefault
-                    )
+                        isDefault,
+                    ),
                 )
             }
         }
@@ -89,11 +89,11 @@ class DefaultBrowserPreference @JvmOverloads constructor(
             val intent = Intent(Settings.ACTION_MANAGE_DEFAULT_APPS_SETTINGS)
             intent.putExtra(
                 SETTINGS_SELECT_OPTION_KEY,
-                DEFAULT_BROWSER_APP_OPTION
+                DEFAULT_BROWSER_APP_OPTION,
             )
             intent.putExtra(
                 SETTINGS_SHOW_FRAGMENT_ARGS,
-                bundleOf(SETTINGS_SELECT_OPTION_KEY to DEFAULT_BROWSER_APP_OPTION)
+                bundleOf(SETTINGS_SELECT_OPTION_KEY to DEFAULT_BROWSER_APP_OPTION),
             )
 
             context.startActivity(intent)

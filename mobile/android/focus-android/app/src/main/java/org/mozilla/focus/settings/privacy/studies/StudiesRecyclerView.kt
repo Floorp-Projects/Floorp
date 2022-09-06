@@ -10,7 +10,7 @@ import androidx.recyclerview.widget.RecyclerView
 
 class StudiesRecyclerView @JvmOverloads constructor(
     context: Context,
-    attrs: AttributeSet? = null
+    attrs: AttributeSet? = null,
 ) : RecyclerView(context, attrs) {
     val studiesAdapter: StudiesAdapter = StudiesAdapter()
 

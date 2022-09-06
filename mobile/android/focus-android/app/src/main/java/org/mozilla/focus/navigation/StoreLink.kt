@@ -24,7 +24,7 @@ import org.mozilla.focus.state.AppStore
  */
 class StoreLink(
     private val appStore: AppStore,
-    private val browserStore: BrowserStore
+    private val browserStore: BrowserStore,
 ) {
     fun start() {
         MainScope().also { scope ->

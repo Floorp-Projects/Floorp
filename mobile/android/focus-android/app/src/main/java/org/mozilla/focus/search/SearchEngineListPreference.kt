@@ -28,7 +28,7 @@ import kotlin.coroutines.CoroutineContext
 abstract class SearchEngineListPreference @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,
-    defStyleAttr: Int = 0
+    defStyleAttr: Int = 0,
 ) : Preference(context, attrs, defStyleAttr), CoroutineScope {
 
     private val job = Job()
@@ -81,7 +81,7 @@ abstract class SearchEngineListPreference @JvmOverloads constructor(
         val layoutInflater = LayoutInflater.from(context)
         val layoutParams = RecyclerView.LayoutParams(
             ViewGroup.LayoutParams.MATCH_PARENT,
-            ViewGroup.LayoutParams.WRAP_CONTENT
+            ViewGroup.LayoutParams.WRAP_CONTENT,
         )
 
         for (i in searchEngines.indices) {
@@ -100,7 +100,7 @@ abstract class SearchEngineListPreference @JvmOverloads constructor(
     private fun makeButtonFromSearchEngine(
         engine: SearchEngine,
         layoutInflater: LayoutInflater,
-        res: Resources
+        res: Resources,
     ): CompoundButton {
         val buttonItem = layoutInflater.inflate(itemResId, null) as CompoundButton
         buttonItem.text = engine.name

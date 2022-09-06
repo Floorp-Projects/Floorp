@@ -49,10 +49,10 @@ class ThreeDotMainMenuRobot {
         val reportSiteIssueButton = mDevice.wait(
             Until.hasObject(
                 By.res("$packageName:id/mozac_browser_menu_menuView").hasDescendant(
-                    By.text("Report Site Issue…")
-                )
+                    By.text("Report Site Issue…"),
+                ),
             ),
-            waitingTime
+            waitingTime,
         )
 
         assertTrue(reportSiteIssueButton)
@@ -85,7 +85,7 @@ class ThreeDotMainMenuRobot {
     class Transition {
         fun openSettings(
             localizedText: String = getStringResource(R.string.menu_settings),
-            interact: SettingsRobot.() -> Unit
+            interact: SettingsRobot.() -> Unit,
         ): SettingsRobot.Transition {
             mDevice.findObject(UiSelector().text(localizedText)).waitForExists(waitingTime)
             settingsMenuButton(localizedText)
@@ -162,28 +162,28 @@ class ThreeDotMainMenuRobot {
 
 private fun settingsMenuButton(localizedText: String = "Settings") =
     onView(
-        allOf(withText(localizedText), withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE))
+        allOf(withText(localizedText), withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)),
     )
 
 private val shareBtn = mDevice.findObject(
     UiSelector()
-        .description("Share…")
+        .description("Share…"),
 )
 
 private val addShortcutButton =
     mDevice.findObject(
         UiSelector()
-            .text("Add to Shortcuts")
+            .text("Add to Shortcuts"),
     )
 
 private val reloadButton = mDevice.findObject(
     UiSelector()
-        .description("Reload website")
+        .description("Reload website"),
 )
 
 private val addToHomeButton = mDevice.findObject(
     UiSelector()
-        .text("Add to Home screen")
+        .text("Add to Home screen"),
 )
 
 private val findInPageButton = onView(withText("Find in Page"))
@@ -192,33 +192,33 @@ private val helpPageMenuLink = onView(withText("Help"))
 
 private val openInBtn = mDevice.findObject(
     UiSelector()
-        .text("Open in…")
+        .text("Open in…"),
 )
 
 private val openInDialogTitle = mDevice.findObject(
     UiSelector()
-        .text("Open in…")
+        .text("Open in…"),
 )
 
 private val openWithList = mDevice.findObject(
     UiSelector()
-        .resourceId("$packageName:id/apps")
+        .resourceId("$packageName:id/apps"),
 )
 
 private val requestDesktopSiteButton =
     mDevice.findObject(
         UiSelector()
-            .resourceId("$packageName:id/switch_widget")
+            .resourceId("$packageName:id/switch_widget"),
     )
 
 private val backButton =
     mDevice.findObject(
         UiSelector()
-            .description("Navigate back")
+            .description("Navigate back"),
     )
 
 private val forwardButton =
     mDevice.findObject(
         UiSelector()
-            .description("Navigate forward")
+            .description("Navigate forward"),
     )

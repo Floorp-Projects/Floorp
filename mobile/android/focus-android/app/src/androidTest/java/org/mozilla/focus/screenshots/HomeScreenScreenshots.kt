@@ -106,7 +106,7 @@ class HomeScreenScreenshots : ScreenshotTest() {
     }
     private val editURLBar: UiObject =
         TestHelper.mDevice.findObject(
-            UiSelector().resourceId("${TestHelper.packageName}:id/mozac_browser_toolbar_edit_url_view")
+            UiSelector().resourceId("${TestHelper.packageName}:id/mozac_browser_toolbar_edit_url_view"),
         )
 
     private fun typeInSearchBar(searchString: String) {
@@ -121,7 +121,7 @@ class HomeScreenScreenshots : ScreenshotTest() {
         TestHelper.mDevice.findObject(UiSelector().resourceId("${TestHelper.packageName}:id/mozac_browser_toolbar_menu"))
 
     private fun addToShortCuts(): ViewInteraction? = onView(ViewMatchers.withText(R.string.menu_add_to_shortcuts)).perform(
-        ViewActions.click()
+        ViewActions.click(),
     )
 
     private val eraseButton =

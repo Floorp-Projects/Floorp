@@ -27,7 +27,7 @@ sealed class StudiesViewHolder(var viewGroup: ViewGroup) : RecyclerView.ViewHold
 
         fun bindStudy(
             activeStudy: StudiesListItem.ActiveStudy,
-            removeStudyListener: (StudiesListItem.ActiveStudy) -> Unit
+            removeStudyListener: (StudiesListItem.ActiveStudy) -> Unit,
         ) {
             titleView.text = activeStudy.value.userFacingName
             summaryView.text = activeStudy.value.userFacingDescription
@@ -39,17 +39,17 @@ sealed class StudiesViewHolder(var viewGroup: ViewGroup) : RecyclerView.ViewHold
         private fun showRemoveDialog(
             context: Context,
             studyListener: (StudiesListItem.ActiveStudy) -> Unit,
-            activeStudy: StudiesListItem.ActiveStudy
+            activeStudy: StudiesListItem.ActiveStudy,
         ): AlertDialog {
             val builder = AlertDialog.Builder(context)
                 .setPositiveButton(
-                    R.string.action_ok
+                    R.string.action_ok,
                 ) { dialog, _ ->
                     studyListener.invoke(activeStudy)
                     dialog.dismiss()
                 }
                 .setNegativeButton(
-                    R.string.action_cancel
+                    R.string.action_cancel,
                 ) { dialog: DialogInterface, _ ->
                     dialog.dismiss()
                 }

@@ -19,17 +19,18 @@ class OnboardingStorage(val context: Context) {
      * @param onBoardingStep current onBoarding step
      */
     internal fun saveCurrentOnboardingStepInSharePref(
-        onBoardingStep: OnboardingStep
+        onBoardingStep: OnboardingStep,
     ) {
         val sharedPref = PreferenceManager.getDefaultSharedPreferences(context)
         with(sharedPref.edit()) {
             putString(
                 context.getString(R.string.pref_key_onboarding_step),
-                context.getString(onBoardingStep.prefId)
+                context.getString(onBoardingStep.prefId),
             )
             apply()
         }
     }
+
     @VisibleForTesting
     internal fun getCurrentOnboardingStepFromSharedPref(): String {
         val sharedPref = PreferenceManager.getDefaultSharedPreferences(context)

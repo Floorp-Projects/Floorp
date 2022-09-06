@@ -37,12 +37,13 @@ class LanguageFragment : BaseComposeFragment() {
             LanguageScreenState(),
             listOf(
                 LanguageMiddleware(
-                    activity = requireActivity(), localeUseCase = localeUseCases
-                )
-            )
+                    activity = requireActivity(),
+                    localeUseCase = localeUseCases,
+                ),
+            ),
         )
         defaultLanguageScreenInteractor = DefaultLanguageScreenInteractor(
-            languageScreenStore = languageScreenStore
+            languageScreenStore = languageScreenStore,
         )
     }
 
@@ -52,7 +53,7 @@ class LanguageFragment : BaseComposeFragment() {
     override fun onNavigateUp(): () -> Unit {
         return {
             requireComponents.appStore.dispatch(
-                AppAction.OpenSettings(Screen.Settings.Page.General)
+                AppAction.OpenSettings(Screen.Settings.Page.General),
             )
         }
     }
@@ -71,7 +72,7 @@ class LanguageFragment : BaseComposeFragment() {
 
     private fun createLanguageListItem(
         languages: List<Language>,
-        state: MutableState<String>
+        state: MutableState<String>,
     ): List<LanguageListItem> {
         val languageListItems = ArrayList<LanguageListItem>()
         languages.forEach { language ->
@@ -83,7 +84,7 @@ class LanguageFragment : BaseComposeFragment() {
                 onClick = {
                     state.value = language.tag
                     defaultLanguageScreenInteractor.handleLanguageSelected(language)
-                }
+                },
             )
             languageListItems.add(languageListItem)
         }
@@ -105,10 +106,10 @@ class LanguageFragment : BaseComposeFragment() {
         LanguagesList(
             languageListItems = createLanguageListItem(
                 languages = languages,
-                state = state
+                state = state,
             ),
             state = state,
-            listState = listState
+            listState = listState,
         )
     }
 }

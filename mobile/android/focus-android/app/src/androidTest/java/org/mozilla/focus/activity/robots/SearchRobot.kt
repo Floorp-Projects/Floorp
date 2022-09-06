@@ -71,7 +71,7 @@ class SearchRobot {
 
     fun verifySearchSuggestionsContain(title: String) {
         assertTrue(
-            suggestionsList.getChild(UiSelector().textContains(title)).waitForExists(waitingTime)
+            suggestionsList.getChild(UiSelector().textContains(title)).waitForExists(waitingTime),
         )
     }
 
@@ -86,11 +86,11 @@ class SearchRobot {
 
             runWithIdleRes(sessionLoadedIdlingResource) {
                 assertTrue(
-                    BrowserRobot().progressBar.waitUntilGone(waitingTime)
+                    BrowserRobot().progressBar.waitUntilGone(waitingTime),
                 )
                 assertTrue(
                     geckoEngineView.waitForExists(waitingTime) ||
-                        trackingProtectionDialog.waitForExists(waitingTime)
+                        trackingProtectionDialog.waitForExists(waitingTime),
                 )
             }
 
@@ -132,24 +132,24 @@ private val toolbar =
 private val searchSuggestionsTitle = mDevice.findObject(
     UiSelector()
         .resourceId("$packageName:id/enable_search_suggestions_title")
-        .enabled(true)
+        .enabled(true),
 )
 
 private val searchSuggestionsButtonYes = mDevice.findObject(
     UiSelector()
         .resourceId("$packageName:id/enable_search_suggestions_button")
-        .enabled(true)
+        .enabled(true),
 )
 
 private val searchSuggestionsButtonNo = mDevice.findObject(
     UiSelector()
         .resourceId("$packageName:id/disable_search_suggestions_button")
-        .enabled(true)
+        .enabled(true),
 )
 
 private val suggestionsList = mDevice.findObject(
     UiSelector()
-        .resourceId("$packageName:id/search_suggestions_view")
+        .resourceId("$packageName:id/search_suggestions_view"),
 )
 
 private val clearSearchButton = mDevice.findObject(UiSelector().resourceId("$packageName:id/mozac_browser_toolbar_clear_view"))

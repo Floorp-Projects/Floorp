@@ -15,7 +15,7 @@ import org.mozilla.focus.ext.settings
  * SharedPreference listener that will update the engine whenever the user changes settings.
  */
 class EngineSharedPreferencesListener(
-    private val context: Context
+    private val context: Context,
 ) : Preference.OnPreferenceChangeListener {
 
     override fun onPreferenceChange(preference: Preference?, newValue: Any?): Boolean {
@@ -40,7 +40,7 @@ class EngineSharedPreferencesListener(
         source: String? = null,
         tracker: String? = null,
         isEnabled: Boolean = false,
-        shouldBlockCookiesValue: String = context.settings.shouldBlockCookiesValue()
+        shouldBlockCookiesValue: String = context.settings.shouldBlockCookiesValue(),
     ) {
         val policy = context.settings.createTrackingProtectionPolicy(shouldBlockCookiesValue)
         val components = context.components
@@ -53,8 +53,8 @@ class EngineSharedPreferencesListener(
                 TrackingProtection.TrackerSettingChangedExtra(
                     sourceOfChange = source,
                     trackerChanged = tracker,
-                    isEnabled = isEnabled
-                )
+                    isEnabled = isEnabled,
+                ),
             )
         }
         components.sessionUseCases.reload()

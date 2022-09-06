@@ -25,7 +25,7 @@ class CustomTabMenu(
     private val context: Context,
     private val store: BrowserStore,
     private val currentTabId: String,
-    private val onItemTapped: (ToolbarMenu.Item) -> Unit = {}
+    private val onItemTapped: (ToolbarMenu.Item) -> Unit = {},
 ) : ToolbarMenu {
 
     private val selectedSession: CustomTabSessionState?
@@ -34,7 +34,7 @@ class CustomTabMenu(
     override val menuBuilder by lazy {
         WebExtensionBrowserMenuBuilder(
             items = menuItems,
-            store = store
+            store = store,
         )
     }
 
@@ -48,7 +48,7 @@ class CustomTabMenu(
             },
             secondaryImageTintResource = context.theme.resolveAttribute(R.attr.disabled),
             disableInSecondaryState = true,
-            longClickListener = { onItemTapped.invoke(ToolbarMenu.CustomTabItem.Back) }
+            longClickListener = { onItemTapped.invoke(ToolbarMenu.CustomTabItem.Back) },
         ) {
             onItemTapped.invoke(ToolbarMenu.CustomTabItem.Back)
         }
@@ -62,7 +62,7 @@ class CustomTabMenu(
             },
             secondaryImageTintResource = context.theme.resolveAttribute(R.attr.disabled),
             disableInSecondaryState = true,
-            longClickListener = { onItemTapped.invoke(ToolbarMenu.CustomTabItem.Forward) }
+            longClickListener = { onItemTapped.invoke(ToolbarMenu.CustomTabItem.Forward) },
         ) {
             onItemTapped.invoke(ToolbarMenu.CustomTabItem.Forward)
         }
@@ -78,7 +78,7 @@ class CustomTabMenu(
             secondaryContentDescription = context.getString(R.string.content_description_stop),
             secondaryImageTintResource = context.theme.resolveAttribute(R.attr.primaryText),
             disableInSecondaryState = false,
-            longClickListener = { onItemTapped.invoke(ToolbarMenu.CustomTabItem.Reload) }
+            longClickListener = { onItemTapped.invoke(ToolbarMenu.CustomTabItem.Reload) },
         ) {
             if (selectedSession?.content?.loading == true) {
                 onItemTapped.invoke(ToolbarMenu.CustomTabItem.Stop)
@@ -92,7 +92,7 @@ class CustomTabMenu(
     private val menuItems by lazy {
         val findInPage = BrowserMenuImageText(
             label = context.getString(R.string.find_in_page),
-            imageResource = R.drawable.mozac_ic_search
+            imageResource = R.drawable.mozac_ic_search,
         ) {
             onItemTapped.invoke(ToolbarMenu.CustomTabItem.FindInPage)
         }
@@ -102,32 +102,32 @@ class CustomTabMenu(
             label = context.getString(R.string.preference_performance_request_desktop_site2),
             initialState = {
                 selectedSession?.content?.desktopMode ?: true
-            }
+            },
         ) { checked ->
             onItemTapped.invoke(ToolbarMenu.CustomTabItem.RequestDesktop(checked))
         }
 
         val reportSiteIssue = WebExtensionPlaceholderMenuItem(
             id = WebCompatReporterFeature.WEBCOMPAT_REPORTER_EXTENSION_ID,
-            iconTintColorResource = context.theme.resolveAttribute(R.attr.primaryText)
+            iconTintColorResource = context.theme.resolveAttribute(R.attr.primaryText),
         )
 
         val addToHomescreen = BrowserMenuImageText(
             label = context.getString(R.string.menu_add_to_home_screen),
-            imageResource = R.drawable.mozac_ic_add_to_home_screen
+            imageResource = R.drawable.mozac_ic_add_to_home_screen,
         ) {
             onItemTapped.invoke(ToolbarMenu.CustomTabItem.AddToHomeScreen)
         }
 
         val appName = context.getString(R.string.app_name)
         val openInFocus = SimpleBrowserMenuItem(
-            label = context.getString(R.string.menu_open_with_default_browser2, appName)
+            label = context.getString(R.string.menu_open_with_default_browser2, appName),
         ) {
             onItemTapped.invoke(ToolbarMenu.CustomTabItem.OpenInBrowser)
         }
 
         val openInApp = SimpleBrowserMenuItem(
-            label = context.getString(R.string.menu_open_with_a_browser2)
+            label = context.getString(R.string.menu_open_with_a_browser2),
         ) {
             onItemTapped.invoke(ToolbarMenu.CustomTabItem.OpenInApp)
         }
@@ -137,7 +137,7 @@ class CustomTabMenu(
             textSize = CAPTION_TEXT_SIZE,
             textColorResource = context.theme.resolveAttribute(R.attr.secondaryText),
             backgroundColorResource = context.theme.resolveAttribute(R.attr.colorPrimary),
-            textStyle = Typeface.NORMAL
+            textStyle = Typeface.NORMAL,
         )
 
         listOfNotNull(
@@ -150,7 +150,7 @@ class CustomTabMenu(
             addToHomescreen,
             openInFocus,
             openInApp,
-            poweredBy
+            poweredBy,
         )
     }
 

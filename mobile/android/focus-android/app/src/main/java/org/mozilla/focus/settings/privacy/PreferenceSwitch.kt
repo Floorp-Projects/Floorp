@@ -10,7 +10,7 @@ import org.mozilla.focus.R
 
 class PreferenceSwitch(
     context: Context,
-    attrs: AttributeSet
+    attrs: AttributeSet,
 ) : SwitchCompat(context, attrs) {
 
     private var clickListener: (() -> Unit)? = null
@@ -22,7 +22,8 @@ class PreferenceSwitch(
         context.withStyledAttributes(
             attrs,
             R.styleable.PreferenceSwitch,
-            0, 0
+            0,
+            0,
         ) {
             key = getResourceId(R.styleable.PreferenceSwitch_preferenceKey, 0)
             title = getResourceId(R.styleable.PreferenceSwitch_preferenceKeyTitle, 0)

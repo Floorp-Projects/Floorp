@@ -36,7 +36,7 @@ class StudiesAdapter(var removeStudyListener: (StudiesListItem.ActiveStudy) -> U
             is StudiesViewHolder.SectionViewHolder -> holder.bindSection(item as StudiesListItem.Section)
             is StudiesViewHolder.ActiveStudiesViewHolder -> holder.bindStudy(
                 item as StudiesListItem.ActiveStudy,
-                removeStudyListener
+                removeStudyListener,
             )
         }
     }

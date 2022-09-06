@@ -52,7 +52,7 @@ class SettingsGeneralMenuRobot {
             in Build.VERSION_CODES.N..Build.VERSION_CODES.P ->
                 assertTrue(
                     mDevice.findObject(UiSelector().resourceId("com.android.settings:id/list"))
-                        .waitForExists(waitingTime)
+                        .waitForExists(waitingTime),
                 )
             in Build.VERSION_CODES.Q..Build.VERSION_CODES.R ->
                 intended(IntentMatchers.hasAction(ACTION_REQUEST_ROLE))
@@ -68,11 +68,12 @@ class SettingsGeneralMenuRobot {
     fun verifySwitchIsToggled(checked: Boolean) {
         onView(withId(R.id.switch_widget)).check(
             matches(
-                if (checked)
+                if (checked) {
                     isChecked()
-                else
+                } else {
                     isNotChecked()
-            )
+                },
+            ),
         )
     }
 
@@ -84,10 +85,10 @@ class SettingsGeneralMenuRobot {
             languageMenu.getChild(
                 UiSelector()
                     .text(localizedText)
-                    .index(1)
+                    .index(1),
             ).getFromParent(
-                UiSelector().index(0)
-            ).isChecked
+                UiSelector().index(0),
+            ).isChecked,
         )
     }
 
@@ -137,10 +138,10 @@ private fun assertDefaultBrowserSwitchState(enabled: Boolean) {
                     hasCousin(
                         allOf(
                             withId(R.id.switch_widget),
-                            isChecked()
-                        )
-                    )
-                )
+                            isChecked(),
+                        ),
+                    ),
+                ),
             )
     } else {
         defaultBrowserSwitch()
@@ -149,22 +150,22 @@ private fun assertDefaultBrowserSwitchState(enabled: Boolean) {
                     hasCousin(
                         allOf(
                             withId(R.id.switch_widget),
-                            isNotChecked()
-                        )
-                    )
-                )
+                            isNotChecked(),
+                        ),
+                    ),
+                ),
             )
     }
 }
 
 private val openWithDialogTitle = mDevice.findObject(
     UiSelector()
-        .text("Open with")
+        .text("Open with"),
 )
 
 private val openWithList = mDevice.findObject(
     UiSelector()
-        .resourceId("android:id/resolver_list")
+        .resourceId("android:id/resolver_list"),
 )
 
 private fun languageMenuButton(localizedText: String = "Language") = onView(withText(localizedText))
@@ -175,22 +176,22 @@ private val darkThemeToggle =
     onView(
         allOf(
             withId(R.id.radio_button),
-            hasSibling(withText("Dark"))
-        )
+            hasSibling(withText("Dark")),
+        ),
     )
 
 private val lightThemeToggle =
     onView(
         allOf(
             withId(R.id.radio_button),
-            hasSibling(withText("Light"))
-        )
+            hasSibling(withText("Light")),
+        ),
     )
 
 private val deviceThemeToggle =
     onView(
         allOf(
             withId(R.id.radio_button),
-            hasSibling(withText("Follow device theme"))
-        )
+            hasSibling(withText("Follow device theme")),
+        ),
     )

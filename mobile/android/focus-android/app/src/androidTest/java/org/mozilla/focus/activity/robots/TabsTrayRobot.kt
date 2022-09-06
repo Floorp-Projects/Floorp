@@ -29,8 +29,8 @@ class TabsTrayRobot {
                     UiSelector()
                         .resourceId("$packageName:id/session_item")
                         .index(tab)
-                        .childSelector(UiSelector().textContains(tabTitle[tab]))
-                ).waitForExists(waitingTime)
+                        .childSelector(UiSelector().textContains(tabTitle[tab])),
+                ).waitForExists(waitingTime),
             )
         }
     }
@@ -51,7 +51,7 @@ class TabsTrayRobot {
             mDevice.findObject(
                 UiSelector()
                     .resourceId("$packageName:id/mozac_browser_toolbar_url_view")
-                    .textContains(tabTitle)
+                    .textContains(tabTitle),
             ).waitUntilGone(waitingTimeShort)
 
             BrowserRobot().interact()
@@ -64,6 +64,6 @@ private fun closeTabButton(tabTitle: String) =
     onView(
         allOf(
             withId(R.id.close_button),
-            hasSibling(withText(containsString(tabTitle)))
-        )
+            hasSibling(withText(containsString(tabTitle))),
+        ),
     )

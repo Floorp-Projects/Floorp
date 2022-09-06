@@ -15,13 +15,13 @@ class SitePermissionOptionsStorageMiddleware(
     override fun invoke(
         context: MiddlewareContext<SitePermissionOptionsScreenState, SitePermissionOptionsScreenAction>,
         next: (SitePermissionOptionsScreenAction) -> Unit,
-        action: SitePermissionOptionsScreenAction
+        action: SitePermissionOptionsScreenAction,
     ) {
         when (action) {
             is SitePermissionOptionsScreenAction.Select -> {
                 storage.saveCurrentSitePermissionOptionInSharePref(
                     action.selectedSitePermissionOption,
-                    sitePermission = sitePermission
+                    sitePermission = sitePermission,
                 )
                 next(action)
             }
@@ -31,8 +31,8 @@ class SitePermissionOptionsStorageMiddleware(
                         storage.getSitePermissionOptions(sitePermission),
                         storage.permissionSelectedOption(sitePermission),
                         storage.getSitePermissionLabel(sitePermission),
-                        storage.isAndroidPermissionGranted(sitePermission)
-                    )
+                        storage.isAndroidPermissionGranted(sitePermission),
+                    ),
                 )
             }
             else -> {

@@ -15,7 +15,7 @@ class FocusSnackbarDelegate(private val view: View) : ContextMenuCandidate.Snack
         @StringRes text: Int,
         duration: Int,
         @StringRes action: Int,
-        listener: ((v: View) -> Unit)?
+        listener: ((v: View) -> Unit)?,
     ) {
         if (listener != null && action != 0) {
             FocusSnackbar.make(

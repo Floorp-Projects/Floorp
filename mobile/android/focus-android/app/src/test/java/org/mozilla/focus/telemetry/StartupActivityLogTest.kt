@@ -14,8 +14,8 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
-import org.mockito.Mockito.`when`
 import org.mockito.Mockito.verify
+import org.mockito.Mockito.`when`
 import org.mozilla.focus.telemetry.startuptelemetry.StartupActivityLog
 import org.mozilla.focus.telemetry.startuptelemetry.StartupActivityLog.LogEntry
 

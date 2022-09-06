@@ -47,7 +47,7 @@ import java.util.Locale
 @Suppress(
     // Yes, this a large class with a lot of functions. But it's very simple and still easy to read.
     "TooManyFunctions",
-    "LargeClass"
+    "LargeClass",
 )
 object TelemetryWrapper {
     private const val TELEMETRY_APP_NAME_FOCUS = "Focus"
@@ -180,7 +180,8 @@ object TelemetryWrapper {
             val preferences = PreferenceManager.getDefaultSharedPreferences(context)
 
             return preferences.getBoolean(
-                resources.getString(R.string.pref_key_telemetry), isEnabledByDefault
+                resources.getString(R.string.pref_key_telemetry),
+                isEnabledByDefault,
             ) && !AppConstants.isDevBuild
         } finally {
             StrictMode.setThreadPolicy(threadPolicy)
@@ -217,7 +218,7 @@ object TelemetryWrapper {
                     resources.getString(R.string.pref_key_autocomplete_preinstalled),
                     resources.getString(R.string.pref_key_autocomplete_custom),
                     resources.getString(R.string.pref_key_remote_debugging),
-                    resources.getString(R.string.pref_key_show_search_suggestions)
+                    resources.getString(R.string.pref_key_show_search_suggestions),
                 )
                 .setSettingsProvider(TelemetrySettingsProvider(context))
                 .setCollectionEnabled(telemetryEnabled)
@@ -244,8 +245,8 @@ object TelemetryWrapper {
                             it.addPingBuilder(
                                 TelemetryMobileMetricsPingBuilder(
                                     mobileMetrics,
-                                    configuration
-                                )
+                                    configuration,
+                                ),
                             )
                         }
 
@@ -255,7 +256,7 @@ object TelemetryWrapper {
                             .putLong(LAST_MOBILE_METRICS_PINGS, (dateFormat.format(Date()).toLong()))
                             .apply()
                     }
-                    .setDefaultSearchProvider(createDefaultSearchProvider(context))
+                    .setDefaultSearchProvider(createDefaultSearchProvider(context)),
             )
         } finally {
             StrictMode.setThreadPolicy(threadPolicy)
@@ -299,7 +300,9 @@ object TelemetryWrapper {
     }
 
     @VisibleForTesting var histogram = IntArray(HISTOGRAM_SIZE)
+
     @VisibleForTesting var domainMap = HashSet<String>()
+
     @VisibleForTesting var numUri = 0
 
     @JvmStatic
@@ -336,13 +339,13 @@ object TelemetryWrapper {
 
         TelemetryEvent.create(Category.ACTION, Method.OPEN, Object.BROWSER).extra(
             Extra.UNIQUE_DOMAINS_COUNT,
-            domainMap.size.toString()
+            domainMap.size.toString(),
         ).queue()
         domainMap.clear()
 
         TelemetryEvent.create(Category.ACTION, Method.OPEN, Object.BROWSER).extra(
             Extra.TOTAL_URI_COUNT,
-            numUri.toString()
+            numUri.toString(),
         ).queue()
         numUri = 0
 
@@ -479,8 +482,8 @@ object TelemetryWrapper {
                 Category.ACTION,
                 Method.CLICK,
                 Object.NOTIFICATION_ACTION,
-                Value.ERASE_AND_OPEN
-            )
+                Value.ERASE_AND_OPEN,
+            ),
         ).queue()
     }
 
@@ -495,7 +498,7 @@ object TelemetryWrapper {
             Category.ACTION,
             Method.CLICK,
             Object.CRASH_REPORTER,
-            Value.CLOSE_TAB
+            Value.CLOSE_TAB,
         )
             .extra(Extra.SUBMIT_CRASH, crashSubmitted.toString()).queue()
     }
@@ -516,7 +519,7 @@ object TelemetryWrapper {
             Category.ACTION,
             Method.CLICK,
             Object.ADD_TO_HOMESCREEN_DIALOG,
-            Value.ADD_TO_HOMESCREEN
+            Value.ADD_TO_HOMESCREEN,
         ).queue()
     }
 
@@ -593,8 +596,8 @@ object TelemetryWrapper {
                 Category.ACTION,
                 Method.OPEN,
                 Object.BROWSER_CONTEXTMENU,
-                Value.FULL_BROWSER
-            )
+                Value.FULL_BROWSER,
+            ),
         )
             .queue()
     }
@@ -655,7 +658,7 @@ object TelemetryWrapper {
             Category.ACTION,
             Method.CLICK,
             Object.DESKTOP_REQUEST_CHECK,
-            shouldRequestDesktop.toString()
+            shouldRequestDesktop.toString(),
         ).queue()
     }
 

@@ -21,7 +21,7 @@ class LanguageStorage(private val context: Context) {
         val sharedConfig: SharedPreferences = PreferenceManager.getDefaultSharedPreferences(context)
         val languageTag = sharedConfig.getString(
             context.resources.getString(R.string.pref_key_locale),
-            LOCALE_SYSTEM_DEFAULT
+            LOCALE_SYSTEM_DEFAULT,
         ) ?: LOCALE_SYSTEM_DEFAULT
         for (language in getLanguages()) {
             if (languageTag == language.tag) {
@@ -40,10 +40,11 @@ class LanguageStorage(private val context: Context) {
         listLocaleNameAndTag.add(
             Language(
                 context.getString(
-                    R.string.preference_language_systemdefault
+                    R.string.preference_language_systemdefault,
                 ),
-                LOCALE_SYSTEM_DEFAULT, 0
-            )
+                LOCALE_SYSTEM_DEFAULT,
+                0,
+            ),
         )
         descriptors.indices.forEach { i ->
             val displayName = descriptors[i]!!.getNativeName()

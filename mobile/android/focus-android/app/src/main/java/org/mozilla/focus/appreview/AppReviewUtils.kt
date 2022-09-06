@@ -66,21 +66,21 @@ class AppReviewUtils {
             val preferenceManage = PreferenceManager.getDefaultSharedPreferences(context)
             val currentOpeningsNumber = preferenceManage.getInt(
                 context.getString(
-                    R.string.pref_in_app_review_openings
+                    R.string.pref_in_app_review_openings,
                 ),
-                0
+                0,
             ) + 1
             val appReviewStep = preferenceManage.getString(
                 context.getString(
-                    R.string.pref_in_app_review_step
+                    R.string.pref_in_app_review_step,
                 ),
-                AppReviewStep.Pending.name
+                AppReviewStep.Pending.name,
             )
 
             preferenceManage
                 .edit().putInt(
                     context.getString(R.string.pref_in_app_review_openings),
-                    currentOpeningsNumber
+                    currentOpeningsNumber,
                 ).apply()
             if (currentOpeningsNumber == APP_OPENINGS_REVIEW_TRIGGER &&
                 appReviewStep == AppReviewStep.Pending.name
@@ -91,10 +91,12 @@ class AppReviewUtils {
 
         private fun shouldShowInAppReview(context: Context): Boolean {
             val inAppReviewStep = PreferenceManager.getDefaultSharedPreferences(context).getString(
-                context.getString(R.string.pref_in_app_review_step), AppReviewStep.Pending.name
+                context.getString(R.string.pref_in_app_review_step),
+                AppReviewStep.Pending.name,
             )
             val lastReviewedTime = PreferenceManager.getDefaultSharedPreferences(context).getLong(
-                context.getString(R.string.pref_in_app_review_time), 0L
+                context.getString(R.string.pref_in_app_review_time),
+                0L,
             )
 
             return inAppReviewStep == AppReviewStep.ReviewNeeded.name || (
@@ -114,7 +116,7 @@ class AppReviewUtils {
                     url = SupportUtils.FOCUS_PLAY_STORE_URL,
                     source = SessionState.Source.Internal.NewTab,
                     selectTab = true,
-                    private = true
+                    private = true,
                 )
                 activity.components.appStore.dispatch(AppAction.OpenTab(tabId))
             }
@@ -129,7 +131,7 @@ class AppReviewUtils {
             PreferenceManager.getDefaultSharedPreferences(context)
                 .edit().putString(
                     context.getString(R.string.pref_in_app_review_step),
-                    appReviewStep.name
+                    appReviewStep.name,
                 ).apply()
         }
 
@@ -137,7 +139,7 @@ class AppReviewUtils {
             PreferenceManager.getDefaultSharedPreferences(context)
                 .edit().putLong(
                     context.getString(R.string.pref_in_app_review_time),
-                    System.currentTimeMillis()
+                    System.currentTimeMillis(),
                 ).apply()
         }
     }

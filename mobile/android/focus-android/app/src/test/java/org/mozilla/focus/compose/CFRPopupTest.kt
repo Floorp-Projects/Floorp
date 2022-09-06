@@ -59,7 +59,11 @@ class CFRPopupTest {
         val windowManager = spy(context.getSystemService(Context.WINDOW_SERVICE))
         doReturn(windowManager).`when`(context).getSystemService(Context.WINDOW_SERVICE)
         val popupView = CFRPopupFullScreenLayout(
-            container, mock(), "", mock(), mock()
+            container,
+            mock(),
+            "",
+            mock(),
+            mock(),
         )
         // The equality check in `verify` fails for the layout params.
         // Seems like we have to verify `addView`s arguments manually.
@@ -75,7 +79,7 @@ class CFRPopupTest {
         assertEquals(PixelFormat.TRANSLUCENT, layoutParamsCaptor.value.format)
         assertEquals(
             WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN or WindowManager.LayoutParams.FLAG_HARDWARE_ACCELERATED,
-            layoutParamsCaptor.value.flags
+            layoutParamsCaptor.value.flags,
         )
     }
 
@@ -83,7 +87,11 @@ class CFRPopupTest {
     fun `WHEN creating layout params THEN get fullscreen translucent layout params`() {
         val container = View(testContext)
         val popupView = CFRPopupFullScreenLayout(
-            container, mock(), "", mock(), mock()
+            container,
+            mock(),
+            "",
+            mock(),
+            mock(),
         )
 
         val result = popupView.createLayoutParams()
@@ -95,7 +103,7 @@ class CFRPopupTest {
         assertEquals(PixelFormat.TRANSLUCENT, result.format)
         assertEquals(
             WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN or WindowManager.LayoutParams.FLAG_HARDWARE_ACCELERATED,
-            result.flags
+            result.flags,
         )
     }
 }

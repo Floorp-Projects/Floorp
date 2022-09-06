@@ -45,19 +45,19 @@ class SettingsMozillaMenuRobot {
             assertTrue(
                 "Expected app version number not found",
                 mDevice.findObject(UiSelector().textContains(versionName))
-                    .waitForExists(waitingTime)
+                    .waitForExists(waitingTime),
             )
 
             assertTrue(
                 "Expected GV version not found",
                 mDevice.findObject(UiSelector().textContains(gvVersion))
-                    .waitForExists(waitingTime)
+                    .waitForExists(waitingTime),
             )
 
             assertTrue(
                 "Expected GV build ID not found",
                 mDevice.findObject(UiSelector().textContains(gvBuildId))
-                    .waitForExists(waitingTime)
+                    .waitForExists(waitingTime),
             )
         }
     }
@@ -118,9 +118,9 @@ private val helpPageLink =
         allOf(
             withText("Help"),
             withParent(
-                hasSibling(withId(R.id.icon_frame))
-            )
-        )
+                hasSibling(withId(R.id.icon_frame)),
+            ),
+        ),
     )
 
 private val yourRightsLink =
@@ -128,9 +128,9 @@ private val yourRightsLink =
         allOf(
             withText("Your Rights"),
             withParent(
-                hasSibling(withId(R.id.icon_frame))
-            )
-        )
+                hasSibling(withId(R.id.icon_frame)),
+            ),
+        ),
     )
 
 private val privacyNoticeLink =
@@ -138,7 +138,7 @@ private val privacyNoticeLink =
         allOf(
             withText("Privacy Notice"),
             withParent(
-                hasSibling(withId(R.id.icon_frame))
-            )
-        )
+                hasSibling(withId(R.id.icon_frame)),
+            ),
+        ),
     )

@@ -68,7 +68,7 @@ private fun PermissionOptionsListComposablePreview() {
             state = state,
             permissionLabel = "Camera",
             goToPhoneSettings = {},
-            componentPermissionBlockedByAndroidVisibility = true
+            componentPermissionBlockedByAndroidVisibility = true,
         )
     }
 }
@@ -85,7 +85,7 @@ fun OptionsPermissionList(
     state: MutableState<Int>,
     permissionLabel: String?,
     goToPhoneSettings: () -> Unit,
-    componentPermissionBlockedByAndroidVisibility: Boolean
+    componentPermissionBlockedByAndroidVisibility: Boolean,
 ) {
     FocusTheme {
         Column(
@@ -94,8 +94,8 @@ fun OptionsPermissionList(
                 .fillMaxHeight()
                 .background(
                     colorResource(R.color.settings_background),
-                    shape = RectangleShape
-                )
+                    shape = RectangleShape,
+                ),
         ) {
             LazyColumn(
                 contentPadding = PaddingValues(horizontal = 12.dp),
@@ -104,7 +104,7 @@ fun OptionsPermissionList(
                     OptionPermission(
                         sitePermissionOption = item.sitePermissionOption,
                         isSelected = state.value == item.sitePermissionOption.prefKeyId,
-                        onClick = item.onClick
+                        onClick = item.onClick,
                     )
                 }
             }
@@ -119,7 +119,7 @@ fun OptionsPermissionList(
 private fun OptionPermission(
     sitePermissionOption: SitePermissionOption,
     isSelected: Boolean,
-    onClick: (SitePermissionOption) -> Unit
+    onClick: (SitePermissionOption) -> Unit,
 ) {
     Row(
         Modifier
@@ -128,7 +128,7 @@ private fun OptionPermission(
             .selectable(
                 selected = isSelected,
                 onClick = { onClick(sitePermissionOption) },
-                role = Role.RadioButton
+                role = Role.RadioButton,
             ),
         horizontalArrangement = Arrangement.Start,
         verticalAlignment = Alignment.CenterVertically,
@@ -138,10 +138,10 @@ private fun OptionPermission(
         RadioButton(
             selected = isSelected,
             colors = RadioButtonDefaults.colors(selectedColor = focusColors.radioButtonSelected),
-            onClick = null
+            onClick = null,
         )
         OptionPermissionDisplayName(
-            sitePermissionOption = sitePermissionOption
+            sitePermissionOption = sitePermissionOption,
         )
     }
 }
@@ -154,10 +154,10 @@ private fun OptionPermissionDisplayName(sitePermissionOption: SitePermissionOpti
             color = focusColors.settingsTextColor,
             text = AnnotatedString(LocalContext.current.resources.getString(sitePermissionOption.titleId)),
             style = TextStyle(
-                fontSize = 16.sp
+                fontSize = 16.sp,
             ),
             modifier = Modifier
-                .padding(start = 8.dp, end = 8.dp)
+                .padding(start = 8.dp, end = 8.dp),
         )
         sitePermissionOption.summaryId?.let {
             Text(
@@ -165,10 +165,10 @@ private fun OptionPermissionDisplayName(sitePermissionOption: SitePermissionOpti
                 text = AnnotatedString(LocalContext.current.resources.getString(it)),
                 color = focusColors.settingsTextSummaryColor,
                 style = TextStyle(
-                    fontSize = 14.sp
+                    fontSize = 14.sp,
                 ),
                 modifier = Modifier
-                    .padding(start = 8.dp, end = 8.dp)
+                    .padding(start = 8.dp, end = 8.dp),
             )
         }
     }
@@ -189,32 +189,34 @@ private fun ComponentPermissionBlockedByAndroid(goToPhoneSettings: () -> Unit, p
             .background(colorResource(R.color.settings_background), shape = RectangleShape)
             .fillMaxWidth()
             .padding(top = 16.dp)
-            .wrapContentHeight()
+            .wrapContentHeight(),
     ) {
         ComponentPermissionBlockedByAndroidText(
             stringRes = R.string.phone_feature_blocked_by_android,
             permissionLabel,
-            16.dp
+            16.dp,
         )
         ComponentPermissionBlockedByAndroidText(
             stringRes = R.string.phone_feature_blocked_intro,
-            permissionLabel, 16.dp
+            permissionLabel,
+            16.dp,
         )
         ComponentPermissionBlockedByAndroidText(
             stringRes = R.string.phone_feature_blocked_step_settings,
-            permissionLabel, 8.dp
+            permissionLabel,
+            8.dp,
         )
         ComponentPermissionBlockedByAndroidText(
             stringRes = R.string.phone_feature_blocked_step_permissions,
             permissionLabel,
-            8.dp
+            8.dp,
         )
         ComponentPermissionBlockedByAndroidText(
             stringRes = R.string.phone_feature_blocked_step_feature,
-            permissionLabel
+            permissionLabel,
         )
         ComponentPermissionBlockedByAndroidButton(
-            goToPhoneSettings = goToPhoneSettings
+            goToPhoneSettings = goToPhoneSettings,
         )
     }
 }
@@ -224,19 +226,19 @@ private fun ComponentPermissionBlockedByAndroidButton(goToPhoneSettings: () -> U
     Button(
         onClick = goToPhoneSettings,
         colors = ButtonDefaults.textButtonColors(
-            backgroundColor = PhotonColors.LightGrey50
+            backgroundColor = PhotonColors.LightGrey50,
         ),
         modifier = Modifier
             .padding(16.dp)
-            .fillMaxWidth()
+            .fillMaxWidth(),
     ) {
         Text(
             color = PhotonColors.Ink20,
             text = AnnotatedString(
                 LocalContext.current.resources.getString(
-                    R.string.phone_feature_go_to_settings
-                )
-            )
+                    R.string.phone_feature_go_to_settings,
+                ),
+            ),
         )
     }
 }
@@ -245,16 +247,16 @@ private fun ComponentPermissionBlockedByAndroidButton(goToPhoneSettings: () -> U
 private fun ComponentPermissionBlockedByAndroidText(
     stringRes: Int,
     permissionLabel: String?,
-    bottomPadding: Dp = 0.dp
+    bottomPadding: Dp = 0.dp,
 ) {
     Text(
         textAlign = TextAlign.Start,
         color = focusColors.settingsTextColor,
         text = LocalContext.current.getString(stringRes, permissionLabel).parseBold(),
         style = TextStyle(
-            fontSize = 16.sp
+            fontSize = 16.sp,
         ),
-        modifier = Modifier.padding(start = 55.dp, end = 16.dp, bottom = bottomPadding)
+        modifier = Modifier.padding(start = 55.dp, end = 16.dp, bottom = bottomPadding),
     )
 }
 

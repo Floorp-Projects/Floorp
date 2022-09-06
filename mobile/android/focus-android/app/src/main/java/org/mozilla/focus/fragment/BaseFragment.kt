@@ -50,12 +50,11 @@ abstract class BaseFragment : Fragment() {
 
 fun Fragment.requestInPlacePermissions(
     permissionsToRequest: Array<String>,
-    onResult: (Map<String, Boolean>) -> Unit
+    onResult: (Map<String, Boolean>) -> Unit,
 ) {
-
     requireActivity().activityResultRegistry.register(
         "permissionsRequest",
-        ActivityResultContracts.RequestMultiplePermissions()
+        ActivityResultContracts.RequestMultiplePermissions(),
     ) { permissions ->
         onResult(permissions)
     }.also {

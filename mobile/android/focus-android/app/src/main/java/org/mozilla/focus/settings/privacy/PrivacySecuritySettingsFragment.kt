@@ -92,19 +92,19 @@ class PrivacySecuritySettingsFragment :
     private fun recordTelemetry(key: String, newValue: Any?) {
         when (key) {
             getString(R.string.pref_key_telemetry) -> PrivacySettings.telemetrySettingChanged.record(
-                PrivacySettings.TelemetrySettingChangedExtra(newValue as? Boolean)
+                PrivacySettings.TelemetrySettingChangedExtra(newValue as? Boolean),
             )
             getString(R.string.pref_key_safe_browsing) -> PrivacySettings.safeBrowsingSettingChanged.record(
-                PrivacySettings.SafeBrowsingSettingChangedExtra(newValue as? Boolean)
+                PrivacySettings.SafeBrowsingSettingChangedExtra(newValue as? Boolean),
             )
             getString(R.string.pref_key_biometric) -> PrivacySettings.unlockSettingChanged.record(
-                PrivacySettings.UnlockSettingChangedExtra(newValue as? Boolean)
+                PrivacySettings.UnlockSettingChangedExtra(newValue as? Boolean),
             )
             getString(R.string.pref_key_secure) -> PrivacySettings.stealthSettingChanged.record(
-                PrivacySettings.StealthSettingChangedExtra(newValue as? Boolean)
+                PrivacySettings.StealthSettingChangedExtra(newValue as? Boolean),
             )
             getString(R.string.pref_key_performance_enable_cookies) -> PrivacySettings.blockCookiesChanged.record(
-                PrivacySettings.BlockCookiesChangedExtra(newValue as? String)
+                PrivacySettings.BlockCookiesChangedExtra(newValue as? String),
             )
             else -> {
                 // Telemetry for the change is recorded elsewhere.
@@ -147,11 +147,11 @@ class PrivacySecuritySettingsFragment :
                 TelemetryWrapper.openExceptionsListSetting()
 
                 requireComponents.appStore.dispatch(
-                    AppAction.OpenSettings(page = Screen.Settings.Page.PrivacyExceptions)
+                    AppAction.OpenSettings(page = Screen.Settings.Page.PrivacyExceptions),
                 )
             }
             resources.getString(R.string.pref_key_secure),
-            resources.getString(R.string.pref_key_biometric) -> {
+            resources.getString(R.string.pref_key_biometric), -> {
                 // We need to recreate the activity to apply the SECURE flags.
                 requireActivity().recreate()
             }
@@ -160,36 +160,36 @@ class PrivacySecuritySettingsFragment :
                 engineSharedPreferencesListener.updateTrackingProtectionPolicy(
                     EngineSharedPreferencesListener.ChangeSource.SETTINGS.source,
                     EngineSharedPreferencesListener.TrackerChanged.SOCIAL.tracker,
-                    settings.shouldBlockSocialTrackers()
+                    settings.shouldBlockSocialTrackers(),
                 )
 
             resources.getString(R.string.pref_key_privacy_block_ads) ->
                 engineSharedPreferencesListener.updateTrackingProtectionPolicy(
                     EngineSharedPreferencesListener.ChangeSource.SETTINGS.source,
                     EngineSharedPreferencesListener.TrackerChanged.ADVERTISING.tracker,
-                    settings.shouldBlockAdTrackers()
+                    settings.shouldBlockAdTrackers(),
                 )
 
             resources.getString(R.string.pref_key_privacy_block_analytics) ->
                 engineSharedPreferencesListener.updateTrackingProtectionPolicy(
                     EngineSharedPreferencesListener.ChangeSource.SETTINGS.source,
                     EngineSharedPreferencesListener.TrackerChanged.ANALYTICS.tracker,
-                    settings.shouldBlockAnalyticTrackers()
+                    settings.shouldBlockAnalyticTrackers(),
                 )
 
             resources.getString(R.string.pref_key_privacy_block_other3) ->
                 engineSharedPreferencesListener.updateTrackingProtectionPolicy(
                     EngineSharedPreferencesListener.ChangeSource.SETTINGS.source,
                     EngineSharedPreferencesListener.TrackerChanged.CONTENT.tracker,
-                    settings.shouldBlockOtherTrackers()
+                    settings.shouldBlockOtherTrackers(),
                 )
             resources.getString(R.string.pref_key_site_permissions) ->
                 requireComponents.appStore.dispatch(
-                    AppAction.OpenSettings(page = Screen.Settings.Page.SitePermissions)
+                    AppAction.OpenSettings(page = Screen.Settings.Page.SitePermissions),
                 )
             resources.getString(R.string.pref_key_studies) ->
                 requireComponents.appStore.dispatch(
-                    AppAction.OpenSettings(page = Screen.Settings.Page.Studies)
+                    AppAction.OpenSettings(page = Screen.Settings.Page.Studies),
                 )
         }
         return super.onPreferenceTreeClick(preference)
@@ -201,13 +201,13 @@ class PrivacySecuritySettingsFragment :
         if (preferenceManager.sharedPreferences
             .getBoolean(
                     resources.getString(R.string.pref_key_biometric),
-                    false
+                    false,
                 )
         ) {
             preferenceManager.sharedPreferences
                 .edit().putBoolean(
                     resources.getString(R.string.pref_key_secure),
-                    true
+                    true,
                 ).apply()
             // Disable the stealth switch
             switch?.isChecked = true

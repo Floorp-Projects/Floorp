@@ -93,7 +93,7 @@ class SwitchContextTest {
         val settingsApp = mDevice.findObject(
             UiSelector()
                 .packageName(SETTINGS_APP)
-                .enabled(true)
+                .enabled(true),
         )
         val launcherPackage = mDevice.launcherPackageName
         val context = InstrumentationRegistry.getInstrumentation().targetContext.applicationContext
@@ -112,7 +112,7 @@ class SwitchContextTest {
         Assert.assertNotNull(launcherPackage)
         mDevice.wait(
             Until.hasObject(By.pkg(launcherPackage).depth(0)),
-            LAUNCH_TIMEOUT.toLong()
+            LAUNCH_TIMEOUT.toLong(),
         )
 
         // Launch the app

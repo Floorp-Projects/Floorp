@@ -39,7 +39,9 @@ fun BrowserToolbar.disableDynamicBehavior(engineView: EngineView) {
  */
 fun BrowserToolbar.enableDynamicBehavior(context: Context, engineView: EngineView) {
     (layoutParams as? CoordinatorLayout.LayoutParams)?.behavior = BrowserToolbarBehavior(
-        context, null, browserToolbarPosition.TOP
+        context,
+        null,
+        browserToolbarPosition.TOP,
     )
 
     val toolbarHeight = context.resources.getDimension(R.dimen.browser_toolbar_height).toInt()
@@ -51,7 +53,7 @@ fun BrowserToolbar.enableDynamicBehavior(context: Context, engineView: EngineVie
             null,
             engineView.asView(),
             toolbarHeight,
-            engineToolbarPosition.TOP
+            engineToolbarPosition.TOP,
         )
     }
 }

@@ -54,7 +54,7 @@ private fun OnBoardingFirstScreenComposePreview() {
 @Composable
 fun OnBoardingFirstScreenCompose(
     onGetStartedButtonClicked: () -> Unit,
-    onCloseButtonClick: () -> Unit
+    onCloseButtonClick: () -> Unit,
 ) {
     Column(
         modifier = Modifier
@@ -70,15 +70,15 @@ fun OnBoardingFirstScreenCompose(
                         colorResource(R.color.home_screen_modal_gradient_six),
                     ),
                     end = Offset(0f, Float.POSITIVE_INFINITY),
-                    start = Offset(Float.POSITIVE_INFINITY, 0f)
-                )
-            )
+                    start = Offset(Float.POSITIVE_INFINITY, 0f),
+                ),
+            ),
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(top = 60.dp, end = 20.dp),
-            horizontalAlignment = Alignment.End
+            horizontalAlignment = Alignment.End,
         ) {
             CloseButton(onCloseButtonClick)
         }
@@ -87,32 +87,32 @@ fun OnBoardingFirstScreenCompose(
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally
+            horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Image(
                 painter = painterResource(R.drawable.onboarding_logo),
                 contentDescription = LocalContext.current.getString(R.string.app_name),
                 modifier = Modifier
-                    .size(150.dp, 150.dp)
+                    .size(150.dp, 150.dp),
             )
             Text(
                 text = stringResource(
                     R.string.onboarding_first_screen_title,
-                    stringResource(R.string.app_name)
+                    stringResource(R.string.app_name),
                 ),
                 modifier = Modifier
                     .padding(top = 32.dp, start = 16.dp, end = 16.dp),
                 textAlign = TextAlign.Center,
-                style = focusTypography.onboardingTitle
+                style = focusTypography.onboardingTitle,
             )
             Text(
                 text = stringResource(
-                    R.string.onboarding_first_screen_subtitle
+                    R.string.onboarding_first_screen_subtitle,
                 ),
                 modifier = Modifier
                     .padding(top = 16.dp, start = 16.dp, end = 16.dp),
                 textAlign = TextAlign.Center,
-                style = focusTypography.onboardingSubtitle
+                style = focusTypography.onboardingSubtitle,
             )
             ComponentGoToOnBoardingSecondScreen {
                 onGetStartedButtonClicked()
@@ -128,13 +128,13 @@ private fun CloseButton(onCloseButtonClick: () -> Unit) {
             .then(Modifier.size(30.dp, 30.dp))
             .background(
                 colorResource(R.color.onboardingCloseButtonColor),
-                shape = CircleShape
+                shape = CircleShape,
             ),
-        onClick = onCloseButtonClick
+        onClick = onCloseButtonClick,
     ) {
         Image(
             painter = painterResource(R.drawable.ic_onboarding_close),
-            contentDescription = stringResource(R.string.onboarding_close_button_content_description)
+            contentDescription = stringResource(R.string.onboarding_close_button_content_description),
         )
     }
 }
@@ -147,16 +147,16 @@ private fun ComponentGoToOnBoardingSecondScreen(goToOnBoardingSecondScreen: () -
             .padding(top = 40.dp, start = 16.dp, end = 16.dp)
             .fillMaxWidth(),
         colors = ButtonDefaults.textButtonColors(
-            backgroundColor = colorResource(R.color.onboardingButtonOneColor)
-        )
+            backgroundColor = colorResource(R.color.onboardingButtonOneColor),
+        ),
     ) {
         Text(
             text = AnnotatedString(
                 LocalContext.current.resources.getString(
-                    R.string.onboarding_first_screen_button_text
-                )
+                    R.string.onboarding_first_screen_button_text,
+                ),
             ),
-            color = PhotonColors.White
+            color = PhotonColors.White,
         )
     }
 }

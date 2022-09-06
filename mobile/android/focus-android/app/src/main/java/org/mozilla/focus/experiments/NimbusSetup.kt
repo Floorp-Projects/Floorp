@@ -65,7 +65,7 @@ fun createNimbus(context: Context, url: String?): NimbusApi {
             // Note: Using BuildConfig.BUILD_TYPE is important here so that it matches the value
             // passed into Glean. `Config.channel.toString()` turned out to be non-deterministic
             // and would mostly produce the value `Beta` and rarely would produce `beta`.
-            channel = BuildConfig.BUILD_TYPE
+            channel = BuildConfig.BUILD_TYPE,
         )
         Nimbus(context, appInfo, serverSettings, errorReporter).apply {
             val isTheFirstLaunch = context.settings.getAppLaunchCount() == 0
@@ -95,16 +95,18 @@ fun createNimbus(context: Context, url: String?): NimbusApi {
             }
             fetchExperiments()
 
-            register(object : NimbusInterface.Observer {
-                override fun onExperimentsFetched() {
-                    applyPendingExperiments()
-                    if (isTheFirstLaunch) {
-                        NimbusExperiments.nimbusInitialFetch.stop()
+            register(
+                object : NimbusInterface.Observer {
+                    override fun onExperimentsFetched() {
+                        applyPendingExperiments()
+                        if (isTheFirstLaunch) {
+                            NimbusExperiments.nimbusInitialFetch.stop()
+                        }
+                        // Remove lingering observer when we're done fetching experiments on startup.
+                        unregister(this)
                     }
-                    // Remove lingering observer when we're done fetching experiments on startup.
-                    unregister(this)
-                }
-            })
+                },
+            )
         }
     } catch (e: Throwable) {
         // Something went wrong. We'd like not to, but stability of the app is more important than
@@ -131,7 +133,8 @@ fun getNimbusAppName(): String {
 fun NimbusException.isReportableError(): Boolean {
     return when (this) {
         is NimbusException.RequestException,
-        is NimbusException.ResponseException -> false
+        is NimbusException.ResponseException,
+        -> false
         else -> true
     }
 }

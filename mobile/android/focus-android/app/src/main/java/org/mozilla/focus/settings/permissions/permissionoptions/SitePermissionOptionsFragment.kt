@@ -49,17 +49,17 @@ class SitePermissionOptionsFragment : BaseComposeFragment() {
             listOf(
                 SitePermissionOptionsStorageMiddleware(
                     sitePermission = sitePermission,
-                    storage = sitePermissionOptionsStorage
-                )
-            )
+                    storage = sitePermissionOptionsStorage,
+                ),
+            ),
         )
         defaultSitePermissionOptionsScreenInteractor = DefaultSitePermissionOptionsScreenInteractor(
-            sitePermissionOptionsScreenStore = sitePermissionOptionsScreenStore
+            sitePermissionOptionsScreenStore = sitePermissionOptionsScreenStore,
         )
         hardwarePermissionCheckFeature = HardwarePermissionCheckFeature(
             storage = sitePermissionOptionsStorage,
             store = sitePermissionOptionsScreenStore,
-            sitePermission = sitePermission
+            sitePermission = sitePermission,
         )
         lifecycle.addObserver(hardwarePermissionCheckFeature)
     }
@@ -70,7 +70,7 @@ class SitePermissionOptionsFragment : BaseComposeFragment() {
     override fun onNavigateUp(): () -> Unit {
         return {
             requireComponents.appStore.dispatch(
-                AppAction.OpenSettings(Screen.Settings.Page.SitePermissions)
+                AppAction.OpenSettings(Screen.Settings.Page.SitePermissions),
             )
         }
     }
@@ -94,7 +94,7 @@ class SitePermissionOptionsFragment : BaseComposeFragment() {
             CreateOptionsPermissionList(
                 sitePermissionOptionSelected,
                 sitePermissionOptionsList,
-                isAndroidPermissionGranted
+                isAndroidPermissionGranted,
             )
         }
     }
@@ -103,7 +103,7 @@ class SitePermissionOptionsFragment : BaseComposeFragment() {
     private fun CreateOptionsPermissionList(
         sitePermissionOptionSelected: SitePermissionOption,
         sitePermissionOptionsList: List<SitePermissionOption>,
-        isAndroidPermissionGranted: Boolean
+        isAndroidPermissionGranted: Boolean,
     ) {
         val state = remember {
             mutableStateOf(sitePermissionOptionSelected.prefKeyId)
@@ -115,10 +115,10 @@ class SitePermissionOptionsFragment : BaseComposeFragment() {
                 onClick = {
                     state.value = sitePermissionOption.prefKeyId
                     defaultSitePermissionOptionsScreenInteractor.handleSitePermissionOptionSelected(
-                        sitePermissionOption
+                        sitePermissionOption,
                     )
                     requireComponents.appStore.dispatch(AppAction.SitePermissionOptionChange(true))
-                }
+                },
             )
             optionsListItems.add(sitePermissionOptionListItem)
         }
@@ -127,7 +127,7 @@ class SitePermissionOptionsFragment : BaseComposeFragment() {
             state = state,
             goToPhoneSettings = { openSettings() },
             permissionLabel = sitePermissionOptionsScreenStore.state.sitePermissionLabel,
-            componentPermissionBlockedByAndroidVisibility = !isAndroidPermissionGranted
+            componentPermissionBlockedByAndroidVisibility = !isAndroidPermissionGranted,
         )
     }
 

@@ -20,7 +20,7 @@ class DebugFocusApplication : FocusApplication() {
         if (!AppWatcher.isInstalled) {
             AppWatcher.manualInstall(
                 application = application,
-                watchersToInstall = AppWatcher.appDefaultWatchers(application)
+                watchersToInstall = AppWatcher.appDefaultWatchers(application),
             )
         }
         GlobalScope.launch(Dispatchers.IO) {

@@ -31,7 +31,7 @@ class DefaultBrowserMenu(
     private val appStore: AppStore,
     private val store: BrowserStore,
     private val isPinningSupported: Boolean,
-    private val onItemTapped: (ToolbarMenu.Item) -> Unit = {}
+    private val onItemTapped: (ToolbarMenu.Item) -> Unit = {},
 ) : ToolbarMenu {
 
     private val selectedSession: TabSessionState?
@@ -39,7 +39,9 @@ class DefaultBrowserMenu(
 
     override val menuBuilder by lazy {
         WebExtensionBrowserMenuBuilder(
-            items = mvpMenuItems, store = store, showAddonsInMenu = false
+            items = mvpMenuItems,
+            store = store,
+            showAddonsInMenu = false,
         )
     }
 
@@ -53,7 +55,7 @@ class DefaultBrowserMenu(
             },
             secondaryImageTintResource = context.theme.resolveAttribute(R.attr.disabled),
             disableInSecondaryState = true,
-            longClickListener = { onItemTapped.invoke(ToolbarMenu.Item.Back) }
+            longClickListener = { onItemTapped.invoke(ToolbarMenu.Item.Back) },
         ) {
             onItemTapped.invoke(ToolbarMenu.Item.Back)
         }
@@ -67,7 +69,7 @@ class DefaultBrowserMenu(
             },
             secondaryImageTintResource = context.theme.resolveAttribute(R.attr.disabled),
             disableInSecondaryState = true,
-            longClickListener = { onItemTapped.invoke(ToolbarMenu.Item.Forward) }
+            longClickListener = { onItemTapped.invoke(ToolbarMenu.Item.Forward) },
         ) {
             onItemTapped.invoke(ToolbarMenu.Item.Forward)
         }
@@ -83,7 +85,7 @@ class DefaultBrowserMenu(
             secondaryContentDescription = context.getString(R.string.content_description_stop),
             secondaryImageTintResource = context.theme.resolveAttribute(R.attr.primaryText),
             disableInSecondaryState = false,
-            longClickListener = { onItemTapped.invoke(ToolbarMenu.Item.Reload) }
+            longClickListener = { onItemTapped.invoke(ToolbarMenu.Item.Reload) },
         ) {
             if (selectedSession?.content?.loading == true) {
                 onItemTapped.invoke(ToolbarMenu.Item.Stop)
@@ -97,7 +99,7 @@ class DefaultBrowserMenu(
             iconTintColorResource = context.theme.resolveAttribute(R.attr.primaryText),
             listener = {
                 onItemTapped.invoke(ToolbarMenu.Item.Share)
-            }
+            },
         )
         BrowserMenuItemToolbar(listOf(back, forward, share, refresh))
     }
@@ -126,7 +128,7 @@ class DefaultBrowserMenu(
 
         val findInPage = BrowserMenuImageText(
             label = context.getString(R.string.find_in_page),
-            imageResource = R.drawable.mozac_ic_search
+            imageResource = R.drawable.mozac_ic_search,
         ) {
             onItemTapped.invoke(ToolbarMenu.Item.FindInPage)
         }
@@ -136,14 +138,14 @@ class DefaultBrowserMenu(
             label = context.getString(R.string.preference_performance_request_desktop_site2),
             initialState = {
                 selectedSession?.content?.desktopMode ?: false
-            }
+            },
         ) { checked ->
             onItemTapped.invoke(ToolbarMenu.Item.RequestDesktop(checked))
         }
 
         val reportSiteIssuePlaceholder = WebExtensionPlaceholderMenuItem(
             id = WebCompatReporterFeature.WEBCOMPAT_REPORTER_EXTENSION_ID,
-            iconTintColorResource = context.theme.resolveAttribute(R.attr.primaryText)
+            iconTintColorResource = context.theme.resolveAttribute(R.attr.primaryText),
         )
 
         @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
@@ -152,7 +154,7 @@ class DefaultBrowserMenu(
 
         val addToHomescreen = BrowserMenuImageText(
             label = context.getString(R.string.menu_add_to_home_screen),
-            imageResource = R.drawable.mozac_ic_add_to_home_screen
+            imageResource = R.drawable.mozac_ic_add_to_home_screen,
         ) {
             onItemTapped.invoke(ToolbarMenu.Item.AddToHomeScreen)
         }
@@ -160,7 +162,7 @@ class DefaultBrowserMenu(
         val openInApp = BrowserMenuImageText(
             label = context.getString(R.string.menu_open_with_a_browser2),
             imageResource = R.drawable.mozac_ic_open_in,
-            textColorResource = context.theme.resolveAttribute(R.attr.primaryText)
+            textColorResource = context.theme.resolveAttribute(R.attr.primaryText),
         ) {
             onItemTapped.invoke(ToolbarMenu.Item.OpenInApp)
         }
@@ -168,7 +170,7 @@ class DefaultBrowserMenu(
         val settings = BrowserMenuImageText(
             label = context.getString(R.string.menu_settings),
             imageResource = R.drawable.mozac_ic_settings,
-            textColorResource = context.theme.resolveAttribute(R.attr.primaryText)
+            textColorResource = context.theme.resolveAttribute(R.attr.primaryText),
         ) {
             onItemTapped.invoke(ToolbarMenu.Item.Settings)
         }
@@ -185,7 +187,7 @@ class DefaultBrowserMenu(
             addToHomescreen.apply { visible = ::canAddToHomescreen },
             openInApp,
             BrowserMenuDivider(),
-            settings
+            settings,
         )
     }
 }

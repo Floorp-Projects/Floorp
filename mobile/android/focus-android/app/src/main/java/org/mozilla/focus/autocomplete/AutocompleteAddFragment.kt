@@ -57,7 +57,7 @@ class AutocompleteAddFragment : BaseSettingsLikeFragment(), CoroutineScope {
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
-        savedInstanceState: Bundle?
+        savedInstanceState: Bundle?,
     ): View {
         _binding = FragmentAutocompleteAddDomainBinding.inflate(inflater, container, false)
         return binding.root
@@ -85,7 +85,6 @@ class AutocompleteAddFragment : BaseSettingsLikeFragment(), CoroutineScope {
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         if (item.itemId == R.id.save) {
-
             val domain = binding.domainView.text.toString().trim()
 
             launch(IO) {
@@ -122,8 +121,8 @@ class AutocompleteAddFragment : BaseSettingsLikeFragment(), CoroutineScope {
 
         requireComponents.appStore.dispatch(
             AppAction.NavigateUp(
-                requireComponents.store.state.selectedTabId
-            )
+                requireComponents.store.state.selectedTabId,
+            ),
         )
     }
 }

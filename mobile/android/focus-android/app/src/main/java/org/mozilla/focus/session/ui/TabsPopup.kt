@@ -19,7 +19,7 @@ import org.mozilla.focus.telemetry.TelemetryWrapper
 
 class TabsPopup(
     private val parentView: ViewGroup,
-    private val components: Components
+    private val components: Components,
 ) : PopupWindow() {
     private lateinit var binding: PopupTabsBinding
 
@@ -35,7 +35,7 @@ class TabsPopup(
             tabList = components.store.state.privateTabs,
             isCurrentSession = { tab -> isCurrentSession(tab) },
             selectSession = { tab -> selectSession(tab) },
-            closeSession = { tab -> closeSession(tab) }
+            closeSession = { tab -> closeSession(tab) },
         )
 
         binding.sessions.apply {

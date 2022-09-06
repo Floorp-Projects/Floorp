@@ -14,7 +14,7 @@ import java.io.IOException
 
 class MobileMetricsPingStorage(
     private val context: Context,
-    private val file: File = File("${context.cacheDir}/$STORAGE_FOLDER/$FILE_NAME")
+    private val file: File = File("${context.cacheDir}/$STORAGE_FOLDER/$FILE_NAME"),
 ) {
     private val atomicFile = AtomicFile(file)
 

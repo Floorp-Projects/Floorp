@@ -55,6 +55,7 @@ class SitePermissionsFragment : BaseSettingsFragment() {
             true
         }
     }
+
     @VisibleForTesting
     internal fun navigateToSitePermissionOptionsScreen(sitePermission: SitePermission) {
         requireComponents.appStore.dispatch(AppAction.OpenSitePermissionOptionsScreen(sitePermission = sitePermission))

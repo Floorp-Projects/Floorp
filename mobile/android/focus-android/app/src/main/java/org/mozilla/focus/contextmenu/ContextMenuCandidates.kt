@@ -23,7 +23,7 @@ object ContextMenuCandidates {
         contextMenuUseCases: ContextMenuUseCases,
         appLinksUseCases: AppLinksUseCases,
         snackBarParentView: View,
-        snackbarDelegate: ContextMenuCandidate.SnackbarDelegate = DefaultSnackbarDelegate()
+        snackbarDelegate: ContextMenuCandidate.SnackbarDelegate = DefaultSnackbarDelegate(),
     ): List<ContextMenuCandidate> {
         val multiTabsFeature = FocusNimbus.features.tabs
         val multiTabsConfig = multiTabsFeature.value()
@@ -36,12 +36,12 @@ object ContextMenuCandidates {
                 additionalValidation = { _: SessionState, _: HitResult ->
                     multiTabsFeature.recordExposure()
                     multiTabsConfig.isMultiTab
-                }
+                },
             ),
             ContextMenuCandidate.createCopyLinkCandidate(
                 context,
                 snackBarParentView,
-                snackbarDelegate
+                snackbarDelegate,
             ),
             ContextMenuCandidate.createDownloadLinkCandidate(context, contextMenuUseCases),
             ContextMenuCandidate.createShareLinkCandidate(context),
@@ -54,26 +54,26 @@ object ContextMenuCandidates {
                 additionalValidation = { _: SessionState, _: HitResult ->
                     multiTabsFeature.recordExposure()
                     multiTabsConfig.isMultiTab
-                }
+                },
             ),
             ContextMenuCandidate.createSaveImageCandidate(context, contextMenuUseCases),
             ContextMenuCandidate.createSaveVideoAudioCandidate(context, contextMenuUseCases),
             ContextMenuCandidate.createCopyImageLocationCandidate(
                 context,
                 snackBarParentView,
-                snackbarDelegate
+                snackbarDelegate,
             ),
             ContextMenuCandidate.createAddContactCandidate(context),
             ContextMenuCandidate.createShareEmailAddressCandidate(context),
             ContextMenuCandidate.createCopyEmailAddressCandidate(
                 context,
                 snackBarParentView,
-                snackbarDelegate
+                snackbarDelegate,
             ),
             ContextMenuCandidate.createOpenInExternalAppCandidate(
                 context,
-                appLinksUseCases
-            )
+                appLinksUseCases,
+            ),
         )
     }
 }

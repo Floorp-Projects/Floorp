@@ -17,7 +17,7 @@ import org.mozilla.focus.browser.LocalizedContent
 import org.mozilla.focus.ext.components
 
 class AppContentInterceptor(
-    private val context: Context
+    private val context: Context,
 ) : RequestInterceptor {
     override fun onLoadRequest(
         engineSession: EngineSession,
@@ -27,23 +27,27 @@ class AppContentInterceptor(
         isSameDomain: Boolean,
         isRedirect: Boolean,
         isDirectNavigation: Boolean,
-        isSubframeRequest: Boolean
+        isSubframeRequest: Boolean,
     ): RequestInterceptor.InterceptionResponse? {
         return when (uri) {
             LocalizedContent.URL_ABOUT -> RequestInterceptor.InterceptionResponse.Content(
-                LocalizedContent.loadAbout(context), encoding = "base64"
+                LocalizedContent.loadAbout(context),
+                encoding = "base64",
             )
 
             LocalizedContent.URL_RIGHTS -> RequestInterceptor.InterceptionResponse.Content(
-                LocalizedContent.loadRights(context), encoding = "base64"
+                LocalizedContent.loadRights(context),
+                encoding = "base64",
             )
 
             LocalizedContent.URL_GPL -> RequestInterceptor.InterceptionResponse.Content(
-                LocalizedContent.loadGPL(context), encoding = "base64"
+                LocalizedContent.loadGPL(context),
+                encoding = "base64",
             )
 
             LocalizedContent.URL_LICENSES -> RequestInterceptor.InterceptionResponse.Content(
-                LocalizedContent.loadLicenses(context), encoding = "base64"
+                LocalizedContent.loadLicenses(context),
+                encoding = "base64",
             )
 
             "about:crashes" -> {
@@ -62,7 +66,7 @@ class AppContentInterceptor(
                 isSameDomain,
                 isRedirect,
                 isDirectNavigation,
-                isSubframeRequest
+                isSubframeRequest,
             )
         }
     }
@@ -70,14 +74,14 @@ class AppContentInterceptor(
     override fun onErrorRequest(
         session: EngineSession,
         errorType: ErrorType,
-        uri: String?
+        uri: String?,
     ): RequestInterceptor.ErrorResponse {
         val errorPage = ErrorPages.createUrlEncodedErrorPage(
             context,
             errorType,
             uri,
             titleOverride = { type -> getErrorPageTitle(context, type) },
-            descriptionOverride = { type -> getErrorPageDescription(context, type) }
+            descriptionOverride = { type -> getErrorPageDescription(context, type) },
         )
         return RequestInterceptor.ErrorResponse(errorPage)
     }
@@ -97,7 +101,7 @@ private fun getErrorPageDescription(context: Context, type: ErrorType): String? 
     if (type == ErrorType.ERROR_HTTPS_ONLY) {
         return context.getString(
             R.string.errorpage_httpsonly_message,
-            context.getString(R.string.app_name)
+            context.getString(R.string.app_name),
         )
     }
     // Returning `null` here will let the component use its default description for this error type

@@ -16,13 +16,13 @@ import mozilla.components.support.base.feature.UserInteractionHandler
 class FindInPageIntegration(
     store: BrowserStore,
     private val findInPageView: FindInPageBar,
-    engineView: EngineView
+    engineView: EngineView,
 ) : LifecycleAwareFeature, UserInteractionHandler {
     private val feature = FindInPageFeature(
         store,
         findInPageView,
         engineView,
-        ::hide
+        ::hide,
     )
 
     override fun start() {

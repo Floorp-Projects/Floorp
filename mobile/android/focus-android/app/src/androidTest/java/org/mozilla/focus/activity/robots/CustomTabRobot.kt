@@ -26,7 +26,7 @@ import org.mozilla.focus.idlingResources.SessionLoadedIdlingResource
 class CustomTabRobot {
     val progressBar: UiObject =
         mDevice.findObject(
-            UiSelector().resourceId("$packageName:id/progress")
+            UiSelector().resourceId("$packageName:id/progress"),
         )
 
     fun verifyCustomTabActionButton(buttonDescription: String) {
@@ -65,7 +65,7 @@ class CustomTabRobot {
             mDevice.findObject(UiSelector().textContains(expectedText)).waitForExists(waitingTime)
             assertTrue(
                 "Actual url: ${customTabUrl.text}",
-                customTabUrl.text.contains(expectedText)
+                customTabUrl.text.contains(expectedText),
             )
         }
     }
@@ -79,7 +79,7 @@ class CustomTabRobot {
         runWithIdleRes(sessionLoadedIdlingResource) {
             Assert.assertTrue(
                 mDevice.findObject(UiSelector().textContains(expectedText))
-                    .waitForExists(waitingTime)
+                    .waitForExists(waitingTime),
             )
         }
     }

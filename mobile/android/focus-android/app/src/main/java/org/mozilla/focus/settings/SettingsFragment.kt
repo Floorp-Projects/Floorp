@@ -46,7 +46,7 @@ class SettingsFragment : BaseSettingsFragment() {
         }
 
         requireComponents.appStore.dispatch(
-            AppAction.OpenSettings(page)
+            AppAction.OpenSettings(page),
         )
 
         return super.onPreferenceTreeClick(preference)
@@ -73,16 +73,17 @@ class SettingsFragment : BaseSettingsFragment() {
 
         WhatsNew.userViewedWhatsNew(context)
 
-        val sumoTopic = if (AppConstants.isKlarBuild)
+        val sumoTopic = if (AppConstants.isKlarBuild) {
             SupportUtils.SumoTopic.WHATS_NEW_KLAR
-        else
+        } else {
             SupportUtils.SumoTopic.WHATS_NEW_FOCUS
+        }
 
         val url = SupportUtils.getSumoURLForTopic(context, sumoTopic)
         requireComponents.tabsUseCases.addTab(
             url,
             source = SessionState.Source.Internal.Menu,
-            private = true
+            private = true,
         )
     }
 

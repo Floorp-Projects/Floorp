@@ -36,10 +36,11 @@ class StatePreference(context: Context?, attrs: AttributeSet?) : Preference(cont
                         context.settings.shouldAutocompleteFromCustomDomainList()
                 else -> false
             }
-            val summaryText = if (state)
+            val summaryText = if (state) {
                 R.string.preference_state_on
-            else
+            } else {
                 R.string.preference_state_off
+            }
 
             summaryView?.setText(summaryText)
         }

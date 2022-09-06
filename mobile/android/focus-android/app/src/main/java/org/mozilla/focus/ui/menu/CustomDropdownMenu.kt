@@ -22,23 +22,23 @@ import org.mozilla.focus.ui.theme.focusColors
 fun CustomDropdownMenu(
     menuItems: List<MenuItem>,
     isExpanded: Boolean,
-    onDismissClicked: () -> Unit
+    onDismissClicked: () -> Unit,
 ) {
     DropdownMenu(
         expanded = isExpanded,
         onDismissRequest = onDismissClicked,
-        modifier = Modifier.background(color = focusColors.menuBackground)
+        modifier = Modifier.background(color = focusColors.menuBackground),
     ) {
         for (item in menuItems) {
             DropdownMenuItem(
                 onClick = {
                     item.onClick()
                     onDismissClicked.invoke()
-                }
+                },
             ) {
                 Text(
                     text = item.title,
-                    color = focusColors.menuText
+                    color = focusColors.menuText,
                 )
             }
         }

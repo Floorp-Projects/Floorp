@@ -20,7 +20,7 @@ import org.mozilla.telemetry.measurement.SettingsMeasurement
  * runtime preferences like "default browser" and "search engine".
  */
 internal class TelemetrySettingsProvider(
-    private val context: Context
+    private val context: Context,
 ) : SettingsMeasurement.SharedPreferenceSettingsProvider() {
     private val prefKeyDefaultBrowser: String
     private val prefKeySearchEngine: String

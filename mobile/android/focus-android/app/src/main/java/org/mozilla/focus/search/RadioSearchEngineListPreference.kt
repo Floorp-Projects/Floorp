@@ -51,10 +51,11 @@ class RadioSearchEngineListPreference : SearchEngineListPreference, RadioGroup.O
 
         context.components.searchUseCases.selectSearchEngine(newDefaultEngine)
 
-        val source = if (newDefaultEngine.type == SearchEngine.Type.CUSTOM)
+        val source = if (newDefaultEngine.type == SearchEngine.Type.CUSTOM) {
             ENGINE_TYPE_CUSTOM
-        else
+        } else {
             ENGINE_TYPE_BUNDLED
+        }
 
         SearchEngines.setDefault.record(SearchEngines.SetDefaultExtra(source))
 

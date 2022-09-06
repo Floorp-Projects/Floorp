@@ -21,7 +21,7 @@ import org.mozilla.focus.state.Screen
  */
 class Navigator(
     val store: AppStore,
-    val navigation: MainActivityNavigation
+    val navigation: MainActivityNavigation,
 ) : LifecycleAwareFeature {
     private var scope: CoroutineScope? = null
 
@@ -44,7 +44,7 @@ class Navigator(
             is Screen.Home -> navigation.home()
             is Screen.Browser -> navigation.browser(screen.tabId)
             is Screen.EditUrl -> navigation.edit(
-                screen.tabId
+                screen.tabId,
             )
             is Screen.FirstRun -> navigation.firstRun()
             is Screen.Locked -> navigation.lock()

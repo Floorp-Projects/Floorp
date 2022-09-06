@@ -53,10 +53,10 @@ private fun assertOpenLinksInAppsSwitchState(enabled: Boolean = false) {
                     hasCousin(
                         allOf(
                             withId(R.id.switchWidget),
-                            isChecked()
-                        )
-                    )
-                )
+                            isChecked(),
+                        ),
+                    ),
+                ),
             )
     } else {
         openLinksInAppsButton()
@@ -65,10 +65,10 @@ private fun assertOpenLinksInAppsSwitchState(enabled: Boolean = false) {
                     hasCousin(
                         allOf(
                             withId(R.id.switchWidget),
-                            isNotChecked()
-                        )
-                    )
-                )
+                            isNotChecked(),
+                        ),
+                    ),
+                ),
             )
     }
 }
@@ -88,10 +88,10 @@ private fun assertRemoteDebuggingSwitchState(enabled: Boolean = false) {
                     hasCousin(
                         allOf(
                             withId(R.id.switchWidget),
-                            isChecked()
-                        )
-                    )
-                )
+                            isChecked(),
+                        ),
+                    ),
+                ),
             )
     } else {
         remoteDebuggingSwitch()
@@ -100,10 +100,10 @@ private fun assertRemoteDebuggingSwitchState(enabled: Boolean = false) {
                     hasCousin(
                         allOf(
                             withId(R.id.switchWidget),
-                            isNotChecked()
-                        )
-                    )
-                )
+                            isNotChecked(),
+                        ),
+                    ),
+                ),
             )
     }
 }

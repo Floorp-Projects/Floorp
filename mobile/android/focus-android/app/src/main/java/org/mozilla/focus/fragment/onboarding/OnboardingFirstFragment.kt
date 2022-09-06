@@ -31,15 +31,15 @@ class OnboardingFirstFragment : Fragment() {
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
-        savedInstanceState: Bundle?
+        savedInstanceState: Bundle?,
     ): View {
         onboardingInteractor = DefaultOnboardingInteractor(
             DefaultOnboardingController(
                 onboardingStorage = OnboardingStorage(requireContext()),
                 appStore = requireComponents.appStore,
                 context = requireActivity(),
-                selectedTabId = requireComponents.store.state.selectedTabId
-            )
+                selectedTabId = requireComponents.store.state.selectedTabId,
+            ),
         )
         return ComposeView(requireContext()).apply {
             setContent {
@@ -52,7 +52,7 @@ class OnboardingFirstFragment : Fragment() {
                         onCloseButtonClick = {
                             Onboarding.firstScreenCloseButton.record(NoExtras())
                             onboardingInteractor.onFinishOnBoarding()
-                        }
+                        },
                     )
                 }
             }

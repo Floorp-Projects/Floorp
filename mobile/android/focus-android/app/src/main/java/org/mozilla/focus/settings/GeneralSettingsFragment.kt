@@ -55,7 +55,7 @@ class GeneralSettingsFragment :
         localePreference.summary = getLocaleSummary()
         localePreference.setOnPreferenceClickListener {
             requireComponents.appStore.dispatch(
-                AppAction.OpenSettings(Screen.Settings.Page.Locale)
+                AppAction.OpenSettings(Screen.Settings.Page.Locale),
             )
             true
         }
@@ -100,7 +100,7 @@ class GeneralSettingsFragment :
         val value: String? =
             sharedConfig.getString(
                 resources.getString(R.string.pref_key_locale),
-                resources.getString(R.string.preference_language_systemdefault)
+                resources.getString(R.string.preference_language_systemdefault),
             )
         return value?.let {
             if (value.isEmpty() || value == LOCALE_SYSTEM_DEFAULT) {
@@ -114,7 +114,7 @@ class GeneralSettingsFragment :
         addToRadioGroup(
             radioLightTheme,
             radioDarkTheme,
-            radioDefaultTheme
+            radioDefaultTheme,
         )
     }
 
@@ -130,11 +130,11 @@ class GeneralSettingsFragment :
     private fun setDefaultTheme() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
             AppCompatDelegate.setDefaultNightMode(
-                AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM
+                AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM,
             )
         } else {
             AppCompatDelegate.setDefaultNightMode(
-                AppCompatDelegate.MODE_NIGHT_AUTO_BATTERY
+                AppCompatDelegate.MODE_NIGHT_AUTO_BATTERY,
             )
         }
     }

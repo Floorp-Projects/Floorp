@@ -23,7 +23,7 @@ import kotlin.coroutines.CoroutineContext
  */
 class DefaultTopSitesStorage(
     private val pinnedSitesStorage: PinnedSiteStorage,
-    coroutineContext: CoroutineContext = Dispatchers.IO
+    coroutineContext: CoroutineContext = Dispatchers.IO,
 ) : TopSitesStorage, Observable<TopSitesStorage.Observer> by ObserverRegistry() {
 
     private var scope = CoroutineScope(coroutineContext)
@@ -55,7 +55,7 @@ class DefaultTopSitesStorage(
     override suspend fun getTopSites(
         totalSites: Int,
         frecencyConfig: TopSitesFrecencyConfig?,
-        providerConfig: TopSitesProviderConfig?
+        providerConfig: TopSitesProviderConfig?,
     ): List<TopSite> = pinnedSitesStorage.getPinnedSites().take(totalSites)
 
     companion object {

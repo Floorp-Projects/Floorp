@@ -19,7 +19,7 @@ object DeleteFilesHelper {
             resolver.delete(
                 uri,
                 MediaStore.Files.FileColumns.DISPLAY_NAME + "=?",
-                selectionArgs
+                selectionArgs,
             )
             Log.d("TestLog", "Download file deleted")
             return true
@@ -32,8 +32,11 @@ object DeleteFilesHelper {
         val projection = arrayOf(MediaStore.Files.FileColumns._ID)
         val extUri: Uri = MediaStore.Files.getContentUri("external")
         val cursor: Cursor = context.contentResolver.query(
-            extUri, projection,
-            MediaStore.Files.FileColumns.DISPLAY_NAME + " LIKE ?", arrayOf(displayName), null
+            extUri,
+            projection,
+            MediaStore.Files.FileColumns.DISPLAY_NAME + " LIKE ?",
+            arrayOf(displayName),
+            null,
         )!!
         cursor.moveToFirst()
         return if (cursor.count > 0) {

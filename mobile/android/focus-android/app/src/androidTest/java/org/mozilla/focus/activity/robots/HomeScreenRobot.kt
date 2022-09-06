@@ -53,7 +53,7 @@ class HomeScreenRobot {
         assertTrue(
             topSitesList
                 .getChild(UiSelector().textContains(title))
-                .waitForExists(waitingTime)
+                .waitForExists(waitingTime),
         )
     }
 
@@ -110,7 +110,7 @@ fun homeScreen(interact: HomeScreenRobot.() -> Unit): HomeScreenRobot.Transition
 
 private val editURLBar =
     mDevice.findObject(
-        UiSelector().resourceId("$packageName:id/mozac_browser_toolbar_edit_url_view")
+        UiSelector().resourceId("$packageName:id/mozac_browser_toolbar_edit_url_view"),
     )
 
 private val mainMenu = onView(withId(R.id.menuView))
@@ -127,13 +127,13 @@ private val lastSlide = onView(withText(R.string.firstrun_privacy_title))
 private val nextBtn = mDevice.findObject(
     UiSelector()
         .resourceId("$packageName:id/next")
-        .enabled(true)
+        .enabled(true),
 )
 
 private val finishBtn = mDevice.findObject(
     UiSelector()
         .resourceId("$packageName:id/finish")
-        .enabled(true)
+        .enabled(true),
 )
 
 private val topSitesList = mDevice.findObject(UiSelector().resourceId("$packageName:id/topSites"))

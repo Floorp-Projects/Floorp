@@ -93,7 +93,7 @@ class WhatsNew private constructor(private val storage: WhatsNewStorage) {
         fun shouldHighlightWhatsNew(context: Context): Boolean {
             return shouldHighlightWhatsNew(
                 ContextWhatsNewVersion(context),
-                SharedPreferenceWhatsNewStorage(context)
+                SharedPreferenceWhatsNewStorage(context),
             )
         }
 

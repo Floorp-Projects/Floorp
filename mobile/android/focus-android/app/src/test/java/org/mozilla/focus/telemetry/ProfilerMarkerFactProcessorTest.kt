@@ -15,11 +15,11 @@ import mozilla.components.support.test.argumentCaptor
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mockito.Mockito.`when`
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.never
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.verifyNoInteractions
+import org.mockito.Mockito.`when`
 import org.robolectric.RobolectricTestRunner
 
 @RunWith(RobolectricTestRunner::class)
@@ -91,9 +91,9 @@ class ProfilerMarkerFactProcessorTest {
 
 private fun newFact(
     action: Action,
-    item: String = "itemName"
+    item: String = "itemName",
 ) = Fact(
     Component.BROWSER_SESSION_STORAGE,
     action,
-    item
+    item,
 )

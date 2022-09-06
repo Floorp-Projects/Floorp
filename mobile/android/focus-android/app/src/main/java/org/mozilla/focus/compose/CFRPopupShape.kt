@@ -43,12 +43,12 @@ private const val INDICATOR_BASE_TO_HEIGHT_RATIO = 1.5f
 class CFRPopupShape(
     private val indicatorArrowStartOffset: Dp,
     private val indicatorArrowHeight: Dp,
-    private val cornerRadius: Dp
+    private val cornerRadius: Dp,
 ) : Shape {
     override fun createOutline(
         size: Size,
         layoutDirection: LayoutDirection,
-        density: Density
+        density: Density,
     ): Outline {
         val indicatorArrowStartOffsetPx = indicatorArrowStartOffset.value * density.density
         val indicatorArrowHeightPx = indicatorArrowHeight.value * density.density
@@ -62,22 +62,28 @@ class CFRPopupShape(
 
                 lineTo(0f, size.height - cornerRadiusPx)
                 quadraticBezierTo(
-                    0f, size.height,
-                    cornerRadiusPx, size.height
+                    0f,
+                    size.height,
+                    cornerRadiusPx,
+                    size.height,
                 )
 
                 lineTo(size.width - cornerRadiusPx, size.height)
                 quadraticBezierTo(
-                    size.width, size.height,
-                    size.width, size.height - cornerRadiusPx
+                    size.width,
+                    size.height,
+                    size.width,
+                    size.height - cornerRadiusPx,
                 )
 
                 val indicatorCornerRadius = cornerRadiusPx.coerceAtMost(indicatorArrowStartOffsetPx)
                 if (layoutDirection == LayoutDirection.Ltr) {
                     lineTo(size.width, cornerRadiusPx + indicatorArrowHeightPx)
                     quadraticBezierTo(
-                        size.width, indicatorArrowHeightPx,
-                        size.width - cornerRadiusPx, indicatorArrowHeightPx
+                        size.width,
+                        indicatorArrowHeightPx,
+                        size.width - cornerRadiusPx,
+                        indicatorArrowHeightPx,
                     )
 
                     lineTo(indicatorArrowStartOffsetPx + indicatorArrowBasePx, indicatorArrowHeightPx)
@@ -86,14 +92,18 @@ class CFRPopupShape(
 
                     lineTo(indicatorCornerRadius, indicatorArrowHeightPx)
                     quadraticBezierTo(
-                        0f, indicatorArrowHeightPx, 0f,
-                        indicatorArrowHeightPx + indicatorCornerRadius
+                        0f,
+                        indicatorArrowHeightPx,
+                        0f,
+                        indicatorArrowHeightPx + indicatorCornerRadius,
                     )
                 } else {
                     lineTo(size.width, indicatorCornerRadius + indicatorArrowHeightPx)
                     quadraticBezierTo(
-                        size.width, indicatorArrowHeightPx,
-                        size.width - indicatorCornerRadius, indicatorArrowHeightPx
+                        size.width,
+                        indicatorArrowHeightPx,
+                        size.width - indicatorCornerRadius,
+                        indicatorArrowHeightPx,
                     )
 
                     val indicatorEnd = size.width - indicatorArrowStartOffsetPx
@@ -103,13 +113,15 @@ class CFRPopupShape(
 
                     lineTo(cornerRadiusPx, indicatorArrowHeightPx)
                     quadraticBezierTo(
-                        0f, indicatorArrowHeightPx,
-                        0f, indicatorArrowHeightPx + cornerRadiusPx
+                        0f,
+                        indicatorArrowHeightPx,
+                        0f,
+                        indicatorArrowHeightPx + cornerRadiusPx,
                     )
                 }
 
                 close()
-            }
+            },
         )
     }
 
@@ -137,13 +149,13 @@ private fun CFRPopupShapeLTRPreview() {
                     brush = Brush.linearGradient(
                         colors = listOf(
                             colorResource(color.cfr_pop_up_shape_end_color),
-                            colorResource(color.cfr_pop_up_shape_start_color)
+                            colorResource(color.cfr_pop_up_shape_start_color),
                         ),
                         end = Offset(0f, Float.POSITIVE_INFINITY),
-                        start = Offset(Float.POSITIVE_INFINITY, 0f)
-                    )
+                        start = Offset(Float.POSITIVE_INFINITY, 0f),
+                    ),
                 ),
-            contentAlignment = Alignment.Center
+            contentAlignment = Alignment.Center,
         ) {
             Text(text = "This is just a test")
         }
@@ -164,13 +176,13 @@ private fun CFRPopupShapeRTLPreview() {
                         brush = Brush.linearGradient(
                             colors = listOf(
                                 colorResource(color.cfr_pop_up_shape_end_color),
-                                colorResource(color.cfr_pop_up_shape_start_color)
+                                colorResource(color.cfr_pop_up_shape_start_color),
                             ),
                             end = Offset(0f, Float.POSITIVE_INFINITY),
-                            start = Offset(Float.POSITIVE_INFINITY, 0f)
-                        )
+                            start = Offset(Float.POSITIVE_INFINITY, 0f),
+                        ),
                     ),
-                contentAlignment = Alignment.Center
+                contentAlignment = Alignment.Center,
             ) {
                 Text(text = "This is just a test")
             }

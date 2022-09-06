@@ -15,7 +15,7 @@ import org.mozilla.focus.utils.SupportUtils
  */
 class SearchSuggestionsPreference(
     context: Context?,
-    attrs: AttributeSet?
+    attrs: AttributeSet?,
 ) : LearnMoreSwitchPreference(context, attrs) {
     override fun getLearnMoreUrl(): String =
         SupportUtils.getSumoURLForTopic(context, SupportUtils.SumoTopic.SEARCH_SUGGESTIONS)
@@ -23,6 +23,6 @@ class SearchSuggestionsPreference(
     override fun getDescription(): String =
         context.getString(
             R.string.preference_show_search_suggestions_summary,
-            context.getString(R.string.app_name)
+            context.getString(R.string.app_name),
         )
 }

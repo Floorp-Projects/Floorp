@@ -39,7 +39,7 @@ class SitePermissionOptionsStorage(private val context: Context) {
             SitePermission.MICROPHONE -> context.getString(R.string.preference_phone_feature_microphone)
             SitePermission.NOTIFICATION -> context.getString(R.string.preference_phone_feature_notification)
             SitePermission.MEDIA_KEY_SYSTEM_ACCESS -> context.getString(
-                R.string.preference_phone_feature_media_key_system_access
+                R.string.preference_phone_feature_media_key_system_access,
             )
             SitePermission.AUTOPLAY, SitePermission.AUTOPLAY_AUDIBLE, SitePermission.AUTOPLAY_INAUDIBLE ->
                 context.getString(R.string.preference_autoplay)
@@ -52,27 +52,31 @@ class SitePermissionOptionsStorage(private val context: Context) {
     fun getSitePermissionOptions(sitePermission: SitePermission): List<SitePermissionOption> {
         return when (sitePermission) {
             SitePermission.CAMERA -> listOf(
-                SitePermissionOption.AskToAllow(), SitePermissionOption.Blocked()
+                SitePermissionOption.AskToAllow(),
+                SitePermissionOption.Blocked(),
             )
             SitePermission.LOCATION -> listOf(
-                SitePermissionOption.AskToAllow(), SitePermissionOption.Blocked()
+                SitePermissionOption.AskToAllow(),
+                SitePermissionOption.Blocked(),
             )
             SitePermission.MICROPHONE -> listOf(
-                SitePermissionOption.AskToAllow(), SitePermissionOption.Blocked()
+                SitePermissionOption.AskToAllow(),
+                SitePermissionOption.Blocked(),
             )
             SitePermission.NOTIFICATION -> listOf(
-                SitePermissionOption.AskToAllow(), SitePermissionOption.Blocked()
+                SitePermissionOption.AskToAllow(),
+                SitePermissionOption.Blocked(),
             )
             SitePermission.MEDIA_KEY_SYSTEM_ACCESS -> listOf(
                 SitePermissionOption.AskToAllow(),
                 SitePermissionOption.Blocked(),
-                SitePermissionOption.Allowed()
+                SitePermissionOption.Allowed(),
             )
             SitePermission.AUTOPLAY, SitePermission.AUTOPLAY_AUDIBLE, SitePermission.AUTOPLAY_INAUDIBLE ->
                 listOf(
                     AutoplayOption.AllowAudioVideo(),
                     AutoplayOption.BlockAudioOnly(),
-                    AutoplayOption.BlockAudioVideo()
+                    AutoplayOption.BlockAudioVideo(),
                 )
         }
     }
@@ -135,13 +139,13 @@ class SitePermissionOptionsStorage(private val context: Context) {
      */
     fun saveCurrentSitePermissionOptionInSharePref(
         sitePermissionOption: SitePermissionOption,
-        sitePermission: SitePermission
+        sitePermission: SitePermission,
     ) {
         val sharedPref = PreferenceManager.getDefaultSharedPreferences(context)
         with(sharedPref.edit()) {
             putString(
                 context.getString(getSitePermissionPreferenceId(sitePermission)),
-                context.getString(sitePermissionOption.prefKeyId)
+                context.getString(sitePermissionOption.prefKeyId),
             )
             apply()
         }
@@ -149,7 +153,7 @@ class SitePermissionOptionsStorage(private val context: Context) {
 
     @VisibleForTesting
     internal fun permissionSelectedOptionByKey(
-        sitePermissionKey: Int
+        sitePermissionKey: Int,
     ): String {
         val sharedPref = PreferenceManager.getDefaultSharedPreferences(context)
         return sharedPref.getString(context.getString(sitePermissionKey), "") ?: ""
@@ -159,17 +163,17 @@ class SitePermissionOptionsStorage(private val context: Context) {
         return when (permissionSelectedOption(SitePermission.AUTOPLAY)) {
             is AutoplayOption.AllowAudioVideo -> Pair(
                 SitePermissionsRules.AutoplayAction.ALLOWED,
-                SitePermissionsRules.AutoplayAction.ALLOWED
+                SitePermissionsRules.AutoplayAction.ALLOWED,
             )
 
             is AutoplayOption.BlockAudioVideo -> Pair(
                 SitePermissionsRules.AutoplayAction.BLOCKED,
-                SitePermissionsRules.AutoplayAction.BLOCKED
+                SitePermissionsRules.AutoplayAction.BLOCKED,
             )
 
             else -> Pair(
                 SitePermissionsRules.AutoplayAction.BLOCKED,
-                SitePermissionsRules.AutoplayAction.ALLOWED
+                SitePermissionsRules.AutoplayAction.ALLOWED,
             )
         }
     }
@@ -183,7 +187,7 @@ class SitePermissionOptionsStorage(private val context: Context) {
         autoplayInaudible = getAutoplayRules().second,
         persistentStorage = SitePermissionsRules.Action.BLOCKED,
         mediaKeySystemAccess = getSitePermissionRules(SitePermission.MEDIA_KEY_SYSTEM_ACCESS),
-        crossOriginStorageAccess = SitePermissionsRules.Action.ASK_TO_ALLOW
+        crossOriginStorageAccess = SitePermissionsRules.Action.ASK_TO_ALLOW,
     )
 
     private fun getSitePermissionRules(sitePermission: SitePermission): SitePermissionsRules.Action {

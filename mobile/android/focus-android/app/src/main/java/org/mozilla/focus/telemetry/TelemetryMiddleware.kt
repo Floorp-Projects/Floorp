@@ -29,7 +29,7 @@ class TelemetryMiddleware : Middleware<BrowserState, BrowserAction> {
     override fun invoke(
         context: MiddlewareContext<BrowserState, BrowserAction>,
         next: (BrowserAction) -> Unit,
-        action: BrowserAction
+        action: BrowserAction,
     ) {
         next(action)
 
@@ -43,7 +43,7 @@ class TelemetryMiddleware : Middleware<BrowserState, BrowserAction> {
 
             is CustomTabListAction.TurnCustomTabIntoNormalTabAction -> {
                 TabCount.newTabOpened.record(
-                    TabCount.NewTabOpenedExtra(context.state.tabs.size, "custom tab")
+                    TabCount.NewTabOpenedExtra(context.state.tabs.size, "custom tab"),
                 )
             }
 
@@ -73,7 +73,7 @@ class TelemetryMiddleware : Middleware<BrowserState, BrowserAction> {
 
     private fun collectTelemetry(
         tab: SessionState,
-        context: MiddlewareContext<BrowserState, BrowserAction>
+        context: MiddlewareContext<BrowserState, BrowserAction>,
     ) {
         val tabCount = context.state.tabs.size
 
@@ -85,7 +85,7 @@ class TelemetryMiddleware : Middleware<BrowserState, BrowserAction> {
             }
             is SessionState.Source.External.ActionSend -> {
                 AppOpened.shareIntent.record(
-                    AppOpened.ShareIntentExtra(tab.content.searchTerms.isNotEmpty())
+                    AppOpened.ShareIntentExtra(tab.content.searchTerms.isNotEmpty()),
                 )
 
                 TelemetryWrapper.shareIntentEvent(tab.content.searchTerms.isNotEmpty())
@@ -104,11 +104,11 @@ class TelemetryMiddleware : Middleware<BrowserState, BrowserAction> {
                 val parentTab = (tab as TabSessionState).parentId?.let { context.state.findTab(it) }
                 if (parentTab?.content?.windowRequest?.type == WindowRequest.Type.OPEN) {
                     TabCount.newTabOpened.record(
-                        TabCount.NewTabOpenedExtra(tabCount, "Window.open()")
+                        TabCount.NewTabOpenedExtra(tabCount, "Window.open()"),
                     )
                 } else {
                     TabCount.newTabOpened.record(
-                        TabCount.NewTabOpenedExtra(tabCount, "context menu")
+                        TabCount.NewTabOpenedExtra(tabCount, "context menu"),
                     )
                 }
             }

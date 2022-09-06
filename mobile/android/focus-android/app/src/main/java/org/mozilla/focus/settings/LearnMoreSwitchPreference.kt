@@ -33,11 +33,11 @@ abstract class LearnMoreSwitchPreference(context: Context?, attrs: AttributeSet?
                 getLearnMoreUrl(),
                 source = SessionState.Source.Internal.Menu,
                 selectTab = true,
-                private = true
+                private = true,
             )
 
             context.components.appStore.dispatch(
-                AppAction.OpenTab(tabId)
+                AppAction.OpenTab(tabId),
             )
         }
 

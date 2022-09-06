@@ -7,7 +7,7 @@ import androidx.test.espresso.IdlingResource
 
 class RecyclerViewIdlingResource constructor(
     private val recycler: androidx.recyclerview.widget.RecyclerView,
-    private val minItemCount: Int = 0
+    private val minItemCount: Int = 0,
 ) : IdlingResource {
 
     private var callback: IdlingResource.ResourceCallback? = null

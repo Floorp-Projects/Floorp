@@ -42,8 +42,8 @@ class OnboardingControllerTest {
                 onboardingStorage,
                 appStore,
                 ApplicationProvider.getApplicationContext(),
-                "1"
-            )
+                "1",
+            ),
         )
     }
 
@@ -53,7 +53,7 @@ class OnboardingControllerTest {
             onboardingStorage,
             appStore,
             ApplicationProvider.getApplicationContext(),
-            "1"
+            "1",
         ).handleFinishOnBoarding()
 
         val prefManager =

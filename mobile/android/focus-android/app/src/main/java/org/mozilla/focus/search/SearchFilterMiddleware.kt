@@ -18,11 +18,11 @@ class SearchFilterMiddleware : Middleware<BrowserState, BrowserAction> {
     override fun invoke(
         context: MiddlewareContext<BrowserState, BrowserAction>,
         next: (BrowserAction) -> Unit,
-        action: BrowserAction
+        action: BrowserAction,
     ) {
         if (action is SearchAction.SetSearchEnginesAction) {
             val newAction = action.copy(
-                regionSearchEngines = action.regionSearchEngines.filterBing()
+                regionSearchEngines = action.regionSearchEngines.filterBing(),
             )
 
             next(newAction)

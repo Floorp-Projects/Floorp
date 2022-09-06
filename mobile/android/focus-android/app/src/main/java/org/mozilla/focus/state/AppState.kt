@@ -25,7 +25,7 @@ data class AppState(
     val sitePermissionOptionChange: Boolean = false,
     val secretSettingsEnabled: Boolean = false,
     val showEraseTabsCfr: Boolean = false,
-    val showTrackingProtectionCfrForTab: Map<String, Boolean> = emptyMap()
+    val showTrackingProtectionCfrForTab: Map<String, Boolean> = emptyMap(),
 ) : State
 
 /**
@@ -61,7 +61,7 @@ sealed class Screen {
      */
     data class Browser(
         val tabId: String,
-        val showTabs: Boolean
+        val showTabs: Boolean,
     ) : Screen() {
         // Whenever the showTabs property changes we want to treat this as a new screen and force
         // a navigation.
@@ -72,7 +72,7 @@ sealed class Screen {
      * Editing the URL of a tab.
      */
     data class EditUrl(
-        val tabId: String
+        val tabId: String,
     ) : Screen()
 
     /**
@@ -81,7 +81,7 @@ sealed class Screen {
     object Locked : Screen()
     data class SitePermissionOptionsScreen(val sitePermission: SitePermission) : Screen()
     data class Settings(
-        val page: Page = Page.Start
+        val page: Page = Page.Start,
     ) : Screen() {
         enum class Page {
             Start,

@@ -12,5 +12,5 @@ package org.mozilla.focus.ui.menu
  */
 data class MenuItem(
     val title: String,
-    val onClick: () -> Unit
+    val onClick: () -> Unit,
 )

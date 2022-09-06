@@ -20,7 +20,7 @@ class InputToolbarIntegration(
     toolbar: BrowserToolbar,
     fragment: UrlInputFragment,
     shippedDomainsProvider: ShippedDomainsProvider,
-    customDomainsProvider: CustomDomainsProvider
+    customDomainsProvider: CustomDomainsProvider,
 ) : LifecycleAwareFeature {
     private val settings = toolbar.context.settings
 
@@ -33,7 +33,7 @@ class InputToolbarIntegration(
             hint = fragment.getString(R.string.urlbar_hint)
             colors = toolbar.display.colors.copy(
                 hint = ContextCompat.getColor(toolbar.context, R.color.urlBarHintText),
-                text = ContextCompat.getColor(toolbar.context, R.color.primaryText)
+                text = ContextCompat.getColor(toolbar.context, R.color.primaryText),
             )
         }
         toolbar.edit.hint = fragment.getString(R.string.urlbar_hint)
@@ -41,23 +41,25 @@ class InputToolbarIntegration(
         toolbar.edit.colors = toolbar.edit.colors.copy(
             hint = ContextCompat.getColor(toolbar.context, R.color.urlBarHintText),
             text = ContextCompat.getColor(toolbar.context, R.color.primaryText),
-            clear = ContextCompat.getColor(toolbar.context, R.color.primaryText)
+            clear = ContextCompat.getColor(toolbar.context, R.color.primaryText),
         )
 
-        toolbar.setOnEditListener(object : Toolbar.OnEditListener {
-            override fun onStartEditing() {
-                fragment.onStartEditing()
-            }
+        toolbar.setOnEditListener(
+            object : Toolbar.OnEditListener {
+                override fun onStartEditing() {
+                    fragment.onStartEditing()
+                }
 
-            override fun onCancelEditing(): Boolean {
-                fragment.onCancelEditing()
-                return true
-            }
+                override fun onCancelEditing(): Boolean {
+                    fragment.onCancelEditing()
+                    return true
+                }
 
-            override fun onTextChanged(text: String) {
-                fragment.onTextChange(text)
-            }
-        })
+                override fun onTextChanged(text: String) {
+                    fragment.onTextChange(text)
+                }
+            },
+        )
 
         toolbar.setOnUrlCommitListener { url ->
             fragment.onCommit(url)
@@ -77,8 +79,12 @@ class InputToolbarIntegration(
             if (result != null) {
                 delegate.applyAutocompleteResult(
                     mozilla.components.concept.toolbar.AutocompleteResult(
-                        result.input, result.text, result.url, result.source, result.totalItems
-                    )
+                        result.input,
+                        result.text,
+                        result.url,
+                        result.source,
+                        result.totalItems,
+                    ),
                 )
             } else {
                 delegate.noAutocompleteResult(text)
@@ -89,7 +95,7 @@ class InputToolbarIntegration(
         val urlBackground = ResourcesCompat.getDrawable(
             fragment.resources,
             R.drawable.toolbar_url_background,
-            fragment.context?.theme
+            fragment.context?.theme,
         )
 
         toolbar.display.setUrlBackground(urlBackground)

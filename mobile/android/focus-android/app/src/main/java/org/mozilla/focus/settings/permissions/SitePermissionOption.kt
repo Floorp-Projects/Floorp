@@ -9,7 +9,7 @@ sealed class AutoplayOption {
 
     data class AllowAudioVideo(
         override val prefKeyId: Int = R.string.pref_key_allow_autoplay_audio_video,
-        override val titleId: Int = R.string.preference_allow_audio_video_autoplay
+        override val titleId: Int = R.string.preference_allow_audio_video_autoplay,
     ) : SitePermissionOption(prefKeyId = prefKeyId, titleId = titleId)
 
     data class BlockAudioOnly(
@@ -20,7 +20,7 @@ sealed class AutoplayOption {
 
     data class BlockAudioVideo(
         override val prefKeyId: Int = R.string.pref_key_block_autoplay_audio_video,
-        override val titleId: Int = R.string.preference_block_autoplay_audio_video
+        override val titleId: Int = R.string.preference_block_autoplay_audio_video,
     ) : SitePermissionOption(prefKeyId = prefKeyId, titleId = titleId)
 }
 
@@ -34,11 +34,11 @@ sealed class SitePermissionOption(open val prefKeyId: Int, open val titleId: Int
 
     data class Blocked(
         override val prefKeyId: Int = R.string.pref_key_blocked,
-        override val titleId: Int = R.string.preference_option_phone_feature_blocked
+        override val titleId: Int = R.string.preference_option_phone_feature_blocked,
     ) : SitePermissionOption(prefKeyId = prefKeyId, titleId = titleId)
 
     data class Allowed(
         override val prefKeyId: Int = R.string.pref_key_allowed,
-        override val titleId: Int = R.string.preference_option_phone_feature_allowed
+        override val titleId: Int = R.string.preference_option_phone_feature_allowed,
     ) : SitePermissionOption(prefKeyId = prefKeyId, titleId = titleId)
 }

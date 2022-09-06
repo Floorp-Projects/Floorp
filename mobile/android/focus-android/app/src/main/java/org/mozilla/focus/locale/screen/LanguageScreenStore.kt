@@ -11,10 +11,11 @@ import mozilla.components.lib.state.Store
 
 class LanguageScreenStore(
     initialState: LanguageScreenState,
-    middlewares: List<Middleware<LanguageScreenState, LanguageScreenAction>> = emptyList()
+    middlewares: List<Middleware<LanguageScreenState, LanguageScreenAction>> = emptyList(),
 ) : Store<LanguageScreenState, LanguageScreenAction>(
     initialState,
-    ::languagesScreenStateReducer, middlewares
+    ::languagesScreenStateReducer,
+    middlewares,
 ) {
     init {
         dispatch(LanguageScreenAction.InitLanguages)
@@ -29,7 +30,7 @@ class LanguageScreenStore(
  */
 data class LanguageScreenState(
     val languageList: List<Language> = emptyList(),
-    val selectedLanguage: Language? = null
+    val selectedLanguage: Language? = null,
 ) : State
 
 /**
@@ -40,7 +41,7 @@ sealed class LanguageScreenAction : Action {
     data class Select(val selectedLanguage: Language) : LanguageScreenAction()
     data class UpdateLanguages(
         val languageList: List<Language>,
-        val selectedLanguage: Language
+        val selectedLanguage: Language,
     ) : LanguageScreenAction()
 }
 
@@ -53,7 +54,7 @@ sealed class LanguageScreenAction : Action {
  */
 private fun languagesScreenStateReducer(
     state: LanguageScreenState,
-    action: LanguageScreenAction
+    action: LanguageScreenAction,
 ): LanguageScreenState {
     return when (action) {
         is LanguageScreenAction.Select -> {

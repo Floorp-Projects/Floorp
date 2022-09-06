@@ -11,7 +11,7 @@ import org.mozilla.focus.R
 class MozillaPreference @JvmOverloads constructor(
     context: Context?,
     attrs: AttributeSet?,
-    defStyleAttr: Int = 0
+    defStyleAttr: Int = 0,
 ) : Preference(context, attrs, defStyleAttr) {
     init {
         val appName = getContext().resources.getString(R.string.app_name)

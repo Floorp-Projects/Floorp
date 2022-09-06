@@ -57,7 +57,7 @@ fun FocusDialog(
                 DialogTextButton(
                     text = confirmButtonText,
                     onClick = onConfirmRequest,
-                    enabled = isConfirmButtonEnabled
+                    enabled = isConfirmButtonEnabled,
                 )
             }
         },
@@ -66,7 +66,7 @@ fun FocusDialog(
                 DialogTextButton(
                     text = dismissButtonText,
                     onClick = onDismissRequest,
-                    enabled = isDismissButtonEnabled
+                    enabled = isDismissButtonEnabled,
                 )
             }
         },
@@ -81,13 +81,13 @@ fun FocusDialog(
 @Composable
 fun DialogTitle(
     modifier: Modifier = Modifier,
-    text: String
+    text: String,
 ) {
     Text(
         modifier = modifier,
         color = focusColors.onPrimary,
         text = text,
-        style = focusTypography.dialogTitle
+        style = focusTypography.dialogTitle,
     )
 }
 
@@ -97,13 +97,13 @@ fun DialogTitle(
 @Composable
 fun DialogText(
     modifier: Modifier = Modifier,
-    text: String
+    text: String,
 ) {
     Text(
         modifier = modifier,
         color = focusColors.onPrimary,
         text = text,
-        style = focusTypography.dialogInput
+        style = focusTypography.dialogInput,
     )
 }
 
@@ -121,7 +121,7 @@ fun DialogTextButton(
         onClick = onClick,
         modifier = modifier,
         enabled = enabled,
-        shape = MaterialTheme.shapes.large
+        shape = MaterialTheme.shapes.large,
     ) {
         Text(
             modifier = modifier,
@@ -131,7 +131,7 @@ fun DialogTextButton(
                 focusColors.dialogActiveControls.copy(alpha = 0.5f)
             },
             text = text,
-            style = MaterialTheme.typography.button
+            style = MaterialTheme.typography.button,
         )
     }
 }
@@ -144,7 +144,7 @@ fun DialogInputField(
     modifier: Modifier = Modifier,
     text: String,
     placeholder: @Composable () -> Unit,
-    onValueChange: (String) -> Unit
+    onValueChange: (String) -> Unit,
 ) {
     TextField(
         modifier = modifier
@@ -158,10 +158,10 @@ fun DialogInputField(
             textColor = focusColors.onSecondary,
             cursorColor = focusColors.onPrimary,
             focusedIndicatorColor = focusColors.dialogActiveControls,
-            unfocusedIndicatorColor = focusColors.dialogActiveControls
+            unfocusedIndicatorColor = focusColors.dialogActiveControls,
         ),
         singleLine = true,
-        shape = MaterialTheme.shapes.large
+        shape = MaterialTheme.shapes.large,
     )
 }
 
@@ -169,7 +169,7 @@ fun DialogInputField(
     name = "dark theme",
     showBackground = true,
     backgroundColor = 0xFF393473,
-    uiMode = Configuration.UI_MODE_NIGHT_MASK
+    uiMode = Configuration.UI_MODE_NIGHT_MASK,
 )
 @Composable
 fun DialogTitlePreviewDark() {
@@ -182,7 +182,7 @@ fun DialogTitlePreviewDark() {
     name = "light theme",
     showBackground = true,
     backgroundColor = 0xFFFBFBFE,
-    uiMode = Configuration.UI_MODE_NIGHT_NO
+    uiMode = Configuration.UI_MODE_NIGHT_NO,
 )
 @Composable
 fun DialogTitlePreviewLight() {

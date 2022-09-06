@@ -52,7 +52,7 @@ class UriTest {
 
         assertTruncatedPath(
             "/2017/…/nasa-hi-seas-mars-analogue-mission-hawaii-mauna-loa",
-            "https://www.theverge.com/2017/9/24/16356876/nasa-hi-seas-mars-analogue-mission-hawaii-mauna-loa"
+            "https://www.theverge.com/2017/9/24/16356876/nasa-hi-seas-mars-analogue-mission-hawaii-mauna-loa",
         )
     }
 
@@ -60,7 +60,7 @@ class UriTest {
     fun testTruncatedPathWithMultipleSegmentsAndFragment() {
         assertTruncatedPath(
             "/@bfrancis/the-story-of-firefox-os-cb5bf796e8fb",
-            "https://medium.com/@bfrancis/the-story-of-firefox-os-cb5bf796e8fb#931a"
+            "https://medium.com/@bfrancis/the-story-of-firefox-os-cb5bf796e8fb#931a",
         )
     }
 
@@ -68,7 +68,7 @@ class UriTest {
         assertEquals(
             "truncatedHost($url)",
             expectedTruncatedPath,
-            Uri.parse(url).truncatedHost()
+            Uri.parse(url).truncatedHost(),
         )
     }
 
@@ -76,7 +76,7 @@ class UriTest {
         assertEquals(
             "truncatedPath($url)",
             expectedTruncatedPath,
-            Uri.parse(url).truncatedPath()
+            Uri.parse(url).truncatedPath(),
         )
     }
 }

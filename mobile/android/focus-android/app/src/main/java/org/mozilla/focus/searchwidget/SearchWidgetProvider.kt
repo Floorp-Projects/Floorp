@@ -30,7 +30,7 @@ class SearchWidgetProvider : AppSearchWidgetProvider() {
         SearchWidgetConfig(
             searchWidgetIconResource = R.drawable.ic_splash_screen,
             searchWidgetMicrophoneResource = R.drawable.mozac_ic_microphone,
-            appName = R.string.app_name
+            appName = R.string.app_name,
         )
 
     override fun createTextSearchIntent(context: Context): PendingIntent {
@@ -44,7 +44,7 @@ class SearchWidgetProvider : AppSearchWidgetProvider() {
             REQUEST_CODE_NEW_TAB,
             textSearchIntent,
             PendingIntentUtils.defaultFlags or
-                PendingIntent.FLAG_UPDATE_CURRENT
+                PendingIntent.FLAG_UPDATE_CURRENT,
         )
     }
 

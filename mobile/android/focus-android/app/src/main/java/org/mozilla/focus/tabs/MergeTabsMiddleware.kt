@@ -22,12 +22,12 @@ import org.mozilla.focus.nimbus.FocusNimbus
  * a single tab with a merged state.
  */
 class MergeTabsMiddleware(
-    private val appContext: Context
+    private val appContext: Context,
 ) : Middleware<BrowserState, BrowserAction> {
     override fun invoke(
         context: MiddlewareContext<BrowserState, BrowserAction>,
         next: (BrowserAction) -> Unit,
-        action: BrowserAction
+        action: BrowserAction,
     ) {
         val multiTabsFeature = FocusNimbus.features.tabs
         if (multiTabsFeature.value(appContext).isMultiTab || action !is TabListAction.AddTabAction) {
@@ -79,16 +79,16 @@ class MergeTabsMiddleware(
                 flags = EngineSession.LoadUrlFlags.select(
                     // To be safe we use the external flag here, since its not the user who decided to
                     // load this URL in this existing session.
-                    EngineSession.LoadUrlFlags.EXTERNAL
-                )
-            )
+                    EngineSession.LoadUrlFlags.EXTERNAL,
+                ),
+            ),
         )
     }
 }
 
 private fun mergeTabs(
     currentTab: TabSessionState,
-    newTab: TabSessionState
+    newTab: TabSessionState,
 ): TabSessionState {
     // In case a new tab is being opened by a web extension, the new tab will have its own new engine/gecko session,
     // which will have to be used
@@ -98,7 +98,7 @@ private fun mergeTabs(
         currentTab.engineState.copy(
             // We are clearing the engine observer, which would update the state of the tab with the
             // old ID. The engine middleware will create a new observer.
-            engineObserver = null
+            engineObserver = null,
         )
     }
 
@@ -107,7 +107,7 @@ private fun mergeTabs(
     return currentTab.copy(
         newTab.id,
         engineState = newEngineState,
-        content = currentTab.content.copy(windowRequest = null)
+        content = currentTab.content.copy(windowRequest = null),
     )
 }
 

@@ -21,7 +21,7 @@ class ConnectionDetailsPanel(
     private val tabTitle: String,
     private val tabUrl: String,
     private val isConnectionSecure: Boolean,
-    private val goBack: () -> Unit
+    private val goBack: () -> Unit,
 ) : BottomSheetDialog(context) {
 
     private var binding: ConnectionDetailsBinding =
@@ -48,7 +48,7 @@ class ConnectionDetailsPanel(
 
         context.components.icons.loadIntoView(
             binding.siteFavicon,
-            IconRequest(tabUrl, isPrivate = true)
+            IconRequest(tabUrl, isPrivate = true),
         )
     }
 
@@ -69,7 +69,7 @@ class ConnectionDetailsPanel(
             start = securityIcon,
             end = null,
             top = null,
-            bottom = null
+            bottom = null,
         )
     }
 

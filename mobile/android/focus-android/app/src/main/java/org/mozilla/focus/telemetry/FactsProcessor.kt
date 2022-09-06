@@ -27,11 +27,13 @@ import org.mozilla.focus.GleanMetrics.CustomTabsToolbar
  */
 object FactsProcessor {
     fun initialize() {
-        Facts.registerProcessor(object : FactProcessor {
-            override fun process(fact: Fact) {
-                fact.process()
-            }
-        })
+        Facts.registerProcessor(
+            object : FactProcessor {
+                override fun process(fact: Fact) {
+                    fact.process()
+                }
+            },
+        )
     }
 
     @VisibleForTesting

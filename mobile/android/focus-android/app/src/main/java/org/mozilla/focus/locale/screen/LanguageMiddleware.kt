@@ -24,7 +24,7 @@ class LanguageMiddleware(val activity: Activity, private val localeUseCase: Loca
     override fun invoke(
         context: MiddlewareContext<LanguageScreenState, LanguageScreenAction>,
         next: (LanguageScreenAction) -> Unit,
-        action: LanguageScreenAction
+        action: LanguageScreenAction,
     ) {
         when (action) {
             is LanguageScreenAction.Select -> {
@@ -39,8 +39,8 @@ class LanguageMiddleware(val activity: Activity, private val localeUseCase: Loca
                 context.dispatch(
                     LanguageScreenAction.UpdateLanguages(
                         storage.getLanguages(),
-                        storage.getSelectedLanguageTag()
-                    )
+                        storage.getSelectedLanguageTag(),
+                    ),
                 )
             }
             else -> {

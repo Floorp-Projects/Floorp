@@ -9,7 +9,7 @@ import org.mozilla.experiments.nimbus.EnrolledExperiment
 sealed class StudiesListItem {
     data class Section(
         @StringRes val titleId: Int,
-        val visibleDivider: Boolean = true
+        val visibleDivider: Boolean = true,
     ) : StudiesListItem()
 
     data class ActiveStudy(val value: EnrolledExperiment) : StudiesListItem()

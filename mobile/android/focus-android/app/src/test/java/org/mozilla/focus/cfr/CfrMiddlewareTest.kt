@@ -47,16 +47,16 @@ class CfrMiddlewareTest {
                 SecurityInfoState(
                     secure = true,
                     host = "test.org",
-                    issuer = "Test"
-                )
+                    issuer = "Test",
+                ),
             )
             val trackerBlockedAction = TrackingProtectionAction.TrackerBlockedAction(
                 tabId = "1",
                 tracker = Tracker(
                     url = "test.org",
                     trackingCategories = listOf(EngineSession.TrackingProtectionPolicy.TrackingCategory.CRYPTOMINING),
-                    cookiePolicies = listOf(EngineSession.TrackingProtectionPolicy.CookiePolicy.ACCEPT_NONE)
-                )
+                    cookiePolicies = listOf(EngineSession.TrackingProtectionPolicy.CookiePolicy.ACCEPT_NONE),
+                ),
             )
 
             browserStore.dispatch(updateSecurityInfoAction).joinBlocking()
@@ -76,8 +76,8 @@ class CfrMiddlewareTest {
                 SecurityInfoState(
                     secure = false,
                     host = "test.org",
-                    issuer = "Test"
-                )
+                    issuer = "Test",
+                ),
             )
 
             browserStore.dispatch(TabListAction.AddTabAction(insecureTab)).joinBlocking()
@@ -97,8 +97,8 @@ class CfrMiddlewareTest {
                 SecurityInfoState(
                     secure = true,
                     host = "test.org",
-                    issuer = "Test"
-                )
+                    issuer = "Test",
+                ),
             )
             browserStore.dispatch(TabListAction.AddTabAction(mozillaTab)).joinBlocking()
             browserStore.dispatch(updateSecurityInfoAction).joinBlocking()
@@ -111,14 +111,14 @@ class CfrMiddlewareTest {
     private fun createTab(
         tabUrl: String = "https://www.test.org",
         tabId: Int = 1,
-        isSecure: Boolean = true
+        isSecure: Boolean = true,
     ): TabSessionState {
         val tab = createTab(tabUrl, id = tabId.toString())
         return tab.copy(
             content = tab.content.copy(
                 private = true,
-                securityInfo = SecurityInfoState(secure = isSecure)
-            )
+                securityInfo = SecurityInfoState(secure = isSecure),
+            ),
         )
     }
 }

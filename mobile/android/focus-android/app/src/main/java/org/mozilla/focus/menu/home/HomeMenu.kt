@@ -14,19 +14,19 @@ import org.mozilla.focus.R
  */
 class HomeMenu(
     private val context: Context,
-    private val onItemTapped: ((HomeMenuItem) -> Unit)
+    private val onItemTapped: ((HomeMenuItem) -> Unit),
 ) {
     fun getMenuBuilder(): BrowserMenuBuilder {
         val help = BrowserMenuImageText(
             label = context.getString(R.string.menu_help),
-            imageResource = R.drawable.mozac_ic_help
+            imageResource = R.drawable.mozac_ic_help,
         ) {
             onItemTapped.invoke(HomeMenuItem.Help)
         }
 
         val settings = BrowserMenuImageText(
             label = context.getString(R.string.menu_settings),
-            imageResource = R.drawable.mozac_ic_settings
+            imageResource = R.drawable.mozac_ic_settings,
         ) {
             onItemTapped.invoke(HomeMenuItem.Settings)
         }

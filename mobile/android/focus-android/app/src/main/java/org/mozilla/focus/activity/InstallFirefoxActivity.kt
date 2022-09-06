@@ -72,7 +72,7 @@ class InstallFirefoxActivity : Activity() {
         private fun createStoreIntent(): Intent {
             return Intent(
                 Intent.ACTION_VIEW,
-                Uri.parse("market://details?id=" + Browsers.KnownBrowser.FIREFOX.packageName)
+                Uri.parse("market://details?id=" + Browsers.KnownBrowser.FIREFOX.packageName),
             )
         }
 

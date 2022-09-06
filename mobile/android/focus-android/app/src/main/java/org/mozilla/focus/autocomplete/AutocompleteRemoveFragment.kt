@@ -51,7 +51,7 @@ class AutocompleteRemoveFragment : AutocompleteListFragment(), CoroutineScope {
                 }
 
                 requireComponents.appStore.dispatch(
-                    AppAction.NavigateUp(requireComponents.store.state.selectedTabId)
+                    AppAction.NavigateUp(requireComponents.store.state.selectedTabId),
                 )
             }
         }

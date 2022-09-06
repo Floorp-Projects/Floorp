@@ -28,7 +28,7 @@ import org.mozilla.focus.utils.UrlUtils
 class IntentProcessor(
     private val context: Context,
     private val tabsUseCases: TabsUseCases,
-    private val customTabsUseCases: CustomTabsUseCases
+    private val customTabsUseCases: CustomTabsUseCases,
 ) {
     sealed class Result {
         object None : Result()
@@ -65,7 +65,6 @@ class IntentProcessor(
 
     @Suppress("ComplexMethod", "ReturnCount")
     private fun createSessionFromIntent(context: Context, intent: SafeIntent): Result {
-
         when (intent.action) {
             Intent.ACTION_VIEW -> {
                 val dataString = intent.dataString
@@ -86,18 +85,18 @@ class IntentProcessor(
                             SessionState.Source.Internal.HomeScreen,
                             intent,
                             intent.dataString ?: "",
-                            requestDesktop
+                            requestDesktop,
                         )
                     }
                     intent.hasExtra(TextActionActivity.EXTRA_TEXT_SELECTION) -> createSession(
                         SessionState.Source.Internal.TextSelection,
                         intent,
-                        intent.dataString ?: ""
+                        intent.dataString ?: "",
                     )
                     else -> createSession(
                         SessionState.Source.External.ActionView(null),
                         intent,
-                        intent.dataString ?: ""
+                        intent.dataString ?: "",
                     )
                 }
             }
@@ -116,7 +115,7 @@ class IntentProcessor(
                         createSearchSession(
                             SessionState.Source.External.ActionSend(null),
                             SearchUtils.createSearchUrl(context, dataString ?: ""),
-                            dataString ?: ""
+                            dataString ?: "",
                         )
                     }
                 } else {
@@ -134,8 +133,8 @@ class IntentProcessor(
                 url,
                 source = source,
                 selectTab = true,
-                private = true
-            )
+                private = true,
+            ),
         )
     }
 
@@ -145,8 +144,8 @@ class IntentProcessor(
                 url,
                 source = source,
                 searchTerms = searchTerms,
-                private = true
-            )
+                private = true,
+            ),
         )
     }
 
@@ -157,8 +156,8 @@ class IntentProcessor(
                     url,
                     createCustomTabConfigFromIntent(intent.unsafe, context.resources),
                     private = true,
-                    source = source
-                )
+                    source = source,
+                ),
             )
         } else {
             Result.Tab(
@@ -166,8 +165,8 @@ class IntentProcessor(
                     url,
                     source = source,
                     selectTab = true,
-                    private = true
-                )
+                    private = true,
+                ),
             )
         }
     }
@@ -176,21 +175,21 @@ class IntentProcessor(
         source: SessionState.Source,
         intent: SafeIntent,
         url: String,
-        requestDesktop: Boolean
+        requestDesktop: Boolean,
     ): Result {
         val (result, tabId) = if (isCustomTabIntent(intent)) {
             val tabId = customTabsUseCases.add(
                 url,
                 createCustomTabConfigFromIntent(intent.unsafe, context.resources),
                 private = true,
-                source = source
+                source = source,
             )
             Pair(Result.CustomTab(tabId), tabId)
         } else {
             val tabId = tabsUseCases.addTab(
                 url,
                 source = source,
-                private = true
+                private = true,
             )
             Pair(Result.Tab(tabId), tabId)
         }

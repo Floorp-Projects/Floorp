@@ -69,6 +69,7 @@ private val site_identity_Icon =
 private val trackingProtectionSwitch =
     onView(
         allOf(
-            withId(R.id.switch_widget), hasSibling(withText("Enhanced Tracking Protection"))
-        )
+            withId(R.id.switch_widget),
+            hasSibling(withText("Enhanced Tracking Protection")),
+        ),
     ).inRoot(isDialog())

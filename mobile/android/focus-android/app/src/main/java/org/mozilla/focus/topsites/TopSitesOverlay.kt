@@ -36,7 +36,7 @@ fun TopSitesOverlay(modifier: Modifier = Modifier) {
     if (!topSites.isNullOrEmpty()) {
         Column(
             modifier = modifier,
-            horizontalAlignment = Alignment.CenterHorizontally
+            horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Spacer(modifier = Modifier.height(24.dp))
 
@@ -49,7 +49,7 @@ fun TopSitesOverlay(modifier: Modifier = Modifier) {
                         url = item.url,
                         source = SessionState.Source.Internal.HomeScreen,
                         selectTab = true,
-                        private = true
+                        private = true,
                     )
                 },
                 onRemoveTopSiteClicked = { item ->
@@ -58,7 +58,7 @@ fun TopSitesOverlay(modifier: Modifier = Modifier) {
                 onRenameTopSiteClicked = { topSite ->
                     showRenameDialog.value = true
                     topSiteItem.value = topSite
-                }
+                },
             )
             Spacer(modifier = Modifier.height(24.dp))
         }
@@ -75,7 +75,7 @@ fun TopSitesOverlay(modifier: Modifier = Modifier) {
                     onDismiss = {
                         showRenameDialog.value = false
                         topSiteItem.value = null
-                    }
+                    },
                 )
             }
         }
@@ -97,7 +97,7 @@ fun renameTopSite(selectedTopSite: TopSite, newTitle: String, components: Compon
         components.topSitesUseCases.updateTopSites.invoke(
             selectedTopSite,
             newTitle,
-            selectedTopSite.url
+            selectedTopSite.url,
         )
     }
 }

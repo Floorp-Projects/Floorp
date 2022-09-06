@@ -34,7 +34,7 @@ class OnboardingStorageTest {
 
         assertEquals(
             OnboardingStep.ON_BOARDING_FIRST_SCREEN,
-            onBoardingStorage.getCurrentOnboardingStep()
+            onBoardingStorage.getCurrentOnboardingStep(),
         )
     }
 
@@ -45,7 +45,7 @@ class OnboardingStorageTest {
 
         assertEquals(
             OnboardingStep.ON_BOARDING_SECOND_SCREEN,
-            onBoardingStorage.getCurrentOnboardingStep()
+            onBoardingStorage.getCurrentOnboardingStep(),
         )
     }
 
@@ -53,9 +53,10 @@ class OnboardingStorageTest {
     fun `GIVEN onboarding not started WHEN querying the current onboarding step from storage THEN get the first step`() {
         assertEquals(
             OnboardingStep.ON_BOARDING_FIRST_SCREEN,
-            onBoardingStorage.getCurrentOnboardingStep()
+            onBoardingStorage.getCurrentOnboardingStep(),
         )
     }
+
     @Test
     fun `GIVEN saveCurrentOnBoardingStepInSharePref is called WHEN ONBOARDING_FIRST_SCREEN is saved, THEN value for pref_key_onboarding_step is pref_key_first_screen`() {
         onBoardingStorage.saveCurrentOnboardingStepInSharePref(OnboardingStep.ON_BOARDING_FIRST_SCREEN)

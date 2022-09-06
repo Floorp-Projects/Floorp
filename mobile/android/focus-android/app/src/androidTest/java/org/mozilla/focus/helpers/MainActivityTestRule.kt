@@ -26,7 +26,7 @@ import org.mozilla.focus.state.Screen
 // Basic Test rule with pref to skip the onboarding screen
 open class MainActivityFirstrunTestRule(
     launchActivity: Boolean = true,
-    private val showFirstRun: Boolean
+    private val showFirstRun: Boolean,
 ) : ActivityTestRule<MainActivity>(MainActivity::class.java, launchActivity) {
     private val longTapUserPreference = getLongPressTimeout()
     private val featureSettingsHelper = FeatureSettingsHelper()
@@ -90,7 +90,7 @@ open class MainActivityIntentsTestRule(launchActivity: Boolean = true, private v
 private fun closeNotificationShade() {
     val mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
     if (mDevice.findObject(
-            UiSelector().resourceId("com.android.systemui:id/notification_stack_scroller")
+            UiSelector().resourceId("com.android.systemui:id/notification_stack_scroller"),
         ).exists()
     ) {
         pressBackKey()
@@ -113,14 +113,14 @@ private fun updateFirstRun(showFirstRun: Boolean) {
 
 private fun showFirstRun(appStore: AppStore) {
     val job = appStore.dispatch(
-        AppAction.ShowFirstRun
+        AppAction.ShowFirstRun,
     )
     runBlocking { job.join() }
 }
 
 private fun hideFirstRun(appStore: AppStore) {
     val job = appStore.dispatch(
-        AppAction.FinishFirstRun(tabId = null)
+        AppAction.FinishFirstRun(tabId = null),
     )
     runBlocking { job.join() }
 }

@@ -15,7 +15,7 @@ import org.mozilla.focus.utils.SupportUtils
  */
 class HttpsOnlyModePreference(
     context: Context,
-    attrs: AttributeSet?
+    attrs: AttributeSet?,
 ) : LearnMoreSwitchPreference(context, attrs) {
 
     override fun getLearnMoreUrl() =

@@ -14,7 +14,7 @@ import androidx.appcompat.app.AppCompatActivity
  * @param icon The resource id of the icon.
  */
 fun Activity.setNavigationIcon(
-    @DrawableRes icon: Int
+    @DrawableRes icon: Int,
 ) {
     (this as? AppCompatActivity)?.supportActionBar?.let {
         it.setDisplayHomeAsUpEnabled(true)

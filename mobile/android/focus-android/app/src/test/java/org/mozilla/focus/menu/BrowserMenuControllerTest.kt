@@ -59,8 +59,8 @@ class BrowserMenuControllerTest {
         val store = BrowserStore(
             initialState = BrowserState(
                 tabs = listOf(selectedTab),
-                selectedTabId = selectedTab.id
-            )
+                selectedTabId = selectedTab.id,
+            ),
         )
         sessionUseCases = SessionUseCases(store)
         MockitoAnnotations.openMocks(this)
@@ -76,7 +76,7 @@ class BrowserMenuControllerTest {
             addToHomeScreenCallback,
             showFindInPageCallback,
             openInCallback,
-            openInBrowser
+            openInBrowser,
         )
     }
 

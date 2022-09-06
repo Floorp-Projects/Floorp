@@ -51,7 +51,7 @@ class AboutFragment : BaseSettingsLikeFragment() {
             url = manifestoURL,
             source = SessionState.Source.Internal.Menu,
             selectTab = true,
-            private = true
+            private = true,
         )
         requireContext().components.appStore.dispatch(AppAction.OpenTab(tabId))
     }
@@ -65,7 +65,7 @@ class AboutFragment : BaseSettingsLikeFragment() {
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
-        savedInstanceState: Bundle?
+        savedInstanceState: Bundle?,
     ): View {
         val binding = FragmentAboutBinding.inflate(inflater, container, false)
 
@@ -96,7 +96,7 @@ class AboutFragment : BaseSettingsLikeFragment() {
                 content,
                 learnMore,
                 secretSettingsUnlocker,
-                openLearnMore
+                openLearnMore,
             )
         }
         return binding.root
@@ -120,7 +120,7 @@ class AboutFragment : BaseSettingsLikeFragment() {
             componentsAbbreviation,
             componentsIndicator,
             servicesAbbreviation,
-            servicesIndicator
+            servicesIndicator,
         )
     }
 }
@@ -131,9 +131,8 @@ private fun AboutPageContent(
     content: String,
     learnMore: String,
     secretSettingsUnlocker: SecretSettingsUnlocker,
-    openLearnMore: () -> Job
+    openLearnMore: () -> Job,
 ) {
-
     FocusTheme {
         Column(
             modifier = Modifier
@@ -141,7 +140,7 @@ private fun AboutPageContent(
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally
+            horizontalAlignment = Alignment.CenterHorizontally,
 
         ) {
             LogoIcon(secretSettingsUnlocker)
@@ -161,7 +160,7 @@ private fun LogoIcon(secretSettingsUnlocker: SecretSettingsUnlocker) {
             .padding(4.dp)
             .clickable {
                 secretSettingsUnlocker.increment()
-            }
+            },
     )
 }
 
@@ -172,10 +171,10 @@ private fun VersionInfo(aboutVersion: String) {
         color = focusColors.aboutPageText,
         style = focusTypography.body1.copy(
             // Use LTR in all cases since the version is not translatable.
-            textDirection = TextDirection.Ltr
+            textDirection = TextDirection.Ltr,
         ),
         modifier = Modifier
-            .padding(10.dp)
+            .padding(10.dp),
     )
 }
 
@@ -186,14 +185,14 @@ private fun AboutContent(content: String) {
         color = focusColors.aboutPageText,
         style = focusTypography.body1,
         modifier = Modifier
-            .padding(10.dp)
+            .padding(10.dp),
     )
 }
 
 @Composable
 fun ColumnScope.LearnMoreLink(
     learnMore: String,
-    openLearnMore: () -> Job
+    openLearnMore: () -> Job,
 ) {
     Text(
         text = learnMore,
@@ -205,6 +204,6 @@ fun ColumnScope.LearnMoreLink(
             .align(Start)
             .clickable {
                 openLearnMore()
-            }
+            },
     )
 }

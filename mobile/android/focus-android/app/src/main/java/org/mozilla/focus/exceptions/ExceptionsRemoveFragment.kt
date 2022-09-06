@@ -36,20 +36,19 @@ class ExceptionsRemoveFragment : ExceptionsListFragment() {
     private fun removeSelectedDomains(context: Context) {
         val exceptions = (binding.exceptionList.adapter as DomainListAdapter).selection()
         TrackingProtectionExceptions.selectedItemsRemoved.record(
-            TrackingProtectionExceptions.SelectedItemsRemovedExtra(exceptions.size)
+            TrackingProtectionExceptions.SelectedItemsRemovedExtra(exceptions.size),
         )
 
         TelemetryWrapper.removeExceptionDomains(exceptions.size)
 
         if (exceptions.isNotEmpty()) {
             launch(Main) {
-
                 exceptions.withEach { exception ->
                     context.components.trackingProtectionUseCases.removeException(exception)
                 }
 
                 requireComponents.appStore.dispatch(
-                    AppAction.NavigateUp(requireComponents.store.state.selectedTabId)
+                    AppAction.NavigateUp(requireComponents.store.state.selectedTabId),
                 )
             }
         }

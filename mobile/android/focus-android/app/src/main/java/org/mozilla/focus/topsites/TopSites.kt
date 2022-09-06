@@ -49,15 +49,14 @@ fun TopSites(
     topSites: List<TopSite>,
     onTopSiteClicked: (TopSite) -> Unit,
     onRemoveTopSiteClicked: (TopSite) -> Unit,
-    onRenameTopSiteClicked: (TopSite) -> Unit
+    onRenameTopSiteClicked: (TopSite) -> Unit,
 ) {
-
     Row(
         modifier = Modifier
             .padding(horizontal = 10.dp)
             .size(width = 324.dp, height = 84.dp),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(28.dp)
+        horizontalArrangement = Arrangement.spacedBy(28.dp),
     ) {
         topSites.forEach { topSite ->
             TopSiteItem(
@@ -65,14 +64,14 @@ fun TopSites(
                 menuItems = listOfNotNull(
                     MenuItem(
                         title = stringResource(R.string.rename_top_site_item),
-                        onClick = { onRenameTopSiteClicked(topSite) }
+                        onClick = { onRenameTopSiteClicked(topSite) },
                     ),
                     MenuItem(
                         title = stringResource(R.string.remove_top_site),
-                        onClick = { onRemoveTopSiteClicked(topSite) }
-                    )
+                        onClick = { onRemoveTopSiteClicked(topSite) },
+                    ),
                 ),
-                onTopSiteClick = { item -> onTopSiteClicked(item) }
+                onTopSiteClick = { item -> onTopSiteClicked(item) },
             )
         }
     }
@@ -90,7 +89,7 @@ fun TopSites(
 private fun TopSiteItem(
     topSite: TopSite,
     menuItems: List<MenuItem>,
-    onTopSiteClick: (TopSite) -> Unit = {}
+    onTopSiteClick: (TopSite) -> Unit = {},
 ) {
     var menuExpanded by remember { mutableStateOf(false) }
 
@@ -101,10 +100,10 @@ private fun TopSiteItem(
                     interactionSource = remember { MutableInteractionSource() },
                     indication = null,
                     onClick = { onTopSiteClick(topSite) },
-                    onLongClick = { menuExpanded = true }
+                    onLongClick = { menuExpanded = true },
                 )
                 .size(width = 60.dp, height = 84.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+            horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             TopSiteFaviconCard(topSite = topSite)
 
@@ -114,13 +113,13 @@ private fun TopSiteItem(
                 color = focusColors.topSiteTitle,
                 fontSize = 12.sp,
                 overflow = TextOverflow.Ellipsis,
-                maxLines = 1
+                maxLines = 1,
             )
 
             CustomDropdownMenu(
                 menuItems = menuItems,
                 isExpanded = menuExpanded,
-                onDismissClicked = { menuExpanded = false }
+                onDismissClicked = { menuExpanded = false },
             )
         }
     }
@@ -136,20 +135,20 @@ private fun TopSiteFaviconCard(topSite: TopSite) {
     Card(
         modifier = Modifier.size(60.dp),
         shape = RoundedCornerShape(8.dp),
-        backgroundColor = focusColors.topSiteBackground
+        backgroundColor = focusColors.topSiteBackground,
     ) {
         Column(
             verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally
+            horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Surface(
                 modifier = Modifier.size(36.dp),
                 shape = RoundedCornerShape(4.dp),
-                color = focusColors.surface
+                color = focusColors.surface,
             ) {
                 Column(
                     verticalArrangement = Arrangement.Center,
-                    horizontalAlignment = Alignment.CenterHorizontally
+                    horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
                     Text(
                         text = if (topSite.title.isNullOrEmpty()) {
@@ -158,7 +157,7 @@ private fun TopSiteFaviconCard(topSite: TopSite) {
                             topSite.title?.get(0).toString()
                         },
                         color = focusColors.topSiteFaviconText,
-                        fontSize = 20.sp
+                        fontSize = 20.sp,
                     )
                 }
             }

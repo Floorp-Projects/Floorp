@@ -36,7 +36,7 @@ internal class TelemetrySwitchPreference(context: Context?, attrs: AttributeSet?
     override fun getDescription(): String {
         return context.resources.getString(
             R.string.preference_mozilla_telemetry_summary2,
-            context.resources.getString(R.string.app_name)
+            context.resources.getString(R.string.app_name),
         )
     }
 

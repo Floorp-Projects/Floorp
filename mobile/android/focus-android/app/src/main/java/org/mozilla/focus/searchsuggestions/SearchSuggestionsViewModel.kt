@@ -41,18 +41,18 @@ class SearchSuggestionsViewModel(application: Application) : AndroidViewModel(ap
     fun selectSearchSuggestion(
         suggestion: String,
         defaultSearchEngineName: String,
-        alwaysSearch: Boolean = false
+        alwaysSearch: Boolean = false,
     ) {
         this.alwaysSearch = alwaysSearch
         _selectedSearchSuggestion.postValue(suggestion)
 
         if (suggestion == searchQuery.value) {
             SearchSuggestions.searchTapped.record(
-                SearchSuggestions.SearchTappedExtra(defaultSearchEngineName)
+                SearchSuggestions.SearchTappedExtra(defaultSearchEngineName),
             )
         } else {
             SearchSuggestions.suggestionTapped.record(
-                SearchSuggestions.SuggestionTappedExtra(defaultSearchEngineName)
+                SearchSuggestions.SuggestionTappedExtra(defaultSearchEngineName),
             )
         }
     }

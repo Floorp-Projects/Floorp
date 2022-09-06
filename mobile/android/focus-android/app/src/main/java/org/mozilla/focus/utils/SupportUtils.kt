@@ -38,7 +38,7 @@ object SupportUtils {
 
     enum class SumoTopic(
         /** The final path segment for a SUMO URL - see {@see #getSumoURLForTopic}  */
-        internal val topicStr: String
+        internal val topicStr: String,
     ) {
         ADD_SEARCH_ENGINE("add-search-engine"),
         AUTOCOMPLETE("autofill-domain-android"),
@@ -94,11 +94,11 @@ object SupportUtils {
             DEFAULT_BROWSER_URL,
             source = SessionState.Source.Internal.Menu,
             selectTab = true,
-            private = true
+            private = true,
         )
 
         context.components.appStore.dispatch(
-            AppAction.OpenTab(tabId)
+            AppAction.OpenTab(tabId),
         )
     }
 
@@ -107,7 +107,7 @@ object SupportUtils {
             url = destinationUrl,
             customTabConfig = createCustomTabConfigFromIntent(activity.intent, activity.resources),
             private = true,
-            source = SessionState.Source.Internal.None
+            source = SessionState.Source.Internal.None,
         )
         val openCustomTabActivityIntent =
             Intent(activity, CustomTabActivity::class.java).apply {

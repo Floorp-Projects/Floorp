@@ -28,7 +28,7 @@ class DefaultTopSitesStorageTest {
     fun `WHEN a top site is added THEN the pinned sites storage is called`() = runTest(UnconfinedTestDispatcher()) {
         val defaultTopSitesStorage = DefaultTopSitesStorage(
             pinnedSitesStorage,
-            coroutineContext
+            coroutineContext,
         )
 
         defaultTopSitesStorage.addTopSite("Mozilla", "https://mozilla.com", isDefault = false)
@@ -36,7 +36,7 @@ class DefaultTopSitesStorageTest {
         verify(pinnedSitesStorage).addPinnedSite(
             "Mozilla",
             "https://mozilla.com",
-            isDefault = false
+            isDefault = false,
         )
     }
 
@@ -44,14 +44,14 @@ class DefaultTopSitesStorageTest {
     fun `WHEN a top site is removed THEN the pinned sites storage is called`() = runTest(UnconfinedTestDispatcher()) {
         val defaultTopSitesStorage = DefaultTopSitesStorage(
             pinnedSitesStorage,
-            coroutineContext
+            coroutineContext,
         )
 
         val pinnedSite = TopSite.Pinned(
             id = 2,
             title = "Firefox",
             url = "https://firefox.com",
-            createdAt = 2
+            createdAt = 2,
         )
 
         defaultTopSitesStorage.removeTopSite(pinnedSite)
@@ -63,25 +63,25 @@ class DefaultTopSitesStorageTest {
     fun `WHEN a top site is updated THEN the pinned sites storage is called`() = runTest(UnconfinedTestDispatcher()) {
         val defaultTopSitesStorage = DefaultTopSitesStorage(
             pinnedSitesStorage,
-            coroutineContext
+            coroutineContext,
         )
 
         val pinnedSite = TopSite.Pinned(
             id = 2,
             title = "Wikipedia",
             url = "https://wikipedia.com",
-            createdAt = 2
+            createdAt = 2,
         )
         defaultTopSitesStorage.updateTopSite(
             pinnedSite,
             "Wiki",
-            "https://en.wikipedia.org/wiki/Wiki"
+            "https://en.wikipedia.org/wiki/Wiki",
         )
 
         verify(pinnedSitesStorage).updatePinnedSite(
             pinnedSite,
             "Wiki",
-            "https://en.wikipedia.org/wiki/Wiki"
+            "https://en.wikipedia.org/wiki/Wiki",
         )
     }
 
@@ -89,32 +89,32 @@ class DefaultTopSitesStorageTest {
     fun `WHEN getTopSites is called THEN the appropriate top sites are returned`() = runTest {
         val defaultTopSitesStorage = DefaultTopSitesStorage(
             pinnedSitesStorage,
-            coroutineContext
+            coroutineContext,
         )
 
         val pinnedSite1 = TopSite.Pinned(
             id = 2,
             title = "Wikipedia",
             url = "https://wikipedia.com",
-            createdAt = 2
+            createdAt = 2,
         )
         val pinnedSite2 = TopSite.Pinned(
             id = 3,
             title = "Example",
             url = "https://example.com",
-            createdAt = 3
+            createdAt = 3,
         )
 
         whenever(pinnedSitesStorage.getPinnedSites()).thenReturn(
             listOf(
                 pinnedSite1,
-                pinnedSite2
-            )
+                pinnedSite2,
+            ),
         )
 
         var topSites = defaultTopSitesStorage.getTopSites(
             totalSites = 0,
-            frecencyConfig = null
+            frecencyConfig = null,
         )
 
         assertTrue(topSites.isEmpty())

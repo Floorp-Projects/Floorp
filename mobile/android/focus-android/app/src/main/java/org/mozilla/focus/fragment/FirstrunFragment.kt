@@ -31,7 +31,8 @@ class FirstrunFragment : Fragment(), View.OnClickListener {
     override fun onAttach(context: Context) {
         super.onAttach(context)
 
-        val transition = TransitionInflater.from(context).inflateTransition(R.transition.firstrun_exit)
+        val transition =
+            TransitionInflater.from(context).inflateTransition(R.transition.firstrun_exit)
 
         exitTransition = transition
 
@@ -41,7 +42,11 @@ class FirstrunFragment : Fragment(), View.OnClickListener {
         TelemetryWrapper.showFirstRunPageEvent(0)
     }
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?,
+    ): View {
         _binding = FragmentFirstrunBinding.inflate(inflater, container, false)
 
         setupPager()
@@ -92,19 +97,25 @@ class FirstrunFragment : Fragment(), View.OnClickListener {
 
             clipToPadding = false
             adapter = firstRunPagerAdapter
-            addOnPageChangeListener(object : ViewPager.OnPageChangeListener {
-                override fun onPageSelected(position: Int) {
-                    Onboarding.pageDisplayed.record(Onboarding.PageDisplayedExtra(0))
-                    TelemetryWrapper.showFirstRunPageEvent(position)
+            addOnPageChangeListener(
+                object : ViewPager.OnPageChangeListener {
+                    override fun onPageSelected(position: Int) {
+                        Onboarding.pageDisplayed.record(Onboarding.PageDisplayedExtra(0))
+                        TelemetryWrapper.showFirstRunPageEvent(position)
 
-                    contentDescription =
-                        firstRunPagerAdapter.getPageAccessibilityDescription(position)
-                }
+                        contentDescription =
+                            firstRunPagerAdapter.getPageAccessibilityDescription(position)
+                    }
 
-                override fun onPageScrolled(position: Int, positionOffset: Float, positionOffsetPixels: Int) {}
+                    override fun onPageScrolled(
+                        position: Int,
+                        positionOffset: Float,
+                        positionOffsetPixels: Int,
+                    ) {}
 
-                override fun onPageScrollStateChanged(state: Int) {}
-            })
+                    override fun onPageScrollStateChanged(state: Int) {}
+                },
+            )
         }
     }
 
@@ -121,7 +132,7 @@ class FirstrunFragment : Fragment(), View.OnClickListener {
                 0,
                 statusBarHeight,
                 0,
-                0
+                0,
             )
         }
     }

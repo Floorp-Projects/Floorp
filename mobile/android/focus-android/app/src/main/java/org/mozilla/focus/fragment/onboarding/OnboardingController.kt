@@ -34,7 +34,7 @@ class DefaultOnboardingController(
     private val onboardingStorage: OnboardingStorage,
     val appStore: AppStore,
     val context: Context,
-    val selectedTabId: String?
+    val selectedTabId: String?,
 ) : OnboardingController {
 
     override fun handleFinishOnBoarding() {
@@ -83,7 +83,7 @@ class DefaultOnboardingController(
                         } catch (e: ActivityNotFoundException) {
                             Logger(BaseVoiceSearchActivity.TAG).error(
                                 "ActivityNotFoundException " +
-                                    e.message.toString()
+                                    e.message.toString(),
                             )
                             handleFinishOnBoarding()
                         }
@@ -104,14 +104,14 @@ class DefaultOnboardingController(
             val intent = Intent(Settings.ACTION_MANAGE_DEFAULT_APPS_SETTINGS).apply {
                 this.putExtra(
                     DefaultBrowserPreference.SETTINGS_SELECT_OPTION_KEY,
-                    DefaultBrowserPreference.DEFAULT_BROWSER_APP_OPTION
+                    DefaultBrowserPreference.DEFAULT_BROWSER_APP_OPTION,
                 )
                 this.putExtra(
                     DefaultBrowserPreference.SETTINGS_SHOW_FRAGMENT_ARGS,
                     bundleOf(
                         DefaultBrowserPreference.SETTINGS_SELECT_OPTION_KEY to
-                            DefaultBrowserPreference.DEFAULT_BROWSER_APP_OPTION
-                    )
+                            DefaultBrowserPreference.DEFAULT_BROWSER_APP_OPTION,
+                    ),
                 )
             }
             context.startActivity(intent)

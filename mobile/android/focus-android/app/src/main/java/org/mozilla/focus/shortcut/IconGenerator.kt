@@ -37,10 +37,11 @@ class IconGenerator {
          * on top of a generic launcher icon shape that we provide.
          */
         private fun generateCharacterIcon(context: Context, character: Char) =
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 generateAdaptiveLauncherIcon(context, character)
-            else
+            } else {
                 generateLauncherIconPreOreo(context, character)
+            }
 
         /*
          * This method needs to be separate from generateAdaptiveLauncherIcon so that we can generate
@@ -79,7 +80,9 @@ class IconGenerator {
             val paint = Paint()
 
             val textSize = TypedValue.applyDimension(
-                TypedValue.COMPLEX_UNIT_DIP, TEXT_SIZE_DP, context.resources.displayMetrics
+                TypedValue.COMPLEX_UNIT_DIP,
+                TEXT_SIZE_DP,
+                context.resources.displayMetrics,
             )
 
             paint.color = Color.WHITE
@@ -91,7 +94,7 @@ class IconGenerator {
                 character.toString(),
                 canvas.width / 2.0f,
                 canvas.height / 2.0f - (paint.descent() + paint.ascent()) / 2.0f,
-                paint
+                paint,
             )
 
             return bitmap

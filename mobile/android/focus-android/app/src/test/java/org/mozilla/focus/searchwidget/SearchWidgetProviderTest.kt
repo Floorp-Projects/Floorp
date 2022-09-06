@@ -52,7 +52,7 @@ class SearchWidgetProviderTest {
             SearchWidgetProvider.REQUEST_CODE_NEW_TAB,
             textSearchIntent,
             PendingIntentUtils.defaultFlags or
-                PendingIntent.FLAG_UPDATE_CURRENT
+                PendingIntent.FLAG_UPDATE_CURRENT,
         )
 
         assertEquals(searchWidgetProvider.createTextSearchIntent(testContext), dummyPendingIntent)

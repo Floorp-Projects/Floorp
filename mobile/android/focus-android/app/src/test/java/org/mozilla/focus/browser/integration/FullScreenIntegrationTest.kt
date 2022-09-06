@@ -36,7 +36,14 @@ internal class FullScreenIntegrationTest {
     fun `WHEN the integration is started THEN start FullScreenFeature`() {
         val feature: FullScreenFeature = mock()
         val integration = FullScreenIntegration(
-            mock(), mock(), null, mock(), mock(), mock(), mock(), mock()
+            mock(),
+            mock(),
+            null,
+            mock(),
+            mock(),
+            mock(),
+            mock(),
+            mock(),
         ).apply {
             this.feature = feature
         }
@@ -50,7 +57,14 @@ internal class FullScreenIntegrationTest {
     fun `WHEN the integration is stopped THEN stop FullScreenFeature`() {
         val feature: FullScreenFeature = mock()
         val integration = FullScreenIntegration(
-            mock(), mock(), null, mock(), mock(), mock(), mock(), mock()
+            mock(),
+            mock(),
+            null,
+            mock(),
+            mock(),
+            mock(),
+            mock(),
+            mock(),
         ).apply {
             this.feature = feature
         }
@@ -64,7 +78,14 @@ internal class FullScreenIntegrationTest {
     fun `WHEN back is pressed THEN send this to the feature`() {
         val feature: FullScreenFeature = mock()
         val integration = FullScreenIntegration(
-            mock(), mock(), null, mock(), mock(), mock(), mock(), mock()
+            mock(),
+            mock(),
+            null,
+            mock(),
+            mock(),
+            mock(),
+            mock(),
+            mock(),
         ).apply {
             this.feature = feature
         }
@@ -82,7 +103,14 @@ internal class FullScreenIntegrationTest {
         doReturn(activityWindow).`when`(activity).window
         doReturn(windowAttributes).`when`(activityWindow).attributes
         val integration = FullScreenIntegration(
-            activity, mock(), null, mock(), mock(), mock(), mock(), mock()
+            activity,
+            mock(),
+            null,
+            mock(),
+            mock(),
+            mock(),
+            mock(),
+            mock(),
         )
 
         integration.viewportFitChanged(33)
@@ -99,7 +127,14 @@ internal class FullScreenIntegrationTest {
         doReturn(activityWindow).`when`(activity).window
         doReturn(decorView).`when`(activityWindow).decorView
         val integration = FullScreenIntegration(
-            activity, mock(), null, mock(), mock(), mock(), mock(), mock()
+            activity,
+            mock(),
+            null,
+            mock(),
+            mock(),
+            mock(),
+            mock(),
+            mock(),
         )
 
         integration.switchToImmersiveMode()
@@ -120,7 +155,14 @@ internal class FullScreenIntegrationTest {
         doReturn(activityWindow).`when`(activity).window
         doReturn(decorView).`when`(activityWindow).decorView
         val integration = FullScreenIntegration(
-            activity, mock(), null, mock(), mock(), mock(), mock(), mock()
+            activity,
+            mock(),
+            null,
+            mock(),
+            mock(),
+            mock(),
+            mock(),
+            mock(),
         )
 
         integration.exitImmersiveMode()
@@ -139,7 +181,14 @@ internal class FullScreenIntegrationTest {
         val settings: Settings = mock()
         doReturn(true).`when`(settings).isAccessibilityEnabled()
         val integration = FullScreenIntegration(
-            mock(), mock(), null, mock(), settings, toolbar, mock(), engineView
+            mock(),
+            mock(),
+            null,
+            mock(),
+            settings,
+            toolbar,
+            mock(),
+            engineView,
         )
 
         integration.enterBrowserFullscreen()
@@ -157,7 +206,14 @@ internal class FullScreenIntegrationTest {
         val settings: Settings = mock()
         doReturn(false).`when`(settings).isAccessibilityEnabled()
         val integration = FullScreenIntegration(
-            mock(), mock(), null, mock(), settings, toolbar, mock(), engineView
+            mock(),
+            mock(),
+            null,
+            mock(),
+            settings,
+            toolbar,
+            mock(),
+            engineView,
         )
 
         integration.enterBrowserFullscreen()
@@ -180,7 +236,14 @@ internal class FullScreenIntegrationTest {
         val activity: Activity = mock()
         doReturn(resources).`when`(activity).resources
         val integration = FullScreenIntegration(
-            activity, mock(), null, mock(), settings, toolbar, mock(), engineView
+            activity,
+            mock(),
+            null,
+            mock(),
+            settings,
+            toolbar,
+            mock(),
+            engineView,
         )
 
         integration.exitBrowserFullscreen()
@@ -201,7 +264,14 @@ internal class FullScreenIntegrationTest {
         val activity: Activity = mock()
         doReturn(resources).`when`(activity).resources
         val integration = FullScreenIntegration(
-            activity, mock(), null, mock(), settings, toolbar, mock(), engineView
+            activity,
+            mock(),
+            null,
+            mock(),
+            settings,
+            toolbar,
+            mock(),
+            engineView,
         )
 
         integration.exitBrowserFullscreen()
@@ -230,8 +300,15 @@ internal class FullScreenIntegrationTest {
         val statusBar: View = mock()
         val integration = spy(
             FullScreenIntegration(
-                activity, mock(), null, mock(), settings, toolbar, statusBar, engineView
-            )
+                activity,
+                mock(),
+                null,
+                mock(),
+                settings,
+                toolbar,
+                statusBar,
+                engineView,
+            ),
         )
 
         integration.fullScreenChanged(true)
@@ -260,8 +337,15 @@ internal class FullScreenIntegrationTest {
         val statusBar: View = mock()
         val integration = spy(
             FullScreenIntegration(
-                activity, mock(), null, mock(), settings, toolbar, statusBar, engineView
-            )
+                activity,
+                mock(),
+                null,
+                mock(),
+                settings,
+                toolbar,
+                statusBar,
+                engineView,
+            ),
         )
 
         integration.fullScreenChanged(false)

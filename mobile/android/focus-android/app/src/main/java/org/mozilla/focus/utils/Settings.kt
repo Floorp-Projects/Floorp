@@ -26,7 +26,7 @@ import org.mozilla.focus.utils.AppConstants.isKlarBuild
  */
 @Suppress("TooManyFunctions", "LargeClass")
 class Settings(
-    private val context: Context
+    private val context: Context,
 ) : PreferencesHolder {
 
     companion object {
@@ -56,7 +56,7 @@ class Settings(
         }
 
     fun createTrackingProtectionPolicy(
-        shouldBlockCookiesValue: String = shouldBlockCookiesValue()
+        shouldBlockCookiesValue: String = shouldBlockCookiesValue(),
     ): EngineSession.TrackingProtectionPolicy {
         val trackingCategories: MutableList<EngineSession.TrackingProtectionPolicy.TrackingCategory> =
             mutableListOf(EngineSession.TrackingProtectionPolicy.TrackingCategory.SCRIPTS_AND_SUB_RESOURCES)
@@ -79,7 +79,7 @@ class Settings(
         return EngineSession.TrackingProtectionPolicy.select(
             cookiePolicy = cookiePolicy,
             trackingCategories = trackingCategories.toTypedArray(),
-            strictSocialTrackingProtection = shouldBlockSocialTrackers()
+            strictSocialTrackingProtection = shouldBlockSocialTrackers(),
         )
     }
 
@@ -105,7 +105,7 @@ class Settings(
                 // Ending up here means that the cookie preference has not been yet modified.
                 // We should set it to the default value.
                 setBlockCookiesValue(
-                    resources.getStringArray(R.array.cookies_options_entry_values)[DEFAULT_COOKIE_OPTION_INDEX]
+                    resources.getStringArray(R.array.cookies_options_entry_values)[DEFAULT_COOKIE_OPTION_INDEX],
                 )
                 EngineSession.TrackingProtectionPolicy.CookiePolicy.ACCEPT_FIRST_PARTY_AND_ISOLATE_OTHERS
             }
@@ -164,7 +164,7 @@ class Settings(
     val openLinksInExternalApp: Boolean
         get() = preferences.getBoolean(
             getPreferenceKey(R.string.pref_key_open_links_in_external_app),
-            false
+            false,
         )
 
     var isExperimentationEnabled: Boolean
@@ -202,34 +202,34 @@ class Settings(
     fun shouldEnableRemoteDebugging(): Boolean =
         preferences.getBoolean(
             getPreferenceKey(R.string.pref_key_remote_debugging),
-            false
+            false,
         )
 
     fun shouldShowSearchSuggestions(): Boolean =
         preferences.getBoolean(
             getPreferenceKey(R.string.pref_key_show_search_suggestions),
-            false
+            false,
         )
 
     fun shouldBlockWebFonts(): Boolean =
         preferences.getBoolean(
             getPreferenceKey(R.string.pref_key_performance_block_webfonts),
-            false
+            false,
         )
 
     fun shouldBlockJavaScript(): Boolean =
         preferences.getBoolean(
             getPreferenceKey(R.string.pref_key_performance_block_javascript),
-            false
+            false,
         )
 
     fun shouldBlockCookiesValue(): String =
         preferences.getString(
             getPreferenceKey(
                 R.string
-                    .pref_key_performance_enable_cookies
+                    .pref_key_performance_enable_cookies,
             ),
-            NO_VALUE
+            NO_VALUE,
         )!!
 
     private fun setBlockCookiesValue(newValue: String) {
@@ -253,43 +253,43 @@ class Settings(
     fun shouldAutocompleteFromShippedDomainList() =
         preferences.getBoolean(
             getPreferenceKey(R.string.pref_key_autocomplete_preinstalled),
-            true
+            true,
         )
 
     fun shouldAutocompleteFromCustomDomainList() =
         preferences.getBoolean(
             getPreferenceKey(R.string.pref_key_autocomplete_custom),
-            true
+            true,
         )
 
     fun shouldBlockAdTrackers() =
         preferences.getBoolean(
             getPreferenceKey(R.string.pref_key_privacy_block_ads),
-            true
+            true,
         )
 
     private fun shouldUseSafeBrowsing() =
         preferences.getBoolean(
             getPreferenceKey(R.string.pref_key_safe_browsing),
-            true
+            true,
         )
 
     fun shouldBlockAnalyticTrackers() =
         preferences.getBoolean(
             getPreferenceKey(R.string.pref_key_privacy_block_analytics),
-            true
+            true,
         )
 
     fun shouldBlockSocialTrackers() =
         preferences.getBoolean(
             getPreferenceKey(R.string.pref_key_privacy_block_social),
-            true
+            true,
         )
 
     fun shouldBlockOtherTrackers() =
         preferences.getBoolean(
             getPreferenceKey(R.string.pref_key_privacy_block_other3),
-            false
+            false,
         )
 
     /**
@@ -306,47 +306,47 @@ class Settings(
 
     fun hasRequestedDesktop() = preferences.getBoolean(
         getPreferenceKey(R.string.has_requested_desktop),
-        false
+        false,
     )
 
     fun getAppLaunchCount() = preferences.getInt(
         getPreferenceKey(R.string.app_launch_count),
-        0
+        0,
     )
 
     fun getTotalBlockedTrackersCount() = preferences.getInt(
         getPreferenceKey(R.string.pref_key_privacy_total_trackers_blocked_count),
-        0
+        0,
     )
 
     fun hasSocialBlocked() = preferences.getBoolean(
         getPreferenceKey(R.string.pref_key_privacy_block_social),
-        true
+        true,
     )
 
     fun hasAdvertisingBlocked() = preferences.getBoolean(
         getPreferenceKey(R.string.pref_key_privacy_block_ads),
-        true
+        true,
     )
 
     fun hasAnalyticsBlocked() = preferences.getBoolean(
         getPreferenceKey(R.string.pref_key_privacy_block_analytics),
-        true
+        true,
     )
 
     var lightThemeSelected by booleanPreference(
         getPreferenceKey(R.string.pref_key_light_theme),
-        false
+        false,
     )
 
     var darkThemeSelected by booleanPreference(
         getPreferenceKey(R.string.pref_key_dark_theme),
-        false
+        false,
     )
 
     var useDefaultThemeSelected by booleanPreference(
         getPreferenceKey(R.string.pref_key_default_theme),
-        false
+        false,
     )
 
     /**
@@ -383,7 +383,7 @@ class Settings(
     val searchWidgetInstalled: Boolean
         get() = 0 < preferences.getInt(
             getPreferenceKey(R.string.pref_key_search_widget_installed),
-            0
+            0,
         )
 
     fun getHttpsOnlyMode(): Engine.HttpsOnlyMode {

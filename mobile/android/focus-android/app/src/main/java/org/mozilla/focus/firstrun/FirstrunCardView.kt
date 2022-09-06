@@ -12,7 +12,7 @@ import kotlin.math.min
 class FirstrunCardView @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,
-    defStyleAttr: Int = R.attr.cardViewStyle
+    defStyleAttr: Int = R.attr.cardViewStyle,
 ) : androidx.cardview.widget.CardView(context, attrs, defStyleAttr) {
 
     private val maxWidth = resources.getDimensionPixelSize(R.dimen.firstrun_card_width)

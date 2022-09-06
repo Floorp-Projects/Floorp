@@ -37,7 +37,7 @@ data class FocusTypography(
     val onboardingDescription: TextStyle,
     val onboardingFeatureTitle: TextStyle,
     val onboardingFeatureDescription: TextStyle,
-    val onboardingButton: TextStyle
+    val onboardingButton: TextStyle,
 ) {
     val h1: TextStyle get() = materialTypography.h1
     val h2: TextStyle get() = materialTypography.h2
@@ -61,58 +61,58 @@ val focusTypography: FocusTypography
         materialTypography = Typography(
             body1 = TextStyle(
                 fontSize = 16.sp,
-                lineHeight = 24.sp
-            )
+                lineHeight = 24.sp,
+            ),
         ),
         links = TextStyle(
             fontSize = 16.sp,
             textDecoration = TextDecoration.Underline,
-            lineHeight = 24.sp
+            lineHeight = 24.sp,
         ),
         dialogTitle = TextStyle(
             fontFamily = metropolis,
             fontWeight = FontWeight.SemiBold,
-            fontSize = 20.sp
+            fontSize = 20.sp,
         ),
         dialogInput = TextStyle(
             fontFamily = metropolis,
             fontSize = 20.sp,
-            color = focusColors.onPrimary
+            color = focusColors.onPrimary,
         ),
         onboardingTitle = TextStyle(
             fontFamily = metropolis,
             fontWeight = FontWeight.SemiBold,
             fontSize = focusDimensions.onboardingTitle,
-            color = focusColors.onboardingSemiBoldText
+            color = focusColors.onboardingSemiBoldText,
         ),
         onboardingSubtitle = TextStyle(
             fontFamily = metropolis,
             fontWeight = FontWeight.Normal,
             fontSize = focusDimensions.onboardingSubtitleOne,
-            color = focusColors.onboardingSemiBoldText
+            color = focusColors.onboardingSemiBoldText,
         ),
         onboardingDescription = TextStyle(
             fontFamily = metropolis,
             fontWeight = FontWeight.Normal,
             fontSize = focusDimensions.onboardingSubtitleTwo,
-            color = focusColors.onboardingNormalText
+            color = focusColors.onboardingNormalText,
         ),
         onboardingFeatureTitle = TextStyle(
             fontFamily = metropolis,
             fontWeight = FontWeight.SemiBold,
             fontSize = 14.sp,
-            color = focusColors.onboardingSemiBoldText
+            color = focusColors.onboardingSemiBoldText,
         ),
         onboardingFeatureDescription = TextStyle(
             fontFamily = metropolis,
             fontWeight = FontWeight.Normal,
             fontSize = 14.sp,
-            color = focusColors.onboardingNormalText
+            color = focusColors.onboardingNormalText,
         ),
         onboardingButton = TextStyle(
             fontFamily = metropolis,
             fontWeight = FontWeight.SemiBold,
             fontSize = 14.sp,
-            color = PhotonColors.LightGrey05
-        )
+            color = PhotonColors.LightGrey05,
+        ),
     )

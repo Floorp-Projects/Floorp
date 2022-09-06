@@ -32,7 +32,7 @@ class SitePermissionOptionsStorageTest {
 
         assertEquals(
             testContext.getString(R.string.phone_feature_blocked_by_android),
-            storage.getSitePermissionOptionSelectedLabel(SitePermission.CAMERA)
+            storage.getSitePermissionOptionSelectedLabel(SitePermission.CAMERA),
         )
     }
 
@@ -42,7 +42,7 @@ class SitePermissionOptionsStorageTest {
 
         assertEquals(
             testContext.getString(R.string.preference_option_phone_feature_ask_to_allow),
-            storage.getSitePermissionOptionSelectedLabel(SitePermission.CAMERA)
+            storage.getSitePermissionOptionSelectedLabel(SitePermission.CAMERA),
         )
     }
 
@@ -52,7 +52,7 @@ class SitePermissionOptionsStorageTest {
 
         assertEquals(
             testContext.getString(R.string.preference_block_autoplay_audio_only),
-            storage.getSitePermissionOptionSelectedLabel(SitePermission.AUTOPLAY)
+            storage.getSitePermissionOptionSelectedLabel(SitePermission.AUTOPLAY),
         )
     }
 
@@ -62,7 +62,7 @@ class SitePermissionOptionsStorageTest {
 
         assertEquals(
             testContext.getString(R.string.preference_option_phone_feature_ask_to_allow),
-            storage.getSitePermissionOptionSelectedLabel(SitePermission.LOCATION)
+            storage.getSitePermissionOptionSelectedLabel(SitePermission.LOCATION),
         )
     }
 
@@ -70,7 +70,7 @@ class SitePermissionOptionsStorageTest {
     fun `GIVEN get site permission options is called WHEN location permission is passed as argument THEN available options are return`() {
         assertEquals(
             listOf(SitePermissionOption.AskToAllow(), SitePermissionOption.Blocked()),
-            storage.getSitePermissionOptions(SitePermission.LOCATION)
+            storage.getSitePermissionOptions(SitePermission.LOCATION),
         )
     }
 
@@ -78,7 +78,7 @@ class SitePermissionOptionsStorageTest {
     fun `GIVEN get site permission options is called WHEN camera permission is passed as argument THEN available options are return`() {
         assertEquals(
             listOf(SitePermissionOption.AskToAllow(), SitePermissionOption.Blocked()),
-            storage.getSitePermissionOptions(SitePermission.CAMERA)
+            storage.getSitePermissionOptions(SitePermission.CAMERA),
         )
     }
 
@@ -86,7 +86,7 @@ class SitePermissionOptionsStorageTest {
     fun `GIVEN get site permission options is called WHEN microphone permission is passed as argument THEN available options are return`() {
         assertEquals(
             listOf(SitePermissionOption.AskToAllow(), SitePermissionOption.Blocked()),
-            storage.getSitePermissionOptions(SitePermission.MICROPHONE)
+            storage.getSitePermissionOptions(SitePermission.MICROPHONE),
         )
     }
 
@@ -94,7 +94,7 @@ class SitePermissionOptionsStorageTest {
     fun `GIVEN get site permission options is called WHEN notification permission is passed as argument THEN available options are return`() {
         assertEquals(
             listOf(SitePermissionOption.AskToAllow(), SitePermissionOption.Blocked()),
-            storage.getSitePermissionOptions(SitePermission.NOTIFICATION)
+            storage.getSitePermissionOptions(SitePermission.NOTIFICATION),
         )
     }
 
@@ -102,7 +102,7 @@ class SitePermissionOptionsStorageTest {
     fun `GIVEN get site permission options is called WHEN media key system access permission is passed as argument THEN available options are return`() {
         assertEquals(
             listOf(SitePermissionOption.AskToAllow(), SitePermissionOption.Blocked(), SitePermissionOption.Allowed()),
-            storage.getSitePermissionOptions(SitePermission.MEDIA_KEY_SYSTEM_ACCESS)
+            storage.getSitePermissionOptions(SitePermission.MEDIA_KEY_SYSTEM_ACCESS),
         )
     }
 
@@ -110,7 +110,7 @@ class SitePermissionOptionsStorageTest {
     fun `GIVEN get site permission options is called WHEN autoplay permission is passed as argument THEN available options are return`() {
         assertEquals(
             listOf(AutoplayOption.AllowAudioVideo(), AutoplayOption.BlockAudioOnly(), AutoplayOption.BlockAudioVideo()),
-            storage.getSitePermissionOptions(SitePermission.AUTOPLAY)
+            storage.getSitePermissionOptions(SitePermission.AUTOPLAY),
         )
     }
 
@@ -118,7 +118,7 @@ class SitePermissionOptionsStorageTest {
     fun `GIVEN get site permission label is called WHEN camera permission is passed as argument THEN permission label is return`() {
         assertEquals(
             testContext.getString(R.string.preference_phone_feature_camera),
-            storage.getSitePermissionLabel(SitePermission.CAMERA)
+            storage.getSitePermissionLabel(SitePermission.CAMERA),
         )
     }
 
@@ -126,7 +126,7 @@ class SitePermissionOptionsStorageTest {
     fun `GIVEN get site permission label is called WHEN location permission is passed as argument THEN permission label is return`() {
         assertEquals(
             testContext.getString(R.string.preference_phone_feature_location),
-            storage.getSitePermissionLabel(SitePermission.LOCATION)
+            storage.getSitePermissionLabel(SitePermission.LOCATION),
         )
     }
 
@@ -134,7 +134,7 @@ class SitePermissionOptionsStorageTest {
     fun `GIVEN get site permission label is called WHEN microphone permission is passed as argument THEN permission label is return`() {
         assertEquals(
             testContext.getString(R.string.preference_phone_feature_microphone),
-            storage.getSitePermissionLabel(SitePermission.MICROPHONE)
+            storage.getSitePermissionLabel(SitePermission.MICROPHONE),
         )
     }
 
@@ -142,7 +142,7 @@ class SitePermissionOptionsStorageTest {
     fun `GIVEN get site permission label is called WHEN notification permission is passed as argument THEN permission label is return`() {
         assertEquals(
             testContext.getString(R.string.preference_phone_feature_notification),
-            storage.getSitePermissionLabel(SitePermission.NOTIFICATION)
+            storage.getSitePermissionLabel(SitePermission.NOTIFICATION),
         )
     }
 
@@ -150,7 +150,7 @@ class SitePermissionOptionsStorageTest {
     fun `GIVEN get site permission label is called WHEN media key system access permission is passed as argument THEN permission label is return`() {
         assertEquals(
             testContext.getString(R.string.preference_phone_feature_media_key_system_access),
-            storage.getSitePermissionLabel(SitePermission.MEDIA_KEY_SYSTEM_ACCESS)
+            storage.getSitePermissionLabel(SitePermission.MEDIA_KEY_SYSTEM_ACCESS),
         )
     }
 
@@ -158,7 +158,7 @@ class SitePermissionOptionsStorageTest {
     fun `GIVEN get site permission label is called WHEN autoplay permission is passed as argument THEN permission label is return`() {
         assertEquals(
             testContext.getString(R.string.preference_autoplay),
-            storage.getSitePermissionLabel(SitePermission.AUTOPLAY)
+            storage.getSitePermissionLabel(SitePermission.AUTOPLAY),
         )
     }
 
@@ -166,7 +166,7 @@ class SitePermissionOptionsStorageTest {
     fun `GIVEN get site permission default option is called WHEN camera permission is passed as argument THEN default option is return`() {
         assertEquals(
             SitePermissionOption.AskToAllow(),
-            storage.getSitePermissionDefaultOption(SitePermission.CAMERA)
+            storage.getSitePermissionDefaultOption(SitePermission.CAMERA),
         )
     }
 
@@ -174,7 +174,7 @@ class SitePermissionOptionsStorageTest {
     fun `GIVEN get site permission default option is called WHEN location permission is passed as argument THEN default option is return`() {
         assertEquals(
             SitePermissionOption.AskToAllow(),
-            storage.getSitePermissionDefaultOption(SitePermission.LOCATION)
+            storage.getSitePermissionDefaultOption(SitePermission.LOCATION),
         )
     }
 
@@ -182,7 +182,7 @@ class SitePermissionOptionsStorageTest {
     fun `GIVEN get site permission default option is called WHEN microphone permission is passed as argument THEN default option is return`() {
         assertEquals(
             SitePermissionOption.AskToAllow(),
-            storage.getSitePermissionDefaultOption(SitePermission.MICROPHONE)
+            storage.getSitePermissionDefaultOption(SitePermission.MICROPHONE),
         )
     }
 
@@ -190,7 +190,7 @@ class SitePermissionOptionsStorageTest {
     fun `GIVEN get site permission default option is called WHEN notification permission is passed as argument THEN default option is return`() {
         assertEquals(
             SitePermissionOption.AskToAllow(),
-            storage.getSitePermissionDefaultOption(SitePermission.NOTIFICATION)
+            storage.getSitePermissionDefaultOption(SitePermission.NOTIFICATION),
         )
     }
 
@@ -198,7 +198,7 @@ class SitePermissionOptionsStorageTest {
     fun `GIVEN get site permission default option is called WHEN media key system access permission is passed as argument THEN default option is return`() {
         assertEquals(
             SitePermissionOption.AskToAllow(),
-            storage.getSitePermissionDefaultOption(SitePermission.MEDIA_KEY_SYSTEM_ACCESS)
+            storage.getSitePermissionDefaultOption(SitePermission.MEDIA_KEY_SYSTEM_ACCESS),
         )
     }
 
@@ -206,7 +206,7 @@ class SitePermissionOptionsStorageTest {
     fun `GIVEN get site permission default option is called WHEN autoplay permission is passed as argument THEN default option is return`() {
         assertEquals(
             AutoplayOption.BlockAudioOnly(),
-            storage.getSitePermissionDefaultOption(SitePermission.AUTOPLAY)
+            storage.getSitePermissionDefaultOption(SitePermission.AUTOPLAY),
         )
     }
 
@@ -217,7 +217,7 @@ class SitePermissionOptionsStorageTest {
 
         assertEquals(
             SitePermissionOption.Allowed(),
-            storage.permissionSelectedOption(SitePermission.CAMERA)
+            storage.permissionSelectedOption(SitePermission.CAMERA),
         )
     }
 
@@ -228,7 +228,7 @@ class SitePermissionOptionsStorageTest {
 
         assertEquals(
             AutoplayOption.AllowAudioVideo(),
-            storage.permissionSelectedOption(SitePermission.CAMERA)
+            storage.permissionSelectedOption(SitePermission.CAMERA),
         )
     }
 
@@ -239,7 +239,7 @@ class SitePermissionOptionsStorageTest {
 
         assertEquals(
             AutoplayOption.BlockAudioVideo(),
-            storage.permissionSelectedOption(SitePermission.CAMERA)
+            storage.permissionSelectedOption(SitePermission.CAMERA),
         )
     }
 
@@ -250,7 +250,7 @@ class SitePermissionOptionsStorageTest {
 
         assertEquals(
             SitePermissionOption.Blocked(),
-            storage.permissionSelectedOption(SitePermission.CAMERA)
+            storage.permissionSelectedOption(SitePermission.CAMERA),
         )
     }
 
@@ -261,7 +261,7 @@ class SitePermissionOptionsStorageTest {
 
         assertEquals(
             SitePermissionOption.AskToAllow(),
-            storage.permissionSelectedOption(SitePermission.CAMERA)
+            storage.permissionSelectedOption(SitePermission.CAMERA),
         )
     }
 
@@ -272,7 +272,7 @@ class SitePermissionOptionsStorageTest {
 
         assertEquals(
             AutoplayOption.BlockAudioOnly(),
-            storage.permissionSelectedOption(SitePermission.CAMERA)
+            storage.permissionSelectedOption(SitePermission.CAMERA),
         )
     }
 
@@ -280,7 +280,7 @@ class SitePermissionOptionsStorageTest {
     fun `GIVEN get site permission preference id is called WHEN site permission camera is passed as argument THEN pref_key_phone_feature_camera is return`() {
         assertEquals(
             R.string.pref_key_phone_feature_camera,
-            storage.getSitePermissionPreferenceId(SitePermission.CAMERA)
+            storage.getSitePermissionPreferenceId(SitePermission.CAMERA),
         )
     }
 
@@ -288,7 +288,7 @@ class SitePermissionOptionsStorageTest {
     fun `GIVEN get site permission preference id is called WHEN site permission location is passed as argument THEN pref_key_phone_feature_location is return`() {
         assertEquals(
             R.string.pref_key_phone_feature_location,
-            storage.getSitePermissionPreferenceId(SitePermission.LOCATION)
+            storage.getSitePermissionPreferenceId(SitePermission.LOCATION),
         )
     }
 
@@ -296,7 +296,7 @@ class SitePermissionOptionsStorageTest {
     fun `GIVEN get site permission preference id is called WHEN site permission microphone is passed as argument THEN pref_key_phone_feature_microphone is return`() {
         assertEquals(
             R.string.pref_key_phone_feature_microphone,
-            storage.getSitePermissionPreferenceId(SitePermission.MICROPHONE)
+            storage.getSitePermissionPreferenceId(SitePermission.MICROPHONE),
         )
     }
 
@@ -304,7 +304,7 @@ class SitePermissionOptionsStorageTest {
     fun `GIVEN get site permission preference id is called WHEN site permission notification is passed as argument THEN pref_key_phone_feature_notification is return`() {
         assertEquals(
             R.string.pref_key_phone_feature_notification,
-            storage.getSitePermissionPreferenceId(SitePermission.NOTIFICATION)
+            storage.getSitePermissionPreferenceId(SitePermission.NOTIFICATION),
         )
     }
 
@@ -312,7 +312,7 @@ class SitePermissionOptionsStorageTest {
     fun `GIVEN get site permission preference id is called WHEN site permission autoplay is passed as argument THEN pref_key_autoplay is return`() {
         assertEquals(
             R.string.pref_key_autoplay,
-            storage.getSitePermissionPreferenceId(SitePermission.AUTOPLAY)
+            storage.getSitePermissionPreferenceId(SitePermission.AUTOPLAY),
         )
     }
 
@@ -320,7 +320,7 @@ class SitePermissionOptionsStorageTest {
     fun `GIVEN get site permission preference id is called WHEN site permission autoplay audible is passed as argument THEN pref_key_allow_autoplay_audio_video is return`() {
         assertEquals(
             R.string.pref_key_allow_autoplay_audio_video,
-            storage.getSitePermissionPreferenceId(SitePermission.AUTOPLAY_AUDIBLE)
+            storage.getSitePermissionPreferenceId(SitePermission.AUTOPLAY_AUDIBLE),
         )
     }
 
@@ -328,7 +328,7 @@ class SitePermissionOptionsStorageTest {
     fun `GIVEN get site permission preference id is called WHEN site permission autoplay inaudible is passed as argument THEN pref_key_block_autoplay_audio_video is return`() {
         assertEquals(
             R.string.pref_key_block_autoplay_audio_video,
-            storage.getSitePermissionPreferenceId(SitePermission.AUTOPLAY_INAUDIBLE)
+            storage.getSitePermissionPreferenceId(SitePermission.AUTOPLAY_INAUDIBLE),
         )
     }
 
@@ -336,7 +336,7 @@ class SitePermissionOptionsStorageTest {
     fun `GIVEN get site permission preference id is called WHEN site permission media key system access is passed as argument THEN pref_key_browser_feature_media_key_system_access is return`() {
         assertEquals(
             R.string.pref_key_browser_feature_media_key_system_access,
-            storage.getSitePermissionPreferenceId(SitePermission.MEDIA_KEY_SYSTEM_ACCESS)
+            storage.getSitePermissionPreferenceId(SitePermission.MEDIA_KEY_SYSTEM_ACCESS),
         )
     }
 }

@@ -38,7 +38,7 @@ object LocalizedContent {
             aboutVersion = String.format(
                 "%s (Build #%s)",
                 packageInfo.versionName,
-                packageInfo.versionCode.toString() + engineIndicator
+                packageInfo.versionCode.toString() + engineIndicator,
             )
         } catch (e: PackageManager.NameNotFoundException) {
             // Nothing to do if we can't find the package name.

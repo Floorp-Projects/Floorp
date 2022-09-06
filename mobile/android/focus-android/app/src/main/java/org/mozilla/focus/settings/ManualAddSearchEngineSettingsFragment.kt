@@ -80,7 +80,7 @@ class ManualAddSearchEngineSettingsFragment : BaseSettingsFragment() {
         val openLearnMore = {
             val learnMoreUrl = SupportUtils.getSumoURLForTopic(
                 requireContext(),
-                SupportUtils.SumoTopic.ADD_SEARCH_ENGINE
+                SupportUtils.SumoTopic.ADD_SEARCH_ENGINE,
             )
             SupportUtils.openUrlInCustomTab(requireActivity(), learnMoreUrl)
             SearchEngines.learnMoreTapped.record(NoExtras())
@@ -126,7 +126,7 @@ class ManualAddSearchEngineSettingsFragment : BaseSettingsFragment() {
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
-        savedInstanceState: Bundle?
+        savedInstanceState: Bundle?,
     ): View? {
         scope = CoroutineScope(Dispatchers.IO)
         return super.onCreateView(inflater, container, savedInstanceState)
@@ -206,7 +206,7 @@ class ManualAddSearchEngineSettingsFragment : BaseSettingsFragment() {
                 connectTimeout = SEARCH_QUERY_VALIDATION_TIMEOUT_MILLIS.toLong() to TimeUnit.MILLISECONDS,
                 readTimeout = SEARCH_QUERY_VALIDATION_TIMEOUT_MILLIS.toLong() to TimeUnit.MILLISECONDS,
                 redirect = FOLLOW,
-                private = true
+                private = true,
             )
 
             return try {
@@ -236,8 +236,8 @@ class ManualAddSearchEngineSettingsFragment : BaseSettingsFragment() {
                     createSearchEngine(
                         engineName,
                         query.toSearchUrl(),
-                        requireComponents.icons.loadIcon(IconRequest(query, isPrivate = true)).await().bitmap
-                    )
+                        requireComponents.icons.loadIcon(IconRequest(query, isPrivate = true)).await().bitmap,
+                    ),
                 )
 
                 ViewUtils.showBrandedSnackbar(requireView(), R.string.search_add_confirmation, Snackbar.LENGTH_SHORT)
@@ -245,7 +245,7 @@ class ManualAddSearchEngineSettingsFragment : BaseSettingsFragment() {
                 SearchEngines.saveEngineTapped.record(SearchEngines.SaveEngineTappedExtra(true))
 
                 requireComponents.appStore.dispatch(
-                    AppAction.NavigateUp(requireComponents.store.state.selectedTabId)
+                    AppAction.NavigateUp(requireComponents.store.state.selectedTabId),
                 )
             } else {
                 showServerError()

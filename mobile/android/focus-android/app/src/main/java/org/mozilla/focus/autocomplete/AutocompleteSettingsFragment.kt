@@ -58,7 +58,7 @@ class AutocompleteSettingsFragment : BaseSettingsFragment(), SharedPreferences.O
         preference?.let {
             if (it.key == getString(R.string.pref_key_screen_custom_domains)) {
                 requireComponents.appStore.dispatch(
-                    AppAction.OpenSettings(page = Screen.Settings.Page.SearchAutocompleteList)
+                    AppAction.OpenSettings(page = Screen.Settings.Page.SearchAutocompleteList),
                 )
             }
         }
@@ -75,12 +75,12 @@ class AutocompleteSettingsFragment : BaseSettingsFragment(), SharedPreferences.O
         when (key) {
             topSitesAutocomplete.key ->
                 Autocomplete.topSitesSettingChanged.record(
-                    Autocomplete.TopSitesSettingChangedExtra(sharedPreferences.all[key] as Boolean)
+                    Autocomplete.TopSitesSettingChangedExtra(sharedPreferences.all[key] as Boolean),
                 )
 
             favoriteSitesAutocomplete.key ->
                 Autocomplete.favoriteSitesSettingChanged.record(
-                    Autocomplete.FavoriteSitesSettingChangedExtra(sharedPreferences.all[key] as Boolean)
+                    Autocomplete.FavoriteSitesSettingChangedExtra(sharedPreferences.all[key] as Boolean),
                 )
         }
     }

@@ -68,21 +68,25 @@ class SitePermissionOptionsStoreTest {
         store.dispatch(
             SitePermissionOptionsScreenAction.UpdateSitePermissionOptions(
                 listOf(
-                    AutoplayOption.BlockAudioOnly(), AutoplayOption.AllowAudioVideo(), AutoplayOption.BlockAudioVideo()
+                    AutoplayOption.BlockAudioOnly(),
+                    AutoplayOption.AllowAudioVideo(),
+                    AutoplayOption.BlockAudioVideo(),
                 ),
                 AutoplayOption.AllowAudioVideo(),
                 testContext.getString(R.string.preference_autoplay),
-                true
-            )
+                true,
+            ),
         ).joinBlocking()
 
         assertEquals(AutoplayOption.AllowAudioVideo(), store.state.selectedSitePermissionOption)
         assertTrue(store.state.isAndroidPermissionGranted)
         assertEquals(
             listOf(
-                AutoplayOption.BlockAudioOnly(), AutoplayOption.AllowAudioVideo(), AutoplayOption.BlockAudioVideo()
+                AutoplayOption.BlockAudioOnly(),
+                AutoplayOption.AllowAudioVideo(),
+                AutoplayOption.BlockAudioVideo(),
             ),
-            store.state.sitePermissionOptionList
+            store.state.sitePermissionOptionList,
         )
         assertEquals(testContext.getString(R.string.preference_autoplay), store.state.sitePermissionLabel)
     }

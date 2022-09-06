@@ -50,12 +50,14 @@ class StudiesViewModel(application: Application) : AndroidViewModel(application)
         viewModelScope.launch(Dispatchers.IO) {
             localStudies.remove(study)
             exposedStudies.postValue(localStudies)
-            appContext.components.experiments.register(object : NimbusInterface.Observer {
-                override fun onUpdatesApplied(updated: List<EnrolledExperiment>) {
-                    // Wait until the experiment is unrolled from nimbus to restart the app
-                    exitProcess(0)
-                }
-            })
+            appContext.components.experiments.register(
+                object : NimbusInterface.Observer {
+                    override fun onUpdatesApplied(updated: List<EnrolledExperiment>) {
+                        // Wait until the experiment is unrolled from nimbus to restart the app
+                        exitProcess(0)
+                    }
+                },
+            )
             appContext.components.experiments.optOut(study.value.slug)
             appContext.components.experiments.applyPendingExperiments()
         }

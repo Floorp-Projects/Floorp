@@ -42,7 +42,7 @@ class NotificationRobot {
         val notification = mDevice.findObject(UiSelector().text(notificationMessage))
         while (!notification.waitForExists(waitingTime)) {
             UiScrollable(
-                UiSelector().resourceId(NOTIFICATION_SHADE)
+                UiSelector().resourceId(NOTIFICATION_SHADE),
             ).flingToEnd(1)
         }
 
@@ -54,10 +54,10 @@ class NotificationRobot {
             val notificationInTray = mDevice.wait(
                 Until.hasObject(
                     By.res(QS_PANEL).hasDescendant(
-                        By.text(notificationMessage)
-                    )
+                        By.text(notificationMessage),
+                    ),
                 ),
-                waitingTime
+                waitingTime,
             )
 
             assertTrue(notificationInTray)
@@ -69,7 +69,7 @@ class NotificationRobot {
     fun verifyNotificationGone(notificationMessage: String) {
         assertTrue(
             mDevice.findObject(UiSelector().text(notificationMessage))
-                .waitUntilGone(waitingTime)
+                .waitUntilGone(waitingTime),
         )
     }
 
@@ -129,27 +129,27 @@ fun notificationTray(interact: NotificationRobot.() -> Unit): NotificationRobot.
 
 private val eraseBrowsingNotification =
     mDevice.findObject(
-        UiSelector().text(getStringResource(R.string.notification_erase_text))
+        UiSelector().text(getStringResource(R.string.notification_erase_text)),
     )
 
 private val notificationEraseAndOpenButton =
     mDevice.findObject(
-        UiSelector().description(getStringResource(R.string.notification_action_erase_and_open))
+        UiSelector().description(getStringResource(R.string.notification_action_erase_and_open)),
     )
 
 private val notificationOpenButton = mDevice.findObject(
-    UiSelector().description(getStringResource(R.string.notification_action_open))
+    UiSelector().description(getStringResource(R.string.notification_action_open)),
 )
 
 private val notificationTray = UiScrollable(
-    UiSelector().resourceId("com.android.systemui:id/notification_stack_scroller")
+    UiSelector().resourceId("com.android.systemui:id/notification_stack_scroller"),
 )
     .setAsVerticalList()
 
 private val notificationHeader = mDevice.findObject(
     UiSelector()
         .resourceId("android:id/app_name_text")
-        .textContains(appName)
+        .textContains(appName),
 )
 
 private val clearButton =

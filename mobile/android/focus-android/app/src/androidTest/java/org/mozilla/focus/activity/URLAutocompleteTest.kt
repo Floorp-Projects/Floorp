@@ -25,9 +25,9 @@ class URLAutocompleteTest {
     @get: Rule
     var mActivityTestRule = MainActivityFirstrunTestRule(showFirstRun = false)
 
+    // Test the url autocomplete feature with default settings
     @SmokeTest
     @Test
-    // Test the url autocomplete feature with default settings
     fun defaultAutoCompleteURLTest() {
         searchScreen {
             // type a partial url, and check it autocompletes
@@ -58,8 +58,8 @@ class URLAutocompleteTest {
         }
     }
 
-    @Test
     // Add custom Url, verify it works, then remove it and check it is no longer autocompleted
+    @Test
     fun customUrlAutoCompletionTest() {
         homeScreen {
         }.openMainMenu {
@@ -99,8 +99,8 @@ class URLAutocompleteTest {
         }
     }
 
-    @Test
     // Add custom autocompletion site, then disable autocomplete
+    @Test
     fun disableAutocompleteForCustomSiteTest() {
         homeScreen {
         }.openMainMenu {
@@ -124,8 +124,8 @@ class URLAutocompleteTest {
         }
     }
 
-    @Test
     // Verifies the custom Url can't be added twice
+    @Test
     fun duplicateCustomUrlNotAllowedTest() {
         homeScreen {
         }.openMainMenu {

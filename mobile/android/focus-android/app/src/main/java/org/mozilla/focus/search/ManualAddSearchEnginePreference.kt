@@ -45,14 +45,14 @@ class ManualAddSearchEnginePreference(context: Context, attrs: AttributeSet) :
         engineNameEditText = holder.findViewById(R.id.edit_engine_name) as EditText
         engineNameEditText?.addTextChangedListener(
             buildTextWatcherForErrorLayout(
-                engineNameErrorLayout!!
-            )
+                engineNameErrorLayout!!,
+            ),
         )
         searchQueryEditText = holder.findViewById(R.id.edit_search_string) as EditText
         searchQueryEditText?.addTextChangedListener(
             buildTextWatcherForErrorLayout(
-                searchQueryErrorLayout!!
-            )
+                searchQueryErrorLayout!!,
+            ),
         )
 
         progressView = holder.findViewById(R.id.progress) as ProgressBar

@@ -11,10 +11,11 @@ import org.mozilla.focus.settings.permissions.SitePermissionOption
 
 class SitePermissionOptionsScreenStore(
     initialState: SitePermissionOptionsScreenState,
-    middlewares: List<Middleware<SitePermissionOptionsScreenState, SitePermissionOptionsScreenAction>> = emptyList()
+    middlewares: List<Middleware<SitePermissionOptionsScreenState, SitePermissionOptionsScreenAction>> = emptyList(),
 ) : Store<SitePermissionOptionsScreenState, SitePermissionOptionsScreenAction>(
     initialState,
-    ::sitePermissionOptionsScreenReducer, middlewares
+    ::sitePermissionOptionsScreenReducer,
+    middlewares,
 ) {
     init {
         dispatch(SitePermissionOptionsScreenAction.InitSitePermissionOptions)
@@ -25,7 +26,7 @@ data class SitePermissionOptionsScreenState(
     val sitePermissionOptionList: List<SitePermissionOption> = emptyList(),
     val selectedSitePermissionOption: SitePermissionOption? = null,
     val sitePermissionLabel: String = "",
-    val isAndroidPermissionGranted: Boolean = false
+    val isAndroidPermissionGranted: Boolean = false,
 ) : State
 
 sealed class SitePermissionOptionsScreenAction : Action {
@@ -36,13 +37,13 @@ sealed class SitePermissionOptionsScreenAction : Action {
         val sitePermissionOptionsList: List<SitePermissionOption>,
         val selectedSitePermissionOption: SitePermissionOption,
         val sitePermissionLabel: String,
-        val isAndroidPermissionGranted: Boolean
+        val isAndroidPermissionGranted: Boolean,
     ) : SitePermissionOptionsScreenAction()
 }
 
 private fun sitePermissionOptionsScreenReducer(
     state: SitePermissionOptionsScreenState,
-    action: SitePermissionOptionsScreenAction
+    action: SitePermissionOptionsScreenAction,
 ): SitePermissionOptionsScreenState {
     return when (action) {
         is SitePermissionOptionsScreenAction.Select -> {
@@ -53,13 +54,13 @@ private fun sitePermissionOptionsScreenReducer(
                 sitePermissionOptionList = action.sitePermissionOptionsList,
                 selectedSitePermissionOption = action.selectedSitePermissionOption,
                 sitePermissionLabel = action.sitePermissionLabel,
-                isAndroidPermissionGranted = action.isAndroidPermissionGranted
+                isAndroidPermissionGranted = action.isAndroidPermissionGranted,
             )
         }
 
         SitePermissionOptionsScreenAction.InitSitePermissionOptions -> {
             throw IllegalStateException(
-                "You need to add SitePermissionsOptionsMiddleware to your SitePermissionsOptionsScreenStore. ($action)"
+                "You need to add SitePermissionsOptionsMiddleware to your SitePermissionsOptionsScreenStore. ($action)",
             )
         }
         is SitePermissionOptionsScreenAction.AndroidPermission -> {

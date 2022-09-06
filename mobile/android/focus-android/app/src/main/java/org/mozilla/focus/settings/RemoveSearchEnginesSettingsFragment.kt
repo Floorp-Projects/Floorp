@@ -72,7 +72,7 @@ class RemoveSearchEnginesSettingsFragment : BaseSettingsFragment() {
                 SearchEngines.removeEngines.record(SearchEngines.RemoveEnginesExtra(enginesToRemove.size))
 
                 requireComponents.appStore.dispatch(
-                    AppAction.NavigateUp(requireComponents.store.state.selectedTabId)
+                    AppAction.NavigateUp(requireComponents.store.state.selectedTabId),
                 )
                 true
             }

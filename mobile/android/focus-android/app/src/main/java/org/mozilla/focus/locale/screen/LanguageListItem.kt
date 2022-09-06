@@ -12,5 +12,5 @@ package org.mozilla.focus.locale.screen
  */
 data class LanguageListItem(
     val language: Language,
-    val onClick: (String) -> Unit
+    val onClick: (String) -> Unit,
 )

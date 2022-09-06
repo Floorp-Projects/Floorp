@@ -35,7 +35,7 @@ class BrowserMenuController(
     private val addToHomeScreenCallback: () -> Unit,
     private val showFindInPageCallback: () -> Unit,
     private val openInCallback: () -> Unit,
-    private val openInBrowser: () -> Unit
+    private val openInBrowser: () -> Unit,
 ) {
     @VisibleForTesting
     private val currentTab: SessionState?
@@ -46,15 +46,14 @@ class BrowserMenuController(
 
     @Suppress("ComplexMethod")
     fun handleMenuInteraction(item: ToolbarMenu.Item) {
-
         recordBrowserMenuTelemetry(item)
 
         when (item) {
             is ToolbarMenu.Item.Back, ToolbarMenu.CustomTabItem.Back -> sessionUseCases.goBack(
-                currentTabId
+                currentTabId,
             )
             is ToolbarMenu.Item.Forward, ToolbarMenu.CustomTabItem.Forward -> sessionUseCases.goForward(
-                currentTabId
+                currentTabId,
             )
             is ToolbarMenu.Item.Reload, ToolbarMenu.CustomTabItem.Reload -> {
                 sessionUseCases.reload(currentTabId)
@@ -62,7 +61,7 @@ class BrowserMenuController(
                 TelemetryWrapper.menuReloadEvent()
             }
             is ToolbarMenu.Item.Stop, ToolbarMenu.CustomTabItem.Stop -> sessionUseCases.stopLoading(
-                currentTabId
+                currentTabId,
             )
             is ToolbarMenu.Item.Share -> shareCallback()
             is ToolbarMenu.Item.FindInPage, ToolbarMenu.CustomTabItem.FindInPage -> showFindInPageCallback()
@@ -71,7 +70,7 @@ class BrowserMenuController(
                     currentTab?.let { state ->
                         topSitesUseCases.addPinnedSites(
                             title = state.content.titleOrDomain,
-                            url = state.content.url
+                            url = state.content.url,
                         )
                     }
                 }
@@ -99,22 +98,22 @@ class BrowserMenuController(
     private fun recordBrowserMenuTelemetry(item: ToolbarMenu.Item) {
         when (item) {
             is ToolbarMenu.Item.Back -> BrowserMenu.navigationToolbarAction.record(
-                BrowserMenu.NavigationToolbarActionExtra("back")
+                BrowserMenu.NavigationToolbarActionExtra("back"),
             )
             is ToolbarMenu.Item.Forward -> BrowserMenu.navigationToolbarAction.record(
-                BrowserMenu.NavigationToolbarActionExtra("forward")
+                BrowserMenu.NavigationToolbarActionExtra("forward"),
             )
             is ToolbarMenu.Item.Reload -> BrowserMenu.navigationToolbarAction.record(
-                BrowserMenu.NavigationToolbarActionExtra("reload")
+                BrowserMenu.NavigationToolbarActionExtra("reload"),
             )
             is ToolbarMenu.Item.Stop -> BrowserMenu.navigationToolbarAction.record(
-                BrowserMenu.NavigationToolbarActionExtra("stop")
+                BrowserMenu.NavigationToolbarActionExtra("stop"),
             )
             is ToolbarMenu.Item.Share -> BrowserMenu.navigationToolbarAction.record(
-                BrowserMenu.NavigationToolbarActionExtra("share")
+                BrowserMenu.NavigationToolbarActionExtra("share"),
             )
             is ToolbarMenu.Item.FindInPage -> BrowserMenu.browserMenuAction.record(
-                BrowserMenu.BrowserMenuActionExtra("find_in_page")
+                BrowserMenu.BrowserMenuActionExtra("find_in_page"),
             )
             is ToolbarMenu.Item.AddToShortcuts ->
                 Shortcuts.shortcutAddedCounter.add()
@@ -124,63 +123,63 @@ class BrowserMenuController(
             is ToolbarMenu.Item.RequestDesktop -> {
                 if (item.isChecked) {
                     BrowserMenu.browserMenuAction.record(
-                        BrowserMenu.BrowserMenuActionExtra("desktop_view_on")
+                        BrowserMenu.BrowserMenuActionExtra("desktop_view_on"),
                     )
                 } else {
                     BrowserMenu.browserMenuAction.record(
-                        BrowserMenu.BrowserMenuActionExtra("desktop_view_off")
+                        BrowserMenu.BrowserMenuActionExtra("desktop_view_off"),
                     )
                 }
 
                 TelemetryWrapper.desktopRequestCheckEvent(item.isChecked)
             }
             is ToolbarMenu.Item.AddToHomeScreen -> BrowserMenu.browserMenuAction.record(
-                BrowserMenu.BrowserMenuActionExtra("add_to_home_screen")
+                BrowserMenu.BrowserMenuActionExtra("add_to_home_screen"),
             )
 
             is ToolbarMenu.Item.OpenInApp -> BrowserMenu.browserMenuAction.record(
-                BrowserMenu.BrowserMenuActionExtra("open_in_app")
+                BrowserMenu.BrowserMenuActionExtra("open_in_app"),
             )
             is ToolbarMenu.Item.Settings -> BrowserMenu.browserMenuAction.record(
-                BrowserMenu.BrowserMenuActionExtra("settings")
+                BrowserMenu.BrowserMenuActionExtra("settings"),
             )
 
             // custom tabs
             ToolbarMenu.CustomTabItem.Back -> CustomTabsToolbar.navigationToolbarAction.record(
-                CustomTabsToolbar.NavigationToolbarActionExtra("back")
+                CustomTabsToolbar.NavigationToolbarActionExtra("back"),
             )
             ToolbarMenu.CustomTabItem.Forward -> CustomTabsToolbar.navigationToolbarAction.record(
-                CustomTabsToolbar.NavigationToolbarActionExtra("forward")
+                CustomTabsToolbar.NavigationToolbarActionExtra("forward"),
             )
             ToolbarMenu.CustomTabItem.Stop -> CustomTabsToolbar.navigationToolbarAction.record(
-                CustomTabsToolbar.NavigationToolbarActionExtra("stop")
+                CustomTabsToolbar.NavigationToolbarActionExtra("stop"),
             )
 
             ToolbarMenu.CustomTabItem.Reload -> CustomTabsToolbar.navigationToolbarAction.record(
-                CustomTabsToolbar.NavigationToolbarActionExtra("reload")
+                CustomTabsToolbar.NavigationToolbarActionExtra("reload"),
             )
 
             ToolbarMenu.CustomTabItem.AddToHomeScreen -> CustomTabsToolbar.browserMenuAction.record(
-                CustomTabsToolbar.BrowserMenuActionExtra("add_to_home_screen")
+                CustomTabsToolbar.BrowserMenuActionExtra("add_to_home_screen"),
             )
             ToolbarMenu.CustomTabItem.OpenInApp -> CustomTabsToolbar.browserMenuAction.record(
-                CustomTabsToolbar.BrowserMenuActionExtra("open_in_app")
+                CustomTabsToolbar.BrowserMenuActionExtra("open_in_app"),
             )
             ToolbarMenu.CustomTabItem.OpenInBrowser -> CustomTabsToolbar.browserMenuAction.record(
-                CustomTabsToolbar.BrowserMenuActionExtra("open_in_browser")
+                CustomTabsToolbar.BrowserMenuActionExtra("open_in_browser"),
             )
 
             ToolbarMenu.CustomTabItem.FindInPage -> CustomTabsToolbar.browserMenuAction.record(
-                CustomTabsToolbar.BrowserMenuActionExtra("find_in_page")
+                CustomTabsToolbar.BrowserMenuActionExtra("find_in_page"),
             )
             is ToolbarMenu.CustomTabItem.RequestDesktop -> {
                 if (item.isChecked) {
                     CustomTabsToolbar.browserMenuAction.record(
-                        CustomTabsToolbar.BrowserMenuActionExtra("desktop_view_on")
+                        CustomTabsToolbar.BrowserMenuActionExtra("desktop_view_on"),
                     )
                 } else {
                     CustomTabsToolbar.browserMenuAction.record(
-                        CustomTabsToolbar.BrowserMenuActionExtra("desktop_view_off")
+                        CustomTabsToolbar.BrowserMenuActionExtra("desktop_view_off"),
                     )
                 }
             }

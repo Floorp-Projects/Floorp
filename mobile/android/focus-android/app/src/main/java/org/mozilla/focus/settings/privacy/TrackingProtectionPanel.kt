@@ -29,7 +29,7 @@ class TrackingProtectionPanel(
     private val isConnectionSecure: Boolean,
     private val toggleTrackingProtection: (Boolean) -> Unit,
     private val updateTrackingProtectionPolicy: (String?, Boolean) -> Unit,
-    private val showConnectionInfo: () -> Unit
+    private val showConnectionInfo: () -> Unit,
 ) : BottomSheetDialog(context) {
 
     private var binding: DialogTrackingProtectionSheetBinding =
@@ -57,7 +57,7 @@ class TrackingProtectionPanel(
         binding.siteTitle.text = tabUrl.tryGetHostFromUrl()
         context.components.icons.loadIntoView(
             binding.siteFavicon,
-            IconRequest(tabUrl, isPrivate = true)
+            IconRequest(tabUrl, isPrivate = true),
         )
     }
 
@@ -80,7 +80,7 @@ class TrackingProtectionPanel(
             start = securityIcon,
             end = nextIcon,
             top = null,
-            bottom = null
+            bottom = null,
         )
     }
 

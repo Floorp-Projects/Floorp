@@ -36,7 +36,7 @@ class SecretSettingsUnlocker(private val context: Context) {
                 val toast = Toast.makeText(
                     context,
                     context.getString(R.string.about_debug_menu_toast_progress, clicksLeft),
-                    Toast.LENGTH_SHORT
+                    Toast.LENGTH_SHORT,
                 )
                 toast.show()
                 lastDebugMenuToast = toast
@@ -45,7 +45,7 @@ class SecretSettingsUnlocker(private val context: Context) {
                 Toast.makeText(
                     context,
                     R.string.about_debug_menu_toast_done,
-                    Toast.LENGTH_LONG
+                    Toast.LENGTH_LONG,
                 ).show()
                 context.components.appStore.dispatch(AppAction.SecretSettingsStateChange(true))
             }

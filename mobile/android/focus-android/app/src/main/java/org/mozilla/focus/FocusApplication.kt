@@ -122,13 +122,13 @@ open class FocusApplication : LocaleAwareApplication(), CoroutineScope {
         when {
             settings.lightThemeSelected -> {
                 AppCompatDelegate.setDefaultNightMode(
-                    AppCompatDelegate.MODE_NIGHT_NO
+                    AppCompatDelegate.MODE_NIGHT_NO,
                 )
             }
 
             settings.darkThemeSelected -> {
                 AppCompatDelegate.setDefaultNightMode(
-                    AppCompatDelegate.MODE_NIGHT_YES
+                    AppCompatDelegate.MODE_NIGHT_YES,
                 )
             }
 
@@ -147,11 +147,11 @@ open class FocusApplication : LocaleAwareApplication(), CoroutineScope {
     private fun setDefaultTheme() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
             AppCompatDelegate.setDefaultNightMode(
-                AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM
+                AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM,
             )
         } else {
             AppCompatDelegate.setDefaultNightMode(
-                AppCompatDelegate.MODE_NIGHT_AUTO_BATTERY
+                AppCompatDelegate.MODE_NIGHT_AUTO_BATTERY,
             )
         }
     }
@@ -187,9 +187,9 @@ open class FocusApplication : LocaleAwareApplication(), CoroutineScope {
                     url = url,
                     selectTab = true,
                     engineSession = engineSession,
-                    private = true
+                    private = true,
                 )
-            }
+            },
         )
     }
 }

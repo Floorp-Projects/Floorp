@@ -64,7 +64,7 @@ abstract class BaseComposeFragment : Fragment() {
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
-        savedInstanceState: Bundle?
+        savedInstanceState: Bundle?,
     ): View {
         hideToolbar()
         (requireActivity() as? MainActivity)?.hideStatusBarBackground()
@@ -84,7 +84,7 @@ abstract class BaseComposeFragment : Fragment() {
                                         title = {
                                             Text(
                                                 text = title,
-                                                color = focusColors.toolbarColor
+                                                color = focusColors.toolbarColor,
                                             )
                                         },
                                         contentPadding = rememberInsetsPaddingValues(
@@ -92,20 +92,20 @@ abstract class BaseComposeFragment : Fragment() {
                                             additionalTop = LocalDensity.current.run {
                                                 (statusBarHeight - LocalWindowInsets.current.statusBars.top)
                                                     .toDp()
-                                            }
+                                            },
                                         ),
                                         navigationIcon = {
                                             IconButton(
-                                                onClick = onNavigateUp()
+                                                onClick = onNavigateUp(),
                                             ) {
                                                 Icon(
                                                     painterResource(id = R.drawable.mozac_ic_back),
                                                     stringResource(R.string.go_back),
-                                                    tint = focusColors.toolbarColor
+                                                    tint = focusColors.toolbarColor,
                                                 )
                                             }
                                         },
-                                        backgroundColor = colorResource(R.color.settings_background)
+                                        backgroundColor = colorResource(R.color.settings_background),
                                     )
                                 }
                                 this@BaseComposeFragment.Content()

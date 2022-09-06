@@ -39,7 +39,7 @@ class FullScreenIntegration(
         sessionUseCases,
         tabId,
         ::viewportFitChanged,
-        ::fullScreenChanged
+        ::fullScreenChanged,
     )
 
     override fun start() {

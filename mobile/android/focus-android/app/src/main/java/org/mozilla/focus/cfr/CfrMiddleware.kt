@@ -31,7 +31,7 @@ class CfrMiddleware(private val appContext: Context) : Middleware<BrowserState, 
     override fun invoke(
         context: MiddlewareContext<BrowserState, BrowserAction>,
         next: (BrowserAction) -> Unit,
-        action: BrowserAction
+        action: BrowserAction,
     ) {
         onboardingConfig = onboardingFeature.value(context = appContext)
         if (onboardingConfig.isCfrEnabled) {
@@ -49,7 +49,7 @@ class CfrMiddleware(private val appContext: Context) : Middleware<BrowserState, 
 
     private fun showTrackingProtectionCfr(
         action: BrowserAction,
-        context: MiddlewareContext<BrowserState, BrowserAction>
+        context: MiddlewareContext<BrowserState, BrowserAction>,
     ) {
         if (shouldShowCfrForTrackingProtection(action = action, browserState = context.state)) {
             if (!tpExposureAlreadyRecorded) {
@@ -59,15 +59,15 @@ class CfrMiddleware(private val appContext: Context) : Middleware<BrowserState, 
 
             components.appStore.dispatch(
                 AppAction.ShowTrackingProtectionCfrChange(
-                    mapOf((action as TrackingProtectionAction.TrackerBlockedAction).tabId to true)
-                )
+                    mapOf((action as TrackingProtectionAction.TrackerBlockedAction).tabId to true),
+                ),
             )
         }
     }
 
     private fun isMozillaUrl(browserState: BrowserState): Boolean {
         return browserState.findTabOrCustomTabOrSelectedTab(
-            browserState.selectedTabId
+            browserState.selectedTabId,
         )?.content?.url?.toUri()?.truncatedHost()?.substringBefore(".") == ("mozilla")
     }
 
@@ -76,7 +76,7 @@ class CfrMiddleware(private val appContext: Context) : Middleware<BrowserState, 
 
     private fun shouldShowCfrForTrackingProtection(
         action: BrowserAction,
-        browserState: BrowserState
+        browserState: BrowserState,
     ) = (
         isActionSecure(action = action) &&
             !isMozillaUrl(browserState = browserState) &&

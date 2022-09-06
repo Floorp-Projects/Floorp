@@ -37,7 +37,7 @@ class MozillaSettingsFragment :
         when (preference.key) {
             resources.getString(R.string.pref_key_about) -> {
                 requireComponents.appStore.dispatch(
-                    AppAction.OpenSettings(Screen.Settings.Page.About)
+                    AppAction.OpenSettings(Screen.Settings.Page.About),
                 )
             }
             resources.getString(R.string.pref_key_help) -> run {
@@ -45,7 +45,7 @@ class MozillaSettingsFragment :
                     SupportUtils.HELP_URL,
                     source = SessionState.Source.Internal.Menu,
                     selectTab = true,
-                    private = true
+                    private = true,
                 )
                 requireComponents.appStore.dispatch(AppAction.OpenTab(tabId))
             }
@@ -54,21 +54,22 @@ class MozillaSettingsFragment :
                     LocalizedContent.URL_RIGHTS,
                     source = SessionState.Source.Internal.Menu,
                     selectTab = true,
-                    private = true
+                    private = true,
                 )
                 requireComponents.appStore.dispatch(AppAction.OpenTab(tabId))
             }
             resources.getString(R.string.pref_key_privacy_notice) -> {
-                val url = if (AppConstants.isKlarBuild)
+                val url = if (AppConstants.isKlarBuild) {
                     SupportUtils.PRIVACY_NOTICE_KLAR_URL
-                else
+                } else {
                     SupportUtils.PRIVACY_NOTICE_URL
+                }
 
                 val tabId = activity.components.tabsUseCases.addTab(
                     url,
                     source = SessionState.Source.Internal.Menu,
                     selectTab = true,
-                    private = true
+                    private = true,
                 )
                 requireComponents.appStore.dispatch(AppAction.OpenTab(tabId))
             }

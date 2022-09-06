@@ -36,13 +36,13 @@ class BrowserRobot {
 
     val progressBar =
         mDevice.findObject(
-            UiSelector().resourceId("$packageName:id/progress")
+            UiSelector().resourceId("$packageName:id/progress"),
         )
 
     fun verifyBrowserView() =
         assertTrue(
             mDevice.findObject(UiSelector().resourceId("$packageName:id/engineView"))
-                .waitForExists(waitingTime)
+                .waitForExists(waitingTime),
         )
 
     fun verifyPageContent(expectedText: String) {
@@ -54,7 +54,7 @@ class BrowserRobot {
         runWithIdleRes(sessionLoadedIdlingResource) {
             assertTrue(
                 mDevice.findObject(UiSelector().textContains(expectedText))
-                    .waitForExists(pageLoadingTime)
+                    .waitForExists(pageLoadingTime),
             )
         }
     }
@@ -63,7 +63,7 @@ class BrowserRobot {
         mDevice.wait(Until.findObject(By.textContains(expectedText)), waitingTime)
         assertTrue(
             mDevice.findObject(UiSelector().textContains(expectedText))
-                .waitForExists(waitingTime)
+                .waitForExists(waitingTime),
         )
         // close the JavaScript alert
         mDevice.pressBack()
@@ -77,7 +77,7 @@ class BrowserRobot {
         runWithIdleRes(sessionLoadedIdlingResource) {
             assertTrue(
                 mDevice.findObject(UiSelector().textContains(expectedText))
-                    .waitForExists(waitingTime)
+                    .waitForExists(waitingTime),
             )
         }
     }
@@ -95,25 +95,27 @@ class BrowserRobot {
     fun verifyCameraPermissionPrompt(url: String) {
         assertTrue(
             mDevice.findObject(UiSelector().text("Allow $url to use your camera?"))
-                .waitForExists(waitingTime)
+                .waitForExists(waitingTime),
         )
     }
 
     fun verifyLocationPermissionPrompt(url: String) {
         assertTrue(
             mDevice.findObject(UiSelector().text("Allow $url to use your location?"))
-                .waitForExists(waitingTime)
+                .waitForExists(waitingTime),
         )
     }
 
     fun allowSitePermissionRequest() {
-        if (permissionAllowBtn.waitForExists(waitingTime))
+        if (permissionAllowBtn.waitForExists(waitingTime)) {
             permissionAllowBtn.click()
+        }
     }
 
     fun denySitePermissionRequest() {
-        if (permissionDenyBtn.waitForExists(waitingTime))
+        if (permissionDenyBtn.waitForExists(waitingTime)) {
             permissionDenyBtn.click()
+        }
     }
 
     fun verifyEraseBrowsingButton(): ViewInteraction =
@@ -127,7 +129,7 @@ class BrowserRobot {
 
     fun openLinkInNewTab() {
         mDevice.findObject(
-            UiSelector().textContains("Open link in private tab")
+            UiSelector().textContains("Open link in private tab"),
         ).waitForExists(waitingTime)
         openLinkInPrivateTab.perform(click())
     }
@@ -135,15 +137,15 @@ class BrowserRobot {
     fun verifyNumberOfTabsOpened(tabsCount: Int) {
         assertTrue(
             mDevice.findObject(
-                UiSelector().description("$tabsCount open tabs. Tap to switch tabs.")
-            ).waitForExists(waitingTime)
+                UiSelector().description("$tabsCount open tabs. Tap to switch tabs."),
+            ).waitForExists(waitingTime),
         )
     }
 
     fun verifyTabsCounterNotShown() {
         assertFalse(
             mDevice.findObject(UiSelector().resourceId("$packageName:id/counter_root"))
-                .waitForExists(waitingTimeShort)
+                .waitForExists(waitingTimeShort),
         )
     }
 
@@ -270,7 +272,7 @@ class BrowserRobot {
             mDevice.findObject(
                 UiSelector()
                     .textContains("$currentDay")
-                    .descriptionContains("$currentDay $currentMonth $currentYear")
+                    .descriptionContains("$currentDay $currentMonth $currentYear"),
             )
 
         monthViewerCurrentDay.click()
@@ -290,14 +292,14 @@ class BrowserRobot {
         mDevice.findObject(
             UiSelector()
                 .textContains("Submit date")
-                .resourceId("submitDate")
+                .resourceId("submitDate"),
         ).waitForExists(waitingTime)
 
         assertTrue(
             mDevice.findObject(
                 UiSelector()
-                    .text("Selected date is: $currentDate")
-            ).waitForExists(waitingTime)
+                    .text("Selected date is: $currentDate"),
+            ).waitForExists(waitingTime),
         )
     }
 
@@ -371,7 +373,7 @@ class BrowserRobot {
 
     fun selectDropDownOption(optionName: String) {
         mDevice.findObject(
-            UiSelector().resourceId("$packageName:id/customPanel")
+            UiSelector().resourceId("$packageName:id/customPanel"),
         ).waitForExists(waitingTime)
         mDevice.findObject(UiSelector().textContains(optionName)).also { it.click() }
     }
@@ -385,14 +387,14 @@ class BrowserRobot {
         mDevice.findObject(
             UiSelector()
                 .textContains("Submit drop down option")
-                .resourceId("submitOption")
+                .resourceId("submitOption"),
         ).waitForExists(waitingTime)
 
         assertTrue(
             mDevice.findObject(
                 UiSelector()
-                    .text("Selected option is: $optionName")
-            ).waitForExists(waitingTime)
+                    .text("Selected option is: $optionName"),
+            ).waitForExists(waitingTime),
         )
     }
 
@@ -429,8 +431,8 @@ class BrowserRobot {
         mDevice.findObject(UiSelector().resourceId("detected_value")).waitForExists(waitingTime)
         assertTrue(
             mDevice.findObject(
-                UiSelector().textContains(areCookiesEnabled)
-            ).waitForExists(waitingTime)
+                UiSelector().textContains(areCookiesEnabled),
+            ).waitForExists(waitingTime),
         )
     }
 
@@ -534,8 +536,8 @@ private fun assertOpenLinksInAppsPrompt(openLinksInAppsEnabled: Boolean, link: S
     } else {
         assertFalse(
             mDevice.findObject(
-                UiSelector().resourceId("$packageName:id/parentPanel")
-            ).waitForExists(waitingTimeShort)
+                UiSelector().resourceId("$packageName:id/parentPanel"),
+            ).waitForExists(waitingTimeShort),
         )
     }
 }
@@ -543,7 +545,7 @@ private fun assertOpenLinksInAppsPrompt(openLinksInAppsEnabled: Boolean, link: S
 private fun openLinksInAppsLink(link: String) = mDevice.findObject(UiSelector().textContains(link))
 
 private val browserURLbar = mDevice.findObject(
-    UiSelector().resourceId("$packageName:id/mozac_browser_toolbar_url_view")
+    UiSelector().resourceId("$packageName:id/mozac_browser_toolbar_url_view"),
 )
 
 private val eraseBrowsingButton = onView(withContentDescription("Erase browsing history"))
@@ -558,13 +560,13 @@ private val shareAppsList =
 private val securityIcon =
     mDevice.findObject(
         UiSelector()
-            .resourceId("$packageName:id/mozac_browser_toolbar_tracking_protection_indicator")
+            .resourceId("$packageName:id/mozac_browser_toolbar_tracking_protection_indicator"),
     )
 
 private val site_security_indicator =
     mDevice.findObject(
         UiSelector()
-            .resourceId("$packageName:id/mozac_browser_toolbar_security_indicator")
+            .resourceId("$packageName:id/mozac_browser_toolbar_security_indicator"),
     )
 
 // Link long-tap context menu items
@@ -606,7 +608,7 @@ private val openLinksInAppsOpenButton =
             .index(1)
             .textContains("OPEN")
             .className("android.widget.Button")
-            .packageName(packageName)
+            .packageName(packageName),
     )
 
 private val currentDate = LocalDate.now()
@@ -619,28 +621,28 @@ private val dropDownForm =
         UiSelector()
             .resourceId("dropDown")
             .className("android.widget.Spinner")
-            .packageName(packageName)
+            .packageName(packageName),
     )
 
 private val submitDropDownButton =
     mDevice.findObject(
         UiSelector()
             .textContains("Submit drop down option")
-            .resourceId("submitOption")
+            .resourceId("submitOption"),
     )
 
 private val textInputBox =
     mDevice.findObject(
         UiSelector()
             .resourceId("textInput")
-            .packageName(packageName)
+            .packageName(packageName),
     )
 
 private val submitTextInputButton =
     mDevice.findObject(
         UiSelector()
             .textContains("Submit input")
-            .resourceId("submitInput")
+            .resourceId("submitInput"),
     )
 
 private val calendarForm =
@@ -648,22 +650,22 @@ private val calendarForm =
         UiSelector()
             .resourceId("calendar")
             .className("android.widget.Spinner")
-            .packageName(packageName)
+            .packageName(packageName),
     )
 
 val submitDateButton =
     mDevice.findObject(
         UiSelector()
             .textContains("Submit date")
-            .resourceId("submitDate")
+            .resourceId("submitDate"),
     )
 
 private val permissionAllowBtn = mDevice.findObject(
     UiSelector()
-        .resourceId("$packageName:id/allow_button")
+        .resourceId("$packageName:id/allow_button"),
 )
 
 private val permissionDenyBtn = mDevice.findObject(
     UiSelector()
-        .resourceId("$packageName:id/deny_button")
+        .resourceId("$packageName:id/deny_button"),
 )

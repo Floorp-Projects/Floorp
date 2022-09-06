@@ -51,7 +51,7 @@ class PreferenceToolTipCompose(context: Context, attrs: AttributeSet?) :
                 onDismissButton = {
                     context.settings.shouldShowPrivacySecuritySettingsToolTip = false
                     preferenceManager.preferenceScreen.removePreference(this)
-                }
+                },
             )
         }
     }
@@ -75,7 +75,7 @@ fun ToolTipContent(onDismissButton: () -> Unit) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .wrapContentSize(Alignment.Center)
+                .wrapContentSize(Alignment.Center),
         ) {
             Box(
                 modifier = Modifier
@@ -88,21 +88,21 @@ fun ToolTipContent(onDismissButton: () -> Unit) {
                         brush = Brush.linearGradient(
                             colors = listOf(
                                 colorResource(R.color.cfr_pop_up_shape_end_color),
-                                colorResource(R.color.cfr_pop_up_shape_start_color)
+                                colorResource(R.color.cfr_pop_up_shape_start_color),
                             ),
                             end = Offset(0f, Float.POSITIVE_INFINITY),
-                            start = Offset(Float.POSITIVE_INFINITY, 0f)
-                        )
+                            start = Offset(Float.POSITIVE_INFINITY, 0f),
+                        ),
                     ),
-                contentAlignment = Alignment.CenterStart
+                contentAlignment = Alignment.CenterStart,
             ) {
                 Column(
                     modifier = Modifier
                         .wrapContentHeight()
                         .padding(16.dp),
                     verticalArrangement = Arrangement.spacedBy(
-                        10.dp
-                    )
+                        10.dp,
+                    ),
                 ) {
                     Text(
                         text = stringResource(R.string.tool_tip_title),
@@ -110,25 +110,25 @@ fun ToolTipContent(onDismissButton: () -> Unit) {
                         letterSpacing = 0.5.sp,
                         color = focusColors.privacySecuritySettingsToolTip,
                         fontWeight = FontWeight.Bold,
-                        lineHeight = 20.sp
+                        lineHeight = 20.sp,
                     )
                     Text(
                         text = stringResource(R.string.tool_tip_message),
                         fontSize = 14.sp,
                         color = focusColors.privacySecuritySettingsToolTip,
-                        lineHeight = 20.sp
+                        lineHeight = 20.sp,
                     )
                 }
                 IconButton(
                     onClick = onDismissButton,
                     modifier = Modifier.align(
-                        Alignment.TopEnd
-                    )
+                        Alignment.TopEnd,
+                    ),
                 ) {
                     Icon(
                         Icons.Filled.Close,
                         contentDescription = stringResource(R.string.tool_tip_dismiss_button_content_description),
-                        tint = focusColors.privacySecuritySettingsToolTip
+                        tint = focusColors.privacySecuritySettingsToolTip,
                     )
                 }
             }

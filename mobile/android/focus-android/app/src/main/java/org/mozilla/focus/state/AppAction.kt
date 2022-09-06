@@ -16,14 +16,14 @@ sealed class AppAction : Action {
      * The selected tab has changed.
      */
     data class SelectionChanged(
-        val tabId: String
+        val tabId: String,
     ) : AppAction()
 
     /**
      * Action for editing the URL of the tab with the given [tabId].
      */
     data class EditAction(
-        val tabId: String
+        val tabId: String,
     ) : AppAction()
 
     /**
@@ -35,7 +35,7 @@ sealed class AppAction : Action {
      * The user finished editing the URL of the tab with the given [tabId].
      */
     data class FinishEdit(
-        val tabId: String
+        val tabId: String,
     ) : AppAction()
 
     /**

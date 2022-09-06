@@ -25,7 +25,7 @@ import org.mozilla.focus.topsites.DefaultTopSitesStorage
 class LockObserver(
     private val context: Context,
     private val browserStore: BrowserStore,
-    private val appStore: AppStore
+    private val appStore: AppStore,
 ) : DefaultLifecycleObserver {
 
     override fun onCreate(owner: LifecycleOwner) {
@@ -45,7 +45,7 @@ class LockObserver(
             TabCount.appBackgrounded.accumulateSamples(listOf(tabCount))
             val topSitesList = context.components.topSitesStorage.getTopSites(
                 totalSites = DefaultTopSitesStorage.TOP_SITES_MAX_LIMIT,
-                frecencyConfig = null
+                frecencyConfig = null,
             )
             if (tabCount == 0L && topSitesList.isNullOrEmpty()) {
                 return@launch

@@ -48,7 +48,7 @@ fun Iterable<GroupableRadioButton>.uncheckAll() {
 @SuppressLint("RestrictedApi")
 open class RadioButtonPreference @JvmOverloads constructor(
     context: Context,
-    attrs: AttributeSet? = null
+    attrs: AttributeSet? = null,
 ) : Preference(context, attrs), GroupableRadioButton {
     private val radioGroups = mutableListOf<GroupableRadioButton>()
     private var summaryView: TextView? = null
@@ -72,9 +72,9 @@ open class RadioButtonPreference @JvmOverloads constructor(
             getAttr(
                 context,
                 androidx.preference.R.attr.preferenceStyle,
-                android.R.attr.preferenceStyle
+                android.R.attr.preferenceStyle,
             ),
-            0
+            0,
         ) {
             defaultValue = when {
                 hasValue(R.styleable.RadioButtonPreference_defaultValue) ->

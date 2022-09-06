@@ -55,8 +55,8 @@ class BiometricAuthenticationFragmentTest {
                     }
                     override fun onAuthSuccess() {
                     }
-                }
-            )
+                },
+            ),
         )
 
         titleBiometric = testContext.getString(R.string.biometric_prompt_title)

@@ -10,5 +10,5 @@ import mozilla.components.lib.state.Store
  * A [Store] keeping track of the global app state.
  */
 class AppStore(
-    initialState: AppState
+    initialState: AppState,
 ) : Store<AppState, AppAction>(initialState, AppReducer)
