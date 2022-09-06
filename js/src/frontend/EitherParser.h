@@ -54,11 +54,6 @@ struct InvokeMemberFunction {
 // |this|-computing templates.
 
 template <class Parser>
-struct GetParser {
-  static Parser* get(Parser* parser) { return parser; }
-};
-
-template <class Parser>
 struct GetTokenStream {
   static auto get(Parser* parser) { return &parser->tokenStream; }
 };
@@ -97,8 +92,6 @@ class EitherParser final {
                    Parser<FullParseHandler, mozilla::Utf8Unit>* const>
       parser;
 
-  using Node = typename FullParseHandler::Node;
-
   template <template <class Parser> class GetThis,
             template <class This> class GetMemberFunction,
             typename... StoredArgs>
@@ -109,9 +102,6 @@ class EitherParser final {
   template <class Parser>
   explicit EitherParser(Parser* parser) : parser(parser) {}
 
-  ErrorReporter& errorReporter() {
-    return parser.match(detail::ErrorReporterMatcher());
-  }
   const ErrorReporter& errorReporter() const {
     return parser.match(detail::ErrorReporterMatcher());
   }
@@ -123,11 +113,6 @@ class EitherParser final {
                          uint32_t*, uint32_t*>
         matcher{offset, line, column};
     return parser.match(std::move(matcher));
-  }
-
-  CompilationState& getCompilationState() {
-    ParserSharedBase& base = parser.match(detail::ParserSharedBaseMatcher());
-    return base.getCompilationState();
   }
 
   ParserAtomsTable& parserAtoms() {
