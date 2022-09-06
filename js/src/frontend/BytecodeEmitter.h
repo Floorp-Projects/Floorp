@@ -237,7 +237,7 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
   // initialized.
   mozilla::Maybe<EitherParser> ep_ = {};
 
-  ErrorReporter* errorReporter_ = nullptr;
+  const ErrorReporter& errorReporter_;
 
  public:
   CompilationState& compilationState;
@@ -264,7 +264,7 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
   friend class AutoCheckUnstableEmitterScope;
 #endif
 
-  ErrorReporter& errorReporter() const { return *errorReporter_; }
+  const ErrorReporter& errorReporter() const { return errorReporter_; }
 
   ParserAtomsTable& parserAtoms() { return compilationState.parserAtoms; }
   const ParserAtomsTable& parserAtoms() const {
@@ -324,6 +324,7 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
   // Internal constructor, for delegation use only.
   BytecodeEmitter(BytecodeEmitter* parent, ErrorContext* ec,
                   JS::NativeStackLimit stackLimit, SharedContext* sc,
+                  const ErrorReporter& errorReporter,
                   CompilationState& compilationState, EmitterMode emitterMode);
 
   BytecodeEmitter(BytecodeEmitter* parent, SharedContext* sc);

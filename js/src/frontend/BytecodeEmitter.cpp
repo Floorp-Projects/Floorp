@@ -133,6 +133,7 @@ static bool ShouldSuppressBreakpointsAndSourceNotes(
 BytecodeEmitter::BytecodeEmitter(BytecodeEmitter* parent, ErrorContext* ec,
                                  JS::NativeStackLimit stackLimit,
                                  SharedContext* sc,
+                                 const ErrorReporter& errorReporter,
                                  CompilationState& compilationState,
                                  EmitterMode emitterMode)
     : sc(sc),
@@ -142,6 +143,7 @@ BytecodeEmitter::BytecodeEmitter(BytecodeEmitter* parent, ErrorContext* ec,
       parent(parent),
       bytecodeSection_(cx, sc->extent().lineno, sc->extent().column),
       perScriptData_(cx, compilationState),
+      errorReporter_(errorReporter),
       compilationState(compilationState),
       suppressBreakpointsAndSourceNotes(
           ShouldSuppressBreakpointsAndSourceNotes(sc, emitterMode)),
@@ -152,19 +154,17 @@ BytecodeEmitter::BytecodeEmitter(BytecodeEmitter* parent, ErrorContext* ec,
 
 BytecodeEmitter::BytecodeEmitter(BytecodeEmitter* parent, SharedContext* sc)
     : BytecodeEmitter(parent, parent->ec, parent->stackLimit, sc,
-                      parent->compilationState, parent->emitterMode) {
-  errorReporter_ = parent->errorReporter_;
-}
+                      parent->errorReporter_, parent->compilationState,
+                      parent->emitterMode) {}
 
 BytecodeEmitter::BytecodeEmitter(ErrorContext* ec,
                                  JS::NativeStackLimit stackLimit,
                                  const EitherParser& parser, SharedContext* sc,
                                  CompilationState& compilationState,
                                  EmitterMode emitterMode)
-    : BytecodeEmitter(nullptr, ec, stackLimit, sc, compilationState,
-                      emitterMode) {
+    : BytecodeEmitter(nullptr, ec, stackLimit, sc, parser.errorReporter(),
+                      compilationState, emitterMode) {
   ep_.emplace(parser);
-  errorReporter_ = &ep_->errorReporter();
 }
 
 void BytecodeEmitter::initFromBodyPosition(TokenPos bodyPosition) {
@@ -555,15 +555,15 @@ bool BytecodeEmitter::updateLineNumberNotes(uint32_t offset) {
     return true;
   }
 
-  ErrorReporter* er = &errorReporter();
+  const ErrorReporter& er = errorReporter();
   bool onThisLine;
-  if (!er->isOnThisLine(offset, bytecodeSection().currentLine(), &onThisLine)) {
-    er->errorNoOffset(JSMSG_OUT_OF_MEMORY);
+  if (!er.isOnThisLine(offset, bytecodeSection().currentLine(), &onThisLine)) {
+    er.errorNoOffset(JSMSG_OUT_OF_MEMORY);
     return false;
   }
 
   if (!onThisLine) {
-    unsigned line = er->lineAt(offset);
+    unsigned line = er.lineAt(offset);
     unsigned delta = line - bytecodeSection().currentLine();
 
     // If we use a `SetLine` note below, we want it to be relative to the
