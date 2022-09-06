@@ -11496,6 +11496,14 @@
   value: 5
   mirror: always
 
+
+# Maximum number of bytes that will be used to determine the content-type when
+# it is unkonwn, according to the mimesniff's specification algorithm.
+- name: network.http.mimesniff_max_length
+  type: RelaxedAtomicUint32
+  value: 8192
+  mirror: always
+
 # The maximum count that we allow socket prrocess to crash. If this count is
 # reached, we won't use networking over socket process.
 - name: network.max_socket_process_failed_count
