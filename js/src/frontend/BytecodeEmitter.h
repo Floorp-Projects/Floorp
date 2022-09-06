@@ -67,7 +67,6 @@ class SharedContext;
 class TDZCheckCache;
 class TryEmitter;
 
-struct BCEParserHandle;
 struct TokenPos;
 
 enum class ValueIsOnStack { Yes, No };
@@ -234,12 +233,13 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
   // switchToMain sets this to the bytecode offset of the main section.
   mozilla::Maybe<uint32_t> mainOffset_ = {};
 
- public:
   // Private storage for parser wrapper. DO NOT REFERENCE INTERNALLY. May not be
-  // initialized. Use |parser| instead.
+  // initialized.
   mozilla::Maybe<EitherParser> ep_ = {};
-  BCEParserHandle* parser = nullptr;
 
+  ErrorReporter* errorReporter_ = nullptr;
+
+ public:
   CompilationState& compilationState;
 
   uint32_t maxFixedSlots = 0; /* maximum number of fixed frame slots so far */
@@ -264,7 +264,7 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
   friend class AutoCheckUnstableEmitterScope;
 #endif
 
-  ErrorReporter& errorReporter() const { return parser->errorReporter(); }
+  ErrorReporter& errorReporter() const { return *errorReporter_; }
 
   ParserAtomsTable& parserAtoms() { return compilationState.parserAtoms; }
   const ParserAtomsTable& parserAtoms() const {
@@ -326,9 +326,7 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
                   JS::NativeStackLimit stackLimit, SharedContext* sc,
                   CompilationState& compilationState, EmitterMode emitterMode);
 
-  BytecodeEmitter(BytecodeEmitter* parent, BCEParserHandle* handle,
-                  SharedContext* sc, CompilationState& compilationState,
-                  EmitterMode emitterMode);
+  BytecodeEmitter(BytecodeEmitter* parent, SharedContext* sc);
 
   void initFromBodyPosition(TokenPos bodyPosition);
 
