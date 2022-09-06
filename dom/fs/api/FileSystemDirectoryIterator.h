@@ -10,6 +10,7 @@
 #include "nsCOMPtr.h"
 #include "nsISupports.h"
 #include "nsWrapperCache.h"
+#include "mozilla/dom/IterableIterator.h"
 
 class nsIGlobalObject;
 
@@ -19,14 +20,29 @@ class ErrorResult;
 
 namespace dom {
 
+class FileSystemManager;
+class IterableIteratorBase;
 class Promise;
 
+// XXX This class isn't used to support iteration anymore. `Impl` should be
+// extracted elsewhere and `FileSystemDirectoryIterator` should be removed
+// completely
 class FileSystemDirectoryIterator : public nsISupports, public nsWrapperCache {
  public:
-  explicit FileSystemDirectoryIterator(nsIGlobalObject* aGlobal);
+  class Impl {
+   public:
+    virtual already_AddRefed<Promise> Next(nsIGlobalObject* aGlobal,
+                                           RefPtr<FileSystemManager>& aManager,
+                                           ErrorResult& aError) = 0;
+    virtual ~Impl() = default;
+  };
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(FileSystemDirectoryIterator)
+
+  explicit FileSystemDirectoryIterator(nsIGlobalObject* aGlobal,
+                                       RefPtr<FileSystemManager>& aManager,
+                                       UniquePtr<Impl> aImpl);
 
   // WebIDL Boilerplate
   nsIGlobalObject* GetParentObject() const;
@@ -41,6 +57,11 @@ class FileSystemDirectoryIterator : public nsISupports, public nsWrapperCache {
   virtual ~FileSystemDirectoryIterator() = default;
 
   nsCOMPtr<nsIGlobalObject> mGlobal;
+
+  RefPtr<FileSystemManager> mManager;
+
+ private:
+  UniquePtr<Impl> mImpl;
 };
 
 }  // namespace dom

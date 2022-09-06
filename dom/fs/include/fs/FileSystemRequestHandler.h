@@ -20,14 +20,10 @@ class Promise;
 
 namespace fs {
 
+class ArrayAppendable;
 class FileSystemChildMetadata;
 class FileSystemEntryMetadata;
 class FileSystemEntryPair;
-
-class ArrayAppendable {
- public:
-  void append(const nsTArray<RefPtr<FileSystemHandle>>& /* aBatch */) {}
-};
 
 class FileSystemRequestHandler {
  public:

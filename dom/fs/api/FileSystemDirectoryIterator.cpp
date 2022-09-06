@@ -8,13 +8,10 @@
 
 #include "mozilla/ErrorResult.h"
 #include "mozilla/dom/FileSystemDirectoryIteratorBinding.h"
+#include "mozilla/dom/FileSystemManager.h"
 #include "mozilla/dom/Promise.h"
 
 namespace mozilla::dom {
-
-FileSystemDirectoryIterator::FileSystemDirectoryIterator(
-    nsIGlobalObject* aGlobal)
-    : mGlobal(aGlobal) {}
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(FileSystemDirectoryIterator)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
@@ -23,6 +20,11 @@ NS_INTERFACE_MAP_END
 NS_IMPL_CYCLE_COLLECTING_ADDREF(FileSystemDirectoryIterator);
 NS_IMPL_CYCLE_COLLECTING_RELEASE(FileSystemDirectoryIterator);
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(FileSystemDirectoryIterator, mGlobal);
+
+FileSystemDirectoryIterator::FileSystemDirectoryIterator(
+    nsIGlobalObject* aGlobal, RefPtr<FileSystemManager>& aManager,
+    UniquePtr<Impl> aImpl)
+    : mGlobal(aGlobal), mManager(aManager), mImpl(std::move(aImpl)) {}
 
 // WebIDL Boilerplate
 
@@ -44,9 +46,8 @@ already_AddRefed<Promise> FileSystemDirectoryIterator::Next(
     return nullptr;
   }
 
-  promise->MaybeReject(NS_ERROR_NOT_IMPLEMENTED);
-
-  return promise.forget();
+  MOZ_ASSERT(mImpl);
+  return mImpl->Next(mGlobal, mManager, aError);
 }
 
 }  // namespace mozilla::dom

@@ -28,7 +28,6 @@ class ErrorResult;
 
 namespace dom {
 
-class DOMString;
 enum class FileSystemHandleKind : uint8_t;
 class FileSystemManager;
 class FileSystemManagerChild;

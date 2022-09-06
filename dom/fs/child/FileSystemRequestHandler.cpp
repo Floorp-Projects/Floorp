@@ -6,6 +6,7 @@
 
 #include "fs/FileSystemRequestHandler.h"
 
+#include "ArrayAppendable.h"
 #include "fs/FileSystemConstants.h"
 #include "mozilla/dom/File.h"
 #include "mozilla/dom/FileSystemDirectoryHandle.h"
@@ -42,21 +43,17 @@ void GetDirectoryContentsResponseHandler(
   // TODO: Add page size to FileSystemConstants, preallocate and handle overflow
   const auto& listing = aResponse.get_FileSystemDirectoryListing();
 
-  nsTArray<RefPtr<FileSystemHandle>> batch;
+  nsTArray<FileSystemEntryMetadata> batch;
 
   for (const auto& it : listing.files()) {
-    RefPtr<FileSystemHandle> handle =
-        new FileSystemFileHandle(aGlobal, aManager, it);
-    batch.AppendElement(handle);
+    batch.AppendElement(it);
   }
 
   for (const auto& it : listing.directories()) {
-    RefPtr<FileSystemHandle> handle =
-        new FileSystemDirectoryHandle(aGlobal, aManager, it);
-    batch.AppendElement(handle);
+    batch.AppendElement(it);
   }
 
-  aSink.append(batch);
+  aSink.append(aGlobal, aManager, batch);
 }
 
 RefPtr<FileSystemDirectoryHandle> MakeResolution(
