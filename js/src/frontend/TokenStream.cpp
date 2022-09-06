@@ -1617,12 +1617,6 @@ bool TokenStreamAnyChars::fillExceptingContext(ErrorMetadata* err,
   return true;
 }
 
-template <typename Unit, class AnyCharsAccess>
-bool TokenStreamSpecific<Unit, AnyCharsAccess>::hasTokenizationStarted() const {
-  const TokenStreamAnyChars& anyChars = anyCharsAccess();
-  return anyChars.isCurrentTokenType(TokenKind::Eof) && !anyChars.isEOF();
-}
-
 template <>
 inline void SourceUnits<char16_t>::computeWindowOffsetAndLength(
     const char16_t* encodedWindow, size_t encodedTokenOffset,

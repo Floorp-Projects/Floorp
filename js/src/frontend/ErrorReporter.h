@@ -318,13 +318,6 @@ class ErrorReportMixin : public StrictModeGetter {
 // classes for emitter.
 class ErrorReporter : public ErrorReportMixin {
  public:
-  // Returns the line and column numbers for given offset.
-  virtual void lineAndColumnAt(size_t offset, uint32_t* line,
-                               uint32_t* column) const = 0;
-
-  // Returns the line and column numbers for current offset.
-  virtual void currentLineAndColumn(uint32_t* line, uint32_t* column) const = 0;
-
   // Sets *onThisLine to true if the given offset is inside the given line
   // number `lineNum`, or false otherwise, and returns true.
   //
@@ -338,13 +331,6 @@ class ErrorReporter : public ErrorReportMixin {
 
   // Returns the column number for given offset.
   virtual uint32_t columnAt(size_t offset) const = 0;
-
-  // Returns true if tokenization is already started and hasn't yet finished.
-  // currentLineAndColumn returns meaningful value only if this is true.
-  virtual bool hasTokenizationStarted() const = 0;
-
-  // Returns the filename which is currently being compiled.
-  virtual const char* getFilename() const = 0;
 };
 
 }  // namespace frontend

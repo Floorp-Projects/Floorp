@@ -2523,16 +2523,6 @@ class MOZ_STACK_CLASS TokenStreamSpecific
  public:
   // Implement ErrorReporter.
 
-  void lineAndColumnAt(size_t offset, uint32_t* line,
-                       uint32_t* column) const final {
-    computeLineAndColumn(offset, line, column);
-  }
-
-  void currentLineAndColumn(uint32_t* line, uint32_t* column) const final {
-    computeLineAndColumn(anyCharsAccess().currentToken().pos.begin, line,
-                         column);
-  }
-
   bool isOnThisLine(size_t offset, uint32_t lineNum,
                     bool* onThisLine) const final {
     return anyCharsAccess().srcCoords.isOnThisLine(offset, lineNum, onThisLine);
@@ -2546,12 +2536,6 @@ class MOZ_STACK_CLASS TokenStreamSpecific
 
   uint32_t columnAt(size_t offset) const final {
     return computeColumn(anyCharsAccess().lineToken(offset), offset);
-  }
-
-  bool hasTokenizationStarted() const final;
-
-  const char* getFilename() const final {
-    return anyCharsAccess().getFilename();
   }
 
  private:
