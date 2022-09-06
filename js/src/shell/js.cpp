@@ -5741,8 +5741,7 @@ static bool OffThreadCompileToStencil(JSContext* cx, unsigned argc, Value* vp) {
   UniqueChars fileNameBytes;
   CompileOptions options(cx);
   options.setIntroductionType("js shell offThreadCompileToStencil")
-      .setFileAndLine("<string>", 1)
-      .setDeferDebugMetadata();
+      .setFileAndLine("<string>", 1);
 
   if (args.length() >= 2) {
     if (!args[1].isObject()) {
