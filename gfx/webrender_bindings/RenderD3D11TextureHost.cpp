@@ -20,7 +20,7 @@ namespace wr {
 RenderDXGITextureHost::RenderDXGITextureHost(
     WindowsHandle aHandle, Maybe<uint64_t>& aGpuProcessTextureId,
     uint32_t aArrayIndex, gfx::SurfaceFormat aFormat,
-    gfx::YUVColorSpace aYUVColorSpace, gfx::ColorRange aColorRange,
+    gfx::ColorSpace2 aColorSpace, gfx::ColorRange aColorRange,
     gfx::IntSize aSize)
     : mHandle(aHandle),
       mGpuProcessTextureId(aGpuProcessTextureId),
@@ -29,7 +29,7 @@ RenderDXGITextureHost::RenderDXGITextureHost(
       mStream(0),
       mTextureHandle{0},
       mFormat(aFormat),
-      mYUVColorSpace(aYUVColorSpace),
+      mColorSpace(aColorSpace),
       mColorRange(aColorRange),
       mSize(aSize),
       mLocked(false) {
