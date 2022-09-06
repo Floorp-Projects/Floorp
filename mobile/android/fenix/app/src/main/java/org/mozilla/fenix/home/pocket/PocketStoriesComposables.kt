@@ -67,6 +67,7 @@ import org.mozilla.fenix.compose.ListItemTabSurface
 import org.mozilla.fenix.compose.SelectableChip
 import org.mozilla.fenix.compose.StaggeredHorizontalGrid
 import org.mozilla.fenix.compose.TabSubtitleWithInterdot
+import org.mozilla.fenix.compose.inComposePreview
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.theme.FirefoxTheme
 import org.mozilla.fenix.theme.Theme
@@ -278,40 +279,44 @@ private fun Modifier.onShown(
     var lastVisibleCoordinates: LayoutCoordinates? = null
 
     return composed {
-        val context = LocalContext.current
-        var wasEventReported by remember { mutableStateOf(false) }
+        if (inComposePreview) {
+            Modifier
+        } else {
+            val context = LocalContext.current
+            var wasEventReported by remember { mutableStateOf(false) }
 
-        val toolbarHeight = context.resources.getDimensionPixelSize(R.dimen.browser_toolbar_height)
-        val isToolbarPlacedAtBottom = context.settings().shouldUseBottomToolbar
-        // Get a Rect of the entire screen minus system insets minus the toolbar
-        val screenBounds = Rect()
-            .apply { LocalView.current.getWindowVisibleDisplayFrame(this) }
-            .apply {
-                when (isToolbarPlacedAtBottom) {
-                    true -> bottom -= toolbarHeight
-                    false -> top += toolbarHeight
+            val toolbarHeight = context.resources.getDimensionPixelSize(R.dimen.browser_toolbar_height)
+            val isToolbarPlacedAtBottom = context.settings().shouldUseBottomToolbar
+            // Get a Rect of the entire screen minus system insets minus the toolbar
+            val screenBounds = Rect()
+                .apply { LocalView.current.getWindowVisibleDisplayFrame(this) }
+                .apply {
+                    when (isToolbarPlacedAtBottom) {
+                        true -> bottom -= toolbarHeight
+                        false -> top += toolbarHeight
+                    }
+                }
+
+            // In the event this composable starts as visible but then gets pushed offscreen
+            // before MINIMUM_TIME_TO_SETTLE_MS we will not report is as being visible.
+            // In the LaunchedEffect we add support for when the composable starts as visible and then
+            // it's position isn't changed after MINIMUM_TIME_TO_SETTLE_MS so it must be reported as visible.
+            LaunchedEffect(initialTime) {
+                delay(MINIMUM_TIME_TO_SETTLE_MS.toLong())
+                if (!wasEventReported && lastVisibleCoordinates?.isVisible(screenBounds, threshold) == true) {
+                    wasEventReported = true
+                    onVisible()
                 }
             }
 
-        // In the event this composable starts as visible but then gets pushed offscreen
-        // before MINIMUM_TIME_TO_SETTLE_MS we will not report is as being visible.
-        // In the LaunchedEffect we add support for when the composable starts as visible and then
-        // it's position isn't changed after MINIMUM_TIME_TO_SETTLE_MS so it must be reported as visible.
-        LaunchedEffect(initialTime) {
-            delay(MINIMUM_TIME_TO_SETTLE_MS.toLong())
-            if (!wasEventReported && lastVisibleCoordinates?.isVisible(screenBounds, threshold) == true) {
-                wasEventReported = true
-                onVisible()
-            }
-        }
-
-        onGloballyPositioned { coordinates ->
-            if (!wasEventReported && coordinates.isVisible(screenBounds, threshold)) {
-                if (System.currentTimeMillis() - initialTime > MINIMUM_TIME_TO_SETTLE_MS) {
-                    wasEventReported = true
-                    onVisible()
-                } else {
-                    lastVisibleCoordinates = coordinates
+            onGloballyPositioned { coordinates ->
+                if (!wasEventReported && coordinates.isVisible(screenBounds, threshold)) {
+                    if (System.currentTimeMillis() - initialTime > MINIMUM_TIME_TO_SETTLE_MS) {
+                        wasEventReported = true
+                        onVisible()
+                    } else {
+                        lastVisibleCoordinates = coordinates
+                    }
                 }
             }
         }
