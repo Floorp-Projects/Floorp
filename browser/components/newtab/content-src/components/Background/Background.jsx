@@ -1,9 +1,8 @@
 import React, { useState } from "react";
-import images from "./images.json";
 
-const imgOrigin = "https://images.unsplash.com/";
+const imgLength = 100;
 
 export function Background() {
-  const [imgSrc, setImgSrc] = useState(imgOrigin + images[Math.floor(Math.random() * images.length)]);
+  const [imgSrc] = useState(`chrome://branding/content/newtabbg-${Math.floor(Math.random() * imgLength)}.jpg`);
   return <div id="background" style={{background: `url(${imgSrc})`}} />
 }
