@@ -21,6 +21,8 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
 });
 
 class BrowsingContextModule extends Module {
+  #listeningToDOMContentLoaded;
+  #listeningToLoad;
   #loadListener;
 
   constructor(messageHandler) {
@@ -29,32 +31,69 @@ class BrowsingContextModule extends Module {
     // Setup the LoadListener as early as possible.
     this.#loadListener = new lazy.LoadListener(this.messageHandler.window);
     this.#loadListener.on("DOMContentLoaded", this.#onDOMContentLoaded);
+    this.#loadListener.on("load", this.#onLoad);
   }
 
   destroy() {
     this.#loadListener.destroy();
   }
 
-  #subscribeEvent(event) {
-    if (event === "browsingContext.DOMContentLoaded") {
+  #startListening() {
+    if (!this.#listeningToDOMContentLoaded && !this.#listeningToLoad) {
       this.#loadListener.startListening();
     }
   }
 
+  #subscribeEvent(event) {
+    switch (event) {
+      case "browsingContext.DOMContentLoaded":
+        this.#startListening();
+        this.#listeningToDOMContentLoaded = true;
+        break;
+      case "browsingContext.load":
+        this.#startListening();
+        this.#listeningToLoad = true;
+        break;
+    }
+  }
+
   #unsubscribeEvent(event) {
-    if (event === "browsingContext.DOMContentLoaded") {
+    switch (event) {
+      case "browsingContext.DOMContentLoaded":
+        this.#listeningToDOMContentLoaded = false;
+        break;
+      case "browsingContext.load":
+        this.#listeningToLoad = false;
+        break;
+    }
+
+    if (!this.#listeningToDOMContentLoaded && !this.#listeningToLoad) {
       this.#loadListener.stopListening();
     }
   }
 
   #onDOMContentLoaded = (eventName, data) => {
-    this.messageHandler.emitEvent("browsingContext.DOMContentLoaded", {
-      baseURL: data.target.baseURI,
-      contextId: this.messageHandler.contextId,
-      documentURL: data.target.URL,
-      innerWindowId: this.messageHandler.innerWindowId,
-      readyState: data.target.readyState,
-    });
+    if (this.#listeningToDOMContentLoaded) {
+      this.messageHandler.emitEvent("browsingContext.DOMContentLoaded", {
+        baseURL: data.target.baseURI,
+        contextId: this.messageHandler.contextId,
+        documentURL: data.target.URL,
+        innerWindowId: this.messageHandler.innerWindowId,
+        readyState: data.target.readyState,
+      });
+    }
+  };
+
+  #onLoad = (eventName, data) => {
+    if (this.#listeningToLoad) {
+      this.emitEvent("browsingContext.load", {
+        context: this.messageHandler.context,
+        // TODO: The navigation id should be a real id mapped to the navigation.
+        // See https://bugzilla.mozilla.org/show_bug.cgi?id=1763122
+        navigation: null,
+        url: data.target.baseURI,
+      });
+    }
   };
 
   /**

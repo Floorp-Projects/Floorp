@@ -26,4 +26,5 @@ remote.jar:
   content/webdriver-bidi/modules/windowglobal/script.jsm (modules/windowglobal/script.jsm)
 
   # WebDriver BiDi windowglobal-in-root modules
+  content/webdriver-bidi/modules/windowglobal-in-root/browsingContext.jsm (modules/windowglobal-in-root/browsingContext.jsm)
   content/webdriver-bidi/modules/windowglobal-in-root/log.jsm (modules/windowglobal-in-root/log.jsm)
