@@ -54,7 +54,7 @@ struct RelationData {
   nsStaticAtom* const mAtom;
   nsStaticAtom* const mValidTag;
   RelationType mType;
-  RelationType mReverseType;
+  Maybe<RelationType> mReverseType;
 };
 
 /**
@@ -70,17 +70,17 @@ struct RelationData {
  */
 static constexpr RelationData kRelationTypeAtoms[] = {
     {nsGkAtoms::aria_labelledby, nullptr, RelationType::LABELLED_BY,
-     RelationType::LABEL_FOR},
+     Some(RelationType::LABEL_FOR)},
     {nsGkAtoms::_for, nsGkAtoms::label, RelationType::LABEL_FOR,
-     RelationType::LABELLED_BY},
+     Some(RelationType::LABELLED_BY)},
     {nsGkAtoms::aria_controls, nullptr, RelationType::CONTROLLER_FOR,
-     RelationType::CONTROLLED_BY},
+     Some(RelationType::CONTROLLED_BY)},
     {nsGkAtoms::_for, nsGkAtoms::output, RelationType::CONTROLLED_BY,
-     RelationType::CONTROLLER_FOR},
+     Some(RelationType::CONTROLLER_FOR)},
     {nsGkAtoms::aria_describedby, nullptr, RelationType::DESCRIBED_BY,
-     RelationType::DESCRIPTION_FOR},
+     Some(RelationType::DESCRIPTION_FOR)},
     {nsGkAtoms::aria_flowto, nullptr, RelationType::FLOWS_TO,
-     RelationType::FLOWS_FROM},
+     Some(RelationType::FLOWS_FROM)},
 };
 
 }  // namespace a11y
