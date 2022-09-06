@@ -130,30 +130,45 @@ class DeviceManagerDx final {
   void ForceDeviceReset(ForcedDeviceResetReason aReason);
 
  private:
+  void ResetDevicesLocked() MOZ_REQUIRES(mDeviceLock);
+
+  // Device reset helpers.
+  bool HasDeviceResetLocked(DeviceResetReason* aOutReason = nullptr)
+      MOZ_REQUIRES(mDeviceLock);
+
   // Pre-load any compositor resources that are expensive, and are needed when
   // we attempt to create a compositor.
   static void PreloadAttachmentsOnCompositorThread();
 
-  IDXGIAdapter1* GetDXGIAdapter();
+  already_AddRefed<IDXGIAdapter1> GetDXGIAdapter();
+  IDXGIAdapter1* GetDXGIAdapterLocked() MOZ_REQUIRES(mDeviceLock);
 
   void DisableD3D11AfterCrash();
 
-  void CreateCompositorDevice(mozilla::gfx::FeatureState& d3d11);
+  bool CreateCompositorDevicesLocked() MOZ_REQUIRES(mDeviceLock);
+  void CreateContentDevicesLocked() MOZ_REQUIRES(mDeviceLock);
+  void CreateDirectCompositionDeviceLocked() MOZ_REQUIRES(mDeviceLock);
+  bool CreateCanvasDeviceLocked() MOZ_REQUIRES(mDeviceLock);
+
+  void CreateCompositorDevice(mozilla::gfx::FeatureState& d3d11)
+      MOZ_REQUIRES(mDeviceLock);
   bool CreateCompositorDeviceHelper(mozilla::gfx::FeatureState& aD3d11,
                                     IDXGIAdapter1* aAdapter,
                                     bool aAttemptVideoSupport,
-                                    RefPtr<ID3D11Device>& aOutDevice);
+                                    RefPtr<ID3D11Device>& aOutDevice)
+      MOZ_REQUIRES(mDeviceLock);
 
-  void CreateWARPCompositorDevice();
-  bool CreateVRDevice();
+  void CreateWARPCompositorDevice() MOZ_REQUIRES(mDeviceLock);
+  bool CreateVRDevice() MOZ_REQUIRES(mDeviceLock);
 
-  mozilla::gfx::FeatureStatus CreateContentDevice();
+  mozilla::gfx::FeatureStatus CreateContentDevice() MOZ_REQUIRES(mDeviceLock);
 
   bool CreateDevice(IDXGIAdapter* aAdapter, D3D_DRIVER_TYPE aDriverType,
                     UINT aFlags, HRESULT& aResOut,
-                    RefPtr<ID3D11Device>& aOutDevice);
+                    RefPtr<ID3D11Device>& aOutDevice) MOZ_REQUIRES(mDeviceLock);
 
-  bool ContentAdapterIsParentAdapter(ID3D11Device* device);
+  bool ContentAdapterIsParentAdapter(ID3D11Device* device)
+      MOZ_REQUIRES(mDeviceLock);
 
   bool LoadD3D11();
   bool LoadDcomp();
@@ -161,7 +176,8 @@ class DeviceManagerDx final {
 
   // Call GetDeviceRemovedReason on each device until one returns
   // a failure.
-  bool GetAnyDeviceRemovedReason(DeviceResetReason* aOutReason);
+  bool GetAnyDeviceRemovedReason(DeviceResetReason* aOutReason)
+      MOZ_REQUIRES(mDeviceLock);
 
  private:
   static StaticAutoPtr<DeviceManagerDx> sInstance;
@@ -173,25 +189,25 @@ class DeviceManagerDx final {
 
   nsModuleHandle mDcompModule;
 
-  mozilla::Mutex mDeviceLock MOZ_UNANNOTATED;
-  nsTArray<D3D_FEATURE_LEVEL> mFeatureLevels;
-  RefPtr<IDXGIAdapter1> mAdapter;
-  RefPtr<ID3D11Device> mCompositorDevice;
-  RefPtr<ID3D11Device> mContentDevice;
-  RefPtr<ID3D11Device> mCanvasDevice;
-  RefPtr<ID3D11Device> mImageDevice;
-  RefPtr<ID3D11Device> mVRDevice;
-  RefPtr<ID3D11Device> mDecoderDevice;
-  RefPtr<IDCompositionDevice2> mDirectCompositionDevice;
-  RefPtr<layers::DeviceAttachmentsD3D11> mCompositorAttachments;
-  bool mCompositorDeviceSupportsVideo;
-
-  Maybe<D3D11DeviceStatus> mDeviceStatus;
+  mutable mozilla::Mutex mDeviceLock;
+  nsTArray<D3D_FEATURE_LEVEL> mFeatureLevels MOZ_GUARDED_BY(mDeviceLock);
+  RefPtr<IDXGIAdapter1> mAdapter MOZ_GUARDED_BY(mDeviceLock);
+  RefPtr<ID3D11Device> mCompositorDevice MOZ_GUARDED_BY(mDeviceLock);
+  RefPtr<ID3D11Device> mContentDevice MOZ_GUARDED_BY(mDeviceLock);
+  RefPtr<ID3D11Device> mCanvasDevice MOZ_GUARDED_BY(mDeviceLock);
+  RefPtr<ID3D11Device> mImageDevice MOZ_GUARDED_BY(mDeviceLock);
+  RefPtr<ID3D11Device> mVRDevice MOZ_GUARDED_BY(mDeviceLock);
+  RefPtr<ID3D11Device> mDecoderDevice MOZ_GUARDED_BY(mDeviceLock);
+  RefPtr<IDCompositionDevice2> mDirectCompositionDevice
+      MOZ_GUARDED_BY(mDeviceLock);
+  RefPtr<layers::DeviceAttachmentsD3D11> mCompositorAttachments
+      MOZ_GUARDED_BY(mDeviceLock);
+  bool mCompositorDeviceSupportsVideo MOZ_GUARDED_BY(mDeviceLock);
+  Maybe<D3D11DeviceStatus> mDeviceStatus MOZ_GUARDED_BY(mDeviceLock);
+  Maybe<DeviceResetReason> mDeviceResetReason MOZ_GUARDED_BY(mDeviceLock);
 
   nsModuleHandle mDirectDrawDLL;
   RefPtr<IDirectDraw7> mDirectDraw;
-
-  Maybe<DeviceResetReason> mDeviceResetReason;
 };
 
 }  // namespace gfx
