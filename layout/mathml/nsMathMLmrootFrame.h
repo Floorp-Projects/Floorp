@@ -59,6 +59,9 @@ class nsMathMLmrootFrame final : public nsMathMLContainerFrame {
 
   nsMathMLChar mSqrChar;
   nsRect mBarRect;
+
+ private:
+  bool ShouldUseRowFallback();
 };
 
 #endif /* nsMathMLmrootFrame_h___ */
