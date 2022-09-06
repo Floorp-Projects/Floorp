@@ -946,11 +946,12 @@ struct PaintRadialGradient : public PaintPatternBase {
         c1 += v * firstStop;
         c2 -= v * (1.0f - lastStop);
         float deltaR = r2 - r1;
-        r1 = fabsf(r1 + deltaR * firstStop);
-        r2 = fabsf(r2 - deltaR * (1.0f - lastStop));
+        r1 = r1 + deltaR * firstStop;
+        r2 = r2 - deltaR * (1.0f - lastStop);
       }
     }
-    return MakeUnique<RadialGradientPattern>(c1, c2, r1, r2, std::move(stops),
+    return MakeUnique<RadialGradientPattern>(c1, c2, fabsf(r1), fabsf(r2),
+                                             std::move(stops),
                                              Matrix::Scaling(1.0, -1.0));
   }
 };
@@ -972,14 +973,14 @@ struct PaintVarRadialGradient : public PaintRadialGradient {
     Point c1(aState.F2P(ApplyVariation(aState, int16_t(x0), varIndexBase)),
              aState.F2P(
                  ApplyVariation(aState, int16_t(y0), SatAdd(varIndexBase, 1))));
-    float r1 = fabsf(aState.F2P(
-        ApplyVariation(aState, uint16_t(radius0), SatAdd(varIndexBase, 2))));
+    float r1 = aState.F2P(
+        ApplyVariation(aState, uint16_t(radius0), SatAdd(varIndexBase, 2)));
     Point c2(aState.F2P(
                  ApplyVariation(aState, int16_t(x1), SatAdd(varIndexBase, 3))),
              aState.F2P(
                  ApplyVariation(aState, int16_t(y1), SatAdd(varIndexBase, 4))));
-    float r2 = fabsf(aState.F2P(
-        ApplyVariation(aState, uint16_t(radius1), SatAdd(varIndexBase, 5))));
+    float r2 = aState.F2P(
+        ApplyVariation(aState, uint16_t(radius1), SatAdd(varIndexBase, 5)));
     return NormalizeAndMakeGradient(aState, colorLine, c1, c2, r1, r2);
   }
 };
