@@ -366,6 +366,11 @@ async function _renderCallout() {
  * Render content based on about:welcome multistage template.
  */
 async function showFeatureCallout(messageId) {
+  // Don't show the feature tour if user has already completed it.
+  if (lazy.featureTourProgress.complete) {
+    return;
+  }
+
   await _loadConfig();
 
   if (!CONFIG?.screens?.length) {
