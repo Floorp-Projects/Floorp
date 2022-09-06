@@ -526,6 +526,7 @@ toolbarpaletteitem[place="palette"] > #personal-bookmarks > #bookmarks-toolbar-b
   height: 29px;
   inset-inline-start: 8px;
   top: 0;
+  pointer-events: none;
 }
 
 #allTabsMenu-dropIndicator:-moz-locale-dir(rtl) {
