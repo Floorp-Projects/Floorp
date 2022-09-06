@@ -454,6 +454,8 @@ class nsWindow final : public nsBaseWidget {
   // rendering queue blocking (see Bug 1782948).
   void ClearRenderingQueue();
 
+  bool ApplyEnterLeaveMutterWorkaround();
+
  protected:
   virtual ~nsWindow();
 

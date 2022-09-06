@@ -16,6 +16,9 @@ namespace mozilla {
 
 struct GFreeDeleter {
   constexpr GFreeDeleter() = default;
+  void operator()(GdkEventCrossing* aPtr) const {
+    gdk_event_free((GdkEvent*)aPtr);
+  }
   void operator()(GdkEventKey* aPtr) const { gdk_event_free((GdkEvent*)aPtr); }
   void operator()(GdkEvent* aPtr) const { gdk_event_free(aPtr); }
   void operator()(GError* aPtr) const { g_error_free(aPtr); }
