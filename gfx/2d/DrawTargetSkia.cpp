@@ -1356,7 +1356,9 @@ Maybe<Rect> DrawTargetSkia::GetGlyphLocalBounds(
     }
 
     sk_sp<SkTextBlob> text = builder.make();
-    bounds = bounds.Union(SkRectToRect(text->bounds()));
+    SkRect storage;
+    bounds = bounds.Union(
+        SkRectToRect(paint.mPaint.computeFastBounds(text->bounds(), &storage)));
   }
 
   if (bounds.IsEmpty()) {

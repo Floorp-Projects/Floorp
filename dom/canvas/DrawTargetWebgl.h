@@ -262,8 +262,9 @@ class DrawTargetWebgl : public DrawTarget, public SupportsWeakPtr {
                        const ShadowOptions* aShadow = nullptr,
                        bool aCacheable = true);
 
-    bool FillGlyphsAccel(ScaledFont* aFont, const GlyphBuffer& aBuffer,
+    bool DrawGlyphsAccel(ScaledFont* aFont, const GlyphBuffer& aBuffer,
                          const Pattern& aPattern, const DrawOptions& aOptions,
+                         const StrokeOptions* aStrokeOptions,
                          bool aUseSubpixelAA);
 
     void PruneTextureHandle(const RefPtr<TextureHandle>& aHandle);
