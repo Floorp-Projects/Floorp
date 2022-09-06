@@ -114,13 +114,16 @@ static void AccountStorageForTextRun(gfxTextRun* aTextRun, int32_t aSign) {
 }
 #endif
 
-static bool NeedsGlyphExtents(gfxTextRun* aTextRun) {
-  if (aTextRun->GetFlags() & gfx::ShapedTextFlags::TEXT_NEED_BOUNDING_BOX)
+bool gfxTextRun::NeedsGlyphExtents() const {
+  if (GetFlags() & gfx::ShapedTextFlags::TEXT_NEED_BOUNDING_BOX) {
     return true;
+  }
   uint32_t numRuns;
-  const gfxTextRun::GlyphRun* glyphRuns = aTextRun->GetGlyphRuns(&numRuns);
+  const GlyphRun* glyphRuns = GetGlyphRuns(&numRuns);
   for (uint32_t i = 0; i < numRuns; ++i) {
-    if (glyphRuns[i].mFont->GetFontEntry()->IsUserFont()) return true;
+    if (glyphRuns[i].mFont->GetFontEntry()->IsUserFont()) {
+      return true;
+    }
   }
   return false;
 }
@@ -1637,9 +1640,11 @@ bool gfxTextRun::SetSpaceGlyphIfSimple(gfxFont* aFont, uint32_t aCharIndex,
   return true;
 }
 
-void gfxTextRun::FetchGlyphExtents(DrawTarget* aRefDrawTarget) {
-  bool needsGlyphExtents = NeedsGlyphExtents(this);
-  if (!needsGlyphExtents && !mDetailedGlyphs) return;
+void gfxTextRun::FetchGlyphExtents(DrawTarget* aRefDrawTarget) const {
+  bool needsGlyphExtents = NeedsGlyphExtents();
+  if (!needsGlyphExtents && !mDetailedGlyphs) {
+    return;
+  }
 
   uint32_t runCount;
   const GlyphRun* glyphRuns = GetGlyphRuns(&runCount);
@@ -1654,22 +1659,24 @@ void gfxTextRun::FetchGlyphExtents(DrawTarget* aRefDrawTarget) {
     uint32_t start = run.mCharacterOffset;
     uint32_t end =
         i + 1 < runCount ? glyphRuns[i + 1].mCharacterOffset : GetLength();
-    uint32_t j;
     gfxGlyphExtents* extents =
         font->GetOrCreateGlyphExtents(mAppUnitsPerDevUnit);
 
-    for (j = start; j < end; ++j) {
+    AutoReadLock lock(extents->mLock);
+    for (uint32_t j = start; j < end; ++j) {
       const gfxTextRun::CompressedGlyph* glyphData = &charGlyphs[j];
       if (glyphData->IsSimpleGlyph()) {
         // If we're in speed mode, don't set up glyph extents here; we'll
         // just return "optimistic" glyph bounds later
         if (needsGlyphExtents) {
           uint32_t glyphIndex = glyphData->GetSimpleGlyph();
-          if (!extents->IsGlyphKnown(glyphIndex)) {
+          if (!extents->IsGlyphKnownLocked(glyphIndex)) {
 #ifdef DEBUG_TEXT_RUN_STORAGE_METRICS
             ++gGlyphExtentsSetupEagerSimple;
 #endif
+            extents->mLock.ReadUnlock();
             font->SetupGlyphExtents(aRefDrawTarget, glyphIndex, false, extents);
+            extents->mLock.ReadLock();
           }
         }
       } else if (!glyphData->IsMissing()) {
@@ -1683,11 +1690,13 @@ void gfxTextRun::FetchGlyphExtents(DrawTarget* aRefDrawTarget) {
         }
         for (uint32_t k = 0; k < glyphCount; ++k, ++details) {
           uint32_t glyphIndex = details->mGlyphID;
-          if (!extents->IsGlyphKnownWithTightExtents(glyphIndex)) {
+          if (!extents->IsGlyphKnownWithTightExtentsLocked(glyphIndex)) {
 #ifdef DEBUG_TEXT_RUN_STORAGE_METRICS
             ++gGlyphExtentsSetupEagerTight;
 #endif
+            extents->mLock.ReadUnlock();
             font->SetupGlyphExtents(aRefDrawTarget, glyphIndex, true, extents);
+            extents->mLock.ReadLock();
           }
         }
       }
