@@ -2524,6 +2524,7 @@ pub extern "C" fn Servo_StyleRule_SetSelectorText(
             stylesheet_origin: contents.origin,
             namespaces: &namespaces,
             url_data: &url_data,
+            for_supports_rule: false,
         };
 
         let mut parser_input = ParserInput::new(&value_str);
