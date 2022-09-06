@@ -615,7 +615,7 @@ button.addon-detail-description-toggle {
   width: 5px;
   height: 5px;
   border-radius: 50%;
-  background: var(--in-content-accent-color);;
+  background-color: var(--in-content-accent-color);;
 }
 
 panel-item {
