@@ -28,8 +28,6 @@ class ErrorResult;
 
 namespace dom {
 
-class FileSystemDirectoryHandle;
-class FileSystemFileHandle;
 enum class FileSystemHandleKind : uint8_t;
 class FileSystemManager;
 class FileSystemManagerChild;
@@ -65,14 +63,6 @@ class FileSystemHandle : public nsISupports, public nsWrapperCache {
   already_AddRefed<Promise> IsSameEntry(FileSystemHandle& aOther,
                                         ErrorResult& aError) const;
 
-  // [Serializable] implementation
-  static already_AddRefed<FileSystemHandle> ReadStructuredClone(
-      JSContext* aCx, nsIGlobalObject* aGlobal,
-      JSStructuredCloneReader* aReader);
-
-  virtual bool WriteStructuredClone(JSContext* aCx,
-                                    JSStructuredCloneWriter* aWriter) const;
-
  protected:
   virtual ~FileSystemHandle() = default;
 
@@ -83,14 +73,6 @@ class FileSystemHandle : public nsISupports, public nsWrapperCache {
   const fs::FileSystemEntryMetadata mMetadata;
 
   const UniquePtr<fs::FileSystemRequestHandler> mRequestHandler;
-
-  static already_AddRefed<FileSystemFileHandle> ConstructFileHandle(
-      JSContext* aCx, nsIGlobalObject* aGlobal,
-      JSStructuredCloneReader* aReader);
-
-  static already_AddRefed<FileSystemDirectoryHandle> ConstructDirectoryHandle(
-      JSContext* aCx, nsIGlobalObject* aGlobal,
-      JSStructuredCloneReader* aReader);
 };
 
 }  // namespace dom
