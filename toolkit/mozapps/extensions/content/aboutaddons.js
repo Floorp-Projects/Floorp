@@ -2146,10 +2146,10 @@ class AddonOptions extends HTMLElement {
         el.hidden = !isAbuseReportSupported(addon);
         break;
       case "dual_theme_disable":
-        el.hidden = !dual_theme_check(addon.id) || addon.isActive;
+        el.hidden = Services.prefs.getBoolPref("floorp.enable.dualtheme", false) && (!dual_theme_check(addon.id) || addon.isActive);
         break;
       case "dual_theme_enable":
-        el.hidden = dual_theme_check(addon.id) || addon.isActive;
+        el.hidden = Services.prefs.getBoolPref("floorp.enable.dualtheme", false) && (dual_theme_check(addon.id) || addon.isActive);
         break;
       case "install-update":
         el.hidden = !updateInstall;
@@ -4747,6 +4747,7 @@ gViewController.defineView("list", async type => {
     {
       headingId: "dual-theme-enabled-heading",
       filterFn: addon =>
+      Services.prefs.getBoolPref("floorp.enable.dualtheme", false) &&
         !addon.hidden &&
         !addon.isActive &&
 	    dual_theme_check(addon.id),

@@ -223,6 +223,7 @@ Preferences.addAll([
   { id: "floorp.browser.UserAgent", type:"int"},
   { id: "floorp.legacy.dlui.enable", type:"bool"},
   { id: "floorp.downloading.red.color", type:"bool"},
+  { id: "floorp.enable.dualtheme", type : "bool"},
   { id: "floorp.browser.rest.mode", type : "bool"},
   { id: "floorp.browser.sidebar.right", type : "bool"},
   { id: "floorp.browser.sidebar.enable", type : "bool"},

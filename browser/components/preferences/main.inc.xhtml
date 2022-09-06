@@ -217,13 +217,17 @@
  <!--only linux-->
       <radio value="6" class="themes" data-l10n-id="floorp-gnomeUI"/>
       <label>
-        <div id="gnomeUI"></div> 
+        <div id="gnomeUI"></div>
       </label>
       </div>
 
     </radiogroup>
 
   <label><html:h2 data-l10n-id="other-preference"/></label>
+  <hbox>
+    <checkbox preference="floorp.enable.dualtheme"
+              id="dualtheme_enable" data-l10n-id="dualtheme-enable"/>
+  </hbox>
   #ifdef XP_WIN
   <hbox>
     <checkbox preference="floorp.material.effect.enable"

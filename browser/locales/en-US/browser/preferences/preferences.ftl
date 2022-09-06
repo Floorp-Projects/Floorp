@@ -1640,3 +1640,6 @@ custom-URL-option = Set Custom URL
 set-custom-URL-button = 
     .label = Set Custom URL...
     .accesskey = S
+
+## DualTheme
+dualtheme-enable = Enable dual Themes
