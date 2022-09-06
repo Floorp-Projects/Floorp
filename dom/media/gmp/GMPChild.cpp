@@ -210,7 +210,7 @@ mozilla::ipc::IPCResult GMPChild::RecvPreloadLibs(const nsCString& aLibs) {
       u"msmpeg2vdec.dll",  // H.264 decoder
       u"nss3.dll",         // NSS for clearkey CDM
       u"ole32.dll",        // required for OPM
-      u"oleaut32.dll",     // For fake-cdm, unclear dependency, see bug 1785030
+      u"oleaut32.dll",     // Unclear dependency, see bugs 1785030, 1788592
       u"psapi.dll",        // For GetMappedFileNameW, see bug 1383611
       u"softokn3.dll",     // NSS for clearkey CDM
       u"winmm.dll",        // Dependency for widevine
