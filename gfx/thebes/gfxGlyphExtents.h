@@ -62,14 +62,13 @@ class gfxGlyphExtents {
     return mContainedGlyphWidths.Get(aGlyphID);
   }
 
-  bool IsGlyphKnown(uint32_t aGlyphID) const {
-    mozilla::AutoReadLock lock(mLock);
+  bool IsGlyphKnownLocked(uint32_t aGlyphID) const MOZ_REQUIRES_SHARED(mLock) {
     return mContainedGlyphWidths.Get(aGlyphID) != INVALID_WIDTH ||
            mTightGlyphExtents.GetEntry(aGlyphID) != nullptr;
   }
 
-  bool IsGlyphKnownWithTightExtents(uint32_t aGlyphID) const {
-    mozilla::AutoReadLock lock(mLock);
+  bool IsGlyphKnownWithTightExtentsLocked(uint32_t aGlyphID) const
+      MOZ_REQUIRES_SHARED(mLock) {
     return mTightGlyphExtents.GetEntry(aGlyphID) != nullptr;
   }
 
