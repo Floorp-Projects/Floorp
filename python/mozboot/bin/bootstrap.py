@@ -247,6 +247,9 @@ def add_microsoft_defender_antivirus_exclusions(dest, no_system_changes):
     if no_system_changes:
         return
 
+    if not WINDOWS:
+        return
+
     powershell_exe = which("powershell")
 
     if not powershell_exe:
