@@ -341,6 +341,7 @@ export class UrlbarInput {
   ) {
     if (
       lazy.UrlbarPrefs.get("showSearchTerms") &&
+      !lazy.UrlbarPrefs.get("browser.search.widget.inNavBar") &&
       this.window.gBrowser.userTypedValue == null &&
       !dueToTabSwitch
     ) {
