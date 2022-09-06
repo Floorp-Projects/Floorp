@@ -3901,8 +3901,11 @@ bool ASTSerializer::functionArgs(ParamsBodyNode* pn, NodeVector& args,
              "must be initially empty for it to be proper to clear this "
              "when there are no defaults");
 
-  auto* argsList = pn;
-  for (ParseNode* arg : argsList->contentsTo(argsList->last())) {
+  MOZ_ASSERT(rest.isNullOrUndefined(),
+             "rest is set to |undefined| when a rest argument is present, "
+             "otherwise rest is set to |null|");
+
+  for (ParseNode* arg : pn->parameters()) {
     ParseNode* pat;
     ParseNode* defNode;
     if (arg->isKind(ParseNodeKind::Name) ||
@@ -3924,7 +3927,7 @@ bool ASTSerializer::functionArgs(ParamsBodyNode* pn, NodeVector& args,
     if (!pattern(pat, &node)) {
       return false;
     }
-    if (rest.isUndefined() && arg->pn_next == argsList->last()) {
+    if (rest.isUndefined() && arg->pn_next == *std::end(pn->parameters())) {
       rest.setObject(node.toObject());
     } else {
       if (!args.append(node)) {
