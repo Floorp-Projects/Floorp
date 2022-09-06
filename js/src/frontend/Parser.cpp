@@ -10591,7 +10591,7 @@ bool ParserBase::checkAndMarkSuperScope() {
 
 template <class ParseHandler, typename Unit>
 bool GeneralParser<ParseHandler, Unit>::computeErrorMetadata(
-    ErrorMetadata* err, const ErrorReportMixin::ErrorOffset& offset) {
+    ErrorMetadata* err, const ErrorReportMixin::ErrorOffset& offset) const {
   if (offset.is<ErrorReportMixin::Current>()) {
     return tokenStream.computeErrorMetadata(err, AsVariant(pos().begin));
   }
