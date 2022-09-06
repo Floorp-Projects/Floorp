@@ -534,7 +534,7 @@ describe("PlacesFeed", () => {
       const [url, where] = openTrustedLinkIn.firstCall.args;
       assert.equal(
         url,
-        "https://getpocket.com/ff_signup?utm_source=firefox_newtab_save_button&utm_campaign=slug&utm_content=branch-slug"
+        "https://getpocket.com/signup?utm_source=firefox_newtab_save_button&utm_campaign=slug&utm_content=branch-slug"
       );
       assert.equal(where, "tab");
     });
