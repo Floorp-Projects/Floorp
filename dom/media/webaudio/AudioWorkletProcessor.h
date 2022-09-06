@@ -25,7 +25,7 @@ class MessagePort;
 class AudioWorkletProcessor final : public nsWrapperCache {
  public:
   NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(AudioWorkletProcessor)
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(AudioWorkletProcessor)
+  NS_DECL_CYCLE_COLLECTION_NATIVE_WRAPPERCACHE_CLASS(AudioWorkletProcessor)
 
   static already_AddRefed<AudioWorkletProcessor> Constructor(
       const GlobalObject& aGlobal, ErrorResult& aRv);

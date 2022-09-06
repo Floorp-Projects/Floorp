@@ -28,7 +28,7 @@ class nsMimeTypeArray final : public nsISupports, public nsWrapperCache {
                   const mozilla::Array<RefPtr<nsMimeType>, 2>& aMimeTypes);
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(nsMimeTypeArray)
+  NS_DECL_CYCLE_COLLECTION_WRAPPERCACHE_CLASS(nsMimeTypeArray)
 
   nsPIDOMWindowInner* GetParentObject() const;
   virtual JSObject* WrapObject(JSContext* aCx,
@@ -69,7 +69,7 @@ class nsMimeTypeArray final : public nsISupports, public nsWrapperCache {
 class nsMimeType final : public nsWrapperCache {
  public:
   NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(nsMimeType)
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(nsMimeType)
+  NS_DECL_CYCLE_COLLECTION_NATIVE_WRAPPERCACHE_CLASS(nsMimeType)
 
   nsMimeType(nsPluginElement* aPluginElement, const nsAString& aName);
 

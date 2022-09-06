@@ -27,7 +27,7 @@ class FlexLineValues : public nsISupports, public nsWrapperCache {
 
  public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(FlexLineValues)
+  NS_DECL_CYCLE_COLLECTION_WRAPPERCACHE_CLASS(FlexLineValues)
 
   virtual JSObject* WrapObject(JSContext* aCx,
                                JS::Handle<JSObject*> aGivenProto) override;

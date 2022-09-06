@@ -43,7 +43,8 @@ class MyHolder final : public nsScriptObjectTracer {
 
  private:
   Flags FlagsForKind(HolderKind kind) {
-    return kind == MultiZone ? FlagMultiZoneJSHolder : 0;
+    return kind == MultiZone ? FlagMultiZoneJSHolder
+                             : FlagMaybeSingleZoneJSHolder;
   }
 };
 

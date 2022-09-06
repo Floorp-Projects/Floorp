@@ -31,7 +31,7 @@ namespace mozilla::dom {
 class ShadowRealmGlobalScope : public nsIGlobalObject, public nsWrapperCache {
  public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(ShadowRealmGlobalScope)
+  NS_DECL_CYCLE_COLLECTION_WRAPPERCACHE_CLASS(ShadowRealmGlobalScope)
 
   NS_DECLARE_STATIC_IID_ACCESSOR(SHADOWREALMGLOBALSCOPE_IID)
 

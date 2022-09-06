@@ -38,7 +38,7 @@ class IdleDeadline final : public nsISupports, public nsWrapperCache {
   bool DidTimeout() const;
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(IdleDeadline)
+  NS_DECL_CYCLE_COLLECTION_WRAPPERCACHE_CLASS(IdleDeadline)
 
  private:
   ~IdleDeadline();

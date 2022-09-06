@@ -35,7 +35,7 @@ class BarProp : public nsISupports, public nsWrapperCache {
   explicit BarProp(nsGlobalWindowInner* aWindow);
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(BarProp)
+  NS_DECL_CYCLE_COLLECTION_WRAPPERCACHE_CLASS(BarProp)
 
   nsPIDOMWindowInner* GetParentObject() const;
 

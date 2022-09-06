@@ -74,7 +74,7 @@ class Attr final : public nsINode {
   static void Initialize();
   static void Shutdown();
 
-  NS_DECL_CYCLE_COLLECTION_SKIPPABLE_SCRIPT_HOLDER_CLASS(Attr)
+  NS_DECL_CYCLE_COLLECTION_SKIPPABLE_WRAPPERCACHE_CLASS(Attr)
 
   // WebIDL
   virtual JSObject* WrapNode(JSContext* aCx,

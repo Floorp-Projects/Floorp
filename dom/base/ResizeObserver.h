@@ -121,7 +121,7 @@ class ResizeObserver final : public nsISupports, public nsWrapperCache {
 
  public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(ResizeObserver)
+  NS_DECL_CYCLE_COLLECTION_WRAPPERCACHE_CLASS(ResizeObserver)
 
   ResizeObserver(nsCOMPtr<nsPIDOMWindowInner>&& aOwner, Document* aDocument,
                  ResizeObserverCallback& aCb)
@@ -215,7 +215,7 @@ class ResizeObserver final : public nsISupports, public nsWrapperCache {
 class ResizeObserverEntry final : public nsISupports, public nsWrapperCache {
  public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(ResizeObserverEntry)
+  NS_DECL_CYCLE_COLLECTION_WRAPPERCACHE_CLASS(ResizeObserverEntry)
 
   ResizeObserverEntry(nsISupports* aOwner, Element& aTarget,
                       const gfx::Size& aBorderBoxSize,
@@ -276,7 +276,7 @@ class ResizeObserverEntry final : public nsISupports, public nsWrapperCache {
 class ResizeObserverSize final : public nsISupports, public nsWrapperCache {
  public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(ResizeObserverSize)
+  NS_DECL_CYCLE_COLLECTION_WRAPPERCACHE_CLASS(ResizeObserverSize)
 
   ResizeObserverSize(nsISupports* aOwner, const gfx::Size& aSize,
                      const WritingMode aWM)

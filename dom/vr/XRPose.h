@@ -21,7 +21,7 @@ class XRView;
 class XRPose : public nsISupports, public nsWrapperCache {
  public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(XRPose)
+  NS_DECL_CYCLE_COLLECTION_WRAPPERCACHE_CLASS(XRPose)
 
   explicit XRPose(nsISupports* aParent, XRRigidTransform* aTransform,
                   bool aEmulatedPosition);

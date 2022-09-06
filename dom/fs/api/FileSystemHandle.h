@@ -46,7 +46,7 @@ class FileSystemHandle : public nsISupports, public nsWrapperCache {
                    fs::FileSystemRequestHandler* aRequestHandler);
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(FileSystemHandle)
+  NS_DECL_CYCLE_COLLECTION_WRAPPERCACHE_CLASS(FileSystemHandle)
 
   // WebIDL Boilerplate
   nsIGlobalObject* GetParentObject() const;
