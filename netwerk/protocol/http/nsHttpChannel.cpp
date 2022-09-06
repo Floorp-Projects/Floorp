@@ -734,6 +734,13 @@ nsresult nsHttpChannel::Connect() {
     return RedirectToInterceptedChannel();
   }
 
+  // Step 8.18 of HTTP-network-or-cache fetch
+  // https://fetch.spec.whatwg.org/#http-network-or-cache-fetch
+  nsAutoCString rangeVal;
+  if (NS_SUCCEEDED(GetRequestHeader("Range"_ns, rangeVal))) {
+    SetRequestHeader("Accept-Encoding"_ns, "identity"_ns, true);
+  }
+
   bool isTrackingResource = IsThirdPartyTrackingResource();
   LOG(("nsHttpChannel %p tracking resource=%d, cos=%lu, inc=%d", this,
        isTrackingResource, mClassOfService.Flags(),
