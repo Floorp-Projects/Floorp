@@ -32,7 +32,7 @@ class StartupStateProvider(
          * - if the activity this is called from is not currently started
          * - if the currently started activity is not the first started activity
          */
-        UNKNOWN;
+        UNKNOWN,
     }
 
     /**

@@ -705,7 +705,7 @@ object TelemetryWrapper {
     }
 
     enum class AutoCompleteEventSource {
-        SETTINGS
+        SETTINGS,
     }
 
     fun saveAutocompleteDomainEvent(eventSource: AutoCompleteEventSource) {

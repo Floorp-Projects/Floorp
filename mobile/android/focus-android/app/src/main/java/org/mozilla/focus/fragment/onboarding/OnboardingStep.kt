@@ -8,5 +8,5 @@ import org.mozilla.focus.R
 
 enum class OnboardingStep(val prefId: Int) {
     ON_BOARDING_FIRST_SCREEN(R.string.pref_key_first_screen),
-    ON_BOARDING_SECOND_SCREEN(R.string.pref_key_second_screen)
+    ON_BOARDING_SECOND_SCREEN(R.string.pref_key_second_screen),
 }

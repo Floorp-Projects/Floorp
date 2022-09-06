@@ -33,7 +33,7 @@ class StartupPathProvider {
          * - this API is accessed before it is set
          * - if no intent is received before the activity is STARTED (e.g. app switcher)
          */
-        NOT_SET
+        NOT_SET,
     }
 
     /**

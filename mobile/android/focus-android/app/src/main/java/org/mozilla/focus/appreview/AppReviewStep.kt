@@ -7,5 +7,5 @@ package org.mozilla.focus.appreview
 enum class AppReviewStep {
     Pending,
     ReviewNeeded,
-    Reviewed
+    Reviewed,
 }

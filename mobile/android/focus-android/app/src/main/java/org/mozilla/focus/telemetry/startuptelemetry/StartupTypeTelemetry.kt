@@ -54,7 +54,8 @@ class StartupTypeTelemetry(
 
             // To avoid combinatorial explosion in label names, we bucket NOT_SET into UNKNOWN.
             StartupPath.NOT_SET,
-            StartupPath.UNKNOWN, -> "unknown"
+            StartupPath.UNKNOWN,
+            -> "unknown"
         }
 
         return "${stateLabel}_$pathLabel"

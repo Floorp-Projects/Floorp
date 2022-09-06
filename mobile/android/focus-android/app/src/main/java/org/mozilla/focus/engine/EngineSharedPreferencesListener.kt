@@ -83,13 +83,13 @@ class EngineSharedPreferencesListener(
 
     enum class ChangeSource(val source: String) {
         SETTINGS("Settings"),
-        PANEL("Panel")
+        PANEL("Panel"),
     }
 
     enum class TrackerChanged(val tracker: String) {
         ADVERTISING("Advertising"),
         ANALYTICS("Analytics"),
         SOCIAL("Social"),
-        CONTENT("Content")
+        CONTENT("Content"),
     }
 }

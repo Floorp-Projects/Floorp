@@ -101,7 +101,8 @@ open class MainActivity : LocaleAwareAppCompatActivity() {
         window.statusBarColor = ContextCompat.getColor(this, android.R.color.transparent)
         when (resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) {
             Configuration.UI_MODE_NIGHT_UNDEFINED, // We assume light here per Android doc's recommendation
-            Configuration.UI_MODE_NIGHT_NO, -> {
+            Configuration.UI_MODE_NIGHT_NO,
+            -> {
                 updateLightSystemBars()
             }
             Configuration.UI_MODE_NIGHT_YES -> {
@@ -321,7 +322,9 @@ open class MainActivity : LocaleAwareAppCompatActivity() {
     override fun onCreateView(parent: View?, name: String, context: Context, attrs: AttributeSet): View? {
         return if (name == EngineView::class.java.name) {
             components.engine.createView(context, attrs).asView()
-        } else super.onCreateView(parent, name, context, attrs)
+        } else {
+            super.onCreateView(parent, name, context, attrs)
+        }
     }
 
     override fun onBackPressed() {
@@ -449,7 +452,7 @@ open class MainActivity : LocaleAwareAppCompatActivity() {
 
     enum class AppOpenType(val type: String) {
         LAUNCH("Launch"),
-        RESUME("Resume")
+        RESUME("Resume"),
     }
 
     companion object {

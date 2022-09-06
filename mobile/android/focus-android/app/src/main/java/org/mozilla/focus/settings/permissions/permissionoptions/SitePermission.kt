@@ -16,5 +16,5 @@ enum class SitePermission(val androidPermissionsList: Array<String>) : Parcelabl
     AUTOPLAY(emptyArray()),
     AUTOPLAY_AUDIBLE(emptyArray()),
     AUTOPLAY_INAUDIBLE(emptyArray()),
-    MEDIA_KEY_SYSTEM_ACCESS(emptyArray());
+    MEDIA_KEY_SYSTEM_ACCESS(emptyArray()),
 }

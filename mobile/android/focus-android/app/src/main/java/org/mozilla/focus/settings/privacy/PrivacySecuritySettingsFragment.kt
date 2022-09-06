@@ -151,7 +151,8 @@ class PrivacySecuritySettingsFragment :
                 )
             }
             resources.getString(R.string.pref_key_secure),
-            resources.getString(R.string.pref_key_biometric), -> {
+            resources.getString(R.string.pref_key_biometric),
+            -> {
                 // We need to recreate the activity to apply the SECURE flags.
                 requireActivity().recreate()
             }

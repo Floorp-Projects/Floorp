@@ -66,7 +66,9 @@ class InstallFirefoxActivity : Activity() {
             return if (!resolveInfo.activityInfo.exported) {
                 // We are not allowed to launch this activity.
                 null
-            } else resolveInfo.activityInfo
+            } else {
+                resolveInfo.activityInfo
+            }
         }
 
         private fun createStoreIntent(): Intent {

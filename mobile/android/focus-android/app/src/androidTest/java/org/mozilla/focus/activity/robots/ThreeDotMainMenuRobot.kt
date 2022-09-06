@@ -39,7 +39,9 @@ class ThreeDotMainMenuRobot {
     fun verifyRequestDesktopSiteIsEnabled(expectedState: Boolean) {
         if (expectedState) {
             assertTrue(requestDesktopSiteButton.isChecked)
-        } else assertFalse(requestDesktopSiteButton.isChecked)
+        } else {
+            assertFalse(requestDesktopSiteButton.isChecked)
+        }
     }
 
     fun verifySettingsButtonExists() = settingsMenuButton().check(matches(isDisplayed()))

@@ -40,7 +40,8 @@ fun SearchOverlay(
 
     when (state.value) {
         is State.Disabled,
-        is State.NoSuggestionsAPI, -> {
+        is State.NoSuggestionsAPI,
+        -> {
             if (query.value.isNullOrEmpty()) {
                 TopSitesOverlay(modifier = Modifier.background(focusColors.surface))
             }
