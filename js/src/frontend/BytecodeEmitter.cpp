@@ -5372,8 +5372,7 @@ bool BytecodeEmitter::emitInitializeForInOrOfTarget(TernaryNode* forHead) {
   NameNode* nameNode = nullptr;
   if (target->isKind(ParseNodeKind::Name)) {
     nameNode = &target->as<NameNode>();
-  } else if (target->isKind(ParseNodeKind::AssignExpr) ||
-             target->isKind(ParseNodeKind::InitExpr)) {
+  } else if (target->isKind(ParseNodeKind::AssignExpr)) {
     BinaryNode* assignNode = &target->as<BinaryNode>();
     if (assignNode->left()->is<NameNode>()) {
       nameNode = &assignNode->left()->as<NameNode>();
@@ -5409,8 +5408,7 @@ bool BytecodeEmitter::emitInitializeForInOrOfTarget(TernaryNode* forHead) {
   }
 
   MOZ_ASSERT(
-      !target->isKind(ParseNodeKind::AssignExpr) &&
-          !target->isKind(ParseNodeKind::InitExpr),
+      !target->isKind(ParseNodeKind::AssignExpr),
       "for-in/of loop destructuring declarations can't have initializers");
 
   MOZ_ASSERT(target->isKind(ParseNodeKind::ArrayExpr) ||
@@ -5528,8 +5526,7 @@ bool BytecodeEmitter::emitForIn(ForNode* forInLoop,
     auto* declarationList = &forInTarget->as<DeclarationListNode>();
 
     ParseNode* decl = declarationList->singleBinding();
-    if (decl->isKind(ParseNodeKind::AssignExpr) ||
-        decl->isKind(ParseNodeKind::InitExpr)) {
+    if (decl->isKind(ParseNodeKind::AssignExpr)) {
       BinaryNode* assignNode = &decl->as<BinaryNode>();
       if (assignNode->left()->is<NameNode>()) {
         NameNode* nameNode = &assignNode->left()->as<NameNode>();
@@ -10401,8 +10398,7 @@ bool BytecodeEmitter::emitFunctionFormalParameters(ParamsBodyNode* paramsBody) {
   for (ParseNode* arg : paramsBody->parameters()) {
     ParseNode* bindingElement = arg;
     ParseNode* initializer = nullptr;
-    if (arg->isKind(ParseNodeKind::AssignExpr) ||
-        arg->isKind(ParseNodeKind::InitExpr)) {
+    if (arg->isKind(ParseNodeKind::AssignExpr)) {
       bindingElement = arg->as<BinaryNode>().left();
       initializer = arg->as<BinaryNode>().right();
     }
