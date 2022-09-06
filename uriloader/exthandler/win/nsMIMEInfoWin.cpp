@@ -16,7 +16,7 @@
 #include <shlobj.h>
 #include "nsIWindowsRegKey.h"
 #include "nsUnicharUtils.h"
-#include "nsITextToSubURI.h"
+#include "nsTextToSubURI.h"
 #include "nsVariant.h"
 #include "mozilla/CmdLineAndEnvUtils.h"
 #include "mozilla/ShellHeaderOnlyUtils.h"
@@ -287,13 +287,8 @@ nsresult nsMIMEInfoWin::LoadUriInternal(nsIURI* aURL) {
 
     // Unescape non-ASCII characters in the URL
     nsAutoString utf16Spec;
-
-    nsCOMPtr<nsITextToSubURI> textToSubURI =
-        do_GetService(NS_ITEXTTOSUBURI_CONTRACTID, &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    if (NS_FAILED(textToSubURI->UnEscapeNonAsciiURI("UTF-8"_ns, urlSpec,
-                                                    utf16Spec))) {
+    if (NS_FAILED(nsTextToSubURI::UnEscapeNonAsciiURI("UTF-8"_ns, urlSpec,
+                                                      utf16Spec))) {
       CopyASCIItoUTF16(urlSpec, utf16Spec);
     }
 
