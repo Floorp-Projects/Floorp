@@ -119,6 +119,7 @@ class nsHttpTransaction final : public nsAHttpTransaction,
   void RemoveDispatchedAsBlocking();
 
   void DisableSpdy() override;
+  void DisableHttp2ForProxy() override;
   void DoNotRemoveAltSvc() override { mDoNotRemoveAltSvc = true; }
   void DisableHttp3(bool aAllowRetryHTTPSRR) override;
 

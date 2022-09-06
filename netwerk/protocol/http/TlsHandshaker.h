@@ -26,7 +26,8 @@ class TlsHandshaker : public nsITlsHandshakeCallbackListener {
   void SetupSSL(bool aInSpdyTunnel, bool aForcePlainText);
   [[nodiscard]] nsresult InitSSLParams(bool connectingToProxy,
                                        bool ProxyStartSSL);
-  [[nodiscard]] nsresult SetupNPNList(nsISSLSocketControl* ssl, uint32_t caps);
+  [[nodiscard]] nsresult SetupNPNList(nsISSLSocketControl* ssl, uint32_t caps,
+                                      bool connectingToProxy);
   // Makes certain the SSL handshake is complete and NPN negotiation
   // has had a chance to happen
   [[nodiscard]] bool EnsureNPNComplete();

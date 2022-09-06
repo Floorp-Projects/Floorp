@@ -2529,6 +2529,10 @@ void nsHttpTransaction::DisableSpdy() {
   }
 }
 
+void nsHttpTransaction::DisableHttp2ForProxy() {
+  mCaps |= NS_HTTP_DISALLOW_HTTP2_PROXY;
+}
+
 void nsHttpTransaction::DisableHttp3(bool aAllowRetryHTTPSRR) {
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
 

@@ -179,6 +179,8 @@ class nsAHttpTransaction : public nsSupportsWeakReference {
   }
 
   virtual void DisableSpdy() {}
+  // When called, we disallow to connect through a Http/2 proxy.
+  virtual void DisableHttp2ForProxy() {}
   virtual void DisableHttp3(bool aAllowRetryHTTPSRR) {}
   virtual void MakeNonSticky() {}
   virtual void ReuseConnectionOnRestartOK(bool) {}
