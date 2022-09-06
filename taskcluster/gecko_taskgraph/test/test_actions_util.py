@@ -3,21 +3,19 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 
-import unittest
 import json
+import unittest
 from pprint import pprint
 from unittest.mock import patch
 
 import pytest
-from mozunit import main, MockedOpen
+from mozunit import MockedOpen, main
+from taskgraph import create
 from taskgraph.util import taskcluster
 
-from gecko_taskgraph import actions, create
+from gecko_taskgraph import actions
+from gecko_taskgraph.actions.util import combine_task_graph_files, relativize_datestamps
 from gecko_taskgraph.decision import read_artifact
-from gecko_taskgraph.actions.util import (
-    combine_task_graph_files,
-    relativize_datestamps,
-)
 
 TASK_DEF = {
     "created": "2017-10-10T18:33:03.460Z",
