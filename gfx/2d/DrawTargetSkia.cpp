@@ -1848,17 +1848,16 @@ already_AddRefed<PathBuilder> DrawTargetSkia::CreatePathBuilder(
   return MakeAndAddRef<PathBuilderSkia>(aFillRule);
 }
 
-void DrawTargetSkia::Clear(const Rect* aRect) {
+void DrawTargetSkia::Clear(const Rect& aRect, bool aClipped) {
   MarkChanged();
   mCanvas->save();
-  if (aRect) {
-    // If a local-space clip rect is supplied, then restrict clearing to that.
-    mCanvas->clipRect(RectToSkRect(*aRect), SkClipOp::kIntersect, true);
+  if (aClipped) {
+    // Restrict clearing to the clip region if requested.
+    mCanvas->clipRect(RectToSkRect(aRect), SkClipOp::kIntersect, true);
   } else {
-    // Otherwise, clear the entire surface.
+    // Otherwise, clear the entire rect.
     mCanvas->resetMatrix();
-    mCanvas->clipRect(IntRectToSkRect(GetRect()),
-                      SkClipOp::kReplace_deprecated);
+    mCanvas->clipRect(RectToSkRect(aRect), SkClipOp::kReplace_deprecated);
   }
   SkColor clearColor = (mFormat == SurfaceFormat::B8G8R8X8)
                            ? SK_ColorBLACK
@@ -1904,14 +1903,17 @@ void DrawTargetSkia::PopClip() {
   SetTransform(GetTransform());
 }
 
-Maybe<Rect> DrawTargetSkia::GetDeviceClipRect() const {
+// Get clip bounds in device space for the clipping region. By default, only
+// bounds for simple (empty or rect) regions are reported. If explicitly
+// allowed, the bounds will be reported for complex (all other) regions as well.
+Maybe<IntRect> DrawTargetSkia::GetDeviceClipRect(bool aAllowComplex) const {
   if (mCanvas->isClipEmpty()) {
-    return Some(Rect());
+    return Some(IntRect());
   }
-  if (mCanvas->isClipRect()) {
+  if (aAllowComplex || mCanvas->isClipRect()) {
     SkIRect deviceBounds;
     if (mCanvas->getDeviceClipBounds(&deviceBounds)) {
-      return Some(Rect(SkIRectToIntRect(deviceBounds)));
+      return Some(SkIRectToIntRect(deviceBounds));
     }
   }
   return Nothing();
