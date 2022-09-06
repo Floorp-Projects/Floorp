@@ -358,6 +358,7 @@ button.close {
 }
 
 .placeholder-content {
+  color: var(--fxview-text-secondary-color);
   text-align: center;
   padding: 24px 16px;
 }
