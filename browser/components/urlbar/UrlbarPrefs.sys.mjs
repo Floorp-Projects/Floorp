@@ -374,6 +374,7 @@ const PREF_OTHER_DEFAULTS = new Map([
   ["browser.fixup.dns_first_for_single_words", false],
   ["browser.search.suggest.enabled", true],
   ["browser.search.suggest.enabled.private", false],
+  ["browser.search.widget.inNavBar", false],
   ["keyword.enabled", true],
   ["ui.popup.disable_autohide", false],
 ]);
