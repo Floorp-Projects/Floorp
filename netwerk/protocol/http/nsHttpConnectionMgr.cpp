@@ -1676,7 +1676,8 @@ nsresult nsHttpConnectionMgr::ProcessNewTransaction(nsHttpTransaction* trans) {
 
   bool isWildcard = false;
   ConnectionEntry* ent = GetOrCreateConnectionEntry(
-      ci, false, trans->Caps() & NS_HTTP_DISALLOW_SPDY,
+      ci, trans->Caps() & NS_HTTP_DISALLOW_HTTP2_PROXY,
+      trans->Caps() & NS_HTTP_DISALLOW_SPDY,
       trans->Caps() & NS_HTTP_DISALLOW_HTTP3, &isWildcard);
   MOZ_ASSERT(ent);
 

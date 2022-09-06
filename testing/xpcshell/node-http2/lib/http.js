@@ -459,6 +459,7 @@ function Server(options) {
       }
     });
     this._server.on('request', this.emit.bind(this, 'request'));
+    this._server.on('connect', this.emit.bind(this, 'connect'));
 
     forwardEvent('error', this._server, this);
     forwardEvent('listening', this._server, this);

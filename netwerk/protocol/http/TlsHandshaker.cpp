@@ -115,7 +115,8 @@ nsresult TlsHandshaker::InitSSLParams(bool connectingToProxy,
     }
   }
 
-  if (NS_SUCCEEDED(SetupNPNList(ssl, mOwner->TransactionCaps())) &&
+  if (NS_SUCCEEDED(
+          SetupNPNList(ssl, mOwner->TransactionCaps(), connectingToProxy)) &&
       NS_SUCCEEDED(ssl->SetHandshakeCallbackListener(this))) {
     LOG(("InitSSLParams Setting up SPDY Negotiation OK mOwner=%p",
          mOwner.get()));
@@ -129,7 +130,8 @@ nsresult TlsHandshaker::InitSSLParams(bool connectingToProxy,
 // offer list for both NPN and ALPN. ALPN validation callbacks are made
 // now before the handshake is complete, and NPN validation callbacks
 // are made during the handshake.
-nsresult TlsHandshaker::SetupNPNList(nsISSLSocketControl* ssl, uint32_t caps) {
+nsresult TlsHandshaker::SetupNPNList(nsISSLSocketControl* ssl, uint32_t caps,
+                                     bool connectingToProxy) {
   nsTArray<nsCString> protocolArray;
 
   // The first protocol is used as the fallback if none of the
@@ -142,12 +144,15 @@ nsresult TlsHandshaker::SetupNPNList(nsISSLSocketControl* ssl, uint32_t caps) {
   protocolArray.AppendElement("http/1.1"_ns);
 
   if (StaticPrefs::network_http_http2_enabled() &&
-      !(caps & NS_HTTP_DISALLOW_SPDY)) {
+      (connectingToProxy || !(caps & NS_HTTP_DISALLOW_SPDY)) &&
+      !(connectingToProxy && (caps & NS_HTTP_DISALLOW_HTTP2_PROXY))) {
     LOG(("nsHttpConnection::SetupSSL Allow SPDY NPN selection"));
     const SpdyInformation* info = gHttpHandler->SpdyInfo();
     if (info->ALPNCallbacks(ssl)) {
       protocolArray.AppendElement(info->VersionString);
     }
+  } else {
+    LOG(("nsHttpConnection::SetupSSL Disallow SPDY NPN selection"));
   }
 
   nsresult rv = ssl->SetNPNList(protocolArray);

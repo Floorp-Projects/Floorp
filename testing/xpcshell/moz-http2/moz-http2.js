@@ -551,6 +551,11 @@ function handleRequest(req, res) {
       rl.resp = res;
       setTimeout(executeRunLaterCatchError, 750, rl);
       return;
+    } else if (req.headers.host == "h11required.com:80") {
+      if (req.httpVersionMajor === 2) {
+        res.stream.reset("HTTP_1_1_REQUIRED");
+      }
+      return;
     }
   } else if (u.pathname === "/750ms") {
     let rl = new runlater();
@@ -1876,6 +1881,13 @@ server.on("connection", function(socket) {
     // by the browser because of an untrusted certificate. And this happens at least once, when
     // the first test case if done.
   });
+});
+
+server.on("connect", function(req, clientSocket, head) {
+  clientSocket.write(
+    "HTTP/1.1 404 Not Found\r\nProxy-agent: Node.js-Proxy\r\n\r\n"
+  );
+  clientSocket.destroy();
 });
 
 function makeid(length) {

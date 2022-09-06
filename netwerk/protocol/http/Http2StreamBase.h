@@ -179,6 +179,22 @@ class Http2StreamBase : public nsAHttpSegmentReader,
 
   virtual nsresult Condition() { return NS_OK; }
 
+  virtual void DisableSpdy() {
+    if (Transaction()) {
+      Transaction()->DisableSpdy();
+    }
+  }
+  virtual void ReuseConnectionOnRestartOK(bool aReuse) {
+    if (Transaction()) {
+      Transaction()->ReuseConnectionOnRestartOK(aReuse);
+    }
+  }
+  virtual void MakeNonSticky() {
+    if (Transaction()) {
+      Transaction()->MakeNonSticky();
+    }
+  }
+
  protected:
   virtual ~Http2StreamBase();
 

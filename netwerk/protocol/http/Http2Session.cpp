@@ -1588,7 +1588,7 @@ nsresult Http2Session::ResponseHeadersComplete() {
          this));
     // This means the stream found connection-oriented auth. Treat this like we
     // got a reset with HTTP_1_1_REQUIRED.
-    mInputFrameDataStream->Transaction()->DisableSpdy();
+    mInputFrameDataStream->DisableSpdy();
     CleanupStream(mInputFrameDataStream, NS_ERROR_NET_RESET, CANCEL_ERROR);
     ResetDownstreamState();
     return NS_OK;
@@ -2220,7 +2220,7 @@ nsresult Http2Session::RecvGoAway(Http2Session* self) {
         static_cast<Http2StreamBase*>(self->mGoAwayStreamsToRestart.PopFront());
 
     if (self->mPeerGoAwayReason == HTTP_1_1_REQUIRED) {
-      stream->Transaction()->DisableSpdy();
+      stream->DisableSpdy();
     }
     self->CloseStream(stream, NS_ERROR_NET_RESET);
     if (stream->HasRegisteredID()) {
@@ -2236,7 +2236,7 @@ nsresult Http2Session::RecvGoAway(Http2Session* self) {
     MOZ_ASSERT(stream->Queued());
     stream->SetQueued(false);
     if (self->mPeerGoAwayReason == HTTP_1_1_REQUIRED) {
-      stream->Transaction()->DisableSpdy();
+      stream->DisableSpdy();
     }
     self->CloseStream(stream, NS_ERROR_NET_RESET);
     self->mStreamTransactionHash.Remove(stream->Transaction());
@@ -3209,7 +3209,7 @@ nsresult Http2Session::WriteSegmentsAgain(nsAHttpSegmentWriter* writer,
 
       // Go through and re-start all of our transactions with h2 disabled.
       for (const auto& stream : mStreamTransactionHash.Values()) {
-        stream->Transaction()->DisableSpdy();
+        stream->DisableSpdy();
         CloseStream(stream, NS_ERROR_NET_RESET);
       }
       mStreamTransactionHash.Clear();
@@ -3307,13 +3307,13 @@ nsresult Http2Session::WriteSegmentsAgain(nsAHttpSegmentWriter* writer,
     // equivalent to cancel.
     if (mDownstreamRstReason == REFUSED_STREAM_ERROR) {
       streamCleanupCode = NS_ERROR_NET_RESET;  // can retry this 100% safely
-      mInputFrameDataStream->Transaction()->ReuseConnectionOnRestartOK(true);
+      mInputFrameDataStream->ReuseConnectionOnRestartOK(true);
     } else if (mDownstreamRstReason == HTTP_1_1_REQUIRED) {
       streamCleanupCode = NS_ERROR_NET_RESET;
-      mInputFrameDataStream->Transaction()->ReuseConnectionOnRestartOK(true);
-      mInputFrameDataStream->Transaction()->DisableSpdy();
-      mInputFrameDataStream->Transaction()
-          ->MakeNonSticky();  // actully allow restart by unsticking
+      mInputFrameDataStream->ReuseConnectionOnRestartOK(true);
+      mInputFrameDataStream->DisableSpdy();
+      // actually allow restart by unsticking
+      mInputFrameDataStream->MakeNonSticky();
     } else {
       streamCleanupCode = mInputFrameDataStream->RecvdData()
                               ? NS_ERROR_NET_PARTIAL_TRANSFER

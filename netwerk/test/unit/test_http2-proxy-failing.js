@@ -162,3 +162,16 @@ add_task(
     Assert.equal(failed2.http_code, undefined);
   }
 );
+
+add_task(async function test_http2_h11required_stream() {
+  let should_failed = await get_response(
+    make_channel(`http://h11required.com`),
+    CL_EXPECT_FAILURE
+  );
+
+  // See HTTP/1.1 connect handler in moz-http2.js. The handler returns
+  // "404 Not Found", so the expected error code is NS_ERROR_UNKNOWN_HOST.
+  Assert.equal(should_failed.status, Cr.NS_ERROR_UNKNOWN_HOST);
+  Assert.equal(should_failed.proxy_connect_response_code, 404);
+  Assert.equal(should_failed.http_code, undefined);
+});
