@@ -525,7 +525,12 @@ continue_loading:
   NTSTATUS ret;
   HANDLE myHandle;
 
-  ret = stub_LdrLoadDll(filePath, flags, moduleFileName, &myHandle);
+  {
+#if defined(_M_AMD64) || defined(_M_ARM64)
+    AutoSuppressStackWalking suppress;
+#endif
+    ret = stub_LdrLoadDll(filePath, flags, moduleFileName, &myHandle);
+  }
 
   if (handle) {
     *handle = myHandle;
