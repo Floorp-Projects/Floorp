@@ -34,7 +34,7 @@ namespace layers {
   uint32_t arrayIndex;
   SurfaceFormat format;
   IntSize size;
-  ColorSpace2 colorSpace;
+  YUVColorSpace yUVColorSpace;
   ColorRange colorRange;
 };
 

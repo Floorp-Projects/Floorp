@@ -1025,6 +1025,4 @@ class gfxPlatform : public mozilla::layers::MemoryPressureListener {
   const gfxSkipChars kEmptySkipChars;
 };
 
-CMSMode GfxColorManagementMode();
-
 #endif /* GFX_PLATFORM_H */

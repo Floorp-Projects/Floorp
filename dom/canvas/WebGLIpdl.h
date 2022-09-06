@@ -247,10 +247,7 @@ struct ParamTraits<mozilla::WebGLContextOptions> final
   using T = mozilla::WebGLContextOptions;
 
   static bool Validate(const T& val) {
-    bool ok = true;
-    ok &= ValidateParam(val.powerPreference);
-    ok &= ValidateParam(val.colorSpace);
-    return ok;
+    return ValidateParam(val.powerPreference) && ValidateParam(val.colorSpace);
   }
 };
 
