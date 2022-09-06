@@ -5,6 +5,9 @@
 :root {
   height: 100%;
 
+  /* This will give us a larger base font size on macOS: */
+  font: menu;
+
   --body-columns: 1fr;
   --body-rows: auto auto 1fr auto;
 
