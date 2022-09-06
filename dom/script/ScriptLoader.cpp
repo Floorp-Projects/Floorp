@@ -2218,7 +2218,8 @@ nsresult ScriptLoader::CompileOrDecodeClassicScript(
     if (aRequest->GetScriptLoadContext()->mOffThreadToken) {
       LOG(("ScriptLoadRequest (%p): Decode Bytecode & Join and Execute",
            aRequest));
-      rv = aExec.JoinDecode(&aRequest->GetScriptLoadContext()->mOffThreadToken);
+      rv = aExec.JoinOffThread(
+          &aRequest->GetScriptLoadContext()->mOffThreadToken);
     } else {
       LOG(("ScriptLoadRequest (%p): Decode Bytecode and Execute", aRequest));
       AUTO_PROFILER_MARKER_TEXT("BytecodeDecodeMainThread", JS,
@@ -2245,7 +2246,8 @@ nsresult ScriptLoader::CompileOrDecodeClassicScript(
          "Execute",
          aRequest));
     MOZ_ASSERT(aRequest->IsTextSource());
-    rv = aExec.JoinCompile(&aRequest->GetScriptLoadContext()->mOffThreadToken);
+    rv =
+        aExec.JoinOffThread(&aRequest->GetScriptLoadContext()->mOffThreadToken);
   } else {
     // Main thread parsing (inline and small scripts)
     LOG(("ScriptLoadRequest (%p): Compile And Exec", aRequest));
