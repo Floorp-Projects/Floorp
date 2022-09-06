@@ -484,8 +484,6 @@ class TabsPanel extends TabsListBase {
   }
 
   _setDropTarget(row, direction) {
-    this._clearDropTarget();
-
     this.dropTargetRow = row;
     this.dropTargetDirection = direction;
 
