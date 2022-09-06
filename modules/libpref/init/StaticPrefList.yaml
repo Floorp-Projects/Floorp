@@ -5357,6 +5357,13 @@
   value: 0
   mirror: once
 
+#if defined(XP_MACOSX)
+- name: gfx.cairo_quartz_cg_layer.enabled
+  type: bool
+  value: false
+  mirror: always
+#endif
+
 - name: gfx.canvas.accelerated
   type: RelaxedAtomicBool
 #if defined(XP_MACOSX) || defined(XP_LINUX) && !defined(ANDROID)

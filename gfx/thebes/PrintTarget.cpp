@@ -15,6 +15,7 @@
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/HelpersCairo.h"
 #include "mozilla/gfx/Logging.h"
+#include "mozilla/StaticPrefs_gfx.h"
 #include "nsReadableUtils.h"
 #include "nsString.h"
 #include "nsUTF8Utils.h"
@@ -107,10 +108,13 @@ already_AddRefed<DrawTarget> PrintTarget::GetReferenceDrawTarget() {
 #endif
 #ifdef CAIRO_HAS_QUARTZ_SURFACE
       case CAIRO_SURFACE_TYPE_QUARTZ:
-        similar = cairo_quartz_surface_create_cg_layer(
-            mCairoSurface, cairo_surface_get_content(mCairoSurface), size.width,
-            size.height);
-        break;
+        if (StaticPrefs::gfx_cairo_quartz_cg_layer_enabled()) {
+          similar = cairo_quartz_surface_create_cg_layer(
+              mCairoSurface, cairo_surface_get_content(mCairoSurface),
+              size.width, size.height);
+          break;
+        }
+        [[fallthrough]];
 #endif
       default:
         similar = cairo_surface_create_similar(
