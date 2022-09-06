@@ -5,8 +5,8 @@
 
 // Test that VariablesView._doSearch() works even without an attached
 // VariablesViewController (bug 1196341).
-const { VariablesView } = ChromeUtils.import(
-  "resource://devtools/client/storage/VariablesView.jsm"
+const { VariablesView } = ChromeUtils.importESModule(
+  "resource://devtools/client/storage/VariablesView.sys.mjs"
 );
 const { globals } = require("devtools/shared/loader/builtin-modules");
 

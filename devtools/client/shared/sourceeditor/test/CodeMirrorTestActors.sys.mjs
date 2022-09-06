@@ -1,13 +1,9 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-"use strict";
-
-var EXPORTED_SYMBOLS = ["CodeMirrorTestParent", "CodeMirrorTestChild"];
-
 let gCallback;
 
-class CodeMirrorTestParent extends JSWindowActorParent {
+export class CodeMirrorTestParent extends JSWindowActorParent {
   static setCallback(callback) {
     gCallback = callback;
   }
@@ -19,7 +15,7 @@ class CodeMirrorTestParent extends JSWindowActorParent {
   }
 }
 
-class CodeMirrorTestChild extends JSWindowActorChild {
+export class CodeMirrorTestChild extends JSWindowActorChild {
   handleEvent(event) {
     if (event.type == "DOMWindowCreated") {
       this.contentWindow.wrappedJSObject.mozilla_setStatus = (
