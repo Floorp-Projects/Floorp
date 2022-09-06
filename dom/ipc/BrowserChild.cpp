@@ -2842,7 +2842,7 @@ void BrowserChild::InitRenderingState(
       lm->SetLayersObserverEpoch(mLayersObserverEpoch);
     }
   } else {
-    NS_WARNING("Fallback to BasicLayerManager");
+    NS_WARNING("Fallback to FallbackRenderer");
     mLayersConnected = Some(false);
   }
 
