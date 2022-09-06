@@ -213,7 +213,7 @@ def main():
     funcOpt = {}
     if options.mode == "decode":
         encodeOpt = {}
-        encodeOpt["transcodeOnly"] = True
+        encodeOpt["execute"] = False
         encodeOpt["saveIncrementalBytecode"] = True
         if not options.lazy:
             encodeOpt["forceFullParse"] = True
@@ -227,8 +227,10 @@ evaluate(contents, $options);
         ).substitute(options=json.dumps(encodeOpt))
 
         func = "evaluate"
-        funcOpt["transcodeOnly"] = True
+        funcOpt["execute"] = False
         funcOpt["loadBytecode"] = True
+        if not options.lazy:
+            funcOpt["forceFullParse"] = True
     else:
         prepare = ""
         func = options.mode
