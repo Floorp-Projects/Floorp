@@ -71,6 +71,7 @@ static bool statefulCharset(const char* charset) {
   return false;
 }
 
+// static
 nsresult nsTextToSubURI::convertURItoUnicode(const nsCString& aCharset,
                                              const nsCString& aURI,
                                              nsAString& aOut) {
@@ -141,9 +142,16 @@ NS_IMETHODIMP nsTextToSubURI::UnEscapeURIForUI(const nsACString& aURIFragment,
 }
 
 NS_IMETHODIMP
-nsTextToSubURI::UnEscapeNonAsciiURI(const nsACString& aCharset,
-                                    const nsACString& aURIFragment,
-                                    nsAString& _retval) {
+nsTextToSubURI::UnEscapeNonAsciiURIJS(const nsACString& aCharset,
+                                      const nsACString& aURIFragment,
+                                      nsAString& _retval) {
+  return UnEscapeNonAsciiURI(aCharset, aURIFragment, _retval);
+}
+
+// static
+nsresult nsTextToSubURI::UnEscapeNonAsciiURI(const nsACString& aCharset,
+                                             const nsACString& aURIFragment,
+                                             nsAString& _retval) {
   nsAutoCString unescapedSpec;
   NS_UnescapeURL(PromiseFlatCString(aURIFragment),
                  esc_AlwaysCopy | esc_OnlyNonASCII, unescapedSpec);

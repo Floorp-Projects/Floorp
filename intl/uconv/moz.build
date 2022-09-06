@@ -15,6 +15,7 @@ XPIDL_MODULE = "uconv"
 
 EXPORTS += [
     "nsConverterInputStream.h",
+    "nsTextToSubURI.h",
 ]
 
 UNIFIED_SOURCES += [

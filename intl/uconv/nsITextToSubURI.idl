@@ -55,5 +55,6 @@ interface nsITextToSubURI : nsISupports
    * @throws NS_ERROR_UCONV_NOCONV when there is no decoder for aCharset
    *         or NS_ERROR_UDEC_ILLEGALINPUT in case of conversion failure
    */
+  [binaryname(UnEscapeNonAsciiURIJS)]
   AString unEscapeNonAsciiURI(in ACString aCharset, in AUTF8String aURIFragment);
 };
