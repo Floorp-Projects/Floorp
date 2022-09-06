@@ -21,6 +21,7 @@ add_setup(async function setup() {
   registerCleanupFunction(async () => {
     trr_clear_prefs();
     Services.prefs.clearUserPref("network.http.http3.support_version1");
+    Services.prefs.clearUserPref("security.tls.version.max");
     if (trrServer) {
       await trrServer.stop();
     }
@@ -121,6 +122,53 @@ add_task(async function testSortedAlpnH3() {
     expectedPriority: 1,
     expectedName: "test.alpn.com",
     expectedAlpn: "h3-30",
+  });
+  checkResult(inRecord, true, true, {
+    expectedPriority: 1,
+    expectedName: "test.alpn.com",
+    expectedAlpn: "http/1.1",
+  });
+  Services.prefs.setBoolPref("network.http.http3.support_version1", true);
+
+  // Disable TLS1.3
+  Services.prefs.setIntPref("security.tls.version.max", 3);
+  checkResult(inRecord, false, false, {
+    expectedPriority: 1,
+    expectedName: "test.alpn.com",
+    expectedAlpn: "h2",
+  });
+  checkResult(inRecord, false, true, {
+    expectedPriority: 1,
+    expectedName: "test.alpn.com",
+    expectedAlpn: "h2",
+  });
+  checkResult(inRecord, true, false, {
+    expectedPriority: 1,
+    expectedName: "test.alpn.com",
+    expectedAlpn: "http/1.1",
+  });
+  checkResult(inRecord, true, true, {
+    expectedPriority: 1,
+    expectedName: "test.alpn.com",
+    expectedAlpn: "http/1.1",
+  });
+
+  // Enable TLS1.3
+  Services.prefs.setIntPref("security.tls.version.max", 4);
+  checkResult(inRecord, false, false, {
+    expectedPriority: 1,
+    expectedName: "test.alpn.com",
+    expectedAlpn: "h3",
+  });
+  checkResult(inRecord, false, true, {
+    expectedPriority: 1,
+    expectedName: "test.alpn.com",
+    expectedAlpn: "h2",
+  });
+  checkResult(inRecord, true, false, {
+    expectedPriority: 1,
+    expectedName: "test.alpn.com",
+    expectedAlpn: "h3",
   });
   checkResult(inRecord, true, true, {
     expectedPriority: 1,

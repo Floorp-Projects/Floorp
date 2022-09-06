@@ -2605,6 +2605,13 @@ HttpTrafficAnalyzer* nsHttpHandler::GetHttpTrafficAnalyzer() {
   return &mHttpTrafficAnalyzer;
 }
 
+bool nsHttpHandler::IsHttp3Enabled() {
+  static const uint32_t TLS3_PREF_VALUE = 4;
+
+  return StaticPrefs::network_http_http3_enable() &&
+         (StaticPrefs::security_tls_version_max() >= TLS3_PREF_VALUE);
+}
+
 bool nsHttpHandler::IsHttp3VersionSupported(const nsACString& version) {
   if (!StaticPrefs::network_http_http3_support_version1() &&
       version.EqualsLiteral("h3")) {
@@ -2746,8 +2753,7 @@ void nsHttpHandler::MaybeAddAltSvcForTesting(
     nsIURI* aUri, const nsACString& aUsername, bool aPrivateBrowsing,
     nsIInterfaceRequestor* aCallbacks,
     const OriginAttributes& aOriginAttributes) {
-  if (!StaticPrefs::network_http_http3_enable() ||
-      mAltSvcMappingTemptativeMap.IsEmpty()) {
+  if (!IsHttp3Enabled() || mAltSvcMappingTemptativeMap.IsEmpty()) {
     return;
   }
 
