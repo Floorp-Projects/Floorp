@@ -2263,7 +2263,7 @@ static bool Evaluate(JSContext* cx, unsigned argc, Value* vp) {
   bool catchTermination = false;
   bool loadBytecode = false;
   bool saveIncrementalBytecode = false;
-  bool transcodeOnly = false;
+  bool execute = true;
   bool assertEqBytecode = false;
   JS::RootedObjectVector envChain(cx);
   RootedObject callerGlobal(cx, cx->global());
@@ -2311,11 +2311,11 @@ static bool Evaluate(JSContext* cx, unsigned argc, Value* vp) {
       saveIncrementalBytecode = ToBoolean(v);
     }
 
-    if (!JS_GetProperty(cx, opts, "transcodeOnly", &v)) {
+    if (!JS_GetProperty(cx, opts, "execute", &v)) {
       return false;
     }
     if (!v.isUndefined()) {
-      transcodeOnly = ToBoolean(v);
+      execute = ToBoolean(v);
     }
 
     if (!JS_GetProperty(cx, opts, "assertEqBytecode", &v)) {
@@ -2461,7 +2461,7 @@ static bool Evaluate(JSContext* cx, unsigned argc, Value* vp) {
       return false;
     }
 
-    if (!transcodeOnly) {
+    if (execute) {
       if (!(envChain.empty()
                 ? JS_ExecuteScript(cx, script, args.rval())
                 : JS_ExecuteScript(cx, envChain, script, args.rval()))) {
@@ -4810,70 +4810,6 @@ static bool Elapsed(JSContext* cx, unsigned argc, Value* vp) {
   }
   JS_ReportErrorASCII(cx, "Wrong number of arguments");
   return false;
-}
-
-static bool Compile(JSContext* cx, unsigned argc, Value* vp) {
-  CallArgs args = CallArgsFromVp(argc, vp);
-  if (!args.requireAtLeast(cx, "compile", 1)) {
-    return false;
-  }
-  if (!args[0].isString()) {
-    const char* typeName = InformalValueTypeName(args[0]);
-    JS_ReportErrorASCII(cx, "expected string to compile, got %s", typeName);
-    return false;
-  }
-
-  RootedObject global(cx, JS::CurrentGlobalOrNull(cx));
-  RootedString scriptContents(cx, args[0].toString());
-
-  AutoStableStringChars stableChars(cx);
-  if (!stableChars.initTwoByte(cx, scriptContents)) {
-    return false;
-  }
-
-  JS::CompileOptions options(cx);
-  options.setIntroductionType("js shell compile")
-      .setFileAndLine("<string>", 1)
-      .setIsRunOnce(true)
-      .setNoScriptRval(true)
-      .setDeferDebugMetadata();
-  RootedValue privateValue(cx);
-  RootedString elementAttributeName(cx);
-
-  if (args.length() >= 2) {
-    if (!args[1].isObject()) {
-      JS_ReportErrorASCII(cx, "compile: The 2nd argument must be an object");
-      return false;
-    }
-
-    RootedObject opts(cx, &args[1].toObject());
-    if (!js::ParseCompileOptions(cx, options, opts, nullptr)) {
-      return false;
-    }
-    if (!ParseDebugMetadata(cx, opts, &privateValue, &elementAttributeName)) {
-      return false;
-    }
-  }
-
-  JS::SourceText<char16_t> srcBuf;
-  if (!srcBuf.init(cx, stableChars.twoByteRange().begin().get(),
-                   scriptContents->length(), JS::SourceOwnership::Borrowed)) {
-    return false;
-  }
-
-  RootedScript script(cx, JS::Compile(cx, options, srcBuf));
-  if (!script) {
-    return false;
-  }
-
-  JS::InstantiateOptions instantiateOptions(options);
-  if (!JS::UpdateDebugMetadata(cx, script, instantiateOptions, privateValue,
-                               elementAttributeName, nullptr, nullptr)) {
-    return false;
-  }
-
-  args.rval().setUndefined();
-  return true;
 }
 
 static ShellCompartmentPrivate* EnsureShellCompartmentPrivate(JSContext* cx) {
@@ -8867,7 +8803,8 @@ static const JSFunctionSpecWithHelp shell_functions[] = {
 "      saveIncrementalBytecode: if true, and if the source is a\n"
 "         CacheEntryObject, the bytecode would be incrementally encoded and\n"
 "         saved into the cache entry.\n"
-"      transcodeOnly: if true, do not execute the script.\n"
+"      execute: if false, do not execute the script, but do parse and/or\n"
+"               transcode.\n"
 "      assertEqBytecode: if true, and if both loadBytecode and either\n"
 "         saveIncrementalBytecode is true, then the loaded\n"
 "         bytecode and the encoded bytecode are compared.\n"
@@ -9017,12 +8954,6 @@ static const JSFunctionSpecWithHelp shell_functions[] = {
     JS_FN_HELP("sleep", Sleep_fn, 1, 0,
 "sleep(dt)",
 "  Sleep for dt seconds."),
-
-    JS_FN_HELP("compile", Compile, 1, 0,
-"compile(code, [options])",
-"  Compiles a string to bytecode, potentially throwing.\n"
-"  If present, |options| may have CompileOptions-related properties of\n"
-"  evaluate function"),
 
     JS_FN_HELP("parseModule", ParseModule, 1, 0,
 "parseModule(code)",
