@@ -2489,8 +2489,7 @@ bool BytecodeEmitter::getNslots(uint32_t* nslots) {
 
 bool BytecodeEmitter::emitFunctionScript(FunctionNode* funNode) {
   MOZ_ASSERT(inPrologue());
-  ListNode* paramsBody = &funNode->body()->as<ListNode>();
-  MOZ_ASSERT(paramsBody->isKind(ParseNodeKind::ParamsBody));
+  ParamsBodyNode* paramsBody = funNode->body();
   FunctionBox* funbox = sc->asFunctionBox();
 
   setScriptStartOffsetIfUnset(paramsBody->pn_pos.begin);
@@ -9660,7 +9659,7 @@ bool BytecodeEmitter::emitPrivateMethodInitializer(
   if (!bce2.init(funNode->pn_pos)) {
     return false;
   }
-  ListNode* paramsBody = &funNode->body()->as<ListNode>();
+  ParamsBodyNode* paramsBody = funNode->body();
   FunctionScriptEmitter fse(&bce2, funbox, Nothing(), Nothing());
   if (!fse.prepareForParameters()) {
     //              [stack]
@@ -10393,7 +10392,7 @@ bool BytecodeEmitter::emitTypeof(UnaryNode* typeofNode, JSOp op) {
   return emit1(op);
 }
 
-bool BytecodeEmitter::emitFunctionFormalParameters(ListNode* paramsBody) {
+bool BytecodeEmitter::emitFunctionFormalParameters(ParamsBodyNode* paramsBody) {
   ParseNode* funBody = paramsBody->last();
   FunctionBox* funbox = sc->asFunctionBox();
 

@@ -596,6 +596,8 @@ class SyntaxParseHandler {
 
   void checkAndSetIsDirectRHSAnonFunction(Node pn) {}
 
+  ParamsBodyNodeType newParamsBody(const TokenPos& pos) { return NodeGeneric; }
+
   FunctionNodeType newFunction(FunctionSyntaxKind syntaxKind,
                                const TokenPos& pos) {
     switch (syntaxKind) {
@@ -612,7 +614,7 @@ class SyntaxParseHandler {
   }
 
   void setFunctionFormalParametersAndBody(FunctionNodeType funNode,
-                                          ListNodeType paramsBody) {}
+                                          ParamsBodyNodeType paramsBody) {}
   void setFunctionBody(FunctionNodeType funNode, LexicalScopeNodeType body) {}
   void setFunctionBox(FunctionNodeType funNode, FunctionBox* funbox) {}
   void addFunctionFormalParameter(FunctionNodeType funNode, Node argpn) {}
@@ -656,6 +658,7 @@ class SyntaxParseHandler {
     MOZ_ASSERT(kind != ParseNodeKind::VarStmt);
     MOZ_ASSERT(kind != ParseNodeKind::LetDecl);
     MOZ_ASSERT(kind != ParseNodeKind::ConstDecl);
+    MOZ_ASSERT(kind != ParseNodeKind::ParamsBody);
     return NodeGeneric;
   }
 

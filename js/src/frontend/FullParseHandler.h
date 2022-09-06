@@ -918,6 +918,10 @@ class FullParseHandler {
     }
   }
 
+  ParamsBodyNodeType newParamsBody(const TokenPos& pos) {
+    return new_<ParamsBodyNode>(pos);
+  }
+
   FunctionNodeType newFunction(FunctionSyntaxKind syntaxKind,
                                const TokenPos& pos) {
     return new_<FunctionNode>(syntaxKind, pos);
@@ -931,8 +935,7 @@ class FullParseHandler {
   }
 
   void setFunctionFormalParametersAndBody(FunctionNodeType funNode,
-                                          ListNodeType paramsBody) {
-    MOZ_ASSERT_IF(paramsBody, paramsBody->isKind(ParseNodeKind::ParamsBody));
+                                          ParamsBodyNodeType paramsBody) {
     funNode->setBody(paramsBody);
   }
   void setFunctionBox(FunctionNodeType funNode, FunctionBox* funbox) {
@@ -943,7 +946,6 @@ class FullParseHandler {
     addList(/* list = */ funNode->body(), /* kid = */ argpn);
   }
   void setFunctionBody(FunctionNodeType funNode, LexicalScopeNodeType body) {
-    MOZ_ASSERT(funNode->body()->isKind(ParseNodeKind::ParamsBody));
     addList(/* list = */ funNode->body(), /* kid = */ body);
   }
 
@@ -1062,12 +1064,13 @@ class FullParseHandler {
 
   ListNodeType newList(ParseNodeKind kind, const TokenPos& pos) {
     MOZ_ASSERT(!isDeclarationKind(kind));
+    MOZ_ASSERT(kind != ParseNodeKind::ParamsBody);
     return new_<ListNode>(kind, pos);
   }
 
- public:
   ListNodeType newList(ParseNodeKind kind, Node kid) {
     MOZ_ASSERT(!isDeclarationKind(kind));
+    MOZ_ASSERT(kind != ParseNodeKind::ParamsBody);
     return new_<ListNode>(kind, kid);
   }
 
@@ -1186,7 +1189,7 @@ class FullParseHandler {
 
 inline bool FullParseHandler::setLastFunctionFormalParameterDefault(
     FunctionNodeType funNode, Node defaultValue) {
-  ListNode* body = funNode->body();
+  ParamsBodyNode* body = funNode->body();
   ParseNode* arg = body->last();
   ParseNode* pn = newAssignment(ParseNodeKind::AssignExpr, arg, defaultValue);
   if (!pn) {

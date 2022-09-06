@@ -1772,7 +1772,7 @@ class ASTSerializer {
   bool expressions(ListNode* exprList, NodeVector& elts);
   bool leftAssociate(ListNode* node, MutableHandleValue dst);
   bool rightAssociate(ListNode* node, MutableHandleValue dst);
-  bool functionArgs(ParseNode* pn, ListNode* argsList, NodeVector& args,
+  bool functionArgs(ParamsBodyNode* pn, ListNode* argsList, NodeVector& args,
                     NodeVector& defaults, MutableHandleValue rest);
 
   bool sourceElement(ParseNode* pn, MutableHandleValue dst);
@@ -1855,7 +1855,7 @@ class ASTSerializer {
   bool objectPattern(ListNode* obj, MutableHandleValue dst);
 
   bool function(FunctionNode* funNode, ASTType type, MutableHandleValue dst);
-  bool functionArgsAndBody(ParseNode* pn, NodeVector& args,
+  bool functionArgsAndBody(ParamsBodyNode* pn, NodeVector& args,
                            NodeVector& defaults, bool isAsync,
                            bool isExpression, MutableHandleValue body,
                            MutableHandleValue rest);
@@ -3849,22 +3849,14 @@ bool ASTSerializer::function(FunctionNode* funNode, ASTType type,
                           rest, generatorStyle, isAsync, isExpression, dst);
 }
 
-bool ASTSerializer::functionArgsAndBody(ParseNode* pn, NodeVector& args,
+bool ASTSerializer::functionArgsAndBody(ParamsBodyNode* pn, NodeVector& args,
                                         NodeVector& defaults, bool isAsync,
                                         bool isExpression,
                                         MutableHandleValue body,
                                         MutableHandleValue rest) {
-  ListNode* argsList;
-  ParseNode* bodyNode;
-
   /* Extract the args and body separately. */
-  if (pn->isKind(ParseNodeKind::ParamsBody)) {
-    argsList = &pn->as<ListNode>();
-    bodyNode = argsList->last();
-  } else {
-    argsList = nullptr;
-    bodyNode = pn;
-  }
+  ListNode* argsList = pn;
+  ParseNode* bodyNode = argsList->last();
 
   if (bodyNode->is<LexicalScopeNode>()) {
     bodyNode = bodyNode->as<LexicalScopeNode>().scopeBody();
@@ -3903,7 +3895,7 @@ bool ASTSerializer::functionArgsAndBody(ParseNode* pn, NodeVector& args,
   }
 }
 
-bool ASTSerializer::functionArgs(ParseNode* pn, ListNode* argsList,
+bool ASTSerializer::functionArgs(ParamsBodyNode* pn, ListNode* argsList,
                                  NodeVector& args, NodeVector& defaults,
                                  MutableHandleValue rest) {
   if (!argsList) {

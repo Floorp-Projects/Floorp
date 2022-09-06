@@ -604,9 +604,7 @@ static inline TaggedParserAtomIndex FunctionName(FunctionNode* funNode) {
 }
 
 static inline ParseNode* FunctionStatementList(FunctionNode* funNode) {
-  MOZ_ASSERT(funNode->body()->isKind(ParseNodeKind::ParamsBody));
-  LexicalScopeNode* last =
-      &funNode->body()->as<ListNode>().last()->as<LexicalScopeNode>();
+  LexicalScopeNode* last = &funNode->body()->last()->as<LexicalScopeNode>();
   MOZ_ASSERT(last->isEmptyScope());
   ParseNode* body = last->scopeBody();
   MOZ_ASSERT(body->isKind(ParseNodeKind::StatementList));
@@ -2398,7 +2396,7 @@ class MOZ_STACK_CLASS FunctionValidatorShared {
   // This is also a ModuleValidator<Unit>& after the appropriate static_cast<>.
   ModuleValidatorShared& m_;
 
-  ParseNode* fn_;
+  FunctionNode* fn_;
   Bytes bytes_;
   Encoder encoder_;
   Uint32Vector callSiteLineNums_;
@@ -2415,7 +2413,7 @@ class MOZ_STACK_CLASS FunctionValidatorShared {
   Maybe<ValType> ret_;
 
  private:
-  FunctionValidatorShared(ModuleValidatorShared& m, ParseNode* fn,
+  FunctionValidatorShared(ModuleValidatorShared& m, FunctionNode* fn,
                           JSContext* cx)
       : m_(m),
         fn_(fn),
@@ -2428,7 +2426,7 @@ class MOZ_STACK_CLASS FunctionValidatorShared {
 
  protected:
   template <typename Unit>
-  FunctionValidatorShared(ModuleValidator<Unit>& m, ParseNode* fn,
+  FunctionValidatorShared(ModuleValidator<Unit>& m, FunctionNode* fn,
                           JSContext* cx)
       : FunctionValidatorShared(static_cast<ModuleValidatorShared&>(m), fn,
                                 cx) {}
@@ -2439,7 +2437,7 @@ class MOZ_STACK_CLASS FunctionValidatorShared {
   JSContext* cx() const { return m_.cx(); }
   ErrorContext* ec() const { return m_.ec(); }
   JS::NativeStackLimit stackLimit() const { return m_.stackLimit(); }
-  ParseNode* fn() const { return fn_; }
+  FunctionNode* fn() const { return fn_; }
 
   void define(ModuleValidatorShared::Func* func, unsigned line) {
     MOZ_ASSERT(!blockDepth_);
@@ -2668,7 +2666,7 @@ class MOZ_STACK_CLASS FunctionValidatorShared {
 template <typename Unit>
 class MOZ_STACK_CLASS FunctionValidator : public FunctionValidatorShared {
  public:
-  FunctionValidator(ModuleValidator<Unit>& m, ParseNode* fn)
+  FunctionValidator(ModuleValidator<Unit>& m, FunctionNode* fn)
       : FunctionValidatorShared(m, fn, m.cx()) {}
 
  public:
