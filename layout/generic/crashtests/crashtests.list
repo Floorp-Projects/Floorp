@@ -585,6 +585,9 @@ load 1134531.html
 load 1134667.html
 load 1137723-1.html
 load 1137723-2.html
+asserts(1) load 1140043-1.html
+asserts(1) load 1140043-2.html
+asserts(1) load 1140043-3.html
 load 1140268-1.html
 load 1145768.html
 load 1145931.html

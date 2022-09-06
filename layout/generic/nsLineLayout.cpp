@@ -3121,7 +3121,7 @@ void nsLineLayout::TextAlignLine(nsLineBox* aLine, bool aIsLastLine) {
 
           MOZ_ASSERT(applyState.mGaps.mHandled == applyState.mGaps.mCount,
                      "Unprocessed justification gaps");
-          MOZ_ASSERT(
+          NS_ASSERTION(
               applyState.mWidth.mConsumed == applyState.mWidth.mAvailable,
               "Unprocessed justification width");
           break;
