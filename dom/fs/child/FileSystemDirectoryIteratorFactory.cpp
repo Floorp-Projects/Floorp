@@ -6,7 +6,7 @@
 
 #include "FileSystemDirectoryIteratorFactory.h"
 
-#include "ArrayAppendable.h"
+#include "FileSystemEntryMetadataArray.h"
 #include "fs/FileSystemRequestHandler.h"
 #include "jsapi.h"
 #include "mozilla/dom/FileSystemDirectoryHandle.h"
@@ -16,6 +16,7 @@
 #include "mozilla/dom/FileSystemManager.h"
 #include "mozilla/dom/IterableIterator.h"
 #include "mozilla/dom/Promise.h"
+#include "mozilla/dom/PromiseNativeHandler.h"
 
 namespace mozilla::dom::fs {
 
@@ -126,8 +127,7 @@ struct ValueResolver<IterableIteratorBase::Entries> {
 // TODO: PageSize could be compile-time shared between content and parent
 template <class ValueResolver, size_t PageSize = 1024u>
 class DoubleBufferQueueImpl
-    : public ArrayAppendable,
-      public mozilla::dom::FileSystemDirectoryIterator::Impl {
+    : public mozilla::dom::FileSystemDirectoryIterator::Impl {
   static_assert(PageSize > 0u);
 
  public:
@@ -166,36 +166,6 @@ class DoubleBufferQueueImpl
     ValueResolver{}(aGlobal, aManager, *aValue, aPromise, aError);
   }
 
-  void append(nsIGlobalObject* aGlobal, RefPtr<FileSystemManager>& aManager,
-              const nsTArray<FileSystemEntryMetadata>& aNewPage) override {
-    MOZ_ASSERT(0u == mWithinPageIndex);
-
-    nsTArray<DataType> batch;
-    for (const auto& it : aNewPage) {
-      batch.AppendElement(it);
-    }
-
-    const size_t batchSize = std::min(PageSize, aNewPage.Length());
-    mData.InsertElementsAt(
-        PageSize * static_cast<size_t>(!mCurrentPageIsLastPage),
-        batch.Elements(), batchSize);
-    mWithinPageEnd += batchSize;
-
-    if (!mPendingPromise) {
-      return;
-    }
-
-    Maybe<DataType> value;
-    if (0 != aNewPage.Length()) {
-      nextInternal(value);
-    }
-
-    IgnoredErrorResult rv;
-    ResolveValue(aGlobal, aManager, value, mPendingPromise, rv);
-
-    mPendingPromise = nullptr;
-  }
-
   already_AddRefed<Promise> Next(nsIGlobalObject* aGlobal,
                                  RefPtr<FileSystemManager>& aManager,
                                  ErrorResult& aError) override {
@@ -215,10 +185,6 @@ class DoubleBufferQueueImpl
   void next(nsIGlobalObject* aGlobal, RefPtr<FileSystemManager>& aManager,
             RefPtr<Promise> aResult, ErrorResult& aError) {
     MOZ_ASSERT(aResult);
-    if (mPendingPromise) {
-      aResult->MaybeRejectWithNotFoundError("Result was not awaited");
-      return;
-    }
 
     Maybe<DataType> rawValue;
 
@@ -226,9 +192,47 @@ class DoubleBufferQueueImpl
     // we hit the end of a page?
     // How likely it is that it would that lead to wasted fetch operations?
     if (0u == mWithinPageIndex) {
-      mPendingPromise = aResult;
+      ErrorResult rv;
+      RefPtr<Promise> promise = Promise::Create(aGlobal, rv);
+      if (rv.Failed()) {
+        aResult->MaybeReject(NS_ERROR_DOM_UNKNOWN_ERR);
+        return;
+      }
+
+      auto newPage = MakeRefPtr<FileSystemEntryMetadataArray>();
+
+      RefPtr<DomPromiseListener> listener = new DomPromiseListener(
+          [global = nsCOMPtr<nsIGlobalObject>(aGlobal),
+           manager = RefPtr<FileSystemManager>(aManager), newPage, aResult,
+           this](JSContext* aCx, JS::Handle<JS::Value> aValue) mutable {
+            MOZ_ASSERT(0u == mWithinPageIndex);
+
+            // XXX Do we need this extra copy ?
+            nsTArray<DataType> batch;
+            for (const auto& it : *newPage) {
+              batch.AppendElement(it);
+            }
+
+            const size_t batchSize = std::min(PageSize, newPage->Length());
+            mData.InsertElementsAt(
+                PageSize * static_cast<size_t>(!mCurrentPageIsLastPage),
+                batch.Elements(), batchSize);
+            mWithinPageEnd += batchSize;
+
+            Maybe<DataType> value;
+            if (0 != newPage->Length()) {
+              nextInternal(value);
+            }
+
+            IgnoredErrorResult rv;
+            ResolveValue(global, manager, value, aResult, rv);
+          },
+          [](nsresult aRv) {});
+      promise->AppendNativeHandler(listener);
+
       FileSystemRequestHandler{}.GetEntries(aManager, mEntryId, mPageNumber,
-                                            mPendingPromise, *this);
+                                            promise, newPage);
+
       ++mPageNumber;
       return;
     }
@@ -269,7 +273,6 @@ class DoubleBufferQueueImpl
   size_t mWithinPageIndex = 0u;
   bool mCurrentPageIsLastPage = true;  // In the beginning, first page is free
   PageNumber mPageNumber = 0u;
-  RefPtr<Promise> mPendingPromise;
 };
 
 template <IterableIteratorBase::IteratorType Type>

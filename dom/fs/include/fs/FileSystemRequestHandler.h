@@ -20,9 +20,9 @@ class Promise;
 
 namespace fs {
 
-class ArrayAppendable;
 class FileSystemChildMetadata;
 class FileSystemEntryMetadata;
+class FileSystemEntryMetadataArray;
 class FileSystemEntryPair;
 
 class FileSystemRequestHandler {
@@ -44,7 +44,8 @@ class FileSystemRequestHandler {
 
   virtual void GetEntries(RefPtr<FileSystemManager>& aManager,
                           const EntryId& aDirectory, PageNumber aPage,
-                          RefPtr<Promise> aPromise, ArrayAppendable& aSink);
+                          RefPtr<Promise> aPromise,
+                          RefPtr<FileSystemEntryMetadataArray>& aSink);
 
   virtual void RemoveEntry(RefPtr<FileSystemManager>& aManager,
                            const FileSystemChildMetadata& aEntry,

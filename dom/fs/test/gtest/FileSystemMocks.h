@@ -14,7 +14,6 @@
 
 #include "fs/FileSystemRequestHandler.h"
 #include "fs/FileSystemChildFactory.h"
-
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/DOMException.h"
@@ -38,7 +37,14 @@
 
 #include <memory>  // We don't have a mozilla shared pointer for pod types
 
-namespace mozilla::dom::fs::test {
+namespace mozilla::dom::fs {
+
+inline std::ostream& operator<<(std::ostream& aOut,
+                                const FileSystemEntryMetadata aMetadata) {
+  return aOut;
+}
+
+namespace test {
 
 nsIGlobalObject* GetGlobal();
 
@@ -70,7 +76,7 @@ class MockFileSystemRequestHandler : public FileSystemRequestHandler {
   MOCK_METHOD(void, GetEntries,
               (RefPtr<FileSystemManager> & aManager, const EntryId& aDirectory,
                PageNumber aPage, RefPtr<Promise> aPromise,
-               ArrayAppendable& aSink),
+               RefPtr<FileSystemEntryMetadataArray>& aSink),
               (override));
 
   MOCK_METHOD(void, RemoveEntry,
@@ -289,7 +295,8 @@ struct FailOnCall {
   }
 };
 
-}  // namespace mozilla::dom::fs::test
+}  // namespace test
+}  // namespace mozilla::dom::fs
 
 #define MOCK_PROMISE_LISTENER(name, ...) \
   using name = mozilla::dom::fs::test::TestPromiseListener<__VA_ARGS__>;
