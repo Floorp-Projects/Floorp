@@ -163,6 +163,12 @@ class SessionControlInteractorTest {
     }
 
     @Test
+    fun onRecentTabLongClicked() {
+        interactor.onRecentTabLongClicked()
+        verify { recentTabController.handleRecentTabLongClicked() }
+    }
+
+    @Test
     fun onRecentTabShowAllClicked() {
         interactor.onRecentTabShowAllClicked()
         verify { recentTabController.handleRecentTabShowAllClicked() }

@@ -163,4 +163,19 @@ class RecentTabControllerTest {
 
         assertNotNull(RecentTabs.showAllClicked.testGetValue())
     }
+
+    @Test
+    fun `GIVEN search dialog is displayed WHEN long clicking a recent tab THEN search dialog is dismissed`() {
+        every { navController.currentDestination } returns mockk {
+            every { id } returns R.id.searchDialogFragment
+        }
+        every { navController.navigateUp() } returns true
+
+        controller.handleRecentTabLongClicked()
+
+        verify {
+            controller.dismissSearchDialogIfDisplayed()
+            navController.navigateUp()
+        }
+    }
 }

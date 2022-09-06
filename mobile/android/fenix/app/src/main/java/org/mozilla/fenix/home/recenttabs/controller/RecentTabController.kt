@@ -30,6 +30,11 @@ interface RecentTabController {
     fun handleRecentTabClicked(tabId: String)
 
     /**
+     * @see [RecentTabInteractor.onRecentTabLongClicked]
+     */
+    fun handleRecentTabLongClicked()
+
+    /**
      * @see [RecentTabInteractor.onRecentTabShowAllClicked]
      */
     fun handleRecentTabShowAllClicked()
@@ -62,6 +67,10 @@ class DefaultRecentTabsController(
 
         selectTabUseCase.invoke(tabId)
         navController.navigate(R.id.browserFragment)
+    }
+
+    override fun handleRecentTabLongClicked() {
+        dismissSearchDialogIfDisplayed()
     }
 
     override fun handleRecentTabShowAllClicked() {
