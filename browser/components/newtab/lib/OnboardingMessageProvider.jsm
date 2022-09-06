@@ -17,6 +17,7 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
   BrowserUtils: "resource://gre/modules/BrowserUtils.jsm",
   ShellService: "resource:///modules/ShellService.jsm",
   BuiltInThemes: "resource:///modules/BuiltInThemes.jsm",
+  NimbusFeatures: "resource://nimbus/ExperimentAPI.jsm",
 });
 
 XPCOMUtils.defineLazyPreferenceGetter(
@@ -947,6 +948,12 @@ const OnboardingMessageProvider = {
     let isDefault = await lazy.ShellService.isDefaultBrowser();
     return checkDefault && !isDefault;
   },
+  _shouldShowPrivacySegmentationScreen() {
+    // Fall back to pref: browser.privacySegmentation.preferences.show
+    return lazy.NimbusFeatures.majorRelease2022.getVariable(
+      "feltPrivacyShowPreferencesSection"
+    );
+  },
   _doesHomepageNeedReset() {
     return (
       Services.prefs.prefHasUserValue(HOMEPAGE_PREF) ||
@@ -976,6 +983,7 @@ const OnboardingMessageProvider = {
     const needPin = await this._doesAppNeedPin();
     const needDefault = await this._doesAppNeedDefault();
     const needPrivatePin = await this._doesAppNeedPin(true);
+    const showSegmentation = this._shouldShowPrivacySegmentationScreen();
 
     //If a user has Firefox as default remove import screen
     if (!needDefault) {
@@ -1019,6 +1027,12 @@ const OnboardingMessageProvider = {
     if (!needPrivatePin || needPin) {
       removeScreens(screen =>
         screen.id?.startsWith("UPGRADE_PIN_PRIVATE_WINDOW")
+      );
+    }
+
+    if (!showSegmentation) {
+      removeScreens(screen =>
+        screen.id?.startsWith("UPGRADE_PRIVACY_SEGMENTATION")
       );
     }
 

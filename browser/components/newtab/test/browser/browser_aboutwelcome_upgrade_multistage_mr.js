@@ -355,6 +355,27 @@ add_task(
   }
 );
 
+add_task(async function test_aboutwelcome_privacy_segmentation_pref() {
+  async function testPrivacySegmentation(enabled = false) {
+    await pushPrefs(["browser.privacySegmentation.preferences.show", enabled]);
+    let screenIds = ["UPGRADE_PRIVACY_SEGMENTATION", "UPGRADE_GRATITUDE"];
+    let browser = await openMRUpgradeWelcome(screenIds);
+    await test_upgrade_screen_content(
+      browser,
+      //Expected selectors
+      [`main.${screenIds[enabled ? 0 : 1]}`],
+      //Unexpected selectors:
+      [`main.${screenIds[enabled ? 1 : 0]}`]
+    );
+    await BrowserTestUtils.removeTab(gBrowser.selectedTab);
+    await popPrefs();
+  }
+
+  for (let enabled of [true, false]) {
+    await testPrivacySegmentation(enabled);
+  }
+});
+
 add_task(async function test_aboutwelcome_upgrade_show_firefox_view() {
   let browser = await openMRUpgradeWelcome(["UPGRADE_GRATITUDE"]);
 
