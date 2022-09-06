@@ -17,7 +17,7 @@ namespace mozilla::dom {
 class VideoPlaybackQuality final : public nsWrapperCache {
  public:
   NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(VideoPlaybackQuality)
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(VideoPlaybackQuality)
+  NS_DECL_CYCLE_COLLECTION_NATIVE_WRAPPERCACHE_CLASS(VideoPlaybackQuality)
 
   VideoPlaybackQuality(HTMLMediaElement* aElement,
                        DOMHighResTimeStamp aCreationTime, uint32_t aTotalFrames,

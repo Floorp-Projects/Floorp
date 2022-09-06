@@ -54,7 +54,7 @@ class GetUserMediaRequest : public nsISupports, public nsWrapperCache {
                       const nsAString& aMediaSource, bool aIsHandlingUserInput);
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(GetUserMediaRequest)
+  NS_DECL_CYCLE_COLLECTION_WRAPPERCACHE_CLASS(GetUserMediaRequest)
 
   JSObject* WrapObject(JSContext* cx,
                        JS::Handle<JSObject*> aGivenProto) override;

@@ -20,7 +20,7 @@ class WrapperCachedNonISupportsTestInterface final : public nsWrapperCache {
  public:
   NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(
       WrapperCachedNonISupportsTestInterface)
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(
+  NS_DECL_CYCLE_COLLECTION_NATIVE_WRAPPERCACHE_CLASS(
       WrapperCachedNonISupportsTestInterface)
 
  public:

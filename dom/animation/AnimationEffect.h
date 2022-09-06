@@ -30,7 +30,7 @@ class Document;
 class AnimationEffect : public nsISupports, public nsWrapperCache {
  public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(AnimationEffect)
+  NS_DECL_CYCLE_COLLECTION_WRAPPERCACHE_CLASS(AnimationEffect)
 
   AnimationEffect(Document* aDocument, TimingParams&& aTiming);
 

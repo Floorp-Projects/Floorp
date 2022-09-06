@@ -25,7 +25,7 @@ class TransformStreamDefaultController final : public nsISupports,
                                                public nsWrapperCache {
  public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(TransformStreamDefaultController)
+  NS_DECL_CYCLE_COLLECTION_WRAPPERCACHE_CLASS(TransformStreamDefaultController)
 
   MOZ_KNOWN_LIVE TransformStream* Stream();
   void SetStream(TransformStream& aStream);

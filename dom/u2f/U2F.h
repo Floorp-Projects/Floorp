@@ -90,8 +90,8 @@ class U2FTransaction {
 class U2F final : public WebAuthnManagerBase, public nsWrapperCache {
  public:
   NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(U2F,
-                                                         WebAuthnManagerBase)
+  NS_DECL_CYCLE_COLLECTION_WRAPPERCACHE_CLASS_INHERITED(U2F,
+                                                        WebAuthnManagerBase)
 
   explicit U2F(nsPIDOMWindowInner* aParent) : WebAuthnManagerBase(aParent) {}
 

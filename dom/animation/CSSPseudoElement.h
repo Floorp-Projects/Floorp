@@ -23,7 +23,7 @@ class UnrestrictedDoubleOrKeyframeAnimationOptions;
 class CSSPseudoElement final : public nsWrapperCache {
  public:
   NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(CSSPseudoElement)
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(CSSPseudoElement)
+  NS_DECL_CYCLE_COLLECTION_NATIVE_WRAPPERCACHE_CLASS(CSSPseudoElement)
 
  protected:
   virtual ~CSSPseudoElement();

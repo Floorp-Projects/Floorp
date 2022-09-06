@@ -190,8 +190,8 @@ class CharacterData : public nsIContent {
 
   //----------------------------------------
 
-  NS_DECL_CYCLE_COLLECTION_SKIPPABLE_SCRIPT_HOLDER_CLASS_INHERITED(
-      CharacterData, nsIContent)
+  NS_DECL_CYCLE_COLLECTION_SKIPPABLE_WRAPPERCACHE_CLASS_INHERITED(CharacterData,
+                                                                  nsIContent)
 
   /**
    * Compare two CharacterData nodes for text equality.

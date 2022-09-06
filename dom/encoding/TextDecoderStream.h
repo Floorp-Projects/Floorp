@@ -40,7 +40,7 @@ class TextDecoderStream final : public nsISupports,
                                 public TextDecoderCommon {
  public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(TextDecoderStream)
+  NS_DECL_CYCLE_COLLECTION_WRAPPERCACHE_CLASS(TextDecoderStream)
 
  public:
   TextDecoderStream(nsISupports* aGlobal, const Encoding& aEncoding,

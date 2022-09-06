@@ -25,7 +25,7 @@ class GlobalObject;
 class TestInterfaceSetlike final : public nsISupports, public nsWrapperCache {
  public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(TestInterfaceSetlike)
+  NS_DECL_CYCLE_COLLECTION_WRAPPERCACHE_CLASS(TestInterfaceSetlike)
   explicit TestInterfaceSetlike(JSContext* aCx, nsPIDOMWindowInner* aParent);
   nsPIDOMWindowInner* GetParentObject() const;
   virtual JSObject* WrapObject(JSContext* aCx,

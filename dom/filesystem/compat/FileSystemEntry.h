@@ -25,7 +25,7 @@ class OwningFileOrDirectory;
 class FileSystemEntry : public nsISupports, public nsWrapperCache {
  public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(FileSystemEntry)
+  NS_DECL_CYCLE_COLLECTION_WRAPPERCACHE_CLASS(FileSystemEntry)
 
   static already_AddRefed<FileSystemEntry> Create(
       nsIGlobalObject* aGlobalObject,

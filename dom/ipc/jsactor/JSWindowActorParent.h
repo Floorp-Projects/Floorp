@@ -30,8 +30,7 @@ namespace mozilla::dom {
 class JSWindowActorParent final : public JSActor {
  public:
   NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(JSWindowActorParent,
-                                                         JSActor)
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(JSWindowActorParent, JSActor)
 
   explicit JSWindowActorParent(nsISupports* aGlobal = nullptr)
       : JSActor(aGlobal) {}

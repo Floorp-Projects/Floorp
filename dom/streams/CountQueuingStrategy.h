@@ -23,8 +23,8 @@ class CountQueuingStrategy final : public BaseQueuingStrategy,
                                    public nsWrapperCache {
  public:
   NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(CountQueuingStrategy,
-                                                         BaseQueuingStrategy)
+  NS_DECL_CYCLE_COLLECTION_WRAPPERCACHE_CLASS_INHERITED(CountQueuingStrategy,
+                                                        BaseQueuingStrategy)
 
  public:
   explicit CountQueuingStrategy(nsISupports* aGlobal, double aHighWaterMark)

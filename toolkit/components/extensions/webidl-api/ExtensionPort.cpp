@@ -17,7 +17,7 @@ namespace extensions {
 NS_IMPL_CYCLE_COLLECTING_ADDREF(ExtensionPort);
 NS_IMPL_CYCLE_COLLECTING_RELEASE(ExtensionPort)
 
-NS_IMPL_CYCLE_COLLECTION_CLASS(ExtensionPort)
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_CLASS(ExtensionPort)
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(ExtensionPort)
   // Clean the entry for this instance from the ports lookup map
@@ -33,8 +33,6 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(ExtensionPort)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mExtensionBrowser, mOnDisconnectEventMgr,
                                     mOnMessageEventMgr)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
-
-NS_IMPL_CYCLE_COLLECTION_TRACE_WRAPPERCACHE(ExtensionPort)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(ExtensionPort)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY

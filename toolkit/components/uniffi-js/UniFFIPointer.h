@@ -19,7 +19,7 @@ namespace mozilla::dom {
 class UniFFIPointer final : public nsISupports, public nsWrapperCache {
  public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(UniFFIPointer)
+  NS_DECL_CYCLE_COLLECTION_WRAPPERCACHE_CLASS(UniFFIPointer)
 
   static already_AddRefed<UniFFIPointer> Create(
       void* aPtr, const uniffi::UniFFIPointerType* aType);

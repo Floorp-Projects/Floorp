@@ -35,7 +35,7 @@ namespace mozilla::dom {
 class TextEncoderStream final : public nsISupports, public nsWrapperCache {
  public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(TextEncoderStream)
+  NS_DECL_CYCLE_COLLECTION_WRAPPERCACHE_CLASS(TextEncoderStream)
 
  public:
   TextEncoderStream(nsISupports* aGlobal, TransformStream& aStream);

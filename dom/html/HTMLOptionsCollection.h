@@ -63,8 +63,8 @@ class HTMLOptionsCollection final : public nsIHTMLCollection,
   virtual nsINode* GetParentObject() override;
   DocGroup* GetDocGroup() const;
 
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_AMBIGUOUS(HTMLOptionsCollection,
-                                                         nsIHTMLCollection)
+  NS_DECL_CYCLE_COLLECTION_WRAPPERCACHE_CLASS_AMBIGUOUS(HTMLOptionsCollection,
+                                                        nsIHTMLCollection)
 
   // Helpers for HTMLSelectElement
   /**

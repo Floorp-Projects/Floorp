@@ -52,7 +52,7 @@ class ExtensionScripting final : public nsISupports,
   nsIGlobalObject* GetParentObject() const;
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(ExtensionScripting)
+  NS_DECL_CYCLE_COLLECTION_WRAPPERCACHE_CLASS(ExtensionScripting)
 
  private:
   ~ExtensionScripting() = default;

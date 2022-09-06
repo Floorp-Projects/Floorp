@@ -19,7 +19,7 @@ class Category;
 class Glean final : public nsISupports, public nsWrapperCache {
  public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(Glean)
+  NS_DECL_CYCLE_COLLECTION_WRAPPERCACHE_CLASS(Glean)
 
   JSObject* WrapObject(JSContext* aCx,
                        JS::Handle<JSObject*> aGivenProto) override;

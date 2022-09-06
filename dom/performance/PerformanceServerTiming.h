@@ -27,7 +27,7 @@ class PerformanceServerTiming final : public nsISupports,
   }
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(PerformanceServerTiming)
+  NS_DECL_CYCLE_COLLECTION_WRAPPERCACHE_CLASS(PerformanceServerTiming)
 
   JSObject* WrapObject(JSContext* aCx,
                        JS::Handle<JSObject*> aGivenProto) override;

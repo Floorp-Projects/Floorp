@@ -364,7 +364,7 @@ nsComputedDOMStyle::~nsComputedDOMStyle() {
              "Should have called ClearComputedStyle() during last release.");
 }
 
-NS_IMPL_CYCLE_COLLECTION_CLASS(nsComputedDOMStyle)
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_CLASS(nsComputedDOMStyle)
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsComputedDOMStyle)
   tmp->ClearComputedStyle();  // remove observer before clearing mElement
@@ -375,8 +375,6 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsComputedDOMStyle)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mElement)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
-
-NS_IMPL_CYCLE_COLLECTION_TRACE_WRAPPERCACHE(nsComputedDOMStyle)
 
 NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_BEGIN(nsComputedDOMStyle)
   return tmp->HasKnownLiveWrapper();

@@ -2350,7 +2350,7 @@ class JSPurpleBuffer {
   SegmentedVector<JSObject*, kSegmentSize, InfallibleAllocPolicy> mObjects;
 };
 
-NS_IMPL_CYCLE_COLLECTION_MULTI_ZONE_JSHOLDER_CLASS(JSPurpleBuffer)
+NS_IMPL_CYCLE_COLLECTION_CLASS(JSPurpleBuffer)
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(JSPurpleBuffer)
   tmp->Destroy();

@@ -29,7 +29,7 @@ class MediaDeviceInfo final : public nsISupports, public nsWrapperCache {
                            const nsAString& aLabel, const nsAString& aGroupId);
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(MediaDeviceInfo)
+  NS_DECL_CYCLE_COLLECTION_WRAPPERCACHE_CLASS(MediaDeviceInfo)
   NS_DECLARE_STATIC_IID_ACCESSOR(MOZILLA_DOM_MEDIADEVICEINFO_IMPLEMENTATION_IID)
 
   JSObject* WrapObject(JSContext* cx,

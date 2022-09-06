@@ -50,7 +50,7 @@ class nsBaseContentList : public nsINodeList {
 
   uint32_t Length() override { return mElements.Length(); }
 
-  NS_DECL_CYCLE_COLLECTION_SKIPPABLE_SCRIPT_HOLDER_CLASS(nsBaseContentList)
+  NS_DECL_CYCLE_COLLECTION_SKIPPABLE_WRAPPERCACHE_CLASS(nsBaseContentList)
 
   void AppendElement(nsIContent* aContent) {
     MOZ_ASSERT(aContent);

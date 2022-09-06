@@ -22,7 +22,7 @@ struct DOMMatrix2DInit;
 class CanvasPath final : public nsWrapperCache {
  public:
   NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(CanvasPath)
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(CanvasPath)
+  NS_DECL_CYCLE_COLLECTION_NATIVE_WRAPPERCACHE_CLASS(CanvasPath)
 
   nsCOMPtr<nsISupports> GetParentObject() { return mParent; }
 

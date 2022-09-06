@@ -334,7 +334,7 @@ void XMLHttpRequestMainThread::SetRequestObserver(
   mRequestObserver = aObserver;
 }
 
-NS_IMPL_CYCLE_COLLECTION_MULTI_ZONE_JSHOLDER_CLASS(XMLHttpRequestMainThread)
+NS_IMPL_CYCLE_COLLECTION_CLASS(XMLHttpRequestMainThread)
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(XMLHttpRequestMainThread,
                                                   XMLHttpRequestEventTarget)

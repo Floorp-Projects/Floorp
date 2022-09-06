@@ -21,7 +21,7 @@ namespace mozilla::dom {
 class TouchList final : public nsISupports, public nsWrapperCache {
  public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(TouchList)
+  NS_DECL_CYCLE_COLLECTION_WRAPPERCACHE_CLASS(TouchList)
 
   explicit TouchList(nsISupports* aParent) : mParent(aParent) {
     nsJSContext::LikelyShortLivingObjectCreated();

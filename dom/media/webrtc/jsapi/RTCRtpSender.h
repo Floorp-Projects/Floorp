@@ -45,7 +45,7 @@ class RTCRtpSender : public nsISupports, public nsWrapperCache {
 
   // nsISupports
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(RTCRtpSender)
+  NS_DECL_CYCLE_COLLECTION_WRAPPERCACHE_CLASS(RTCRtpSender)
 
   JSObject* WrapObject(JSContext* aCx,
                        JS::Handle<JSObject*> aGivenProto) override;

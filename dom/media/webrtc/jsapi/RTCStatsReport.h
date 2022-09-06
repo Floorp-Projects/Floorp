@@ -79,7 +79,7 @@ typedef MozPromise<UniquePtr<RTCStatsReportInternal>, nsresult, true>
 class RTCStatsReport final : public nsWrapperCache {
  public:
   NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(RTCStatsReport)
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(RTCStatsReport)
+  NS_DECL_CYCLE_COLLECTION_NATIVE_WRAPPERCACHE_CLASS(RTCStatsReport)
 
   explicit RTCStatsReport(nsPIDOMWindowInner* aParent);
 

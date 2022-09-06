@@ -37,7 +37,7 @@ class BrowsingContext;
 class ChildSHistory : public nsISupports, public nsWrapperCache {
  public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(ChildSHistory)
+  NS_DECL_CYCLE_COLLECTION_WRAPPERCACHE_CLASS(ChildSHistory)
   nsISupports* GetParentObject() const;
   JSObject* WrapObject(JSContext* cx,
                        JS::Handle<JSObject*> aGivenProto) override;

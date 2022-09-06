@@ -31,7 +31,7 @@ class TestInterfaceObservableArray final : public nsISupports,
                                            public nsWrapperCache {
  public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(TestInterfaceObservableArray)
+  NS_DECL_CYCLE_COLLECTION_WRAPPERCACHE_CLASS(TestInterfaceObservableArray)
 
   nsPIDOMWindowInner* GetParentObject() const;
   virtual JSObject* WrapObject(JSContext* aCx,

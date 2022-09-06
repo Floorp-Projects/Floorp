@@ -73,7 +73,7 @@ struct JsonWebKey;
 class CryptoKey final : public nsISupports, public nsWrapperCache {
  public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(CryptoKey)
+  NS_DECL_CYCLE_COLLECTION_WRAPPERCACHE_CLASS(CryptoKey)
 
   static const uint32_t CLEAR_EXTRACTABLE = 0xFFFFFFE;
   static const uint32_t EXTRACTABLE = 0x00000001;

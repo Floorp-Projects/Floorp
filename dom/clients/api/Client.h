@@ -80,7 +80,7 @@ class Client final : public nsISupports, public nsWrapperCache {
                    ErrorResult& aRv);
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(mozilla::dom::Client)
+  NS_DECL_CYCLE_COLLECTION_WRAPPERCACHE_CLASS(mozilla::dom::Client)
 };
 
 }  // namespace dom

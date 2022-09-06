@@ -48,7 +48,7 @@ class Gamepad final : public nsISupports, public nsWrapperCache {
           uint32_t aNumTouchEvents);
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(Gamepad)
+  NS_DECL_CYCLE_COLLECTION_WRAPPERCACHE_CLASS(Gamepad)
 
   void SetConnected(bool aConnected);
   void SetButton(uint32_t aButton, bool aPressed, bool aTouched, double aValue);

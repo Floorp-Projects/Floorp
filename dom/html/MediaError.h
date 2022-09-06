@@ -23,7 +23,7 @@ class MediaError final : public nsISupports, public nsWrapperCache {
 
   // nsISupports
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(MediaError)
+  NS_DECL_CYCLE_COLLECTION_WRAPPERCACHE_CLASS(MediaError)
 
   HTMLMediaElement* GetParentObject() const { return mParent; }
 

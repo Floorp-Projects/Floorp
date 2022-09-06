@@ -27,7 +27,7 @@ class Crypto final : public nsISupports, public nsWrapperCache {
   explicit Crypto(nsIGlobalObject* aParent);
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(Crypto)
+  NS_DECL_CYCLE_COLLECTION_WRAPPERCACHE_CLASS(Crypto)
 
   void GetRandomValues(JSContext* aCx, const ArrayBufferView& aArray,
                        JS::MutableHandle<JSObject*> aRetval, ErrorResult& aRv);

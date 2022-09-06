@@ -23,7 +23,7 @@ CustomEvent::CustomEvent(mozilla::dom::EventTarget* aOwner,
 
 CustomEvent::~CustomEvent() { mozilla::DropJSObjects(this); }
 
-NS_IMPL_CYCLE_COLLECTION_MULTI_ZONE_JSHOLDER_CLASS(CustomEvent)
+NS_IMPL_CYCLE_COLLECTION_CLASS(CustomEvent)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(CustomEvent, Event)
   mozilla::DropJSObjects(tmp);
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END

@@ -23,7 +23,7 @@ class OwningFileOrDirectory;
 class FileSystem final : public nsISupports, public nsWrapperCache {
  public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(FileSystem)
+  NS_DECL_CYCLE_COLLECTION_WRAPPERCACHE_CLASS(FileSystem)
 
   static already_AddRefed<FileSystem> Create(nsIGlobalObject* aGlobalObject);
 

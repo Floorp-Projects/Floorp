@@ -14,7 +14,7 @@ namespace mozilla::dom {
 class EventCounts final : public nsWrapperCache {
  public:
   NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(EventCounts)
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(EventCounts)
+  NS_DECL_CYCLE_COLLECTION_NATIVE_WRAPPERCACHE_CLASS(EventCounts)
 
   explicit EventCounts(nsISupports* aParent);
 

@@ -25,8 +25,8 @@ class CSSKeyframeDeclaration : public nsDOMCSSDeclaration {
   }
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_AMBIGUOUS(CSSKeyframeDeclaration,
-                                                         nsICSSDeclaration)
+  NS_DECL_CYCLE_COLLECTION_WRAPPERCACHE_CLASS_AMBIGUOUS(CSSKeyframeDeclaration,
+                                                        nsICSSDeclaration)
 
   css::Rule* GetParentRule() final { return mRule; }
 

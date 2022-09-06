@@ -30,8 +30,8 @@ class SandboxPrivate : public nsIGlobalObject,
                        public nsWrapperCache {
  public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_AMBIGUOUS(SandboxPrivate,
-                                                         nsIGlobalObject)
+  NS_DECL_CYCLE_COLLECTION_WRAPPERCACHE_CLASS_AMBIGUOUS(SandboxPrivate,
+                                                        nsIGlobalObject)
 
   static void Create(nsIPrincipal* principal, JS::Handle<JSObject*> global) {
     RefPtr<SandboxPrivate> sbp = new SandboxPrivate(principal);

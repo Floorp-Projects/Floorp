@@ -101,7 +101,7 @@ class AccessibleNode : public nsISupports, public nsWrapperCache {
   explicit AccessibleNode(nsINode* aNode);
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS;
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(AccessibleNode);
+  NS_DECL_CYCLE_COLLECTION_WRAPPERCACHE_CLASS(AccessibleNode);
 
   JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) final;
   dom::ParentObject GetParentObject() const;

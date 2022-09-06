@@ -18,7 +18,7 @@ namespace mozilla::dom {
 class DebuggerNotification : public nsISupports, public nsWrapperCache {
  public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(DebuggerNotification)
+  NS_DECL_CYCLE_COLLECTION_WRAPPERCACHE_CLASS(DebuggerNotification)
 
   DebuggerNotification(nsIGlobalObject* aDebuggeeGlobal,
                        DebuggerNotificationType aType,
