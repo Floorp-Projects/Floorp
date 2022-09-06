@@ -5,6 +5,7 @@
 package org.mozilla.fenix.home.pocket
 
 import android.view.View
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
@@ -13,6 +14,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -21,6 +23,7 @@ import androidx.recyclerview.widget.RecyclerView
 import mozilla.components.lib.state.ext.observeAsComposableState
 import mozilla.components.service.pocket.PocketStory.PocketRecommendedStory
 import org.mozilla.fenix.R
+import org.mozilla.fenix.R.dimen
 import org.mozilla.fenix.components.components
 import org.mozilla.fenix.compose.ComposeViewHolder
 import org.mozilla.fenix.compose.home.HomeSectionHeader
@@ -40,18 +43,14 @@ class PocketStoriesViewHolder(
     private val interactor: PocketStoriesInteractor
 ) : ComposeViewHolder(composeView, viewLifecycleOwner) {
 
-    init {
-        val horizontalPadding =
-            composeView.resources.getDimensionPixelSize(R.dimen.home_item_horizontal_margin)
-        composeView.setPadding(horizontalPadding, 0, horizontalPadding, 0)
-    }
-
     companion object {
         val LAYOUT_ID = View.generateViewId()
     }
 
     @Composable
     override fun Content() {
+        val horizontalPadding = dimensionResource(dimen.home_item_horizontal_margin)
+
         val homeScreenReady = components.appStore
             .observeAsComposableState { state -> state.firstFrameDrawn }.value ?: false
 
@@ -79,14 +78,18 @@ class PocketStoriesViewHolder(
         }
 
         Column(modifier = Modifier.padding(top = 72.dp)) {
-            HomeSectionHeader(
-                headerText = stringResource(R.string.pocket_stories_header_1),
-            )
+            // Simple wrapper to add horizontal padding to just the header while the stories have none.
+            Box(modifier = Modifier.padding(horizontal = horizontalPadding)) {
+                HomeSectionHeader(
+                    headerText = stringResource(R.string.pocket_stories_header_1),
+                )
+            }
 
             Spacer(Modifier.height(16.dp))
 
             PocketStories(
                 stories ?: emptyList(),
+                horizontalPadding,
                 interactor::onStoryShown,
                 interactor::onStoryClicked,
                 interactor::onDiscoverMoreClicked
@@ -109,6 +112,7 @@ fun PocketStoriesViewHolderPreview() {
             @Suppress("MagicNumber")
             PocketStories(
                 stories = getFakePocketStories(8),
+                contentPadding = 0.dp,
                 onStoryShown = { _, _ -> },
                 onStoryClicked = { _, _ -> },
                 onDiscoverMoreClicked = {}
