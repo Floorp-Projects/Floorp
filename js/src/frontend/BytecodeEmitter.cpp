@@ -558,7 +558,7 @@ bool BytecodeEmitter::updateLineNumberNotes(uint32_t offset) {
     return true;
   }
 
-  ErrorReporter* er = &parser->errorReporter();
+  ErrorReporter* er = &errorReporter();
   bool onThisLine;
   if (!er->isOnThisLine(offset, bytecodeSection().currentLine(), &onThisLine)) {
     er->errorNoOffset(JSMSG_OUT_OF_MEMORY);
@@ -614,7 +614,7 @@ bool BytecodeEmitter::updateSourceCoordNotes(uint32_t offset) {
     return true;
   }
 
-  uint32_t columnIndex = parser->errorReporter().columnAt(offset);
+  uint32_t columnIndex = errorReporter().columnAt(offset);
   MOZ_ASSERT(columnIndex <= ColumnLimit);
 
   // Assert colspan is always representable.
@@ -1456,8 +1456,8 @@ void BytecodeEmitter::reportError(ParseNode* pn, unsigned errorNumber, ...) {
   va_list args;
   va_start(args, errorNumber);
 
-  parser->errorReporter().errorWithNotesAtVA(nullptr, AsVariant(offset),
-                                             errorNumber, &args);
+  errorReporter().errorWithNotesAtVA(nullptr, AsVariant(offset), errorNumber,
+                                     &args);
 
   va_end(args);
 }
@@ -1466,8 +1466,8 @@ void BytecodeEmitter::reportError(uint32_t offset, unsigned errorNumber, ...) {
   va_list args;
   va_start(args, errorNumber);
 
-  parser->errorReporter().errorWithNotesAtVA(nullptr, AsVariant(offset),
-                                             errorNumber, &args);
+  errorReporter().errorWithNotesAtVA(nullptr, AsVariant(offset), errorNumber,
+                                     &args);
 
   va_end(args);
 }

@@ -353,7 +353,7 @@ bool CallOrNewEmitter::emitEnd(uint32_t argc, uint32_t beginPos) {
   }
 
   if (isEval()) {
-    uint32_t lineNum = bce_->parser->errorReporter().lineAt(beginPos);
+    uint32_t lineNum = bce_->errorReporter().lineAt(beginPos);
     if (!bce_->emitUint32Operand(JSOp::Lineno, lineNum)) {
       //            [stack] RVAL
       return false;

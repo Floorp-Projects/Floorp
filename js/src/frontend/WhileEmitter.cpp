@@ -25,8 +25,8 @@ bool WhileEmitter::emitCond(uint32_t whilePos, uint32_t condPos,
   // "next"ing will skip the whole loop. However, for the multi-line case we
   // want to emit the line note for the JSOp::LoopHead, so that "cont" stops on
   // each iteration -- but without a stop before the first iteration.
-  if (bce_->parser->errorReporter().lineAt(whilePos) ==
-      bce_->parser->errorReporter().lineAt(endPos)) {
+  if (bce_->errorReporter().lineAt(whilePos) ==
+      bce_->errorReporter().lineAt(endPos)) {
     if (!bce_->updateSourceCoordNotes(whilePos)) {
       return false;
     }

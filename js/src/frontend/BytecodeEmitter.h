@@ -56,6 +56,7 @@ class CallOrNewEmitter;
 class ClassEmitter;
 class ElemOpEmitter;
 class EmitterScope;
+class ErrorReporter;
 class FullParseHandler;
 class NestableControl;
 class PrivateOpEmitter;
@@ -262,6 +263,8 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
 
   friend class AutoCheckUnstableEmitterScope;
 #endif
+
+  ErrorReporter& errorReporter() const { return parser->errorReporter(); }
 
   ParserAtomsTable& parserAtoms() { return compilationState.parserAtoms; }
   const ParserAtomsTable& parserAtoms() const {
