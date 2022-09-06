@@ -8936,8 +8936,8 @@ GeneralParser<ParseHandler, Unit>::fieldInitializerOpt(
   }
 
   // Synthesize an property init.
-  AssignmentNodeType initializerPropInit = handler_.newAssignment(
-      ParseNodeKind::InitExpr, propAssignFieldAccess, initializerExpr);
+  BinaryNodeType initializerPropInit =
+      handler_.newInitExpr(propAssignFieldAccess, initializerExpr);
   if (!initializerPropInit) {
     return null();
   }

@@ -1058,7 +1058,9 @@ class AssignmentNode : public BinaryNode {
  public:
   AssignmentNode(ParseNodeKind kind, ParseNode* left, ParseNode* right)
       : BinaryNode(kind, TokenPos(left->pn_pos.begin, right->pn_pos.end), left,
-                   right) {}
+                   right) {
+    MOZ_ASSERT(is<AssignmentNode>());
+  }
 
   static bool test(const ParseNode& node) {
     ParseNodeKind kind = node.getKind();

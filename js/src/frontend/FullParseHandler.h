@@ -975,13 +975,17 @@ class FullParseHandler {
     if ((kind == ParseNodeKind::AssignExpr ||
          kind == ParseNodeKind::CoalesceAssignExpr ||
          kind == ParseNodeKind::OrAssignExpr ||
-         kind == ParseNodeKind::AndAssignExpr ||
-         kind == ParseNodeKind::InitExpr) &&
+         kind == ParseNodeKind::AndAssignExpr) &&
         lhs->isKind(ParseNodeKind::Name) && !lhs->isInParens()) {
       checkAndSetIsDirectRHSAnonFunction(rhs);
     }
 
     return new_<AssignmentNode>(kind, lhs, rhs);
+  }
+
+  BinaryNodeType newInitExpr(Node lhs, Node rhs) {
+    TokenPos pos(lhs->pn_pos.begin, rhs->pn_pos.end);
+    return new_<BinaryNode>(ParseNodeKind::InitExpr, pos, lhs, rhs);
   }
 
   bool isUnparenthesizedAssignment(Node node) {
