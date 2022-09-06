@@ -169,7 +169,7 @@ AsyncScriptCompiler::Run() {
     FinishCompile(jsapi.cx());
   } else {
     jsapi.Init();
-    JS::CancelCompileToStencilOffThread(jsapi.cx(), mToken);
+    JS::CancelOffThreadToken(jsapi.cx(), mToken);
 
     mPromise->MaybeReject(NS_ERROR_FAILURE);
   }
@@ -179,7 +179,7 @@ AsyncScriptCompiler::Run() {
 
 void AsyncScriptCompiler::FinishCompile(JSContext* aCx) {
   RefPtr<JS::Stencil> stencil =
-      JS::FinishCompileToStencilOffThread(aCx, mToken);
+      JS::FinishOffThreadStencil(aCx, mToken);
   if (stencil) {
     Finish(aCx, stencil);
   } else {

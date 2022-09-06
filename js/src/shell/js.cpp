@@ -5827,7 +5827,7 @@ static bool FinishOffThreadCompileToStencil(JSContext* cx, unsigned argc,
   JS::OffThreadToken* token = job->waitUntilDone(cx);
   MOZ_ASSERT(token);
 
-  RefPtr<JS::Stencil> stencil = JS::FinishCompileToStencilOffThread(cx, token);
+  RefPtr<JS::Stencil> stencil = JS::FinishOffThreadStencil(cx, token);
   DeleteOffThreadJob(cx, job);
   if (!stencil) {
     return false;
@@ -5923,7 +5923,7 @@ static bool FinishOffThreadCompileModuleToStencil(JSContext* cx, unsigned argc,
   MOZ_ASSERT(token);
 
   RefPtr<JS::Stencil> stencil =
-      JS::FinishCompileModuleToStencilOffThread(cx, token);
+      JS::FinishOffThreadStencil(cx, token);
   DeleteOffThreadJob(cx, job);
   if (!stencil) {
     return false;
@@ -6033,7 +6033,7 @@ static bool FinishOffThreadDecodeStencil(JSContext* cx, unsigned argc,
   JS::OffThreadToken* token = job->waitUntilDone(cx);
   MOZ_ASSERT(token);
 
-  RefPtr<JS::Stencil> stencil = JS::FinishDecodeStencilOffThread(cx, token);
+  RefPtr<JS::Stencil> stencil = JS::FinishOffThreadStencil(cx, token);
   DeleteOffThreadJob(cx, job);
   if (!stencil) {
     return false;

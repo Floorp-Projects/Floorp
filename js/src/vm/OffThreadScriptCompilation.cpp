@@ -107,59 +107,21 @@ JS_PUBLIC_API JS::OffThreadToken* JS::DecodeStencilOffThread(
                                      callbackData);
 }
 
-JS_PUBLIC_API already_AddRefed<JS::Stencil> JS::FinishCompileToStencilOffThread(
+JS_PUBLIC_API already_AddRefed<JS::Stencil> JS::FinishOffThreadStencil(
     JSContext* cx, JS::OffThreadToken* token,
     JS::InstantiationStorage* storage /* = nullptr */) {
   MOZ_ASSERT(cx);
   MOZ_ASSERT(CurrentThreadCanAccessRuntime(cx->runtime()));
   RefPtr<JS::Stencil> stencil =
-      HelperThreadState().finishCompileToStencilTask(cx, token, storage);
+      HelperThreadState().finishStencilTask(cx, token, storage);
   return stencil.forget();
 }
 
-JS_PUBLIC_API already_AddRefed<JS::Stencil>
-JS::FinishCompileModuleToStencilOffThread(
-    JSContext* cx, JS::OffThreadToken* token,
-    JS::InstantiationStorage* storage /* = nullptr */) {
+JS_PUBLIC_API void JS::CancelOffThreadToken(JSContext* cx,
+                                            JS::OffThreadToken* token) {
   MOZ_ASSERT(cx);
   MOZ_ASSERT(CurrentThreadCanAccessRuntime(cx->runtime()));
-  RefPtr<JS::Stencil> stencil =
-      HelperThreadState().finishCompileModuleToStencilTask(cx, token, storage);
-  return stencil.forget();
-}
-
-JS_PUBLIC_API already_AddRefed<JS::Stencil> JS::FinishDecodeStencilOffThread(
-    JSContext* cx, JS::OffThreadToken* token,
-    JS::InstantiationStorage* storage /* = nullptr */) {
-  MOZ_ASSERT(cx);
-  MOZ_ASSERT(CurrentThreadCanAccessRuntime(cx->runtime()));
-  RefPtr<JS::Stencil> stencil =
-      HelperThreadState().finishDecodeStencilTask(cx, token, storage);
-  return stencil.forget();
-}
-
-JS_PUBLIC_API void JS::CancelCompileToStencilOffThread(
-    JSContext* cx, JS::OffThreadToken* token) {
-  MOZ_ASSERT(cx);
-  MOZ_ASSERT(CurrentThreadCanAccessRuntime(cx->runtime()));
-  HelperThreadState().cancelParseTask(cx->runtime(),
-                                      ParseTaskKind::ScriptStencil, token);
-}
-
-JS_PUBLIC_API void JS::CancelCompileModuleToStencilOffThread(
-    JSContext* cx, JS::OffThreadToken* token) {
-  MOZ_ASSERT(cx);
-  MOZ_ASSERT(CurrentThreadCanAccessRuntime(cx->runtime()));
-  HelperThreadState().cancelParseTask(cx->runtime(),
-                                      ParseTaskKind::ModuleStencil, token);
-}
-
-JS_PUBLIC_API void JS::CancelDecodeStencilOffThread(JSContext* cx,
-                                                    JS::OffThreadToken* token) {
-  MOZ_ASSERT(cx);
-  MOZ_ASSERT(CurrentThreadCanAccessRuntime(cx->runtime()));
-  HelperThreadState().cancelParseTask(cx->runtime(),
-                                      ParseTaskKind::StencilDecode, token);
+  HelperThreadState().cancelParseTask(cx->runtime(), token);
 }
 
 JS_PUBLIC_API bool JS::CanDecodeOffThread(JSContext* cx,
@@ -188,12 +150,4 @@ JS_PUBLIC_API bool JS::FinishDecodeMultiStencilsOffThread(
   MOZ_ASSERT(cx);
   MOZ_ASSERT(CurrentThreadCanAccessRuntime(cx->runtime()));
   return HelperThreadState().finishMultiStencilsDecodeTask(cx, token, stencils);
-}
-
-JS_PUBLIC_API void JS::CancelDecodeMultiStencilsOffThread(
-    JSContext* cx, JS::OffThreadToken* token) {
-  MOZ_ASSERT(cx);
-  MOZ_ASSERT(CurrentThreadCanAccessRuntime(cx->runtime()));
-  HelperThreadState().cancelParseTask(
-      cx->runtime(), ParseTaskKind::MultiStencilsDecode, token);
 }

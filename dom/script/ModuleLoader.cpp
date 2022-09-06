@@ -149,18 +149,9 @@ nsresult ModuleLoader::CompileFetchedModule(
     ModuleLoadRequest* aRequest, JS::MutableHandle<JSObject*> aModuleOut) {
   if (aRequest->GetScriptLoadContext()->mWasCompiledOMT) {
     JS::Rooted<JS::InstantiationStorage> storage(aCx);
-
-    RefPtr<JS::Stencil> stencil;
-    if (aRequest->IsTextSource()) {
-      stencil = JS::FinishCompileModuleToStencilOffThread(
-          aCx, aRequest->GetScriptLoadContext()->mOffThreadToken,
-          storage.address());
-    } else {
-      MOZ_ASSERT(aRequest->IsBytecode());
-      stencil = JS::FinishDecodeStencilOffThread(
-          aCx, aRequest->GetScriptLoadContext()->mOffThreadToken,
-          storage.address());
-    }
+    RefPtr<JS::Stencil> stencil = JS::FinishOffThreadStencil(
+        aCx, aRequest->GetScriptLoadContext()->mOffThreadToken,
+        storage.address());
 
     aRequest->GetScriptLoadContext()->mOffThreadToken = nullptr;
 
