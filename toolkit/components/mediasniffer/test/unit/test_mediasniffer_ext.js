@@ -45,6 +45,9 @@ const tests = [
   { path: "data/mp3-in-riff.wav", expected: "audio/mpeg" },
   // The sniffing-relevant portion of a Canon raw image
   { path: "data/bug1725190.cr3", expected: "application/octet-stream" },
+  // An AAC in ADTS, that is 8kHz, 219kbps, 8 channels, resulting in huge AAC
+  // frames.
+  { path: "data/8kHz-320kbps-8ch.aac", expected: "audio/aac" },
 ];
 
 // A basic listener that reads checks the if we sniffed properly.
