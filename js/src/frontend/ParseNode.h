@@ -51,6 +51,7 @@ class RegExpObject;
 
 namespace frontend {
 
+class ParserAtomsTable;
 class ParserBase;
 class ParseContext;
 struct ExtensibleCompilationStencil;
@@ -843,9 +844,10 @@ class ParseNode {
 #ifdef DEBUG
   // Debugger-friendly stderr printer.
   void dump();
-  void dump(ParserBase* parser);
-  void dump(ParserBase* parser, GenericPrinter& out);
-  void dump(ParserBase* parser, GenericPrinter& out, int indent);
+  void dump(const ParserAtomsTable* parserAtoms);
+  void dump(const ParserAtomsTable* parserAtoms, GenericPrinter& out);
+  void dump(const ParserAtomsTable* parserAtoms, GenericPrinter& out,
+            int indent);
 
   // The size of this node, in bytes.
   size_t size() const { return sizeTable[getKindAsIndex()]; }
@@ -882,7 +884,8 @@ class NullaryNode : public ParseNode {
   }
 
 #ifdef DEBUG
-  void dumpImpl(ParserBase* parser, GenericPrinter& out, int indent);
+  void dumpImpl(const ParserAtomsTable* parserAtoms, GenericPrinter& out,
+                int indent);
 #endif
 };
 
@@ -909,7 +912,8 @@ class NameNode : public ParseNode {
   }
 
 #ifdef DEBUG
-  void dumpImpl(ParserBase* parser, GenericPrinter& out, int indent);
+  void dumpImpl(const ParserAtomsTable* parserAtoms, GenericPrinter& out,
+                int indent);
 #endif
 
   TaggedParserAtomIndex atom() const { return atom_; }
@@ -959,7 +963,8 @@ class UnaryNode : public ParseNode {
   }
 
 #ifdef DEBUG
-  void dumpImpl(ParserBase* parser, GenericPrinter& out, int indent);
+  void dumpImpl(const ParserAtomsTable* parserAtoms, GenericPrinter& out,
+                int indent);
 #endif
 
   ParseNode* kid() const { return kid_; }
@@ -1037,7 +1042,8 @@ class BinaryNode : public ParseNode {
   }
 
 #ifdef DEBUG
-  void dumpImpl(ParserBase* parser, GenericPrinter& out, int indent);
+  void dumpImpl(const ParserAtomsTable* parserAtoms, GenericPrinter& out,
+                int indent);
 #endif
 
   ParseNode* left() const { return left_; }
@@ -1143,7 +1149,8 @@ class TernaryNode : public ParseNode {
   }
 
 #ifdef DEBUG
-  void dumpImpl(ParserBase* parser, GenericPrinter& out, int indent);
+  void dumpImpl(const ParserAtomsTable* parserAtoms, GenericPrinter& out,
+                int indent);
 #endif
 
   ParseNode* kid1() const { return kid1_; }
@@ -1233,7 +1240,8 @@ class ListNode : public ParseNode {
   }
 
 #ifdef DEBUG
-  void dumpImpl(ParserBase* parser, GenericPrinter& out, int indent);
+  void dumpImpl(const ParserAtomsTable* parserAtoms, GenericPrinter& out,
+                int indent);
 #endif
 
   ParseNode* head() const { return head_; }
@@ -1519,7 +1527,8 @@ class FunctionNode : public ParseNode {
   }
 
 #ifdef DEBUG
-  void dumpImpl(ParserBase* parser, GenericPrinter& out, int indent);
+  void dumpImpl(const ParserAtomsTable* parserAtoms, GenericPrinter& out,
+                int indent);
 #endif
 
   FunctionBox* funbox() const { return funbox_; }
@@ -1559,7 +1568,8 @@ class ModuleNode : public ParseNode {
   }
 
 #ifdef DEBUG
-  void dumpImpl(ParserBase* parser, GenericPrinter& out, int indent);
+  void dumpImpl(const ParserAtomsTable* parserAtoms, GenericPrinter& out,
+                int indent);
 #endif
 
   ListNode* body() const { return &body_->as<ListNode>(); }
@@ -1589,7 +1599,8 @@ class NumericLiteral : public ParseNode {
   }
 
 #ifdef DEBUG
-  void dumpImpl(ParserBase* parser, GenericPrinter& out, int indent);
+  void dumpImpl(const ParserAtomsTable* parserAtoms, GenericPrinter& out,
+                int indent);
 #endif
 
   double value() const { return value_; }
@@ -1623,7 +1634,8 @@ class BigIntLiteral : public ParseNode {
   }
 
 #ifdef DEBUG
-  void dumpImpl(ParserBase* parser, GenericPrinter& out, int indent);
+  void dumpImpl(const ParserAtomsTable* parserAtoms, GenericPrinter& out,
+                int indent);
 #endif
 
   BigIntIndex index() { return index_; }
@@ -1656,7 +1668,8 @@ class BaseScopeNode : public ParseNode {
   }
 
 #ifdef DEBUG
-  void dumpImpl(ParserBase* parser, GenericPrinter& out, int indent);
+  void dumpImpl(const ParserAtomsTable* parserAtoms, GenericPrinter& out,
+                int indent);
 #endif
 
   ParserData* scopeBindings() const {
@@ -1724,7 +1737,8 @@ class LabeledStatement : public NameNode {
   }
 
 #ifdef DEBUG
-  void dumpImpl(ParserBase* parser, GenericPrinter& out, int indent);
+  void dumpImpl(const ParserAtomsTable* parserAtoms, GenericPrinter& out,
+                int indent);
 #endif
 };
 
@@ -1767,7 +1781,8 @@ class LoopControlStatement : public ParseNode {
   TaggedParserAtomIndex label() const { return label_; }
 
 #ifdef DEBUG
-  void dumpImpl(ParserBase* parser, GenericPrinter& out, int indent);
+  void dumpImpl(const ParserAtomsTable* parserAtoms, GenericPrinter& out,
+                int indent);
 #endif
 
   static bool test(const ParseNode& node) {
@@ -1938,7 +1953,8 @@ class RegExpLiteral : public ParseNode {
                        ExtensibleCompilationStencil& stencil) const;
 
 #ifdef DEBUG
-  void dumpImpl(ParserBase* parser, GenericPrinter& out, int indent);
+  void dumpImpl(const ParserAtomsTable* parserAtoms, GenericPrinter& out,
+                int indent);
 #endif
 
   static bool test(const ParseNode& node) {
