@@ -14,6 +14,7 @@
 #include "mozilla/Scoped.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/Vector.h"
+#include "mozilla/StaticPrefs_gfx.h"
 #include "mozilla/StaticPrefs_print.h"
 #include "nsPrintfCString.h"
 
@@ -1757,10 +1758,13 @@ already_AddRefed<DrawTarget> DrawTargetCairo::CreateSimilarDrawTarget(
 #endif
 #ifdef CAIRO_HAS_QUARTZ_SURFACE
     case CAIRO_SURFACE_TYPE_QUARTZ:
-      similar = cairo_quartz_surface_create_cg_layer(
-          mSurface, GfxFormatToCairoContent(aFormat), aSize.width,
-          aSize.height);
-      break;
+      if (StaticPrefs::gfx_cairo_quartz_cg_layer_enabled()) {
+        similar = cairo_quartz_surface_create_cg_layer(
+            mSurface, GfxFormatToCairoContent(aFormat), aSize.width,
+            aSize.height);
+        break;
+      }
+      [[fallthrough]];
 #endif
     default:
       similar = cairo_surface_create_similar(mSurface,
