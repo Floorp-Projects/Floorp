@@ -88,22 +88,15 @@ gfxFontEntry::gfxFontEntry(const nsACString& aName, bool aIsStandardFace)
       mIgnoreGSUB(false),
       mSkipDefaultFeatureSpaceCheck(false),
       mSVGInitialized(false),
-      mHasSpaceFeaturesInitialized(false),
-      mHasSpaceFeatures(false),
-      mHasSpaceFeaturesKerning(false),
-      mHasSpaceFeaturesNonKerning(false),
-      mGraphiteSpaceContextualsInitialized(false),
-      mHasGraphiteSpaceContextuals(false),
-      mSpaceGlyphIsInvisible(false),
-      mSpaceGlyphIsInvisibleInitialized(false),
-      mHasGraphiteTables(false),
-      mCheckedForGraphiteTables(false),
       mHasCmapTable(false),
       mGrFaceInitialized(false),
       mCheckedForColorGlyph(false),
       mCheckedForVariationAxes(false),
-      mHasColorBitmapTable(false),
-      mCheckedForColorBitmapTables(false) {
+      mSpaceGlyphIsInvisible(LazyFlag::Uninitialized),
+      mHasGraphiteTables(LazyFlag::Uninitialized),
+      mHasGraphiteSpaceContextuals(LazyFlag::Uninitialized),
+      mHasColorBitmapTable(LazyFlag::Uninitialized),
+      mHasSpaceFeatures(SpaceFeatures::Uninitialized) {
   mTrakTable.exchange(kTrakTableUninitialized);
   memset(&mDefaultSubSpaceFeatures, 0, sizeof(mDefaultSubSpaceFeatures));
   memset(&mNonDefaultSubSpaceFeatures, 0, sizeof(mNonDefaultSubSpaceFeatures));
@@ -772,12 +765,9 @@ bool gfxFontEntry::HasFontTable(uint32_t aTableTag) {
   return table && hb_blob_get_length(table) > 0;
 }
 
-void gfxFontEntry::CheckForGraphiteTables() {
-  mHasGraphiteTables = HasFontTable(TRUETYPE_TAG('S', 'i', 'l', 'f'));
-}
-
 tainted_boolean_hint gfxFontEntry::HasGraphiteSpaceContextuals() {
-  if (!mGraphiteSpaceContextualsInitialized) {
+  LazyFlag flag = mHasGraphiteSpaceContextuals;
+  if (flag == LazyFlag::Uninitialized) {
     auto face = GetGrFace();
     auto t_face = rlbox::from_opaque(face);
     if (t_face) {
@@ -788,20 +778,21 @@ tainted_boolean_hint gfxFontEntry::HasGraphiteSpaceContextuals() {
       // maliciously at any moment.
       tainted_boolean_hint is_not_none =
           faceInfo->space_contextuals != gr_faceinfo::gr_space_none;
-      mHasGraphiteSpaceContextuals = is_not_none.unverified_safe_because(
-          "Note ideally mHasGraphiteSpaceContextuals would be "
-          "tainted_boolean_hint, but RLBox does not yet support bitfields, so "
-          "it is not wrapped. However, its value is only ever accessed through "
-          "this function which returns a tainted_boolean_hint, so unwrapping "
-          "temporarily is safe. We remove the wrapper now and re-add it "
-          "below.");
+      flag = is_not_none.unverified_safe_because(
+                 "Note ideally mHasGraphiteSpaceContextuals would be "
+                 "tainted_boolean_hint, but RLBox does not yet support "
+                 "bitfields, so it is not wrapped. However, its value is only "
+                 "ever accessed through this function which returns a "
+                 "tainted_boolean_hint, so unwrapping temporarily is safe. "
+                 "We remove the wrapper now and re-add it below.")
+                 ? LazyFlag::Yes
+                 : LazyFlag::No;
     }
     ReleaseGrFace(face);  // always balance GetGrFace, even if face is null
-    mGraphiteSpaceContextualsInitialized = true;
+    mHasGraphiteSpaceContextuals = flag;
   }
 
-  bool ret = mHasGraphiteSpaceContextuals;
-  return tainted_boolean_hint(ret);
+  return tainted_boolean_hint(flag == LazyFlag::Yes);
 }
 
 #define FEATURE_SCRIPT_MASK 0x000000ff  // script index replaces low byte of tag

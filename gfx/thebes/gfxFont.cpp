@@ -1223,16 +1223,16 @@ static const hb_tag_t defaultFeatures[] = {
     HB_TAG('v', 'e', 'r', 't'), HB_TAG('v', 'j', 'm', 'o')};
 
 void gfxFont::CheckForFeaturesInvolvingSpace() const {
-  auto setInitializedFlag =
-      MakeScopeExit([&]() { mFontEntry->mHasSpaceFeaturesInitialized = true; });
+  gfxFontEntry::SpaceFeatures flags = gfxFontEntry::SpaceFeatures::None;
+
+  auto setFlags =
+      MakeScopeExit([&]() { mFontEntry->mHasSpaceFeatures = flags; });
 
   bool log = LOG_FONTINIT_ENABLED();
   TimeStamp start;
   if (MOZ_UNLIKELY(log)) {
     start = TimeStamp::Now();
   }
-
-  bool result = false;
 
   uint32_t spaceGlyph = GetSpaceGlyph();
   if (!spaceGlyph) {
@@ -1292,7 +1292,7 @@ void gfxFont::CheckForFeaturesInvolvingSpace() const {
             !sScriptTagToCode->Get(scriptTags[i], &s)) {
           continue;
         }
-        result = true;
+        flags = flags | gfxFontEntry::SpaceFeatures::HasFeatures;
         uint32_t index = static_cast<uint32_t>(s) >> 5;
         uint32_t bit = static_cast<uint32_t>(s) & 0x1f;
         if (isDefaultFeature) {
@@ -1313,45 +1313,48 @@ void gfxFont::CheckForFeaturesInvolvingSpace() const {
   }
 
   // GPOS lookups - distinguish kerning from non-kerning features
-  mFontEntry->mHasSpaceFeaturesKerning = false;
-  mFontEntry->mHasSpaceFeaturesNonKerning = false;
-
   if (canUseWordCache && hb_ot_layout_has_positioning(face)) {
     bool hasKerning = false, hasNonKerning = false;
     HasLookupRuleWithGlyph(face, HB_OT_TAG_GPOS, hasNonKerning,
                            HB_TAG('k', 'e', 'r', 'n'), hasKerning, spaceGlyph);
-    if (hasKerning || hasNonKerning) {
-      result = true;
+    if (hasKerning) {
+      flags |= gfxFontEntry::SpaceFeatures::HasFeatures |
+               gfxFontEntry::SpaceFeatures::Kerning;
     }
-    mFontEntry->mHasSpaceFeaturesKerning = hasKerning;
-    mFontEntry->mHasSpaceFeaturesNonKerning = hasNonKerning;
+    if (hasNonKerning) {
+      flags |= gfxFontEntry::SpaceFeatures::HasFeatures |
+               gfxFontEntry::SpaceFeatures::NonKerning;
+    }
   }
-
-  mFontEntry->mHasSpaceFeatures = result;
 
   if (MOZ_UNLIKELY(log)) {
     TimeDuration elapsed = TimeStamp::Now() - start;
-    LOG_FONTINIT(
-        ("(fontinit-spacelookups) font: %s - "
-         "subst default: %8.8x %8.8x %8.8x %8.8x "
-         "subst non-default: %8.8x %8.8x %8.8x %8.8x "
-         "kerning: %s non-kerning: %s time: %6.3f\n",
-         mFontEntry->Name().get(), mFontEntry->mDefaultSubSpaceFeatures[3],
-         mFontEntry->mDefaultSubSpaceFeatures[2],
-         mFontEntry->mDefaultSubSpaceFeatures[1],
-         mFontEntry->mDefaultSubSpaceFeatures[0],
-         mFontEntry->mNonDefaultSubSpaceFeatures[3],
-         mFontEntry->mNonDefaultSubSpaceFeatures[2],
-         mFontEntry->mNonDefaultSubSpaceFeatures[1],
-         mFontEntry->mNonDefaultSubSpaceFeatures[0],
-         (mFontEntry->mHasSpaceFeaturesKerning ? "true" : "false"),
-         (mFontEntry->mHasSpaceFeaturesNonKerning ? "true" : "false"),
-         elapsed.ToMilliseconds()));
+    LOG_FONTINIT((
+        "(fontinit-spacelookups) font: %s - "
+        "subst default: %8.8x %8.8x %8.8x %8.8x "
+        "subst non-default: %8.8x %8.8x %8.8x %8.8x "
+        "kerning: %s non-kerning: %s time: %6.3f\n",
+        mFontEntry->Name().get(), mFontEntry->mDefaultSubSpaceFeatures[3],
+        mFontEntry->mDefaultSubSpaceFeatures[2],
+        mFontEntry->mDefaultSubSpaceFeatures[1],
+        mFontEntry->mDefaultSubSpaceFeatures[0],
+        mFontEntry->mNonDefaultSubSpaceFeatures[3],
+        mFontEntry->mNonDefaultSubSpaceFeatures[2],
+        mFontEntry->mNonDefaultSubSpaceFeatures[1],
+        mFontEntry->mNonDefaultSubSpaceFeatures[0],
+        (mFontEntry->mHasSpaceFeatures & gfxFontEntry::SpaceFeatures::Kerning
+             ? "true"
+             : "false"),
+        (mFontEntry->mHasSpaceFeatures & gfxFontEntry::SpaceFeatures::NonKerning
+             ? "true"
+             : "false"),
+        elapsed.ToMilliseconds()));
   }
 }
 
 bool gfxFont::HasSubstitutionRulesWithSpaceLookups(Script aRunScript) const {
-  NS_ASSERTION(GetFontEntry()->mHasSpaceFeaturesInitialized,
+  NS_ASSERTION(GetFontEntry()->mHasSpaceFeatures !=
+                   gfxFontEntry::SpaceFeatures::Uninitialized,
                "need to initialize space lookup flags");
   NS_ASSERTION(aRunScript < Script::NUM_SCRIPT_CODES, "weird script code");
   if (aRunScript == Script::INVALID || aRunScript >= Script::NUM_SCRIPT_CODES) {
@@ -1398,24 +1401,26 @@ tainted_boolean_hint gfxFont::SpaceMayParticipateInShaping(
   // require us to re-check the tables; however, the actual check is done
   // by gfxFont because not all font entry subclasses know how to create
   // a harfbuzz face for introspection.
-  if (!mFontEntry->mHasSpaceFeaturesInitialized) {
+  gfxFontEntry::SpaceFeatures flags = mFontEntry->mHasSpaceFeatures;
+  if (flags == gfxFontEntry::SpaceFeatures::Uninitialized) {
     CheckForFeaturesInvolvingSpace();
+    flags = mFontEntry->mHasSpaceFeatures;
   }
 
-  if (!mFontEntry->mHasSpaceFeatures) {
+  if (!(flags & gfxFontEntry::SpaceFeatures::HasFeatures)) {
     return false;
   }
 
   // if font has substitution rules or non-kerning positioning rules
   // that involve spaces, bypass
   if (HasSubstitutionRulesWithSpaceLookups(aRunScript) ||
-      mFontEntry->mHasSpaceFeaturesNonKerning) {
+      (flags & gfxFontEntry::SpaceFeatures::NonKerning)) {
     return true;
   }
 
   // if kerning explicitly enabled/disabled via font-feature-settings or
   // font-kerning and kerning rules use spaces, only bypass when enabled
-  if (mKerningSet && mFontEntry->mHasSpaceFeaturesKerning) {
+  if (mKerningSet && (flags & gfxFontEntry::SpaceFeatures::Kerning)) {
     return mKerningEnabled;
   }
 
@@ -2545,18 +2550,20 @@ static bool NeedsGlyphExtents(gfxFont* aFont, const gfxTextRun* aTextRun) {
 
 bool gfxFont::IsSpaceGlyphInvisible(DrawTarget* aRefDrawTarget,
                                     const gfxTextRun* aTextRun) {
-  if (!mFontEntry->mSpaceGlyphIsInvisibleInitialized &&
+  gfxFontEntry::LazyFlag flag = mFontEntry->mSpaceGlyphIsInvisible;
+  if (flag == gfxFontEntry::LazyFlag::Uninitialized &&
       GetAdjustedSize() >= 1.0) {
     gfxGlyphExtents* extents =
         GetOrCreateGlyphExtents(aTextRun->GetAppUnitsPerDevUnit());
     gfxRect glyphExtents;
-    mFontEntry->mSpaceGlyphIsInvisible =
-        extents->GetTightGlyphExtentsAppUnits(this, aRefDrawTarget,
-                                              GetSpaceGlyph(), &glyphExtents) &&
-        glyphExtents.IsEmpty();
-    mFontEntry->mSpaceGlyphIsInvisibleInitialized = true;
+    flag = extents->GetTightGlyphExtentsAppUnits(
+               this, aRefDrawTarget, GetSpaceGlyph(), &glyphExtents) &&
+                   glyphExtents.IsEmpty()
+               ? gfxFontEntry::LazyFlag::Yes
+               : gfxFontEntry::LazyFlag::No;
+    mFontEntry->mSpaceGlyphIsInvisible = flag;
   }
-  return mFontEntry->mSpaceGlyphIsInvisible;
+  return flag == gfxFontEntry::LazyFlag::Yes;
 }
 
 bool gfxFont::MeasureGlyphs(const gfxTextRun* aTextRun, uint32_t aStart,
@@ -2585,16 +2592,18 @@ bool gfxFont::MeasureGlyphs(const gfxTextRun* aTextRun, uint32_t aStart,
         if (glyphIndex != spaceGlyph) {
           allGlyphsInvisible = false;
         } else {
-          if (!mFontEntry->mSpaceGlyphIsInvisibleInitialized &&
+          gfxFontEntry::LazyFlag flag = mFontEntry->mSpaceGlyphIsInvisible;
+          if (flag == gfxFontEntry::LazyFlag::Uninitialized &&
               GetAdjustedSize() >= 1.0) {
             gfxRect glyphExtents;
-            mFontEntry->mSpaceGlyphIsInvisible =
-                aExtents->GetTightGlyphExtentsAppUnitsLocked(
-                    this, aRefDrawTarget, spaceGlyph, &glyphExtents) &&
-                glyphExtents.IsEmpty();
-            mFontEntry->mSpaceGlyphIsInvisibleInitialized = true;
+            flag = aExtents->GetTightGlyphExtentsAppUnitsLocked(
+                       this, aRefDrawTarget, spaceGlyph, &glyphExtents) &&
+                           glyphExtents.IsEmpty()
+                       ? gfxFontEntry::LazyFlag::Yes
+                       : gfxFontEntry::LazyFlag::No;
+            mFontEntry->mSpaceGlyphIsInvisible = flag;
           }
-          if (!mFontEntry->mSpaceGlyphIsInvisible) {
+          if (flag == gfxFontEntry::LazyFlag::No) {
             allGlyphsInvisible = false;
           }
         }
