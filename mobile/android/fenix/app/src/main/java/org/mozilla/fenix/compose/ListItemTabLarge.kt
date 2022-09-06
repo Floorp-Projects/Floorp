@@ -4,6 +4,7 @@
 
 package org.mozilla.fenix.compose
 
+import android.content.res.Configuration
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -19,6 +20,7 @@ import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -42,6 +44,7 @@ import org.mozilla.fenix.theme.Theme
  * @param imageUrl URL from where the to download a header image of the tab this composable renders.
  * @param title Title off the tab this composable renders.
  * @param caption Optional caption text.
+ * @param backgroundColor Background [Color] of the item.
  * @param onClick Optional callback to be invoked when this composable is clicked.
  */
 @Composable
@@ -49,9 +52,14 @@ fun ListItemTabLarge(
     imageUrl: String,
     title: String,
     caption: String? = null,
+    backgroundColor: Color = FirefoxTheme.colors.layer2,
     onClick: (() -> Unit)? = null
 ) {
-    ListItemTabSurface(imageUrl, onClick) {
+    ListItemTabSurface(
+        imageUrl = imageUrl,
+        backgroundColor = backgroundColor,
+        onClick = onClick,
+    ) {
         Text(
             text = title,
             color = FirefoxTheme.colors.textPrimary,
@@ -89,18 +97,24 @@ fun ListItemTabLarge(
  * ```
  *
  * @param imageUrl URL from where the to download a header image of the tab this composable renders.
+ * @param backgroundColor Background [Color] of the item.
+ * @param onClick Optional callback to be invoked when this composable is clicked.
  * @param title Composable rendering the title of the tab this composable represents.
  * @param subtitle Optional tab caption composable.
- * @param onClick Optional callback to be invoked when this composable is clicked.
  */
 @Composable
 fun ListItemTabLarge(
     imageUrl: String,
+    backgroundColor: Color = FirefoxTheme.colors.layer2,
     onClick: () -> Unit,
     title: @Composable () -> Unit,
     subtitle: @Composable (() -> Unit)? = null
 ) {
-    ListItemTabSurface(imageUrl, onClick) {
+    ListItemTabSurface(
+        imageUrl = imageUrl,
+        backgroundColor = backgroundColor,
+        onClick = onClick,
+    ) {
         title()
 
         subtitle?.invoke()
@@ -111,12 +125,14 @@ fun ListItemTabLarge(
  * Shared default configuration of a ListItemTabLarge Composable.
  *
  * @param imageUrl URL from where the to download a header image of the tab this composable renders.
+ * @param backgroundColor Background [Color] of the item.
  * @param onClick Optional callback to be invoked when this composable is clicked.
  * @param tabDetails [Composable] Displayed to the the end of the image. Allows for variation in the item text style.
  */
 @Composable
 fun ListItemTabSurface(
     imageUrl: String,
+    backgroundColor: Color = FirefoxTheme.colors.layer2,
     onClick: (() -> Unit)? = null,
     tabDetails: @Composable () -> Unit
 ) {
@@ -126,7 +142,7 @@ fun ListItemTabSurface(
     Card(
         modifier = modifier,
         shape = RoundedCornerShape(8.dp),
-        backgroundColor = FirefoxTheme.colors.layer2,
+        backgroundColor = backgroundColor,
         elevation = 6.dp
     ) {
         Row(
@@ -152,7 +168,8 @@ fun ListItemTabSurface(
 }
 
 @Composable
-@Preview
+@Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Preview(uiMode = Configuration.UI_MODE_NIGHT_NO)
 private fun ListItemTabLargePreview() {
     FirefoxTheme(theme = Theme.getTheme()) {
         ListItemTabLarge(
@@ -164,11 +181,30 @@ private fun ListItemTabLargePreview() {
 }
 
 @Composable
-@Preview
+@Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Preview(uiMode = Configuration.UI_MODE_NIGHT_NO)
 private fun ListItemTabSurfacePreview() {
     FirefoxTheme(theme = Theme.getTheme()) {
         ListItemTabSurface(
             imageUrl = ""
+        ) {
+            Text(
+                text = "This can be anything",
+                color = FirefoxTheme.colors.textPrimary,
+                fontSize = 22.sp
+            )
+        }
+    }
+}
+
+@Composable
+@Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Preview(uiMode = Configuration.UI_MODE_NIGHT_NO)
+private fun ListItemTabSurfaceWithCustomBackgroundPreview() {
+    FirefoxTheme(theme = Theme.getTheme()) {
+        ListItemTabSurface(
+            imageUrl = "",
+            backgroundColor = Color.Cyan,
         ) {
             Text(
                 text = "This can be anything",

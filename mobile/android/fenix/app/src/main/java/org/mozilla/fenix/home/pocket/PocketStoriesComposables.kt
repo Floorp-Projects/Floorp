@@ -165,7 +165,10 @@ fun PocketSponsoredStory(
         "&resize=w$imageWidth-h$imageHeight"
     )
 
-    ListItemTabSurface(imageUrl, { onStoryClick(story) }) {
+    ListItemTabSurface(
+        imageUrl = imageUrl,
+        onClick = { onStoryClick(story) },
+    ) {
         Text(
             text = story.title,
             color = FirefoxTheme.colors.textPrimary,
