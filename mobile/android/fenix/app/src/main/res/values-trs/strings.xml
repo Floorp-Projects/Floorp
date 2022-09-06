@@ -16,6 +16,8 @@
     <string name="content_description_disable_private_browsing_button">Dūnâ\’āJ riña gāchē nu huìt</string>
     <!-- Placeholder text shown in the search bar before a user enters text -->
     <string name="search_hint">Gachrūn nuguan\' ruhuât nanà\'uìt</string>
+    <!-- Placeholder text shown in the search bar when using application search engines -->
+    <string name="application_search_hint">Duguatûj nuguan\'an</string>
     <!-- No Open Tabs Message Description -->
     <string name="no_open_tabs_description">Hiūj nan nāruguì\’ nej rakïj ñanj huā ni\’nïnj ïn</string>
 
@@ -30,6 +32,23 @@
     <string name="tab_tray_add_new_collection_name">Si yugui</string>
     <!-- Label of button in save to collection dialog for selecting a current collection  -->
     <string name="tab_tray_select_collection">Nāguī sa màn yì\'nïn\'ïn</string>
+
+    <!-- Content description for close button while in multiselect mode in tab tray -->
+    <string name="tab_tray_close_multiselect_content_description">Gāhuī riña multiselección</string>
+    <!-- Content description for save to collection button while in multiselect mode in tab tray -->
+    <string name="tab_tray_collection_button_multiselect_content_description">Na\'nïnj sà\' nej rakïj ñanj riña \'na\' nej kolexión</string>
+    <!-- Content description on checkmark while tab is selected in multiselect mode in tab tray -->
+    <string name="tab_tray_multiselect_selected_content_description">Sa naguit</string>
+
+    <!-- Home - Recently saved bookmarks -->
+    <!-- Title for the home screen section with recently saved bookmarks. -->
+    <string moz:RemovedIn="106" name="recent_bookmarks_title" tools:ignore="UnusedResources">Marcador nakà doj</string>
+    <!-- Title for the home screen section with recently saved bookmarks. -->
+    <string name="recently_saved_title">Hìaj nanu sà\'aj</string>
+    <!-- Content description for the button which navigates the user to show all of their saved bookmarks. -->
+    <string name="recently_saved_show_all_content_description_2">Gīni\'hiāj riña daran\' nej markado nū sa\'a</string>
+    <!-- Text for the menu button to remove a recently saved bookmark from the user's home screen -->
+    <string name="recently_saved_menu_item_remove">Nādure\'</string>
 
     <!-- About content. The first parameter is the name of the application. (For example: Fenix) -->
     <string name="about_content">%1$s huin \’ngō sa giri Mozilla.</string>
@@ -134,8 +153,6 @@
     <string name="search_suggestions_onboarding_title">Dīganj nuguan\' dàj nanà\'uì\'t riña sesiûn guendâ \'ngō rînt</string>
     <!-- Search suggestion onboarding hint description text, first parameter is the name of the app defined in app_name (for example: Fenix)-->
     <string name="search_suggestions_onboarding_text">%s dūyingaj daran\' sa gāchrūnt riña barra direksiûn ngà sa nana\'ui\' nīkājt.</string>
-    <!-- Search suggestion onboarding hint Learn more link text -->
-    <string moz:RemovedIn="100" name="search_suggestions_onboarding_learn_more_link" tools:ignore="UnusedResources">Gāhuin chrūn doj</string>
 
     <!-- Text preview for smaller sized widgets -->
     <string name="search_widget_text_short">Nānà\'uì\'</string>
@@ -202,7 +219,7 @@
     <!-- Preference for settings related to visual options -->
     <string name="preferences_customize">Nādunō\' dàj huin ruhuô\'</string>
     <!-- Preference description for banner about signing in -->
-    <string name="preferences_sign_in_description">Nāgi\'aj nūgua\'àn nej markadô, nej sa ni\'iājt nī doj ngà si kuentât Firefox</string>
+    <string moz:RemovedIn="104" name="preferences_sign_in_description" tools:ignore="UnusedResources">Nāgi\'aj nūgua\'àn nej markadô, nej sa ni\'iājt nī doj ngà si kuentât Firefox</string>
     <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
     <string name="preferences_account_default_name">Si kuendâ Firefox</string>
     <!-- Preference text for account title when there was an error syncing FxA -->
@@ -306,7 +323,7 @@
 
     <!-- Turn On Sync Preferences -->
     <!-- Header of the Turn on Sync preference view -->
-    <string name="preferences_sync">Nāchrūn Sync</string>
+    <string moz:RemovedIn="104" name="preferences_sync" tools:ignore="UnusedResources">Nāchrūn Sync</string>
     <!-- Preference for reconnecting to FxA sync -->
     <string name="preferences_sync_sign_in_to_reconnect">Gāyi\'ì sēsiûn da\' ga\'ue gānātū nûnt</string>
     <!-- Preference for removing FxA account -->
@@ -380,8 +397,6 @@
 
     <!-- Open tabs menu item to save tabs to collection -->
     <string name="tabs_menu_save_to_collection1">Na\'nïnj sà\' nej rakïj ñanj riña màn si yi\'nïnj</string>
-    <!-- Content description (not visible, for screen readers etc.): Opens the tab menu when pressed -->
-    <string name="tab_menu">Si menû rakïj ñanj</string>
     <!-- Text for the menu button to delete a collection -->
     <string name="collection_delete">Nādūre\' da\' huā ngè yi\'nïn\'ïn</string>
     <!-- Text for the menu button to rename a collection -->
@@ -637,8 +652,6 @@
     <string name="snackbar_tab_closed">Ganarán riña rakïj ñanj</string>
     <!-- Text shown in snackbar when user closes all tabs -->
     <string name="snackbar_tabs_closed">Ganarán riña nej rakïj ñanj</string>
-    <!-- Text shown in snackbar when user adds a site to top sites -->
-    <string moz:RemovedIn="101" name="snackbar_added_to_top_sites" tools:ignore="UnusedResources">Ngà nañunj riña nej sitiô nīhià\' ruhuât doj</string>
     <!-- Text shown in snackbar when user closes a private tab -->
     <string name="snackbar_private_tab_closed">Ngà narán riña rakïj ñanj huìi</string>
     <!-- Text shown in snackbar when user closes all private tabs -->
@@ -712,7 +725,8 @@
     <string name="delete_browsing_data_on_quit_action">Gāhuī</string>
 
     <!-- Dialog message to the user asking to delete browsing data. -->
-    <string name="delete_browsing_data_prompt_message">Gānarè\' daran\' nej si datôt ngà gaché nunt.</string>
+    <string moz:removedIn="104" name="delete_browsing_data_prompt_message" tools:ignore="UnusedResources">Gānarè\' daran\' nej si datôt ngà gaché nunt.</string>
+
     <!-- Dialog message to the user asking to delete browsing data. Parameter will be replaced by app name. -->
     <string name="delete_browsing_data_prompt_message_3">%s nādure\'ej nej si datô riña gaché nunt ngà naguit.</string>
     <!-- Text for the cancel button for the data deletion dialog -->
@@ -723,34 +737,6 @@
     <string name="preferences_delete_browsing_data_snackbar">Ngà ganare\' nej si datô sa nana\'uî\'t</string>
     <!-- Text for the snackbar to show the user that the deletion of browsing data is in progress -->
     <string name="deleting_browsing_data_in_progress">Hīaj nadure\'ej nej si datô riña sā nana\'uî\'t…</string>
-
-    <!-- Tips -->
-    <!-- text for firefox preview moving tip header "Firefox Preview" and "Firefox Nightly" are intentionally hardcoded -->
-    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_header" tools:ignore="UnusedResources">Firefox Preview huin Firefox Nightly hīaj</string>
-
-    <!-- text for firefox preview moving tip description -->
-    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_description" tools:ignore="UnusedResources">Nahuin nākà Firefox Nightly daran\' nìïn nī huā sa gārahuê\' nākàa nika.
-        Sanī, ga\'ue sī gi\'iaj sun hue\'ej. Nādūnïnj sa nana\'ui\' gù\'nàj beta da\' gā hīa ruhuât doj.</string>
-    <!-- text for firefox preview moving tip button. "Firefox for Android Beta" is intentionally hardcoded -->
-    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_button_2" tools:ignore="UnusedResources">Nādūnïnj Firefox guendâ Android Beta</string>
-
-    <!-- text for firefox preview moving tip header. "Firefox Nightly" is intentionally hardcoded -->
-    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_header_preview_installed" tools:ignore="UnusedResources">Ngà nasiki\' Firefox Nightly</string>
-
-    <!-- text for firefox preview moving tip description -->
-    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_description_preview_installed" tools:ignore="UnusedResources">Sī nahuin ra\'a aplikasiûn nan sa nahuin nākà dūgumî sò\' ngà\'. Dūnâj aplikasiûn nan nī nādūnā ngà Nightly nākàa.
-        \n\nDa\' gānāchīn nej sa arâj sun nīchrà\'t doj, riña ayi\'ì sēsiûn nī sa gini\'iājt riña a\'ngô aplikasiûn, da\'uît gīrīt \'ngō si kuentât Firefox.</string>
-    <!-- text for firefox preview moving tip button  -->
-    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_button_preview_installed" tools:ignore="UnusedResources">Nādūnā ngà Nightly nākàa</string>
-
-    <!-- text for firefox preview moving tip header. "Firefox Nightly" is intentionally hardcoded -->
-    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_header_preview_not_installed" tools:ignore="UnusedResources">Ngà nasiki\' Firefox Nightly</string>
-    <!-- text for firefox preview moving tip description -->
-    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_description_preview_not_installed" tools:ignore="UnusedResources">Sī nahuin ra\'a aplikasiûn nan sa nahuin nākà dūgumî sò\' ngà\'. Sī garâj sunt aplikasiûn nan ngà\' nī nādūnïnj Nightly nākàa.
-        \n\nDa\' gānāchīn nej sa arâj sun nīchrà\'t doj, riña ayi\'ì sēsiûn nī sa gini\'iājt riña a\'ngô aplikasiûn, da\'uît gīrīt \'ngō si kuentât Firefox.</string>
-
-    <!-- text for firefox preview moving tip button  -->
-    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_button_preview_not_installed" tools:ignore="UnusedResources">Nādūnïnj Nightly nākàa</string>
 
     <!-- Onboarding -->
     <!-- Text for onboarding welcome message
@@ -1063,19 +1049,6 @@
     <!-- Text shown when a user successfully deletes a custom search engine -->
     <string name="search_delete_search_engine_success_message">Ngà nare\' %s</string>
 
-    <!-- Title text shown for the migration screen to the new browser. Placeholder replaced with app name -->
-    <string moz:removedIn="100" name="migration_title" tools:ignore="UnusedResources">Guruhuât gunumât riña %s \'ngō sa hìaj gahui nākàt chre huin</string>
-    <!-- Description text followed by a list of things migrating (e.g. Bookmarks, History). Placeholder replaced with app name-->
-    <string moz:removedIn="100" name="migration_description" tools:ignore="UnusedResources">Ānà\'uìj \'ngō sa nana\'uî\' nahuin nākà ta\'u sò\', hue\'ê nī hìo doj \'iaj sun da\' rūgûña\'un doj sò\' nga aché nunt.\n\nGāna\'uìj hìaj nï\' nagi\'iaj nākà ñunj %s ngà si</string>
-    <!-- Text on the disabled button while in progress. Placeholder replaced with app name -->
-    <string moz:removedIn="100" name="migration_updating_app_button_text" tools:ignore="UnusedResources">Hīaj nagi\'iaj nākaj %s…</string>
-    <!-- Text on the enabled button. Placeholder replaced with app name-->
-    <string moz:removedIn="100" name="migration_update_app_button" tools:ignore="UnusedResources">Gāyi\'ì %s</string>
-    <!-- Accessibility description text for a completed migration item -->
-    <string moz:removedIn="100" name="migration_icon_description" tools:ignore="UnusedResources">Ngà nahuij gachinj</string>
-    <!--Text on list of migrated items (e.g. Settings, History, etc.)-->
-    <string moz:removedIn="100" name="migration_text_passwords" tools:ignore="UnusedResources">Nej da\'nga\' huìi</string>
-
     <!-- Heading for the instructions to allow a permission -->
     <string name="phone_feature_blocked_intro">Da\' ga\'ue gā\'nïn:</string>
     <!-- First step for the allowing a permission -->
@@ -1096,8 +1069,6 @@
     <string name="no_site_exceptions">Nitāj à\'ngō nej sîtio gūnàj</string>
     <!-- Bookmark deletion confirmation -->
     <string name="bookmark_deletion_confirmation">Huā yītïnj ruhuât nādure\'t markadô nan anj.</string>
-    <!-- Browser menu button that adds a top site to the home fragment -->
-    <string moz:RemovedIn="101" name="browser_menu_add_to_top_sites" tools:ignore="UnusedResources">Nūtà\' riña nej sitiô nīhià\' ruhuât doj</string>
     <!-- text shown before the issuer name to indicate who its verified by, parameter is the name of
      the certificate authority that verified the ticket-->
     <string name="certificate_info_verified_by">Ngà ganatsij sa gu\'nàj: %1$s</string>
@@ -1146,9 +1117,6 @@
     <!-- Text displayed on a button in the synced tabs screen to link users to sign in when a user is not signed in to Firefox Sync -->
     <string name="synced_tabs_sign_in_button">Gāyi\'ì sēsiûn riña sync</string>
 
-    <!-- Top Sites -->
-    <!-- Title text displayed in the dialog when top sites limit is reached. -->
-    <string moz:RemovedIn="101" name="top_sites_max_limit_title" tools:ignore="UnusedResources">Ngà guchî\'t riña da\'uît gūchì\'t guendâ nej sitiô ña’ān doj</string>
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">Ga\'ue, ngà garâj da\'nga\' ruhuâj</string>
 

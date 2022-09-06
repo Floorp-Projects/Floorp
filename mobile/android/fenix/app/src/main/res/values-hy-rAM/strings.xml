@@ -40,7 +40,7 @@
 
     <!-- Home - Recently saved bookmarks -->
     <!-- Title for the home screen section with recently saved bookmarks. -->
-    <string name="recent_bookmarks_title">Վերջին Էջանիշերը</string>
+    <string moz:RemovedIn="106" name="recent_bookmarks_title" tools:ignore="UnusedResources">Վերջին Էջանիշերը</string>
     <!-- Content description for the button which navigates the user to show all of their saved bookmarks. -->
     <string name="recently_saved_show_all_content_description_2">Ցուցադրել բոլոր էջանիշերը</string>
 
@@ -249,24 +249,24 @@
 
     <!-- Home onboarding -->
     <!-- Onboarding home screen dialog title text. The first parameter is the name of the application.-->
-    <string name="onboarding_home_screen_title_3">Ինչն է նոր %1$s-ում</string>
+    <string moz:RemovedIn="106" name="onboarding_home_screen_title_3" tools:ignore="UnusedResources">Ինչն է նոր %1$s-ում</string>
     <!-- Onboarding home screen dialog description text. -->
-    <string name="onboarding_home_screen_description_2">Այժմ ավելի հեշտ է շարունակել այն տեղից, որտեղ կանգ եք առել:</string>
+    <string moz:RemovedIn="106" name="onboarding_home_screen_description_2" tools:ignore="UnusedResources">Այժմ ավելի հեշտ է շարունակել այն տեղից, որտեղ կանգ եք առել:</string>
     <!-- Onboarding home screen dialog title text for the home section. The first parameter is the name of the application.-->
-    <string name="onboarding_home_screen_section_home_title_3">Անհատականացված %1$s գլխավոր էջ</string>
+    <string moz:RemovedIn="106" name="onboarding_home_screen_section_home_title_3" tools:ignore="UnusedResources">Անհատականացված %1$s գլխավոր էջ</string>
     <!-- Onboarding home screen dialog description text for the home section. -->
-    <string name="onboarding_home_screen_section_home_description_2">Անցեք ձեր բաց ներդիրներին, էջանիշերին և զննման պատմությանը:</string>
+    <string moz:RemovedIn="106" name="onboarding_home_screen_section_home_description_2" tools:ignore="UnusedResources">Անցեք ձեր բաց ներդիրներին, էջանիշերին և զննման պատմությանը:</string>
     <!-- Onboarding home screen dialog description text for the tab tray section. -->
-    <string name="onboarding_home_screen_section_cleaner_tab_tray_title_2">Մաքուր, կազմակերպված ներդիրներ</string>
+    <string moz:RemovedIn="106" name="onboarding_home_screen_section_cleaner_tab_tray_title_2" tools:ignore="UnusedResources">Մաքուր, կազմակերպված ներդիրներ</string>
     <!-- Onboarding home screen dialog description text for the tab tray section. -->
-    <string name="onboarding_home_screen_section_cleaner_tab_tray_description_2">Կարգի բերեք ներդիրները դասավորությունը լավարկելու և ինքնափակելու միջոցով:</string>
+    <string moz:RemovedIn="106" name="onboarding_home_screen_section_cleaner_tab_tray_description_2" tools:ignore="UnusedResources">Կարգի բերեք ներդիրները դասավորությունը լավարկելու և ինքնափակելու միջոցով:</string>
     <!-- Onboarding home screen dialog description text for the history section. -->
-    <string name="onboarding_home_screen_section_useful_history_title_2">Վերջին որոնումները</string>
+    <string moz:RemovedIn="106" name="onboarding_home_screen_section_useful_history_title_2" tools:ignore="UnusedResources">Վերջին որոնումները</string>
     <!-- Onboarding home screen dialog description text for the history section. -->
-    <string name="onboarding_home_screen_section_useful_history_description_2">Վերանայեք ձեր վերջին որոնումները ձեր տնային էջից և ներդիրներից:</string>
+    <string moz:RemovedIn="106" name="onboarding_home_screen_section_useful_history_description_2" tools:ignore="UnusedResources">Վերանայեք ձեր վերջին որոնումները ձեր տնային էջից և ներդիրներից:</string>
 
     <!-- Onboarding home screen popup dialog, shown on top of the Jump back in section. Firefox is intentionally hardcoded. -->
-    <string name="onboarding_home_screen_jump_back_contextual_hint" tools:ignore="UnusedResources">Ձեր անհատականացված Firefox-ի տնային էջը այժմ հեշտացնում է աշխատանքը շարունակելու այն կետից, որում կանգնել եք: Գտեք ձեր վերջին ներդիրները, էջանիշերը և որոնման արդյունքները:</string>
+    <string moz:RemovedIn="106" name="onboarding_home_screen_jump_back_contextual_hint" tools:ignore="UnusedResources">Ձեր անհատականացված Firefox-ի տնային էջը այժմ հեշտացնում է աշխատանքը շարունակելու այն կետից, որում կանգնել եք: Գտեք ձեր վերջին ներդիրները, էջանիշերը և որոնման արդյունքները:</string>
 
     <!-- Search Widget -->
     <!-- Content description for searching with a widget. The first parameter is the name of the application.-->
@@ -443,11 +443,11 @@
     <!-- Snackbar label for action to view selected wallpaper -->
     <string name="wallpaper_updated_snackbar_action">Տեսք</string>
     <!-- Label for switch which toggles the "tap-to-switch" behavior on home screen logo -->
-    <string name="wallpaper_tap_to_change_switch_label_1">Փոխեք պաստառը՝ կտտացնելով Firefox-ի գլխավոր էջի պատկերանշանին</string>
+    <string moz:removedIn="105" name="wallpaper_tap_to_change_switch_label_1" tools:ignore="UnusedResources">Փոխեք պաստառը՝ կտտացնելով Firefox-ի գլխավոր էջի պատկերանշանին</string>
 
     <!-- This is the accessibility content description for the wallpapers functionality. Users are
     able to tap on the app logo in the home screen and can switch to different wallpapers by tapping. -->
-    <string name="wallpaper_logo_content_description">Firefox լոգոն` փոխել պաստառը, կոճակը</string>
+    <string moz:removedIn="105" name="wallpaper_logo_content_description" tools:ignore="UnusedResources">Firefox լոգոն` փոխել պաստառը, կոճակը</string>
 
     <!-- Add-on Installation from AMO-->
     <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is not supported -->
@@ -648,7 +648,7 @@
     <!-- Option for always opening the homepage when re-opening the app after four hours of inactivity -->
     <string name="opening_screen_after_four_hours_of_inactivity">Տնային էջը չորս ժամ անգործությունից հետո</string>
     <!-- Summary for tabs preference when auto closing tabs setting is set to manual close-->
-    <string name="close_tabs_manually_summary">Ձեռքով փակեք</string>
+    <string name="close_tabs_manually_summary">Ձեռքով փակել</string>
     <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one day-->
     <string name="close_tabs_after_one_day_summary">Փակել մեկ օր անց</string>
     <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one week-->
@@ -728,8 +728,6 @@
     <string name="open_tabs_menu">Բացել ներդիրների ցանկը</string>
     <!-- Open tabs menu item to save tabs to collection -->
     <string name="tabs_menu_save_to_collection1">Պահպանել ներդիրները հավաքածուում</string>
-    <!-- Content description (not visible, for screen readers etc.): Opens the tab menu when pressed -->
-    <string moz:RemovedIn="103" name="tab_menu" tools:ignore="UnusedResources">Ներդիրի ցանկ</string>
     <!-- Text for the menu button to delete a collection -->
     <string name="collection_delete">Ջնջել հավաքածուն</string>
     <!-- Text for the menu button to rename a collection -->
@@ -779,16 +777,16 @@
     <string name="history_empty_message">Այստեղ պատմություն չկա</string>
 
     <!-- Text for the button inside History screen that opens Synced History screen. History that is coming from other devices -->
-    <string name="history_synced_from_other_devices">Համաժամեցված այլ սարքից</string>
+    <string moz:removedIn="105" name="history_synced_from_other_devices" tools:ignore="UnusedResources">Համաժամեցված այլ սարքից</string>
     <!-- The page title for browsing history coming from other devices. -->
-    <string name="history_from_other_devices">Այլ սարքերից</string>
+    <string moz:removedIn="105" name="history_from_other_devices" tools:ignore="UnusedResources">Այլ սարքերից</string>
 
     <!-- The synced history sign in dialog message -->
-    <string name="history_sign_in_message">Մուտք գործե՛ք՝ տեսնելու Ձեր այլ սարքերից համաժամեցված պատմությունը:</string>
+    <string moz:removedIn="105" name="history_sign_in_message" tools:ignore="UnusedResources">Մուտք գործե՛ք՝ տեսնելու Ձեր այլ սարքերից համաժամեցված պատմությունը:</string>
     <!-- The synced history sign in dialog button text -->
-    <string name="history_sign_in_button">Մուտք գործել</string>
+    <string moz:removedIn="105" name="history_sign_in_button" tools:ignore="UnusedResources">Մուտք գործել</string>
     <!-- The synced history sign in dialog create a new account link -->
-    <string name="history_sign_in_create_account"><![CDATA[<u>Կամ ստեղծեք Firefox հաշիվ՝ համաժամացումը սկսելու համար</u>]]></string>
+    <string moz:removedIn="105" name="history_sign_in_create_account" tools:ignore="UnusedResources"><![CDATA[<u>Կամ ստեղծեք Firefox հաշիվ՝ համաժամացումը սկսելու համար</u>]]></string>
 
     <!-- Downloads -->
     <!-- Text for the snackbar to confirm that multiple downloads items have been removed -->
@@ -890,7 +888,7 @@
         Secure settings status and a button to modify site permissions -->
     <string name="quick_settings_sheet">Արագ կարգավորումների թերթիկ</string>
     <!-- Label that indicates that this option it the recommended one -->
-    <string name="phone_feature_recommended">Հանձնարարելի</string>
+    <string name="phone_feature_recommended">Երաշխավորվում է</string>
     <!-- Button label for clearing all the information of site permissions-->
     <string name="clear_permissions">Մաքրել թույլտվությունները</string>
     <!-- Text for the OK button on Clear permissions dialog -->

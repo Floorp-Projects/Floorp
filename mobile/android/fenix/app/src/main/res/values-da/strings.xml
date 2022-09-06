@@ -41,7 +41,9 @@
 
     <!-- Home - Recently saved bookmarks -->
     <!-- Title for the home screen section with recently saved bookmarks. -->
-    <string name="recent_bookmarks_title">Seneste bogmærker</string>
+    <string moz:RemovedIn="106" name="recent_bookmarks_title" tools:ignore="UnusedResources">Seneste bogmærker</string>
+    <!-- Title for the home screen section with recently saved bookmarks. -->
+    <string name="recently_saved_title">Gemt for nylig</string>
     <!-- Content description for the button which navigates the user to show all of their saved bookmarks. -->
     <string name="recently_saved_show_all_content_description_2">Vis alle gemte bogmærker</string>
 
@@ -75,6 +77,12 @@
 
     <!-- Content description for close button used in "contextual feature recommendation" (CFR) popups -->
     <string name="cfr_dismiss_button_default_content_description">Afvis</string>
+
+    <!-- Total cookie protection "contextual feature recommendation" (CFR) -->
+    <!-- Text for the message displayed in the contextual feature recommendation popup promoting the total cookie protection feature. -->
+    <string name="tcp_cfr_message">Vores stærkeste privatlivs-beskyttelse til dato isolerer sporings-tjenester på tværs af websteder.</string>
+    <!-- Text displayed that links to website containing documentation about the "Total cookie protection" feature. -->
+    <string name="tcp_cfr_learn_more">Læs om Komplet Cookiebeskyttelse</string>
 
     <!-- Text for the info dialog when camera permissions have been denied but user tries to access a camera feature. -->
     <string name="camera_permissions_needed_message">Adgang til kamera er nødvendig. Gå til Indstillinger i Android, tryk på Tilladelser, og tryk så på Tillad.</string>
@@ -134,6 +142,8 @@
     <string name="recent_tabs_see_all_synced_tabs_button_text">Vis alle synkroniserede faneblade</string>
     <!-- Accessibility description for device icon used for recent synced tab -->
     <string name="recent_tabs_synced_device_icon_content_description">Synkroniseret enhed</string>
+    <!-- Text for the dropdown menu to remove a recent synced tab from the homescreen -->
+    <string name="recent_synced_tab_menu_item_remove">Fjern</string>
     <!-- Text for the menu button to remove a grouped highlight from the user's browsing history
          in the Recently visited section -->
     <string name="recent_tab_menu_item_remove">Fjern</string>
@@ -249,24 +259,43 @@
 
     <!-- Home onboarding -->
     <!-- Onboarding home screen dialog title text. The first parameter is the name of the application.-->
-    <string name="onboarding_home_screen_title_3">Nyheder i %1$s</string>
+    <string moz:RemovedIn="106" name="onboarding_home_screen_title_3" tools:ignore="UnusedResources">Nyheder i %1$s</string>
     <!-- Onboarding home screen dialog description text. -->
-    <string name="onboarding_home_screen_description_2">Det er blevet lettere at fortsætte, hvor du slap.</string>
+    <string moz:RemovedIn="106" name="onboarding_home_screen_description_2" tools:ignore="UnusedResources">Det er blevet lettere at fortsætte, hvor du slap.</string>
     <!-- Onboarding home screen dialog title text for the home section. The first parameter is the name of the application.-->
-    <string name="onboarding_home_screen_section_home_title_3">Tilpasset startside i %1$s</string>
+    <string moz:RemovedIn="106" name="onboarding_home_screen_section_home_title_3" tools:ignore="UnusedResources">Tilpasset startside i %1$s</string>
     <!-- Onboarding home screen dialog description text for the home section. -->
-    <string name="onboarding_home_screen_section_home_description_2">Hop til dine åbne faneblade, bogmærker og browserhistorik.</string>
+    <string moz:RemovedIn="106" name="onboarding_home_screen_section_home_description_2" tools:ignore="UnusedResources">Hop til dine åbne faneblade, bogmærker og browserhistorik.</string>
     <!-- Onboarding home screen dialog description text for the tab tray section. -->
-    <string name="onboarding_home_screen_section_cleaner_tab_tray_title_2">Overskuelige faneblade</string>
+    <string moz:RemovedIn="106" name="onboarding_home_screen_section_cleaner_tab_tray_title_2" tools:ignore="UnusedResources">Overskuelige faneblade</string>
     <!-- Onboarding home screen dialog description text for the tab tray section. -->
-    <string name="onboarding_home_screen_section_cleaner_tab_tray_description_2">Fjern distraherende faneblade med forbedret layout og automatisk lukning af faneblade.</string>
+    <string moz:RemovedIn="106" name="onboarding_home_screen_section_cleaner_tab_tray_description_2" tools:ignore="UnusedResources">Fjern distraherende faneblade med forbedret layout og automatisk lukning af faneblade.</string>
     <!-- Onboarding home screen dialog description text for the history section. -->
-    <string name="onboarding_home_screen_section_useful_history_title_2">Seneste søgninger</string>
+    <string moz:RemovedIn="106" name="onboarding_home_screen_section_useful_history_title_2" tools:ignore="UnusedResources">Seneste søgninger</string>
     <!-- Onboarding home screen dialog description text for the history section. -->
-    <string name="onboarding_home_screen_section_useful_history_description_2">Besøg dine seneste søgninger igen fra din startside og faneblade.</string>
+    <string moz:RemovedIn="106" name="onboarding_home_screen_section_useful_history_description_2" tools:ignore="UnusedResources">Besøg dine seneste søgninger igen fra din startside og faneblade.</string>
 
     <!-- Onboarding home screen popup dialog, shown on top of the Jump back in section. Firefox is intentionally hardcoded. -->
-    <string name="onboarding_home_screen_jump_back_contextual_hint" tools:ignore="UnusedResources">Din personlige startside i Firefox gør det nu lettere at fortsætte, hvor du slap. Find dine seneste faneblade, bogmærker og søgeresultater.</string>
+    <string moz:RemovedIn="106" name="onboarding_home_screen_jump_back_contextual_hint" tools:ignore="UnusedResources">Din personlige startside i Firefox gør det nu lettere at fortsætte, hvor du slap. Find dine seneste faneblade, bogmærker og søgeresultater.</string>
+
+    <!-- Onboarding home screen popup dialog, shown on top of the Jump back in section. -->
+    <string name="onboarding_home_screen_jump_back_contextual_hint_2">Mød din tilpassede startside. Seneste faneblade, bogmærker og søgeresultater vises her.</string>
+    <!-- Home onboarding dialog welcome screen title text. -->
+    <string name="onboarding_home_welcome_title">Velkommen til et uafhængigt internet</string>
+    <!-- Home onboarding dialog welcome screen description text. -->
+    <string name="onboarding_home_welcome_description">Flere farver. Bedre beskyttelse af dit privatliv. Samme forpligtelse til mennesker frem for profit.</string>
+    <!-- Home onboarding dialog sign into sync screen title text. -->
+    <string name="onboarding_home_sync_title_2">Hop fra telefonen til computeren og tilbage</string>
+    <!-- Home onboarding dialog sign into sync screen description text. -->
+    <string name="onboarding_home_sync_description">Fortsæt hvor du slap med faneblade fra andre enheder - nu på din startside.</string>
+    <!-- Text for the button to continue the onboarding on the home onboarding dialog. -->
+    <string name="onboarding_home_get_started_button">Kom i gang</string>
+    <!-- Text for the button to navigate to the sync sign in screen on the home onboarding dialog. -->
+    <string name="onboarding_home_sign_in_button">Log ind</string>
+    <!-- Text for the button to skip the onboarding on the home onboarding dialog. -->
+    <string name="onboarding_home_skip_button">Spring over</string>
+    <!-- Onboarding home screen sync popup dialog message, shown on top of Recent Synced Tabs in the Jump back in section. -->
+    <string name="sync_cfr_message">Dine faneblade synkroniseres! Fortsæt, hvor du slap, på din anden enhed.</string>
 
     <!-- Search Widget -->
     <!-- Content description for searching with a widget. The first parameter is the name of the application.-->
@@ -442,11 +471,11 @@
     <!-- Snackbar label for action to view selected wallpaper -->
     <string name="wallpaper_updated_snackbar_action">Vis</string>
     <!-- Label for switch which toggles the "tap-to-switch" behavior on home screen logo -->
-    <string name="wallpaper_tap_to_change_switch_label_1">Skift baggrund ved at trykke på Firefox-logoet på startsiden</string>
+    <string moz:removedIn="105" name="wallpaper_tap_to_change_switch_label_1" tools:ignore="UnusedResources">Skift baggrund ved at trykke på Firefox-logoet på startsiden</string>
 
     <!-- This is the accessibility content description for the wallpapers functionality. Users are
     able to tap on the app logo in the home screen and can switch to different wallpapers by tapping. -->
-    <string name="wallpaper_logo_content_description">Firefox-logo - skift baggrund, knap</string>
+    <string moz:removedIn="105" name="wallpaper_logo_content_description" tools:ignore="UnusedResources">Firefox-logo - skift baggrund, knap</string>
 
     <!-- Add-on Installation from AMO-->
     <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is not supported -->
@@ -727,8 +756,6 @@
     <string name="open_tabs_menu">Åbn faneblads-menuen</string>
     <!-- Open tabs menu item to save tabs to collection -->
     <string name="tabs_menu_save_to_collection1">Gem faneblade til samling</string>
-    <!-- Content description (not visible, for screen readers etc.): Opens the tab menu when pressed -->
-    <string moz:RemovedIn="103" name="tab_menu" tools:ignore="UnusedResources">Faneblads-menu</string>
     <!-- Text for the menu button to delete a collection -->
     <string name="collection_delete">Slet samling</string>
     <!-- Text for the menu button to rename a collection -->
@@ -778,16 +805,16 @@
     <string name="history_empty_message">Ingen historik</string>
 
     <!-- Text for the button inside History screen that opens Synced History screen. History that is coming from other devices -->
-    <string name="history_synced_from_other_devices">Synkroniseret fra andre enheder</string>
+    <string moz:removedIn="105" name="history_synced_from_other_devices" tools:ignore="UnusedResources">Synkroniseret fra andre enheder</string>
     <!-- The page title for browsing history coming from other devices. -->
-    <string name="history_from_other_devices">Fra andre enheder</string>
+    <string moz:removedIn="105" name="history_from_other_devices" tools:ignore="UnusedResources">Fra andre enheder</string>
 
     <!-- The synced history sign in dialog message -->
-    <string name="history_sign_in_message">Log ind for at se historik synkroniseret fra dine andre enheder.</string>
+    <string moz:removedIn="105" name="history_sign_in_message" tools:ignore="UnusedResources">Log ind for at se historik synkroniseret fra dine andre enheder.</string>
     <!-- The synced history sign in dialog button text -->
-    <string name="history_sign_in_button">Log ind</string>
+    <string moz:removedIn="105" name="history_sign_in_button" tools:ignore="UnusedResources">Log ind</string>
     <!-- The synced history sign in dialog create a new account link -->
-    <string name="history_sign_in_create_account"><![CDATA[<u>Eller opret en Firefox-konto for at starte synkroniseringen</u>]]></string>
+    <string moz:removedIn="105" name="history_sign_in_create_account" tools:ignore="UnusedResources"><![CDATA[<u>Eller opret en Firefox-konto for at starte synkroniseringen</u>]]></string>
 
     <!-- Downloads -->
     <!-- Text for the snackbar to confirm that multiple downloads items have been removed -->
@@ -1308,6 +1335,8 @@
     <string name="preference_enhanced_tracking_protection_custom_cookies_3">Alle tredjeparts-cookies (kan forhindre websteder i at fungere)</string>
     <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
     <string name="preference_enhanced_tracking_protection_custom_cookies_4">Alle cookies (vil forhindre websteder i at fungere)</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
+    <string name="preference_enhanced_tracking_protection_custom_cookies_5">Isoler cookies på tværs af websteder</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings for tracking content -->
     <string name="preference_enhanced_tracking_protection_custom_tracking_content">Sporings-indhold</string>
     <!-- Option for enhanced tracking protection for the custom protection settings for tracking content-->
@@ -1330,8 +1359,12 @@
     <string name="etp_social_media_trackers_description">Begrænser sociale netværks muligheder for at spore din aktivitet rundt på nettet.</string>
     <!-- Category of trackers (cross-site tracking cookies) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cookies_title">Sporings-cookies på tværs af websteder</string>
+    <!-- Category of trackers (cross-site tracking cookies) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_cookies_title_2">Cookies på tværs af websteder</string>
     <!-- Description of cross-site tracking cookies that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cookies_description">Blokerer cookies, som reklame-netværk og analyse-virksomheder bruger til at sammenstille din aktivitet på nettet på tværs af websteder.</string>
+    <!-- Description of cross-site tracking cookies that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_cookies_description_2">Komplet Cookiebeskyttelse isolerer cookies til det websted, du befinder dig på. Så kan sporings-tjenester, som fx reklamenetværk, ikke følge dig på tværs af websteder.</string>
     <!-- Category of trackers (cryptominers) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cryptominers_title">Cryptominers</string>
     <!-- Description of cryptominers that can be blocked by Enhanced Tracking Protection -->

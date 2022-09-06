@@ -82,6 +82,9 @@
     <!-- Content description for close button used in "contextual feature recommendation" (CFR) popups -->
     <string name="cfr_dismiss_button_default_content_description">知道了</string>
 
+    <!-- Total cookie protection "contextual feature recommendation" (CFR) -->
+    <!-- Text for the message displayed in the contextual feature recommendation popup promoting the total cookie protection feature. -->
+    <string name="tcp_cfr_message">我们最强大的隐私功能：隔离跨站跟踪器。</string>
     <!-- Text displayed that links to website containing documentation about the "Total cookie protection" feature. -->
     <string name="tcp_cfr_learn_more">了解“全方位 Cookie 保护”</string>
 
@@ -290,6 +293,12 @@
     <string name="onboarding_home_screen_jump_back_contextual_hint_2">认识您的个性化主页。这里将显示最近的标签页、书签和搜索结果。</string>
     <!-- Home onboarding dialog welcome screen title text. -->
     <string name="onboarding_home_welcome_title">欢迎开启不受巨头左右的互联网世界</string>
+    <!-- Home onboarding dialog welcome screen description text. -->
+    <string name="onboarding_home_welcome_description">更靓、更保护隐私，但始终不变的是以人为本的承诺。</string>
+    <!-- Home onboarding dialog sign into sync screen title text. -->
+    <string name="onboarding_home_sync_title_2">手机与 PC 快速切换</string>
+    <!-- Home onboarding dialog sign into sync screen description text. -->
+    <string name="onboarding_home_sync_description">您现在从主页就可以继续浏览其他设备上的标签页。</string>
     <!-- Text for the button to continue the onboarding on the home onboarding dialog. -->
     <string name="onboarding_home_get_started_button">开始使用</string>
     <!-- Text for the button to navigate to the sync sign in screen on the home onboarding dialog. -->
@@ -351,7 +360,7 @@
     <!-- Preference for enabling "HTTPS-Only" mode -->
     <string name="preferences_https_only_title">HTTPS-Only 模式</string>
     <!-- Description of the preference to enable "HTTPS-Only" mode. -->
-    <string name="preferences_https_only_summary">自动尝试使用 HTTPS 加密协议连接至网站，以增强安全性。</string>
+    <string name="preferences_https_only_summary">自动尝试使用 HTTPS 加密协议连接至网站，增强安全性。</string>
     <!-- Summary of tracking protection preference if tracking protection is set to on -->
     <string name="preferences_https_only_on">开启</string>
     <!-- Summary of tracking protection preference if tracking protection is set to off -->
@@ -967,7 +976,7 @@
     <!-- Preference for altering the persistent storage access for all websites -->
     <string name="preference_phone_feature_persistent_storage">持久存储</string>
     <!-- Preference for altering the storage access setting for all websites -->
-    <string name="preference_phone_feature_cross_origin_storage_access">跨网站 Cookie</string>
+    <string name="preference_phone_feature_cross_origin_storage_access">跨站 Cookie</string>
     <!-- Preference for altering the EME access for all websites -->
     <string name="preference_phone_feature_media_key_system_access">受 DRM 控制的内容</string>
     <!-- Label that indicates that a permission must be asked always -->
@@ -1375,7 +1384,7 @@
     <!-- Preference for enhanced tracking protection for the custom protection settings for cookies-->
     <string name="preference_enhanced_tracking_protection_custom_cookies">Cookie</string>
     <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
-    <string name="preference_enhanced_tracking_protection_custom_cookies_1">跨网站和社交媒体跟踪器</string>
+    <string name="preference_enhanced_tracking_protection_custom_cookies_1">跨站和社交媒体跟踪器</string>
     <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
     <string name="preference_enhanced_tracking_protection_custom_cookies_2">未访问网站的 Cookie</string>
     <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
@@ -1383,7 +1392,7 @@
     <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
     <string name="preference_enhanced_tracking_protection_custom_cookies_4">所有 Cookie（将会导致网站异常）</string>
     <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
-    <string name="preference_enhanced_tracking_protection_custom_cookies_5">隔离跨网站 Cookie</string>
+    <string name="preference_enhanced_tracking_protection_custom_cookies_5">隔离跨站 Cookie</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings for tracking content -->
     <string name="preference_enhanced_tracking_protection_custom_tracking_content">跟踪性内容</string>
     <!-- Option for enhanced tracking protection for the custom protection settings for tracking content-->
@@ -1405,11 +1414,13 @@
     <!-- Description of social media trackers that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_social_media_trackers_description">限制社交网络在网上跟踪您浏览活动的能力。</string>
     <!-- Category of trackers (cross-site tracking cookies) that can be blocked by Enhanced Tracking Protection -->
-    <string name="etp_cookies_title">跨网站跟踪性 Cookie</string>
+    <string name="etp_cookies_title">跨站跟踪性 Cookie</string>
     <!-- Category of trackers (cross-site tracking cookies) that can be blocked by Enhanced Tracking Protection -->
-    <string name="etp_cookies_title_2">跨网站 Cookie</string>
+    <string name="etp_cookies_title_2">跨站 Cookie</string>
     <!-- Description of cross-site tracking cookies that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cookies_description">拦截网络分析公司用于跨网站收集浏览数据的 Cookie。</string>
+    <!-- Description of cross-site tracking cookies that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_cookies_description_2">“全方位 Cookie 保护”能够完全隔离每个网站的 Cookie，阻止像广告联盟等这类跟踪器借其跨站跟踪您。</string>
     <!-- Category of trackers (cryptominers) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cryptominers_title">加密货币挖矿程序</string>
     <!-- Description of cryptominers that can be blocked by Enhanced Tracking Protection -->
