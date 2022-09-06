@@ -2,10 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
-
-const EXPORTED_SYMBOLS = ["StyleSheetEditor"];
-
 const { require, loader } = ChromeUtils.import(
   "resource://devtools/shared/loader/Loader.jsm"
 );
@@ -95,7 +91,7 @@ const STYLE_SHEET_UPDATE_CAUSED_BY_STYLE_EDITOR = "styleeditor";
  *        Optional Integer representing the index of the current stylesheet
  *        among all stylesheets of its type (inline or user-created)
  */
-function StyleSheetEditor(resource, win, styleSheetFriendlyIndex) {
+export function StyleSheetEditor(resource, win, styleSheetFriendlyIndex) {
   EventEmitter.decorate(this);
 
   this._resource = resource;

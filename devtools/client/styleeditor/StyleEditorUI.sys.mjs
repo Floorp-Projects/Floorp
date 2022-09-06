@@ -2,10 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
-
-const EXPORTED_SYMBOLS = ["StyleEditorUI"];
-
 const { loader, require } = ChromeUtils.import(
   "resource://devtools/shared/loader/Loader.jsm"
 );
@@ -92,7 +88,7 @@ const HTML_NS = "http://www.w3.org/1999/xhtml";
  *   'error': An error occured
  *
  */
-class StyleEditorUI extends EventEmitter {
+export class StyleEditorUI extends EventEmitter {
   #activeSummary = null;
   #commands;
   #contextMenu;

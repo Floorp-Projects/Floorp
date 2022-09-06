@@ -3,8 +3,8 @@
 
 "use strict";
 
-const { VariablesView } = ChromeUtils.import(
-  "resource://devtools/client/storage/VariablesView.jsm"
+const { VariablesView } = ChromeUtils.importESModule(
+  "resource://devtools/client/storage/VariablesView.sys.mjs"
 );
 
 const PENDING = {

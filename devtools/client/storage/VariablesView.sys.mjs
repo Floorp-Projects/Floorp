@@ -1,7 +1,8 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-"use strict";
+
+/* eslint-disable mozilla/no-aArgs */
 
 const DBG_STRINGS_URI = "devtools/client/locales/debugger.properties";
 const LAZY_EMPTY_DELAY = 150; // ms
@@ -28,6 +29,7 @@ const nodeConstants = require("devtools/shared/dom-node-constants");
 const { KeyCodes } = require("devtools/client/shared/keycodes");
 const { PluralForm } = require("devtools/shared/plural-form");
 const { LocalizationHelper, ELLIPSIS } = require("devtools/shared/l10n");
+
 const L10N = new LocalizationHelper(DBG_STRINGS_URI);
 const HTML_NS = "http://www.w3.org/1999/xhtml";
 
@@ -39,8 +41,6 @@ XPCOMUtils.defineLazyServiceGetter(
   "@mozilla.org/widget/clipboardhelper;1",
   "nsIClipboardHelper"
 );
-
-const EXPORTED_SYMBOLS = ["VariablesView", "escapeHTML"];
 
 /**
  * A tree view for inspecting scopes, objects and properties.
@@ -58,7 +58,7 @@ const EXPORTED_SYMBOLS = ["VariablesView", "escapeHTML"];
  *        An object contaning initialization options for this view.
  *        e.g. { lazyEmpty: true, searchEnabled: true ... }
  */
-function VariablesView(aParentNode, aFlags = {}) {
+export function VariablesView(aParentNode, aFlags = {}) {
   this._store = []; // Can't use a Map because Scope names needn't be unique.
   this._itemsByElement = new WeakMap();
   this._prevHierarchy = new Map();
@@ -1519,7 +1519,7 @@ Scope.prototype = {
   /**
    * Expands the scope, showing all the added details.
    */
-  expand() {
+  async expand() {
     if (this._isExpanded || this._isLocked) {
       return;
     }
@@ -1536,7 +1536,7 @@ Scope.prototype = {
       // (up to the user of VariableView to do it)
       // that can indicate when the view is done expanding
       // and attributes are available. (Mostly used for tests)
-      return this.onexpand(this);
+      await this.onexpand(this);
     }
   },
 
@@ -1615,6 +1615,7 @@ Scope.prototype = {
     if (isNaN(parseFloat(a)) && isNaN(parseFloat(b))) {
       return a < b ? -1 : 1;
     }
+    return 0;
   },
 
   /**
@@ -4188,7 +4189,7 @@ function escapeString(aString) {
  * @param string aString
  * @return string
  */
-function escapeHTML(aString) {
+export function escapeHTML(aString) {
   return aString
     .replace(/&/g, "&amp;")
     .replace(/"/g, "&quot;")

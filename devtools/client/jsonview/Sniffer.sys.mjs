@@ -1,13 +1,8 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-"use strict";
 
-var EXPORTED_SYMBOLS = ["Sniffer"];
-
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 const gPrefs = {};
 
@@ -39,7 +34,7 @@ function getContentDisposition(channel) {
  * This is done in the .js file rather than a .jsm to avoid creating
  * a compartment at startup when no JSON is being viewed.
  */
-class Sniffer {
+export class Sniffer {
   getMIMETypeFromContent(request, data, length) {
     if (request instanceof Ci.nsIChannel) {
       // JSON View is enabled only for top level loads only.

@@ -5,23 +5,13 @@
 /* All top-level definitions here are exports.  */
 /* eslint no-unused-vars: [2, {"vars": "local"}] */
 
-"use strict";
-
-const EXPORTED_SYMBOLS = [
-  "getString",
-  "assert",
-  "log",
-  "text",
-  "showFilePicker",
-  "optionsPopupMenu",
-];
-
 const PROPERTIES_URL = "chrome://devtools/locale/styleeditor.properties";
 
 const { loader, require } = ChromeUtils.import(
   "resource://devtools/shared/loader/Loader.jsm"
 );
 const Services = require("Services");
+
 const gStringBundle = Services.strings.createBundle(PROPERTIES_URL);
 
 const lazy = {};
@@ -44,7 +34,7 @@ const PREF_ORIG_SOURCES = "devtools.source-map.client-service.enabled";
  *        Optional arguments to format in the string.
  * @return string
  */
-function getString(name) {
+export function getString(name) {
   try {
     if (arguments.length == 1) {
       return gStringBundle.GetStringFromName(name);
@@ -67,7 +57,7 @@ function getString(name) {
  *        Optional message.
  * @return expression
  */
-function assert(expression, message) {
+export function assert(expression, message) {
   if (!expression) {
     const msg = message ? "ASSERTION FAILURE:" + message : "ASSERTION FAILURE";
     log(msg);
@@ -89,7 +79,7 @@ function assert(expression, message) {
  *         Text content of matching element or null if there were no element
  *         matching selector.
  */
-function text(root, selector, textContent) {
+export function text(root, selector, textContent) {
   const element = root.querySelector(selector);
   if (!element) {
     return null;
@@ -103,21 +93,6 @@ function text(root, selector, textContent) {
 }
 
 /**
- * Iterates _own_ properties of an object.
- *
- * @param object
- *        The object to iterate.
- * @param function callback(aKey, aValue)
- */
-function forEach(object, callback) {
-  for (const key in object) {
-    if (object.hasOwnProperty(key)) {
-      callback(key, object[key]);
-    }
-  }
-}
-
-/**
  * Log a message to the console.
  *
  * @param ...rest
@@ -125,7 +100,7 @@ function forEach(object, callback) {
  *        If multiple arguments are given, they will be joined by " "
  *        in the log.
  */
-function log() {
+export function log() {
   console.logStringMessage(Array.prototype.slice.call(arguments).join(" "));
 }
 
@@ -145,7 +120,7 @@ function log() {
  * @param AString suggestedFilename
  *        The suggested filename when toSave is true.
  */
-function showFilePicker(
+export function showFilePicker(
   path,
   toSave,
   parentWindow,
@@ -210,7 +185,7 @@ function showFilePicker(
  * @return {object} popupMenu
  *         A Menu object holding the MenuItems
  */
-function optionsPopupMenu(toggleOrigSources, toggleMediaSidebar) {
+export function optionsPopupMenu(toggleOrigSources, toggleMediaSidebar) {
   const popupMenu = new lazy.Menu();
   popupMenu.append(
     new lazy.MenuItem({

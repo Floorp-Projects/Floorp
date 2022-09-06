@@ -13,7 +13,7 @@ DIRS += [
 DevToolsModules(
     "panel.js",
     "ui.js",
-    "VariablesView.jsm",
+    "VariablesView.sys.mjs",
 )
 
 with Files("**"):
