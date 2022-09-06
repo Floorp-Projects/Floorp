@@ -209,11 +209,12 @@ class gfxFontEntry {
   virtual bool HasFontTable(uint32_t aTableTag);
 
   inline bool HasGraphiteTables() {
-    if (!mCheckedForGraphiteTables) {
-      CheckForGraphiteTables();
-      mCheckedForGraphiteTables = true;
+    LazyFlag flag = mHasGraphiteTables;
+    if (flag == LazyFlag::Uninitialized) {
+      flag = CheckForGraphiteTables() ? LazyFlag::Yes : LazyFlag::No;
+      mHasGraphiteTables = flag;
     }
-    return mHasGraphiteTables;
+    return flag == LazyFlag::Yes;
   }
 
   inline bool HasCmapTable() {
@@ -268,12 +269,15 @@ class gfxFontEntry {
   bool TryGetColorGlyphs();
 
   bool HasColorBitmapTable() {
-    if (!mCheckedForColorBitmapTables) {
-      mHasColorBitmapTable = HasFontTable(TRUETYPE_TAG('C', 'B', 'D', 'T')) ||
-                             HasFontTable(TRUETYPE_TAG('s', 'b', 'i', 'x'));
-      mCheckedForColorBitmapTables = true;
+    LazyFlag flag = mHasColorBitmapTable;
+    if (flag == LazyFlag::Uninitialized) {
+      flag = HasFontTable(TRUETYPE_TAG('C', 'B', 'D', 'T')) ||
+                     HasFontTable(TRUETYPE_TAG('s', 'b', 'i', 'x'))
+                 ? LazyFlag::Yes
+                 : LazyFlag::No;
+      mHasColorBitmapTable = flag;
     }
-    return mHasColorBitmapTable;
+    return flag == LazyFlag::Yes;
   }
 
   // Access to raw font table data (needed for Harfbuzz):
@@ -582,22 +586,29 @@ class gfxFontEntry {
   bool mSkipDefaultFeatureSpaceCheck : 1;
 
   mozilla::Atomic<bool> mSVGInitialized;
-  mozilla::Atomic<bool> mHasSpaceFeaturesInitialized;
-  mozilla::Atomic<bool> mHasSpaceFeatures;
-  mozilla::Atomic<bool> mHasSpaceFeaturesKerning;
-  mozilla::Atomic<bool> mHasSpaceFeaturesNonKerning;
-  mozilla::Atomic<bool> mGraphiteSpaceContextualsInitialized;
-  mozilla::Atomic<bool> mHasGraphiteSpaceContextuals;
-  mozilla::Atomic<bool> mSpaceGlyphIsInvisible;
-  mozilla::Atomic<bool> mSpaceGlyphIsInvisibleInitialized;
-  mozilla::Atomic<bool> mHasGraphiteTables;
-  mozilla::Atomic<bool> mCheckedForGraphiteTables;
   mozilla::Atomic<bool> mHasCmapTable;
   mozilla::Atomic<bool> mGrFaceInitialized;
   mozilla::Atomic<bool> mCheckedForColorGlyph;
   mozilla::Atomic<bool> mCheckedForVariationAxes;
-  mozilla::Atomic<bool> mHasColorBitmapTable;
-  mozilla::Atomic<bool> mCheckedForColorBitmapTables;
+
+  // Atomic flags that are lazily evaluated - initially set to UNINITIALIZED,
+  // changed to NO or YES once we determine the actual value.
+  enum class LazyFlag : uint8_t { Uninitialized = 0xff, No = 0, Yes = 1 };
+
+  std::atomic<LazyFlag> mSpaceGlyphIsInvisible;
+  std::atomic<LazyFlag> mHasGraphiteTables;
+  std::atomic<LazyFlag> mHasGraphiteSpaceContextuals;
+  std::atomic<LazyFlag> mHasColorBitmapTable;
+
+  enum class SpaceFeatures : uint8_t {
+    Uninitialized = 0xff,
+    None = 0,
+    HasFeatures = 1 << 0,
+    Kerning = 1 << 1,
+    NonKerning = 1 << 2
+  };
+
+  std::atomic<SpaceFeatures> mHasSpaceFeatures;
 
  protected:
   friend class gfxPlatformFontList;
@@ -609,7 +620,9 @@ class gfxFontEntry {
 
   virtual gfxFont* CreateFontInstance(const gfxFontStyle* aFontStyle) = 0;
 
-  virtual void CheckForGraphiteTables();
+  inline bool CheckForGraphiteTables() {
+    return HasFontTable(TRUETYPE_TAG('S', 'i', 'l', 'f'));
+  }
 
   // Copy a font table into aBuffer.
   // The caller will be responsible for ownership of the data.
@@ -803,6 +816,7 @@ class gfxFontEntry {
 };
 
 MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(gfxFontEntry::RangeFlags)
+MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(gfxFontEntry::SpaceFeatures)
 
 inline bool gfxFontEntry::SupportsItalic() {
   return SlantStyle().Max().IsItalic() ||
