@@ -20,8 +20,8 @@
   --in-content-item-selected: var(--in-content-primary-button-background);
   --in-content-item-selected-text: var(--in-content-primary-button-text-color);
   --in-content-icon-color: rgb(91,91,102);
-  --in-content-accent-color: #0a84ff;
-  --in-content-accent-color-active: #0060df;
+  --in-content-accent-color: var(--in-content-primary-button-background);
+  --in-content-accent-color-active: var(--in-content-primary-button-background-hover);
   --in-content-border-hover: var(--grey-90-a50);
   --in-content-border-invalid: var(--red-50);
   --in-content-border-color: #d7d7db;
@@ -160,8 +160,6 @@
 
     --in-content-table-background: rgb(35, 34, 43);
 
-    --in-content-accent-color: var(--in-content-primary-button-background);
-    --in-content-accent-color-active: var(--in-content-primary-button-background-hover);
     --in-content-link-color: var(--in-content-primary-button-background);
     --in-content-link-color-hover: var(--in-content-primary-button-background-hover);
     --in-content-link-color-active: var(--in-content-primary-button-background-active);
