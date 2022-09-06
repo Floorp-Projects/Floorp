@@ -11,13 +11,10 @@ namespace js {
 namespace frontend {
 
 class ErrorReporter;
-class FullParseHandler;
 
 struct BCEParserHandle {
   virtual ErrorReporter& errorReporter() = 0;
   virtual const ErrorReporter& errorReporter() const = 0;
-
-  virtual FullParseHandler& astGenerator() = 0;
 };
 
 }  // namespace frontend
