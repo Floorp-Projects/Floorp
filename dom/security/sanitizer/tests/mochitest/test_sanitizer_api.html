@@ -98,13 +98,30 @@ SimpleTest.waitForExplicitFinish();
         dropAttributes: { 'title': ['p'] },
       },
     },
+    {
+      // URL does not really matter. We do not really test whether the SVG is loaded or not.
+      testString: `<svg><use href='http://example.com/test.svg'></svg>`,
+      testExpected: `<svg><use></use></svg>`,
+    },
+    {
+      // fragments that reference the same document are allowed.
+      testString: `<svg><use href='#x'></svg>`,
+      testExpected: `<svg><use href="#x"></use></svg>`,
+    }
   ];
 
 
   const div = document.createElement("div");
   for (let test of testCases) {
     const {testString, testExpected, sanitizerOptions} = test;
-    const testSanitizer = new Sanitizer(sanitizerOptions);
+
+    let testSanitizer;
+    // there's a difference whether we supply empty options or no options at all.
+    if (sanitizerOptions) {
+      testSanitizer = new Sanitizer(sanitizerOptions);
+    } else {
+      testSanitizer = new Sanitizer();
+    }
 
     for (let testInputAndType of possibleInputTypes(testString)) {
       const {testInput, testType} = testInputAndType;
