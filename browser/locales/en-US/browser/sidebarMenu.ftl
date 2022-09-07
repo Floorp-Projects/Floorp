@@ -45,4 +45,4 @@ show-CustomURL-sidebar =
  .label = Show Custom URL Sidebar
 
 Edit-Custom-URL =
- .label = Edit Custom URL Sidebar URL
+ .label = Edit Custom URL in Sidebar
