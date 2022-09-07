@@ -773,11 +773,7 @@ pref("browser.tabs.tooltipsShowPidAndActiveness", true);
 pref("browser.tabs.tooltipsShowPidAndActiveness", false);
 #endif
 
-#ifdef NIGHTLY_BUILD
 pref("browser.tabs.firefox-view", true);
-#else
-pref("browser.tabs.firefox-view", false);
-#endif
 
 // allow_eval_* is enabled on Firefox Desktop only at this
 // point in time
