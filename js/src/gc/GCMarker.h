@@ -253,7 +253,7 @@ enum MarkingState : uint8_t {
   IterativeMarking
 };
 
-class GCMarker final : public GenericTracerImpl<GCMarker> {
+class GCMarker final : public JSTracer {
  public:
   explicit GCMarker(JSRuntime* rt);
   [[nodiscard]] bool init();
@@ -266,10 +266,6 @@ class GCMarker final : public GenericTracerImpl<GCMarker> {
   void start();
   void stop();
   void reset();
-
-  template <typename T>
-  void onEdge(T** thingp, const char* name);
-  friend class js::GenericTracerImpl<GCMarker>;
 
   // If |thing| is unmarked, mark it and then traverse its children.
   template <typename T>

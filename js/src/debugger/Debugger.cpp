@@ -3849,7 +3849,7 @@ void DebugAPI::slowPathTraceGeneratorFrame(JSTracer* tracer,
   // precisely, but they're both generic tracers, so we just show them all the
   // door. This means the generator -> Debugger.Frame edge is going to be
   // invisible to some traversals. We'll cope with that when it's a problem.
-  if (!tracer->isMarkingTracer()) {
+  if (tracer->isGenericTracer()) {
     return;
   }
 

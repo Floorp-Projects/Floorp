@@ -9,11 +9,7 @@
 
 #include "mozilla/Maybe.h"
 
-#include "gc/Barrier.h"
-#include "js/HashTable.h"
-#include "js/RootingAPI.h"
-
-class JSObject;
+#include "gc/Tracer.h"
 
 namespace js {
 
@@ -52,7 +48,13 @@ class TaggedProto {
 
   HashNumber hashCode() const;
 
-  void trace(JSTracer* trc);
+  void trace(JSTracer* trc) {
+    // It's not safe to trace unbarriered pointers except as part of root
+    // marking.
+    if (isObject()) {
+      TraceRoot(trc, &proto, "TaggedProto");
+    }
+  }
 
  private:
   JSObject* proto;
