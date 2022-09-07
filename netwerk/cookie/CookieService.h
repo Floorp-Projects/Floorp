@@ -121,6 +121,7 @@ class CookieService final : public nsICookieService,
   static bool CheckDomain(CookieStruct& aCookieData, nsIURI* aHostURI,
                           const nsACString& aBaseDomain,
                           bool aRequireHostMatch);
+  static bool CheckHiddenPrefix(CookieStruct& aCookieData);
   static bool CheckPath(CookieStruct& aCookieData,
                         nsIConsoleReportCollector* aCRC, nsIURI* aHostURI);
   static bool CheckPrefixes(CookieStruct& aCookieData, bool aSecureRequest);
