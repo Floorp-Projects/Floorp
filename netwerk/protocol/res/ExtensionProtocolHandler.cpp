@@ -426,6 +426,11 @@ nsresult ExtensionProtocolHandler::GetFlagsForURI(nsIURI* aURI,
       } else {
         flags |= WEBEXT_URI_WEB_ACCESSIBLE;
       }
+    } else if (policy->Type() == nsGkAtoms::theme) {
+      // Static themes cannot set web accessible resources, however using this
+      // flag here triggers SourceMayAccessPath calls necessary to allow another
+      // extension to access static theme resources in this extension.
+      flags |= WEBEXT_URI_WEB_ACCESSIBLE;
     } else {
       flags |= URI_DANGEROUS_TO_LOAD;
     }

@@ -569,3 +569,52 @@ add_task(async function test_WebExtensionPolicy_registerContentScripts() {
     "script2 has been removed from the policy contentScripts"
   );
 });
+
+add_task(async function test_WebExtensionPolicy_static_themes_resources() {
+  const uuid = "0e7ae607-b5b3-4204-9838-c2138c14bc3c";
+  const mozExtURL = `moz-extension://${uuid}/`;
+  const mozExtURI = newURI(mozExtURL);
+
+  let policy = new WebExtensionPolicy({
+    id: "test-extension@mochitest",
+    mozExtensionHostname: uuid,
+    baseURL: "file:///foo/foo/",
+    localizeCallback() {},
+    allowedOrigins: new MatchPatternSet([]),
+    permissions: [],
+  });
+  policy.active = true;
+
+  let staticThemePolicy = new WebExtensionPolicy({
+    id: "statictheme@bar.baz",
+    mozExtensionHostname: "164d05dc-b45b-4731-aefc-7c1691bae9a4",
+    baseURL: "file:///static_theme/",
+    type: "theme",
+    allowedOrigins: new MatchPatternSet([]),
+    localizeCallback() {},
+  });
+
+  staticThemePolicy.active = true;
+
+  ok(
+    staticThemePolicy.sourceMayAccessPath(mozExtURI, "/someresource.ext"),
+    "Active extensions should be allowed to access the static themes resources"
+  );
+
+  policy.active = false;
+
+  ok(
+    !staticThemePolicy.sourceMayAccessPath(mozExtURI, "/someresource.ext"),
+    "Disabled extensions should be disallowed the static themes resources"
+  );
+
+  ok(
+    !staticThemePolicy.sourceMayAccessPath(
+      Services.io.newURI("http://example.com"),
+      "/someresource.ext"
+    ),
+    "Web content should be disallowed the static themes resources"
+  );
+
+  staticThemePolicy.active = false;
+});

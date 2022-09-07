@@ -181,6 +181,7 @@ WebExtensionPolicy::WebExtensionPolicy(GlobalObject& aGlobal,
                                        ErrorResult& aRv)
     : mId(NS_AtomizeMainThread(aInit.mId)),
       mName(aInit.mName),
+      mType(NS_AtomizeMainThread(aInit.mType)),
       mManifestVersion(aInit.mManifestVersion),
       mExtensionPageCSP(aInit.mExtensionPageCSP),
       mLocalizeCallback(aInit.mLocalizeCallback),
@@ -437,6 +438,30 @@ bool WebExtensionPolicy::IsExtensionProcess(GlobalObject& aGlobal) {
 /* static */
 bool WebExtensionPolicy::BackgroundServiceWorkerEnabled(GlobalObject& aGlobal) {
   return StaticPrefs::extensions_backgroundServiceWorker_enabled_AtStartup();
+}
+
+bool WebExtensionPolicy::SourceMayAccessPath(const URLInfo& aURI,
+                                             const nsAString& aPath) const {
+  if (aURI.Scheme() == nsGkAtoms::moz_extension &&
+      mHostname.Equals(aURI.Host())) {
+    // An extension can always access it's own paths.
+    return true;
+  }
+  // Bug 1786564 Static themes need to allow access to theme resources.
+  if (mType == nsGkAtoms::theme) {
+    WebExtensionPolicy* policy = EPS().GetByHost(aURI.Host());
+    return policy != nullptr;
+  }
+
+  if (mManifestVersion < 3) {
+    return IsWebAccessiblePath(aPath);
+  }
+  for (const auto& resource : mWebAccessibleResources) {
+    if (resource->SourceMayAccessPath(aURI, aPath)) {
+      return true;
+    }
+  }
+  return false;
 }
 
 namespace {
