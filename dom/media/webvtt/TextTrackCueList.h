@@ -22,7 +22,7 @@ class TextTrackCue;
 class TextTrackCueList final : public nsISupports, public nsWrapperCache {
  public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(TextTrackCueList)
+  NS_DECL_CYCLE_COLLECTION_WRAPPERCACHE_CLASS(TextTrackCueList)
 
   // TextTrackCueList WebIDL
   explicit TextTrackCueList(nsISupports* aParent);

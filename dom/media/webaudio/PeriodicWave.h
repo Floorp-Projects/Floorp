@@ -26,7 +26,7 @@ class PeriodicWave final : public nsWrapperCache {
                ErrorResult& aRv);
 
   NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(PeriodicWave)
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(PeriodicWave)
+  NS_DECL_CYCLE_COLLECTION_NATIVE_WRAPPERCACHE_CLASS(PeriodicWave)
 
   static already_AddRefed<PeriodicWave> Constructor(
       const GlobalObject& aGlobal, AudioContext& aAudioContext,

@@ -14,7 +14,7 @@ namespace mozilla::dom {
 class ConsoleInstance final : public nsISupports, public nsWrapperCache {
  public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(ConsoleInstance)
+  NS_DECL_CYCLE_COLLECTION_WRAPPERCACHE_CLASS(ConsoleInstance)
 
   explicit ConsoleInstance(JSContext* aCx,
                            const ConsoleInstanceOptions& aOptions);

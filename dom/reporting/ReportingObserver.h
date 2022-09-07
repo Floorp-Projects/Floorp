@@ -33,7 +33,7 @@ struct ReportingObserverOptions;
 class ReportingObserver final : public nsWrapperCache {
  public:
   NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(ReportingObserver)
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(ReportingObserver)
+  NS_DECL_CYCLE_COLLECTION_NATIVE_WRAPPERCACHE_CLASS(ReportingObserver)
 
   static already_AddRefed<ReportingObserver> Constructor(
       const GlobalObject& aGlobal, ReportingObserverCallback& aCallback,

@@ -50,8 +50,7 @@ class SimpleGlobalObject : public nsIGlobalObject, public nsWrapperCache {
                                                      JS::UndefinedHandleValue);
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_AMBIGUOUS(SimpleGlobalObject,
-                                                         nsIGlobalObject)
+  NS_DECL_CYCLE_COLLECTION_WRAPPERCACHE_CLASS(SimpleGlobalObject)
 
   // Gets the GlobalType of this SimpleGlobalObject.
   GlobalType Type() const { return mType; }

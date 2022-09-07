@@ -16,7 +16,7 @@ namespace mozilla::dom {
 class DeviceRotationRate final : public nsWrapperCache {
  public:
   NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(DeviceRotationRate)
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(DeviceRotationRate)
+  NS_DECL_CYCLE_COLLECTION_NATIVE_WRAPPERCACHE_CLASS(DeviceRotationRate)
 
   DeviceRotationRate(DeviceMotionEvent* aOwner, const Nullable<double>& aAlpha,
                      const Nullable<double>& aBeta,
@@ -44,7 +44,7 @@ class DeviceRotationRate final : public nsWrapperCache {
 class DeviceAcceleration final : public nsWrapperCache {
  public:
   NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(DeviceAcceleration)
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(DeviceAcceleration)
+  NS_DECL_CYCLE_COLLECTION_NATIVE_WRAPPERCACHE_CLASS(DeviceAcceleration)
 
   DeviceAcceleration(DeviceMotionEvent* aOwner, const Nullable<double>& aX,
                      const Nullable<double>& aY, const Nullable<double>& aZ);

@@ -28,7 +28,7 @@ class PerformanceEntry : public nsISupports, public nsWrapperCache {
                    const nsAString& aEntryType);
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(PerformanceEntry)
+  NS_DECL_CYCLE_COLLECTION_WRAPPERCACHE_CLASS(PerformanceEntry)
 
   nsISupports* GetParentObject() const { return mParent; }
 

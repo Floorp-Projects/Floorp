@@ -44,7 +44,7 @@ class Promise;
 class RTCCertificate final : public nsISupports, public nsWrapperCache {
  public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(RTCCertificate)
+  NS_DECL_CYCLE_COLLECTION_WRAPPERCACHE_CLASS(RTCCertificate)
 
   // WebIDL method that implements RTCPeerConnection.generateCertificate.
   static already_AddRefed<Promise> GenerateCertificate(

@@ -20,7 +20,7 @@ namespace mozilla::intl {
 class L10nFileSource : public nsWrapperCache {
  public:
   NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(L10nFileSource)
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(L10nFileSource)
+  NS_DECL_CYCLE_COLLECTION_NATIVE_WRAPPERCACHE_CLASS(L10nFileSource)
 
   explicit L10nFileSource(RefPtr<const ffi::FileSource> aRaw,
                           nsIGlobalObject* aGlobal = nullptr);

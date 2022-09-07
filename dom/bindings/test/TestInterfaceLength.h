@@ -18,7 +18,7 @@ namespace mozilla::dom {
 class TestInterfaceLength final : public nsWrapperCache {
  public:
   NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(TestInterfaceLength)
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(TestInterfaceLength)
+  NS_DECL_CYCLE_COLLECTION_NATIVE_WRAPPERCACHE_CLASS(TestInterfaceLength)
 
  public:
   TestInterfaceLength() = default;

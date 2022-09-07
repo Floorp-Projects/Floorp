@@ -64,7 +64,7 @@ class nsWindowRoot final : public nsPIWindowRoot {
 
   JSObject* WrapObject(JSContext*, JS::Handle<JSObject*> aGivenProto) override;
 
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(nsWindowRoot)
+  NS_DECL_CYCLE_COLLECTION_WRAPPERCACHE_CLASS(nsWindowRoot)
 
   void AddBrowser(nsIRemoteTab* aBrowser) override;
   void RemoveBrowser(nsIRemoteTab* aBrowser) override;

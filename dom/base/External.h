@@ -17,7 +17,7 @@ namespace mozilla::dom {
 class External : public nsWrapperCache {
  public:
   NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(External)
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(External)
+  NS_DECL_CYCLE_COLLECTION_NATIVE_WRAPPERCACHE_CLASS(External)
 
   explicit External(nsISupports* aParent) : mParent(aParent) {}
 

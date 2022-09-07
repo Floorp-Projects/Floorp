@@ -35,7 +35,7 @@ class PerformanceObserverEntryList final : public nsISupports,
                                JS::Handle<JSObject*> aGivenProto) override;
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(PerformanceObserverEntryList)
+  NS_DECL_CYCLE_COLLECTION_WRAPPERCACHE_CLASS(PerformanceObserverEntryList)
 
   void GetEntries(const PerformanceEntryFilterOptions& aFilter,
                   nsTArray<RefPtr<PerformanceEntry>>& aRetval);

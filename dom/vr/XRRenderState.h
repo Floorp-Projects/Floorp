@@ -18,7 +18,7 @@ class XRWebGLLayer;
 class XRRenderState final : public nsWrapperCache {
  public:
   NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(XRRenderState)
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(XRRenderState)
+  NS_DECL_CYCLE_COLLECTION_NATIVE_WRAPPERCACHE_CLASS(XRRenderState)
 
   explicit XRRenderState(nsISupports* aParent, XRSession* aSession);
   explicit XRRenderState(const XRRenderState& aOther);

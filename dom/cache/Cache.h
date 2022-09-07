@@ -114,7 +114,7 @@ class Cache final : public nsISupports,
 
  public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(Cache)
+  NS_DECL_CYCLE_COLLECTION_WRAPPERCACHE_CLASS(Cache)
 };
 
 }  // namespace cache

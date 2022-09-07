@@ -80,8 +80,8 @@ class Localization : public nsIObserver,
 
  public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_AMBIGUOUS(Localization,
-                                                         nsIObserver)
+  NS_DECL_CYCLE_COLLECTION_WRAPPERCACHE_CLASS_AMBIGUOUS(Localization,
+                                                        nsIObserver)
   NS_DECL_NSIOBSERVER
 
   static already_AddRefed<Localization> Constructor(

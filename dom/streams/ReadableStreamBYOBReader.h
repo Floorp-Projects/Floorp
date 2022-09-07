@@ -31,7 +31,7 @@ class ReadableStreamBYOBReader final : public ReadableStreamGenericReader,
                                        public nsWrapperCache {
  public:
   NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(
+  NS_DECL_CYCLE_COLLECTION_WRAPPERCACHE_CLASS_INHERITED(
       ReadableStreamBYOBReader, ReadableStreamGenericReader)
 
  public:

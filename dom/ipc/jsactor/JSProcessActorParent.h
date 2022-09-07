@@ -24,8 +24,7 @@ namespace dom {
 class JSProcessActorParent final : public JSActor {
  public:
   NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(JSProcessActorParent,
-                                                         JSActor)
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(JSProcessActorParent, JSActor)
 
   explicit JSProcessActorParent(nsISupports* aGlobal = nullptr)
       : JSActor(aGlobal) {}
