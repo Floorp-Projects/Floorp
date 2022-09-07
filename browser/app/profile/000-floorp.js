@@ -50,7 +50,17 @@ pref("floorp.browser.rest.mode", false);// 休止モード
 pref("floorp.browser.sidebar.right", true);// サイドバーの右側を表示
 pref("floorp.browser.sidebar.enable", false);// サイドバーを表示
 pref("floorp.browser.sidebar2.mode", 0);// サイドバーのモード
-pref("floorp.browser.sidebar2.customurl", "");// サイドバーのカスタムURL
+pref("floorp.browser.sidebar2.customurl1", "");// サイドバーのカスタムURL
+pref("floorp.browser.sidebar2.customurl2", "");// サイドバーのカスタムURL
+pref("floorp.browser.sidebar2.customurl3", "");// サイドバーのカスタムURL
+pref("floorp.browser.sidebar2.customurl4", "");// サイドバーのカスタムURL
+pref("floorp.browser.sidebar2.customurl5", "");// サイドバーのカスタムURL
+pref("floorp.browser.sidebar2.customurl6", "");// サイドバーのカスタムURL
+pref("floorp.browser.sidebar2.customurl7", "");// サイドバーのカスタムURL
+pref("floorp.browser.sidebar2.customurl8", "");// サイドバーのカスタムURL
+pref("floorp.browser.sidebar2.customurl9", "");// サイドバーのカスタムURL
+pref("floorp.browser.sidebar2.customurl10", "");// サイドバーのカスタムURL
+
 
 pref("contentblocking.cryptomining_blocking_enabled", true);
 pref("contentblocking.cryptomining_blocking_enabled",true);
@@ -73,6 +83,7 @@ pref("floorp.multitab.bottommode", false);
 pref("browser.search.separatePrivateDefault", true);
 pref("browser.search.separatePrivateDefault.ui.enabled", true);
 pref("browser.urlbar.update2.engineAliasRefresh", true);
+pref("devtools.debugger.prompt-connection", false);
 
 //個人設定の同期無効
 pref("services.sync.engine.prefs", false); // Never sync prefs, addons, or tabs with other browsers

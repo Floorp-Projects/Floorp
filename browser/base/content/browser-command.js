@@ -110,9 +110,36 @@
         setTreeStyleTabURL();
        break;
       case 5:
-       sidebar2elem.setAttribute("src", Services.prefs.getStringPref("floorp.browser.sidebar2.customurl", undefined));
+       sidebar2elem.setAttribute("src", Services.prefs.getStringPref("floorp.browser.sidebar2.customurl1", undefined));
        break;
-    }
+      case 6:
+        sidebar2elem.setAttribute("src", Services.prefs.getStringPref("floorp.browser.sidebar2.customurl2", undefined));
+        break;
+      case 7:
+        sidebar2elem.setAttribute("src", Services.prefs.getStringPref("floorp.browser.sidebar2.customurl3", undefined));
+        break;
+      case 8:
+        sidebar2elem.setAttribute("src", Services.prefs.getStringPref("floorp.browser.sidebar2.customurl4", undefined));
+        break;
+      case 9:
+        sidebar2elem.setAttribute("src", Services.prefs.getStringPref("floorp.browser.sidebar2.customurl5", undefined));
+        break;
+      case 10:
+        sidebar2elem.setAttribute("src", Services.prefs.getStringPref("floorp.browser.sidebar2.customurl6", undefined));
+        break;
+      case 11:
+        sidebar2elem.setAttribute("src", Services.prefs.getStringPref("floorp.browser.sidebar2.customurl7", undefined));
+        break;
+      case 12:
+        sidebar2elem.setAttribute("src", Services.prefs.getStringPref("floorp.browser.sidebar2.customurl8", undefined));
+        break;
+      case 13:
+        sidebar2elem.setAttribute("src", Services.prefs.getStringPref("floorp.browser.sidebar2.customurl9", undefined));
+        break;
+      case 14:
+        sidebar2elem.setAttribute("src", Services.prefs.getStringPref("floorp.browser.sidebar2.customurl10", undefined));
+        break;
+     }
   }
 }
    function changeSidebarVisibility() {
@@ -143,22 +170,45 @@
       changeSidebarVisibility();
     }
   }
-  function setCustomURLFavicon() {
-    document.getElementById("select-CustomURL").style.listStyleImage = 
-    "url(" + "http://www.google.com/s2/favicons?domain=" + Services.prefs.getStringPref("floorp.browser.sidebar2.customurl") + ")"
+  function setCustomURL1Favicon() {
+    document.getElementById("select-CustomURL1").style.listStyleImage = 
+    "url(" + "http://www.google.com/s2/favicons?domain=" + Services.prefs.getStringPref("floorp.browser.sidebar2.customurl1") + ")"
   }
-
-  function EditCustomURL() {
-    const URL_PREF = "floorp.browser.sidebar2.customurl"
-    let l10n = new Localization(["browser/preferences/preferences.ftl"], true);
-    url = window.prompt(l10n.formatValueSync("set-customurl"), Services.prefs.getStringPref(URL_PREF));
-    if (!url.match(/https:\/\// || !url.match(/http:\/\//))) {
-      url = "http://" + url;
-    }
-    Services.prefs.setStringPref("floorp.browser.sidebar2.customurl", url);
-    if(url != "" && url != null){
-      window.alert(l10n.formatValueSync("seted-url") + " " + url);
-    }
+  function setCustomURL2Favicon() {
+    document.getElementById("select-CustomURL2").style.listStyleImage = 
+    "url(" + "http://www.google.com/s2/favicons?domain=" + Services.prefs.getStringPref("floorp.browser.sidebar2.customurl2") + ")"
+  }
+  function setCustomURL3Favicon() {
+    document.getElementById("select-CustomURL3").style.listStyleImage = 
+    "url(" + "http://www.google.com/s2/favicons?domain=" + Services.prefs.getStringPref("floorp.browser.sidebar2.customurl3") + ")"
+  }
+  function setCustomURL4Favicon() {
+    document.getElementById("select-CustomURL4").style.listStyleImage = 
+    "url(" + "http://www.google.com/s2/favicons?domain=" + Services.prefs.getStringPref("floorp.browser.sidebar2.customurl4") + ")"
+  }
+  function setCustomURL5Favicon() {
+    document.getElementById("select-CustomURL5").style.listStyleImage = 
+    "url(" + "http://www.google.com/s2/favicons?domain=" + Services.prefs.getStringPref("floorp.browser.sidebar2.customurl5") + ")"
+  }
+  function setCustomURL6Favicon() {
+    document.getElementById("select-CustomURL6").style.listStyleImage = 
+    "url(" + "http://www.google.com/s2/favicons?domain=" + Services.prefs.getStringPref("floorp.browser.sidebar2.customurl6") + ")"
+  }
+  function setCustomURL7Favicon() {
+    document.getElementById("select-CustomURL7").style.listStyleImage = 
+    "url(" + "http://www.google.com/s2/favicons?domain=" + Services.prefs.getStringPref("floorp.browser.sidebar2.customurl7") + ")"
+  }
+  function setCustomURL8Favicon() {
+    document.getElementById("select-CustomURL8").style.listStyleImage = 
+    "url(" + "http://www.google.com/s2/favicons?domain=" + Services.prefs.getStringPref("floorp.browser.sidebar2.customurl8") + ")"
+  }
+  function setCustomURL9Favicon() {
+    document.getElementById("select-CustomURL9").style.listStyleImage = 
+    "url(" + "http://www.google.com/s2/favicons?domain=" + Services.prefs.getStringPref("floorp.browser.sidebar2.customurl9") + ")"
+  }
+  function setCustomURL10Favicon() {
+    document.getElementById("select-CustomURL10").style.listStyleImage = 
+    "url(" + "http://www.google.com/s2/favicons?domain=" + Services.prefs.getStringPref("floorp.browser.sidebar2.customurl10") + ")"
   }
 
   function backSidebarSite() {
@@ -197,11 +247,99 @@
     Services.prefs.setIntPref("floorp.browser.sidebar2.mode", 4);
     ViewBrowserManagerSidebar();
   }
-  function setCustomSidebarMode() {
+  function setCustomSidebarMode1() {
     Services.prefs.setIntPref("floorp.browser.sidebar2.mode", 5);
     ViewBrowserManagerSidebar();
   }
+  function setCustomSidebarMode2() {
+    Services.prefs.setIntPref("floorp.browser.sidebar2.mode", 6);
+    ViewBrowserManagerSidebar();
+  }
+  function setCustomSidebarMode3() {
+    Services.prefs.setIntPref("floorp.browser.sidebar2.mode", 7);
+    ViewBrowserManagerSidebar();
+  }
+  function setCustomSidebarMode4() {
+    Services.prefs.setIntPref("floorp.browser.sidebar2.mode", 8);
+    ViewBrowserManagerSidebar();
+  }
+  function setCustomSidebarMode5() {
+    Services.prefs.setIntPref("floorp.browser.sidebar2.mode", 9);
+    ViewBrowserManagerSidebar();
+  }
+  function setCustomSidebarMode6() {
+    Services.prefs.setIntPref("floorp.browser.sidebar2.mode", 10);
+    ViewBrowserManagerSidebar();
+  }
+  function setCustomSidebarMode7() {
+    Services.prefs.setIntPref("floorp.browser.sidebar2.mode", 11);
+    ViewBrowserManagerSidebar();
+  }
+  function setCustomSidebarMode8() {
+    Services.prefs.setIntPref("floorp.browser.sidebar2.mode", 12);
+    ViewBrowserManagerSidebar();
+  }
+  function setCustomSidebarMode9() {
+    Services.prefs.setIntPref("floorp.browser.sidebar2.mode", 13);
+    ViewBrowserManagerSidebar();
+  }
+  function setCustomSidebarMode10() {
+    Services.prefs.setIntPref("floorp.browser.sidebar2.mode", 14);
+    ViewBrowserManagerSidebar();
+  }
 
+  function setSidebarIconView() {
+  if(Services.prefs.getStringPref("floorp.browser.sidebar2.customurl1", undefined) != ""){
+    document.getElementById("select-CustomURL1").hidden = false;
+  }else{
+    document.getElementById("select-CustomURL1").hidden = true;
+  }
+  if(Services.prefs.getStringPref("floorp.browser.sidebar2.customurl2", undefined) != ""){
+    document.getElementById("select-CustomURL2").hidden = false;
+  }else{
+    document.getElementById("select-CustomURL2").hidden = true;
+  }
+  if(Services.prefs.getStringPref("floorp.browser.sidebar2.customurl3", undefined) != ""){
+    document.getElementById("select-CustomURL3").hidden = false;
+  }else{
+    document.getElementById("select-CustomURL3").hidden = true;
+  }
+  if(Services.prefs.getStringPref("floorp.browser.sidebar2.customurl4", undefined) != ""){
+    document.getElementById("select-CustomURL4").hidden = false;
+  }else{
+    document.getElementById("select-CustomURL4").hidden = true;
+  }
+  if(Services.prefs.getStringPref("floorp.browser.sidebar2.customurl5", undefined) != ""){
+    document.getElementById("select-CustomURL5").hidden = false;
+  }else{
+    document.getElementById("select-CustomURL5").hidden = true;
+  }
+  if(Services.prefs.getStringPref("floorp.browser.sidebar2.customurl6", undefined) != ""){
+    document.getElementById("select-CustomURL6").hidden = false;
+  }else{
+    document.getElementById("select-CustomURL6").hidden = true;
+  }
+  if(Services.prefs.getStringPref("floorp.browser.sidebar2.customurl7", undefined) != ""){
+    document.getElementById("select-CustomURL7").hidden = false;
+  }else{
+    document.getElementById("select-CustomURL7").hidden = true;
+  }
+  if(Services.prefs.getStringPref("floorp.browser.sidebar2.customurl8", undefined) != ""){
+    document.getElementById("select-CustomURL8").hidden = false;
+  }else{
+    document.getElementById("select-CustomURL8").hidden = true;
+  }
+  if(Services.prefs.getStringPref("floorp.browser.sidebar2.customurl9", undefined) != ""){
+    document.getElementById("select-CustomURL9").hidden = false;
+  }else{
+    document.getElementById("select-CustomURL9").hidden = true;
+  }
+  if(Services.prefs.getStringPref("floorp.browser.sidebar2.customurl10", undefined) != ""){
+    document.getElementById("select-CustomURL10").hidden = false;
+  }else{
+    document.getElementById("select-CustomURL10").hidden = true;
+  }
+}
 
 /*---------------------------------------------------------------- design ----------------------------------------------------------------*/
 

@@ -3863,15 +3863,9 @@ window.setTimeout(function(){
   el.addEventListener("click", opentreestyletaboption, false);
 
   document.getElementById("SetCustomURL").addEventListener("click", function(){
-    const URL_PREF = "floorp.browser.sidebar2.customurl"
-    let l10n = new Localization(["browser/preferences/preferences.ftl"], true);
-    url = window.prompt(l10n.formatValueSync("set-customurl"), Services.prefs.getStringPref(URL_PREF));
-    if (!url.match(/https:\/\// || !url.match(/http:\/\//))) {
-      url = "https://" + url;
-    }
-    Services.prefs.setStringPref("floorp.browser.sidebar2.customurl", url);
-    if(url != "" && url != null){
-      window.alert(l10n.formatValueSync("seted-url") + " " + url);
-    }
+    gSubDialog.open(
+      "chrome://browser/content/preferences/dialogs/customURL.xhtml",
+      { features: "resizable=true" }
+    );
   }, false);
 }, 3000);

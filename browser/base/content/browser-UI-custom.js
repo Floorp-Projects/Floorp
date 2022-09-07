@@ -142,6 +142,8 @@ Services.prefs.addObserver("floorp.downloading.red.color", function(){
    document.getElementById("dlredcolor").remove();
  }});
 
+ /*------------------------------------------- sidebar -------------------------------------------*/
+
  if (Services.prefs.getBoolPref("floorp.browser.sidebar.right", false)) {    
   var Tag = document.createElement("style");
   Tag.innerText = `.browser-sidebar2 {-moz-box-ordinal-group: 10 !important;}#sidebar-select-box{-moz-box-ordinal-group: 15 !important;}`;
@@ -165,18 +167,73 @@ Services.prefs.addObserver("floorp.browser.sidebar.right", function(){
       document.getElementsByTagName("head")[0].insertAdjacentElement("beforeend",Tag)
   }
 
-  window.setTimeout(function(){
-    setSidebarMode();
-    setCustomURLFavicon();
-  }, 1000);
-  
    if (Services.prefs.getBoolPref("floorp.browser.sidebar.enable", false)) {
      Services.prefs.addObserver("floorp.browser.sidebar2.mode", function(){
       setSidebarMode();
   })};
 
   if (Services.prefs.getBoolPref("floorp.browser.sidebar.enable", false)) {
-    Services.prefs.addObserver("floorp.browser.sidebar2.customurl", function(){
+    Services.prefs.addObserver("floorp.browser.sidebar2.customurl1", function(){
      setSidebarMode();
-     setCustomURLFavicon();
-  })};
+     setCustomURL1Favicon();
+     setSidebarIconView();
+  })
+    Services.prefs.addObserver("floorp.browser.sidebar2.customurl2", function(){
+     setSidebarMode();
+     setCustomURL2Favicon();
+     setSidebarIconView();
+  })
+    Services.prefs.addObserver("floorp.browser.sidebar2.customurl3", function(){
+     setSidebarMode();
+     setCustomURL3Favicon();
+     setSidebarIconView();
+  })
+    Services.prefs.addObserver("floorp.browser.sidebar2.customurl4", function(){
+     setSidebarMode();
+     setCustomURL4Favicon();
+     setSidebarIconView();
+  })
+    Services.prefs.addObserver("floorp.browser.sidebar2.customurl5", function(){
+     setSidebarMode();
+     setCustomURL5Favicon();
+     setSidebarIconView();
+  })
+    Services.prefs.addObserver("floorp.browser.sidebar2.customurl6", function(){
+     setSidebarMode();
+     setCustomURL6Favicon();
+     setSidebarIconView();
+  })
+    Services.prefs.addObserver("floorp.browser.sidebar2.customurl7", function(){
+     setSidebarMode();
+     setCustomURL7Favicon();
+     setSidebarIconView();
+  })
+    Services.prefs.addObserver("floorp.browser.sidebar2.customurl8", function(){
+     setSidebarMode();
+     setCustomURL8Favicon();
+     setSidebarIconView();
+  })
+    Services.prefs.addObserver("floorp.browser.sidebar2.customurl9", function(){
+     setSidebarMode();
+     setCustomURL9Favicon();
+     setSidebarIconView();
+  })
+  Services.prefs.addObserver("floorp.browser.sidebar2.customurl10", function(){
+    setSidebarMode();
+    setCustomURL10Favicon();
+    setSidebarIconView();
+ })
+};
+
+setSidebarMode();
+document.getElementById("select-CustomURL1").style.listStyleImage = "url(" + "http://www.google.com/s2/favicons?domain=" + Services.prefs.getStringPref("floorp.browser.sidebar2.customurl1") + ")"
+document.getElementById("select-CustomURL2").style.listStyleImage = "url(" + "http://www.google.com/s2/favicons?domain=" + Services.prefs.getStringPref("floorp.browser.sidebar2.customurl2") + ")"
+document.getElementById("select-CustomURL3").style.listStyleImage = "url(" + "http://www.google.com/s2/favicons?domain=" + Services.prefs.getStringPref("floorp.browser.sidebar2.customurl3") + ")"
+document.getElementById("select-CustomURL4").style.listStyleImage = "url(" + "http://www.google.com/s2/favicons?domain=" + Services.prefs.getStringPref("floorp.browser.sidebar2.customurl4") + ")"
+document.getElementById("select-CustomURL5").style.listStyleImage = "url(" + "http://www.google.com/s2/favicons?domain=" + Services.prefs.getStringPref("floorp.browser.sidebar2.customurl5") + ")"
+document.getElementById("select-CustomURL6").style.listStyleImage = "url(" + "http://www.google.com/s2/favicons?domain=" + Services.prefs.getStringPref("floorp.browser.sidebar2.customurl6") + ")"
+document.getElementById("select-CustomURL7").style.listStyleImage = "url(" + "http://www.google.com/s2/favicons?domain=" + Services.prefs.getStringPref("floorp.browser.sidebar2.customurl7") + ")"
+document.getElementById("select-CustomURL8").style.listStyleImage = "url(" + "http://www.google.com/s2/favicons?domain=" + Services.prefs.getStringPref("floorp.browser.sidebar2.customurl8") + ")"
+document.getElementById("select-CustomURL9").style.listStyleImage = "url(" + "http://www.google.com/s2/favicons?domain=" + Services.prefs.getStringPref("floorp.browser.sidebar2.customurl9") + ")"
+document.getElementById("select-CustomURL10").style.listStyleImage = "url(" + "http://www.google.com/s2/favicons?domain=" + Services.prefs.getStringPref("floorp.browser.sidebar2.customurl10") + ")"
+setSidebarIconView();

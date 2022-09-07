@@ -43,3 +43,6 @@ browser.jar:
    content/browser/preferences/dialogs/syncChooseWhatToSync.js
    content/browser/preferences/dialogs/translation.xhtml
    content/browser/preferences/dialogs/translation.js
+
+   content/browser/preferences/dialogs/customURL.xhtml
+   content/browser/preferences/dialogs/customURL.js
