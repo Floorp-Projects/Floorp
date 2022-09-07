@@ -11,7 +11,7 @@
  * and create derivative works of this document.
  */
 
-// https://html.spec.whatwg.org/#the-meta-element
+// http://www.whatwg.org/specs/web-apps/current-work/#the-meta-element
 [Exposed=Window]
 interface HTMLMetaElement : HTMLElement {
   [HTMLConstructor] constructor();
@@ -22,8 +22,6 @@ interface HTMLMetaElement : HTMLElement {
            attribute DOMString httpEquiv;
   [CEReactions, SetterThrows, Pure]
            attribute DOMString content;
-  [CEReactions, SetterThrows, Pure]
-           attribute DOMString media;
 };
 
 // http://www.whatwg.org/specs/web-apps/current-work/#other-elements,-attributes-and-apis
