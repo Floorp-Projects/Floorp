@@ -1680,7 +1680,6 @@ bool nsWindow::WaylandPopupConfigure() {
   GdkWindowTypeHint gtkTypeHint;
   switch (mPopupHint) {
     case ePopupTypeMenu:
-    case ePopupTypePanel:
       // GDK_WINDOW_TYPE_HINT_POPUP_MENU is mapped as xdg_popup by default.
       // We use this type for all menu popups.
       gtkTypeHint = GDK_WINDOW_TYPE_HINT_POPUP_MENU;
@@ -1834,7 +1833,8 @@ void nsWindow::UpdateWaylandPopupHierarchy() {
         // popups are adjacent.
         return false;
       }
-      if (popup->WaylandPopupIsFirst() &&
+      if (popup->mPopupHint == ePopupTypePanel &&
+          popup->WaylandPopupIsFirst() &&
           popup->WaylandPopupFitsToplevelWindow()) {
         // Workaround for https://gitlab.gnome.org/GNOME/gtk/-/issues/1986
         // Bug 1760276 - don't use move-to-rect when popup is inside main
