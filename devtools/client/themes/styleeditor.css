@@ -152,7 +152,7 @@ li.error > .stylesheet-info > .stylesheet-more  > .stylesheet-error-message {
   overflow: hidden;
 }
 
-.stylesheet-enabled {
+.stylesheet-toggle {
   display: -moz-box;
   cursor: pointer;
   padding: 8px 0;
@@ -171,11 +171,11 @@ li.error > .stylesheet-info > .stylesheet-more  > .stylesheet-error-message {
   stroke: currentColor;
 }
 
-.disabled > .stylesheet-enabled {
+.disabled > .stylesheet-toggle {
   background-image: url(images/eye-closed.svg);
 }
 
-.stylesheet-system > .stylesheet-enabled {
+.stylesheet-system > .stylesheet-toggle {
   /* Override the default "color: grayText" from [disabled] browser style */
   color: currentColor;
   cursor: auto;
@@ -247,7 +247,7 @@ h3 {
     background-size: 0 0, 0 0, auto;
   }
 
-  .stylesheet-enabled {
+  .stylesheet-toggle {
     padding: 0;
     height: 24px;
   }
