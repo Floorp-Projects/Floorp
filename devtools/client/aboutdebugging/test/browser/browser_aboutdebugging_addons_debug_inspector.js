@@ -40,7 +40,7 @@ add_task(async function testWebExtensionsToolboxWebConsole() {
   );
 
   info("Open a toolbox to debug the addon");
-  const { devtoolsWindow } = await openAboutDevtoolsToolbox(
+  const { devtoolsTab, devtoolsWindow } = await openAboutDevtoolsToolbox(
     document,
     tab,
     window,
@@ -80,7 +80,7 @@ add_task(async function testWebExtensionsToolboxWebConsole() {
     "The dark color scheme simulation button exists and is hidden"
   );
 
-  await closeWebExtAboutDevtoolsToolbox(devtoolsWindow, window);
+  await closeAboutDevtoolsToolbox(document, devtoolsTab, window);
   await removeTemporaryExtension(ADDON_NAME, document);
   await removeTab(tab);
 });

@@ -75,7 +75,6 @@ class DebugTargetItem extends PureComponent {
     return dom.li(
       {
         className: "card debug-target-item qa-debug-target-item",
-        "data-qa-target-type": this.props.target.type,
       },
       this.renderIcon(),
       this.renderName(),
