@@ -3708,6 +3708,11 @@
   value: false
   mirror: always
 
+- name: dom.sitepermsaddon-provider.enabled
+  type: bool
+  value: false
+  mirror: always
+
 # Whether automatic storage access granting heuristics should be turned on.
 - name: dom.storage_access.auto_grants
   type: bool
