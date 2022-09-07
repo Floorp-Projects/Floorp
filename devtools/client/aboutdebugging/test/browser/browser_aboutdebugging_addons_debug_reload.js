@@ -40,11 +40,12 @@ add_task(async function testWebExtensionToolboxReload() {
     document
   );
 
-  const {
-    devtoolsDocument,
-    devtoolsTab,
-    devtoolsWindow,
-  } = await openAboutDevtoolsToolbox(document, tab, window, ADDON_NAME);
+  const { devtoolsDocument, devtoolsWindow } = await openAboutDevtoolsToolbox(
+    document,
+    tab,
+    window,
+    ADDON_NAME
+  );
   const toolbox = getToolbox(devtoolsWindow);
 
   ok(
@@ -123,7 +124,7 @@ add_task(async function testWebExtensionToolboxReload() {
 
   await waitForLoadedPanelsReload();
 
-  await closeAboutDevtoolsToolbox(document, devtoolsTab, window);
+  await closeWebExtAboutDevtoolsToolbox(devtoolsWindow, window);
   await removeTemporaryExtension(ADDON_NAME, document);
   await removeTab(tab);
 });
