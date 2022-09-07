@@ -584,9 +584,6 @@ class Settings(private val appContext: Context) : PreferencesHolder {
         true
     )
 
-    val enabledTotalCookieProtection: Boolean
-        get() = mr2022Sections[Mr2022Section.TCP_FEATURE] == true
-
     val enabledTotalCookieProtectionSetting: Boolean
         get() = mr2022Sections[Mr2022Section.TCP_FEATURE] == true
 

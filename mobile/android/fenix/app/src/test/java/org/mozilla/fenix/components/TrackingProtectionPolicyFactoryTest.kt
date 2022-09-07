@@ -138,44 +138,6 @@ class TrackingProtectionPolicyFactoryTest {
     }
 
     @Test
-    fun `GIVEN TCP is enabled by nimbus WHEN applyTCPIfNeeded THEN cookie policy should be TCP`() {
-        val settings: Settings = mockk(relaxed = true)
-        every { settings.enabledTotalCookieProtection } returns true
-
-        val policies = arrayOf(
-            TrackingProtectionPolicy.strict(), TrackingProtectionPolicy.recommended(),
-            TrackingProtectionPolicy.select()
-        )
-
-        for (policy in policies) {
-            val adaptedPolicy = policy.applyTCPIfNeeded(settings)
-            assertEquals(
-                CookiePolicy.ACCEPT_FIRST_PARTY_AND_ISOLATE_OTHERS,
-                adaptedPolicy.cookiePolicy
-            )
-        }
-    }
-
-    fun `GIVEN TCP is NOT enabled by nimbus WHEN applyTCPIfNeeded THEN reuse cookie policy`() {
-        val settings: Settings = mockk(relaxed = true)
-
-        every { settings.enabledTotalCookieProtection } returns false
-
-        val policies = arrayOf(
-            TrackingProtectionPolicy.strict(), TrackingProtectionPolicy.recommended(),
-            TrackingProtectionPolicy.select()
-        )
-
-        for (policy in policies) {
-            val adaptedPolicy = policy.applyTCPIfNeeded(settings)
-            assertEquals(
-                policy.cookiePolicy,
-                adaptedPolicy.cookiePolicy
-            )
-        }
-    }
-
-    @Test
     fun `GIVEN custom policy WHEN cookie policy social THEN tracking policy should have cookie policy allow non-trackers`() {
         val expected = TrackingProtectionPolicy.select(
             cookiePolicy = TrackingProtectionPolicy.CookiePolicy.ACCEPT_NON_TRACKERS,
