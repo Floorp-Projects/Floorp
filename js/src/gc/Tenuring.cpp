@@ -44,8 +44,8 @@ using mozilla::PodCopy;
 constexpr size_t MAX_DEDUPLICATABLE_STRING_LENGTH = 500;
 
 TenuringTracer::TenuringTracer(JSRuntime* rt, Nursery* nursery)
-    : GenericTracer(rt, JS::TracerKind::Tenuring,
-                    JS::WeakMapTraceAction::TraceKeysAndValues),
+    : JSTracer(rt, JS::TracerKind::Tenuring,
+               JS::WeakMapTraceAction::TraceKeysAndValues),
       nursery_(*nursery) {}
 
 size_t TenuringTracer::getTenuredSize() const {

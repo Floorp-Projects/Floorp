@@ -21,7 +21,7 @@ class RelocationOverlay;
 class StringRelocationOverlay;
 }  // namespace gc
 
-class TenuringTracer final : public GenericTracer {
+class TenuringTracer final : public JSTracer {
   Nursery& nursery_;
 
   // Amount of data moved to the tenured generation during collection.
