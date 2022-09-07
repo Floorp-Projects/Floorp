@@ -29,6 +29,28 @@ async function require_module(id) {
   return require_module.moduleLoader.require(id);
 }
 
+async function run_test_in_worker(script) {
+  const { runTestInWorker } = ChromeUtils.import(
+    "resource://testing-common/dom/quota/test/modules/WorkerDriver.jsm"
+  );
+
+  const base = "resource://testing-common/dom/fs/test/xpcshell/";
+
+  const listener = {
+    onOk(value, message) {
+      ok(value, message);
+    },
+    onIs(a, b, message) {
+      Assert.equal(a, b, message);
+    },
+    onInfo(message) {
+      info(message);
+    },
+  };
+
+  await runTestInWorker(script, base, listener);
+}
+
 add_setup(async function() {
   const {
     setStoragePrefs,
