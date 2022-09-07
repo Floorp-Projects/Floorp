@@ -732,7 +732,7 @@ fn xpcom_impl(args: AttributeArgs, template: ItemStruct) -> Result<TokenStream, 
                 );
                 if new == 0 {
                     // dealloc
-                    ::std::boxed::Box::from_raw(self as *const Self as *mut Self);
+                    ::std::mem::drop(::std::boxed::Box::from_raw(self as *const Self as *mut Self));
                 }
                 new
             }
