@@ -333,25 +333,31 @@ class HistoryFragment : LibraryPageFragment<History>(), UserInteractionHandler {
     }
 
     private fun openItem(item: History.Regular) {
-        GleanHistory.openedItem.record(GleanHistory.OpenedItemExtra(item.isRemote))
+        GleanHistory.openedItem.record(
+            GleanHistory.OpenedItemExtra(
+                isRemote = item.isRemote,
+                timeGroup = item.historyTimeGroup.toString(),
+                isPrivate = (activity as HomeActivity).browsingModeManager.mode == BrowsingMode.Private,
+            ),
+        )
 
         (activity as HomeActivity).openToBrowserAndLoad(
             searchTermOrURL = item.url,
             newTab = true,
-            from = BrowserDirection.FromHistory
+            from = BrowserDirection.FromHistory,
         )
     }
 
     private fun displayDeleteTimeRange() {
         DeleteConfirmationDialogFragment(
-            historyInteractor = historyInteractor
+            historyInteractor = historyInteractor,
         ).show(childFragmentManager, null)
     }
 
     private fun share(data: List<ShareData>) {
         GleanHistory.shared.record(NoExtras())
         val directions = HistoryFragmentDirections.actionGlobalShareFragment(
-            data = data.toTypedArray()
+            data = data.toTypedArray(),
         )
         navigateToHistoryFragment(directions)
     }
@@ -359,7 +365,7 @@ class HistoryFragment : LibraryPageFragment<History>(), UserInteractionHandler {
     private fun navigateToHistoryFragment(directions: NavDirections) {
         findNavController().nav(
             R.id.historyFragment,
-            directions
+            directions,
         )
     }
 
@@ -371,7 +377,7 @@ class HistoryFragment : LibraryPageFragment<History>(), UserInteractionHandler {
     }
 
     internal class DeleteConfirmationDialogFragment(
-        private val historyInteractor: HistoryInteractor
+        private val historyInteractor: HistoryInteractor,
     ) : DialogFragment() {
         override fun onCreateDialog(savedInstanceState: Bundle?): Dialog =
             AlertDialog.Builder(requireContext()).apply {
