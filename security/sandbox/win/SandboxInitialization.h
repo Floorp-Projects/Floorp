@@ -45,6 +45,11 @@ sandbox::BrokerServices* GetInitializedBrokerServices();
 
 PermissionsService* GetPermissionsService();
 
+/**
+ * Apply mitigations for parent processes.
+ */
+void ApplyParentProcessMitigations();
+
 }  // namespace sandboxing
 }  // namespace mozilla
 

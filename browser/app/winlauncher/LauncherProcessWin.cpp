@@ -37,6 +37,10 @@
 #  include "SameBinary.h"
 #endif  // defined(MOZ_LAUNCHER_PROCESS)
 
+#if defined(MOZ_SANDBOX)
+#  include "mozilla/sandboxing/SandboxInitialization.h"
+#endif
+
 namespace mozilla {
 // "const" because nothing in this process modifies it.
 // "volatile" because something in another process may.
@@ -319,6 +323,11 @@ Maybe<int> LauncherMain(int& argc, wchar_t* argv[],
       MOZ_ASSERT(setOk);
     }
   }
+
+#if defined(MOZ_SANDBOX)
+  // Ensure the relevant mitigations are enforced.
+  mozilla::sandboxing::ApplyParentProcessMitigations();
+#endif
 
   mozilla::UseParentConsole();
 
