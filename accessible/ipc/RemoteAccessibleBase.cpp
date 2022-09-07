@@ -939,8 +939,6 @@ uint64_t RemoteAccessibleBase<Derived>::State() {
     auto* cbc = mDoc->GetBrowsingContext();
     if (cbc && !cbc->IsActive()) {
       state |= states::OFFSCREEN;
-    } else if (!mDoc->mOnScreenAccessibles.Contains(ID())) {
-      state |= states::OFFSCREEN;
     }
   }
   auto* browser = static_cast<dom::BrowserParent*>(Document()->Manager());
