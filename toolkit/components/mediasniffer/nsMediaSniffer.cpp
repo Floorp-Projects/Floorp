@@ -30,9 +30,6 @@ static const uint32_t MAX_BYTES_SNIFFED = 512;
 // bitstream.
 // This is 320kbps * 144 / 32kHz + 1 padding byte + 4 bytes of capture pattern.
 static const uint32_t MAX_BYTES_SNIFFED_MP3 = 320 * 144 / 32 + 1 + 4;
-// Multi-channel low sample-rate AAC packets can be huge, have a higher maximum
-// size.
-static const uint32_t MAX_BYTES_SNIFFED_ADTS = 8096;
 
 NS_IMPL_ISUPPORTS(nsMediaSniffer, nsIContentSniffer)
 
@@ -235,7 +232,7 @@ nsMediaSniffer::GetMIMETypeFromContent(nsIRequest* aRequest,
     return NS_OK;
   }
 
-  if (MatchesADTS(aData, std::min(aLength, MAX_BYTES_SNIFFED_ADTS))) {
+  if (MatchesADTS(aData, clampedLength)) {
     aSniffedType.AssignLiteral(AUDIO_AAC);
     return NS_OK;
   }
