@@ -82,7 +82,7 @@ body {
 
 h1 {
   color: var(--newtab-text-primary-color);
-  font-weight: 500;
+  font-weight: 600;
   font-size: 1.5em;
 }
 
@@ -269,8 +269,6 @@ body > main > aside {
   margin-top: 0.3em;
   margin-inline-end: 0.5em;
   padding: 0;
-  font-size: 1.8em;
-  font-weight: bold;
 }
 
 #colorways-collection-expiry-date {
