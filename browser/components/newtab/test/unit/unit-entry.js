@@ -616,11 +616,23 @@ const TEST_GLOBAL = {
       enabled: {
         set() {},
       },
+      impression: {
+        record() {},
+      },
       isSignedIn: {
         set() {},
       },
       sponsoredStoriesEnabled: {
         set() {},
+      },
+      click: {
+        record() {},
+      },
+      save: {
+        record() {},
+      },
+      topicClick: {
+        record() {},
       },
     },
     topsites: {

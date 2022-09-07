@@ -934,6 +934,33 @@ class TelemetryFeed {
         },
       },
     });
+    const session = this.sessions.get(au.getPortIdOfSender(action));
+    switch (action.data?.event) {
+      case "CLICK":
+        if (
+          action.data.source === "POPULAR_TOPICS" ||
+          action.data.value?.card_type === "topics_widget"
+        ) {
+          Glean.pocket.topicClick.record({
+            newtab_visit_id: session.session_id,
+            topic: action.data.value?.topic,
+          });
+        } else if (["spoc", "organic"].includes(action.data.value?.card_type)) {
+          Glean.pocket.click.record({
+            newtab_visit_id: session.session_id,
+            is_sponsored: action.data.value?.card_type === "spoc",
+            position: action.data.action_position,
+          });
+        }
+        break;
+      case "SAVE_TO_POCKET":
+        Glean.pocket.save.record({
+          newtab_visit_id: session.session_id,
+          is_sponsored: action.data.value?.card_type === "spoc",
+          position: action.data.action_position,
+        });
+        break;
+    }
   }
 
   async handleASRouterUserEvent(action) {
@@ -1132,13 +1159,18 @@ class TelemetryFeed {
       window_inner_height,
     };
     // The payload might contain other properties, we need `id`, `pos` and potentially `shim` here.
-    tiles.forEach(tile =>
+    tiles.forEach(tile => {
       impressions.tiles.push({
         id: tile.id,
         pos: tile.pos,
         ...(tile.shim ? { shim: tile.shim } : {}),
-      })
-    );
+      });
+      Glean.pocket.impression.record({
+        newtab_visit_id: session.session_id,
+        is_sponsored: tile.type === "spoc",
+        position: tile.pos,
+      });
+    });
     impressionSets[source] = impressions;
     session.impressionSets = impressionSets;
   }

@@ -7564,7 +7564,8 @@ class _DSCard extends (external_React_default()).PureComponent {
           pos: this.props.pos,
           ...(this.props.shim && this.props.shim.click ? {
             shim: this.props.shim.click
-          } : {})
+          } : {}),
+          type: this.props.flightId ? "spoc" : "organic"
         }]
       }));
     }
@@ -7584,7 +7585,10 @@ class _DSCard extends (external_React_default()).PureComponent {
       this.props.dispatch(actionCreators.DiscoveryStreamUserEvent({
         event: "SAVE_TO_POCKET",
         source: "CARDGRID_HOVER",
-        action_position: this.props.pos
+        action_position: this.props.pos,
+        value: {
+          card_type: this.props.flightId ? "spoc" : "organic"
+        }
       }));
       this.props.dispatch(actionCreators.ImpressionStats({
         source: "CARDGRID_HOVER",

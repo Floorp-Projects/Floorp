@@ -1854,6 +1854,35 @@ describe("TelemetryFeed", () => {
         window_inner_height: 900,
       });
     });
+    it("should instrument pocket impressions", () => {
+      const session_id = "1337cafe";
+      const pos1 = 1;
+      const pos2 = 4;
+      sandbox.stub(instance.sessions, "get").returns({ session_id });
+      sandbox.spy(Glean.pocket.impression, "record");
+
+      instance.handleDiscoveryStreamImpressionStats("_", {
+        source: "foo",
+        tiles: [
+          { id: 1, pos: pos1, type: "organic" },
+          { id: 2, pos: pos2, type: "spoc" },
+        ],
+        window_inner_width: 1000,
+        window_inner_height: 900,
+      });
+
+      assert.calledTwice(Glean.pocket.impression.record);
+      assert.deepEqual(Glean.pocket.impression.record.firstCall.args[0], {
+        newtab_visit_id: session_id,
+        is_sponsored: false,
+        position: pos1,
+      });
+      assert.deepEqual(Glean.pocket.impression.record.secondCall.args[0], {
+        newtab_visit_id: session_id,
+        is_sponsored: true,
+        position: pos2,
+      });
+    });
   });
   describe("#handleDiscoveryStreamLoadedContent", () => {
     it("should throw for a missing session", () => {
@@ -2102,6 +2131,238 @@ describe("TelemetryFeed", () => {
 
       assert.calledOnce(global.Cu.reportError);
       assert.notCalled(instance.sendStructuredIngestionEvent);
+    });
+  });
+  describe("#handleDiscoveryStreamUserEvent", () => {
+    it("correctly handles action with no `data`", () => {
+      const action = ac.DiscoveryStreamUserEvent();
+      instance = new TelemetryFeed();
+      const session_id = "c0ffee";
+      sandbox.stub(instance.sessions, "get").returns({ session_id });
+      sandbox.spy(Glean.pocket.topicClick, "record");
+      sandbox.spy(Glean.pocket.click, "record");
+      sandbox.spy(Glean.pocket.save, "record");
+
+      instance.handleDiscoveryStreamUserEvent(action);
+
+      assert.notCalled(Glean.pocket.topicClick.record);
+      assert.notCalled(Glean.pocket.click.record);
+      assert.notCalled(Glean.pocket.save.record);
+    });
+    it("correctly handles CLICK data with no value", () => {
+      const action = ac.DiscoveryStreamUserEvent({
+        event: "CLICK",
+        source: "POPULAR_TOPICS",
+      });
+      instance = new TelemetryFeed();
+      const session_id = "c0ffee";
+      sandbox.stub(instance.sessions, "get").returns({ session_id });
+      sandbox.spy(Glean.pocket.topicClick, "record");
+
+      instance.handleDiscoveryStreamUserEvent(action);
+
+      assert.calledOnce(Glean.pocket.topicClick.record);
+      assert.calledWith(Glean.pocket.topicClick.record, {
+        newtab_visit_id: session_id,
+        topic: undefined,
+      });
+    });
+    it("correctly handles non-POPULAR_TOPICS CLICK data with no value", () => {
+      const action = ac.DiscoveryStreamUserEvent({
+        event: "CLICK",
+        source: "not-POPULAR_TOPICS",
+      });
+      instance = new TelemetryFeed();
+      const session_id = "c0ffee";
+      sandbox.stub(instance.sessions, "get").returns({ session_id });
+      sandbox.spy(Glean.pocket.topicClick, "record");
+      sandbox.spy(Glean.pocket.click, "record");
+      sandbox.spy(Glean.pocket.save, "record");
+
+      instance.handleDiscoveryStreamUserEvent(action);
+
+      assert.notCalled(Glean.pocket.topicClick.record);
+      assert.notCalled(Glean.pocket.click.record);
+      assert.notCalled(Glean.pocket.save.record);
+    });
+    it("correctly handles CLICK data with non-POPULAR_TOPICS source", () => {
+      const topic = "atopic";
+      const action = ac.DiscoveryStreamUserEvent({
+        event: "CLICK",
+        source: "not-POPULAR_TOPICS",
+        value: {
+          card_type: "topics_widget",
+          topic,
+        },
+      });
+      instance = new TelemetryFeed();
+      const session_id = "c0ffee";
+      sandbox.stub(instance.sessions, "get").returns({ session_id });
+      sandbox.spy(Glean.pocket.topicClick, "record");
+
+      instance.handleDiscoveryStreamUserEvent(action);
+
+      assert.calledOnce(Glean.pocket.topicClick.record);
+      assert.calledWith(Glean.pocket.topicClick.record, {
+        newtab_visit_id: session_id,
+        topic,
+      });
+    });
+    it("doesn't instrument a CLICK without a card_type", () => {
+      const action = ac.DiscoveryStreamUserEvent({
+        event: "CLICK",
+        source: "not-POPULAR_TOPICS",
+        value: {
+          card_type: "not spoc, organic, or topics_widget",
+        },
+      });
+      instance = new TelemetryFeed();
+      const session_id = "c0ffee";
+      sandbox.stub(instance.sessions, "get").returns({ session_id });
+      sandbox.spy(Glean.pocket.topicClick, "record");
+      sandbox.spy(Glean.pocket.click, "record");
+      sandbox.spy(Glean.pocket.save, "record");
+
+      instance.handleDiscoveryStreamUserEvent(action);
+
+      assert.notCalled(Glean.pocket.topicClick.record);
+      assert.notCalled(Glean.pocket.click.record);
+      assert.notCalled(Glean.pocket.save.record);
+    });
+    it("instruments a popular topic click", () => {
+      const topic = "entertainment";
+      const action = ac.DiscoveryStreamUserEvent({
+        event: "CLICK",
+        source: "POPULAR_TOPICS",
+        value: {
+          card_type: "topics_widget",
+          topic,
+        },
+      });
+      instance = new TelemetryFeed();
+      const session_id = "c0ffee";
+      sandbox.stub(instance.sessions, "get").returns({ session_id });
+      sandbox.spy(Glean.pocket.topicClick, "record");
+
+      instance.handleDiscoveryStreamUserEvent(action);
+
+      assert.calledOnce(Glean.pocket.topicClick.record);
+      assert.calledWith(Glean.pocket.topicClick.record, {
+        newtab_visit_id: session_id,
+        topic,
+      });
+    });
+    it("instruments an organic top stories click", () => {
+      const action_position = 42;
+      const action = ac.DiscoveryStreamUserEvent({
+        event: "CLICK",
+        action_position,
+        value: {
+          card_type: "organic",
+        },
+      });
+      instance = new TelemetryFeed();
+      const session_id = "c0ffee";
+      sandbox.stub(instance.sessions, "get").returns({ session_id });
+      sandbox.spy(Glean.pocket.click, "record");
+
+      instance.handleDiscoveryStreamUserEvent(action);
+
+      assert.calledOnce(Glean.pocket.click.record);
+      assert.calledWith(Glean.pocket.click.record, {
+        newtab_visit_id: session_id,
+        is_sponsored: false,
+        position: action_position,
+      });
+    });
+    it("instruments a sponsored top stories click", () => {
+      const action_position = 42;
+      const action = ac.DiscoveryStreamUserEvent({
+        event: "CLICK",
+        action_position,
+        value: {
+          card_type: "spoc",
+        },
+      });
+      instance = new TelemetryFeed();
+      const session_id = "c0ffee";
+      sandbox.stub(instance.sessions, "get").returns({ session_id });
+      sandbox.spy(Glean.pocket.click, "record");
+
+      instance.handleDiscoveryStreamUserEvent(action);
+
+      assert.calledOnce(Glean.pocket.click.record);
+      assert.calledWith(Glean.pocket.click.record, {
+        newtab_visit_id: session_id,
+        is_sponsored: true,
+        position: action_position,
+      });
+    });
+    it("instruments a save of an organic top story", () => {
+      const action_position = 42;
+      const action = ac.DiscoveryStreamUserEvent({
+        event: "SAVE_TO_POCKET",
+        action_position,
+        value: {
+          card_type: "organic",
+        },
+      });
+      instance = new TelemetryFeed();
+      const session_id = "c0ffee";
+      sandbox.stub(instance.sessions, "get").returns({ session_id });
+      sandbox.spy(Glean.pocket.save, "record");
+
+      instance.handleDiscoveryStreamUserEvent(action);
+
+      assert.calledOnce(Glean.pocket.save.record);
+      assert.calledWith(Glean.pocket.save.record, {
+        newtab_visit_id: session_id,
+        is_sponsored: false,
+        position: action_position,
+      });
+    });
+    it("instruments a save of a sponsored top story", () => {
+      const action_position = 42;
+      const action = ac.DiscoveryStreamUserEvent({
+        event: "SAVE_TO_POCKET",
+        action_position,
+        value: {
+          card_type: "spoc",
+        },
+      });
+      instance = new TelemetryFeed();
+      const session_id = "c0ffee";
+      sandbox.stub(instance.sessions, "get").returns({ session_id });
+      sandbox.spy(Glean.pocket.save, "record");
+
+      instance.handleDiscoveryStreamUserEvent(action);
+
+      assert.calledOnce(Glean.pocket.save.record);
+      assert.calledWith(Glean.pocket.save.record, {
+        newtab_visit_id: session_id,
+        is_sponsored: true,
+        position: action_position,
+      });
+    });
+    it("instruments a save of a sponsored top story, without `value`", () => {
+      const action_position = 42;
+      const action = ac.DiscoveryStreamUserEvent({
+        event: "SAVE_TO_POCKET",
+        action_position,
+      });
+      instance = new TelemetryFeed();
+      const session_id = "c0ffee";
+      sandbox.stub(instance.sessions, "get").returns({ session_id });
+      sandbox.spy(Glean.pocket.save, "record");
+
+      instance.handleDiscoveryStreamUserEvent(action);
+
+      assert.calledOnce(Glean.pocket.save.record);
+      assert.calledWith(Glean.pocket.save.record, {
+        newtab_visit_id: session_id,
+        is_sponsored: false,
+        position: action_position,
+      });
     });
   });
 });
