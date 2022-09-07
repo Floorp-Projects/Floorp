@@ -147,14 +147,19 @@ class WorkerScriptLoader final : public nsINamed {
   WorkerScriptLoader(WorkerPrivate* aWorkerPrivate,
                      UniquePtr<SerializedStackHolder> aOriginStack,
                      nsIEventTarget* aSyncLoopTarget,
-                     const nsTArray<nsString>& aScriptURLs,
-                     const mozilla::Encoding* aDocumentEncoding,
-                     bool aIsMainScript, WorkerScriptType aWorkerScriptType,
-                     ErrorResult& aRv);
+                     WorkerScriptType aWorkerScriptType, ErrorResult& aRv);
 
   void CancelMainThreadWithBindingAborted() {
     CancelMainThread(NS_BINDING_ABORTED);
   }
+
+  void CreateScriptRequests(const nsTArray<nsString>& aScriptURLs,
+                            const mozilla::Encoding* aDocumentEncoding,
+                            bool aIsMainScript);
+
+  already_AddRefed<ScriptLoadRequest> CreateScriptLoadRequest(
+      const nsString& aScriptURL, const mozilla::Encoding* aDocumentEncoding,
+      bool aIsMainScript);
 
   bool DispatchLoadScripts();
 
