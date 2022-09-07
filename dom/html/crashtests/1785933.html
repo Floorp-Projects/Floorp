@@ -1,0 +1,10 @@
+<html class="reftest-wait">
+<body>
+  <iframe src="./1785933-inner.html"></iframe>
+  <script>
+    window.onmessage = function() {
+      document.documentElement.removeAttribute("class");
+    }
+  </script>
+</body>
+</html>

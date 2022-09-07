@@ -548,6 +548,13 @@ void ImageDocument::UpdateRemoteStyle(StyleImageRendering aImageRendering) {
     return;
   }
 
+  // Using ScriptRunner to avoid doing DOM mutation at an unexpected time.
+  if (!nsContentUtils::IsSafeToRunScript()) {
+    return nsContentUtils::AddScriptRunner(
+        NewRunnableMethod<StyleImageRendering>("UpdateRemoteStyle", this,
+                          &ImageDocument::UpdateRemoteStyle, aImageRendering));
+  }
+
   nsCOMPtr<nsICSSDeclaration> style = mImageContent->Style();
   switch (aImageRendering) {
     case StyleImageRendering::Auto:
