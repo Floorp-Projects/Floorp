@@ -70,7 +70,7 @@ private data class PopupHorizontalBounds(
  * @param action Optional other composable to show just below the popup text.
  */
 @SuppressLint("ViewConstructor") // Intended to be used only in code, don't need a View constructor
-internal class CFRPopupFullScreenLayout(
+internal class CFRPopupFullscreenLayout(
     private val text: String,
     private val anchor: View,
     private val properties: CFRPopupProperties,

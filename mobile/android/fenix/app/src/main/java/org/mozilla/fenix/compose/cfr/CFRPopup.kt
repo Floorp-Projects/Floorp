@@ -63,7 +63,7 @@ class CFRPopup(
     // This is just a facade for the CFRPopupFullScreenLayout composable offering a cleaner API.
 
     @VisibleForTesting
-    internal var popup: WeakReference<CFRPopupFullScreenLayout>? = null
+    internal var popup: WeakReference<CFRPopupFullscreenLayout>? = null
 
     /**
      * Construct and display a styled CFR popup shown at the coordinates of [anchor].
@@ -72,7 +72,7 @@ class CFRPopup(
      */
     fun show() {
         anchor.post {
-            CFRPopupFullScreenLayout(text, anchor, properties, onDismiss, action).apply {
+            CFRPopupFullscreenLayout(text, anchor, properties, onDismiss, action).apply {
                 this.show()
                 popup = WeakReference(this)
             }
