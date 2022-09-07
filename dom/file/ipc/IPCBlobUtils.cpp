@@ -129,7 +129,7 @@ nsresult SerializeInternal(BlobImpl* aBlobImpl, M* aManager,
     RefPtr<RemoteLazyInputStream> stream =
         RemoteLazyInputStream::WrapStream(inputStream);
     if (NS_WARN_IF(!stream)) {
-      return rv.StealNSResult();
+      return NS_ERROR_FAILURE;
     }
 
     aIPCBlob.inputStream() = stream;
