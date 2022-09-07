@@ -85,7 +85,7 @@ impl<'s> Store<'s> {
             "SELECT NOT EXISTS(
                SELECT 1 FROM moz_bookmarks
                WHERE id = (SELECT parent FROM moz_bookmarks
-                           WHERE guid = '{0}')
+                           WHERE guid = '{root}')
              ) AND NOT EXISTS(
                SELECT 1 FROM moz_bookmarks b
                JOIN moz_bookmarks p ON p.id = b.parent
