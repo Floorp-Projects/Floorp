@@ -114,7 +114,7 @@ pub fn headers_valid(headers: &[Header], message_type: MessageType) -> Res<()> {
     let pseudo_header_mask = match message_type {
         MessageType::Response => enum_set!(PseudoHeaderState::Status),
         MessageType::Request => {
-            if method_value == Some(&"CONNECT".to_string()) {
+            if method_value == Some("CONNECT") {
                 PseudoHeaderState::Method | PseudoHeaderState::Authority
             } else {
                 PseudoHeaderState::Method | PseudoHeaderState::Scheme | PseudoHeaderState::Path
@@ -124,7 +124,7 @@ pub fn headers_valid(headers: &[Header], message_type: MessageType) -> Res<()> {
 
     if (MessageType::Request == message_type)
         && pseudo_state.contains(PseudoHeaderState::Protocol)
-        && method_value != Some(&"CONNECT".to_string())
+        && method_value != Some("CONNECT")
     {
         return Err(Error::InvalidHeader);
     }

@@ -24,7 +24,7 @@ const SETTINGS_ENABLE_WEB_TRANSPORT: SettingsType = 0x2b60_3742;
 
 pub const H3_RESERVED_SETTINGS: &[SettingsType] = &[0x2, 0x3, 0x4, 0x5];
 
-#[derive(Clone, PartialEq, Debug, Copy)]
+#[derive(Clone, PartialEq, Eq, Debug, Copy)]
 pub enum HSettingType {
     MaxHeaderListSize,
     MaxTableCapacity,
@@ -41,7 +41,7 @@ fn hsetting_default(setting_type: HSettingType) -> u64 {
     }
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct HSetting {
     pub setting_type: HSettingType,
     pub value: u64,
@@ -57,7 +57,7 @@ impl HSetting {
     }
 }
 
-#[derive(Clone, Debug, Default, PartialEq)]
+#[derive(Clone, Debug, Default, PartialEq, Eq)]
 pub struct HSettings {
     settings: Vec<HSetting>,
 }

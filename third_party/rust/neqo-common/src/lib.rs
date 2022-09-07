@@ -27,11 +27,13 @@ pub use self::incrdecoder::{
 #[macro_use]
 extern crate lazy_static;
 
+use std::fmt::Write;
+
 #[must_use]
 pub fn hex(buf: impl AsRef<[u8]>) -> String {
     let mut ret = String::with_capacity(buf.as_ref().len() * 2);
     for b in buf.as_ref() {
-        ret.push_str(&format!("{:02x}", b));
+        write!(&mut ret, "{:02x}", b).unwrap();
     }
     ret
 }
@@ -44,13 +46,13 @@ pub fn hex_snip_middle(buf: impl AsRef<[u8]>) -> String {
         hex_with_len(buf)
     } else {
         let mut ret = String::with_capacity(SHOW_LEN * 2 + 16);
-        ret.push_str(&format!("[{}]: ", buf.len()));
+        write!(&mut ret, "[{}]: ", buf.len()).unwrap();
         for b in &buf[..SHOW_LEN] {
-            ret.push_str(&format!("{:02x}", b));
+            write!(&mut ret, "{:02x}", b).unwrap();
         }
         ret.push_str("..");
         for b in &buf[buf.len() - SHOW_LEN..] {
-            ret.push_str(&format!("{:02x}", b));
+            write!(&mut ret, "{:02x}", b).unwrap();
         }
         ret
     }
@@ -60,9 +62,9 @@ pub fn hex_snip_middle(buf: impl AsRef<[u8]>) -> String {
 pub fn hex_with_len(buf: impl AsRef<[u8]>) -> String {
     let buf = buf.as_ref();
     let mut ret = String::with_capacity(10 + buf.len() * 2);
-    ret.push_str(&format!("[{}]: ", buf.len()));
+    write!(&mut ret, "[{}]: ", buf.len()).unwrap();
     for b in buf {
-        ret.push_str(&format!("{:02x}", b));
+        write!(&mut ret, "{:02x}", b).unwrap();
     }
     ret
 }
@@ -76,7 +78,7 @@ pub const fn const_min(a: usize, b: usize) -> usize {
     [a, b][(a >= b) as usize]
 }
 
-#[derive(Debug, PartialEq, Copy, Clone)]
+#[derive(Debug, PartialEq, Eq, Copy, Clone)]
 /// Client or Server.
 pub enum Role {
     Client,

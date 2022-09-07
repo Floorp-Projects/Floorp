@@ -10,19 +10,21 @@
 mod common;
 
 use common::{
-    apply_header_protection, client_initial_aead_and_hp, connect, connected_server,
-    decode_initial_header, default_server, get_ticket, remove_header_protection,
+    apply_header_protection, connect, connected_server, decode_initial_header, default_server,
+    find_ticket, generate_ticket, initial_aead_and_hp, new_server, remove_header_protection,
 };
 
-use neqo_common::{qtrace, Datagram, Decoder, Encoder};
-use neqo_crypto::{generate_ech_keys, AllowZeroRtt, ZeroRttCheckResult, ZeroRttChecker};
+use neqo_common::{qtrace, Datagram, Decoder, Encoder, Role};
+use neqo_crypto::{
+    generate_ech_keys, AllowZeroRtt, AuthenticationStatus, ZeroRttCheckResult, ZeroRttChecker,
+};
 use neqo_transport::{
     server::{ActiveConnectionRef, Server, ValidateAddress},
-    Connection, ConnectionError, ConnectionParameters, Error, Output, QuicVersion, State,
-    StreamType,
+    Connection, ConnectionError, ConnectionParameters, Error, Output, State, StreamType, Version,
 };
 use test_fixture::{
-    self, assertions, default_client, now, split_datagram, CountingConnectionIdGenerator,
+    self, assertions, default_client, new_client, now, split_datagram,
+    CountingConnectionIdGenerator,
 };
 
 use std::cell::RefCell;
@@ -64,6 +66,70 @@ fn single_client() {
     let mut server = default_server();
     let mut client = default_client();
     connect(&mut client, &mut server);
+}
+
+#[test]
+fn connect_single_version_both() {
+    fn connect_one_version(version: Version) {
+        let params = ConnectionParameters::default().versions(version, vec![version]);
+        let mut server = new_server(params.clone());
+
+        let mut client = new_client(params);
+        let server_conn = connect(&mut client, &mut server);
+        assert_eq!(client.version(), version);
+        assert_eq!(server_conn.borrow().version(), version);
+    }
+
+    for v in Version::all() {
+        println!("Connecting with {:?}", v);
+        connect_one_version(v);
+    }
+}
+
+#[test]
+fn connect_single_version_client() {
+    fn connect_one_version(version: Version) {
+        let mut server = default_server();
+
+        let mut client =
+            new_client(ConnectionParameters::default().versions(version, vec![version]));
+        let server_conn = connect(&mut client, &mut server);
+        assert_eq!(client.version(), version);
+        assert_eq!(server_conn.borrow().version(), version);
+    }
+
+    for v in Version::all() {
+        println!("Connecting with {:?}", v);
+        connect_one_version(v);
+    }
+}
+
+#[test]
+fn connect_single_version_server() {
+    fn connect_one_version(version: Version) {
+        let mut server =
+            new_server(ConnectionParameters::default().versions(version, vec![version]));
+
+        let mut client = default_client();
+
+        if client.version() != version {
+            // Run the version negotiation exchange if necessary.
+            let dgram = client.process_output(now()).dgram();
+            assert!(dgram.is_some());
+            let dgram = server.process(dgram, now()).dgram();
+            assertions::assert_vn(dgram.as_ref().unwrap());
+            client.process_input(dgram.unwrap(), now());
+        }
+
+        let server_conn = connect(&mut client, &mut server);
+        assert_eq!(client.version(), version);
+        assert_eq!(server_conn.borrow().version(), version);
+    }
+
+    for v in Version::all() {
+        println!("Connecting with {:?}", v);
+        connect_one_version(v);
+    }
 }
 
 #[test]
@@ -164,7 +230,7 @@ fn drop_non_initial() {
     let mut header = neqo_common::Encoder::with_capacity(1200);
     header
         .encode_byte(0xfa)
-        .encode_uint(4, QuicVersion::default().as_u32())
+        .encode_uint(4, Version::default().wire_version())
         .encode_vec(1, CID)
         .encode_vec(1, CID);
     let mut bogus_data: Vec<u8> = header.into();
@@ -183,7 +249,7 @@ fn drop_short_initial() {
     let mut header = neqo_common::Encoder::with_capacity(1199);
     header
         .encode_byte(0xca)
-        .encode_uint(4, QuicVersion::default().as_u32())
+        .encode_uint(4, Version::default().wire_version())
         .encode_vec(1, CID)
         .encode_vec(1, CID);
     let mut bogus_data: Vec<u8> = header.into();
@@ -200,7 +266,7 @@ fn drop_short_initial() {
 #[test]
 fn zero_rtt() {
     let mut server = default_server();
-    let token = get_ticket(&mut server);
+    let token = generate_ticket(&mut server);
 
     // Discharge the old connection so that we don't have to worry about it.
     let mut now = now();
@@ -262,7 +328,7 @@ fn zero_rtt() {
 #[test]
 fn new_token_0rtt() {
     let mut server = default_server();
-    let token = get_ticket(&mut server);
+    let token = generate_ticket(&mut server);
     server.set_validation(ValidateAddress::NoToken);
 
     let mut client = default_client();
@@ -293,7 +359,7 @@ fn new_token_0rtt() {
 #[test]
 fn new_token_different_port() {
     let mut server = default_server();
-    let token = get_ticket(&mut server);
+    let token = generate_ticket(&mut server);
     server.set_validation(ValidateAddress::NoToken);
 
     let mut client = default_client();
@@ -318,8 +384,8 @@ fn bad_client_initial() {
     let mut server = default_server();
 
     let dgram = client.process(None, now()).dgram().expect("a datagram");
-    let (header, d_cid, s_cid, payload) = decode_initial_header(&dgram);
-    let (aead, hp) = client_initial_aead_and_hp(d_cid);
+    let (header, d_cid, s_cid, payload) = decode_initial_header(&dgram, Role::Client);
+    let (aead, hp) = initial_aead_and_hp(d_cid, Role::Client);
     let (fixed_header, pn) = remove_header_protection(&hp, header, payload);
     let payload = &payload[(fixed_header.len() - header.len())..];
 
@@ -335,20 +401,20 @@ fn bad_client_initial() {
     let mut header_enc = Encoder::new();
     header_enc
         .encode_byte(0xc0) // Initial with 1 byte packet number.
-        .encode_uint(4, QuicVersion::default().as_u32())
+        .encode_uint(4, Version::default().wire_version())
         .encode_vec(1, d_cid)
         .encode_vec(1, s_cid)
         .encode_vvec(&[])
         .encode_varint(u64::try_from(payload_enc.len() + aead.expansion() + 1).unwrap())
         .encode_byte(u8::try_from(pn).unwrap());
 
-    let mut ciphertext = header_enc.to_vec();
+    let mut ciphertext = header_enc.as_ref().to_vec();
     ciphertext.resize(header_enc.len() + payload_enc.len() + aead.expansion(), 0);
     let v = aead
         .encrypt(
             pn,
-            &header_enc,
-            &payload_enc,
+            header_enc.as_ref(),
+            payload_enc.as_ref(),
             &mut ciphertext[header_enc.len()..],
         )
         .unwrap();
@@ -401,7 +467,7 @@ fn bad_client_initial() {
 }
 
 #[test]
-fn version_negotiation() {
+fn version_negotiation_ignored() {
     let mut server = default_server();
     let mut client = default_client();
 
@@ -426,7 +492,7 @@ fn version_negotiation() {
     let mut found = false;
     while dec.remaining() > 0 {
         let v = dec.decode_uint(4).expect("supported version");
-        found |= v == u64::from(QuicVersion::default().as_u32());
+        found |= v == u64::from(Version::default().wire_version());
     }
     assert!(found, "valid version not found");
 
@@ -434,6 +500,128 @@ fn version_negotiation() {
     let res = client.process(Some(vn), now());
     assert!(res.callback() > Duration::new(0, 120));
     assert_eq!(client.state(), &State::WaitInitial);
+}
+
+/// Test that if the server doesn't support a version it will signal with a
+/// Version Negotiation packet and the client will use that version.
+#[test]
+fn version_negotiation() {
+    const VN_VERSION: Version = Version::Draft29;
+    assert_ne!(VN_VERSION, Version::default());
+    assert!(!Version::default().is_compatible(VN_VERSION));
+
+    let mut server =
+        new_server(ConnectionParameters::default().versions(VN_VERSION, vec![VN_VERSION]));
+    let mut client = default_client();
+
+    // `connect()` runs a fixed exchange, so manually run the Version Negotiation.
+    let dgram = client.process_output(now()).dgram();
+    assert!(dgram.is_some());
+    let dgram = server.process(dgram, now()).dgram();
+    assertions::assert_vn(dgram.as_ref().unwrap());
+    client.process_input(dgram.unwrap(), now());
+
+    let sconn = connect(&mut client, &mut server);
+    assert_eq!(client.version(), VN_VERSION);
+    assert_eq!(sconn.borrow().version(), VN_VERSION);
+}
+
+/// Test that the client can pick a version from a Version Negotiation packet,
+/// which is then subsequently upgraded to a compatible version by the server.
+#[test]
+fn version_negotiation_and_compatible() {
+    const ORIG_VERSION: Version = Version::Draft29;
+    const VN_VERSION: Version = Version::Version1;
+    const COMPAT_VERSION: Version = Version::Version2;
+    assert!(!ORIG_VERSION.is_compatible(VN_VERSION));
+    assert!(!ORIG_VERSION.is_compatible(COMPAT_VERSION));
+    assert!(VN_VERSION.is_compatible(COMPAT_VERSION));
+
+    let mut server = new_server(
+        ConnectionParameters::default().versions(VN_VERSION, vec![COMPAT_VERSION, VN_VERSION]),
+    );
+    // Note that the order of versions at the client only determines what it tries first.
+    // The server will pick between VN_VERSION and COMPAT_VERSION.
+    let mut client = new_client(
+        ConnectionParameters::default()
+            .versions(ORIG_VERSION, vec![ORIG_VERSION, VN_VERSION, COMPAT_VERSION]),
+    );
+
+    // Run the full exchange so that we can observe the versions in use.
+
+    // Version Negotiation
+    let dgram = client.process_output(now()).dgram();
+    assert!(dgram.is_some());
+    assertions::assert_version(dgram.as_ref().unwrap(), ORIG_VERSION.wire_version());
+    let dgram = server.process(dgram, now()).dgram();
+    assertions::assert_vn(dgram.as_ref().unwrap());
+    client.process_input(dgram.unwrap(), now());
+
+    let dgram = client.process(None, now()).dgram(); // ClientHello
+    assertions::assert_version(dgram.as_ref().unwrap(), VN_VERSION.wire_version());
+    let dgram = server.process(dgram, now()).dgram(); // ServerHello...
+    assertions::assert_version(dgram.as_ref().unwrap(), COMPAT_VERSION.wire_version());
+    client.process_input(dgram.unwrap(), now());
+
+    client.authenticated(AuthenticationStatus::Ok, now());
+    let dgram = client.process_output(now()).dgram();
+    assertions::assert_version(dgram.as_ref().unwrap(), COMPAT_VERSION.wire_version());
+    assert_eq!(*client.state(), State::Connected);
+    let dgram = server.process(dgram, now()).dgram(); // ACK + HANDSHAKE_DONE + NST
+    client.process_input(dgram.unwrap(), now());
+    assert_eq!(*client.state(), State::Confirmed);
+
+    let sconn = connected_server(&mut server);
+    assert_eq!(client.version(), COMPAT_VERSION);
+    assert_eq!(sconn.borrow().version(), COMPAT_VERSION);
+}
+
+/// When a client resumes it remembers the version that the connection last used.
+/// A subsequent connection will use that version, but if it then receives
+/// a version negotiation packet, it should validate based on what it attempted
+/// not what it was originally configured for.
+#[test]
+fn compatible_upgrade_resumption_and_vn() {
+    // Start at v1, compatible upgrade to v2.
+    const ORIG_VERSION: Version = Version::Version1;
+    const COMPAT_VERSION: Version = Version::Version2;
+    const RESUMPTION_VERSION: Version = Version::Draft29;
+
+    let client_params = ConnectionParameters::default().versions(
+        ORIG_VERSION,
+        vec![COMPAT_VERSION, ORIG_VERSION, RESUMPTION_VERSION],
+    );
+    let mut client = new_client(client_params.clone());
+    assert_eq!(client.version(), ORIG_VERSION);
+
+    let mut server = default_server();
+    let mut server_conn = connect(&mut client, &mut server);
+    assert_eq!(client.version(), COMPAT_VERSION);
+    assert_eq!(server_conn.borrow().version(), COMPAT_VERSION);
+
+    server_conn.borrow_mut().send_ticket(now(), &[]).unwrap();
+    let dgram = server.process(None, now()).dgram();
+    client.process_input(dgram.unwrap(), now()); // Consume ticket, ignore output.
+    let ticket = find_ticket(&mut client);
+
+    // This new server will reject the ticket, but it will also generate a VN packet.
+    let mut client = new_client(client_params);
+    let mut server = new_server(
+        ConnectionParameters::default().versions(RESUMPTION_VERSION, vec![RESUMPTION_VERSION]),
+    );
+    client.enable_resumption(now(), ticket).unwrap();
+
+    // The version negotiation exchange.
+    let dgram = client.process_output(now()).dgram();
+    assert!(dgram.is_some());
+    assertions::assert_version(dgram.as_ref().unwrap(), COMPAT_VERSION.wire_version());
+    let dgram = server.process(dgram, now()).dgram();
+    assertions::assert_vn(dgram.as_ref().unwrap());
+    client.process_input(dgram.unwrap(), now());
+
+    let server_conn = connect(&mut client, &mut server);
+    assert_eq!(client.version(), RESUMPTION_VERSION);
+    assert_eq!(server_conn.borrow().version(), RESUMPTION_VERSION);
 }
 
 #[test]
@@ -533,7 +721,7 @@ fn max_streams_after_0rtt_rejection() {
             .max_streams(StreamType::UniDi, MAX_STREAMS_UNIDI),
     )
     .expect("should create a server");
-    let token = get_ticket(&mut server);
+    let token = generate_ticket(&mut server);
 
     let mut client = default_client();
     client.enable_resumption(now(), &token).unwrap();

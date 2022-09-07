@@ -9,7 +9,7 @@ use std::ops::Deref;
 
 use crate::hex_with_len;
 
-#[derive(PartialEq, Clone)]
+#[derive(PartialEq, Eq, Clone)]
 pub struct Datagram {
     src: SocketAddr,
     dst: SocketAddr,

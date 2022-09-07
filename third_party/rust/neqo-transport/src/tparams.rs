@@ -9,12 +9,13 @@
 use crate::cid::{
     ConnectionId, ConnectionIdEntry, CONNECTION_ID_SEQNO_PREFERRED, MAX_CONNECTION_ID_LEN,
 };
+use crate::version::{Version, VersionConfig, WireVersion};
 use crate::{Error, Res};
 
-use neqo_common::{hex, qdebug, qinfo, qtrace, Decoder, Encoder};
+use neqo_common::{hex, qdebug, qinfo, qtrace, Decoder, Encoder, Role};
 use neqo_crypto::constants::{TLS_HS_CLIENT_HELLO, TLS_HS_ENCRYPTED_EXTENSIONS};
 use neqo_crypto::ext::{ExtensionHandler, ExtensionHandlerResult, ExtensionWriterResult};
-use neqo_crypto::{HandshakeMessage, ZeroRttCheckResult, ZeroRttChecker};
+use neqo_crypto::{random, HandshakeMessage, ZeroRttCheckResult, ZeroRttChecker};
 
 use std::cell::RefCell;
 use std::collections::HashMap;
@@ -26,6 +27,10 @@ pub type TransportParameterId = u64;
 macro_rules! tpids {
         { $($n:ident = $v:expr),+ $(,)? } => {
             $(pub const $n: TransportParameterId = $v as TransportParameterId;)+
+
+            /// A complete list of internal transport parameters.
+            #[cfg(not(test))]
+            pub(crate) const INTERNAL_TRANSPORT_PARAMETERS: &[TransportParameterId] = &[ $($n),+ ];
         };
     }
 tpids! {
@@ -49,6 +54,7 @@ tpids! {
     GREASE_QUIC_BIT = 0x2ab2,
     MIN_ACK_DELAY = 0xff02_de1a,
     MAX_DATAGRAM_FRAME_SIZE = 0x0020,
+    VERSION_NEGOTIATION = 0xff73db,
 }
 
 #[derive(Clone, Debug, Copy)]
@@ -94,7 +100,7 @@ impl PreferredAddress {
     }
 }
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub enum TransportParameter {
     Bytes(Vec<u8>),
     Integer(u64),
@@ -104,6 +110,10 @@ pub enum TransportParameter {
         v6: Option<SocketAddr>,
         cid: ConnectionId,
         srt: [u8; 16],
+    },
+    Versions {
+        current: WireVersion,
+        other: Vec<WireVersion>,
     },
 }
 
@@ -149,6 +159,14 @@ impl TransportParameter {
                     }
                     enc_inner.encode_vec(1, &cid[..]);
                     enc_inner.encode(&srt[..]);
+                });
+            }
+            Self::Versions { current, other } => {
+                enc.encode_vvec_with(|enc_inner| {
+                    enc_inner.encode_uint(4, *current);
+                    for v in other {
+                        enc_inner.encode_uint(4, *v);
+                    }
                 });
             }
         };
@@ -197,6 +215,26 @@ impl TransportParameter {
         let srt = <[u8; 16]>::try_from(srtbuf).unwrap();
 
         Ok(Self::PreferredAddress { v4, v6, cid, srt })
+    }
+
+    fn decode_versions(dec: &mut Decoder) -> Res<Self> {
+        fn dv(dec: &mut Decoder) -> Res<WireVersion> {
+            let v = dec.decode_uint(4).ok_or(Error::NoMoreData)?;
+            if v == 0 {
+                Err(Error::TransportParameterError)
+            } else {
+                Ok(v as WireVersion)
+            }
+        }
+
+        let current = dv(dec)?;
+        // This rounding down is OK because `decode` checks for left over data.
+        let count = dec.remaining() / 4;
+        let mut other = Vec::with_capacity(count);
+        for _ in 0..count {
+            other.push(dv(dec)?);
+        }
+        Ok(Self::Versions { current, other })
     }
 
     fn decode(dec: &mut Decoder) -> Res<Option<(TransportParameterId, Self)>> {
@@ -253,6 +291,8 @@ impl TransportParameter {
                 _ => return Err(Error::TransportParameterError),
             },
 
+            VERSION_NEGOTIATION => Self::decode_versions(&mut d)?,
+
             // Skip.
             _ => return Ok(None),
         };
@@ -264,7 +304,7 @@ impl TransportParameter {
     }
 }
 
-#[derive(Clone, Debug, Default, PartialEq)]
+#[derive(Clone, Debug, Default, PartialEq, Eq)]
 pub struct TransportParameters {
     params: HashMap<TransportParameterId, TransportParameter>,
 }
@@ -388,6 +428,37 @@ impl TransportParameters {
         }
     }
 
+    /// Set version information.
+    pub fn set_versions(&mut self, role: Role, versions: &VersionConfig) {
+        let rbuf = random(4);
+        let mut other = Vec::with_capacity(versions.all().len() + 1);
+        let mut dec = Decoder::new(&rbuf);
+        let grease = (dec.decode_uint(4).unwrap() as u32) & 0xf0f0_f0f0 | 0x0a0a0a0a;
+        other.push(grease);
+        for &v in versions.all() {
+            if role == Role::Client && !versions.initial().is_compatible(v) {
+                continue;
+            }
+            other.push(v.wire_version());
+        }
+        let current = versions.initial().wire_version();
+        self.set(
+            VERSION_NEGOTIATION,
+            TransportParameter::Versions { current, other },
+        );
+    }
+
+    fn compatible_upgrade(&mut self, v: Version) {
+        if let Some(TransportParameter::Versions {
+            ref mut current, ..
+        }) = self.params.get_mut(&VERSION_NEGOTIATION)
+        {
+            *current = v.wire_version();
+        } else {
+            unreachable!("Compatible upgrade without transport parameters set!");
+        }
+    }
+
     pub fn get_empty(&self, tipe: TransportParameterId) -> bool {
         match self.params.get(&tipe) {
             None => false,
@@ -416,23 +487,30 @@ impl TransportParameters {
             ) {
                 continue;
             }
-            if let Some(v_self) = self.params.get(k) {
+            let ok = if let Some(v_self) = self.params.get(k) {
                 match (v_self, v_rem) {
                     (TransportParameter::Integer(i_self), TransportParameter::Integer(i_rem)) => {
                         if *k == MIN_ACK_DELAY {
                             // MIN_ACK_DELAY is backwards:
                             // it can only be reduced safely.
-                            if *i_self > *i_rem {
-                                return false;
-                            }
-                        } else if *i_self < *i_rem {
-                            return false;
+                            *i_self <= *i_rem
+                        } else {
+                            *i_self >= *i_rem
                         }
                     }
-                    (TransportParameter::Empty, TransportParameter::Empty) => {}
-                    _ => return false,
+                    (TransportParameter::Empty, TransportParameter::Empty) => true,
+                    (
+                        TransportParameter::Versions {
+                            current: v_self, ..
+                        },
+                        TransportParameter::Versions { current: v_rem, .. },
+                    ) => v_self == v_rem,
+                    _ => false,
                 }
             } else {
+                false
+            };
+            if !ok {
                 return false;
             }
         }
@@ -454,24 +532,115 @@ impl TransportParameters {
         }
     }
 
+    /// Get the version negotiation values for validation.
+    #[must_use]
+    pub fn get_versions(&self) -> Option<(WireVersion, &[WireVersion])> {
+        if let Some(TransportParameter::Versions { current, other }) =
+            self.params.get(&VERSION_NEGOTIATION)
+        {
+            Some((*current, other))
+        } else {
+            None
+        }
+    }
+
     #[must_use]
     pub fn has_value(&self, tp: TransportParameterId) -> bool {
         self.params.contains_key(&tp)
     }
 }
 
-#[derive(Default, Debug)]
+#[derive(Debug)]
 pub struct TransportParametersHandler {
+    role: Role,
+    versions: VersionConfig,
     pub(crate) local: TransportParameters,
     pub(crate) remote: Option<TransportParameters>,
     pub(crate) remote_0rtt: Option<TransportParameters>,
 }
 
 impl TransportParametersHandler {
+    pub fn new(role: Role, versions: VersionConfig) -> Self {
+        let mut local = TransportParameters::default();
+        local.set_versions(role, &versions);
+        Self {
+            role,
+            versions,
+            local,
+            remote: None,
+            remote_0rtt: None,
+        }
+    }
+
+    /// When resuming, the version is set based on the ticket.
+    /// That needs to be done to override the default choice from configuration.
+    pub fn set_version(&mut self, version: Version) {
+        debug_assert_eq!(self.role, Role::Client);
+        self.versions.set_initial(version);
+        self.local.set_versions(self.role, &self.versions)
+    }
+
     pub fn remote(&self) -> &TransportParameters {
         match (self.remote.as_ref(), self.remote_0rtt.as_ref()) {
             (Some(tp), _) | (_, Some(tp)) => tp,
             _ => panic!("no transport parameters from peer"),
+        }
+    }
+
+    /// Get the version as set (or as determined by a compatible upgrade).
+    pub fn version(&self) -> Version {
+        self.versions.initial()
+    }
+
+    fn compatible_upgrade(&mut self, remote_tp: &TransportParameters) -> Res<()> {
+        if let Some((current, other)) = remote_tp.get_versions() {
+            qtrace!(
+                "Peer versions: {:x} {:x?}; config {:?}",
+                current,
+                other,
+                self.versions,
+            );
+
+            if self.role == Role::Client {
+                let chosen = Version::try_from(current)?;
+                if self.versions.compatible().any(|&v| v == chosen) {
+                    Ok(())
+                } else {
+                    qinfo!(
+                        "Chosen version {:x} is not compatible with initial version {:x}",
+                        current,
+                        self.versions.initial().wire_version(),
+                    );
+                    Err(Error::TransportParameterError)
+                }
+            } else {
+                if current != self.versions.initial().wire_version() {
+                    qinfo!(
+                        "Current version {:x} != own version {:x}",
+                        current,
+                        self.versions.initial().wire_version(),
+                    );
+                    return Err(Error::TransportParameterError);
+                }
+
+                if let Some(preferred) = self.versions.preferred_compatible(other) {
+                    if preferred != self.versions.initial() {
+                        qinfo!(
+                            "Compatible upgrade {:?} ==> {:?}",
+                            self.versions.initial(),
+                            preferred
+                        );
+                        self.versions.set_initial(preferred);
+                        self.local.compatible_upgrade(preferred);
+                    }
+                    Ok(())
+                } else {
+                    qinfo!("Unable to find any compatible version");
+                    Err(Error::TransportParameterError)
+                }
+            }
+        } else {
+            Ok(())
         }
     }
 }
@@ -488,7 +657,7 @@ impl ExtensionHandler for TransportParametersHandler {
         let mut enc = Encoder::default();
         self.local.encode(&mut enc);
         assert!(enc.len() <= d.len());
-        d[..enc.len()].copy_from_slice(&enc);
+        d[..enc.len()].copy_from_slice(enc.as_ref());
         ExtensionWriterResult::Write(enc.len())
     }
 
@@ -506,8 +675,12 @@ impl ExtensionHandler for TransportParametersHandler {
         let mut dec = Decoder::from(d);
         match TransportParameters::decode(&mut dec) {
             Ok(tp) => {
-                self.remote = Some(tp);
-                ExtensionHandlerResult::Ok
+                if self.compatible_upgrade(&tp).is_ok() {
+                    self.remote = Some(tp);
+                    ExtensionHandlerResult::Ok
+                } else {
+                    ExtensionHandlerResult::Alert(47)
+                }
             }
             _ => ExtensionHandlerResult::Alert(47), // illegal_parameter
         }
@@ -569,7 +742,6 @@ where
     }
 }
 
-// TODO(ekr@rtfm.com): Need to write more TP unit tests.
 #[cfg(test)]
 #[allow(unused_variables)]
 mod tests {
@@ -639,7 +811,7 @@ mod tests {
         let spa = make_spa();
         let mut enc = Encoder::new();
         spa.encode(&mut enc, PREFERRED_ADDRESS);
-        assert_eq!(&enc[..], ENCODED);
+        assert_eq!(enc.as_ref(), ENCODED);
 
         let mut dec = enc.as_decoder();
         let (id, decoded) = TransportParameter::decode(&mut dec).unwrap().unwrap();
@@ -733,7 +905,7 @@ mod tests {
         let spa = make_spa();
         let mut enc = Encoder::new();
         spa.encode(&mut enc, PREFERRED_ADDRESS);
-        let mut dec = Decoder::from(&enc[..enc.len() - 1]);
+        let mut dec = Decoder::from(&enc.as_ref()[..enc.len() - 1]);
         assert_eq!(
             TransportParameter::decode(&mut dec).unwrap_err(),
             Error::NoMoreData
@@ -910,5 +1082,98 @@ mod tests {
         // the result should be an error.
         let invalid_decode_result = TransportParameters::decode(&mut enc.as_decoder());
         assert!(invalid_decode_result.is_err());
+    }
+
+    #[test]
+    fn versions_encode_decode() {
+        const ENCODED: &[u8] = &[
+            0x80, 0xff, 0x73, 0xdb, 0x0c, 0x00, 0x00, 0x00, 0x01, 0x1a, 0x2a, 0x3a, 0x4a, 0x5a,
+            0x6a, 0x7a, 0x8a,
+        ];
+        let vn = TransportParameter::Versions {
+            current: Version::Version1.wire_version(),
+            other: vec![0x1a2a_3a4a, 0x5a6a_7a8a],
+        };
+
+        let mut enc = Encoder::new();
+        vn.encode(&mut enc, VERSION_NEGOTIATION);
+        assert_eq!(enc.as_ref(), ENCODED);
+
+        let mut dec = enc.as_decoder();
+        let (id, decoded) = TransportParameter::decode(&mut dec).unwrap().unwrap();
+        assert_eq!(id, VERSION_NEGOTIATION);
+        assert_eq!(decoded, vn);
+    }
+
+    #[test]
+    fn versions_truncated() {
+        const TRUNCATED: &[u8] = &[
+            0x80, 0xff, 0x73, 0xdb, 0x0c, 0x00, 0x00, 0x00, 0x01, 0x1a, 0x2a, 0x3a, 0x4a, 0x5a,
+            0x6a, 0x7a,
+        ];
+        let mut dec = Decoder::from(&TRUNCATED);
+        assert_eq!(
+            TransportParameter::decode(&mut dec).unwrap_err(),
+            Error::NoMoreData
+        );
+    }
+
+    #[test]
+    fn versions_zero() {
+        const ZERO1: &[u8] = &[0x80, 0xff, 0x73, 0xdb, 0x04, 0x00, 0x00, 0x00, 0x00];
+        const ZERO2: &[u8] = &[
+            0x80, 0xff, 0x73, 0xdb, 0x08, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00,
+        ];
+
+        let mut dec = Decoder::from(&ZERO1);
+        assert_eq!(
+            TransportParameter::decode(&mut dec).unwrap_err(),
+            Error::TransportParameterError
+        );
+        let mut dec = Decoder::from(&ZERO2);
+        assert_eq!(
+            TransportParameter::decode(&mut dec).unwrap_err(),
+            Error::TransportParameterError
+        );
+    }
+
+    #[test]
+    fn versions_equal_0rtt() {
+        let mut current = TransportParameters::default();
+        current.set(
+            VERSION_NEGOTIATION,
+            TransportParameter::Versions {
+                current: Version::Version1.wire_version(),
+                other: vec![0x1a2a_3a4a],
+            },
+        );
+
+        let mut remembered = TransportParameters::default();
+        // It's OK to not remember having versions.
+        assert!(current.ok_for_0rtt(&remembered));
+        // But it is bad in the opposite direction.
+        assert!(!remembered.ok_for_0rtt(&current));
+
+        // If the version matches, it's OK to use 0-RTT.
+        remembered.set(
+            VERSION_NEGOTIATION,
+            TransportParameter::Versions {
+                current: Version::Version1.wire_version(),
+                other: vec![0x5a6a_7a8a, 0x9aaa_baca],
+            },
+        );
+        assert!(current.ok_for_0rtt(&remembered));
+        assert!(remembered.ok_for_0rtt(&current));
+
+        // An apparent "upgrade" is still cause to reject 0-RTT.
+        remembered.set(
+            VERSION_NEGOTIATION,
+            TransportParameter::Versions {
+                current: Version::Version1.wire_version() + 1,
+                other: vec![],
+            },
+        );
+        assert!(!current.ok_for_0rtt(&remembered));
+        assert!(!remembered.ok_for_0rtt(&current));
     }
 }

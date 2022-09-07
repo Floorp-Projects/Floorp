@@ -6,8 +6,9 @@
 
 #![cfg_attr(feature = "deny-warnings", deny(warnings))]
 #![warn(clippy::pedantic)]
+#![allow(unused)]
 
-use neqo_common::{event::Provider, hex_with_len, qtrace, Datagram, Decoder};
+use neqo_common::{event::Provider, hex_with_len, qtrace, Datagram, Decoder, Role};
 use neqo_crypto::{
     constants::{TLS_AES_128_GCM_SHA256, TLS_VERSION_1_3},
     hkdf,
@@ -26,8 +27,8 @@ use std::mem;
 use std::ops::Range;
 use std::rc::Rc;
 
-// Different than the one in the fixture, which is a single connection.
-pub fn default_server() -> Server {
+/// Create a server.  This is different than the one in the fixture, which is a single connection.
+pub fn new_server(params: ConnectionParameters) -> Server {
     Server::new(
         now(),
         test_fixture::DEFAULT_KEYS,
@@ -35,9 +36,14 @@ pub fn default_server() -> Server {
         test_fixture::anti_replay(),
         Box::new(AllowZeroRtt {}),
         Rc::new(RefCell::new(CountingConnectionIdGenerator::default())),
-        ConnectionParameters::default(),
+        params,
     )
     .expect("should create a server")
+}
+
+/// Create a server.  This is different than the one in the fixture, which is a single connection.
+pub fn default_server() -> Server {
+    new_server(ConnectionParameters::default())
 }
 
 // Check that there is at least one connection.  Returns a ref to the first confirmed connection.
@@ -91,10 +97,14 @@ pub fn connect(client: &mut Connection, server: &mut Server) -> ActiveConnection
 // * the protected payload including the packet number.
 // Any token is thrown away.
 #[must_use]
-pub fn decode_initial_header(dgram: &Datagram) -> (&[u8], &[u8], &[u8], &[u8]) {
+pub fn decode_initial_header(dgram: &Datagram, role: Role) -> (&[u8], &[u8], &[u8], &[u8]) {
     let mut dec = Decoder::new(&dgram[..]);
     let type_and_ver = dec.decode(5).unwrap().to_vec();
-    assert_eq!(type_and_ver[0] & 0xf0, 0xc0);
+    // The client sets the QUIC bit, the server might not.
+    match role {
+        Role::Client => assert_eq!(type_and_ver[0] & 0xf0, 0xc0),
+        Role::Server => assert_eq!(type_and_ver[0] & 0xb0, 0x80),
+    }
     let dest_cid = dec.decode_vec(1).unwrap();
     let src_cid = dec.decode_vec(1).unwrap();
     dec.skip_vvec(); // Ignore any the token.
@@ -110,9 +120,10 @@ pub fn decode_initial_header(dgram: &Datagram) -> (&[u8], &[u8], &[u8], &[u8]) {
     )
 }
 
-// Generate an AEAD and header protection object for a client Initial.
+/// Generate an AEAD and header protection object for a client Initial.
+/// Note that this works for QUIC version 1 only.
 #[must_use]
-pub fn client_initial_aead_and_hp(dcid: &[u8]) -> (Aead, HpKey) {
+pub fn initial_aead_and_hp(dcid: &[u8], role: Role) -> (Aead, HpKey) {
     const INITIAL_SALT: &[u8] = &[
         0x38, 0x76, 0x2c, 0xf7, 0xf5, 0x59, 0x34, 0xb3, 0x4d, 0x17, 0x9a, 0xe6, 0xa4, 0xc8, 0x0c,
         0xad, 0xcc, 0xbb, 0x7f, 0x0a,
@@ -134,7 +145,10 @@ pub fn client_initial_aead_and_hp(dcid: &[u8]) -> (Aead, HpKey) {
         TLS_AES_128_GCM_SHA256,
         &initial_secret,
         &[],
-        "client in",
+        match role {
+            Role::Client => "client in",
+            Role::Server => "server in",
+        },
     )
     .unwrap();
     (
@@ -184,15 +198,9 @@ pub fn apply_header_protection(hp: &HpKey, packet: &mut [u8], pn_bytes: Range<us
     }
 }
 
-pub fn get_ticket(server: &mut Server) -> ResumptionToken {
-    let mut client = default_client();
-    let mut server_conn = connect(&mut client, server);
-
-    server_conn.borrow_mut().send_ticket(now(), &[]).unwrap();
-    let dgram = server.process(None, now()).dgram();
-    client.process_input(dgram.unwrap(), now()); // Consume ticket, ignore output.
-
-    let ticket = client
+/// Scrub through client events to find a resumption token.
+pub fn find_ticket(client: &mut Connection) -> ResumptionToken {
+    client
         .events()
         .find_map(|e| {
             if let ConnectionEvent::ResumptionToken(token) = e {
@@ -201,7 +209,18 @@ pub fn get_ticket(server: &mut Server) -> ResumptionToken {
                 None
             }
         })
-        .unwrap();
+        .unwrap()
+}
+
+/// Connect to the server and have it generate a ticket.
+pub fn generate_ticket(server: &mut Server) -> ResumptionToken {
+    let mut client = default_client();
+    let mut server_conn = connect(&mut client, server);
+
+    server_conn.borrow_mut().send_ticket(now(), &[]).unwrap();
+    let dgram = server.process(None, now()).dgram();
+    client.process_input(dgram.unwrap(), now()); // Consume ticket, ignore output.
+    let ticket = find_ticket(&mut client);
 
     // Have the client close the connection and then let the server clean up.
     client.close(now(), 0, "got a ticket");

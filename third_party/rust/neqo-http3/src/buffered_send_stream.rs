@@ -8,7 +8,7 @@ use crate::Res;
 use neqo_common::qtrace;
 use neqo_transport::{Connection, StreamId};
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Eq)]
 pub enum BufferedStream {
     Uninitialized,
     Initialized { stream_id: StreamId, buf: Vec<u8> },
