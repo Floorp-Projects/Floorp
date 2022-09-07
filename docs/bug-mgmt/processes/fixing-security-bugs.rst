@@ -213,5 +213,5 @@ Documentation & Contacts
 - :ref:`Normal process for submitting a patch <How to submit a patch>`
 - `How to file a security bug <https://wiki.mozilla.org/Security/Fileabug>`__
 - `Handling Mozilla security bugs (policy) <https://www.mozilla.org/en-US/about/governance/policies/security-group/bugs/>`__
-- `Security Bug Approval Process <security-approval>`__
+- :ref:`Security Bug Approval Process`
 - `Contacting the Security team(s) at Mozilla: <https://wiki.mozilla.org/Security>`__
