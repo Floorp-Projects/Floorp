@@ -149,26 +149,28 @@ a quality and compelling product will be consistently delivered to our
 users with each new version. See below for a distilled list of those
 milestones.
 
-========================================= ========== =============== ===============================================================================
-Milestone                                 Week       Day of Week
------------------------------------------ ---------- --------------- -------------------------------------------------------------------------------
-Merge Day                                 Nightly W1 Monday          Day 1 of the new Nightly Cycle
-PI Request deadline                       Nightly W1 Friday          Manual QA request deadline for high risk features
-Feature technical documentation due       Nightly W2 Friday          Deadline for features requiring manual QA
-Beta release notes draft                  Nightly W4 Wednesday
-Nightly features Go/No-Go decisions       Nightly W4 Wednesday
-Feature Complete Milestone                Nightly W4 Wednesday       Last day to land risky patches and/or enable new features
-Nightly soft code freeze start            Nightly W4 Thursday        Stabilization period in preparation to merge to Beta
-String freeze                             Nightly W4 Thursday        Modification or deletion of strings exposed to the end-users is not allowed
-QA pre-merge regression testing completed Nightly W4 Friday
-Merge Day                                 Beta W1    Monday          Day 1 of the new Beta cycle
-Pre-release sign off                      Beta W3    Friday          Final round of QA testing prior to Release
-Firefox RC week                           Beta W4    Monday          Validating Release Candidate builds in preparation for the next Firefox Release
-Release Notes ready                       Beta W4    Tuesday
-What’s new page ready                     Beta W4    Wednesday
-Firefox go-live @ 6am PT                  Release W1 Tuesday         Day 1 of the new Firefox Release to 25% of Release users
-Firefox Release bump to 100%              Release W1 Thursday        Increase deployment of new Firefox Release to 100% of Release users
-========================================= ========== =============== ===============================================================================
+=========================================== ================ ================= ===============================================================================
+Milestone                                   Week             Day of Week
+------------------------------------------- ---------------- ----------------- -------------------------------------------------------------------------------
+Merge Day                                   Nightly W1       Monday            Day 1 of the new Nightly Cycle
+PI Request deadline                         Nightly W1       Friday            Manual QA request deadline for high risk features
+Feature technical documentation due         Nightly W2       Friday            Deadline for features requiring manual QA
+Beta release notes draft                    Nightly W4       Wednesday
+Nightly features Go/No-Go decisions         Nightly W4       Wednesday
+Feature Complete Milestone                  Nightly W4       Wednesday         Last day to land risky patches and/or enable new features
+Nightly soft code freeze start              Nightly W4       Thursday          Stabilization period in preparation to merge to Beta
+String freeze                               Nightly W4       Thursday          Modification or deletion of strings exposed to the end-users is not allowed
+QA pre-merge regression testing completed   Nightly W4       Friday
+Merge Day                                   Beta W1          Monday            Day 1 of the new Beta cycle
+Pre-release sign off                        Beta W3          Friday            Final round of QA testing prior to Release
+Firefox RC week                             Beta W4          Monday            Validating Release Candidate builds in preparation for the next Firefox Release
+Release Notes ready                         Beta W4          Tuesday
+What’s new page ready                       Beta W4          Wednesday
+Firefox go-live @ 6am PT                    Release W1       Tuesday           Day 1 of the new Firefox Release to 25% of Release users
+Firefox Release bump to 100%                Release W1       Thursday          Increase deployment of new Firefox Release to 100% of Release users
+Scheduled dot release approval requests due Release W2       Friday            All requests required by EOD
+Scheduled dot release go-live               Release W3       Tuesday           By default, ships when ready. Specific time available upon request.
+=========================================== ================ ================= ===============================================================================
 
 
 The Release Management team (aka “Relman”) monitors and enforces this
