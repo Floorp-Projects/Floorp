@@ -33,6 +33,56 @@ newtab:
       - newtab
     lifetime: application
 
+  newtab_category:
+    type: string
+    description: >
+      The current setting of the newtab page.
+      One of ["enabled", "disabled", "extension"] or any value from
+      SiteClassifier like "known-hijacker" or "social-media".
+      Similar to Activity Stream's PAGE_TAKEOVER_DATA event's
+      `newtab_url_category`.
+      Sampled once after newtab init.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1786612
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1786612
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - anicholson@mozilla.com
+      - chutten@mozilla.com
+      - mmccorquodale@mozilla.com
+      - najiang@mozilla.com
+    expires: 113
+    send_in_pings:
+      - newtab
+    lifetime: application
+
+  homepage_category:
+    type: string
+    description: >
+      The current setting of the home page.
+      One of ["enabled", "disabled", "extension"] or any value from
+      SiteClassifier like "known-hijacker" or "social-media".
+      Similar to Activity Stream's PAGE_TAKEOVER_DATA event's
+      `home_url_category`.
+      Sampled once after newtab init.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1786612
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1786612
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - anicholson@mozilla.com
+      - chutten@mozilla.com
+      - mmccorquodale@mozilla.com
+      - najiang@mozilla.com
+    expires: 113
+    send_in_pings:
+      - newtab
+    lifetime: application
+
   opened:
     type: event
     description: >
@@ -97,7 +147,77 @@ newtab:
     send_in_pings:
       - newtab
 
+newtab.search:
+  enabled:
+    lifetime: application
+    type: boolean
+    description: >
+      Whether the search input is enabled on the newtab.
+      Corresponds to the value of the
+      `browser.newtabpage.activity-stream.showSearch` pref.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1786612
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1786612
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - anicholson@mozilla.com
+      - chutten@mozilla.com
+      - mmccorquodale@mozilla.com
+      - najiang@mozilla.com
+    expires: 113
+    send_in_pings:
+      - newtab
+
 topsites:
+  enabled:
+    lifetime: application
+    type: boolean
+    description: >
+      Whether "topsites" is enabled on the newtab.
+      AKA the "Shortcuts" section.
+      Corresponds to the value of the
+      `browser.newtabpage.activity-stream.feeds.topsites` pref.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1786612
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1786612
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - anicholson@mozilla.com
+      - chutten@mozilla.com
+      - mmccorquodale@mozilla.com
+      - najiang@mozilla.com
+    expires: 113
+    send_in_pings:
+      - newtab
+
+  sponsored_enabled:
+    lifetime: application
+    type: boolean
+    description: >
+      Whether sponsored topsites are enabled on the newtab.
+      AKA the "Sponsored Shortcuts" section.
+      Corresponds to the value of the
+      `browser.newtabpage.activity-stream.showSponsoredTopSites` pref.
+      Can be `true` even if topsites.enabled is `false`.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1786612
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1786612
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - anicholson@mozilla.com
+      - chutten@mozilla.com
+      - mmccorquodale@mozilla.com
+      - najiang@mozilla.com
+    expires: 113
+    send_in_pings:
+      - newtab
+
   impression:
     type: event
     description: >
@@ -143,5 +263,74 @@ topsites:
     extra_keys:
       newtab_visit_id: *newtab_visit_id
       is_sponsored: *is_sponsored
+    send_in_pings:
+      - newtab
+
+pocket:
+  is_signed_in:
+    lifetime: application
+    type: boolean
+    description: >
+      Whether the Firefox user is signed in to Pocket.
+      Does not correspond to a pref, so its value is resampled at newtab's
+      component init and whenever there is a Discovery Stream user event.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1786612
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1786612
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - anicholson@mozilla.com
+      - chutten@mozilla.com
+      - mmccorquodale@mozilla.com
+      - najiang@mozilla.com
+    expires: 113
+    send_in_pings:
+      - newtab
+
+  enabled:
+    lifetime: application
+    type: boolean
+    description: >
+      Whether Pocket is enabled on the newtab.
+      AKA the "Recommended by Pocket" section.
+      Corresponds to the value of the
+      `browser.newtabpage.activity-stream.feeds.section.topstories` pref.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1786612
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1786612
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - anicholson@mozilla.com
+      - chutten@mozilla.com
+      - mmccorquodale@mozilla.com
+      - najiang@mozilla.com
+    expires: 113
+    send_in_pings:
+      - newtab
+
+  sponsored_stories_enabled:
+    lifetime: application
+    type: boolean
+    description: >
+      Whether Pocket sponsored stories are enabled on the newtab.
+      Corresponds to the value of the
+      `browser.newtabpage.activity-stream.showSponsored` pref.
+      Can be `true` even if pocket.enabled is `false`.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1786612
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1786612
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - anicholson@mozilla.com
+      - chutten@mozilla.com
+      - mmccorquodale@mozilla.com
+      - najiang@mozilla.com
+    expires: 113
     send_in_pings:
       - newtab

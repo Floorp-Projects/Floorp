@@ -177,6 +177,7 @@ class TelemetryFeed {
   }
 
   init() {
+    this._beginObservingNewtabPingPrefs();
     Services.obs.addObserver(
       this.browserOpenNewtabStart,
       "browser-open-newtab-start"
@@ -921,13 +922,15 @@ class TelemetryFeed {
   }
 
   handleDiscoveryStreamUserEvent(action) {
+    const pocket_logged_in_status = lazy.pktApi.isUserLoggedIn();
+    Glean.pocket.isSignedIn.set(pocket_logged_in_status);
     this.handleUserEvent({
       ...action,
       data: {
         ...(action.data || {}),
         value: {
           ...(action.data?.value || {}),
-          pocket_logged_in_status: lazy.pktApi.isUserLoggedIn(),
+          pocket_logged_in_status,
         },
       },
     });
@@ -962,18 +965,23 @@ class TelemetryFeed {
       const value = {};
       let newtabAffected = false;
       let homeAffected = false;
+      let newtabCategory = "disabled";
+      let homePageCategory = "disabled";
 
       // Check whether or not about:home and about:newtab are set to a custom URL.
       // If so, classify them.
-      if (
-        Services.prefs.getBoolPref("browser.newtabpage.enabled") &&
-        lazy.AboutNewTab.newTabURLOverridden &&
-        !lazy.AboutNewTab.newTabURL.startsWith("moz-extension://")
-      ) {
-        value.newtab_url_category = await this._classifySite(
-          lazy.AboutNewTab.newTabURL
-        );
-        newtabAffected = true;
+      if (Services.prefs.getBoolPref("browser.newtabpage.enabled")) {
+        newtabCategory = "enabled";
+        if (
+          lazy.AboutNewTab.newTabURLOverridden &&
+          !lazy.AboutNewTab.newTabURL.startsWith("moz-extension://")
+        ) {
+          value.newtab_url_category = await this._classifySite(
+            lazy.AboutNewTab.newTabURL
+          );
+          newtabAffected = true;
+          newtabCategory = value.newtab_url_category;
+        }
       }
       // Check if the newtab page setting is controlled by an extension.
       await lazy.ExtensionSettingsStore.initialize();
@@ -984,6 +992,7 @@ class TelemetryFeed {
       if (newtabExtensionInfo && newtabExtensionInfo.id) {
         value.newtab_extension_id = newtabExtensionInfo.id;
         newtabAffected = true;
+        newtabCategory = "extension";
       }
 
       const homePageURL = lazy.HomePage.get();
@@ -993,6 +1002,7 @@ class TelemetryFeed {
       ) {
         value.home_url_category = await this._classifySite(homePageURL);
         homeAffected = true;
+        homePageCategory = value.home_url_category;
       }
       const homeExtensionInfo = lazy.ExtensionSettingsStore.getSetting(
         "prefs",
@@ -1001,6 +1011,10 @@ class TelemetryFeed {
       if (homeExtensionInfo && homeExtensionInfo.id) {
         value.home_extension_id = homeExtensionInfo.id;
         homeAffected = true;
+        homePageCategory = "extension";
+      }
+      if (!homeAffected && !lazy.HomePage.overridden) {
+        homePageCategory = "enabled";
       }
 
       let page;
@@ -1022,6 +1036,8 @@ class TelemetryFeed {
         });
         this.sendEvent(event);
       }
+      Glean.newtab.newtabCategory.set(newtabCategory);
+      Glean.newtab.homepageCategory.set(homePageCategory);
     }
   }
 
@@ -1212,6 +1228,27 @@ class TelemetryFeed {
         source,
       });
     }
+  }
+
+  _beginObservingNewtabPingPrefs() {
+    const BRANCH = "browser.newtabpage.activity-stream.";
+    const NEWTAB_PING_PREFS = {
+      showSearch: Glean.newtabSearch.enabled,
+      "feeds.topsites": Glean.topsites.enabled,
+      showSponsoredTopSites: Glean.topsites.sponsoredEnabled,
+      "feeds.section.topstories": Glean.pocket.enabled,
+      showSponsored: Glean.pocket.sponsoredStoriesEnabled,
+    };
+    const setNewtabPrefMetrics = () => {
+      for (const [pref, metric] of Object.entries(NEWTAB_PING_PREFS)) {
+        metric.set(Services.prefs.getBoolPref(BRANCH + pref));
+      }
+    };
+    for (const pref of Object.keys(NEWTAB_PING_PREFS)) {
+      Services.prefs.addObserver(BRANCH + pref, setNewtabPrefMetrics);
+    }
+    setNewtabPrefMetrics();
+    Glean.pocket.isSignedIn.set(lazy.pktApi.isUserLoggedIn());
   }
 
   uninit() {
