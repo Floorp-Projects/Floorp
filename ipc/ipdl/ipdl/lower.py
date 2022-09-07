@@ -2425,13 +2425,23 @@ class _ParamTraits:
         writeswitch.addcase(
             DefaultLabel(),
             StmtBlock(
-                [cls.fatalError(cls.writervar, "unknown union type"), StmtReturn()]
+                [
+                    cls.fatalError(
+                        cls.writervar, "unknown variant of union " + uniontype.name()
+                    ),
+                    StmtReturn(),
+                ]
             ),
         )
         readswitch.addcase(
             DefaultLabel(),
             StmtBlock(
-                [cls.fatalError(cls.readervar, "unknown union type"), StmtReturn.FALSE]
+                [
+                    cls.fatalError(
+                        cls.readervar, "unknown variant of union " + uniontype.name()
+                    ),
+                    StmtReturn.FALSE,
+                ]
             ),
         )
 
