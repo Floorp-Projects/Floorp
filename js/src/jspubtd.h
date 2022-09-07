@@ -85,6 +85,7 @@ inline JS::Zone* GetContextZone(const JSContext* cx);
 JS_PUBLIC_API bool CurrentThreadCanAccessRuntime(const JSRuntime* rt);
 
 #ifdef DEBUG
+JS_PUBLIC_API bool CurrentThreadIsMainThread();
 JS_PUBLIC_API bool CurrentThreadIsPerformingGC();
 #endif
 

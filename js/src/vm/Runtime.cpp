@@ -742,6 +742,13 @@ bool js::CurrentThreadCanAccessZone(Zone* zone) {
   return CurrentThreadCanAccessRuntime(zone->runtime_);
 }
 
+#ifdef DEBUG
+bool js::CurrentThreadIsMainThread() {
+  JSContext* cx = TlsContext.get();
+  return cx && cx->isMainThreadContext();
+}
+#endif
+
 JS_PUBLIC_API void JS::SetJSContextProfilerSampleBufferRangeStart(
     JSContext* cx, uint64_t rangeStart) {
   cx->runtime()->setProfilerSampleBufferRangeStart(rangeStart);
