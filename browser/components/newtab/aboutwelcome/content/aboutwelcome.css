@@ -357,6 +357,13 @@ body {
 .onboardingContainer .screen[pos=center].with-noodles .section-main {
   height: 504px;
 }
+.onboardingContainer .screen:not([pos=split]) .secondary-cta .secondary {
+  background: none;
+  color: var(--in-content-link-color);
+  font-size: 14px;
+  font-weight: normal;
+  line-height: 20px;
+}
 .onboardingContainer .screen[pos=split] {
   margin: auto;
 }
@@ -441,6 +448,7 @@ body {
 .onboardingContainer .screen[pos=split] .section-main .main-content .action-buttons .secondary-cta .secondary {
   background-color: var(--in-content-button-background) !important;
   color: var(--in-content-button-text-color);
+  border: 1px solid var(--in-content-button-border-color);
   line-height: 12px;
   font-size: 10px;
   font-weight: 600;
@@ -449,6 +457,7 @@ body {
 .onboardingContainer .screen[pos=split] .section-main .main-content .action-buttons .secondary-cta .secondary:hover {
   text-decoration: none;
   background-color: var(--in-content-button-background-hover) !important;
+  color: var(--in-content-button-text-color-hover);
 }
 .onboardingContainer .screen[pos=split] .section-main .main-content .action-buttons .secondary-cta .arrow-icon {
   background: url("chrome://browser/skin/forward.svg") no-repeat right 8px center;
@@ -1174,13 +1183,6 @@ body {
   justify-content: center;
   font-size: 14px;
   transition: var(--transition);
-}
-.onboardingContainer .secondary-cta .secondary {
-  background: none;
-  color: var(--in-content-link-color);
-  font-size: 14px;
-  font-weight: normal;
-  line-height: 20px;
 }
 .onboardingContainer .secondary-cta.top {
   justify-content: end;
