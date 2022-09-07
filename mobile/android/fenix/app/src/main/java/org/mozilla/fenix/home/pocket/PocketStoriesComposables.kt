@@ -44,6 +44,7 @@ import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
@@ -391,12 +392,14 @@ fun PocketStoriesCategories(
  * Contains the full URL for where the user should be navigated to.
  * @param modifier [Modifier] to be applied to the layout.
  * @param textColor [Color] to be applied to the text.
+ * @param linkTextColor [Color] of the link text.
  */
 @Composable
 fun PoweredByPocketHeader(
     onLearnMoreClicked: (String) -> Unit,
     modifier: Modifier = Modifier,
     textColor: Color = FirefoxTheme.colors.textPrimary,
+    linkTextColor: Color = FirefoxTheme.colors.textAccent,
 ) {
     val link = stringResource(R.string.pocket_stories_feature_learn_more)
     val text = stringResource(R.string.pocket_stories_feature_caption, link)
@@ -433,6 +436,8 @@ fun PoweredByPocketHeader(
                 ClickableSubstringLink(
                     text = text,
                     textColor = textColor,
+                    linkTextColor = linkTextColor,
+                    linkTextDecoration = TextDecoration.Underline,
                     clickableStartIndex = linkStartIndex,
                     clickableEndIndex = linkEndIndex,
                 ) {

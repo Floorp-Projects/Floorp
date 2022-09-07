@@ -6,7 +6,10 @@
 
 package org.mozilla.fenix.home.pocket
 
+import android.content.res.Configuration
 import android.view.View
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -47,7 +50,17 @@ class PocketRecommendationsHeaderViewHolder(
 
         val wallpaperState = components.appStore
             .observeAsComposableState { state -> state.wallpaperState }.value
-        val wallpaperAdaptedTextColor = wallpaperState?.currentWallpaper?.textColor?.let { Color(it) }
+
+        var textColor = FirefoxTheme.colors.textPrimary
+        var linkTextColor = FirefoxTheme.colors.textAccent
+
+        wallpaperState?.currentWallpaper?.let { currentWallpaper ->
+            currentWallpaper.textColor?.let {
+                val wallpaperAdaptedTextColor = Color(it)
+                textColor = wallpaperAdaptedTextColor
+                linkTextColor = wallpaperAdaptedTextColor
+            }
+        }
 
         Column {
             Spacer(Modifier.height(24.dp))
@@ -55,7 +68,8 @@ class PocketRecommendationsHeaderViewHolder(
             PoweredByPocketHeader(
                 onLearnMoreClicked = interactor::onLearnMoreClicked,
                 modifier = Modifier.fillMaxWidth(),
-                textColor = wallpaperAdaptedTextColor ?: FirefoxTheme.colors.textPrimary,
+                textColor = textColor,
+                linkTextColor = linkTextColor,
             )
         }
     }
@@ -66,11 +80,14 @@ class PocketRecommendationsHeaderViewHolder(
 }
 
 @Composable
-@Preview
-fun PocketRecommendationsFooterViewHolderPreview() {
+@Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Preview(uiMode = Configuration.UI_MODE_NIGHT_NO)
+private fun PocketRecommendationsFooterViewHolderPreview() {
     FirefoxTheme(theme = Theme.getTheme()) {
-        PoweredByPocketHeader(
-            onLearnMoreClicked = {},
-        )
+        Box(modifier = Modifier.background(color = FirefoxTheme.colors.layer1)) {
+            PoweredByPocketHeader(
+                onLearnMoreClicked = {},
+            )
+        }
     }
 }
