@@ -977,14 +977,6 @@ menuitem[checked="true"]>.menu-iconic-left,
   @media not (-moz-platform: windows-win7) {
     @media not (-moz-platform: windows-win8) {
       @media (-moz-windows-default-theme) {
-        :root[tabsintitlebar] #TabsToolbar .titlebar-button {
-          transform: translateY(-8px) !important;
-          transform: translateY(-10px) !important;
-        }
-
-        .titlebar-button {
-          padding: 10px 17px !important;
-        }
 
         .titlebar-buttonbox-container {
           margin-bottom: 0 !important;
@@ -1418,22 +1410,15 @@ menuitem[checked="true"]>.menu-iconic-left,
 }
 
 #navigator-toolbox>#PersonalToolbar .toolbarbutton-1>.toolbarbutton-icon,
-#navigator-toolbox .toolbarbutton-1> :-moz-any(.toolbarbutton-icon, .toolbarbutton-badge-stack:not(#PanelUI-menu-button > .toolbarbutton-badge-stack)),
-/* no ::part workaround - may have side effects */
-#scrollbutton-up[part="scrollbutton-up"]:not(.menupopup-scrollbutton)>.toolbarbutton-icon,
-#scrollbutton-down[part="scrollbutton-down"]:not(.menupopup-scrollbutton)>.toolbarbutton-icon {
-  background: 0 !important;
-}
-#navigator-toolbox>#PersonalToolbar .toolbarbutton-1>.toolbarbutton-icon,
 #navigator-toolbox .toolbarbutton-1> :-moz-any(.toolbarbutton-icon, .toolbarbutton-badge-stack),
 /* no ::part workaround - may have side effects */
 #scrollbutton-up[part="scrollbutton-up"]:not(.menupopup-scrollbutton)>.toolbarbutton-icon,
 #scrollbutton-down[part="scrollbutton-down"]:not(.menupopup-scrollbutton)>.toolbarbutton-icon {
+  background: 0 !important;
   padding: 6px !important;
   width: auto !important;
   height: auto !important;
 }
-
 /* #endregion*/
 /* #region パーソナルバー*/
 /* EdgeFr-Fox by bmFtZQ - personalbar.css */
@@ -1917,7 +1902,6 @@ menupopup> :is(menu:not(.menu-iconic), menuitem:not(.menuitem-iconic, [checked="
 }
 
 /* vertically center buttons in tab bar */
-#TabsToolbar toolbarbutton,
 #TabsToolbar .toolbar-items toolbarbutton.toolbarbutton-1,
 /* >= 72 */
 #TabsToolbar .tabbrowser-arrowscrollbox::part(scrollbutton-up),
@@ -1928,7 +1912,6 @@ menupopup> :is(menu:not(.menu-iconic), menuitem:not(.menuitem-iconic, [checked="
   margin-top: calc(var(--tab-shadow-max-size) + 3px) !important;
   margin-bottom: 1px !important;
 }
-
 #tabbrowser-tabs[overflow] .tabbrowser-tab[pinned] .tab-stack {
   margin-top: 8px !important;
   margin-bottom: 0 !important;
