@@ -14,89 +14,32 @@ loadScripts(
 // Temporary debug logging for bug 1652192.
 EventsLogger.enabled = true;
 
-function testVisibility(acc, shouldBeOffscreen, shouldBeInvisible) {
-  const [states] = getStates(acc);
-  let looksGood = shouldBeOffscreen == ((states & STATE_OFFSCREEN) != 0);
-  looksGood |= shouldBeInvisible == ((states & STATE_INVISIBLE) != 0);
-  return looksGood;
-}
-
 async function runTest(browser, accDoc) {
   let getAcc = id => findAccessibleChildByID(accDoc, id);
 
-  await untilCacheOk(
-    () => testVisibility(getAcc("div"), false, false),
-    "Div should be on screen"
-  );
+  testStates(getAcc("div"), 0, 0, STATE_INVISIBLE | STATE_OFFSCREEN);
 
   let input = getAcc("input_scrolledoff");
-  await untilCacheOk(
-    () => testVisibility(input, true, false),
-    "Input should be offscreen"
-  );
+  testStates(input, STATE_OFFSCREEN, 0, STATE_INVISIBLE);
 
   // scrolled off item (twice)
   let lastLi = getAcc("li_last");
-  await untilCacheOk(
-    () => testVisibility(lastLi, true, false),
-    "Last list item should be offscreen"
-  );
+  testStates(lastLi, STATE_OFFSCREEN, 0, STATE_INVISIBLE);
 
   // scroll into view the item
   await invokeContentTask(browser, [], () => {
     content.document.getElementById("li_last").scrollIntoView(true);
   });
-  await untilCacheOk(
-    () => testVisibility(lastLi, false, false),
-    "Last list item should no longer be offscreen"
-  );
+  testStates(lastLi, 0, 0, STATE_OFFSCREEN | STATE_INVISIBLE);
 
   // first item is scrolled off now (testcase for bug 768786)
   let firstLi = getAcc("li_first");
-  await untilCacheOk(
-    () => testVisibility(firstLi, true, false),
-    "First listitem should now be offscreen"
-  );
-
-  await untilCacheOk(
-    () => testVisibility(getAcc("frame"), false, false),
-    "iframe should initially be onscreen"
-  );
-
-  let loaded = waitForEvent(EVENT_DOCUMENT_LOAD_COMPLETE, "iframeDoc");
-  await invokeContentTask(browser, [], () => {
-    content.document.querySelector("iframe").src =
-      'data:text/html,<body id="iframeDoc"><p id="p">hi</p></body>';
-  });
-  const iframeDoc = (await loaded).accessible;
-  const iframeP = findAccessibleChildByID(iframeDoc, "p");
-  await untilCacheOk(
-    () => testVisibility(iframeP, false, false),
-    "iframe content should also be on screen"
-  );
-
-  // scroll into view the div
-  await invokeContentTask(browser, [], () => {
-    content.document.getElementById("div").scrollIntoView(true);
-  });
-
-  await untilCacheOk(
-    () => testVisibility(getAcc("frame"), true, false),
-    "iframe should now be offscreen"
-  );
-
-  await untilCacheOk(
-    () => testVisibility(iframeP, true, false),
-    "iframe content should now be off screen"
-  );
+  testStates(firstLi, STATE_OFFSCREEN, 0, STATE_INVISIBLE);
 
   let newTab = await BrowserTestUtils.openNewForegroundTab(gBrowser);
   // Accessibles in background tab should have offscreen state and no
   // invisible state.
-  await untilCacheOk(
-    () => testVisibility(getAcc("div"), true, false),
-    "Accs in background tab should be offscreen but not invisible."
-  );
+  testStates(getAcc("div"), STATE_OFFSCREEN, 0, STATE_INVISIBLE);
   BrowserTestUtils.removeTab(newTab);
 }
 
@@ -107,9 +50,7 @@ addAccessibleTask(
   <ul style="border:2px solid red; width: 100px; height: 50px; overflow: auto;">
     <li id="li_first">item1</li><li>item2</li><li>item3</li>
     <li>item4</li><li>item5</li><li id="li_last">item6</li>
-  </ul>
-  <iframe id="frame"></iframe>
-  `,
+  </ul>`,
   runTest,
   { chrome: true, iframe: true, remoteIframe: true }
 );
