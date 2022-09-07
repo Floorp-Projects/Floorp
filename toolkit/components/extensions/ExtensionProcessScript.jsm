@@ -146,6 +146,7 @@ ExtensionManager = {
         id: extension.id,
         mozExtensionHostname: extension.uuid,
         name: extension.name,
+        type: extension.type,
         baseURL: extension.resourceURL,
 
         isPrivileged: extension.isPrivileged,

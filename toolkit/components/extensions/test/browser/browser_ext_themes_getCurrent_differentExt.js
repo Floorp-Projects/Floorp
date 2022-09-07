@@ -26,6 +26,21 @@ add_task(async function test_getcurrent() {
       browser.theme.onUpdated.addListener(() => {
         browser.theme.getCurrent().then(theme => {
           browser.test.sendMessage("theme-updated", theme);
+          if (!theme?.images) {
+            return;
+          }
+
+          // Try to access the theme_frame image
+          fetch(theme.images.theme_frame)
+            .then(() => {
+              browser.test.sendMessage("theme-image", { success: true });
+            })
+            .catch(e => {
+              browser.test.sendMessage("theme-image", {
+                success: false,
+                error: e.message,
+              });
+            });
         });
       });
     },
@@ -35,6 +50,7 @@ add_task(async function test_getcurrent() {
 
   info("Testing getCurrent after static theme startup");
   let updatedPromise = extension.awaitMessage("theme-updated");
+  let imageLoaded = extension.awaitMessage("theme-image");
   await theme.startup();
   let receivedTheme = await updatedPromise;
   Assert.ok(
@@ -51,6 +67,7 @@ add_task(async function test_getcurrent() {
     TEXT_COLOR,
     "getCurrent returns correct tab_background_text color"
   );
+  Assert.deepEqual(await imageLoaded, { success: true }, "theme image loaded");
 
   info("Testing getCurrent after static theme unload");
   updatedPromise = extension.awaitMessage("theme-updated");
