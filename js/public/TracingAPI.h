@@ -41,7 +41,6 @@ enum class TracerKind {
   // Specific kinds of generic tracer.
   Tenuring,
   Moving,
-  GrayBuffering,
   ClearEdges,
   Sweeping,
   MinorSweeping,
@@ -194,10 +193,6 @@ class JS_PUBLIC_API JSTracer {
   }
 
   JS::TracingContext& context() { return context_; }
-
-  // Get the current GC number. Only call this method if |isMarkingTracer()|
-  // is true.
-  uint32_t gcNumberForMarking() const;
 
  protected:
   JSTracer(JSRuntime* rt, JS::TracerKind kind,

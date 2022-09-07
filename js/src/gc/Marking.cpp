@@ -197,7 +197,6 @@ void js::CheckTracedThing(JSTracer* trc, T* thing) {
   } else {
     MOZ_ASSERT(isGcMarkingTracer || isUnmarkGrayTracer || isClearEdgesTracer ||
                IsTracerKind(trc, JS::TracerKind::Moving) ||
-               IsTracerKind(trc, JS::TracerKind::GrayBuffering) ||
                IsTracerKind(trc, JS::TracerKind::Sweeping));
     MOZ_ASSERT_IF(!isClearEdgesTracer, CurrentThreadIsPerformingGC());
   }
