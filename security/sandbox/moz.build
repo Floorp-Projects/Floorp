@@ -28,14 +28,12 @@ elif CONFIG["OS_ARCH"] == "WINNT":
     DIRS += [
         "win/src/remotesandboxbroker",
         "win/src/sandboxbroker",
-        "win/src/sandboxpermissions",
         "win/src/sandboxtarget",
     ]
 
     EXPORTS.mozilla.sandboxing += [
         "chromium-shim/sandbox/win/loggingCallbacks.h",
         "chromium-shim/sandbox/win/loggingTypes.h",
-        "chromium-shim/sandbox/win/permissionsService.h",
         "chromium-shim/sandbox/win/sandboxLogging.h",
         "win/SandboxInitialization.h",
     ]
@@ -47,7 +45,6 @@ elif CONFIG["OS_ARCH"] == "WINNT":
         "chromium-shim/base/logging.cpp",
         "chromium-shim/base/process/memory_win.cpp",
         "chromium-shim/base/win/win_util.cpp",
-        "chromium-shim/sandbox/win/permissionsService.cpp",
         "chromium-shim/sandbox/win/sandboxLogging.cpp",
         "chromium-shim/sandbox/win/src/line_break_dispatcher.cc",
         "chromium-shim/sandbox/win/src/line_break_interception.cc",

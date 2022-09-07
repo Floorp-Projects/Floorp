@@ -236,7 +236,6 @@
 #    include "mozilla/SandboxInfo.h"
 #  elif defined(XP_WIN)
 #    include "sandboxBroker.h"
-#    include "sandboxPermissions.h"
 #  endif
 #endif
 
@@ -4239,10 +4238,6 @@ int XREMain::XRE_mainInit(bool* aExitFlag) {
         "Failed to initialize broker services, sandboxed processes will "
         "fail to start.");
   }
-  if (mAppData->sandboxPermissionsService) {
-    SandboxPermissions::Initialize(mAppData->sandboxPermissionsService,
-                                   nullptr);
-  }
 #endif
 
 #ifdef XP_MACOSX
@@ -5867,7 +5862,6 @@ int XREMain::XRE_main(int argc, char* argv[], const BootstrapConfig& aConfig) {
 
 #if defined(XP_WIN) && defined(MOZ_SANDBOX)
   mAppData->sandboxBrokerServices = aConfig.sandboxBrokerServices;
-  mAppData->sandboxPermissionsService = aConfig.sandboxPermissionsService;
 #endif
 
   // Once we unset the exception handler, we lose the ability to properly

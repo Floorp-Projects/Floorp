@@ -80,6 +80,9 @@ NTSTATUS WINAPI TargetNtCreateFile(NtCreateFileFunction orig_CreateFile,
     params[OpenFile::OPTIONS] = ParamPickerMake(options_uint32);
     params[OpenFile::BROKER] = ParamPickerMake(broker);
 
+    if (!QueryBroker(IpcTag::NTCREATEFILE, params.GetBase()))
+      break;
+
     SharedMemIPCClient ipc(memory);
     CrossCallReturn answer = {0};
     // The following call must match in the parameters with
@@ -162,6 +165,9 @@ NTSTATUS WINAPI TargetNtOpenFile(NtOpenFileFunction orig_OpenFile,
     params[OpenFile::OPTIONS] = ParamPickerMake(options_uint32);
     params[OpenFile::BROKER] = ParamPickerMake(broker);
 
+    if (!QueryBroker(IpcTag::NTOPENFILE, params.GetBase()))
+      break;
+
     SharedMemIPCClient ipc(memory);
     CrossCallReturn answer = {0};
     ResultCode code =
@@ -232,6 +238,9 @@ TargetNtQueryAttributesFile(NtQueryAttributesFileFunction orig_QueryAttributes,
     params[FileName::NAME] = ParamPickerMake(name_ptr);
     params[FileName::BROKER] = ParamPickerMake(broker);
 
+    if (!QueryBroker(IpcTag::NTQUERYATTRIBUTESFILE, params.GetBase()))
+      break;
+
     SharedMemIPCClient ipc(memory);
     CrossCallReturn answer = {0};
     ResultCode code = CrossCall(ipc, IpcTag::NTQUERYATTRIBUTESFILE, name.get(),
@@ -293,6 +302,9 @@ NTSTATUS WINAPI TargetNtQueryFullAttributesFile(
     const wchar_t* name_ptr = name.get();
     params[FileName::NAME] = ParamPickerMake(name_ptr);
     params[FileName::BROKER] = ParamPickerMake(broker);
+
+    if (!QueryBroker(IpcTag::NTQUERYFULLATTRIBUTESFILE, params.GetBase()))
+      break;
 
     SharedMemIPCClient ipc(memory);
     CrossCallReturn answer = {0};
@@ -372,6 +384,9 @@ TargetNtSetInformationFile(NtSetInformationFileFunction orig_SetInformationFile,
     const wchar_t* name_ptr = name.get();
     params[FileName::NAME] = ParamPickerMake(name_ptr);
     params[FileName::BROKER] = ParamPickerMake(broker);
+
+    if (!QueryBroker(IpcTag::NTSETINFO_RENAME, params.GetBase()))
+      break;
 
     InOutCountedBuffer io_status_buffer(io_status, sizeof(IO_STATUS_BLOCK));
     // This is actually not an InOut buffer, only In, but using InOut facility
