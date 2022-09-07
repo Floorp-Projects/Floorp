@@ -1932,8 +1932,8 @@ interface nsIDOMWindowUtils : nsISupports {
 
   /**
    * If aHandlingInput is true, this informs the event state manager that
-   * we're handling user input. Otherwise, this is a no-op (as by default
-   * we're not handling user input).
+   * we're handling user input, and provides transient user activation.
+   * Otherwise, this is a no-op (as by default we're not handling user input).
    * Remember to call destruct() on the return value!
    * See also nsIDOMWindowUtils::isHandlingUserInput.
    */
