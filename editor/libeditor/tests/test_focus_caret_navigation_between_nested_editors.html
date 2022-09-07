@@ -1,0 +1,207 @@
+<!DOCTYPE>
+<html>
+<head>
+<title>Test for bug1318312</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<script src="/tests/SimpleTest/EventUtils.js"></script>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+<style type="text/css">
+</style>
+</head>
+<body>
+<div id="outerEditor" contenteditable><p>editable in outer editor</p>
+<div id="staticInEditor" contenteditable="false"><p>non-editable in outer editor</p>
+<div id="innerEditor" contenteditable><p>editable in inner editor</p></div></div></div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+var outerEditor = document.getElementById("outerEditor");
+var innerEditor = document.getElementById("innerEditor");
+
+function getNodeDescription(node) {
+  if (!node) {
+    return "null";
+  }
+  switch (node.nodeType) {
+    case Node.TEXT_NODE:
+    case Node.COMMENT_NODE:
+    case Node.CDATA_SECTION_NODE:
+      return `${node.nodeName} "${node.data}"`;
+    case Node.ELEMENT_NODE:
+      return `<${node.nodeName.toLowerCase()}>`;
+    default:
+      return `${node.nodeName}`;
+  }
+}
+
+function getRangeDescription(range) {
+  if (range === null) {
+    return "null";
+  }
+  if (range === undefined) {
+    return "undefined";
+  }
+  return range.startContainer == range.endContainer &&
+    range.startOffset == range.endOffset
+    ? `(${getNodeDescription(range.startContainer)}, ${range.startOffset})`
+    : `(${getNodeDescription(range.startContainer)}, ${
+        range.startOffset
+      }) - (${getNodeDescription(range.endContainer)}, ${range.endOffset})`;
+}
+
+function runTests() {
+  outerEditor.focus();
+  is(document.activeElement, outerEditor,
+     "outerEditor should have focus");
+
+  // Move cursor into the innerEditor with ArrowDown key.  Then, focus shouldn't
+  // be moved to innerEditor from outerEditor.
+  // Note that Chrome moves focus in this case.  However, we should align the
+  // behavior to Chrome for now because we don't support move caret from a
+  // selection limiter to outside of it.
+  (() => {
+    const description = "Press ArrowDown from start of the outer editor";
+    synthesizeKey("KEY_ArrowDown");
+    is(
+      document.activeElement,
+      outerEditor,
+      `${description}: The outer editor should keep having focus`
+    );
+    is(
+      getRangeDescription(getSelection().getRangeAt(0)),
+      '(#text "editable in inner editor", 0)',
+      `${description}: Caret should be moved to start of the inner editor`
+    );
+  })();
+
+  (() => {
+    const description = 'Typing "a" at start of the inner editor';
+    sendString("a");
+    is(
+      document.activeElement,
+      outerEditor,
+      `${description}: The outer editor should keep having focus`
+    );
+    is(
+      getRangeDescription(getSelection().getRangeAt(0)),
+      '(#text "aeditable in inner editor", 1)',
+      `${description}: Caret should be moved to after typed character, "a"`
+    );
+  })();
+
+  (() => {
+    const description = 'Pressing Enter next to the typed character "a"';
+    synthesizeKey("KEY_Enter");
+    is(
+      document.activeElement,
+      outerEditor,
+      `${description}: The outer editor should keep having focus`
+    );
+    is(
+      innerEditor.innerHTML,
+      "<p>a</p><p>editable in inner editor</p>",
+      `${description}: The paragraph in the inner editor should be split after "a"`
+    );
+    is(
+      getRangeDescription(getSelection().getRangeAt(0)),
+      '(#text "editable in inner editor", 0)',
+      `${description}: Caret should be moved to start of the second paragraph`
+    );
+  })();
+
+  (() => {
+    const description = 'Pressing Backspace at start of the second paragraph';
+    synthesizeKey("KEY_Backspace");
+    is(
+      document.activeElement,
+      outerEditor,
+      `${description}: The outer editor should keep having focus`
+    );
+    is(
+      innerEditor.innerHTML,
+      "<p>aeditable in inner editor</p>",
+      `${description}: The paragraphs should be joined`
+    );
+    is(
+      getRangeDescription(getSelection().getRangeAt(0)),
+      '(#text "aeditable in inner editor", 1)',
+      `${description}: Caret should be moved to end of text which was in the first paragraph`
+    );
+  })();
+
+  (() => {
+    const description = 'Pressing Shift-ArrowLeft from next to the first character, "a"';
+    synthesizeKey("KEY_ArrowLeft", {shiftKey: true});
+    is(
+      document.activeElement,
+      outerEditor,
+      `${description}: The outer editor should keep having focus`
+    );
+    is(
+      getRangeDescription(getSelection().getRangeAt(0)),
+      '(#text "aeditable in inner editor", 0) - (#text "aeditable in inner editor", 1)',
+      `${description}: The first character, "a", should be selected`
+    );
+  })();
+
+  (() => {
+    const description = 'Pressing Delete to delete selected "a"';
+    synthesizeKey("KEY_Delete");
+    is(
+      document.activeElement,
+      outerEditor,
+      `${description}: The outer editor should keep having focus`
+    );
+    is(
+      innerEditor.innerHTML,
+      "<p>editable in inner editor</p>",
+      `${description}: The selected "a" should be deleted`
+    );
+    is(
+      getRangeDescription(getSelection().getRangeAt(0)),
+      '(#text "editable in inner editor", 0)',
+      `${description}: Selection should be collapsed at start of the inner editor`
+    );
+  })();
+
+  (() => {
+    const description = 'Pressing ArrowUp from start of the inner editor';
+    synthesizeKey("KEY_ArrowUp");
+    is(
+      document.activeElement,
+      outerEditor,
+      `${description}: The outer editor should keep having focus`
+    );
+    is(
+      getRangeDescription(getSelection().getRangeAt(0)),
+      '(#text "editable in outer editor", 0)',
+      `${description}: Caret should be moved to start of the outer editor`
+    );
+  })();
+
+  // However, clicking in innerEditor should move focus.
+  (() => {
+    const description = 'Clicking the inner editor when caret is in the outer editor';
+    synthesizeMouseAtCenter(innerEditor, {});
+    is(
+      document.activeElement,
+      innerEditor,
+      `${description}: The inner editor should get focus`
+    );
+    is(
+      getNodeDescription(getSelection().focusNode),
+      '#text "editable in inner editor"',
+      `${description}: Caret should move into the inner editor`
+    );
+  })();
+
+  SimpleTest.finish();
+}
+
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(runTests);
+
+</script>
+</pre>
+</body>
+</html>
