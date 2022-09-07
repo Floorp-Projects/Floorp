@@ -484,14 +484,9 @@ MOZ_ALWAYS_INLINE void ReadBarrier(T* thing) {
 }
 
 MOZ_ALWAYS_INLINE void ReadBarrierImpl(TenuredCell* thing) {
-  MOZ_ASSERT(!CurrentThreadIsIonCompiling());
-  MOZ_ASSERT(!CurrentThreadIsGCMarking());
+  MOZ_ASSERT(CurrentThreadIsMainThread());
+  MOZ_ASSERT(!JS::RuntimeHeapIsCollecting());
   MOZ_ASSERT(thing);
-
-  // Barriers should not be triggered on main thread while collecting.
-  mozilla::DebugOnly<JSRuntime*> runtime = thing->runtimeFromAnyThread();
-  MOZ_ASSERT_IF(CurrentThreadCanAccessRuntime(runtime),
-                !JS::RuntimeHeapIsCollecting());
 
   JS::shadow::Zone* shadowZone = thing->shadowZoneFromAnyThread();
   if (shadowZone->needsIncrementalBarrier()) {
@@ -500,8 +495,6 @@ MOZ_ALWAYS_INLINE void ReadBarrierImpl(TenuredCell* thing) {
   }
 
   if (thing->isMarkedGray()) {
-    // There shouldn't be anything marked gray unless we're on the main thread.
-    MOZ_ASSERT(CurrentThreadCanAccessRuntime(runtime));
     UnmarkGrayGCThingRecursively(thing);
   }
 }
