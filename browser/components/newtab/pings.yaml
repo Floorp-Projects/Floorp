@@ -12,8 +12,12 @@ newtab:
     feature, or the `browser.newtabpage.ping.enabled` pref.
   reasons:
     newtab_session_end: |
-      The newtab session ended.
+      The newtab visit ended.
       Could be by navigation, being closed, etc.
+    component_init: |
+      The newtab component init'd.
+      This is mostly to ensure we hear at least once from clients configured to
+      not show a newtab UI.
   include_client_id: true
   bugs:
     - https://bugzilla.mozilla.org/show_bug.cgi?id=1766887

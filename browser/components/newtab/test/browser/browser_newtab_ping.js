@@ -198,3 +198,24 @@ add_task(async function test_newtab_doesnt_send_nimbus() {
   await doEnrollmentCleanup();
   await SpecialPowers.popPrefEnv();
 });
+
+add_task(async function test_newtab_init_sends_ping() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.newtabpage.activity-stream.telemetry", true]],
+  });
+
+  Services.fog.testResetFOG();
+  sendTriggerMessageSpy.resetHistory();
+  let TelemetryFeed = AboutNewTab.activityStream.store.feeds.get(
+    "feeds.telemetry"
+  );
+  let pingSent = false;
+  GleanPings.newtab.testBeforeNextSubmit(reason => {
+    pingSent = true;
+    Assert.equal(reason, "component_init");
+  });
+  TelemetryFeed.init(); // INIT action doesn't happen by default.
+  Assert.ok(pingSent, "ping was sent");
+
+  await SpecialPowers.popPrefEnv();
+});
