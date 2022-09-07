@@ -306,7 +306,7 @@ struct MovingTracer final : public GenericTracerImpl<MovingTracer> {
 
  private:
   template <typename T>
-  T* onEdge(T* thingp);
+  T* onEdge(T* thingp, const char* name);
   friend class GenericTracerImpl<MovingTracer>;
 };
 
@@ -316,7 +316,7 @@ struct MinorSweepingTracer final
 
  private:
   template <typename T>
-  T* onEdge(T* thingp);
+  T* onEdge(T* thingp, const char* name);
   friend class GenericTracerImpl<MinorSweepingTracer>;
 };
 

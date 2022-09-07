@@ -355,9 +355,10 @@ void GetTraceThingInfo(char* buf, size_t bufsize, void* thing,
 
 // Overloaded function to call the correct GenericTracer method based on the
 // argument type.
-#define DEFINE_DISPATCH_FUNCTION(name, type, _1, _2)               \
-  inline type* DispatchToOnEdge(GenericTracer* trc, type* thing) { \
-    return trc->on##name##Edge(thing);                             \
+#define DEFINE_DISPATCH_FUNCTION(name, type, _1, _2)             \
+  inline type* DispatchToOnEdge(GenericTracer* trc, type* thing, \
+                                const char* name) {              \
+    return trc->on##name##Edge(thing, name);                     \
   }
 JS_FOR_EACH_TRACEKIND(DEFINE_DISPATCH_FUNCTION)
 #undef DEFINE_DISPATCH_FUNCTION
