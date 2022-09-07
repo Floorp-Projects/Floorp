@@ -11774,10 +11774,6 @@ exports.PREFERENCES = [
     "layout.css.scrollbar-gutter.enabled"
   ],
   [
-    "-webkit-line-clamp",
-    "layout.css.webkit-line-clamp.enabled"
-  ],
-  [
     "overflow-clip-box-block",
     "layout.css.overflow-clip-box.enabled"
   ],

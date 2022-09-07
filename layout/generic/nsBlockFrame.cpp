@@ -1162,6 +1162,10 @@ static bool IsLineClampRoot(const nsBlockFrame* aFrame) {
     return false;
   }
 
+  if (StaticPrefs::layout_css_webkit_line_clamp_block_enabled()) {
+    return true;
+  }
+
   // For now, -webkit-box is the only thing allowed to be a line-clamp root.
   // Ideally we'd just make this work everywhere, but for now we're carrying
   // this forward as a limitation on the legacy -webkit-line-clamp feature,
@@ -1848,7 +1852,6 @@ static nscoord ApplyLineClamp(const ReflowInput& aReflowInput,
   if (!IsLineClampRoot(aFrame)) {
     return aContentBlockEndEdge;
   }
-
   auto lineClamp = aReflowInput.mStyleDisplay->mWebkitLineClamp;
   nsBlockFrame* frame = aFrame;
   nsLineBox* line = FindLineClampTarget(frame, lineClamp);

@@ -11466,6 +11466,14 @@ var gCSSProperties = {
     alias_for: "flex-flow",
     subproperties: ["flex-direction", "flex-wrap"],
   },
+  "-webkit-line-clamp": {
+    domProp: "webkitLineClamp",
+    inherited: false,
+    type: CSS_TYPE_LONGHAND,
+    initial_values: ["none"],
+    other_values: ["1", "2"],
+    invalid_values: ["auto", "0", "-1"],
+  },
   "-webkit-order": {
     domProp: "webkitOrder",
     inherited: false,
@@ -12882,17 +12890,6 @@ if (IsCSSPropertyPrefEnabled("layout.css.overscroll-behavior.enabled")) {
 }
 
 gCSSProperties["display"].other_values.push("flow-root");
-
-if (IsCSSPropertyPrefEnabled("layout.css.webkit-line-clamp.enabled")) {
-  gCSSProperties["-webkit-line-clamp"] = {
-    domProp: "webkitLineClamp",
-    inherited: false,
-    type: CSS_TYPE_LONGHAND,
-    initial_values: ["none"],
-    other_values: ["1", "2"],
-    invalid_values: ["auto", "0", "-1"],
-  };
-}
 
 if (IsCSSPropertyPrefEnabled("layout.css.hyphenate-character.enabled")) {
   gCSSProperties["hyphenate-character"] = {
