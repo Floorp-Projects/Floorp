@@ -481,6 +481,25 @@ already_AddRefed<ScriptLoadRequest> WorkerScriptLoader::CreateScriptLoadRequest(
   return request.forget();
 }
 
+bool WorkerScriptLoader::DispatchLoadScript(ScriptLoadRequest* aRequest) {
+  mWorkerRef->Private()->AssertIsOnWorkerThread();
+
+  nsTArray<WorkerLoadContext*> scriptLoadList;
+  scriptLoadList.AppendElement(aRequest->GetWorkerLoadContext());
+
+  nsresult rv =
+      NS_DispatchToMainThread(NewRunnableMethod<nsTArray<WorkerLoadContext*>&&>(
+          "WorkerScriptLoader::LoadScripts", this,
+          &WorkerScriptLoader::LoadScripts, std::move(scriptLoadList)));
+
+  if (NS_FAILED(rv)) {
+    NS_ERROR("Failed to dispatch!");
+    mRv.Throw(NS_ERROR_FAILURE);
+    return false;
+  }
+  return true;
+}
+
 bool WorkerScriptLoader::DispatchLoadScripts() {
   mWorkerRef->Private()->AssertIsOnWorkerThread();
 
