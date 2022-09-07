@@ -441,12 +441,11 @@ MovingTracer::MovingTracer(JSRuntime* rt)
                         JS::WeakMapTraceAction::TraceKeysAndValues) {}
 
 template <typename T>
-inline T* MovingTracer::onEdge(T* thing, const char* name) {
+inline void MovingTracer::onEdge(T** thingp, const char* name) {
+  T* thing = *thingp;
   if (thing->runtimeFromAnyThread() == runtime() && IsForwarded(thing)) {
-    thing = Forwarded(thing);
+    *thingp = Forwarded(thing);
   }
-
-  return thing;
 }
 
 void Zone::prepareForCompacting() {
