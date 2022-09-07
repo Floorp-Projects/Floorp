@@ -8,7 +8,7 @@ import android.content.Context
 import com.google.android.gms.common.ConnectionResult
 import com.google.android.gms.common.GoogleApiAvailability
 import com.google.firebase.FirebaseApp
-import com.google.firebase.iid.FirebaseInstanceId
+import com.google.firebase.messaging.FirebaseMessaging
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
 import kotlinx.coroutines.CoroutineScope
@@ -98,7 +98,7 @@ abstract class AbstractFirebasePushService(
     override fun deleteToken() {
         CoroutineScope(coroutineContext).launch {
             try {
-                FirebaseInstanceId.getInstance().deleteInstanceId()
+                FirebaseMessaging.getInstance().deleteToken()
             } catch (e: IOException) {
                 logger.error("Force registration renewable failed.", e)
             }

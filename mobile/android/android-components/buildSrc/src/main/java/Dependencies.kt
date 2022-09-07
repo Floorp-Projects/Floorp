@@ -76,7 +76,7 @@ object Versions {
     }
 
     object Firebase {
-        const val messaging = "20.3.0"
+        const val messaging = "23.0.8"
     }
 }
 
