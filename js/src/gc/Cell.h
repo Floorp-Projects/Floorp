@@ -38,7 +38,6 @@ extern bool CurrentThreadIsIonCompiling();
 extern bool CurrentThreadIsGCMarking();
 extern bool CurrentThreadIsGCSweeping();
 extern bool CurrentThreadIsGCFinalizing();
-extern bool RuntimeIsVerifyingPreBarriers(JSRuntime* runtime);
 
 #endif
 
@@ -509,19 +508,18 @@ MOZ_ALWAYS_INLINE void ReadBarrierImpl(Cell* thing) {
 }
 
 MOZ_ALWAYS_INLINE void PreWriteBarrierImpl(TenuredCell* thing) {
-  MOZ_ASSERT(!CurrentThreadIsIonCompiling());
-  MOZ_ASSERT(!CurrentThreadIsGCMarking());
+  MOZ_ASSERT(CurrentThreadIsMainThread() || CurrentThreadIsGCSweeping() ||
+             CurrentThreadIsGCFinalizing());
   MOZ_ASSERT(thing);
 
   // Barriers can be triggered on the main thread while collecting, but are
-  // disabled. For example, this happens when destroying HeapPtr wrappers.
+  // disabled. For example, this happens when sweeping HeapPtr wrappers. See
+  // AutoDisableBarriers.
 
   JS::shadow::Zone* zone = thing->shadowZoneFromAnyThread();
-  if (!zone->needsIncrementalBarrier()) {
-    return;
+  if (zone->needsIncrementalBarrier()) {
+    PerformIncrementalPreWriteBarrier(thing);
   }
-
-  PerformIncrementalPreWriteBarrier(thing);
 }
 
 MOZ_ALWAYS_INLINE void PreWriteBarrierImpl(Cell* thing) {

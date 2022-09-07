@@ -989,26 +989,25 @@ void js::gc::PerformIncrementalPreWriteBarrier(TenuredCell* cell) {
   // The same as PerformIncrementalReadBarrier except for an extra check on the
   // runtime for cells in atoms zone.
 
+  Zone* zone = cell->zoneFromAnyThread();
+  MOZ_ASSERT(zone->needsIncrementalBarrier());
+
   MOZ_ASSERT(cell);
   if (cell->isMarkedBlack()) {
     return;
   }
 
-  Zone* zone = cell->zoneFromAnyThread();
-  MOZ_ASSERT(zone->needsIncrementalBarrier());
-
-  // Barriers can be triggered on off the main thread in two situations:
-  //  - background finalization of HeapPtrs to the atoms zone
-  //  - while we are verifying pre-barriers for a worker runtime
-  // The barrier is not required in either case.
+  // Barriers can be triggered off the main thread by background finalization of
+  // HeapPtrs to the atoms zone. We don't want to trigger the barrier in this
+  // case.
   bool checkThread = zone->isAtomsZone();
   JSRuntime* runtime = cell->runtimeFromAnyThread();
   if (checkThread && !CurrentThreadCanAccessRuntime(runtime)) {
-    MOZ_ASSERT(CurrentThreadIsGCFinalizing() ||
-               RuntimeIsVerifyingPreBarriers(runtime));
+    MOZ_ASSERT(CurrentThreadIsGCFinalizing());
     return;
   }
 
+  MOZ_ASSERT(CurrentThreadIsMainThread());
   MOZ_ASSERT(!JS::RuntimeHeapIsMajorCollecting());
 
   // Skip dispatching on known tracer type.

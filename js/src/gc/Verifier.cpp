@@ -32,16 +32,6 @@ using namespace js::gc;
 
 using mozilla::DebugOnly;
 
-#ifdef DEBUG
-bool js::RuntimeIsVerifyingPreBarriers(JSRuntime* runtime) {
-#  ifdef JS_GC_ZEAL
-  return runtime->gc.isVerifyPreBarriersEnabled();
-#  else
-  return false;
-#  endif
-}
-#endif
-
 #ifdef JS_GC_ZEAL
 
 /*
