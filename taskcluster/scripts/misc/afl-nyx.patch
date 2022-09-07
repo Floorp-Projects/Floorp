@@ -159,10 +159,10 @@ index 60475c9..536adb9 100644
 +    exit(1);
 +  }
 +
-+  __firefox_afl_control_areas[0] = enable_afl_tracing;
-+  __firefox_afl_control_areas[1] = disable_afl_tracing;
-+  __firefox_afl_control_areas[2] = init_afl_tracing;
-+  __firefox_afl_control_areas[3] = 1337;
++  __firefox_afl_control_areas[0] = (u8**) enable_afl_tracing;
++  __firefox_afl_control_areas[1] = (u8**) disable_afl_tracing;
++  __firefox_afl_control_areas[2] = (u8**) init_afl_tracing;
++  __firefox_afl_control_areas[3] = (u8**) 1337;
 +
    is_persistent = !!getenv(PERSIST_ENV_VAR);
  
@@ -233,14 +233,24 @@ Subject: [PATCH 02/10] [compiler] Add selective instrumentation through
  AFL_INST_FILTER
 
 ---
- llvm_mode/afl-clang-fast.c | 54 +++++++++++++++++++++++++++++++++++++-
- 1 file changed, 53 insertions(+), 1 deletion(-)
+ llvm_mode/afl-clang-fast.c | 57 +++++++++++++++++++++++++++++++++++++-
+ 1 file changed, 56 insertions(+), 1 deletion(-)
 
 diff --git a/llvm_mode/afl-clang-fast.c b/llvm_mode/afl-clang-fast.c
-index c154e01..226ee36 100644
+index c154e01..b5aa521 100644
 --- a/llvm_mode/afl-clang-fast.c
 +++ b/llvm_mode/afl-clang-fast.c
-@@ -39,6 +39,7 @@
+@@ -29,6 +29,9 @@
+ */
+ 
+ #define AFL_MAIN
++#ifndef _GNU_SOURCE
++#define _GNU_SOURCE
++#endif
+ 
+ #include "../config.h"
+ #include "../types.h"
+@@ -39,6 +42,7 @@
  #include <unistd.h>
  #include <stdlib.h>
  #include <string.h>
@@ -248,7 +258,7 @@ index c154e01..226ee36 100644
  
  static u8*  obj_path;               /* Path to runtime libraries         */
  static u8** cc_params;              /* Parameters passed to the real CC  */
-@@ -119,13 +120,63 @@ static void edit_params(u32 argc, char** argv) {
+@@ -119,13 +123,63 @@ static void edit_params(u32 argc, char** argv) {
      cc_params[0] = alt_cc ? alt_cc : (u8*)"clang";
    }
  
@@ -313,7 +323,7 @@ index c154e01..226ee36 100644
  #ifdef USE_TRACE_PC
    cc_params[cc_par_cnt++] = "-fsanitize-coverage=trace-pc-guard";
    cc_params[cc_par_cnt++] = "-mllvm";
-@@ -136,6 +187,7 @@ static void edit_params(u32 argc, char** argv) {
+@@ -136,6 +190,7 @@ static void edit_params(u32 argc, char** argv) {
    cc_params[cc_par_cnt++] = "-Xclang";
    cc_params[cc_par_cnt++] = alloc_printf("%s/afl-llvm-pass.so", obj_path);
  #endif /* ^USE_TRACE_PC */
@@ -788,4 +798,29 @@ index 0d1e76b..3bc0daa 100644
      "__attribute__((visibility(\"default\"))) "
 -- 
 2.37.1
+
+From 0884906de0cdd007b28b15aae35cee484d1bc31d Mon Sep 17 00:00:00 2001
+From: Mike Hommey <mh@glandium.org>
+Date: Tue, 6 Sep 2022 11:08:55 +0900
+Subject: [PATCH] Fix build failures with clang 15
+
+---
+ Makefile | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/Makefile b/Makefile
+index 5e800db..c875f2d 100644
+--- a/Makefile
++++ b/Makefile
+@@ -50,7 +50,7 @@ ifndef AFL_NO_X86
+ 
+ test_x86:
+ 	@echo "[*] Checking for the ability to compile x86 code..."
+-	@echo 'main() { __asm__("xorb %al, %al"); }' | $(CC) -w -x c - -o .test || ( echo; echo "Oops, looks like your compiler can't generate x86 code."; echo; echo "Don't panic! You can use the LLVM or QEMU mode, but see docs/INSTALL first."; echo "(To ignore this error, set AFL_NO_X86=1 and try again.)"; echo; exit 1 )
++	@echo 'int main() { __asm__("xorb %al, %al"); }' | $(CC) -w -x c - -o .test || ( echo; echo "Oops, looks like your compiler can't generate x86 code."; echo; echo "Don't panic! You can use the LLVM or QEMU mode, but see docs/INSTALL first."; echo "(To ignore this error, set AFL_NO_X86=1 and try again.)"; echo; exit 1 )
+ 	@rm -f .test
+ 	@echo "[+] Everything seems to be working, ready to compile."
+ 
+-- 
+2.37.1.1.g659da70093
 
