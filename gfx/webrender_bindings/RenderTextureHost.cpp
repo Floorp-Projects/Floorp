@@ -28,7 +28,7 @@ void ActivateBindAndTexParameteri(gl::GLContext* aGL, GLenum aActiveTexture,
 }
 
 RenderTextureHost::RenderTextureHost()
-    : mCachedRendering(wr::ImageRendering::Auto) {
+    : mCachedRendering(wr::ImageRendering::Auto), mIsFromDRMSource(false) {
   MOZ_COUNT_CTOR(RenderTextureHost);
 }
 
