@@ -2146,10 +2146,18 @@ class AddonOptions extends HTMLElement {
         el.hidden = !isAbuseReportSupported(addon);
         break;
       case "dual_theme_disable":
-        el.hidden = Services.prefs.getBoolPref("floorp.enable.dualtheme", false) && (!dual_theme_check(addon.id) || addon.isActive);
+        if(!Services.prefs.getBoolPref("floorp.enable.dualtheme", false)){
+          el.hidden = true
+        }else{
+          el.hidden = !dual_theme_check(addon.id) || addon.isActive;
+        }
         break;
       case "dual_theme_enable":
-        el.hidden = Services.prefs.getBoolPref("floorp.enable.dualtheme", false) && (dual_theme_check(addon.id) || addon.isActive);
+        if(!Services.prefs.getBoolPref("floorp.enable.dualtheme", false)){
+          el.hidden = true
+        }else{
+          el.hidden = dual_theme_check(addon.id) || addon.isActive;
+        }
         break;
       case "install-update":
         el.hidden = !updateInstall;
@@ -3361,6 +3369,7 @@ class AddonCard extends HTMLElement {
    */
   update() {
     Services.prefs.addObserver("floorp.dualtheme.theme",this.pref_update.bind(this))
+    Services.prefs.addObserver("Services.prefs",this.pref_update.bind(this))
     let { addon, card } = this;
 
     card.setAttribute("active", addon.isActive);
@@ -3898,12 +3907,23 @@ class AddonList extends HTMLElement {
     this.sections = [];
     this.pendingUninstallAddons = new Set();
     this._addonsToUpdate = new Set();
-    this._userFocusListenersAdded = false;Services.prefs.addObserver("floorp.dualtheme.theme",this.dual_theme_up.bind(this))
+    this._userFocusListenersAdded = false;
+    Services.prefs.addObserver("floorp.dualtheme.theme",this.dual_theme_up.bind(this))
+    Services.prefs.addObserver("floorp.enable.dualtheme",this.dual_theme_up2.bind(this))
   }
 
   dual_theme_up(){
     if(dual_theme_update.length > 0){
       for (let elem of dual_theme_update){
+        this.updateAddon(elem)
+      }
+      this.update()
+    }
+  }
+  async dual_theme_up2(){
+    let update_All = await AddonManager.getAllAddons()
+    if(update_All.length > 0){
+      for (let elem of update_All){
         this.updateAddon(elem)
       }
       this.update()

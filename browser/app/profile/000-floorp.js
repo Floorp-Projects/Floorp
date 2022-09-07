@@ -52,7 +52,7 @@ pref("floorp.browser.sidebar.enable", false);// サイドバーを表示
 pref("floorp.browser.sidebar2.mode", 0);// サイドバーのモード
 pref("floorp.browser.sidebar2.customurl", "");// サイドバーのカスタムURL
 
-pref("floorp.enable.dualtheme", false); //デュアルテーマの有効・無効
+pref("floorp.enable.dualtheme", false); //デュアルテーマの有効・無効 
 pref("floorp.dualtheme.theme", "[]"); //デュアルテーマのリスト
 
 pref("contentblocking.cryptomining_blocking_enabled", true);

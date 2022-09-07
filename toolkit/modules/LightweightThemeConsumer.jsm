@@ -533,7 +533,7 @@ if(Services.prefs.getBoolPref("floorp.enable.dualtheme", false)){
             }
           }
         }
-        if(dualtheme_experiment != undefined && dualtheme_experiment.stylesheet != undefined && dualtheme_experiment.stylesheet != null && (BuiltInThemeConfig.has(elem) || Services.prefs.getBoolPref("extensions.experiments.enabled",false))){
+        if(dualtheme_experiment != undefined && dualtheme_experiment.stylesheet != undefined && dualtheme_experiment.stylesheet != null && (BuiltInThemeConfig.has(elem) || Services.prefs.getBoolPref("extensions.experiments.enabled",false))) {
           let val = dualtheme_experiment.stylesheet;
           if(val.slice(0,2) != "./") val = "./" + val
           if(!("experiment" in themeData)) themeData.experiment = {"dual_stylesheets":[]}
