@@ -27,7 +27,7 @@ private const val CFR_TO_ANCHOR_VERTICAL_PADDING = -16
  * @param context [Context] used for various Android interactions.
  * @param recyclerView [RecyclerView] will serve as anchor for the sync CFR.
  */
-class SyncCFRPresenter(
+class HomeCFRPresenter(
     private val context: Context,
     private val recyclerView: RecyclerView,
 ) {

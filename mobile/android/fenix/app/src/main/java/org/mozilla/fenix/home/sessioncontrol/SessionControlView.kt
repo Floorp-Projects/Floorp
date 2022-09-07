@@ -24,7 +24,7 @@ import org.mozilla.fenix.home.OnboardingState
 import org.mozilla.fenix.home.recentbookmarks.RecentBookmark
 import org.mozilla.fenix.home.recentvisits.RecentlyVisitedItem
 import org.mozilla.fenix.onboarding.JumpBackInCFRDialog
-import org.mozilla.fenix.onboarding.SyncCFRPresenter
+import org.mozilla.fenix.onboarding.HomeCFRPresenter
 import org.mozilla.fenix.utils.Settings
 
 // This method got a little complex with the addition of the tab tray feature flag
@@ -215,7 +215,7 @@ class SessionControlView(
 
                     if (!context.settings().showHomeOnboardingDialog) {
                         if (context.settings().showSyncCFR) {
-                            SyncCFRPresenter(
+                            HomeCFRPresenter(
                                 context = context,
                                 recyclerView = view,
                             ).showSyncCFR()
