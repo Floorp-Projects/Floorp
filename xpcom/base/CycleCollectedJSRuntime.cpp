@@ -161,7 +161,7 @@ struct NoteWeakMapChildrenTracer : public JS::CallbackTracer {
         mMap(nullptr),
         mKey(nullptr),
         mKeyDelegate(nullptr) {}
-  void onChild(JS::GCCellPtr aThing) override;
+  void onChild(JS::GCCellPtr aThing, const char* name) override;
   nsCycleCollectionNoteRootCallback& mCb;
   bool mTracedAny;
   JSObject* mMap;
@@ -169,7 +169,8 @@ struct NoteWeakMapChildrenTracer : public JS::CallbackTracer {
   JSObject* mKeyDelegate;
 };
 
-void NoteWeakMapChildrenTracer::onChild(JS::GCCellPtr aThing) {
+void NoteWeakMapChildrenTracer::onChild(JS::GCCellPtr aThing,
+                                        const char* name) {
   if (aThing.is<JSString>()) {
     return;
   }
@@ -399,11 +400,11 @@ struct TraversalTracer : public JS::CallbackTracer {
                            JS::TraceOptions(JS::WeakMapTraceAction::Skip,
                                             JS::WeakEdgeTraceAction::Trace)),
         mCb(aCb) {}
-  void onChild(JS::GCCellPtr aThing) override;
+  void onChild(JS::GCCellPtr aThing, const char* name) override;
   nsCycleCollectionTraversalCallback& mCb;
 };
 
-void TraversalTracer::onChild(JS::GCCellPtr aThing) {
+void TraversalTracer::onChild(JS::GCCellPtr aThing, const char* name) {
   // Checking strings and symbols for being gray is rather slow, and we don't
   // need either of them for the cycle collector.
   if (aThing.is<JSString>() || aThing.is<JS::Symbol>()) {
@@ -425,7 +426,7 @@ void TraversalTracer::onChild(JS::GCCellPtr aThing) {
   if (JS::IsCCTraceKind(aThing.kind())) {
     if (MOZ_UNLIKELY(mCb.WantDebugInfo())) {
       char buffer[200];
-      context().getEdgeName(buffer, sizeof(buffer));
+      context().getEdgeName(name, buffer, sizeof(buffer));
       mCb.NoteNextEdgeName(buffer);
     }
     mCb.NoteJSChild(aThing);
@@ -746,7 +747,7 @@ class JSLeakTracer : public JS::CallbackTracer {
                            JS::WeakMapTraceAction::TraceKeysAndValues) {}
 
  private:
-  void onChild(JS::GCCellPtr thing) override {
+  void onChild(JS::GCCellPtr thing, const char* name) override {
     const char* kindName = JS::GCTraceKindToAscii(thing.kind());
     size_t size = JS::GCTraceKindSize(thing.kind());
     MOZ_LOG_CTOR(thing.asCell(), kindName, size);

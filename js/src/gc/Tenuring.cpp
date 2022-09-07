@@ -59,7 +59,7 @@ static inline void UpdateAllocSiteOnTenure(Cell* cell) {
   site->incTenuredCount();
 }
 
-JSObject* TenuringTracer::onObjectEdge(JSObject* obj) {
+JSObject* TenuringTracer::onObjectEdge(JSObject* obj, const char* name) {
   if (!IsInsideNursery(obj)) {
     return obj;
   }
@@ -80,7 +80,7 @@ JSObject* TenuringTracer::onObjectEdge(JSObject* obj) {
   return moveToTenuredSlow(obj);
 }
 
-JSString* TenuringTracer::onStringEdge(JSString* str) {
+JSString* TenuringTracer::onStringEdge(JSString* str, const char* name) {
   if (!IsInsideNursery(str)) {
     return str;
   }
@@ -95,7 +95,7 @@ JSString* TenuringTracer::onStringEdge(JSString* str) {
   return moveToTenured(str);
 }
 
-JS::BigInt* TenuringTracer::onBigIntEdge(JS::BigInt* bi) {
+JS::BigInt* TenuringTracer::onBigIntEdge(JS::BigInt* bi, const char* name) {
   if (!IsInsideNursery(bi)) {
     return bi;
   }
@@ -110,23 +110,38 @@ JS::BigInt* TenuringTracer::onBigIntEdge(JS::BigInt* bi) {
   return moveToTenured(bi);
 }
 
-JS::Symbol* TenuringTracer::onSymbolEdge(JS::Symbol* sym) { return sym; }
-js::BaseScript* TenuringTracer::onScriptEdge(BaseScript* script) {
+JS::Symbol* TenuringTracer::onSymbolEdge(JS::Symbol* sym, const char* name) {
+  return sym;
+}
+js::BaseScript* TenuringTracer::onScriptEdge(BaseScript* script,
+                                             const char* name) {
   return script;
 }
-js::Shape* TenuringTracer::onShapeEdge(Shape* shape) { return shape; }
-js::RegExpShared* TenuringTracer::onRegExpSharedEdge(RegExpShared* shared) {
+js::Shape* TenuringTracer::onShapeEdge(Shape* shape, const char* name) {
+  return shape;
+}
+js::RegExpShared* TenuringTracer::onRegExpSharedEdge(RegExpShared* shared,
+                                                     const char* name) {
   return shared;
 }
-js::BaseShape* TenuringTracer::onBaseShapeEdge(BaseShape* base) { return base; }
-js::GetterSetter* TenuringTracer::onGetterSetterEdge(GetterSetter* gs) {
+js::BaseShape* TenuringTracer::onBaseShapeEdge(BaseShape* base,
+                                               const char* name) {
+  return base;
+}
+js::GetterSetter* TenuringTracer::onGetterSetterEdge(GetterSetter* gs,
+                                                     const char* name) {
   return gs;
 }
-js::PropMap* TenuringTracer::onPropMapEdge(PropMap* map) { return map; }
-js::jit::JitCode* TenuringTracer::onJitCodeEdge(jit::JitCode* code) {
+js::PropMap* TenuringTracer::onPropMapEdge(PropMap* map, const char* name) {
+  return map;
+}
+js::jit::JitCode* TenuringTracer::onJitCodeEdge(jit::JitCode* code,
+                                                const char* name) {
   return code;
 }
-js::Scope* TenuringTracer::onScopeEdge(Scope* scope) { return scope; }
+js::Scope* TenuringTracer::onScopeEdge(Scope* scope, const char* name) {
+  return scope;
+}
 
 void TenuringTracer::traverse(JS::Value* thingp) {
   MOZ_ASSERT(!nursery().isInside(thingp));
@@ -138,18 +153,18 @@ void TenuringTracer::traverse(JS::Value* thingp) {
   // tighter code than using MapGCThingTyped.
   Value post;
   if (value.isObject()) {
-    post = JS::ObjectValue(*onObjectEdge(&value.toObject()));
+    post = JS::ObjectValue(*onObjectEdge(&value.toObject(), "value"));
   }
 #ifdef ENABLE_RECORD_TUPLE
   else if (value.isExtendedPrimitive()) {
-    post =
-        JS::ExtendedPrimitiveValue(*onObjectEdge(&value.toExtendedPrimitive()));
+    post = JS::ExtendedPrimitiveValue(
+        *onObjectEdge(&value.toExtendedPrimitive(), "value"));
   }
 #endif
   else if (value.isString()) {
-    post = JS::StringValue(onStringEdge(value.toString()));
+    post = JS::StringValue(onStringEdge(value.toString(), "value"));
   } else if (value.isBigInt()) {
-    post = JS::BigIntValue(onBigIntEdge(value.toBigInt()));
+    post = JS::BigIntValue(onBigIntEdge(value.toBigInt(), "value"));
   } else {
     MOZ_ASSERT_IF(value.isGCThing(), !IsInsideNursery(value.toGCThing()));
     return;
@@ -397,7 +412,7 @@ void js::gc::StoreBuffer::CellPtrEdge<T>::trace(TenuringTracer& mover) const {
         edge, JS::TraceKind::String));
   }
 
-  *edge = DispatchToOnEdge(&mover, thing);
+  *edge = DispatchToOnEdge(&mover, thing, "CellPtrEdge");
 }
 
 void js::gc::StoreBuffer::ValueEdge::trace(TenuringTracer& mover) const {
@@ -986,7 +1001,7 @@ MinorSweepingTracer::MinorSweepingTracer(JSRuntime* rt)
 }
 
 template <typename T>
-inline T* MinorSweepingTracer::onEdge(T* thing) {
+inline T* MinorSweepingTracer::onEdge(T* thing, const char* name) {
   if (thing->isTenured()) {
     return thing;
   }

@@ -101,7 +101,6 @@ struct TraceOptions {
       : weakEdgeAction(weakEdgeActionArg) {}
 };
 
-class AutoTracingName;
 class AutoTracingIndex;
 
 // Optional context information that can be used to construct human readable
@@ -124,13 +123,6 @@ class TracingContext {
   // complexity), by associating a functor with the tracer so that, when
   // requested, the user can generate totally custom edge descriptions.
 
-  // Returns the current edge's name. It is only valid to call this when
-  // inside the trace callback, however, the edge name will always be set.
-  const char* name() const {
-    MOZ_ASSERT(name_);
-    return name_;
-  }
-
   // Returns the current edge's index, if marked as part of an array of edges.
   // This must be called only inside the trace callback. When not tracing an
   // array, the value will be InvalidIndex.
@@ -142,7 +134,7 @@ class TracingContext {
   // heap. On the other hand, the description provided by this method may be
   // substantially more accurate and useful than those provided by only the
   // name and index.
-  void getEdgeName(char* buffer, size_t bufferSize);
+  void getEdgeName(const char* name, char* buffer, size_t bufferSize);
 
   // The trace implementation may associate a callback with one or more edges
   // using AutoTracingDetails. This functor is called by getEdgeName and
@@ -155,9 +147,6 @@ class TracingContext {
   };
 
  private:
-  friend class AutoTracingName;
-  const char* name_ = nullptr;
-
   friend class AutoTracingIndex;
   size_t index_ = InvalidIndex;
 
@@ -228,7 +217,7 @@ class GenericTracer : public JSTracer {
   // which is freqently useful if, for example, we only want to process one type
   // of edge.
 #define DEFINE_ON_EDGE_METHOD(name, type, _1, _2) \
-  virtual type* on##name##Edge(type* thing) = 0;
+  virtual type* on##name##Edge(type* thing, const char* name) = 0;
   JS_FOR_EACH_TRACEKIND(DEFINE_ON_EDGE_METHOD)
 #undef DEFINE_ON_EDGE_METHOD
 };
@@ -245,8 +234,10 @@ class GenericTracerImpl : public GenericTracer {
  private:
   T* derived() { return static_cast<T*>(this); }
 
-#define DEFINE_ON_EDGE_METHOD(name, type, _1, _2) \
-  type* on##name##Edge(type* thing) final { return derived()->onEdge(thing); }
+#define DEFINE_ON_EDGE_METHOD(name, type, _1, _2)             \
+  type* on##name##Edge(type* thing, const char* name) final { \
+    return derived()->onEdge(thing, name);                    \
+  }
   JS_FOR_EACH_TRACEKIND(DEFINE_ON_EDGE_METHOD)
 #undef DEFINE_ON_EDGE_METHOD
 };
@@ -268,31 +259,15 @@ class JS_PUBLIC_API CallbackTracer
 
   // Override this method to receive notification when a node in the GC
   // heap graph is visited.
-  virtual void onChild(JS::GCCellPtr thing) = 0;
+  virtual void onChild(JS::GCCellPtr thing, const char* name) = 0;
 
  private:
   template <typename T>
-  T* onEdge(T* thing) {
-    onChild(JS::GCCellPtr(thing));
+  T* onEdge(T* thing, const char* name) {
+    onChild(JS::GCCellPtr(thing), name);
     return thing;
   }
   friend class js::GenericTracerImpl<CallbackTracer>;
-};
-
-// Set the name portion of the tracer's context for the current edge.
-class MOZ_RAII AutoTracingName {
-  JSTracer* trc_;
-
- public:
-  AutoTracingName(JSTracer* trc, const char* name) : trc_(trc) {
-    MOZ_ASSERT(name);
-    MOZ_ASSERT(!trc_->context().name_);
-    trc_->context().name_ = name;
-  }
-  ~AutoTracingName() {
-    MOZ_ASSERT(trc_->context().name_);
-    trc_->context().name_ = nullptr;
-  }
 };
 
 // Set the index portion of the tracer's context for the current range.
