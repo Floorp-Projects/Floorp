@@ -128,7 +128,7 @@ pub unsafe extern "C" fn mozurl_addref(url: &MozURL) -> nsrefcnt {
 pub unsafe extern "C" fn mozurl_release(url: &MozURL) -> nsrefcnt {
     let rc = url.refcnt.dec();
     if rc == 0 {
-        Box::from_raw(url as *const MozURL as *mut MozURL);
+        mem::drop(Box::from_raw(url as *const MozURL as *mut MozURL));
     }
     rc
 }

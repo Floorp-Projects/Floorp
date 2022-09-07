@@ -197,7 +197,7 @@ pub unsafe extern "C" fn neqo_http3conn_addref(conn: &NeqoHttp3Conn) -> nsrefcnt
 pub unsafe extern "C" fn neqo_http3conn_release(conn: &NeqoHttp3Conn) -> nsrefcnt {
     let rc = conn.refcnt.dec();
     if rc == 0 {
-        Box::from_raw(conn as *const _ as *mut NeqoHttp3Conn);
+        std::mem::drop(Box::from_raw(conn as *const _ as *mut NeqoHttp3Conn));
     }
     rc
 }
