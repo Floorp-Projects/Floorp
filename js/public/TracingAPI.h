@@ -28,10 +28,6 @@ JS_PUBLIC_API size_t GCTraceKindSize(JS::TraceKind kind);
 
 // Kinds of JSTracer.
 enum class TracerKind {
-  // Marking path: a tracer used only for marking liveness of cells, not
-  // for moving them.
-  Marking,
-
   // Generic tracers: Internal tracers that have a different virtual method
   // called for each edge kind.
   //
@@ -39,6 +35,7 @@ enum class TracerKind {
   Generic,
 
   // Specific kinds of generic tracer.
+  Marking,
   Tenuring,
   Moving,
   ClearEdges,
