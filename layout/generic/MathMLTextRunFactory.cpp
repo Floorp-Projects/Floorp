@@ -10,6 +10,7 @@
 #include "mozilla/BinarySearch.h"
 #include "mozilla/ComputedStyle.h"
 #include "mozilla/ComputedStyleInlines.h"
+#include "mozilla/StaticPrefs_mathml.h"
 #include "mozilla/intl/UnicodeScriptCodes.h"
 
 #include "nsStyleConsts.h"
@@ -533,9 +534,10 @@ void MathMLTextRunFactory::RebuildTextRun(
     }
     uint32_t ch2 = MathVariant(ch, mathVar);
 
-    if (mathVar == StyleMathVariant::Bold ||
-        mathVar == StyleMathVariant::BoldItalic ||
-        mathVar == StyleMathVariant::Italic) {
+    if (!StaticPrefs::mathml_mathvariant_styling_fallback_disabled() &&
+        (mathVar == StyleMathVariant::Bold ||
+         mathVar == StyleMathVariant::BoldItalic ||
+         mathVar == StyleMathVariant::Italic)) {
       if (ch == ch2 && ch != 0x20 && ch != 0xA0) {
         // Don't apply the CSS style if a character cannot be
         // transformed. There is an exception for whitespace as it is both
@@ -598,7 +600,8 @@ void MathMLTextRunFactory::RebuildTextRun(
   RefPtr<gfxTextRun> cachedChild;
   gfxTextRun* child;
 
-  if (doMathvariantStyling) {
+  if (!StaticPrefs::mathml_mathvariant_styling_fallback_disabled() &&
+      doMathvariantStyling) {
     if (mathVar == StyleMathVariant::Bold) {
       font.style = FontSlantStyle::NORMAL;
       font.weight = FontWeight::BOLD;
