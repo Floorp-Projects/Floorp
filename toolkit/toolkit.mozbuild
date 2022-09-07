@@ -161,7 +161,6 @@ if CONFIG['MOZ_GECKODRIVER'] and not CONFIG['MOZ_TSAN'] and not CONFIG['FUZZING_
     DIRS += ['/testing/geckodriver']
 
 DIRS += [
-    '/tools/quitter',
     '/media/gmp-clearkey/0.1',
 ]
 
