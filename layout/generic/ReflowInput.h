@@ -535,20 +535,6 @@ struct ReflowInput : public SizeComputationInput {
     bool mIOffsetsNeedCSSAlign : 1;
     bool mBOffsetsNeedCSSAlign : 1;
 
-    // Are we somewhere inside an element with -webkit-line-clamp set?
-    // This flag is inherited into descendant ReflowInputs, but we don't bother
-    // resetting it to false when crossing over into a block descendant that
-    // -webkit-line-clamp skips over (such as a BFC).
-    bool mInsideLineClamp : 1;
-
-    // Is this a flex item, and should we add or remove a -webkit-line-clamp
-    // ellipsis on a descendant line?  It's possible for this flag to be true
-    // when mInsideLineClamp is false if we previously had a numeric
-    // -webkit-line-clamp value, but now have 'none' and we need to find the
-    // line with the ellipsis flag and clear it.
-    // This flag is not inherited into descendant ReflowInputs.
-    bool mApplyLineClamp : 1;
-
     // Is this frame or one of its ancestors being reflowed in a different
     // continuation than the one in which it was previously reflowed?  In
     // other words, has it moved to a different column or page than it was in

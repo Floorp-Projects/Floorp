@@ -9936,12 +9936,13 @@ bool nsIFrame::FinishAndStoreOverflow(OverflowAreas& aOverflowAreas,
 
   if (anyOverflowChanged) {
     SVGObserverUtils::InvalidateDirectRenderingObservers(this);
-    if (IsBlockFrameOrSubclass() &&
-        TextOverflow::CanHaveOverflowMarkers(this)) {
-      DiscardDisplayItems(this, [](nsDisplayItem* aItem) {
-        return aItem->GetType() == DisplayItemType::TYPE_TEXT_OVERFLOW;
-      });
-      SchedulePaint(PAINT_DEFAULT);
+    if (nsBlockFrame* block = do_QueryFrame(this)) {
+      if (TextOverflow::CanHaveOverflowMarkers(block)) {
+        DiscardDisplayItems(this, [](nsDisplayItem* aItem) {
+          return aItem->GetType() == DisplayItemType::TYPE_TEXT_OVERFLOW;
+        });
+        SchedulePaint(PAINT_DEFAULT);
+      }
     }
   }
   return anyOverflowChanged;

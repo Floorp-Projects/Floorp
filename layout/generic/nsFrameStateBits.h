@@ -343,18 +343,14 @@ FRAME_STATE_BIT(FlexContainer, 21, NS_STATE_FLEX_IS_EMULATING_LEGACY_BOX)
 // True if the container has no flex items; may lie if there is a pending reflow
 FRAME_STATE_BIT(FlexContainer, 22, NS_STATE_FLEX_SYNTHESIZE_BASELINE)
 
-// True if any flex item in the container has a line with a
-// -webkit-line-ellipsis marker.
-FRAME_STATE_BIT(FlexContainer, 23, NS_STATE_FLEX_HAS_LINE_CLAMP_ELLIPSIS)
-
 // True iff some first-in-flow in-flow children were pushed.
 // Note that those child frames may have been removed without this bit
 // being updated for performance reasons, so code shouldn't depend on
 // actually finding any pushed items when this bit is set.
-FRAME_STATE_BIT(FlexContainer, 24, NS_STATE_FLEX_DID_PUSH_ITEMS)
+FRAME_STATE_BIT(FlexContainer, 23, NS_STATE_FLEX_DID_PUSH_ITEMS)
 
 // We've merged some OverflowList children since last reflow.
-FRAME_STATE_BIT(FlexContainer, 25, NS_STATE_FLEX_HAS_CHILD_NIFS)
+FRAME_STATE_BIT(FlexContainer, 24, NS_STATE_FLEX_HAS_CHILD_NIFS)
 
 // == Frame state bits that apply to grid container frames ====================
 

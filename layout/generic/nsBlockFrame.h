@@ -621,6 +621,13 @@ class nsBlockFrame : public nsContainerFrame {
    */
   void ClearLineClampEllipsis();
 
+  /**
+   * Returns whether this block is in a -webkit-line-clamp context. That is,
+   * whether this block is in a block formatting-context whose root block has
+   * -webkit-line-clamp: <n>.
+   */
+  bool IsInLineClampContext() const;
+
  protected:
   /** @see DoRemoveFrame */
   void DoRemoveFrameInternal(nsIFrame* aDeletedFrame, uint32_t aFlags,
