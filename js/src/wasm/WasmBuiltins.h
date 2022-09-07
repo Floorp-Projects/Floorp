@@ -130,7 +130,6 @@ enum class SymbolicAddress {
   ArrayNewData,
   ArrayNewElem,
   ArrayCopy,
-  InlineTypedObjectClass,
 #define DECL_INTRINSIC_SA(op, export, sa_name, abitype, entry, idx) sa_name,
   FOR_EACH_INTRINSIC(DECL_INTRINSIC_SA)
 #undef DECL_INTRINSIC_SA

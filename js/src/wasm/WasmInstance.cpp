@@ -1198,7 +1198,7 @@ bool Instance::initElems(uint32_t tableIndex, const ElemSegment& seg,
   return TypedObject::createArray(cx, rttValue, numElements);
 }
 
-// Creates an (OutlineTypedObject) array containing `numElements` of type
+// Creates an array (WasmArrayObject) containing `numElements` of type
 // described by `arrayDescr`.  Initialises it with data copied from the data
 // segment whose index is `segIndex`, starting at byte offset `segByteOffset`
 // in the segment.  Traps if the segment doesn't hold enough bytes to fill the
@@ -1229,21 +1229,21 @@ bool Instance::initElems(uint32_t tableIndex, const ElemSegment& seg,
   Rooted<RttValue*> rttValue(cx, (RttValue*)arrayDescr);
   MOZ_ASSERT(rttValue);
 
-  Rooted<TypedObject*> objTO(
+  Rooted<TypedObject*> typedObj(
       cx, TypedObject::createArray(cx, rttValue, numElements));
-  if (!objTO) {
+  if (!typedObj) {
     // TypedObject::createArray will have reported OOM.
     return nullptr;
   }
-  MOZ_RELEASE_ASSERT(objTO->is<OutlineTypedObject>());
+  MOZ_RELEASE_ASSERT(typedObj->is<WasmArrayObject>());
 
-  Rooted<OutlineTypedObject*> objOTO(
-      cx, static_cast<OutlineTypedObject*>(objTO.get()));
-  MOZ_ASSERT(objOTO->numElements() == numElements);
+  Rooted<WasmArrayObject*> arrayObj(
+      cx, static_cast<WasmArrayObject*>(typedObj.get()));
+  MOZ_ASSERT(arrayObj->numElements() == numElements);
 
   if (!seg) {
     // A zero-length array was requested and has been created, so we're done.
-    return objOTO;
+    return arrayObj;
   }
 
   // Compute the number of bytes to copy, ensuring it's below 2^32.
@@ -1273,15 +1273,15 @@ bool Instance::initElems(uint32_t tableIndex, const ElemSegment& seg,
 
   // Because `numBytesToCopy` is an in-range `CheckedUint32`, the cast to
   // `size_t` is safe even on a 32-bit target.
-  memcpy(objOTO->addressOfElementZero(), &seg->bytes[segByteOffset],
+  memcpy(arrayObj->addressOfElementZero(), &seg->bytes[segByteOffset],
          size_t(numBytesToCopy.value()));
 
-  return objOTO;
+  return arrayObj;
 }
 
 // This is almost identical to ::arrayNewData, apart from the final part that
-// actually copies the data.  It creates an (OutlineTypedObject) array
-// containg `numElements` of type described by `arrayDescr`.  Initialises it
+// actually copies the data.  It creates an array (WasmArrayObject)
+// containing `numElements` of type described by `arrayDescr`.  Initialises it
 // with data copied from the element segment whose index is `segIndex`,
 // starting at element number `segElemIndex` in the segment.  Traps if the
 // segment doesn't hold enough elements to fill the array.
@@ -1315,21 +1315,21 @@ bool Instance::initElems(uint32_t tableIndex, const ElemSegment& seg,
   MOZ_RELEASE_ASSERT(rttValue->typeDef().arrayType().elementType_.size() ==
                      sizeof(void*));
 
-  Rooted<TypedObject*> objTO(
+  Rooted<TypedObject*> typedObj(
       cx, TypedObject::createArray(cx, rttValue, numElements));
-  if (!objTO) {
+  if (!typedObj) {
     // TypedObject::createArray will have reported OOM.
     return nullptr;
   }
-  MOZ_RELEASE_ASSERT(objTO->is<OutlineTypedObject>());
+  MOZ_RELEASE_ASSERT(typedObj->is<WasmArrayObject>());
 
-  Rooted<OutlineTypedObject*> objOTO(
-      cx, static_cast<OutlineTypedObject*>(objTO.get()));
-  MOZ_ASSERT(objOTO->numElements() == numElements);
+  Rooted<WasmArrayObject*> arrayObj(
+      cx, static_cast<WasmArrayObject*>(typedObj.get()));
+  MOZ_ASSERT(arrayObj->numElements() == numElements);
 
   if (!seg) {
     // A zero-length array was requested and has been created, so we're done.
-    return objOTO;
+    return arrayObj;
   }
 
   // Range-check the copy.  As in ::arrayNewData, compute the index of the
@@ -1348,7 +1348,7 @@ bool Instance::initElems(uint32_t tableIndex, const ElemSegment& seg,
 
   // Do the initialisation, converting function indices into code pointers as
   // we go.
-  void** dst = (void**)objOTO->addressOfElementZero();
+  void** dst = (void**)arrayObj->addressOfElementZero();
   const uint32_t* src = &seg->elemFuncIndices[segElemIndex];
   for (uint32_t i = 0; i < numElements; i++) {
     uint32_t funcIndex = src[i];
@@ -1367,7 +1367,7 @@ bool Instance::initElems(uint32_t tableIndex, const ElemSegment& seg,
     value.get().writeToHeapLocation(&dst[i]);
   }
 
-  return objOTO;
+  return arrayObj;
 }
 
 /* static */ int32_t Instance::arrayCopy(Instance* instance, void* dstArray,
@@ -1396,29 +1396,29 @@ bool Instance::initElems(uint32_t tableIndex, const ElemSegment& seg,
   MOZ_ASSERT(elementSize >= 1 && elementSize <= 16);
 
   // Get hold of the two arrays.
-  TypedObject* dstTO = (TypedObject*)dstArray;
-  MOZ_RELEASE_ASSERT(dstTO->is<OutlineTypedObject>());
-  Rooted<OutlineTypedObject*> dstOTO(cx,
-                                     static_cast<OutlineTypedObject*>(dstTO));
+  TypedObject* dstTypedObj = (TypedObject*)dstArray;
+  MOZ_RELEASE_ASSERT(dstTypedObj->is<WasmArrayObject>());
+  Rooted<WasmArrayObject*> dstArrayObj(
+      cx, static_cast<WasmArrayObject*>(dstTypedObj));
 
-  TypedObject* srcTO = (TypedObject*)srcArray;
-  MOZ_RELEASE_ASSERT(srcTO->is<OutlineTypedObject>());
-  Rooted<OutlineTypedObject*> srcOTO(cx,
-                                     static_cast<OutlineTypedObject*>(srcTO));
+  TypedObject* srcTypedObj = (TypedObject*)srcArray;
+  MOZ_RELEASE_ASSERT(srcTypedObj->is<WasmArrayObject>());
+  Rooted<WasmArrayObject*> srcArrayObj(
+      cx, static_cast<WasmArrayObject*>(srcTypedObj));
 
-  // If OutlineTypedObject::numElements() is changed to return 64 bits, the
+  // If WasmArrayObject::numElements() is changed to return 64 bits, the
   // following checking logic will be incorrect.
   STATIC_ASSERT_NUMELEMENTS_IS_U32;
 
   // "traps if destination + length > len(array1)"
-  uint64_t dstNumElements = uint64_t(dstOTO->numElements());
+  uint64_t dstNumElements = uint64_t(dstArrayObj->numElements());
   if (uint64_t(dstIndex) + uint64_t(numElements) > dstNumElements) {
     ReportTrapError(cx, JSMSG_WASM_OUT_OF_BOUNDS);
     return -1;
   }
 
   // "traps if source + length > len(array2)"
-  uint64_t srcNumElements = uint64_t(srcOTO->numElements());
+  uint64_t srcNumElements = uint64_t(srcArrayObj->numElements());
   if (uint64_t(srcIndex) + uint64_t(numElements) > srcNumElements) {
     ReportTrapError(cx, JSMSG_WASM_OUT_OF_BOUNDS);
     return -1;
@@ -1437,8 +1437,8 @@ bool Instance::initElems(uint32_t tableIndex, const ElemSegment& seg,
 
   // Actually do the copy, taking care to handle cases where the src and dst
   // areas overlap.
-  uint8_t* srcBase = srcOTO->addressOfElementZero();
-  uint8_t* dstBase = dstOTO->addressOfElementZero();
+  uint8_t* srcBase = srcArrayObj->addressOfElementZero();
+  uint8_t* dstBase = dstArrayObj->addressOfElementZero();
   srcBase += size_t(srcIndex) * size_t(elementSize);
   dstBase += size_t(dstIndex) * size_t(elementSize);
 

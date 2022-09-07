@@ -12,12 +12,22 @@
 #include "gc/ObjectKind-inl.h"
 
 /* static */
-js::gc::AllocKind js::InlineTypedObject::allocKindForRttValue(RttValue* rtt) {
+js::gc::AllocKind js::WasmStructObject::allocKindForRttValue(RttValue* rtt) {
   MOZ_ASSERT(rtt->kind() == wasm::TypeDefKind::Struct);
   size_t nbytes = rtt->typeDef().structType().size_;
-  MOZ_ASSERT(nbytes <= MaxInlineBytes);
 
-  return gc::GetGCObjectKindForBytes(nbytes + sizeof(TypedObject));
+  // `nbytes` is the total required size for all struct fields, including
+  // padding.  What we need is the size of resulting WasmStructObject,
+  // ignoring any space used for out-of-line data.  First, restrict `nbytes`
+  // to cover just the inline data.
+  if (nbytes > WasmStructObject_MaxInlineBytes) {
+    nbytes = WasmStructObject_MaxInlineBytes;
+  }
+
+  // Now convert it to size of the WasmStructObject as a whole.
+  nbytes = sizeOfIncludingInlineData(nbytes);
+
+  return gc::GetGCObjectKindForBytes(nbytes);
 }
 
 #endif  // wasm_TypedObject_inl_h

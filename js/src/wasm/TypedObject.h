@@ -17,9 +17,14 @@
 #include "wasm/WasmTypeDef.h"
 #include "wasm/WasmValType.h"
 
+using js::wasm::FieldType;
+
 namespace js {
 
 class TypedObject;
+
+//=========================================================================
+// RttValue
 
 class RttValue : public NativeObject {
  private:
@@ -68,12 +73,36 @@ class RttValue : public NativeObject {
   ObjectWeakMap& children() const { return *maybeChildren(); }
   bool ensureChildren(JSContext* cx);
 
+  // PropOffset is a uint32_t that is used to carry information about the
+  // location of an value from RttValue::lookupProperty to
+  // TypedObject::loadValue.  It is distinct from a normal uint32_t to
+  // emphasise the fact that it cannot be interpreted as an offset in any
+  // single contiguous area of memory:
+  //
+  // * If the object in question is a WasmStructObject, it is the value of
+  //   `wasm::StructField::offset` for the relevant field, without regard to
+  //   the inline/outline split.
+  //
+  // * If the object in question is a WasmArrayObject, then
+  //   - u32 == 0 means the "length" property is requested
+  //   - u32 >= 4 means the array element starting at that byte offset in
+  //     WasmArrayObject::data_.  It is not an array index value.
+  //   See RttValue::lookupProperty for details.
+  class PropOffset {
+    uint32_t u32_;
+
+   public:
+    PropOffset() : u32_(0) {}
+    uint32_t get() const { return u32_; }
+    void set(uint32_t u32) { u32_ = u32; }
+  };
+
   [[nodiscard]] bool lookupProperty(JSContext* cx,
                                     js::Handle<TypedObject*> object, jsid id,
-                                    uint32_t* offset, wasm::FieldType* type);
+                                    PropOffset* offset, wasm::FieldType* type);
   [[nodiscard]] bool hasProperty(JSContext* cx, js::Handle<TypedObject*> object,
                                  jsid id) {
-    uint32_t offset;
+    RttValue::PropOffset offset;
     wasm::FieldType type;
     return lookupProperty(cx, object, id, &offset, &type);
   }
@@ -81,6 +110,9 @@ class RttValue : public NativeObject {
   static void trace(JSTracer* trc, JSObject* obj);
   static void finalize(JS::GCContext* gcx, JSObject* obj);
 };
+
+//=========================================================================
+// TypedObject
 
 /* Base type for typed objects. */
 class TypedObject : public JSObject {
@@ -125,10 +157,8 @@ class TypedObject : public JSObject {
 
   void initDefault();
 
-  bool loadValue(JSContext* cx, size_t offset, wasm::FieldType type,
-                 MutableHandleValue vp);
-
-  uint8_t* typedMem() const;
+  bool loadValue(JSContext* cx, const RttValue::PropOffset& offset,
+                 wasm::FieldType type, MutableHandleValue vp);
 
   template <typename V>
   void visitReferences(V& visitor);
@@ -162,29 +192,31 @@ class TypedObject : public JSObject {
                                              bool enumerableOnly);
 };
 
-// Class for a typed object whose data is allocated in the malloc heap.
-class OutlineTypedObject : public TypedObject {
+//=========================================================================
+// WasmArrayObject
+
+// Class for a wasm array.  It contains a pointer to the array contents, that
+// lives in the C++ heap.
+
+class WasmArrayObject : public TypedObject {
  public:
   // This holds a value indicating the number of elements in the block (array)
   // that `data_` points at.
   using NumElements = uint32_t;
 
  private:
-  // Owned data pointer.  In the case where this TypedObject is being used to
-  // represent a wasm array, the pointed-to block must be at least 4 bytes
-  // long since the first 4 bytes are used to store the number of array
-  // elements present.  They start at `&data_[4]`.  In the case where this
-  // TypedObject is being used to represent a wasm struct, the 4-byte limit
-  // does not apply.
+  // Owned data pointer.  The pointed-to block must be at least 4 bytes long
+  // since the first 4 bytes are used to store the number of array elements
+  // present.  They start at `&data_[4]`.
   uint8_t* data_;
 
  protected:
   friend class TypedObject;
 
   // `numBytes` is the required size of the block pointed to by `data`.
-  static OutlineTypedObject* create(JSContext* cx, Handle<RttValue*> rtt,
-                                    size_t numBytes,
-                                    gc::InitialHeap heap = gc::DefaultHeap);
+  static WasmArrayObject* create(JSContext* cx, Handle<RttValue*> rtt,
+                                 size_t numBytes,
+                                 gc::InitialHeap heap = gc::DefaultHeap);
 
   // This can possibly be removed, specialised or renamed, as part of the
   // cleanup scheduled to happen in bug 1774836.
@@ -214,7 +246,7 @@ class OutlineTypedObject : public TypedObject {
 
   // Offset of `data_` relative to the start of the object.
   static constexpr size_t offsetOfData() {
-    return offsetof(OutlineTypedObject, data_);
+    return offsetof(WasmArrayObject, data_);
   }
   // Offset inside `data_` of its size-in-bytes field.
   static constexpr size_t offsetOfNumElements() { return 0; }
@@ -226,56 +258,168 @@ class OutlineTypedObject : public TypedObject {
 
 // Helper to mark all locations that assume the type of the array length header
 // for a typed object.
-#define STATIC_ASSERT_NUMELEMENTS_IS_U32                       \
-  static_assert(sizeof(js::OutlineTypedObject::NumElements) == \
-                sizeof(uint32_t));
+#define STATIC_ASSERT_NUMELEMENTS_IS_U32 \
+  static_assert(sizeof(js::WasmArrayObject::NumElements) == sizeof(uint32_t));
 
-// Class for a typed object whose data is allocated inline.
-class InlineTypedObject : public TypedObject {
-  // Start of the inline data, which immediately follows the shape and type.
-  uint8_t data_[1];
+//=========================================================================
+// WasmStructObject
+
+// Class for a wasm struct.  It has inline data and, if the inline area is
+// insufficient, a pointer to outline data that lives in the C++ heap.
+// Computing the field offsets is somewhat tricky; see block comment on `class
+// StructLayout` for background.
+
+class WasmStructObject : public TypedObject {
+  // A pointer to a malloc'd block containing out-of-line fields, or nullptr
+  // if none.
+  uint8_t* outlineData_;
+
+ public:
+  // As a refinement, ensure that the inline data begins at an offset that is
+  // 8-aligned relative to the start of the object.  Combined with the fact
+  // that js::AllocateObject produces values that are at least 8-aligned, this
+  // means that the inline data will have an address which is 8-aligned, even
+  // on a 32-bit target.  This seems like a Good Thing in that it guarantees
+  // that double-precision fields are not penalised by misaligned-access
+  // penalties.
+  uint32_t padding_[
+#if !defined(JS_64BIT) && defined(XP_WIN)
+      1
+#else
+      0
+#endif
+  ];
+
+  // The inline (wasm-struct-level) data fields.  This must be a multiple of
+  // 16 bytes long in order to ensure that no field gets split across the
+  // inline-outline boundary.  This field is guaranteed to begin at an
+  // 8-aligned offset, relative to the start of the object, due to the
+  // presence of `padding_` above.  This is in reality a variable length block
+  // with maximum size WasmStructObject_MaxInlineBytes bytes.  Do not add any
+  // (C++-level) fields after this point!
+  uint8_t inlineData_[0];
 
  protected:
   friend class TypedObject;
 
-  static const size_t MaxInlineBytes =
-      JSObject::MAX_BYTE_SIZE - sizeof(TypedObject);
-
-  static InlineTypedObject* create(JSContext* cx, Handle<RttValue*> rtt,
-                                   gc::InitialHeap heap = gc::DefaultHeap);
-
-  uint8_t* inlineTypedMem() const { return (uint8_t*)&data_; }
-
  public:
   static const JSClass class_;
+
+  // This tells us how big the object is if we know the number of inline bytes
+  // it was created with.
+  static inline size_t sizeOfIncludingInlineData(size_t sizeOfInlineData) {
+    size_t n = sizeof(WasmStructObject) + sizeOfInlineData;
+    MOZ_ASSERT(n <= JSObject::MAX_BYTE_SIZE);
+    return n;
+  }
 
   // AllocKind for object creation
   static inline gc::AllocKind allocKindForRttValue(RttValue* rtt);
 
-  // Check if the following byte size could be allocated in an InlineTypedObject
-  static bool canAccommodateSize(size_t size) { return size <= MaxInlineBytes; }
+  // Given the total number of data bytes required (including alignment
+  // holes), return the number of inline and outline bytes required.
+  static inline void getDataByteSizes(uint32_t totalBytes,
+                                      uint32_t* inlineBytes,
+                                      uint32_t* outlineBytes);
+
+  // Given the offset of a field, produce the offset in `inlineData_` or
+  // `*outlineData_` to use, plus a bool indicating which area it is.
+  // `fieldType` is for assertional purposes only.
+  static inline void fieldOffsetToAreaAndOffset(FieldType fieldType,
+                                                uint32_t fieldOffset,
+                                                bool* areaIsOutline,
+                                                uint32_t* areaOffset);
+
+  // Given the offset of a field, return its actual address.  `fieldType` is
+  // for assertional purposes only.
+  inline uint8_t* fieldOffsetToAddress(FieldType fieldType,
+                                       uint32_t fieldOffset);
 
   // JIT accessors
-  static size_t offsetOfDataStart() {
-    return offsetof(InlineTypedObject, data_);
+  static size_t offsetOfOutlineData() {
+    return offsetof(WasmStructObject, outlineData_);
+  }
+  static size_t offsetOfInlineData() {
+    return offsetof(WasmStructObject, inlineData_);
   }
 
   // Tracing and finalization
   static void obj_trace(JSTracer* trc, JSObject* object);
   static size_t obj_moved(JSObject* dst, JSObject* src);
+  static void obj_finalize(JS::GCContext* gcx, JSObject* object);
 };
 
+// This is ensured by the hoop-jumping for WasmStructObject::padding_ above.
+static_assert((offsetof(WasmStructObject, inlineData_) % 8) == 0);
+
+// MaxInlineBytes must be a multiple of 16 for reasons described in the
+// comment on `class StructLayout`.  This unfortunately can't be defined
+// inside the class definition itself because the sizeof(..) expression isn't
+// valid until after the end of the class definition.
+const size_t WasmStructObject_MaxInlineBytes =
+    ((JSObject::MAX_BYTE_SIZE - sizeof(WasmStructObject)) / 16) * 16;
+
+static_assert((WasmStructObject_MaxInlineBytes % 16) == 0);
+
+/*static*/
+inline void WasmStructObject::getDataByteSizes(uint32_t totalBytes,
+                                               uint32_t* inlineBytes,
+                                               uint32_t* outlineBytes) {
+  *inlineBytes = totalBytes;
+  *outlineBytes = 0;
+  if (totalBytes > WasmStructObject_MaxInlineBytes) {
+    *inlineBytes = WasmStructObject_MaxInlineBytes;
+    *outlineBytes = totalBytes - *inlineBytes;
+  }
+}
+
+/*static*/
+inline void WasmStructObject::fieldOffsetToAreaAndOffset(FieldType fieldType,
+                                                         uint32_t fieldOffset,
+                                                         bool* areaIsOutline,
+                                                         uint32_t* areaOffset) {
+  if (fieldOffset < WasmStructObject_MaxInlineBytes) {
+    *areaIsOutline = false;
+    *areaOffset = fieldOffset;
+  } else {
+    *areaIsOutline = true;
+    *areaOffset = fieldOffset - WasmStructObject_MaxInlineBytes;
+  }
+  // Assert that the first and last bytes for the field agree on which side of
+  // the inline/outline boundary they live.
+  MOZ_RELEASE_ASSERT(
+      (fieldOffset < WasmStructObject_MaxInlineBytes) ==
+      ((fieldOffset + fieldType.size() - 1) < WasmStructObject_MaxInlineBytes));
+}
+
+inline uint8_t* WasmStructObject::fieldOffsetToAddress(FieldType fieldType,
+                                                       uint32_t fieldOffset) {
+  bool areaIsOutline;
+  uint32_t areaOffset;
+  fieldOffsetToAreaAndOffset(fieldType, fieldOffset, &areaIsOutline,
+                             &areaOffset);
+  return ((uint8_t*)(areaIsOutline ? outlineData_ : &inlineData_[0])) +
+         areaOffset;
+}
+
+}  // namespace js
+
+//=========================================================================
+// misc
+
+namespace js {
+
 inline bool IsTypedObjectClass(const JSClass* class_) {
-  return class_ == &OutlineTypedObject::class_ ||
-         class_ == &InlineTypedObject::class_;
+  return class_ == &WasmArrayObject::class_ ||
+         class_ == &WasmStructObject::class_;
 }
 
-inline bool IsOutlineTypedObjectClass(const JSClass* class_) {
-  return class_ == &OutlineTypedObject::class_;
+inline bool IsWasmArrayObjectClass(const JSClass* class_) {
+  return class_ == &WasmArrayObject::class_;
 }
 
-inline bool IsInlineTypedObjectClass(const JSClass* class_) {
-  return class_ == &InlineTypedObject::class_;
+inline bool IsWasmStructObjectClass(const JSClass* class_) {
+  return class_ == &WasmStructObject::class_;
 }
 
 }  // namespace js
@@ -286,13 +430,13 @@ inline bool JSObject::is<js::TypedObject>() const {
 }
 
 template <>
-inline bool JSObject::is<js::OutlineTypedObject>() const {
-  return js::IsOutlineTypedObjectClass(getClass());
+inline bool JSObject::is<js::WasmArrayObject>() const {
+  return js::IsWasmArrayObjectClass(getClass());
 }
 
 template <>
-inline bool JSObject::is<js::InlineTypedObject>() const {
-  return js::IsInlineTypedObjectClass(getClass());
+inline bool JSObject::is<js::WasmStructObject>() const {
+  return js::IsWasmStructObjectClass(getClass());
 }
 
 #endif /* wasm_TypedObject_h */

@@ -231,8 +231,22 @@ class StructType {
 using StructTypeVector = Vector<StructType, 0, SystemAllocPolicy>;
 using StructTypePtrVector = Vector<const StructType*, 0, SystemAllocPolicy>;
 
-// Utility for computing field offset and alignments, and total size for structs
-// and tags.
+// Utility for computing field offset and alignments, and total size for
+// structs and tags.  This is complicated by fact that a WasmStructObject has
+// an inline area, which is used first, and if that fills up an optional
+// C++-heap-allocated outline area is used.  We need to be careful not to
+// split any data item across the boundary.  This is ensured as follows:
+//
+// (1) the possible field sizes are 1, 2, 4, 8 and 16 only.
+// (2) each field is "naturally aligned" -- aligned to its size.
+// (3) MaxInlineBytes (the size of the inline area) % 16 == 0.
+//
+// From (1) and (2), it follows that all fields are placed so that their first
+// and last bytes fall within the same 16-byte chunk.  That is,
+// offset_of_first_byte_of_field / 16 == offset_of_last_byte_of_field / 16.
+//
+// Given that, it follows from (3) that all fields fall completely within
+// either the inline or outline areas; no field crosses the boundary.
 class StructLayout {
   CheckedInt32 sizeSoFar = 0;
   uint32_t structAlignment = 1;

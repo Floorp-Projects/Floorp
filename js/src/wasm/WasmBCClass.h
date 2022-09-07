@@ -1648,8 +1648,16 @@ struct BaseCompiler final {
   void emitGcGet(FieldType type, FieldExtension extension, const T& src);
   template <typename T>
   void emitGcSetScalar(const T& dst, FieldType type, AnyReg value);
-  [[nodiscard]] bool emitGcStructSet(RegRef object, RegPtr data,
-                                     const StructField& field, AnyReg value);
+
+  // Write `value` to wasm struct `object`, at `areaBase + areaOffset`.  The
+  // caller must decide on the in- vs out-of-lineness before the call and set
+  // the latter two accordingly; this routine does not take that into account.
+  // The value in `object` is unmodified, but `areaBase` and `value` may get
+  // trashed.
+  [[nodiscard]] bool emitGcStructSet(RegRef object, RegPtr areaBase,
+                                     uint32_t areaOffset, FieldType fieldType,
+                                     AnyReg value);
+
   [[nodiscard]] bool emitGcArraySet(RegRef object, RegPtr data, RegI32 index,
                                     const ArrayType& array, AnyReg value);
 #endif  // ENABLE_WASM_GC

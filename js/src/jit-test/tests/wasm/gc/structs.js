@@ -213,6 +213,9 @@ var bigger = ins.mk_bigger();
 for ( let i=0; i < 52; i++ )
     assertEq(bigger[i], i);
 
+assertEq(bigger[-1], undefined);
+assertEq(bigger[52], undefined);
+
 var withfloats = ins.mk_withfloats(1/3, Math.PI, bigger, 5/6, 0x1337);
 assertEq(withfloats[0], Math.fround(1/3));
 assertEq(withfloats[1], Math.PI);
