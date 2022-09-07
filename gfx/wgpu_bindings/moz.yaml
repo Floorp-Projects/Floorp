@@ -33,7 +33,7 @@ updatebot:
     maintainer-bz: jimb@mozilla.com
     tasks:
       - type: vendoring
-        enabled: true
+        enabled: false
         frequency: 1 week
 
 vendoring:
