@@ -217,7 +217,7 @@ class GenericTracer : public JSTracer {
   // which is freqently useful if, for example, we only want to process one type
   // of edge.
 #define DEFINE_ON_EDGE_METHOD(name, type, _1, _2) \
-  virtual type* on##name##Edge(type* thing, const char* name) = 0;
+  virtual void on##name##Edge(type** thingp, const char* name) = 0;
   JS_FOR_EACH_TRACEKIND(DEFINE_ON_EDGE_METHOD)
 #undef DEFINE_ON_EDGE_METHOD
 };
@@ -234,9 +234,9 @@ class GenericTracerImpl : public GenericTracer {
  private:
   T* derived() { return static_cast<T*>(this); }
 
-#define DEFINE_ON_EDGE_METHOD(name, type, _1, _2)             \
-  type* on##name##Edge(type* thing, const char* name) final { \
-    return derived()->onEdge(thing, name);                    \
+#define DEFINE_ON_EDGE_METHOD(name, type, _1, _2)              \
+  void on##name##Edge(type** thingp, const char* name) final { \
+    derived()->onEdge(thingp, name);                           \
   }
   JS_FOR_EACH_TRACEKIND(DEFINE_ON_EDGE_METHOD)
 #undef DEFINE_ON_EDGE_METHOD
@@ -263,9 +263,8 @@ class JS_PUBLIC_API CallbackTracer
 
  private:
   template <typename T>
-  T* onEdge(T* thing, const char* name) {
-    onChild(JS::GCCellPtr(thing), name);
-    return thing;
+  void onEdge(T** thingp, const char* name) {
+    onChild(JS::GCCellPtr(*thingp), name);
   }
   friend class js::GenericTracerImpl<CallbackTracer>;
 };
