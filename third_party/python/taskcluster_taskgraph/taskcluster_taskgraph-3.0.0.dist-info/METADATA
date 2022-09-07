@@ -1,8 +1,10 @@
 Metadata-Version: 2.1
 Name: taskcluster-taskgraph
-Version: 2.0.0
+Version: 3.0.0
 Summary: Build taskcluster taskgraphs
 Home-page: https://github.com/taskcluster/taskgraph
+License: UNKNOWN
+Platform: UNKNOWN
 Classifier: Development Status :: 5 - Production/Stable
 Classifier: Environment :: Console
 Classifier: License :: OSI Approved :: Mozilla Public License 2.0 (MPL 2.0)
@@ -23,4 +25,6 @@ Requires-Dist: requests-unixsocket (>=0.2)
 Requires-Dist: slugid (>=2.0)
 Requires-Dist: taskcluster-urls (>=11.0)
 Requires-Dist: voluptuous (>=0.12.1)
+
+UNKNOWN
 
