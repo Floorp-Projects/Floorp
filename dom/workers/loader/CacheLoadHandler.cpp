@@ -86,6 +86,7 @@ CacheCreator::CacheCreator(WorkerPrivate* aWorkerPrivate)
     : mCacheName(aWorkerPrivate->ServiceWorkerCacheName()),
       mOriginAttributes(aWorkerPrivate->GetOriginAttributes()) {
   MOZ_ASSERT(aWorkerPrivate->IsServiceWorker());
+  AssertIsOnMainThread();
 }
 
 nsresult CacheCreator::CreateCacheStorage(nsIPrincipal* aPrincipal) {
