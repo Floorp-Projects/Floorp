@@ -145,19 +145,6 @@ inline void CheckGCThingAfterMovingGC(const WeakHeapPtr<T*>& t);
 
 } /* namespace gc */
 
-// Debugging functions to check tracing invariants.
-#ifdef DEBUG
-template <typename T>
-void CheckTracedThing(JSTracer* trc, T* thing);
-template <typename T>
-void CheckTracedThing(JSTracer* trc, const T& thing);
-#else
-template <typename T>
-inline void CheckTracedThing(JSTracer* trc, T* thing) {}
-template <typename T>
-inline void CheckTracedThing(JSTracer* trc, const T& thing) {}
-#endif
-
 } /* namespace js */
 
 #endif /* gc_Marking_h */
