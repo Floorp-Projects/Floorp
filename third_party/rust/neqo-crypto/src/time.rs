@@ -78,7 +78,7 @@ pub(crate) fn init() {
 }
 
 /// Time wraps Instant and provides conversion functions into `PRTime`.
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct Time {
     t: Instant,
 }
@@ -119,8 +119,10 @@ impl TryInto<PRTime> for Time {
     type Error = Error;
     fn try_into(self) -> Res<PRTime> {
         let base = get_base();
-        // TODO(mt) use checked_duration_since when that is available.
-        let delta = self.t.duration_since(base.instant);
+        let delta = self
+            .t
+            .checked_duration_since(base.instant)
+            .ok_or(Error::TimeTravelError)?;
         if let Ok(d) = PRTime::try_from(delta.as_micros()) {
             d.checked_add(base.prtime).ok_or(Error::TimeTravelError)
         } else {
@@ -137,7 +139,7 @@ impl From<Time> for Instant {
 }
 
 /// Interval wraps Duration and provides conversion functions into `PRTime`.
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct Interval {
     d: Duration,
 }

@@ -37,7 +37,7 @@ use std::time::Instant;
 /// The maximum number of tickets to remember for a given connection.
 const MAX_TICKETS: usize = 4;
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub enum HandshakeState {
     New,
     InProgress,
@@ -87,8 +87,11 @@ fn get_alpn(fd: *mut ssl::PRFileDesc, pre: bool) -> Res<Option<String>> {
 
     let alpn = match (pre, alpn_state) {
         (true, ssl::SSLNextProtoState::SSL_NEXT_PROTO_EARLY_VALUE)
-        | (false, ssl::SSLNextProtoState::SSL_NEXT_PROTO_NEGOTIATED)
-        | (false, ssl::SSLNextProtoState::SSL_NEXT_PROTO_SELECTED) => {
+        | (
+            false,
+            ssl::SSLNextProtoState::SSL_NEXT_PROTO_NEGOTIATED
+            | ssl::SSLNextProtoState::SSL_NEXT_PROTO_SELECTED,
+        ) => {
             chosen.truncate(usize::try_from(chosen_len)?);
             Some(match String::from_utf8(chosen) {
                 Ok(a) => a,
@@ -191,7 +194,7 @@ impl SecretAgentPreInfo {
     }
 }
 
-#[derive(Clone, Debug, Default, PartialEq)]
+#[derive(Clone, Debug, Default, PartialEq, Eq)]
 pub struct SecretAgentInfo {
     version: Version,
     cipher: Cipher,
@@ -802,6 +805,8 @@ impl ResumptionToken {
 pub struct Client {
     agent: SecretAgent,
 
+    /// The name of the server we're attempting a connection to.
+    server_name: String,
     /// Records the resumption tokens we've received.
     resumption: Pin<Box<Vec<ResumptionToken>>>,
 }
@@ -811,13 +816,15 @@ impl Client {
     ///
     /// # Errors
     /// Errors returned if the socket can't be created or configured.
-    pub fn new(server_name: &str) -> Res<Self> {
+    pub fn new(server_name: impl Into<String>) -> Res<Self> {
+        let server_name = server_name.into();
         let mut agent = SecretAgent::new()?;
-        let url = CString::new(server_name)?;
+        let url = CString::new(server_name.as_bytes())?;
         secstatus_to_res(unsafe { ssl::SSL_SetURL(agent.fd, url.as_ptr()) })?;
         agent.ready(false)?;
         let mut client = Self {
             agent,
+            server_name,
             resumption: Box::pin(Vec::new()),
         };
         client.ready()?;
@@ -864,6 +871,11 @@ impl Client {
             resumption.push(ResumptionToken::new(v, *t));
         }
         ssl::SECSuccess
+    }
+
+    #[must_use]
+    pub fn server_name(&self) -> &str {
+        &self.server_name
     }
 
     fn ready(&mut self) -> Res<()> {
@@ -955,7 +967,7 @@ impl ::std::fmt::Display for Client {
 }
 
 /// `ZeroRttCheckResult` encapsulates the options for handling a `ClientHello`.
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub enum ZeroRttCheckResult {
     /// Accept 0-RTT.
     Accept,
@@ -1177,8 +1189,8 @@ impl Deref for Agent {
     #[must_use]
     fn deref(&self) -> &SecretAgent {
         match self {
-            Self::Client(c) => &*c,
-            Self::Server(s) => &*s,
+            Self::Client(c) => &**c,
+            Self::Server(s) => &**s,
         }
     }
 }
@@ -1186,8 +1198,8 @@ impl Deref for Agent {
 impl DerefMut for Agent {
     fn deref_mut(&mut self) -> &mut SecretAgent {
         match self {
-            Self::Client(c) => &mut *c,
-            Self::Server(s) => &mut *s,
+            Self::Client(c) => &mut **c,
+            Self::Server(s) => &mut **s,
         }
     }
 }

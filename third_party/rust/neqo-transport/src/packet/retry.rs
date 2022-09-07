@@ -6,7 +6,7 @@
 
 #![deny(clippy::pedantic)]
 
-use crate::packet::QuicVersion;
+use crate::version::Version;
 use crate::{Error, Res};
 
 use neqo_common::qerror;
@@ -14,37 +14,33 @@ use neqo_crypto::{hkdf, Aead, TLS_AES_128_GCM_SHA256, TLS_VERSION_1_3};
 
 use std::cell::RefCell;
 
-const RETRY_SECRET_29: &[u8] = &[
-    0x8b, 0x0d, 0x37, 0xeb, 0x85, 0x35, 0x02, 0x2e, 0xbc, 0x8d, 0x76, 0xa2, 0x07, 0xd8, 0x0d, 0xf2,
-    0x26, 0x46, 0xec, 0x06, 0xdc, 0x80, 0x96, 0x42, 0xc3, 0x0a, 0x8b, 0xaa, 0x2b, 0xaa, 0xff, 0x4c,
-];
-const RETRY_SECRET_V1: &[u8] = &[
-    0xd9, 0xc9, 0x94, 0x3e, 0x61, 0x01, 0xfd, 0x20, 0x00, 0x21, 0x50, 0x6b, 0xcc, 0x02, 0x81, 0x4c,
-    0x73, 0x03, 0x0f, 0x25, 0xc7, 0x9d, 0x71, 0xce, 0x87, 0x6e, 0xca, 0x87, 0x6e, 0x6f, 0xca, 0x8e,
-];
-
 /// The AEAD used for Retry is fixed, so use thread local storage.
-fn make_aead(secret: &[u8]) -> Aead {
+fn make_aead(version: Version) -> Aead {
     #[cfg(debug_assertions)]
     ::neqo_crypto::assert_initialized();
 
-    let secret = hkdf::import_key(TLS_VERSION_1_3, secret).unwrap();
-    Aead::new(TLS_VERSION_1_3, TLS_AES_128_GCM_SHA256, &secret, "quic ").unwrap()
+    let secret = hkdf::import_key(TLS_VERSION_1_3, version.retry_secret()).unwrap();
+    Aead::new(
+        TLS_VERSION_1_3,
+        TLS_AES_128_GCM_SHA256,
+        &secret,
+        version.label_prefix(),
+    )
+    .unwrap()
 }
-thread_local!(static RETRY_AEAD_29: RefCell<Aead> = RefCell::new(make_aead(RETRY_SECRET_29)));
-thread_local!(static RETRY_AEAD_V1: RefCell<Aead> = RefCell::new(make_aead(RETRY_SECRET_V1)));
+thread_local!(static RETRY_AEAD_29: RefCell<Aead> = RefCell::new(make_aead(Version::Draft29)));
+thread_local!(static RETRY_AEAD_V1: RefCell<Aead> = RefCell::new(make_aead(Version::Version1)));
+thread_local!(static RETRY_AEAD_V2: RefCell<Aead> = RefCell::new(make_aead(Version::Version2)));
 
 /// Run a function with the appropriate Retry AEAD.
-pub fn use_aead<F, T>(quic_version: QuicVersion, f: F) -> Res<T>
+pub fn use_aead<F, T>(version: Version, f: F) -> Res<T>
 where
     F: FnOnce(&Aead) -> Res<T>,
 {
-    match quic_version {
-        QuicVersion::Version1 => &RETRY_AEAD_V1,
-        QuicVersion::Draft29
-        | QuicVersion::Draft30
-        | QuicVersion::Draft31
-        | QuicVersion::Draft32 => &RETRY_AEAD_29,
+    match version {
+        Version::Version2 => &RETRY_AEAD_V2,
+        Version::Version1 => &RETRY_AEAD_V1,
+        Version::Draft29 | Version::Draft30 | Version::Draft31 | Version::Draft32 => &RETRY_AEAD_29,
     }
     .try_with(|aead| f(&aead.borrow()))
     .map_err(|e| {
@@ -54,8 +50,8 @@ where
 }
 
 /// Determine how large the expansion is for a given key.
-pub fn expansion(quic_version: QuicVersion) -> usize {
-    if let Ok(ex) = use_aead(quic_version, |aead| Ok(aead.expansion())) {
+pub fn expansion(version: Version) -> usize {
+    if let Ok(ex) = use_aead(version, |aead| Ok(aead.expansion())) {
         ex
     } else {
         panic!("Unable to access Retry AEAD")

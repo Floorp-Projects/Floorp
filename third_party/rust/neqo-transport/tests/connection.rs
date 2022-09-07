@@ -7,8 +7,14 @@
 #![cfg_attr(feature = "deny-warnings", deny(warnings))]
 #![warn(clippy::use_self)]
 
-use neqo_common::Datagram;
-use test_fixture::{self, default_client, default_server, now};
+mod common;
+
+use common::{
+    apply_header_protection, decode_initial_header, initial_aead_and_hp, remove_header_protection,
+};
+use neqo_common::{Datagram, Decoder, Role};
+use neqo_transport::{ConnectionParameters, State, Version};
+use test_fixture::{self, default_client, default_server, new_client, now, split_datagram};
 
 #[test]
 fn connect() {
@@ -34,8 +40,8 @@ fn truncate_long_packet() {
         dupe.destination(),
         &dupe[..(dupe.len() - tail)],
     );
-    let dupe_ack = client.process(Some(truncated), now()).dgram();
-    assert!(dupe_ack.is_some());
+    let hs_probe = client.process(Some(truncated), now()).dgram();
+    assert!(hs_probe.is_some());
 
     // Now feed in the untruncated packet.
     let dgram = client.process(dgram, now()).dgram();
@@ -48,4 +54,74 @@ fn truncate_long_packet() {
     let dgram = server.process(dgram, now()).dgram();
     assert!(dgram.is_some());
     assert!(server.state().connected());
+}
+
+/// Test that reordering parts of the server Initial doesn't change things.
+#[test]
+fn reorder_server_initial() {
+    // A simple ACK frame for a single packet with packet number 0.
+    const ACK_FRAME: &[u8] = &[0x02, 0x00, 0x00, 0x00, 0x00];
+
+    let mut client = new_client(
+        ConnectionParameters::default().versions(Version::Version1, vec![Version::Version1]),
+    );
+    let mut server = default_server();
+
+    let client_initial = client.process_output(now()).dgram();
+    let (_, client_dcid, _, _) =
+        decode_initial_header(client_initial.as_ref().unwrap(), Role::Client);
+    let client_dcid = client_dcid.to_owned();
+
+    let server_packet = server.process(client_initial, now()).dgram();
+    let (server_initial, server_hs) = split_datagram(server_packet.as_ref().unwrap());
+    let (protected_header, _, _, payload) = decode_initial_header(&server_initial, Role::Server);
+
+    // Now decrypt the packet.
+    let (aead, hp) = initial_aead_and_hp(&client_dcid, Role::Server);
+    let (header, pn) = remove_header_protection(&hp, protected_header, payload);
+    assert_eq!(pn, 0);
+    let pn_len = header.len() - protected_header.len();
+    let mut buf = vec![0; payload.len()];
+    let mut plaintext = aead
+        .decrypt(pn, &header, &payload[pn_len..], &mut buf)
+        .unwrap()
+        .to_owned();
+
+    // Now we need to find the frames.  Make some really strong assumptions.
+    let mut dec = Decoder::new(&plaintext[..]);
+    assert_eq!(dec.decode(ACK_FRAME.len()), Some(ACK_FRAME));
+    assert_eq!(dec.decode_varint(), Some(0x06)); // CRYPTO
+    assert_eq!(dec.decode_varint(), Some(0x00)); // offset
+    dec.skip_vvec(); // Skip over the payload.
+    let end = dec.offset();
+
+    // Move the ACK frame after the CRYPTO frame.
+    plaintext[..end].rotate_left(ACK_FRAME.len());
+
+    // And rebuild a packet.
+    let mut packet = header.clone();
+    packet.resize(1200, 0);
+    aead.encrypt(pn, &header, &plaintext, &mut packet[header.len()..])
+        .unwrap();
+    apply_header_protection(&hp, &mut packet, protected_header.len()..header.len());
+    let reordered = Datagram::new(
+        server_initial.source(),
+        server_initial.destination(),
+        packet,
+    );
+
+    // Now a connection can be made successfully.
+    // Though we modified the server's Initial packet, we get away with it.
+    // TLS only authenticates the content of the CRYPTO frame, which was untouched.
+    client.process_input(reordered, now());
+    client.process_input(server_hs.unwrap(), now());
+    assert!(test_fixture::maybe_authenticate(&mut client));
+    let finished = client.process_output(now()).dgram();
+    assert_eq!(*client.state(), State::Connected);
+
+    let done = server.process(finished, now()).dgram();
+    assert_eq!(*server.state(), State::Confirmed);
+
+    client.process_input(done.unwrap(), now());
+    assert_eq!(*client.state(), State::Confirmed);
 }

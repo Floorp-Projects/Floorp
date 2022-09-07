@@ -191,7 +191,7 @@ dependencies = [
  "quote",
  "serde",
  "syn",
- "toml 0.5.9",
+ "toml",
 ]
 
 [[package]]
@@ -416,13 +416,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b1f45e9417d87227c7a56d22e471c6206462cba514c7590c09aff4cf6d1ddcad"
 dependencies = [
  "serde",
-]
-
-[[package]]
-name = "bindgen"
-version = "0.56.999"
-dependencies = [
- "bindgen 0.59.2",
 ]
 
 [[package]]
@@ -901,7 +894,7 @@ version = "0.2.10"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3dff444d80630d7073077d38d40b4501fd518bd2b922c2a55edcc8b0f7be57e6"
 dependencies = [
- "bindgen 0.59.2",
+ "bindgen",
 ]
 
 [[package]]
@@ -1988,7 +1981,7 @@ name = "gecko-profiler"
 version = "0.1.0"
 dependencies = [
  "bincode",
- "bindgen 0.59.2",
+ "bindgen",
  "lazy_static",
  "mozbuild",
  "profiler-macros",
@@ -2515,7 +2508,7 @@ name = "http3server"
 version = "0.1.1"
 dependencies = [
  "base64",
- "bindgen 0.59.2",
+ "bindgen",
  "log",
  "mio 0.6.23",
  "mio-extras",
@@ -3446,7 +3439,7 @@ dependencies = [
 name = "mozilla-central-workspace-hack"
 version = "0.1.0"
 dependencies = [
- "bindgen 0.59.2",
+ "bindgen",
  "libc",
  "quote",
  "serde",
@@ -3565,10 +3558,11 @@ dependencies = [
 
 [[package]]
 name = "neqo-common"
-version = "0.5.7"
+version = "0.6.1"
+source = "git+https://github.com/mozilla/neqo?tag=v0.6.1#e71e860489447fed25b64bd8ec31a804dccb0dad"
 dependencies = [
  "chrono",
- "env_logger 0.8.999",
+ "env_logger 0.9.0",
  "lazy_static",
  "log",
  "qlog",
@@ -3577,22 +3571,22 @@ dependencies = [
 
 [[package]]
 name = "neqo-crypto"
-version = "0.5.7"
-source = "git+https://github.com/mozilla/neqo?tag=v0.5.7#f3de275b12c40f45718ce43a0482e771ba6cd4b8"
+version = "0.6.1"
+source = "git+https://github.com/mozilla/neqo?tag=v0.6.1#e71e860489447fed25b64bd8ec31a804dccb0dad"
 dependencies = [
- "bindgen 0.56.999",
+ "bindgen",
  "log",
  "mozbuild",
  "neqo-common",
  "serde",
  "serde_derive",
- "toml 0.4.999",
+ "toml",
 ]
 
 [[package]]
 name = "neqo-http3"
-version = "0.5.7"
-source = "git+https://github.com/mozilla/neqo?tag=v0.5.7#f3de275b12c40f45718ce43a0482e771ba6cd4b8"
+version = "0.6.1"
+source = "git+https://github.com/mozilla/neqo?tag=v0.6.1#e71e860489447fed25b64bd8ec31a804dccb0dad"
 dependencies = [
  "enumset",
  "lazy_static",
@@ -3609,8 +3603,8 @@ dependencies = [
 
 [[package]]
 name = "neqo-qpack"
-version = "0.5.7"
-source = "git+https://github.com/mozilla/neqo?tag=v0.5.7#f3de275b12c40f45718ce43a0482e771ba6cd4b8"
+version = "0.6.1"
+source = "git+https://github.com/mozilla/neqo?tag=v0.6.1#e71e860489447fed25b64bd8ec31a804dccb0dad"
 dependencies = [
  "lazy_static",
  "log",
@@ -3623,8 +3617,8 @@ dependencies = [
 
 [[package]]
 name = "neqo-transport"
-version = "0.5.7"
-source = "git+https://github.com/mozilla/neqo?tag=v0.5.7#f3de275b12c40f45718ce43a0482e771ba6cd4b8"
+version = "0.6.1"
+source = "git+https://github.com/mozilla/neqo?tag=v0.6.1#e71e860489447fed25b64bd8ec31a804dccb0dad"
 dependencies = [
  "indexmap",
  "lazy_static",
@@ -4074,7 +4068,7 @@ version = "0.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "054f65db435bb7cf99db2f38bbcf568dfa66c342201df54e700c772b178e2f20"
 dependencies = [
- "bindgen 0.59.2",
+ "bindgen",
 ]
 
 [[package]]
@@ -4957,7 +4951,7 @@ dependencies = [
  "app_units",
  "arrayvec",
  "atomic_refcell",
- "bindgen 0.59.2",
+ "bindgen",
  "bitflags",
  "byteorder",
  "cssparser",
@@ -4998,7 +4992,7 @@ dependencies = [
  "time 0.1.44",
  "to_shmem",
  "to_shmem_derive",
- "toml 0.5.9",
+ "toml",
  "uluru",
  "unicode-bidi",
  "unicode-segmentation",
@@ -5411,13 +5405,6 @@ dependencies = [
 
 [[package]]
 name = "toml"
-version = "0.4.999"
-dependencies = [
- "toml 0.5.9",
-]
-
-[[package]]
-name = "toml"
 version = "0.5.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8d82e1a7758622a465f8cee077614c73484dac5b836c02ff6a40d5d1010324d7"
@@ -5645,7 +5632,7 @@ dependencies = [
  "extend",
  "heck",
  "serde",
- "toml 0.5.9",
+ "toml",
  "uniffi_bindgen",
 ]
 
@@ -5731,7 +5718,7 @@ dependencies = [
  "lazy_static",
  "paste",
  "serde",
- "toml 0.5.9",
+ "toml",
  "weedle2",
 ]
 

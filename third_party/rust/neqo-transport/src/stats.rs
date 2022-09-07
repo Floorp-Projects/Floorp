@@ -18,7 +18,7 @@ use std::time::Duration;
 pub(crate) const MAX_PTO_COUNTS: usize = 16;
 
 #[derive(Default, Clone)]
-#[cfg_attr(test, derive(PartialEq))]
+#[cfg_attr(test, derive(PartialEq, Eq))]
 #[allow(clippy::module_name_repetitions)]
 pub struct FrameStats {
     pub all: usize,

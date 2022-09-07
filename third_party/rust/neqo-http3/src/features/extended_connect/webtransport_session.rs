@@ -377,7 +377,8 @@ impl WebTransportSession {
         };
         let mut encoder = Encoder::default();
         close_frame.encode(&mut encoder);
-        self.control_stream_send.send_data_atomic(conn, &encoder)?;
+        self.control_stream_send
+            .send_data_atomic(conn, encoder.as_ref())?;
         self.control_stream_send.close(conn)?;
         self.state = if self.control_stream_send.done() {
             SessionState::Done

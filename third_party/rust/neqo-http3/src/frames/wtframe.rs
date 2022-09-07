@@ -13,7 +13,7 @@ pub(crate) type WebTransportFrameType = u64;
 const WT_FRAME_CLOSE_SESSION: WebTransportFrameType = 0x2843;
 const WT_FRAME_CLOSE_MAX_MESSAGE_SIZE: u64 = 1024;
 
-#[derive(PartialEq, Debug)]
+#[derive(PartialEq, Eq, Debug)]
 pub enum WebTransportFrame {
     CloseSession { error: u32, message: String },
 }

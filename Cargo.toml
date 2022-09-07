@@ -91,9 +91,6 @@ vcpkg = { path = "build/rust/vcpkg" }
 # Helper crate for integration in the gecko build system.
 mozbuild = { path = "build/rust/mozbuild" }
 
-# Patch bindgen 0.56 to 0.59.
-bindgen = { path = "build/rust/bindgen" }
-
 # Patch cfg-if 0.1 to 1.0
 cfg-if = { path = "build/rust/cfg-if" }
 
@@ -111,9 +108,6 @@ tokio-util = { path = "build/rust/tokio-util" }
 
 # Patch env_logger 0.8 to 0.9
 env_logger = { path = "build/rust/env_logger" }
-
-# Patch toml 0.4 to 0.5
-toml = { path = "build/rust/toml" }
 
 # Patch parking_lot 0.12 down to 0.11, which is compatible for most crates that use it, to avoid
 # dependencies on windows-sys.
@@ -163,11 +157,6 @@ webext-storage = { git = "https://github.com/mozilla/application-services", rev 
 # There is not going to be new version of mio 0.6, mio now being >= 0.7.11.
 [patch.crates-io.mio]
 path = "third_party/rust/mio-0.6.23"
-
-# Patch neqo 0.5.7 to be compatible with newer versions of the log crate.
-# https://github.com/mozilla/neqo/pull/1350
-[patch."https://github.com/mozilla/neqo"]
-neqo-common = { path = "third_party/rust/neqo-common" }
 
 # These are used to test UniFFI functionality.  We haven't figured out how we
 # want to publish these yet, so they are only accessible via git.  This works

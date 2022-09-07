@@ -93,13 +93,13 @@ impl From<ConnectionError> for CloseError {
     }
 }
 
-#[derive(PartialEq, Debug, Default, Clone)]
+#[derive(PartialEq, Eq, Debug, Default, Clone)]
 pub struct AckRange {
     pub(crate) gap: u64,
     pub(crate) range: u64,
 }
 
-#[derive(PartialEq, Debug, Clone)]
+#[derive(PartialEq, Eq, Debug, Clone)]
 pub enum Frame<'a> {
     Padding,
     Ping,

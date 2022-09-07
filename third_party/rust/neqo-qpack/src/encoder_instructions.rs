@@ -18,7 +18,7 @@ use std::mem;
 // We may decide to use othe instruction in the future.
 // All instructions are used for testing, therefore they are defined.
 #[allow(dead_code)]
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Eq)]
 pub enum EncoderInstruction<'a> {
     Capacity { value: u64 },
     InsertWithNameRefStatic { index: u64, value: &'a [u8] },
@@ -63,7 +63,7 @@ enum EncoderInstructionReaderState {
     Done,
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Eq)]
 pub enum DecodedEncoderInstruction {
     Capacity { value: u64 },
     InsertWithNameRefStatic { index: u64, value: Vec<u8> },

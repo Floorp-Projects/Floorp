@@ -1966,7 +1966,10 @@ mod tests {
             &mut tokens,
             &mut stats,
         );
-        qtrace!("STREAM frame: {}", hex_with_len(&builder[header_len..]));
+        qtrace!(
+            "STREAM frame: {}",
+            hex_with_len(&builder.as_ref()[header_len..])
+        );
         stats.stream > 0
     }
 

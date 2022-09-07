@@ -14,7 +14,7 @@ use neqo_common::{qdebug, qtrace};
 use neqo_transport::StreamId;
 use std::mem;
 
-#[derive(Debug, Copy, Clone, PartialEq)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub enum DecoderInstruction {
     InsertCountIncrement { increment: u64 },
     HeaderAck { stream_id: StreamId },

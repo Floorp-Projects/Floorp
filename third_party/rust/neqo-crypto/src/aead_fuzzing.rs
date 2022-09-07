@@ -15,9 +15,6 @@ pub struct Aead {}
 #[allow(clippy::unused_self)]
 impl Aead {
     pub fn new(_version: Version, _cipher: Cipher, _secret: &SymKey, _prefix: &str) -> Res<Self> {
-        #[cfg(not(debug_assertions))]
-        panic!("Trying to run a non-debug fuzzing build.");
-
         Ok(Self {})
     }
 

@@ -177,7 +177,7 @@ impl<'a> ::std::fmt::Display for HeaderDecoder<'a> {
     }
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Eq)]
 pub enum HeaderDecoderResult {
     Blocked(u64),
     Headers(Vec<Header>),
