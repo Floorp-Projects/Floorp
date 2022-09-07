@@ -333,7 +333,7 @@ unsafe impl<T: XpCom + 'static> RefCounted for ThreadPtrHolder<T> {
                 }
             }
             // ...And deallocate the holder.
-            Box::from_raw(self as *const Self as *mut Self);
+            mem::drop(Box::from_raw(self as *const Self as *mut Self));
         }
     }
 }
