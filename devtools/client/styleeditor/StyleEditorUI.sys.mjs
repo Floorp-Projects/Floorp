@@ -893,15 +893,15 @@ export class StyleEditorUI extends EventEmitter {
       eventListenersConfig
     );
 
-    const enabledToggle = summary.querySelector(".stylesheet-enabled");
+    const stylesheetToggle = summary.querySelector(".stylesheet-toggle");
     if (isSystem) {
-      enabledToggle.disabled = true;
+      stylesheetToggle.disabled = true;
       this.#window.document.l10n.setAttributes(
-        enabledToggle,
+        stylesheetToggle,
         "styleeditor-visibility-toggle-system"
       );
     } else {
-      enabledToggle.addEventListener(
+      stylesheetToggle.addEventListener(
         "click",
         event => {
           event.stopPropagation();
