@@ -40,7 +40,9 @@
 
     <!-- Home - Recently saved bookmarks -->
     <!-- Title for the home screen section with recently saved bookmarks. -->
-    <string name="recent_bookmarks_title">Нядаўнія закладкі</string>
+    <string moz:RemovedIn="106" name="recent_bookmarks_title" tools:ignore="UnusedResources">Нядаўнія закладкі</string>
+    <!-- Title for the home screen section with recently saved bookmarks. -->
+    <string name="recently_saved_title">Нядаўна захаваныя</string>
     <!-- Content description for the button which navigates the user to show all of their saved bookmarks. -->
     <string name="recently_saved_show_all_content_description_2">Паказаць усе захаваныя закладкі</string>
 
@@ -131,6 +133,8 @@
     <string name="recent_tabs_see_all_synced_tabs_button_text">Усе сінхранізаваныя карткі</string>
     <!-- Accessibility description for device icon used for recent synced tab -->
     <string name="recent_tabs_synced_device_icon_content_description">Сінхранізаваная прылада</string>
+    <!-- Text for the dropdown menu to remove a recent synced tab from the homescreen -->
+    <string name="recent_synced_tab_menu_item_remove">Выдаліць</string>
     <!-- Text for the menu button to remove a grouped highlight from the user's browsing history
          in the Recently visited section -->
     <string name="recent_tab_menu_item_remove">Выдаліць</string>
@@ -248,24 +252,31 @@
 
     <!-- Home onboarding -->
     <!-- Onboarding home screen dialog title text. The first parameter is the name of the application.-->
-    <string name="onboarding_home_screen_title_3">Што новага ў %1$s</string>
+    <string moz:RemovedIn="106" name="onboarding_home_screen_title_3" tools:ignore="UnusedResources">Што новага ў %1$s</string>
     <!-- Onboarding home screen dialog description text. -->
-    <string name="onboarding_home_screen_description_2">Цяпер стала прасцей працягнуць працу там, дзе вы спыніліся.</string>
+    <string moz:RemovedIn="106" name="onboarding_home_screen_description_2" tools:ignore="UnusedResources">Цяпер стала прасцей працягнуць працу там, дзе вы спыніліся.</string>
     <!-- Onboarding home screen dialog title text for the home section. The first parameter is the name of the application.-->
-    <string name="onboarding_home_screen_section_home_title_3">Персаналізаваная хатняя старонка %1$s</string>
+    <string moz:RemovedIn="106" name="onboarding_home_screen_section_home_title_3" tools:ignore="UnusedResources">Персаналізаваная хатняя старонка %1$s</string>
     <!-- Onboarding home screen dialog description text for the home section. -->
-    <string name="onboarding_home_screen_section_home_description_2">Пераходзьце да адкрытых картак, закладак і гісторыі аглядання.</string>
+    <string moz:RemovedIn="106" name="onboarding_home_screen_section_home_description_2" tools:ignore="UnusedResources">Пераходзьце да адкрытых картак, закладак і гісторыі аглядання.</string>
     <!-- Onboarding home screen dialog description text for the tab tray section. -->
-    <string name="onboarding_home_screen_section_cleaner_tab_tray_title_2">Лепшая арганізацыя картак</string>
+    <string moz:RemovedIn="106" name="onboarding_home_screen_section_cleaner_tab_tray_title_2" tools:ignore="UnusedResources">Лепшая арганізацыя картак</string>
     <!-- Onboarding home screen dialog description text for the tab tray section. -->
-    <string name="onboarding_home_screen_section_cleaner_tab_tray_description_2">Пазбаўцеся бязладдзя ў картках дзякуючы палепшанаму выкладу і аўтаматычнаму закрыццю картак.</string>
+    <string moz:RemovedIn="106" name="onboarding_home_screen_section_cleaner_tab_tray_description_2" tools:ignore="UnusedResources">Пазбаўцеся бязладдзя ў картках дзякуючы палепшанаму выкладу і аўтаматычнаму закрыццю картак.</string>
     <!-- Onboarding home screen dialog description text for the history section. -->
-    <string name="onboarding_home_screen_section_useful_history_title_2">Нядаўнія пошукі</string>
+    <string moz:RemovedIn="106" name="onboarding_home_screen_section_useful_history_title_2" tools:ignore="UnusedResources">Нядаўнія пошукі</string>
     <!-- Onboarding home screen dialog description text for the history section. -->
-    <string name="onboarding_home_screen_section_useful_history_description_2">Вяртайцеся да сваіх апошнія пошукавых запытаў з хатняй старонкі і картак.</string>
+    <string moz:RemovedIn="106" name="onboarding_home_screen_section_useful_history_description_2" tools:ignore="UnusedResources">Вяртайцеся да сваіх апошнія пошукавых запытаў з хатняй старонкі і картак.</string>
 
     <!-- Onboarding home screen popup dialog, shown on top of the Jump back in section. Firefox is intentionally hardcoded. -->
-    <string name="onboarding_home_screen_jump_back_contextual_hint" tools:ignore="UnusedResources">Ваша персаналізаваная галоўная старонка Firefox цяпер палягчае працяг адтуль, дзе вы спыніліся. Знайдзіце свае апошнія карткі, закладкі і вынікі пошуку.</string>
+    <string moz:RemovedIn="106" name="onboarding_home_screen_jump_back_contextual_hint" tools:ignore="UnusedResources">Ваша персаналізаваная галоўная старонка Firefox цяпер палягчае працяг адтуль, дзе вы спыніліся. Знайдзіце свае апошнія карткі, закладкі і вынікі пошуку.</string>
+
+    <!-- Text for the button to continue the onboarding on the home onboarding dialog. -->
+    <string name="onboarding_home_get_started_button">Пачаць</string>
+    <!-- Text for the button to navigate to the sync sign in screen on the home onboarding dialog. -->
+    <string name="onboarding_home_sign_in_button">Увайсці</string>
+    <!-- Text for the button to skip the onboarding on the home onboarding dialog. -->
+    <string name="onboarding_home_skip_button">Прапусціць</string>
 
     <!-- Search Widget -->
     <!-- Content description for searching with a widget. The first parameter is the name of the application.-->
@@ -443,11 +454,11 @@
     <string name="wallpaper_updated_snackbar_action">Прагляд</string>
 
     <!-- Label for switch which toggles the "tap-to-switch" behavior on home screen logo -->
-    <string name="wallpaper_tap_to_change_switch_label_1">Змяняць шпалеры дотыкам да лагатыпа хатняй старонкі Firefox</string>
+    <string moz:removedIn="105" name="wallpaper_tap_to_change_switch_label_1" tools:ignore="UnusedResources">Змяняць шпалеры дотыкам да лагатыпа хатняй старонкі Firefox</string>
 
     <!-- This is the accessibility content description for the wallpapers functionality. Users are
     able to tap on the app logo in the home screen and can switch to different wallpapers by tapping. -->
-    <string name="wallpaper_logo_content_description">Лагатып Firefox — змяніць шпалеры, кнопка</string>
+    <string moz:removedIn="105" name="wallpaper_logo_content_description" tools:ignore="UnusedResources">Лагатып Firefox — змяніць шпалеры, кнопка</string>
 
     <!-- Add-on Installation from AMO-->
     <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is not supported -->
@@ -732,8 +743,6 @@
     <string name="open_tabs_menu">Меню адкрытых картак</string>
     <!-- Open tabs menu item to save tabs to collection -->
     <string name="tabs_menu_save_to_collection1">Захаваць карткі у калекцыі</string>
-    <!-- Content description (not visible, for screen readers etc.): Opens the tab menu when pressed -->
-    <string moz:RemovedIn="103" name="tab_menu" tools:ignore="UnusedResources">Меню картак</string>
     <!-- Text for the menu button to delete a collection -->
     <string name="collection_delete">Выдаліць калекцыю</string>
     <!-- Text for the menu button to rename a collection -->
@@ -785,16 +794,16 @@
     <string name="history_empty_message">Няма гісторыі</string>
 
     <!-- Text for the button inside History screen that opens Synced History screen. History that is coming from other devices -->
-    <string name="history_synced_from_other_devices">Сінхранавана з іншых прылад</string>
+    <string moz:removedIn="105" name="history_synced_from_other_devices" tools:ignore="UnusedResources">Сінхранавана з іншых прылад</string>
     <!-- The page title for browsing history coming from other devices. -->
-    <string name="history_from_other_devices">З іншых прылад</string>
+    <string moz:removedIn="105" name="history_from_other_devices" tools:ignore="UnusedResources">З іншых прылад</string>
 
     <!-- The synced history sign in dialog message -->
-    <string name="history_sign_in_message">Увайдзіце, каб убачыць гісторыю, сінхранізаваную з іншых вашых прылад.</string>
+    <string moz:removedIn="105" name="history_sign_in_message" tools:ignore="UnusedResources">Увайдзіце, каб убачыць гісторыю, сінхранізаваную з іншых вашых прылад.</string>
     <!-- The synced history sign in dialog button text -->
-    <string name="history_sign_in_button">Увайсці</string>
+    <string moz:removedIn="105" name="history_sign_in_button" tools:ignore="UnusedResources">Увайсці</string>
     <!-- The synced history sign in dialog create a new account link -->
-    <string name="history_sign_in_create_account"><![CDATA[<u>Або стварыць уліковы запіс Firefox, каб пачаць сінхранізацыю</u>]]></string>
+    <string moz:removedIn="105" name="history_sign_in_create_account" tools:ignore="UnusedResources"><![CDATA[<u>Або стварыць уліковы запіс Firefox, каб пачаць сінхранізацыю</u>]]></string>
 
     <!-- Downloads -->
     <!-- Text for the snackbar to confirm that multiple downloads items have been removed -->
@@ -1350,8 +1359,12 @@
     <string name="etp_social_media_trackers_description">Абмяжоўвае мажлівасць сацыяльных сетак асочваць вашу дзейнасць у сеціве.</string>
     <!-- Category of trackers (cross-site tracking cookies) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cookies_title">Міжсайтавыя кукі асочвання</string>
+    <!-- Category of trackers (cross-site tracking cookies) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_cookies_title_2">Міжсайтавыя кукі</string>
     <!-- Description of cross-site tracking cookies that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cookies_description">Блакуе файлы cookie, якія рэкламныя сеткі і аналітычныя кампаніі выкарыстоўваюць, каб аб’яднаць звесткі аглядання з многіх сайтаў.</string>
+    <!-- Description of cross-site tracking cookies that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_cookies_description_2">Поўная ахова кукаў ізалюе кукі на сайце, дзе вы знаходзіцеся, таму трэкеры, такія як рэкламныя сеткі, не могуць скарыстаць іх для сачэння за вамі паміж сайтамі.</string>
     <!-- Category of trackers (cryptominers) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cryptominers_title">Майнеры крыптавалют</string>
     <!-- Description of cryptominers that can be blocked by Enhanced Tracking Protection -->
