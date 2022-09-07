@@ -362,7 +362,7 @@ class NativeLayerCA : public NativeLayer {
                       gfx::SamplingFilter aSamplingFilter,
                       bool aSpecializeVideo,
                       CFTypeRefPtr<IOSurfaceRef> aFrontSurface,
-                      CFTypeRefPtr<CGColorRef> aColor);
+                      CFTypeRefPtr<CGColorRef> aColor, bool aIsDRM);
 
     // Return whether any aspects of this layer representation have been mutated
     // since the last call to ApplyChanges, i.e. whether ApplyChanges needs to
@@ -390,6 +390,7 @@ class NativeLayerCA : public NativeLayer {
     bool mMutatedFrontSurface : 1;
     bool mMutatedSamplingFilter : 1;
     bool mMutatedSpecializeVideo : 1;
+    bool mMutatedIsDRM : 1;
   };
 
   Representation& GetRepresentation(WhichRepresentation aRepresentation);
@@ -466,6 +467,7 @@ class NativeLayerCA : public NativeLayer {
   bool mRootWindowIsFullscreen = false;
   bool mSpecializeVideo = false;
   bool mHasExtent = false;
+  bool mIsDRM = false;
 };
 
 }  // namespace layers
