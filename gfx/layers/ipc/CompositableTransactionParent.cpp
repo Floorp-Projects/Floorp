@@ -87,7 +87,7 @@ bool CompositableParentManager::ReceiveCompositableUpdate(
     }
     case CompositableOperationDetail::TOpUseRemoteTexture: {
       const OpUseRemoteTexture& op = aDetail.get_OpUseRemoteTexture();
-      aCompositable->UseRemoteTexture(op.textureId(), op.ownerId(), aHandle,
+      aCompositable->UseRemoteTexture(op.textureId(), op.ownerId(),
                                       GetChildProcessId(), op.size(),
                                       op.textureFlags());
       break;

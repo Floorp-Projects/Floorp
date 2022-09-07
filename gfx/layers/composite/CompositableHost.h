@@ -88,7 +88,6 @@ class CompositableHost {
   virtual void UseTextureHost(const nsTArray<TimedTexture>& aTextures);
   virtual void UseRemoteTexture(const RemoteTextureId aTextureId,
                                 const RemoteTextureOwnerId aOwnerId,
-                                const CompositableHandle& aHandle,
                                 const base::ProcessId aForPid,
                                 const gfx::IntSize aSize,
                                 const TextureFlags aFlags) = 0;

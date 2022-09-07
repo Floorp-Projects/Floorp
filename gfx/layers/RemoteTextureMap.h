@@ -12,7 +12,6 @@
 #include <memory>
 #include <queue>
 #include <stack>
-#include <unordered_map>
 #include <unordered_set>
 #include <utility>
 
@@ -20,10 +19,12 @@
 #include "mozilla/gfx/Types.h"               // for SurfaceFormat
 #include "mozilla/layers/CompositorTypes.h"  // for TextureFlags, etc
 #include "mozilla/layers/LayersSurfaces.h"   // for SurfaceDescriptor
+#include "mozilla/layers/TextureHost.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/ThreadSafeWeakPtr.h"
 #include "mozilla/UniquePtr.h"
+#include "mozilla/webrender/WebRenderTypes.h"
 
 class nsISerialEventTarget;
 
@@ -35,6 +36,7 @@ class SharedSurface;
 
 namespace layers {
 
+class RemoteTextureHostWrapper;
 class TextureData;
 class TextureHost;
 
@@ -70,67 +72,9 @@ class RemoteTextureOwnerClient final {
       mOwnerIds;
 };
 
-using RemoteTextureCallback = std::function<void(
-    const RemoteTextureId aTextureId, const RemoteTextureOwnerId aOwnerId,
-    const base::ProcessId aForPid)>;
-
-/**
- * A class provides API for remote texture consumer.
- * This handle only one texture consumer.
- */
-class RemoteTextureConsumerClient {
- public:
-  static UniquePtr<RemoteTextureConsumerClient> Create(
-      const RemoteTextureOwnerId aOwnerId, const CompositableHandle& aHandle,
-      const base::ProcessId aForPid);
-
-  RemoteTextureConsumerClient(const RemoteTextureOwnerId aOwnerId,
-                              const CompositableHandle& aHandle,
-                              const base::ProcessId aForPid);
-  ~RemoteTextureConsumerClient();
-
-  RefPtr<TextureHost> GetTextureHost(const RemoteTextureId aTextureId,
-                                     const gfx::IntSize aSize,
-                                     const TextureFlags aFlags,
-                                     const RemoteTextureCallback& aCallback);
-
-  const RemoteTextureOwnerId mOwnerId;
-  const CompositableHandle mHandle;
-  const base::ProcessId mForPid;
-};
-
-/**
- * A class wraps SharedSurface and provides thread safe weak pointer.
- * Since SharedSurface is not thread safe.
- */
-class SharedSurfaceWrapper
-    : public SupportsThreadSafeWeakPtr<SharedSurfaceWrapper> {
- public:
-  MOZ_DECLARE_REFCOUNTED_TYPENAME(SharedSurfaceWrapper)
-
-  explicit SharedSurfaceWrapper(
-      const std::shared_ptr<gl::SharedSurface>& aSharedSurface);
-  virtual ~SharedSurfaceWrapper();
-
-  bool IsUsed() { return mIsUsed; }
-  void EndUsage() { mIsUsed = false; }
-
-  const std::shared_ptr<gl::SharedSurface> mSharedSurface;
-
- protected:
-  Atomic<bool> mIsUsed{true};
-};
-
 /**
  * A class to map RemoteTextureId to remote texture(TextureHost).
- * Remote textures are provided by texture owner. The textures are consumed by
- * texture consumer. Textures of one texture owner are consumed by one texture
- * consumer at a time. Lifetime of the consumer is different from the owner. A
- * new consumer could replace old consumer.
- *
- * There could be a case that remote texture is not provided yet by texture
- * owner, when textur consumer requests the texture. In this case, callback
- * function is called when the texture is provided by the owner.
+ * Remote textures are provided by texture owner.
  */
 class RemoteTextureMap {
  public:
@@ -160,25 +104,18 @@ class RemoteTextureMap {
                                RemoteTextureOwnerId::HashFn>& aOwnerIds,
       const base::ProcessId aForPid);
 
-  UniquePtr<RemoteTextureConsumerClient> RegisterTextureConsumer(
-      const RemoteTextureOwnerId aOwnerId, const CompositableHandle& aHandle,
-      const base::ProcessId aForPid);
+  void GetRemoteTextureHost(RemoteTextureHostWrapper* aTextureHostWrapper);
 
-  void UnregisterTextureConsumer(const RemoteTextureOwnerId aOwnerId,
-                                 const CompositableHandle& aHandle,
-                                 const base::ProcessId aForPid);
+  void ReleaseRemoteTextureHost(RemoteTextureHostWrapper* aTextureHostWrapper);
 
-  RefPtr<TextureHost> GetTextureHost(const RemoteTextureId aTextureId,
-                                     const RemoteTextureOwnerId aOwnerId,
-                                     const CompositableHandle& aHandle,
-                                     const base::ProcessId aForPid,
-                                     const gfx::IntSize aSize,
-                                     const TextureFlags aFlags,
-                                     const RemoteTextureCallback& aCallback);
+  RefPtr<TextureHost> GetOrCreateRemoteTextureHostWrapper(
+      const RemoteTextureId aTextureId, const RemoteTextureOwnerId aOwnerId,
+      const base::ProcessId aForPid, const gfx::IntSize aSize,
+      const TextureFlags aFlags);
 
-  void NotifyReleased(const RemoteTextureId aTextureId,
-                      const RemoteTextureOwnerId aOwnerId,
-                      const base::ProcessId aForPid);
+  void UnregisterRemoteTextureHostWrapper(const RemoteTextureId aTextureId,
+                                          const RemoteTextureOwnerId aOwnerId,
+                                          const base::ProcessId aForPid);
 
   UniquePtr<TextureData> GetRecycledBufferTextureData(
       const RemoteTextureOwnerId aOwnerId, const base::ProcessId aForPid,
@@ -188,47 +125,45 @@ class RemoteTextureMap {
       const RemoteTextureOwnerId aOwnerId, const base::ProcessId aForPid);
 
  protected:
-  // Holds data necessary for creating TextureHost.
-  struct TextureDataWrapper {
-    TextureDataWrapper(
-        const RemoteTextureId aTextureId, UniquePtr<TextureData>&& aTextureData,
-        const ThreadSafeWeakPtr<SharedSurfaceWrapper>& aSharedSurface);
+  // Holds data related to remote texture
+  struct TextureDataHolder {
+    TextureDataHolder(const RemoteTextureId aTextureId,
+                      RefPtr<TextureHost> aTextureHost,
+                      UniquePtr<TextureData>&& aTextureData,
+                      const std::shared_ptr<gl::SharedSurface>& aSharedSurface);
 
     const RemoteTextureId mTextureId;
+    // TextureHost of remote texture
+    // Compositable ref of the mTextureHost should be updated within mMutex.
+    // The compositable ref is used to check if TextureHost(remote texture) is
+    // still in use by WebRender.
+    RefPtr<TextureHost> mTextureHost;
+    // Holds BufferTextureData of TextureHost
     UniquePtr<TextureData> mTextureData;
-    ThreadSafeWeakPtr<SharedSurfaceWrapper> mSharedSurface;
+    // Holds gl::SharedSurface of TextureHost
+    std::shared_ptr<gl::SharedSurface> mSharedSurface;
   };
 
   struct TextureOwner {
-    std::queue<UniquePtr<TextureDataWrapper>> mTextureDataWrappers;
+    // Holds TextureDataHolders that wait to be used by WebRender.
+    std::queue<UniquePtr<TextureDataHolder>> mWaitingTextureDataHolders;
+    // Holds TextureDataHolders that are used by WebRender
+    std::queue<UniquePtr<TextureDataHolder>> mUsingTextureDataHolders;
     RemoteTextureId mLatestTextureId = {0};
-    RefPtr<TextureHost> mLatestTextureHost;
-    std::queue<RefPtr<SharedSurfaceWrapper>> mSharedSurfaces;
+    CompositableTextureHostRef mLatestTextureHost;
     std::stack<UniquePtr<TextureData>> mRecycledTextures;
-    std::stack<RefPtr<SharedSurfaceWrapper>> mRecycledSharedSurfaces;
+    std::stack<std::shared_ptr<gl::SharedSurface>> mRecycledSharedSurfaces;
   };
 
-  // Holds callbacks of texture consumer.
-  // Callback is used only when remote texture is not provided yet by texture
-  // owner during GetTextureHost() call.
-  struct TextureConsumer {
-    explicit TextureConsumer(const CompositableHandle& aHandle)
-        : mHandle(aHandle) {}
-    CompositableHandle mHandle;
-    std::queue<std::pair<RemoteTextureId, RemoteTextureCallback>> mCallbacks;
-  };
+  void UpdateTexture(const MutexAutoLock& aProofOfLock,
+                     RemoteTextureMap::TextureOwner* aOwner,
+                     const RemoteTextureId aTextureId);
 
   RemoteTextureMap::TextureOwner* GetTextureOwner(
       const MutexAutoLock& aProofOfLock, const RemoteTextureOwnerId aOwnerId,
       const base::ProcessId aForPid);
 
-  RemoteTextureMap::TextureConsumer* GetTextureConsumer(
-      const MutexAutoLock& aProofOfLock, const RemoteTextureOwnerId aOwnerId,
-      const base::ProcessId aForPid);
-
-  RefPtr<TextureHost> CreateRemoteTexture(const gfx::IntSize aSize,
-                                          const TextureFlags aFlags,
-                                          TextureDataWrapper* aTextureData);
+  static RefPtr<TextureHost> CreateRemoteTexture(TextureData* aTextureData);
 
   Mutex mMutex MOZ_UNANNOTATED;
 
@@ -236,15 +171,8 @@ class RemoteTextureMap {
            UniquePtr<TextureOwner>>
       mTextureOwners;
 
-  // Holds TextureConsumers that consume related TextureOwner.
-  std::map<std::pair<base::ProcessId, RemoteTextureOwnerId>,
-           UniquePtr<TextureConsumer>>
-      mTextureConsumers;
-
-  // Keeps TextureDataWrappers alive during their usage.
-  std::map<std::pair<base::ProcessId, RemoteTextureId>,
-           UniquePtr<TextureDataWrapper>>
-      mKeepAlives;
+  std::map<std::pair<base::ProcessId, RemoteTextureId>, RefPtr<TextureHost>>
+      mRemoteTextureHostWrappers;
 
   static StaticAutoPtr<RemoteTextureMap> sInstance;
 };

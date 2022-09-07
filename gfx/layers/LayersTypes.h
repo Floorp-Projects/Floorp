@@ -359,6 +359,10 @@ struct RemoteTextureId {
     return !(*this == aOther);
   }
 
+  bool operator>=(const RemoteTextureId& aOther) const {
+    return mId >= aOther.mId;
+  }
+
   // Helper struct that allow this class to be used as a key in
   // std::unordered_map like so:
   //   std::unordered_map<RemoteTextureId, ValueType, RemoteTextureId::HashFn>
