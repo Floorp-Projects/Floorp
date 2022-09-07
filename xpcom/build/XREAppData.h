@@ -19,11 +19,6 @@
 namespace sandbox {
 class BrokerServices;
 }
-namespace mozilla {
-namespace sandboxing {
-class PermissionsService;
-}
-}  // namespace mozilla
 #endif
 
 namespace mozilla {
@@ -189,7 +184,6 @@ class XREAppData {
    * Chromium sandbox BrokerServices.
    */
   sandbox::BrokerServices* sandboxBrokerServices = nullptr;
-  mozilla::sandboxing::PermissionsService* sandboxPermissionsService;
 #endif
 
   // Returns a name suitable for DBUS services.

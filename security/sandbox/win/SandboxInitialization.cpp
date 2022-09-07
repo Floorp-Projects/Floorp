@@ -11,7 +11,6 @@
 #include "sandbox/win/src/process_mitigations.h"
 #include "sandbox/win/src/sandbox_factory.h"
 #include "mozilla/DebugOnly.h"
-#include "mozilla/sandboxing/permissionsService.h"
 #include "mozilla/WindowsProcessMitigations.h"
 
 namespace mozilla {
@@ -189,10 +188,6 @@ sandbox::BrokerServices* GetInitializedBrokerServices() {
       InitializeBrokerServices();
 
   return sInitializedBrokerServices;
-}
-
-PermissionsService* GetPermissionsService() {
-  return PermissionsService::GetInstance();
 }
 
 void ApplyParentProcessMitigations() {
