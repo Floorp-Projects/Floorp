@@ -87,14 +87,8 @@ BlockReflowState::BlockReflowState(const ReflowInput& aReflowInput,
     mFlags.mBlockNeedsFloatManager = true;
   }
 
-  // We need to check mInsideLineClamp here since we are here before the block
-  // has been reflowed, and CanHaveOverflowMarkers() relies on the block's
-  // NS_BLOCK_HAS_LINE_CLAMP_ELLIPSIS state bit to know if a -webkit-line-clamp
-  // ellipsis is set on one of the block's lines.  And that state bit is only
-  // set after we do the bsize measuring reflow of the flex item.
-  mFlags.mCanHaveOverflowMarkers =
-      aReflowInput.mFlags.mInsideLineClamp ||
-      css::TextOverflow::CanHaveOverflowMarkers(mBlock);
+  mFlags.mCanHaveOverflowMarkers = css::TextOverflow::CanHaveOverflowMarkers(
+      mBlock, css::TextOverflow::BeforeReflow::Yes);
 
   MOZ_ASSERT(FloatManager(),
              "Float manager should be valid when creating BlockReflowState!");

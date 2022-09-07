@@ -207,7 +207,6 @@ ReflowInput::ReflowInput(nsPresContext* aPresContext,
   mFlags.mDummyParentReflowInput = false;
   mFlags.mStaticPosIsCBOrigin = aFlags.contains(InitFlag::StaticPosIsCBOrigin);
   mFlags.mIOffsetsNeedCSSAlign = mFlags.mBOffsetsNeedCSSAlign = false;
-  mFlags.mApplyLineClamp = false;
 
   if (aFlags.contains(InitFlag::DummyParentReflowInput) ||
       (mParentReflowInput->mFlags.mDummyParentReflowInput &&

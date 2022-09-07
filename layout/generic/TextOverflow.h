@@ -16,6 +16,7 @@
 #include <algorithm>
 
 class nsIScrollableFrame;
+class nsBlockFrame;
 class nsLineBox;
 
 namespace mozilla {
@@ -34,21 +35,22 @@ class TextOverflow final {
    * @return nullptr if no processing is necessary.  The caller owns the object.
    */
   static Maybe<TextOverflow> WillProcessLines(nsDisplayListBuilder* aBuilder,
-                                              nsIFrame* aBlockFrame);
+                                              nsBlockFrame*);
 
   /**
    * Constructor, which client code SHOULD NOT use directly. Instead, clients
    * should call WillProcessLines(), which is basically the factory function
    * for TextOverflow instances.
    */
-  TextOverflow(nsDisplayListBuilder* aBuilder, nsIFrame* aBlockFrame);
+  TextOverflow(nsDisplayListBuilder* aBuilder, nsBlockFrame*);
 
   TextOverflow() = delete;
   ~TextOverflow() = default;
   TextOverflow(TextOverflow&&) = default;
+
   TextOverflow(const TextOverflow&) = delete;
-  TextOverflow& operator=(TextOverflow&&) = default;
   TextOverflow& operator=(const TextOverflow&) = delete;
+  TextOverflow& operator=(TextOverflow&&) = delete;
 
   /**
    * Analyze the display lists for text overflow and what kind of item is at
@@ -70,8 +72,13 @@ class TextOverflow final {
   // Returns whether aBlockFrame has a block ellipsis on one of its lines.
   static bool HasBlockEllipsis(nsIFrame* aBlockFrame);
 
-  // Returns whether aBlockFrame needs analysis for text overflow.
-  static bool CanHaveOverflowMarkers(nsIFrame* aBlockFrame);
+  // Returns whether the given block frame needs analysis for text overflow.
+  // The BeforeReflow flag indicates whether we can be faster and more precise
+  // for line-clamp ellipsis (only returning true iff the block actually uses
+  // it).
+  enum class BeforeReflow : bool { No, Yes };
+  static bool CanHaveOverflowMarkers(nsBlockFrame*,
+                                     BeforeReflow = BeforeReflow::No);
 
   typedef nsTHashSet<nsIFrame*> FrameHashtable;
 
@@ -246,6 +253,9 @@ class TextOverflow final {
   nsSize mBlockSize;
   WritingMode mBlockWM;
   bool mCanHaveInlineAxisScrollbar;
+  // When we're in a -webkit-line-clamp context, we should ignore inline-end
+  // text-overflow markers. See nsBlockFrame::IsInLineClampContext.
+  const bool mInLineClampContext;
   bool mAdjustForPixelSnapping;
 
   class Marker {
@@ -266,7 +276,12 @@ class TextOverflow final {
      */
     void SetupString(nsIFrame* aFrame);
 
-    bool IsSuppressed() const { return !mHasBlockEllipsis && mStyle->IsClip(); }
+    bool IsSuppressed(bool aInLineClampContext) const {
+      if (aInLineClampContext) {
+        return !mHasBlockEllipsis;
+      }
+      return mStyle->IsClip();
+    }
     bool IsNeeded() const { return mHasOverflow || mHasBlockEllipsis; }
     void Reset() {
       mHasOverflow = false;

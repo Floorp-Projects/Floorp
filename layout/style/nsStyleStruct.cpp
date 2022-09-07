@@ -2527,11 +2527,8 @@ nsChangeHint nsStyleDisplay::CalcDifference(
     }
   }
 
-  if (mWebkitLineClamp != aNewData.mWebkitLineClamp) {
-    hint |= NS_STYLE_HINT_REFLOW;
-  }
-
-  if (mVerticalAlign != aNewData.mVerticalAlign) {
+  if (mWebkitLineClamp != aNewData.mWebkitLineClamp ||
+      mVerticalAlign != aNewData.mVerticalAlign) {
     // XXX Can this just be AllReflowHints + RepaintFrame, and be included in
     // the block below?
     hint |= NS_STYLE_HINT_REFLOW;

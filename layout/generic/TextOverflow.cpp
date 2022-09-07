@@ -278,7 +278,7 @@ bool nsDisplayTextOverflowMarker::CreateWebRenderCommands(
 }
 
 TextOverflow::TextOverflow(nsDisplayListBuilder* aBuilder,
-                           nsIFrame* aBlockFrame)
+                           nsBlockFrame* aBlockFrame)
     : mContentArea(aBlockFrame->GetWritingMode(),
                    aBlockFrame->GetContentRectRelativeToSelf(),
                    aBlockFrame->GetSize()),
@@ -288,6 +288,8 @@ TextOverflow::TextOverflow(nsDisplayListBuilder* aBuilder,
       mMarkerList(aBuilder),
       mBlockSize(aBlockFrame->GetSize()),
       mBlockWM(aBlockFrame->GetWritingMode()),
+      mCanHaveInlineAxisScrollbar(false),
+      mInLineClampContext(aBlockFrame->IsInLineClampContext()),
       mAdjustForPixelSnapping(false) {
   if (!mScrollableFrame) {
     auto pseudoType = aBlockFrame->Style()->GetPseudoType();
@@ -301,7 +303,6 @@ TextOverflow::TextOverflow(nsDisplayListBuilder* aBuilder,
       mAdjustForPixelSnapping = mBlockWM.IsBidiRTL();
     }
   }
-  mCanHaveInlineAxisScrollbar = false;
   if (mScrollableFrame) {
     auto scrollbarStyle = mBlockWM.IsVertical()
                               ? mScrollableFrame->GetScrollStyles().mVertical
@@ -342,7 +343,7 @@ TextOverflow::TextOverflow(nsDisplayListBuilder* aBuilder,
 
 /* static */
 Maybe<TextOverflow> TextOverflow::WillProcessLines(
-    nsDisplayListBuilder* aBuilder, nsIFrame* aBlockFrame) {
+    nsDisplayListBuilder* aBuilder, nsBlockFrame* aBlockFrame) {
   // Ignore text-overflow and -webkit-line-clamp for event and frame visibility
   // processing.
   if (aBuilder->IsForEventDelivery() || aBuilder->IsForFrameVisibility() ||
@@ -494,8 +495,8 @@ LogicalRect TextOverflow::ExamineLineFrames(nsLineBox* aLine,
                                             FrameHashtable* aFramesToHide,
                                             AlignmentEdges* aAlignmentEdges) {
   // No ellipsing for 'clip' style.
-  bool suppressIStart = mIStart.IsSuppressed();
-  bool suppressIEnd = mIEnd.IsSuppressed();
+  bool suppressIStart = mIStart.IsSuppressed(mInLineClampContext);
+  bool suppressIEnd = mIEnd.IsSuppressed(mInLineClampContext);
   if (mCanHaveInlineAxisScrollbar) {
     LogicalPoint pos(mBlockWM, mScrollableFrame->GetScrollPosition(),
                      mBlockSize);
@@ -699,7 +700,7 @@ void TextOverflow::ProcessLine(const nsDisplayListSet& aLists, nsLineBox* aLine,
   mIStart.mActive = !mIStart.mStyle->IsClip();
   mIEnd.Reset();
   mIEnd.mHasBlockEllipsis = aLine->HasLineClampEllipsis();
-  mIEnd.mActive = !mIEnd.mStyle->IsClip() || aLine->HasLineClampEllipsis();
+  mIEnd.mActive = !mIEnd.IsSuppressed(mInLineClampContext);
 
   FrameHashtable framesToHide(64);
   AlignmentEdges alignmentEdges;
@@ -710,9 +711,9 @@ void TextOverflow::ProcessLine(const nsDisplayListSet& aLists, nsLineBox* aLine,
   if (!needIStart && !needIEnd) {
     return;
   }
-  NS_ASSERTION(!mIStart.IsSuppressed() || !needIStart,
+  NS_ASSERTION(!mIStart.IsSuppressed(mInLineClampContext) || !needIStart,
                "left marker when not needed");
-  NS_ASSERTION(!mIEnd.IsSuppressed() || !needIEnd,
+  NS_ASSERTION(!mIEnd.IsSuppressed(mInLineClampContext) || !needIEnd,
                "right marker when not needed");
 
   // If there is insufficient space for both markers then keep the one on the
@@ -819,11 +820,19 @@ bool TextOverflow::HasBlockEllipsis(nsIFrame* aBlockFrame) {
   return f && f->HasAnyStateBits(NS_BLOCK_HAS_LINE_CLAMP_ELLIPSIS);
 }
 
+static bool BlockCanHaveLineClampEllipsis(nsBlockFrame* aBlockFrame,
+                                          bool aBeforeReflow) {
+  if (aBeforeReflow) {
+    return aBlockFrame->IsInLineClampContext();
+  }
+  return aBlockFrame->HasAnyStateBits(NS_BLOCK_HAS_LINE_CLAMP_ELLIPSIS);
+}
+
 /* static */
-bool TextOverflow::CanHaveOverflowMarkers(nsIFrame* aBlockFrame) {
-  // Treat a line with a -webkit-line-clamp ellipsis as a kind of text
-  // overflow.
-  if (aBlockFrame->HasAnyStateBits(NS_BLOCK_HAS_LINE_CLAMP_ELLIPSIS)) {
+bool TextOverflow::CanHaveOverflowMarkers(nsBlockFrame* aBlockFrame,
+                                          BeforeReflow aBeforeReflow) {
+  if (BlockCanHaveLineClampEllipsis(aBlockFrame,
+                                    aBeforeReflow == BeforeReflow::Yes)) {
     return true;
   }
 
