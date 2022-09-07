@@ -15,7 +15,7 @@ import org.mozilla.fenix.utils.Settings
  */
 class TrackingProtectionPolicyFactory(
     private val settings: Settings,
-    private val resources: Resources
+    private val resources: Resources,
 ) {
 
     /**
@@ -30,7 +30,7 @@ class TrackingProtectionPolicyFactory(
     @Suppress("ComplexMethod")
     fun createTrackingProtectionPolicy(
         normalMode: Boolean = settings.shouldUseTrackingProtection,
-        privateMode: Boolean = settings.shouldUseTrackingProtection
+        privateMode: Boolean = settings.shouldUseTrackingProtection,
     ): TrackingProtectionPolicy {
         val trackingProtectionPolicy =
             when {
@@ -51,7 +51,7 @@ class TrackingProtectionPolicyFactory(
         return TrackingProtectionPolicy.select(
             cookiePolicy = getCustomCookiePolicy(),
             trackingCategories = getCustomTrackingCategories(),
-            cookiePurging = getCustomCookiePurgingPolicy()
+            cookiePurging = getCustomCookiePurgingPolicy(),
         ).let {
             if (settings.blockTrackingContentSelectionInCustomTrackingProtection == "private") {
                 it.forPrivateSessionsOnly()
@@ -81,7 +81,7 @@ class TrackingProtectionPolicyFactory(
             TrackingProtectionPolicy.TrackingCategory.AD,
             TrackingProtectionPolicy.TrackingCategory.ANALYTICS,
             TrackingProtectionPolicy.TrackingCategory.SOCIAL,
-            TrackingProtectionPolicy.TrackingCategory.MOZILLA_SOCIAL
+            TrackingProtectionPolicy.TrackingCategory.MOZILLA_SOCIAL,
         )
 
         if (settings.blockTrackingContentInCustomTrackingProtection) {

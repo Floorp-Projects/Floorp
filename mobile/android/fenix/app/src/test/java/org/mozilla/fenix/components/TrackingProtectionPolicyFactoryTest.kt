@@ -50,7 +50,7 @@ class TrackingProtectionPolicyFactoryTest {
 
         val factory = TrackingProtectionPolicyFactory(
             mockSettings(useStrict = true),
-            testContext.resources
+            testContext.resources,
         )
 
         val privateOnly =
@@ -72,7 +72,7 @@ class TrackingProtectionPolicyFactoryTest {
 
         val factory = TrackingProtectionPolicyFactory(
             mockSettings(useStrict = false, useCustom = false),
-            testContext.resources
+            testContext.resources,
         )
 
         val privateOnly =
@@ -92,12 +92,12 @@ class TrackingProtectionPolicyFactoryTest {
     fun `GIVEN custom policy WHEN should not block cookies THEN tracking policy should not block cookies`() {
         val expected = TrackingProtectionPolicy.select(
             cookiePolicy = TrackingProtectionPolicy.CookiePolicy.ACCEPT_ALL,
-            trackingCategories = allTrackingCategories
+            trackingCategories = allTrackingCategories,
         )
 
         val factory = TrackingProtectionPolicyFactory(
             settingsForCustom(shouldBlockCookiesInCustom = false),
-            testContext.resources
+            testContext.resources,
         )
 
         val privateOnly =
@@ -115,15 +115,15 @@ class TrackingProtectionPolicyFactoryTest {
     fun `GIVEN custom policy WHEN cookie policy block all THEN tracking policy should have cookie policy allow none`() {
         val expected = TrackingProtectionPolicy.select(
             cookiePolicy = TrackingProtectionPolicy.CookiePolicy.ACCEPT_NONE,
-            trackingCategories = allTrackingCategories
+            trackingCategories = allTrackingCategories,
         )
 
         val factory = TrackingProtectionPolicyFactory(
             settingsForCustom(
                 shouldBlockCookiesInCustom = true,
-                blockCookiesSelection = all
+                blockCookiesSelection = all,
             ),
-            testContext.resources
+            testContext.resources,
         )
 
         val privateOnly =
@@ -141,15 +141,15 @@ class TrackingProtectionPolicyFactoryTest {
     fun `GIVEN custom policy WHEN cookie policy social THEN tracking policy should have cookie policy allow non-trackers`() {
         val expected = TrackingProtectionPolicy.select(
             cookiePolicy = TrackingProtectionPolicy.CookiePolicy.ACCEPT_NON_TRACKERS,
-            trackingCategories = allTrackingCategories
+            trackingCategories = allTrackingCategories,
         )
 
         val factory = TrackingProtectionPolicyFactory(
             settingsForCustom(
                 shouldBlockCookiesInCustom = true,
-                blockCookiesSelection = social
+                blockCookiesSelection = social,
             ),
-            testContext.resources
+            testContext.resources,
         )
 
         val privateOnly =
@@ -167,15 +167,15 @@ class TrackingProtectionPolicyFactoryTest {
     fun `GIVEN custom policy WHEN cookie policy accept visited THEN tracking policy should have cookie policy allow visited`() {
         val expected = TrackingProtectionPolicy.select(
             cookiePolicy = TrackingProtectionPolicy.CookiePolicy.ACCEPT_VISITED,
-            trackingCategories = allTrackingCategories
+            trackingCategories = allTrackingCategories,
         )
 
         val factory = TrackingProtectionPolicyFactory(
             settingsForCustom(
                 shouldBlockCookiesInCustom = true,
-                blockCookiesSelection = unvisited
+                blockCookiesSelection = unvisited,
             ),
-            testContext.resources
+            testContext.resources,
         )
 
         val privateOnly =
@@ -193,15 +193,15 @@ class TrackingProtectionPolicyFactoryTest {
     fun `GIVEN custom policy WHEN cookie policy block third party THEN tracking policy should have cookie policy allow first party`() {
         val expected = TrackingProtectionPolicy.select(
             cookiePolicy = TrackingProtectionPolicy.CookiePolicy.ACCEPT_ONLY_FIRST_PARTY,
-            trackingCategories = allTrackingCategories
+            trackingCategories = allTrackingCategories,
         )
 
         val factory = TrackingProtectionPolicyFactory(
             settingsForCustom(
                 shouldBlockCookiesInCustom = true,
-                blockCookiesSelection = thirdParty
+                blockCookiesSelection = thirdParty,
             ),
-            testContext.resources
+            testContext.resources,
         )
 
         val privateOnly =
@@ -219,19 +219,21 @@ class TrackingProtectionPolicyFactoryTest {
     fun `GIVEN custom policy WHEN cookie policy is total protection THEN tracking policy should have cookie policy to block cross-site cookies`() {
         val expected = TrackingProtectionPolicy.select(
             cookiePolicy = TrackingProtectionPolicy.CookiePolicy.ACCEPT_FIRST_PARTY_AND_ISOLATE_OTHERS,
-            trackingCategories = allTrackingCategories
+            trackingCategories = allTrackingCategories,
         )
 
         val factory = TrackingProtectionPolicyFactory(
             settingsForCustom(
                 shouldBlockCookiesInCustom = true,
-                blockCookiesSelection = "total-protection"
+                blockCookiesSelection = "total-protection",
             ),
-            testContext.resources
+            testContext.resources,
         )
 
-        val privateOnly = factory.createTrackingProtectionPolicy(normalMode = false, privateMode = true)
-        val normalOnly = factory.createTrackingProtectionPolicy(normalMode = true, privateMode = false)
+        val privateOnly =
+            factory.createTrackingProtectionPolicy(normalMode = false, privateMode = true)
+        val normalOnly =
+            factory.createTrackingProtectionPolicy(normalMode = true, privateMode = false)
         val always = factory.createTrackingProtectionPolicy(normalMode = true, privateMode = true)
 
         expected.assertPolicyEquals(privateOnly, checkPrivacy = false)
@@ -243,15 +245,15 @@ class TrackingProtectionPolicyFactoryTest {
     fun `GIVEN custom policy WHEN cookie policy unrecognized THEN tracking policy should have cookie policy block all`() {
         val expected = TrackingProtectionPolicy.select(
             cookiePolicy = TrackingProtectionPolicy.CookiePolicy.ACCEPT_NONE,
-            trackingCategories = allTrackingCategories
+            trackingCategories = allTrackingCategories,
         )
 
         val factory = TrackingProtectionPolicyFactory(
             settingsForCustom(
                 shouldBlockCookiesInCustom = true,
-                blockCookiesSelection = "some text!"
+                blockCookiesSelection = "some text!",
             ),
-            testContext.resources
+            testContext.resources,
         )
 
         val privateOnly =
@@ -271,9 +273,9 @@ class TrackingProtectionPolicyFactoryTest {
             TrackingProtectionPolicyFactory(
                 settingsForCustom(
                     shouldBlockCookiesInCustom = true,
-                    blockCookiesSelection = it
+                    blockCookiesSelection = it,
                 ),
-                testContext.resources
+                testContext.resources,
             )
                 .createTrackingProtectionPolicy(normalMode = true, privateMode = true)
         }
@@ -284,12 +286,12 @@ class TrackingProtectionPolicyFactoryTest {
         val allFactories = listOf(
             TrackingProtectionPolicyFactory(
                 mockSettings(useStrict = true),
-                testContext.resources
+                testContext.resources,
             ),
             TrackingProtectionPolicyFactory(
                 mockSettings(useStrict = false, useCustom = false),
-                testContext.resources
-            )
+                testContext.resources,
+            ),
         )
 
         allFactories.map {
@@ -320,7 +322,7 @@ class TrackingProtectionPolicyFactoryTest {
     fun `factory should follow global ETP settings by default`() {
         var useETPFactory = TrackingProtectionPolicyFactory(
             mockSettings(useTrackingProtection = true),
-            testContext.resources
+            testContext.resources,
         )
         var policy = useETPFactory.createTrackingProtectionPolicy()
         assertTrue(policy.useForPrivateSessions)
@@ -328,7 +330,7 @@ class TrackingProtectionPolicyFactoryTest {
 
         useETPFactory = TrackingProtectionPolicyFactory(
             mockSettings(useTrackingProtection = false),
-            testContext.resources
+            testContext.resources,
         )
         policy = useETPFactory.createTrackingProtectionPolicy()
         assertEquals(policy, TrackingProtectionPolicy.none())
@@ -339,74 +341,74 @@ class TrackingProtectionPolicyFactoryTest {
         val allSettings = listOf(
             settingsForCustom(
                 shouldBlockCookiesInCustom = false,
-                blockTrackingContentInCustom = all
+                blockTrackingContentInCustom = all,
             ),
             settingsForCustom(
                 shouldBlockCookiesInCustom = true,
                 blockCookiesSelection = all,
-                blockTrackingContentInCustom = all
+                blockTrackingContentInCustom = all,
             ),
             settingsForCustom(
                 shouldBlockCookiesInCustom = true,
                 blockCookiesSelection = all,
-                blockTrackingContentInCustom = all
+                blockTrackingContentInCustom = all,
             ),
             settingsForCustom(
                 shouldBlockCookiesInCustom = true,
                 blockCookiesSelection = unvisited,
-                blockTrackingContentInCustom = all
+                blockTrackingContentInCustom = all,
             ),
             settingsForCustom(
                 shouldBlockCookiesInCustom = true,
                 blockCookiesSelection = thirdParty,
-                blockTrackingContentInCustom = all
+                blockTrackingContentInCustom = all,
             ),
             settingsForCustom(
                 shouldBlockCookiesInCustom = true,
                 blockCookiesSelection = "some text!",
-                blockTrackingContentInCustom = all
-            )
+                blockTrackingContentInCustom = all,
+            ),
         )
 
         val privateSettings = listOf(
             settingsForCustom(
                 shouldBlockCookiesInCustom = false,
-                blockTrackingContentInCustom = private
+                blockTrackingContentInCustom = private,
             ),
             settingsForCustom(
                 shouldBlockCookiesInCustom = true,
                 blockCookiesSelection = all,
-                blockTrackingContentInCustom = private
+                blockTrackingContentInCustom = private,
             ),
             settingsForCustom(
                 shouldBlockCookiesInCustom = true,
                 blockCookiesSelection = all,
-                blockTrackingContentInCustom = private
+                blockTrackingContentInCustom = private,
             ),
             settingsForCustom(
                 shouldBlockCookiesInCustom = true,
                 blockCookiesSelection = unvisited,
-                blockTrackingContentInCustom = private
+                blockTrackingContentInCustom = private,
             ),
             settingsForCustom(
                 shouldBlockCookiesInCustom = true,
                 blockCookiesSelection = thirdParty,
-                blockTrackingContentInCustom = private
+                blockTrackingContentInCustom = private,
             ),
             settingsForCustom(
                 shouldBlockCookiesInCustom = true,
                 blockCookiesSelection = "some text!",
-                blockTrackingContentInCustom = private
-            )
+                blockTrackingContentInCustom = private,
+            ),
         )
 
         allSettings.map {
             TrackingProtectionPolicyFactory(
                 it,
-                testContext.resources
+                testContext.resources,
             ).createTrackingProtectionPolicy(
                 normalMode = true,
-                privateMode = true
+                privateMode = true,
             )
         }
             .forEach {
@@ -417,10 +419,10 @@ class TrackingProtectionPolicyFactoryTest {
         privateSettings.map {
             TrackingProtectionPolicyFactory(
                 it,
-                testContext.resources
+                testContext.resources,
             ).createTrackingProtectionPolicy(
                 normalMode = true,
-                privateMode = true
+                privateMode = true,
             )
         }
             .forEach {
@@ -435,12 +437,12 @@ class TrackingProtectionPolicyFactoryTest {
             TrackingProtectionPolicy.TrackingCategory.AD,
             TrackingProtectionPolicy.TrackingCategory.ANALYTICS,
             TrackingProtectionPolicy.TrackingCategory.SOCIAL,
-            TrackingProtectionPolicy.TrackingCategory.MOZILLA_SOCIAL
+            TrackingProtectionPolicy.TrackingCategory.MOZILLA_SOCIAL,
         )
 
         val expected = TrackingProtectionPolicy.select(
             cookiePolicy = TrackingProtectionPolicy.CookiePolicy.ACCEPT_NONE,
-            trackingCategories = defaultTrackingCategories
+            trackingCategories = defaultTrackingCategories,
         )
 
         val factory = TrackingProtectionPolicyFactory(
@@ -448,9 +450,9 @@ class TrackingProtectionPolicyFactoryTest {
                 shouldBlockCookiesInCustom = true,
                 blockTrackingContent = false,
                 blockFingerprinters = false,
-                blockCryptominers = false
+                blockCryptominers = false,
             ),
-            testContext.resources
+            testContext.resources,
         )
         val actual = factory.createTrackingProtectionPolicy(normalMode = true, privateMode = true)
 
@@ -461,7 +463,7 @@ class TrackingProtectionPolicyFactoryTest {
     fun `GIVEN custom policy WHEN all tracking policies THEN tracking policies should match all`() {
         val expected = TrackingProtectionPolicy.select(
             cookiePolicy = TrackingProtectionPolicy.CookiePolicy.ACCEPT_NONE,
-            trackingCategories = allTrackingCategories
+            trackingCategories = allTrackingCategories,
         )
 
         val factory = TrackingProtectionPolicyFactory(
@@ -469,9 +471,9 @@ class TrackingProtectionPolicyFactoryTest {
                 shouldBlockCookiesInCustom = true,
                 blockTrackingContent = true,
                 blockFingerprinters = true,
-                blockCryptominers = true
+                blockCryptominers = true,
             ),
-            testContext.resources
+            testContext.resources,
         )
         val actual = factory.createTrackingProtectionPolicy(normalMode = true, privateMode = true)
 
@@ -485,12 +487,12 @@ class TrackingProtectionPolicyFactoryTest {
             TrackingProtectionPolicy.TrackingCategory.ANALYTICS,
             TrackingProtectionPolicy.TrackingCategory.SOCIAL,
             TrackingProtectionPolicy.TrackingCategory.MOZILLA_SOCIAL,
-            TrackingProtectionPolicy.TrackingCategory.FINGERPRINTING
+            TrackingProtectionPolicy.TrackingCategory.FINGERPRINTING,
         )
 
         val expected = TrackingProtectionPolicy.select(
             cookiePolicy = TrackingProtectionPolicy.CookiePolicy.ACCEPT_NONE,
-            trackingCategories = someTrackingCategories
+            trackingCategories = someTrackingCategories,
         )
 
         val factory = TrackingProtectionPolicyFactory(
@@ -499,9 +501,9 @@ class TrackingProtectionPolicyFactoryTest {
                 blockTrackingContent = false,
                 blockFingerprinters = true,
                 blockCryptominers = false,
-                blockRedirectTrackers = true
+                blockRedirectTrackers = true,
             ),
-            testContext.resources
+            testContext.resources,
         )
         val actual = factory.createTrackingProtectionPolicy(normalMode = true, privateMode = true)
 
@@ -513,12 +515,12 @@ class TrackingProtectionPolicyFactoryTest {
         val expected = TrackingProtectionPolicy.select(
             cookiePolicy = TrackingProtectionPolicy.CookiePolicy.ACCEPT_NONE,
             trackingCategories = allTrackingCategories,
-            cookiePurging = true
+            cookiePurging = true,
         )
 
         val factory = TrackingProtectionPolicyFactory(
             settingsForCustom(shouldBlockCookiesInCustom = true),
-            testContext.resources
+            testContext.resources,
         )
 
         val privateOnly =
@@ -539,9 +541,9 @@ class TrackingProtectionPolicyFactoryTest {
         val factory = TrackingProtectionPolicyFactory(
             mockSettings(
                 useStrict = true,
-                useTrackingProtection = true
+                useTrackingProtection = true,
             ),
-            testContext.resources
+            testContext.resources,
         )
 
         val privateOnly =
@@ -563,9 +565,9 @@ class TrackingProtectionPolicyFactoryTest {
             mockSettings(
                 useStrict = false,
                 useCustom = false,
-                useTrackingProtection = true
+                useTrackingProtection = true,
             ),
-            testContext.resources
+            testContext.resources,
         )
 
         val privateOnly =
@@ -582,9 +584,8 @@ class TrackingProtectionPolicyFactoryTest {
     private fun mockSettings(
         useStrict: Boolean = false,
         useCustom: Boolean = false,
-        useTrackingProtection: Boolean = false
+        useTrackingProtection: Boolean = false,
     ): Settings = mockk {
-        every { enabledTotalCookieProtection } returns false
         every { useStrictTrackingProtection } returns useStrict
         every { useCustomTrackingProtection } returns useCustom
         every { shouldUseTrackingProtection } returns useTrackingProtection
@@ -598,9 +599,8 @@ class TrackingProtectionPolicyFactoryTest {
         blockTrackingContent: Boolean = true,
         blockFingerprinters: Boolean = true,
         blockCryptominers: Boolean = true,
-        blockRedirectTrackers: Boolean = true
+        blockRedirectTrackers: Boolean = true,
     ): Settings = mockSettings(useStrict = false, useCustom = true).apply {
-
         every { blockTrackingContentSelectionInCustomTrackingProtection } returns blockTrackingContentInCustom
 
         every { blockCookiesInCustomTrackingProtection } returns shouldBlockCookiesInCustom
@@ -613,7 +613,7 @@ class TrackingProtectionPolicyFactoryTest {
 
     private fun TrackingProtectionPolicy.assertPolicyEquals(
         actual: TrackingProtectionPolicy,
-        checkPrivacy: Boolean
+        checkPrivacy: Boolean,
     ) {
         assertEquals(this.cookiePolicy, actual.cookiePolicy)
         assertEquals(this.strictSocialTrackingProtection, actual.strictSocialTrackingProtection)
@@ -640,6 +640,6 @@ class TrackingProtectionPolicyFactoryTest {
         TrackingProtectionPolicy.TrackingCategory.MOZILLA_SOCIAL,
         TrackingProtectionPolicy.TrackingCategory.SCRIPTS_AND_SUB_RESOURCES,
         TrackingProtectionPolicy.TrackingCategory.FINGERPRINTING,
-        TrackingProtectionPolicy.TrackingCategory.CRYPTOMINING
+        TrackingProtectionPolicy.TrackingCategory.CRYPTOMINING,
     )
 }

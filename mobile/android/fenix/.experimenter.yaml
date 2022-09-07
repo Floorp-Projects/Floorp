@@ -1,12 +1,4 @@
 ---
-engine-settings:
-  description: Contains a set of settings for controlling the web engine configurations.
-  hasExposure: true
-  exposureDescription: ""
-  variables:
-    tabs-prioritization-enabled:
-      type: boolean
-      description: "If true, enables tabs prioritization feature."
 homescreen:
   description: The homescreen that the user goes to when they press home or new tab.
   hasExposure: true
