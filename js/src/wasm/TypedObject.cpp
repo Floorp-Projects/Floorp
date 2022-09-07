@@ -172,26 +172,40 @@ void RttValue::finalize(JS::GCContext* gcx, JSObject* obj) {
 /*static*/
 TypedObject* TypedObject::createStruct(JSContext* cx, Handle<RttValue*> rtt,
                                        gc::InitialHeap heap) {
-  Rooted<TypedObject*> typedObj(cx);
-  uint32_t totalSize = rtt->typeDef().structType().size_;
+  MOZ_ASSERT(rtt->kind() == wasm::TypeDefKind::Struct);
 
-  // If possible, create an object with inline data.
-  if (InlineTypedObject::canAccommodateSize(totalSize)) {
-    AutoSetNewObjectMetadata metadata(cx);
-    typedObj = InlineTypedObject::create(cx, rtt, heap);
-  } else {
-    typedObj = OutlineTypedObject::create(cx, rtt, totalSize, heap);
+  uint32_t totalBytes = rtt->typeDef().structType().size_;
+  uint32_t inlineBytes, outlineBytes;
+  WasmStructObject::getDataByteSizes(totalBytes, &inlineBytes, &outlineBytes);
+
+  uint8_t* outlineData = nullptr;
+  if (outlineBytes > 0) {
+    outlineData = (uint8_t*)js_malloc(outlineBytes);
+    if (!outlineData) {
+      ReportOutOfMemory(cx);
+      return nullptr;
+    }
   }
 
-  if (!typedObj) {
+  Rooted<WasmStructObject*> structObj(cx);
+  AutoSetNewObjectMetadata metadata(cx);
+  structObj = TypedObject::create<WasmStructObject>(
+      cx, WasmStructObject::allocKindForRttValue(rtt), heap);
+  if (!structObj) {
     ReportOutOfMemory(cx);
+    if (outlineData) {
+      js_free(outlineData);
+    }
     return nullptr;
   }
+  structObj->outlineData_ = outlineData;
+  structObj->rttValue_.init(rtt);
 
-  // Initialize the values to their defaults
-  typedObj->initDefault();
+  // Initialize the values to their defaults, including *outlineData_
+  // inlineData_.
+  structObj->initDefault();
 
-  return typedObj;
+  return structObj;
 }
 
 /*static*/
@@ -202,8 +216,8 @@ TypedObject* TypedObject::createArray(JSContext* cx, Handle<RttValue*> rtt,
   // for overflow. We stick to uint32_t as an implicit implementation limit.
   CheckedUint32 numBytes = rtt->typeDef().arrayType().elementType_.size();
   numBytes *= numElements;
-  numBytes += OutlineTypedObject::offsetOfNumElements() +
-              sizeof(OutlineTypedObject::NumElements);
+  numBytes += WasmArrayObject::offsetOfNumElements() +
+              sizeof(WasmArrayObject::NumElements);
   if (!numBytes.isValid()) {
     JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
                              JSMSG_WASM_ARRAY_IMP_LIMIT);
@@ -211,8 +225,8 @@ TypedObject* TypedObject::createArray(JSContext* cx, Handle<RttValue*> rtt,
   }
 
   // Always create arrays outlined
-  Rooted<OutlineTypedObject*> typedObj(
-      cx, OutlineTypedObject::create(cx, rtt, numBytes.value(), heap));
+  Rooted<WasmArrayObject*> typedObj(
+      cx, WasmArrayObject::create(cx, rtt, numBytes.value(), heap));
   if (!typedObj) {
     ReportOutOfMemory(cx);
     return nullptr;
@@ -226,36 +240,37 @@ TypedObject* TypedObject::createArray(JSContext* cx, Handle<RttValue*> rtt,
   return typedObj;
 }
 
-uint8_t* TypedObject::typedMem() const {
-  if (is<InlineTypedObject>()) {
-    return as<InlineTypedObject>().inlineTypedMem();
-  }
-  return as<OutlineTypedObject>().outOfLineTypedMem();
-}
-
 template <typename V>
 void TypedObject::visitReferences(V& visitor) {
   RttValue& rtt = rttValue();
   const auto& typeDef = rtt.typeDef();
-  uint8_t* base = typedMem();
 
   switch (typeDef.kind()) {
     case TypeDefKind::Struct: {
+      MOZ_ASSERT(is<WasmStructObject>());
+      WasmStructObject& structObj = as<WasmStructObject>();
       const auto& structType = typeDef.structType();
       for (const StructField& field : structType.fields_) {
         if (field.type.isRefRepr()) {
-          visitor.visitReference(base, field.offset);
+          // Ensure no out-of-range access possible
+          MOZ_RELEASE_ASSERT(field.offset + field.type.size() <=
+                             structType.size_);
+          uint8_t* fieldAddr =
+              structObj.fieldOffsetToAddress(field.type, field.offset);
+          visitor.visitReference(fieldAddr, 0);
         }
       }
       break;
     }
     case TypeDefKind::Array: {
+      MOZ_ASSERT(is<WasmArrayObject>());
       const auto& arrayType = typeDef.arrayType();
-      MOZ_ASSERT(is<OutlineTypedObject>());
       if (arrayType.elementType_.isRefRepr()) {
-        uint8_t* elemBase = base + OutlineTypedObject::offsetOfNumElements() +
-                            sizeof(OutlineTypedObject::NumElements);
-        uint32_t numElements = as<OutlineTypedObject>().numElements();
+        WasmArrayObject& arrayObj = as<WasmArrayObject>();
+        uint8_t* base = arrayObj.outOfLineTypedMem();
+        uint8_t* elemBase = base + WasmArrayObject::offsetOfNumElements() +
+                            sizeof(WasmArrayObject::NumElements);
+        uint32_t numElements = arrayObj.numElements();
         for (uint32_t i = 0; i < numElements; i++) {
           visitor.visitReference(elemBase, i * arrayType.elementType_.size());
         }
@@ -290,19 +305,18 @@ void MemoryTracingVisitor::visitReference(uint8_t* base, size_t offset) {
 }
 
 /******************************************************************************
- * Outline typed objects
+ * WasmArrayObject
  */
 
 /*static*/
-OutlineTypedObject* OutlineTypedObject::create(JSContext* cx,
-                                               Handle<RttValue*> rtt,
-                                               size_t numBytes,
-                                               gc::InitialHeap heap) {
+WasmArrayObject* WasmArrayObject::create(JSContext* cx, Handle<RttValue*> rtt,
+                                         size_t numBytes,
+                                         gc::InitialHeap heap) {
   STATIC_ASSERT_NUMELEMENTS_IS_U32;
   MOZ_ASSERT(numBytes >= sizeof(NumElements));
   AutoSetNewObjectMetadata metadata(cx);
 
-  auto* obj = TypedObject::create<OutlineTypedObject>(cx, allocKind(), heap);
+  auto* obj = TypedObject::create<WasmArrayObject>(cx, allocKind(), heap);
   if (!obj) {
     return nullptr;
   }
@@ -317,15 +331,15 @@ OutlineTypedObject* OutlineTypedObject::create(JSContext* cx,
 }
 
 /* static */
-gc::AllocKind OutlineTypedObject::allocKind() {
-  return gc::GetGCObjectKindForBytes(sizeof(OutlineTypedObject));
+gc::AllocKind WasmArrayObject::allocKind() {
+  return gc::GetGCObjectKindForBytes(sizeof(WasmArrayObject));
 }
 
 /* static */
-void OutlineTypedObject::obj_trace(JSTracer* trc, JSObject* object) {
-  OutlineTypedObject& typedObj = object->as<OutlineTypedObject>();
+void WasmArrayObject::obj_trace(JSTracer* trc, JSObject* object) {
+  WasmArrayObject& typedObj = object->as<WasmArrayObject>();
 
-  TraceEdge(trc, &typedObj.rttValue_, "OutlineTypedObject_rttvalue");
+  TraceEdge(trc, &typedObj.rttValue_, "WasmArrayObject_rttvalue");
 
   if (!typedObj.data_) {
     return;
@@ -336,8 +350,8 @@ void OutlineTypedObject::obj_trace(JSTracer* trc, JSObject* object) {
 }
 
 /* static */
-void OutlineTypedObject::obj_finalize(JS::GCContext* gcx, JSObject* object) {
-  OutlineTypedObject& typedObj = object->as<OutlineTypedObject>();
+void WasmArrayObject::obj_finalize(JS::GCContext* gcx, JSObject* object) {
+  WasmArrayObject& typedObj = object->as<WasmArrayObject>();
 
   if (typedObj.data_) {
     js_free(typedObj.data_);
@@ -346,7 +360,7 @@ void OutlineTypedObject::obj_finalize(JS::GCContext* gcx, JSObject* object) {
 }
 
 bool RttValue::lookupProperty(JSContext* cx, Handle<TypedObject*> object,
-                              jsid id, uint32_t* offset, FieldType* type) {
+                              jsid id, PropOffset* offset, FieldType* type) {
   const auto& typeDef = this->typeDef();
 
   switch (typeDef.kind()) {
@@ -360,7 +374,7 @@ bool RttValue::lookupProperty(JSContext* cx, Handle<TypedObject*> object,
         return false;
       }
       const StructField& field = structType.fields_[index];
-      *offset = field.offset;
+      offset->set(field.offset);
       *type = field.type;
       return true;
     }
@@ -373,7 +387,7 @@ bool RttValue::lookupProperty(JSContext* cx, Handle<TypedObject*> object,
           id.toString() == cx->runtime()->commonNames->length) {
         STATIC_ASSERT_NUMELEMENTS_IS_U32;
         *type = FieldType::I32;
-        *offset = OutlineTypedObject::offsetOfNumElements();
+        offset->set(WasmArrayObject::offsetOfNumElements());
         return true;
       }
 
@@ -382,14 +396,14 @@ bool RttValue::lookupProperty(JSContext* cx, Handle<TypedObject*> object,
       if (!IdIsIndex(id, &index)) {
         return false;
       }
-      OutlineTypedObject::NumElements numElements =
-          object->as<OutlineTypedObject>().numElements();
+      WasmArrayObject::NumElements numElements =
+          object->as<WasmArrayObject>().numElements();
       if (index >= numElements) {
         return false;
       }
-      *offset = OutlineTypedObject::offsetOfNumElements() +
-                sizeof(OutlineTypedObject::NumElements) +
-                index * arrayType.elementType_.size();
+      offset->set(WasmArrayObject::offsetOfNumElements() +
+                  sizeof(WasmArrayObject::NumElements) +
+                  index * arrayType.elementType_.size());
       *type = arrayType.elementType_;
       return true;
     }
@@ -451,7 +465,7 @@ bool TypedObject::obj_getProperty(JSContext* cx, HandleObject obj,
                                   MutableHandleValue vp) {
   Rooted<TypedObject*> typedObj(cx, &obj->as<TypedObject>());
 
-  uint32_t offset;
+  RttValue::PropOffset offset;
   FieldType type;
   if (typedObj->rttValue().lookupProperty(cx, typedObj, id, &offset, &type)) {
     return typedObj->loadValue(cx, offset, type, vp);
@@ -489,7 +503,7 @@ bool TypedObject::obj_getOwnPropertyDescriptor(
     MutableHandle<mozilla::Maybe<PropertyDescriptor>> desc) {
   Rooted<TypedObject*> typedObj(cx, &obj->as<TypedObject>());
 
-  uint32_t offset;
+  RttValue::PropOffset offset;
   FieldType type;
   if (typedObj->rttValue().lookupProperty(cx, typedObj, id, &offset, &type)) {
     RootedValue value(cx);
@@ -538,7 +552,7 @@ bool TypedObject::obj_newEnumerate(JSContext* cx, HandleObject obj,
       break;
     }
     case wasm::TypeDefKind::Array: {
-      indexCount = typedObj->as<OutlineTypedObject>().numElements();
+      indexCount = typedObj->as<WasmArrayObject>().numElements();
       otherCount = 1;
       break;
     }
@@ -562,8 +576,8 @@ bool TypedObject::obj_newEnumerate(JSContext* cx, HandleObject obj,
   return true;
 }
 
-bool TypedObject::loadValue(JSContext* cx, size_t offset, FieldType type,
-                            MutableHandleValue vp) {
+bool TypedObject::loadValue(JSContext* cx, const RttValue::PropOffset& offset,
+                            FieldType type, MutableHandleValue vp) {
   // Temporary hack, (ref T) is not exposable to JS yet but some tests would
   // like to access it so we erase (ref T) with eqref when loading. This is
   // safe as (ref T) <: eqref and we're not in the writing case where we
@@ -576,20 +590,46 @@ bool TypedObject::loadValue(JSContext* cx, size_t offset, FieldType type,
                              JSMSG_WASM_BAD_VAL_TYPE);
     return false;
   }
-  return ToJSValue(cx, typedMem() + offset, type, vp);
+  if (is<WasmStructObject>()) {
+    // `offset` is the field offset, without regard to the in/out-line split.
+    // That is handled by the call to `fieldOffsetToAddress`.
+    WasmStructObject& structObj = as<WasmStructObject>();
+    // Ensure no out-of-range access possible
+    const RttValue& rtt = structObj.rttValue();
+    MOZ_RELEASE_ASSERT(rtt.kind() == TypeDefKind::Struct);
+    MOZ_RELEASE_ASSERT(offset.get() + type.size() <=
+                       rtt.typeDef().structType().size_);
+    return ToJSValue(cx, structObj.fieldOffsetToAddress(type, offset.get()),
+                     type, vp);
+  } else {
+    MOZ_ASSERT(is<WasmArrayObject>());
+    WasmArrayObject& arrayObj = as<WasmArrayObject>();
+    return ToJSValue(cx, arrayObj.outOfLineTypedMem() + offset.get(), type, vp);
+  }
 }
 
 void TypedObject::initDefault() {
   RttValue& rtt = rttValue();
   switch (rtt.kind()) {
     case TypeDefKind::Struct: {
-      memset(typedMem(), 0, rtt.typeDef().structType().size_);
+      MOZ_ASSERT(is<WasmStructObject>());
+      WasmStructObject& structObj = as<WasmStructObject>();
+      uint32_t totalBytes = rtt.typeDef().structType().size_;
+      uint32_t inlineBytes, outlineBytes;
+      WasmStructObject::getDataByteSizes(totalBytes, &inlineBytes,
+                                         &outlineBytes);
+      MOZ_ASSERT((outlineBytes == 0) == (structObj.outlineData_ == nullptr));
+      if (outlineBytes > 0) {
+        memset(structObj.outlineData_, 0, outlineBytes);
+      }
+      memset(&structObj.inlineData_[0], 0, inlineBytes);
       break;
     }
     case TypeDefKind::Array: {
-      MOZ_ASSERT(is<OutlineTypedObject>());
-      uint32_t numElements = as<OutlineTypedObject>().numElements();
-      memset(typedMem() + sizeof(uint32_t), 0,
+      MOZ_ASSERT(is<WasmArrayObject>());
+      WasmArrayObject& arrayObj = as<WasmArrayObject>();
+      uint32_t numElements = arrayObj.numElements();
+      memset(arrayObj.outOfLineTypedMem() + sizeof(uint32_t), 0,
              rtt.typeDef().arrayType().elementType_.size() * numElements);
       break;
     }
@@ -599,38 +639,31 @@ void TypedObject::initDefault() {
 }
 
 /******************************************************************************
- * Inline typed objects
+ * WasmStructObject
  */
 
 /* static */
-InlineTypedObject* InlineTypedObject::create(JSContext* cx,
-                                             Handle<RttValue*> rtt,
-                                             gc::InitialHeap heap) {
-  MOZ_ASSERT(rtt->kind() == wasm::TypeDefKind::Struct);
+void WasmStructObject::obj_trace(JSTracer* trc, JSObject* object) {
+  WasmStructObject& typedObj = object->as<WasmStructObject>();
 
-  AutoSetNewObjectMetadata metadata(cx);
-  auto* obj = TypedObject::create<InlineTypedObject>(
-      cx, allocKindForRttValue(rtt), heap);
-  if (!obj) {
-    return nullptr;
-  }
-
-  obj->rttValue_.init(rtt);
-  return obj;
-}
-
-/* static */
-void InlineTypedObject::obj_trace(JSTracer* trc, JSObject* object) {
-  InlineTypedObject& typedObj = object->as<InlineTypedObject>();
-
-  TraceEdge(trc, &typedObj.rttValue_, "InlineTypedObject_rttvalue");
+  TraceEdge(trc, &typedObj.rttValue_, "WasmStructObject_rttvalue");
 
   MemoryTracingVisitor visitor(trc);
   typedObj.visitReferences(visitor);
 }
 
 /* static */
-size_t InlineTypedObject::obj_moved(JSObject* dst, JSObject* src) { return 0; }
+size_t WasmStructObject::obj_moved(JSObject* dst, JSObject* src) { return 0; }
+
+/* static */
+void WasmStructObject::obj_finalize(JS::GCContext* gcx, JSObject* object) {
+  WasmStructObject& structObj = object->as<WasmStructObject>();
+
+  if (structObj.outlineData_) {
+    js_free(structObj.outlineData_);
+    structObj.outlineData_ = nullptr;
+  }
+}
 
 /******************************************************************************
  * Typed object classes
@@ -672,11 +705,11 @@ const ObjectOps TypedObject::objectOps_ = {
       &Name##ClassExt,                                                \
       &TypedObject::objectOps_}
 
-DEFINE_TYPEDOBJ_CLASS(OutlineTypedObject, OutlineTypedObject::obj_trace,
-                      OutlineTypedObject::obj_finalize, nullptr,
+DEFINE_TYPEDOBJ_CLASS(WasmArrayObject, WasmArrayObject::obj_trace,
+                      WasmArrayObject::obj_finalize, nullptr,
                       JSCLASS_FOREGROUND_FINALIZE);
-DEFINE_TYPEDOBJ_CLASS(InlineTypedObject, InlineTypedObject::obj_trace, nullptr,
-                      InlineTypedObject::obj_moved, 0);
+DEFINE_TYPEDOBJ_CLASS(WasmStructObject, WasmStructObject::obj_trace, nullptr,
+                      WasmStructObject::obj_moved, 0);
 
 /* static */
 template <typename T>

@@ -69,6 +69,13 @@ CheckedInt32 StructLayout::addField(FieldType type) {
   uint32_t fieldSize = type.size();
   uint32_t fieldAlignment = type.alignmentInStruct();
 
+  // We have to ensure that `offset` is chosen so that no field crosses the
+  // inline/outline boundary.  The assertions here ensure that.  See comment
+  // on `class StructLayout` for background.
+  MOZ_ASSERT(fieldSize >= 1 && fieldSize <= 16);
+  MOZ_ASSERT((fieldSize & (fieldSize - 1)) == 0);  // is a power of 2
+  MOZ_ASSERT(fieldAlignment == fieldSize);         // is naturally aligned
+
   // Alignment of the struct is the max of the alignment of its fields.
   structAlignment = std::max(structAlignment, fieldAlignment);
 
@@ -84,6 +91,8 @@ CheckedInt32 StructLayout::addField(FieldType type) {
     return sizeSoFar;
   }
 
+  // The following should hold if the three assertions above hold.
+  MOZ_ASSERT(offset / 16 == (offset + fieldSize - 1) / 16);
   return offset;
 }
 
