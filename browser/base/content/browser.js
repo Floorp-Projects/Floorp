@@ -9878,11 +9878,14 @@ var ConfirmationHint = {
 
 var FirefoxViewHandler = {
   tab: null,
+  BUTTON_ID: "firefox-view-button",
   _enabled: false,
   get button() {
-    return document.getElementById("firefox-view-button");
+    return document.getElementById(this.BUTTON_ID);
   },
   init() {
+    CustomizableUI.addListener(this);
+
     this._updateEnabledState = this._updateEnabledState.bind(this);
     this._updateEnabledState();
     NimbusFeatures.majorRelease2022.onUpdate(this._updateEnabledState);
@@ -9896,9 +9899,9 @@ var FirefoxViewHandler = {
       SyncedTabs: "resource://services-sync/SyncedTabs.jsm",
     });
     Services.obs.addObserver(this, "firefoxview-notification-dot-update");
-    gNavToolbox.addEventListener("customizationchange", this);
   },
   uninit() {
+    CustomizableUI.removeListener(this);
     Services.obs.removeObserver(this, "firefoxview-notification-dot-update");
     NimbusFeatures.majorRelease2022.off(this._updateEnabledState);
   },
@@ -9913,11 +9916,8 @@ var FirefoxViewHandler = {
     );
     document.getElementById("menu_openFirefoxView").hidden = !this._enabled;
   },
-  _maybeRemoveTab() {
-    if (
-      this.tab &&
-      !CustomizableUI.getPlacementOfWidget("firefox-view-button")
-    ) {
+  onWidgetRemoved(aWidgetId) {
+    if (aWidgetId == this.BUTTON_ID && this.tab) {
       gBrowser.removeTab(this.tab);
     }
   },
@@ -9925,13 +9925,20 @@ var FirefoxViewHandler = {
     if (event?.type == "mousedown" && event?.button != 0) {
       return;
     }
+    if (!CustomizableUI.getPlacementOfWidget(this.BUTTON_ID)) {
+      CustomizableUI.addWidgetToArea(
+        this.BUTTON_ID,
+        CustomizableUI.AREA_TABSTRIP,
+        CustomizableUI.getPlacementOfWidget("tabbrowser-tabs").position
+      );
+    }
     if (!this.tab) {
       this.tab = gBrowser.addTrustedTab("about:firefoxview", { index: 0 });
       this.tab.addEventListener("TabClose", this, { once: true });
       gBrowser.tabContainer.addEventListener("TabSelect", this);
       window.addEventListener("activate", this);
       gBrowser.hideTab(this.tab);
-      this.button?.setAttribute("aria-controls", this.tab.linkedPanel);
+      this.button.setAttribute("aria-controls", this.tab.linkedPanel);
     }
     gBrowser.selectedTab = this.tab;
   },
@@ -9941,7 +9948,7 @@ var FirefoxViewHandler = {
         this.button?.toggleAttribute("open", e.target == this.tab);
         this.button?.setAttribute("aria-selected", e.target == this.tab);
         this._recordViewIfTabSelected();
-        this.handleFirefoxViewSelect();
+        this._onTabForegrounded();
         break;
       case "TabClose":
         this.tab = null;
@@ -9949,10 +9956,7 @@ var FirefoxViewHandler = {
         this.button?.removeAttribute("aria-controls");
         break;
       case "activate":
-        this.handleFirefoxViewSelect();
-        break;
-      case "customizationchange":
-        this._maybeRemoveTab();
+        this._onTabForegrounded();
         break;
     }
   },
@@ -9964,7 +9968,7 @@ var FirefoxViewHandler = {
         break;
     }
   },
-  handleFirefoxViewSelect() {
+  _onTabForegrounded() {
     if (this.tab?.selected) {
       this.SyncedTabs.syncTabs();
       Services.obs.notifyObservers(
