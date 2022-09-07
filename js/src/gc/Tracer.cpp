@@ -24,33 +24,23 @@
 #include "vm/StringType.h"
 #include "vm/SymbolType.h"
 
-#include "gc/TraceMethods-inl.h"
 #include "vm/Shape-inl.h"
 
 using namespace js;
 using namespace js::gc;
 using mozilla::DebugOnly;
 
-template void RuntimeScopeData<LexicalScope::SlotInfo>::trace(JSTracer* trc);
-template void RuntimeScopeData<ClassBodyScope::SlotInfo>::trace(JSTracer* trc);
-template void RuntimeScopeData<VarScope::SlotInfo>::trace(JSTracer* trc);
-template void RuntimeScopeData<GlobalScope::SlotInfo>::trace(JSTracer* trc);
-template void RuntimeScopeData<EvalScope::SlotInfo>::trace(JSTracer* trc);
-template void RuntimeScopeData<WasmFunctionScope::SlotInfo>::trace(
-    JSTracer* trc);
-
-void JS::TracingContext::getEdgeName(const char* name, char* buffer,
-                                     size_t bufferSize) {
+void JS::TracingContext::getEdgeName(char* buffer, size_t bufferSize) {
   MOZ_ASSERT(bufferSize > 0);
   if (functor_) {
     (*functor_)(this, buffer, bufferSize);
     return;
   }
   if (index_ != InvalidIndex) {
-    snprintf(buffer, bufferSize, "%s[%zu]", name, index_);
+    snprintf(buffer, bufferSize, "%s[%zu]", name_, index_);
     return;
   }
-  snprintf(buffer, bufferSize, "%s", name);
+  snprintf(buffer, bufferSize, "%s", name_);
 }
 
 /*** Public Tracing API *****************************************************/
@@ -295,3 +285,8 @@ void js::gc::GetTraceThingInfo(char* buf, size_t bufsize, void* thing,
 JS::CallbackTracer::CallbackTracer(JSContext* cx, JS::TracerKind kind,
                                    JS::TraceOptions options)
     : CallbackTracer(cx->runtime(), kind, options) {}
+
+uint32_t JSTracer::gcNumberForMarking() const {
+  MOZ_ASSERT(isMarkingTracer());
+  return runtime()->gc.gcNumber();
+}

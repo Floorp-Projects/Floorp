@@ -29,6 +29,4 @@ namespace js {
   InternalBarrierMethods<JSObject*>::readBarrier(proto.toObjectOrNull());
 }
 
-void TaggedProto::trace(JSTracer* trc) { TraceRoot(trc, this, "TaggedProto"); }
-
 }  // namespace js

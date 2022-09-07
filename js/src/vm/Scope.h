@@ -122,11 +122,7 @@ class AbstractBindingName<JSAtom> {
   bool isTopLevelFunction() const { return bits_ & TopLevelFunctionFlag; }
 
  public:
-  void trace(JSTracer* trc) {
-    if (JSAtom* atom = name()) {
-      TraceManuallyBarrieredEdge(trc, &atom, "binding name");
-    }
-  }
+  void trace(JSTracer* trc);
 };
 
 template <>
@@ -188,23 +184,6 @@ class AbstractBindingName<frontend::TaggedParserAtomIndex> {
 };
 
 using BindingName = AbstractBindingName<JSAtom>;
-
-static inline void TraceBindingNames(JSTracer* trc, BindingName* names,
-                                     uint32_t length) {
-  for (uint32_t i = 0; i < length; i++) {
-    JSAtom* name = names[i].name();
-    MOZ_ASSERT(name);
-    TraceManuallyBarrieredEdge(trc, &name, "scope name");
-  }
-};
-static inline void TraceNullableBindingNames(JSTracer* trc, BindingName* names,
-                                             uint32_t length) {
-  for (uint32_t i = 0; i < length; i++) {
-    if (JSAtom* name = names[i].name()) {
-      TraceManuallyBarrieredEdge(trc, &name, "scope name");
-    }
-  }
-};
 
 const size_t ScopeDataAlignBytes = size_t(1) << gc::CellFlagBitsReservedForGC;
 
@@ -1548,9 +1527,7 @@ class AbstractBindingIter<JSAtom> : public BaseAbstractBindingIter<JSAtom> {
 
   using Base::Base;
 
-  inline void trace(JSTracer* trc) {
-    TraceNullableBindingNames(trc, names_, length_);
-  }
+  void trace(JSTracer* trc);
 };
 
 template <>

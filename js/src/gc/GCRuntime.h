@@ -263,7 +263,7 @@ class BarrierTracer final : public GenericTracerImpl<BarrierTracer> {
 
  private:
   template <typename T>
-  void onEdge(T** thingp, const char* name);
+  T* onEdge(T* thing);
   friend class GenericTracerImpl<BarrierTracer>;
 
   void handleBufferFull(JS::GCCellPtr cell);
@@ -276,7 +276,7 @@ struct SweepingTracer final : public GenericTracerImpl<SweepingTracer> {
 
  private:
   template <typename T>
-  void onEdge(T** thingp, const char* name);
+  T* onEdge(T* thingp);
   friend class GenericTracerImpl<SweepingTracer>;
 };
 

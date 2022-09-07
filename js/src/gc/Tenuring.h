@@ -21,7 +21,7 @@ class RelocationOverlay;
 class StringRelocationOverlay;
 }  // namespace gc
 
-class TenuringTracer final : public JSTracer {
+class TenuringTracer final : public GenericTracer {
   Nursery& nursery_;
 
   // Amount of data moved to the tenured generation during collection.
@@ -36,7 +36,7 @@ class TenuringTracer final : public JSTracer {
   gc::StringRelocationOverlay* stringHead = nullptr;
 
 #define DEFINE_ON_EDGE_METHOD(name, type, _1, _2) \
-  void on##name##Edge(type** thingp, const char* name) override;
+  type* on##name##Edge(type* thing) override;
   JS_FOR_EACH_TRACEKIND(DEFINE_ON_EDGE_METHOD)
 #undef DEFINE_ON_EDGE_METHOD
 
