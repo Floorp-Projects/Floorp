@@ -106,7 +106,7 @@
         }
 
         // Test dialog buttons
-        let buttonBox = window.top.document.documentElement.buttonBox;
+        let buttonBox = window.top.document.querySelector("dialog")?.buttonBox;
         if (buttonBox) {
           this.fireAccessKeyButton(buttonBox, charPressedLower);
         }
