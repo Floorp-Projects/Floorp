@@ -35,7 +35,7 @@ add_task(async () => {
     document
   );
 
-  const { devtoolsWindow } = await openAboutDevtoolsToolbox(
+  const { devtoolsTab, devtoolsWindow } = await openAboutDevtoolsToolbox(
     document,
     tab,
     window,
@@ -59,7 +59,7 @@ add_task(async () => {
     "Extension name displays correctly"
   );
 
-  await closeWebExtAboutDevtoolsToolbox(devtoolsWindow, window);
+  await closeAboutDevtoolsToolbox(document, devtoolsTab, window);
   await removeTemporaryExtension(EXTENSION_NAME, document);
   await removeTab(tab);
 });

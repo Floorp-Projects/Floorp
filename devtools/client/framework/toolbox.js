@@ -12,7 +12,6 @@ const SOURCE_MAP_WORKER_ASSETS =
 const MAX_ORDINAL = 99;
 const SPLITCONSOLE_ENABLED_PREF = "devtools.toolbox.splitconsoleEnabled";
 const SPLITCONSOLE_HEIGHT_PREF = "devtools.toolbox.splitconsoleHeight";
-const DEVTOOLS_ALWAYS_ON_TOP = "devtools.toolbox.alwaysOnTop";
 const DISABLE_AUTOHIDE_PREF = "ui.popup.disable_autohide";
 const PSEUDO_LOCALE_PREF = "intl.l10n.pseudo";
 const HOST_HISTOGRAM = "DEVTOOLS_TOOLBOX_HOST";
@@ -279,7 +278,6 @@ function Toolbox(
   this._toolUnregistered = this._toolUnregistered.bind(this);
   this._refreshHostTitle = this._refreshHostTitle.bind(this);
   this.toggleNoAutohide = this.toggleNoAutohide.bind(this);
-  this.toggleAlwaysOnTop = this.toggleAlwaysOnTop.bind(this);
   this.disablePseudoLocale = () => this.changePseudoLocale("none");
   this.enableAccentedPseudoLocale = () => this.changePseudoLocale("accented");
   this.enableBidiPseudoLocale = () => this.changePseudoLocale("bidi");
@@ -296,7 +294,6 @@ function Toolbox(
   );
   this._saveSplitConsoleHeight = this._saveSplitConsoleHeight.bind(this);
   this._onFocus = this._onFocus.bind(this);
-  this._onBlur = this._onBlur.bind(this);
   this._onBrowserMessage = this._onBrowserMessage.bind(this);
   this._onTabsOrderUpdated = this._onTabsOrderUpdated.bind(this);
   this._onToolbarFocus = this._onToolbarFocus.bind(this);
@@ -332,14 +329,6 @@ function Toolbox(
   // `component` might be null if the toolbox was destroying during the throttling
   this._throttledSetToolboxButtons = throttle(
     () => this.component?.setToolboxButtons(this.toolbarButtons),
-    500,
-    this
-  );
-
-  this._debounceUpdateFocusedState = debounce(
-    () => {
-      this.component?.setFocusedState(this._isToolboxFocused);
-    },
     500,
     this
   );
@@ -1118,7 +1107,6 @@ Toolbox.prototype = {
       this._splitConsoleOnKeypress
     );
     this._chromeEventHandler.addEventListener("focus", this._onFocus, true);
-    this._chromeEventHandler.addEventListener("blur", this._onBlur, true);
     this._chromeEventHandler.addEventListener(
       "contextmenu",
       this._onContextMenu
@@ -1141,7 +1129,6 @@ Toolbox.prototype = {
       this._splitConsoleOnKeypress
     );
     this._chromeEventHandler.removeEventListener("focus", this._onFocus, true);
-    this._chromeEventHandler.removeEventListener("focus", this._onBlur, true);
     this._chromeEventHandler.removeEventListener(
       "contextmenu",
       this._onContextMenu
@@ -1902,16 +1889,6 @@ Toolbox.prototype = {
     if (typeof pseudoLocale == "string") {
       this.component.setPseudoLocale(pseudoLocale);
     }
-    if (
-      this.descriptorFront.isWebExtensionDescriptor &&
-      this.hostType === Toolbox.HostType.WINDOW
-    ) {
-      const alwaysOnTop = Services.prefs.getBoolPref(
-        DEVTOOLS_ALWAYS_ON_TOP,
-        false
-      );
-      this.component.setAlwaysOnTop(alwaysOnTop);
-    }
   },
 
   /**
@@ -1930,7 +1907,6 @@ Toolbox.prototype = {
       toggleOptions: this.toggleOptions,
       toggleSplitConsole: this.toggleSplitConsole,
       toggleNoAutohide: this.toggleNoAutohide,
-      toggleAlwaysOnTop: this.toggleAlwaysOnTop,
       disablePseudoLocale: this.disablePseudoLocale,
       enableAccentedPseudoLocale: this.enableAccentedPseudoLocale,
       enableBidiPseudoLocale: this.enableBidiPseudoLocale,
@@ -3004,11 +2980,8 @@ Toolbox.prototype = {
    * If the console is split and we are focusing an element outside
    * of the console, then store the newly focused element, so that
    * it can be restored once the split console closes.
-   *
-   * @param Element originalTarget
-   *        The DOM Element that just got focused.
    */
-  _updateLastFocusedElementForSplitConsole(originalTarget) {
+  _onFocus({ originalTarget }) {
     // Ignore any non element nodes, or any elements contained
     // within the webconsole frame.
     const webconsoleURL = gDevTools.getToolDefinition("webconsole").url;
@@ -3020,22 +2993,6 @@ Toolbox.prototype = {
     }
 
     this._lastFocusedElement = originalTarget;
-  },
-
-  // Report if the toolbox is currently focused,
-  // or the focus in elsewhere in the browser or another app.
-  _isToolboxFocused: false,
-
-  _onFocus({ originalTarget }) {
-    this._isToolboxFocused = true;
-    this._debounceUpdateFocusedState();
-
-    this._updateLastFocusedElementForSplitConsole(originalTarget);
-  },
-
-  _onBlur() {
-    this._isToolboxFocused = false;
-    this._debounceUpdateFocusedState();
   },
 
   _onTabsOrderUpdated() {
@@ -3365,25 +3322,6 @@ Toolbox.prototype = {
       this.component.setDisableAutohide(toggledValue);
     }
     this._autohideHasBeenToggled = true;
-  },
-
-  /**
-   * Toggling "always on top" behavior is a bit special.
-   *
-   * We toggle the preference and then destroy and re-create the toolbox
-   * as there is no way to change this behavior on an existing window
-   * (see bug 1788946).
-   */
-  async toggleAlwaysOnTop() {
-    const currentValue = Services.prefs.getBoolPref(
-      DEVTOOLS_ALWAYS_ON_TOP,
-      false
-    );
-    Services.prefs.setBoolPref(DEVTOOLS_ALWAYS_ON_TOP, !currentValue);
-
-    const addonId = this.descriptorFront.id;
-    await this.destroy();
-    gDevTools.showToolboxForWebExtension(addonId);
   },
 
   async _isDisableAutohideEnabled() {
