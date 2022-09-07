@@ -400,9 +400,12 @@ WorkerScriptLoader::WorkerScriptLoader(
 
   RefPtr<StrongWorkerRef> workerRef =
       StrongWorkerRef::Create(aWorkerPrivate, "ScriptLoader", [self]() {
-        NS_DispatchToMainThread(NewRunnableMethod(
-            "WorkerScriptLoader::CancelMainThreadWithBindingAborted", self,
-            &loader::WorkerScriptLoader::CancelMainThreadWithBindingAborted));
+        nsTArray<WorkerLoadContext*> scriptLoadList = self->GetLoadingList();
+        NS_DispatchToMainThread(
+            NewRunnableMethod<nsTArray<WorkerLoadContext*>&&>(
+                "WorkerScriptLoader::CancelMainThreadWithBindingAborted", self,
+                &WorkerScriptLoader::CancelMainThreadWithBindingAborted,
+                std::move(scriptLoadList)));
       });
 
   if (workerRef) {
@@ -636,11 +639,27 @@ nsresult WorkerScriptLoader::OnStreamComplete(ScriptLoadRequest* aRequest,
   return NS_OK;
 }
 
-void WorkerScriptLoader::CancelMainThread(nsresult aCancelResult) {
+void WorkerScriptLoader::CancelMainThreadWithBindingAborted(
+    nsTArray<WorkerLoadContext*>&& aContextList) {
+  AssertIsOnMainThread();
+  CancelMainThread(NS_BINDING_ABORTED, &aContextList);
+}
+
+void WorkerScriptLoader::CancelMainThread(
+    nsresult aCancelResult, nsTArray<WorkerLoadContext*>* aContextList) {
   AssertIsOnMainThread();
 
   if (IsCancelled()) {
     return;
+  }
+
+  // In the case of a cancellation, service workers fetching from the
+  // cache will still be doing work despite CancelMainThread. Eagerly
+  // clear the promises associated with these scripts.
+  for (WorkerLoadContext* loadContext : *aContextList) {
+    if (loadContext->IsAwaitingPromise()) {
+      loadContext->mCachePromise->MaybeReject(NS_BINDING_ABORTED);
+    }
   }
 
   mCancelMainThread = Some(aCancelResult);
@@ -662,7 +681,7 @@ nsresult WorkerScriptLoader::LoadScripts(
       nsresult rv = LoadScript(loadContext->mRequest);
       if (NS_WARN_IF(NS_FAILED(rv))) {
         LoadingFinished(loadContext->mRequest, rv);
-        CancelMainThread(rv);
+        CancelMainThread(rv, &aContextList);
         return rv;
       }
     }
@@ -690,7 +709,7 @@ nsresult WorkerScriptLoader::LoadScripts(
 
   nsresult rv = cacheCreator->Load(principal);
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    CancelMainThread(rv);
+    CancelMainThread(rv, &aContextList);
     return rv;
   }
 
