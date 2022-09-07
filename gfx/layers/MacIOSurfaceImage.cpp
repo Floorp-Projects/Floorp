@@ -23,9 +23,11 @@ TextureClient* MacIOSurfaceImage::GetTextureClient(
     KnowsCompositor* aKnowsCompositor) {
   if (!mTextureClient) {
     BackendType backend = BackendType::NONE;
+    TextureFlags flags =
+        IsDRM() ? TextureFlags::DRM_SOURCE : TextureFlags::DEFAULT;
     mTextureClient = TextureClient::CreateWithData(
-        MacIOSurfaceTextureData::Create(mSurface, backend),
-        TextureFlags::DEFAULT, aKnowsCompositor->GetTextureForwarder());
+        MacIOSurfaceTextureData::Create(mSurface, backend), flags,
+        aKnowsCompositor->GetTextureForwarder());
   }
   return mTextureClient;
 }

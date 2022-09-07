@@ -75,6 +75,9 @@ void MacIOSurfaceTextureHostOGL::CreateRenderTexture(
   RefPtr<wr::RenderTextureHost> texture =
       new wr::RenderMacIOSurfaceTextureHost(GetMacIOSurface());
 
+  bool isDRM = (bool)(mFlags & TextureFlags::DRM_SOURCE);
+  texture->SetIsFromDRMSource(isDRM);
+
   wr::RenderThread::Get()->RegisterExternalImage(aExternalImageId,
                                                  texture.forget());
 }
