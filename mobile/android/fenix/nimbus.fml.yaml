@@ -189,7 +189,6 @@ features:
         type: Map<MR2022Section, Boolean>
         default:
           {
-            "home-onboarding-dialog-new-users": false,
             "home-onboarding-dialog-existing-users": false,
             "sync-cfr": false,
             "wallpapers-selection-tool": false,
@@ -201,7 +200,6 @@ features:
       - channel: developer
         value: {
           "sections-enabled": {
-            "home-onboarding-dialog-new-users": true,
             "home-onboarding-dialog-existing-users": true,
             "sync-cfr": true,
             "wallpapers-selection-tool": true,
@@ -337,8 +335,6 @@ types:
       variants:
         home-onboarding-dialog-existing-users:
           description: Home onboarding dialog for upgraded users.
-        home-onboarding-dialog-new-users:
-          description: Home onboarding dialog for new users.
         sync-cfr:
           description: CFR for the first time you see a synced tab on the home screen.
         wallpapers-selection-tool:
