@@ -103,6 +103,21 @@ async function openAboutDevtoolsToolbox(
   // WebExtension open a toolbox in a dedicated window
   if (isWebExtension) {
     const toolbox = await onToolboxReady;
+    // For some reason the test helpers prevents the toolbox from being automatically focused on opening,
+    // whereas it is IRL.
+    const focusedWin = Services.focus.focusedWindow;
+    if (focusedWin?.top != toolbox.win) {
+      info("Wait for the toolbox window to be focused");
+      await new Promise(r => {
+        // focus event only fired on the chrome event handler and in capture phase
+        toolbox.win.docShell.chromeEventHandler.addEventListener("focus", r, {
+          once: true,
+          capture: true,
+        });
+        toolbox.win.focus();
+      });
+      info("The toolbox is focused");
+    }
     return {
       devtoolsBrowser: null,
       devtoolsDocument: toolbox.doc,
