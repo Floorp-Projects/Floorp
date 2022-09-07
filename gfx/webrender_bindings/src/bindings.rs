@@ -1113,7 +1113,7 @@ pub extern "C" fn wr_thread_pool_new(low_priority: bool) -> *mut WrThreadPool {
 
 #[no_mangle]
 pub unsafe extern "C" fn wr_thread_pool_delete(thread_pool: *mut WrThreadPool) {
-    Box::from_raw(thread_pool);
+    mem::drop(Box::from_raw(thread_pool));
 }
 
 #[no_mangle]
@@ -1128,7 +1128,7 @@ pub unsafe extern "C" fn wr_program_cache_new(
 
 #[no_mangle]
 pub unsafe extern "C" fn wr_program_cache_delete(program_cache: *mut WrProgramCache) {
-    Box::from_raw(program_cache);
+    mem::drop(Box::from_raw(program_cache));
 }
 
 #[no_mangle]
@@ -2418,7 +2418,7 @@ pub extern "C" fn wr_state_delete(state: *mut WrState) {
     assert!(unsafe { !is_in_render_thread() });
 
     unsafe {
-        Box::from_raw(state);
+        mem::drop(Box::from_raw(state));
     }
 }
 
@@ -3952,7 +3952,7 @@ impl WrSpatialId {
 
 #[no_mangle]
 pub unsafe extern "C" fn wr_device_delete(device: *mut Device) {
-    Box::from_raw(device);
+    mem::drop(Box::from_raw(device));
 }
 
 // Call MakeCurrent before this.
