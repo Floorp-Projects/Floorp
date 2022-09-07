@@ -974,6 +974,9 @@ already_AddRefed<VideoData> ChromiumCDMParent::CreateVideoFrame(
       media::TimeUnit::FromMicroseconds(aFrame.mDuration()), b, false,
       media::TimeUnit::FromMicroseconds(-1), pictureRegion, mKnowsCompositor);
 
+  // This is a DRM image.
+  v->mImage->SetIsDRM(true);
+
   return v.forget();
 }
 
