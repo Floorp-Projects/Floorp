@@ -2323,17 +2323,6 @@ RefPtr<VsyncMainChild> BrowserChild::GetVsyncChild() {
   return mVsyncChild;
 }
 
-mozilla::ipc::IPCResult BrowserChild::RecvActivateFrameEvent(
-    const nsAString& aType, const bool& capture) {
-  nsCOMPtr<nsPIDOMWindowOuter> window = do_GetInterface(WebNavigation());
-  NS_ENSURE_TRUE(window, IPC_OK());
-  nsCOMPtr<EventTarget> chromeHandler = window->GetChromeEventHandler();
-  NS_ENSURE_TRUE(chromeHandler, IPC_OK());
-  RefPtr<ContentListener> listener = new ContentListener(this);
-  chromeHandler->AddEventListener(aType, listener, capture);
-  return IPC_OK();
-}
-
 mozilla::ipc::IPCResult BrowserChild::RecvLoadRemoteScript(
     const nsAString& aURL, const bool& aRunInGlobalScope) {
   if (!InitBrowserChildMessageManager())

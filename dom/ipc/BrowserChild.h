@@ -428,9 +428,6 @@ class BrowserChild final : public nsMessageManagerScriptExecutor,
       nsIPrincipal* aRequestingPrincipal,
       const nsContentPolicyType& aContentPolicyType);
 
-  mozilla::ipc::IPCResult RecvActivateFrameEvent(const nsAString& aType,
-                                                 const bool& aCapture);
-
   mozilla::ipc::IPCResult RecvLoadRemoteScript(const nsAString& aURL,
                                                const bool& aRunInGlobalScope);
 
