@@ -52,6 +52,36 @@ add_task(async function() {
   );
 });
 
+add_task(async function testSystemStylesheet() {
+  const { ui } = await openStyleEditorForURL("about:support");
+
+  const aboutSupportEditor = ui.editors.find(
+    editor => editor.friendlyName === "aboutSupport.css"
+  );
+  ok(!!aboutSupportEditor, "Found the editor for aboutSupport.css");
+  const aboutSupportToggle = aboutSupportEditor.summary.querySelector(
+    ".stylesheet-enabled"
+  );
+  ok(aboutSupportToggle, "enabled toggle button exists");
+  ok(!aboutSupportToggle.disabled, "enabled toggle button is not disabled");
+  is(
+    aboutSupportToggle.getAttribute("tooltiptext"),
+    "Toggle style sheet visibility"
+  );
+
+  const formsEditor = ui.editors.find(
+    editor => editor.friendlyName === "forms.css"
+  );
+  ok(!!formsEditor, "Found the editor for forms.css");
+  const formsToggle = formsEditor.summary.querySelector(".stylesheet-enabled");
+  ok(formsToggle, "enabled toggle button exists");
+  ok(formsToggle.disabled, "enabled toggle button is disabled");
+  is(
+    formsToggle.getAttribute("tooltiptext"),
+    "System style sheets can’t be disabled"
+  );
+});
+
 async function toggleEnabled(editor, enabledToggle, panelWindow) {
   const changed = editor.once("property-change");
 

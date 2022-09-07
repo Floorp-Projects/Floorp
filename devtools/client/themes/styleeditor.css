@@ -175,6 +175,13 @@ li.error > .stylesheet-info > .stylesheet-more  > .stylesheet-error-message {
   background-image: url(images/eye-closed.svg);
 }
 
+.stylesheet-system > .stylesheet-enabled {
+  /* Override the default "color: grayText" from [disabled] browser style */
+  color: currentColor;
+  cursor: auto;
+  opacity: 0.3;
+}
+
 .stylesheet-linked-file:not(:empty){
   margin-inline-end: 0.4em;
 }
