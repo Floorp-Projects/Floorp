@@ -1645,9 +1645,7 @@ bool nsPresContext::UseOverlayScrollbars() const {
 }
 
 void nsPresContext::ThemeChanged(widget::ThemeChangeKind aKind) {
-  // NOTE(emilio): This ideally wouldn't need to be a _TEXT() marker, but
-  // otherwise the stack is not captured, see bug 1670046.
-  PROFILER_MARKER_TEXT("ThemeChanged", LAYOUT, MarkerStack::Capture(), ""_ns);
+  PROFILER_MARKER_UNTYPED("ThemeChanged", LAYOUT, MarkerStack::Capture());
 
   mPendingThemeChangeKind |= unsigned(aKind);
 
