@@ -115,29 +115,30 @@ class MessageChannel : HasResultCodes {
 
   typedef mozilla::Monitor Monitor;
 
-  // We could templatize the actor type but it would unnecessarily
-  // expand the code size. Using the actor address as the
-  // identifier is already good enough.
-  typedef void* ActorIdType;
-
  public:
+  using Message = IPC::Message;
+
   struct UntypedCallbackHolder {
-    UntypedCallbackHolder(ActorIdType aActorId, RejectCallback&& aReject)
-        : mActorId(aActorId), mReject(std::move(aReject)) {}
+    UntypedCallbackHolder(int32_t aActorId, Message::msgid_t aReplyMsgId,
+                          RejectCallback&& aReject)
+        : mActorId(aActorId),
+          mReplyMsgId(aReplyMsgId),
+          mReject(std::move(aReject)) {}
 
     virtual ~UntypedCallbackHolder() = default;
 
     void Reject(ResponseRejectReason&& aReason) { mReject(std::move(aReason)); }
 
-    ActorIdType mActorId;
+    int32_t mActorId;
+    Message::msgid_t mReplyMsgId;
     RejectCallback mReject;
   };
 
   template <typename Value>
   struct CallbackHolder : public UntypedCallbackHolder {
-    CallbackHolder(ActorIdType aActorId, ResolveCallback<Value>&& aResolve,
-                   RejectCallback&& aReject)
-        : UntypedCallbackHolder(aActorId, std::move(aReject)),
+    CallbackHolder(int32_t aActorId, Message::msgid_t aReplyMsgId,
+                   ResolveCallback<Value>&& aResolve, RejectCallback&& aReject)
+        : UntypedCallbackHolder(aActorId, aReplyMsgId, std::move(aReject)),
           mResolve(std::move(aResolve)) {}
 
     void Resolve(Value&& aReason) { mResolve(std::move(aReason)); }
@@ -152,7 +153,6 @@ class MessageChannel : HasResultCodes {
  public:
   static constexpr int32_t kNoTimeout = INT32_MIN;
 
-  typedef IPC::Message Message;
   using ScopedPort = mozilla::ipc::ScopedPort;
 
   explicit MessageChannel(const char* aName, IToplevelProtocol* aListener);
@@ -242,9 +242,9 @@ class MessageChannel : HasResultCodes {
   // Asynchronously send a message to the other side of the channel
   // and wait for asynchronous reply.
   template <typename Value>
-  void Send(UniquePtr<Message> aMsg, ActorIdType aActorId,
-            ResolveCallback<Value>&& aResolve, RejectCallback&& aReject)
-      EXCLUDES(*mMonitor) {
+  void Send(UniquePtr<Message> aMsg, int32_t aActorId,
+            Message::msgid_t aReplyMsgId, ResolveCallback<Value>&& aResolve,
+            RejectCallback&& aReject) EXCLUDES(*mMonitor) {
     int32_t seqno = NextSeqno();
     aMsg->set_seqno(seqno);
     if (!Send(std::move(aMsg))) {
@@ -253,8 +253,8 @@ class MessageChannel : HasResultCodes {
     }
 
     UniquePtr<UntypedCallbackHolder> callback =
-        MakeUnique<CallbackHolder<Value>>(aActorId, std::move(aResolve),
-                                          std::move(aReject));
+        MakeUnique<CallbackHolder<Value>>(
+            aActorId, aReplyMsgId, std::move(aResolve), std::move(aReject));
     mPendingResponses.insert(std::make_pair(seqno, std::move(callback)));
     gUnresolvedResponses++;
   }
@@ -272,11 +272,12 @@ class MessageChannel : HasResultCodes {
   bool CanSend() const EXCLUDES(*mMonitor);
 
   // Remove and return a callback that needs reply
-  UniquePtr<UntypedCallbackHolder> PopCallback(const Message& aMsg);
+  UniquePtr<UntypedCallbackHolder> PopCallback(const Message& aMsg,
+                                               int32_t aActorId);
 
   // Used to reject and remove pending responses owned by the given
   // actor when it's about to be destroyed.
-  void RejectPendingResponsesForActor(ActorIdType aActorId);
+  void RejectPendingResponsesForActor(int32_t aActorId);
 
   // If sending a sync message returns an error, this function gives a more
   // descriptive error message.
