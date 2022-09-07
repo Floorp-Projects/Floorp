@@ -28,8 +28,7 @@ job-template:
             by-level:
                 "3": true
                 # If you set the following line to true, you need to grant write access
-                # to https://github.com/mozilla-release-automation-bot-staging on your
-                # fork.
+                # to https://github.com/moz-releng-automation-stage on your fork.
                 default: false
 
     treeherder:
