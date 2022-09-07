@@ -786,10 +786,9 @@ void MessageChannel::SendMessageToLink(UniquePtr<Message> aMsg) {
 }
 
 UniquePtr<MessageChannel::UntypedCallbackHolder> MessageChannel::PopCallback(
-    const Message& aMsg, int32_t aActorId) {
+    const Message& aMsg) {
   auto iter = mPendingResponses.find(aMsg.seqno());
-  if (iter != mPendingResponses.end() && iter->second->mActorId == aActorId &&
-      iter->second->mReplyMsgId == aMsg.type()) {
+  if (iter != mPendingResponses.end()) {
     UniquePtr<MessageChannel::UntypedCallbackHolder> ret =
         std::move(iter->second);
     mPendingResponses.erase(iter);
@@ -799,7 +798,7 @@ UniquePtr<MessageChannel::UntypedCallbackHolder> MessageChannel::PopCallback(
   return nullptr;
 }
 
-void MessageChannel::RejectPendingResponsesForActor(int32_t aActorId) {
+void MessageChannel::RejectPendingResponsesForActor(ActorIdType aActorId) {
   auto itr = mPendingResponses.begin();
   while (itr != mPendingResponses.end()) {
     if (itr->second.get()->mActorId != aActorId) {
