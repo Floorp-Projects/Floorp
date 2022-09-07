@@ -366,9 +366,13 @@ MediaResult FFmpegAudioDecoder<LIBAV_VER>::DoDecode(MediaRawData* aSample,
         *aGotFrame = true;
       }
     }
-    packet.data += bytesConsumed;
-    packet.size -= bytesConsumed;
-    samplePosition += bytesConsumed;
+    // The packet wasn't sent to ffmpeg, another attempt will happen next
+    // iteration.
+    if (bytesConsumed != -1) {
+      packet.data += bytesConsumed;
+      packet.size -= bytesConsumed;
+      samplePosition += bytesConsumed;
+    }
   }
   return NS_OK;
 }
