@@ -14264,7 +14264,7 @@ const Search_Search = (0,external_ReactRedux_namespaceObject.connect)(state => (
 
 const imgLength = 100;
 function Background() {
-  const [imgSrc] = (0,external_React_namespaceObject.useState)(`chrome://branding/content/newtabbg-${Math.floor(Math.random() * imgLength)}.jpg`);
+  const [imgSrc] = (0,external_React_namespaceObject.useState)(`chrome://browser/skin/newtabbg-${Math.floor(Math.random() * imgLength)}.jpg`);
   return /*#__PURE__*/external_React_default().createElement("div", {
     id: "background",
     style: {
