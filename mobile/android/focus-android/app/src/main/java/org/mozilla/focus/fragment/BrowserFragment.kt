@@ -83,7 +83,6 @@ import org.mozilla.focus.ext.settings
 import org.mozilla.focus.ext.showAsFixed
 import org.mozilla.focus.ext.titleOrDomain
 import org.mozilla.focus.menu.browser.DefaultBrowserMenu
-import org.mozilla.focus.nimbus.FocusNimbus
 import org.mozilla.focus.open.OpenWithFragment
 import org.mozilla.focus.session.ui.TabsPopup
 import org.mozilla.focus.settings.permissions.permissionoptions.SitePermissionOptionsStorage
@@ -777,16 +776,7 @@ class BrowserFragment :
 
         TelemetryWrapper.openFullBrowser()
 
-        val multiTabsFeature = FocusNimbus.features.tabs
-        val multiTabsConfig = multiTabsFeature.value(context = requireContext())
-        multiTabsFeature.recordExposure()
-        if (multiTabsConfig.isMultiTab) {
-            requireComponents.customTabsUseCases.migrate(tab.id)
-        } else {
-            // A Middleware will take care of either opening a new tab for this URL or reusing an
-            // already existing tab.
-            requireComponents.tabsUseCases.addTab(tab.content.url)
-        }
+        requireComponents.customTabsUseCases.migrate(tab.id)
 
         val intent = Intent(context, MainActivity::class.java)
         intent.action = Intent.ACTION_MAIN

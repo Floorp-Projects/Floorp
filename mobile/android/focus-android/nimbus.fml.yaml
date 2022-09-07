@@ -9,13 +9,6 @@ channels:
   - beta
   - release
 features:
-  tabs:
-    description: Nimbus feature name intended to control the multiple tabs feature in the app.
-    variables:
-      is_multi_tab:
-        description: Nimbus variable of [FEATURE_TABS] allowing outside control of whether the multiple tabs feature should be enabled or not.
-        type: Boolean
-        default: true
   onboarding:
     description: Nimbus feature name intended to control the onboarding plus all CFRs in the app.
     variables:

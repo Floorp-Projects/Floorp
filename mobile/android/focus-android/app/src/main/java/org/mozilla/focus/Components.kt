@@ -67,7 +67,6 @@ import org.mozilla.focus.search.SearchMigration
 import org.mozilla.focus.state.AppState
 import org.mozilla.focus.state.AppStore
 import org.mozilla.focus.state.Screen
-import org.mozilla.focus.tabs.MergeTabsMiddleware
 import org.mozilla.focus.telemetry.GleanMetricsService
 import org.mozilla.focus.telemetry.TelemetryMiddleware
 import org.mozilla.focus.telemetry.startuptelemetry.AppStartReasonProvider
@@ -155,7 +154,6 @@ class Components(
                 PromptMiddleware(),
                 AdsTelemetryMiddleware(adsTelemetry),
                 BlockedTrackersMiddleware(context),
-                MergeTabsMiddleware(context),
                 RecordingDevicesMiddleware(context),
             ) + EngineMiddleware.create(engine) + CfrMiddleware(context),
         ).apply {
