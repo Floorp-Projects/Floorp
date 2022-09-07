@@ -1635,6 +1635,8 @@ describe("TelemetryFeed", () => {
         })
       );
       // Services.prefs = {getBoolPref: key => fakePrefs[key]};
+      sandbox.spy(Glean.newtab.newtabCategory, "set");
+      sandbox.spy(Glean.newtab.homepageCategory, "set");
     });
     it("should send correct event data for about:home set to custom URL", async () => {
       fakeHomePageUrl = "https://searchprovider.com";
@@ -1649,6 +1651,8 @@ describe("TelemetryFeed", () => {
         home_url_category: "other",
       });
       assert.validate(sendEvent.firstCall.args[0], UserEventPing);
+      assert.calledOnce(Glean.newtab.homepageCategory.set);
+      assert.calledWith(Glean.newtab.homepageCategory.set, "other");
     });
     it("should send correct event data for about:newtab set to custom URL", async () => {
       globals.set("AboutNewTab", {
@@ -1666,6 +1670,8 @@ describe("TelemetryFeed", () => {
         newtab_url_category: "other",
       });
       assert.validate(sendEvent.firstCall.args[0], UserEventPing);
+      assert.calledOnce(Glean.newtab.newtabCategory.set);
+      assert.calledWith(Glean.newtab.newtabCategory.set, "other");
     });
     it("should not send an event if neither about:{home,newtab} are set to custom URL", async () => {
       instance._prefs.set(TELEMETRY_PREF, true);
@@ -1673,6 +1679,10 @@ describe("TelemetryFeed", () => {
 
       await instance.sendPageTakeoverData();
       assert.notCalled(sendEvent);
+      assert.calledOnce(Glean.newtab.newtabCategory.set);
+      assert.calledOnce(Glean.newtab.homepageCategory.set);
+      assert.calledWith(Glean.newtab.newtabCategory.set, "enabled");
+      assert.calledWith(Glean.newtab.homepageCategory.set, "enabled");
     });
     it("should send home_extension_id and newtab_extension_id when appropriate", async () => {
       const ID = "{abc-foo-bar}";
@@ -1689,6 +1699,24 @@ describe("TelemetryFeed", () => {
         newtab_extension_id: ID,
       });
       assert.validate(sendEvent.firstCall.args[0], UserEventPing);
+      assert.calledOnce(Glean.newtab.newtabCategory.set);
+      assert.calledOnce(Glean.newtab.homepageCategory.set);
+      assert.equal(Glean.newtab.newtabCategory.set.args[0], "extension");
+      assert.equal(Glean.newtab.homepageCategory.set.args[0], "extension");
+    });
+    it("instruments when newtab is disabled", async () => {
+      instance._prefs.set(TELEMETRY_PREF, true);
+      fakePrefs["browser.newtabpage.enabled"] = false;
+      await instance.sendPageTakeoverData();
+      assert.calledOnce(Glean.newtab.newtabCategory.set);
+      assert.calledWith(Glean.newtab.newtabCategory.set, "disabled");
+    });
+    it("instruments when homepage is disabled", async () => {
+      instance._prefs.set(TELEMETRY_PREF, true);
+      fakeHomePage.overridden = true;
+      await instance.sendPageTakeoverData();
+      assert.calledOnce(Glean.newtab.homepageCategory.set);
+      assert.calledWith(Glean.newtab.homepageCategory.set, "disabled");
     });
   });
   describe("#sendDiscoveryStreamImpressions", () => {

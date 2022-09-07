@@ -32,6 +32,10 @@ add_task(async function test_newtab_tab_close_sends_ping() {
 
   Services.fog.testResetFOG();
   sendTriggerMessageSpy.resetHistory();
+  let TelemetryFeed = AboutNewTab.activityStream.store.feeds.get(
+    "feeds.telemetry"
+  );
+  TelemetryFeed.init(); // INIT action doesn't happen by default.
   let tab = await BrowserTestUtils.openNewForegroundTab(
     gBrowser,
     "about:newtab",
@@ -64,6 +68,12 @@ add_task(async function test_newtab_tab_close_sends_ping() {
       sessionId,
       "Should've closed the session we opened"
     );
+    Assert.ok(Glean.newtabSearch.enabled.testGetValue());
+    Assert.ok(Glean.topsites.enabled.testGetValue());
+    Assert.ok(Glean.topsites.sponsoredEnabled.testGetValue());
+    Assert.ok(Glean.pocket.enabled.testGetValue());
+    Assert.ok(Glean.pocket.sponsoredStoriesEnabled.testGetValue());
+    Assert.equal(false, Glean.pocket.isSignedIn.testGetValue());
   });
 
   BrowserTestUtils.removeTab(tab);
@@ -81,6 +91,10 @@ add_task(async function test_newtab_tab_nav_sends_ping() {
 
   Services.fog.testResetFOG();
   sendTriggerMessageSpy.resetHistory();
+  let TelemetryFeed = AboutNewTab.activityStream.store.feeds.get(
+    "feeds.telemetry"
+  );
+  TelemetryFeed.init(); // INIT action doesn't happen by default.
   let tab = await BrowserTestUtils.openNewForegroundTab(
     gBrowser,
     "about:newtab",
@@ -113,6 +127,12 @@ add_task(async function test_newtab_tab_nav_sends_ping() {
       sessionId,
       "Should've closed the session we opened"
     );
+    Assert.ok(Glean.newtabSearch.enabled.testGetValue());
+    Assert.ok(Glean.topsites.enabled.testGetValue());
+    Assert.ok(Glean.topsites.sponsoredEnabled.testGetValue());
+    Assert.ok(Glean.pocket.enabled.testGetValue());
+    Assert.ok(Glean.pocket.sponsoredStoriesEnabled.testGetValue());
+    Assert.equal(false, Glean.pocket.isSignedIn.testGetValue());
   });
 
   BrowserTestUtils.loadURI(tab.linkedBrowser, "about:mozilla");
@@ -135,6 +155,10 @@ add_task(async function test_newtab_doesnt_send_nimbus() {
     value: { newtabPingEnabled: false },
   });
   Services.fog.testResetFOG();
+  let TelemetryFeed = AboutNewTab.activityStream.store.feeds.get(
+    "feeds.telemetry"
+  );
+  TelemetryFeed.init(); // INIT action doesn't happen by default.
   sendTriggerMessageSpy.resetHistory();
   let tab = await BrowserTestUtils.openNewForegroundTab(
     gBrowser,
