@@ -550,9 +550,11 @@ void IProtocol::DestroySubtree(ActorDestroyReason aWhy) {
   fuzzing::IPCFuzzController::instance().OnActorDestroyed(this);
 #endif
 
+  int32_t id = Id();
+
   // If we're a managed actor, unregister from our manager
   if (Manager()) {
-    Unregister(Id());
+    Unregister(id);
   }
 
   // Destroy subtree
@@ -579,7 +581,7 @@ void IProtocol::DestroySubtree(ActorDestroyReason aWhy) {
   // The actor is being destroyed, reject any pending responses, invoke
   // `ActorDestroy` to destroy it, and then clear our status to
   // `LinkStatus::Destroyed`.
-  GetIPCChannel()->RejectPendingResponsesForActor(this);
+  GetIPCChannel()->RejectPendingResponsesForActor(id);
   ActorDestroy(aWhy);
   mLinkStatus = LinkStatus::Destroyed;
 }
