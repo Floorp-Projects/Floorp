@@ -2,56 +2,73 @@
 <html>
 <meta charset=utf-8>
 <head>
-  <title>Test that we can decode 4 channel wave file in webaudio, but not in &lt;audio&gt;</title>
+  <title>Test that we can decode multichannel file with webaudio and &lt;audio&gt;</title>
   <script src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
 <body>
 <pre id="test">
 <script class="testbody" type="text/javascript">
-var filename = "audio-quad.wav";
+var testcases = [
+  {
+    filename: "audio-quad.wav",
+    channels: 4
+  },
+  {
+    filename: "8kHz-320kbps-6ch.aac",
+    channels: 6
+  }
+];
 
 SimpleTest.waitForExplicitFinish();
 
-function finishTest(a) {
-  if (a) {
-    a = null;
-    SimpleTest.finish();
-  }
-}
-
-function decodeUsingAudioElement() {
+function decodeUsingAudioElement(filename, resolve) {
   var a = new Audio();
   a.addEventListener("error", function() {
     ok(false, "Error loading metadata");
-    finishTest(a);
+    resolve();
   });
   a.addEventListener("loadedmetadata", function() {
     ok(true, "Metadata Loaded");
-    finishTest(a);
+    resolve();
   });
 
   a.src = filename;
   a.load();
 }
 
-addLoadEvent(function() {
-  var xhr = new XMLHttpRequest();
-  xhr.open("GET", filename);
-  xhr.responseType = "arraybuffer";
-  xhr.onload = function() {
-    var context = new AudioContext();
-    context.decodeAudioData(xhr.response, function(b) {
-      ok(true, "Decoding of a wave file with four channels succeded.");
-      is(b.numberOfChannels, 4, "The AudioBuffer should have 4 channels.");
-      decodeUsingAudioElement();
-    }, function() {
-      ok(false, "Decoding of a wave file with four channels failed.");
-      decodeUsingAudioElement();
-    });
-  };
-  xhr.send(null);
-});
+function testOne({filename, channels}) {
+  return new Promise(resolve => {
+    var xhr = new XMLHttpRequest();
+    xhr.open("GET", filename);
+    xhr.responseType = "arraybuffer";
+    xhr.onload = function() {
+      var context = new AudioContext();
+      context.decodeAudioData(xhr.response, function(b) {
+        ok(true, "Decoding of a wave file with four channels succeded.");
+        is(b.numberOfChannels,
+           channels,
+           `The AudioBuffer decoded from ${filename} should have ${channels} channels.`);
+        decodeUsingAudioElement(filename, resolve);
+      }, function() {
+        ok(false, `Decoding ${filename} failed)`);
+        decodeUsingAudioElement(filename, resolve);
+      });
+    };
+    xhr.send(null);
+  });
+}
+
+async function runTest() {
+  for (var testcase of testcases) {
+    await testOne(testcase);
+  }
+
+  SimpleTest.finish();
+}
+
+addLoadEvent(runTest);
+
 </script>
 </pre>
 </body>
