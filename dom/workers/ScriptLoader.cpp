@@ -349,41 +349,6 @@ class ChannelGetterRunnable final : public WorkerMainThreadRunnable {
 
 namespace loader {
 
-class ScriptLoaderRunnable final : public nsIRunnable, public nsINamed {
-  RefPtr<WorkerScriptLoader> mScriptLoader;
-
- public:
-  NS_DECL_THREADSAFE_ISUPPORTS
-
-  explicit ScriptLoaderRunnable(WorkerScriptLoader* aScriptLoader)
-      : mScriptLoader(aScriptLoader) {
-    MOZ_ASSERT(aScriptLoader);
-  }
-
- private:
-  ~ScriptLoaderRunnable() = default;
-
-  NS_IMETHOD
-  Run() override {
-    AssertIsOnMainThread();
-
-    nsresult rv = mScriptLoader->LoadScripts();
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      mScriptLoader->CancelMainThread(rv);
-    }
-
-    return NS_OK;
-  }
-
-  NS_IMETHOD
-  GetName(nsACString& aName) override {
-    aName.AssignLiteral("ScriptLoaderRunnable");
-    return NS_OK;
-  }
-};
-
-NS_IMPL_ISUPPORTS(ScriptLoaderRunnable, nsIRunnable, nsINamed)
-
 class ScriptExecutorRunnable final : public MainThreadWorkerSyncRunnable {
   WorkerScriptLoader& mScriptLoader;
   ScriptLoadRequest* mRequest;
@@ -465,6 +430,15 @@ void WorkerScriptLoader::CreateScriptRequests(
   }
 }
 
+nsTArray<WorkerLoadContext*> WorkerScriptLoader::GetLoadingList() {
+  nsTArray<WorkerLoadContext*> list;
+  for (ScriptLoadRequest* req = mLoadingRequests.getFirst(); req;
+       req = req->getNext()) {
+    list.AppendElement(req->GetWorkerLoadContext());
+  }
+  return list;
+}
+
 already_AddRefed<ScriptLoadRequest> WorkerScriptLoader::CreateScriptLoadRequest(
     const nsString& aScriptURL, const mozilla::Encoding* aDocumentEncoding,
     bool aIsMainScript) {
@@ -509,9 +483,15 @@ already_AddRefed<ScriptLoadRequest> WorkerScriptLoader::CreateScriptLoadRequest(
 
 bool WorkerScriptLoader::DispatchLoadScripts() {
   mWorkerRef->Private()->AssertIsOnWorkerThread();
-  RefPtr<ScriptLoaderRunnable> runnable = new ScriptLoaderRunnable(this);
 
-  if (NS_FAILED(NS_DispatchToMainThread(runnable))) {
+  nsTArray<WorkerLoadContext*> scriptLoadList = GetLoadingList();
+
+  nsresult rv =
+      NS_DispatchToMainThread(NewRunnableMethod<nsTArray<WorkerLoadContext*>&&>(
+          "WorkerScriptLoader::LoadScripts", this,
+          &WorkerScriptLoader::LoadScripts, std::move(scriptLoadList)));
+
+  if (NS_FAILED(rv)) {
     NS_ERROR("Failed to dispatch!");
     mRv.Throw(NS_ERROR_FAILURE);
     return false;
@@ -667,7 +647,8 @@ void WorkerScriptLoader::CancelMainThread(nsresult aCancelResult) {
   mCancelMainThread = Some(aCancelResult);
 }
 
-nsresult WorkerScriptLoader::LoadScripts() {
+nsresult WorkerScriptLoader::LoadScripts(
+    nsTArray<WorkerLoadContext*>&& aContextList) {
   AssertIsOnMainThread();
 
   // Convert the origin stack to JSON (which must be done on the main
@@ -678,11 +659,11 @@ nsresult WorkerScriptLoader::LoadScripts() {
   }
 
   if (!mWorkerRef->Private()->IsServiceWorker() || IsDebuggerScript()) {
-    for (ScriptLoadRequest* req = mLoadingRequests.getFirst(); req;
-         req = req->getNext()) {
-      nsresult rv = LoadScript(req);
+    for (WorkerLoadContext* loadContext : aContextList) {
+      nsresult rv = LoadScript(loadContext->mRequest);
       if (NS_WARN_IF(NS_FAILED(rv))) {
-        LoadingFinished(req, rv);
+        LoadingFinished(loadContext->mRequest, rv);
+        CancelMainThread(rv);
         return rv;
       }
     }
@@ -692,13 +673,11 @@ nsresult WorkerScriptLoader::LoadScripts() {
 
   RefPtr<CacheCreator> cacheCreator = new CacheCreator(mWorkerRef->Private());
 
-  for (ScriptLoadRequest* req = mLoadingRequests.getFirst(); req;
-       req = req->getNext()) {
-    WorkerLoadContext* loadInfo = req->GetWorkerLoadContext();
-    loadInfo->SetCacheCreator(cacheCreator);
-    loadInfo->GetCacheCreator()->AddLoader(
-        MakeNotNull<RefPtr<CacheLoadHandler>>(mWorkerRef, req,
-                                              loadInfo->IsTopLevel(), this));
+  for (WorkerLoadContext* loadContext : aContextList) {
+    loadContext->SetCacheCreator(cacheCreator);
+    loadContext->GetCacheCreator()->AddLoader(
+        MakeNotNull<RefPtr<CacheLoadHandler>>(mWorkerRef, loadContext->mRequest,
+                                              loadContext->IsTopLevel(), this));
   }
 
   // The worker may have a null principal on first load, but in that case its
@@ -712,6 +691,7 @@ nsresult WorkerScriptLoader::LoadScripts() {
 
   nsresult rv = cacheCreator->Load(principal);
   if (NS_WARN_IF(NS_FAILED(rv))) {
+    CancelMainThread(rv);
     return rv;
   }
 
