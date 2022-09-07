@@ -6,3 +6,6 @@ ktlint_disabled_rules=import-ordering
 
 ij_kotlin_allow_trailing_comma_on_call_site=true
 ij_kotlin_allow_trailing_comma=true
+
+[*]
+insert_final_newline = true
