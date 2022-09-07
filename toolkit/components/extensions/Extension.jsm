@@ -2727,6 +2727,7 @@ class Extension extends ExtensionData {
       id: this.id,
       uuid: this.uuid,
       name: this.name,
+      type: this.type,
       manifestVersion: this.manifestVersion,
       extensionPageCSP: this.extensionPageCSP,
       instanceId: this.instanceId,
