@@ -78,7 +78,9 @@ fn render_js(
     object_ids: &ObjectIds,
 ) -> Result<()> {
     for ci in ci_list {
-        let path = out_dir.join(format!("{}.jsm", ci.namespace().to_title_case()));
+        // The plain namespace name is a bit too generic as a module name for m-c, so we
+        // prefix it with "Rust". Later we'll probably allow this to be customized.
+        let path = out_dir.join(format!("Rust{}.jsm", ci.namespace().to_title_case()));
         render(
             path,
             JSBindingsTemplate {

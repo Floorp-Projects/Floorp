@@ -2,7 +2,7 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 const Arithmetic = ChromeUtils.import(
-  "resource://gre/modules/components-utils/Arithmetic.jsm"
+  "resource://gre/modules/components-utils/RustArithmetic.jsm"
 );
 
 add_task(async function() {
