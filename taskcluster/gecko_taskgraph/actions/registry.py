@@ -183,10 +183,14 @@ def register_callback_action(
             revision = parameters[
                 "{}head_rev".format(graph_config["project-repo-param-prefix"])
             ]
+            base_revision = parameters[
+                "{}base_rev".format(graph_config["project-repo-param-prefix"])
+            ]
             push = {
                 "owner": "mozilla-taskcluster-maintenance@mozilla.com",
                 "pushlog_id": parameters["pushlog_id"],
                 "revision": revision,
+                "base_revision": base_revision,
             }
 
             match = re.match(

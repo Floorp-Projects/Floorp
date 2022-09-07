@@ -8,23 +8,43 @@ Support for optimizing tasks based on the set of files that have changed.
 
 
 import logging
+import os
 
 import requests
 from redo import retry
 
 from .util.memoize import memoize
 from .util.path import match as match_path
+from .util.vcs import get_repository
 
 logger = logging.getLogger(__name__)
 
 
 @memoize
-def get_changed_files(repository, revision):
+def get_changed_files(head_repository_url, head_rev, base_rev=None):
     """
-    Get the set of files changed in the push headed by the given revision.
+    Get the set of files changed between revisions.
     Responses are cached, so multiple calls with the same arguments are OK.
     """
-    url = "{}/json-automationrelevance/{}".format(repository.rstrip("/"), revision)
+    repo_path = os.getcwd()
+    repository = get_repository(repo_path)
+
+    if repository.tool == "hg":
+        # TODO Use VCS version once tested enough
+        return _get_changed_files_json_automationrelevance(
+            head_repository_url, head_rev
+        )
+
+    return repository.get_changed_files(rev=head_rev, base_rev=base_rev)
+
+
+def _get_changed_files_json_automationrelevance(head_repository_url, head_rev):
+    """
+    Get the set of files changed in the push headed by the given revision.
+    """
+    url = "{}/json-automationrelevance/{}".format(
+        head_repository_url.rstrip("/"), head_rev
+    )
     logger.debug("Querying version control for metadata: %s", url)
 
     def get_automationrelevance():
@@ -48,18 +68,20 @@ def get_changed_files(repository, revision):
 
 
 def check(params, file_patterns):
-    """Determine whether any of the files changed in the indicated push to
-    https://hg.mozilla.org match any of the given file patterns."""
-    repository = params.get("head_repository")
-    revision = params.get("head_rev")
-    if not repository or not revision:
+    """Determine whether any of the files changed between 2 revisions
+    match any of the given file patterns."""
+
+    head_repository_url = params.get("head_repository")
+    head_rev = params.get("head_rev")
+    if not head_repository_url or not head_rev:
         logger.warning(
             "Missing `head_repository` or `head_rev` parameters; "
             "assuming all files have changed"
         )
         return True
 
-    changed_files = get_changed_files(repository, revision)
+    base_rev = params.get("base_rev")
+    changed_files = get_changed_files(head_repository_url, head_rev, base_rev)
 
     for pattern in file_patterns:
         for path in changed_files:

@@ -51,9 +51,9 @@ class Kind:
         config = copy.deepcopy(self.config)
 
         kind_dependencies = config.get("kind-dependencies", [])
-        kind_dependencies_tasks = [
-            task for task in loaded_tasks if task.kind in kind_dependencies
-        ]
+        kind_dependencies_tasks = {
+            task.label: task for task in loaded_tasks if task.kind in kind_dependencies
+        }
 
         inputs = loader(self.name, self.path, config, parameters, loaded_tasks)
 

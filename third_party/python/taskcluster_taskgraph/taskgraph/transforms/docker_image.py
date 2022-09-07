@@ -67,7 +67,7 @@ transforms.add_validate(docker_image_schema)
 @transforms.add
 def fill_template(config, tasks):
     available_packages = set()
-    for task in config.kind_dependencies_tasks:
+    for task in config.kind_dependencies_tasks.values():
         if task.kind != "packages":
             continue
         name = task.label.replace("packages-", "")
