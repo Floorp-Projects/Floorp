@@ -275,29 +275,17 @@ class WasmStructObject : public TypedObject {
   uint8_t* outlineData_;
 
  public:
-  // As a refinement, ensure that the inline data begins at an offset that is
-  // 8-aligned relative to the start of the object.  Combined with the fact
-  // that js::AllocateObject produces values that are at least 8-aligned, this
-  // means that the inline data will have an address which is 8-aligned, even
-  // on a 32-bit target.  This seems like a Good Thing in that it guarantees
-  // that double-precision fields are not penalised by misaligned-access
-  // penalties.
-  uint32_t padding_[
-#if !defined(JS_64BIT) && defined(XP_WIN)
-      1
-#else
-      0
-#endif
-  ];
-
   // The inline (wasm-struct-level) data fields.  This must be a multiple of
   // 16 bytes long in order to ensure that no field gets split across the
-  // inline-outline boundary.  This field is guaranteed to begin at an
-  // 8-aligned offset, relative to the start of the object, due to the
-  // presence of `padding_` above.  This is in reality a variable length block
-  // with maximum size WasmStructObject_MaxInlineBytes bytes.  Do not add any
-  // (C++-level) fields after this point!
-  uint8_t inlineData_[0];
+  // inline-outline boundary.  As a refinement, we request this field to begin
+  // at an 8-aligned offset relative to the start of the object, so as to
+  // guarantee that `double` typed fields are not subject to misaligned-access
+  // penalties on any target, whilst wasting at maximum 4 bytes of space.
+  //
+  // `inlineData_` is in reality a variable length block with maximum size
+  // WasmStructObject_MaxInlineBytes bytes.  Do not add any (C++-level) fields
+  // after this point!
+  alignas(8) uint8_t inlineData_[0];
 
  protected:
   friend class TypedObject;
@@ -349,7 +337,7 @@ class WasmStructObject : public TypedObject {
   static void obj_finalize(JS::GCContext* gcx, JSObject* object);
 };
 
-// This is ensured by the hoop-jumping for WasmStructObject::padding_ above.
+// This is ensured by the use of `alignas` on `WasmStructObject::inlineData_`.
 static_assert((offsetof(WasmStructObject, inlineData_) % 8) == 0);
 
 // MaxInlineBytes must be a multiple of 16 for reasons described in the
