@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<head>
+</head>
+<body>
+  <video id=a src="1787281.mp4" autoplay="true" controls></video>
+  <script>
+    a.onended = function() {
+      document.documentElement.className = "";
+    }
+  </script>
+</body>
+</html>
