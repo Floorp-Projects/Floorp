@@ -97,6 +97,10 @@ TEST_F(TestFileSystemHandle, isDifferentEntry) {
   ASSERT_TRUE(rv.ErrorCodeIs(NS_OK));
   ASSERT_TRUE(promise);
   ASSERT_EQ(Promise::PromiseState::Rejected, promise->State());
+
+  nsString result;
+  ASSERT_NSEQ(NS_OK, GetAsString(promise, result));
+  ASSERT_STREQ(u"NS_ERROR_NOT_IMPLEMENTED"_ns, result);
 }
 
 TEST_F(TestFileSystemHandle, isSameEntry) {
@@ -108,6 +112,10 @@ TEST_F(TestFileSystemHandle, isSameEntry) {
   ASSERT_TRUE(rv.ErrorCodeIs(NS_OK));
   ASSERT_TRUE(promise);
   ASSERT_EQ(Promise::PromiseState::Rejected, promise->State());
+
+  nsString result;
+  ASSERT_NSEQ(NS_OK, GetAsString(promise, result));
+  ASSERT_STREQ(u"NS_ERROR_NOT_IMPLEMENTED"_ns, result);
 }
 
 }  // namespace mozilla::dom::fs::test
