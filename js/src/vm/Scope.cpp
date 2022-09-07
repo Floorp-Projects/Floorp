@@ -24,6 +24,7 @@
 
 #include "gc/GCContext-inl.h"
 #include "gc/ObjectKind-inl.h"
+#include "gc/TraceMethods-inl.h"
 #include "wasm/WasmInstance-inl.h"
 
 using namespace js;

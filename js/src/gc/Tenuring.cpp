@@ -29,6 +29,7 @@
 #include "gc/Marking-inl.h"
 #include "gc/ObjectKind-inl.h"
 #include "gc/StoreBuffer-inl.h"
+#include "gc/TraceMethods-inl.h"
 #include "vm/JSObject-inl.h"
 #include "vm/PlainObject-inl.h"
 #ifdef ENABLE_RECORD_TUPLE
