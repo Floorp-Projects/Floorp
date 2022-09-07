@@ -197,6 +197,7 @@ export class _DSCard extends React.PureComponent {
               ...(this.props.shim && this.props.shim.click
                 ? { shim: this.props.shim.click }
                 : {}),
+              type: this.props.flightId ? "spoc" : "organic",
             },
           ],
         })
@@ -218,6 +219,7 @@ export class _DSCard extends React.PureComponent {
           event: "SAVE_TO_POCKET",
           source: "CARDGRID_HOVER",
           action_position: this.props.pos,
+          value: { card_type: this.props.flightId ? "spoc" : "organic" },
         })
       );
 

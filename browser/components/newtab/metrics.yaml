@@ -248,6 +248,8 @@ topsites:
     description: >
       Recorded when a topsite tile is clicked.
       Presently only happens for sponsored tiles.
+      Only happens on click. Not on middle-click. Not on "Open in new Tab"-like
+      options in the context menu.
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1766887
     data_reviews:
@@ -332,5 +334,109 @@ pocket:
       - mmccorquodale@mozilla.com
       - najiang@mozilla.com
     expires: 113
+    send_in_pings:
+      - newtab
+
+  impression:
+    type: event
+    description: >
+      Recorded when a pocket tile is visible to the user.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1786612
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1786612
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - anicholson@mozilla.com
+      - chutten@mozilla.com
+      - mmccorquodale@mozilla.com
+      - najiang@mozilla.com
+    expires: 113
+    extra_keys:
+      newtab_visit_id: *newtab_visit_id
+      is_sponsored: &is_sponsored_pocket
+        description: Whether the pocket tile was sponsored (has an ad shim).
+        type: boolean
+      position: &pocket_position
+        description: The position (0-index) of the pocket tile.
+        type: quantity
+    send_in_pings:
+      - newtab
+
+  click:
+    type: event
+    description: >
+      Recorded when a pocket tile is clicked.
+      Only happens on click. Not on middle-click. Not on "Open in new Tab"-like
+      options in the context menu.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1786612
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1786612
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - anicholson@mozilla.com
+      - chutten@mozilla.com
+      - mmccorquodale@mozilla.com
+      - najiang@mozilla.com
+    expires: 113
+    extra_keys:
+      newtab_visit_id: *newtab_visit_id
+      is_sponsored: *is_sponsored_pocket
+      position: *pocket_position
+    send_in_pings:
+      - newtab
+
+  save:
+    type: event
+    description: >
+      Recorded when a user decides to save a pocket tile.
+      Does not mean it ends up successfully saved.
+      Just that the user clicked on "Save to Pocket" in the little pocket
+      tile menu.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1786612
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1786612
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - anicholson@mozilla.com
+      - chutten@mozilla.com
+      - mmccorquodale@mozilla.com
+      - najiang@mozilla.com
+    expires: 113
+    extra_keys:
+      newtab_visit_id: *newtab_visit_id
+      is_sponsored: *is_sponsored_pocket
+      position: *pocket_position
+    send_in_pings:
+      - newtab
+
+  topic_click:
+    type: event
+    description: >
+      Recorded when a pocket "Popular Topic" is clicked.
+      Only happens on click. Not on middle-click. Not on "Open in new Tab"-like
+      options in the context menu.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1786612
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1786612
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - anicholson@mozilla.com
+      - chutten@mozilla.com
+      - mmccorquodale@mozilla.com
+      - najiang@mozilla.com
+    expires: 113
+    extra_keys:
+      newtab_visit_id: *newtab_visit_id
+      topic:
+        description: The topic that was clicked on. Like "entertainment".
+        type: string
     send_in_pings:
       - newtab

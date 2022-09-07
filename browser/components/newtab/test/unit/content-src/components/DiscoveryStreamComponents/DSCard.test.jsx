@@ -166,7 +166,7 @@ describe("<DSCard>", () => {
         ac.ImpressionStats({
           click: 0,
           source: "FOO",
-          tiles: [{ id: "fooidx", pos: 1 }],
+          tiles: [{ id: "fooidx", pos: 1, type: "organic" }],
           window_inner_width: 1000,
           window_inner_height: 900,
         })
@@ -193,7 +193,7 @@ describe("<DSCard>", () => {
         ac.ImpressionStats({
           click: 0,
           source: "FOO",
-          tiles: [{ id: "fooidx", pos: 1 }],
+          tiles: [{ id: "fooidx", pos: 1, type: "spoc" }],
           window_inner_width: 1000,
           window_inner_height: 900,
         })
@@ -227,7 +227,9 @@ describe("<DSCard>", () => {
         ac.ImpressionStats({
           click: 0,
           source: "FOO",
-          tiles: [{ id: "fooidx", pos: 1, shim: "click shim" }],
+          tiles: [
+            { id: "fooidx", pos: 1, shim: "click shim", type: "organic" },
+          ],
           window_inner_width: 1000,
           window_inner_height: 900,
         })
@@ -340,6 +342,7 @@ describe("<DSCard>", () => {
           event: "SAVE_TO_POCKET",
           source: "CARDGRID_HOVER",
           action_position: 1,
+          value: { card_type: "organic" },
         })
       );
       assert.calledWith(
