@@ -782,7 +782,7 @@ load 1638906.html
 load 1640028.html
 load 1640051.html
 load 1640275.html
-pref(layout.accessiblecaret.enabled,true) asserts(16-26) load 1644819.html # bug 1688115
+pref(layout.accessiblecaret.enabled,true) asserts(11-13) load 1644819.html # bug 1688115
 load 1645549-1.html
 load 1648577.html
 load 1652618.html
