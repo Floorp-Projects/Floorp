@@ -269,6 +269,17 @@ bool EmailInputType::PunycodeEncodeEmailAddress(const nsAString& aEmail,
     if (NS_FAILED(idnSrv->ConvertUTF8toACE(domain, domainACE))) {
       return false;
     }
+
+    // Bug 1788115 removed the 63 character limit from the
+    // IDNService::ConvertUTF8toACE so we check for that limit here as required
+    // by the spec: https://html.spec.whatwg.org/#valid-e-mail-address
+    nsCCharSeparatedTokenizer tokenizer(domainACE, '.');
+    while (tokenizer.hasMoreTokens()) {
+      if (tokenizer.nextToken().Length() > 63) {
+        return false;
+      }
+    }
+
     value.Replace(indexOfDomain, domain.Length(), domainACE);
   }
 
