@@ -35,7 +35,9 @@ let openUrl = url => {
   let window = lazy.BrowserWindowTracker.getTopWindow();
 
   if (url.startsWith("about:")) {
-    window.switchToTabHavingURI(Services.io.newURI(url), true);
+    window.switchToTabHavingURI(Services.io.newURI(url), true, {
+      ignoreFragment: "whenComparing",
+    });
   } else {
     window.gBrowser.loadOneTab(url, {
       inBackground: false,

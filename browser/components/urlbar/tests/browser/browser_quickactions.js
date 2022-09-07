@@ -7,6 +7,8 @@
 
 "use strict";
 
+requestLongerTimeout(2);
+
 ChromeUtils.defineESModuleGetters(this, {
   UrlbarProviderQuickActions:
     "resource:///modules/UrlbarProviderQuickActions.sys.mjs",
@@ -359,23 +361,39 @@ add_task(async function test_about_pages_refocused() {
       uri: "about:addons",
       component: "button[name=plugin]",
     },
+    {
+      firstLoad: "about:preferences#home",
+      secondInput: "settings",
+      uri: "about:preferences#home",
+    },
   ];
 
-  for (const { firstInput, secondInput, uri, component } of testData) {
+  for (const {
+    firstInput,
+    firstLoad,
+    secondInput,
+    uri,
+    component,
+  } of testData) {
+    info("Setup initial state");
     let firstTab = await BrowserTestUtils.openNewForegroundTab(gBrowser);
-
-    info("Open about page by quick action");
-    await UrlbarTestUtils.promiseAutocompleteResultPopup({
-      window,
-      value: firstInput,
-    });
     let onLoad = BrowserTestUtils.browserLoaded(
       gBrowser.selectedBrowser,
       false,
       uri
     );
-    EventUtils.synthesizeKey("KEY_ArrowDown", {}, window);
-    EventUtils.synthesizeKey("KEY_Enter", {}, window);
+    if (firstLoad) {
+      info("Load initial URI");
+      BrowserTestUtils.loadURI(gBrowser.selectedBrowser, uri);
+    } else {
+      info("Open about page by quick action");
+      await UrlbarTestUtils.promiseAutocompleteResultPopup({
+        window,
+        value: firstInput,
+      });
+      EventUtils.synthesizeKey("KEY_ArrowDown", {}, window);
+      EventUtils.synthesizeKey("KEY_Enter", {}, window);
+    }
     await onLoad;
 
     if (component) {
