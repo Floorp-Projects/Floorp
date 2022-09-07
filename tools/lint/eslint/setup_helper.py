@@ -276,6 +276,14 @@ def eslint_module_needs_setup():
             has_issues = True
             continue
 
+        # For @microsoft/eslint-plugin-sdl we are loading a static version as
+        # long that PR is not merged into the master branch. Bug 1786290
+        if (name == "@microsoft/eslint-plugin-sdl") and (
+            version_range
+            == "github:mozfreddyb/eslint-plugin-sdl#17b22cd527682108af7a1a4edacf69cb7a9b4a06"
+        ):
+            continue
+
         if not version_in_range(data["version"], version_range):
             print("%s v%s should be v%s." % (name, data["version"], version_range))
             has_issues = True

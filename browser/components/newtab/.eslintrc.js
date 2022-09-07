@@ -75,6 +75,32 @@ module.exports = {
       files: "test/xpcshell/**",
       extends: ["plugin:mozilla/xpcshell-test"],
     },
+    {
+      // Exempt all files without a 'test' string in their path name since no-insecure-url
+      // is focussing on the test base
+      files: "*",
+      excludedFiles: ["**/test**", "**/test*/**", "Test*/**"],
+      rules: {
+        "@microsoft/sdl/no-insecure-url": "off",
+      },
+    },
+    {
+      // That are all files in browser/component/newtab/test that produces warnings in the existing test infrastructure.
+      // Since our focus is that new tests won't use http without thinking twice we exempt
+      // these test files for now.
+      // TODO gradually check and remove from here bug 1758951.
+      files: [
+        "browser/components/newtab/test/browser/abouthomecache/browser_process_crash.js",
+        "browser/components/newtab/test/browser/browser_aboutwelcome_observer.js",
+        "browser/components/newtab/test/browser/browser_asrouter_cfr.js",
+        "browser/components/newtab/test/browser/browser_asrouter_group_frequency.js",
+        "browser/components/newtab/test/browser/browser_asrouter_group_userprefs.js",
+        "browser/components/newtab/test/browser/browser_trigger_listeners.js",
+      ],
+      rules: {
+        "@microsoft/sdl/no-insecure-url": "off",
+      },
+    },
   ],
   rules: {
     "fetch-options/no-fetch-credentials": 2,

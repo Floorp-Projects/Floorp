@@ -30,9 +30,27 @@ module.exports = {
     },
   ],
 
-  plugins: ["mozilla"],
+  plugins: ["mozilla", "@microsoft/sdl"],
 
   rules: {
+    // No using of insecure url, so no http urls
+    "@microsoft/sdl/no-insecure-url": [
+      "error",
+      {
+        exceptions: [
+          "^http:\\/\\/mochi\\.test?.*",
+          "^http:\\/\\/localhost?.*",
+          "^http:\\/\\/127\\.0\\.0\\.1?.*",
+          // Exempt xmlns urls
+          "^http:\\/\\/www\\.w3\\.org?.*",
+          "^http:\\/\\/www\\.mozilla\\.org\\/keymaster\\/gatekeeper?.*",
+          // Exempt urls that start with ftp or ws.
+          "^ws:?.*",
+          "^ftp:?.*",
+        ],
+        varExceptions: ["insecure?.*"],
+      },
+    ],
     "mozilla/import-content-task-globals": "error",
     "mozilla/import-headjs-globals": "error",
     "mozilla/mark-test-function-used": "error",
