@@ -65,16 +65,14 @@ using mozilla::PodCopy;
 //
 //  +-------------------+                             ......................
 //  |                   |                             :                    :
-//  |                   v                             v                    :
-//  |   TraceRoot   TraceEdge   TraceRange        GCMarker::           +---+---+
-//  |       |           |           |         processMarkStackTop      |       |
-//  |       +-----------------------+                 |                | Mark  |
-//  |                   |                             |                | Stack |
-//  |                   v                             |                |       |
-//  |           TraceEdgeInternal                     |                +---+---+
-//  |                   |                             |                    ^
-//  |                   v                             |                    :
-//  |              DoCallback                         +<-------------+     :
+//  |                   v                             v                +---+---+
+//  |   TraceRoot   TraceEdge   TraceRange        GCMarker::           |       |
+//  |       |           |           |         processMarkStackTop      | Mark  |
+//  |       +-----------------------+                 |                | Stack |
+//  |                   |                             |                |       |
+//  |                   v                             |                +---+---+
+//  |           TraceEdgeInternal                     |                    ^
+//  |                   |                             +<-------------+     :
 //  |                   |                             |              |     :
 //  |                   v                             v              |     :
 //  |            CallbackTracer::             markAndTraverseEdge    |     :
@@ -428,9 +426,8 @@ DEFINE_UNSAFE_TRACE_ROOT_FUNCTION(SavedFrame*)
 namespace js {
 namespace gc {
 
-#define INSTANTIATE_INTERNAL_TRACE_FUNCTIONS(type)                      \
-  template bool TraceEdgeInternal<type>(JSTracer*, type*, const char*); \
-  template void TraceRangeInternal<type>(JSTracer*, size_t len, type*,  \
+#define INSTANTIATE_INTERNAL_TRACE_FUNCTIONS(type)                     \
+  template void TraceRangeInternal<type>(JSTracer*, size_t len, type*, \
                                          const char*);
 
 #define INSTANTIATE_INTERNAL_TRACE_FUNCTIONS_FROM_TRACEKIND(_1, type, _2, _3) \
@@ -643,18 +640,11 @@ void js::TraceGCCellPtrRoot(JSTracer* trc, JS::GCCellPtr* thingp,
 }
 
 template <typename T>
-inline bool DoCallback(JSTracer* trc, T** thingp, const char* name) {
-  CheckTracedThing(trc, *thingp);
-  DispatchToOnEdge(trc, thingp, name);
-  return *thingp;
-}
-
-template <typename T>
-inline bool DoCallback(JSTracer* trc, T* thingp, const char* name) {
+inline bool TraceTaggedPtrEdge(JSTracer* trc, T* thingp, const char* name) {
   // Return true by default. For some types the lambda below won't be called.
   bool ret = true;
   auto thing = MapGCThingTyped(*thingp, [&](auto thing) {
-    if (!DoCallback(trc, &thing, name)) {
+    if (!TraceEdgeInternal(trc, &thing, name)) {
       ret = false;
       return TaggedPtr<T>::empty();
     }
@@ -672,20 +662,15 @@ inline bool DoCallback(JSTracer* trc, T* thingp, const char* name) {
   return ret;
 }
 
-// This method is responsible for dynamic dispatch to the real tracer
-// implementation. Consider replacing this choke point with virtual dispatch:
-// a sufficiently smart C++ compiler may be able to devirtualize some paths.
-template <typename T>
-bool js::gc::TraceEdgeInternal(JSTracer* trc, T* thingp, const char* name) {
-#define IS_SAME_TYPE_OR(name, type, _, _1) std::is_same_v<type*, T> ||
-  static_assert(JS_FOR_EACH_TRACEKIND(IS_SAME_TYPE_OR)
-                        std::is_same_v<T, JS::Value> ||
-                    std::is_same_v<T, jsid> || std::is_same_v<T, TaggedProto>,
-                "Only the base cell layout types are allowed into "
-                "marking/tracing internals");
-#undef IS_SAME_TYPE_OR
-
-  return DoCallback(trc, thingp, name);
+bool js::gc::TraceEdgeInternal(JSTracer* trc, Value* thingp, const char* name) {
+  return TraceTaggedPtrEdge(trc, thingp, name);
+}
+bool js::gc::TraceEdgeInternal(JSTracer* trc, jsid* thingp, const char* name) {
+  return TraceTaggedPtrEdge(trc, thingp, name);
+}
+bool js::gc::TraceEdgeInternal(JSTracer* trc, TaggedProto* thingp,
+                               const char* name) {
+  return TraceTaggedPtrEdge(trc, thingp, name);
 }
 
 template <typename T>
