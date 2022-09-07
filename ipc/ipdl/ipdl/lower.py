@@ -4859,7 +4859,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             $*{prologue}
 
             UniquePtr<MessageChannel::UntypedCallbackHolder> untypedCallback =
-                GetIPCChannel()->PopCallback(${msgvar});
+                GetIPCChannel()->PopCallback(${msgvar}, Id());
 
             typedef MessageChannel::CallbackHolder<${resolvetype}> CallbackHolder;
             auto* callback = static_cast<CallbackHolder*>(untypedCallback.get());
@@ -5413,6 +5413,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                         send,
                         args=[
                             ExprMove(msgexpr),
+                            ExprVar(md.pqReplyId()),
                             ExprMove(resolvefn),
                             ExprMove(rejectfn),
                         ],
