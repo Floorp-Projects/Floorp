@@ -944,8 +944,20 @@ export class MozIntl {
         let regionID;
         // Allow changing names over time for specific regions
         switch (lcRegionCode) {
+          case "bq":
+            regionID = "region-name-bq-2018";
+            break;
+          case "cv":
+            regionID = "region-name-cv-2020";
+            break;
+          case "cz":
+            regionID = "region-name-cz-2019";
+            break;
           case "mk":
             regionID = "region-name-mk-2019";
+            break;
+          case "sz":
+            regionID = "region-name-sz-2019";
             break;
           default:
             regionID = `region-name-${lcRegionCode}`;
