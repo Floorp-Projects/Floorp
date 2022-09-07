@@ -124,22 +124,7 @@ class WebExtensionPolicy final : public nsISupports,
     return false;
   }
 
-  bool SourceMayAccessPath(const URLInfo& aURI, const nsAString& aPath) const {
-    if (aURI.Scheme() == nsGkAtoms::moz_extension &&
-        mHostname.Equals(aURI.Host())) {
-      // An extension can always access it's own paths.
-      return true;
-    }
-    if (mManifestVersion < 3) {
-      return IsWebAccessiblePath(aPath);
-    }
-    for (const auto& resource : mWebAccessibleResources) {
-      if (resource->SourceMayAccessPath(aURI, aPath)) {
-        return true;
-      }
-    }
-    return false;
-  }
+  bool SourceMayAccessPath(const URLInfo& aURI, const nsAString& aPath) const;
 
   bool HasPermission(const nsAtom* aPermission) const {
     return mPermissions->Contains(aPermission);
@@ -158,6 +143,11 @@ class WebExtensionPolicy final : public nsISupports,
 
   const nsString& Name() const { return mName; }
   void GetName(nsAString& aName) const { aName = mName; }
+
+  nsAtom* Type() const { return mType; }
+  void GetType(nsAString& aType) const {
+    aType = nsDependentAtomString(mType);
+  };
 
   uint32_t ManifestVersion() const { return mManifestVersion; }
 
@@ -252,6 +242,7 @@ class WebExtensionPolicy final : public nsISupports,
   nsCOMPtr<nsIURI> mBaseURI;
 
   nsString mName;
+  RefPtr<nsAtom> mType;
   uint32_t mManifestVersion = 2;
   nsString mExtensionPageCSP;
   nsString mBaseCSP;

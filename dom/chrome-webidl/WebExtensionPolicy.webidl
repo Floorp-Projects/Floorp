@@ -44,6 +44,12 @@ interface WebExtensionPolicy {
   readonly attribute DOMString name;
 
   /**
+   * The add-on's internal type as determined by parsing the manifest.json file.
+   */
+  [Constant]
+  readonly attribute DOMString type;
+
+  /**
    * Whether the extension has access to privileged features
    */
   [Constant]
@@ -286,6 +292,8 @@ dictionary WebExtensionInit {
   required DOMString baseURL;
 
   DOMString name = "";
+
+  DOMString type = "";
 
   boolean isPrivileged = false;
 
