@@ -157,7 +157,7 @@ li.error > .stylesheet-info > .stylesheet-more  > .stylesheet-error-message {
   cursor: pointer;
   padding: 8px 0;
   margin: 0 8px;
-  background-image: url(images/item-toggle.svg);
+  background-image: url(images/eye-opened.svg);
   background-repeat: no-repeat;
   background-clip: content-box;
   background-position: center;
@@ -166,12 +166,13 @@ li.error > .stylesheet-info > .stylesheet-more  > .stylesheet-error-message {
   height: 40px;
 
   /* The icon color should always match the text color. */
-  -moz-context-properties: fill;
+  -moz-context-properties: fill, stroke;
   fill: currentColor;
+  stroke: currentColor;
 }
 
 .disabled > .stylesheet-enabled {
-  opacity: 0.3;
+  background-image: url(images/eye-closed.svg);
 }
 
 .stylesheet-linked-file:not(:empty){
