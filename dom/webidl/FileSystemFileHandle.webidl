@@ -7,8 +7,7 @@ dictionary FileSystemCreateWritableOptions {
   boolean keepExistingData = false;
 };
 
-// TODO: Add Serializable
-[Exposed=(Window,Worker), SecureContext, Pref="dom.fs.enabled"]
+[Exposed=(Window,Worker), SecureContext, Serializable, Pref="dom.fs.enabled"]
 interface FileSystemFileHandle : FileSystemHandle {
   [NewObject]
   Promise<File> getFile();

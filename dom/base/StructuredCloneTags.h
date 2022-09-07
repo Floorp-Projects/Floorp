@@ -105,8 +105,20 @@ enum StructuredCloneTags : uint32_t {
   // IDB.
   SCTAG_DOM_STRUCTUREDCLONETESTER,
 
+  // IMPORTANT: Don't change the order of these enum values. You could break
+  // IDB.
+  SCTAG_DOM_FILESYSTEMHANDLE,
+
+  // IMPORTANT: Don't change the order of these enum values. You could break
+  // IDB.
+  SCTAG_DOM_FILESYSTEMFILEHANDLE,
+
+  // IMPORTANT: Don't change the order of these enum values. You could break
+  // IDB.
+  SCTAG_DOM_FILESYSTEMDIRECTORYHANDLE,
+
   // If you are planning to add new tags which could be used by IndexedDB,
-  // consider to use empty slots. See EMPTY_SLOT_x
+  // consider to use an empty slot. See EMPTY_SLOT_x
 
   // Please update the static assertions in StructuredCloneHolder.cpp and in
   // IDBObjectStore.cpp, method CommonStructuredCloneReadCallback.
