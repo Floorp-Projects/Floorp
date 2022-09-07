@@ -149,9 +149,8 @@ class WorkerScriptLoader final : public nsINamed {
                      nsIEventTarget* aSyncLoopTarget,
                      WorkerScriptType aWorkerScriptType, ErrorResult& aRv);
 
-  void CancelMainThreadWithBindingAborted() {
-    CancelMainThread(NS_BINDING_ABORTED);
-  }
+  void CancelMainThreadWithBindingAborted(
+      nsTArray<WorkerLoadContext*>&& aContextList);
 
   void CreateScriptRequests(const nsTArray<nsString>& aScriptURLs,
                             const mozilla::Encoding* aDocumentEncoding,
@@ -192,7 +191,8 @@ class WorkerScriptLoader final : public nsINamed {
 
   bool IsCancelled() { return mCancelMainThread.isSome(); }
 
-  void CancelMainThread(nsresult aCancelResult);
+  void CancelMainThread(nsresult aCancelResult,
+                        nsTArray<WorkerLoadContext*>* aContextList);
 
   nsresult LoadScripts(nsTArray<WorkerLoadContext*>&& aContextList);
 
