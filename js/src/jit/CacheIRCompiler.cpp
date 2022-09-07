@@ -1541,6 +1541,21 @@ bool CacheIRCompiler::emitGuardIsUndefined(ValOperandId inputId) {
   return true;
 }
 
+bool CacheIRCompiler::emitGuardIsNotUninitializedLexical(ValOperandId valId) {
+  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
+
+  ValueOperand val = allocator.useValueRegister(masm, valId);
+
+  FailurePath* failure;
+  if (!addFailurePath(&failure)) {
+    return false;
+  }
+
+  masm.branchTestMagicValue(Assembler::Equal, val, JS_UNINITIALIZED_LEXICAL,
+                            failure->label());
+  return true;
+}
+
 bool CacheIRCompiler::emitGuardBooleanToInt32(ValOperandId inputId,
                                               Int32OperandId resultId) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);

@@ -1120,51 +1120,6 @@ bool IonCacheIRCompiler::emitFrameIsConstructingResult() {
   MOZ_CRASH("Baseline-specific op");
 }
 
-bool IonCacheIRCompiler::emitLoadEnvironmentFixedSlotResult(
-    ObjOperandId objId, uint32_t offsetOffset) {
-  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
-  AutoOutputRegister output(*this);
-  Register obj = allocator.useRegister(masm, objId);
-  int32_t offset = int32StubField(offsetOffset);
-
-  FailurePath* failure;
-  if (!addFailurePath(&failure)) {
-    return false;
-  }
-
-  // Check for uninitialized lexicals.
-  Address slot(obj, offset);
-  masm.branchTestMagic(Assembler::Equal, slot, failure->label());
-
-  // Load the value.
-  masm.loadTypedOrValue(slot, output);
-  return true;
-}
-
-bool IonCacheIRCompiler::emitLoadEnvironmentDynamicSlotResult(
-    ObjOperandId objId, uint32_t offsetOffset) {
-  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
-  AutoOutputRegister output(*this);
-  Register obj = allocator.useRegister(masm, objId);
-  int32_t offset = int32StubField(offsetOffset);
-  AutoScratchRegisterMaybeOutput scratch(allocator, masm, output);
-
-  FailurePath* failure;
-  if (!addFailurePath(&failure)) {
-    return false;
-  }
-
-  masm.loadPtr(Address(obj, NativeObject::offsetOfSlots()), scratch);
-
-  // Check for uninitialized lexicals.
-  Address slot(scratch, offset);
-  masm.branchTestMagic(Assembler::Equal, slot, failure->label());
-
-  // Load the value.
-  masm.loadTypedOrValue(slot, output);
-  return true;
-}
-
 bool IonCacheIRCompiler::emitLoadConstantStringResult(uint32_t strOffset) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
   MOZ_CRASH("not used in ion");

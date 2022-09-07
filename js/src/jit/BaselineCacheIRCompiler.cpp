@@ -646,54 +646,6 @@ bool BaselineCacheIRCompiler::emitFrameIsConstructingResult() {
   return true;
 }
 
-bool BaselineCacheIRCompiler::emitLoadEnvironmentFixedSlotResult(
-    ObjOperandId objId, uint32_t offsetOffset) {
-  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
-  AutoOutputRegister output(*this);
-  Register obj = allocator.useRegister(masm, objId);
-  AutoScratchRegisterMaybeOutput scratch(allocator, masm, output);
-
-  FailurePath* failure;
-  if (!addFailurePath(&failure)) {
-    return false;
-  }
-
-  masm.load32(stubAddress(offsetOffset), scratch);
-  BaseIndex slot(obj, scratch, TimesOne);
-
-  // Check for uninitialized lexicals.
-  masm.branchTestMagic(Assembler::Equal, slot, failure->label());
-
-  // Load the value.
-  masm.loadValue(slot, output.valueReg());
-  return true;
-}
-
-bool BaselineCacheIRCompiler::emitLoadEnvironmentDynamicSlotResult(
-    ObjOperandId objId, uint32_t offsetOffset) {
-  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
-  AutoOutputRegister output(*this);
-  Register obj = allocator.useRegister(masm, objId);
-  AutoScratchRegister scratch(allocator, masm);
-  AutoScratchRegisterMaybeOutput scratch2(allocator, masm, output);
-
-  FailurePath* failure;
-  if (!addFailurePath(&failure)) {
-    return false;
-  }
-
-  masm.load32(stubAddress(offsetOffset), scratch);
-  masm.loadPtr(Address(obj, NativeObject::offsetOfSlots()), scratch2);
-
-  // Check for uninitialized lexicals.
-  BaseIndex slot(scratch2, scratch, TimesOne);
-  masm.branchTestMagic(Assembler::Equal, slot, failure->label());
-
-  // Load the value.
-  masm.loadValue(slot, output.valueReg());
-  return true;
-}
-
 bool BaselineCacheIRCompiler::emitLoadConstantStringResult(uint32_t strOffset) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
   AutoOutputRegister output(*this);

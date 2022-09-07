@@ -3033,6 +3033,7 @@ AttachDecision GetNameIRGenerator::tryAttachEnvironmentName(ObjOperandId objId,
     return AttachDecision::NoAction;
   }
   if (holder->getSlot(prop->slot()).isMagic()) {
+    MOZ_ASSERT(holder->is<EnvironmentObject>());
     return AttachDecision::NoAction;
   }
 
@@ -3051,14 +3052,18 @@ AttachDecision GetNameIRGenerator::tryAttachEnvironmentName(ObjOperandId objId,
     env = env->enclosingEnvironment();
   }
 
+  ValOperandId resId;
   if (holder->isFixedSlot(prop->slot())) {
-    writer.loadEnvironmentFixedSlotResult(
+    resId = writer.loadFixedSlot(
         lastObjId, NativeObject::getFixedSlotOffset(prop->slot()));
   } else {
-    size_t dynamicSlotOffset =
-        holder->dynamicSlotIndex(prop->slot()) * sizeof(Value);
-    writer.loadEnvironmentDynamicSlotResult(lastObjId, dynamicSlotOffset);
+    size_t dynamicSlotIndex = holder->dynamicSlotIndex(prop->slot());
+    resId = writer.loadDynamicSlot(lastObjId, dynamicSlotIndex);
   }
+  if (holder->is<EnvironmentObject>()) {
+    writer.guardIsNotUninitializedLexical(resId);
+  }
+  writer.loadOperandResult(resId);
   writer.returnFromIC();
 
   trackAttached("EnvironmentName");
