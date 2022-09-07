@@ -4026,13 +4026,13 @@ class HandlingUserInputHelper final : public nsIJSRAIIHelper {
   ~HandlingUserInputHelper();
 
   bool mHandlingUserInput;
-  bool mDestructCalled;
+  bool mDestructCalled = false;
 };
 
 NS_IMPL_ISUPPORTS(HandlingUserInputHelper, nsIJSRAIIHelper)
 
 HandlingUserInputHelper::HandlingUserInputHelper(bool aHandlingUserInput)
-    : mHandlingUserInput(aHandlingUserInput), mDestructCalled(false) {
+    : mHandlingUserInput(aHandlingUserInput) {
   if (aHandlingUserInput) {
     UserActivation::StartHandlingUserInput(eVoidEvent);
   }
@@ -4065,8 +4065,12 @@ HandlingUserInputHelper::Destruct() {
 NS_IMETHODIMP
 nsDOMWindowUtils::SetHandlingUserInput(bool aHandlingUserInput,
                                        nsIJSRAIIHelper** aHelper) {
-  RefPtr<HandlingUserInputHelper> helper(
-      new HandlingUserInputHelper(aHandlingUserInput));
+  if (aHandlingUserInput) {
+    if (Document* doc = GetDocument()) {
+      doc->NotifyUserGestureActivation();
+    }
+  }
+  auto helper = MakeRefPtr<HandlingUserInputHelper>(aHandlingUserInput);
   helper.forget(aHelper);
   return NS_OK;
 }

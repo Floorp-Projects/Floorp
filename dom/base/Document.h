@@ -3682,10 +3682,11 @@ class Document : public nsINode,
   DOMHighResTimeStamp LastUserGestureTimeStamp();
 
   // Return true if there is transient user gesture activation and it hasn't yet
-  // timed out.
+  // timed out or hasn't been consumed.
   bool HasValidTransientUserGestureActivation() const;
 
-  // Return true.
+  // Return true if HasValidTransientUserGestureActivation() would return true,
+  // and consume the activation.
   bool ConsumeTransientUserGestureActivation();
 
   BrowsingContext* GetBrowsingContext() const;
