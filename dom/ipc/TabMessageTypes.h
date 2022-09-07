@@ -10,12 +10,6 @@
 #include "mozilla/RefPtr.h"
 
 namespace mozilla::dom {
-class Event;
-
-struct RemoteDOMEvent {
-  // Make sure to set the owner after deserializing.
-  RefPtr<Event> mEvent;
-};
 
 enum class EmbedderElementEventType {
   NoEvent,

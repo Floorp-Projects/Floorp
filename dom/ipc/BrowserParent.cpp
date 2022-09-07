@@ -868,21 +868,6 @@ mozilla::ipc::IPCResult BrowserParent::RecvDropLinks(
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult BrowserParent::RecvEvent(const RemoteDOMEvent& aEvent) {
-  NS_ENSURE_TRUE(xpc::IsInAutomation(), IPC_FAIL(this, "Unexpected event"));
-
-  RefPtr<Event> event = aEvent.mEvent;
-  NS_ENSURE_TRUE(event, IPC_OK());
-
-  RefPtr<EventTarget> target = mFrameElement;
-  NS_ENSURE_TRUE(target, IPC_OK());
-
-  event->SetOwner(target);
-
-  target->DispatchEvent(*event);
-  return IPC_OK();
-}
-
 bool BrowserParent::SendLoadRemoteScript(const nsAString& aURL,
                                          const bool& aRunInGlobalScope) {
   if (mCreatingWindow) {
