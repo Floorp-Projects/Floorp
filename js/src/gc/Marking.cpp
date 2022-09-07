@@ -643,14 +643,14 @@ void js::TraceGCCellPtrRoot(JSTracer* trc, JS::GCCellPtr* thingp,
 }
 
 template <typename T>
-inline bool DoCallback(GenericTracer* trc, T** thingp, const char* name) {
+inline bool DoCallback(JSTracer* trc, T** thingp, const char* name) {
   CheckTracedThing(trc, *thingp);
   DispatchToOnEdge(trc, thingp, name);
   return *thingp;
 }
 
 template <typename T>
-inline bool DoCallback(GenericTracer* trc, T* thingp, const char* name) {
+inline bool DoCallback(JSTracer* trc, T* thingp, const char* name) {
   // Return true by default. For some types the lambda below won't be called.
   bool ret = true;
   auto thing = MapGCThingTyped(*thingp, [&](auto thing) {
@@ -685,7 +685,7 @@ bool js::gc::TraceEdgeInternal(JSTracer* trc, T* thingp, const char* name) {
                 "marking/tracing internals");
 #undef IS_SAME_TYPE_OR
 
-  return DoCallback(trc->asGenericTracer(), thingp, name);
+  return DoCallback(trc, thingp, name);
 }
 
 template <typename T>
@@ -2724,7 +2724,7 @@ static bool CellMayHaveChildren(JS::GCCellPtr cell) {
 /* static */
 BarrierTracer* BarrierTracer::fromTracer(JSTracer* trc) {
   MOZ_ASSERT(trc->kind() == JS::TracerKind::Barrier);
-  return static_cast<BarrierTracer*>(trc->asGenericTracer());
+  return static_cast<BarrierTracer*>(trc);
 }
 
 BarrierTracer::BarrierTracer(JSRuntime* rt)

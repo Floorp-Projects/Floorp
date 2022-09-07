@@ -30,11 +30,6 @@ JS_PUBLIC_API size_t GCTraceKindSize(JS::TraceKind kind);
 enum class TracerKind {
   // Generic tracers: Internal tracers that have a different virtual method
   // called for each edge kind.
-  //
-  // Order is important. All generic kinds must follow this one.
-  Generic,
-
-  // Specific kinds of generic tracer.
   Marking,
   Tenuring,
   Moving,
@@ -153,22 +148,17 @@ class TracingContext {
 
 }  // namespace JS
 
-namespace js {
-class GenericTracer;
-}  // namespace js
-
 class JS_PUBLIC_API JSTracer {
  public:
   // Return the runtime set on the tracer.
   JSRuntime* runtime() const { return runtime_; }
 
   JS::TracerKind kind() const { return kind_; }
+  bool isGenericTracer() const { return kind_ < JS::TracerKind::Callback; }
+  bool isCallbackTracer() const { return kind_ >= JS::TracerKind::Callback; }
   bool isMarkingTracer() const { return kind_ == JS::TracerKind::Marking; }
   bool isTenuringTracer() const { return kind_ == JS::TracerKind::Tenuring; }
-  bool isGenericTracer() const { return kind_ >= JS::TracerKind::Generic; }
-  bool isCallbackTracer() const { return kind_ >= JS::TracerKind::Callback; }
 
-  inline js::GenericTracer* asGenericTracer();
   inline JS::CallbackTracer* asCallbackTracer();
 
   JS::WeakMapTraceAction weakMapAction() const {
@@ -179,28 +169,6 @@ class JS_PUBLIC_API JSTracer {
   }
 
   JS::TracingContext& context() { return context_; }
-
- protected:
-  JSTracer(JSRuntime* rt, JS::TracerKind kind,
-           JS::TraceOptions options = JS::TraceOptions())
-      : runtime_(rt), kind_(kind), options_(options) {}
-
- private:
-  JSRuntime* const runtime_;
-  const JS::TracerKind kind_;
-  const JS::TraceOptions options_;
-  JS::TracingContext context_;
-};
-
-namespace js {
-
-class GenericTracer : public JSTracer {
- public:
-  GenericTracer(JSRuntime* rt, JS::TracerKind kind = JS::TracerKind::Generic,
-                JS::TraceOptions options = JS::TraceOptions())
-      : JSTracer(rt, kind, options) {
-    MOZ_ASSERT(isGenericTracer());
-  }
 
   // These methods are called when the tracer encounters an edge. Clients should
   // override them to receive notifications when an edge of each type is
@@ -217,16 +185,29 @@ class GenericTracer : public JSTracer {
   virtual void on##name##Edge(type** thingp, const char* name) = 0;
   JS_FOR_EACH_TRACEKIND(DEFINE_ON_EDGE_METHOD)
 #undef DEFINE_ON_EDGE_METHOD
+
+ protected:
+  JSTracer(JSRuntime* rt, JS::TracerKind kind,
+           JS::TraceOptions options = JS::TraceOptions())
+      : runtime_(rt), kind_(kind), options_(options) {}
+
+ private:
+  JSRuntime* const runtime_;
+  const JS::TracerKind kind_;
+  const JS::TraceOptions options_;
+  JS::TracingContext context_;
 };
 
-// A helper class that implements a GenericTracer by calling template method
-// on a derived type for each edge kind.
+namespace js {
+
+// A CRTP helper class that implements a JSTracer by calling a template method
+// on the derived tracer type for each edge kind.
 template <typename T>
-class GenericTracerImpl : public GenericTracer {
+class GenericTracerImpl : public JSTracer {
  public:
   GenericTracerImpl(JSRuntime* rt, JS::TracerKind kind,
                     JS::TraceOptions options)
-      : GenericTracer(rt, kind, options) {}
+      : JSTracer(rt, kind, options) {}
 
  private:
   T* derived() { return static_cast<T*>(this); }
@@ -317,11 +298,6 @@ class MOZ_RAII AutoClearTracingContext {
 };
 
 }  // namespace JS
-
-js::GenericTracer* JSTracer::asGenericTracer() {
-  MOZ_ASSERT(isGenericTracer());
-  return static_cast<js::GenericTracer*>(this);
-}
 
 JS::CallbackTracer* JSTracer::asCallbackTracer() {
   MOZ_ASSERT(isCallbackTracer());
