@@ -45,7 +45,7 @@ def _replace_in_file(file, pattern, replacement, regex=False):
 
     if newcontents == contents:
         raise Exception(
-            "Could not find %s in %s to replace with %s" % (pattern, file, replacement)
+            "Could not find '%s' in %s to %sreplace with '%s'" % (pattern, file, "regex-" if regex else "", replacement)
         )
 
     with open(file, "w") as f:
@@ -512,7 +512,7 @@ class VendorManifest(MozbuildObject):
                     file,
                     update["pattern"],
                     replacement,
-                    regex=update["action"] == "replace-in-file",
+                    regex=update["action"] == "replace-in-file-regex",
                 )
             elif update["action"] == "delete-path":
                 path = self.get_full_path(update["path"])
