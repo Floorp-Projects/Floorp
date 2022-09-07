@@ -1281,6 +1281,12 @@ class TelemetryFeed {
     }
     setNewtabPrefMetrics();
     Glean.pocket.isSignedIn.set(lazy.pktApi.isUserLoggedIn());
+    if (
+      this.telemetryEnabled &&
+      (lazy.NimbusFeatures.glean.getVariable("newtabPingEnabled") ?? true)
+    ) {
+      GleanPings.newtab.submit("component_init");
+    }
   }
 
   uninit() {
