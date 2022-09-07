@@ -169,10 +169,6 @@ add_task(async function testNotificationDot() {
  * Tests the notification badge with multiple windows
  */
 add_task(async function testNotificationDotOnMultipleWindows() {
-  // FIXME: This sub-test is disabled, should be re-enabled in bug 1786565.
-  /* eslint-disable no-unreachable */
-  return;
-
   const sandbox = setupRecentDeviceListMocks();
   const syncedTabsMock = sandbox.stub(SyncedTabs, "getRecentTabs");
 
