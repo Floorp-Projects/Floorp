@@ -229,6 +229,9 @@ DrawTargetWebgl::~DrawTargetWebgl() {
         child->DeallocShmem(mShmem);
       }
     }
+    if (mClipMask) {
+      mSharedContext->mWebgl->DeleteTexture(mClipMask);
+    }
     if (mFramebuffer) {
       mSharedContext->mWebgl->DeleteFramebuffer(mFramebuffer);
     }
