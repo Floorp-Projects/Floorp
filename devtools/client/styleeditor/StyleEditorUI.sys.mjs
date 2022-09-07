@@ -865,6 +865,11 @@ export class StyleEditorUI extends EventEmitter {
     summary.style.MozBoxOrdinalGroup = ordinal;
     summary.setAttribute("data-ordinal", ordinal);
 
+    const isSystem = !!editor.styleSheet.system;
+    if (isSystem) {
+      summary.classList.add("stylesheet-system");
+    }
+
     this.#nav.appendChild(summary);
     this.#side.appendChild(details);
 
@@ -888,16 +893,25 @@ export class StyleEditorUI extends EventEmitter {
       eventListenersConfig
     );
 
-    summary.querySelector(".stylesheet-enabled").addEventListener(
-      "click",
-      event => {
-        event.stopPropagation();
-        event.target.blur();
+    const enabledToggle = summary.querySelector(".stylesheet-enabled");
+    if (isSystem) {
+      enabledToggle.disabled = true;
+      this.#window.document.l10n.setAttributes(
+        enabledToggle,
+        "styleeditor-visibility-toggle-system"
+      );
+    } else {
+      enabledToggle.addEventListener(
+        "click",
+        event => {
+          event.stopPropagation();
+          event.target.blur();
 
-        createdEditor.toggleDisabled();
-      },
-      eventListenersConfig
-    );
+          createdEditor.toggleDisabled();
+        },
+        eventListenersConfig
+      );
+    }
 
     summary.querySelector(".stylesheet-name").addEventListener(
       "keypress",
