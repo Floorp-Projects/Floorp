@@ -646,14 +646,8 @@ void js::TraceGCCellPtrRoot(JSTracer* trc, JS::GCCellPtr* thingp,
 template <typename T>
 inline bool DoCallback(GenericTracer* trc, T** thingp, const char* name) {
   CheckTracedThing(trc, *thingp);
-
-  T* thing = *thingp;
-  T* post = DispatchToOnEdge(trc, thing, name);
-  if (post != thing) {
-    *thingp = post;
-  }
-
-  return post;
+  DispatchToOnEdge(trc, thingp, name);
+  return *thingp;
 }
 
 template <typename T>
@@ -661,15 +655,12 @@ inline bool DoCallback(GenericTracer* trc, T* thingp, const char* name) {
   // Return true by default. For some types the lambda below won't be called.
   bool ret = true;
   auto thing = MapGCThingTyped(*thingp, [&](auto thing) {
-    CheckTracedThing(trc, thing);
-
-    auto* post = DispatchToOnEdge(trc, thing, name);
-    if (!post) {
+    if (!DoCallback(trc, &thing, name)) {
       ret = false;
       return TaggedPtr<T>::empty();
     }
 
-    return TaggedPtr<T>::wrap(post);
+    return TaggedPtr<T>::wrap(thing);
   });
 
   // Only update *thingp if the value changed, to avoid TSan false positives for
@@ -2437,11 +2428,12 @@ SweepingTracer::SweepingTracer(JSRuntime* rt)
                         JS::WeakMapTraceAction::TraceKeysAndValues) {}
 
 template <typename T>
-inline T* SweepingTracer::onEdge(T* thing, const char* name) {
+inline void SweepingTracer::onEdge(T** thingp, const char* name) {
+  T* thing = *thingp;
   CheckIsMarkedThing(thing);
 
   if (!thing->isTenured()) {
-    return thing;
+    return;
   }
 
   // Permanent things are never finalized by non-owning runtimes.
@@ -2460,10 +2452,8 @@ inline T* SweepingTracer::onEdge(T* thing, const char* name) {
   //  - the jitcode map
   //  - the mark queue
   if (zone->isGCSweeping() && !cell->isMarkedAny()) {
-    return nullptr;
+    *thingp = nullptr;
   }
-
-  return thing;
 }
 
 namespace js {
@@ -2746,9 +2736,9 @@ BarrierTracer::BarrierTracer(JSRuntime* rt)
       marker(rt->gc.marker) {}
 
 template <typename T>
-T* BarrierTracer::onEdge(T* thing, const char* name) {
+void BarrierTracer::onEdge(T** thingp, const char* name) {
+  T* thing = *thingp;
   PreWriteBarrier(thing);
-  return thing;
 }
 
 // If the barrier buffer grows too large, trace all barriered things at that

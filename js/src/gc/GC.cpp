@@ -4735,16 +4735,16 @@ js::gc::ClearEdgesTracer::ClearEdgesTracer(JSRuntime* rt)
                         JS::WeakMapTraceAction::TraceKeysAndValues) {}
 
 template <typename T>
-T* js::gc::ClearEdgesTracer::onEdge(T* thing, const char* name) {
+void js::gc::ClearEdgesTracer::onEdge(T** thingp, const char* name) {
   // We don't handle removing pointers to nursery edges from the store buffer
   // with this tracer. Check that this doesn't happen.
+  T* thing = *thingp;
   MOZ_ASSERT(!IsInsideNursery(thing));
 
   // Fire the pre-barrier since we're removing an edge from the graph.
   InternalBarrierMethods<T*>::preBarrier(thing);
 
-  // Return nullptr to clear the edge.
-  return nullptr;
+  *thingp = nullptr;
 }
 
 void GCRuntime::setPerformanceHint(PerformanceHint hint) {
