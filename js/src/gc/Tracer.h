@@ -55,6 +55,8 @@ namespace js {
 //     called "tracing" forever and changing it would be extremely difficult at
 //     this point.
 
+class GCMarker;
+
 namespace gc {
 
 // Our barrier templates are parameterized on the pointer types so that we can
@@ -87,8 +89,10 @@ bool TraceWeakMapKeyInternal(JSTracer* trc, Zone* zone, T* thingp,
 
 #ifdef DEBUG
 void AssertRootMarkingPhase(JSTracer* trc);
+void AssertShouldMarkInZone(GCMarker* marker, gc::Cell* thing);
 #else
 inline void AssertRootMarkingPhase(JSTracer* trc) {}
+inline void AssertShouldMarkInZone(GCMarker* marker, gc::Cell* thing) {}
 #endif
 
 }  // namespace gc
