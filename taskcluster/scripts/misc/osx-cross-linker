@@ -1,3 +1,5 @@
+#!/bin/sh
+
 exec $MOZ_FETCHES_DIR/clang/bin/clang -v \
   -fuse-ld=$MOZ_FETCHES_DIR/cctools/bin/$TARGET-ld \
   -mmacosx-version-min=${MACOSX_DEPLOYMENT_TARGET:-10.12} \
