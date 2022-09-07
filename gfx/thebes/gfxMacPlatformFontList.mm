@@ -1906,8 +1906,8 @@ void gfxMacPlatformFontList::LookupSystemFont(LookAndFeel::FontID aSystemFontID,
 // used to load system-wide font info on off-main thread
 class MacFontInfo final : public FontInfoData {
  public:
-  MacFontInfo(bool aLoadOtherNames, bool aLoadFaceNames, bool aLoadCmaps)
-      : FontInfoData(aLoadOtherNames, aLoadFaceNames, aLoadCmaps) {}
+  MacFontInfo(bool aLoadOtherNames, bool aLoadFaceNames, bool aLoadCmaps, RecursiveMutex& aLock)
+      : FontInfoData(aLoadOtherNames, aLoadFaceNames, aLoadCmaps), mLock(aLock) {}
 
   virtual ~MacFontInfo() = default;
 
@@ -1918,11 +1918,18 @@ class MacFontInfo final : public FontInfoData {
 
   // loads font data for all members of a given family
   virtual void LoadFontFamilyData(const nsACString& aFamilyName);
+
+  RecursiveMutex& mLock;
 };
 
 void MacFontInfo::LoadFontFamilyData(const nsACString& aFamilyName) {
   CrashReporter::AutoAnnotateCrashReport autoFontName(CrashReporter::Annotation::FontName,
                                                       aFamilyName);
+  // Prevent this from running concurrently with CGFont operations on the main thread,
+  // because the macOS font cache is fragile with concurrent access. This appears to be
+  // a vulnerability within CoreText in versions of macOS before macOS 13. In time, we
+  // can remove this lock.
+  RecursiveMutexAutoLock lock(mLock);
 
   // family name ==> CTFontDescriptor
   NSString* famName = GetNSStringForString(NS_ConvertUTF8toUTF16(aFamilyName));
@@ -2016,7 +2023,7 @@ already_AddRefed<FontInfoData> gfxMacPlatformFontList::CreateFontInfoData() {
       !UsesSystemFallback() || gfxPlatform::GetPlatform()->UseCmapsDuringSystemFallback();
 
   mLock.AssertCurrentThreadIn();
-  RefPtr<MacFontInfo> fi = new MacFontInfo(true, NeedFullnamePostscriptNames(), loadCmaps);
+  RefPtr<MacFontInfo> fi = new MacFontInfo(true, NeedFullnamePostscriptNames(), loadCmaps, mLock);
   return fi.forget();
 }
 
