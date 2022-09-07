@@ -22,17 +22,11 @@ RemoteImageHolder::RemoteImageHolder() = default;
 RemoteImageHolder::RemoteImageHolder(layers::IGPUVideoSurfaceManager* aManager,
                                      layers::VideoBridgeSource aSource,
                                      const gfx::IntSize& aSize,
-                                     const gfx::ColorDepth& aColorDepth,
                                      const layers::SurfaceDescriptor& aSD)
-    : mSource(aSource),
-      mSize(aSize),
-      mColorDepth(aColorDepth),
-      mSD(Some(aSD)),
-      mManager(aManager) {}
+    : mSource(aSource), mSize(aSize), mSD(Some(aSD)), mManager(aManager) {}
 RemoteImageHolder::RemoteImageHolder(RemoteImageHolder&& aOther)
     : mSource(aOther.mSource),
       mSize(aOther.mSize),
-      mColorDepth(aOther.mColorDepth),
       mSD(std::move(aOther.mSD)),
       mManager(aOther.mManager) {
   aOther.mSD = Nothing();
@@ -119,7 +113,7 @@ already_AddRefed<layers::Image> RemoteImageHolder::TransferToImage(
     SurfaceDescriptorRemoteDecoder remoteSD =
         static_cast<const SurfaceDescriptorGPUVideo&>(*mSD);
     remoteSD.source() = Some(mSource);
-    image = new GPUVideoImage(mManager, remoteSD, mSize, mColorDepth);
+    image = new GPUVideoImage(mManager, remoteSD, mSize);
   }
   mSD = Nothing();
   mManager = nullptr;
@@ -145,7 +139,6 @@ RemoteImageHolder::~RemoteImageHolder() {
     RemoteImageHolder&& aParam) {
   WriteIPDLParam(aWriter, aActor, aParam.mSource);
   WriteIPDLParam(aWriter, aActor, aParam.mSize);
-  WriteIPDLParam(aWriter, aActor, aParam.mColorDepth);
   WriteIPDLParam(aWriter, aActor, aParam.mSD);
   // Empty this holder.
   aParam.mSD = Nothing();
@@ -157,7 +150,6 @@ RemoteImageHolder::~RemoteImageHolder() {
     RemoteImageHolder* aResult) {
   if (!ReadIPDLParam(aReader, aActor, &aResult->mSource) ||
       !ReadIPDLParam(aReader, aActor, &aResult->mSize) ||
-      !ReadIPDLParam(aReader, aActor, &aResult->mColorDepth) ||
       !ReadIPDLParam(aReader, aActor, &aResult->mSD)) {
     return false;
   }
