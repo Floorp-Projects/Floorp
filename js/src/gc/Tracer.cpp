@@ -285,8 +285,3 @@ void js::gc::GetTraceThingInfo(char* buf, size_t bufsize, void* thing,
 JS::CallbackTracer::CallbackTracer(JSContext* cx, JS::TracerKind kind,
                                    JS::TraceOptions options)
     : CallbackTracer(cx->runtime(), kind, options) {}
-
-uint32_t JSTracer::gcNumberForMarking() const {
-  MOZ_ASSERT(isMarkingTracer());
-  return runtime()->gc.gcNumber();
-}
