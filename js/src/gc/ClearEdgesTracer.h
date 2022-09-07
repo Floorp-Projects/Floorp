@@ -17,7 +17,7 @@ struct ClearEdgesTracer final : public GenericTracerImpl<ClearEdgesTracer> {
 
  private:
   template <typename T>
-  T* onEdge(T* thing);
+  T* onEdge(T* thing, const char* name);
   friend class GenericTracerImpl<ClearEdgesTracer>;
 };
 

@@ -39,17 +39,18 @@ template void RuntimeScopeData<EvalScope::SlotInfo>::trace(JSTracer* trc);
 template void RuntimeScopeData<WasmFunctionScope::SlotInfo>::trace(
     JSTracer* trc);
 
-void JS::TracingContext::getEdgeName(char* buffer, size_t bufferSize) {
+void JS::TracingContext::getEdgeName(const char* name, char* buffer,
+                                     size_t bufferSize) {
   MOZ_ASSERT(bufferSize > 0);
   if (functor_) {
     (*functor_)(this, buffer, bufferSize);
     return;
   }
   if (index_ != InvalidIndex) {
-    snprintf(buffer, bufferSize, "%s[%zu]", name_, index_);
+    snprintf(buffer, bufferSize, "%s[%zu]", name, index_);
     return;
   }
-  snprintf(buffer, bufferSize, "%s", name_);
+  snprintf(buffer, bufferSize, "%s", name);
 }
 
 /*** Public Tracing API *****************************************************/

@@ -196,7 +196,7 @@ class EdgeVectorTracer final : public JS::CallbackTracer {
   // True if we should populate the edge's names.
   bool wantNames;
 
-  void onChild(JS::GCCellPtr thing) override {
+  void onChild(JS::GCCellPtr thing, const char* name) override {
     if (!okay) {
       return;
     }
@@ -214,8 +214,8 @@ class EdgeVectorTracer final : public JS::CallbackTracer {
     if (wantNames) {
       // Ask the tracer to compute an edge name for us.
       char buffer[1024];
-      context().getEdgeName(buffer, sizeof(buffer));
-      const char* name = buffer;
+      context().getEdgeName(name, buffer, sizeof(buffer));
+      name = buffer;
 
       // Convert the name to char16_t characters.
       name16 = js_pod_malloc<char16_t>(strlen(name) + 1);

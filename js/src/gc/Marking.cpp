@@ -646,10 +646,9 @@ void js::TraceGCCellPtrRoot(JSTracer* trc, JS::GCCellPtr* thingp,
 template <typename T>
 inline bool DoCallback(GenericTracer* trc, T** thingp, const char* name) {
   CheckTracedThing(trc, *thingp);
-  JS::AutoTracingName ctx(trc, name);
 
   T* thing = *thingp;
-  T* post = DispatchToOnEdge(trc, thing);
+  T* post = DispatchToOnEdge(trc, thing, name);
   if (post != thing) {
     *thingp = post;
   }
@@ -659,14 +658,12 @@ inline bool DoCallback(GenericTracer* trc, T** thingp, const char* name) {
 
 template <typename T>
 inline bool DoCallback(GenericTracer* trc, T* thingp, const char* name) {
-  JS::AutoTracingName ctx(trc, name);
-
   // Return true by default. For some types the lambda below won't be called.
   bool ret = true;
-  auto thing = MapGCThingTyped(*thingp, [trc, &ret](auto thing) {
+  auto thing = MapGCThingTyped(*thingp, [&](auto thing) {
     CheckTracedThing(trc, thing);
 
-    auto* post = DispatchToOnEdge(trc, thing);
+    auto* post = DispatchToOnEdge(trc, thing, name);
     if (!post) {
       ret = false;
       return TaggedPtr<T>::empty();
@@ -2440,7 +2437,7 @@ SweepingTracer::SweepingTracer(JSRuntime* rt)
                         JS::WeakMapTraceAction::TraceKeysAndValues) {}
 
 template <typename T>
-inline T* SweepingTracer::onEdge(T* thing) {
+inline T* SweepingTracer::onEdge(T* thing, const char* name) {
   CheckIsMarkedThing(thing);
 
   if (!thing->isTenured()) {
@@ -2560,7 +2557,7 @@ struct AssertNonGrayTracer final : public JS::CallbackTracer {
   // context without making this more generic.
   explicit AssertNonGrayTracer(JSRuntime* rt)
       : JS::CallbackTracer(rt, JS::TracerKind::UnmarkGray) {}
-  void onChild(JS::GCCellPtr thing) override {
+  void onChild(JS::GCCellPtr thing, const char* name) override {
     MOZ_ASSERT(!thing.asCell()->isMarkedGray());
   }
 };
@@ -2589,10 +2586,10 @@ class UnmarkGrayTracer final : public JS::CallbackTracer {
   // Stack of cells to traverse.
   Vector<JS::GCCellPtr, 0, SystemAllocPolicy>& stack;
 
-  void onChild(JS::GCCellPtr thing) override;
+  void onChild(JS::GCCellPtr thing, const char* name) override;
 };
 
-void UnmarkGrayTracer::onChild(JS::GCCellPtr thing) {
+void UnmarkGrayTracer::onChild(JS::GCCellPtr thing, const char* name) {
   Cell* cell = thing.asCell();
 
   // Cells in the nursery cannot be gray, and nor can certain kinds of tenured
@@ -2645,7 +2642,7 @@ void UnmarkGrayTracer::onChild(JS::GCCellPtr thing) {
 void UnmarkGrayTracer::unmark(JS::GCCellPtr cell) {
   MOZ_ASSERT(stack.empty());
 
-  onChild(cell);
+  onChild(cell, "unmarking root");
 
   while (!stack.empty() && !oom) {
     TraceChildren(this, stack.popCopy());
@@ -2705,7 +2702,7 @@ static bool CellHasChildren(JS::GCCellPtr cell) {
   struct Tracer : public JS::CallbackTracer {
     bool hasChildren = false;
     explicit Tracer(JSRuntime* runtime) : JS::CallbackTracer(runtime) {}
-    void onChild(JS::GCCellPtr thing) { hasChildren = true; }
+    void onChild(JS::GCCellPtr thing, const char* name) { hasChildren = true; }
   };
 
   Tracer trc(cell.asCell()->runtimeFromMainThread());
@@ -2749,7 +2746,7 @@ BarrierTracer::BarrierTracer(JSRuntime* rt)
       marker(rt->gc.marker) {}
 
 template <typename T>
-T* BarrierTracer::onEdge(T* thing) {
+T* BarrierTracer::onEdge(T* thing, const char* name) {
   PreWriteBarrier(thing);
   return thing;
 }
