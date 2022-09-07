@@ -133,7 +133,6 @@ UNIFIED_SOURCES += [
     "SharedStringMap.cpp",
     "StructuredCloneData.cpp",
     "TabContext.cpp",
-    "TabMessageUtils.cpp",
     "URLClassifierParent.cpp",
     "WindowGlobalActor.cpp",
     "WindowGlobalChild.cpp",

@@ -265,8 +265,6 @@ parent:
      */
     async DropLinks(nsString[] aLinks);
 
-    async Event(RemoteDOMEvent aEvent);
-
     sync SyncMessage(nsString aMessage, ClonedMessageData aData)
       returns (StructuredCloneData[] retval);
 
