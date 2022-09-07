@@ -59,14 +59,16 @@ static inline void UpdateAllocSiteOnTenure(Cell* cell) {
   site->incTenuredCount();
 }
 
-JSObject* TenuringTracer::onObjectEdge(JSObject* obj, const char* name) {
+void TenuringTracer::onObjectEdge(JSObject** objp, const char* name) {
+  JSObject* obj = *objp;
   if (!IsInsideNursery(obj)) {
-    return obj;
+    return;
   }
 
   if (obj->isForwarded()) {
     const gc::RelocationOverlay* overlay = gc::RelocationOverlay::fromCell(obj);
-    return static_cast<JSObject*>(overlay->forwardingAddress());
+    *objp = static_cast<JSObject*>(overlay->forwardingAddress());
+    return;
   }
 
   UpdateAllocSiteOnTenure(obj);
@@ -74,74 +76,57 @@ JSObject* TenuringTracer::onObjectEdge(JSObject* obj, const char* name) {
   // Take a fast path for tenuring a plain object which is by far the most
   // common case.
   if (obj->is<PlainObject>()) {
-    return movePlainObjectToTenured(&obj->as<PlainObject>());
+    *objp = movePlainObjectToTenured(&obj->as<PlainObject>());
+    return;
   }
 
-  return moveToTenuredSlow(obj);
+  *objp = moveToTenuredSlow(obj);
 }
 
-JSString* TenuringTracer::onStringEdge(JSString* str, const char* name) {
+void TenuringTracer::onStringEdge(JSString** strp, const char* name) {
+  JSString* str = *strp;
   if (!IsInsideNursery(str)) {
-    return str;
+    return;
   }
 
   if (str->isForwarded()) {
     const gc::RelocationOverlay* overlay = gc::RelocationOverlay::fromCell(str);
-    return static_cast<JSString*>(overlay->forwardingAddress());
+    *strp = static_cast<JSString*>(overlay->forwardingAddress());
+    return;
   }
 
   UpdateAllocSiteOnTenure(str);
 
-  return moveToTenured(str);
+  *strp = moveToTenured(str);
 }
 
-JS::BigInt* TenuringTracer::onBigIntEdge(JS::BigInt* bi, const char* name) {
+void TenuringTracer::onBigIntEdge(JS::BigInt** bip, const char* name) {
+  JS::BigInt* bi = *bip;
   if (!IsInsideNursery(bi)) {
-    return bi;
+    return;
   }
 
   if (bi->isForwarded()) {
     const gc::RelocationOverlay* overlay = gc::RelocationOverlay::fromCell(bi);
-    return static_cast<JS::BigInt*>(overlay->forwardingAddress());
+    *bip = static_cast<JS::BigInt*>(overlay->forwardingAddress());
+    return;
   }
 
   UpdateAllocSiteOnTenure(bi);
 
-  return moveToTenured(bi);
+  *bip = moveToTenured(bi);
 }
 
-JS::Symbol* TenuringTracer::onSymbolEdge(JS::Symbol* sym, const char* name) {
-  return sym;
-}
-js::BaseScript* TenuringTracer::onScriptEdge(BaseScript* script,
-                                             const char* name) {
-  return script;
-}
-js::Shape* TenuringTracer::onShapeEdge(Shape* shape, const char* name) {
-  return shape;
-}
-js::RegExpShared* TenuringTracer::onRegExpSharedEdge(RegExpShared* shared,
-                                                     const char* name) {
-  return shared;
-}
-js::BaseShape* TenuringTracer::onBaseShapeEdge(BaseShape* base,
-                                               const char* name) {
-  return base;
-}
-js::GetterSetter* TenuringTracer::onGetterSetterEdge(GetterSetter* gs,
-                                                     const char* name) {
-  return gs;
-}
-js::PropMap* TenuringTracer::onPropMapEdge(PropMap* map, const char* name) {
-  return map;
-}
-js::jit::JitCode* TenuringTracer::onJitCodeEdge(jit::JitCode* code,
-                                                const char* name) {
-  return code;
-}
-js::Scope* TenuringTracer::onScopeEdge(Scope* scope, const char* name) {
-  return scope;
-}
+void TenuringTracer::onSymbolEdge(JS::Symbol** symp, const char* name) {}
+void TenuringTracer::onScriptEdge(BaseScript** scriptp, const char* name) {}
+void TenuringTracer::onShapeEdge(Shape** shapep, const char* name) {}
+void TenuringTracer::onRegExpSharedEdge(RegExpShared** sharedp,
+                                        const char* name) {}
+void TenuringTracer::onBaseShapeEdge(BaseShape** basep, const char* name) {}
+void TenuringTracer::onGetterSetterEdge(GetterSetter** gsp, const char* name) {}
+void TenuringTracer::onPropMapEdge(PropMap** mapp, const char* name) {}
+void TenuringTracer::onJitCodeEdge(jit::JitCode** codep, const char* name) {}
+void TenuringTracer::onScopeEdge(Scope** scopep, const char* name) {}
 
 void TenuringTracer::traverse(JS::Value* thingp) {
   MOZ_ASSERT(!nursery().isInside(thingp));
@@ -153,18 +138,25 @@ void TenuringTracer::traverse(JS::Value* thingp) {
   // tighter code than using MapGCThingTyped.
   Value post;
   if (value.isObject()) {
-    post = JS::ObjectValue(*onObjectEdge(&value.toObject(), "value"));
+    JSObject* obj = &value.toObject();
+    onObjectEdge(&obj, "value");
+    post = JS::ObjectValue(*obj);
   }
 #ifdef ENABLE_RECORD_TUPLE
   else if (value.isExtendedPrimitive()) {
-    post = JS::ExtendedPrimitiveValue(
-        *onObjectEdge(&value.toExtendedPrimitive(), "value"));
+    JSObject* obj = &value.toExtendedPrimitive();
+    onObjectEdge(&obj, "value");
+    post = JS::ExtendedPrimitiveValue(*obj);
   }
 #endif
   else if (value.isString()) {
-    post = JS::StringValue(onStringEdge(value.toString(), "value"));
+    JSString* str = value.toString();
+    onStringEdge(&str, "value");
+    post = JS::StringValue(str);
   } else if (value.isBigInt()) {
-    post = JS::BigIntValue(onBigIntEdge(value.toBigInt(), "value"));
+    JS::BigInt* bi = value.toBigInt();
+    onBigIntEdge(&bi, "value");
+    post = JS::BigIntValue(bi);
   } else {
     MOZ_ASSERT_IF(value.isGCThing(), !IsInsideNursery(value.toGCThing()));
     return;
@@ -412,7 +404,7 @@ void js::gc::StoreBuffer::CellPtrEdge<T>::trace(TenuringTracer& mover) const {
         edge, JS::TraceKind::String));
   }
 
-  *edge = DispatchToOnEdge(&mover, thing, "CellPtrEdge");
+  DispatchToOnEdge(&mover, edge, "CellPtrEdge");
 }
 
 void js::gc::StoreBuffer::ValueEdge::trace(TenuringTracer& mover) const {
@@ -1001,14 +993,16 @@ MinorSweepingTracer::MinorSweepingTracer(JSRuntime* rt)
 }
 
 template <typename T>
-inline T* MinorSweepingTracer::onEdge(T* thing, const char* name) {
+inline void MinorSweepingTracer::onEdge(T** thingp, const char* name) {
+  T* thing = *thingp;
   if (thing->isTenured()) {
-    return thing;
+    return;
   }
 
   if (IsForwarded(thing)) {
-    return Forwarded(thing);
+    *thingp = Forwarded(thing);
+    return;
   }
 
-  return nullptr;
+  *thingp = nullptr;
 }
