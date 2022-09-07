@@ -1293,6 +1293,7 @@ class GatherDecls(TcheckVisitor):
                 "Priority": ("normal", "input", "vsync", "mediumhigh", "control"),
                 "Nested": ("not", "inside_sync", "inside_cpow"),
                 "LegacyIntr": None,
+                "VirtualSendImpl": None,
             },
         )
 

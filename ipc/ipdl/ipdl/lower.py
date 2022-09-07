@@ -4880,7 +4880,10 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         return (lbl, case)
 
     def genAsyncSendMethod(self, md):
-        method = MethodDefn(self.makeSendMethodDecl(md))
+        decl = self.makeSendMethodDecl(md)
+        if "VirtualSendImpl" in md.attributes:
+            decl.methodspec = MethodSpec.VIRTUAL
+        method = MethodDefn(decl)
         msgvar, stmts = self.makeMessage(md, errfnSend)
         retvar, sendstmts = self.sendAsync(md, msgvar)
 
@@ -4890,7 +4893,10 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
 
         # Add the promise overload if we need one.
         if md.returns:
-            promisemethod = MethodDefn(self.makeSendMethodDecl(md, promise=True))
+            decl = self.makeSendMethodDecl(md, promise=True)
+            if "VirtualSendImpl" in md.attributes:
+                decl.methodspec = MethodSpec.VIRTUAL
+            promisemethod = MethodDefn(decl)
             stmts = self.sendAsyncWithPromise(md)
             promisemethod.addstmts(stmts)
 
