@@ -16,6 +16,8 @@
 #include <windows.h>
 #include <sapi.h>
 
+class nsISynthVoiceRegistry;
+
 namespace mozilla::dom {
 
 class SapiCallback;
@@ -39,6 +41,8 @@ class SapiService final : public nsISpeechService, public nsIObserver {
 
   already_AddRefed<ISpVoice> InitSapiInstance();
   bool RegisterVoices();
+  bool RegisterVoices(nsCOMPtr<nsISynthVoiceRegistry>& registry,
+                      const WCHAR* categoryId);
 
   nsRefPtrHashtable<nsStringHashKey, ISpObjectToken> mVoices;
   nsTArray<RefPtr<SapiCallback>> mCallbacks;
