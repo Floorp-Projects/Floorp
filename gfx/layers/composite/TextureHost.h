@@ -71,6 +71,7 @@ class TextureSourceOGL;
 class TextureSourceD3D11;
 class DataTextureSource;
 class PTextureParent;
+class RemoteTextureHostWrapper;
 class TextureParent;
 class WebRenderTextureHost;
 class WrappingTextureSourceYCbCrBasic;
@@ -603,6 +604,9 @@ class TextureHost : public AtomicRefCountedWithFinalize<TextureHost> {
   AsAndroidHardwareBufferTextureHost() {
     return nullptr;
   }
+  virtual RemoteTextureHostWrapper* AsRemoteTextureHostWrapper() {
+    return nullptr;
+  }
 
   virtual bool IsWrappingBufferTextureHost() { return false; }
 
@@ -744,6 +748,7 @@ class TextureHost : public AtomicRefCountedWithFinalize<TextureHost> {
   std::function<void()> mDestroyedCallback;
 
   friend class Compositor;
+  friend class RemoteTextureHostWrapper;
   friend class TextureParent;
   friend class TextureSourceProvider;
   friend class GPUVideoTextureHost;

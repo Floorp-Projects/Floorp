@@ -74,14 +74,13 @@ void AsyncImagePipelineManager::Destroy() {
 
 /* static */
 wr::ExternalImageId AsyncImagePipelineManager::GetNextExternalImageId() {
-  MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
-  static uint64_t sResourceId = 0;
+  static std::atomic<uint64_t> sCounter = 0;
 
-  ++sResourceId;
+  uint64_t id = ++sCounter;
   // Upper 32bit(namespace) needs to be 0.
   // Namespace other than 0 might be used by others.
-  MOZ_RELEASE_ASSERT(sResourceId != UINT32_MAX);
-  return wr::ToExternalImageId(sResourceId);
+  MOZ_RELEASE_ASSERT(id != UINT32_MAX);
+  return wr::ToExternalImageId(id);
 }
 
 void AsyncImagePipelineManager::SetWillGenerateFrame() {

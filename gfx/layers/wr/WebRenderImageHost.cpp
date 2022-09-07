@@ -12,6 +12,7 @@
 #include "mozilla/layers/AsyncImagePipelineManager.h"
 #include "mozilla/layers/CompositorThread.h"
 #include "mozilla/layers/CompositorVsyncScheduler.h"  // for CompositorVsyncScheduler
+#include "mozilla/layers/RemoteTextureHostWrapper.h"
 #include "mozilla/layers/RemoteTextureMap.h"
 #include "mozilla/layers/WebRenderBridgeParent.h"
 #include "mozilla/layers/WebRenderTextureHost.h"
@@ -34,13 +35,13 @@ WebRenderImageHost::WebRenderImageHost(const TextureInfo& aTextureInfo)
       mCurrentAsyncImageManager(nullptr) {}
 
 WebRenderImageHost::~WebRenderImageHost() {
-  MOZ_ASSERT(!mRemoteTextureConsumer);
+  MOZ_ASSERT(!mRemoteTextureHost);
   MOZ_ASSERT(mWrBridges.empty());
 }
 
 void WebRenderImageHost::OnReleased() {
-  if (mRemoteTextureConsumer) {
-    mRemoteTextureConsumer = nullptr;
+  if (mRemoteTextureHost) {
+    mRemoteTextureHost = nullptr;
   }
 }
 
@@ -49,8 +50,8 @@ void WebRenderImageHost::UseTextureHost(
   CompositableHost::UseTextureHost(aTextures);
   MOZ_ASSERT(aTextures.Length() >= 1);
 
-  if (mRemoteTextureConsumer) {
-    mRemoteTextureConsumer = nullptr;
+  if (mRemoteTextureHost) {
+    mRemoteTextureHost = nullptr;
   }
 
   nsTArray<TimedImage> newImages;
@@ -112,43 +113,19 @@ void WebRenderImageHost::UseTextureHost(
 
 void WebRenderImageHost::UseRemoteTexture(const RemoteTextureId aTextureId,
                                           const RemoteTextureOwnerId aOwnerId,
-                                          const CompositableHandle& aHandle,
                                           const base::ProcessId aForPid,
                                           const gfx::IntSize aSize,
                                           const TextureFlags aFlags) {
-  RefPtr<WebRenderImageHost> self = this;
-  const auto callback = [=](const RemoteTextureId textureId,
-                            const RemoteTextureOwnerId ownerId,
-                            const base::ProcessId forPid) {
-    MOZ_ASSERT(aTextureId == textureId);
-    MOZ_ASSERT(aOwnerId == ownerId);
-    MOZ_ASSERT(aForPid == forPid);
-
-    if (CompositorThreadHolder::IsInCompositorThread()) {
-      self->UseRemoteTexture(aTextureId, aOwnerId, aHandle, aForPid, aSize,
-                             aFlags);
-      return;
-    }
-
-    CompositorThread()->Dispatch(
-        NS_NewRunnableFunction("WebRenderImageHost::UseRemoteTexture", [=]() {
-          self->UseRemoteTexture(aTextureId, aOwnerId, aHandle, aForPid, aSize,
-                                 aFlags);
-        }));
-  };
-
-  if (mRemoteTextureConsumer && mRemoteTextureConsumer->mOwnerId != aOwnerId) {
-    mRemoteTextureConsumer = nullptr;
+  RefPtr<TextureHost> texture =
+      RemoteTextureMap::Get()->GetOrCreateRemoteTextureHostWrapper(
+          aTextureId, aOwnerId, aForPid, aSize, aFlags);
+  mRemoteTextureHost = texture;
+  if (mRemoteTextureHost) {
+    mRemoteTextureHost->AsRemoteTextureHostWrapper()
+        ->CheckIsReadyForRendering();
   }
 
-  if (!mRemoteTextureConsumer) {
-    mRemoteTextureConsumer = RemoteTextureMap::Get()->RegisterTextureConsumer(
-        aOwnerId, aHandle, aForPid);
-  }
-
-  RefPtr<TextureHost> texture = mRemoteTextureConsumer->GetTextureHost(
-      aTextureId, aSize, aFlags, callback);
-  SetCurrentTextureHost(texture);
+  SetCurrentTextureHost(mRemoteTextureHost);
 
   if (GetAsyncRef()) {
     for (const auto& it : mWrBridges) {
@@ -201,7 +178,7 @@ void WebRenderImageHost::AppendImageCompositeNotification(
 
 TextureHost* WebRenderImageHost::GetAsTextureHostForComposite(
     AsyncImagePipelineManager* aAsyncImageManager) {
-  if (mRemoteTextureConsumer) {
+  if (mRemoteTextureHost) {
     return mCurrentTextureHost;
   }
 

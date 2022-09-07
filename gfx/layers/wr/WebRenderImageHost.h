@@ -19,7 +19,6 @@ namespace layers {
 class AsyncImagePipelineManager;
 class WebRenderBridgeParent;
 class WebRenderBridgeParentRef;
-class RemoteTextureConsumerClient;
 
 /**
  * ImageHost. Works with ImageClientSingle and ImageClientBuffered
@@ -32,7 +31,6 @@ class WebRenderImageHost : public CompositableHost, public ImageComposite {
   void UseTextureHost(const nsTArray<TimedTexture>& aTextures) override;
   void UseRemoteTexture(const RemoteTextureId aTextureId,
                         const RemoteTextureOwnerId aOwnerId,
-                        const CompositableHandle& aHandle,
                         const base::ProcessId aForPid, const gfx::IntSize aSize,
                         const TextureFlags aFlags) override;
   void RemoveTextureHost(TextureHost* aTexture) override;
@@ -74,7 +72,7 @@ class WebRenderImageHost : public CompositableHost, public ImageComposite {
 
   CompositableTextureHostRef mCurrentTextureHost;
 
-  UniquePtr<RemoteTextureConsumerClient> mRemoteTextureConsumer;
+  CompositableTextureHostRef mRemoteTextureHost;
 };
 
 }  // namespace layers

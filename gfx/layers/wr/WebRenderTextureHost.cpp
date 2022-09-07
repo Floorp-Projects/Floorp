@@ -47,8 +47,7 @@ WebRenderTextureHost::WebRenderTextureHost(
   // DEALLOCATE_CLIENT flag here. If the buffer deallocation is controlled by
   // parent, we could do something to make sure the wrapped textureHost is not
   // used by WebRender and then release it.
-  MOZ_ASSERT(!(aFlags & TextureFlags::DEALLOCATE_CLIENT) ||
-             (aFlags & TextureFlags::REMOTE_TEXTURE));
+  MOZ_ASSERT(!(aFlags & TextureFlags::DEALLOCATE_CLIENT));
   MOZ_COUNT_CTOR(WebRenderTextureHost);
 
   mExternalImageId = Some(aExternalImageId);
@@ -106,6 +105,9 @@ void WebRenderTextureHost::NotifyNotUsed() {
     wr::RenderThread::Get()->NotifyNotUsed(GetExternalImageKey());
   }
 #endif
+  if (mWrappedTextureHost->AsRemoteTextureHostWrapper()) {
+    mWrappedTextureHost->NotifyNotUsed();
+  }
   TextureHost::NotifyNotUsed();
 }
 
