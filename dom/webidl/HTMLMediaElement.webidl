@@ -236,9 +236,6 @@ partial interface HTMLMediaElement {
   readonly attribute double totalVideoPlayTime;
 
   [ChromeOnly]
-  readonly attribute double totalVideoHDRPlayTime;
-
-  [ChromeOnly]
   readonly attribute double visiblePlayTime;
 
   [ChromeOnly]
