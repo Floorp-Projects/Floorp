@@ -13,6 +13,8 @@
 
   --figure-width: min(37.5vw, 300px);
 
+  --card-border-zap-gradient: linear-gradient(90deg, #9059FF 0%, #FF4AA2 52.08%, #FFBD4F 100%);
+
   --colorway-selector-align: center;
   --colorway-name-font-size: 1.5em;
 
@@ -40,7 +42,7 @@
     --customization-panel-padding-inline-start: 2.5em;
 
     --colorway-selector-align: start;
-    --colorway-name-font-size: 2.5em;
+    --colorway-name-font-size: 2em;
 
     --homepage-reset-column: 1/4;
     --homepage-reset-align: end;
@@ -76,17 +78,16 @@ body > header {
   margin-inline: 0 .7em;
   margin-block: 0 .2em;
   padding: 0;
-  font-size: 1.7em;
+  font-size: 1.5em;
   font-weight: bold;
 }
 
 #collection-expiry-date {
   display: inline-block;
-  background: linear-gradient(to right, purple, pink, orange);
+  background: var(--card-border-zap-gradient);
   background-origin: border-box;
   border-radius: 1.5em;
   padding: 1px;
-  font-size: 1.1em;
 }
 
 #collection-expiry-date > span {
@@ -179,7 +180,6 @@ figure > img {
 }
 
 #colorway-description {
-  font-size: 1.1em;
   line-height: 1.5;
   flex: 2;
 }
@@ -187,9 +187,9 @@ figure > img {
 /* Intensity Picker */
 
 #colorway-intensities > legend {
-  font-size: 1.1em;
   padding-inline-start: 0;
   margin-bottom: .5em;
+  color: var(--in-content-deemphasized-text);
 }
 
 #colorway-intensity-radios {
@@ -201,7 +201,7 @@ figure > img {
 #colorway-intensity-radios > label {
   background-color: var(--in-content-box-background-color);
   border-radius: 4px;
-  border: 1px solid var(--in-content-box-border-color);
+  border: 1px solid var(--in-content-border-color);
   color: var(--in-content-text-color);
 
   flex: 1;
