@@ -165,7 +165,15 @@ add_task(async function test() {
       });
 
       // check that PDF is opened with internal viewer
-      await waitForPdfJS(browser, TESTROOT + "file_pdfjs_test.pdf");
+      await waitForPdfJSAllLayers(browser, TESTROOT + "file_pdfjs_test.pdf", [
+        [
+          "annotationEditorLayer",
+          "annotationLayer",
+          "textLayer",
+          "canvasWrapper",
+        ],
+        ["annotationEditorLayer", "textLayer", "canvasWrapper"],
+      ]);
 
       const spanBox = await getSpanBox(browser, "and found references");
       let menuitems = await getContextMenuItems(browser, spanBox);
