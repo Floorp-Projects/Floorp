@@ -466,7 +466,7 @@ pub unsafe extern "C" fn localization_addref(loc: &LocalizationRc) -> nsrefcnt {
 pub unsafe extern "C" fn localization_release(loc: *const LocalizationRc) -> nsrefcnt {
     let rc = (*loc).refcnt.dec();
     if rc == 0 {
-        Box::from_raw(loc as *const _ as *mut LocalizationRc);
+        std::mem::drop(Box::from_raw(loc as *const _ as *mut LocalizationRc));
     }
     rc
 }
