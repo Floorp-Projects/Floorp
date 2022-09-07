@@ -8564,10 +8564,10 @@
   value: true
   mirror: always
 
-# Is support for -webkit-line-clamp enabled?
-- name: layout.css.webkit-line-clamp.enabled
+# Is support for -webkit-line-clamp on regular blocks enabled?
+- name: layout.css.webkit-line-clamp.block.enabled
   type: bool
-  value: true
+  value: false
   mirror: always
 
 # Is 'content:none' supported on (non-pseudo) elements?

@@ -5,11 +5,11 @@
   @keyframes enabled-and-disabled {
     from {
       left: 0px;
-      -webkit-line-clamp: 2;
+      overflow-clip-box: padding-box;
     }
     to {
       left: 100px;
-      -webkit-line-clamp: 4;
+      overflow-clip-box: padding-box;
     }
   }
   </style>
@@ -37,12 +37,12 @@ is(animation.effect.getKeyframes().length, 2,
 
 ok(animation.effect.getKeyframes()[0].hasOwnProperty('left'),
    'Enabled property is set on initial keyframe');
-ok(!animation.effect.getKeyframes()[0].hasOwnProperty('webkitLineClamp'),
+ok(!animation.effect.getKeyframes()[0].hasOwnProperty('overflowClipBox'),
    'Disabled property is not set on initial keyframe');
 
 ok(animation.effect.getKeyframes()[1].hasOwnProperty('left'),
    'Enabled property is set on final keyframe');
-ok(!animation.effect.getKeyframes()[1].hasOwnProperty('webkitLineClamp'),
+ok(!animation.effect.getKeyframes()[1].hasOwnProperty('overflowClipBox'),
    'Disabled property is not set on final keyframe');
 
 finish();
