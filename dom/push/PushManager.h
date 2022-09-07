@@ -52,7 +52,7 @@ class WorkerPrivate;
 class PushManager final : public nsISupports, public nsWrapperCache {
  public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(PushManager)
+  NS_DECL_CYCLE_COLLECTION_WRAPPERCACHE_CLASS(PushManager)
 
   enum SubscriptionAction {
     SubscribeAction,

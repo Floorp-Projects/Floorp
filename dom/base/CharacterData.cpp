@@ -66,9 +66,9 @@ Element* CharacterData::GetNameSpaceElement() {
   return Element::FromNodeOrNull(GetParentNode());
 }
 
-NS_IMPL_CYCLE_COLLECTION_CLASS(CharacterData)
-
-NS_IMPL_CYCLE_COLLECTION_TRACE_WRAPPERCACHE(CharacterData)
+// Note, _INHERITED macro isn't used here since nsINode implementations are
+// rather special.
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_CLASS(CharacterData)
 
 NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_BEGIN(CharacterData)
   return Element::CanSkip(tmp, aRemovingAllowed);

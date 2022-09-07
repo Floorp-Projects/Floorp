@@ -21,7 +21,7 @@ class Statement;
 class StatementParams final : public nsISupports, public nsWrapperCache {
  public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(StatementParams)
+  NS_DECL_CYCLE_COLLECTION_WRAPPERCACHE_CLASS(StatementParams)
 
   explicit StatementParams(nsPIDOMWindowInner* aWindow, Statement* aStatement);
 

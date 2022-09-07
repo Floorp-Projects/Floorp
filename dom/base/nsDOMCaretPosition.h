@@ -29,7 +29,7 @@ class nsDOMCaretPosition : public nsISupports, public nsWrapperCache {
 
  public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(nsDOMCaretPosition)
+  NS_DECL_CYCLE_COLLECTION_WRAPPERCACHE_CLASS(nsDOMCaretPosition)
 
   nsDOMCaretPosition(nsINode* aNode, uint32_t aOffset);
 

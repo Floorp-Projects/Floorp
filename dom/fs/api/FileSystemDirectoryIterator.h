@@ -38,7 +38,7 @@ class FileSystemDirectoryIterator : public nsISupports, public nsWrapperCache {
   };
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(FileSystemDirectoryIterator)
+  NS_DECL_CYCLE_COLLECTION_WRAPPERCACHE_CLASS(FileSystemDirectoryIterator)
 
   explicit FileSystemDirectoryIterator(nsIGlobalObject* aGlobal,
                                        RefPtr<FileSystemManager>& aManager,

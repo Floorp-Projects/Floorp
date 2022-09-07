@@ -43,7 +43,7 @@ enum class JSActorMessageKind {
 class JSActor : public nsISupports, public nsWrapperCache {
  public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(JSActor)
+  NS_DECL_CYCLE_COLLECTION_WRAPPERCACHE_CLASS(JSActor)
 
   explicit JSActor(nsISupports* aGlobal = nullptr);
 

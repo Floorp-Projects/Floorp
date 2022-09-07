@@ -23,7 +23,7 @@ class DebuggerNotificationObserver final : public nsISupports,
                                            public nsWrapperCache {
  public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(DebuggerNotificationObserver)
+  NS_DECL_CYCLE_COLLECTION_WRAPPERCACHE_CLASS(DebuggerNotificationObserver)
 
   static already_AddRefed<DebuggerNotificationObserver> Constructor(
       GlobalObject& aGlobal, ErrorResult& aRv);

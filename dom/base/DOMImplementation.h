@@ -34,7 +34,7 @@ class DOMImplementation final : public nsISupports, public nsWrapperCache {
                     nsIURI* aDocumentURI, nsIURI* aBaseURI);
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(DOMImplementation)
+  NS_DECL_CYCLE_COLLECTION_WRAPPERCACHE_CLASS(DOMImplementation)
 
   Document* GetParentObject() const { return mOwner; }
 

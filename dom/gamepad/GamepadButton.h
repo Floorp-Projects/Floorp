@@ -19,7 +19,7 @@ class GamepadButton : public nsISupports, public nsWrapperCache {
       : mParent(aParent), mValue(0), mPressed(false), mTouched(false) {}
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(GamepadButton)
+  NS_DECL_CYCLE_COLLECTION_WRAPPERCACHE_CLASS(GamepadButton)
 
   nsISupports* GetParentObject() const { return mParent; }
 
