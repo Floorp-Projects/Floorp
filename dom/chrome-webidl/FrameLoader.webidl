@@ -53,12 +53,6 @@ interface FrameLoader {
    */
   readonly attribute boolean isRemoteFrame;
 
-  /**
-   * Activate event forwarding from client (remote frame) to parent.
-   */
-  [Throws]
-  void activateFrameEvent(DOMString aType, boolean capture);
-
   // Note, when frameloaders are swapped, also messageManagers are swapped.
   readonly attribute MessageSender? messageManager;
 

@@ -2878,20 +2878,6 @@ mozilla::layers::LayersId nsFrameLoader::GetLayersId() const {
   return mRemoteBrowser->GetLayersId();
 }
 
-void nsFrameLoader::ActivateFrameEvent(const nsAString& aType, bool aCapture,
-                                       ErrorResult& aRv) {
-  auto* browserParent = GetBrowserParent();
-  if (!browserParent) {
-    aRv.Throw(NS_ERROR_FAILURE);
-    return;
-  }
-
-  bool ok = browserParent->SendActivateFrameEvent(aType, aCapture);
-  if (!ok) {
-    aRv.Throw(NS_ERROR_NOT_AVAILABLE);
-  }
-}
-
 nsresult nsFrameLoader::DoRemoteStaticClone(nsFrameLoader* aStaticCloneOf,
                                             nsIPrintSettings* aPrintSettings) {
   MOZ_ASSERT(aStaticCloneOf->IsRemoteFrame());
