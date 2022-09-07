@@ -1,0 +1,28 @@
+<style>
+* {
+  image-rendering: pixelated;
+}
+</style>
+<script>
+window.requestIdleCallback(() => {
+  a.setSelectionRange(-1, 1)
+  document.head.innerHTML = undefined
+})
+</script>
+<embed src="data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs="></embed>
+<textarea id="a">aaaaaaaaaaaaaaaa</textarea>
+<script>
+  const embed = document.querySelector("embed");
+  embed.onload = function() {
+    var countdown = 20;
+    if (location.search) {
+        countdown = parseInt(location.search.slice(1)) - 1;
+	  }
+
+    if (countdown > 0) {
+      location.search = countdown;
+    } else {
+      window.parent.postMessage("done", "*");
+    }
+  }
+</script>
