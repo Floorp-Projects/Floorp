@@ -38,11 +38,14 @@ const intl::IDNA::ProcessingType kIDNA2008_DefaultProcessingType =
     intl::IDNA::ProcessingType::NonTransitional;
 
 //-----------------------------------------------------------------------------
-// RFC 1034 - 3.1. Name space specifications and terminology
-static const uint32_t kMaxDNSNodeLen = 63;
+// According to RFC 1034 - 3.1. Name space specifications and terminology
+// the maximum label size would be 63. However, this is enforced at the DNS
+// level and none of the other browsers seem to not enforce the VerifyDnsLength
+// check in https://unicode.org/reports/tr46/#ToASCII
+// Instead, we choose a rather arbitrary but larger size.
+static const uint32_t kMaxULabelSize = 256;
 // RFC 3490 - 5.   ACE prefix
 static const char kACEPrefix[] = "xn--";
-#define kACEPrefixLen 4
 
 //-----------------------------------------------------------------------------
 
@@ -532,14 +535,14 @@ static nsresult utf16ToUcs4(const nsAString& in, uint32_t* out,
 }
 
 static nsresult punycode(const nsAString& in, nsACString& out) {
-  uint32_t ucs4Buf[kMaxDNSNodeLen + 1];
+  uint32_t ucs4Buf[kMaxULabelSize + 1];
   uint32_t ucs4Len = 0u;
-  nsresult rv = utf16ToUcs4(in, ucs4Buf, kMaxDNSNodeLen, &ucs4Len);
+  nsresult rv = utf16ToUcs4(in, ucs4Buf, kMaxULabelSize, &ucs4Len);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // need maximum 20 bits to encode 16 bit Unicode character
   // (include null terminator)
-  const uint32_t kEncodedBufSize = kMaxDNSNodeLen * 20 / 8 + 1 + 1;
+  const uint32_t kEncodedBufSize = kMaxULabelSize * 20 / 8 + 1 + 1;
   char encodedBuf[kEncodedBufSize];
   punycode_uint encodedLength = kEncodedBufSize;
 
@@ -588,14 +591,12 @@ nsresult nsIDNService::stringPrepAndACE(const nsAString& in, nsACString& out,
 
   out.Truncate();
 
-  if (in.Length() > kMaxDNSNodeLen) {
-    NS_WARNING("IDN node too large");
-    return NS_ERROR_MALFORMED_URI;
-  }
-
   if (IsAscii(in)) {
     LossyCopyUTF16toASCII(in, out);
-    return NS_OK;
+    // If label begins with xn-- we still want to check its validity
+    if (!StringBeginsWith(in, u"xn--"_ns)) {
+      return NS_OK;
+    }
   }
 
   nsAutoString strPrep;
@@ -614,20 +615,7 @@ nsresult nsIDNService::stringPrepAndACE(const nsAString& in, nsACString& out,
     return NS_OK;
   }
 
-  rv = punycode(strPrep, out);
-  // Check that the encoded output isn't larger than the maximum length
-  // of a DNS node per RFC 1034.
-  // This test isn't necessary in the code paths above where the input
-  // is ASCII (since the output will be the same length as the input) or
-  // where we convert to UTF-8 (since the output is only used for
-  // display in the UI and not passed to DNS and can legitimately be
-  // longer than the limit).
-  if (out.Length() > kMaxDNSNodeLen) {
-    NS_WARNING("IDN node too large");
-    return NS_ERROR_MALFORMED_URI;
-  }
-
-  return rv;
+  return punycode(strPrep, out);
 }
 
 // RFC 3490
