@@ -326,11 +326,14 @@ void MFMediaSource::NotifyEndOfStreamInternal(TrackInfo::TrackType aType) {
 
 void MFMediaSource::HandleStreamEnded(TrackInfo::TrackType aType) {
   AssertOnTaskQueue();
-  LOG("Handle %s stream ended", TrackTypeToStr(aType));
   if (mPresentationEnded) {
+    LOG("Presentation is ended already");
+    RETURN_VOID_IF_FAILED(
+        QueueEvent(MEEndOfPresentation, GUID_NULL, S_OK, nullptr));
     return;
   }
 
+  LOG("Handle %s stream ended", TrackTypeToStr(aType));
   const bool audioEnded = !mAudioStream || mAudioStream->IsEnded();
   const bool videoEnded = !mVideoStream || mVideoStream->IsEnded();
   mPresentationEnded = audioEnded && videoEnded;
