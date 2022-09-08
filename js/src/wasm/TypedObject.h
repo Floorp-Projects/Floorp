@@ -84,9 +84,10 @@ class RttValue : public NativeObject {
   //   the inline/outline split.
   //
   // * If the object in question is a WasmArrayObject, then
-  //   - u32 == 0 means the "length" property is requested
-  //   - u32 >= 4 means the array element starting at that byte offset in
-  //     WasmArrayObject::data_.  It is not an array index value.
+  //   - u32 == UINT32_MAX (0xFFFF'FFFF) means the "length" property
+  //     is requested
+  //   - u32 < UINT32_MAX means the array element starting at that byte
+  //     offset in WasmArrayObject::data_.  It is not an array index value.
   //   See RttValue::lookupProperty for details.
   class PropOffset {
     uint32_t u32_;
@@ -200,66 +201,45 @@ class TypedObject : public JSObject {
 
 class WasmArrayObject : public TypedObject {
  public:
-  // This holds a value indicating the number of elements in the block (array)
-  // that `data_` points at.
-  using NumElements = uint32_t;
+  // The number of elements in the array.
+  uint32_t numElements_;
 
  private:
-  // Owned data pointer.  The pointed-to block must be at least 4 bytes long
-  // since the first 4 bytes are used to store the number of array elements
-  // present.  They start at `&data_[4]`.
+  // Owned data pointer, holding `numElements_` entries.  Unlike
+  // WasmStructObject::outlineData_, this can never validly be nullptr, since
+  // WasmArrayObject doesn't have any inline storage area.
   uint8_t* data_;
 
- protected:
   friend class TypedObject;
-
-  // `numBytes` is the required size of the block pointed to by `data`.
-  static WasmArrayObject* create(JSContext* cx, Handle<RttValue*> rtt,
-                                 size_t numBytes,
-                                 gc::InitialHeap heap = gc::DefaultHeap);
-
-  // This can possibly be removed, specialised or renamed, as part of the
-  // cleanup scheduled to happen in bug 1774836.
-  uint8_t* outOfLineTypedMem() const { return data_; }
-
-  void setNumElements(NumElements numElements) {
-    *(NumElements*)(data_ + offsetOfNumElements()) = numElements;
-  }
 
  public:
   static const JSClass class_;
 
-  // The address of the first element in the array
-  uint8_t* addressOfElementZero() const {
-    return data_ + offsetOfNumElements() + sizeof(NumElements);
-  }
-
-  // The number of elements in the array
-  NumElements numElements() const {
-    return *(NumElements*)(data_ + offsetOfNumElements());
-  }
-
   // AllocKind for object creation
   static gc::AllocKind allocKind();
 
-  // JIT accessors
+  // VM accessors
+  uint32_t numElements() const { return numElements_; }
+  void setNumElements(uint32_t numElements) { numElements_ = numElements; }
+  uint8_t* data() const { return data_; }
 
-  // Offset of `data_` relative to the start of the object.
+  // JIT accessors
+  static constexpr size_t offsetOfNumElements() {
+    return offsetof(WasmArrayObject, numElements_);
+  }
   static constexpr size_t offsetOfData() {
     return offsetof(WasmArrayObject, data_);
   }
-  // Offset inside `data_` of its size-in-bytes field.
-  static constexpr size_t offsetOfNumElements() { return 0; }
 
   // Tracing and finalization
   static void obj_trace(JSTracer* trc, JSObject* object);
   static void obj_finalize(JS::GCContext* gcx, JSObject* object);
 };
 
-// Helper to mark all locations that assume the type of the array length header
-// for a typed object.
-#define STATIC_ASSERT_NUMELEMENTS_IS_U32 \
-  static_assert(sizeof(js::WasmArrayObject::NumElements) == sizeof(uint32_t));
+// Helper to mark all locations that assume that the type of
+// WasmArrayObject::numElements is uint32_t.
+#define STATIC_ASSERT_WASMARRAYELEMENTS_NUMELEMENTS_IS_U32 \
+  static_assert(sizeof(js::WasmArrayObject::numElements_) == sizeof(uint32_t))
 
 //=========================================================================
 // WasmStructObject

@@ -212,32 +212,42 @@ TypedObject* TypedObject::createStruct(JSContext* cx, Handle<RttValue*> rtt,
 TypedObject* TypedObject::createArray(JSContext* cx, Handle<RttValue*> rtt,
                                       uint32_t numElements,
                                       gc::InitialHeap heap) {
+  STATIC_ASSERT_WASMARRAYELEMENTS_NUMELEMENTS_IS_U32;
+  MOZ_ASSERT(rtt->kind() == wasm::TypeDefKind::Array);
+
   // Calculate the byte length of the outline storage, being careful to check
   // for overflow. We stick to uint32_t as an implicit implementation limit.
-  CheckedUint32 numBytes = rtt->typeDef().arrayType().elementType_.size();
-  numBytes *= numElements;
-  numBytes += WasmArrayObject::offsetOfNumElements() +
-              sizeof(WasmArrayObject::NumElements);
-  if (!numBytes.isValid()) {
+  CheckedUint32 outlineBytes = rtt->typeDef().arrayType().elementType_.size();
+  outlineBytes *= numElements;
+  if (!outlineBytes.isValid()) {
     JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
                              JSMSG_WASM_ARRAY_IMP_LIMIT);
     return nullptr;
   }
 
-  // Always create arrays outlined
-  Rooted<WasmArrayObject*> typedObj(
-      cx, WasmArrayObject::create(cx, rtt, numBytes.value(), heap));
-  if (!typedObj) {
+  uint8_t* outlineData = (uint8_t*)js_malloc(outlineBytes.value());
+  if (!outlineData) {
     ReportOutOfMemory(cx);
     return nullptr;
   }
 
-  // Initialize the values to their defaults
-  typedObj->setNumElements(numElements);
-  MOZ_ASSERT(typedObj->numElements() == numElements);
-  typedObj->initDefault();
+  Rooted<WasmArrayObject*> arrayObj(cx);
+  AutoSetNewObjectMetadata metadata(cx);
+  arrayObj = TypedObject::create<WasmArrayObject>(
+      cx, WasmArrayObject::allocKind(), heap);
+  if (!arrayObj) {
+    ReportOutOfMemory(cx);
+    js_free(outlineData);
+    return nullptr;
+  }
+  arrayObj->data_ = outlineData;
+  arrayObj->rttValue_.init(rtt);
 
-  return typedObj;
+  // Initialize the values to their defaults
+  arrayObj->setNumElements(numElements);
+  arrayObj->initDefault();
+
+  return arrayObj;
 }
 
 template <typename V>
@@ -267,12 +277,10 @@ void TypedObject::visitReferences(V& visitor) {
       const auto& arrayType = typeDef.arrayType();
       if (arrayType.elementType_.isRefRepr()) {
         WasmArrayObject& arrayObj = as<WasmArrayObject>();
-        uint8_t* base = arrayObj.outOfLineTypedMem();
-        uint8_t* elemBase = base + WasmArrayObject::offsetOfNumElements() +
-                            sizeof(WasmArrayObject::NumElements);
+        uint8_t* base = arrayObj.data();
         uint32_t numElements = arrayObj.numElements();
         for (uint32_t i = 0; i < numElements; i++) {
-          visitor.visitReference(elemBase, i * arrayType.elementType_.size());
+          visitor.visitReference(base, i * arrayType.elementType_.size());
         }
       }
       break;
@@ -308,28 +316,6 @@ void MemoryTracingVisitor::visitReference(uint8_t* base, size_t offset) {
  * WasmArrayObject
  */
 
-/*static*/
-WasmArrayObject* WasmArrayObject::create(JSContext* cx, Handle<RttValue*> rtt,
-                                         size_t numBytes,
-                                         gc::InitialHeap heap) {
-  STATIC_ASSERT_NUMELEMENTS_IS_U32;
-  MOZ_ASSERT(numBytes >= sizeof(NumElements));
-  AutoSetNewObjectMetadata metadata(cx);
-
-  auto* obj = TypedObject::create<WasmArrayObject>(cx, allocKind(), heap);
-  if (!obj) {
-    return nullptr;
-  }
-
-  obj->rttValue_.init(rtt);
-  obj->data_ = (uint8_t*)js_malloc(numBytes);
-  if (!obj->data_) {
-    return nullptr;
-  }
-
-  return obj;
-}
-
 /* static */
 gc::AllocKind WasmArrayObject::allocKind() {
   return gc::GetGCObjectKindForBytes(sizeof(WasmArrayObject));
@@ -338,12 +324,9 @@ gc::AllocKind WasmArrayObject::allocKind() {
 /* static */
 void WasmArrayObject::obj_trace(JSTracer* trc, JSObject* object) {
   WasmArrayObject& typedObj = object->as<WasmArrayObject>();
+  MOZ_ASSERT(typedObj.data_);
 
   TraceEdge(trc, &typedObj.rttValue_, "WasmArrayObject_rttvalue");
-
-  if (!typedObj.data_) {
-    return;
-  }
 
   MemoryTracingVisitor visitor(trc);
   typedObj.visitReferences(visitor);
@@ -352,11 +335,10 @@ void WasmArrayObject::obj_trace(JSTracer* trc, JSObject* object) {
 /* static */
 void WasmArrayObject::obj_finalize(JS::GCContext* gcx, JSObject* object) {
   WasmArrayObject& typedObj = object->as<WasmArrayObject>();
+  MOZ_ASSERT(typedObj.data_);
 
-  if (typedObj.data_) {
-    js_free(typedObj.data_);
-    typedObj.data_ = nullptr;
-  }
+  js_free(typedObj.data_);
+  typedObj.data_ = nullptr;
 }
 
 bool RttValue::lookupProperty(JSContext* cx, Handle<TypedObject*> object,
@@ -385,9 +367,9 @@ bool RttValue::lookupProperty(JSContext* cx, Handle<TypedObject*> object,
       // beginning of the data buffer
       if (id.isString() &&
           id.toString() == cx->runtime()->commonNames->length) {
-        STATIC_ASSERT_NUMELEMENTS_IS_U32;
+        STATIC_ASSERT_WASMARRAYELEMENTS_NUMELEMENTS_IS_U32;
         *type = FieldType::I32;
-        offset->set(WasmArrayObject::offsetOfNumElements());
+        offset->set(UINT32_MAX);
         return true;
       }
 
@@ -396,14 +378,17 @@ bool RttValue::lookupProperty(JSContext* cx, Handle<TypedObject*> object,
       if (!IdIsIndex(id, &index)) {
         return false;
       }
-      WasmArrayObject::NumElements numElements =
-          object->as<WasmArrayObject>().numElements();
+      uint32_t numElements = object->as<WasmArrayObject>().numElements();
       if (index >= numElements) {
         return false;
       }
-      offset->set(WasmArrayObject::offsetOfNumElements() +
-                  sizeof(WasmArrayObject::NumElements) +
-                  index * arrayType.elementType_.size());
+      uint64_t scaledIndex =
+          uint64_t(index) * uint64_t(arrayType.elementType_.size());
+      if (scaledIndex >= uint64_t(UINT32_MAX)) {
+        // It's unrepresentable as an RttValue::PropOffset.  Give up.
+        return false;
+      }
+      offset->set(uint32_t(scaledIndex));
       *type = arrayType.elementType_;
       return true;
     }
@@ -604,7 +589,16 @@ bool TypedObject::loadValue(JSContext* cx, const RttValue::PropOffset& offset,
   } else {
     MOZ_ASSERT(is<WasmArrayObject>());
     WasmArrayObject& arrayObj = as<WasmArrayObject>();
-    return ToJSValue(cx, arrayObj.outOfLineTypedMem() + offset.get(), type, vp);
+    if (offset.get() == UINT32_MAX) {
+      // This denotes "length"
+      uint32_t numElements = arrayObj.numElements();
+      // We can't use `ToJSValue(.., ValType::I32, ..)` here since it will
+      // treat the integer as signed, which it isn't.  `vp.set(..)` will
+      // coerce correctly to a JS::Value, though.
+      vp.set(NumberValue(numElements));
+      return true;
+    }
+    return ToJSValue(cx, arrayObj.data() + offset.get(), type, vp);
   }
 }
 
@@ -629,7 +623,7 @@ void TypedObject::initDefault() {
       MOZ_ASSERT(is<WasmArrayObject>());
       WasmArrayObject& arrayObj = as<WasmArrayObject>();
       uint32_t numElements = arrayObj.numElements();
-      memset(arrayObj.outOfLineTypedMem() + sizeof(uint32_t), 0,
+      memset(arrayObj.data(), 0,
              rtt.typeDef().arrayType().elementType_.size() * numElements);
       break;
     }

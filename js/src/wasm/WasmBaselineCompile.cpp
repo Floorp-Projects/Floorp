@@ -6351,39 +6351,25 @@ void BaseCompiler::emitGcNullCheck(RegRef rp) {
 }
 
 RegPtr BaseCompiler::emitGcArrayGetData(RegRef rp) {
-  // `rp` points at an OutLineTypedObject.  Return a reg holding the value of
-  // its `data_` field.
+  // `rp` points at a WasmArrayObject.  Return a reg holding the value of its
+  // `data_` field.
   RegPtr rdata = needPtr();
-  // An array is always an outline typed object
   masm.loadPtr(Address(rp, WasmArrayObject::offsetOfData()), rdata);
   return rdata;
 }
 
-void BaseCompiler::emitGcArrayAdjustDataPointer(RegPtr rdata) {
-  // `rdata` points at the start of an WasmArrayObject's out of line array
-  // (iow it holds the value of a WasmArrayObject::data_ field).  Move it
-  // forwards so it points at the first byte of the first array element stored
-  // there.
-  STATIC_ASSERT_NUMELEMENTS_IS_U32;
-  masm.addPtr(ImmWord(WasmArrayObject::offsetOfNumElements() +
-                      sizeof(WasmArrayObject::NumElements)),
-              rdata);
+RegI32 BaseCompiler::emitGcArrayGetNumElements(RegRef rp) {
+  // `rp` points at a WasmArrayObject.  Return a reg holding the value of its
+  // `numElements_` field.
+  STATIC_ASSERT_WASMARRAYELEMENTS_NUMELEMENTS_IS_U32;
+  RegI32 numElements = needI32();
+  masm.load32(Address(rp, WasmArrayObject::offsetOfNumElements()), numElements);
+  return numElements;
 }
 
-RegI32 BaseCompiler::emitGcArrayGetNumElements(RegPtr rdata,
-                                               bool adjustDataPointer) {
-  STATIC_ASSERT_NUMELEMENTS_IS_U32;
-  RegI32 length = needI32();
-  masm.load32(Address(rdata, WasmArrayObject::offsetOfNumElements()), length);
-  if (adjustDataPointer) {
-    emitGcArrayAdjustDataPointer(rdata);
-  }
-  return length;
-}
-
-void BaseCompiler::emitGcArrayBoundsCheck(RegI32 index, RegI32 length) {
+void BaseCompiler::emitGcArrayBoundsCheck(RegI32 index, RegI32 numElements) {
   Label inBounds;
-  masm.branch32(Assembler::Below, index, length, &inBounds);
+  masm.branch32(Assembler::Below, index, numElements, &inBounds);
   masm.wasmTrap(Trap::OutOfBounds, bytecodeOffset());
   masm.bind(&inBounds);
 }
@@ -6828,12 +6814,11 @@ bool BaseCompiler::emitArrayNew() {
   RegRef rp = popRef();
   AnyReg value = popAny();
 
-  // Acquire the data pointers from the object
+  // Acquire the data pointer from the object
   RegPtr rdata = emitGcArrayGetData(rp);
 
-  // Acquire the number of elements and adjust the data pointer to be
-  // immediately after the number-of-elements header.
-  RegI32 numElements = emitGcArrayGetNumElements(rdata, true);
+  // Acquire the number of elements
+  RegI32 numElements = emitGcArrayGetNumElements(rp);
 
   // Free the barrier reg after we've allocated all registers
   if (arrayType.elementType_.isRefRepr()) {
@@ -6902,16 +6887,13 @@ bool BaseCompiler::emitArrayNewFixed() {
   // Get hold of the pointer to the array, as created by SASigArrayNew.
   RegRef rp = popRef();
 
-  // Acquire the data pointers from the object
+  // Acquire the data pointer from the object
   RegPtr rdata = emitGcArrayGetData(rp);
 
   // Free the barrier reg if we previously reserved it.
   if (avoidPreBarrierReg) {
     freePtr(RegPtr(PreBarrierReg));
   }
-
-  // Adjust the data pointer to be immediately after the array length header
-  emitGcArrayAdjustDataPointer(rdata);
 
   // Generate straight-line initialization code.  We could do better here if
   // there was a version of ::emitGcArraySet that took `index` as a `uint32_t`
@@ -7021,16 +7003,15 @@ bool BaseCompiler::emitArrayGet(FieldExtension extension) {
   // Check for null
   emitGcNullCheck(rp);
 
-  // Acquire the data pointer from the object
-  RegPtr rdata = emitGcArrayGetData(rp);
-
-  // Acquire the number of elements and adjust the data pointer to be
-  // immediately after the number-of-elements header
-  RegI32 numElements = emitGcArrayGetNumElements(rdata, true);
+  // Acquire the number of elements
+  RegI32 numElements = emitGcArrayGetNumElements(rp);
 
   // Bounds check the index
   emitGcArrayBoundsCheck(index, numElements);
   freeI32(numElements);
+
+  // Acquire the data pointer from the object
+  RegPtr rdata = emitGcArrayGetData(rp);
 
   // Load the value
   uint32_t shift = arrayType.elementType_.indexingShift();
@@ -7073,31 +7054,23 @@ bool BaseCompiler::emitArraySet() {
   RegI32 index = popI32();
   RegRef rp = popRef();
 
-  // We run out of registers on x86 with this instruction, so stash `value` on
-  // the stack until it is needed later.
-  pushAny(value);
-
   // Check for null
   emitGcNullCheck(rp);
 
-  // Acquire the data pointer from the object
-  RegPtr rdata = emitGcArrayGetData(rp);
-
-  // Acquire the number of elements and adjust the data pointer to be
-  // immediately after the number-of-elements header
-  RegI32 numElements = emitGcArrayGetNumElements(rdata, true);
-
-  // Free the barrier reg after we've allocated all registers
-  if (arrayType.elementType_.isRefRepr()) {
-    freePtr(RegPtr(PreBarrierReg));
-  }
+  // Acquire the number of elements
+  RegI32 numElements = emitGcArrayGetNumElements(rp);
 
   // Bounds check the index
   emitGcArrayBoundsCheck(index, numElements);
   freeI32(numElements);
 
-  // Pull the value out of the stack now that we need it.
-  popAny(value);
+  // Acquire the data pointer from the object
+  RegPtr rdata = emitGcArrayGetData(rp);
+
+  // Free the barrier reg after we've allocated all registers
+  if (arrayType.elementType_.isRefRepr()) {
+    freePtr(RegPtr(PreBarrierReg));
+  }
 
   // All registers are preserved. This isn't strictly necessary, as we'll just
   // be freeing them all after this is done. But this is needed for repeated
@@ -7130,13 +7103,11 @@ bool BaseCompiler::emitArrayLen() {
   // Check for null
   emitGcNullCheck(rp);
 
-  // Acquire the data pointer from the object
-  RegPtr rdata = emitGcArrayGetData(rp);
-  freeRef(rp);
+  // Acquire the number of elements
+  RegI32 numElements = emitGcArrayGetNumElements(rp);
+  pushI32(numElements);
 
-  // Acquire the number of elements from the array
-  pushI32(emitGcArrayGetNumElements(rdata, false));
-  freePtr(rdata);
+  freeRef(rp);
 
   return true;
 }
