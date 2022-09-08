@@ -9,8 +9,8 @@ const { BrowserUtils } = ChromeUtils.import(
   "resource://gre/modules/BrowserUtils.jsm"
 );
 
-const { EnterprisePolicyTesting } = ChromeUtils.import(
-  "resource://testing-common/EnterprisePolicyTesting.jsm"
+const { EnterprisePolicyTesting } = ChromeUtils.importESModule(
+  "resource://testing-common/EnterprisePolicyTesting.sys.mjs"
 );
 
 const { Region } = ChromeUtils.import("resource://gre/modules/Region.jsm");
