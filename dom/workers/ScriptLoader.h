@@ -160,6 +160,8 @@ class WorkerScriptLoader final : public nsINamed {
       const nsString& aScriptURL, const mozilla::Encoding* aDocumentEncoding,
       bool aIsMainScript);
 
+  bool DispatchLoadScript(ScriptLoadRequest* aRequest);
+
   bool DispatchLoadScripts();
 
  protected:
