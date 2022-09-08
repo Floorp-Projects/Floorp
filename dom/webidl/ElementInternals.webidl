@@ -44,6 +44,9 @@ partial interface ElementInternals {
   readonly attribute HTMLElement? validationAnchor;
 };
 
+ElementInternals includes AccessibilityRole;
+ElementInternals includes AriaAttributes;
+
 dictionary ValidityStateFlags {
   boolean valueMissing = false;
   boolean typeMismatch = false;

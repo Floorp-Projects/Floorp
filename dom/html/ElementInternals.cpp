@@ -413,4 +413,8 @@ void ElementInternals::Unlink() {
   }
 }
 
+DocGroup* ElementInternals::GetDocGroup() {
+  return mTarget->OwnerDoc()->GetDocGroup();
+}
+
 }  // namespace mozilla::dom
