@@ -225,7 +225,6 @@ Services.prefs.addObserver("floorp.browser.sidebar.right", function(){
  })
 };
 
-setSidebarMode();
 document.getElementById("select-CustomURL1").style.listStyleImage = "url(" + "http://www.google.com/s2/favicons?domain=" + Services.prefs.getStringPref("floorp.browser.sidebar2.customurl1") + ")"
 document.getElementById("select-CustomURL2").style.listStyleImage = "url(" + "http://www.google.com/s2/favicons?domain=" + Services.prefs.getStringPref("floorp.browser.sidebar2.customurl2") + ")"
 document.getElementById("select-CustomURL3").style.listStyleImage = "url(" + "http://www.google.com/s2/favicons?domain=" + Services.prefs.getStringPref("floorp.browser.sidebar2.customurl3") + ")"
@@ -237,3 +236,4 @@ document.getElementById("select-CustomURL8").style.listStyleImage = "url(" + "ht
 document.getElementById("select-CustomURL9").style.listStyleImage = "url(" + "http://www.google.com/s2/favicons?domain=" + Services.prefs.getStringPref("floorp.browser.sidebar2.customurl9") + ")"
 document.getElementById("select-CustomURL10").style.listStyleImage = "url(" + "http://www.google.com/s2/favicons?domain=" + Services.prefs.getStringPref("floorp.browser.sidebar2.customurl10") + ")"
 setSidebarIconView();
+setSidebarMode();

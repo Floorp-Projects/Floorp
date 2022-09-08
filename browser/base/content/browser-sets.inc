@@ -113,10 +113,14 @@
 #include ../../components/places/content/placesCommands.inc.xhtml
 
   <keyset id="mainKeyset">
-    <key 
+    <key id="restmode"
         keycode="VK_F9"
         oncommand="
         bosshascomming();"/>  
+    <key id="showbm"
+         keycode="VK_F2"
+         oncommand="
+         changeSidebarVisibility();"/>
     <key id="key_newNavigator"
          data-l10n-id="window-new-shortcut"
          command="cmd_newNavigator"
