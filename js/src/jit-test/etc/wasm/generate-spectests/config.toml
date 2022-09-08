@@ -71,3 +71,26 @@ url = "https://github.com/mozilla-spidermonkey/memory64"
 branch = "test-cases"
 directive = "; skip-if: !wasmMemory64Enabled()"
 excluded_tests = []
+
+[[repos]]
+name = "function-references"
+url = "https://github.com/WebAssembly/function-references"
+branch = "main"
+parent = "spec"
+directive = "; --wasm-function-references; skip-if: !wasmFunctionReferencesEnabled()"
+excluded_tests = [
+  # return_call_ref not implemented
+  "return_call_ref.wast",
+  # table function elem subtyping
+  "ref_is_null.wast",
+  # cannot expose indexed reference type
+  "ref_null.wast",
+  # argument is not wasm value
+  "select.wast",
+  # parameter subtyping
+  "type-equivalence.wast",
+  # NYI WasmValType.h:259
+  "table-sub.wast",
+  # unrelated
+  "tokens.wast",
+]

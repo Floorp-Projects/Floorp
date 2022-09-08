@@ -1510,6 +1510,13 @@ static bool DecodeValTypeVector(Decoder& d, ModuleEnvironment* env,
     if (!d.readValType(env->types->length(), env->features, &(*valTypes)[i])) {
       return false;
     }
+#ifdef ENABLE_WASM_FUNCTION_REFERENCES
+    if (env->functionReferencesEnabled()) {
+      // Disable validatation of param/result types for functions.
+      // ValidateTypeState rejects only TypeState::Func, which is needed.
+      continue;
+    }
+#endif
     if (!ValidateTypeState(d, typeState, (*valTypes)[i])) {
       return false;
     }
