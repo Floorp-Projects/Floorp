@@ -227,8 +227,8 @@ figure > img {
   grid-column: var(--homepage-reset-column);
 }
 
-.reset-prompt,
-.success-prompt {
+#homepage-reset-prompt,
+#homepage-reset-success {
   width: 100%;
   display: flex;
   flex-flow: row wrap;
@@ -236,25 +236,33 @@ figure > img {
   justify-content: var(--homepage-reset-align);
 }
 
-.reset-prompt > span,
-.success-prompt > span {
+#homepage-reset-prompt > span,
+#homepage-reset-success > span {
   padding-inline-end: 1em;
 }
 
-#homepage-reset-container:not(.success) > .success-prompt,
-#homepage-reset-container.success > .reset-prompt {
+#homepage-reset-container:not(.success) > #homepage-reset-success,
+#homepage-reset-container.success > #homepage-reset-prompt {
   display: none;
 }
 
-#homepage-reset-container > .success-prompt > span::before {
-  display: inline-block;
+#homepage-reset-success > span {
+  position: relative;
+  padding-inline-start: calc(22px + .5em);
+}
+
+#homepage-reset-success > span::before {
   content: "";
+
   background: var(--green-70) url('chrome://global/skin/icons/check.svg') center center no-repeat;
   -moz-context-properties: fill;
   fill: white;
+  border-radius: 100%;
+
   width: 22px;
   height: 22px;
-  border-radius: 15px;
-  vertical-align: middle;
-  margin-inline-end: 0.5em;
+
+  position: absolute;
+  inset-inline-start: 0;
+  inset-block-start: calc((1em - 22px) / 2);
 }
