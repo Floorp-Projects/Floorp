@@ -2043,11 +2043,21 @@ bool WarpBuilder::build_FreshenLexicalEnv(BytecodeLocation loc) {
 bool WarpBuilder::build_RecreateLexicalEnv(BytecodeLocation loc) {
   MOZ_ASSERT(usesEnvironmentChain());
 
-  MDefinition* env = current->environmentChain();
+  const auto* snapshot = getOpSnapshot<WarpLexicalEnvironment>(loc);
+  MOZ_ASSERT(snapshot);
 
-  bool copySlots = false;
-  auto* ins = MCopyLexicalEnvironmentObject::New(alloc(), env, copySlots);
+  MDefinition* enclosingEnv = walkEnvironmentChain(1);
+  MConstant* templateCst = constant(ObjectValue(*snapshot->templateObj()));
+
+  auto* ins = MNewLexicalEnvironmentObject::New(alloc(), templateCst);
   current->add(ins);
+
+  // Initialize the object's reserved slots. No post barrier is needed here,
+  // for the same reason as in buildNamedLambdaEnv.
+  current->add(MStoreFixedSlot::NewUnbarriered(
+      alloc(), ins, EnvironmentObject::enclosingEnvironmentSlot(),
+      enclosingEnv));
+
   current->setEnvironmentChain(ins);
   return true;
 }
