@@ -1704,7 +1704,6 @@
   operands:
     templateObj: Object
   result_type: Object
-  possibly_calls: true
   alias_set: none
 
 # Allocate a new ClassBodyEnvironmentObject.
@@ -1712,7 +1711,6 @@
   operands:
     templateObj: Object
   result_type: Object
-  possibly_calls: true
   alias_set: none
 
 # Allocate a new BlockLexicalEnvironmentObject from an existing one.
@@ -1729,7 +1727,6 @@
   operands:
     templateObj: Object
   result_type: Object
-  possibly_calls: true
   alias_set: none
 
 - name: HomeObject

@@ -9,6 +9,7 @@
 
 #include "jit/TemplateObject.h"
 
+#include "vm/EnvironmentObject.h"
 #include "vm/PlainObject.h"  // js::PlainObject
 #include "vm/RegExpObject.h"
 
@@ -41,6 +42,10 @@ inline bool TemplateObject::isRegExpObject() const {
 
 inline bool TemplateObject::isCallObject() const {
   return obj_->is<CallObject>();
+}
+
+inline bool TemplateObject::isBlockLexicalEnvironmentObject() const {
+  return obj_->is<BlockLexicalEnvironmentObject>();
 }
 
 inline bool TemplateObject::isPlainObject() const {
