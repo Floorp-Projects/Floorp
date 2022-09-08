@@ -436,6 +436,10 @@ class MOZ_NON_PARAM Val : public LitVal {
 
   // Read from `loc` which is a rooted location and needs no barriers.
   void readFromRootedLocation(const void* loc);
+
+  // Initialize from `loc` which is a rooted location and needs no barriers.
+  void initFromRootedLocation(ValType type, const void* loc);
+
   // Write to `loc` which is a rooted location and needs no barriers.
   void writeToRootedLocation(void* loc, bool mustWrite64) const;
 

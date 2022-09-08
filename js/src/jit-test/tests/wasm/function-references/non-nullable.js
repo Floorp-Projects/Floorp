@@ -130,3 +130,14 @@ wasmFailValidateText(`(module
 wasmFailValidateText(`(module
   (table (ref extern) (elem))
 )`, /non-nullable references not supported in tables/);
+
+// Testing internal wasmLosslessInvoke to pass non-nullable as params and arguments.
+let {t} = wasmEvalText(`(module
+  (func (export "t") (param (ref extern)) (result (ref extern))
+    (local (ref extern))
+    (local.set 1 (local.get 0))
+    (local.get 1)
+  )
+)`).exports;
+const ret = wasmLosslessInvoke(t, {test: 1});
+assertEq(ret.value.test, 1);
