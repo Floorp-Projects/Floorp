@@ -157,9 +157,6 @@ class MFMediaEngineStream
   // True if the stream has received the last data, but it could be reset if the
   // stream starts delivering more data. Used on the task queue only.
   bool mReceivedEOS;
-
-  // Used on the task queue only.
-  bool mHasDispatchedEndEvent;
 };
 
 /**

@@ -130,10 +130,7 @@ MFMediaEngineStreamWrapper::FakeDecodedDataCreator::FakeDecodedDataCreator(
 }
 
 MFMediaEngineStream::MFMediaEngineStream()
-    : mIsShutdown(false),
-      mIsSelected(false),
-      mReceivedEOS(false),
-      mHasDispatchedEndEvent(false) {}
+    : mIsShutdown(false), mIsSelected(false), mReceivedEOS(false) {}
 
 MFMediaEngineStream::~MFMediaEngineStream() { MOZ_ASSERT(IsShutdown()); }
 
@@ -286,10 +283,15 @@ IFACEMETHODIMP MFMediaEngineStream::RequestSample(IUnknown* aToken) {
 
 void MFMediaEngineStream::ReplySampleRequestIfPossible() {
   AssertOnTaskQueue();
-  if (IsEnded() && !mHasDispatchedEndEvent) {
-    mHasDispatchedEndEvent = true;
+  if (IsEnded()) {
+    // We have no more sample to return, clean all pending requests.
+    while (!mSampleRequestTokens.empty()) {
+      mSampleRequestTokens.pop();
+    }
+
     SLOG("Notify end events");
     MOZ_ASSERT(mRawDataQueue.GetSize() == 0);
+    MOZ_ASSERT(mSampleRequestTokens.empty());
     RETURN_VOID_IF_FAILED(mMediaEventQueue->QueueEventParamUnk(
         MEEndOfStream, GUID_NULL, S_OK, nullptr));
     mEndedEvent.Notify(TrackType());
@@ -423,7 +425,6 @@ void MFMediaEngineStream::NotifyNewData(MediaRawData* aSample) {
   if (mReceivedEOS) {
     SLOG("Receive a new data, cancel old EOS flag");
     mReceivedEOS = false;
-    mHasDispatchedEndEvent = false;
   }
   ReplySampleRequestIfPossible();
   if (!wasEnough && HasEnoughRawData()) {
