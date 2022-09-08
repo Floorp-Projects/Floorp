@@ -1142,19 +1142,18 @@ void CanonicalBrowsingContext::RemoveFromSessionHistory(const nsID& aChangeID) {
   }
 }
 
-void CanonicalBrowsingContext::HistoryGo(
+Maybe<int32_t> CanonicalBrowsingContext::HistoryGo(
     int32_t aOffset, uint64_t aHistoryEpoch, bool aRequireUserInteraction,
-    bool aUserActivation, Maybe<ContentParentId> aContentId,
-    std::function<void(int32_t&&)>&& aResolver) {
+    bool aUserActivation, Maybe<ContentParentId> aContentId) {
   if (aRequireUserInteraction && aOffset != -1 && aOffset != 1) {
     NS_ERROR(
         "aRequireUserInteraction may only be used with an offset of -1 or 1");
-    return;
+    return Nothing();
   }
 
   nsSHistory* shistory = static_cast<nsSHistory*>(GetSessionHistory());
   if (!shistory) {
-    return;
+    return Nothing();
   }
 
   CheckedInt<int32_t> index = shistory->GetRequestedIndex() >= 0
@@ -1169,7 +1168,7 @@ void CanonicalBrowsingContext::HistoryGo(
     index += aOffset;
     if (!index.isValid()) {
       MOZ_LOG(gSHLog, LogLevel::Debug, ("Invalid index"));
-      return;
+      return Nothing();
     }
 
     // Check for user interaction if desired, except for the first and last
@@ -1205,14 +1204,15 @@ void CanonicalBrowsingContext::HistoryGo(
   if (NS_FAILED(rv)) {
     MOZ_LOG(gSHLog, LogLevel::Debug,
             ("Dropping HistoryGo - bad index or same epoch (not in same doc)"));
-    return;
+    return Nothing();
   }
   if (epoch < aHistoryEpoch || aContentId != id) {
     MOZ_LOG(gSHLog, LogLevel::Debug, ("Set epoch"));
     shistory->SetEpoch(aHistoryEpoch, aContentId);
   }
-  aResolver(shistory->GetRequestedIndex());
+  int32_t requestedIndex = shistory->GetRequestedIndex();
   nsSHistory::LoadURIs(loadResults);
+  return Some(requestedIndex);
 }
 
 JSObject* CanonicalBrowsingContext::WrapObject(
