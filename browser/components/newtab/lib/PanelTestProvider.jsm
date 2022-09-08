@@ -701,8 +701,7 @@ const MESSAGES = () => [
                 type: "SET_PREF",
                 data: {
                   pref: {
-                    name:
-                      "browser.privacySegmentation.windowSeparation.enabled",
+                    name: "browser.privateWindowSeparation.enabled",
                     value: true,
                   },
                 },
