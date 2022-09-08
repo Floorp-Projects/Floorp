@@ -7635,9 +7635,9 @@ mozilla::ipc::IPCResult ContentParent::RecvHistoryGo(
     uint64_t aHistoryEpoch, bool aRequireUserInteraction, bool aUserActivation,
     HistoryGoResolver&& aResolveRequestedIndex) {
   if (!aContext.IsDiscarded()) {
-    aContext.get_canonical()->HistoryGo(
+    aResolveRequestedIndex(aContext.get_canonical()->HistoryGo(
         aOffset, aHistoryEpoch, aRequireUserInteraction, aUserActivation,
-        Some(ChildID()), std::move(aResolveRequestedIndex));
+        Some(ChildID())));
   }
   return IPC_OK();
 }
