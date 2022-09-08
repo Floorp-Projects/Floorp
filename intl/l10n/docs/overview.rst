@@ -198,4 +198,4 @@ support basic plural categories via a proprietary API `PluralForms.jsm`.
 .. _Pontoon: https://pontoon.mozilla.org/
 .. _hg.mozilla.org/l10n-central: https://hg.mozilla.org/l10n-central/
 .. _L10n Drivers Team: https://wiki.mozilla.org/L10n:Mozilla_Team
-.. _Fluent For Firefox Developers: ./l10n/l10n/fluent_tutorial.html
+.. _Fluent For Firefox Developers: ./fluent/tutorial.html
