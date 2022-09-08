@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources xmlns:moz="http://mozac.org/tools">
+<resources xmlns:moz="http://mozac.org/tools" xmlns:tools="http://schemas.android.com/tools">
     <!-- ####################################################################################### -->
     <!-- ## Put only strings into this file that should be translated. Move all other strings ## -->
     <!-- ## into a separate file like strings_references.xml                                  ## -->
@@ -193,6 +193,9 @@
     <!-- Action at the bottom of the list of custom autocomplete URLs that will open a new screen to add a new URL to the list. -->
     <string name="preference_autocomplete_action_add">+ ເພີ່ມ URL ທີ່ກຳນົດເອງ</string>
 
+    <!-- Action at the bottom of the list of custom autocomplete URLs that will open a new screen to add a new URL to the list. -->
+    <string name="preference_autocomplete_action_add2">ເພີ່ມ URL</string>
+
     <!-- Title of the screen for adding custom autocomplete URLs. -->
     <string name="preference_autocomplete_title_add">ເພີ່ມ URL ທີ່ກຳນົດເອງ</string>
 
@@ -257,15 +260,14 @@
     <string name="preference_privacy_block_content_summary2">ການເປີດໃຊ້ງານອາດຈະເຮັດໃຫ້ບາງຫນ້າເຮັດວຽກຜຶດປົກກະຕິ</string>
     <string name="preference_privacy_category_cookies">ລະງັບຄຸກກີ້</string>
 
+    <!-- Three options for Cookie blocking. Yes (All cookies Blocked), Block 3rd-party cookies
+    only (Only 3rd-party Cookies Blocked), No (No cookies blocked) -->
+    <string name="preference_privacy_should_block_cookies_no_option2">ບໍ່, ຂອບໃຈ</string>
     <string name="preference_privacy_should_block_cookies_third_party_tracker_cookies_option">ບັອກຕົວຕິດຕາມຄຸກກີ້ຈາກບຸກຄົນທີ່ສາມເທົ່ານັ້ນ</string>
     <string name="preference_privacy_should_block_cookies_third_party_only_option">ລະງັບຄຸກກີ້ພາຍນອກເທົ່ານັ້ນ</string>
 
     <!-- Preference Title: Biometrics can be used to unlock Focus if the previous session's data was not erased by the user. -->
     <string name="preference_security_biometric">ນຳໃຊ້ລາຍນິ້ວມືເພື່ອປົດລ໋ອກແອັບ</string>
-    <!-- Preference Summary: Biometrics (iris scan, fingerprint, or facial scan) can be used to unlock Focus if the app had a URL
-        open when the app was last run to ensure that only the phone's owner can view a previous session.
-        %1$s will be replaced by the app name (e.g. Firefox Focus) -->
-    <string name="preference_security_biometric_summary">ລາຍມືຂອງທ່ານສາມາດປົດລ໋ອກ %1$s ຖ້າຫາກ URL ຖືກເປີດຢູ່ແລ້ວໃນແອັບ. ການເຊື່ອງໂຕຈະຖືກເປີດ.</string>
 
     <!-- Preference Title: Secure Mode is a setting that prevents the app's content to show up in the "recent apps" screen
          and prevents the user from taking screenshots or casting the app to other displays. -->
@@ -311,6 +313,9 @@
     <!-- Header for the list of installed search engines -->
     <string name="preference_search_installed_search_engines">ໄດ້ທຳການຕິດຕັ້ງເຄື່ອງມືການຄົ້ນຫາແລ້ວ</string>
 
+    <!-- Header for the list of installed search engines -->
+    <string name="preference_choose_search_engine">ເລືອກເຄື່ອງມືການຄົ້ນຫາ</string>
+
     <!-- Action for restoring the default list of search engines -->
     <string name="preference_search_restore">ກູ້ຄືນເຄື່ອງມືພື້ນຖານຂອງການຄົ້ນຫາ</string>
 
@@ -322,7 +327,7 @@
 
     <!-- Title: Homescreen tips settings toggle to determine whether or not tips are displayed when
      a user first launches the app. -->
-    <string name="preference_homescreen_tips">&quot; ສະແດງເຄັດລັບໜ້າຈໍຫຼັກ&quot;</string>
+    <string moz:removedIn="105" name="preference_homescreen_tips" tools:ignore="UnusedResources">&quot; ສະແດງເຄັດລັບໜ້າຈໍຫຼັກ&quot;</string>
 
     <!-- Clickable action text that shows when user long-presses on a search engine search field (this is similar to paste or copy when long-pressing a text field) -->
     <string name="action_option_add_search_engine">ເພີ່ມເຄື່ອງມືການຄົ້ນຫາ</string>
@@ -568,14 +573,14 @@
 
     <!-- Title for the fingerprint authentication dialog box that is shown to the user when opening the app.
      %1$s is replaced with the app name -->
-    <string name="biometric_auth_title">ປົດລ໋ອກ %1$s</string>
+    <string moz:removedIn="103" name="biometric_auth_title">ປົດລ໋ອກ %1$s</string>
 
     <!-- Description for the fingerprint authentication dialog box that is shown to the user when opening the app -->
-    <string name="biometric_auth_description">ແຕະເຊັນເຊີ້ລາຍນິ້ວມືເພື່ອດຳເນີນການຕໍ່.</string>
+    <string moz:removedIn="103" name="biometric_auth_description">ແຕະເຊັນເຊີ້ລາຍນິ້ວມືເພື່ອດຳເນີນການຕໍ່.</string>
 
     <!-- New session button for the fingerprint authentication dialog box that is shown to the user when opening the app.
      When pressed, the user's previous session is cleared, and authentication is not required. -->
-    <string name="biometric_auth_new_session">ວາລະໃໝ່</string>
+    <string moz:removedIn="103" name="biometric_auth_new_session">ວາລະໃໝ່</string>
 
     <!-- Description for the fingerprint authentication image. Used for accessibility purposes. -->
     <string name="biometric_auth_image_description">ໄອຄອນລາຍນິ້ວມື</string>
@@ -635,8 +640,6 @@
     <!-- Preference for switching to a new tab immediately after opening -->
     <string name="preference_open_new_tab">ສະລັບໄປຫາແທັບໃຫມ່ທັນທີ</string>
 
-    <!-- Preference for safe browsing which when enabled, blocks dangerous or deceptive webpages that may include phishing or malware -->
-    <string moz:removedIn="97" name="preference_category_safe_browsing">ການທ່ອງເວັບແບບປອດໄພ</string>
     <!-- Preference title for safe browsing which when enabled, blocks dangerous or deceptive webpages that may include phishing or malware -->
     <string name="preference_safe_browsing_title">ບັອກເວັບໄຊທທີ່ເປັນອັນຕະລາຍ ແລະ ຕົ້ມຕຸນ</string>
     <!-- Preference summary for safe browsing which when enabled, blocks dangerous or deceptive webpages that may include phishing or malware -->
