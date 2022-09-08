@@ -3808,7 +3808,7 @@ class Document : public nsINode,
    * Localization
    *
    * For more information on DocumentL10n see
-   * intl/l10n/docs/fluent_tutorial.rst
+   * intl/l10n/docs/fluent/tutorial.rst
    */
 
  public:

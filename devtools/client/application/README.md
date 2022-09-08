@@ -37,7 +37,7 @@ The panel is registered along the rest of the Developer Tools panels, in `devtoo
 
 The panel uses the [fluent-react](https://github.com/projectfluent/fluent.js/wiki/React-Bindings) library. The localization file is located at `devtools/client/locales/en-US/application.ftl` and it follows [Fluent syntax](https://projectfluent.org/fluent/guide/).
 
-You should read the [Fluent for Firefox developers](https://firefox-source-docs.mozilla.org/intl/l10n/l10n/fluent_tutorial.html) and [Guidelines for Fluent Reviewers](https://firefox-source-docs.mozilla.org/intl/l10n/l10n/fluent_review.html) guides.
+You should read the [Fluent for Firefox developers](https://firefox-source-docs.mozilla.org/l10n/fluent/tutorial.html) and [Guidelines for Fluent Reviewers](https://firefox-source-docs.mozilla.org/intl/l10n/l10n/fluent_review.html) guides.
 
 #### Adding a new string
 

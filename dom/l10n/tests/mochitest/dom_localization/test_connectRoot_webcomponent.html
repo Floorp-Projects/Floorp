@@ -27,7 +27,7 @@
           if (label.textContent.length) {
             window.removeEventListener("MozAfterPaint", verifyL10n);
             // Notice: In normal tests we do not want to test against any particular
-            // value as per https://firefox-source-docs.mozilla.org/intl/l10n/l10n/fluent_tutorial.html#testing
+            // value as per https://firefox-source-docs.mozilla.org/l10n/fluent/tutorial.html#testing
             // But in this particular test, since we do not rely on actual real
             // localization, but instead we mock it in the test, we can test
             // against the actual value safely.
