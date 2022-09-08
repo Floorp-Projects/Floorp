@@ -108,10 +108,13 @@ add_task(async function() {
     EventUtils.sendMouseEvent({ type: "contextmenu" }, imgRequest);
 
     info("Opening the new request panel");
-    const waitForPanels = waitForDOM(
-      document,
-      ".monitor-panel .network-action-bar"
+    const waitForPanels = waitUntil(
+      () =>
+        document.querySelector(".http-custom-request-panel") &&
+        document.querySelector("#http-custom-request-send-button").disabled ===
+          false
     );
+
     await selectContextMenuItem(monitor, "request-list-context-edit-resend");
     await waitForPanels;
 
