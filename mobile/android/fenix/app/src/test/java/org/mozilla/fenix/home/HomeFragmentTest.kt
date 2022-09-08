@@ -8,6 +8,7 @@ import android.content.Context
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.mockkObject
 import io.mockk.mockkStatic
 import io.mockk.spyk
 import io.mockk.verify
@@ -31,6 +32,8 @@ import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.home.HomeFragment.Companion.AMAZON_SPONSORED_TITLE
 import org.mozilla.fenix.home.HomeFragment.Companion.EBAY_SPONSORED_TITLE
 import org.mozilla.fenix.utils.Settings
+import org.mozilla.fenix.wallpapers.WallpaperManager
+import org.mozilla.fenix.wallpapers.WallpaperManager.Companion.isDefaultTheCurrentWallpaper
 
 class HomeFragmentTest {
 
@@ -109,7 +112,7 @@ class HomeFragmentTest {
     }
 
     @Test
-    fun `GIVEN the user is in normal mode WHEN configuration changes THEN the wallpaper is reapplied`() = runTest {
+    fun `GIVEN the user is in normal mode and has a custom wallpaper chosen WHEN configuration changes THEN the wallpaper is reapplied`() = runTest {
         homeFragment.getMenuButton = { null }
         val observer: WallpapersObserver = mockk(relaxed = true)
         homeFragment.wallpapersObserver = observer
@@ -117,10 +120,31 @@ class HomeFragmentTest {
             every { themeManager.currentTheme.isPrivate } returns false
         }
         every { homeFragment.activity } returns activity
+        mockkObject(WallpaperManager.Companion) {
+            every { isDefaultTheCurrentWallpaper(any()) } returns false
 
-        homeFragment.onConfigurationChanged(mockk(relaxed = true))
+            homeFragment.onConfigurationChanged(mockk(relaxed = true))
 
-        coVerify { observer.applyCurrentWallpaper() }
+            coVerify { observer.applyCurrentWallpaper() }
+        }
+    }
+
+    @Test
+    fun `GIVEN the user is in normal mode and has no custom wallpaper chosen WHEN configuration changes THEN do no try to apply a wallpaper`() = runTest {
+        homeFragment.getMenuButton = { null }
+        val observer: WallpapersObserver = mockk(relaxed = true)
+        homeFragment.wallpapersObserver = observer
+        val activity: HomeActivity = mockk {
+            every { themeManager.currentTheme.isPrivate } returns false
+        }
+        every { homeFragment.activity } returns activity
+        mockkObject(WallpaperManager.Companion) {
+            every { isDefaultTheCurrentWallpaper(any()) } returns true
+
+            homeFragment.onConfigurationChanged(mockk(relaxed = true))
+
+            coVerify(exactly = 0) { observer.applyCurrentWallpaper() }
+        }
     }
 
     @Test
