@@ -1731,6 +1731,13 @@ void BaseCompiler::finishTryNote(size_t tryNoteIndex) {
     }
   }
 
+  // Don't set the end of the try note if we've OOM'ed, as the above nop's may
+  // not have been placed. This is okay as this compilation will be thrown
+  // away.
+  if (masm.oom()) {
+    return;
+  }
+
   // Mark the end of the try note
   tryNote.setTryBodyEnd(masm.currentOffset());
 }
