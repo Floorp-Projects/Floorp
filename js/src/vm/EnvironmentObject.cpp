@@ -106,7 +106,7 @@ static T* CreateEnvironmentObject(JSContext* cx, Handle<Shape*> shape,
   return CreateEnvironmentObject<T>(cx, shape, heap);
 }
 
-CallObject* CallObject::create(JSContext* cx, Handle<Shape*> shape) {
+CallObject* CallObject::createWithShape(JSContext* cx, Handle<Shape*> shape) {
   return CreateEnvironmentObject<CallObject>(cx, shape);
 }
 
@@ -227,7 +227,7 @@ CallObject* CallObject::createHollowForDebug(JSContext* cx,
   if (!shape) {
     return nullptr;
   }
-  Rooted<CallObject*> callobj(cx, create(cx, shape));
+  Rooted<CallObject*> callobj(cx, createWithShape(cx, shape));
   if (!callobj) {
     return nullptr;
   }
