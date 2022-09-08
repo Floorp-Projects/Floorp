@@ -600,8 +600,10 @@ const AVAILABLE_INJECTIONS = [
     bug: "1774005",
     contentScripts: {
       matches: [
-        "*://*.pixiv.net/*", // Bug 1774006
         "*://*.crunchyroll.com/*", // Bug 1777597
+        "*://*.pixiv.net/*", // Bug 1774006
+        "*://*.webex.com/*", // Bug 1788934
+        "*://business.help.royalmail.com/app/webforms/*", // Bug 1786404
         "*://www.northcountrypublicradio.org/contact/subscribe.html*", // Bug 1778382
       ],
       js: [
@@ -729,6 +731,81 @@ const AVAILABLE_INJECTIONS = [
       css: [
         {
           file: "injections/css/bug1784199-entrata-platform-unsupported.css",
+        },
+      ],
+    },
+  },
+  {
+    id: "bug1787267",
+    platform: "all",
+    domain: "All international Nintendo domains",
+    bug: "1787267",
+    contentScripts: {
+      matches: [
+        "*://*.mojenintendo.cz/*",
+        "*://*.nintendo-europe.com/*",
+        "*://*.nintendo.at/*",
+        "*://*.nintendo.be/*",
+        "*://*.nintendo.ch/*",
+        "*://*.nintendo.co.il/*",
+        "*://*.nintendo.co.jp/*",
+        "*://*.nintendo.co.kr/*",
+        "*://*.nintendo.co.nz/*",
+        "*://*.nintendo.co.uk/*",
+        "*://*.nintendo.co.za/*",
+        "*://*.nintendo.com.au/*",
+        "*://*.nintendo.com.hk/*",
+        "*://*.nintendo.com/*",
+        "*://*.nintendo.de/*",
+        "*://*.nintendo.dk/*",
+        "*://*.nintendo.es/*",
+        "*://*.nintendo.fi/*",
+        "*://*.nintendo.fr/*",
+        "*://*.nintendo.gr/*",
+        "*://*.nintendo.hu/*",
+        "*://*.nintendo.it/*",
+        "*://*.nintendo.nl/*",
+        "*://*.nintendo.no/*",
+        "*://*.nintendo.pt/*",
+        "*://*.nintendo.ru/*",
+        "*://*.nintendo.se/*",
+        "*://*.nintendo.sk/*",
+        "*://*.nintendo.tw/*",
+        "*://*.nintendoswitch.com.cn/*",
+      ],
+      js: [
+        {
+          file:
+            "injections/js/bug1787267-nintendo-window-OnetrustActiveGroups.js",
+        },
+      ],
+    },
+  },
+  {
+    id: "bug1788685",
+    platform: "all",
+    domain: "microsoftedgetips.microsoft.com",
+    bug: "1788685",
+    contentScripts: {
+      matches: ["*://microsoftedgetips.microsoft.com/*"],
+      css: [
+        {
+          file:
+            "injections/css/bug1788685-microsoftedgetips.microsoft.com-gallery-fix.css",
+        },
+      ],
+    },
+  },
+  {
+    id: "bug1789164",
+    platform: "all",
+    domain: "zdnet.com",
+    bug: "1789164",
+    contentScripts: {
+      matches: ["*://www.zdnet.com/*"],
+      css: [
+        {
+          file: "injections/css/bug1789164-zdnet.com-cropped-section.css",
         },
       ],
     },
