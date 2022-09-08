@@ -5,8 +5,11 @@
 
 requestLongerTimeout(4);
 
-const { EnterprisePolicyTesting, PoliciesPrefTracker } = ChromeUtils.import(
-  "resource://testing-common/EnterprisePolicyTesting.jsm"
+const {
+  EnterprisePolicyTesting,
+  PoliciesPrefTracker,
+} = ChromeUtils.importESModule(
+  "resource://testing-common/EnterprisePolicyTesting.sys.mjs"
 );
 
 ChromeUtils.defineModuleGetter(

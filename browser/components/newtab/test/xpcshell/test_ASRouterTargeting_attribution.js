@@ -13,8 +13,8 @@ const { ASRouterTargeting } = ChromeUtils.import(
 const { MacAttribution } = ChromeUtils.import(
   "resource:///modules/MacAttribution.jsm"
 );
-const { EnterprisePolicyTesting } = ChromeUtils.import(
-  "resource://testing-common/EnterprisePolicyTesting.jsm"
+const { EnterprisePolicyTesting } = ChromeUtils.importESModule(
+  "resource://testing-common/EnterprisePolicyTesting.sys.mjs"
 );
 
 add_task(async function check_attribution_data() {
