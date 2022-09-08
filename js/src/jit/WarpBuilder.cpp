@@ -2031,11 +2031,67 @@ bool WarpBuilder::build_PopLexicalEnv(BytecodeLocation) {
 bool WarpBuilder::build_FreshenLexicalEnv(BytecodeLocation loc) {
   MOZ_ASSERT(usesEnvironmentChain());
 
-  MDefinition* env = current->environmentChain();
+  const auto* snapshot = getOpSnapshot<WarpLexicalEnvironment>(loc);
+  MOZ_ASSERT(snapshot);
 
-  bool copySlots = true;
-  auto* ins = MCopyLexicalEnvironmentObject::New(alloc(), env, copySlots);
+  MDefinition* enclosingEnv = walkEnvironmentChain(1);
+  MDefinition* env = current->environmentChain();
+  MConstant* templateCst = constant(ObjectValue(*snapshot->templateObj()));
+
+  auto* templateObj = snapshot->templateObj();
+  auto* scope = &templateObj->scope();
+  MOZ_ASSERT(scope->hasEnvironment());
+
+  auto* ins = MNewLexicalEnvironmentObject::New(alloc(), templateCst);
   current->add(ins);
+
+  // Initialize the object's reserved slots. No post barrier is needed here,
+  // for the same reason as in buildNamedLambdaEnv.
+  current->add(MStoreFixedSlot::NewUnbarriered(
+      alloc(), ins, EnvironmentObject::enclosingEnvironmentSlot(),
+      enclosingEnv));
+
+  // Copy environment slots.
+  MSlots* envSlots = nullptr;
+  MSlots* slots = nullptr;
+  for (BindingIter iter(scope); iter; iter++) {
+    auto loc = iter.location();
+    if (loc.kind() != BindingLocation::Kind::Environment) {
+      MOZ_ASSERT(loc.kind() == BindingLocation::Kind::Frame);
+      continue;
+    }
+
+    if (!alloc().ensureBallast()) {
+      return false;
+    }
+
+    uint32_t slot = loc.slot();
+    uint32_t numFixedSlots = templateObj->numFixedSlots();
+    if (slot >= numFixedSlots) {
+      if (!envSlots) {
+        envSlots = MSlots::New(alloc(), env);
+        current->add(envSlots);
+      }
+      if (!slots) {
+        slots = MSlots::New(alloc(), ins);
+        current->add(slots);
+      }
+
+      uint32_t dynamicSlot = slot - numFixedSlots;
+
+      auto* load = MLoadDynamicSlot::New(alloc(), envSlots, dynamicSlot);
+      current->add(load);
+
+      current->add(
+          MStoreDynamicSlot::NewUnbarriered(alloc(), slots, dynamicSlot, load));
+    } else {
+      auto* load = MLoadFixedSlot::New(alloc(), env, slot);
+      current->add(load);
+
+      current->add(MStoreFixedSlot::NewUnbarriered(alloc(), ins, slot, load));
+    }
+  }
+
   current->setEnvironmentChain(ins);
   return true;
 }
