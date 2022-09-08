@@ -13,20 +13,23 @@
 namespace mozilla {
 
 // Don't use this log on the task queue, because it would be racy for `mStream`.
-#define WLOGV(msg, ...)                                           \
-  MOZ_LOG(gMFMediaEngineLog, LogLevel::Verbose,                   \
-          ("MFMediaEngineStreamWrapper for stream %p (%s), " msg, \
-           mStream.Get(), mStream->GetDescriptionName().get(), ##__VA_ARGS__))
+#define WLOGV(msg, ...)                                                   \
+  MOZ_LOG(gMFMediaEngineLog, LogLevel::Verbose,                           \
+          ("MFMediaEngineStreamWrapper for stream %p (%s, id=%lu), " msg, \
+           mStream.Get(), mStream->GetDescriptionName().get(),            \
+           mStream->DescriptorId(), ##__VA_ARGS__))
 
-#define SLOG(msg, ...)                          \
-  MOZ_LOG(gMFMediaEngineLog, LogLevel::Debug,   \
-          ("MFMediaStream=%p (%s), " msg, this, \
-           this->GetDescriptionName().get(), ##__VA_ARGS__))
+#define SLOG(msg, ...)                              \
+  MOZ_LOG(                                          \
+      gMFMediaEngineLog, LogLevel::Debug,           \
+      ("MFMediaStream=%p (%s, id=%lu), " msg, this, \
+       this->GetDescriptionName().get(), this->DescriptorId(), ##__VA_ARGS__))
 
-#define SLOGV(msg, ...)                         \
-  MOZ_LOG(gMFMediaEngineLog, LogLevel::Verbose, \
-          ("MFMediaStream=%p (%s), " msg, this, \
-           this->GetDescriptionName().get(), ##__VA_ARGS__))
+#define SLOGV(msg, ...)                             \
+  MOZ_LOG(                                          \
+      gMFMediaEngineLog, LogLevel::Verbose,         \
+      ("MFMediaStream=%p (%s, id=%lu), " msg, this, \
+       this->GetDescriptionName().get(), this->DescriptorId(), ##__VA_ARGS__))
 
 using Microsoft::WRL::ComPtr;
 
