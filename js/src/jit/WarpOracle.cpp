@@ -454,8 +454,8 @@ AbortReasonOr<WarpScriptSnapshot*> WarpScriptOracle::createScriptSnapshot() {
       case JSOp::PushVarEnv: {
         Rooted<VarScope*> scope(cx_, &loc.getScope(script_)->as<VarScope>());
 
-        auto* templateObj = VarEnvironmentObject::createTemplateObject(
-            cx_, scope, gc::TenuredHeap);
+        auto* templateObj =
+            VarEnvironmentObject::createTemplateObject(cx_, scope);
         if (!templateObj) {
           return abort(AbortReason::Alloc);
         }
@@ -474,8 +474,8 @@ AbortReasonOr<WarpScriptSnapshot*> WarpScriptOracle::createScriptSnapshot() {
         Rooted<LexicalScope*> scope(cx_,
                                     &loc.getScope(script_)->as<LexicalScope>());
 
-        auto* templateObj = BlockLexicalEnvironmentObject::createTemplateObject(
-            cx_, scope, gc::TenuredHeap);
+        auto* templateObj =
+            BlockLexicalEnvironmentObject::createTemplateObject(cx_, scope);
         if (!templateObj) {
           return abort(AbortReason::Alloc);
         }
@@ -493,8 +493,7 @@ AbortReasonOr<WarpScriptSnapshot*> WarpScriptOracle::createScriptSnapshot() {
             cx_, &loc.getScope(script_)->as<ClassBodyScope>());
 
         auto* templateObj =
-            ClassBodyLexicalEnvironmentObject::createTemplateObject(
-                cx_, scope, gc::TenuredHeap);
+            ClassBodyLexicalEnvironmentObject::createTemplateObject(cx_, scope);
         if (!templateObj) {
           return abort(AbortReason::Alloc);
         }

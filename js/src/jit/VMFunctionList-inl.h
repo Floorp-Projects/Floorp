@@ -88,8 +88,8 @@ namespace jit {
     js::jit::BigIntStringEqual<js::jit::EqualityKind::NotEqual>)               \
   _(BigIntSub, JS::BigInt::sub)                                                \
   _(BindVarOperation, js::BindVarOperation)                                    \
-  _(BlockLexicalEnvironmentObjectCreateTemplateObject,                         \
-    js::BlockLexicalEnvironmentObject::createTemplateObject)                   \
+  _(BlockLexicalEnvironmentObjectCreateWithoutEnclosing,                       \
+    js::BlockLexicalEnvironmentObject::createWithoutEnclosing)                 \
   _(BoxBoxableValue, js::wasm::BoxBoxableValue)                                \
   _(BoxNonStrictThis, js::BoxNonStrictThis)                                    \
   _(BuiltinObjectOperation, js::BuiltinObjectOperation)                        \
@@ -103,8 +103,8 @@ namespace jit {
   _(CheckOverRecursed, js::jit::CheckOverRecursed)                             \
   _(CheckOverRecursedBaseline, js::jit::CheckOverRecursedBaseline)             \
   _(CheckPrivateFieldOperation, js::CheckPrivateFieldOperation)                \
-  _(ClassBodyLexicalEnvironmentObjectCreateTemplateObject,                     \
-    js::ClassBodyLexicalEnvironmentObject::createTemplateObject)               \
+  _(ClassBodyLexicalEnvironmentObjectCreateWithoutEnclosing,                   \
+    js::ClassBodyLexicalEnvironmentObject::createWithoutEnclosing)             \
   _(CloneRegExpObject, js::CloneRegExpObject)                                  \
   _(CloseIterOperation, js::CloseIterOperation)                                \
   _(ConcatStrings, js::ConcatStrings<CanGC>)                                   \
@@ -189,8 +189,8 @@ namespace jit {
   _(MapObjectGet, js::jit::MapObjectGet)                                       \
   _(MapObjectHas, js::jit::MapObjectHas)                                       \
   _(MutatePrototype, js::jit::MutatePrototype)                                 \
-  _(NamedLambdaObjectCreateTemplateObject,                                     \
-    js::NamedLambdaObject::createTemplateObject)                               \
+  _(NamedLambdaObjectCreateWithoutEnclosing,                                   \
+    js::NamedLambdaObject::createWithoutEnclosing)                             \
   _(NativeGetElement, js::NativeGetElement)                                    \
   _(NewArgumentsObject, js::jit::NewArgumentsObject)                           \
   _(NewArrayIterator, js::NewArrayIterator)                                    \
@@ -275,8 +275,8 @@ namespace jit {
   _(ToBigInt, js::ToBigInt)                                                    \
   _(ToStringSlow, js::ToStringSlow<CanGC>)                                     \
   _(ValueToIterator, js::ValueToIterator)                                      \
-  _(VarEnvironmentObjectCreateTemplateObject,                                  \
-    js::VarEnvironmentObject::createTemplateObject)
+  _(VarEnvironmentObjectCreateWithoutEnclosing,                                \
+    js::VarEnvironmentObject::createWithoutEnclosing)
 
 // The list below is for tail calls. The third argument specifies the number of
 // non-argument Values the VM wrapper should pop from the stack. This is used
