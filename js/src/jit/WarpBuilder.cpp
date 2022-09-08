@@ -2028,22 +2028,27 @@ bool WarpBuilder::build_PopLexicalEnv(BytecodeLocation) {
   return true;
 }
 
-void WarpBuilder::buildCopyLexicalEnvOp(bool copySlots) {
+bool WarpBuilder::build_FreshenLexicalEnv(BytecodeLocation loc) {
   MOZ_ASSERT(usesEnvironmentChain());
 
   MDefinition* env = current->environmentChain();
+
+  bool copySlots = true;
   auto* ins = MCopyLexicalEnvironmentObject::New(alloc(), env, copySlots);
   current->add(ins);
   current->setEnvironmentChain(ins);
-}
-
-bool WarpBuilder::build_FreshenLexicalEnv(BytecodeLocation) {
-  buildCopyLexicalEnvOp(/* copySlots = */ true);
   return true;
 }
 
-bool WarpBuilder::build_RecreateLexicalEnv(BytecodeLocation) {
-  buildCopyLexicalEnvOp(/* copySlots = */ false);
+bool WarpBuilder::build_RecreateLexicalEnv(BytecodeLocation loc) {
+  MOZ_ASSERT(usesEnvironmentChain());
+
+  MDefinition* env = current->environmentChain();
+
+  bool copySlots = false;
+  auto* ins = MCopyLexicalEnvironmentObject::New(alloc(), env, copySlots);
+  current->add(ins);
+  current->setEnvironmentChain(ins);
   return true;
 }
 
