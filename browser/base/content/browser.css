@@ -1572,8 +1572,11 @@ toolbar[keyNav=true]:not([collapsed=true], [customizing=true]) toolbartabstop {
   --box-max-height-margin: calc(100vh - var(--box-top-px) - var(--box-block-margin));
   --box-max-width-ratio: 70vw;
   --box-max-height-ratio: calc(var(--box-ideal-height) / var(--box-ideal-width) * var(--box-max-width-ratio));
-  max-width: min(max(var(--box-ideal-width) * 1px, var(--box-max-width-ratio)), var(--box-max-width-margin));
-  max-height: min(max(var(--box-ideal-height) * 1px, var(--box-max-height-ratio)), var(--box-max-height-margin));
+  --box-max-height-requested: 100vh;
+  --box-max-width-requested: 100vw;
+  --box-max-height-remaining: calc(100vh - var(--box-top-px));
+  max-width: min(max(var(--box-ideal-width) * 1px, var(--box-max-width-ratio)), var(--box-max-width-margin), var(--box-max-width-requested));
+  max-height: min(max(var(--box-ideal-height) * 1px, var(--box-max-height-ratio)), var(--box-max-height-margin), var(--box-max-height-requested), var(--box-max-height-remaining));
   width: 100vw;
   height: 100vh;
   margin: 0;
