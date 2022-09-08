@@ -4012,46 +4012,72 @@ static T* ToConstantObject(MDefinition* def) {
 
 void CodeGenerator::visitNewLexicalEnvironmentObject(
     LNewLexicalEnvironmentObject* lir) {
+  Register output = ToRegister(lir->output());
+  Register temp = ToRegister(lir->temp0());
+
   auto* templateObj = ToConstantObject<BlockLexicalEnvironmentObject>(
       lir->mir()->templateObj());
   auto* scope = &templateObj->scope();
-
-  pushArg(Imm32(gc::DefaultHeap));
-  pushArg(ImmGCPtr(scope));
+  gc::InitialHeap initialHeap = gc::DefaultHeap;
 
   using Fn =
       BlockLexicalEnvironmentObject* (*)(JSContext*, Handle<LexicalScope*>,
                                          gc::InitialHeap);
-  callVM<Fn, BlockLexicalEnvironmentObject::createTemplateObject>(lir);
+  auto* ool =
+      oolCallVM<Fn, BlockLexicalEnvironmentObject::createTemplateObject>(
+          lir, ArgList(ImmGCPtr(scope), Imm32(initialHeap)),
+          StoreRegisterTo(output));
+
+  TemplateObject templateObject(templateObj);
+  masm.createGCObject(output, temp, templateObject, initialHeap, ool->entry());
+
+  masm.bind(ool->rejoin());
 }
 
 void CodeGenerator::visitNewClassBodyEnvironmentObject(
     LNewClassBodyEnvironmentObject* lir) {
+  Register output = ToRegister(lir->output());
+  Register temp = ToRegister(lir->temp0());
+
   auto* templateObj = ToConstantObject<ClassBodyLexicalEnvironmentObject>(
       lir->mir()->templateObj());
   auto* scope = &templateObj->scope();
-
-  pushArg(Imm32(gc::DefaultHeap));
-  pushArg(ImmGCPtr(scope));
+  gc::InitialHeap initialHeap = gc::DefaultHeap;
 
   using Fn = ClassBodyLexicalEnvironmentObject* (*)(JSContext*,
                                                     Handle<ClassBodyScope*>,
                                                     gc::InitialHeap);
-  callVM<Fn, ClassBodyLexicalEnvironmentObject::createTemplateObject>(lir);
+  auto* ool =
+      oolCallVM<Fn, ClassBodyLexicalEnvironmentObject::createTemplateObject>(
+          lir, ArgList(ImmGCPtr(scope), Imm32(initialHeap)),
+          StoreRegisterTo(output));
+
+  TemplateObject templateObject(templateObj);
+  masm.createGCObject(output, temp, templateObject, initialHeap, ool->entry());
+
+  masm.bind(ool->rejoin());
 }
 
 void CodeGenerator::visitNewVarEnvironmentObject(
     LNewVarEnvironmentObject* lir) {
+  Register output = ToRegister(lir->output());
+  Register temp = ToRegister(lir->temp0());
+
   auto* templateObj =
       ToConstantObject<VarEnvironmentObject>(lir->mir()->templateObj());
   auto* scope = &templateObj->scope().as<VarScope>();
-
-  pushArg(Imm32(gc::DefaultHeap));
-  pushArg(ImmGCPtr(scope));
+  gc::InitialHeap initialHeap = gc::DefaultHeap;
 
   using Fn =
       VarEnvironmentObject* (*)(JSContext*, Handle<VarScope*>, gc::InitialHeap);
-  callVM<Fn, VarEnvironmentObject::createTemplateObject>(lir);
+  auto* ool = oolCallVM<Fn, VarEnvironmentObject::createTemplateObject>(
+      lir, ArgList(ImmGCPtr(scope), Imm32(initialHeap)),
+      StoreRegisterTo(output));
+
+  TemplateObject templateObject(templateObj);
+  masm.createGCObject(output, temp, templateObject, initialHeap, ool->entry());
+
+  masm.bind(ool->rejoin());
 }
 
 void CodeGenerator::visitCopyLexicalEnvironmentObject(

@@ -2109,7 +2109,7 @@
 
 - name: NewLexicalEnvironmentObject
   result_type: WordSized
-  call_instruction: true
+  num_temps: 1
   mir_op: true
 
 - name: CopyLexicalEnvironmentObject
@@ -2121,12 +2121,12 @@
 
 - name: NewClassBodyEnvironmentObject
   result_type: WordSized
-  call_instruction: true
+  num_temps: 1
   mir_op: true
 
 - name: NewVarEnvironmentObject
   result_type: WordSized
-  call_instruction: true
+  num_temps: 1
   mir_op: true
 
 - name: CallSetElement

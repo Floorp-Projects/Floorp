@@ -3134,9 +3134,9 @@ void LIRGenerator::visitSetFunName(MSetFunName* ins) {
 
 void LIRGenerator::visitNewLexicalEnvironmentObject(
     MNewLexicalEnvironmentObject* ins) {
-  auto* lir = new (alloc()) LNewLexicalEnvironmentObject();
+  auto* lir = new (alloc()) LNewLexicalEnvironmentObject(temp());
 
-  defineReturn(lir, ins);
+  define(lir, ins);
   assignSafepoint(lir, ins);
 }
 
@@ -3154,16 +3154,16 @@ void LIRGenerator::visitCopyLexicalEnvironmentObject(
 
 void LIRGenerator::visitNewClassBodyEnvironmentObject(
     MNewClassBodyEnvironmentObject* ins) {
-  auto* lir = new (alloc()) LNewClassBodyEnvironmentObject();
+  auto* lir = new (alloc()) LNewClassBodyEnvironmentObject(temp());
 
-  defineReturn(lir, ins);
+  define(lir, ins);
   assignSafepoint(lir, ins);
 }
 
 void LIRGenerator::visitNewVarEnvironmentObject(MNewVarEnvironmentObject* ins) {
-  auto* lir = new (alloc()) LNewVarEnvironmentObject();
+  auto* lir = new (alloc()) LNewVarEnvironmentObject(temp());
 
-  defineReturn(lir, ins);
+  define(lir, ins);
   assignSafepoint(lir, ins);
 }
 
