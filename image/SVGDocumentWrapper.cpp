@@ -180,7 +180,9 @@ void SVGDocumentWrapper::SetCurrentTime(float aTime) {
 void SVGDocumentWrapper::TickRefreshDriver() {
   if (RefPtr<PresShell> presShell = mViewer->GetPresShell()) {
     if (RefPtr<nsPresContext> presContext = presShell->GetPresContext()) {
-      presContext->RefreshDriver()->DoTick();
+      if (RefPtr<nsRefreshDriver> driver = presContext->RefreshDriver()) {
+        driver->DoTick();
+      }
     }
   }
 }
