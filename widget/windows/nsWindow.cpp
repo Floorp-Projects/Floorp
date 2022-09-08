@@ -262,7 +262,6 @@ using namespace mozilla::plugins;
 static const wchar_t kUser32LibName[] = L"user32.dll";
 
 uint32_t nsWindow::sInstanceCount = 0;
-bool nsWindow::sSwitchKeyboardLayout = false;
 BOOL nsWindow::sIsOleInitialized = FALSE;
 nsIWidget::Cursor nsWindow::sCurrentCursor = {};
 nsWindow* nsWindow::sCurrentWindow = nullptr;
@@ -270,10 +269,7 @@ bool nsWindow::sJustGotDeactivate = false;
 bool nsWindow::sJustGotActivate = false;
 bool nsWindow::sIsInMouseCapture = false;
 
-// imported in nsWidgetFactory.cpp
-TriStateBool nsWindow::sCanQuit = TRI_UNKNOWN;
-
-// Hook Data Memebers for Dropdowns. sProcessHook Tells the
+// Hook Data Members for Dropdowns. sProcessHook Tells the
 // hook methods whether they should be processing the hook
 // messages.
 HHOOK nsWindow::sMsgFilterHook = nullptr;
@@ -284,20 +280,11 @@ UINT nsWindow::sRollupMsgId = 0;
 HWND nsWindow::sRollupMsgWnd = nullptr;
 UINT nsWindow::sHookTimerId = 0;
 
-// Mouse Clicks - static variable definitions for figuring
-// out 1 - 3 Clicks.
-POINT nsWindow::sLastMousePoint = {0};
+// Used to prevent dispatching mouse events that do not originate from user
+// input.
 POINT nsWindow::sLastMouseMovePoint = {0};
-LONG nsWindow::sLastMouseDownTime = 0L;
-LONG nsWindow::sLastClickCount = 0L;
-BYTE nsWindow::sLastMouseButton = 0;
 
-bool nsWindow::sHaveInitializedPrefs = false;
 bool nsWindow::sIsRestoringSession = false;
-
-bool nsWindow::sFirstTopLevelWindowCreated = false;
-
-TriStateBool nsWindow::sHasBogusPopupsDropShadowOnMultiMonitor = TRI_UNKNOWN;
 
 bool nsWindow::sTouchInjectInitialized = false;
 InjectTouchInputPtr nsWindow::sInjectTouchFuncPtr;
@@ -370,9 +357,6 @@ static const char* sScreenManagerContractID =
     "@mozilla.org/gfx/screenmanager;1";
 
 extern mozilla::LazyLogModule gWindowsLog;
-
-// True if we have sent a notification that we are suspending/sleeping.
-static bool gIsSleepMode = false;
 
 static NS_DEFINE_CID(kCClipboardCID, NS_CLIPBOARD_CID);
 
@@ -1023,6 +1007,8 @@ nsresult nsWindow::Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
 
   const wchar_t* className = ChooseWindowClass(mWindowType, mForMenupopupFrame);
 
+  // Take specific actions when creating the first top-level window
+  static bool sFirstTopLevelWindowCreated = false;
   if (aInitData->mWindowType == eWindowType_toplevel && !aParent &&
       !sFirstTopLevelWindowCreated) {
     sFirstTopLevelWindowCreated = true;
@@ -1227,15 +1213,6 @@ nsresult nsWindow::Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
 
   mDefaultIMC.Init(this);
   IMEHandler::InitInputContext(this, mInputContext);
-
-  // Do some initialization work, but only if (a) it hasn't already been done,
-  // and (b) this is the hidden window (which is conveniently created before
-  // any visible windows but after the profile has been initialized).
-  if (!sHaveInitializedPrefs && mWindowType == eWindowType_invisible) {
-    sSwitchKeyboardLayout =
-        Preferences::GetBool("intl.keyboard.per_window_layout", false);
-    sHaveInitializedPrefs = true;
-  }
 
   // Query for command button metric data for rendering the titlebar. We
   // only do this once on the first window that has an actual titlebar
@@ -4597,6 +4574,12 @@ bool nsWindow::DispatchMouseEvent(EventMessage aEventMessage, WPARAM wParam,
     event.pointerId = pointerId;
   }
 
+  // Static variables used to distinguish simple-, double- and triple-clicks.
+  static POINT sLastMousePoint = {0};
+  static LONG sLastMouseDownTime = 0L;
+  static LONG sLastClickCount = 0L;
+  static BYTE sLastMouseButton = 0;
+
   bool insideMovementThreshold =
       (DeprecatedAbs(sLastMousePoint.x - eventPoint.x) <
        (short)::GetSystemMetrics(SM_CXDOUBLECLK)) &&
@@ -5183,6 +5166,16 @@ bool nsWindow::ProcessMessageInternal(UINT msg, WPARAM& wParam, LPARAM& lParam,
     *aRetValue = dwmHitResult;
     return true;
   }
+
+  // The preference whether to use a different keyboard layout for each
+  // window is cached, and updating it will not take effect until the
+  // next restart. We read the preference here and not upon WM_ACTIVATE to make
+  // sure that this behavior is consistent. Otherwise, if the user changed the
+  // preference before having ever lowered the window, the preference would take
+  // effect immediately.
+  static bool sSwitchKeyboardLayout =
+      Preferences::GetBool("intl.keyboard.per_window_layout", false);
+  static TriStateBool sCanQuit = TRI_UNKNOWN;
 
   // (Large blocks of code should be broken out into OnEvent handlers.)
   switch (msg) {
@@ -6676,9 +6669,13 @@ TimeStamp nsWindow::GetMessageTimeStamp(LONG aEventTime) const {
 }
 
 void nsWindow::PostSleepWakeNotification(const bool aIsSleepMode) {
-  if (aIsSleepMode == gIsSleepMode) return;
+  // Retain the previous mode that was notified to observers
+  static bool sWasSleepMode = false;
 
-  gIsSleepMode = aIsSleepMode;
+  // Only notify observers if mode changed
+  if (aIsSleepMode == sWasSleepMode) return;
+
+  sWasSleepMode = aIsSleepMode;
 
   nsCOMPtr<nsIObserverService> observerService =
       mozilla::services::GetObserverService();
@@ -7615,7 +7612,9 @@ void nsWindow::WindowUsesOMTC() {
   NS_WARNING_ASSERTION(result, "Could not reset window class style");
 }
 
+// See bug 603793
 bool nsWindow::HasBogusPopupsDropShadowOnMultiMonitor() {
+  static TriStateBool sHasBogusPopupsDropShadowOnMultiMonitor = TRI_UNKNOWN;
   if (sHasBogusPopupsDropShadowOnMultiMonitor == TRI_UNKNOWN) {
     // Since any change in the preferences requires a restart, this can be
     // done just once.
