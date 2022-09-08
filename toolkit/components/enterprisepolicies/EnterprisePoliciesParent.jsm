@@ -2,22 +2,22 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
+var EXPORTED_SYMBOLS = ["EnterprisePoliciesManager"];
 
+const { XPCOMUtils } = ChromeUtils.importESModule(
+  "resource://gre/modules/XPCOMUtils.sys.mjs"
+);
 const { AppConstants } = ChromeUtils.import(
   "resource://gre/modules/AppConstants.jsm"
 );
 
 const lazy = {};
 
-ChromeUtils.defineESModuleGetters(lazy, {
-  Policies: "resource:///modules/policies/Policies.sys.mjs",
-  WindowsGPOParser: "resource://gre/modules/policies/WindowsGPOParser.sys.mjs",
-  macOSPoliciesParser:
-    "resource://gre/modules/policies/macOSPoliciesParser.sys.mjs",
-});
-
 XPCOMUtils.defineLazyModuleGetters(lazy, {
+  WindowsGPOParser: "resource://gre/modules/policies/WindowsGPOParser.jsm",
+  macOSPoliciesParser:
+    "resource://gre/modules/policies/macOSPoliciesParser.jsm",
+  Policies: "resource:///modules/policies/Policies.jsm",
   JsonSchemaValidator:
     "resource://gre/modules/components-utils/JsonSchemaValidator.jsm",
 });
@@ -81,7 +81,7 @@ function isEmptyObject(obj) {
   return true;
 }
 
-export function EnterprisePoliciesManager() {
+function EnterprisePoliciesManager() {
   Services.obs.addObserver(this, "profile-after-change", true);
   Services.obs.addObserver(this, "final-ui-startup", true);
   Services.obs.addObserver(this, "sessionstore-windows-restored", true);

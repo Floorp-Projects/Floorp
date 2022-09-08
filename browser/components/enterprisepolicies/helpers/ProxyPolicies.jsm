@@ -4,7 +4,9 @@
 
 "use strict";
 
-import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
+const { XPCOMUtils } = ChromeUtils.importESModule(
+  "resource://gre/modules/XPCOMUtils.sys.mjs"
+);
 
 const PREF_LOGLEVEL = "browser.policies.loglevel";
 
@@ -23,7 +25,7 @@ XPCOMUtils.defineLazyGetter(lazy, "log", () => {
 
 // Don't use const here because this is acessed by
 // tests through the BackstagePass object.
-export var PROXY_TYPES_MAP = new Map([
+var PROXY_TYPES_MAP = new Map([
   ["none", Ci.nsIProtocolProxyService.PROXYCONFIG_DIRECT],
   ["system", Ci.nsIProtocolProxyService.PROXYCONFIG_SYSTEM],
   ["manual", Ci.nsIProtocolProxyService.PROXYCONFIG_MANUAL],
@@ -31,7 +33,9 @@ export var PROXY_TYPES_MAP = new Map([
   ["autoConfig", Ci.nsIProtocolProxyService.PROXYCONFIG_PAC],
 ]);
 
-export var ProxyPolicies = {
+var EXPORTED_SYMBOLS = ["ProxyPolicies", "PROXY_TYPES_MAP"];
+
+var ProxyPolicies = {
   configureProxySettings(param, setPref) {
     if (param.Mode) {
       setPref("network.proxy.type", PROXY_TYPES_MAP.get(param.Mode));

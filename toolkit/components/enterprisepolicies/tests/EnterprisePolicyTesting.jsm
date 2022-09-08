@@ -15,7 +15,9 @@ ChromeUtils.defineModuleGetter(
   "resource://testing-common/FileTestUtils.jsm"
 );
 
-export var EnterprisePolicyTesting = {
+var EXPORTED_SYMBOLS = ["EnterprisePolicyTesting", "PoliciesPrefTracker"];
+
+var EnterprisePolicyTesting = {
   // |json| must be an object representing the desired policy configuration, OR a
   // path to the JSON file containing the policy configuration.
   setupPolicyEngineWithJson: async function setupPolicyEngineWithJson(
@@ -97,13 +99,13 @@ export var EnterprisePolicyTesting = {
  * that they are restored to their original values when
  * the test ends or another test case restarts the engine.
  */
-export var PoliciesPrefTracker = {
+var PoliciesPrefTracker = {
   _originalFunc: null,
   _originalValues: new Map(),
 
   start() {
-    let { PoliciesUtils } = ChromeUtils.importESModule(
-      "resource:///modules/policies/Policies.sys.mjs"
+    let { PoliciesUtils } = ChromeUtils.import(
+      "resource:///modules/policies/Policies.jsm"
     );
     this._originalFunc = PoliciesUtils.setDefaultPref;
     PoliciesUtils.setDefaultPref = this.hoistedSetDefaultPref.bind(this);
@@ -112,8 +114,8 @@ export var PoliciesPrefTracker = {
   stop() {
     this.restoreDefaultValues();
 
-    let { PoliciesUtils } = ChromeUtils.importESModule(
-      "resource:///modules/policies/Policies.sys.mjs"
+    let { PoliciesUtils } = ChromeUtils.import(
+      "resource:///modules/policies/Policies.jsm"
     );
     PoliciesUtils.setDefaultPref = this._originalFunc;
     this._originalFunc = null;

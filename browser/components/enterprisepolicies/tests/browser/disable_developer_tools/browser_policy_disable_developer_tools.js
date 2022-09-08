@@ -3,8 +3,8 @@
 
 "use strict";
 
-const { EnterprisePolicyTesting } = ChromeUtils.importESModule(
-  "resource://testing-common/EnterprisePolicyTesting.sys.mjs"
+const { EnterprisePolicyTesting } = ChromeUtils.import(
+  "resource://testing-common/EnterprisePolicyTesting.jsm"
 );
 var updateService = Cc["@mozilla.org/updates/update-service;1"].getService(
   Ci.nsIApplicationUpdateService

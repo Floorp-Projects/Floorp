@@ -4,11 +4,8 @@
 
 "use strict";
 
-const {
-  EnterprisePolicyTesting,
-  PoliciesPrefTracker,
-} = ChromeUtils.importESModule(
-  "resource://testing-common/EnterprisePolicyTesting.sys.mjs"
+const { EnterprisePolicyTesting, PoliciesPrefTracker } = ChromeUtils.import(
+  "resource://testing-common/EnterprisePolicyTesting.jsm"
 );
 const { TestUtils } = ChromeUtils.import(
   "resource://testing-common/TestUtils.jsm"

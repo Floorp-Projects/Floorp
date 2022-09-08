@@ -4,8 +4,9 @@
 
 "use strict";
 
-import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
-
+const { XPCOMUtils } = ChromeUtils.importESModule(
+  "resource://gre/modules/XPCOMUtils.sys.mjs"
+);
 const { AppConstants } = ChromeUtils.import(
   "resource://gre/modules/AppConstants.jsm"
 );
@@ -26,16 +27,13 @@ XPCOMUtils.defineLazyServiceGetters(lazy, {
   gXulStore: ["@mozilla.org/xul/xulstore;1", "nsIXULStore"],
 });
 
-ChromeUtils.defineESModuleGetters(lazy, {
-  BookmarksPolicies: "resource:///modules/policies/BookmarksPolicies.sys.mjs",
-  ProxyPolicies: "resource:///modules/policies/ProxyPolicies.sys.mjs",
-  WebsiteFilter: "resource:///modules/policies/WebsiteFilter.sys.mjs",
-});
-
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   AddonManager: "resource://gre/modules/AddonManager.jsm",
+  BookmarksPolicies: "resource:///modules/policies/BookmarksPolicies.jsm",
   CustomizableUI: "resource:///modules/CustomizableUI.jsm",
   FileUtils: "resource://gre/modules/FileUtils.jsm",
+  ProxyPolicies: "resource:///modules/policies/ProxyPolicies.jsm",
+  WebsiteFilter: "resource:///modules/policies/WebsiteFilter.jsm",
 });
 
 const PREF_LOGLEVEL = "browser.policies.loglevel";
@@ -57,6 +55,13 @@ XPCOMUtils.defineLazyGetter(lazy, "log", () => {
     maxLogLevelPref: PREF_LOGLEVEL,
   });
 });
+
+var EXPORTED_SYMBOLS = [
+  "Policies",
+  "setAndLockPref",
+  "PoliciesUtils",
+  "runOnce",
+];
 
 /*
  * ============================
@@ -84,7 +89,7 @@ XPCOMUtils.defineLazyGetter(lazy, "log", () => {
  *
  * The callbacks will be bound to their parent policy object.
  */
-export var Policies = {
+var Policies = {
   // Used for cleaning up policies.
   // Use the same timing that you used for setting up the policy.
   _cleanup: {
@@ -2337,7 +2342,7 @@ export var Policies = {
  * @param {boolean,number,string} prefValue
  *        The value to set and lock
  */
-export function setAndLockPref(prefName, prefValue) {
+function setAndLockPref(prefName, prefValue) {
   PoliciesUtils.setDefaultPref(prefName, prefValue, true);
 }
 
@@ -2355,7 +2360,7 @@ export function setAndLockPref(prefName, prefValue) {
  *        Optionally lock the pref
  */
 
-export var PoliciesUtils = {
+var PoliciesUtils = {
   setDefaultPref(prefName, prefValue, locked = false) {
     if (Services.prefs.prefIsLocked(prefName)) {
       Services.prefs.unlockPref(prefName);
@@ -2477,7 +2482,7 @@ function addAllowDenyPermissions(permissionName, allowList, blockList) {
  *        The callback to run only once.
  */
 // eslint-disable-next-line no-unused-vars
-export function runOnce(actionName, callback) {
+function runOnce(actionName, callback) {
   let prefName = `browser.policies.runonce.${actionName}`;
   if (Services.prefs.getBoolPref(prefName, false)) {
     lazy.log.debug(
