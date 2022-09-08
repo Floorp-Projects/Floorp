@@ -250,13 +250,15 @@ void LoadAllScripts(WorkerPrivate* aWorkerPrivate,
     return;
   }
 
-  RefPtr<loader::WorkerScriptLoader> loader = new loader::WorkerScriptLoader(
-      aWorkerPrivate, std::move(aOriginStack), syncLoopTarget, aScriptURLs,
-      aDocumentEncoding, aIsMainScript, aWorkerScriptType, aRv);
+  RefPtr<loader::WorkerScriptLoader> loader =
+      new loader::WorkerScriptLoader(aWorkerPrivate, std::move(aOriginStack),
+                                     syncLoopTarget, aWorkerScriptType, aRv);
 
   if (NS_WARN_IF(aRv.Failed())) {
     return;
   }
+
+  loader->CreateScriptRequests(aScriptURLs, aDocumentEncoding, aIsMainScript);
 
   if (loader->DispatchLoadScripts()) {
     syncLoop.Run();
@@ -422,9 +424,8 @@ static bool EvaluateSourceBuffer(JSContext* aCx,
 WorkerScriptLoader::WorkerScriptLoader(
     WorkerPrivate* aWorkerPrivate,
     UniquePtr<SerializedStackHolder> aOriginStack,
-    nsIEventTarget* aSyncLoopTarget, const nsTArray<nsString>& aScriptURLs,
-    const mozilla::Encoding* aDocumentEncoding, bool aIsMainScript,
-    WorkerScriptType aWorkerScriptType, ErrorResult& aRv)
+    nsIEventTarget* aSyncLoopTarget, WorkerScriptType aWorkerScriptType,
+    ErrorResult& aRv)
     : mOriginStack(std::move(aOriginStack)),
       mSyncLoopTarget(aSyncLoopTarget),
       mWorkerScriptType(aWorkerScriptType),
@@ -432,7 +433,6 @@ WorkerScriptLoader::WorkerScriptLoader(
       mRv(aRv) {
   aWorkerPrivate->AssertIsOnWorkerThread();
   MOZ_ASSERT(aSyncLoopTarget);
-  MOZ_ASSERT_IF(aIsMainScript, aScriptURLs.Length() == 1);
 
   RefPtr<WorkerScriptLoader> self = this;
 
@@ -452,46 +452,59 @@ WorkerScriptLoader::WorkerScriptLoader(
 
   nsIGlobalObject* global = GetGlobal();
 
-  Maybe<ClientInfo> clientInfo = global->GetClientInfo();
   mController = global->GetController();
+}
 
-  for (const nsString& aScriptURL : aScriptURLs) {
-    WorkerLoadContext::Kind kind =
-        WorkerLoadContext::GetKind(aIsMainScript, IsDebuggerScript());
-
-    RefPtr<WorkerLoadContext> loadContext =
-        new WorkerLoadContext(kind, clientInfo);
-
-    // Create ScriptLoadRequests for this WorkerScriptLoader
-    ReferrerPolicy aReferrerPolicy = mWorkerRef->Private()->GetReferrerPolicy();
-
-    // Only top level workers' main script use the document charset for the
-    // script uri encoding. Otherwise, default encoding (UTF-8) is applied.
-    MOZ_ASSERT_IF(bool(aDocumentEncoding),
-                  aIsMainScript && !aWorkerPrivate->GetParent());
-    nsCOMPtr<nsIURI> baseURI =
-        aIsMainScript ? GetInitialBaseURI() : GetBaseURI();
-    nsCOMPtr<nsIURI> aURI;
-    nsresult rv = ConstructURI(aScriptURL, baseURI, aDocumentEncoding,
-                               getter_AddRefs(aURI));
-    // If we failed to construct the URI, handle it in the LoadContext so it is
-    // thrown in the right order.
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      loadContext->mLoadResult = rv;
-    }
-
-    RefPtr<ScriptFetchOptions> fetchOptions =
-        new ScriptFetchOptions(CORSMode::CORS_NONE, aReferrerPolicy, nullptr);
-
+void WorkerScriptLoader::CreateScriptRequests(
+    const nsTArray<nsString>& aScriptURLs,
+    const mozilla::Encoding* aDocumentEncoding, bool aIsMainScript) {
+  for (const nsString& scriptURL : aScriptURLs) {
     RefPtr<ScriptLoadRequest> request =
-        new ScriptLoadRequest(ScriptKind::eClassic, aURI, fetchOptions,
-                              SRIMetadata(), nullptr, /* = aReferrer */
-                              loadContext);
-
-    // Set the mURL, it will be used for error handling and debugging.
-    request->mURL = NS_ConvertUTF16toUTF8(aScriptURL);
+        CreateScriptLoadRequest(scriptURL, aDocumentEncoding, aIsMainScript);
     mLoadingRequests.AppendElement(request);
   }
+}
+
+already_AddRefed<ScriptLoadRequest> WorkerScriptLoader::CreateScriptLoadRequest(
+    const nsString& aScriptURL, const mozilla::Encoding* aDocumentEncoding,
+    bool aIsMainScript) {
+  WorkerLoadContext::Kind kind =
+      WorkerLoadContext::GetKind(aIsMainScript, IsDebuggerScript());
+
+  Maybe<ClientInfo> clientInfo = GetGlobal()->GetClientInfo();
+
+  RefPtr<WorkerLoadContext> loadContext =
+      new WorkerLoadContext(kind, clientInfo);
+
+  // Create ScriptLoadRequests for this WorkerScriptLoader
+  ReferrerPolicy referrerPolicy = mWorkerRef->Private()->GetReferrerPolicy();
+
+  // Only top level workers' main script use the document charset for the
+  // script uri encoding. Otherwise, default encoding (UTF-8) is applied.
+  MOZ_ASSERT_IF(bool(aDocumentEncoding),
+                aIsMainScript && !mWorkerRef->Private()->GetParent());
+  nsCOMPtr<nsIURI> baseURI = aIsMainScript ? GetInitialBaseURI() : GetBaseURI();
+  nsCOMPtr<nsIURI> uri;
+  nsresult rv =
+      ConstructURI(aScriptURL, baseURI, aDocumentEncoding, getter_AddRefs(uri));
+  // If we failed to construct the URI, handle it in the LoadContext so it is
+  // thrown in the right order.
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    loadContext->mLoadResult = rv;
+  }
+
+  RefPtr<ScriptFetchOptions> fetchOptions =
+      new ScriptFetchOptions(CORSMode::CORS_NONE, referrerPolicy, nullptr);
+
+  RefPtr<ScriptLoadRequest> request =
+      new ScriptLoadRequest(ScriptKind::eClassic, uri, fetchOptions,
+                            SRIMetadata(), nullptr, /* = aReferrer */
+                            loadContext);
+
+  // Set the mURL, it will be used for error handling and debugging.
+  request->mURL = NS_ConvertUTF16toUTF8(aScriptURL);
+
+  return request.forget();
 }
 
 bool WorkerScriptLoader::DispatchLoadScripts() {
