@@ -1,6 +1,60 @@
 {
   "data": [
     {
+      "schema": 1662515823574,
+      "derHash": "Yjq+xvhacCisoQ9b3F2BtWtjFN8odD/8yE7KMvNa6EY=",
+      "subject": "CN=MuaSSL.com TLS Issuing ECC CA R1,O=Hao Quang Viet Software Company Limited,C=VN",
+      "subjectDN": "MGoxCzAJBgNVBAYTAlZOMTAwLgYDVQQKDCdIYW8gUXVhbmcgVmlldCBTb2Z0d2FyZSBDb21wYW55IExpbWl0ZWQxKTAnBgNVBAMMIE11YVNTTC5jb20gVExTIElzc3VpbmcgRUNDIENBIFIx",
+      "whitelist": false,
+      "attachment": {
+        "hash": "4bc297912beeadd2623b4a9a35eb5f3a3edd6b8122f64073f6c3feedbb3f3e56",
+        "size": 1894,
+        "filename": "aWadCp7kMcffucdctgN2uR7OBZm-XJI09tOLxjLbhv8=.pem",
+        "location": "security-state-staging/intermediates/cb2c8fd9-e390-4ea9-8d08-c689e5d173f2.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "aWadCp7kMcffucdctgN2uR7OBZm+XJI09tOLxjLbhv8=",
+      "crlite_enrolled": false,
+      "id": "9e0c4d64-984d-43a7-bce2-36a26101fe95",
+      "last_modified": 1662620223051
+    },
+    {
+      "schema": 1662469023493,
+      "derHash": "aZGdgg7fWCrbz44JKpKE2QF3LuK0Geqd4fWHLHkfxvo=",
+      "subject": "CN=Thawte EV RSA CN CA G2,O=DigiCert Inc,C=US",
+      "subjectDN": "MEUxCzAJBgNVBAYTAlVTMRUwEwYDVQQKEwxEaWdpQ2VydCBJbmMxHzAdBgNVBAMTFlRoYXd0ZSBFViBSU0EgQ04gQ0EgRzI=",
+      "whitelist": false,
+      "attachment": {
+        "hash": "ce1818d94d078e469bacac8ce640901ec6f9ef4e08ee8ed1295da929ca3f4723",
+        "size": 1626,
+        "filename": "5jGxIiaHNj15fBcUBvvAsMfKNtiK_podXNf0YoRUoeI=.pem",
+        "location": "security-state-staging/intermediates/f5157a19-89e9-4513-9b51-b540e430b34c.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "5jGxIiaHNj15fBcUBvvAsMfKNtiK/podXNf0YoRUoeI=",
+      "crlite_enrolled": false,
+      "id": "e05d537c-e98a-4c16-8476-344896c66748",
+      "last_modified": 1662515823091
+    },
+    {
+      "schema": 1662043010551,
+      "derHash": "fAkS5d6EeLuG6OpGulrmXcOHC878vC9GeV7uz2SM++c=",
+      "subject": "CN=DigiCert Extended Validation CA G3,OU=www.digicert.com,O=DigiCert Inc,C=US",
+      "subjectDN": "MGwxCzAJBgNVBAYTAlVTMRUwEwYDVQQKEwxEaWdpQ2VydCBJbmMxGTAXBgNVBAsTEHd3dy5kaWdpY2VydC5jb20xKzApBgNVBAMTIkRpZ2lDZXJ0IEV4dGVuZGVkIFZhbGlkYXRpb24gQ0EgRzM=",
+      "whitelist": false,
+      "attachment": {
+        "hash": "a9b8d926d5c6840a9c7cfbb16d22ea65f23628c6fdb4af615cb30e7d3ceaa1f1",
+        "size": 1158,
+        "filename": "26Ut6iLcm-3yJllopC51FzYrG4EvCSFIv9j5aRSvwvk=.pem",
+        "location": "security-state-staging/intermediates/d9eb8ff7-9305-49b0-b4e6-9b4a86ebd7f6.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "26Ut6iLcm+3yJllopC51FzYrG4EvCSFIv9j5aRSvwvk=",
+      "crlite_enrolled": false,
+      "id": "afc3f6a7-6865-4035-9978-68f1eaa2e5dc",
+      "last_modified": 1662469023022
+    },
+    {
       "schema": 1662015423618,
       "derHash": "lzpBJ2/9AeAnoqrUnjTDeEbT6Xb/amILZxLjODIEGqY=",
       "subject": "CN=Go Daddy Secure Certificate Authority - G2,OU=http://certs.godaddy.com/repository/,O=GoDaddy.com\\, Inc.,L=Scottsdale,ST=Arizona,C=US",
@@ -2519,24 +2573,6 @@
       "crlite_enrolled": true,
       "id": "ca4bf929-8439-479e-b4c1-488d61f0e0c2",
       "last_modified": 1657328223438
-    },
-    {
-      "schema": 1657327852035,
-      "derHash": "Yjq+xvhacCisoQ9b3F2BtWtjFN8odD/8yE7KMvNa6EY=",
-      "subject": "CN=MuaSSL.com TLS Issuing ECC CA R1,O=Hao Quang Viet Software Company Limited,C=VN",
-      "subjectDN": "MGoxCzAJBgNVBAYTAlZOMTAwLgYDVQQKDCdIYW8gUXVhbmcgVmlldCBTb2Z0d2FyZSBDb21wYW55IExpbWl0ZWQxKTAnBgNVBAMMIE11YVNTTC5jb20gVExTIElzc3VpbmcgRUNDIENBIFIx",
-      "whitelist": false,
-      "attachment": {
-        "hash": "4bc297912beeadd2623b4a9a35eb5f3a3edd6b8122f64073f6c3feedbb3f3e56",
-        "size": 1894,
-        "filename": "aWadCp7kMcffucdctgN2uR7OBZm-XJI09tOLxjLbhv8=.pem",
-        "location": "security-state-staging/intermediates/cb2c8fd9-e390-4ea9-8d08-c689e5d173f2.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "aWadCp7kMcffucdctgN2uR7OBZm+XJI09tOLxjLbhv8=",
-      "crlite_enrolled": true,
-      "id": "9e0c4d64-984d-43a7-bce2-36a26101fe95",
-      "last_modified": 1657328223426
     },
     {
       "schema": 1657327852573,
@@ -13645,24 +13681,6 @@
       "last_modified": 1641481037689
     },
     {
-      "schema": 1641477708451,
-      "derHash": "aZGdgg7fWCrbz44JKpKE2QF3LuK0Geqd4fWHLHkfxvo=",
-      "subject": "CN=Thawte EV RSA CN CA G2,O=DigiCert Inc,C=US",
-      "subjectDN": "MEUxCzAJBgNVBAYTAlVTMRUwEwYDVQQKEwxEaWdpQ2VydCBJbmMxHzAdBgNVBAMTFlRoYXd0ZSBFViBSU0EgQ04gQ0EgRzI=",
-      "whitelist": false,
-      "attachment": {
-        "hash": "ce1818d94d078e469bacac8ce640901ec6f9ef4e08ee8ed1295da929ca3f4723",
-        "size": 1626,
-        "filename": "5jGxIiaHNj15fBcUBvvAsMfKNtiK_podXNf0YoRUoeI=.pem",
-        "location": "security-state-staging/intermediates/f5157a19-89e9-4513-9b51-b540e430b34c.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "5jGxIiaHNj15fBcUBvvAsMfKNtiK/podXNf0YoRUoeI=",
-      "crlite_enrolled": true,
-      "id": "e05d537c-e98a-4c16-8476-344896c66748",
-      "last_modified": 1641481037679
-    },
-    {
       "schema": 1641477727214,
       "derHash": "TjD4AEwY09eY7Fp3NDRrWl6+jVRCPOmCV/xXc1pvc40=",
       "subject": "CN=DigiCert High Assurance CA-3b,O=DigiCert Inc,C=US",
@@ -14165,24 +14183,6 @@
       "crlite_enrolled": true,
       "id": "ec135dce-52fb-4ab9-b488-075172498a7c",
       "last_modified": 1641481037065
-    },
-    {
-      "schema": 1641477714475,
-      "derHash": "fAkS5d6EeLuG6OpGulrmXcOHC878vC9GeV7uz2SM++c=",
-      "subject": "CN=DigiCert Extended Validation CA G3,OU=www.digicert.com,O=DigiCert Inc,C=US",
-      "subjectDN": "MGwxCzAJBgNVBAYTAlVTMRUwEwYDVQQKEwxEaWdpQ2VydCBJbmMxGTAXBgNVBAsTEHd3dy5kaWdpY2VydC5jb20xKzApBgNVBAMTIkRpZ2lDZXJ0IEV4dGVuZGVkIFZhbGlkYXRpb24gQ0EgRzM=",
-      "whitelist": false,
-      "attachment": {
-        "hash": "a9b8d926d5c6840a9c7cfbb16d22ea65f23628c6fdb4af615cb30e7d3ceaa1f1",
-        "size": 1158,
-        "filename": "26Ut6iLcm-3yJllopC51FzYrG4EvCSFIv9j5aRSvwvk=.pem",
-        "location": "security-state-staging/intermediates/d9eb8ff7-9305-49b0-b4e6-9b4a86ebd7f6.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "26Ut6iLcm+3yJllopC51FzYrG4EvCSFIv9j5aRSvwvk=",
-      "crlite_enrolled": true,
-      "id": "afc3f6a7-6865-4035-9978-68f1eaa2e5dc",
-      "last_modified": 1641481037045
     },
     {
       "schema": 1641477725083,
@@ -26317,5 +26317,5 @@
       "last_modified": 1559865863642
     }
   ],
-  "timestamp": 1662037023056
+  "timestamp": 1662620223051
 }
