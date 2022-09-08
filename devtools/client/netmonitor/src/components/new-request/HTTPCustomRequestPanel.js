@@ -5,11 +5,10 @@
 "use strict";
 
 const {
-  createRef,
   Component,
   createFactory,
 } = require("devtools/client/shared/vendor/react");
-const Services = require("Services");
+const asyncStorage = require("devtools/shared/async-storage");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const {
@@ -96,12 +95,44 @@ class HTTPCustomRequestPanel extends Component {
   constructor(props) {
     super(props);
 
-    let { request } = props;
+    this.state = {
+      method: HTTP_METHODS[0],
+      url: "",
+      urlQueryParams: [],
+      headers: [],
+      postBody: "",
+      // Flag to know the data from either the request or the async storage has
+      // been loaded in componentDidMount
+      _isStateDataReady: false,
+    };
 
-    request = request || this.getStateFromPref();
+    this.handleInputChange = this.handleInputChange.bind(this);
+    this.handleChangeURL = this.handleChangeURL.bind(this);
+    this.updateInputMapItem = this.updateInputMapItem.bind(this);
+    this.addInputMapItem = this.addInputMapItem.bind(this);
+    this.deleteInputMapItem = this.deleteInputMapItem.bind(this);
+    this.checkInputMapItem = this.checkInputMapItem.bind(this);
+    this.handleClear = this.handleClear.bind(this);
+    this.createQueryParamsListFromURL = this.createQueryParamsListFromURL.bind(
+      this
+    );
+    this.onUpdateQueryParams = this.onUpdateQueryParams.bind(this);
+  }
 
-    // We need this part because on the pref we are saving the request in one format
-    // and from the edit and resen it comes in a different form with different properties,
+  async componentDidMount() {
+    let { connector, request } = this.props;
+    const persistedCustomRequest = await asyncStorage.getItem(
+      "devtools.netmonitor.customRequest"
+    );
+    request = request || persistedCustomRequest;
+
+    if (!request) {
+      this.setState({ _isStateDataReady: true });
+      return;
+    }
+
+    // We need this part because in the asyncStorage we are saving the request in one format
+    // and from the edit and resend it comes in a different form with different properties,
     // so we need this to nomalize the request.
     if (request.requestHeaders) {
       request.headers = request.requestHeaders.headers;
@@ -111,10 +142,8 @@ class HTTPCustomRequestPanel extends Component {
       request.postBody = request.requestPostData.postData.text;
     }
 
-    this.URLTextareaRef = createRef();
-
-    const requestHeaders = request.headers
-      ?.map(({ name, value }) => {
+    const headers = request.headers
+      .map(({ name, value }) => {
         return {
           name,
           value,
@@ -132,46 +161,22 @@ class HTTPCustomRequestPanel extends Component {
         return 0;
       });
 
-    this.state = {
-      method: request.method || HTTP_METHODS[0],
-      url: request.url || "",
-      urlQueryParams: this.createQueryParamsListFromURL(request.url),
-      headers: requestHeaders || [],
-      postBody: request.postBody || "",
-    };
-
-    Services.prefs.setCharPref(
-      "devtools.netmonitor.customRequest",
-      JSON.stringify(this.state)
-    );
-
-    this.updateStateAndPref = this.updateStateAndPref.bind(this);
-    this.handleInputChange = this.handleInputChange.bind(this);
-    this.handleChangeURL = this.handleChangeURL.bind(this);
-    this.updateInputMapItem = this.updateInputMapItem.bind(this);
-    this.addInputMapItem = this.addInputMapItem.bind(this);
-    this.deleteInputMapItem = this.deleteInputMapItem.bind(this);
-    this.checkInputMapItem = this.checkInputMapItem.bind(this);
-    this.handleClear = this.handleClear.bind(this);
-    this.createQueryParamsListFromURL = this.createQueryParamsListFromURL.bind(
-      this
-    );
-    this.onUpdateQueryParams = this.onUpdateQueryParams.bind(this);
-    this.getStateFromPref = this.getStateFromPref.bind(this);
-  }
-
-  // FIXME: https://bugzilla.mozilla.org/show_bug.cgi?id=1774507
-  async UNSAFE_componentWillMount() {
-    const { connector, request } = this.props;
-    if (request?.requestPostDataAvailable && !this.state.postBody) {
+    if (request.requestPostDataAvailable && !request.postBody) {
       const requestData = await connector.requestData(
         request.id,
         "requestPostData"
       );
-      this.setState({
-        postBody: requestData.postData.text,
-      });
+      request.postBody = requestData.postData.text;
     }
+
+    this.setState({
+      method: request.method,
+      url: request.url,
+      urlQueryParams: this.createQueryParamsListFromURL(request.url),
+      headers,
+      postBody: request.postBody,
+      _isStateDataReady: true,
+    });
   }
 
   componentDidUpdate(prevProps, prevState) {
@@ -184,31 +189,14 @@ class HTTPCustomRequestPanel extends Component {
     }
   }
 
-  updateStateAndPref(nextState, cb) {
-    this.setState(nextState, cb);
-
-    const persistedState = this.getStateFromPref();
-
-    Services.prefs.setCharPref(
-      "devtools.netmonitor.customRequest",
-      JSON.stringify({ ...persistedState, ...nextState })
-    );
-  }
-
-  getStateFromPref() {
-    try {
-      return JSON.parse(
-        Services.prefs.getCharPref("devtools.netmonitor.customRequest")
-      );
-    } catch (_) {
-      return {};
-    }
+  componentWillUnmount() {
+    asyncStorage.setItem("devtools.netmonitor.customRequest", this.state);
   }
 
   handleChangeURL(event) {
     const { value } = event.target;
 
-    this.updateStateAndPref({
+    this.setState({
       url: value,
       urlQueryParams: this.createQueryParamsListFromURL(value),
     });
@@ -231,25 +219,22 @@ class HTTPCustomRequestPanel extends Component {
       });
     }
 
-    this.updateStateAndPref(newState);
+    this.setState(newState);
   }
 
   updateInputMapItem(stateName, event) {
     const { name, value } = event.target;
-
     const [prop, index] = name.split("-");
-
     const updatedList = [...this.state[stateName]];
-
     updatedList[Number(index)][prop] = value;
 
-    this.updateStateAndPref({
+    this.setState({
       [stateName]: updatedList,
     });
   }
 
   addInputMapItem(stateName, name, value) {
-    this.updateStateAndPref({
+    this.setState({
       [stateName]: [
         ...this.state[stateName],
         { name, value, checked: true, disabled: false },
@@ -258,13 +243,13 @@ class HTTPCustomRequestPanel extends Component {
   }
 
   deleteInputMapItem(stateName, index) {
-    this.updateStateAndPref({
+    this.setState({
       [stateName]: this.state[stateName].filter((_, i) => i !== index),
     });
   }
 
   checkInputMapItem(stateName, index, checked) {
-    this.updateStateAndPref({
+    this.setState({
       [stateName]: this.state[stateName].map((item, i) => {
         if (index === i) {
           return {
@@ -293,7 +278,7 @@ class HTTPCustomRequestPanel extends Component {
     if (queryString.length) {
       finalURL += `?${queryString.substring(0, queryString.length - 1)}`;
     }
-    this.updateStateAndPref({
+    this.setState({
       url: finalURL,
     });
   }
@@ -311,7 +296,7 @@ class HTTPCustomRequestPanel extends Component {
   }
 
   handleClear() {
-    this.updateStateAndPref({
+    this.setState({
       method: HTTP_METHODS[0],
       url: "",
       urlQueryParams: [],
@@ -321,9 +306,6 @@ class HTTPCustomRequestPanel extends Component {
   }
 
   render() {
-    const { sendCustomRequest } = this.props;
-    const { method, urlQueryParams, postBody, url, headers } = this.state;
-
     return div(
       { className: "http-custom-request-panel" },
       div(
@@ -340,7 +322,7 @@ class HTTPCustomRequestPanel extends Component {
               name: "method",
               onChange: this.handleInputChange,
               onBlur: this.handleInputChange,
-              value: method,
+              value: this.state.method,
             },
 
             HTTP_METHODS.map(item =>
@@ -356,20 +338,19 @@ class HTTPCustomRequestPanel extends Component {
           div(
             {
               className: "auto-growing-textarea",
-              "data-replicated-value": url,
-              title: url,
+              "data-replicated-value": this.state.url,
+              title: this.state.url,
             },
             textarea({
               className: "http-custom-url-value",
               id: "http-custom-url-value",
               name: "url",
               placeholder: CUSTOM_NEW_REQUEST_URL_LABEL,
-              ref: this.URLTextareaRef,
               onChange: event => {
                 this.handleChangeURL(event);
               },
               onBlur: this.handleTextareaChange,
-              value: url,
+              value: this.state.url,
               rows: 1,
             })
           )
@@ -388,7 +369,7 @@ class HTTPCustomRequestPanel extends Component {
           ),
           // This is the input map for the Url Parameters Component
           InputMap({
-            list: urlQueryParams,
+            list: this.state.urlQueryParams,
             onUpdate: event => {
               this.updateInputMapItem(
                 "urlQueryParams",
@@ -434,7 +415,7 @@ class HTTPCustomRequestPanel extends Component {
           // This is the input map for the Headers Component
           InputMap({
             ref: this.headersListRef,
-            list: headers,
+            list: this.state.headers,
             onUpdate: event => {
               this.updateInputMapItem("headers", event);
             },
@@ -465,7 +446,7 @@ class HTTPCustomRequestPanel extends Component {
             placeholder: CUSTOM_POSTDATA_PLACEHOLDER,
             onChange: this.handleInputChange,
             rows: 6,
-            value: postBody,
+            value: this.state.postBody,
             wrap: "off",
           })
         )
@@ -484,29 +465,33 @@ class HTTPCustomRequestPanel extends Component {
           {
             className: "devtools-button",
             id: "http-custom-request-send-button",
-            disabled: !this.state.url || !this.state.method,
+            disabled:
+              !this.state._isStateDataReady ||
+              !this.state.url ||
+              !this.state.method,
             onClick: () => {
-              const customRequestDetails = {
-                ...this.state,
+              const newRequest = {
+                method: this.state.method,
+                url: this.state.url,
                 cause: this.props.request?.cause,
-                urlQueryParams: urlQueryParams.map(
+                urlQueryParams: this.state.urlQueryParams.map(
                   ({ checked, ...params }) => params
                 ),
                 requestHeaders: {
-                  headers: headers
+                  headers: this.state.headers
                     .filter(({ checked }) => checked)
                     .map(({ checked, ...headersValues }) => headersValues),
                 },
               };
-              if (postBody) {
-                customRequestDetails.requestPostData = {
+
+              if (this.state.postBody) {
+                newRequest.requestPostData = {
                   postData: {
-                    text: postBody,
+                    text: this.state.postBody,
                   },
                 };
               }
-              delete customRequestDetails.postBody;
-              sendCustomRequest(customRequestDetails);
+              this.props.sendCustomRequest(newRequest);
             },
           },
           CUSTOM_SEND
