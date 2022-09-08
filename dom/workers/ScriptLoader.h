@@ -209,6 +209,8 @@ class WorkerScriptLoader final : public nsINamed {
     return NS_OK;
   }
 
+  void TryShutdown();
+
   nsTArray<WorkerLoadContext*> GetLoadingList();
 
   nsIGlobalObject* GetGlobal();
