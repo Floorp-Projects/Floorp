@@ -30,6 +30,8 @@ pub enum ActionsType {
         parameters: PointerActionParameters,
         actions: Vec<PointerActionItem>,
     },
+    #[serde(rename = "wheel")]
+    Wheel { actions: Vec<WheelActionItem> },
 }
 
 #[derive(Debug, PartialEq, Serialize, Deserialize)]
@@ -379,6 +381,56 @@ impl<'de> Deserialize<'de> for PointerOrigin {
             )))
         }
     }
+}
+
+#[derive(Debug, PartialEq, Serialize, Deserialize)]
+#[serde(untagged)]
+pub enum WheelActionItem {
+    General(GeneralAction),
+    Wheel(WheelAction),
+}
+
+#[derive(Debug, PartialEq, Serialize, Deserialize)]
+#[serde(tag = "type")]
+pub enum WheelAction {
+    #[serde(rename = "scroll")]
+    Scroll(WheelScrollAction),
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+pub struct WheelScrollAction {
+    #[serde(
+        default,
+        skip_serializing_if = "Option::is_none",
+        deserialize_with = "deserialize_to_option_u64"
+    )]
+    pub duration: Option<u64>,
+    #[serde(default)]
+    pub origin: PointerOrigin,
+    #[serde(
+        default,
+        skip_serializing_if = "Option::is_none",
+        deserialize_with = "deserialize_to_option_i64"
+    )]
+    pub x: Option<i64>,
+    #[serde(
+        default,
+        skip_serializing_if = "Option::is_none",
+        deserialize_with = "deserialize_to_option_i64"
+    )]
+    pub y: Option<i64>,
+    #[serde(
+        default,
+        skip_serializing_if = "Option::is_none",
+        deserialize_with = "deserialize_to_option_i64"
+    )]
+    pub deltaX: Option<i64>,
+    #[serde(
+        default,
+        skip_serializing_if = "Option::is_none",
+        deserialize_with = "deserialize_to_option_i64"
+    )]
+    pub deltaY: Option<i64>,
 }
 
 fn serialize_webelement_id<S>(element: &WebElement, serializer: S) -> Result<S::Ok, S::Error>
