@@ -4017,13 +4017,12 @@ void CodeGenerator::visitNewLexicalEnvironmentObject(
   auto* scope = &templateObj->scope();
 
   pushArg(Imm32(gc::DefaultHeap));
-  pushArg(ToRegister(lir->enclosing()));
   pushArg(ImmGCPtr(scope));
 
   using Fn =
       BlockLexicalEnvironmentObject* (*)(JSContext*, Handle<LexicalScope*>,
-                                         HandleObject, gc::InitialHeap);
-  callVM<Fn, BlockLexicalEnvironmentObject::create>(lir);
+                                         gc::InitialHeap);
+  callVM<Fn, BlockLexicalEnvironmentObject::createTemplateObject>(lir);
 }
 
 void CodeGenerator::visitNewClassBodyEnvironmentObject(
@@ -4033,14 +4032,12 @@ void CodeGenerator::visitNewClassBodyEnvironmentObject(
   auto* scope = &templateObj->scope();
 
   pushArg(Imm32(gc::DefaultHeap));
-  pushArg(ToRegister(lir->enclosing()));
   pushArg(ImmGCPtr(scope));
 
-  using Fn =
-      ClassBodyLexicalEnvironmentObject* (*)(JSContext*,
-                                             Handle<ClassBodyScope*>,
-                                             HandleObject, gc::InitialHeap);
-  callVM<Fn, ClassBodyLexicalEnvironmentObject::create>(lir);
+  using Fn = ClassBodyLexicalEnvironmentObject* (*)(JSContext*,
+                                                    Handle<ClassBodyScope*>,
+                                                    gc::InitialHeap);
+  callVM<Fn, ClassBodyLexicalEnvironmentObject::createTemplateObject>(lir);
 }
 
 void CodeGenerator::visitNewVarEnvironmentObject(
@@ -4050,12 +4047,11 @@ void CodeGenerator::visitNewVarEnvironmentObject(
   auto* scope = &templateObj->scope().as<VarScope>();
 
   pushArg(Imm32(gc::DefaultHeap));
-  pushArg(ToRegister(lir->enclosing()));
   pushArg(ImmGCPtr(scope));
 
-  using Fn = VarEnvironmentObject* (*)(JSContext*, Handle<Scope*>, HandleObject,
-                                       gc::InitialHeap);
-  callVM<Fn, VarEnvironmentObject::create>(lir);
+  using Fn =
+      VarEnvironmentObject* (*)(JSContext*, Handle<VarScope*>, gc::InitialHeap);
+  callVM<Fn, VarEnvironmentObject::createTemplateObject>(lir);
 }
 
 void CodeGenerator::visitCopyLexicalEnvironmentObject(

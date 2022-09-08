@@ -88,8 +88,8 @@ namespace jit {
     js::jit::BigIntStringEqual<js::jit::EqualityKind::NotEqual>)               \
   _(BigIntSub, JS::BigInt::sub)                                                \
   _(BindVarOperation, js::BindVarOperation)                                    \
-  _(BlockLexicalEnvironmentObjectCreate,                                       \
-    js::BlockLexicalEnvironmentObject::create)                                 \
+  _(BlockLexicalEnvironmentObjectCreateTemplateObject,                         \
+    js::BlockLexicalEnvironmentObject::createTemplateObject)                   \
   _(BoxBoxableValue, js::wasm::BoxBoxableValue)                                \
   _(BoxNonStrictThis, js::BoxNonStrictThis)                                    \
   _(BuiltinObjectOperation, js::BuiltinObjectOperation)                        \
@@ -103,8 +103,8 @@ namespace jit {
   _(CheckOverRecursed, js::jit::CheckOverRecursed)                             \
   _(CheckOverRecursedBaseline, js::jit::CheckOverRecursedBaseline)             \
   _(CheckPrivateFieldOperation, js::CheckPrivateFieldOperation)                \
-  _(ClassBodyLexicalEnvironmentObjectCreate,                                   \
-    js::ClassBodyLexicalEnvironmentObject::create)                             \
+  _(ClassBodyLexicalEnvironmentObjectCreateTemplateObject,                     \
+    js::ClassBodyLexicalEnvironmentObject::createTemplateObject)               \
   _(CloneRegExpObject, js::CloneRegExpObject)                                  \
   _(CloseIterOperation, js::CloseIterOperation)                                \
   _(ConcatStrings, js::ConcatStrings<CanGC>)                                   \
@@ -276,7 +276,8 @@ namespace jit {
   _(ToBigInt, js::ToBigInt)                                                    \
   _(ToStringSlow, js::ToStringSlow<CanGC>)                                     \
   _(ValueToIterator, js::ValueToIterator)                                      \
-  _(VarEnvironmentObjectCreate, js::VarEnvironmentObject::create)
+  _(VarEnvironmentObjectCreateTemplateObject,                                  \
+    js::VarEnvironmentObject::createTemplateObject)
 
 // The list below is for tail calls. The third argument specifies the number of
 // non-argument Values the VM wrapper should pop from the stack. This is used

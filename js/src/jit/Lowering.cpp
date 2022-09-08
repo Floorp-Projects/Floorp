@@ -3134,11 +3134,7 @@ void LIRGenerator::visitSetFunName(MSetFunName* ins) {
 
 void LIRGenerator::visitNewLexicalEnvironmentObject(
     MNewLexicalEnvironmentObject* ins) {
-  MDefinition* enclosing = ins->enclosing();
-  MOZ_ASSERT(enclosing->type() == MIRType::Object);
-
-  LNewLexicalEnvironmentObject* lir =
-      new (alloc()) LNewLexicalEnvironmentObject(useRegisterAtStart(enclosing));
+  auto* lir = new (alloc()) LNewLexicalEnvironmentObject();
 
   defineReturn(lir, ins);
   assignSafepoint(lir, ins);
@@ -3158,22 +3154,14 @@ void LIRGenerator::visitCopyLexicalEnvironmentObject(
 
 void LIRGenerator::visitNewClassBodyEnvironmentObject(
     MNewClassBodyEnvironmentObject* ins) {
-  MDefinition* enclosing = ins->enclosing();
-  MOZ_ASSERT(enclosing->type() == MIRType::Object);
-
-  LNewClassBodyEnvironmentObject* lir = new (alloc())
-      LNewClassBodyEnvironmentObject(useRegisterAtStart(enclosing));
+  auto* lir = new (alloc()) LNewClassBodyEnvironmentObject();
 
   defineReturn(lir, ins);
   assignSafepoint(lir, ins);
 }
 
 void LIRGenerator::visitNewVarEnvironmentObject(MNewVarEnvironmentObject* ins) {
-  MDefinition* enclosing = ins->enclosing();
-  MOZ_ASSERT(enclosing->type() == MIRType::Object);
-
-  auto* lir =
-      new (alloc()) LNewVarEnvironmentObject(useRegisterAtStart(enclosing));
+  auto* lir = new (alloc()) LNewVarEnvironmentObject();
 
   defineReturn(lir, ins);
   assignSafepoint(lir, ins);

@@ -1986,8 +1986,14 @@ bool WarpBuilder::build_PushLexicalEnv(BytecodeLocation loc) {
   MDefinition* env = current->environmentChain();
   MConstant* templateCst = constant(ObjectValue(*snapshot->templateObj()));
 
-  auto* ins = MNewLexicalEnvironmentObject::New(alloc(), env, templateCst);
+  auto* ins = MNewLexicalEnvironmentObject::New(alloc(), templateCst);
   current->add(ins);
+
+  // Initialize the object's reserved slots. No post barrier is needed here,
+  // for the same reason as in buildNamedLambdaEnv.
+  current->add(MStoreFixedSlot::NewUnbarriered(
+      alloc(), ins, EnvironmentObject::enclosingEnvironmentSlot(), env));
+
   current->setEnvironmentChain(ins);
   return true;
 }
@@ -2001,8 +2007,14 @@ bool WarpBuilder::build_PushClassBodyEnv(BytecodeLocation loc) {
   MDefinition* env = current->environmentChain();
   MConstant* templateCst = constant(ObjectValue(*snapshot->templateObj()));
 
-  auto* ins = MNewClassBodyEnvironmentObject::New(alloc(), env, templateCst);
+  auto* ins = MNewClassBodyEnvironmentObject::New(alloc(), templateCst);
   current->add(ins);
+
+  // Initialize the object's reserved slots. No post barrier is needed here,
+  // for the same reason as in buildNamedLambdaEnv.
+  current->add(MStoreFixedSlot::NewUnbarriered(
+      alloc(), ins, EnvironmentObject::enclosingEnvironmentSlot(), env));
+
   current->setEnvironmentChain(ins);
   return true;
 }
@@ -2044,8 +2056,14 @@ bool WarpBuilder::build_PushVarEnv(BytecodeLocation loc) {
   MDefinition* env = current->environmentChain();
   MConstant* templateCst = constant(ObjectValue(*snapshot->templateObj()));
 
-  auto* ins = MNewVarEnvironmentObject::New(alloc(), env, templateCst);
+  auto* ins = MNewVarEnvironmentObject::New(alloc(), templateCst);
   current->add(ins);
+
+  // Initialize the object's reserved slots. No post barrier is needed here,
+  // for the same reason as in buildNamedLambdaEnv.
+  current->add(MStoreFixedSlot::NewUnbarriered(
+      alloc(), ins, EnvironmentObject::enclosingEnvironmentSlot(), env));
+
   current->setEnvironmentChain(ins);
   return true;
 }

@@ -1702,7 +1702,6 @@
 # Allocate a new BlockLexicalEnvironmentObject.
 - name: NewLexicalEnvironmentObject
   operands:
-    enclosing: Object
     templateObj: Object
   result_type: Object
   possibly_calls: true
@@ -1711,7 +1710,6 @@
 # Allocate a new ClassBodyEnvironmentObject.
 - name: NewClassBodyEnvironmentObject
   operands:
-    enclosing: Object
     templateObj: Object
   result_type: Object
   possibly_calls: true
@@ -1729,7 +1727,6 @@
 
 - name: NewVarEnvironmentObject
   operands:
-    enclosing: Object
     templateObj: Object
   result_type: Object
   possibly_calls: true
