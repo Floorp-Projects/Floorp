@@ -45,15 +45,6 @@ static mozilla::LazyLogModule gFlexContainerLog("FlexContainer");
 #define FLEX_LOGV(...) \
   MOZ_LOG(gFlexContainerLog, LogLevel::Verbose, (__VA_ARGS__));
 
-// Returns true iff the given nsStyleDisplay has display:-webkit-{inline-}box
-// or display:-moz-{inline-}box.
-static inline bool IsDisplayValueLegacyBox(const nsStyleDisplay* aStyleDisp) {
-  return aStyleDisp->mDisplay == mozilla::StyleDisplay::WebkitBox ||
-         aStyleDisp->mDisplay == mozilla::StyleDisplay::WebkitInlineBox ||
-         aStyleDisp->mDisplay == mozilla::StyleDisplay::MozBox ||
-         aStyleDisp->mDisplay == mozilla::StyleDisplay::MozInlineBox;
-}
-
 // Returns true if aFlexContainer is a frame for some element that has
 // display:-webkit-{inline-}box (or -moz-{inline-}box). aFlexContainer is
 // expected to be an instance of nsFlexContainerFrame (enforced with an assert);
@@ -2868,30 +2859,31 @@ void nsFlexContainerFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
     AddStateBits(NS_FRAME_FONT_INFLATION_FLOW_ROOT);
   }
 
-  const nsStyleDisplay* styleDisp = Style()->StyleDisplay();
-
-  // Figure out if we should set a frame state bit to indicate that this frame
-  // represents a legacy -webkit-{inline-}box or -moz-{inline-}box container.
-  // First, the trivial case: just check "display" directly.
-  bool isLegacyBox = IsDisplayValueLegacyBox(styleDisp);
-
+  auto displayInside = StyleDisplay()->DisplayInside();
   // If this frame is for a scrollable element, then it will actually have
   // "display:block", and its *parent frame* will have the real
   // flex-flavored display value. So in that case, check the parent frame to
   // find out if we're legacy.
-  if (!isLegacyBox && styleDisp->mDisplay == mozilla::StyleDisplay::Block) {
-    ComputedStyle* parentComputedStyle = GetParent()->Style();
-    NS_ASSERTION(
-        Style()->GetPseudoType() == PseudoStyleType::buttonContent ||
-            Style()->GetPseudoType() == PseudoStyleType::scrolledContent,
-        "The only way a nsFlexContainerFrame can have 'display:block' "
-        "should be if it's the inner part of a scrollable or button "
-        "element");
-    isLegacyBox = IsDisplayValueLegacyBox(parentComputedStyle->StyleDisplay());
+  //
+  // TODO(emilio): Maybe ::-moz-scrolled-content and co should inherit `display`
+  // (or a blockified version thereof, to not hit bug 456484).
+  if (displayInside == StyleDisplayInside::Flow) {
+    MOZ_ASSERT(StyleDisplay()->mDisplay == StyleDisplay::Block);
+    MOZ_ASSERT(Style()->GetPseudoType() == PseudoStyleType::buttonContent ||
+                   Style()->GetPseudoType() == PseudoStyleType::scrolledContent,
+               "The only way a nsFlexContainerFrame can have 'display:block' "
+               "should be if it's the inner part of a scrollable or button "
+               "element");
+    displayInside = GetParent()->StyleDisplay()->DisplayInside();
   }
 
-  if (isLegacyBox) {
+  // Figure out if we should set a frame state bit to indicate that this frame
+  // represents a legacy -moz-{inline-}box or -webkit-{inline-}box container.
+  if (displayInside == StyleDisplayInside::MozBox) {
     AddStateBits(NS_STATE_FLEX_IS_EMULATING_LEGACY_BOX);
+  } else if (displayInside == StyleDisplayInside::WebkitBox) {
+    AddStateBits(NS_STATE_FLEX_IS_EMULATING_LEGACY_BOX |
+                 NS_STATE_FLEX_IS_EMULATING_LEGACY_WEBKIT_BOX);
   }
 }
 

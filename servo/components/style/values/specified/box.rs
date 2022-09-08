@@ -324,6 +324,8 @@ impl Display {
             DisplayInside::Flex => true,
             #[cfg(feature = "gecko")]
             DisplayInside::Grid => true,
+            #[cfg(feature = "gecko")]
+            DisplayInside::MozBox => true,
             _ => false,
         }
     }
@@ -362,7 +364,7 @@ impl Display {
                 };
                 Display::from3(DisplayOutside::Block, inside, self.is_list_item())
             },
-            DisplayOutside::Block | DisplayOutside::None => *self,
+            DisplayOutside::Block | DisplayOutside::XUL | DisplayOutside::None => *self,
             #[cfg(any(feature = "servo-layout-2013", feature = "gecko"))]
             _ => Display::Block,
         }
