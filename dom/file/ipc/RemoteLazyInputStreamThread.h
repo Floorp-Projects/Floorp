@@ -31,7 +31,7 @@ class RemoteLazyInputStreamThread final : public nsIObserver,
 
   bool Initialize();
 
-  void InitializeOnMainThread();
+  bool InitializeOnMainThread();
 
  private:
   ~RemoteLazyInputStreamThread() = default;
