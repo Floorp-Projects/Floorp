@@ -725,6 +725,28 @@ impl BitsRequest {
     fn set_trr_mode(&self, _trr_mode: u8) -> Result<(), nsresult> {
         Err(NS_ERROR_NOT_IMPLEMENTED)
     }
+
+    xpcom_method!(
+        get_canceled_reason => GetCanceledReason() -> nsACString
+    );
+    fn get_canceled_reason(&self) -> Result<nsCString, nsresult> {
+        Err(NS_ERROR_NOT_IMPLEMENTED)
+    }
+
+    xpcom_method!(
+        set_canceled_reason => SetCanceledReason(_reason: *const nsACString)
+    );
+    fn set_canceled_reason(&self, _reason: *const nsACString) -> Result<(), nsresult> {
+        Err(NS_ERROR_NOT_IMPLEMENTED)
+    }
+
+    xpcom_method!(
+        cancel_with_reason_nsIRequest => CancelWithReason(status: nsresult, _reason: *const nsACString)
+    );
+    #[allow(non_snake_case)]
+    fn cancel_with_reason_nsIRequest(&self, status: nsresult,  _reason: *const nsACString) -> Result<(), BitsTaskError> {
+        self.cancel(status, None)
+    }
 }
 
 impl Drop for BitsRequest {

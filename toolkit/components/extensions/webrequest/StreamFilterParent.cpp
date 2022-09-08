@@ -428,6 +428,19 @@ StreamFilterParent::IsPending(bool* aIsPending) {
   return NS_OK;
 }
 
+NS_IMETHODIMP StreamFilterParent::SetCanceledReason(const nsACString& aReason) {
+  return SetCanceledReasonImpl(aReason);
+}
+
+NS_IMETHODIMP StreamFilterParent::GetCanceledReason(nsACString& aReason) {
+  return GetCanceledReasonImpl(aReason);
+}
+
+NS_IMETHODIMP StreamFilterParent::CancelWithReason(nsresult aStatus,
+                                                   const nsACString& aReason) {
+  return CancelWithReasonImpl(aStatus, aReason);
+}
+
 NS_IMETHODIMP
 StreamFilterParent::Cancel(nsresult aResult) {
   AssertIsMainThread();

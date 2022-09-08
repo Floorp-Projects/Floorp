@@ -489,6 +489,21 @@ InterceptedHttpChannel::CreateForSynthesis(
   return ref.forget();
 }
 
+NS_IMETHODIMP InterceptedHttpChannel::SetCanceledReason(
+    const nsACString& aReason) {
+  return SetCanceledReasonImpl(aReason);
+}
+
+NS_IMETHODIMP InterceptedHttpChannel::GetCanceledReason(nsACString& aReason) {
+  return GetCanceledReasonImpl(aReason);
+}
+
+NS_IMETHODIMP
+InterceptedHttpChannel::CancelWithReason(nsresult aStatus,
+                                         const nsACString& aReason) {
+  return CancelWithReasonImpl(aStatus, aReason);
+}
+
 NS_IMETHODIMP
 InterceptedHttpChannel::Cancel(nsresult aStatus) {
   // Note: This class has been designed to send all error results through

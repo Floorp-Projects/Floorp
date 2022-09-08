@@ -166,6 +166,19 @@ nsInputStreamPump::GetStatus(nsresult* status) {
   return NS_OK;
 }
 
+NS_IMETHODIMP nsInputStreamPump::SetCanceledReason(const nsACString& aReason) {
+  return SetCanceledReasonImpl(aReason);
+}
+
+NS_IMETHODIMP nsInputStreamPump::GetCanceledReason(nsACString& aReason) {
+  return GetCanceledReasonImpl(aReason);
+}
+
+NS_IMETHODIMP nsInputStreamPump::CancelWithReason(nsresult aStatus,
+                                                  const nsACString& aReason) {
+  return CancelWithReasonImpl(aStatus, aReason);
+}
+
 NS_IMETHODIMP
 nsInputStreamPump::Cancel(nsresult status) {
   RecursiveMutexAutoLock lock(mMutex);
