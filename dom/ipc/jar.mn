@@ -3,7 +3,5 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 toolkit.jar:
-        content/global/test-ipc.xhtml (test.xhtml)
-        content/global/remote-test-ipc.js (remote-test.js)
         content/global/BrowserElementChild.js (../browser-element/BrowserElementChild.js)
         content/global/BrowserElementChildPreload.js (../browser-element/BrowserElementChildPreload.js)

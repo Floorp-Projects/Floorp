@@ -231,8 +231,6 @@ var whitelist = [
   { file: "chrome://pippki/content/resetpassword.xhtml" },
   // Bug 1337345
   { file: "resource://gre/modules/Manifest.jsm" },
-  // Bug 1356045
-  { file: "chrome://global/content/test-ipc.xhtml" },
   // Bug 1494170
   // (The references to these files are dynamically generated, so the test can't
   // find the references)
