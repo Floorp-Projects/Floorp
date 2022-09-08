@@ -887,6 +887,9 @@ class Settings(private val appContext: Context) : PreferencesHolder {
         default = { mr2022Sections[Mr2022Section.JUMP_BACK_IN_CFR] == true },
     )
 
+    /**
+     *  Returns a sitePermissions action for the provided [feature].
+     */
     fun getSitePermissionsPhoneFeatureAction(
         feature: PhoneFeature,
         default: Action = Action.ASK_TO_ALLOW,
@@ -924,6 +927,9 @@ class Settings(private val appContext: Context) : PreferencesHolder {
         default: AutoplayAction = AutoplayAction.BLOCKED,
     ) = preferences.getInt(feature.getPreferenceKey(appContext), default.toInt()).toAutoplayAction()
 
+    /**
+     *  Sets a sitePermissions action for the provided [feature].
+     */
     fun setSitePermissionsPhoneFeatureAction(
         feature: PhoneFeature,
         value: Action,
