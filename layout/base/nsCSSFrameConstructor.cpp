@@ -260,10 +260,8 @@ nsIFrame* NS_NewImageFrameForGeneratedContentIndex(PresShell*, ComputedStyle*);
 nsIFrame* NS_NewImageFrameForListStyleImage(PresShell*, ComputedStyle*);
 
 // Returns true if aFrame is an anonymous flex/grid item.
-static inline bool IsAnonymousFlexOrGridItem(const nsIFrame* aFrame) {
-  auto pseudoType = aFrame->Style()->GetPseudoType();
-  return pseudoType == PseudoStyleType::anonymousFlexItem ||
-         pseudoType == PseudoStyleType::anonymousGridItem;
+static inline bool IsAnonymousItem(const nsIFrame* aFrame) {
+  return aFrame->Style()->GetPseudoType() == PseudoStyleType::anonymousItem;
 }
 
 // Returns true IFF the given nsIFrame is a nsFlexContainerFrame and
@@ -276,19 +274,12 @@ static inline bool IsFlexContainerForLegacyBox(const nsIFrame* aFrame) {
 #if DEBUG
 static void AssertAnonymousFlexOrGridItemParent(const nsIFrame* aChild,
                                                 const nsIFrame* aParent) {
-  MOZ_ASSERT(IsAnonymousFlexOrGridItem(aChild),
+  MOZ_ASSERT(IsAnonymousItem(aChild),
              "expected an anonymous flex or grid item child frame");
   MOZ_ASSERT(aParent, "expected a parent frame");
-  auto pseudoType = aChild->Style()->GetPseudoType();
-  if (pseudoType == PseudoStyleType::anonymousFlexItem) {
-    MOZ_ASSERT(aParent->IsFlexContainerFrame(),
-               "anonymous flex items should only exist as children "
-               "of flex container frames");
-  } else {
-    MOZ_ASSERT(aParent->IsGridContainerFrame(),
-               "anonymous grid items should only exist as children "
-               "of grid container frames");
-  }
+  MOZ_ASSERT(aParent->IsFlexContainerFrame() || aParent->IsGridContainerFrame(),
+             "anonymous items should only exist as children of "
+             "flex/grid container frames");
 }
 #else
 #  define AssertAnonymousFlexOrGridItemParent(x, y) PR_BEGIN_MACRO PR_END_MACRO
@@ -8608,7 +8599,7 @@ bool nsCSSFrameConstructor::MaybeRecreateContainerForFrameRemoval(
   // we're only interested in anonymous flex items here, and those can never
   // be adjacent to whitespace, since they absorb contiguous runs of inline
   // non-replaced content (including whitespace).
-  if (nextSibling && IsAnonymousFlexOrGridItem(nextSibling)) {
+  if (nextSibling && IsAnonymousItem(nextSibling)) {
     AssertAnonymousFlexOrGridItemParent(nextSibling, parent);
     TRACE("Anon flex or grid item next sibling");
     // Recreate frames for the flex container (the removed frame's parent)
@@ -8619,7 +8610,7 @@ bool nsCSSFrameConstructor::MaybeRecreateContainerForFrameRemoval(
   // Might need to reconstruct things if the removed frame's nextSibling is
   // null and its parent is an anonymous flex item. (This might be the last
   // remaining child of that anonymous flex item, which can then go away.)
-  if (!nextSibling && IsAnonymousFlexOrGridItem(parent)) {
+  if (!nextSibling && IsAnonymousItem(parent)) {
     AssertAnonymousFlexOrGridItemParent(parent, parent->GetParent());
     TRACE("Anon flex or grid item parent");
     // Recreate frames for the flex container (the removed frame's grandparent)
@@ -8989,14 +8980,10 @@ void nsCSSFrameConstructor::CreateNeededAnonFlexOrGridItems(
 
     // Now, we create the anonymous flex or grid item to contain the children
     // between |iter| and |endIter|.
-    auto pseudoType = aParentFrame->IsFlexContainerFrame()
-                          ? PseudoStyleType::anonymousFlexItem
-                          : PseudoStyleType::anonymousGridItem;
-    ComputedStyle* parentStyle = aParentFrame->Style();
     nsIContent* parentContent = aParentFrame->GetContent();
     RefPtr<ComputedStyle> wrapperStyle =
-        mPresShell->StyleSet()->ResolveInheritingAnonymousBoxStyle(pseudoType,
-                                                                   parentStyle);
+        mPresShell->StyleSet()->ResolveInheritingAnonymousBoxStyle(
+            PseudoStyleType::anonymousItem, aParentFrame->Style());
 
     static constexpr FrameConstructionData sBlockFormattingContextFCData(
         ToCreationFunc(NS_NewBlockFormattingContext),
@@ -9590,7 +9577,7 @@ static void VerifyGridFlexContainerChildren(nsIFrame* aParentFrame,
   for (const nsIFrame* child : aChildren) {
     MOZ_ASSERT(!FrameWantsToBeInAnonymousItem(aParentFrame, child),
                "frame wants to be inside an anonymous item, but it isn't");
-    if (IsAnonymousFlexOrGridItem(child)) {
+    if (IsAnonymousItem(child)) {
       AssertAnonymousFlexOrGridItemParent(child, aParentFrame);
       MOZ_ASSERT(!prevChildWasAnonItem, "two anon items in a row");
       nsIFrame* firstWrappedChild = child->PrincipalChildList().FirstChild();
@@ -11447,7 +11434,7 @@ bool nsCSSFrameConstructor::WipeContainingBlock(
     // Check if we're adding to-be-wrapped content right *after* an existing
     // anonymous flex or grid item (which would need to absorb this content).
     const bool isLegacyBox = IsFlexContainerForLegacyBox(aFrame);
-    if (aPrevSibling && IsAnonymousFlexOrGridItem(aPrevSibling) &&
+    if (aPrevSibling && IsAnonymousItem(aPrevSibling) &&
         iter.item().NeedsAnonFlexOrGridItem(aState, isLegacyBox)) {
       TRACE("Inserting inline after anon flex or grid item");
       RecreateFramesForContent(aFrame->GetContent(), InsertionKind::Async);
@@ -11456,7 +11443,7 @@ bool nsCSSFrameConstructor::WipeContainingBlock(
 
     // Check if we're adding to-be-wrapped content right *before* an existing
     // anonymous flex or grid item (which would need to absorb this content).
-    if (nextSibling && IsAnonymousFlexOrGridItem(nextSibling)) {
+    if (nextSibling && IsAnonymousItem(nextSibling)) {
       // Jump to the last entry in the list
       iter.SetToEnd();
       iter.Prev();
@@ -11470,7 +11457,7 @@ bool nsCSSFrameConstructor::WipeContainingBlock(
 
   // Situation #3 is an anonymous flex or grid item that's getting new children
   // who don't want to be wrapped.
-  if (IsAnonymousFlexOrGridItem(aFrame)) {
+  if (IsAnonymousItem(aFrame)) {
     AssertAnonymousFlexOrGridItemParent(aFrame, aFrame->GetParent());
 
     // We need to push a null float containing block to be sure that

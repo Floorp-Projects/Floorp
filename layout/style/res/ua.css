@@ -298,8 +298,7 @@
   column-span: all;
 }
 
-*|*::-moz-anonymous-flex-item,
-*|*::-moz-anonymous-grid-item {
+*|*::-moz-anonymous-item {
   /* Anonymous blocks that wrap contiguous runs of text
    * inside of a flex or grid container. */
   display: block;
