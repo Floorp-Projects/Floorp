@@ -381,7 +381,8 @@ class VarEnvironmentObject : public EnvironmentObject {
 
   static VarEnvironmentObject* createInternal(JSContext* cx,
                                               Handle<Shape*> shape,
-                                              HandleObject enclosing);
+                                              HandleObject enclosing,
+                                              gc::InitialHeap heap);
 
   void initScope(Scope* scope) {
     initReservedSlot(SCOPE_SLOT, PrivateGCThingValue(scope));
@@ -394,12 +395,16 @@ class VarEnvironmentObject : public EnvironmentObject {
   static constexpr ObjectFlags OBJECT_FLAGS = {ObjectFlag::QualifiedVarObj};
 
   static VarEnvironmentObject* create(JSContext* cx, Handle<Scope*> scope,
-                                      HandleObject enclosing);
+                                      HandleObject enclosing,
+                                      gc::InitialHeap heap);
   static VarEnvironmentObject* createForFrame(JSContext* cx,
                                               Handle<Scope*> scope,
                                               AbstractFramePtr frame);
   static VarEnvironmentObject* createHollowForDebug(JSContext* cx,
                                                     Handle<Scope*> scope);
+  static VarEnvironmentObject* createTemplateObject(JSContext* cx,
+                                                    Handle<VarScope*> scope,
+                                                    gc::InitialHeap heap);
 
   Scope& scope() const {
     Value v = getReservedSlot(SCOPE_SLOT);
@@ -584,6 +589,9 @@ class BlockLexicalEnvironmentObject : public ScopedLexicalEnvironmentObject {
   static BlockLexicalEnvironmentObject* createHollowForDebug(
       JSContext* cx, Handle<LexicalScope*> scope);
 
+  static BlockLexicalEnvironmentObject* createTemplateObject(
+      JSContext* cx, Handle<LexicalScope*> scope, gc::InitialHeap heap);
+
   // Create a new BlockLexicalEnvironmentObject with the same enclosing env and
   // variable values as this.
   static BlockLexicalEnvironmentObject* clone(
@@ -625,6 +633,9 @@ class ClassBodyLexicalEnvironmentObject
 
   static ClassBodyLexicalEnvironmentObject* createForFrame(
       JSContext* cx, Handle<ClassBodyScope*> scope, AbstractFramePtr frame);
+
+  static ClassBodyLexicalEnvironmentObject* createTemplateObject(
+      JSContext* cx, Handle<ClassBodyScope*> scope, gc::InitialHeap heap);
 
   // The ClassBodyScope that created this environment.
   ClassBodyScope& scope() const {
