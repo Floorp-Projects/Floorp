@@ -1983,10 +1983,10 @@ bool WarpBuilder::build_PushLexicalEnv(BytecodeLocation loc) {
   const auto* snapshot = getOpSnapshot<WarpLexicalEnvironment>(loc);
   MOZ_ASSERT(snapshot);
 
-  LexicalScope* scope = &snapshot->templateObj()->scope();
   MDefinition* env = current->environmentChain();
+  MConstant* templateCst = constant(ObjectValue(*snapshot->templateObj()));
 
-  auto* ins = MNewLexicalEnvironmentObject::New(alloc(), env, scope);
+  auto* ins = MNewLexicalEnvironmentObject::New(alloc(), env, templateCst);
   current->add(ins);
   current->setEnvironmentChain(ins);
   return true;
@@ -1998,10 +1998,10 @@ bool WarpBuilder::build_PushClassBodyEnv(BytecodeLocation loc) {
   const auto* snapshot = getOpSnapshot<WarpClassBodyEnvironment>(loc);
   MOZ_ASSERT(snapshot);
 
-  ClassBodyScope* scope = &snapshot->templateObj()->scope();
   MDefinition* env = current->environmentChain();
+  MConstant* templateCst = constant(ObjectValue(*snapshot->templateObj()));
 
-  auto* ins = MNewClassBodyEnvironmentObject::New(alloc(), env, scope);
+  auto* ins = MNewClassBodyEnvironmentObject::New(alloc(), env, templateCst);
   current->add(ins);
   current->setEnvironmentChain(ins);
   return true;
@@ -2041,10 +2041,10 @@ bool WarpBuilder::build_PushVarEnv(BytecodeLocation loc) {
   const auto* snapshot = getOpSnapshot<WarpVarEnvironment>(loc);
   MOZ_ASSERT(snapshot);
 
-  VarScope* scope = &snapshot->templateObj()->scope().as<VarScope>();
   MDefinition* env = current->environmentChain();
+  MConstant* templateCst = constant(ObjectValue(*snapshot->templateObj()));
 
-  auto* ins = MNewVarEnvironmentObject::New(alloc(), env, scope);
+  auto* ins = MNewVarEnvironmentObject::New(alloc(), env, templateCst);
   current->add(ins);
   current->setEnvironmentChain(ins);
   return true;

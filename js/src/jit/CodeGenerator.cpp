@@ -4004,11 +4004,21 @@ void CodeGenerator::visitHomeObjectSuperBase(LHomeObjectSuperBase* lir) {
   masm.bind(&done);
 }
 
+template <class T>
+static T* ToConstantObject(MDefinition* def) {
+  MOZ_ASSERT(def->isConstant());
+  return &def->toConstant()->toObject().as<T>();
+}
+
 void CodeGenerator::visitNewLexicalEnvironmentObject(
     LNewLexicalEnvironmentObject* lir) {
+  auto* templateObj = ToConstantObject<BlockLexicalEnvironmentObject>(
+      lir->mir()->templateObj());
+  auto* scope = &templateObj->scope();
+
   pushArg(Imm32(gc::DefaultHeap));
   pushArg(ToRegister(lir->enclosing()));
-  pushArg(ImmGCPtr(lir->mir()->scope()));
+  pushArg(ImmGCPtr(scope));
 
   using Fn =
       BlockLexicalEnvironmentObject* (*)(JSContext*, Handle<LexicalScope*>,
@@ -4018,9 +4028,13 @@ void CodeGenerator::visitNewLexicalEnvironmentObject(
 
 void CodeGenerator::visitNewClassBodyEnvironmentObject(
     LNewClassBodyEnvironmentObject* lir) {
+  auto* templateObj = ToConstantObject<ClassBodyLexicalEnvironmentObject>(
+      lir->mir()->templateObj());
+  auto* scope = &templateObj->scope();
+
   pushArg(Imm32(gc::DefaultHeap));
   pushArg(ToRegister(lir->enclosing()));
-  pushArg(ImmGCPtr(lir->mir()->scope()));
+  pushArg(ImmGCPtr(scope));
 
   using Fn =
       ClassBodyLexicalEnvironmentObject* (*)(JSContext*,
@@ -4031,9 +4045,13 @@ void CodeGenerator::visitNewClassBodyEnvironmentObject(
 
 void CodeGenerator::visitNewVarEnvironmentObject(
     LNewVarEnvironmentObject* lir) {
+  auto* templateObj =
+      ToConstantObject<VarEnvironmentObject>(lir->mir()->templateObj());
+  auto* scope = &templateObj->scope().as<VarScope>();
+
   pushArg(Imm32(gc::DefaultHeap));
   pushArg(ToRegister(lir->enclosing()));
-  pushArg(ImmGCPtr(lir->mir()->scope()));
+  pushArg(ImmGCPtr(scope));
 
   using Fn = VarEnvironmentObject* (*)(JSContext*, Handle<Scope*>, HandleObject,
                                        gc::InitialHeap);
