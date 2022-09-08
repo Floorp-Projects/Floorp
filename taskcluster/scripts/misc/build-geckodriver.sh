@@ -39,6 +39,9 @@ case "$TARGET" in
       export MACOSX_DEPLOYMENT_TARGET=10.12
   fi
   ;;
+aarch64-unknown-linux-musl)
+  export RUSTFLAGS="-C linker=$MOZ_FETCHES_DIR/clang/bin/clang -C link-arg=--target=$TARGET -C link-arg=-fuse-ld=lld"
+  ;;
 esac
 
 export PATH="$MOZ_FETCHES_DIR/rustc/bin:$PATH"
