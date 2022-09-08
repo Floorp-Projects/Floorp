@@ -703,8 +703,9 @@ mozilla::ipc::IPCResult HttpChannelParent::RecvResume() {
 
 mozilla::ipc::IPCResult HttpChannelParent::RecvCancel(
     const nsresult& status, const uint32_t& requestBlockingReason,
-    const mozilla::Maybe<nsCString>& logString) {
-  LOG(("HttpChannelParent::RecvCancel [this=%p]\n", this));
+    const nsACString& reason, const mozilla::Maybe<nsCString>& logString) {
+  LOG(("HttpChannelParent::RecvCancel [this=%p, reason=%s]\n", this,
+       PromiseFlatCString(reason).get()));
 
   // logging child cancel reason on the parent side
   if (logString.isSome()) {
@@ -713,7 +714,7 @@ mozilla::ipc::IPCResult HttpChannelParent::RecvCancel(
 
   // May receive cancel before channel has been constructed!
   if (mChannel) {
-    mChannel->Cancel(status);
+    mChannel->CancelWithReason(status, reason);
 
     if (MOZ_UNLIKELY(requestBlockingReason !=
                      nsILoadInfo::BLOCKING_REASON_NONE)) {

@@ -593,6 +593,19 @@ XSLTProcessRequest::GetStatus(nsresult* status) {
   return NS_OK;
 }
 
+NS_IMETHODIMP XSLTProcessRequest::SetCanceledReason(const nsACString& aReason) {
+  return SetCanceledReasonImpl(aReason);
+}
+
+NS_IMETHODIMP XSLTProcessRequest::GetCanceledReason(nsACString& aReason) {
+  return GetCanceledReasonImpl(aReason);
+}
+
+NS_IMETHODIMP XSLTProcessRequest::CancelWithReason(nsresult aStatus,
+                                                   const nsACString& aReason) {
+  return CancelWithReasonImpl(aStatus, aReason);
+}
+
 NS_IMETHODIMP
 XSLTProcessRequest::Cancel(nsresult status) {
   mState->stopProcessing();

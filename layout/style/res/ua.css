@@ -207,13 +207,6 @@
   z-index: inherit;
 }
 
-*|*::-moz-xul-anonymous-block {
-  display: block;
-  -moz-box-ordinal-group: inherit;
-  text-overflow: inherit;
-  overflow-clip-box: inherit;
-}
-
 *|*::-moz-scrolled-content, *|*::-moz-scrolled-canvas {
   /* e.g., text inputs, select boxes */
   padding: inherit;
@@ -298,10 +291,9 @@
   column-span: all;
 }
 
-*|*::-moz-anonymous-flex-item,
-*|*::-moz-anonymous-grid-item {
+*|*::-moz-anonymous-item {
   /* Anonymous blocks that wrap contiguous runs of text
-   * inside of a flex or grid container. */
+   * inside of a flex / grid / -moz-box container. */
   display: block;
 }
 

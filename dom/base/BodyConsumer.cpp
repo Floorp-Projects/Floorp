@@ -799,7 +799,8 @@ void BodyConsumer::ShutDownMainThreadConsuming() {
   mShuttingDown = true;
 
   if (mConsumeBodyPump) {
-    mConsumeBodyPump->Cancel(NS_BINDING_ABORTED);
+    mConsumeBodyPump->CancelWithReason(
+        NS_BINDING_ABORTED, "BodyConsumer::ShutDownMainThreadConsuming"_ns);
     mConsumeBodyPump = nullptr;
   }
 }

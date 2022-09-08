@@ -1320,7 +1320,8 @@ const LoginHelper = {
         fieldType == "email" ||
         fieldType == "url" ||
         fieldType == "tel" ||
-        fieldType == "number"
+        fieldType == "number" ||
+        fieldType == "search"
       )
     ) {
       return false;

@@ -3,8 +3,8 @@
 
 "use strict";
 
-const { EnterprisePolicyTesting } = ChromeUtils.import(
-  "resource://testing-common/EnterprisePolicyTesting.jsm"
+const { EnterprisePolicyTesting } = ChromeUtils.importESModule(
+  "resource://testing-common/EnterprisePolicyTesting.sys.mjs"
 );
 
 let { Region } = ChromeUtils.import("resource://gre/modules/Region.jsm");

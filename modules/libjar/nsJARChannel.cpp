@@ -570,6 +570,19 @@ nsJARChannel::GetStatus(nsresult* status) {
   return NS_OK;
 }
 
+NS_IMETHODIMP nsJARChannel::SetCanceledReason(const nsACString& aReason) {
+  return SetCanceledReasonImpl(aReason);
+}
+
+NS_IMETHODIMP nsJARChannel::GetCanceledReason(nsACString& aReason) {
+  return GetCanceledReasonImpl(aReason);
+}
+
+NS_IMETHODIMP nsJARChannel::CancelWithReason(nsresult aStatus,
+                                             const nsACString& aReason) {
+  return CancelWithReasonImpl(aStatus, aReason);
+}
+
 NS_IMETHODIMP
 nsJARChannel::Cancel(nsresult status) {
   mCanceled = true;

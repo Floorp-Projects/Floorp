@@ -188,16 +188,16 @@ function getColorwayClosetTestElements(document) {
     colorwayDescription: document.querySelector("#colorway-description"),
     homepageResetContainer: document.getElementById("homepage-reset-container"),
     homepageResetSuccessMessage: document.querySelector(
-      "#homepage-reset-container > .success-prompt > span"
+      "#homepage-reset-success > span"
     ),
     homepageResetUndoButton: document.querySelector(
-      "#homepage-reset-container > .success-prompt > button"
+      "#homepage-reset-success > button"
     ),
     homepageResetMessage: document.querySelector(
-      "#homepage-reset-container > .reset-prompt > span"
+      "#homepage-reset-prompt > span"
     ),
     homepageResetApplyButton: document.querySelector(
-      "#homepage-reset-container > .reset-prompt > button"
+      "#homepage-reset-prompt > button"
     ),
   };
 }

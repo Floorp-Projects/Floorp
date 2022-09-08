@@ -3166,10 +3166,10 @@
      *
      *   Category: Variables and scopes
      *   Type: Entering and leaving environments
-     *   Operands:
+     *   Operands: uint32_t lexicalScopeIndex
      *   Stack: =>
      */ \
-    MACRO(RecreateLexicalEnv, recreate_lexical_env, NULL, 1, 0, 0, JOF_BYTE) \
+    MACRO(RecreateLexicalEnv, recreate_lexical_env, NULL, 5, 0, 0, JOF_SCOPE) \
     /*
      * Like `JSOp::RecreateLexicalEnv`, but the values of all the bindings are
      * copied from the old block to the new one. This is used for C-style
@@ -3177,10 +3177,10 @@
      *
      *   Category: Variables and scopes
      *   Type: Entering and leaving environments
-     *   Operands:
+     *   Operands: uint32_t lexicalScopeIndex
      *   Stack: =>
      */ \
-    MACRO(FreshenLexicalEnv, freshen_lexical_env, NULL, 1, 0, 0, JOF_BYTE) \
+    MACRO(FreshenLexicalEnv, freshen_lexical_env, NULL, 5, 0, 0, JOF_SCOPE) \
     /*
      * Push a ClassBody environment onto the environment chain.
      *

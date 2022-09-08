@@ -866,7 +866,8 @@ void MacroAssembler::initGCSlots(Register obj, Register temp,
       FindStartOfUninitializedAndUndefinedSlots(templateObj, nslots);
   MOZ_ASSERT(startOfUninitialized <= nfixed);  // Reserved slots must be fixed.
   MOZ_ASSERT(startOfUndefined >= startOfUninitialized);
-  MOZ_ASSERT_IF(!templateObj.isCallObject(),
+  MOZ_ASSERT_IF(!templateObj.isCallObject() &&
+                    !templateObj.isBlockLexicalEnvironmentObject(),
                 startOfUninitialized == startOfUndefined);
 
   // Copy over any preserved reserved slots.

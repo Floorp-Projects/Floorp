@@ -108,9 +108,15 @@ add_task(async function() {
     await selectContextMenuItem(monitor, "request-list-context-edit-resend");
 
     // 1) Wait for "Edit & Resend" panel to appear
+    // 2) Wait for the Send button to be  enabled (i.e all the data is loaded)
     // 2) Click the "Send" button
     // 3) Wait till the new request appears in the list
-    await waitUntil(() => document.querySelector(".http-custom-request-panel"));
+    await waitUntil(
+      () =>
+        document.querySelector(".http-custom-request-panel") &&
+        document.querySelector("#http-custom-request-send-button").disabled ===
+          false
+    );
     document.querySelector("#http-custom-request-send-button").click();
     await waitForNetworkEvents(monitor, 1);
 

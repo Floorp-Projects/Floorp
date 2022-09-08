@@ -455,13 +455,18 @@ DocumentChannelChild::OnRedirectVerifyCallback(nsresult aStatusCode) {
 
 NS_IMETHODIMP
 DocumentChannelChild::Cancel(nsresult aStatusCode) {
+  return CancelWithReason(aStatusCode, "DocumentChannelChild::Cancel"_ns);
+}
+
+NS_IMETHODIMP DocumentChannelChild::CancelWithReason(
+    nsresult aStatusCode, const nsACString& aReason) {
   if (mCanceled) {
     return NS_OK;
   }
 
   mCanceled = true;
   if (CanSend()) {
-    SendCancel(aStatusCode);
+    SendCancel(aStatusCode, aReason);
   }
 
   ShutdownListeners(aStatusCode);

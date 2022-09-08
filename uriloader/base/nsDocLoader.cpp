@@ -255,7 +255,10 @@ MOZ_CAN_RUN_SCRIPT_BOUNDARY NS_IMETHODIMP nsDocLoader::Stop(void) {
 
   NS_OBSERVER_ARRAY_NOTIFY_XPCOM_OBSERVERS(mChildList, Stop, ());
 
-  if (mLoadGroup) rv = mLoadGroup->Cancel(NS_BINDING_ABORTED);
+  if (mLoadGroup) {
+    rv = mLoadGroup->CancelWithReason(NS_BINDING_ABORTED,
+                                      "nsDocLoader::Stop"_ns);
+  }
 
   // Don't report that we're flushing layout so IsBusy returns false after a
   // Stop call.

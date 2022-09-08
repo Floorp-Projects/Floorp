@@ -98,8 +98,6 @@ class nsBoxFrame : public nsContainerFrame {
                             nsFrameList& aFrameList) override;
   virtual void RemoveFrame(ChildListID aListID, nsIFrame* aOldFrame) override;
 
-  virtual nsContainerFrame* GetContentInsertionFrame() override;
-
   virtual void DidSetComputedStyle(ComputedStyle* aOldComputedStyle) override;
 
   virtual bool IsFrameOfType(uint32_t aFlags) const override {
@@ -146,11 +144,6 @@ class nsBoxFrame : public nsContainerFrame {
   void WrapListsInRedirector(nsDisplayListBuilder* aBuilder,
                              const nsDisplayListSet& aIn,
                              const nsDisplayListSet& aOut);
-
-  /**
-   * Return our wrapper block, if any.
-   */
-  void AppendDirectlyOwnedAnonBoxes(nsTArray<OwnedAnonBox>& aResult) override;
 
   // Gets a next / prev sibling accounting for ordinal group. Slow, please avoid
   // usage if possible.

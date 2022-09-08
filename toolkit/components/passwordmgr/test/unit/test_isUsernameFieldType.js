@@ -91,7 +91,7 @@ const TESTCASES = [
   {
     description: "type=search, no autocomplete attribute",
     document: `<input type="search">`,
-    expected: false,
+    expected: true,
   },
   {
     description: "type=range, no autocomplete attribute",

@@ -10,7 +10,7 @@
   <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
 
 <deck style="margin-top: 5px; padding-top: 5px;">
-  <label id="outer" popup="outerpopup" value="Popup"/>
+  <label id="outer" style="display: block" popup="outerpopup" value="Popup"/>
 </deck>
 
 <panel id="outerpopup"
@@ -65,11 +65,10 @@ function popupShowingEventOccurred(event)
   var rect = trigger.getBoundingClientRect();
   is(event.clientX, Math.round(rect.left + 4), testname + "clientX");
   is(event.clientY, Math.round(rect.top + 5), testname + "clientY");
-  // rangeOffset should be just after the trigger element. As rangeOffset
-  // considers the zeroth position to be before the first element, the value
-  // should be one higher than its index within its parent.
-  is(event.rangeParent, trigger.parentNode, testname + "rangeParent");
-  is(event.rangeOffset, Array.prototype.indexOf.call(trigger.parentNode.childNodes, trigger) + 1, testname + "rangeOffset");
+  // rangeOffset should be just at the trigger element, since they are labels
+  // they don't have any childrens so the offset should be zero.
+  is(event.rangeParent, trigger, testname + "rangeParent");
+  is(event.rangeOffset, 0, testname + "rangeOffset");
 
   var popuprect = event.target.getBoundingClientRect();
   var marginLeft = parseFloat(getComputedStyle(event.target).marginLeft);

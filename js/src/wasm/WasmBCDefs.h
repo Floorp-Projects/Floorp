@@ -52,10 +52,10 @@
 #endif
 #include "js/ScalarType.h"
 #include "util/Memory.h"
-#include "wasm/TypedObject.h"
 #include "wasm/WasmCodegenTypes.h"
 #include "wasm/WasmDebugFrame.h"
 #include "wasm/WasmGC.h"
+#include "wasm/WasmGcObject.h"
 #include "wasm/WasmGenerator.h"
 #include "wasm/WasmInstance.h"
 #include "wasm/WasmOpIter.h"

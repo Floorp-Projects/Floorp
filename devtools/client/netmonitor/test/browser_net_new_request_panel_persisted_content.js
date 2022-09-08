@@ -3,6 +3,8 @@
 
 "use strict";
 
+const asyncStorage = require("devtools/shared/async-storage");
+
 /**
  * Test if content is still persisted after the panel is closed
  */
@@ -10,8 +12,8 @@
 add_task(async function() {
   // Turn true the pref
   await pushPref("devtools.netmonitor.features.newEditAndResend", true);
-  // Resetting the pref
-  await pushPref("devtools.netmonitor.customRequest", "");
+  // Reset the storage for the persisted custom request
+  await asyncStorage.removeItem("devtools.netmonitor.customRequest");
 
   const { monitor } = await initNetMonitor(HTTPS_CUSTOM_GET_URL, {
     requestCount: 1,
@@ -85,7 +87,13 @@ add_task(async function() {
   closePanel.click();
 
   // Open the panel again to see if the content is still there
-  waitForPanels = waitForDOM(document, ".monitor-panel .network-action-bar");
+  waitForPanels = waitUntil(
+    () =>
+      document.querySelector(".http-custom-request-panel") &&
+      document.querySelector("#http-custom-request-send-button").disabled ===
+        false
+  );
+
   HTTPCustomRequestButton = document.querySelector(
     "#netmonitor-toolbar-container .devtools-http-custom-request-icon"
   );

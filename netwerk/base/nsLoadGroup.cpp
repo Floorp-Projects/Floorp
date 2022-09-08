@@ -91,7 +91,8 @@ nsLoadGroup::nsLoadGroup()
 }
 
 nsLoadGroup::~nsLoadGroup() {
-  DebugOnly<nsresult> rv = Cancel(NS_BINDING_ABORTED);
+  DebugOnly<nsresult> rv =
+      CancelWithReason(NS_BINDING_ABORTED, "nsLoadGroup::~nsLoadGroup"_ns);
   NS_ASSERTION(NS_SUCCEEDED(rv), "Cancel failed");
 
   mDefaultLoadRequest = nullptr;
@@ -168,6 +169,19 @@ static bool AppendRequestsToArray(PLDHashTable* aTable,
     return false;
   }
   return true;
+}
+
+NS_IMETHODIMP nsLoadGroup::SetCanceledReason(const nsACString& aReason) {
+  return SetCanceledReasonImpl(aReason);
+}
+
+NS_IMETHODIMP nsLoadGroup::GetCanceledReason(nsACString& aReason) {
+  return GetCanceledReasonImpl(aReason);
+}
+
+NS_IMETHODIMP nsLoadGroup::CancelWithReason(nsresult aStatus,
+                                            const nsACString& aReason) {
+  return CancelWithReasonImpl(aStatus, aReason);
 }
 
 NS_IMETHODIMP

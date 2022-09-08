@@ -509,6 +509,19 @@ nsJSChannel::GetStatus(nsresult* aResult) {
   return NS_OK;
 }
 
+NS_IMETHODIMP nsJSChannel::SetCanceledReason(const nsACString& aReason) {
+  return SetCanceledReasonImpl(aReason);
+}
+
+NS_IMETHODIMP nsJSChannel::GetCanceledReason(nsACString& aReason) {
+  return GetCanceledReasonImpl(aReason);
+}
+
+NS_IMETHODIMP nsJSChannel::CancelWithReason(nsresult aStatus,
+                                            const nsACString& aReason) {
+  return CancelWithReasonImpl(aStatus, aReason);
+}
+
 NS_IMETHODIMP
 nsJSChannel::Cancel(nsresult aStatus) {
   mStatus = aStatus;

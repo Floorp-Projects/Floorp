@@ -1699,36 +1699,24 @@
   # A function's environment is fixed.
   alias_set: none
 
+# Allocate a new BlockLexicalEnvironmentObject.
 - name: NewLexicalEnvironmentObject
-  gen_boilerplate: false
+  operands:
+    templateObj: Object
+  result_type: Object
+  alias_set: none
 
 # Allocate a new ClassBodyEnvironmentObject.
 - name: NewClassBodyEnvironmentObject
   operands:
-    enclosing: Object
-  arguments:
-    scope: ClassBodyScope*
+    templateObj: Object
   result_type: Object
-  possibly_calls: true
   alias_set: none
-
-# Allocate a new BlockLexicalEnvironmentObject from an existing one.
-- name: CopyLexicalEnvironmentObject
-  operands:
-    env: Object
-  arguments:
-    copySlots: bool
-  result_type: Object
-  possibly_calls: true
-  alias_set: custom
 
 - name: NewVarEnvironmentObject
   operands:
-    enclosing: Object
-  arguments:
-    scope: VarScope*
+    templateObj: Object
   result_type: Object
-  possibly_calls: true
   alias_set: none
 
 - name: HomeObject
@@ -1996,6 +1984,14 @@
 
 - name: PostWriteElementBarrier
   gen_boilerplate: false
+
+- name: AssertCanElidePostWriteBarrier
+  operands:
+    object: Object
+    value: Value
+  result_type: None
+  guard: true
+  alias_set: none
 
 - name: NewNamedLambdaObject
   arguments:

@@ -440,6 +440,19 @@ imgRequestProxy::GetStatus(nsresult* aStatus) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+NS_IMETHODIMP imgRequestProxy::SetCanceledReason(const nsACString& aReason) {
+  return SetCanceledReasonImpl(aReason);
+}
+
+NS_IMETHODIMP imgRequestProxy::GetCanceledReason(nsACString& aReason) {
+  return GetCanceledReasonImpl(aReason);
+}
+
+NS_IMETHODIMP imgRequestProxy::CancelWithReason(nsresult aStatus,
+                                                const nsACString& aReason) {
+  return CancelWithReasonImpl(aStatus, aReason);
+}
+
 NS_IMETHODIMP
 imgRequestProxy::Cancel(nsresult status) {
   if (mCanceled) {

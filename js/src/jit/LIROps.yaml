@@ -2109,30 +2109,17 @@
 
 - name: NewLexicalEnvironmentObject
   result_type: WordSized
-  operands:
-    enclosing: WordSized
-  call_instruction: true
-  mir_op: true
-
-- name: CopyLexicalEnvironmentObject
-  result_type: WordSized
-  operands:
-    env: WordSized
-  call_instruction: true
+  num_temps: 1
   mir_op: true
 
 - name: NewClassBodyEnvironmentObject
   result_type: WordSized
-  operands:
-    enclosing: WordSized
-  call_instruction: true
+  num_temps: 1
   mir_op: true
 
 - name: NewVarEnvironmentObject
   result_type: WordSized
-  operands:
-    enclosing: WordSized
-  call_instruction: true
+  num_temps: 1
   mir_op: true
 
 - name: CallSetElement
@@ -2371,6 +2358,13 @@
     value: BoxedValue
   num_temps: 1
   mir_op: PostWriteElementBarrier
+
+# Assert in debug mode that a post write barrier can be elided.
+- name: AssertCanElidePostWriteBarrier
+  operands:
+    object: WordSized
+    value: BoxedValue
+  num_temps: 1
 
 # Guard against an object's identity.
 - name: GuardObjectIdentity

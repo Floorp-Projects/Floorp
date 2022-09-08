@@ -49,7 +49,6 @@ avoid-blacklist-and-whitelist:
         - browser/base/content/test/tabMediaIndicator/browser_mute_webAudio.js
         - browser/base/content/test/tabs/browser_new_file_whitelisted_http_tab.js
         - browser/components/downloads/content/contentAreaDownloadsView.xhtml
-        - browser/components/enterprisepolicies/helpers/WebsiteFilter.jsm
         - browser/components/migration/ChromeMigrationUtils.jsm
         - browser/components/migration/ChromeProfileMigrator.jsm
         - browser/components/newtab/data/content/activity-stream.bundle.js

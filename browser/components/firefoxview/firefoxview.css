@@ -194,6 +194,7 @@ body > main > aside {
 .brand-logo > .brand-feature-name {
   margin-inline-start: 8px;
   flex: 1 1 auto;
+  font-weight: 600;
 }
 
 #colorways {

@@ -14,9 +14,9 @@
  * The exceptions list takes the same as input. This list opens up
  * exceptions for rules on the blocklist that might be too strict.
  *
- * In addition to that, this allows the user to create a whitelist approach,
+ * In addition to that, this allows the user to create an allowlist approach,
  * by using the special "<all_urls>" pattern for the blocklist, and then
- * adding all whitelisted websites on the exceptions list.
+ * adding all allowlisted websites on the exceptions list.
  *
  * Note that this module only blocks top-level website navigations and embeds.
  * It does not block any other accesses to these urls: image tags, scripts, XHR, etc.,
@@ -26,9 +26,7 @@
  * way is to configure that with extensions or through a company firewall.
  */
 
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 const LIST_LENGTH_LIMIT = 1000;
 
@@ -47,9 +45,7 @@ XPCOMUtils.defineLazyGetter(lazy, "log", () => {
   });
 });
 
-var EXPORTED_SYMBOLS = ["WebsiteFilter"];
-
-let WebsiteFilter = {
+export let WebsiteFilter = {
   init(blocklist, exceptionlist) {
     let blockArray = [],
       exceptionArray = [];

@@ -275,7 +275,7 @@ Action for setting various browser prefs
 Prefs that can be changed with this action are:
 
 - `browser.dataFeatureRecommendations.enabled`
-- `browser.privacySegmentation.windowSeparation.enabled`
+- `browser.privateWindowSeparation.enabled`
 - `browser.startup.homepage`
 
 * args:

@@ -2549,6 +2549,19 @@ class CancelRunnable final : public MainThreadWorkerRunnable {
 
 }  // namespace
 
+NS_IMETHODIMP WebSocketImpl::SetCanceledReason(const nsACString& aReason) {
+  return SetCanceledReasonImpl(aReason);
+}
+
+NS_IMETHODIMP WebSocketImpl::GetCanceledReason(nsACString& aReason) {
+  return GetCanceledReasonImpl(aReason);
+}
+
+NS_IMETHODIMP WebSocketImpl::CancelWithReason(nsresult aStatus,
+                                              const nsACString& aReason) {
+  return CancelWithReasonImpl(aStatus, aReason);
+}
+
 // Window closed, stop/reload button pressed, user navigated away from page,
 // etc.
 NS_IMETHODIMP

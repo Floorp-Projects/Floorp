@@ -393,7 +393,6 @@ JSString* StringFromCodePoint(JSContext* cx, int32_t codePoint);
 
 [[nodiscard]] bool InterruptCheck(JSContext* cx);
 
-JSObject* NewCallObject(JSContext* cx, Handle<Shape*> shape);
 JSObject* NewStringObject(JSContext* cx, HandleString str);
 
 bool OperatorIn(JSContext* cx, HandleValue key, HandleObject obj, bool* out);
@@ -461,9 +460,6 @@ JSObject* CreateGenerator(JSContext* cx, HandleFunction, HandleScript,
                                       MutableHandleValue res);
 
 ArrayObject* NewArrayObjectEnsureDenseInitLength(JSContext* cx, int32_t count);
-
-JSObject* CopyLexicalEnvironmentObject(JSContext* cx, HandleObject env,
-                                       bool copySlots);
 
 JSObject* InitRestParameter(JSContext* cx, uint32_t length, Value* rest,
                             HandleObject res);

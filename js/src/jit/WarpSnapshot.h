@@ -15,6 +15,7 @@
 #include "jit/JitAllocPolicy.h"
 #include "jit/JitContext.h"
 #include "jit/TypeData.h"
+#include "vm/EnvironmentObject.h"
 #include "vm/FunctionFlags.h"  // js::FunctionFlags
 
 namespace js {
@@ -40,6 +41,9 @@ class WarpScriptSnapshot;
   _(WarpGetImport)               \
   _(WarpRest)                    \
   _(WarpBindGName)               \
+  _(WarpVarEnvironment)          \
+  _(WarpLexicalEnvironment)      \
+  _(WarpClassBodyEnvironment)    \
   _(WarpBailout)                 \
   _(WarpCacheIR)                 \
   _(WarpInlinedCall)             \
@@ -397,6 +401,67 @@ class WarpBindGName : public WarpOpSnapshot {
       : WarpOpSnapshot(ThisKind, offset), globalEnv_(globalEnv) {}
 
   JSObject* globalEnv() const { return globalEnv_; }
+
+  void traceData(JSTracer* trc);
+
+#ifdef JS_JITSPEW
+  void dumpData(GenericPrinter& out) const;
+#endif
+};
+
+// Block environment for PushVarEnv
+class WarpVarEnvironment : public WarpOpSnapshot {
+  WarpGCPtr<VarEnvironmentObject*> templateObj_;
+
+ public:
+  static constexpr Kind ThisKind = Kind::WarpVarEnvironment;
+
+  WarpVarEnvironment(uint32_t offset, VarEnvironmentObject* templateObj)
+      : WarpOpSnapshot(ThisKind, offset), templateObj_(templateObj) {}
+
+  VarEnvironmentObject* templateObj() const { return templateObj_; }
+
+  void traceData(JSTracer* trc);
+
+#ifdef JS_JITSPEW
+  void dumpData(GenericPrinter& out) const;
+#endif
+};
+
+// Block environment for PushLexicalEnv, FreshenLexicalEnv, RecreateLexicalEnv
+class WarpLexicalEnvironment : public WarpOpSnapshot {
+  WarpGCPtr<BlockLexicalEnvironmentObject*> templateObj_;
+
+ public:
+  static constexpr Kind ThisKind = Kind::WarpLexicalEnvironment;
+
+  WarpLexicalEnvironment(uint32_t offset,
+                         BlockLexicalEnvironmentObject* templateObj)
+      : WarpOpSnapshot(ThisKind, offset), templateObj_(templateObj) {}
+
+  BlockLexicalEnvironmentObject* templateObj() const { return templateObj_; }
+
+  void traceData(JSTracer* trc);
+
+#ifdef JS_JITSPEW
+  void dumpData(GenericPrinter& out) const;
+#endif
+};
+
+// Class body lexical environment for PushClassBodyEnv
+class WarpClassBodyEnvironment : public WarpOpSnapshot {
+  WarpGCPtr<ClassBodyLexicalEnvironmentObject*> templateObj_;
+
+ public:
+  static constexpr Kind ThisKind = Kind::WarpClassBodyEnvironment;
+
+  WarpClassBodyEnvironment(uint32_t offset,
+                           ClassBodyLexicalEnvironmentObject* templateObj)
+      : WarpOpSnapshot(ThisKind, offset), templateObj_(templateObj) {}
+
+  ClassBodyLexicalEnvironmentObject* templateObj() const {
+    return templateObj_;
+  }
 
   void traceData(JSTracer* trc);
 

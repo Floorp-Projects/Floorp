@@ -23,6 +23,8 @@ runInParent(function setup() {
                createInstance(Ci.nsILoginInfo);
   let login4 = Cc["@mozilla.org/login-manager/loginInfo;1"].
                createInstance(Ci.nsILoginInfo);
+  let login5 = Cc["@mozilla.org/login-manager/loginInfo;1"].
+               createInstance(Ci.nsILoginInfo);
 
   login1.init("http://mochi.test:8888", "http://bug600551-1", null,
               "testuser@example.com", "testpass1", "", "");
@@ -32,11 +34,14 @@ runInParent(function setup() {
               "http://mozilla.org", "testpass3", "", "");
   login4.init("http://mochi.test:8888", "http://bug600551-4", null,
               "123456789", "testpass4", "", "");
+  login5.init("http://mochi.test:8888", "http://bug600551-5", null,
+              "test", "test", "", "");
 
   Services.logins.addLogin(login1);
   Services.logins.addLogin(login2);
   Services.logins.addLogin(login3);
   Services.logins.addLogin(login4);
+  Services.logins.addLogin(login5);
 });
 </script>
 
@@ -77,13 +82,13 @@ async function startTest() {
       <button type="submit">Submit</button>
     </form>
 
-    <!-- The following forms should not be filled with usernames -->
-    <form id="form5" action="formtest.js">
+    <form id="form5" action="http://bug600551-5">
       <input  type="search"   name="uname">
       <input  type="password" name="pword">
       <button type="submit">Submit</button>
-    </form>
+      </form>
 
+    <!-- The following forms should not be filled with usernames -->
     <form id="form6" action="formtest.js">
       <input  type="datetime" name="uname">
       <input  type="password" name="pword">
@@ -136,9 +141,8 @@ async function startTest() {
   await checkLoginFormInFrameWithElementValues(win, 2, "555-555-5555", "testpass2");
   await checkLoginFormInFrameWithElementValues(win, 3, "http://mozilla.org", "testpass3");
   await checkLoginFormInFrameWithElementValues(win, 4, "123456789", "testpass4");
+  await checkLoginFormInFrameWithElementValues(win, 5, "test", "test");
 
-  info("type=search should not be considered a username");
-  await checkLoginFormInFrameWithElementValues(win, 5, "");
   info("type=datetime should not be considered a username");
   await checkLoginFormInFrameWithElementValues(win, 6, "");
   info("type=date should not be considered a username");

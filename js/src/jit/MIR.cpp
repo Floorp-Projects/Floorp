@@ -5587,20 +5587,32 @@ MDefinition* MLoadDynamicSlot::foldsTo(TempAllocator& alloc) {
 #ifdef JS_JITSPEW
 void MLoadDynamicSlot::printOpcode(GenericPrinter& out) const {
   MDefinition::printOpcode(out);
-  out.printf(" %u", slot());
+  out.printf(" (slot %u)", slot());
 }
 
 void MLoadDynamicSlotAndUnbox::printOpcode(GenericPrinter& out) const {
   MDefinition::printOpcode(out);
-  out.printf(" %zu", slot());
+  out.printf(" (slot %zu)", slot());
 }
 
 void MStoreDynamicSlot::printOpcode(GenericPrinter& out) const {
-  PrintOpcodeName(out, op());
-  out.printf(" ");
-  getOperand(0)->printName(out);
-  out.printf(" %u ", slot());
-  getOperand(1)->printName(out);
+  MDefinition::printOpcode(out);
+  out.printf(" (slot %u)", slot());
+}
+
+void MLoadFixedSlot::printOpcode(GenericPrinter& out) const {
+  MDefinition::printOpcode(out);
+  out.printf(" (slot %zu)", slot());
+}
+
+void MLoadFixedSlotAndUnbox::printOpcode(GenericPrinter& out) const {
+  MDefinition::printOpcode(out);
+  out.printf(" (slot %zu)", slot());
+}
+
+void MStoreFixedSlot::printOpcode(GenericPrinter& out) const {
+  MDefinition::printOpcode(out);
+  out.printf(" (slot %zu)", slot());
 }
 #endif
 
@@ -6373,11 +6385,6 @@ MDefinition* MGuardStringToDouble::foldsTo(TempAllocator& alloc) {
 
 AliasSet MGuardNoDenseElements::getAliasSet() const {
   return AliasSet::Load(AliasSet::ObjectFields);
-}
-
-AliasSet MCopyLexicalEnvironmentObject::getAliasSet() const {
-  return AliasSet::Load(AliasSet::ObjectFields | AliasSet::FixedSlot |
-                        AliasSet::DynamicSlot);
 }
 
 AliasSet MAllocateAndStoreSlot::getAliasSet() const {

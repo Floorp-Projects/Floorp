@@ -3,6 +3,8 @@
 
 "use strict";
 
+const asyncStorage = require("devtools/shared/async-storage");
+
 /**
  * Test to check the sync between URL parameters and the parameters section
  */
@@ -10,8 +12,8 @@
 add_task(async function() {
   // Turn on the pref
   await pushPref("devtools.netmonitor.features.newEditAndResend", true);
-  // Resetting the pref
-  await pushPref("devtools.netmonitor.customRequest", "");
+  // Reset the storage for the persisted custom request
+  await asyncStorage.removeItem("devtools.netmonitor.customRequest");
 
   const { tab, monitor } = await initNetMonitor(HTTPS_CUSTOM_GET_URL, {
     requestCount: 1,

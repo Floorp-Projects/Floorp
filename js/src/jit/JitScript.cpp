@@ -436,16 +436,14 @@ bool JitScript::ensureHasCachedIonData(JSContext* cx, HandleScript script) {
     RootedFunction fun(cx, script->function());
 
     if (fun->needsNamedLambdaEnvironment()) {
-      templateEnv =
-          NamedLambdaObject::createTemplateObject(cx, fun, gc::TenuredHeap);
+      templateEnv = NamedLambdaObject::createTemplateObject(cx, fun);
       if (!templateEnv) {
         return false;
       }
     }
 
     if (fun->needsCallObject()) {
-      templateEnv = CallObject::createTemplateObject(cx, script, templateEnv,
-                                                     gc::TenuredHeap);
+      templateEnv = CallObject::createTemplateObject(cx, script, templateEnv);
       if (!templateEnv) {
         return false;
       }

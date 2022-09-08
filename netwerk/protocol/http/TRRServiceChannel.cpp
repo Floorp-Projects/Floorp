@@ -97,6 +97,20 @@ TRRServiceChannel::~TRRServiceChannel() {
   LOG(("TRRServiceChannel dtor [this=%p]\n", this));
 }
 
+NS_IMETHODIMP TRRServiceChannel::SetCanceledReason(const nsACString& aReason) {
+  return SetCanceledReasonImpl(aReason);
+}
+
+NS_IMETHODIMP TRRServiceChannel::GetCanceledReason(nsACString& aReason) {
+  return GetCanceledReasonImpl(aReason);
+}
+
+NS_IMETHODIMP
+TRRServiceChannel::CancelWithReason(nsresult aStatus,
+                                    const nsACString& aReason) {
+  return CancelWithReasonImpl(aStatus, aReason);
+}
+
 NS_IMETHODIMP
 TRRServiceChannel::Cancel(nsresult status) {
   LOG(("TRRServiceChannel::Cancel [this=%p status=%" PRIx32 "]\n", this,

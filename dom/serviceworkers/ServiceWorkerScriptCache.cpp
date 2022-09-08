@@ -799,7 +799,7 @@ void CompareNetwork::Abort() {
     mState = Finished;
 
     MOZ_ASSERT(mChannel);
-    mChannel->Cancel(NS_BINDING_ABORTED);
+    mChannel->CancelWithReason(NS_BINDING_ABORTED, "CompareNetwork::Abort"_ns);
     mChannel = nullptr;
 
     if (mCC) {
@@ -1154,7 +1154,7 @@ void CompareCache::Abort() {
     mState = Finished;
 
     if (mPump) {
-      mPump->Cancel(NS_BINDING_ABORTED);
+      mPump->CancelWithReason(NS_BINDING_ABORTED, "CompareCache::Abort"_ns);
       mPump = nullptr;
     }
   }

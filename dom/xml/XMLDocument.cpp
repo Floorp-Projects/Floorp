@@ -219,7 +219,8 @@ void XMLDocument::ResetToURI(nsIURI* aURI, nsILoadGroup* aLoadGroup,
                              nsIPrincipal* aPartitionedPrincipal) {
   if (mChannelIsPending) {
     StopDocumentLoad();
-    mChannel->Cancel(NS_BINDING_ABORTED);
+    mChannel->CancelWithReason(NS_BINDING_ABORTED,
+                               "XMLDocument::ResetToURI"_ns);
     mChannelIsPending = false;
   }
 

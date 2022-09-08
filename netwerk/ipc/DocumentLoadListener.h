@@ -227,7 +227,7 @@ class DocumentLoadListener : public nsIInterfaceRequestor,
   NS_DECLARE_STATIC_IID_ACCESSOR(DOCUMENT_LOAD_LISTENER_IID)
 
   // Called by the DocumentChannel if cancelled.
-  void Cancel(const nsresult& aStatusCode);
+  void Cancel(const nsresult& aStatusCode, const nsACString& aReason);
 
   nsIChannel* GetChannel() const { return mChannel; }
 
