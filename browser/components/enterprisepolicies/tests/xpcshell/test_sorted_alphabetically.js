@@ -22,8 +22,8 @@ add_task(async function test_policies_sorted() {
   let { schema } = ChromeUtils.import(
     "resource:///modules/policies/schema.jsm"
   );
-  let { Policies } = ChromeUtils.import(
-    "resource:///modules/policies/Policies.jsm"
+  let { Policies } = ChromeUtils.importESModule(
+    "resource:///modules/policies/Policies.sys.mjs"
   );
 
   checkArrayIsSorted(

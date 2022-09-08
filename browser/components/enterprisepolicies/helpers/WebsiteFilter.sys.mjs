@@ -26,9 +26,7 @@
  * way is to configure that with extensions or through a company firewall.
  */
 
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 const LIST_LENGTH_LIMIT = 1000;
 
@@ -47,9 +45,7 @@ XPCOMUtils.defineLazyGetter(lazy, "log", () => {
   });
 });
 
-var EXPORTED_SYMBOLS = ["WebsiteFilter"];
-
-let WebsiteFilter = {
+export let WebsiteFilter = {
   init(blocklist, exceptionlist) {
     let blockArray = [],
       exceptionArray = [];
