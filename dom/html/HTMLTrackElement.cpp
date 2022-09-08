@@ -226,7 +226,8 @@ void HTMLTrackElement::SetSrc(const nsAString& aSrc, ErrorResult& aError) {
   // Stop WebVTTListener.
   mListener = nullptr;
   if (mChannel) {
-    mChannel->Cancel(NS_BINDING_ABORTED);
+    mChannel->CancelWithReason(NS_BINDING_ABORTED,
+                               "HTMLTrackElement::SetSrc"_ns);
     mChannel = nullptr;
   }
 
@@ -473,7 +474,8 @@ void HTMLTrackElement::DispatchTrustedEvent(const nsAString& aName) {
 
 void HTMLTrackElement::CancelChannelAndListener() {
   if (mChannel) {
-    mChannel->Cancel(NS_BINDING_ABORTED);
+    mChannel->CancelWithReason(NS_BINDING_ABORTED,
+                               "HTMLTrackElement::CancelChannelAndListener"_ns);
     mChannel->SetNotificationCallbacks(nullptr);
     mChannel = nullptr;
   }

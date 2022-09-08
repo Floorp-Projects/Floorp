@@ -50,7 +50,8 @@ class MainThreadReleaseRunnable final : public Runnable {
   NS_IMETHOD
   Run() override {
     if (mLoadGroupToCancel) {
-      mLoadGroupToCancel->Cancel(NS_BINDING_ABORTED);
+      mLoadGroupToCancel->CancelWithReason(
+          NS_BINDING_ABORTED, "WorkerLoadInfo::MainThreadReleaseRunnable"_ns);
       mLoadGroupToCancel = nullptr;
     }
 

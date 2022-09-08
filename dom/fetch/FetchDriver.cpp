@@ -178,7 +178,8 @@ void AlternativeDataStreamListener::Cancel() {
   if (mChannel && mStatus != AlternativeDataStreamListener::FALLBACK) {
     // if mStatus is fallback, we need to keep channel to forward request back
     // to FetchDriver
-    mChannel->Cancel(NS_BINDING_ABORTED);
+    mChannel->CancelWithReason(NS_BINDING_ABORTED,
+                               "AlternativeDataStreamListener::Cancel"_ns);
     mChannel = nullptr;
   }
   mStatus = AlternativeDataStreamListener::CANCELED;
@@ -923,7 +924,8 @@ FetchDriver::OnStartRequest(nsIRequest* aRequest) {
   // channel will call in with an errored OnStartRequest().
 
   if (mFromPreload && mAborted) {
-    aRequest->Cancel(NS_BINDING_ABORTED);
+    aRequest->CancelWithReason(NS_BINDING_ABORTED,
+                               "FetchDriver::OnStartRequest aborted"_ns);
     return NS_BINDING_ABORTED;
   }
 
@@ -1619,7 +1621,8 @@ void FetchDriver::RunAbortAlgorithm() {
   }
 
   if (mChannel) {
-    mChannel->Cancel(NS_BINDING_ABORTED);
+    mChannel->CancelWithReason(NS_BINDING_ABORTED,
+                               "FetchDriver::RunAbortAlgorithm"_ns);
     mChannel = nullptr;
   }
 

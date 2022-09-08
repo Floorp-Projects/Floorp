@@ -928,7 +928,8 @@ void XMLHttpRequestMainThread::CloseRequest() {
   mWaitingForOnStopRequest = false;
   mErrorLoad = ErrorType::eTerminated;
   if (mChannel) {
-    mChannel->Cancel(NS_BINDING_ABORTED);
+    mChannel->CancelWithReason(NS_BINDING_ABORTED,
+                               "XMLHttpRequestMainThread::CloseRequest"_ns);
   }
   if (mTimeoutTimer) {
     mTimeoutTimer->Cancel();

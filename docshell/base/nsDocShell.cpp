@@ -13300,7 +13300,8 @@ nsDocShell::ResumeRedirectedLoad(uint64_t aIdentifier, int32_t aHistoryIndex) {
                        nsDOMNavigationTiming* aTiming) {
         MOZ_ASSERT(aLoadState->GetPendingRedirectedChannel());
         if (NS_WARN_IF(self->mIsBeingDestroyed)) {
-          aLoadState->GetPendingRedirectedChannel()->Cancel(NS_BINDING_ABORTED);
+          aLoadState->GetPendingRedirectedChannel()->CancelWithReason(
+              NS_BINDING_ABORTED, "nsDocShell::mIsBeingDestroyed"_ns);
           return NS_BINDING_ABORTED;
         }
 

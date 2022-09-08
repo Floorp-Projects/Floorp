@@ -91,7 +91,8 @@ nsLoadGroup::nsLoadGroup()
 }
 
 nsLoadGroup::~nsLoadGroup() {
-  DebugOnly<nsresult> rv = Cancel(NS_BINDING_ABORTED);
+  DebugOnly<nsresult> rv =
+      CancelWithReason(NS_BINDING_ABORTED, "nsLoadGroup::~nsLoadGroup"_ns);
   NS_ASSERTION(NS_SUCCEEDED(rv), "Cancel failed");
 
   mDefaultLoadRequest = nullptr;

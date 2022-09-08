@@ -31,6 +31,8 @@ class ParentProcessDocumentChannel : public DocumentChannel,
 
   NS_IMETHOD AsyncOpen(nsIStreamListener* aListener) override;
   NS_IMETHOD Cancel(nsresult aStatusCode) override;
+  NS_IMETHOD CancelWithReason(nsresult aStatusCode,
+                              const nsACString& aReason) override;
 
   RefPtr<PDocumentChannelParent::RedirectToRealChannelPromise>
   RedirectToRealChannel(
