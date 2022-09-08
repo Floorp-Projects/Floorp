@@ -33,7 +33,14 @@ class ThreadInitializeRunnable final : public Runnable {
   Run() override {
     StaticMutexAutoLock lock(gRemoteLazyThreadMutex);
     MOZ_ASSERT(gRemoteLazyThread);
-    gRemoteLazyThread->InitializeOnMainThread();
+    if (NS_WARN_IF(!gRemoteLazyThread->InitializeOnMainThread())) {
+      // RemoteLazyInputStreamThread::GetOrCreate might have handed out a
+      // pointer to our thread already at this point such that we cannot
+      // just do gRemoteLazyThread = nullptr; here.
+      MOZ_DIAGNOSTIC_ASSERT(
+          false, "Async gRemoteLazyThread->InitializeOnMainThread() failed.");
+      return NS_ERROR_FAILURE;
+    }
     return NS_OK;
   }
 };
@@ -64,7 +71,7 @@ RemoteLazyInputStreamThread* RemoteLazyInputStreamThread::GetOrCreate() {
   if (!gRemoteLazyThread) {
     gRemoteLazyThread = new RemoteLazyInputStreamThread();
     if (!gRemoteLazyThread->Initialize()) {
-      return nullptr;
+      gRemoteLazyThread = nullptr;
     }
   }
 
@@ -82,27 +89,25 @@ bool RemoteLazyInputStreamThread::Initialize() {
 
   if (!NS_IsMainThread()) {
     RefPtr<Runnable> runnable = new ThreadInitializeRunnable();
-    SchedulerGroup::Dispatch(TaskCategory::Other, runnable.forget());
-    return true;
+    nsresult rv =
+        SchedulerGroup::Dispatch(TaskCategory::Other, runnable.forget());
+    return !NS_WARN_IF(NS_FAILED(rv));
   }
 
-  InitializeOnMainThread();
-  return true;
+  return InitializeOnMainThread();
 }
 
-void RemoteLazyInputStreamThread::InitializeOnMainThread() {
+bool RemoteLazyInputStreamThread::InitializeOnMainThread() {
   MOZ_ASSERT(NS_IsMainThread());
 
   nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
   if (NS_WARN_IF(!obs)) {
-    return;
+    return false;
   }
 
   nsresult rv =
       obs->AddObserver(this, NS_XPCOM_SHUTDOWN_THREADS_OBSERVER_ID, false);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return;
-  }
+  return !NS_WARN_IF(NS_FAILED(rv));
 }
 
 NS_IMETHODIMP
