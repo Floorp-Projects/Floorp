@@ -8,7 +8,7 @@ with Files("**"):
     BUG_COMPONENT = ("Firefox", "Enterprise Policies")
 
 EXTRA_JS_MODULES.policies += [
-    "BookmarksPolicies.jsm",
-    "ProxyPolicies.jsm",
-    "WebsiteFilter.jsm",
+    "BookmarksPolicies.sys.mjs",
+    "ProxyPolicies.sys.mjs",
+    "WebsiteFilter.sys.mjs",
 ]

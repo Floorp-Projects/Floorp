@@ -8,8 +8,8 @@ add_task(async function test_proxy_modes_and_autoconfig() {
   // uses these prefs, and changing them interfere with the harness.
 
   // Checks that every Mode value translates correctly to the expected pref value
-  let { ProxyPolicies, PROXY_TYPES_MAP } = ChromeUtils.import(
-    "resource:///modules/policies/ProxyPolicies.jsm"
+  let { ProxyPolicies, PROXY_TYPES_MAP } = ChromeUtils.importESModule(
+    "resource:///modules/policies/ProxyPolicies.sys.mjs"
   );
 
   for (let [mode, expectedValue] of PROXY_TYPES_MAP) {
