@@ -69,6 +69,8 @@ FINAL_TARGET_FILES.features["webcompat@mozilla.org"]["injections"]["css"] += [
     "injections/css/bug1784199-entrata-platform-unsupported.css",
     "injections/css/bug1784351-movistar.com.ar-overflow-overlay-fix.css",
     "injections/css/bug1784546-seznam.cz-popup-height.css",
+    "injections/css/bug1788685-microsoftedgetips.microsoft.com-gallery-fix.css",
+    "injections/css/bug1789164-zdnet.com-cropped-section.css",
 ]
 
 FINAL_TARGET_FILES.features["webcompat@mozilla.org"]["injections"]["js"] += [
@@ -91,6 +93,7 @@ FINAL_TARGET_FILES.features["webcompat@mozilla.org"]["injections"]["js"] += [
     "injections/js/bug1778239-m.pji.co.kr-banner-hide.js",
     "injections/js/bug1784302-effectiveType-shim.js",
     "injections/js/bug1784309-bet365.com-math-pow.js",
+    "injections/js/bug1787267-nintendo-window-OnetrustActiveGroups.js",
 ]
 
 FINAL_TARGET_FILES.features["webcompat@mozilla.org"]["shims"] += [

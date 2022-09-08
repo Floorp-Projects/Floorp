@@ -1,0 +1,9 @@
+/**
+ * microsoftedgetips.microsoft.com - "Editor's Picks" slideshow images are not displayed
+ * Bug #1788685 - https://bugzilla.mozilla.org/show_bug.cgi?id=1788685
+ * WebCompat issue #102601 - https://webcompat.com/issues/102601
+ */
+
+.card-swiper__swiper {
+  min-width: 0;
+}
