@@ -54,18 +54,6 @@ fi
 
 ErrorFlag=0
 
-#if [  ! -h OSF1V5.1_DBG.OBJ -a ! -d OSF1V5.1_DBG.OBJ ] ; then 
-    #ln -s OSF1V4.0D_DBG.OBJ OSF1V5.1_DBG.OBJ || ErrorFlag=1
-#fi
-#if [  ! -h OSF1V5.1_OPT.OBJ -a ! -d OSF1V5.1_OPT.OBJ ] ; then 
-    #ln -s OSF1V4.0D_OPT.OBJ OSF1V5.1_OPT.OBJ || ErrorFlag=1
-#fi
-#if [  ! -h OSF1V5.0_DBG.OBJ -a ! -d OSF1V5.0_DBG.OBJ ] ; then 
-    #ln -s OSF1V4.0D_DBG.OBJ OSF1V5.0_DBG.OBJ || ErrorFlag=1
-#fi
-#if [  ! -h OSF1V5.0_OPT.OBJ -a ! -d OSF1V5.0_OPT.OBJ ] ; then 
-    #ln -s OSF1V4.0D_OPT.OBJ OSF1V5.0_OPT.OBJ || ErrorFlag=1
-#fi
 if [  ! -h SunOS5.9_64_DBG.OBJ  -a ! -d  SunOS5.9_64_DBG.OBJ ] ; then 
     ln -s SunOS5.8_64_DBG.OBJ SunOS5.9_64_DBG.OBJ || ErrorFlag=1
 fi

@@ -175,11 +175,6 @@ endif
     endif
 endif
 
-ifeq ($(OS_TARGET),OSF1)
-    DEFINES += -DMP_ASSEMBLY_MULTIPLY -DMP_NO_MP_WORD
-    MPI_SRCS += mpvalpha.c
-endif
-
 ifeq (OS2,$(OS_TARGET))
     ASFILES  = mpi_x86_os2.s
     DEFINES += -DMP_ASSEMBLY_MULTIPLY -DMP_ASSEMBLY_SQUARE
@@ -257,19 +252,6 @@ ifeq ($(CPU_ARCH),x86_64)
     MPI_SRCS += mpi_amd64.c
 endif
 endif
-endif
-endif
-
-ifeq ($(OS_TARGET),IRIX)
-ifeq ($(USE_N32),1)
-    ASFILES  = mpi_mips.s
-    ifeq ($(NS_USE_GCC),1)
-	ASFLAGS = -Wp,-P -Wp,-traditional -O -mips3
-    else
-	ASFLAGS = -O -OPT:Olimit=4000 -dollar -fullwarn -xansi -n32 -mips3
-    endif
-    DEFINES += -DMP_ASSEMBLY_MULTIPLY -DMP_ASSEMBLY_SQUARE
-    DEFINES += -DMP_USE_UINT_DIGIT
 endif
 endif
 

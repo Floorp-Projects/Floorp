@@ -2770,7 +2770,7 @@ SEC_PKCS12DecoderValidateBags(SEC_PKCS12DecoderContext *p12dcx,
                               SEC_PKCS12NicknameCollisionCallback nicknameCb)
 {
     SECStatus rv;
-    int i, noInstallCnt, probCnt, bagCnt, errorVal = 0;
+    int i, probCnt, errorVal = 0;
     if (!p12dcx || p12dcx->error || !p12dcx->safeBags) {
         PORT_SetError(SEC_ERROR_INVALID_ARGS);
         return SECFailure;
@@ -2781,27 +2781,15 @@ SEC_PKCS12DecoderValidateBags(SEC_PKCS12DecoderContext *p12dcx,
         p12dcx->bagsVerified = PR_TRUE;
     }
 
-    noInstallCnt = probCnt = bagCnt = 0;
+    probCnt = 0;
     i = 0;
     while (p12dcx->safeBags[i]) {
-        bagCnt++;
-        if (p12dcx->safeBags[i]->noInstall)
-            noInstallCnt++;
         if (p12dcx->safeBags[i]->problem) {
             probCnt++;
             errorVal = p12dcx->safeBags[i]->error;
         }
         i++;
     }
-
-    /* formerly was erroneous code here that assumed that if all bags
-     * failed to import, then the problem was duplicated data;
-     * that is, it assume that the problem must be that the file had
-     * previously been successfully imported.  But importing a
-     * previously imported file causes NO ERRORS at all, and this
-     * false assumption caused real errors to be hidden behind false
-     * errors about duplicated data.
-     */
 
     if (probCnt) {
         PORT_SetError(errorVal);

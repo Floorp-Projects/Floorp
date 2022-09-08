@@ -40,7 +40,7 @@
 #endif
 #include "prtypes.h"
 
-#if !defined(XP_BEOS) && !defined(XP_OS2) && !defined(XP_UNIX) || defined(NTO)
+#if !defined(XP_OS2) && !defined(XP_UNIX) || defined(NTO)
 typedef PRUintn uint;
 #endif
 typedef PRUint8 uint8;
@@ -60,7 +60,7 @@ typedef PRUint32 uint32;
 #include <sys/byteorder.h>
 #endif
 
-#if defined(__linux) || defined(__BEOS__)
+#if defined(__linux)
 #include <endian.h>
 #ifndef BYTE_ORDER
 #define BYTE_ORDER __BYTE_ORDER

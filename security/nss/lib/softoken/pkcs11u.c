@@ -1852,7 +1852,7 @@ sftk_update_all_states(SFTKSlot *slot)
     for (i = 0; i < slot->sessHashSize; i++) {
         PZLock *lock = SFTK_SESSION_LOCK(slot, i);
         PZ_Lock(lock);
-        for (session = slot->head[i]; session; session = session->next) {
+        for (session = (slot->head ? slot->head[i] : NULL); session; session = session->next) {
             sftk_update_state(slot, session);
         }
         PZ_Unlock(lock);
@@ -1982,7 +1982,7 @@ SFTKSession *
 sftk_SessionFromHandle(CK_SESSION_HANDLE handle)
 {
     SFTKSlot *slot = sftk_SlotFromSessionHandle(handle);
-    SFTKSession *session;
+    SFTKSession *session = NULL;
     PZLock *lock;
 
     if (!slot)
@@ -1990,7 +1990,9 @@ sftk_SessionFromHandle(CK_SESSION_HANDLE handle)
     lock = SFTK_SESSION_LOCK(slot, handle);
 
     PZ_Lock(lock);
-    sftkqueue_find(session, handle, slot->head, slot->sessHashSize);
+    if (slot->head) {
+        sftkqueue_find(session, handle, slot->head, slot->sessHashSize);
+    }
     PZ_Unlock(lock);
 
     return (session);

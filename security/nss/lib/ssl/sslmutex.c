@@ -4,7 +4,7 @@
 
 #include "seccomon.h"
 /* This ifdef should match the one in sslsnce.c */
-#if defined(XP_UNIX) || defined(XP_WIN32) || defined(XP_OS2) || defined(XP_BEOS)
+#if defined(XP_UNIX) || defined(XP_WIN32) || defined(XP_OS2)
 
 #include "sslmutex.h"
 #include "prerr.h"
@@ -60,7 +60,7 @@ single_process_sslMutex_Lock(sslMutex* pMutex)
     return SECSuccess;
 }
 
-#if defined(LINUX) || defined(AIX) || defined(BEOS) || defined(BSDI) || \
+#if defined(LINUX) || defined(AIX) || defined(BSDI) || \
     (defined(NETBSD) && __NetBSD_Version__ < 500000000) || defined(OPENBSD) || defined(__GLIBC__)
 
 #include <unistd.h>

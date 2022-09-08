@@ -146,8 +146,7 @@ cert_DupOCSPCertID(const CERTOCSPCertID *src);
 #define OCSP_TRACE_CERT(cert) dumpCertificate(cert)
 #define OCSP_TRACE_CERTID(certid) dumpCertID(certid)
 
-#if defined(XP_UNIX) || defined(XP_WIN32) || defined(XP_BEOS) || \
-    defined(XP_MACOSX)
+#if defined(XP_UNIX) || defined(XP_WIN32) || defined(XP_MACOSX)
 #define NSS_HAVE_GETENV 1
 #endif
 

@@ -64,7 +64,7 @@ typedef int mp_err;
 /* MP_ULONG_LONG_MAX was defined to be ULLONG_MAX */
 #elif defined(ULONG_LONG_MAX) /* HPUX */
 #define MP_ULONG_LONG_MAX ULONG_LONG_MAX
-#elif defined(ULONGLONG_MAX) /* IRIX, AIX */
+#elif defined(ULONGLONG_MAX) /* AIX */
 #define MP_ULONG_LONG_MAX ULONGLONG_MAX
 #endif
 
