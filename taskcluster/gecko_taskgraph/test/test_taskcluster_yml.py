@@ -24,7 +24,6 @@ class TestTaskclusterYml(unittest.TestCase):
             "tasks_for": "hg-push",
             "push": {
                 "revision": "e8d2d9aff5026ef1f1777b781b47fdcbdb9d8f20",
-                "base_revision": "e8aebe488b2f2e567940577de25013d00e818f7c",
                 "owner": "dustin@mozilla.com",
                 "pushlog_id": 1556565286,
                 "pushdate": 112957,
@@ -52,7 +51,6 @@ class TestTaskclusterYml(unittest.TestCase):
             },
             "push": {
                 "revision": "e8aebe488b2f2e567940577de25013d00e818f7c",
-                "base_revision": "54cbb3745cdb9a8aa0a4428d405b3b2e1c7d13c2",
                 "pushlog_id": -1,
                 "pushdate": 0,
                 "owner": "cron",
@@ -82,7 +80,6 @@ class TestTaskclusterYml(unittest.TestCase):
             },
             "push": {
                 "revision": "e8d2d9aff5026ef1f1777b781b47fdcbdb9d8f20",
-                "base_revision": "e8aebe488b2f2e567940577de25013d00e818f7c",
                 "owner": "dustin@mozilla.com",
                 "pushlog_id": 1556565286,
                 "pushdate": 112957,
