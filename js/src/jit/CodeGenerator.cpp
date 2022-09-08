@@ -4021,12 +4021,10 @@ void CodeGenerator::visitNewLexicalEnvironmentObject(
   gc::InitialHeap initialHeap = gc::DefaultHeap;
 
   using Fn =
-      BlockLexicalEnvironmentObject* (*)(JSContext*, Handle<LexicalScope*>,
-                                         gc::InitialHeap);
+      BlockLexicalEnvironmentObject* (*)(JSContext*, Handle<LexicalScope*>);
   auto* ool =
-      oolCallVM<Fn, BlockLexicalEnvironmentObject::createTemplateObject>(
-          lir, ArgList(ImmGCPtr(scope), Imm32(initialHeap)),
-          StoreRegisterTo(output));
+      oolCallVM<Fn, BlockLexicalEnvironmentObject::createWithoutEnclosing>(
+          lir, ArgList(ImmGCPtr(scope)), StoreRegisterTo(output));
 
   TemplateObject templateObject(templateObj);
   masm.createGCObject(output, temp, templateObject, initialHeap, ool->entry());
@@ -4045,12 +4043,10 @@ void CodeGenerator::visitNewClassBodyEnvironmentObject(
   gc::InitialHeap initialHeap = gc::DefaultHeap;
 
   using Fn = ClassBodyLexicalEnvironmentObject* (*)(JSContext*,
-                                                    Handle<ClassBodyScope*>,
-                                                    gc::InitialHeap);
+                                                    Handle<ClassBodyScope*>);
   auto* ool =
-      oolCallVM<Fn, ClassBodyLexicalEnvironmentObject::createTemplateObject>(
-          lir, ArgList(ImmGCPtr(scope), Imm32(initialHeap)),
-          StoreRegisterTo(output));
+      oolCallVM<Fn, ClassBodyLexicalEnvironmentObject::createWithoutEnclosing>(
+          lir, ArgList(ImmGCPtr(scope)), StoreRegisterTo(output));
 
   TemplateObject templateObject(templateObj);
   masm.createGCObject(output, temp, templateObject, initialHeap, ool->entry());
@@ -4068,11 +4064,9 @@ void CodeGenerator::visitNewVarEnvironmentObject(
   auto* scope = &templateObj->scope().as<VarScope>();
   gc::InitialHeap initialHeap = gc::DefaultHeap;
 
-  using Fn =
-      VarEnvironmentObject* (*)(JSContext*, Handle<VarScope*>, gc::InitialHeap);
-  auto* ool = oolCallVM<Fn, VarEnvironmentObject::createTemplateObject>(
-      lir, ArgList(ImmGCPtr(scope), Imm32(initialHeap)),
-      StoreRegisterTo(output));
+  using Fn = VarEnvironmentObject* (*)(JSContext*, Handle<VarScope*>);
+  auto* ool = oolCallVM<Fn, VarEnvironmentObject::createWithoutEnclosing>(
+      lir, ArgList(ImmGCPtr(scope)), StoreRegisterTo(output));
 
   TemplateObject templateObject(templateObj);
   masm.createGCObject(output, temp, templateObject, initialHeap, ool->entry());
@@ -7195,11 +7189,9 @@ void CodeGenerator::visitNewNamedLambdaObject(LNewNamedLambdaObject* lir) {
   Register tempReg = ToRegister(lir->temp0());
   const CompileInfo& info = lir->mir()->block()->info();
 
-  using Fn =
-      js::NamedLambdaObject* (*)(JSContext*, HandleFunction, gc::InitialHeap);
-  OutOfLineCode* ool = oolCallVM<Fn, NamedLambdaObject::createTemplateObject>(
-      lir, ArgList(info.funMaybeLazy(), Imm32(gc::DefaultHeap)),
-      StoreRegisterTo(objReg));
+  using Fn = js::NamedLambdaObject* (*)(JSContext*, HandleFunction);
+  OutOfLineCode* ool = oolCallVM<Fn, NamedLambdaObject::createWithoutEnclosing>(
+      lir, ArgList(info.funMaybeLazy()), StoreRegisterTo(objReg));
 
   TemplateObject templateObject(lir->mir()->templateObj());
 

@@ -115,9 +115,8 @@ CallObject* CallObject::create(JSContext* cx, Handle<Shape*> shape) {
  * callsite. This object can either be initialized (with an enclosing scope and
  * callee) or used as a template for jit compilation.
  */
-CallObject* CallObject::createTemplateObject(JSContext* cx, HandleScript script,
-                                             HandleObject enclosing,
-                                             gc::InitialHeap heap) {
+CallObject* CallObject::create(JSContext* cx, HandleScript script,
+                               HandleObject enclosing, gc::InitialHeap heap) {
   Rooted<FunctionScope*> scope(cx, &script->bodyScope()->as<FunctionScope>());
   Rooted<Shape*> shape(cx, scope->environmentShape());
   MOZ_ASSERT(shape->getObjectClass() == &class_);
@@ -149,6 +148,11 @@ CallObject* CallObject::createTemplateObject(JSContext* cx, HandleScript script,
   return callObj;
 }
 
+CallObject* CallObject::createTemplateObject(JSContext* cx, HandleScript script,
+                                             HandleObject enclosing) {
+  return create(cx, script, enclosing, gc::TenuredHeap);
+}
+
 CallObject* CallObject::create(JSContext* cx, AbstractFramePtr frame) {
   MOZ_ASSERT(frame.isFunctionFrame());
   cx->check(frame);
@@ -158,8 +162,7 @@ CallObject* CallObject::create(JSContext* cx, AbstractFramePtr frame) {
   RootedScript script(cx, callee->nonLazyScript());
 
   gc::InitialHeap heap = gc::DefaultHeap;
-  CallObject* callobj =
-      CallObject::createTemplateObject(cx, script, envChain, heap);
+  CallObject* callobj = create(cx, script, envChain, heap);
   if (!callobj) {
     return nullptr;
   }
@@ -348,8 +351,14 @@ VarEnvironmentObject* VarEnvironmentObject::createHollowForDebug(
 
 /* static */
 VarEnvironmentObject* VarEnvironmentObject::createTemplateObject(
-    JSContext* cx, Handle<VarScope*> scope, gc::InitialHeap heap) {
-  return create(cx, scope, nullptr, heap);
+    JSContext* cx, Handle<VarScope*> scope) {
+  return create(cx, scope, nullptr, gc::TenuredHeap);
+}
+
+/* static */
+VarEnvironmentObject* VarEnvironmentObject::createWithoutEnclosing(
+    JSContext* cx, Handle<VarScope*> scope) {
+  return create(cx, scope, nullptr, gc::DefaultHeap);
 }
 
 const JSClass VarEnvironmentObject::class_ = {
@@ -903,7 +912,7 @@ const JSClass LexicalEnvironmentObject::class_ = {
     JS_NULL_OBJECT_OPS};
 
 /* static */
-LexicalEnvironmentObject* LexicalEnvironmentObject::createTemplateObject(
+LexicalEnvironmentObject* LexicalEnvironmentObject::create(
     JSContext* cx, Handle<Shape*> shape, HandleObject enclosing,
     gc::InitialHeap heap) {
   MOZ_ASSERT(shape->getObjectClass() == &LexicalEnvironmentObject::class_);
@@ -939,8 +948,7 @@ BlockLexicalEnvironmentObject* BlockLexicalEnvironmentObject::create(
 
   Rooted<Shape*> shape(cx, scope->environmentShape());
   auto* env = static_cast<BlockLexicalEnvironmentObject*>(
-      LexicalEnvironmentObject::createTemplateObject(cx, shape, enclosing,
-                                                     heap));
+      LexicalEnvironmentObject::create(cx, shape, enclosing, heap));
   if (!env) {
     return nullptr;
   }
@@ -982,8 +990,8 @@ BlockLexicalEnvironmentObject::createHollowForDebug(
   // Debugger.Environment objects.
   RootedObject enclosingEnv(cx, &cx->global()->lexicalEnvironment());
   Rooted<LexicalEnvironmentObject*> env(
-      cx, LexicalEnvironmentObject::createTemplateObject(
-              cx, shape, enclosingEnv, gc::TenuredHeap));
+      cx, LexicalEnvironmentObject::create(cx, shape, enclosingEnv,
+                                           gc::TenuredHeap));
   if (!env) {
     return nullptr;
   }
@@ -1007,10 +1015,16 @@ BlockLexicalEnvironmentObject::createHollowForDebug(
 
 /* static */
 BlockLexicalEnvironmentObject*
-BlockLexicalEnvironmentObject::createTemplateObject(JSContext* cx,
-                                                    Handle<LexicalScope*> scope,
-                                                    gc::InitialHeap heap) {
-  return create(cx, scope, nullptr, heap);
+BlockLexicalEnvironmentObject::createTemplateObject(
+    JSContext* cx, Handle<LexicalScope*> scope) {
+  return create(cx, scope, nullptr, gc::TenuredHeap);
+}
+
+/* static */
+BlockLexicalEnvironmentObject*
+BlockLexicalEnvironmentObject::createWithoutEnclosing(
+    JSContext* cx, Handle<LexicalScope*> scope) {
+  return create(cx, scope, nullptr, gc::DefaultHeap);
 }
 
 /* static */
@@ -1078,8 +1092,14 @@ NamedLambdaObject* NamedLambdaObject::create(JSContext* cx,
 
 /* static */
 NamedLambdaObject* NamedLambdaObject::createTemplateObject(
-    JSContext* cx, HandleFunction callee, gc::InitialHeap heap) {
-  return create(cx, callee, nullptr, heap);
+    JSContext* cx, HandleFunction callee) {
+  return create(cx, callee, nullptr, gc::TenuredHeap);
+}
+
+/* static */
+NamedLambdaObject* NamedLambdaObject::createWithoutEnclosing(
+    JSContext* cx, HandleFunction callee) {
+  return create(cx, callee, nullptr, gc::DefaultHeap);
 }
 
 /* static */
@@ -1105,8 +1125,7 @@ ClassBodyLexicalEnvironmentObject* ClassBodyLexicalEnvironmentObject::create(
 
   Rooted<Shape*> shape(cx, scope->environmentShape());
   auto* env = static_cast<ClassBodyLexicalEnvironmentObject*>(
-      LexicalEnvironmentObject::createTemplateObject(cx, shape, enclosing,
-                                                     heap));
+      LexicalEnvironmentObject::create(cx, shape, enclosing, heap));
   if (!env) {
     return nullptr;
   }
@@ -1127,8 +1146,15 @@ ClassBodyLexicalEnvironmentObject::createForFrame(JSContext* cx,
 /* static */
 ClassBodyLexicalEnvironmentObject*
 ClassBodyLexicalEnvironmentObject::createTemplateObject(
-    JSContext* cx, Handle<ClassBodyScope*> scope, gc::InitialHeap heap) {
-  return create(cx, scope, nullptr, heap);
+    JSContext* cx, Handle<ClassBodyScope*> scope) {
+  return create(cx, scope, nullptr, gc::TenuredHeap);
+}
+
+/* static */
+ClassBodyLexicalEnvironmentObject*
+ClassBodyLexicalEnvironmentObject::createWithoutEnclosing(
+    JSContext* cx, Handle<ClassBodyScope*> scope) {
+  return create(cx, scope, nullptr, gc::DefaultHeap);
 }
 
 JSObject* ExtensibleLexicalEnvironmentObject::thisObject() const {
@@ -1170,7 +1196,7 @@ GlobalLexicalEnvironmentObject* GlobalLexicalEnvironmentObject::create(
   }
 
   auto* env = static_cast<GlobalLexicalEnvironmentObject*>(
-      createTemplateObject(cx, shape, global, gc::TenuredHeap));
+      LexicalEnvironmentObject::create(cx, shape, global, gc::TenuredHeap));
   if (!env) {
     return nullptr;
   }
@@ -1199,7 +1225,7 @@ NonSyntacticLexicalEnvironmentObject::create(JSContext* cx,
   }
 
   auto* env = static_cast<NonSyntacticLexicalEnvironmentObject*>(
-      createTemplateObject(cx, shape, enclosing, gc::TenuredHeap));
+      LexicalEnvironmentObject::create(cx, shape, enclosing, gc::TenuredHeap));
   if (!env) {
     return nullptr;
   }
