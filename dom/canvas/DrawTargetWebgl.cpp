@@ -2751,10 +2751,12 @@ inline bool GlyphCacheEntry::MatchesGlyphs(
   }
   // Check that stroke options actually match.
   if (aStrokeOptions) {
+    // If stroking, verify that the entry is also stroked with the same options.
     if (!(mStrokeOptions && *aStrokeOptions == *mStrokeOptions)) {
       return false;
     }
-  } else if (!mStrokeOptions) {
+  } else if (mStrokeOptions) {
+    // If not stroking, check if the entry is stroked. If so, don't match.
     return false;
   }
   // Verify that the full bounds, once translated and clipped, are equal to the
