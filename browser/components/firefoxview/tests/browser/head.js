@@ -60,6 +60,12 @@ const syncedTabsData1 = [
   },
 ];
 
+function promiseSyncReady() {
+  let service = Cc["@mozilla.org/weave/service;1"].getService(Ci.nsISupports)
+    .wrappedJSObject;
+  return service.whenLoaded();
+}
+
 async function clearAllParentTelemetryEvents() {
   // Clear everything.
   await TestUtils.waitForCondition(() => {
@@ -108,6 +114,38 @@ async function waitForElementVisible(browser, selector, isVisible = true) {
         : BrowserTestUtils.is_hidden(elem);
     }
   );
+}
+
+async function waitForVisibleSetupStep(browser, expected) {
+  const { document } = browser.contentWindow;
+
+  const deck = document.querySelector(".sync-setup-container");
+  const nextStepElem = deck.querySelector(expected.expectedVisible);
+  const stepElems = deck.querySelectorAll(".setup-step");
+
+  await BrowserTestUtils.waitForMutationCondition(
+    deck,
+    {
+      attributeFilter: ["selected-view"],
+    },
+    () => {
+      return BrowserTestUtils.is_visible(nextStepElem);
+    }
+  );
+
+  for (let elem of stepElems) {
+    if (elem == nextStepElem) {
+      ok(
+        BrowserTestUtils.is_visible(elem),
+        `Expected ${elem.id || elem.className} to be visible`
+      );
+    } else {
+      ok(
+        BrowserTestUtils.is_hidden(elem),
+        `Expected ${elem.id || elem.className} to be hidden`
+      );
+    }
+  }
 }
 
 function assertFirefoxViewTab(w) {
@@ -186,6 +224,34 @@ async function withFirefoxView(
     await BrowserTestUtils.closeWindow(win);
   }
   return result;
+}
+
+var gMockFxaDevices = null;
+var gUIStateStatus;
+var gSandbox;
+function setupSyncFxAMocks({ fxaDevices = null, state, syncEnabled = true }) {
+  gUIStateStatus = state || UIState.STATUS_SIGNED_IN;
+  if (gSandbox) {
+    gSandbox.restore();
+  }
+  const sandbox = (gSandbox = sinon.createSandbox());
+  gMockFxaDevices = fxaDevices;
+  sandbox.stub(fxAccounts.device, "recentDeviceList").get(() => fxaDevices);
+  sandbox.stub(UIState, "get").callsFake(() => {
+    return {
+      status: gUIStateStatus,
+      syncEnabled,
+    };
+  });
+  sandbox
+    .stub(Weave.Service.clientsEngine, "getClientByFxaDeviceId")
+    .callsFake(fxaDeviceId => {
+      let target = gMockFxaDevices.find(c => c.id == fxaDeviceId);
+      return target ? target.clientRecord : null;
+    });
+  sandbox.stub(Weave.Service.clientsEngine, "getClientType").returns("desktop");
+
+  return sandbox;
 }
 
 function setupRecentDeviceListMocks() {

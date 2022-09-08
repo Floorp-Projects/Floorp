@@ -156,8 +156,6 @@ async function tearDown(sandbox) {
 }
 
 add_setup(async function() {
-  // we only use this for the first test, then we reset it
-  Services.prefs.lockPref("identity.fxaccounts.enabled");
   registerCleanupFunction(() => {
     // reset internal state so it doesn't affect the next tests
     TabsSetupFlowManager.resetInternalState();
@@ -177,52 +175,6 @@ add_setup(async function() {
   });
 });
 
-add_task(async function test_sync_admin_disabled() {
-  const sandbox = setupMocks({
-    state: UIState.STATUS_NOT_CONFIGURED,
-    syncEnabled: false,
-  });
-  await withFirefoxView({}, async browser => {
-    const { document } = browser.contentWindow;
-
-    Services.obs.notifyObservers(null, UIState.ON_UPDATE);
-    is(
-      Services.prefs.getBoolPref("identity.fxaccounts.enabled"),
-      true,
-      "Expected identity.fxaccounts.enabled pref to be false"
-    );
-
-    is(
-      Services.prefs.prefIsLocked("identity.fxaccounts.enabled"),
-      true,
-      "Expected identity.fxaccounts.enabled pref to be locked"
-    );
-
-    await waitForVisibleStep(browser, {
-      expectedVisible: "#tabpickup-steps-view0",
-    });
-
-    const errorStateHeader = document.querySelector(
-      "#tabpickup-steps-view0-header"
-    );
-
-    await BrowserTestUtils.waitForMutationCondition(
-      errorStateHeader,
-      { childList: true },
-      () => errorStateHeader.textContent.includes("disabled")
-    );
-
-    ok(
-      errorStateHeader
-        .getAttribute("data-l10n-id")
-        .includes("fxa-admin-disabled"),
-      "Correct message should show when fxa is disabled by an admin"
-    );
-  });
-  Services.prefs.unlockPref("identity.fxaccounts.enabled");
-  await tearDown(sandbox);
-});
-
 add_task(async function test_unconfigured_initial_state() {
   await clearAllParentTelemetryEvents();
   const sandbox = setupMocks({
@@ -231,7 +183,7 @@ add_task(async function test_unconfigured_initial_state() {
   });
   await withFirefoxView({}, async browser => {
     Services.obs.notifyObservers(null, UIState.ON_UPDATE);
-    await waitForVisibleStep(browser, {
+    await waitForVisibleSetupStep(browser, {
       expectedVisible: "#tabpickup-steps-view1",
     });
     checkMobilePromo(browser, {
@@ -283,7 +235,7 @@ add_task(async function test_signed_in() {
 
   await withFirefoxView({}, async browser => {
     Services.obs.notifyObservers(null, UIState.ON_UPDATE);
-    await waitForVisibleStep(browser, {
+    await waitForVisibleSetupStep(browser, {
       expectedVisible: "#tabpickup-steps-view2",
     });
 
@@ -350,7 +302,7 @@ add_task(async function test_2nd_desktop_connected() {
     );
 
     Services.obs.notifyObservers(null, UIState.ON_UPDATE);
-    await waitForVisibleStep(browser, {
+    await waitForVisibleSetupStep(browser, {
       expectedVisible: "#tabpickup-steps-view3",
     });
 
@@ -394,7 +346,7 @@ add_task(async function test_mobile_connected() {
     );
 
     Services.obs.notifyObservers(null, UIState.ON_UPDATE);
-    await waitForVisibleStep(browser, {
+    await waitForVisibleSetupStep(browser, {
       expectedVisible: "#tabpickup-steps-view3",
     });
 
@@ -434,7 +386,7 @@ add_task(async function test_tab_sync_enabled() {
     Services.obs.notifyObservers(null, UIState.ON_UPDATE);
 
     // test initial state, with the pref not enabled
-    await waitForVisibleStep(browser, {
+    await waitForVisibleSetupStep(browser, {
       expectedVisible: "#tabpickup-steps-view3",
     });
     checkMobilePromo(browser, {
@@ -454,7 +406,7 @@ add_task(async function test_tab_sync_enabled() {
 
     // reset and test clicking the action button
     await SpecialPowers.popPrefEnv();
-    await waitForVisibleStep(browser, {
+    await waitForVisibleSetupStep(browser, {
       expectedVisible: "#tabpickup-steps-view3",
     });
     checkMobilePromo(browser, {
@@ -660,7 +612,7 @@ add_task(async function test_mobile_promo() {
     );
     Services.obs.notifyObservers(null, UIState.ON_UPDATE);
     info("waiting for setup card 1 to appear again");
-    await waitForVisibleStep(browser, {
+    await waitForVisibleSetupStep(browser, {
       expectedVisible: "#tabpickup-steps-view1",
     });
     checkMobilePromo(browser, {
@@ -807,197 +759,6 @@ add_task(async function test_mobile_promo_windows() {
       }
     );
     await BrowserTestUtils.closeWindow(win2);
-  });
-  await tearDown(sandbox);
-});
-
-add_task(async function test_network_offline() {
-  const sandbox = await setupWithDesktopDevices();
-  await withFirefoxView({}, async browser => {
-    const { document } = browser.contentWindow;
-
-    Services.obs.notifyObservers(
-      null,
-      "network:offline-status-changed",
-      "offline"
-    );
-    await waitForElementVisible(browser, "#tabpickup-steps", true);
-    await waitForVisibleStep(browser, {
-      expectedVisible: "#tabpickup-steps-view0",
-    });
-
-    const errorStateHeader = document.querySelector(
-      "#tabpickup-steps-view0-header"
-    );
-
-    await BrowserTestUtils.waitForMutationCondition(
-      errorStateHeader,
-      { childList: true },
-      () => errorStateHeader.textContent.includes("connection")
-    );
-
-    ok(
-      errorStateHeader.getAttribute("data-l10n-id").includes("network-offline"),
-      "Correct message should show when network connection is lost"
-    );
-
-    Services.obs.notifyObservers(
-      null,
-      "network:offline-status-changed",
-      "online"
-    );
-
-    await waitForElementVisible(browser, "#tabpickup-tabs-container", true);
-  });
-  await tearDown(sandbox);
-});
-
-add_task(async function test_sync_error() {
-  const sandbox = await setupWithDesktopDevices();
-  sandbox.spy(TabsSetupFlowManager, "forceSyncTabs");
-  await withFirefoxView({}, async browser => {
-    const { document } = browser.contentWindow;
-
-    Services.obs.notifyObservers(null, "weave:service:sync:error");
-
-    await waitForElementVisible(browser, "#tabpickup-steps", true);
-    await waitForVisibleStep(browser, {
-      expectedVisible: "#tabpickup-steps-view0",
-    });
-
-    const errorStateHeader = document.querySelector(
-      "#tabpickup-steps-view0-header"
-    );
-
-    await BrowserTestUtils.waitForMutationCondition(
-      errorStateHeader,
-      { childList: true },
-      () => errorStateHeader.textContent.includes("trouble syncing")
-    );
-
-    ok(
-      errorStateHeader.getAttribute("data-l10n-id").includes("sync-error"),
-      "Correct message should show when there's a sync service error"
-    );
-
-    await BrowserTestUtils.synthesizeMouseAtCenter(
-      "#error-state-button",
-      {},
-      browser
-    );
-
-    await BrowserTestUtils.waitForCondition(() => {
-      return TabsSetupFlowManager.forceSyncTabs.calledOnce;
-    });
-
-    ok(
-      TabsSetupFlowManager.forceSyncTabs.calledOnce,
-      "TabsSetupFlowManager.forceSyncTabs() was called once"
-    );
-
-    // Clear the error.
-    Services.obs.notifyObservers(null, "weave:service:sync:finish");
-  });
-
-  // Now reopen the tab and check that sending an error state does not
-  // start showing the error:
-  Services.obs.notifyObservers(null, UIState.ON_UPDATE);
-  const recentFetchTime = Math.floor(Date.now() / 1000);
-  info("updating lastFetch:" + recentFetchTime);
-  Services.prefs.setIntPref("services.sync.lastTabFetch", recentFetchTime);
-  await withFirefoxView({ resetFlowManager: false }, async browser => {
-    const { document } = browser.contentWindow;
-
-    await waitForElementVisible(browser, "#synced-tabs-placeholder", true);
-
-    Services.obs.notifyObservers(null, "weave:service:sync:error");
-    await TestUtils.waitForTick();
-    ok(
-      BrowserTestUtils.is_visible(
-        document.getElementById("synced-tabs-placeholder")
-      ),
-      "Should still be showing the placeholder content."
-    );
-    let stepHeader = document.getElementById("tabpickup-steps-view0-header");
-    ok(
-      !stepHeader || BrowserTestUtils.is_hidden(stepHeader),
-      "Should not be showing an error state if we had previously synced successfully."
-    );
-
-    // Now drop a device:
-    let someDevice = gMockFxaDevices.pop();
-    Services.obs.notifyObservers(null, "fxaccounts:devicelist_updated");
-    // This will trip a UI update where we decide we can't rely on
-    // previously synced tabs anymore (they may be from the device
-    // that was removed!), so we still show an error:
-
-    await waitForElementVisible(browser, "#tabpickup-steps", true);
-    await waitForVisibleStep(browser, {
-      expectedVisible: "#tabpickup-steps-view0",
-    });
-
-    const errorStateHeader = document.querySelector(
-      "#tabpickup-steps-view0-header"
-    );
-
-    await BrowserTestUtils.waitForMutationCondition(
-      errorStateHeader,
-      { childList: true },
-      () => errorStateHeader.textContent.includes("trouble syncing")
-    );
-
-    ok(
-      errorStateHeader.getAttribute("data-l10n-id").includes("sync-error"),
-      "Correct message should show when there's an error and tab information is outdated."
-    );
-
-    // Sneak device back in so as not to break other tests:
-    gMockFxaDevices.push(someDevice);
-    // Clear the error.
-    Services.obs.notifyObservers(null, "weave:service:sync:finish");
-  });
-  Services.prefs.clearUserPref("services.sync.lastTabFetch");
-
-  await tearDown(sandbox);
-});
-
-add_task(async function test_sync_disconnected_error() {
-  // it's possible for fxa to be enabled but sync not enabled.
-  const sandbox = setupMocks({
-    state: UIState.STATUS_SIGNED_IN,
-    syncEnabled: false,
-  });
-  await withFirefoxView({}, async browser => {
-    const { document } = browser.contentWindow;
-
-    // triggered when user disconnects sync in about:preferences
-    Services.obs.notifyObservers(null, UIState.ON_UPDATE);
-
-    await waitForElementVisible(browser, "#tabpickup-steps", true);
-    info("Waiting for the tabpickup error step to be visible");
-    await waitForVisibleStep(browser, {
-      expectedVisible: "#tabpickup-steps-view0",
-    });
-
-    const errorStateHeader = document.querySelector(
-      "#tabpickup-steps-view0-header"
-    );
-
-    info(
-      "Waiting for a mutation condition to ensure the right syncing error message"
-    );
-    await BrowserTestUtils.waitForMutationCondition(
-      errorStateHeader,
-      { childList: true },
-      () => errorStateHeader.textContent.includes("Turn on syncing to continue")
-    );
-
-    ok(
-      errorStateHeader
-        .getAttribute("data-l10n-id")
-        .includes("sync-disconnected"),
-      "Correct message should show when sync's been disconnected error"
-    );
   });
   await tearDown(sandbox);
 });
