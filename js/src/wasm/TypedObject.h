@@ -156,37 +156,16 @@ class TypedObject : public JSObject {
   static T* create(JSContext* cx, gc::AllocKind allocKind,
                    gc::InitialHeap heap);
 
-  void initDefault();
-
   bool loadValue(JSContext* cx, const RttValue::PropOffset& offset,
                  wasm::FieldType type, MutableHandleValue vp);
 
-  template <typename V>
-  void visitReferences(V& visitor);
-
  public:
-  // Creates a new struct typed object initialized to zero. Reports if there
-  // is an out of memory error.
-  static TypedObject* createStruct(JSContext* cx, Handle<RttValue*> rtt,
-                                   gc::InitialHeap heap = gc::DefaultHeap);
-
-  // Creates a new array typed object initialized to zero for the specified
-  // number of elements.  Reports an error if the number of elements is too
-  // large, or if there is an out of memory.
-  static TypedObject* createArray(JSContext* cx, Handle<RttValue*> rtt,
-                                  uint32_t numElements,
-                                  gc::InitialHeap heap = gc::DefaultHeap);
-
   RttValue& rttValue() const {
     MOZ_ASSERT(rttValue_);
     return *rttValue_;
   }
 
   [[nodiscard]] bool isRuntimeSubtype(js::Handle<RttValue*> rtt) const;
-
-  static constexpr size_t offsetOfRttValue() {
-    return offsetof(TypedObject, rttValue_);
-  }
 
   [[nodiscard]] static bool obj_newEnumerate(JSContext* cx, HandleObject obj,
                                              MutableHandleIdVector properties,
@@ -201,27 +180,26 @@ class TypedObject : public JSObject {
 
 class WasmArrayObject : public TypedObject {
  public:
+  static const JSClass class_;
+
   // The number of elements in the array.
   uint32_t numElements_;
 
- private:
   // Owned data pointer, holding `numElements_` entries.  Unlike
   // WasmStructObject::outlineData_, this can never validly be nullptr, since
   // WasmArrayObject doesn't have any inline storage area.
   uint8_t* data_;
 
-  friend class TypedObject;
-
- public:
-  static const JSClass class_;
-
   // AllocKind for object creation
   static gc::AllocKind allocKind();
 
-  // VM accessors
-  uint32_t numElements() const { return numElements_; }
-  void setNumElements(uint32_t numElements) { numElements_ = numElements; }
-  uint8_t* data() const { return data_; }
+  // Creates a new array typed object initialized to zero for the specified
+  // number of elements.  Reports an error if the number of elements is too
+  // large, or if there is an out of memory.  `rtt` is the overall array type,
+  // not the element type.
+  static WasmArrayObject* createArray(JSContext* cx, Handle<RttValue*> rtt,
+                                      uint32_t numElements,
+                                      gc::InitialHeap heap = gc::DefaultHeap);
 
   // JIT accessors
   static constexpr size_t offsetOfNumElements() {
@@ -250,8 +228,11 @@ class WasmArrayObject : public TypedObject {
 // StructLayout` for background.
 
 class WasmStructObject : public TypedObject {
-  // A pointer to a malloc'd block containing out-of-line fields, or nullptr
-  // if none.
+ public:
+  static const JSClass class_;
+
+  // Owned pointer to a malloc'd block containing out-of-line fields, or
+  // nullptr if none.
   uint8_t* outlineData_;
 
  public:
@@ -267,12 +248,6 @@ class WasmStructObject : public TypedObject {
   // after this point!
   alignas(8) uint8_t inlineData_[0];
 
- protected:
-  friend class TypedObject;
-
- public:
-  static const JSClass class_;
-
   // This tells us how big the object is if we know the number of inline bytes
   // it was created with.
   static inline size_t sizeOfIncludingInlineData(size_t sizeOfInlineData) {
@@ -283,6 +258,11 @@ class WasmStructObject : public TypedObject {
 
   // AllocKind for object creation
   static inline gc::AllocKind allocKindForRttValue(RttValue* rtt);
+
+  // Creates a new struct typed object initialized to zero. Reports if there
+  // is an out of memory error.  `rtt` is the type of the struct.
+  static WasmStructObject* createStruct(JSContext* cx, Handle<RttValue*> rtt,
+                                        gc::InitialHeap heap = gc::DefaultHeap);
 
   // Given the total number of data bytes required (including alignment
   // holes), return the number of inline and outline bytes required.
@@ -304,10 +284,10 @@ class WasmStructObject : public TypedObject {
                                        uint32_t fieldOffset);
 
   // JIT accessors
-  static size_t offsetOfOutlineData() {
+  static constexpr size_t offsetOfOutlineData() {
     return offsetof(WasmStructObject, outlineData_);
   }
-  static size_t offsetOfInlineData() {
+  static constexpr size_t offsetOfInlineData() {
     return offsetof(WasmStructObject, inlineData_);
   }
 
