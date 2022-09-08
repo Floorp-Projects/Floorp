@@ -92,7 +92,6 @@ CSS_ANON_BOX(firstLetterContinuation, ":-moz-first-letter-continuation")
 
 CSS_ANON_BOX(mozBlockInsideInlineWrapper, ":-moz-block-inside-inline-wrapper")
 CSS_WRAPPER_ANON_BOX(mozMathMLAnonymousBlock, ":-moz-mathml-anonymous-block")
-CSS_ANON_BOX(mozXULAnonymousBlock, ":-moz-xul-anonymous-block")
 
 CSS_ANON_BOX(mozLineFrame, ":-moz-line-frame")
 
@@ -125,8 +124,8 @@ CSS_ANON_BOX(columnContent, ":-moz-column-content")
 CSS_ANON_BOX(viewport, ":-moz-viewport")
 CSS_ANON_BOX(viewportScroll, ":-moz-viewport-scroll")
 
-// Inside a flex/grid container, a contiguous run of text gets wrapped in an
-// anonymous block, which is then treated as a flex item.
+// Inside a flex/grid/-moz-box container, a contiguous run of text gets wrapped
+// in an anonymous block, which is then treated as a flex item.
 CSS_WRAPPER_ANON_BOX(anonymousItem, ":-moz-anonymous-item")
 
 CSS_ANON_BOX(blockRubyContent, ":-moz-block-ruby-content")

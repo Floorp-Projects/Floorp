@@ -867,7 +867,6 @@ class nsCSSFrameConstructor final : public nsFrameManager {
     bool HasLineBoundaryAtEnd() { return mLineBoundaryAtEnd; }
     bool ParentHasNoShadowDOM() { return mParentHasNoShadowDOM; }
     bool IsEmpty() const { return mItems.isEmpty(); }
-    bool AnyItemsNeedBlockParent() const { return mLineParticipantCount != 0; }
     bool AreAllItemsInline() const { return mInlineCount == mItemCount; }
     bool AreAllItemsBlock() const { return mBlockCount == mItemCount; }
     bool AllWantParentType(ParentType aDesiredParentType) const {
@@ -907,7 +906,6 @@ class nsCSSFrameConstructor final : public nsFrameManager {
 
     void InlineItemAdded() { ++mInlineCount; }
     void BlockItemAdded() { ++mBlockCount; }
-    void LineParticipantItemAdded() { ++mLineParticipantCount; }
 
     class Iterator {
      public:
@@ -1023,7 +1021,6 @@ class nsCSSFrameConstructor final : public nsFrameManager {
     FrameConstructionItemList()
         : mInlineCount(0),
           mBlockCount(0),
-          mLineParticipantCount(0),
           mItemCount(0),
           mLineBoundaryAtStart(false),
           mLineBoundaryAtEnd(false),
@@ -1073,7 +1070,6 @@ class nsCSSFrameConstructor final : public nsFrameManager {
     mozilla::LinkedList<FrameConstructionItem> mItems;
     uint32_t mInlineCount;
     uint32_t mBlockCount;
-    uint32_t mLineParticipantCount;
     uint32_t mItemCount;
     uint32_t mDesiredParentCounts[eParentTypeCount];
     // True if there is guaranteed to be a line boundary before the
