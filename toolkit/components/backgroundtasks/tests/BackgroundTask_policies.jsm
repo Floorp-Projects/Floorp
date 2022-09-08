@@ -8,8 +8,8 @@ var EXPORTED_SYMBOLS = ["runBackgroundTask"];
 const { Checker } = ChromeUtils.import(
   "resource://gre/modules/UpdateService.jsm"
 );
-const { EnterprisePolicyTesting } = ChromeUtils.importESModule(
-  "resource://testing-common/EnterprisePolicyTesting.sys.mjs"
+const { EnterprisePolicyTesting } = ChromeUtils.import(
+  "resource://testing-common/EnterprisePolicyTesting.jsm"
 );
 
 async function runBackgroundTask(commandLine) {

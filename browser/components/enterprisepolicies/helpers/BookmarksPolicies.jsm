@@ -39,7 +39,9 @@
  * The schema for this object is defined in policies-schema.json.
  */
 
-import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
+const { XPCOMUtils } = ChromeUtils.importESModule(
+  "resource://gre/modules/XPCOMUtils.sys.mjs"
+);
 
 const lazy = {};
 
@@ -60,7 +62,9 @@ XPCOMUtils.defineLazyGetter(lazy, "log", () => {
   });
 });
 
-export const BookmarksPolicies = {
+const EXPORTED_SYMBOLS = ["BookmarksPolicies"];
+
+const BookmarksPolicies = {
   // These prefixes must only contain characters
   // allowed by PlacesUtils.isValidGuid
   BOOKMARK_GUID_PREFIX: "PolB-",

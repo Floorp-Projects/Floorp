@@ -4,7 +4,9 @@
 
 "use strict";
 
-import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
+const { XPCOMUtils } = ChromeUtils.importESModule(
+  "resource://gre/modules/XPCOMUtils.sys.mjs"
+);
 
 const PREF_LOGLEVEL = "browser.policies.loglevel";
 
@@ -21,7 +23,9 @@ XPCOMUtils.defineLazyGetter(lazy, "log", () => {
   });
 });
 
-export var WindowsGPOParser = {
+var EXPORTED_SYMBOLS = ["WindowsGPOParser"];
+
+var WindowsGPOParser = {
   readPolicies(wrk, policies) {
     let childWrk = wrk.openChild(
       "Mozilla\\" + Services.appinfo.name,

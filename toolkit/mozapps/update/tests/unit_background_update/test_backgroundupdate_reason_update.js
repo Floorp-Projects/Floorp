@@ -11,8 +11,8 @@ const { BackgroundUpdate } = ChromeUtils.import(
 );
 let reasons = () => BackgroundUpdate._reasonsToNotUpdateInstallation();
 let REASON = BackgroundUpdate.REASON;
-const { EnterprisePolicyTesting } = ChromeUtils.importESModule(
-  "resource://testing-common/EnterprisePolicyTesting.sys.mjs"
+const { EnterprisePolicyTesting } = ChromeUtils.import(
+  "resource://testing-common/EnterprisePolicyTesting.jsm"
 );
 const { UpdateService } = ChromeUtils.import(
   "resource://gre/modules/UpdateService.jsm"

@@ -18,8 +18,8 @@ updateAppInfo({
   platformVersion: "48",
 });
 
-const { EnterprisePolicyTesting } = ChromeUtils.importESModule(
-  "resource://testing-common/EnterprisePolicyTesting.sys.mjs"
+const { EnterprisePolicyTesting } = ChromeUtils.import(
+  "resource://testing-common/EnterprisePolicyTesting.jsm"
 );
 
 // This initializes the policy engine for xpcshell tests
