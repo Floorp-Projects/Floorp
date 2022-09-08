@@ -261,7 +261,6 @@ class AccMutationEvent : public AccTreeMutationEvent {
   LocalAccessible* LocalParent() const { return mParent; }
 
  protected:
-  nsCOMPtr<nsINode> mNode;
   RefPtr<LocalAccessible> mParent;
   RefPtr<AccTextChangeEvent> mTextChangeEvent;
 
