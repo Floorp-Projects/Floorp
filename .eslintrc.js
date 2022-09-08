@@ -328,7 +328,6 @@ module.exports = {
         "dom/xml/test/**",
         "dom/xslt/tests/**",
         "dom/xul/test/**",
-        "dom/ipc/test.xhtml",
       ],
       rules: {
         "consistent-return": "off",
@@ -445,7 +444,6 @@ module.exports = {
         "dom/events/test/test_bug679494.xhtml",
         "dom/indexedDB/test/test_globalObjects_chrome.xhtml",
         "dom/indexedDB/test/test_wrappedArray.xhtml",
-        "dom/ipc/test.xhtml",
         "dom/ipc/tests/test_process_error.xhtml",
         "dom/notification/test/chrome/test_notification_system_principal.xhtml",
         "dom/security/test/general/test_bug1277803.xhtml",
