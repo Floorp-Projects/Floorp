@@ -7216,6 +7216,10 @@ class MLoadFixedSlot : public MUnaryInstruction,
 
   AliasType mightAlias(const MDefinition* store) const override;
 
+#ifdef JS_JITSPEW
+  void printOpcode(GenericPrinter& out) const override;
+#endif
+
   ALLOW_CLONE(MLoadFixedSlot)
 };
 
@@ -7258,6 +7262,10 @@ class MLoadFixedSlotAndUnbox : public MUnaryInstruction,
   }
 
   AliasType mightAlias(const MDefinition* store) const override;
+
+#ifdef JS_JITSPEW
+  void printOpcode(GenericPrinter& out) const override;
+#endif
 
   ALLOW_CLONE(MLoadFixedSlotAndUnbox);
 };
@@ -7340,6 +7348,10 @@ class MStoreFixedSlot
   void setNeedsBarrier(bool needsBarrier = true) {
     needsBarrier_ = needsBarrier;
   }
+
+#ifdef JS_JITSPEW
+  void printOpcode(GenericPrinter& out) const override;
+#endif
 
   ALLOW_CLONE(MStoreFixedSlot)
 };
