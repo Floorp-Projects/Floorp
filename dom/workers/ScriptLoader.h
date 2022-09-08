@@ -194,7 +194,7 @@ class WorkerScriptLoader final : public nsINamed {
 
   void CancelMainThread(nsresult aCancelResult);
 
-  nsresult LoadScripts();
+  nsresult LoadScripts(nsTArray<WorkerLoadContext*>&& aContextList);
 
   nsresult LoadScript(ScriptLoadRequest* aRequest);
 
@@ -208,6 +208,8 @@ class WorkerScriptLoader final : public nsINamed {
     aName.AssignLiteral("WorkerScriptLoader");
     return NS_OK;
   }
+
+  nsTArray<WorkerLoadContext*> GetLoadingList();
 
   nsIGlobalObject* GetGlobal();
 
