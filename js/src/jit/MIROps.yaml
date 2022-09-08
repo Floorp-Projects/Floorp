@@ -1703,8 +1703,7 @@
 - name: NewLexicalEnvironmentObject
   operands:
     enclosing: Object
-  arguments:
-    scope: LexicalScope*
+    templateObj: Object
   result_type: Object
   possibly_calls: true
   alias_set: none
@@ -1713,8 +1712,7 @@
 - name: NewClassBodyEnvironmentObject
   operands:
     enclosing: Object
-  arguments:
-    scope: ClassBodyScope*
+    templateObj: Object
   result_type: Object
   possibly_calls: true
   alias_set: none
@@ -1732,8 +1730,7 @@
 - name: NewVarEnvironmentObject
   operands:
     enclosing: Object
-  arguments:
-    scope: VarScope*
+    templateObj: Object
   result_type: Object
   possibly_calls: true
   alias_set: none
