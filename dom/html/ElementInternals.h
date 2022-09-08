@@ -8,21 +8,29 @@
 #define mozilla_dom_ElementInternals_h
 
 #include "js/TypeDecls.h"
+#include "mozilla/ErrorResult.h"
 #include "mozilla/dom/ElementInternalsBinding.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsIConstraintValidation.h"
 #include "nsIFormControl.h"
 #include "nsWrapperCache.h"
+#include "AttrArray.h"
+#include "nsGkAtoms.h"
+
+#define ARIA_REFLECT_ATTR(method, attr)                             \
+  void Get##method(nsAString& aValue) const {                       \
+    GetAttr(nsGkAtoms::attr, aValue);                               \
+  }                                                                 \
+  void Set##method(const nsAString& aValue, ErrorResult& aResult) { \
+    aResult = ErrorResult(SetAttr(nsGkAtoms::attr, aValue));        \
+  }
 
 class nsINodeList;
 class nsGenericHTMLElement;
 
-namespace mozilla {
+namespace mozilla::dom {
 
-class ErrorResult;
-
-namespace dom {
-
+class DocGroup;
 class HTMLElement;
 class HTMLFieldSetElement;
 class HTMLFormElement;
@@ -83,6 +91,71 @@ class ElementInternals final : public nsIFormControl,
 
   void Unlink();
 
+  // AccessibilityRole
+  ARIA_REFLECT_ATTR(Role, role)
+
+  // AriaAttributes
+  ARIA_REFLECT_ATTR(AriaAtomic, aria_atomic)
+  ARIA_REFLECT_ATTR(AriaAutoComplete, aria_autocomplete)
+  ARIA_REFLECT_ATTR(AriaBusy, aria_busy)
+  ARIA_REFLECT_ATTR(AriaChecked, aria_checked)
+  ARIA_REFLECT_ATTR(AriaColCount, aria_colcount)
+  ARIA_REFLECT_ATTR(AriaColIndex, aria_colindex)
+  ARIA_REFLECT_ATTR(AriaColIndexText, aria_colindextext)
+  ARIA_REFLECT_ATTR(AriaColSpan, aria_colspan)
+  ARIA_REFLECT_ATTR(AriaCurrent, aria_current)
+  ARIA_REFLECT_ATTR(AriaDescription, aria_description)
+  ARIA_REFLECT_ATTR(AriaDisabled, aria_disabled)
+  ARIA_REFLECT_ATTR(AriaExpanded, aria_expanded)
+  ARIA_REFLECT_ATTR(AriaHasPopup, aria_haspopup)
+  ARIA_REFLECT_ATTR(AriaHidden, aria_hidden)
+  ARIA_REFLECT_ATTR(AriaInvalid, aria_invalid)
+  ARIA_REFLECT_ATTR(AriaKeyShortcuts, aria_keyshortcuts)
+  ARIA_REFLECT_ATTR(AriaLabel, aria_label)
+  ARIA_REFLECT_ATTR(AriaLevel, aria_level)
+  ARIA_REFLECT_ATTR(AriaLive, aria_live)
+  ARIA_REFLECT_ATTR(AriaModal, aria_modal)
+  ARIA_REFLECT_ATTR(AriaMultiLine, aria_multiline)
+  ARIA_REFLECT_ATTR(AriaMultiSelectable, aria_multiselectable)
+  ARIA_REFLECT_ATTR(AriaOrientation, aria_orientation)
+  ARIA_REFLECT_ATTR(AriaPlaceholder, aria_placeholder)
+  ARIA_REFLECT_ATTR(AriaPosInSet, aria_posinset)
+  ARIA_REFLECT_ATTR(AriaPressed, aria_pressed)
+  ARIA_REFLECT_ATTR(AriaReadOnly, aria_readonly)
+  ARIA_REFLECT_ATTR(AriaRelevant, aria_relevant)
+  ARIA_REFLECT_ATTR(AriaRequired, aria_required)
+  ARIA_REFLECT_ATTR(AriaRoleDescription, aria_roledescription)
+  ARIA_REFLECT_ATTR(AriaRowCount, aria_rowcount)
+  ARIA_REFLECT_ATTR(AriaRowIndex, aria_rowindex)
+  ARIA_REFLECT_ATTR(AriaRowIndexText, aria_rowindextext)
+  ARIA_REFLECT_ATTR(AriaRowSpan, aria_rowspan)
+  ARIA_REFLECT_ATTR(AriaSelected, aria_selected)
+  ARIA_REFLECT_ATTR(AriaSetSize, aria_setsize)
+  ARIA_REFLECT_ATTR(AriaSort, aria_sort)
+  ARIA_REFLECT_ATTR(AriaValueMax, aria_valuemax)
+  ARIA_REFLECT_ATTR(AriaValueMin, aria_valuemin)
+  ARIA_REFLECT_ATTR(AriaValueNow, aria_valuenow)
+  ARIA_REFLECT_ATTR(AriaValueText, aria_valuetext)
+
+  void GetAttr(const nsAtom* aName, nsAString& aResult) const {
+    MOZ_ASSERT(aResult.IsEmpty(), "Should have empty string coming in");
+
+    nsAutoString attrName;
+    aName->ToString(attrName);
+    const nsAttrValue* val = mAttrs.GetAttr(attrName);
+    if (val) {
+      val->ToString(aResult);
+    }
+  }
+
+  nsresult SetAttr(nsAtom* aName, const nsAString& aValue) {
+    bool attrHadValue;
+    nsAttrValue attrValue(aValue);
+    return mAttrs.SetAndSwapAttr(aName, attrValue, &attrHadValue);
+  }
+
+  DocGroup* GetDocGroup();
+
  private:
   ~ElementInternals() = default;
 
@@ -112,9 +185,12 @@ class ElementInternals final : public nsIFormControl,
 
   // https://html.spec.whatwg.org/#face-validation-anchor
   RefPtr<nsGenericHTMLElement> mValidationAnchor;
+
+  AttrArray mAttrs;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
+
+#undef ARIA_REFLECT_ATTR
 
 #endif  // mozilla_dom_ElementInternals_h
