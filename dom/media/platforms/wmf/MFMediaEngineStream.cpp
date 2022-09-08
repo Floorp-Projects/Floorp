@@ -171,10 +171,16 @@ HRESULT MFMediaEngineStream::Start(const PROPVARIANT* aPosition) {
   SLOG("Start");
   RETURN_IF_FAILED(QueueEvent(MEStreamStarted, GUID_NULL, S_OK, aPosition));
   Unused << mTaskQueue->Dispatch(NS_NewRunnableFunction(
-      "MFMediaEngineStream::Start", [self = RefPtr{this}]() {
-        // Process any pending requests (if any) which happens when the stream
-        // wasn't allowed to serve samples.
-        self->ReplySampleRequestIfPossible();
+      "MFMediaEngineStream::Start", [self = RefPtr{this}, aPosition, this]() {
+        if (const bool isFromCurrentPosition = aPosition->vt == VT_EMPTY;
+            !isFromCurrentPosition && IsEnded()) {
+          SLOG("Stream restarts again from a new position, reset EOS");
+          mReceivedEOS = false;
+        } else if (!IsEnded()) {
+          // Process pending requests (if any) which happened when the stream
+          // wasn't allowed to serve samples. Eg. stream is paused.
+          ReplySampleRequestIfPossible();
+        }
       }));
   return S_OK;
 }
@@ -458,6 +464,7 @@ RefPtr<MediaDataDecoder::FlushPromise> MFMediaEngineStream::Flush() {
   }
   SLOG("Flush");
   mRawDataQueue.Reset();
+  mReceivedEOS = false;
   return MediaDataDecoder::FlushPromise::CreateAndResolve(true, __func__);
 }
 
