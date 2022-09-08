@@ -169,6 +169,11 @@ class ResizeObserver final : public nsISupports, public nsWrapperCache {
   bool HasSkippedObservations() const { return mHasSkippedTargets; }
 
   /**
+   * Returns whether this is an internal ResizeObserver with a native callback.
+   */
+  bool HasNativeCallback() { return mCallback.is<NativeCallback>(); }
+
+  /**
    * Invoke the callback function in JavaScript for all active observations
    * and pass the sequence of ResizeObserverEntry so JavaScript can access them.
    * The active observations' mLastReportedSize fields will be updated, and
