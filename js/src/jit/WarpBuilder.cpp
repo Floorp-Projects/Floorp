@@ -1980,7 +1980,10 @@ bool WarpBuilder::build_SetFunName(BytecodeLocation loc) {
 bool WarpBuilder::build_PushLexicalEnv(BytecodeLocation loc) {
   MOZ_ASSERT(usesEnvironmentChain());
 
-  LexicalScope* scope = &loc.getScope(script_)->as<LexicalScope>();
+  const auto* snapshot = getOpSnapshot<WarpLexicalEnvironment>(loc);
+  MOZ_ASSERT(snapshot);
+
+  LexicalScope* scope = &snapshot->templateObj()->scope();
   MDefinition* env = current->environmentChain();
 
   auto* ins = MNewLexicalEnvironmentObject::New(alloc(), env, scope);
@@ -1992,7 +1995,10 @@ bool WarpBuilder::build_PushLexicalEnv(BytecodeLocation loc) {
 bool WarpBuilder::build_PushClassBodyEnv(BytecodeLocation loc) {
   MOZ_ASSERT(usesEnvironmentChain());
 
-  ClassBodyScope* scope = &loc.getScope(script_)->as<ClassBodyScope>();
+  const auto* snapshot = getOpSnapshot<WarpClassBodyEnvironment>(loc);
+  MOZ_ASSERT(snapshot);
+
+  ClassBodyScope* scope = &snapshot->templateObj()->scope();
   MDefinition* env = current->environmentChain();
 
   auto* ins = MNewClassBodyEnvironmentObject::New(alloc(), env, scope);
@@ -2032,7 +2038,10 @@ bool WarpBuilder::build_RecreateLexicalEnv(BytecodeLocation) {
 bool WarpBuilder::build_PushVarEnv(BytecodeLocation loc) {
   MOZ_ASSERT(usesEnvironmentChain());
 
-  VarScope* scope = &loc.getScope(script_)->as<VarScope>();
+  const auto* snapshot = getOpSnapshot<WarpVarEnvironment>(loc);
+  MOZ_ASSERT(snapshot);
+
+  VarScope* scope = &snapshot->templateObj()->scope().as<VarScope>();
   MDefinition* env = current->environmentChain();
 
   auto* ins = MNewVarEnvironmentObject::New(alloc(), env, scope);
