@@ -66,6 +66,13 @@ void Val::readFromRootedLocation(const void* loc) {
   memcpy(&cell_, loc, type_.size());
 }
 
+void Val::initFromRootedLocation(ValType type, const void* loc) {
+  MOZ_ASSERT(!type_.isValid());
+  type_ = type;
+  memset(&cell_, 0, sizeof(Cell));
+  memcpy(&cell_, loc, type_.size());
+}
+
 void Val::writeToRootedLocation(void* loc, bool mustWrite64) const {
   memcpy(loc, &cell_, type_.size());
   if (mustWrite64 && type_.size() == 4) {
@@ -468,8 +475,8 @@ bool ToJSValue_anyref(JSContext* cx, void* src, MutableHandleValue dst) {
 template <typename Debug = NoDebug>
 bool ToJSValue_lossless(JSContext* cx, const void* src, MutableHandleValue dst,
                         ValType type) {
-  RootedVal srcVal(cx, type);
-  srcVal.get().readFromRootedLocation(src);
+  RootedVal srcVal(cx);
+  srcVal.get().initFromRootedLocation(type, src);
   RootedObject prototype(
       cx, GlobalObject::getOrCreatePrototype(cx, JSProto_WasmGlobal));
   Rooted<WasmGlobalObject*> srcGlobal(
