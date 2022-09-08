@@ -110,7 +110,8 @@ nsForceXMLListener::OnStopRequest(nsIRequest* aRequest, nsresult aStatusCode) {
 
 nsSyncLoader::~nsSyncLoader() {
   if (mLoading && mChannel) {
-    mChannel->Cancel(NS_BINDING_ABORTED);
+    mChannel->CancelWithReason(NS_BINDING_ABORTED,
+                               "nsSyncLoader::~nsSyncLoader"_ns);
   }
 }
 

@@ -267,7 +267,8 @@ nsresult PageIconProtocolHandler::NewChannelInternal(nsIURI* aURI,
                 do_GetService(NS_STREAMTRANSPORTSERVICE_CONTRACTID, &rv);
 
             if (NS_WARN_IF(NS_FAILED(rv))) {
-              channel->Cancel(NS_BINDING_ABORTED);
+              channel->CancelWithReason(NS_BINDING_ABORTED,
+                                        "GetFaviconData failed"_ns);
               return;
             }
 

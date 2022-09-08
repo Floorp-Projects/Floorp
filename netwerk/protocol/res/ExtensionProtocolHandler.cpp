@@ -279,12 +279,12 @@ ExtensionStreamGetter::Cancel(nsresult aStatus) {
   mStatus = aStatus;
 
   if (mPump) {
-    mPump->Cancel(aStatus);
+    mPump->CancelWithReason(aStatus, "ExtensionStreamGetter::Cancel"_ns);
     mPump = nullptr;
   }
 
   if (mIsJarChannel && mJarChannel) {
-    mJarChannel->Cancel(aStatus);
+    mJarChannel->CancelWithReason(aStatus, "ExtensionStreamGetter::Cancel"_ns);
   }
 
   return NS_OK;
@@ -299,7 +299,8 @@ void ExtensionStreamGetter::CancelRequest(nsIStreamListener* aListener,
 
   aListener->OnStartRequest(aChannel);
   aListener->OnStopRequest(aChannel, aResult);
-  aChannel->Cancel(NS_BINDING_ABORTED);
+  aChannel->CancelWithReason(NS_BINDING_ABORTED,
+                             "ExtensionStreamGetter::CancelRequest"_ns);
 }
 
 // Handle an input stream sent from the parent.

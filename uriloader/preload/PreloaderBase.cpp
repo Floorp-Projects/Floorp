@@ -282,7 +282,8 @@ void PreloaderBase::RemoveLinkPreloadNode(nsINode* aNode) {
     RemoveSelf(aNode->OwnerDoc());
 
     if (mChannel) {
-      mChannel->Cancel(NS_BINDING_ABORTED);
+      mChannel->CancelWithReason(NS_BINDING_ABORTED,
+                                 "PreloaderBase::RemoveLinkPreloadNode"_ns);
     }
   }
 }

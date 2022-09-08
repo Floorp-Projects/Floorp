@@ -1239,7 +1239,8 @@ void CanonicalBrowsingContext::CanonicalDiscard() {
   }
 
   if (mCurrentLoad) {
-    mCurrentLoad->Cancel(NS_BINDING_ABORTED);
+    mCurrentLoad->Cancel(NS_BINDING_ABORTED,
+                         "CanonicalBrowsingContext::CanonicalDiscard"_ns);
   }
 
   if (mWebProgress) {
@@ -1401,7 +1402,7 @@ void CanonicalBrowsingContext::GoBack(
 
   // Stop any known network loads if necessary.
   if (mCurrentLoad) {
-    mCurrentLoad->Cancel(NS_BINDING_CANCELLED_OLD_LOAD);
+    mCurrentLoad->Cancel(NS_BINDING_CANCELLED_OLD_LOAD, ""_ns);
   }
 
   if (nsDocShell* docShell = nsDocShell::Cast(GetDocShell())) {
@@ -1427,7 +1428,7 @@ void CanonicalBrowsingContext::GoForward(
 
   // Stop any known network loads if necessary.
   if (mCurrentLoad) {
-    mCurrentLoad->Cancel(NS_BINDING_CANCELLED_OLD_LOAD);
+    mCurrentLoad->Cancel(NS_BINDING_CANCELLED_OLD_LOAD, ""_ns);
   }
 
   if (auto* docShell = nsDocShell::Cast(GetDocShell())) {
@@ -1453,7 +1454,7 @@ void CanonicalBrowsingContext::GoToIndex(
 
   // Stop any known network loads if necessary.
   if (mCurrentLoad) {
-    mCurrentLoad->Cancel(NS_BINDING_CANCELLED_OLD_LOAD);
+    mCurrentLoad->Cancel(NS_BINDING_CANCELLED_OLD_LOAD, ""_ns);
   }
 
   if (auto* docShell = nsDocShell::Cast(GetDocShell())) {
@@ -1477,7 +1478,7 @@ void CanonicalBrowsingContext::Reload(uint32_t aReloadFlags) {
 
   // Stop any known network loads if necessary.
   if (mCurrentLoad) {
-    mCurrentLoad->Cancel(NS_BINDING_CANCELLED_OLD_LOAD);
+    mCurrentLoad->Cancel(NS_BINDING_CANCELLED_OLD_LOAD, ""_ns);
   }
 
   if (auto* docShell = nsDocShell::Cast(GetDocShell())) {
@@ -1494,7 +1495,8 @@ void CanonicalBrowsingContext::Stop(uint32_t aStopFlags) {
 
   // Stop any known network loads if necessary.
   if (mCurrentLoad && (aStopFlags & nsIWebNavigation::STOP_NETWORK)) {
-    mCurrentLoad->Cancel(NS_BINDING_ABORTED);
+    mCurrentLoad->Cancel(NS_BINDING_ABORTED,
+                         "CanonicalBrowsingContext::Stop"_ns);
   }
 
   // Ask the docshell to stop to handle loads that haven't
@@ -2194,7 +2196,7 @@ bool CanonicalBrowsingContext::StartDocumentLoad(
 
     // If we want to do a download, don't cancel the current navigation.
     if (!aLoad->IsDownload()) {
-      mCurrentLoad->Cancel(NS_BINDING_CANCELLED_OLD_LOAD);
+      mCurrentLoad->Cancel(NS_BINDING_CANCELLED_OLD_LOAD, ""_ns);
     }
   }
   mCurrentLoad = aLoad;

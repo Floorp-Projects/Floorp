@@ -369,7 +369,8 @@ void nsFontFaceLoader::Cancel() {
     mLoadTimer = nullptr;
   }
   if (nsCOMPtr<nsIChannel> channel = std::move(mChannel)) {
-    channel->Cancel(NS_BINDING_ABORTED);
+    channel->CancelWithReason(NS_BINDING_ABORTED,
+                              "nsFontFaceLoader::OnStopRequest"_ns);
   }
 }
 

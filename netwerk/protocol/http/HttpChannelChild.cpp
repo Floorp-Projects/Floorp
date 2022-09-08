@@ -1806,7 +1806,8 @@ HttpChannelChild::Cancel(nsresult aStatus) {
 #endif
 
     if (remoteChannelExists) {
-      SendCancel(aStatus, mLoadInfo->GetRequestBlockingReason(), logOnParent);
+      SendCancel(aStatus, mLoadInfo->GetRequestBlockingReason(),
+                 mCanceledReason, logOnParent);
     } else if (MOZ_UNLIKELY(!LoadOnStartRequestCalled() ||
                             !LoadOnStopRequestCalled())) {
       Unused << AsyncAbort(mStatus);

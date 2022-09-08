@@ -32,15 +32,16 @@ class DocumentChannelParent final
             const DocumentChannelCreationArgs& aArgs);
 
   // PDocumentChannelParent
-  ipc::IPCResult RecvCancel(const nsresult& aStatus) {
+  ipc::IPCResult RecvCancel(const nsresult& aStatus, const nsCString& aReason) {
     if (mDocumentLoadListener) {
-      mDocumentLoadListener->Cancel(aStatus);
+      mDocumentLoadListener->Cancel(aStatus, aReason);
     }
     return IPC_OK();
   }
   void ActorDestroy(ActorDestroyReason aWhy) override {
     if (mDocumentLoadListener) {
-      mDocumentLoadListener->Cancel(NS_BINDING_ABORTED);
+      mDocumentLoadListener->Cancel(NS_BINDING_ABORTED,
+                                    "DocumentChannelParent::ActorDestroy"_ns);
     }
   }
 

@@ -78,7 +78,8 @@ void RemoteStreamGetter::CancelRequest(nsIStreamListener* aListener,
 
   aListener->OnStartRequest(aChannel);
   aListener->OnStopRequest(aChannel, aResult);
-  aChannel->Cancel(NS_BINDING_ABORTED);
+  aChannel->CancelWithReason(NS_BINDING_ABORTED,
+                             "RemoteStreamGetter::CancelRequest"_ns);
 }
 
 // Handle an input stream sent from the parent.

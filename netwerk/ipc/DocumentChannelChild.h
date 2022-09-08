@@ -34,6 +34,8 @@ class DocumentChannelChild final : public DocumentChannel,
 
   NS_IMETHOD AsyncOpen(nsIStreamListener* aListener) override;
   NS_IMETHOD Cancel(nsresult aStatusCode) override;
+  NS_IMETHOD CancelWithReason(nsresult aStatusCode,
+                              const nsACString& aReason) override;
 
   mozilla::ipc::IPCResult RecvFailedAsyncOpen(const nsresult& aStatusCode);
 
