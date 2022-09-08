@@ -46,9 +46,9 @@ class TransformConfig:
     # the parameters for this task-graph generation run
     params = attr.ib(type=Parameters)
 
-    # a dict of all the tasks associated with the kind dependencies of the
+    # a list of all the tasks associated with the kind dependencies of the
     # current kind
-    kind_dependencies_tasks = attr.ib(type=dict)
+    kind_dependencies_tasks = attr.ib()
 
     # Global configuration of the taskgraph
     graph_config = attr.ib(type=GraphConfig)
