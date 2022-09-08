@@ -33,12 +33,6 @@ here = os.path.abspath(os.path.dirname(__file__))
 logger = logging.getLogger(__name__)
 MAX_ROUTES = 10
 
-registered_morphs = []
-
-
-def register_morph(func):
-    registered_morphs.append(func)
-
 
 def amend_taskgraph(taskgraph, label_to_taskid, to_add):
     """Add the given tasks to the taskgraph, returning a new taskgraph"""
@@ -162,7 +156,6 @@ def make_index_task(parent_task, taskgraph, label_to_taskid, parameters, graph_c
     return task, taskgraph, label_to_taskid
 
 
-@register_morph
 def add_index_tasks(taskgraph, label_to_taskid, parameters, graph_config):
     """
     The TaskCluster queue only allows 10 routes on a task, but we have tasks
@@ -203,9 +196,8 @@ def _get_morph_url():
     return f"{taskgraph_repo}/raw-file/{taskgraph_rev}/src/taskgraph/morph.py"
 
 
-@register_morph
 def add_code_review_task(taskgraph, label_to_taskid, parameters, graph_config):
-    logger.debug("Morphing: adding code review task")
+    logger.debug("Morphing: adding index tasks")
 
     review_config = parameters.get("code-review")
     if not review_config:
@@ -264,7 +256,12 @@ def add_code_review_task(taskgraph, label_to_taskid, parameters, graph_config):
 
 def morph(taskgraph, label_to_taskid, parameters, graph_config):
     """Apply all morphs"""
-    for m in registered_morphs:
+    morphs = [
+        add_index_tasks,
+        add_code_review_task,
+    ]
+
+    for m in morphs:
         taskgraph, label_to_taskid = m(
             taskgraph, label_to_taskid, parameters, graph_config
         )
