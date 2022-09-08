@@ -718,42 +718,55 @@ class Browsertime(Perftest):
         try:
             line_matcher = re.compile(r".*(\[.*\])\s+([a-zA-Z]+):\s+(.*)")
 
-            def _line_handler(line):
-                """This function acts as a bridge between browsertime
-                and raptor. It reforms the lines to get rid of information
-                that is not needed, and outputs them appropriately based
-                on the level that is found. (Debug and info all go to info).
+            def _create_line_handler(extra_profiler_run=False):
+                def _line_handler(line):
+                    """This function acts as a bridge between browsertime
+                    and raptor. It reforms the lines to get rid of information
+                    that is not needed, and outputs them appropriately based
+                    on the level that is found. (Debug and info all go to info).
 
-                For errors, we set an attribute (self.browsertime_failure) to
-                it, then raise a generic exception. When we return, we check
-                if self.browsertime_failure, and raise an Exception if necessary
-                to stop Raptor execution (preventing the results processing).
-                """
+                    For errors, we set an attribute (self.browsertime_failure) to
+                    it, then raise a generic exception. When we return, we check
+                    if self.browsertime_failure, and raise an Exception if necessary
+                    to stop Raptor execution (preventing the results processing).
+                    """
 
-                # NOTE: this hack is to workaround encoding issues on windows
-                # a newer version of browsertime adds a `σ` character to output
-                line = line.replace(b"\xcf\x83", b"")
+                    # NOTE: this hack is to workaround encoding issues on windows
+                    # a newer version of browsertime adds a `σ` character to output
+                    line = line.replace(b"\xcf\x83", b"")
 
-                line = line.decode("utf-8")
-                match = line_matcher.match(line)
-                if not match:
-                    LOG.info(line)
-                    return
+                    line = line.decode("utf-8")
+                    match = line_matcher.match(line)
+                    if not match:
+                        LOG.info(line)
+                        return
 
-                date, level, msg = match.groups()
-                level = level.lower()
-                if "error" in level and not self.debug_mode:
-                    if self._kill_browsertime_process(msg):
-                        self.browsertime_failure = msg
-                        LOG.error("Browsertime failed to run")
-                        proc.kill()
-                elif "warning" in level:
-                    LOG.warning(msg)
-                elif "metrics" in level:
-                    vals = msg.split(":")[-1].strip()
-                    self.page_count = vals.split(",")
-                else:
-                    LOG.info(msg)
+                    date, level, msg = match.groups()
+                    level = level.lower()
+                    if "error" in level and not self.debug_mode:
+                        if self._kill_browsertime_process(msg):
+                            self.browsertime_failure = msg
+                            if extra_profiler_run:
+                                # Do not trigger the log parser for extra profiler run.
+                                LOG.info(
+                                    "Browsertime failed to run on extra profiler run"
+                                )
+                            else:
+                                LOG.error("Browsertime failed to run")
+                            proc.kill()
+                    elif "warning" in level:
+                        if extra_profiler_run:
+                            # Do not trigger the log parser for extra profiler run.
+                            LOG.info(msg)
+                        else:
+                            LOG.warning(msg)
+                    elif "metrics" in level:
+                        vals = msg.split(":")[-1].strip()
+                        self.page_count = vals.split(",")
+                    else:
+                        LOG.info(msg)
+
+                return _line_handler
 
             proc_timeout = self._compute_process_timeout(test, timeout)
             output_timeout = BROWSERTIME_PAGELOAD_OUTPUT_TIMEOUT
@@ -768,7 +781,9 @@ class Browsertime(Perftest):
                     output_timeout *= 2
                 proc_timeout *= 2
 
-            proc = self.process_handler(cmd, processOutputLine=_line_handler, env=env)
+            proc = self.process_handler(
+                cmd, processOutputLine=_create_line_handler(), env=env
+            )
             proc.run(timeout=proc_timeout, outputTimeout=output_timeout)
             proc.wait()
 
@@ -793,7 +808,12 @@ class Browsertime(Perftest):
                 and not self.config["gecko_profile"]
             ):
                 self.run_extra_profiler_run(
-                    test, timeout, proc_timeout, output_timeout, _line_handler, env
+                    test,
+                    timeout,
+                    proc_timeout,
+                    output_timeout,
+                    _create_line_handler(extra_profiler_run=True),
+                    env,
                 )
 
         except Exception as e:
