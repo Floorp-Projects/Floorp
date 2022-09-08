@@ -336,8 +336,8 @@ FRAME_STATE_BIT(FlexContainer, 20,
                 NS_STATE_FLEX_NORMAL_FLOW_CHILDREN_IN_CSS_ORDER)
 
 // Set for a flex container that is emulating a legacy
-// 'display:-webkit-{inline-}box' or 'display:-moz-{inline-}box' container.
-FRAME_STATE_BIT(FlexContainer, 21, NS_STATE_FLEX_IS_EMULATING_LEGACY_BOX)
+// 'display:-moz-{inline-}box' container.
+FRAME_STATE_BIT(FlexContainer, 21, NS_STATE_FLEX_IS_EMULATING_LEGACY_MOZ_BOX)
 
 // Set for a flex container that is emulating a legacy
 // 'display:-webkit-{inline-}box'.

@@ -52,7 +52,9 @@ static mozilla::LazyLogModule gFlexContainerLog("FlexContainer");
 static bool IsLegacyBox(const nsIFrame* aFlexContainer) {
   MOZ_ASSERT(aFlexContainer->IsFlexContainerFrame(),
              "only flex containers may be passed to this function");
-  return aFlexContainer->HasAnyStateBits(NS_STATE_FLEX_IS_EMULATING_LEGACY_BOX);
+  return aFlexContainer->HasAnyStateBits(
+      NS_STATE_FLEX_IS_EMULATING_LEGACY_MOZ_BOX |
+      NS_STATE_FLEX_IS_EMULATING_LEGACY_WEBKIT_BOX);
 }
 
 // Returns the OrderState enum we should pass to CSSOrderAwareFrameIterator
@@ -2880,10 +2882,9 @@ void nsFlexContainerFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
   // Figure out if we should set a frame state bit to indicate that this frame
   // represents a legacy -moz-{inline-}box or -webkit-{inline-}box container.
   if (displayInside == StyleDisplayInside::MozBox) {
-    AddStateBits(NS_STATE_FLEX_IS_EMULATING_LEGACY_BOX);
+    AddStateBits(NS_STATE_FLEX_IS_EMULATING_LEGACY_MOZ_BOX);
   } else if (displayInside == StyleDisplayInside::WebkitBox) {
-    AddStateBits(NS_STATE_FLEX_IS_EMULATING_LEGACY_BOX |
-                 NS_STATE_FLEX_IS_EMULATING_LEGACY_WEBKIT_BOX);
+    AddStateBits(NS_STATE_FLEX_IS_EMULATING_LEGACY_WEBKIT_BOX);
   }
 }
 
