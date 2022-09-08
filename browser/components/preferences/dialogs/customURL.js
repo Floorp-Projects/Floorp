@@ -23,10 +23,11 @@ function onLoad(){
 function onunload() {
     let boxs = document.getElementsByClassName("URLBox");
     for (let i = 0; i < boxs.length; i++) {
+      boxs[i].value = boxs[i].value.replace(/^\s+/, "");
       if(boxs[i].value == ""){
         
       }
-      else if(!boxs[i].value.match(/https?:\/\//)){
+      else if(!boxs[i].value.match(/^https?:\/\//)){
         boxs[i].value = "https://" + boxs[i].value;
       }
       var num = i + 1;
