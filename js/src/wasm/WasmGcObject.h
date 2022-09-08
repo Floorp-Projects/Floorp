@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef wasm_TypedObject_h
-#define wasm_TypedObject_h
+#ifndef wasm_WasmGcObject_h
+#define wasm_WasmGcObject_h
 
 #include "mozilla/CheckedInt.h"
 #include "mozilla/Maybe.h"
@@ -21,7 +21,7 @@ using js::wasm::FieldType;
 
 namespace js {
 
-class TypedObject;
+class WasmGcObject;
 
 //=========================================================================
 // RttValue
@@ -75,7 +75,7 @@ class RttValue : public NativeObject {
 
   // PropOffset is a uint32_t that is used to carry information about the
   // location of an value from RttValue::lookupProperty to
-  // TypedObject::loadValue.  It is distinct from a normal uint32_t to
+  // WasmGcObject::loadValue.  It is distinct from a normal uint32_t to
   // emphasise the fact that it cannot be interpreted as an offset in any
   // single contiguous area of memory:
   //
@@ -99,10 +99,10 @@ class RttValue : public NativeObject {
   };
 
   [[nodiscard]] bool lookupProperty(JSContext* cx,
-                                    js::Handle<TypedObject*> object, jsid id,
+                                    js::Handle<WasmGcObject*> object, jsid id,
                                     PropOffset* offset, wasm::FieldType* type);
-  [[nodiscard]] bool hasProperty(JSContext* cx, js::Handle<TypedObject*> object,
-                                 jsid id) {
+  [[nodiscard]] bool hasProperty(JSContext* cx,
+                                 js::Handle<WasmGcObject*> object, jsid id) {
     RttValue::PropOffset offset;
     wasm::FieldType type;
     return lookupProperty(cx, object, id, &offset, &type);
@@ -113,10 +113,10 @@ class RttValue : public NativeObject {
 };
 
 //=========================================================================
-// TypedObject
+// WasmGcObject
 
 /* Base type for typed objects. */
-class TypedObject : public JSObject {
+class WasmGcObject : public JSObject {
  protected:
   GCPtr<RttValue*> rttValue_;
 
@@ -178,7 +178,7 @@ class TypedObject : public JSObject {
 // Class for a wasm array.  It contains a pointer to the array contents, that
 // lives in the C++ heap.
 
-class WasmArrayObject : public TypedObject {
+class WasmArrayObject : public WasmGcObject {
  public:
   static const JSClass class_;
 
@@ -227,7 +227,7 @@ class WasmArrayObject : public TypedObject {
 // Computing the field offsets is somewhat tricky; see block comment on `class
 // StructLayout` for background.
 
-class WasmStructObject : public TypedObject {
+class WasmStructObject : public WasmGcObject {
  public:
   static const JSClass class_;
 
@@ -235,7 +235,6 @@ class WasmStructObject : public TypedObject {
   // nullptr if none.
   uint8_t* outlineData_;
 
- public:
   // The inline (wasm-struct-level) data fields.  This must be a multiple of
   // 16 bytes long in order to ensure that no field gets split across the
   // inline-outline boundary.  As a refinement, we request this field to begin
@@ -257,7 +256,7 @@ class WasmStructObject : public TypedObject {
   }
 
   // AllocKind for object creation
-  static inline gc::AllocKind allocKindForRttValue(RttValue* rtt);
+  static gc::AllocKind allocKindForRttValue(RttValue* rtt);
 
   // Creates a new struct typed object initialized to zero. Reports if there
   // is an out of memory error.  `rtt` is the type of the struct.
@@ -357,34 +356,16 @@ inline uint8_t* WasmStructObject::fieldOffsetToAddress(FieldType fieldType,
 
 namespace js {
 
-inline bool IsTypedObjectClass(const JSClass* class_) {
+inline bool IsWasmGcObjectClass(const JSClass* class_) {
   return class_ == &WasmArrayObject::class_ ||
          class_ == &WasmStructObject::class_;
-}
-
-inline bool IsWasmArrayObjectClass(const JSClass* class_) {
-  return class_ == &WasmArrayObject::class_;
-}
-
-inline bool IsWasmStructObjectClass(const JSClass* class_) {
-  return class_ == &WasmStructObject::class_;
 }
 
 }  // namespace js
 
 template <>
-inline bool JSObject::is<js::TypedObject>() const {
-  return js::IsTypedObjectClass(getClass());
+inline bool JSObject::is<js::WasmGcObject>() const {
+  return js::IsWasmGcObjectClass(getClass());
 }
 
-template <>
-inline bool JSObject::is<js::WasmArrayObject>() const {
-  return js::IsWasmArrayObjectClass(getClass());
-}
-
-template <>
-inline bool JSObject::is<js::WasmStructObject>() const {
-  return js::IsWasmStructObjectClass(getClass());
-}
-
-#endif /* wasm_TypedObject_h */
+#endif /* wasm_WasmGcObject_h */

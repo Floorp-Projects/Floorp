@@ -22,7 +22,7 @@
 #include "js/GCAPI.h"
 #include "vm/HelperThreads.h"
 #include "vm/Realm.h"
-#include "wasm/TypedObject.h"
+#include "wasm/WasmGcObject.h"
 
 #include "gc/Heap-inl.h"
 #include "gc/Marking-inl.h"
