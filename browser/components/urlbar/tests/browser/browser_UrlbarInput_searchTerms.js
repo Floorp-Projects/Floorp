@@ -210,3 +210,51 @@ add_task(async function non_default_search() {
 
   BrowserTestUtils.removeTab(tab);
 });
+
+// Manually loading a url that matches a search query url
+// should show the search term in the Urlbar.
+add_task(async function load_url() {
+  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser);
+  let [expectedSearchUrl] = UrlbarUtils.getSearchQueryUrl(
+    defaultTestEngine,
+    SEARCH_STRING
+  );
+  let browserLoadedPromise = BrowserTestUtils.browserLoaded(
+    tab.linkedBrowser,
+    false,
+    expectedSearchUrl
+  );
+  BrowserTestUtils.loadURI(tab.linkedBrowser, expectedSearchUrl);
+  await browserLoadedPromise;
+  assertSearchStringIsInUrlbar(SEARCH_STRING);
+
+  BrowserTestUtils.removeTab(tab);
+});
+
+// Loading a url that looks like a search query url but has additional
+// query params should not show the search term in the Urlbar.
+add_task(async function url_with_additional_query_params() {
+  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser);
+  let [expectedSearchUrl] = UrlbarUtils.getSearchQueryUrl(
+    defaultTestEngine,
+    SEARCH_STRING
+  );
+  // Add a query param
+  expectedSearchUrl += "&another_code=something_else";
+  let browserLoadedPromise = BrowserTestUtils.browserLoaded(
+    tab.linkedBrowser,
+    false,
+    expectedSearchUrl
+  );
+  BrowserTestUtils.loadURI(tab.linkedBrowser, expectedSearchUrl);
+  await browserLoadedPromise;
+
+  Assert.equal(gURLBar.value, expectedSearchUrl, `URL should be in URL bar`);
+  Assert.equal(
+    gURLBar.getAttribute("pageproxystate"),
+    "valid",
+    "Pageproxystate should be valid"
+  );
+
+  BrowserTestUtils.removeTab(tab);
+});

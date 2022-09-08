@@ -2228,8 +2228,8 @@ export class UrlbarInput {
           );
           if (
             lazy.UrlbarSearchUtils.serpsAreEquivalent(
-              expectedSearchUrl,
-              uri.spec
+              uri.spec,
+              expectedSearchUrl
             )
           ) {
             return terms;
