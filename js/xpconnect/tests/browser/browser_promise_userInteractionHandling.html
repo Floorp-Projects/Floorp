@@ -6,20 +6,5 @@
 </head>
 <body>
 <button id="button">Meow</button>
-<script type="application/javascript">
-const domWindowUtils = SpecialPowers.getDOMWindowUtils(window);
-
-is(domWindowUtils.isHandlingUserInput, false, "not yet handling user input");
-
-const button = document.getElementById("button")
-
-button.addEventListener("click", () => {
-  is(domWindowUtils.isHandlingUserInput, true, "handling user input");
-
-  document.hasStorageAccess().then(() => {
-    is(domWindowUtils.isHandlingUserInput, true, "still handling user input");
-  });
-});
-</script>
 </body>
 </html>
