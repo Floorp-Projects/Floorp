@@ -310,7 +310,7 @@ class nsWindow final : public nsBaseWidget {
    * Window utilities
    */
   nsWindow* GetTopLevelWindow(bool aStopOnDialogOrPopup);
-  WNDPROC GetPrevWindowProc() { return mPrevWndProc; }
+  WNDPROC GetPrevWindowProc() { return mPrevWndProc.valueOr(nullptr); }
   WindowHook& GetWindowHook() { return mWindowHook; }
   nsWindow* GetParentWindow(bool aIncludeOwner);
 
@@ -526,7 +526,8 @@ class nsWindow final : public nsBaseWidget {
 
   WPARAM wParamFromGlobalMouseState();
 
-  void SubclassWindow(BOOL bState);
+  bool AssociateWithNativeWindow();
+  void DissociateFromNativeWindow();
   bool CanTakeFocus();
   bool UpdateNonClientMargins(int32_t aSizeMode = -1,
                               bool aReflowWindow = true);
@@ -737,7 +738,7 @@ class nsWindow final : public nsBaseWidget {
   nsIntPoint mLastPoint;
   HWND mWnd = nullptr;
   HWND mTransitionWnd = nullptr;
-  WNDPROC mPrevWndProc = nullptr;
+  mozilla::Maybe<WNDPROC> mPrevWndProc;
   HBRUSH mBrush;
   IMEContext mDefaultIMC;
   HDEVNOTIFY mDeviceNotifyHandle = nullptr;

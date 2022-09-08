@@ -1203,7 +1203,12 @@ nsresult nsWindow::Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
     ::SetWindowLongPtrW(scrollableWnd, GWLP_USERDATA, (LONG_PTR)oldWndProc);
   }
 
-  SubclassWindow(TRUE);
+  // We will start receiving native events after associating with our native
+  // window. We will also become the output of WinUtils::GetNSWindowPtr for that
+  // window.
+  if (!AssociateWithNativeWindow()) {
+    return NS_ERROR_FAILURE;
+  }
 
   // Starting with Windows XP, a process always runs within a terminal services
   // session. In order to play nicely with RDP, fast user switching, and the
@@ -1480,33 +1485,65 @@ DWORD nsWindow::WindowExStyle() {
 
 /**************************************************************
  *
- * SECTION: Window subclassing utilities
+ * SECTION: Native window association utilities
  *
- * Set or clear window subclasses on native windows. Used in
- * Create and Destroy.
+ * Used in Create and Destroy. A nsWindow can associate with its
+ * underlying native window mWnd. Once a native window is
+ * associated with a nsWindow, its native events will be handled
+ * by the static member function nsWindow::WindowProc. Moreover,
+ * the association will be registered in the WinUtils association
+ * list, that is, calling WinUtils::GetNSWindowPtr on the native
+ * window will return the associated nsWindow. This is used in
+ * nsWindow::WindowProc to correctly dispatch native events to
+ * the handler methods defined in nsWindow, even though it is a
+ * static member function.
+ *
+ * After dissociation, the native events of the native window will
+ * no longer be handled by nsWindow::WindowProc, and will thus not
+ * be dispatched to the nsWindow native event handler methods.
+ * Moreover, the association will no longer be registered in the
+ * WinUtils association list, so calling WinUtils::GetNSWindowPtr
+ * on the native window will return nullptr.
  *
  **************************************************************/
 
-// Subclass (or remove the subclass from) this component's nsWindow
-void nsWindow::SubclassWindow(BOOL bState) {
-  if (bState) {
-    if (!mWnd || !IsWindow(mWnd)) {
-      NS_ERROR("Invalid window handle");
-    }
-
-    mPrevWndProc = reinterpret_cast<WNDPROC>(SetWindowLongPtrW(
-        mWnd, GWLP_WNDPROC, reinterpret_cast<LONG_PTR>(nsWindow::WindowProc)));
-    NS_ASSERTION(mPrevWndProc, "Null standard window procedure");
-    // connect the this pointer to the nsWindow handle
-    WinUtils::SetNSWindowPtr(mWnd, this);
-  } else {
-    if (IsWindow(mWnd)) {
-      SetWindowLongPtrW(mWnd, GWLP_WNDPROC,
-                        reinterpret_cast<LONG_PTR>(mPrevWndProc));
-    }
-    WinUtils::SetNSWindowPtr(mWnd, nullptr);
-    mPrevWndProc = nullptr;
+bool nsWindow::AssociateWithNativeWindow() {
+  if (!mWnd || !IsWindow(mWnd)) {
+    NS_ERROR("Invalid window handle");
+    return false;
   }
+
+  // Connect the this pointer to the native window handle.
+  // This should be done before SetWindowLongPtrW, because nsWindow::WindowProc
+  // uses WinUtils::GetNSWindowPtr internally.
+  WinUtils::SetNSWindowPtr(mWnd, this);
+
+  ::SetLastError(ERROR_SUCCESS);
+  const auto prevWndProc = reinterpret_cast<WNDPROC>(::SetWindowLongPtrW(
+      mWnd, GWLP_WNDPROC, reinterpret_cast<LONG_PTR>(nsWindow::WindowProc)));
+  if (!prevWndProc && GetLastError() != ERROR_SUCCESS) {
+    NS_ERROR("Failure in SetWindowLongPtrW");
+    WinUtils::SetNSWindowPtr(mWnd, nullptr);
+    return false;
+  }
+
+  mPrevWndProc.emplace(prevWndProc);
+  return true;
+}
+
+void nsWindow::DissociateFromNativeWindow() {
+  if (!mWnd || !IsWindow(mWnd) || mPrevWndProc.isNothing()) {
+    return;
+  }
+
+  DebugOnly<WNDPROC> wndProcBeforeDissociate =
+      reinterpret_cast<WNDPROC>(::SetWindowLongPtrW(
+          mWnd, GWLP_WNDPROC, reinterpret_cast<LONG_PTR>(*mPrevWndProc)));
+  NS_ASSERTION(wndProcBeforeDissociate == nsWindow::WindowProc,
+               "Unstacked an unexpected native window procedure");
+
+  WinUtils::SetNSWindowPtr(mWnd, nullptr);
+  mPrevWndProc.reset();
 }
 
 /**************************************************************
@@ -7473,9 +7510,10 @@ void nsWindow::OnDestroy() {
   // Unregister notifications from terminal services
   ::WTSUnRegisterSessionNotification(mWnd);
 
-  // Free our subclass and clear the |this|-pointer associated with our HWND. We
-  // will no longer receive events from Windows after this point.
-  SubclassWindow(FALSE);
+  // We will stop receiving native events after dissociating from our native
+  // window. We will also disappear from the output of WinUtils::GetNSWindowPtr
+  // for that window.
+  DissociateFromNativeWindow();
 
   // Once mWidgetListener is cleared and the subclass is reset, sCurrentWindow
   // can be cleared. (It's used in tracking windows for mouse events.)
