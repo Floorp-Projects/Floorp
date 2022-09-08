@@ -614,7 +614,10 @@ LayoutDeviceIntRect RemoteAccessibleBase<Derived>::BoundsWithOffset(
     // This block is not thread safe because it queries a LocalAccessible.
     // It is also not needed in Android since the only local accessible is
     // the outer doc browser that has an offset of 0.
-    if (LocalAccessible* localAcc = const_cast<Accessible*>(acc)->AsLocal()) {
+    // acc could be null if the OuterDocAccessible died before the top level
+    // DocAccessibleParent.
+    if (LocalAccessible* localAcc =
+            acc ? const_cast<Accessible*>(acc)->AsLocal() : nullptr) {
       // LocalAccessible::Bounds returns screen-relative bounds in
       // dev pixels.
       LayoutDeviceIntRect localBounds = localAcc->Bounds();
