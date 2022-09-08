@@ -278,7 +278,6 @@ class MOZ_STACK_CLASS WarpBuilder : public WarpBuilderShared {
   [[nodiscard]] bool buildSuspend(BytecodeLocation loc, MDefinition* gen,
                                   MDefinition* retVal);
 
-  void buildCopyLexicalEnvOp(bool copySlots);
   void buildCheckLexicalOp(BytecodeLocation loc);
 
   bool usesEnvironmentChain() const;
