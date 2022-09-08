@@ -327,6 +327,13 @@ MInstruction* WarpBuilder::buildNamedLambdaEnv(MDefinition* callee,
   MInstruction* namedLambda = MNewNamedLambdaObject::New(alloc(), templateObj);
   current->add(namedLambda);
 
+#ifdef DEBUG
+  // Assert in debug mode we can elide the post write barriers.
+  current->add(MAssertCanElidePostWriteBarrier::New(alloc(), namedLambda, env));
+  current->add(
+      MAssertCanElidePostWriteBarrier::New(alloc(), namedLambda, callee));
+#endif
+
   // Initialize the object's reserved slots. No post barrier is needed here:
   // the object will be allocated in the nursery if possible, and if the
   // tenured heap is used instead, a minor collection will have been performed
@@ -348,6 +355,12 @@ MInstruction* WarpBuilder::buildCallObject(MDefinition* callee,
 
   MNewCallObject* callObj = MNewCallObject::New(alloc(), templateCst);
   current->add(callObj);
+
+#ifdef DEBUG
+  // Assert in debug mode we can elide the post write barriers.
+  current->add(MAssertCanElidePostWriteBarrier::New(alloc(), callObj, env));
+  current->add(MAssertCanElidePostWriteBarrier::New(alloc(), callObj, callee));
+#endif
 
   // Initialize the object's reserved slots. No post barrier is needed here,
   // for the same reason as in buildNamedLambdaEnv.
@@ -378,6 +391,11 @@ MInstruction* WarpBuilder::buildCallObject(MDefinition* callee,
     } else {
       param = current->getSlot(info().argSlotUnchecked(formal));
     }
+
+#ifdef DEBUG
+    // Assert in debug mode we can elide the post write barrier.
+    current->add(MAssertCanElidePostWriteBarrier::New(alloc(), callObj, param));
+#endif
 
     if (slot >= numFixedSlots) {
       if (!slots) {
@@ -1989,6 +2007,11 @@ bool WarpBuilder::build_PushLexicalEnv(BytecodeLocation loc) {
   auto* ins = MNewLexicalEnvironmentObject::New(alloc(), templateCst);
   current->add(ins);
 
+#ifdef DEBUG
+  // Assert in debug mode we can elide the post write barrier.
+  current->add(MAssertCanElidePostWriteBarrier::New(alloc(), ins, env));
+#endif
+
   // Initialize the object's reserved slots. No post barrier is needed here,
   // for the same reason as in buildNamedLambdaEnv.
   current->add(MStoreFixedSlot::NewUnbarriered(
@@ -2009,6 +2032,11 @@ bool WarpBuilder::build_PushClassBodyEnv(BytecodeLocation loc) {
 
   auto* ins = MNewClassBodyEnvironmentObject::New(alloc(), templateCst);
   current->add(ins);
+
+#ifdef DEBUG
+  // Assert in debug mode we can elide the post write barrier.
+  current->add(MAssertCanElidePostWriteBarrier::New(alloc(), ins, env));
+#endif
 
   // Initialize the object's reserved slots. No post barrier is needed here,
   // for the same reason as in buildNamedLambdaEnv.
@@ -2044,6 +2072,12 @@ bool WarpBuilder::build_FreshenLexicalEnv(BytecodeLocation loc) {
 
   auto* ins = MNewLexicalEnvironmentObject::New(alloc(), templateCst);
   current->add(ins);
+
+#ifdef DEBUG
+  // Assert in debug mode we can elide the post write barrier.
+  current->add(
+      MAssertCanElidePostWriteBarrier::New(alloc(), ins, enclosingEnv));
+#endif
 
   // Initialize the object's reserved slots. No post barrier is needed here,
   // for the same reason as in buildNamedLambdaEnv.
@@ -2082,11 +2116,21 @@ bool WarpBuilder::build_FreshenLexicalEnv(BytecodeLocation loc) {
       auto* load = MLoadDynamicSlot::New(alloc(), envSlots, dynamicSlot);
       current->add(load);
 
+#ifdef DEBUG
+      // Assert in debug mode we can elide the post write barrier.
+      current->add(MAssertCanElidePostWriteBarrier::New(alloc(), ins, load));
+#endif
+
       current->add(
           MStoreDynamicSlot::NewUnbarriered(alloc(), slots, dynamicSlot, load));
     } else {
       auto* load = MLoadFixedSlot::New(alloc(), env, slot);
       current->add(load);
+
+#ifdef DEBUG
+      // Assert in debug mode we can elide the post write barrier.
+      current->add(MAssertCanElidePostWriteBarrier::New(alloc(), ins, load));
+#endif
 
       current->add(MStoreFixedSlot::NewUnbarriered(alloc(), ins, slot, load));
     }
@@ -2107,6 +2151,12 @@ bool WarpBuilder::build_RecreateLexicalEnv(BytecodeLocation loc) {
 
   auto* ins = MNewLexicalEnvironmentObject::New(alloc(), templateCst);
   current->add(ins);
+
+#ifdef DEBUG
+  // Assert in debug mode we can elide the post write barrier.
+  current->add(
+      MAssertCanElidePostWriteBarrier::New(alloc(), ins, enclosingEnv));
+#endif
 
   // Initialize the object's reserved slots. No post barrier is needed here,
   // for the same reason as in buildNamedLambdaEnv.
@@ -2129,6 +2179,11 @@ bool WarpBuilder::build_PushVarEnv(BytecodeLocation loc) {
 
   auto* ins = MNewVarEnvironmentObject::New(alloc(), templateCst);
   current->add(ins);
+
+#ifdef DEBUG
+  // Assert in debug mode we can elide the post write barrier.
+  current->add(MAssertCanElidePostWriteBarrier::New(alloc(), ins, env));
+#endif
 
   // Initialize the object's reserved slots. No post barrier is needed here,
   // for the same reason as in buildNamedLambdaEnv.
