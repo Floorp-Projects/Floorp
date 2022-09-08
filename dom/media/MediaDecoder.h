@@ -730,6 +730,7 @@ class MediaDecoder : public DecoderDoctorLifeLogger<MediaDecoder> {
 
   // Those methods exist to report telemetry related metrics.
   double GetTotalVideoPlayTimeInSeconds() const;
+  double GetTotalVideoHDRPlayTimeInSeconds() const;
   double GetVisibleVideoPlayTimeInSeconds() const;
   double GetInvisibleVideoPlayTimeInSeconds() const;
   double GetVideoDecodeSuspendedTimeInSeconds() const;
