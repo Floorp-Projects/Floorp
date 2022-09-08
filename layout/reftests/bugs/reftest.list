@@ -2133,4 +2133,3 @@ test-pref(widget.non-native-theme.use-theme-accent,false) == 1778834.html 177883
 pref(layout.css.prefers-color-scheme.content-override,0) == 1787127.html 1787127-ref.html
 pref(layout.css.prefers-color-scheme.content-override,1) == 1787127.html 1787127-ref.html
 pref(layout.css.prefers-color-scheme.content-override,2) == 1787127.html 1787127-ref.html
-pref(layout.css.prefers-color-scheme.content-override,3) == 1787127.html 1787127-ref.html

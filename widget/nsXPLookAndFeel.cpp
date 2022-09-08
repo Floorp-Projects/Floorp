@@ -1299,8 +1299,6 @@ void LookAndFeel::RecomputeColorSchemes() {
         return ColorScheme::Dark;
       case 1:
         return ColorScheme::Light;
-      case 2:
-        return SystemColorScheme();
       default:
         return ThemeDerivedColorSchemeForContent();
     }

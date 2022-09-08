@@ -159,10 +159,10 @@ add_task(async function test_support_ntp_colors() {
       // BrowserTestUtils.withNewTab waits for about:newtab to load
       // so we disable preloading before running the test.
       ["browser.newtab.preload", false],
-      // Force prefers-color-scheme to "system", as otherwise it is derived
-      // from the newtab background colors, but we hard-code the light styles
-      // on this test.
-      ["layout.css.prefers-color-scheme.content-override", 2],
+      // Force prefers-color-scheme to "light", as otherwise it might be
+      // derived from the theme, but we hard-code the light styles on this
+      // test.
+      ["layout.css.prefers-color-scheme.content-override", 1],
       // Override the system color scheme to light so this test passes on
       // machines with dark system color scheme.
       ["ui.systemUsesDarkTheme", 0],
