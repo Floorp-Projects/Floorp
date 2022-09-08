@@ -33,7 +33,10 @@ pub fn convert<P: AsRef<Path>>(path: P, wast: &str) -> Result<String> {
         err
     };
 
-    let buf = wast::parser::ParseBuffer::new(wast).map_err(adjust_wast)?;
+    let mut lexer = wast::lexer::Lexer::new(wast);
+    // The 'names.wast' spec test has confusable unicode -- disable detection.
+    lexer.allow_confusing_unicode(filename.ends_with("names.wast"));
+    let buf = wast::parser::ParseBuffer::new_with_lexer(lexer).map_err(adjust_wast)?;
     let ast = wast::parser::parse::<wast::Wast>(&buf).map_err(adjust_wast)?;
 
     let mut out = String::new();
@@ -95,7 +98,7 @@ fn convert_directive(
         writeln!(out, "// {}:{}:{}", filename.display(), line + 1, col)?;
     }
     match directive {
-        Module(module) => {
+        Wat(wast::QuoteWat::Wat(wast::Wat::Module(module))) => {
             let next_instance = current_instance.map(|x| x + 1).unwrap_or(0);
             let module_text = module_to_js_string(&module, wast)?;
 
@@ -115,8 +118,8 @@ fn convert_directive(
 
             *current_instance = Some(next_instance);
         }
-        QuoteModule { span: _, source: _ } => {
-            write!(out, "// unsupported quote module")?;
+        Wat(_) => {
+            write!(out, "// unsupported quote wat")?;
         }
         Register {
             span: _,
@@ -179,8 +182,9 @@ fn convert_directive(
             message,
         } => {
             let text = match module {
-                wast::QuoteModule::Module(m) => module_to_js_string(&m, wast)?,
-                wast::QuoteModule::Quote(source) => quote_module_to_js_string(source)?,
+                wast::QuoteWat::Wat(wast::Wat::Module(m)) => module_to_js_string(&m, wast)?,
+                wast::QuoteWat::QuoteModule(_, source) => quote_module_to_js_string(source)?,
+                other => bail!("unsupported {:?} in assert_invalid", other),
             };
             writeln!(
                 out,
@@ -195,8 +199,9 @@ fn convert_directive(
             message,
         } => {
             let text = match module {
-                wast::QuoteModule::Module(m) => module_to_js_string(&m, wast)?,
-                wast::QuoteModule::Quote(source) => quote_module_to_js_string(source)?,
+                wast::QuoteWat::Wat(wast::Wat::Module(m)) => module_to_js_string(&m, wast)?,
+                wast::QuoteWat::QuoteModule(_, source) => quote_module_to_js_string(source)?,
+                other => bail!("unsupported {:?} in assert_malformed", other),
             };
             writeln!(
                 out,
@@ -210,7 +215,10 @@ fn convert_directive(
             module,
             message,
         } => {
-            let text = module_to_js_string(&module, wast)?;
+            let text = match module {
+                wast::Wat::Module(module) => module_to_js_string(&module, wast)?,
+                other => bail!("unsupported {:?} in assert_unlinkable", other),
+            };
             writeln!(
                 out,
                 "assert_unlinkable(() => instantiate(`{}`), `{}`);",
@@ -248,7 +256,7 @@ fn escape_template_string(text: &str) -> String {
     escaped
 }
 
-fn span_to_offset(span: wast::Span, text: &str) -> Result<usize> {
+fn span_to_offset(span: wast::token::Span, text: &str) -> Result<usize> {
     let (span_line, span_col) = span.linecol_in(text);
     let mut cur = 0;
     // Use split_terminator instead of lines so that if there is a `\r`,
@@ -302,7 +310,7 @@ fn closed_module(module: &str) -> Result<&str> {
     return Ok(&module[0..i]);
 }
 
-fn module_to_js_string(module: &wast::Module, wast: &str) -> Result<String> {
+fn module_to_js_string(module: &wast::core::Module, wast: &str) -> Result<String> {
     let offset = span_to_offset(module.span, wast)?;
     let opened_module = &wast[offset..];
     if !opened_module.starts_with("module") {
@@ -314,9 +322,9 @@ fn module_to_js_string(module: &wast::Module, wast: &str) -> Result<String> {
     )))
 }
 
-fn quote_module_to_js_string(quotes: Vec<&[u8]>) -> Result<String> {
+fn quote_module_to_js_string(quotes: Vec<(wast::token::Span, &[u8])>) -> Result<String> {
     let mut text = String::new();
-    for src in quotes {
+    for (_, src) in quotes {
         text.push_str(str::from_utf8(src)?);
         text.push_str(" ");
     }
@@ -334,7 +342,7 @@ fn invoke_to_js(current_instance: &Option<usize>, i: wast::WastInvoke) -> Result
         "invoke({}, `{}`, {})",
         instanceish,
         escape_template_string(i.name),
-        to_js_value_array(&i.args, |x| expression_to_js_value(x))?
+        to_js_value_array(&i.args, |x| arg_to_js_value(x))?
     ))
 }
 
@@ -345,8 +353,11 @@ fn execute_to_js(
 ) -> Result<String> {
     match exec {
         wast::WastExecute::Invoke(invoke) => invoke_to_js(current_instance, invoke),
-        wast::WastExecute::Module(module) => {
-            let text = module_to_js_string(&module, wast)?;
+        wast::WastExecute::Wat(module) => {
+            let text = match module {
+                wast::Wat::Module(module) => module_to_js_string(&module, wast)?,
+                other => bail!("unsupported {:?} at execute_to_js", other),
+            };
             Ok(format!("instantiate(`{}`)", text))
         }
         wast::WastExecute::Get { module, global } => {
@@ -387,14 +398,14 @@ fn f64_needs_bits(a: f64) -> bool {
     return a.is_nan();
 }
 
-fn f32x4_needs_bits(a: &[wast::Float32; 4]) -> bool {
+fn f32x4_needs_bits(a: &[wast::token::Float32; 4]) -> bool {
     a.iter().any(|x| {
         let as_f32 = f32::from_bits(x.bits);
         f32_needs_bits(as_f32)
     })
 }
 
-fn f64x2_needs_bits(a: &[wast::Float64; 2]) -> bool {
+fn f64x2_needs_bits(a: &[wast::token::Float64; 2]) -> bool {
     a.iter().any(|x| {
         let as_f64 = f64::from_bits(x.bits);
         f64_needs_bits(as_f64)
@@ -425,7 +436,7 @@ fn f64_to_js_value(val: f64) -> String {
     }
 }
 
-fn float32_to_js_value(val: &wast::Float32) -> String {
+fn float32_to_js_value(val: &wast::token::Float32) -> String {
     let as_f32 = f32::from_bits(val.bits);
     if f32_needs_bits(as_f32) {
         format!(
@@ -437,7 +448,7 @@ fn float32_to_js_value(val: &wast::Float32) -> String {
     }
 }
 
-fn float64_to_js_value(val: &wast::Float64) -> String {
+fn float64_to_js_value(val: &wast::token::Float64) -> String {
     let as_f64 = f64::from_bits(val.bits);
     if f64_needs_bits(as_f64) {
         format!(
@@ -449,8 +460,8 @@ fn float64_to_js_value(val: &wast::Float64) -> String {
     }
 }
 
-fn f32_pattern_to_js_value(pattern: &wast::NanPattern<wast::Float32>) -> String {
-    use wast::NanPattern::*;
+fn f32_pattern_to_js_value(pattern: &wast::core::NanPattern<wast::token::Float32>) -> String {
+    use wast::core::NanPattern::*;
     match pattern {
         CanonicalNan => format!("`canonical_nan`"),
         ArithmeticNan => format!("`arithmetic_nan`"),
@@ -458,8 +469,8 @@ fn f32_pattern_to_js_value(pattern: &wast::NanPattern<wast::Float32>) -> String 
     }
 }
 
-fn f64_pattern_to_js_value(pattern: &wast::NanPattern<wast::Float64>) -> String {
-    use wast::NanPattern::*;
+fn f64_pattern_to_js_value(pattern: &wast::core::NanPattern<wast::token::Float64>) -> String {
+    use wast::core::NanPattern::*;
     match pattern {
         CanonicalNan => format!("`canonical_nan`"),
         ArithmeticNan => format!("`arithmetic_nan`"),
@@ -467,25 +478,26 @@ fn f64_pattern_to_js_value(pattern: &wast::NanPattern<wast::Float64>) -> String 
     }
 }
 
-fn assert_expression_to_js_value(v: &wast::AssertExpression<'_>) -> Result<String> {
-    use wast::AssertExpression::*;
+fn assert_expression_to_js_value(v: &wast::WastRet<'_>) -> Result<String> {
+    use wast::core::WastRetCore::*;
+    use wast::WastRet::*;
 
     Ok(match &v {
-        I32(x) => format!("value('i32', {})", x),
-        I64(x) => format!("value('i64', {}n)", x),
-        F32(x) => f32_pattern_to_js_value(x),
-        F64(x) => f64_pattern_to_js_value(x),
-        RefNull(x) => match x {
-            Some(wast::HeapType::Func) => format!("value('anyfunc', null)"),
-            Some(wast::HeapType::Extern) => format!("value('externref', null)"),
+        Core(I32(x)) => format!("value('i32', {})", x),
+        Core(I64(x)) => format!("value('i64', {}n)", x),
+        Core(F32(x)) => f32_pattern_to_js_value(x),
+        Core(F64(x)) => f64_pattern_to_js_value(x),
+        Core(RefNull(x)) => match x {
+            Some(wast::core::HeapType::Func) => format!("value('anyfunc', null)"),
+            Some(wast::core::HeapType::Extern) => format!("value('externref', null)"),
             other => bail!(
                 "couldn't convert ref.null {:?} to a js assertion value",
                 other
             ),
         },
-        RefExtern(x) => format!("value('externref', externref({}))", x),
-        V128(x) => {
-            use wast::V128Pattern::*;
+        Core(RefExtern(x)) => format!("value('externref', externref({}))", x),
+        Core(V128(x)) => {
+            use wast::core::V128Pattern::*;
             match x {
                 I8x16(elements) => format!(
                     "i8x16({})",
@@ -526,19 +538,17 @@ fn assert_expression_to_js_value(v: &wast::AssertExpression<'_>) -> Result<Strin
     })
 }
 
-fn expression_to_js_value(v: &wast::Expression<'_>) -> Result<String> {
-    use wast::Instruction::*;
+fn arg_to_js_value(v: &wast::WastArg<'_>) -> Result<String> {
+    use wast::core::WastArgCore::*;
+    use wast::WastArg::Core;
 
-    if v.instrs.len() != 1 {
-        bail!("too many instructions in {:?}", v);
-    }
-    Ok(match &v.instrs[0] {
-        I32Const(x) => format!("{}", *x),
-        I64Const(x) => format!("{}n", *x),
-        F32Const(x) => float32_to_js_value(x),
-        F64Const(x) => float64_to_js_value(x),
-        V128Const(x) => {
-            use wast::V128Const::*;
+    Ok(match &v {
+        Core(I32(x)) => format!("{}", *x),
+        Core(I64(x)) => format!("{}n", *x),
+        Core(F32(x)) => float32_to_js_value(x),
+        Core(F64(x)) => float64_to_js_value(x),
+        Core(V128(x)) => {
+            use wast::core::V128Const::*;
             match x {
                 I8x16(elements) => format!(
                     "i8x16({})",
@@ -588,8 +598,8 @@ fn expression_to_js_value(v: &wast::Expression<'_>) -> Result<String> {
                 }
             }
         }
-        RefNull(_) => format!("null"),
-        RefExtern(x) => format!("externref({})", x),
+        Core(RefNull(_)) => format!("null"),
+        Core(RefExtern(x)) => format!("externref({})", x),
         other => bail!("couldn't convert {:?} to a js value", other),
     })
 }
