@@ -1273,7 +1273,7 @@ bool Instance::initElems(uint32_t tableIndex, const ElemSegment& seg,
 
   // Because `numBytesToCopy` is an in-range `CheckedUint32`, the cast to
   // `size_t` is safe even on a 32-bit target.
-  memcpy(arrayObj->addressOfElementZero(), &seg->bytes[segByteOffset],
+  memcpy(arrayObj->data(), &seg->bytes[segByteOffset],
          size_t(numBytesToCopy.value()));
 
   return arrayObj;
@@ -1348,7 +1348,7 @@ bool Instance::initElems(uint32_t tableIndex, const ElemSegment& seg,
 
   // Do the initialisation, converting function indices into code pointers as
   // we go.
-  void** dst = (void**)arrayObj->addressOfElementZero();
+  void** dst = (void**)arrayObj->data();
   const uint32_t* src = &seg->elemFuncIndices[segElemIndex];
   for (uint32_t i = 0; i < numElements; i++) {
     uint32_t funcIndex = src[i];
@@ -1408,7 +1408,7 @@ bool Instance::initElems(uint32_t tableIndex, const ElemSegment& seg,
 
   // If WasmArrayObject::numElements() is changed to return 64 bits, the
   // following checking logic will be incorrect.
-  STATIC_ASSERT_NUMELEMENTS_IS_U32;
+  STATIC_ASSERT_WASMARRAYELEMENTS_NUMELEMENTS_IS_U32;
 
   // "traps if destination + length > len(array1)"
   uint64_t dstNumElements = uint64_t(dstArrayObj->numElements());
@@ -1437,8 +1437,8 @@ bool Instance::initElems(uint32_t tableIndex, const ElemSegment& seg,
 
   // Actually do the copy, taking care to handle cases where the src and dst
   // areas overlap.
-  uint8_t* srcBase = srcArrayObj->addressOfElementZero();
-  uint8_t* dstBase = dstArrayObj->addressOfElementZero();
+  uint8_t* srcBase = srcArrayObj->data();
+  uint8_t* dstBase = dstArrayObj->data();
   srcBase += size_t(srcIndex) * size_t(elementSize);
   dstBase += size_t(dstIndex) * size_t(elementSize);
 
