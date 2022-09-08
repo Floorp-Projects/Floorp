@@ -388,7 +388,6 @@ class FormAutofillSection {
         // Do not change value or dispatch events if the option is already selected.
         // Use case for multiple select is not considered here.
         if (!option.selected) {
-          option.selected = true;
           element.focus({ preventScroll: true });
           // Set the value of the select element so that web event handlers can react accordingly
           element.value = option.value;
