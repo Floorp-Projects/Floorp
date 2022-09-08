@@ -50,6 +50,19 @@ linux64-geckodriver:
         toolchain:
             - linux64-rust-static
 
+linux64-aarch64-geckodriver:
+    treeherder:
+        symbol: TL(gd)
+        platform: linux64-aarch64/opt
+    run:
+        arguments: ['aarch64-unknown-linux-musl']
+    attributes:
+        build_platform: linux64-aarch64-geckodriver
+    fetches:
+        toolchain:
+            - linux64-clang-toolchain
+            - linux64-rust-static
+
 macosx64-geckodriver:
     treeherder:
         symbol: TM(gd)
