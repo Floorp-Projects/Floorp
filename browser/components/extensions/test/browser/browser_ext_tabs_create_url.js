@@ -3,8 +3,11 @@
 "use strict";
 
 async function runWithDisabledPrivateBrowsing(callback) {
-  const { EnterprisePolicyTesting, PoliciesPrefTracker } = ChromeUtils.import(
-    "resource://testing-common/EnterprisePolicyTesting.jsm"
+  const {
+    EnterprisePolicyTesting,
+    PoliciesPrefTracker,
+  } = ChromeUtils.importESModule(
+    "resource://testing-common/EnterprisePolicyTesting.sys.mjs"
   );
 
   PoliciesPrefTracker.start();

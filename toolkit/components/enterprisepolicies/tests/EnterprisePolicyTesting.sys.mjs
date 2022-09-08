@@ -102,8 +102,8 @@ export var PoliciesPrefTracker = {
   _originalValues: new Map(),
 
   start() {
-    let { PoliciesUtils } = ChromeUtils.import(
-      "resource:///modules/policies/Policies.jsm"
+    let { PoliciesUtils } = ChromeUtils.importESModule(
+      "resource:///modules/policies/Policies.sys.mjs"
     );
     this._originalFunc = PoliciesUtils.setDefaultPref;
     PoliciesUtils.setDefaultPref = this.hoistedSetDefaultPref.bind(this);
@@ -112,8 +112,8 @@ export var PoliciesPrefTracker = {
   stop() {
     this.restoreDefaultValues();
 
-    let { PoliciesUtils } = ChromeUtils.import(
-      "resource:///modules/policies/Policies.jsm"
+    let { PoliciesUtils } = ChromeUtils.importESModule(
+      "resource:///modules/policies/Policies.sys.mjs"
     );
     PoliciesUtils.setDefaultPref = this._originalFunc;
     this._originalFunc = null;
