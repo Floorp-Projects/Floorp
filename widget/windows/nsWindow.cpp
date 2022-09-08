@@ -262,7 +262,7 @@ using namespace mozilla::plugins;
 static const wchar_t kUser32LibName[] = L"user32.dll";
 
 uint32_t nsWindow::sInstanceCount = 0;
-BOOL nsWindow::sIsOleInitialized = FALSE;
+bool nsWindow::sIsOleInitialized = false;
 nsIWidget::Cursor nsWindow::sCurrentCursor = {};
 nsWindow* nsWindow::sCurrentWindow = nullptr;
 bool nsWindow::sJustGotDeactivate = false;
@@ -612,22 +612,24 @@ class InitializeVirtualDesktopManagerTask : public Task {
   }
 };
 
-static BOOL GetMouseVanishSystemPref(bool aShouldUpdate) {
-  static bool sInitialized = false;
-  static BOOL sMouseVanishSystemPref = FALSE;
+static bool GetMouseVanishSystemPref(bool aShouldUpdate) {
+  static Maybe<bool> sCachedMouseVanishSystemPref;
 
-  if (!sInitialized || aShouldUpdate) {
-    BOOL ok = ::SystemParametersInfo(SPI_GETMOUSEVANISH, 0,
-                                     &sMouseVanishSystemPref, 0);
-    if (!ok) {
-      // Getting system pref failed so just use user pref.
-      sMouseVanishSystemPref =
-          StaticPrefs::widget_windows_hide_cursor_when_typing();
-    }
-    sInitialized = true;
+  if (aShouldUpdate) {
+    sCachedMouseVanishSystemPref.reset();
   }
 
-  return sMouseVanishSystemPref;
+  if (sCachedMouseVanishSystemPref.isNothing()) {
+    BOOL mouseVanishSystemPref;
+    BOOL ok = ::SystemParametersInfo(SPI_GETMOUSEVANISH, 0,
+                                     &mouseVanishSystemPref, 0);
+    // If getting system pref failed, just use user pref.
+    sCachedMouseVanishSystemPref.emplace(
+        ok ? mouseVanishSystemPref
+           : StaticPrefs::widget_windows_hide_cursor_when_typing());
+  }
+
+  return *sCachedMouseVanishSystemPref;
 }
 
 static bool IsMouseVanishKey(WPARAM aVirtKey) {
@@ -761,7 +763,7 @@ nsWindow::nsWindow(bool aIsChildWindow)
     mozilla::TIPMessageHandler::Initialize();
 #endif  // defined(ACCESSIBILITY)
     if (SUCCEEDED(::OleInitialize(nullptr))) {
-      sIsOleInitialized = TRUE;
+      sIsOleInitialized = true;
     }
     NS_ASSERTION(sIsOleInitialized, "***** OLE is not initialized!\n");
     MouseScrollHandler::Initialize();
@@ -804,7 +806,7 @@ nsWindow::~nsWindow() {
     if (sIsOleInitialized) {
       ::OleFlushClipboard();
       ::OleUninitialize();
-      sIsOleInitialized = FALSE;
+      sIsOleInitialized = false;
     }
   }
 
@@ -5173,33 +5175,33 @@ bool nsWindow::ProcessMessageInternal(UINT msg, WPARAM& wParam, LPARAM& lParam,
   // sure that this behavior is consistent. Otherwise, if the user changed the
   // preference before having ever lowered the window, the preference would take
   // effect immediately.
-  static bool sSwitchKeyboardLayout =
+  static const bool sSwitchKeyboardLayout =
       Preferences::GetBool("intl.keyboard.per_window_layout", false);
-  static TriStateBool sCanQuit = TRI_UNKNOWN;
+  static Maybe<bool> sCanQuit;
 
   // (Large blocks of code should be broken out into OnEvent handlers.)
   switch (msg) {
     // WM_QUERYENDSESSION must be handled by all windows.
     // Otherwise Windows thinks the window can just be killed at will.
     case WM_QUERYENDSESSION:
-      if (sCanQuit == TRI_UNKNOWN) {
+      if (sCanQuit.isNothing()) {
         // Ask if it's ok to quit, and store the answer until we
         // get WM_ENDSESSION signaling the round is complete.
         nsCOMPtr<nsIObserverService> obsServ =
             mozilla::services::GetObserverService();
-        nsCOMPtr<nsISupportsPRBool> cancelQuit =
+        nsCOMPtr<nsISupportsPRBool> cancelQuitWrapper =
             do_CreateInstance(NS_SUPPORTS_PRBOOL_CONTRACTID);
-        cancelQuit->SetData(false);
+        cancelQuitWrapper->SetData(false);
 
         const char16_t* quitType = GetQuitType();
-        obsServ->NotifyObservers(cancelQuit, "quit-application-requested",
-                                 quitType);
+        obsServ->NotifyObservers(cancelQuitWrapper,
+                                 "quit-application-requested", quitType);
 
-        bool abortQuit;
-        cancelQuit->GetData(&abortQuit);
-        sCanQuit = abortQuit ? TRI_FALSE : TRI_TRUE;
+        bool shouldCancelQuit;
+        cancelQuitWrapper->GetData(&shouldCancelQuit);
+        sCanQuit.emplace(!shouldCancelQuit);
       }
-      *aRetValue = sCanQuit ? TRUE : FALSE;
+      *aRetValue = *sCanQuit;
       result = true;
       break;
 
@@ -5214,7 +5216,9 @@ bool nsWindow::ProcessMessageInternal(UINT msg, WPARAM& wParam, LPARAM& lParam,
 
     case WM_ENDSESSION:
     case MOZ_WM_APP_QUIT:
-      if (msg == MOZ_WM_APP_QUIT || (wParam == TRUE && sCanQuit == TRI_TRUE)) {
+      // For WM_ENDSESSION, wParam indicates whether the session is being ended
+      // (TRUE) or not (FALSE)
+      if (msg == MOZ_WM_APP_QUIT || (wParam && sCanQuit.valueOr(false))) {
         // Let's fake a shutdown sequence without actually closing windows etc.
         // to avoid Windows killing us in the middle. A proper shutdown would
         // require having a chance to pump some messages. Unfortunately
@@ -5246,7 +5250,7 @@ bool nsWindow::ProcessMessageInternal(UINT msg, WPARAM& wParam, LPARAM& lParam,
 
         AppShutdown::DoImmediateExit();
       }
-      sCanQuit = TRI_UNKNOWN;
+      sCanQuit.reset();
       result = true;
       break;
 
@@ -7614,35 +7618,33 @@ void nsWindow::WindowUsesOMTC() {
 
 // See bug 603793
 bool nsWindow::HasBogusPopupsDropShadowOnMultiMonitor() {
-  static TriStateBool sHasBogusPopupsDropShadowOnMultiMonitor = TRI_UNKNOWN;
-  if (sHasBogusPopupsDropShadowOnMultiMonitor == TRI_UNKNOWN) {
+  static const bool sHasBogusPopupsDropShadowOnMultiMonitor = [] {
     // Since any change in the preferences requires a restart, this can be
     // done just once.
     // Check for Direct2D first.
-    sHasBogusPopupsDropShadowOnMultiMonitor =
-        gfxWindowsPlatform::GetPlatform()->IsDirect2DBackend() ? TRI_TRUE
-                                                               : TRI_FALSE;
-    if (!sHasBogusPopupsDropShadowOnMultiMonitor) {
-      // Otherwise check if Direct3D 9 may be used.
-      if (gfxConfig::IsEnabled(gfx::Feature::HW_COMPOSITING) &&
-          !gfxConfig::IsEnabled(gfx::Feature::OPENGL_COMPOSITING)) {
-        nsCOMPtr<nsIGfxInfo> gfxInfo = components::GfxInfo::Service();
-        if (gfxInfo) {
-          int32_t status;
-          nsCString discardFailureId;
-          if (NS_SUCCEEDED(gfxInfo->GetFeatureStatus(
-                  nsIGfxInfo::FEATURE_DIRECT3D_9_LAYERS, discardFailureId,
-                  &status))) {
-            if (status == nsIGfxInfo::FEATURE_STATUS_OK ||
-                gfxConfig::IsForcedOnByUser(gfx::Feature::HW_COMPOSITING)) {
-              sHasBogusPopupsDropShadowOnMultiMonitor = TRI_TRUE;
-            }
+    if (gfxWindowsPlatform::GetPlatform()->IsDirect2DBackend()) {
+      return true;
+    }
+    // Otherwise check if Direct3D 9 may be used.
+    if (gfxConfig::IsEnabled(gfx::Feature::HW_COMPOSITING) &&
+        !gfxConfig::IsEnabled(gfx::Feature::OPENGL_COMPOSITING)) {
+      nsCOMPtr<nsIGfxInfo> gfxInfo = components::GfxInfo::Service();
+      if (gfxInfo) {
+        int32_t status;
+        nsCString discardFailureId;
+        if (NS_SUCCEEDED(
+                gfxInfo->GetFeatureStatus(nsIGfxInfo::FEATURE_DIRECT3D_9_LAYERS,
+                                          discardFailureId, &status))) {
+          if (status == nsIGfxInfo::FEATURE_STATUS_OK ||
+              gfxConfig::IsForcedOnByUser(gfx::Feature::HW_COMPOSITING)) {
+            return true;
           }
         }
       }
     }
-  }
-  return !!sHasBogusPopupsDropShadowOnMultiMonitor;
+    return false;
+  }();
+  return sHasBogusPopupsDropShadowOnMultiMonitor;
 }
 
 void nsWindow::OnDPIChanged(int32_t x, int32_t y, int32_t width,
