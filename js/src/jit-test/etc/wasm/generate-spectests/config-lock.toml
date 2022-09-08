@@ -17,3 +17,7 @@ commit = '76419ef8'
 [[repos]]
 name = 'memory64'
 commit = '8d8f532d'
+
+[[repos]]
+name = 'function-references'
+commit = '888cce93'
