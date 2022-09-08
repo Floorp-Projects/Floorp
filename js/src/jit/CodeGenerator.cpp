@@ -4080,15 +4080,6 @@ void CodeGenerator::visitNewVarEnvironmentObject(
   masm.bind(ool->rejoin());
 }
 
-void CodeGenerator::visitCopyLexicalEnvironmentObject(
-    LCopyLexicalEnvironmentObject* lir) {
-  pushArg(Imm32(lir->mir()->copySlots()));
-  pushArg(ToRegister(lir->env()));
-
-  using Fn = JSObject* (*)(JSContext*, HandleObject, bool);
-  callVM<Fn, jit::CopyLexicalEnvironmentObject>(lir);
-}
-
 void CodeGenerator::visitGuardShape(LGuardShape* guard) {
   Register obj = ToRegister(guard->input());
   Register temp = ToTempRegisterOrInvalid(guard->temp0());
