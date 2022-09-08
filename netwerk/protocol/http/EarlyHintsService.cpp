@@ -84,7 +84,7 @@ void EarlyHintsService::FinalResponse(uint32_t aResponseStatus) {
   // We will collect telemetry mosly once for a document.
   // In case of a reddirect this will be called multiple times.
   CollectTelemetry(Some(aResponseStatus));
-  if (aResponseStatus >= 300) {
+  if (aResponseStatus >= 300 && aResponseStatus < 400) {
     mOngoingEarlyHints->CancelAllOngoingPreloads();
     mCanceled = true;
   }
