@@ -51,9 +51,9 @@ const AWTerminate = {
   ADDRESS_BAR_NAVIGATED: "address-bar-navigated",
 };
 const LIGHT_WEIGHT_THEMES = {
+  AUTOMATIC: "default-theme@mozilla.org",
   DARK: "firefox-compact-dark@mozilla.org",
   LIGHT: "firefox-compact-light@mozilla.org",
-  AUTOMATIC: "default-theme@mozilla.org",
   ALPENGLOW: "firefox-alpenglow@mozilla.org",
   "PLAYMAKER-SOFT": "playmaker-soft-colorway@mozilla.org",
   "PLAYMAKER-BALANCED": "playmaker-balanced-colorway@mozilla.org",
@@ -269,7 +269,10 @@ class AboutWelcomeParent extends JSWindowActorParent {
       case "AWPage:GET_SELECTED_THEME":
         let themes = await lazy.AddonManager.getAddonsByTypes(["theme"]);
         let activeTheme = themes.find(addon => addon.isActive);
-
+        // Store the current theme ID so user can restore their previous theme.
+        if (activeTheme?.id) {
+          LIGHT_WEIGHT_THEMES.AUTOMATIC = activeTheme.id;
+        }
         // convert this to the short form name that the front end code
         // expects
         let themeShortName = Object.keys(LIGHT_WEIGHT_THEMES).find(

@@ -573,6 +573,77 @@ add_task(async function test_AWMultistage_Themes() {
   );
 });
 
+add_task(async function test_AWMultistage_can_restore_theme() {
+  const { XPIProvider } = ChromeUtils.import(
+    "resource://gre/modules/addons/XPIProvider.jsm"
+  );
+  const sandbox = sinon.createSandbox();
+  registerCleanupFunction(() => sandbox.restore());
+
+  const fakeAddons = [];
+  class FakeAddon {
+    constructor({ id = "default-theme@mozilla.org", isActive = false } = {}) {
+      this.id = id;
+      this.isActive = isActive;
+    }
+    enable() {
+      for (let addon of fakeAddons) {
+        addon.isActive = false;
+      }
+      this.isActive = true;
+    }
+  }
+  fakeAddons.push(
+    new FakeAddon({ id: "fake-theme-1@mozilla.org", isActive: true }),
+    new FakeAddon({ id: "fake-theme-2@mozilla.org" })
+  );
+
+  let browser = await openAboutWelcome();
+  let aboutWelcomeActor = await getAboutWelcomeParent(browser);
+
+  sandbox.stub(XPIProvider, "getAddonsByTypes").resolves(fakeAddons);
+  sandbox
+    .stub(XPIProvider, "getAddonByID")
+    .callsFake(id => fakeAddons.find(addon => addon.id === id));
+  sandbox.spy(aboutWelcomeActor, "onContentMessage");
+
+  // Test that the active theme ID is stored in LIGHT_WEIGHT_THEMES
+  await aboutWelcomeActor.receiveMessage({
+    name: "AWPage:GET_SELECTED_THEME",
+  });
+  Assert.equal(
+    await aboutWelcomeActor.onContentMessage.lastCall.returnValue,
+    "automatic",
+    `Should return "automatic" for non-built-in theme`
+  );
+
+  await aboutWelcomeActor.receiveMessage({
+    name: "AWPage:SELECT_THEME",
+    data: "AUTOMATIC",
+  });
+  Assert.equal(
+    XPIProvider.getAddonByID.lastCall.args[0],
+    fakeAddons[0].id,
+    `LIGHT_WEIGHT_THEMES.AUTOMATIC should be ${fakeAddons[0].id}`
+  );
+
+  // Enable a different theme...
+  fakeAddons[1].enable();
+  // And test that AWGetSelectedTheme updates the active theme ID
+  await aboutWelcomeActor.receiveMessage({
+    name: "AWPage:GET_SELECTED_THEME",
+  });
+  await aboutWelcomeActor.receiveMessage({
+    name: "AWPage:SELECT_THEME",
+    data: "AUTOMATIC",
+  });
+  Assert.equal(
+    XPIProvider.getAddonByID.lastCall.args[0],
+    fakeAddons[1].id,
+    `LIGHT_WEIGHT_THEMES.AUTOMATIC should be ${fakeAddons[1].id}`
+  );
+});
+
 add_task(async function test_AWMultistage_Import() {
   // No import screen to test for win7.
   if (win7Content) return;
