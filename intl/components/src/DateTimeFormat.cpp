@@ -373,7 +373,14 @@ ICUResult ToICUSkeleton(const DateTimeFormat::ComponentsBag& aBag,
         MOZ_TRY(PushString(aSkeleton, u"GGGGG"));
         break;
       case DateTimeFormat::Text::Short:
-        MOZ_TRY(PushString(aSkeleton, u"G"));
+        // Use "GGG" instead of "G" to return the same results as other
+        // browsers. This is exploiting the following ICU bug
+        // <https://unicode-org.atlassian.net/browse/ICU-22138>. As soon as that
+        // bug has been fixed, we can change this back to "G".
+        //
+        // In practice the bug only affects "G", so we only apply it for "G"
+        // and not for other symbols like "B" or "z".
+        MOZ_TRY(PushString(aSkeleton, u"GGG"));
         break;
       case DateTimeFormat::Text::Long:
         MOZ_TRY(PushString(aSkeleton, u"GGGG"));
