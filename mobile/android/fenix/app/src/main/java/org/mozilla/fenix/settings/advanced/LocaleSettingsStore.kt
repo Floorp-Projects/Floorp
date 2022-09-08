@@ -60,7 +60,7 @@ private fun localeSettingsStateReducer(
 ): LocaleSettingsState {
     return when (action) {
         is LocaleSettingsAction.Select -> {
-            state.copy(selectedLocale = action.selectedItem)
+            state.copy(selectedLocale = action.selectedItem, searchedLocaleList = state.localeList)
         }
         is LocaleSettingsAction.Search -> {
             val searchedItems = state.localeList.filter {
