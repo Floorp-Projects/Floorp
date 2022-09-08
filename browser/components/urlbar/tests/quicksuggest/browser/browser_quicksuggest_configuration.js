@@ -8,12 +8,12 @@
  */
 
 ChromeUtils.defineESModuleGetters(this, {
+  EnterprisePolicyTesting:
+    "resource://testing-common/EnterprisePolicyTesting.sys.mjs",
   UrlbarQuickSuggest: "resource:///modules/UrlbarQuickSuggest.sys.mjs",
 });
 
 XPCOMUtils.defineLazyModuleGetters(this, {
-  EnterprisePolicyTesting:
-    "resource://testing-common/EnterprisePolicyTesting.jsm",
   sinon: "resource://testing-common/Sinon.jsm",
 });
 
