@@ -2556,10 +2556,10 @@ BrowserGlue.prototype = {
           );
 
           if (
-            !shellService.hasMatchingShortcut(
+            !(await shellService.hasMatchingShortcut(
               winTaskbar.defaultPrivateGroupId,
               true
-            )
+            ))
           ) {
             let appdir = Services.dirsvc.get("GreD", Ci.nsIFile);
             let exe = appdir.clone();
@@ -2571,7 +2571,7 @@ BrowserGlue.prototype = {
             let [desc] = await strings.formatValues([
               "private-browsing-shortcut-text",
             ]);
-            shellService.createShortcut(
+            await shellService.createShortcut(
               exe,
               [],
               desc,
@@ -2583,11 +2583,16 @@ BrowserGlue.prototype = {
               desc + ".lnk",
               appdir
             );
-            Services.prefs.setBoolPref(
-              PREF_PRIVATE_BROWSING_SHORTCUT_CREATED,
-              true
-            );
           }
+          // We always set this as long as no exception has been thrown. This
+          // ensure that it is `true` both if we created one because it didn't
+          // exist, or if it already existed (most likely because it was created
+          // by the installer). This avoids the need to call `hasMatchingShortcut`
+          // again, which necessarily does pointless I/O.
+          Services.prefs.setBoolPref(
+            PREF_PRIVATE_BROWSING_SHORTCUT_CREATED,
+            true
+          );
         },
       },
 
