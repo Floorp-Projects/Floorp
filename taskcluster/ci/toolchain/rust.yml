@@ -179,6 +179,7 @@ linux64-rust-windows-1.63:
             '--target', 'x86_64-unknown-linux-gnu',
             '--target', 'x86_64-pc-windows-msvc',
             '--target', 'i686-pc-windows-msvc',
+            '--target', 'aarch64-pc-windows-msvc',
         ]
         toolchain-alias: linux64-rust-windows
 

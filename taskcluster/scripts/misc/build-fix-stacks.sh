@@ -50,14 +50,13 @@ x86_64-unknown-linux-gnu)
 
     case "$TARGET" in
         i686-pc-windows-msvc)
-            . $GECKO_PATH/taskcluster/scripts/misc/vs-setup32.sh
             export CARGO_TARGET_I686_PC_WINDOWS_MSVC_LINKER=$MOZ_FETCHES_DIR/clang/bin/lld-link
             ;;
         x86_64-pc-windows-msvc)
-            . $GECKO_PATH/taskcluster/scripts/misc/vs-setup.sh
             export CARGO_TARGET_X86_64_PC_WINDOWS_MSVC_LINKER=$MOZ_FETCHES_DIR/clang/bin/lld-link
             ;;
     esac
+    . $GECKO_PATH/taskcluster/scripts/misc/vs-setup.sh
     ;;
 esac
 

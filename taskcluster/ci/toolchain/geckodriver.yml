@@ -109,6 +109,22 @@ win32-geckodriver:
             - linux64-rust-windows
             - win64-vs2017
 
+win64-aarch64-geckodriver:
+    treeherder:
+        symbol: TW64(gd)
+        platform: windows2012-aarch64/opt
+    run:
+        arguments: ['aarch64-pc-windows-msvc']
+        toolchain-artifact: public/build/geckodriver.zip
+    attributes:
+        build_platform: win64-aarch64-geckodriver
+    fetches:
+        toolchain:
+            - linux64-clang-toolchain
+            - linux64-liblowercase
+            - linux64-rust-windows
+            - win64-vs2017
+
 win64-geckodriver:
     treeherder:
         symbol: TW64(gd)
