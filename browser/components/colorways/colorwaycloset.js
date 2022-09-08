@@ -158,7 +158,7 @@ const ColorwayCloset = {
     if (!HomePage.isDefault) {
       let homeState;
       this.el.homepageResetContainer
-        .querySelector(".reset-prompt > button")
+        .querySelector("#homepage-reset-prompt > button")
         .addEventListener("click", () => {
           ColorwaysTelemetry.recordEvent({
             method: "homepage_reset",
@@ -169,7 +169,7 @@ const ColorwayCloset = {
           this.el.homepageResetContainer.classList.add("success");
         });
       this.el.homepageResetContainer
-        .querySelector(".success-prompt > button")
+        .querySelector("#homepage-reset-success > button")
         .addEventListener("click", () => {
           ColorwaysTelemetry.recordEvent({
             method: "homepage_reset_undo",
