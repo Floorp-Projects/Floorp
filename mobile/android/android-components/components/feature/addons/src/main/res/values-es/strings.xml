@@ -3,11 +3,11 @@
     <!-- Description for privacy add-on permission. -->
     <string name="mozac_feature_addons_permissions_privacy_description">Leer y modificar configuración de privacidad</string>
     <!-- Description for all_urls add-on permission. -->
-    <string name="mozac_feature_addons_permissions_all_urls_description">Acceder a tus datos para todos los sitios web</string>
+    <string name="mozac_feature_addons_permissions_all_urls_description">Acceder a tus datos de todos los sitios web</string>
     <!-- Description for giving an add-on access to users's data on one site. %1$s  will be replaced by the DNS host name for which a web extension is requesting access (e.g., www.mozilla.org). -->
     <string name="mozac_feature_addons_permissions_one_site_description">Acceder a tus datos para %1$s</string>
     <!-- Description for giving an add-on access to users's data in multiple sites in the domain %1$s. %1$s will be replaced by the DNS domain for which a web extension is requesting access (e.g., mozilla.org). -->
-    <string name="mozac_feature_addons_permissions_sites_in_domain_description">Acceder a tus datos para sitios en el dominio %1$s</string>
+    <string name="mozac_feature_addons_permissions_sites_in_domain_description">Acceder a tus datos de sitios en el dominio %1$s</string>
     <!-- When an add-on requires access to more than 4 sites, for example the add-on requires access for 5 sites. We will show the first 4 sites in individual entries, as in mozac_feature_addons_permissions_one_site_description,
      then we will show another collapsed entry saying "Access your data on 1 other site". This entry it's for the singular case, when the add-on is only accessing one extra site. -->
     <string name="mozac_feature_addons_permissions_one_extra_site_description" tools:ignore="PluralsCandidate">Acceder a tus datos en 1 sitio más</string>
@@ -31,13 +31,15 @@
     <!-- Description for bookmarks permission. -->
     <string name="mozac_feature_addons_permissions_bookmarks_description">Leer y modificar marcadores</string>
     <!-- Description for browser_setting permission. -->
-    <string name="mozac_feature_addons_permissions_browser_setting_description">Leer y modificar los ajustes del navegador</string>
+    <string name="mozac_feature_addons_permissions_browser_setting_description">Leer y modificar ajustes del navegador</string>
     <!-- Description for browser_data permission. -->
     <string name="mozac_feature_addons_permissions_browser_data_description">Limpiar el historial de navegación reciente, cookies y datos relacionados</string>
     <!-- Description for clipboard_read permission. -->
     <string name="mozac_feature_addons_permissions_clipboard_read_description">Obtener datos del portapapeles</string>
     <!-- Description for clipboard_write permission. -->
     <string name="mozac_feature_addons_permissions_clipboard_write_description">Introducir datos en el portapapeles</string>
+    <!-- Description for declarativeNetRequest permission. -->
+    <string name="mozac_feature_addons_permissions_declarative_net_request_description">Bloquear contenido en cualquier página</string>
     <!-- Description for downloads permission. -->
     <string name="mozac_feature_addons_permissions_downloads_description">Descargar archivos y leer y modificar el historial de descargas del navegador</string>
     <!-- Description for downloads_open permission. -->
@@ -51,13 +53,13 @@
     <!-- Description for management permission. -->
     <string name="mozac_feature_addons_permissions_management_description">Monitorizar el uso de extensiones y administrar temas</string>
     <!-- Description for native_messaging permission. -->
-    <string name="mozac_feature_addons_permissions_native_messaging_description">Intercambiar mensajes con aplicaciones diferentes a esta</string>
+    <string name="mozac_feature_addons_permissions_native_messaging_description">Intercambiar mensajes con otras aplicaciones distintas</string>
     <!-- Description for notifications permission. -->
     <string name="mozac_feature_addons_permissions_notifications_description">Mostrarte notificaciones</string>
     <!-- Description for pkcs11 permission. -->
     <string name="mozac_feature_addons_permissions_pkcs11_description">Proporcionar servicios de autenticación criptográfica</string>
     <!-- Description for proxy permission. -->
-    <string name="mozac_feature_addons_permissions_proxy_description">Controlar configuración proxy del navegador</string>
+    <string name="mozac_feature_addons_permissions_proxy_description">Controlar la configuración proxy del navegador</string>
     <!-- Description for sessions permission. -->
     <string name="mozac_feature_addons_permissions_sessions_description">Acceder a las pestañas cerradas recientemente</string>
     <!-- Description for tab_hide permission. -->
@@ -95,7 +97,7 @@
     <!-- This is displayed in a page where the user can see the installed and recommended(not installed yet) add-ons, this string indicates the installed section. -->
     <string name="mozac_feature_addons_installed_section">Instalado</string>
     <!-- This is displayed in a page where the user can see the installed and recommended(not installed yet) add-ons, this string indicates the recommended section. -->
-    <string name="mozac_feature_addons_recommended_section">Recomendados</string>
+    <string name="mozac_feature_addons_recommended_section">Recomendado</string>
     <!-- This is displayed in a page where the user can see the installed and recommended(not installed yet) add-ons, this string indicates the not yet supported section. -->
     <string name="mozac_feature_addons_unsupported_section">Todavía no es compatible</string>
     <!-- This is displayed in a page where the user can see the installed and recommended(not installed yet) add-ons, this string indicates the not yet available section. -->
@@ -121,9 +123,9 @@
     <!-- This is the label of a button to cancel an ongoing add-on installation. -->
     <string name="mozac_feature_addons_install_addon_dialog_cancel">Cancelar</string>
     <!-- Indicates how many users have rated an add-on. %1$s will be replaced with number of reviews -->
-    <string name="mozac_feature_addons_user_rating_count_2">Reseñas: %1$s</string>
+    <string name="mozac_feature_addons_user_rating_count_2">Revisiones: %1$s</string>
     <!-- Accessibility content description for the amount of stars that add-on has, where %1$.02f will be the amount of stars and / separator and 5 the maximum number of stars e.g (2/5, 4.5/5 or 5/5)  . -->
-    <string name="mozac_feature_addons_rating_content_description">%1$.02f / 5</string>
+    <string name="mozac_feature_addons_rating_content_description">%1$.02f/5</string>
     <!-- This is the title of page where all the add-ons are listed-->
     <string name="mozac_feature_addons_addons">Complementos</string>
     <!-- Label for add-ons sub menu item for add-ons manager-->
@@ -161,7 +163,7 @@
     <!-- Error shown when something unexpected happened while trying to get the add-on list from the server -->
     <string name="mozac_feature_addons_failed_to_query_add_ons">¡Error al solicitar complementos!</string>
     <!-- Error shown when unable to find a translation for an add-on field. %1$s is the locale of the user and %2$s is the default language of the add-on -->
-    <string name="mozac_feature_addons_failed_to_translate">No se encontró la traducción para la localización %1$s ni para el idioma predeterminado %2$s</string>
+    <string name="mozac_feature_addons_failed_to_translate">No se ha encontrado la traducción para la localización %1$s ni para el idioma predeterminado %2$s</string>
     <!-- Text shown after successfully installed an add-on. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_successfully_installed">%1$s instalado correctamente</string>
     <!-- Text shown after failed to install an add-on. %1$s is the add-on name. -->
@@ -205,7 +207,7 @@
     <!-- Text shown in the dialog when add-on installation is completed. %1$s is the add-on name. %2$s is the app name. -->
     <string name="mozac_feature_addons_installed_dialog_title">%1$s ha sido añadido a %2$s</string>
     <!-- Text shown in the dialog when add-on installation is completed. %1$s is the add-on name. -->
-    <string name="mozac_feature_addons_installed_dialog_description">Abrirlo en el menú</string>
+    <string name="mozac_feature_addons_installed_dialog_description">Ábrelo en el menú</string>
     <!-- Confirmation button text for the dialog when add-on installation is completed. -->
-    <string name="mozac_feature_addons_installed_dialog_okay_button">Listo, entendido</string>
+    <string name="mozac_feature_addons_installed_dialog_okay_button">Vale, entendido</string>
 </resources>

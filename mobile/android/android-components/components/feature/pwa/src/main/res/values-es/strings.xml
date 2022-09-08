@@ -6,9 +6,9 @@
     <!-- Name of the "notification channel" used for displaying site controls notification. See https://developer.android.com/training/notify-user/channels -->
     <string name="mozac_feature_pwa_site_controls_notification_channel">Controles del sitio a pantalla completa</string>
     <!-- Text shown on the second row of the site controls notification. -->
-    <string name="mozac_feature_pwa_site_controls_notification_text">Toca para copiar la URL de esta aplicación</string>
+    <string name="mozac_feature_pwa_site_controls_notification_text">Toca para copiar la URL de esta aplicación.</string>
     <!-- Refresh button in site controls notification. -->
-    <string name="mozac_feature_pwa_site_controls_refresh">Actualizar</string>
+    <string name="mozac_feature_pwa_site_controls_refresh">Refrescar</string>
     <!-- Toast displayed when the website URL is copied. -->
     <string name="mozac_feature_pwa_copy_success">URL copiada.</string>
 </resources>

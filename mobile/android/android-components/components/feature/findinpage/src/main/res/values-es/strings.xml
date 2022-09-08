@@ -13,7 +13,7 @@
     <string name="mozac_feature_findindpage_accessibility_result" tools:ignore="PluralsCandidate">%1$d de %2$d</string>
 
     <!-- String to be read by the accessibility service when focusing the next result button. -->
-    <string name="mozac_feature_findindpage_next_result">Buscar próximo resultado</string>
+    <string name="mozac_feature_findindpage_next_result">Buscar resultado siguiente</string>
 
     <!-- String to be read by the accessibility service when focusing the previous result button. -->
     <string name="mozac_feature_findindpage_previous_result">Buscar resultado anterior</string>

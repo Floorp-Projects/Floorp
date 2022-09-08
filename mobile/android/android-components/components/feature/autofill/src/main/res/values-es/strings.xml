@@ -16,7 +16,7 @@
 
     <!-- Autofill: Title of a dialog asking the user to confirm before autofilling credentials into
     a third-party app after the authenticity verification failed. -->
-    <string name="mozac_feature_autofill_confirmation_title">Falló la verificación</string>
+    <string name="mozac_feature_autofill_confirmation_title">Ha fallado la verificación</string>
 
     <!-- Autofill: Text shown in dialog asking the user to confirm before autofilling credentials into a
     third-party app where we could not verify the authenticity (e.g. we determined that this app is
@@ -24,7 +24,7 @@
     Links" this application is not the official Twitter application for twitter.com credentials.
     %1$s will be replaced with the name of the browser application (e.g. Firefox).
     -->
-    <string name="mozac_feature_autofill_confirmation_authenticity">%1$s no pudo verificar la autenticidad de la aplicación. ¿Deseas continuar autocompletando las credenciales seleccionadas?</string>
+    <string name="mozac_feature_autofill_confirmation_authenticity">%1$s no ha podido verificar la autenticidad de la aplicación. ¿Quieres continuar autocompletando las credenciales seleccionadas?</string>
 
     <!-- Autofill: Positive button shown in dialog asking the user to confirm before autofilling
     credentials in a third-part app (Also see string mozac_feature_autofill_confirmation_authenticity). -->
@@ -37,7 +37,7 @@
     <!-- Autofill: When showing a list of logins to autofill in a third-party app, then this is the
     last item in the list. When clicking it a new screen opens which allows the user to search for
     a specific login. %1$s will be replaced with the name of the application (e.g. "Firefox") -->
-    <string name="mozac_feature_autofill_search_suggestions">Buscar en %1$s</string>
+    <string name="mozac_feature_autofill_search_suggestions">Buscar %1$s</string>
 
     <!-- Autofill: Hint shown in the text field used to search specific logins. Shown when the field
      is empty and the user has not entered any text into it yet. -->

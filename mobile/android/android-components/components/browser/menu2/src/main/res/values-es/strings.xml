@@ -3,5 +3,5 @@
     <!-- Content description (not visible, for screen readers etc.): Description for the overflow menu button in the browser toolbar. -->
     <string name="mozac_browser_menu2_button">Menú</string>
     <!-- Content description (not visible, for screen readers etc.): Indicates the overflow menu has a highlight -->
-    <string name="mozac_browser_menu2_highlighted">Destacado</string>
+    <string name="mozac_browser_menu2_highlighted">Resaltado</string>
 </resources>
