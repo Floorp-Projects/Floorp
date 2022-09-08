@@ -26,10 +26,10 @@ function onunload() {
       if(boxs[i].value == ""){
         
       }
-      else if(!boxs[i].value.match(/https:\/\// || !boxs[i].value.match(/http:\/\//)) && !boxs[i].value == ""){
+      else if(!boxs[i].value.match(/https?:\/\//)){
         boxs[i].value = "https://" + boxs[i].value;
-     }
-     var num = i + 1;
-     Services.prefs.setStringPref("floorp.browser.sidebar2.customurl" + num, boxs[i].value);
+      }
+      var num = i + 1;
+      Services.prefs.setStringPref("floorp.browser.sidebar2.customurl" + num, boxs[i].value);
     }
 }
