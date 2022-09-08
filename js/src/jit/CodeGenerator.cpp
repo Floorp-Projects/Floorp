@@ -4031,11 +4031,12 @@ void CodeGenerator::visitNewClassBodyEnvironmentObject(
 
 void CodeGenerator::visitNewVarEnvironmentObject(
     LNewVarEnvironmentObject* lir) {
+  pushArg(Imm32(gc::DefaultHeap));
   pushArg(ToRegister(lir->enclosing()));
   pushArg(ImmGCPtr(lir->mir()->scope()));
 
-  using Fn =
-      VarEnvironmentObject* (*)(JSContext*, Handle<Scope*>, HandleObject);
+  using Fn = VarEnvironmentObject* (*)(JSContext*, Handle<Scope*>, HandleObject,
+                                       gc::InitialHeap);
   callVM<Fn, VarEnvironmentObject::create>(lir);
 }
 

@@ -157,6 +157,18 @@ void WarpBindGName::dumpData(GenericPrinter& out) const {
   out.printf("    globalEnv: 0x%p\n", globalEnv());
 }
 
+void WarpVarEnvironment::dumpData(GenericPrinter& out) const {
+  out.printf("    template: 0x%p\n", templateObj());
+}
+
+void WarpLexicalEnvironment::dumpData(GenericPrinter& out) const {
+  out.printf("    template: 0x%p\n", templateObj());
+}
+
+void WarpClassBodyEnvironment::dumpData(GenericPrinter& out) const {
+  out.printf("    template: 0x%p\n", templateObj());
+}
+
 void WarpBailout::dumpData(GenericPrinter& out) const {
   // No fields.
 }
@@ -281,6 +293,18 @@ void WarpRest::traceData(JSTracer* trc) {
 
 void WarpBindGName::traceData(JSTracer* trc) {
   TraceWarpGCPtr(trc, globalEnv_, "warp-bindgname-globalenv");
+}
+
+void WarpVarEnvironment::traceData(JSTracer* trc) {
+  TraceWarpGCPtr(trc, templateObj_, "warp-varenv-template");
+}
+
+void WarpLexicalEnvironment::traceData(JSTracer* trc) {
+  TraceWarpGCPtr(trc, templateObj_, "warp-lexenv-template");
+}
+
+void WarpClassBodyEnvironment::traceData(JSTracer* trc) {
+  TraceWarpGCPtr(trc, templateObj_, "warp-classbodyenv-template");
 }
 
 void WarpBailout::traceData(JSTracer* trc) {
