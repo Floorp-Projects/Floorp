@@ -66,7 +66,7 @@ const SETTING_USER_SET = null;
 const SETTING_PRECEDENCE_ORDER = undefined;
 
 const JSON_FILE_NAME = "extension-settings.json";
-const JSON_FILE_VERSION = 2;
+const JSON_FILE_VERSION = 3;
 const STORE_PATH = PathUtils.join(
   Services.dirsvc.get("ProfD", Ci.nsIFile).path,
   JSON_FILE_NAME
@@ -81,6 +81,9 @@ function dataPostProcessor(json) {
     for (let storeType in json) {
       for (let setting in json[storeType]) {
         for (let extData of json[storeType][setting].precedenceList) {
+          if (setting == "overrideContentColorScheme" && extData.value > 2) {
+            extData.value = 2;
+          }
           if (typeof extData.installDate != "number") {
             extData.installDate = new Date(extData.installDate).valueOf();
           }

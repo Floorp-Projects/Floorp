@@ -8130,11 +8130,12 @@
   rust: true
 
 # An override for prefers-color-scheme for content documents.
-#
-# Dark (0), light (1), system (2) or browser (3).
+#   0: Dark
+#   1: Light
+#   2: Auto (system color scheme unless overridden by browser theme)
 - name: layout.css.prefers-color-scheme.content-override
   type: RelaxedAtomicInt32
-  value: 3
+  value: 2
   mirror: always
 
 # Dictates whether or not the forced-colors media query is enabled.

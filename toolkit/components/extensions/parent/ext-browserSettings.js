@@ -289,10 +289,8 @@ ExtensionPreferencesManager.addSetting("overrideContentColorScheme", {
         return "dark";
       case 1:
         return "light";
-      case 2:
-        return "system";
       default:
-        return "browser";
+        return "auto";
     }
   },
 });
@@ -517,12 +515,20 @@ this.browserSettings = class extends ExtensionAPI {
           makeSettingsAPI("overrideContentColorScheme"),
           {
             set: details => {
-              let prefValue = ["dark", "light", "system", "browser"].indexOf(
-                details.value
-              );
+              let value = details.value;
+              if (value == "system" || value == "browser") {
+                // Map previous values that used to be different but were
+                // unified under the "auto" setting. In practice this should
+                // almost always behave like the extension author expects.
+                extension.logger.warn(
+                  `The "${value}" value for overrideContentColorScheme has been deprecated. Use "auto" instead`
+                );
+                value = "auto";
+              }
+              let prefValue = ["dark", "light", "auto"].indexOf(value);
               if (prefValue === -1) {
                 throw new ExtensionError(
-                  `${details.value} is not a valid value for overrideContentColorScheme.`
+                  `${value} is not a valid value for overrideContentColorScheme.`
                 );
               }
               return ExtensionPreferencesManager.setSetting(
