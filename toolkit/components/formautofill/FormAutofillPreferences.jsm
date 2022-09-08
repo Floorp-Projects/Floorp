@@ -105,7 +105,21 @@ FormAutofillPreferences.prototype = {
     formAutofillGroupBoxLabel.appendChild(formAutofillGroupBoxLabelHeading);
     formAutofillFragment.appendChild(formAutofillGroupBoxLabel);
     formAutofillFragment.appendChild(formAutofillGroup);
-    if (FormAutofill.isAutofillAddressesAvailable) {
+
+    let showAddressUI = FormAutofill.isAutofillAddressesAvailable;
+    let showCreditCardUI =
+      FormAutofill.isAutofillCreditCardsAvailable &&
+      !FormAutofill.isAutofillCreditCardsHideUI;
+
+    if (!showAddressUI && !showCreditCardUI) {
+      return;
+    }
+
+    formAutofillGroupBoxLabelHeading.textContent = this.bundle.GetStringFromName(
+      "autofillHeader"
+    );
+
+    if (showAddressUI) {
       let savedAddressesBtnWrapper = document.createXULElement("hbox");
       let addressAutofill = document.createXULElement("hbox");
       let addressAutofillCheckboxGroup = document.createXULElement("hbox");
@@ -123,10 +137,6 @@ FormAutofillPreferences.prototype = {
       formAutofillGroup.id = "formAutofillGroup";
       addressAutofill.id = "addressAutofill";
       addressAutofillLearnMore.id = "addressAutofillLearnMore";
-
-      formAutofillGroupBoxLabelHeading.textContent = this.bundle.GetStringFromName(
-        "autofillHeader"
-      );
 
       addressAutofill.setAttribute("data-subcategory", "address-autofill");
       addressAutofillCheckbox.setAttribute(
@@ -172,10 +182,7 @@ FormAutofillPreferences.prototype = {
       this.refs.savedAddressesBtn = savedAddressesBtn;
     }
 
-    if (
-      FormAutofill.isAutofillCreditCardsAvailable &&
-      !FormAutofill.isAutofillCreditCardsHideUI
-    ) {
+    if (showCreditCardUI) {
       let savedCreditCardsBtnWrapper = document.createXULElement("hbox");
       let creditCardAutofill = document.createXULElement("hbox");
       let creditCardAutofillCheckboxGroup = document.createXULElement("hbox");
