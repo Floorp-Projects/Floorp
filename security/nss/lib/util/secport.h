@@ -13,7 +13,7 @@
 #include "prlink.h"
 
 /*
- * define XP_WIN, XP_BEOS, or XP_UNIX, in case they are not defined
+ * define XP_WIN, or XP_UNIX, in case they are not defined
  * by anyone else
  */
 #ifdef _WINDOWS
@@ -24,12 +24,6 @@
 #ifndef XP_WIN32
 #define XP_WIN32
 #endif
-#endif
-#endif
-
-#ifdef __BEOS__
-#ifndef XP_BEOS
-#define XP_BEOS
 #endif
 #endif
 

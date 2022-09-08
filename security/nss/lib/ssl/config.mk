@@ -44,10 +44,6 @@ EXTRA_SHARED_LIBS += \
 	-lnspr4 \
 	$(NULL)
 
-ifeq ($(OS_ARCH), BeOS)
-EXTRA_SHARED_LIBS += -lbe
-endif
-
 endif
 
 ifdef NSS_DISABLE_TLS_1_3

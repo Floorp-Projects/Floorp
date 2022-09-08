@@ -3890,7 +3890,7 @@ loser:
     return SECFailure;
 }
 
-#if defined(XP_UNIX) || defined(XP_WIN32) || defined(XP_BEOS)
+#if defined(XP_UNIX) || defined(XP_WIN32)
 #define NSS_HAVE_GETENV 1
 #endif
 

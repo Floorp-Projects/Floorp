@@ -22,7 +22,7 @@
 #define CONVERT_TO_WORDS
 #endif
 
-#if defined(AIX) || defined(OSF1) || defined(NSS_BEVAND_ARCFOUR)
+#if defined(AIX) || defined(NSS_BEVAND_ARCFOUR)
 /* Treat array variables as words, not bytes, on CPUs that take
  * much longer to write bytes than to write words, or when using
  * assembler code that required it.

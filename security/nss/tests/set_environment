@@ -92,18 +92,6 @@ then
      fi
     export XAPPLRESDIR  OPENWINHOME LD_LIBRARY_PATH
 
-elif [ "$os_name" = "IRIX" ]
-then
-    PATH=$PATH:/tools/ns/bin:/usr/local/bin:/etc:/usr/bsd
-    MANPATH=/tools/ns/man:/usr/local/man
-    JAVA_HOME="/share/builds/components/jdk/1.2.2/IRIX"
-    JAVA_HOME14=$JAVA_HOME
-elif [ "$os_name" = "IRIX64" ]
-then
-    PATH=$PATH:/tools/ns/bin:/usr/local/bin:/etc:/usr/bsd
-    MANPATH=/tools/ns/man:/usr/local/man
-    JAVA_HOME="/share/builds/components/jdk/1.2.2/IRIX"
-    JAVA_HOME14=$JAVA_HOME
 elif [ "$os_name" = "Linux" ]
 then
     PATH=/lib:/usr/lib:/bin:/sbin:/usr/bin:/usr/sbin:$PATH
@@ -121,19 +109,6 @@ then
     export TERM
     JAVA_HOME="/share/builds/components/cms_jdk/AIX/1.3.0"
     JAVA_HOME14=$JAVA_HOME
-elif [ "$os_name" = "OSF1" ]
-then
-    PATH=$PATH:/usr/local/bin
-    JAVA_HOME="/share/builds/components/jdk/1.2.2/OSF1"
-    JAVA_HOME14=$JAVA_HOME
-fi
-
-if [ "$os_name" = "IRIX" ]
-then
-    PATH=/tools/ns-arch/soft/perl-5.004_04/run/default/mips_sgi_irix5.3/bin:$PATH
-elif [ "$os_name" = "IRIX64" ]
-then
-    PATH=/tools/ns-arch/soft/perl-5.004_04/run/default/mips_sgi_irix5.3/bin:$PATH
 fi
 
 O_CYGNUS=OFF

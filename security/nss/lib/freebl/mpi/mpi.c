@@ -9,9 +9,6 @@
 
 #include "mpi-priv.h"
 #include "mplogic.h"
-#if defined(OSF1)
-#include <c_asm.h>
-#endif
 
 #if defined(__arm__) && \
     ((defined(__thumb__) && !defined(__thumb2__)) || defined(__ARM_ARCH_3__))
@@ -3930,12 +3927,6 @@ s_mp_mul(mp_int *a, const mp_int *b)
         Plo = (mp_digit)product;                                \
         Phi = (mp_digit)(product >> MP_DIGIT_BIT);              \
     }
-#elif defined(OSF1)
-#define MP_MUL_DxD(a, b, Phi, Plo)              \
-    {                                           \
-        Plo = asm("mulq %a0, %a1, %v0", a, b);  \
-        Phi = asm("umulh %a0, %a1, %v0", a, b); \
-    }
 #else
 #define MP_MUL_DxD(a, b, Phi, Plo)                                 \
     {                                                              \
@@ -4080,12 +4071,6 @@ s_mpv_mul_d_add_prop(const mp_digit *a, mp_size a_len, mp_digit b, mp_digit *c)
         unsigned long long square = (unsigned long long)a * a; \
         Plo = (mp_digit)square;                                \
         Phi = (mp_digit)(square >> MP_DIGIT_BIT);              \
-    }
-#elif defined(OSF1)
-#define MP_SQR_D(a, Phi, Plo)                \
-    {                                        \
-        Plo = asm("mulq  %a0, %a0, %v0", a); \
-        Phi = asm("umulh %a0, %a0, %v0", a); \
     }
 #else
 #define MP_SQR_D(a, Phi, Plo)                                      \
