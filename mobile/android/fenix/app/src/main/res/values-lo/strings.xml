@@ -39,7 +39,7 @@
 
     <!-- Home - Recently saved bookmarks -->
     <!-- Title for the home screen section with recently saved bookmarks. -->
-    <string name="recent_bookmarks_title">ບຸກມາກຫລ້າສຸດ</string>
+    <string moz:RemovedIn="106" name="recent_bookmarks_title" tools:ignore="UnusedResources">ບຸກມາກຫລ້າສຸດ</string>
 
     <!-- Content description for the button which navigates the user to show all of their saved bookmarks. -->
     <string name="recently_saved_show_all_content_description_2">ສະແດງບຸກມາກທີ່ບັນທຶກໄວ້ທັງໝົດ</string>
@@ -66,6 +66,9 @@
     <string name="open_in_app_cfr_positive_button_text">ໄປທີ່ການຕັ້ງຄ່າ</string>
     <!-- Text for the negative action button -->
     <string name="open_in_app_cfr_negative_button_text">ຍົກເລີກ</string>
+
+    <!-- Content description for close button used in "contextual feature recommendation" (CFR) popups -->
+    <string name="cfr_dismiss_button_default_content_description">ຍົກເລີກ</string>
 
     <!-- Text for the info dialog when camera permissions have been denied but user tries to access a camera feature. -->
     <string name="camera_permissions_needed_message">ຕ້ອງການເຂົ້ານຳໃຊ້ກ້ອງ. ໄປທີ່ການຕັ້ງຄ່າ Android ແຕະໃສ່ ສິດ ແລະ ແຕະໃສ່ ອະນຸຍາດ</string>
@@ -114,10 +117,10 @@
 
     <!-- Title for showing a group item in the 'Jump back in' section of the new tab
         The first parameter is the search term that the user used. (for example: your search for "cat")-->
-    <string name="recent_tabs_search_term">ການຄົ້ນຫາຂອງທ່ານສຳລັບ \&quot;%1$s\&quot;</string>
+    <string moz:RemovedIn="105" name="recent_tabs_search_term" tools:ignore="UnusedResources">ການຄົ້ນຫາຂອງທ່ານສຳລັບ \&quot;%1$s\&quot;</string>
     <!-- Text for the number of tabs in a group in the 'Jump back in' section of the new tab
         %d is a placeholder for the number of sites in the group. This number will always be more than one. -->
-    <string name="recent_tabs_search_term_count_2">%d ເວັບໄຊທ</string>
+    <string moz:RemovedIn="105" name="recent_tabs_search_term_count_2" tools:ignore="UnusedResources">%d ເວັບໄຊທ</string>
     <!-- Text for button in synced tab card that opens synced tabs tray -->
     <string name="recent_tabs_see_all_synced_tabs_button_text">ເບິງແທັບທີ່ sync ທັງຫມົດ</string>
     <!-- Accessibility description for device icon used for recent synced tab -->
@@ -239,12 +242,12 @@
 
     <!-- Home onboarding -->
     <!-- Onboarding home screen dialog title text. The first parameter is the name of the application.-->
-    <string name="onboarding_home_screen_title_3">ສິ່ງໃໝ່ໆໃນ %1$s</string>
+    <string moz:RemovedIn="106" name="onboarding_home_screen_title_3" tools:ignore="UnusedResources">ສິ່ງໃໝ່ໆໃນ %1$s</string>
     <!-- Onboarding home screen dialog description text. -->
-    <string name="onboarding_home_screen_description_2">ທ່ານສາມາດກັບໄປເບິງຫນ້າເວັບທີ່ທ່ານເບິງຄ້າງໄວ້ໄດ້ງ່າຍຂື້ນແລ້ວ.</string>
+    <string moz:RemovedIn="106" name="onboarding_home_screen_description_2" tools:ignore="UnusedResources">ທ່ານສາມາດກັບໄປເບິງຫນ້າເວັບທີ່ທ່ານເບິງຄ້າງໄວ້ໄດ້ງ່າຍຂື້ນແລ້ວ.</string>
 
     <!-- Onboarding home screen dialog description text for the home section. -->
-    <string name="onboarding_home_screen_section_home_description_2">ຂ້າມໄປຫາແທັບທີ່ເປີດຢູ່, ບຸກມມາກ ແລະ ປະຫວັດການທ່ອງເວັບຂອງທ່ານ.</string>
+    <string moz:RemovedIn="106" name="onboarding_home_screen_section_home_description_2" tools:ignore="UnusedResources">ຂ້າມໄປຫາແທັບທີ່ເປີດຢູ່, ບຸກມມາກ ແລະ ປະຫວັດການທ່ອງເວັບຂອງທ່ານ.</string>
 
     <!-- Text preview for smaller sized widgets -->
     <string name="search_widget_text_short">ຄົ້ນຫາ</string>
@@ -637,8 +640,6 @@
     <string name="open_tabs_menu">ເປີດເມນູແທັບ</string>
     <!-- Open tabs menu item to save tabs to collection -->
     <string name="tabs_menu_save_to_collection1">ບັນທຶກແຖບໄປໄວ້ໃນບ່ອນເກັບສະສົມ</string>
-    <!-- Content description (not visible, for screen readers etc.): Opens the tab menu when pressed -->
-    <string moz:RemovedIn="103" name="tab_menu" tools:ignore="UnusedResources">ເມນູແທັບ</string>
 
     <!-- Text for the menu button to delete a collection -->
     <string name="collection_delete">ລຶບບ່ອນເກັບສະສົມ</string>

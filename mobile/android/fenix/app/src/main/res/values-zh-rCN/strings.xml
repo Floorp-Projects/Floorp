@@ -296,7 +296,7 @@
     <!-- Home onboarding dialog welcome screen description text. -->
     <string name="onboarding_home_welcome_description">更靓、更保护隐私，但始终不变的是以人为本的承诺。</string>
     <!-- Home onboarding dialog sign into sync screen title text. -->
-    <string name="onboarding_home_sync_title_2">手机与 PC 快速切换</string>
+    <string name="onboarding_home_sync_title_2">全平台快速切换</string>
     <!-- Home onboarding dialog sign into sync screen description text. -->
     <string name="onboarding_home_sync_description">您现在从主页就可以继续浏览其他设备上的标签页。</string>
     <!-- Text for the button to continue the onboarding on the home onboarding dialog. -->
