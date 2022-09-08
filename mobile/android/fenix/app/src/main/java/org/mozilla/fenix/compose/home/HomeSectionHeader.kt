@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.text.ClickableText
+import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -18,13 +19,13 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import mozilla.components.lib.state.ext.observeAsComposableState
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.components
-import org.mozilla.fenix.compose.SectionHeader
 import org.mozilla.fenix.compose.inComposePreview
 import org.mozilla.fenix.theme.FirefoxTheme
 import org.mozilla.fenix.theme.Theme
@@ -34,7 +35,7 @@ import org.mozilla.fenix.wallpapers.Wallpaper
  * Homepage header.
  *
  * @param headerText The header string.
- * @param description The description for click action
+ * @param description The content description for the "Show all" button.
  * @param onShowAllClick Invoked when "Show all" button is clicked.
  */
 @Composable
@@ -76,7 +77,7 @@ fun HomeSectionHeader(
  * Homepage header content.
  *
  * @param headerText The header string.
- * @param description The description for click action
+ * @param description The content description for the "Show all" button.
  * @param showAllTextColor [Color] for the "Show all" button.
  * @param onShowAllClick Invoked when "Show all" button is clicked.
  */
@@ -90,13 +91,17 @@ private fun HomeSectionHeaderContent(
 ) {
     Row(
         modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically,
     ) {
-        SectionHeader(
+        Text(
             text = headerText,
-            textColor = textColor,
             modifier = Modifier
                 .weight(1f)
                 .wrapContentHeight(align = Alignment.Top),
+            color = textColor,
+            overflow = TextOverflow.Ellipsis,
+            maxLines = 2,
+            style = FirefoxTheme.typography.headline6,
         )
 
         onShowAllClick?.let {
@@ -123,6 +128,7 @@ private fun HomeSectionsHeaderPreview() {
         HomeSectionHeader(
             headerText = stringResource(R.string.recently_saved_title),
             description = stringResource(R.string.recently_saved_show_all_content_description_2),
+            onShowAllClick = {},
         )
     }
 }
