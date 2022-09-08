@@ -1699,8 +1699,15 @@
   # A function's environment is fixed.
   alias_set: none
 
+# Allocate a new BlockLexicalEnvironmentObject.
 - name: NewLexicalEnvironmentObject
-  gen_boilerplate: false
+  operands:
+    enclosing: Object
+  arguments:
+    scope: LexicalScope*
+  result_type: Object
+  possibly_calls: true
+  alias_set: none
 
 # Allocate a new ClassBodyEnvironmentObject.
 - name: NewClassBodyEnvironmentObject

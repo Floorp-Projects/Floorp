@@ -7702,26 +7702,6 @@ class MLoadDynamicSlot : public MUnaryInstruction, public NoTypePolicy::Data {
   ALLOW_CLONE(MLoadDynamicSlot)
 };
 
-// Allocate a new BlockLexicalEnvironmentObject.
-class MNewLexicalEnvironmentObject : public MUnaryInstruction,
-                                     public SingleObjectPolicy::Data {
-  CompilerGCPointer<LexicalScope*> scope_;
-
-  MNewLexicalEnvironmentObject(MDefinition* enclosing, LexicalScope* scope)
-      : MUnaryInstruction(classOpcode, enclosing), scope_(scope) {
-    setResultType(MIRType::Object);
-  }
-
- public:
-  INSTRUCTION_HEADER(NewLexicalEnvironmentObject)
-  TRIVIAL_NEW_WRAPPERS
-  NAMED_OPERANDS((0, enclosing))
-
-  LexicalScope* scope() const { return scope_; }
-  bool possiblyCalls() const override { return true; }
-  AliasSet getAliasSet() const override { return AliasSet::None(); }
-};
-
 class MAddAndStoreSlot
     : public MBinaryInstruction,
       public MixPolicy<SingleObjectPolicy, BoxPolicy<1>>::Data {

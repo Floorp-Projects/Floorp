@@ -113,6 +113,7 @@ gc_pointer_types = [
     "NamedLambdaObject*",
     "RegExpObject*",
     "JSScript*",
+    "LexicalScope*",
 ]
 
 
