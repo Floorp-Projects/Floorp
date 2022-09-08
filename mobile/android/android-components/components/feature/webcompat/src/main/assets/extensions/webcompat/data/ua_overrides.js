@@ -726,94 +726,18 @@ const AVAILABLE_UA_OVERRIDES = [
         "*://survey.sogosurvey.com/*", // Bug 1765925
         "*://ubank.com.au/*", // #104099
         "*://wifi.sncf/*", // #100194
-        "*://www.accringtonobserver.co.uk/*", // Bug 1762928 (Reach Plc)
-        "*://www.bathchronicle.co.uk/*", // Bug 1762928 (Reach Plc)
-        "*://www.bedfordshirelive.co.uk/*", // Bug 1762928 (Reach Plc)
-        "*://www.belfastlive.co.uk/*", // Bug 1762928 (Reach Plc)
-        "*://www.birminghamlive.co.uk/*", // Bug 1762928 (Reach Plc)
-        "*://www.birminghammail.co.uk/*", // Bug 1762928 (Reach Plc)
-        "*://www.birminghampost.co.uk/*", // Bug 1762928 (Reach Plc)
-        "*://www.bristol.live/*", // Bug 1762928 (Reach Plc)
-        "*://www.bristolpost.co.uk/*", // Bug 1762928 (Reach Plc)
-        "*://www.buckinghamshirelive.com/*", // Bug 1762928 (Reach Plc)
-        "*://www.burtonmail.co.uk/*", // Bug 1762928 (Reach Plc)
-        "*://www.business-live.co.uk/*", // Bug 1762928 (Reach Plc)
-        "*://www.cambridge-news.co.uk/*", // Bug 1762928 (Reach Plc)
-        "*://www.cambridgeshirelive.co.uk/*", // Bug 1762928 (Reach Plc)
-        "*://www.cheshire-live.co.uk/*", // Bug 1762928 (Reach Plc)
-        "*://www.chesterchronicle.co.uk/*", // Bug 1762928 (Reach Plc)
-        "*://www.chroniclelive.co.uk/*", // Bug 1762928 (Reach Plc)
-        "*://www.corkbeo.ie/*", // Bug 1762928 (Reach Plc)
-        "*://www.cornwalllive.com/*", // Bug 1762928 (Reach Plc)
-        "*://www.coventrytelegraph.net/*", // Bug 1762928 (Reach Plc)
-        "*://www.crewechronicle.co.uk/*", // Bug 1762928 (Reach Plc)
-        "*://www.croydonadvertiser.co.uk/*", // Bug 1762928 (Reach Plc)
-        "*://www.dailypost.co.uk/*", // Bug 1762928 (Reach Plc)
-        "*://www.dailyrecord.co.uk/*", // Bug 1762928 (Reach Plc)
-        "*://www.dailystar.co.uk/*", // Bug 1762928 (Reach Plc)
-        "*://www.derbytelegraph.co.uk/*", // Bug 1762928 (Reach Plc)
-        "*://www.devonlive.com/*", // Bug 1762928 (Reach Plc)
         "*://www.discoveryplus.in/*", // #100389
-        "*://www.dublinlive.ie/*", // Bug 1762928 (Reach Plc)
-        "*://www.edinburghlive.co.uk/*", // Bug 1762928 (Reach Plc)
-        "*://www.essexlive.news/*", // Bug 1762928 (Reach Plc)
         "*://www.eurosportplayer.com/*", // #91087
-        "*://www.examiner.co.uk/*", // Bug 1762928 (Reach Plc)
-        "*://www.examinerlive.co.uk/*", // Bug 1762928 (Reach Plc)
-        "*://www.express.co.uk/*", // Bug 1762928 (Reach Plc)
-        "*://www.football.london/*", // Bug 1762928 (Reach Plc)
-        "*://www.footballscotland.co.uk/*", // Bug 1762928 (Reach Plc)
-        "*://www.gazettelive.co.uk/*", // Bug 1762928 (Reach Plc)
-        "*://www.getbucks.co.uk/*", // Bug 1762928 (Reach Plc)
-        "*://www.gethampshire.co.uk/*", // Bug 1762928 (Reach Plc)
-        "*://www.getreading.co.uk/*", // Bug 1762928 (Reach Plc)
-        "*://www.getsurrey.co.uk/*", // Bug 1762928 (Reach Plc)
-        "*://www.getwestlondon.co.uk/*", // Bug 1762928 (Reach Plc)
         "*://www.gismeteo.ru/*", // #101326
-        "*://www.glasgowlive.co.uk/*", // Bug 1762928 (Reach Plc)
-        "*://www.gloucestershirelive.co.uk/*", // Bug 1762928 (Reach Plc)
-        "*://www.grimsbytelegraph.co.uk/*", // Bug 1762928 (Reach Plc)
-        "*://www.hampshirelive.news/*", // Bug 1762928 (Reach Plc)
         "*://www.hannaandersson.com/*", // #95003
-        "*://www.hertfordshiremercury.co.uk/*", // Bug 1762928 (Reach Plc)
-        "*://www.hinckleytimes.net/*", // Bug 1762928 (Reach Plc)
-        "*://www.hulldailymail.co.uk/*", // Bug 1762928 (Reach Plc)
         "*://www.imb.com.au/*", // Bug 1762209
-        "*://www.insider.co.uk/*", // Bug 1762928 (Reach Plc)
-        "*://www.irishmirror.ie/*", // Bug 1762928 (Reach Plc)
-        "*://www.kentlive.news/*", // Bug 1762928 (Reach Plc)
-        "*://www.lancs.live/*", // Bug 1762928 (Reach Plc)
         "*://www.learningants.com/*", // #104080
-        "*://www.leeds-live.co.uk/*", // Bug 1762928 (Reach Plc)
-        "*://www.leicestermercury.co.uk/*", // Bug 1762928 (Reach Plc)
-        "*://www.lincolnshirelive.co.uk/*", // Bug 1762928 (Reach Plc)
         "*://www.liveobserverpark.com/*", // #105244
-        "*://www.liverpool.com/*", // Bug 1762928 (Reach Plc)
-        "*://www.liverpoolecho.co.uk/*", // Bug 1762928 (Reach Plc)
-        "*://www.loughboroughecho.net/*", // Bug 1762928 (Reach Plc)
-        "*://www.macclesfield-express.co.uk/*", // Bug 1762928 (Reach Plc)
-        "*://www.macclesfield-live.co.uk/*", // Bug 1762928 (Reach Plc)
         "*://www.manchestereveningnews.co.uk/*", // #100923
-        "*://www.mylondon.news/*", // Bug 1762928 (Reach Plc)
-        "*://www.northantslive.news/*", // Bug 1762928 (Reach Plc)
-        "*://www.nottinghampost.com/*", // Bug 1762928 (Reach Plc)
-        "*://www.ok.co.uk/*", // Bug 1762928 (Reach Plc)
-        "*://www.plymouthherald.co.uk/*", // Bug 1762928 (Reach Plc)
-        "*://www.rossendalefreepress.co.uk/*", // Bug 1762928 (Reach Plc)
-        "*://www.rsvplive.ie/*", // Bug 1762928 (Reach Plc)
-        "*://www.scotlandnow.dailyrecord.co.uk/*", // Bug 1762928 (Reach Plc)
+        "*://www.metrobyt-mobile.com/*", // #105106
         "*://www.screwfix.com/*", // #96959
-        "*://www.scunthorpetelegraph.co.uk/*", // Bug 1762928 (Reach Plc)
         "*://www.services.gov.on.ca/*", // #100926
         "*://www.smsv.com.ar/*", // #90666
-        "*://www.somersetlive.co.uk/*", // Bug 1762928 (Reach Plc)
-        "*://www.southportvisiter.co.uk/*", // Bug 1762928 (Reach Plc)
-        "*://www.staffordshire-live.co.uk/*", // Bug 1762928 (Reach Plc)
-        "*://www.stokesentinel.co.uk/*", // Bug 1762928 (Reach Plc)
-        "*://www.sussexlive.co.uk/*", // Bug 1762928 (Reach Plc)
-        "*://www.tm-awx.com/*", // Bug 1762928 (Reach Plc)
-        "*://www.walesonline.co.uk/*", // Bug 1762928 (Reach Plc)
-        "*://www.wharf.co.uk/*", // Bug 1762928 (Reach Plc)
       ],
       uaTransformer: originalUA => {
         return UAHelpers.capVersionTo99(originalUA);
@@ -971,6 +895,24 @@ const AVAILABLE_UA_OVERRIDES = [
       matches: ["*://*.coldwellbankerhomes.com/*"],
       uaTransformer: originalUA => {
         return UAHelpers.getDeviceAppropriateChromeUA();
+      },
+    },
+  },
+  {
+    /*
+     * Bug 1786404 - UA override for business.help.royalmail.com
+     * Webcompat issue #109070 - https://webcompat.com/issues/109070
+     *
+     * Replacing `Firefox` with `FireFox` to evade one of their UA tests...
+     */
+    id: "bug1786404",
+    platform: "all",
+    domain: "business.help.royalmail.com",
+    bug: "1786404",
+    config: {
+      matches: ["*://business.help.royalmail.com/app/webforms/*"],
+      uaTransformer: originalUA => {
+        return originalUA.replace("Firefox", "FireFox");
       },
     },
   },

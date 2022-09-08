@@ -796,6 +796,8 @@ const AVAILABLE_SHIMS = [
     bug: "1782772",
     requestStorageAccessForRedirect: [
       ["*://*/*", "*://*.firebaseapp.com/*/auth/*signInViaRedirect*"],
+      ["*://*/*", "*://members.rally.allizom.org/*/auth/*signInViaRedirect*"],
+      ["*://*/*", "*://members.rally.mozilla.org/*/auth/*signInViaRedirect*"],
     ],
     onlyIfDFPIActive: true,
   },
