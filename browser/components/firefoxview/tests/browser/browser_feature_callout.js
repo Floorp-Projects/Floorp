@@ -120,9 +120,10 @@ add_task(async function feature_callout_syncs_across_visits_and_tabs() {
   );
 
   await clickPrimaryButton(tab2Doc);
-  gBrowser.selectedTab = tab1;
-  await waitForCalloutScreen(tab1Doc, 3);
 
+  gBrowser.selectedTab = tab1;
+  tab1.focus();
+  await waitForCalloutScreen(tab1Doc, 3);
   ok(
     tab1Doc.querySelector(".FEATURE_CALLOUT_3"),
     "First tab's Feature Callout advances to the next screen when the tour is advanced in second tab"
@@ -138,6 +139,7 @@ add_task(async function feature_callout_syncs_across_visits_and_tabs() {
   );
 
   gBrowser.selectedTab = tab2;
+  tab2.focus();
   await waitForCalloutRemoved(tab2Doc);
 
   ok(
@@ -377,7 +379,6 @@ add_task(async function feature_callout_arrow_is_not_flipped_on_ltr() {
   await SpecialPowers.pushPrefEnv({
     set: [["browser.firefox-view.feature-tour", getPrefValueByScreen(3)]],
   });
-
   await BrowserTestUtils.withNewTab(
     {
       gBrowser,
@@ -385,13 +386,13 @@ add_task(async function feature_callout_arrow_is_not_flipped_on_ltr() {
     },
     async browser => {
       const { document } = browser.contentWindow;
-      await waitForCalloutScreen(document, 3);
-      let arrowParent = document.querySelector(
-        ".callout-arrow.arrow-inline-end"
-      );
-
+      await BrowserTestUtils.waitForCondition(() => {
+        return document.querySelector(
+          `${calloutSelector}.arrow-inline-end:not(.hidden)`
+        );
+      });
       ok(
-        arrowParent,
+        true,
         "Feature Callout arrow parent has arrow-end class when arrow direction is set to 'end'"
       );
     }
