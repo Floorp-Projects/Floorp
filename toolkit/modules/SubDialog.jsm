@@ -241,6 +241,8 @@ SubDialog.prototype = {
     // Clear the sizing attributes
     this._box.removeAttribute("width");
     this._box.removeAttribute("height");
+    this._box.style.removeProperty("--box-max-height-requested");
+    this._box.style.removeProperty("--box-max-width-requested");
     this._box.style.removeProperty("min-height");
     this._box.style.removeProperty("min-width");
     this._overlay.parentNode.style.removeProperty("--inner-height");
@@ -476,6 +478,15 @@ SubDialog.prototype = {
     let frameWidth = docEl.getAttribute("width")
       ? docEl.getAttribute("width") + "px"
       : frameMinWidth;
+    if (
+      this._box.getAttribute("sizeto") == "available" &&
+      docEl.style.maxWidth
+    ) {
+      this._box.style.setProperty(
+        "--box-max-width-requested",
+        this._emToPx(docEl.style.maxWidth)
+      );
+    }
 
     if (this._box.getAttribute("sizeto") != "available") {
       this._frame.style.width = frameWidth;
@@ -557,6 +568,12 @@ SubDialog.prototype = {
         this._overlay.style.setProperty("--doc-height-px", getDocHeight());
         contentPane?.classList.add("sizeDetermined");
       } else {
+        if (docEl.style.maxHeight) {
+          this._box.style.setProperty(
+            "--box-max-height-requested",
+            this._emToPx(docEl.style.maxHeight)
+          );
+        }
         // Inform the CSS of the toolbar height so the bottom padding can be
         // correctly calculated.
         this._box.style.setProperty("--box-top-px", `${boxRect.top}px`);

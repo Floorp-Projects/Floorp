@@ -9091,7 +9091,8 @@ class TabDialogBox {
    * showing multiple dialogs with aURL at the same time. If false calls for
    * duplicate dialogs will be dropped.
    * @param {String} [aOptions.sizeTo] - Pass "available" to stretch dialog to
-   * roughly content size.
+   * roughly content size. Any max-width or max-height style values on the document root
+   * will also be applied to the dialog box.
    * @param {Boolean} [aOptions.keepOpenSameOriginNav] - By default dialogs are
    * aborted on any navigation.
    * Set to true to keep the dialog open for same origin navigation.
