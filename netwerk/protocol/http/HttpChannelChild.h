@@ -254,7 +254,7 @@ class HttpChannelChild final : public PHttpChannelChild,
 
   // Try invoke Cancel if on main thread, or prepend a CancelEvent in mEventQ to
   // ensure Cacnel is processed before any other channel events.
-  void CancelOnMainThread(nsresult aRv);
+  void CancelOnMainThread(nsresult aRv, const nsACString& aReason);
 
   nsresult MaybeLogCOEPError(nsresult aStatus);
 

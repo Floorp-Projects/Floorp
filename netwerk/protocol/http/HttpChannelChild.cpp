@@ -566,14 +566,15 @@ void HttpChannelChild::DoOnStartRequest(nsIRequest* aRequest) {
   StoreOnStartRequestCalled(true);
 
   if (NS_FAILED(rv)) {
-    Cancel(rv);
+    CancelWithReason(rv, "HttpChannelChild listener->OnStartRequest failed"_ns);
     return;
   }
 
   nsCOMPtr<nsIStreamListener> listener;
   rv = DoApplyContentConversions(mListener, getter_AddRefs(listener), nullptr);
   if (NS_FAILED(rv)) {
-    Cancel(rv);
+    CancelWithReason(rv,
+                     "HttpChannelChild DoApplyContentConversions failed"_ns);
   } else if (listener) {
     mListener = listener;
     mCompressListener = listener;
@@ -657,7 +658,7 @@ void HttpChannelChild::OnTransportAndData(const nsresult& aChannelStatus,
       NS_NewByteInputStream(getter_AddRefs(stringStream),
                             Span(aData).To(aCount), NS_ASSIGNMENT_DEPEND);
   if (NS_FAILED(rv)) {
-    Cancel(rv);
+    CancelWithReason(rv, "HttpChannelChild NS_NewByteInputStream failed"_ns);
     return;
   }
 
@@ -761,7 +762,7 @@ void HttpChannelChild::DoOnDataAvailable(nsIRequest* aRequest,
     nsCOMPtr<nsIStreamListener> listener(mListener);
     nsresult rv = listener->OnDataAvailable(aRequest, aStream, aOffset, aCount);
     if (NS_FAILED(rv)) {
-      CancelOnMainThread(rv);
+      CancelOnMainThread(rv, "HttpChannelChild OnDataAvailable failed"_ns);
     }
   }
 }
@@ -1423,7 +1424,8 @@ mozilla::ipc::IPCResult HttpChannelChild::RecvRedirect3Complete() {
           if (httpChannelChild) {
             // For sending an IPC message to parent channel so that the loading
             // can be cancelled.
-            Unused << httpChannelChild->Cancel(rv);
+            Unused << httpChannelChild->CancelWithReason(
+                rv, "HttpChannelChild Redirect3 failed"_ns);
 
             // The post-redirect channel could still get OnStart/StopRequest IPC
             // messages from parent, but the mListener is still null. So, we
@@ -2854,11 +2856,12 @@ nsresult HttpChannelChild::SetReferrerHeader(const nsACString& aReferrer,
   return HttpBaseChannel::SetReferrerHeader(aReferrer, aRespectBeforeConnect);
 }
 
-void HttpChannelChild::CancelOnMainThread(nsresult aRv) {
+void HttpChannelChild::CancelOnMainThread(nsresult aRv,
+                                          const nsACString& aReason) {
   LOG(("HttpChannelChild::CancelOnMainThread [this=%p]", this));
 
   if (NS_IsMainThread()) {
-    Cancel(aRv);
+    CancelWithReason(aRv, aReason);
     return;
   }
 
@@ -2866,9 +2869,10 @@ void HttpChannelChild::CancelOnMainThread(nsresult aRv) {
   // Cancel is expected to preempt any other channel events, thus we put this
   // event in the front of mEventQ to make sure nsIStreamListener not receiving
   // any ODA/OnStopRequest callbacks.
+  nsCString reason(aReason);
   mEventQ->PrependEvent(MakeUnique<NeckoTargetChannelFunctionEvent>(
-      this, [self = UnsafePtr<HttpChannelChild>(this), aRv]() {
-        self->Cancel(aRv);
+      this, [self = UnsafePtr<HttpChannelChild>(this), aRv, reason]() {
+        self->CancelWithReason(aRv, reason);
       }));
   mEventQ->Resume();
 }
