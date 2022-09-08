@@ -16,7 +16,7 @@
 #include "sslproto.h"
 #include "nssilock.h"
 #include "sslencode.h"
-#if defined(XP_UNIX) || defined(XP_WIN) || defined(_WINDOWS)
+#if defined(XP_UNIX) || defined(XP_WIN) || defined(_WINDOWS) || defined(XP_BEOS)
 #include <time.h>
 #endif
 
