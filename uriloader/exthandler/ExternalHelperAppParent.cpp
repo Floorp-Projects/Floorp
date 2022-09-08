@@ -202,6 +202,20 @@ ExternalHelperAppParent::GetStatus(nsresult* aResult) {
   return NS_OK;
 }
 
+NS_IMETHODIMP ExternalHelperAppParent::SetCanceledReason(
+    const nsACString& aReason) {
+  return SetCanceledReasonImpl(aReason);
+}
+
+NS_IMETHODIMP ExternalHelperAppParent::GetCanceledReason(nsACString& aReason) {
+  return GetCanceledReasonImpl(aReason);
+}
+
+NS_IMETHODIMP ExternalHelperAppParent::CancelWithReason(
+    nsresult aStatus, const nsACString& aReason) {
+  return CancelWithReasonImpl(aStatus, aReason);
+}
+
 NS_IMETHODIMP
 ExternalHelperAppParent::Cancel(nsresult aStatus) {
   mCanceled = true;

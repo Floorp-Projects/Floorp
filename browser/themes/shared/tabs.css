@@ -568,7 +568,7 @@
 }
 
 @media (prefers-contrast) {
-  #TabsToolbar #firefox-view-button:is([open], :hover) > .toolbarbutton-icon,
+  #TabsToolbar #firefox-view-button:is([open], :hover):not(:focus-visible) > .toolbarbutton-icon,
   .tab-background[selected],
   .tabbrowser-tab:hover > .tab-stack > .tab-background {
     outline: 1px solid currentColor;
@@ -577,7 +577,7 @@
 }
 
 @media not (prefers-contrast) {
-  #TabsToolbar #firefox-view-button[open] > .toolbarbutton-icon:-moz-lwtheme,
+  #TabsToolbar #firefox-view-button[open]:not(:focus-visible) > .toolbarbutton-icon:-moz-lwtheme,
   .tab-background[selected]:not([multiselected=true]):-moz-lwtheme {
     outline: 1px solid var(--lwt-tab-line-color, var(--lwt-tabs-border-color, currentColor));
     outline-offset: -1px;

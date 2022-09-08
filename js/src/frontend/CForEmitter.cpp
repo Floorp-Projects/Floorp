@@ -60,7 +60,8 @@ bool CForEmitter::emitCond(const Maybe<uint32_t>& condPos) {
                ScopeKind::Lexical);
 
     if (headLexicalEmitterScopeForLet_->hasEnvironment()) {
-      if (!bce_->emit1(JSOp::FreshenLexicalEnv)) {
+      if (!bce_->emitInternedScopeOp(headLexicalEmitterScopeForLet_->index(),
+                                     JSOp::FreshenLexicalEnv)) {
         return false;
       }
     }
@@ -114,7 +115,8 @@ bool CForEmitter::emitUpdate(Update update, const Maybe<uint32_t>& updatePos) {
                ScopeKind::Lexical);
 
     if (headLexicalEmitterScopeForLet_->hasEnvironment()) {
-      if (!bce_->emit1(JSOp::FreshenLexicalEnv)) {
+      if (!bce_->emitInternedScopeOp(headLexicalEmitterScopeForLet_->index(),
+                                     JSOp::FreshenLexicalEnv)) {
         return false;
       }
     }

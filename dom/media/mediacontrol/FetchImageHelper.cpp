@@ -128,7 +128,8 @@ nsresult FetchImageHelper::ImageFetchListener::FetchDecodedImageFromURI(
 void FetchImageHelper::ImageFetchListener::Clear() {
   MOZ_ASSERT(NS_IsMainThread());
   if (mChannel) {
-    mChannel->Cancel(NS_BINDING_ABORTED);
+    mChannel->CancelWithReason(
+        NS_BINDING_ABORTED, "FetchImageHelper::ImageFetchListener::Clear"_ns);
     mChannel = nullptr;
   }
   mHelper = nullptr;

@@ -7216,6 +7216,10 @@ class MLoadFixedSlot : public MUnaryInstruction,
 
   AliasType mightAlias(const MDefinition* store) const override;
 
+#ifdef JS_JITSPEW
+  void printOpcode(GenericPrinter& out) const override;
+#endif
+
   ALLOW_CLONE(MLoadFixedSlot)
 };
 
@@ -7258,6 +7262,10 @@ class MLoadFixedSlotAndUnbox : public MUnaryInstruction,
   }
 
   AliasType mightAlias(const MDefinition* store) const override;
+
+#ifdef JS_JITSPEW
+  void printOpcode(GenericPrinter& out) const override;
+#endif
 
   ALLOW_CLONE(MLoadFixedSlotAndUnbox);
 };
@@ -7340,6 +7348,10 @@ class MStoreFixedSlot
   void setNeedsBarrier(bool needsBarrier = true) {
     needsBarrier_ = needsBarrier;
   }
+
+#ifdef JS_JITSPEW
+  void printOpcode(GenericPrinter& out) const override;
+#endif
 
   ALLOW_CLONE(MStoreFixedSlot)
 };
@@ -7688,26 +7700,6 @@ class MLoadDynamicSlot : public MUnaryInstruction, public NoTypePolicy::Data {
 #endif
 
   ALLOW_CLONE(MLoadDynamicSlot)
-};
-
-// Allocate a new BlockLexicalEnvironmentObject.
-class MNewLexicalEnvironmentObject : public MUnaryInstruction,
-                                     public SingleObjectPolicy::Data {
-  CompilerGCPointer<LexicalScope*> scope_;
-
-  MNewLexicalEnvironmentObject(MDefinition* enclosing, LexicalScope* scope)
-      : MUnaryInstruction(classOpcode, enclosing), scope_(scope) {
-    setResultType(MIRType::Object);
-  }
-
- public:
-  INSTRUCTION_HEADER(NewLexicalEnvironmentObject)
-  TRIVIAL_NEW_WRAPPERS
-  NAMED_OPERANDS((0, enclosing))
-
-  LexicalScope* scope() const { return scope_; }
-  bool possiblyCalls() const override { return true; }
-  AliasSet getAliasSet() const override { return AliasSet::None(); }
 };
 
 class MAddAndStoreSlot

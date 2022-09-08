@@ -5,6 +5,10 @@
 
 #include "nsISupports.idl"
 
+%{ C++
+#include "nsString.h"
+%}
+
 interface nsILoadGroup;
 
 typedef unsigned long nsLoadFlags;
@@ -201,6 +205,34 @@ interface nsIRequest : nsISupports
     const unsigned long LOAD_TRR_DISABLED_MODE = 1 << 3;
     const unsigned long LOAD_TRR_FIRST_MODE = 1 << 4;
     const unsigned long LOAD_TRR_ONLY_MODE = (1 << 3) | (1 << 4);
+
+    void cancelWithReason(in nsresult aStatus, in ACString aReason);
+    attribute ACString canceledReason;
+
+    %{C++
+      protected:
+        nsCString mCanceledReason;
+
+      public:
+        inline nsresult SetCanceledReasonImpl(const nsACString& aReason) {
+          if (mCanceledReason.IsEmpty()) {
+            mCanceledReason.Assign(aReason);
+          }
+
+          return NS_OK;
+        }
+
+        inline nsresult CancelWithReasonImpl(nsresult aStatus,
+                                             const nsACString& aReason) {
+          SetCanceledReasonImpl(aReason);
+          return Cancel(aStatus);
+        }
+
+        inline nsresult GetCanceledReasonImpl(nsACString& aReason) {
+          aReason.Assign(mCanceledReason);
+          return NS_OK;
+        }
+    %}
 
     /**
      * This is used for a temporary workaround for a web-compat issue. The flag is

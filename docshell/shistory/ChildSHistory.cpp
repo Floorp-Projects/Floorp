@@ -209,10 +209,10 @@ void ChildSHistory::GotoIndex(int32_t aIndex, int32_t aOffset,
     nsCOMPtr<nsISHistory> shistory = mHistory;
     mBrowsingContext->HistoryGo(
         aOffset, mHistoryEpoch, aRequireUserInteraction, aUserActivation,
-        [shistory](int32_t&& aRequestedIndex) {
+        [shistory](Maybe<int32_t>&& aRequestedIndex) {
           // FIXME Should probably only do this for non-fission.
-          if (shistory) {
-            shistory->InternalSetRequestedIndex(aRequestedIndex);
+          if (aRequestedIndex.isSome() && shistory) {
+            shistory->InternalSetRequestedIndex(aRequestedIndex.value());
           }
         });
   } else {

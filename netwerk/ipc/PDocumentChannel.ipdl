@@ -28,7 +28,7 @@ protocol PDocumentChannel
 
 parent:
 
-  async Cancel(nsresult status);
+  async Cancel(nsresult status, nsCString reason);
 
   async __delete__();
 

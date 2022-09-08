@@ -347,6 +347,20 @@ NS_IMETHODIMP nsExtProtocolChannel::GetStatus(nsresult* status) {
   return NS_OK;
 }
 
+NS_IMETHODIMP nsExtProtocolChannel::SetCanceledReason(
+    const nsACString& aReason) {
+  return SetCanceledReasonImpl(aReason);
+}
+
+NS_IMETHODIMP nsExtProtocolChannel::GetCanceledReason(nsACString& aReason) {
+  return GetCanceledReasonImpl(aReason);
+}
+
+NS_IMETHODIMP nsExtProtocolChannel::CancelWithReason(
+    nsresult aStatus, const nsACString& aReason) {
+  return CancelWithReasonImpl(aStatus, aReason);
+}
+
 NS_IMETHODIMP nsExtProtocolChannel::Cancel(nsresult status) {
   if (NS_SUCCEEDED(mStatus)) {
     mStatus = status;

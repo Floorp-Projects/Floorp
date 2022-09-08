@@ -35,7 +35,7 @@ async function testResendRequest() {
   const Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
   store.dispatch(Actions.batchEnable(false));
 
-  await performRequests(monitor, tab, 1);
+  await performRequests(monitor, tab, 2);
 
   is(
     document.querySelectorAll(".request-list-item").length,

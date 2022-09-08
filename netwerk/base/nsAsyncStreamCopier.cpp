@@ -155,6 +155,20 @@ nsAsyncStreamCopier::GetStatus(nsresult* status) {
   return NS_OK;
 }
 
+NS_IMETHODIMP nsAsyncStreamCopier::SetCanceledReason(
+    const nsACString& aReason) {
+  return nsIAsyncStreamCopier::SetCanceledReasonImpl(aReason);
+}
+
+NS_IMETHODIMP nsAsyncStreamCopier::GetCanceledReason(nsACString& aReason) {
+  return nsIAsyncStreamCopier::GetCanceledReasonImpl(aReason);
+}
+
+NS_IMETHODIMP nsAsyncStreamCopier::CancelWithReason(nsresult aStatus,
+                                                    const nsACString& aReason) {
+  return nsIAsyncStreamCopier::CancelWithReasonImpl(aStatus, aReason);
+}
+
 NS_IMETHODIMP
 nsAsyncStreamCopier::Cancel(nsresult status) {
   nsCOMPtr<nsISupports> copierCtx;

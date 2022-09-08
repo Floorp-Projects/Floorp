@@ -182,11 +182,13 @@ input[type = "url"]:focus:-moz-ui-invalid:not(:placeholder-shown) ~ .tooltip-con
 .arrow-box {
   position: relative;
   padding: 12px;
-	background: var(--in-content-box-background);
+	background-color: var(--in-content-box-background);
 	border: 1px solid var(--in-content-border-color);
+  border-radius: 4px;
 }
 
-.arrow-box::after, .arrow-box::before {
+.arrow-box::before,
+.arrow-box::after {
   inset-inline-end: 100%;
   top: 40px; /* This allows the arrow to stay in the correct position, even if the text length is changed */
 	border: solid transparent;

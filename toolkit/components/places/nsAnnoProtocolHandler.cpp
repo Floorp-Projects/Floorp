@@ -131,7 +131,8 @@ class faviconAsyncLoader : public AsyncStatementCallback, public nsICancelable {
 
     aListener->OnStartRequest(aChannel);
     aListener->OnStopRequest(aChannel, aResult);
-    aChannel->Cancel(NS_BINDING_ABORTED);
+    aChannel->CancelWithReason(NS_BINDING_ABORTED,
+                               "faviconAsyncLoader::CancelRequest"_ns);
   }
 
   NS_IMETHOD HandleCompletion(uint16_t aReason) override {

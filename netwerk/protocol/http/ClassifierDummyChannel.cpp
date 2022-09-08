@@ -267,6 +267,20 @@ ClassifierDummyChannel::GetStatus(nsresult* aStatus) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+NS_IMETHODIMP ClassifierDummyChannel::SetCanceledReason(
+    const nsACString& aReason) {
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP ClassifierDummyChannel::GetCanceledReason(nsACString& aReason) {
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP ClassifierDummyChannel::CancelWithReason(
+    nsresult aStatus, const nsACString& aReason) {
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 NS_IMETHODIMP
 ClassifierDummyChannel::Cancel(nsresult aStatus) {
   return NS_ERROR_NOT_IMPLEMENTED;

@@ -22,7 +22,7 @@ fuzzy(0-1,0-5) == clipped-elements.html clipped-elements-ref.html
 fuzzy(0-47,0-18) == two-value-syntax.html two-value-syntax-ref.html
 == single-value.html single-value-ref.html
 fuzzy-if(gtkWidget,0-10,0-2) == atomic-under-marker.html atomic-under-marker-ref.html
-fuzzy(0-1,0-2616) skip-if(Android) fuzzy-if(asyncPan&&!layersGPUAccelerated,0-102,0-12352) fails-if(gtkWidget) == chrome://reftest/content/text-overflow/xulscroll.html chrome://reftest/content/text-overflow/xulscroll-ref.html # gtkWidget:bug 1309107, bug 1328771
+skip == chrome://reftest/content/text-overflow/xulscroll.html chrome://reftest/content/text-overflow/xulscroll-ref.html # bug 1789123 makes it work like regular flexbox, need to probably fix the test
 == combobox-zoom.html combobox-zoom-ref.html
 == dynamic-change-1.html dynamic-change-1-ref.html
 == float-edges-1.html float-edges-1-ref.html

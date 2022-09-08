@@ -703,6 +703,20 @@ HttpTransactionParent::GetStatus(nsresult* aStatus) {
   return NS_OK;
 }
 
+NS_IMETHODIMP HttpTransactionParent::SetCanceledReason(
+    const nsACString& aReason) {
+  return SetCanceledReasonImpl(aReason);
+}
+
+NS_IMETHODIMP HttpTransactionParent::GetCanceledReason(nsACString& aReason) {
+  return GetCanceledReasonImpl(aReason);
+}
+
+NS_IMETHODIMP HttpTransactionParent::CancelWithReason(
+    nsresult aStatus, const nsACString& aReason) {
+  return CancelWithReasonImpl(aStatus, aReason);
+}
+
 NS_IMETHODIMP
 HttpTransactionParent::Cancel(nsresult aStatus) {
   MOZ_ASSERT(NS_IsMainThread());

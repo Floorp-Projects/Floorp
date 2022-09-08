@@ -248,7 +248,12 @@ NS_IMETHODIMP ParentProcessDocumentChannel::AsyncOpen(
 }
 
 NS_IMETHODIMP ParentProcessDocumentChannel::Cancel(nsresult aStatus) {
-  LOG(("ParentProcessDocumentChannel Cancel [this=%p]", this));
+  return CancelWithReason(aStatus, "ParentProcessDocumentChannel::Cancel"_ns);
+}
+
+NS_IMETHODIMP ParentProcessDocumentChannel::CancelWithReason(
+    nsresult aStatusCode, const nsACString& aReason) {
+  LOG(("ParentProcessDocumentChannel CancelWithReason [this=%p]", this));
   if (mCanceled) {
     return NS_OK;
   }
@@ -256,7 +261,7 @@ NS_IMETHODIMP ParentProcessDocumentChannel::Cancel(nsresult aStatus) {
   mCanceled = true;
   // This will force the DocumentListener to abort the promise if there's one
   // pending.
-  mDocumentLoadListener->Cancel(aStatus);
+  mDocumentLoadListener->Cancel(aStatusCode, aReason);
 
   return NS_OK;
 }

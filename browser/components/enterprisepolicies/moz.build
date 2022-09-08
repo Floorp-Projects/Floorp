@@ -17,7 +17,7 @@ DIRS += [
 TEST_DIRS += ["tests"]
 
 EXTRA_JS_MODULES.policies += [
-    "Policies.jsm",
+    "Policies.sys.mjs",
 ]
 
 FINAL_LIBRARY = "browsercomps"

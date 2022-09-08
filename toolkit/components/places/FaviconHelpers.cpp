@@ -618,7 +618,8 @@ AsyncFetchAndSetIconForPage::Cancel() {
   }
   mCanceled = true;
   if (mRequest) {
-    mRequest->Cancel(NS_BINDING_ABORTED);
+    mRequest->CancelWithReason(NS_BINDING_ABORTED,
+                               "AsyncFetchAndSetIconForPage::Cancel"_ns);
   }
   return NS_OK;
 }
@@ -644,7 +645,8 @@ AsyncFetchAndSetIconForPage::OnStartRequest(nsIRequest* aRequest) {
         !path.EqualsLiteral("/favicon.ico") &&
         NS_SUCCEEDED(httpChannel->IsNoStoreResponse(&isNoStore)) && isNoStore) {
       // Abandon the network fetch.
-      mRequest->Cancel(NS_BINDING_ABORTED);
+      mRequest->CancelWithReason(
+          NS_BINDING_ABORTED, "AsyncFetchAndSetIconForPage::OnStartRequest"_ns);
     }
   }
   return NS_OK;

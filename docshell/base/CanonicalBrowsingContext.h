@@ -174,10 +174,9 @@ class CanonicalBrowsingContext final : public BrowsingContext {
 
   void RemoveFromSessionHistory(const nsID& aChangeID);
 
-  void HistoryGo(int32_t aIndex, uint64_t aHistoryEpoch,
-                 bool aRequireUserInteraction, bool aUserActivation,
-                 Maybe<ContentParentId> aContentId,
-                 std::function<void(int32_t&&)>&& aResolver);
+  Maybe<int32_t> HistoryGo(int32_t aOffset, uint64_t aHistoryEpoch,
+                           bool aRequireUserInteraction, bool aUserActivation,
+                           Maybe<ContentParentId> aContentId);
 
   JSObject* WrapObject(JSContext* aCx,
                        JS::Handle<JSObject*> aGivenProto) override;

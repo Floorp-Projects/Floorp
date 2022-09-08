@@ -1803,7 +1803,7 @@ bool RNewCallObject::recover(JSContext* cx, SnapshotIterator& iter) const {
 
   Rooted<Shape*> shape(cx, templateObj->shape());
 
-  JSObject* resultObject = NewCallObject(cx, shape);
+  JSObject* resultObject = CallObject::createWithShape(cx, shape);
   if (!resultObject) {
     return false;
   }

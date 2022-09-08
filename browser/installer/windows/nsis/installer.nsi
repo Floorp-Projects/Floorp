@@ -619,16 +619,7 @@ Section "-Application" APP_IDX
   ; native "Pin to Taskbar" functionality can find an appropriate shortcut.
   ; See https://bugzilla.mozilla.org/show_bug.cgi?id=1762994 for additional
   ; background.
-  ; Pref'ed off until Private Browsing window separation is enabled by default
-  ; to avoid a situation where a user pins the Private Browsing shortcut to
-  ; the Taskbar, which will end up launching into a different Taskbar icon.
-  ClearErrors
-  ReadRegDWORD $2 HKCU \
-      "Software\Mozilla\${AppName}\Installer\$AppUserModelID" \
-      "CreatePrivateBrowsingShortcut"
-  ${IfNot} ${Errors}
-    ${AddPrivateBrowsingShortcut}
-  ${EndIf}
+  ${AddPrivateBrowsingShortcut}
 
   ; Update lastwritetime of the Start Menu shortcut to clear the tile cache.
   ; Do this for both shell contexts in case the user has shortcuts in multiple

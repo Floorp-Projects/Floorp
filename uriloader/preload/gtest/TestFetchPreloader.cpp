@@ -62,6 +62,16 @@ NS_IMETHODIMP FakeChannel::GetStatus(nsresult* status) {
   *status = mStatus;
   return NS_OK;
 }
+NS_IMETHODIMP FakeChannel::SetCanceledReason(const nsACString& aReason) {
+  return SetCanceledReasonImpl(aReason);
+}
+NS_IMETHODIMP FakeChannel::GetCanceledReason(nsACString& aReason) {
+  return GetCanceledReasonImpl(aReason);
+}
+NS_IMETHODIMP FakeChannel::CancelWithReason(nsresult aStatus,
+                                            const nsACString& aReason) {
+  return CancelWithReasonImpl(aStatus, aReason);
+}
 NS_IMETHODIMP FakeChannel::Cancel(nsresult status) {
   if (!mCanceled) {
     mCanceled = true;

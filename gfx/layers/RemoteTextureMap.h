@@ -7,6 +7,7 @@
 #ifndef MOZILLA_GFX_RemoteTextureMap_H
 #define MOZILLA_GFX_RemoteTextureMap_H
 
+#include <deque>
 #include <functional>
 #include <map>
 #include <memory>
@@ -148,7 +149,7 @@ class RemoteTextureMap {
     // Holds TextureDataHolders that wait to be used by WebRender.
     std::queue<UniquePtr<TextureDataHolder>> mWaitingTextureDataHolders;
     // Holds TextureDataHolders that are used by WebRender
-    std::queue<UniquePtr<TextureDataHolder>> mUsingTextureDataHolders;
+    std::deque<UniquePtr<TextureDataHolder>> mUsingTextureDataHolders;
     RemoteTextureId mLatestTextureId = {0};
     CompositableTextureHostRef mLatestTextureHost;
     std::stack<UniquePtr<TextureData>> mRecycledTextures;
@@ -158,6 +159,10 @@ class RemoteTextureMap {
   void UpdateTexture(const MutexAutoLock& aProofOfLock,
                      RemoteTextureMap::TextureOwner* aOwner,
                      const RemoteTextureId aTextureId);
+
+  void KeepTextureDataAliveForTextureHostIfNecessary(
+      const MutexAutoLock& aProofOfLock,
+      std::deque<UniquePtr<TextureDataHolder>>& aHolders);
 
   RemoteTextureMap::TextureOwner* GetTextureOwner(
       const MutexAutoLock& aProofOfLock, const RemoteTextureOwnerId aOwnerId,

@@ -614,6 +614,10 @@ majorRelease2022:
       type: boolean
       fallbackPref: "browser.privacySegmentation.preferences.show"
       description: "Controls visibility of the privacy segmentation preferences section."
+    feltPrivacyWindowSeparation:
+      type: boolean
+      fallbackPref: "browser.privateWindowSeparation.enabled"
+      description: "Whether or not private browsing windows use a separate icon in the Windows taskbar"
     colorwayCloset:
       type: boolean
       fallbackPref: "browser.theme.colorway-closet"

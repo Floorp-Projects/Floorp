@@ -327,6 +327,13 @@ MInstruction* WarpBuilder::buildNamedLambdaEnv(MDefinition* callee,
   MInstruction* namedLambda = MNewNamedLambdaObject::New(alloc(), templateObj);
   current->add(namedLambda);
 
+#ifdef DEBUG
+  // Assert in debug mode we can elide the post write barriers.
+  current->add(MAssertCanElidePostWriteBarrier::New(alloc(), namedLambda, env));
+  current->add(
+      MAssertCanElidePostWriteBarrier::New(alloc(), namedLambda, callee));
+#endif
+
   // Initialize the object's reserved slots. No post barrier is needed here:
   // the object will be allocated in the nursery if possible, and if the
   // tenured heap is used instead, a minor collection will have been performed
@@ -348,6 +355,12 @@ MInstruction* WarpBuilder::buildCallObject(MDefinition* callee,
 
   MNewCallObject* callObj = MNewCallObject::New(alloc(), templateCst);
   current->add(callObj);
+
+#ifdef DEBUG
+  // Assert in debug mode we can elide the post write barriers.
+  current->add(MAssertCanElidePostWriteBarrier::New(alloc(), callObj, env));
+  current->add(MAssertCanElidePostWriteBarrier::New(alloc(), callObj, callee));
+#endif
 
   // Initialize the object's reserved slots. No post barrier is needed here,
   // for the same reason as in buildNamedLambdaEnv.
@@ -378,6 +391,11 @@ MInstruction* WarpBuilder::buildCallObject(MDefinition* callee,
     } else {
       param = current->getSlot(info().argSlotUnchecked(formal));
     }
+
+#ifdef DEBUG
+    // Assert in debug mode we can elide the post write barrier.
+    current->add(MAssertCanElidePostWriteBarrier::New(alloc(), callObj, param));
+#endif
 
     if (slot >= numFixedSlots) {
       if (!slots) {
@@ -1980,11 +1998,25 @@ bool WarpBuilder::build_SetFunName(BytecodeLocation loc) {
 bool WarpBuilder::build_PushLexicalEnv(BytecodeLocation loc) {
   MOZ_ASSERT(usesEnvironmentChain());
 
-  LexicalScope* scope = &loc.getScope(script_)->as<LexicalScope>();
-  MDefinition* env = current->environmentChain();
+  const auto* snapshot = getOpSnapshot<WarpLexicalEnvironment>(loc);
+  MOZ_ASSERT(snapshot);
 
-  auto* ins = MNewLexicalEnvironmentObject::New(alloc(), env, scope);
+  MDefinition* env = current->environmentChain();
+  MConstant* templateCst = constant(ObjectValue(*snapshot->templateObj()));
+
+  auto* ins = MNewLexicalEnvironmentObject::New(alloc(), templateCst);
   current->add(ins);
+
+#ifdef DEBUG
+  // Assert in debug mode we can elide the post write barrier.
+  current->add(MAssertCanElidePostWriteBarrier::New(alloc(), ins, env));
+#endif
+
+  // Initialize the object's reserved slots. No post barrier is needed here,
+  // for the same reason as in buildNamedLambdaEnv.
+  current->add(MStoreFixedSlot::NewUnbarriered(
+      alloc(), ins, EnvironmentObject::enclosingEnvironmentSlot(), env));
+
   current->setEnvironmentChain(ins);
   return true;
 }
@@ -1992,11 +2024,25 @@ bool WarpBuilder::build_PushLexicalEnv(BytecodeLocation loc) {
 bool WarpBuilder::build_PushClassBodyEnv(BytecodeLocation loc) {
   MOZ_ASSERT(usesEnvironmentChain());
 
-  ClassBodyScope* scope = &loc.getScope(script_)->as<ClassBodyScope>();
-  MDefinition* env = current->environmentChain();
+  const auto* snapshot = getOpSnapshot<WarpClassBodyEnvironment>(loc);
+  MOZ_ASSERT(snapshot);
 
-  auto* ins = MNewClassBodyEnvironmentObject::New(alloc(), env, scope);
+  MDefinition* env = current->environmentChain();
+  MConstant* templateCst = constant(ObjectValue(*snapshot->templateObj()));
+
+  auto* ins = MNewClassBodyEnvironmentObject::New(alloc(), templateCst);
   current->add(ins);
+
+#ifdef DEBUG
+  // Assert in debug mode we can elide the post write barrier.
+  current->add(MAssertCanElidePostWriteBarrier::New(alloc(), ins, env));
+#endif
+
+  // Initialize the object's reserved slots. No post barrier is needed here,
+  // for the same reason as in buildNamedLambdaEnv.
+  current->add(MStoreFixedSlot::NewUnbarriered(
+      alloc(), ins, EnvironmentObject::enclosingEnvironmentSlot(), env));
+
   current->setEnvironmentChain(ins);
   return true;
 }
@@ -2010,33 +2056,140 @@ bool WarpBuilder::build_PopLexicalEnv(BytecodeLocation) {
   return true;
 }
 
-void WarpBuilder::buildCopyLexicalEnvOp(bool copySlots) {
+bool WarpBuilder::build_FreshenLexicalEnv(BytecodeLocation loc) {
   MOZ_ASSERT(usesEnvironmentChain());
 
-  MDefinition* env = current->environmentChain();
-  auto* ins = MCopyLexicalEnvironmentObject::New(alloc(), env, copySlots);
-  current->add(ins);
-  current->setEnvironmentChain(ins);
-}
+  const auto* snapshot = getOpSnapshot<WarpLexicalEnvironment>(loc);
+  MOZ_ASSERT(snapshot);
 
-bool WarpBuilder::build_FreshenLexicalEnv(BytecodeLocation) {
-  buildCopyLexicalEnvOp(/* copySlots = */ true);
+  MDefinition* enclosingEnv = walkEnvironmentChain(1);
+  MDefinition* env = current->environmentChain();
+  MConstant* templateCst = constant(ObjectValue(*snapshot->templateObj()));
+
+  auto* templateObj = snapshot->templateObj();
+  auto* scope = &templateObj->scope();
+  MOZ_ASSERT(scope->hasEnvironment());
+
+  auto* ins = MNewLexicalEnvironmentObject::New(alloc(), templateCst);
+  current->add(ins);
+
+#ifdef DEBUG
+  // Assert in debug mode we can elide the post write barrier.
+  current->add(
+      MAssertCanElidePostWriteBarrier::New(alloc(), ins, enclosingEnv));
+#endif
+
+  // Initialize the object's reserved slots. No post barrier is needed here,
+  // for the same reason as in buildNamedLambdaEnv.
+  current->add(MStoreFixedSlot::NewUnbarriered(
+      alloc(), ins, EnvironmentObject::enclosingEnvironmentSlot(),
+      enclosingEnv));
+
+  // Copy environment slots.
+  MSlots* envSlots = nullptr;
+  MSlots* slots = nullptr;
+  for (BindingIter iter(scope); iter; iter++) {
+    auto loc = iter.location();
+    if (loc.kind() != BindingLocation::Kind::Environment) {
+      MOZ_ASSERT(loc.kind() == BindingLocation::Kind::Frame);
+      continue;
+    }
+
+    if (!alloc().ensureBallast()) {
+      return false;
+    }
+
+    uint32_t slot = loc.slot();
+    uint32_t numFixedSlots = templateObj->numFixedSlots();
+    if (slot >= numFixedSlots) {
+      if (!envSlots) {
+        envSlots = MSlots::New(alloc(), env);
+        current->add(envSlots);
+      }
+      if (!slots) {
+        slots = MSlots::New(alloc(), ins);
+        current->add(slots);
+      }
+
+      uint32_t dynamicSlot = slot - numFixedSlots;
+
+      auto* load = MLoadDynamicSlot::New(alloc(), envSlots, dynamicSlot);
+      current->add(load);
+
+#ifdef DEBUG
+      // Assert in debug mode we can elide the post write barrier.
+      current->add(MAssertCanElidePostWriteBarrier::New(alloc(), ins, load));
+#endif
+
+      current->add(
+          MStoreDynamicSlot::NewUnbarriered(alloc(), slots, dynamicSlot, load));
+    } else {
+      auto* load = MLoadFixedSlot::New(alloc(), env, slot);
+      current->add(load);
+
+#ifdef DEBUG
+      // Assert in debug mode we can elide the post write barrier.
+      current->add(MAssertCanElidePostWriteBarrier::New(alloc(), ins, load));
+#endif
+
+      current->add(MStoreFixedSlot::NewUnbarriered(alloc(), ins, slot, load));
+    }
+  }
+
+  current->setEnvironmentChain(ins);
   return true;
 }
 
-bool WarpBuilder::build_RecreateLexicalEnv(BytecodeLocation) {
-  buildCopyLexicalEnvOp(/* copySlots = */ false);
+bool WarpBuilder::build_RecreateLexicalEnv(BytecodeLocation loc) {
+  MOZ_ASSERT(usesEnvironmentChain());
+
+  const auto* snapshot = getOpSnapshot<WarpLexicalEnvironment>(loc);
+  MOZ_ASSERT(snapshot);
+
+  MDefinition* enclosingEnv = walkEnvironmentChain(1);
+  MConstant* templateCst = constant(ObjectValue(*snapshot->templateObj()));
+
+  auto* ins = MNewLexicalEnvironmentObject::New(alloc(), templateCst);
+  current->add(ins);
+
+#ifdef DEBUG
+  // Assert in debug mode we can elide the post write barrier.
+  current->add(
+      MAssertCanElidePostWriteBarrier::New(alloc(), ins, enclosingEnv));
+#endif
+
+  // Initialize the object's reserved slots. No post barrier is needed here,
+  // for the same reason as in buildNamedLambdaEnv.
+  current->add(MStoreFixedSlot::NewUnbarriered(
+      alloc(), ins, EnvironmentObject::enclosingEnvironmentSlot(),
+      enclosingEnv));
+
+  current->setEnvironmentChain(ins);
   return true;
 }
 
 bool WarpBuilder::build_PushVarEnv(BytecodeLocation loc) {
   MOZ_ASSERT(usesEnvironmentChain());
 
-  VarScope* scope = &loc.getScope(script_)->as<VarScope>();
-  MDefinition* env = current->environmentChain();
+  const auto* snapshot = getOpSnapshot<WarpVarEnvironment>(loc);
+  MOZ_ASSERT(snapshot);
 
-  auto* ins = MNewVarEnvironmentObject::New(alloc(), env, scope);
+  MDefinition* env = current->environmentChain();
+  MConstant* templateCst = constant(ObjectValue(*snapshot->templateObj()));
+
+  auto* ins = MNewVarEnvironmentObject::New(alloc(), templateCst);
   current->add(ins);
+
+#ifdef DEBUG
+  // Assert in debug mode we can elide the post write barrier.
+  current->add(MAssertCanElidePostWriteBarrier::New(alloc(), ins, env));
+#endif
+
+  // Initialize the object's reserved slots. No post barrier is needed here,
+  // for the same reason as in buildNamedLambdaEnv.
+  current->add(MStoreFixedSlot::NewUnbarriered(
+      alloc(), ins, EnvironmentObject::enclosingEnvironmentSlot(), env));
+
   current->setEnvironmentChain(ins);
   return true;
 }

@@ -253,7 +253,7 @@ fails-if(Android&&emulator) == mathvariant-1a.html mathvariant-1a-ref.html # Bug
 fails-if(Android&&emulator) == mathvariant-1b.html mathvariant-1b-ref.html # Bug 1010679, Bug 1392106
 fails-if(Android&&emulator) == mathvariant-1c.html mathvariant-1c-ref.html # Bug 1010679, Bug 1392106
 == mathvariant-1d.html mathvariant-1d-ref.html
-fails-if(Android&&emulator) fails-if(OSX) == mathvariant-2.html mathvariant-2-ref.html # Bugs 1010678, 1010679
+fails-if(Android&&emulator) == mathvariant-2.html mathvariant-2-ref.html # Bug 1010679
 == mathvariant-4.html mathvariant-4-ref.html
 == mathvariant-5.html mathvariant-5-ref.html
 == dtls-1.html dtls-1-ref.html
