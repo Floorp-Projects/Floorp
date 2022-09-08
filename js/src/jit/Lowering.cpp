@@ -3389,6 +3389,13 @@ void LIRGenerator::visitPostWriteElementBarrier(MPostWriteElementBarrier* ins) {
   }
 }
 
+void LIRGenerator::visitAssertCanElidePostWriteBarrier(
+    MAssertCanElidePostWriteBarrier* ins) {
+  auto* lir = new (alloc()) LAssertCanElidePostWriteBarrier(
+      useRegister(ins->object()), useBox(ins->value()), temp());
+  add(lir, ins);
+}
+
 void LIRGenerator::visitArrayLength(MArrayLength* ins) {
   MOZ_ASSERT(ins->elements()->type() == MIRType::Elements);
   auto* lir = new (alloc()) LArrayLength(useRegisterAtStart(ins->elements()));

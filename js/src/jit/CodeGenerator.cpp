@@ -5084,6 +5084,22 @@ void CodeGenerator::visitPostWriteElementBarrierV(
   visitPostWriteBarrierCommonV(lir, ool);
 }
 
+void CodeGenerator::visitAssertCanElidePostWriteBarrier(
+    LAssertCanElidePostWriteBarrier* lir) {
+  Register object = ToRegister(lir->object());
+  ValueOperand value =
+      ToValue(lir, LAssertCanElidePostWriteBarrier::ValueIndex);
+  Register temp = ToRegister(lir->temp0());
+
+  Label ok;
+  masm.branchPtrInNurseryChunk(Assembler::Equal, object, temp, &ok);
+  masm.branchValueIsNurseryCell(Assembler::NotEqual, value, temp, &ok);
+
+  masm.assumeUnreachable("Unexpected missing post write barrier");
+
+  masm.bind(&ok);
+}
+
 void CodeGenerator::visitCallNative(LCallNative* call) {
   WrappedFunction* target = call->getSingleTarget();
   MOZ_ASSERT(target);

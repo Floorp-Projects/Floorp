@@ -1985,6 +1985,14 @@
 - name: PostWriteElementBarrier
   gen_boilerplate: false
 
+- name: AssertCanElidePostWriteBarrier
+  operands:
+    object: Object
+    value: Value
+  result_type: None
+  guard: true
+  alias_set: none
+
 - name: NewNamedLambdaObject
   arguments:
     templateObj: NamedLambdaObject*
