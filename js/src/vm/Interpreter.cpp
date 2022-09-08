@@ -4240,6 +4240,13 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
     END_CASE(DebugLeaveLexicalEnv)
 
     CASE(FreshenLexicalEnv) {
+#ifdef DEBUG
+      Scope* scope = script->getScope(REGS.pc);
+      auto envChain = REGS.fp()->environmentChain();
+      auto* envScope = &envChain->as<BlockLexicalEnvironmentObject>().scope();
+      MOZ_ASSERT(scope == envScope);
+#endif
+
       if (MOZ_UNLIKELY(cx->realm()->isDebuggee())) {
         DebugEnvironments::onPopLexical(cx, REGS.fp(), REGS.pc);
       }
@@ -4251,6 +4258,13 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
     END_CASE(FreshenLexicalEnv)
 
     CASE(RecreateLexicalEnv) {
+#ifdef DEBUG
+      Scope* scope = script->getScope(REGS.pc);
+      auto envChain = REGS.fp()->environmentChain();
+      auto* envScope = &envChain->as<BlockLexicalEnvironmentObject>().scope();
+      MOZ_ASSERT(scope == envScope);
+#endif
+
       if (MOZ_UNLIKELY(cx->realm()->isDebuggee())) {
         DebugEnvironments::onPopLexical(cx, REGS.fp(), REGS.pc);
       }
