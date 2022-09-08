@@ -3140,18 +3140,6 @@ void LIRGenerator::visitNewLexicalEnvironmentObject(
   assignSafepoint(lir, ins);
 }
 
-void LIRGenerator::visitCopyLexicalEnvironmentObject(
-    MCopyLexicalEnvironmentObject* ins) {
-  MDefinition* env = ins->env();
-  MOZ_ASSERT(env->type() == MIRType::Object);
-
-  LCopyLexicalEnvironmentObject* lir =
-      new (alloc()) LCopyLexicalEnvironmentObject(useRegisterAtStart(env));
-
-  defineReturn(lir, ins);
-  assignSafepoint(lir, ins);
-}
-
 void LIRGenerator::visitNewClassBodyEnvironmentObject(
     MNewClassBodyEnvironmentObject* ins) {
   auto* lir = new (alloc()) LNewClassBodyEnvironmentObject(temp());

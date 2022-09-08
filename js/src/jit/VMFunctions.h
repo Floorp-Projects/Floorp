@@ -462,9 +462,6 @@ JSObject* CreateGenerator(JSContext* cx, HandleFunction, HandleScript,
 
 ArrayObject* NewArrayObjectEnsureDenseInitLength(JSContext* cx, int32_t count);
 
-JSObject* CopyLexicalEnvironmentObject(JSContext* cx, HandleObject env,
-                                       bool copySlots);
-
 JSObject* InitRestParameter(JSContext* cx, uint32_t length, Value* rest,
                             HandleObject res);
 

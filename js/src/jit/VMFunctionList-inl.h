@@ -108,7 +108,6 @@ namespace jit {
   _(CloneRegExpObject, js::CloneRegExpObject)                                  \
   _(CloseIterOperation, js::CloseIterOperation)                                \
   _(ConcatStrings, js::ConcatStrings<CanGC>)                                   \
-  _(CopyLexicalEnvironmentObject, js::jit::CopyLexicalEnvironmentObject)       \
   _(CreateAsyncFromSyncIterator, js::CreateAsyncFromSyncIterator)              \
   _(CreateBigIntFromInt64, js::jit::CreateBigIntFromInt64)                     \
   _(CreateBigIntFromUint64, js::jit::CreateBigIntFromUint64)                   \

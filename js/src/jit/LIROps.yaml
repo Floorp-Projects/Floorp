@@ -2112,13 +2112,6 @@
   num_temps: 1
   mir_op: true
 
-- name: CopyLexicalEnvironmentObject
-  result_type: WordSized
-  operands:
-    env: WordSized
-  call_instruction: true
-  mir_op: true
-
 - name: NewClassBodyEnvironmentObject
   result_type: WordSized
   num_temps: 1

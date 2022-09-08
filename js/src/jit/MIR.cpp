@@ -6387,11 +6387,6 @@ AliasSet MGuardNoDenseElements::getAliasSet() const {
   return AliasSet::Load(AliasSet::ObjectFields);
 }
 
-AliasSet MCopyLexicalEnvironmentObject::getAliasSet() const {
-  return AliasSet::Load(AliasSet::ObjectFields | AliasSet::FixedSlot |
-                        AliasSet::DynamicSlot);
-}
-
 AliasSet MAllocateAndStoreSlot::getAliasSet() const {
   return AliasSet::Store(AliasSet::ObjectFields | AliasSet::DynamicSlot);
 }
