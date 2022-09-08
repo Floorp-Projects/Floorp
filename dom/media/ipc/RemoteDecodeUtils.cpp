@@ -92,7 +92,7 @@ const char* RemoteDecodeInToStr(RemoteDecodeIn aLocation) {
 #endif
 #ifdef MOZ_WMF_MEDIA_ENGINE
     case RemoteDecodeIn::UtilityProcess_MFMediaEngineCDM:
-      return "Utiltiy MF Media Engine CDM";
+      return "Utility MF Media Engine CDM";
 #endif
     default:
       MOZ_ASSERT_UNREACHABLE("Unsupported RemoteDecodeIn");
