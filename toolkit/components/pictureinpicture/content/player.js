@@ -112,11 +112,8 @@ let Player = {
    */
   resizeDebouncer: null,
   /**
-   * Used for window movement Telemetry to determine if the player window has
-   * moved since the last time we checked.
+   * Used for Telemetry to identify the window.
    */
-  lastScreenX: -1,
-  lastScreenY: -1,
   id: -1,
 
   /**
@@ -244,9 +241,6 @@ let Player = {
         height: window.outerHeight.toString(),
       });
     }, RESIZE_DEBOUNCE_RATE_MS);
-
-    this.lastScreenX = window.screenX;
-    this.lastScreenY = window.screenY;
 
     this.computeAndSetMinimumSize(window.outerWidth, window.outerHeight);
 
@@ -656,9 +650,6 @@ let Player = {
    *  Event context details
    */
   onMouseUp(event) {
-    this.lastScreenX = window.screenX;
-    this.lastScreenY = window.screenY;
-
     // Corner snapping changes start here.
     // Check if metakey pressed and macOS
     let quadrant = this.determineCurrentQuadrant();
