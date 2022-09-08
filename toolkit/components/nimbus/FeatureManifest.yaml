@@ -616,7 +616,7 @@ majorRelease2022:
       description: "Controls visibility of the privacy segmentation preferences section."
     feltPrivacyWindowSeparation:
       type: boolean
-      fallbackPref: "browser.privacySegmentation.windowSeparation.enabled"
+      fallbackPref: "browser.privateWindowSeparation.enabled"
       description: "Whether or not private browsing windows use a separate icon in the Windows taskbar"
     colorwayCloset:
       type: boolean
