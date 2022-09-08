@@ -282,6 +282,9 @@ function _removePositionListeners() {
 
 function _setupWindowFunctions() {
   const AWParent = new lazy.AboutWelcomeParent();
+  addEventListener("unload", () => {
+    AWParent.didDestroy();
+  });
   const receive = name => data =>
     AWParent.onContentMessage(`AWPage:${name}`, data, document);
   // Expose top level functions expected by the bundle.
@@ -366,11 +369,6 @@ async function _renderCallout() {
  * Render content based on about:welcome multistage template.
  */
 async function showFeatureCallout(messageId) {
-  // Don't show the feature tour if user has already completed it.
-  if (lazy.featureTourProgress.complete) {
-    return;
-  }
-
   await _loadConfig();
 
   if (!CONFIG?.screens?.length) {
