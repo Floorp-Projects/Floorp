@@ -3,8 +3,8 @@
 
 "use strict";
 
-let { macOSPoliciesParser } = ChromeUtils.import(
-  "resource://gre/modules/policies/macOSPoliciesParser.jsm"
+let { macOSPoliciesParser } = ChromeUtils.importESModule(
+  "resource://gre/modules/policies/macOSPoliciesParser.sys.mjs"
 );
 
 add_task(async function test_object_unflatten() {

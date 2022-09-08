@@ -3,8 +3,8 @@
 
 "use strict";
 
-let { runOnce } = ChromeUtils.import(
-  "resource:///modules/policies/Policies.jsm"
+let { runOnce } = ChromeUtils.importESModule(
+  "resource:///modules/policies/Policies.sys.mjs"
 );
 
 let runCount = 0;

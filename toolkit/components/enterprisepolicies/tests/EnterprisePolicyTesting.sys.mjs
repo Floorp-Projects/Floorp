@@ -15,9 +15,7 @@ ChromeUtils.defineModuleGetter(
   "resource://testing-common/FileTestUtils.jsm"
 );
 
-var EXPORTED_SYMBOLS = ["EnterprisePolicyTesting", "PoliciesPrefTracker"];
-
-var EnterprisePolicyTesting = {
+export var EnterprisePolicyTesting = {
   // |json| must be an object representing the desired policy configuration, OR a
   // path to the JSON file containing the policy configuration.
   setupPolicyEngineWithJson: async function setupPolicyEngineWithJson(
@@ -99,7 +97,7 @@ var EnterprisePolicyTesting = {
  * that they are restored to their original values when
  * the test ends or another test case restarts the engine.
  */
-var PoliciesPrefTracker = {
+export var PoliciesPrefTracker = {
   _originalFunc: null,
   _originalValues: new Map(),
 

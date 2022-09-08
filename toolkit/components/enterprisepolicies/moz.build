@@ -17,9 +17,9 @@ TEST_DIRS += ["tests"]
 
 if CONFIG["MOZ_WIDGET_TOOLKIT"] != "android":
     EXTRA_JS_MODULES += [
-        "EnterprisePolicies.jsm",
-        "EnterprisePoliciesContent.jsm",
-        "EnterprisePoliciesParent.jsm",
+        "EnterprisePolicies.sys.mjs",
+        "EnterprisePoliciesContent.sys.mjs",
+        "EnterprisePoliciesParent.sys.mjs",
     ]
 
     XPCOM_MANIFESTS += [
@@ -28,10 +28,10 @@ if CONFIG["MOZ_WIDGET_TOOLKIT"] != "android":
 
 if CONFIG["MOZ_WIDGET_TOOLKIT"] == "windows":
     EXTRA_JS_MODULES.policies += [
-        "WindowsGPOParser.jsm",
+        "WindowsGPOParser.sys.mjs",
     ]
 
 if CONFIG["MOZ_WIDGET_TOOLKIT"] == "cocoa":
     EXTRA_JS_MODULES.policies += [
-        "macOSPoliciesParser.jsm",
+        "macOSPoliciesParser.sys.mjs",
     ]
