@@ -758,9 +758,12 @@ details[open] > .page-section-header > .twisty {
 
 .synced-tab-li-url,
 .synced-tab-li-device,
-.synced-tab-li-time,
 .synced-tab-li:not(:first-child) > .synced-tab-a > .synced-tab-li-title {
   font-size: .85em;
+}
+
+.synced-tab-li-time {
+  font-size: .75em;
 }
 
 .synced-tab-li-url {
