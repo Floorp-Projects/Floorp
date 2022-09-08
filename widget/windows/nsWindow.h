@@ -701,7 +701,7 @@ class nsWindow final : public nsBaseWidget {
   static InjectTouchInputPtr sInjectTouchFuncPtr;
   static uint32_t sInstanceCount;
   static nsWindow* sCurrentWindow;
-  static BOOL sIsOleInitialized;
+  static bool sIsOleInitialized;
   static Cursor sCurrentCursor;
   static bool sJustGotDeactivate;
   static bool sJustGotActivate;
