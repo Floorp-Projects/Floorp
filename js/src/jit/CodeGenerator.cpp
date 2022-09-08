@@ -7207,8 +7207,8 @@ void CodeGenerator::visitNewCallObject(LNewCallObject* lir) {
 
   CallObject* templateObj = lir->mir()->templateObject();
 
-  using Fn = JSObject* (*)(JSContext*, Handle<Shape*>);
-  OutOfLineCode* ool = oolCallVM<Fn, NewCallObject>(
+  using Fn = CallObject* (*)(JSContext*, Handle<Shape*>);
+  OutOfLineCode* ool = oolCallVM<Fn, CallObject::createWithShape>(
       lir, ArgList(ImmGCPtr(templateObj->shape())), StoreRegisterTo(objReg));
 
   // Inline call object creation, using the OOL path only for tricky cases.

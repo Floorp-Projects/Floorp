@@ -336,7 +336,7 @@ class CallObject : public EnvironmentObject {
    * Construct a bare-bones call object given a shape.
    * The call object must be further initialized to be usable.
    */
-  static CallObject* create(JSContext* cx, Handle<Shape*> shape);
+  static CallObject* createWithShape(JSContext* cx, Handle<Shape*> shape);
 
   static CallObject* createTemplateObject(JSContext* cx, HandleScript script,
                                           HandleObject enclosing);
