@@ -23,6 +23,7 @@ fuzzy-if(cocoaWidget,255-255,1495-1495) fuzzy-if(winWidget,255-255,353-353) fuzz
 random-if(useDrawSnapshot) fuzzy-if(cocoaWidget,255-255,284-320) == backplate-bg-image-011.html backplate-bg-image-011-ref.html
 fuzzy-if(cocoaWidget,255-255,16-16) == backplate-bg-image-012.html backplate-bg-image-012-ref.html
 == backplate-bg-image-013.html backplate-bg-image-013-ref.html
+fuzzy-if(cocoaWidget,255-255,20-20) == backplate-bg-image-014.html backplate-bg-image-001-ref.html # bug 1577028
 
 test-pref(browser.display.suppress_canvas_background_image_on_forced_colors,true) == bg-image-root-001.html bg-image-root-001-ref.html
 test-pref(browser.display.suppress_canvas_background_image_on_forced_colors,false) != bg-image-root-001.html bg-image-root-001-ref.html
