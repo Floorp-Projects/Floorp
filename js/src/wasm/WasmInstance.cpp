@@ -44,11 +44,11 @@
 #include "vm/Iteration.h"
 #include "vm/JitActivation.h"
 #include "vm/PlainObject.h"  // js::PlainObject
-#include "wasm/TypedObject.h"
 #include "wasm/WasmBuiltins.h"
 #include "wasm/WasmCode.h"
 #include "wasm/WasmDebug.h"
 #include "wasm/WasmDebugFrame.h"
+#include "wasm/WasmGcObject.h"
 #include "wasm/WasmJS.h"
 #include "wasm/WasmModule.h"
 #include "wasm/WasmStubs.h"
@@ -1510,8 +1510,8 @@ bool Instance::initElems(uint32_t tableIndex, const ElemSegment& seg,
   JSContext* cx = instance->cx();
 
   ASSERT_ANYREF_IS_JSOBJECT;
-  Rooted<TypedObject*> ref(
-      cx, (TypedObject*)AnyRef::fromCompiledCode(refPtr).asJSObject());
+  Rooted<WasmGcObject*> ref(
+      cx, (WasmGcObject*)AnyRef::fromCompiledCode(refPtr).asJSObject());
   Rooted<RttValue*> rtt(
       cx, &AnyRef::fromCompiledCode(rttPtr).asJSObject()->as<RttValue>());
   return int32_t(ref->isRuntimeSubtype(rtt));

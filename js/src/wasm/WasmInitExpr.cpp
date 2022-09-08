@@ -22,7 +22,7 @@
 
 #include "js/Value.h"
 
-#include "wasm/TypedObject.h"
+#include "wasm/WasmGcObject.h"
 #include "wasm/WasmInstance.h"
 #include "wasm/WasmOpIter.h"
 #include "wasm/WasmSerialize.h"

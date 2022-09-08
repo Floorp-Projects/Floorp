@@ -64,6 +64,7 @@
 #  include "vm/RecordType.h"
 #  include "vm/TupleType.h"
 #endif
+#include "wasm/WasmGcObject.h"
 
 #include "vm/BooleanObject-inl.h"
 #include "vm/EnvironmentObject-inl.h"
@@ -76,7 +77,6 @@
 #include "vm/Realm-inl.h"
 #include "vm/StringObject-inl.h"
 #include "vm/TypedArrayObject-inl.h"
-#include "wasm/TypedObject-inl.h"
 
 using namespace js;
 
@@ -1955,10 +1955,10 @@ bool js::SetPrototype(JSContext* cx, HandleObject obj, HandleObject proto,
   /*
    * Disallow mutating the [[Prototype]] on Typed Objects, per the spec.
    */
-  if (obj->is<TypedObject>()) {
+  if (obj->is<WasmGcObject>()) {
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
                               JSMSG_CANT_SET_PROTO_OF,
-                              "incompatible TypedObject");
+                              "incompatible WebAssembly object");
     return false;
   }
 

@@ -27,7 +27,7 @@
 #include "vm/JSContext.h"
 #include "vm/JSObject.h"
 #include "vm/StringType.h"
-#include "wasm/TypedObject.h"
+#include "wasm/WasmGcObject.h"
 #include "wasm/WasmJS.h"
 #include "wasm/WasmLog.h"
 
@@ -175,8 +175,8 @@ bool wasm::CheckEqRefValue(JSContext* cx, HandleValue v,
 
   if (v.isObject()) {
     JSObject& obj = v.toObject();
-    if (obj.is<TypedObject>()) {
-      vp.set(AnyRef::fromJSObject(&obj.as<TypedObject>()));
+    if (obj.is<WasmGcObject>()) {
+      vp.set(AnyRef::fromJSObject(&obj.as<WasmGcObject>()));
       return true;
     }
   }
