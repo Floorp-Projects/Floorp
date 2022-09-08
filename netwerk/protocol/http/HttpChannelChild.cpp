@@ -1763,6 +1763,20 @@ HttpChannelChild::OnRedirectVerifyCallback(nsresult aResult) {
 // HttpChannelChild::nsIRequest
 //-----------------------------------------------------------------------------
 
+NS_IMETHODIMP HttpChannelChild::SetCanceledReason(const nsACString& aReason) {
+  return SetCanceledReasonImpl(aReason);
+}
+
+NS_IMETHODIMP HttpChannelChild::GetCanceledReason(nsACString& aReason) {
+  return GetCanceledReasonImpl(aReason);
+}
+
+NS_IMETHODIMP
+HttpChannelChild::CancelWithReason(nsresult aStatus,
+                                   const nsACString& aReason) {
+  return CancelWithReasonImpl(aStatus, aReason);
+}
+
 NS_IMETHODIMP
 HttpChannelChild::Cancel(nsresult aStatus) {
   LOG(("HttpChannelChild::Cancel [this=%p, status=%" PRIx32 "]\n", this,

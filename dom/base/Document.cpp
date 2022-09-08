@@ -772,6 +772,18 @@ OnloadBlocker::GetStatus(nsresult* status) {
   return NS_OK;
 }
 
+NS_IMETHODIMP OnloadBlocker::SetCanceledReason(const nsACString& aReason) {
+  return SetCanceledReasonImpl(aReason);
+}
+
+NS_IMETHODIMP OnloadBlocker::GetCanceledReason(nsACString& aReason) {
+  return GetCanceledReasonImpl(aReason);
+}
+
+NS_IMETHODIMP OnloadBlocker::CancelWithReason(nsresult aStatus,
+                                              const nsACString& aReason) {
+  return CancelWithReasonImpl(aStatus, aReason);
+}
 NS_IMETHODIMP
 OnloadBlocker::Cancel(nsresult status) { return NS_OK; }
 NS_IMETHODIMP

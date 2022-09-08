@@ -170,6 +170,19 @@ static bool AppendRequestsToArray(PLDHashTable* aTable,
   return true;
 }
 
+NS_IMETHODIMP nsLoadGroup::SetCanceledReason(const nsACString& aReason) {
+  return SetCanceledReasonImpl(aReason);
+}
+
+NS_IMETHODIMP nsLoadGroup::GetCanceledReason(nsACString& aReason) {
+  return GetCanceledReasonImpl(aReason);
+}
+
+NS_IMETHODIMP nsLoadGroup::CancelWithReason(nsresult aStatus,
+                                            const nsACString& aReason) {
+  return CancelWithReasonImpl(aStatus, aReason);
+}
+
 NS_IMETHODIMP
 nsLoadGroup::Cancel(nsresult status) {
   MOZ_ASSERT(NS_IsMainThread());

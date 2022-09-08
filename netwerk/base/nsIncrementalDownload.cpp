@@ -325,6 +325,20 @@ nsIncrementalDownload::GetStatus(nsresult* status) {
   return NS_OK;
 }
 
+NS_IMETHODIMP nsIncrementalDownload::SetCanceledReason(
+    const nsACString& aReason) {
+  return SetCanceledReasonImpl(aReason);
+}
+
+NS_IMETHODIMP nsIncrementalDownload::GetCanceledReason(nsACString& aReason) {
+  return GetCanceledReasonImpl(aReason);
+}
+
+NS_IMETHODIMP nsIncrementalDownload::CancelWithReason(
+    nsresult aStatus, const nsACString& aReason) {
+  return CancelWithReasonImpl(aStatus, aReason);
+}
+
 NS_IMETHODIMP
 nsIncrementalDownload::Cancel(nsresult status) {
   NS_ENSURE_ARG(NS_FAILED(status));

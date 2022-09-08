@@ -193,6 +193,19 @@ already_AddRefed<DocumentChannel> DocumentChannel::CreateForObject(
                            aNotificationCallbacks, 0, false, false);
 }
 
+NS_IMETHODIMP DocumentChannel::SetCanceledReason(const nsACString& aReason) {
+  return SetCanceledReasonImpl(aReason);
+}
+
+NS_IMETHODIMP DocumentChannel::GetCanceledReason(nsACString& aReason) {
+  return GetCanceledReasonImpl(aReason);
+}
+
+NS_IMETHODIMP DocumentChannel::CancelWithReason(nsresult aStatus,
+                                                const nsACString& aReason) {
+  return CancelWithReasonImpl(aStatus, aReason);
+}
+
 NS_IMETHODIMP
 DocumentChannel::Cancel(nsresult aStatusCode) {
   MOZ_CRASH("If we get here, something is broken");
