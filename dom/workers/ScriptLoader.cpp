@@ -392,7 +392,9 @@ WorkerScriptLoader::WorkerScriptLoader(
       mSyncLoopTarget(aSyncLoopTarget),
       mWorkerScriptType(aWorkerScriptType),
       mCancelMainThread(Nothing()),
-      mRv(aRv) {
+      mRv(aRv),
+      mCleanedUp(false),
+      mCleanUpLock("cleanUpLock") {
   aWorkerPrivate->AssertIsOnWorkerThread();
   MOZ_ASSERT(aSyncLoopTarget);
 
@@ -667,22 +669,25 @@ void WorkerScriptLoader::CancelMainThreadWithBindingAborted(
 void WorkerScriptLoader::CancelMainThread(
     nsresult aCancelResult, nsTArray<WorkerLoadContext*>* aContextList) {
   AssertIsOnMainThread();
+  {
+    MutexAutoLock lock(CleanUpLock());
 
-  // Check if we have already cancelled, or if the worker has been killed
-  // before we cancel.
-  if (IsCancelled() || !mWorkerRef) {
-    return;
-  }
+    // Check if we have already cancelled, or if the worker has been killed
+    // before we cancel.
+    if (IsCancelled() || CleanedUp()) {
+      return;
+    }
 
-  mCancelMainThread = Some(aCancelResult);
+    mCancelMainThread = Some(aCancelResult);
 
-  // In the case of a cancellation, service workers fetching from the
-  // cache will still be doing work despite CancelMainThread. Eagerly
-  // clear the promises associated with these scripts.
-  for (WorkerLoadContext* loadContext : *aContextList) {
-    if (loadContext->IsAwaitingPromise()) {
-      loadContext->mCachePromise->MaybeReject(NS_BINDING_ABORTED);
-      loadContext->mCachePromise = nullptr;
+    // In the case of a cancellation, service workers fetching from the
+    // cache will still be doing work despite CancelMainThread. Eagerly
+    // clear the promises associated with these scripts.
+    for (WorkerLoadContext* loadContext : *aContextList) {
+      if (loadContext->IsAwaitingPromise()) {
+        loadContext->mCachePromise->MaybeReject(NS_BINDING_ABORTED);
+        loadContext->mCachePromise = nullptr;
+      }
     }
   }
 }
@@ -1006,7 +1011,6 @@ void WorkerScriptLoader::TryShutdown() {
 
 void WorkerScriptLoader::ShutdownScriptLoader(bool aResult, bool aMutedError) {
   mWorkerRef->Private()->AssertIsOnWorkerThread();
-
   MOZ_ASSERT(AllScriptsExecuted());
 
   if (!aResult) {
@@ -1034,10 +1038,17 @@ void WorkerScriptLoader::ShutdownScriptLoader(bool aResult, bool aMutedError) {
     }
   }
 
-  mWorkerRef->Private()->StopSyncLoop(mSyncLoopTarget, aResult);
+  // Lock, shutdown, and cleanup state. After this the Loader is closed.
+  {
+    MutexAutoLock lock(CleanUpLock());
 
-  // Allow worker shutdown.
-  mWorkerRef = nullptr;
+    mWorkerRef->Private()->StopSyncLoop(mSyncLoopTarget, aResult);
+
+    // Signal cleanup
+    mCleanedUp = true;
+    // Allow worker shutdown.
+    mWorkerRef = nullptr;
+  }
 }
 
 void WorkerScriptLoader::LogExceptionToConsole(JSContext* aCx,
