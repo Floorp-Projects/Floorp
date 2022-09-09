@@ -1331,6 +1331,7 @@ menuitem[checked="true"]>.menu-iconic-left,
 
 
 #navigator-toolbox :-moz-any(toolbar, #nav-bar-customization-target):not(#toolbar-menubar) {
+  -moz-box-align: center !important;
   min-height: 36px !important;
 }
 
@@ -3153,13 +3154,18 @@ menuitem[data-l10n-id^="places-edit-"] {
 #pageAction-panel-bookmark,
 #panelMenuBookmarkThisPage {
   list-style-image: url(chrome://browser/skin/star-1x.svg) !important;
+}
+#star-button:not(#star-button[starred]),
+#context-bookmarkpage,
+#pageAction-panel-bookmark,
+#panelMenuBookmarkThisPage {
   fill-opacity: 0 !important;
 }
 
-/*#star-button[starred],
+#star-button[starred],
 #tracking-protection-icon-box[active] {
-  fill: var(--toolbarbutton-icon-fill-attention) !important;
-}*/
+  fill-opacity: 1 !important;
+}
 
 #bookmarks-menu-button,
 #appMenu-library-bookmarks-button,
