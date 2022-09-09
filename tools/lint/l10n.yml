@@ -13,7 +13,6 @@ l10n:
         - devtools/startup/locales/en-US
         - dom/locales/en-US
         - mobile/android/locales/en-US
-        - mobile/locales/en-US
         - netwerk/locales/en-US
         - security/manager/locales/en-US
         - services/sync/locales/en-US
