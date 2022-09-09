@@ -13,7 +13,6 @@ remote.jar:
   content/marionette/actors/MarionetteReftestChild.jsm (actors/MarionetteReftestChild.jsm)
   content/marionette/actors/MarionetteReftestParent.jsm (actors/MarionetteReftestParent.jsm)
   content/marionette/addon.js (addon.js)
-  content/marionette/appinfo.js (appinfo.js)
   content/marionette/atom.js (atom.js)
   content/marionette/browser.js (browser.js)
   content/marionette/capture.js (capture.js)
