@@ -16,6 +16,12 @@ pub fn cvt_r(ret: c_int) -> Result<(), Error> {
 
 macro_rules! call {
     (ffi::$p:ident ($($e:expr),*)) => ({
-        ::call::cvt_r(ffi::$p($($e),*))
+        ::try_call::cvt_r(ffi::$p($($e),*))
+    })
+}
+
+macro_rules! try_call {
+    (ffi::$p:ident ($($e:expr),*)) => ({
+        ::try_call::cvt_r(ffi::$p($($e),*))?
     })
 }
