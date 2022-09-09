@@ -24,7 +24,6 @@ from mozharness.mozilla.testing.android import AndroidMixin
 from mozharness.mozilla.testing.testbase import TestingMixin, testing_config_options
 from mozharness.mozilla.testing.codecoverage import CodeCoverageMixin
 
-PY2 = sys.version_info.major == 2
 SUITE_DEFAULT_E10S = ["geckoview-junit", "mochitest", "reftest"]
 SUITE_NO_E10S = ["cppunittest", "gtest", "jittest"]
 SUITE_REPEATABLE = ["mochitest", "reftest"]
@@ -356,17 +355,12 @@ class AndroidHardwareTest(
         dirs = self.query_abs_dirs()
         requirements = None
         suites = self._query_suites()
-        # mochitest is the only thing that needs this
-        if PY2:
-            wspb_requirements = "websocketprocessbridge_requirements.txt"
-        else:
-            wspb_requirements = "websocketprocessbridge_requirements_3.txt"
         if ("mochitest-media", "mochitest-media") in suites:
             # mochitest-media is the only thing that needs this
             requirements = os.path.join(
                 dirs["abs_mochitest_dir"],
                 "websocketprocessbridge",
-                wspb_requirements,
+                "websocketprocessbridge_requirements_3.txt",
             )
         if requirements:
             self.register_virtualenv_module(requirements=[requirements], two_pass=True)
