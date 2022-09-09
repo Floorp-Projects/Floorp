@@ -604,9 +604,6 @@ ignore-flag(--more-compartments) script test262/built-ins/Proxy/construct/return
 ignore-flag(--more-compartments) script test262/built-ins/Proxy/construct/return-not-object-throws-boolean-realm.js
 ignore-flag(--more-compartments) script test262/built-ins/Proxy/construct/return-not-object-throws-boolean-realm.js
 
-# https://bugzilla.mozilla.org/show_bug.cgi?id=1648202
-skip script test262/built-ins/RegExp/named-groups/non-unicode-property-names-valid.js
-
 # https://bugzilla.mozilla.org/show_bug.cgi?id=1761993
 skip script test262/built-ins/AsyncGeneratorPrototype/return/return-state-completed-broken-promise.js
 skip script test262/built-ins/AsyncGeneratorPrototype/return/return-suspendedStart-broken-promise.js
