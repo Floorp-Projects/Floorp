@@ -18,7 +18,7 @@ const lazy = {};
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   Addon: "chrome://remote/content/marionette/addon.js",
-  AppInfo: "chrome://remote/content/shared/AppInfo.jsm",
+  AppInfo: "chrome://remote/content/marionette/appinfo.js",
   assert: "chrome://remote/content/shared/webdriver/Assert.jsm",
   atom: "chrome://remote/content/marionette/atom.js",
   browser: "chrome://remote/content/marionette/browser.js",

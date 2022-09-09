@@ -15,7 +15,7 @@ const lazy = {};
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   E10SUtils: "resource://gre/modules/E10SUtils.jsm",
 
-  AppInfo: "chrome://remote/content/shared/AppInfo.jsm",
+  AppInfo: "chrome://remote/content/marionette/appinfo.js",
   assert: "chrome://remote/content/shared/webdriver/Assert.jsm",
   capture: "chrome://remote/content/marionette/capture.js",
   Log: "chrome://remote/content/shared/Log.jsm",
