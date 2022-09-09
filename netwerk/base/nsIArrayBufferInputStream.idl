@@ -11,7 +11,7 @@
  * Provides scriptable methods for initializing a nsIInputStream
  * implementation with an ArrayBuffer.
  */
-[scriptable, uuid(3014dde6-aa1c-41db-87d0-48764a3710f6)]
+[scriptable, builtinclass, uuid(3014dde6-aa1c-41db-87d0-48764a3710f6)]
 interface nsIArrayBufferInputStream : nsIInputStream
 {
     /**

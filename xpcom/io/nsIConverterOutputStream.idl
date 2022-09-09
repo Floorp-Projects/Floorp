@@ -11,7 +11,7 @@ interface nsIOutputStream;
  * This interface allows writing strings to a stream, doing automatic
  * character encoding conversion.
  */
-[scriptable, uuid(4b71113a-cb0d-479f-8ed5-01daeba2e8d4)]
+[scriptable, builtinclass, uuid(4b71113a-cb0d-479f-8ed5-01daeba2e8d4)]
 interface nsIConverterOutputStream : nsIUnicharOutputStream
 {
     /**

@@ -9,7 +9,7 @@
  * An input stream that reads ahead and keeps a buffer coming from another input
  * stream so that fewer accesses to the underlying stream are necessary.
  */
-[scriptable, uuid(616f5b48-da09-11d3-8cda-0060b0fc14a3)]
+[scriptable, builtinclass, uuid(616f5b48-da09-11d3-8cda-0060b0fc14a3)]
 interface nsIBufferedInputStream : nsIInputStream
 {
     /**
@@ -30,7 +30,7 @@ interface nsIBufferedInputStream : nsIInputStream
  * and does the entire write only when the buffer is full, so that fewer writes
  * to the underlying output stream are necessary.
  */
-[scriptable, uuid(6476378a-da09-11d3-8cda-0060b0fc14a3)]
+[scriptable, builtinclass, uuid(6476378a-da09-11d3-8cda-0060b0fc14a3)]
 interface nsIBufferedOutputStream : nsIOutputStream
 {
     /**
