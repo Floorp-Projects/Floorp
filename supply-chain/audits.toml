@@ -1174,6 +1174,11 @@ collected by Jim Blandy, a Mozilla employee, over email in July 2022:
 Dzmitry was shown, and agreed to, the 'safe-to-deploy' text.
 """
 
+[[audits.wgpu-core]]
+who = "Jim Blandy <jimb@mozilla.com>"
+criteria = "safe-to-deploy"
+delta = "0.12.0 -> 0.13.0"
+
 [[audits.wgpu-hal]]
 who = "Dzmitry Malyshau <kvark@fastmail.com>"
 criteria = "safe-to-deploy"
@@ -1186,6 +1191,11 @@ collected by Jim Blandy, a Mozilla employee, over email in July 2022:
 Dzmitry was shown, and agreed to, the 'safe-to-deploy' text.
 """
 
+[[audits.wgpu-hal]]
+who = "Jim Blandy <jimb@mozilla.com>"
+criteria = "safe-to-deploy"
+delta = "0.12.0 -> 0.13.0"
+
 [[audits.wgpu-types]]
 who = "Dzmitry Malyshau <kvark@fastmail.com>"
 criteria = "safe-to-deploy"
@@ -1197,6 +1207,11 @@ Mozilla at the beginning of February 2022. This audit statement was
 collected by Jim Blandy, a Mozilla employee, over email in July 2022:
 Dzmitry was shown, and agreed to, the 'safe-to-deploy' text.
 """
+
+[[audits.wgpu-types]]
+who = "Jim Blandy <jimb@mozilla.com>"
+criteria = "safe-to-deploy"
+delta = "0.12.0 -> 0.13.0"
 
 [[audits.whatsys]]
 who = "Bobby Holley <bobbyholley@gmail.com>"
