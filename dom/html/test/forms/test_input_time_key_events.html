@@ -34,24 +34,24 @@ var testData = [
    * initialVal: initial value set to the input element.
    * expectedVal: expected value of the input element after sending the keys.
    */
-    {
+  {
     // Type 16 in the hour field will automatically change time to 4PM in 12-hour clock
     keys: ["16"],
     initialVal: "01:00",
     expectedVal: "16:00"
-    },
-    {
+  },
+  {
     // Type 00 in hour field will automatically convert to 12AM in 12-hour clock
     keys: ["00"],
     initialVal: "03:00",
     expectedVal: "00:00"
-    },
-    {
+  },
+  {
     // Type hour > 23 such as 24 will automatically convert to 2
     keys: ["24"],
     initialVal: "04:00",
     expectedVal: "02:00"
-    },
+  },
   {
     // Type 1030 and select AM.
     keys: ["1030"],
