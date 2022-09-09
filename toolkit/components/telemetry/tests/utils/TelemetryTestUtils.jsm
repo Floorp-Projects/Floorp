@@ -104,6 +104,65 @@ var TelemetryTestUtils = {
   },
 
   /**
+   * Returns the events in a snapshot, after optional filtering.
+   *
+   * @param {Object} filter An object of strings or RegExps for first filtering
+   *                 the event snapshot. Of the form {category, method, object}.
+   *                 Absent filters filter nothing.
+   * @param {Object} options An object containing any of
+   *                     - process {string} the process to examine. Default parent.
+   */
+  getEvents(filter = {}, { process = "parent" } = {}) {
+    // Step 0: Snapshot and clear.
+    let snapshots = Services.telemetry.snapshotEvents(
+      Ci.nsITelemetry.DATASET_PRERELEASE_CHANNELS,
+      false
+    );
+
+    if (!(process in snapshots)) {
+      return [];
+    }
+
+    let snapshot = snapshots[process];
+
+    // Step 1: Filter.
+    // Shared code with the below function
+    let {
+      category: filterCategory,
+      method: filterMethod,
+      object: filterObject,
+    } = filter;
+    let matches = (expected, actual) => {
+      if (expected === undefined) {
+        return true;
+      } else if (expected && expected.test) {
+        // Possibly a RegExp.
+        return expected.test(actual);
+      } else if (typeof expected === "function") {
+        return expected(actual);
+      }
+      return expected === actual;
+    };
+
+    return snapshot
+      .map(([, /* timestamp */ category, method, object, value, extra]) => {
+        // We don't care about the `timestamp` value.
+        // Tests that examine that value should use `snapshotEvents` directly.
+        return [category, method, object, value, extra];
+      })
+      .filter(([category, method, object]) => {
+        return (
+          matches(filterCategory, category) &&
+          matches(filterMethod, method) &&
+          matches(filterObject, object)
+        );
+      })
+      .map(([category, method, object, value, extra]) => {
+        return { category, method, object, value, extra };
+      });
+  },
+
+  /**
    * Asserts that, after optional filtering, the current events snapshot
    * matches expectedEvents.
    *
@@ -146,6 +205,7 @@ var TelemetryTestUtils = {
     let snapshot = snapshots[process];
 
     // Step 1: Filter.
+    // Shared code with the above function
     let {
       category: filterCategory,
       method: filterMethod,

@@ -15,6 +15,8 @@ XPCSHELL_TESTS_MANIFESTS += [
     "test/unit_ipc/xpcshell.ini",
 ]
 
+BROWSER_CHROME_MANIFESTS += ["test/mochitest/browser.ini"]
+
 XPIDL_SOURCES += [
     "nsIPrefBranch.idl",
     "nsIPrefLocalizedString.idl",
