@@ -1628,48 +1628,6 @@
         <error line="222" column="83" source="trailing-comma-on-call-site" />
         <error line="223" column="14" source="trailing-comma-on-call-site" />
     </file>
-    <file name="app/src/main/java/org/mozilla/fenix/components/Core.kt">
-        <error line="109" column="34" source="trailing-comma-on-declaration-site" />
-        <error line="132" column="48" source="trailing-comma-on-call-site" />
-        <error line="134" column="66" source="trailing-comma-on-call-site" />
-        <error line="140" column="25" source="trailing-comma-on-call-site" />
-        <error line="171" column="25" source="trailing-comma-on-call-site" />
-        <error line="180" column="77" source="trailing-comma-on-call-site" />
-        <error line="242" column="57" source="trailing-comma-on-call-site" />
-        <error line="263" column="18" source="trailing-comma-on-call-site" />
-        <error line="274" column="48" source="trailing-comma-on-call-site" />
-        <error line="275" column="14" source="trailing-comma-on-call-site" />
-        <error line="287" column="26" source="argument-list-wrapping" />
-        <error line="287" column="34" source="argument-list-wrapping" />
-        <error line="287" column="41" source="argument-list-wrapping" />
-        <error line="288" column="55" source="argument-list-wrapping" />
-        <error line="288" column="89" source="trailing-comma-on-call-site" />
-        <error line="340" column="34" source="trailing-comma-on-call-site" />
-        <error line="370" column="23" source="trailing-comma-on-call-site" />
-        <error line="388" column="56" source="trailing-comma-on-call-site" />
-        <error line="389" column="14" source="trailing-comma-on-call-site" />
-        <error line="398" column="57" source="trailing-comma-on-call-site" />
-        <error line="407" column="53" source="trailing-comma-on-call-site" />
-        <error line="420" column="51" source="trailing-comma-on-call-site" />
-        <error line="421" column="26" source="trailing-comma-on-call-site" />
-        <error line="427" column="48" source="trailing-comma-on-call-site" />
-        <error line="428" column="26" source="trailing-comma-on-call-site" />
-        <error line="434" column="49" source="trailing-comma-on-call-site" />
-        <error line="435" column="26" source="trailing-comma-on-call-site" />
-        <error line="441" column="48" source="trailing-comma-on-call-site" />
-        <error line="442" column="26" source="trailing-comma-on-call-site" />
-        <error line="448" column="53" source="trailing-comma-on-call-site" />
-        <error line="449" column="26" source="trailing-comma-on-call-site" />
-        <error line="455" column="52" source="trailing-comma-on-call-site" />
-        <error line="456" column="26" source="trailing-comma-on-call-site" />
-        <error line="463" column="65" source="trailing-comma-on-call-site" />
-        <error line="464" column="30" source="trailing-comma-on-call-site" />
-        <error line="471" column="55" source="trailing-comma-on-call-site" />
-        <error line="472" column="26" source="trailing-comma-on-call-site" />
-        <error line="484" column="46" source="trailing-comma-on-call-site" />
-        <error line="504" column="61" source="trailing-comma-on-call-site" />
-        <error line="538" column="9" source="spacing-between-declarations-with-comments" />
-    </file>
     <file name="app/src/main/java/org/mozilla/fenix/components/FenixSnackbar.kt">
         <error line="30" column="21" source="trailing-comma-on-declaration-site" />
         <error line="45" column="39" source="trailing-comma-on-call-site" />
@@ -1729,13 +1687,6 @@
     <file name="app/src/main/java/org/mozilla/fenix/components/TabCollectionStorage.kt">
         <error line="31" column="68" source="trailing-comma-on-declaration-site" />
         <error line="113" column="48" source="trailing-comma-on-call-site" />
-    </file>
-    <file name="app/src/main/java/org/mozilla/fenix/components/TrackingProtectionPolicyFactory.kt">
-        <error line="20" column="37" source="trailing-comma-on-declaration-site" />
-        <error line="35" column="68" source="trailing-comma-on-declaration-site" />
-        <error line="62" column="59" source="trailing-comma-on-call-site" />
-        <error line="92" column="69" source="trailing-comma-on-call-site" />
-        <error line="128" column="38" source="trailing-comma-on-call-site" />
     </file>
     <file name="app/src/main/java/org/mozilla/fenix/components/UseCases.kt">
         <error line="75" column="28" source="trailing-comma-on-call-site" />
@@ -2575,59 +2526,59 @@
         <error line="136" column="33" source="trailing-comma-on-call-site" />
     </file>
     <file name="app/src/main/java/org/mozilla/fenix/home/HomeFragment.kt">
-        <error line="124" column="5" source="spacing-between-declarations-with-annotations" />
-        <error line="166" column="5" source="spacing-between-declarations-with-annotations" />
-        <error line="196" column="60" source="argument-list-wrapping" />
-        <error line="196" column="79" source="argument-list-wrapping" />
-        <error line="204" column="36" source="trailing-comma-on-declaration-site" />
-        <error line="227" column="34" source="trailing-comma-on-call-site" />
-        <error line="243" column="87" source="trailing-comma-on-call-site" />
-        <error line="244" column="26" source="trailing-comma-on-call-site" />
-        <error line="258" column="36" source="trailing-comma-on-call-site" />
-        <error line="267" column="55" source="trailing-comma-on-call-site" />
-        <error line="270" column="49" source="trailing-comma-on-call-site" />
-        <error line="273" column="36" source="trailing-comma-on-call-site" />
-        <error line="281" column="51" source="trailing-comma-on-call-site" />
-        <error line="284" column="36" source="trailing-comma-on-call-site" />
-        <error line="299" column="40" source="trailing-comma-on-call-site" />
-        <error line="311" column="62" source="trailing-comma-on-call-site" />
-        <error line="314" column="36" source="trailing-comma-on-call-site" />
-        <error line="324" column="62" source="trailing-comma-on-call-site" />
-        <error line="327" column="36" source="trailing-comma-on-call-site" />
-        <error line="353" column="45" source="trailing-comma-on-call-site" />
-        <error line="384" column="14" source="trailing-comma-on-call-site" />
-        <error line="404" column="60" source="argument-list-wrapping" />
-        <error line="404" column="79" source="argument-list-wrapping" />
-        <error line="436" column="60" source="trailing-comma-on-call-site" />
-        <error line="447" column="18" source="trailing-comma-on-call-site" />
-        <error line="448" column="14" source="trailing-comma-on-call-site" />
-        <error line="477" column="63" source="trailing-comma-on-call-site" />
-        <error line="494" column="87" source="trailing-comma-on-call-site" />
-        <error line="547" column="36" source="trailing-comma-on-call-site" />
-        <error line="555" column="50" source="trailing-comma-on-call-site" />
-        <error line="602" column="60" source="argument-list-wrapping" />
-        <error line="602" column="79" source="argument-list-wrapping" />
-        <error line="667" column="44" source="trailing-comma-on-call-site" />
-        <error line="689" column="69" source="trailing-comma-on-call-site" />
-        <error line="693" column="44" source="trailing-comma-on-call-site" />
-        <error line="723" column="61" source="trailing-comma-on-call-site" />
-        <error line="733" column="74" source="trailing-comma-on-call-site" />
-        <error line="742" column="61" source="trailing-comma-on-call-site" />
-        <error line="781" column="30" source="trailing-comma-on-call-site" />
-        <error line="812" column="64" source="trailing-comma-on-call-site" />
-        <error line="813" column="22" source="trailing-comma-on-call-site" />
-        <error line="814" column="18" source="trailing-comma-on-call-site" />
-        <error line="833" column="92" source="trailing-comma-on-call-site" />
-        <error line="836" column="25" source="trailing-comma-on-call-site" />
-        <error line="856" column="56" source="argument-list-wrapping" />
-        <error line="856" column="59" source="argument-list-wrapping" />
-        <error line="856" column="73" source="argument-list-wrapping" />
-        <error line="856" column="99" source="trailing-comma-on-call-site" />
-        <error line="868" column="56" source="trailing-comma-on-call-site" />
-        <error line="869" column="18" source="trailing-comma-on-call-site" />
-        <error line="884" column="33" source="trailing-comma-on-call-site" />
-        <error line="911" column="54" source="trailing-comma-on-call-site" />
-        <error line="922" column="66" source="trailing-comma-on-call-site" />
+        <error line="125" column="5" source="spacing-between-declarations-with-annotations" />
+        <error line="167" column="5" source="spacing-between-declarations-with-annotations" />
+        <error line="197" column="60" source="argument-list-wrapping" />
+        <error line="197" column="79" source="argument-list-wrapping" />
+        <error line="205" column="36" source="trailing-comma-on-declaration-site" />
+        <error line="229" column="34" source="trailing-comma-on-call-site" />
+        <error line="245" column="87" source="trailing-comma-on-call-site" />
+        <error line="246" column="26" source="trailing-comma-on-call-site" />
+        <error line="260" column="36" source="trailing-comma-on-call-site" />
+        <error line="269" column="55" source="trailing-comma-on-call-site" />
+        <error line="272" column="49" source="trailing-comma-on-call-site" />
+        <error line="275" column="36" source="trailing-comma-on-call-site" />
+        <error line="283" column="51" source="trailing-comma-on-call-site" />
+        <error line="286" column="36" source="trailing-comma-on-call-site" />
+        <error line="301" column="40" source="trailing-comma-on-call-site" />
+        <error line="313" column="62" source="trailing-comma-on-call-site" />
+        <error line="316" column="36" source="trailing-comma-on-call-site" />
+        <error line="326" column="62" source="trailing-comma-on-call-site" />
+        <error line="329" column="36" source="trailing-comma-on-call-site" />
+        <error line="355" column="45" source="trailing-comma-on-call-site" />
+        <error line="386" column="14" source="trailing-comma-on-call-site" />
+        <error line="406" column="60" source="argument-list-wrapping" />
+        <error line="406" column="79" source="argument-list-wrapping" />
+        <error line="438" column="60" source="trailing-comma-on-call-site" />
+        <error line="449" column="18" source="trailing-comma-on-call-site" />
+        <error line="450" column="14" source="trailing-comma-on-call-site" />
+        <error line="479" column="63" source="trailing-comma-on-call-site" />
+        <error line="496" column="87" source="trailing-comma-on-call-site" />
+        <error line="549" column="36" source="trailing-comma-on-call-site" />
+        <error line="557" column="50" source="trailing-comma-on-call-site" />
+        <error line="604" column="60" source="argument-list-wrapping" />
+        <error line="604" column="79" source="argument-list-wrapping" />
+        <error line="669" column="44" source="trailing-comma-on-call-site" />
+        <error line="691" column="69" source="trailing-comma-on-call-site" />
+        <error line="695" column="44" source="trailing-comma-on-call-site" />
+        <error line="725" column="61" source="trailing-comma-on-call-site" />
+        <error line="735" column="74" source="trailing-comma-on-call-site" />
+        <error line="744" column="61" source="trailing-comma-on-call-site" />
+        <error line="790" column="30" source="trailing-comma-on-call-site" />
+        <error line="821" column="64" source="trailing-comma-on-call-site" />
+        <error line="822" column="22" source="trailing-comma-on-call-site" />
+        <error line="823" column="18" source="trailing-comma-on-call-site" />
+        <error line="842" column="92" source="trailing-comma-on-call-site" />
+        <error line="845" column="25" source="trailing-comma-on-call-site" />
+        <error line="865" column="56" source="argument-list-wrapping" />
+        <error line="865" column="59" source="argument-list-wrapping" />
+        <error line="865" column="73" source="argument-list-wrapping" />
+        <error line="865" column="99" source="trailing-comma-on-call-site" />
+        <error line="877" column="56" source="trailing-comma-on-call-site" />
+        <error line="878" column="18" source="trailing-comma-on-call-site" />
+        <error line="893" column="33" source="trailing-comma-on-call-site" />
+        <error line="920" column="54" source="trailing-comma-on-call-site" />
+        <error line="931" column="66" source="trailing-comma-on-call-site" />
     </file>
     <file name="app/src/main/java/org/mozilla/fenix/home/HomeMenu.kt">
         <error line="43" column="72" source="trailing-comma-on-declaration-site" />
@@ -2704,9 +2655,6 @@
     </file>
     <file name="app/src/main/java/org/mozilla/fenix/home/TopPlaceholderViewHolder.kt">
         <error line="16" column="15" source="trailing-comma-on-declaration-site" />
-    </file>
-    <file name="app/src/main/java/org/mozilla/fenix/home/WallpapersObserver.kt">
-        <error line="41" column="5" source="spacing-between-declarations-with-annotations" />
     </file>
     <file name="app/src/main/java/org/mozilla/fenix/home/blocklist/BlocklistHandler.kt">
         <error line="67" column="5" source="spacing-between-declarations-with-comments" />
@@ -3461,11 +3409,6 @@
         <error line="246" column="30" source="trailing-comma-on-call-site" />
         <error line="304" column="69" source="trailing-comma-on-call-site" />
         <error line="320" column="18" source="trailing-comma-on-call-site" />
-        <error line="341" column="48" source="trailing-comma-on-call-site" />
-        <error line="347" column="50" source="trailing-comma-on-call-site" />
-        <error line="354" column="39" source="trailing-comma-on-call-site" />
-        <error line="362" column="23" source="trailing-comma-on-call-site" />
-        <error line="374" column="57" source="trailing-comma-on-declaration-site" />
     </file>
     <file name="app/src/main/java/org/mozilla/fenix/library/history/HistoryFragmentStore.kt">
         <error line="70" column="47" source="trailing-comma-on-declaration-site" />
@@ -5438,152 +5381,6 @@
         <error line="20" column="26" source="trailing-comma-on-declaration-site" />
         <error line="28" column="83" source="trailing-comma-on-call-site" />
     </file>
-    <file name="app/src/main/java/org/mozilla/fenix/utils/Settings.kt">
-        <error line="91" column="9" source="spacing-between-declarations-with-comments" />
-        <error line="142" column="20" source="trailing-comma-on-call-site" />
-        <error line="147" column="21" source="trailing-comma-on-call-site" />
-        <error line="152" column="21" source="trailing-comma-on-call-site" />
-        <error line="160" column="24" source="trailing-comma-on-call-site" />
-        <error line="165" column="21" source="trailing-comma-on-call-site" />
-        <error line="170" column="21" source="trailing-comma-on-call-site" />
-        <error line="175" column="21" source="trailing-comma-on-call-site" />
-        <error line="180" column="21" source="trailing-comma-on-call-site" />
-        <error line="185" column="21" source="trailing-comma-on-call-site" />
-        <error line="190" column="41" source="trailing-comma-on-call-site" />
-        <error line="198" column="20" source="trailing-comma-on-call-site" />
-        <error line="206" column="20" source="trailing-comma-on-call-site" />
-        <error line="220" column="24" source="trailing-comma-on-call-site" />
-        <error line="225" column="24" source="trailing-comma-on-call-site" />
-        <error line="230" column="14" source="trailing-comma-on-call-site" />
-        <error line="235" column="21" source="trailing-comma-on-call-site" />
-        <error line="240" column="24" source="trailing-comma-on-call-site" />
-        <error line="245" column="24" source="trailing-comma-on-call-site" />
-        <error line="250" column="23" source="trailing-comma-on-call-site" />
-        <error line="257" column="21" source="trailing-comma-on-call-site" />
-        <error line="262" column="24" source="trailing-comma-on-call-site" />
-        <error line="267" column="23" source="trailing-comma-on-call-site" />
-        <error line="272" column="50" source="trailing-comma-on-call-site" />
-        <error line="277" column="23" source="trailing-comma-on-call-site" />
-        <error line="292" column="23" source="trailing-comma-on-call-site" />
-        <error line="297" column="24" source="trailing-comma-on-call-site" />
-        <error line="302" column="23" source="trailing-comma-on-call-site" />
-        <error line="307" column="21" source="trailing-comma-on-call-site" />
-        <error line="312" column="23" source="trailing-comma-on-call-site" />
-        <error line="317" column="23" source="trailing-comma-on-call-site" />
-        <error line="322" column="23" source="trailing-comma-on-call-site" />
-        <error line="327" column="23" source="trailing-comma-on-call-site" />
-        <error line="332" column="24" source="trailing-comma-on-call-site" />
-        <error line="337" column="23" source="trailing-comma-on-call-site" />
-        <error line="342" column="23" source="trailing-comma-on-call-site" />
-        <error line="347" column="24" source="trailing-comma-on-call-site" />
-        <error line="352" column="24" source="trailing-comma-on-call-site" />
-        <error line="357" column="24" source="trailing-comma-on-call-site" />
-        <error line="362" column="24" source="trailing-comma-on-call-site" />
-        <error line="367" column="24" source="trailing-comma-on-call-site" />
-        <error line="372" column="23" source="trailing-comma-on-call-site" />
-        <error line="382" column="36" source="trailing-comma-on-call-site" />
-        <error line="391" column="23" source="trailing-comma-on-call-site" />
-        <error line="399" column="24" source="trailing-comma-on-call-site" />
-        <error line="408" column="24" source="trailing-comma-on-call-site" />
-        <error line="429" column="48" source="trailing-comma-on-call-site" />
-        <error line="484" column="24" source="trailing-comma-on-call-site" />
-        <error line="489" column="24" source="trailing-comma-on-call-site" />
-        <error line="494" column="24" source="trailing-comma-on-call-site" />
-        <error line="499" column="23" source="trailing-comma-on-call-site" />
-        <error line="504" column="24" source="trailing-comma-on-call-site" />
-        <error line="509" column="23" source="trailing-comma-on-call-site" />
-        <error line="537" column="24" source="trailing-comma-on-call-site" />
-        <error line="546" column="24" source="trailing-comma-on-call-site" />
-        <error line="551" column="13" source="trailing-comma-on-call-site" />
-        <error line="556" column="14" source="trailing-comma-on-call-site" />
-        <error line="561" column="14" source="trailing-comma-on-call-site" />
-        <error line="568" column="17" source="trailing-comma-on-call-site" />
-        <error line="572" column="18" source="trailing-comma-on-call-site" />
-        <error line="584" column="13" source="trailing-comma-on-call-site" />
-        <error line="607" column="10" source="trailing-comma-on-call-site" />
-        <error line="612" column="13" source="trailing-comma-on-call-site" />
-        <error line="617" column="43" source="trailing-comma-on-call-site" />
-        <error line="622" column="13" source="trailing-comma-on-call-site" />
-        <error line="627" column="13" source="trailing-comma-on-call-site" />
-        <error line="632" column="13" source="trailing-comma-on-call-site" />
-        <error line="651" column="22" source="trailing-comma-on-call-site" />
-        <error line="666" column="44" source="trailing-comma-on-call-site" />
-        <error line="675" column="24" source="trailing-comma-on-call-site" />
-        <error line="680" column="23" source="trailing-comma-on-call-site" />
-        <error line="685" column="23" source="trailing-comma-on-call-site" />
-        <error line="690" column="23" source="trailing-comma-on-call-site" />
-        <error line="695" column="23" source="trailing-comma-on-call-site" />
-        <error line="700" column="23" source="trailing-comma-on-call-site" />
-        <error line="705" column="23" source="trailing-comma-on-call-site" />
-        <error line="711" column="72" source="trailing-comma-on-call-site" />
-        <error line="761" column="14" source="trailing-comma-on-call-site" />
-        <error line="766" column="13" source="trailing-comma-on-call-site" />
-        <error line="772" column="21" source="trailing-comma-on-call-site" />
-        <error line="778" column="21" source="trailing-comma-on-call-site" />
-        <error line="787" column="23" source="trailing-comma-on-call-site" />
-        <error line="792" column="23" source="trailing-comma-on-call-site" />
-        <error line="797" column="24" source="trailing-comma-on-call-site" />
-        <error line="802" column="24" source="trailing-comma-on-call-site" />
-        <error line="807" column="24" source="trailing-comma-on-call-site" />
-        <error line="815" column="21" source="trailing-comma-on-call-site" />
-        <error line="841" column="24" source="trailing-comma-on-call-site" />
-        <error line="846" column="23" source="trailing-comma-on-call-site" />
-        <error line="854" column="23" source="trailing-comma-on-call-site" />
-        <error line="859" column="23" source="trailing-comma-on-call-site" />
-        <error line="867" column="24" source="trailing-comma-on-call-site" />
-        <error line="893" column="46" source="trailing-comma-on-declaration-site" />
-        <error line="907" column="29" source="trailing-comma-on-declaration-site" />
-        <error line="925" column="57" source="trailing-comma-on-declaration-site" />
-        <error line="930" column="22" source="trailing-comma-on-declaration-site" />
-        <error line="943" column="49" source="trailing-comma-on-call-site" />
-        <error line="947" column="49" source="trailing-comma-on-call-site" />
-        <error line="951" column="110" source="trailing-comma-on-call-site" />
-        <error line="965" column="49" source="trailing-comma-on-call-site" />
-        <error line="975" column="23" source="trailing-comma-on-call-site" />
-        <error line="984" column="23" source="trailing-comma-on-call-site" />
-        <error line="993" column="23" source="trailing-comma-on-call-site" />
-        <error line="998" column="23" source="trailing-comma-on-call-site" />
-        <error line="1003" column="23" source="trailing-comma-on-call-site" />
-        <error line="1008" column="20" source="trailing-comma-on-call-site" />
-        <error line="1022" column="14" source="trailing-comma-on-call-site" />
-        <error line="1029" column="24" source="trailing-comma-on-call-site" />
-        <error line="1033" column="75" source="trailing-comma-on-call-site" />
-        <error line="1058" column="24" source="trailing-comma-on-call-site" />
-        <error line="1063" column="23" source="trailing-comma-on-call-site" />
-        <error line="1068" column="21" source="trailing-comma-on-call-site" />
-        <error line="1073" column="21" source="trailing-comma-on-call-site" />
-        <error line="1078" column="21" source="trailing-comma-on-call-site" />
-        <error line="1083" column="21" source="trailing-comma-on-call-site" />
-        <error line="1088" column="21" source="trailing-comma-on-call-site" />
-        <error line="1097" column="20" source="trailing-comma-on-call-site" />
-        <error line="1102" column="38" source="trailing-comma-on-call-site" />
-        <error line="1107" column="10" source="trailing-comma-on-call-site" />
-        <error line="1112" column="10" source="trailing-comma-on-call-site" />
-        <error line="1117" column="10" source="trailing-comma-on-call-site" />
-        <error line="1125" column="10" source="trailing-comma-on-call-site" />
-        <error line="1133" column="21" source="trailing-comma-on-call-site" />
-        <error line="1135" column="5" source="spacing-between-declarations-with-comments" />
-        <error line="1145" column="31" source="trailing-comma-on-call-site" />
-        <error line="1153" column="10" source="trailing-comma-on-call-site" />
-        <error line="1161" column="21" source="trailing-comma-on-call-site" />
-        <error line="1166" column="88" source="trailing-comma-on-call-site" />
-        <error line="1190" column="23" source="trailing-comma-on-call-site" />
-        <error line="1195" column="23" source="trailing-comma-on-call-site" />
-        <error line="1200" column="23" source="trailing-comma-on-call-site" />
-        <error line="1206" column="58" source="trailing-comma-on-call-site" />
-        <error line="1218" column="20" source="trailing-comma-on-call-site" />
-        <error line="1224" column="24" source="trailing-comma-on-call-site" />
-        <error line="1236" column="88" source="trailing-comma-on-call-site" />
-        <error line="1275" column="58" source="trailing-comma-on-call-site" />
-        <error line="1284" column="24" source="trailing-comma-on-call-site" />
-        <error line="1289" column="24" source="trailing-comma-on-call-site" />
-        <error line="1300" column="23" source="trailing-comma-on-call-site" />
-        <error line="1311" column="23" source="trailing-comma-on-call-site" />
-        <error line="1329" column="86" source="trailing-comma-on-call-site" />
-        <error line="1338" column="41" source="trailing-comma-on-call-site" />
-        <error line="1364" column="56" source="trailing-comma-on-call-site" />
-        <error line="1372" column="26" source="trailing-comma-on-call-site" />
-    </file>
     <file name="app/src/main/java/org/mozilla/fenix/utils/ToolbarPopupWindow.kt">
         <error line="35" column="36" source="trailing-comma-on-declaration-site" />
         <error line="50" column="17" source="trailing-comma-on-call-site" />
@@ -5969,83 +5766,6 @@
         <error line="140" column="19" source="trailing-comma-on-call-site" />
         <error line="157" column="46" source="trailing-comma-on-call-site" />
         <error line="163" column="30" source="trailing-comma-on-call-site" />
-    </file>
-    <file name="app/src/test/java/org/mozilla/fenix/components/TrackingProtectionPolicyFactoryTest.kt">
-        <error line="53" column="34" source="trailing-comma-on-call-site" />
-        <error line="75" column="34" source="trailing-comma-on-call-site" />
-        <error line="95" column="55" source="trailing-comma-on-call-site" />
-        <error line="100" column="34" source="trailing-comma-on-call-site" />
-        <error line="118" column="55" source="trailing-comma-on-call-site" />
-        <error line="124" column="44" source="trailing-comma-on-call-site" />
-        <error line="126" column="34" source="trailing-comma-on-call-site" />
-        <error line="146" column="48" source="argument-list-wrapping" />
-        <error line="147" column="46" source="trailing-comma-on-call-site" />
-        <error line="154" column="43" source="trailing-comma-on-call-site" />
-        <error line="165" column="48" source="argument-list-wrapping" />
-        <error line="166" column="46" source="trailing-comma-on-call-site" />
-        <error line="173" column="43" source="trailing-comma-on-call-site" />
-        <error line="182" column="55" source="trailing-comma-on-call-site" />
-        <error line="188" column="47" source="trailing-comma-on-call-site" />
-        <error line="190" column="34" source="trailing-comma-on-call-site" />
-        <error line="208" column="55" source="trailing-comma-on-call-site" />
-        <error line="214" column="50" source="trailing-comma-on-call-site" />
-        <error line="216" column="34" source="trailing-comma-on-call-site" />
-        <error line="234" column="55" source="trailing-comma-on-call-site" />
-        <error line="240" column="51" source="trailing-comma-on-call-site" />
-        <error line="242" column="34" source="trailing-comma-on-call-site" />
-        <error line="260" column="55" source="trailing-comma-on-call-site" />
-        <error line="266" column="59" source="trailing-comma-on-call-site" />
-        <error line="268" column="34" source="trailing-comma-on-call-site" />
-        <error line="284" column="55" source="trailing-comma-on-call-site" />
-        <error line="290" column="53" source="trailing-comma-on-call-site" />
-        <error line="292" column="34" source="trailing-comma-on-call-site" />
-        <error line="312" column="47" source="trailing-comma-on-call-site" />
-        <error line="314" column="38" source="trailing-comma-on-call-site" />
-        <error line="325" column="38" source="trailing-comma-on-call-site" />
-        <error line="329" column="38" source="trailing-comma-on-call-site" />
-        <error line="330" column="14" source="trailing-comma-on-call-site" />
-        <error line="361" column="34" source="trailing-comma-on-call-site" />
-        <error line="369" column="34" source="trailing-comma-on-call-site" />
-        <error line="380" column="51" source="trailing-comma-on-call-site" />
-        <error line="385" column="51" source="trailing-comma-on-call-site" />
-        <error line="390" column="51" source="trailing-comma-on-call-site" />
-        <error line="395" column="51" source="trailing-comma-on-call-site" />
-        <error line="400" column="51" source="trailing-comma-on-call-site" />
-        <error line="405" column="51" source="trailing-comma-on-call-site" />
-        <error line="406" column="14" source="trailing-comma-on-call-site" />
-        <error line="412" column="55" source="trailing-comma-on-call-site" />
-        <error line="417" column="55" source="trailing-comma-on-call-site" />
-        <error line="422" column="55" source="trailing-comma-on-call-site" />
-        <error line="427" column="55" source="trailing-comma-on-call-site" />
-        <error line="432" column="55" source="trailing-comma-on-call-site" />
-        <error line="437" column="55" source="trailing-comma-on-call-site" />
-        <error line="438" column="14" source="trailing-comma-on-call-site" />
-        <error line="444" column="38" source="trailing-comma-on-call-site" />
-        <error line="447" column="35" source="trailing-comma-on-call-site" />
-        <error line="458" column="38" source="trailing-comma-on-call-site" />
-        <error line="461" column="35" source="trailing-comma-on-call-site" />
-        <error line="476" column="69" source="trailing-comma-on-call-site" />
-        <error line="481" column="59" source="trailing-comma-on-call-site" />
-        <error line="489" column="42" source="trailing-comma-on-call-site" />
-        <error line="491" column="34" source="trailing-comma-on-call-site" />
-        <error line="502" column="55" source="trailing-comma-on-call-site" />
-        <error line="510" column="41" source="trailing-comma-on-call-site" />
-        <error line="512" column="34" source="trailing-comma-on-call-site" />
-        <error line="526" column="69" source="trailing-comma-on-call-site" />
-        <error line="531" column="56" source="trailing-comma-on-call-site" />
-        <error line="540" column="45" source="trailing-comma-on-call-site" />
-        <error line="542" column="34" source="trailing-comma-on-call-site" />
-        <error line="554" column="33" source="trailing-comma-on-call-site" />
-        <error line="559" column="34" source="trailing-comma-on-call-site" />
-        <error line="580" column="45" source="trailing-comma-on-call-site" />
-        <error line="582" column="34" source="trailing-comma-on-call-site" />
-        <error line="604" column="45" source="trailing-comma-on-call-site" />
-        <error line="606" column="34" source="trailing-comma-on-call-site" />
-        <error line="623" column="47" source="trailing-comma-on-declaration-site" />
-        <error line="639" column="46" source="trailing-comma-on-declaration-site" />
-        <error line="641" column="1" source="no-empty-first-line-in-method-block" />
-        <error line="654" column="30" source="trailing-comma-on-declaration-site" />
-        <error line="681" column="63" source="trailing-comma-on-call-site" />
     </file>
     <file name="app/src/test/java/org/mozilla/fenix/components/appstate/AppStoreReducerTest.kt">
         <error line="21" column="40" source="trailing-comma-on-call-site" />
