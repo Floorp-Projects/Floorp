@@ -1484,6 +1484,10 @@ allow-auto-restart =
 browser-rest-mode =
  .label = Enable Rest-mode Shortcut key
 
+## DualTheme
+dualtheme-enable =
+ .label = Enable dual theme 
+
 ## macOS version use legacy update system 
 floorp-updater = { -brand-short-name } Updater Settings
 enable-floorp-updater = 
