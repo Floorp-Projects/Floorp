@@ -2,10 +2,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-// These tests check the general behavior of the Urlbar
-// when search terms are shown in the Urlbar.
+// These tests check the behavior of the Urlbar when loading a page
+// whose url matches that of the default search engine.
 
-let originalEngine, defaultTestEngine, mochiTestEngine;
+let originalEngine, defaultTestEngine;
 
 // The main search string used in tests
 const SEARCH_STRING = "chocolate cake";
@@ -24,13 +24,6 @@ add_setup(async function() {
     search_url_get_params: "q={searchTerms}&pc=fake_code",
   });
   defaultTestEngine = Services.search.getEngineByName("MozSearch");
-
-  await SearchTestUtils.installSearchExtension({
-    name: "MochiSearch",
-    search_url: "https://mochi.test:8888/",
-    search_url_get_params: "q={searchTerms}&pc=fake_code",
-  });
-  mochiTestEngine = Services.search.getEngineByName("MochiSearch");
 
   originalEngine = await Services.search.getDefault();
   await Services.search.setDefault(defaultTestEngine);
@@ -142,75 +135,6 @@ add_task(async function go_back() {
   BrowserTestUtils.removeTab(tab);
 });
 
-// If a SERP uses the History API to modify the URI,
-// the search term, will still show up in the URL bar.
-add_task(async function history_push_state() {
-  let { tab } = await searchWithTab(SEARCH_STRING);
-
-  let locationChangePromise = BrowserTestUtils.waitForLocationChange(gBrowser);
-  await SpecialPowers.spawn(tab.linkedBrowser, [], function() {
-    let url = new URL(content.window.location);
-    url.searchParams.set("pc", "fake_code_2");
-    content.history.pushState({}, "", url);
-  });
-
-  await locationChangePromise;
-  // Check URI to make sure that it's actually been changed
-  Assert.equal(
-    gBrowser.currentURI.spec,
-    `https://www.example.com/?q=chocolate+cake&pc=fake_code_2`,
-    "URI of Urlbar should have changed"
-  );
-
-  Assert.equal(
-    gURLBar.value,
-    SEARCH_STRING,
-    `Search string ${SEARCH_STRING} should be in the url bar`
-  );
-
-  BrowserTestUtils.removeTab(tab);
-});
-
-// When a user changes their default search engine, and does
-// a search with it again using the one-off search, they should
-// no longer see the search term in the URL bar for that engine.
-// If they change it back, they should see the search term in
-// the url bar.
-add_task(async function non_default_search() {
-  let { tab } = await searchWithTab(SEARCH_STRING);
-
-  await Services.search.setDefault(mochiTestEngine);
-
-  await UrlbarTestUtils.promiseAutocompleteResultPopup({
-    window,
-    value: SEARCH_STRING,
-  });
-
-  let [expectedSearchUrl] = UrlbarUtils.getSearchQueryUrl(
-    defaultTestEngine,
-    SEARCH_STRING
-  );
-  let browserLoadedPromise = BrowserTestUtils.browserLoaded(
-    tab.linkedBrowser,
-    false,
-    expectedSearchUrl
-  );
-
-  await UrlbarTestUtils.enterSearchMode(window, {
-    engineName: defaultTestEngine.name,
-  });
-  gURLBar.focus();
-  EventUtils.synthesizeKey("KEY_Enter");
-  await browserLoadedPromise;
-
-  Assert.equal(gURLBar.value, expectedSearchUrl, `URL should be in URL bar`);
-
-  await Services.search.setDefault(defaultTestEngine);
-  await searchWithTab(SEARCH_STRING, tab);
-
-  BrowserTestUtils.removeTab(tab);
-});
-
 // Manually loading a url that matches a search query url
 // should show the search term in the Urlbar.
 add_task(async function load_url() {
@@ -227,34 +151,6 @@ add_task(async function load_url() {
   BrowserTestUtils.loadURI(tab.linkedBrowser, expectedSearchUrl);
   await browserLoadedPromise;
   assertSearchStringIsInUrlbar(SEARCH_STRING);
-
-  BrowserTestUtils.removeTab(tab);
-});
-
-// Loading a url that looks like a search query url but has additional
-// query params should not show the search term in the Urlbar.
-add_task(async function url_with_additional_query_params() {
-  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser);
-  let [expectedSearchUrl] = UrlbarUtils.getSearchQueryUrl(
-    defaultTestEngine,
-    SEARCH_STRING
-  );
-  // Add a query param
-  expectedSearchUrl += "&another_code=something_else";
-  let browserLoadedPromise = BrowserTestUtils.browserLoaded(
-    tab.linkedBrowser,
-    false,
-    expectedSearchUrl
-  );
-  BrowserTestUtils.loadURI(tab.linkedBrowser, expectedSearchUrl);
-  await browserLoadedPromise;
-
-  Assert.equal(gURLBar.value, expectedSearchUrl, `URL should be in URL bar`);
-  Assert.equal(
-    gURLBar.getAttribute("pageproxystate"),
-    "valid",
-    "Pageproxystate should be valid"
-  );
 
   BrowserTestUtils.removeTab(tab);
 });
