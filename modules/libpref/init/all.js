@@ -180,14 +180,9 @@ pref("dom.keyboardevent.keypress.hack.use_legacy_keycode_and_charcode.addl", "")
 // explanation for the detail.
 pref("dom.mouseevent.click.hack.use_legacy_non-primary_dispatch", "");
 
-// Text recognition is a macOS 10.15+ feature that is currently in development.
-// It is surfaced through the browser's context menu. There is no need to pref it
-// on by OS, as there is a specific check if that version of the OS supports the feature.
-#ifdef EARLY_BETA_OR_EARLIER
-  pref("dom.text-recognition.enabled", true);
-#else
-  pref("dom.text-recognition.enabled", false);
-#endif
+// Text recognition is a platform dependent feature, so even if this preference is
+// enabled here, the feature may not be visible in all browsers.
+pref("dom.text-recognition.enabled", true);
 
 // Fastback caching - if this pref is negative, then we calculate the number
 // of content viewers to cache based on the amount of available memory.
