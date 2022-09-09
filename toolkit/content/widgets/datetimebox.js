@@ -1114,7 +1114,12 @@ this.DateTimeBoxWidget = class {
       let n = Number(buffer);
       let max = targetField.getAttribute("max");
       let maxLength = targetField.getAttribute("maxlength");
-      if (buffer.length >= maxLength || n * 10 > max) {
+      if (targetField == this.mHourField) {
+        if (n * 10 > 23 || buffer.length === 2) {
+          buffer = "";
+          this.advanceToNextField();
+        }
+      } else if (buffer.length >= maxLength || n * 10 > max) {
         buffer = "";
         this.advanceToNextField();
       }
@@ -1171,11 +1176,28 @@ this.DateTimeBoxWidget = class {
       if (this.mHour12) {
         // Try to change to 12hr format if user input is 0 or greater
         // than 12.
-        let maxLength = aField.getAttribute("maxlength");
-        if (value == 0 && aValue.length == maxLength) {
-          value = this.mMaxHour;
-        } else {
-          value = value > this.mMaxHour ? value % this.mMaxHour : value;
+        switch (true) {
+          case value == 0 && aValue.length == 2:
+            value = this.mMaxHour;
+            this.setDayPeriodValue(this.mAMIndicator);
+            break;
+
+          case value == this.mMaxHour:
+            this.setDayPeriodValue(this.mPMIndicator);
+            break;
+
+          case value < 12:
+            this.setDayPeriodValue(this.mAMIndicator);
+            break;
+
+          case value > 12 && value < 24:
+            value = value % this.mMaxHour;
+            this.setDayPeriodValue(this.mPMIndicator);
+            break;
+
+          default:
+            value = Math.floor(value / 10);
+            break;
         }
       } else if (value > this.mMaxHour) {
         value = this.mMaxHour;

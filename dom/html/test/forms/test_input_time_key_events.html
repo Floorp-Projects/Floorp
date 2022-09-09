@@ -34,22 +34,40 @@ var testData = [
    * initialVal: initial value set to the input element.
    * expectedVal: expected value of the input element after sending the keys.
    */
+    {
+    // Type 16 in the hour field will automatically change time to 4PM in 12-hour clock
+    keys: ["16"],
+    initialVal: "01:00",
+    expectedVal: "16:00"
+    },
+    {
+    // Type 00 in hour field will automatically convert to 12AM in 12-hour clock
+    keys: ["00"],
+    initialVal: "03:00",
+    expectedVal: "00:00"
+    },
+    {
+    // Type hour > 23 such as 24 will automatically convert to 2
+    keys: ["24"],
+    initialVal: "04:00",
+    expectedVal: "02:00"
+    },
   {
     // Type 1030 and select AM.
-    keys: ["1030", "KEY_ArrowDown"],
+    keys: ["1030"],
     initialVal: "",
     expectedVal: "10:30"
   },
   {
     // Type 3 in the hour field will automatically advance to the minute field.
-    keys: ["330", "KEY_ArrowDown"],
+    keys: ["330"],
     initialVal: "",
     expectedVal: "03:30"
   },
   {
     // Type 5 in the hour field will automatically advance to the minute field.
     // Type 7 in the minute field will automatically advance to the AM/PM field.
-    keys: ["57", "KEY_ArrowDown"],
+    keys: ["57"],
     initialVal: "",
     expectedVal: "05:07"
   },
@@ -75,7 +93,7 @@ var testData = [
     // Focus starts on the first field, hour in this case, and increment.
     keys: ["KEY_ArrowUp"],
     initialVal: "16:00",
-    expectedVal: "17:00"
+    expectedVal: "05:00"
   },
   {
     // Advance to minute field and decrement.
@@ -121,11 +139,11 @@ var testData = [
     expectedVal: "01:10"
   },
   {
-    // End key on hour field sets it to the maximum hour, which is 12 in 12-hour
+    // End key on hour field sets it to the maximum hour, which is 12PM in 12-hour
     // clock.
     keys: ["KEY_End"],
     initialVal: "03:10",
-    expectedVal: "00:10"
+    expectedVal: "12:10"
   },
   {
     // Home key on minute field sets it to the minimum minute, which is 0.
