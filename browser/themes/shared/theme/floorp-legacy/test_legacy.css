@@ -1804,15 +1804,18 @@ toolbarbutton[part="scrollbutton-down"] {
   padding-inline-end: 8px !important;
 }
 
-
-
-menupopup> :is(menu:not(.menu-iconic), menuitem:not(.menuitem-iconic, [checked="true"])) {
-  padding-inline-start: 12px !important;
+menupopup> :is(menu:not(.menu-iconic), menuitem:not(.menuitem-iconic)) {
   background-position: left 1em center;
   background-repeat: no-repeat;
   background-size: 16px;
   -moz-context-properties: fill;
   fill: currentColor;
+}
+menupopup> :is(menu:not(.menu-iconic), menuitem:not(.menuitem-iconic, [type="checkbox"])) {
+  padding-inline-start: calc(1em + 24px) !important;
+}
+menupopup> menuitem[type="checkbox"] {
+  padding-inline-start: 12px !important;
 }
 
 
