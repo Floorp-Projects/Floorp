@@ -11,21 +11,25 @@
 $schema: moz://mozilla.org/schemas/glean/tags/1-0-0
 'Cloud Services :: Firefox: Common':
   description: The Bugzilla component which applies to this object.
+'Conduit :: mots':
+  description: The Bugzilla component which applies to this object.
 'Core :: Audio/Video':
   description: The Bugzilla component which applies to this object.
 'Core :: Audio/Video: GMP':
+  description: The Bugzilla component which applies to this object.
+'Core :: Audio/Video: MediaStreamGraph':
   description: The Bugzilla component which applies to this object.
 'Core :: Audio/Video: Playback':
   description: The Bugzilla component which applies to this object.
 'Core :: Audio/Video: Recording':
   description: The Bugzilla component which applies to this object.
+'Core :: Audio/Video: cubeb':
+  description: The Bugzilla component which applies to this object.
+'Core :: AutoConfig (Mission Control Desktop)':
+  description: The Bugzilla component which applies to this object.
 'Core :: CSS Parsing and Computation':
   description: The Bugzilla component which applies to this object.
 'Core :: CSS Transitions and Animations':
-  description: The Bugzilla component which applies to this object.
-'Core :: Canvas: 2D':
-  description: The Bugzilla component which applies to this object.
-'Core :: Canvas: WebGL':
   description: The Bugzilla component which applies to this object.
 'Core :: DOM: Animation':
   description: The Bugzilla component which applies to this object.
@@ -57,6 +61,8 @@ $schema: moz://mozilla.org/schemas/glean/tags/1-0-0
   description: The Bugzilla component which applies to this object.
 'Core :: DOM: Networking':
   description: The Bugzilla component which applies to this object.
+'Core :: DOM: Performance':
+  description: The Bugzilla component which applies to this object.
 'Core :: DOM: Push Notifications':
   description: The Bugzilla component which applies to this object.
 'Core :: DOM: Security':
@@ -66,6 +72,8 @@ $schema: moz://mozilla.org/schemas/glean/tags/1-0-0
 'Core :: DOM: Serializers':
   description: The Bugzilla component which applies to this object.
 'Core :: DOM: Service Workers':
+  description: The Bugzilla component which applies to this object.
+'Core :: DOM: Streams':
   description: The Bugzilla component which applies to this object.
 'Core :: DOM: UI Events & Focus Handling':
   description: The Bugzilla component which applies to this object.
@@ -85,6 +93,12 @@ $schema: moz://mozilla.org/schemas/glean/tags/1-0-0
   description: The Bugzilla component which applies to this object.
 'Core :: Graphics':
   description: The Bugzilla component which applies to this object.
+'Core :: Graphics: Canvas2D':
+  description: The Bugzilla component which applies to this object.
+'Core :: Graphics: CanvasWebGL':
+  description: The Bugzilla component which applies to this object.
+'Core :: Graphics: ImageLib':
+  description: The Bugzilla component which applies to this object.
 'Core :: Graphics: Text':
   description: The Bugzilla component which applies to this object.
 'Core :: Graphics: WebGPU':
@@ -95,13 +109,23 @@ $schema: moz://mozilla.org/schemas/glean/tags/1-0-0
   description: The Bugzilla component which applies to this object.
 'Core :: IPC':
   description: The Bugzilla component which applies to this object.
-'Core :: ImageLib':
-  description: The Bugzilla component which applies to this object.
 'Core :: Internationalization':
   description: The Bugzilla component which applies to this object.
 'Core :: JavaScript Engine':
   description: The Bugzilla component which applies to this object.
+'Core :: JavaScript Engine: JIT':
+  description: The Bugzilla component which applies to this object.
+'Core :: JavaScript: GC':
+  description: The Bugzilla component which applies to this object.
 'Core :: JavaScript: Internationalization API':
+  description: The Bugzilla component which applies to this object.
+'Core :: JavaScript: Standard Library':
+  description: The Bugzilla component which applies to this object.
+'Core :: JavaScript: WebAssembly':
+  description: The Bugzilla component which applies to this object.
+'Core :: Javascript: Web Assembly':
+  description: The Bugzilla component which applies to this object.
+'Core :: Javascript: WebAssembly':
   description: The Bugzilla component which applies to this object.
 'Core :: Layout':
   description: The Bugzilla component which applies to this object.
@@ -114,6 +138,8 @@ $schema: moz://mozilla.org/schemas/glean/tags/1-0-0
 'Core :: Layout: Floats':
   description: The Bugzilla component which applies to this object.
 'Core :: Layout: Form Controls':
+  description: The Bugzilla component which applies to this object.
+'Core :: Layout: Generated Content, Lists, and Counters':
   description: The Bugzilla component which applies to this object.
 'Core :: Layout: Grid':
   description: The Bugzilla component which applies to this object.
@@ -159,8 +185,6 @@ $schema: moz://mozilla.org/schemas/glean/tags/1-0-0
   description: The Bugzilla component which applies to this object.
 'Core :: Permission Manager':
   description: The Bugzilla component which applies to this object.
-'Core :: Plug-ins':
-  description: The Bugzilla component which applies to this object.
 'Core :: Preferences: Backend':
   description: The Bugzilla component which applies to this object.
 'Core :: Printing: Output':
@@ -199,6 +223,8 @@ $schema: moz://mozilla.org/schemas/glean/tags/1-0-0
   description: The Bugzilla component which applies to this object.
 'Core :: WebRTC: Audio/Video':
   description: The Bugzilla component which applies to this object.
+'Core :: WebRTC: Networking':
+  description: The Bugzilla component which applies to this object.
 'Core :: WebRTC: Signaling':
   description: The Bugzilla component which applies to this object.
 'Core :: WebVR':
@@ -206,6 +232,10 @@ $schema: moz://mozilla.org/schemas/glean/tags/1-0-0
 'Core :: Widget':
   description: The Bugzilla component which applies to this object.
 'Core :: Widget: Cocoa':
+  description: The Bugzilla component which applies to this object.
+'Core :: Widget: Gtk':
+  description: The Bugzilla component which applies to this object.
+'Core :: Widget: Win32':
   description: The Bugzilla component which applies to this object.
 'Core :: Window Management':
   description: The Bugzilla component which applies to this object.
@@ -219,13 +249,19 @@ $schema: moz://mozilla.org/schemas/glean/tags/1-0-0
   description: The Bugzilla component which applies to this object.
 'Core :: XUL':
   description: The Bugzilla component which applies to this object.
+'Core :: js-ctypes':
+  description: The Bugzilla component which applies to this object.
 'Core :: mozglue':
   description: The Bugzilla component which applies to this object.
 'DevTools :: Accessibility Tools':
   description: The Bugzilla component which applies to this object.
 'DevTools :: Console':
   description: The Bugzilla component which applies to this object.
+'DevTools :: DOM':
+  description: The Bugzilla component which applies to this object.
 'DevTools :: Debugger':
+  description: The Bugzilla component which applies to this object.
+'DevTools :: Framework':
   description: The Bugzilla component which applies to this object.
 'DevTools :: General':
   description: The Bugzilla component which applies to this object.
@@ -233,19 +269,41 @@ $schema: moz://mozilla.org/schemas/glean/tags/1-0-0
   description: The Bugzilla component which applies to this object.
 'DevTools :: Inspector: Animations':
   description: The Bugzilla component which applies to this object.
+'DevTools :: Inspector: Changes':
+  description: The Bugzilla component which applies to this object.
 'DevTools :: Inspector: Compatibility':
+  description: The Bugzilla component which applies to this object.
+'DevTools :: Inspector: Layout':
   description: The Bugzilla component which applies to this object.
 'DevTools :: Inspector: Rules':
   description: The Bugzilla component which applies to this object.
+'DevTools :: JSON Viewer':
+  description: The Bugzilla component which applies to this object.
 'DevTools :: Memory':
   description: The Bugzilla component which applies to this object.
+'DevTools :: Netmonitor':
+  description: The Bugzilla component which applies to this object.
 'DevTools :: Performance Tools (Profiler/Timeline)':
+  description: The Bugzilla component which applies to this object.
+'DevTools :: Responsive Design Mode':
+  description: The Bugzilla component which applies to this object.
+'DevTools :: Shared Components':
+  description: The Bugzilla component which applies to this object.
+'DevTools :: Source Editor':
   description: The Bugzilla component which applies to this object.
 'DevTools :: Storage Inspector':
   description: The Bugzilla component which applies to this object.
 'DevTools :: Style Editor':
   description: The Bugzilla component which applies to this object.
+'DevTools :: about:debugging':
+  description: The Bugzilla component which applies to this object.
+'Firefox :: Address Bar':
+  description: The Bugzilla component which applies to this object.
 'Firefox :: Bookmarks & History':
+  description: The Bugzilla component which applies to this object.
+'Firefox :: Distributions':
+  description: The Bugzilla component which applies to this object.
+'Firefox :: Downloads Panel':
   description: The Bugzilla component which applies to this object.
 'Firefox :: Enterprise Policies':
   description: The Bugzilla component which applies to this object.
@@ -257,9 +315,13 @@ $schema: moz://mozilla.org/schemas/glean/tags/1-0-0
   description: The Bugzilla component which applies to this object.
 'Firefox :: Headless':
   description: The Bugzilla component which applies to this object.
+'Firefox :: Installer':
+  description: The Bugzilla component which applies to this object.
 'Firefox :: Keyboard Navigation':
   description: The Bugzilla component which applies to this object.
 'Firefox :: Menus':
+  description: The Bugzilla component which applies to this object.
+'Firefox :: Messaging System':
   description: The Bugzilla component which applies to this object.
 'Firefox :: Migration':
   description: The Bugzilla component which applies to this object.
@@ -267,11 +329,23 @@ $schema: moz://mozilla.org/schemas/glean/tags/1-0-0
   description: The Bugzilla component which applies to this object.
 'Firefox :: Nimbus Desktop Client':
   description: The Bugzilla component which applies to this object.
+'Firefox :: Normandy Client':
+  description: The Bugzilla component which applies to this object.
 'Firefox :: PDF Viewer':
+  description: The Bugzilla component which applies to this object.
+'Firefox :: Page Info Window':
+  description: The Bugzilla component which applies to this object.
+'Firefox :: Pocket':
+  description: The Bugzilla component which applies to this object.
+'Firefox :: Preferences':
   description: The Bugzilla component which applies to this object.
 'Firefox :: Private Browsing':
   description: The Bugzilla component which applies to this object.
+'Firefox :: Protections UI':
+  description: The Bugzilla component which applies to this object.
 'Firefox :: Remote Settings Client':
+  description: The Bugzilla component which applies to this object.
+'Firefox :: Screenshots':
   description: The Bugzilla component which applies to this object.
 'Firefox :: Search':
   description: The Bugzilla component which applies to this object.
@@ -281,13 +355,25 @@ $schema: moz://mozilla.org/schemas/glean/tags/1-0-0
   description: The Bugzilla component which applies to this object.
 'Firefox :: Session Restore':
   description: The Bugzilla component which applies to this object.
+'Firefox :: Shell Integration':
+  description: The Bugzilla component which applies to this object.
+'Firefox :: Site Identity':
+  description: The Bugzilla component which applies to this object.
 'Firefox :: Site Permissions':
   description: The Bugzilla component which applies to this object.
 'Firefox :: Sync':
   description: The Bugzilla component which applies to this object.
 'Firefox :: Tabbed Browser':
   description: The Bugzilla component which applies to this object.
+'Firefox :: Theme':
+  description: The Bugzilla component which applies to this object.
 'Firefox :: Toolbars and Customization':
+  description: The Bugzilla component which applies to this object.
+'Firefox :: Tours':
+  description: The Bugzilla component which applies to this object.
+'Firefox :: Translation':
+  description: The Bugzilla component which applies to this object.
+'Firefox :: about:logins':
   description: The Bugzilla component which applies to this object.
 'Firefox Build System :: Bootstrap Configuration':
   description: The Bugzilla component which applies to this object.
@@ -317,9 +403,17 @@ $schema: moz://mozilla.org/schemas/glean/tags/1-0-0
   description: The Bugzilla component which applies to this object.
 'NSPR :: NSPR':
   description: The Bugzilla component which applies to this object.
+'NSS :: Libraries':
+  description: The Bugzilla component which applies to this object.
 'Release Engineering :: General':
   description: The Bugzilla component which applies to this object.
 'Release Engineering :: Release Automation: Updates':
+  description: The Bugzilla component which applies to this object.
+'Remote Protocol :: Agent':
+  description: The Bugzilla component which applies to this object.
+'Remote Protocol :: CDP':
+  description: The Bugzilla component which applies to this object.
+'Remote Protocol :: WebDriver BiDi':
   description: The Bugzilla component which applies to this object.
 'Taskcluster :: General':
   description: The Bugzilla component which applies to this object.
@@ -329,9 +423,15 @@ $schema: moz://mozilla.org/schemas/glean/tags/1-0-0
   description: The Bugzilla component which applies to this object.
 'Testing :: Code Coverage':
   description: The Bugzilla component which applies to this object.
+'Testing :: Firefox UI Tests':
+  description: The Bugzilla component which applies to this object.
 'Testing :: GTest':
   description: The Bugzilla component which applies to this object.
 'Testing :: General':
+  description: The Bugzilla component which applies to this object.
+'Testing :: Marionette':
+  description: The Bugzilla component which applies to this object.
+'Testing :: Mochitest':
   description: The Bugzilla component which applies to this object.
 'Testing :: Mozbase':
   description: The Bugzilla component which applies to this object.
@@ -341,7 +441,13 @@ $schema: moz://mozilla.org/schemas/glean/tags/1-0-0
   description: The Bugzilla component which applies to this object.
 'Testing :: Reftest':
   description: The Bugzilla component which applies to this object.
+'Testing :: XPCShell Harness':
+  description: The Bugzilla component which applies to this object.
+'Testing :: geckodriver':
+  description: The Bugzilla component which applies to this object.
 'Testing :: mozperftest':
+  description: The Bugzilla component which applies to this object.
+'Testing :: web-platform-tests':
   description: The Bugzilla component which applies to this object.
 'Toolkit :: Add-ons Manager':
   description: The Bugzilla component which applies to this object.
@@ -350,6 +456,8 @@ $schema: moz://mozilla.org/schemas/glean/tags/1-0-0
 'Toolkit :: Async Tooling':
   description: The Bugzilla component which applies to this object.
 'Toolkit :: Autocomplete':
+  description: The Bugzilla component which applies to this object.
+'Toolkit :: Background Tasks':
   description: The Bugzilla component which applies to this object.
 'Toolkit :: Blocklist Implementation':
   description: The Bugzilla component which applies to this object.
@@ -407,11 +515,17 @@ $schema: moz://mozilla.org/schemas/glean/tags/1-0-0
   description: The Bugzilla component which applies to this object.
 'Toolkit :: about:memory':
   description: The Bugzilla component which applies to this object.
+'Web Compatibility :: Tooling & Investigations':
+  description: The Bugzilla component which applies to this object.
 'WebExtensions :: General':
   description: The Bugzilla component which applies to this object.
 'WebExtensions :: Request Handling':
   description: The Bugzilla component which applies to this object.
 'WebExtensions :: Storage':
+  description: The Bugzilla component which applies to this object.
+'WebExtensions :: Themes':
+  description: The Bugzilla component which applies to this object.
+'WebExtensions :: Untriaged':
   description: The Bugzilla component which applies to this object.
 'mozilla.org :: Licensing':
   description: The Bugzilla component which applies to this object.
