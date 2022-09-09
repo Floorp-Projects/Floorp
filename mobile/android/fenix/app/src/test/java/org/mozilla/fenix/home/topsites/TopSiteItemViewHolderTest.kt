@@ -42,7 +42,7 @@ class TopSiteItemViewHolderTest {
         id = 1L,
         title = "Pocket",
         url = "https://getpocket.com",
-        createdAt = 0
+        createdAt = 0,
     )
 
     @Before
@@ -77,7 +77,7 @@ class TopSiteItemViewHolderTest {
             id = 1L,
             title = "Pocket",
             url = "https://getpocket.com",
-            createdAt = 0
+            createdAt = 0,
         )
 
         TopSiteItemViewHolder(binding.root, lifecycleOwner, interactor).bind(defaultTopSite, position = 0)
@@ -92,7 +92,7 @@ class TopSiteItemViewHolderTest {
             id = 1L,
             title = "Mozilla",
             url = "https://www.mozilla.org",
-            createdAt = 0
+            createdAt = 0,
         )
 
         TopSiteItemViewHolder(binding.root, lifecycleOwner, interactor).bind(pinnedTopSite, position = 0)
@@ -107,7 +107,7 @@ class TopSiteItemViewHolderTest {
             id = 1L,
             title = "Mozilla",
             url = "https://www.mozilla.org",
-            createdAt = 0
+            createdAt = 0,
         )
 
         TopSiteItemViewHolder(binding.root, lifecycleOwner, interactor).bind(frecentTopSite, position = 0)
@@ -125,7 +125,7 @@ class TopSiteItemViewHolderTest {
             clickUrl = "https://mozilla.com/click",
             imageUrl = "https://test.com/image2.jpg",
             impressionUrl = "https://example.com",
-            createdAt = 3
+            createdAt = 3,
         )
         val position = 0
         assertNull(TopSites.contileImpression.testGetValue())

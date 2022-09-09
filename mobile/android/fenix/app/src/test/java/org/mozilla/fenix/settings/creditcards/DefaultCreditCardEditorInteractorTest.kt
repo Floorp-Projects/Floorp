@@ -46,7 +46,7 @@ class DefaultCreditCardEditorInteractorTest {
             timeCreated = 1L,
             timeLastUsed = 1L,
             timeLastModified = 1L,
-            timesUsed = 1L
+            timesUsed = 1L,
         )
         interactor.onDeleteCardButtonClicked(creditCard.guid)
         verify { controller.handleDeleteCreditCard(creditCard.guid) }
@@ -60,7 +60,7 @@ class DefaultCreditCardEditorInteractorTest {
             cardNumberLast4 = "1112",
             expiryMonth = 1,
             expiryYear = 2030,
-            cardType = CreditCardNetworkType.DISCOVER.cardName
+            cardType = CreditCardNetworkType.DISCOVER.cardName,
         )
         interactor.onSaveCreditCard(creditCardFields)
         verify { controller.handleSaveCreditCard(creditCardFields) }
@@ -75,7 +75,7 @@ class DefaultCreditCardEditorInteractorTest {
             cardNumberLast4 = "1112",
             expiryMonth = 1,
             expiryYear = 2034,
-            cardType = CreditCardNetworkType.DISCOVER.cardName
+            cardType = CreditCardNetworkType.DISCOVER.cardName,
         )
         interactor.onUpdateCreditCard(guid, creditCardFields)
         verify { controller.handleUpdateCreditCard(guid, creditCardFields) }

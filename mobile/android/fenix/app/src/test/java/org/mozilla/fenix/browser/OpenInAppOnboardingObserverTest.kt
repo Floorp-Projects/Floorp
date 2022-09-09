@@ -55,10 +55,10 @@ class OpenInAppOnboardingObserverTest {
         store = BrowserStore(
             BrowserState(
                 tabs = listOf(
-                    createTab(url = "https://www.mozilla.org", id = "1")
+                    createTab(url = "https://www.mozilla.org", id = "1"),
                 ),
-                selectedTabId = "1"
-            )
+                selectedTabId = "1",
+            ),
         )
         lifecycleOwner = MockedLifecycleOwner(Lifecycle.State.STARTED)
         navigationController = mockk(relaxed = true)
@@ -76,8 +76,8 @@ class OpenInAppOnboardingObserverTest {
                 settings = settings,
                 appLinksUseCases = appLinksUseCases,
                 container = container,
-                shouldScrollWithTopToolbar = true
-            )
+                shouldScrollWithTopToolbar = true,
+            ),
         )
         every { openInAppOnboardingObserver.createInfoBanner() } returns infoBanner
     }
@@ -165,16 +165,30 @@ class OpenInAppOnboardingObserverTest {
 
         openInAppOnboardingObserver = spyk(
             OpenInAppOnboardingObserver(
-                testContext, mockk(), mockk(), mockk(), mockk(), mockk(), FrameLayout(testContext), shouldScrollWithTopToolbar = true
-            )
+                testContext,
+                mockk(),
+                mockk(),
+                mockk(),
+                mockk(),
+                mockk(),
+                FrameLayout(testContext),
+                shouldScrollWithTopToolbar = true,
+            ),
         )
         val banner1 = openInAppOnboardingObserver.createInfoBanner()
         assertTrue(banner1.shouldScrollWithTopToolbar)
 
         openInAppOnboardingObserver = spyk(
             OpenInAppOnboardingObserver(
-                testContext, mockk(), mockk(), mockk(), mockk(), mockk(), FrameLayout(testContext), shouldScrollWithTopToolbar = false
-            )
+                testContext,
+                mockk(),
+                mockk(),
+                mockk(),
+                mockk(),
+                mockk(),
+                FrameLayout(testContext),
+                shouldScrollWithTopToolbar = false,
+            ),
         )
         val banner2 = openInAppOnboardingObserver.createInfoBanner()
         assertFalse(banner2.shouldScrollWithTopToolbar)

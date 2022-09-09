@@ -31,7 +31,10 @@ import org.mozilla.fenix.library.bookmarks.BookmarkPayload
 class BookmarkNodeViewHolderTest {
 
     @MockK private lateinit var interactor: BookmarkFragmentInteractor
-    @MockK(relaxed = true) private lateinit var siteItemView: LibrarySiteItemView
+
+    @MockK(relaxed = true)
+    private lateinit var siteItemView: LibrarySiteItemView
+
     @MockK private lateinit var icons: BrowserIcons
     private lateinit var holder: BookmarkNodeViewHolder
 
@@ -43,7 +46,7 @@ class BookmarkNodeViewHolderTest {
         title = "Mozilla",
         url = "https://www.mozilla.org",
         dateAdded = 0,
-        children = listOf()
+        children = listOf(),
     )
     private val folder = BookmarkNode(
         type = BookmarkNodeType.FOLDER,
@@ -53,7 +56,7 @@ class BookmarkNodeViewHolderTest {
         title = "Folder",
         url = null,
         dateAdded = 0,
-        children = listOf()
+        children = listOf(),
     )
 
     private val falsePayload = BookmarkPayload(
@@ -61,7 +64,7 @@ class BookmarkNodeViewHolderTest {
         urlChanged = false,
         selectedChanged = false,
         modeChanged = false,
-        iconChanged = false
+        iconChanged = false,
     )
 
     @Before
@@ -115,7 +118,7 @@ class BookmarkNodeViewHolderTest {
         holder.bind(
             item,
             BookmarkFragmentState.Mode.Normal(),
-            falsePayload
+            falsePayload,
         )
 
         verify(inverse = true) {
@@ -155,8 +158,8 @@ class BookmarkNodeViewHolderTest {
                 urlChanged = true,
                 selectedChanged = false,
                 modeChanged = false,
-                iconChanged = false
-            )
+                iconChanged = false,
+            ),
         )
 
         verify { siteItemView.titleView.text = item.url }
@@ -173,8 +176,8 @@ class BookmarkNodeViewHolderTest {
                 urlChanged = true,
                 selectedChanged = false,
                 modeChanged = false,
-                iconChanged = false
-            )
+                iconChanged = false,
+            ),
         )
 
         verify { siteItemView.titleView.text = item.url }
@@ -204,7 +207,7 @@ class BookmarkNodeViewHolderTest {
         holder.bind(
             folder,
             BookmarkFragmentState.Mode.Normal(),
-            falsePayload
+            falsePayload,
         )
 
         verify(inverse = true) {

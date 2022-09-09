@@ -19,22 +19,22 @@ internal object MessagingReducer {
         is UpdateMessageToShow -> {
             state.copy(
                 messaging = state.messaging.copy(
-                    messageToShow = action.message
-                )
+                    messageToShow = action.message,
+                ),
             )
         }
         is UpdateMessages -> {
             state.copy(
                 messaging = state.messaging.copy(
-                    messages = action.messages
-                )
+                    messages = action.messages,
+                ),
             )
         }
         is ConsumeMessageToShow -> {
             state.copy(
                 messaging = state.messaging.copy(
-                    messageToShow = null
-                )
+                    messageToShow = null,
+                ),
             )
         }
         else -> state

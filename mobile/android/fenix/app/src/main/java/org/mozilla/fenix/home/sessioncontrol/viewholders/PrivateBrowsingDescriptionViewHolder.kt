@@ -53,7 +53,7 @@ class PrivateBrowsingDescriptionViewHolder(
     @Composable
     override fun Content() {
         PrivateBrowsingDescription(
-            onLearnMoreClick = interactor::onPrivateBrowsingLearnMoreClicked
+            onLearnMoreClick = interactor::onPrivateBrowsingLearnMoreClicked,
         )
     }
 
@@ -74,17 +74,17 @@ fun PrivateBrowsingDescription(
     val interactionSource = remember { MutableInteractionSource() }
 
     Column(
-        modifier = Modifier.padding(horizontal = 4.dp)
+        modifier = Modifier.padding(horizontal = 4.dp),
     ) {
         Text(
             text = stringResource(
                 R.string.private_browsing_placeholder_description_2,
-                stringResource(R.string.app_name)
+                stringResource(R.string.app_name),
             ),
             modifier = Modifier.padding(top = 4.dp),
             color = FirefoxTheme.colors.textPrimary,
             fontSize = 14.sp,
-            lineHeight = 20.sp
+            lineHeight = 20.sp,
         )
 
         // The text is wrapped in a box to increase the tap area.
@@ -97,7 +97,7 @@ fun PrivateBrowsingDescription(
                     indication = null,
                     onClickLabel = stringResource(R.string.link_text_view_type_announcement),
                     onClick = onLearnMoreClick,
-                )
+                ),
         ) {
             Text(
                 text = stringResource(R.string.private_browsing_common_myths),
@@ -106,8 +106,8 @@ fun PrivateBrowsingDescription(
                     color = FirefoxTheme.colors.textPrimary,
                     fontSize = 14.sp,
                     textDecoration = TextDecoration.Underline,
-                    textDirection = TextDirection.Content
-                )
+                    textDirection = TextDirection.Content,
+                ),
             )
         }
     }
@@ -118,7 +118,7 @@ fun PrivateBrowsingDescription(
 private fun PrivateBrowsingDescriptionPreview() {
     FirefoxTheme(theme = Theme.getTheme()) {
         PrivateBrowsingDescription(
-            onLearnMoreClick = {}
+            onLearnMoreClick = {},
         )
     }
 }

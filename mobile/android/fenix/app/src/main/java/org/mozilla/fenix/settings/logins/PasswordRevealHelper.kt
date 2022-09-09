@@ -21,7 +21,7 @@ fun togglePasswordReveal(passwordText: TextView, revealPasswordButton: ImageButt
         Logins.viewPasswordLogin.record(NoExtras())
         passwordText.inputType = InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD
         revealPasswordButton.setImageDrawable(
-            AppCompatResources.getDrawable(context, R.drawable.mozac_ic_password_hide)
+            AppCompatResources.getDrawable(context, R.drawable.mozac_ic_password_hide),
         )
         revealPasswordButton.contentDescription =
             context.getString(R.string.saved_login_hide_password)
@@ -29,7 +29,7 @@ fun togglePasswordReveal(passwordText: TextView, revealPasswordButton: ImageButt
         passwordText.inputType =
             InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD
         revealPasswordButton.setImageDrawable(
-            AppCompatResources.getDrawable(context, R.drawable.mozac_ic_password_reveal)
+            AppCompatResources.getDrawable(context, R.drawable.mozac_ic_password_reveal),
         )
         revealPasswordButton.contentDescription =
             context.getString(R.string.saved_login_reveal_password)

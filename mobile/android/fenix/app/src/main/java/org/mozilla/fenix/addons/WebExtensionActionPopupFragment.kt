@@ -36,7 +36,7 @@ class WebExtensionActionPopupFragment : AddonPopupBaseFragment(), EngineSession.
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
-        savedInstanceState: Bundle?
+        savedInstanceState: Bundle?,
     ): View? {
         // Grab the [EngineSession] from the store when the view is created if it is available.
         coreComponents.store.state.extensions[args.webExtensionId]?.popupSession?.let {
@@ -84,7 +84,7 @@ class WebExtensionActionPopupFragment : AddonPopupBaseFragment(), EngineSession.
 
     private fun consumePopupSession() {
         coreComponents.store.dispatch(
-            WebExtensionAction.UpdatePopupSessionAction(args.webExtensionId, popupSession = null)
+            WebExtensionAction.UpdatePopupSessionAction(args.webExtensionId, popupSession = null),
         )
         sessionConsumed = true
     }

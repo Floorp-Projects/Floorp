@@ -26,7 +26,7 @@ import java.lang.IllegalStateException
 class WallpaperDownloader(
     private val storageRootDirectory: File,
     private val client: Client,
-    private val dispatcher: CoroutineDispatcher = Dispatchers.IO
+    private val dispatcher: CoroutineDispatcher = Dispatchers.IO,
 ) {
     private val remoteHost = BuildConfig.WALLPAPER_URL
 
@@ -62,7 +62,7 @@ class WallpaperDownloader(
 
     private suspend fun downloadAsset(
         wallpaper: Wallpaper,
-        imageType: Wallpaper.ImageType
+        imageType: Wallpaper.ImageType,
     ): Wallpaper.ImageFileState = withContext(dispatcher) {
         val localFile = File(storageRootDirectory, getLocalPath(wallpaper.name, imageType))
         if (localFile.exists()) {
@@ -72,7 +72,7 @@ class WallpaperDownloader(
         val remotePath = "${wallpaper.collection.name}/${wallpaper.name}/${imageType.lowercase()}.png"
         val request = Request(
             url = "$remoteHost/$remotePath",
-            method = Request.Method.GET
+            method = Request.Method.GET,
         )
 
         return@withContext Result.runCatching {

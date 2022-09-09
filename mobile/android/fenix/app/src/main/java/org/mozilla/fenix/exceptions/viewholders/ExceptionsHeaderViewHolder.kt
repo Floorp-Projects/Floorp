@@ -12,7 +12,7 @@ import org.mozilla.fenix.R
 
 class ExceptionsHeaderViewHolder(
     view: View,
-    @StringRes description: Int
+    @StringRes description: Int,
 ) : RecyclerView.ViewHolder(view) {
 
     init {

@@ -37,7 +37,7 @@ class DefaultAddressEditorControllerTest {
                 storage = storage,
                 lifecycleScope = coroutinesTestRule.scope,
                 navController = navController,
-            )
+            ),
         )
     }
 
@@ -64,7 +64,7 @@ class DefaultAddressEditorControllerTest {
             postalCode = "90210",
             country = "US",
             tel = "+1 519 555-5555",
-            email = "foo@bar.com"
+            email = "foo@bar.com",
         )
 
         controller.handleSaveAddress(addressFields)

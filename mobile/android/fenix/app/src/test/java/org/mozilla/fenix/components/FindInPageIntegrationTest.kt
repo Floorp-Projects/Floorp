@@ -32,7 +32,7 @@ class FindInPageIntegrationTest {
         val toolbarInfo = FindInPageIntegration.ToolbarInfo(
             toolbar = toolbar,
             isToolbarDynamic = true,
-            isToolbarPlacedAtTop = true
+            isToolbarPlacedAtTop = true,
         )
         val feature = spyk(FindInPageIntegration(mockk(), null, mockk(), mockk(), toolbarInfo)) {
             every { getEngineViewsParentLayoutParams() } returns engineViewParentParams
@@ -58,7 +58,7 @@ class FindInPageIntegrationTest {
         val toolbarInfo = FindInPageIntegration.ToolbarInfo(
             toolbar = toolbar,
             isToolbarDynamic = false,
-            isToolbarPlacedAtTop = true
+            isToolbarPlacedAtTop = true,
         )
         val feature = spyk(FindInPageIntegration(mockk(), null, mockk(), mockk(), toolbarInfo)) {
             every { getEngineViewsParentLayoutParams() } returns engineViewParentParams
@@ -84,7 +84,7 @@ class FindInPageIntegrationTest {
         val toolbarInfo = FindInPageIntegration.ToolbarInfo(
             toolbar = toolbar,
             isToolbarDynamic = true,
-            isToolbarPlacedAtTop = true
+            isToolbarPlacedAtTop = true,
         )
         val feature = spyk(FindInPageIntegration(mockk(), null, mockk(), mockk(), toolbarInfo)) {
             every { getEngineViewsParentLayoutParams() } returns engineViewParentParams
@@ -110,7 +110,7 @@ class FindInPageIntegrationTest {
         val toolbarInfo = FindInPageIntegration.ToolbarInfo(
             toolbar = toolbar,
             isToolbarDynamic = false,
-            isToolbarPlacedAtTop = true
+            isToolbarPlacedAtTop = true,
         )
         val feature = spyk(FindInPageIntegration(mockk(), null, mockk(), mockk(), toolbarInfo)) {
             every { getEngineViewsParentLayoutParams() } returns engineViewParentParams
@@ -136,7 +136,7 @@ class FindInPageIntegrationTest {
         val toolbarInfo = FindInPageIntegration.ToolbarInfo(
             toolbar = toolbar,
             isToolbarDynamic = true,
-            isToolbarPlacedAtTop = false
+            isToolbarPlacedAtTop = false,
         )
         val feature = spyk(FindInPageIntegration(mockk(), null, mockk(), mockk(), toolbarInfo)) {
             every { getEngineViewsParentLayoutParams() } returns engineViewParentParams
@@ -162,7 +162,7 @@ class FindInPageIntegrationTest {
         val toolbarInfo = FindInPageIntegration.ToolbarInfo(
             toolbar = toolbar,
             isToolbarDynamic = false,
-            isToolbarPlacedAtTop = false
+            isToolbarPlacedAtTop = false,
         )
         val feature = spyk(FindInPageIntegration(mockk(), null, mockk(), mockk(), toolbarInfo)) {
             every { getEngineViewsParentLayoutParams() } returns engineViewParentParams
@@ -188,7 +188,7 @@ class FindInPageIntegrationTest {
         val toolbarInfo = FindInPageIntegration.ToolbarInfo(
             toolbar = toolbar,
             isToolbarDynamic = true,
-            isToolbarPlacedAtTop = false
+            isToolbarPlacedAtTop = false,
         )
         val feature = spyk(FindInPageIntegration(mockk(), null, mockk(), mockk(), toolbarInfo)) {
             every { getEngineViewsParentLayoutParams() } returns engineViewParentParams
@@ -214,7 +214,7 @@ class FindInPageIntegrationTest {
         val toolbarInfo = FindInPageIntegration.ToolbarInfo(
             toolbar = toolbar,
             isToolbarDynamic = true,
-            isToolbarPlacedAtTop = false
+            isToolbarPlacedAtTop = false,
         )
         val feature = spyk(FindInPageIntegration(mockk(), null, mockk(), mockk(), toolbarInfo)) {
             every { getEngineViewsParentLayoutParams() } returns engineViewParentParams

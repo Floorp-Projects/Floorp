@@ -39,7 +39,7 @@ class DynamicDownloadDialogBehaviorTest {
             directTargetChild = mockk(),
             target = mockk(),
             axes = ViewCompat.SCROLL_AXIS_VERTICAL,
-            type = ViewCompat.TYPE_TOUCH
+            type = ViewCompat.TYPE_TOUCH,
         )
 
         assertTrue(acceptsNestedScroll)
@@ -57,7 +57,7 @@ class DynamicDownloadDialogBehaviorTest {
             directTargetChild = mockk(),
             target = mockk(),
             axes = ViewCompat.SCROLL_AXIS_HORIZONTAL,
-            type = ViewCompat.TYPE_TOUCH
+            type = ViewCompat.TYPE_TOUCH,
         )
 
         assertFalse(acceptsNestedScroll)
@@ -67,9 +67,10 @@ class DynamicDownloadDialogBehaviorTest {
     fun `Behavior will snap the dialog up if it is more than 50 percent visible`() {
         val behavior = spyk(
             DynamicDownloadDialogBehavior<View>(
-                testContext, attrs = null,
-                bottomToolbarHeight = 10f
-            )
+                testContext,
+                attrs = null,
+                bottomToolbarHeight = 10f,
+            ),
         )
         every { behavior.shouldScroll } returns true
 
@@ -89,7 +90,7 @@ class DynamicDownloadDialogBehaviorTest {
             directTargetChild = mockk(),
             target = mockk(),
             axes = ViewCompat.SCROLL_AXIS_VERTICAL,
-            type = ViewCompat.TYPE_TOUCH
+            type = ViewCompat.TYPE_TOUCH,
         )
 
         assertTrue(behavior.shouldSnapAfterScroll)
@@ -100,7 +101,7 @@ class DynamicDownloadDialogBehaviorTest {
             coordinatorLayout = mockk(),
             child = child,
             target = mockk(),
-            type = 0
+            type = 0,
         )
 
         verify { behavior.animateSnap(child, DynamicDownloadDialogBehavior.SnapDirection.UP) }
@@ -112,9 +113,10 @@ class DynamicDownloadDialogBehaviorTest {
     fun `Behavior will snap the dialog down if translationY is at least equal to half the toolbarHeight`() {
         val behavior = spyk(
             DynamicDownloadDialogBehavior<View>(
-                testContext, attrs = null,
-                bottomToolbarHeight = 10f
-            )
+                testContext,
+                attrs = null,
+                bottomToolbarHeight = 10f,
+            ),
         )
         every { behavior.shouldScroll } returns true
 
@@ -134,7 +136,7 @@ class DynamicDownloadDialogBehaviorTest {
             directTargetChild = mockk(),
             target = mockk(),
             axes = ViewCompat.SCROLL_AXIS_VERTICAL,
-            type = ViewCompat.TYPE_TOUCH
+            type = ViewCompat.TYPE_TOUCH,
         )
 
         assertTrue(behavior.shouldSnapAfterScroll)
@@ -145,7 +147,7 @@ class DynamicDownloadDialogBehaviorTest {
             coordinatorLayout = mockk(),
             child = child,
             target = mockk(),
-            type = 0
+            type = 0,
         )
 
         verify { behavior.animateSnap(child, DynamicDownloadDialogBehavior.SnapDirection.DOWN) }
@@ -171,7 +173,7 @@ class DynamicDownloadDialogBehaviorTest {
             dx = 0,
             dy = 25,
             consumed = IntArray(0),
-            type = 0
+            type = 0,
         )
 
         verify { child.translationY = 25f }
@@ -188,7 +190,7 @@ class DynamicDownloadDialogBehaviorTest {
         verify {
             behavior.animateSnap(
                 dynamicDialogView,
-                DynamicDownloadDialogBehavior.SnapDirection.UP
+                DynamicDownloadDialogBehavior.SnapDirection.UP,
             )
         }
     }
@@ -246,7 +248,7 @@ class DynamicDownloadDialogBehaviorTest {
             directTargetChild = mockk(),
             target = mockk(),
             axes = ViewCompat.SCROLL_AXIS_VERTICAL,
-            type = ViewCompat.TYPE_TOUCH
+            type = ViewCompat.TYPE_TOUCH,
         )
 
         verify { behavior.forceExpand(childView) }

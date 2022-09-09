@@ -203,7 +203,7 @@ class TopSitesTest {
         val defaultTopSites = arrayOf(
             "Top Articles",
             "Wikipedia",
-            "Google"
+            "Google",
         )
 
         homeScreen { }.dismissOnboarding()
@@ -245,7 +245,6 @@ class TopSitesTest {
     @SmokeTest
     @Test
     fun verifySponsoredShortcutsListTest() {
-
         homeScreen {
         }.openThreeDotMenu {
         }.openCustomizeHome {

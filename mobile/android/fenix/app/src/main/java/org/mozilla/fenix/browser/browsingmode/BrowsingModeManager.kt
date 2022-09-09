@@ -37,7 +37,7 @@ interface BrowsingModeManager {
 class DefaultBrowsingModeManager(
     private var _mode: BrowsingMode,
     private val settings: Settings,
-    private val modeDidChange: (BrowsingMode) -> Unit
+    private val modeDidChange: (BrowsingMode) -> Unit,
 ) : BrowsingModeManager {
 
     override var mode: BrowsingMode

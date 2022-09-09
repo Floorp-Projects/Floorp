@@ -14,7 +14,7 @@ interface LoginExceptionsInteractor : ExceptionsInteractor<LoginException>
 
 class DefaultLoginExceptionsInteractor(
     private val ioScope: CoroutineScope,
-    private val loginExceptionStorage: LoginExceptionStorage
+    private val loginExceptionStorage: LoginExceptionStorage,
 ) : LoginExceptionsInteractor {
 
     override fun onDeleteAll() {

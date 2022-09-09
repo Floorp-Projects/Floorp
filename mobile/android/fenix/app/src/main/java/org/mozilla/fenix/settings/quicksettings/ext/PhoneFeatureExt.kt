@@ -16,7 +16,7 @@ import org.mozilla.fenix.utils.Settings
  */
 fun PhoneFeature.shouldBeVisible(
     sitePermissions: SitePermissions?,
-    settings: Settings
+    settings: Settings,
 ): Boolean {
     // We have to check if the site have a site permission exception,
     // if it doesn't the feature shouldn't be visible
@@ -35,7 +35,7 @@ fun PhoneFeature.shouldBeVisible(
 fun PhoneFeature.shouldBeEnabled(
     context: Context,
     sitePermissions: SitePermissions?,
-    settings: Settings
+    settings: Settings,
 ) = isAndroidPermissionGranted(context) && isUserPermissionGranted(sitePermissions, settings)
 
 /**
@@ -48,5 +48,5 @@ fun PhoneFeature.shouldBeEnabled(
  */
 fun PhoneFeature.isUserPermissionGranted(
     sitePermissions: SitePermissions?,
-    settings: Settings
+    settings: Settings,
 ) = getStatus(sitePermissions, settings) == SitePermissions.Status.ALLOWED

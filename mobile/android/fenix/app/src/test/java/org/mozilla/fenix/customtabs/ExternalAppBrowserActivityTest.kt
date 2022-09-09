@@ -79,22 +79,24 @@ class ExternalAppBrowserActivityTest {
 
     @Test
     fun `getNavDirections finishes activity if session ID is null`() {
-        val activity = spyk(object : ExternalAppBrowserActivity() {
-            public override fun getNavDirections(
-                from: BrowserDirection,
-                customTabSessionId: String?
-            ): NavDirections? {
-                return super.getNavDirections(from, customTabSessionId)
-            }
+        val activity = spyk(
+            object : ExternalAppBrowserActivity() {
+                public override fun getNavDirections(
+                    from: BrowserDirection,
+                    customTabSessionId: String?,
+                ): NavDirections? {
+                    return super.getNavDirections(from, customTabSessionId)
+                }
 
-            override fun getIntent(): Intent {
-                val intent: Intent = mockk()
-                val bundle: Bundle = mockk()
-                every { bundle.getString(any()) } returns ""
-                every { intent.extras } returns bundle
-                return intent
-            }
-        })
+                override fun getIntent(): Intent {
+                    val intent: Intent = mockk()
+                    val bundle: Bundle = mockk()
+                    every { bundle.getString(any()) } returns ""
+                    every { intent.extras } returns bundle
+                    return intent
+                }
+            },
+        )
 
         var directions = activity.getNavDirections(BrowserDirection.FromGlobal, "id")
         assertNotNull(directions)
@@ -112,10 +114,10 @@ class ExternalAppBrowserActivityTest {
                 customTabs = listOf(
                     createCustomTab(
                         url = "https://www.mozilla.org",
-                        id = "mozilla"
-                    )
-                )
-            )
+                        id = "mozilla",
+                    ),
+                ),
+            ),
         )
 
         val intent = Intent(Intent.ACTION_VIEW).apply { putSessionId("mozilla") }
@@ -155,10 +157,10 @@ class ExternalAppBrowserActivityTest {
                 tabs = listOf(
                     createTab(
                         url = "https://www.mozilla.org",
-                        id = "mozilla"
-                    )
-                )
-            )
+                        id = "mozilla",
+                    ),
+                ),
+            ),
         )
 
         val intent = Intent(Intent.ACTION_VIEW).apply { putSessionId("mozilla") }

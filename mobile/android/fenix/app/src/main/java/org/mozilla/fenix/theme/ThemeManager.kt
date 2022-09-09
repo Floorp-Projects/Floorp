@@ -46,7 +46,8 @@ abstract class ThemeManager {
             BrowsingMode.Normal -> {
                 when (context.resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) {
                     Configuration.UI_MODE_NIGHT_UNDEFINED, // We assume light here per Android doc's recommendation
-                    Configuration.UI_MODE_NIGHT_NO -> {
+                    Configuration.UI_MODE_NIGHT_NO,
+                    -> {
                         updateLightSystemBars(window, context)
                     }
                     Configuration.UI_MODE_NIGHT_YES -> {
@@ -116,7 +117,7 @@ abstract class ThemeManager {
 
 class DefaultThemeManager(
     currentTheme: BrowsingMode,
-    private val activity: Activity
+    private val activity: Activity,
 ) : ThemeManager() {
     override var currentTheme: BrowsingMode = currentTheme
         set(value) {

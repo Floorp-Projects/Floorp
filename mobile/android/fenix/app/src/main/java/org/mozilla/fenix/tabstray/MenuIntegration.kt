@@ -19,14 +19,14 @@ class MenuIntegration(
     @VisibleForTesting internal val browserStore: BrowserStore,
     @VisibleForTesting internal val tabsTrayStore: TabsTrayStore,
     @VisibleForTesting internal val tabLayout: TabLayout,
-    @VisibleForTesting internal val navigationInteractor: NavigationInteractor
+    @VisibleForTesting internal val navigationInteractor: NavigationInteractor,
 ) {
     private val tabsTrayItemMenu by lazy {
         TabsTrayMenu(
             context = context,
             browserStore = browserStore,
             tabLayout = tabLayout,
-            onItemTapped = ::handleMenuClicked
+            onItemTapped = ::handleMenuClicked,
         )
     }
 

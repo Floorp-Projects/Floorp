@@ -82,13 +82,13 @@ object TestHelper {
     fun longTapSelectItem(url: Uri) {
         mDevice.waitNotNull(
             Until.findObject(By.text(url.toString())),
-            waitingTime
+            waitingTime,
         )
         onView(
             allOf(
                 withId(R.id.url),
-                withText(url.toString())
-            )
+                withText(url.toString()),
+            ),
         ).perform(longClick())
     }
 
@@ -111,7 +111,7 @@ object TestHelper {
     fun waitUntilObjectIsFound(resourceName: String) {
         mDevice.waitNotNull(
             Until.findObjects(By.res(resourceName)),
-            waitingTime
+            waitingTime,
         )
     }
 
@@ -189,7 +189,7 @@ object TestHelper {
     fun createCustomTabIntent(
         pageUrl: String,
         customMenuItemLabel: String = "",
-        customActionButtonDescription: String = ""
+        customActionButtonDescription: String = "",
     ): Intent {
         val appContext = InstrumentationRegistry.getInstrumentation()
             .targetContext
@@ -200,7 +200,9 @@ object TestHelper {
             .setShareState(CustomTabsIntent.SHARE_STATE_ON)
             .setActionButton(
                 createTestBitmap(),
-                customActionButtonDescription, pendingIntent, true
+                customActionButtonDescription,
+                pendingIntent,
+                true,
             )
             .build()
         customTabsIntent.intent.data = Uri.parse(pageUrl)
@@ -233,7 +235,7 @@ object TestHelper {
         } else {
             mDevice.waitNotNull(
                 Until.findObject(By.text("Could not open file")),
-                waitingTime
+                waitingTime,
             )
         }
     }
@@ -243,7 +245,7 @@ object TestHelper {
             mDevice.waitForIdle(waitingTimeShort)
             assertTrue(
                 mDevice.findObject(UiSelector().packageName(appPackageName))
-                    .waitForExists(waitingTime)
+                    .waitForExists(waitingTime),
             )
         } else {
             BrowserRobot().verifyUrl(url)
@@ -281,9 +283,9 @@ object TestHelper {
         return withParent(
             hasSibling(
                 withChild(
-                    matcher
-                )
-            )
+                    matcher,
+                ),
+            ),
         )
     }
 
@@ -302,11 +304,12 @@ object TestHelper {
                 By.text(
                     when (Build.VERSION.SDK_INT) {
                         Build.VERSION_CODES.R -> Pattern.compile(
-                            "WHILE USING THE APP", Pattern.CASE_INSENSITIVE
+                            "WHILE USING THE APP",
+                            Pattern.CASE_INSENSITIVE,
                         )
                         else -> Pattern.compile("Allow", Pattern.CASE_INSENSITIVE)
-                    }
-                )
+                    },
+                ),
             ).click()
         }
     }
@@ -317,11 +320,12 @@ object TestHelper {
                 By.text(
                     when (Build.VERSION.SDK_INT) {
                         Build.VERSION_CODES.R -> Pattern.compile(
-                            "DENY", Pattern.CASE_INSENSITIVE
+                            "DENY",
+                            Pattern.CASE_INSENSITIVE,
                         )
                         else -> Pattern.compile("Deny", Pattern.CASE_INSENSITIVE)
-                    }
-                )
+                    },
+                ),
             ).click()
         }
     }
@@ -368,7 +372,7 @@ object TestHelper {
         config.javaClass.getDeclaredField("userSetLocale").setBoolean(config, true)
         am.javaClass.getMethod(
             "updateConfiguration",
-            Configuration::class.java
+            Configuration::class.java,
         ).invoke(am, config)
     }
 }

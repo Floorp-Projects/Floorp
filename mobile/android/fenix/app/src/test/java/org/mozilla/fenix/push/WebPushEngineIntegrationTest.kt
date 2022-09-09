@@ -40,9 +40,13 @@ import org.mozilla.fenix.helpers.MockkRetryTestRule
 class WebPushEngineIntegrationTest {
 
     private val scope = TestScope(UnconfinedTestDispatcher())
+
     @MockK private lateinit var engine: Engine
+
     @MockK private lateinit var pushFeature: AutoPushFeature
-    @MockK(relaxed = true) private lateinit var handler: WebPushHandler
+
+    @MockK(relaxed = true)
+    private lateinit var handler: WebPushHandler
     private lateinit var delegate: CapturingSlot<WebPushDelegate>
     private lateinit var integration: WebPushEngineIntegration
 
@@ -105,7 +109,7 @@ class WebPushEngineIntegrationTest {
             "scope",
             onSubscription = {
                 actualSubscription = it
-            }
+            },
         )
 
         assertNull(actualSubscription)
@@ -117,8 +121,8 @@ class WebPushEngineIntegrationTest {
                 publicKey = "abc",
                 endpoint = "def",
                 authKey = "xyz",
-                appServerKey = null
-            )
+                appServerKey = null,
+            ),
         )
 
         val expectedSubscription = WebPushSubscription(
@@ -126,7 +130,7 @@ class WebPushEngineIntegrationTest {
             publicKey = "abc".toByteArray(),
             endpoint = "def",
             authSecret = "xyz".toByteArray(),
-            appServerKey = null
+            appServerKey = null,
         )
         assertEquals(expectedSubscription, actualSubscription)
     }
@@ -141,7 +145,7 @@ class WebPushEngineIntegrationTest {
                 scope = "scope",
                 appServerKey = null,
                 onSubscribeError = any(),
-                onSubscribe = any()
+                onSubscribe = any(),
             )
         } answers {
             onSubscribeErrorFn = thirdArg()
@@ -169,8 +173,8 @@ class WebPushEngineIntegrationTest {
                 publicKey = "abc",
                 endpoint = "def",
                 authKey = "xyz",
-                appServerKey = null
-            )
+                appServerKey = null,
+            ),
         )
 
         val expectedSubscription = WebPushSubscription(
@@ -178,7 +182,7 @@ class WebPushEngineIntegrationTest {
             publicKey = "abc".toByteArray(),
             endpoint = "def",
             authSecret = "xyz".toByteArray(),
-            appServerKey = null
+            appServerKey = null,
         )
 
         assertEquals(expectedSubscription, actualSubscription)
@@ -193,7 +197,7 @@ class WebPushEngineIntegrationTest {
             pushFeature.unsubscribe(
                 scope = "scope",
                 onUnsubscribeError = any(),
-                onUnsubscribe = any()
+                onUnsubscribe = any(),
             )
         } answers {
             onUnsubscribeErrorFn = secondArg()

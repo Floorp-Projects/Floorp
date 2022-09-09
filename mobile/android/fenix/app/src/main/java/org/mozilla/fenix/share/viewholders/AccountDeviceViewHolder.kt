@@ -19,7 +19,7 @@ import org.mozilla.fenix.utils.Do
 class AccountDeviceViewHolder(
     itemView: View,
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
-    val interactor: ShareToAccountDevicesInteractor
+    val interactor: ShareToAccountDevicesInteractor,
 ) : RecyclerView.ViewHolder(itemView) {
 
     private val context: Context = itemView.context
@@ -70,38 +70,38 @@ class AccountDeviceViewHolder(
                 SyncShareOption.SignIn -> Triple(
                     context.getText(R.string.sync_sign_in),
                     R.drawable.mozac_ic_sync,
-                    R.color.default_share_background
+                    R.color.default_share_background,
                 )
                 SyncShareOption.Reconnect -> Triple(
                     context.getText(R.string.sync_reconnect),
                     R.drawable.mozac_ic_warning,
-                    R.color.default_share_background
+                    R.color.default_share_background,
                 )
                 SyncShareOption.Offline -> Triple(
                     context.getText(R.string.sync_offline),
                     R.drawable.mozac_ic_warning,
-                    R.color.default_share_background
+                    R.color.default_share_background,
                 )
                 SyncShareOption.AddNewDevice -> Triple(
                     context.getText(R.string.sync_connect_device),
                     R.drawable.mozac_ic_new,
-                    R.color.default_share_background
+                    R.color.default_share_background,
                 )
                 is SyncShareOption.SendAll -> Triple(
                     context.getText(R.string.sync_send_to_all),
                     R.drawable.mozac_ic_select_all,
-                    R.color.default_share_background
+                    R.color.default_share_background,
                 )
                 is SyncShareOption.SingleDevice -> when (option.device.deviceType) {
                     DeviceType.MOBILE -> Triple(
                         option.device.displayName,
                         R.drawable.mozac_ic_device_mobile,
-                        R.color.device_type_mobile_background
+                        R.color.device_type_mobile_background,
                     )
                     else -> Triple(
                         option.device.displayName,
                         R.drawable.mozac_ic_device_desktop,
-                        R.color.device_type_desktop_background
+                        R.color.device_type_desktop_background,
                     )
                 }
             }

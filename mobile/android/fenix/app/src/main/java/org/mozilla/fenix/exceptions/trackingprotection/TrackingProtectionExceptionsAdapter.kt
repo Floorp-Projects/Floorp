@@ -14,7 +14,7 @@ import org.mozilla.fenix.exceptions.ExceptionsAdapter
  * along with controls to remove the exception.
  */
 class TrackingProtectionExceptionsAdapter(
-    interactor: TrackingProtectionExceptionsInteractor
+    interactor: TrackingProtectionExceptionsInteractor,
 ) : ExceptionsAdapter<TrackingProtectionException>(interactor, DiffCallback) {
 
     override val deleteButtonLayoutId = R.layout.delete_exceptions_button
@@ -24,7 +24,7 @@ class TrackingProtectionExceptionsAdapter(
         TrackingProtectionAdapterItem(item)
 
     data class TrackingProtectionAdapterItem(
-        override val item: TrackingProtectionException
+        override val item: TrackingProtectionException,
     ) : AdapterItem.Item<TrackingProtectionException>() {
         override val url get() = item.url
     }

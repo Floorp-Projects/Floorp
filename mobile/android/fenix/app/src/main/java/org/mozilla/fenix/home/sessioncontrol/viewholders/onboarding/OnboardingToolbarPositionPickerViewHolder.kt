@@ -38,8 +38,8 @@ class OnboardingToolbarPositionPickerViewHolder(view: View) : RecyclerView.ViewH
         radioBottomToolbar.onClickListener {
             Onboarding.prefToggledToolbarPosition.record(
                 Onboarding.PrefToggledToolbarPositionExtra(
-                    Position.BOTTOM.name
-                )
+                    Position.BOTTOM.name,
+                ),
             )
 
             itemView.context.asActivity()?.recreate()
@@ -48,8 +48,8 @@ class OnboardingToolbarPositionPickerViewHolder(view: View) : RecyclerView.ViewH
         binding.toolbarBottomImage.setOnClickListener {
             Onboarding.prefToggledToolbarPosition.record(
                 Onboarding.PrefToggledToolbarPositionExtra(
-                    Position.BOTTOM.name
-                )
+                    Position.BOTTOM.name,
+                ),
             )
 
             radioBottomToolbar.performClick()
@@ -58,8 +58,8 @@ class OnboardingToolbarPositionPickerViewHolder(view: View) : RecyclerView.ViewH
         radioTopToolbar.onClickListener {
             Onboarding.prefToggledToolbarPosition.record(
                 Onboarding.PrefToggledToolbarPositionExtra(
-                    Position.TOP.name
-                )
+                    Position.TOP.name,
+                ),
             )
             itemView.context.asActivity()?.recreate()
         }
@@ -67,8 +67,8 @@ class OnboardingToolbarPositionPickerViewHolder(view: View) : RecyclerView.ViewH
         binding.toolbarTopImage.setOnClickListener {
             Onboarding.prefToggledToolbarPosition.record(
                 Onboarding.PrefToggledToolbarPositionExtra(
-                    Position.TOP.name
-                )
+                    Position.TOP.name,
+                ),
             )
             radioTopToolbar.performClick()
         }
@@ -76,6 +76,7 @@ class OnboardingToolbarPositionPickerViewHolder(view: View) : RecyclerView.ViewH
 
     companion object {
         const val LAYOUT_ID = R.layout.onboarding_toolbar_position_picker
+
         // Position of the toolbar used for telemetry
         enum class Position { TOP, BOTTOM }
     }

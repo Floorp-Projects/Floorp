@@ -10,7 +10,7 @@ import mozilla.components.support.ktx.android.content.PreferencesHolder
 class CounterPreference(
     private val holder: PreferencesHolder,
     private val key: String,
-    private val maxCount: Int
+    private val maxCount: Int,
 ) {
 
     val value get() = holder.preferences.getInt(key, 0)

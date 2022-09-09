@@ -11,7 +11,7 @@ import org.mozilla.fenix.trackingprotection.TrackingProtectionState
  */
 internal fun quickSettingsFragmentReducer(
     state: QuickSettingsFragmentState,
-    action: QuickSettingsFragmentAction
+    action: QuickSettingsFragmentAction,
 ): QuickSettingsFragmentState {
     return when (action) {
         is WebsiteInfoAction -> {
@@ -23,14 +23,14 @@ internal fun quickSettingsFragmentReducer(
         is WebsitePermissionAction -> state.copy(
             websitePermissionsState = WebsitePermissionsStateReducer.reduce(
                 state.websitePermissionsState,
-                action
-            )
+                action,
+            ),
         )
         is TrackingProtectionAction -> state.copy(
             trackingProtectionState = TrackingProtectionStateReducer.reduce(
                 state = state.trackingProtectionState,
-                action = action
-            )
+                action = action,
+            ),
         )
     }
 }
@@ -41,7 +41,7 @@ object WebsitePermissionsStateReducer {
      */
     fun reduce(
         state: WebsitePermissionsState,
-        action: WebsitePermissionAction
+        action: WebsitePermissionAction,
     ): WebsitePermissionsState {
         val key = action.updatedFeature
         val value = state.getValue(key)
@@ -51,7 +51,7 @@ object WebsitePermissionsStateReducer {
                 val toggleable = value as WebsitePermission.Toggleable
                 val newWebsitePermission = toggleable.copy(
                     status = action.updatedStatus,
-                    isEnabled = action.updatedEnabledStatus
+                    isEnabled = action.updatedEnabledStatus,
                 )
 
                 state + Pair(key, newWebsitePermission)
@@ -59,7 +59,7 @@ object WebsitePermissionsStateReducer {
             is WebsitePermissionAction.ChangeAutoplay -> {
                 val autoplay = value as WebsitePermission.Autoplay
                 val newWebsitePermission = autoplay.copy(
-                    autoplayValue = action.autoplayValue
+                    autoplayValue = action.autoplayValue,
                 )
                 state + Pair(key, newWebsitePermission)
             }
@@ -74,7 +74,7 @@ object TrackingProtectionStateReducer {
      */
     fun reduce(
         state: TrackingProtectionState,
-        action: TrackingProtectionAction
+        action: TrackingProtectionAction,
     ): TrackingProtectionState {
         return when (action) {
             is TrackingProtectionAction.ToggleTrackingProtectionEnabled ->

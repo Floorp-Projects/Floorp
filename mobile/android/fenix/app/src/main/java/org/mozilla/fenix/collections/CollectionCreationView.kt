@@ -29,13 +29,13 @@ import org.mozilla.fenix.ext.toShortUrl
 
 class CollectionCreationView(
     private val container: ViewGroup,
-    private val interactor: CollectionCreationInteractor
+    private val interactor: CollectionCreationInteractor,
 ) {
 
     private val binding = ComponentCollectionCreationBinding.inflate(
         LayoutInflater.from(container.context),
         container,
-        true
+        true,
     )
 
     private val bottomBarView = CollectionCreationBottomBarView(
@@ -43,7 +43,7 @@ class CollectionCreationView(
         layout = binding.bottomButtonBarLayout,
         iconButton = binding.bottomBarIconButton,
         textView = binding.bottomBarText,
-        saveButton = binding.saveButton
+        saveButton = binding.saveButton,
     )
     private val collectionCreationTabListAdapter = CollectionCreationTabListAdapter(interactor)
     private val collectionSaveListAdapter = SaveCollectionListAdapter(interactor)
@@ -61,7 +61,9 @@ class CollectionCreationView(
         transition.duration = TRANSITION_DURATION
         transition.excludeTarget(binding.backButton, true)
 
-        binding.nameCollectionEdittext.filters += InputFilter.LengthFilter(COLLECTION_NAME_MAX_LENGTH)
+        binding.nameCollectionEdittext.filters += InputFilter.LengthFilter(
+            COLLECTION_NAME_MAX_LENGTH,
+        )
         binding.nameCollectionEdittext.setOnEditorActionListener { view, actionId, _ ->
             val text = view.text.toString()
             if (actionId == EditorInfo.IME_ACTION_DONE && text.isNotBlank()) {
@@ -70,7 +72,8 @@ class CollectionCreationView(
                         interactor.onNewCollectionNameSaved(selectedTabs.toList(), text)
                     SaveCollectionStep.RenameCollection ->
                         selectedCollection?.let { interactor.onCollectionRenamed(it, text) }
-                    else -> { /* noop */ }
+                    else -> { /* noop */
+                    }
                 }
             }
             false
@@ -89,7 +92,6 @@ class CollectionCreationView(
     }
 
     fun update(state: CollectionCreationState) {
-
         cacheState(state)
 
         bottomBarView.update(step, state)
@@ -141,7 +143,7 @@ class CollectionCreationView(
 
         selectTabsConstraints.clone(
             container.context,
-            R.layout.component_collection_creation
+            R.layout.component_collection_creation,
         )
         collectionCreationTabListAdapter.updateData(state.tabs, state.selectedTabs)
         selectTabsConstraints.applyTo(binding.collectionConstraintLayout)
@@ -151,7 +153,7 @@ class CollectionCreationView(
         binding.tabList.isClickable = false
         selectCollectionConstraints.clone(
             container.context,
-            R.layout.component_collection_creation_select_collection
+            R.layout.component_collection_creation_select_collection,
         )
         selectCollectionConstraints.applyTo(binding.collectionConstraintLayout)
 
@@ -168,11 +170,15 @@ class CollectionCreationView(
         binding.tabList.isClickable = false
         nameCollectionConstraints.clone(
             container.context,
-            R.layout.component_collection_creation_name_collection
+            R.layout.component_collection_creation_name_collection,
         )
         nameCollectionConstraints.applyTo(binding.collectionConstraintLayout)
 
-        collectionCreationTabListAdapter.updateData(state.selectedTabs.toList(), state.selectedTabs, true)
+        collectionCreationTabListAdapter.updateData(
+            state.selectedTabs.toList(),
+            state.selectedTabs,
+            true,
+        )
         binding.backButton.apply {
             text = context.getString(R.string.create_collection_name_collection)
             setOnClickListener {
@@ -182,7 +188,7 @@ class CollectionCreationView(
                     {
                         interactor.onBackPressed(SaveCollectionStep.NameCollection)
                     },
-                    TRANSITION_DURATION
+                    TRANSITION_DURATION,
                 )
             }
         }
@@ -192,8 +198,8 @@ class CollectionCreationView(
         binding.nameCollectionEdittext.setText(
             container.context.getString(
                 R.string.create_collection_default_name,
-                state.defaultCollectionNumber
-            )
+                state.defaultCollectionNumber,
+            ),
         )
         binding.nameCollectionEdittext.setSelection(0, binding.nameCollectionEdittext.text.length)
     }
@@ -208,7 +214,7 @@ class CollectionCreationView(
                     sessionId = tab.id.toString(),
                     url = tab.url,
                     hostname = tab.url.toShortUrl(publicSuffixList),
-                    title = tab.title
+                    title = tab.title,
                 )
             }.let { tabs ->
                 collectionCreationTabListAdapter.updateData(tabs, tabs.toSet(), true)
@@ -216,7 +222,7 @@ class CollectionCreationView(
         }
         nameCollectionConstraints.clone(
             container.context,
-            R.layout.component_collection_creation_name_collection
+            R.layout.component_collection_creation_name_collection,
         )
         nameCollectionConstraints.applyTo(binding.collectionConstraintLayout)
         binding.nameCollectionEdittext.setText(state.selectedTabCollection?.title)
@@ -231,22 +237,30 @@ class CollectionCreationView(
                     {
                         interactor.onBackPressed(SaveCollectionStep.RenameCollection)
                     },
-                    TRANSITION_DURATION
+                    TRANSITION_DURATION,
                 )
             }
         }
-        transition.addListener(object : Transition.TransitionListener {
-            override fun onTransitionStart(transition: Transition) { /* noop */ }
+        transition.addListener(
+            object : Transition.TransitionListener {
+                override fun onTransitionStart(transition: Transition) { /* noop */
+                }
 
-            override fun onTransitionEnd(transition: Transition) {
-                binding.nameCollectionEdittext.showKeyboard()
-                transition.removeListener(this)
-            }
+                override fun onTransitionEnd(transition: Transition) {
+                    binding.nameCollectionEdittext.showKeyboard()
+                    transition.removeListener(this)
+                }
 
-            override fun onTransitionCancel(transition: Transition) { /* noop */ }
-            override fun onTransitionPause(transition: Transition) { /* noop */ }
-            override fun onTransitionResume(transition: Transition) { /* noop */ }
-        })
+                override fun onTransitionCancel(transition: Transition) { /* noop */
+                }
+
+                override fun onTransitionPause(transition: Transition) { /* noop */
+                }
+
+                override fun onTransitionResume(transition: Transition) { /* noop */
+                }
+            },
+        )
         TransitionManager.beginDelayedTransition(binding.collectionConstraintLayout, transition)
     }
 

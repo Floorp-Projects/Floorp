@@ -32,7 +32,7 @@ object ToolbarPopupWindow {
         customTabId: String? = null,
         handlePasteAndGo: (String) -> Unit,
         handlePaste: (String) -> Unit,
-        copyVisible: Boolean = true
+        copyVisible: Boolean = true,
     ) {
         val context = view.get()?.context ?: return
         val clipboard = context.components.clipboardHandler
@@ -47,7 +47,7 @@ object ToolbarPopupWindow {
             binding.root,
             LinearLayout.LayoutParams.WRAP_CONTENT,
             context.resources.getDimensionPixelSize(R.dimen.context_menu_height),
-            true
+            true,
         )
         popupWindow.elevation =
             context.resources.getDimension(R.dimen.mozac_browser_menu_elevation)
@@ -66,14 +66,14 @@ object ToolbarPopupWindow {
                 popupWindow.dismiss()
                 clipboard.text = getUrlForClipboard(
                     copyView.context.components.core.store,
-                    customTabId
+                    customTabId,
                 )
 
                 view.get()?.let { toolbarView ->
                     FenixSnackbar.make(
                         view = toolbarView,
                         duration = Snackbar.LENGTH_SHORT,
-                        isDisplayedWithBrowserToolbar = true
+                        isDisplayedWithBrowserToolbar = true,
                     )
                         .setText(context.getString(R.string.browser_toolbar_url_copied_to_clipboard_snackbar))
                         .show()
@@ -101,7 +101,7 @@ object ToolbarPopupWindow {
                 it,
                 context.resources.getDimensionPixelSize(R.dimen.context_menu_x_offset),
                 0,
-                Gravity.START
+                Gravity.START,
             )
         }
     }
@@ -109,7 +109,7 @@ object ToolbarPopupWindow {
     @VisibleForTesting
     internal fun getUrlForClipboard(
         store: BrowserStore,
-        customTabId: String? = null
+        customTabId: String? = null,
     ): String? {
         return if (customTabId != null) {
             val customTab = store.state.findCustomTab(customTabId)

@@ -21,20 +21,19 @@ class DownloadFragmentTest {
 
     @Test
     fun `downloads are sorted from newest to oldest`() {
-
         val downloadedFile1 = File(
             Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS),
-            "1.pdf"
+            "1.pdf",
         )
 
         val downloadedFile2 = File(
             Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS),
-            "2.pdf"
+            "2.pdf",
         )
 
         val downloadedFile3 = File(
             Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS),
-            "3.pdf"
+            "3.pdf",
         )
 
         downloadedFile1.createNewFile()
@@ -51,7 +50,7 @@ class DownloadFragmentTest {
                 filePath = downloadedFile3.path,
                 size = "0",
                 contentType = null,
-                status = DownloadState.Status.COMPLETED
+                status = DownloadState.Status.COMPLETED,
             ),
             DownloadItem(
                 id = "2",
@@ -60,7 +59,7 @@ class DownloadFragmentTest {
                 filePath = downloadedFile2.path,
                 size = "0",
                 contentType = null,
-                status = DownloadState.Status.COMPLETED
+                status = DownloadState.Status.COMPLETED,
             ),
             DownloadItem(
                 id = "1",
@@ -69,8 +68,8 @@ class DownloadFragmentTest {
                 filePath = downloadedFile1.path,
                 size = "0",
                 contentType = null,
-                status = DownloadState.Status.COMPLETED
-            )
+                status = DownloadState.Status.COMPLETED,
+            ),
         )
 
         val state: BrowserState = mockk(relaxed = true)
@@ -81,22 +80,22 @@ class DownloadFragmentTest {
                 createdTime = 1,
                 url = "url",
                 fileName = "1.pdf",
-                status = DownloadState.Status.COMPLETED
+                status = DownloadState.Status.COMPLETED,
             ),
             "2" to DownloadState(
                 id = "2",
                 createdTime = 2,
                 url = "url",
                 fileName = "2.pdf",
-                status = DownloadState.Status.COMPLETED
+                status = DownloadState.Status.COMPLETED,
             ),
             "3" to DownloadState(
                 id = "3",
                 createdTime = 3,
                 url = "url",
                 fileName = "3.pdf",
-                status = DownloadState.Status.COMPLETED
-            )
+                status = DownloadState.Status.COMPLETED,
+            ),
         )
 
         val list = fragment.provideDownloads(state)
@@ -112,7 +111,7 @@ class DownloadFragmentTest {
     fun `downloads with null content length don't crash`() {
         val downloadedFile0 = File(
             Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS),
-            "1.pdf"
+            "1.pdf",
         )
 
         downloadedFile0.createNewFile()
@@ -127,8 +126,8 @@ class DownloadFragmentTest {
                 filePath = downloadedFile0.path,
                 size = "0",
                 contentType = null,
-                status = DownloadState.Status.COMPLETED
-            )
+                status = DownloadState.Status.COMPLETED,
+            ),
         )
 
         val state: BrowserState = mockk(relaxed = true)
@@ -140,8 +139,8 @@ class DownloadFragmentTest {
                 url = "url",
                 fileName = "1.pdf",
                 contentLength = null,
-                status = DownloadState.Status.COMPLETED
-            )
+                status = DownloadState.Status.COMPLETED,
+            ),
         )
 
         val list = fragment.provideDownloads(state)
@@ -153,7 +152,7 @@ class DownloadFragmentTest {
         val fragment = DownloadFragment()
         val downloadedFile0 = File(
             Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS),
-            "1.pdf"
+            "1.pdf",
         )
         val state: BrowserState = mockk(relaxed = true)
         every { state.downloads } returns mapOf(
@@ -163,7 +162,7 @@ class DownloadFragmentTest {
                 url = "url",
                 fileName = "1.pdf",
                 contentLength = 100,
-                status = DownloadState.Status.COMPLETED
+                status = DownloadState.Status.COMPLETED,
             ),
             "2" to DownloadState(
                 id = "2",
@@ -171,8 +170,8 @@ class DownloadFragmentTest {
                 url = "url",
                 fileName = "1.pdf",
                 contentLength = 100,
-                status = DownloadState.Status.COMPLETED
-            )
+                status = DownloadState.Status.COMPLETED,
+            ),
         )
 
         downloadedFile0.createNewFile()

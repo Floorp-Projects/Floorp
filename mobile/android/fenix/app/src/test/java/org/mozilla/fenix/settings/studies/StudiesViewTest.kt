@@ -60,8 +60,8 @@ class StudiesViewTest {
                 interactor,
                 settings,
                 experiments,
-                isAttached = { true }
-            )
+                isAttached = { true },
+            ),
         )
     }
 

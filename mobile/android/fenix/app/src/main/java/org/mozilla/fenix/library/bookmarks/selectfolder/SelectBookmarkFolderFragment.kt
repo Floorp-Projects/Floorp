@@ -86,7 +86,7 @@ class SelectBookmarkFolderFragment : Fragment() {
                     nav(
                         R.id.bookmarkSelectFolderFragment,
                         SelectBookmarkFolderFragmentDirections
-                            .actionBookmarkSelectFolderFragmentToBookmarkAddFolderFragment()
+                            .actionBookmarkSelectFolderFragmentToBookmarkAddFolderFragment(),
                     )
                 }
                 true

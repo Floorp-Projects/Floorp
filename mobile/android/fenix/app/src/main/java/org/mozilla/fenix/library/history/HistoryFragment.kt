@@ -64,10 +64,10 @@ class HistoryFragment : LibraryPageFragment<History>(), UserInteractionHandler {
 
     private var history: Flow<PagingData<History>> = Pager(
         PagingConfig(PAGE_SIZE),
-        null
+        null,
     ) {
         HistoryDataSource(
-            historyProvider = historyProvider
+            historyProvider = historyProvider,
         )
     }.flow
 
@@ -91,8 +91,8 @@ class HistoryFragment : LibraryPageFragment<History>(), UserInteractionHandler {
                     mode = HistoryFragmentState.Mode.Normal,
                     pendingDeletionItems = emptySet(),
                     isEmpty = false,
-                    isDeletingItems = false
-                )
+                    isDeletingItems = false,
+                ),
             )
         }
         val historyController: HistoryController = DefaultHistoryController(
@@ -112,21 +112,21 @@ class HistoryFragment : LibraryPageFragment<History>(), UserInteractionHandler {
             settings = requireContext().components.settings,
         )
         historyInteractor = DefaultHistoryInteractor(
-            historyController
+            historyController,
         )
         _historyView = HistoryView(
             binding.historyLayout,
             historyInteractor,
             onZeroItemsLoaded = {
                 historyStore.dispatch(
-                    HistoryFragmentAction.ChangeEmptyState(isEmpty = true)
+                    HistoryFragmentAction.ChangeEmptyState(isEmpty = true),
                 )
             },
             onEmptyStateChanged = {
                 historyStore.dispatch(
-                    HistoryFragmentAction.ChangeEmptyState(it)
+                    HistoryFragmentAction.ChangeEmptyState(it),
                 )
-            }
+            },
         )
 
         return view
@@ -161,7 +161,7 @@ class HistoryFragment : LibraryPageFragment<History>(), UserInteractionHandler {
     private fun deleteSnackbar(
         items: Set<History>,
         undo: suspend (items: Set<History>) -> Unit,
-        delete: (Set<History>) -> suspend (context: Context) -> Unit
+        delete: (Set<History>) -> suspend (context: Context) -> Unit,
     ) {
         CoroutineScope(IO).allowUndo(
             requireActivity().getRootView()!!,
@@ -170,7 +170,7 @@ class HistoryFragment : LibraryPageFragment<History>(), UserInteractionHandler {
             {
                 undo.invoke(items)
             },
-            delete(items)
+            delete(items),
         )
     }
 
@@ -179,7 +179,7 @@ class HistoryFragment : LibraryPageFragment<History>(), UserInteractionHandler {
             historyView.historyAdapter.refresh()
             showSnackBar(
                 binding.root,
-                getString(R.string.preferences_delete_browsing_data_snackbar)
+                getString(R.string.preferences_delete_browsing_data_snackbar),
             )
         }
     }
@@ -194,7 +194,7 @@ class HistoryFragment : LibraryPageFragment<History>(), UserInteractionHandler {
         requireContext().components.appStore.flowScoped(viewLifecycleOwner) { flow ->
             flow.mapNotNull { state -> state.pendingDeletionHistoryItems }.collect { items ->
                 historyStore.dispatch(
-                    HistoryFragmentAction.UpdatePendingDeletionItems(pendingDeletionItems = items)
+                    HistoryFragmentAction.UpdatePendingDeletionItems(pendingDeletionItems = items),
                 )
             }
         }
@@ -243,7 +243,7 @@ class HistoryFragment : LibraryPageFragment<History>(), UserInteractionHandler {
                         shareTabs.addAll(
                             history.items.map { metadata ->
                                 ShareData(url = metadata.url, title = metadata.title)
-                            }
+                            },
                         )
                     }
                     else -> {
@@ -301,7 +301,7 @@ class HistoryFragment : LibraryPageFragment<History>(), UserInteractionHandler {
     private fun showTabTray() {
         findNavController().nav(
             R.id.historyFragment,
-            HistoryFragmentDirections.actionGlobalTabsTrayFragment()
+            HistoryFragmentDirections.actionGlobalTabsTrayFragment(),
         )
     }
 
@@ -317,7 +317,7 @@ class HistoryFragment : LibraryPageFragment<History>(), UserInteractionHandler {
                     historyItem.url.toShortUrl(requireComponents.publicSuffixList)
                 } else {
                     historyItem.title
-                }
+                },
             )
         }
     }

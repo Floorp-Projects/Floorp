@@ -33,7 +33,7 @@ class SettingsSubMenuLoginsAndPasswordsSavedLoginsRobot {
     fun verifySavedLoginsAfterSync() {
         mDevice.waitNotNull(
             Until.findObjects(By.text("https://accounts.google.com")),
-            TestAssetHelper.waitingTime
+            TestAssetHelper.waitingTime,
         )
         assertSavedLoginAppears()
     }

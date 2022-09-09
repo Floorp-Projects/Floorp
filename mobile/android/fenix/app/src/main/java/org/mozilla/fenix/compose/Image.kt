@@ -54,7 +54,7 @@ fun Image(
             url = url,
             client = components.core.client,
             private = private,
-            targetSize = targetSize
+            targetSize = targetSize,
         ) {
             WithImage { painter ->
                 androidx.compose.foundation.Image(
@@ -62,7 +62,7 @@ fun Image(
                     modifier = modifier,
                     contentDescription = contentDescription,
                     alignment = alignment,
-                    contentScale = contentScale
+                    contentScale = contentScale,
                 )
             }
 
@@ -79,7 +79,7 @@ private fun ImagePreview() {
     FirefoxTheme {
         Image(
             url = "https://mozilla.com",
-            modifier = Modifier.height(100.dp).width(200.dp)
+            modifier = Modifier.height(100.dp).width(200.dp),
         )
     }
 }

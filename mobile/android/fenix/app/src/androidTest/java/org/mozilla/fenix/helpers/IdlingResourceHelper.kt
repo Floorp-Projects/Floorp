@@ -17,16 +17,16 @@ object IdlingResourceHelper {
     fun registerAddonInstallingIdlingResource(activityTestRule: ActivityTestRule<HomeActivity>) {
         IdlingRegistry.getInstance().register(
             AddonsInstallingIdlingResource(
-                activityTestRule.activity.supportFragmentManager
-            )
+                activityTestRule.activity.supportFragmentManager,
+            ),
         )
     }
 
     fun unregisterAddonInstallingIdlingResource(activityTestRule: ActivityTestRule<HomeActivity>) {
         IdlingRegistry.getInstance().unregister(
             AddonsInstallingIdlingResource(
-                activityTestRule.activity.supportFragmentManager
-            )
+                activityTestRule.activity.supportFragmentManager,
+            ),
         )
     }
 

@@ -26,13 +26,14 @@ class ConnectionPanelDialogFragment : FenixDialogFragment() {
 
     override val gravity: Int get() = args.gravity
     override val layoutId: Int = R.layout.fragment_connection_details_dialog
+
     // This property is only valid between onCreateView and onDestroyView.
     private val binding get() = _binding!!
 
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
-        savedInstanceState: Bundle?
+        savedInstanceState: Bundle?,
     ): View {
         val rootView = inflateRootView(container)
 
@@ -42,7 +43,7 @@ class ConnectionPanelDialogFragment : FenixDialogFragment() {
             navController = { findNavController() },
             sitePermissions = args.sitePermissions,
             gravity = args.gravity,
-            getCurrentTab = ::getCurrentTab
+            getCurrentTab = ::getCurrentTab,
         )
 
         val interactor = ConnectionDetailsInteractor(controller)
@@ -51,7 +52,7 @@ class ConnectionPanelDialogFragment : FenixDialogFragment() {
         connectionView = ConnectionDetailsView(
             binding.connectionDetailsInfoLayout,
             icons = requireComponents.core.icons,
-            interactor = interactor
+            interactor = interactor,
         )
 
         return rootView
@@ -64,8 +65,8 @@ class ConnectionPanelDialogFragment : FenixDialogFragment() {
                 args.url,
                 args.title,
                 args.isSecured,
-                args.certificateName
-            )
+                args.certificateName,
+            ),
         )
     }
 

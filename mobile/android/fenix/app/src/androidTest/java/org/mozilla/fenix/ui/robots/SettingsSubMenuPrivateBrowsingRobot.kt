@@ -53,7 +53,7 @@ class SettingsSubMenuPrivateBrowsingRobot {
     fun cancelPrivateShortcutAddition() {
         mDevice.wait(
             Until.findObject(text("Add private browsing shortcut")),
-            waitingTime
+            waitingTime,
         )
         addPrivateBrowsingShortcutButton().click()
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -65,7 +65,7 @@ class SettingsSubMenuPrivateBrowsingRobot {
     fun addPrivateShortcutToHomescreen() {
         mDevice.wait(
             Until.findObject(text("Add private browsing shortcut")),
-            waitingTime
+            waitingTime,
         )
         addPrivateBrowsingShortcutButton().click()
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -95,8 +95,8 @@ private fun assertNavigationToolBarHeader() {
     onView(
         CoreMatchers.allOf(
             withId(R.id.navigationToolbar),
-            withChild(withText(R.string.preferences_private_browsing_options))
-        )
+            withChild(withText(R.string.preferences_private_browsing_options)),
+        ),
     )
         .check((matches(withEffectiveVisibility(Visibility.VISIBLE))))
 }
@@ -122,7 +122,7 @@ private fun privateBrowsingShortcutIcon() = mDevice.findObject(text("Private $ap
 private fun assertAddPrivateBrowsingShortcutButton() {
     mDevice.wait(
         Until.findObject(text("Add private browsing shortcut")),
-        waitingTime
+        waitingTime,
     )
     addPrivateBrowsingShortcutButton()
         .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))

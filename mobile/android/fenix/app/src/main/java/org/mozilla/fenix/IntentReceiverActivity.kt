@@ -48,7 +48,9 @@ class IntentReceiverActivity : Activity() {
         processIntent(intent)
 
         components.core.engine.profiler?.addMarker(
-            MarkersActivityLifecycleCallbacks.MARKER_NAME, startTimeProfiler, "IntentReceiverActivity.onCreate"
+            MarkersActivityLifecycleCallbacks.MARKER_NAME,
+            startTimeProfiler,
+            "IntentReceiverActivity.onCreate",
         )
         StartupTimeline.onActivityCreateEndIntentReceiver() // DO NOT MOVE ANYTHING BELOW HERE.
     }
@@ -78,7 +80,7 @@ class IntentReceiverActivity : Activity() {
         if (!intent.hasExtra(HomeActivity.OPEN_TO_BROWSER)) {
             intent.putExtra(
                 HomeActivity.OPEN_TO_BROWSER,
-                intentProcessorType.shouldOpenToBrowser(intent)
+                intentProcessorType.shouldOpenToBrowser(intent),
             )
         }
         // StrictMode violation on certain devices such as Samsung
@@ -92,13 +94,13 @@ class IntentReceiverActivity : Activity() {
         val modeDependentProcessors = if (private) {
             listOf(
                 components.intentProcessors.privateCustomTabIntentProcessor,
-                components.intentProcessors.privateIntentProcessor
+                components.intentProcessors.privateIntentProcessor,
             )
         } else {
             Events.openedLink.record(Events.OpenedLinkExtra("NORMAL"))
             listOf(
                 components.intentProcessors.customTabIntentProcessor,
-                components.intentProcessors.intentProcessor
+                components.intentProcessors.intentProcessor,
             )
         }
 

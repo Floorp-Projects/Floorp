@@ -144,7 +144,7 @@ class BaseBrowserFragmentTest {
 
         val download = DownloadState(
             url = "",
-            sessionId = "1"
+            sessionId = "1",
         )
 
         val status = DownloadState.Status.values()
@@ -164,7 +164,7 @@ class BaseBrowserFragmentTest {
 
         val download = DownloadState(
             url = "",
-            sessionId = "1"
+            sessionId = "1",
         )
 
         val status = DownloadState.Status.values()
@@ -184,7 +184,7 @@ class BaseBrowserFragmentTest {
 
         val download = DownloadState(
             url = "",
-            sessionId = "2"
+            sessionId = "2",
         )
 
         val status = DownloadState.Status.values()
@@ -202,7 +202,7 @@ class BaseBrowserFragmentTest {
 private class TestBaseBrowserFragment : BaseBrowserFragment() {
     override fun getContextMenuCandidates(
         context: Context,
-        view: View
+        view: View,
     ): List<ContextMenuCandidate> {
         // no-op
         return emptyList()

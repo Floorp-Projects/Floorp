@@ -74,10 +74,10 @@ abstract class BiometricPromptPreferenceFragment : PreferenceFragmentCompat() {
                 onAuthFailure = {
                     togglePrefsEnabled(prefList, true)
                 },
-                onAuthSuccess = ::navigateOnSuccess
+                onAuthSuccess = ::navigateOnSuccess,
             ),
             owner = this,
-            view = view
+            view = view,
         )
     }
 

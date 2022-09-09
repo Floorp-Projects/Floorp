@@ -85,7 +85,9 @@ class ThreeDotMenuMainRobot {
         expandMenu()
         if (state) {
             desktopSiteButton().check(matches(isChecked()))
-        } else desktopSiteButton().check(matches(not(isChecked())))
+        } else {
+            desktopSiteButton().check(matches(not(isChecked())))
+        }
     }
 
     fun verifyPageThreeDotMainMenuItems() {
@@ -128,7 +130,7 @@ class ThreeDotMenuMainRobot {
             try {
                 assertTrue(
                     "Addon not listed in the Add-ons menu",
-                    mDevice.findObject(UiSelector().text(addonName)).waitForExists(waitingTime)
+                    mDevice.findObject(UiSelector().text(addonName)).waitForExists(waitingTime),
                 )
                 break
             } catch (e: AssertionError) {
@@ -148,7 +150,7 @@ class ThreeDotMenuMainRobot {
     class Transition {
         fun openSettings(
             localizedText: String = getStringResource(R.string.browser_menu_settings),
-            interact: SettingsRobot.() -> Unit
+            interact: SettingsRobot.() -> Unit,
         ): SettingsRobot.Transition {
             // We require one swipe to display the full size 3-dot menu. On smaller devices
             // such as the Pixel 2, we require two swipes to display the "Settings" menu item
@@ -215,19 +217,18 @@ class ThreeDotMenuMainRobot {
         }
 
         fun openCustomizeHome(interact: SettingsSubMenuHomepageRobot.() -> Unit): SettingsSubMenuHomepageRobot.Transition {
-
             mDevice.wait(
                 Until
                     .findObject(
-                        By.textContains("$packageName:id/browser_menu_customize_home_1")
+                        By.textContains("$packageName:id/browser_menu_customize_home_1"),
                     ),
-                waitingTime
+                waitingTime,
             )
 
             customizeHomeButton().click()
 
             mDevice.findObject(
-                UiSelector().resourceId("$packageName:id/recycler_view")
+                UiSelector().resourceId("$packageName:id/recycler_view"),
             ).waitForExists(waitingTime)
 
             SettingsSubMenuHomepageRobot().interact()
@@ -418,8 +419,8 @@ private fun customizeHomeButton() =
     onView(
         allOf(
             withId(R.id.text),
-            withText(R.string.browser_menu_customize_home_1)
-        )
+            withText(R.string.browser_menu_customize_home_1),
+        ),
     )
 
 private fun assertCustomizeHomeButton() =
@@ -495,8 +496,8 @@ private fun assertFindInPageButton() = findInPageButton()
 private fun whatsNewButton() = onView(
     allOf(
         withText("What’s new"),
-        withEffectiveVisibility(Visibility.VISIBLE)
-    )
+        withEffectiveVisibility(Visibility.VISIBLE),
+    ),
 )
 
 private fun assertWhatsNewButton() = whatsNewButton()
@@ -534,18 +535,17 @@ private fun assertAddToTopSitesButton() {
     onView(withId(R.id.mozac_browser_menu_recyclerView))
         .perform(
             RecyclerViewActions.scrollTo<RecyclerView.ViewHolder>(
-                hasDescendant(withText(R.string.browser_menu_add_to_shortcuts))
-            )
+                hasDescendant(withText(R.string.browser_menu_add_to_shortcuts)),
+            ),
         ).check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 }
 
 private fun assertRemoveFromShortcutsButton() {
-
     onView(withId(R.id.mozac_browser_menu_recyclerView))
         .perform(
             RecyclerViewActions.scrollTo<RecyclerView.ViewHolder>(
-                hasDescendant(withText(R.string.browser_menu_settings))
-            )
+                hasDescendant(withText(R.string.browser_menu_settings)),
+            ),
         ).check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 }
 
@@ -556,8 +556,8 @@ private fun assertAddToMobileHome() {
     onView(withId(R.id.mozac_browser_menu_recyclerView))
         .perform(
             RecyclerViewActions.scrollTo<RecyclerView.ViewHolder>(
-                hasDescendant(withText(R.string.browser_menu_add_to_homescreen))
-            )
+                hasDescendant(withText(R.string.browser_menu_add_to_homescreen)),
+            ),
         ).check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 }
 
@@ -573,8 +573,8 @@ private fun openInAppButton() =
     onView(
         allOf(
             withText("Open in app"),
-            withEffectiveVisibility(Visibility.VISIBLE)
-        )
+            withEffectiveVisibility(Visibility.VISIBLE),
+        ),
     )
 
 private fun downloadsButton() = onView(withText(R.string.library_downloads))
@@ -594,7 +594,7 @@ private fun shareAllTabsButton() =
 private fun assertShareAllTabsButton() {
     shareAllTabsButton()
         .check(
-            matches(isDisplayed())
+            matches(isDisplayed()),
         )
 }
 

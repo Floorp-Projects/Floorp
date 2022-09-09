@@ -19,7 +19,7 @@ sealed class CustomViewHolder(view: View) : RecyclerView.ViewHolder(view) {
     class SectionViewHolder(
         view: View,
         val titleView: TextView,
-        val divider: View
+        val divider: View,
     ) : CustomViewHolder(view)
 
     /**

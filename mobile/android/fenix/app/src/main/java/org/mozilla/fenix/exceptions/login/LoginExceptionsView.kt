@@ -12,7 +12,7 @@ import org.mozilla.fenix.exceptions.ExceptionsView
 
 class LoginExceptionsView(
     container: ViewGroup,
-    interactor: LoginExceptionsInteractor
+    interactor: LoginExceptionsInteractor,
 ) : ExceptionsView<LoginException>(container, interactor) {
 
     override val exceptionsAdapter = LoginExceptionsAdapter(interactor)

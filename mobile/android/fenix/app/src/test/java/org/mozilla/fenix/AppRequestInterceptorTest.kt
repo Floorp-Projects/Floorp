@@ -41,7 +41,6 @@ class AppRequestInterceptorTest {
 
     @Before
     fun setUp() {
-
         mockkStatic("org.mozilla.fenix.ext.ConnectivityManagerKt")
 
         every { testContext.getSystemService<ConnectivityManager>()!!.isOnline() } returns true
@@ -63,7 +62,7 @@ class AppRequestInterceptorTest {
             isSameDomain = true,
             isDirectNavigation = false,
             isRedirect = false,
-            isSubframeRequest = false
+            isSubframeRequest = false,
         )
 
         verify { navigationController.navigate(NavGraphDirections.actionGlobalAddonsManagementFragment(addonId)) }
@@ -81,7 +80,7 @@ class AppRequestInterceptorTest {
             isSameDomain = true,
             isDirectNavigation = false,
             isRedirect = false,
-            isSubframeRequest = false
+            isSubframeRequest = false,
         )
 
         verify { navigationController.navigate(NavGraphDirections.actionGlobalAddonsManagementFragment(addonId)) }
@@ -99,7 +98,7 @@ class AppRequestInterceptorTest {
             isSameDomain = false,
             isDirectNavigation = false,
             isRedirect = false,
-            isSubframeRequest = false
+            isSubframeRequest = false,
         )
 
         verify(exactly = 0) { navigationController.navigate(NavGraphDirections.actionGlobalAddonsManagementFragment()) }
@@ -117,7 +116,7 @@ class AppRequestInterceptorTest {
             isSameDomain = true,
             isDirectNavigation = false,
             isRedirect = false,
-            isSubframeRequest = false
+            isSubframeRequest = false,
         )
 
         verify(exactly = 0) { navigationController.navigate(NavGraphDirections.actionGlobalAddonsManagementFragment()) }
@@ -135,7 +134,7 @@ class AppRequestInterceptorTest {
             isSameDomain = true,
             isDirectNavigation = false,
             isRedirect = false,
-            isSubframeRequest = false
+            isSubframeRequest = false,
         )
 
         verify(exactly = 0) { navigationController.navigate(NavGraphDirections.actionGlobalAddonsManagementFragment()) }
@@ -153,7 +152,7 @@ class AppRequestInterceptorTest {
             isSameDomain = true,
             isDirectNavigation = false,
             isRedirect = false,
-            isSubframeRequest = false
+            isSubframeRequest = false,
         )
 
         verify(exactly = 0) { navigationController.navigate(NavGraphDirections.actionGlobalAddonsManagementFragment()) }
@@ -181,19 +180,19 @@ class AppRequestInterceptorTest {
             ErrorType.ERROR_FILE_ACCESS_DENIED,
             ErrorType.ERROR_PROXY_CONNECTION_REFUSED,
             ErrorType.ERROR_UNKNOWN_PROXY_HOST,
-            ErrorType.ERROR_UNKNOWN_PROTOCOL
+            ErrorType.ERROR_UNKNOWN_PROTOCOL,
         ).forEach { error ->
             val actualPage = createActualErrorPage(error)
             val expectedPage = createExpectedErrorPage(
                 error = error,
-                html = LOW_AND_MEDIUM_RISK_ERROR_PAGES
+                html = LOW_AND_MEDIUM_RISK_ERROR_PAGES,
             )
 
             assertEquals(expectedPage, actualPage)
             // Check if the error metric was recorded
             assertEquals(
                 error.name,
-                ErrorPage.visitedError.testGetValue()!!.last().extra?.get("error_type")
+                ErrorPage.visitedError.testGetValue()!!.last().extra?.get("error_type"),
             )
         }
     }
@@ -203,19 +202,19 @@ class AppRequestInterceptorTest {
         setOf(
             ErrorType.ERROR_SECURITY_BAD_CERT,
             ErrorType.ERROR_SECURITY_SSL,
-            ErrorType.ERROR_PORT_BLOCKED
+            ErrorType.ERROR_PORT_BLOCKED,
         ).forEach { error ->
             val actualPage = createActualErrorPage(error)
             val expectedPage = createExpectedErrorPage(
                 error = error,
-                html = LOW_AND_MEDIUM_RISK_ERROR_PAGES
+                html = LOW_AND_MEDIUM_RISK_ERROR_PAGES,
             )
 
             assertEquals(expectedPage, actualPage)
             // Check if the error metric was recorded
             assertEquals(
                 error.name,
-                ErrorPage.visitedError.testGetValue()!!.last().extra?.get("error_type")
+                ErrorPage.visitedError.testGetValue()!!.last().extra?.get("error_type"),
             )
         }
     }
@@ -226,19 +225,19 @@ class AppRequestInterceptorTest {
             ErrorType.ERROR_SAFEBROWSING_HARMFUL_URI,
             ErrorType.ERROR_SAFEBROWSING_MALWARE_URI,
             ErrorType.ERROR_SAFEBROWSING_PHISHING_URI,
-            ErrorType.ERROR_SAFEBROWSING_UNWANTED_URI
+            ErrorType.ERROR_SAFEBROWSING_UNWANTED_URI,
         ).forEach { error ->
             val actualPage = createActualErrorPage(error)
             val expectedPage = createExpectedErrorPage(
                 error = error,
-                html = HIGH_RISK_ERROR_PAGES
+                html = HIGH_RISK_ERROR_PAGES,
             )
 
             assertEquals(expectedPage, actualPage)
             // Check if the error metric was recorded
             assertEquals(
                 error.name,
-                ErrorPage.visitedError.testGetValue()!!.last().extra?.get("error_type")
+                ErrorPage.visitedError.testGetValue()!!.last().extra?.get("error_type"),
             )
         }
     }
@@ -253,7 +252,7 @@ class AppRequestInterceptorTest {
         return ErrorPages.createUrlEncodedErrorPage(
             context = testContext,
             errorType = error,
-            htmlResource = html
+            htmlResource = html,
         )
     }
 }

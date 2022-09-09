@@ -72,14 +72,14 @@ interface TrackingProtectionPanelViewInteractor {
 @SuppressWarnings("TooManyFunctions")
 class TrackingProtectionPanelView(
     val containerView: ViewGroup,
-    val interactor: TrackingProtectionPanelInteractor
+    val interactor: TrackingProtectionPanelInteractor,
 ) : View.OnClickListener {
 
     @VisibleForTesting
     internal val binding = ComponentTrackingProtectionPanelBinding.inflate(
         LayoutInflater.from(containerView.context),
         containerView,
-        true
+        true,
     )
 
     val view: ConstraintLayout = binding.panelWrapper
@@ -114,7 +114,7 @@ class TrackingProtectionPanelView(
             is TrackingProtectionState.Mode.Normal -> setUIForNormalMode(state)
             is TrackingProtectionState.Mode.Details -> setUIForDetailsMode(
                 mode.selectedCategory,
-                mode.categoryBlocked
+                mode.categoryBlocked,
             )
         }
 
@@ -140,7 +140,7 @@ class TrackingProtectionPanelView(
 
     private fun setUIForDetailsMode(
         category: TrackingProtectionCategory,
-        categoryBlocked: Boolean
+        categoryBlocked: Boolean,
     ) {
         val containASmartBlockItem = bucketedTrackers.get(category, categoryBlocked).any { it.unBlockedBySmartBlock }
         binding.normalMode.visibility = View.GONE
@@ -179,7 +179,7 @@ class TrackingProtectionPanelView(
                 R.string.enhanced_tracking_protection_blocked
             } else {
                 R.string.enhanced_tracking_protection_allowed
-            }
+            },
         )
 
         binding.detailsBack.requestFocus()
@@ -298,12 +298,12 @@ class TrackingProtectionPanelView(
             object : AccessibilityDelegateCompat() {
                 override fun onInitializeAccessibilityNodeInfo(
                     host: View?,
-                    info: AccessibilityNodeInfoCompat
+                    info: AccessibilityNodeInfoCompat,
                 ) {
                     info.setTraversalAfter(view1)
                     super.onInitializeAccessibilityNodeInfo(host, info)
                 }
-            }
+            },
         )
     }
 
@@ -331,14 +331,16 @@ class TrackingProtectionPanelView(
             R.id.fingerprinters_loaded,
             R.id.tracking_content_loaded,
             R.id.cryptominers_loaded,
-            R.id.redirect_trackers_loaded -> true
+            R.id.redirect_trackers_loaded,
+            -> true
 
             R.id.social_media_trackers,
             R.id.fingerprinters,
             R.id.cross_site_tracking,
             R.id.tracking_content,
             R.id.cryptominers,
-            R.id.redirect_trackers -> false
+            R.id.redirect_trackers,
+            -> false
             else -> false
         }
     }

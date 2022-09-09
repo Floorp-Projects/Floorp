@@ -30,7 +30,7 @@ fun deleteAndQuit(activity: Activity, coroutineScope: CoroutineScope, snackbar: 
             activity.components.core.store,
             activity.components.core.icons,
             activity.components.core.engine,
-            coroutineContext
+            coroutineContext,
         )
 
         snackbar?.apply {

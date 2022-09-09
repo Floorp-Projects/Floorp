@@ -29,8 +29,8 @@ object CustomAttributeProvider {
             mapOf(
                 "is_default_browser_string" to BrowsersCache.all(context).isDefaultBrowser.toString(),
                 "date_string" to formatter.format(now.time),
-                "number_of_app_launches" to context.settings().numberOfAppLaunches
-            )
+                "number_of_app_launches" to context.settings().numberOfAppLaunches,
+            ),
         )
     }
 }

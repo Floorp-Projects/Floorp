@@ -76,7 +76,7 @@ class SearchSelectorToolbarActionTest {
             SearchSelectorToolbarAction(
                 store = store,
                 menu = menu,
-            )
+            ),
         )
         val view = action.createView(LinearLayout(testContext) as ViewGroup) as SearchSelector
         assertNull(UnifiedSearch.searchMenuTapped.testGetValue())
@@ -111,8 +111,8 @@ class SearchSelectorToolbarActionTest {
             store.dispatch(
                 SearchDefaultEngineSelected(
                     engine = testSearchEngine,
-                    settings = mockk(relaxed = true)
-                )
+                    settings = mockk(relaxed = true),
+                ),
             )
             store.waitUntilIdle()
 
@@ -120,7 +120,7 @@ class SearchSelectorToolbarActionTest {
             verify {
                 view.setIcon(
                     icon = searchEngineIcon,
-                    contentDescription = testSearchEngine.name
+                    contentDescription = testSearchEngine.name,
                 )
             }
         }
@@ -142,8 +142,8 @@ class SearchSelectorToolbarActionTest {
             store.dispatch(
                 SearchDefaultEngineSelected(
                     engine = testSearchEngine,
-                    settings = mockk(relaxed = true)
-                )
+                    settings = mockk(relaxed = true),
+                ),
             )
             store.waitUntilIdle()
 
@@ -151,7 +151,7 @@ class SearchSelectorToolbarActionTest {
             verify(exactly = 1) {
                 view.setIcon(
                     icon = searchEngineIcon,
-                    contentDescription = testSearchEngine.name
+                    contentDescription = testSearchEngine.name,
                 )
             }
         }
@@ -171,15 +171,15 @@ class SearchSelectorToolbarActionTest {
             store.dispatch(
                 SearchDefaultEngineSelected(
                     engine = testSearchEngine,
-                    settings = mockk(relaxed = true)
-                )
+                    settings = mockk(relaxed = true),
+                ),
             )
             store.waitUntilIdle()
             verify(exactly = 1) { testSearchEngine.getScaledIcon(any()) }
             verify(exactly = 1) {
                 view.setIcon(
                     icon = searchEngineIcon,
-                    contentDescription = testSearchEngine.name
+                    contentDescription = testSearchEngine.name,
                 )
             }
 
@@ -187,26 +187,26 @@ class SearchSelectorToolbarActionTest {
             store.dispatch(
                 SearchDefaultEngineSelected(
                     engine = testSearchEngine,
-                    settings = mockk(relaxed = true)
-                )
+                    settings = mockk(relaxed = true),
+                ),
             )
             store.waitUntilIdle()
             verify(exactly = 1) { testSearchEngine.getScaledIcon(any()) }
             verify(exactly = 1) {
                 view.setIcon(
                     icon = searchEngineIcon,
-                    contentDescription = testSearchEngine.name
+                    contentDescription = testSearchEngine.name,
                 )
             }
 
             // Test another search engine being selected
             val newSearchEngine = testSearchEngine.copy(
-                name = "NewSearchEngine"
+                name = "NewSearchEngine",
             )
             store.dispatch(
                 SearchHistoryEngineSelected(
-                    engine = newSearchEngine
-                )
+                    engine = newSearchEngine,
+                ),
             )
             store.waitUntilIdle()
             verify(exactly = 1) { testSearchEngine.getScaledIcon(any()) }
@@ -214,13 +214,13 @@ class SearchSelectorToolbarActionTest {
             verify(exactly = 1) {
                 view.setIcon(
                     icon = searchEngineIcon,
-                    contentDescription = testSearchEngine.name
+                    contentDescription = testSearchEngine.name,
                 )
             }
             verify(exactly = 1) {
                 view.setIcon(
                     icon = searchEngineIcon,
-                    contentDescription = newSearchEngine.name
+                    contentDescription = newSearchEngine.name,
                 )
             }
         }
@@ -234,12 +234,12 @@ class SearchSelectorToolbarActionTest {
         val expectedScaledIcon = Bitmap.createBitmap(
             testContext.resources.getDimensionPixelSize(R.dimen.preference_icon_drawable_size),
             testContext.resources.getDimensionPixelSize(R.dimen.preference_icon_drawable_size),
-            ARGB_8888
+            ARGB_8888,
         ).applyCanvas {
             drawColor(Color.RED)
         }
         val searchEngine = testSearchEngine.copy(
-            icon = originalIcon
+            icon = originalIcon,
         )
 
         val result = searchEngine.getScaledIcon(testContext)
@@ -267,7 +267,7 @@ private val testSearchFragmentState = SearchFragmentState(
     showSessionSuggestions = true,
     tabId = "tabId",
     pastedText = "",
-    searchAccessPoint = MetricsUtils.Source.SHORTCUT
+    searchAccessPoint = MetricsUtils.Source.SHORTCUT,
 )
 
 private val testSearchEngine = SearchEngine(
@@ -276,6 +276,6 @@ private val testSearchEngine = SearchEngine(
     icon = mockk(),
     type = BUNDLED,
     resultUrls = listOf(
-        "https://www.startpage.com/sp/search?q={searchTerms}"
-    )
+        "https://www.startpage.com/sp/search?q={searchTerms}",
+    ),
 )

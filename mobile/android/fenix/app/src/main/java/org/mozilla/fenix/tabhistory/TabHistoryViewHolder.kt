@@ -15,7 +15,7 @@ import org.mozilla.fenix.ext.loadIntoView
 class TabHistoryViewHolder(
     private val view: WidgetSiteItemView,
     private val interactor: TabHistoryViewInteractor,
-    private val icons: BrowserIcons = view.context.components.core.icons
+    private val icons: BrowserIcons = view.context.components.core.icons,
 ) : RecyclerView.ViewHolder(view) {
 
     private lateinit var item: TabHistoryItem
@@ -32,7 +32,7 @@ class TabHistoryViewHolder(
 
         if (item.isSelected) {
             view.setBackgroundColor(
-                view.context.getColorFromAttr(R.attr.layerNonOpaque)
+                view.context.getColorFromAttr(R.attr.layerNonOpaque),
             )
         } else {
             view.background = null

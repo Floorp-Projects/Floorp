@@ -40,7 +40,7 @@ interface AddonDetailsInteractor {
  */
 class AddonDetailsBindingDelegate(
     private val binding: FragmentAddOnDetailsBinding,
-    private val interactor: AddonDetailsInteractor
+    private val interactor: AddonDetailsInteractor,
 ) {
 
     private val dateFormatter = DateFormat.getDateInstance()
@@ -115,7 +115,7 @@ class AddonDetailsBindingDelegate(
 
     private fun addActionToLinks(
         spannableStringBuilder: SpannableStringBuilder,
-        link: URLSpan
+        link: URLSpan,
     ) {
         val start = spannableStringBuilder.getSpanStart(link)
         val end = spannableStringBuilder.getSpanEnd(link)

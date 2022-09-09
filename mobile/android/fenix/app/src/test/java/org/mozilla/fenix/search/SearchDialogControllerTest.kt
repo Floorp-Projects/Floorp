@@ -57,11 +57,19 @@ import org.mozilla.fenix.utils.Settings
 @RunWith(FenixRobolectricTestRunner::class) // for gleanTestRule
 class SearchDialogControllerTest {
 
-    @MockK(relaxed = true) private lateinit var activity: HomeActivity
-    @MockK(relaxed = true) private lateinit var store: SearchDialogFragmentStore
-    @MockK(relaxed = true) private lateinit var navController: NavController
+    @MockK(relaxed = true)
+    private lateinit var activity: HomeActivity
+
+    @MockK(relaxed = true)
+    private lateinit var store: SearchDialogFragmentStore
+
+    @MockK(relaxed = true)
+    private lateinit var navController: NavController
+
     @MockK private lateinit var searchEngine: SearchEngine
-    @MockK(relaxed = true) private lateinit var settings: Settings
+
+    @MockK(relaxed = true)
+    private lateinit var settings: Settings
 
     private lateinit var middleware: CaptureActionsMiddleware<BrowserState, BrowserAction>
     private lateinit var browserStore: BrowserStore
@@ -75,7 +83,7 @@ class SearchDialogControllerTest {
         mockkObject(MetricsUtils)
         middleware = CaptureActionsMiddleware()
         browserStore = BrowserStore(
-            middleware = listOf(middleware)
+            middleware = listOf(middleware),
         )
         every { store.state.tabId } returns "test-tab-id"
         every { store.state.searchEngineSource.searchEngine } returns searchEngine
@@ -103,7 +111,7 @@ class SearchDialogControllerTest {
                 searchTermOrURL = url,
                 newTab = false,
                 from = BrowserDirection.FromSearchDialog,
-                engine = searchEngine
+                engine = searchEngine,
             )
         }
 
@@ -121,7 +129,7 @@ class SearchDialogControllerTest {
         createController(
             dismissDialog = {
                 dismissDialogInvoked = true
-            }
+            },
         ).handleUrlCommitted(url)
 
         assertTrue(dismissDialogInvoked)
@@ -138,7 +146,7 @@ class SearchDialogControllerTest {
                 searchTermOrURL = searchTerm,
                 newTab = false,
                 from = BrowserDirection.FromSearchDialog,
-                engine = searchEngine
+                engine = searchEngine,
             )
         }
     }
@@ -153,7 +161,7 @@ class SearchDialogControllerTest {
         createController(
             dismissDialog = {
                 dismissDialogInvoked = true
-            }
+            },
         ).handleUrlCommitted(searchTerm)
 
         verify(exactly = 0) {
@@ -161,7 +169,7 @@ class SearchDialogControllerTest {
                 searchTermOrURL = any(),
                 newTab = any(),
                 from = any(),
-                engine = any()
+                engine = any(),
             )
         }
 
@@ -202,7 +210,7 @@ class SearchDialogControllerTest {
                 searchTermOrURL = SupportUtils.getMozillaPageUrl(SupportUtils.MozillaPage.MANIFESTO),
                 newTab = false,
                 from = BrowserDirection.FromSearchDialog,
-                engine = searchEngine
+                engine = searchEngine,
             )
         }
 
@@ -218,7 +226,7 @@ class SearchDialogControllerTest {
         createController(
             clearToolbarFocus = {
                 clearToolbarFocusInvoked = true
-            }
+            },
         ).handleEditingCancelled()
 
         assertTrue(clearToolbarFocusInvoked)
@@ -308,7 +316,7 @@ class SearchDialogControllerTest {
                 searchTermOrURL = url,
                 newTab = false,
                 from = BrowserDirection.FromSearchDialog,
-                flags = flags
+                flags = flags,
             )
         }
 
@@ -331,7 +339,7 @@ class SearchDialogControllerTest {
                 newTab = false,
                 from = BrowserDirection.FromSearchDialog,
                 engine = searchEngine,
-                forceSearch = true
+                forceSearch = true,
             )
         }
     }
@@ -344,7 +352,7 @@ class SearchDialogControllerTest {
         createController(
             focusToolbar = {
                 focusToolbarInvoked = true
-            }
+            },
         ).handleSearchShortcutEngineSelected(searchEngine)
 
         assertTrue(focusToolbarInvoked)
@@ -372,7 +380,7 @@ class SearchDialogControllerTest {
         createController(
             focusToolbar = {
                 focusToolbarInvoked = true
-            }
+            },
         ).handleSearchShortcutEngineSelected(searchEngine)
 
         assertTrue(focusToolbarInvoked)
@@ -400,7 +408,7 @@ class SearchDialogControllerTest {
         createController(
             focusToolbar = {
                 focusToolbarInvoked = true
-            }
+            },
         ).handleSearchShortcutEngineSelected(searchEngine)
 
         assertTrue(focusToolbarInvoked)
@@ -428,7 +436,7 @@ class SearchDialogControllerTest {
         createController(
             focusToolbar = {
                 focusToolbarInvoked = true
-            }
+            },
         ).handleSearchShortcutEngineSelected(searchEngine)
 
         assertTrue(focusToolbarInvoked)
@@ -520,7 +528,7 @@ class SearchDialogControllerTest {
         clearToolbarFocus: () -> Unit = { },
         focusToolbar: () -> Unit = { },
         clearToolbar: () -> Unit = { },
-        dismissDialog: () -> Unit = { }
+        dismissDialog: () -> Unit = { },
     ): SearchDialogController {
         return SearchDialogController(
             activity = activity,
@@ -532,7 +540,7 @@ class SearchDialogControllerTest {
             dismissDialog = dismissDialog,
             clearToolbarFocus = clearToolbarFocus,
             focusToolbar = focusToolbar,
-            clearToolbar = clearToolbar
+            clearToolbar = clearToolbar,
         )
     }
 }

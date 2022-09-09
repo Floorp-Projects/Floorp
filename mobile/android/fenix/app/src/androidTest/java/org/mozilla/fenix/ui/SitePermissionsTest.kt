@@ -45,7 +45,7 @@ class SitePermissionsTest {
     val grantPermissionRule: GrantPermissionRule = GrantPermissionRule.grant(
         Manifest.permission.RECORD_AUDIO,
         Manifest.permission.CAMERA,
-        Manifest.permission.ACCESS_COARSE_LOCATION
+        Manifest.permission.ACCESS_COARSE_LOCATION,
     )
 
     @get: Rule

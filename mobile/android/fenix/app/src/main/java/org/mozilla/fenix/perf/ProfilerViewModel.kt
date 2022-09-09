@@ -17,7 +17,7 @@ import org.mozilla.fenix.ext.components
  */
 class ProfilerViewModel(application: Application) : AndroidViewModel(application) {
     val isProfilerActive: MutableLiveData<Boolean> = MutableLiveData(
-        application.components.core.engine.profiler?.isProfilerActive() ?: false
+        application.components.core.engine.profiler?.isProfilerActive() ?: false,
     )
 
     /**

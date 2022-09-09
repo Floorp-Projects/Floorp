@@ -34,7 +34,7 @@ abstract class ToolbarIntegration(
     toolbarMenu: ToolbarMenu,
     sessionId: String?,
     isPrivate: Boolean,
-    renderStyle: ToolbarFeature.RenderStyle
+    renderStyle: ToolbarFeature.RenderStyle,
 ) : LifecycleAwareFeature {
 
     val store = context.components.core.store
@@ -45,8 +45,8 @@ abstract class ToolbarIntegration(
         ToolbarFeature.UrlRenderConfiguration(
             context.components.publicSuffixList,
             ThemeManager.resolveAttribute(R.attr.textPrimary, context),
-            renderStyle = renderStyle
-        )
+            renderStyle = renderStyle,
+        ),
     )
 
     private val menuPresenter =
@@ -86,14 +86,14 @@ class DefaultToolbarIntegration(
     sessionId: String? = null,
     isPrivate: Boolean,
     interactor: BrowserToolbarInteractor,
-    engine: Engine
+    engine: Engine,
 ) : ToolbarIntegration(
     context = context,
     toolbar = toolbar,
     toolbarMenu = toolbarMenu,
     sessionId = sessionId,
     isPrivate = isPrivate,
-    renderStyle = ToolbarFeature.RenderStyle.UncoloredUrl
+    renderStyle = ToolbarFeature.RenderStyle.UncoloredUrl,
 ) {
 
     @VisibleForTesting
@@ -102,7 +102,7 @@ class DefaultToolbarIntegration(
         browserStore = context.components.core.store,
         settings = context.settings(),
         toolbar = toolbar,
-        sessionId = sessionId
+        sessionId = sessionId,
     )
 
     init {
@@ -112,7 +112,7 @@ class DefaultToolbarIntegration(
         toolbar.display.indicators = listOf(
             DisplayToolbar.Indicators.SECURITY,
             DisplayToolbar.Indicators.EMPTY,
-            DisplayToolbar.Indicators.HIGHLIGHT
+            DisplayToolbar.Indicators.HIGHLIGHT,
         )
 
         val tabCounterMenu = FenixTabCounterMenu(
@@ -124,7 +124,7 @@ class DefaultToolbarIntegration(
                 ContextCompat.getColor(context, R.color.fx_mobile_private_text_color_primary)
             } else {
                 null
-            }
+            },
         ).also {
             it.updateMenu(context.settings().toolbarPosition)
         }
@@ -136,7 +136,7 @@ class DefaultToolbarIntegration(
                 interactor.onTabCounterClicked()
             },
             store = store,
-            menu = tabCounterMenu
+            menu = tabCounterMenu,
         )
 
         val tabCount = if (isPrivate) {
@@ -152,7 +152,7 @@ class DefaultToolbarIntegration(
         val engineForSpeculativeConnects = if (!isPrivate) engine else null
         ToolbarAutocompleteFeature(
             toolbar,
-            engineForSpeculativeConnects
+            engineForSpeculativeConnects,
         ).apply {
             addDomainProvider(domainAutocompleteProvider)
             if (context.settings().shouldShowHistorySuggestions) {

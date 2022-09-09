@@ -75,7 +75,7 @@ internal class HomeSettingsFragmentTest {
             .commitNow()
 
         sponsoredStoriesSetting = homeSettingsFragment.findPreference(
-            homeSettingsFragment.getPreferenceKey(R.string.pref_key_pocket_sponsored_stories)
+            homeSettingsFragment.getPreferenceKey(R.string.pref_key_pocket_sponsored_stories),
         )!!
     }
 

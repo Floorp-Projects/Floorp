@@ -15,5 +15,5 @@ import android.view.Gravity
  */
 enum class ToolbarPosition(val androidGravity: Int) {
     BOTTOM(Gravity.BOTTOM),
-    TOP(Gravity.TOP)
+    TOP(Gravity.TOP),
 }

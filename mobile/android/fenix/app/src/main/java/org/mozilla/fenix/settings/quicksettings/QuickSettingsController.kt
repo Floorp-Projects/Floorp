@@ -136,8 +136,8 @@ class DefaultQuickSettingsController(
                         WebsitePermissionAction.TogglePermission(
                             featureToggled,
                             featureToggled.getActionLabel(context, newPermissions, settings),
-                            featureToggled.shouldBeEnabled(context, newPermissions, settings)
-                        )
+                            featureToggled.shouldBeEnabled(context, newPermissions, settings),
+                        ),
                     )
                 } else {
                     navigateToManagePhoneFeature(featureToggled)
@@ -151,8 +151,8 @@ class DefaultQuickSettingsController(
             WebsitePermissionAction.TogglePermission(
                 feature,
                 feature.getActionLabel(context, sitePermissions, settings),
-                feature.shouldBeEnabled(context, sitePermissions, settings)
-            )
+                feature.shouldBeEnabled(context, sitePermissions, settings),
+            ),
         )
     }
 
@@ -174,7 +174,7 @@ class DefaultQuickSettingsController(
             newPermission
         }
         quickSettingsStore.dispatch(
-            WebsitePermissionAction.ChangeAutoplay(autoplayValue)
+            WebsitePermissionAction.ChangeAutoplay(autoplayValue),
         )
     }
 
@@ -198,8 +198,8 @@ class DefaultQuickSettingsController(
 
         quickSettingsStore.dispatch(
             TrackingProtectionAction.ToggleTrackingProtectionEnabled(
-                isEnabled
-            )
+                isEnabled,
+            ),
         )
     }
 
@@ -213,7 +213,7 @@ class DefaultQuickSettingsController(
                 url = state.url,
                 trackingProtectionEnabled = state.isTrackingProtectionEnabled,
                 gravity = context.components.settings.toolbarPosition.androidGravity,
-                sitePermissions = sitePermissions
+                sitePermissions = sitePermissions,
             )
         navController.navigate(directions)
     }
@@ -230,7 +230,7 @@ class DefaultQuickSettingsController(
                 isSecured = state.websiteSecurityUiValues == WebsiteSecurityUiValues.SECURE,
                 certificateName = state.certificateName,
                 gravity = context.components.settings.toolbarPosition.androidGravity,
-                sitePermissions = sitePermissions
+                sitePermissions = sitePermissions,
             )
         navController.navigate(directions)
     }

@@ -19,7 +19,7 @@ import org.mozilla.fenix.settings.logins.controller.SavedLoginsStorageController
  */
 class SavedLoginsInteractor(
     private val loginsListController: LoginsListController,
-    private val savedLoginsStorageController: SavedLoginsStorageController
+    private val savedLoginsStorageController: SavedLoginsStorageController,
 ) {
     fun onItemClicked(item: SavedLogin) {
         loginsListController.handleItemClicked(item)

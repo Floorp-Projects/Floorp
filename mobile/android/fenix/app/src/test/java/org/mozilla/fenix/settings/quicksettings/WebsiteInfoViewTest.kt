@@ -45,8 +45,8 @@ class WebsiteInfoViewTest {
                 websiteUrl = websiteUrl,
                 websiteTitle = "Mozilla",
                 websiteSecurityUiValues = WebsiteSecurityUiValues.SECURE,
-                certificateName = ""
-            )
+                certificateName = "",
+            ),
         )
 
         verify { icons.loadIntoView(binding.faviconImage, IconRequest(websiteUrl)) }
@@ -62,8 +62,8 @@ class WebsiteInfoViewTest {
                 websiteUrl = "https://mozilla.org",
                 websiteTitle = "Mozilla",
                 websiteSecurityUiValues = WebsiteSecurityUiValues.INSECURE,
-                certificateName = "Certificate"
-            )
+                certificateName = "Certificate",
+            ),
         )
 
         verify { view.bindConnectionDetailsListener() }

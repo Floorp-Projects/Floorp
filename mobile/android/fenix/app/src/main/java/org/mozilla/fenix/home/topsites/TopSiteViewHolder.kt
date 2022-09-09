@@ -16,7 +16,7 @@ import org.mozilla.fenix.utils.AccessibilityGridLayoutManager
 class TopSiteViewHolder(
     view: View,
     viewLifecycleOwner: LifecycleOwner,
-    interactor: TopSiteInteractor
+    interactor: TopSiteInteractor,
 ) : RecyclerView.ViewHolder(view) {
 
     private val topSitesAdapter = TopSitesAdapter(viewLifecycleOwner, interactor)

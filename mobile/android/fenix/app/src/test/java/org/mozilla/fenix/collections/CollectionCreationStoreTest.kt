@@ -33,12 +33,14 @@ private const val SESSION_ID_BAD_2 = "definitely not a real session id"
 class CollectionCreationStoreTest {
 
     @MockK private lateinit var tabCollectionStorage: TabCollectionStorage
-    @MockK(relaxed = true) private lateinit var publicSuffixList: PublicSuffixList
+
+    @MockK(relaxed = true)
+    private lateinit var publicSuffixList: PublicSuffixList
 
     private val sessionMozilla = createTab(URL_MOZILLA, id = SESSION_ID_MOZILLA)
     private val sessionBcc = createTab(URL_BCC, id = SESSION_ID_BCC)
     private val state = BrowserState(
-        tabs = listOf(sessionMozilla, sessionBcc)
+        tabs = listOf(sessionMozilla, sessionBcc),
     )
 
     @Before
@@ -55,8 +57,8 @@ class CollectionCreationStoreTest {
         val store = CollectionCreationStore(
             CollectionCreationState(
                 tabs = tabs,
-                selectedTabs = emptySet()
-            )
+                selectedTabs = emptySet(),
+            ),
         )
 
         store.dispatch(CollectionCreationAction.AddAllTabs).joinBlocking()
@@ -74,8 +76,8 @@ class CollectionCreationStoreTest {
         val store = CollectionCreationStore(
             CollectionCreationState(
                 tabs = listOf(tab1, tab2),
-                selectedTabs = setOf(tab2)
-            )
+                selectedTabs = setOf(tab2),
+            ),
         )
 
         store.dispatch(CollectionCreationAction.TabAdded(tab2)).joinBlocking()
@@ -96,15 +98,15 @@ class CollectionCreationStoreTest {
         val store = CollectionCreationStore(
             CollectionCreationState(
                 saveCollectionStep = SaveCollectionStep.SelectTabs,
-                defaultCollectionNumber = 1
-            )
+                defaultCollectionNumber = 1,
+            ),
         )
 
         store.dispatch(
             CollectionCreationAction.StepChanged(
                 saveCollectionStep = SaveCollectionStep.RenameCollection,
-                defaultCollectionNumber = 3
-            )
+                defaultCollectionNumber = 3,
+            ),
         ).joinBlocking()
         assertEquals(SaveCollectionStep.RenameCollection, store.state.saveCollectionStep)
         assertEquals(3, store.state.defaultCollectionNumber)
@@ -119,7 +121,7 @@ class CollectionCreationStoreTest {
             saveCollectionStep = SaveCollectionStep.NameCollection,
             tabIds = arrayOf(SESSION_ID_MOZILLA),
             selectedTabIds = null,
-            selectedTabCollectionId = 0
+            selectedTabCollectionId = 0,
         )
 
         assertEquals(SaveCollectionStep.NameCollection, result.saveCollectionStep)
@@ -138,7 +140,7 @@ class CollectionCreationStoreTest {
             saveCollectionStep = SaveCollectionStep.NameCollection,
             tabIds = arrayOf(SESSION_ID_MOZILLA, SESSION_ID_BCC),
             selectedTabIds = null,
-            selectedTabCollectionId = 0
+            selectedTabCollectionId = 0,
         )
 
         assertEquals(SaveCollectionStep.NameCollection, result.saveCollectionStep)
@@ -157,7 +159,7 @@ class CollectionCreationStoreTest {
             saveCollectionStep = SaveCollectionStep.RenameCollection,
             tabIds = arrayOf(SESSION_ID_MOZILLA, SESSION_ID_BCC),
             selectedTabIds = arrayOf(SESSION_ID_BCC),
-            selectedTabCollectionId = 0
+            selectedTabCollectionId = 0,
         )
 
         assertEquals(SaveCollectionStep.RenameCollection, result.saveCollectionStep)
@@ -207,21 +209,23 @@ class CollectionCreationStoreTest {
         val tabWithoutReaderState = createTab(url = "https://example.com", id = "1")
 
         val tabWithInactiveReaderState = createTab(
-            url = "https://blog.mozilla.org", id = "2",
-            readerState = ReaderState(active = false, activeUrl = null)
+            url = "https://blog.mozilla.org",
+            id = "2",
+            readerState = ReaderState(active = false, activeUrl = null),
         )
 
         val tabWithActiveReaderState = createTab(
-            url = "moz-extension://123", id = "3",
-            readerState = ReaderState(active = true, activeUrl = "https://blog.mozilla.org/123")
+            url = "moz-extension://123",
+            id = "3",
+            readerState = ReaderState(active = true, activeUrl = "https://blog.mozilla.org/123"),
         )
 
         val state = BrowserState(
-            tabs = listOf(tabWithoutReaderState, tabWithInactiveReaderState, tabWithActiveReaderState)
+            tabs = listOf(tabWithoutReaderState, tabWithInactiveReaderState, tabWithActiveReaderState),
         )
         val tabs = state.getTabs(
             arrayOf(tabWithoutReaderState.id, tabWithInactiveReaderState.id, tabWithActiveReaderState.id),
-            publicSuffixList
+            publicSuffixList,
         )
 
         assertEquals(tabWithoutReaderState.content.url, tabs[0].url)

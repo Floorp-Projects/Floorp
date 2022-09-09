@@ -15,7 +15,7 @@ import mozilla.components.lib.state.Store
 class RecentlyClosedFragmentStore(initialState: RecentlyClosedFragmentState) :
     Store<RecentlyClosedFragmentState, RecentlyClosedFragmentAction>(
         initialState,
-        ::recentlyClosedStateReducer
+        ::recentlyClosedStateReducer,
     )
 
 /**
@@ -35,7 +35,7 @@ sealed class RecentlyClosedFragmentAction : Action {
  */
 data class RecentlyClosedFragmentState(
     val items: List<TabState> = emptyList(),
-    val selectedTabs: Set<TabState>
+    val selectedTabs: Set<TabState>,
 ) : State
 
 /**
@@ -43,7 +43,7 @@ data class RecentlyClosedFragmentState(
  */
 private fun recentlyClosedStateReducer(
     state: RecentlyClosedFragmentState,
-    action: RecentlyClosedFragmentAction
+    action: RecentlyClosedFragmentAction,
 ): RecentlyClosedFragmentState {
     return when (action) {
         is RecentlyClosedFragmentAction.Change -> state.copy(items = action.list)

@@ -35,8 +35,8 @@ class LocaleSettingsControllerTest {
             DefaultLocaleSettingsController(
                 activity,
                 localeSettingsStore,
-                localeUseCases
-            )
+                localeUseCases,
+            ),
         )
 
         mockkObject(LocaleManager)

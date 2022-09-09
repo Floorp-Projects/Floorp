@@ -25,7 +25,7 @@ private const val INSTRUMENTED_HOOKS_CLASS = "com.android.tools.deploy.instrumen
  */
 @RequiresApi(Build.VERSION_CODES.P)
 class ThreadPenaltyDeathWithIgnoresListener(
-    private val logger: Logger = Performance.logger
+    private val logger: Logger = Performance.logger,
 ) : StrictMode.OnThreadViolationListener {
 
     override fun onThreadViolation(violation: Violation?) {

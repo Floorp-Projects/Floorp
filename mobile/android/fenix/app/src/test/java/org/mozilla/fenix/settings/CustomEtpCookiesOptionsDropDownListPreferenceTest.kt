@@ -23,7 +23,7 @@ class CustomEtpCookiesOptionsDropDownListPreferenceTest {
     @Test
     fun `GIVEN total cookie protection is enabled WHEN using this preference THEN show the total cookie protection option`() {
         val expectedEntries = arrayOf(
-            testContext.getString(R.string.preference_enhanced_tracking_protection_custom_cookies_5)
+            testContext.getString(R.string.preference_enhanced_tracking_protection_custom_cookies_5),
         ) + defaultEntries
         val expectedValues = arrayOf(testContext.getString(R.string.total_protection)) + defaultValues
 

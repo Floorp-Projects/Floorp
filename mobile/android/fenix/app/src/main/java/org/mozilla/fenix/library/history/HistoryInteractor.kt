@@ -63,7 +63,7 @@ interface HistoryInteractor : SelectionInteractor<History> {
  */
 @SuppressWarnings("TooManyFunctions")
 class DefaultHistoryInteractor(
-    private val historyController: HistoryController
+    private val historyController: HistoryController,
 ) : HistoryInteractor {
     override fun open(item: History) {
         historyController.handleOpen(item)

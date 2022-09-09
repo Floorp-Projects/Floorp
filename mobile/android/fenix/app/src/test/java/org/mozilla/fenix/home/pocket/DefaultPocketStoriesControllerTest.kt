@@ -46,9 +46,9 @@ class DefaultPocketStoriesControllerTest {
             AppStore(
                 AppState(
                     pocketStoriesCategories = listOf(category1, category2),
-                    pocketStoriesCategoriesSelections = selections
-                )
-            )
+                    pocketStoriesCategoriesSelections = selections,
+                ),
+            ),
         )
         val controller = DefaultPocketStoriesController(mockk(), store, mockk())
         assertNull(Pocket.homeRecsCategoryClicked.testGetValue())
@@ -83,10 +83,17 @@ class DefaultPocketStoriesControllerTest {
             AppStore(
                 AppState(
                     pocketStoriesCategoriesSelections = listOf(
-                        category1, category2, category3, category4, category5, category6, category7, oldestSelectedCategory
-                    )
-                )
-            )
+                        category1,
+                        category2,
+                        category3,
+                        category4,
+                        category5,
+                        category6,
+                        category7,
+                        oldestSelectedCategory,
+                    ),
+                ),
+            ),
         )
         val controller = DefaultPocketStoriesController(mockk(), store, mockk())
         assertNull(Pocket.homeRecsCategoryClicked.testGetValue())
@@ -120,10 +127,16 @@ class DefaultPocketStoriesControllerTest {
             AppStore(
                 AppState(
                     pocketStoriesCategoriesSelections = listOf(
-                        category1, category2, category3, category4, category5, category6, oldestSelectedCategory
-                    )
-                )
-            )
+                        category1,
+                        category2,
+                        category3,
+                        category4,
+                        category5,
+                        category6,
+                        oldestSelectedCategory,
+                    ),
+                ),
+            ),
         )
         val newSelectedCategoryName = "newSelectedCategory"
         val controller = DefaultPocketStoriesController(mockk(), store, mockk())
@@ -193,7 +206,7 @@ class DefaultPocketStoriesControllerTest {
             publisher = "",
             category = "",
             timeToRead = 0,
-            timesShown = 123
+            timesShown = 123,
         )
         val homeActivity: HomeActivity = mockk(relaxed = true)
         val controller = DefaultPocketStoriesController(homeActivity, mockk(), mockk(relaxed = true))

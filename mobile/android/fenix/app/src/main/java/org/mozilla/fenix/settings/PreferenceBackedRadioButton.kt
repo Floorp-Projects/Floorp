@@ -31,8 +31,10 @@ class PreferenceBackedRadioButton @JvmOverloads constructor(
 ) : AppCompatRadioButton(context, attrs, defStyleAttr) {
     @VisibleForTesting
     internal var externalOnCheckedChangeListener: OnCheckedChangeListener? = null
+
     @VisibleForTesting
     internal var backingPreferenceName: String? = null
+
     @VisibleForTesting
     internal var backingPreferenceDefaultValue: Boolean = false
 
@@ -48,7 +50,8 @@ class PreferenceBackedRadioButton @JvmOverloads constructor(
         context.withStyledAttributes(attrs, R.styleable.PreferenceBackedRadioButton, defStyleAttr, 0) {
             backingPreferenceName = this.getString(R.styleable.PreferenceBackedRadioButton_preferenceKey)
             backingPreferenceDefaultValue = getBoolean(
-                R.styleable.PreferenceBackedRadioButton_preferenceKeyDefaultValue, false
+                R.styleable.PreferenceBackedRadioButton_preferenceKeyDefaultValue,
+                false,
             )
         }
 

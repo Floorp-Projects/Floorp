@@ -19,7 +19,7 @@ class CollectionsListAdapterTest {
         arrayOf(
             "Add new collection",
             "Collection 1",
-            "Collection 2"
+            "Collection 2",
         )
     private val onNewCollectionClicked: () -> Unit = mockk(relaxed = true)
 

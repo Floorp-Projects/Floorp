@@ -27,7 +27,7 @@ import org.mozilla.fenix.utils.Do
  */
 class BookmarkNodeViewHolder(
     private val containerView: LibrarySiteItemView,
-    private val interactor: BookmarkViewInteractor
+    private val interactor: BookmarkViewInteractor,
 ) : RecyclerView.ViewHolder(containerView) {
 
     var item: BookmarkNode? = null
@@ -52,7 +52,7 @@ class BookmarkNodeViewHolder(
     fun bind(
         item: BookmarkNode,
         mode: BookmarkFragmentState.Mode,
-        payload: BookmarkPayload
+        payload: BookmarkPayload,
     ) {
         this.item = item
 

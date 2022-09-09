@@ -97,7 +97,7 @@ class AccountSettingsFragment : PreferenceFragmentCompat() {
             findNavController(),
             ::syncNow,
             ::syncDeviceName,
-            accountSettingsStore
+            accountSettingsStore,
         )
     }
 
@@ -114,9 +114,9 @@ class AccountSettingsFragment : PreferenceFragmentCompat() {
                         LastSyncTime.Success(getLastSynced(requireContext()))
                     },
                     deviceName = requireComponents.backgroundServices.defaultDeviceName(
-                        requireContext()
-                    )
-                )
+                        requireContext(),
+                    ),
+                ),
             )
         }
 
@@ -178,7 +178,7 @@ class AccountSettingsFragment : PreferenceFragmentCompat() {
             SyncEngine.History,
             SyncEngine.Bookmarks,
             SyncEngine.Tabs,
-            SyncEngine.Addresses
+            SyncEngine.Addresses,
         ).forEach {
             requirePreference<CheckBoxPreference>(it.prefId()).apply {
                 setOnPreferenceChangeListener { _, newValue ->
@@ -191,7 +191,7 @@ class AccountSettingsFragment : PreferenceFragmentCompat() {
         // 'Passwords' and 'Credit card' listeners are special, since we also display a pin protection warning.
         listOf(
             SyncEngine.Passwords,
-            SyncEngine.CreditCards
+            SyncEngine.CreditCards,
         ).forEach {
             requirePreference<CheckBoxPreference>(it.prefId()).apply {
                 setOnPreferenceChangeListener { _, newValue ->
@@ -204,13 +204,15 @@ class AccountSettingsFragment : PreferenceFragmentCompat() {
         deviceConstellation?.registerDeviceObserver(
             deviceConstellationObserver,
             owner = this,
-            autoPause = true
+            autoPause = true,
         )
 
         // NB: ObserverRegistry will take care of cleaning up internal references to 'observer' and
         // 'owner' when appropriate.
         requireComponents.backgroundServices.accountManager.registerForSyncEvents(
-            syncStatusObserver, owner = this, autoPause = true
+            syncStatusObserver,
+            owner = this,
+            autoPause = true,
         )
     }
 
@@ -225,7 +227,7 @@ class AccountSettingsFragment : PreferenceFragmentCompat() {
      */
     private fun updateSyncEngineStateWithPinWarning(
         syncEngine: SyncEngine,
-        newValue: Boolean
+        newValue: Boolean,
     ) {
         val manager = activity?.getSystemService(Context.KEYGUARD_SERVICE) as KeyguardManager
 
@@ -269,7 +271,7 @@ class AccountSettingsFragment : PreferenceFragmentCompat() {
             AlertDialog.Builder(it).apply {
                 setTitle(getString(R.string.logins_warning_dialog_title))
                 setMessage(
-                    getString(R.string.logins_warning_dialog_message)
+                    getString(R.string.logins_warning_dialog_message),
                 )
 
                 setNegativeButton(getString(R.string.logins_warning_dialog_later)) { _: DialogInterface, _ ->
@@ -279,7 +281,7 @@ class AccountSettingsFragment : PreferenceFragmentCompat() {
                 setPositiveButton(getString(R.string.logins_warning_dialog_set_up_now)) { it: DialogInterface, _ ->
                     it.dismiss()
                     val intent = Intent(
-                        Settings.ACTION_SECURITY_SETTINGS
+                        Settings.ACTION_SECURITY_SETTINGS,
                     )
                     startActivity(intent)
                 }
@@ -379,7 +381,7 @@ class AccountSettingsFragment : PreferenceFragmentCompat() {
                 FenixSnackbar.make(
                     view = requireView(),
                     duration = FenixSnackbar.LENGTH_LONG,
-                    isDisplayedWithBrowserToolbar = false
+                    isDisplayedWithBrowserToolbar = false,
                 )
                     .setText(getString(R.string.empty_device_name_error))
                     .show()
@@ -428,8 +430,8 @@ class AccountSettingsFragment : PreferenceFragmentCompat() {
                 val failedTime = getLastSynced(requireContext())
                 accountSettingsStore.dispatch(
                     AccountSettingsFragmentAction.SyncFailed(
-                        failedTime
-                    )
+                        failedTime,
+                    ),
                 )
             }
         }
@@ -457,13 +459,13 @@ class AccountSettingsFragment : PreferenceFragmentCompat() {
                 } else {
                     getString(
                         R.string.sync_failed_summary,
-                        DateUtils.getRelativeTimeSpanString(state.lastSyncedDate.lastSync)
+                        DateUtils.getRelativeTimeSpanString(state.lastSyncedDate.lastSync),
                     )
                 }
             }
             is LastSyncTime.Success -> String.format(
                 getString(R.string.sync_last_synced_summary),
-                DateUtils.getRelativeTimeSpanString(state.lastSyncedDate.lastSync)
+                DateUtils.getRelativeTimeSpanString(state.lastSyncedDate.lastSync),
             )
         }
 

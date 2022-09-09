@@ -95,7 +95,7 @@ fun Collection(
                 contentDescription = null,
                 modifier = Modifier.padding(
                     start = 16.dp,
-                    end = 8.dp // (24.dp - 16.dp) hardcoded in ExpandableListHeader
+                    end = 8.dp, // (24.dp - 16.dp) hardcoded in ExpandableListHeader
                 ),
                 tint = Paint().apply {
                     color = Color(collection.getIconColor(LocalContext.current))
@@ -111,7 +111,7 @@ fun Collection(
                 if (isExpanded) {
                     Row {
                         IconButton(
-                            onClick = { onCollectionShareTabsClicked(collection) }
+                            onClick = { onCollectionShareTabsClicked(collection) },
                         ) {
                             Icon(
                                 painter = painterResource(drawable.ic_share),
@@ -124,12 +124,12 @@ fun Collection(
                             onClick = {
                                 isMenuExpanded = !isMenuExpanded
                                 onCollectionMenuOpened()
-                            }
+                            },
                         ) {
                             Icon(
                                 painter = painterResource(drawable.ic_menu),
                                 contentDescription = stringResource(
-                                    string.collection_menu_button_content_description
+                                    string.collection_menu_button_content_description,
                                 ),
                                 tint = FirefoxTheme.colors.iconPrimary,
                             )

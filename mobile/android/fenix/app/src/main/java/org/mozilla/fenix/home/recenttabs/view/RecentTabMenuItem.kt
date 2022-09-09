@@ -14,5 +14,5 @@ import org.mozilla.fenix.home.recenttabs.RecentTab
 */
 class RecentTabMenuItem(
     val title: String,
-    val onClick: (RecentTab.Tab) -> Unit
+    val onClick: (RecentTab.Tab) -> Unit,
 )

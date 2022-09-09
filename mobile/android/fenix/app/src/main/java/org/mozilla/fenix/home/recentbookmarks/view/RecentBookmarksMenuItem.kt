@@ -14,5 +14,5 @@ import org.mozilla.fenix.home.recentbookmarks.RecentBookmark
  */
 data class RecentBookmarksMenuItem(
     val title: String,
-    val onClick: (RecentBookmark) -> Unit
+    val onClick: (RecentBookmark) -> Unit,
 )

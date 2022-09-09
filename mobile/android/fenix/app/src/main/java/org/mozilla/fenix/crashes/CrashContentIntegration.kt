@@ -47,7 +47,7 @@ class CrashContentIntegration(
     private val components: Components,
     private val settings: Settings,
     private val navController: NavController,
-    private val sessionId: String?
+    private val sessionId: String?,
 ) : AbstractBinding<BrowserState>(browserStore) {
     override suspend fun onState(flow: Flow<BrowserState>) {
         flow.mapNotNull { state -> state.findTabOrCustomTabOrSelectedTab(sessionId) }
@@ -67,7 +67,7 @@ class CrashContentIntegration(
                             components = components,
                             settings = settings,
                             navController = navController,
-                            appStore = appStore
+                            appStore = appStore,
                         )
 
                         show(controller)

@@ -43,7 +43,7 @@ class DefaultInactiveTabsInteractorTest {
             id = "tabId",
             content = ContentState(
                 url = "www.mozilla.com",
-            )
+            ),
         )
 
         createInteractor().onTabClicked(tab)
@@ -58,7 +58,7 @@ class DefaultInactiveTabsInteractorTest {
             id = "tabId",
             content = ContentState(
                 url = "www.mozilla.com",
-            )
+            ),
         )
 
         createInteractor().onTabClosed(tab)

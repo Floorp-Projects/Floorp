@@ -31,7 +31,7 @@ class DynamicDownloadDialog(
     private val onCannotOpenFile: (DownloadState) -> Unit,
     private val binding: DownloadDialogLayoutBinding,
     private val toolbarHeight: Int,
-    private val onDismiss: () -> Unit
+    private val onDismiss: () -> Unit,
 ) {
 
     private val settings = context.settings()
@@ -45,12 +45,11 @@ class DynamicDownloadDialog(
         binding.root.apply {
             if (layoutParams is CoordinatorLayout.LayoutParams) {
                 (layoutParams as CoordinatorLayout.LayoutParams).apply {
-
                     behavior =
                         DynamicDownloadDialogBehavior<View>(
                             context,
                             null,
-                            toolbarHeight.toFloat()
+                            toolbarHeight.toFloat(),
                         )
                 }
             }
@@ -67,12 +66,12 @@ class DynamicDownloadDialog(
                 context.getString(R.string.mozac_feature_downloads_failed_notification_text2)
 
             binding.downloadDialogIcon.setImageResource(
-                mozilla.components.feature.downloads.R.drawable.mozac_feature_download_ic_download_failed
+                mozilla.components.feature.downloads.R.drawable.mozac_feature_download_ic_download_failed,
             )
 
             binding.downloadDialogActionButton.apply {
                 text = context.getString(
-                    mozilla.components.feature.downloads.R.string.mozac_feature_downloads_button_try_again
+                    mozilla.components.feature.downloads.R.string.mozac_feature_downloads_button_try_again,
                 )
                 setOnClickListener {
                     tryAgain(downloadState.id)
@@ -81,23 +80,23 @@ class DynamicDownloadDialog(
             }
         } else {
             val titleText = context.getString(
-                R.string.mozac_feature_downloads_completed_notification_text2
+                R.string.mozac_feature_downloads_completed_notification_text2,
             ) + " (${downloadState.contentLength?.toMegabyteOrKilobyteString()})"
 
             binding.downloadDialogTitle.text = titleText
 
             binding.downloadDialogIcon.setImageResource(
-                mozilla.components.feature.downloads.R.drawable.mozac_feature_download_ic_download_complete
+                mozilla.components.feature.downloads.R.drawable.mozac_feature_download_ic_download_complete,
             )
 
             binding.downloadDialogActionButton.apply {
                 text = context.getString(
-                    mozilla.components.feature.downloads.R.string.mozac_feature_downloads_button_open
+                    mozilla.components.feature.downloads.R.string.mozac_feature_downloads_button_open,
                 )
                 setOnClickListener {
                     val fileWasOpened = AbstractFetchDownloadService.openFile(
                         applicationContext = context.applicationContext,
-                        download = downloadState
+                        download = downloadState,
                     )
 
                     if (downloadState.contentType == "application/pdf") {
@@ -136,10 +135,11 @@ class DynamicDownloadDialog(
     companion object {
         fun getCannotOpenFileErrorMessage(context: Context, download: DownloadState): String {
             val fileExt = MimeTypeMap.getFileExtensionFromUrl(
-                download.filePath
+                download.filePath,
             )
             return context.getString(
-                R.string.mozac_feature_downloads_open_not_supported1, fileExt
+                R.string.mozac_feature_downloads_open_not_supported1,
+                fileExt,
             )
         }
     }

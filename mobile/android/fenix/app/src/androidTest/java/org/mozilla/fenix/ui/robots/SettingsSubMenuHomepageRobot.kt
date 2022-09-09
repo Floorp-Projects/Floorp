@@ -65,8 +65,8 @@ class SettingsSubMenuHomepageRobot {
         assertTrue(
             mDevice.findObject(
                 UiSelector()
-                    .textContains(expectedText)
-            ).waitForExists(waitingTimeShort)
+                    .textContains(expectedText),
+            ).waitForExists(waitingTimeShort),
         )
 
     fun verifySponsoredShortcutsCheckBox(checked: Boolean) {
@@ -78,11 +78,11 @@ class SettingsSubMenuHomepageRobot {
                             withChild(
                                 allOf(
                                     withClassName(endsWith("CheckBox")),
-                                    isChecked()
-                                )
-                            )
-                        )
-                    )
+                                    isChecked(),
+                                ),
+                            ),
+                        ),
+                    ),
                 )
         } else {
             sponsoredShortcuts()
@@ -92,11 +92,11 @@ class SettingsSubMenuHomepageRobot {
                             withChild(
                                 allOf(
                                     withClassName(endsWith("CheckBox")),
-                                    isNotChecked()
-                                )
-                            )
-                        )
-                    )
+                                    isNotChecked(),
+                                ),
+                            ),
+                        ),
+                    ),
                 )
         }
     }
@@ -146,8 +146,8 @@ private fun homepageButton() =
         allOf(
             withId(R.id.title),
             withText(R.string.opening_screen_homepage),
-            hasSibling(withId(R.id.radio_button))
-        )
+            hasSibling(withId(R.id.radio_button)),
+        ),
     )
 
 private fun lastTabButton() =
@@ -155,8 +155,8 @@ private fun lastTabButton() =
         allOf(
             withId(R.id.title),
             withText(R.string.opening_screen_last_tab),
-            hasSibling(withId(R.id.radio_button))
-        )
+            hasSibling(withId(R.id.radio_button)),
+        ),
     )
 
 private fun homepageAfterFourHoursButton() =
@@ -164,8 +164,8 @@ private fun homepageAfterFourHoursButton() =
         allOf(
             withId(R.id.title),
             withText(R.string.opening_screen_after_four_hours_of_inactivity),
-            hasSibling(withId(R.id.radio_button))
-        )
+            hasSibling(withId(R.id.radio_button)),
+        ),
     )
 
 private fun goBackButton() = onView(allOf(withContentDescription(R.string.action_bar_up_description)))

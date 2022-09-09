@@ -27,7 +27,7 @@ class CreditCardsAdapterTest {
             timeCreated = 1L,
             timeLastUsed = 1L,
             timeLastModified = 1L,
-            timesUsed = 1L
+            timesUsed = 1L,
         )
         val creditCard2 = CreditCard(
             guid = "id",
@@ -40,14 +40,14 @@ class CreditCardsAdapterTest {
             timeCreated = 1L,
             timeLastUsed = 1L,
             timeLastModified = 1L,
-            timesUsed = 1L
+            timesUsed = 1L,
         )
 
         assertTrue(
-            CreditCardsAdapter.DiffCallback.areItemsTheSame(creditCard1, creditCard2)
+            CreditCardsAdapter.DiffCallback.areItemsTheSame(creditCard1, creditCard2),
         )
         assertTrue(
-            CreditCardsAdapter.DiffCallback.areContentsTheSame(creditCard1, creditCard2)
+            CreditCardsAdapter.DiffCallback.areContentsTheSame(creditCard1, creditCard2),
         )
 
         val creditCard3 = CreditCard(
@@ -61,14 +61,14 @@ class CreditCardsAdapterTest {
             timeCreated = 1L,
             timeLastUsed = 1L,
             timeLastModified = 1L,
-            timesUsed = 1L
+            timesUsed = 1L,
         )
 
         assertFalse(
-            CreditCardsAdapter.DiffCallback.areItemsTheSame(creditCard1, creditCard3)
+            CreditCardsAdapter.DiffCallback.areItemsTheSame(creditCard1, creditCard3),
         )
         assertFalse(
-            CreditCardsAdapter.DiffCallback.areContentsTheSame(creditCard1, creditCard3)
+            CreditCardsAdapter.DiffCallback.areContentsTheSame(creditCard1, creditCard3),
         )
     }
 }

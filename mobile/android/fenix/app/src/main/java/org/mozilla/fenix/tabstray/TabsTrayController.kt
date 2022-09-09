@@ -98,8 +98,9 @@ interface TabsTrayController {
      */
     fun forceTabsAsInactive(
         tabs: Collection<TabSessionState>,
-        numOfDays: Long = DEFAULT_ACTIVE_DAYS + 1
+        numOfDays: Long = DEFAULT_ACTIVE_DAYS + 1,
     )
+
     /**
      * Handles when a tab item is click either to play/pause.
      */
@@ -128,12 +129,12 @@ class DefaultTabsTrayController(
         val startTime = profiler?.getProfilerTime()
         browsingModeManager.mode = BrowsingMode.fromBoolean(isPrivate)
         navController.navigate(
-            TabsTrayFragmentDirections.actionGlobalHome(focusOnAddressBar = true)
+            TabsTrayFragmentDirections.actionGlobalHome(focusOnAddressBar = true),
         )
         navigationInteractor.onTabTrayDismissed()
         profiler?.addMarker(
             "DefaultTabTrayController.onNewTabTapped",
-            startTime
+            startTime,
         )
         sendNewTabEvent(isPrivate)
     }
@@ -208,7 +209,7 @@ class DefaultTabsTrayController(
         // If user closes all the tabs from selected tabs page dismiss tray and navigate home.
         if (tabs.size == browserStore.state.getNormalOrPrivateTabs(isPrivate).size) {
             dismissTabsTrayAndNavigateHome(
-                if (isPrivate) HomeFragment.ALL_PRIVATE_TABS else HomeFragment.ALL_NORMAL_TABS
+                if (isPrivate) HomeFragment.ALL_PRIVATE_TABS else HomeFragment.ALL_NORMAL_TABS,
             )
         } else {
             tabs.map { it.id }.let {
@@ -228,7 +229,7 @@ class DefaultTabsTrayController(
     override fun handleTabsMove(
         tabId: String,
         targetId: String?,
-        placeAfter: Boolean
+        placeAfter: Boolean,
     ) {
         if (targetId != null && tabId != targetId) {
             tabsUseCases.moveTabs(listOf(tabId), targetId, placeAfter)
@@ -288,7 +289,7 @@ class DefaultTabsTrayController(
                 tab.mediaSessionState?.controller?.play()
             }
             else -> throw AssertionError(
-                "Play/Pause button clicked without play/pause state."
+                "Play/Pause button clicked without play/pause state.",
             )
         }
     }

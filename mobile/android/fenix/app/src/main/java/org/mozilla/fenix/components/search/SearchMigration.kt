@@ -23,7 +23,7 @@ private const val PREF_KEY_MIGRATED = "pref_search_migrated"
  * Helper class to migrate the search related data in Fenix to the "Android Components" implementation.
  */
 internal class SearchMigration(
-    private val context: Context
+    private val context: Context,
 ) : SearchMiddleware.Migration {
 
     override fun getValuesToMigrate(): SearchMiddleware.Migration.MigrationValues? {
@@ -34,7 +34,7 @@ internal class SearchMigration(
 
         val values = SearchMiddleware.Migration.MigrationValues(
             customSearchEngines = loadCustomSearchEngines(preferences),
-            defaultSearchEngineName = context.components.settings.defaultSearchEngineName
+            defaultSearchEngineName = context.components.settings.defaultSearchEngineName,
         )
 
         preferences.edit()
@@ -45,7 +45,7 @@ internal class SearchMigration(
     }
 
     private fun loadCustomSearchEngines(
-        preferences: SharedPreferences
+        preferences: SharedPreferences,
     ): List<SearchEngine> {
         val ids = preferences.getStringSet(PREF_KEY_CUSTOM_SEARCH_ENGINES, emptySet()) ?: emptySet()
 

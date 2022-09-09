@@ -28,7 +28,7 @@ class HistoryMetadataGroupFragmentStoreTest {
         visitedAt = 0,
         historyTimeGroup = HistoryItemTimeGroup.timeGroupForTimestamp(0),
         totalViewTime = 0,
-        historyMetadataKey = HistoryMetadataKey("http://www.mozilla.com", "mozilla", null)
+        historyMetadataKey = HistoryMetadataKey("http://www.mozilla.com", "mozilla", null),
     )
     private val firefoxHistoryMetadataItem = History.Metadata(
         position = 1,
@@ -37,7 +37,7 @@ class HistoryMetadataGroupFragmentStoreTest {
         visitedAt = 0,
         historyTimeGroup = HistoryItemTimeGroup.timeGroupForTimestamp(0),
         totalViewTime = 0,
-        historyMetadataKey = HistoryMetadataKey("http://www.firefox.com", "mozilla", null)
+        historyMetadataKey = HistoryMetadataKey("http://www.firefox.com", "mozilla", null),
     )
     private val pendingDeletionItem = mozillaHistoryMetadataItem.toPendingDeletionHistory()
 
@@ -46,7 +46,7 @@ class HistoryMetadataGroupFragmentStoreTest {
         state = HistoryMetadataGroupFragmentState(
             items = emptyList(),
             pendingDeletionItems = emptySet(),
-            isEmpty = true
+            isEmpty = true,
         )
         store = HistoryMetadataGroupFragmentStore(state)
     }

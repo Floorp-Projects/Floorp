@@ -18,7 +18,7 @@ class DownloadFragmentStoreTest {
         filePath = "url",
         size = "77",
         contentType = "jpg",
-        status = DownloadState.Status.COMPLETED
+        status = DownloadState.Status.COMPLETED,
     )
     private val newDownloadItem = DownloadItem(
         id = "1",
@@ -27,7 +27,7 @@ class DownloadFragmentStoreTest {
         filePath = "url",
         size = "77",
         contentType = "jpg",
-        status = DownloadState.Status.COMPLETED
+        status = DownloadState.Status.COMPLETED,
     )
 
     @Test
@@ -49,7 +49,7 @@ class DownloadFragmentStoreTest {
         assertNotSame(initialState, store.state)
         assertEquals(
             store.state.mode,
-            DownloadFragmentState.Mode.Editing(setOf(newDownloadItem))
+            DownloadFragmentState.Mode.Editing(setOf(newDownloadItem)),
         )
     }
 
@@ -67,20 +67,20 @@ class DownloadFragmentStoreTest {
         items = listOf(),
         mode = DownloadFragmentState.Mode.Normal,
         pendingDeletionIds = emptySet(),
-        isDeletingItems = false
+        isDeletingItems = false,
     )
 
     private fun oneItemEditState(): DownloadFragmentState = DownloadFragmentState(
         items = listOf(),
         mode = DownloadFragmentState.Mode.Editing(setOf(downloadItem)),
         pendingDeletionIds = emptySet(),
-        isDeletingItems = false
+        isDeletingItems = false,
     )
 
     private fun twoItemEditState(): DownloadFragmentState = DownloadFragmentState(
         items = listOf(),
         mode = DownloadFragmentState.Mode.Editing(setOf(downloadItem, newDownloadItem)),
         pendingDeletionIds = emptySet(),
-        isDeletingItems = false
+        isDeletingItems = false,
     )
 }

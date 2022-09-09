@@ -68,11 +68,12 @@ class Components(private val context: Context) {
             core.lazyPasswordsStorage,
             core.lazyRemoteTabsStorage,
             core.lazyAutofillStorage,
-            strictMode
+            strictMode,
         )
     }
     val services by lazyMonitored { Services(context, backgroundServices.accountManager) }
     val core by lazyMonitored { Core(context, analytics.crashReporter, strictMode) }
+
     @Suppress("Deprecation")
     val useCases by lazyMonitored {
         UseCases(
@@ -109,7 +110,7 @@ class Components(private val context: Context) {
                 context,
                 core.client,
                 collectionUser = context.settings().overrideAmoUser,
-                collectionName = context.settings().overrideAmoCollection
+                collectionName = context.settings().overrideAmoCollection,
             )
         }
         // Use build config otherwise
@@ -122,7 +123,7 @@ class Components(private val context: Context) {
                 serverURL = BuildConfig.AMO_SERVER_URL,
                 collectionUser = BuildConfig.AMO_COLLECTION_USER,
                 collectionName = BuildConfig.AMO_COLLECTION_NAME,
-                maxCacheAgeInMinutes = AMO_COLLECTION_MAX_CACHE_AGE
+                maxCacheAgeInMinutes = AMO_COLLECTION_MAX_CACHE_AGE,
             )
         }
         // Fall back to defaults
@@ -139,12 +140,13 @@ class Components(private val context: Context) {
     @Suppress("MagicNumber")
     val supportedAddonsChecker by lazyMonitored {
         DefaultSupportedAddonsChecker(
-            context, Frequency(12, TimeUnit.HOURS),
+            context,
+            Frequency(12, TimeUnit.HOURS),
             onNotificationClickIntent = Intent(context, HomeActivity::class.java).apply {
                 action = Intent.ACTION_VIEW
                 flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
                 data = "${BuildConfig.DEEP_LINK_SCHEME}://settings_addon_manager".toUri()
-            }
+            },
         )
     }
 
@@ -173,7 +175,7 @@ class Components(private val context: Context) {
     val reviewPromptController by lazyMonitored {
         ReviewPromptController(
             manager = ReviewManagerFactory.create(context),
-            reviewSettings = FenixReviewSettings(settings)
+            reviewSettings = FenixReviewSettings(settings),
         )
     }
 
@@ -185,7 +187,7 @@ class Components(private val context: Context) {
             confirmActivity = AutofillConfirmActivity::class.java,
             searchActivity = AutofillSearchActivity::class.java,
             applicationName = context.getString(R.string.app_name),
-            httpClient = core.client
+            httpClient = core.client,
         )
     }
 
@@ -211,16 +213,16 @@ class Components(private val context: Context) {
                 } else {
                     emptyList()
                 },
-                recentHistory = emptyList()
+                recentHistory = emptyList(),
             ).run { filterState(blocklistHandler) },
             middlewares = listOf(
                 BlocklistMiddleware(blocklistHandler),
                 PocketUpdatesMiddleware(
                     core.pocketStoriesService,
-                    context.pocketStoriesSelectedCategoriesDataStore
+                    context.pocketStoriesSelectedCategoriesDataStore,
                 ),
-                MessagingMiddleware(messagingStorage = analytics.messagingStorage)
-            )
+                MessagingMiddleware(messagingStorage = analytics.messagingStorage),
+            ),
         )
     }
 }

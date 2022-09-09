@@ -31,7 +31,6 @@ class ConnectivityManagerTest {
 
     @Test
     fun `connectManager is online works`() {
-
         val network = mockk<Network>()
         val networkCapabilities = mockk<NetworkCapabilities>()
 
@@ -44,7 +43,6 @@ class ConnectivityManagerTest {
 
     @Test
     fun `connectManager is online with null network works`() {
-
         val network: Network? = null
         val networkCapabilities = mockk<NetworkCapabilities>()
 
@@ -57,7 +55,6 @@ class ConnectivityManagerTest {
 
     @Test
     fun `connectManager is online with unvalidated connection works`() {
-
         val network = mockk<Network>()
         val networkCapabilities = mockk<NetworkCapabilities>()
 
@@ -70,7 +67,6 @@ class ConnectivityManagerTest {
 
     @Test
     fun `connectManager is online with no connection works`() {
-
         val network = mockk<Network>()
         val networkCapabilities = mockk<NetworkCapabilities>()
 

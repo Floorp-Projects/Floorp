@@ -21,7 +21,7 @@ fun TabCollection.getIconColor(context: Context): Int {
     val index = abs(id % iconColors.length()).toInt()
     val color = iconColors.getColor(
         index,
-        ContextCompat.getColor(context, R.color.fx_mobile_icon_color_oncolor)
+        ContextCompat.getColor(context, R.color.fx_mobile_icon_color_oncolor),
     )
     iconColors.recycle()
     return color
@@ -40,7 +40,7 @@ fun List<TabCollection>.getDefaultCollectionNumber(): Int {
             .filter { it.matches(Regex("Collection\\s\\d+")) }
             .map {
                 Integer.valueOf(
-                    it.split(" ")[DefaultCollectionCreationController.DEFAULT_COLLECTION_NUMBER_POSITION]
+                    it.split(" ")[DefaultCollectionCreationController.DEFAULT_COLLECTION_NUMBER_POSITION],
                 )
             }
             .maxOrNull() ?: 0

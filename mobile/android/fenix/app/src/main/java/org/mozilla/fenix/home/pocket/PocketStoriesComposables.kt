@@ -107,7 +107,7 @@ fun PocketStory(
 ) {
     val imageUrl = story.imageUrl.replace(
         "{wh}",
-        with(LocalDensity.current) { "${116.dp.toPx().roundToInt()}x${84.dp.toPx().roundToInt()}" }
+        with(LocalDensity.current) { "${116.dp.toPx().roundToInt()}x${84.dp.toPx().roundToInt()}" },
     )
     val isValidPublisher = story.publisher.isNotBlank()
     val isValidTimeToRead = story.timeToRead >= 0
@@ -143,7 +143,7 @@ fun PocketStory(
                     maxLines = 1,
                 )
             }
-        }
+        },
     )
 }
 
@@ -156,14 +156,14 @@ fun PocketStory(
 @Composable
 fun PocketSponsoredStory(
     story: PocketSponsoredStory,
-    onStoryClick: (PocketSponsoredStory) -> Unit
+    onStoryClick: (PocketSponsoredStory) -> Unit,
 ) {
     val (imageWidth, imageHeight) = with(LocalDensity.current) {
         116.dp.toPx().roundToInt() to 84.dp.toPx().roundToInt()
     }
     val imageUrl = story.imageUrl.replace(
         "&resize=w[0-9]+-h[0-9]+".toRegex(),
-        "&resize=w$imageWidth-h$imageHeight"
+        "&resize=w$imageWidth-h$imageHeight",
     )
 
     ListItemTabSurface(
@@ -218,7 +218,7 @@ fun PocketStories(
     contentPadding: Dp,
     onStoryShown: (PocketStory, Pair<Int, Int>) -> Unit,
     onStoryClicked: (PocketStory, Pair<Int, Int>) -> Unit,
-    onDiscoverMoreClicked: (String) -> Unit
+    onDiscoverMoreClicked: (String) -> Unit,
 ) {
     // Show stories in at most 3 rows but on any number of columns depending on the data received.
     val maxRowsNo = 3
@@ -231,7 +231,7 @@ fun PocketStories(
         contentPadding = PaddingValues(horizontal = contentPadding),
         state = listState,
         flingBehavior = flingBehavior,
-        horizontalArrangement = Arrangement.spacedBy(8.dp)
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         itemsIndexed(storiesToShow) { columnIndex, columnItems ->
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -252,7 +252,7 @@ fun PocketStories(
                         Box(
                             modifier = Modifier.onShown(0.5f) {
                                 onStoryShown(story, rowIndex to columnIndex)
-                            }
+                            },
                         ) {
                             PocketSponsoredStory(story) {
                                 onStoryClicked(story, rowIndex to columnIndex)
@@ -367,12 +367,12 @@ fun PocketStoriesCategories(
     categories: List<PocketRecommendedStoriesCategory>,
     selections: List<PocketRecommendedStoriesSelectedCategory>,
     onCategoryClick: (PocketRecommendedStoriesCategory) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     Box(modifier = modifier) {
         StaggeredHorizontalGrid(
             horizontalItemsSpacing = 16.dp,
-            verticalItemsSpacing = 16.dp
+            verticalItemsSpacing = 16.dp,
         ) {
             categories.filter { it.name != POCKET_STORIES_DEFAULT_CATEGORY_NAME }.forEach { category ->
                 SelectableChip(category.name, selections.map { it.name }.contains(category.name)) {
@@ -411,13 +411,13 @@ fun PoweredByPocketHeader(
             Modifier
                 .fillMaxWidth()
                 .semantics(mergeDescendants = true) {},
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.CenterVertically,
         ) {
             Icon(
                 painter = painterResource(id = R.drawable.pocket_vector),
                 contentDescription = null,
                 // Apply the red tint in code. Otherwise the image is black and white.
-                tint = Color(0xFFEF4056)
+                tint = Color(0xFFEF4056),
             )
 
             Spacer(modifier = Modifier.width(16.dp))
@@ -427,14 +427,14 @@ fun PoweredByPocketHeader(
                     text = stringResource(R.string.pocket_stories_feature_title),
                     color = textColor,
                     fontSize = 12.sp,
-                    lineHeight = 16.sp
+                    lineHeight = 16.sp,
                 )
 
                 ClickableSubstringLink(
                     text = text,
                     textColor = textColor,
                     clickableStartIndex = linkStartIndex,
-                    clickableEndIndex = linkEndIndex
+                    clickableEndIndex = linkEndIndex,
                 ) {
                     onLearnMoreClicked("https://www.mozilla.org/en-US/firefox/pocket/?$POCKET_FEATURE_UTM_KEY_VALUE")
                 }
@@ -454,7 +454,7 @@ private fun PocketStoriesComposablesPreview() {
                     contentPadding = 0.dp,
                     onStoryShown = { _, _ -> },
                     onStoryClicked = { _, _ -> },
-                    onDiscoverMoreClicked = {}
+                    onDiscoverMoreClicked = {},
                 )
                 Spacer(Modifier.height(10.dp))
 
@@ -463,12 +463,12 @@ private fun PocketStoriesComposablesPreview() {
                         .split(" ")
                         .map { PocketRecommendedStoriesCategory(it) },
                     selections = emptyList(),
-                    onCategoryClick = {}
+                    onCategoryClick = {},
                 )
                 Spacer(Modifier.height(10.dp))
 
                 PoweredByPocketHeader(
-                    onLearnMoreClicked = {}
+                    onLearnMoreClicked = {},
                 )
             }
         }
@@ -492,8 +492,8 @@ internal fun getFakePocketStories(limit: Int = 1): List<PocketStory> {
                         imageUrl = "",
                         timeToRead = index,
                         category = "Category #$index",
-                        timesShown = index.toLong()
-                    )
+                        timesShown = index.toLong(),
+                    ),
                 )
                 false -> add(
                     PocketSponsoredStory(
@@ -508,8 +508,8 @@ internal fun getFakePocketStories(limit: Int = 1): List<PocketStory> {
                             flightCount = index,
                             flightPeriod = index * 2,
                             lifetimeCount = index * 3,
-                        )
-                    )
+                        ),
+                    ),
                 )
             }
         }

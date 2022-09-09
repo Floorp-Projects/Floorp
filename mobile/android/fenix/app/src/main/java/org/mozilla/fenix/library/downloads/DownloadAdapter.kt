@@ -11,7 +11,7 @@ import org.mozilla.fenix.library.downloads.viewholders.DownloadsListItemViewHold
 import org.mozilla.fenix.selection.SelectionHolder
 
 class DownloadAdapter(
-    private val downloadInteractor: DownloadInteractor
+    private val downloadInteractor: DownloadInteractor,
 ) : RecyclerView.Adapter<DownloadsListItemViewHolder>(), SelectionHolder<DownloadItem> {
     private var downloads: List<DownloadItem> = listOf()
     private var mode: DownloadFragmentState.Mode = DownloadFragmentState.Mode.Normal

@@ -9,7 +9,7 @@ import org.mozilla.fenix.GleanMetrics.TabsTray
 
 class SelectTabUseCaseWrapper(
     private val selectTab: TabsUseCases.SelectTabUseCase,
-    private val onSelect: (String) -> Unit
+    private val onSelect: (String) -> Unit,
 ) : TabsUseCases.SelectTabUseCase {
     operator fun invoke(tabId: String, source: String? = null) {
         TabsTray.openedExistingTab.record(TabsTray.OpenedExistingTabExtra(source ?: "unknown"))

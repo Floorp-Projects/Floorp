@@ -19,7 +19,7 @@ import org.mozilla.fenix.home.sessioncontrol.TopSiteInteractor
 class TopSitePagerViewHolder(
     view: View,
     viewLifecycleOwner: LifecycleOwner,
-    interactor: TopSiteInteractor
+    interactor: TopSiteInteractor,
 ) : RecyclerView.ViewHolder(view) {
 
     private val binding = ComponentTopSitesPagerBinding.bind(view)
@@ -32,8 +32,8 @@ class TopSitePagerViewHolder(
             if (currentPage != position) {
                 TopSites.swipeCarousel.record(
                     TopSites.SwipeCarouselExtra(
-                        position.toString()
-                    )
+                        position.toString(),
+                    ),
                 )
             }
 

@@ -39,7 +39,7 @@ class HistoryControllerTest {
         "title",
         "url",
         0.toLong(),
-        HistoryItemTimeGroup.timeGroupForTimestamp(0)
+        HistoryItemTimeGroup.timeGroupForTimestamp(0),
     )
 
     @get:Rule
@@ -69,7 +69,7 @@ class HistoryControllerTest {
         val controller = createController(
             openInBrowser = {
                 actualHistoryItem = it
-            }
+            },
         )
         controller.handleOpen(historyItem)
         assertEquals(historyItem, actualHistoryItem)
@@ -131,7 +131,7 @@ class HistoryControllerTest {
         val controller = createController(
             invalidateOptionsMenu = {
                 invalidateOptionsMenuInvoked = true
-            }
+            },
         )
 
         controller.handleModeSwitched()
@@ -146,7 +146,7 @@ class HistoryControllerTest {
         verify {
             navController.navigateSafe(
                 R.id.historyFragment,
-                HistoryFragmentDirections.actionGlobalHistorySearchDialog()
+                HistoryFragmentDirections.actionGlobalHistorySearchDialog(),
             )
         }
     }
@@ -157,7 +157,7 @@ class HistoryControllerTest {
         val controller = createController(
             displayDeleteTimeRange = {
                 displayDeleteTimeRangeInvoked = true
-            }
+            },
         )
 
         controller.handleDeleteTimeRange()
@@ -222,7 +222,7 @@ class HistoryControllerTest {
         val controller = createController(
             deleteHistoryItems = { items ->
                 actualItems = items
-            }
+            },
         )
 
         controller.handleDeleteSome(itemsToDelete)
@@ -235,7 +235,7 @@ class HistoryControllerTest {
         createController(
             syncHistory = {
                 syncHistoryInvoked = true
-            }
+            },
         ).handleRequestSync()
 
         coVerifyOrder {
@@ -253,7 +253,7 @@ class HistoryControllerTest {
         onTimeFrameDeleted: () -> Unit = {},
         invalidateOptionsMenu: () -> Unit = {},
         deleteHistoryItems: (Set<History>) -> Unit = { _ -> },
-        syncHistory: suspend () -> Unit = {}
+        syncHistory: suspend () -> Unit = {},
     ): HistoryController {
         return DefaultHistoryController(
             store,

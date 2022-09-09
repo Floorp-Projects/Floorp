@@ -23,5 +23,5 @@ const val POCKET_STORIES_DEFAULT_CATEGORY_NAME = "general"
  */
 data class PocketRecommendedStoriesCategory(
     val name: String,
-    val stories: List<PocketRecommendedStory> = emptyList()
+    val stories: List<PocketRecommendedStory> = emptyList(),
 )

@@ -19,15 +19,15 @@ class SupportUtilsTest {
     fun getSumoURLForTopic() {
         assertEquals(
             "https://support.mozilla.org/1/mobile/1.6/Android/en-US/common-myths-about-private-browsing",
-            SupportUtils.getSumoURLForTopic(mockContext("1.6"), SupportUtils.SumoTopic.PRIVATE_BROWSING_MYTHS, Locale("en", "US"))
+            SupportUtils.getSumoURLForTopic(mockContext("1.6"), SupportUtils.SumoTopic.PRIVATE_BROWSING_MYTHS, Locale("en", "US")),
         )
         assertEquals(
             "https://support.mozilla.org/1/mobile/20/Android/fr/tracking-protection-firefox-android",
-            SupportUtils.getSumoURLForTopic(mockContext("2 0"), SupportUtils.SumoTopic.TRACKING_PROTECTION, Locale("fr"))
+            SupportUtils.getSumoURLForTopic(mockContext("2 0"), SupportUtils.SumoTopic.TRACKING_PROTECTION, Locale("fr")),
         )
         assertEquals(
             "https://support.mozilla.org/1/mobile/three/Android/es-CL/whats-new-firefox-preview",
-            SupportUtils.getSumoURLForTopic(mockContext("three"), SupportUtils.SumoTopic.WHATS_NEW, Locale("es", "CL"))
+            SupportUtils.getSumoURLForTopic(mockContext("three"), SupportUtils.SumoTopic.WHATS_NEW, Locale("es", "CL")),
         )
     }
 
@@ -35,11 +35,11 @@ class SupportUtilsTest {
     fun getGenericSumoURLForTopic() {
         assertEquals(
             "https://support.mozilla.org/en-GB/kb/faq-android",
-            SupportUtils.getGenericSumoURLForTopic(SupportUtils.SumoTopic.HELP, Locale("en", "GB"))
+            SupportUtils.getGenericSumoURLForTopic(SupportUtils.SumoTopic.HELP, Locale("en", "GB")),
         )
         assertEquals(
             "https://support.mozilla.org/de/kb/your-rights",
-            SupportUtils.getGenericSumoURLForTopic(SupportUtils.SumoTopic.YOUR_RIGHTS, Locale("de"))
+            SupportUtils.getGenericSumoURLForTopic(SupportUtils.SumoTopic.YOUR_RIGHTS, Locale("de")),
         )
     }
 
@@ -47,11 +47,11 @@ class SupportUtilsTest {
     fun getMozillaPageUrl() {
         assertEquals(
             "https://www.mozilla.org/en-US/about/manifesto/",
-            SupportUtils.getMozillaPageUrl(SupportUtils.MozillaPage.MANIFESTO, Locale("en", "US"))
+            SupportUtils.getMozillaPageUrl(SupportUtils.MozillaPage.MANIFESTO, Locale("en", "US")),
         )
         assertEquals(
             "https://www.mozilla.org/zh/privacy/firefox/",
-            SupportUtils.getMozillaPageUrl(SupportUtils.MozillaPage.PRIVATE_NOTICE, Locale("zh"))
+            SupportUtils.getMozillaPageUrl(SupportUtils.MozillaPage.PRIVATE_NOTICE, Locale("zh")),
         )
     }
 

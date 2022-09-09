@@ -33,7 +33,7 @@ class CreditCardEditorStateTest {
         timeCreated = 1L,
         timeLastUsed = 1L,
         timeLastModified = 1L,
-        timesUsed = 1L
+        timesUsed = 1L,
     )
 
     @Test

@@ -122,7 +122,7 @@ class AddonsManagementViewTest {
         managementView.onNotYetSupportedSectionClicked(addons)
 
         val expected = AddonsManagementFragmentDirections.actionAddonsManagementFragmentToNotYetSupportedAddonFragment(
-            addons.toTypedArray()
+            addons.toTypedArray(),
         )
         verify {
             navController.navigate(directionsEq(expected))

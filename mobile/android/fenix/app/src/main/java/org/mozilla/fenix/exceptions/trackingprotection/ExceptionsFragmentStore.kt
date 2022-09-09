@@ -15,11 +15,11 @@ import mozilla.components.lib.state.Store
  */
 class ExceptionsFragmentStore(
     initialState: ExceptionsFragmentState = ExceptionsFragmentState(),
-    middlewares: List<Middleware<ExceptionsFragmentState, ExceptionsFragmentAction>> = emptyList()
+    middlewares: List<Middleware<ExceptionsFragmentState, ExceptionsFragmentAction>> = emptyList(),
 ) : Store<ExceptionsFragmentState, ExceptionsFragmentAction>(
     initialState,
     ::exceptionsStateReducer,
-    middlewares
+    middlewares,
 )
 
 /**
@@ -40,7 +40,7 @@ data class ExceptionsFragmentState(val items: List<TrackingProtectionException> 
  */
 private fun exceptionsStateReducer(
     state: ExceptionsFragmentState,
-    action: ExceptionsFragmentAction
+    action: ExceptionsFragmentAction,
 ): ExceptionsFragmentState {
     return when (action) {
         is ExceptionsFragmentAction.Change -> state.copy(items = action.list)

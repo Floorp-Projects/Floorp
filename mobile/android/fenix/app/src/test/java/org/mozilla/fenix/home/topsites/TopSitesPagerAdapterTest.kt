@@ -24,27 +24,27 @@ class TopSitesPagerAdapterTest {
         id = 1L,
         title = "Title1",
         url = "https://mozilla.org",
-        null
+        null,
     )
 
     private val topSite2 = TopSite.Default(
         id = 2L,
         title = "Title2",
         url = "https://mozilla.org",
-        null
+        null,
     )
 
     private val topSite3 = TopSite.Default(
         id = 3L,
         title = "Title3",
         url = "https://firefox.org",
-        null
+        null,
     )
     private val topSite4 = TopSite.Default(
         id = 4L,
         title = "Title4",
         url = "https://firefox.org",
-        null
+        null,
     )
 
     @Before
@@ -57,9 +57,9 @@ class TopSitesPagerAdapterTest {
         assertEquals(
             TopSitesPagerAdapter.TopSiteListDiffCallback.getChangePayload(
                 listOf(topSite, topSite3),
-                listOf(topSite, topSite2)
+                listOf(topSite, topSite2),
             ),
-            TopSitePagerPayload(setOf(Pair(1, topSite2)))
+            TopSitePagerPayload(setOf(Pair(1, topSite2))),
         )
     }
 
@@ -70,8 +70,8 @@ class TopSitesPagerAdapterTest {
                 Pair(0, topSite),
                 Pair(1, topSite2),
                 Pair(2, topSite3),
-                Pair(8, topSite4)
-            )
+                Pair(8, topSite4),
+            ),
         )
 
         val resultPage1: List<Pair<Int, TopSite>> =
@@ -83,14 +83,14 @@ class TopSitesPagerAdapterTest {
             listOf(
                 Pair(0, topSite),
                 Pair(1, topSite2),
-                Pair(2, topSite3)
+                Pair(2, topSite3),
             ),
-            resultPage1
+            resultPage1,
         )
 
         assertEquals(
             listOf(Pair(8, topSite4)),
-            resultPage2
+            resultPage2,
         )
     }
 
@@ -106,15 +106,15 @@ class TopSitesPagerAdapterTest {
             id = -1L,
             title = "REMOVED",
             url = "https://firefox.org",
-            null
+            null,
         )
         val payload = TopSitePagerPayload(
             setOf(
                 Pair(0, removedTopSite),
                 Pair(1, topSite2),
                 Pair(2, topSite3),
-                Pair(3, topSite4)
-            )
+                Pair(3, topSite4),
+            ),
         )
 
         topSitesPagerAdapter.update(payload, 0, topSitesAdapter)
@@ -135,12 +135,12 @@ class TopSitesPagerAdapterTest {
             id = -1L,
             title = "REMOVED",
             url = "https://firefox.org",
-            null
+            null,
         )
         val payload = TopSitePagerPayload(
             setOf(
-                Pair(3, removedTopSite)
-            )
+                Pair(3, removedTopSite),
+            ),
         )
 
         topSitesPagerAdapter.update(payload, 0, topSitesAdapter)
@@ -161,12 +161,12 @@ class TopSitesPagerAdapterTest {
             id = 3L,
             title = "CHANGED",
             url = "https://firefox.org",
-            null
+            null,
         )
         val payload = TopSitePagerPayload(
             setOf(
-                Pair(2, changedTopSite)
-            )
+                Pair(2, changedTopSite),
+            ),
         )
 
         topSitesPagerAdapter.update(payload, 0, topSitesAdapter)

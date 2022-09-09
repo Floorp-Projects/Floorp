@@ -35,9 +35,9 @@ class ShareOverlayRobot {
                     matches(
                         allOf(
                             hasSibling(withId(R.id.share_tab_favicon)),
-                            hasSibling(withId(R.id.share_tab_url))
-                        )
-                    )
+                            hasSibling(withId(R.id.share_tab_url)),
+                        ),
+                    ),
                 )
         }
     }
@@ -66,8 +66,8 @@ class ShareOverlayRobot {
         Intents.intended(
             allOf(
                 IntentMatchers.hasExtra(Intent.EXTRA_TEXT, text),
-                IntentMatchers.hasExtra(Intent.EXTRA_SUBJECT, subject)
-            )
+                IntentMatchers.hasExtra(Intent.EXTRA_SUBJECT, subject),
+            ),
         )
     }
 
@@ -83,8 +83,8 @@ private fun sendToDeviceTitle() =
     onView(
         allOf(
             withText("SEND TO DEVICE"),
-            withResourceName("accountHeaderText")
-        )
+            withResourceName("accountHeaderText"),
+        ),
     )
 
 private fun assertSendToDeviceTitle() = sendToDeviceTitle()
@@ -94,8 +94,8 @@ private fun shareALinkTitle() =
     onView(
         allOf(
             withText("ALL ACTIONS"),
-            withResourceName("apps_link_header")
-        )
+            withResourceName("apps_link_header"),
+        ),
     )
 
 private fun assertShareALinkTitle() = shareALinkTitle()

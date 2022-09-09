@@ -20,12 +20,12 @@ class CustomTabContextMenuCandidate {
             context: Context,
             contextMenuUseCases: ContextMenuUseCases,
             snackBarParentView: View,
-            snackbarDelegate: ContextMenuCandidate.SnackbarDelegate = DefaultSnackbarDelegate()
+            snackbarDelegate: ContextMenuCandidate.SnackbarDelegate = DefaultSnackbarDelegate(),
         ): List<ContextMenuCandidate> = listOf(
             ContextMenuCandidate.createCopyLinkCandidate(
                 context,
                 snackBarParentView,
-                snackbarDelegate
+                snackbarDelegate,
             ),
             ContextMenuCandidate.createShareLinkCandidate(context),
             ContextMenuCandidate.createSaveImageCandidate(context, contextMenuUseCases),
@@ -33,8 +33,8 @@ class CustomTabContextMenuCandidate {
             ContextMenuCandidate.createCopyImageLocationCandidate(
                 context,
                 snackBarParentView,
-                snackbarDelegate
-            )
+                snackbarDelegate,
+            ),
         )
     }
 }

@@ -28,7 +28,7 @@ class LoginsListViewHolderTest {
         origin = "mozilla.org",
         username = "admin",
         password = "password",
-        timeLastUsed = 100L
+        timeLastUsed = 100L,
     )
 
     private lateinit var interactor: SavedLoginsInteractor
@@ -45,7 +45,7 @@ class LoginsListViewHolderTest {
     fun `bind url and username`() {
         val holder = LoginsListViewHolder(
             binding.root,
-            interactor
+            interactor,
         )
         holder.bind(baseLogin)
 
@@ -57,7 +57,7 @@ class LoginsListViewHolderTest {
     fun `call interactor on click`() {
         val holder = LoginsListViewHolder(
             binding.root,
-            interactor
+            interactor,
         )
         holder.bind(baseLogin)
 

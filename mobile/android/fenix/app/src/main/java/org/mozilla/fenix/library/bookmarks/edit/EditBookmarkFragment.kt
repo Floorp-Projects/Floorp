@@ -131,8 +131,8 @@ class EditBookmarkFragment : Fragment(R.layout.fragment_edit_bookmark) {
                             hideFolderGuid = when (bookmarkNode!!.type) {
                                 BookmarkNodeType.FOLDER -> bookmarkNode!!.guid
                                 else -> null
-                            }
-                        )
+                            },
+                        ),
                 )
             }
 
@@ -142,22 +142,34 @@ class EditBookmarkFragment : Fragment(R.layout.fragment_edit_bookmark) {
                 showKeyboard()
             }
 
-            binding.bookmarkUrlEdit.addTextChangedListener(object : TextWatcher {
-                override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {
-                    // NOOP
-                }
+            binding.bookmarkUrlEdit.addTextChangedListener(
+                object : TextWatcher {
+                    override fun beforeTextChanged(
+                        s: CharSequence?,
+                        start: Int,
+                        count: Int,
+                        after: Int,
+                    ) {
+                        // NOOP
+                    }
 
-                override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
-                    binding.bookmarkUrlEdit.onTextChanged(s)
+                    override fun onTextChanged(
+                        s: CharSequence?,
+                        start: Int,
+                        before: Int,
+                        count: Int,
+                    ) {
+                        binding.bookmarkUrlEdit.onTextChanged(s)
 
-                    binding.inputLayoutBookmarkUrl.error = null
-                    binding.inputLayoutBookmarkUrl.errorIconDrawable = null
-                }
+                        binding.inputLayoutBookmarkUrl.error = null
+                        binding.inputLayoutBookmarkUrl.errorIconDrawable = null
+                    }
 
-                override fun afterTextChanged(s: Editable?) {
-                    // NOOP
-                }
-            })
+                    override fun afterTextChanged(s: Editable?) {
+                        // NOOP
+                    }
+                },
+            )
         }
     }
 
@@ -167,7 +179,7 @@ class EditBookmarkFragment : Fragment(R.layout.fragment_edit_bookmark) {
         val toolbar = activity.findViewById<Toolbar>(R.id.navigationToolbar)
         toolbar?.setToolbarColors(
             foreground = activity.getColorFromAttr(R.attr.textPrimary),
-            background = activity.getColorFromAttr(R.attr.layer1)
+            background = activity.getColorFromAttr(R.attr.layer1),
         )
         actionBar.show()
     }
@@ -218,14 +230,14 @@ class EditBookmarkFragment : Fragment(R.layout.fragment_edit_bookmark) {
                             bookmarkNode?.let { bookmark ->
                                 FenixSnackbar.make(
                                     view = activity.getRootView()!!,
-                                    isDisplayedWithBrowserToolbar = args.requiresSnackbarPaddingForToolbar
+                                    isDisplayedWithBrowserToolbar = args.requiresSnackbarPaddingForToolbar,
                                 )
                                     .setText(
                                         getString(
                                             R.string.bookmark_deletion_snackbar_message,
                                             bookmark.url?.toShortUrl(context.components.publicSuffixList)
-                                                ?: bookmark.title
-                                        )
+                                                ?: bookmark.title,
+                                        ),
                                     )
                                     .show()
                             }
@@ -252,7 +264,8 @@ class EditBookmarkFragment : Fragment(R.layout.fragment_edit_bookmark) {
                     if (title != bookmarkNode?.title || url != bookmarkNode?.url) {
                         BookmarksManagement.edited.record(NoExtras())
                     }
-                    val parentGuid = sharedViewModel.selectedFolder?.guid ?: bookmarkNode!!.parentGuid
+                    val parentGuid =
+                        sharedViewModel.selectedFolder?.guid ?: bookmarkNode!!.parentGuid
                     val parentChanged = initialParentGuid != parentGuid
                     // Only track the 'moved' event if new parent was selected.
                     if (parentChanged) {
@@ -265,8 +278,8 @@ class EditBookmarkFragment : Fragment(R.layout.fragment_edit_bookmark) {
                             // Setting position to 'null' is treated as a 'move to the end' by the storage API.
                             if (parentChanged) null else bookmarkNode?.position,
                             title,
-                            if (bookmarkNode?.type == BookmarkNodeType.ITEM) url else null
-                        )
+                            if (bookmarkNode?.type == BookmarkNodeType.ITEM) url else null,
+                        ),
                     )
                 }
                 withContext(Main) {
@@ -277,12 +290,16 @@ class EditBookmarkFragment : Fragment(R.layout.fragment_edit_bookmark) {
                 }
             } catch (e: PlacesException.UrlParseFailed) {
                 withContext(Main) {
-                    binding.inputLayoutBookmarkUrl.error = getString(R.string.bookmark_invalid_url_error)
+                    binding.inputLayoutBookmarkUrl.error =
+                        getString(R.string.bookmark_invalid_url_error)
                     binding.inputLayoutBookmarkUrl.setErrorIconDrawable(R.drawable.mozac_ic_warning_with_bottom_padding)
                     binding.inputLayoutBookmarkUrl.setErrorIconTintList(
                         ColorStateList.valueOf(
-                            ContextCompat.getColor(requireContext(), R.color.fx_mobile_text_color_warning)
-                        )
+                            ContextCompat.getColor(
+                                requireContext(),
+                                R.color.fx_mobile_text_color_warning,
+                            ),
+                        ),
                     )
                 }
             }

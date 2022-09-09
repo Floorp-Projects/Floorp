@@ -48,7 +48,7 @@ class EditCustomSearchEngineFragment : Fragment(R.layout.fragment_add_search_eng
         searchEngine = requireNotNull(
             requireComponents.core.store.state.search.customSearchEngines.find { engine ->
                 engine.id == args.searchEngineIdentifier
-            }
+            },
         )
     }
 
@@ -67,10 +67,10 @@ class EditCustomSearchEngineFragment : Fragment(R.layout.fragment_add_search_eng
             (activity as HomeActivity).openToBrowserAndLoad(
                 searchTermOrURL = SupportUtils.getSumoURLForTopic(
                     requireContext(),
-                    SupportUtils.SumoTopic.CUSTOM_SEARCH_ENGINES
+                    SupportUtils.SumoTopic.CUSTOM_SEARCH_ENGINES,
                 ),
                 newTab = true,
-                from = BrowserDirection.FromEditCustomSearchEngineFragment
+                from = BrowserDirection.FromEditCustomSearchEngineFragment,
             )
         }
     }
@@ -115,7 +115,7 @@ class EditCustomSearchEngineFragment : Fragment(R.layout.fragment_add_search_eng
             val result = withContext(IO) {
                 SearchStringValidator.isSearchStringValid(
                     requireComponents.core.client,
-                    searchString
+                    searchString,
                 )
             }
 
@@ -130,7 +130,7 @@ class EditCustomSearchEngineFragment : Fragment(R.layout.fragment_add_search_eng
                         name = name,
                         resultUrls = listOf(searchString.toSearchUrl()),
                         icon = requireComponents.core.icons.loadIcon(IconRequest(searchString))
-                            .await().bitmap
+                            .await().bitmap,
                     )
 
                     requireComponents.useCases.searchUseCases.addSearchEngine(update)
@@ -142,7 +142,7 @@ class EditCustomSearchEngineFragment : Fragment(R.layout.fragment_add_search_eng
                         FenixSnackbar.make(
                             view = it,
                             duration = FenixSnackbar.LENGTH_SHORT,
-                            isDisplayedWithBrowserToolbar = false
+                            isDisplayedWithBrowserToolbar = false,
                         )
                             .setText(successMessage)
                             .show()

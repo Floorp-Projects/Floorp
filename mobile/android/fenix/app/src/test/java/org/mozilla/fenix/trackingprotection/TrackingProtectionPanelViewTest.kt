@@ -43,7 +43,7 @@ class TrackingProtectionPanelViewTest {
         isTrackingProtectionEnabled = false,
         listTrackers = emptyList(),
         mode = TrackingProtectionState.Mode.Normal,
-        lastAccessedCategory = ""
+        lastAccessedCategory = "",
     )
 
     @get:Rule
@@ -106,23 +106,23 @@ class TrackingProtectionPanelViewTest {
             baseState.copy(
                 mode = TrackingProtectionState.Mode.Details(
                     selectedCategory = TrackingProtectionCategory.TRACKING_CONTENT,
-                    categoryBlocked = false
-                )
-            )
+                    categoryBlocked = false,
+                ),
+            ),
         )
         assertTrue(view.binding.detailsMode.isVisible)
         assertFalse(view.binding.normalMode.isVisible)
         assertEquals(
             testContext.getString(R.string.etp_tracking_content_title),
-            view.binding.categoryTitle.text
+            view.binding.categoryTitle.text,
         )
         assertEquals(
             testContext.getString(R.string.etp_tracking_content_description),
-            view.binding.categoryDescription.text
+            view.binding.categoryDescription.text,
         )
         assertEquals(
             testContext.getString(R.string.enhanced_tracking_protection_allowed),
-            view.binding.detailsBlockingHeader.text
+            view.binding.detailsBlockingHeader.text,
         )
     }
 
@@ -139,9 +139,9 @@ class TrackingProtectionPanelViewTest {
                 baseState.copy(
                     mode = TrackingProtectionState.Mode.Details(
                         selectedCategory = CROSS_SITE_TRACKING_COOKIES,
-                        categoryBlocked = false
-                    )
-                )
+                        categoryBlocked = false,
+                    ),
+                ),
             )
 
             assertEquals(expectedTitle, view.binding.categoryTitle.text)
@@ -162,9 +162,9 @@ class TrackingProtectionPanelViewTest {
                 baseState.copy(
                     mode = TrackingProtectionState.Mode.Details(
                         selectedCategory = CROSS_SITE_TRACKING_COOKIES,
-                        categoryBlocked = false
-                    )
-                )
+                        categoryBlocked = false,
+                    ),
+                ),
             )
 
             assertEquals(expectedTitle, view.binding.categoryTitle.text)

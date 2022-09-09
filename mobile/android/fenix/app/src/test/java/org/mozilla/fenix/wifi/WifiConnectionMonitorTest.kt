@@ -44,7 +44,7 @@ class WifiConnectionMonitorTest {
         verify(exactly = 1) {
             connectivityManager.registerNetworkCallback(
                 any(),
-                wifiConnectionMonitor.frameworkListener
+                wifiConnectionMonitor.frameworkListener,
             )
         }
 
@@ -66,7 +66,7 @@ class WifiConnectionMonitorTest {
         verify(exactly = 0) {
             connectivityManager.registerNetworkCallback(
                 any(),
-                wifiConnectionMonitor.frameworkListener
+                wifiConnectionMonitor.frameworkListener,
             )
         }
     }
@@ -78,7 +78,7 @@ class WifiConnectionMonitorTest {
 
         verify {
             wifiConnectionMonitor.connectivityManager.unregisterNetworkCallback(
-                wifiConnectionMonitor.frameworkListener
+                wifiConnectionMonitor.frameworkListener,
             )
         }
 
@@ -100,7 +100,6 @@ class WifiConnectionMonitorTest {
 
     @Test
     fun `WHEN adding a listener THEN should be added to the callback queue`() {
-
         wifiConnectionMonitor.addOnWifiConnectedChangedListener({})
 
         assertFalse(wifiConnectionMonitor.callbacks.isEmpty())
@@ -121,7 +120,6 @@ class WifiConnectionMonitorTest {
 
     @Test
     fun `WHEN removing a listener THEN it will be removed from the listeners queue`() {
-
         assertTrue(wifiConnectionMonitor.callbacks.isEmpty())
 
         val callback: (Boolean) -> Unit = {}
@@ -177,12 +175,12 @@ class WifiConnectionMonitorTest {
     @Test
     fun `GIVEN multiple listeners are are added and notify THEN a ConcurrentModificationException must not be thrown`() {
         repeat(100) {
-
             // Adding to callbacks.
             wifiConnectionMonitor.addOnWifiConnectedChangedListener {
                 // Altering callbacks while looping.
-                if (wifiConnectionMonitor.callbacks.isNotEmpty())
+                if (wifiConnectionMonitor.callbacks.isNotEmpty()) {
                     wifiConnectionMonitor.callbacks.removeFirst()
+                }
             }
 
             // Looping over callbacks.

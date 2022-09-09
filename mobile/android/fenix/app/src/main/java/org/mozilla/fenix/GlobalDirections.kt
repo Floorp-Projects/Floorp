@@ -17,45 +17,46 @@ enum class GlobalDirections(val navDirections: NavDirections, val destinationId:
     Home(NavGraphDirections.actionGlobalHome(), R.id.homeFragment),
     Bookmarks(
         NavGraphDirections.actionGlobalBookmarkFragment(BookmarkRoot.Root.id),
-        R.id.bookmarkFragment
+        R.id.bookmarkFragment,
     ),
     History(
         NavGraphDirections.actionGlobalHistoryFragment(),
-        R.id.historyFragment
+        R.id.historyFragment,
     ),
     Settings(
         NavGraphDirections.actionGlobalSettingsFragment(),
-        R.id.settingsFragment
+        R.id.settingsFragment,
     ),
     Sync(
         NavGraphDirections.actionGlobalTurnOnSync(),
-        R.id.turnOnSyncFragment
+        R.id.turnOnSyncFragment,
     ),
     SearchEngine(
         NavGraphDirections.actionGlobalSearchEngineFragment(),
-        R.id.searchEngineFragment
+        R.id.searchEngineFragment,
     ),
     Accessibility(
         NavGraphDirections.actionGlobalAccessibilityFragment(),
-        R.id.accessibilityFragment
+        R.id.accessibilityFragment,
     ),
     DeleteData(
         NavGraphDirections.actionGlobalDeleteBrowsingDataFragment(),
-        R.id.deleteBrowsingDataFragment
+        R.id.deleteBrowsingDataFragment,
     ),
     SettingsAddonManager(
         NavGraphDirections.actionGlobalAddonsManagementFragment(),
-        R.id.addonsManagementFragment
+        R.id.addonsManagementFragment,
     ),
     SettingsLogins(
         NavGraphDirections.actionGlobalSavedLoginsAuthFragment(),
-        R.id.saveLoginSettingFragment
+        R.id.saveLoginSettingFragment,
     ),
     SettingsTrackingProtection(
         NavGraphDirections.actionGlobalTrackingProtectionFragment(),
-        R.id.trackingProtectionFragment
+        R.id.trackingProtectionFragment,
     ),
     WallpaperSettings(
-        NavGraphDirections.actionGlobalWallpaperSettingsFragment(), R.id.wallpaperSettingsFragment
-    )
+        NavGraphDirections.actionGlobalWallpaperSettingsFragment(),
+        R.id.wallpaperSettingsFragment,
+    ),
 }

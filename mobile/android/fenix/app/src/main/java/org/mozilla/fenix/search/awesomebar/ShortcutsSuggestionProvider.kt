@@ -24,7 +24,7 @@ class ShortcutsSuggestionProvider(
     private val store: BrowserStore,
     private val context: Context,
     private val selectShortcutEngine: (engine: SearchEngine) -> Unit,
-    private val selectShortcutEngineSettings: () -> Unit
+    private val selectShortcutEngineSettings: () -> Unit,
 ) : AwesomeBar.SuggestionProvider {
     override val id: String = UUID.randomUUID().toString()
 
@@ -32,7 +32,7 @@ class ShortcutsSuggestionProvider(
         AppCompatResources.getDrawable(context, R.drawable.mozac_ic_settings)?.apply {
             colorFilter = createBlendModeColorFilterCompat(
                 context.getColorFromAttr(R.attr.textPrimary),
-                SRC_IN
+                SRC_IN,
             )
         }?.toBitmap()
     }
@@ -48,7 +48,7 @@ class ShortcutsSuggestionProvider(
                 title = it.name,
                 onSuggestionClicked = {
                     selectShortcutEngine(it)
-                }
+                },
             )
         }
 
@@ -60,8 +60,8 @@ class ShortcutsSuggestionProvider(
                 title = context.getString(R.string.search_shortcuts_engine_settings),
                 onSuggestionClicked = {
                     selectShortcutEngineSettings()
-                }
-            )
+                },
+            ),
         )
         return suggestions
     }

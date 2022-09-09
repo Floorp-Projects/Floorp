@@ -14,7 +14,7 @@ import org.mozilla.fenix.tabstray.browser.BrowserTrayInteractor
 class TabsTrayDialog(
     context: Context,
     theme: Int,
-    private val interactor: () -> BrowserTrayInteractor
+    private val interactor: () -> BrowserTrayInteractor,
 ) : Dialog(context, theme) {
     override fun onBackPressed() {
         if (interactor.invoke().onBackPressed()) {

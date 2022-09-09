@@ -141,7 +141,7 @@ class SettingsSubMenuDeleteBrowsingDataRobot {
     fun clickCancelButtonInDialogBoxAndVerifyContentsInDialogBox() {
         mDevice.wait(
             Until.findObject(By.text("Delete browsing data")),
-            waitingTime
+            waitingTime,
         )
         clickDeleteBrowsingDataButton()
         verifyDialogElements()
@@ -176,8 +176,8 @@ private fun navigationToolBarHeader() =
     onView(
         allOf(
             withId(R.id.navigationToolbar),
-            withChild(withText(R.string.preferences_delete_browsing_data))
-        )
+            withChild(withText(R.string.preferences_delete_browsing_data)),
+        ),
     )
 
 private fun deleteBrowsingDataButton() = onView(withId(R.id.delete_data))
@@ -288,8 +288,8 @@ private fun assertBrowsingHistoryDescription(addresses: String) =
 private fun assertDeleteBrowsingDataSnackbar() {
     assertTrue(
         mDevice.findObject(
-            UiSelector().text("Browsing data deleted")
-        ).waitUntilGone(waitingTime)
+            UiSelector().text("Browsing data deleted"),
+        ).waitUntilGone(waitingTime),
     )
 }
 

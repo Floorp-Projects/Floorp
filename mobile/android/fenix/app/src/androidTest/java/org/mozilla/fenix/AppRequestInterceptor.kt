@@ -39,9 +39,8 @@ class AppRequestInterceptor(private val context: Context) : RequestInterceptor {
         isSameDomain: Boolean,
         isRedirect: Boolean,
         isDirectNavigation: Boolean,
-        isSubframeRequest: Boolean
+        isSubframeRequest: Boolean,
     ): RequestInterceptor.InterceptionResponse? {
-
         interceptFxaRequest(
             engineSession,
             uri,
@@ -50,7 +49,7 @@ class AppRequestInterceptor(private val context: Context) : RequestInterceptor {
             isSameDomain,
             isRedirect,
             isDirectNavigation,
-            isSubframeRequest
+            isSubframeRequest,
         )?.let { response ->
             return response
         }
@@ -68,14 +67,14 @@ class AppRequestInterceptor(private val context: Context) : RequestInterceptor {
                 isSameDomain,
                 isRedirect,
                 isDirectNavigation,
-                isSubframeRequest
+                isSubframeRequest,
             )
     }
 
     override fun onErrorRequest(
         session: EngineSession,
         errorType: ErrorType,
-        uri: String?
+        uri: String?,
     ): RequestInterceptor.ErrorResponse? {
         val improvedErrorType = improveErrorType(errorType)
         val riskLevel = getRiskLevel(improvedErrorType)
@@ -86,7 +85,7 @@ class AppRequestInterceptor(private val context: Context) : RequestInterceptor {
             context = context,
             errorType = improvedErrorType,
             uri = uri,
-            htmlResource = riskLevel.htmlRes
+            htmlResource = riskLevel.htmlRes,
         )
 
         return RequestInterceptor.ErrorResponse(errorPageUri)
@@ -102,20 +101,18 @@ class AppRequestInterceptor(private val context: Context) : RequestInterceptor {
     private fun interceptAmoRequest(
         uri: String,
         isSameDomain: Boolean,
-        hasUserGesture: Boolean
+        hasUserGesture: Boolean,
     ): RequestInterceptor.InterceptionResponse? {
         // First we execute a quick check to see if this is a request we're interested in i.e. a
         // request triggered by the user and coming from AMO.
         if (hasUserGesture && isSameDomain && uri.startsWith(AMO_BASE_URL)) {
-
             // Check if this is a request to install an add-on.
             val matchResult = AMO_INSTALL_URL_REGEX.toRegex().matchEntire(uri)
             if (matchResult != null) {
-
                 // Navigate and trigger add-on installation.
                 matchResult.groupValues.getOrNull(1)?.let { addonId ->
                     navController?.get()?.navigate(
-                        NavGraphDirections.actionGlobalAddonsManagementFragment(addonId)
+                        NavGraphDirections.actionGlobalAddonsManagementFragment(addonId),
                     )
 
                     // We've redirected to the add-ons management fragment, skip original request.
@@ -137,7 +134,7 @@ class AppRequestInterceptor(private val context: Context) : RequestInterceptor {
         isSameDomain: Boolean,
         isRedirect: Boolean,
         isDirectNavigation: Boolean,
-        isSubframeRequest: Boolean
+        isSubframeRequest: Boolean,
     ): RequestInterceptor.InterceptionResponse? {
         return appContext.components.services.accountsAuthFeature.interceptor.onLoadRequest(
             engineSession,
@@ -147,7 +144,7 @@ class AppRequestInterceptor(private val context: Context) : RequestInterceptor {
             isSameDomain,
             isRedirect,
             isDirectNavigation,
-            isSubframeRequest
+            isSubframeRequest,
         )
     }
 
@@ -189,16 +186,19 @@ class AppRequestInterceptor(private val context: Context) : RequestInterceptor {
         ErrorType.ERROR_NO_INTERNET,
         ErrorType.ERROR_HTTPS_ONLY,
         ErrorType.ERROR_BAD_HSTS_CERT,
-        ErrorType.ERROR_UNKNOWN_PROTOCOL -> RiskLevel.Low
+        ErrorType.ERROR_UNKNOWN_PROTOCOL,
+        -> RiskLevel.Low
 
         ErrorType.ERROR_SECURITY_BAD_CERT,
         ErrorType.ERROR_SECURITY_SSL,
-        ErrorType.ERROR_PORT_BLOCKED -> RiskLevel.Medium
+        ErrorType.ERROR_PORT_BLOCKED,
+        -> RiskLevel.Medium
 
         ErrorType.ERROR_SAFEBROWSING_HARMFUL_URI,
         ErrorType.ERROR_SAFEBROWSING_MALWARE_URI,
         ErrorType.ERROR_SAFEBROWSING_PHISHING_URI,
-        ErrorType.ERROR_SAFEBROWSING_UNWANTED_URI -> RiskLevel.High
+        ErrorType.ERROR_SAFEBROWSING_UNWANTED_URI,
+        -> RiskLevel.High
     }
 
     internal enum class RiskLevel(val htmlRes: String) {

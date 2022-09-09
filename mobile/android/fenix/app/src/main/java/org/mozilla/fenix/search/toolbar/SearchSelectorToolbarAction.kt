@@ -56,7 +56,7 @@ class SearchSelectorToolbarAction(
             }
 
             setBackgroundResource(
-                context.theme.resolveAttribute(android.R.attr.selectableItemBackgroundBorderless)
+                context.theme.resolveAttribute(android.R.attr.selectableItemBackgroundBorderless),
             )
         }
     }
@@ -73,7 +73,7 @@ class SearchSelectorToolbarAction(
                     .collect { searchEngine ->
                         view.setIcon(
                             icon = searchEngine.getScaledIcon(view.context),
-                            contentDescription = searchEngine.name
+                            contentDescription = searchEngine.name,
                         )
                     }
             }.also {
@@ -94,7 +94,7 @@ internal fun SearchEngine.getScaledIcon(context: Context): BitmapDrawable {
         icon,
         iconSize,
         iconSize,
-        true
+        true,
     )
 
     return BitmapDrawable(context.resources, scaledIcon)

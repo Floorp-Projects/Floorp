@@ -14,7 +14,7 @@ import org.mozilla.fenix.utils.BrowsersCache
 
 class DefaultBrowserPreference @JvmOverloads constructor(
     context: Context,
-    attrs: AttributeSet? = null
+    attrs: AttributeSet? = null,
 ) : Preference(context, attrs) {
 
     private var switchView: SwitchMaterial? = null

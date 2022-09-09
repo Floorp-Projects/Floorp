@@ -98,7 +98,7 @@ class DefaultBookmarkController(
             isPrivate || fromHomeFragment,
             BrowserDirection.FromBookmarks,
             activity.browsingModeManager.mode,
-            flags
+            flags,
         )
     }
 
@@ -148,8 +148,8 @@ class DefaultBookmarkController(
     override fun handleBookmarkSharing(item: BookmarkNode) {
         navigateToGivenDirection(
             BookmarkFragmentDirections.actionGlobalShareFragment(
-                data = arrayOf(ShareData(url = item.url, title = item.title))
-            )
+                data = arrayOf(ShareData(url = item.url, title = item.title)),
+            ),
         )
     }
 
@@ -211,7 +211,7 @@ class DefaultBookmarkController(
         newTab: Boolean,
         from: BrowserDirection,
         mode: BrowsingMode,
-        flags: EngineSession.LoadUrlFlags = EngineSession.LoadUrlFlags.none()
+        flags: EngineSession.LoadUrlFlags = EngineSession.LoadUrlFlags.none(),
     ) {
         with(activity) {
             browsingModeManager.mode = mode
@@ -221,7 +221,7 @@ class DefaultBookmarkController(
 
     private fun openInNewTab(
         url: String,
-        mode: BrowsingMode
+        mode: BrowsingMode,
     ) {
         activity.browsingModeManager.mode = BrowsingMode.fromBoolean(mode == BrowsingMode.Private)
         tabsUseCases?.addTab?.invoke(url, private = (mode == BrowsingMode.Private))

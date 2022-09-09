@@ -35,7 +35,7 @@ class StartupActivityLog {
 
     fun registerInAppOnCreate(
         application: Application,
-        processLifecycleOwner: LifecycleOwner = ProcessLifecycleOwner.get()
+        processLifecycleOwner: LifecycleOwner = ProcessLifecycleOwner.get(),
     ) {
         processLifecycleOwner.lifecycle.addObserver(StartupLogAppLifecycleObserver())
         application.registerActivityLifecycleCallbacks(StartupLogActivityLifecycleCallbacks())

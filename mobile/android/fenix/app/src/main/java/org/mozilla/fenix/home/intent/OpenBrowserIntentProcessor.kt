@@ -17,7 +17,7 @@ import org.mozilla.fenix.HomeActivity
  */
 class OpenBrowserIntentProcessor(
     private val activity: HomeActivity,
-    private val getIntentSessionId: (SafeIntent) -> String?
+    private val getIntentSessionId: (SafeIntent) -> String?,
 ) : HomeIntentProcessor {
 
     override fun process(intent: Intent, navController: NavController, out: Intent): Boolean {

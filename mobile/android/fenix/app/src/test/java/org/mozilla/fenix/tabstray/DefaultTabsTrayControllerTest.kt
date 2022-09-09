@@ -87,12 +87,12 @@ class DefaultTabsTrayControllerTest {
         verifyOrder {
             profiler.getProfilerTime()
             navController.navigate(
-                TabsTrayFragmentDirections.actionGlobalHome(focusOnAddressBar = true)
+                TabsTrayFragmentDirections.actionGlobalHome(focusOnAddressBar = true),
             )
             navigationInteractor.onTabTrayDismissed()
             profiler.addMarker(
                 "DefaultTabTrayController.onNewTabTapped",
-                Double.MAX_VALUE
+                Double.MAX_VALUE,
             )
         }
     }
@@ -108,12 +108,12 @@ class DefaultTabsTrayControllerTest {
         verifyOrder {
             profiler.getProfilerTime()
             navController.navigate(
-                TabsTrayFragmentDirections.actionGlobalHome(focusOnAddressBar = true)
+                TabsTrayFragmentDirections.actionGlobalHome(focusOnAddressBar = true),
             )
             navigationInteractor.onTabTrayDismissed()
             profiler.addMarker(
                 "DefaultTabTrayController.onNewTabTapped",
-                Double.MAX_VALUE
+                Double.MAX_VALUE,
             )
         }
     }
@@ -161,8 +161,8 @@ class DefaultTabsTrayControllerTest {
             createController(
                 showCancelledDownloadWarning = { _, _, _ ->
                     showCancelledDownloadWarningInvoked = true
-                }
-            )
+                },
+            ),
         )
         val tab: TabSessionState = mockk { every { content.private } returns true }
         every { browserStore.state } returns mockk()
@@ -171,8 +171,8 @@ class DefaultTabsTrayControllerTest {
                 "https://mozilla.org/download",
                 private = true,
                 destinationDirectory = "Download",
-                status = DownloadState.Status.DOWNLOADING
-            )
+                status = DownloadState.Status.DOWNLOADING,
+            ),
         )
         try {
             mockkStatic("mozilla.components.browser.state.selector.SelectorsKt")
@@ -195,7 +195,7 @@ class DefaultTabsTrayControllerTest {
                 assertEquals(3, position)
                 assertTrue(smoothScroll)
                 selectTabPositionInvoked = true
-            }
+            },
         ).handleTrayScrollingToPosition(3, true)
 
         assertTrue(selectTabPositionInvoked)
@@ -287,7 +287,7 @@ class DefaultTabsTrayControllerTest {
                 showUndoSnackbarForTab = {
                     assertTrue(it)
                     showUndoSnackbarForTabInvoked = true
-                }
+                },
             ).handleTabDeletion("22")
 
             verify { tabsUseCases.removeTab("22") }
@@ -329,8 +329,8 @@ class DefaultTabsTrayControllerTest {
                 showUndoSnackbarForTab = {
                     assertTrue(it)
                     showUndoSnackbarForTabInvoked = true
-                }
-            )
+                },
+            ),
         )
 
         val privateTab = createTab(url = "url", private = true)
@@ -363,8 +363,8 @@ class DefaultTabsTrayControllerTest {
                 showUndoSnackbarForTab = {
                     assertFalse(it)
                     showUndoSnackbarForTabInvoked = true
-                }
-            )
+                },
+            ),
         )
 
         val normalTab = createTab(url = "url", private = false)
@@ -468,7 +468,7 @@ class DefaultTabsTrayControllerTest {
             navigateToHomeAndDeleteSession = {
                 assertEquals("randomId", it)
                 navigateToHomeAndDeleteSessionInvoked = true
-            }
+            },
         ).dismissTabsTrayAndNavigateHome("randomId")
 
         assertTrue(dismissTrayInvoked)
@@ -480,7 +480,7 @@ class DefaultTabsTrayControllerTest {
         selectTabPosition: (Int, Boolean) -> Unit = { _, _ -> },
         dismissTray: () -> Unit = { },
         showUndoSnackbarForTab: (Boolean) -> Unit = { _ -> },
-        showCancelledDownloadWarning: (Int, String?, String?) -> Unit = { _, _, _ -> }
+        showCancelledDownloadWarning: (Int, String?, String?) -> Unit = { _, _, _ -> },
     ): DefaultTabsTrayController {
         return DefaultTabsTrayController(
             trayStore,
@@ -494,7 +494,7 @@ class DefaultTabsTrayControllerTest {
             selectTabPosition,
             dismissTray,
             showUndoSnackbarForTab,
-            showCancelledDownloadWarning = showCancelledDownloadWarning
+            showCancelledDownloadWarning = showCancelledDownloadWarning,
         )
     }
 }

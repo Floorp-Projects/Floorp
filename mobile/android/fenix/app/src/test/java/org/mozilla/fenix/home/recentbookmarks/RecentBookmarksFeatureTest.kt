@@ -32,7 +32,7 @@ class RecentBookmarksFeatureTest {
     private val bookmark = RecentBookmark(
         title = null,
         url = "https://www.example.com",
-        previewImageUrl = null
+        previewImageUrl = null,
     )
 
     @get:Rule
@@ -52,7 +52,7 @@ class RecentBookmarksFeatureTest {
                 appStore,
                 bookmarksUseCases,
                 scope,
-                testDispatcher
+                testDispatcher,
             )
 
             assertEquals(emptyList<BookmarkNode>(), appStore.state.recentBookmarks)

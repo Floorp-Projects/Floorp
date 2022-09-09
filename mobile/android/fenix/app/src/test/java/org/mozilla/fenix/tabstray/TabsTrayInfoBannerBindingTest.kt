@@ -55,7 +55,7 @@ class TabsTrayInfoBannerBindingTest {
                 store = store,
                 infoBannerView = view,
                 settings = settings,
-                navigationInteractor = interactor
+                navigationInteractor = interactor,
             )
 
         binding.start()
@@ -82,7 +82,7 @@ class TabsTrayInfoBannerBindingTest {
                 store = store,
                 infoBannerView = view,
                 settings = settings,
-                navigationInteractor = interactor
+                navigationInteractor = interactor,
             )
 
         binding.start()

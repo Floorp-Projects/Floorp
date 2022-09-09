@@ -49,7 +49,9 @@ class StartupTypeTelemetryTest {
 
     private lateinit var telemetry: StartupTypeTelemetry
     private lateinit var callbacks: StartupTypeTelemetry.StartupTypeLifecycleObserver
+
     @MockK private lateinit var stateProvider: StartupStateProvider
+
     @MockK private lateinit var pathProvider: StartupPathProvider
 
     @Before
@@ -70,7 +72,7 @@ class StartupTypeTelemetryTest {
     @Test
     fun `GIVEN all possible path and state combinations WHEN record telemetry THEN the labels are incremented the appropriate number of times`() = runTestOnMain {
         val allPossibleInputArgs = StartupState.values().toList().crossProduct(
-            StartupPath.values().toList()
+            StartupPath.values().toList(),
         ) { state, path ->
             Pair(state, path)
         }

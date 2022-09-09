@@ -13,14 +13,14 @@ import org.mozilla.fenix.nimbus.NimbusExperimentsFragmentDirections
  * View used for managing Nimbus experiments.
  */
 class NimbusExperimentsView(
-    private val navController: NavController
+    private val navController: NavController,
 ) : NimbusExperimentsAdapterDelegate {
 
     override fun onExperimentItemClicked(experiment: AvailableExperiment) {
         val directions =
             NimbusExperimentsFragmentDirections.actionNimbusExperimentsFragmentToNimbusBranchesFragment(
                 experimentId = experiment.slug,
-                experimentName = experiment.userFacingName
+                experimentName = experiment.userFacingName,
             )
 
         navController.navigate(directions)

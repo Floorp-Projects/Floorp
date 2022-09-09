@@ -46,7 +46,7 @@ abstract class ComposeAbstractTabViewHolder(
 
         ViewTreeLifecycleOwner.set(composeView, viewLifecycleOwner)
         composeView.setViewTreeSavedStateRegistryOwner(
-            viewLifecycleOwner as SavedStateRegistryOwner
+            viewLifecycleOwner as SavedStateRegistryOwner,
         )
     }
 }

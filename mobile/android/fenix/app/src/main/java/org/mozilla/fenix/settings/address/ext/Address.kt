@@ -30,7 +30,7 @@ fun Address.getAddressLabel(): String = listOf(
     country,
     postalCode,
     tel,
-    email
+    email,
 ).filter { it.isNotEmpty() }.joinToString(", ")
 
 @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)

@@ -99,15 +99,15 @@ class RecentlyClosedFragment : LibraryPageFragment<RecoverableTab>(), UserIntera
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
-        savedInstanceState: Bundle?
+        savedInstanceState: Bundle?,
     ): View {
         val binding = FragmentRecentlyClosedTabsBinding.inflate(inflater, container, false)
         recentlyClosedFragmentStore = StoreProvider.get(this) {
             RecentlyClosedFragmentStore(
                 RecentlyClosedFragmentState(
                     items = listOf(),
-                    selectedTabs = emptySet()
-                )
+                    selectedTabs = emptySet(),
+                ),
             )
         }
         recentlyClosedController = DefaultRecentlyClosedController(
@@ -118,12 +118,12 @@ class RecentlyClosedFragment : LibraryPageFragment<RecoverableTab>(), UserIntera
             tabsUseCases = requireComponents.useCases.tabsUseCases,
             recentlyClosedTabsStorage = requireComponents.core.recentlyClosedTabsStorage.value,
             lifecycleScope = lifecycleScope,
-            openToBrowser = ::openItem
+            openToBrowser = ::openItem,
         )
         recentlyClosedInteractor = RecentlyClosedFragmentInteractor(recentlyClosedController)
         _recentlyClosedFragmentView = RecentlyClosedFragmentView(
             binding.recentlyClosedLayout,
-            recentlyClosedInteractor
+            recentlyClosedInteractor,
         )
         return binding.root
     }
@@ -139,7 +139,7 @@ class RecentlyClosedFragment : LibraryPageFragment<RecoverableTab>(), UserIntera
         (activity as HomeActivity).openToBrowserAndLoad(
             searchTermOrURL = url,
             newTab = true,
-            from = BrowserDirection.FromRecentlyClosed
+            from = BrowserDirection.FromRecentlyClosed,
         )
     }
 
@@ -154,7 +154,7 @@ class RecentlyClosedFragment : LibraryPageFragment<RecoverableTab>(), UserIntera
                 .ifChanged()
                 .collect { tabs ->
                     recentlyClosedFragmentStore.dispatch(
-                        RecentlyClosedFragmentAction.Change(tabs)
+                        RecentlyClosedFragmentAction.Change(tabs),
                     )
                 }
         }

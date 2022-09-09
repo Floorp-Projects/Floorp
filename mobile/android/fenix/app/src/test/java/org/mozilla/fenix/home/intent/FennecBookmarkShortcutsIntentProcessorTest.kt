@@ -55,7 +55,7 @@ class FennecBookmarkShortcutsIntentProcessorTest {
                 flags = EngineSession.LoadUrlFlags.external(),
                 source = SessionState.Source.Internal.HomeScreen,
                 selectTab = true,
-                startLoading = true
+                startLoading = true,
             )
         } returns expectedSessionId
 
@@ -69,7 +69,7 @@ class FennecBookmarkShortcutsIntentProcessorTest {
                 flags = EngineSession.LoadUrlFlags.external(),
                 source = SessionState.Source.Internal.HomeScreen,
                 selectTab = true,
-                startLoading = true
+                startLoading = true,
             )
         }
     }

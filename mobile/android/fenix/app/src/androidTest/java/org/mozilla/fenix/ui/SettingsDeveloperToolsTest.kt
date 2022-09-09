@@ -44,8 +44,8 @@ class SettingsDeveloperToolsTest {
         mockWebServer.shutdown()
     }
 
-    @Test
     // Walks through settings developer tools menu and sub-menus to ensure all items are present
+    @Test
     fun settingsDeveloperToolsItemsTest() {
         homeScreen {
         }.openThreeDotMenu {

@@ -12,10 +12,10 @@ import mozilla.components.lib.state.Store
  * The [Store] for holding the [HistorySearchFragmentState] and applying [HistorySearchFragmentAction]s.
  */
 class HistorySearchFragmentStore(
-    initialState: HistorySearchFragmentState
+    initialState: HistorySearchFragmentState,
 ) : Store<HistorySearchFragmentState, HistorySearchFragmentAction>(
     initialState,
-    ::historySearchStateReducer
+    ::historySearchStateReducer,
 )
 
 /**
@@ -44,7 +44,7 @@ sealed class HistorySearchFragmentAction : Action {
  */
 private fun historySearchStateReducer(
     state: HistorySearchFragmentState,
-    action: HistorySearchFragmentAction
+    action: HistorySearchFragmentAction,
 ): HistorySearchFragmentState {
     return when (action) {
         is HistorySearchFragmentAction.UpdateQuery ->

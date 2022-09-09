@@ -61,7 +61,7 @@ class CustomizationFragment : PreferenceFragmentCompat() {
                 radioFollowDeviceTheme
             } else {
                 radioAutoBatteryTheme
-            }
+            },
         )
     }
 
@@ -86,8 +86,8 @@ class CustomizationFragment : PreferenceFragmentCompat() {
         radioDarkTheme.onClickListener {
             AppTheme.darkThemeSelected.record(
                 AppTheme.DarkThemeSelectedExtra(
-                    "SETTINGS"
-                )
+                    "SETTINGS",
+                ),
             )
             setNewTheme(AppCompatDelegate.MODE_NIGHT_YES)
         }
@@ -117,8 +117,8 @@ class CustomizationFragment : PreferenceFragmentCompat() {
         topPreference.onClickListener {
             ToolbarSettings.changedPosition.record(
                 ToolbarSettings.ChangedPositionExtra(
-                    Position.TOP.name
-                )
+                    Position.TOP.name,
+                ),
             )
         }
 
@@ -126,8 +126,8 @@ class CustomizationFragment : PreferenceFragmentCompat() {
         bottomPreference.onClickListener {
             ToolbarSettings.changedPosition.record(
                 ToolbarSettings.ChangedPositionExtra(
-                    Position.BOTTOM.name
-                )
+                    Position.BOTTOM.name,
+                ),
             )
         }
 

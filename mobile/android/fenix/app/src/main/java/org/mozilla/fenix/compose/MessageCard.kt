@@ -57,7 +57,7 @@ fun MessageCard(
                     Modifier.clickable(onClick = onClick)
                 } else {
                     Modifier
-                }
+                },
             ),
         shape = RoundedCornerShape(8.dp),
         backgroundColor = FirefoxTheme.colors.layer2,
@@ -65,7 +65,7 @@ fun MessageCard(
         Column(
             Modifier
                 .padding(all = 16.dp)
-                .fillMaxWidth()
+                .fillMaxWidth(),
         ) {
             val title = message.data.title
             if (!title.isNullOrBlank()) {
@@ -75,19 +75,19 @@ fun MessageCard(
                     SectionHeader(
                         text = title,
                         modifier = Modifier
-                            .weight(1f)
+                            .weight(1f),
                     )
 
                     IconButton(
                         modifier = Modifier.size(20.dp),
-                        onClick = onCloseButtonClick
+                        onClick = onCloseButtonClick,
                     ) {
                         Icon(
                             painter = painterResource(R.drawable.mozac_ic_close_20),
                             contentDescription = stringResource(
-                                R.string.content_description_close_button
+                                R.string.content_description_close_button,
                             ),
-                            tint = FirefoxTheme.colors.iconPrimary
+                            tint = FirefoxTheme.colors.iconPrimary,
                         )
                     }
                 }
@@ -111,14 +111,14 @@ fun MessageCard(
 
                     IconButton(
                         modifier = Modifier.size(20.dp),
-                        onClick = onCloseButtonClick
+                        onClick = onCloseButtonClick,
                     ) {
                         Icon(
                             painter = painterResource(R.drawable.mozac_ic_close_20),
                             contentDescription = stringResource(
-                                R.string.content_description_close_button
+                                R.string.content_description_close_button,
                             ),
-                            tint = FirefoxTheme.colors.iconPrimary
+                            tint = FirefoxTheme.colors.iconPrimary,
                         )
                     }
                 }
@@ -130,7 +130,7 @@ fun MessageCard(
 
                 PrimaryButton(
                     text = buttonLabel,
-                    onClick = onClick
+                    onClick = onClick,
                 )
             }
         }
@@ -148,19 +148,20 @@ private fun MessageCardPreview() {
                     data = MessageData(
                         title = StringHolder(
                             R.string.bookmark_empty_title_error,
-                            "Title"
+                            "Title",
                         ),
                         text = StringHolder(
-                            R.string.default_browser_experiment_card_text, "description"
-                        )
+                            R.string.default_browser_experiment_card_text,
+                            "description",
+                        ),
                     ),
                     action = "action",
                     style = StyleData(),
                     triggers = listOf("trigger"),
-                    metadata = Message.Metadata("end-")
+                    metadata = Message.Metadata("end-"),
                 ),
                 onClick = {},
-                onCloseButtonClick = {}
+                onCloseButtonClick = {},
             )
         }
     }
@@ -176,16 +177,17 @@ private fun MessageCardWithoutTitlePreview() {
                     id = "end-",
                     data = MessageData(
                         text = StringHolder(
-                            R.string.default_browser_experiment_card_text, "description"
-                        )
+                            R.string.default_browser_experiment_card_text,
+                            "description",
+                        ),
                     ),
                     action = "action",
                     style = StyleData(),
                     triggers = listOf("trigger"),
-                    metadata = Message.Metadata("end-")
+                    metadata = Message.Metadata("end-"),
                 ),
                 onClick = {},
-                onCloseButtonClick = {}
+                onCloseButtonClick = {},
             )
         }
     }
@@ -203,19 +205,20 @@ private fun MessageCardWithButtonLabelPreview() {
                         buttonLabel = StringHolder(R.string.preferences_set_as_default_browser, ""),
                         title = StringHolder(
                             R.string.bookmark_empty_title_error,
-                            "Title"
+                            "Title",
                         ),
                         text = StringHolder(
-                            R.string.default_browser_experiment_card_text, "description"
-                        )
+                            R.string.default_browser_experiment_card_text,
+                            "description",
+                        ),
                     ),
                     action = "action",
                     style = StyleData(),
                     triggers = listOf("trigger"),
-                    metadata = Message.Metadata("end-")
+                    metadata = Message.Metadata("end-"),
                 ),
                 onClick = {},
-                onCloseButtonClick = {}
+                onCloseButtonClick = {},
             )
         }
     }

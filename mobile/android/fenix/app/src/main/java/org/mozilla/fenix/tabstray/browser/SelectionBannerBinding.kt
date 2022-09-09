@@ -48,7 +48,7 @@ class SelectionBannerBinding(
     private val tabsTrayInteractor: TabsTrayInteractor,
     private val backgroundView: View,
     private val showOnSelectViews: VisibilityModifier,
-    private val showOnNormalViews: VisibilityModifier
+    private val showOnNormalViews: VisibilityModifier,
 ) : AbstractBinding<TabsTrayState>(store) {
 
     /**
@@ -106,7 +106,7 @@ class SelectionBannerBinding(
                 context,
                 store,
                 navInteractor,
-                tabsTrayInteractor
+                tabsTrayInteractor,
             ).build()
 
             menu.showWithTheme(anchor)

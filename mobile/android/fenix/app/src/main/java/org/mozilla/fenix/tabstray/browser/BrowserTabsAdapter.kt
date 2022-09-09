@@ -40,7 +40,7 @@ class BrowserTabsAdapter(
     val interactor: BrowserTrayInteractor,
     private val store: TabsTrayStore,
     override val featureName: String,
-    internal val viewLifecycleOwner: LifecycleOwner
+    internal val viewLifecycleOwner: LifecycleOwner,
 ) : TabsAdapter<SelectableTabViewHolder>(interactor), FeatureNameHolder {
 
     /**
@@ -50,7 +50,7 @@ class BrowserTabsAdapter(
         LIST(BrowserTabViewHolder.ListViewHolder.LAYOUT_ID),
         COMPOSE_LIST(ComposeListViewHolder.LAYOUT_ID),
         GRID(BrowserTabViewHolder.GridViewHolder.LAYOUT_ID),
-        COMPOSE_GRID(ComposeGridViewHolder.LAYOUT_ID)
+        COMPOSE_GRID(ComposeGridViewHolder.LAYOUT_ID),
     }
 
     /**
@@ -89,7 +89,7 @@ class BrowserTabsAdapter(
                     selectionHolder = selectionHolder,
                     composeItemView = ComposeView(parent.context),
                     featureName = featureName,
-                    viewLifecycleOwner = viewLifecycleOwner
+                    viewLifecycleOwner = viewLifecycleOwner,
                 )
             ViewType.COMPOSE_GRID.layoutRes ->
                 ComposeGridViewHolder(
@@ -98,7 +98,7 @@ class BrowserTabsAdapter(
                     selectionHolder = selectionHolder,
                     composeItemView = ComposeView(parent.context),
                     featureName = featureName,
-                    viewLifecycleOwner = viewLifecycleOwner
+                    viewLifecycleOwner = viewLifecycleOwner,
                 )
             else -> {
                 val view = LayoutInflater.from(parent.context).inflate(viewType, parent, false)
@@ -109,7 +109,7 @@ class BrowserTabsAdapter(
                         store,
                         selectionHolder,
                         view,
-                        featureName
+                        featureName,
                     )
                 } else {
                     BrowserTabViewHolder.ListViewHolder(
@@ -118,7 +118,7 @@ class BrowserTabsAdapter(
                         store,
                         selectionHolder,
                         view,
-                        featureName
+                        featureName,
                     )
                 }
             }
@@ -145,7 +145,7 @@ class BrowserTabsAdapter(
             selectionHolder?.let {
                 holder.showTabIsMultiSelectEnabled(
                     selectedMaskView,
-                    (it.selectedItems.map { item -> item.id }).contains(tab.id)
+                    (it.selectedItems.map { item -> item.id }).contains(tab.id),
                 )
             }
         }
@@ -186,7 +186,7 @@ class BrowserTabsAdapter(
             }
             holder.showTabIsMultiSelectEnabled(
                 selectedMaskView,
-                it.selectedItems.map { item -> item.id }.contains(tab.id)
+                it.selectedItems.map { item -> item.id }.contains(tab.id),
             )
         }
     }

@@ -90,7 +90,7 @@ abstract class AbstractBrowserTabViewHolder(
         tab: TabSessionState,
         isSelected: Boolean,
         styling: TabsTrayStyling,
-        delegate: TabsTray.Delegate
+        delegate: TabsTray.Delegate,
     ) {
         this.tab = tab
         beingDragged = false
@@ -167,7 +167,7 @@ abstract class AbstractBrowserTabViewHolder(
                     contentDescription =
                         context.getString(R.string.mozac_feature_media_notification_action_play)
                     setImageDrawable(
-                        AppCompatResources.getDrawable(context, R.drawable.media_state_play)
+                        AppCompatResources.getDrawable(context, R.drawable.media_state_play),
                     )
                 }
 
@@ -176,7 +176,7 @@ abstract class AbstractBrowserTabViewHolder(
                     contentDescription =
                         context.getString(R.string.mozac_feature_media_notification_action_pause)
                     setImageDrawable(
-                        AppCompatResources.getDrawable(context, R.drawable.media_state_pause)
+                        AppCompatResources.getDrawable(context, R.drawable.media_state_pause),
                     )
                 }
 
@@ -198,7 +198,7 @@ abstract class AbstractBrowserTabViewHolder(
                         sessionState.mediaSessionState?.controller?.play()
                     }
                     else -> throw AssertionError(
-                        "Play/Pause button clicked without play/pause state."
+                        "Play/Pause button clicked without play/pause state.",
                     )
                 }
             }
@@ -212,7 +212,7 @@ abstract class AbstractBrowserTabViewHolder(
     private fun setSelectionInteractor(
         item: TabSessionState,
         holder: SelectionHolder<TabSessionState>,
-        interactor: BrowserTrayInteractor
+        interactor: BrowserTrayInteractor,
     ) {
         itemView.setOnClickListener {
             interactor.onMultiSelectClicked(item, holder, featureName)
@@ -228,7 +228,7 @@ abstract class AbstractBrowserTabViewHolder(
     private fun setDragInteractor(
         item: TabSessionState,
         holder: SelectionHolder<TabSessionState>,
-        interactor: BrowserTrayInteractor
+        interactor: BrowserTrayInteractor,
     ) {
         // Since I immediately pass the event to onTouchEvent if it's not a move
         // The ClickableViewAccessibility warning isn't useful

@@ -17,7 +17,7 @@ data class WallpaperState(
     companion object {
         val default = WallpaperState(
             currentWallpaper = Wallpaper.Default,
-            availableWallpapers = listOf()
+            availableWallpapers = listOf(),
         )
     }
 }

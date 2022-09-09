@@ -81,7 +81,7 @@ class HomeDeepLinkIntentProcessor(
             "make_default_browser" -> {
                 activity.openSetDefaultBrowserOption(
                     from = BrowserDirection.FromGlobal,
-                    flags = EngineSession.LoadUrlFlags.external()
+                    flags = EngineSession.LoadUrlFlags.external(),
                 )
             }
             "open" -> {
@@ -95,7 +95,7 @@ class HomeDeepLinkIntentProcessor(
                     url,
                     newTab = true,
                     from = BrowserDirection.FromGlobal,
-                    flags = EngineSession.LoadUrlFlags.external()
+                    flags = EngineSession.LoadUrlFlags.external(),
                 )
             }
             "settings_notifications" -> {

@@ -91,7 +91,7 @@ class BaselinePingTest {
             val httpClient = ConceptFetchHttpUploader(
                 lazy {
                     GeckoViewFetchClient(ApplicationProvider.getApplicationContext())
-                }
+                },
             )
 
             // Fenix does not initialize the Glean SDK in tests/debug builds, but this test
@@ -102,7 +102,7 @@ class BaselinePingTest {
                     applicationContext = ApplicationProvider.getApplicationContext(),
                     uploadEnabled = true,
                     configuration = Configuration(httpClient = httpClient),
-                    buildInfo = GleanBuildInfo.buildInfo
+                    buildInfo = GleanBuildInfo.buildInfo,
                 )
             }
         }
@@ -119,7 +119,7 @@ class BaselinePingTest {
     private fun waitForPingContent(
         pingName: String,
         pingReason: String?,
-        maxAttempts: Int = 3
+        maxAttempts: Int = 3,
     ): JSONObject? {
         var attempts = 0
         do {
@@ -163,8 +163,8 @@ class BaselinePingTest {
         mDevice.pressRecentApps()
         mDevice.findObject(
             UiSelector().descriptionContains(
-                ApplicationProvider.getApplicationContext<Context>().getString(R.string.app_name)
-            )
+                ApplicationProvider.getApplicationContext<Context>().getString(R.string.app_name),
+            ),
         )
             .click()
 

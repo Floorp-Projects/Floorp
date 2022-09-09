@@ -22,7 +22,7 @@ class TabsTrayMenu(
     private val context: Context,
     browserStore: BrowserStore,
     private val tabLayout: TabLayout,
-    private val onItemTapped: (Item) -> Unit = {}
+    private val onItemTapped: (Item) -> Unit = {},
 ) {
 
     private val checkOpenTabs =
@@ -54,14 +54,14 @@ class TabsTrayMenu(
         listOf(
             SimpleBrowserMenuItem(
                 context.getString(R.string.tabs_tray_select_tabs),
-                textColorResource = R.color.fx_mobile_text_color_primary
+                textColorResource = R.color.fx_mobile_text_color_primary,
             ) {
                 onItemTapped.invoke(Item.SelectTabs)
             }.apply { visible = shouldShowSelectOrShare },
 
             SimpleBrowserMenuItem(
                 context.getString(R.string.tab_tray_menu_item_share),
-                textColorResource = R.color.fx_mobile_text_color_primary
+                textColorResource = R.color.fx_mobile_text_color_primary,
             ) {
                 TabsTray.shareAllTabs.record(NoExtras())
                 onItemTapped.invoke(Item.ShareAllTabs)
@@ -69,32 +69,32 @@ class TabsTrayMenu(
 
             SimpleBrowserMenuItem(
                 context.getString(R.string.tab_tray_menu_account_settings),
-                textColorResource = R.color.fx_mobile_text_color_primary
+                textColorResource = R.color.fx_mobile_text_color_primary,
             ) {
                 onItemTapped.invoke(Item.OpenAccountSettings)
             }.apply { visible = shouldShowAccountSetting },
 
             SimpleBrowserMenuItem(
                 context.getString(R.string.tab_tray_menu_tab_settings),
-                textColorResource = R.color.fx_mobile_text_color_primary
+                textColorResource = R.color.fx_mobile_text_color_primary,
             ) {
                 onItemTapped.invoke(Item.OpenTabSettings)
             }.apply { visible = shouldShowTabSetting },
 
             SimpleBrowserMenuItem(
                 context.getString(R.string.tab_tray_menu_recently_closed),
-                textColorResource = R.color.fx_mobile_text_color_primary
+                textColorResource = R.color.fx_mobile_text_color_primary,
             ) {
                 onItemTapped.invoke(Item.OpenRecentlyClosed)
             },
 
             SimpleBrowserMenuItem(
                 context.getString(R.string.tab_tray_menu_item_close),
-                textColorResource = R.color.fx_mobile_text_color_primary
+                textColorResource = R.color.fx_mobile_text_color_primary,
             ) {
                 TabsTray.closeAllTabs.record(NoExtras())
                 onItemTapped.invoke(Item.CloseAllTabs)
-            }.apply { visible = { checkOpenTabs } }
+            }.apply { visible = { checkOpenTabs } },
         )
     }
 }

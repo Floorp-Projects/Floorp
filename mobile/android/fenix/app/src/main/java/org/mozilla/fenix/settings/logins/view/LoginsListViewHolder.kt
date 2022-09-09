@@ -15,7 +15,7 @@ import org.mozilla.fenix.utils.view.ViewHolder
 
 class LoginsListViewHolder(
     val view: View,
-    private val interactor: SavedLoginsInteractor
+    private val interactor: SavedLoginsInteractor,
 ) : ViewHolder(view) {
 
     private var loginItem: SavedLogin? = null
@@ -26,7 +26,7 @@ class LoginsListViewHolder(
             origin = item.origin,
             password = item.password,
             username = item.username,
-            timeLastUsed = item.timeLastUsed
+            timeLastUsed = item.timeLastUsed,
         )
         val binding = LoginsItemBinding.bind(view)
         binding.webAddressView.text = item.origin

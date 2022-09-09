@@ -27,8 +27,8 @@ class AddonPermissionDetailsBindingDelegateTest {
     private val addon = Addon(
         id = "",
         translatableName = mapOf(
-            Addon.DEFAULT_LOCALE to "Some blank addon"
-        )
+            Addon.DEFAULT_LOCALE to "Some blank addon",
+        ),
     )
     private val learnMoreUrl =
         "https://support.mozilla.org/kb/permission-request-messages-firefox-extensions"
@@ -45,8 +45,8 @@ class AddonPermissionDetailsBindingDelegateTest {
     fun `clicking learn more opens learn more page in browser`() {
         permissionDetailsBindingDelegate.bind(
             addon.copy(
-                rating = null
-            )
+                rating = null,
+            ),
         )
 
         permissionDetailsBindingDelegate.binding.learnMoreLabel.performClick()

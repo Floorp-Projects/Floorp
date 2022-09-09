@@ -60,6 +60,7 @@ class QuickSettingsSheetDialogFragment : FenixDialogFragment() {
     private val args by navArgs<QuickSettingsSheetDialogFragmentArgs>()
 
     private var _binding: FragmentQuickSettingsDialogSheetBinding? = null
+
     // This property is only valid between onCreateView and onDestroyView.
     private val binding get() = _binding!!
     override val gravity: Int get() = args.gravity
@@ -70,7 +71,7 @@ class QuickSettingsSheetDialogFragment : FenixDialogFragment() {
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
-        savedInstanceState: Bundle?
+        savedInstanceState: Bundle?,
     ): View {
         val context = requireContext()
         val components = context.components
@@ -89,7 +90,7 @@ class QuickSettingsSheetDialogFragment : FenixDialogFragment() {
             certificateName = args.certificateName,
             permissionHighlights = args.permissionHighlights,
             sessionId = args.sessionId,
-            isTrackingProtectionEnabled = args.isTrackingProtectionEnabled
+            isTrackingProtectionEnabled = args.isTrackingProtectionEnabled,
         )
 
         quickSettingsController = DefaultQuickSettingsController(
@@ -107,7 +108,7 @@ class QuickSettingsSheetDialogFragment : FenixDialogFragment() {
                 requestPermissions(permissions, REQUEST_CODE_QUICK_SETTINGS_PERMISSIONS)
                 tryToRequestPermissions = true
             },
-            displayPermissions = ::showPermissionsView
+            displayPermissions = ::showPermissionsView,
         )
 
         interactor = QuickSettingsInteractor(quickSettingsController)
@@ -122,7 +123,7 @@ class QuickSettingsSheetDialogFragment : FenixDialogFragment() {
             containerView = binding.clearSiteDataLayout,
             containerDivider = binding.clearSiteDataDivider,
             interactor = interactor,
-            navController = navController
+            navController = navController,
         )
 
         return rootView
@@ -148,7 +149,7 @@ class QuickSettingsSheetDialogFragment : FenixDialogFragment() {
     override fun onRequestPermissionsResult(
         requestCode: Int,
         permissions: Array<out String>,
-        grantResults: IntArray
+        grantResults: IntArray,
     ) {
         if (arePermissionsGranted(requestCode, grantResults)) {
             PhoneFeature.findFeatureBy(permissions)?.let {
@@ -181,7 +182,7 @@ class QuickSettingsSheetDialogFragment : FenixDialogFragment() {
             Intent().apply {
                 action = android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS
                 data = Uri.fromParts("package", BuildConfig.APPLICATION_ID, null)
-            }
+            },
         )
     }
 
@@ -196,7 +197,7 @@ class QuickSettingsSheetDialogFragment : FenixDialogFragment() {
             }.ifAnyChanged { tab ->
                 arrayOf(
                     tab.trackingProtection.blockedTrackers,
-                    tab.trackingProtection.loadedTrackers
+                    tab.trackingProtection.loadedTrackers,
                 )
             }.collect {
                 updateTrackers(it)
@@ -213,7 +214,7 @@ class QuickSettingsSheetDialogFragment : FenixDialogFragment() {
             },
             onError = {
                 Logger.error("QuickSettingsSheetDialogFragment - fetchTrackingLogs onError", it)
-            }
+            },
         )
     }
 

@@ -14,7 +14,7 @@ package org.mozilla.fenix.settings.quicksettings
  * it expected to contain all business logic for how to act in response.
  */
 class ConnectionDetailsInteractor(
-    private val controller: ConnectionDetailsController
+    private val controller: ConnectionDetailsController,
 ) : WebSiteInfoInteractor {
 
     override fun onBackPressed() {

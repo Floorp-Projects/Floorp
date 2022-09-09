@@ -77,7 +77,7 @@ class ReaderViewTest {
 
         readerViewNotification = ViewVisibilityIdlingResource(
             activityIntentTestRule.activity.findViewById(R.id.mozac_browser_toolbar_page_actions),
-            View.VISIBLE
+            View.VISIBLE,
         )
 
         IdlingRegistry.getInstance().register(readerViewNotification)
@@ -120,7 +120,7 @@ class ReaderViewTest {
 
         readerViewNotification = ViewVisibilityIdlingResource(
             activityIntentTestRule.activity.findViewById(R.id.mozac_browser_toolbar_page_actions),
-            View.VISIBLE
+            View.VISIBLE,
         )
 
         IdlingRegistry.getInstance().register(readerViewNotification)
@@ -158,7 +158,7 @@ class ReaderViewTest {
 
         readerViewNotification = ViewVisibilityIdlingResource(
             activityIntentTestRule.activity.findViewById(R.id.mozac_browser_toolbar_page_actions),
-            View.VISIBLE
+            View.VISIBLE,
         )
 
         IdlingRegistry.getInstance().register(readerViewNotification)
@@ -198,7 +198,7 @@ class ReaderViewTest {
 
         readerViewNotification = ViewVisibilityIdlingResource(
             activityIntentTestRule.activity.findViewById(R.id.mozac_browser_toolbar_page_actions),
-            View.VISIBLE
+            View.VISIBLE,
         )
 
         IdlingRegistry.getInstance().register(readerViewNotification)
@@ -244,7 +244,7 @@ class ReaderViewTest {
 
         readerViewNotification = ViewVisibilityIdlingResource(
             activityIntentTestRule.activity.findViewById(R.id.mozac_browser_toolbar_page_actions),
-            View.VISIBLE
+            View.VISIBLE,
         )
 
         IdlingRegistry.getInstance().register(readerViewNotification)

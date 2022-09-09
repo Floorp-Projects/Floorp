@@ -35,9 +35,14 @@ import org.mozilla.fenix.utils.Settings
 class SearchFragmentStoreTest {
 
     @MockK private lateinit var searchEngine: SearchEngine
+
     @MockK private lateinit var activity: HomeActivity
-    @MockK(relaxed = true) private lateinit var components: Components
-    @MockK(relaxed = true) private lateinit var settings: Settings
+
+    @MockK(relaxed = true)
+    private lateinit var components: Components
+
+    @MockK(relaxed = true)
+    private lateinit var settings: Settings
 
     @Before
     fun setup() {
@@ -72,7 +77,7 @@ class SearchFragmentStoreTest {
             showSessionSuggestions = true,
             tabId = null,
             pastedText = "pastedText",
-            searchAccessPoint = MetricsUtils.Source.ACTION
+            searchAccessPoint = MetricsUtils.Source.ACTION,
         )
 
         assertEquals(
@@ -82,8 +87,8 @@ class SearchFragmentStoreTest {
                 components,
                 tabId = null,
                 pastedText = "pastedText",
-                searchAccessPoint = MetricsUtils.Source.ACTION
-            )
+                searchAccessPoint = MetricsUtils.Source.ACTION,
+            ),
         )
         assertEquals(
             expected.copy(tabId = "tabId"),
@@ -92,8 +97,8 @@ class SearchFragmentStoreTest {
                 components,
                 tabId = "tabId",
                 pastedText = "pastedText",
-                searchAccessPoint = MetricsUtils.Source.ACTION
-            )
+                searchAccessPoint = MetricsUtils.Source.ACTION,
+            ),
         )
     }
 
@@ -106,10 +111,10 @@ class SearchFragmentStoreTest {
                     id = "tabId",
                     content = ContentState(
                         url = "https://example.com",
-                        searchTerms = "search terms"
-                    )
-                )
-            )
+                        searchTerms = "search terms",
+                    ),
+                ),
+            ),
         )
 
         assertEquals(
@@ -131,15 +136,15 @@ class SearchFragmentStoreTest {
                 showSessionSuggestions = true,
                 tabId = "tabId",
                 pastedText = "",
-                searchAccessPoint = MetricsUtils.Source.SHORTCUT
+                searchAccessPoint = MetricsUtils.Source.SHORTCUT,
             ),
             createInitialSearchFragmentState(
                 activity,
                 components,
                 tabId = "tabId",
                 pastedText = "",
-                searchAccessPoint = MetricsUtils.Source.SHORTCUT
-            )
+                searchAccessPoint = MetricsUtils.Source.SHORTCUT,
+            ),
         )
     }
 
@@ -239,7 +244,7 @@ class SearchFragmentStoreTest {
         assertFalse(store.state.clipboardHasUrl)
 
         store.dispatch(
-            SearchFragmentAction.UpdateClipboardHasUrl(true)
+            SearchFragmentAction.UpdateClipboardHasUrl(true),
         ).joinBlocking()
 
         assertTrue(store.state.clipboardHasUrl)
@@ -252,8 +257,8 @@ class SearchFragmentStoreTest {
                 searchEngineSource = SearchEngineSource.None,
                 areShortcutsAvailable = false,
                 defaultEngine = null,
-                showSearchShortcutsSetting = true
-            )
+                showSearchShortcutsSetting = true,
+            ),
         )
 
         assertNull(store.state.defaultEngine)
@@ -268,27 +273,27 @@ class SearchFragmentStoreTest {
                     regionSearchEngines = listOf(
                         SearchEngine("engine-a", "Engine A", mockk(), type = SearchEngine.Type.BUNDLED),
                         SearchEngine("engine-b", "Engine B", mockk(), type = SearchEngine.Type.BUNDLED),
-                        SearchEngine("engine-c", "Engine C", mockk(), type = SearchEngine.Type.BUNDLED)
+                        SearchEngine("engine-c", "Engine C", mockk(), type = SearchEngine.Type.BUNDLED),
                     ),
                     customSearchEngines = listOf(
                         SearchEngine("engine-d", "Engine D", mockk(), type = SearchEngine.Type.CUSTOM),
-                        SearchEngine("engine-e", "Engine E", mockk(), type = SearchEngine.Type.CUSTOM)
+                        SearchEngine("engine-e", "Engine E", mockk(), type = SearchEngine.Type.CUSTOM),
                     ),
                     additionalSearchEngines = listOf(
-                        SearchEngine("engine-f", "Engine F", mockk(), type = SearchEngine.Type.BUNDLED_ADDITIONAL)
+                        SearchEngine("engine-f", "Engine F", mockk(), type = SearchEngine.Type.BUNDLED_ADDITIONAL),
                     ),
                     additionalAvailableSearchEngines = listOf(
                         SearchEngine("engine-g", "Engine G", mockk(), type = SearchEngine.Type.BUNDLED_ADDITIONAL),
-                        SearchEngine("engine-h", "Engine H", mockk(), type = SearchEngine.Type.BUNDLED_ADDITIONAL)
+                        SearchEngine("engine-h", "Engine H", mockk(), type = SearchEngine.Type.BUNDLED_ADDITIONAL),
                     ),
                     hiddenSearchEngines = listOf(
-                        SearchEngine("engine-i", "Engine I", mockk(), type = SearchEngine.Type.BUNDLED)
+                        SearchEngine("engine-i", "Engine I", mockk(), type = SearchEngine.Type.BUNDLED),
                     ),
                     regionDefaultSearchEngineId = "engine-b",
                     userSelectedSearchEngineId = null,
-                    userSelectedSearchEngineName = null
-                )
-            )
+                    userSelectedSearchEngineName = null,
+                ),
+            ),
         )
 
         store.waitUntilIdle()
@@ -311,8 +316,8 @@ class SearchFragmentStoreTest {
                 searchEngineSource = SearchEngineSource.None,
                 areShortcutsAvailable = false,
                 defaultEngine = null,
-                showSearchShortcutsSetting = false
-            )
+                showSearchShortcutsSetting = false,
+            ),
         )
 
         assertNull(store.state.defaultEngine)
@@ -327,27 +332,27 @@ class SearchFragmentStoreTest {
                     regionSearchEngines = listOf(
                         SearchEngine("engine-a", "Engine A", mockk(), type = SearchEngine.Type.BUNDLED),
                         SearchEngine("engine-b", "Engine B", mockk(), type = SearchEngine.Type.BUNDLED),
-                        SearchEngine("engine-c", "Engine C", mockk(), type = SearchEngine.Type.BUNDLED)
+                        SearchEngine("engine-c", "Engine C", mockk(), type = SearchEngine.Type.BUNDLED),
                     ),
                     customSearchEngines = listOf(
                         SearchEngine("engine-d", "Engine D", mockk(), type = SearchEngine.Type.CUSTOM),
-                        SearchEngine("engine-e", "Engine E", mockk(), type = SearchEngine.Type.CUSTOM)
+                        SearchEngine("engine-e", "Engine E", mockk(), type = SearchEngine.Type.CUSTOM),
                     ),
                     additionalSearchEngines = listOf(
-                        SearchEngine("engine-f", "Engine F", mockk(), type = SearchEngine.Type.BUNDLED_ADDITIONAL)
+                        SearchEngine("engine-f", "Engine F", mockk(), type = SearchEngine.Type.BUNDLED_ADDITIONAL),
                     ),
                     additionalAvailableSearchEngines = listOf(
                         SearchEngine("engine-g", "Engine G", mockk(), type = SearchEngine.Type.BUNDLED_ADDITIONAL),
-                        SearchEngine("engine-h", "Engine H", mockk(), type = SearchEngine.Type.BUNDLED_ADDITIONAL)
+                        SearchEngine("engine-h", "Engine H", mockk(), type = SearchEngine.Type.BUNDLED_ADDITIONAL),
                     ),
                     hiddenSearchEngines = listOf(
-                        SearchEngine("engine-i", "Engine I", mockk(), type = SearchEngine.Type.BUNDLED)
+                        SearchEngine("engine-i", "Engine I", mockk(), type = SearchEngine.Type.BUNDLED),
                     ),
                     regionDefaultSearchEngineId = "engine-b",
                     userSelectedSearchEngineId = null,
-                    userSelectedSearchEngineName = null
-                )
-            )
+                    userSelectedSearchEngineName = null,
+                ),
+            ),
         )
 
         store.waitUntilIdle()
@@ -367,7 +372,7 @@ class SearchFragmentStoreTest {
         searchEngineSource: SearchEngineSource = mockk(),
         defaultEngine: SearchEngine? = mockk(),
         areShortcutsAvailable: Boolean = true,
-        showSearchShortcutsSetting: Boolean = false
+        showSearchShortcutsSetting: Boolean = false,
     ): SearchFragmentState = SearchFragmentState(
         tabId = null,
         url = "",
@@ -385,6 +390,6 @@ class SearchFragmentStoreTest {
         showBookmarkSuggestions = false,
         showSyncedTabsSuggestions = false,
         showSessionSuggestions = false,
-        searchAccessPoint = MetricsUtils.Source.NONE
+        searchAccessPoint = MetricsUtils.Source.NONE,
     )
 }

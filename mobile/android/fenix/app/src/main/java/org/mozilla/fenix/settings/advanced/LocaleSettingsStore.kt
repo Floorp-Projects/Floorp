@@ -12,9 +12,10 @@ import mozilla.components.support.locale.LocaleManager
 import java.util.Locale
 
 class LocaleSettingsStore(
-    initialState: LocaleSettingsState
+    initialState: LocaleSettingsState,
 ) : Store<LocaleSettingsState, LocaleSettingsAction>(
-    initialState, ::localeSettingsStateReducer
+    initialState,
+    ::localeSettingsStateReducer,
 )
 
 /**
@@ -26,7 +27,7 @@ class LocaleSettingsStore(
 data class LocaleSettingsState(
     val localeList: List<Locale>,
     val searchedLocaleList: List<Locale>,
-    val selectedLocale: Locale
+    val selectedLocale: Locale,
 ) : State
 
 fun createInitialLocaleSettingsState(context: Context): LocaleSettingsState {
@@ -35,7 +36,7 @@ fun createInitialLocaleSettingsState(context: Context): LocaleSettingsState {
     return LocaleSettingsState(
         supportedLocales,
         supportedLocales,
-        selectedLocale = LocaleManager.getSelectedLocale(context)
+        selectedLocale = LocaleManager.getSelectedLocale(context),
     )
 }
 
@@ -55,7 +56,7 @@ sealed class LocaleSettingsAction : Action {
  */
 private fun localeSettingsStateReducer(
     state: LocaleSettingsState,
-    action: LocaleSettingsAction
+    action: LocaleSettingsAction,
 ): LocaleSettingsState {
     return when (action) {
         is LocaleSettingsAction.Select -> {

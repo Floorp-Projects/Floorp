@@ -40,7 +40,7 @@ import org.mozilla.fenix.utils.allowUndo
 class RadioSearchEngineListPreference @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,
-    defStyleAttr: Int = android.R.attr.preferenceStyle
+    defStyleAttr: Int = android.R.attr.preferenceStyle,
 ) : Preference(context, attrs, defStyleAttr), CompoundButton.OnCheckedChangeListener {
     private val itemResId: Int
         get() = R.layout.search_engine_radio_button
@@ -54,7 +54,7 @@ class RadioSearchEngineListPreference @JvmOverloads constructor(
 
         subscribeToSearchEngineUpdates(
             context.components.core.store,
-            holder.itemView
+            holder.itemView,
         )
     }
 
@@ -73,7 +73,7 @@ class RadioSearchEngineListPreference @JvmOverloads constructor(
         val layoutInflater = LayoutInflater.from(context)
         val layoutParams = ViewGroup.LayoutParams(
             ViewGroup.LayoutParams.MATCH_PARENT,
-            ViewGroup.LayoutParams.WRAP_CONTENT
+            ViewGroup.LayoutParams.WRAP_CONTENT,
         )
 
         state.searchEngines.filter { engine ->
@@ -84,7 +84,7 @@ class RadioSearchEngineListPreference @JvmOverloads constructor(
                 layoutInflater = layoutInflater,
                 res = context.resources,
                 allowDeletion = state.searchEngines.size > 1,
-                isSelected = engine == state.selectedOrDefaultSearchEngine
+                isSelected = engine == state.selectedOrDefaultSearchEngine,
             )
 
             searchEngineGroup.addView(searchEngineView, layoutParams)
@@ -96,7 +96,7 @@ class RadioSearchEngineListPreference @JvmOverloads constructor(
         layoutInflater: LayoutInflater,
         res: Resources,
         allowDeletion: Boolean,
-        isSelected: Boolean
+        isSelected: Boolean,
     ): View {
         val isCustomSearchEngine = engine.type == SearchEngine.Type.CUSTOM
 
@@ -120,10 +120,10 @@ class RadioSearchEngineListPreference @JvmOverloads constructor(
                         is SearchEngineMenu.Item.Edit -> editCustomSearchEngine(wrapper, engine)
                         is SearchEngineMenu.Item.Delete -> deleteSearchEngine(
                             context,
-                            engine
+                            engine,
                         )
                     }
-                }
+                },
             ).menuBuilder.build(context).show(binding.overflowMenu)
         }
         val iconSize = res.getDimension(R.dimen.preference_icon_drawable_size).toInt()
@@ -138,7 +138,7 @@ class RadioSearchEngineListPreference @JvmOverloads constructor(
         val engine = requireNotNull(
             context.components.core.store.state.search.searchEngines.find { searchEngine ->
                 searchEngine.id == searchEngineId
-            }
+            },
         )
 
         context.components.useCases.searchUseCases.selectSearchEngine(engine)
@@ -153,7 +153,7 @@ class RadioSearchEngineListPreference @JvmOverloads constructor(
 
     private fun deleteSearchEngine(
         context: Context,
-        engine: SearchEngine
+        engine: SearchEngine,
     ) {
         context.components.useCases.searchUseCases.removeSearchEngine(engine)
 
@@ -165,7 +165,7 @@ class RadioSearchEngineListPreference @JvmOverloads constructor(
             onCancel = {
                 context.components.useCases.searchUseCases.addSearchEngine(engine)
             },
-            operation = {}
+            operation = {},
         )
     }
 }

@@ -87,7 +87,7 @@ class AddressTest {
             postalCode = "",
             country = "",
             tel = "",
-            email = ""
+            email = "",
         )
 
         val description = addr.getAddressLabel()

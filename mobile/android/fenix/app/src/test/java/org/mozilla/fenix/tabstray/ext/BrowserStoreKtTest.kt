@@ -20,9 +20,9 @@ class BrowserStoreKtTest {
             initialState = BrowserState(
                 listOf(
                     TabSessionState(id = "tab1", mockk(), lastAccess = 3),
-                    TabSessionState(id = "tab2", mockk(), lastAccess = 5)
-                )
-            )
+                    TabSessionState(id = "tab2", mockk(), lastAccess = 5),
+                ),
+            ),
         )
 
         val tabs = listOf(
@@ -41,9 +41,9 @@ class BrowserStoreKtTest {
         val store = BrowserStore(
             initialState = BrowserState(
                 listOf(
-                    TabSessionState(id = "tab2", mockk(), lastAccess = 5)
-                )
-            )
+                    TabSessionState(id = "tab2", mockk(), lastAccess = 5),
+                ),
+            ),
         )
 
         val tabs = listOf(

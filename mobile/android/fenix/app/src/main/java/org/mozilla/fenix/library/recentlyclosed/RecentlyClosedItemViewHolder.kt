@@ -42,7 +42,7 @@ class RecentlyClosedItemViewHolder(
         binding.historyLayout.setSelectionInteractor(
             item,
             selectionHolder,
-            recentlyClosedFragmentInteractor
+            recentlyClosedFragmentInteractor,
         )
         binding.historyLayout.changeSelected(item in selectionHolder.selectedItems)
 

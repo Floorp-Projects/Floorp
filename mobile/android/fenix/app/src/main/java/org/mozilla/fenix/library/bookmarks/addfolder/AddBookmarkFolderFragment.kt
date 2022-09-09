@@ -75,8 +75,8 @@ class AddBookmarkFolderFragment : Fragment(R.layout.fragment_edit_bookmark) {
                     R.id.bookmarkAddFolderFragment,
                     AddBookmarkFolderFragmentDirections
                         .actionBookmarkAddFolderFragmentToBookmarkSelectFolderFragment(
-                            allowCreatingNewFolder = true
-                        )
+                            allowCreatingNewFolder = true,
+                        ),
                 )
             }
         }
@@ -104,7 +104,7 @@ class AddBookmarkFolderFragment : Fragment(R.layout.fragment_edit_bookmark) {
                     val newGuid = requireComponents.core.bookmarksStorage.addFolder(
                         sharedViewModel.selectedFolder!!.guid,
                         binding.bookmarkNameEdit.text.toString(),
-                        null
+                        null,
                     )
                     sharedViewModel.selectedFolder =
                         requireComponents.core.bookmarksStorage.getTree(newGuid)

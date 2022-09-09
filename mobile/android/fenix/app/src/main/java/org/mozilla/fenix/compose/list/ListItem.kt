@@ -129,7 +129,7 @@ fun FaviconListItem(
                     )
                 }
             }
-        }
+        },
     )
 }
 
@@ -184,7 +184,7 @@ fun IconListItem(
                     )
                 }
             }
-        }
+        },
     )
 }
 
@@ -215,7 +215,7 @@ private fun ListItem(
             true -> Modifier.clickable { onClick() }
             false -> Modifier
         }.then(
-            Modifier.defaultMinSize(minHeight = LIST_ITEM_HEIGHT)
+            Modifier.defaultMinSize(minHeight = LIST_ITEM_HEIGHT),
         ),
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -264,7 +264,7 @@ private fun TextListItemWithDescriptionPreview() {
         Box(Modifier.background(FirefoxTheme.colors.layer1)) {
             TextListItem(
                 label = "Label + description",
-                description = "Description text"
+                description = "Description text",
             )
         }
     }
@@ -302,7 +302,7 @@ private fun IconListItemPreview() {
 @Composable
 @Preview(
     name = "IconListItem with an interactable right icon",
-    uiMode = Configuration.UI_MODE_NIGHT_YES
+    uiMode = Configuration.UI_MODE_NIGHT_YES,
 )
 private fun IconListItemWithRightIconPreview() {
     FirefoxTheme(theme = Theme.getTheme()) {
@@ -322,7 +322,7 @@ private fun IconListItemWithRightIconPreview() {
 @Composable
 @Preview(
     name = "FaviconListItem with a right icon and onClicks",
-    uiMode = Configuration.UI_MODE_NIGHT_YES
+    uiMode = Configuration.UI_MODE_NIGHT_YES,
 )
 private fun FaviconListItemPreview() {
     FirefoxTheme(theme = Theme.getTheme()) {

@@ -30,7 +30,7 @@ class ColdStartupDurationTelemetry {
         visualCompletenessQueue: VisualCompletenessQueue,
         startupStateProvider: StartupStateProvider,
         safeIntent: SafeIntent,
-        rootContainer: View
+        rootContainer: View,
     ) {
         // Optimization: it might be expensive to post runnables so we can short-circuit
         // with a subset of the later logic.

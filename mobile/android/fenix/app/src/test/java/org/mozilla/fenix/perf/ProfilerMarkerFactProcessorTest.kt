@@ -23,6 +23,7 @@ import org.junit.Test
 class ProfilerMarkerFactProcessorTest {
 
     @RelaxedMockK lateinit var profiler: Profiler
+
     @RelaxedMockK lateinit var mainHandler: Handler
     lateinit var processor: ProfilerMarkerFactProcessor
 

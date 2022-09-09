@@ -21,7 +21,7 @@ class LocaleSettingsStoreTest {
         val localeList = listOf(
             Locale("fr"), // default
             otherLocale,
-            selectedLocale
+            selectedLocale,
         )
 
         localeSettingsStore =

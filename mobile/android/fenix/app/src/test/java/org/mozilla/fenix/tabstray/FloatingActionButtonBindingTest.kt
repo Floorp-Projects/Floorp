@@ -45,7 +45,9 @@ class FloatingActionButtonBindingTest {
     fun `WHEN tab selected page is normal tab THEN shrink and show is called`() {
         val tabsTrayStore = TabsTrayStore(TabsTrayState(selectedPage = Page.NormalTabs))
         val fabBinding = FloatingActionButtonBinding(
-            tabsTrayStore, actionButton, browserTrayInteractor
+            tabsTrayStore,
+            actionButton,
+            browserTrayInteractor,
         )
 
         fabBinding.start()
@@ -60,7 +62,9 @@ class FloatingActionButtonBindingTest {
     fun `WHEN tab selected page is private tab THEN extend and show is called`() {
         val tabsTrayStore = TabsTrayStore(TabsTrayState(selectedPage = Page.PrivateTabs))
         val fabBinding = FloatingActionButtonBinding(
-            tabsTrayStore, actionButton, browserTrayInteractor
+            tabsTrayStore,
+            actionButton,
+            browserTrayInteractor,
         )
 
         fabBinding.start()
@@ -75,7 +79,9 @@ class FloatingActionButtonBindingTest {
     fun `WHEN tab selected page is sync tab THEN extend and show is called`() {
         val tabsTrayStore = TabsTrayStore(TabsTrayState(selectedPage = Page.SyncedTabs))
         val fabBinding = FloatingActionButtonBinding(
-            tabsTrayStore, actionButton, browserTrayInteractor
+            tabsTrayStore,
+            actionButton,
+            browserTrayInteractor,
         )
 
         fabBinding.start()
@@ -90,7 +96,9 @@ class FloatingActionButtonBindingTest {
     fun `WHEN selected page is updated THEN button is updated`() {
         val tabsTrayStore = TabsTrayStore(TabsTrayState(selectedPage = Page.NormalTabs))
         val fabBinding = FloatingActionButtonBinding(
-            tabsTrayStore, actionButton, browserTrayInteractor
+            tabsTrayStore,
+            actionButton,
+            browserTrayInteractor,
         )
 
         fabBinding.start()

@@ -23,6 +23,7 @@ class ThreadPenaltyDeathWithIgnoresListenerTest {
 
     @RelaxedMockK private lateinit var logger: Logger
     private lateinit var listener: ThreadPenaltyDeathWithIgnoresListener
+
     @MockK private lateinit var violation: Violation
     private lateinit var stackTrace: Array<StackTraceElement>
 

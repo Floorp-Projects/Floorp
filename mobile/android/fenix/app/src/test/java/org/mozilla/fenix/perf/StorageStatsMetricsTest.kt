@@ -29,6 +29,7 @@ class StorageStatsMetricsTest {
     val gleanTestRule = GleanTestRule(testContext)
 
     @RelaxedMockK private lateinit var mockContext: Context
+
     @RelaxedMockK private lateinit var storageStats: StorageStats
 
     @Before

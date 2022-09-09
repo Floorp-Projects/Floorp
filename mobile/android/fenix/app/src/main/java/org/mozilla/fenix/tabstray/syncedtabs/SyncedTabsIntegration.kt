@@ -53,7 +53,7 @@ class SyncedTabsIntegration(
             onTabClicked = {
                 // We can ignore this callback here because we're not connecting the Compose UI
                 // back to the feature.
-            }
+            },
         )
     }
 
@@ -93,9 +93,9 @@ class SyncedTabsIntegration(
         store.dispatch(
             TabsTrayAction.UpdateSyncedTabs(
                 syncedTabs.toComposeList(
-                    context.settings().enableTaskContinuityEnhancements
-                )
-            )
+                    context.settings().enableTaskContinuityEnhancements,
+                ),
+            ),
         )
     }
 }

@@ -22,7 +22,7 @@ interface TabHistoryViewInteractor {
 class TabHistoryView(
     container: ViewGroup,
     private val expandDialog: () -> Unit,
-    interactor: TabHistoryViewInteractor
+    interactor: TabHistoryViewInteractor,
 ) {
 
     private val binding = ComponentTabhistoryBinding.inflate(LayoutInflater.from(container.context), container, true)
@@ -42,7 +42,7 @@ class TabHistoryView(
                     // won't work when its position is near the bottom of the recyclerview.
                     expandDialog.invoke()
                     val itemView = binding.tabHistoryRecyclerView.findViewHolderForLayoutPosition(
-                        findFirstCompletelyVisibleItemPosition()
+                        findFirstCompletelyVisibleItemPosition(),
                     )?.itemView
                     val offset = binding.tabHistoryRecyclerView.height / 2 - (itemView?.height ?: 0) / 2
                     scrollToPositionWithOffset(index, offset)
@@ -68,7 +68,7 @@ class TabHistoryView(
                 title = historyItem.title,
                 url = historyItem.uri,
                 index = index,
-                isSelected = index == currentIndex
+                isSelected = index == currentIndex,
             )
         }
         adapter.submitList(items)

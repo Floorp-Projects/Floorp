@@ -39,6 +39,7 @@ class DefaultRecentBookmarksControllerTest {
 
     @get:Rule
     val gleanTestRule = GleanTestRule(testContext)
+
     @get:Rule
     val coroutinesTestRule = MainCoroutineRule()
 
@@ -60,7 +61,7 @@ class DefaultRecentBookmarksControllerTest {
             DefaultRecentBookmarksController(
                 activity = activity,
                 navController = navController,
-                appStore = mockk()
+                appStore = mockk(),
             ),
         )
     }
@@ -74,7 +75,7 @@ class DefaultRecentBookmarksControllerTest {
 
         val bookmark = RecentBookmark(
             title = null,
-            url = "https://www.example.com"
+            url = "https://www.example.com",
         )
 
         controller.handleBookmarkClicked(bookmark)
@@ -85,7 +86,7 @@ class DefaultRecentBookmarksControllerTest {
                 searchTermOrURL = bookmark.url!!,
                 newTab = true,
                 flags = EngineSession.LoadUrlFlags.select(ALLOW_JAVASCRIPT_URL),
-                from = BrowserDirection.FromHome
+                from = BrowserDirection.FromHome,
             )
         }
         assertNotNull(RecentBookmarks.bookmarkClicked.testGetValue())

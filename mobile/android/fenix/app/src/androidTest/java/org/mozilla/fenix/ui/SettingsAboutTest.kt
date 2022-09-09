@@ -53,8 +53,8 @@ class SettingsAboutTest {
         mockWebServer.shutdown()
     }
 
-    @Test
     // Walks through settings menu and sub-menus to ensure all items are present
+    @Test
     fun settingsAboutItemsTest() {
         // ABOUT
         homeScreen {

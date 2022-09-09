@@ -38,7 +38,7 @@ fun SyncedTabsView.ErrorType.toSyncedTabsListItem(context: Context, navControlle
             SyncedTabsListItem.Error(
                 errorText = context.getString(R.string.synced_tabs_sign_in_message),
                 errorButton = SyncedTabsListItem.ErrorButton(
-                    buttonText = context.getString(R.string.synced_tabs_sign_in_button)
+                    buttonText = context.getString(R.string.synced_tabs_sign_in_button),
                 ) {
                     navController.navigate(NavGraphDirections.actionGlobalTurnOnSync())
                 },

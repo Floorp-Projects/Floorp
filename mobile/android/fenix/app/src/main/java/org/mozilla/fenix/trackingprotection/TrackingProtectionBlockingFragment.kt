@@ -20,6 +20,7 @@ class TrackingProtectionBlockingFragment :
 
     private val args: TrackingProtectionBlockingFragmentArgs by navArgs()
     private val settings by lazy { requireContext().settings() }
+
     @VisibleForTesting
     internal lateinit var binding: FragmentTrackingProtectionBlockingBinding
 

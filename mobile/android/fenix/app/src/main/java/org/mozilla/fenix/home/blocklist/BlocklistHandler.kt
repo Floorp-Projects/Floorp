@@ -64,6 +64,7 @@ class BlocklistHandler(private val settings: Settings) {
         it is RecentTab.Tab &&
             Uri.parse(it.state.content.url).containsQueryParameters(settings.frecencyFilterQuery)
     }
+
     /**
      * If the state is set to [RecentSyncedTabState.Success], filter the list of recently synced
      * tabs by the blocklist. If the filtered list of tabs is empty, change the state to

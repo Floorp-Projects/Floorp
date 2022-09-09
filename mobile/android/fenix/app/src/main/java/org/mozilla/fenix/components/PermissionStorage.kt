@@ -18,7 +18,7 @@ class PermissionStorage(
     private val context: Context,
     @VisibleForTesting internal val dispatcher: CoroutineContext = Dispatchers.IO,
     @VisibleForTesting internal val permissionsStorage: SitePermissionsStorage =
-        context.components.core.geckoSitePermissionsStorage
+        context.components.core.geckoSitePermissionsStorage,
 ) {
 
     suspend fun add(sitePermissions: SitePermissions) = withContext(dispatcher) {

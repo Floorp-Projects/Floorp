@@ -33,7 +33,7 @@ data class ExceptionsFragmentState(val items: List<LoginException> = emptyList()
  */
 private fun exceptionsStateReducer(
     state: ExceptionsFragmentState,
-    action: ExceptionsFragmentAction
+    action: ExceptionsFragmentAction,
 ): ExceptionsFragmentState {
     return when (action) {
         is ExceptionsFragmentAction.Change -> state.copy(items = action.list)

@@ -28,7 +28,7 @@ class BookmarkDeselectNavigationListenerTest {
         title = null,
         url = null,
         dateAdded = 0,
-        children = null
+        children = null,
     )
 
     @Test

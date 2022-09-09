@@ -30,7 +30,7 @@ import org.mozilla.fenix.R
 class PoweredByNotification(
     private val applicationContext: Context,
     private val store: BrowserStore,
-    private val customTabId: String
+    private val customTabId: String,
 ) : DefaultLifecycleObserver {
 
     override fun onResume(owner: LifecycleOwner) {
@@ -77,7 +77,7 @@ class PoweredByNotification(
             val channel = NotificationChannel(
                 NOTIFICATION_CHANNEL_ID,
                 applicationContext.getString(R.string.mozac_feature_pwa_site_controls_notification_channel),
-                NotificationManager.IMPORTANCE_MIN
+                NotificationManager.IMPORTANCE_MIN,
             )
 
             notificationManager.createNotificationChannel(channel)

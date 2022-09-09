@@ -11,7 +11,7 @@ import org.mozilla.fenix.tabstray.TabsTrayFragment.Companion.ELEVATION
 
 internal fun FenixSnackbar.collectionMessage(
     tabSize: Int,
-    isNewCollection: Boolean = false
+    isNewCollection: Boolean = false,
 ): FenixSnackbar {
     val stringRes = when {
         isNewCollection -> {
@@ -29,7 +29,7 @@ internal fun FenixSnackbar.collectionMessage(
 }
 
 internal fun FenixSnackbar.bookmarkMessage(
-    tabSize: Int
+    tabSize: Int,
 ): FenixSnackbar {
     val stringRes = when {
         tabSize > 1 -> {
@@ -45,7 +45,7 @@ internal fun FenixSnackbar.bookmarkMessage(
 
 internal inline fun FenixSnackbar.anchorWithAction(
     anchor: View?,
-    crossinline action: () -> Unit
+    crossinline action: () -> Unit,
 ): FenixSnackbar {
     anchorView = anchor
     view.elevation = ELEVATION
@@ -60,5 +60,5 @@ internal inline fun FenixSnackbar.anchorWithAction(
 internal fun FenixSnackbar.Companion.make(view: View) = make(
     duration = LENGTH_LONG,
     isDisplayedWithBrowserToolbar = true,
-    view = view
+    view = view,
 )

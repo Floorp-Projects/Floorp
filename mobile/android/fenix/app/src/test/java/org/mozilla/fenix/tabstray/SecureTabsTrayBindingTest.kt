@@ -53,7 +53,7 @@ class SecureTabsTrayBindingTest {
             store = tabsTrayStore,
             settings = settings,
             fragment = fragment,
-            dialog = dialog
+            dialog = dialog,
         )
 
         secureTabsTrayBinding.start()
@@ -71,7 +71,7 @@ class SecureTabsTrayBindingTest {
             store = tabsTrayStore,
             settings = settings,
             fragment = fragment,
-            dialog = dialog
+            dialog = dialog,
         )
         every { settings.allowScreenshotsInPrivateMode } returns true
 
@@ -91,7 +91,7 @@ class SecureTabsTrayBindingTest {
             store = tabsTrayStore,
             settings = settings,
             fragment = fragment,
-            dialog = dialog
+            dialog = dialog,
         )
 
         secureTabsTrayBinding.start()
@@ -110,7 +110,7 @@ class SecureTabsTrayBindingTest {
             store = tabsTrayStore,
             settings = settings,
             fragment = fragment,
-            dialog = dialog
+            dialog = dialog,
         )
 
         secureTabsTrayBinding.start()

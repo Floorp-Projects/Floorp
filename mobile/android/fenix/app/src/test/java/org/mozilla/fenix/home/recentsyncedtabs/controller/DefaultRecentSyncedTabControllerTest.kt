@@ -55,7 +55,7 @@ class DefaultRecentSyncedTabControllerTest {
             tabsUseCase = tabsUseCases,
             navController = navController,
             accessPoint = accessPoint,
-            appStore = appStore
+            appStore = appStore,
         )
     }
 
@@ -68,18 +68,18 @@ class DefaultRecentSyncedTabControllerTest {
             deviceType = DeviceType.DESKTOP,
             title = "title",
             url = url,
-            previewImageUrl = null
+            previewImageUrl = null,
         )
         val store = BrowserStore(
             initialState = BrowserState(
                 tabs = listOf(
                     TabSessionState(
                         id = nonSyncId,
-                        content = ContentState(url = "different url", private = false)
+                        content = ContentState(url = "different url", private = false),
                     ),
                 ),
-                selectedTabId = nonSyncId
-            )
+                selectedTabId = nonSyncId,
+            ),
         )
         val selectOrAddTabUseCase = TabsUseCases.SelectOrAddUseCase(store)
 
@@ -104,22 +104,22 @@ class DefaultRecentSyncedTabControllerTest {
             deviceType = DeviceType.DESKTOP,
             title = "title",
             url = url,
-            previewImageUrl = null
+            previewImageUrl = null,
         )
         val store = BrowserStore(
             initialState = BrowserState(
                 tabs = listOf(
                     TabSessionState(
                         id = syncId,
-                        content = ContentState(url = url, private = false)
+                        content = ContentState(url = url, private = false),
                     ),
                     TabSessionState(
                         id = nonSyncId,
-                        content = ContentState(url = "different url", private = false)
+                        content = ContentState(url = "different url", private = false),
                     ),
                 ),
-                selectedTabId = nonSyncId
-            )
+                selectedTabId = nonSyncId,
+            ),
         )
         val selectOrAddTabUseCase = TabsUseCases.SelectOrAddUseCase(store)
 
@@ -144,8 +144,8 @@ class DefaultRecentSyncedTabControllerTest {
             navController.navigate(
                 HomeFragmentDirections.actionGlobalTabsTrayFragment(
                     page = Page.SyncedTabs,
-                    accessPoint = accessPoint
-                )
+                    accessPoint = accessPoint,
+                ),
             )
         }
     }
@@ -159,7 +159,7 @@ class DefaultRecentSyncedTabControllerTest {
             deviceType = deviceType,
             title = "title",
             url = url,
-            previewImageUrl = null
+            previewImageUrl = null,
         )
 
         every { tabsUseCases.selectOrAddTab } returns mockk(relaxed = true)
@@ -186,7 +186,7 @@ class DefaultRecentSyncedTabControllerTest {
             deviceType = DeviceType.DESKTOP,
             title = "title",
             url = "https://mozilla.org",
-            previewImageUrl = null
+            previewImageUrl = null,
         )
 
         controller.handleRecentSyncedTabRemoved(tab)

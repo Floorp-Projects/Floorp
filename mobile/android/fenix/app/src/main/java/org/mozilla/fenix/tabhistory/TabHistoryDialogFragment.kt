@@ -29,7 +29,7 @@ class TabHistoryDialogFragment : BottomSheetDialogFragment() {
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
-        savedInstanceState: Bundle?
+        savedInstanceState: Bundle?,
     ): View? = inflater.inflate(R.layout.fragment_tab_history_dialog, container, false)
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -44,12 +44,12 @@ class TabHistoryDialogFragment : BottomSheetDialogFragment() {
         val controller = DefaultTabHistoryController(
             navController = findNavController(),
             goToHistoryIndexUseCase = requireComponents.useCases.sessionUseCases.goToHistoryIndex,
-            customTabId = customTabSessionId
+            customTabId = customTabSessionId,
         )
         val tabHistoryView = TabHistoryView(
             container = binding.tabHistoryLayout,
             expandDialog = ::expand,
-            interactor = TabHistoryInteractor(controller)
+            interactor = TabHistoryInteractor(controller),
         )
 
         requireComponents.core.store.flowScoped(viewLifecycleOwner) { flow ->

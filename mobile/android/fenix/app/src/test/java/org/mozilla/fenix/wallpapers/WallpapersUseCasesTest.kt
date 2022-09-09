@@ -71,7 +71,7 @@ class WallpapersUseCasesTest {
             mockLegacyFileManager,
             mockSettings,
             "en-US",
-            possibleWallpapers = listOf(Wallpaper.Default) + fakeRemoteWallpapers
+            possibleWallpapers = listOf(Wallpaper.Default) + fakeRemoteWallpapers,
         ).invoke()
 
         appStore.waitUntilIdle()
@@ -92,7 +92,7 @@ class WallpapersUseCasesTest {
             mockLegacyFileManager,
             mockSettings,
             "en-US",
-            possibleWallpapers = listOf(Wallpaper.Default) + fakeRemoteWallpapers
+            possibleWallpapers = listOf(Wallpaper.Default) + fakeRemoteWallpapers,
         ).invoke()
 
         appStore.waitUntilIdle()
@@ -117,7 +117,7 @@ class WallpapersUseCasesTest {
             mockLegacyFileManager,
             mockSettings,
             "en-US",
-            possibleWallpapers = possibleWallpapers
+            possibleWallpapers = possibleWallpapers,
         ).invoke()
 
         val expectedFilteredWallpaper = fakeExpiredRemoteWallpapers[0]
@@ -141,7 +141,7 @@ class WallpapersUseCasesTest {
             mockLegacyFileManager,
             mockSettings,
             "en-US",
-            possibleWallpapers = fakeRemoteWallpapers + listOf(expiredWallpaper)
+            possibleWallpapers = fakeRemoteWallpapers + listOf(expiredWallpaper),
         ).invoke()
 
         appStore.waitUntilIdle()
@@ -164,7 +164,7 @@ class WallpapersUseCasesTest {
             mockLegacyFileManager,
             mockSettings,
             locale,
-            possibleWallpapers = fakeRemoteWallpapers
+            possibleWallpapers = fakeRemoteWallpapers,
         ).invoke()
 
         appStore.waitUntilIdle()
@@ -185,7 +185,7 @@ class WallpapersUseCasesTest {
             mockLegacyFileManager,
             mockSettings,
             "en-US",
-            possibleWallpapers = fakeRemoteWallpapers
+            possibleWallpapers = fakeRemoteWallpapers,
         ).invoke()
 
         for (fakeRemoteWallpaper in fakeRemoteWallpapers) {
@@ -207,7 +207,7 @@ class WallpapersUseCasesTest {
             mockLegacyFileManager,
             mockSettings,
             "en-US",
-            possibleWallpapers = fakeRemoteWallpapers
+            possibleWallpapers = fakeRemoteWallpapers,
         ).invoke()
 
         appStore.waitUntilIdle()
@@ -230,7 +230,7 @@ class WallpapersUseCasesTest {
             mockLegacyFileManager,
             mockSettings,
             "en-US",
-            possibleWallpapers = possibleWallpapers
+            possibleWallpapers = possibleWallpapers,
         ).invoke()
 
         appStore.waitUntilIdle()
@@ -335,7 +335,7 @@ class WallpapersUseCasesTest {
         ).invoke()
 
         val expectedWallpaper = expiredWallpaper.copy(
-            thumbnailFileState = Wallpaper.ImageFileState.Downloaded
+            thumbnailFileState = Wallpaper.ImageFileState.Downloaded,
         )
         appStore.waitUntilIdle()
         assertTrue(appStore.state.wallpaperState.availableWallpapers.contains(expectedWallpaper))
@@ -416,7 +416,7 @@ class WallpapersUseCasesTest {
         assertTrue(
             appStore.state.wallpaperState.availableWallpapers.all {
                 it.thumbnailFileState == Wallpaper.ImageFileState.Downloaded
-            }
+            },
         )
     }
 
@@ -508,7 +508,7 @@ class WallpapersUseCasesTest {
 
         WallpapersUseCases.LegacySelectWallpaperUseCase(
             mockSettings,
-            appStore
+            appStore,
         ).invoke(selectedWallpaper)
 
         appStore.waitUntilIdle()
@@ -615,7 +615,7 @@ class WallpapersUseCasesTest {
                     availableLocales = listOf("en-US"),
                     startDate = null,
                     endDate = relativeTime,
-                    learnMoreUrl = null
+                    learnMoreUrl = null,
                 ),
                 textColor = null,
                 cardColor = null,
@@ -632,7 +632,7 @@ class WallpapersUseCasesTest {
                     availableLocales = null,
                     startDate = null,
                     endDate = relativeTime,
-                    learnMoreUrl = null
+                    learnMoreUrl = null,
                 ),
                 textColor = null,
                 cardColor = null,

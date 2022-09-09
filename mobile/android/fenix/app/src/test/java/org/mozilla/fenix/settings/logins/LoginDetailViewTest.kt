@@ -26,7 +26,7 @@ class LoginDetailViewTest {
             origin = "mozilla.org",
             username = "admin",
             password = "password",
-            timeLastUsed = 100L
+            timeLastUsed = 100L,
         ),
         searchedForText = null,
         sortingStrategy = SortingStrategy.LastUsed,

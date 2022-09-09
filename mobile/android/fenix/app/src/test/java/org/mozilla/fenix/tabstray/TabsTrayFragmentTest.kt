@@ -114,7 +114,7 @@ class TabsTrayFragmentTest {
                     any(),
                     fabButtonBinding.newTabButton,
                     TabsTrayFragment.ELEVATION,
-                    false
+                    false,
                 )
             }
         } finally {
@@ -145,7 +145,7 @@ class TabsTrayFragmentTest {
                     any(),
                     null,
                     TabsTrayFragment.ELEVATION,
-                    false
+                    false,
                 )
             }
         } finally {
@@ -177,7 +177,7 @@ class TabsTrayFragmentTest {
                     any(),
                     fabButtonBinding.newTabButton,
                     TabsTrayFragment.ELEVATION,
-                    false
+                    false,
                 )
             }
         } finally {
@@ -208,7 +208,7 @@ class TabsTrayFragmentTest {
                     any(),
                     null,
                     TabsTrayFragment.ELEVATION,
-                    false
+                    false,
                 )
             }
         } finally {
@@ -385,7 +385,9 @@ class TabsTrayFragmentTest {
     @Test
     fun `WHEN the tabs tray is declared in XML THEN certain options are set for the behavior`() {
         tabsTrayBinding = ComponentTabstray2Binding.inflate(
-            LayoutInflater.from(testContext), CoordinatorLayout(testContext), true
+            LayoutInflater.from(testContext),
+            CoordinatorLayout(testContext),
+            true,
         )
         val behavior = BottomSheetBehavior.from(tabsTrayBinding.tabWrapper)
 

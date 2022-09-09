@@ -27,7 +27,9 @@ class HistoryMetadataGroupView(
 ) : LibraryPageView(container) {
 
     private val binding = ComponentHistoryMetadataGroupBinding.inflate(
-        LayoutInflater.from(container.context), container, true
+        LayoutInflater.from(container.context),
+        container,
+        true,
     )
 
     private val historyMetadataGroupAdapter = HistoryMetadataGroupAdapter(interactor) { isEmpty ->
@@ -89,7 +91,7 @@ class HistoryMetadataGroupView(
             setUiForNormalMode(title)
         } else {
             setUiForSelectingMode(
-                context.getString(R.string.history_multi_select_title, selectedHistoryItems.size)
+                context.getString(R.string.history_multi_select_title, selectedHistoryItems.size),
             )
         }
     }

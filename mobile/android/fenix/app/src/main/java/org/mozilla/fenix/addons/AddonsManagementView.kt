@@ -15,7 +15,7 @@ import org.mozilla.fenix.ext.navigateSafe
  */
 class AddonsManagementView(
     private val navController: NavController,
-    private val showPermissionDialog: (Addon) -> Unit
+    private val showPermissionDialog: (Addon) -> Unit,
 ) : AddonsManagerAdapterDelegate {
 
     override fun onAddonItemClicked(addon: Addon) {
@@ -37,7 +37,7 @@ class AddonsManagementView(
     private fun showInstalledAddonDetailsFragment(addon: Addon) {
         val directions =
             AddonsManagementFragmentDirections.actionAddonsManagementFragmentToInstalledAddonDetails(
-                addon
+                addon,
             )
         navController.navigateSafe(R.id.addonsManagementFragment, directions)
     }
@@ -45,7 +45,7 @@ class AddonsManagementView(
     private fun showDetailsFragment(addon: Addon) {
         val directions =
             AddonsManagementFragmentDirections.actionAddonsManagementFragmentToAddonDetailsFragment(
-                addon
+                addon,
             )
         navController.navigateSafe(R.id.addonsManagementFragment, directions)
     }
@@ -53,7 +53,7 @@ class AddonsManagementView(
     private fun showNotYetSupportedAddonFragment(unsupportedAddons: List<Addon>) {
         val directions =
             AddonsManagementFragmentDirections.actionAddonsManagementFragmentToNotYetSupportedAddonFragment(
-                unsupportedAddons.toTypedArray()
+                unsupportedAddons.toTypedArray(),
             )
         navController.navigate(directions)
     }

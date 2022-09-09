@@ -49,7 +49,7 @@ class AddonDetailsFragment : Fragment(R.layout.fragment_add_on_details), AddonDe
         (activity as HomeActivity).openToBrowserAndLoad(
             searchTermOrURL = addonSiteUrl.toString(),
             newTab = true,
-            from = BrowserDirection.FromAddonDetailsFragment
+            from = BrowserDirection.FromAddonDetailsFragment,
         )
     }
 

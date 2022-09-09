@@ -44,7 +44,6 @@ class SitePermissionsDetailsExceptionsFragmentTest {
 
     @Test
     fun `WHEN bindCategoryPhoneFeatures is called THEN all categories must be initialized`() {
-
         every { fragment.initPhoneFeature(any()) } returns Unit
         every { fragment.initAutoplayFeature() } returns Unit
         every { fragment.bindClearPermissionsButton() } returns Unit

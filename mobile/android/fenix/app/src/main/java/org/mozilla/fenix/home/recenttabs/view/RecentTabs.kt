@@ -75,7 +75,7 @@ fun RecentTabs(
 ) {
     Column(
         modifier = Modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(8.dp)
+        verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         recentTabs.forEach { tab ->
             when (tab) {
@@ -83,7 +83,7 @@ fun RecentTabs(
                     RecentTabItem(
                         tab = tab,
                         menuItems = menuItems,
-                        onRecentTabClick = onRecentTabClick
+                        onRecentTabClick = onRecentTabClick,
                     )
                 }
             }
@@ -102,7 +102,7 @@ fun RecentTabs(
 private fun RecentTabItem(
     tab: RecentTab.Tab,
     menuItems: List<RecentTabMenuItem>,
-    onRecentTabClick: (String) -> Unit = {}
+    onRecentTabClick: (String) -> Unit = {},
 ) {
     var isMenuExpanded by remember { mutableStateOf(false) }
 
@@ -113,14 +113,14 @@ private fun RecentTabItem(
             .combinedClickable(
                 enabled = true,
                 onClick = { onRecentTabClick(tab.state.id) },
-                onLongClick = { isMenuExpanded = true }
+                onLongClick = { isMenuExpanded = true },
             ),
         shape = RoundedCornerShape(8.dp),
         backgroundColor = FirefoxTheme.colors.layer2,
-        elevation = 6.dp
+        elevation = 6.dp,
     ) {
         Row(
-            modifier = Modifier.padding(16.dp)
+            modifier = Modifier.padding(16.dp),
         ) {
             RecentTabImage(
                 tab = tab,
@@ -134,7 +134,7 @@ private fun RecentTabItem(
 
             Column(
                 modifier = Modifier.fillMaxSize(),
-                verticalArrangement = Arrangement.SpaceBetween
+                verticalArrangement = Arrangement.SpaceBetween,
             ) {
                 Text(
                     text = tab.state.content.title.ifEmpty { tab.state.content.url },
@@ -170,7 +170,7 @@ private fun RecentTabItem(
                 showMenu = isMenuExpanded,
                 menuItems = menuItems,
                 tab = tab,
-                onDismissRequest = { isMenuExpanded = false }
+                onDismissRequest = { isMenuExpanded = false },
             )
         }
     }
@@ -189,7 +189,7 @@ fun RecentTabImage(
     tab: RecentTab.Tab,
     modifier: Modifier = Modifier,
     contentScale: ContentScale = ContentScale.FillWidth,
-    alignment: Alignment = Alignment.TopCenter
+    alignment: Alignment = Alignment.TopCenter,
 ) {
     val previewImageUrl = tab.state.content.previewImageUrl
     val thumbnail = tab.state.content.thumbnail
@@ -200,7 +200,7 @@ fun RecentTabImage(
                 url = previewImageUrl,
                 modifier = modifier,
                 targetSize = 108.dp,
-                contentScale = ContentScale.Crop
+                contentScale = ContentScale.Crop,
             )
         }
         thumbnail != null -> {
@@ -209,7 +209,7 @@ fun RecentTabImage(
                 contentDescription = null,
                 modifier = modifier,
                 contentScale = contentScale,
-                alignment = alignment
+                alignment = alignment,
             )
         }
         else -> ThumbnailCard(
@@ -246,7 +246,7 @@ private fun RecentTabMenu(
         expanded = showMenu,
         onDismissRequest = { onDismissRequest() },
         modifier = Modifier
-            .background(color = FirefoxTheme.colors.layer2)
+            .background(color = FirefoxTheme.colors.layer2),
     ) {
         for (item in menuItems) {
             DropdownMenuItem(
@@ -261,7 +261,7 @@ private fun RecentTabMenu(
                     maxLines = 1,
                     modifier = Modifier
                         .fillMaxHeight()
-                        .align(Alignment.CenterVertically)
+                        .align(Alignment.CenterVertically),
                 )
             }
         }
@@ -284,7 +284,7 @@ private fun RecentTabIcon(
     modifier: Modifier = Modifier,
     contentScale: ContentScale = ContentScale.Fit,
     alignment: Alignment = Alignment.Center,
-    icon: Bitmap? = null
+    icon: Bitmap? = null,
 ) {
     when {
         icon != null -> {
@@ -293,7 +293,7 @@ private fun RecentTabIcon(
                 contentDescription = null,
                 modifier = modifier,
                 contentScale = contentScale,
-                alignment = alignment
+                alignment = alignment,
             )
         }
         !inComposePreview -> {
@@ -330,8 +330,8 @@ private fun PlaceHolderTabIcon(modifier: Modifier) {
             color = when (isSystemInDarkTheme()) {
                 true -> PhotonColors.DarkGrey60
                 false -> PhotonColors.LightGrey30
-            }
-        )
+            },
+        ),
     )
 }
 
@@ -344,20 +344,20 @@ private fun RecentTabsPreview() {
             id = "tabId",
             content = ContentState(
                 url = "www.mozilla.com",
-            )
-        )
+            ),
+        ),
     )
 
     FirefoxTheme {
         RecentTabs(
             recentTabs = listOf(
-                tab
+                tab,
             ),
             menuItems = listOf(
                 RecentTabMenuItem(
                     title = "Menu item",
                     onClick = {},
-                )
+                ),
             ),
             onRecentTabClick = {},
         )

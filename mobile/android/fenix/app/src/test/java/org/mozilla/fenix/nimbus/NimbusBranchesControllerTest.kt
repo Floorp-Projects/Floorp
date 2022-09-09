@@ -73,7 +73,7 @@ class NimbusBranchesControllerTest {
             navController,
             nimbusBranchesStore,
             experiments,
-            experimentId
+            experimentId,
         )
     }
 
@@ -84,7 +84,7 @@ class NimbusBranchesControllerTest {
 
         val branch = Branch(
             slug = "slug",
-            ratio = 1
+            ratio = 1,
         )
 
         controller.onBranchItemClicked(branch)
@@ -106,7 +106,7 @@ class NimbusBranchesControllerTest {
 
         val branch = Branch(
             slug = "slug",
-            ratio = 1
+            ratio = 1,
         )
 
         controller.onBranchItemClicked(branch)
@@ -125,7 +125,7 @@ class NimbusBranchesControllerTest {
 
         val branch = Branch(
             slug = "slug",
-            ratio = 1
+            ratio = 1,
         )
 
         controller.onBranchItemClicked(branch)
@@ -147,7 +147,7 @@ class NimbusBranchesControllerTest {
 
         val branch = Branch(
             slug = "slug",
-            ratio = 1
+            ratio = 1,
         )
 
         controller.onBranchItemClicked(branch)
@@ -170,7 +170,7 @@ class NimbusBranchesControllerTest {
 
         val branch = Branch(
             slug = "slug",
-            ratio = 1
+            ratio = 1,
         )
 
         controller.onBranchItemClicked(branch)
@@ -191,7 +191,7 @@ class NimbusBranchesControllerTest {
 
         val branch = Branch(
             slug = "slug",
-            ratio = 1
+            ratio = 1,
         )
 
         controller.onBranchItemClicked(branch)

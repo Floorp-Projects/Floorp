@@ -15,7 +15,7 @@ import org.mozilla.fenix.components.history.PagedHistoryProvider
  * Flow<PagingData>, that provides HistoryAdapter with items to display.
  */
 class HistoryDataSource(
-    private val historyProvider: PagedHistoryProvider
+    private val historyProvider: PagedHistoryProvider,
 ) : PagingSource<Int, History>() {
 
     // The refresh key is set to null so that it will always reload the entire list for any data
@@ -37,7 +37,7 @@ class HistoryDataSource(
         return LoadResult.Page(
             data = historyItems,
             prevKey = null, // Only paging forward.
-            nextKey = nextOffset
+            nextKey = nextOffset,
         )
     }
 }
@@ -104,6 +104,6 @@ private fun HistoryDB.Regular.positioned(position: Int): History.Regular {
         url = this.url,
         visitedAt = this.visitedAt,
         historyTimeGroup = this.historyTimeGroup,
-        isRemote = this.isRemote
+        isRemote = this.isRemote,
     )
 }

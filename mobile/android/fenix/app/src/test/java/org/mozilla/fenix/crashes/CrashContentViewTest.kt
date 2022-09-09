@@ -59,7 +59,7 @@ class CrashContentViewTest {
             assertTrue(view.isBindingInitialized)
             assertEquals(
                 testContext.getString(R.string.tab_crash_title_2, testContext.getString(R.string.app_name)),
-                view.binding.title.text
+                view.binding.title.text,
             )
             verify {
                 view.binding.restoreTabButton.increaseTapArea(TAP_INCREASE_DP)

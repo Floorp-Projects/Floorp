@@ -27,12 +27,12 @@ class AboutPageAdapterTest {
             AboutPageItem(
                 AboutItem.ExternalLink(
                     AboutItemType.WHATS_NEW,
-                    "https://mozilla.org"
+                    "https://mozilla.org",
                 ),
-                "Libraries"
+                "Libraries",
             ),
             AboutPageItem(AboutItem.Libraries, "Libraries"),
-            AboutPageItem(AboutItem.Crashes, "Crashes")
+            AboutPageItem(AboutItem.Crashes, "Crashes"),
         )
     private val listener: AboutPageListener = mockk(relaxed = true)
 
@@ -79,7 +79,7 @@ class AboutPageAdapterTest {
         every {
             adapter.onCreateViewHolder(
                 parentView,
-                AboutItemViewHolder.LAYOUT_ID
+                AboutItemViewHolder.LAYOUT_ID,
             )
         } returns viewHolder
 

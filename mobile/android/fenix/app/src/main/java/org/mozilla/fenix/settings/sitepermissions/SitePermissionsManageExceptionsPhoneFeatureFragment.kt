@@ -42,6 +42,7 @@ class SitePermissionsManageExceptionsPhoneFeatureFragment : Fragment() {
     private lateinit var radioAllow: RadioButton
     private lateinit var radioBlock: RadioButton
     private lateinit var blockedByAndroidView: View
+
     @VisibleForTesting
     internal lateinit var rootView: View
     private val args by navArgs<SitePermissionsManageExceptionsPhoneFeatureFragmentArgs>()
@@ -49,7 +50,7 @@ class SitePermissionsManageExceptionsPhoneFeatureFragment : Fragment() {
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
-        savedInstanceState: Bundle?
+        savedInstanceState: Bundle?,
     ): View? {
         rootView =
             inflater.inflate(R.layout.fragment_manage_site_permissions_exceptions_feature_phone, container, false)
@@ -181,7 +182,7 @@ class SitePermissionsManageExceptionsPhoneFeatureFragment : Fragment() {
                 ?: AutoplayValue.getFallbackValue(
                     context,
                     settings,
-                    null
+                    null,
                 )
         updatedSitePermissions(defaultValue)
         initAutoplay()

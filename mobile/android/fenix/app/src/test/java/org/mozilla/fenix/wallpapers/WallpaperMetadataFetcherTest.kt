@@ -24,7 +24,7 @@ class WallpaperMetadataFetcherTest {
     private val expectedRequest = Request(
         url = BuildConfig.WALLPAPER_URL.substringBefore("android") +
             "metadata/v$currentJsonVersion/wallpapers.json",
-        method = Request.Method.GET
+        method = Request.Method.GET,
     )
     private val mockResponse = mockk<Response>()
     private val mockClient = mockk<Client> {
@@ -209,7 +209,7 @@ class WallpaperMetadataFetcherTest {
         assertTrue(
             wallpapers.all {
                 it.collection.availableLocales == locales
-            }
+            },
         )
     }
 
@@ -261,7 +261,7 @@ class WallpaperMetadataFetcherTest {
                 val formatter = SimpleDateFormat("yyyy-MM-dd", Locale.US)
                 formatter.format(startDate) == formatter.format(it.collection.startDate!!) &&
                     formatter.format(endDate) == formatter.format(it.collection.endDate!!)
-            }
+            },
         )
     }
 
@@ -300,7 +300,7 @@ class WallpaperMetadataFetcherTest {
         assertTrue(
             wallpapers.all {
                 it.collection.learnMoreUrl == "https://www.mozilla.org"
-            }
+            },
         )
     }
 
@@ -343,7 +343,7 @@ class WallpaperMetadataFetcherTest {
         assertTrue(
             wallpapers.all {
                 it.collection.heading == heading && it.collection.description == description
-            }
+            },
         )
     }
 
@@ -384,7 +384,7 @@ class WallpaperMetadataFetcherTest {
         assertTrue(
             wallpapers.all {
                 it.collection.heading == null && it.collection.description == null
-            }
+            },
         )
     }
 }

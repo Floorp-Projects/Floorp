@@ -20,6 +20,7 @@ import org.mozilla.fenix.ext.settings
  */
 class StudiesFragment : Fragment() {
     private var _binding: SettingsStudiesBinding? = null
+
     // This property is only valid between onCreateView and
     // onDestroyView.
     private val binding get() = _binding!!
@@ -27,7 +28,7 @@ class StudiesFragment : Fragment() {
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
-        savedInstanceState: Bundle?
+        savedInstanceState: Bundle?,
     ): View {
         val experiments = requireComponents.analytics.experiments
         _binding = SettingsStudiesBinding.inflate(inflater, container, false)

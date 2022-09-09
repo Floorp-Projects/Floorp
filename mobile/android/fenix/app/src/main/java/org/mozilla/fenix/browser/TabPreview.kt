@@ -25,7 +25,7 @@ import kotlin.math.max
 class TabPreview @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,
-    defStyle: Int = 0
+    defStyle: Int = 0,
 ) : FrameLayout(context, attrs, defStyle) {
 
     private val binding = TabPreviewBinding.inflate(LayoutInflater.from(context), this)
@@ -39,7 +39,7 @@ class TabPreview @JvmOverloads constructor(
 
             binding.fakeToolbar.background = AppCompatResources.getDrawable(
                 context,
-                ThemeManager.resolveAttribute(R.attr.bottomBarBackgroundTop, context)
+                ThemeManager.resolveAttribute(R.attr.bottomBarBackgroundTop, context),
             )
         }
 
@@ -63,7 +63,7 @@ class TabPreview @JvmOverloads constructor(
             val thumbnailSize = max(previewThumbnail.height, previewThumbnail.width)
             thumbnailLoader.loadIntoView(
                 previewThumbnail,
-                ImageLoadRequest(thumbnailId, thumbnailSize)
+                ImageLoadRequest(thumbnailId, thumbnailSize),
             )
         }
     }

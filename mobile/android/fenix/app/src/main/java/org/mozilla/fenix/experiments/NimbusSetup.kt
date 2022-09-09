@@ -80,8 +80,8 @@ fun createNimbus(context: Context, url: String?): NimbusApi {
             // and would mostly produce the value `Beta` and rarely would produce `beta`.
             channel = BuildConfig.BUILD_TYPE,
             customTargetingAttributes = mapOf(
-                "isFirstRun" to context.settings().isFirstNimbusRun.toString()
-            )
+                "isFirstRun" to context.settings().isFirstNimbusRun.toString(),
+            ),
         )
         Nimbus(context, appInfo, serverSettings, errorReporter).apply {
             // We register our own internal observer for housekeeping the Nimbus SDK and
@@ -132,7 +132,8 @@ fun createNimbus(context: Context, url: String?): NimbusApi {
 fun NimbusException.isReportableError(): Boolean {
     return when (this) {
         is NimbusException.RequestException,
-        is NimbusException.ResponseException -> false
+        is NimbusException.ResponseException,
+        -> false
         else -> true
     }
 }

@@ -82,7 +82,7 @@ class NavigationInteractorTest {
         createInteractor(
             dismissTabTray = {
                 dismissTabTrayInvoked = true
-            }
+            },
         ).onTabTrayDismissed()
 
         assertTrue(dismissTabTrayInvoked)
@@ -129,7 +129,7 @@ class NavigationInteractorTest {
         createInteractor(
             dismissTabTrayAndNavigateHome = {
                 dismissTabTrayAndNavigateHomeInvoked = true
-            }
+            },
         ).onCloseAllTabsClicked(false)
 
         assertTrue(dismissTabTrayAndNavigateHomeInvoked)
@@ -144,8 +144,8 @@ class NavigationInteractorTest {
                 browserStore = mockedStore,
                 showCancelledDownloadWarning = { _, _, _ ->
                     showCancelledDownloadWarningInvoked = true
-                }
-            )
+                },
+            ),
         )
         val tab: TabSessionState = mockk { every { content.private } returns true }
         every { mockedStore.state } returns mockk()
@@ -154,8 +154,8 @@ class NavigationInteractorTest {
                 "https://mozilla.org/download",
                 private = true,
                 destinationDirectory = "Download",
-                status = DownloadState.Status.DOWNLOADING
-            )
+                status = DownloadState.Status.DOWNLOADING,
+            ),
         )
         try {
             mockkStatic("mozilla.components.browser.state.selector.SelectorsKt")
@@ -178,7 +178,6 @@ class NavigationInteractorTest {
 
     @Test
     fun `onShareTabs calls navigation on DefaultNavigationInteractor`() {
-
         createInteractor().onShareTabs(listOf(testTab))
 
         verify(exactly = 1) { navController.navigate(any<NavDirections>()) }
@@ -209,7 +208,7 @@ class NavigationInteractorTest {
         createInteractor(
             showBookmarkSnackbar = {
                 showBookmarkSnackbarInvoked = true
-            }
+            },
         ).onSaveToBookmarks(listOf(createStateTab("url")))
 
         coVerify(exactly = 1) { bookmarksUseCase.addBookmark(any(), any(), any()) }
@@ -234,7 +233,7 @@ class NavigationInteractorTest {
         createInteractor(
             dismissTabTray = {
                 dismissTabTrayInvoked = true
-            }
+            },
         ).onSyncedTabClicked(tab)
 
         assertTrue(dismissTabTrayInvoked)
@@ -244,7 +243,7 @@ class NavigationInteractorTest {
             activity.openToBrowserAndLoad(
                 searchTermOrURL = "https://mozilla.org",
                 newTab = true,
-                from = BrowserDirection.FromTabsTray
+                from = BrowserDirection.FromTabsTray,
             )
         }
     }
@@ -256,7 +255,7 @@ class NavigationInteractorTest {
         dismissTabTrayAndNavigateHome: (String) -> Unit = { _ -> },
         showCollectionSnackbar: (Int, Boolean) -> Unit = { _, _ -> },
         showBookmarkSnackbar: (Int) -> Unit = { _ -> },
-        showCancelledDownloadWarning: (Int, String?, String?) -> Unit = { _, _, _ -> }
+        showCancelledDownloadWarning: (Int, String?, String?) -> Unit = { _, _, _ -> },
     ): NavigationInteractor {
         return DefaultNavigationInteractor(
             context,
@@ -272,7 +271,7 @@ class NavigationInteractorTest {
             showBookmarkSnackbar,
             showCancelledDownloadWarning,
             accountManager,
-            testDispatcher
+            testDispatcher,
         )
     }
 }

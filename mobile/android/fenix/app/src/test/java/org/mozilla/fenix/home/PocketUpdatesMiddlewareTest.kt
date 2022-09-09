@@ -35,7 +35,13 @@ class PocketUpdatesMiddlewareTest {
     @Test
     fun `WHEN PocketStoriesShown is dispatched THEN update PocketStoriesService`() = runTestOnMain {
         val story1 = PocketRecommendedStory(
-            "title", "url1", "imageUrl", "publisher", "category", 0, timesShown = 0
+            "title",
+            "url1",
+            "imageUrl",
+            "publisher",
+            "category",
+            0,
+            timesShown = 0,
         )
         val story2 = story1.copy("title2", "url2")
         val story3 = story1.copy("title3", "url3")
@@ -43,9 +49,9 @@ class PocketUpdatesMiddlewareTest {
         val pocketMiddleware = PocketUpdatesMiddleware(pocketService, mockk(), this)
         val appstore = AppStore(
             AppState(
-                pocketStories = listOf(story1, story2, story3)
+                pocketStories = listOf(story1, story2, story3),
             ),
-            listOf(pocketMiddleware)
+            listOf(pocketMiddleware),
         )
 
         appstore.dispatch(AppAction.PocketStoriesShown(listOf(story2))).joinBlocking()
@@ -56,7 +62,13 @@ class PocketUpdatesMiddlewareTest {
     @Test
     fun `WHEN needing to persist impressions is called THEN update PocketStoriesService`() = runTestOnMain {
         val story = PocketRecommendedStory(
-            "title", "url1", "imageUrl", "publisher", "category", 0, timesShown = 3
+            "title",
+            "url1",
+            "imageUrl",
+            "publisher",
+            "category",
+            0,
+            timesShown = 3,
         )
         val stories = listOf(story)
         val expectedStoryUpdate = story.copy(timesShown = story.timesShown.inc())
@@ -65,7 +77,7 @@ class PocketUpdatesMiddlewareTest {
         persistStoriesImpressions(
             coroutineScope = this,
             pocketStoriesService = pocketService,
-            updatedStories = stories
+            updatedStories = stories,
         )
 
         coVerify { pocketService.updateStoriesTimesShown(listOf(expectedStoryUpdate)) }
@@ -90,10 +102,10 @@ class PocketUpdatesMiddlewareTest {
         val appStore = spyk(
             AppStore(
                 AppState(
-                    pocketStoriesCategories = currentCategories
+                    pocketStoriesCategories = currentCategories,
                 ),
-                listOf(pocketMiddleware)
-            )
+                listOf(pocketMiddleware),
+            ),
         )
 
         appStore.dispatch(AppAction.PocketStoriesCategoriesChange(currentCategories)).joinBlocking()
@@ -103,9 +115,9 @@ class PocketUpdatesMiddlewareTest {
                 AppAction.PocketStoriesCategoriesSelectionsChange(
                     storiesCategories = currentCategories,
                     categoriesSelected = listOf(
-                        PocketRecommendedStoriesSelectedCategory("testCategory", 123)
-                    )
-                )
+                        PocketRecommendedStoriesSelectedCategory("testCategory", 123),
+                    ),
+                ),
             )
         }
     }
@@ -122,10 +134,10 @@ class PocketUpdatesMiddlewareTest {
         val appStore = spyk(
             AppStore(
                 AppState(
-                    pocketStoriesCategories = listOf(categ1, categ2)
+                    pocketStoriesCategories = listOf(categ1, categ2),
                 ),
-                listOf(pocketMiddleware)
-            )
+                listOf(pocketMiddleware),
+            ),
         )
 
         appStore.dispatch(AppAction.SelectPocketStoriesCategory(categ2.name)).joinBlocking()
@@ -146,10 +158,10 @@ class PocketUpdatesMiddlewareTest {
         val appStore = spyk(
             AppStore(
                 AppState(
-                    pocketStoriesCategories = listOf(categ1, categ2)
+                    pocketStoriesCategories = listOf(categ1, categ2),
                 ),
-                listOf(pocketMiddleware)
-            )
+                listOf(pocketMiddleware),
+            ),
         )
 
         appStore.dispatch(AppAction.DeselectPocketStoriesCategory(categ2.name)).joinBlocking()
@@ -187,14 +199,14 @@ class PocketUpdatesMiddlewareTest {
             } as DataStore<SelectedPocketStoriesCategories>
         val currentCategories = listOf(mockk<PocketRecommendedStoriesCategory>())
         val appStore = spyk(
-            AppStore(AppState())
+            AppStore(AppState()),
         )
 
         restoreSelectedCategories(
             coroutineScope = this,
             currentCategories = currentCategories,
             store = appStore,
-            selectedPocketCategoriesDataStore = dataStore
+            selectedPocketCategoriesDataStore = dataStore,
         )
 
         coVerify {
@@ -202,9 +214,9 @@ class PocketUpdatesMiddlewareTest {
                 AppAction.PocketStoriesCategoriesSelectionsChange(
                     storiesCategories = currentCategories,
                     categoriesSelected = listOf(
-                        PocketRecommendedStoriesSelectedCategory("testCategory", 123)
-                    )
-                )
+                        PocketRecommendedStoriesSelectedCategory("testCategory", 123),
+                    ),
+                ),
             )
         }
     }

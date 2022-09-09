@@ -20,7 +20,7 @@ interface ShareToAppsInteractor {
 
 class ShareToAppsView(
     containerView: ViewGroup,
-    interactor: ShareToAppsInteractor
+    interactor: ShareToAppsInteractor,
 ) {
 
     private val adapter = AppShareAdapter(interactor)
@@ -28,7 +28,7 @@ class ShareToAppsView(
     private var binding: ShareToAppsBinding = ShareToAppsBinding.inflate(
         LayoutInflater.from(containerView.context),
         containerView,
-        true
+        true,
     )
 
     init {

@@ -40,7 +40,7 @@ class RecentVisitsInteractorTest {
             recentSyncedTabController,
             recentBookmarksController,
             recentVisitsController,
-            pocketStoriesController
+            pocketStoriesController,
         )
     }
 
@@ -57,9 +57,9 @@ class RecentVisitsInteractorTest {
                         updatedAt = System.currentTimeMillis(),
                         totalViewTime = 10,
                         documentType = DocumentType.Regular,
-                        previewImageUrl = null
-                    )
-                )
+                        previewImageUrl = null,
+                    ),
+                ),
             )
 
         interactor.onRecentHistoryGroupClicked(historyGroup)
@@ -79,7 +79,7 @@ class RecentVisitsInteractorTest {
         val historyMetadataKey = HistoryMetadataKey(
             "http://www.mozilla.com",
             "mozilla",
-            null
+            null,
         )
 
         val historyGroup =
@@ -93,9 +93,9 @@ class RecentVisitsInteractorTest {
                         updatedAt = System.currentTimeMillis(),
                         totalViewTime = 10,
                         documentType = DocumentType.Regular,
-                        previewImageUrl = null
-                    )
-                )
+                        previewImageUrl = null,
+                    ),
+                ),
             )
 
         interactor.onRemoveRecentHistoryGroup(historyGroup.title)

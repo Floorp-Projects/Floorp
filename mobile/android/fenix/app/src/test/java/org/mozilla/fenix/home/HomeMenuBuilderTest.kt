@@ -79,7 +79,7 @@ class HomeMenuBuilderTest {
         verify {
             navController.nav(
                 R.id.homeFragment,
-                HomeFragmentDirections.actionGlobalSettingsFragment()
+                HomeFragmentDirections.actionGlobalSettingsFragment(),
             )
         }
     }
@@ -95,7 +95,7 @@ class HomeMenuBuilderTest {
         verify {
             navController.nav(
                 R.id.homeFragment,
-                HomeFragmentDirections.actionGlobalHomeSettingsFragment()
+                HomeFragmentDirections.actionGlobalHomeSettingsFragment(),
             )
         }
     }
@@ -107,7 +107,7 @@ class HomeMenuBuilderTest {
         verify {
             navController.nav(
                 R.id.homeFragment,
-                HomeFragmentDirections.actionGlobalAccountSettingsFragment()
+                HomeFragmentDirections.actionGlobalAccountSettingsFragment(),
             )
         }
 
@@ -116,7 +116,7 @@ class HomeMenuBuilderTest {
         verify {
             navController.nav(
                 R.id.homeFragment,
-                HomeFragmentDirections.actionGlobalAccountProblemFragment()
+                HomeFragmentDirections.actionGlobalAccountProblemFragment(),
             )
         }
 
@@ -125,7 +125,7 @@ class HomeMenuBuilderTest {
         verify {
             navController.nav(
                 R.id.homeFragment,
-                HomeFragmentDirections.actionGlobalTurnOnSync()
+                HomeFragmentDirections.actionGlobalTurnOnSync(),
             )
         }
     }
@@ -137,7 +137,7 @@ class HomeMenuBuilderTest {
         verify {
             navController.nav(
                 R.id.homeFragment,
-                HomeFragmentDirections.actionGlobalBookmarkFragment(BookmarkRoot.Mobile.id)
+                HomeFragmentDirections.actionGlobalBookmarkFragment(BookmarkRoot.Mobile.id),
             )
         }
     }
@@ -149,7 +149,7 @@ class HomeMenuBuilderTest {
         verify {
             navController.nav(
                 R.id.homeFragment,
-                HomeFragmentDirections.actionGlobalHistoryFragment()
+                HomeFragmentDirections.actionGlobalHistoryFragment(),
             )
         }
     }
@@ -161,7 +161,7 @@ class HomeMenuBuilderTest {
         verify {
             navController.nav(
                 R.id.homeFragment,
-                HomeFragmentDirections.actionGlobalDownloadsFragment()
+                HomeFragmentDirections.actionGlobalDownloadsFragment(),
             )
         }
     }
@@ -174,10 +174,10 @@ class HomeMenuBuilderTest {
             homeActivity.openToBrowserAndLoad(
                 searchTermOrURL = SupportUtils.getSumoURLForTopic(
                     context = testContext,
-                    topic = SupportUtils.SumoTopic.HELP
+                    topic = SupportUtils.SumoTopic.HELP,
                 ),
                 newTab = true,
-                from = BrowserDirection.FromHome
+                from = BrowserDirection.FromHome,
             )
         }
     }
@@ -196,7 +196,7 @@ class HomeMenuBuilderTest {
             homeActivity.openToBrowserAndLoad(
                 searchTermOrURL = SupportUtils.getWhatsNewUrl(testContext),
                 newTab = true,
-                from = BrowserDirection.FromHome
+                from = BrowserDirection.FromHome,
             )
         }
     }
@@ -208,7 +208,7 @@ class HomeMenuBuilderTest {
         verify {
             navController.nav(
                 R.id.homeFragment,
-                HomeFragmentDirections.actionGlobalAccountProblemFragment()
+                HomeFragmentDirections.actionGlobalAccountProblemFragment(),
             )
         }
     }
@@ -220,7 +220,7 @@ class HomeMenuBuilderTest {
         verify {
             navController.nav(
                 R.id.homeFragment,
-                HomeFragmentDirections.actionGlobalAddonsManagementFragment()
+                HomeFragmentDirections.actionGlobalAddonsManagementFragment(),
             )
         }
     }

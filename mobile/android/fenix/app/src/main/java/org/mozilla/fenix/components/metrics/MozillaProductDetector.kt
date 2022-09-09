@@ -24,7 +24,7 @@ object MozillaProductDetector {
         KLAR("org.mozilla.klar"),
 
         // Other products
-        LOCKWISE("mozilla.lockbox")
+        LOCKWISE("mozilla.lockbox"),
     }
 
     fun getInstalledMozillaProducts(context: Context): List<String> {

@@ -47,7 +47,7 @@ class HistoryMetadataMiddlewareTest {
         middleware = HistoryMetadataMiddleware(service)
         store = BrowserStore(
             middleware = listOf(middleware) + EngineMiddleware.create(engine = mockk()),
-            initialState = BrowserState()
+            initialState = BrowserState(),
         )
     }
 
@@ -124,8 +124,8 @@ class HistoryMetadataMiddlewareTest {
         store = BrowserStore(
             middleware = listOf(middleware) + EngineMiddleware.create(engine = mockk()),
             initialState = BrowserState(
-                tabs = listOf(tab)
-            )
+                tabs = listOf(tab),
+            ),
         )
         setupGoogleSearchEngine()
 
@@ -149,8 +149,8 @@ class HistoryMetadataMiddlewareTest {
         store = BrowserStore(
             middleware = listOf(middleware) + EngineMiddleware.create(engine = mockk()),
             initialState = BrowserState(
-                tabs = listOf(tab)
-            )
+                tabs = listOf(tab),
+            ),
         )
         setupGoogleSearchEngine()
 
@@ -171,7 +171,7 @@ class HistoryMetadataMiddlewareTest {
         middleware = HistoryMetadataMiddleware(service)
         store = BrowserStore(
             middleware = listOf(middleware) + EngineMiddleware.create(engine = mockk()),
-            initialState = BrowserState()
+            initialState = BrowserState(),
         )
         setupGoogleSearchEngine()
 
@@ -241,7 +241,7 @@ class HistoryMetadataMiddlewareTest {
         middleware = HistoryMetadataMiddleware(service)
         store = BrowserStore(
             middleware = listOf(middleware) + EngineMiddleware.create(engine = mockk()),
-            initialState = BrowserState()
+            initialState = BrowserState(),
         )
         setupGoogleSearchEngine()
 
@@ -303,7 +303,7 @@ class HistoryMetadataMiddlewareTest {
         middleware = HistoryMetadataMiddleware(service)
         store = BrowserStore(
             middleware = listOf(middleware) + EngineMiddleware.create(engine = mockk()),
-            initialState = BrowserState()
+            initialState = BrowserState(),
         )
         setupGoogleSearchEngine()
 
@@ -360,7 +360,7 @@ class HistoryMetadataMiddlewareTest {
         middleware = HistoryMetadataMiddleware(service)
         store = BrowserStore(
             middleware = listOf(middleware) + EngineMiddleware.create(engine = mockk()),
-            initialState = BrowserState()
+            initialState = BrowserState(),
         )
         setupGoogleSearchEngine()
 
@@ -433,7 +433,7 @@ class HistoryMetadataMiddlewareTest {
 
         val historyState = listOf(
             HistoryItem("firefox", "https://google.com?q=mozilla+website"),
-            HistoryItem("mozilla", "https://mozilla.org")
+            HistoryItem("mozilla", "https://mozilla.org"),
         )
         store.dispatch(ContentAction.UpdateHistoryStateAction(tab.id, historyState, currentIndex = 1)).joinBlocking()
 
@@ -450,7 +450,7 @@ class HistoryMetadataMiddlewareTest {
 
         val historyState = listOf(
             HistoryItem("firefox", "https://mozilla.org"),
-            HistoryItem("mozilla", "https://firefox.com")
+            HistoryItem("mozilla", "https://firefox.com"),
         )
         store.dispatch(ContentAction.UpdateHistoryStateAction(tab.id, historyState, currentIndex = 1)).joinBlocking()
 
@@ -467,7 +467,7 @@ class HistoryMetadataMiddlewareTest {
 
         val historyState = listOf(
             HistoryItem("firefox", "https://google.com?q=mozilla+website"),
-            HistoryItem("mozilla", "https://mozilla.org")
+            HistoryItem("mozilla", "https://mozilla.org"),
         )
         store.dispatch(EngineAction.LoadUrlAction(tab.id, tab.content.url)).joinBlocking()
         store.dispatch(ContentAction.UpdateHistoryStateAction(tab.id, historyState, currentIndex = 1)).joinBlocking()
@@ -761,8 +761,8 @@ class HistoryMetadataMiddlewareTest {
                         name = "Google",
                         icon = mockk(),
                         type = SearchEngine.Type.BUNDLED,
-                        resultUrls = listOf("https://google.com?q={searchTerms}")
-                    )
+                        resultUrls = listOf("https://google.com?q={searchTerms}"),
+                    ),
                 ),
                 userSelectedSearchEngineId = null,
                 userSelectedSearchEngineName = null,
@@ -771,8 +771,8 @@ class HistoryMetadataMiddlewareTest {
                 hiddenSearchEngines = emptyList(),
                 additionalAvailableSearchEngines = emptyList(),
                 additionalSearchEngines = emptyList(),
-                regionSearchEnginesOrder = listOf("google")
-            )
+                regionSearchEnginesOrder = listOf("google"),
+            ),
         ).joinBlocking()
     }
 
@@ -784,7 +784,7 @@ class HistoryMetadataMiddlewareTest {
         override fun createMetadata(
             tab: TabSessionState,
             searchTerms: String?,
-            referrerUrl: String?
+            referrerUrl: String?,
         ): HistoryMetadataKey {
             createdMetadata.add(HistoryMetadataKey(tab.content.url, searchTerms, referrerUrl))
             return HistoryMetadataKey(tab.content.url, searchTerms, referrerUrl)

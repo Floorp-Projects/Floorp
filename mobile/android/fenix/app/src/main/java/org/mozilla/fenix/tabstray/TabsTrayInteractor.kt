@@ -48,7 +48,7 @@ interface TabsTrayInteractor {
     fun onTabsMove(
         tabId: String,
         targetId: String?,
-        placeAfter: Boolean
+        placeAfter: Boolean,
     )
 }
 
@@ -58,7 +58,7 @@ interface TabsTrayInteractor {
  * @property controller [TabsTrayController] to which user actions can be delegated for actual app update.
  */
 class DefaultTabsTrayInteractor(
-    private val controller: TabsTrayController
+    private val controller: TabsTrayController,
 ) : TabsTrayInteractor {
     override fun onTrayPositionSelected(position: Int, smoothScroll: Boolean) {
         controller.handleTrayScrollingToPosition(position, smoothScroll)
@@ -83,7 +83,7 @@ class DefaultTabsTrayInteractor(
     override fun onTabsMove(
         tabId: String,
         targetId: String?,
-        placeAfter: Boolean
+        placeAfter: Boolean,
     ) {
         controller.handleTabsMove(tabId, targetId, placeAfter)
     }

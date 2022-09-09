@@ -246,7 +246,7 @@ class StringTest {
     fun testReplaceConsecutiveZeros() {
         assertEquals(
             "2001:db8::ff00:42:8329",
-            "2001:db8:0:0:0:ff00:42:8329".replaceConsecutiveZeros()
+            "2001:db8:0:0:0:ff00:42:8329".replaceConsecutiveZeros(),
         )
     }
 

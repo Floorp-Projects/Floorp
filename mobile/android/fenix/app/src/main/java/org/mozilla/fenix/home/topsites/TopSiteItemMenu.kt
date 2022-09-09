@@ -20,7 +20,7 @@ import org.mozilla.fenix.R
 class TopSiteItemMenu(
     private val context: Context,
     private val topSite: TopSite,
-    private val onItemTapped: (Item) -> Unit = {}
+    private val onItemTapped: (Item) -> Unit = {},
 ) {
     sealed class Item {
         object OpenInPrivateTab : Item()
@@ -38,13 +38,13 @@ class TopSiteItemMenu(
 
         listOfNotNull(
             SimpleBrowserMenuItem(
-                context.getString(R.string.bookmark_menu_open_in_private_tab_button)
+                context.getString(R.string.bookmark_menu_open_in_private_tab_button),
             ) {
                 onItemTapped.invoke(Item.OpenInPrivateTab)
             },
             if (isPinnedSite) {
                 SimpleBrowserMenuItem(
-                    context.getString(R.string.rename_top_site)
+                    context.getString(R.string.rename_top_site),
                 ) {
                     onItemTapped.invoke(Item.RenameTopSite)
                 }
@@ -57,7 +57,7 @@ class TopSiteItemMenu(
                         context.getString(R.string.remove_top_site)
                     } else {
                         context.getString(R.string.delete_from_history)
-                    }
+                    },
                 ) {
                     onItemTapped.invoke(Item.RemoveTopSite)
                 }
@@ -66,7 +66,7 @@ class TopSiteItemMenu(
             },
             if (isProvidedSite) {
                 SimpleBrowserMenuItem(
-                    context.getString(R.string.top_sites_menu_settings)
+                    context.getString(R.string.top_sites_menu_settings),
                 ) {
                     onItemTapped.invoke(Item.Settings)
                 }
@@ -75,13 +75,13 @@ class TopSiteItemMenu(
             },
             if (isProvidedSite) {
                 SimpleBrowserMenuItem(
-                    context.getString(R.string.top_sites_menu_sponsor_privacy)
+                    context.getString(R.string.top_sites_menu_sponsor_privacy),
                 ) {
                     onItemTapped.invoke(Item.SponsorPrivacy)
                 }
             } else {
                 null
-            }
+            },
         )
     }
 }

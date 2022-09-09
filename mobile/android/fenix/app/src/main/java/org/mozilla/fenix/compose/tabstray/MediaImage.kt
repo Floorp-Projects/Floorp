@@ -65,7 +65,7 @@ private fun ImagePreview() {
             onMediaIconClicked = {},
             modifier = Modifier
                 .height(100.dp)
-                .width(200.dp)
+                .width(200.dp),
         )
     }
 }

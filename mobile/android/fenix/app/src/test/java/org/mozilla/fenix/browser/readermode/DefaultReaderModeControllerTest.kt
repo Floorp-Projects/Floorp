@@ -40,15 +40,15 @@ class DefaultReaderModeControllerTest {
         val store = BrowserStore(
             BrowserState(
                 tabs = listOf(tab),
-                selectedTabId = tab.id
-            )
+                selectedTabId = tab.id,
+            ),
         )
         readerViewFeature = spyk(ReaderViewFeature(testContext, mockk(), store, mockk()))
 
         featureWrapper = ViewBoundFeatureWrapper(
             feature = readerViewFeature,
             owner = mockk(relaxed = true),
-            view = mockk(relaxed = true)
+            view = mockk(relaxed = true),
         )
         readerViewControlsBar = mockk(relaxed = true)
         onReaderModeChanged = mockk(relaxed = true)
@@ -64,7 +64,7 @@ class DefaultReaderModeControllerTest {
         val controller = DefaultReaderModeController(
             featureWrapper,
             readerViewControlsBar,
-            onReaderModeChanged = onReaderModeChanged
+            onReaderModeChanged = onReaderModeChanged,
         )
         controller.hideReaderView()
         verify { readerViewFeature.hideReaderView() }
@@ -77,7 +77,7 @@ class DefaultReaderModeControllerTest {
         val controller = DefaultReaderModeController(
             featureWrapper,
             readerViewControlsBar,
-            onReaderModeChanged = onReaderModeChanged
+            onReaderModeChanged = onReaderModeChanged,
         )
         controller.showReaderView()
         verify { readerViewFeature.showReaderView() }
@@ -89,7 +89,7 @@ class DefaultReaderModeControllerTest {
         val controller = DefaultReaderModeController(
             featureWrapper,
             readerViewControlsBar,
-            isPrivate = false
+            isPrivate = false,
         )
 
         controller.showControls()
@@ -102,7 +102,7 @@ class DefaultReaderModeControllerTest {
         val controller = DefaultReaderModeController(
             featureWrapper,
             readerViewControlsBar,
-            isPrivate = true
+            isPrivate = true,
         )
 
         val decrease = mockk<Button>(relaxUnitFun = true)

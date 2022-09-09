@@ -69,13 +69,13 @@ private const val VISITS_PER_COLUMN = 3
 fun RecentlyVisited(
     recentVisits: List<RecentlyVisitedItem>,
     menuItems: List<RecentVisitMenuItem>,
-    onRecentVisitClick: (RecentlyVisitedItem, Int) -> Unit = { _, _ -> }
+    onRecentVisitClick: (RecentlyVisitedItem, Int) -> Unit = { _, _ -> },
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(8.dp),
         backgroundColor = FirefoxTheme.colors.layer2,
-        elevation = 6.dp
+        elevation = 6.dp,
     ) {
         val listState = rememberLazyListState()
         val flingBehavior = EagerFlingBehavior(lazyRowState = listState)
@@ -84,13 +84,13 @@ fun RecentlyVisited(
             state = listState,
             contentPadding = PaddingValues(16.dp),
             horizontalArrangement = Arrangement.spacedBy(32.dp),
-            flingBehavior = flingBehavior
+            flingBehavior = flingBehavior,
         ) {
             val itemsList = recentVisits.chunked(VISITS_PER_COLUMN)
 
             itemsIndexed(itemsList) { pageIndex, items ->
                 Column(
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
                 ) {
                     items.forEachIndexed { index, recentVisit ->
                         when (recentVisit) {
@@ -101,7 +101,7 @@ fun RecentlyVisited(
                                 showDividerLine = index < items.size - 1,
                                 onRecentVisitClick = {
                                     onRecentVisitClick(it, pageIndex + 1)
-                                }
+                                },
                             )
                             is RecentHistoryGroup -> RecentlyVisitedHistoryGroup(
                                 recentVisit = recentVisit,
@@ -110,7 +110,7 @@ fun RecentlyVisited(
                                 showDividerLine = index < items.size - 1,
                                 onRecentVisitClick = {
                                     onRecentVisitClick(it, pageIndex + 1)
-                                }
+                                },
                             )
                         }
                     }
@@ -145,10 +145,10 @@ private fun RecentlyVisitedHistoryGroup(
             .combinedClickable(
                 enabled = clickableEnabled,
                 onClick = { onRecentVisitClick(recentVisit) },
-                onLongClick = { isMenuExpanded = true }
+                onLongClick = { isMenuExpanded = true },
             )
             .size(268.dp, 56.dp),
-        verticalAlignment = Alignment.CenterVertically
+        verticalAlignment = Alignment.CenterVertically,
     ) {
         Image(
             painter = painterResource(R.drawable.ic_multiple_tabs),
@@ -159,18 +159,18 @@ private fun RecentlyVisitedHistoryGroup(
         Spacer(modifier = Modifier.width(16.dp))
 
         Column(
-            modifier = Modifier.fillMaxSize()
+            modifier = Modifier.fillMaxSize(),
         ) {
             RecentlyVisitedTitle(
                 text = recentVisit.title,
                 modifier = Modifier
                     .padding(top = 7.dp, bottom = 2.dp)
-                    .weight(1f)
+                    .weight(1f),
             )
 
             RecentlyVisitedCaption(
                 count = recentVisit.historyMetadata.size,
-                modifier = Modifier.weight(1f)
+                modifier = Modifier.weight(1f),
             )
 
             if (showDividerLine) {
@@ -182,7 +182,7 @@ private fun RecentlyVisitedHistoryGroup(
             showMenu = isMenuExpanded,
             menuItems = menuItems,
             recentVisit = recentVisit,
-            onDismissRequest = { isMenuExpanded = false }
+            onDismissRequest = { isMenuExpanded = false },
         )
     }
 }
@@ -212,10 +212,10 @@ private fun RecentlyVisitedHistoryHighlight(
             .combinedClickable(
                 enabled = clickableEnabled,
                 onClick = { onRecentVisitClick(recentVisit) },
-                onLongClick = { isMenuExpanded = true }
+                onLongClick = { isMenuExpanded = true },
             )
             .size(268.dp, 56.dp),
-        verticalAlignment = Alignment.CenterVertically
+        verticalAlignment = Alignment.CenterVertically,
     ) {
         Favicon(url = recentVisit.url, size = 24.dp)
 
@@ -224,7 +224,7 @@ private fun RecentlyVisitedHistoryHighlight(
         Box(modifier = Modifier.fillMaxSize()) {
             RecentlyVisitedTitle(
                 text = recentVisit.title,
-                modifier = Modifier.align(Alignment.CenterStart)
+                modifier = Modifier.align(Alignment.CenterStart),
             )
 
             if (showDividerLine) {
@@ -236,7 +236,7 @@ private fun RecentlyVisitedHistoryHighlight(
             showMenu = isMenuExpanded,
             menuItems = menuItems,
             recentVisit = recentVisit,
-            onDismissRequest = { isMenuExpanded = false }
+            onDismissRequest = { isMenuExpanded = false },
         )
     }
 }
@@ -250,7 +250,7 @@ private fun RecentlyVisitedHistoryHighlight(
 @Composable
 private fun RecentlyVisitedTitle(
     text: String,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     Text(
         text = text,
@@ -271,7 +271,7 @@ private fun RecentlyVisitedTitle(
 @Composable
 private fun RecentlyVisitedCaption(
     count: Int,
-    modifier: Modifier
+    modifier: Modifier,
 ) {
     val stringId = if (count == 1) {
         R.string.history_search_group_site
@@ -288,7 +288,7 @@ private fun RecentlyVisitedCaption(
         },
         fontSize = 12.sp,
         overflow = TextOverflow.Ellipsis,
-        maxLines = 1
+        maxLines = 1,
     )
 }
 
@@ -317,7 +317,7 @@ private fun RecentlyVisitedMenu(
         expanded = showMenu,
         onDismissRequest = { onDismissRequest() },
         modifier = Modifier
-            .background(color = FirefoxTheme.colors.layer2)
+            .background(color = FirefoxTheme.colors.layer2),
     ) {
         for (item in menuItems) {
             DropdownMenuItem(
@@ -332,7 +332,7 @@ private fun RecentlyVisitedMenu(
                     maxLines = 1,
                     modifier = Modifier
                         .fillMaxHeight()
-                        .align(Alignment.CenterVertically)
+                        .align(Alignment.CenterVertically),
                 )
             }
         }
@@ -346,12 +346,12 @@ private fun RecentlyVisitedMenu(
  */
 @Composable
 private fun RecentlyVisitedDivider(
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     Divider(
         modifier = modifier,
         color = FirefoxTheme.colors.borderPrimary,
-        thickness = 0.5.dp
+        thickness = 0.5.dp,
     )
 }
 
@@ -376,9 +376,9 @@ private fun RecentlyVisitedPreview() {
                 RecentHistoryGroup(title = "running shoes"),
                 RecentHistoryGroup(title = "mozilla"),
                 RecentHistoryGroup(title = "firefox"),
-                RecentHistoryGroup(title = "pocket")
+                RecentHistoryGroup(title = "pocket"),
             ),
-            menuItems = emptyList()
+            menuItems = emptyList(),
         )
     }
 }

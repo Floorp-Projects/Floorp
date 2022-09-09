@@ -40,7 +40,7 @@ object MetricsUtils {
     fun recordSearchMetrics(
         engine: SearchEngine,
         isDefault: Boolean,
-        searchAccessPoint: Source
+        searchAccessPoint: Source,
     ) {
         val identifier = if (engine.type == SearchEngine.Type.CUSTOM) "custom" else engine.id.lowercase()
         val source = searchAccessPoint.name.lowercase()
@@ -121,7 +121,7 @@ object MetricsUtils {
                     unhashedID.toCharArray(),
                     salt.toByteArray(),
                     ActivationPing.PBKDF2_ITERATIONS,
-                    ActivationPing.PBKDF2_KEY_LEN_BITS
+                    ActivationPing.PBKDF2_KEY_LEN_BITS,
                 )
 
                 val keyFactory = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA1")

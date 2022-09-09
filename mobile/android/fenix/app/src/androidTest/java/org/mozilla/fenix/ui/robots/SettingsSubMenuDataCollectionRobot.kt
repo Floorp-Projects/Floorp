@@ -58,13 +58,12 @@ private fun goBackButton() =
 private fun assertNavigationToolBarHeader() = onView(
     allOf(
         withParent(withId(R.id.navigationToolbar)),
-        withText(R.string.preferences_data_collection)
-    )
+        withText(R.string.preferences_data_collection),
+    ),
 )
     .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 
 private fun assertDataCollectionOptions() {
-
     onView(withText(R.string.preference_usage_data))
         .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 

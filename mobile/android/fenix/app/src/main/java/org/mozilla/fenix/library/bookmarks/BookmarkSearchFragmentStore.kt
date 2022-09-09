@@ -12,10 +12,10 @@ import mozilla.components.lib.state.Store
  * The [Store] for holding the [BookmarkSearchFragmentState] and applying [BookmarkSearchFragmentAction]s.
  */
 class BookmarkSearchFragmentStore(
-    initialState: BookmarkSearchFragmentState
+    initialState: BookmarkSearchFragmentState,
 ) : Store<BookmarkSearchFragmentState, BookmarkSearchFragmentAction>(
     initialState,
-    ::bookmarkSearchStateReducer
+    ::bookmarkSearchStateReducer,
 )
 
 /**
@@ -44,7 +44,7 @@ sealed class BookmarkSearchFragmentAction : Action {
  */
 private fun bookmarkSearchStateReducer(
     state: BookmarkSearchFragmentState,
-    action: BookmarkSearchFragmentAction
+    action: BookmarkSearchFragmentAction,
 ): BookmarkSearchFragmentState {
     return when (action) {
         is BookmarkSearchFragmentAction.UpdateQuery ->

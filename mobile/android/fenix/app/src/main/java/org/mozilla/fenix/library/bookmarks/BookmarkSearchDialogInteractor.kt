@@ -13,7 +13,7 @@ import org.mozilla.fenix.library.bookmarks.toolbar.ToolbarInteractor
  * Provides implementations for the AwesomeBarView and ToolbarView
  */
 class BookmarkSearchDialogInteractor(
-    private val bookmarkSearchController: BookmarkSearchDialogController
+    private val bookmarkSearchController: BookmarkSearchDialogController,
 ) : AwesomeBarInteractor, ToolbarInteractor {
 
     override fun onEditingCanceled() {

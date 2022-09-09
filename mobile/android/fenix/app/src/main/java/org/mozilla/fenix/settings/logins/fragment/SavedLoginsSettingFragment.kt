@@ -36,8 +36,8 @@ class SavedLoginsSettingFragment : PreferenceFragmentCompat() {
                 if (newValue == true) {
                     Logins.saveLoginsSettingChanged.record(
                         Logins.SaveLoginsSettingChangedExtra(
-                            Setting.ASK_TO_SAVE.name
-                        )
+                            Setting.ASK_TO_SAVE.name,
+                        ),
                     )
                 }
                 // We want to reload the current session here so we can try to fill the current page
@@ -55,8 +55,8 @@ class SavedLoginsSettingFragment : PreferenceFragmentCompat() {
                 if (newValue == true) {
                     Logins.saveLoginsSettingChanged.record(
                         Logins.SaveLoginsSettingChangedExtra(
-                            Setting.NEVER_SAVE.name
-                        )
+                            Setting.NEVER_SAVE.name,
+                        ),
                     )
                 }
                 // We want to reload the current session here so we don't save any currently inserted login

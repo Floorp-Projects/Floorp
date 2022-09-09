@@ -17,7 +17,7 @@ import org.mozilla.fenix.home.recenttabs.RecentTab
  * @param settings Blocklist is stored here as a string set
  */
 class BlocklistMiddleware(
-    private val blocklistHandler: BlocklistHandler
+    private val blocklistHandler: BlocklistHandler,
 ) : Middleware<AppState, AppAction> {
 
     /**
@@ -27,7 +27,7 @@ class BlocklistMiddleware(
     override fun invoke(
         context: MiddlewareContext<AppState, AppAction>,
         next: (AppAction) -> Unit,
-        action: AppAction
+        action: AppAction,
     ) {
         next(getUpdatedAction(context.state, action))
     }
@@ -35,7 +35,7 @@ class BlocklistMiddleware(
     @Suppress("ComplexMethod")
     private fun getUpdatedAction(
         state: AppState,
-        action: AppAction
+        action: AppAction,
     ) = with(blocklistHandler) {
         when (action) {
             is AppAction.Change -> {
@@ -43,17 +43,17 @@ class BlocklistMiddleware(
                     recentBookmarks = action.recentBookmarks.filteredByBlocklist(),
                     recentTabs = action.recentTabs.filteredByBlocklist().filterContile(),
                     recentHistory = action.recentHistory.filteredByBlocklist().filterContile(),
-                    recentSyncedTabState = action.recentSyncedTabState.filteredByBlocklist().filterContile()
+                    recentSyncedTabState = action.recentSyncedTabState.filteredByBlocklist().filterContile(),
                 )
             }
             is AppAction.RecentTabsChange -> {
                 action.copy(
-                    recentTabs = action.recentTabs.filteredByBlocklist().filterContile()
+                    recentTabs = action.recentTabs.filteredByBlocklist().filterContile(),
                 )
             }
             is AppAction.RecentBookmarksChange -> {
                 action.copy(
-                    recentBookmarks = action.recentBookmarks.filteredByBlocklist()
+                    recentBookmarks = action.recentBookmarks.filteredByBlocklist(),
                 )
             }
             is AppAction.RecentHistoryChange -> {
@@ -61,7 +61,7 @@ class BlocklistMiddleware(
             }
             is AppAction.RecentSyncedTabStateChange -> {
                 action.copy(
-                    state = action.state.filteredByBlocklist().filterContile()
+                    state = action.state.filteredByBlocklist().filterContile(),
                 )
             }
             is AppAction.RemoveRecentTab -> {
@@ -104,7 +104,7 @@ class BlocklistMiddleware(
                 mode = mode,
                 collections = collections,
                 showCollectionPlaceholder = showCollectionPlaceholder,
-                recentSyncedTabState = recentSyncedTabState.filteredByBlocklist().filterContile()
+                recentSyncedTabState = recentSyncedTabState.filteredByBlocklist().filterContile(),
             )
         }
 }

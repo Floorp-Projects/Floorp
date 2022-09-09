@@ -16,7 +16,7 @@ import org.mozilla.fenix.settings.creditcards.interactor.CreditCardsManagementIn
  */
 class CreditCardsManagementView(
     val binding: ComponentCreditCardsBinding,
-    val interactor: CreditCardsManagementInteractor
+    val interactor: CreditCardsManagementInteractor,
 ) {
 
     private val creditCardsAdapter = CreditCardsAdapter(interactor)

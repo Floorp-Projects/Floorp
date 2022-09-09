@@ -39,7 +39,7 @@ class InstalledAddonDetailsFragment : Fragment() {
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
-        savedInstanceState: Bundle?
+        savedInstanceState: Bundle?,
     ): View {
         if (!::addon.isInitialized) {
             addon = AddonDetailsFragmentArgs.fromBundle(requireNotNull(arguments)).addon
@@ -48,7 +48,7 @@ class InstalledAddonDetailsFragment : Fragment() {
         _binding = FragmentInstalledAddOnDetailsBinding.inflate(
             inflater,
             container,
-            false
+            false,
         )
 
         bindUI()
@@ -96,7 +96,7 @@ class InstalledAddonDetailsFragment : Fragment() {
                     runIfFragmentIsAttached {
                         showSnackBar(
                             binding.root,
-                            getString(R.string.mozac_feature_addons_failed_to_query_add_ons)
+                            getString(R.string.mozac_feature_addons_failed_to_query_add_ons),
                         )
                         findNavController().popBackStack()
                     }
@@ -140,8 +140,8 @@ class InstalledAddonDetailsFragment : Fragment() {
                                     binding.root,
                                     getString(
                                         R.string.mozac_feature_addons_successfully_enabled,
-                                        addon.translateName(it)
-                                    )
+                                        addon.translateName(it),
+                                    ),
                                 )
                             }
                         }
@@ -156,12 +156,12 @@ class InstalledAddonDetailsFragment : Fragment() {
                                     binding.root,
                                     getString(
                                         R.string.mozac_feature_addons_failed_to_enable,
-                                        addon.translateName(it)
-                                    )
+                                        addon.translateName(it),
+                                    ),
                                 )
                             }
                         }
-                    }
+                    },
                 )
             } else {
                 binding.settings.isVisible = false
@@ -179,8 +179,8 @@ class InstalledAddonDetailsFragment : Fragment() {
                                     binding.root,
                                     getString(
                                         R.string.mozac_feature_addons_successfully_disabled,
-                                        addon.translateName(it)
-                                    )
+                                        addon.translateName(it),
+                                    ),
                                 )
                             }
                         }
@@ -196,12 +196,12 @@ class InstalledAddonDetailsFragment : Fragment() {
                                     binding.root,
                                     getString(
                                         R.string.mozac_feature_addons_failed_to_disable,
-                                        addon.translateName(it)
-                                    )
+                                        addon.translateName(it),
+                                    ),
                                 )
                             }
                         }
-                    }
+                    },
                 )
             }
         }
@@ -233,7 +233,7 @@ class InstalledAddonDetailsFragment : Fragment() {
         binding.details.setOnClickListener {
             val directions =
                 InstalledAddonDetailsFragmentDirections.actionInstalledAddonFragmentToAddonDetailsFragment(
-                    addon
+                    addon,
                 )
             Navigation.findNavController(binding.root).navigate(directions)
         }
@@ -243,7 +243,7 @@ class InstalledAddonDetailsFragment : Fragment() {
         binding.permissions.setOnClickListener {
             val directions =
                 InstalledAddonDetailsFragmentDirections.actionInstalledAddonFragmentToAddonPermissionsDetailsFragment(
-                    addon
+                    addon,
                 )
             Navigation.findNavController(binding.root).navigate(directions)
         }
@@ -273,7 +273,7 @@ class InstalledAddonDetailsFragment : Fragment() {
                         switch.isClickable = true
                         binding.removeAddOn.isEnabled = true
                     }
-                }
+                },
             )
         }
     }
@@ -290,8 +290,8 @@ class InstalledAddonDetailsFragment : Fragment() {
                                 binding.root,
                                 getString(
                                     R.string.mozac_feature_addons_successfully_uninstalled,
-                                    addon.translateName(it)
-                                )
+                                    addon.translateName(it),
+                                ),
                             )
                         }
                         binding.root.findNavController().popBackStack()
@@ -305,19 +305,19 @@ class InstalledAddonDetailsFragment : Fragment() {
                                 binding.root,
                                 getString(
                                     R.string.mozac_feature_addons_failed_to_uninstall,
-                                    addon.translateName(it)
-                                )
+                                    addon.translateName(it),
+                                ),
                             )
                         }
                     }
-                }
+                },
             )
         }
     }
 
     private fun setAllInteractiveViewsClickable(
         binding: FragmentInstalledAddOnDetailsBinding,
-        clickable: Boolean
+        clickable: Boolean,
     ) {
         binding.enableSwitch.isClickable = clickable
         binding.settings.isClickable = clickable

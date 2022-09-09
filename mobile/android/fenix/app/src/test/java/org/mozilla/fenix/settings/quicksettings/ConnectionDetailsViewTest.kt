@@ -48,8 +48,8 @@ class ConnectionDetailsViewTest {
                 websiteUrl = websiteUrl,
                 websiteTitle = "Mozilla",
                 websiteSecurityUiValues = WebsiteSecurityUiValues.SECURE,
-                certificateName = ""
-            )
+                certificateName = "",
+            ),
         )
 
         verify { icons.loadIntoView(binding.faviconImage, IconRequest(websiteUrl)) }
@@ -65,8 +65,8 @@ class ConnectionDetailsViewTest {
                 websiteUrl = "https://mozilla.org",
                 websiteTitle = "Mozilla",
                 websiteSecurityUiValues = WebsiteSecurityUiValues.INSECURE,
-                certificateName = "Certificate"
-            )
+                certificateName = "Certificate",
+            ),
         )
 
         assertEquals("Connection is not secure", binding.securityInfo.text)
@@ -79,8 +79,8 @@ class ConnectionDetailsViewTest {
                 websiteUrl = "https://mozilla.org",
                 websiteTitle = "Mozilla",
                 websiteSecurityUiValues = WebsiteSecurityUiValues.INSECURE,
-                certificateName = "Certificate"
-            )
+                certificateName = "Certificate",
+            ),
         )
 
         verify {
@@ -92,7 +92,6 @@ class ConnectionDetailsViewTest {
 
     @Test
     fun `WHEN title is empty THEN the title should be gone`() {
-
         view.bindTitle("")
 
         assertFalse(binding.titleContainer.isVisible)

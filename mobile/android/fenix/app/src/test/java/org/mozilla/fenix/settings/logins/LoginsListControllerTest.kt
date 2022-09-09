@@ -61,7 +61,7 @@ class LoginsListControllerTest {
         verifyAll {
             store.dispatch(LoginsAction.LoginSelected(login))
             navController.navigate(
-                SavedLoginsFragmentDirections.actionSavedLoginsFragmentToLoginDetailFragment(login.guid)
+                SavedLoginsFragmentDirections.actionSavedLoginsFragmentToLoginDetailFragment(login.guid),
             )
         }
 
@@ -78,7 +78,7 @@ class LoginsListControllerTest {
             browserNavigator.invoke(
                 SupportUtils.getGenericSumoURLForTopic(SupportUtils.SumoTopic.SYNC_SETUP),
                 true,
-                BrowserDirection.FromSavedLoginsFragment
+                BrowserDirection.FromSavedLoginsFragment,
             )
         }
     }
@@ -89,7 +89,7 @@ class LoginsListControllerTest {
 
         verifyAll {
             navController.navigate(
-                SavedLoginsFragmentDirections.actionSavedLoginsFragmentToAddLoginFragment()
+                SavedLoginsFragmentDirections.actionSavedLoginsFragmentToAddLoginFragment(),
             )
         }
     }

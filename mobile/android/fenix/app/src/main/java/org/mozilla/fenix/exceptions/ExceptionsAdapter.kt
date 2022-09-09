@@ -22,7 +22,7 @@ import org.mozilla.fenix.exceptions.viewholders.ExceptionsListItemViewHolder
  */
 abstract class ExceptionsAdapter<T : Any>(
     private val interactor: ExceptionsInteractor<T>,
-    diffCallback: DiffUtil.ItemCallback<AdapterItem>
+    diffCallback: DiffUtil.ItemCallback<AdapterItem>,
 ) : ListAdapter<ExceptionsAdapter.AdapterItem, RecyclerView.ViewHolder>(diffCallback) {
 
     /**

@@ -19,7 +19,7 @@ class DownloadInteractorTest {
         filePath = "filePath",
         size = "5.6 mb",
         contentType = "png",
-        status = DownloadState.Status.COMPLETED
+        status = DownloadState.Status.COMPLETED,
     )
     val controller: DownloadController = mockk(relaxed = true)
     val interactor = DownloadInteractor(controller)

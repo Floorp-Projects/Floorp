@@ -16,7 +16,7 @@ import mozilla.components.lib.state.Store
  * @property store [Store] instance attached to [ViewModel].
  */
 class StoreProvider<T : Store<*, *>>(
-    val store: T
+    val store: T,
 ) : ViewModel() {
 
     companion object {
@@ -34,7 +34,7 @@ class StoreProvider<T : Store<*, *>>(
  * @param createStore Callback to create a new [Store], used when the [ViewModel] is first created.
  */
 class StoreProviderFactory<T : Store<*, *>>(
-    private val createStore: () -> T
+    private val createStore: () -> T,
 ) : ViewModelProvider.Factory {
 
     @Suppress("UNCHECKED_CAST")

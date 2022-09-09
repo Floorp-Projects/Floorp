@@ -24,7 +24,9 @@ import org.mozilla.fenix.helpers.MockkRetryTestRule
 class FenixSnackbarDelegateTest {
 
     @MockK private lateinit var view: View
-    @MockK(relaxed = true) private lateinit var snackbar: FenixSnackbar
+
+    @MockK(relaxed = true)
+    private lateinit var snackbar: FenixSnackbar
     private lateinit var delegate: FenixSnackbarDelegate
 
     @get:Rule
@@ -57,7 +59,7 @@ class FenixSnackbarDelegateTest {
             text = R.string.app_name,
             duration = 0,
             action = 0,
-            listener = null
+            listener = null,
         )
 
         verify { snackbar.setText("Firefox") }
@@ -72,7 +74,7 @@ class FenixSnackbarDelegateTest {
             text = R.string.app_name,
             duration = 0,
             action = 0,
-            listener = {}
+            listener = {},
         )
 
         verify { snackbar.setText("Firefox") }
@@ -87,7 +89,7 @@ class FenixSnackbarDelegateTest {
             text = R.string.app_name,
             duration = 0,
             action = R.string.edit,
-            listener = null
+            listener = null,
         )
 
         verify { snackbar.setText("Firefox") }
@@ -103,7 +105,7 @@ class FenixSnackbarDelegateTest {
             text = R.string.app_name,
             duration = 0,
             action = R.string.edit,
-            listener = listener
+            listener = listener,
         )
 
         verify { snackbar.setText("Firefox") }
@@ -114,7 +116,7 @@ class FenixSnackbarDelegateTest {
                     verify(exactly = 0) { listener(view) }
                     it.invoke()
                     verify { listener(view) }
-                }
+                },
             )
         }
         verify { snackbar.show() }

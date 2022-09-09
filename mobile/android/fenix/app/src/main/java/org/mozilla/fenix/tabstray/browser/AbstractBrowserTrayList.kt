@@ -23,7 +23,7 @@ import kotlin.math.abs
 abstract class AbstractBrowserTrayList @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,
-    defStyleAttr: Int = 0
+    defStyleAttr: Int = 0,
 ) : RecyclerView(context, attrs, defStyleAttr) {
 
     lateinit var interactor: TabsTrayInteractor
@@ -148,7 +148,9 @@ abstract class AbstractBrowserTrayList @JvmOverloads constructor(
                     false
                 }
             }
-        } else false
+        } else {
+            false
+        }
     }
 
     private val dragRunnable: Runnable = object : Runnable {
@@ -176,7 +178,10 @@ abstract class AbstractBrowserTrayList @JvmOverloads constructor(
                         // Deal with https://issuetracker.google.com/issues/37018279
                         // See also https://stackoverflow.com/questions/27992427
                         (layoutManager as? ItemTouchHelper.ViewDropHandler)?.prepareForDrop(
-                            sourceView, targetView, sourceView.left, sourceView.top
+                            sourceView,
+                            targetView,
+                            sourceView.left,
+                            sourceView.top,
                         )
                     }
                 }

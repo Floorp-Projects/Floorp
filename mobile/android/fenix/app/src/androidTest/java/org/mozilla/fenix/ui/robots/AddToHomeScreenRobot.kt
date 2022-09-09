@@ -55,10 +55,10 @@ class AddToHomeScreenRobot {
             mDevice.wait(
                 Until.findObject(
                     By.text(
-                        Pattern.compile("Add Automatically", Pattern.CASE_INSENSITIVE)
-                    )
+                        Pattern.compile("Add Automatically", Pattern.CASE_INSENSITIVE),
+                    ),
                 ),
-                waitingTime
+                waitingTime,
             )
             addAutomaticallyButton().click()
         }
@@ -67,7 +67,7 @@ class AddToHomeScreenRobot {
     fun verifyShortcutAdded(shortcutTitle: String) {
         assertTrue(
             mDevice.findObject(UiSelector().text(shortcutTitle))
-                .waitForExists(waitingTime)
+                .waitForExists(waitingTime),
         )
     }
 
@@ -75,7 +75,7 @@ class AddToHomeScreenRobot {
         fun openHomeScreenShortcut(title: String, interact: BrowserRobot.() -> Unit): BrowserRobot.Transition {
             mDevice.wait(
                 Until.findObject(By.text(title)),
-                waitingTime
+                waitingTime,
             )
             mDevice.findObject((UiSelector().text(title))).clickAndWaitForNewWindow(waitingTime)
 
@@ -112,8 +112,8 @@ private fun assertShortcutNameField(expectedText: String) {
     onView(
         allOf(
             withId(R.id.shortcut_text),
-            withText(expectedText)
-        )
+            withText(expectedText),
+        ),
     )
         .check(matches(isCompletelyDisplayed()))
 }

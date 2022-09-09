@@ -58,7 +58,7 @@ class TrackerBuckets {
     companion object {
 
         private fun putTrackersInBuckets(
-            list: List<TrackerLog>
+            list: List<TrackerLog>,
         ): BucketedTrackerLog {
             val blockedMap = createMap()
             val loadedMap = createMap()
@@ -93,7 +93,7 @@ class TrackerBuckets {
          */
         private fun MutableMap<TrackingProtectionCategory, MutableList<TrackerLog>>.addTrackerHost(
             category: TrackingCategory,
-            tracker: TrackerLog
+            tracker: TrackerLog,
         ) {
             val key = when (category) {
                 TrackingCategory.CRYPTOMINING -> CRYPTOMINERS
@@ -110,7 +110,7 @@ class TrackerBuckets {
          */
         private fun MutableMap<TrackingProtectionCategory, MutableList<TrackerLog>>.addTrackerHost(
             key: TrackingProtectionCategory,
-            tracker: TrackerLog
+            tracker: TrackerLog,
         ) {
             getOrPut(key) { mutableListOf() }.add(tracker)
         }

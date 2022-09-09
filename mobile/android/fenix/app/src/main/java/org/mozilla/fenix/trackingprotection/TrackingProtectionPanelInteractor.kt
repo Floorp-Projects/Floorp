@@ -27,7 +27,7 @@ class TrackingProtectionPanelInteractor(
     private val openLearnMoreLink: () -> Unit,
     internal var sitePermissions: SitePermissions?,
     private val gravity: Int,
-    private val getCurrentTab: () -> SessionState?
+    private val getCurrentTab: () -> SessionState?,
 ) : TrackingProtectionPanelViewInteractor {
 
     override fun openDetails(category: TrackingProtectionCategory, categoryBlocked: Boolean) {
@@ -58,7 +58,7 @@ class TrackingProtectionPanelInteractor(
                             gravity = gravity,
                             certificateName = tab.content.securityInfo.issuer,
                             permissionHighlights = tab.content.permissionHighlights,
-                            isTrackingProtectionEnabled = isTrackingProtectionEnabled
+                            isTrackingProtectionEnabled = isTrackingProtectionEnabled,
                         )
                     navController().navigate(directions)
                 }

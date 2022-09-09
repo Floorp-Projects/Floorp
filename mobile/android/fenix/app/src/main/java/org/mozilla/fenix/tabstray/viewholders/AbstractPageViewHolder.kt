@@ -12,14 +12,14 @@ import org.mozilla.fenix.tabstray.TrayPagerAdapter
  * An abstract [RecyclerView.ViewHolder] for [TrayPagerAdapter] items.
  */
 abstract class AbstractPageViewHolder constructor(
-    val containerView: View
+    val containerView: View,
 ) : RecyclerView.ViewHolder(containerView) {
 
     /**
      * Invoked when the nested [RecyclerView.Adapter] is bound to the [RecyclerView.ViewHolder].
      */
     abstract fun bind(
-        adapter: RecyclerView.Adapter<out RecyclerView.ViewHolder>
+        adapter: RecyclerView.Adapter<out RecyclerView.ViewHolder>,
     )
 
     /**

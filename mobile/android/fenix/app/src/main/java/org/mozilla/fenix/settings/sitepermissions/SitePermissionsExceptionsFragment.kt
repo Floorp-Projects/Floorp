@@ -144,7 +144,7 @@ class SitePermissionsExceptionsFragment :
 class SitePermissionsViewHolder(
     val view: View,
     val iconView: ImageView,
-    val siteTextView: TextView
+    val siteTextView: TextView,
 ) :
     RecyclerView.ViewHolder(view)
 

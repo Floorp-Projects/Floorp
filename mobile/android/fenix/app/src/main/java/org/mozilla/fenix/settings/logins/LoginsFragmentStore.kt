@@ -26,7 +26,7 @@ data class SavedLogin(
     val origin: String,
     val username: String,
     val password: String,
-    val timeLastUsed: Long
+    val timeLastUsed: Long,
 ) : Parcelable
 
 fun Login.mapToSavedLogin(): SavedLogin =
@@ -35,7 +35,7 @@ fun Login.mapToSavedLogin(): SavedLogin =
         origin = this.origin,
         username = this.username,
         password = this.password,
-        timeLastUsed = this.timeLastUsed
+        timeLastUsed = this.timeLastUsed,
     )
 
 /**
@@ -44,7 +44,7 @@ fun Login.mapToSavedLogin(): SavedLogin =
 class LoginsFragmentStore(initialState: LoginsListState) :
     Store<LoginsListState, LoginsAction>(
         initialState,
-        ::savedLoginsStateReducer
+        ::savedLoginsStateReducer,
     )
 
 /**
@@ -95,7 +95,7 @@ fun createInitialLoginsListState(settings: Settings) = LoginsListState(
  */
 private fun savedLoginsStateReducer(
     state: LoginsListState,
-    action: LoginsAction
+    action: LoginsAction,
 ): LoginsListState {
     return when (action) {
         is LoginsAction.LoginsListUpToDate -> {
@@ -105,36 +105,36 @@ private fun savedLoginsStateReducer(
             state.copy(
                 isLoading = false,
                 loginList = action.list,
-                filteredItems = state.sortingStrategy(action.list)
+                filteredItems = state.sortingStrategy(action.list),
             )
         }
         is LoginsAction.FilterLogins -> {
             filterItems(
                 action.newText,
                 state.sortingStrategy,
-                state
+                state,
             )
         }
         is LoginsAction.UpdateCurrentLogin -> {
             state.copy(
-                currentItem = action.item
+                currentItem = action.item,
             )
         }
         is LoginsAction.SortLogins -> {
             filterItems(
                 state.searchedForText,
                 action.sortingStrategy,
-                state
+                state,
             )
         }
         is LoginsAction.LoginSelected -> {
             state.copy(
-                isLoading = true
+                isLoading = true,
             )
         }
         is LoginsAction.DuplicateLogin -> {
             state.copy(
-                duplicateLogin = action.dupe
+                duplicateLogin = action.dupe,
             )
         }
     }
@@ -152,7 +152,7 @@ private fun savedLoginsStateReducer(
 private fun filterItems(
     searchedForText: String?,
     sortingStrategy: SortingStrategy,
-    state: LoginsListState
+    state: LoginsListState,
 ): LoginsListState {
     return if (searchedForText.isNullOrBlank()) {
         state.copy(
@@ -160,7 +160,7 @@ private fun filterItems(
             sortingStrategy = sortingStrategy,
             highlightedItem = sortingStrategyToMenuItem(sortingStrategy),
             searchedForText = searchedForText,
-            filteredItems = sortingStrategy(state.loginList)
+            filteredItems = sortingStrategy(state.loginList),
         )
     } else {
         state.copy(
@@ -170,9 +170,9 @@ private fun filterItems(
             searchedForText = searchedForText,
             filteredItems = sortingStrategy(state.loginList).filter {
                 it.origin.contains(
-                    searchedForText
+                    searchedForText,
                 )
-            }
+            },
         )
     }
 }

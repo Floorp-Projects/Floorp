@@ -23,7 +23,7 @@ import org.mozilla.fenix.tabstray.TabsTrayStore
 @OptIn(ExperimentalCoroutinesApi::class)
 class SyncButtonBinding(
     tabsTrayStore: TabsTrayStore,
-    private val onSyncNow: () -> Unit
+    private val onSyncNow: () -> Unit,
 ) : AbstractBinding<TabsTrayState>(tabsTrayStore) {
     override suspend fun onState(flow: Flow<TabsTrayState>) {
         flow.map { it.syncing }

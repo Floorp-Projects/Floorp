@@ -70,6 +70,7 @@ class WallpapersObserver(
     /**
      * Listener for when the first observed wallpaper is loaded and available to be set.
      */
+
     @VisibleForTesting
     internal val isWallpaperLoaded = CompletableDeferred<Unit>()
 

@@ -35,7 +35,7 @@ class DesktopFoldersTest {
         position = 0u,
         url = null,
         dateAdded = 0,
-        children = null
+        children = null,
     )
 
     @Before

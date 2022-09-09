@@ -23,7 +23,7 @@ class CrashReporterController(
     @get:VisibleForTesting internal val components: Components,
     @get:VisibleForTesting internal val settings: Settings,
     @get:VisibleForTesting internal val navController: NavController,
-    @get:VisibleForTesting internal val appStore: AppStore
+    @get:VisibleForTesting internal val appStore: AppStore,
 ) {
 
     /**
@@ -55,7 +55,7 @@ class CrashReporterController(
         // When the only tab crashed and the user chose to close it we'll navigate to Home.
         if (currentNumberOfTabs == 1) {
             navController.navigate(
-                BrowserFragmentDirections.actionGlobalHome()
+                BrowserFragmentDirections.actionGlobalHome(),
             )
         }
 

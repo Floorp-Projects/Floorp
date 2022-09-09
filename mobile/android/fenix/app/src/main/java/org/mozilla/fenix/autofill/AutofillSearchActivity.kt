@@ -27,7 +27,7 @@ class AutofillSearchActivity : AbstractAutofillSearchActivity() {
         // the full width of the screen for the dialog.
         window.setLayout(
             ViewGroup.LayoutParams.MATCH_PARENT,
-            ViewGroup.LayoutParams.WRAP_CONTENT
+            ViewGroup.LayoutParams.WRAP_CONTENT,
         )
     }
 }

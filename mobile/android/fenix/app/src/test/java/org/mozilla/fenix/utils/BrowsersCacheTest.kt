@@ -32,8 +32,8 @@ class BrowsersCacheTest {
         pretendBrowsersAreInstalled(
             browsers = listOf(
                 Browsers.KnownBrowser.FIREFOX_NIGHTLY.packageName,
-                Browsers.KnownBrowser.REFERENCE_BROWSER.packageName
-            )
+                Browsers.KnownBrowser.REFERENCE_BROWSER.packageName,
+            ),
         )
 
         val initialBrowserList = BrowsersCache.all(testContext)
@@ -46,8 +46,8 @@ class BrowsersCacheTest {
                 Browsers.KnownBrowser.CHROME.packageName,
                 Browsers.KnownBrowser.SAMSUNG_INTERNET.packageName,
                 Browsers.KnownBrowser.DUCKDUCKGO.packageName,
-                Browsers.KnownBrowser.REFERENCE_BROWSER.packageName
-            )
+                Browsers.KnownBrowser.REFERENCE_BROWSER.packageName,
+            ),
         )
         val updatedBrowserList = BrowsersCache.all(testContext)
         assertEquals(3, updatedBrowserList.installedBrowsers.size)
@@ -59,8 +59,8 @@ class BrowsersCacheTest {
         pretendBrowsersAreInstalled(
             browsers = listOf(
                 Browsers.KnownBrowser.FIREFOX_NIGHTLY.packageName,
-                Browsers.KnownBrowser.REFERENCE_BROWSER.packageName
-            )
+                Browsers.KnownBrowser.REFERENCE_BROWSER.packageName,
+            ),
         )
 
         val initialBrowserList = BrowsersCache.all(testContext)
@@ -73,8 +73,8 @@ class BrowsersCacheTest {
                 Browsers.KnownBrowser.CHROME.packageName,
                 Browsers.KnownBrowser.SAMSUNG_INTERNET.packageName,
                 Browsers.KnownBrowser.DUCKDUCKGO.packageName,
-                Browsers.KnownBrowser.REFERENCE_BROWSER.packageName
-            )
+                Browsers.KnownBrowser.REFERENCE_BROWSER.packageName,
+            ),
         )
 
         BrowsersCache.resetAll()
@@ -103,7 +103,7 @@ class BrowsersCacheTest {
         defaultBrowser: String? = null,
         url: String = "http://www.mozilla.org/index.html",
         browsersExported: Boolean = true,
-        defaultBrowserExported: Boolean = true
+        defaultBrowserExported: Boolean = true,
     ) {
         val packageManager = testContext.packageManager
         val shadow = shadowOf(packageManager)

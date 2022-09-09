@@ -32,17 +32,19 @@ class DefaultStudiesInteractor(
         homeActivity.openToBrowserAndLoad(
             searchTermOrURL = url,
             newTab = true,
-            from = BrowserDirection.FromStudiesFragment
+            from = BrowserDirection.FromStudiesFragment,
         )
     }
 
     override fun removeStudy(experiment: EnrolledExperiment) {
-        experiments.register(object : NimbusInterface.Observer {
-            override fun onUpdatesApplied(updated: List<EnrolledExperiment>) {
-                // Wait until the experiment is unrolled from nimbus to restart.
-                killApplication()
-            }
-        })
+        experiments.register(
+            object : NimbusInterface.Observer {
+                override fun onUpdatesApplied(updated: List<EnrolledExperiment>) {
+                    // Wait until the experiment is unrolled from nimbus to restart.
+                    killApplication()
+                }
+            },
+        )
         experiments.optOut(experiment.slug)
         experiments.applyPendingExperiments()
     }

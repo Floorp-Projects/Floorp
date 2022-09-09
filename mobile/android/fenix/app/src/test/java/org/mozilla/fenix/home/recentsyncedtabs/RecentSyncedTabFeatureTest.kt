@@ -66,7 +66,7 @@ class RecentSyncedTabFeatureTest {
         lastAccessTime = timeNow,
         capabilities = listOf(),
         subscriptionExpired = false,
-        subscription = null
+        subscription = null,
     )
     private val deviceAccessed1 = Device(
         id = "id1",
@@ -76,7 +76,7 @@ class RecentSyncedTabFeatureTest {
         lastAccessTime = earliestTime,
         capabilities = listOf(),
         subscriptionExpired = false,
-        subscription = null
+        subscription = null,
     )
     private val deviceAccessed2 = Device(
         id = "id2",
@@ -86,7 +86,7 @@ class RecentSyncedTabFeatureTest {
         lastAccessTime = earlierTime,
         capabilities = listOf(),
         subscriptionExpired = false,
-        subscription = null
+        subscription = null,
     )
 
     private val appStore: AppStore = mockk()
@@ -105,7 +105,7 @@ class RecentSyncedTabFeatureTest {
         every { appStore.dispatch(any()) } returns mockk()
         mockkConstructor(SyncEnginesStorage::class)
         every { anyConstructed<SyncEnginesStorage>().getStatus() } returns mapOf(
-            SyncEngine.Tabs to true
+            SyncEngine.Tabs to true,
         )
 
         feature = RecentSyncedTabFeature(
@@ -170,8 +170,8 @@ class RecentSyncedTabFeatureTest {
         coEvery { syncedTabsStorage.getSyncedDeviceTabs() } returns listOf(
             SyncedDeviceTabs(
                 device = deviceAccessed1,
-                tabs = listOf(activeTab)
-            )
+                tabs = listOf(activeTab),
+            ),
         )
 
         feature.start()
@@ -194,7 +194,7 @@ class RecentSyncedTabFeatureTest {
         val remoteTab = createActiveTab("remote", "https://mozilla.org", null)
         val syncedTabs = listOf(
             SyncedDeviceTabs(currentDevice, listOf(localTab)),
-            SyncedDeviceTabs(deviceAccessed1, listOf(remoteTab))
+            SyncedDeviceTabs(deviceAccessed1, listOf(remoteTab)),
         )
         coEvery { syncedTabsStorage.getSyncedDeviceTabs() } returns syncedTabs
 
@@ -205,7 +205,7 @@ class RecentSyncedTabFeatureTest {
         val expectedTabs = listOf(remoteTab.toRecentSyncedTab(deviceAccessed1))
         verify {
             appStore.dispatch(
-                AppAction.RecentSyncedTabStateChange(RecentSyncedTabState.Success(expectedTabs))
+                AppAction.RecentSyncedTabStateChange(RecentSyncedTabState.Success(expectedTabs)),
             )
         }
     }
@@ -221,7 +221,7 @@ class RecentSyncedTabFeatureTest {
         val remoteTab = createActiveTab("remote", "https://mozilla.org", null)
         val syncedTabs = listOf(
             SyncedDeviceTabs(deviceAccessed2, listOf()),
-            SyncedDeviceTabs(deviceAccessed1, listOf(remoteTab))
+            SyncedDeviceTabs(deviceAccessed1, listOf(remoteTab)),
         )
         coEvery { syncedTabsStorage.getSyncedDeviceTabs() } returns syncedTabs
 
@@ -232,7 +232,7 @@ class RecentSyncedTabFeatureTest {
         val expectedTabs = listOf(remoteTab.toRecentSyncedTab(deviceAccessed1))
         verify {
             appStore.dispatch(
-                AppAction.RecentSyncedTabStateChange(RecentSyncedTabState.Success(expectedTabs))
+                AppAction.RecentSyncedTabStateChange(RecentSyncedTabState.Success(expectedTabs)),
             )
         }
     }
@@ -248,11 +248,11 @@ class RecentSyncedTabFeatureTest {
             coEvery { historyStorage.getDetailedVisits(any(), any()) } returns listOf()
             val firstDeviceTabs = listOf(
                 createActiveTab("first", "https://local.com", null),
-                createActiveTab("second", "https://github.com", null)
+                createActiveTab("second", "https://github.com", null),
             )
             val secondDeviceTabs = listOf(
                 createActiveTab("first", "https://mozilla.org", null),
-                createActiveTab("second", "https://www.mozilla.org/en-US/firefox", null)
+                createActiveTab("second", "https://www.mozilla.org/en-US/firefox", null),
             )
             val currentTime = System.currentTimeMillis()
             // Delay used to change last used times of tabs
@@ -263,7 +263,7 @@ class RecentSyncedTabFeatureTest {
             every { secondDeviceTabs[1].lastUsed } returns currentTime - 3 * usedDelay
             val syncedTabs = listOf(
                 SyncedDeviceTabs(deviceAccessed1, firstDeviceTabs),
-                SyncedDeviceTabs(deviceAccessed2, secondDeviceTabs)
+                SyncedDeviceTabs(deviceAccessed2, secondDeviceTabs),
             )
             coEvery { syncedTabsStorage.getSyncedDeviceTabs() } returns syncedTabs
 
@@ -282,7 +282,7 @@ class RecentSyncedTabFeatureTest {
                 }
             verify {
                 appStore.dispatch(
-                    AppAction.RecentSyncedTabStateChange(RecentSyncedTabState.Success(expectedTabs))
+                    AppAction.RecentSyncedTabStateChange(RecentSyncedTabState.Success(expectedTabs)),
                 )
             }
         }
@@ -295,7 +295,7 @@ class RecentSyncedTabFeatureTest {
             every { recentSyncedTabState } returns RecentSyncedTabState.Loading
         }
         every { anyConstructed<SyncEnginesStorage>().getStatus() } returns mapOf(
-            SyncEngine.Tabs to false
+            SyncEngine.Tabs to false,
         )
 
         val firstTab = createActiveTab("remote", "https://mozilla.org", null)
@@ -310,7 +310,7 @@ class RecentSyncedTabFeatureTest {
 
         verify {
             appStore.dispatch(
-                AppAction.RecentSyncedTabStateChange(RecentSyncedTabState.None)
+                AppAction.RecentSyncedTabStateChange(RecentSyncedTabState.None),
             )
         }
     }
@@ -402,7 +402,7 @@ class RecentSyncedTabFeatureTest {
         every { appStore.state } returns mockk {
             every { recentSyncedTabState } returnsMany listOf(
                 RecentSyncedTabState.None,
-                RecentSyncedTabState.Loading
+                RecentSyncedTabState.Loading,
             )
         }
 
@@ -433,7 +433,7 @@ class RecentSyncedTabFeatureTest {
         coEvery { historyStorage.getDetailedVisits(any(), any()) } returns listOf()
         val tab = createActiveTab()
         coEvery { syncedTabsStorage.getSyncedDeviceTabs() } returns listOf(
-            SyncedDeviceTabs(deviceAccessed1, listOf(tab))
+            SyncedDeviceTabs(deviceAccessed1, listOf(tab)),
         )
 
         feature.start()
@@ -459,13 +459,13 @@ class RecentSyncedTabFeatureTest {
         coEvery { syncedTabsStorage.getSyncedDeviceTabs() } returns listOf(
             SyncedDeviceTabs(
                 device = deviceAccessed1,
-                tabs = listOf(activeTab)
-            )
+                tabs = listOf(activeTab),
+            ),
         )
         val longerThanSyncedTabUrl = activeTab.active().url + "/some/more/paths"
         val previewUrl = "preview"
         coEvery { historyStorage.getDetailedVisits(any(), any()) } returns listOf(
-            activeTab.toVisitInfo(longerThanSyncedTabUrl, previewUrl)
+            activeTab.toVisitInfo(longerThanSyncedTabUrl, previewUrl),
         )
 
         feature.start()
@@ -487,12 +487,12 @@ class RecentSyncedTabFeatureTest {
         coEvery { syncedTabsStorage.getSyncedDeviceTabs() } returns listOf(
             SyncedDeviceTabs(
                 device = deviceAccessed1,
-                tabs = listOf(activeTab)
-            )
+                tabs = listOf(activeTab),
+            ),
         )
         val longerThanSyncedTabUrl = activeTab.active().url + "/some/more/paths"
         coEvery { historyStorage.getDetailedVisits(any(), any()) } returns listOf(
-            activeTab.toVisitInfo(longerThanSyncedTabUrl, null)
+            activeTab.toVisitInfo(longerThanSyncedTabUrl, null),
         )
 
         feature.start()
@@ -517,13 +517,13 @@ class RecentSyncedTabFeatureTest {
 
     private fun Tab.toRecentSyncedTab(
         device: Device,
-        previewImageUrl: String? = null
+        previewImageUrl: String? = null,
     ) = RecentSyncedTab(
         deviceDisplayName = device.displayName,
         deviceType = device.deviceType,
         title = this.active().title,
         url = this.active().url,
-        previewImageUrl = previewImageUrl
+        previewImageUrl = previewImageUrl,
     )
 
     private fun SyncStore.setState(
@@ -545,6 +545,6 @@ class RecentSyncedTabFeatureTest {
         visitTime = 0L,
         visitType = VisitType.TYPED,
         previewImageUrl = previewUrl,
-        isRemote = false
+        isRemote = false,
     )
 }

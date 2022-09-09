@@ -23,7 +23,7 @@ class DownloadControllerTest {
         filePath = "url",
         size = "77",
         contentType = "jpg",
-        status = DownloadState.Status.COMPLETED
+        status = DownloadState.Status.COMPLETED,
     )
     private val store: DownloadFragmentStore = mockk(relaxed = true)
     private val state: DownloadFragmentState = mockk(relaxed = true)
@@ -45,7 +45,7 @@ class DownloadControllerTest {
         store,
         openToFileManager,
         invalidateOptionsMenu,
-        deleteDownloadItems
+        deleteDownloadItems,
     )
 
     @Before

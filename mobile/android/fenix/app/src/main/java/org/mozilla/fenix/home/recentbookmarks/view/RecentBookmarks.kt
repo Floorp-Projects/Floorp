@@ -74,7 +74,7 @@ fun RecentBookmarks(
 ) {
     LazyRow(
         contentPadding = PaddingValues(horizontal = 16.dp),
-        horizontalArrangement = Arrangement.spacedBy(8.dp)
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         items(bookmarks) { bookmark ->
             RecentBookmarkItem(
@@ -97,7 +97,7 @@ fun RecentBookmarks(
 private fun RecentBookmarkItem(
     bookmark: RecentBookmark,
     menuItems: List<RecentBookmarksMenuItem>,
-    onRecentBookmarkClick: (RecentBookmark) -> Unit = {}
+    onRecentBookmarkClick: (RecentBookmark) -> Unit = {},
 ) {
     var isMenuExpanded by remember { mutableStateOf(false) }
 
@@ -107,7 +107,7 @@ private fun RecentBookmarkItem(
             .combinedClickable(
                 enabled = true,
                 onClick = { onRecentBookmarkClick(bookmark) },
-                onLongClick = { isMenuExpanded = true }
+                onLongClick = { isMenuExpanded = true },
             ),
         shape = cardShape,
         backgroundColor = FirefoxTheme.colors.layer2,
@@ -116,7 +116,7 @@ private fun RecentBookmarkItem(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 8.dp)
+                .padding(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 8.dp),
         ) {
             RecentBookmarkImage(bookmark)
 
@@ -134,7 +134,7 @@ private fun RecentBookmarkItem(
                 showMenu = isMenuExpanded,
                 menuItems = menuItems,
                 recentBookmark = bookmark,
-                onDismissRequest = { isMenuExpanded = false }
+                onDismissRequest = { isMenuExpanded = false },
             )
         }
     }
@@ -148,7 +148,7 @@ private fun RecentBookmarkImage(bookmark: RecentBookmark) {
                 url = bookmark.previewImageUrl,
                 modifier = imageModifier,
                 targetSize = imageWidth,
-                contentScale = ContentScale.Crop
+                contentScale = ContentScale.Crop,
             )
         }
         !bookmark.url.isNullOrEmpty() && !inComposePreview -> {
@@ -163,7 +163,7 @@ private fun RecentBookmarkImage(bookmark: RecentBookmark) {
                             color = when (isSystemInDarkTheme()) {
                                 true -> PhotonColors.DarkGrey60
                                 false -> PhotonColors.LightGrey30
-                            }
+                            },
                         ),
                         contentAlignment = Alignment.Center,
                     ) {
@@ -192,8 +192,8 @@ private fun PlaceholderBookmarkImage() {
             color = when (isSystemInDarkTheme()) {
                 true -> PhotonColors.DarkGrey60
                 false -> PhotonColors.LightGrey30
-            }
-        )
+            },
+        ),
     )
 }
 
@@ -218,7 +218,7 @@ private fun RecentBookmarksMenu(
         expanded = showMenu,
         onDismissRequest = { onDismissRequest() },
         modifier = Modifier
-            .background(color = FirefoxTheme.colors.layer2)
+            .background(color = FirefoxTheme.colors.layer2),
     ) {
         for (item in menuItems) {
             DropdownMenuItem(
@@ -233,7 +233,7 @@ private fun RecentBookmarksMenu(
                     maxLines = 1,
                     modifier = Modifier
                         .fillMaxHeight()
-                        .align(Alignment.CenterVertically)
+                        .align(Alignment.CenterVertically),
                 )
             }
         }
@@ -250,25 +250,25 @@ private fun RecentBookmarksPreview() {
                 RecentBookmark(
                     title = "Other Bookmark Title",
                     url = "https://www.example.com",
-                    previewImageUrl = null
+                    previewImageUrl = null,
                 ),
                 RecentBookmark(
                     title = "Other Bookmark Title",
                     url = "https://www.example.com",
-                    previewImageUrl = null
+                    previewImageUrl = null,
                 ),
                 RecentBookmark(
                     title = "Other Bookmark Title",
                     url = "https://www.example.com",
-                    previewImageUrl = null
+                    previewImageUrl = null,
                 ),
                 RecentBookmark(
                     title = "Other Bookmark Title",
                     url = "https://www.example.com",
-                    previewImageUrl = null
-                )
+                    previewImageUrl = null,
+                ),
             ),
-            menuItems = listOf()
+            menuItems = listOf(),
         )
     }
 }

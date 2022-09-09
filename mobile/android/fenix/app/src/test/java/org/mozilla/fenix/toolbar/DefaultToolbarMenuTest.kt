@@ -56,10 +56,10 @@ class DefaultToolbarMenuTest {
             BrowserState(
                 tabs = listOf(
                     createTab(url = "https://firefox.com", id = "1"),
-                    createTab(url = "https://getpocket.com", id = "2")
+                    createTab(url = "https://getpocket.com", id = "2"),
                 ),
-                selectedTabId = "1"
-            )
+                selectedTabId = "1",
+            ),
         )
     }
 
@@ -78,8 +78,8 @@ class DefaultToolbarMenuTest {
                 lifecycleOwner = lifecycleOwner,
                 pinnedSiteStorage = pinnedSiteStorage,
                 bookmarksStorage = bookmarksStorage,
-                isPinningSupported = false
-            )
+                isPinningSupported = false,
+            ),
         )
 
         every { toolbarMenu.updateCurrentUrlIsBookmarked(any()) } returns mockk()

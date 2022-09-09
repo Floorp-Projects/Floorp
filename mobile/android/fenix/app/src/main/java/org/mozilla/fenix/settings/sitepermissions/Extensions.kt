@@ -37,7 +37,7 @@ internal fun initBlockedByAndroidView(phoneFeature: PhoneFeature, blockedByAndro
         val descriptionLabel = blockedByAndroidView.findViewById<TextView>(R.id.blocked_by_android_feature_label)
         val descriptionText = context.getString(
             R.string.phone_feature_blocked_step_feature,
-            phoneFeature.getLabel(context)
+            phoneFeature.getLabel(context),
         )
         descriptionLabel.text = HtmlCompat.fromHtml(descriptionText, HtmlCompat.FROM_HTML_MODE_COMPACT)
 

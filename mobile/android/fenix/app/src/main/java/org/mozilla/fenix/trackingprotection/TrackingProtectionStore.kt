@@ -18,7 +18,7 @@ import org.mozilla.fenix.R
 class TrackingProtectionStore(initialState: TrackingProtectionState) :
     Store<TrackingProtectionState, TrackingProtectionAction>(
         initialState,
-        ::trackingProtectionStateReducer
+        ::trackingProtectionStateReducer,
     )
 
 /**
@@ -29,7 +29,7 @@ sealed class TrackingProtectionAction : Action {
         val url: String,
         val isTrackingProtectionEnabled: Boolean,
         val listTrackers: List<TrackerLog>,
-        val mode: TrackingProtectionState.Mode
+        val mode: TrackingProtectionState.Mode,
     ) : TrackingProtectionAction()
 
     data class UrlChange(val url: String) : TrackingProtectionAction()
@@ -38,7 +38,7 @@ sealed class TrackingProtectionAction : Action {
     object ExitDetailsMode : TrackingProtectionAction()
     data class EnterDetailsMode(
         val category: TrackingProtectionCategory,
-        val categoryBlocked: Boolean
+        val categoryBlocked: Boolean,
     ) :
         TrackingProtectionAction()
 }
@@ -60,13 +60,13 @@ data class TrackingProtectionState(
     val isTrackingProtectionEnabled: Boolean,
     val listTrackers: List<TrackerLog>,
     val mode: Mode,
-    val lastAccessedCategory: String
+    val lastAccessedCategory: String,
 ) : State {
     sealed class Mode {
         object Normal : Mode()
         data class Details(
             val selectedCategory: TrackingProtectionCategory,
-            val categoryBlocked: Boolean
+            val categoryBlocked: Boolean,
         ) : Mode()
     }
 }
@@ -76,32 +76,32 @@ data class TrackingProtectionState(
  */
 enum class TrackingProtectionCategory(
     @StringRes val title: Int,
-    @StringRes val description: Int
+    @StringRes val description: Int,
 ) {
     SOCIAL_MEDIA_TRACKERS(
         R.string.etp_social_media_trackers_title,
-        R.string.etp_social_media_trackers_description
+        R.string.etp_social_media_trackers_description,
     ),
     CROSS_SITE_TRACKING_COOKIES(
         R.string.etp_cookies_title,
-        R.string.etp_cookies_description
+        R.string.etp_cookies_description,
     ),
     CRYPTOMINERS(
         R.string.etp_cryptominers_title,
-        R.string.etp_cryptominers_description
+        R.string.etp_cryptominers_description,
     ),
     FINGERPRINTERS(
         R.string.etp_fingerprinters_title,
-        R.string.etp_fingerprinters_description
+        R.string.etp_fingerprinters_description,
     ),
     TRACKING_CONTENT(
         R.string.etp_tracking_content_title,
-        R.string.etp_tracking_content_description
+        R.string.etp_tracking_content_description,
     ),
     REDIRECT_TRACKERS(
         R.string.etp_redirect_trackers_title,
-        R.string.etp_redirect_trackers_description
-    )
+        R.string.etp_redirect_trackers_description,
+    ),
 }
 
 /**
@@ -109,28 +109,28 @@ enum class TrackingProtectionCategory(
  */
 fun trackingProtectionStateReducer(
     state: TrackingProtectionState,
-    action: TrackingProtectionAction
+    action: TrackingProtectionAction,
 ): TrackingProtectionState {
     return when (action) {
         is TrackingProtectionAction.Change -> state.copy(
             url = action.url,
             isTrackingProtectionEnabled = action.isTrackingProtectionEnabled,
             listTrackers = action.listTrackers,
-            mode = action.mode
+            mode = action.mode,
         )
         is TrackingProtectionAction.UrlChange -> state.copy(
-            url = action.url
+            url = action.url,
         )
         is TrackingProtectionAction.TrackerLogChange -> state.copy(listTrackers = action.listTrackers)
         TrackingProtectionAction.ExitDetailsMode -> state.copy(
-            mode = TrackingProtectionState.Mode.Normal
+            mode = TrackingProtectionState.Mode.Normal,
         )
         is TrackingProtectionAction.EnterDetailsMode -> state.copy(
             mode = TrackingProtectionState.Mode.Details(
                 action.category,
-                action.categoryBlocked
+                action.categoryBlocked,
             ),
-            lastAccessedCategory = action.category.name
+            lastAccessedCategory = action.category.name,
         )
     }
 }

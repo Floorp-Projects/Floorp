@@ -23,7 +23,7 @@ import org.mozilla.fenix.tabstray.TabsTrayStore
 @OptIn(ExperimentalCoroutinesApi::class)
 class SelectedItemAdapterBinding(
     store: TabsTrayStore,
-    val adapter: RecyclerView.Adapter<out RecyclerView.ViewHolder>
+    val adapter: RecyclerView.Adapter<out RecyclerView.ViewHolder>,
 ) : AbstractBinding<TabsTrayState>(store) {
 
     override suspend fun onState(flow: Flow<TabsTrayState>) {

@@ -17,7 +17,7 @@ import org.mozilla.fenix.home.topsites.TopSitePagerViewHolder.Companion.TOP_SITE
 
 class TopSitesPagerAdapter(
     private val viewLifecycleOwner: LifecycleOwner,
-    private val interactor: TopSiteInteractor
+    private val interactor: TopSiteInteractor,
 ) : ListAdapter<List<TopSite>, TopSiteViewHolder>(TopSiteListDiffCallback) {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): TopSiteViewHolder {
@@ -29,7 +29,7 @@ class TopSitesPagerAdapter(
     override fun onBindViewHolder(
         holder: TopSiteViewHolder,
         position: Int,
-        payloads: MutableList<Any>
+        payloads: MutableList<Any>,
     ) {
         if (payloads.isNullOrEmpty()) {
             onBindViewHolder(holder, position)
@@ -47,7 +47,7 @@ class TopSitesPagerAdapter(
     internal fun update(
         payload: TopSitePagerPayload,
         position: Int,
-        adapter: TopSitesAdapter
+        adapter: TopSitesAdapter,
     ) {
         // Only currently selected page items need to be updated
         val currentPageChangedItems = getCurrentPageChanges(payload, position)

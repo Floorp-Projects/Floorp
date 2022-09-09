@@ -31,7 +31,7 @@ interface CreditCardsManagementController {
  * The default implementation of [CreditCardsManagementController].
  */
 class DefaultCreditCardsManagementController(
-    private val navController: NavController
+    private val navController: NavController,
 ) : CreditCardsManagementController {
 
     override fun handleCreditCardClicked(creditCard: CreditCard) {
@@ -46,8 +46,8 @@ class DefaultCreditCardsManagementController(
         navController.navigate(
             CreditCardsManagementFragmentDirections
                 .actionCreditCardsManagementFragmentToCreditCardEditorFragment(
-                    creditCard = creditCard
-                )
+                    creditCard = creditCard,
+                ),
         )
     }
 }

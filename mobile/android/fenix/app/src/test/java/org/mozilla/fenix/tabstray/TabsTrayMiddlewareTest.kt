@@ -33,13 +33,12 @@ class TabsTrayMiddlewareTest {
         tabsTrayMiddleware = TabsTrayMiddleware()
         store = TabsTrayStore(
             middlewares = listOf(tabsTrayMiddleware),
-            initialState = TabsTrayState()
+            initialState = TabsTrayState(),
         )
     }
 
     @Test
     fun `WHEN inactive tabs are updated THEN report the count of inactive tabs`() {
-
         assertNull(TabsTray.hasInactiveTabs.testGetValue())
         assertNull(Metrics.inactiveTabsCount.testGetValue())
 

@@ -25,6 +25,7 @@ import org.mozilla.fenix.utils.Settings
 class PhoneFeatureTest {
 
     @MockK private lateinit var sitePermissions: SitePermissions
+
     @MockK private lateinit var settings: Settings
 
     @Before

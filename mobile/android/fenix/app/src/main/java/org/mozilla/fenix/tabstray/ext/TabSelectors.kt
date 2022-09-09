@@ -35,7 +35,7 @@ fun BrowserState.findPrivateTab(tabId: String): TabSessionState? {
  * The list of normal tabs in the tabs tray filtered appropriately based on feature flags.
  */
 fun BrowserState.getNormalTrayTabs(
-    inactiveTabsEnabled: Boolean
+    inactiveTabsEnabled: Boolean,
 ): List<TabSessionState> {
     return normalTabs.run {
         if (inactiveTabsEnabled) {

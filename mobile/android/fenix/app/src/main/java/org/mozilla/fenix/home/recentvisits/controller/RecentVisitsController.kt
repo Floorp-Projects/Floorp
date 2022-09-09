@@ -80,7 +80,7 @@ class DefaultRecentVisitsController(
     override fun handleHistoryShowAllClicked() {
         dismissSearchDialogIfDisplayed()
         navController.navigate(
-            HomeFragmentDirections.actionGlobalHistoryFragment()
+            HomeFragmentDirections.actionGlobalHistoryFragment(),
         )
     }
 
@@ -94,8 +94,8 @@ class DefaultRecentVisitsController(
             HomeFragmentDirections.actionGlobalHistoryMetadataGroup(
                 title = recentHistoryGroup.title,
                 historyMetadataItems = recentHistoryGroup.historyMetadata
-                    .mapIndexed { index, item -> item.toHistoryMetadata(index) }.toTypedArray()
-            )
+                    .mapIndexed { index, item -> item.toHistoryMetadata(index) }.toTypedArray(),
+            ),
         )
     }
 

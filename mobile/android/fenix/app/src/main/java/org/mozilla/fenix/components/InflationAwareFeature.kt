@@ -19,7 +19,7 @@ import java.lang.ref.WeakReference
  * for any feature-specific startup needs.
  */
 abstract class InflationAwareFeature(
-    private val stub: ViewStub
+    private val stub: ViewStub,
 ) : LifecycleAwareFeature, UserInteractionHandler {
 
     internal lateinit var view: WeakReference<View>

@@ -22,7 +22,7 @@ import mozilla.components.browser.toolbar.BrowserToolbar
  */
 class DynamicInfoBannerBehavior(
     context: Context?,
-    attrs: AttributeSet?
+    attrs: AttributeSet?,
 ) : CoordinatorLayout.Behavior<View>(context, attrs) {
     @VisibleForTesting
     internal var toolbarHeight: Int = 0

@@ -16,7 +16,7 @@ import org.mozilla.fenix.browser.browsingmode.BrowsingModeManager
 class PrivateBrowsingButtonView(
     button: View,
     private val browsingModeManager: BrowsingModeManager,
-    private val onClick: (BrowsingMode) -> Unit
+    private val onClick: (BrowsingMode) -> Unit,
 ) : View.OnClickListener {
 
     init {

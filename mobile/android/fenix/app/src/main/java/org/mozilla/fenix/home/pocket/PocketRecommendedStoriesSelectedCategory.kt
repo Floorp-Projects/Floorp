@@ -12,5 +12,5 @@ package org.mozilla.fenix.home.pocket
  */
 data class PocketRecommendedStoriesSelectedCategory(
     val name: String,
-    val selectionTimestamp: Long = System.currentTimeMillis()
+    val selectionTimestamp: Long = System.currentTimeMillis(),
 )

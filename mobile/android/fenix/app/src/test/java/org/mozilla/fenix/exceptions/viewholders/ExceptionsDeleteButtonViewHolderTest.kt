@@ -22,7 +22,9 @@ import org.mozilla.fenix.exceptions.ExceptionsInteractor
 class ExceptionsDeleteButtonViewHolderTest {
 
     @MockK private lateinit var view: View
+
     @MockK private lateinit var deleteButton: MaterialButton
+
     @MockK private lateinit var interactor: ExceptionsInteractor<Unit>
 
     @Before

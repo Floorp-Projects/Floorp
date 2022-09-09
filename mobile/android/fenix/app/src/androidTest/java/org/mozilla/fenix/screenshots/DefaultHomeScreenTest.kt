@@ -26,6 +26,7 @@ class DefaultHomeScreenTest : ScreenshotTest() {
 
     @Rule @JvmField
     val localeTestRule = LocaleTestRule()
+
     @get:Rule
     var mActivityTestRule: ActivityTestRule<HomeActivity> = HomeActivityTestRule()
 

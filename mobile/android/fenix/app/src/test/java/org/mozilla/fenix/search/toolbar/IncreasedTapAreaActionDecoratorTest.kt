@@ -18,6 +18,7 @@ import org.mozilla.fenix.ext.increaseTapArea
 class IncreasedTapAreaActionDecoratorTest {
 
     @MockK lateinit var action: Toolbar.Action
+
     @MockK lateinit var view: View
 
     private lateinit var increasedTapAreaActionDecorator: IncreasedTapAreaActionDecorator

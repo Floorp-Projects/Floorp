@@ -32,7 +32,6 @@ class OnboardingTrackingProtectionViewHolder(view: View) : RecyclerView.ViewHold
     }
 
     private fun setupRadioGroup(isChecked: Boolean) {
-
         updateRadioGroupState(isChecked)
 
         addToRadioGroup(standardTrackingProtection, strictTrackingProtection)
@@ -46,8 +45,8 @@ class OnboardingTrackingProtectionViewHolder(view: View) : RecyclerView.ViewHold
             updateTrackingProtectionPolicy()
             Onboarding.prefToggledTrackingProt.record(
                 Onboarding.PrefToggledTrackingProtExtra(
-                    Settings.STANDARD.name
-                )
+                    Settings.STANDARD.name,
+                ),
             )
         }
 
@@ -55,8 +54,8 @@ class OnboardingTrackingProtectionViewHolder(view: View) : RecyclerView.ViewHold
             updateTrackingProtectionPolicy()
             Onboarding.prefToggledTrackingProt.record(
                 Onboarding.PrefToggledTrackingProtExtra(
-                    Settings.STRICT.name
-                )
+                    Settings.STRICT.name,
+                ),
             )
         }
     }
@@ -77,6 +76,7 @@ class OnboardingTrackingProtectionViewHolder(view: View) : RecyclerView.ViewHold
 
     companion object {
         const val LAYOUT_ID = R.layout.onboarding_tracking_protection
+
         // Tracking protection policy types used for telemetry
         enum class Settings { STRICT, STANDARD }
     }

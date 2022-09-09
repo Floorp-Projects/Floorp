@@ -24,7 +24,7 @@ interface SyncController {
  * Controller for handling [DefaultSyncInteractor] requests.
  */
 class DefaultSyncController(
-    private val activity: HomeActivity
+    private val activity: HomeActivity,
 ) : SyncController {
 
     /**
@@ -45,7 +45,7 @@ class DefaultSyncController(
     fun buildDialog(): AlertDialog.Builder {
         return AlertDialog.Builder(activity).apply {
             val spannableText = SpannableString(
-                activity.resources.getString(R.string.camera_permissions_needed_message)
+                activity.resources.getString(R.string.camera_permissions_needed_message),
             )
             setMessage(spannableText)
             setNegativeButton(R.string.camera_permissions_needed_negative_button_text) { dialog: DialogInterface, _ ->
@@ -59,8 +59,8 @@ class DefaultSyncController(
                         activity,
                         SupportUtils.getSumoURLForTopic(
                             activity,
-                            SupportUtils.SumoTopic.QR_CAMERA_ACCESS
-                        )
+                            SupportUtils.SumoTopic.QR_CAMERA_ACCESS,
+                        ),
                     )
                 }
                 val uri = Uri.fromParts("package", activity.packageName, null)

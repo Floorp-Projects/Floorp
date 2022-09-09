@@ -42,13 +42,13 @@ abstract class AbstractBrowserPageViewHolder(
      */
     abstract fun scrollToTab(
         adapter: RecyclerView.Adapter<out RecyclerView.ViewHolder>,
-        layoutManager: RecyclerView.LayoutManager
+        layoutManager: RecyclerView.LayoutManager,
     )
 
     @CallSuper
     protected fun bind(
         adapter: RecyclerView.Adapter<out RecyclerView.ViewHolder>,
-        layoutManager: RecyclerView.LayoutManager
+        layoutManager: RecyclerView.LayoutManager,
     ) {
         adapterRef = adapter
 
@@ -96,6 +96,7 @@ abstract class AbstractBrowserPageViewHolder(
             adapterObserver = null
         }
     }
+
     /**
      * A way for an implementor of [AbstractBrowserPageViewHolder] to define their own behavior of
      * when to show/hide the tray list and empty list UI.

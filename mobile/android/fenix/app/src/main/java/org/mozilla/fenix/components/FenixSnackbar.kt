@@ -27,7 +27,7 @@ class FenixSnackbar private constructor(
     parent: ViewGroup,
     private val binding: FenixSnackbarBinding,
     contentViewCallback: FenixSnackbarCallback,
-    isError: Boolean
+    isError: Boolean,
 ) : BaseTransientBottomBar<FenixSnackbar>(parent, binding.root, contentViewCallback) {
 
     init {
@@ -42,7 +42,7 @@ class FenixSnackbar private constructor(
             minTextSize,
             maxTextSize,
             stepGranularity,
-            TypedValue.COMPLEX_UNIT_SP
+            TypedValue.COMPLEX_UNIT_SP,
         )
     }
 
@@ -99,11 +99,11 @@ class FenixSnackbar private constructor(
             view: View,
             duration: Int = LENGTH_LONG,
             isError: Boolean = false,
-            isDisplayedWithBrowserToolbar: Boolean
+            isDisplayedWithBrowserToolbar: Boolean,
         ): FenixSnackbar {
             val parent = findSuitableParent(view) ?: run {
                 throw IllegalArgumentException(
-                    "No suitable parent found from the given view. Please provide a valid view."
+                    "No suitable parent found from the given view. Please provide a valid view.",
                 )
             }
 
@@ -139,7 +139,7 @@ class FenixSnackbar private constructor(
                         toolbarHeight
                     } else {
                         0
-                    }
+                    },
                 )
             }
         }
@@ -174,7 +174,7 @@ class FenixSnackbar private constructor(
 }
 
 private class FenixSnackbarCallback(
-    private val content: View
+    private val content: View,
 ) : ContentViewCallback {
 
     override fun animateContentIn(delay: Int, duration: Int) {

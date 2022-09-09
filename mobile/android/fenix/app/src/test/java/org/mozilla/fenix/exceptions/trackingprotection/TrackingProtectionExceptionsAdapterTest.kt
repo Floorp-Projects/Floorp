@@ -63,38 +63,38 @@ class TrackingProtectionExceptionsAdapterTest {
         assertTrue(
             TrackingProtectionExceptionsAdapter.DiffCallback.areItemsTheSame(
                 ExceptionsAdapter.AdapterItem.Header,
-                ExceptionsAdapter.AdapterItem.Header
-            )
+                ExceptionsAdapter.AdapterItem.Header,
+            ),
         )
         assertTrue(
             TrackingProtectionExceptionsAdapter.DiffCallback.areItemsTheSame(
                 ExceptionsAdapter.AdapterItem.DeleteButton,
-                ExceptionsAdapter.AdapterItem.DeleteButton
-            )
+                ExceptionsAdapter.AdapterItem.DeleteButton,
+            ),
         )
         assertFalse(
             TrackingProtectionExceptionsAdapter.DiffCallback.areItemsTheSame(
                 ExceptionsAdapter.AdapterItem.Header,
-                ExceptionsAdapter.AdapterItem.DeleteButton
-            )
+                ExceptionsAdapter.AdapterItem.DeleteButton,
+            ),
         )
         assertTrue(
             TrackingProtectionExceptionsAdapter.DiffCallback.areContentsTheSame(
                 ExceptionsAdapter.AdapterItem.Header,
-                ExceptionsAdapter.AdapterItem.Header
-            )
+                ExceptionsAdapter.AdapterItem.Header,
+            ),
         )
         assertTrue(
             TrackingProtectionExceptionsAdapter.DiffCallback.areContentsTheSame(
                 ExceptionsAdapter.AdapterItem.DeleteButton,
-                ExceptionsAdapter.AdapterItem.DeleteButton
-            )
+                ExceptionsAdapter.AdapterItem.DeleteButton,
+            ),
         )
         assertFalse(
             TrackingProtectionExceptionsAdapter.DiffCallback.areContentsTheSame(
                 ExceptionsAdapter.AdapterItem.DeleteButton,
-                ExceptionsAdapter.AdapterItem.Header
-            )
+                ExceptionsAdapter.AdapterItem.Header,
+            ),
         )
     }
 
@@ -105,38 +105,38 @@ class TrackingProtectionExceptionsAdapterTest {
                 TrackingProtectionExceptionsAdapter.TrackingProtectionAdapterItem(
                     mockk {
                         every { url } returns "https://mozilla.org"
-                    }
+                    },
                 ),
                 TrackingProtectionExceptionsAdapter.TrackingProtectionAdapterItem(
                     mockk {
                         every { url } returns "https://mozilla.org"
-                    }
-                )
-            )
+                    },
+                ),
+            ),
         )
         assertFalse(
             TrackingProtectionExceptionsAdapter.DiffCallback.areItemsTheSame(
                 TrackingProtectionExceptionsAdapter.TrackingProtectionAdapterItem(
                     mockk {
                         every { url } returns "https://mozilla.org"
-                    }
+                    },
                 ),
                 TrackingProtectionExceptionsAdapter.TrackingProtectionAdapterItem(
                     mockk {
                         every { url } returns "https://firefox.com"
-                    }
-                )
-            )
+                    },
+                ),
+            ),
         )
         assertFalse(
             TrackingProtectionExceptionsAdapter.DiffCallback.areItemsTheSame(
                 TrackingProtectionExceptionsAdapter.TrackingProtectionAdapterItem(
                     mockk {
                         every { url } returns "https://mozilla.org"
-                    }
+                    },
                 ),
-                ExceptionsAdapter.AdapterItem.Header
-            )
+                ExceptionsAdapter.AdapterItem.Header,
+            ),
         )
         assertFalse(
             TrackingProtectionExceptionsAdapter.DiffCallback.areItemsTheSame(
@@ -144,9 +144,9 @@ class TrackingProtectionExceptionsAdapterTest {
                 TrackingProtectionExceptionsAdapter.TrackingProtectionAdapterItem(
                     mockk {
                         every { url } returns "https://mozilla.org"
-                    }
-                )
-            )
+                    },
+                ),
+            ),
         )
     }
 }

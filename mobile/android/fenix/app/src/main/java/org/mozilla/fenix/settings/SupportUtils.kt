@@ -58,7 +58,7 @@ object SupportUtils {
 
     enum class MozillaPage(internal val path: String) {
         PRIVATE_NOTICE("privacy/firefox/"),
-        MANIFESTO("about/manifesto/")
+        MANIFESTO("about/manifesto/"),
     }
 
     /**
@@ -67,7 +67,7 @@ object SupportUtils {
     fun getSumoURLForTopic(
         context: Context,
         topic: SumoTopic,
-        locale: Locale = Locale.getDefault()
+        locale: Locale = Locale.getDefault(),
     ): String {
         val escapedTopic = getEncodedTopicUTF8(topic.topicStr)
         // Remove the whitespace so a search is not triggered:
@@ -102,7 +102,7 @@ object SupportUtils {
     fun createCustomTabIntent(context: Context, url: String): Intent = CustomTabsIntent.Builder()
         .setInstantAppsEnabled(false)
         .setDefaultColorSchemeParams(
-            CustomTabColorSchemeParams.Builder().setToolbarColor(context.getColorFromAttr(R.attr.layer1)).build()
+            CustomTabColorSchemeParams.Builder().setToolbarColor(context.getColorFromAttr(R.attr.layer1)).build(),
         )
         .build()
         .intent

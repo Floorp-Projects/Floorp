@@ -58,12 +58,12 @@ class ShareFragment : AppCompatDialogFragment() {
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
-        savedInstanceState: Bundle?
+        savedInstanceState: Bundle?,
     ): View {
         val binding = FragmentShareBinding.inflate(
             inflater,
             container,
-            false
+            false,
         )
         val shareData = args.data.toList()
 
@@ -76,12 +76,12 @@ class ShareFragment : AppCompatDialogFragment() {
                 shareData = shareData,
                 snackbar = FenixSnackbar.make(
                     view = requireActivity().getRootView()!!,
-                    isDisplayedWithBrowserToolbar = true
+                    isDisplayedWithBrowserToolbar = true,
                 ),
                 navController = findNavController(),
                 sendTabUseCases = SendTabUseCases(accountManager),
                 recentAppsStorage = RecentAppsStorage(requireContext()),
-                viewLifecycleScope = viewLifecycleOwner.lifecycleScope
+                viewLifecycleScope = viewLifecycleOwner.lifecycleScope,
             ) { result ->
                 consumePrompt {
                     when (result) {
@@ -91,7 +91,7 @@ class ShareFragment : AppCompatDialogFragment() {
                     }
                 }
                 super.dismiss()
-            }
+            },
         )
 
         binding.shareWrapper.setOnClickListener { shareInteractor.onShareClosed() }
@@ -140,7 +140,7 @@ class ShareFragment : AppCompatDialogFragment() {
      * prompt request, call [consume] then clean up the prompt.
      */
     private fun consumePrompt(
-        consume: PromptRequest.Share.() -> Unit
+        consume: PromptRequest.Share.() -> Unit,
     ) {
         val browserStore = requireComponents.core.store
         args.sessionId

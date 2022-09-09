@@ -21,7 +21,7 @@ import org.mozilla.fenix.selection.SelectionHolder
 class HistoryMetadataGroupItemViewHolder(
     view: View,
     private val interactor: HistoryMetadataGroupInteractor,
-    private val selectionHolder: SelectionHolder<History.Metadata>
+    private val selectionHolder: SelectionHolder<History.Metadata>,
 ) : RecyclerView.ViewHolder(view) {
 
     private val binding = HistoryMetadataGroupListItemBinding.bind(view)

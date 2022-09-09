@@ -111,8 +111,8 @@ class DefaultQuickSettingsControllerTest {
                 reload = reload,
                 requestRuntimePermissions = requestPermissions,
                 engine = engine,
-                displayPermissions = {}
-            )
+                displayPermissions = {},
+            ),
         )
     }
 
@@ -123,7 +123,7 @@ class DefaultQuickSettingsControllerTest {
         createController(
             displayPermissions = {
                 displayPermissionsInvoked = true
-            }
+            },
         ).handlePermissionsShown()
 
         assertTrue(displayPermissionsInvoked)
@@ -162,7 +162,7 @@ class DefaultQuickSettingsControllerTest {
             store.dispatch(
                 match { action ->
                     PhoneFeature.CAMERA == (action as WebsitePermissionAction.TogglePermission).updatedFeature
-                }
+                },
             )
         }
     }
@@ -183,7 +183,7 @@ class DefaultQuickSettingsControllerTest {
             permissionStorage = permissionStorage,
             reload = reload,
             requestRuntimePermissions = requestPermissions,
-            displayPermissions = {}
+            displayPermissions = {},
         )
 
         every { websitePermission.phoneFeature } returns PhoneFeature.CAMERA
@@ -196,9 +196,9 @@ class DefaultQuickSettingsControllerTest {
             navController.navigate(
                 directionsEq(
                     QuickSettingsSheetDialogFragmentDirections.actionGlobalSitePermissionsManagePhoneFeature(
-                        PhoneFeature.CAMERA
-                    )
-                )
+                        PhoneFeature.CAMERA,
+                    ),
+                ),
             )
         }
     }
@@ -254,7 +254,7 @@ class DefaultQuickSettingsControllerTest {
                     assertEquals(featureGranted, action.updatedFeature)
                     assertEquals(permissionStatus, action.updatedStatus)
                     assertEquals(permissionEnabled, action.updatedEnabledStatus)
-                }
+                },
             )
         }
     }
@@ -269,7 +269,7 @@ class DefaultQuickSettingsControllerTest {
             requestPermissions = {
                 assertArrayEquals(testPermissions, it)
                 requestRuntimePermissionsInvoked = true
-            }
+            },
         ).handleAndroidPermissionRequest(testPermissions)
 
         assertTrue(requestRuntimePermissionsInvoked)
@@ -347,7 +347,7 @@ class DefaultQuickSettingsControllerTest {
             context = context,
             websiteUrl = tab.content.url,
             sessionId = tab.id,
-            isTrackingProtectionEnabled = isTrackingProtectionEnabled
+            isTrackingProtectionEnabled = isTrackingProtectionEnabled,
         )
 
         every { store.state.trackingProtectionState } returns state
@@ -371,7 +371,7 @@ class DefaultQuickSettingsControllerTest {
             websiteUrl = tab.content.url,
             websiteTitle = tab.content.title,
             isSecured = true,
-            certificateName = "certificateName"
+            certificateName = "certificateName",
         )
 
         every { store.state.webInfoState } returns state
@@ -395,14 +395,14 @@ class DefaultQuickSettingsControllerTest {
                 data = Engine.BrowsingData.select(
                     Engine.BrowsingData.AUTH_SESSIONS,
                     Engine.BrowsingData.ALL_SITE_DATA,
-                )
+                ),
             )
         }
     }
 
     private fun createController(
         requestPermissions: (Array<String>) -> Unit = { _ -> },
-        displayPermissions: () -> Unit = {}
+        displayPermissions: () -> Unit = {},
     ): DefaultQuickSettingsController {
         return spyk(
             DefaultQuickSettingsController(
@@ -417,8 +417,8 @@ class DefaultQuickSettingsControllerTest {
                 permissionStorage = permissionStorage,
                 reload = reload,
                 requestRuntimePermissions = requestPermissions,
-                displayPermissions = displayPermissions
-            )
+                displayPermissions = displayPermissions,
+            ),
         )
     }
 }

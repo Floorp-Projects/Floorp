@@ -25,38 +25,59 @@ private const val PROFILER_DATA_URL = "https://profiler.firefox.com/public/"
 
 private val firefox_features = arrayOf(
     "screenshots", "js", "leaf", "stackwalk", "cpu", "java",
-    "processcpu", "ipcmessages", "java"
+    "processcpu", "ipcmessages", "java",
 )
 private val firefox_threads = arrayOf(
-    "GeckoMain", "Compositor", "Renderer",
-    "SwComposite", "DOM Worker"
+    "GeckoMain",
+    "Compositor",
+    "Renderer",
+    "SwComposite",
+    "DOM Worker",
 )
 
 private val graphics_features = arrayOf("java", "ipcmessages")
 private val graphics_threads = arrayOf(
-    "GeckoMain", "Compositor", "Renderer", "SwComposite",
-    "RenderBackend", "SceneBuilder", "WrWorker", "CanvasWorkers",
+    "GeckoMain",
+    "Compositor",
+    "Renderer",
+    "SwComposite",
+    "RenderBackend",
+    "SceneBuilder",
+    "WrWorker",
+    "CanvasWorkers",
 )
 
 private val media_features = arrayOf(
-    "js", "leaf", "stackwalk", "cpu", "audiocallbacktracing",
-    "ipcmessages", "processcpu", "java"
+    "js",
+    "leaf",
+    "stackwalk",
+    "cpu",
+    "audiocallbacktracing",
+    "ipcmessages",
+    "processcpu",
+    "java",
 )
 private val media_threads = arrayOf(
     "cubeb", "audio", "camera", "capture", "Compositor", "GeckoMain", "gmp", "graph", "grph",
     "InotifyEventThread", "IPDL Background", "media", "ModuleProcessThread", "PacerThread",
     "RemVidChild", "RenderBackend", "Renderer", "Socket Thread", "SwComposite",
-    "webrtc"
+    "webrtc",
 )
 
 private val networking_features = arrayOf(
-    "screenshots", "js", "leaf", "stackwalk", "cpu", "java",
-    "processcpu", "ipcmessages"
+    "screenshots",
+    "js",
+    "leaf",
+    "stackwalk",
+    "cpu",
+    "java",
+    "processcpu",
+    "ipcmessages",
 )
 
 private val networking_threads = arrayOf(
     "Compositor", "DNS Resolver", "DOM Worker", "GeckoMain",
-    "Renderer", "Socket Thread", "StreamTrans", "SwComposite", "TRR Background"
+    "Renderer", "Socket Thread", "StreamTrans", "SwComposite", "TRR Background",
 )
 
 /**
@@ -66,7 +87,8 @@ enum class ProfilerSettings(val threads: Array<String>, val features: Array<Stri
     Firefox(firefox_threads, firefox_features),
     Graphics(graphics_threads, graphics_features),
     Media(media_threads, media_features),
-    Networking(networking_threads, networking_features);
+    Networking(networking_threads, networking_features),
+    ;
 }
 
 /**
@@ -109,9 +131,9 @@ object ProfilerUtils {
             url = PROFILER_API,
             method = Request.Method.POST,
             headers = MutableHeaders(
-                "Accept" to PROFILER_SERVER_HEADER
+                "Accept" to PROFILER_SERVER_HEADER,
             ),
-            body = Request.Body.fromFile(outputFile)
+            body = Request.Body.fromFile(outputFile),
         )
         return context.components.core.client.fetch(request)
     }
@@ -139,7 +161,7 @@ object ProfilerUtils {
     fun handleProfileSave(
         context: Context,
         profile: ByteArray,
-        onUrlFinish: (Int) -> Unit
+        onUrlFinish: (Int) -> Unit,
     ) {
         try {
             val url = saveProfileUrlToClipboard(profile, context)

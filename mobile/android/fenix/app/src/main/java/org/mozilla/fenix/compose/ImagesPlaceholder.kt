@@ -29,7 +29,7 @@ import org.mozilla.fenix.theme.FirefoxTheme
 @Composable
 internal fun ImageLoaderScope.WithDefaultPlaceholder(
     modifier: Modifier,
-    contentDescription: String? = null
+    contentDescription: String? = null,
 ) {
     Placeholder {
         DefaultImagePlaceholder(modifier, contentDescription)
@@ -47,7 +47,7 @@ internal fun ImageLoaderScope.WithDefaultPlaceholder(
 @Composable
 internal fun ImageLoaderScope.WithDefaultFallback(
     modifier: Modifier,
-    contentDescription: String? = null
+    contentDescription: String? = null,
 ) {
     Fallback {
         DefaultImagePlaceholder(modifier, contentDescription)
@@ -65,7 +65,7 @@ internal fun ImageLoaderScope.WithDefaultFallback(
 @Composable
 internal fun DefaultImagePlaceholder(
     modifier: Modifier,
-    contentDescription: String? = null
+    contentDescription: String? = null,
 ) {
     Image(ColorPainter(FirefoxTheme.colors.layer2), contentDescription, modifier)
 }
@@ -77,7 +77,7 @@ private fun DefaultImagePlaceholderPreview() {
         DefaultImagePlaceholder(
             Modifier
                 .size(200.dp, 100.dp)
-                .clip(RoundedCornerShape(8.dp))
+                .clip(RoundedCornerShape(8.dp)),
         )
     }
 }

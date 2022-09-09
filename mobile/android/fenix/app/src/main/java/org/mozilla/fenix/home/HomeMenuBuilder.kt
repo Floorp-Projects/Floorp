@@ -64,14 +64,14 @@ class HomeMenuBuilder(
             context = context,
             onItemTapped = ::onItemTapped,
             onHighlightPresent = { menuButton.get()?.setHighlight(it) },
-            onMenuBuilderChanged = { menuButton.get()?.menuBuilder = it }
+            onMenuBuilderChanged = { menuButton.get()?.menuBuilder = it },
         )
 
         menuButton.get()?.setColorFilter(
             ContextCompat.getColor(
                 context,
-                ThemeManager.resolveAttribute(R.attr.textPrimary, context)
-            )
+                ThemeManager.resolveAttribute(R.attr.textPrimary, context),
+            ),
         )
     }
 
@@ -91,7 +91,7 @@ class HomeMenuBuilder(
 
                 navController.nav(
                     R.id.homeFragment,
-                    HomeFragmentDirections.actionGlobalSettingsFragment()
+                    HomeFragmentDirections.actionGlobalSettingsFragment(),
                 )
             }
             HomeMenu.Item.CustomizeHome -> {
@@ -99,7 +99,7 @@ class HomeMenuBuilder(
 
                 navController.nav(
                     R.id.homeFragment,
-                    HomeFragmentDirections.actionGlobalHomeSettingsFragment()
+                    HomeFragmentDirections.actionGlobalHomeSettingsFragment(),
                 )
             }
             is HomeMenu.Item.SyncAccount -> {
@@ -112,7 +112,7 @@ class HomeMenuBuilder(
                             HomeFragmentDirections.actionGlobalAccountProblemFragment()
                         AccountState.NO_ACCOUNT ->
                             HomeFragmentDirections.actionGlobalTurnOnSync()
-                    }
+                    },
                 )
             }
             HomeMenu.Item.ManageAccountAndDevices -> {
@@ -124,35 +124,35 @@ class HomeMenuBuilder(
                         mozilla.appservices.fxaclient.Config.Server.RELEASE.contentUrl + "/settings"
                     },
                     newTab = true,
-                    from = BrowserDirection.FromHome
+                    from = BrowserDirection.FromHome,
                 )
             }
             HomeMenu.Item.Bookmarks -> {
                 navController.nav(
                     R.id.homeFragment,
-                    HomeFragmentDirections.actionGlobalBookmarkFragment(BookmarkRoot.Mobile.id)
+                    HomeFragmentDirections.actionGlobalBookmarkFragment(BookmarkRoot.Mobile.id),
                 )
             }
             HomeMenu.Item.History -> {
                 navController.nav(
                     R.id.homeFragment,
-                    HomeFragmentDirections.actionGlobalHistoryFragment()
+                    HomeFragmentDirections.actionGlobalHistoryFragment(),
                 )
             }
             HomeMenu.Item.Downloads -> {
                 navController.nav(
                     R.id.homeFragment,
-                    HomeFragmentDirections.actionGlobalDownloadsFragment()
+                    HomeFragmentDirections.actionGlobalDownloadsFragment(),
                 )
             }
             HomeMenu.Item.Help -> {
                 homeActivity.openToBrowserAndLoad(
                     searchTermOrURL = SupportUtils.getSumoURLForTopic(
                         context = context,
-                        topic = SupportUtils.SumoTopic.HELP
+                        topic = SupportUtils.SumoTopic.HELP,
                     ),
                     newTab = true,
-                    from = BrowserDirection.FromHome
+                    from = BrowserDirection.FromHome,
                 )
             }
             HomeMenu.Item.WhatsNew -> {
@@ -162,7 +162,7 @@ class HomeMenuBuilder(
                 homeActivity.openToBrowserAndLoad(
                     searchTermOrURL = SupportUtils.getWhatsNewUrl(context),
                     newTab = true,
-                    from = BrowserDirection.FromHome
+                    from = BrowserDirection.FromHome,
                 )
             }
             HomeMenu.Item.Quit -> {
@@ -174,20 +174,20 @@ class HomeMenuBuilder(
                     coroutineScope = lifecycleOwner.lifecycleScope,
                     snackbar = FenixSnackbar.make(
                         view = view,
-                        isDisplayedWithBrowserToolbar = false
-                    )
+                        isDisplayedWithBrowserToolbar = false,
+                    ),
                 )
             }
             HomeMenu.Item.ReconnectSync -> {
                 navController.nav(
                     R.id.homeFragment,
-                    HomeFragmentDirections.actionGlobalAccountProblemFragment()
+                    HomeFragmentDirections.actionGlobalAccountProblemFragment(),
                 )
             }
             HomeMenu.Item.Extensions -> {
                 navController.nav(
                     R.id.homeFragment,
-                    HomeFragmentDirections.actionGlobalAddonsManagementFragment()
+                    HomeFragmentDirections.actionGlobalAddonsManagementFragment(),
                 )
             }
             is HomeMenu.Item.DesktopMode -> {

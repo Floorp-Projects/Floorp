@@ -22,8 +22,11 @@ import org.junit.Test
 
 class TabHistoryViewHolderTest {
 
-    @MockK(relaxed = true) private lateinit var view: WidgetSiteItemView
+    @MockK(relaxed = true)
+    private lateinit var view: WidgetSiteItemView
+
     @MockK private lateinit var interactor: TabHistoryViewInteractor
+
     @MockK private lateinit var icons: BrowserIcons
     private lateinit var holder: TabHistoryViewHolder
     private lateinit var onClick: CapturingSlot<View.OnClickListener>
@@ -32,13 +35,13 @@ class TabHistoryViewHolderTest {
         title = "Mozilla",
         url = "https://mozilla.org",
         index = 0,
-        isSelected = true
+        isSelected = true,
     )
     private val unselectedItem = TabHistoryItem(
         title = "Firefox",
         url = "https://firefox.com",
         index = 1,
-        isSelected = false
+        isSelected = false,
     )
 
     @Before

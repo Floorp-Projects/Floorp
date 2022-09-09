@@ -58,7 +58,7 @@ class CFRPopup(
     @get:VisibleForTesting internal val anchor: View,
     @get:VisibleForTesting internal val properties: CFRPopupProperties = CFRPopupProperties(),
     @get:VisibleForTesting internal val onDismiss: (Boolean) -> Unit = {},
-    @get:VisibleForTesting internal val action: @Composable (() -> Unit) = {}
+    @get:VisibleForTesting internal val action: @Composable (() -> Unit) = {},
 ) {
     // This is just a facade for the CFRPopupFullScreenLayout composable offering a cleaner API.
 
@@ -93,7 +93,7 @@ class CFRPopup(
      */
     enum class IndicatorDirection {
         UP,
-        DOWN
+        DOWN,
     }
 
     /**
@@ -116,7 +116,7 @@ class CFRPopup(
          * Recommended to be used when there are multiple widgets displayed horizontally so that this will allow
          * to indicate exactly which widget the popup refers to.
          */
-        INDICATOR_CENTERED_IN_ANCHOR
+        INDICATOR_CENTERED_IN_ANCHOR,
     }
 
     companion object {

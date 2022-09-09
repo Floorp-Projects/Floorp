@@ -74,7 +74,9 @@ enum class Page {
     /**
      * The pager position that displays Synced Tabs.
      */
-    SyncedTabs;
+    SyncedTabs,
+
+    ;
 
     companion object {
         fun positionToPage(position: Int): Page {
@@ -168,7 +170,7 @@ internal object TabsTrayReducer {
                         TabsTrayState.Mode.Normal
                     } else {
                         TabsTrayState.Mode.Select(selected)
-                    }
+                    },
                 )
             }
             is TabsTrayAction.PageSelected ->
@@ -195,9 +197,9 @@ internal object TabsTrayReducer {
  */
 class TabsTrayStore(
     initialState: TabsTrayState = TabsTrayState(),
-    middlewares: List<Middleware<TabsTrayState, TabsTrayAction>> = emptyList()
+    middlewares: List<Middleware<TabsTrayState, TabsTrayAction>> = emptyList(),
 ) : Store<TabsTrayState, TabsTrayAction>(
     initialState,
     TabsTrayReducer::reduce,
-    middlewares
+    middlewares,
 )

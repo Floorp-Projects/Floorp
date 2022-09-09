@@ -23,7 +23,7 @@ class PrivateBrowserPageViewHolder(
     containerView: View,
     tabsTrayStore: TabsTrayStore,
     private val browserStore: BrowserStore,
-    interactor: TabsTrayInteractor
+    interactor: TabsTrayInteractor,
 ) : AbstractBrowserPageViewHolder(
     containerView,
     tabsTrayStore,
@@ -35,7 +35,7 @@ class PrivateBrowserPageViewHolder(
 
     override fun scrollToTab(
         adapter: RecyclerView.Adapter<out RecyclerView.ViewHolder>,
-        layoutManager: RecyclerView.LayoutManager
+        layoutManager: RecyclerView.LayoutManager,
     ) {
         adapter.observeFirstInsert {
             val selectedTab = browserStore.state.selectedPrivateTab ?: return@observeFirstInsert
@@ -46,7 +46,7 @@ class PrivateBrowserPageViewHolder(
     }
 
     override fun bind(
-        adapter: RecyclerView.Adapter<out RecyclerView.ViewHolder>
+        adapter: RecyclerView.Adapter<out RecyclerView.ViewHolder>,
     ) {
         val context = containerView.context
         val columns = context.defaultBrowserLayoutColumns

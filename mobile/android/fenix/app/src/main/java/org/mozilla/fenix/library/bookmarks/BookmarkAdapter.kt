@@ -46,13 +46,15 @@ class BookmarkAdapter(private val emptyView: View, private val interactor: Bookm
                 this.tree,
                 newTree,
                 this.mode,
-                mode
-            )
+                mode,
+            ),
         )
 
         this.tree = newTree
 
-        isFirstRun = if (isFirstRun) false else {
+        isFirstRun = if (isFirstRun) {
+            false
+        } else {
             emptyView.isVisible = this.tree.isEmpty()
             false
         }
@@ -66,7 +68,7 @@ class BookmarkAdapter(private val emptyView: View, private val interactor: Bookm
         val old: List<BookmarkNode>,
         val new: List<BookmarkNode>,
         val oldMode: BookmarkFragmentState.Mode,
-        val newMode: BookmarkFragmentState.Mode
+        val newMode: BookmarkFragmentState.Mode,
     ) : DiffUtil.Callback() {
         override fun areItemsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean =
             old[oldItemPosition].guid == new[newItemPosition].guid
@@ -84,7 +86,7 @@ class BookmarkAdapter(private val emptyView: View, private val interactor: Bookm
                 urlChanged = oldItem.url != newItem.url,
                 selectedChanged = oldItem in oldMode.selectedItems != newItem in newMode.selectedItems,
                 modeChanged = oldMode::class != newMode::class,
-                iconChanged = oldItem.type != newItem.type || oldItem.url != newItem.url
+                iconChanged = oldItem.type != newItem.type || oldItem.url != newItem.url,
             )
         }
 
@@ -114,7 +116,7 @@ class BookmarkAdapter(private val emptyView: View, private val interactor: Bookm
     override fun onBindViewHolder(
         holder: RecyclerView.ViewHolder,
         position: Int,
-        payloads: MutableList<Any>
+        payloads: MutableList<Any>,
     ) {
         (holder as? BookmarkNodeViewHolder)?.apply {
             val diffPayload = if (payloads.isNotEmpty() && payloads[0] is BookmarkPayload) {
@@ -145,14 +147,14 @@ data class BookmarkPayload(
     val urlChanged: Boolean,
     val selectedChanged: Boolean,
     val modeChanged: Boolean,
-    val iconChanged: Boolean
+    val iconChanged: Boolean,
 ) {
     constructor() : this(
         titleChanged = true,
         urlChanged = true,
         selectedChanged = true,
         modeChanged = true,
-        iconChanged = true
+        iconChanged = true,
     )
 }
 

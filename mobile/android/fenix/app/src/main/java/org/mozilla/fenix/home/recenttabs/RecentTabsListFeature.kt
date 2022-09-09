@@ -23,7 +23,7 @@ import org.mozilla.fenix.ext.asRecentTabs
 @OptIn(ExperimentalCoroutinesApi::class)
 class RecentTabsListFeature(
     browserStore: BrowserStore,
-    private val appStore: AppStore
+    private val appStore: AppStore,
 ) : AbstractBinding<BrowserState>(browserStore) {
 
     override suspend fun onState(flow: Flow<BrowserState>) {

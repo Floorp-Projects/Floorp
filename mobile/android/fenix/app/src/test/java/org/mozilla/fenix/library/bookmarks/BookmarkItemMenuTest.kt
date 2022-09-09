@@ -39,7 +39,7 @@ class BookmarkItemMenuTest {
         assertEquals("Delete", deleteItem.text)
         assertEquals(
             TextStyle(color = context.getColorFromAttr(R.attr.textWarning)),
-            deleteItem.textStyle
+            deleteItem.textStyle,
         )
 
         deleteItem.onClick()

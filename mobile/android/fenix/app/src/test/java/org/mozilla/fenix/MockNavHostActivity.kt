@@ -32,7 +32,7 @@ class MockNavHostActivity : AppCompatActivity(), NavHostActivity {
  */
 inline fun <T : Fragment> createAddedTestFragmentInNavHostActivity(
     fragmentTag: String = "test",
-    fragmentFactory: () -> T
+    fragmentFactory: () -> T,
 ): T {
     val activity = Robolectric.buildActivity(MockNavHostActivity::class.java)
         .create()

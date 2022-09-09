@@ -53,7 +53,7 @@ class SavedLoginsStorageControllerTest {
             lifecycleScope = scope,
             navController = navController,
             loginsFragmentStore = loginsFragmentStore,
-            ioDispatcher = ioDispatcher
+            ioDispatcher = ioDispatcher,
         )
     }
 
@@ -77,7 +77,7 @@ class SavedLoginsStorageControllerTest {
             username = "user123",
             password = "securePassword1",
             httpRealm = "httpRealm",
-            formActionOrigin = ""
+            formActionOrigin = "",
         )
         coEvery { passwordsStorage.get("id") } returns login
 
@@ -89,8 +89,8 @@ class SavedLoginsStorageControllerTest {
             passwordsStorage.get("id")
             loginsFragmentStore.dispatch(
                 LoginsAction.UpdateCurrentLogin(
-                    expectedLogin
-                )
+                    expectedLogin,
+                ),
             )
         }
     }
@@ -103,7 +103,7 @@ class SavedLoginsStorageControllerTest {
             username = "user123",
             password = "securePassword1",
             httpRealm = "httpRealm",
-            formActionOrigin = ""
+            formActionOrigin = "",
         )
         val oldLoginEncrypted = EncryptedLogin(
             guid = "id",
@@ -118,7 +118,7 @@ class SavedLoginsStorageControllerTest {
             username = "newUsername",
             password = "newPassword",
             httpRealm = "httpRealm",
-            formActionOrigin = ""
+            formActionOrigin = "",
         )
 
         coEvery { passwordsStorage.get(any()) } returns oldLogin
@@ -129,7 +129,7 @@ class SavedLoginsStorageControllerTest {
 
         val directions =
             EditLoginFragmentDirections.actionEditLoginFragmentToLoginDetailFragment(
-                oldLogin.guid
+                oldLogin.guid,
             )
 
         val expectedNewList = listOf(newLogin.mapToSavedLogin())
@@ -139,8 +139,8 @@ class SavedLoginsStorageControllerTest {
             passwordsStorage.update(newLogin.guid, newLogin.toEntry())
             loginsFragmentStore.dispatch(
                 LoginsAction.UpdateLoginsList(
-                    expectedNewList
-                )
+                    expectedNewList,
+                ),
             )
             navController.navigate(directionsEq(directions))
         }
@@ -182,11 +182,11 @@ class SavedLoginsStorageControllerTest {
                     httpRealm = login.httpRealm,
                     formActionOrigin = login.formActionOrigin,
                     username = login2.username,
-                    password = login.password
-                )
+                    password = login.password,
+                ),
             )
             loginsFragmentStore.dispatch(
-                LoginsAction.DuplicateLogin(login2.mapToSavedLogin())
+                LoginsAction.DuplicateLogin(login2.mapToSavedLogin()),
             )
         }
     }
@@ -218,11 +218,11 @@ class SavedLoginsStorageControllerTest {
                     httpRealm = login.httpRealm,
                     formActionOrigin = login.formActionOrigin,
                     username = "new-username",
-                    password = login.password
-                )
+                    password = login.password,
+                ),
             )
             loginsFragmentStore.dispatch(
-                LoginsAction.DuplicateLogin(null)
+                LoginsAction.DuplicateLogin(null),
             )
         }
     }
@@ -253,10 +253,10 @@ class SavedLoginsStorageControllerTest {
                     formActionOrigin = null,
                     username = login.username,
                     password = "new-password",
-                )
+                ),
             )
             loginsFragmentStore.dispatch(
-                LoginsAction.DuplicateLogin(login.mapToSavedLogin())
+                LoginsAction.DuplicateLogin(login.mapToSavedLogin()),
             )
         }
     }
@@ -279,10 +279,10 @@ class SavedLoginsStorageControllerTest {
                     formActionOrigin = null,
                     username = "username",
                     password = "password",
-                )
+                ),
             )
             loginsFragmentStore.dispatch(
-                LoginsAction.DuplicateLogin(null)
+                LoginsAction.DuplicateLogin(null),
             )
         }
     }
@@ -305,10 +305,10 @@ class SavedLoginsStorageControllerTest {
                     formActionOrigin = null,
                     username = "username",
                     password = "password",
-                )
+                ),
             )
             loginsFragmentStore.dispatch(
-                LoginsAction.DuplicateLogin(null)
+                LoginsAction.DuplicateLogin(null),
             )
         }
     }
@@ -334,7 +334,7 @@ class SavedLoginsStorageControllerTest {
                     formActionOrigin = null,
                     username = "username",
                     password = "password",
-                )
+                ),
             )
         }
     }

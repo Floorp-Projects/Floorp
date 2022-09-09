@@ -16,7 +16,7 @@ import kotlin.properties.Delegates
 class AccountAuthErrorPreference @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,
-    attributeSetId: Int = android.R.attr.preferenceStyle
+    attributeSetId: Int = android.R.attr.preferenceStyle,
 ) : Preference(context, attrs, attributeSetId) {
     private var emailView: TextView? = null
     var email: String? by Delegates.observable(null) { _, _, new -> updateEmailView(new) }

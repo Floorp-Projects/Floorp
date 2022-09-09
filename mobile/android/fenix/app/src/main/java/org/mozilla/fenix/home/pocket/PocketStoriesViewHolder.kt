@@ -40,7 +40,7 @@ import org.mozilla.fenix.theme.Theme
 class PocketStoriesViewHolder(
     composeView: ComposeView,
     viewLifecycleOwner: LifecycleOwner,
-    private val interactor: PocketStoriesInteractor
+    private val interactor: PocketStoriesInteractor,
 ) : ComposeViewHolder(composeView, viewLifecycleOwner) {
 
     companion object {
@@ -92,7 +92,7 @@ class PocketStoriesViewHolder(
                 horizontalPadding,
                 interactor::onStoryShown,
                 interactor::onStoryClicked,
-                interactor::onDiscoverMoreClicked
+                interactor::onDiscoverMoreClicked,
             )
         }
     }
@@ -115,7 +115,7 @@ fun PocketStoriesViewHolderPreview() {
                 contentPadding = 0.dp,
                 onStoryShown = { _, _ -> },
                 onStoryClicked = { _, _ -> },
-                onDiscoverMoreClicked = {}
+                onDiscoverMoreClicked = {},
             )
         }
     }

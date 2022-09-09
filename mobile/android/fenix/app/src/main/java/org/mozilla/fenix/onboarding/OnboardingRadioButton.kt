@@ -21,7 +21,7 @@ import org.mozilla.fenix.utils.view.uncheckAll
 
 class OnboardingRadioButton(
     context: Context,
-    attrs: AttributeSet
+    attrs: AttributeSet,
 ) : AppCompatRadioButton(context, attrs), GroupableRadioButton {
     private val radioGroups = mutableListOf<GroupableRadioButton>()
     private var illustration: ImageView? = null
@@ -34,7 +34,8 @@ class OnboardingRadioButton(
         context.withStyledAttributes(
             attrs,
             R.styleable.OnboardingRadioButton,
-            0, 0
+            0,
+            0,
         ) {
             key = getResourceId(R.styleable.OnboardingRadioButton_onboardingKey, 0)
             title = getResourceId(R.styleable.OnboardingRadioButton_onboardingKeyTitle, 0)

@@ -19,7 +19,7 @@ import org.mozilla.fenix.tabstray.TabsTrayStore
 class NormalTabsBinding(
     store: TabsTrayStore,
     private val browserStore: BrowserStore,
-    private val tabsTray: TabsTray
+    private val tabsTray: TabsTray,
 ) : AbstractBinding<TabsTrayState>(store) {
     override suspend fun onState(flow: Flow<TabsTrayState>) {
         flow.ifChanged { it.normalTabs }

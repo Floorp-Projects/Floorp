@@ -17,7 +17,7 @@ import org.mozilla.fenix.share.viewholders.AccountDeviceViewHolder
  * May also display buttons to reconnect, add a device, or send to all devices.
  */
 class AccountDevicesShareAdapter(
-    private val interactor: ShareToAccountDevicesInteractor
+    private val interactor: ShareToAccountDevicesInteractor,
 ) : ListAdapter<SyncShareOption, AccountDeviceViewHolder>(DiffCallback) {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): AccountDeviceViewHolder {

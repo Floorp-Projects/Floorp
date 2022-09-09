@@ -54,7 +54,7 @@ fun ExpandableListHeader(
             true -> Modifier.clickable { onClick() }
             false -> Modifier
         }.then(
-            Modifier.fillMaxWidth()
+            Modifier.fillMaxWidth(),
         ),
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -76,7 +76,7 @@ fun ExpandableListHeader(
 
                 Icon(
                     painter = painterResource(
-                        if (expanded) R.drawable.ic_chevron_up else R.drawable.ic_chevron_down
+                        if (expanded) R.drawable.ic_chevron_up else R.drawable.ic_chevron_down,
                     ),
                     contentDescription = if (expanded) {
                         collapseActionContentDescription

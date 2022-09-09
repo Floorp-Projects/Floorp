@@ -17,7 +17,7 @@ class BookmarkSearchFragmentStoreTest {
 
         assertEquals(
             expected,
-            createInitialBookmarkSearchFragmentState()
+            createInitialBookmarkSearchFragmentState(),
         )
     }
 

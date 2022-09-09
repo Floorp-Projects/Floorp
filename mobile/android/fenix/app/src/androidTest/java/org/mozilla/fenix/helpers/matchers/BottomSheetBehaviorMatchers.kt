@@ -28,7 +28,7 @@ class BottomSheetBehaviorHalfExpandedMaxRatioMatcher(private val maxHalfExpanded
     override fun describeTo(description: Description?) {
         description?.appendText(
             "BottomSheetBehavior with an at max halfExpandedRation: " +
-                "$maxHalfExpandedRatio"
+                "$maxHalfExpandedRatio",
         )
     }
 

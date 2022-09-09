@@ -13,12 +13,12 @@ import org.mozilla.fenix.settings.logins.SavedLogin
 import org.mozilla.fenix.settings.logins.interactor.SavedLoginsInteractor
 
 class LoginsAdapter(
-    private val interactor: SavedLoginsInteractor
+    private val interactor: SavedLoginsInteractor,
 ) : ListAdapter<SavedLogin, LoginsListViewHolder>(DiffCallback) {
 
     override fun onCreateViewHolder(
         parent: ViewGroup,
-        viewType: Int
+        viewType: Int,
     ): LoginsListViewHolder {
         val view = LayoutInflater.from(parent.context)
             .inflate(R.layout.logins_item, parent, false)

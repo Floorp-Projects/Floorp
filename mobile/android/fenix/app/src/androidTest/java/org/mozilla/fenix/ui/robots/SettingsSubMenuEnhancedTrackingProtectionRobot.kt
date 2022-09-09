@@ -86,13 +86,12 @@ class SettingsSubMenuEnhancedTrackingProtectionRobot {
         }
 
         fun openExceptions(
-            interact: SettingsSubMenuEnhancedTrackingProtectionExceptionsRobot.() -> Unit
+            interact: SettingsSubMenuEnhancedTrackingProtectionExceptionsRobot.() -> Unit,
         ): SettingsSubMenuEnhancedTrackingProtectionExceptionsRobot.Transition {
-
             onView(withId(R.id.recycler_view)).perform(
                 RecyclerViewActions.scrollTo<RecyclerView.ViewHolder>(
-                    hasDescendant(withText("Exceptions"))
-                )
+                    hasDescendant(withText("Exceptions")),
+                ),
             )
 
             openExceptions().click()
@@ -107,8 +106,8 @@ private fun assertNavigationToolBarHeader() {
     onView(
         allOf(
             withParent(withId(org.mozilla.fenix.R.id.navigationToolbar)),
-            withText("Enhanced Tracking Protection")
-        )
+            withText("Enhanced Tracking Protection"),
+        ),
     )
         .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 }
@@ -122,8 +121,8 @@ private fun assertEnhancedTrackingProtectionHeaderDescription() {
     onView(
         allOf(
             withParent(withParentIndex(0)),
-            withText("Keep your data to yourself. $appName protects you from many of the most common trackers that follow what you do online.")
-        )
+            withText("Keep your data to yourself. $appName protects you from many of the most common trackers that follow what you do online."),
+        ),
     )
         .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 }
@@ -132,8 +131,8 @@ private fun assertLearnMoreText() {
     onView(
         allOf(
             withParent(withParentIndex(0)),
-            withText("Learn more")
-        )
+            withText("Learn more"),
+        ),
     )
         .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 }
@@ -142,8 +141,8 @@ private fun assertEnhancedTrackingProtectionTextWithSwitchWidget() {
     onView(
         allOf(
             withParentIndex(1),
-            withChild(withText("Enhanced Tracking Protection"))
-        )
+            withChild(withText("Enhanced Tracking Protection")),
+        ),
     )
         .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 }
@@ -172,26 +171,26 @@ private fun assertTrackingProtectionSwitchEnabled() {
     onView(withResourceName("switch_widget")).check(
         matches(
             isChecked(
-                true
-            )
-        )
+                true,
+            ),
+        ),
     )
 }
 
 private fun assertRadioButtonDefaults() {
     onView(
-        withText("Strict")
+        withText("Strict"),
     ).assertIsChecked(false)
 
     onView(
         allOf(
             withId(org.mozilla.fenix.R.id.radio_button),
-            hasSibling(withText("Standard (default)"))
-        )
+            hasSibling(withText("Standard (default)")),
+        ),
     ).assertIsChecked(true)
 
     onView(
-        withText("Custom")
+        withText("Custom"),
     ).assertIsChecked(false)
 }
 

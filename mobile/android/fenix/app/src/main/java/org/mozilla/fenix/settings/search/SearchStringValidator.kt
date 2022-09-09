@@ -31,7 +31,11 @@ object SearchStringValidator {
         response.body.close()
         return if (response.isSuccess ||
             isTestQueryParamNotFound(response.status)
-        ) Result.Success else Result.CannotReach
+        ) {
+            Result.Success
+        } else {
+            Result.CannotReach
+        }
     }
 
     private fun createRequest(searchString: String): Request {

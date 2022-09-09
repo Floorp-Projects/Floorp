@@ -75,7 +75,7 @@ class TabCounterBuilderTest {
         verify {
             navController.nav(
                 R.id.homeFragment,
-                HomeFragmentDirections.actionGlobalTabsTrayFragment()
+                HomeFragmentDirections.actionGlobalTabsTrayFragment(),
             )
         }
     }

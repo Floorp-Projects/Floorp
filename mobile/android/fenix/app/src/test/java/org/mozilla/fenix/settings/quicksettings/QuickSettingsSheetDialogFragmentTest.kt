@@ -117,7 +117,7 @@ class QuickSettingsSheetDialogFragmentTest {
             trackingProtectionUseCases.fetchTrackingLogs.invoke(
                 any(),
                 capture(onComplete),
-                any()
+                any(),
             )
         }.answers { onComplete.captured.invoke(emptyList()) }
 
@@ -144,7 +144,7 @@ class QuickSettingsSheetDialogFragmentTest {
             trackingProtectionUseCases.fetchTrackingLogs.invoke(
                 any(),
                 capture(onComplete),
-                any()
+                any(),
             )
         }.answers { onComplete.captured.invoke(listOf(TrackerLog(""))) }
 

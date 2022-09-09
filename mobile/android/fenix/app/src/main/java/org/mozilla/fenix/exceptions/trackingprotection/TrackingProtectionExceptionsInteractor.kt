@@ -21,16 +21,16 @@ interface TrackingProtectionExceptionsInteractor : ExceptionsInteractor<Tracking
 class DefaultTrackingProtectionExceptionsInteractor(
     private val activity: HomeActivity,
     private val exceptionsStore: ExceptionsFragmentStore,
-    private val trackingProtectionUseCases: TrackingProtectionUseCases
+    private val trackingProtectionUseCases: TrackingProtectionUseCases,
 ) : TrackingProtectionExceptionsInteractor {
 
     override fun onLearnMore() {
         activity.openToBrowserAndLoad(
             searchTermOrURL = SupportUtils.getGenericSumoURLForTopic(
-                SupportUtils.SumoTopic.TRACKING_PROTECTION
+                SupportUtils.SumoTopic.TRACKING_PROTECTION,
             ),
             newTab = true,
-            from = BrowserDirection.FromTrackingProtectionExceptions
+            from = BrowserDirection.FromTrackingProtectionExceptions,
         )
     }
 
@@ -47,7 +47,7 @@ class DefaultTrackingProtectionExceptionsInteractor(
     fun reloadExceptions() {
         trackingProtectionUseCases.fetchExceptions { resultList ->
             exceptionsStore.dispatch(
-                ExceptionsFragmentAction.Change(resultList)
+                ExceptionsFragmentAction.Change(resultList),
             )
         }
     }

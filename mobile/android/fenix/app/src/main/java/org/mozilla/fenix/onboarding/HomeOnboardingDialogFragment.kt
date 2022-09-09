@@ -42,7 +42,7 @@ class HomeOnboardingDialogFragment : DialogFragment() {
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
-        savedInstanceState: Bundle?
+        savedInstanceState: Bundle?,
     ): View = ComposeView(requireContext()).apply {
         setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
 
@@ -58,7 +58,7 @@ class HomeOnboardingDialogFragment : DialogFragment() {
                         onSignInButtonClick = {
                             findNavController().nav(
                                 R.id.homeOnboardingDialogFragment,
-                                HomeOnboardingDialogFragmentDirections.actionGlobalTurnOnSync()
+                                HomeOnboardingDialogFragmentDirections.actionGlobalTurnOnSync(),
                             )
                             onDismiss()
                         },

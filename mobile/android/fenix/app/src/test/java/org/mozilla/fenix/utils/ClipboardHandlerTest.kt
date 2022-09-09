@@ -71,7 +71,7 @@ class ClipboardHandlerTest {
         assertEquals(null, clipboardHandler.extractURL())
 
         clipboard.setPrimaryClip(
-            ClipData(clipboardUrl, arrayOf("text/x-moz-url"), ClipData.Item(clipboardUrl))
+            ClipData(clipboardUrl, arrayOf("text/x-moz-url"), ClipData.Item(clipboardUrl)),
         )
         assertEquals(clipboardUrl, clipboardHandler.extractURL())
     }

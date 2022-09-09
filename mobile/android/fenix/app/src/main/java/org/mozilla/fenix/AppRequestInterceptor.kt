@@ -18,7 +18,7 @@ import org.mozilla.fenix.ext.isOnline
 import java.lang.ref.WeakReference
 
 class AppRequestInterceptor(
-    private val context: Context
+    private val context: Context,
 ) : RequestInterceptor {
 
     private var navController: WeakReference<NavController>? = null
@@ -35,9 +35,8 @@ class AppRequestInterceptor(
         isSameDomain: Boolean,
         isRedirect: Boolean,
         isDirectNavigation: Boolean,
-        isSubframeRequest: Boolean
+        isSubframeRequest: Boolean,
     ): RequestInterceptor.InterceptionResponse? {
-
         interceptAmoRequest(uri, isSameDomain, hasUserGesture)?.let { response ->
             return response
         }
@@ -51,14 +50,14 @@ class AppRequestInterceptor(
                 isSameDomain,
                 isRedirect,
                 isDirectNavigation,
-                isSubframeRequest
+                isSubframeRequest,
             )
     }
 
     override fun onErrorRequest(
         session: EngineSession,
         errorType: ErrorType,
-        uri: String?
+        uri: String?,
     ): RequestInterceptor.ErrorResponse? {
         val improvedErrorType = improveErrorType(errorType)
         val riskLevel = getRiskLevel(improvedErrorType)
@@ -71,7 +70,7 @@ class AppRequestInterceptor(
             uri = uri,
             htmlResource = riskLevel.htmlRes,
             titleOverride = { type -> getErrorPageTitle(context, type) },
-            descriptionOverride = { type -> getErrorPageDescription(context, type) }
+            descriptionOverride = { type -> getErrorPageDescription(context, type) },
         )
 
         return RequestInterceptor.ErrorResponse(errorPageUri)
@@ -87,20 +86,18 @@ class AppRequestInterceptor(
     private fun interceptAmoRequest(
         uri: String,
         isSameDomain: Boolean,
-        hasUserGesture: Boolean
+        hasUserGesture: Boolean,
     ): RequestInterceptor.InterceptionResponse? {
         // First we execute a quick check to see if this is a request we're interested in i.e. a
         // request triggered by the user and coming from AMO.
         if (hasUserGesture && isSameDomain && uri.startsWith(AMO_BASE_URL)) {
-
             // Check if this is a request to install an add-on.
             val matchResult = AMO_INSTALL_URL_REGEX.toRegex().find(uri)
             if (matchResult != null) {
-
                 // Navigate and trigger add-on installation.
                 matchResult.groupValues.getOrNull(1)?.let { addonId ->
                     navController?.get()?.navigate(
-                        NavGraphDirections.actionGlobalAddonsManagementFragment(addonId)
+                        NavGraphDirections.actionGlobalAddonsManagementFragment(addonId),
                     )
 
                     // We've redirected to the add-ons management fragment, skip original request.
@@ -152,16 +149,19 @@ class AppRequestInterceptor(
         ErrorType.ERROR_NO_INTERNET,
         ErrorType.ERROR_HTTPS_ONLY,
         ErrorType.ERROR_BAD_HSTS_CERT,
-        ErrorType.ERROR_UNKNOWN_PROTOCOL -> RiskLevel.Low
+        ErrorType.ERROR_UNKNOWN_PROTOCOL,
+        -> RiskLevel.Low
 
         ErrorType.ERROR_SECURITY_BAD_CERT,
         ErrorType.ERROR_SECURITY_SSL,
-        ErrorType.ERROR_PORT_BLOCKED -> RiskLevel.Medium
+        ErrorType.ERROR_PORT_BLOCKED,
+        -> RiskLevel.Medium
 
         ErrorType.ERROR_SAFEBROWSING_HARMFUL_URI,
         ErrorType.ERROR_SAFEBROWSING_MALWARE_URI,
         ErrorType.ERROR_SAFEBROWSING_PHISHING_URI,
-        ErrorType.ERROR_SAFEBROWSING_UNWANTED_URI -> RiskLevel.High
+        ErrorType.ERROR_SAFEBROWSING_UNWANTED_URI,
+        -> RiskLevel.High
     }
 
     private fun getErrorPageTitle(context: Context, type: ErrorType): String? {

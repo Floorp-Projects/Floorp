@@ -102,7 +102,7 @@ class AccountAbnormalities(
             logger.warn("Missing expected account on startup")
 
             crashReporter.submitCaughtException(
-                AbnormalFxaEvent.MissingExpectedAccountAfterStartup()
+                AbnormalFxaEvent.MissingExpectedAccountAfterStartup(),
             )
         }
     }

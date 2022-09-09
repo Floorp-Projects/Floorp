@@ -38,8 +38,8 @@ class ClearSiteDataViewTest {
                 FrameLayout(testContext),
                 View(testContext),
                 interactor,
-                navController
-            )
+                navController,
+            ),
         )
         binding = view.binding
     }
@@ -50,7 +50,7 @@ class ClearSiteDataViewTest {
             websiteUrl = "https://developers.mozilla.org",
             websiteTitle = "Mozilla",
             websiteSecurityUiValues = WebsiteSecurityUiValues.SECURE,
-            certificateName = "Certificate"
+            certificateName = "Certificate",
         )
 
         view.update(state)

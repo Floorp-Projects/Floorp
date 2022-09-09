@@ -39,8 +39,10 @@ class ShareViewModel(application: Application) : AndroidViewModel(application) {
 
     private val connectivityManager by lazy { application.getSystemService<ConnectivityManager>() }
     private val fxaAccountManager = application.components.backgroundServices.accountManager
+
     @VisibleForTesting
     internal var recentAppsStorage = RecentAppsStorage(application.applicationContext)
+
     @VisibleForTesting
     internal var ioDispatcher = Dispatchers.IO
 
@@ -69,10 +71,12 @@ class ShareViewModel(application: Application) : AndroidViewModel(application) {
      * List of devices and sync-related share options.
      */
     val devicesList: LiveData<List<SyncShareOption>> get() = devicesListLiveData
+
     /**
      * List of applications that can be shared to.
      */
     val appsList: LiveData<List<AppShareOption>> get() = appsListLiveData
+
     /**
      * List of recent applications that can be shared to.
      */
@@ -122,14 +126,14 @@ class ShareViewModel(application: Application) : AndroidViewModel(application) {
                 context.getString(R.string.share_copy_link_to_clipboard),
                 copyIcon,
                 ACTION_COPY_LINK_TO_CLIPBOARD,
-                ""
+                "",
             )
         }
     }
 
     private fun filterOutRecentApps(
         apps: List<AppShareOption>,
-        recentApps: List<AppShareOption>
+        recentApps: List<AppShareOption>,
     ): List<AppShareOption> {
         return apps.filter { app -> !recentApps.contains(app) }
     }
@@ -169,7 +173,7 @@ class ShareViewModel(application: Application) : AndroidViewModel(application) {
     @WorkerThread
     internal fun buildAppsList(
         intentActivities: List<ResolveInfo>?,
-        context: Context
+        context: Context,
     ): List<AppShareOption> {
         return intentActivities
             .orEmpty()
@@ -179,7 +183,7 @@ class ShareViewModel(application: Application) : AndroidViewModel(application) {
                     resolveInfo.loadLabel(context.packageManager).toString(),
                     resolveInfo.loadIcon(context.packageManager),
                     resolveInfo.activityInfo.packageName,
-                    resolveInfo.activityInfo.name
+                    resolveInfo.activityInfo.name,
                 )
             }
     }

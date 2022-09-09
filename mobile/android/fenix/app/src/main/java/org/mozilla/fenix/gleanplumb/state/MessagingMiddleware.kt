@@ -33,7 +33,7 @@ class MessagingMiddleware(
     override fun invoke(
         context: AppStoreMiddlewareContext,
         next: (AppAction) -> Unit,
-        action: AppAction
+        action: AppAction,
     ) {
         when (action) {
             is Restore -> {
@@ -67,15 +67,15 @@ class MessagingMiddleware(
     @VisibleForTesting
     internal fun onMessagedDisplayed(
         oldMessage: Message,
-        context: AppStoreMiddlewareContext
+        context: AppStoreMiddlewareContext,
     ) {
         sendShownMessageTelemetry(oldMessage.id)
         val newMetadata = oldMessage.metadata.copy(
             displayCount = oldMessage.metadata.displayCount + 1,
-            lastTimeShown = now()
+            lastTimeShown = now(),
         )
         val newMessage = oldMessage.copy(
-            metadata = newMetadata
+            metadata = newMetadata,
         )
         val newMessages = if (newMetadata.displayCount < oldMessage.maxDisplayCount) {
             updateMessage(context, oldMessage, newMessage)
@@ -103,7 +103,7 @@ class MessagingMiddleware(
     @VisibleForTesting
     internal fun onMessageDismissed(
         context: AppStoreMiddlewareContext,
-        message: Message
+        message: Message,
     ) {
         val newMessages = removeMessage(context, message)
         context.dispatch(UpdateMessages(newMessages))
@@ -117,7 +117,7 @@ class MessagingMiddleware(
     @VisibleForTesting
     internal fun onMessageClicked(
         message: Message,
-        context: AppStoreMiddlewareContext
+        context: AppStoreMiddlewareContext,
     ) {
         // Update Nimbus storage.
         coroutineScope.launch {
@@ -133,7 +133,7 @@ class MessagingMiddleware(
     @VisibleForTesting
     internal fun consumeMessageToShowIfNeeded(
         context: AppStoreMiddlewareContext,
-        message: Message
+        message: Message,
     ) {
         if (context.state.messaging.messageToShow?.id == message.id) {
             context.dispatch(ConsumeMessageToShow)
@@ -143,7 +143,7 @@ class MessagingMiddleware(
     @VisibleForTesting
     internal fun removeMessage(
         context: AppStoreMiddlewareContext,
-        message: Message
+        message: Message,
     ): List<Message> {
         return context.state.messaging.messages.filter { it.id != message.id }
     }
@@ -152,7 +152,7 @@ class MessagingMiddleware(
     internal fun updateMessage(
         context: AppStoreMiddlewareContext,
         oldMessage: Message,
-        updatedMessage: Message
+        updatedMessage: Message,
     ): List<Message> {
         val actualMessageToShow = context.state.messaging.messageToShow
 

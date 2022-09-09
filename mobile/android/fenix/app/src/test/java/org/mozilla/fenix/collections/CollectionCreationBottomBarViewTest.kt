@@ -46,7 +46,7 @@ class CollectionCreationBottomBarViewTest {
             layout,
             iconButton,
             textView,
-            saveButton
+            saveButton,
         )
     }
 
@@ -83,24 +83,24 @@ class CollectionCreationBottomBarViewTest {
         bottomBarView.update(
             SaveCollectionStep.SelectTabs,
             CollectionCreationState(
-                selectedTabs = emptySet()
-            )
+                selectedTabs = emptySet(),
+            ),
         )
         assertEquals("Select tabs to save", textView.text)
 
         bottomBarView.update(
             SaveCollectionStep.SelectTabs,
             CollectionCreationState(
-                selectedTabs = setOf(mockk())
-            )
+                selectedTabs = setOf(mockk()),
+            ),
         )
         assertEquals("1 tab selected", textView.text)
 
         bottomBarView.update(
             SaveCollectionStep.SelectTabs,
             CollectionCreationState(
-                selectedTabs = setOf(mockk(), mockk())
-            )
+                selectedTabs = setOf(mockk(), mockk()),
+            ),
         )
         assertEquals("2 tabs selected", textView.text)
     }
@@ -121,8 +121,8 @@ class CollectionCreationBottomBarViewTest {
             SaveCollectionStep.SelectTabs,
             CollectionCreationState(
                 selectedTabCollection = null,
-                selectedTabs = emptySet()
-            )
+                selectedTabs = emptySet(),
+            ),
         )
         assertFalse(saveButton.isVisible)
 
@@ -130,8 +130,8 @@ class CollectionCreationBottomBarViewTest {
             SaveCollectionStep.SelectTabs,
             CollectionCreationState(
                 selectedTabCollection = collection,
-                selectedTabs = emptySet()
-            )
+                selectedTabs = emptySet(),
+            ),
         )
         assertFalse(saveButton.isVisible)
 
@@ -139,8 +139,8 @@ class CollectionCreationBottomBarViewTest {
             SaveCollectionStep.SelectTabs,
             CollectionCreationState(
                 selectedTabCollection = null,
-                selectedTabs = tabs
-            )
+                selectedTabs = tabs,
+            ),
         )
         assertTrue(saveButton.isVisible)
         saveButton.performClick()
@@ -150,8 +150,8 @@ class CollectionCreationBottomBarViewTest {
             SaveCollectionStep.SelectTabs,
             CollectionCreationState(
                 selectedTabCollection = collection,
-                selectedTabs = tabs
-            )
+                selectedTabs = tabs,
+            ),
         )
         assertTrue(saveButton.isVisible)
         saveButton.performClick()

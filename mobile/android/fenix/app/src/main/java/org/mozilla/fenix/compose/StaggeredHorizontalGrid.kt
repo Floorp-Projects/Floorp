@@ -41,7 +41,7 @@ fun StaggeredHorizontalGrid(
     horizontalItemsSpacing: Dp = 0.dp,
     verticalItemsSpacing: Dp = 8.dp,
     arrangement: Arrangement.Horizontal = Arrangement.Start,
-    content: @Composable () -> Unit
+    content: @Composable () -> Unit,
 ) {
     val currentLayoutDirection = LocalLayoutDirection.current
 
@@ -69,7 +69,7 @@ fun StaggeredHorizontalGrid(
                     notYetPlacedItems[0].also {
                         currentWidth += it.width + horizontalItemsSpacingPixels
                         totalHeight += it.height + verticalItemsSpacingPixels
-                    }
+                    },
                 )
                 notYetPlacedItems.removeAt(0)
             } else {
@@ -78,7 +78,7 @@ fun StaggeredHorizontalGrid(
                     currentRow.add(
                         notYetPlacedItems[nextPlaceableThatFitsIndex].also {
                             currentWidth += it.width + horizontalItemsSpacingPixels
-                        }
+                        },
                     )
                     notYetPlacedItems.removeAt(nextPlaceableThatFitsIndex)
                 } else {
@@ -110,7 +110,7 @@ fun StaggeredHorizontalGrid(
                 itemRow.forEachIndexed { itemIndex, item ->
                     item.place(
                         x = itemsPositions[itemIndex],
-                        y = (rowIndex * item.height) + (rowIndex * verticalItemsSpacingPixels)
+                        y = (rowIndex * item.height) + (rowIndex * verticalItemsSpacingPixels),
                     )
                 }
             }
@@ -125,7 +125,7 @@ private fun StaggeredHorizontalGridPreview() {
         Box(Modifier.background(FirefoxTheme.colors.layer2)) {
             StaggeredHorizontalGrid(
                 horizontalItemsSpacing = 8.dp,
-                arrangement = Arrangement.Center
+                arrangement = Arrangement.Center,
             ) {
                 "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor"
                     .split(" ")

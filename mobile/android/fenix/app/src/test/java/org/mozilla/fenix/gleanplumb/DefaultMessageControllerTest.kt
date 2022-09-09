@@ -43,7 +43,7 @@ class DefaultMessageControllerTest {
         controller = DefaultMessageController(
             messagingStorage = storageNimbus,
             appStore = store,
-            homeActivity = activity
+            homeActivity = activity,
         )
     }
 
@@ -75,7 +75,7 @@ class DefaultMessageControllerTest {
         val encodedUrl = Uri.encode("http://mozilla.org")
         assertEquals(
             "${BuildConfig.DEEP_LINK_SCHEME}://open?url=$encodedUrl",
-            intent.data.toString()
+            intent.data.toString(),
         )
     }
 
@@ -112,7 +112,7 @@ class DefaultMessageControllerTest {
             id = "id",
             displayCount = 0,
             pressed = false,
-            dismissed = false
-        )
+            dismissed = false,
+        ),
     )
 }

@@ -458,7 +458,7 @@ class SettingsTest {
         // Then
         assertEquals(
             ASK_TO_ALLOW,
-            settings.getSitePermissionsPhoneFeatureAction(PhoneFeature.CAMERA)
+            settings.getSitePermissionsPhoneFeatureAction(PhoneFeature.CAMERA),
         )
 
         // When
@@ -474,7 +474,7 @@ class SettingsTest {
         // Then
         assertEquals(
             ASK_TO_ALLOW,
-            settings.getSitePermissionsPhoneFeatureAction(PhoneFeature.MICROPHONE)
+            settings.getSitePermissionsPhoneFeatureAction(PhoneFeature.MICROPHONE),
         )
 
         // When
@@ -483,7 +483,7 @@ class SettingsTest {
         // Then
         assertEquals(
             BLOCKED,
-            settings.getSitePermissionsPhoneFeatureAction(PhoneFeature.MICROPHONE)
+            settings.getSitePermissionsPhoneFeatureAction(PhoneFeature.MICROPHONE),
         )
     }
 
@@ -493,7 +493,7 @@ class SettingsTest {
         // Then
         assertEquals(
             ASK_TO_ALLOW,
-            settings.getSitePermissionsPhoneFeatureAction(PhoneFeature.NOTIFICATION)
+            settings.getSitePermissionsPhoneFeatureAction(PhoneFeature.NOTIFICATION),
         )
 
         // When
@@ -502,7 +502,7 @@ class SettingsTest {
         // Then
         assertEquals(
             BLOCKED,
-            settings.getSitePermissionsPhoneFeatureAction(PhoneFeature.NOTIFICATION)
+            settings.getSitePermissionsPhoneFeatureAction(PhoneFeature.NOTIFICATION),
         )
     }
 
@@ -512,7 +512,7 @@ class SettingsTest {
         // Then
         assertEquals(
             ASK_TO_ALLOW,
-            settings.getSitePermissionsPhoneFeatureAction(PhoneFeature.LOCATION)
+            settings.getSitePermissionsPhoneFeatureAction(PhoneFeature.LOCATION),
         )
 
         // When
@@ -528,7 +528,7 @@ class SettingsTest {
         // Then
         assertEquals(
             defaultPermissions,
-            settings.getSitePermissionsCustomSettingsRules()
+            settings.getSitePermissionsCustomSettingsRules(),
         )
     }
 
@@ -540,7 +540,7 @@ class SettingsTest {
         // Then
         assertEquals(
             defaultPermissions.copy(camera = BLOCKED),
-            settings.getSitePermissionsCustomSettingsRules()
+            settings.getSitePermissionsCustomSettingsRules(),
         )
     }
 
@@ -552,7 +552,7 @@ class SettingsTest {
         // Then
         assertEquals(
             defaultPermissions.copy(notification = BLOCKED),
-            settings.getSitePermissionsCustomSettingsRules()
+            settings.getSitePermissionsCustomSettingsRules(),
         )
     }
 
@@ -564,7 +564,7 @@ class SettingsTest {
         // Then
         assertEquals(
             defaultPermissions.copy(location = BLOCKED),
-            settings.getSitePermissionsCustomSettingsRules()
+            settings.getSitePermissionsCustomSettingsRules(),
         )
     }
 
@@ -576,7 +576,7 @@ class SettingsTest {
         // Then
         assertEquals(
             defaultPermissions.copy(microphone = BLOCKED),
-            settings.getSitePermissionsCustomSettingsRules()
+            settings.getSitePermissionsCustomSettingsRules(),
         )
     }
 
@@ -586,7 +586,7 @@ class SettingsTest {
 
         assertEquals(
             defaultPermissions.copy(autoplayAudible = AutoplayAction.ALLOWED),
-            settings.getSitePermissionsCustomSettingsRules()
+            settings.getSitePermissionsCustomSettingsRules(),
         )
     }
 
@@ -596,7 +596,7 @@ class SettingsTest {
 
         assertEquals(
             defaultPermissions.copy(autoplayInaudible = AutoplayAction.ALLOWED),
-            settings.getSitePermissionsCustomSettingsRules()
+            settings.getSitePermissionsCustomSettingsRules(),
         )
     }
 
@@ -606,12 +606,12 @@ class SettingsTest {
 
         assertEquals(
             AutoplayAction.BLOCKED,
-            settings.getSitePermissionsCustomSettingsRules().autoplayAudible
+            settings.getSitePermissionsCustomSettingsRules().autoplayAudible,
         )
 
         assertEquals(
             AutoplayAction.ALLOWED,
-            settings.getSitePermissionsCustomSettingsRules().autoplayInaudible
+            settings.getSitePermissionsCustomSettingsRules().autoplayInaudible,
         )
     }
 
@@ -621,30 +621,31 @@ class SettingsTest {
 
         assertEquals(
             defaultPermissions.copy(persistentStorage = ALLOWED),
-            settings.getSitePermissionsCustomSettingsRules()
+            settings.getSitePermissionsCustomSettingsRules(),
         )
 
         settings.setSitePermissionsPhoneFeatureAction(PhoneFeature.PERSISTENT_STORAGE, BLOCKED)
 
         assertEquals(
             defaultPermissions.copy(persistentStorage = BLOCKED),
-            settings.getSitePermissionsCustomSettingsRules()
+            settings.getSitePermissionsCustomSettingsRules(),
         )
     }
+
     @Test
     fun getSitePermissionsCustomSettingsRules_crossOriginStorageAccess() {
         settings.setSitePermissionsPhoneFeatureAction(PhoneFeature.CROSS_ORIGIN_STORAGE_ACCESS, ALLOWED)
 
         assertEquals(
             defaultPermissions.copy(crossOriginStorageAccess = ALLOWED),
-            settings.getSitePermissionsCustomSettingsRules()
+            settings.getSitePermissionsCustomSettingsRules(),
         )
 
         settings.setSitePermissionsPhoneFeatureAction(PhoneFeature.CROSS_ORIGIN_STORAGE_ACCESS, BLOCKED)
 
         assertEquals(
             defaultPermissions.copy(crossOriginStorageAccess = BLOCKED),
-            settings.getSitePermissionsCustomSettingsRules()
+            settings.getSitePermissionsCustomSettingsRules(),
         )
     }
 
@@ -654,14 +655,14 @@ class SettingsTest {
 
         assertEquals(
             defaultPermissions.copy(mediaKeySystemAccess = ALLOWED),
-            settings.getSitePermissionsCustomSettingsRules()
+            settings.getSitePermissionsCustomSettingsRules(),
         )
 
         settings.setSitePermissionsPhoneFeatureAction(PhoneFeature.MEDIA_KEY_SYSTEM_ACCESS, BLOCKED)
 
         assertEquals(
             defaultPermissions.copy(mediaKeySystemAccess = BLOCKED),
-            settings.getSitePermissionsCustomSettingsRules()
+            settings.getSitePermissionsCustomSettingsRules(),
         )
     }
 

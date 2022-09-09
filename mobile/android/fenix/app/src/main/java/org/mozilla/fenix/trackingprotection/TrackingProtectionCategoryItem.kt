@@ -15,11 +15,11 @@ import org.mozilla.fenix.databinding.TrackingProtectionCategoryBinding
 class TrackingProtectionCategoryItem @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,
-    defStyleAttr: Int = 0
+    defStyleAttr: Int = 0,
 ) : ConstraintLayout(context, attrs, defStyleAttr) {
     private val binding = TrackingProtectionCategoryBinding.inflate(
         LayoutInflater.from(context),
-        this
+        this,
     )
 
     init {
@@ -27,19 +27,19 @@ class TrackingProtectionCategoryItem @JvmOverloads constructor(
             attrs,
             R.styleable.TrackingProtectionCategory,
             defStyleAttr,
-            0
+            0,
         ) {
             binding.trackingProtectionCategoryTitle.text = resources.getString(
                 getResourceId(
                     R.styleable.TrackingProtectionCategory_categoryItemTitle,
-                    R.string.etp_cookies_title
-                )
+                    R.string.etp_cookies_title,
+                ),
             )
             binding.trackingProtectionCategoryItemDescription.text = resources.getString(
                 getResourceId(
                     R.styleable.TrackingProtectionCategory_categoryItemDescription,
-                    R.string.etp_cookies_description
-                )
+                    R.string.etp_cookies_description,
+                ),
             )
         }
     }

@@ -42,8 +42,8 @@ class HomeSettingsFragment : PreferenceFragmentCompat() {
                     CustomizeHome.preferenceToggled.record(
                         CustomizeHome.PreferenceToggledExtra(
                             newValue as Boolean,
-                            "most_visited_sites"
-                        )
+                            "most_visited_sites",
+                        ),
                     )
 
                     return super.onPreferenceChange(preference, newValue)
@@ -58,8 +58,8 @@ class HomeSettingsFragment : PreferenceFragmentCompat() {
                     CustomizeHome.preferenceToggled.record(
                         CustomizeHome.PreferenceToggledExtra(
                             newValue as Boolean,
-                            "contile"
-                        )
+                            "contile",
+                        ),
                     )
 
                     return super.onPreferenceChange(preference, newValue)
@@ -75,8 +75,8 @@ class HomeSettingsFragment : PreferenceFragmentCompat() {
                     CustomizeHome.preferenceToggled.record(
                         CustomizeHome.PreferenceToggledExtra(
                             newValue as Boolean,
-                            "jump_back_in"
-                        )
+                            "jump_back_in",
+                        ),
                     )
 
                     return super.onPreferenceChange(preference, newValue)
@@ -92,8 +92,8 @@ class HomeSettingsFragment : PreferenceFragmentCompat() {
                     CustomizeHome.preferenceToggled.record(
                         CustomizeHome.PreferenceToggledExtra(
                             newValue as Boolean,
-                            "recently_saved"
-                        )
+                            "recently_saved",
+                        ),
                     )
 
                     return super.onPreferenceChange(preference, newValue)
@@ -109,8 +109,8 @@ class HomeSettingsFragment : PreferenceFragmentCompat() {
                     CustomizeHome.preferenceToggled.record(
                         CustomizeHome.PreferenceToggledExtra(
                             newValue as Boolean,
-                            "pocket"
-                        )
+                            "pocket",
+                        ),
                     )
 
                     return super.onPreferenceChange(preference, newValue)
@@ -130,7 +130,7 @@ class HomeSettingsFragment : PreferenceFragmentCompat() {
                         false -> {
                             context.components.core.pocketStoriesService.deleteProfile()
                             context.components.appStore.dispatch(
-                                AppAction.PocketSponsoredStoriesChange(emptyList())
+                                AppAction.PocketSponsoredStoriesChange(emptyList()),
                             )
                         }
                     }
@@ -148,8 +148,8 @@ class HomeSettingsFragment : PreferenceFragmentCompat() {
                     CustomizeHome.preferenceToggled.record(
                         CustomizeHome.PreferenceToggledExtra(
                             newValue as Boolean,
-                            "recently_visited"
-                        )
+                            "recently_visited",
+                        ),
                     )
 
                     return super.onPreferenceChange(preference, newValue)
@@ -167,7 +167,7 @@ class HomeSettingsFragment : PreferenceFragmentCompat() {
         requirePreference<Preference>(R.string.pref_key_wallpapers).apply {
             setOnPreferenceClickListener {
                 view?.findNavController()?.navigate(
-                    HomeSettingsFragmentDirections.actionHomeSettingsFragmentToWallpaperSettingsFragment()
+                    HomeSettingsFragmentDirections.actionHomeSettingsFragmentToWallpaperSettingsFragment(),
                 )
                 true
             }
@@ -176,7 +176,7 @@ class HomeSettingsFragment : PreferenceFragmentCompat() {
         addToRadioGroup(
             openingScreenRadioHomepage,
             openingScreenLastTab,
-            openingScreenAfterFourHours
+            openingScreenAfterFourHours,
         )
     }
 }

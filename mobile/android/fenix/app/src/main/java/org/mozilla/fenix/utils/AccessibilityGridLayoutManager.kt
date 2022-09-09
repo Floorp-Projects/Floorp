@@ -14,14 +14,14 @@ import androidx.recyclerview.widget.RecyclerView
  */
 class AccessibilityGridLayoutManager(
     context: Context,
-    spanCount: Int
+    spanCount: Int,
 ) : GridLayoutManager(
     context,
-    spanCount
+    spanCount,
 ) {
     override fun getColumnCountForAccessibility(
         recycler: RecyclerView.Recycler,
-        state: RecyclerView.State
+        state: RecyclerView.State,
     ): Int {
         return if (itemCount < spanCount) {
             itemCount

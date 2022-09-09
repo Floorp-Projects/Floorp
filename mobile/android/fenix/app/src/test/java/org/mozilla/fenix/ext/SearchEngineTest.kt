@@ -21,8 +21,8 @@ class SearchEngineTest {
             icon = mockk(),
             type = SearchEngine.Type.BUNDLED,
             resultUrls = listOf(
-                "https://www.startpage.com/sp/search?q={searchTerms}"
-            )
+                "https://www.startpage.com/sp/search?q={searchTerms}",
+            ),
         )
 
         val customSearchEngine = SearchEngine(
@@ -31,8 +31,8 @@ class SearchEngineTest {
             icon = mockk(),
             type = SearchEngine.Type.CUSTOM,
             resultUrls = listOf(
-                "https://www.startpage.com/sp/search?q={searchTerms}"
-            )
+                "https://www.startpage.com/sp/search?q={searchTerms}",
+            ),
         )
 
         assertFalse(searchEngine.isCustomEngine())
@@ -47,8 +47,8 @@ class SearchEngineTest {
             icon = mockk(),
             type = SearchEngine.Type.BUNDLED,
             resultUrls = listOf(
-                "https://www.random.com/sp/search?q={searchTerms}"
-            )
+                "https://www.random.com/sp/search?q={searchTerms}",
+            ),
         )
 
         val wellKnownSearchEngine = SearchEngine(
@@ -57,8 +57,8 @@ class SearchEngineTest {
             icon = mockk(),
             type = SearchEngine.Type.CUSTOM,
             resultUrls = listOf(
-                "https://www.startpage.com/sp/search?q={searchTerms}"
-            )
+                "https://www.startpage.com/sp/search?q={searchTerms}",
+            ),
         )
 
         assertFalse(searchEngine.isKnownSearchDomain())

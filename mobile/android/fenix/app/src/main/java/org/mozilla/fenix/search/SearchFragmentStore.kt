@@ -22,10 +22,10 @@ import org.mozilla.fenix.utils.Settings
  * The [Store] for holding the [SearchFragmentState] and applying [SearchFragmentAction]s.
  */
 class SearchFragmentStore(
-    initialState: SearchFragmentState
+    initialState: SearchFragmentState,
 ) : Store<SearchFragmentState, SearchFragmentAction>(
     initialState,
-    ::searchStateReducer
+    ::searchStateReducer,
 )
 
 /**
@@ -111,7 +111,7 @@ data class SearchFragmentState(
     val tabId: String?,
     val pastedText: String? = null,
     val searchAccessPoint: MetricsUtils.Source,
-    val clipboardHasUrl: Boolean = false
+    val clipboardHasUrl: Boolean = false,
 ) : State
 
 /**
@@ -122,7 +122,7 @@ fun createInitialSearchFragmentState(
     components: Components,
     tabId: String?,
     pastedText: String?,
-    searchAccessPoint: MetricsUtils.Source
+    searchAccessPoint: MetricsUtils.Source,
 ): SearchFragmentState {
     val settings = components.settings
     val tab = tabId?.let { components.core.store.state.findTab(it) }
@@ -152,7 +152,7 @@ fun createInitialSearchFragmentState(
         showSessionSuggestions = true,
         tabId = tabId,
         pastedText = pastedText,
-        searchAccessPoint = searchAccessPoint
+        searchAccessPoint = searchAccessPoint,
     )
 }
 
@@ -315,12 +315,12 @@ private fun searchStateReducer(state: SearchFragmentState, action: SearchFragmen
                     else -> {
                         state.searchEngineSource
                     }
-                }
+                },
             )
         }
         is SearchFragmentAction.UpdateClipboardHasUrl -> {
             state.copy(
-                clipboardHasUrl = action.hasUrl
+                clipboardHasUrl = action.hasUrl,
             )
         }
     }

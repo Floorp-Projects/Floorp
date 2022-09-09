@@ -23,7 +23,7 @@ import org.mozilla.fenix.home.HomeFragment
 @ExperimentalCoroutinesApi // reference to HomeFragment causes cascade.
 @Suppress("TooManyFunctions") // it's the interface so we don't have a choice
 class MarkersFragmentLifecycleCallbacks(
-    private val engine: Engine
+    private val engine: Engine,
 ) : FragmentManager.FragmentLifecycleCallbacks() {
 
     private fun shouldSkip(): Boolean {

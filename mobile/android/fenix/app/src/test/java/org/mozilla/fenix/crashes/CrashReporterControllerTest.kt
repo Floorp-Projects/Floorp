@@ -30,8 +30,8 @@ class CrashReporterControllerTest {
     private val crash: NativeCodeCrash = mockk(relaxed = true)
     private var appStore = AppStore(
         AppState(
-            nonFatalCrashes = listOf(crash)
-        )
+            nonFatalCrashes = listOf(crash),
+        ),
     )
     private var controller = CrashReporterController(sessionId, 2, components, settings, navController, appStore)
 

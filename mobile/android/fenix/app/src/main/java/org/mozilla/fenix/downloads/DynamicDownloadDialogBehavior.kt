@@ -31,7 +31,7 @@ private const val SNAP_ANIMATION_DURATION = 150L
 class DynamicDownloadDialogBehavior<V : View>(
     context: Context?,
     attrs: AttributeSet?,
-    private val bottomToolbarHeight: Float = 0f
+    private val bottomToolbarHeight: Float = 0f,
 ) : CoordinatorLayout.Behavior<V>(context, attrs) {
 
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
@@ -75,7 +75,7 @@ class DynamicDownloadDialogBehavior<V : View>(
         directTargetChild: View,
         target: View,
         axes: Int,
-        type: Int
+        type: Int,
     ): Boolean {
         return if (shouldScroll && axes == ViewCompat.SCROLL_AXIS_VERTICAL) {
             shouldSnapAfterScroll = type == ViewCompat.TYPE_TOUCH
@@ -96,7 +96,7 @@ class DynamicDownloadDialogBehavior<V : View>(
         coordinatorLayout: CoordinatorLayout,
         child: V,
         target: View,
-        type: Int
+        type: Int,
     ) {
         if (shouldSnapAfterScroll || type == ViewCompat.TYPE_NON_TOUCH) {
             if (expanded) {
@@ -122,7 +122,7 @@ class DynamicDownloadDialogBehavior<V : View>(
         dx: Int,
         dy: Int,
         consumed: IntArray,
-        type: Int
+        type: Int,
     ) {
         if (shouldScroll) {
             super.onNestedPreScroll(coordinatorLayout, child, target, dx, dy, consumed, type)
@@ -130,8 +130,8 @@ class DynamicDownloadDialogBehavior<V : View>(
                 0f,
                 min(
                     child.height.toFloat() + bottomToolbarHeight,
-                    child.translationY + dy
-                )
+                    child.translationY + dy,
+                ),
             )
         }
     }
@@ -139,7 +139,7 @@ class DynamicDownloadDialogBehavior<V : View>(
     override fun layoutDependsOn(
         parent: CoordinatorLayout,
         child: V,
-        dependency: View
+        dependency: View,
     ): Boolean {
         engineView = parent.findViewInHierarchy { it is EngineView } as? EngineView
         return super.layoutDependsOn(parent, child, dependency)
@@ -159,7 +159,7 @@ class DynamicDownloadDialogBehavior<V : View>(
                 0f
             } else {
                 child.height.toFloat() + bottomToolbarHeight
-            }
+            },
         )
         start()
     }
@@ -167,6 +167,6 @@ class DynamicDownloadDialogBehavior<V : View>(
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     internal enum class SnapDirection {
         UP,
-        DOWN
+        DOWN,
     }
 }

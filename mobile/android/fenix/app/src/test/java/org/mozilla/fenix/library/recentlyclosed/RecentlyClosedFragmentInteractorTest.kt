@@ -20,7 +20,7 @@ class RecentlyClosedFragmentInteractorTest {
     fun setup() {
         interactor =
             RecentlyClosedFragmentInteractor(
-                recentlyClosedController = defaultRecentlyClosedController
+                recentlyClosedController = defaultRecentlyClosedController,
             )
     }
 

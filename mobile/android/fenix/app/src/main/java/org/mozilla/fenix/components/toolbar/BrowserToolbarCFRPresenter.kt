@@ -51,10 +51,11 @@ class BrowserToolbarCFRPresenter(
     private val browserStore: BrowserStore,
     private val settings: Settings,
     private val toolbar: BrowserToolbar,
-    private val sessionId: String? = null
+    private val sessionId: String? = null,
 ) {
     @VisibleForTesting
     internal var tcpCfrScope: CoroutineScope? = null
+
     @VisibleForTesting
     internal var tcpCfrPopup: CFRPopup? = null
 
@@ -94,7 +95,7 @@ class BrowserToolbarCFRPresenter(
         CFRPopup(
             text = context.getString(R.string.tcp_cfr_message),
             anchor = toolbar.findViewById(
-                R.id.mozac_browser_toolbar_security_indicator
+                R.id.mozac_browser_toolbar_security_indicator,
             ),
             properties = CFRPopupProperties(
                 popupAlignment = INDICATOR_CENTERED_IN_ANCHOR,
@@ -103,14 +104,14 @@ class BrowserToolbarCFRPresenter(
                 } else {
                     CFRPopup.IndicatorDirection.DOWN
                 },
-                popupVerticalOffset = CFR_TO_ANCHOR_VERTICAL_PADDING.dp
+                popupVerticalOffset = CFR_TO_ANCHOR_VERTICAL_PADDING.dp,
             ),
             onDismiss = {
                 when (it) {
                     true -> TrackingProtection.tcpCfrExplicitDismissal.record(NoExtras())
                     false -> TrackingProtection.tcpCfrImplicitDismissal.record(NoExtras())
                 }
-            }
+            },
         ) {
             Text(
                 text = context.getString(R.string.tcp_cfr_learn_more),
@@ -119,15 +120,15 @@ class BrowserToolbarCFRPresenter(
                     context.components.useCases.tabsUseCases.selectOrAddTab.invoke(
                         SupportUtils.getSumoURLForTopic(
                             context,
-                            TOTAL_COOKIE_PROTECTION
-                        )
+                            TOTAL_COOKIE_PROTECTION,
+                        ),
                     )
                     TrackingProtection.tcpSumoLinkClicked.record(NoExtras())
                     tcpCfrPopup?.dismiss()
                 },
                 style = FirefoxTheme.typography.body2.copy(
-                    textDecoration = TextDecoration.Underline
-                )
+                    textDecoration = TextDecoration.Underline,
+                ),
             )
         }.run {
             settings.shouldShowTotalCookieProtectionCFR = false

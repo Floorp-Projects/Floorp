@@ -19,7 +19,7 @@ import mozilla.components.support.utils.toSafeIntent
  * https://developer.android.com/guide/topics/ui/shortcuts/creating-shortcuts#pinned
  */
 class FennecBookmarkShortcutsIntentProcessor(
-    private val addNewTabUseCase: TabsUseCases.AddNewTabUseCase
+    private val addNewTabUseCase: TabsUseCases.AddNewTabUseCase,
 ) : IntentProcessor {
 
     /**
@@ -43,7 +43,7 @@ class FennecBookmarkShortcutsIntentProcessor(
                 flags = EngineSession.LoadUrlFlags.external(),
                 source = SessionState.Source.Internal.HomeScreen,
                 selectTab = true,
-                startLoading = true
+                startLoading = true,
             )
             intent.action = ACTION_VIEW
             intent.putSessionId(sessionId)

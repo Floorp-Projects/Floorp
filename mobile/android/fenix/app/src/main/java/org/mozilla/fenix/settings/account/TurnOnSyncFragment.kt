@@ -124,17 +124,17 @@ class TurnOnSyncFragment : Fragment(), AccountObserver {
             } else {
                 getString(R.string.sign_in_instructions)
             },
-            HtmlCompat.FROM_HTML_MODE_LEGACY
+            HtmlCompat.FROM_HTML_MODE_LEGACY,
         )
 
         interactor = DefaultSyncInteractor(
-            DefaultSyncController(activity = activity as HomeActivity)
+            DefaultSyncController(activity = activity as HomeActivity),
         )
 
         binding.createAccount.apply {
             text = HtmlCompat.fromHtml(
                 getString(R.string.sign_in_create_account_text),
-                HtmlCompat.FROM_HTML_MODE_LEGACY
+                HtmlCompat.FROM_HTML_MODE_LEGACY,
             )
             setOnClickListener(createAccountClickListener)
         }
@@ -161,7 +161,7 @@ class TurnOnSyncFragment : Fragment(), AccountObserver {
         FenixSnackbar.make(
             view = requireView(),
             duration = snackbarLength,
-            isDisplayedWithBrowserToolbar = args.padSnackbar
+            isDisplayedWithBrowserToolbar = args.padSnackbar,
         )
             .setText(snackbarText)
             .show()

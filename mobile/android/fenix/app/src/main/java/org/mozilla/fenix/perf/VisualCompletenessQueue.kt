@@ -29,7 +29,7 @@ class VisualCompletenessQueue(val queue: RunWhenReadyQueue) {
                 {
                     queue.ready()
                 },
-                delay
+                delay,
             )
         }
     }

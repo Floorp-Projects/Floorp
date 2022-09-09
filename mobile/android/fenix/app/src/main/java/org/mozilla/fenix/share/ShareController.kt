@@ -79,7 +79,7 @@ class DefaultShareController(
     private val recentAppsStorage: RecentAppsStorage,
     private val viewLifecycleScope: CoroutineScope,
     private val dispatcher: CoroutineDispatcher = Dispatchers.IO,
-    private val dismiss: (ShareController.Result) -> Unit
+    private val dismiss: (ShareController.Result) -> Unit,
 ) : ShareController {
 
     override fun handleReauth() {

@@ -29,9 +29,9 @@ class NoCollectionsMessageViewHolderTest {
     private val store: BrowserStore = BrowserStore(
         initialState = BrowserState(
             listOf(
-                createTab("https://www.mozilla.org", id = "reader-inactive-tab")
-            )
-        )
+                createTab("https://www.mozilla.org", id = "reader-inactive-tab"),
+            ),
+        ),
     )
     private lateinit var lifecycleOwner: LifecycleOwner
     private lateinit var interactor: CollectionInteractor

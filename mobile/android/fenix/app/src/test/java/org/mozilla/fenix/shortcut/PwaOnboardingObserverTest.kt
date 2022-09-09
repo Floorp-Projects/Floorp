@@ -44,10 +44,10 @@ class PwaOnboardingObserverTest {
         store = BrowserStore(
             BrowserState(
                 tabs = listOf(
-                    createTab(url = "https://firefox.com", id = "1")
+                    createTab(url = "https://firefox.com", id = "1"),
                 ),
-                selectedTabId = "1"
-            )
+                selectedTabId = "1",
+            ),
         )
         lifecycleOwner = MockedLifecycleOwner(Lifecycle.State.STARTED)
 
@@ -60,7 +60,7 @@ class PwaOnboardingObserverTest {
             lifecycleOwner = lifecycleOwner,
             navController = navigationController,
             settings = settings,
-            webAppUseCases = webAppUseCases
+            webAppUseCases = webAppUseCases,
         )
         every { pwaOnboardingObserver.navigateToPwaOnboarding() } returns Unit
     }

@@ -12,7 +12,7 @@ import org.mozilla.fenix.ext.components
 
 class DesktopFolders(
     private val context: Context,
-    private val showMobileRoot: Boolean
+    private val showMobileRoot: Boolean,
 ) {
     private val bookmarksStorage = context.components.core.bookmarksStorage
 
@@ -38,7 +38,7 @@ class DesktopFolders(
                         restructureMobileRoots(node.children)
                     } else {
                         restructureDesktopRoots(node.children)
-                    }
+                    },
                 )
             BookmarkRoot.Menu.id, BookmarkRoot.Toolbar.id, BookmarkRoot.Unfiled.id ->
                 // If we're looking at one of the desktop roots, change their titles to friendly names.
@@ -82,8 +82,8 @@ class DesktopFolders(
         return listOf(
             mobileRoot.copy(
                 children = mobileChildren,
-                title = context.getString(R.string.library_bookmarks)
-            )
+                title = context.getString(R.string.library_bookmarks),
+            ),
         )
     }
 }

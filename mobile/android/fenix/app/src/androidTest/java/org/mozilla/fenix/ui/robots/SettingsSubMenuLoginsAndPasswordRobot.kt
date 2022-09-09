@@ -101,9 +101,9 @@ private fun assertDefaultValueAutofillLogins(context: Context) = onView(
     ViewMatchers.withText(
         context.getString(
             R.string.preferences_passwords_autofill2,
-            context.getString(R.string.app_name)
-        )
-    )
+            context.getString(R.string.app_name),
+        ),
+    ),
 )
     .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
 

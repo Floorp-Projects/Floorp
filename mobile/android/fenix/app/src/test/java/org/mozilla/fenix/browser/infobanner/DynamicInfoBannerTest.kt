@@ -23,8 +23,12 @@ class DynamicInfoBannerTest {
         every { testContext.components.settings } returns mockk(relaxed = true)
         val banner = spyk(
             DynamicInfoBanner(
-                testContext, CoordinatorLayout(testContext), true, "", ""
-            )
+                testContext,
+                CoordinatorLayout(testContext),
+                true,
+                "",
+                "",
+            ),
         )
 
         banner.showBanner()
@@ -37,8 +41,12 @@ class DynamicInfoBannerTest {
         every { testContext.components.settings } returns mockk(relaxed = true)
         val banner = spyk(
             DynamicInfoBanner(
-                testContext, CoordinatorLayout(testContext), false, "", ""
-            )
+                testContext,
+                CoordinatorLayout(testContext),
+                false,
+                "",
+                "",
+            ),
         )
 
         banner.showBanner()

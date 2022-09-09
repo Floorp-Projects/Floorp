@@ -63,38 +63,38 @@ class LoginExceptionsAdapterTest {
         assertTrue(
             LoginExceptionsAdapter.DiffCallback.areItemsTheSame(
                 ExceptionsAdapter.AdapterItem.Header,
-                ExceptionsAdapter.AdapterItem.Header
-            )
+                ExceptionsAdapter.AdapterItem.Header,
+            ),
         )
         assertTrue(
             LoginExceptionsAdapter.DiffCallback.areItemsTheSame(
                 ExceptionsAdapter.AdapterItem.DeleteButton,
-                ExceptionsAdapter.AdapterItem.DeleteButton
-            )
+                ExceptionsAdapter.AdapterItem.DeleteButton,
+            ),
         )
         assertFalse(
             LoginExceptionsAdapter.DiffCallback.areItemsTheSame(
                 ExceptionsAdapter.AdapterItem.Header,
-                ExceptionsAdapter.AdapterItem.DeleteButton
-            )
+                ExceptionsAdapter.AdapterItem.DeleteButton,
+            ),
         )
         assertTrue(
             LoginExceptionsAdapter.DiffCallback.areContentsTheSame(
                 ExceptionsAdapter.AdapterItem.Header,
-                ExceptionsAdapter.AdapterItem.Header
-            )
+                ExceptionsAdapter.AdapterItem.Header,
+            ),
         )
         assertTrue(
             LoginExceptionsAdapter.DiffCallback.areContentsTheSame(
                 ExceptionsAdapter.AdapterItem.DeleteButton,
-                ExceptionsAdapter.AdapterItem.DeleteButton
-            )
+                ExceptionsAdapter.AdapterItem.DeleteButton,
+            ),
         )
         assertFalse(
             LoginExceptionsAdapter.DiffCallback.areContentsTheSame(
                 ExceptionsAdapter.AdapterItem.DeleteButton,
-                ExceptionsAdapter.AdapterItem.Header
-            )
+                ExceptionsAdapter.AdapterItem.Header,
+            ),
         )
     }
 
@@ -105,38 +105,38 @@ class LoginExceptionsAdapterTest {
                 LoginExceptionsAdapter.LoginAdapterItem(
                     mockk {
                         every { id } returns 12L
-                    }
+                    },
                 ),
                 LoginExceptionsAdapter.LoginAdapterItem(
                     mockk {
                         every { id } returns 12L
-                    }
-                )
-            )
+                    },
+                ),
+            ),
         )
         assertFalse(
             LoginExceptionsAdapter.DiffCallback.areItemsTheSame(
                 LoginExceptionsAdapter.LoginAdapterItem(
                     mockk {
                         every { id } returns 14L
-                    }
+                    },
                 ),
                 LoginExceptionsAdapter.LoginAdapterItem(
                     mockk {
                         every { id } returns 12L
-                    }
-                )
-            )
+                    },
+                ),
+            ),
         )
         assertFalse(
             LoginExceptionsAdapter.DiffCallback.areItemsTheSame(
                 LoginExceptionsAdapter.LoginAdapterItem(
                     mockk {
                         every { id } returns 14L
-                    }
+                    },
                 ),
-                ExceptionsAdapter.AdapterItem.Header
-            )
+                ExceptionsAdapter.AdapterItem.Header,
+            ),
         )
         assertFalse(
             LoginExceptionsAdapter.DiffCallback.areItemsTheSame(
@@ -144,9 +144,9 @@ class LoginExceptionsAdapterTest {
                 LoginExceptionsAdapter.LoginAdapterItem(
                     mockk {
                         every { id } returns 14L
-                    }
-                )
-            )
+                    },
+                ),
+            ),
         )
     }
 }

@@ -16,7 +16,7 @@ import java.util.Locale
 class LocaleViewHolder(
     view: View,
     selectedLocale: Locale,
-    private val interactor: LocaleSettingsViewInteractor
+    private val interactor: LocaleSettingsViewInteractor,
 ) : BaseLocaleViewHolder(view, selectedLocale) {
 
     private val binding = LocaleSettingsItemBinding.bind(view)
@@ -171,7 +171,7 @@ class LocaleViewHolder(
             "vec" to "Vèneto",
             "vi" to "Tiếng Việt",
             "wo" to "Wolof",
-            "zam" to "DíɁztè"
+            "zam" to "DíɁztè",
         )
 
         val LOCALE_TO_DISPLAY_ENGLISH_NAME_MAP: Map<String, String> = mapOf(
@@ -266,7 +266,7 @@ class LocaleViewHolder(
             "ur" to "Urdu",
             "uz" to "Uzbek",
             "vec" to "Venitian",
-            "vi" to "Vietnamese"
+            "vi" to "Vietnamese",
         )
     }
 }
@@ -274,7 +274,7 @@ class LocaleViewHolder(
 class SystemLocaleViewHolder(
     view: View,
     selectedLocale: Locale,
-    private val interactor: LocaleSettingsViewInteractor
+    private val interactor: LocaleSettingsViewInteractor,
 ) : BaseLocaleViewHolder(view, selectedLocale) {
 
     private val binding = LocaleSettingsItemBinding.bind(view)
@@ -300,7 +300,7 @@ class SystemLocaleViewHolder(
 
 abstract class BaseLocaleViewHolder(
     view: View,
-    private val selectedLocale: Locale
+    private val selectedLocale: Locale,
 ) : RecyclerView.ViewHolder(view) {
 
     @VisibleForTesting(otherwise = VisibleForTesting.PROTECTED)

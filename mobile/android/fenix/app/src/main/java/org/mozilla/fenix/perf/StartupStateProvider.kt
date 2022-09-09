@@ -22,7 +22,7 @@ import org.mozilla.fenix.perf.StartupActivityLog.LogEntry
  */
 class StartupStateProvider(
     private val startupLog: StartupActivityLog,
-    private val startReasonProvider: AppStartReasonProvider
+    private val startReasonProvider: AppStartReasonProvider,
 ) {
 
     /**
@@ -39,7 +39,9 @@ class StartupStateProvider(
          * - if the activity this is called from is not currently started
          * - if the currently started activity is not the first started activity
          */
-        UNKNOWN;
+        UNKNOWN,
+
+        ;
     }
 
     /**
@@ -76,7 +78,7 @@ class StartupStateProvider(
 
         val isLastStartedActivityStillStarted = startupLog.log.takeLast(2) == listOf(
             LogEntry.ActivityStarted(activityClass),
-            LogEntry.AppStarted
+            LogEntry.AppStarted,
         )
         return !startupLog.log.contains(LogEntry.AppStopped) && isLastStartedActivityStillStarted
     }
@@ -116,7 +118,7 @@ class StartupStateProvider(
         val isLastActivityCreatedStillStarted = afterLastStopped.takeLast(3) == listOf(
             LogEntry.ActivityCreated(activityClass),
             LogEntry.ActivityStarted(activityClass),
-            LogEntry.AppStarted
+            LogEntry.AppStarted,
         )
         return isLastActivityCreatedStillStarted
     }
@@ -146,7 +148,7 @@ class StartupStateProvider(
 
         val isLastActivityStartedStillStarted = afterLastStopped.takeLast(2) == listOf(
             LogEntry.ActivityStarted(activityClass),
-            LogEntry.AppStarted
+            LogEntry.AppStarted,
         )
         return !afterLastStopped.contains(LogEntry.ActivityCreated(activityClass)) &&
             isLastActivityStartedStillStarted

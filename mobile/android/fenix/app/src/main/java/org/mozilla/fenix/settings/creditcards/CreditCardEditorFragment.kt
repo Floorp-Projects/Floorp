@@ -63,8 +63,8 @@ class CreditCardEditorFragment : SecureFragment(R.layout.fragment_credit_card_ed
                 storage = storage,
                 lifecycleScope = lifecycleScope,
                 navController = findNavController(),
-                showDeleteDialog = ::showDeleteDialog
-            )
+                showDeleteDialog = ::showDeleteDialog,
+            ),
         )
 
         val binding = FragmentCreditCardEditorBinding.bind(view)
@@ -106,7 +106,7 @@ class CreditCardEditorFragment : SecureFragment(R.layout.fragment_credit_card_ed
         redirectToReAuth(
             listOf(R.id.creditCardsManagementFragment),
             findNavController().currentDestination?.id,
-            R.id.creditCardEditorFragment
+            R.id.creditCardEditorFragment,
         )
 
         super.onPause()

@@ -21,7 +21,7 @@ class FenixOnboarding(context: Context) : PreferencesHolder {
     override val preferences: SharedPreferences = strictMode.resetAfter(StrictMode.allowThreadDiskReads()) {
         context.getSharedPreferences(
             PREF_NAME_ONBOARDING_KEY,
-            Context.MODE_PRIVATE
+            Context.MODE_PRIVATE,
         )
     }
 

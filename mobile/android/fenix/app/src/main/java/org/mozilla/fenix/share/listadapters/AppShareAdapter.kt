@@ -16,7 +16,7 @@ import org.mozilla.fenix.share.viewholders.AppViewHolder
  * Adapter for a list of apps that can be shared to.
  */
 class AppShareAdapter(
-    private val interactor: ShareToAppsInteractor
+    private val interactor: ShareToAppsInteractor,
 ) : ListAdapter<AppShareOption, AppViewHolder>(DiffCallback) {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): AppViewHolder {
@@ -51,5 +51,5 @@ data class AppShareOption(
     val name: String,
     val icon: Drawable,
     val packageName: String,
-    val activityName: String
+    val activityName: String,
 )

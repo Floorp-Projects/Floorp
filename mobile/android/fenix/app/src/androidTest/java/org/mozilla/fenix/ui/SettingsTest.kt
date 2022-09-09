@@ -43,9 +43,9 @@ class SettingsTest {
         mockWebServer.shutdown()
     }
 
+    // Walks through settings menu and sub-menus to ensure all items are present
     @Ignore("This is a stub test, ignore for now")
     @Test
-    // Walks through settings menu and sub-menus to ensure all items are present
     fun settingsMenusItemsTest() {
         // SYNC
 

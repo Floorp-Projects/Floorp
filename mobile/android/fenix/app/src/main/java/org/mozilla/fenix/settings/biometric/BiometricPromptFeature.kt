@@ -31,7 +31,7 @@ class BiometricPromptFeature(
     private val context: Context,
     private val fragment: Fragment,
     private val onAuthFailure: () -> Unit,
-    private val onAuthSuccess: () -> Unit
+    private val onAuthSuccess: () -> Unit,
 ) : LifecycleAwareFeature {
     private val logger = Logger(javaClass.simpleName)
 

@@ -34,15 +34,15 @@ class CollectionRobot {
     fun verifySelectCollectionScreen() {
         assertTrue(
             mDevice.findObject(UiSelector().text("Select collection"))
-                .exists()
+                .exists(),
         )
         assertTrue(
             mDevice.findObject(UiSelector().resourceId("$packageName:id/collections_list"))
-                .exists()
+                .exists(),
         )
         assertTrue(
             mDevice.findObject(UiSelector().text("Add new collection"))
-                .exists()
+                .exists(),
         )
     }
 
@@ -50,7 +50,7 @@ class CollectionRobot {
 
     fun verifyCollectionNameTextField() {
         assertTrue(
-            mainMenuEditCollectionNameField().waitForExists(waitingTime)
+            mainMenuEditCollectionNameField().waitForExists(waitingTime),
         )
     }
 
@@ -79,12 +79,13 @@ class CollectionRobot {
         if (visible) {
             scrollToElementByText(title)
             assertTrue(
-                collectionListItem(title).waitForExists(waitingTime)
+                collectionListItem(title).waitForExists(waitingTime),
             )
-        } else
+        } else {
             assertTrue(
-                collectionListItem(title).waitUntilGone(waitingTime)
+                collectionListItem(title).waitUntilGone(waitingTime),
             )
+        }
     }
 
     fun verifyCollectionTabUrl(visible: Boolean, url: String) {
@@ -152,11 +153,11 @@ class CollectionRobot {
     fun verifyCollectionItemRemoveButtonIsVisible(title: String, visible: Boolean) {
         if (visible) {
             assertTrue(
-                removeTabFromCollectionButton(title).exists()
+                removeTabFromCollectionButton(title).exists(),
             )
         } else {
             assertFalse(
-                removeTabFromCollectionButton(title).exists()
+                removeTabFromCollectionButton(title).exists(),
             )
         }
     }
@@ -183,13 +184,13 @@ class CollectionRobot {
 
     fun swipeToBottom() =
         UiScrollable(
-            UiSelector().resourceId("$packageName:id/sessionControlRecyclerView")
+            UiSelector().resourceId("$packageName:id/sessionControlRecyclerView"),
         ).scrollToEnd(3)
 
     class Transition {
         fun collapseCollection(
             title: String,
-            interact: HomeScreenRobot.() -> Unit
+            interact: HomeScreenRobot.() -> Unit,
         ): HomeScreenRobot.Transition {
             try {
                 collectionTitle(title).waitForExists(waitingTime)
@@ -206,7 +207,7 @@ class CollectionRobot {
         // names a collection saved from the 3dot menu
         fun typeCollectionNameAndSave(
             name: String,
-            interact: BrowserRobot.() -> Unit
+            interact: BrowserRobot.() -> Unit,
         ): BrowserRobot.Transition {
             mainMenuEditCollectionNameField().waitForExists(waitingTime)
             mainMenuEditCollectionNameField().text = name
@@ -221,7 +222,7 @@ class CollectionRobot {
 
         fun selectExistingCollection(
             title: String,
-            interact: BrowserRobot.() -> Unit
+            interact: BrowserRobot.() -> Unit,
         ): BrowserRobot.Transition {
             collectionTitle(title).waitForExists(waitingTime)
             collectionTitle(title).click()
@@ -248,7 +249,7 @@ fun collectionRobot(interact: CollectionRobot.() -> Unit): CollectionRobot.Trans
 private fun collectionTitle(title: String) =
     mDevice.findObject(
         UiSelector()
-            .text(title)
+            .text(title),
     )
 
 private fun collectionThreeDotButton(rule: ComposeTestRule) =
@@ -258,27 +259,27 @@ private fun collectionListItem(title: String) = mDevice.findObject(UiSelector().
 
 private fun shareCollectionButton() =
     mDevice.findObject(
-        UiSelector().description("Share")
+        UiSelector().description("Share"),
     )
 
 private fun removeTabFromCollectionButton(title: String) =
     mDevice.findObject(
-        UiSelector().text(title)
+        UiSelector().text(title),
     ).getFromParent(
         UiSelector()
-            .description("Remove tab from collection")
+            .description("Remove tab from collection"),
     )
 
 // collection name text field, opened from tab drawer
 private fun collectionNameTextField() =
     mDevice.findObject(
-        UiSelector().resourceId("$packageName:id/collection_name")
+        UiSelector().resourceId("$packageName:id/collection_name"),
     )
 
 // collection name text field, when saving from the main menu option
 private fun mainMenuEditCollectionNameField() =
     mDevice.findObject(
-        UiSelector().resourceId("$packageName:id/name_collection_edittext")
+        UiSelector().resourceId("$packageName:id/name_collection_edittext"),
     )
 
 private fun addNewCollectionButton() =
@@ -286,5 +287,5 @@ private fun addNewCollectionButton() =
 
 private fun backButton() =
     mDevice.findObject(
-        UiSelector().resourceId("$packageName:id/back_button")
+        UiSelector().resourceId("$packageName:id/back_button"),
     )

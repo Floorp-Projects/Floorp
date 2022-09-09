@@ -108,7 +108,9 @@ data class Wallpaper(
                     thumbnailFileState = ImageFileState.Downloaded,
                     assetsFileState = ImageFileState.Downloaded,
                 )
-            } else null
+            } else {
+                null
+            }
         }
     }
 
@@ -118,7 +120,8 @@ data class Wallpaper(
     enum class ImageType {
         Portrait,
         Landscape,
-        Thumbnail;
+        Thumbnail,
+        ;
 
         /**
          * Get a lowercase string representation of the [ImageType.name] for use in path segments.

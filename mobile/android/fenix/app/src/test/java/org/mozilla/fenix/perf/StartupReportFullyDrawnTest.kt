@@ -35,9 +35,15 @@ class StartupReportFullyDrawnTest {
 
     @MockK private lateinit var activity: HomeActivity
     private lateinit var holder: TopSiteItemViewHolder
-    @MockK(relaxed = true) private lateinit var rootContainer: LinearLayout
-    @MockK(relaxed = true) private lateinit var holderItemView: View
-    @MockK(relaxed = true) private lateinit var viewTreeObserver: ViewTreeObserver
+
+    @MockK(relaxed = true)
+    private lateinit var rootContainer: LinearLayout
+
+    @MockK(relaxed = true)
+    private lateinit var holderItemView: View
+
+    @MockK(relaxed = true)
+    private lateinit var viewTreeObserver: ViewTreeObserver
     private lateinit var fullyDrawn: StartupReportFullyDrawn
 
     @Before

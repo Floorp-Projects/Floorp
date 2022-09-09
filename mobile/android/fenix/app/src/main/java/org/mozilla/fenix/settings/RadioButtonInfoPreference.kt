@@ -12,7 +12,7 @@ import org.mozilla.fenix.R
 
 class RadioButtonInfoPreference @JvmOverloads constructor(
     context: Context,
-    attrs: AttributeSet? = null
+    attrs: AttributeSet? = null,
 ) : RadioButtonPreference(context, attrs) {
     private var infoClickListener: (() -> Unit)? = null
     private var infoView: ImageView? = null

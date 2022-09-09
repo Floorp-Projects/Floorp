@@ -44,7 +44,7 @@ fun withBitmapDrawable(bitmap: Bitmap, name: String): Matcher<View>? = BitmapDra
 
 fun nthChildOf(
     parentMatcher: Matcher<View>,
-    childPosition: Int
+    childPosition: Int,
 ): Matcher<View> {
     return object : TypeSafeMatcher<View>() {
         override fun describeTo(description: Description) {

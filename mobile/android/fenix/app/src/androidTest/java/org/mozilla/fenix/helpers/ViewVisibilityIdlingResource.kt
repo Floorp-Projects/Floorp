@@ -9,7 +9,7 @@ import androidx.test.espresso.IdlingResource
 
 class ViewVisibilityIdlingResource(
     private val view: View,
-    private val expectedVisibility: Int
+    private val expectedVisibility: Int,
 ) : IdlingResource {
     private var resourceCallback: IdlingResource.ResourceCallback? = null
     private var isIdle: Boolean = false

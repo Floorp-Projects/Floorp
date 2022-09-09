@@ -5,7 +5,7 @@
 package org.mozilla.fenix.tabhistory
 
 class TabHistoryInteractor(
-    private val controller: TabHistoryController
+    private val controller: TabHistoryController,
 ) : TabHistoryViewInteractor {
 
     override fun goToHistoryItem(item: TabHistoryItem) {

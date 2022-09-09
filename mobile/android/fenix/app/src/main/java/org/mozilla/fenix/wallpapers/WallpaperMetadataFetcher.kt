@@ -21,7 +21,7 @@ import java.util.Locale
  * @property client The client that will be used to fetch metadata.
  */
 class WallpaperMetadataFetcher(
-    private val client: Client
+    private val client: Client,
 ) {
     private val metadataUrl = BuildConfig.WALLPAPER_URL.substringBefore("android") +
         "metadata/v$currentJsonVersion/wallpapers.json"

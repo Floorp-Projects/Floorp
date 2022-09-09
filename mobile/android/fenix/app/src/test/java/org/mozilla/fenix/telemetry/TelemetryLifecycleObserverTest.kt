@@ -81,10 +81,10 @@ class TelemetryLifecycleObserverTest {
                     createTab("https://news.google.com", id = "news"),
                     createTab("https://theverge.com", id = "theverge", engineSession = mockk(relaxed = true)),
                     createTab("https://www.google.com", id = "google", engineSession = mockk(relaxed = true)),
-                    createTab("https://getpocket.com", id = "pocket", crashed = true)
-                )
+                    createTab("https://getpocket.com", id = "pocket", crashed = true),
+                ),
             ),
-            middleware = EngineMiddleware.create(engine = mockk())
+            middleware = EngineMiddleware.create(engine = mockk()),
         )
 
         val observer = TelemetryLifecycleObserver(store)
@@ -94,11 +94,11 @@ class TelemetryLifecycleObserverTest {
         observer.onPause(mockk())
 
         store.dispatch(
-            EngineAction.KillEngineSessionAction("theverge")
+            EngineAction.KillEngineSessionAction("theverge"),
         ).joinBlocking()
 
         store.dispatch(
-            EngineAction.SuspendEngineSessionAction("mozilla")
+            EngineAction.SuspendEngineSessionAction("mozilla"),
         ).joinBlocking()
 
         clock.elapsedTime = 10340

@@ -50,7 +50,7 @@ class NimbusExperimentsFragment : Fragment(R.layout.mozac_service_nimbus_experim
 
     private fun bindRecyclerView(view: View) {
         val experimentsView = NimbusExperimentsView(
-            navController = findNavController()
+            navController = findNavController(),
         )
 
         val recyclerView = view.findViewById<RecyclerView>(R.id.nimbus_experiments_list)
@@ -68,7 +68,7 @@ class NimbusExperimentsFragment : Fragment(R.layout.mozac_service_nimbus_experim
                         if (!shouldRefresh) {
                             adapter = NimbusExperimentAdapter(
                                 experimentsView,
-                                experiments
+                                experiments,
                             )
                         }
 

@@ -75,7 +75,7 @@ class DefaultCollectionCreationController(
     private val browserStore: BrowserStore,
     private val dismiss: () -> Unit,
     private val tabCollectionStorage: TabCollectionStorage,
-    private val scope: CoroutineScope
+    private val scope: CoroutineScope,
 ) : CollectionCreationController {
 
     companion object {
@@ -94,8 +94,8 @@ class DefaultCollectionCreationController(
         Collections.saved.record(
             Collections.SavedExtra(
                 browserStore.state.normalTabs.size.toString(),
-                sessionBundle.size.toString()
-            )
+                sessionBundle.size.toString(),
+            ),
         )
     }
 
@@ -139,8 +139,8 @@ class DefaultCollectionCreationController(
         Collections.tabsAdded.record(
             Collections.TabsAddedExtra(
                 browserStore.state.normalTabs.size.toString(),
-                sessionBundle.size.toString()
-            )
+                sessionBundle.size.toString(),
+            ),
         )
     }
 
@@ -152,8 +152,8 @@ class DefaultCollectionCreationController(
                 } else {
                     SaveCollectionStep.SelectCollection
                 },
-                defaultCollectionNumber = store.state.tabCollections.getDefaultCollectionNumber()
-            )
+                defaultCollectionNumber = store.state.tabCollections.getDefaultCollectionNumber(),
+            ),
         )
     }
 
@@ -161,8 +161,8 @@ class DefaultCollectionCreationController(
         store.dispatch(
             CollectionCreationAction.StepChanged(
                 SaveCollectionStep.NameCollection,
-                store.state.tabCollections.getDefaultCollectionNumber()
-            )
+                store.state.tabCollections.getDefaultCollectionNumber(),
+            ),
         )
     }
 
@@ -181,7 +181,7 @@ class DefaultCollectionCreationController(
      */
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     fun stepBack(
-        backFromStep: SaveCollectionStep
+        backFromStep: SaveCollectionStep,
     ): SaveCollectionStep? {
         val tabCollectionCount = store.state.tabCollections.size
         val tabCount = store.state.tabs.size

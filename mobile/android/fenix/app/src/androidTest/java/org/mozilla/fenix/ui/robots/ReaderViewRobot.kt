@@ -56,7 +56,7 @@ class ReaderViewRobot {
         val prefs = InstrumentationRegistry.getInstrumentation()
             .targetContext.getSharedPreferences(
                 "mozac_feature_reader_view",
-                Context.MODE_PRIVATE
+                Context.MODE_PRIVATE,
             )
 
         assertEquals(fontType, prefs.getString(fontTypeKey, ""))
@@ -68,7 +68,7 @@ class ReaderViewRobot {
         val prefs = InstrumentationRegistry.getInstrumentation()
             .targetContext.getSharedPreferences(
                 "mozac_feature_reader_view",
-                Context.MODE_PRIVATE
+                Context.MODE_PRIVATE,
             )
 
         val fontSizeKeyValue = prefs.getInt(fontSizeKey, 3)
@@ -82,7 +82,7 @@ class ReaderViewRobot {
         val prefs = InstrumentationRegistry.getInstrumentation()
             .targetContext.getSharedPreferences(
                 "mozac_feature_reader_view",
-                Context.MODE_PRIVATE
+                Context.MODE_PRIVATE,
             )
 
         assertEquals(expectedColorScheme, prefs.getString(colorSchemeKey, ""))
@@ -92,7 +92,7 @@ class ReaderViewRobot {
         fun toggleSansSerif(interact: ReaderViewRobot.() -> Unit): Transition {
             fun sansSerifButton() =
                 onView(
-                    withId(R.id.mozac_feature_readerview_font_sans_serif)
+                    withId(R.id.mozac_feature_readerview_font_sans_serif),
                 )
 
             sansSerifButton().click()
@@ -104,7 +104,7 @@ class ReaderViewRobot {
         fun toggleSerif(interact: ReaderViewRobot.() -> Unit): Transition {
             fun serifButton() =
                 onView(
-                    withId(R.id.mozac_feature_readerview_font_serif)
+                    withId(R.id.mozac_feature_readerview_font_serif),
                 )
 
             serifButton().click()
@@ -116,7 +116,7 @@ class ReaderViewRobot {
         fun toggleFontSizeDecrease(interact: ReaderViewRobot.() -> Unit): Transition {
             fun fontSizeDecrease() =
                 onView(
-                    withId(R.id.mozac_feature_readerview_font_size_decrease)
+                    withId(R.id.mozac_feature_readerview_font_size_decrease),
                 )
 
             fontSizeDecrease().click()
@@ -128,7 +128,7 @@ class ReaderViewRobot {
         fun toggleFontSizeIncrease(interact: ReaderViewRobot.() -> Unit): Transition {
             fun fontSizeIncrease() =
                 onView(
-                    withId(R.id.mozac_feature_readerview_font_size_increase)
+                    withId(R.id.mozac_feature_readerview_font_size_increase),
                 )
 
             fontSizeIncrease().click()
@@ -140,7 +140,7 @@ class ReaderViewRobot {
         fun toggleColorSchemeChangeLight(interact: ReaderViewRobot.() -> Unit): Transition {
             fun toggleLightColorSchemeButton() =
                 onView(
-                    withId(R.id.mozac_feature_readerview_color_light)
+                    withId(R.id.mozac_feature_readerview_color_light),
                 )
 
             toggleLightColorSchemeButton().click()
@@ -152,7 +152,7 @@ class ReaderViewRobot {
         fun toggleColorSchemeChangeDark(interact: ReaderViewRobot.() -> Unit): Transition {
             fun toggleDarkColorSchemeButton() =
                 onView(
-                    withId(R.id.mozac_feature_readerview_color_dark)
+                    withId(R.id.mozac_feature_readerview_color_dark),
                 )
 
             toggleDarkColorSchemeButton().click()
@@ -164,7 +164,7 @@ class ReaderViewRobot {
         fun toggleColorSchemeChangeSepia(interact: ReaderViewRobot.() -> Unit): Transition {
             fun toggleSepiaColorSchemeButton() =
                 onView(
-                    withId(R.id.mozac_feature_readerview_color_sepia)
+                    withId(R.id.mozac_feature_readerview_color_sepia),
                 )
 
             toggleSepiaColorSchemeButton().click()
@@ -182,65 +182,65 @@ fun readerViewRobot(interact: ReaderViewRobot.() -> Unit): ReaderViewRobot.Trans
 
 private fun assertAppearanceFontGroup(visible: Boolean) =
     onView(
-        withId(R.id.mozac_feature_readerview_font_group)
+        withId(R.id.mozac_feature_readerview_font_group),
     ).check(
-        matches(withEffectiveVisibility(visibleOrGone(visible)))
+        matches(withEffectiveVisibility(visibleOrGone(visible))),
     )
 
 private fun assertAppearanceFontSansSerif(visible: Boolean) =
     onView(
-        withId(R.id.mozac_feature_readerview_font_sans_serif)
+        withId(R.id.mozac_feature_readerview_font_sans_serif),
     ).check(
-        matches(withEffectiveVisibility(visibleOrGone(visible)))
+        matches(withEffectiveVisibility(visibleOrGone(visible))),
     )
 
 private fun assertAppearanceFontSerif(visible: Boolean) =
     onView(
-        withId(R.id.mozac_feature_readerview_font_serif)
+        withId(R.id.mozac_feature_readerview_font_serif),
     ).check(
-        matches(withEffectiveVisibility(visibleOrGone(visible)))
+        matches(withEffectiveVisibility(visibleOrGone(visible))),
     )
 
 private fun assertAppearanceFontDecrease(visible: Boolean) =
     onView(
-        withId(R.id.mozac_feature_readerview_font_size_decrease)
+        withId(R.id.mozac_feature_readerview_font_size_decrease),
     ).check(
-        matches(withEffectiveVisibility(visibleOrGone(visible)))
+        matches(withEffectiveVisibility(visibleOrGone(visible))),
     )
 
 private fun assertAppearanceFontIncrease(visible: Boolean) =
     onView(
-        withId(R.id.mozac_feature_readerview_font_size_increase)
+        withId(R.id.mozac_feature_readerview_font_size_increase),
     ).check(
-        matches(withEffectiveVisibility(visibleOrGone(visible)))
+        matches(withEffectiveVisibility(visibleOrGone(visible))),
     )
 
 private fun assertAppearanceColorDark(visible: Boolean) =
     onView(
-        withId(R.id.mozac_feature_readerview_color_dark)
+        withId(R.id.mozac_feature_readerview_color_dark),
     ).check(
-        matches(withEffectiveVisibility(visibleOrGone(visible)))
+        matches(withEffectiveVisibility(visibleOrGone(visible))),
     )
 
 private fun assertAppearanceColorLight(visible: Boolean) =
     onView(
-        withId(R.id.mozac_feature_readerview_color_light)
+        withId(R.id.mozac_feature_readerview_color_light),
     ).check(
-        matches(withEffectiveVisibility(visibleOrGone(visible)))
+        matches(withEffectiveVisibility(visibleOrGone(visible))),
     )
 
 private fun assertAppearanceColorSepia(visible: Boolean) =
     onView(
-        withId(R.id.mozac_feature_readerview_color_sepia)
+        withId(R.id.mozac_feature_readerview_color_sepia),
     ).check(
-        matches(withEffectiveVisibility(visibleOrGone(visible)))
+        matches(withEffectiveVisibility(visibleOrGone(visible))),
     )
 
 private fun assertAppearanceColorGroup(visible: Boolean) =
     onView(
-        withId(R.id.mozac_feature_readerview_color_scheme_group)
+        withId(R.id.mozac_feature_readerview_color_scheme_group),
     ).check(
-        matches(withEffectiveVisibility(visibleOrGone(visible)))
+        matches(withEffectiveVisibility(visibleOrGone(visible))),
     )
 
 private fun visibleOrGone(visibility: Boolean) =

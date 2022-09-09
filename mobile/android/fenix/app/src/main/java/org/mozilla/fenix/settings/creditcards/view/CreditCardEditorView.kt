@@ -32,7 +32,7 @@ import java.util.Locale
  */
 class CreditCardEditorView(
     private val binding: FragmentCreditCardEditorBinding,
-    private val interactor: CreditCardEditorInteractor
+    private val interactor: CreditCardEditorInteractor,
 ) {
 
     /**
@@ -62,13 +62,13 @@ class CreditCardEditorView(
 
         binding.cardNumberLayout.setErrorTextColor(
             ColorStateList.valueOf(
-                binding.root.context.getColorFromAttr(R.attr.textWarning)
-            )
+                binding.root.context.getColorFromAttr(R.attr.textWarning),
+            ),
         )
         binding.nameOnCardLayout.setErrorTextColor(
             ColorStateList.valueOf(
-                binding.root.context.getColorFromAttr(R.attr.textWarning)
-            )
+                binding.root.context.getColorFromAttr(R.attr.textWarning),
+            ),
         )
 
         bindExpiryMonthDropDown(state.expiryMonth)
@@ -94,7 +94,7 @@ class CreditCardEditorView(
                     cardNumberLast4 = cardNumber.last4Digits(),
                     expiryMonth = (binding.expiryMonthDropDown.selectedItemPosition + 1).toLong(),
                     expiryYear = binding.expiryYearDropDown.selectedItem.toString().toLong(),
-                    cardType = cardNumber.creditCardIIN()?.creditCardIssuerNetwork?.name ?: ""
+                    cardType = cardNumber.creditCardIIN()?.creditCardIssuerNetwork?.name ?: "",
                 )
                 interactor.onUpdateCreditCard(state.guid, fields)
             } else {
@@ -104,7 +104,7 @@ class CreditCardEditorView(
                     cardNumberLast4 = cardNumber.last4Digits(),
                     expiryMonth = (binding.expiryMonthDropDown.selectedItemPosition + 1).toLong(),
                     expiryYear = binding.expiryYearDropDown.selectedItem.toString().toLong(),
-                    cardType = cardNumber.creditCardIIN()?.creditCardIssuerNetwork?.name ?: ""
+                    cardType = cardNumber.creditCardIIN()?.creditCardIssuerNetwork?.name ?: "",
                 )
                 interactor.onSaveCreditCard(fields)
             }
@@ -155,7 +155,7 @@ class CreditCardEditorView(
         val adapter =
             ArrayAdapter<String>(
                 binding.root.context,
-                android.R.layout.simple_spinner_dropdown_item
+                android.R.layout.simple_spinner_dropdown_item,
             )
         val dateFormat = SimpleDateFormat("MMMM (MM)", Locale.getDefault())
 
@@ -181,7 +181,7 @@ class CreditCardEditorView(
         val adapter =
             ArrayAdapter<String>(
                 binding.root.context,
-                android.R.layout.simple_spinner_dropdown_item
+                android.R.layout.simple_spinner_dropdown_item,
             )
         val (startYear, endYear) = expiryYears
 

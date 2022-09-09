@@ -37,7 +37,7 @@ class OnDiskMessageMetadataStorageTest {
     @Before
     fun setup() {
         storage = OnDiskMessageMetadataStorage(
-            testContext
+            testContext,
         )
     }
 

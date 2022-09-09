@@ -50,7 +50,7 @@ class SessionControlViewTest {
             false,
             showRecentSyncedTab = false,
             recentVisits = historyMetadata,
-            pocketStories = pocketStories
+            pocketStories = pocketStories,
         )
 
         assertTrue(results[0] is AdapterItem.TopPlaceholderItem)
@@ -87,7 +87,7 @@ class SessionControlViewTest {
             false,
             showRecentSyncedTab = false,
             historyMetadata,
-            pocketStories
+            pocketStories,
         )
 
         assertTrue(results.contains(AdapterItem.NimbusMessageCard(nimbusMessageCard)))
@@ -120,7 +120,7 @@ class SessionControlViewTest {
             true,
             showRecentSyncedTab = false,
             historyMetadata,
-            pocketStories
+            pocketStories,
         )
 
         assertTrue(results[0] is AdapterItem.TopPlaceholderItem)
@@ -156,7 +156,7 @@ class SessionControlViewTest {
             false,
             showRecentSyncedTab = false,
             historyMetadata,
-            pocketStories
+            pocketStories,
         )
 
         assertTrue(results[0] is AdapterItem.TopPlaceholderItem)
@@ -193,7 +193,7 @@ class SessionControlViewTest {
             showRecentSyncedTab = false,
             historyMetadata,
             pocketStories,
-            true
+            true,
         )
 
         assertTrue(results[0] is AdapterItem.TopPlaceholderItem)
@@ -215,7 +215,7 @@ class SessionControlViewTest {
             showRecentSyncedTab = false,
             historyMetadata,
             pocketStories,
-            false
+            false,
         )
 
         assertTrue(results2[0] is AdapterItem.TopPlaceholderItem)
@@ -249,7 +249,7 @@ class SessionControlViewTest {
             false,
             showRecentSyncedTab = false,
             historyMetadata,
-            pocketStories
+            pocketStories,
         )
         assertEquals(results.size, 2)
         assertTrue(results[0] is AdapterItem.TopPlaceholderItem)
@@ -285,7 +285,7 @@ class SessionControlViewTest {
             true,
             showRecentSyncedTab = true,
             historyMetadata,
-            pocketStories
+            pocketStories,
         )
 
         assertTrue(results[0] is AdapterItem.TopPlaceholderItem)

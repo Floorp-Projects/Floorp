@@ -38,6 +38,7 @@ import org.mozilla.fenix.ui.robots.notificationShade
 class DownloadTest {
     private lateinit var mDevice: UiDevice
     private val featureSettingsHelper = FeatureSettingsHelper()
+
     /* Remote test page managed by Mozilla Mobile QA team at https://github.com/mozilla-mobile/testapp */
     private val downloadTestPage = "https://storage.googleapis.com/mobile_test_assets/test_app/downloads.html"
     private var downloadFile: String = ""
@@ -45,15 +46,15 @@ class DownloadTest {
     @get:Rule
     val activityTestRule = HomeActivityIntentTestRule()
 
-    @get: Rule
     // Making sure to grant storage access for this test running on API 28
+    @get: Rule
     var watcher: TestRule = object : TestWatcher() {
         override fun starting(description: Description) {
             if (description.methodName == "pauseResumeCancelDownloadTest") {
                 PermissionRequester().apply {
                     addPermissions(
                         android.Manifest.permission.WRITE_EXTERNAL_STORAGE,
-                        android.Manifest.permission.READ_EXTERNAL_STORAGE
+                        android.Manifest.permission.READ_EXTERNAL_STORAGE,
                     )
                     requestPermissions()
                 }
@@ -166,12 +167,12 @@ class DownloadTest {
         }
     }
 
-    @SmokeTest
-    @Test
-        /* Verifies downloads in the Downloads Menu:
+    /* Verifies downloads in the Downloads Menu:
           - downloads appear in the list
           - deleting a download from device storage, removes it from the Downloads Menu too
         */
+    @SmokeTest
+    @Test
     fun manageDownloadsInDownloadsMenuTest() {
         // a long filename to verify it's correctly displayed on the prompt and in the Downloads menu
         downloadFile = "tAJwqaWjJsXS8AhzSninBMCfIZbHBGgcc001lx5DIdDwIcfEgQ6vE5Gb5VgAled17DFZ2A7ZDOHA0NpQPHXXFt.svg"

@@ -46,7 +46,7 @@ class TrackingProtectionExceptionsViewTest {
 
         exceptionsView = TrackingProtectionExceptionsView(
             container,
-            interactor
+            interactor,
         )
         binding = ComponentExceptionsBinding.bind(container)
     }

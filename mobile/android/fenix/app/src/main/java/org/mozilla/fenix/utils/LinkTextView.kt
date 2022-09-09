@@ -17,7 +17,7 @@ import org.mozilla.fenix.R
 class LinkTextView @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,
-    defStyleAttr: Int = 0
+    defStyleAttr: Int = 0,
 ) : AppCompatTextView(context, attrs, defStyleAttr) {
 
     override fun onInitializeAccessibilityNodeInfo(info: AccessibilityNodeInfo?) {
@@ -25,7 +25,7 @@ class LinkTextView @JvmOverloads constructor(
         val extras = info?.extras
         extras?.putCharSequence(
             "AccessibilityNodeInfo.roleDescription",
-            context.resources.getString(R.string.link_text_view_type_announcement)
+            context.resources.getString(R.string.link_text_view_type_announcement),
         )
         // disable long click  announcement, as there is no action to be performed on long click
         info?.isLongClickable = false

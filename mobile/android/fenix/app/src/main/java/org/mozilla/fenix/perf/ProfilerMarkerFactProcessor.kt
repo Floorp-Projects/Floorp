@@ -42,12 +42,14 @@ import mozilla.components.support.base.facts.FactProcessor
  * That being said, if we find a location where it would be valuable to have a long term Profiler
  * marker, we should consider instrumenting it via the [Profiler] API.
  */
-class ProfilerMarkerFactProcessor @VisibleForTesting(otherwise = PRIVATE) constructor(
+class ProfilerMarkerFactProcessor
+@VisibleForTesting(otherwise = PRIVATE)
+constructor(
     // We use a provider to defer accessing the profiler until we need it, because the property is a
     // child of the engine property and we don't want to initialize it earlier than we intend to.
     private val profilerProvider: () -> Profiler?,
     private val mainHandler: Handler = Handler(Looper.getMainLooper()),
-    private val getMyLooper: () -> Looper? = { Looper.myLooper() }
+    private val getMyLooper: () -> Looper? = { Looper.myLooper() },
 ) : FactProcessor {
 
     override fun process(fact: Fact) {

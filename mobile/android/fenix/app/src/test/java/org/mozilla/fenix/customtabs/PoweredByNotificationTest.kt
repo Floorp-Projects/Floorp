@@ -24,9 +24,9 @@ class PoweredByNotificationTest {
         val store = BrowserStore(
             BrowserState(
                 customTabs = listOf(
-                    createCustomTab("https://mozilla.org", config = config)
-                )
-            )
+                    createCustomTab("https://mozilla.org", config = config),
+                ),
+            ),
         )
 
         val feature = PoweredByNotification(testContext, store, "session-id")
@@ -39,9 +39,9 @@ class PoweredByNotificationTest {
         val store = BrowserStore(
             BrowserState(
                 customTabs = listOf(
-                    createCustomTab("https://mozilla.org", config = config)
-                )
-            )
+                    createCustomTab("https://mozilla.org", config = config),
+                ),
+            ),
         )
 
         val feature = PoweredByNotification(testContext, store, "session-id")

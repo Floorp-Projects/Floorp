@@ -18,7 +18,7 @@ import org.mozilla.fenix.tabstray.TabsTrayStore
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 class SwipeToDeleteBinding(
-    store: TabsTrayStore
+    store: TabsTrayStore,
 ) : AbstractBinding<TabsTrayState>(store) {
     var isSwipeable = false
         private set

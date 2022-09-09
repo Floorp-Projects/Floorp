@@ -26,7 +26,7 @@ class AccountUiView(
     private val scope: CoroutineScope,
     private val accountManager: FxaAccountManager,
     private val httpClient: Client,
-    private val updateFxAAllowDomesticChinaServerMenu: () -> Unit
+    private val updateFxAAllowDomesticChinaServerMenu: () -> Unit,
 ) {
 
     private val preferenceSignIn =
@@ -111,7 +111,7 @@ class AccountUiView(
      */
     private suspend fun toRoundedDrawable(
         url: String,
-        context: Context
+        context: Context,
     ) = httpClient.bitmapForUrl(url)?.let { bitmap ->
         RoundedBitmapDrawableFactory.create(context.resources, bitmap).apply {
             isCircular = true

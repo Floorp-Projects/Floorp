@@ -45,10 +45,10 @@ abstract class AddonPopupBaseFragment : Fragment(), EngineSession.Observer, User
                     fragmentManager = parentFragmentManager,
                     onNeedToRequestPermissions = { permissions ->
                         requestPermissions(permissions, REQUEST_CODE_PROMPT_PERMISSIONS)
-                    }
+                    },
                 ),
                 owner = this,
-                view = view
+                view = view,
             )
         }
     }
@@ -76,8 +76,8 @@ abstract class AddonPopupBaseFragment : Fragment(), EngineSession.Observer, User
             requireComponents.core.store.dispatch(
                 ContentAction.UpdatePromptRequestAction(
                     session.id,
-                    promptRequest
-                )
+                    promptRequest,
+                ),
             )
         }
     }
@@ -107,7 +107,7 @@ abstract class AddonPopupBaseFragment : Fragment(), EngineSession.Observer, User
         engineSession = fromEngineSession ?: requireComponents.core.engine.createSession()
         session = createCustomTab(
             url = "",
-            source = SessionState.Source.Internal.CustomTab
+            source = SessionState.Source.Internal.CustomTab,
         ).copy(engineState = EngineState(engineSession))
         requireComponents.core.store.dispatch(CustomTabListAction.AddCustomTabAction(session as CustomTabSessionState))
     }
@@ -115,7 +115,7 @@ abstract class AddonPopupBaseFragment : Fragment(), EngineSession.Observer, User
     final override fun onRequestPermissionsResult(
         requestCode: Int,
         permissions: Array<String>,
-        grantResults: IntArray
+        grantResults: IntArray,
     ) {
         when (requestCode) {
             REQUEST_CODE_PROMPT_PERMISSIONS -> promptsFeature.get()?.onPermissionsResult(permissions, grantResults)

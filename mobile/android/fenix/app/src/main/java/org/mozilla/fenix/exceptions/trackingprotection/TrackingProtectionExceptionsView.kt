@@ -12,7 +12,7 @@ import org.mozilla.fenix.ext.addUnderline
 
 class TrackingProtectionExceptionsView(
     container: ViewGroup,
-    interactor: TrackingProtectionExceptionsInteractor
+    interactor: TrackingProtectionExceptionsInteractor,
 ) : ExceptionsView<TrackingProtectionException>(container, interactor) {
 
     override val exceptionsAdapter = TrackingProtectionExceptionsAdapter(interactor)

@@ -14,7 +14,8 @@ import org.mozilla.experiments.nimbus.Branch
  */
 class NimbusBranchesStore(initialState: NimbusBranchesState) :
     Store<NimbusBranchesState, NimbusBranchesAction>(
-        initialState, ::nimbusBranchesFragmentStateReducer
+        initialState,
+        ::nimbusBranchesFragmentStateReducer,
     )
 
 /**
@@ -27,7 +28,7 @@ class NimbusBranchesStore(initialState: NimbusBranchesState) :
 data class NimbusBranchesState(
     val branches: List<Branch>,
     val selectedBranch: String = "",
-    val isLoading: Boolean = true
+    val isLoading: Boolean = true,
 ) : State
 
 /**
@@ -67,14 +68,14 @@ sealed class NimbusBranchesAction : Action {
  */
 private fun nimbusBranchesFragmentStateReducer(
     state: NimbusBranchesState,
-    action: NimbusBranchesAction
+    action: NimbusBranchesAction,
 ): NimbusBranchesState {
     return when (action) {
         is NimbusBranchesAction.UpdateBranches -> {
             state.copy(
                 branches = action.branches,
                 selectedBranch = action.selectedBranch,
-                isLoading = false
+                isLoading = false,
             )
         }
         is NimbusBranchesAction.UpdateSelectedBranch -> {

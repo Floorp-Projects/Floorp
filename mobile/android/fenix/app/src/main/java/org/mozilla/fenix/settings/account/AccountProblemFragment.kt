@@ -38,7 +38,7 @@ class AccountProblemFragment : PreferenceFragmentCompat(), AccountObserver {
     private val signOutClickListener = Preference.OnPreferenceClickListener {
         nav(
             R.id.accountProblemFragment,
-            AccountProblemFragmentDirections.actionAccountProblemFragmentToSignOutFragment()
+            AccountProblemFragmentDirections.actionAccountProblemFragmentToSignOutFragment(),
         )
         true
     }

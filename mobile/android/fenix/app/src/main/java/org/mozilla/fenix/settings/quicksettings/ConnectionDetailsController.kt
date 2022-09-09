@@ -35,7 +35,7 @@ class DefaultConnectionDetailsController(
     private val navController: () -> NavController,
     internal var sitePermissions: SitePermissions?,
     private val gravity: Int,
-    private val getCurrentTab: () -> SessionState?
+    private val getCurrentTab: () -> SessionState?,
 ) : ConnectionDetailsController {
 
     override fun handleBackPressed() {
@@ -54,7 +54,7 @@ class DefaultConnectionDetailsController(
                             gravity = gravity,
                             certificateName = tab.content.securityInfo.issuer,
                             permissionHighlights = tab.content.permissionHighlights,
-                            isTrackingProtectionEnabled = isTrackingProtectionEnabled
+                            isTrackingProtectionEnabled = isTrackingProtectionEnabled,
                         )
                     navController().navigate(directions)
                 }

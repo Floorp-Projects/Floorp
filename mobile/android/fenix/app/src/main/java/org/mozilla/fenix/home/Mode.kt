@@ -36,6 +36,7 @@ sealed class Mode {
 sealed class OnboardingState {
     // Signed out, without an option to auto-login using a shared FxA account.
     object SignedOutNoAutoSignIn : OnboardingState()
+
     // Signed in.
     object SignedIn : OnboardingState()
 }
@@ -44,7 +45,7 @@ class CurrentMode(
     private val context: Context,
     private val onboarding: FenixOnboarding,
     private val browsingModeManager: BrowsingModeManager,
-    private val dispatchModeChanges: (mode: Mode) -> Unit
+    private val dispatchModeChanges: (mode: Mode) -> Unit,
 ) : AccountObserver {
 
     private val accountManager by lazy { context.components.backgroundServices.accountManager }

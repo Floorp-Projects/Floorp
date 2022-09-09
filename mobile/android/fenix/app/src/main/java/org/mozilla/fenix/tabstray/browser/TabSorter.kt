@@ -19,7 +19,7 @@ import org.mozilla.fenix.utils.Settings
  */
 class TabSorter(
     private val settings: Settings,
-    private val tabsTrayStore: TabsTrayStore? = null
+    private val tabsTrayStore: TabsTrayStore? = null,
 ) : TabsTray {
 
     override fun updateTabs(tabs: List<TabSessionState>, tabPartition: TabPartition?, selectedTabId: String?) {

@@ -29,7 +29,7 @@ class TabsTrayInfoBannerBinding(
     store: BrowserStore,
     private val infoBannerView: ViewGroup,
     private val settings: Settings,
-    private val navigationInteractor: NavigationInteractor
+    private val navigationInteractor: NavigationInteractor,
 ) : AbstractBinding<BrowserState>(store) {
 
     @VisibleForTesting
@@ -68,7 +68,7 @@ class TabsTrayInfoBannerBinding(
                 dismissByHiding = true,
                 dismissAction = {
                     settings.shouldShowAutoCloseTabsBanner = false
-                }
+                },
             ) {
                 navigationInteractor.onTabSettingsClicked()
                 settings.shouldShowAutoCloseTabsBanner = false

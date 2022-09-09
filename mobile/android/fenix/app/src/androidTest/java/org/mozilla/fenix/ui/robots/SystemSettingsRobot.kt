@@ -43,6 +43,6 @@ private fun assertSystemNotificationsView() {
         .waitForExists(waitingTime)
     assertTrue(
         mDevice.findObject(UiSelector().textContains("All ${TestHelper.appName} notifications"))
-            .waitForExists(waitingTime)
+            .waitForExists(waitingTime),
     )
 }

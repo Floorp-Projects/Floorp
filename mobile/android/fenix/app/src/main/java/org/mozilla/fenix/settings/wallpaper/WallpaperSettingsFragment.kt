@@ -35,7 +35,7 @@ class WallpaperSettingsFragment : Fragment() {
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
-        savedInstanceState: Bundle?
+        savedInstanceState: Bundle?,
     ): View? {
         Wallpapers.wallpaperSettingsOpened.record(NoExtras())
         return ComposeView(requireContext()).apply {

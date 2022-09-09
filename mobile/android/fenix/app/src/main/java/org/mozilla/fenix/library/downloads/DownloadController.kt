@@ -19,7 +19,7 @@ class DefaultDownloadController(
     private val store: DownloadFragmentStore,
     private val openToFileManager: (item: DownloadItem, mode: BrowsingMode?) -> Unit,
     private val invalidateOptionsMenu: () -> Unit,
-    private val deleteDownloadItems: (Set<DownloadItem>) -> Unit
+    private val deleteDownloadItems: (Set<DownloadItem>) -> Unit,
 ) : DownloadController {
     override fun handleOpen(item: DownloadItem, mode: BrowsingMode?) {
         openToFileManager(item, mode)

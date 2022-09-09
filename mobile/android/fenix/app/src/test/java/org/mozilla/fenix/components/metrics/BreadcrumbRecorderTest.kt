@@ -56,8 +56,8 @@ class BreadcrumbRecorderTest {
             CrashReporter(
                 context = mockk(),
                 services = listOf(service),
-                shouldPrompt = CrashReporter.Prompt.NEVER
-            )
+                shouldPrompt = CrashReporter.Prompt.NEVER,
+            ),
         )
 
         val navController: NavController = mockk()
@@ -72,7 +72,7 @@ class BreadcrumbRecorderTest {
                     assertEquals("test", it.message)
                     assertEquals("DestinationChanged", it.category)
                     assertEquals(Breadcrumb.Level.INFO, it.level)
-                }
+                },
             )
         }
     }

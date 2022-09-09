@@ -24,7 +24,7 @@ class ShareTabsAdapter :
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int) = ShareTabViewHolder(
         LayoutInflater.from(parent.context)
-            .inflate(R.layout.share_tab_item, parent, false)
+            .inflate(R.layout.share_tab_item, parent, false),
     )
 
     override fun onBindViewHolder(holder: ShareTabViewHolder, position: Int) =

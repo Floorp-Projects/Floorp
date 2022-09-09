@@ -44,7 +44,7 @@ class StudiesAdapter(
     private val studiesDelegate: StudiesAdapterDelegate,
     studies: List<EnrolledExperiment>,
     @VisibleForTesting
-    internal val shouldSubmitOnInit: Boolean = true
+    internal val shouldSubmitOnInit: Boolean = true,
 ) : ListAdapter<Any, CustomViewHolder>(DifferCallback) {
     /**
      * Represents all the studies that will be distributed in multiple headers like
@@ -88,7 +88,7 @@ class StudiesAdapter(
             view,
             titleView,
             summaryView,
-            removeButton
+            removeButton,
         )
     }
 
@@ -129,13 +129,13 @@ class StudiesAdapter(
     internal fun showDeleteDialog(context: Context, study: EnrolledExperiment): AlertDialog {
         val builder = AlertDialog.Builder(context)
             .setPositiveButton(
-                R.string.studies_restart_dialog_ok
+                R.string.studies_restart_dialog_ok,
             ) { dialog, _ ->
                 studiesDelegate.onRemoveButtonClicked(study)
                 dialog.dismiss()
             }
             .setNegativeButton(
-                R.string.studies_restart_dialog_cancel
+                R.string.studies_restart_dialog_cancel,
             ) { dialog: DialogInterface, _ ->
                 dialog.dismiss()
             }

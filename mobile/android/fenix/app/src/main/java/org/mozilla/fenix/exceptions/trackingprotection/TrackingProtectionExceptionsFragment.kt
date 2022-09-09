@@ -35,26 +35,26 @@ class TrackingProtectionExceptionsFragment : Fragment() {
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
-        savedInstanceState: Bundle?
+        savedInstanceState: Bundle?,
     ): View {
         val binding = FragmentExceptionsBinding.inflate(
             inflater,
             container,
-            false
+            false,
         )
         exceptionsStore = StoreProvider.get(this) {
             ExceptionsFragmentStore(
-                ExceptionsFragmentState(items = emptyList())
+                ExceptionsFragmentState(items = emptyList()),
             )
         }
         exceptionsInteractor = DefaultTrackingProtectionExceptionsInteractor(
             activity = activity as HomeActivity,
             exceptionsStore = exceptionsStore,
-            trackingProtectionUseCases = requireComponents.useCases.trackingProtectionUseCases
+            trackingProtectionUseCases = requireComponents.useCases.trackingProtectionUseCases,
         )
         exceptionsView = TrackingProtectionExceptionsView(
             binding.exceptionsLayout,
-            exceptionsInteractor
+            exceptionsInteractor,
         )
         exceptionsInteractor.reloadExceptions()
         return binding.root

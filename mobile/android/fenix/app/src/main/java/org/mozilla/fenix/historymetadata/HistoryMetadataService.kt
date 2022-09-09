@@ -31,7 +31,7 @@ interface HistoryMetadataService {
     fun createMetadata(
         tab: TabSessionState,
         searchTerms: String? = null,
-        referrerUrl: String? = null
+        referrerUrl: String? = null,
     ): HistoryMetadataKey
 
     /**
@@ -55,9 +55,9 @@ class DefaultHistoryMetadataService(
     private val storage: HistoryMetadataStorage,
     private val scope: CoroutineScope = CoroutineScope(
         Executors.newSingleThreadExecutor(
-            NamedThreadFactory("HistoryMetadataService")
-        ).asCoroutineDispatcher()
-    )
+            NamedThreadFactory("HistoryMetadataService"),
+        ).asCoroutineDispatcher(),
+    ),
 ) : HistoryMetadataService {
 
     private val logger = Logger("DefaultHistoryMetadataService")
@@ -79,7 +79,7 @@ class DefaultHistoryMetadataService(
             documentType = when (tab.mediaSessionState) {
                 null -> DocumentType.Regular
                 else -> DocumentType.Media
-            }
+            },
         )
 
         scope.launch {
@@ -107,13 +107,13 @@ class DefaultHistoryMetadataService(
             val lastUpdated = tabsLastUpdated[tab.id] ?: 0
             if (lastUpdated > lastAccess) {
                 logger.debug(
-                    "Failed to update metadata because it was already recorded or lastAccess is incorrect"
+                    "Failed to update metadata because it was already recorded or lastAccess is incorrect",
                 )
                 return@launch
             }
 
             val viewTimeObservation = HistoryMetadataObservation.ViewTimeObservation(
-                viewTime = (now - lastAccess).toInt()
+                viewTime = (now - lastAccess).toInt(),
             )
             storage.noteHistoryMetadataObservation(key, viewTimeObservation)
             tabsLastUpdated[tab.id] = now
@@ -133,5 +133,5 @@ fun TabSessionState.toHistoryMetadataKey(searchTerms: String?, referrerUrl: Stri
     HistoryMetadataKey(
         url = content.url,
         referrerUrl = referrerUrl,
-        searchTerm = searchTerms
+        searchTerm = searchTerms,
     )

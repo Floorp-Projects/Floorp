@@ -53,7 +53,7 @@ fun ListItemTabLarge(
     title: String,
     caption: String? = null,
     backgroundColor: Color = FirefoxTheme.colors.layer2,
-    onClick: (() -> Unit)? = null
+    onClick: (() -> Unit)? = null,
 ) {
     ListItemTabSurface(
         imageUrl = imageUrl,
@@ -108,7 +108,7 @@ fun ListItemTabLarge(
     backgroundColor: Color = FirefoxTheme.colors.layer2,
     onClick: () -> Unit,
     title: @Composable () -> Unit,
-    subtitle: @Composable (() -> Unit)? = null
+    subtitle: @Composable (() -> Unit)? = null,
 ) {
     ListItemTabSurface(
         imageUrl = imageUrl,
@@ -134,7 +134,7 @@ fun ListItemTabSurface(
     imageUrl: String,
     backgroundColor: Color = FirefoxTheme.colors.layer2,
     onClick: (() -> Unit)? = null,
-    tabDetails: @Composable () -> Unit
+    tabDetails: @Composable () -> Unit,
 ) {
     var modifier = Modifier.size(328.dp, 116.dp)
     if (onClick != null) modifier = modifier.then(Modifier.clickable { onClick() })
@@ -143,10 +143,10 @@ fun ListItemTabSurface(
         modifier = modifier,
         shape = RoundedCornerShape(8.dp),
         backgroundColor = backgroundColor,
-        elevation = 6.dp
+        elevation = 6.dp,
     ) {
         Row(
-            modifier = Modifier.padding(16.dp)
+            modifier = Modifier.padding(16.dp),
         ) {
             val (imageWidth, imageHeight) = 116.dp to 84.dp
             val imageModifier = Modifier
@@ -159,7 +159,7 @@ fun ListItemTabSurface(
 
             Column(
                 modifier = Modifier.fillMaxSize(),
-                verticalArrangement = Arrangement.SpaceBetween
+                verticalArrangement = Arrangement.SpaceBetween,
             ) {
                 tabDetails()
             }
@@ -175,7 +175,7 @@ private fun ListItemTabLargePreview() {
         ListItemTabLarge(
             imageUrl = "",
             title = "This is a very long title for a tab but needs to be so for this preview",
-            caption = "And this is a caption"
+            caption = "And this is a caption",
         ) { }
     }
 }
@@ -186,12 +186,12 @@ private fun ListItemTabLargePreview() {
 private fun ListItemTabSurfacePreview() {
     FirefoxTheme(theme = Theme.getTheme()) {
         ListItemTabSurface(
-            imageUrl = ""
+            imageUrl = "",
         ) {
             Text(
                 text = "This can be anything",
                 color = FirefoxTheme.colors.textPrimary,
-                fontSize = 22.sp
+                fontSize = 22.sp,
             )
         }
     }
@@ -209,7 +209,7 @@ private fun ListItemTabSurfaceWithCustomBackgroundPreview() {
             Text(
                 text = "This can be anything",
                 color = FirefoxTheme.colors.textPrimary,
-                fontSize = 22.sp
+                fontSize = 22.sp,
             )
         }
     }

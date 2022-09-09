@@ -52,7 +52,8 @@ class ToolbarView(
             editMode()
 
             background = AppCompatResources.getDrawable(
-                context, context.theme.resolveAttribute(R.attr.layer1)
+                context,
+                context.theme.resolveAttribute(R.attr.layer1),
             )
 
             edit.hint = context.getString(R.string.history_search_1)
@@ -62,13 +63,13 @@ class ToolbarView(
                 hint = context.getColorFromAttr(R.attr.textSecondary),
                 suggestionBackground = ContextCompat.getColor(
                     context,
-                    R.color.suggestion_highlight_color
+                    R.color.suggestion_highlight_color,
                 ),
-                clear = context.getColorFromAttr(R.attr.textPrimary)
+                clear = context.getColorFromAttr(R.attr.textPrimary),
             )
 
             edit.setUrlBackground(
-                AppCompatResources.getDrawable(context, R.drawable.search_url_background)
+                AppCompatResources.getDrawable(context, R.drawable.search_url_background),
             )
 
             private = isPrivate
@@ -80,18 +81,20 @@ class ToolbarView(
                 false
             }
 
-            setOnEditListener(object : mozilla.components.concept.toolbar.Toolbar.OnEditListener {
-                override fun onCancelEditing(): Boolean {
-                    interactor.onEditingCanceled()
-                    // We need to return false to not show display mode
-                    return false
-                }
+            setOnEditListener(
+                object : mozilla.components.concept.toolbar.Toolbar.OnEditListener {
+                    override fun onCancelEditing(): Boolean {
+                        interactor.onEditingCanceled()
+                        // We need to return false to not show display mode
+                        return false
+                    }
 
-                override fun onTextChanged(text: String) {
-                    url = text
-                    interactor.onTextChanged(text)
-                }
-            })
+                    override fun onTextChanged(text: String) {
+                        url = text
+                        interactor.onTextChanged(text)
+                    }
+                },
+            )
         }
     }
 

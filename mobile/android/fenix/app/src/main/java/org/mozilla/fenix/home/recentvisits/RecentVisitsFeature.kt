@@ -29,7 +29,9 @@ import org.mozilla.fenix.utils.Settings.Companion.SEARCH_GROUP_MINIMUM_SITES
 import kotlin.math.max
 
 @VisibleForTesting internal const val MAX_RESULTS_TOTAL = 9
+
 @VisibleForTesting internal const val MIN_VIEW_TIME_OF_HIGHLIGHT = 10.0
+
 @VisibleForTesting internal const val MIN_FREQUENCY_OF_HIGHLIGHT = 4.0
 
 /**
@@ -60,7 +62,7 @@ class RecentVisitsFeature(
             val highlights = async {
                 historyHighlightsStorage.value.getHistoryHighlights(
                     HistoryHighlightWeights(MIN_VIEW_TIME_OF_HIGHLIGHT, MIN_FREQUENCY_OF_HIGHLIGHT),
-                    MAX_RESULTS_TOTAL
+                    MAX_RESULTS_TOTAL,
                 )
             }
 
@@ -78,12 +80,12 @@ class RecentVisitsFeature(
     @VisibleForTesting
     internal fun updateState(
         historyHighlights: List<HistoryHighlightInternal>,
-        historyGroups: List<HistoryGroupInternal>
+        historyGroups: List<HistoryGroupInternal>,
     ) {
         appStore.dispatch(
             AppAction.RecentHistoryChange(
-                getCombinedHistory(historyHighlights, historyGroups)
-            )
+                getCombinedHistory(historyHighlights, historyGroups),
+            ),
         )
     }
 
@@ -99,7 +101,7 @@ class RecentVisitsFeature(
     @VisibleForTesting
     internal fun getCombinedHistory(
         historyHighlights: List<HistoryHighlightInternal>,
-        historyGroups: List<HistoryGroupInternal>
+        historyGroups: List<HistoryGroupInternal>,
     ): List<RecentlyVisitedItem> {
         // Cleanup highlights now to avoid counting them below and then removing the ones found in groups.
         val distinctHighlights = historyHighlights
@@ -110,7 +112,7 @@ class RecentVisitsFeature(
         return if (totalItemsCount <= MAX_RESULTS_TOTAL) {
             getSortedHistory(
                 distinctHighlights.sortedByDescending { it.lastAccessedTime },
-                historyGroups.sortedByDescending { it.lastAccessedTime }
+                historyGroups.sortedByDescending { it.lastAccessedTime },
             )
         } else {
             var groupsCount = 0
@@ -135,7 +137,7 @@ class RecentVisitsFeature(
                     .take(highlightCount),
                 historyGroups
                     .sortedByDescending { it.lastAccessedTime }
-                    .take(groupsCount)
+                    .take(groupsCount),
             )
         }
     }
@@ -155,7 +157,7 @@ class RecentVisitsFeature(
     @VisibleForTesting
     internal fun getHistoryHighlights(
         highlights: List<HistoryHighlight>,
-        metadata: List<HistoryMetadata>
+        metadata: List<HistoryMetadata>,
     ): List<HistoryHighlightInternal> {
         val highlightsUrls = highlights.map { it.url }
         val highlightsLastUpdatedTime = metadata
@@ -170,7 +172,7 @@ class RecentVisitsFeature(
                 historyHighlight = it,
                 lastAccessedTime = highlightsLastUpdatedTime
                     .firstOrNull { (url, _) -> url == it.url }?.second?.updatedAt
-                    ?: 0
+                    ?: 0,
             )
         }
     }
@@ -185,7 +187,7 @@ class RecentVisitsFeature(
      */
     @VisibleForTesting
     internal fun getHistorySearchGroups(
-        metadata: List<HistoryMetadata>
+        metadata: List<HistoryMetadata>,
     ): List<HistoryGroupInternal> {
         return metadata
             .filter { it.totalViewTime > 0 && it.key.searchTerm != null }
@@ -200,7 +202,7 @@ class RecentVisitsFeature(
                     metadata.value.reduce { acc, elem ->
                         acc.copy(
                             totalViewTime = acc.totalViewTime + elem.totalViewTime,
-                            updatedAt = max(acc.updatedAt, elem.updatedAt)
+                            updatedAt = max(acc.updatedAt, elem.updatedAt),
                         )
                     }
                 }
@@ -208,7 +210,7 @@ class RecentVisitsFeature(
             .map {
                 HistoryGroupInternal(
                     groupName = it.key,
-                    groupItems = it.value
+                    groupItems = it.value,
                 )
             }
             .filter {
@@ -227,7 +229,7 @@ class RecentVisitsFeature(
     @VisibleForTesting
     internal fun getSortedHistory(
         historyHighlights: List<HistoryHighlightInternal>,
-        historyGroups: List<HistoryGroupInternal>
+        historyGroups: List<HistoryGroupInternal>,
     ): List<RecentlyVisitedItem> {
         return (historyHighlights + historyGroups)
             .sortedByDescending { it.lastAccessedTime }
@@ -239,11 +241,11 @@ class RecentVisitsFeature(
                         } else {
                             it.historyHighlight.title!!
                         },
-                        url = it.historyHighlight.url
+                        url = it.historyHighlight.url,
                     )
                     is HistoryGroupInternal -> RecentHistoryGroup(
                         title = it.groupName,
-                        historyMetadata = it.groupItems
+                        historyMetadata = it.groupItems,
                     )
                 }
             }
@@ -259,7 +261,7 @@ class RecentVisitsFeature(
  */
 @VisibleForTesting
 internal fun List<HistoryHighlightInternal>.removeHighlightsAlreadyInGroups(
-    historyMetadata: List<HistoryGroupInternal>
+    historyMetadata: List<HistoryGroupInternal>,
 ): List<HistoryHighlightInternal> {
     return filterNot { highlight ->
         historyMetadata.any {
@@ -279,7 +281,7 @@ internal sealed class RecentlyVisitedItemInternal {
      */
     data class HistoryHighlightInternal(
         val historyHighlight: HistoryHighlight,
-        override val lastAccessedTime: Long
+        override val lastAccessedTime: Long,
     ) : RecentlyVisitedItemInternal()
 
     /**
@@ -288,6 +290,6 @@ internal sealed class RecentlyVisitedItemInternal {
     data class HistoryGroupInternal(
         val groupName: String,
         val groupItems: List<HistoryMetadata>,
-        override val lastAccessedTime: Long = groupItems.maxOf { it.updatedAt }
+        override val lastAccessedTime: Long = groupItems.maxOf { it.updatedAt },
     ) : RecentlyVisitedItemInternal()
 }

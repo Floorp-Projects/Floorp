@@ -37,13 +37,13 @@ class TabHistoryAdapterTest {
         title = "Mozilla",
         url = "https://mozilla.org",
         index = 0,
-        isSelected = true
+        isSelected = true,
     )
     private val unselectedItem = TabHistoryItem(
         title = "Firefox",
         url = "https://firefox.com",
         index = 1,
-        isSelected = false
+        isSelected = false,
     )
 
     @Before
@@ -73,20 +73,20 @@ class TabHistoryAdapterTest {
         assertTrue(
             TabHistoryAdapter.DiffCallback.areItemsTheSame(
                 selectedItem,
-                selectedItem
-            )
+                selectedItem,
+            ),
         )
         assertTrue(
             TabHistoryAdapter.DiffCallback.areItemsTheSame(
                 unselectedItem,
-                unselectedItem.copy(title = "Waterbug", index = 2, isSelected = true)
-            )
+                unselectedItem.copy(title = "Waterbug", index = 2, isSelected = true),
+            ),
         )
         assertFalse(
             TabHistoryAdapter.DiffCallback.areItemsTheSame(
                 unselectedItem,
-                unselectedItem.copy(url = "https://firefox.com/subpage")
-            )
+                unselectedItem.copy(url = "https://firefox.com/subpage"),
+            ),
         )
     }
 
@@ -95,20 +95,20 @@ class TabHistoryAdapterTest {
         assertTrue(
             TabHistoryAdapter.DiffCallback.areContentsTheSame(
                 selectedItem,
-                selectedItem
-            )
+                selectedItem,
+            ),
         )
         assertFalse(
             TabHistoryAdapter.DiffCallback.areContentsTheSame(
                 selectedItem,
-                selectedItem.copy(title = "Waterbug", index = 2, isSelected = false)
-            )
+                selectedItem.copy(title = "Waterbug", index = 2, isSelected = false),
+            ),
         )
         assertFalse(
             TabHistoryAdapter.DiffCallback.areContentsTheSame(
                 unselectedItem,
-                selectedItem
-            )
+                selectedItem,
+            ),
         )
     }
 }

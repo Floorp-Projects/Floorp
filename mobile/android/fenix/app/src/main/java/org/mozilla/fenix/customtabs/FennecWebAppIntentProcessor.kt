@@ -36,7 +36,7 @@ import java.io.IOException
 class FennecWebAppIntentProcessor(
     private val context: Context,
     private val useCases: CustomTabsUseCases,
-    private val storage: ManifestStorage
+    private val storage: ManifestStorage,
 ) : IntentProcessor {
     val logger = Logger("FennecWebAppIntentProcessor")
 
@@ -63,13 +63,13 @@ class FennecWebAppIntentProcessor(
                     url = url,
                     source = SessionState.Source.Internal.HomeScreen,
                     webAppManifest = webAppManifest,
-                    customTabConfig = webAppManifest.toCustomTabConfig()
+                    customTabConfig = webAppManifest.toCustomTabConfig(),
                 )
             } else {
                 useCases.add(
                     url = url,
                     source = SessionState.Source.Internal.HomeScreen,
-                    customTabConfig = createFallbackCustomTabConfig()
+                    customTabConfig = createFallbackCustomTabConfig(),
                 )
             }
             intent.putSessionId(sessionId)
@@ -139,7 +139,7 @@ class FennecWebAppIntentProcessor(
 
     private fun createFallbackCustomTabConfig(): CustomTabConfig {
         return CustomTabConfig(
-            toolbarColor = ContextCompat.getColor(context, R.color.fx_mobile_layer_color_1)
+            toolbarColor = ContextCompat.getColor(context, R.color.fx_mobile_layer_color_1),
         )
     }
 

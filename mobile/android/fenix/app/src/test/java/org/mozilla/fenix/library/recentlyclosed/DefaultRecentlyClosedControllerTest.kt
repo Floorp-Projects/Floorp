@@ -67,7 +67,7 @@ class DefaultRecentlyClosedControllerTest {
             openToBrowser = { url, browsingMode ->
                 tabUrl = url
                 actualBrowsingMode = browsingMode
-            }
+            },
         )
 
         controller.handleOpen(item, BrowsingMode.Private)
@@ -95,7 +95,7 @@ class DefaultRecentlyClosedControllerTest {
             openToBrowser = { url, mode ->
                 tabUrls.add(url)
                 actualBrowsingModes.add(mode)
-            }
+            },
         )
         assertNull(RecentlyClosedTabs.menuOpenInNormalTab.testGetValue())
 
@@ -213,9 +213,9 @@ class DefaultRecentlyClosedControllerTest {
         verify {
             navController.navigate(
                 directionsEq(
-                    RecentlyClosedFragmentDirections.actionGlobalHistoryFragment()
+                    RecentlyClosedFragmentDirections.actionGlobalHistoryFragment(),
                 ),
-                optionsEq(NavOptions.Builder().setPopUpTo(R.id.historyFragment, true).build())
+                optionsEq(NavOptions.Builder().setPopUpTo(R.id.historyFragment, true).build()),
             )
         }
         assertNotNull(RecentlyClosedTabs.showFullHistory.testGetValue())
@@ -233,10 +233,10 @@ class DefaultRecentlyClosedControllerTest {
         verify {
             val data = arrayOf(
                 ShareData(title = tabs[0].title, url = tabs[0].url),
-                ShareData(title = tabs[1].title, url = tabs[1].url)
+                ShareData(title = tabs[1].title, url = tabs[1].url),
             )
             navController.navigate(
-                directionsEq(RecentlyClosedFragmentDirections.actionGlobalShareFragment(data))
+                directionsEq(RecentlyClosedFragmentDirections.actionGlobalShareFragment(data)),
             )
         }
         assertNotNull(RecentlyClosedTabs.menuShare.testGetValue())
@@ -296,7 +296,7 @@ class DefaultRecentlyClosedControllerTest {
             tabsUseCases,
             activity,
             scope,
-            openToBrowser
+            openToBrowser,
         )
     }
 

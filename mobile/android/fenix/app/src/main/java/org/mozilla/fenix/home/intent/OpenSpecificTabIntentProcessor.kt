@@ -19,7 +19,7 @@ import org.mozilla.fenix.ext.components
  * extra string for the tab id - [AbstractMediaSessionService.Companion.EXTRA_TAB_ID]
  */
 class OpenSpecificTabIntentProcessor(
-    private val activity: HomeActivity
+    private val activity: HomeActivity,
 ) : HomeIntentProcessor {
 
     override fun process(intent: Intent, navController: NavController, out: Intent): Boolean {

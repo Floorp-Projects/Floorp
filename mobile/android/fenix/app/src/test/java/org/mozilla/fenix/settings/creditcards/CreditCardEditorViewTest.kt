@@ -59,7 +59,7 @@ class CreditCardEditorViewTest {
         timeCreated = 1L,
         timeLastUsed = 1L,
         timeLastModified = 1L,
-        timesUsed = 1L
+        timesUsed = 1L,
     )
 
     @Before
@@ -168,7 +168,7 @@ class CreditCardEditorViewTest {
         assertNotNull(fragmentCreditCardEditorBinding.cardNumberLayout.error)
         assertEquals(
             fragmentCreditCardEditorBinding.cardNumberLayout.errorCurrentTextColors,
-            fragmentCreditCardEditorBinding.root.context.getColorFromAttr(R.attr.textWarning)
+            fragmentCreditCardEditorBinding.root.context.getColorFromAttr(R.attr.textWarning),
         )
 
         verify(exactly = 0) {
@@ -179,8 +179,8 @@ class CreditCardEditorViewTest {
                     cardNumberLast4 = "0000",
                     expiryMonth = expiryMonth.toLong(),
                     expiryYear = expiryYear.toLong(),
-                    cardType = CreditCardNetworkType.MASTERCARD.cardName
-                )
+                    cardType = CreditCardNetworkType.MASTERCARD.cardName,
+                ),
             )
         }
 
@@ -193,7 +193,7 @@ class CreditCardEditorViewTest {
         assertNotNull(fragmentCreditCardEditorBinding.cardNumberLayout.error)
         assertEquals(
             fragmentCreditCardEditorBinding.cardNumberLayout.errorCurrentTextColors,
-            fragmentCreditCardEditorBinding.root.context.getColorFromAttr(R.attr.textWarning)
+            fragmentCreditCardEditorBinding.root.context.getColorFromAttr(R.attr.textWarning),
         )
 
         verify(exactly = 0) {
@@ -204,8 +204,8 @@ class CreditCardEditorViewTest {
                     cardNumberLast4 = "0000",
                     expiryMonth = expiryMonth.toLong(),
                     expiryYear = expiryYear.toLong(),
-                    cardType = CreditCardNetworkType.MASTERCARD.cardName
-                )
+                    cardType = CreditCardNetworkType.MASTERCARD.cardName,
+                ),
             )
         }
     }
@@ -269,7 +269,7 @@ class CreditCardEditorViewTest {
         assertNotNull(fragmentCreditCardEditorBinding.nameOnCardLayout.error)
         assertEquals(
             fragmentCreditCardEditorBinding.nameOnCardLayout.errorCurrentTextColors,
-            fragmentCreditCardEditorBinding.root.context.getColorFromAttr(R.attr.textWarning)
+            fragmentCreditCardEditorBinding.root.context.getColorFromAttr(R.attr.textWarning),
         )
 
         verify(exactly = 0) {
@@ -280,8 +280,8 @@ class CreditCardEditorViewTest {
                     cardNumberLast4 = "0000",
                     expiryMonth = expiryMonth.toLong(),
                     expiryYear = expiryYear.toLong(),
-                    cardType = CreditCardNetworkType.MASTERCARD.cardName
-                )
+                    cardType = CreditCardNetworkType.MASTERCARD.cardName,
+                ),
             )
         }
     }
@@ -317,8 +317,8 @@ class CreditCardEditorViewTest {
                     cardNumberLast4 = "1252",
                     expiryMonth = expiryMonth.toLong(),
                     expiryYear = expiryYear.toLong(),
-                    cardType = CreditCardNetworkType.MASTERCARD.cardName
-                )
+                    cardType = CreditCardNetworkType.MASTERCARD.cardName,
+                ),
             )
         }
     }
@@ -338,8 +338,8 @@ class CreditCardEditorViewTest {
                     cardNumberLast4 = creditCard.cardNumberLast4,
                     expiryMonth = creditCard.expiryMonth,
                     expiryYear = creditCard.expiryYear,
-                    cardType = creditCard.cardType
-                )
+                    cardType = creditCard.cardType,
+                ),
             )
         }
     }

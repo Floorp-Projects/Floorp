@@ -61,14 +61,14 @@ class SavedLoginsFragment : SecureFragment() {
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
-        savedInstanceState: Bundle?
+        savedInstanceState: Bundle?,
     ): View? {
         val view = inflater.inflate(R.layout.fragment_saved_logins, container, false)
         val binding = FragmentSavedLoginsBinding.bind(view)
 
         savedLoginsStore = StoreProvider.get(this) {
             LoginsFragmentStore(
-                createInitialLoginsListState(requireContext().settings())
+                createInitialLoginsListState(requireContext().settings()),
             )
         }
 
@@ -84,18 +84,18 @@ class SavedLoginsFragment : SecureFragment() {
                 passwordsStorage = requireContext().components.core.passwordsStorage,
                 lifecycleScope = viewLifecycleOwner.lifecycleScope,
                 navController = findNavController(),
-                loginsFragmentStore = savedLoginsStore
+                loginsFragmentStore = savedLoginsStore,
             )
 
         savedLoginsInteractor =
             SavedLoginsInteractor(
                 loginsListController,
-                savedLoginsStorageController
+                savedLoginsStorageController,
             )
 
         savedLoginsListView = SavedLoginsListView(
             binding.savedLoginsLayout,
-            savedLoginsInteractor
+            savedLoginsInteractor,
         )
         savedLoginsInteractor.loadAndMapLogins()
         return view
@@ -116,20 +116,22 @@ class SavedLoginsFragment : SecureFragment() {
         searchView.queryHint = getString(R.string.preferences_passwords_saved_logins_search)
         searchView.maxWidth = Int.MAX_VALUE
 
-        searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
-            override fun onQueryTextSubmit(query: String?): Boolean {
-                return false
-            }
+        searchView.setOnQueryTextListener(
+            object : SearchView.OnQueryTextListener {
+                override fun onQueryTextSubmit(query: String?): Boolean {
+                    return false
+                }
 
-            override fun onQueryTextChange(newText: String?): Boolean {
-                savedLoginsStore.dispatch(
-                    LoginsAction.FilterLogins(
-                        newText
+                override fun onQueryTextChange(newText: String?): Boolean {
+                    savedLoginsStore.dispatch(
+                        LoginsAction.FilterLogins(
+                            newText,
+                        ),
                     )
-                )
-                return false
-            }
-        })
+                    return false
+                }
+            },
+        )
     }
 
     /**
@@ -138,14 +140,15 @@ class SavedLoginsFragment : SecureFragment() {
     override fun onPause() {
         toolbarChildContainer.removeAllViews()
         toolbarChildContainer.visibility = View.GONE
-        (activity as HomeActivity).getSupportActionBarAndInflateIfNecessary().setDisplayShowTitleEnabled(true)
+        (activity as HomeActivity).getSupportActionBarAndInflateIfNecessary()
+            .setDisplayShowTitleEnabled(true)
         sortingStrategyMenu.menuController.dismiss()
         sortLoginsMenuRoot.setOnClickListener(null)
 
         redirectToReAuth(
             listOf(R.id.loginDetailFragment, R.id.addLoginFragment),
             findNavController().currentDestination?.id,
-            R.id.savedLoginsFragment
+            R.id.savedLoginsFragment,
         )
         super.onPause()
     }
@@ -153,7 +156,7 @@ class SavedLoginsFragment : SecureFragment() {
     private fun openToBrowserAndLoad(
         searchTermOrURL: String,
         newTab: Boolean,
-        from: BrowserDirection
+        from: BrowserDirection,
     ) = (activity as HomeActivity).openToBrowserAndLoad(searchTermOrURL, newTab, from)
 
     private fun initToolbar() {
@@ -166,10 +169,10 @@ class SavedLoginsFragment : SecureFragment() {
         dropDownMenuAnchorView = sortLoginsMenuRoot.findViewById(R.id.drop_down_menu_anchor_view)
         when (requireContext().settings().savedLoginsSortingStrategy) {
             is SortingStrategy.Alphabetically -> setupMenu(
-                SavedLoginsSortingStrategyMenu.Item.AlphabeticallySort
+                SavedLoginsSortingStrategyMenu.Item.AlphabeticallySort,
             )
             is SortingStrategy.LastUsed -> setupMenu(
-                SavedLoginsSortingStrategyMenu.Item.LastUsedSort
+                SavedLoginsSortingStrategyMenu.Item.LastUsedSort,
             )
         }
     }
@@ -197,7 +200,7 @@ class SavedLoginsFragment : SecureFragment() {
                     sortLoginsMenuRoot.isActivated = false
                 }
             },
-            view = sortLoginsMenuRoot
+            view = sortLoginsMenuRoot,
         )
 
         sortLoginsMenuRoot.setOnClickListener {
@@ -205,13 +208,14 @@ class SavedLoginsFragment : SecureFragment() {
             sortLoginsMenuRoot.isActivated = true
             sortingStrategyMenu.menuController.show(
                 anchor = dropDownMenuAnchorView,
-                orientation = Orientation.DOWN
+                orientation = Orientation.DOWN,
             )
         }
     }
 
     private fun setupMenu(itemToHighlight: SavedLoginsSortingStrategyMenu.Item) {
-        sortingStrategyMenu = SavedLoginsSortingStrategyMenu(requireContext(), savedLoginsInteractor)
+        sortingStrategyMenu =
+            SavedLoginsSortingStrategyMenu(requireContext(), savedLoginsInteractor)
         sortingStrategyMenu.updateMenu(itemToHighlight)
 
         attachMenu()

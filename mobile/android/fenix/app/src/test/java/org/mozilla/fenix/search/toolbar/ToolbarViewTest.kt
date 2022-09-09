@@ -33,7 +33,9 @@ import org.mozilla.fenix.utils.Settings
 
 @RunWith(FenixRobolectricTestRunner::class)
 class ToolbarViewTest {
-    @MockK(relaxed = true) private lateinit var interactor: ToolbarInteractor
+    @MockK(relaxed = true)
+    private lateinit var interactor: ToolbarInteractor
+
     @MockK private lateinit var engine: Engine
     private lateinit var context: Context
     private lateinit var toolbar: BrowserToolbar
@@ -47,7 +49,7 @@ class ToolbarViewTest {
                 every { name } returns "Search Engine"
                 every { icon } returns testContext.getDrawable(R.drawable.ic_search)!!.toBitmap()
                 every { type } returns SearchEngine.Type.BUNDLED
-            }
+            },
         ),
         defaultEngine = null,
         showSearchShortcutsSetting = false,
@@ -60,7 +62,7 @@ class ToolbarViewTest {
         showBookmarkSuggestions = false,
         showSyncedTabsSuggestions = false,
         showSessionSuggestions = false,
-        searchAccessPoint = MetricsUtils.Source.NONE
+        searchAccessPoint = MetricsUtils.Source.NONE,
     )
 
     @Before
@@ -139,7 +141,7 @@ class ToolbarViewTest {
     fun `searchTerms don't get set if pastedText has a value`() {
         val toolbarView = buildToolbarView(false)
         toolbarView.update(
-            defaultState.copy(query = "Query", pastedText = "PastedText", searchTerms = "Search Terms")
+            defaultState.copy(query = "Query", pastedText = "PastedText", searchTerms = "Search Terms"),
         )
 
         verify(exactly = 0) { toolbar.setSearchTerms("Search Terms") }
@@ -162,6 +164,6 @@ class ToolbarViewTest {
         interactor,
         isPrivate = isPrivate,
         view = toolbar,
-        fromHomeFragment = false
+        fromHomeFragment = false,
     )
 }

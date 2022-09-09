@@ -43,7 +43,7 @@ class LegacyWallpaperDownloader(
             if (localFile.exists()) continue
             val request = Request(
                 url = "$remoteHost/${metadata.remotePath}",
-                method = Request.Method.GET
+                method = Request.Method.GET,
             )
             Result.runCatching {
                 val response = client.fetch(request)

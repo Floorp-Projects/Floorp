@@ -82,7 +82,7 @@ class CollectionViewHolder(
     fun bindSession(collection: TabCollection, expanded: Boolean) {
         collectionData = CollectionInfo(
             collection = collection,
-            isExpanded = expanded
+            isExpanded = expanded,
         )
     }
 

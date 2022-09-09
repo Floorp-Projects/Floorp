@@ -24,7 +24,7 @@ class CustomTabsIntegration(
     activity: Activity,
     onItemTapped: (ToolbarMenu.Item) -> Unit = {},
     shouldReverseItems: Boolean,
-    isPrivate: Boolean
+    isPrivate: Boolean,
 ) : LifecycleAwareFeature, UserInteractionHandler {
 
     init {
@@ -33,7 +33,7 @@ class CustomTabsIntegration(
 
         toolbar.display.displayIndicatorSeparator = false
         toolbar.display.indicators = listOf(
-            DisplayToolbar.Indicators.SECURITY
+            DisplayToolbar.Indicators.SECURITY,
         )
 
         // If in private mode, override toolbar background to use private color
@@ -49,7 +49,7 @@ class CustomTabsIntegration(
             store,
             sessionId,
             shouldReverseItems,
-            onItemTapped = onItemTapped
+            onItemTapped = onItemTapped,
         )
     }
 
@@ -64,7 +64,7 @@ class CustomTabsIntegration(
         shareListener = { onItemTapped.invoke(ToolbarMenu.Item.Share) },
         closeListener = { activity.finishAndRemoveTask() },
         updateToolbarBackground = !isPrivate,
-        forceActionButtonTinting = isPrivate
+        forceActionButtonTinting = isPrivate,
     )
 
     override fun start() = feature.start()

@@ -30,10 +30,10 @@ class TabSorterTest {
 
         tabSorter.updateTabs(
             listOf(
-                createTab(url = "url", id = "tab1", lastAccess = System.currentTimeMillis())
+                createTab(url = "url", id = "tab1", lastAccess = System.currentTimeMillis()),
             ),
             null,
-            selectedTabId = "tab1"
+            selectedTabId = "tab1",
         )
 
         tabsTrayStore.waitUntilIdle()
@@ -52,7 +52,7 @@ class TabSorterTest {
                 createTab(url = "url", id = "tab2", lastAccess = inactiveTimestamp, createdAt = inactiveTimestamp),
             ),
             tabPartition = null,
-            selectedTabId = "tab1"
+            selectedTabId = "tab1",
         )
 
         tabsTrayStore.waitUntilIdle()
@@ -73,11 +73,11 @@ class TabSorterTest {
                     url = "url",
                     id = "tab2",
                     lastAccess = inactiveTimestamp,
-                    createdAt = inactiveTimestamp
+                    createdAt = inactiveTimestamp,
                 ),
             ),
             tabPartition = null,
-            selectedTabId = "tab1"
+            selectedTabId = "tab1",
         )
 
         tabsTrayStore.waitUntilIdle()
@@ -97,23 +97,23 @@ class TabSorterTest {
                 createTab(
                     url = "url",
                     id = "tab2",
-                    lastAccess = inactiveTimestamp
+                    lastAccess = inactiveTimestamp,
                 ),
                 createTab(
                     url = "url",
                     id = "tab3",
                     lastAccess = System.currentTimeMillis(),
-                    searchTerms = "mozilla"
+                    searchTerms = "mozilla",
                 ),
                 createTab(
                     url = "url",
                     id = "tab4",
                     lastAccess = System.currentTimeMillis(),
-                    searchTerms = "mozilla"
-                )
+                    searchTerms = "mozilla",
+                ),
             ),
             tabPartition = null,
-            selectedTabId = "tab1"
+            selectedTabId = "tab1",
         )
 
         tabsTrayStore.waitUntilIdle()

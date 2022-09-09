@@ -43,6 +43,6 @@ fun ViewInteraction.clickAtLocationInView(locationInView: GeneralLocation): View
             locationInView,
             Press.FINGER,
             InputDevice.SOURCE_UNKNOWN,
-            MotionEvent.BUTTON_PRIMARY
-        )
+            MotionEvent.BUTTON_PRIMARY,
+        ),
     )

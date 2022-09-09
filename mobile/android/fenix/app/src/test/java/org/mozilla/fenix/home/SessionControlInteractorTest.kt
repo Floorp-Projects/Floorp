@@ -46,7 +46,7 @@ class SessionControlInteractorTest {
             recentSyncedTabController,
             recentBookmarksController,
             recentVisitsController,
-            pocketStoriesController
+            pocketStoriesController,
         )
     }
 

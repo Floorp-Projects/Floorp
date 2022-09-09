@@ -25,8 +25,8 @@ class DefaultCreditCardsManagementControllerTest {
     fun setup() {
         controller = spyk(
             DefaultCreditCardsManagementController(
-                navController = navController
-            )
+                navController = navController,
+            ),
         )
     }
 
@@ -43,7 +43,7 @@ class DefaultCreditCardsManagementControllerTest {
             timeCreated = 1L,
             timeLastUsed = 1L,
             timeLastModified = 1L,
-            timesUsed = 1L
+            timesUsed = 1L,
         )
 
         controller.handleCreditCardClicked(creditCard)
@@ -52,8 +52,8 @@ class DefaultCreditCardsManagementControllerTest {
             navController.navigate(
                 CreditCardsManagementFragmentDirections
                     .actionCreditCardsManagementFragmentToCreditCardEditorFragment(
-                        creditCard = creditCard
-                    )
+                        creditCard = creditCard,
+                    ),
             )
         }
     }
@@ -64,7 +64,7 @@ class DefaultCreditCardsManagementControllerTest {
 
         verify {
             navController.navigate(
-                CreditCardsManagementFragmentDirections.actionCreditCardsManagementFragmentToCreditCardEditorFragment()
+                CreditCardsManagementFragmentDirections.actionCreditCardsManagementFragmentToCreditCardEditorFragment(),
             )
         }
     }

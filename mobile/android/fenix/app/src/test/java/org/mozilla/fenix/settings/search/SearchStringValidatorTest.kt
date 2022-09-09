@@ -25,13 +25,13 @@ class SearchStringValidatorTest {
     @Test
     fun `test MDN url`() {
         val request = Request(
-            url = "https://developer.mozilla.org/en-US/search?q=1"
+            url = "https://developer.mozilla.org/en-US/search?q=1",
         )
         every { client.fetch(request) } returns Response(
             url = "",
             status = 200,
             headers = MutableHeaders(),
-            body = Response.Body(ByteArrayInputStream("".toByteArray()))
+            body = Response.Body(ByteArrayInputStream("".toByteArray())),
         )
 
         val result = SearchStringValidator.isSearchStringValid(client, "https://developer.mozilla.org/en-US/search?q=%s")
@@ -42,13 +42,13 @@ class SearchStringValidatorTest {
     @Test
     fun `normalize search url`() {
         val request = Request(
-            url = "http://firefox.com/search?q=1"
+            url = "http://firefox.com/search?q=1",
         )
         every { client.fetch(request) } returns Response(
             url = "",
             status = 200,
             headers = MutableHeaders(),
-            body = Response.Body(ByteArrayInputStream("".toByteArray()))
+            body = Response.Body(ByteArrayInputStream("".toByteArray())),
         )
 
         val result = SearchStringValidator.isSearchStringValid(client, "firefox.com/search?q=%s")
@@ -80,7 +80,7 @@ class SearchStringValidatorTest {
             url = "",
             status = 400,
             headers = MutableHeaders(),
-            body = Response.Body(ByteArrayInputStream("".toByteArray()))
+            body = Response.Body(ByteArrayInputStream("".toByteArray())),
         )
 
         val result = SearchStringValidator.isSearchStringValid(client, "https://developer.mozilla.org/en-US/search?q=%s")
@@ -94,7 +94,7 @@ class SearchStringValidatorTest {
             url = "",
             status = 404,
             headers = MutableHeaders(),
-            body = Response.Body(ByteArrayInputStream("".toByteArray()))
+            body = Response.Body(ByteArrayInputStream("".toByteArray())),
         )
 
         val result = SearchStringValidator.isSearchStringValid(client, "https://developer.mozilla.org/en-US/search?q=%s")

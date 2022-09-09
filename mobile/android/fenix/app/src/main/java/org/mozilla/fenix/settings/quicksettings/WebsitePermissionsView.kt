@@ -66,7 +66,7 @@ interface WebsitePermissionInteractor {
  */
 class WebsitePermissionsView(
     containerView: ViewGroup,
-    val interactor: WebsitePermissionInteractor
+    val interactor: WebsitePermissionInteractor,
 ) {
     private val context = containerView.context
 
@@ -80,29 +80,29 @@ class WebsitePermissionsView(
             LOCATION to ToggleablePermission(binding.locationLabel, binding.locationStatus),
             MICROPHONE to ToggleablePermission(
                 binding.microphoneLabel,
-                binding.microphoneStatus
+                binding.microphoneStatus,
             ),
             NOTIFICATION to ToggleablePermission(
                 binding.notificationLabel,
-                binding.notificationStatus
+                binding.notificationStatus,
             ),
             PERSISTENT_STORAGE to ToggleablePermission(
                 binding.persistentStorageLabel,
-                binding.persistentStorageStatus
+                binding.persistentStorageStatus,
             ),
             CROSS_ORIGIN_STORAGE_ACCESS to ToggleablePermission(
                 binding.crossOriginStorageAccessLabel,
-                binding.crossOriginStorageAccessStatus
+                binding.crossOriginStorageAccessStatus,
             ),
             MEDIA_KEY_SYSTEM_ACCESS to ToggleablePermission(
                 binding.mediaKeySystemAccessLabel,
-                binding.mediaKeySystemAccessStatus
+                binding.mediaKeySystemAccessStatus,
             ),
             AUTOPLAY to SpinnerPermission(
                 binding.autoplayLabel,
-                binding.autoplayStatus
-            )
-        )
+                binding.autoplayStatus,
+            ),
+        ),
     )
 
     /**
@@ -135,7 +135,7 @@ class WebsitePermissionsView(
     @VisibleForTesting
     internal fun bindPermission(
         permissionState: WebsitePermission,
-        viewHolder: PermissionViewHolder
+        viewHolder: PermissionViewHolder,
     ) {
         viewHolder.label.isEnabled = permissionState.isEnabled
         viewHolder.label.isVisible = permissionState.isVisible
@@ -146,7 +146,7 @@ class WebsitePermissionsView(
                 viewHolder.status.text = permissionState.status
                 viewHolder.status.setOnClickListener {
                     interactor.onPermissionToggled(
-                        permissionState
+                        permissionState,
                     )
                 }
             }
@@ -160,24 +160,24 @@ class WebsitePermissionsView(
                 val adapter = object : ArrayAdapter<AutoplayValue>(
                     context,
                     R.layout.quicksettings_permission_spinner_item,
-                    permissionState.options
+                    permissionState.options,
                 ) {
                     override fun getDropDownView(
                         position: Int,
                         convertView: View?,
-                        parent: ViewGroup
+                        parent: ViewGroup,
                     ): View {
                         val view = super.getDropDownView(
                             position,
                             convertView,
-                            parent
+                            parent,
                         )
                         if (position == viewHolder.status.selectedItemPosition) {
                             view.setBackgroundColor(
                                 ContextCompat.getColor(
                                     context,
-                                    R.color.spinner_selected_item
-                                )
+                                    R.color.spinner_selected_item,
+                                ),
                             )
                         }
                         return view
@@ -195,7 +195,7 @@ class WebsitePermissionsView(
                             parent: AdapterView<*>?,
                             view: View?,
                             position: Int,
-                            id: Long
+                            id: Long,
                         ) {
                             // Unfortunately the spinner component triggers an selection event when initialized,
                             // to avoid that, we are using the tag property to store the selected value and
@@ -218,13 +218,13 @@ class WebsitePermissionsView(
     sealed class PermissionViewHolder(open val label: TextView, open val status: View) {
         data class ToggleablePermission(
             override val label: TextView,
-            override val status: TextView
+            override val status: TextView,
         ) :
             PermissionViewHolder(label, status)
 
         data class SpinnerPermission(
             override val label: TextView,
-            override val status: AppCompatSpinner
+            override val status: AppCompatSpinner,
         ) :
             PermissionViewHolder(label, status)
     }

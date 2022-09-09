@@ -25,7 +25,7 @@ class AddonInternalSettingsFragment : AddonPopupBaseFragment() {
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
-        savedInstanceState: Bundle?
+        savedInstanceState: Bundle?,
     ): View? {
         initializeSession()
         return inflater.inflate(R.layout.fragment_add_on_internal_settings, container, false)

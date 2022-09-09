@@ -61,7 +61,7 @@ class DefaultCreditCardEditorController(
     private val lifecycleScope: CoroutineScope,
     private val navController: NavController,
     private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
-    private val showDeleteDialog: (DialogInterface.OnClickListener) -> Unit
+    private val showDeleteDialog: (DialogInterface.OnClickListener) -> Unit,
 ) : CreditCardEditorController {
 
     override fun handleCancelButtonClicked() {

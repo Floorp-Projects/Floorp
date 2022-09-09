@@ -81,7 +81,7 @@ internal class DefaultPocketStoriesController(
 ) : PocketStoriesController {
     override fun handleStoryShown(
         storyShown: PocketStory,
-        storyPosition: Pair<Int, Int>
+        storyPosition: Pair<Int, Int>,
     ) {
         appStore.dispatch(AppAction.PocketStoriesShown(listOf(storyShown)))
 
@@ -90,8 +90,8 @@ internal class DefaultPocketStoriesController(
                 Pocket.homeRecsSpocShown.record(
                     Pocket.HomeRecsSpocShownExtra(
                         position = "${storyPosition.first}x${storyPosition.second}",
-                        timesShown = storyShown.getCurrentFlightImpressions().size.inc().toString()
-                    )
+                        timesShown = storyShown.getCurrentFlightImpressions().size.inc().toString(),
+                    ),
                 )
             }
             else -> {
@@ -116,8 +116,8 @@ internal class DefaultPocketStoriesController(
                 Pocket.HomeRecsCategoryClickedExtra(
                     categoryName = categoryClicked.name,
                     newState = "deselected",
-                    selectedTotal = initialCategoriesSelections.size.toString()
-                )
+                    selectedTotal = initialCategoriesSelections.size.toString(),
+                ),
             )
             return
         }
@@ -141,14 +141,14 @@ internal class DefaultPocketStoriesController(
             Pocket.HomeRecsCategoryClickedExtra(
                 categoryName = categoryClicked.name,
                 newState = "selected",
-                selectedTotal = initialCategoriesSelections.size.toString()
-            )
+                selectedTotal = initialCategoriesSelections.size.toString(),
+            ),
         )
     }
 
     override fun handleStoryClicked(
         storyClicked: PocketStory,
-        storyPosition: Pair<Int, Int>
+        storyPosition: Pair<Int, Int>,
     ) {
         dismissSearchDialogIfDisplayed()
         homeActivity.openToBrowserAndLoad(storyClicked.url, true, BrowserDirection.FromHome)
@@ -158,16 +158,16 @@ internal class DefaultPocketStoriesController(
                 Pocket.homeRecsStoryClicked.record(
                     Pocket.HomeRecsStoryClickedExtra(
                         position = "${storyPosition.first}x${storyPosition.second}",
-                        timesShown = storyClicked.timesShown.inc().toString()
-                    )
+                        timesShown = storyClicked.timesShown.inc().toString(),
+                    ),
                 )
             }
             is PocketSponsoredStory -> {
                 Pocket.homeRecsSpocClicked.record(
                     Pocket.HomeRecsSpocClickedExtra(
                         position = "${storyPosition.first}x${storyPosition.second}",
-                        timesShown = storyClicked.getCurrentFlightImpressions().size.inc().toString()
-                    )
+                        timesShown = storyClicked.getCurrentFlightImpressions().size.inc().toString(),
+                    ),
                 )
             }
         }

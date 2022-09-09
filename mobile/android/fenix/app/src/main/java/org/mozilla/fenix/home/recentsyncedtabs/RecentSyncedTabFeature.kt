@@ -88,7 +88,7 @@ class RecentSyncedTabFeature(
                     SyncStatus.Idle -> dispatchSyncedTabs()
                     SyncStatus.Error -> onError()
                     SyncStatus.LoggedOut -> appStore.dispatch(
-                        AppAction.RecentSyncedTabStateChange(RecentSyncedTabState.None)
+                        AppAction.RecentSyncedTabStateChange(RecentSyncedTabState.None),
                     )
                     else -> Unit
                 }
@@ -106,7 +106,7 @@ class RecentSyncedTabFeature(
     private suspend fun dispatchSyncedTabs() {
         if (!isSyncedTabsEngineEnabled()) {
             appStore.dispatch(
-                AppAction.RecentSyncedTabStateChange(RecentSyncedTabState.None)
+                AppAction.RecentSyncedTabStateChange(RecentSyncedTabState.None),
             )
 
             return
@@ -131,7 +131,7 @@ class RecentSyncedTabFeature(
                 val maxAgeInMs = TimeUnit.DAYS.toMillis(DAYS_HISTORY_FOR_PREVIEW_IMAGE)
                 val history = historyStorage.getDetailedVisits(
                     start = currentTime - maxAgeInMs,
-                    end = currentTime
+                    end = currentTime,
                 )
 
                 // Searching history entries for any that share a top level domain and have a
@@ -145,17 +145,17 @@ class RecentSyncedTabFeature(
                     deviceType = deviceTab.device.deviceType,
                     title = activeTabEntry.title,
                     url = activeTabEntry.url,
-                    previewImageUrl = previewImageUrl
+                    previewImageUrl = previewImageUrl,
                 )
             }
         if (syncedTabs.isEmpty()) {
             appStore.dispatch(
-                AppAction.RecentSyncedTabStateChange(RecentSyncedTabState.None)
+                AppAction.RecentSyncedTabStateChange(RecentSyncedTabState.None),
             )
         } else {
             recordMetrics(syncedTabs.first(), lastSyncedTabs?.first(), syncStartId)
             appStore.dispatch(
-                AppAction.RecentSyncedTabStateChange(RecentSyncedTabState.Success(syncedTabs))
+                AppAction.RecentSyncedTabStateChange(RecentSyncedTabState.Success(syncedTabs)),
             )
             lastSyncedTabs = syncedTabs
         }
@@ -170,7 +170,7 @@ class RecentSyncedTabFeature(
     private fun recordMetrics(
         tab: RecentSyncedTab,
         lastSyncedTab: RecentSyncedTab?,
-        syncStartId: GleanTimerId?
+        syncStartId: GleanTimerId?,
     ) {
         RecentSyncedTabs.recentSyncedTabShown[tab.deviceType.name.lowercase()].add()
         syncStartId?.let { RecentSyncedTabs.recentSyncedTabTimeToLoad.stopAndAccumulate(it) }
@@ -242,5 +242,5 @@ data class RecentSyncedTab(
  */
 private data class SyncedDeviceTab(
     val device: Device,
-    val tab: Tab
+    val tab: Tab,
 )

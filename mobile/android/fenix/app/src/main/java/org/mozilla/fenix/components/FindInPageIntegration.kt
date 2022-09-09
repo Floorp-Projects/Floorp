@@ -32,7 +32,7 @@ class FindInPageIntegration(
     private val sessionId: String? = null,
     stub: ViewStub,
     private val engineView: EngineView,
-    private val toolbarInfo: ToolbarInfo
+    private val toolbarInfo: ToolbarInfo,
 ) : InflationAwareFeature(stub) {
     override fun onViewInflated(view: View): LifecycleAwareFeature {
         return FindInPageFeature(store, view as FindInPageView, engineView) {
@@ -108,6 +108,6 @@ class FindInPageIntegration(
     data class ToolbarInfo(
         val toolbar: BrowserToolbar,
         val isToolbarDynamic: Boolean,
-        val isToolbarPlacedAtTop: Boolean
+        val isToolbarPlacedAtTop: Boolean,
     )
 }

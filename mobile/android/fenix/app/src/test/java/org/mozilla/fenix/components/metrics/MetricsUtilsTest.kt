@@ -33,7 +33,7 @@ class MetricsUtilsTest {
             GooglePlayServicesNotAvailableException(1),
             GooglePlayServicesRepairableException(0, "", mockk()),
             IllegalStateException(),
-            IOException()
+            IOException(),
         )
 
         exceptions.forEach {

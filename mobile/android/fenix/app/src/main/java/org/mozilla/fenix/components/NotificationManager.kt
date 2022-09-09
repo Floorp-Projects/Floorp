@@ -44,7 +44,7 @@ class NotificationManager(private val context: Context) {
                 NotificationManager.IMPORTANCE_HIGH,
                 // Name and description are shown in the 'app notifications' settings for the app.
                 context.getString(R.string.fxa_received_tab_channel_name),
-                context.getString(R.string.fxa_received_tab_channel_description)
+                context.getString(R.string.fxa_received_tab_channel_description),
             )
         }
     }
@@ -103,7 +103,7 @@ class NotificationManager(private val context: Context) {
         channelId: String,
         importance: Int,
         channelName: String,
-        channelDescription: String
+        channelDescription: String,
     ) {
         val channel = NotificationChannel(channelId, channelName, importance).apply {
             description = channelDescription
@@ -117,14 +117,14 @@ class NotificationManager(private val context: Context) {
     private fun NotificationCompat.Builder.setSendTabTitle(
         context: Context,
         device: Device?,
-        tab: TabData
+        tab: TabData,
     ): NotificationCompat.Builder {
         device?.let {
             setContentTitle(
                 context.getString(
                     R.string.fxa_tab_received_from_notification_name,
-                    it.displayName
-                )
+                    it.displayName,
+                ),
             )
             return this
         }

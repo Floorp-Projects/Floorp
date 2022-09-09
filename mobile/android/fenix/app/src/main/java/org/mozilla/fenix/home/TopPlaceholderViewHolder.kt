@@ -13,7 +13,7 @@ import org.mozilla.fenix.utils.view.ViewHolder
  * the top when home is created.
  */
 class TopPlaceholderViewHolder(
-    view: View
+    view: View,
 ) : ViewHolder(view) {
 
     fun bind() = Unit

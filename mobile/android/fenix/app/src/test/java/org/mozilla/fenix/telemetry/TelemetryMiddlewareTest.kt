@@ -56,10 +56,10 @@ class TelemetryMiddlewareTest {
         Clock.delegate = clock
 
         settings = Settings(testContext)
-        telemetryMiddleware = TelemetryMiddleware(settings,)
+        telemetryMiddleware = TelemetryMiddleware(settings)
         store = BrowserStore(
             middleware = listOf(telemetryMiddleware) + EngineMiddleware.create(engine = mockk()),
-            initialState = BrowserState()
+            initialState = BrowserState(),
         )
     }
 
@@ -99,9 +99,9 @@ class TelemetryMiddlewareTest {
             TabListAction.AddMultipleTabsAction(
                 listOf(
                     createTab("https://mozilla.org"),
-                    createTab("https://firefox.com")
-                )
-            )
+                    createTab("https://firefox.com"),
+                ),
+            ),
         ).joinBlocking()
 
         assertEquals(2, settings.openTabsCount)
@@ -117,9 +117,9 @@ class TelemetryMiddlewareTest {
             TabListAction.AddMultipleTabsAction(
                 listOf(
                     createTab(id = "1", url = "https://mozilla.org"),
-                    createTab(id = "2", url = "https://firefox.com")
-                )
-            )
+                    createTab(id = "2", url = "https://firefox.com"),
+                ),
+            ),
         ).joinBlocking()
         assertEquals(2, settings.openTabsCount)
 
@@ -137,9 +137,9 @@ class TelemetryMiddlewareTest {
             TabListAction.AddMultipleTabsAction(
                 listOf(
                     createTab("https://mozilla.org"),
-                    createTab("https://firefox.com")
-                )
-            )
+                    createTab("https://firefox.com"),
+                ),
+            ),
         ).joinBlocking()
         assertEquals(2, settings.openTabsCount)
 
@@ -160,9 +160,9 @@ class TelemetryMiddlewareTest {
                 listOf(
                     createTab("https://mozilla.org"),
                     createTab("https://firefox.com"),
-                    createTab("https://getpocket.com", private = true)
-                )
-            )
+                    createTab("https://getpocket.com", private = true),
+                ),
+            ),
         ).joinBlocking()
         assertEquals(2, settings.openTabsCount)
         assertTrue(Metrics.hasOpenTabs.testGetValue()!!)
@@ -179,14 +179,14 @@ class TelemetryMiddlewareTest {
 
         val tabsToRestore = listOf(
             RecoverableTab(null, TabState(url = "https://mozilla.org", id = "1")),
-            RecoverableTab(null, TabState(url = "https://firefox.com", id = "2"))
+            RecoverableTab(null, TabState(url = "https://firefox.com", id = "2")),
         )
 
         store.dispatch(
             TabListAction.RestoreAction(
                 tabs = tabsToRestore,
-                restoreLocation = TabListAction.RestoreAction.RestoreLocation.BEGINNING
-            )
+                restoreLocation = TabListAction.RestoreAction.RestoreLocation.BEGINNING,
+            ),
         ).joinBlocking()
         assertEquals(2, settings.openTabsCount)
 
@@ -228,18 +228,18 @@ class TelemetryMiddlewareTest {
                 listOf(
                     RecoverableTab(null, TabState(url = "https://www.mozilla.org", id = "foreground")),
                     RecoverableTab(null, TabState(url = "https://getpocket.com", id = "background_pocket")),
-                    RecoverableTab(null, TabState(url = "https://theverge.com", id = "background_verge"))
+                    RecoverableTab(null, TabState(url = "https://theverge.com", id = "background_verge")),
                 ),
                 selectedTabId = "foreground",
-                restoreLocation = TabListAction.RestoreAction.RestoreLocation.BEGINNING
-            )
+                restoreLocation = TabListAction.RestoreAction.RestoreLocation.BEGINNING,
+            ),
         ).joinBlocking()
 
         assertNull(EngineMetrics.kills["foreground"].testGetValue())
         assertNull(EngineMetrics.kills["background"].testGetValue())
 
         store.dispatch(
-            EngineAction.KillEngineSessionAction("foreground")
+            EngineAction.KillEngineSessionAction("foreground"),
         ).joinBlocking()
 
         assertNotNull(EngineMetrics.kills["foreground"].testGetValue())
@@ -252,25 +252,25 @@ class TelemetryMiddlewareTest {
                 listOf(
                     RecoverableTab(null, TabState(url = "https://www.mozilla.org", id = "foreground")),
                     RecoverableTab(null, TabState(url = "https://getpocket.com", id = "background_pocket")),
-                    RecoverableTab(null, TabState(url = "https://theverge.com", id = "background_verge"))
+                    RecoverableTab(null, TabState(url = "https://theverge.com", id = "background_verge")),
                 ),
                 selectedTabId = "foreground",
-                restoreLocation = TabListAction.RestoreAction.RestoreLocation.BEGINNING
-            )
+                restoreLocation = TabListAction.RestoreAction.RestoreLocation.BEGINNING,
+            ),
         ).joinBlocking()
 
         assertNull(EngineMetrics.kills["foreground"].testGetValue())
         assertNull(EngineMetrics.kills["background"].testGetValue())
 
         store.dispatch(
-            EngineAction.KillEngineSessionAction("background_pocket")
+            EngineAction.KillEngineSessionAction("background_pocket"),
         ).joinBlocking()
 
         assertNull(EngineMetrics.kills["foreground"].testGetValue())
         assertEquals(1, EngineMetrics.kills["background"].testGetValue())
 
         store.dispatch(
-            EngineAction.KillEngineSessionAction("background_verge")
+            EngineAction.KillEngineSessionAction("background_verge"),
         ).joinBlocking()
 
         assertNull(EngineMetrics.kills["foreground"].testGetValue())
@@ -284,11 +284,11 @@ class TelemetryMiddlewareTest {
                 listOf(
                     RecoverableTab(null, TabState(url = "https://www.mozilla.org", id = "foreground")),
                     RecoverableTab(null, TabState(url = "https://getpocket.com", id = "background_pocket")),
-                    RecoverableTab(null, TabState(url = "https://theverge.com", id = "background_verge"))
+                    RecoverableTab(null, TabState(url = "https://theverge.com", id = "background_verge")),
                 ),
                 selectedTabId = "foreground",
-                restoreLocation = TabListAction.RestoreAction.RestoreLocation.BEGINNING
-            )
+                restoreLocation = TabListAction.RestoreAction.RestoreLocation.BEGINNING,
+            ),
         ).joinBlocking()
 
         clock.elapsedTime = 100
@@ -296,8 +296,8 @@ class TelemetryMiddlewareTest {
         store.dispatch(
             EngineAction.LinkEngineSessionAction(
                 tabId = "foreground",
-                engineSession = mockk(relaxed = true)
-            )
+                engineSession = mockk(relaxed = true),
+            ),
         ).joinBlocking()
 
         assertNull(EngineMetrics.killForegroundAge.testGetValue())
@@ -306,7 +306,7 @@ class TelemetryMiddlewareTest {
         clock.elapsedTime = 500
 
         store.dispatch(
-            EngineAction.KillEngineSessionAction("foreground")
+            EngineAction.KillEngineSessionAction("foreground"),
         ).joinBlocking()
 
         assertNull(EngineMetrics.killBackgroundAge.testGetValue())
@@ -320,11 +320,11 @@ class TelemetryMiddlewareTest {
                 listOf(
                     RecoverableTab(null, TabState(url = "https://www.mozilla.org", id = "foreground")),
                     RecoverableTab(null, TabState(url = "https://getpocket.com", id = "background_pocket")),
-                    RecoverableTab(null, TabState(url = "https://theverge.com", id = "background_verge"))
+                    RecoverableTab(null, TabState(url = "https://theverge.com", id = "background_verge")),
                 ),
                 selectedTabId = "foreground",
-                restoreLocation = TabListAction.RestoreAction.RestoreLocation.BEGINNING
-            )
+                restoreLocation = TabListAction.RestoreAction.RestoreLocation.BEGINNING,
+            ),
         ).joinBlocking()
 
         clock.elapsedTime = 100
@@ -332,8 +332,8 @@ class TelemetryMiddlewareTest {
         store.dispatch(
             EngineAction.LinkEngineSessionAction(
                 tabId = "background_pocket",
-                engineSession = mockk(relaxed = true)
-            )
+                engineSession = mockk(relaxed = true),
+            ),
         ).joinBlocking()
 
         clock.elapsedTime = 700
@@ -342,7 +342,7 @@ class TelemetryMiddlewareTest {
         assertNull(EngineMetrics.killBackgroundAge.testGetValue())
 
         store.dispatch(
-            EngineAction.KillEngineSessionAction("background_pocket")
+            EngineAction.KillEngineSessionAction("background_pocket"),
         ).joinBlocking()
 
         assertNull(EngineMetrics.killForegroundAge.testGetValue())

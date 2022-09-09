@@ -39,9 +39,9 @@ class TopSiteViewHolderTest {
                     id = 1L,
                     title = "Pocket",
                     url = "https://getpocket.com",
-                    createdAt = 0
-                )
-            )
+                    createdAt = 0,
+                ),
+            ),
         )
 
         assertEquals(1, binding.topSitesList.adapter!!.itemCount)

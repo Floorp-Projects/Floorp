@@ -25,7 +25,7 @@ import org.mozilla.fenix.utils.Settings
 data class QuickSettingsFragmentState(
     val webInfoState: WebsiteInfoState,
     val websitePermissionsState: WebsitePermissionsState,
-    val trackingProtectionState: TrackingProtectionState
+    val trackingProtectionState: TrackingProtectionState,
 ) : State
 
 /**
@@ -39,7 +39,7 @@ data class WebsiteInfoState(
     val websiteUrl: String,
     val websiteTitle: String,
     val websiteSecurityUiValues: WebsiteSecurityUiValues,
-    val certificateName: String
+    val certificateName: String,
 ) : State {
     companion object {
         /**
@@ -56,7 +56,7 @@ data class WebsiteInfoState(
             websiteUrl: String,
             websiteTitle: String,
             isSecured: Boolean,
-            certificateName: String
+            certificateName: String,
         ): WebsiteInfoState {
             val uiValues =
                 if (isSecured) WebsiteSecurityUiValues.SECURE else WebsiteSecurityUiValues.INSECURE
@@ -67,16 +67,16 @@ data class WebsiteInfoState(
 
 enum class WebsiteSecurityUiValues(
     @StringRes val securityInfoRes: Int,
-    @DrawableRes val iconRes: Int
+    @DrawableRes val iconRes: Int,
 ) {
     SECURE(
         R.string.quick_settings_sheet_secure_connection_2,
-        R.drawable.ic_lock
+        R.drawable.ic_lock,
     ),
     INSECURE(
         R.string.quick_settings_sheet_insecure_connection_2,
-        R.drawable.mozac_ic_broken_lock
-    )
+        R.drawable.mozac_ic_broken_lock,
+    ),
 }
 
 /**
@@ -102,18 +102,18 @@ sealed class WebsitePermission(
     open val status: String,
     open val isVisible: Boolean,
     open val isEnabled: Boolean,
-    open val isBlockedByAndroid: Boolean
+    open val isBlockedByAndroid: Boolean,
 ) {
     data class Autoplay(
         val autoplayValue: AutoplayValue,
         val options: List<AutoplayValue>,
-        override val isVisible: Boolean
+        override val isVisible: Boolean,
     ) : WebsitePermission(
         PhoneFeature.AUTOPLAY,
         autoplayValue.label,
         isVisible,
         autoplayValue.isEnabled,
-        isBlockedByAndroid = false
+        isBlockedByAndroid = false,
     )
 
     data class Toggleable(
@@ -121,20 +121,20 @@ sealed class WebsitePermission(
         override val status: String,
         override val isVisible: Boolean,
         override val isEnabled: Boolean,
-        override val isBlockedByAndroid: Boolean
+        override val isBlockedByAndroid: Boolean,
     ) : WebsitePermission(
         phoneFeature,
         status,
         isVisible,
         isEnabled,
-        isBlockedByAndroid
+        isBlockedByAndroid,
     )
 }
 
 sealed class AutoplayValue(
     open val label: String,
     open val rules: SitePermissionsRules,
-    open val sitePermission: SitePermissions?
+    open val sitePermission: SitePermissions?,
 ) {
     override fun toString() = label
     abstract fun isSelected(): Boolean
@@ -147,7 +147,7 @@ sealed class AutoplayValue(
     data class AllowAll(
         override val label: String,
         override val rules: SitePermissionsRules,
-        override val sitePermission: SitePermissions?
+        override val sitePermission: SitePermissions?,
     ) : AutoplayValue(label, rules, sitePermission) {
         override val isEnabled: Boolean = true
         override fun toString() = super.toString()
@@ -155,7 +155,7 @@ sealed class AutoplayValue(
             val actions = if (sitePermission !== null) {
                 listOf(
                     sitePermission.autoplayAudible,
-                    sitePermission.autoplayInaudible
+                    sitePermission.autoplayInaudible,
                 )
             } else {
                 listOf(rules.autoplayAudible.toAutoplayStatus(), rules.autoplayInaudible.toAutoplayStatus())
@@ -168,14 +168,14 @@ sealed class AutoplayValue(
             val rules = settings.getSitePermissionsCustomSettingsRules()
             return rules.copy(
                 autoplayAudible = AutoplayAction.ALLOWED,
-                autoplayInaudible = AutoplayAction.ALLOWED
+                autoplayInaudible = AutoplayAction.ALLOWED,
             ).toSitePermissions(origin)
         }
 
         override fun updateSitePermissions(sitePermissions: SitePermissions): SitePermissions {
             return sitePermissions.copy(
                 autoplayAudible = AutoplayStatus.ALLOWED,
-                autoplayInaudible = AutoplayStatus.ALLOWED
+                autoplayInaudible = AutoplayStatus.ALLOWED,
             )
         }
     }
@@ -183,7 +183,7 @@ sealed class AutoplayValue(
     data class BlockAll(
         override val label: String,
         override val rules: SitePermissionsRules,
-        override val sitePermission: SitePermissions?
+        override val sitePermission: SitePermissions?,
     ) : AutoplayValue(label, rules, sitePermission) {
         override val isEnabled: Boolean = false
         override fun toString() = super.toString()
@@ -191,7 +191,7 @@ sealed class AutoplayValue(
             val actions = if (sitePermission !== null) {
                 listOf(
                     sitePermission.autoplayAudible,
-                    sitePermission.autoplayInaudible
+                    sitePermission.autoplayInaudible,
                 )
             } else {
                 listOf(rules.autoplayAudible.toAutoplayStatus(), rules.autoplayInaudible.toAutoplayStatus())
@@ -203,14 +203,14 @@ sealed class AutoplayValue(
             val rules = settings.getSitePermissionsCustomSettingsRules()
             return rules.copy(
                 autoplayAudible = AutoplayAction.BLOCKED,
-                autoplayInaudible = AutoplayAction.BLOCKED
+                autoplayInaudible = AutoplayAction.BLOCKED,
             ).toSitePermissions(origin)
         }
 
         override fun updateSitePermissions(sitePermissions: SitePermissions): SitePermissions {
             return sitePermissions.copy(
                 autoplayAudible = AutoplayStatus.BLOCKED,
-                autoplayInaudible = AutoplayStatus.BLOCKED
+                autoplayInaudible = AutoplayStatus.BLOCKED,
             )
         }
     }
@@ -218,7 +218,7 @@ sealed class AutoplayValue(
     data class BlockAudible(
         override val label: String,
         override val rules: SitePermissionsRules,
-        override val sitePermission: SitePermissions?
+        override val sitePermission: SitePermissions?,
     ) : AutoplayValue(label, rules, sitePermission) {
         override val isEnabled: Boolean = false
         override fun toString() = super.toString()
@@ -241,7 +241,7 @@ sealed class AutoplayValue(
         override fun updateSitePermissions(sitePermissions: SitePermissions): SitePermissions {
             return sitePermissions.copy(
                 autoplayInaudible = AutoplayStatus.ALLOWED,
-                autoplayAudible = AutoplayStatus.BLOCKED
+                autoplayAudible = AutoplayStatus.BLOCKED,
             )
         }
     }
@@ -250,38 +250,38 @@ sealed class AutoplayValue(
         fun values(
             context: Context,
             settings: Settings,
-            sitePermission: SitePermissions?
+            sitePermission: SitePermissions?,
         ): List<AutoplayValue> {
             val rules = settings.getSitePermissionsCustomSettingsRules()
             return listOf(
                 AllowAll(
                     context.getString(R.string.quick_setting_option_autoplay_allowed),
                     rules,
-                    sitePermission
+                    sitePermission,
                 ),
                 BlockAll(
                     context.getString(R.string.quick_setting_option_autoplay_blocked),
                     rules,
-                    sitePermission
+                    sitePermission,
                 ),
                 BlockAudible(
                     context.getString(R.string.quick_setting_option_autoplay_block_audio),
                     rules,
-                    sitePermission
-                )
+                    sitePermission,
+                ),
             )
         }
 
         fun getFallbackValue(
             context: Context,
             settings: Settings,
-            sitePermission: SitePermissions?
+            sitePermission: SitePermissions?,
         ): AutoplayValue {
             val rules = settings.getSitePermissionsCustomSettingsRules()
             return BlockAudible(
                 context.getString(R.string.preference_option_autoplay_block_audio2),
                 rules,
-                sitePermission
+                sitePermission,
             )
         }
     }

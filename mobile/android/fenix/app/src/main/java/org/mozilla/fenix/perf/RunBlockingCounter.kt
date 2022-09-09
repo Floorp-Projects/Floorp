@@ -34,7 +34,7 @@ object RunBlockingCounter {
  */
 fun <T> runBlockingIncrement(
     context: CoroutineContext? = null,
-    action: suspend CoroutineScope.() -> T
+    action: suspend CoroutineScope.() -> T,
 ): T {
     RunBlockingCounter.count.getAndIncrementNoOverflow()
     return if (context != null) {

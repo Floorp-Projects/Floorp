@@ -29,14 +29,14 @@ object PrivateShortcutCreateManager {
             .setShortLabel(
                 context.getString(
                     R.string.app_name_private_5,
-                    context.getString(R.string.app_name)
-                )
+                    context.getString(R.string.app_name),
+                ),
             )
             .setLongLabel(
                 context.getString(
                     R.string.app_name_private_5,
-                    context.getString(R.string.app_name)
-                )
+                    context.getString(R.string.app_name),
+                ),
             )
             .setIcon(icon)
             .setIntent(
@@ -46,9 +46,9 @@ object PrivateShortcutCreateManager {
                     putExtra(HomeActivity.PRIVATE_BROWSING_MODE, true)
                     putExtra(
                         HomeActivity.OPEN_TO_SEARCH,
-                        StartSearchIntentProcessor.PRIVATE_BROWSING_PINNED_SHORTCUT
+                        StartSearchIntentProcessor.PRIVATE_BROWSING_PINNED_SHORTCUT,
                     )
-                }
+                },
             )
             .build()
         val createPrivateShortcutIntentFlags = IntentUtils.defaultIntentPendingFlags or

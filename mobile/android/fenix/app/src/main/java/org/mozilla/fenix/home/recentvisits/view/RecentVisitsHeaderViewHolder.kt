@@ -28,7 +28,7 @@ import org.mozilla.fenix.home.recentvisits.interactor.RecentVisitsInteractor
 class RecentVisitsHeaderViewHolder(
     composeView: ComposeView,
     viewLifecycleOwner: LifecycleOwner,
-    private val interactor: RecentVisitsInteractor
+    private val interactor: RecentVisitsInteractor,
 ) : ComposeViewHolder(composeView, viewLifecycleOwner) {
 
     init {

@@ -41,7 +41,7 @@ class CustomTabToolbarMenu(
     private val store: BrowserStore,
     private val sessionId: String?,
     private val shouldReverseItems: Boolean,
-    private val onItemTapped: (ToolbarMenu.Item) -> Unit = {}
+    private val onItemTapped: (ToolbarMenu.Item) -> Unit = {},
 ) : ToolbarMenu {
 
     override val menuBuilder by lazy { BrowserMenuBuilder(menuItems) }
@@ -61,10 +61,10 @@ class CustomTabToolbarMenu(
             },
             secondaryImageTintResource = ThemeManager.resolveAttribute(
                 R.attr.textDisabled,
-                context
+                context,
             ),
             disableInSecondaryState = true,
-            longClickListener = { onItemTapped.invoke(ToolbarMenu.Item.Back(viewHistory = true)) }
+            longClickListener = { onItemTapped.invoke(ToolbarMenu.Item.Back(viewHistory = true)) },
         ) {
             onItemTapped.invoke(ToolbarMenu.Item.Back(viewHistory = false))
         }
@@ -78,10 +78,10 @@ class CustomTabToolbarMenu(
             },
             secondaryImageTintResource = ThemeManager.resolveAttribute(
                 R.attr.textDisabled,
-                context
+                context,
             ),
             disableInSecondaryState = true,
-            longClickListener = { onItemTapped.invoke(ToolbarMenu.Item.Forward(viewHistory = true)) }
+            longClickListener = { onItemTapped.invoke(ToolbarMenu.Item.Forward(viewHistory = true)) },
         ) {
             onItemTapped.invoke(ToolbarMenu.Item.Forward(viewHistory = false))
         }
@@ -97,7 +97,7 @@ class CustomTabToolbarMenu(
             secondaryContentDescription = context.getString(R.string.browser_menu_stop),
             secondaryImageTintResource = primaryTextColor(),
             disableInSecondaryState = false,
-            longClickListener = { onItemTapped.invoke(ToolbarMenu.Item.Reload(bypassCache = true)) }
+            longClickListener = { onItemTapped.invoke(ToolbarMenu.Item.Reload(bypassCache = true)) },
         ) {
             if (session?.content?.loading == true) {
                 onItemTapped.invoke(ToolbarMenu.Item.Stop)
@@ -123,7 +123,7 @@ class CustomTabToolbarMenu(
             openInApp.apply { visible = ::shouldShowOpenInApp },
             openInFenix,
             BrowserMenuDivider(),
-            menuToolbar
+            menuToolbar,
         )
         if (shouldReverseItems) {
             menuItems.reversed()
@@ -135,7 +135,7 @@ class CustomTabToolbarMenu(
     private val desktopMode = BrowserMenuImageSwitch(
         imageResource = R.drawable.ic_desktop,
         label = context.getString(R.string.browser_menu_desktop_site),
-        initialState = { session?.content?.desktopMode ?: false }
+        initialState = { session?.content?.desktopMode ?: false },
     ) { checked ->
         onItemTapped.invoke(ToolbarMenu.Item.RequestDesktop(checked))
     }
@@ -143,7 +143,7 @@ class CustomTabToolbarMenu(
     private val findInPage = BrowserMenuImageText(
         label = context.getString(R.string.browser_menu_find_in_page),
         imageResource = R.drawable.mozac_ic_search,
-        iconTintColorResource = primaryTextColor()
+        iconTintColorResource = primaryTextColor(),
     ) {
         onItemTapped.invoke(ToolbarMenu.Item.FindInPage)
     }
@@ -154,16 +154,16 @@ class CustomTabToolbarMenu(
         iconTintColorResource = primaryTextColor(),
         highlight = BrowserMenuHighlight.LowPriority(
             label = context.getString(R.string.browser_menu_open_app_link),
-            notificationTint = getColor(context, R.color.fx_mobile_icon_color_information)
+            notificationTint = getColor(context, R.color.fx_mobile_icon_color_information),
         ),
-        isHighlighted = { !context.settings().openInAppOpened }
+        isHighlighted = { !context.settings().openInAppOpened },
     ) {
         onItemTapped.invoke(ToolbarMenu.Item.OpenInApp)
     }
 
     private val openInFenix = SimpleBrowserMenuItem(
         label = context.getString(R.string.browser_menu_open_in_fenix, appName),
-        textColorResource = primaryTextColor()
+        textColorResource = primaryTextColor(),
     ) {
         onItemTapped.invoke(ToolbarMenu.Item.OpenInFenix)
     }
@@ -173,7 +173,7 @@ class CustomTabToolbarMenu(
             .uppercase(Locale.getDefault()),
         textSize = CAPTION_TEXT_SIZE,
         textColorResource = primaryTextColor(),
-        textStyle = Typeface.NORMAL
+        textStyle = Typeface.NORMAL,
     )
 
     @ColorRes

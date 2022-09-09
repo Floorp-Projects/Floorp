@@ -27,7 +27,8 @@ class DynamicDownloadDialogTest {
         }
 
         val expected = testContext.getString(
-            R.string.mozac_feature_downloads_open_not_supported1, "gif"
+            R.string.mozac_feature_downloads_open_not_supported1,
+            "gif",
         )
 
         val result = getCannotOpenFileErrorMessage(testContext, download)

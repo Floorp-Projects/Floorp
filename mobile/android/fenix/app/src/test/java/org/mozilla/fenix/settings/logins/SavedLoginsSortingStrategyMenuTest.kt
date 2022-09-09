@@ -50,7 +50,7 @@ class SavedLoginsSortingStrategyMenuTest {
         val (name, lastUsed) = menu.menuItems(Item.AlphabeticallySort)
         assertEquals(
             HighPriorityHighlightEffect(context.getColorFromAttr(R.attr.colorControlHighlight)),
-            name.effect
+            name.effect,
         )
         assertNull(lastUsed.effect)
     }
@@ -61,7 +61,7 @@ class SavedLoginsSortingStrategyMenuTest {
         assertNull(name.effect)
         assertEquals(
             HighPriorityHighlightEffect(context.getColorFromAttr(R.attr.colorControlHighlight)),
-            lastUsed.effect
+            lastUsed.effect,
         )
     }
 
@@ -78,7 +78,7 @@ class SavedLoginsSortingStrategyMenuTest {
         lastUsed.onClick()
         verify {
             interactor.onSortingStrategyChanged(
-                SortingStrategy.LastUsed
+                SortingStrategy.LastUsed,
             )
         }
     }

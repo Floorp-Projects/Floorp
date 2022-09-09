@@ -40,7 +40,7 @@ class AddressManagementFragment : Fragment() {
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
-        savedInstanceState: Bundle?
+        savedInstanceState: Bundle?,
     ): View {
         store = StoreProvider.get(this) {
             AutofillFragmentStore(AutofillFragmentState())
@@ -48,8 +48,8 @@ class AddressManagementFragment : Fragment() {
 
         interactor = DefaultAddressManagementInteractor(
             controller = DefaultAddressManagementController(
-                navController = findNavController()
-            )
+                navController = findNavController(),
+            ),
         )
 
         loadAddresses()
@@ -68,7 +68,7 @@ class AddressManagementFragment : Fragment() {
                         onAddAddressButtonClick = {
                             interactor.onAddAddressButtonClick()
                             Addresses.managementAddTapped.record(NoExtras())
-                        }
+                        },
                     )
                 }
             }

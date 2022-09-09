@@ -32,7 +32,7 @@ class AccountDeviceViewHolderTest {
         lastAccessTime = 0L,
         capabilities = emptyList(),
         subscriptionExpired = false,
-        subscription = null
+        subscription = null,
     )
     private lateinit var binding: AccountShareListItemBinding
     private lateinit var viewHolder: AccountDeviceViewHolder
@@ -101,7 +101,7 @@ class AccountDeviceViewHolderTest {
     fun `bind mobile SingleDevice option`() {
         val device = baseDevice.copy(
             deviceType = DeviceType.MOBILE,
-            displayName = "Mobile"
+            displayName = "Mobile",
         )
         viewHolder.bind(SyncShareOption.SingleDevice(device))
         assertEquals("Mobile", binding.deviceName.text)
@@ -115,7 +115,7 @@ class AccountDeviceViewHolderTest {
     fun `bind desktop SingleDevice option`() {
         val device = baseDevice.copy(
             deviceType = DeviceType.DESKTOP,
-            displayName = "Desktop"
+            displayName = "Desktop",
         )
         viewHolder.bind(SyncShareOption.SingleDevice(device))
         assertEquals("Desktop", binding.deviceName.text)

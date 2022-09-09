@@ -31,7 +31,7 @@ class HistoryMetadataGroupAdapter(
 
     override fun onCreateViewHolder(
         parent: ViewGroup,
-        viewType: Int
+        viewType: Int,
     ): HistoryMetadataGroupItemViewHolder {
         val view = LayoutInflater.from(parent.context)
             .inflate(HistoryMetadataGroupItemViewHolder.LAYOUT_ID, parent, false)

@@ -19,7 +19,7 @@ class BookmarkSearchDialogInteractorTest {
     fun setup() {
         searchController = mockk(relaxed = true)
         interactor = BookmarkSearchDialogInteractor(
-            searchController
+            searchController,
         )
     }
 

@@ -73,7 +73,7 @@ class WhatsNew private constructor(private val storage: WhatsNewStorage) {
                 ContextWhatsNewVersion(context),
                 context.components.strictMode.resetAfter(StrictMode.allowThreadDiskReads()) {
                     SharedPreferenceWhatsNewStorage(context)
-                }
+                },
             )
         }
 
@@ -93,8 +93,8 @@ class WhatsNew private constructor(private val storage: WhatsNewStorage) {
         fun userViewedWhatsNew(context: Context) {
             userViewedWhatsNew(
                 SharedPreferenceWhatsNewStorage(
-                    context
-                )
+                    context,
+                ),
             )
         }
     }

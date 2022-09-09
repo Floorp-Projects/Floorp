@@ -72,7 +72,7 @@ class UseCases(
         SearchUseCases(
             store,
             tabsUseCases,
-            sessionUseCases
+            sessionUseCases,
         )
     }
 

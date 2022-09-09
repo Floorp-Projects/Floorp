@@ -33,7 +33,7 @@ interface AddressManagementController {
  * @param navController [NavController] used for navigation.
  */
 class DefaultAddressManagementController(
-    private val navController: NavController
+    private val navController: NavController,
 ) : AddressManagementController {
 
     override fun handleAddressClicked(address: Address) {
@@ -48,8 +48,8 @@ class DefaultAddressManagementController(
         navController.navigate(
             AddressManagementFragmentDirections
                 .actionAddressManagementFragmentToAddressEditorFragment(
-                    address = address
-                )
+                    address = address,
+                ),
         )
     }
 }

@@ -51,13 +51,12 @@ class DefaultDeleteBrowsingDataControllerTest {
             permissionStorage = permissionStorage,
             iconsStorage = iconsStorage,
             engine = engine,
-            coroutineContext = coroutinesTestRule.testDispatcher
+            coroutineContext = coroutinesTestRule.testDispatcher,
         )
     }
 
     @Test
     fun deleteTabs() = runTestOnMain {
-
         controller.deleteTabs()
 
         verify {
@@ -87,15 +86,14 @@ class DefaultDeleteBrowsingDataControllerTest {
             engine.clearData(
                 Engine.BrowsingData.select(
                     Engine.BrowsingData.COOKIES,
-                    Engine.BrowsingData.AUTH_SESSIONS
-                )
+                    Engine.BrowsingData.AUTH_SESSIONS,
+                ),
             )
         }
     }
 
     @Test
     fun deleteCachedFiles() = runTestOnMain {
-
         controller.deleteCachedFiles()
 
         verify {
@@ -115,7 +113,6 @@ class DefaultDeleteBrowsingDataControllerTest {
 
     @Test
     fun deleteDownloads() = runTestOnMain {
-
         controller.deleteDownloads()
 
         verify {

@@ -47,6 +47,7 @@ class RecentVisitsControllerTest {
 
     @get:Rule
     val gleanTestRule = GleanTestRule(testContext)
+
     @get:Rule
     val coroutinesTestRule = MainCoroutineRule()
     private val scope = coroutinesTestRule.scope
@@ -77,7 +78,7 @@ class RecentVisitsControllerTest {
                 navController = navController,
                 scope = scope,
                 storage = storage,
-            )
+            ),
         )
     }
 
@@ -88,7 +89,7 @@ class RecentVisitsControllerTest {
         verify {
             controller.dismissSearchDialogIfDisplayed()
             navController.navigate(
-                HomeFragmentDirections.actionGlobalHistoryFragment()
+                HomeFragmentDirections.actionGlobalHistoryFragment(),
             )
         }
     }
@@ -102,18 +103,18 @@ class RecentVisitsControllerTest {
             updatedAt = System.currentTimeMillis(),
             totalViewTime = 10,
             documentType = DocumentType.Regular,
-            previewImageUrl = null
+            previewImageUrl = null,
         )
         val historyGroup = RecentHistoryGroup(
             title = "mozilla",
-            historyMetadata = listOf(historyEntry)
+            historyMetadata = listOf(historyEntry),
         )
 
         controller.handleRecentHistoryGroupClicked(historyGroup)
 
         verify {
             navController.navigate(
-                match<NavDirections> { it.actionId == R.id.action_global_history_metadata_group }
+                match<NavDirections> { it.actionId == R.id.action_global_history_metadata_group },
             )
         }
     }
@@ -123,7 +124,7 @@ class RecentVisitsControllerTest {
         val historyMetadataKey = HistoryMetadataKey(
             "http://www.mozilla.com",
             "mozilla",
-            null
+            null,
         )
 
         val historyGroup = RecentHistoryGroup(
@@ -136,9 +137,9 @@ class RecentVisitsControllerTest {
                     updatedAt = System.currentTimeMillis(),
                     totalViewTime = 10,
                     documentType = DocumentType.Regular,
-                    previewImageUrl = null
-                )
-            )
+                    previewImageUrl = null,
+                ),
+            ),
         )
         assertNull(RecentSearches.groupDeleted.testGetValue())
 

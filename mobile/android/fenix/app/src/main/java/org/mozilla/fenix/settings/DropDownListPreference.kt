@@ -13,7 +13,7 @@ import org.mozilla.fenix.R
 
 open class DropDownListPreference @JvmOverloads constructor(
     context: Context,
-    attrs: AttributeSet? = null
+    attrs: AttributeSet? = null,
 ) : DropDownPreference(context, attrs) {
 
     init {

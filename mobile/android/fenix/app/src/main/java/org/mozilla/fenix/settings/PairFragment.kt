@@ -44,21 +44,21 @@ class PairFragment : Fragment(R.layout.fragment_pair), UserInteractionHandler {
                     if (context == null) {
                         findNavController().popBackStack(
                             R.id.turnOnSyncFragment,
-                            false
+                            false,
                         )
                         return@QrFeature
                     }
                     requireComponents.services.accountsAuthFeature.beginPairingAuthentication(
                         requireContext(),
-                        pairingUrl
+                        pairingUrl,
                     )
                     val vibrator = requireContext().getSystemService<Vibrator>()!!
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                         vibrator.vibrate(
                             VibrationEffect.createOneShot(
                                 VIBRATE_LENGTH,
-                                VibrationEffect.DEFAULT_AMPLITUDE
-                            )
+                                VibrationEffect.DEFAULT_AMPLITUDE,
+                            ),
                         )
                     } else {
                         @Suppress("Deprecation")
@@ -66,7 +66,7 @@ class PairFragment : Fragment(R.layout.fragment_pair), UserInteractionHandler {
                     }
                     findNavController().popBackStack(
                         R.id.turnOnSyncFragment,
-                        false
+                        false,
                     )
                 },
                 scanMessage =
@@ -76,10 +76,10 @@ class PairFragment : Fragment(R.layout.fragment_pair), UserInteractionHandler {
                     R.string.pair_instructions_2_cn
                 } else {
                     R.string.pair_instructions_2
-                }
+                },
             ),
             owner = this,
-            view = view
+            view = view,
         )
 
         qrFeature.withFeature {
@@ -106,13 +106,13 @@ class PairFragment : Fragment(R.layout.fragment_pair), UserInteractionHandler {
     override fun onRequestPermissionsResult(
         requestCode: Int,
         permissions: Array<String>,
-        grantResults: IntArray
+        grantResults: IntArray,
     ) {
         when (requestCode) {
             REQUEST_CODE_CAMERA_PERMISSIONS -> {
                 if (ContextCompat.checkSelfPermission(
                         requireContext(),
-                        android.Manifest.permission.CAMERA
+                        android.Manifest.permission.CAMERA,
                     ) == PackageManager.PERMISSION_GRANTED
                 ) {
                     qrFeature.withFeature {

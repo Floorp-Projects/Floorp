@@ -25,7 +25,7 @@ open class NoCollectionsMessageViewHolder(
     view: View,
     viewLifecycleOwner: LifecycleOwner,
     store: BrowserStore,
-    interactor: CollectionInteractor
+    interactor: CollectionInteractor,
 ) : ViewHolder(view) {
 
     init {
@@ -41,7 +41,7 @@ open class NoCollectionsMessageViewHolder(
 
         binding.removeCollectionPlaceholder.apply {
             increaseTapArea(
-                view.resources.getDimensionPixelSize(R.dimen.tap_increase_16)
+                view.resources.getDimensionPixelSize(R.dimen.tap_increase_16),
             )
             setOnClickListener {
                 interactor.onRemoveCollectionsPlaceholder()

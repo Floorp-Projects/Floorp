@@ -20,10 +20,12 @@ import org.mozilla.fenix.settings.logins.interactor.SavedLoginsInteractor
  */
 class SavedLoginsListView(
     private val containerView: ViewGroup,
-    val interactor: SavedLoginsInteractor
+    val interactor: SavedLoginsInteractor,
 ) {
     private val binding = ComponentSavedLoginsBinding.inflate(
-        LayoutInflater.from(containerView.context), containerView, true
+        LayoutInflater.from(containerView.context),
+        containerView,
+        true,
     )
 
     private val loginsAdapter = LoginsAdapter(interactor)
@@ -45,9 +47,9 @@ class SavedLoginsListView(
             val appName = context.getString(R.string.app_name)
             text = String.format(
                 context.getString(
-                    R.string.preferences_passwords_saved_logins_description_empty_text
+                    R.string.preferences_passwords_saved_logins_description_empty_text,
                 ),
-                appName
+                appName,
             )
         }
 

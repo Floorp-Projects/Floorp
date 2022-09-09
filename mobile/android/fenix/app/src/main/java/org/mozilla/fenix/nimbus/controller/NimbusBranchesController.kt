@@ -31,7 +31,7 @@ class NimbusBranchesController(
     private val navController: NavController,
     private val nimbusBranchesStore: NimbusBranchesStore,
     private val experiments: NimbusApi,
-    private val experimentId: String
+    private val experimentId: String,
 ) : NimbusBranchesAdapterDelegate {
 
     override fun onBranchItemClicked(branch: Branch) {
@@ -47,13 +47,13 @@ class NimbusBranchesController(
                 FenixSnackbar.make(
                     view = v,
                     FenixSnackbar.LENGTH_LONG,
-                    isDisplayedWithBrowserToolbar = false
+                    isDisplayedWithBrowserToolbar = false,
                 )
                     .setText(snackbarText)
                     .setAction(buttonText) {
                         navController.navigate(
                             NimbusBranchesFragmentDirections
-                                .actionNimbusBranchesFragmentToDataChoicesFragment()
+                                .actionNimbusBranchesFragmentToDataChoicesFragment(),
                         )
                     }
                     .show()
@@ -69,7 +69,7 @@ class NimbusBranchesController(
             } else {
                 experiments.optOut(experimentId)
                 NimbusBranchesAction.UpdateUnselectBranch
-            }
+            },
         )
     }
 }

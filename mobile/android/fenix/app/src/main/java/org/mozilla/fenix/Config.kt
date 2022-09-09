@@ -8,7 +8,8 @@ enum class ReleaseChannel {
     Debug,
     Nightly,
     Beta,
-    Release;
+    Release,
+    ;
 
     val isReleased: Boolean
         get() = when (this) {

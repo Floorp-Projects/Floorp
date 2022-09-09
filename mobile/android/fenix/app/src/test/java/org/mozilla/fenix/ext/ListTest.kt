@@ -31,7 +31,7 @@ class ListTest {
             filePath = filePath1,
             size = "71 Mb",
             contentType = "Image/png",
-            status = DownloadState.Status.COMPLETED
+            status = DownloadState.Status.COMPLETED,
         )
         val item2 = DownloadItem(
             id = "71",
@@ -40,7 +40,7 @@ class ListTest {
             filePath = "filepath2.txt",
             size = "71 Mb",
             contentType = "Image/png",
-            status = DownloadState.Status.COMPLETED
+            status = DownloadState.Status.COMPLETED,
         )
         val item3 = DownloadItem(
             id = "71",
@@ -49,7 +49,7 @@ class ListTest {
             filePath = filePath3,
             size = "71 Mb",
             contentType = "Image/png",
-            status = DownloadState.Status.COMPLETED
+            status = DownloadState.Status.COMPLETED,
         )
 
         val testList = mutableListOf(item1, item2, item3)
@@ -86,7 +86,7 @@ class ListTest {
             filePath = filePath1,
             size = "71 Mb",
             contentType = "text/plain",
-            status = DownloadState.Status.COMPLETED
+            status = DownloadState.Status.COMPLETED,
         )
         val item2 = DownloadItem(
             id = "72",
@@ -95,7 +95,7 @@ class ListTest {
             filePath = filePath2,
             size = "71 Mb",
             contentType = "text/plain",
-            status = DownloadState.Status.COMPLETED
+            status = DownloadState.Status.COMPLETED,
         )
         val item3 = DownloadItem(
             id = "73",
@@ -104,7 +104,7 @@ class ListTest {
             filePath = filePath3,
             size = "71 Mb",
             contentType = "text/plain",
-            status = DownloadState.Status.COMPLETED
+            status = DownloadState.Status.COMPLETED,
         )
 
         val testList = mutableListOf(item1, item2, item3)

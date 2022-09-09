@@ -17,10 +17,10 @@ import org.mozilla.fenix.components.TabCollectionStorage
 import org.mozilla.fenix.ext.toShortUrl
 
 class CollectionCreationStore(
-    initialState: CollectionCreationState
+    initialState: CollectionCreationState,
 ) : Store<CollectionCreationState, CollectionCreationAction>(
     initialState,
-    ::collectionCreationReducer
+    ::collectionCreationReducer,
 )
 
 /**
@@ -36,7 +36,7 @@ enum class SaveCollectionStep {
     SelectTabs,
     SelectCollection,
     NameCollection,
-    RenameCollection
+    RenameCollection,
 }
 
 data class CollectionCreationState(
@@ -45,7 +45,7 @@ data class CollectionCreationState(
     val saveCollectionStep: SaveCollectionStep = SaveCollectionStep.SelectTabs,
     val tabCollections: List<TabCollection> = emptyList(),
     val selectedTabCollection: TabCollection? = null,
-    val defaultCollectionNumber: Int = 1
+    val defaultCollectionNumber: Int = 1,
 ) : State
 
 @Suppress("LongParameterList")
@@ -56,7 +56,7 @@ fun createInitialCollectionCreationState(
     saveCollectionStep: SaveCollectionStep,
     tabIds: Array<String>?,
     selectedTabIds: Array<String>?,
-    selectedTabCollectionId: Long
+    selectedTabCollectionId: Long,
 ): CollectionCreationState {
     val tabs = browserState.getTabs(tabIds, publicSuffixList)
     val selectedTabs = if (selectedTabIds != null) {
@@ -73,14 +73,14 @@ fun createInitialCollectionCreationState(
         selectedTabs = selectedTabs,
         saveCollectionStep = saveCollectionStep,
         tabCollections = tabCollections,
-        selectedTabCollection = selectedTabCollection
+        selectedTabCollection = selectedTabCollection,
     )
 }
 
 @VisibleForTesting
 internal fun BrowserState.getTabs(
     tabIds: Array<String>?,
-    publicSuffixList: PublicSuffixList
+    publicSuffixList: PublicSuffixList,
 ): List<Tab> {
     return tabIds
         ?.mapNotNull { id -> findTab(id) }
@@ -89,7 +89,7 @@ internal fun BrowserState.getTabs(
 }
 
 private fun TabSessionState.toTab(
-    publicSuffixList: PublicSuffixList
+    publicSuffixList: PublicSuffixList,
 ): Tab {
     val url = readerState.activeUrl ?: content.url
     return Tab(
@@ -98,7 +98,7 @@ private fun TabSessionState.toTab(
         hostname = url.toShortUrl(publicSuffixList),
         title = content.title,
         selected = null,
-        icon = content.icon
+        icon = content.icon,
     )
 }
 
@@ -107,6 +107,7 @@ sealed class CollectionCreationAction : Action {
     object RemoveAllTabs : CollectionCreationAction()
     data class TabAdded(val tab: Tab) : CollectionCreationAction()
     data class TabRemoved(val tab: Tab) : CollectionCreationAction()
+
     /**
      * Used as a setter for [SaveCollectionStep].
      *
@@ -114,13 +115,13 @@ sealed class CollectionCreationAction : Action {
      */
     data class StepChanged(
         val saveCollectionStep: SaveCollectionStep,
-        val defaultCollectionNumber: Int = 1
+        val defaultCollectionNumber: Int = 1,
     ) : CollectionCreationAction()
 }
 
 private fun collectionCreationReducer(
     prevState: CollectionCreationState,
-    action: CollectionCreationAction
+    action: CollectionCreationAction,
 ): CollectionCreationState = when (action) {
     is CollectionCreationAction.AddAllTabs -> prevState.copy(selectedTabs = prevState.tabs.toSet())
     is CollectionCreationAction.RemoveAllTabs -> prevState.copy(selectedTabs = emptySet())
@@ -128,6 +129,6 @@ private fun collectionCreationReducer(
     is CollectionCreationAction.TabRemoved -> prevState.copy(selectedTabs = prevState.selectedTabs - action.tab)
     is CollectionCreationAction.StepChanged -> prevState.copy(
         saveCollectionStep = action.saveCollectionStep,
-        defaultCollectionNumber = action.defaultCollectionNumber
+        defaultCollectionNumber = action.defaultCollectionNumber,
     )
 }

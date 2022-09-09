@@ -17,7 +17,7 @@ class SelectionMenuIntegration(
     private val context: Context,
     private val store: TabsTrayStore,
     private val navInteractor: NavigationInteractor,
-    private val trayInteractor: TabsTrayInteractor
+    private val trayInteractor: TabsTrayInteractor,
 ) {
     private val menu by lazy {
         SelectionMenu(context, ::handleMenuClicked)

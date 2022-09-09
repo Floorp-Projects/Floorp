@@ -42,10 +42,10 @@ class CloseOnLastTabBindingTest {
                 tabs = listOf(
                     createTab(
                         "https://mozilla.org",
-                        id = "tab1"
-                    )
-                )
-            )
+                        id = "tab1",
+                    ),
+                ),
+            ),
         )
         val tabsTrayStore = TabsTrayStore()
         val interactor = mockk<NavigationInteractor>(relaxed = true)
@@ -68,10 +68,10 @@ class CloseOnLastTabBindingTest {
                     createTab(
                         "https://mozilla.org",
                         id = "tab1",
-                        private = true
-                    )
-                )
-            )
+                        private = true,
+                    ),
+                ),
+            ),
         )
         val tabsTrayStore = TabsTrayStore(TabsTrayState(selectedPage = Page.PrivateTabs))
         val interactor = mockk<NavigationInteractor>(relaxed = true)
@@ -94,10 +94,10 @@ class CloseOnLastTabBindingTest {
                     createTab(
                         "https://mozilla.org",
                         id = "tab1",
-                        private = true
-                    )
-                )
-            )
+                        private = true,
+                    ),
+                ),
+            ),
         )
         val tabsTrayStore = TabsTrayStore(TabsTrayState(selectedPage = Page.SyncedTabs))
         val interactor = mockk<NavigationInteractor>(relaxed = true)

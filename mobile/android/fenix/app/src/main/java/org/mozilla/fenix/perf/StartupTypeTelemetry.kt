@@ -37,7 +37,7 @@ private val logger = Logger("StartupTypeTelemetry")
  */
 class StartupTypeTelemetry(
     private val startupStateProvider: StartupStateProvider,
-    private val startupPathProvider: StartupPathProvider
+    private val startupPathProvider: StartupPathProvider,
 ) {
 
     fun attachOnHomeActivityOnCreate(lifecycle: Lifecycle) {
@@ -59,7 +59,8 @@ class StartupTypeTelemetry(
 
             // To avoid combinatorial explosion in label names, we bucket NOT_SET into UNKNOWN.
             StartupPath.NOT_SET,
-            StartupPath.UNKNOWN -> "unknown"
+            StartupPath.UNKNOWN,
+            -> "unknown"
         }
 
         return "${stateLabel}_$pathLabel"

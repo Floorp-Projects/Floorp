@@ -35,7 +35,7 @@ class TabsTouchHelperTest {
         assertEquals(0, callback.getDragDirs(recyclerView, viewHolder))
         assertEquals(
             ItemTouchHelper.LEFT or ItemTouchHelper.RIGHT,
-            callback.getSwipeDirs(recyclerView, viewHolder)
+            callback.getSwipeDirs(recyclerView, viewHolder),
         )
 
         val actual = callback.getMovementFlags(recyclerView, viewHolder)
@@ -54,7 +54,7 @@ class TabsTouchHelperTest {
         assertEquals(0, callback.getDragDirs(recyclerView, viewHolder))
         assertEquals(
             ItemTouchHelper.LEFT or ItemTouchHelper.RIGHT,
-            callback.getSwipeDirs(recyclerView, viewHolder)
+            callback.getSwipeDirs(recyclerView, viewHolder),
         )
 
         val actual = callback.getMovementFlags(recyclerView, viewHolder)

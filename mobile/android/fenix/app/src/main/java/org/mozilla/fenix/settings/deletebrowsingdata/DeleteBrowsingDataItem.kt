@@ -17,7 +17,7 @@ import org.mozilla.fenix.databinding.DeleteBrowsingDataItemBinding
 class DeleteBrowsingDataItem @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,
-    defStyleAttr: Int = 0
+    defStyleAttr: Int = 0,
 ) : ConstraintLayout(context, attrs, defStyleAttr) {
 
     private companion object {
@@ -58,11 +58,11 @@ class DeleteBrowsingDataItem @JvmOverloads constructor(
         context.withStyledAttributes(attrs, R.styleable.DeleteBrowsingDataItem, defStyleAttr, 0) {
             val titleId = getResourceId(
                 R.styleable.DeleteBrowsingDataItem_deleteBrowsingDataItemTitle,
-                R.string.browser_menu_library
+                R.string.browser_menu_library,
             )
             val subtitleId = getResourceId(
                 R.styleable.DeleteBrowsingDataItem_deleteBrowsingDataItemSubtitle,
-                R.string.empty_string
+                R.string.empty_string,
             )
 
             binding.title.text = resources.getString(titleId)

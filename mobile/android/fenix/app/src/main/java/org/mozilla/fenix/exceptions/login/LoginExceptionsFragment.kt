@@ -37,25 +37,25 @@ class LoginExceptionsFragment : Fragment() {
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
-        savedInstanceState: Bundle?
+        savedInstanceState: Bundle?,
     ): View {
         val binding = FragmentExceptionsBinding.inflate(
             inflater,
             container,
-            false
+            false,
         )
         exceptionsStore = StoreProvider.get(this) {
             ExceptionsFragmentStore(
-                ExceptionsFragmentState(items = emptyList())
+                ExceptionsFragmentState(items = emptyList()),
             )
         }
         exceptionsInteractor = DefaultLoginExceptionsInteractor(
             ioScope = viewLifecycleOwner.lifecycleScope + Dispatchers.IO,
-            loginExceptionStorage = requireComponents.core.loginExceptionStorage
+            loginExceptionStorage = requireComponents.core.loginExceptionStorage,
         )
         exceptionsView = LoginExceptionsView(
             binding.exceptionsLayout,
-            exceptionsInteractor
+            exceptionsInteractor,
         )
         subscribeToLoginExceptions()
         return binding.root

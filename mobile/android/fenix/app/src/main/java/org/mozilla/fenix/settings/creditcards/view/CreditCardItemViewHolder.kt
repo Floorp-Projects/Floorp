@@ -20,7 +20,7 @@ import java.util.Locale
  */
 class CreditCardItemViewHolder(
     private val view: View,
-    private val interactor: CreditCardsManagementInteractor
+    private val interactor: CreditCardsManagementInteractor,
 ) : ViewHolder(view) {
 
     fun bind(creditCard: CreditCard) {
@@ -42,7 +42,7 @@ class CreditCardItemViewHolder(
      */
     private fun bindCreditCardExpiryDate(
         creditCard: CreditCard,
-        binding: CreditCardListItemBinding
+        binding: CreditCardListItemBinding,
     ) {
         val dateFormat = SimpleDateFormat(DATE_PATTERN, Locale.getDefault())
 

@@ -58,7 +58,7 @@ class DefaultConnectionDetailsControllerTest {
             navController = { navController },
             sitePermissions = sitePermissions,
             gravity = gravity,
-            getCurrentTab = { tab }
+            getCurrentTab = { tab },
         )
 
         every { fragment.context } returns context
@@ -68,7 +68,7 @@ class DefaultConnectionDetailsControllerTest {
         every {
             trackingProtectionUseCases.containsException.invoke(
                 any(),
-                capture(onComplete)
+                capture(onComplete),
             )
         }.answers { onComplete.captured.invoke(true) }
     }

@@ -118,11 +118,11 @@ class DefaultBrowserToolbarControllerTest {
         store = BrowserStore(
             initialState = BrowserState(
                 tabs = listOf(
-                    createTab("https://www.mozilla.org", id = "1")
+                    createTab("https://www.mozilla.org", id = "1"),
                 ),
-                selectedTabId = "1"
+                selectedTabId = "1",
             ),
-            middleware = listOf(captureMiddleware)
+            middleware = listOf(captureMiddleware),
         )
     }
 
@@ -139,7 +139,7 @@ class DefaultBrowserToolbarControllerTest {
 
         val directions = BrowserFragmentDirections.actionGlobalSearchDialog(
             sessionId = "1",
-            pastedText = pastedText
+            pastedText = pastedText,
         )
 
         verify { navController.navigate(directions, any<NavOptions>()) }
@@ -153,7 +153,7 @@ class DefaultBrowserToolbarControllerTest {
 
         val directions = BrowserFragmentDirections.actionGlobalSearchDialog(
             sessionId = "1",
-            pastedText = pastedText
+            pastedText = pastedText,
         )
 
         verify { navController.navigate(directions, any<NavOptions>()) }
@@ -240,7 +240,7 @@ class DefaultBrowserToolbarControllerTest {
 
         val homeDirections = BrowserFragmentDirections.actionGlobalHome()
         val searchDialogDirections = BrowserFragmentDirections.actionGlobalSearchDialog(
-            sessionId = "1"
+            sessionId = "1",
         )
 
         assertNotNull(Events.searchBarTapped.testGetValue())
@@ -267,7 +267,7 @@ class DefaultBrowserToolbarControllerTest {
 
         val homeDirections = BrowserFragmentDirections.actionGlobalHome()
         val searchDialogDirections = BrowserFragmentDirections.actionGlobalSearchDialog(
-            sessionId = searchResultsTab.id
+            sessionId = searchResultsTab.id,
         )
 
         assertNotNull(Events.searchBarTapped.testGetValue())
@@ -368,7 +368,7 @@ class DefaultBrowserToolbarControllerTest {
 
     private fun createController(
         activity: HomeActivity = this.activity,
-        customTabSessionId: String? = null
+        customTabSessionId: String? = null,
     ) = DefaultBrowserToolbarController(
         store = store,
         tabsUseCases = tabsUseCases,
@@ -382,6 +382,6 @@ class DefaultBrowserToolbarControllerTest {
         onTabCounterClicked = {
             tabCounterClicked = true
         },
-        onCloseTab = {}
+        onCloseTab = {},
     )
 }

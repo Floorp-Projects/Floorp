@@ -35,7 +35,7 @@ class HistoryFragmentStoreTest {
         assertNotSame(initialState, store.state)
         assertEquals(
             store.state.mode,
-            HistoryFragmentState.Mode.Editing(setOf(newHistoryItem))
+            HistoryFragmentState.Mode.Editing(setOf(newHistoryItem)),
         )
     }
 
@@ -66,7 +66,7 @@ class HistoryFragmentStoreTest {
             mode = HistoryFragmentState.Mode.Syncing,
             pendingDeletionItems = emptySet(),
             isEmpty = false,
-            isDeletingItems = false
+            isDeletingItems = false,
         )
         val store = HistoryFragmentStore(initialState)
 
@@ -108,7 +108,7 @@ class HistoryFragmentStoreTest {
         mode = HistoryFragmentState.Mode.Normal,
         pendingDeletionItems = emptySet(),
         isEmpty = false,
-        isDeletingItems = false
+        isDeletingItems = false,
     )
 
     private fun oneItemEditState(): HistoryFragmentState = HistoryFragmentState(
@@ -116,7 +116,7 @@ class HistoryFragmentStoreTest {
         mode = HistoryFragmentState.Mode.Editing(setOf(historyItem)),
         pendingDeletionItems = emptySet(),
         isEmpty = false,
-        isDeletingItems = false
+        isDeletingItems = false,
     )
 
     private fun twoItemEditState(): HistoryFragmentState = HistoryFragmentState(
@@ -124,6 +124,6 @@ class HistoryFragmentStoreTest {
         mode = HistoryFragmentState.Mode.Editing(setOf(historyItem, newHistoryItem)),
         pendingDeletionItems = emptySet(),
         isEmpty = false,
-        isDeletingItems = false
+        isDeletingItems = false,
     )
 }

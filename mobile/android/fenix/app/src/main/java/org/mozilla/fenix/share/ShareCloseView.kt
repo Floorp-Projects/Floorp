@@ -29,7 +29,7 @@ class ShareCloseView(
         val binding = ShareCloseBinding.inflate(
             LayoutInflater.from(containerView.context),
             containerView,
-            true
+            true,
         )
 
         binding.closeButton.setOnClickListener { interactor.onShareClosed() }

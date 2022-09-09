@@ -51,7 +51,7 @@ class MessageCardViewHolder(
         MessageCard(
             message = message,
             onClick = { interactor.onMessageClicked(message) },
-            onCloseButtonClick = { interactor.onMessageClosedClicked(message) }
+            onCloseButtonClick = { interactor.onMessageClosedClicked(message) },
         )
     }
 }

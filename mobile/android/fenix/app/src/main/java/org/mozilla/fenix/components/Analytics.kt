@@ -40,7 +40,7 @@ import org.mozilla.geckoview.BuildConfig.MOZ_UPDATE_CHANNEL
  * Component group for all functionality related to analytics e.g. crash reporting and telemetry.
  */
 class Analytics(
-    private val context: Context
+    private val context: Context,
 ) {
     val crashReporter: CrashReporter by lazyMonitored {
         val services = mutableListOf<CrashReporterService>()
@@ -67,7 +67,7 @@ class Analytics(
                 environment = BuildConfig.BUILD_TYPE,
                 sendEventForNativeCrashes = false, // Do not send native crashes to Sentry
                 sendCaughtExceptions = shouldSendCaughtExceptions,
-                sentryProjectUrl = getSentryProjectUrl()
+                sentryProjectUrl = getSentryProjectUrl(),
             )
 
             services.add(sentryService)
@@ -76,9 +76,13 @@ class Analytics(
         // The name "Fenix" here matches the product name on Socorro and is unrelated to the actual app name:
         // https://bugzilla.mozilla.org/show_bug.cgi?id=1523284
         val socorroService = MozillaSocorroService(
-            context, appName = "Fenix",
-            version = MOZ_APP_VERSION, buildId = MOZ_APP_BUILDID, vendor = MOZ_APP_VENDOR,
-            releaseChannel = MOZ_UPDATE_CHANNEL, distributionId = distributionId
+            context,
+            appName = "Fenix",
+            version = MOZ_APP_VERSION,
+            buildId = MOZ_APP_BUILDID,
+            vendor = MOZ_APP_VENDOR,
+            releaseChannel = MOZ_UPDATE_CHANNEL,
+            distributionId = distributionId,
         )
         services.add(socorroService)
 
@@ -94,7 +98,7 @@ class Analytics(
             context,
             0,
             intent,
-            crashReportingIntentFlags
+            crashReportingIntentFlags,
         )
 
         CrashReporter(
@@ -104,10 +108,10 @@ class Analytics(
             shouldPrompt = CrashReporter.Prompt.ALWAYS,
             promptConfiguration = CrashReporter.PromptConfiguration(
                 appName = context.getString(R.string.app_name),
-                organizationName = "Mozilla"
+                organizationName = "Mozilla",
             ),
             enabled = true,
-            nonFatalCrashIntent = pendingIntent
+            nonFatalCrashIntent = pendingIntent,
         )
     }
 
@@ -115,11 +119,11 @@ class Analytics(
         MetricController.create(
             listOf(
                 GleanMetricsService(context),
-                AdjustMetricsService(context as Application)
+                AdjustMetricsService(context as Application),
             ),
             isDataTelemetryEnabled = { context.settings().isTelemetryEnabled },
             isMarketingDataTelemetryEnabled = { context.settings().isMarketingTelemetryEnabled },
-            context.settings()
+            context.settings(),
         )
     }
 

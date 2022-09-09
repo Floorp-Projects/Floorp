@@ -12,7 +12,7 @@ import mozilla.components.browser.state.state.recover.TabState
 import org.mozilla.fenix.selection.SelectionHolder
 
 class RecentlyClosedAdapter(
-    private val interactor: RecentlyClosedFragmentInteractor
+    private val interactor: RecentlyClosedFragmentInteractor,
 ) : ListAdapter<TabState, RecentlyClosedItemViewHolder>(DiffCallback),
     SelectionHolder<TabState> {
 
@@ -20,7 +20,7 @@ class RecentlyClosedAdapter(
 
     override fun onCreateViewHolder(
         parent: ViewGroup,
-        viewType: Int
+        viewType: Int,
     ): RecentlyClosedItemViewHolder {
         val view = LayoutInflater.from(parent.context)
             .inflate(RecentlyClosedItemViewHolder.LAYOUT_ID, parent, false)

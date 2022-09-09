@@ -67,17 +67,17 @@ class UtilsKtTest {
                 BookmarkNodeWithDepth(0, rootWithChildren, null),
                 BookmarkNodeWithDepth(1, folder, "root"),
                 BookmarkNodeWithDepth(1, folder2, "root"),
-                BookmarkNodeWithDepth(2, folder3, "folder2")
+                BookmarkNodeWithDepth(2, folder3, "folder2"),
             ),
-            rootWithChildren.flatNodeList(null)
+            rootWithChildren.flatNodeList(null),
         )
 
         assertEquals(
             listOf(
                 BookmarkNodeWithDepth(0, rootWithChildren, null),
-                BookmarkNodeWithDepth(1, folder, "root")
+                BookmarkNodeWithDepth(1, folder, "root"),
             ),
-            rootWithChildren.flatNodeList(excludeSubtreeRoot = "folder2")
+            rootWithChildren.flatNodeList(excludeSubtreeRoot = "folder2"),
         )
     }
 }
@@ -90,7 +90,7 @@ internal fun testBookmarkItem(parentGuid: String, url: String, title: String = "
     title,
     url,
     0,
-    null
+    null,
 )
 
 internal fun testFolder(guid: String, parentGuid: String?, children: List<BookmarkNode>?, title: String = "Folder: $guid") = BookmarkNode(
@@ -101,9 +101,16 @@ internal fun testFolder(guid: String, parentGuid: String?, children: List<Bookma
     title,
     null,
     0,
-    children
+    children,
 )
 
 internal fun testSeparator(parentGuid: String) = BookmarkNode(
-    BookmarkNodeType.SEPARATOR, "guid#${Math.random() * 1000}", parentGuid, null, null, null, 0, null
+    BookmarkNodeType.SEPARATOR,
+    "guid#${Math.random() * 1000}",
+    parentGuid,
+    null,
+    null,
+    null,
+    0,
+    null,
 )

@@ -41,12 +41,12 @@ class CFRPopupFullscreenLayoutTest {
         assertNotNull(popupView.findViewTreeLifecycleOwner())
         assertEquals(
             anchor.findViewTreeLifecycleOwner(),
-            popupView.findViewTreeLifecycleOwner()
+            popupView.findViewTreeLifecycleOwner(),
         )
         assertNotNull(popupView.findViewTreeSavedStateRegistryOwner())
         assertEquals(
             assertNotNull(anchor.findViewTreeSavedStateRegistryOwner()),
-            assertNotNull(popupView.findViewTreeSavedStateRegistryOwner())
+            assertNotNull(popupView.findViewTreeSavedStateRegistryOwner()),
         )
     }
 
@@ -90,7 +90,7 @@ class CFRPopupFullscreenLayoutTest {
         assertEquals(PixelFormat.TRANSLUCENT, layoutParamsCaptor.captured.format)
         assertEquals(
             LayoutParams.FLAG_LAYOUT_IN_SCREEN or LayoutParams.FLAG_HARDWARE_ACCELERATED,
-            layoutParamsCaptor.captured.flags
+            layoutParamsCaptor.captured.flags,
         )
     }
 
@@ -108,7 +108,7 @@ class CFRPopupFullscreenLayoutTest {
         assertEquals(PixelFormat.TRANSLUCENT, result.format)
         assertEquals(
             LayoutParams.FLAG_LAYOUT_IN_SCREEN or LayoutParams.FLAG_HARDWARE_ACCELERATED,
-            result.flags
+            result.flags,
         )
     }
 }

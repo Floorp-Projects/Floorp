@@ -248,7 +248,7 @@ class SessionControlInteractor(
     private val recentSyncedTabController: RecentSyncedTabController,
     private val recentBookmarksController: RecentBookmarksController,
     private val recentVisitsController: RecentVisitsController,
-    private val pocketStoriesController: PocketStoriesController
+    private val pocketStoriesController: PocketStoriesController,
 ) : CollectionInteractor,
     OnboardingInteractor,
     TopSiteInteractor,
@@ -400,7 +400,7 @@ class SessionControlInteractor(
 
     override fun onRecentHistoryGroupClicked(recentHistoryGroup: RecentHistoryGroup) {
         recentVisitsController.handleRecentHistoryGroupClicked(
-            recentHistoryGroup
+            recentHistoryGroup,
         )
     }
 

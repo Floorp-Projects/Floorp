@@ -50,7 +50,7 @@ class TrackingProtectionViewTest {
             isTrackingProtectionEnabled = true,
             listTrackers = listOf(),
             mode = TrackingProtectionState.Mode.Normal,
-            lastAccessedCategory = ""
+            lastAccessedCategory = "",
         )
 
         every { settings.shouldUseTrackingProtection } returns true
@@ -70,7 +70,7 @@ class TrackingProtectionViewTest {
             isTrackingProtectionEnabled = true,
             listTrackers = listOf(),
             mode = TrackingProtectionState.Mode.Normal,
-            lastAccessedCategory = ""
+            lastAccessedCategory = "",
         )
 
         every { settings.shouldUseTrackingProtection } returns false

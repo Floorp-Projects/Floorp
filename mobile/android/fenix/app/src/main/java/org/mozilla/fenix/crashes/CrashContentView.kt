@@ -21,12 +21,14 @@ import org.mozilla.fenix.ext.increaseTapArea
 class CrashContentView @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,
-    defStyleAttr: Int = 0
+    defStyleAttr: Int = 0,
 ) : ConstraintLayout(context, attrs, defStyleAttr) {
     @VisibleForTesting
     internal lateinit var binding: ViewCrashReporterBinding
+
     @VisibleForTesting val isBindingInitialized
         get() = ::binding.isInitialized
+
     @VisibleForTesting
     internal lateinit var controller: CrashReporterController
 

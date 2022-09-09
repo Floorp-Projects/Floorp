@@ -40,7 +40,7 @@ class DeleteBrowsingDataOnQuitFragment : PreferenceFragmentCompat() {
 
         // Delete Browsing Data on Quit Switch
         val deleteOnQuitPref = requirePreference<SwitchPreference>(
-            R.string.pref_key_delete_browsing_data_on_quit
+            R.string.pref_key_delete_browsing_data_on_quit,
         )
         deleteOnQuitPref.apply {
             onPreferenceChangeListener = object : SharedPreferenceUpdater() {

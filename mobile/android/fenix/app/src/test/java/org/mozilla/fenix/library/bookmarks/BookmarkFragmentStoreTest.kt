@@ -56,7 +56,7 @@ class BookmarkFragmentStoreTest {
     fun `changing to a node that is in the backstack removes backstack items after that node`() = runTest {
         val initialState = BookmarkFragmentState(
             null,
-            guidBackstack = listOf(tree.guid, subfolder.guid, item.guid)
+            guidBackstack = listOf(tree.guid, subfolder.guid, item.guid),
         )
         val store = BookmarkFragmentStore(initialState)
 
@@ -225,10 +225,17 @@ class BookmarkFragmentStoreTest {
         "Firefox",
         "https://www.mozilla.org/en-US/firefox/",
         0,
-        null
+        null,
     )
     private val tree = BookmarkNode(
-        BookmarkNodeType.FOLDER, "123", null, 0u, "Mobile", null, 0, listOf(item, separator, childItem, subfolder)
+        BookmarkNodeType.FOLDER,
+        "123",
+        null,
+        0u,
+        "Mobile",
+        null,
+        0,
+        listOf(item, separator, childItem, subfolder),
     )
     private val newTree = BookmarkNode(
         BookmarkNodeType.FOLDER,
@@ -238,7 +245,7 @@ class BookmarkFragmentStoreTest {
         "Mobile",
         null,
         0,
-        listOf(separator, subfolder)
+        listOf(separator, subfolder),
     )
     private val rootFolder = BookmarkNode(
         BookmarkNodeType.FOLDER,
@@ -248,6 +255,6 @@ class BookmarkFragmentStoreTest {
         "Desktop Bookmarks",
         null,
         0,
-        listOf(subfolder)
+        listOf(subfolder),
     )
 }

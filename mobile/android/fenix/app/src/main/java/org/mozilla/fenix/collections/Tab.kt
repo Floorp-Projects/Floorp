@@ -12,5 +12,5 @@ data class Tab(
     val hostname: String,
     val title: String,
     val selected: Boolean? = null,
-    val icon: Bitmap? = null
+    val icon: Bitmap? = null,
 )

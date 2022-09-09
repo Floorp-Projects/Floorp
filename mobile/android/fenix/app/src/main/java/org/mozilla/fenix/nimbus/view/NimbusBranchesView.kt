@@ -16,7 +16,7 @@ import org.mozilla.fenix.nimbus.controller.NimbusBranchesController
  */
 class NimbusBranchesView(
     private val containerView: ViewGroup,
-    val controller: NimbusBranchesController
+    val controller: NimbusBranchesController,
 ) {
 
     private val nimbusAdapter = NimbusBranchAdapter(controller)

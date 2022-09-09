@@ -79,13 +79,13 @@ class HistorySearchDialogFragment : AppCompatDialogFragment(), UserInteractionHa
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
-        savedInstanceState: Bundle?
+        savedInstanceState: Bundle?,
     ): View {
         _binding = FragmentHistorySearchDialogBinding.inflate(inflater, container, false)
         val activity = requireActivity() as HomeActivity
 
         store = HistorySearchFragmentStore(
-            createInitialHistorySearchFragmentState()
+            createInitialHistorySearchFragmentState(),
         )
 
         interactor = HistorySearchDialogInteractor(
@@ -97,7 +97,7 @@ class HistorySearchDialogFragment : AppCompatDialogFragment(), UserInteractionHa
                     toolbarView.view.hideKeyboard()
                     toolbarView.view.clearFocus()
                 },
-            )
+            ),
         )
 
         toolbarView = ToolbarView(
@@ -137,10 +137,10 @@ class HistorySearchDialogFragment : AppCompatDialogFragment(), UserInteractionHa
                 (activity as HomeActivity)
                     .openToBrowserAndLoad(
                         searchTermOrURL = SupportUtils.getGenericSumoURLForTopic(
-                            SupportUtils.SumoTopic.SEARCH_SUGGESTION
+                            SupportUtils.SumoTopic.SEARCH_SUGGESTION,
                         ),
                         newTab = true,
-                        from = BrowserDirection.FromHistorySearchDialog
+                        from = BrowserDirection.FromHistorySearchDialog,
                     )
             }
 
@@ -288,8 +288,8 @@ class HistorySearchDialogFragment : AppCompatDialogFragment(), UserInteractionHa
                 imageDrawable = AppCompatResources.getDrawable(requireContext(), R.drawable.ic_microphone)!!,
                 contentDescription = requireContext().getString(R.string.voice_search_content_description),
                 visible = { true },
-                listener = ::launchVoiceSearch
-            )
+                listener = ::launchVoiceSearch,
+            ),
         )
 
         voiceSearchButtonAlreadyAdded = true

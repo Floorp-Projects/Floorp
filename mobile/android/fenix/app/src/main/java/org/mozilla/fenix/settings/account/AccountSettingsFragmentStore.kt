@@ -12,10 +12,10 @@ import mozilla.components.lib.state.Store
  * The [Store] for holding the [AccountSettingsFragmentState] and applying [AccountAction]s.
  */
 class AccountSettingsFragmentStore(
-    initialState: AccountSettingsFragmentState
+    initialState: AccountSettingsFragmentState,
 ) : Store<AccountSettingsFragmentState, AccountSettingsFragmentAction>(
     initialState,
-    ::accountStateReducer
+    ::accountStateReducer,
 )
 
 sealed class LastSyncTime {
@@ -29,7 +29,7 @@ sealed class LastSyncTime {
  */
 data class AccountSettingsFragmentState(
     val lastSyncedDate: LastSyncTime = LastSyncTime.Never,
-    val deviceName: String = ""
+    val deviceName: String = "",
 ) : State
 
 /**
@@ -46,7 +46,7 @@ sealed class AccountSettingsFragmentAction : Action {
  */
 private fun accountStateReducer(
     state: AccountSettingsFragmentState,
-    action: AccountSettingsFragmentAction
+    action: AccountSettingsFragmentAction,
 ): AccountSettingsFragmentState {
     return when (action) {
         is AccountSettingsFragmentAction.SyncFailed -> state.copy(lastSyncedDate = LastSyncTime.Failed(action.time))

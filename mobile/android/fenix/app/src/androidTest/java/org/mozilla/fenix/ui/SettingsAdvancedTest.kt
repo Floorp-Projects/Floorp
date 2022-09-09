@@ -54,8 +54,8 @@ class SettingsAdvancedTest {
         featureSettingsHelper.resetAllFeatureFlags()
     }
 
-    @Test
     // Walks through settings menu and sub-menus to ensure all items are present
+    @Test
     fun settingsAboutItemsTest() {
         // ADVANCED
         homeScreen {
@@ -71,9 +71,9 @@ class SettingsAdvancedTest {
         }
     }
 
+    // Assumes Play Store is installed and enabled
     @SmokeTest
     @Test
-    // Assumes Play Store is installed and enabled
     fun openLinkInAppTest() {
         val defaultWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 3)
         val playStoreUrl = "play.google.com/store/apps/details?id=org.mozilla.fenix"

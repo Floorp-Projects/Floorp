@@ -21,7 +21,7 @@ class DownloadItemKtTest {
             filePath = "",
             size = "",
             contentType = "image/png",
-            status = DownloadState.Status.COMPLETED
+            status = DownloadState.Status.COMPLETED,
         )
 
         assertEquals(R.drawable.ic_file_type_image, downloadItem.getIcon())

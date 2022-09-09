@@ -61,8 +61,8 @@ class DefaultRecentSyncedTabController(
         navController.navigate(
             HomeFragmentDirections.actionGlobalTabsTrayFragment(
                 page = Page.SyncedTabs,
-                accessPoint = accessPoint
-            )
+                accessPoint = accessPoint,
+            ),
         )
     }
 

@@ -45,13 +45,13 @@ class CFRPopupShape(
     private val indicatorDirection: CFRPopup.IndicatorDirection,
     private val indicatorArrowStartOffset: Dp,
     private val indicatorArrowHeight: Dp,
-    private val cornerRadius: Dp
+    private val cornerRadius: Dp,
 ) : Shape {
     @Suppress("LongMethod")
     override fun createOutline(
         size: Size,
         layoutDirection: LayoutDirection,
-        density: Density
+        density: Density,
     ): Outline {
         val indicatorArrowStartOffsetPx = indicatorArrowStartOffset.value * density.density
         val indicatorArrowHeightPx = indicatorArrowHeight.value * density.density
@@ -69,21 +69,27 @@ class CFRPopupShape(
 
                         lineTo(0f, size.height - cornerRadiusPx)
                         quadraticBezierTo(
-                            0f, size.height,
-                            cornerRadiusPx, size.height
+                            0f,
+                            size.height,
+                            cornerRadiusPx,
+                            size.height,
                         )
 
                         lineTo(size.width - cornerRadiusPx, size.height)
                         quadraticBezierTo(
-                            size.width, size.height,
-                            size.width, size.height - cornerRadiusPx
+                            size.width,
+                            size.height,
+                            size.width,
+                            size.height - cornerRadiusPx,
                         )
 
                         if (layoutDirection == LayoutDirection.Ltr) {
                             lineTo(size.width, cornerRadiusPx + indicatorArrowHeightPx)
                             quadraticBezierTo(
-                                size.width, indicatorArrowHeightPx,
-                                size.width - cornerRadiusPx, indicatorArrowHeightPx
+                                size.width,
+                                indicatorArrowHeightPx,
+                                size.width - cornerRadiusPx,
+                                indicatorArrowHeightPx,
                             )
 
                             lineTo(indicatorArrowStartOffsetPx + indicatorArrowBasePx, indicatorArrowHeightPx)
@@ -92,14 +98,18 @@ class CFRPopupShape(
 
                             lineTo(indicatorCornerRadiusPx, indicatorArrowHeightPx)
                             quadraticBezierTo(
-                                0f, indicatorArrowHeightPx,
-                                0f, indicatorArrowHeightPx + indicatorCornerRadiusPx
+                                0f,
+                                indicatorArrowHeightPx,
+                                0f,
+                                indicatorArrowHeightPx + indicatorCornerRadiusPx,
                             )
                         } else {
                             lineTo(size.width, indicatorCornerRadiusPx + indicatorArrowHeightPx)
                             quadraticBezierTo(
-                                size.width, indicatorArrowHeightPx,
-                                size.width - indicatorCornerRadiusPx, indicatorArrowHeightPx
+                                size.width,
+                                indicatorArrowHeightPx,
+                                size.width - indicatorCornerRadiusPx,
+                                indicatorArrowHeightPx,
                             )
 
                             val indicatorEnd = size.width - indicatorArrowStartOffsetPx
@@ -109,13 +119,15 @@ class CFRPopupShape(
 
                             lineTo(cornerRadiusPx, indicatorArrowHeightPx)
                             quadraticBezierTo(
-                                0f, indicatorArrowHeightPx,
-                                0f, indicatorArrowHeightPx + cornerRadiusPx
+                                0f,
+                                indicatorArrowHeightPx,
+                                0f,
+                                indicatorArrowHeightPx + cornerRadiusPx,
                             )
                         }
 
                         close()
-                    }
+                    },
                 )
             }
             CFRPopup.IndicatorDirection.DOWN -> {
@@ -128,8 +140,10 @@ class CFRPopupShape(
                         if (layoutDirection == LayoutDirection.Ltr) {
                             lineTo(0f, messageBodyHeightPx - indicatorCornerRadiusPx)
                             quadraticBezierTo(
-                                0f, size.height - indicatorArrowHeightPx,
-                                indicatorCornerRadiusPx, size.height - indicatorArrowHeightPx
+                                0f,
+                                size.height - indicatorArrowHeightPx,
+                                indicatorCornerRadiusPx,
+                                size.height - indicatorArrowHeightPx,
                             )
 
                             lineTo(indicatorArrowStartOffsetPx, messageBodyHeightPx)
@@ -138,14 +152,18 @@ class CFRPopupShape(
 
                             lineTo(size.width - cornerRadiusPx, messageBodyHeightPx)
                             quadraticBezierTo(
-                                size.width, messageBodyHeightPx,
-                                size.width, messageBodyHeightPx - cornerRadiusPx
+                                size.width,
+                                messageBodyHeightPx,
+                                size.width,
+                                messageBodyHeightPx - cornerRadiusPx,
                             )
                         } else {
                             lineTo(0f, messageBodyHeightPx - cornerRadiusPx)
                             quadraticBezierTo(
-                                0f, messageBodyHeightPx,
-                                cornerRadiusPx, messageBodyHeightPx
+                                0f,
+                                messageBodyHeightPx,
+                                cornerRadiusPx,
+                                messageBodyHeightPx,
                             )
 
                             val indicatorStartPx = size.width - indicatorArrowStartOffsetPx - indicatorArrowBasePx
@@ -155,25 +173,31 @@ class CFRPopupShape(
 
                             lineTo(size.width - indicatorCornerRadiusPx, messageBodyHeightPx)
                             quadraticBezierTo(
-                                size.width, messageBodyHeightPx,
-                                size.width, messageBodyHeightPx - indicatorCornerRadiusPx
+                                size.width,
+                                messageBodyHeightPx,
+                                size.width,
+                                messageBodyHeightPx - indicatorCornerRadiusPx,
                             )
                         }
 
                         lineTo(size.width, cornerRadiusPx)
                         quadraticBezierTo(
-                            size.width, 0f,
-                            size.width - cornerRadiusPx, 0f
+                            size.width,
+                            0f,
+                            size.width - cornerRadiusPx,
+                            0f,
                         )
 
                         lineTo(cornerRadiusPx, 0f)
                         quadraticBezierTo(
-                            0f, 0f,
-                            0f, cornerRadiusPx
+                            0f,
+                            0f,
+                            0f,
+                            cornerRadiusPx,
                         )
 
                         close()
-                    }
+                    },
                 )
             }
         }
@@ -206,17 +230,17 @@ private fun CFRPopupBelowShapePreview() {
                     brush = Brush.linearGradient(
                         colors = listOf(
                             FirefoxTheme.colors.gradientStart,
-                            FirefoxTheme.colors.gradientEnd
+                            FirefoxTheme.colors.gradientEnd,
                         ),
                         end = Offset(0f, Float.POSITIVE_INFINITY),
-                        start = Offset(Float.POSITIVE_INFINITY, 0f)
-                    )
+                        start = Offset(Float.POSITIVE_INFINITY, 0f),
+                    ),
                 ),
-            contentAlignment = Alignment.Center
+            contentAlignment = Alignment.Center,
         ) {
             Text(
                 text = "This is just a test",
-                color = FirefoxTheme.colors.textOnColorPrimary
+                color = FirefoxTheme.colors.textOnColorPrimary,
             )
         }
     }
@@ -238,17 +262,17 @@ private fun CFRPopupAboveShapePreview() {
                     brush = Brush.linearGradient(
                         colors = listOf(
                             FirefoxTheme.colors.gradientStart,
-                            FirefoxTheme.colors.gradientEnd
+                            FirefoxTheme.colors.gradientEnd,
                         ),
                         end = Offset(0f, Float.POSITIVE_INFINITY),
-                        start = Offset(Float.POSITIVE_INFINITY, 0f)
-                    )
+                        start = Offset(Float.POSITIVE_INFINITY, 0f),
+                    ),
                 ),
-            contentAlignment = Alignment.Center
+            contentAlignment = Alignment.Center,
         ) {
             Text(
                 text = "This is just a test",
-                color = FirefoxTheme.colors.textOnColorPrimary
+                color = FirefoxTheme.colors.textOnColorPrimary,
             )
         }
     }

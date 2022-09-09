@@ -79,7 +79,7 @@ private val EXPECTED_NUMBER_OF_INFLATION =
 private val failureMsgStrictMode = getErrorMessage("StrictMode suppression")
 private val failureMsgRunBlocking = getErrorMessage("runBlockingIncrement")
 private val failureMsgRecyclerViewConstraintLayoutChildren = getErrorMessage(
-    "ConstraintLayout being a common direct descendant of a RecyclerView"
+    "ConstraintLayout being a common direct descendant of a RecyclerView",
 )
 private val failureMsgNumberOfInflation = getErrorMessage("start up inflation")
 

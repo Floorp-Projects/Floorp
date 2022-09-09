@@ -16,30 +16,30 @@ class TopSitesAdapterTest {
             id = 1L,
             title = "Title1",
             url = "https://mozilla.org",
-            null
+            null,
         )
         val topSite2 = TopSite.Default(
             id = 1L,
             title = "Title2",
             url = "https://mozilla.org",
-            null
+            null,
         )
 
         assertEquals(
             TopSitesAdapter.TopSitesDiffCallback.getChangePayload(topSite, topSite2),
-            topSite.copy(title = "Title2")
+            topSite.copy(title = "Title2"),
         )
 
         val topSite3 = TopSite.Default(
             id = 2L,
             title = "Title2",
             url = "https://firefox.org",
-            null
+            null,
         )
 
         assertEquals(
             TopSitesAdapter.TopSitesDiffCallback.getChangePayload(topSite, topSite3),
-            null
+            null,
         )
     }
 }

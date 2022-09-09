@@ -41,7 +41,7 @@ class HistorySearchDialogController(
             searchTermOrURL = url,
             newTab = true,
             from = BrowserDirection.FromHistorySearchDialog,
-            flags = flags
+            flags = flags,
         )
     }
 }

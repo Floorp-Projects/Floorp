@@ -43,9 +43,9 @@ class SettingsSyncTest {
         mockWebServer.shutdown()
     }
 
+    // Walks through settings sync menu and sub-menus to ensure all items are present
     @Ignore("This is a stub test, ignore for now")
     @Test
-    // Walks through settings sync menu and sub-menus to ensure all items are present
     fun settingsSyncItemsTest() {
         // SYNC
 

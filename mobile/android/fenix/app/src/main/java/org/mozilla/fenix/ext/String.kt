@@ -32,10 +32,10 @@ const val MAX_VALID_PORT = 65_535
  * This method is complex because URLs have a lot of edge cases. Be sure to thoroughly unit
  * test any changes you make to it.
  */
-@Suppress("UNUSED_PARAMETER", "ReturnCount", "ComplexCondition")
 // Unused Parameter: We may resume stripping eTLD, depending on conversations between security and UX
 // Return count: This is a complex method, but it would not be more understandable if broken up
 // ComplexCondition: Breaking out the complex condition would make this logic harder to follow
+@Suppress("UNUSED_PARAMETER", "ReturnCount", "ComplexCondition")
 fun String.toShortUrl(publicSuffixList: PublicSuffixList): String {
     val inputString = this
     val uri = inputString.toUri()

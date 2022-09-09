@@ -69,5 +69,5 @@ data class AppState(
     val pocketSponsoredStories: List<PocketSponsoredStory> = emptyList(),
     val messaging: MessagingState = MessagingState(),
     val pendingDeletionHistoryItems: Set<PendingDeletionHistory> = emptySet(),
-    val wallpaperState: WallpaperState = WallpaperState.default
+    val wallpaperState: WallpaperState = WallpaperState.default,
 ) : State

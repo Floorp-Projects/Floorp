@@ -55,12 +55,12 @@ class TrackingProtectionPanelDialogFragment : AppCompatDialogFragment(), UserInt
     private fun inflateRootView(container: ViewGroup? = null): View {
         val contextThemeWrapper = ContextThemeWrapper(
             activity,
-            (activity as HomeActivity).themeManager.currentThemeResource
+            (activity as HomeActivity).themeManager.currentThemeResource,
         )
         return LayoutInflater.from(contextThemeWrapper).inflate(
             R.layout.fragment_tracking_protection,
             container,
-            false
+            false,
         )
     }
 
@@ -78,7 +78,7 @@ class TrackingProtectionPanelDialogFragment : AppCompatDialogFragment(), UserInt
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
-        savedInstanceState: Bundle?
+        savedInstanceState: Bundle?,
     ): View {
         val store = requireComponents.core.store
         val view = inflateRootView(container)
@@ -92,8 +92,8 @@ class TrackingProtectionPanelDialogFragment : AppCompatDialogFragment(), UserInt
                     isTrackingProtectionEnabled = args.trackingProtectionEnabled,
                     listTrackers = listOf(),
                     mode = TrackingProtectionState.Mode.Normal,
-                    lastAccessedCategory = ""
-                )
+                    lastAccessedCategory = "",
+                ),
             )
         }
         trackingProtectionInteractor = TrackingProtectionPanelInteractor(
@@ -105,7 +105,7 @@ class TrackingProtectionPanelDialogFragment : AppCompatDialogFragment(), UserInt
             openLearnMoreLink = ::handleLearnMoreClicked,
             sitePermissions = args.sitePermissions,
             gravity = args.gravity,
-            getCurrentTab = ::getCurrentTab
+            getCurrentTab = ::getCurrentTab,
         )
         val binding = FragmentTrackingProtectionBinding.bind(view)
         trackingProtectionView =
@@ -123,7 +123,7 @@ class TrackingProtectionPanelDialogFragment : AppCompatDialogFragment(), UserInt
             },
             onError = {
                 Logger.error("TrackingProtectionUseCases - fetchTrackingLogs onError", it)
-            }
+            },
         )
     }
 
@@ -146,17 +146,17 @@ class TrackingProtectionPanelDialogFragment : AppCompatDialogFragment(), UserInt
         TrackingProtection.panelSettings.record(NoExtras())
         nav(
             R.id.trackingProtectionPanelDialogFragment,
-            TrackingProtectionPanelDialogFragmentDirections.actionGlobalTrackingProtectionFragment()
+            TrackingProtectionPanelDialogFragmentDirections.actionGlobalTrackingProtectionFragment(),
         )
     }
 
     private fun handleLearnMoreClicked() {
         (activity as HomeActivity).openToBrowserAndLoad(
             searchTermOrURL = SupportUtils.getGenericSumoURLForTopic(
-                SupportUtils.SumoTopic.SMARTBLOCK
+                SupportUtils.SumoTopic.SMARTBLOCK,
             ),
             newTab = true,
-            from = BrowserDirection.FromTrackingProtectionDialog
+            from = BrowserDirection.FromTrackingProtectionDialog,
         )
     }
 
@@ -188,8 +188,8 @@ class TrackingProtectionPanelDialogFragment : AppCompatDialogFragment(), UserInt
             rootView,
             LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.MATCH_PARENT
-            )
+                LinearLayout.LayoutParams.MATCH_PARENT,
+            ),
         )
 
         window?.apply {
@@ -231,7 +231,7 @@ class TrackingProtectionPanelDialogFragment : AppCompatDialogFragment(), UserInt
             }.ifAnyChanged { tab ->
                 arrayOf(
                     tab.trackingProtection.blockedTrackers,
-                    tab.trackingProtection.loadedTrackers
+                    tab.trackingProtection.loadedTrackers,
                 )
             }.collect {
                 updateTrackers(it)

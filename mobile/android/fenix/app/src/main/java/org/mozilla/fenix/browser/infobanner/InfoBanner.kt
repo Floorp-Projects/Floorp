@@ -35,7 +35,7 @@ open class InfoBanner(
     @VisibleForTesting
     internal val dismissAction: (() -> Unit)? = null,
     @VisibleForTesting
-    internal val actionToPerform: (() -> Unit)? = null
+    internal val actionToPerform: (() -> Unit)? = null,
 ) {
     @SuppressLint("InflateParams")
     @VisibleForTesting

@@ -110,7 +110,7 @@ internal fun normalModeAdapterItems(
 private fun showCollections(
     collections: List<TabCollection>,
     expandedCollections: Set<Long>,
-    items: MutableList<AdapterItem>
+    items: MutableList<AdapterItem>,
 ) {
     // If the collection is expanded, we want to add all of its tabs beneath it in the adapter
     items.add(AdapterItem.CollectionHeader)
@@ -133,18 +133,18 @@ private fun onboardingAdapterItems(onboardingState: OnboardingState): List<Adapt
         listOf(
             AdapterItem.OnboardingThemePicker,
             AdapterItem.OnboardingToolbarPositionPicker,
-        )
+        ),
     )
     // Customize FxA items based on where we are with the account state:
     items.addAll(
         when (onboardingState) {
             OnboardingState.SignedOutNoAutoSignIn -> {
                 listOf(
-                    AdapterItem.OnboardingManualSignIn
+                    AdapterItem.OnboardingManualSignIn,
                 )
             }
             OnboardingState.SignedIn -> listOf()
-        }
+        },
     )
 
     items.addAll(
@@ -152,8 +152,8 @@ private fun onboardingAdapterItems(onboardingState: OnboardingState): List<Adapt
             AdapterItem.OnboardingTrackingProtection,
             AdapterItem.OnboardingPrivacyNotice,
             AdapterItem.OnboardingFinish,
-            AdapterItem.BottomSpacer
-        )
+            AdapterItem.BottomSpacer,
+        ),
     )
 
     return items
@@ -172,7 +172,7 @@ private fun AppState.toAdapterList(settings: Settings): List<AdapterItem> = when
         shouldShowRecentSyncedTabs(settings),
         recentHistory,
         pocketStories,
-        firstFrameDrawn
+        firstFrameDrawn,
     )
     is Mode.Private -> privateModeAdapterItems()
     is Mode.Onboarding -> onboardingAdapterItems(mode.state)
@@ -202,7 +202,7 @@ class SessionControlView(
     private val sessionControlAdapter = SessionControlAdapter(
         interactor,
         viewLifecycleOwner,
-        containerView.context.components
+        containerView.context.components,
     )
 
     init {
@@ -229,7 +229,7 @@ class SessionControlView(
                     // layout and post an update for when it's best for non-visible parts of the
                     // home screen to render itself.
                     containerView.context.components.appStore.dispatch(
-                        AppAction.UpdateFirstFrameDrawn(true)
+                        AppAction.UpdateFirstFrameDrawn(true),
                     )
                 }
             }

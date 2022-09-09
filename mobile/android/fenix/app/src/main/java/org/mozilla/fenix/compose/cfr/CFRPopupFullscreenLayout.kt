@@ -54,7 +54,7 @@ private value class Pixels(val value: Int)
  */
 private data class PopupHorizontalBounds(
     val startCoord: Pixels,
-    val endCoord: Pixels
+    val endCoord: Pixels,
 )
 
 /**
@@ -75,7 +75,7 @@ internal class CFRPopupFullscreenLayout(
     private val anchor: View,
     private val properties: CFRPopupProperties,
     private val onDismiss: (Boolean) -> Unit,
-    private val action: @Composable (() -> Unit) = {}
+    private val action: @Composable (() -> Unit) = {},
 ) : AbstractComposeView(anchor.context), ViewRootForInspector {
     private val windowManager = anchor.context.getSystemService(Context.WINDOW_SERVICE) as WindowManager
 
@@ -128,7 +128,7 @@ internal class CFRPopupFullscreenLayout(
         }
 
         val indicatorArrowHeight = Pixels(
-            CFRPopup.DEFAULT_INDICATOR_HEIGHT.dp.toPx()
+            CFRPopup.DEFAULT_INDICATOR_HEIGHT.dp.toPx(),
         )
 
         val popupBounds = computePopupHorizontalBounds(
@@ -139,8 +139,8 @@ internal class CFRPopupFullscreenLayout(
             anchorMiddleXCoord = Pixels(anchorLocation.first() + anchor.width / 2),
             popupStartCoord = popupBounds.startCoord,
             arrowIndicatorWidth = Pixels(
-                CFRPopupShape.getIndicatorBaseWidthForHeight(indicatorArrowHeight.value)
-            )
+                CFRPopupShape.getIndicatorBaseWidthForHeight(indicatorArrowHeight.value),
+            ),
         )
 
         FirefoxTheme {
@@ -158,7 +158,7 @@ internal class CFRPopupFullscreenLayout(
                     // For when tapping outside the popup.
                     dismiss()
                     onDismiss(false)
-                }
+                },
             ) {
                 CFRPopupContent(
                     text = text,
@@ -187,7 +187,7 @@ internal class CFRPopupFullscreenLayout(
                 anchorBounds: IntRect,
                 windowSize: IntSize,
                 layoutDirection: LayoutDirection,
-                popupContentSize: IntSize
+                popupContentSize: IntSize,
             ): IntOffset {
                 // Popup will be anchored such that the indicator arrow will point to the middle of the anchor View
                 // but the popup is allowed some space as start padding in which it can be displayed such that the
@@ -212,7 +212,7 @@ internal class CFRPopupFullscreenLayout(
                                     properties.popupVerticalOffset.toPx()
                             }
                         }
-                    }
+                    },
                 )
             }
         }
@@ -227,7 +227,7 @@ internal class CFRPopupFullscreenLayout(
      */
     @Composable
     private fun computePopupHorizontalBounds(
-        arrowIndicatorWidth: Pixels
+        arrowIndicatorWidth: Pixels,
     ): PopupHorizontalBounds {
         val arrowIndicatorHalfWidth = arrowIndicatorWidth.value / 2
 
@@ -248,7 +248,7 @@ internal class CFRPopupFullscreenLayout(
                         (anchorMiddleXCoord.value - arrowIndicatorHalfWidth)
                             .minus(properties.indicatorArrowStartOffset.toPx())
                             .minus(CFRPopup.DEFAULT_HORIZONTAL_PADDING.dp.toPx())
-                            .coerceAtLeast(getLeftInsets())
+                            .coerceAtLeast(getLeftInsets()),
                     )
                 }
             }
@@ -258,8 +258,8 @@ internal class CFRPopupFullscreenLayout(
                 endCoord = Pixels(
                     startCoord.value
                         .plus(properties.popupWidth.toPx())
-                        .plus(CFRPopup.DEFAULT_HORIZONTAL_PADDING.dp.toPx() * 2)
-                )
+                        .plus(CFRPopup.DEFAULT_HORIZONTAL_PADDING.dp.toPx() * 2),
+                ),
             )
         } else {
             val startCoord = when (properties.popupAlignment) {
@@ -281,7 +281,7 @@ internal class CFRPopupFullscreenLayout(
                             .plus(properties.indicatorArrowStartOffset.toPx())
                             .plus(CFRPopup.DEFAULT_HORIZONTAL_PADDING.dp.toPx())
                             .coerceAtMost(LocalConfiguration.current.screenWidthDp.dp.toPx())
-                            .plus(getLeftInsets())
+                            .plus(getLeftInsets()),
                     )
                 }
             }
@@ -291,8 +291,8 @@ internal class CFRPopupFullscreenLayout(
                 endCoord = Pixels(
                     startCoord.value
                         .minus(properties.popupWidth.toPx())
-                        .minus(CFRPopup.DEFAULT_HORIZONTAL_PADDING.dp.toPx() * 2)
-                )
+                        .minus(CFRPopup.DEFAULT_HORIZONTAL_PADDING.dp.toPx() * 2),
+                ),
             )
         }
     }
@@ -309,11 +309,12 @@ internal class CFRPopupFullscreenLayout(
     private fun computeIndicatorArrowStartCoord(
         anchorMiddleXCoord: Pixels,
         popupStartCoord: Pixels,
-        arrowIndicatorWidth: Pixels
+        arrowIndicatorWidth: Pixels,
     ): Pixels {
         return when (properties.popupAlignment) {
             BODY_TO_ANCHOR_START,
-            BODY_TO_ANCHOR_CENTER -> Pixels(properties.indicatorArrowStartOffset.toPx())
+            BODY_TO_ANCHOR_CENTER,
+            -> Pixels(properties.indicatorArrowStartOffset.toPx())
             INDICATOR_CENTERED_IN_ANCHOR -> {
                 val arrowIndicatorHalfWidth = arrowIndicatorWidth.value / 2
                 if (LocalConfiguration.current.layoutDirection == View.LAYOUT_DIRECTION_LTR) {

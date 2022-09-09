@@ -64,10 +64,17 @@ class MetricControllerTest {
     @get:Rule
     val gleanTestRule = GleanTestRule(testContext)
 
-    @MockK(relaxUnitFun = true) private lateinit var dataService1: MetricsService
-    @MockK(relaxUnitFun = true) private lateinit var dataService2: MetricsService
-    @MockK(relaxUnitFun = true) private lateinit var marketingService1: MetricsService
-    @MockK(relaxUnitFun = true) private lateinit var marketingService2: MetricsService
+    @MockK(relaxUnitFun = true)
+    private lateinit var dataService1: MetricsService
+
+    @MockK(relaxUnitFun = true)
+    private lateinit var dataService2: MetricsService
+
+    @MockK(relaxUnitFun = true)
+    private lateinit var marketingService1: MetricsService
+
+    @MockK(relaxUnitFun = true)
+    private lateinit var marketingService2: MetricsService
 
     @Before
     fun setup() {
@@ -98,7 +105,7 @@ class MetricControllerTest {
             services = listOf(dataService1, marketingService1, dataService2, marketingService2),
             isDataTelemetryEnabled = { enabled },
             isMarketingDataTelemetryEnabled = { enabled },
-            mockk()
+            mockk(),
         )
 
         controller.start(MetricServiceType.Data)
@@ -125,7 +132,7 @@ class MetricControllerTest {
             services = listOf(dataService1),
             isDataTelemetryEnabled = { false },
             isMarketingDataTelemetryEnabled = { true },
-            mockk()
+            mockk(),
         )
 
         controller.start(MetricServiceType.Data)
@@ -142,7 +149,7 @@ class MetricControllerTest {
             services = listOf(dataService1),
             isDataTelemetryEnabled = { enabled },
             isMarketingDataTelemetryEnabled = { true },
-            mockk()
+            mockk(),
         )
 
         controller.start(MetricServiceType.Data)
@@ -164,14 +171,14 @@ class MetricControllerTest {
         var metadata = mapOf<String, Pair<*, Long>>(
             ComposeAwesomeBarFacts.MetadataKeys.DURATION_PAIR to Pair(
                 mockk<HistoryStorageSuggestionProvider>(),
-                duration
-            )
+                duration,
+            ),
         )
         var fact = Fact(
             Component.COMPOSE_AWESOMEBAR,
             action,
             ComposeAwesomeBarFacts.Items.PROVIDER_DURATION,
-            metadata = metadata
+            metadata = metadata,
         )
         // Verify history based suggestions
         assertNull(PerfAwesomebar.historySuggestions.testGetValue())
@@ -186,8 +193,8 @@ class MetricControllerTest {
         metadata = mapOf(
             ComposeAwesomeBarFacts.MetadataKeys.DURATION_PAIR to Pair(
                 mockk<BookmarksStorageSuggestionProvider>(),
-                duration
-            )
+                duration,
+            ),
         )
         fact = fact.copy(metadata = metadata)
         assertNull(PerfAwesomebar.bookmarkSuggestions.testGetValue())
@@ -202,8 +209,8 @@ class MetricControllerTest {
         metadata = mapOf(
             ComposeAwesomeBarFacts.MetadataKeys.DURATION_PAIR to Pair(
                 mockk<SessionSuggestionProvider>(),
-                duration
-            )
+                duration,
+            ),
         )
         fact = fact.copy(metadata = metadata)
         assertNull(PerfAwesomebar.sessionSuggestions.testGetValue())
@@ -218,8 +225,8 @@ class MetricControllerTest {
         metadata = mapOf(
             ComposeAwesomeBarFacts.MetadataKeys.DURATION_PAIR to Pair(
                 mockk<SearchSuggestionProvider>(),
-                duration
-            )
+                duration,
+            ),
         )
         fact = fact.copy(metadata = metadata)
         assertNull(PerfAwesomebar.searchEngineSuggestions.testGetValue())
@@ -234,8 +241,8 @@ class MetricControllerTest {
         metadata = mapOf(
             ComposeAwesomeBarFacts.MetadataKeys.DURATION_PAIR to Pair(
                 mockk<ClipboardSuggestionProvider>(),
-                duration
-            )
+                duration,
+            ),
         )
         fact = fact.copy(metadata = metadata)
         assertNull(PerfAwesomebar.clipboardSuggestions.testGetValue())
@@ -250,8 +257,8 @@ class MetricControllerTest {
         metadata = mapOf(
             ComposeAwesomeBarFacts.MetadataKeys.DURATION_PAIR to Pair(
                 mockk<ShortcutsSuggestionProvider>(),
-                duration
-            )
+                duration,
+            ),
         )
         fact = fact.copy(metadata = metadata)
         assertNull(PerfAwesomebar.shortcutsSuggestions.testGetValue())
@@ -270,7 +277,7 @@ class MetricControllerTest {
             services = listOf(dataService1, marketingService1, dataService2, marketingService2),
             isDataTelemetryEnabled = { enabled },
             isMarketingDataTelemetryEnabled = { enabled },
-            mockk()
+            mockk(),
         )
 
         controller.start(MetricServiceType.Marketing)
@@ -299,14 +306,14 @@ class MetricControllerTest {
             services = listOf(dataService1),
             isDataTelemetryEnabled = { enabled },
             isMarketingDataTelemetryEnabled = { enabled },
-            settings
+            settings,
         )
 
         val fact = Fact(
             Component.FEATURE_TOP_SITES,
             Action.INTERACTION,
             TopSitesFacts.Items.COUNT,
-            "1"
+            "1",
         )
 
         verify(exactly = 0) { settings.topSitesSize = any() }
@@ -324,7 +331,7 @@ class MetricControllerTest {
             services = listOf(dataService1),
             isDataTelemetryEnabled = { enabled },
             isMarketingDataTelemetryEnabled = { enabled },
-            settings
+            settings,
         )
         val fact = Fact(
             Component.SUPPORT_WEBEXTENSIONS,
@@ -332,8 +339,8 @@ class MetricControllerTest {
             WebExtensionFacts.Items.WEB_EXTENSIONS_INITIALIZED,
             metadata = mapOf(
                 "installed" to listOf("test1", "test2", "test3", "test4"),
-                "enabled" to listOf("test2", "test4")
-            )
+                "enabled" to listOf("test2", "test4"),
+            ),
         )
 
         assertEquals(settings.installedAddonsCount, 0)
@@ -438,7 +445,7 @@ class MetricControllerTest {
             Component.FEATURE_AUTOFILL,
             mockk(relaxed = true),
             AutofillFacts.Items.AUTOFILL_REQUEST,
-            metadata = mapOf(AutofillFacts.Metadata.HAS_MATCHING_LOGINS to true)
+            metadata = mapOf(AutofillFacts.Metadata.HAS_MATCHING_LOGINS to true),
         )
 
         with(controller) {
@@ -508,7 +515,7 @@ class MetricControllerTest {
             Component.FEATURE_CONTEXTMENU,
             action,
             ContextMenuFacts.Items.TEXT_SELECTION_OPTION,
-            metadata = mapOf("textSelectionOption" to Companion.CONTEXT_MENU_COPY)
+            metadata = mapOf("textSelectionOption" to Companion.CONTEXT_MENU_COPY),
         )
         assertNull(ContextualMenu.copyTapped.testGetValue())
 
@@ -525,7 +532,7 @@ class MetricControllerTest {
             Component.FEATURE_CONTEXTMENU,
             action,
             ContextMenuFacts.Items.TEXT_SELECTION_OPTION,
-            metadata = mapOf("textSelectionOption" to Companion.CONTEXT_MENU_SEARCH)
+            metadata = mapOf("textSelectionOption" to Companion.CONTEXT_MENU_SEARCH),
         )
         assertNull(ContextualMenu.searchTapped.testGetValue())
 
@@ -542,7 +549,7 @@ class MetricControllerTest {
             Component.FEATURE_CONTEXTMENU,
             action,
             ContextMenuFacts.Items.TEXT_SELECTION_OPTION,
-            metadata = mapOf("textSelectionOption" to Companion.CONTEXT_MENU_SELECT_ALL)
+            metadata = mapOf("textSelectionOption" to Companion.CONTEXT_MENU_SELECT_ALL),
         )
         assertNull(ContextualMenu.selectAllTapped.testGetValue())
 
@@ -559,7 +566,7 @@ class MetricControllerTest {
             Component.FEATURE_CONTEXTMENU,
             action,
             ContextMenuFacts.Items.TEXT_SELECTION_OPTION,
-            metadata = mapOf("textSelectionOption" to Companion.CONTEXT_MENU_SHARE)
+            metadata = mapOf("textSelectionOption" to Companion.CONTEXT_MENU_SHARE),
         )
         assertNull(ContextualMenu.shareTapped.testGetValue())
 
@@ -707,7 +714,7 @@ class MetricControllerTest {
             Component.FEATURE_SEARCH,
             action,
             AdsTelemetry.SERP_ADD_CLICKED,
-            "provider"
+            "provider",
         )
 
         assertNull(BrowserSearch.adClicks["provider"].testGetValue())
@@ -722,7 +729,7 @@ class MetricControllerTest {
             Component.FEATURE_SEARCH,
             action,
             AdsTelemetry.SERP_SHOWN_WITH_ADDS,
-            "provider"
+            "provider",
         )
 
         assertNull(BrowserSearch.withAds["provider"].testGetValue())
@@ -739,7 +746,7 @@ class MetricControllerTest {
             Component.FEATURE_SEARCH,
             action,
             InContentTelemetry.IN_CONTENT_SEARCH,
-            "provider"
+            "provider",
         )
 
         assertNull(BrowserSearch.inContent["provider"].testGetValue())
@@ -766,7 +773,7 @@ class MetricControllerTest {
             component = Component.FEATURE_SITEPERMISSIONS,
             action = Action.DISPLAY,
             item = SitePermissionsFacts.Items.PERMISSIONS,
-            value = "test"
+            value = "test",
         )
         assertNull(SitePermissions.promptShown.testGetValue())
 
@@ -785,7 +792,7 @@ class MetricControllerTest {
             component = Component.FEATURE_SITEPERMISSIONS,
             action = Action.CONFIRM,
             item = SitePermissionsFacts.Items.PERMISSIONS,
-            value = "allow"
+            value = "allow",
         )
         assertNull(SitePermissions.promptShown.testGetValue())
 
@@ -804,7 +811,7 @@ class MetricControllerTest {
             component = Component.FEATURE_SITEPERMISSIONS,
             action = Action.CANCEL,
             item = SitePermissionsFacts.Items.PERMISSIONS,
-            value = "deny"
+            value = "deny",
         )
         assertNull(SitePermissions.promptShown.testGetValue())
 

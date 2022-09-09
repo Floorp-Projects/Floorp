@@ -13,7 +13,7 @@ import org.mozilla.fenix.settings.about.AboutPageListener
 
 class AboutItemViewHolder(
     view: View,
-    listener: AboutPageListener
+    listener: AboutPageListener,
 ) : RecyclerView.ViewHolder(view) {
 
     private lateinit var item: AboutPageItem

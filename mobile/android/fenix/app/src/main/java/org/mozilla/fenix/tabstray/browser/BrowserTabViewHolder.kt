@@ -38,7 +38,7 @@ sealed class BrowserTabViewHolder(itemView: View) : RecyclerView.ViewHolder(item
         store: TabsTrayStore,
         selectionHolder: SelectionHolder<TabSessionState>? = null,
         itemView: View,
-        featureName: String
+        featureName: String,
     ) : AbstractBrowserTabViewHolder(itemView, imageLoader, store, selectionHolder, featureName) {
 
         private val closeButton: AppCompatImageButton = itemView.findViewById(R.id.mozac_browser_tabstray_close)
@@ -46,7 +46,7 @@ sealed class BrowserTabViewHolder(itemView: View) : RecyclerView.ViewHolder(item
         override val thumbnailSize: Int
             get() = max(
                 itemView.resources.getDimensionPixelSize(R.dimen.tab_tray_grid_item_thumbnail_height),
-                itemView.resources.getDimensionPixelSize(R.dimen.tab_tray_grid_item_thumbnail_width)
+                itemView.resources.getDimensionPixelSize(R.dimen.tab_tray_grid_item_thumbnail_width),
             )
 
         override fun updateSelectedTabIndicator(showAsSelected: Boolean) {
@@ -63,7 +63,7 @@ sealed class BrowserTabViewHolder(itemView: View) : RecyclerView.ViewHolder(item
             tab: TabSessionState,
             isSelected: Boolean,
             styling: TabsTrayStyling,
-            delegate: TabsTray.Delegate
+            delegate: TabsTray.Delegate,
         ) {
             super.bind(tab, isSelected, styling, delegate)
 
@@ -92,12 +92,12 @@ sealed class BrowserTabViewHolder(itemView: View) : RecyclerView.ViewHolder(item
         store: TabsTrayStore,
         selectionHolder: SelectionHolder<TabSessionState>? = null,
         itemView: View,
-        featureName: String
+        featureName: String,
     ) : AbstractBrowserTabViewHolder(itemView, imageLoader, store, selectionHolder, featureName) {
         override val thumbnailSize: Int
             get() = max(
                 itemView.resources.getDimensionPixelSize(R.dimen.tab_tray_list_item_thumbnail_height),
-                itemView.resources.getDimensionPixelSize(R.dimen.tab_tray_list_item_thumbnail_width)
+                itemView.resources.getDimensionPixelSize(R.dimen.tab_tray_list_item_thumbnail_width),
             )
 
         override fun updateSelectedTabIndicator(showAsSelected: Boolean) {
@@ -109,8 +109,8 @@ sealed class BrowserTabViewHolder(itemView: View) : RecyclerView.ViewHolder(item
             itemView.setBackgroundColor(
                 ContextCompat.getColor(
                     itemView.context,
-                    color
-                )
+                    color,
+                ),
             )
         }
 

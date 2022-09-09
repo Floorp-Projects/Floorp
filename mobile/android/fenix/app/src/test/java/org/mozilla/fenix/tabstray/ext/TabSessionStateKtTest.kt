@@ -29,7 +29,7 @@ class TabSessionStateKtTest {
         val tab = createTab(
             url = "https://mozilla.org",
             lastAccess = System.currentTimeMillis(),
-            createdAt = 0
+            createdAt = 0,
         )
         assertTrue(tab.isNormalTabActive(maxTime))
     }
@@ -39,7 +39,7 @@ class TabSessionStateKtTest {
         val tab = createTab(
             url = "https://mozilla.org",
             lastAccess = 0,
-            createdAt = System.currentTimeMillis()
+            createdAt = System.currentTimeMillis(),
         )
         assertTrue(tab.isNormalTabActive(maxTime))
     }
@@ -49,14 +49,14 @@ class TabSessionStateKtTest {
         val tab = createTab(
             url = "https://mozilla.org",
             lastAccess = 0,
-            createdAt = inactiveTimestamp
+            createdAt = inactiveTimestamp,
         )
         assertFalse(tab.isNormalTabActive(maxTime))
 
         val tab2 = createTab(
             url = "https://mozilla.org",
             lastAccess = inactiveTimestamp,
-            createdAt = 0
+            createdAt = 0,
         )
         assertFalse(tab2.isNormalTabActive(maxTime))
     }
@@ -66,7 +66,7 @@ class TabSessionStateKtTest {
         val tab = createTab(
             url = "https://mozilla.org",
             lastAccess = inactiveTimestamp,
-            createdAt = inactiveTimestamp
+            createdAt = inactiveTimestamp,
         )
         assertFalse(tab.isNormalTabActive(maxTime))
     }
@@ -77,7 +77,7 @@ class TabSessionStateKtTest {
             url = "https://mozilla.org",
             lastAccess = System.currentTimeMillis(),
             createdAt = System.currentTimeMillis(),
-            private = false
+            private = false,
         )
         val test = tab.isNormalTabActive(maxTime)
         assertTrue(test)
@@ -89,7 +89,7 @@ class TabSessionStateKtTest {
             url = "https://mozilla.org",
             lastAccess = System.currentTimeMillis(),
             createdAt = System.currentTimeMillis(),
-            private = true
+            private = true,
         )
         assertFalse(tab.isNormalTabActive(maxTime))
     }
@@ -100,7 +100,7 @@ class TabSessionStateKtTest {
             url = "https://mozilla.org",
             lastAccess = inactiveTimestamp,
             createdAt = inactiveTimestamp,
-            private = true
+            private = true,
         )
         assertFalse(tab.isNormalTabActive(maxTime))
     }
@@ -110,17 +110,17 @@ class TabSessionStateKtTest {
         val tab = createTab(
             url = "https://mozilla.org",
             createdAt = System.currentTimeMillis(),
-            historyMetadata = HistoryMetadataKey("https://getpockjet.com", "cats")
+            historyMetadata = HistoryMetadataKey("https://getpockjet.com", "cats"),
         )
         val tab2 = createTab(
             url = "https://mozilla.org",
             createdAt = System.currentTimeMillis(),
-            searchTerms = "dogs"
+            searchTerms = "dogs",
         )
         val tab3 = createTab(
             url = "https://mozilla.org",
             createdAt = inactiveTimestamp,
-            searchTerms = "dogs"
+            searchTerms = "dogs",
         )
         assertTrue(tab.isNormalTabActiveWithSearchTerm(maxTime))
         assertTrue(tab2.isNormalTabActiveWithSearchTerm(maxTime))

@@ -25,19 +25,20 @@ internal class BookmarkAdapterTest {
     @Before
     fun setup() {
         bookmarkAdapter = spyk(
-            BookmarkAdapter(mockk(relaxed = true), mockk())
+            BookmarkAdapter(mockk(relaxed = true), mockk()),
         )
     }
 
     @Test
     fun `update adapter from tree of bookmark nodes, null tree returns empty list`() {
         val tree = testFolder(
-            "123", "root",
+            "123",
+            "root",
             listOf(
                 testBookmarkItem("someFolder", "http://mozilla.org"),
                 testSeparator("123"),
-                testBookmarkItem("123", "https://www.mozilla.org/en-US/firefox/")
-            )
+                testBookmarkItem("123", "https://www.mozilla.org/en-US/firefox/"),
+            ),
         )
         bookmarkAdapter.updateData(tree, BookmarkFragmentState.Mode.Normal())
         bookmarkAdapter.updateData(null, BookmarkFragmentState.Mode.Normal())
@@ -77,10 +78,18 @@ internal class BookmarkAdapterTest {
         val folder3 = testFolder("125", "123", title = "Mobile 3", children = listOf(item4))
         val folder4 = testFolder("126", "123", title = "Mobile 3", children = emptyList())
         val folder = testFolder(
-            "123", "root", title = "Mobile",
+            "123",
+            "root",
+            title = "Mobile",
             children = listOf(
-                folder4, item1, sep1, item2, folder2, folder3, item3
-            )
+                folder4,
+                item1,
+                sep1,
+                item2,
+                folder2,
+                folder3,
+                item3,
+            ),
         )
         bookmarkAdapter.updateData(folder, BookmarkFragmentState.Mode.Normal())
         verifyOrder {
@@ -99,7 +108,7 @@ internal class BookmarkAdapterTest {
         val folder1 = testFolder("124", "123", title = "Mobile 2", children = emptyList())
         bookmarkAdapter.updateData(
             testFolder("123", "root", listOf(sep1, item1, folder1)),
-            BookmarkFragmentState.Mode.Normal()
+            BookmarkFragmentState.Mode.Normal(),
         )
 
         assertEquals(2, bookmarkAdapter.itemCount)
@@ -117,14 +126,14 @@ internal class BookmarkAdapterTest {
         assertTrue(
             createSingleItemDiffUtil(
                 item,
-                item.copy(title = "Wikipedia.org", url = "https://www.wikipedia.org")
-            ).areItemsTheSame(0, 0)
+                item.copy(title = "Wikipedia.org", url = "https://www.wikipedia.org"),
+            ).areItemsTheSame(0, 0),
         )
         assertFalse(
             createSingleItemDiffUtil(
                 item,
-                item.copy(guid = "111")
-            ).areItemsTheSame(0, 0)
+                item.copy(guid = "111"),
+            ).areItemsTheSame(0, 0),
         )
     }
 
@@ -133,21 +142,21 @@ internal class BookmarkAdapterTest {
         val item = testBookmarkItem("someFolder", "http://mozilla.org")
         assertTrue(createSingleItemDiffUtil(item, item).areContentsTheSame(0, 0))
         assertFalse(
-            createSingleItemDiffUtil(item, item.copy(position = 1u)).areContentsTheSame(0, 0)
+            createSingleItemDiffUtil(item, item.copy(position = 1u)).areContentsTheSame(0, 0),
         )
         assertFalse(
             createSingleItemDiffUtil(
                 item,
                 item,
-                oldMode = BookmarkFragmentState.Mode.Selecting(setOf(item))
-            ).areContentsTheSame(0, 0)
+                oldMode = BookmarkFragmentState.Mode.Selecting(setOf(item)),
+            ).areContentsTheSame(0, 0),
         )
         assertFalse(
             createSingleItemDiffUtil(
                 item,
                 item,
-                newMode = BookmarkFragmentState.Mode.Selecting(setOf(item))
-            ).areContentsTheSame(0, 0)
+                newMode = BookmarkFragmentState.Mode.Selecting(setOf(item)),
+            ).areContentsTheSame(0, 0),
         )
     }
 
@@ -155,7 +164,7 @@ internal class BookmarkAdapterTest {
         oldItem: BookmarkNode,
         newItem: BookmarkNode,
         oldMode: BookmarkFragmentState.Mode = BookmarkFragmentState.Mode.Normal(),
-        newMode: BookmarkFragmentState.Mode = BookmarkFragmentState.Mode.Normal()
+        newMode: BookmarkFragmentState.Mode = BookmarkFragmentState.Mode.Normal(),
     ): BookmarkAdapter.BookmarkDiffUtil {
         return BookmarkAdapter.BookmarkDiffUtil(listOf(oldItem), listOf(newItem), oldMode, newMode)
     }

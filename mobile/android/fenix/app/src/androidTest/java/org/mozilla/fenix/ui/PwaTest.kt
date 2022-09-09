@@ -17,6 +17,7 @@ import org.mozilla.fenix.ui.robots.pwaScreen
 
 class PwaTest {
     private val featureSettingsHelper = FeatureSettingsHelper()
+
     /* Updated externalLinks.html to v2.0,
        changed the hypertext reference to mozilla-mobile.github.io/testapp/downloads for "External link"
      */
@@ -63,7 +64,6 @@ class PwaTest {
     @SmokeTest
     @Test
     fun emailLinkPWATest() {
-
         navigationToolbar {
         }.enterURLAndEnterToBrowser(externalLinksPWAPage.toUri()) {
             waitForPageToLoad()
@@ -80,7 +80,6 @@ class PwaTest {
     @SmokeTest
     @Test
     fun telephoneLinkPWATest() {
-
         navigationToolbar {
         }.enterURLAndEnterToBrowser(externalLinksPWAPage.toUri()) {
             waitForPageToLoad()
@@ -97,7 +96,6 @@ class PwaTest {
     @SmokeTest
     @Test
     fun appLikeExperiencePWATest() {
-
         navigationToolbar {
         }.enterURLAndEnterToBrowser(externalLinksPWAPage.toUri()) {
             waitForPageToLoad()

@@ -43,7 +43,7 @@ fun HorizontalFadingEdgeBox(
     fadeWidth: Dp = 25.dp,
     backgroundColor: Color = Color.Transparent,
     isContentRtl: Boolean = false,
-    content: @Composable BoxScope.() -> Unit
+    content: @Composable BoxScope.() -> Unit,
 ) {
     // List of colors defining the direction of the fade effect
     val colorList = listOf(Color.Transparent, backgroundColor)
@@ -60,7 +60,7 @@ fun HorizontalFadingEdgeBox(
                             Alignment.CenterStart
                         } else {
                             Alignment.CenterEnd
-                        }
+                        },
                     )
                     .background(
                         Brush.horizontalGradient(
@@ -68,9 +68,9 @@ fun HorizontalFadingEdgeBox(
                                 colorList.reversed()
                             } else {
                                 colorList
-                            }
-                        )
-                    )
+                            },
+                        ),
+                    ),
             )
         }
     }
@@ -86,13 +86,13 @@ private fun FadingRightTextPreview() {
                     .width(250.dp)
                     .height(20.dp)
                     .clipToBounds(),
-                backgroundColor = FirefoxTheme.colors.layer1
+                backgroundColor = FirefoxTheme.colors.layer1,
             ) {
                 Text(
                     "Example text set to fade on the right",
                     modifier = Modifier
                         .fillMaxSize(),
-                    softWrap = false
+                    softWrap = false,
                 )
             }
         }
@@ -111,13 +111,13 @@ private fun FadingLeftTextPreview() {
                     .clipToBounds(),
                 isContentRtl = true,
                 fadeWidth = 50.dp,
-                backgroundColor = FirefoxTheme.colors.layer1
+                backgroundColor = FirefoxTheme.colors.layer1,
             ) {
                 Text(
                     "Example text set to fade on the left",
                     modifier = Modifier
                         .fillMaxSize(),
-                    softWrap = false
+                    softWrap = false,
                 )
             }
         }

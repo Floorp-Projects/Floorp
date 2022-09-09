@@ -48,7 +48,7 @@ class AboutFragment : Fragment(), AboutPageListener {
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
-        savedInstanceState: Bundle?
+        savedInstanceState: Bundle?,
     ): View {
         _binding = FragmentAboutBinding.inflate(inflater, container, false)
         appName = getString(R.string.app_name)
@@ -66,16 +66,16 @@ class AboutFragment : Fragment(), AboutPageListener {
             addItemDecoration(
                 DividerItemDecoration(
                     context,
-                    DividerItemDecoration.VERTICAL
-                )
+                    DividerItemDecoration.VERTICAL,
+                ),
             )
         }
 
         lifecycle.addObserver(
             SecretDebugMenuTrigger(
                 logoView = binding.wordmark,
-                settings = view.context.settings()
-            )
+                settings = view.context.settings(),
+            ),
         )
 
         populateAboutHeader()
@@ -118,7 +118,7 @@ class AboutFragment : Fragment(), AboutPageListener {
                 maybeGecko,
                 geckoVersion,
                 appServicesAbbreviation,
-                appServicesVersion
+                appServicesVersion,
             )
         } catch (e: PackageManager.NameNotFoundException) {
             ""
@@ -139,43 +139,43 @@ class AboutFragment : Fragment(), AboutPageListener {
             AboutPageItem(
                 AboutItem.ExternalLink(
                     WHATS_NEW,
-                    SupportUtils.getWhatsNewUrl(context)
+                    SupportUtils.getWhatsNewUrl(context),
                 ),
-                getString(R.string.about_whats_new, getString(R.string.app_name))
+                getString(R.string.about_whats_new, getString(R.string.app_name)),
             ),
             AboutPageItem(
                 AboutItem.ExternalLink(
                     SUPPORT,
-                    SupportUtils.getSumoURLForTopic(context, SupportUtils.SumoTopic.HELP)
+                    SupportUtils.getSumoURLForTopic(context, SupportUtils.SumoTopic.HELP),
                 ),
-                getString(R.string.about_support)
+                getString(R.string.about_support),
             ),
             AboutPageItem(
                 AboutItem.Crashes,
-                getString(R.string.about_crashes)
+                getString(R.string.about_crashes),
             ),
             AboutPageItem(
                 AboutItem.ExternalLink(
                     PRIVACY_NOTICE,
-                    SupportUtils.getMozillaPageUrl(SupportUtils.MozillaPage.PRIVATE_NOTICE)
+                    SupportUtils.getMozillaPageUrl(SupportUtils.MozillaPage.PRIVATE_NOTICE),
                 ),
-                getString(R.string.about_privacy_notice)
+                getString(R.string.about_privacy_notice),
             ),
             AboutPageItem(
                 AboutItem.ExternalLink(
                     RIGHTS,
-                    SupportUtils.getSumoURLForTopic(context, SupportUtils.SumoTopic.YOUR_RIGHTS)
+                    SupportUtils.getSumoURLForTopic(context, SupportUtils.SumoTopic.YOUR_RIGHTS),
                 ),
-                getString(R.string.about_know_your_rights)
+                getString(R.string.about_know_your_rights),
             ),
             AboutPageItem(
                 AboutItem.ExternalLink(LICENSING_INFO, ABOUT_LICENSE_URL),
-                getString(R.string.about_licensing_information)
+                getString(R.string.about_licensing_information),
             ),
             AboutPageItem(
                 AboutItem.Libraries,
-                getString(R.string.about_other_open_source_libraries)
-            )
+                getString(R.string.about_other_open_source_libraries),
+            ),
         )
     }
 
@@ -183,7 +183,7 @@ class AboutFragment : Fragment(), AboutPageListener {
         (activity as HomeActivity).openToBrowserAndLoad(
             searchTermOrURL = url,
             newTab = true,
-            from = BrowserDirection.FromAbout
+            from = BrowserDirection.FromAbout,
         )
     }
 

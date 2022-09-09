@@ -63,13 +63,13 @@ class LoginDetailFragment : SecureFragment(R.layout.fragment_login_detail) {
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
-        savedInstanceState: Bundle?
+        savedInstanceState: Bundle?,
     ): View? {
         val view = inflater.inflate(R.layout.fragment_login_detail, container, false)
         _binding = FragmentLoginDetailBinding.bind(view)
         savedLoginsStore = StoreProvider.get(this) {
             LoginsFragmentStore(
-                createInitialLoginsListState(requireContext().settings())
+                createInitialLoginsListState(requireContext().settings()),
             )
         }
         loginDetailsBindingDelegate = LoginDetailsBindingDelegate(binding)
@@ -85,8 +85,8 @@ class LoginDetailFragment : SecureFragment(R.layout.fragment_login_detail) {
                 passwordsStorage = requireContext().components.core.passwordsStorage,
                 lifecycleScope = lifecycleScope,
                 navController = findNavController(),
-                loginsFragmentStore = savedLoginsStore
-            )
+                loginsFragmentStore = savedLoginsStore,
+            ),
         )
         interactor.onFetchLoginList(args.savedLoginId)
 
@@ -96,7 +96,7 @@ class LoginDetailFragment : SecureFragment(R.layout.fragment_login_detail) {
             setUpCopyButtons()
             showToolbar(
                 savedLoginsStore.state.currentItem?.origin?.simplifiedUrl()
-                    ?: ""
+                    ?: "",
             )
             setUpPasswordReveal()
         }
@@ -119,7 +119,7 @@ class LoginDetailFragment : SecureFragment(R.layout.fragment_login_detail) {
         redirectToReAuth(
             listOf(R.id.editLoginFragment, R.id.savedLoginsFragment),
             findNavController().currentDestination?.id,
-            R.id.loginDetailFragment
+            R.id.loginDetailFragment,
         )
         super.onPause()
     }
@@ -148,12 +148,12 @@ class LoginDetailFragment : SecureFragment(R.layout.fragment_login_detail) {
 
         binding.usernameText.text = login?.username
         binding.copyUsername.setOnClickListener(
-            CopyButtonListener(login?.username, R.string.logins_username_copied)
+            CopyButtonListener(login?.username, R.string.logins_username_copied),
         )
 
         binding.passwordText.text = login?.password
         binding.copyPassword.setOnClickListener(
-            CopyButtonListener(login?.password, R.string.logins_password_copied)
+            CopyButtonListener(login?.password, R.string.logins_password_copied),
         )
     }
 
@@ -178,7 +178,7 @@ class LoginDetailFragment : SecureFragment(R.layout.fragment_login_detail) {
         (activity as HomeActivity).openToBrowserAndLoad(
             address,
             newTab = true,
-            from = BrowserDirection.FromLoginDetailFragment
+            from = BrowserDirection.FromLoginDetailFragment,
         )
     }
 
@@ -186,7 +186,7 @@ class LoginDetailFragment : SecureFragment(R.layout.fragment_login_detail) {
         Logins.openLoginEditor.record(NoExtras())
         val directions =
             LoginDetailFragmentDirections.actionLoginDetailFragmentToEditLoginFragment(
-                login!!
+                login!!,
             )
         findNavController().navigate(directions)
     }
@@ -215,7 +215,7 @@ class LoginDetailFragment : SecureFragment(R.layout.fragment_login_detail) {
      */
     private inner class CopyButtonListener(
         private val value: String?,
-        @StringRes private val snackbarText: Int
+        @StringRes private val snackbarText: Int,
     ) : View.OnClickListener {
         override fun onClick(view: View) {
             val clipboard = view.context.components.clipboardHandler
@@ -229,7 +229,7 @@ class LoginDetailFragment : SecureFragment(R.layout.fragment_login_detail) {
                 FenixSnackbar.make(
                     view = it,
                     duration = Snackbar.LENGTH_SHORT,
-                    isDisplayedWithBrowserToolbar = false
+                    isDisplayedWithBrowserToolbar = false,
                 ).setText(copiedItem).show()
             }
         }

@@ -61,7 +61,7 @@ class HomeCFRPresenter(
                     true -> Onboarding.syncCfrExplicitDismissal.record(NoExtras())
                     false -> Onboarding.syncCfrImplicitDismissal.record(NoExtras())
                 }
-            }
+            },
         ).show()
 
         // Turn off both the recent tab and synced tab CFR after the recent synced tab CFR is shown.
@@ -85,7 +85,7 @@ class HomeCFRPresenter(
                     true -> RecentTabs.jumpBackInCfrDismissed.record(NoExtras())
                     false -> RecentTabs.jumpBackInCfrCancelled.record(NoExtras())
                 }
-            }
+            },
         ).show()
 
         // Users can still see the recent synced tab CFR after the recent tab CFR is shown in

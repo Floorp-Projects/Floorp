@@ -23,7 +23,7 @@ interface LocaleSettingsViewInteractor {
 
 class LocaleSettingsView(
     container: ViewGroup,
-    val interactor: LocaleSettingsViewInteractor
+    val interactor: LocaleSettingsViewInteractor,
 ) {
 
     val view: View = LayoutInflater.from(container.context)

@@ -13,7 +13,8 @@ import java.util.Date
  */
 enum class RemoveTimeFrame {
     LastHour,
-    TodayAndYesterday;
+    TodayAndYesterday,
+    ;
 
     /**
      * Provides starting and ending timestamps for a set time frame. Each call is calculated at the

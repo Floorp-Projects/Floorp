@@ -14,14 +14,14 @@ class TabsTrayStoreReducerTest {
     @Test
     fun `WHEN UpdateInactiveTabs THEN inactive tabs are added`() {
         val inactiveTabs = listOf(
-            createTab("https://mozilla.org")
+            createTab("https://mozilla.org"),
         )
         val initialState = TabsTrayState()
         val expectedState = initialState.copy(inactiveTabs = inactiveTabs)
 
         val resultState = TabsTrayReducer.reduce(
             initialState,
-            TabsTrayAction.UpdateInactiveTabs(inactiveTabs)
+            TabsTrayAction.UpdateInactiveTabs(inactiveTabs),
         )
 
         assertEquals(expectedState, resultState)
@@ -30,14 +30,14 @@ class TabsTrayStoreReducerTest {
     @Test
     fun `WHEN UpdateNormalTabs THEN normal tabs are added`() {
         val normalTabs = listOf(
-            createTab("https://mozilla.org")
+            createTab("https://mozilla.org"),
         )
         val initialState = TabsTrayState()
         val expectedState = initialState.copy(normalTabs = normalTabs)
 
         val resultState = TabsTrayReducer.reduce(
             initialState,
-            TabsTrayAction.UpdateNormalTabs(normalTabs)
+            TabsTrayAction.UpdateNormalTabs(normalTabs),
         )
 
         assertEquals(expectedState, resultState)
@@ -46,14 +46,14 @@ class TabsTrayStoreReducerTest {
     @Test
     fun `WHEN UpdatePrivateTabs THEN private tabs are added`() {
         val privateTabs = listOf(
-            createTab("https://mozilla.org", private = true)
+            createTab("https://mozilla.org", private = true),
         )
         val initialState = TabsTrayState()
         val expectedState = initialState.copy(privateTabs = privateTabs)
 
         val resultState = TabsTrayReducer.reduce(
             initialState,
-            TabsTrayAction.UpdatePrivateTabs(privateTabs)
+            TabsTrayAction.UpdatePrivateTabs(privateTabs),
         )
 
         assertEquals(expectedState, resultState)
@@ -67,7 +67,7 @@ class TabsTrayStoreReducerTest {
 
         val resultState = TabsTrayReducer.reduce(
             initialState,
-            TabsTrayAction.UpdateSyncedTabs(syncedTabs)
+            TabsTrayAction.UpdateSyncedTabs(syncedTabs),
         )
 
         assertEquals(expectedState, resultState)

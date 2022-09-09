@@ -71,9 +71,9 @@ class StartSearchIntentProcessorTest {
                 null,
                 NavGraphDirections.actionGlobalSearchDialog(
                     sessionId = null,
-                    searchAccessPoint = MetricsUtils.Source.WIDGET
+                    searchAccessPoint = MetricsUtils.Source.WIDGET,
                 ),
-                options
+                options,
             )
         }
         verify { out.removeExtra(HomeActivity.OPEN_TO_SEARCH) }

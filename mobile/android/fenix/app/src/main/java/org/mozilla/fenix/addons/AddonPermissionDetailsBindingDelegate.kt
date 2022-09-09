@@ -26,7 +26,7 @@ interface AddonPermissionsDetailsInteractor {
  */
 class AddonPermissionDetailsBindingDelegate(
     val binding: FragmentAddOnPermissionsBinding,
-    private val interactor: AddonPermissionsDetailsInteractor
+    private val interactor: AddonPermissionsDetailsInteractor,
 ) {
 
     fun bind(addon: Addon) {
@@ -41,8 +41,8 @@ class AddonPermissionDetailsBindingDelegate(
             adapter = AddonPermissionsAdapter(
                 sortedPermissions,
                 style = AddonPermissionsAdapter.Style(
-                    ThemeManager.resolveAttribute(R.attr.textPrimary, context)
-                )
+                    ThemeManager.resolveAttribute(R.attr.textPrimary, context),
+                ),
             )
         }
     }

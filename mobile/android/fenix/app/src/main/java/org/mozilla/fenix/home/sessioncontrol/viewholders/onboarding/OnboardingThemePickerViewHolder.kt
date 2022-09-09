@@ -34,7 +34,7 @@ class OnboardingThemePickerViewHolder(view: View) : RecyclerView.ViewHolder(view
         addToRadioGroup(
             radioLightTheme,
             radioDarkTheme,
-            radioFollowDeviceTheme
+            radioFollowDeviceTheme,
         )
         radioLightTheme.addIllustration(binding.themeLightImage)
         radioDarkTheme.addIllustration(binding.themeDarkImage)
@@ -42,8 +42,8 @@ class OnboardingThemePickerViewHolder(view: View) : RecyclerView.ViewHolder(view
         binding.themeDarkImage.setOnClickListener {
             Onboarding.prefToggledThemePicker.record(
                 Onboarding.PrefToggledThemePickerExtra(
-                    Theme.DARK.name
-                )
+                    Theme.DARK.name,
+                ),
             )
             radioDarkTheme.performClick()
         }
@@ -51,8 +51,8 @@ class OnboardingThemePickerViewHolder(view: View) : RecyclerView.ViewHolder(view
         binding.themeLightImage.setOnClickListener {
             Onboarding.prefToggledThemePicker.record(
                 Onboarding.PrefToggledThemePickerExtra(
-                    Theme.LIGHT.name
-                )
+                    Theme.LIGHT.name,
+                ),
             )
             radioLightTheme.performClick()
         }
@@ -64,8 +64,8 @@ class OnboardingThemePickerViewHolder(view: View) : RecyclerView.ViewHolder(view
         binding.clickableRegionAutomatic.setOnClickListener {
             Onboarding.prefToggledThemePicker.record(
                 Onboarding.PrefToggledThemePickerExtra(
-                    Theme.FOLLOW_DEVICE.name
-                )
+                    Theme.FOLLOW_DEVICE.name,
+                ),
             )
             radioFollowDeviceTheme.performClick()
         }
@@ -73,8 +73,8 @@ class OnboardingThemePickerViewHolder(view: View) : RecyclerView.ViewHolder(view
         radioLightTheme.onClickListener {
             Onboarding.prefToggledThemePicker.record(
                 Onboarding.PrefToggledThemePickerExtra(
-                    Theme.LIGHT.name
-                )
+                    Theme.LIGHT.name,
+                ),
             )
             setNewTheme(AppCompatDelegate.MODE_NIGHT_NO)
         }
@@ -82,8 +82,8 @@ class OnboardingThemePickerViewHolder(view: View) : RecyclerView.ViewHolder(view
         radioDarkTheme.onClickListener {
             Onboarding.prefToggledThemePicker.record(
                 Onboarding.PrefToggledThemePickerExtra(
-                    Theme.DARK.name
-                )
+                    Theme.DARK.name,
+                ),
             )
             setNewTheme(AppCompatDelegate.MODE_NIGHT_YES)
         }
@@ -91,8 +91,8 @@ class OnboardingThemePickerViewHolder(view: View) : RecyclerView.ViewHolder(view
         radioFollowDeviceTheme.onClickListener {
             Onboarding.prefToggledThemePicker.record(
                 Onboarding.PrefToggledThemePickerExtra(
-                    Theme.FOLLOW_DEVICE.name
-                )
+                    Theme.FOLLOW_DEVICE.name,
+                ),
             )
             if (SDK_INT >= Build.VERSION_CODES.P) {
                 setNewTheme(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM)
@@ -128,6 +128,7 @@ class OnboardingThemePickerViewHolder(view: View) : RecyclerView.ViewHolder(view
 
     companion object {
         const val LAYOUT_ID = R.layout.onboarding_theme_picker
+
         // The theme used for telemetry
         enum class Theme { LIGHT, DARK, FOLLOW_DEVICE }
     }

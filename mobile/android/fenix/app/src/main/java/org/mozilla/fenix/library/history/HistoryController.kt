@@ -68,7 +68,7 @@ class DefaultHistoryController(
     private val deleteSnackbar: (
         items: Set<History>,
         undo: suspend (Set<History>) -> Unit,
-        delete: (Set<History>) -> suspend (context: Context) -> Unit
+        delete: (Set<History>) -> suspend (context: Context) -> Unit,
     ) -> Unit,
     private val syncHistory: suspend () -> Unit,
     private val settings: Settings,
@@ -82,9 +82,9 @@ class DefaultHistoryController(
                 navController.navigate(
                     HistoryFragmentDirections.actionGlobalHistoryMetadataGroup(
                         title = item.title,
-                        historyMetadataItems = item.items.toTypedArray()
+                        historyMetadataItems = item.items.toTypedArray(),
                     ),
-                    NavOptions.Builder().setPopUpTo(R.id.historyMetadataGroupFragment, true).build()
+                    NavOptions.Builder().setPopUpTo(R.id.historyMetadataGroupFragment, true).build(),
                 )
             }
             else -> { /* noop */ }
@@ -184,7 +184,7 @@ class DefaultHistoryController(
                             // NB: If we have non-search groups, this logic needs to be updated.
                             historyProvider.deleteMetadataSearchGroup(item)
                             context.components.core.store.dispatch(
-                                HistoryMetadataAction.DisbandSearchGroupAction(searchTerm = item.title)
+                                HistoryMetadataAction.DisbandSearchGroupAction(searchTerm = item.title),
                             )
                         }
                         // We won't encounter individual metadata entries outside of groups.
@@ -207,7 +207,7 @@ class DefaultHistoryController(
     override fun handleEnterRecentlyClosed() {
         navController.navigate(
             HistoryFragmentDirections.actionGlobalRecentlyClosed(),
-            NavOptions.Builder().setPopUpTo(R.id.recentlyClosedFragment, true).build()
+            NavOptions.Builder().setPopUpTo(R.id.recentlyClosedFragment, true).build(),
         )
         Events.recentlyClosedTabsOpened.record(NoExtras())
     }

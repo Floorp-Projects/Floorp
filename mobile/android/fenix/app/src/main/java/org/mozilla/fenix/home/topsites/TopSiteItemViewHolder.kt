@@ -33,7 +33,7 @@ import org.mozilla.fenix.utils.view.ViewHolder
 class TopSiteItemViewHolder(
     view: View,
     private val viewLifecycleOwner: LifecycleOwner,
-    private val interactor: TopSiteInteractor
+    private val interactor: TopSiteInteractor,
 ) : ViewHolder(view) {
     private lateinit var topSite: TopSite
     private val binding = TopSiteItemBinding.bind(view)
@@ -45,17 +45,17 @@ class TopSiteItemViewHolder(
 
             val topSiteMenu = TopSiteItemMenu(
                 context = view.context,
-                topSite = topSite
+                topSite = topSite,
             ) { item ->
                 when (item) {
                     is TopSiteItemMenu.Item.OpenInPrivateTab -> interactor.onOpenInPrivateTabClicked(
-                        topSite
+                        topSite,
                     )
                     is TopSiteItemMenu.Item.RenameTopSite -> interactor.onRenameTopSiteClicked(
-                        topSite
+                        topSite,
                     )
                     is TopSiteItemMenu.Item.RemoveTopSite -> interactor.onRemoveTopSiteClicked(
-                        topSite
+                        topSite,
                     )
                     is TopSiteItemMenu.Item.Settings -> interactor.onSettingsClicked()
                     is TopSiteItemMenu.Item.SponsorPrivacy -> interactor.onSponsorPrivacyClicked()
@@ -130,8 +130,8 @@ class TopSiteItemViewHolder(
         TopSites.contileImpression.record(
             TopSites.ContileImpressionExtra(
                 position = position + 1,
-                source = "newtab"
-            )
+                source = "newtab",
+            ),
         )
 
         topSite.id?.let { TopSites.contileTileId.set(it) }
@@ -143,7 +143,7 @@ class TopSiteItemViewHolder(
     private fun onTouchEvent(
         v: View,
         event: MotionEvent,
-        menu: PopupWindow
+        menu: PopupWindow,
     ): Boolean {
         if (event.action == MotionEvent.ACTION_CANCEL) {
             menu.dismiss()

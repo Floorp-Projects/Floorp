@@ -36,13 +36,12 @@ class SettingsSubMenuSitePermissionsRobot {
         }
 
         fun openAutoPlay(
-            interact: SettingsSubMenuSitePermissionsCommonRobot.() -> Unit
+            interact: SettingsSubMenuSitePermissionsCommonRobot.() -> Unit,
         ): SettingsSubMenuSitePermissionsCommonRobot.Transition {
-
             onView(withId(R.id.recycler_view)).perform(
                 RecyclerViewActions.scrollTo<RecyclerView.ViewHolder>(
-                    hasDescendant(withText("Autoplay"))
-                )
+                    hasDescendant(withText("Autoplay")),
+                ),
             )
 
             openAutoPlay().click()
@@ -52,13 +51,12 @@ class SettingsSubMenuSitePermissionsRobot {
         }
 
         fun openCamera(
-            interact: SettingsSubMenuSitePermissionsCommonRobot.() -> Unit
+            interact: SettingsSubMenuSitePermissionsCommonRobot.() -> Unit,
         ): SettingsSubMenuSitePermissionsCommonRobot.Transition {
-
             onView(withId(R.id.recycler_view)).perform(
                 RecyclerViewActions.scrollTo<RecyclerView.ViewHolder>(
-                    hasDescendant(withText("Camera"))
-                )
+                    hasDescendant(withText("Camera")),
+                ),
             )
 
             openCamera().click()
@@ -68,13 +66,12 @@ class SettingsSubMenuSitePermissionsRobot {
         }
 
         fun openLocation(
-            interact: SettingsSubMenuSitePermissionsCommonRobot.() -> Unit
+            interact: SettingsSubMenuSitePermissionsCommonRobot.() -> Unit,
         ): SettingsSubMenuSitePermissionsCommonRobot.Transition {
-
             onView(withId(R.id.recycler_view)).perform(
                 RecyclerViewActions.scrollTo<RecyclerView.ViewHolder>(
-                    hasDescendant(withText("Location"))
-                )
+                    hasDescendant(withText("Location")),
+                ),
             )
 
             openLocation().click()
@@ -84,13 +81,12 @@ class SettingsSubMenuSitePermissionsRobot {
         }
 
         fun openMicrophone(
-            interact: SettingsSubMenuSitePermissionsCommonRobot.() -> Unit
+            interact: SettingsSubMenuSitePermissionsCommonRobot.() -> Unit,
         ): SettingsSubMenuSitePermissionsCommonRobot.Transition {
-
             onView(withId(R.id.recycler_view)).perform(
                 RecyclerViewActions.scrollTo<RecyclerView.ViewHolder>(
-                    hasDescendant(withText("Microphone"))
-                )
+                    hasDescendant(withText("Microphone")),
+                ),
             )
 
             openMicrophone().click()
@@ -100,13 +96,12 @@ class SettingsSubMenuSitePermissionsRobot {
         }
 
         fun openNotification(
-            interact: SettingsSubMenuSitePermissionsCommonRobot.() -> Unit
+            interact: SettingsSubMenuSitePermissionsCommonRobot.() -> Unit,
         ): SettingsSubMenuSitePermissionsCommonRobot.Transition {
-
             onView(withId(R.id.recycler_view)).perform(
                 RecyclerViewActions.scrollTo<RecyclerView.ViewHolder>(
-                    hasDescendant(withText("Notification"))
-                )
+                    hasDescendant(withText("Notification")),
+                ),
             )
 
             openNotification().click()
@@ -116,13 +111,12 @@ class SettingsSubMenuSitePermissionsRobot {
         }
 
         fun openPersistentStorage(
-            interact: SettingsSubMenuSitePermissionsCommonRobot.() -> Unit
+            interact: SettingsSubMenuSitePermissionsCommonRobot.() -> Unit,
         ): SettingsSubMenuSitePermissionsCommonRobot.Transition {
-
             onView(withId(R.id.recycler_view)).perform(
                 RecyclerViewActions.scrollTo<RecyclerView.ViewHolder>(
-                    hasDescendant(withText("Persistent Storage"))
-                )
+                    hasDescendant(withText("Persistent Storage")),
+                ),
             )
 
             openPersistentStorage().click()
@@ -132,13 +126,12 @@ class SettingsSubMenuSitePermissionsRobot {
         }
 
         fun openExceptions(
-            interact: SettingsSubMenuSitePermissionsExceptionsRobot.() -> Unit
+            interact: SettingsSubMenuSitePermissionsExceptionsRobot.() -> Unit,
         ): SettingsSubMenuSitePermissionsExceptionsRobot.Transition {
-
             onView(withId(R.id.recycler_view)).perform(
                 RecyclerViewActions.scrollTo<RecyclerView.ViewHolder>(
-                    hasDescendant(withText("Exceptions"))
-                )
+                    hasDescendant(withText("Exceptions")),
+                ),
             )
 
             openExceptions().click()
@@ -152,7 +145,6 @@ class SettingsSubMenuSitePermissionsRobot {
         .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 
     private fun assertSitePermissionsSubMenuItems() {
-
         onView(withText("Autoplay"))
             .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 
@@ -164,24 +156,24 @@ class SettingsSubMenuSitePermissionsRobot {
             "Blocked by Android"
         onView(withId(R.id.recycler_view)).perform(
             RecyclerViewActions.scrollTo<RecyclerView.ViewHolder>(
-                allOf(hasDescendant(withText("Camera")), hasDescendant(withText(cameraText)))
-            )
+                allOf(hasDescendant(withText("Camera")), hasDescendant(withText(cameraText))),
+            ),
         ).check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 
         val locationText =
             "Blocked by Android"
         onView(withId(R.id.recycler_view)).perform(
             RecyclerViewActions.scrollTo<RecyclerView.ViewHolder>(
-                allOf(hasDescendant(withText("Location")), hasDescendant(withText(locationText)))
-            )
+                allOf(hasDescendant(withText("Location")), hasDescendant(withText(locationText))),
+            ),
         ).check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 
         val microphoneText =
             "Blocked by Android"
         onView(withId(R.id.recycler_view)).perform(
             RecyclerViewActions.scrollTo<RecyclerView.ViewHolder>(
-                allOf(hasDescendant(withText("Microphone")), hasDescendant(withText(microphoneText)))
-            )
+                allOf(hasDescendant(withText("Microphone")), hasDescendant(withText(microphoneText))),
+            ),
         ).check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 
         onView(withText("Notification"))
@@ -192,8 +184,8 @@ class SettingsSubMenuSitePermissionsRobot {
 
         onView(withId(R.id.recycler_view)).perform(
             RecyclerViewActions.scrollTo<RecyclerView.ViewHolder>(
-                allOf(hasDescendant(withText("Notification")), hasDescendant(withText(notificationText)))
-            )
+                allOf(hasDescendant(withText("Notification")), hasDescendant(withText(notificationText))),
+            ),
         ).check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 
         onView(withText("Persistent Storage"))
@@ -206,9 +198,9 @@ class SettingsSubMenuSitePermissionsRobot {
             RecyclerViewActions.scrollTo<RecyclerView.ViewHolder>(
                 allOf(
                     hasDescendant(withText("Persistent Storage")),
-                    hasDescendant(withText(persistentStorageText))
-                )
-            )
+                    hasDescendant(withText(persistentStorageText)),
+                ),
+            ),
         ).check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
     }
 }

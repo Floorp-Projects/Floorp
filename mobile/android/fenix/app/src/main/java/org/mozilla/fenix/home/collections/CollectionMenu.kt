@@ -76,7 +76,7 @@ fun CollectionMenu(
                         maxLines = 1,
                         modifier = Modifier
                             .fillMaxHeight()
-                            .align(Alignment.CenterVertically)
+                            .align(Alignment.CenterVertically),
                     )
                 }
             }
@@ -119,13 +119,13 @@ fun getMenuItems(
     return listOfNotNull(
         CollectionMenuItem(
             title = stringResource(string.collection_open_tabs),
-            color = FirefoxTheme.colors.textPrimary
+            color = FirefoxTheme.colors.textPrimary,
         ) {
             onOpenTabsTapped(collection)
         },
         CollectionMenuItem(
             title = stringResource(string.collection_rename),
-            color = FirefoxTheme.colors.textPrimary
+            color = FirefoxTheme.colors.textPrimary,
         ) {
             onRenameCollectionTapped(collection)
         },
@@ -133,7 +133,7 @@ fun getMenuItems(
         if (hasOpenTabs()) {
             CollectionMenuItem(
                 title = stringResource(string.add_tab),
-                color = FirefoxTheme.colors.textPrimary
+                color = FirefoxTheme.colors.textPrimary,
             ) {
                 onAddTabTapped(collection)
             }
@@ -143,7 +143,7 @@ fun getMenuItems(
 
         CollectionMenuItem(
             title = stringResource(string.collection_delete),
-            color = FirefoxTheme.colors.textWarning
+            color = FirefoxTheme.colors.textWarning,
         ) {
             onDeleteCollectionTapped(collection)
         },
@@ -167,7 +167,7 @@ private fun CollectionMenuDarkPreview() {
                 onOpenTabsTapped = {},
                 onRenameCollectionTapped = {},
                 onAddTabTapped = {},
-                onDeleteCollectionTapped = {}
+                onDeleteCollectionTapped = {},
             ),
         ) {}
     }
@@ -184,7 +184,7 @@ private fun CollectionMenuLightPreview() {
                 onOpenTabsTapped = {},
                 onRenameCollectionTapped = {},
                 onAddTabTapped = {},
-                onDeleteCollectionTapped = {}
+                onDeleteCollectionTapped = {},
             ),
         ) {}
     }

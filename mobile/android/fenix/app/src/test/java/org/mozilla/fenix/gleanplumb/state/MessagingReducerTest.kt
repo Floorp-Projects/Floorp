@@ -23,13 +23,13 @@ class MessagingReducerTest {
     fun `GIVEN a new value for messageToShow WHEN UpdateMessageToShow is called THEN update the current value`() {
         val initialState = AppState(
             messaging = MessagingState(
-                messageToShow = null
-            )
+                messageToShow = null,
+            ),
         )
 
         var updatedState = MessagingReducer.reduce(
             initialState,
-            UpdateMessageToShow(mockk())
+            UpdateMessageToShow(mockk()),
         )
 
         assertNotNull(updatedState.messaging.messageToShow)
@@ -43,13 +43,13 @@ class MessagingReducerTest {
     fun `GIVEN a new value for messages WHEN UpdateMessages is called THEN update the current value`() {
         val initialState = AppState(
             messaging = MessagingState(
-                messages = emptyList()
-            )
+                messages = emptyList(),
+            ),
         )
 
         var updatedState = MessagingReducer.reduce(
             initialState,
-            UpdateMessages(listOf(mockk()))
+            UpdateMessages(listOf(mockk())),
         )
 
         assertFalse(updatedState.messaging.messages.isEmpty())

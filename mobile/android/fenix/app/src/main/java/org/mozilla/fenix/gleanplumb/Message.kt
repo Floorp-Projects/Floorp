@@ -25,7 +25,7 @@ data class Message(
     val action: String,
     val style: StyleData,
     val triggers: List<String>,
-    val metadata: Metadata
+    val metadata: Metadata,
 ) {
     val maxDisplayCount: Int
         get() = style.maxDisplayCount
@@ -47,6 +47,6 @@ data class Message(
         val displayCount: Int = 0,
         val pressed: Boolean = false,
         val dismissed: Boolean = false,
-        val lastTimeShown: Long = 0L
+        val lastTimeShown: Long = 0L,
     )
 }

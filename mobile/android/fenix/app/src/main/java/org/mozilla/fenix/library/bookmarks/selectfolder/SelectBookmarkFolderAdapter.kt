@@ -34,7 +34,7 @@ class SelectBookmarkFolderAdapter(private val sharedViewModel: BookmarksSharedVi
         val view = LibrarySiteItemView(parent.context).apply {
             layoutParams = ViewGroup.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
-                ViewGroup.LayoutParams.WRAP_CONTENT
+                ViewGroup.LayoutParams.WRAP_CONTENT,
             )
         }
 
@@ -57,7 +57,7 @@ class SelectBookmarkFolderAdapter(private val sharedViewModel: BookmarksSharedVi
     }
 
     class BookmarkFolderViewHolder(
-        val view: LibrarySiteItemView
+        val view: LibrarySiteItemView,
     ) : RecyclerView.ViewHolder(view) {
 
         init {
@@ -102,12 +102,12 @@ private object DiffCallback : DiffUtil.ItemCallback<BookmarkNodeWithDepth>() {
 
     override fun areItemsTheSame(
         oldItem: BookmarkNodeWithDepth,
-        newItem: BookmarkNodeWithDepth
+        newItem: BookmarkNodeWithDepth,
     ) = oldItem.node.guid == newItem.node.guid
 
     override fun areContentsTheSame(
         oldItem: BookmarkNodeWithDepth,
-        newItem: BookmarkNodeWithDepth
+        newItem: BookmarkNodeWithDepth,
     ) = oldItem == newItem
 }
 

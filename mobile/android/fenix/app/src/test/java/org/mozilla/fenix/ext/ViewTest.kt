@@ -35,7 +35,9 @@ import org.robolectric.annotation.Config
 class ViewTest {
 
     @MockK private lateinit var view: View
+
     @MockK private lateinit var parent: FrameLayout
+
     @MockK private lateinit var displayMetrics: DisplayMetrics
 
     @Before

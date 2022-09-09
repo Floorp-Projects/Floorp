@@ -62,7 +62,7 @@ open class ExternalAppBrowserActivity : HomeActivity() {
 
     override fun getNavDirections(
         from: BrowserDirection,
-        customTabSessionId: String?
+        customTabSessionId: String?,
     ): NavDirections? {
         if (customTabSessionId == null) {
             finishAndRemoveTask()
@@ -76,10 +76,10 @@ open class ExternalAppBrowserActivity : HomeActivity() {
             BrowserDirection.FromGlobal ->
                 NavGraphDirections.actionGlobalExternalAppBrowser(
                     activeSessionId = customTabSessionId,
-                    webAppManifest = manifest
+                    webAppManifest = manifest,
                 )
             else -> throw InvalidParameterException(
-                "Tried to navigate to ExternalAppBrowserFragment from $from"
+                "Tried to navigate to ExternalAppBrowserFragment from $from",
             )
         }
     }

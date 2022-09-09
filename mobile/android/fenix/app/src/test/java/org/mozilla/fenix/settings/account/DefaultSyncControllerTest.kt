@@ -18,7 +18,9 @@ import org.mozilla.fenix.HomeActivity
 class DefaultSyncControllerTest {
 
     private lateinit var syncController: DefaultSyncController
-    @MockK(relaxed = true) private lateinit var activity: HomeActivity
+
+    @MockK(relaxed = true)
+    private lateinit var activity: HomeActivity
 
     @Before
     fun setUp() {

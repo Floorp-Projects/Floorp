@@ -23,7 +23,7 @@ class SyncedDeviceTabsTest {
             every { id } returns "123"
             every { deviceType } returns DeviceType.DESKTOP
         },
-        tabs = emptyList()
+        tabs = emptyList(),
     )
 
     private val oneTabDevice = SyncedDeviceTabs(
@@ -38,13 +38,13 @@ class SyncedDeviceTabsTest {
                     TabEntry(
                         title = "Mozilla",
                         url = "https://mozilla.org",
-                        iconUrl = null
-                    )
+                        iconUrl = null,
+                    ),
                 ),
                 active = 0,
-                lastUsed = 0L
-            )
-        )
+                lastUsed = 0L,
+            ),
+        ),
     )
 
     private val twoTabDevice = SyncedDeviceTabs(
@@ -59,24 +59,24 @@ class SyncedDeviceTabsTest {
                     TabEntry(
                         title = "Mozilla",
                         url = "https://mozilla.org",
-                        iconUrl = null
-                    )
+                        iconUrl = null,
+                    ),
                 ),
                 active = 0,
-                lastUsed = 0L
+                lastUsed = 0L,
             ),
             Tab(
                 history = listOf(
                     TabEntry(
                         title = "Firefox",
                         url = "https://firefox.com",
-                        iconUrl = null
-                    )
+                        iconUrl = null,
+                    ),
                 ),
                 active = 0,
-                lastUsed = 0L
-            )
-        )
+                lastUsed = 0L,
+            ),
+        ),
     )
 
     @Test

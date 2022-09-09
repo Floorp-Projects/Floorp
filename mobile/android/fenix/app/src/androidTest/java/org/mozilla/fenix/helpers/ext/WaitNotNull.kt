@@ -16,5 +16,5 @@ import org.mozilla.fenix.helpers.TestAssetHelper
  */
 fun UiDevice.waitNotNull(
     searchCondition: SearchCondition<*>,
-    waitTime: Long = TestAssetHelper.waitingTime
+    waitTime: Long = TestAssetHelper.waitingTime,
 ) = assertNotNull(wait(searchCondition, waitTime))

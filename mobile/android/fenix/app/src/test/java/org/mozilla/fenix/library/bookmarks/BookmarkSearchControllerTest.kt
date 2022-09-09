@@ -17,8 +17,11 @@ import org.mozilla.fenix.HomeActivity
 
 class BookmarkSearchControllerTest {
 
-    @MockK(relaxed = true) private lateinit var activity: HomeActivity
-    @MockK(relaxed = true) private lateinit var store: BookmarkSearchFragmentStore
+    @MockK(relaxed = true)
+    private lateinit var activity: HomeActivity
+
+    @MockK(relaxed = true)
+    private lateinit var store: BookmarkSearchFragmentStore
 
     @Before
     fun setUp() {
@@ -31,7 +34,7 @@ class BookmarkSearchControllerTest {
         createController(
             clearToolbarFocus = {
                 clearToolbarFocusInvoked = true
-            }
+            },
         ).handleEditingCancelled()
 
         assertTrue(clearToolbarFocusInvoked)
@@ -68,7 +71,7 @@ class BookmarkSearchControllerTest {
                 searchTermOrURL = url,
                 newTab = true,
                 from = BrowserDirection.FromBookmarkSearchDialog,
-                flags = flags
+                flags = flags,
             )
         }
     }

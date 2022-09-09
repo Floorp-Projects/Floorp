@@ -27,7 +27,7 @@ import org.mozilla.fenix.theme.FirefoxTheme
 class AwesomeBarWrapper @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,
-    defStyleAttr: Int = 0
+    defStyleAttr: Int = 0,
 ) : AbstractComposeView(context, attrs, defStyleAttr), AwesomeBar {
     private val providers = mutableStateOf(emptyList<AwesomeBar.SuggestionProvider>())
     private val text = mutableStateOf("")
@@ -55,7 +55,7 @@ class AwesomeBarWrapper @JvmOverloads constructor(
                     background = Color.Transparent,
                     title = FirefoxTheme.colors.textPrimary,
                     description = FirefoxTheme.colors.textSecondary,
-                    autocompleteIcon = FirefoxTheme.colors.textSecondary
+                    autocompleteIcon = FirefoxTheme.colors.textSecondary,
                 ),
                 onSuggestionClicked = { suggestion ->
                     suggestion.onSuggestionClicked?.invoke()

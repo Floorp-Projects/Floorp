@@ -34,7 +34,7 @@ class SecretDebugSettingsFragment : Fragment() {
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
-        savedInstanceState: Bundle?
+        savedInstanceState: Bundle?,
     ): View {
         return ComposeView(requireContext()).apply {
             setContent {
@@ -52,7 +52,7 @@ private fun DebugInfo() {
 
     Column(
         modifier = Modifier
-            .padding(8.dp)
+            .padding(8.dp),
     ) {
         Text(
             text = stringResource(R.string.debug_info_region_home),
@@ -63,18 +63,18 @@ private fun DebugInfo() {
         Text(
             text = store.state.search.region?.home ?: "Unknown",
             color = MaterialTheme.colors.onBackground,
-            modifier = Modifier.padding(4.dp)
+            modifier = Modifier.padding(4.dp),
         )
         Text(
             text = stringResource(R.string.debug_info_region_current),
             style = MaterialTheme.typography.h6,
             color = MaterialTheme.colors.onBackground,
-            modifier = Modifier.padding(4.dp)
+            modifier = Modifier.padding(4.dp),
         )
         Text(
             text = store.state.search.region?.current ?: "Unknown",
             color = MaterialTheme.colors.onBackground,
-            modifier = Modifier.padding(4.dp)
+            modifier = Modifier.padding(4.dp),
         )
     }
 }

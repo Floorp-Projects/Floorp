@@ -49,7 +49,7 @@ class BrowserToolbarViewTest {
             container = CoordinatorLayout(testContext),
             interactor = mockk(),
             customTabSession = mockk(relaxed = true),
-            lifecycleOwner = mockk()
+            lifecycleOwner = mockk(),
         )
 
         toolbarView.view = toolbar

@@ -35,17 +35,17 @@ class PrivateNotificationService : AbstractPrivateNotificationService() {
         setContentTitle(
             applicationContext.getString(
                 R.string.app_name_private_4,
-                getString(R.string.app_name)
-            )
+                getString(R.string.app_name),
+            ),
         )
         setContentText(
             applicationContext.getString(
-                R.string.notification_pbm_delete_text_2
-            )
+                R.string.notification_pbm_delete_text_2,
+            ),
         )
         color = ContextCompat.getColor(
             this@PrivateNotificationService,
-            R.color.pbm_notification_color
+            R.color.pbm_notification_color,
         )
     }
 

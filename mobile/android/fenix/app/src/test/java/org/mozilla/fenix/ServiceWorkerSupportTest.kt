@@ -83,7 +83,7 @@ class ServiceWorkerSupportTest {
                 source = eq(None),
                 searchTerms = eq(""), // default
                 private = eq(false), // default
-                historyMetadata = eq(null) // default
+                historyMetadata = eq(null), // default
             )
         }
     }

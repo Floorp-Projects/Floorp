@@ -22,7 +22,7 @@ fun SitePermissions.get(field: PhoneFeature) = when (field) {
     PhoneFeature.AUTOPLAY ->
         throw IllegalAccessException(
             "AUTOPLAY can't be accessed via get try " +
-                "using AUTOPLAY_AUDIBLE and AUTOPLAY_INAUDIBLE"
+                "using AUTOPLAY_AUDIBLE and AUTOPLAY_INAUDIBLE",
         )
     PhoneFeature.CAMERA -> camera
     PhoneFeature.LOCATION -> location
@@ -38,7 +38,7 @@ fun SitePermissions.get(field: PhoneFeature) = when (field) {
 fun SitePermissions.update(field: PhoneFeature, value: SitePermissions.Status) = when (field) {
     PhoneFeature.AUTOPLAY -> throw IllegalAccessException(
         "AUTOPLAY can't be accessed via update " +
-            "try using AUTOPLAY_AUDIBLE and AUTOPLAY_INAUDIBLE"
+            "try using AUTOPLAY_AUDIBLE and AUTOPLAY_INAUDIBLE",
     )
     PhoneFeature.CAMERA -> copy(camera = value)
     PhoneFeature.LOCATION -> copy(location = value)
@@ -72,7 +72,7 @@ fun RadioButton.setStartCheckedIndicator() {
  * @param onPreferenceChangeListener The callback to be invoked
  */
 inline fun <reified T> Preference.setOnPreferenceChangeListener(
-    crossinline onPreferenceChangeListener: (Preference, T) -> Boolean
+    crossinline onPreferenceChangeListener: (Preference, T) -> Boolean,
 ) {
     setOnPreferenceChangeListener { preference: Preference, newValue: Any ->
         (newValue as? T)?.let { onPreferenceChangeListener(preference, it) } ?: false

@@ -87,7 +87,7 @@ fun CollectionItem(
                 dismissDirection = dismissState.dismissDirection,
                 isLastInCollection = isLastInCollection,
             )
-        }
+        },
     ) {
         // We need to clip the top bounds to avoid this item drawing shadows over the above item.
         // But we need to add this shadows back to have a clearer separation between tabs
@@ -154,7 +154,7 @@ private fun DismissedTabBackground(
                     .padding(horizontal = 32.dp)
                     // Only show the delete icon for where the swipe starts.
                     .alpha(
-                        if (dismissDirection == StartToEnd) 1f else 0f
+                        if (dismissDirection == StartToEnd) 1f else 0f,
                     ),
                 tint = FirefoxTheme.colors.iconWarning,
             )
@@ -166,7 +166,7 @@ private fun DismissedTabBackground(
                     .padding(horizontal = 32.dp)
                     // Only show the delete icon for where the swipe starts.
                     .alpha(
-                        if (dismissDirection == EndToStart) 1f else 0f
+                        if (dismissDirection == EndToStart) 1f else 0f,
                     ),
                 tint = FirefoxTheme.colors.iconWarning,
             )
@@ -184,11 +184,11 @@ private fun Modifier.clipTop() = this.then(
             left = 0f - paddingPx,
             top = 0f,
             right = size.width + paddingPx,
-            bottom = size.height + paddingPx
+            bottom = size.height + paddingPx,
         ) {
             this@drawWithContent.drawContent()
         }
-    }
+    },
 )
 
 @Composable
@@ -236,6 +236,6 @@ private val tabPreview = object : Tab {
     override fun restore(
         context: Context,
         engine: Engine,
-        restoreSessionId: Boolean
+        restoreSessionId: Boolean,
     ): RecoverableTab? = null
 }

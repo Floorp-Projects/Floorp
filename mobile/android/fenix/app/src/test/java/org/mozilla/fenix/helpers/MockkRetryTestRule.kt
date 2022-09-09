@@ -40,7 +40,8 @@ class MockkRetryTestRule(val maxTries: Int = 3) : TestRule {
                             // Work around intermittently failing tests with mocked lambdas
                             // on JDK 11: https://github.com/mockk/mockk/issues/598
                             is InstantiationError,
-                            is MockKException -> {
+                            is MockKException,
+                            -> {
                                 failure = throwable
                                 val message = if (i < maxTries - 1) {
                                     "Retrying test \"${description.displayName}\""

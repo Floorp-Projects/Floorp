@@ -176,7 +176,7 @@ private fun ButtonPreview() {
             modifier = Modifier
                 .background(FirefoxTheme.colors.layer1)
                 .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+            verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             PrimaryButton(
                 text = "Label",

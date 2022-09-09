@@ -59,10 +59,10 @@ class EnhancedTrackingProtectionRobot {
                         containsString(
                             "social-track-digest256.dummytracker.org\n" +
                                 "ads-track-digest256.dummytracker.org\n" +
-                                "analytics-track-digest256.dummytracker.org"
-                        )
-                    )
-                )
+                                "analytics-track-digest256.dummytracker.org",
+                        ),
+                    ),
+                ),
             )
     }
 
@@ -130,9 +130,9 @@ private fun assertEnhancedTrackingProtectionSheetStatus(status: String, state: B
     onView(ViewMatchers.withResourceName("switch_widget")).check(
         matches(
             isChecked(
-                state
-            )
-        )
+                state,
+            ),
+        ),
     )
 }
 
@@ -149,8 +149,8 @@ private fun enhancedTrackingProtectionSwitch() =
 private fun trackingProtectionSettingsButton() =
     onView(withId(R.id.protection_settings)).inRoot(RootMatchers.isDialog()).check(
         matches(
-            isDisplayed()
-        )
+            isDisplayed(),
+        ),
     )
 
 private fun openEnhancedTrackingProtectionDetails() =
@@ -180,7 +180,7 @@ private fun assertCryptominersBlocked() {
 private fun assertTrackingContentBlocked() {
     assertTrue(
         mDevice.findObject(UiSelector().resourceId("$packageName:id/tracking_content"))
-            .waitForExists(waitingTime)
+            .waitForExists(waitingTime),
     )
 }
 
@@ -191,7 +191,7 @@ private fun assertSecuritySheetIsCompletelyDisplayed() {
         .waitForExists(waitingTime)
     assertTrue(
         mDevice.findObject(
-            UiSelector().resourceId("$packageName:id/quick_action_sheet")
-        ).waitForExists(waitingTime)
+            UiSelector().resourceId("$packageName:id/quick_action_sheet"),
+        ).waitForExists(waitingTime),
     )
 }

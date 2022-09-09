@@ -18,7 +18,7 @@ class AppStoreReducerTest {
     @Test
     fun `GIVEN a new value for inactiveTabsExpanded WHEN UpdateInactiveExpanded is called THEN update the current value`() {
         val initialState = AppState(
-            inactiveTabsExpanded = true
+            inactiveTabsExpanded = true,
         )
 
         var updatedState = AppStoreReducer.reduce(initialState, UpdateInactiveExpanded(false))
@@ -46,7 +46,7 @@ class AppStoreReducerTest {
         val crash1: NativeCodeCrash = mockk()
         val crash2: NativeCodeCrash = mockk()
         val initialState = AppState(
-            nonFatalCrashes = listOf(crash1, crash2)
+            nonFatalCrashes = listOf(crash1, crash2),
         )
 
         var updatedState = AppStoreReducer.reduce(initialState, RemoveNonFatalCrash(crash1))
@@ -62,7 +62,7 @@ class AppStoreReducerTest {
     @Test
     fun `GIVEN crashes exist in State WHEN RemoveAllNonFatalCrashes is called THEN clear the current list of crashes`() {
         val initialState = AppState(
-            nonFatalCrashes = listOf(mockk(), mockk())
+            nonFatalCrashes = listOf(mockk(), mockk()),
         )
 
         val updatedState = AppStoreReducer.reduce(initialState, RemoveAllNonFatalCrashes)

@@ -29,14 +29,15 @@ class TabHistoryControllerTest {
             index = 0,
             title = "",
             url = "",
-            isSelected = true
+            isSelected = true,
         )
     }
+
     @Test
     fun handleGoToHistoryIndexNormalBrowsing() {
         val controller = DefaultTabHistoryController(
             navController = navController,
-            goToHistoryIndexUseCase = goToHistoryIndexUseCase
+            goToHistoryIndexUseCase = goToHistoryIndexUseCase,
         )
 
         controller.handleGoToHistoryItem(currentItem)
@@ -50,7 +51,7 @@ class TabHistoryControllerTest {
         val customTabController = DefaultTabHistoryController(
             navController = navController,
             goToHistoryIndexUseCase = goToHistoryIndexUseCase,
-            customTabId = customTabId
+            customTabId = customTabId,
         )
 
         customTabController.handleGoToHistoryItem(currentItem)

@@ -40,7 +40,7 @@ class SyncPreferenceView(
     private val loggedOffTitle: String,
     private val loggedInTitle: String,
     private val onSignInToSyncClicked: () -> Unit = {},
-    private val onReconnectClicked: () -> Unit = {}
+    private val onReconnectClicked: () -> Unit = {},
 ) {
 
     init {
@@ -58,7 +58,7 @@ class SyncPreferenceView(
                     MainScope().launch { updateSyncPreferenceNeedsReauth() }
                 }
             },
-            owner = lifecycleOwner
+            owner = lifecycleOwner,
         )
 
         val accountExists = accountManager.authenticatedAccount() != null

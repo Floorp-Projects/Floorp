@@ -19,8 +19,9 @@ import java.util.concurrent.atomic.AtomicInteger
 private val classPrefixList = arrayOf(
     "android.widget.",
     "android.webkit.",
-    "android.app."
+    "android.app.",
 )
+
 /**
  * Counts the number of inflations fenix does. This class behaves only as an inflation counter since
  * it takes the `inflater` that is given by the base system. This is done in order not to change
@@ -28,10 +29,10 @@ private val classPrefixList = arrayOf(
  */
 open class PerformanceInflater(
     inflater: LayoutInflater,
-    context: Context
+    context: Context,
 ) : LayoutInflater(
     inflater,
-    context
+    context,
 ) {
 
     private val profiler: Profiler? = context.components.core.engine.profiler

@@ -69,7 +69,7 @@ class BookmarksUseCaseTest {
             visitTime = 2,
             visitType = VisitType.LINK,
             previewImageUrl = "http://firefox.com/image1",
-            isRemote = false
+            isRemote = false,
         )
         val bookmarkNode = BookmarkNode(
             BookmarkNodeType.ITEM,
@@ -79,7 +79,7 @@ class BookmarksUseCaseTest {
             "Firefox",
             "https://www.firefox.com",
             0,
-            null
+            null,
         )
 
         coEvery {
@@ -90,7 +90,7 @@ class BookmarksUseCaseTest {
             bookmarksStorage.getRecentBookmarks(
                 any(),
                 any(),
-                any()
+                any(),
             )
         }.coAnswers { listOf(bookmarkNode) }
 
@@ -101,17 +101,17 @@ class BookmarksUseCaseTest {
                 RecentBookmark(
                     title = bookmarkNode.title,
                     url = bookmarkNode.url,
-                    previewImageUrl = visitInfo.previewImageUrl
-                )
+                    previewImageUrl = visitInfo.previewImageUrl,
+                ),
             ),
-            result
+            result,
         )
 
         coVerify {
             bookmarksStorage.getRecentBookmarks(
                 BookmarksUseCase.DEFAULT_BOOKMARKS_TO_RETRIEVE,
                 22,
-                any()
+                any(),
             )
         }
     }
@@ -132,7 +132,7 @@ class BookmarksUseCaseTest {
             bookmarksStorage.getRecentBookmarks(
                 BookmarksUseCase.DEFAULT_BOOKMARKS_TO_RETRIEVE,
                 TimeUnit.DAYS.toMillis(BookmarksUseCase.DEFAULT_BOOKMARKS_DAYS_AGE_TO_RETRIEVE),
-                any()
+                any(),
             )
         }
     }

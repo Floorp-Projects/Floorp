@@ -24,7 +24,7 @@ class AccessibilityFragment : PreferenceFragmentCompat() {
         showToolbar(getString(R.string.preferences_accessibility))
 
         val forceZoomPreference = requirePreference<SwitchPreference>(
-            R.string.pref_key_accessibility_force_enable_zoom
+            R.string.pref_key_accessibility_force_enable_zoom,
         )
 
         forceZoomPreference.setOnPreferenceChangeListener<Boolean> { preference, shouldForce ->
@@ -38,7 +38,7 @@ class AccessibilityFragment : PreferenceFragmentCompat() {
         }
 
         val textSizePreference = requirePreference<TextPercentageSeekBarPreference>(
-            R.string.pref_key_accessibility_font_scale
+            R.string.pref_key_accessibility_font_scale,
         )
         textSizePreference.setOnPreferenceChangeListener<Int> { preference, newTextSize ->
             val settings = preference.context.settings()

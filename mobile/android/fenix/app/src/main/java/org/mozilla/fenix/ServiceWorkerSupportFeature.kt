@@ -21,7 +21,7 @@ import org.mozilla.fenix.ext.components
  * @param homeActivity [HomeActivity] used for navigating to browser or accessing various app components.
  */
 class ServiceWorkerSupportFeature(
-    private val homeActivity: HomeActivity
+    private val homeActivity: HomeActivity,
 ) : ServiceWorkerDelegate, DefaultLifecycleObserver {
     override fun onDestroy(owner: LifecycleOwner) {
         homeActivity.components.core.engine.unregisterServiceWorkerDelegate()
@@ -38,7 +38,7 @@ class ServiceWorkerSupportFeature(
             components.useCases.tabsUseCases.addTab(
                 flags = LoadUrlFlags.external(),
                 engineSession = engineSession,
-                source = SessionState.Source.Internal.None
+                source = SessionState.Source.Internal.None,
             )
         }
 

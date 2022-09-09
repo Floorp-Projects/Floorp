@@ -12,7 +12,7 @@ import org.mozilla.fenix.exceptions.ExceptionsInteractor
 
 class ExceptionsDeleteButtonViewHolder(
     view: View,
-    private val interactor: ExceptionsInteractor<*>
+    private val interactor: ExceptionsInteractor<*>,
 ) : RecyclerView.ViewHolder(view) {
 
     init {

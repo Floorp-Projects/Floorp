@@ -38,7 +38,7 @@ class NimbusMessagingStorage(
     private val reportMalformedMessage: (String) -> Unit,
     private val gleanPlumb: GleanPlumbInterface,
     private val messagingFeature: FeatureHolder<Messaging>,
-    private val attributeProvider: CustomAttributeProvider? = null
+    private val attributeProvider: CustomAttributeProvider? = null,
 ) {
     /**
      * Contains all malformed messages where they key can be the value or a trigger of the message
@@ -72,7 +72,7 @@ class NimbusMessagingStorage(
                 style = nimbusStyles[value.style] ?: defaultStyle,
                 metadata = storageMetadata[key] ?: addMetadata(key),
                 triggers = sanitizeTriggers(key, value.trigger, nimbusTriggers)
-                    ?: return@mapNotNull null
+                    ?: return@mapNotNull null,
             )
         }.filter {
             it.maxDisplayCount >= it.metadata.displayCount &&
@@ -138,9 +138,8 @@ class NimbusMessagingStorage(
         messageId: String,
         unsafeAction: String,
         nimbusActions: Map<String, String>,
-        isControl: Boolean
+        isControl: Boolean,
     ): String? {
-
         return when {
             unsafeAction.startsWith("http") -> {
                 unsafeAction
@@ -164,7 +163,7 @@ class NimbusMessagingStorage(
     internal fun sanitizeTriggers(
         messageId: String,
         unsafeTriggers: List<String>,
-        nimbusTriggers: Map<String, String>
+        nimbusTriggers: Map<String, String>,
     ): List<String>? {
         return unsafeTriggers.map {
             val safeTrigger = nimbusTriggers[it]
@@ -198,7 +197,7 @@ class NimbusMessagingStorage(
     internal fun isMessageEligible(
         message: Message,
         helper: GleanPlumbMessageHelper,
-        jexlCache: MutableMap<String, Boolean> = mutableMapOf()
+        jexlCache: MutableMap<String, Boolean> = mutableMapOf(),
     ): Boolean {
         return message.triggers.all { condition ->
             jexlCache[condition]
@@ -225,7 +224,7 @@ class NimbusMessagingStorage(
         return metadataStorage.addMetadata(
             Message.Metadata(
                 id = id,
-            )
+            ),
         )
     }
 }

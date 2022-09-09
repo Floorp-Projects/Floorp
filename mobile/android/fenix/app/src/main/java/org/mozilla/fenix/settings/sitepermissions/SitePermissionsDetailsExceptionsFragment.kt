@@ -119,7 +119,7 @@ class SitePermissionsDetailsExceptionsFragment : PreferenceFragmentCompat() {
             autoplayValues.firstOrNull { it.isSelected() } ?: AutoplayValue.getFallbackValue(
                 context,
                 settings,
-                sitePermissions
+                sitePermissions,
             )
 
         return selected.label
@@ -162,7 +162,7 @@ class SitePermissionsDetailsExceptionsFragment : PreferenceFragmentCompat() {
         val directions =
             SitePermissionsDetailsExceptionsFragmentDirections.actionSitePermissionsToExceptionsToManagePhoneFeature(
                 phoneFeature = phoneFeature,
-                sitePermissions = sitePermissions
+                sitePermissions = sitePermissions,
             )
         requireView().findNavController().navigate(directions)
     }

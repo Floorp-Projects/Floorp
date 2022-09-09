@@ -29,6 +29,7 @@ abstract class FenixDialogFragment : AppCompatDialogFragment() {
      * Indicates the position of the dialog top or bottom.
      */
     abstract val gravity: Int
+
     /**
      * The layout id that will be render on the dialog.
      */
@@ -54,8 +55,8 @@ abstract class FenixDialogFragment : AppCompatDialogFragment() {
             rootView,
             LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.MATCH_PARENT
-            )
+                LinearLayout.LayoutParams.MATCH_PARENT,
+            ),
         )
 
         window?.apply {
@@ -70,12 +71,12 @@ abstract class FenixDialogFragment : AppCompatDialogFragment() {
     fun inflateRootView(container: ViewGroup? = null): View {
         val contextThemeWrapper = ContextThemeWrapper(
             activity,
-            (activity as HomeActivity).themeManager.currentThemeResource
+            (activity as HomeActivity).themeManager.currentThemeResource,
         )
         return LayoutInflater.from(contextThemeWrapper).inflate(
             layoutId,
             container,
-            false
+            false,
         )
     }
 }

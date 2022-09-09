@@ -21,6 +21,7 @@ import org.junit.Test
 class FeatureFlagPreferenceTest {
 
     @MockK private lateinit var prefs: SharedPreferences
+
     @MockK private lateinit var editor: SharedPreferences.Editor
 
     @Before
@@ -61,7 +62,7 @@ class FeatureFlagPreferenceTest {
         var property by featureFlagPreference(
             "key",
             default = false,
-            featureFlag = featureFlag
+            featureFlag = featureFlag,
         )
     }
 }

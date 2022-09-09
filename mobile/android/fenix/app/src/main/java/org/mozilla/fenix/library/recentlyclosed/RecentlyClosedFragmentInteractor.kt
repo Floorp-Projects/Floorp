@@ -11,7 +11,7 @@ import mozilla.components.browser.state.state.recover.TabState
  * Provides implementations for the RecentlyClosedInteractor
  */
 class RecentlyClosedFragmentInteractor(
-    private val recentlyClosedController: RecentlyClosedController
+    private val recentlyClosedController: RecentlyClosedController,
 ) : RecentlyClosedInteractor {
 
     override fun onDelete(tab: TabState) {

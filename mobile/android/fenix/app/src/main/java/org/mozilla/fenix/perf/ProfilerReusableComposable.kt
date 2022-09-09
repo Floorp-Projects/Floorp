@@ -34,7 +34,7 @@ import androidx.compose.ui.unit.sp
 fun ProfilerDialogueCard(content: @Composable () -> Unit) {
     Card(
         elevation = 8.dp,
-        shape = RoundedCornerShape(12.dp)
+        shape = RoundedCornerShape(12.dp),
     ) {
         content()
     }
@@ -47,7 +47,7 @@ fun ProfilerDialogueCard(content: @Composable () -> Unit) {
 fun ProfilerLabeledRadioButton(
     text: String,
     subText: String,
-    state: MutableState<String>
+    state: MutableState<String>,
 ) {
     Row {
         RadioButton(
@@ -62,14 +62,14 @@ fun ProfilerLabeledRadioButton(
                     .padding(start = 8.dp)
                     .clickable {
                         state.value = text
-                    }
+                    },
             )
             Text(
                 text = subText,
                 fontWeight = FontWeight.ExtraLight,
                 modifier = Modifier
                     .padding(start = 8.dp)
-                    .clickable { state.value = text }
+                    .clickable { state.value = text },
             )
         }
     }
@@ -80,19 +80,19 @@ fun ProfilerLabeledRadioButton(
  */
 @Composable
 fun WaitForProfilerDialog(
-    @StringRes message: Int
+    @StringRes message: Int,
 ) {
     ProfilerDialogueCard {
         Column(
             modifier = Modifier.padding(8.dp),
             verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally
+            horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Text(
                 text = stringResource(message),
                 fontWeight = FontWeight.Bold,
                 fontSize = 15.sp,
-                modifier = Modifier.padding(8.dp)
+                modifier = Modifier.padding(8.dp),
             )
             Spacer(modifier = Modifier.height(2.dp))
             CircularProgressIndicator()

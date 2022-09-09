@@ -20,7 +20,9 @@ import org.mozilla.fenix.utils.Settings
 class DefaultBrowsingModeManagerTest {
 
     @MockK lateinit var settings: Settings
-    @MockK(relaxed = true) lateinit var callback: (BrowsingMode) -> Unit
+
+    @MockK(relaxed = true)
+    lateinit var callback: (BrowsingMode) -> Unit
     lateinit var manager: BrowsingModeManager
 
     private val initMode = BrowsingMode.Normal

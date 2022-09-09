@@ -25,11 +25,13 @@ class HistoryView(
     container: ViewGroup,
     val interactor: HistoryInteractor,
     val onZeroItemsLoaded: () -> Unit,
-    val onEmptyStateChanged: (Boolean) -> Unit
+    val onEmptyStateChanged: (Boolean) -> Unit,
 ) : LibraryPageView(container), UserInteractionHandler {
 
     val binding = ComponentHistoryBinding.inflate(
-        LayoutInflater.from(container.context), container, true
+        LayoutInflater.from(container.context),
+        container,
+        true,
     )
 
     var mode: HistoryFragmentState.Mode = HistoryFragmentState.Mode.Normal
@@ -97,12 +99,12 @@ class HistoryView(
         when (val mode = state.mode) {
             is HistoryFragmentState.Mode.Normal -> {
                 setUiForNormalMode(
-                    context.getString(R.string.library_history)
+                    context.getString(R.string.library_history),
                 )
             }
             is HistoryFragmentState.Mode.Editing -> {
                 setUiForSelectingMode(
-                    context.getString(R.string.history_multi_select_title, mode.selectedItems.size)
+                    context.getString(R.string.history_multi_select_title, mode.selectedItems.size),
                 )
             }
             else -> {
@@ -127,9 +129,9 @@ class HistoryView(
                         R.string.recently_closed_tab
                     } else {
                         R.string.recently_closed_tabs
-                    }
+                    },
                 ),
-                numRecentTabs
+                numRecentTabs,
             )
             recentlyClosedNav.isVisible = !userHasHistory
         }

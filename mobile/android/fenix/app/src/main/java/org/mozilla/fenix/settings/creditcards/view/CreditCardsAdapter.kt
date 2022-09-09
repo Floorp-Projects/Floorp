@@ -15,7 +15,7 @@ import org.mozilla.fenix.settings.creditcards.interactor.CreditCardsManagementIn
  * Adapter for a list of credit cards to be displayed.
  */
 class CreditCardsAdapter(
-    private val interactor: CreditCardsManagementInteractor
+    private val interactor: CreditCardsManagementInteractor,
 ) : ListAdapter<CreditCard, CreditCardItemViewHolder>(DiffCallback) {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): CreditCardItemViewHolder {

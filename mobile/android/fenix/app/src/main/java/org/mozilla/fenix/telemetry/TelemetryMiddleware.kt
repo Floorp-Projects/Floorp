@@ -41,7 +41,7 @@ class TelemetryMiddleware(
     override fun invoke(
         context: MiddlewareContext<BrowserState, BrowserAction>,
         next: (BrowserAction) -> Unit,
-        action: BrowserAction
+        action: BrowserAction,
     ) {
         // Pre process actions
         when (action) {
@@ -72,7 +72,8 @@ class TelemetryMiddleware(
             is TabListAction.RemoveTabAction,
             is TabListAction.RemoveAllNormalTabsAction,
             is TabListAction.RemoveAllTabsAction,
-            is TabListAction.RestoreAction -> {
+            is TabListAction.RestoreAction,
+            -> {
                 // Update/Persist tabs count whenever it changes
                 settings.openTabsCount = context.state.normalTabs.count()
                 if (context.state.normalTabs.isNotEmpty()) {

@@ -13,5 +13,5 @@ import androidx.datastore.dataStore
  */
 internal val Context.pocketStoriesSelectedCategoriesDataStore: DataStore<SelectedPocketStoriesCategories> by dataStore(
     fileName = "pocket_recommendations_selected_categories.pb",
-    serializer = SelectedPocketStoriesCategorySerializer
+    serializer = SelectedPocketStoriesCategorySerializer,
 )

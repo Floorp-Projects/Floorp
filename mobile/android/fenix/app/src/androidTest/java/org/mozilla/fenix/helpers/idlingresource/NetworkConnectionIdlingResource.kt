@@ -32,14 +32,16 @@ class NetworkConnectionIdlingResource(private val networkConnected: Boolean) : I
             } else {
                 !isOnline()
             }
-        if (idle)
+        if (idle) {
             resourceCallback?.onTransitionToIdle()
+        }
         return idle
     }
 
     override fun registerIdleTransitionCallback(callback: IdlingResource.ResourceCallback?) {
-        if (callback != null)
+        if (callback != null) {
             resourceCallback = callback
+        }
     }
 
     private fun isOnline(): Boolean {

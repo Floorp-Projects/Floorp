@@ -89,7 +89,7 @@ class BookmarksTest {
             bookmarksListIdlingResource =
                 RecyclerViewIdlingResource(
                     activityTestRule.activity.findViewById(R.id.bookmark_list),
-                    1
+                    1,
                 )
             IdlingRegistry.getInstance().register(bookmarksListIdlingResource!!)
 
@@ -642,7 +642,6 @@ class BookmarksTest {
     @SmokeTest
     @Test
     fun undoDeleteBookmarkFolderTest() {
-
         browserScreen {
         }.openThreeDotMenu {
         }.openBookmarks {

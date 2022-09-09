@@ -51,7 +51,7 @@ interface HistoryMetadataGroupInteractor : SelectionInteractor<History.Metadata>
  * The default implementation of [HistoryMetadataGroupInteractor].
  */
 class DefaultHistoryMetadataGroupInteractor(
-    private val controller: HistoryMetadataGroupController
+    private val controller: HistoryMetadataGroupController,
 ) : HistoryMetadataGroupInteractor {
 
     override fun open(item: History.Metadata) {

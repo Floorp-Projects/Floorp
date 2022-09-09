@@ -22,7 +22,7 @@ import org.mozilla.fenix.home.sessioncontrol.CustomizeHomeIteractor
 class CustomizeHomeButtonViewHolder(
     composeView: ComposeView,
     viewLifecycleOwner: LifecycleOwner,
-    private val interactor: CustomizeHomeIteractor
+    private val interactor: CustomizeHomeIteractor,
 ) : ComposeViewHolder(composeView, viewLifecycleOwner) {
 
     companion object {

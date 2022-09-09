@@ -20,7 +20,8 @@ class FirstSessionPing(private val context: Context) {
 
     private val prefs: SharedPreferences by lazy {
         context.getSharedPreferences(
-            "${this.javaClass.canonicalName}.prefs", Context.MODE_PRIVATE
+            "${this.javaClass.canonicalName}.prefs",
+            Context.MODE_PRIVATE,
         )
     }
 
@@ -65,7 +66,7 @@ class FirstSessionPing(private val context: Context) {
                     when (Config.channel.isMozillaOnline) {
                         true -> "MozillaOnline"
                         false -> "Mozilla"
-                    }
+                    },
                 )
                 FirstSession.timestamp.set()
             }
@@ -87,7 +88,7 @@ class FirstSessionPing(private val context: Context) {
         context.settings().adjustCampaignId,
         context.settings().adjustAdGroup,
         context.settings().adjustCreative,
-        context.settings().adjustNetwork
+        context.settings().adjustNetwork,
     ).any { it.isNotEmpty() }
 
     /**

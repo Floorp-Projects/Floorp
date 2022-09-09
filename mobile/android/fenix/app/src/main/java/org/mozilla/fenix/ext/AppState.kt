@@ -56,7 +56,8 @@ fun AppState.getFilteredStories(): List<PocketStory> {
                 }
 
             val filteredStoriesCount = getFilteredStoriesCount(
-                oldestSortedCategories, POCKET_STORIES_TO_SHOW_COUNT
+                oldestSortedCategories,
+                POCKET_STORIES_TO_SHOW_COUNT,
             )
 
             oldestSortedCategories
@@ -75,7 +76,7 @@ fun AppState.getFilteredStories(): List<PocketStory> {
 
     return combineRecommendedAndSponsoredStories(
         recommendedStories = recommendedStories,
-        sponsoredStories = sponsoredStories
+        sponsoredStories = sponsoredStories,
     )
 }
 
@@ -90,7 +91,7 @@ internal fun combineRecommendedAndSponsoredStories(
 ): List<PocketStory> {
     val recommendedStoriesToShow =
         POCKET_STORIES_TO_SHOW_COUNT - sponsoredStories.size.coerceAtMost(
-            POCKET_SPONSORED_STORIES_TO_SHOW_COUNT
+            POCKET_SPONSORED_STORIES_TO_SHOW_COUNT,
         )
 
     // Sponsored stories should be shown at position 2 and 8. If possible.
@@ -113,7 +114,7 @@ internal fun combineRecommendedAndSponsoredStories(
 @Suppress("ReturnCount", "NestedBlockDepth")
 internal fun getFilteredStoriesCount(
     selectedCategories: List<PocketRecommendedStoriesCategory>,
-    neededStoriesCount: Int
+    neededStoriesCount: Int,
 ): Map<String, Int> {
     val totalStoriesInFilteredCategories = selectedCategories.fold(0) { availableStories, category ->
         availableStories + category.stories.size
@@ -172,7 +173,7 @@ fun AppState.filterState(blocklistHandler: BlocklistHandler): AppState =
             recentBookmarks = recentBookmarks.filteredByBlocklist(),
             recentTabs = recentTabs.filteredByBlocklist().filterContile(),
             recentHistory = recentHistory.filteredByBlocklist().filterContile(),
-            recentSyncedTabState = recentSyncedTabState.filteredByBlocklist().filterContile()
+            recentSyncedTabState = recentSyncedTabState.filteredByBlocklist().filterContile(),
         )
     }
 

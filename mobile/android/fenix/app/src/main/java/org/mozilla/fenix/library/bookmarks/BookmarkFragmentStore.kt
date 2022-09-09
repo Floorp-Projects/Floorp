@@ -12,9 +12,10 @@ import mozilla.components.lib.state.Store
 import org.mozilla.fenix.selection.SelectionHolder
 
 class BookmarkFragmentStore(
-    initialState: BookmarkFragmentState
+    initialState: BookmarkFragmentState,
 ) : Store<BookmarkFragmentState, BookmarkFragmentAction>(
-    initialState, ::bookmarkFragmentStateReducer
+    initialState,
+    ::bookmarkFragmentStateReducer,
 )
 
 /**
@@ -29,7 +30,7 @@ data class BookmarkFragmentState(
     val tree: BookmarkNode?,
     val mode: Mode = Mode.Normal(),
     val guidBackstack: List<String> = emptyList(),
-    val isLoading: Boolean = true
+    val isLoading: Boolean = true,
 ) : State {
     sealed class Mode : SelectionHolder<BookmarkNode> {
         override val selectedItems = emptySet<BookmarkNode>()
@@ -60,7 +61,7 @@ sealed class BookmarkFragmentAction : Action {
  */
 private fun bookmarkFragmentStateReducer(
     state: BookmarkFragmentState,
-    action: BookmarkFragmentAction
+    action: BookmarkFragmentAction,
 ): BookmarkFragmentState {
     return when (action) {
         is BookmarkFragmentAction.Change -> {
@@ -85,11 +86,11 @@ private fun bookmarkFragmentStateReducer(
                 tree = action.tree,
                 mode = mode,
                 guidBackstack = backstack,
-                isLoading = false
+                isLoading = false,
             )
         }
         is BookmarkFragmentAction.Select -> state.copy(
-            mode = BookmarkFragmentState.Mode.Selecting(state.mode.selectedItems + action.item)
+            mode = BookmarkFragmentState.Mode.Selecting(state.mode.selectedItems + action.item),
         )
         is BookmarkFragmentAction.Deselect -> {
             val items = state.mode.selectedItems - action.item
@@ -99,7 +100,7 @@ private fun bookmarkFragmentStateReducer(
                 BookmarkFragmentState.Mode.Selecting(items)
             }
             state.copy(
-                mode = mode
+                mode = mode,
             )
         }
         is BookmarkFragmentAction.DeselectAll ->
@@ -108,15 +109,15 @@ private fun bookmarkFragmentStateReducer(
                     BookmarkFragmentState.Mode.Syncing
                 } else {
                     BookmarkFragmentState.Mode.Normal()
-                }
+                },
             )
         is BookmarkFragmentAction.StartSync -> state.copy(
-            mode = BookmarkFragmentState.Mode.Syncing
+            mode = BookmarkFragmentState.Mode.Syncing,
         )
         is BookmarkFragmentAction.FinishSync -> state.copy(
             mode = BookmarkFragmentState.Mode.Normal(
-                showMenu = shouldShowMenu(state.tree?.guid)
-            )
+                showMenu = shouldShowMenu(state.tree?.guid),
+            ),
         )
     }
 }

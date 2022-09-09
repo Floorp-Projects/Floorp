@@ -45,7 +45,7 @@ class ToolbarGestureHandler(
     private val tabPreview: TabPreview,
     private val toolbarLayout: View,
     private val store: BrowserStore,
-    private val selectTabUseCase: TabsUseCases.SelectTabUseCase
+    private val selectTabUseCase: TabsUseCases.SelectTabUseCase,
 ) : SwipeGestureListener {
 
     private enum class GestureDirection {
@@ -100,21 +100,21 @@ class ToolbarGestureHandler(
                 tabPreview.translationX = when (gestureDirection) {
                     GestureDirection.RIGHT_TO_LEFT -> min(
                         windowWidth.toFloat() + previewOffset,
-                        tabPreview.translationX - distanceX
+                        tabPreview.translationX - distanceX,
                     ).coerceAtLeast(0f)
                     GestureDirection.LEFT_TO_RIGHT -> max(
                         -windowWidth.toFloat() - previewOffset,
-                        tabPreview.translationX - distanceX
+                        tabPreview.translationX - distanceX,
                     ).coerceAtMost(0f)
                 }
                 contentLayout.translationX = when (gestureDirection) {
                     GestureDirection.RIGHT_TO_LEFT -> min(
                         0f,
-                        contentLayout.translationX - distanceX
+                        contentLayout.translationX - distanceX,
                     ).coerceAtLeast(-windowWidth.toFloat() - previewOffset)
                     GestureDirection.LEFT_TO_RIGHT -> max(
                         0f,
-                        contentLayout.translationX - distanceX
+                        contentLayout.translationX - distanceX,
                     ).coerceAtMost(windowWidth.toFloat() + previewOffset)
                 }
             }
@@ -125,11 +125,11 @@ class ToolbarGestureHandler(
                 contentLayout.translationX = when (gestureDirection) {
                     GestureDirection.RIGHT_TO_LEFT -> max(
                         -maxContentHidden.toFloat(),
-                        contentLayout.translationX - distanceX
+                        contentLayout.translationX - distanceX,
                     ).coerceAtMost(0f)
                     GestureDirection.LEFT_TO_RIGHT -> min(
                         maxContentHidden.toFloat(),
-                        contentLayout.translationX - distanceX
+                        contentLayout.translationX - distanceX,
                     ).coerceAtLeast(0f)
                 }
             }
@@ -138,7 +138,7 @@ class ToolbarGestureHandler(
 
     override fun onSwipeFinished(
         velocityX: Float,
-        velocityY: Float
+        velocityY: Float,
     ) {
         val destination = getDestination()
         if (destination is Destination.Tab && isGestureComplete(velocityX)) {
@@ -151,9 +151,10 @@ class ToolbarGestureHandler(
     private fun getDestination(): Destination {
         val isLtr = activity.resources.configuration.layoutDirection == View.LAYOUT_DIRECTION_LTR
         val currentTab = store.state.selectedTab ?: return Destination.None
-        val currentIndex = store.state.getNormalOrPrivateTabs(currentTab.content.private).indexOfFirst {
-            it.id == currentTab.id
-        }
+        val currentIndex =
+            store.state.getNormalOrPrivateTabs(currentTab.content.private).indexOfFirst {
+                it.id == currentTab.id
+            }
 
         return if (currentIndex == -1) {
             Destination.None
@@ -255,11 +256,13 @@ class ToolbarGestureHandler(
                 tabPreview.animate()
                     .alpha(0f)
                     .setDuration(shortAnimationDuration.toLong())
-                    .setListener(object : AnimatorListenerAdapter() {
-                        override fun onAnimationEnd(animation: Animator?) {
-                            tabPreview.isVisible = false
-                        }
-                    })
+                    .setListener(
+                        object : AnimatorListenerAdapter() {
+                            override fun onAnimationEnd(animation: Animator?) {
+                                tabPreview.isVisible = false
+                            }
+                        },
+                    )
             }
         }.start()
     }

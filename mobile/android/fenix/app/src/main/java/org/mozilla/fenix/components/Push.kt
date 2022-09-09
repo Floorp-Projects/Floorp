@@ -27,7 +27,7 @@ class Push(val context: Context, crashReporter: CrashReporter) {
                 context = context,
                 service = pushService,
                 config = config,
-                crashReporter = crashReporter
+                crashReporter = crashReporter,
             )
         }
     }
@@ -56,7 +56,7 @@ class Push(val context: Context, crashReporter: CrashReporter) {
                 } else {
                     // Treat any non "http" value as HTTPS, since those are the only 2 options.
                     Protocol.HTTPS
-                }
+                },
             )
         }
     }

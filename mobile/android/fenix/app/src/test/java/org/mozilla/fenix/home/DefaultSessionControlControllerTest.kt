@@ -81,6 +81,7 @@ class DefaultSessionControlControllerTest {
 
     @get:Rule
     val coroutinesTestRule = MainCoroutineRule()
+
     @get:Rule
     val gleanTestRule = GleanTestRule(testContext)
 
@@ -101,7 +102,7 @@ class DefaultSessionControlControllerTest {
         name = "Test Engine",
         icon = mockk(relaxed = true),
         type = SearchEngine.Type.BUNDLED,
-        resultUrls = listOf("https://example.org/?q={searchTerms}")
+        resultUrls = listOf("https://example.org/?q={searchTerms}"),
     )
 
     private val googleSearchEngine = SearchEngine(
@@ -110,7 +111,7 @@ class DefaultSessionControlControllerTest {
         icon = mockk(relaxed = true),
         type = SearchEngine.Type.BUNDLED,
         resultUrls = listOf("https://www.google.com/?q={searchTerms}"),
-        suggestUrl = "https://www.google.com/"
+        suggestUrl = "https://www.google.com/",
     )
 
     private val duckDuckGoSearchEngine = SearchEngine(
@@ -119,7 +120,7 @@ class DefaultSessionControlControllerTest {
         icon = mockk(relaxed = true),
         type = SearchEngine.Type.BUNDLED,
         resultUrls = listOf("https://duckduckgo.com/?q=%7BsearchTerms%7D&t=fpas"),
-        suggestUrl = "https://ac.duckduckgo.com/ac/?q=%7BsearchTerms%7D&type=list"
+        suggestUrl = "https://ac.duckduckgo.com/ac/?q=%7BsearchTerms%7D&type=list",
     )
 
     private lateinit var store: BrowserStore
@@ -130,9 +131,9 @@ class DefaultSessionControlControllerTest {
         store = BrowserStore(
             BrowserState(
                 search = SearchState(
-                    regionSearchEngines = listOf(searchEngine)
-                )
-            )
+                    regionSearchEngines = listOf(searchEngine),
+                ),
+            ),
         )
 
         every { appStore.state } returns AppState(
@@ -142,7 +143,7 @@ class DefaultSessionControlControllerTest {
             topSites = emptyList(),
             showCollectionPlaceholder = true,
             recentTabs = emptyList(),
-            recentBookmarks = emptyList()
+            recentBookmarks = emptyList(),
         )
 
         every { navController.currentDestination } returns mockk {
@@ -170,7 +171,7 @@ class DefaultSessionControlControllerTest {
                 match<NavDirections> {
                     it.actionId == R.id.action_global_collectionCreationFragment
                 },
-                null
+                null,
             )
         }
     }
@@ -187,7 +188,7 @@ class DefaultSessionControlControllerTest {
                 match<NavDirections> {
                     it.actionId == R.id.action_global_homeSettingsFragment
                 },
-                null
+                null,
             )
         }
     }
@@ -209,7 +210,7 @@ class DefaultSessionControlControllerTest {
             activity.openToBrowserAndLoad(
                 searchTermOrURL = "https://mozilla.org",
                 newTab = true,
-                from = BrowserDirection.FromHome
+                from = BrowserDirection.FromHome,
             )
         }
     }
@@ -226,8 +227,8 @@ class DefaultSessionControlControllerTest {
                 contextId = null,
                 readerState = ReaderState(),
                 lastAccess = 0,
-                private = false
-            )
+                private = false,
+            ),
         )
 
         val tab = mockk<ComponentTab> {
@@ -264,8 +265,8 @@ class DefaultSessionControlControllerTest {
                 contextId = null,
                 readerState = ReaderState(),
                 lastAccess = 0,
-                private = false
-            )
+                private = false,
+            ),
         )
 
         val tab = mockk<ComponentTab> {
@@ -310,7 +311,7 @@ class DefaultSessionControlControllerTest {
         every {
             activity.resources.getString(
                 R.string.delete_tab_and_collection_dialog_title,
-                "Collection"
+                "Collection",
             )
         } returns "Delete Collection?"
         every {
@@ -322,7 +323,7 @@ class DefaultSessionControlControllerTest {
         createController(
             removeCollectionWithUndo = { collection ->
                 actualCollection = collection
-            }
+            },
         ).handleCollectionRemoveTab(expectedCollection, tab, false)
 
         assertNotNull(Collections.tabRemoved.testGetValue())
@@ -361,7 +362,7 @@ class DefaultSessionControlControllerTest {
         verify {
             navController.navigate(
                 match<NavDirections> { it.actionId == R.id.action_global_shareFragment },
-                null
+                null,
             )
         }
     }
@@ -380,7 +381,7 @@ class DefaultSessionControlControllerTest {
         createController(
             removeCollectionWithUndo = { collection ->
                 actualCollection = collection
-            }
+            },
         ).handleDeleteCollectionTapped(expectedCollection)
 
         assertEquals(expectedCollection, actualCollection)
@@ -398,7 +399,7 @@ class DefaultSessionControlControllerTest {
                 searchTermOrURL = SupportUtils.getGenericSumoURLForTopic
                 (SupportUtils.SumoTopic.PRIVATE_BROWSING_MYTHS),
                 newTab = true,
-                from = BrowserDirection.FromHome
+                from = BrowserDirection.FromHome,
             )
         }
     }
@@ -418,7 +419,7 @@ class DefaultSessionControlControllerTest {
         verify {
             navController.navigate(
                 match<NavDirections> { it.actionId == R.id.action_global_collectionCreationFragment },
-                null
+                null,
             )
         }
     }
@@ -429,7 +430,7 @@ class DefaultSessionControlControllerTest {
             id = 1L,
             title = "Mozilla",
             url = "mozilla.org",
-            createdAt = 0
+            createdAt = 0,
         )
         val controller = spyk(createController())
 
@@ -449,7 +450,7 @@ class DefaultSessionControlControllerTest {
             tabsUseCases.addTab.invoke(
                 url = topSite.url,
                 selectTab = true,
-                startLoading = true
+                startLoading = true,
             )
         }
         verify { activity.openToBrowser(BrowserDirection.FromHome) }
@@ -461,7 +462,7 @@ class DefaultSessionControlControllerTest {
             id = 1L,
             title = "Mozilla",
             url = "mozilla.org",
-            createdAt = 0
+            createdAt = 0,
         )
         val controller = spyk(createController())
 
@@ -477,7 +478,7 @@ class DefaultSessionControlControllerTest {
             tabsUseCases.addTab.invoke(
                 url = topSite.url,
                 selectTab = true,
-                startLoading = true
+                startLoading = true,
             )
         }
         verify { activity.openToBrowser(BrowserDirection.FromHome) }
@@ -489,7 +490,7 @@ class DefaultSessionControlControllerTest {
             id = 1L,
             title = "Google",
             url = SupportUtils.GOOGLE_URL,
-            createdAt = 0
+            createdAt = 0,
         )
         val controller = spyk(createController())
 
@@ -515,7 +516,7 @@ class DefaultSessionControlControllerTest {
             tabsUseCases.addTab.invoke(
                 url = SupportUtils.GOOGLE_US_URL,
                 selectTab = true,
-                startLoading = true
+                startLoading = true,
             )
         }
         verify { activity.openToBrowser(BrowserDirection.FromHome) }
@@ -527,7 +528,7 @@ class DefaultSessionControlControllerTest {
             id = 1L,
             title = "Google",
             url = SupportUtils.GOOGLE_URL,
-            createdAt = 0
+            createdAt = 0,
         )
         val controller = spyk(createController())
 
@@ -553,7 +554,7 @@ class DefaultSessionControlControllerTest {
             tabsUseCases.addTab.invoke(
                 SupportUtils.GOOGLE_XX_URL,
                 selectTab = true,
-                startLoading = true
+                startLoading = true,
             )
         }
         verify { activity.openToBrowser(BrowserDirection.FromHome) }
@@ -567,7 +568,7 @@ class DefaultSessionControlControllerTest {
             id = 1L,
             title = "Google",
             url = SupportUtils.GOOGLE_URL,
-            createdAt = 0
+            createdAt = 0,
         )
         val controller = spyk(createController())
 
@@ -602,7 +603,7 @@ class DefaultSessionControlControllerTest {
             id = 1L,
             title = "DuckDuckGo",
             url = "https://duckduckgo.com",
-            createdAt = 0
+            createdAt = 0,
         )
         val controller = spyk(createController())
 
@@ -627,7 +628,7 @@ class DefaultSessionControlControllerTest {
             id = 1L,
             title = "Google",
             url = SupportUtils.GOOGLE_URL,
-            createdAt = 0
+            createdAt = 0,
         )
         val controller = spyk(createController())
 
@@ -653,7 +654,7 @@ class DefaultSessionControlControllerTest {
             tabsUseCases.addTab.invoke(
                 SupportUtils.GOOGLE_US_URL,
                 selectTab = true,
-                startLoading = true
+                startLoading = true,
             )
         }
         verify { activity.openToBrowser(BrowserDirection.FromHome) }
@@ -665,7 +666,7 @@ class DefaultSessionControlControllerTest {
             id = 1L,
             title = "Google",
             url = SupportUtils.GOOGLE_URL,
-            createdAt = 0
+            createdAt = 0,
         )
         val controller = spyk(createController())
 
@@ -691,7 +692,7 @@ class DefaultSessionControlControllerTest {
             tabsUseCases.addTab.invoke(
                 SupportUtils.GOOGLE_XX_URL,
                 selectTab = true,
-                startLoading = true
+                startLoading = true,
             )
         }
         verify { activity.openToBrowser(BrowserDirection.FromHome) }
@@ -703,7 +704,7 @@ class DefaultSessionControlControllerTest {
             id = 1L,
             title = "Google",
             url = SupportUtils.GOOGLE_URL,
-            createdAt = 0
+            createdAt = 0,
         )
         val controller = spyk(createController())
 
@@ -729,7 +730,7 @@ class DefaultSessionControlControllerTest {
             tabsUseCases.addTab.invoke(
                 SupportUtils.GOOGLE_US_URL,
                 selectTab = true,
-                startLoading = true
+                startLoading = true,
             )
         }
         verify { activity.openToBrowser(BrowserDirection.FromHome) }
@@ -741,7 +742,7 @@ class DefaultSessionControlControllerTest {
             id = 1L,
             title = "Google",
             url = SupportUtils.GOOGLE_URL,
-            createdAt = 0
+            createdAt = 0,
         )
         val controller = spyk(createController())
 
@@ -767,7 +768,7 @@ class DefaultSessionControlControllerTest {
             tabsUseCases.addTab.invoke(
                 SupportUtils.GOOGLE_XX_URL,
                 selectTab = true,
-                startLoading = true
+                startLoading = true,
             )
         }
         verify { activity.openToBrowser(BrowserDirection.FromHome) }
@@ -782,7 +783,7 @@ class DefaultSessionControlControllerTest {
             clickUrl = "",
             imageUrl = "",
             impressionUrl = "",
-            createdAt = 0
+            createdAt = 0,
         )
         val position = 0
         val controller = spyk(createController())
@@ -803,7 +804,7 @@ class DefaultSessionControlControllerTest {
             tabsUseCases.addTab.invoke(
                 url = topSite.url,
                 selectTab = true,
-                startLoading = true
+                startLoading = true,
             )
         }
         verify { controller.submitTopSitesImpressionPing(topSite, position) }
@@ -820,7 +821,7 @@ class DefaultSessionControlControllerTest {
             clickUrl = "https://mozilla.com/click",
             imageUrl = "https://test.com/image2.jpg",
             impressionUrl = "https://example.com",
-            createdAt = 3
+            createdAt = 3,
         )
         val position = 0
         assertNull(TopSites.contileImpression.testGetValue())
@@ -861,7 +862,7 @@ class DefaultSessionControlControllerTest {
             id = 1L,
             title = "Google",
             url = SupportUtils.GOOGLE_URL,
-            createdAt = 0
+            createdAt = 0,
         )
         assertNull(TopSites.remove.testGetValue())
         assertNull(TopSites.googleTopSiteRemoved.testGetValue())
@@ -892,7 +893,7 @@ class DefaultSessionControlControllerTest {
             activity.openToBrowserAndLoad(
                 searchTermOrURL = SupportUtils.getMozillaPageUrl(SupportUtils.MozillaPage.PRIVATE_NOTICE),
                 newTab = true,
-                from = BrowserDirection.FromHome
+                from = BrowserDirection.FromHome,
             )
         }
     }
@@ -911,7 +912,7 @@ class DefaultSessionControlControllerTest {
         verify {
             navController.navigate(
                 match<NavDirections> { it.actionId == R.id.action_global_tabsTrayFragment },
-                null
+                null,
             )
         }
     }
@@ -928,7 +929,7 @@ class DefaultSessionControlControllerTest {
                 searchTermOrURL = "text",
                 newTab = true,
                 from = BrowserDirection.FromHome,
-                engine = searchEngine
+                engine = searchEngine,
             )
         }
 
@@ -940,7 +941,7 @@ class DefaultSessionControlControllerTest {
                 searchTermOrURL = "https://mozilla.org",
                 newTab = true,
                 from = BrowserDirection.FromHome,
-                engine = searchEngine
+                engine = searchEngine,
             )
         }
         assertNotNull(Events.enteredUrl.testGetValue())
@@ -953,7 +954,7 @@ class DefaultSessionControlControllerTest {
         verify {
             navController.navigate(
                 match<NavDirections> { it.actionId == R.id.action_global_search_dialog },
-                null
+                null,
             )
         }
     }
@@ -1027,7 +1028,7 @@ class DefaultSessionControlControllerTest {
             id = "otherTab",
             url = url,
             private = false,
-            engineSession = mockk(relaxed = true)
+            engineSession = mockk(relaxed = true),
         )
         store.dispatch(TabListAction.AddTabAction(tab, select = true)).joinBlocking()
 
@@ -1041,8 +1042,8 @@ class DefaultSessionControlControllerTest {
             AppAction.ModeChange(Mode.fromBrowsingMode(newMode))
             navController.navigate(
                 BrowserFragmentDirections.actionGlobalSearchDialog(
-                    sessionId = null
-                )
+                    sessionId = null,
+                ),
             )
         }
     }
@@ -1058,7 +1059,7 @@ class DefaultSessionControlControllerTest {
             id = "otherTab",
             url = url,
             private = true,
-            engineSession = mockk(relaxed = true)
+            engineSession = mockk(relaxed = true),
         )
         store.dispatch(TabListAction.AddTabAction(tab, select = true)).joinBlocking()
 
@@ -1074,8 +1075,8 @@ class DefaultSessionControlControllerTest {
             AppAction.ModeChange(Mode.fromBrowsingMode(newMode))
             navController.navigate(
                 BrowserFragmentDirections.actionGlobalSearchDialog(
-                    sessionId = null
-                )
+                    sessionId = null,
+                ),
             )
         }
     }
@@ -1139,7 +1140,7 @@ class DefaultSessionControlControllerTest {
                 match<NavDirections> {
                     it.actionId == R.id.action_global_homeSettingsFragment
                 },
-                null
+                null,
             )
         }
     }
@@ -1155,7 +1156,7 @@ class DefaultSessionControlControllerTest {
             activity.openToBrowserAndLoad(
                 searchTermOrURL = SupportUtils.getGenericSumoURLForTopic(SupportUtils.SumoTopic.SPONSOR_PRIVACY),
                 newTab = true,
-                from = BrowserDirection.FromHome
+                from = BrowserDirection.FromHome,
             )
         }
     }
@@ -1169,7 +1170,7 @@ class DefaultSessionControlControllerTest {
             clickUrl = "",
             imageUrl = "",
             impressionUrl = "",
-            createdAt = 0
+            createdAt = 0,
         )
         createController().handleOpenInPrivateTabClicked(topSite)
 
@@ -1185,19 +1186,19 @@ class DefaultSessionControlControllerTest {
             id = 1L,
             title = "Mozilla",
             url = "mozilla.org",
-            createdAt = 0
+            createdAt = 0,
         )
         val topSite2 = TopSite.Pinned(
             id = 1L,
             title = "Mozilla",
             url = "mozilla.org",
-            createdAt = 0
+            createdAt = 0,
         )
         val topSite3 = TopSite.Frecent(
             id = 1L,
             title = "Mozilla",
             url = "mozilla.org",
-            createdAt = 0
+            createdAt = 0,
         )
         assertNull(TopSites.openInPrivateTab.testGetValue())
 
@@ -1232,7 +1233,7 @@ class DefaultSessionControlControllerTest {
         hideOnboarding: () -> Unit = { },
         registerCollectionStorageObserver: () -> Unit = { },
         showTabTray: () -> Unit = { },
-        removeCollectionWithUndo: (tabCollection: TabCollection) -> Unit = { }
+        removeCollectionWithUndo: (tabCollection: TabCollection) -> Unit = { },
     ): DefaultSessionControlController {
         return DefaultSessionControlController(
             activity = activity,
@@ -1251,7 +1252,7 @@ class DefaultSessionControlControllerTest {
             hideOnboarding = hideOnboarding,
             registerCollectionStorageObserver = registerCollectionStorageObserver,
             removeCollectionWithUndo = removeCollectionWithUndo,
-            showTabTray = showTabTray
+            showTabTray = showTabTray,
         )
     }
 }

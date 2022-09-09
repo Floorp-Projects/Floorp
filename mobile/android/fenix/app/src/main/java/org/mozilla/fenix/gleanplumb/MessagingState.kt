@@ -12,5 +12,5 @@ package org.mozilla.fenix.gleanplumb
  */
 data class MessagingState(
     val messages: List<Message> = emptyList(),
-    val messageToShow: Message? = null
+    val messageToShow: Message? = null,
 )

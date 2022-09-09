@@ -46,9 +46,9 @@ class TrackingProtectionExceptionsInteractorTest {
                 createTab("https://mozilla.org", false, "tab1")
                     .copy(trackingProtection = TrackingProtectionState(ignoredOnTrackingProtection = true)),
                 createTab("https://firefox.com", false, "tab2")
-                    .copy(trackingProtection = TrackingProtectionState(ignoredOnTrackingProtection = true))
-            )
-        )
+                    .copy(trackingProtection = TrackingProtectionState(ignoredOnTrackingProtection = true)),
+            ),
+        ),
     )
     private val capture =
         CaptureActionsMiddleware<ExceptionsFragmentState, ExceptionsFragmentAction>()
@@ -83,7 +83,7 @@ class TrackingProtectionExceptionsInteractorTest {
         interactor = DefaultTrackingProtectionExceptionsInteractor(
             activity = activity,
             exceptionsStore = exceptionsStore,
-            trackingProtectionUseCases = trackingProtectionUseCases
+            trackingProtectionUseCases = trackingProtectionUseCases,
         )
 
         every { engine.trackingProtectionExceptionStore } returns trackingStorage
@@ -98,13 +98,13 @@ class TrackingProtectionExceptionsInteractorTest {
         interactor.onLearnMore()
 
         val supportUrl = SupportUtils.getGenericSumoURLForTopic(
-            SupportUtils.SumoTopic.TRACKING_PROTECTION
+            SupportUtils.SumoTopic.TRACKING_PROTECTION,
         )
         verify {
             activity.openToBrowserAndLoad(
                 searchTermOrURL = supportUrl,
                 newTab = true,
-                from = BrowserDirection.FromTrackingProtectionExceptions
+                from = BrowserDirection.FromTrackingProtectionExceptions,
             )
         }
     }

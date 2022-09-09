@@ -35,11 +35,13 @@ interface RecentlyClosedInteractor : SelectionInteractor<TabState> {
  */
 class RecentlyClosedFragmentView(
     container: ViewGroup,
-    private val interactor: RecentlyClosedFragmentInteractor
+    private val interactor: RecentlyClosedFragmentInteractor,
 ) : LibraryPageView(container) {
 
     private val binding = ComponentRecentlyClosedBinding.inflate(
-        LayoutInflater.from(container.context), container, true
+        LayoutInflater.from(container.context),
+        container,
+        true,
     )
 
     private val recentlyClosedAdapter: RecentlyClosedAdapter = RecentlyClosedAdapter(interactor)
@@ -60,8 +62,8 @@ class RecentlyClosedFragmentView(
             iconView.setImageDrawable(
                 AppCompatResources.getDrawable(
                     containerView.context,
-                    R.drawable.ic_history
-                )
+                    R.drawable.ic_history,
+                ),
             )
             setOnClickListener {
                 interactor.onNavigateToHistory()
@@ -80,7 +82,7 @@ class RecentlyClosedFragmentView(
                 setUiForNormalMode(context.getString(R.string.library_recently_closed_tabs))
             } else {
                 setUiForSelectingMode(
-                    context.getString(R.string.history_multi_select_title, selectedTabs.size)
+                    context.getString(R.string.history_multi_select_title, selectedTabs.size),
                 )
             }
         }

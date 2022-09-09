@@ -14,7 +14,7 @@ import org.mozilla.fenix.exceptions.ExceptionsAdapter
  * along with controls to remove the exception.
  */
 class LoginExceptionsAdapter(
-    interactor: LoginExceptionsInteractor
+    interactor: LoginExceptionsInteractor,
 ) : ExceptionsAdapter<LoginException>(interactor, DiffCallback) {
 
     override val deleteButtonLayoutId = R.layout.delete_logins_exceptions_button
@@ -24,7 +24,7 @@ class LoginExceptionsAdapter(
         LoginAdapterItem(item)
 
     data class LoginAdapterItem(
-        override val item: LoginException
+        override val item: LoginException,
     ) : AdapterItem.Item<LoginException>() {
         override val url get() = item.origin
     }

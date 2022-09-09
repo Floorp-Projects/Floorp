@@ -21,7 +21,7 @@ import org.mozilla.fenix.GleanMetrics.EngineTab.foregroundMetricsKeys as Metrics
  * - https://github.com/mozilla-mobile/android-components/issues/9997
  */
 class TelemetryLifecycleObserver(
-    private val store: BrowserStore
+    private val store: BrowserStore,
 ) : DefaultLifecycleObserver {
     private var pausedState: TabState? = null
 
@@ -43,8 +43,8 @@ class TelemetryLifecycleObserver(
                 MetricsKeys.foregroundActiveTabs to currentState.activeEngineTabs.toString(),
                 MetricsKeys.foregroundCrashedTabs to currentState.crashedTabs.toString(),
                 MetricsKeys.foregroundTotalTabs to currentState.totalTabs.toString(),
-                MetricsKeys.timeInBackground to (currentState.timestamp - lastState.timestamp).toString()
-            )
+                MetricsKeys.timeInBackground to (currentState.timestamp - lastState.timestamp).toString(),
+            ),
         )
 
         pausedState = null
@@ -65,7 +65,7 @@ class TelemetryLifecycleObserver(
         return TabState(
             activeEngineTabs = tabsWithEngineSession,
             totalTabs = totalTabs,
-            crashedTabs = crashedTabs
+            crashedTabs = crashedTabs,
         )
     }
 
@@ -73,6 +73,6 @@ class TelemetryLifecycleObserver(
         val timestamp: Long = Clock.elapsedRealtime(),
         val totalTabs: Int,
         val crashedTabs: Int,
-        val activeEngineTabs: Int
+        val activeEngineTabs: Int,
     )
 }

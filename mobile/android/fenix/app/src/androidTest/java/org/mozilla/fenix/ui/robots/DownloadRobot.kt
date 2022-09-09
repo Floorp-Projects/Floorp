@@ -49,7 +49,7 @@ class DownloadRobot {
         assertTrue(
             "$fileName not found in Downloads list",
             mDevice.findObject(UiSelector().text(fileName))
-                .waitForExists(waitingTime)
+                .waitForExists(waitingTime),
         )
     }
 
@@ -65,7 +65,7 @@ class DownloadRobot {
         assertTrue(
             "Downloads list either empty or not displayed",
             mDevice.findObject(UiSelector().resourceId("$packageName:id/download_list"))
-                .waitForExists(waitingTime)
+                .waitForExists(waitingTime),
         )
 
     fun openDownloadedFile(fileName: String) {
@@ -96,8 +96,8 @@ class DownloadRobot {
             Intents.intended(
                 CoreMatchers.allOf(
                     IntentMatchers.hasAction(Intent.ACTION_VIEW),
-                    IntentMatchers.hasType(type)
-                )
+                    IntentMatchers.hasType(type),
+                ),
             )
 
             BrowserRobot().interact()
@@ -107,7 +107,7 @@ class DownloadRobot {
         fun clickAllowPermission(interact: DownloadRobot.() -> Unit): Transition {
             mDevice.waitNotNull(
                 Until.findObject(By.res(TestHelper.getPermissionAllowID() + ":id/permission_allow_button")),
-                waitingTime
+                waitingTime,
             )
 
             val allowPermissionButton = mDevice.findObject(By.res(TestHelper.getPermissionAllowID() + ":id/permission_allow_button"))
@@ -138,12 +138,12 @@ private fun assertDownloadPrompt(fileName: String) {
             assertTrue(
                 "Download prompt button not visible",
                 mDevice.findObject(UiSelector().resourceId("$packageName:id/download_button"))
-                    .waitForExists(waitingTimeLong)
+                    .waitForExists(waitingTimeLong),
             )
             assertTrue(
                 "$fileName title doesn't match",
                 mDevice.findObject(UiSelector().text(fileName))
-                    .waitForExists(waitingTimeLong)
+                    .waitForExists(waitingTimeLong),
             )
 
             break
@@ -161,17 +161,17 @@ private fun assertDownloadNotificationPopup() {
     assertTrue(
         "Download notification Open button not found",
         mDevice.findObject(UiSelector().text("Open"))
-            .waitForExists(waitingTime)
+            .waitForExists(waitingTime),
     )
     assertTrue(
         "Download completed notification text doesn't match",
         mDevice.findObject(UiSelector().textContains("Download completed"))
-            .waitForExists(waitingTime)
+            .waitForExists(waitingTime),
     )
     assertTrue(
         "Downloaded file name not visible",
         mDevice.findObject(UiSelector().resourceId("$packageName:id/download_dialog_filename"))
-            .waitForExists(waitingTime)
+            .waitForExists(waitingTime),
     )
 }
 
@@ -193,5 +193,5 @@ private fun assertDownloadedFileIcon() =
     assertTrue(
         "Downloaded file icon not found",
         mDevice.findObject(UiSelector().resourceId("$packageName:id/favicon"))
-            .exists()
+            .exists(),
     )

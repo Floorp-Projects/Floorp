@@ -21,7 +21,7 @@ import org.mozilla.fenix.tabstray.browser.BrowserTrayInteractor
 class FloatingActionButtonBinding(
     private val store: TabsTrayStore,
     private val actionButton: ExtendedFloatingActionButton,
-    private val browserTrayInteractor: BrowserTrayInteractor
+    private val browserTrayInteractor: BrowserTrayInteractor,
 ) : AbstractBinding<TabsTrayState>(store) {
 
     override suspend fun onState(flow: Flow<TabsTrayState>) {
@@ -29,7 +29,7 @@ class FloatingActionButtonBinding(
             .ifAnyChanged { state ->
                 arrayOf(
                     state.selectedPage,
-                    state.syncing
+                    state.syncing,
                 )
             }
             .collect { state ->
@@ -68,7 +68,7 @@ class FloatingActionButtonBinding(
                         when (syncing) {
                             true -> R.string.sync_syncing_in_progress
                             false -> R.string.tab_drawer_fab_sync
-                        }
+                        },
                     )
                     contentDescription = context.getString(R.string.resync_button_content_description)
                     extend()

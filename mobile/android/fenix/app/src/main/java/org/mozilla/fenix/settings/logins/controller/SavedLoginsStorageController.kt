@@ -36,7 +36,7 @@ open class SavedLoginsStorageController(
     private val lifecycleScope: CoroutineScope,
     private val navController: NavController,
     private val loginsFragmentStore: LoginsFragmentStore,
-    private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO
+    private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
 ) {
 
     fun delete(loginId: String) {
@@ -63,7 +63,7 @@ open class SavedLoginsStorageController(
         username = usernameText,
         password = passwordText,
         // Implicitly fill in httpRealm with the origin
-        httpRealm = originText
+        httpRealm = originText,
     )
 
     fun add(originText: String, usernameText: String, passwordText: String) {
@@ -93,7 +93,8 @@ open class SavedLoginsStorageController(
         } catch (loginException: LoginsStorageException) {
             Log.e(
                 "Add new login",
-                "Failed to add new login.", loginException
+                "Failed to add new login.",
+                loginException,
             )
         }
     }
@@ -123,7 +124,7 @@ open class SavedLoginsStorageController(
             withContext(Dispatchers.Main) {
                 val directions =
                     EditLoginFragmentDirections.actionEditLoginFragmentToLoginDetailFragment(
-                        loginId
+                        loginId,
                     )
                 navController.navigate(directions)
             }
@@ -142,15 +143,18 @@ open class SavedLoginsStorageController(
         } catch (loginException: LoginsStorageException) {
             when (loginException) {
                 is NoSuchRecordException,
-                is InvalidRecordException -> {
+                is InvalidRecordException,
+                -> {
                     Log.e(
                         "Edit login",
-                        "Failed to save edited login.", loginException
+                        "Failed to save edited login.",
+                        loginException,
                     )
                 }
                 else -> Log.e(
                     "Edit login",
-                    "Failed to save edited login.", loginException
+                    "Failed to save edited login.",
+                    loginException,
                 )
             }
         }
@@ -160,15 +164,15 @@ open class SavedLoginsStorageController(
         val login = updatedLogin.mapToSavedLogin()
         loginsFragmentStore.dispatch(
             LoginsAction.UpdateLoginsList(
-                listOf(login)
-            )
+                listOf(login),
+            ),
         )
     }
 
     fun findDuplicateForAdd(originText: String, usernameText: String, passwordText: String) {
         lifecycleScope.launch(ioDispatcher) {
             findDuplicate(
-                loginEntryForAdd(originText, usernameText, passwordText)
+                loginEntryForAdd(originText, usernameText, passwordText),
             )
         }
     }
@@ -177,7 +181,7 @@ open class SavedLoginsStorageController(
         lifecycleScope.launch(ioDispatcher) {
             findDuplicate(
                 loginEntryForSave(loginId, usernameText, passwordText),
-                loginId
+                loginId,
             )
         }
     }
@@ -207,8 +211,8 @@ open class SavedLoginsStorageController(
             if (fetchedLogin != null) {
                 loginsFragmentStore.dispatch(
                     LoginsAction.UpdateCurrentLogin(
-                        fetchedLogin.mapToSavedLogin()
-                    )
+                        fetchedLogin.mapToSavedLogin(),
+                    ),
                 )
             } else {
                 navController.popBackStack()
@@ -236,8 +240,8 @@ open class SavedLoginsStorageController(
                 withContext(Dispatchers.Main) {
                     loginsFragmentStore.dispatch(
                         LoginsAction.UpdateLoginsList(
-                            logins.map { it.mapToSavedLogin() }
-                        )
+                            logins.map { it.mapToSavedLogin() },
+                        ),
                     )
                 }
             }

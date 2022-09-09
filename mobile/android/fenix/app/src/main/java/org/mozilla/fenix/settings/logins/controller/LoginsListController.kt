@@ -30,7 +30,7 @@ class LoginsListController(
     private val browserNavigator: (
         searchTermOrURL: String,
         newTab: Boolean,
-        from: BrowserDirection
+        from: BrowserDirection,
     ) -> Unit,
     private val settings: Settings,
 ) {
@@ -39,13 +39,13 @@ class LoginsListController(
         loginsFragmentStore.dispatch(LoginsAction.LoginSelected(item))
         Logins.openIndividualLogin.record(NoExtras())
         navController.navigate(
-            SavedLoginsFragmentDirections.actionSavedLoginsFragmentToLoginDetailFragment(item.guid)
+            SavedLoginsFragmentDirections.actionSavedLoginsFragmentToLoginDetailFragment(item.guid),
         )
     }
 
     fun handleAddLoginClicked() {
         navController.navigate(
-            SavedLoginsFragmentDirections.actionSavedLoginsFragmentToAddLoginFragment()
+            SavedLoginsFragmentDirections.actionSavedLoginsFragmentToAddLoginFragment(),
         )
     }
 
@@ -53,15 +53,15 @@ class LoginsListController(
         browserNavigator.invoke(
             SupportUtils.getGenericSumoURLForTopic(SupportUtils.SumoTopic.SYNC_SETUP),
             true,
-            BrowserDirection.FromSavedLoginsFragment
+            BrowserDirection.FromSavedLoginsFragment,
         )
     }
 
     fun handleSort(sortingStrategy: SortingStrategy) {
         loginsFragmentStore.dispatch(
             LoginsAction.SortLogins(
-                sortingStrategy
-            )
+                sortingStrategy,
+            ),
         )
         settings.savedLoginsSortingStrategy = sortingStrategy
     }

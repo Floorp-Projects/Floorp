@@ -34,15 +34,14 @@ class TrackerBucketsTest {
             listOf(
                 google,
                 facebook,
-                TrackerLog("https://mozilla.com")
-            )
+                TrackerLog("https://mozilla.com"),
+            ),
         )
 
         assertEquals(google, buckets.buckets.blockedBucketMap[FINGERPRINTERS]!!.first())
         assertEquals(
             facebook,
-            buckets.buckets.loadedBucketMap[FenixTrackingProtectionCategory.SOCIAL_MEDIA_TRACKERS]
-            !!.first()
+            buckets.buckets.loadedBucketMap[FenixTrackingProtectionCategory.SOCIAL_MEDIA_TRACKERS]!!.first(),
         )
         assertTrue(buckets.buckets.blockedBucketMap[CRYPTOMINERS].isNullOrEmpty())
         assertTrue(buckets.buckets.loadedBucketMap[CRYPTOMINERS].isNullOrEmpty())
@@ -58,22 +57,22 @@ class TrackerBucketsTest {
             listOf(
                 facebook,
                 google,
-                mozilla
-            )
+                mozilla,
+            ),
         )
 
         assertEquals(
             mapOf(
-                FenixTrackingProtectionCategory.SOCIAL_MEDIA_TRACKERS to listOf(facebook)
+                FenixTrackingProtectionCategory.SOCIAL_MEDIA_TRACKERS to listOf(facebook),
             ),
-            buckets.buckets.loadedBucketMap
+            buckets.buckets.loadedBucketMap,
         )
 
         assertEquals(
             mapOf(
-                FINGERPRINTERS to listOf(google)
+                FINGERPRINTERS to listOf(google),
             ),
-            buckets.buckets.blockedBucketMap
+            buckets.buckets.blockedBucketMap,
         )
     }
 
@@ -84,14 +83,14 @@ class TrackerBucketsTest {
             CRYPTOMINING,
             MOZILLA_SOCIAL,
             FINGERPRINTING,
-            SCRIPTS_AND_SUB_RESOURCES
+            SCRIPTS_AND_SUB_RESOURCES,
         )
 
         val trackerLog = TrackerLog(
             url = "http://facebook.com",
             cookiesHasBeenBlocked = true,
             blockedCategories = acCategories,
-            loadedCategories = acCategories
+            loadedCategories = acCategories,
         )
         buckets.updateIfNeeded(listOf(trackerLog))
 
@@ -101,7 +100,7 @@ class TrackerBucketsTest {
                 FenixTrackingProtectionCategory.TRACKING_CONTENT to listOf(trackerLog),
                 FenixTrackingProtectionCategory.FINGERPRINTERS to listOf(trackerLog),
                 FenixTrackingProtectionCategory.CRYPTOMINERS to listOf(trackerLog),
-                FenixTrackingProtectionCategory.CROSS_SITE_TRACKING_COOKIES to listOf(trackerLog)
+                FenixTrackingProtectionCategory.CROSS_SITE_TRACKING_COOKIES to listOf(trackerLog),
             )
         val expectedLoadedMap =
             expectedBlockedMap - FenixTrackingProtectionCategory.CROSS_SITE_TRACKING_COOKIES

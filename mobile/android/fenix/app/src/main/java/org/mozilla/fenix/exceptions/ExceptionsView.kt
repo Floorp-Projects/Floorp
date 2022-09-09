@@ -17,14 +17,14 @@ import org.mozilla.fenix.databinding.ComponentExceptionsBinding
  */
 abstract class ExceptionsView<T : Any>(
     container: ViewGroup,
-    protected val interactor: ExceptionsInteractor<T>
+    protected val interactor: ExceptionsInteractor<T>,
 ) {
 
     @VisibleForTesting
     internal val binding = ComponentExceptionsBinding.inflate(
         LayoutInflater.from(container.context),
         container,
-        true
+        true,
     )
 
     val containerView: FrameLayout = binding.exceptionsWrapper

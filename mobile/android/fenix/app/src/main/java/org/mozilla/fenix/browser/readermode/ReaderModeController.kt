@@ -25,7 +25,7 @@ class DefaultReaderModeController(
     private val readerViewFeature: ViewBoundFeatureWrapper<ReaderViewFeature>,
     private val readerViewControlsBar: View,
     private val isPrivate: Boolean = false,
-    private val onReaderModeChanged: () -> Unit = {}
+    private val onReaderModeChanged: () -> Unit = {},
 ) : ReaderModeController {
     override fun hideReaderView() {
         onReaderModeChanged()
@@ -52,29 +52,29 @@ class DefaultReaderModeController(
     private fun themeReaderViewControlsForPrivateMode(view: View) = with(view) {
         listOf(
             R.id.mozac_feature_readerview_font_size_decrease,
-            R.id.mozac_feature_readerview_font_size_increase
+            R.id.mozac_feature_readerview_font_size_increase,
         ).map {
             findViewById<Button>(it)
         }.forEach {
             it.setTextColor(
                 AppCompatResources.getColorStateList(
                     context,
-                    R.color.readerview_private_button_color
-                )
+                    R.color.readerview_private_button_color,
+                ),
             )
         }
 
         listOf(
             R.id.mozac_feature_readerview_font_serif,
-            R.id.mozac_feature_readerview_font_sans_serif
+            R.id.mozac_feature_readerview_font_sans_serif,
         ).map {
             findViewById<RadioButton>(it)
         }.forEach {
             it.setTextColor(
                 AppCompatResources.getColorStateList(
                     context,
-                    R.color.readerview_private_radio_color
-                )
+                    R.color.readerview_private_radio_color,
+                ),
             )
         }
     }

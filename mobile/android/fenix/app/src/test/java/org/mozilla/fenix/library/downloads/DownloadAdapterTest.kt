@@ -37,7 +37,7 @@ class DownloadAdapterTest {
         assertEquals(0, adapter.itemCount)
 
         adapter.updateDownloads(
-            downloads = listOf(download)
+            downloads = listOf(download),
         )
         assertEquals(1, adapter.itemCount)
     }
@@ -49,7 +49,7 @@ class DownloadAdapterTest {
         val observer = mockk<RecyclerView.AdapterDataObserver>(relaxed = true)
         adapter.registerAdapterDataObserver(observer)
         adapter.updateDownloads(
-            downloads = listOf(download)
+            downloads = listOf(download),
         )
         verify { observer.onChanged() }
     }

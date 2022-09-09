@@ -17,7 +17,7 @@ import org.mozilla.fenix.ext.loadIntoView
 import org.mozilla.fenix.utils.view.ViewHolder
 
 class CollectionCreationTabListAdapter(
-    private val interactor: CollectionCreationInteractor
+    private val interactor: CollectionCreationInteractor,
 ) : RecyclerView.Adapter<TabViewHolder>() {
 
     private var tabs: List<Tab> = listOf()
@@ -30,7 +30,7 @@ class CollectionCreationTabListAdapter(
         binding = CollectionTabListRowBinding.inflate(
             LayoutInflater.from(parent.context),
             parent,
-            false
+            false,
         )
 
         return TabViewHolder(binding)
@@ -74,8 +74,8 @@ class CollectionCreationTabListAdapter(
                 this.selectedTabs,
                 selectedTabs,
                 this.hideCheckboxes,
-                hideCheckboxes
-            )
+                hideCheckboxes,
+            ),
         )
 
         this.tabs = tabs

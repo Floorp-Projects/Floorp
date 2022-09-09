@@ -38,10 +38,10 @@ class BrowserTabsAdapterTest {
 
         adapter.updateTabs(
             listOf(
-                createTab(url = "url", id = "tab1")
+                createTab(url = "url", id = "tab1"),
             ),
             null,
-            selectedTabId = "tab1"
+            selectedTabId = "tab1",
         )
 
         adapter.onBindViewHolder(holder, 0, listOf(PAYLOAD_HIGHLIGHT_SELECTED_ITEM))
@@ -68,8 +68,8 @@ class BrowserTabsAdapterTest {
                 store = store,
                 selectionHolder = null,
                 itemView = binding.root,
-                featureName = "Test"
-            )
+                featureName = "Test",
+            ),
         )
         val tab = createTab(url = "url", id = "tab1")
 
@@ -81,7 +81,7 @@ class BrowserTabsAdapterTest {
         adapter.updateTabs(
             listOf(tab),
             null,
-            selectedTabId = "tab1"
+            selectedTabId = "tab1",
         )
 
         adapter.onBindViewHolder(holder, 0, listOf(PAYLOAD_DONT_HIGHLIGHT_SELECTED_ITEM))

@@ -82,7 +82,7 @@ class BookmarkFragment : LibraryPageFragment<BookmarkNode>(), UserInteractionHan
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
-        savedInstanceState: Bundle?
+        savedInstanceState: Bundle?,
     ): View {
         _binding = FragmentBookmarkBinding.inflate(inflater, container, false)
 
@@ -105,7 +105,7 @@ class BookmarkFragment : LibraryPageFragment<BookmarkNode>(), UserInteractionHan
                 deleteBookmarkFolder = ::showRemoveFolderDialog,
                 showTabTray = ::showTabTray,
                 settings = requireComponents.settings,
-            )
+            ),
         )
 
         bookmarkView = BookmarkView(binding.bookmarkLayout, bookmarkInteractor, findNavController())
@@ -115,8 +115,8 @@ class BookmarkFragment : LibraryPageFragment<BookmarkNode>(), UserInteractionHan
             BookmarkDeselectNavigationListener(
                 findNavController(),
                 sharedViewModel,
-                bookmarkInteractor
-            )
+                bookmarkInteractor,
+            ),
         )
 
         return binding.root
@@ -127,7 +127,7 @@ class BookmarkFragment : LibraryPageFragment<BookmarkNode>(), UserInteractionHan
             FenixSnackbar.make(
                 view = it,
                 duration = FenixSnackbar.LENGTH_LONG,
-                isDisplayedWithBrowserToolbar = false
+                isDisplayedWithBrowserToolbar = false,
             ).setText(text).show()
         }
     }
@@ -218,7 +218,7 @@ class BookmarkFragment : LibraryPageFragment<BookmarkNode>(), UserInteractionHan
             R.id.add_bookmark_folder -> {
                 navigateToBookmarkFragment(
                     BookmarkFragmentDirections
-                        .actionBookmarkFragmentToBookmarkAddFolderFragment()
+                        .actionBookmarkFragmentToBookmarkAddFolderFragment(),
                 )
                 true
             }
@@ -242,8 +242,8 @@ class BookmarkFragment : LibraryPageFragment<BookmarkNode>(), UserInteractionHan
                 }
                 navigateToBookmarkFragment(
                     BookmarkFragmentDirections.actionGlobalShareFragment(
-                        data = shareTabs.toTypedArray()
-                    )
+                        data = shareTabs.toTypedArray(),
+                    ),
                 )
                 true
             }
@@ -262,7 +262,7 @@ class BookmarkFragment : LibraryPageFragment<BookmarkNode>(), UserInteractionHan
     private fun navigateToBookmarkFragment(directions: NavDirections) {
         findNavController().nav(
             R.id.bookmarkFragment,
-            directions
+            directions,
         )
     }
 
@@ -294,7 +294,7 @@ class BookmarkFragment : LibraryPageFragment<BookmarkNode>(), UserInteractionHan
 
     private fun deleteMulti(
         selected: Set<BookmarkNode>,
-        eventType: BookmarkRemoveType = BookmarkRemoveType.MULTIPLE
+        eventType: BookmarkRemoveType = BookmarkRemoveType.MULTIPLE,
     ) {
         selected.iterator().forEach {
             if (it.type == BookmarkNodeType.FOLDER) {
@@ -309,12 +309,13 @@ class BookmarkFragment : LibraryPageFragment<BookmarkNode>(), UserInteractionHan
                 getRemoveBookmarksSnackBarMessage(selected, containsFolders = false)
             }
             BookmarkRemoveType.FOLDER,
-            BookmarkRemoveType.SINGLE -> {
+            BookmarkRemoveType.SINGLE,
+            -> {
                 val bookmarkNode = selected.first()
                 getString(
                     R.string.bookmark_deletion_snackbar_message,
                     bookmarkNode.url?.toShortUrl(requireContext().components.publicSuffixList)
-                        ?: bookmarkNode.title
+                        ?: bookmarkNode.title,
                 )
             }
         }
@@ -326,13 +327,13 @@ class BookmarkFragment : LibraryPageFragment<BookmarkNode>(), UserInteractionHan
             {
                 undoPendingDeletion(selected)
             },
-            operation = getDeleteOperation(eventType)
+            operation = getDeleteOperation(eventType),
         )
     }
 
     private fun getRemoveBookmarksSnackBarMessage(
         selected: Set<BookmarkNode>,
-        containsFolders: Boolean
+        containsFolders: Boolean,
     ): String {
         return if (selected.size > 1) {
             return if (containsFolders) {
@@ -345,7 +346,7 @@ class BookmarkFragment : LibraryPageFragment<BookmarkNode>(), UserInteractionHan
             getString(
                 R.string.bookmark_deletion_snackbar_message,
                 bookmarkNode.url?.toShortUrl(requireContext().components.publicSuffixList)
-                    ?: bookmarkNode.title
+                    ?: bookmarkNode.title,
             )
         }
     }
@@ -354,7 +355,7 @@ class BookmarkFragment : LibraryPageFragment<BookmarkNode>(), UserInteractionHan
         return if (selected.size > 1) {
             getString(
                 R.string.bookmark_delete_multiple_folders_confirmation_dialog,
-                getString(R.string.app_name)
+                getString(R.string.app_name),
             )
         } else {
             getString(R.string.bookmark_delete_folder_confirmation_dialog)
@@ -388,7 +389,7 @@ class BookmarkFragment : LibraryPageFragment<BookmarkNode>(), UserInteractionHan
                         {
                             undoPendingDeletion(selected)
                         },
-                        operation = getDeleteOperation(BookmarkRemoveType.FOLDER)
+                        operation = getDeleteOperation(BookmarkRemoveType.FOLDER),
                     )
                 }
                 create()

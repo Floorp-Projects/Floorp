@@ -24,14 +24,14 @@ class AddLoginInteractorTest {
         interactor.findDuplicate(
             hostname,
             username,
-            password
+            password,
         )
 
         verify {
             loginsController.findDuplicateForAdd(
                 hostname,
                 username,
-                password
+                password,
             )
         }
     }
@@ -44,7 +44,7 @@ class AddLoginInteractorTest {
             loginsController.add(
                 hostname,
                 username,
-                password
+                password,
             )
         }
     }

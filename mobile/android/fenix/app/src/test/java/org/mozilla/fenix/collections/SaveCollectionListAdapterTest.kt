@@ -46,7 +46,7 @@ class SaveCollectionListAdapterTest {
 
         adapter.updateData(
             tabCollections = listOf(collection),
-            selectedTabs = emptySet()
+            selectedTabs = emptySet(),
         )
         assertEquals(1, adapter.itemCount)
     }
@@ -63,12 +63,12 @@ class SaveCollectionListAdapterTest {
                 },
                 mockk {
                     every { url } returns "https://firefox.com"
-                }
+                },
             )
         }
         adapter.updateData(
             tabCollections = listOf(collection),
-            selectedTabs = emptySet()
+            selectedTabs = emptySet(),
         )
 
         val holder = adapter.createViewHolder(parent, 0)

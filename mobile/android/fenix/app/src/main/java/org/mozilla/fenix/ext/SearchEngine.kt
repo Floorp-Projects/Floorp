@@ -17,7 +17,7 @@ private val wellKnownSearchDomains = setOf(
     "google",
     "yahoo",
     "yandex",
-    "startpage"
+    "startpage",
 )
 
 /**

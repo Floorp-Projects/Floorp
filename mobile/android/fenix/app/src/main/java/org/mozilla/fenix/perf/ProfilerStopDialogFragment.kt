@@ -47,7 +47,7 @@ class ProfilerStopDialogFragment : DialogFragment() {
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
-        savedInstanceState: Bundle?
+        savedInstanceState: Bundle?,
     ): View {
         return ComposeView(requireContext()).apply {
             setContent {
@@ -63,7 +63,6 @@ class ProfilerStopDialogFragment : DialogFragment() {
 
     @Composable
     private fun StopProfilerCard() {
-
         val viewStateObserver = remember { mutableStateOf(CardState.UrlWarningState) }
         Dialog(
             onDismissRequest = {
@@ -73,7 +72,7 @@ class ProfilerStopDialogFragment : DialogFragment() {
                 if (viewStateObserver.value != CardState.WaitForProfilerState) {
                     this@ProfilerStopDialogFragment.dismiss()
                 }
-            }
+            },
         ) {
             when (viewStateObserver.value) {
                 CardState.UrlWarningState -> {
@@ -96,25 +95,25 @@ class ProfilerStopDialogFragment : DialogFragment() {
                     text = stringResource(R.string.profiler_url_warning),
                     fontWeight = FontWeight.ExtraBold,
                     fontSize = 20.sp,
-                    modifier = Modifier.padding(8.dp)
+                    modifier = Modifier.padding(8.dp),
                 )
                 Spacer(modifier = Modifier.height(10.dp))
                 Text(
                     text = stringResource(R.string.profiler_url_warning_explained),
                     fontWeight = FontWeight.Medium,
                     fontSize = 15.sp,
-                    modifier = Modifier.padding(8.dp)
+                    modifier = Modifier.padding(8.dp),
                 )
                 Spacer(modifier = Modifier.height(30.dp))
                 Row(
                     horizontalArrangement = Arrangement.End,
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
                 ) {
                     TextButton(
                         onClick = {
                             requireContext().components.core.engine.profiler?.stopProfiler({}, {})
                             dismiss()
-                        }
+                        },
                     ) {
                         Text(stringResource(R.string.profiler_start_cancel))
                     }
@@ -124,7 +123,7 @@ class ProfilerStopDialogFragment : DialogFragment() {
                         onClick = {
                             viewStateObserver.value = CardState.WaitForProfilerState
                             stopProfiler()
-                        }
+                        },
                     ) {
                         Text(stringResource(R.string.profiler_as_url))
                     }
@@ -140,20 +139,20 @@ class ProfilerStopDialogFragment : DialogFragment() {
                     handleProfileSave(
                         requireContext(),
                         it,
-                        ::displayToastAndDismiss
+                        ::displayToastAndDismiss,
                     )
                 } else {
                     displayToastAndDismiss(R.string.profiler_no_info)
                 }
             },
             onError = {
-                error ->
+                    error ->
                 if (error.message != null) {
                     displayToastAndDismiss(R.string.profiler_error, " error: $error")
                 } else {
                     displayToastAndDismiss(R.string.profiler_error)
                 }
-            }
+            },
         )
     }
 
@@ -161,7 +160,7 @@ class ProfilerStopDialogFragment : DialogFragment() {
         Toast.makeText(
             context,
             resources.getString(message) + extra,
-            Toast.LENGTH_LONG
+            Toast.LENGTH_LONG,
         ).show()
         dismiss()
     }
@@ -171,6 +170,7 @@ class ProfilerStopDialogFragment : DialogFragment() {
      */
     enum class CardState {
         UrlWarningState,
-        WaitForProfilerState;
+        WaitForProfilerState,
+        ;
     }
 }

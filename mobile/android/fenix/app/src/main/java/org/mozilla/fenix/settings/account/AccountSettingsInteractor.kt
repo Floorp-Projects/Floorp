@@ -32,7 +32,7 @@ class AccountSettingsInteractor(
     private val navController: NavController,
     private val syncNow: () -> Unit,
     private val syncDeviceName: (String) -> Boolean,
-    private val store: AccountSettingsFragmentStore
+    private val store: AccountSettingsFragmentStore,
 ) : AccountSettingsUserActions {
 
     override fun onSyncNow() {
@@ -59,7 +59,7 @@ class AccountSettingsInteractor(
         val directions = AccountSettingsFragmentDirections.actionAccountSettingsFragmentToSignOutFragment()
         navController.nav(
             R.id.accountSettingsFragment,
-            directions
+            directions,
         )
     }
 }

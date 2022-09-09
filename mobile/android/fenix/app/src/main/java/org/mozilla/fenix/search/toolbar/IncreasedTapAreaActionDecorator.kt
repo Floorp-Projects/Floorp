@@ -13,7 +13,7 @@ import org.mozilla.fenix.ext.increaseTapArea
  * A Decorator that accepts a [Toolbar.Action] and increases its tap area.
  */
 class IncreasedTapAreaActionDecorator(
-    private val action: Toolbar.Action
+    private val action: Toolbar.Action,
 ) : Toolbar.Action by action {
 
     override fun bind(view: View) {

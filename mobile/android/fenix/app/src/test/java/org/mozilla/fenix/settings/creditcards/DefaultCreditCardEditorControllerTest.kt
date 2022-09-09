@@ -52,7 +52,7 @@ class DefaultCreditCardEditorControllerTest {
         every { showDeleteDialog(any()) } answers {
             firstArg<DialogInterface.OnClickListener>().onClick(
                 mockk(relaxed = true),
-                mockk(relaxed = true)
+                mockk(relaxed = true),
             )
         }
         controller = spyk(
@@ -61,8 +61,8 @@ class DefaultCreditCardEditorControllerTest {
                 lifecycleScope = testCoroutineScope,
                 navController = navController,
                 ioDispatcher = testDispatcher,
-                showDeleteDialog = showDeleteDialog
-            )
+                showDeleteDialog = showDeleteDialog,
+            ),
         )
     }
 
@@ -97,7 +97,7 @@ class DefaultCreditCardEditorControllerTest {
             cardNumberLast4 = "1112",
             expiryMonth = 1,
             expiryYear = 2030,
-            cardType = CreditCardNetworkType.DISCOVER.cardName
+            cardType = CreditCardNetworkType.DISCOVER.cardName,
         )
         assertNull(CreditCards.saved.testGetValue())
 
@@ -119,7 +119,7 @@ class DefaultCreditCardEditorControllerTest {
             cardNumberLast4 = "1112",
             expiryMonth = 1,
             expiryYear = 2034,
-            cardType = CreditCardNetworkType.DISCOVER.cardName
+            cardType = CreditCardNetworkType.DISCOVER.cardName,
         )
         assertNull(CreditCards.modified.testGetValue())
 

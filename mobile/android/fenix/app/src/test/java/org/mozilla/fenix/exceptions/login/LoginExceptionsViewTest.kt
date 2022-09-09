@@ -31,7 +31,7 @@ class LoginExceptionsViewTest {
         interactor = mockk()
         view = LoginExceptionsView(
             parent,
-            interactor
+            interactor,
         )
     }
 
@@ -39,7 +39,7 @@ class LoginExceptionsViewTest {
     fun `sets empty message text`() {
         assertEquals(
             "Logins and passwords that are not saved will be shown here.",
-            view.binding.exceptionsEmptyMessage.text
+            view.binding.exceptionsEmptyMessage.text,
         )
         assertTrue(view.binding.exceptionsList.adapter is LoginExceptionsAdapter)
         assertTrue(view.binding.exceptionsList.layoutManager is LinearLayoutManager)

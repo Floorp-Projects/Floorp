@@ -29,7 +29,9 @@ class ConnectionDetailsView(
     val interactor: WebSiteInfoInteractor,
 ) {
     val binding = ConnectionDetailsWebsiteInfoBinding.inflate(
-        LayoutInflater.from(container.context), container, true
+        LayoutInflater.from(container.context),
+        container,
+        true,
     )
 
     /**

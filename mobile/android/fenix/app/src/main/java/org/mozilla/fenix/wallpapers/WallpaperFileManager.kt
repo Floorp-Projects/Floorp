@@ -21,7 +21,7 @@ import java.io.File
  */
 class WallpaperFileManager(
     private val storageRootDirectory: File,
-    coroutineDispatcher: CoroutineDispatcher = Dispatchers.IO
+    coroutineDispatcher: CoroutineDispatcher = Dispatchers.IO,
 ) {
     private val scope = CoroutineScope(coroutineDispatcher)
     private val wallpapersDirectory = File(storageRootDirectory, "wallpapers")
@@ -40,7 +40,9 @@ class WallpaperFileManager(
                 thumbnailFileState = Wallpaper.ImageFileState.Downloaded,
                 assetsFileState = Wallpaper.ImageFileState.Downloaded,
             )
-        } else null
+        } else {
+            null
+        }
     }
 
     private fun allAssetsExist(name: String): Boolean =

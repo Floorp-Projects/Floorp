@@ -85,14 +85,14 @@ class TabsSettingsFragment : PreferenceFragmentCompat() {
     private fun setupRadioGroups() {
         addToRadioGroup(
             listRadioButton,
-            gridRadioButton
+            gridRadioButton,
         )
 
         addToRadioGroup(
             radioManual,
             radioOneDay,
             radioOneMonth,
-            radioOneWeek
+            radioOneWeek,
         )
     }
 

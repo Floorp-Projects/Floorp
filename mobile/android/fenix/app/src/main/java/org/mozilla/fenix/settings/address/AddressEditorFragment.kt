@@ -51,8 +51,8 @@ class AddressEditorFragment : SecureFragment(R.layout.fragment_address_editor) {
             controller = DefaultAddressEditorController(
                 storage = storage,
                 lifecycleScope = lifecycleScope,
-                navController = findNavController()
-            )
+                navController = findNavController(),
+            ),
         )
 
         val binding = FragmentAddressEditorBinding.bind(view)

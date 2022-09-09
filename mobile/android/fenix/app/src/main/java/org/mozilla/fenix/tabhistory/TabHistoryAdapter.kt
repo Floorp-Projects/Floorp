@@ -15,11 +15,11 @@ data class TabHistoryItem(
     val title: String,
     val url: String,
     val index: Int,
-    val isSelected: Boolean
+    val isSelected: Boolean,
 )
 
 class TabHistoryAdapter(
-    private val interactor: TabHistoryViewInteractor
+    private val interactor: TabHistoryViewInteractor,
 ) : ListAdapter<TabHistoryItem, TabHistoryViewHolder>(DiffCallback) {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): TabHistoryViewHolder {

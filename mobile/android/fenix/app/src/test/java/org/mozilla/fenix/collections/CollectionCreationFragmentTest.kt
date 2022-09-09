@@ -37,7 +37,7 @@ class CollectionCreationFragmentTest {
     private val sessionMozilla = createTab(URL_MOZILLA, id = SESSION_ID_MOZILLA)
     private val sessionBcc = createTab(URL_BCC, id = SESSION_ID_BCC)
     private val state = BrowserState(
-        tabs = listOf(sessionMozilla, sessionBcc)
+        tabs = listOf(sessionMozilla, sessionBcc),
     )
 
     @Before
@@ -53,12 +53,13 @@ class CollectionCreationFragmentTest {
         every { testContext.components.analytics } returns mockk(relaxed = true)
         every { testContext.components.core.store } returns BrowserStore(state)
         every { testContext.components.core.tabCollectionStorage } returns TabCollectionStorage(
-            testContext, TestStrictModeManager()
+            testContext,
+            TestStrictModeManager(),
         )
         val fragment = createAddedTestFragment {
             CollectionCreationFragment().apply {
                 arguments = CollectionCreationFragmentArgs(
-                    saveCollectionStep = SaveCollectionStep.SelectTabs
+                    saveCollectionStep = SaveCollectionStep.SelectTabs,
                 ).toBundle()
             }
         }

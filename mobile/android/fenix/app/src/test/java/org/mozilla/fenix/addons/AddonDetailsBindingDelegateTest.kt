@@ -30,9 +30,9 @@ class AddonDetailsBindingDelegateTest {
     private val baseAddon = Addon(
         id = "",
         translatableDescription = mapOf(
-            Addon.DEFAULT_LOCALE to "Some blank addon\nwith a blank line"
+            Addon.DEFAULT_LOCALE to "Some blank addon\nwith a blank line",
         ),
-        updatedAt = "2020-11-23T08:00:00Z"
+        updatedAt = "2020-11-23T08:00:00Z",
     )
 
     @Before
@@ -48,8 +48,8 @@ class AddonDetailsBindingDelegateTest {
     fun `bind addons rating`() {
         detailsBindingDelegate.bind(
             baseAddon.copy(
-                rating = null
-            )
+                rating = null,
+            ),
         )
         assertEquals(0f, binding.ratingView.rating)
 
@@ -57,9 +57,9 @@ class AddonDetailsBindingDelegateTest {
             baseAddon.copy(
                 rating = Addon.Rating(
                     average = 4.3f,
-                    reviews = 100
-                )
-            )
+                    reviews = 100,
+                ),
+            ),
         )
         assertEquals("4.30/5", binding.ratingView.contentDescription)
         assertEquals(4.5f, binding.ratingView.rating)
@@ -70,8 +70,8 @@ class AddonDetailsBindingDelegateTest {
     fun `bind addons website`() {
         detailsBindingDelegate.bind(
             baseAddon.copy(
-                siteUrl = "https://mozilla.org"
-            )
+                siteUrl = "https://mozilla.org",
+            ),
         )
 
         binding.homePageLabel.performClick()
@@ -90,7 +90,7 @@ class AddonDetailsBindingDelegateTest {
     fun `bind addons version`() {
         val addon1 = baseAddon.copy(
             version = "1.0.0",
-            installedState = null
+            installedState = null,
         )
 
         detailsBindingDelegate.bind(addon1)
@@ -103,8 +103,8 @@ class AddonDetailsBindingDelegateTest {
             installedState = Addon.InstalledState(
                 id = "",
                 version = "2.0.0",
-                optionsPageUrl = null
-            )
+                optionsPageUrl = null,
+            ),
         )
         detailsBindingDelegate.bind(addon2)
         assertEquals("2.0.0", binding.versionText.text)
@@ -119,9 +119,9 @@ class AddonDetailsBindingDelegateTest {
             baseAddon.copy(
                 authors = listOf(
                     baseAuthor.copy(name = " Sarah Jane"),
-                    baseAuthor.copy(name = "John Smith ")
-                )
-            )
+                    baseAuthor.copy(name = "John Smith "),
+                ),
+            ),
         )
 
         assertEquals("Sarah Jane, John Smith", binding.authorText.text)
@@ -133,7 +133,7 @@ class AddonDetailsBindingDelegateTest {
 
         assertEquals(
             "Some blank addon\nwith a blank line",
-            binding.details.text.toString()
+            binding.details.text.toString(),
         )
         assertTrue(binding.details.movementMethod is LinkMovementMethod)
     }

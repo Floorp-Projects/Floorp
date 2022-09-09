@@ -49,9 +49,9 @@ class RecentTabViewHolder(
             menuItems = listOf(
                 RecentTabMenuItem(
                     title = stringResource(id = R.string.recent_tab_menu_item_remove),
-                    onClick = { tab -> recentTabInteractor.onRemoveRecentTab(tab) }
-                )
-            )
+                    onClick = { tab -> recentTabInteractor.onRemoveRecentTab(tab) },
+                ),
+            ),
         )
     }
 }

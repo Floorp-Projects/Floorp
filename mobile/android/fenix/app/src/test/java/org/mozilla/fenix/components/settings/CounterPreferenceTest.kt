@@ -21,6 +21,7 @@ import org.junit.Test
 class CounterPreferenceTest {
 
     @MockK private lateinit var prefs: SharedPreferences
+
     @MockK private lateinit var editor: SharedPreferences.Editor
 
     @Before

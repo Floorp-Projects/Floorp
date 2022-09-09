@@ -18,7 +18,7 @@ sealed class PendingDeletionHistory {
      */
     data class Item(
         val visitedAt: Long,
-        val url: String
+        val url: String,
     ) : PendingDeletionHistory()
 
     /**
@@ -26,7 +26,7 @@ sealed class PendingDeletionHistory {
      */
     data class Group(
         val visitedAt: Long,
-        val historyMetadata: List<MetaData>
+        val historyMetadata: List<MetaData>,
     ) : PendingDeletionHistory()
 
     /**
@@ -34,7 +34,7 @@ sealed class PendingDeletionHistory {
      */
     data class MetaData(
         val visitedAt: Long,
-        val key: HistoryMetadataKey
+        val key: HistoryMetadataKey,
     ) : PendingDeletionHistory()
 }
 
@@ -49,9 +49,9 @@ fun History.toPendingDeletionHistory(): PendingDeletionHistory {
             historyMetadata = items.map { historyMetadata ->
                 PendingDeletionHistory.MetaData(
                     historyMetadata.visitedAt,
-                    historyMetadata.historyMetadataKey
+                    historyMetadata.historyMetadataKey,
                 )
-            }
+            },
         )
         is History.Metadata -> PendingDeletionHistory.MetaData(visitedAt, historyMetadataKey)
     }

@@ -13,7 +13,7 @@ import org.mozilla.fenix.library.history.toolbar.ToolbarInteractor
  * Provides implementations for the AwesomeBarView and ToolbarView
  */
 class HistorySearchDialogInteractor(
-    private val historySearchController: HistorySearchDialogController
+    private val historySearchController: HistorySearchDialogController,
 ) : AwesomeBarInteractor, ToolbarInteractor {
 
     override fun onEditingCanceled() {

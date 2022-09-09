@@ -4,7 +4,9 @@
 
 // We need to do full suppressing as we have a import, that is deprecated.
 // Follow-up https://github.com/mozilla-mobile/fenix/issues/25091
+
 @file:Suppress("DEPRECATION")
+
 package org.mozilla.fenix.components
 
 import android.content.Context
@@ -67,7 +69,7 @@ class IntentProcessors(
     val externalAppIntentProcessors by lazyMonitored {
         listOf(
             WebAppIntentProcessor(store, customTabsUseCases.addWebApp, sessionUseCases.loadUrl, manifestStorage),
-            FennecWebAppIntentProcessor(context, customTabsUseCases, manifestStorage)
+            FennecWebAppIntentProcessor(context, customTabsUseCases, manifestStorage),
         )
     }
 

@@ -127,7 +127,6 @@ class SettingsRobot {
 
         fun openAboutFirefoxPreview(interact: SettingsSubMenuAboutRobot.() -> Unit):
             SettingsSubMenuAboutRobot.Transition {
-
             aboutFirefoxHeading().click()
 
             SettingsSubMenuAboutRobot().interact()
@@ -136,7 +135,6 @@ class SettingsRobot {
 
         fun openSearchSubMenu(interact: SettingsSubMenuSearchRobot.() -> Unit):
             SettingsSubMenuSearchRobot.Transition {
-
             fun searchEngineButton() = onView(withText("Search"))
             searchEngineButton().click()
 
@@ -145,7 +143,6 @@ class SettingsRobot {
         }
 
         fun openCustomizeSubMenu(interact: SettingsSubMenuThemeRobot.() -> Unit): SettingsSubMenuThemeRobot.Transition {
-
             fun customizeButton() = onView(withText("Customize"))
             customizeButton().click()
 
@@ -154,7 +151,6 @@ class SettingsRobot {
         }
 
         fun openTabsSubMenu(interact: SettingsSubMenuTabsRobot.() -> Unit): SettingsSubMenuTabsRobot.Transition {
-
             fun tabsButton() = onView(withText("Tabs"))
             tabsButton().click()
 
@@ -163,7 +159,6 @@ class SettingsRobot {
         }
 
         fun openHomepageSubMenu(interact: SettingsSubMenuHomepageRobot.() -> Unit): SettingsSubMenuHomepageRobot.Transition {
-
             mDevice.findObject(UiSelector().textContains("Homepage")).waitForExists(waitingTime)
             onView(withText(R.string.preferences_home_2)).click()
 
@@ -172,7 +167,6 @@ class SettingsRobot {
         }
 
         fun openAutofillSubMenu(interact: SettingsSubMenuAutofillRobot.() -> Unit): SettingsSubMenuAutofillRobot.Transition {
-
             mDevice.findObject(UiSelector().textContains(getStringResource(R.string.preferences_autofill))).waitForExists(waitingTime)
             onView(withText(R.string.preferences_autofill)).click()
 
@@ -194,16 +188,16 @@ class SettingsRobot {
 
         fun openLanguageSubMenu(
             localizedText: String = getStringResource(R.string.preferences_language),
-            interact: SettingsSubMenuLanguageRobot.() -> Unit
+            interact: SettingsSubMenuLanguageRobot.() -> Unit,
         ): SettingsSubMenuLanguageRobot.Transition {
             onView(withId(R.id.recycler_view))
                 .perform(
                     RecyclerViewActions.actionOnItem<RecyclerView.ViewHolder>(
                         hasDescendant(
-                            withText(localizedText)
+                            withText(localizedText),
                         ),
-                        ViewActions.click()
-                    )
+                        ViewActions.click(),
+                    ),
                 )
 
             SettingsSubMenuLanguageRobot().interact()
@@ -333,8 +327,8 @@ private fun assertSettingsToolbar() =
         CoreMatchers.allOf(
             withId(R.id.navigationToolbar),
             hasDescendant(ViewMatchers.withContentDescription(R.string.action_bar_up_description)),
-            hasDescendant(withText(R.string.settings))
-        )
+            hasDescendant(withText(R.string.settings)),
+        ),
     ).check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 
 private fun assertGeneralHeading() {
@@ -404,7 +398,7 @@ private fun assertPrivacyHeading() {
 private fun assertHTTPSOnlyModeButton() {
     scrollToElementByText(getStringResource(R.string.preferences_https_only_title))
     onView(
-        withText(R.string.preferences_https_only_title)
+        withText(R.string.preferences_https_only_title),
     ).check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 }
 
@@ -412,8 +406,8 @@ private fun assertHTTPSOnlyModeState(state: String) {
     onView(
         allOf(
             withText(R.string.preferences_https_only_title),
-            hasSibling(withText(state))
-        )
+            hasSibling(withText(state)),
+        ),
     ).check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 }
 
@@ -421,8 +415,8 @@ private fun assertEnhancedTrackingProtectionButton() {
     mDevice.wait(Until.findObject(By.text("Privacy and Security")), waitingTime)
     onView(withId(R.id.recycler_view)).perform(
         RecyclerViewActions.scrollTo<RecyclerView.ViewHolder>(
-            hasDescendant(withText("Enhanced Tracking Protection"))
-        )
+            hasDescendant(withText("Enhanced Tracking Protection")),
+        ),
     ).check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 }
 
@@ -466,8 +460,8 @@ private fun assertDeleteBrowsingDataState(state: String) {
     onView(
         allOf(
             withText(R.string.preferences_delete_browsing_data_on_quit),
-            hasSibling(withText(state))
-        )
+            hasSibling(withText(state)),
+        ),
     ).check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 }
 
@@ -500,10 +494,10 @@ fun assertOpenLinksInAppsSwitchState(enabled: Boolean) {
                     hasCousin(
                         allOf(
                             withClassName(endsWith("Switch")),
-                            isChecked()
-                        )
-                    )
-                )
+                            isChecked(),
+                        ),
+                    ),
+                ),
             )
     } else {
         openLinksInAppsButton()
@@ -512,10 +506,10 @@ fun assertOpenLinksInAppsSwitchState(enabled: Boolean) {
                     hasCousin(
                         allOf(
                             withClassName(endsWith("Switch")),
-                            isNotChecked()
-                        )
-                    )
-                )
+                            isNotChecked(),
+                        ),
+                    ),
+                ),
             )
     }
 }
@@ -530,8 +524,8 @@ private fun assertDeveloperToolsHeading() {
 private fun assertAdvancedHeading() {
     onView(withId(R.id.recycler_view)).perform(
         RecyclerViewActions.scrollTo<RecyclerView.ViewHolder>(
-            hasDescendant(withText("Add-ons"))
-        )
+            hasDescendant(withText("Add-ons")),
+        ),
     )
 
     onView(withText("Add-ons"))
@@ -541,8 +535,8 @@ private fun assertAdvancedHeading() {
 private fun assertAddonsButton() {
     onView(withId(R.id.recycler_view)).perform(
         RecyclerViewActions.scrollTo<RecyclerView.ViewHolder>(
-            hasDescendant(withText("Add-ons"))
-        )
+            hasDescendant(withText("Add-ons")),
+        ),
     )
 
     addonsManagerButton()

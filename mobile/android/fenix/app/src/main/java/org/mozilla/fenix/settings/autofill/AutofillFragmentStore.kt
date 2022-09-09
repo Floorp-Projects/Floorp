@@ -15,7 +15,8 @@ import mozilla.components.lib.state.Store
  */
 class AutofillFragmentStore(initialState: AutofillFragmentState) :
     Store<AutofillFragmentState, AutofillAction>(
-        initialState, ::autofillFragmentStateReducer
+        initialState,
+        ::autofillFragmentStateReducer,
     )
 
 /**
@@ -29,7 +30,7 @@ class AutofillFragmentStore(initialState: AutofillFragmentState) :
 data class AutofillFragmentState(
     val addresses: List<Address> = emptyList(),
     val creditCards: List<CreditCard> = emptyList(),
-    val isLoading: Boolean = true
+    val isLoading: Boolean = true,
 ) : State
 
 /**
@@ -61,19 +62,19 @@ sealed class AutofillAction : Action {
  */
 private fun autofillFragmentStateReducer(
     state: AutofillFragmentState,
-    action: AutofillAction
+    action: AutofillAction,
 ): AutofillFragmentState {
     return when (action) {
         is AutofillAction.UpdateAddresses -> {
             state.copy(
                 addresses = action.addresses,
-                isLoading = false
+                isLoading = false,
             )
         }
         is AutofillAction.UpdateCreditCards -> {
             state.copy(
                 creditCards = action.creditCards,
-                isLoading = false
+                isLoading = false,
             )
         }
     }

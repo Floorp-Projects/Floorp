@@ -14,15 +14,15 @@ class HistoryDataSourceTest {
         listOf<Int>() to listOf(),
 
         listOf(1) to listOf(
-            TestHistory.Regular("http://www.mozilla.com")
+            TestHistory.Regular("http://www.mozilla.com"),
         ),
         listOf(1, 2) to listOf(
             TestHistory.Regular("http://www.mozilla.com"),
-            TestHistory.Regular("http://www.mozilla.com/2")
+            TestHistory.Regular("http://www.mozilla.com/2"),
         ),
         listOf(1, 2) to listOf(
             TestHistory.Metadata("http://www.mozilla.com"),
-            TestHistory.Regular("http://www.mozilla.com/2")
+            TestHistory.Regular("http://www.mozilla.com/2"),
         ),
         listOf(1, 2, 3) to listOf(
             TestHistory.Metadata("http://www.mozilla.com"),
@@ -39,7 +39,7 @@ class HistoryDataSourceTest {
         listOf(1, 2, 3) to listOf(
             TestHistory.Metadata("http://www.mozilla.com"),
             TestHistory.Regular("http://www.mozilla.com/2"),
-            TestHistory.Group("firefox", items = listOf())
+            TestHistory.Group("firefox", items = listOf()),
         ),
         listOf(1, 2, 3) to listOf(
             TestHistory.Metadata("http://www.mozilla.com"),
@@ -47,9 +47,9 @@ class HistoryDataSourceTest {
             TestHistory.Group(
                 "firefox",
                 items = listOf(
-                    "http://www.firefox.com"
-                )
-            )
+                    "http://www.firefox.com",
+                ),
+            ),
         ),
         listOf(1, 2, 7) to listOf(
             TestHistory.Metadata("http://www.mozilla.com"),
@@ -61,9 +61,9 @@ class HistoryDataSourceTest {
                     "http://www.firefox.com/2",
                     "http://www.firefox.com/3",
                     "http://www.firefox.com/4",
-                    "http://www.firefox.com/5"
-                )
-            )
+                    "http://www.firefox.com/5",
+                ),
+            ),
         ),
         listOf(5, 6, 7) to listOf(
             TestHistory.Group(
@@ -73,11 +73,11 @@ class HistoryDataSourceTest {
                     "http://www.firefox.com/2",
                     "http://www.firefox.com/3",
                     "http://www.firefox.com/4",
-                    "http://www.firefox.com/5"
-                )
+                    "http://www.firefox.com/5",
+                ),
             ),
             TestHistory.Metadata("http://www.mozilla.com"),
-            TestHistory.Regular("http://www.mozilla.com/2")
+            TestHistory.Regular("http://www.mozilla.com/2"),
         ),
         listOf(1, 6, 7) to listOf(
             TestHistory.Metadata("http://www.mozilla.com"),
@@ -88,10 +88,10 @@ class HistoryDataSourceTest {
                     "http://www.firefox.com/2",
                     "http://www.firefox.com/3",
                     "http://www.firefox.com/4",
-                    "http://www.firefox.com/5"
-                )
+                    "http://www.firefox.com/5",
+                ),
             ),
-            TestHistory.Regular("http://www.mozilla.com/2")
+            TestHistory.Regular("http://www.mozilla.com/2"),
         ),
         listOf(1, 6, 8, 9) to listOf(
             TestHistory.Metadata("http://www.mozilla.com"),
@@ -102,26 +102,26 @@ class HistoryDataSourceTest {
                     "http://www.firefox.com/2",
                     "http://www.firefox.com/3",
                     "http://www.firefox.com/4",
-                    "http://www.firefox.com/5"
-                )
+                    "http://www.firefox.com/5",
+                ),
             ),
             TestHistory.Group(
                 "mdn",
                 items = listOf(
                     "https://developer.mozilla.org/en-US/1",
-                    "https://developer.mozilla.org/en-US/2"
-                )
+                    "https://developer.mozilla.org/en-US/2",
+                ),
             ),
-            TestHistory.Regular("http://www.mozilla.com/2")
+            TestHistory.Regular("http://www.mozilla.com/2"),
         ),
         listOf(1) to listOf(
             TestHistory.Group(
                 "mozilla",
                 items = listOf(
-                    "http://www.mozilla.com"
-                )
-            )
-        )
+                    "http://www.mozilla.com",
+                ),
+            ),
+        ),
     )
 
     @Test
@@ -155,7 +155,7 @@ class HistoryDataSourceTest {
         assertEquals(
             "For case $history with offset $offset",
             expectedPositions,
-            history.toHistoryDB().positionWithOffset(offset).map { it.position }
+            history.toHistoryDB().positionWithOffset(offset).map { it.position },
         )
     }
 
@@ -174,7 +174,7 @@ class HistoryDataSourceTest {
                     HistoryDB.Regular(
                         title = it.url,
                         url = it.url,
-                        visitedAt = 0
+                        visitedAt = 0,
                     )
                 }
                 is TestHistory.Metadata -> {
@@ -183,7 +183,7 @@ class HistoryDataSourceTest {
                         url = it.url,
                         visitedAt = 0,
                         totalViewTime = 0,
-                        historyMetadataKey = HistoryMetadataKey(url = it.url)
+                        historyMetadataKey = HistoryMetadataKey(url = it.url),
                     )
                 }
                 is TestHistory.Group -> {
@@ -196,9 +196,9 @@ class HistoryDataSourceTest {
                                 url = item,
                                 visitedAt = 0,
                                 totalViewTime = 0,
-                                historyMetadataKey = HistoryMetadataKey(url = item)
+                                historyMetadataKey = HistoryMetadataKey(url = item),
                             )
-                        }
+                        },
                     )
                 }
             }

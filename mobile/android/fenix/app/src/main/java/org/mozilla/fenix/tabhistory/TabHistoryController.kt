@@ -14,7 +14,7 @@ interface TabHistoryController {
 class DefaultTabHistoryController(
     private val navController: NavController,
     private val goToHistoryIndexUseCase: SessionUseCases.GoToHistoryIndexUseCase,
-    private val customTabId: String? = null
+    private val customTabId: String? = null,
 ) : TabHistoryController {
 
     override fun handleGoToHistoryItem(item: TabHistoryItem) {

@@ -36,10 +36,10 @@ import java.util.EnumMap
  * @param initialState [QuickSettingsFragmentState] that will be shown initially to the user.
  */
 class QuickSettingsFragmentStore(
-    initialState: QuickSettingsFragmentState
+    initialState: QuickSettingsFragmentState,
 ) : Store<QuickSettingsFragmentState, QuickSettingsFragmentAction>(
     initialState,
-    ::quickSettingsFragmentReducer
+    ::quickSettingsFragmentReducer,
 ) {
     companion object {
         /**
@@ -68,28 +68,28 @@ class QuickSettingsFragmentStore(
             permissionHighlights: PermissionHighlightsState,
             settings: Settings,
             sessionId: String,
-            isTrackingProtectionEnabled: Boolean
+            isTrackingProtectionEnabled: Boolean,
         ) = QuickSettingsFragmentStore(
             QuickSettingsFragmentState(
                 webInfoState = createWebsiteInfoState(
                     websiteUrl,
                     websiteTitle,
                     isSecured,
-                    certificateName
+                    certificateName,
                 ),
                 websitePermissionsState = createWebsitePermissionState(
                     context,
                     permissions,
                     permissionHighlights,
-                    settings
+                    settings,
                 ),
                 trackingProtectionState = createTrackingProtectionState(
                     context,
                     sessionId,
                     websiteUrl,
-                    isTrackingProtectionEnabled
-                )
-            )
+                    isTrackingProtectionEnabled,
+                ),
+            ),
         )
 
         /**
@@ -108,7 +108,7 @@ class QuickSettingsFragmentStore(
             context: Context,
             permissions: SitePermissions?,
             permissionHighlights: PermissionHighlightsState,
-            settings: Settings
+            settings: Settings,
         ): WebsitePermissionsState {
             val state = EnumMap<PhoneFeature, WebsitePermission>(PhoneFeature::class.java)
             for (feature in PhoneFeature.values()) {
@@ -116,7 +116,7 @@ class QuickSettingsFragmentStore(
                     context,
                     permissions,
                     permissionHighlights,
-                    settings
+                    settings,
                 )
             }
             return state
@@ -137,7 +137,7 @@ class QuickSettingsFragmentStore(
             context: Context,
             sessionId: String,
             websiteUrl: String,
-            isTrackingProtectionEnabled: Boolean
+            isTrackingProtectionEnabled: Boolean,
         ): TrackingProtectionState {
             return TrackingProtectionState(
                 tab = context.components.core.store.state.findTabOrCustomTab(sessionId),
@@ -145,7 +145,7 @@ class QuickSettingsFragmentStore(
                 isTrackingProtectionEnabled = isTrackingProtectionEnabled,
                 listTrackers = listOf(),
                 mode = TrackingProtectionState.Mode.Normal,
-                lastAccessedCategory = ""
+                lastAccessedCategory = "",
             )
         }
 
@@ -157,7 +157,7 @@ class QuickSettingsFragmentStore(
             context: Context,
             permissions: SitePermissions?,
             permissionHighlights: PermissionHighlightsState,
-            settings: Settings
+            settings: Settings,
         ): WebsitePermission {
             return if (this == PhoneFeature.AUTOPLAY) {
                 val autoplayValues = AutoplayValue.values(context, settings, permissions)
@@ -165,12 +165,12 @@ class QuickSettingsFragmentStore(
                     autoplayValues.firstOrNull { it.isSelected() } ?: AutoplayValue.getFallbackValue(
                         context,
                         settings,
-                        permissions
+                        permissions,
                     )
                 WebsitePermission.Autoplay(
                     autoplayValue = selected,
                     options = autoplayValues,
-                    isVisible = permissionHighlights.isAutoPlayBlocking || permissions !== null
+                    isVisible = permissionHighlights.isAutoPlayBlocking || permissions !== null,
                 )
             } else {
                 WebsitePermission.Toggleable(
@@ -178,7 +178,7 @@ class QuickSettingsFragmentStore(
                     status = getActionLabel(context, permissions, settings),
                     isVisible = shouldBeVisible(permissions, settings),
                     isEnabled = shouldBeEnabled(context, permissions, settings),
-                    isBlockedByAndroid = !isAndroidPermissionGranted(context)
+                    isBlockedByAndroid = !isAndroidPermissionGranted(context),
                 )
             }
         }

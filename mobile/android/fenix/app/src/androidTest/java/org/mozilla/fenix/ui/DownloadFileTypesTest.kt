@@ -44,7 +44,7 @@ class DownloadFileTypesTest(fileName: String) {
             "web_icon.png",
             "videoSample.webm",
             "CSVfile.csv",
-            "XMLfile.xml"
+            "XMLfile.xml",
         )
     }
 

@@ -43,13 +43,13 @@ interface DownloadViewInteractor : SelectionInteractor<DownloadItem> {
  */
 class DownloadView(
     container: ViewGroup,
-    val interactor: DownloadInteractor
+    val interactor: DownloadInteractor,
 ) : LibraryPageView(container), UserInteractionHandler {
 
     val binding = ComponentDownloadsBinding.inflate(
         LayoutInflater.from(container.context),
         container,
-        true
+        true,
     )
 
     var mode: DownloadFragmentState.Mode = DownloadFragmentState.Mode.Normal
@@ -87,7 +87,7 @@ class DownloadView(
         when (val mode = state.mode) {
             is DownloadFragmentState.Mode.Normal -> {
                 setUiForNormalMode(
-                    context.getString(R.string.library_downloads)
+                    context.getString(R.string.library_downloads),
                 )
             }
             is DownloadFragmentState.Mode.Editing -> {
@@ -98,7 +98,7 @@ class DownloadView(
                     downloadAdapter.notifyItemChanged(index)
                 }
                 setUiForSelectingMode(
-                    context.getString(R.string.download_multi_select_title, mode.selectedItems.size)
+                    context.getString(R.string.download_multi_select_title, mode.selectedItems.size),
                 )
             }
         }

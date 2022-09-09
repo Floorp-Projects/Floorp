@@ -21,7 +21,7 @@ import mozilla.components.ui.tabcounter.TabCounter
 @OptIn(ExperimentalCoroutinesApi::class)
 class TabCounterBinding(
     store: BrowserStore,
-    private val counter: TabCounter
+    private val counter: TabCounter,
 ) : AbstractBinding<BrowserState>(store) {
 
     override suspend fun onState(flow: Flow<BrowserState>) {

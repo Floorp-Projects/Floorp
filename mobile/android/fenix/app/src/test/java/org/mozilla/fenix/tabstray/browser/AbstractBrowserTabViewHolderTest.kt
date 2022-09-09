@@ -52,7 +52,7 @@ class AbstractBrowserTabViewHolderTest {
             store,
             null,
             browserStore,
-            interactor
+            interactor,
         )
 
         holder.bind(createTab(url = "url"), false, mockk(), mockk())
@@ -73,7 +73,7 @@ class AbstractBrowserTabViewHolderTest {
             store,
             selectionHolder,
             browserStore,
-            interactor
+            interactor,
         )
 
         val tab = createTab(url = "url")
@@ -93,12 +93,12 @@ class AbstractBrowserTabViewHolderTest {
             url = "url",
             mediaSessionState = MediaSessionState(
                 mediaSessionController,
-                playbackState = MediaSession.PlaybackState.PAUSED
-            )
+                playbackState = MediaSession.PlaybackState.PAUSED,
+            ),
         )
         val mediaBrowserStore = BrowserStore(
             initialState =
-            BrowserState(listOf(mediaTab))
+            BrowserState(listOf(mediaTab)),
         )
         val holder = TestTabTrayViewHolder(
             view,
@@ -106,7 +106,7 @@ class AbstractBrowserTabViewHolderTest {
             store,
             TestSelectionHolder(emptySet()),
             mediaBrowserStore,
-            interactor
+            interactor,
         )
         assertNull(Tab.mediaPlay.testGetValue())
 
@@ -130,12 +130,12 @@ class AbstractBrowserTabViewHolderTest {
             url = "url",
             mediaSessionState = MediaSessionState(
                 mediaSessionController,
-                playbackState = MediaSession.PlaybackState.PLAYING
-            )
+                playbackState = MediaSession.PlaybackState.PLAYING,
+            ),
         )
         val mediaBrowserStore = BrowserStore(
             initialState =
-            BrowserState(listOf(mediaTab))
+            BrowserState(listOf(mediaTab)),
         )
         val holder = TestTabTrayViewHolder(
             view,
@@ -143,7 +143,7 @@ class AbstractBrowserTabViewHolderTest {
             store,
             TestSelectionHolder(emptySet()),
             mediaBrowserStore,
-            interactor
+            interactor,
         )
         assertNull(Tab.mediaPause.testGetValue())
 
@@ -166,7 +166,7 @@ class AbstractBrowserTabViewHolderTest {
         selectionHolder: SelectionHolder<TabSessionState>?,
         store: BrowserStore,
         override val browserTrayInteractor: BrowserTrayInteractor,
-        featureName: String = "Test"
+        featureName: String = "Test",
     ) : AbstractBrowserTabViewHolder(itemView, imageLoader, trayStore, selectionHolder, featureName, store) {
         override val thumbnailSize: Int
             get() = 30
@@ -177,7 +177,7 @@ class AbstractBrowserTabViewHolderTest {
     }
 
     class TestSelectionHolder(
-        private val testItems: Set<TabSessionState>
+        private val testItems: Set<TabSessionState>,
     ) : SelectionHolder<TabSessionState> {
         override val selectedItems: Set<TabSessionState>
             get() {

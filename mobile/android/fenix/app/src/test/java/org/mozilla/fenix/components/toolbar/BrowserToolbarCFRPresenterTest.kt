@@ -45,6 +45,7 @@ import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 class BrowserToolbarCFRPresenterTest {
     @get:Rule
     val coroutinesTestRule = MainCoroutineRule()
+
     @get:Rule
     val gleanTestRule = GleanTestRule(testContext)
 
@@ -218,7 +219,7 @@ class BrowserToolbarCFRPresenterTest {
     @Test
     fun `WHEN the TCP CFR is dismissed THEN log telemetry`() {
         val presenter = createPresenter(
-            anchor = mockk(relaxed = true)
+            anchor = mockk(relaxed = true),
         )
 
         presenter.showTcpCfr()
@@ -241,7 +242,7 @@ class BrowserToolbarCFRPresenterTest {
         browserStore: BrowserStore = mockk(),
         settings: Settings = mockk { every { shouldShowTotalCookieProtectionCFR } returns true },
         toolbar: BrowserToolbar = mockk(),
-        sessionId: String? = null
+        sessionId: String? = null,
     ) = spyk(createPresenter(context, anchor, browserStore, settings, toolbar, sessionId)) {
         every { showTcpCfr() } just Runs
     }
@@ -258,24 +259,24 @@ class BrowserToolbarCFRPresenterTest {
         toolbar: BrowserToolbar = mockk {
             every { findViewById<View>(R.id.mozac_browser_toolbar_security_indicator) } returns anchor
         },
-        sessionId: String? = null
+        sessionId: String? = null,
     ) = BrowserToolbarCFRPresenter(
         context = context,
         browserStore = browserStore,
         settings = settings,
         toolbar = toolbar,
-        sessionId = sessionId
+        sessionId = sessionId,
     )
 
     private fun createBrowserStore(
         tab: TabSessionState? = null,
         customTab: CustomTabSessionState? = null,
-        selectedTabId: String? = null
+        selectedTabId: String? = null,
     ) = BrowserStore(
         initialState = BrowserState(
             tabs = if (tab != null) listOf(tab) else listOf(),
             customTabs = if (customTab != null) listOf(customTab) else listOf(),
-            selectedTabId = selectedTabId
-        )
+            selectedTabId = selectedTabId,
+        ),
     )
 }

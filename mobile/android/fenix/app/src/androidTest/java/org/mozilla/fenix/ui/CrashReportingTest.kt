@@ -28,7 +28,7 @@ class CrashReportingTest {
     @get:Rule
     val activityTestRule = AndroidComposeTestRule(
         HomeActivityIntentTestRule(),
-        { it.activity }
+        { it.activity },
     )
 
     @Before

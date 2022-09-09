@@ -48,7 +48,7 @@ class PrivateNotificationServiceTest {
 
         controller = Robolectric.buildService(
             PrivateNotificationService::class.java,
-            Intent(ACTION_ERASE)
+            Intent(ACTION_ERASE),
         )
     }
 

@@ -28,7 +28,7 @@ fun NavController.alreadyOnDestination(@IdRes destId: Int?): Boolean {
 
 fun NavController.navigateSafe(
     @IdRes resId: Int,
-    directions: NavDirections
+    directions: NavDirections,
 ) {
     if (currentDestination?.id == resId) {
         this.navigate(directions)

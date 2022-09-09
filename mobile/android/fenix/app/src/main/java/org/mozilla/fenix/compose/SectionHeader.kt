@@ -31,7 +31,7 @@ fun SectionHeader(
         color = textColor,
         overflow = TextOverflow.Ellipsis,
         maxLines = 2,
-        style = FirefoxTheme.typography.headline7
+        style = FirefoxTheme.typography.headline7,
     )
 }
 

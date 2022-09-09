@@ -54,7 +54,7 @@ class WallpapersUseCases(
                 fileManager = fileManager,
                 metadataFetcher = metadataFetcher,
                 settings = context.settings(),
-                currentLocale = currentLocale
+                currentLocale = currentLocale,
             )
         } else {
             val fileManager = LegacyWallpaperFileManager(storageRootDirectory)
@@ -64,7 +64,7 @@ class WallpapersUseCases(
                 downloader = downloader,
                 fileManager = fileManager,
                 settings = context.settings(),
-                currentLocale = currentLocale
+                currentLocale = currentLocale,
             )
         }
     }
@@ -136,7 +136,7 @@ class WallpapersUseCases(
 
                 fileManager.clean(
                     currentWallpaper,
-                    possibleWallpapers
+                    possibleWallpapers,
                 )
                 downloadAllRemoteWallpapers(availableWallpapers)
                 store.dispatch(AppAction.WallpaperAction.UpdateAvailableWallpapers(availableWallpapers))
@@ -173,7 +173,7 @@ class WallpapersUseCases(
                 availableLocales = null,
                 startDate = null,
                 endDate = null,
-                learnMoreUrl = null
+                learnMoreUrl = null,
             )
             private val localWallpapers: List<Wallpaper> = listOf(
                 Wallpaper(
@@ -250,7 +250,7 @@ class WallpapersUseCases(
 
             fileManager.clean(
                 currentWallpaper,
-                possibleWallpapers
+                possibleWallpapers,
             )
 
             val wallpapersWithUpdatedThumbnailState = possibleWallpapers.map { wallpaper ->
@@ -273,6 +273,7 @@ class WallpapersUseCases(
         private fun Wallpaper.isAvailableInLocale(): Boolean =
             this.collection.availableLocales?.contains(currentLocale) ?: true
     }
+
     /**
      * Contract for usecase for loading bitmaps related to a specific wallpaper.
      */
@@ -304,7 +305,7 @@ class WallpapersUseCases(
 
         private suspend fun loadWallpaperFromDrawable(
             context: Context,
-            wallpaper: Wallpaper
+            wallpaper: Wallpaper,
         ): Bitmap? = Result.runCatching {
             val drawableRes = when (wallpaper.name) {
                 Wallpaper.amethystName -> R.drawable.amethyst
@@ -319,7 +320,7 @@ class WallpapersUseCases(
 
         private suspend fun loadWallpaperFromDisk(
             context: Context,
-            wallpaper: Wallpaper
+            wallpaper: Wallpaper,
         ): Bitmap? = Result.runCatching {
             val path = wallpaper.getLocalPathFromContext(context)
             withContext(Dispatchers.IO) {
@@ -355,7 +356,7 @@ class WallpapersUseCases(
 
         private suspend fun loadWallpaperFromDisk(
             context: Context,
-            wallpaper: Wallpaper
+            wallpaper: Wallpaper,
         ): Bitmap? = Result.runCatching {
             val path = wallpaper.getLocalPathFromContext(context)
             withContext(Dispatchers.IO) {
@@ -443,8 +444,8 @@ class WallpapersUseCases(
             Wallpapers.wallpaperSelected.record(
                 Wallpapers.WallpaperSelectedExtra(
                     name = wallpaper.name,
-                    themeCollection = wallpaper.collection.name
-                )
+                    themeCollection = wallpaper.collection.name,
+                ),
             )
         }
     }
@@ -481,8 +482,8 @@ class WallpapersUseCases(
             Wallpapers.wallpaperSelected.record(
                 Wallpapers.WallpaperSelectedExtra(
                     name = wallpaper.name,
-                    themeCollection = wallpaper.collection.name
-                )
+                    themeCollection = wallpaper.collection.name,
+                ),
             )
         }
 

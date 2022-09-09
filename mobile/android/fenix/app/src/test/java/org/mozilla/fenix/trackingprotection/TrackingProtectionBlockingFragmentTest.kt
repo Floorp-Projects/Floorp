@@ -67,7 +67,7 @@ class TrackingProtectionBlockingFragmentTest {
             .get()
         val fragment = TrackingProtectionBlockingFragment().apply {
             arguments = TrackingProtectionBlockingFragmentArgs(
-                protectionMode = CUSTOM
+                protectionMode = CUSTOM,
             ).toBundle()
         }
         activity.supportFragmentManager.beginTransaction()

@@ -21,7 +21,7 @@ import org.mozilla.fenix.components.appstate.AppAction.MessagingAction.MessageDi
 class DefaultMessageController(
     private val appStore: AppStore,
     private val messagingStorage: NimbusMessagingStorage,
-    private val homeActivity: HomeActivity
+    private val homeActivity: HomeActivity,
 ) : MessageController {
 
     override fun onMessagePressed(message: Message) {
@@ -31,8 +31,8 @@ class DefaultMessageController(
         Messaging.messageClicked.record(
             Messaging.MessageClickedExtra(
                 messageKey = message.id,
-                actionUuid = uuid
-            )
+                actionUuid = uuid,
+            ),
         )
         handleAction(action)
         appStore.dispatch(MessageClicked(message))

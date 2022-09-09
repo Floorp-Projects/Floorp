@@ -37,7 +37,7 @@ class NotYetSupportedAddonFragment :
         unsupportedAddonsAdapter = UnsupportedAddonsAdapter(
             addonManager = requireContext().components.addonManager,
             unsupportedAddonsAdapterDelegate = this@NotYetSupportedAddonFragment,
-            addons = args.addons.toList()
+            addons = args.addons.toList(),
         )
 
         val binding = FragmentNotYetSupportedAddonsBinding.bind(view)

@@ -82,11 +82,11 @@ fun RecentSyncedTab(
             .height(180.dp)
             .combinedClickable(
                 onClick = { tab?.let { onRecentSyncedTabClick(tab) } },
-                onLongClick = { isDropdownExpanded = true }
+                onLongClick = { isDropdownExpanded = true },
             ),
         shape = RoundedCornerShape(8.dp),
         backgroundColor = FirefoxTheme.colors.layer2,
-        elevation = 6.dp
+        elevation = 6.dp,
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Row(modifier = Modifier.height(IntrinsicSize.Min)) {
@@ -101,13 +101,13 @@ fun RecentSyncedTab(
                         Image(
                             url = tab.previewImageUrl,
                             contentScale = ContentScale.Crop,
-                            modifier = imageModifier
+                            modifier = imageModifier,
                         )
                     } else {
                         ThumbnailCard(
                             url = tab.url,
                             key = tab.url.hashCode().toString(),
-                            modifier = imageModifier
+                            modifier = imageModifier,
                         )
                     }
                 }
@@ -116,7 +116,7 @@ fun RecentSyncedTab(
 
                 Column(
                     verticalArrangement = Arrangement.SpaceBetween,
-                    modifier = Modifier.fillMaxHeight()
+                    modifier = Modifier.fillMaxHeight(),
                 ) {
                     if (tab == null) {
                         RecentTabTitlePlaceholder()
@@ -135,15 +135,15 @@ fun RecentSyncedTab(
                             Box(
                                 modifier = Modifier
                                     .background(FirefoxTheme.colors.layer3)
-                                    .size(18.dp)
+                                    .size(18.dp),
                             )
                         } else {
                             Image(
                                 painter = painterResource(R.drawable.ic_synced_tabs),
                                 contentDescription = stringResource(
-                                    R.string.recent_tabs_synced_device_icon_content_description
+                                    R.string.recent_tabs_synced_device_icon_content_description,
                                 ),
-                                modifier = Modifier.size(18.dp)
+                                modifier = Modifier.size(18.dp),
                             )
                         }
 
@@ -196,7 +196,7 @@ private fun RecentTabImagePlaceholder() {
         modifier = Modifier
             .size(108.dp, 80.dp)
             .clip(RoundedCornerShape(8.dp))
-            .background(color = FirefoxTheme.colors.layer3)
+            .background(color = FirefoxTheme.colors.layer3),
     )
 }
 
@@ -223,7 +223,7 @@ private fun TextLinePlaceHolder() {
         modifier = Modifier
             .height(12.dp)
             .fillMaxWidth()
-            .background(FirefoxTheme.colors.layer3)
+            .background(FirefoxTheme.colors.layer3),
     )
 }
 
@@ -250,12 +250,12 @@ private fun SyncedTabDropdown(
         expanded = showMenu && tab != null,
         onDismissRequest = { onDismiss() },
         modifier = Modifier
-            .background(color = FirefoxTheme.colors.layer2)
+            .background(color = FirefoxTheme.colors.layer2),
     ) {
         DropdownMenuItem(
             onClick = {
                 tab?.let { onRemove(it) }
-            }
+            },
         ) {
             Text(
                 text = stringResource(id = R.string.recent_synced_tab_menu_item_remove),
@@ -263,7 +263,7 @@ private fun SyncedTabDropdown(
                 maxLines = 1,
                 modifier = Modifier
                     .fillMaxHeight()
-                    .align(Alignment.CenterVertically)
+                    .align(Alignment.CenterVertically),
             )
         }
     }

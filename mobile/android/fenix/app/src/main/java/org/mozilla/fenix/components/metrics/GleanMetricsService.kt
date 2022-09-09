@@ -12,7 +12,7 @@ import org.mozilla.fenix.ext.components
 
 private class EventWrapper<T : Enum<T>>(
     private val recorder: ((Map<T, String>?) -> Unit),
-    private val keyMapper: ((String) -> T)? = null
+    private val keyMapper: ((String) -> T)? = null,
 ) {
 
     /**
@@ -58,7 +58,7 @@ private val Event.wrapper: EventWrapper<*>?
  * Service responsible for sending the activation and installation pings.
  */
 class GleanMetricsService(
-    private val context: Context
+    private val context: Context,
 ) : MetricsService {
     override val type = MetricServiceType.Data
 

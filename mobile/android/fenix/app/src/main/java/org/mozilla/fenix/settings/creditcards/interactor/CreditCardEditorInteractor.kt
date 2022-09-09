@@ -52,7 +52,7 @@ interface CreditCardEditorInteractor {
  * user interactions.
  */
 class DefaultCreditCardEditorInteractor(
-    private val controller: CreditCardEditorController
+    private val controller: CreditCardEditorController,
 ) : CreditCardEditorInteractor {
 
     override fun onCancelButtonClicked() {

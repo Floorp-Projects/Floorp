@@ -26,16 +26,24 @@ class DynamicInfoBanner(
     actionText: String? = null,
     dismissByHiding: Boolean = false,
     dismissAction: (() -> Unit)? = null,
-    actionToPerform: (() -> Unit)? = null
+    actionToPerform: (() -> Unit)? = null,
 ) : InfoBanner(
-    context, container, message, dismissText, actionText, dismissByHiding, dismissAction, actionToPerform
+    context,
+    container,
+    message,
+    dismissText,
+    actionText,
+    dismissByHiding,
+    dismissAction,
+    actionToPerform,
 ) {
     override fun showBanner() {
         super.showBanner()
 
         if (shouldScrollWithTopToolbar) {
             (binding.root.layoutParams as CoordinatorLayout.LayoutParams).behavior = DynamicInfoBannerBehavior(
-                context, null
+                context,
+                null,
             )
         }
     }

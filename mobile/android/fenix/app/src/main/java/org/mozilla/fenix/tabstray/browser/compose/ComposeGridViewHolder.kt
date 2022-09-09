@@ -49,7 +49,7 @@ class ComposeGridViewHolder(
         tab: TabSessionState,
         isSelected: Boolean,
         styling: TabsTrayStyling,
-        delegate: TabsTray.Delegate
+        delegate: TabsTray.Delegate,
     ) {
         this.tab = tab
         isSelectedTabState.value = isSelected

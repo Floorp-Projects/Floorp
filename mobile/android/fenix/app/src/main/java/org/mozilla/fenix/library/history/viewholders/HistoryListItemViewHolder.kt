@@ -61,7 +61,7 @@ class HistoryListItemViewHolder(
         showTopContent: Boolean,
         mode: HistoryFragmentState.Mode,
         isPendingDeletion: Boolean,
-        groupPendingDeletionCount: Int
+        groupPendingDeletionCount: Int,
     ) {
         binding.historyLayout.isVisible = !isPendingDeletion
 
@@ -131,9 +131,9 @@ class HistoryListItemViewHolder(
                         R.string.recently_closed_tab
                     } else {
                         R.string.recently_closed_tabs
-                    }
+                    },
                 ),
-                numRecentTabs
+                numRecentTabs,
             )
             binding.recentlyClosedNavEmpty.recentlyClosedNav.run {
                 if (isNormalMode) {

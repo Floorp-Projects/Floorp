@@ -19,7 +19,7 @@ sealed class RecentlyVisitedItem {
      */
     data class RecentHistoryHighlight(
         val title: String,
-        val url: String
+        val url: String,
     ) : RecentlyVisitedItem()
 
     /**
@@ -30,7 +30,7 @@ sealed class RecentlyVisitedItem {
      */
     data class RecentHistoryGroup(
         val title: String,
-        val historyMetadata: List<HistoryMetadata> = emptyList()
+        val historyMetadata: List<HistoryMetadata> = emptyList(),
     ) : RecentlyVisitedItem()
 }
 

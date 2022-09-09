@@ -25,12 +25,12 @@ class LocaleAdapter(private val interactor: LocaleSettingsViewInteractor) :
             ItemType.DEFAULT.ordinal -> SystemLocaleViewHolder(
                 view,
                 selectedLocale,
-                interactor
+                interactor,
             )
             ItemType.LOCALE.ordinal -> LocaleViewHolder(
                 view,
                 selectedLocale,
-                interactor
+                interactor,
             )
             else -> throw IllegalStateException("ViewType $viewType does not match to a ViewHolder")
         }
@@ -57,8 +57,8 @@ class LocaleAdapter(private val interactor: LocaleSettingsViewInteractor) :
                 this.localeList,
                 localeList,
                 this.selectedLocale,
-                selectedLocale
-            )
+                selectedLocale,
+            ),
         )
         this.localeList = localeList
         this.selectedLocale = selectedLocale
@@ -70,7 +70,7 @@ class LocaleAdapter(private val interactor: LocaleSettingsViewInteractor) :
         private val old: List<Locale>,
         private val new: List<Locale>,
         private val oldSelectedLocale: Locale,
-        private val newSelectedLocale: Locale
+        private val newSelectedLocale: Locale,
     ) : DiffUtil.Callback() {
 
         override fun areItemsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean {

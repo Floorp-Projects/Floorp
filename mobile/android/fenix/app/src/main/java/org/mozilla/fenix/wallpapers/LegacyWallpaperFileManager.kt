@@ -20,7 +20,7 @@ import java.io.File
  */
 class LegacyWallpaperFileManager(
     private val rootDirectory: File,
-    coroutineDispatcher: CoroutineDispatcher = Dispatchers.IO
+    coroutineDispatcher: CoroutineDispatcher = Dispatchers.IO,
 ) {
     private val scope = CoroutineScope(coroutineDispatcher)
     private val portraitDirectory = File(rootDirectory, "wallpapers/portrait")
@@ -41,7 +41,9 @@ class LegacyWallpaperFileManager(
                 thumbnailFileState = Wallpaper.ImageFileState.Unavailable,
                 assetsFileState = Wallpaper.ImageFileState.Downloaded,
             )
-        } else null
+        } else {
+            null
+        }
     }
 
     private fun getAllLocalWallpaperPaths(name: String): List<String> =

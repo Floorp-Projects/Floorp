@@ -15,7 +15,7 @@ internal class TabDiffUtil(
     private val oldSelected: Set<Tab>,
     private val newSelected: Set<Tab>,
     private val oldHideCheckboxes: Boolean,
-    private val newHideCheckboxes: Boolean
+    private val newHideCheckboxes: Boolean,
 ) : DiffUtil.Callback() {
 
     /**
@@ -55,5 +55,5 @@ internal class TabDiffUtil(
  */
 data class CheckChanged(
     val shouldBeChecked: Boolean,
-    val shouldHideCheckBox: Boolean
+    val shouldHideCheckBox: Boolean,
 )

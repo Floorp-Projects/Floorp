@@ -25,13 +25,13 @@ class LibrarySiteItemView @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,
     defStyleAttr: Int = 0,
-    defStyleRes: Int = 0
+    defStyleRes: Int = 0,
 ) : ConstraintLayout(context, attrs, defStyleAttr, defStyleRes) {
 
     private val binding = LibrarySiteItemBinding.inflate(
         LayoutInflater.from(context),
         this,
-        true
+        true,
     )
 
     val titleView: TextView get() = binding.title
@@ -69,7 +69,7 @@ class LibrarySiteItemView @JvmOverloads constructor(
         overflowView.setOnClickListener {
             menuController.show(
                 anchor = it,
-                orientation = Orientation.DOWN
+                orientation = Orientation.DOWN,
             )
         }
     }

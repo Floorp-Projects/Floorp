@@ -63,7 +63,7 @@ interface BrowserTrayInteractor : SelectionInteractor<TabSessionState>, UserInte
     fun onMultiSelectClicked(
         tab: TabSessionState,
         holder: SelectionHolder<TabSessionState>,
-        source: String?
+        source: String?,
     )
 
     /**
@@ -71,7 +71,7 @@ interface BrowserTrayInteractor : SelectionInteractor<TabSessionState>, UserInte
      */
     fun onLongClicked(
         tab: TabSessionState,
-        holder: SelectionHolder<TabSessionState>
+        holder: SelectionHolder<TabSessionState>,
     ): Boolean
 }
 
@@ -175,7 +175,7 @@ class DefaultBrowserTrayInteractor(
     override fun onMultiSelectClicked(
         tab: TabSessionState,
         holder: SelectionHolder<TabSessionState>,
-        source: String?
+        source: String?,
     ) {
         val selected = holder.selectedItems
         when {
@@ -192,7 +192,7 @@ class DefaultBrowserTrayInteractor(
      */
     override fun onLongClicked(
         tab: TabSessionState,
-        holder: SelectionHolder<TabSessionState>
+        holder: SelectionHolder<TabSessionState>,
     ): Boolean {
         return if (holder.selectedItems.isEmpty()) {
             Collections.longPress.record(NoExtras())

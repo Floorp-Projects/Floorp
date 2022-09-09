@@ -74,7 +74,7 @@ class AddSearchEngineFragment :
         val layoutInflater = LayoutInflater.from(context)
         val layoutParams = ViewGroup.LayoutParams(
             ViewGroup.LayoutParams.MATCH_PARENT,
-            ViewGroup.LayoutParams.WRAP_CONTENT
+            ViewGroup.LayoutParams.WRAP_CONTENT,
         )
         _binding = FragmentAddSearchEngineBinding.bind(view)
         customSearchEngine = binding.customSearchEngine
@@ -84,7 +84,7 @@ class AddSearchEngineFragment :
             val engineItem = makeButtonFromSearchEngine(
                 engine = engine,
                 layoutInflater = layoutInflater,
-                res = requireContext().resources
+                res = requireContext().resources,
             )
             engineItem.root.id = index
             engineItem.root.tag = engineId
@@ -107,10 +107,10 @@ class AddSearchEngineFragment :
             (activity as HomeActivity).openToBrowserAndLoad(
                 searchTermOrURL = SupportUtils.getSumoURLForTopic(
                     requireContext(),
-                    SupportUtils.SumoTopic.CUSTOM_SEARCH_ENGINES
+                    SupportUtils.SumoTopic.CUSTOM_SEARCH_ENGINES,
                 ),
                 newTab = true,
-                from = BrowserDirection.FromAddSearchEngineFragment
+                from = BrowserDirection.FromAddSearchEngineFragment,
             )
         }
     }
@@ -163,7 +163,7 @@ class AddSearchEngineFragment :
             val result = withContext(IO) {
                 SearchStringValidator.isSearchStringValid(
                     requireComponents.core.client,
-                    searchString
+                    searchString,
                 )
             }
 
@@ -176,7 +176,7 @@ class AddSearchEngineFragment :
                     val searchEngine = createSearchEngine(
                         name,
                         searchString.toSearchUrl(),
-                        requireComponents.core.icons.loadIcon(IconRequest(searchString)).await().bitmap
+                        requireComponents.core.icons.loadIcon(IconRequest(searchString)).await().bitmap,
                     )
 
                     requireComponents.useCases.searchUseCases.addSearchEngine(searchEngine)
@@ -188,7 +188,7 @@ class AddSearchEngineFragment :
                         FenixSnackbar.make(
                             view = it,
                             duration = FenixSnackbar.LENGTH_SHORT,
-                            isDisplayedWithBrowserToolbar = false
+                            isDisplayedWithBrowserToolbar = false,
                         )
                             .setText(successMessage)
                             .show()
@@ -260,7 +260,7 @@ class AddSearchEngineFragment :
     private fun makeButtonFromSearchEngine(
         engine: SearchEngine,
         layoutInflater: LayoutInflater,
-        res: Resources
+        res: Resources,
     ): SearchEngineRadioButtonBinding {
         val wrapper = layoutInflater
             .inflate(R.layout.search_engine_radio_button, null) as LinearLayout

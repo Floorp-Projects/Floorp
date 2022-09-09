@@ -24,14 +24,14 @@ class TrackingProtectionStoreTest {
         store.dispatch(
             TrackingProtectionAction.EnterDetailsMode(
                 TrackingProtectionCategory.FINGERPRINTERS,
-                true
-            )
+                true,
+            ),
         )
             .join()
         assertNotSame(initialState, store.state)
         assertEquals(
             store.state.mode,
-            TrackingProtectionState.Mode.Details(TrackingProtectionCategory.FINGERPRINTERS, true)
+            TrackingProtectionState.Mode.Details(TrackingProtectionCategory.FINGERPRINTERS, true),
         )
         assertEquals(store.state.lastAccessedCategory, TrackingProtectionCategory.FINGERPRINTERS.name)
     }
@@ -45,7 +45,7 @@ class TrackingProtectionStoreTest {
         assertNotSame(initialState, store.state)
         assertEquals(
             store.state.mode,
-            TrackingProtectionState.Mode.Normal
+            TrackingProtectionState.Mode.Normal,
         )
         assertEquals(store.state.lastAccessedCategory, initialState.lastAccessedCategory)
     }
@@ -60,7 +60,7 @@ class TrackingProtectionStoreTest {
         assertNotSame(initialState, store.state)
         assertEquals(
             listOf(tracker),
-            store.state.listTrackers
+            store.state.listTrackers,
         )
     }
 
@@ -73,7 +73,7 @@ class TrackingProtectionStoreTest {
         assertNotSame(initialState, store.state)
         assertEquals(
             "newURL",
-            store.state.url
+            store.state.url,
         )
     }
 
@@ -90,26 +90,26 @@ class TrackingProtectionStoreTest {
                 listOf(tracker),
                 TrackingProtectionState.Mode.Details(
                     TrackingProtectionCategory.FINGERPRINTERS,
-                    true
-                )
-            )
+                    true,
+                ),
+            ),
         ).join()
         assertNotSame(initialState, store.state)
         assertEquals(
             "newURL",
-            store.state.url
+            store.state.url,
         )
         assertEquals(
             false,
-            store.state.isTrackingProtectionEnabled
+            store.state.isTrackingProtectionEnabled,
         )
         assertEquals(
             listOf(tracker),
-            store.state.listTrackers
+            store.state.listTrackers,
         )
         assertEquals(
             TrackingProtectionState.Mode.Details(TrackingProtectionCategory.FINGERPRINTERS, true),
-            store.state.mode
+            store.state.mode,
         )
     }
 
@@ -119,7 +119,7 @@ class TrackingProtectionStoreTest {
         isTrackingProtectionEnabled = true,
         listTrackers = listOf(),
         mode = TrackingProtectionState.Mode.Normal,
-        lastAccessedCategory = ""
+        lastAccessedCategory = "",
     )
 
     private fun detailsState(): TrackingProtectionState = TrackingProtectionState(
@@ -128,6 +128,6 @@ class TrackingProtectionStoreTest {
         isTrackingProtectionEnabled = true,
         listTrackers = listOf(),
         mode = TrackingProtectionState.Mode.Details(TrackingProtectionCategory.CRYPTOMINERS, true),
-        lastAccessedCategory = TrackingProtectionCategory.CRYPTOMINERS.name
+        lastAccessedCategory = TrackingProtectionCategory.CRYPTOMINERS.name,
     )
 }

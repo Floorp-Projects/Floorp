@@ -56,9 +56,9 @@ class ShortcutsSuggestionProviderTest {
         val store = BrowserStore(
             BrowserState(
                 search = SearchState(
-                    regionSearchEngines = listOf(engineOne, engineTwo)
-                )
-            )
+                    regionSearchEngines = listOf(engineOne, engineTwo),
+                ),
+            ),
         )
         val provider = ShortcutsSuggestionProvider(store, context, {}, {})
 
@@ -87,9 +87,9 @@ class ShortcutsSuggestionProviderTest {
         val store = BrowserStore(
             BrowserState(
                 search = SearchState(
-                    regionSearchEngines = listOf(engineOne)
-                )
-            )
+                    regionSearchEngines = listOf(engineOne),
+                ),
+            ),
         )
 
         var selectEngine: SearchEngine? = null
@@ -98,7 +98,7 @@ class ShortcutsSuggestionProviderTest {
             store,
             context,
             { selectEngine = it },
-            { selectShortcutEngineSettingsChanged = true }
+            { selectShortcutEngineSettingsChanged = true },
         )
 
         val suggestions = provider.onInputChanged("")

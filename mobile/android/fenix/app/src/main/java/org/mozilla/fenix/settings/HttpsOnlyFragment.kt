@@ -30,7 +30,7 @@ class HttpsOnlyFragment : Fragment() {
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
-        savedInstanceState: Bundle?
+        savedInstanceState: Bundle?,
     ): View {
         val binding = SettingsHttpsOnlyBinding.inflate(inflater)
 
@@ -81,11 +81,11 @@ class HttpsOnlyFragment : Fragment() {
 
     private fun combineTextWithLink(
         text: String,
-        linkTitle: String
+        linkTitle: String,
     ): SpannableStringBuilder {
         val rawTextWithLink = HtmlCompat.fromHtml(
             "$text <a href=\"\">$linkTitle</a>",
-            HtmlCompat.FROM_HTML_MODE_COMPACT
+            HtmlCompat.FROM_HTML_MODE_COMPACT,
         )
 
         return SpannableStringBuilder(rawTextWithLink)
@@ -103,10 +103,10 @@ class HttpsOnlyFragment : Fragment() {
                 view.setOnClickListener {
                     (activity as HomeActivity).openToBrowserAndLoad(
                         searchTermOrURL = SupportUtils.getGenericSumoURLForTopic(
-                            SupportUtils.SumoTopic.HTTPS_ONLY_MODE
+                            SupportUtils.SumoTopic.HTTPS_ONLY_MODE,
                         ),
                         newTab = true,
-                        from = BrowserDirection.FromHttpsOnlyMode
+                        from = BrowserDirection.FromHttpsOnlyMode,
                     )
                 }
             }

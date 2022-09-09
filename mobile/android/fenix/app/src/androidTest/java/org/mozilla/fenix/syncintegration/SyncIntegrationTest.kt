@@ -177,7 +177,7 @@ class SyncIntegrationTest {
         val emailInput = mDevice.findObject(
             UiSelector()
                 .instance(0)
-                .className(EditText::class.java)
+                .className(EditText::class.java),
         )
         emailInput.waitForExists(TestAssetHelper.waitingTime)
 
@@ -194,7 +194,7 @@ class SyncIntegrationTest {
         val passwordInput = mDevice.findObject(
             UiSelector()
                 .instance(0)
-                .className(EditText::class.java)
+                .className(EditText::class.java),
         )
 
         val passwordValue = javaClass.classLoader!!.getResource("password.txt").readText()

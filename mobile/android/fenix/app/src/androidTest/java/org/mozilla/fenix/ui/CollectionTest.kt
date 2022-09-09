@@ -40,7 +40,7 @@ class CollectionTest {
     @get:Rule
     val composeTestRule = AndroidComposeTestRule(
         HomeActivityIntentTestRule(),
-        { it.activity }
+        { it.activity },
     )
 
     @Before
@@ -168,7 +168,7 @@ class CollectionTest {
             createCollection(
                 firstTestPage.title,
                 secondTestPage.title,
-                collectionName = collectionName
+                collectionName = collectionName,
             )
             closeTab()
         }
@@ -324,8 +324,9 @@ class CollectionTest {
             createCollection(webPage.title, collectionName = firstCollectionName)
             verifySnackBarText("Collection saved!")
             createCollection(
-                webPage.title, collectionName = secondCollectionName,
-                firstCollection = false
+                webPage.title,
+                collectionName = secondCollectionName,
+                firstCollection = false,
             )
             verifySnackBarText("Collection saved!")
         }.closeTabDrawer {
@@ -369,7 +370,7 @@ class CollectionTest {
         }.openTabDrawer {
             createCollection(
                 testPage.title,
-                collectionName = collectionName
+                collectionName = collectionName,
             )
             closeTab()
         }
@@ -396,7 +397,7 @@ class CollectionTest {
         }.openTabDrawer {
             createCollection(
                 testPage.title,
-                collectionName = collectionName
+                collectionName = collectionName,
             )
             closeTab()
         }

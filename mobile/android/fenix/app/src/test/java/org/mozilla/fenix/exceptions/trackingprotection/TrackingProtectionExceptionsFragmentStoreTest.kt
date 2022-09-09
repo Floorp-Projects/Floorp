@@ -21,7 +21,7 @@ class TrackingProtectionExceptionsFragmentStoreTest {
         assertNotSame(initialState, store.state)
         assertEquals(
             store.state.items,
-            listOf(newExceptionsItem)
+            listOf(newExceptionsItem),
         )
     }
 

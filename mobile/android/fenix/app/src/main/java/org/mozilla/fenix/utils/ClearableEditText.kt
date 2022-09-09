@@ -23,7 +23,7 @@ import org.mozilla.fenix.R
 class ClearableEditText @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,
-    defStyleAttr: Int = R.attr.editTextStyle
+    defStyleAttr: Int = R.attr.editTextStyle,
 ) :
     AppCompatEditText(context, attrs, defStyleAttr) {
 

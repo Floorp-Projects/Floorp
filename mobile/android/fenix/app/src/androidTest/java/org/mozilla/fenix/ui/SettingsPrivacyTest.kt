@@ -79,8 +79,8 @@ class SettingsPrivacyTest {
         featureSettingsHelper.resetAllFeatureFlags()
     }
 
-    @Test
     // Walks through settings privacy menu and sub-menus to ensure all items are present
+    @Test
     fun settingsPrivacyItemsTest() {
         homeScreen {
         }.openThreeDotMenu {
@@ -110,7 +110,6 @@ class SettingsPrivacyTest {
             verifyEnhancedTrackingProtectionProtectionExceptionsSubMenuItems()
         }.goBack {
         }.goBack {
-
             // SITE PERMISSIONS
             verifySitePermissionsButton()
         }.openSettingsSubMenuSitePermissions {
@@ -122,54 +121,46 @@ class SettingsPrivacyTest {
             verifyNavigationToolBarHeader("Autoplay")
             verifySitePermissionsAutoPlaySubMenuItems()
         }.goBack {
-
             // SITE PERMISSIONS CAMERA
         }.openCamera {
             verifyNavigationToolBarHeader("Camera")
             verifySitePermissionsCommonSubMenuItems()
             verifyToggleNameToON("3. Toggle Camera to ON")
         }.goBack {
-
             // SITE PERMISSIONS LOCATION
         }.openLocation {
             verifyNavigationToolBarHeader("Location")
             verifySitePermissionsCommonSubMenuItems()
             verifyToggleNameToON("3. Toggle Location to ON")
         }.goBack {
-
             // SITE PERMISSIONS MICROPHONE
         }.openMicrophone {
             verifyNavigationToolBarHeader("Microphone")
             verifySitePermissionsCommonSubMenuItems()
             verifyToggleNameToON("3. Toggle Microphone to ON")
         }.goBack {
-
             // SITE PERMISSIONS NOTIFICATION
         }.openNotification {
             verifyNavigationToolBarHeader("Notification")
             verifySitePermissionsNotificationSubMenuItems()
         }.goBack {
-
             // SITE PERMISSIONS PERSISTENT STORAGE
         }.openPersistentStorage {
             verifyNavigationToolBarHeader("Persistent Storage")
             verifySitePermissionsPersistentStorageSubMenuItems()
         }.goBack {
-
             // SITE PERMISSIONS EXCEPTIONS
         }.openExceptions {
             verifyNavigationToolBarHeader()
             verifySitePermissionsExceptionSubMenuItems()
         }.goBack {
         }.goBack {
-
             // DELETE BROWSING DATA
             verifyDeleteBrowsingDataButton()
         }.openSettingsSubMenuDeleteBrowsingData {
             verifyNavigationToolBarHeader()
             verifyDeleteBrowsingDataSubMenuItems()
         }.goBack {
-
             // DELETE BROWSING DATA ON QUIT
             verifyDeleteBrowsingDataOnQuitButton()
             verifyDeleteBrowsingDataOnQuitState("Off")
@@ -177,13 +168,11 @@ class SettingsPrivacyTest {
             verifyNavigationToolBarHeader()
             verifyDeleteBrowsingDataOnQuitSubMenuItems()
         }.goBack {
-
             // NOTIFICATIONS
             verifyNotificationsButton()
         }.openSettingsSubMenuNotifications {
             verifySystemNotificationsView()
         }.goBack {
-
             // DATA COLLECTION
             verifyDataCollectionButton()
         }.openSettingsSubMenuDataCollection {
@@ -455,10 +444,10 @@ class SettingsPrivacyTest {
         }
     }
 
+    // Verifies that you can go to System settings and change app's permissions from inside the app
     @SmokeTest
     @Test
     @SdkSuppress(minSdkVersion = 29)
-    // Verifies that you can go to System settings and change app's permissions from inside the app
     fun redirectToAppPermissionsSystemSettingsTest() {
         homeScreen {
         }.openThreeDotMenu {

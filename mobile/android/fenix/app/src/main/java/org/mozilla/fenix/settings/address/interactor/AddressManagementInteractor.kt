@@ -34,7 +34,7 @@ interface AddressManagementInteractor {
  * all user interactions.
  */
 class DefaultAddressManagementInteractor(
-    private val controller: AddressManagementController
+    private val controller: AddressManagementController,
 ) : AddressManagementInteractor {
 
     override fun onSelectAddress(address: Address) {

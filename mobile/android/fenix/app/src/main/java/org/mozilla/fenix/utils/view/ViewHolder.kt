@@ -12,5 +12,5 @@ import androidx.recyclerview.widget.RecyclerView
  * This allows views to be used without an `itemView.<id>` prefix, and additionally caches them.
  */
 abstract class ViewHolder(
-    val containerView: View
+    val containerView: View,
 ) : RecyclerView.ViewHolder(containerView)

@@ -76,7 +76,7 @@ class OnboardingToolbarPositionPickerViewHolderTest {
         assertEquals(
             OnboardingToolbarPositionPickerViewHolder.Companion.Position.TOP.name,
             Onboarding.prefToggledToolbarPosition.testGetValue()!!
-                .last().extra?.get("position")
+                .last().extra?.get("position"),
         )
     }
 
@@ -91,7 +91,7 @@ class OnboardingToolbarPositionPickerViewHolderTest {
         assertEquals(
             OnboardingToolbarPositionPickerViewHolder.Companion.Position.BOTTOM.name,
             Onboarding.prefToggledToolbarPosition.testGetValue()!!
-                .last().extra?.get("position")
+                .last().extra?.get("position"),
         )
     }
 }

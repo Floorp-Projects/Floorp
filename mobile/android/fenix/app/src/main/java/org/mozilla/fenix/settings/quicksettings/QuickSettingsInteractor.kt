@@ -14,7 +14,7 @@ package org.mozilla.fenix.settings.quicksettings
  * it expected to contain all business logic for how to act in response.
  */
 class QuickSettingsInteractor(
-    private val controller: QuickSettingsController
+    private val controller: QuickSettingsController,
 ) : WebsitePermissionInteractor, TrackingProtectionInteractor, WebSiteInfoInteractor, ClearSiteDataViewInteractor {
     override fun onPermissionsShown() {
         controller.handlePermissionsShown()

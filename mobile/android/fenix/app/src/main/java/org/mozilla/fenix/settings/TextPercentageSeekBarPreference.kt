@@ -65,7 +65,7 @@ class TextPercentageSeekBarPreference @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,
     defStyleAttr: Int = R.attr.seekBarPreferenceStyle,
-    defStyleRes: Int = 0
+    defStyleRes: Int = 0,
 ) : Preference(context, attrs, defStyleAttr, defStyleRes) {
     /* synthetic access */
     internal var mSeekBarValue: Int = 0
@@ -177,6 +177,7 @@ class TextPercentageSeekBarPreference @JvmOverloads constructor(
      */
     var seekBarIncrement: Int
         get() = mSeekBarIncrement
+
         /**
          * Sets the increment amount on the [SeekBar] for each arrow key press.
          * @param seekBarIncrement The amount to increment or decrement when the user presses an
@@ -212,6 +213,7 @@ class TextPercentageSeekBarPreference @JvmOverloads constructor(
      */
     var showSeekBarValue: Boolean
         get() = mShowSeekBarValue
+
         /**
          * Sets whether the current [SeekBar] value is displayed to the user.
          * @param showSeekBarValue Whether the current [SeekBar] value is displayed to the user
@@ -231,7 +233,10 @@ class TextPercentageSeekBarPreference @JvmOverloads constructor(
 
     init {
         val a = context.obtainStyledAttributes(
-            attrs, R.styleable.TextPercentageSeekBarPreference, defStyleAttr, defStyleRes
+            attrs,
+            R.styleable.TextPercentageSeekBarPreference,
+            defStyleAttr,
+            defStyleRes,
         )
 
         // The ordering of these two statements are important. If we want to set max first, we need
@@ -241,10 +246,11 @@ class TextPercentageSeekBarPreference @JvmOverloads constructor(
         max = a.getInt(R.styleable.TextPercentageSeekBarPreference_android_max, SEEK_BAR_MAX)
         seekBarIncrement = a.getInt(R.styleable.TextPercentageSeekBarPreference_seekBarIncrement, 0)
         isAdjustable = a.getBoolean(R.styleable.TextPercentageSeekBarPreference_adjustable, true)
-        mShowSeekBarValue = a.getBoolean(R.styleable.TextPercentageSeekBarPreference_showSeekBarValue, false)
+        mShowSeekBarValue =
+            a.getBoolean(R.styleable.TextPercentageSeekBarPreference_showSeekBarValue, false)
         updatesContinuously = a.getBoolean(
             R.styleable.TextPercentageSeekBarPreference_updatesContinuously,
-            false
+            false,
         )
         a.recycle()
     }
@@ -354,11 +360,12 @@ class TextPercentageSeekBarPreference @JvmOverloads constructor(
             mSeekBarValueTextView?.text = percentage
         }
 
-        mSeekBar?.setAccessibilityDelegate(object :
+        mSeekBar?.setAccessibilityDelegate(
+            object :
                 View.AccessibilityDelegate() {
                 override fun onInitializeAccessibilityNodeInfo(
                     host: View?,
-                    info: AccessibilityNodeInfo?
+                    info: AccessibilityNodeInfo?,
                 ) {
                     super.onInitializeAccessibilityNodeInfo(host, info)
                     val initialInfo = info?.rangeInfo
@@ -367,11 +374,12 @@ class TextPercentageSeekBarPreference @JvmOverloads constructor(
                             RANGE_TYPE_PERCENT,
                             MIN_VALUE.toFloat(),
                             SEEK_BAR_MAX.toFloat(),
-                            convertCurrentValue(it.current)
+                            convertCurrentValue(it.current),
                         )
                     }
                 }
-            })
+            },
+        )
     }
 
     /**

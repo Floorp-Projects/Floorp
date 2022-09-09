@@ -51,7 +51,7 @@ fun Favicon(
         components.core.icons.Loader(
             url = url,
             isPrivate = isPrivate,
-            size = size.toIconRequestSize()
+            size = size.toIconRequestSize(),
         ) {
             Placeholder {
                 FaviconPlaceholder(
@@ -91,7 +91,7 @@ private fun FaviconPlaceholder(
             .clip(RoundedCornerShape(2.dp))
             .background(
                 color = FirefoxTheme.colors.layer2,
-            )
+            ),
     )
 }
 

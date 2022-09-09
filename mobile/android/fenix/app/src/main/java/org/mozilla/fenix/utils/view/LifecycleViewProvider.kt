@@ -33,7 +33,7 @@ class LifecycleViewProvider(view: View) : LifecycleOwner {
 
 @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
 internal class ViewBinding(
-    private val registry: LifecycleRegistry
+    private val registry: LifecycleRegistry,
 ) : View.OnAttachStateChangeListener {
     override fun onViewAttachedToWindow(v: View?) {
         registry.currentState = State.RESUMED

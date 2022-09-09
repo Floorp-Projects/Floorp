@@ -28,7 +28,7 @@ class BrowserAnimator(
     private val fragment: WeakReference<Fragment>,
     private val engineView: WeakReference<EngineView>,
     private val swipeRefresh: WeakReference<View>,
-    private val viewLifecycleScope: WeakReference<LifecycleCoroutineScope>
+    private val viewLifecycleScope: WeakReference<LifecycleCoroutineScope>,
 ) {
 
     private val unwrappedEngineView: EngineView?

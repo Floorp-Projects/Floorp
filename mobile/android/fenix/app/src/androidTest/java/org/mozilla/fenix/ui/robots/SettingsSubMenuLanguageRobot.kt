@@ -40,7 +40,7 @@ class SettingsSubMenuLanguageRobot {
             languagesList
                 .getChildByText(UiSelector().text(language), language, true)
                 .getFromParent(UiSelector().resourceId("$packageName:id/locale_selected_icon"))
-                .waitForExists(waitingTime)
+                .waitForExists(waitingTime),
         )
     }
 
@@ -84,7 +84,7 @@ private val languagesList =
     UiScrollable(
         UiSelector()
             .resourceId("$packageName:id/locale_list")
-            .scrollable(true)
+            .scrollable(true),
     )
 
 private fun language(name: String) = mDevice.findObject(UiSelector().text(name))

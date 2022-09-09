@@ -19,7 +19,7 @@ class HistorySearchDialogInteractorTest {
     fun setup() {
         searchController = mockk(relaxed = true)
         interactor = HistorySearchDialogInteractor(
-            searchController
+            searchController,
         )
     }
 

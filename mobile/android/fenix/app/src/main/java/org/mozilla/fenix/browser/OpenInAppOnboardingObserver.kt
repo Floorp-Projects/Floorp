@@ -39,7 +39,7 @@ class OpenInAppOnboardingObserver(
     private val appLinksUseCases: AppLinksUseCases,
     private val container: ViewGroup,
     @VisibleForTesting
-    internal val shouldScrollWithTopToolbar: Boolean = false
+    internal val shouldScrollWithTopToolbar: Boolean = false,
 ) : LifecycleAwareFeature {
     private var scope: CoroutineScope? = null
     private var currentUrl: String? = null
@@ -54,7 +54,7 @@ class OpenInAppOnboardingObserver(
                 state.selectedTab
             }
                 .ifAnyChanged {
-                    tab ->
+                        tab ->
                     arrayOf(tab.content.url, tab.content.loading)
                 }
                 .collect { tab ->
@@ -100,10 +100,10 @@ class OpenInAppOnboardingObserver(
             dismissText = context.getString(R.string.open_in_app_cfr_negative_button_text),
             actionText = context.getString(R.string.open_in_app_cfr_positive_button_text),
             container = container,
-            shouldScrollWithTopToolbar = shouldScrollWithTopToolbar
+            shouldScrollWithTopToolbar = shouldScrollWithTopToolbar,
         ) {
             val directions = BrowserFragmentDirections.actionBrowserFragmentToSettingsFragment(
-                preferenceToScrollTo = context.getString(R.string.pref_key_open_links_in_external_app)
+                preferenceToScrollTo = context.getString(R.string.pref_key_open_links_in_external_app),
             )
             navController.nav(R.id.browserFragment, directions)
         }

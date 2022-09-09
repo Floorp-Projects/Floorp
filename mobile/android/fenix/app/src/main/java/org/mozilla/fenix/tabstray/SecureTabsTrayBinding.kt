@@ -24,14 +24,14 @@ class SecureTabsTrayBinding(
     store: TabsTrayStore,
     private val settings: Settings,
     private val fragment: Fragment,
-    private val dialog: TabsTrayDialog
+    private val dialog: TabsTrayDialog,
 ) : AbstractBinding<TabsTrayState>(store) {
 
     override suspend fun onState(flow: Flow<TabsTrayState>) {
         flow.map { it }
             .ifAnyChanged { state ->
                 arrayOf(
-                    state.selectedPage
+                    state.selectedPage,
                 )
             }
             .collect { state ->

@@ -12,7 +12,7 @@ class DraggableItemAnimator : DefaultItemAnimator() {
     override fun animatePersistence(
         @NonNull viewHolder: RecyclerView.ViewHolder,
         @NonNull preLayoutInfo: RecyclerView.ItemAnimator.ItemHolderInfo,
-        @NonNull postLayoutInfo: RecyclerView.ItemAnimator.ItemHolderInfo
+        @NonNull postLayoutInfo: RecyclerView.ItemAnimator.ItemHolderInfo,
     ): Boolean {
         // While being dragged, keep the tab visually in place
         if (viewHolder is AbstractBrowserTabViewHolder && viewHolder.beingDragged) {

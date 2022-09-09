@@ -30,7 +30,7 @@ class AccountAbnormalitiesTest {
         val accountAbnormalities = AccountAbnormalities(
             testContext,
             crashReporter,
-            TestStrictModeManager() as StrictModeManager
+            TestStrictModeManager() as StrictModeManager,
         )
 
         try {
@@ -60,7 +60,7 @@ class AccountAbnormalitiesTest {
         val accountAbnormalities = AccountAbnormalities(
             testContext,
             crashReporter,
-            TestStrictModeManager() as StrictModeManager
+            TestStrictModeManager() as StrictModeManager,
         )
         accountAbnormalities.onReady(mockk(relaxed = true))
 
@@ -76,7 +76,7 @@ class AccountAbnormalitiesTest {
         val accountAbnormalities = AccountAbnormalities(
             testContext,
             crashReporter,
-            TestStrictModeManager() as StrictModeManager
+            TestStrictModeManager() as StrictModeManager,
         )
         accountAbnormalities.onReady(mockk(relaxed = true))
 
@@ -97,7 +97,7 @@ class AccountAbnormalitiesTest {
         val accountAbnormalities = AccountAbnormalities(
             testContext,
             crashReporter,
-            TestStrictModeManager() as StrictModeManager
+            TestStrictModeManager() as StrictModeManager,
         )
         accountAbnormalities.onReady(mockk(relaxed = true))
 
@@ -114,7 +114,7 @@ class AccountAbnormalitiesTest {
         val accountAbnormalities = AccountAbnormalities(
             testContext,
             crashReporter,
-            TestStrictModeManager() as StrictModeManager
+            TestStrictModeManager() as StrictModeManager,
         )
         accountAbnormalities.onReady(null)
 
@@ -126,7 +126,7 @@ class AccountAbnormalitiesTest {
         val accountAbnormalities2 = AccountAbnormalities(
             testContext,
             crashReporter,
-            TestStrictModeManager() as StrictModeManager
+            TestStrictModeManager() as StrictModeManager,
         )
         // mock accountManager doesn't have an account, but we expect it to have one since we
         // were authenticated before our "restart".
@@ -142,7 +142,7 @@ class AccountAbnormalitiesTest {
         val accountAbnormalities = AccountAbnormalities(
             testContext,
             crashReporter,
-            TestStrictModeManager() as StrictModeManager
+            TestStrictModeManager() as StrictModeManager,
         )
         accountAbnormalities.onReady(mockk(relaxed = true))
 

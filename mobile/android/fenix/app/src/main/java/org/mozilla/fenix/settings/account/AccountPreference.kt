@@ -15,7 +15,7 @@ import kotlin.properties.Delegates
 
 class AccountPreference @JvmOverloads constructor(
     context: Context,
-    attrs: AttributeSet? = null
+    attrs: AttributeSet? = null,
 ) : Preference(context, attrs) {
     private var emailView: TextView? = null
     private var displayNameView: TextView? = null

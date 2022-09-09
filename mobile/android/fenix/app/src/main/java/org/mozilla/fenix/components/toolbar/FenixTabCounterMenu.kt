@@ -14,7 +14,7 @@ import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 class FenixTabCounterMenu(
     context: Context,
     onItemTapped: (Item) -> Unit,
-    iconColor: Int? = null
+    iconColor: Int? = null,
 ) : TabCounterMenu(context, onItemTapped, iconColor) {
 
     @VisibleForTesting
@@ -31,7 +31,7 @@ class FenixTabCounterMenu(
             newTabItem,
             newPrivateTabItem,
             DividerMenuCandidate(),
-            closeTabItem
+            closeTabItem,
         )
 
         return when (toolbarPosition) {

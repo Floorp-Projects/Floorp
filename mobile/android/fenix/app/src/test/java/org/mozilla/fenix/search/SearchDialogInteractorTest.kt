@@ -21,7 +21,7 @@ class SearchDialogInteractorTest {
     fun setup() {
         searchController = mockk(relaxed = true)
         interactor = SearchDialogInteractor(
-            searchController
+            searchController,
         )
     }
 

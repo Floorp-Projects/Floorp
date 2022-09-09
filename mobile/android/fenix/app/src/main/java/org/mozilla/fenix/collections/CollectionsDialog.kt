@@ -42,14 +42,14 @@ data class CollectionsDialog(
     val storage: TabCollectionStorage,
     val sessionList: List<TabSessionState>,
     val onPositiveButtonClick: OnPositiveButtonClick,
-    val onNegativeButtonClick: OnNegativeButtonClick
+    val onNegativeButtonClick: OnNegativeButtonClick,
 )
 
 /**
  * Create and display a [CollectionsDialog] using [AlertDialog].
  */
 fun CollectionsDialog.show(
-    context: Context
+    context: Context,
 ) {
     if (storage.cachedTabCollections.isEmpty()) {
         showAddNewDialog(context, storage)
@@ -96,7 +96,7 @@ fun CollectionsDialog.show(
 
 internal fun CollectionsDialog.showAddNewDialog(
     context: Context,
-    collectionsStorage: TabCollectionStorage
+    collectionsStorage: TabCollectionStorage,
 ) {
     val layout = LayoutInflater.from(context).inflate(R.layout.name_collection_dialog, null)
     val collectionNameEditText: EditText = layout.findViewById(R.id.collection_name)
@@ -104,8 +104,8 @@ internal fun CollectionsDialog.showAddNewDialog(
     collectionNameEditText.setText(
         context.getString(
             R.string.create_collection_default_name,
-            collectionsStorage.cachedTabCollections.getDefaultCollectionNumber()
-        )
+            collectionsStorage.cachedTabCollections.getDefaultCollectionNumber(),
+        ),
     )
 
     AlertDialog.Builder(context)
@@ -115,7 +115,7 @@ internal fun CollectionsDialog.showAddNewDialog(
             MainScope().launch {
                 val id = storage.createCollection(
                     collectionNameEditText.text.toString(),
-                    sessionList
+                    sessionList,
                 )
                 onPositiveButtonClick.invoke(id, true)
             }

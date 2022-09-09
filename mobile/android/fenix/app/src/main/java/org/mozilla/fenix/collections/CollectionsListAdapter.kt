@@ -20,7 +20,7 @@ import org.mozilla.fenix.R
  */
 class CollectionsListAdapter(
     private val collections: Array<String>,
-    private val onNewCollectionClicked: () -> Unit
+    private val onNewCollectionClicked: () -> Unit,
 ) : RecyclerView.Adapter<CollectionsListAdapter.CollectionItemViewHolder>() {
 
     @VisibleForTesting
@@ -31,7 +31,7 @@ class CollectionsListAdapter(
 
     override fun onCreateViewHolder(
         parent: ViewGroup,
-        viewType: Int
+        viewType: Int,
     ): CollectionItemViewHolder {
         val textView = LayoutInflater.from(parent.context)
             .inflate(R.layout.collection_dialog_list_item, parent, false) as CheckedTextView
@@ -42,15 +42,15 @@ class CollectionsListAdapter(
         if (position == 0) {
             val resources = holder.textView.resources
             holder.textView.updatePaddingRelative(
-                start = resources.getDimensionPixelSize(R.dimen.tab_tray_new_collection_padding_start)
+                start = resources.getDimensionPixelSize(R.dimen.tab_tray_new_collection_padding_start),
             )
             holder.textView.compoundDrawablePadding =
                 resources.getDimensionPixelSize(R.dimen.tab_tray_new_collection_drawable_padding)
             holder.textView.putCompoundDrawablesRelativeWithIntrinsicBounds(
                 start = AppCompatResources.getDrawable(
                     holder.textView.context,
-                    R.drawable.ic_new
-                )
+                    R.drawable.ic_new,
+                ),
             )
         } else {
             holder.textView.isChecked = checkedPosition == position

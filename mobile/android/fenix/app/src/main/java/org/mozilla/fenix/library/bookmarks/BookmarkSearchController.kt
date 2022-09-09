@@ -38,7 +38,7 @@ class BookmarkSearchDialogController(
             searchTermOrURL = url,
             newTab = true,
             from = BrowserDirection.FromBookmarkSearchDialog,
-            flags = flags
+            flags = flags,
         )
     }
 }

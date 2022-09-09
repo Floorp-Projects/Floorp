@@ -14,6 +14,7 @@ import com.google.android.material.bottomsheet.BottomSheetBehavior.STATE_HIDDEN
 import mozilla.components.support.ktx.android.util.dpToPx
 
 @VisibleForTesting internal const val EXPANDED_OFFSET_IN_LANDSCAPE_DP = 0
+
 @VisibleForTesting internal const val EXPANDED_OFFSET_IN_PORTRAIT_DP = 40
 
 /**
@@ -32,14 +33,14 @@ internal class TabSheetBehaviorManager(
     private val maxNumberOfTabs: Int,
     private val numberForExpandingTray: Int,
     navigationInteractor: NavigationInteractor,
-    private val displayMetrics: DisplayMetrics
+    private val displayMetrics: DisplayMetrics,
 ) {
     @VisibleForTesting
     internal var currentOrientation = orientation
 
     init {
         behavior.addBottomSheetCallback(
-            TraySheetBehaviorCallback(behavior, navigationInteractor)
+            TraySheetBehaviorCallback(behavior, navigationInteractor),
         )
 
         val isInLandscape = isLandscape(orientation)
@@ -85,7 +86,7 @@ internal class TabSheetBehaviorManager(
 @VisibleForTesting
 internal class TraySheetBehaviorCallback(
     @VisibleForTesting internal val behavior: BottomSheetBehavior<ConstraintLayout>,
-    @VisibleForTesting internal val trayInteractor: NavigationInteractor
+    @VisibleForTesting internal val trayInteractor: NavigationInteractor,
 ) : BottomSheetBehavior.BottomSheetCallback() {
 
     override fun onStateChanged(bottomSheet: View, newState: Int) {

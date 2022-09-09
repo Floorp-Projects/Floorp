@@ -27,9 +27,13 @@ import org.mozilla.fenix.utils.Settings
 class SecretDebugMenuTriggerTest {
 
     @MockK private lateinit var logoView: View
+
     @MockK private lateinit var context: Context
+
     @MockK private lateinit var settings: Settings
-    @MockK(relaxUnitFun = true) private lateinit var toast: Toast
+
+    @MockK(relaxUnitFun = true)
+    private lateinit var toast: Toast
     private lateinit var clickListener: CapturingSlot<View.OnClickListener>
 
     @Before
@@ -100,7 +104,7 @@ class SecretDebugMenuTriggerTest {
             Toast.makeText(
                 context,
                 R.string.about_debug_menu_toast_done,
-                Toast.LENGTH_LONG
+                Toast.LENGTH_LONG,
             )
         }
         verify { toast.show() }

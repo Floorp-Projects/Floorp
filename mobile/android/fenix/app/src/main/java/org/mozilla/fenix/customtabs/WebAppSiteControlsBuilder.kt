@@ -19,7 +19,7 @@ class WebAppSiteControlsBuilder(
     private val store: BrowserStore,
     reloadUrlUseCase: SessionUseCases.ReloadUrlUseCase,
     private val sessionId: String,
-    private val manifest: WebAppManifest
+    private val manifest: WebAppManifest,
 ) : SiteControlsBuilder {
 
     private val inner = SiteControlsBuilder.CopyAndRefresh(reloadUrlUseCase)

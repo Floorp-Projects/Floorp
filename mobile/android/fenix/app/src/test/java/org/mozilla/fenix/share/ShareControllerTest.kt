@@ -51,13 +51,13 @@ class ShareControllerTest {
     private val shareSubject = "shareSubject"
     private val shareData = listOf(
         ShareData(url = "url0", title = "title0"),
-        ShareData(url = "url1", title = "title1")
+        ShareData(url = "url1", title = "title1"),
     )
 
     // Navigation between app fragments uses ShareTab as arguments. SendTabUseCases uses TabData.
     private val tabsData = listOf(
         TabData("title0", "url0"),
-        TabData("title1", "url1")
+        TabData("title1", "url1"),
     )
     private val textToShare = "${shareData[0].url}\n\n${shareData[1].url}"
     private val sendTabUseCases = mockk<SendTabUseCases>(relaxed = true)
@@ -75,7 +75,7 @@ class ShareControllerTest {
     private val testCoroutineScope = coroutinesTestRule.scope
     private val controller = DefaultShareController(
         context, shareSubject, shareData, sendTabUseCases, snackbar, navController,
-        recentAppStorage, testCoroutineScope, testDispatcher, dismiss
+        recentAppStorage, testCoroutineScope, testDispatcher, dismiss,
     )
 
     @Test
@@ -97,7 +97,7 @@ class ShareControllerTest {
         val activityContext: Context = mockk<Activity>()
         val testController = DefaultShareController(
             activityContext, shareSubject, shareData, mockk(),
-            mockk(), mockk(), recentAppStorage, testCoroutineScope, testDispatcher, dismiss
+            mockk(), mockk(), recentAppStorage, testCoroutineScope, testDispatcher, dismiss,
         )
         every { activityContext.startActivity(capture(shareIntent)) } just Runs
         every { recentAppStorage.updateRecentApp(appShareOption.activityName) } just Runs
@@ -134,7 +134,7 @@ class ShareControllerTest {
         val activityContext: Context = mockk<Activity>()
         val testController = DefaultShareController(
             activityContext, shareSubject, shareData, mockk(),
-            snackbar, mockk(), recentAppStorage, testCoroutineScope, testDispatcher, dismiss
+            snackbar, mockk(), recentAppStorage, testCoroutineScope, testDispatcher, dismiss,
         )
         every { recentAppStorage.updateRecentApp(appShareOption.activityName) } just Runs
         every { activityContext.startActivity(capture(shareIntent)) } throws SecurityException()
@@ -162,7 +162,7 @@ class ShareControllerTest {
         val activityContext: Context = mockk<Activity>()
         val testController = DefaultShareController(
             activityContext, shareSubject, shareData, mockk(),
-            snackbar, mockk(), recentAppStorage, testCoroutineScope, testDispatcher, dismiss
+            snackbar, mockk(), recentAppStorage, testCoroutineScope, testDispatcher, dismiss,
         )
         every { recentAppStorage.updateRecentApp(appShareOption.activityName) } just Runs
         every { activityContext.startActivity(capture(shareIntent)) } throws ActivityNotFoundException()
@@ -183,7 +183,7 @@ class ShareControllerTest {
         val activityContext: Context = mockk<Activity>()
         val testController = DefaultShareController(
             activityContext, shareSubject, shareData, mockk(),
-            mockk(), mockk(), recentAppStorage, testCoroutineScope, testDispatcher, dismiss
+            mockk(), mockk(), recentAppStorage, testCoroutineScope, testDispatcher, dismiss,
         )
 
         assertEquals(shareSubject, testController.getShareSubject())
@@ -194,7 +194,7 @@ class ShareControllerTest {
         val activityContext: Context = mockk<Activity>()
         val testController = DefaultShareController(
             activityContext, null, shareData, mockk(),
-            mockk(), mockk(), recentAppStorage, testCoroutineScope, testDispatcher, dismiss
+            mockk(), mockk(), recentAppStorage, testCoroutineScope, testDispatcher, dismiss,
         )
 
         assertEquals("title0, title1", testController.getShareSubject())
@@ -205,11 +205,11 @@ class ShareControllerTest {
         val activityContext: Context = mockk<Activity>()
         val partialTitlesShareData = listOf(
             ShareData(url = "url0", title = null),
-            ShareData(url = "url1", title = "title1")
+            ShareData(url = "url1", title = "title1"),
         )
         val testController = DefaultShareController(
             activityContext, null, partialTitlesShareData, mockk(),
-            mockk(), mockk(), recentAppStorage, testCoroutineScope, testDispatcher, dismiss
+            mockk(), mockk(), recentAppStorage, testCoroutineScope, testDispatcher, dismiss,
         )
 
         assertEquals("title1", testController.getShareSubject())
@@ -220,11 +220,11 @@ class ShareControllerTest {
         val activityContext: Context = mockk<Activity>()
         val noTitleShareData = listOf(
             ShareData(url = "url0", title = null),
-            ShareData(url = "url1", title = null)
+            ShareData(url = "url1", title = null),
         )
         val testController = DefaultShareController(
             activityContext, null, noTitleShareData, mockk(),
-            mockk(), mockk(), recentAppStorage, testCoroutineScope, testDispatcher, dismiss
+            mockk(), mockk(), recentAppStorage, testCoroutineScope, testDispatcher, dismiss,
         )
 
         assertEquals("", testController.getShareSubject())
@@ -235,11 +235,11 @@ class ShareControllerTest {
         val activityContext: Context = mockk<Activity>()
         val noTitleShareData = listOf(
             ShareData(url = "url0", title = ""),
-            ShareData(url = "url1", title = "")
+            ShareData(url = "url1", title = ""),
         )
         val testController = DefaultShareController(
             activityContext, null, noTitleShareData, mockk(),
-            mockk(), mockk(), recentAppStorage, testCoroutineScope, testDispatcher, dismiss
+            mockk(), mockk(), recentAppStorage, testCoroutineScope, testDispatcher, dismiss,
         )
 
         assertEquals("", testController.getShareSubject())
@@ -249,7 +249,14 @@ class ShareControllerTest {
     @Suppress("DeferredResultUnused")
     fun `handleShareToDevice should share to account device, inform callbacks and dismiss`() {
         val deviceToShareTo = Device(
-            "deviceId", "deviceName", DeviceType.UNKNOWN, false, 0L, emptyList(), false, null
+            "deviceId",
+            "deviceName",
+            DeviceType.UNKNOWN,
+            false,
+            0L,
+            emptyList(),
+            false,
+            null,
         )
         val deviceId = slot<String>()
         val tabsShared = slot<List<TabData>>()
@@ -284,7 +291,7 @@ class ShareControllerTest {
                 0L,
                 emptyList(),
                 false,
-                null
+                null,
             ),
             Device(
                 "deviceId1",
@@ -294,8 +301,8 @@ class ShareControllerTest {
                 1L,
                 emptyList(),
                 false,
-                null
-            )
+                null,
+            ),
         )
         val tabsShared = slot<List<TabData>>()
 
@@ -322,7 +329,7 @@ class ShareControllerTest {
         verifyOrder {
             navController.nav(
                 R.id.shareFragment,
-                ShareFragmentDirections.actionGlobalTurnOnSync()
+                ShareFragmentDirections.actionGlobalTurnOnSync(),
             )
             dismiss(ShareController.Result.DISMISSED)
         }
@@ -335,7 +342,7 @@ class ShareControllerTest {
         verifyOrder {
             navController.nav(
                 R.id.shareFragment,
-                ShareFragmentDirections.actionGlobalAccountProblemFragment()
+                ShareFragmentDirections.actionGlobalAccountProblemFragment(),
             )
             dismiss(ShareController.Result.DISMISSED)
         }
@@ -386,7 +393,7 @@ class ShareControllerTest {
             mockk(),
             mockk(),
             mockk(),
-            mockk()
+            mockk(),
         )
         val controllerWithMoreSharedTabs = controller
         val expectedTabSharedMessage = context.getString(R.string.sync_sent_tab_snackbar)
@@ -410,11 +417,11 @@ class ShareControllerTest {
         val shareData = listOf(
             ShareData(url = "moz-extension://eb8df45a-895b-4f3a-896a-c0c71ae4/page.html"),
             ShareData(url = "moz-extension://eb8df45a-895b-4f3a-896a-c0c71ae5/page.html?url=url0"),
-            ShareData(url = "url1")
+            ShareData(url = "url1"),
         )
         val controller = DefaultShareController(
             context, shareSubject, shareData, sendTabUseCases, snackbar, navController,
-            recentAppStorage, testCoroutineScope, testDispatcher, dismiss
+            recentAppStorage, testCoroutineScope, testDispatcher, dismiss,
         )
 
         val expectedShareText = "${shareData[0].url}\n\nurl0\n\n${shareData[2].url}"
@@ -430,7 +437,7 @@ class ShareControllerTest {
     fun `getShareSubject will return a concatenation of tab titles if 'shareSubject' is null`() {
         val controller = DefaultShareController(
             context, null, shareData, sendTabUseCases, snackbar, navController,
-            recentAppStorage, testCoroutineScope, testDispatcher, dismiss
+            recentAppStorage, testCoroutineScope, testDispatcher, dismiss,
         )
 
         assertEquals("title0, title1", controller.getShareSubject())
@@ -452,13 +459,13 @@ class ShareControllerTest {
         var tabData: List<TabData>
         val expected = listOf(
             TabData(title = "title0", url = ""),
-            TabData(title = "title1", url = "data:,Hello%2C%20World!")
+            TabData(title = "title1", url = "data:,Hello%2C%20World!"),
         )
 
         with(controller) {
             tabData = listOf(
                 ShareData(title = "title0"),
-                ShareData(title = "title1", text = "Hello, World!")
+                ShareData(title = "title1", text = "Hello, World!"),
             ).toTabData()
         }
 

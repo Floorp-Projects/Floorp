@@ -83,8 +83,8 @@ class DeleteAndQuitTest {
         coVerify(exactly = 0) {
             engine.clearData(
                 Engine.BrowsingData.select(
-                    Engine.BrowsingData.COOKIES
-                )
+                    Engine.BrowsingData.COOKIES,
+                ),
             )
 
             permissionStorage.deleteAllSitePermissions()
@@ -128,8 +128,8 @@ class DeleteAndQuitTest {
             engine.clearData(
                 Engine.BrowsingData.select(
                     Engine.BrowsingData.COOKIES,
-                    Engine.BrowsingData.AUTH_SESSIONS
-                )
+                    Engine.BrowsingData.AUTH_SESSIONS,
+                ),
             )
 
             // Delete cached files

@@ -23,7 +23,9 @@ import org.mozilla.fenix.FenixApplication
 class SyncedTabsIntegrationTest {
 
     @MockK private lateinit var context: Context
+
     @MockK private lateinit var syncedTabsStorage: SyncedTabsStorage
+
     @MockK private lateinit var accountManager: FxaAccountManager
 
     @Before

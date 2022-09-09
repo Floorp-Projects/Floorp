@@ -181,7 +181,7 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
             StartSearchIntentProcessor(),
             OpenBrowserIntentProcessor(this, ::getIntentSessionId),
             OpenSpecificTabIntentProcessor(this),
-            DefaultBrowserIntentProcessor(this)
+            DefaultBrowserIntentProcessor(this),
         )
     }
 
@@ -219,8 +219,8 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
             message = "onCreate()",
             data = mapOf(
                 "recreated" to (savedInstanceState != null).toString(),
-                "intent" to (intent?.action ?: "null")
-            )
+                "intent" to (intent?.action ?: "null"),
+            ),
         )
 
         components.publicSuffixList.prefetch()
@@ -238,7 +238,7 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
         privateNotificationObserver = PrivateNotificationFeature(
             applicationContext,
             components.core.store,
-            PrivateNotificationService::class
+            PrivateNotificationService::class,
         ).also {
             it.start()
         }
@@ -265,8 +265,9 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
             lifecycle.addObserver(
                 BreadcrumbsRecorder(
                     components.analytics.crashReporter,
-                    navHost.navController, ::getBreadcrumbMessage
-                )
+                    navHost.navController,
+                    ::getBreadcrumbMessage,
+                ),
             )
 
             val safeIntent = intent?.toSafeIntent()
@@ -318,7 +319,9 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
         }
 
         components.core.engine.profiler?.addMarker(
-            MarkersActivityLifecycleCallbacks.MARKER_NAME, startTimeProfiler, "HomeActivity.onCreate"
+            MarkersActivityLifecycleCallbacks.MARKER_NAME,
+            startTimeProfiler,
+            "HomeActivity.onCreate",
         )
         StartupTimeline.onActivityCreateEndHome(this) // DO NOT MOVE ANYTHING BELOW HERE.
     }
@@ -338,7 +341,7 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
             components.performance.visualCompletenessQueue,
             components.startupStateProvider,
             safeIntent,
-            binding.rootContainer
+            binding.rootContainer,
         )
     }
 
@@ -350,7 +353,7 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
         // Diagnostic breadcrumb for "Display already aquired" crash:
         // https://github.com/mozilla-mobile/android-components/issues/7960
         breadcrumb(
-            message = "onResume()"
+            message = "onResume()",
         )
 
         lifecycleScope.launch(IO) {
@@ -379,12 +382,14 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
         // Diagnostic breadcrumb for "Display already aquired" crash:
         // https://github.com/mozilla-mobile/android-components/issues/7960
         breadcrumb(
-            message = "onStart()"
+            message = "onStart()",
         )
 
         ProfilerMarkers.homeActivityOnStart(binding.rootContainer, components.core.engine.profiler)
         components.core.engine.profiler?.addMarker(
-            MarkersActivityLifecycleCallbacks.MARKER_NAME, startProfilerTime, "HomeActivity.onStart"
+            MarkersActivityLifecycleCallbacks.MARKER_NAME,
+            startProfilerTime,
+            "HomeActivity.onStart",
         ) // DO NOT MOVE ANYTHING BELOW THIS addMarker CALL.
     }
 
@@ -396,8 +401,8 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
         breadcrumb(
             message = "onStop()",
             data = mapOf(
-                "finishing" to isFinishing.toString()
-            )
+                "finishing" to isFinishing.toString(),
+            ),
         )
     }
 
@@ -410,7 +415,7 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
             components.core.bookmarksStorage.getTree(BookmarkRoot.Root.id, true)?.let {
                 val desktopRootNode = DesktopFolders(
                     applicationContext,
-                    showMobileRoot = false
+                    showMobileRoot = false,
                 ).withOptionalDesktopFolders(it)
                 settings().desktopBookmarksSize = getBookmarkCount(desktopRootNode)
             }
@@ -427,8 +432,8 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
         breadcrumb(
             message = "onPause()",
             data = mapOf(
-                "finishing" to isFinishing.toString()
-            )
+                "finishing" to isFinishing.toString(),
+            ),
         )
 
         // Every time the application goes into the background, it is possible that the user
@@ -466,8 +471,8 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
         breadcrumb(
             message = "onDestroy()",
             data = mapOf(
-                "finishing" to isFinishing.toString()
-            )
+                "finishing" to isFinishing.toString(),
+            ),
         )
 
         components.core.contileTopSitesUpdater.stopPeriodicWork()
@@ -482,7 +487,7 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
         // Diagnostic breadcrumb for "Display already aquired" crash:
         // https://github.com/mozilla-mobile/android-components/issues/7960
         breadcrumb(
-            message = "onConfigurationChanged()"
+            message = "onConfigurationChanged()",
         )
     }
 
@@ -490,7 +495,7 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
         // Diagnostic breadcrumb for "Display already aquired" crash:
         // https://github.com/mozilla-mobile/android-components/issues/7960
         breadcrumb(
-            message = "recreate()"
+            message = "recreate()",
         )
 
         super.recreate()
@@ -513,8 +518,8 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
         breadcrumb(
             message = "onNewIntent()",
             data = mapOf(
-                "intent" to intent.action.toString()
-            )
+                "intent" to intent.action.toString(),
+            ),
         )
 
         val tab = components.core.store.state.findActiveMediaTab()
@@ -524,7 +529,7 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
 
         val intentProcessors =
             listOf(
-                CrashReporterIntentProcessor(components.appStore)
+                CrashReporterIntentProcessor(components.appStore),
             ) + externalSourceIntentProcessors
         val intentHandled =
             intentProcessors.any { it.process(intent, navHost.navController, this.intent) }
@@ -548,19 +553,19 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
         parent: View?,
         name: String,
         context: Context,
-        attrs: AttributeSet
+        attrs: AttributeSet,
     ): View? = when (name) {
         EngineView::class.java.name -> components.core.engine.createView(context, attrs).apply {
             selectionActionDelegate = DefaultSelectionActionDelegate(
                 BrowserStoreSearchAdapter(
                     components.core.store,
-                    tabId = getIntentSessionId(intent.toSafeIntent())
+                    tabId = getIntentSessionId(intent.toSafeIntent()),
                 ),
                 resources = context.resources,
                 shareTextClicked = { share(it) },
                 emailTextClicked = { email(it) },
                 callTextClicked = { call(it) },
-                actionSorter = ::actionSorter
+                actionSorter = ::actionSorter,
             )
         }.asView()
         else -> super.onCreateView(parent, name, context, attrs)
@@ -757,7 +762,7 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
         NavigationUI.setupWithNavController(
             navigationToolbar,
             navHost.navController,
-            AppBarConfiguration.Builder(*topLevelDestinationIds).build()
+            AppBarConfiguration.Builder(*topLevelDestinationIds).build(),
         )
 
         navigationToolbar.setNavigationOnClickListener {
@@ -783,7 +788,7 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
         forceSearch: Boolean = false,
         flags: EngineSession.LoadUrlFlags = EngineSession.LoadUrlFlags.none(),
         requestDesktopMode: Boolean = false,
-        historyMetadata: HistoryMetadataKey? = null
+        historyMetadata: HistoryMetadataKey? = null,
     ) {
         openToBrowser(from, customTabSessionId)
         load(searchTermOrURL, newTab, engine, forceSearch, flags, requestDesktopMode, historyMetadata)
@@ -800,7 +805,7 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
 
     protected open fun getNavDirections(
         from: BrowserDirection,
-        customTabSessionId: String?
+        customTabSessionId: String?,
     ): NavDirections? = when (from) {
         BrowserDirection.FromGlobal ->
             NavGraphDirections.actionGlobalBrowser(customTabSessionId)
@@ -849,7 +854,7 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
         BrowserDirection.FromRecentlyClosed ->
             RecentlyClosedFragmentDirections.actionGlobalBrowser(customTabSessionId)
         BrowserDirection.FromStudiesFragment -> StudiesFragmentDirections.actionGlobalBrowser(
-            customTabSessionId
+            customTabSessionId,
         )
     }
 
@@ -867,7 +872,7 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
         forceSearch: Boolean,
         flags: EngineSession.LoadUrlFlags = EngineSession.LoadUrlFlags.none(),
         requestDesktopMode: Boolean = false,
-        historyMetadata: HistoryMetadataKey? = null
+        historyMetadata: HistoryMetadataKey? = null,
     ) {
         val startTime = components.core.engine.profiler?.getProfilerTime()
         val mode = browsingModeManager.mode
@@ -886,12 +891,12 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
                     url = searchTermOrURL.toNormalizedUrl(),
                     flags = flags,
                     private = private,
-                    historyMetadata = historyMetadata
+                    historyMetadata = historyMetadata,
                 )
             } else {
                 components.useCases.sessionUseCases.loadUrl(
                     url = searchTermOrURL.toNormalizedUrl(),
-                    flags = flags
+                    flags = flags,
                 )
                 components.core.store.state.selectedTabId
             }
@@ -907,7 +912,7 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
                         SessionState.Source.Internal.UserEntered,
                         true,
                         mode.isPrivate,
-                        searchEngine = engine
+                        searchEngine = engine,
                     )
             } else {
                 components.useCases.searchUseCases.defaultSearch.invoke(searchTermOrURL, engine)
@@ -920,7 +925,7 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
             components.core.engine.profiler?.addMarker(
                 "HomeActivity.load",
                 startTime,
-                "newTab: $newTab"
+                "newTab: $newTab",
             )
         }
     }
@@ -990,7 +995,7 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
     private fun openPopup(webExtensionState: WebExtensionState) {
         val action = NavGraphDirections.actionGlobalWebExtensionActionPopupFragment(
             webExtensionId = webExtensionState.id,
-            webExtensionTitle = webExtensionState.name
+            webExtensionTitle = webExtensionState.name,
         )
         navHost.navController.navigate(action)
     }
@@ -1006,7 +1011,7 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
     private fun captureSnapshotTelemetryMetrics() = CoroutineScope(IO).launch {
         // PWA
         val recentlyUsedPwaCount = components.core.webAppShortcutManager.recentlyUsedWebAppsCount(
-            activeThresholdMs = PWA_RECENTLY_USED_THRESHOLD
+            activeThresholdMs = PWA_RECENTLY_USED_THRESHOLD,
         )
         if (recentlyUsedPwaCount == 0) {
             Metrics.hasRecentPwas.set(false)
@@ -1047,7 +1052,7 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
             it.process(
                 intent,
                 navHost.navController,
-                this.intent
+                this.intent,
             )
         }
     }

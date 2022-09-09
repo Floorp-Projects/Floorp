@@ -14,7 +14,7 @@ class SearchEngineMenu(
     private val context: Context,
     private val allowDeletion: Boolean,
     private val isCustomSearchEngine: Boolean,
-    private val onItemTapped: (Item) -> Unit = {}
+    private val onItemTapped: (Item) -> Unit = {},
 ) {
     sealed class Item {
         object Delete : Item()
@@ -29,10 +29,10 @@ class SearchEngineMenu(
         if (isCustomSearchEngine) {
             items.add(
                 SimpleBrowserMenuItem(
-                    label = context.getString(R.string.search_engine_edit)
+                    label = context.getString(R.string.search_engine_edit),
                 ) {
                     onItemTapped.invoke(Item.Edit)
-                }
+                },
             )
         }
 
@@ -40,10 +40,10 @@ class SearchEngineMenu(
             items.add(
                 SimpleBrowserMenuItem(
                     context.getString(R.string.search_engine_delete),
-                    textColorResource = ThemeManager.resolveAttribute(R.attr.textWarning, context)
+                    textColorResource = ThemeManager.resolveAttribute(R.attr.textWarning, context),
                 ) {
                     onItemTapped.invoke(Item.Delete)
-                }
+                },
             )
         }
 

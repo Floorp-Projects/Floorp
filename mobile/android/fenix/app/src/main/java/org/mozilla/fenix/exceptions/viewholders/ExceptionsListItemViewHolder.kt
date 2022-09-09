@@ -18,7 +18,7 @@ import org.mozilla.fenix.ext.loadIntoView
 class ExceptionsListItemViewHolder<T : Any>(
     private val view: WidgetSiteItemView,
     private val interactor: ExceptionsInteractor<T>,
-    private val icons: BrowserIcons = view.context.components.core.icons
+    private val icons: BrowserIcons = view.context.components.core.icons,
 ) : RecyclerView.ViewHolder(view) {
 
     private lateinit var item: T
@@ -26,7 +26,7 @@ class ExceptionsListItemViewHolder<T : Any>(
     init {
         view.setSecondaryButton(
             icon = R.drawable.ic_close,
-            contentDescription = R.string.history_delete_item
+            contentDescription = R.string.history_delete_item,
         ) {
             interactor.onDeleteOne(item)
         }

@@ -30,7 +30,7 @@ class CreateShortcutFragment : DialogFragment() {
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
-        savedInstanceState: Bundle?
+        savedInstanceState: Bundle?,
     ): View {
         _binding = FragmentCreateShortcutBinding.inflate(inflater, container, false)
 

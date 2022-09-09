@@ -65,6 +65,6 @@ private fun createFennecWebAppIntentProcessor(): FennecWebAppIntentProcessor {
     return FennecWebAppIntentProcessor(
         testContext,
         useCase,
-        storage
+        storage,
     )
 }

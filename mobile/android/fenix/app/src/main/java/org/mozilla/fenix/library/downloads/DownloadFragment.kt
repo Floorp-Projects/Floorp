@@ -49,7 +49,7 @@ class DownloadFragment : LibraryPageFragment<DownloadItem>(), UserInteractionHan
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
-        savedInstanceState: Bundle?
+        savedInstanceState: Bundle?,
     ): View {
         _binding = FragmentDownloadsBinding.inflate(inflater, container, false)
 
@@ -61,18 +61,18 @@ class DownloadFragment : LibraryPageFragment<DownloadItem>(), UserInteractionHan
                     items = items,
                     mode = DownloadFragmentState.Mode.Normal,
                     pendingDeletionIds = emptySet(),
-                    isDeletingItems = false
-                )
+                    isDeletingItems = false,
+                ),
             )
         }
         val downloadController: DownloadController = DefaultDownloadController(
             downloadStore,
             ::openItem,
             ::invalidateOptionsMenu,
-            ::deleteDownloadItems
+            ::deleteDownloadItems,
         )
         downloadInteractor = DownloadInteractor(
-            downloadController
+            downloadController,
         )
         downloadView = DownloadView(binding.downloadsLayout, downloadInteractor)
 
@@ -101,7 +101,7 @@ class DownloadFragment : LibraryPageFragment<DownloadItem>(), UserInteractionHan
                     filePath = it.filePath,
                     size = it.contentLength?.toString() ?: "0",
                     contentType = it.contentType,
-                    status = it.status
+                    status = it.status,
                 )
             }.filter {
                 it.status == DownloadState.Status.COMPLETED
@@ -133,7 +133,7 @@ class DownloadFragment : LibraryPageFragment<DownloadItem>(), UserInteractionHan
             onCancel = {
                 undoPendingDeletion(items)
             },
-            operation = getDeleteDownloadItemsOperation(items)
+            operation = getDeleteDownloadItemsOperation(items),
         )
     }
 
@@ -193,9 +193,9 @@ class DownloadFragment : LibraryPageFragment<DownloadItem>(), UserInteractionHan
         } else {
             String.format(
                 requireContext().getString(
-                    R.string.download_delete_single_item_snackbar
+                    R.string.download_delete_single_item_snackbar,
                 ),
-                downloadItems.first().fileName
+                downloadItems.first().fileName,
             )
         }
     }
@@ -205,7 +205,6 @@ class DownloadFragment : LibraryPageFragment<DownloadItem>(), UserInteractionHan
     }
 
     private fun openItem(item: DownloadItem, mode: BrowsingMode? = null) {
-
         mode?.let { (activity as HomeActivity).browsingModeManager.mode = it }
         context?.let {
             val contentLength = if (item.size.isNotEmpty()) {
@@ -221,14 +220,14 @@ class DownloadFragment : LibraryPageFragment<DownloadItem>(), UserInteractionHan
                     fileName = item.fileName,
                     contentType = item.contentType,
                     status = item.status,
-                    contentLength = contentLength
-                )
+                    contentLength = contentLength,
+                ),
             )
         }
     }
 
     private fun getDeleteDownloadItemsOperation(
-        items: Set<DownloadItem>
+        items: Set<DownloadItem>,
     ): (suspend (context: Context) -> Unit) {
         return { context ->
             CoroutineScope(IO).launch {

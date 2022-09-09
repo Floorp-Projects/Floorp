@@ -90,7 +90,7 @@ class SettingsAddonsTest {
                 addonsListIdlingResource =
                     RecyclerViewIdlingResource(
                         activityTestRule.activity.findViewById(R.id.add_ons_list),
-                        1
+                        1,
                     )
                 IdlingRegistry.getInstance().register(addonsListIdlingResource!!)
                 clickInstallAddon(addonName)
@@ -119,7 +119,7 @@ class SettingsAddonsTest {
         }.openDetailedMenuForAddon(addonName) {
             addonContainerIdlingResource = ViewVisibilityIdlingResource(
                 activityTestRule.activity.findViewById(R.id.addon_container),
-                View.VISIBLE
+                View.VISIBLE,
             )
             IdlingRegistry.getInstance().register(addonContainerIdlingResource!!)
         }.removeAddon {
@@ -128,9 +128,9 @@ class SettingsAddonsTest {
         }
     }
 
+    // Installs uBlock add-on and checks that the app doesn't crash while loading pages with trackers
     @SmokeTest
     @Test
-    // Installs uBlock add-on and checks that the app doesn't crash while loading pages with trackers
     fun noCrashWithAddonInstalledTest() {
         // setting ETP to Strict mode to test it works with add-ons
         activityTestRule.activity.settings().setStrictETP()

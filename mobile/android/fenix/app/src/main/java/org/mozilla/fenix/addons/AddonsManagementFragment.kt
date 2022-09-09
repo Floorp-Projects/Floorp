@@ -95,7 +95,7 @@ class AddonsManagementFragment : Fragment(R.layout.fragment_add_ons_management) 
     private fun bindRecyclerView() {
         val managementView = AddonsManagementView(
             navController = findNavController(),
-            showPermissionDialog = ::showPermissionDialog
+            showPermissionDialog = ::showPermissionDialog,
         )
 
         val recyclerView = binding?.addOnsList
@@ -124,7 +124,7 @@ class AddonsManagementFragment : Fragment(R.layout.fragment_add_ons_management) 
                                 managementView,
                                 addons,
                                 style = createAddonStyle(requireContext()),
-                                excludedAddonIDs
+                                excludedAddonIDs,
                             )
                         }
                         isInstallationInProgress = false
@@ -194,7 +194,7 @@ class AddonsManagementFragment : Fragment(R.layout.fragment_add_ons_management) 
             addonNameTextColor = ThemeManager.resolveAttribute(R.attr.textPrimary, context),
             addonSummaryTextColor = ThemeManager.resolveAttribute(R.attr.textSecondary, context),
             sectionsTypeFace = sectionsTypeFace,
-            addonAllowPrivateBrowsingLabelDrawableRes = R.drawable.ic_add_on_private_browsing_label
+            addonAllowPrivateBrowsingLabelDrawableRes = R.drawable.ic_add_on_private_browsing_label,
         )
     }
 
@@ -221,15 +221,15 @@ class AddonsManagementFragment : Fragment(R.layout.fragment_add_ons_management) 
                     shouldWidthMatchParent = true,
                     positiveButtonBackgroundColor = ThemeManager.resolveAttribute(
                         R.attr.accent,
-                        requireContext()
+                        requireContext(),
                     ),
                     positiveButtonTextColor = ThemeManager.resolveAttribute(
                         R.attr.textOnColorPrimary,
-                        requireContext()
+                        requireContext(),
                     ),
-                    positiveButtonRadius = (resources.getDimensionPixelSize(R.dimen.tab_corner_radius)).toFloat()
+                    positiveButtonRadius = (resources.getDimensionPixelSize(R.dimen.tab_corner_radius)).toFloat(),
                 ),
-                onPositiveButtonClicked = onPositiveButtonClicked
+                onPositiveButtonClicked = onPositiveButtonClicked,
             )
             dialog.show(parentFragmentManager, PERMISSIONS_DIALOG_FRAGMENT_TAG)
         }
@@ -255,13 +255,13 @@ class AddonsManagementFragment : Fragment(R.layout.fragment_add_ons_management) 
                     shouldWidthMatchParent = true,
                     confirmButtonBackgroundColor = ThemeManager.resolveAttribute(
                         R.attr.accent,
-                        requireContext()
+                        requireContext(),
                     ),
                     confirmButtonTextColor = ThemeManager.resolveAttribute(
                         R.attr.textOnColorPrimary,
-                        requireContext()
+                        requireContext(),
                     ),
-                    confirmButtonRadius = (resources.getDimensionPixelSize(R.dimen.tab_corner_radius)).toFloat()
+                    confirmButtonRadius = (resources.getDimensionPixelSize(R.dimen.tab_corner_radius)).toFloat(),
                 ),
                 onConfirmButtonClicked = { _, allowInPrivateBrowsing ->
                     if (allowInPrivateBrowsing) {
@@ -272,10 +272,10 @@ class AddonsManagementFragment : Fragment(R.layout.fragment_add_ons_management) 
                                 runIfFragmentIsAttached {
                                     adapter?.updateAddon(it)
                                 }
-                            }
+                            },
                         )
                     }
-                }
+                },
             )
 
             dialog.show(parentFragmentManager, INSTALLATION_DIALOG_FRAGMENT_TAG)
@@ -311,15 +311,15 @@ class AddonsManagementFragment : Fragment(R.layout.fragment_add_ons_management) 
                                 rootView,
                                 getString(
                                     R.string.mozac_feature_addons_failed_to_install,
-                                    addon.translateName(it)
-                                )
+                                    addon.translateName(it),
+                                ),
                             )
                         }
                     }
                     binding?.addonProgressOverlay?.overlayCardView?.visibility = View.GONE
                     isInstallationInProgress = false
                 }
-            }
+            },
         )
 
         binding?.addonProgressOverlay?.cancelButton?.setOnClickListener {
@@ -335,7 +335,7 @@ class AddonsManagementFragment : Fragment(R.layout.fragment_add_ons_management) 
 
     private fun announceForAccessibility(announcementText: CharSequence) {
         val event = AccessibilityEvent.obtain(
-            AccessibilityEvent.TYPE_ANNOUNCEMENT
+            AccessibilityEvent.TYPE_ANNOUNCEMENT,
         )
 
         binding?.addonProgressOverlay?.overlayCardView?.onInitializeAccessibilityEvent(event)
@@ -343,7 +343,7 @@ class AddonsManagementFragment : Fragment(R.layout.fragment_add_ons_management) 
         event.contentDescription = null
         binding?.addonProgressOverlay?.overlayCardView?.parent?.requestSendAccessibilityEvent(
             binding?.addonProgressOverlay?.overlayCardView,
-            event
+            event,
         )
     }
 

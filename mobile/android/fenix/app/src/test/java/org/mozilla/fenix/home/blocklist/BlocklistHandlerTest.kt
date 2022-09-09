@@ -136,9 +136,9 @@ class BlocklistHandlerTest {
                     DeviceType.DESKTOP,
                     "title",
                     blockedUrl,
-                    null
-                )
-            )
+                    null,
+                ),
+            ),
         )
         every { mockSessionState.content } returns mockContent
         every { mockContent.url } returns blockedUrl

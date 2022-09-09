@@ -211,7 +211,7 @@ class HomeDeepLinkIntentProcessorTest {
                 "https://www.example.org/",
                 newTab = true,
                 from = BrowserDirection.FromGlobal,
-                flags = EngineSession.LoadUrlFlags.external()
+                flags = EngineSession.LoadUrlFlags.external(),
             )
         }
         verify { navController wasNot Called }
@@ -254,11 +254,11 @@ class HomeDeepLinkIntentProcessorTest {
             activity.openToBrowserAndLoad(
                 searchTermOrURL = SupportUtils.getSumoURLForTopic(
                     activity,
-                    SupportUtils.SumoTopic.SET_AS_DEFAULT_BROWSER
+                    SupportUtils.SumoTopic.SET_AS_DEFAULT_BROWSER,
                 ),
                 newTab = true,
                 from = BrowserDirection.FromGlobal,
-                flags = EngineSession.LoadUrlFlags.external()
+                flags = EngineSession.LoadUrlFlags.external(),
             )
         }
         verify { navController wasNot Called }

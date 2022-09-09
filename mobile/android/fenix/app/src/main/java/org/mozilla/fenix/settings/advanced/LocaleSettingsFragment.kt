@@ -39,7 +39,7 @@ class LocaleSettingsFragment : Fragment() {
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
-        savedInstanceState: Bundle?
+        savedInstanceState: Bundle?,
     ): View {
         _binding = FragmentLocaleSettingsBinding.inflate(inflater, container, false)
         val view = binding.root
@@ -49,15 +49,15 @@ class LocaleSettingsFragment : Fragment() {
 
         localeSettingsStore = StoreProvider.get(this) {
             LocaleSettingsStore(
-                createInitialLocaleSettingsState(requireContext())
+                createInitialLocaleSettingsState(requireContext()),
             )
         }
         interactor = LocaleSettingsInteractor(
             controller = DefaultLocaleSettingsController(
                 activity = requireActivity(),
                 localeSettingsStore = localeSettingsStore,
-                localeUseCase = localeUseCase
-            )
+                localeUseCase = localeUseCase,
+            ),
         )
         localeView = LocaleSettingsView(binding.root, interactor)
         return view
@@ -71,16 +71,18 @@ class LocaleSettingsFragment : Fragment() {
         searchView.queryHint = getString(R.string.locale_search_hint)
         searchView.maxWidth = Int.MAX_VALUE
 
-        searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
-            override fun onQueryTextSubmit(query: String): Boolean {
-                return false
-            }
+        searchView.setOnQueryTextListener(
+            object : SearchView.OnQueryTextListener {
+                override fun onQueryTextSubmit(query: String): Boolean {
+                    return false
+                }
 
-            override fun onQueryTextChange(newText: String): Boolean {
-                interactor.onSearchQueryTyped(newText)
-                return false
-            }
-        })
+                override fun onQueryTextChange(newText: String): Boolean {
+                    interactor.onSearchQueryTyped(newText)
+                    return false
+                }
+            },
+        )
     }
 
     override fun onResume() {

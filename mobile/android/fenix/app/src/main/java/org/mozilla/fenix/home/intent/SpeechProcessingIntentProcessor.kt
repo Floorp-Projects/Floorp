@@ -40,7 +40,7 @@ class SpeechProcessingIntentProcessor(
             if (searchEngine != null) {
                 launchToBrowser(
                     searchEngine,
-                    intent.getStringExtra(SPEECH_PROCESSING).orEmpty()
+                    intent.getStringExtra(SPEECH_PROCESSING).orEmpty(),
                 )
             }
         }
@@ -53,7 +53,7 @@ class SpeechProcessingIntentProcessor(
             MetricsUtils.recordSearchMetrics(
                 searchEngine,
                 searchEngine == store.state.search.selectedOrDefaultSearchEngine,
-                MetricsUtils.Source.WIDGET
+                MetricsUtils.Source.WIDGET,
             )
         }
 
@@ -62,7 +62,7 @@ class SpeechProcessingIntentProcessor(
             newTab = true,
             from = BrowserDirection.FromGlobal,
             engine = searchEngine,
-            forceSearch = true
+            forceSearch = true,
         )
     }
 }

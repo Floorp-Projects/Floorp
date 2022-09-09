@@ -40,7 +40,7 @@ class CreditCardsManagementFragment : SecureFragment() {
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
-        savedInstanceState: Bundle?
+        savedInstanceState: Bundle?,
     ): View? {
         val view = inflater.inflate(CreditCardsManagementView.LAYOUT_ID, container, false)
 
@@ -50,7 +50,7 @@ class CreditCardsManagementFragment : SecureFragment() {
 
         interactor = DefaultCreditCardsManagementInteractor(
             controller = DefaultCreditCardsManagementController(
-                navController = findNavController()
+                navController = findNavController(),
             ),
         )
         val binding = ComponentCreditCardsBinding.bind(view)
@@ -86,7 +86,7 @@ class CreditCardsManagementFragment : SecureFragment() {
         redirectToReAuth(
             listOf(R.id.creditCardEditorFragment),
             findNavController().currentDestination?.id,
-            R.id.creditCardsManagementFragment
+            R.id.creditCardsManagementFragment,
         )
 
         super.onPause()

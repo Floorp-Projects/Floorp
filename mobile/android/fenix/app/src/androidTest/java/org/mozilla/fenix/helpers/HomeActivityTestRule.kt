@@ -25,7 +25,7 @@ import org.mozilla.fenix.onboarding.FenixOnboarding
 class HomeActivityTestRule(
     initialTouchMode: Boolean = false,
     launchActivity: Boolean = true,
-    private val skipOnboarding: Boolean = false
+    private val skipOnboarding: Boolean = false,
 ) :
     ActivityTestRule<HomeActivity>(HomeActivity::class.java, initialTouchMode, launchActivity) {
     private val longTapUserPreference = getLongPressTimeout()
@@ -54,7 +54,7 @@ class HomeActivityTestRule(
 class HomeActivityIntentTestRule(
     initialTouchMode: Boolean = false,
     launchActivity: Boolean = true,
-    private val skipOnboarding: Boolean = false
+    private val skipOnboarding: Boolean = false,
 ) :
     IntentsTestRule<HomeActivity>(HomeActivity::class.java, initialTouchMode, launchActivity) {
     private val longTapUserPreference = getLongPressTimeout()
@@ -94,7 +94,7 @@ private fun skipOnboardingBeforeLaunch() {
 
 private fun closeNotificationShade() {
     if (mDevice.findObject(
-            UiSelector().resourceId("com.android.systemui:id/notification_stack_scroller")
+            UiSelector().resourceId("com.android.systemui:id/notification_stack_scroller"),
         ).exists()
     ) {
         mDevice.pressHome()

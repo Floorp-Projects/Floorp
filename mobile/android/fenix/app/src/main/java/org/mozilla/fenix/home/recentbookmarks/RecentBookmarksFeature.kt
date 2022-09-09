@@ -29,7 +29,7 @@ class RecentBookmarksFeature(
     private val appStore: AppStore,
     private val bookmarksUseCase: BookmarksUseCase,
     private val scope: CoroutineScope,
-    private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO
+    private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
 ) : LifecycleAwareFeature {
     private var job: Job? = null
 
@@ -55,5 +55,5 @@ class RecentBookmarksFeature(
 data class RecentBookmark(
     val title: String? = null,
     val url: String? = null,
-    val previewImageUrl: String? = null
+    val previewImageUrl: String? = null,
 )

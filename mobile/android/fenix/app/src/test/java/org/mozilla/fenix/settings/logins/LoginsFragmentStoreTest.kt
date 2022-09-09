@@ -22,7 +22,7 @@ class LoginsFragmentStoreTest {
         origin = "",
         username = "",
         password = "",
-        timeLastUsed = 0L
+        timeLastUsed = 0L,
     )
     private val exampleLogin = baseLogin.copy(origin = "example.com", timeLastUsed = 10)
     private val firefoxLogin = baseLogin.copy(origin = "firefox.com", timeLastUsed = 20)
@@ -52,7 +52,7 @@ class LoginsFragmentStoreTest {
                 highlightedItem = SavedLoginsSortingStrategyMenu.Item.LastUsedSort,
                 duplicateLogin = null,
             ),
-            createInitialLoginsListState(settings)
+            createInitialLoginsListState(settings),
         )
     }
 
@@ -63,7 +63,7 @@ class LoginsFragmentStoreTest {
             origin = "example.com",
             username = "login",
             password = "password",
-            timeLastUsed = 35L
+            timeLastUsed = 35L,
         ).mapToSavedLogin()
 
         assertEquals("abcd", login.guid)
@@ -90,8 +90,8 @@ class LoginsFragmentStoreTest {
             baseState.copy(
                 isLoading = true,
                 searchedForText = "firefox",
-                loginList = loginList
-            )
+                loginList = loginList,
+            ),
         )
 
         store.dispatch(LoginsAction.FilterLogins(null)).joinBlocking()
@@ -119,8 +119,8 @@ class LoginsFragmentStoreTest {
                 searchedForText = null,
                 sortingStrategy = SortingStrategy.Alphabetically,
                 highlightedItem = SavedLoginsSortingStrategyMenu.Item.AlphabeticallySort,
-                loginList = loginList
-            )
+                loginList = loginList,
+            ),
         )
 
         store.dispatch(LoginsAction.SortLogins(lastUsed)).joinBlocking()
@@ -141,8 +141,8 @@ class LoginsFragmentStoreTest {
                 searchedForText = "example",
                 sortingStrategy = SortingStrategy.Alphabetically,
                 highlightedItem = SavedLoginsSortingStrategyMenu.Item.AlphabeticallySort,
-                loginList = loginList
-            )
+                loginList = loginList,
+            ),
         )
 
         store.dispatch(LoginsAction.SortLogins(lastUsed)).joinBlocking()
@@ -160,8 +160,8 @@ class LoginsFragmentStoreTest {
             baseState.copy(
                 isLoading = false,
                 loginList = listOf(mockk()),
-                filteredItems = listOf(mockk())
-            )
+                filteredItems = listOf(mockk()),
+            ),
         )
 
         store.dispatch(LoginsAction.LoginSelected(mockk())).joinBlocking()

@@ -18,7 +18,7 @@ import org.mozilla.fenix.utils.Settings
  */
 class SitePermissionsWifiIntegration(
     private val settings: Settings,
-    private val wifiConnectionMonitor: WifiConnectionMonitor
+    private val wifiConnectionMonitor: WifiConnectionMonitor,
 ) : LifecycleAwareFeature {
 
     /**
@@ -32,11 +32,11 @@ class SitePermissionsWifiIntegration(
                 val setting = if (connected) ALLOWED else BLOCKED
                 settings.setSitePermissionsPhoneFeatureAction(
                     PhoneFeature.AUTOPLAY_AUDIBLE,
-                    setting
+                    setting,
                 )
                 settings.setSitePermissionsPhoneFeatureAction(
                     PhoneFeature.AUTOPLAY_INAUDIBLE,
-                    setting
+                    setting,
                 )
             } else {
                 // The autoplay setting has changed, we can remove the listener

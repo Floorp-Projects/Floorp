@@ -9,7 +9,7 @@ package org.mozilla.fenix.library.downloads
  */
 @SuppressWarnings("TooManyFunctions")
 class DownloadInteractor(
-    private val downloadController: DownloadController
+    private val downloadController: DownloadController,
 ) : DownloadViewInteractor {
     override fun open(item: DownloadItem) {
         downloadController.handleOpen(item)

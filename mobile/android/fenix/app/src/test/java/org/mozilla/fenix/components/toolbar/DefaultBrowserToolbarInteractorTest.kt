@@ -16,6 +16,7 @@ import org.mozilla.fenix.components.toolbar.interactor.DefaultBrowserToolbarInte
 class DefaultBrowserToolbarInteractorTest {
 
     @RelaxedMockK lateinit var browserToolbarController: BrowserToolbarController
+
     @RelaxedMockK lateinit var browserToolbarMenuController: BrowserToolbarMenuController
     lateinit var interactor: DefaultBrowserToolbarInteractor
 
@@ -24,7 +25,7 @@ class DefaultBrowserToolbarInteractorTest {
         MockKAnnotations.init(this)
         interactor = DefaultBrowserToolbarInteractor(
             browserToolbarController,
-            browserToolbarMenuController
+            browserToolbarMenuController,
         )
     }
 

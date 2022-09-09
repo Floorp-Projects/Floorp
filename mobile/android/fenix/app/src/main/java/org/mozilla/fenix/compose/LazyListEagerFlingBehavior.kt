@@ -19,7 +19,7 @@ import kotlinx.coroutines.launch
  */
 @Composable
 fun EagerFlingBehavior(
-    lazyRowState: LazyListState
+    lazyRowState: LazyListState,
 ): FlingBehavior {
     val scope = rememberCoroutineScope()
 
@@ -28,7 +28,7 @@ fun EagerFlingBehavior(
 
 private class LazyListEagerFlingBehavior(
     private val lazyRowState: LazyListState,
-    private val scope: CoroutineScope
+    private val scope: CoroutineScope,
 ) : FlingBehavior {
     override suspend fun ScrollScope.performFling(initialVelocity: Float): Float {
         val firstItemIndex = lazyRowState.firstVisibleItemIndex

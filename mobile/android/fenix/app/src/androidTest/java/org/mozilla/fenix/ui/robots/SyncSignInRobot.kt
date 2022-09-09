@@ -53,7 +53,7 @@ private fun assertTurnOnSyncMenu() {
         mDevice.findObject(
             UiSelector()
                 .resourceId("$packageName:id/signInScanButton")
-                .resourceId("$packageName:id/signInEmailButton")
-        ).waitForExists(waitingTime)
+                .resourceId("$packageName:id/signInEmailButton"),
+        ).waitForExists(waitingTime),
     )
 }

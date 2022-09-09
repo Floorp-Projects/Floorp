@@ -32,7 +32,8 @@ class StrictModeManagerTest {
     private lateinit var debugManager: StrictModeManager
     private lateinit var releaseManager: StrictModeManager
 
-    @MockK(relaxUnitFun = true) private lateinit var fragmentManager: FragmentManager
+    @MockK(relaxUnitFun = true)
+    private lateinit var fragmentManager: FragmentManager
 
     @Before
     fun setup() {
@@ -112,8 +113,12 @@ class StrictModeManagerTest {
     fun `GIVEN we're in a debug build WHEN resetAfter is called and an exception is thrown from the function THEN the old policy is set`() {
         val expectedPolicy = StrictMode.allowThreadDiskReads()
         try {
-            debugManager.resetAfter(expectedPolicy) { throw IllegalStateException() }
-            @Suppress("UNREACHABLE_CODE") fail("Expected previous method to throw.")
+            debugManager.resetAfter(expectedPolicy) {
+                throw IllegalStateException()
+            }
+
+            @Suppress("UNREACHABLE_CODE")
+            fail("Expected previous method to throw.")
         } catch (e: IllegalStateException) { /* Do nothing */ }
 
         verify { StrictMode.setThreadPolicy(expectedPolicy) }

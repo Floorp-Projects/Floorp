@@ -36,7 +36,7 @@ sealed class SyncedTabsListItem {
     data class Tab(
         val displayTitle: String,
         val displayURL: String,
-        val tab: SyncTab
+        val tab: SyncTab,
     ) : SyncedTabsListItem()
 
     /**
@@ -64,6 +64,6 @@ sealed class SyncedTabsListItem {
      */
     data class ErrorButton(
         val buttonText: String,
-        val onClick: () -> Unit
+        val onClick: () -> Unit,
     )
 }

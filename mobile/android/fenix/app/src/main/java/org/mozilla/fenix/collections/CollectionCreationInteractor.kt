@@ -58,7 +58,7 @@ interface CollectionCreationInteractor {
  * Forwards all method calls to their equivalents in [CollectionCreationController].
  */
 class DefaultCollectionCreationInteractor(
-    private val controller: CollectionCreationController
+    private val controller: CollectionCreationController,
 ) : CollectionCreationInteractor {
     override fun onNewCollectionNameSaved(tabs: List<Tab>, name: String) {
         controller.saveCollectionName(tabs, name)

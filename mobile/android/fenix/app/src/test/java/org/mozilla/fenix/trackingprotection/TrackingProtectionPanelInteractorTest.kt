@@ -69,7 +69,7 @@ class TrackingProtectionPanelInteractorTest {
             openLearnMoreLink = { learnMoreClicked = true },
             sitePermissions = sitePermissions,
             gravity = gravity,
-            getCurrentTab = { tab }
+            getCurrentTab = { tab },
         )
 
         val trackingProtectionUseCases: TrackingProtectionUseCases = mockk(relaxed = true)
@@ -81,7 +81,7 @@ class TrackingProtectionPanelInteractorTest {
         every {
             trackingProtectionUseCases.containsException.invoke(
                 any(),
-                capture(onComplete)
+                capture(onComplete),
             )
         }.answers { onComplete.captured.invoke(true) }
     }
@@ -94,8 +94,8 @@ class TrackingProtectionPanelInteractorTest {
             store.dispatch(
                 TrackingProtectionAction.EnterDetailsMode(
                     TrackingProtectionCategory.FINGERPRINTERS,
-                    true
-                )
+                    true,
+                ),
             )
         }
 
@@ -105,8 +105,8 @@ class TrackingProtectionPanelInteractorTest {
             store.dispatch(
                 TrackingProtectionAction.EnterDetailsMode(
                     TrackingProtectionCategory.REDIRECT_TRACKERS,
-                    true
-                )
+                    true,
+                ),
             )
         }
     }

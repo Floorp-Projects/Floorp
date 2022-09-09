@@ -12,7 +12,7 @@ import org.mozilla.fenix.settings.logins.controller.SavedLoginsStorageController
  * @property savedLoginsController controller for the saved logins storage
  */
 class LoginDetailInteractor(
-    private val savedLoginsController: SavedLoginsStorageController
+    private val savedLoginsController: SavedLoginsStorageController,
 ) {
     fun onFetchLoginList(loginId: String) {
         savedLoginsController.fetchLoginDetails(loginId)

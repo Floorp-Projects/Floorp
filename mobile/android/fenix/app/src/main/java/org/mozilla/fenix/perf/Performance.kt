@@ -57,7 +57,8 @@ object Performance {
 
             val isAdbEnabled = AndroidSettings.Global.getInt(
                 context.contentResolver,
-                AndroidSettings.Global.ADB_ENABLED, 0
+                AndroidSettings.Global.ADB_ENABLED,
+                0,
             ) == 1
             return isPhonePlugged && isAdbEnabled
         }

@@ -29,7 +29,7 @@ import org.mozilla.fenix.utils.Settings
 
 class DefaultBrowserNotificationWorker(
     context: Context,
-    workerParameters: WorkerParameters
+    workerParameters: WorkerParameters,
 ) : Worker(context, workerParameters) {
 
     override fun doWork(): Result {
@@ -55,7 +55,7 @@ class DefaultBrowserNotificationWorker(
             applicationContext,
             SharedIdsHelper.getNextIdForTag(applicationContext, NOTIFICATION_PENDING_INTENT_TAG),
             intent,
-            IntentUtils.defaultIntentPendingFlags
+            IntentUtils.defaultIntentPendingFlags,
         )
 
         with(applicationContext) {
@@ -63,10 +63,10 @@ class DefaultBrowserNotificationWorker(
             return NotificationCompat.Builder(this, channelId)
                 .setSmallIcon(R.drawable.ic_status_logo)
                 .setContentTitle(
-                    applicationContext.getString(R.string.notification_default_browser_title, appName)
+                    applicationContext.getString(R.string.notification_default_browser_title, appName),
                 )
                 .setContentText(
-                    applicationContext.getString(R.string.notification_default_browser_text, appName)
+                    applicationContext.getString(R.string.notification_default_browser_text, appName),
                 )
                 .setBadgeIconType(NotificationCompat.BADGE_ICON_SMALL)
                 .setColor(ContextCompat.getColor(this, R.color.primary_text_light_theme))
@@ -91,7 +91,7 @@ class DefaultBrowserNotificationWorker(
             val channel = NotificationChannel(
                 NOTIFICATION_CHANNEL_ID,
                 applicationContext.getString(R.string.notification_marketing_channel_name),
-                NotificationManager.IMPORTANCE_DEFAULT
+                NotificationManager.IMPORTANCE_DEFAULT,
             )
 
             notificationManager.createNotificationChannel(channel)
@@ -128,7 +128,7 @@ class DefaultBrowserNotificationWorker(
             instanceWorkManager.beginUniqueWork(
                 NOTIFICATION_WORK_NAME,
                 ExistingWorkPolicy.KEEP,
-                notificationWork
+                notificationWork,
             ).enqueue()
         }
     }

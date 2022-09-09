@@ -43,28 +43,28 @@ class TabCollectionTest {
             },
             mockk {
                 every { title } returns "Collection 3"
-            }
+            },
         )
         assertEquals(4, collections.getDefaultCollectionNumber())
 
         collections.add(
             mockk {
                 every { title } returns "Collection 5"
-            }
+            },
         )
         assertEquals(6, collections.getDefaultCollectionNumber())
 
         collections.add(
             mockk {
                 every { title } returns "Random name"
-            }
+            },
         )
         assertEquals(6, collections.getDefaultCollectionNumber())
 
         collections.add(
             mockk {
                 every { title } returns "Collection 10 10"
-            }
+            },
         )
         assertEquals(6, collections.getDefaultCollectionNumber())
     }

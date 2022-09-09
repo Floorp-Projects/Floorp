@@ -46,16 +46,16 @@ class SignOutFragment : AppCompatDialogFragment() {
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
-        savedInstanceState: Bundle?
+        savedInstanceState: Bundle?,
     ): View? {
         accountManager = requireComponents.backgroundServices.accountManager
         _binding = FragmentSignOutBinding.inflate(inflater, container, false)
 
         binding.signOutMessage.text = String.format(
             binding.root.context.getString(
-                R.string.sign_out_confirmation_message_2
+                R.string.sign_out_confirmation_message_2,
             ),
-            binding.root.context.getString(R.string.app_name)
+            binding.root.context.getString(R.string.app_name),
         )
         return binding.root
     }

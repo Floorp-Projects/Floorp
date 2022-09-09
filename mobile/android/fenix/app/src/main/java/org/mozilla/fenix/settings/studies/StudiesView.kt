@@ -59,7 +59,7 @@ class StudiesView(
             provideStudiesTitle().text = getSwitchCheckedTitle()
             val builder = AlertDialog.Builder(context)
                 .setPositiveButton(
-                    R.string.studies_restart_dialog_ok
+                    R.string.studies_restart_dialog_ok,
                 ) { dialog, _ ->
                     settings.isExperimentationEnabled = isChecked
                     val experimentsKey = context.getPreferenceKey(R.string.pref_key_experimentation)
@@ -73,7 +73,7 @@ class StudiesView(
                     quitTheApp()
                 }
                 .setNegativeButton(
-                    R.string.studies_restart_dialog_cancel
+                    R.string.studies_restart_dialog_cancel,
                 ) { dialog, _ ->
                     provideStudiesSwitch().isChecked = !isChecked
                     provideStudiesTitle().text = getSwitchTitle()
@@ -94,7 +94,7 @@ class StudiesView(
                     if (isAttached()) {
                         adapter = StudiesAdapter(
                             this@StudiesView,
-                            experiments
+                            experiments,
                         )
                         provideStudiesList().adapter = adapter
                     }
@@ -130,7 +130,7 @@ class StudiesView(
 
     private fun addActionToLinks(
         spannableStringBuilder: SpannableStringBuilder,
-        link: URLSpan
+        link: URLSpan,
     ) {
         val start = spannableStringBuilder.getSpanStart(link)
         val end = spannableStringBuilder.getSpanEnd(link)

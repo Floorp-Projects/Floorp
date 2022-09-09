@@ -14,31 +14,31 @@ import org.mozilla.fenix.ext.asActivity
 import org.mozilla.fenix.ext.setToolbarColors
 
 open class LibraryPageView(
-    val containerView: ViewGroup
+    val containerView: ViewGroup,
 ) {
     protected val context: Context inline get() = containerView.context
     protected val activity = context.asActivity()
 
     protected fun setUiForNormalMode(
-        title: String?
+        title: String?,
     ) {
         updateToolbar(
             title = title,
             foregroundColor = context.getColorFromAttr(R.attr.textPrimary),
-            backgroundColor = context.getColorFromAttr(R.attr.layer1)
+            backgroundColor = context.getColorFromAttr(R.attr.layer1),
         )
     }
 
     protected fun setUiForSelectingMode(
-        title: String?
+        title: String?,
     ) {
         updateToolbar(
             title = title,
             foregroundColor = ContextCompat.getColor(
                 context,
-                R.color.fx_mobile_text_color_oncolor_primary
+                R.color.fx_mobile_text_color_oncolor_primary,
             ),
-            backgroundColor = context.getColorFromAttr(R.attr.accent)
+            backgroundColor = context.getColorFromAttr(R.attr.accent),
         )
     }
 

@@ -46,7 +46,7 @@ class BookmarksRobot {
 
     fun verifyBookmarksMenuView() {
         mDevice.findObject(
-            UiSelector().text("Bookmarks")
+            UiSelector().text("Bookmarks"),
         ).waitForExists(waitingTime)
 
         assertBookmarksView()
@@ -83,7 +83,7 @@ class BookmarksRobot {
     fun verifySnackBarHidden() {
         mDevice.waitNotNull(
             Until.gone(By.text("UNDO")),
-            TestAssetHelper.waitingTime
+            TestAssetHelper.waitingTime,
         )
         onView(withId(R.id.snackbar_layout)).check(doesNotExist())
     }
@@ -115,15 +115,15 @@ class BookmarksRobot {
     fun verifyCurrentFolderTitle(title: String) {
         mDevice.findObject(
             UiSelector().resourceId("$packageName:id/navigationToolbar")
-                .textContains(title)
+                .textContains(title),
         )
             .waitForExists(waitingTime)
 
         onView(
             allOf(
                 withText(title),
-                withParent(withId(R.id.navigationToolbar))
-            )
+                withParent(withId(R.id.navigationToolbar)),
+            ),
         )
             .check(matches(isDisplayed()))
     }
@@ -131,7 +131,7 @@ class BookmarksRobot {
     fun waitForBookmarksFolderContentToExist(parentFolderName: String, childFolderName: String) {
         mDevice.findObject(
             UiSelector().resourceId("$packageName:id/navigationToolbar")
-                .textContains(parentFolderName)
+                .textContains(parentFolderName),
         )
             .waitForExists(waitingTime)
 
@@ -159,7 +159,7 @@ class BookmarksRobot {
     fun clickAddFolderButton() {
         mDevice.waitNotNull(
             Until.findObject(By.desc("Add folder")),
-            TestAssetHelper.waitingTime
+            TestAssetHelper.waitingTime,
         )
         addFolderButton().click()
     }
@@ -266,10 +266,10 @@ private fun bookmarkFavicon(url: String) = onView(
         withId(R.id.favicon),
         withParent(
             withParent(
-                withChild(allOf(withId(R.id.url), withText(url)))
-            )
-        )
-    )
+                withChild(allOf(withId(R.id.url), withText(url))),
+            ),
+        ),
+    ),
 )
 
 private fun bookmarkURL(url: String) = onView(allOf(withId(R.id.url), withText(containsString(url))))
@@ -283,15 +283,15 @@ private fun saveFolderButton() = onView(withId(R.id.confirm_add_folder_button))
 private fun threeDotMenu(bookmarkUrl: Uri) = onView(
     allOf(
         withId(R.id.overflow_menu),
-        withParent(withChild(allOf(withId(R.id.url), withText(bookmarkUrl.toString()))))
-    )
+        withParent(withChild(allOf(withId(R.id.url), withText(bookmarkUrl.toString())))),
+    ),
 )
 
 private fun threeDotMenu(bookmarkTitle: String) = onView(
     allOf(
         withId(R.id.overflow_menu),
-        withParent(withChild(allOf(withId(R.id.title), withText(bookmarkTitle))))
-    )
+        withParent(withChild(allOf(withId(R.id.title), withText(bookmarkTitle)))),
+    ),
 )
 
 private fun snackBarText() = onView(withId(R.id.snackbar_text))
@@ -314,8 +314,8 @@ private fun assertBookmarksView() {
     onView(
         allOf(
             withText("Bookmarks"),
-            withParent(withId(R.id.navigationToolbar))
-        )
+            withParent(withId(R.id.navigationToolbar)),
+        ),
     )
         .check(matches(isDisplayed()))
 }
@@ -331,23 +331,23 @@ private fun assertEmptyBookmarksList() =
 private fun assertBookmarkFolderIsNotCreated(title: String) {
     mDevice.findObject(
         UiSelector()
-            .resourceId("$packageName:id/bookmarks_wrapper")
+            .resourceId("$packageName:id/bookmarks_wrapper"),
     ).waitForExists(waitingTime)
 
     assertFalse(
         mDevice.findObject(
             UiSelector()
-                .textContains(title)
-        ).waitForExists(waitingTime)
+                .textContains(title),
+        ).waitForExists(waitingTime),
     )
 }
 
 private fun assertBookmarkFavicon(forUrl: Uri) = bookmarkFavicon(forUrl.toString()).check(
     matches(
         withEffectiveVisibility(
-            ViewMatchers.Visibility.VISIBLE
-        )
-    )
+            ViewMatchers.Visibility.VISIBLE,
+        ),
+    ),
 )
 
 private fun assertBookmarkURL(expectedURL: String) =
@@ -362,15 +362,15 @@ private fun assertBookmarkTitle(expectedTitle: String) =
 private fun assertBookmarkIsDeleted(expectedTitle: String) {
     mDevice.findObject(
         UiSelector()
-            .resourceId("$packageName:id/bookmarks_wrapper")
+            .resourceId("$packageName:id/bookmarks_wrapper"),
     ).waitForExists(waitingTime)
 
     assertFalse(
         mDevice.findObject(
             UiSelector()
                 .resourceId("$packageName:id/title")
-                .textContains(expectedTitle)
-        ).waitForExists(waitingTime)
+                .textContains(expectedTitle),
+        ).waitForExists(waitingTime),
     )
 }
 private fun assertUndoDeleteSnackBarButton() =
@@ -399,7 +399,7 @@ private fun assertKeyboardVisibility(isExpectedToBeVisible: Boolean) =
         isExpectedToBeVisible,
         mDevice
             .executeShellCommand("dumpsys input_method | grep mInputShown")
-            .contains("mInputShown=true")
+            .contains("mInputShown=true"),
     )
 
 private fun assertShareOverlay() =

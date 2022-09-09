@@ -82,8 +82,8 @@ private fun AddressListPreview() {
                         timeCreated = 0L,
                         timeLastUsed = 0L,
                         timeLastModified = 0L,
-                        timesUsed = 0L
-                    )
+                        timesUsed = 0L,
+                    ),
                 ),
                 onAddressClick = {},
                 onAddAddressButtonClick = {},

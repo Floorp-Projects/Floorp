@@ -36,7 +36,7 @@ class SpeechProcessingIntentProcessorTest {
     private val searchEngine = createSearchEngine(
         name = "Test",
         url = "https://www.example.org/?q={searchTerms}",
-        icon = mockk()
+        icon = mockk(),
     )
 
     private lateinit var store: BrowserStore
@@ -50,9 +50,9 @@ class SpeechProcessingIntentProcessorTest {
                 search = SearchState(
                     customSearchEngines = listOf(searchEngine),
                     userSelectedSearchEngineId = searchEngine.id,
-                    complete = true
-                )
-            )
+                    complete = true,
+                ),
+            ),
         )
 
         every { activity.applicationContext } returns ApplicationProvider.getApplicationContext()
@@ -98,7 +98,7 @@ class SpeechProcessingIntentProcessorTest {
                 newTab = true,
                 from = BrowserDirection.FromGlobal,
                 forceSearch = true,
-                engine = searchEngine
+                engine = searchEngine,
             )
         }
     }

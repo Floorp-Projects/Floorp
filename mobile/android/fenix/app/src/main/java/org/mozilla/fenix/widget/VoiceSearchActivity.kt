@@ -68,13 +68,13 @@ class VoiceSearchActivity : AppCompatActivity() {
         val intentSpeech = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
             putExtra(
                 RecognizerIntent.EXTRA_LANGUAGE_MODEL,
-                RecognizerIntent.LANGUAGE_MODEL_FREE_FORM
+                RecognizerIntent.LANGUAGE_MODEL_FREE_FORM,
             )
             putExtra(
                 RecognizerIntent.EXTRA_LANGUAGE,
                 components.strictMode.resetAfter(StrictMode.allowThreadDiskReads()) {
                     LocaleManager.getCurrentLocale(this@VoiceSearchActivity)
-                }
+                },
             )
         }
         SearchWidget.voiceButton.record(NoExtras())
@@ -112,6 +112,7 @@ class VoiceSearchActivity : AppCompatActivity() {
     companion object {
         internal const val SPEECH_REQUEST_CODE = 0
         internal const val PREVIOUS_INTENT = "org.mozilla.fenix.previous_intent"
+
         /**
          * In [VoiceSearchActivity] activity, used to store if the speech processing should start.
          * In [IntentReceiverActivity] activity, used to store the search terms.

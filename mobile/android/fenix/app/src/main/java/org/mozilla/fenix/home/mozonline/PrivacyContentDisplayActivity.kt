@@ -46,17 +46,17 @@ class PrivacyContentDisplayActivity : Activity(), EngineSession.Observer {
         parent: View?,
         name: String,
         context: Context,
-        attrs: AttributeSet
+        attrs: AttributeSet,
     ): View? = when (name) {
         EngineView::class.java.name -> components.core.engine.createView(context, attrs).apply {
             selectionActionDelegate = DefaultSelectionActionDelegate(
                 BrowserStoreSearchAdapter(
-                    components.core.store
+                    components.core.store,
                 ),
                 resources = context.resources,
                 shareTextClicked = { share(it) },
                 emailTextClicked = { email(it) },
-                callTextClicked = { call(it) }
+                callTextClicked = { call(it) },
             )
         }.asView()
         else -> super.onCreateView(parent, name, context, attrs)

@@ -16,7 +16,7 @@ import org.mozilla.fenix.search.toolbar.ToolbarInteractor
  */
 @Suppress("TooManyFunctions")
 class SearchDialogInteractor(
-    private val searchController: SearchDialogController
+    private val searchController: SearchDialogController,
 ) : AwesomeBarInteractor, ToolbarInteractor {
 
     override fun onUrlCommitted(url: String, fromHomeScreen: Boolean) {

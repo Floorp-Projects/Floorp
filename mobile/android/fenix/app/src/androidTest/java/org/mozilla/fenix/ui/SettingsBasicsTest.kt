@@ -180,7 +180,7 @@ class SettingsBasicsTest {
                 "94105",
                 "United States",
                 "555-5555",
-                "foo@bar.com"
+                "foo@bar.com",
             )
         }.goBack {
         }.goBack {
@@ -212,7 +212,7 @@ class SettingsBasicsTest {
                 "94105",
                 "United States",
                 "555-5555",
-                "foo@bar.com"
+                "foo@bar.com",
             )
             clickManageAddressesButton()
             clickSavedAddress("Mozilla")
@@ -281,7 +281,7 @@ class SettingsBasicsTest {
             localeListIdlingResource =
                 RecyclerViewIdlingResource(
                     activityIntentTestRule.activity.findViewById(R.id.locale_list),
-                    2
+                    2,
                 )
             IdlingRegistry.getInstance().register(localeListIdlingResource)
             selectLanguage("Romanian")

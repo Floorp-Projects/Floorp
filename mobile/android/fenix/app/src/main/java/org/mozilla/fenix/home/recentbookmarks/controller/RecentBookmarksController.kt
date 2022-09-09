@@ -57,7 +57,7 @@ class DefaultRecentBookmarksController(
             searchTermOrURL = bookmark.url!!,
             newTab = true,
             from = BrowserDirection.FromHome,
-            flags = EngineSession.LoadUrlFlags.select(ALLOW_JAVASCRIPT_URL)
+            flags = EngineSession.LoadUrlFlags.select(ALLOW_JAVASCRIPT_URL),
         )
         RecentBookmarks.bookmarkClicked.add()
     }
@@ -66,7 +66,7 @@ class DefaultRecentBookmarksController(
         RecentBookmarks.showAllBookmarks.add()
         dismissSearchDialogIfDisplayed()
         navController.navigate(
-            HomeFragmentDirections.actionGlobalBookmarkFragment(BookmarkRoot.Mobile.id)
+            HomeFragmentDirections.actionGlobalBookmarkFragment(BookmarkRoot.Mobile.id),
         )
     }
 

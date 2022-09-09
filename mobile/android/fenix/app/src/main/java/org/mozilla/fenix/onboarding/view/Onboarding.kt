@@ -51,7 +51,7 @@ import org.mozilla.fenix.GleanMetrics.Onboarding as OnboardingMetrics
  */
 private enum class OnboardingState {
     Welcome,
-    SyncSignIn
+    SyncSignIn,
 }
 
 /**
@@ -92,7 +92,7 @@ fun Onboarding(
                         OnboardingMetrics.syncCloseClicked.record(NoExtras())
                     }
                     onDismiss()
-                }
+                },
             ) {
                 Icon(
                     painter = painterResource(id = R.drawable.mozac_ic_close),
@@ -131,7 +131,7 @@ fun Onboarding(
                 onSkipButtonClick = {
                     OnboardingMetrics.syncSkipClicked.record(NoExtras())
                     onDismiss()
-                }
+                },
             )
 
             OnboardingMetrics.syncCardImpression.record(NoExtras())
@@ -143,7 +143,7 @@ fun Onboarding(
 private fun OnboardingWelcomeBottomContent(
     onboardingState: OnboardingState,
     isSyncSignIn: Boolean,
-    onGetStartedButtonClick: () -> Unit
+    onGetStartedButtonClick: () -> Unit,
 ) {
     Column(modifier = Modifier.padding(horizontal = 16.dp)) {
         PrimaryButton(
@@ -259,7 +259,7 @@ private fun Indicators(onboardingState: OnboardingState) {
                 FirefoxTheme.colors.indicatorActive
             } else {
                 FirefoxTheme.colors.indicatorInactive
-            }
+            },
         )
 
         Spacer(modifier = Modifier.width(8.dp))
@@ -269,7 +269,7 @@ private fun Indicators(onboardingState: OnboardingState) {
                 FirefoxTheme.colors.indicatorActive
             } else {
                 FirefoxTheme.colors.indicatorInactive
-            }
+            },
         )
     }
 }

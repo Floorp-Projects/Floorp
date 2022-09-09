@@ -43,14 +43,14 @@ class TabCounterBuilder(
                 ContextCompat.getColor(context, R.color.fx_mobile_private_text_color_primary)
             } else {
                 null
-            }
+            },
         )
 
         tabCounterMenu.updateMenu(
             showOnly = when (browsingModeManager.mode) {
                 BrowsingMode.Normal -> BrowsingMode.Private
                 BrowsingMode.Private -> BrowsingMode.Normal
-            }
+            },
         )
 
         tabCounter.setOnLongClickListener {
@@ -63,7 +63,7 @@ class TabCounterBuilder(
 
             navController.nav(
                 R.id.homeFragment,
-                HomeFragmentDirections.actionGlobalTabsTrayFragment()
+                HomeFragmentDirections.actionGlobalTabsTrayFragment(),
             )
         }
     }

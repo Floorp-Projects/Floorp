@@ -20,7 +20,7 @@ interface LocaleSettingsController {
 class DefaultLocaleSettingsController(
     private val activity: Activity,
     private val localeSettingsStore: LocaleSettingsStore,
-    private val localeUseCase: LocaleUseCases
+    private val localeUseCase: LocaleUseCases,
 ) : LocaleSettingsController {
 
     override fun handleLocaleSelected(locale: Locale) {

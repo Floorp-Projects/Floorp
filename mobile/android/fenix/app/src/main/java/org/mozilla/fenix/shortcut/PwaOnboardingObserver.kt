@@ -29,7 +29,7 @@ class PwaOnboardingObserver(
     private val lifecycleOwner: LifecycleOwner,
     private val navController: NavController,
     private val settings: Settings,
-    private val webAppUseCases: WebAppUseCases
+    private val webAppUseCases: WebAppUseCases,
 ) {
 
     private var scope: CoroutineScope? = null
@@ -63,7 +63,7 @@ class PwaOnboardingObserver(
     internal fun navigateToPwaOnboarding() {
         navController.nav(
             R.id.browserFragment,
-            BrowserFragmentDirections.actionBrowserFragmentToPwaOnboardingDialogFragment()
+            BrowserFragmentDirections.actionBrowserFragmentToPwaOnboardingDialogFragment(),
         )
     }
 }

@@ -50,7 +50,7 @@ class SettingsSubMenuAutofillRobot {
         zipCode: String,
         country: String,
         phoneNumber: String,
-        emailAddress: String
+        emailAddress: String,
     ) {
         firstNameTextInput.waitForExists(waitingTime)
         firstNameTextInput.setText(firstName)

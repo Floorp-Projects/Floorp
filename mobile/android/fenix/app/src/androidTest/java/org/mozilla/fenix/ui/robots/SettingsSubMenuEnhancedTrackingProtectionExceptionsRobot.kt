@@ -65,22 +65,22 @@ private fun assertNavigationToolBarHeader() {
 private fun assertExceptionDefault() =
     assertTrue(
         mDevice.findObject(
-            UiSelector().text("Exceptions let you disable tracking protection for selected sites.")
-        ).waitForExists(waitingTime)
+            UiSelector().text("Exceptions let you disable tracking protection for selected sites."),
+        ).waitForExists(waitingTime),
     )
 
 private fun assertExceptionLearnMoreText() =
     assertTrue(
         mDevice.findObject(
-            UiSelector().text("Learn more")
-        ).waitForExists(waitingTime)
+            UiSelector().text("Learn more"),
+        ).waitForExists(waitingTime),
     )
 
 private fun assertExceptionURL(url: String) =
     assertTrue(
         mDevice.findObject(
-            UiSelector().textContains(url.replace("http://", "https://"))
-        ).waitForExists(waitingTime)
+            UiSelector().textContains(url.replace("http://", "https://")),
+        ).waitForExists(waitingTime),
     )
 
 private fun disableExceptionsButton() =

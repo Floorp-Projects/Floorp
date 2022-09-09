@@ -53,7 +53,7 @@ class SettingsSubMenuAddonsManagerRobot {
     fun clickInstallAddon(addonName: String) {
         mDevice.waitNotNull(
             Until.findObject(By.textContains(addonName)),
-            waitingTime
+            waitingTime,
         )
 
         installButtonForAddon(addonName)
@@ -66,12 +66,12 @@ class SettingsSubMenuAddonsManagerRobot {
             try {
                 assertFalse(
                     mDevice.findObject(UiSelector().text("Failed to install $addonName"))
-                        .waitForExists(waitingTime)
+                        .waitForExists(waitingTime),
                 )
 
                 assertTrue(
                     mDevice.findObject(UiSelector().text("Okay, Got it"))
-                        .waitForExists(waitingTimeLong)
+                        .waitForExists(waitingTimeLong),
                 )
                 break
             } catch (e: AssertionError) {
@@ -93,8 +93,8 @@ class SettingsSubMenuAddonsManagerRobot {
                 withParent(instanceOf(RelativeLayout::class.java)),
                 hasSibling(withText("$addonName has been added to $appName")),
                 hasSibling(withText("Open it in the menu")),
-                hasSibling(withText("Allow in private browsing"))
-            )
+                hasSibling(withText("Allow in private browsing")),
+            ),
         )
             .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
     }
@@ -122,7 +122,7 @@ class SettingsSubMenuAddonsManagerRobot {
         assertTrue(
             "Addon install confirmation prompt not displayed",
             mDevice.findObject(UiSelector().text("Allow in private browsing"))
-                .waitForExists(waitingTimeLong)
+                .waitForExists(waitingTimeLong),
         )
         onView(withId(R.id.allow_in_private_browsing)).click()
     }
@@ -148,7 +148,7 @@ class SettingsSubMenuAddonsManagerRobot {
 
         fun openDetailedMenuForAddon(
             addonName: String,
-            interact: SettingsSubMenuAddonsManagerAddonDetailedMenuRobot.() -> Unit
+            interact: SettingsSubMenuAddonsManagerAddonDetailedMenuRobot.() -> Unit,
         ): SettingsSubMenuAddonsManagerAddonDetailedMenuRobot.Transition {
             scrollToElementByText(addonName)
 
@@ -158,10 +158,10 @@ class SettingsSubMenuAddonsManagerRobot {
                     hasDescendant(
                         allOf(
                             withId(R.id.add_on_name),
-                            withText(addonName)
-                        )
-                    )
-                )
+                            withText(addonName),
+                        ),
+                    ),
+                ),
             ).check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
                 .perform(click())
 
@@ -175,8 +175,8 @@ class SettingsSubMenuAddonsManagerRobot {
             allOf(
                 withContentDescription(R.string.mozac_feature_addons_install_addon_content_description),
                 isDescendantOfA(withId(R.id.add_on_item)),
-                hasSibling(hasDescendant(withText(addonName)))
-            )
+                hasSibling(hasDescendant(withText(addonName))),
+            ),
         )
 
     private fun assertAddonIsEnabled(addonName: String) {
@@ -191,8 +191,8 @@ class SettingsSubMenuAddonsManagerRobot {
         onView(
             allOf(
                 withId(R.id.permissions),
-                withText(containsString("It requires your permission to:"))
-            )
+                withText(containsString("It requires your permission to:")),
+            ),
         )
             .check(matches(isCompletelyDisplayed()))
 
@@ -208,8 +208,8 @@ class SettingsSubMenuAddonsManagerRobot {
             allOf(
                 withId(R.id.add_button),
                 isDescendantOfA(withId(R.id.add_on_item)),
-                hasSibling(hasDescendant(withText(addonName)))
-            )
+                hasSibling(hasDescendant(withText(addonName))),
+            ),
         ).check(matches(withEffectiveVisibility(Visibility.GONE)))
     }
 
@@ -251,11 +251,11 @@ class SettingsSubMenuAddonsManagerRobot {
                         hasDescendant(withText("uBlock Origin")),
                         hasDescendant(withText("Finally, an efficient wide-spectrum content blocker. Easy on CPU and memory.")),
                         hasDescendant(withId(R.id.rating)),
-                        hasDescendant(withId(R.id.users_count))
-                    )
+                        hasDescendant(withId(R.id.users_count)),
+                    ),
                 ),
-                hasDescendant(withId(R.id.add_button))
-            )
+                hasDescendant(withId(R.id.add_button)),
+            ),
         ).check(matches(isCompletelyDisplayed()))
     }
 
@@ -270,11 +270,11 @@ class SettingsSubMenuAddonsManagerRobot {
                     hasDescendant(
                         allOf(
                             withId(R.id.add_on_name),
-                            withText(addonName)
-                        )
-                    )
-                )
-            )
+                            withText(addonName),
+                        ),
+                    ),
+                ),
+            ),
         ).check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
     }
 }

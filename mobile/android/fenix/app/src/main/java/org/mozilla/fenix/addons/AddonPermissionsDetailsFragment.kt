@@ -42,7 +42,7 @@ class AddonPermissionsDetailsFragment :
         (activity as HomeActivity).openToBrowserAndLoad(
             searchTermOrURL = addonSiteUrl.toString(),
             newTab = true,
-            from = BrowserDirection.FromAddonPermissionsDetailsFragment
+            from = BrowserDirection.FromAddonPermissionsDetailsFragment,
         )
     }
 }

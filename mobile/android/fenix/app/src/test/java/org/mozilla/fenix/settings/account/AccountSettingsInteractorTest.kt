@@ -26,7 +26,7 @@ class AccountSettingsInteractorTest {
             mockk(),
             { ranSyncNow = true },
             { false },
-            mockk()
+            mockk(),
         )
 
         interactor.onSyncNow()
@@ -44,7 +44,7 @@ class AccountSettingsInteractorTest {
             mockk(),
             { },
             { true },
-            store
+            store,
         )
 
         assertTrue(interactor.onChangeDeviceName("New Name", invalidNameResponse))
@@ -63,7 +63,7 @@ class AccountSettingsInteractorTest {
             mockk(),
             { },
             { false },
-            store
+            store,
         )
 
         assertFalse(interactor.onChangeDeviceName("New Name", invalidNameResponse))
@@ -81,7 +81,7 @@ class AccountSettingsInteractorTest {
             navController,
             { },
             { false },
-            mockk()
+            mockk(),
         )
 
         interactor.onSignOut()
@@ -89,7 +89,7 @@ class AccountSettingsInteractorTest {
         verify {
             navController.navigate(
                 AccountSettingsFragmentDirections.actionAccountSettingsFragmentToSignOutFragment(),
-                null
+                null,
             )
         }
     }

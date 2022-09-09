@@ -15,7 +15,7 @@ import org.mozilla.fenix.ext.settings
  */
 class CustomEtpCookiesOptionsDropDownListPreference @JvmOverloads constructor(
     context: Context,
-    attrs: AttributeSet? = null
+    attrs: AttributeSet? = null,
 ) : DropDownListPreference(context, attrs) {
     init {
         with(context) {

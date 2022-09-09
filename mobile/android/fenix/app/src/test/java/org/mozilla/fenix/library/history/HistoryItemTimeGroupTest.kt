@@ -19,7 +19,7 @@ class HistoryItemTimeGroupTest {
             title = "test item",
             url = "url",
             visitedAt = time,
-            historyTimeGroup = HistoryItemTimeGroup.timeGroupForTimestamp(time)
+            historyTimeGroup = HistoryItemTimeGroup.timeGroupForTimestamp(time),
         )
 
         assertEquals(HistoryItemTimeGroup.Today, history.historyTimeGroup)
@@ -33,7 +33,7 @@ class HistoryItemTimeGroupTest {
             title = "test item",
             url = "url",
             visitedAt = time,
-            historyTimeGroup = HistoryItemTimeGroup.timeGroupForTimestamp(time)
+            historyTimeGroup = HistoryItemTimeGroup.timeGroupForTimestamp(time),
         )
 
         assertEquals(HistoryItemTimeGroup.Today, history.historyTimeGroup)
@@ -52,7 +52,7 @@ class HistoryItemTimeGroupTest {
             title = "test item",
             url = "url",
             visitedAt = calendar.timeInMillis,
-            historyTimeGroup = HistoryItemTimeGroup.timeGroupForTimestamp(calendar.timeInMillis)
+            historyTimeGroup = HistoryItemTimeGroup.timeGroupForTimestamp(calendar.timeInMillis),
         )
 
         assertEquals(HistoryItemTimeGroup.Today, history.historyTimeGroup)
@@ -73,7 +73,7 @@ class HistoryItemTimeGroupTest {
             title = "test item",
             url = "url",
             visitedAt = time,
-            historyTimeGroup = HistoryItemTimeGroup.timeGroupForTimestamp(time)
+            historyTimeGroup = HistoryItemTimeGroup.timeGroupForTimestamp(time),
         )
 
         assertEquals(HistoryItemTimeGroup.Yesterday, history.historyTimeGroup)
@@ -93,7 +93,7 @@ class HistoryItemTimeGroupTest {
             title = "test item",
             url = "url",
             visitedAt = time,
-            historyTimeGroup = HistoryItemTimeGroup.timeGroupForTimestamp(time)
+            historyTimeGroup = HistoryItemTimeGroup.timeGroupForTimestamp(time),
         )
 
         assertEquals(HistoryItemTimeGroup.Yesterday, history.historyTimeGroup)
@@ -113,7 +113,7 @@ class HistoryItemTimeGroupTest {
             title = "test item",
             url = "url",
             visitedAt = time,
-            historyTimeGroup = HistoryItemTimeGroup.timeGroupForTimestamp(time)
+            historyTimeGroup = HistoryItemTimeGroup.timeGroupForTimestamp(time),
         )
 
         assertEquals(HistoryItemTimeGroup.ThisWeek, history.historyTimeGroup)
@@ -127,7 +127,7 @@ class HistoryItemTimeGroupTest {
             title = "test item",
             url = "url",
             visitedAt = time,
-            historyTimeGroup = HistoryItemTimeGroup.timeGroupForTimestamp(time)
+            historyTimeGroup = HistoryItemTimeGroup.timeGroupForTimestamp(time),
         )
 
         assertEquals(HistoryItemTimeGroup.ThisWeek, history.historyTimeGroup)
@@ -141,7 +141,7 @@ class HistoryItemTimeGroupTest {
             title = "test item",
             url = "url",
             visitedAt = time,
-            historyTimeGroup = HistoryItemTimeGroup.timeGroupForTimestamp(time)
+            historyTimeGroup = HistoryItemTimeGroup.timeGroupForTimestamp(time),
         )
 
         assertEquals(HistoryItemTimeGroup.ThisWeek, history.historyTimeGroup)
@@ -155,7 +155,7 @@ class HistoryItemTimeGroupTest {
             title = "test item",
             url = "url",
             visitedAt = time,
-            historyTimeGroup = HistoryItemTimeGroup.timeGroupForTimestamp(time)
+            historyTimeGroup = HistoryItemTimeGroup.timeGroupForTimestamp(time),
         )
 
         assertEquals(HistoryItemTimeGroup.ThisMonth, history.historyTimeGroup)
@@ -169,7 +169,7 @@ class HistoryItemTimeGroupTest {
             title = "test item",
             url = "url",
             visitedAt = time,
-            historyTimeGroup = HistoryItemTimeGroup.timeGroupForTimestamp(time)
+            historyTimeGroup = HistoryItemTimeGroup.timeGroupForTimestamp(time),
         )
 
         assertEquals(HistoryItemTimeGroup.ThisMonth, history.historyTimeGroup)
@@ -183,7 +183,7 @@ class HistoryItemTimeGroupTest {
             title = "test item",
             url = "url",
             visitedAt = time,
-            historyTimeGroup = HistoryItemTimeGroup.timeGroupForTimestamp(time)
+            historyTimeGroup = HistoryItemTimeGroup.timeGroupForTimestamp(time),
         )
 
         assertEquals(HistoryItemTimeGroup.Older, history.historyTimeGroup)
@@ -196,7 +196,7 @@ class HistoryItemTimeGroupTest {
             title = "test item",
             url = "url",
             visitedAt = 0,
-            historyTimeGroup = HistoryItemTimeGroup.timeGroupForTimestamp(0)
+            historyTimeGroup = HistoryItemTimeGroup.timeGroupForTimestamp(0),
         )
 
         assertEquals(HistoryItemTimeGroup.Older, history.historyTimeGroup)
@@ -209,7 +209,7 @@ class HistoryItemTimeGroupTest {
             title = "test item",
             url = "url",
             visitedAt = -100,
-            historyTimeGroup = HistoryItemTimeGroup.timeGroupForTimestamp(-100)
+            historyTimeGroup = HistoryItemTimeGroup.timeGroupForTimestamp(-100),
         )
 
         assertEquals(HistoryItemTimeGroup.Older, history.historyTimeGroup)

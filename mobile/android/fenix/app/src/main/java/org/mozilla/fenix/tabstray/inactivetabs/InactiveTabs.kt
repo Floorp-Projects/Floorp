@@ -83,7 +83,7 @@ fun InactiveTabsList(
         ),
     ) {
         Column(
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth(),
         ) {
             InactiveTabsHeader(
                 expanded = expanded,
@@ -188,12 +188,12 @@ private fun InactiveTabsAutoClosePrompt(
                     text = stringResource(R.string.tab_tray_inactive_auto_close_title),
                     color = FirefoxTheme.colors.textPrimary,
                     modifier = Modifier.weight(1f),
-                    style = FirefoxTheme.typography.headline8
+                    style = FirefoxTheme.typography.headline8,
                 )
 
                 IconButton(
                     onClick = onDismissClick,
-                    modifier = Modifier.size(20.dp)
+                    modifier = Modifier.size(20.dp),
                 ) {
                     Icon(
                         painter = painterResource(R.drawable.mozac_ic_close_20),
@@ -207,7 +207,7 @@ private fun InactiveTabsAutoClosePrompt(
             Text(
                 text = stringResource(
                     R.string.tab_tray_inactive_auto_close_body_2,
-                    stringResource(R.string.app_name)
+                    stringResource(R.string.app_name),
                 ),
                 color = FirefoxTheme.colors.textSecondary,
                 modifier = Modifier.fillMaxWidth(),
@@ -266,12 +266,12 @@ private fun generateFakeInactiveTabsList(): List<TabSessionState> =
             id = "tabId",
             content = ContentState(
                 url = "www.mozilla.com",
-            )
+            ),
         ),
         TabSessionState(
             id = "tabId",
             content = ContentState(
                 url = "www.google.com",
-            )
+            ),
         ),
     )

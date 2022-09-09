@@ -46,7 +46,7 @@ class ModeTest {
             context,
             onboarding,
             browsingModeManager,
-            dispatchModeChanges
+            dispatchModeChanges,
         )
     }
 

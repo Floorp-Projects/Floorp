@@ -28,7 +28,7 @@ private const val COLLECTION_MAX_TITLE_LENGTH = 20
 class TabCollectionStorage(
     private val context: Context,
     strictMode: StrictModeManager,
-    private val delegate: Observable<Observer> = ObserverRegistry()
+    private val delegate: Observable<Observer> = ObserverRegistry(),
 ) : Observable<org.mozilla.fenix.components.TabCollectionStorage.Observer> by delegate {
 
     /**
@@ -110,7 +110,7 @@ fun TabCollection.description(context: Context): String {
             if (it.length > COLLECTION_MAX_TITLE_LENGTH) {
                 it.substring(
                     0,
-                    COLLECTION_MAX_TITLE_LENGTH
+                    COLLECTION_MAX_TITLE_LENGTH,
                 ) + "…"
             } else {
                 it

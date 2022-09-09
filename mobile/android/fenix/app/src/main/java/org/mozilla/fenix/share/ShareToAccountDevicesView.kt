@@ -24,7 +24,7 @@ interface ShareToAccountDevicesInteractor {
 
 class ShareToAccountDevicesView(
     containerView: ViewGroup,
-    interactor: ShareToAccountDevicesInteractor
+    interactor: ShareToAccountDevicesInteractor,
 ) {
 
     private val adapter = AccountDevicesShareAdapter(interactor)
@@ -33,7 +33,7 @@ class ShareToAccountDevicesView(
         val binding = ShareToAccountDevicesBinding.inflate(
             LayoutInflater.from(containerView.context),
             containerView,
-            true
+            true,
         )
 
         binding.devicesList.adapter = adapter

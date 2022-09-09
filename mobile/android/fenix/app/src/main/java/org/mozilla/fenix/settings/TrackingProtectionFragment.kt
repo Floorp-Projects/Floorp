@@ -35,18 +35,25 @@ class TrackingProtectionFragment : PreferenceFragmentCompat() {
         requireView().findNavController().navigate(directions)
         true
     }
+
     @VisibleForTesting
     internal lateinit var customCookies: CheckBoxPreference
+
     @VisibleForTesting
     internal lateinit var customCookiesSelect: DropDownPreference
+
     @VisibleForTesting
     internal lateinit var customTracking: CheckBoxPreference
+
     @VisibleForTesting
     internal lateinit var customTrackingSelect: DropDownPreference
+
     @VisibleForTesting
     internal lateinit var customCryptominers: CheckBoxPreference
+
     @VisibleForTesting
     internal lateinit var customFingerprinters: CheckBoxPreference
+
     @VisibleForTesting
     internal lateinit var customRedirectTrackers: CheckBoxPreference
 
@@ -85,13 +92,13 @@ class TrackingProtectionFragment : PreferenceFragmentCompat() {
                 searchTermOrURL = SupportUtils.getGenericSumoURLForTopic
                 (SupportUtils.SumoTopic.TRACKING_PROTECTION),
                 newTab = true,
-                from = BrowserDirection.FromTrackingProtection
+                from = BrowserDirection.FromTrackingProtection,
             )
             true
         }
         learnMorePreference.summary = getString(
             R.string.preference_enhanced_tracking_protection_explanation,
-            getString(R.string.app_name)
+            getString(R.string.app_name),
         )
 
         val preferenceExceptions =
@@ -100,7 +107,7 @@ class TrackingProtectionFragment : PreferenceFragmentCompat() {
     }
 
     private fun bindTrackingProtectionRadio(
-        mode: TrackingProtectionMode
+        mode: TrackingProtectionMode,
     ): RadioButtonInfoPreference {
         val radio = requirePreference<RadioButtonInfoPreference>(mode.preferenceKey)
         radio.contentDescription = getString(mode.contentDescriptionRes)
@@ -115,7 +122,7 @@ class TrackingProtectionFragment : PreferenceFragmentCompat() {
             nav(
                 R.id.trackingProtectionFragment,
                 TrackingProtectionFragmentDirections
-                    .actionTrackingProtectionFragmentToTrackingProtectionBlockingFragment(mode)
+                    .actionTrackingProtectionFragmentToTrackingProtectionBlockingFragment(mode),
             )
         }
 
@@ -174,7 +181,6 @@ class TrackingProtectionFragment : PreferenceFragmentCompat() {
 
         customTrackingSelect.onPreferenceChangeListener = object : StringSharedPreferenceUpdater() {
             override fun onPreferenceChange(preference: Preference, newValue: Any?): Boolean {
-
                 return super.onPreferenceChange(preference, newValue).also {
                     updateTrackingProtectionPolicy()
                 }

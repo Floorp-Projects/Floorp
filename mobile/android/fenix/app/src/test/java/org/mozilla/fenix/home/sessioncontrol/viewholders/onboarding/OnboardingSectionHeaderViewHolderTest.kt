@@ -30,7 +30,7 @@ class OnboardingSectionHeaderViewHolderTest {
 
         assertEquals(
             "Hello world",
-            binding.sectionHeaderText.text
+            binding.sectionHeaderText.text,
         )
     }
 }

@@ -25,9 +25,9 @@ fun LocaleManager.getSupportedLocales(): List<Locale> {
             }.sortedWith(
                 compareBy(
                     { it.displayLanguage },
-                    { it.displayCountry }
-                )
-            )
+                    { it.displayCountry },
+                ),
+            ),
     )
     return resultLocaleList
 }
@@ -38,7 +38,7 @@ fun LocaleManager.getSupportedLocales(): List<Locale> {
  */
 fun LocaleManager.getSelectedLocale(
     context: Context,
-    localeList: List<Locale> = getSupportedLocales()
+    localeList: List<Locale> = getSupportedLocales(),
 ): Locale {
     val selectedLocale = getCurrentLocale(context)?.toLanguageTag()
     val defaultLocale = getSystemDefault()

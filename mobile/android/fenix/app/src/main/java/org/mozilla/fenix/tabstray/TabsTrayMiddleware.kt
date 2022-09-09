@@ -19,7 +19,7 @@ class TabsTrayMiddleware : Middleware<TabsTrayState, TabsTrayAction> {
     override fun invoke(
         context: MiddlewareContext<TabsTrayState, TabsTrayAction>,
         next: (TabsTrayAction) -> Unit,
-        action: TabsTrayAction
+        action: TabsTrayAction,
     ) {
         next(action)
 

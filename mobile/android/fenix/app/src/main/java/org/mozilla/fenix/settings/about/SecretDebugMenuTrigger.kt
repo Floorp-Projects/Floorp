@@ -16,7 +16,7 @@ import org.mozilla.fenix.utils.Settings
  */
 class SecretDebugMenuTrigger(
     logoView: View,
-    private val settings: Settings
+    private val settings: Settings,
 ) : View.OnClickListener, DefaultLifecycleObserver {
 
     private var secretDebugMenuClicks = 0
@@ -46,7 +46,7 @@ class SecretDebugMenuTrigger(
                 val toast = Toast.makeText(
                     v.context,
                     v.context.getString(R.string.about_debug_menu_toast_progress, clicksLeft),
-                    Toast.LENGTH_SHORT
+                    Toast.LENGTH_SHORT,
                 )
                 toast.show()
                 lastDebugMenuToast = toast
@@ -55,7 +55,7 @@ class SecretDebugMenuTrigger(
                 Toast.makeText(
                     v.context,
                     R.string.about_debug_menu_toast_done,
-                    Toast.LENGTH_LONG
+                    Toast.LENGTH_LONG,
                 ).show()
                 settings.showSecretDebugMenuThisSession = true
             }

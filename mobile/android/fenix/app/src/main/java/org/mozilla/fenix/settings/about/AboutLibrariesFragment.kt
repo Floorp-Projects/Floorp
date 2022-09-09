@@ -51,7 +51,7 @@ class AboutLibrariesFragment : Fragment(R.layout.fragment_about_libraries) {
         listView.adapter = ArrayAdapter(
             listView.context,
             android.R.layout.simple_list_item_1,
-            libraries
+            libraries,
         )
         listView.setOnItemClickListener { _, _, position, _ ->
             showLicenseDialog(libraries[position])

@@ -36,7 +36,7 @@ import org.mozilla.fenix.theme.Theme
 class PocketRecommendationsHeaderViewHolder(
     composeView: ComposeView,
     viewLifecycleOwner: LifecycleOwner,
-    private val interactor: PocketStoriesInteractor
+    private val interactor: PocketStoriesInteractor,
 ) : ComposeViewHolder(composeView, viewLifecycleOwner) {
 
     @Composable
@@ -55,7 +55,7 @@ class PocketRecommendationsHeaderViewHolder(
             PoweredByPocketHeader(
                 onLearnMoreClicked = interactor::onLearnMoreClicked,
                 modifier = Modifier.fillMaxWidth(),
-                textColor = wallpaperAdaptedTextColor ?: FirefoxTheme.colors.textPrimary
+                textColor = wallpaperAdaptedTextColor ?: FirefoxTheme.colors.textPrimary,
             )
         }
     }
@@ -70,7 +70,7 @@ class PocketRecommendationsHeaderViewHolder(
 fun PocketRecommendationsFooterViewHolderPreview() {
     FirefoxTheme(theme = Theme.getTheme()) {
         PoweredByPocketHeader(
-            onLearnMoreClicked = {}
+            onLearnMoreClicked = {},
         )
     }
 }

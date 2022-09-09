@@ -37,7 +37,7 @@ class PerformanceInflaterTest {
          *  activity_home.xml contains FragmentContainerView which needs to be
          *  put inside FragmentActivity in order to get inflated
          */
-        "activity_home"
+        "activity_home",
     )
 
     @Before
@@ -68,7 +68,7 @@ class PerformanceInflaterTest {
                 val layoutId = testContext.resources.getIdentifier(
                     layoutName,
                     "layout",
-                    testContext.packageName
+                    testContext.packageName,
                 )
 
                 assertNotEquals(-1, layoutId)
@@ -82,10 +82,10 @@ class PerformanceInflaterTest {
 
 private class MockInflater(
     inflater: LayoutInflater,
-    context: Context
+    context: Context,
 ) : PerformanceInflater(
     inflater,
-    context
+    context,
 ) {
 
     override fun onCreateView(name: String?, attrs: AttributeSet?): View? {

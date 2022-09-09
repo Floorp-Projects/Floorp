@@ -18,7 +18,7 @@ class TopSiteTest {
         id = 1L,
         title = "Google",
         url = SupportUtils.GOOGLE_URL,
-        createdAt = 0
+        createdAt = 0,
     )
     val providedSite1 = TopSite.Provided(
         id = 3,
@@ -27,7 +27,7 @@ class TopSiteTest {
         clickUrl = "https://mozilla.com/click",
         imageUrl = "https://test.com/image2.jpg",
         impressionUrl = "https://example.com",
-        createdAt = 3
+        createdAt = 3,
     )
     val providedSite2 = TopSite.Provided(
         id = 3,
@@ -36,25 +36,25 @@ class TopSiteTest {
         clickUrl = "https://firefox.com/click",
         imageUrl = "https://test.com/image2.jpg",
         impressionUrl = "https://example.com",
-        createdAt = 3
+        createdAt = 3,
     )
     val pinnedSite1 = TopSite.Pinned(
         id = 1L,
         title = "DuckDuckGo",
         url = "https://duckduckgo.com",
-        createdAt = 0
+        createdAt = 0,
     )
     val pinnedSite2 = TopSite.Pinned(
         id = 1L,
         title = "Mozilla",
         url = "mozilla.org",
-        createdAt = 0
+        createdAt = 0,
     )
     val frecentSite = TopSite.Frecent(
         id = 1L,
         title = "Mozilla",
         url = "mozilla.org",
-        createdAt = 0
+        createdAt = 0,
     )
 
     @Test
@@ -65,7 +65,7 @@ class TopSiteTest {
             providedSite2,
             pinnedSite1,
             pinnedSite2,
-            frecentSite
+            frecentSite,
         )
 
         assertEquals(topSites.sort(), topSites)
@@ -79,7 +79,7 @@ class TopSiteTest {
             defaultGoogleTopSite,
             pinnedSite1,
             pinnedSite2,
-            frecentSite
+            frecentSite,
         )
         val expected = listOf(
             defaultGoogleTopSite,
@@ -87,7 +87,7 @@ class TopSiteTest {
             providedSite2,
             pinnedSite1,
             pinnedSite2,
-            frecentSite
+            frecentSite,
         )
 
         assertEquals(topSites.sort(), expected)
@@ -101,7 +101,7 @@ class TopSiteTest {
             pinnedSite1,
             pinnedSite2,
             frecentSite,
-            defaultGoogleTopSite
+            defaultGoogleTopSite,
         )
         val expected = listOf(
             defaultGoogleTopSite,
@@ -109,7 +109,7 @@ class TopSiteTest {
             providedSite2,
             pinnedSite1,
             pinnedSite2,
-            frecentSite
+            frecentSite,
         )
 
         assertEquals(topSites.sort(), expected)

@@ -14,5 +14,5 @@ import org.mozilla.fenix.home.recentvisits.RecentlyVisitedItem
  */
 data class RecentVisitMenuItem(
     val title: String,
-    val onClick: (RecentlyVisitedItem) -> Unit
+    val onClick: (RecentlyVisitedItem) -> Unit,
 )

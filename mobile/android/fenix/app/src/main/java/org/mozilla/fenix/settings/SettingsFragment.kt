@@ -73,7 +73,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
                 accountUiView.updateAccountUIState(
                     context = context,
                     profile = profile
-                        ?: context.components.backgroundServices.accountManager.accountProfile()
+                        ?: context.components.backgroundServices.accountManager.accountProfile(),
                 )
             }
         }
@@ -97,14 +97,14 @@ class SettingsFragment : PreferenceFragmentCompat() {
             scope = lifecycleScope,
             accountManager = requireComponents.backgroundServices.accountManager,
             httpClient = requireComponents.core.client,
-            updateFxAAllowDomesticChinaServerMenu = :: updateFxAAllowDomesticChinaServerMenu
+            updateFxAAllowDomesticChinaServerMenu = ::updateFxAAllowDomesticChinaServerMenu,
         )
 
         // Observe account changes to keep the UI up-to-date.
         requireComponents.backgroundServices.accountManager.register(
             accountObserver,
             owner = this,
-            autoPause = true
+            autoPause = true,
         )
 
         // It's important to update the account UI state in onCreate since that ensures we'll never
@@ -115,7 +115,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
         // once this call is ran in onResume shortly after.
         accountUiView.updateAccountUIState(
             requireContext(),
-            requireComponents.backgroundServices.accountManager.accountProfile()
+            requireComponents.backgroundServices.accountManager.accountProfile(),
         )
 
         val booleanPreferenceTelemetryAllowList = listOf(
@@ -132,7 +132,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
             requireContext().getString(R.string.pref_key_sync_bookmarks),
             requireContext().getString(R.string.pref_key_sync_history),
             requireContext().getString(R.string.pref_key_show_voice_search),
-            requireContext().getString(R.string.pref_key_show_search_suggestions_in_private)
+            requireContext().getString(R.string.pref_key_show_search_suggestions_in_private),
         )
 
         preferenceManager.sharedPreferences
@@ -151,7 +151,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
             this,
             Observer<Boolean> {
                 updateProfilerUI(it)
-            }
+            },
         )
     }
 
@@ -229,7 +229,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
         if (shouldUpdateAccountUIState) {
             accountUiView.updateAccountUIState(
                 requireContext(),
-                requireComponents.backgroundServices.accountManager.accountProfile()
+                requireComponents.backgroundServices.accountManager.accountProfile(),
             )
         }
     }
@@ -287,10 +287,10 @@ class SettingsFragment : PreferenceFragmentCompat() {
                 (activity as HomeActivity).openToBrowserAndLoad(
                     searchTermOrURL = SupportUtils.getSumoURLForTopic(
                         requireContext(),
-                        SupportUtils.SumoTopic.HELP
+                        SupportUtils.SumoTopic.HELP,
                     ),
                     newTab = true,
-                    from = BrowserDirection.FromSettings
+                    from = BrowserDirection.FromSettings,
                 )
                 null
             }
@@ -303,7 +303,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
                     (activity as HomeActivity).openToBrowserAndLoad(
                         searchTermOrURL = SupportUtils.FENIX_PLAY_STORE_URL,
                         newTab = true,
-                        from = BrowserDirection.FromSettings
+                        from = BrowserDirection.FromSettings,
                     )
                 }
                 null
@@ -339,7 +339,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
             resources.getString(R.string.pref_key_privacy_link) -> {
                 val intent = SupportUtils.createCustomTabIntent(
                     requireContext(),
-                    SupportUtils.getMozillaPageUrl(SupportUtils.MozillaPage.PRIVATE_NOTICE)
+                    SupportUtils.getMozillaPageUrl(SupportUtils.MozillaPage.PRIVATE_NOTICE),
                 )
                 startActivity(intent)
                 null
@@ -348,7 +348,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
                 val context = requireContext()
                 val intent = SupportUtils.createCustomTabIntent(
                     context,
-                    SupportUtils.getSumoURLForTopic(context, SupportUtils.SumoTopic.YOUR_RIGHTS)
+                    SupportUtils.getSumoURLForTopic(context, SupportUtils.SumoTopic.YOUR_RIGHTS),
                 )
                 startActivity(intent)
                 null
@@ -381,14 +381,14 @@ class SettingsFragment : PreferenceFragmentCompat() {
                         Toast.makeText(
                             context,
                             getString(R.string.toast_customize_addon_collection_done),
-                            Toast.LENGTH_LONG
+                            Toast.LENGTH_LONG,
                         ).show()
 
                         Handler(Looper.getMainLooper()).postDelayed(
                             {
                                 exitProcess(0)
                             },
-                            AMO_COLLECTION_OVERRIDE_EXIT_DELAY
+                            AMO_COLLECTION_OVERRIDE_EXIT_DELAY,
                         )
                     }
 
@@ -449,16 +449,16 @@ class SettingsFragment : PreferenceFragmentCompat() {
 
         with(requireContext().settings()) {
             findPreference<Preference>(
-                getPreferenceKey(R.string.pref_key_nimbus_experiments)
+                getPreferenceKey(R.string.pref_key_nimbus_experiments),
             )?.isVisible = showSecretDebugMenuThisSession
             findPreference<Preference>(
-                getPreferenceKey(R.string.pref_key_debug_settings)
+                getPreferenceKey(R.string.pref_key_debug_settings),
             )?.isVisible = showSecretDebugMenuThisSession
             findPreference<Preference>(
-                getPreferenceKey(R.string.pref_key_secret_debug_info)
+                getPreferenceKey(R.string.pref_key_secret_debug_info),
             )?.isVisible = showSecretDebugMenuThisSession
             findPreference<Preference>(
-                getPreferenceKey(R.string.pref_key_sync_debug)
+                getPreferenceKey(R.string.pref_key_sync_debug),
             )?.isVisible = showSecretDebugMenuThisSession
             preferenceStartProfiler?.isVisible = showSecretDebugMenuThisSession &&
                 (requireContext().components.core.engine.profiler?.isProfilerActive() != null)
@@ -550,13 +550,13 @@ class SettingsFragment : PreferenceFragmentCompat() {
                     Toast.makeText(
                         context,
                         getString(R.string.toast_override_fxa_sync_server_done),
-                        Toast.LENGTH_LONG
+                        Toast.LENGTH_LONG,
                     ).show()
                     Handler(Looper.getMainLooper()).postDelayed(
                         {
                             exitProcess(0)
                         },
-                        FXA_SYNC_OVERRIDE_EXIT_DELAY
+                        FXA_SYNC_OVERRIDE_EXIT_DELAY,
                     )
                 }
         }

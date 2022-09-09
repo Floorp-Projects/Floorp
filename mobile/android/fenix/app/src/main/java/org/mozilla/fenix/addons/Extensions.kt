@@ -17,7 +17,7 @@ internal fun showSnackBar(view: View, text: String, duration: Int = FenixSnackba
     FenixSnackbar.make(
         view = view,
         duration = duration,
-        isDisplayedWithBrowserToolbar = true
+        isDisplayedWithBrowserToolbar = true,
     )
         .setText(text)
         .show()

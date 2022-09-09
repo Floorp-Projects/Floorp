@@ -34,7 +34,8 @@ enum class PhoneFeature(val androidPermissionsList: Array<String>) : Parcelable 
     AUTOPLAY_INAUDIBLE(emptyArray()),
     PERSISTENT_STORAGE(emptyArray()),
     MEDIA_KEY_SYSTEM_ACCESS(emptyArray()),
-    CROSS_ORIGIN_STORAGE_ACCESS(emptyArray());
+    CROSS_ORIGIN_STORAGE_ACCESS(emptyArray()),
+    ;
 
     fun isAndroidPermissionGranted(context: Context): Boolean {
         return context.isPermissionGranted(androidPermissionsList.asIterable())
@@ -44,7 +45,7 @@ enum class PhoneFeature(val androidPermissionsList: Array<String>) : Parcelable 
     fun getActionLabel(
         context: Context,
         sitePermissions: SitePermissions? = null,
-        settings: Settings? = null
+        settings: Settings? = null,
     ): String {
         @StringRes val stringRes = if (isAndroidPermissionGranted(context)) {
             when (this) {
@@ -70,7 +71,7 @@ enum class PhoneFeature(val androidPermissionsList: Array<String>) : Parcelable 
 
     fun getStatus(
         sitePermissions: SitePermissions? = null,
-        settings: Settings? = null
+        settings: Settings? = null,
     ): SitePermissions.Status {
         val status = sitePermissions?.get(this) ?: settings?.let(::getAction)?.toStatus()
         return requireNotNull(status)

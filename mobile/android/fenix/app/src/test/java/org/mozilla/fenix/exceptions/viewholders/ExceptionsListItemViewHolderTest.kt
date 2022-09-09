@@ -24,8 +24,11 @@ import org.mozilla.fenix.helpers.MockkRetryTestRule
 
 class ExceptionsListItemViewHolderTest {
 
-    @MockK(relaxed = true) private lateinit var view: WidgetSiteItemView
+    @MockK(relaxed = true)
+    private lateinit var view: WidgetSiteItemView
+
     @MockK private lateinit var icons: BrowserIcons
+
     @MockK private lateinit var interactor: ExceptionsInteractor<Exception>
 
     @get:Rule

@@ -17,7 +17,7 @@ class DebugFenixApplication : FenixApplication() {
         if (!AppWatcher.isInstalled) {
             AppWatcher.manualInstall(
                 application = application,
-                watchersToInstall = AppWatcher.appDefaultWatchers(application)
+                watchersToInstall = AppWatcher.appDefaultWatchers(application),
             )
         }
 

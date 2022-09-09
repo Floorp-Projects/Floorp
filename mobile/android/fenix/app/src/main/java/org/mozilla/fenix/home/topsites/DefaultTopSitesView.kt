@@ -13,7 +13,7 @@ import org.mozilla.fenix.utils.Settings
 
 class DefaultTopSitesView(
     val store: AppStore,
-    val settings: Settings
+    val settings: Settings,
 ) : TopSitesView {
 
     override fun displayTopSites(topSites: List<TopSite>) {
@@ -23,8 +23,8 @@ class DefaultTopSitesView(
                     topSites
                 } else {
                     topSites.sort()
-                }
-            )
+                },
+            ),
         )
     }
 }

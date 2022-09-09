@@ -32,13 +32,13 @@ class CustomTabToolbarMenuTest {
         store = BrowserStore(
             BrowserState(
                 tabs = listOf(
-                    createTab(url = "https://wikipedia.com", id = "1")
+                    createTab(url = "https://wikipedia.com", id = "1"),
                 ),
                 customTabs = listOf(
                     firefoxCustomTab,
-                    createCustomTab(url = "https://mozilla.com", id = "456")
-                )
-            )
+                    createCustomTab(url = "https://mozilla.com", id = "456"),
+                ),
+            ),
         )
 
         customTabToolbarMenu = spyk(
@@ -47,8 +47,8 @@ class CustomTabToolbarMenuTest {
                 store = store,
                 sessionId = firefoxCustomTab.id,
                 shouldReverseItems = false,
-                onItemTapped = { }
-            )
+                onItemTapped = { },
+            ),
         )
     }
 

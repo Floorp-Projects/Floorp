@@ -33,7 +33,7 @@ class AdjustMetricsService(private val application: Application) : MetricsServic
             application,
             BuildConfig.ADJUST_TOKEN,
             AdjustConfig.ENVIRONMENT_PRODUCTION,
-            true
+            true,
         )
 
         val installationPing = FirstSessionPing(application)

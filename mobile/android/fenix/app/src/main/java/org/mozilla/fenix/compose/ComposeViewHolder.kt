@@ -23,7 +23,7 @@ import org.mozilla.fenix.theme.Theme
  */
 abstract class ComposeViewHolder(
     val composeView: ComposeView,
-    viewLifecycleOwner: LifecycleOwner
+    viewLifecycleOwner: LifecycleOwner,
 ) : RecyclerView.ViewHolder(composeView) {
 
     /**
@@ -39,7 +39,7 @@ abstract class ComposeViewHolder(
 
     init {
         composeView.setViewCompositionStrategy(
-            ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed
+            ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed,
         )
         composeView.setContent {
             FirefoxTheme(theme = Theme.getTheme(allowPrivateTheme = allowPrivateTheme)) {
@@ -49,7 +49,7 @@ abstract class ComposeViewHolder(
 
         ViewTreeLifecycleOwner.set(composeView, viewLifecycleOwner)
         composeView.setViewTreeSavedStateRegistryOwner(
-            viewLifecycleOwner as SavedStateRegistryOwner
+            viewLifecycleOwner as SavedStateRegistryOwner,
         )
     }
 }

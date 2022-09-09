@@ -15,11 +15,11 @@ import org.mozilla.fenix.R
 
 class DownloadItemMenu(
     private val context: Context,
-    private val onItemTapped: (Item) -> Unit
+    private val onItemTapped: (Item) -> Unit,
 ) {
 
     enum class Item {
-        Delete
+        Delete,
     }
 
     val menuController: MenuController by lazy {
@@ -34,11 +34,11 @@ class DownloadItemMenu(
             TextMenuCandidate(
                 text = context.getString(R.string.history_delete_item),
                 textStyle = TextStyle(
-                    color = context.getColorFromAttr(R.attr.textWarning)
-                )
+                    color = context.getColorFromAttr(R.attr.textWarning),
+                ),
             ) {
                 onItemTapped.invoke(Item.Delete)
-            }
+            },
         )
     }
 }

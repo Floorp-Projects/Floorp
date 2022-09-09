@@ -10,7 +10,7 @@ import androidx.test.espresso.IdlingResource
 import mozilla.components.feature.addons.ui.AddonInstallationDialogFragment
 
 class AddonsInstallingIdlingResource(
-    private val fragmentManager: FragmentManager
+    private val fragmentManager: FragmentManager,
 ) :
     IdlingResource {
     private var resourceCallback: IdlingResource.ResourceCallback? = null
@@ -25,8 +25,9 @@ class AddonsInstallingIdlingResource(
     }
 
     override fun registerIdleTransitionCallback(callback: IdlingResource.ResourceCallback?) {
-        if (callback != null)
+        if (callback != null) {
             resourceCallback = callback
+        }
     }
 
     private fun isInstalledAddonDialogShown(): Boolean {

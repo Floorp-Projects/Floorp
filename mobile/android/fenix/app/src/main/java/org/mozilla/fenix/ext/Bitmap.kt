@@ -16,33 +16,35 @@ fun Bitmap.scaleToBottomOfView(view: ImageView) {
     view.setImageBitmap(bitmap)
     view.scaleType = ImageView.ScaleType.MATRIX
     val matrix = Matrix()
-    view.addOnLayoutChangeListener(object : View.OnLayoutChangeListener {
-        override fun onLayoutChange(
-            v: View?,
-            left: Int,
-            top: Int,
-            right: Int,
-            bottom: Int,
-            oldLeft: Int,
-            oldTop: Int,
-            oldRight: Int,
-            oldBottom: Int
-        ) {
-            val viewWidth: Float = view.width.toFloat()
-            val viewHeight: Float = view.height.toFloat()
-            val bitmapWidth = bitmap.width
-            val bitmapHeight = bitmap.height
-            val widthScale = viewWidth / bitmapWidth
-            val heightScale = viewHeight / bitmapHeight
-            val scale = widthScale.coerceAtLeast(heightScale)
-            matrix.postScale(scale, scale)
-            // The image is translated to its bottom such that any pertinent information is
-            // guaranteed to be shown.
-            // Majority of this math borrowed from // https://medium.com/@tokudu/how-to-whitelist-strictmode-violations-on-android-based-on-stacktrace-eb0018e909aa
-            // except that there is no need to translate horizontally in our case.
-            matrix.postTranslate(0f, (viewHeight - bitmapHeight * scale))
-            view.imageMatrix = matrix
-            view.removeOnLayoutChangeListener(this)
-        }
-    })
+    view.addOnLayoutChangeListener(
+        object : View.OnLayoutChangeListener {
+            override fun onLayoutChange(
+                v: View?,
+                left: Int,
+                top: Int,
+                right: Int,
+                bottom: Int,
+                oldLeft: Int,
+                oldTop: Int,
+                oldRight: Int,
+                oldBottom: Int,
+            ) {
+                val viewWidth: Float = view.width.toFloat()
+                val viewHeight: Float = view.height.toFloat()
+                val bitmapWidth = bitmap.width
+                val bitmapHeight = bitmap.height
+                val widthScale = viewWidth / bitmapWidth
+                val heightScale = viewHeight / bitmapHeight
+                val scale = widthScale.coerceAtLeast(heightScale)
+                matrix.postScale(scale, scale)
+                // The image is translated to its bottom such that any pertinent information is
+                // guaranteed to be shown.
+                // Majority of this math borrowed from // https://medium.com/@tokudu/how-to-whitelist-strictmode-violations-on-android-based-on-stacktrace-eb0018e909aa
+                // except that there is no need to translate horizontally in our case.
+                matrix.postTranslate(0f, (viewHeight - bitmapHeight * scale))
+                view.imageMatrix = matrix
+                view.removeOnLayoutChangeListener(this)
+            }
+        },
+    )
 }

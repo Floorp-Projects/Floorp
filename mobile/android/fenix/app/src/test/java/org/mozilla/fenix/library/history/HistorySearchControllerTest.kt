@@ -29,8 +29,11 @@ class HistorySearchControllerTest {
     @get:Rule
     val gleanTestRule = GleanTestRule(testContext)
 
-    @MockK(relaxed = true) private lateinit var activity: HomeActivity
-    @MockK(relaxed = true) private lateinit var store: HistorySearchFragmentStore
+    @MockK(relaxed = true)
+    private lateinit var activity: HomeActivity
+
+    @MockK(relaxed = true)
+    private lateinit var store: HistorySearchFragmentStore
 
     @Before
     fun setUp() {
@@ -43,7 +46,7 @@ class HistorySearchControllerTest {
         createController(
             clearToolbarFocus = {
                 clearToolbarFocusInvoked = true
-            }
+            },
         ).handleEditingCancelled()
 
         assertTrue(clearToolbarFocusInvoked)
@@ -83,7 +86,7 @@ class HistorySearchControllerTest {
                 searchTermOrURL = url,
                 newTab = true,
                 from = BrowserDirection.FromHistorySearchDialog,
-                flags = flags
+                flags = flags,
             )
         }
     }

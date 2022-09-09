@@ -28,7 +28,7 @@ import org.mozilla.fenix.home.recenttabs.interactor.RecentTabInteractor
 class RecentTabsHeaderViewHolder(
     composeView: ComposeView,
     viewLifecycleOwner: LifecycleOwner,
-    private val interactor: RecentTabInteractor
+    private val interactor: RecentTabInteractor,
 ) : ComposeViewHolder(composeView, viewLifecycleOwner) {
 
     init {
@@ -55,7 +55,7 @@ class RecentTabsHeaderViewHolder(
                 onShowAllClick = {
                     dismissSearchDialogIfDisplayed()
                     interactor.onRecentTabShowAllClicked()
-                }
+                },
             )
 
             Spacer(Modifier.height(16.dp))

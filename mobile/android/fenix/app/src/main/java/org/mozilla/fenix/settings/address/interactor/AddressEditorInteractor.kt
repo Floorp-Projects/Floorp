@@ -51,7 +51,7 @@ interface AddressEditorInteractor {
  * user interactions.
  */
 class DefaultAddressEditorInteractor(
-    private val controller: AddressEditorController
+    private val controller: AddressEditorController,
 ) : AddressEditorInteractor {
 
     override fun onCancelButtonClicked() {

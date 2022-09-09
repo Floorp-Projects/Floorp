@@ -129,7 +129,7 @@ class AddressEditorViewTest {
                 binding = binding,
                 interactor = interactor,
                 address = address,
-            )
+            ),
         )
         addressEditorView.bind()
 
@@ -151,7 +151,7 @@ class AddressEditorViewTest {
                 binding = binding,
                 interactor = interactor,
                 address = address,
-            )
+            ),
         )
         addressEditorView.bind()
 
@@ -165,7 +165,7 @@ class AddressEditorViewTest {
                 binding = binding,
                 interactor = interactor,
                 address = address,
-            )
+            ),
         )
         addressEditorView.bind()
 
@@ -247,7 +247,7 @@ class AddressEditorViewTest {
                 binding = binding,
                 interactor = interactor,
                 address = generateAddress(country = "CA"),
-            )
+            ),
         )
         addressEditorView.bind()
 
@@ -262,7 +262,7 @@ class AddressEditorViewTest {
                 interactor = interactor,
                 region = RegionState.Default,
                 address = generateAddress(country = "XX"),
-            )
+            ),
         )
         addressEditorView.bind()
 
@@ -349,6 +349,6 @@ class AddressEditorViewTest {
         timeCreated = 0L,
         timeLastUsed = 1L,
         timeLastModified = 1L,
-        timesUsed = 2L
+        timesUsed = 2L,
     )
 }

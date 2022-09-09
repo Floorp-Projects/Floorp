@@ -30,7 +30,9 @@ import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 @RunWith(FenixRobolectricTestRunner::class)
 class ExtensionsTest {
 
-    @MockK(relaxUnitFun = true) private lateinit var radioButton: RadioButton
+    @MockK(relaxUnitFun = true)
+    private lateinit var radioButton: RadioButton
+
     @MockK private lateinit var fragment: PreferenceFragmentCompat
     private lateinit var preference: Preference
 
@@ -56,7 +58,7 @@ class ExtensionsTest {
             radioButton.putCompoundDrawablesRelative(
                 start = withArg {
                     assertEquals(Rect(0, 0, it.intrinsicWidth, it.intrinsicHeight), it.bounds)
-                }
+                },
             )
         }
     }
@@ -85,7 +87,7 @@ class ExtensionsTest {
 
         assertEquals(
             switchPreference,
-            fragment.requirePreference<SwitchPreference>(R.string.pref_key_accessibility_auto_size)
+            fragment.requirePreference<SwitchPreference>(R.string.pref_key_accessibility_auto_size),
         )
     }
 

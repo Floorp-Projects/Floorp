@@ -18,7 +18,7 @@ import org.mozilla.fenix.R
  * */
 class SyncPreference @JvmOverloads constructor(
     context: Context,
-    attrs: AttributeSet? = null
+    attrs: AttributeSet? = null,
 ) : SwitchPreferenceCompat(context, attrs) {
 
     private var switchView: SwitchCompat? = null

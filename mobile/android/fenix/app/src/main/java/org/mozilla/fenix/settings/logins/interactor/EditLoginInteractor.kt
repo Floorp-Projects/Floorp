@@ -12,7 +12,7 @@ import org.mozilla.fenix.settings.logins.controller.SavedLoginsStorageController
  * @property savedLoginsController controller for the saved logins storage
  */
 class EditLoginInteractor(
-    private val savedLoginsController: SavedLoginsStorageController
+    private val savedLoginsController: SavedLoginsStorageController,
 ) {
     fun findDuplicate(loginId: String, usernameText: String, passwordText: String) {
         savedLoginsController.findDuplicateForSave(loginId, usernameText, passwordText)

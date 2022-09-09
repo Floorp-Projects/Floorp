@@ -53,11 +53,11 @@ class RecentlyVisitedViewHolder(
                         when (visit) {
                             is RecentHistoryGroup -> interactor.onRemoveRecentHistoryGroup(visit.title)
                             is RecentHistoryHighlight -> interactor.onRemoveRecentHistoryHighlight(
-                                visit.url
+                                visit.url,
                             )
                         }
-                    }
-                )
+                    },
+                ),
             ),
             onRecentVisitClick = { recentlyVisitedItem, pageNumber ->
                 when (recentlyVisitedItem) {
@@ -69,13 +69,13 @@ class RecentlyVisitedViewHolder(
                         RecentlyVisitedHomepage.searchGroupOpened.record(NoExtras())
                         History.recentSearchesTapped.record(
                             History.RecentSearchesTappedExtra(
-                                pageNumber.toString()
-                            )
+                                pageNumber.toString(),
+                            ),
                         )
                         interactor.onRecentHistoryGroupClicked(recentlyVisitedItem)
                     }
                 }
-            }
+            },
         )
     }
 

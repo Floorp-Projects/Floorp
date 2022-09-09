@@ -25,7 +25,7 @@ data class CreditCardEditorState(
     val cardNumber: String = "",
     val expiryMonth: Int = 1,
     val expiryYears: Pair<Int, Int>,
-    val isEditing: Boolean = false
+    val isEditing: Boolean = false,
 )
 
 /**
@@ -44,7 +44,7 @@ suspend fun CreditCard.toCreditCardEditorState(storage: AutofillCreditCardsAddre
         cardNumber = cardNumber,
         expiryMonth = expiryMonth.toInt(),
         expiryYears = Pair(startYear, endYear),
-        isEditing = true
+        isEditing = true,
     )
 }
 
@@ -60,6 +60,6 @@ fun getInitialCreditCardEditorState(): CreditCardEditorState {
     val endYear = startYear + NUMBER_OF_YEARS_TO_SHOW
 
     return CreditCardEditorState(
-        expiryYears = Pair(startYear, endYear)
+        expiryYears = Pair(startYear, endYear),
     )
 }

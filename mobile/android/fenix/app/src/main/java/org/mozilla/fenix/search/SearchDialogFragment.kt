@@ -106,7 +106,7 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
     private val searchSelectorMenu by lazy {
         SearchSelectorMenu(
             context = requireContext(),
-            interactor = interactor
+            interactor = interactor,
         )
     }
 
@@ -125,7 +125,7 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
         // see the whole homescreen behind the search dialog.
         @Suppress("DEPRECATION")
         requireActivity().window.setSoftInputMode(
-            WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE
+            WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE,
         )
 
         // Refocus the toolbar editing and show keyboard if the QR fragment isn't showing
@@ -160,7 +160,7 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
-        savedInstanceState: Bundle?
+        savedInstanceState: Bundle?,
     ): View {
         val args by navArgs<SearchDialogFragmentArgs>()
         _binding = FragmentSearchDialogBinding.inflate(inflater, container, false)
@@ -173,8 +173,8 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
                 requireComponents,
                 tabId = args.sessionId,
                 pastedText = args.pastedText,
-                searchAccessPoint = args.searchAccessPoint
-            )
+                searchAccessPoint = args.searchAccessPoint,
+            ),
         )
 
         interactor = SearchDialogInteractor(
@@ -197,8 +197,8 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
                 focusToolbar = { toolbarView.view.edit.focus() },
                 clearToolbar = {
                     inlineAutocompleteEditText.setText("")
-                }
-            )
+                },
+            ),
         )
 
         val fromHomeFragment =
@@ -210,7 +210,7 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
             interactor,
             isPrivate,
             binding.toolbar,
-            fromHomeFragment
+            fromHomeFragment,
         ).also {
             inlineAutocompleteEditText = it.view.findViewById(R.id.mozac_browser_toolbar_edit_url_view)
         }
@@ -221,12 +221,12 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
             ToolbarAutocompleteFeature(
                 binding.toolbar,
                 engineForSpeculativeConnects,
-                { store.state.searchEngineSource.searchEngine?.type != SearchEngine.Type.APPLICATION }
+                { store.state.searchEngineSource.searchEngine?.type != SearchEngine.Type.APPLICATION },
             ).apply {
                 addDomainProvider(
                     ShippedDomainsProvider().also { shippedDomainsProvider ->
                         shippedDomainsProvider.initialize(requireContext())
-                    }
+                    },
                 )
                 historyStorageProvider()?.also(::addHistoryStorageProvider)
             }
@@ -238,7 +238,7 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
             activity,
             interactor,
             awesomeBar,
-            fromHomeFragment
+            fromHomeFragment,
         )
 
         binding.awesomeBar.setOnTouchListener { _, _ ->
@@ -327,7 +327,7 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
         qrFeature.set(
             createQrFeature(),
             owner = this,
-            view = view
+            view = view,
         )
 
         binding.qrScanButton.isVisible = when {
@@ -373,7 +373,7 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
                     .openToBrowserAndLoad(
                         searchTermOrURL = clipboardUrl,
                         newTab = store.state.tabId == null,
-                        from = BrowserDirection.FromSearchDialog
+                        from = BrowserDirection.FromSearchDialog,
                     )
             }
         }
@@ -385,10 +385,10 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
                 (activity as HomeActivity)
                     .openToBrowserAndLoad(
                         searchTermOrURL = SupportUtils.getGenericSumoURLForTopic(
-                            SupportUtils.SumoTopic.SEARCH_SUGGESTION
+                            SupportUtils.SumoTopic.SEARCH_SUGGESTION,
                         ),
                         newTab = store.state.tabId == null,
-                        from = BrowserDirection.FromSearchDialog
+                        from = BrowserDirection.FromSearchDialog,
                     )
             }
 
@@ -572,7 +572,7 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
                     val args by navArgs<SearchDialogFragmentArgs>()
                     args.sessionId?.let {
                         findNavController().navigate(
-                            SearchDialogFragmentDirections.actionGlobalBrowser(null)
+                            SearchDialogFragmentDirections.actionGlobalBrowser(null),
                         )
                     }
                 }
@@ -586,7 +586,9 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
     private fun historyStorageProvider(): HistoryStorage? {
         return if (requireContext().settings().shouldShowHistorySuggestions) {
             requireComponents.core.historyStorage
-        } else null
+        } else {
+            null
+        }
     }
 
     @Suppress("DEPRECATION")
@@ -617,7 +619,7 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
                             val spannable = resources.getSpanned(
                                 R.string.qr_scanner_confirmation_dialog_message,
                                 getString(R.string.app_name) to StyleSpan(Typeface.BOLD),
-                                normalizedUrl to StyleSpan(Typeface.ITALIC)
+                                normalizedUrl to StyleSpan(Typeface.ITALIC),
                             )
                             setMessage(spannable)
                             setNegativeButton(R.string.qr_scanner_dialog_negative) { dialog: DialogInterface, _ ->
@@ -628,7 +630,7 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
                                     searchTermOrURL = normalizedUrl,
                                     newTab = store.state.tabId == null,
                                     from = BrowserDirection.FromSearchDialog,
-                                    flags = EngineSession.LoadUrlFlags.external()
+                                    flags = EngineSession.LoadUrlFlags.external(),
                                 )
                                 dialog.dismiss()
                             }
@@ -636,7 +638,7 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
                         }.show()
                     }
                 }
-            }
+            },
         )
     }
 
@@ -645,7 +647,7 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
     override fun onRequestPermissionsResult(
         requestCode: Int,
         permissions: Array<String>,
-        grantResults: IntArray
+        grantResults: IntArray,
     ) {
         when (requestCode) {
             REQUEST_CODE_CAMERA_PERMISSIONS -> qrFeature.withFeature {
@@ -717,8 +719,8 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
                 TextMenuCandidate(
                     text = it.name,
                     start = DrawableMenuIcon(
-                        drawable = it.icon.toDrawable(resources)
-                    )
+                        drawable = it.icon.toDrawable(resources),
+                    ),
                 ) {
                     interactor.onMenuItemTapped(SearchSelectorMenu.Item.SearchEngine(it))
                 }
@@ -735,7 +737,7 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
             SearchSelectorToolbarAction(
                 store = store,
                 menu = searchSelectorMenu,
-            )
+            ),
         )
 
         searchSelectorAlreadyAdded = true
@@ -757,8 +759,8 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
                             AppCompatResources.getDrawable(requireContext(), R.drawable.ic_microphone)!!,
                             requireContext().getString(R.string.voice_search_content_description),
                             visible = { true },
-                            listener = ::launchVoiceSearch
-                        )
+                            listener = ::launchVoiceSearch,
+                        ),
                     ).also { action ->
                         toolbarView.view.run {
                             addEditActionEnd(action)
@@ -803,7 +805,7 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
                             requireContext().getString(R.string.search_scan_button),
                             autoHide = { true },
                             listener = ::launchQr,
-                        )
+                        ),
                     ).also { action ->
                         toolbarView.view.run {
                             addEditActionEnd(action)
@@ -848,7 +850,7 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
     private fun isSpeechAvailable(): Boolean = speechIntent.resolveActivity(requireContext().packageManager) != null
 
     private fun updateClipboardSuggestion(
-        shouldShowView: Boolean
+        shouldShowView: Boolean,
     ) {
         binding.fillLinkFromClipboard.isVisible = shouldShowView
         binding.fillLinkDivider.isVisible = shouldShowView
@@ -885,7 +887,7 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
 
     private fun updateSearchShortcutsIcon(
         areShortcutsAvailable: Boolean,
-        showShortcuts: Boolean
+        showShortcuts: Boolean,
     ) {
         val showUnifiedSearchFeature = requireContext().settings().showUnifiedSearchFeature
 
@@ -897,7 +899,7 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
 
             val color = if (showShortcuts) R.attr.textOnColorPrimary else R.attr.textPrimary
             binding.searchEnginesShortcutButton.compoundDrawables[0]?.setTint(
-                requireContext().getColorFromAttr(color)
+                requireContext().getColorFromAttr(color),
             )
         }
     }

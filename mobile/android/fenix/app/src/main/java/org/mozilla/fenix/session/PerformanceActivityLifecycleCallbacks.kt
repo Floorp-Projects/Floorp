@@ -18,7 +18,7 @@ import org.mozilla.fenix.widget.VoiceSearchActivity
  */
 @SuppressWarnings("EmptyFunctionBlock")
 class PerformanceActivityLifecycleCallbacks(
-    private val visualCompletenessQueue: RunWhenReadyQueue
+    private val visualCompletenessQueue: RunWhenReadyQueue,
 ) : Application.ActivityLifecycleCallbacks {
 
     override fun onActivityCreated(activity: Activity, bundle: Bundle?) {

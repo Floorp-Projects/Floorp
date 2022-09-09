@@ -20,14 +20,16 @@ class AddonsLoadingIdlingResource(val fragmentManager: FragmentManager) : Idling
 
     override fun isIdleNow(): Boolean {
         val idle = addonsFinishedLoading()
-        if (idle)
+        if (idle) {
             resourceCallback?.onTransitionToIdle()
+        }
         return idle
     }
 
     override fun registerIdleTransitionCallback(callback: IdlingResource.ResourceCallback?) {
-        if (callback != null)
+        if (callback != null) {
             resourceCallback = callback
+        }
     }
 
     private fun addonsFinishedLoading(): Boolean {
@@ -37,8 +39,9 @@ class AddonsLoadingIdlingResource(val fragmentManager: FragmentManager) : Idling
             addonsManagementFragment.view?.findViewById<View>(R.id.add_ons_progress_bar)
         } ?: return true
 
-        if (progressbar.visibility == VISIBLE)
+        if (progressbar.visibility == VISIBLE) {
             return false
+        }
 
         return true
     }

@@ -25,7 +25,8 @@ class ActivationPing(private val context: Context) {
 
     private val prefs: SharedPreferences by lazy {
         context.getSharedPreferences(
-            "${this.javaClass.canonicalName}.prefs", Context.MODE_PRIVATE
+            "${this.javaClass.canonicalName}.prefs",
+            Context.MODE_PRIVATE,
         )
     }
 

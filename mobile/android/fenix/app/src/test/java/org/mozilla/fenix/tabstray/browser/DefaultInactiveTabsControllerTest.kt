@@ -102,7 +102,7 @@ class DefaultInactiveTabsControllerTest {
             id = "tabId",
             content = ContentState(
                 url = "www.mozilla.com",
-            )
+            ),
         )
 
         assertNull(TabsTrayMetrics.openInactiveTab.testGetValue())
@@ -119,7 +119,7 @@ class DefaultInactiveTabsControllerTest {
             id = "tabId",
             content = ContentState(
                 url = "www.mozilla.com",
-            )
+            ),
         )
 
         assertNull(TabsTrayMetrics.closeInactiveTab.testGetValue())
@@ -135,7 +135,7 @@ class DefaultInactiveTabsControllerTest {
         val controller = createController(
             showUndoSnackbar = {
                 showSnackbarInvoked = true
-            }
+            },
         )
         val inactiveTab: TabSessionState = mockk {
             every { lastAccess } returns maxActiveTime

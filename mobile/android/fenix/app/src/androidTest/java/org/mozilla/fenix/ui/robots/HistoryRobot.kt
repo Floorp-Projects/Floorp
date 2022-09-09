@@ -39,7 +39,7 @@ class HistoryRobot {
 
     fun verifyEmptyHistoryView() {
         mDevice.findObject(
-            UiSelector().text("No history here")
+            UiSelector().text("No history here"),
         ).waitForExists(waitingTime)
 
         assertEmptyHistoryView()
@@ -50,9 +50,9 @@ class HistoryRobot {
     fun verifyVisitedTimeTitle() {
         mDevice.waitNotNull(
             Until.findObject(
-                By.text("Today")
+                By.text("Today"),
             ),
-            waitingTime
+            waitingTime,
         )
         assertVisitedTimeTitle()
     }
@@ -88,7 +88,7 @@ class HistoryRobot {
         mDevice
             .findObject(
                 UiSelector()
-                    .textContains(getStringResource(R.string.delete_browsing_data_prompt_cancel))
+                    .textContains(getStringResource(R.string.delete_browsing_data_prompt_cancel)),
             ).click()
 
     fun verifyDeleteSnackbarText(text: String) = assertSnackBarText(text)
@@ -127,7 +127,7 @@ private fun snackBarText() = onView(withId(R.id.snackbar_text))
 
 private fun assertHistoryMenuView() {
     onView(
-        allOf(withText("History"), withParent(withId(R.id.navigationToolbar)))
+        allOf(withText("History"), withParent(withId(R.id.navigationToolbar))),
     )
         .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
 }
@@ -136,8 +136,8 @@ private fun assertEmptyHistoryView() =
     onView(
         allOf(
             withId(R.id.history_empty_view),
-            withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)
-        )
+            withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE),
+        ),
     )
         .check(matches(withText("No history here")))
 
@@ -183,7 +183,7 @@ private fun deleteHistoryPromptTitle() =
         .findObject(
             UiSelector()
                 .textContains(getStringResource(R.string.delete_history_prompt_title))
-                .resourceId("$packageName:id/title")
+                .resourceId("$packageName:id/title"),
         )
 
 private fun deleteHistoryPromptSummary() =
@@ -191,7 +191,7 @@ private fun deleteHistoryPromptSummary() =
         .findObject(
             UiSelector()
                 .textContains(getStringResource(R.string.delete_history_prompt_body))
-                .resourceId("$packageName:id/body")
+                .resourceId("$packageName:id/body"),
         )
 
 private fun deleteHistoryEverythingOption() =
@@ -199,5 +199,5 @@ private fun deleteHistoryEverythingOption() =
         .findObject(
             UiSelector()
                 .textContains(getStringResource(R.string.delete_history_prompt_button_everything))
-                .resourceId("$packageName:id/everything_button")
+                .resourceId("$packageName:id/everything_button"),
         )

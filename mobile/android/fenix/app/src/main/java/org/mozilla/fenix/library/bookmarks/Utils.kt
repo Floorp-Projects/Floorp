@@ -15,14 +15,14 @@ fun rootTitles(context: Context, withMobileRoot: Boolean): Map<String, String> =
         "mobile" to context.getString(R.string.library_bookmarks),
         "menu" to context.getString(R.string.library_desktop_bookmarks_menu),
         "toolbar" to context.getString(R.string.library_desktop_bookmarks_toolbar),
-        "unfiled" to context.getString(R.string.library_desktop_bookmarks_unfiled)
+        "unfiled" to context.getString(R.string.library_desktop_bookmarks_unfiled),
     )
 } else {
     mapOf(
         "root" to context.getString(R.string.library_desktop_bookmarks_root),
         "menu" to context.getString(R.string.library_desktop_bookmarks_menu),
         "toolbar" to context.getString(R.string.library_desktop_bookmarks_toolbar),
-        "unfiled" to context.getString(R.string.library_desktop_bookmarks_unfiled)
+        "unfiled" to context.getString(R.string.library_desktop_bookmarks_unfiled),
     )
 }
 
@@ -30,7 +30,7 @@ fun friendlyRootTitle(
     context: Context,
     node: BookmarkNode,
     withMobileRoot: Boolean = true,
-    rootTitles: Map<String, String> = rootTitles(context, withMobileRoot)
+    rootTitles: Map<String, String> = rootTitles(context, withMobileRoot),
 ) = when {
     !node.inRoots() -> node.title
     rootTitles.containsKey(node.title) -> rootTitles[node.title]

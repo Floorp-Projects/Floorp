@@ -70,7 +70,7 @@ fun Context.getStringWithArgSafe(@StringRes resId: Int, formatArg: String): Stri
         logDebug(
             "L10n",
             "String: " + resources.getResourceEntryName(resId) +
-                " not properly formatted in: " + LocaleManager.getSelectedLocale(this).language
+                " not properly formatted in: " + LocaleManager.getSelectedLocale(this).language,
         )
         val config = resources.configuration
         config.setLocale(Locale("en"))

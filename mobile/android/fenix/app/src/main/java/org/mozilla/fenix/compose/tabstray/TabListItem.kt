@@ -64,7 +64,6 @@ fun TabListItem(
     onClick: (tab: TabSessionState) -> Unit,
     onLongClick: (tab: TabSessionState) -> Unit,
 ) {
-
     val contentBackgroundColor = if (isSelected) {
         FirefoxTheme.colors.layerAccentNonOpaque
     } else {
@@ -76,22 +75,22 @@ fun TabListItem(
             .background(contentBackgroundColor)
             .combinedClickable(
                 onLongClick = { onLongClick(tab) },
-                onClick = { onClick(tab) }
+                onClick = { onClick(tab) },
             )
             .padding(horizontal = 16.dp, vertical = 8.dp),
-        verticalAlignment = Alignment.CenterVertically
+        verticalAlignment = Alignment.CenterVertically,
     ) {
         Thumbnail(
             tab = tab,
             multiSelectionEnabled = multiSelectionEnabled,
             isSelected = multiSelectionSelected,
-            onMediaIconClicked = { onMediaClick(it) }
+            onMediaIconClicked = { onMediaClick(it) },
         )
 
         Column(
             modifier = Modifier
                 .padding(horizontal = 16.dp)
-                .weight(weight = 1f)
+                .weight(weight = 1f),
         ) {
             Text(
                 text = tab.content.title,
@@ -116,9 +115,9 @@ fun TabListItem(
                     painter = painterResource(id = R.drawable.mozac_ic_close),
                     contentDescription = stringResource(
                         id = R.string.close_tab_title,
-                        tab.content.title
+                        tab.content.title,
                     ),
-                    tint = FirefoxTheme.colors.iconPrimary
+                    tint = FirefoxTheme.colors.iconPrimary,
                 )
             }
         }
@@ -130,7 +129,7 @@ private fun Thumbnail(
     tab: TabSessionState,
     multiSelectionEnabled: Boolean,
     isSelected: Boolean,
-    onMediaIconClicked: ((TabSessionState) -> Unit)
+    onMediaIconClicked: ((TabSessionState) -> Unit),
 ) {
     Box {
         ThumbnailCard(
@@ -154,7 +153,7 @@ private fun Thumbnail(
                         .matchParentSize()
                         .padding(all = 8.dp),
                     contentDescription = null,
-                    tint = colorResource(id = R.color.mozac_ui_icons_fill)
+                    tint = colorResource(id = R.color.mozac_ui_icons_fill),
                 )
             }
         }
@@ -163,7 +162,7 @@ private fun Thumbnail(
             MediaImage(
                 tab = tab,
                 onMediaIconClicked = onMediaIconClicked,
-                modifier = Modifier.align(Alignment.TopEnd)
+                modifier = Modifier.align(Alignment.TopEnd),
             )
         }
     }

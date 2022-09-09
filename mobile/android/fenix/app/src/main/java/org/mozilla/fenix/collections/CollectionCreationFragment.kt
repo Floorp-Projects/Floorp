@@ -35,7 +35,7 @@ class CollectionCreationFragment : DialogFragment() {
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
-        savedInstanceState: Bundle?
+        savedInstanceState: Bundle?,
     ): View {
         _binding = FragmentCreateCollectionBinding.inflate(inflater, container, false)
         val args: CollectionCreationFragmentArgs by navArgs()
@@ -49,8 +49,8 @@ class CollectionCreationFragment : DialogFragment() {
                     saveCollectionStep = args.saveCollectionStep,
                     tabIds = args.tabIds,
                     selectedTabIds = args.selectedTabIds,
-                    selectedTabCollectionId = args.selectedTabCollectionId
-                )
+                    selectedTabCollectionId = args.selectedTabCollectionId,
+                ),
             )
         }
         collectionCreationInteractor = DefaultCollectionCreationInteractor(
@@ -59,12 +59,12 @@ class CollectionCreationFragment : DialogFragment() {
                 requireComponents.core.store,
                 ::dismiss,
                 requireComponents.core.tabCollectionStorage,
-                scope = lifecycleScope
-            )
+                scope = lifecycleScope,
+            ),
         )
         collectionCreationView = CollectionCreationView(
             binding.createCollectionWrapper,
-            collectionCreationInteractor
+            collectionCreationInteractor,
         )
 
         return binding.root

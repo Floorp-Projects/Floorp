@@ -11,7 +11,7 @@ import android.os.SystemClock
  *  Time is stores in elapsed real time nano seconds
  */
 internal class ApplicationInitTimeContainer(
-    private val getElapsedRealtimeNanos: () -> Long = SystemClock::elapsedRealtimeNanos
+    private val getElapsedRealtimeNanos: () -> Long = SystemClock::elapsedRealtimeNanos,
 ) {
 
     var applicationInitNanos = -1L

@@ -5,5 +5,5 @@
 package org.mozilla.fenix.browser.browsingmode
 
 data class SimpleBrowsingModeManager(
-    override var mode: BrowsingMode
+    override var mode: BrowsingMode,
 ) : BrowsingModeManager

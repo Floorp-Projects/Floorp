@@ -51,7 +51,7 @@ class ComposeListViewHolder(
         tab: TabSessionState,
         isSelected: Boolean,
         styling: TabsTrayStyling,
-        delegate: TabsTray.Delegate
+        delegate: TabsTray.Delegate,
     ) {
         this.tab = tab
         this.delegate = delegate
@@ -88,7 +88,7 @@ class ComposeListViewHolder(
     @Composable
     override fun Content(tab: TabSessionState) {
         val multiSelectionEnabled = tabsTrayStore.observeAsComposableState {
-            state ->
+                state ->
             state.mode is TabsTrayState.Mode.Select
         }.value ?: false
         val isSelectedTabState by isSelectedTab.collectAsState()

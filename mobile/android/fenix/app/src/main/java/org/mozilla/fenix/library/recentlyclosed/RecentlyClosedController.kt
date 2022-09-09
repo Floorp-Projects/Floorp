@@ -44,7 +44,7 @@ class DefaultRecentlyClosedController(
     private val tabsUseCases: TabsUseCases,
     private val activity: HomeActivity,
     private val lifecycleScope: CoroutineScope,
-    private val openToBrowser: (url: String, mode: BrowsingMode?) -> Unit
+    private val openToBrowser: (url: String, mode: BrowsingMode?) -> Unit,
 ) : RecentlyClosedController {
     override fun handleOpen(tab: TabState, mode: BrowsingMode?) {
         openToBrowser(tab.url, mode)
@@ -91,7 +91,7 @@ class DefaultRecentlyClosedController(
         RecentlyClosedTabs.showFullHistory.record(NoExtras())
         navController.navigate(
             RecentlyClosedFragmentDirections.actionGlobalHistoryFragment(),
-            NavOptions.Builder().setPopUpTo(R.id.historyFragment, true).build()
+            NavOptions.Builder().setPopUpTo(R.id.historyFragment, true).build(),
         )
     }
 
@@ -100,8 +100,8 @@ class DefaultRecentlyClosedController(
         val shareData = tabs.map { ShareData(url = it.url, title = it.title) }
         navController.navigate(
             RecentlyClosedFragmentDirections.actionGlobalShareFragment(
-                data = shareData.toTypedArray()
-            )
+                data = shareData.toTypedArray(),
+            ),
         )
     }
 
@@ -111,11 +111,11 @@ class DefaultRecentlyClosedController(
             tabsUseCases.restore(item, recentlyClosedTabsStorage.engineStateStorage())
 
             browserStore.dispatch(
-                RecentlyClosedAction.RemoveClosedTabAction(item)
+                RecentlyClosedAction.RemoveClosedTabAction(item),
             )
 
             activity.openToBrowser(
-                from = BrowserDirection.FromRecentlyClosed
+                from = BrowserDirection.FromRecentlyClosed,
             )
         }
     }

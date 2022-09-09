@@ -70,7 +70,7 @@ class EditLoginFragment : Fragment(R.layout.fragment_edit_login) {
 
         loginsFragmentStore = StoreProvider.get(this) {
             LoginsFragmentStore(
-                createInitialLoginsListState(requireContext().settings())
+                createInitialLoginsListState(requireContext().settings()),
             )
         }
 
@@ -79,8 +79,8 @@ class EditLoginFragment : Fragment(R.layout.fragment_edit_login) {
                 passwordsStorage = requireContext().components.core.passwordsStorage,
                 lifecycleScope = lifecycleScope,
                 navController = findNavController(),
-                loginsFragmentStore = loginsFragmentStore
-            )
+                loginsFragmentStore = loginsFragmentStore,
+            ),
         )
 
         loginsFragmentStore.dispatch(LoginsAction.UpdateCurrentLogin(args.savedLoginItem))
@@ -109,7 +109,8 @@ class EditLoginFragment : Fragment(R.layout.fragment_edit_login) {
         binding.hostnameText.isFocusable = false
         binding.usernameText.inputType = InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS
         // TODO: extend PasswordTransformationMethod() to change bullets to asterisks
-        binding.passwordText.inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD
+        binding.passwordText.inputType =
+            InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD
         binding.passwordText.compoundDrawablePadding =
             requireContext().resources
                 .getDimensionPixelOffset(R.dimen.saved_logins_end_icon_drawable_padding)
@@ -147,59 +148,73 @@ class EditLoginFragment : Fragment(R.layout.fragment_edit_login) {
             }
         }
 
-        binding.usernameText.addTextChangedListener(object : TextWatcher {
-            override fun afterTextChanged(u: Editable?) {
-                updateUsernameField()
-                findDuplicate()
-                setSaveButtonState()
-            }
-
-            override fun beforeTextChanged(u: CharSequence?, start: Int, count: Int, after: Int) {
-                // NOOP
-            }
-
-            override fun onTextChanged(u: CharSequence?, start: Int, before: Int, count: Int) {
-                // NOOP
-            }
-        })
-
-        binding.passwordText.addTextChangedListener(object : TextWatcher {
-            override fun afterTextChanged(p: Editable?) {
-                when {
-                    p.toString().isEmpty() -> {
-                        passwordChanged = true
-                        binding.revealPasswordButton.isVisible = false
-                        binding.clearPasswordTextButton.isVisible = false
-                        setPasswordError()
-                    }
-                    p.toString() == oldLogin.password -> {
-                        passwordChanged = false
-                        validPassword = true
-                        binding.inputLayoutPassword.error = null
-                        binding.inputLayoutPassword.errorIconDrawable = null
-                        binding.revealPasswordButton.isVisible = true
-                        binding.clearPasswordTextButton.isVisible = true
-                    }
-                    else -> {
-                        passwordChanged = true
-                        validPassword = true
-                        binding.inputLayoutPassword.error = null
-                        binding.inputLayoutPassword.errorIconDrawable = null
-                        binding.revealPasswordButton.isVisible = true
-                        binding.clearPasswordTextButton.isVisible = true
-                    }
+        binding.usernameText.addTextChangedListener(
+            object : TextWatcher {
+                override fun afterTextChanged(u: Editable?) {
+                    updateUsernameField()
+                    findDuplicate()
+                    setSaveButtonState()
                 }
-                setSaveButtonState()
-            }
 
-            override fun beforeTextChanged(p: CharSequence?, start: Int, count: Int, after: Int) {
-                // NOOP
-            }
+                override fun beforeTextChanged(
+                    u: CharSequence?,
+                    start: Int,
+                    count: Int,
+                    after: Int,
+                ) {
+                    // NOOP
+                }
 
-            override fun onTextChanged(p: CharSequence?, start: Int, before: Int, count: Int) {
-                // NOOP
-            }
-        })
+                override fun onTextChanged(u: CharSequence?, start: Int, before: Int, count: Int) {
+                    // NOOP
+                }
+            },
+        )
+
+        binding.passwordText.addTextChangedListener(
+            object : TextWatcher {
+                override fun afterTextChanged(p: Editable?) {
+                    when {
+                        p.toString().isEmpty() -> {
+                            passwordChanged = true
+                            binding.revealPasswordButton.isVisible = false
+                            binding.clearPasswordTextButton.isVisible = false
+                            setPasswordError()
+                        }
+                        p.toString() == oldLogin.password -> {
+                            passwordChanged = false
+                            validPassword = true
+                            binding.inputLayoutPassword.error = null
+                            binding.inputLayoutPassword.errorIconDrawable = null
+                            binding.revealPasswordButton.isVisible = true
+                            binding.clearPasswordTextButton.isVisible = true
+                        }
+                        else -> {
+                            passwordChanged = true
+                            validPassword = true
+                            binding.inputLayoutPassword.error = null
+                            binding.inputLayoutPassword.errorIconDrawable = null
+                            binding.revealPasswordButton.isVisible = true
+                            binding.clearPasswordTextButton.isVisible = true
+                        }
+                    }
+                    setSaveButtonState()
+                }
+
+                override fun beforeTextChanged(
+                    p: CharSequence?,
+                    start: Int,
+                    count: Int,
+                    after: Int,
+                ) {
+                    // NOOP
+                }
+
+                override fun onTextChanged(p: CharSequence?, start: Int, before: Int, count: Int) {
+                    // NOOP
+                }
+            },
+        )
     }
 
     private fun findDuplicate() {
@@ -233,8 +248,11 @@ class EditLoginFragment : Fragment(R.layout.fragment_edit_login) {
                 layout.setErrorIconDrawable(R.drawable.mozac_ic_warning_with_bottom_padding)
                 layout.setErrorIconTintList(
                     ColorStateList.valueOf(
-                        ContextCompat.getColor(requireContext(), R.color.fx_mobile_text_color_warning)
-                    )
+                        ContextCompat.getColor(
+                            requireContext(),
+                            R.color.fx_mobile_text_color_warning,
+                        ),
+                    ),
                 )
                 clearButton.isVisible = false
             }
@@ -250,8 +268,8 @@ class EditLoginFragment : Fragment(R.layout.fragment_edit_login) {
             layout.setErrorIconDrawable(R.drawable.mozac_ic_warning_with_bottom_padding)
             layout.setErrorIconTintList(
                 ColorStateList.valueOf(
-                    ContextCompat.getColor(requireContext(), R.color.fx_mobile_text_color_warning)
-                )
+                    ContextCompat.getColor(requireContext(), R.color.fx_mobile_text_color_warning),
+                ),
             )
         }
     }
@@ -268,14 +286,15 @@ class EditLoginFragment : Fragment(R.layout.fragment_edit_login) {
         val saveButton = menu.findItem(R.id.save_login_button)
         val changesMadeWithNoErrors =
             validUsername && validPassword && (usernameChanged || passwordChanged)
-        saveButton.isEnabled = changesMadeWithNoErrors // don't enable saving until something has been changed
+        saveButton.isEnabled =
+            changesMadeWithNoErrors // don't enable saving until something has been changed
     }
 
     override fun onPause() {
         redirectToReAuth(
             listOf(R.id.loginDetailFragment, R.id.savedLoginsFragment),
             findNavController().currentDestination?.id,
-            R.id.editLoginFragment
+            R.id.editLoginFragment,
         )
         super.onPause()
     }
@@ -286,7 +305,7 @@ class EditLoginFragment : Fragment(R.layout.fragment_edit_login) {
             interactor.onSaveLogin(
                 args.savedLoginItem.guid,
                 binding.usernameText.text.toString(),
-                binding.passwordText.text.toString()
+                binding.passwordText.text.toString(),
             )
             Logins.saveEditedLogin.record(NoExtras())
             true

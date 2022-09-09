@@ -25,7 +25,7 @@ typealias MozSearchEngine = SearchEngine
  */
 class SearchSelectorMenu(
     private val context: Context,
-    private val interactor: ToolbarInteractor
+    private val interactor: ToolbarInteractor,
 ) {
 
     /**
@@ -55,13 +55,13 @@ class SearchSelectorMenu(
                 start = DrawableMenuIcon(
                     drawable = AppCompatResources.getDrawable(
                         context,
-                        R.drawable.mozac_ic_settings
+                        R.drawable.mozac_ic_settings,
                     ),
-                    tint = context.getColorFromAttr(R.attr.textPrimary)
-                )
+                    tint = context.getColorFromAttr(R.attr.textPrimary),
+                ),
             ) {
                 interactor.onMenuItemTapped(Item.SearchSettings)
-            }
+            },
         )
     }
 }

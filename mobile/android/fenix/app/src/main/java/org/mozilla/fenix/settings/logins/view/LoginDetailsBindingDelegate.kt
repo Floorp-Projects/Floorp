@@ -11,7 +11,7 @@ import org.mozilla.fenix.settings.logins.LoginsListState
  * View that contains and configures the Login Details
  */
 class LoginDetailsBindingDelegate(
-    private val binding: FragmentLoginDetailBinding
+    private val binding: FragmentLoginDetailBinding,
 ) {
     fun update(login: LoginsListState) {
         binding.webAddressText.text = login.currentItem?.origin

@@ -51,8 +51,8 @@ class CreditCardsManagementViewTest {
         creditCardsView.update(
             AutofillFragmentState(
                 creditCards = creditCards,
-                isLoading = false
-            )
+                isLoading = false,
+            ),
         )
 
         assertFalse(componentCreditCardsBinding.progressBar.isVisible)

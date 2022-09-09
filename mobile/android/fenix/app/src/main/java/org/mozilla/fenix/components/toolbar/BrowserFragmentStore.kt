@@ -31,7 +31,7 @@ sealed class BrowserFragmentAction : Action
  */
 private fun browserStateReducer(
     state: BrowserFragmentState,
-    action: BrowserFragmentAction
+    action: BrowserFragmentAction,
 ): BrowserFragmentState {
     return when {
         else -> BrowserFragmentState()

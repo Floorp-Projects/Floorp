@@ -33,7 +33,7 @@ fun ClickableSubstringLink(
     textColor: Color,
     clickableStartIndex: Int,
     clickableEndIndex: Int,
-    onClick: () -> Unit
+    onClick: () -> Unit,
 ) {
     val annotatedText = buildAnnotatedString {
         append(text)
@@ -41,32 +41,32 @@ fun ClickableSubstringLink(
         addStyle(
             SpanStyle(textColor),
             start = 0,
-            end = clickableStartIndex
+            end = clickableStartIndex,
         )
 
         addStyle(
             SpanStyle(color = FirefoxTheme.colors.textAccent),
             start = clickableStartIndex,
-            end = clickableEndIndex
+            end = clickableEndIndex,
         )
 
         addStyle(
             SpanStyle(textColor),
             start = clickableEndIndex,
-            end = text.length
+            end = text.length,
         )
 
         addStyle(
             SpanStyle(fontSize = 12.sp),
             start = 0,
-            end = clickableEndIndex
+            end = clickableEndIndex,
         )
 
         addStringAnnotation(
             tag = "link",
             annotation = "",
             start = clickableStartIndex,
-            end = clickableEndIndex
+            end = clickableEndIndex,
         )
     }
 
@@ -78,7 +78,7 @@ fun ClickableSubstringLink(
                 .firstOrNull()?.let {
                     onClick()
                 }
-        }
+        },
     )
 }
 
@@ -93,7 +93,7 @@ private fun ClickableSubstringTextPreview() {
                 text = text,
                 textColor = FirefoxTheme.colors.textPrimary,
                 clickableStartIndex = text.indexOf("link"),
-                clickableEndIndex = text.length
+                clickableEndIndex = text.length,
             ) { }
         }
     }

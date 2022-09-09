@@ -22,7 +22,7 @@ import org.mozilla.fenix.library.downloads.DownloadItemMenu
 class DownloadsListItemViewHolder(
     view: View,
     private val downloadInteractor: DownloadInteractor,
-    private val selectionHolder: SelectionHolder<DownloadItem>
+    private val selectionHolder: SelectionHolder<DownloadItem>,
 ) : RecyclerView.ViewHolder(view) {
 
     private var item: DownloadItem? = null
@@ -39,7 +39,7 @@ class DownloadsListItemViewHolder(
     fun bind(
         item: DownloadItem,
         mode: DownloadFragmentState.Mode,
-        isPendingDeletion: Boolean = false
+        isPendingDeletion: Boolean = false,
     ) {
         binding.downloadLayout.visibility = if (isPendingDeletion) {
             View.GONE

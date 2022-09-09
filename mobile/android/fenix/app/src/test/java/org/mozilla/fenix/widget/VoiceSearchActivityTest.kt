@@ -63,7 +63,7 @@ class VoiceSearchActivityTest {
         shadowPackageManager.addActivityIfNotPresent(component)
         shadowPackageManager.addIntentFilterForActivity(
             component,
-            IntentFilter(ACTION_RECOGNIZE_SPEECH).apply { addCategory(Intent.CATEGORY_DEFAULT) }
+            IntentFilter(ACTION_RECOGNIZE_SPEECH).apply { addCategory(Intent.CATEGORY_DEFAULT) },
         )
     }
 
@@ -79,7 +79,7 @@ class VoiceSearchActivityTest {
         assertEquals(ACTION_RECOGNIZE_SPEECH, intentForResult.intent.action)
         assertEquals(
             LANGUAGE_MODEL_FREE_FORM,
-            intentForResult.intent.getStringExtra(EXTRA_LANGUAGE_MODEL)
+            intentForResult.intent.getStringExtra(EXTRA_LANGUAGE_MODEL),
         )
     }
 
@@ -153,7 +153,7 @@ class VoiceSearchActivityTest {
         shadow.receiveResult(
             shadow.peekNextStartedActivityForResult().intent,
             RESULT_OK,
-            resultIntent
+            resultIntent,
         )
 
         val browserIntent = shadow.peekNextStartedActivity()
@@ -161,7 +161,7 @@ class VoiceSearchActivityTest {
         assertTrue(activity.isFinishing)
         assertEquals(
             ComponentName(activity, IntentReceiverActivity::class.java),
-            browserIntent.component
+            browserIntent.component,
         )
         assertEquals("hello world", browserIntent.getStringExtra(SPEECH_PROCESSING))
         assertTrue(browserIntent.getBooleanExtra(OPEN_TO_BROWSER_AND_LOAD, false))
@@ -178,7 +178,7 @@ class VoiceSearchActivityTest {
         shadow.receiveResult(
             shadow.peekNextStartedActivityForResult().intent,
             Activity.RESULT_CANCELED,
-            resultIntent
+            resultIntent,
         )
 
         assertTrue(activity.isFinishing)

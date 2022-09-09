@@ -53,7 +53,7 @@ class CollectionCreationTabListAdapterTest {
 
         adapter.updateData(
             tabs = listOf(tab),
-            selectedTabs = emptySet()
+            selectedTabs = emptySet(),
         )
         assertEquals(1, adapter.itemCount)
     }
@@ -64,7 +64,7 @@ class CollectionCreationTabListAdapterTest {
         adapter.updateData(
             tabs = listOf(mozillaTab),
             selectedTabs = emptySet(),
-            hideCheckboxes = false
+            hideCheckboxes = false,
         )
 
         val holder = adapter.createViewHolder(FrameLayout(testContext), 0)
@@ -95,7 +95,7 @@ class CollectionCreationTabListAdapterTest {
         adapter.updateData(
             tabs = listOf(mozillaTab),
             selectedTabs = setOf(mozillaTab),
-            hideCheckboxes = true
+            hideCheckboxes = true,
         )
 
         val holder = adapter.createViewHolder(FrameLayout(testContext), 0)
@@ -117,7 +117,7 @@ class CollectionCreationTabListAdapterTest {
         adapter.registerAdapterDataObserver(observer)
         adapter.updateData(
             tabs = listOf(tab),
-            selectedTabs = emptySet()
+            selectedTabs = emptySet(),
         )
 
         verify { observer.onItemRangeInserted(0, 1) }

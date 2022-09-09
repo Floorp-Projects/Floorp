@@ -18,7 +18,7 @@ import org.mozilla.fenix.R
 class SwitchWithDescription @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,
-    defStyleAttr: Int = 0
+    defStyleAttr: Int = 0,
 ) : ConstraintLayout(context, attrs, defStyleAttr) {
 
     lateinit var switchWidget: SwitchCompat
@@ -31,25 +31,25 @@ class SwitchWithDescription @JvmOverloads constructor(
         context.withStyledAttributes(attrs, R.styleable.SwitchWithDescription, defStyleAttr, 0) {
             val id = getResourceId(
                 R.styleable.SwitchWithDescription_switchIcon,
-                R.drawable.ic_tracking_protection
+                R.drawable.ic_tracking_protection,
             )
             switchWidget = findViewById(R.id.switch_widget)
             trackingProtectionCategoryTitle = findViewById(R.id.trackingProtectionCategoryTitle)
             trackingProtectionCategoryItemDescription = findViewById(R.id.trackingProtectionCategoryItemDescription)
             switchWidget.putCompoundDrawablesRelativeWithIntrinsicBounds(
-                start = AppCompatResources.getDrawable(context, id)
+                start = AppCompatResources.getDrawable(context, id),
             )
             trackingProtectionCategoryTitle.text = resources.getString(
                 getResourceId(
                     R.styleable.SwitchWithDescription_switchTitle,
-                    R.string.preference_enhanced_tracking_protection
-                )
+                    R.string.preference_enhanced_tracking_protection,
+                ),
             )
             trackingProtectionCategoryItemDescription.text = resources.getString(
                 getResourceId(
                     R.styleable.SwitchWithDescription_switchDescription,
-                    R.string.preference_enhanced_tracking_protection_explanation
-                )
+                    R.string.preference_enhanced_tracking_protection_explanation,
+                ),
             )
         }
     }

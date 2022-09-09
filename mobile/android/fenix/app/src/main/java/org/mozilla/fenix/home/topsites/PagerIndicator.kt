@@ -48,7 +48,7 @@ class PagerIndicator : LinearLayout {
                     if (!isLast) {
                         MarginLayoutParamsCompat.setMarginEnd(this, dpToPx(DOT_MARGIN))
                     }
-                }
+                },
             )
         }
     }

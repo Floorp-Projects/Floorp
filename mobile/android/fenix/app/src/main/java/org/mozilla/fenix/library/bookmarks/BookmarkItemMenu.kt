@@ -16,7 +16,7 @@ import org.mozilla.fenix.R
 
 class BookmarkItemMenu(
     private val context: Context,
-    private val onItemTapped: (Item) -> Unit
+    private val onItemTapped: (Item) -> Unit,
 ) {
 
     enum class Item {
@@ -25,7 +25,8 @@ class BookmarkItemMenu(
         Share,
         OpenInNewTab,
         OpenInPrivateTab,
-        Delete;
+        Delete,
+        ;
     }
 
     val menuController: MenuController by lazy { BrowserMenuController() }
@@ -35,7 +36,7 @@ class BookmarkItemMenu(
         return listOfNotNull(
             if (itemType != BookmarkNodeType.SEPARATOR) {
                 TextMenuCandidate(
-                    text = context.getString(R.string.bookmark_menu_edit_button)
+                    text = context.getString(R.string.bookmark_menu_edit_button),
                 ) {
                     onItemTapped.invoke(Item.Edit)
                 }
@@ -44,7 +45,7 @@ class BookmarkItemMenu(
             },
             if (itemType == BookmarkNodeType.ITEM) {
                 TextMenuCandidate(
-                    text = context.getString(R.string.bookmark_menu_copy_button)
+                    text = context.getString(R.string.bookmark_menu_copy_button),
                 ) {
                     onItemTapped.invoke(Item.Copy)
                 }
@@ -53,7 +54,7 @@ class BookmarkItemMenu(
             },
             if (itemType == BookmarkNodeType.ITEM) {
                 TextMenuCandidate(
-                    text = context.getString(R.string.bookmark_menu_share_button)
+                    text = context.getString(R.string.bookmark_menu_share_button),
                 ) {
                     onItemTapped.invoke(Item.Share)
                 }
@@ -62,7 +63,7 @@ class BookmarkItemMenu(
             },
             if (itemType == BookmarkNodeType.ITEM) {
                 TextMenuCandidate(
-                    text = context.getString(R.string.bookmark_menu_open_in_new_tab_button)
+                    text = context.getString(R.string.bookmark_menu_open_in_new_tab_button),
                 ) {
                     onItemTapped.invoke(Item.OpenInNewTab)
                 }
@@ -71,7 +72,7 @@ class BookmarkItemMenu(
             },
             if (itemType == BookmarkNodeType.ITEM) {
                 TextMenuCandidate(
-                    text = context.getString(R.string.bookmark_menu_open_in_private_tab_button)
+                    text = context.getString(R.string.bookmark_menu_open_in_private_tab_button),
                 ) {
                     onItemTapped.invoke(Item.OpenInPrivateTab)
                 }
@@ -80,10 +81,10 @@ class BookmarkItemMenu(
             },
             TextMenuCandidate(
                 text = context.getString(R.string.bookmark_menu_delete_button),
-                textStyle = TextStyle(color = context.getColorFromAttr(R.attr.textWarning))
+                textStyle = TextStyle(color = context.getColorFromAttr(R.attr.textWarning)),
             ) {
                 onItemTapped.invoke(Item.Delete)
-            }
+            },
         )
     }
 

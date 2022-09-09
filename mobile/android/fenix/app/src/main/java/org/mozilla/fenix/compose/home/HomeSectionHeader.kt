@@ -41,13 +41,13 @@ import org.mozilla.fenix.wallpapers.Wallpaper
 fun HomeSectionHeader(
     headerText: String,
     description: String = "",
-    onShowAllClick: (() -> Unit)? = null
+    onShowAllClick: (() -> Unit)? = null,
 ) {
     if (inComposePreview) {
         HomeSectionHeaderContent(
             headerText = headerText,
             description = description,
-            onShowAllClick = onShowAllClick
+            onShowAllClick = onShowAllClick,
         )
     } else {
         val wallpaperState = components.appStore
@@ -96,7 +96,7 @@ private fun HomeSectionHeaderContent(
             textColor = textColor,
             modifier = Modifier
                 .weight(1f)
-                .wrapContentHeight(align = Alignment.Top)
+                .wrapContentHeight(align = Alignment.Top),
         )
 
         onShowAllClick?.let {
@@ -108,9 +108,9 @@ private fun HomeSectionHeaderContent(
                     },
                 style = TextStyle(
                     color = showAllTextColor,
-                    fontSize = 14.sp
+                    fontSize = 14.sp,
                 ),
-                onClick = { onShowAllClick() }
+                onClick = { onShowAllClick() },
             )
         }
     }

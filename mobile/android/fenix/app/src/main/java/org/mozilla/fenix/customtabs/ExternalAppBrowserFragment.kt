@@ -66,17 +66,17 @@ class ExternalAppBrowserFragment : BaseBrowserFragment(), UserInteractionHandler
                 activity = activity,
                 onItemTapped = { browserToolbarInteractor.onBrowserToolbarMenuItemTapped(it) },
                 isPrivate = tab.content.private,
-                shouldReverseItems = !activity.settings().shouldUseBottomToolbar
+                shouldReverseItems = !activity.settings().shouldUseBottomToolbar,
             ),
             owner = this,
-            view = view
+            view = view,
         )
 
         windowFeature.set(
             feature = CustomTabWindowFeature(
                 activity,
                 components.core.store,
-                customTabSessionId
+                customTabSessionId,
             ) { uri ->
                 val intent =
                     Intent.parseUri("${BuildConfig.DEEP_LINK_SCHEME}://open?url=$uri", 0)
@@ -89,7 +89,7 @@ class ExternalAppBrowserFragment : BaseBrowserFragment(), UserInteractionHandler
                 activity.startActivity(intent)
             },
             owner = this,
-            view = view
+            view = view,
         )
 
         hideToolbarFeature.set(
@@ -97,7 +97,7 @@ class ExternalAppBrowserFragment : BaseBrowserFragment(), UserInteractionHandler
                 store = requireComponents.core.store,
                 customTabsStore = requireComponents.core.customTabsStore,
                 tabId = customTabSessionId,
-                manifest = manifest
+                manifest = manifest,
             ) { toolbarVisible ->
                 browserToolbarView.view.isVisible = toolbarVisible
                 webAppToolbarShouldBeVisible = toolbarVisible
@@ -109,7 +109,7 @@ class ExternalAppBrowserFragment : BaseBrowserFragment(), UserInteractionHandler
                 }
             },
             owner = this,
-            view = toolbar
+            view = toolbar,
         )
 
         if (manifest != null) {
@@ -117,7 +117,7 @@ class ExternalAppBrowserFragment : BaseBrowserFragment(), UserInteractionHandler
                 WebAppActivityFeature(
                     activity,
                     components.core.icons,
-                    manifest
+                    manifest,
                 ),
                 ManifestUpdateFeature(
                     activity.applicationContext,
@@ -125,8 +125,8 @@ class ExternalAppBrowserFragment : BaseBrowserFragment(), UserInteractionHandler
                     requireComponents.core.webAppShortcutManager,
                     requireComponents.core.webAppManifestStorage,
                     customTabSessionId,
-                    manifest
-                )
+                    manifest,
+                ),
             )
             viewLifecycleOwner.lifecycle.addObserver(
                 WebAppSiteControlsFeature(
@@ -139,17 +139,17 @@ class ExternalAppBrowserFragment : BaseBrowserFragment(), UserInteractionHandler
                         requireComponents.core.store,
                         requireComponents.useCases.sessionUseCases.reload,
                         customTabSessionId,
-                        manifest
-                    )
-                )
+                        manifest,
+                    ),
+                ),
             )
         } else {
             viewLifecycleOwner.lifecycle.addObserver(
                 PoweredByNotification(
                     activity.applicationContext,
                     requireComponents.core.store,
-                    customTabSessionId
-                )
+                    customTabSessionId,
+                ),
             )
         }
     }
@@ -171,7 +171,7 @@ class ExternalAppBrowserFragment : BaseBrowserFragment(), UserInteractionHandler
                         gravity = getAppropriateLayoutGravity(),
                         certificateName = tab.content.securityInfo.issuer,
                         permissionHighlights = tab.content.permissionHighlights,
-                        isTrackingProtectionEnabled = tab.trackingProtection.enabled && !contains
+                        isTrackingProtectionEnabled = tab.trackingProtection.enabled && !contains,
                     )
                 nav(R.id.externalAppBrowserFragment, directions)
             }
@@ -180,12 +180,12 @@ class ExternalAppBrowserFragment : BaseBrowserFragment(), UserInteractionHandler
 
     override fun getContextMenuCandidates(
         context: Context,
-        view: View
+        view: View,
     ): List<ContextMenuCandidate> = CustomTabContextMenuCandidate.defaultCandidates(
         context,
         context.components.useCases.contextMenuUseCases,
         view,
-        FenixSnackbarDelegate(view)
+        FenixSnackbarDelegate(view),
     )
 
     companion object {

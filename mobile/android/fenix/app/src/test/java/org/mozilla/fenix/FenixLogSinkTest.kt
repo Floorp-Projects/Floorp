@@ -30,7 +30,7 @@ class FenixLogSinkTest {
         logSink.log(
             mozilla.components.support.base.log.Log.Priority.DEBUG,
             "test",
-            message = "test"
+            message = "test",
         )
         verify(exactly = 0) { Log.println(Log.DEBUG, "test", "test") }
     }
@@ -41,7 +41,7 @@ class FenixLogSinkTest {
         logSink.log(
             mozilla.components.support.base.log.Log.Priority.ERROR,
             "test",
-            message = "test"
+            message = "test",
         )
         verify(exactly = 1) { Log.println(Log.ERROR, "test", "test") }
     }
@@ -52,7 +52,7 @@ class FenixLogSinkTest {
         logSink.log(
             mozilla.components.support.base.log.Log.Priority.WARN,
             "test",
-            message = "test"
+            message = "test",
         )
         verify(exactly = 1) { Log.println(Log.WARN, "test", "test") }
     }
@@ -63,7 +63,7 @@ class FenixLogSinkTest {
         logSink.log(
             mozilla.components.support.base.log.Log.Priority.INFO,
             "test",
-            message = "test"
+            message = "test",
         )
         verify(exactly = 1) { Log.println(Log.INFO, "test", "test") }
     }
@@ -74,7 +74,7 @@ class FenixLogSinkTest {
         logSink.log(
             mozilla.components.support.base.log.Log.Priority.DEBUG,
             "test",
-            message = "test"
+            message = "test",
         )
         verify(exactly = 1) { Log.println(Log.DEBUG, "test", "test") }
     }

@@ -22,7 +22,7 @@ class CollectionCreationBottomBarView(
     private val layout: ViewGroup,
     private val iconButton: ImageButton,
     private val textView: TextView,
-    private val saveButton: Button
+    private val saveButton: Button,
 ) {
 
     fun update(step: SaveCollectionStep, state: CollectionCreationState) {
@@ -40,7 +40,7 @@ class CollectionCreationBottomBarView(
         iconButton.apply {
             val drawable = context.getDrawableWithTint(
                 R.drawable.ic_close,
-                ContextCompat.getColor(context, R.color.photonWhite)
+                ContextCompat.getColor(context, R.color.photonWhite),
             )
             setImageDrawable(drawable)
             contentDescription = context.getString(R.string.create_collection_close)
@@ -58,7 +58,7 @@ class CollectionCreationBottomBarView(
                     } else {
                         R.string.create_collection_save_to_collection_tabs_selected
                     },
-                    state.selectedTabs.size
+                    state.selectedTabs.size,
                 )
             }
         }
@@ -68,7 +68,7 @@ class CollectionCreationBottomBarView(
                 if (state.selectedTabCollection != null) {
                     interactor.selectCollection(
                         collection = state.selectedTabCollection,
-                        tabs = state.selectedTabs.toList()
+                        tabs = state.selectedTabs.toList(),
                     )
                 } else {
                     interactor.saveTabsToCollection(tabs = state.selectedTabs.toList())
@@ -87,7 +87,7 @@ class CollectionCreationBottomBarView(
         iconButton.apply {
             val drawable = context.getDrawableWithTint(
                 R.drawable.ic_new,
-                ContextCompat.getColor(context, R.color.photonWhite)
+                ContextCompat.getColor(context, R.color.photonWhite),
             )
             setImageDrawable(drawable)
             contentDescription = null

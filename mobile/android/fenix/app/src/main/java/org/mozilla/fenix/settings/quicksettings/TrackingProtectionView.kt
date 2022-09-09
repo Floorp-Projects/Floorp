@@ -44,14 +44,15 @@ interface TrackingProtectionInteractor {
 class TrackingProtectionView(
     val containerView: ViewGroup,
     val interactor: TrackingProtectionInteractor,
-    val settings: Settings
+    val settings: Settings,
 ) {
     private val context = containerView.context
+
     @VisibleForTesting
     internal val binding = QuicksettingsTrackingProtectionBinding.inflate(
         LayoutInflater.from(containerView.context),
         containerView,
-        true
+        true,
     )
     fun update(state: TrackingProtectionState) {
         bindTrackingProtectionInfo(state.isTrackingProtectionEnabled)

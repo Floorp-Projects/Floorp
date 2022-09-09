@@ -51,7 +51,7 @@ fun CFRPopupContent(
     indicatorArrowStartOffset: Dp,
     onDismiss: (Boolean) -> Unit,
     popupWidth: Dp = CFRPopup.DEFAULT_WIDTH.dp,
-    action: @Composable (() -> Unit) = {}
+    action: @Composable (() -> Unit) = {},
 ) {
     val popupShape = CFRPopupShape(
         indicatorDirection,
@@ -72,16 +72,15 @@ fun CFRPopupContent(
                     brush = Brush.linearGradient(
                         colors = listOf(
                             FirefoxTheme.colors.gradientEnd,
-                            FirefoxTheme.colors.gradientStart
+                            FirefoxTheme.colors.gradientStart,
                         ),
                         end = Offset(0f, Float.POSITIVE_INFINITY),
-                        start = Offset(Float.POSITIVE_INFINITY, 0f)
-                    )
+                        start = Offset(Float.POSITIVE_INFINITY, 0f),
+                    ),
                 )
                 .wrapContentHeight()
-                .width(popupWidth)
+                .width(popupWidth),
         ) {
-
             Column(
                 modifier = Modifier
                     .padding(
@@ -97,8 +96,8 @@ fun CFRPopupContent(
                                 CFRPopup.DEFAULT_INDICATOR_HEIGHT.dp
                             } else {
                                 0.dp
-                            }
-                    )
+                            },
+                    ),
             ) {
                 Text(
                     text = text,
@@ -106,7 +105,7 @@ fun CFRPopupContent(
                         end = 24.dp, // 8.dp extra padding to the "X" icon
                     ),
                     color = FirefoxTheme.colors.textOnColorPrimary,
-                    style = FirefoxTheme.typography.body2
+                    style = FirefoxTheme.typography.body2,
                 )
 
                 action()
@@ -119,9 +118,9 @@ fun CFRPopupContent(
                 .align(Alignment.TopEnd)
                 .padding(
                     top = if (indicatorDirection == CFRPopup.IndicatorDirection.UP) 14.dp else 0.dp,
-                    end = 6.dp
+                    end = 6.dp,
                 )
-                .size(48.dp)
+                .size(48.dp),
         ) {
             Icon(
                 painter = painterResource(drawable.mozac_ic_close_20),
@@ -132,7 +131,7 @@ fun CFRPopupContent(
                     .align(Alignment.TopCenter)
                     .padding(top = 10.dp)
                     .size(24.dp),
-                tint = FirefoxTheme.colors.iconOnColor
+                tint = FirefoxTheme.colors.iconOnColor,
             )
         }
     }
@@ -149,7 +148,7 @@ private fun CFRPopupAbovePreview() {
             text = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt",
             indicatorDirection = CFRPopup.IndicatorDirection.DOWN,
             indicatorArrowStartOffset = CFRPopup.DEFAULT_INDICATOR_START_OFFSET.dp,
-            onDismiss = { }
+            onDismiss = { },
         )
     }
 }
@@ -165,7 +164,7 @@ private fun CFRPopupBelowPreview() {
             text = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt",
             indicatorDirection = CFRPopup.IndicatorDirection.UP,
             indicatorArrowStartOffset = CFRPopup.DEFAULT_INDICATOR_START_OFFSET.dp,
-            onDismiss = { }
+            onDismiss = { },
         )
     }
 }

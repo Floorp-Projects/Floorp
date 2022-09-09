@@ -38,10 +38,10 @@ class CrashContentIntegrationTest {
         browserStore = BrowserStore(
             BrowserState(
                 tabs = listOf(
-                    createTab("url", id = sessionId)
+                    createTab("url", id = sessionId),
                 ),
-                selectedTabId = sessionId
-            )
+                selectedTabId = sessionId,
+            ),
         )
     }
 
@@ -66,7 +66,7 @@ class CrashContentIntegrationTest {
             components = components,
             settings = settings,
             navController = mockk(),
-            sessionId = sessionId
+            sessionId = sessionId,
         )
         val controllerCaptor = slot<CrashReporterController>()
         integration.start()

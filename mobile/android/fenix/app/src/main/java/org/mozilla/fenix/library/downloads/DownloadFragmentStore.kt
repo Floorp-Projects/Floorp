@@ -26,7 +26,7 @@ data class DownloadItem(
     val filePath: String,
     val size: String,
     val contentType: String?,
-    val status: DownloadState.Status
+    val status: DownloadState.Status,
 )
 
 /**
@@ -58,7 +58,7 @@ data class DownloadFragmentState(
     val items: List<DownloadItem>,
     val mode: Mode,
     val pendingDeletionIds: Set<String>,
-    val isDeletingItems: Boolean
+    val isDeletingItems: Boolean,
 ) : State {
     sealed class Mode {
         open val selectedItems = emptySet<DownloadItem>()
@@ -73,7 +73,7 @@ data class DownloadFragmentState(
  */
 private fun downloadStateReducer(
     state: DownloadFragmentState,
-    action: DownloadFragmentAction
+    action: DownloadFragmentAction,
 ): DownloadFragmentState {
     return when (action) {
         is DownloadFragmentAction.AddItemForRemoval ->
@@ -85,7 +85,7 @@ private fun downloadStateReducer(
                     DownloadFragmentState.Mode.Normal
                 } else {
                     DownloadFragmentState.Mode.Editing(selected)
-                }
+                },
             )
         }
         is DownloadFragmentAction.ExitEditMode -> state.copy(mode = DownloadFragmentState.Mode.Normal)
@@ -93,11 +93,11 @@ private fun downloadStateReducer(
         is DownloadFragmentAction.ExitDeletionMode -> state.copy(isDeletingItems = false)
         is DownloadFragmentAction.AddPendingDeletionSet ->
             state.copy(
-                pendingDeletionIds = state.pendingDeletionIds + action.itemIds
+                pendingDeletionIds = state.pendingDeletionIds + action.itemIds,
             )
         is DownloadFragmentAction.UndoPendingDeletionSet ->
             state.copy(
-                pendingDeletionIds = state.pendingDeletionIds - action.itemIds
+                pendingDeletionIds = state.pendingDeletionIds - action.itemIds,
             )
     }
 }

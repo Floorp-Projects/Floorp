@@ -17,7 +17,7 @@ import org.mozilla.fenix.ext.getIconColor
 import org.mozilla.fenix.utils.view.ViewHolder
 
 class SaveCollectionListAdapter(
-    private val interactor: CollectionCreationInteractor
+    private val interactor: CollectionCreationInteractor,
 ) : RecyclerView.Adapter<CollectionViewHolder>() {
 
     private var tabCollections = listOf<TabCollection>()
@@ -27,7 +27,7 @@ class SaveCollectionListAdapter(
         val binding = CollectionsListItemBinding.inflate(
             LayoutInflater.from(parent.context),
             parent,
-            false
+            false,
         )
 
         return CollectionViewHolder(binding)

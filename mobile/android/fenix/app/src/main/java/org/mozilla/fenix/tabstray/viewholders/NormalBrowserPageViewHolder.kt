@@ -59,7 +59,7 @@ class NormalBrowserPageViewHolder(
         get() = itemView.resources.getString(R.string.no_open_tabs_description)
 
     override fun bind(
-        adapter: RecyclerView.Adapter<out RecyclerView.ViewHolder>
+        adapter: RecyclerView.Adapter<out RecyclerView.ViewHolder>,
     ) {
         val concatAdapter = adapter as ConcatAdapter
         val browserAdapter = concatAdapter.browserAdapter
@@ -76,7 +76,7 @@ class NormalBrowserPageViewHolder(
      */
     override fun scrollToTab(
         adapter: RecyclerView.Adapter<out RecyclerView.ViewHolder>,
-        layoutManager: RecyclerView.LayoutManager
+        layoutManager: RecyclerView.LayoutManager,
     ) {
         val concatAdapter = adapter as ConcatAdapter
         val browserAdapter = concatAdapter.browserAdapter
@@ -139,7 +139,7 @@ class NormalBrowserPageViewHolder(
 
     private fun setupLayoutManager(
         context: Context,
-        concatAdapter: ConcatAdapter
+        concatAdapter: ConcatAdapter,
     ): GridLayoutManager {
         val inactiveTabAdapter = concatAdapter.inactiveTabsAdapter
         val numberOfColumns = containerView.context.defaultBrowserLayoutColumns

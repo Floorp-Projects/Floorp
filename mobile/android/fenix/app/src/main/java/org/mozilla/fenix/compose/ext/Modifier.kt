@@ -26,7 +26,7 @@ fun Modifier.dashedBorder(
     cornerRadius: Dp,
     dashHeight: Dp,
     dashWidth: Dp,
-    dashGap: Dp = dashWidth
+    dashGap: Dp = dashWidth,
 ) = this.then(
     drawBehind {
         val cornerRadiusPx = cornerRadius.toPx()
@@ -37,14 +37,15 @@ fun Modifier.dashedBorder(
         val dashedStroke = Stroke(
             width = borderHeightPx,
             pathEffect = PathEffect.dashPathEffect(
-                floatArrayOf(dashWidthPx, dashGapPx), 0f
-            )
+                floatArrayOf(dashWidthPx, dashGapPx),
+                0f,
+            ),
         )
 
         drawRoundRect(
             color = color,
             cornerRadius = CornerRadius(cornerRadiusPx),
-            style = dashedStroke
+            style = dashedStroke,
         )
-    }
+    },
 )

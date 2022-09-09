@@ -26,7 +26,7 @@ import mozilla.components.support.base.log.logger.Logger
  * This [Middleware] reacts to various browsing events and records history metadata as needed.
  */
 class HistoryMetadataMiddleware(
-    private val historyMetadataService: HistoryMetadataService
+    private val historyMetadataService: HistoryMetadataService,
 ) : Middleware<BrowserState, BrowserAction> {
 
     private val logger = Logger("HistoryMetadataMiddleware")
@@ -39,7 +39,7 @@ class HistoryMetadataMiddleware(
     override fun invoke(
         context: MiddlewareContext<BrowserState, BrowserAction>,
         next: (BrowserAction) -> Unit,
-        action: BrowserAction
+        action: BrowserAction,
     ) {
         // Pre process actions
         when (action) {
@@ -137,7 +137,7 @@ class HistoryMetadataMiddleware(
 
     private fun createHistoryMetadataIfNeeded(
         context: MiddlewareContext<BrowserState, BrowserAction>,
-        tab: TabSessionState
+        tab: TabSessionState,
     ) {
         // When history state is ready, we can record metadata for this page.
         val knownHistoryMetadata = tab.historyMetadata
@@ -153,7 +153,7 @@ class HistoryMetadataMiddleware(
     @Suppress("ComplexMethod")
     private fun createHistoryMetadata(
         context: MiddlewareContext<BrowserState, BrowserAction>,
-        tab: TabSessionState
+        tab: TabSessionState,
     ) {
         val tabParent = tab.getParent(context.store)
         val previousUrlIndex = tab.content.history.currentIndex - 1

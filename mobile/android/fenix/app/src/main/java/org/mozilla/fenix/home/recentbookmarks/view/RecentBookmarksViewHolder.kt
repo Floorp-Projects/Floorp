@@ -42,9 +42,9 @@ class RecentBookmarksViewHolder(
             menuItems = listOf(
                 RecentBookmarksMenuItem(
                     stringResource(id = R.string.recently_saved_menu_item_remove),
-                    onClick = { bookmark -> interactor.onRecentBookmarkRemoved(bookmark) }
-                )
-            )
+                    onClick = { bookmark -> interactor.onRecentBookmarkRemoved(bookmark) },
+                ),
+            ),
         )
     }
 }

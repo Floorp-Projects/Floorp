@@ -53,7 +53,7 @@ class RecentTabControllerTest {
     @Before
     fun setup() {
         store = BrowserStore(
-            BrowserState()
+            BrowserState(),
         )
         controller = spyk(
             DefaultRecentTabsController(
@@ -61,7 +61,7 @@ class RecentTabControllerTest {
                 navController = navController,
                 store = store,
                 appStore = appStore,
-            )
+            ),
         )
         every { navController.navigateUp() } returns true
     }
@@ -77,7 +77,7 @@ class RecentTabControllerTest {
 
         val tab = createTab(
             url = "https://mozilla.org",
-            title = "Mozilla"
+            title = "Mozilla",
         )
         store.dispatch(TabListAction.AddTabAction(tab)).joinBlocking()
         store.dispatch(TabListAction.SelectTabAction(tab.id)).joinBlocking()
@@ -102,8 +102,9 @@ class RecentTabControllerTest {
         }
 
         val inProgressMediaTab = createTab(
-            url = "mediaUrl", id = "2",
-            lastMediaAccessState = LastMediaAccessState("https://mozilla.com", 123, true)
+            url = "mediaUrl",
+            id = "2",
+            lastMediaAccessState = LastMediaAccessState("https://mozilla.com", 123, true),
         )
 
         store.dispatch(TabListAction.AddTabAction(inProgressMediaTab)).joinBlocking()
@@ -132,7 +133,7 @@ class RecentTabControllerTest {
         verify {
             controller.dismissSearchDialogIfDisplayed()
             navController.navigate(
-                match<NavDirections> { it.actionId == R.id.action_global_tabsTrayFragment }
+                match<NavDirections> { it.actionId == R.id.action_global_tabsTrayFragment },
             )
         }
         verify(exactly = 0) {
@@ -156,7 +157,7 @@ class RecentTabControllerTest {
             controller.dismissSearchDialogIfDisplayed()
             navController.navigateUp()
             navController.navigate(
-                match<NavDirections> { it.actionId == R.id.action_global_tabsTrayFragment }
+                match<NavDirections> { it.actionId == R.id.action_global_tabsTrayFragment },
             )
         }
 

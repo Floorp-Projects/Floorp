@@ -36,7 +36,7 @@ class HistoryMetadataGroupItemViewHolderTest {
         visitedAt = 0,
         historyTimeGroup = HistoryItemTimeGroup.timeGroupForTimestamp(0),
         totalViewTime = 0,
-        historyMetadataKey = HistoryMetadataKey("http://www.mozilla.com", "mozilla", null)
+        historyMetadataKey = HistoryMetadataKey("http://www.mozilla.com", "mozilla", null),
     )
 
     @Before

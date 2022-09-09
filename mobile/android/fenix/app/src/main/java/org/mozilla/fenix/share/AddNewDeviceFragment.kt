@@ -33,10 +33,10 @@ class AddNewDeviceFragment : Fragment(R.layout.fragment_add_new_device) {
             (activity as HomeActivity).openToBrowserAndLoad(
                 searchTermOrURL = SupportUtils.getSumoURLForTopic(
                     requireContext(),
-                    SupportUtils.SumoTopic.SEND_TABS
+                    SupportUtils.SumoTopic.SEND_TABS,
                 ),
                 newTab = true,
-                from = BrowserDirection.FromAddNewDeviceFragment
+                from = BrowserDirection.FromAddNewDeviceFragment,
             )
         }
 

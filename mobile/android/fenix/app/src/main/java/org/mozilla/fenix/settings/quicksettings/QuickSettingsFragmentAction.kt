@@ -34,7 +34,7 @@ sealed class WebsitePermissionAction(open val updatedFeature: PhoneFeature) : Qu
     class TogglePermission(
         override val updatedFeature: PhoneFeature,
         val updatedStatus: String,
-        val updatedEnabledStatus: Boolean
+        val updatedEnabledStatus: Boolean,
     ) : WebsitePermissionAction(updatedFeature)
 
     /**
@@ -44,7 +44,7 @@ sealed class WebsitePermissionAction(open val updatedFeature: PhoneFeature) : Qu
      * Allows to easily identify which permission changed
      */
     class ChangeAutoplay(
-        val autoplayValue: AutoplayValue
+        val autoplayValue: AutoplayValue,
     ) : WebsitePermissionAction(PhoneFeature.AUTOPLAY)
 }
 

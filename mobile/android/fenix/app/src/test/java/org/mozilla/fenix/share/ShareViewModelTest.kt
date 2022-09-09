@@ -74,7 +74,7 @@ class ShareViewModelTest {
         viewModel = spyk(
             ShareViewModel(application).apply {
                 this.ioDispatcher = testIoDispatcher
-            }
+            },
         )
     }
 
@@ -87,7 +87,7 @@ class ShareViewModelTest {
     @Test
     fun `loadDevicesAndApps`() = runTestOnMain {
         val appOptions = listOf(
-            AppShareOption("Label", mockk(), "Package", "Activity")
+            AppShareOption("Label", mockk(), "Package", "Activity"),
         )
 
         val appEntity = mockk<RecentApp>()
@@ -105,7 +105,7 @@ class ShareViewModelTest {
         verify {
             connectivityManager.registerNetworkCallback(
                 any(),
-                any<ConnectivityManager.NetworkCallback>()
+                any<ConnectivityManager.NetworkCallback>(),
             )
         }
 
@@ -123,11 +123,11 @@ class ShareViewModelTest {
         val info = listOf(
             createResolveInfo("App 0", icon1, "package 0", "activity 0"),
             createResolveInfo("Self", mockk(), packageName, "activity self"),
-            createResolveInfo("App 1", icon2, "package 1", "activity 1")
+            createResolveInfo("App 1", icon2, "package 1", "activity 1"),
         )
         val apps = listOf(
             AppShareOption("App 0", icon1, "package 0", "activity 0"),
-            AppShareOption("App 1", icon2, "package 1", "activity 1")
+            AppShareOption("App 1", icon2, "package 1", "activity 1"),
         )
         assertEquals(apps, viewModel.buildAppsList(info, application))
     }
@@ -157,14 +157,14 @@ class ShareViewModelTest {
 
         assertEquals(
             listOf(SyncShareOption.Reconnect),
-            viewModel.buildDeviceList(fxaAccountManager)
+            viewModel.buildDeviceList(fxaAccountManager),
         )
     }
 
     @Test
     fun `GIVEN only one app THEN show copy to clipboard before the app`() = runTestOnMain {
         val appOptions = listOf(
-            AppShareOption("Label", mockk(), "Package", "Activity")
+            AppShareOption("Label", mockk(), "Package", "Activity"),
         )
 
         val appEntity = mockk<RecentApp>()
@@ -204,7 +204,7 @@ class ShareViewModelTest {
         label: String,
         icon: Drawable,
         packageName: String,
-        name: String
+        name: String,
     ): ResolveInfo {
         val info = ResolveInfo().apply {
             activityInfo = ActivityInfo()

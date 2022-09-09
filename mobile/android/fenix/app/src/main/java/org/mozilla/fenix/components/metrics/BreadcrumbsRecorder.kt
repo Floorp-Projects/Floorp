@@ -22,7 +22,7 @@ import mozilla.components.lib.crash.CrashReporter
 class BreadcrumbsRecorder(
     private val crashReporter: CrashReporter,
     private val navController: NavController,
-    private val getBreadcrumbMessage: (NavDestination) -> String
+    private val getBreadcrumbMessage: (NavDestination) -> String,
 ) : NavController.OnDestinationChangedListener, DefaultLifecycleObserver {
 
     override fun onCreate(owner: LifecycleOwner) {
@@ -39,14 +39,14 @@ class BreadcrumbsRecorder(
     override fun onDestinationChanged(
         controller: NavController,
         destination: NavDestination,
-        arguments: Bundle?
+        arguments: Bundle?,
     ) {
         crashReporter.recordCrashBreadcrumb(
             Breadcrumb(
                 message = getBreadcrumbMessage(destination),
                 category = "DestinationChanged",
-                level = Breadcrumb.Level.INFO
-            )
+                level = Breadcrumb.Level.INFO,
+            ),
         )
     }
 }

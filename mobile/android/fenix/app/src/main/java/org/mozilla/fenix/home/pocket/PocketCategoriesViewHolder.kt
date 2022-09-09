@@ -38,7 +38,7 @@ internal const val POCKET_CATEGORIES_SELECTED_AT_A_TIME_COUNT = 8
 class PocketCategoriesViewHolder(
     composeView: ComposeView,
     viewLifecycleOwner: LifecycleOwner,
-    private val interactor: PocketStoriesInteractor
+    private val interactor: PocketStoriesInteractor,
 ) : ComposeViewHolder(composeView, viewLifecycleOwner) {
 
     @Composable
@@ -63,7 +63,7 @@ class PocketCategoriesViewHolder(
             PocketTopics(
                 categories = categories ?: emptyList(),
                 categoriesSelections = categoriesSelections ?: emptyList(),
-                onCategoryClick = interactor::onCategoryClicked
+                onCategoryClick = interactor::onCategoryClicked,
             )
         }
     }
@@ -77,7 +77,7 @@ class PocketCategoriesViewHolder(
 private fun PocketTopics(
     categories: List<PocketRecommendedStoriesCategory> = emptyList(),
     categoriesSelections: List<PocketRecommendedStoriesSelectedCategory> = emptyList(),
-    onCategoryClick: (PocketRecommendedStoriesCategory) -> Unit
+    onCategoryClick: (PocketRecommendedStoriesCategory) -> Unit,
 ) {
     Column {
         HomeSectionHeader(
@@ -91,7 +91,7 @@ private fun PocketTopics(
             selections = categoriesSelections,
             onCategoryClick = onCategoryClick,
             modifier = Modifier
-                .fillMaxWidth()
+                .fillMaxWidth(),
         )
     }
 }
@@ -105,7 +105,7 @@ private fun PocketCategoriesViewHolderPreview() {
                 .split(" ")
                 .map { PocketRecommendedStoriesCategory(it) },
             categoriesSelections = emptyList(),
-            onCategoryClick = {}
+            onCategoryClick = {},
         )
     }
 }

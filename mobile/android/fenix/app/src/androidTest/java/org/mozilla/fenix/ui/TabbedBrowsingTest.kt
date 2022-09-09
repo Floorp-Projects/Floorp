@@ -287,7 +287,6 @@ class TabbedBrowsingTest {
 
     @Test
     fun verifyTabTrayNotShowingStateHalfExpanded() {
-
         navigationToolbar {
         }.openTabTray {
             verifyNoOpenTabsInNormalBrowsing()

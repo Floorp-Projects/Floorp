@@ -13,7 +13,8 @@ import org.mozilla.fenix.components.Components
 
 class HistorySearchFragmentStoreTest {
 
-    @MockK(relaxed = true) private lateinit var components: Components
+    @MockK(relaxed = true)
+    private lateinit var components: Components
 
     @Test
     fun `GIVEN createInitialHistorySearchFragmentState THEN query is empty`() {
@@ -21,7 +22,7 @@ class HistorySearchFragmentStoreTest {
 
         assertEquals(
             expected,
-            createInitialHistorySearchFragmentState()
+            createInitialHistorySearchFragmentState(),
         )
     }
 

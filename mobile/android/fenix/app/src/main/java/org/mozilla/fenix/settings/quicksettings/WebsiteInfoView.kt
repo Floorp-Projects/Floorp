@@ -29,7 +29,9 @@ class WebsiteInfoView(
     val interactor: WebSiteInfoInteractor,
 ) {
     val binding = QuicksettingsWebsiteInfoBinding.inflate(
-        LayoutInflater.from(container.context), container, true
+        LayoutInflater.from(container.context),
+        container,
+        true,
     )
 
     /**

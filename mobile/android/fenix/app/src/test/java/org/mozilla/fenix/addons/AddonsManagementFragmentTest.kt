@@ -40,7 +40,8 @@ class AddonsManagementFragmentTest {
     @Test
     fun `GIVEN add-on is installed from external source WHEN add-on is not supported THEN error is shown`() {
         val supportedAddons = listOf(
-            Addon("1", downloadId = "d1"), Addon("2", downloadId = "d2")
+            Addon("1", downloadId = "d1"),
+            Addon("2", downloadId = "d2"),
         )
         val installAddonId = "d3"
         fragment.installExternalAddon(supportedAddons, installAddonId)

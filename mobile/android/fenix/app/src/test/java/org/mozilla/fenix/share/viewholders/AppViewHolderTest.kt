@@ -41,7 +41,7 @@ class AppViewHolderTest {
             name = "Pocket",
             icon = getDrawable(testContext, R.drawable.ic_pocket)!!,
             packageName = "com.mozilla.pocket",
-            activityName = "MainActivity"
+            activityName = "MainActivity",
         )
         viewHolder.bind(app)
 
@@ -55,7 +55,7 @@ class AppViewHolderTest {
             name = "Pocket",
             icon = getDrawable(testContext, R.drawable.ic_pocket)!!,
             packageName = "com.mozilla.pocket",
-            activityName = "MainActivity"
+            activityName = "MainActivity",
         )
 
         viewHolder.itemView.performClick()
