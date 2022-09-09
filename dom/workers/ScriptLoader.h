@@ -141,6 +141,28 @@ class WorkerScriptLoader final : public nsINamed {
   bool mExecutionAborted = false;
   bool mMutedErrorFlag = false;
 
+  // Worker cancellation related Mutex
+  //
+  // Modified on the worker thread.
+  // It is ok to *read* this without a lock on the worker.
+  // Main thread must always acquire a lock.
+  bool mCleanedUp MOZ_GUARDED_BY(
+      mCleanUpLock);  // To specify if the cleanUp() has been done.
+
+  Mutex& CleanUpLock() MOZ_RETURN_CAPABILITY(mCleanUpLock) {
+    return mCleanUpLock;
+  }
+
+  bool CleanedUp() const MOZ_REQUIRES(mCleanUpLock) {
+    mCleanUpLock.AssertCurrentThreadOwns();
+    return mCleanedUp;
+  }
+
+  // Ensure the worker and the main thread won't race to access |mCleanedUp|.
+  // Should be a MutexSingleWriter, but that causes a lot of issues when you
+  // expose the lock via Lock().
+  Mutex mCleanUpLock;
+
  public:
   NS_DECL_THREADSAFE_ISUPPORTS
 
