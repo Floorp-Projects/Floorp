@@ -1,0 +1,10 @@
+<!DOCTYPE html>
+<script>
+window.addEventListener('load', () => {
+  let a = document.createElement("img");
+  a.srcset = "1";
+  let b = new DOMParser()
+  let c = b.parseFromString("<div></div>", "text/html")
+  c.adoptNode(a)
+})
+</script>

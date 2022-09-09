@@ -420,6 +420,9 @@ class HTMLImageElement final : public nsGenericHTMLElement,
   void SetResponsiveSelector(RefPtr<ResponsiveImageSelector>&& aSource);
   void SetDensity(double aDensity);
 
+  // Queue an image load task (via microtask).
+  void QueueImageLoadTask(bool aAlwaysLoad);
+
   bool mInDocResponsiveContent;
 
   RefPtr<ImageLoadTask> mPendingImageLoadTask;
