@@ -7,6 +7,7 @@
 #include "RemoteLazyInputStreamThread.h"
 
 #include "ErrorList.h"
+#include "mozilla/AppShutdown.h"
 #include "mozilla/SchedulerGroup.h"
 #include "mozilla/StaticMutex.h"
 #include "mozilla/StaticPtr.h"
@@ -23,7 +24,6 @@ namespace {
 
 StaticMutex gRemoteLazyThreadMutex;
 StaticRefPtr<RemoteLazyInputStreamThread> gRemoteLazyThread;
-bool gShutdownHasStarted = false;
 
 class ThreadInitializeRunnable final : public Runnable {
  public:
@@ -49,24 +49,30 @@ class ThreadInitializeRunnable final : public Runnable {
 
 NS_IMPL_ISUPPORTS(RemoteLazyInputStreamThread, nsIObserver, nsIEventTarget)
 
+bool RLISThreadIsInOrBeyondShutdown() {
+  // ShutdownPhase::XPCOMShutdownThreads matches
+  // obs->AddObserver(this, NS_XPCOM_SHUTDOWN_THREADS_OBSERVER_ID, false);
+  return AppShutdown::IsInOrBeyond(ShutdownPhase::XPCOMShutdownThreads);
+}
+
 /* static */
 RemoteLazyInputStreamThread* RemoteLazyInputStreamThread::Get() {
-  StaticMutexAutoLock lock(gRemoteLazyThreadMutex);
-
-  if (gShutdownHasStarted) {
+  if (RLISThreadIsInOrBeyondShutdown()) {
     return nullptr;
   }
+
+  StaticMutexAutoLock lock(gRemoteLazyThreadMutex);
 
   return gRemoteLazyThread;
 }
 
 /* static */
 RemoteLazyInputStreamThread* RemoteLazyInputStreamThread::GetOrCreate() {
-  StaticMutexAutoLock lock(gRemoteLazyThreadMutex);
-
-  if (gShutdownHasStarted) {
+  if (RLISThreadIsInOrBeyondShutdown()) {
     return nullptr;
   }
+
+  StaticMutexAutoLock lock(gRemoteLazyThreadMutex);
 
   if (!gRemoteLazyThread) {
     gRemoteLazyThread = new RemoteLazyInputStreamThread();
@@ -122,7 +128,6 @@ RemoteLazyInputStreamThread::Observe(nsISupports* aSubject, const char* aTopic,
     mThread = nullptr;
   }
 
-  gShutdownHasStarted = true;
   gRemoteLazyThread = nullptr;
 
   return NS_OK;
@@ -143,13 +148,13 @@ RemoteLazyInputStreamThread::IsOnCurrentThread(bool* aRetval) {
 NS_IMETHODIMP
 RemoteLazyInputStreamThread::Dispatch(already_AddRefed<nsIRunnable> aRunnable,
                                       uint32_t aFlags) {
+  if (RLISThreadIsInOrBeyondShutdown()) {
+    return NS_ERROR_ILLEGAL_DURING_SHUTDOWN;
+  }
+
   nsCOMPtr<nsIRunnable> runnable(aRunnable);
 
   StaticMutexAutoLock lock(gRemoteLazyThreadMutex);
-
-  if (gShutdownHasStarted) {
-    return NS_ERROR_NOT_INITIALIZED;
-  }
 
   return mThread->Dispatch(runnable.forget(), aFlags);
 }
@@ -178,9 +183,9 @@ RemoteLazyInputStreamThread::UnregisterShutdownTask(nsITargetShutdownTask*) {
 }
 
 bool IsOnDOMFileThread() {
-  StaticMutexAutoLock lock(gRemoteLazyThreadMutex);
+  MOZ_ASSERT(!RLISThreadIsInOrBeyondShutdown());
 
-  MOZ_ASSERT(!gShutdownHasStarted);
+  StaticMutexAutoLock lock(gRemoteLazyThreadMutex);
   MOZ_ASSERT(gRemoteLazyThread);
 
   return gRemoteLazyThread->IsOnCurrentThreadInfallible();
