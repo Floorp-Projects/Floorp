@@ -43,12 +43,12 @@ add_task(async function() {
   );
   is(
     transferred,
-    L10N.getFormatStrWithNumbers("networkMenu.sizeMB", 2),
+    L10N.getFormatStrWithNumbers("networkMenu.sizeMB", 2.1),
     "Transferred size should be rendered correctly."
   );
   is(
     size,
-    L10N.getFormatStrWithNumbers("networkMenu.sizeMB", 2),
+    L10N.getFormatStrWithNumbers("networkMenu.sizeMB", 2.1),
     "Size should be rendered correctly."
   );
 

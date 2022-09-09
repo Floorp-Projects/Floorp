@@ -71,8 +71,8 @@ add_task(async function() {
         type: "json",
         fullMimeType: "text/json; charset=utf-8",
         size: L10N.getFormatStr(
-          "networkMenu.sizeKB",
-          L10N.numberWithDecimals(85975 / 1024, 2)
+          "networkMenu.size.kB",
+          L10N.numberWithDecimals(85975 / 1000, 2)
         ),
         time: true,
       }

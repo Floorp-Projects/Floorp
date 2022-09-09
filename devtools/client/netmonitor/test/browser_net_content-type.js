@@ -137,7 +137,7 @@ add_task(async function() {
       type: "plain",
       fullMimeType: "text/plain",
       transferred: L10N.getFormatStrWithNumbers("networkMenu.sizeB", 324),
-      size: L10N.getFormatStrWithNumbers("networkMenu.sizeKB", 10.73),
+      size: L10N.getFormatStrWithNumbers("networkMenu.size.kB", 10.99),
       time: true,
     }
   );
