@@ -173,74 +173,74 @@ add_task(async function() {
   await performRequestsInContent(REQUESTS);
   await waitNetwork;
 
-  // Test running flag once requests finish running
+  info(" > Test running flag once requests finish running");
   setFreetextFilter("is:running");
   await testContents([0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
 
-  // Test cached flag
+  info(" > Test cached flag");
   setFreetextFilter("is:from-cache");
   await testContents([0, 0, 0, 0, 0, 0, 0, 0, 0, 1]);
 
   setFreetextFilter("is:cached");
   await testContents([0, 0, 0, 0, 0, 0, 0, 0, 0, 1]);
 
-  // Test negative cached flag
+  info(" > Test negative cached flag");
   setFreetextFilter("-is:from-cache");
   await testContents([1, 1, 1, 1, 1, 1, 1, 1, 1, 0]);
 
   setFreetextFilter("-is:cached");
   await testContents([1, 1, 1, 1, 1, 1, 1, 1, 1, 0]);
 
-  // Test status-code flag
+  info(" > Test status-code flag");
   setFreetextFilter("status-code:200");
   await testContents([1, 1, 1, 1, 1, 1, 1, 1, 1, 0]);
 
-  // Test status-code negative flag
+  info(" > Test status-code negative flag");
   setFreetextFilter("-status-code:200");
   await testContents([0, 0, 0, 0, 0, 0, 0, 0, 0, 1]);
 
-  // Test mime-type flag
+  info(" > Test mime-type flag");
   setFreetextFilter("mime-type:HtmL");
   await testContents([1, 1, 0, 0, 0, 0, 0, 0, 0, 0]);
 
-  // Test mime-type negative flag
+  info(" > Test mime-type negative flag");
   setFreetextFilter("-mime-type:HtmL");
   await testContents([0, 0, 1, 1, 1, 1, 1, 1, 1, 1]);
 
-  // Test method flag
+  info(" > Test method flag");
   setFreetextFilter("method:get");
   await testContents([1, 1, 1, 1, 1, 1, 1, 1, 1, 1]);
 
-  // Test unmatched method flag
+  info(" > Test unmatched method flag");
   setFreetextFilter("method:post");
   await testContents([0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
 
-  // Test scheme flag (all requests are http)
+  info(" > Test scheme flag (all requests are http)");
   setFreetextFilter("scheme:http");
   await testContents([1, 1, 1, 1, 1, 1, 1, 1, 1, 1]);
 
   setFreetextFilter("scheme:https");
   await testContents([0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
 
-  // Test regex filter
+  info(" > Test regex filter");
   setFreetextFilter("regexp:content.*?Sam");
   await testContents([1, 1, 0, 0, 0, 0, 0, 0, 0, 0]);
 
-  // Test set-cookie-name flag
+  info(" > Test set-cookie-name flag");
   setFreetextFilter("set-cookie-name:name2");
   await testContents([0, 1, 0, 0, 0, 0, 0, 0, 0, 0]);
 
   setFreetextFilter("set-cookie-name:not-existing");
   await testContents([0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
 
-  // Test set-cookie-value flag
+  info(" > Test set-cookie-value flag");
   setFreetextFilter("set-cookie-value:value2");
   await testContents([0, 1, 0, 0, 0, 0, 0, 0, 0, 0]);
 
   setFreetextFilter("set-cookie-value:not-existing");
   await testContents([0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
 
-  // Test set-cookie-domain flag
+  info(" > Test set-cookie-domain flag");
   setFreetextFilter("set-cookie-domain:.example.com");
   await testContents([0, 1, 0, 0, 0, 0, 0, 0, 0, 0]);
 
@@ -250,7 +250,7 @@ add_task(async function() {
   setFreetextFilter("set-cookie-domain:.not-existing.example.com");
   await testContents([0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
 
-  // Test size
+  info(" > Test size");
   setFreetextFilter("size:-1");
   await testContents([0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
 
@@ -263,19 +263,19 @@ add_task(async function() {
   setFreetextFilter("size:0kb");
   await testContents([0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
 
-  // Testing the lower bound
+  info(" > Testing the lower bound");
   setFreetextFilter("size:9.659k");
-  await testContents([0, 0, 0, 0, 0, 0, 0, 0, 1, 0]);
+  await testContents([0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
 
-  // Testing the actual value
+  info(" > Testing the actual value");
   setFreetextFilter("size:10989");
   await testContents([0, 0, 0, 0, 0, 0, 0, 0, 1, 0]);
 
-  // Testing the upper bound
+  info(" > Testing the upper bound");
   setFreetextFilter("size:11.804k");
   await testContents([0, 0, 0, 0, 0, 0, 0, 0, 1, 0]);
 
-  // Test transferred
+  info(" > Test transferred");
   setFreetextFilter("transferred:200");
   await testContents([0, 0, 0, 0, 1, 1, 1, 1, 0, 0]);
 
@@ -288,7 +288,7 @@ add_task(async function() {
   setFreetextFilter("transferred:0kb");
   await testContents([0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
 
-  // Test larger-than
+  info(" > Test larger-than");
   setFreetextFilter("larger-than:-1");
   await testContents([1, 1, 1, 1, 1, 1, 1, 1, 1, 1]);
 
@@ -305,12 +305,12 @@ add_task(async function() {
   await testContents([0, 0, 0, 0, 0, 0, 0, 0, 1, 0]);
 
   setFreetextFilter("larger-than:10.732k");
-  await testContents([0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
+  await testContents([0, 0, 0, 0, 0, 0, 0, 0, 1, 0]);
 
   setFreetextFilter("larger-than:0kb");
   await testContents([0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
 
-  // Test transferred-larger-than
+  info(" > Test transferred-larger-than");
   setFreetextFilter("transferred-larger-than:-1");
   await testContents([1, 1, 1, 1, 1, 1, 1, 1, 1, 1]);
 
@@ -329,42 +329,42 @@ add_task(async function() {
   setFreetextFilter("transferred-larger-than:0kb");
   await testContents([0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
 
-  // Test cause
+  info(" > Test cause");
   setFreetextFilter("cause:xhr");
   await testContents([1, 1, 1, 1, 1, 1, 1, 1, 1, 1]);
 
   setFreetextFilter("cause:script");
   await testContents([0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
 
-  // Test has-response-header
+  info(" > Test has-response-header");
   setFreetextFilter("has-response-header:Content-Type");
   await testContents([1, 1, 1, 1, 1, 1, 1, 1, 1, 1]);
 
   setFreetextFilter("has-response-header:Last-Modified");
   await testContents([0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
 
-  // Test remote-ip
+  info(" > Test remote-ip");
   setFreetextFilter("remote-ip:127.0.0.1");
   await testContents([1, 1, 1, 1, 1, 1, 1, 1, 1, 1]);
 
   setFreetextFilter("remote-ip:192.168.1.2");
   await testContents([0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
 
-  // Test domain
+  info(" > Test domain");
   setFreetextFilter("domain:example.com");
   await testContents([1, 1, 1, 1, 1, 1, 1, 1, 1, 1]);
 
   setFreetextFilter("domain:wrongexample.com");
   await testContents([0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
 
-  // Test protocol
+  info(" > Test protocol");
   setFreetextFilter("protocol:http/1");
   await testContents([1, 1, 1, 1, 1, 1, 1, 1, 1, 1]);
 
   setFreetextFilter("protocol:http/2");
   await testContents([0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
 
-  // Test mixing flags
+  info(" > Test mixing flags");
   setFreetextFilter("-mime-type:HtmL status-code:200");
   await testContents([0, 0, 1, 1, 1, 1, 1, 1, 1, 0]);
 

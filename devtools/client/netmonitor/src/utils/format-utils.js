@@ -7,7 +7,7 @@
 const { L10N } = require("devtools/client/netmonitor/src/utils/l10n");
 
 // Constants for formatting bytes.
-const BYTES_IN_KB = 1024;
+const BYTES_IN_KB = 1000;
 const BYTES_IN_MB = Math.pow(BYTES_IN_KB, 2);
 const BYTES_IN_GB = Math.pow(BYTES_IN_KB, 3);
 const MAX_BYTES_SIZE = 1000;
@@ -38,10 +38,8 @@ function formatDecimals(size, decimals) {
 }
 
 /**
- * Get a human-readable string from a number of bytes, with the B, KB, MB, or
- * GB value. Note that the transition between abbreviations is by 1000 rather
- * than 1024 in order to keep the displayed digits smaller as "1016 KB" is
- * more awkward than 0.99 MB"
+ * Get a human-readable string from a number of bytes, with the B, kB, MB, or
+ * GB value.
  */
 function getFormattedSize(bytes, decimals = REQUEST_DECIMALS) {
   if (bytes < MAX_BYTES_SIZE) {
@@ -52,7 +50,7 @@ function getFormattedSize(bytes, decimals = REQUEST_DECIMALS) {
     const formattedDecimals = formatDecimals(kb, decimals);
 
     return L10N.getFormatStr(
-      "networkMenu.sizeKB",
+      "networkMenu.size.kB",
       getSizeWithDecimals(kb, formattedDecimals)
     );
   }

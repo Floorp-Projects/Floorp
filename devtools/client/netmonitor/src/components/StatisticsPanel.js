@@ -183,11 +183,14 @@ class StatisticsPanel extends Component {
       data,
       strings: {
         size: value =>
-          L10N.getFormatStr("charts.sizeKB", getSizeWithDecimals(value / 1024)),
+          L10N.getFormatStr(
+            "charts.size.kB",
+            getSizeWithDecimals(value / 1000)
+          ),
         transferredSize: value =>
           L10N.getFormatStr(
-            "charts.transferredSizeKB",
-            getSizeWithDecimals(value / 1024)
+            "charts.transferredSize.kB",
+            getSizeWithDecimals(value / 1000)
           ),
         time: value =>
           L10N.getFormatStr("charts.totalS", getTimeWithDecimals(value / 1000)),
@@ -199,13 +202,13 @@ class StatisticsPanel extends Component {
         count: total => L10N.getFormatStr("charts.totalCount", total),
         size: total =>
           L10N.getFormatStr(
-            "charts.totalSize",
-            getSizeWithDecimals(total / 1024)
+            "charts.totalSize.kB",
+            getSizeWithDecimals(total / 1000)
           ),
         transferredSize: total =>
           L10N.getFormatStr(
-            "charts.totalTransferredSize",
-            getSizeWithDecimals(total / 1024)
+            "charts.totalTransferredSize.kB",
+            getSizeWithDecimals(total / 1000)
           ),
         time: total => {
           const seconds = total / 1000;
