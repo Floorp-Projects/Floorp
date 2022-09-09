@@ -9,7 +9,7 @@ const { Preferences } = ChromeUtils.import(
 );
 
 const { AppInfo } = ChromeUtils.import(
-  "chrome://remote/content/marionette/appinfo.js"
+  "chrome://remote/content/shared/AppInfo.jsm"
 );
 const { error } = ChromeUtils.import(
   "chrome://remote/content/shared/webdriver/Errors.jsm"
