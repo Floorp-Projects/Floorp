@@ -24,8 +24,8 @@ class SyncAuthInfoCacheTest {
         val authInfo = SyncAuthInfo(
             kid = "testKid",
             fxaAccessToken = "fxaAccess",
-            // expires in the future
-            fxaAccessTokenExpiresAt = System.currentTimeMillis() + 60 * 1000L,
+            // expires in the future (in seconds)
+            fxaAccessTokenExpiresAt = (System.currentTimeMillis() / 1000L) + 60,
             syncKey = "long secret key",
             tokenServerUrl = "http://www.token.server/url"
         )
@@ -36,8 +36,8 @@ class SyncAuthInfoCacheTest {
         assertFalse(cache.expired())
 
         val authInfo2 = authInfo.copy(
-            // expires in the past
-            fxaAccessTokenExpiresAt = System.currentTimeMillis() - 60 * 1000L
+            // expires in the past (in seconds)
+            fxaAccessTokenExpiresAt = (System.currentTimeMillis() / 1000L) - 60,
         )
 
         cache.setToCache(authInfo2)

@@ -9,6 +9,7 @@ import mozilla.components.concept.sync.SyncAuthInfo
 import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.base.utils.SharedPreferencesCache
 import org.json.JSONObject
+import java.util.concurrent.TimeUnit
 
 private const val CACHE_NAME = "SyncAuthInfoCache"
 private const val CACHE_KEY = CACHE_NAME
@@ -44,12 +45,14 @@ class SyncAuthInfoCache(context: Context) : SharedPreferencesCache<SyncAuthInfo>
             fxaAccessToken = obj.getString(KEY_FXA_ACCESS_TOKEN),
             fxaAccessTokenExpiresAt = obj.getLong(KEY_FXA_ACCESS_TOKEN_EXPIRES_AT),
             syncKey = obj.getString(KEY_SYNC_KEY),
-            tokenServerUrl = obj.getString(KEY_TOKEN_SERVER_URL)
+            tokenServerUrl = obj.getString(KEY_TOKEN_SERVER_URL),
         )
     }
 
     fun expired(): Boolean {
         val expiresAt = getCached()?.fxaAccessTokenExpiresAt ?: return true
-        return expiresAt <= System.currentTimeMillis()
+        val now = TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis())
+
+        return expiresAt <= now
     }
 }
