@@ -1,5 +1,5 @@
-commit adba7dfd9c04a33a7369cf008863d3667a0ba57f
+commit 746197355c1705b7d4463fc75c29433c0ce2fd0d
 Author: Kevin Gibbons <bakkot@gmail.com>
-Date:   Sun Aug 7 20:11:29 2022 -0700
+Date:   Tue Sep 6 04:21:50 2022 -0700
 
-    fix order
+    Implement changes for "avoid mostly-redundant `await` in async `yield*`" (#3619)
