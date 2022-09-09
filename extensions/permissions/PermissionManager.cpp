@@ -2471,6 +2471,20 @@ NS_IMETHODIMP PermissionManager::GetAllWithTypePrefix(
       aResult);
 }
 
+NS_IMETHODIMP PermissionManager::GetAllByTypes(
+    const nsTArray<nsCString>& aTypes,
+    nsTArray<RefPtr<nsIPermission>>& aResult) {
+  if (aTypes.IsEmpty()) {
+    return NS_OK;
+  }
+
+  return GetPermissionEntries(
+      [&](const PermissionEntry& aPermEntry) {
+        return aTypes.Contains(mTypeArray[aPermEntry.mType]);
+      },
+      aResult);
+}
+
 nsresult PermissionManager::GetAllForPrincipalHelper(
     nsIPrincipal* aPrincipal, bool aSiteScopePermissions,
     nsTArray<RefPtr<nsIPermission>>& aResult) {
