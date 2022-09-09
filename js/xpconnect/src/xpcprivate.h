@@ -555,7 +555,6 @@ class XPCJSRuntime final : public mozilla::CycleCollectedJSRuntime {
   static void WeakPointerCompartmentCallback(JSTracer* trc,
                                              JS::Compartment* comp, void* data);
 
-  inline void AddVariantRoot(XPCTraceableVariant* variant);
   inline void AddWrappedJSRoot(nsXPCWrappedJS* wrappedJS);
 
   void DebugDump(int16_t depth);
@@ -637,7 +636,6 @@ class XPCJSRuntime final : public mozilla::CycleCollectedJSRuntime {
   bool mGCIsRunning;
   nsTArray<nsISupports*> mNativesToReleaseArray;
   bool mDoingFinalization;
-  XPCRootSetElem* mVariantRoots;
   XPCRootSetElem* mWrappedJSRoots;
   nsTArray<xpcGCCallback> extraGCCallbacks;
   JS::GCSliceCallback mPrevGCSliceCallback;
@@ -2104,7 +2102,7 @@ using AutoMarkingWrappedNativeProtoPtr =
     TypedAutoMarkingPtr<XPCWrappedNativeProto>;
 
 /***************************************************************************/
-// in xpcvariant.cpp...
+// Definitions in XPCVariant.cpp.
 
 // {1809FD50-91E8-11d5-90F9-0010A4E73D9A}
 #define XPCVARIANT_IID                              \
@@ -2126,7 +2124,7 @@ class XPCVariant : public nsIVariant {
  public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_NSIVARIANT
-  NS_DECL_CYCLE_COLLECTION_CLASS(XPCVariant)
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(XPCVariant)
 
   // If this class ever implements nsIWritableVariant, take special care with
   // the case when mJSVal is JSVAL_STRING, since we don't own the data in
@@ -2146,6 +2144,7 @@ class XPCVariant : public nsIVariant {
    */
   JS::Value GetJSVal() const { return mJSVal; }
 
+ protected:
   /**
    * This getter does not change the color of the Value (if it represents a
    * JSObject) meaning that the value returned is not guaranteed to be kept
@@ -2159,6 +2158,7 @@ class XPCVariant : public nsIVariant {
 
   XPCVariant(JSContext* cx, const JS::Value& aJSVal);
 
+ public:
   /**
    * Convert a variant into a JS::Value.
    *
@@ -2171,34 +2171,19 @@ class XPCVariant : public nsIVariant {
   static bool VariantDataToJS(JSContext* cx, nsIVariant* variant,
                               nsresult* pErr, JS::MutableHandleValue pJSVal);
 
-  bool IsPurple() { return mRefCnt.IsPurple(); }
-
-  void RemovePurple() { mRefCnt.RemovePurple(); }
-
  protected:
-  virtual ~XPCVariant() = default;
+  virtual ~XPCVariant();
 
   bool InitializeData(JSContext* cx);
 
- protected:
+  void Cleanup();
+
   nsDiscriminatedUnion mData;
   JS::Heap<JS::Value> mJSVal;
   bool mReturnRawObject;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(XPCVariant, XPCVARIANT_IID)
-
-class XPCTraceableVariant : public XPCVariant, public XPCRootSetElem {
- public:
-  XPCTraceableVariant(JSContext* cx, const JS::Value& aJSVal)
-      : XPCVariant(cx, aJSVal) {
-    nsXPConnect::GetRuntimeInstance()->AddVariantRoot(this);
-  }
-
-  virtual ~XPCTraceableVariant();
-
-  void TraceJS(JSTracer* trc);
-};
 
 /***************************************************************************/
 // Utilities
