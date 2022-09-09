@@ -957,11 +957,11 @@ alsa_destroy(cubeb * ctx)
     WRAP(snd_config_delete)(ctx->local_config);
     pthread_mutex_unlock(&cubeb_alsa_mutex);
   }
-
+#ifndef DISABLE_LIBASOUND_DLOPEN
   if (ctx->libasound) {
     dlclose(ctx->libasound);
   }
-
+#endif
   free(ctx);
 }
 
