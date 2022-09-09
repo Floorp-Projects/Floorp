@@ -181,7 +181,7 @@ body > main > aside {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  font-size: 1.5em;
+  font-size: 1.75em;
 }
 
 .brand-logo > .brand-icon {
