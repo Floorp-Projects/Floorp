@@ -212,19 +212,26 @@ class TextRecognitionModal {
 
       for (let i = 0; i < cluster.length; i++) {
         const index = cluster[i];
-        // Each cluster could be a paragraph, so add a newline to the end
-        // for better copying.
-        const ending = i + 1 === cluster.length ? "\n" : " ";
-
-        const result = results[index];
-        text += result.string + ending;
-        pCluster.innerText += result.string + ending;
+        const { string } = results[index];
+        if (i + 1 === cluster.length) {
+          // Each cluster could be a paragraph, so add newlines to the end
+          // for better copying.
+          text += string + "\n\n";
+          // The paragraph tag automatically uses two newlines.
+          pCluster.innerText += string;
+        } else {
+          // This text is assumed to be a newlines in a paragraph, so only needs
+          // to be separated by a space.
+          text += string + " ";
+          pCluster.innerText += string + " ";
+        }
       }
       this.textEl.appendChild(pCluster);
     }
 
     this.textEl.style.display = "block";
 
+    text = text.trim();
     TextRecognitionModal.copy(text);
     TextRecognitionModal.recordTextLengthTelemetry(text.length);
   }
