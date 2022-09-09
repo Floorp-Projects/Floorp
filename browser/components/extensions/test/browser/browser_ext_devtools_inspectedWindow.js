@@ -31,8 +31,8 @@ function getAdditionalPanelId(toolbox, label) {
  */
 function getTargetActorsCount(tab) {
   return SpecialPowers.spawn(tab.linkedBrowser, [], () => {
-    const { TargetActorRegistry } = ChromeUtils.import(
-      "resource://devtools/server/actors/targets/target-actor-registry.jsm"
+    const { TargetActorRegistry } = ChromeUtils.importESModule(
+      "resource://devtools/server/actors/targets/target-actor-registry.sys.mjs"
     );
 
     // Retrieve the target actor instances

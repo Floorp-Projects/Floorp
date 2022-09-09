@@ -2,8 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
-
 /**
  * Helper module around `sharedData` object that helps storing the state
  * of all observed Targets and Resources, that, for all DevTools connections.
@@ -26,14 +24,13 @@
  * while from the content process, we will read `sharedData` directly.
  */
 
-var EXPORTED_SYMBOLS = ["WatcherRegistry"];
-
 const { ActorManagerParent } = ChromeUtils.import(
   "resource://gre/modules/ActorManagerParent.jsm"
 );
 const { SessionDataHelpers } = ChromeUtils.import(
   "resource://devtools/server/actors/watcher/SessionDataHelpers.jsm"
 );
+
 const { SUPPORTED_DATA } = SessionDataHelpers;
 const SUPPORTED_DATA_TYPES = Object.values(SUPPORTED_DATA);
 
@@ -72,7 +69,7 @@ function persistMapToSharedData() {
   Services.ppmm.sharedData.flush();
 }
 
-const WatcherRegistry = {
+export const WatcherRegistry = {
   /**
    * Tells if a given watcher currently watches for a given target type.
    *
@@ -331,12 +328,12 @@ let isJSWindowActorRegistered = false;
 const JSWindowActorsConfig = {
   DevToolsFrame: {
     parent: {
-      moduleURI:
-        "resource://devtools/server/connectors/js-window-actor/DevToolsFrameParent.jsm",
+      esModuleURI:
+        "resource://devtools/server/connectors/js-window-actor/DevToolsFrameParent.sys.mjs",
     },
     child: {
-      moduleURI:
-        "resource://devtools/server/connectors/js-window-actor/DevToolsFrameChild.jsm",
+      esModuleURI:
+        "resource://devtools/server/connectors/js-window-actor/DevToolsFrameChild.sys.mjs",
       events: {
         DOMWindowCreated: {},
         DOMDocElementInserted: {},
@@ -348,12 +345,12 @@ const JSWindowActorsConfig = {
   },
   DevToolsWorker: {
     parent: {
-      moduleURI:
-        "resource://devtools/server/connectors/js-window-actor/DevToolsWorkerParent.jsm",
+      esModuleURI:
+        "resource://devtools/server/connectors/js-window-actor/DevToolsWorkerParent.sys.mjs",
     },
     child: {
-      moduleURI:
-        "resource://devtools/server/connectors/js-window-actor/DevToolsWorkerChild.jsm",
+      esModuleURI:
+        "resource://devtools/server/connectors/js-window-actor/DevToolsWorkerChild.sys.mjs",
       events: {
         DOMWindowCreated: {},
       },

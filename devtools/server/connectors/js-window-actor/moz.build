@@ -5,9 +5,9 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 DevToolsModules(
-    "DevToolsFrameChild.jsm",
-    "DevToolsFrameParent.jsm",
-    "DevToolsWorkerChild.jsm",
-    "DevToolsWorkerParent.jsm",
-    "WindowGlobalLogger.jsm",
+    "DevToolsFrameChild.sys.mjs",
+    "DevToolsFrameParent.sys.mjs",
+    "DevToolsWorkerChild.sys.mjs",
+    "DevToolsWorkerParent.sys.mjs",
+    "WindowGlobalLogger.sys.mjs",
 )

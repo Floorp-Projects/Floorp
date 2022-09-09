@@ -17,8 +17,8 @@
 function onInit(message) {
   // Only reply if we are in a real content process
   if (Services.appinfo.processType == Services.appinfo.PROCESS_TYPE_CONTENT) {
-    const { initContentProcessTarget } = ChromeUtils.import(
-      "resource://devtools/server/startup/content-process.jsm"
+    const { initContentProcessTarget } = ChromeUtils.importESModule(
+      "resource://devtools/server/startup/content-process.sys.mjs"
     );
     initContentProcessTarget(message);
   }
