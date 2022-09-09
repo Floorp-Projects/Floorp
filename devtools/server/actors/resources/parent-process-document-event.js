@@ -8,7 +8,6 @@ const {
   TYPES: { DOCUMENT_EVENT },
 } = require("devtools/server/actors/resources/index");
 const { Ci } = require("chrome");
-const ChromeUtils = require("ChromeUtils");
 const isEveryFrameTargetEnabled = Services.prefs.getBoolPref(
   "devtools.every-frame-target.enabled",
   false

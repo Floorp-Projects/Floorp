@@ -36,7 +36,6 @@
 "use strict";
 
 const { Cu, Cc, Ci } = require("chrome");
-const ChromeUtils = require("ChromeUtils");
 
 const MemoryReporter = Cc["@mozilla.org/memory-reporter-manager;1"].getService(
   Ci.nsIMemoryReporterManager

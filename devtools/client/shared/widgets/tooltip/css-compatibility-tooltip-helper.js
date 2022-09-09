@@ -4,7 +4,6 @@
 
 "use strict";
 
-const ChromeUtils = require("ChromeUtils");
 const { BrowserLoader } = ChromeUtils.import(
   "resource://devtools/shared/loader/browser-loader.js"
 );

@@ -62,7 +62,6 @@
 
 "use strict";
 
-const ChromeUtils = require("ChromeUtils");
 const { components, Cc, Ci } = require("chrome");
 loader.lazyImporter(this, "NetUtil", "resource://gre/modules/NetUtil.jsm");
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");

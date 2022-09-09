@@ -26,7 +26,6 @@
  */
 
 const { Cu } = require("chrome");
-const ChromeUtils = require("ChromeUtils");
 
 const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {

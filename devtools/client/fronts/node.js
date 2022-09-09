@@ -18,7 +18,6 @@ loader.lazyRequireGetter(
   "devtools/shared/dom-node-constants"
 );
 
-const ChromeUtils = require("ChromeUtils");
 const { XPCOMUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/XPCOMUtils.sys.mjs"
 );

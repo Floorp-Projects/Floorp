@@ -528,13 +528,13 @@ this.worker = new WorkerDebuggerLoader({
     btoa: this.btoa,
     atob: this.atob,
     Services: Object.create(null),
+    ChromeUtils,
   },
   loadSubScript,
   modules: {
     Debugger,
     chrome,
     xpcInspector,
-    ChromeUtils,
     DebuggerNotificationObserver,
   },
   paths: {

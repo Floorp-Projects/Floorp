@@ -4,7 +4,6 @@
 
 "use strict";
 
-const ChromeUtils = require("ChromeUtils");
 var { settleAll } = require("devtools/shared/DevToolsUtils");
 var EventEmitter = require("devtools/shared/event-emitter");
 

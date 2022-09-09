@@ -26,7 +26,6 @@ Services.scriptloader.loadSubScript(
   EventUtils
 );
 
-var ChromeUtils = require("ChromeUtils");
 const { TestUtils } = ChromeUtils.import(
   "resource://testing-common/TestUtils.jsm"
 );

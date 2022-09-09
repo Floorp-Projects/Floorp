@@ -21,7 +21,6 @@ loader.lazyRequireGetter(
   "devtools/server/actors/utils/stack",
   true
 );
-loader.lazyRequireGetter(this, "ChromeUtils");
 loader.lazyRequireGetter(
   this,
   "ParentProcessTargetActor",

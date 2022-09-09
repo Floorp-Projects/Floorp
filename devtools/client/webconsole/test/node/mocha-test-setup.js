@@ -106,6 +106,7 @@ global.Services = require(mcRoot +
 global.ChromeUtils = {
   import: () => {},
   defineModuleGetter: () => {},
+  addProfilerMarker: () => {},
 };
 
 global.Cu = { isInAutomation: true };
@@ -139,8 +140,6 @@ requireHacker.global_hook("default", (path, module) => {
 
     chrome: () =>
       `module.exports = { Cc: {}, Ci: {}, Cu: { now: () => {}}, components: {stack: {caller: ""}} }`,
-    ChromeUtils: () =>
-      `module.exports = { addProfilerMarker: () => {}, import: () => ({}) }`,
     // Some modules depend on Chrome APIs which don't work in mocha. When such a module
     // is required, replace it with a mock version.
     "devtools/server/devtools-server": () =>
