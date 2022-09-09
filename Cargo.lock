@@ -1164,7 +1164,7 @@ dependencies = [
 [[package]]
 name = "cubeb-pulse"
 version = "0.4.0"
-source = "git+https://github.com/mozilla/cubeb-pulse-rs?rev=1f1fe1e08e01a9a534ec7f079702a583a0899ce7#1f1fe1e08e01a9a534ec7f079702a583a0899ce7"
+source = "git+https://github.com/mozilla/cubeb-pulse-rs?rev=f32b3ef708c0bfb2c414c08971d638527353d376#f32b3ef708c0bfb2c414c08971d638527353d376"
 dependencies = [
  "cubeb-backend",
  "pulse",
@@ -4225,7 +4225,7 @@ dependencies = [
 [[package]]
 name = "pulse"
 version = "0.3.0"
-source = "git+https://github.com/mozilla/cubeb-pulse-rs?rev=1f1fe1e08e01a9a534ec7f079702a583a0899ce7#1f1fe1e08e01a9a534ec7f079702a583a0899ce7"
+source = "git+https://github.com/mozilla/cubeb-pulse-rs?rev=f32b3ef708c0bfb2c414c08971d638527353d376#f32b3ef708c0bfb2c414c08971d638527353d376"
 dependencies = [
  "bitflags",
  "pulse-ffi",
@@ -4234,7 +4234,7 @@ dependencies = [
 [[package]]
 name = "pulse-ffi"
 version = "0.1.0"
-source = "git+https://github.com/mozilla/cubeb-pulse-rs?rev=1f1fe1e08e01a9a534ec7f079702a583a0899ce7#1f1fe1e08e01a9a534ec7f079702a583a0899ce7"
+source = "git+https://github.com/mozilla/cubeb-pulse-rs?rev=f32b3ef708c0bfb2c414c08971d638527353d376#f32b3ef708c0bfb2c414c08971d638527353d376"
 dependencies = [
  "libc",
 ]

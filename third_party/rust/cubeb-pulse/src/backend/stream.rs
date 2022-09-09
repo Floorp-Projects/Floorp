@@ -319,7 +319,7 @@ impl<'ctx> PulseStream<'ctx> {
                 readable_size
             }
 
-            cubeb_logv!("Input callback buffer size {}", nbytes);
+            cubeb_alogv!("Input callback buffer size {}", nbytes);
             let stm = unsafe { &mut *(u as *mut PulseStream) };
             if stm.shutdown {
                 return;
@@ -380,7 +380,7 @@ impl<'ctx> PulseStream<'ctx> {
         }
 
         fn write_data(_: &pulse::Stream, nbytes: usize, u: *mut c_void) {
-            cubeb_logv!("Output callback to be written buffer size {}", nbytes);
+            cubeb_alogv!("Output callback to be written buffer size {}", nbytes);
             let stm = unsafe { &mut *(u as *mut PulseStream) };
             if stm.shutdown || stm.state != ffi::CUBEB_STATE_STARTED {
                 return;
@@ -400,7 +400,7 @@ impl<'ctx> PulseStream<'ctx> {
                         let popped_frames = buffered_input_frames - nframes;
                         input_buffer_manager
                             .trim(nframes * stm.input_sample_spec.channels as usize);
-                        cubeb_log!("Dropping {} frames in input buffer.", popped_frames);
+                        cubeb_alog!("Dropping {} frames in input buffer.", popped_frames);
                     }
                 }
 
@@ -552,7 +552,7 @@ impl<'ctx> PulseStream<'ctx> {
             if log_enabled() {
                 if let Some(ref output_stream) = stm.output_stream {
                     let output_att = output_stream.get_buffer_attr();
-                    cubeb_log!(
+                    cubeb_alog!(
                         "Output buffer attributes maxlength {}, tlength {}, \
                          prebuf {}, minreq {}, fragsize {}",
                         output_att.maxlength,
@@ -565,7 +565,7 @@ impl<'ctx> PulseStream<'ctx> {
 
                 if let Some(ref input_stream) = stm.input_stream {
                     let input_att = input_stream.get_buffer_attr();
-                    cubeb_log!(
+                    cubeb_alog!(
                         "Input buffer attributes maxlength {}, tlength {}, \
                          prebuf {}, minreq {}, fragsize {}",
                         input_att.maxlength,
@@ -650,11 +650,11 @@ impl<'ctx> StreamOps for PulseStream<'ctx> {
             self.context.mainloop.lock();
             self.shutdown = true;
             // If draining is taking place wait to finish
-            cubeb_log!("Stream stop: waiting for drain");
+            cubeb_alog!("Stream stop: waiting for drain");
             while !self.drain_timer.load(Ordering::Acquire).is_null() {
                 self.context.mainloop.wait();
             }
-            cubeb_log!("Stream stop: waited for drain");
+            cubeb_alog!("Stream stop: waited for drain");
             self.context.mainloop.unlock();
         }
         self.cork(CorkState::cork() | CorkState::notify());
@@ -1025,7 +1025,7 @@ impl<'ctx> PulseStream<'ctx> {
         true
     }
 
-    #[cfg_attr(feature = "cargo-clippy", allow(cyclomatic_complexity))]
+    #[cfg_attr(feature = "cargo-clippy", allow(clippy::cognitive_complexity))]
     fn trigger_user_callback(&mut self, input_data: *const c_void, nbytes: usize) {
         fn drained_cb(
             a: &pulse::MainloopApi,
@@ -1033,7 +1033,7 @@ impl<'ctx> PulseStream<'ctx> {
             _tv: &pulse::TimeVal,
             u: *mut c_void,
         ) {
-            cubeb_logv!("Drain finished callback.");
+            cubeb_alogv!("Drain finished callback.");
             let stm = unsafe { &mut *(u as *mut PulseStream) };
             let drain_timer = stm.drain_timer.load(Ordering::Acquire);
             debug_assert_eq!(drain_timer, e);
@@ -1060,7 +1060,7 @@ impl<'ctx> PulseStream<'ctx> {
                         debug_assert!(size > 0);
                         debug_assert_eq!(size % frame_size, 0);
 
-                        cubeb_logv!(
+                        cubeb_alogv!(
                             "Trigger user callback with output buffer size={}, read_offset={}",
                             size,
                             read_offset
@@ -1135,7 +1135,7 @@ impl<'ctx> PulseStream<'ctx> {
                                     got += (padding_bytes / frame_size) as i64;
                                 }
                             } else {
-                                cubeb_logv!(
+                                cubeb_alogv!(
                                     "Not enough room to pad up to prebuf when prebuffering."
                                 )
                             }
@@ -1149,7 +1149,7 @@ impl<'ctx> PulseStream<'ctx> {
                         );
 
                         if should_drain {
-                            cubeb_logv!("Draining {} < {}", got, size / frame_size);
+                            cubeb_alogv!("Draining {} < {}", got, size / frame_size);
                             let latency = match stm.get_latency() {
                                 Ok(StreamLatency::Positive(l)) => l,
                                 Ok(_) => {
