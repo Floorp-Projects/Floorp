@@ -1,7 +1,3 @@
-body {
-  background-color: rgba(0, 0, 0, 0.5);
-}
-
 #background{
   position: fixed;
   top: 0;
@@ -13,4 +9,22 @@ body {
   background-size: cover !important;
   opacity: 0.8 !important;
   z-index: -1 !important;
+  animation: fadeIn 3.7s ease 0s 1 normal !important;
+}
+
+@keyframes fadeIn { 
+  0% {opacity: 0.1 !important} 
+  100% {opacity: 0.8 !important}
+}
+
+@supports -moz-bool-pref("browser.disable.nt.image.gb") {
+  #background, #floorp, #unsplash {
+    display: none !important;
+  }
+}
+
+@supports not -moz-bool-pref("browser.disable.nt.image.gb") {
+  body {
+    background-color: rgba(0, 0, 0, 0.5);
+  }
 }

@@ -61,6 +61,7 @@ pref("floorp.browser.sidebar2.customurl8", "");// サイドバーのカスタム
 pref("floorp.browser.sidebar2.customurl9", "");// サイドバーのカスタムURL
 pref("floorp.browser.sidebar2.customurl10", "");// サイドバーのカスタムURL
 
+pref("browser.disable.nt.image.gb", false);// 画像を表示しない
 
 pref("contentblocking.cryptomining_blocking_enabled", true);
 pref("contentblocking.cryptomining_blocking_enabled",true);

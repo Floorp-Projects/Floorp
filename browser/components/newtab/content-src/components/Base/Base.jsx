@@ -264,7 +264,7 @@ export class BaseContent extends React.PureComponent {
           <a class="releasenote" href="https://blog.ablaze.one/category/ablaze/ablaze-project/floorp" target="_blank">Release Note</a>
         </div>
         {/* TODO: move to _Base.scss */}
-        <a href="https://unsplash.com/" style={{position: "fixed", bottom: "1em", left: "1em", fontSize: "16px",  color: "#ffffff"}} target="_blank">Unsplash</a>
+        <a  href="https://unsplash.com/" style={{position: "fixed", bottom: "1em", left: "1em", fontSize: "16px",  color: "#ffffff"}} target="_blank" id="unsplash">Unsplash</a>
       </div>
     );
   }

@@ -1641,3 +1641,7 @@ set-custom-URL-button =
     .label = Set Custom URL...
     .accesskey = S
 
+disable-bg-newtab =
+ .label = Disable Background Image at { -brand-short-name } Home
+
+how-to-disable-ntbg = To apply this setting, you need to press "Ctrl + Shift + R" in { -brand-short-name } Home and  it's super reload.
