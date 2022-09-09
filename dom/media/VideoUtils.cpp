@@ -199,6 +199,10 @@ uint32_t DecideAudioPlaybackSampleRate(const AudioInfo& aInfo) {
   } else {
     // We will resample all data to match cubeb's preferred sampling rate.
     rate = AudioStream::GetPreferredRate();
+    if (rate > 384000) {
+      // bogus rate, fall back to something else;
+      rate = 48000;
+    }
   }
   MOZ_DIAGNOSTIC_ASSERT(rate, "output rate can't be 0.");
 

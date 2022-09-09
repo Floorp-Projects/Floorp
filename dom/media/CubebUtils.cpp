@@ -363,7 +363,13 @@ bool InitPreferredSampleRate() {
     return true;
   }
 #ifdef MOZ_WIDGET_ANDROID
-  sPreferredSampleRate = AndroidGetAudioOutputSampleRate();
+  int rate = AndroidGetAudioOutputSampleRate();
+  if (rate > 0) {
+    sPreferredSampleRate = rate;
+    return true;
+  } else {
+    return false;
+  }
 #else
   cubeb* context = GetCubebContextUnlocked();
   if (!context) {
@@ -655,7 +661,12 @@ uint32_t GetCubebMTGLatencyInFrames(cubeb_stream_params* params) {
   }
 
 #ifdef MOZ_WIDGET_ANDROID
-  return AndroidGetAudioOutputFramesPerBuffer();
+  int frames = AndroidGetAudioOutputFramesPerBuffer();
+  if (frames > 0) {
+    return frames;
+  } else {
+    return 512;
+  }
 #else
   cubeb* context = GetCubebContextUnlocked();
   if (!context) {
@@ -891,14 +902,12 @@ bool EstimatedRoundTripLatencyDefaultDevices(double* aMean, double* aStdDev) {
 }
 
 #ifdef MOZ_WIDGET_ANDROID
-uint32_t AndroidGetAudioOutputSampleRate() {
+int32_t AndroidGetAudioOutputSampleRate() {
   int32_t sample_rate = java::GeckoAppShell::GetAudioOutputSampleRate();
-  MOZ_ASSERT(sample_rate > 0);
   return sample_rate;
 }
-uint32_t AndroidGetAudioOutputFramesPerBuffer() {
+int32_t AndroidGetAudioOutputFramesPerBuffer() {
   int32_t frames = java::GeckoAppShell::GetAudioOutputFramesPerBuffer();
-  MOZ_ASSERT(frames > 0);
   return frames;
 }
 #endif

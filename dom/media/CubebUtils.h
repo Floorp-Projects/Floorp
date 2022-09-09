@@ -93,8 +93,8 @@ bool RouteOutputAsVoice();
 bool EstimatedRoundTripLatencyDefaultDevices(double* aMean, double* aStdDev);
 
 #  ifdef MOZ_WIDGET_ANDROID
-uint32_t AndroidGetAudioOutputSampleRate();
-uint32_t AndroidGetAudioOutputFramesPerBuffer();
+int32_t AndroidGetAudioOutputSampleRate();
+int32_t AndroidGetAudioOutputFramesPerBuffer();
 #  endif
 
 #  ifdef ENABLE_SET_CUBEB_BACKEND
