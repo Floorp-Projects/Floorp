@@ -77,20 +77,20 @@ fun WallpaperOnboarding(
 
             Text(
                 text = stringResource(R.string.wallpapers_onboarding_dialog_title_text),
-                style = FirefoxTheme.typography.headline7,
                 color = FirefoxTheme.colors.textPrimary,
                 overflow = TextOverflow.Ellipsis,
                 maxLines = 1,
+                style = FirefoxTheme.typography.headline7,
             )
 
             Spacer(modifier = Modifier.height(4.dp))
 
             Text(
                 text = stringResource(R.string.wallpapers_onboarding_dialog_body_text),
-                style = FirefoxTheme.typography.caption,
                 color = FirefoxTheme.colors.textSecondary,
                 overflow = TextOverflow.Ellipsis,
                 maxLines = 1,
+                style = FirefoxTheme.typography.caption,
             )
 
             WallpaperThumbnails(
@@ -111,11 +111,10 @@ fun WallpaperOnboarding(
             ) {
                 Text(
                     text = stringResource(R.string.wallpapers_onboarding_dialog_explore_more_button_text),
-                    fontWeight = FontWeight.Bold,
                     color = FirefoxTheme.colors.textAccent,
-                    fontSize = 14.sp,
                     overflow = TextOverflow.Ellipsis,
                     maxLines = 1,
+                    style = FirefoxTheme.typography.button,
                 )
             }
 
