@@ -66,7 +66,7 @@ class WallpaperOnboardingDialogFragment : BottomSheetDialogFragment() {
         setContent {
             FirefoxTheme {
                 val wallpapers = appStore.observeAsComposableState { state ->
-                    state.wallpaperState.availableWallpapers.subList(0, THUMBNAILS_COUNT)
+                    state.wallpaperState.availableWallpapers.take(THUMBNAILS_COUNT)
                 }.value ?: listOf()
                 val currentWallpaper = appStore.observeAsComposableState { state ->
                     state.wallpaperState.currentWallpaper
@@ -78,7 +78,7 @@ class WallpaperOnboardingDialogFragment : BottomSheetDialogFragment() {
                     wallpapers = wallpapers,
                     currentWallpaper = currentWallpaper,
                     onCloseClicked = { dismiss() },
-                    onBottomButtonClicked = {
+                    onExploreMoreButtonClicked = {
                         val directions = NavGraphDirections.actionGlobalWallpaperSettingsFragment()
                         findNavController().navigate(directions)
                     },
