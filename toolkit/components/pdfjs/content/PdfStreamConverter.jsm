@@ -619,7 +619,6 @@ class ChromeActions {
       doc.editorStates = {
         isEditing: false,
         isEmpty: true,
-        hasEmptyClipboard: true,
         hasSomethingToUndo: false,
         hasSomethingToRedo: false,
         hasSelectedEditor: false,

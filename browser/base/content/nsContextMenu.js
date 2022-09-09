@@ -377,11 +377,15 @@ class nsContextMenu {
 
     const {
       isEmpty,
-      hasEmptyClipboard,
       hasSomethingToUndo,
       hasSomethingToRedo,
       hasSelectedEditor,
     } = this.pdfEditorStates;
+
+    const hasEmptyClipboard = !Services.clipboard.hasDataMatchingFlavors(
+      ["application/pdfjs"],
+      Ci.nsIClipboard.kGlobalClipboard
+    );
 
     this.setItemAttr("context-pdfjs-undo", "disabled", !hasSomethingToUndo);
     this.setItemAttr("context-pdfjs-redo", "disabled", !hasSomethingToRedo);
@@ -1495,6 +1499,14 @@ class nsContextMenu {
   }
 
   pdfJSCmd(name) {
+    if (["cut", "copy", "paste"].includes(name)) {
+      const cmd = `cmd_${name}`;
+      document.commandDispatcher.getControllerForCommand(cmd).doCommand(cmd);
+      if (Cu.isInAutomation) {
+        this.browser.sendMessageToActor("PDFJS:Editing", { name }, "Pdfjs");
+      }
+      return;
+    }
     this.browser.sendMessageToActor("PDFJS:Editing", { name }, "Pdfjs");
   }
 
