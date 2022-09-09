@@ -10,7 +10,7 @@
 /**
  * imgIEncoder interface
  */
-[scriptable, uuid(4baa2d6e-fee7-42df-ae3f-5fbebc0c267c)]
+[scriptable, builtinclass, uuid(4baa2d6e-fee7-42df-ae3f-5fbebc0c267c)]
 interface imgIEncoder : nsIAsyncInputStream
 {
   // Possible values for outputOptions. Multiple values are semicolon-separated.
