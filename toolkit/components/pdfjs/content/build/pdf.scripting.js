@@ -2091,17 +2091,12 @@ class App extends _pdf_object.PDFObject {
 
     this._timeoutIds.set(timeout, id);
 
-    if (this._timeoutIdsRegistry) {
-      this._timeoutIdsRegistry.register(timeout, id);
-    }
-
+    this._timeoutIdsRegistry?.register(timeout, id);
     return timeout;
   }
 
   _unregisterTimeout(timeout) {
-    if (this._timeoutIdsRegistry) {
-      this._timeoutIdsRegistry.unregister(timeout);
-    }
+    this._timeoutIdsRegistry?.unregister(timeout);
 
     const data = this._timeoutIds.get(timeout);
 
@@ -2685,10 +2680,7 @@ class EventDispatcher {
       } else if (id === "app" && baseEvent.name === "ResetForm") {
         for (const fieldId of baseEvent.ids) {
           const obj = this._objects[fieldId];
-
-          if (obj) {
-            obj.obj._reset();
-          }
+          obj?.obj._reset();
         }
       }
 
@@ -4006,13 +3998,9 @@ class Doc extends _pdf_object.PDFObject {
   getPageTransition() {}
 
   getPrintParams() {
-    if (!this._printParams) {
-      this._printParams = new _print_params.PrintParams({
-        lastPage: this._numPages - 1
-      });
-    }
-
-    return this._printParams;
+    return this._printParams ||= new _print_params.PrintParams({
+      lastPage: this._numPages - 1
+    });
   }
 
   getSound() {}
@@ -5084,8 +5072,8 @@ Object.defineProperty(exports, "initSandbox", ({
 
 var _initialization = __w_pdfjs_require__(1);
 
-const pdfjsVersion = '3.0.7';
-const pdfjsBuild = '86370bd5c';
+const pdfjsVersion = '3.0.51';
+const pdfjsBuild = 'a274f63d5';
 })();
 
 /******/ 	return __webpack_exports__;
