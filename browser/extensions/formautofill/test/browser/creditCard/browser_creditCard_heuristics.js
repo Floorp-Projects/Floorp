@@ -83,6 +83,9 @@ const TESTCASES = [
                 <input id="cc-number" name="credit card number">
                 <input id="token" type="hidden">
                </form>`,
+    prefs: [
+      ["extensions.formautofill.creditCards.heuristics.testConfidence", "0.95"],
+    ],
     idsToShowPopup: ["cc-number"],
   },
 ];
