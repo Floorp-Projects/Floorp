@@ -28,9 +28,9 @@ const {
 const Targets = require("devtools/server/actors/targets/index");
 const Resources = require("devtools/server/actors/resources/index");
 const TargetActorMixin = require("devtools/server/actors/targets/target-actor-mixin");
-const {
-  TargetActorRegistry,
-} = require("resource://devtools/server/actors/targets/target-actor-registry.jsm");
+const { TargetActorRegistry } = ChromeUtils.importESModule(
+  "resource://devtools/server/actors/targets/target-actor-registry.sys.mjs"
+);
 
 loader.lazyRequireGetter(
   this,

@@ -40,7 +40,7 @@ loader.lazyRequireGetter(
 loader.lazyRequireGetter(
   this,
   "getAddonIdForWindowGlobal",
-  "devtools/server/actors/watcher/browsing-context-helpers.jsm",
+  "devtools/server/actors/watcher/browsing-context-helpers.sys.mjs",
   true
 );
 

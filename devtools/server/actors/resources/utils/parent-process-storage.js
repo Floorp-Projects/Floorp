@@ -9,7 +9,9 @@ const EventEmitter = require("devtools/shared/event-emitter");
 const {
   getAllBrowsingContextsForContext,
   isWindowGlobalPartOfContext,
-} = require("devtools/server/actors/watcher/browsing-context-helpers.jsm");
+} = ChromeUtils.importESModule(
+  "resource://devtools/server/actors/watcher/browsing-context-helpers.sys.mjs"
+);
 
 // ms of delay to throttle updates
 const BATCH_DELAY = 200;

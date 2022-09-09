@@ -4,12 +4,12 @@
 
 "use strict";
 
-const {
-  WatcherRegistry,
-} = require("devtools/server/actors/watcher/WatcherRegistry.jsm");
-const {
-  WindowGlobalLogger,
-} = require("devtools/server/connectors/js-window-actor/WindowGlobalLogger.jsm");
+const { WatcherRegistry } = ChromeUtils.importESModule(
+  "resource://devtools/server/actors/watcher/WatcherRegistry.sys.mjs"
+);
+const { WindowGlobalLogger } = ChromeUtils.importESModule(
+  "resource://devtools/server/connectors/js-window-actor/WindowGlobalLogger.sys.mjs"
+);
 const Targets = require("devtools/server/actors/targets/index");
 
 const browsingContextAttachedObserverByWatcher = new Map();
