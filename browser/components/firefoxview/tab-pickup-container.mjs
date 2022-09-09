@@ -81,9 +81,18 @@ class TabPickupContainer extends HTMLDetailsElement {
           TabsSetupFlowManager.dismissMobileConfirmation(event.target);
           break;
         }
-        case "view0-sync-disconnected-action":
-          TabsSetupFlowManager.openSyncPreferences(event.target.ownerGlobal);
+        case "view0-sync-disconnected-action": {
+          const window = event.target.ownerGlobal;
+          const {
+            switchToTabHavingURI,
+          } = window.docShell.chromeEventHandler.ownerGlobal;
+          switchToTabHavingURI(
+            "about:preferences?action=choose-what-to-sync#sync",
+            true,
+            {}
+          );
           break;
+        }
       }
     }
     // Returning to fxview seems like a likely time for a device check
