@@ -24,7 +24,6 @@
  *   These dedicated classes are used by the LayoutChangesObserver.
  */
 
-const ChromeUtils = require("ChromeUtils");
 const protocol = require("devtools/shared/protocol");
 const EventEmitter = require("devtools/shared/event-emitter");
 const { reflowSpec } = require("devtools/shared/specs/reflow");

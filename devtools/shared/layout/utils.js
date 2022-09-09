@@ -11,7 +11,6 @@ loader.lazyRequireGetter(
   "DevToolsUtils",
   "devtools/shared/DevToolsUtils"
 );
-loader.lazyRequireGetter(this, "ChromeUtils");
 loader.lazyRequireGetter(
   this,
   "NetUtil",

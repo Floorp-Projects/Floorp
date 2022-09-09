@@ -27,7 +27,6 @@ var { Ci, Cc } = require("chrome");
 const { debounce } = require("devtools/shared/debounce");
 const { throttle } = require("devtools/shared/throttle");
 const { safeAsyncMethod } = require("devtools/shared/async-utils");
-var ChromeUtils = require("ChromeUtils");
 var { gDevTools } = require("devtools/client/framework/devtools");
 var EventEmitter = require("devtools/shared/event-emitter");
 const Selection = require("devtools/client/framework/selection");

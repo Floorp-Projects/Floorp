@@ -5,7 +5,6 @@
 "use strict";
 
 const { Cc, Ci, Cm, Cr, components } = require("chrome");
-const ChromeUtils = require("ChromeUtils");
 const { ComponentUtils } = require("resource://gre/modules/ComponentUtils.jsm");
 
 /**

@@ -9,7 +9,6 @@
 const { Ci, Cc, Cu } = require("chrome");
 const { gBrowser, MozillaFileLogger, requestIdleCallback } = dampWindow;
 
-const ChromeUtils = require("ChromeUtils");
 const { AddonManager } = require("resource://gre/modules/AddonManager.jsm");
 
 const DampLoadParentModule = require("damp-test/actors/DampLoadParent.jsm");

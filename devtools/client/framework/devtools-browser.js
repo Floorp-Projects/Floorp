@@ -12,8 +12,6 @@
  * browser window is ready (i.e. fired browser-delayed-startup-finished event)
  **/
 
-const ChromeUtils = require("ChromeUtils");
-
 const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
   BrowserToolboxLauncher:

@@ -5,7 +5,6 @@
 "use strict";
 
 const { components } = require("chrome");
-const ChromeUtils = require("ChromeUtils");
 
 /**
  * A ReflowObserver that listens for reflow events from the page.

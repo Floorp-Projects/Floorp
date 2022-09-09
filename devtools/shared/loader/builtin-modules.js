@@ -217,7 +217,6 @@ function lazyRequireGetter(obj, properties, module, destructure) {
 
 // List of pseudo modules exposed to all devtools modules.
 exports.modules = {
-  ChromeUtils,
   DebuggerNotificationObserver,
   HeapSnapshot,
   InspectorUtils,
@@ -261,6 +260,7 @@ exports.globals = {
   Blob,
   btoa,
   CanonicalBrowsingContext,
+  ChromeUtils,
   BrowsingContext,
   WebExtensionPolicy,
   WindowGlobalParent,

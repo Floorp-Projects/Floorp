@@ -60,8 +60,6 @@ loader.lazyRequireGetter(
   true
 );
 
-loader.lazyRequireGetter(this, "ChromeUtils");
-
 const XHTML_NS = "http://www.w3.org/1999/xhtml";
 
 const SUPPORTED_RULE_TYPES = [

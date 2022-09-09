@@ -9,7 +9,6 @@ const L10N = new LocalizationHelper(
   "devtools/client/locales/device.properties"
 );
 
-const ChromeUtils = require("ChromeUtils");
 const { RemoteSettings } = ChromeUtils.import(
   "resource://services-settings/remote-settings.js"
 );

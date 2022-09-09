@@ -5,7 +5,6 @@
 "use strict";
 
 const { Ci, Cu } = require("chrome");
-const ChromeUtils = require("ChromeUtils");
 
 const { createStringGrip } = require("devtools/server/actors/object/utils");
 

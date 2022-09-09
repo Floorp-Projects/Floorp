@@ -5,7 +5,6 @@
 "use strict";
 
 const { components, Ci, Cr, Cu, CC } = require("chrome");
-const ChromeUtils = require("ChromeUtils");
 
 loader.lazyRequireGetter(
   this,

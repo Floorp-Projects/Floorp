@@ -10,7 +10,6 @@ const protocol = require("devtools/shared/protocol");
 const {
   propertyIteratorSpec,
 } = require("devtools/shared/specs/property-iterator");
-loader.lazyRequireGetter(this, "ChromeUtils");
 loader.lazyRequireGetter(
   this,
   "ObjectUtils",

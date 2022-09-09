@@ -23,7 +23,6 @@ loader.lazyServiceGetter(
   "nsIHttpActivityDistributor"
 );
 
-const ChromeUtils = require("ChromeUtils");
 const { setTimeout } = require("resource://gre/modules/Timer.jsm");
 
 /**

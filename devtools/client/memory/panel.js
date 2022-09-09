@@ -5,7 +5,6 @@
 "use strict";
 
 const EventEmitter = require("devtools/shared/event-emitter");
-const ChromeUtils = require("ChromeUtils");
 const HeapAnalysesClient = require("devtools/shared/heapsnapshot/HeapAnalysesClient");
 
 function MemoryPanel(iframeWindow, toolbox, commands) {

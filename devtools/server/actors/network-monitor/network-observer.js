@@ -13,7 +13,6 @@
 const DEBUG_PLATFORM_EVENTS = false;
 
 const { Cc, Ci } = require("chrome");
-const ChromeUtils = require("ChromeUtils");
 
 loader.lazyRequireGetter(
   this,

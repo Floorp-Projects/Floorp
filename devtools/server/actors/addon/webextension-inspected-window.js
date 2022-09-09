@@ -9,7 +9,6 @@ const protocol = require("devtools/shared/protocol");
 const { Cc, Ci, Cu, Cr } = require("chrome");
 
 const { DevToolsServer } = require("devtools/server/devtools-server");
-const ChromeUtils = require("ChromeUtils");
 
 loader.lazyGetter(
   this,

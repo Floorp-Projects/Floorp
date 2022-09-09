@@ -4,7 +4,6 @@
 
 "use strict";
 
-const ChromeUtils = require("ChromeUtils");
 const { Cu } = require("chrome");
 const { dumpn } = require("devtools/shared/DevToolsUtils");
 
