@@ -301,6 +301,7 @@ class SystemEngineView @JvmOverloads constructor(
             }
         }
 
+        @Deprecated("Deprecated in Java")
         override fun onReceivedError(view: WebView, errorCode: Int, description: String?, failingUrl: String?) {
             session?.let { session ->
                 val errorType = SystemEngineSession.webViewErrorToErrorType(errorCode)
