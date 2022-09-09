@@ -462,10 +462,57 @@ const MESSAGES = () => {
       frequency: { lifetime: 1 },
       trigger: { id: "featureCalloutCheck" },
     },
+    {
+      id: "FIREFOX_VIEW_TAB_PICKUP_REMINDER",
+      template: "feature_callout",
+      content: {
+        id: "FIREFOX_VIEW_TAB_PICKUP_REMINDER",
+        template: "multistage",
+        backdrop: "transparent",
+        transitions: false,
+        disableHistoryUpdates: true,
+        screens: [
+          {
+            id: "FIREFOX_VIEW_TAB_PICKUP_REMINDER",
+            parent_selector: "#tabpickup-steps",
+            content: {
+              position: "callout",
+              arrow_position: "top",
+              title: {
+                string_id:
+                  "continuous-onboarding-firefox-view-tab-pickup-title",
+              },
+              subtitle: {
+                string_id:
+                  "continuous-onboarding-firefox-view-tab-pickup-subtitle",
+              },
+              logo: {
+                imageURL: "chrome://browser/content/callout-tab-pickup.svg",
+                darkModeImageURL:
+                  "chrome://browser/content/callout-tab-pickup-dark.svg",
+                height: "128px",
+              },
+              dismiss_button: {
+                action: {
+                  navigate: true,
+                },
+              },
+            },
+          },
+        ],
+      },
+      priority: 1,
+      targeting: `source == "firefoxview" && "browser.firefox-view.view-count" | preferenceValue > 2
+    && (("identity.fxaccounts.enabled" | preferenceValue == false) || !(("services.sync.engine.tabs" | preferenceValue == true) && ("services.sync.username" | preferenceValue)))`,
+      frequency: {
+        lifetime: 1,
+      },
+      trigger: { id: "featureCalloutCheck" },
+    },
   ];
 
   messages = add24HourImpressionJEXLTargeting(
-    ["FIREFOX_VIEW_COLORWAYS_REMINDER"],
+    ["FIREFOX_VIEW_COLORWAYS_REMINDER", "FIREFOX_VIEW_TAB_PICKUP_REMINDER"],
     "FIREFOX_VIEW",
     messages
   );
