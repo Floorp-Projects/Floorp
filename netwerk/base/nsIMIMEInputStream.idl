@@ -11,7 +11,7 @@
  * automatic creation of the content-length header.
  */
 
-[scriptable, uuid(dcbce63c-1dd1-11b2-b94d-91f6d49a3161)]
+[scriptable, builtinclass, uuid(dcbce63c-1dd1-11b2-b94d-91f6d49a3161)]
 interface nsIMIMEInputStream : nsIInputStream
 {
     /**

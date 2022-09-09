@@ -50,7 +50,7 @@ native nsReadSegmentFun(nsReadSegmentFun);
  * generally the case that a blocking output stream should be implemented using
  * thread- safe AddRef and Release.
  */
-[scriptable, uuid(0d0acd2a-61b4-11d4-9877-00c04fa0cf4a)]
+[scriptable, builtinclass, uuid(0d0acd2a-61b4-11d4-9877-00c04fa0cf4a)]
 interface nsIOutputStream : nsISupports
 {
     /**

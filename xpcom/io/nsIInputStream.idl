@@ -56,7 +56,7 @@ native nsWriteSegmentFun(nsWriteSegmentFun);
  * the case that a blocking input stream should be implemented using thread-
  * safe AddRef and Release.
  */
-[scriptable, uuid(53cdbc97-c2d7-4e30-b2c3-45b2ee79db18)]
+[scriptable, builtinclass, uuid(53cdbc97-c2d7-4e30-b2c3-45b2ee79db18)]
 interface nsIInputStream : nsISupports
 {
     /**

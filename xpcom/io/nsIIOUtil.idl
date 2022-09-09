@@ -11,7 +11,7 @@ interface nsIOutputStream;
 /**
  * nsIIOUtil provdes various xpcom/io-related utility methods.
  */
-[scriptable, uuid(e8152f7f-4209-4c63-ad23-c3d2aa0c5a49)]
+[scriptable, builtinclass, uuid(e8152f7f-4209-4c63-ad23-c3d2aa0c5a49)]
 interface nsIIOUtil : nsISupports
 {
   /**
