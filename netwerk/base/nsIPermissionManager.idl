@@ -82,6 +82,17 @@ interface nsIPermissionManager : nsISupports
    */
   Array<nsIPermission> getAllWithTypePrefix(in ACString prefix);
 
+
+  /**
+   * Get all custom permissions whose type exactly match one of the types defined
+   * in the passed array argument.
+   * This will return an array of all permissions which are not set to default.
+   *
+   * @param types  an array of case-sensitive ASCII strings, identifying the 
+   *               permissions to be matched.
+   */
+  Array<nsIPermission> getAllByTypes(in Array<ACString> types);
+
   /**
    * Get all custom permissions of a specific type and that were modified after
    * the specified date. This will return an array of all permissions which are
