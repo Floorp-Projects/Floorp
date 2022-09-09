@@ -1559,4 +1559,56 @@ var TemporalHelpers = {
       },
     };
   },
+
+  /*
+   * An object containing further methods that return arrays of ISO strings, for
+   * testing parsers.
+   */
+  ISO: {
+    /*
+     * PlainTime strings that may be mistaken for PlainMonthDay or
+     * PlainYearMonth strings, and so require a time designator.
+     */
+    plainTimeStringsAmbiguous() {
+      const ambiguousStrings = [
+        "2021-12",  // ambiguity between YYYY-MM and HHMM-UU
+        "1214",     // ambiguity between MMDD and HHMM
+        "0229",     //   ditto, including MMDD that doesn't occur every year
+        "1130",     //   ditto, including DD that doesn't occur in every month
+        "12-14",    // ambiguity between MM-DD and HH-UU
+        "202112",   // ambiguity between YYYYMM and HHMMSS
+      ];
+      // Adding a calendar annotation to one of these strings must not cause
+      // disambiguation in favour of time.
+      const stringsWithCalendar = ambiguousStrings.map((s) => s + '[u-ca=iso8601]');
+      return ambiguousStrings.concat(stringsWithCalendar);
+    },
+
+    /*
+     * PlainTime strings that are of similar form to PlainMonthDay and
+     * PlainYearMonth strings, but are not ambiguous due to components that
+     * aren't valid as months or days.
+     */
+    plainTimeStringsUnambiguous() {
+      return [
+        "2021-13",          // 13 is not a month
+        "202113",           //   ditto
+        "2021-13[-13:00]",  //   ditto
+        "202113[-13:00]",   //   ditto
+        "0000-00",          // 0 is not a month
+        "000000",           //   ditto
+        "0000-00[UTC]",     //   ditto
+        "000000[UTC]",      //   ditto
+        "1314",             // 13 is not a month
+        "13-14",            //   ditto
+        "1232",             // 32 is not a day
+        "0230",             // 30 is not a day in February
+        "0631",             // 31 is not a day in June
+        "0000",             // 0 is neither a month nor a day
+        "00-00",            //   ditto
+        "2021-12[-12:00]",  // HHMM-UU is ambiguous with YYYY-MM, but TZ disambiguates
+        "202112[UTC]",      // HHMMSS is ambiguous with YYYYMM, but TZ disambiguates
+      ];
+    }
+  }
 };

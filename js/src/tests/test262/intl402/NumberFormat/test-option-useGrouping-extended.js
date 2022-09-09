@@ -1,6 +1,7 @@
 // |reftest| skip-if(release_or_beta) -- Intl.NumberFormat-v3 is not released yet
 // Copyright 2021 the V8 project authors. All rights reserved.
 // Copyright 2022 Apple Inc. All rights reserved.
+// Copyright 2022 Igalia, S.L. All rights reserved.
 // This code is governed by the BSD license found in the LICENSE file.
 
 /*---
@@ -38,6 +39,5 @@ assert.sameValue(render({notation: 'compact', useGrouping: 'min2'}), 'min2', 'co
 assert.sameValue(render({useGrouping: 'undefined'}), 'auto', 'use fallback value');
 assert.sameValue(render({useGrouping: 'false'}), 'auto', 'use fallback value');
 assert.sameValue(render({useGrouping: 'true'}), 'auto', 'use fallback value');
-assert.sameValue(render({useGrouping: 'min3'}), 'auto', 'use fallback value');
 
 reportCompare(0, 0);
