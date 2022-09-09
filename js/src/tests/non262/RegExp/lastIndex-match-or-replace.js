@@ -25,6 +25,7 @@ class DuckRegExp extends RegExp {
 
     get source() { return this.regExp.source; }
 
+    get flags() { return this.regExp.flags; }
     get global() { return this.regExp.global; }
     get ignoreCase() { return this.regExp.ignoreCase; }
     get multiline() { return this.regExp.multiline; }

@@ -612,14 +612,6 @@ skip script test262/built-ins/AsyncGeneratorPrototype/return/return-state-comple
 skip script test262/built-ins/AsyncGeneratorPrototype/return/return-suspendedStart-broken-promise.js
 skip script test262/built-ins/AsyncGeneratorPrototype/return/return-suspendedYield-broken-promise-try-catch.js
 
-# https://bugzilla.mozilla.org/show_bug.cgi?id=1781206
-skip script test262/built-ins/RegExp/prototype/Symbol.replace/get-flags-err.js
-skip script test262/built-ins/RegExp/prototype/Symbol.replace/get-unicode-error.js
-skip script test262/built-ins/RegExp/prototype/Symbol.replace/flags-tostring-error.js
-skip script test262/built-ins/RegExp/prototype/Symbol.match/get-flags-err.js
-skip script test262/built-ins/RegExp/prototype/Symbol.match/get-unicode-error.js
-skip script test262/built-ins/RegExp/prototype/Symbol.match/flags-tostring-error.js
-
 # https://bugzilla.mozilla.org/show_bug.cgi?id=1781205
 skip script test262/language/statements/async-generator/yield-star-return-then-getter-ticks.js
 skip script test262/language/statements/async-generator/yield-star-promise-not-unwrapped.js

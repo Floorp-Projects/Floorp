@@ -158,13 +158,16 @@ function RegExpMatch(string) {
 // ES 2017 draft rev 6859bb9ccaea9c6ede81d71e5320e3833b92cb3e 21.2.5.6
 // steps 4-6.
 function RegExpMatchSlowPath(rx, S) {
-  // Steps 4-5.
-  if (!rx.global) {
+  // Step 4.
+  var flags = ToString(rx.flags);
+
+  // Step 5.
+  if (!callFunction(std_String_includes, flags, "g")) {
     return RegExpExec(rx, S, false);
   }
 
   // Step 6.a.
-  var fullUnicode = !!rx.unicode;
+  var fullUnicode = callFunction(std_String_includes, flags, "u");
 
   // Step 6.b.
   rx.lastIndex = 0;
@@ -397,13 +400,16 @@ function RegExpReplaceSlowPath(
   firstDollarIndex
 ) {
   // Step 7.
-  var global = !!rx.global;
+  var flags = ToString(rx.flags);
 
   // Step 8.
+  var global = callFunction(std_String_includes, flags, "g");
+
+  // Step 9.
   var fullUnicode = false;
   if (global) {
-    // Step 8.a.
-    fullUnicode = !!rx.unicode;
+    // Step 9.a.
+    fullUnicode = callFunction(std_String_includes, flags, "u");
 
     // Step 8.b.
     rx.lastIndex = 0;

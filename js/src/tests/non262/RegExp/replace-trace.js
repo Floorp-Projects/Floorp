@@ -52,9 +52,12 @@ function P(A, index, matched2) {
 }
 
 var myRegExp = {
-  get global() {
-    log += "get:global,";
-    return global;
+  get flags() {
+    log += "get:flags,";
+    var flags = "";
+    if (global) flags += "g";
+    if (unicode) flags += "u";
+    return flags;
   },
   get lastIndex() {
     log += "get:lastIndex,";
@@ -63,10 +66,6 @@ var myRegExp = {
   set lastIndex(v) {
     log += "set:lastIndex,";
     assertEq(v, lastIndexExpected[n]);
-  },
-  get unicode() {
-    log += "get:unicode,";
-    return unicode;
   },
   get exec() {
     log += "get:exec,";
@@ -96,8 +95,7 @@ var ret = RegExp.prototype[Symbol.replace].call(myRegExp, target, "_XYZ_");
 assertEq(arraySetterObserved, false);
 assertEq(ret, "a_XYZ_AbcABC");
 assertEq(log,
-         "get:global," +
-         "get:unicode," +
+         "get:flags," +
          "set:lastIndex," +
          "get:exec,call:exec," +
          "get:result[0]," +
@@ -113,8 +111,7 @@ ret = RegExp.prototype[Symbol.replace].call(myRegExp, target, "_XYZ_");
 assertEq(arraySetterObserved, false);
 assertEq(ret, "a_XYZ_bcAbcABC");
 assertEq(log,
-         "get:global," +
-         "get:unicode," +
+         "get:flags," +
          "set:lastIndex," +
          "get:exec,call:exec," +
          "get:result[0]," +
@@ -139,8 +136,7 @@ ret = RegExp.prototype[Symbol.replace].call(myRegExp, target, "_XYZ_");
 assertEq(arraySetterObserved, false);
 assertEq(ret, "-_XYZ_-_XYZ_-_XYZ_\uD83D_XYZ_\uDC38_XYZ_---\uD83D");
 assertEq(log,
-         "get:global," +
-         "get:unicode," +
+         "get:flags," +
          "set:lastIndex," +
          "get:exec,call:exec," +
          "get:result[0]," +
@@ -173,8 +169,7 @@ ret = RegExp.prototype[Symbol.replace].call(myRegExp, target, "[$&,$`,$',$1,$2,$
 assertEq(arraySetterObserved, false);
 assertEq(ret, "a[bc,a,AbcABC,b,c,$3,$]AbcABC");
 assertEq(log,
-         "get:global," +
-         "get:unicode," +
+         "get:flags," +
          "set:lastIndex," +
          "get:exec,call:exec," +
          "get:result[0]," +
@@ -192,8 +187,7 @@ ret = RegExp.prototype[Symbol.replace].call(myRegExp, target, "[$&,$`,$',$1,$2,$
 assertEq(arraySetterObserved, false);
 assertEq(ret, "a[BC,a,AbcABC,b,c,$3,$]AbcABC");
 assertEq(log,
-         "get:global," +
-         "get:unicode," +
+         "get:flags," +
          "set:lastIndex," +
          "get:exec,call:exec," +
          "get:result[0]," +
@@ -223,8 +217,7 @@ ret = RegExp.prototype[Symbol.replace].call(myRegExp, target, replaceFunc);
 assertEq(arraySetterObserved, false);
 assertEq(ret, "a_ret_AbcABC");
 assertEq(log,
-         "get:global," +
-         "get:unicode," +
+         "get:flags," +
          "set:lastIndex," +
          "get:exec,call:exec," +
          "get:result[0]," +
@@ -244,8 +237,7 @@ ret = RegExp.prototype[Symbol.replace].call(myRegExp, target, "_XYZ_");
 assertEq(arraySetterObserved, false);
 assertEq(ret, "abcAb_XYZ_ABC");
 assertEq(log,
-         "get:global," +
-         "get:unicode," +
+         "get:flags," +
          "set:lastIndex," +
          "get:exec,call:exec," +
          "get:result[0]," +
@@ -264,8 +256,7 @@ ret = RegExp.prototype[Symbol.replace].call(myRegExp, target, "_XYZ_");
 assertEq(arraySetterObserved, false);
 assertEq(ret, "abcAbcA_XYZ_");
 assertEq(log,
-         "get:global," +
-         "get:unicode," +
+         "get:flags," +
          "set:lastIndex," +
          "get:exec,call:exec," +
          "get:result[0]," +
@@ -281,8 +272,7 @@ ret = RegExp.prototype[Symbol.replace].call(myRegExp, target, "_XYZ_");
 assertEq(arraySetterObserved, false);
 assertEq(ret, "abcAbcABC_XYZ_");
 assertEq(log,
-         "get:global," +
-         "get:unicode," +
+         "get:flags," +
          "set:lastIndex," +
          "get:exec,call:exec," +
          "get:result[0]," +
@@ -299,7 +289,7 @@ ret = RegExp.prototype[Symbol.replace].call(myRegExp, target, "_XYZ_");
 assertEq(arraySetterObserved, false);
 assertEq(ret, "a_XYZ_AbcABC");
 assertEq(log,
-         "get:global," +
+         "get:flags," +
          "get:exec,call:exec," +
          "get:result[length],get:result[0],get:result[index],get:result[groups],");
 
