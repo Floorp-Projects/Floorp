@@ -1446,7 +1446,7 @@ with only_when("--enable-compile-environment"):
     @depends("--enable-release", enable_linker)
     def default_elfhack(release, linker):
         # Disable elfhack when explicitly building with --enable-linker=lld
-        if linker and linker.origin != "default" and linker[0] == "lld":
+        if linker and linker.origin != "default" and linker[0] in ("lld", "mold"):
             return False
         return bool(release)
 

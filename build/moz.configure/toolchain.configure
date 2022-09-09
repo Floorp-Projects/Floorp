@@ -1513,7 +1513,7 @@ def enable_linker_default(target, developer_options):
 option(
     "--enable-linker",
     nargs=1,
-    help="Select the linker {bfd, gold, ld64, lld, lld-*}{|}",
+    help="Select the linker {bfd, gold, ld64, lld, lld-*, mold}{|}",
     default=enable_linker_default,
     when=is_linker_option_enabled,
 )
@@ -1548,7 +1548,7 @@ def select_linker(linker, c_compiler, developer_options, toolchain_flags, target
         if target.kernel == "Darwin":
             valid_linkers = ("ld64", "lld")
         else:
-            valid_linkers = ("bfd", "gold", "lld")
+            valid_linkers = ("bfd", "gold", "lld", "mold")
         if linker in valid_linkers:
             return True
         if "lld" in valid_linkers and linker.startswith("lld-"):
@@ -1592,6 +1592,9 @@ def select_linker(linker, c_compiler, developer_options, toolchain_flags, target
 
         elif retcode != 0:
             return None
+
+        elif "mold" in stdout:
+            kind = "mold"
 
         elif "GNU ld" in stdout:
             # We are using the normal linker
@@ -1699,7 +1702,7 @@ add_old_configure_assignment("LINKER_LDFLAGS", linker_ldflags)
 @depends(select_linker, target, c_compiler)
 def gcc_use_gnu_ld(select_linker, target, c_compiler):
     if select_linker is not None and target.kernel != "Darwin":
-        return select_linker.KIND in ("bfd", "gold", "lld")
+        return select_linker.KIND in ("bfd", "gold", "lld", "mold")
     if target.kernel == "WINNT" and c_compiler.type == "clang":
         return True
     return None
