@@ -23,8 +23,12 @@
   flex-direction: column;
   background-color: var(--in-content-page-background);
   width: 412px;
-  gap: var(--gap);
-  padding: var(--gap);
+  gap: var(--gap) 0;
+  padding-block: var(--gap);
+}
+
+.textRecognition > * {
+  padding-inline: var(--gap);
 }
 
 .textRecognitionHeader {
