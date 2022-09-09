@@ -41,7 +41,6 @@ from mozharness.mozilla.testing.codecoverage import (
 )
 from mozharness.mozilla.testing.testbase import TestingMixin, testing_config_options
 
-PY2 = sys.version_info.major == 2
 SUITE_CATEGORIES = [
     "gtest",
     "cppunittest",
@@ -492,15 +491,11 @@ class DesktopUnittest(TestingMixin, MercurialScript, MozbaseMixin, CodeCoverageM
 
         if self._query_specified_suites("mochitest") is not None:
             # mochitest is the only thing that needs this
-            if PY2:
-                wspb_requirements = "websocketprocessbridge_requirements.txt"
-            else:
-                wspb_requirements = "websocketprocessbridge_requirements_3.txt"
             requirements_files.append(
                 os.path.join(
                     dirs["abs_mochitest_dir"],
                     "websocketprocessbridge",
-                    wspb_requirements,
+                    "websocketprocessbridge_requirements_3.txt",
                 )
             )
 
