@@ -120,6 +120,7 @@ already_AddRefed<TextureClient> ImageClient::CreateTextureClientForImage(
     texture = AndroidSurfaceTextureData::CreateTextureClient(
         typedImage->GetHandle(), size, typedImage->GetContinuous(),
         typedImage->GetOriginPos(), typedImage->GetHasAlpha(),
+        typedImage->GetTransformOverride(),
         aKnowsCompositor->GetTextureForwarder(), TextureFlags::DEFAULT);
 #endif
   } else {

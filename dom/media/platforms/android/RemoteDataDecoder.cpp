@@ -7,6 +7,7 @@
 #include <jni.h>
 
 #include "AndroidBridge.h"
+#include "AndroidBuild.h"
 #include "AndroidDecoderModule.h"
 #include "EMEDecoderModule.h"
 #include "GLImages.h"
@@ -17,6 +18,7 @@
 #include "SimpleMap.h"
 #include "VPXDecoder.h"
 #include "VideoUtils.h"
+#include "mozilla/gfx/Matrix.h"
 #include "mozilla/java/CodecProxyWrappers.h"
 #include "mozilla/java/GeckoSurfaceWrappers.h"
 #include "mozilla/java/SampleBufferWrappers.h"
@@ -170,6 +172,16 @@ class RemoteVideoDecoder : public RemoteDataDecoder {
     mIsCodecSupportAdaptivePlayback =
         mJavaDecoder->IsAdaptivePlaybackSupported();
     mIsHardwareAccelerated = mJavaDecoder->IsHardwareAccelerated();
+
+    // On Mediatek 6735 devices we have observed that the transform obtained
+    // from SurfaceTexture.getTransformMatrix() is incorrect for surfaces
+    // produced by a MediaCodec. We therefore override the transform to be a
+    // simple y-flip to ensure it is rendered correctly.
+    if (java::sdk::Build::HARDWARE()->ToString().EqualsASCII("mt6735")) {
+      mTransformOverride = Some(
+          gfx::Matrix4x4::Scaling(1.0, -1.0, 1.0).PostTranslate(0.0, 1.0, 0.0));
+    }
+
     return InitPromise::CreateAndResolve(TrackInfo::kVideoTrack, __func__);
   }
 
@@ -315,7 +327,7 @@ class RemoteVideoDecoder : public RemoteDataDecoder {
     if (ok && (size > 0 || presentationTimeUs >= 0)) {
       RefPtr<layers::Image> img = new layers::SurfaceTextureImage(
           mSurfaceHandle, inputInfo.mImageSize, false /* NOT continuous */,
-          gl::OriginPos::BottomLeft, mConfig.HasAlpha());
+          gl::OriginPos::BottomLeft, mConfig.HasAlpha(), mTransformOverride);
       img->AsSurfaceTextureImage()->RegisterSetCurrentCallback(
           std::move(releaseSample));
 
@@ -341,6 +353,9 @@ class RemoteVideoDecoder : public RemoteDataDecoder {
   const VideoInfo mConfig;
   java::GeckoSurface::GlobalRef mSurface;
   AndroidSurfaceTextureHandle mSurfaceHandle;
+  // Used to override the SurfaceTexture transform on some devices where the
+  // decoder provides a buggy value.
+  Maybe<gfx::Matrix4x4> mTransformOverride;
   // Only accessed on reader's task queue.
   bool mIsCodecSupportAdaptivePlayback = false;
   // Can be accessed on any thread, but only written on during init.

@@ -17,12 +17,13 @@ namespace wr {
 
 RenderAndroidSurfaceTextureHost::RenderAndroidSurfaceTextureHost(
     const java::GeckoSurfaceTexture::GlobalRef& aSurfTex, gfx::IntSize aSize,
-    gfx::SurfaceFormat aFormat, bool aContinuousUpdate, bool aIgnoreTransform)
+    gfx::SurfaceFormat aFormat, bool aContinuousUpdate,
+    Maybe<gfx::Matrix4x4> aTransformOverride)
     : mSurfTex(aSurfTex),
       mSize(aSize),
       mFormat(aFormat),
       mContinuousUpdate(aContinuousUpdate),
-      mIgnoreTransform(aIgnoreTransform),
+      mTransformOverride(aTransformOverride),
       mPrepareStatus(STATUS_NONE),
       mAttachedToGLContext(false) {
   MOZ_COUNT_CTOR_INHERITED(RenderAndroidSurfaceTextureHost, RenderTextureHost);
@@ -273,11 +274,14 @@ std::pair<gfx::Point, gfx::Point> RenderAndroidSurfaceTextureHost::GetUvCoords(
     gfx::IntSize aTextureSize) const {
   gfx::Matrix4x4 transform;
 
-  // GetTransformMatrix() returns the transform set by the producer side of
-  // the SurfaceTexture. We should ignore this if we know the transform should
-  // be identity but the producer couldn't set it correctly, like is the
-  // case for AndroidNativeWindowTextureData.
-  if (mSurfTex && !mIgnoreTransform) {
+  // GetTransformMatrix() returns the transform set by the producer side of the
+  // SurfaceTexture that must be applied to texture coordinates when
+  // sampling. In some cases we may have set an override value, such as in
+  // AndroidNativeWindowTextureData where we own the producer side, or for
+  // MediaCodec output on devices where where we know the value is incorrect.
+  if (mTransformOverride) {
+    transform = *mTransformOverride;
+  } else if (mSurfTex) {
     const auto& surf = java::sdk::SurfaceTexture::LocalRef(
         java::sdk::SurfaceTexture::Ref::From(mSurfTex));
     gl::AndroidSurfaceTexture::GetTransformMatrix(surf, &transform);

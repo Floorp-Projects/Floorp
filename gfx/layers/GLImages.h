@@ -9,10 +9,12 @@
 
 #include "GLContextTypes.h"
 #include "GLTypes.h"
-#include "ImageContainer.h"     // for Image
-#include "ImageTypes.h"         // for ImageFormat::SHARED_GLTEXTURE
-#include "nsCOMPtr.h"           // for already_AddRefed
-#include "mozilla/gfx/Point.h"  // for IntSize
+#include "ImageContainer.h"      // for Image
+#include "ImageTypes.h"          // for ImageFormat::SHARED_GLTEXTURE
+#include "nsCOMPtr.h"            // for already_AddRefed
+#include "mozilla/Maybe.h"       // for Maybe
+#include "mozilla/gfx/Matrix.h"  // for Matrix4x4
+#include "mozilla/gfx/Point.h"   // for IntSize
 
 #ifdef MOZ_WIDGET_ANDROID
 #  include "AndroidSurfaceTexture.h"
@@ -42,13 +44,17 @@ class SurfaceTextureImage : public GLImage {
 
   SurfaceTextureImage(AndroidSurfaceTextureHandle aHandle,
                       const gfx::IntSize& aSize, bool aContinuous,
-                      gl::OriginPos aOriginPos, bool aHasAlpha = true);
+                      gl::OriginPos aOriginPos, bool aHasAlpha,
+                      Maybe<gfx::Matrix4x4> aTransformOverride);
 
   gfx::IntSize GetSize() const override { return mSize; }
   AndroidSurfaceTextureHandle GetHandle() const { return mHandle; }
   bool GetContinuous() const { return mContinuous; }
   gl::OriginPos GetOriginPos() const { return mOriginPos; }
   bool GetHasAlpha() const { return mHasAlpha; }
+  const Maybe<gfx::Matrix4x4>& GetTransformOverride() const {
+    return mTransformOverride;
+  }
 
   already_AddRefed<gfx::SourceSurface> GetAsSourceSurface() override {
     // We can implement this, but currently don't want to because it will cause
@@ -78,6 +84,7 @@ class SurfaceTextureImage : public GLImage {
   bool mContinuous;
   gl::OriginPos mOriginPos;
   const bool mHasAlpha;
+  const Maybe<gfx::Matrix4x4> mTransformOverride;
   UniquePtr<SetCurrentCallback> mSetCurrentCallback;
 };
 
