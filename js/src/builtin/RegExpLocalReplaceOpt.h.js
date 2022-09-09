@@ -16,8 +16,9 @@
 //   * SHORT_STRING     -- replaceValue is a string without "$" and lengthS < 0x7fff
 //   * neither of above -- replaceValue is a string without "$"
 
-// ES 2017 draft 6390c2f1b34b309895d31d8c0512eac8660a0210 21.2.5.8
-// steps 11.a-16.
+// ES2023 draft rev 2c78e6f6b5bc6bfbf79dd8a12a9593e5b57afcd2
+// 22.2.5.11 RegExp.prototype [ @@replace ] ( string, replaceValue )
+// Steps 12.a-17.
 // Optimized path for @@replace with the following conditions:
 //   * global flag is false
 function FUNC_NAME(
@@ -57,60 +58,60 @@ function FUNC_NAME(
   }
 
 #if !defined(SHORT_STRING)
-  // Step 11.a.
+  // Step 12.a.
   var result = RegExpMatcher(rx, S, lastIndex);
 
-  // Step 11.b.
+  // Step 12.b.
   if (result === null) {
     // 21.2.5.2.2 RegExpBuiltinExec, steps 12.a.i, 12.c.i.
     if (globalOrSticky) {
       rx.lastIndex = 0;
     }
 
-    // Steps 12-16.
+    // Steps 13-17.
     return S;
   }
 #else
-  // Step 11.a.
+  // Step 12.a.
   var result = RegExpSearcher(rx, S, lastIndex);
 
-  // Step 11.b.
+  // Step 12.b.
   if (result === -1) {
     // 21.2.5.2.2 RegExpBuiltinExec, steps 12.a.i, 12.c.i.
     if (globalOrSticky) {
       rx.lastIndex = 0;
     }
 
-    // Steps 12-16.
+    // Steps 13-17.
     return S;
   }
 #endif
 
-  // Steps 11.c, 12-13.
+  // Steps 12.c, 13-14.
 
 #if !defined(SHORT_STRING)
-  // Steps 14.a-b.
+  // Steps 15.a-b.
   assert(result.length >= 1, "RegExpMatcher doesn't return an empty array");
 
-  // Step 14.c.
+  // Step 15.c.
   var matched = result[0];
 
-  // Step 14.d.
+  // Step 15.d.
   var matchLength = matched.length;
 
-  // Step 14.e-f.
+  // Step 15.e-f.
   var position = result.index;
 
-  // Step 14.m.iii (reordered)
+  // Step 15.m.iii (reordered)
   // To set rx.lastIndex before RegExpGetFunctionalReplacement.
   var nextSourcePosition = position + matchLength;
 #else
-  // Steps 14.a-d (skipped).
+  // Steps 15.a-d (skipped).
 
-  // Step 14.e-f.
+  // Step 15.e-f.
   var position = result & 0x7fff;
 
-  // Step 14.l.iii (reordered)
+  // Step 15.m.iii (reordered)
   var nextSourcePosition = (result >> 15) & 0x7fff;
 #endif
 
@@ -120,7 +121,7 @@ function FUNC_NAME(
   }
 
   var replacement;
-  // Steps g-l.
+  // Steps 15.g-l.
 #if defined(FUNCTIONAL)
   replacement = RegExpGetFunctionalReplacement(
     result,
@@ -129,12 +130,12 @@ function FUNC_NAME(
     replaceValue
   );
 #elif defined(SUBSTITUTION)
-  // Step l.i
+  // Step 15.l.i
   var namedCaptures = result.groups;
   if (namedCaptures !== undefined) {
     namedCaptures = ToObject(namedCaptures);
   }
-  // Step l.ii
+  // Step 15.l.ii
   replacement = RegExpGetSubstitution(
     result,
     S,
@@ -147,15 +148,15 @@ function FUNC_NAME(
   replacement = replaceValue;
 #endif
 
-  // Step 14.m.ii.
+  // Step 15.m.ii.
   var accumulatedResult = Substring(S, 0, position) + replacement;
 
-  // Step 15.
+  // Step 16.
   if (nextSourcePosition >= lengthS) {
     return accumulatedResult;
   }
 
-  // Step 16.
+  // Step 17.
   return (
     accumulatedResult +
     Substring(S, nextSourcePosition, lengthS - nextSourcePosition)
