@@ -900,7 +900,7 @@ dependencies = [
 [[package]]
 name = "coreaudio-sys-utils"
 version = "0.1.0"
-source = "git+https://github.com/mozilla/cubeb-coreaudio-rs?rev=ab933e7cbd569f79b37b540412a7990a5352dd66#ab933e7cbd569f79b37b540412a7990a5352dd66"
+source = "git+https://github.com/mozilla/cubeb-coreaudio-rs?rev=44eca95823bb57e964cf7b6d9791ed2ccb4b2108#44eca95823bb57e964cf7b6d9791ed2ccb4b2108"
 dependencies = [
  "core-foundation-sys",
  "coreaudio-sys",
@@ -1117,27 +1117,27 @@ checksum = "b365fabc795046672053e29c954733ec3b05e4be654ab130fe8f1f94d7051f35"
 
 [[package]]
 name = "cubeb"
-version = "0.10.1"
+version = "0.10.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "53051f86ed8cf5a6771704e80147266f32bdf05cc09089da304484a1c612bb97"
+checksum = "d47c8cc00b8034e996d7dd262956a0d904c1e1d0d521d22c99801420b38484bd"
 dependencies = [
  "cubeb-core",
 ]
 
 [[package]]
 name = "cubeb-backend"
-version = "0.10.1"
+version = "0.10.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0ce2d65b509a33ff97b83439dd1df5f50b8253cb14aa5c55794df37a28846724"
+checksum = "e3d1cd779dd013686571104bbc98f2bcde1e732764b8ad394efaea86b064227d"
 dependencies = [
  "cubeb-core",
 ]
 
 [[package]]
 name = "cubeb-core"
-version = "0.10.1"
+version = "0.10.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "48c0ac573dc2e393c12e4b829d6e17bbb7a1f95b288043ee47ef251097ddb094"
+checksum = "04aabcd7fa088330b5f25b2f92cd1c2d80d0232e114e5bdaa682bb65103d57d9"
 dependencies = [
  "bitflags",
  "cubeb-sys",
@@ -1146,7 +1146,7 @@ dependencies = [
 [[package]]
 name = "cubeb-coreaudio"
 version = "0.1.0"
-source = "git+https://github.com/mozilla/cubeb-coreaudio-rs?rev=ab933e7cbd569f79b37b540412a7990a5352dd66#ab933e7cbd569f79b37b540412a7990a5352dd66"
+source = "git+https://github.com/mozilla/cubeb-coreaudio-rs?rev=44eca95823bb57e964cf7b6d9791ed2ccb4b2108#44eca95823bb57e964cf7b6d9791ed2ccb4b2108"
 dependencies = [
  "atomic",
  "audio-mixer",
@@ -1164,7 +1164,7 @@ dependencies = [
 [[package]]
 name = "cubeb-pulse"
 version = "0.4.0"
-source = "git+https://github.com/mozilla/cubeb-pulse-rs?rev=f32b3ef708c0bfb2c414c08971d638527353d376#f32b3ef708c0bfb2c414c08971d638527353d376"
+source = "git+https://github.com/mozilla/cubeb-pulse-rs?rev=1f1fe1e08e01a9a534ec7f079702a583a0899ce7#1f1fe1e08e01a9a534ec7f079702a583a0899ce7"
 dependencies = [
  "cubeb-backend",
  "pulse",
@@ -1175,9 +1175,9 @@ dependencies = [
 
 [[package]]
 name = "cubeb-sys"
-version = "0.10.1"
+version = "0.10.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "33b49428acff552b1ba790649ea16a6f3d60cf74e9457a1378771a1acc12d5ee"
+checksum = "da8f61339785526e9488f4902ef09d83483fa7fc2c6f6f6f80bb8ae04af03818"
 dependencies = [
  "cmake",
  "pkg-config",
@@ -4225,7 +4225,7 @@ dependencies = [
 [[package]]
 name = "pulse"
 version = "0.3.0"
-source = "git+https://github.com/mozilla/cubeb-pulse-rs?rev=f32b3ef708c0bfb2c414c08971d638527353d376#f32b3ef708c0bfb2c414c08971d638527353d376"
+source = "git+https://github.com/mozilla/cubeb-pulse-rs?rev=1f1fe1e08e01a9a534ec7f079702a583a0899ce7#1f1fe1e08e01a9a534ec7f079702a583a0899ce7"
 dependencies = [
  "bitflags",
  "pulse-ffi",
@@ -4234,7 +4234,7 @@ dependencies = [
 [[package]]
 name = "pulse-ffi"
 version = "0.1.0"
-source = "git+https://github.com/mozilla/cubeb-pulse-rs?rev=f32b3ef708c0bfb2c414c08971d638527353d376#f32b3ef708c0bfb2c414c08971d638527353d376"
+source = "git+https://github.com/mozilla/cubeb-pulse-rs?rev=1f1fe1e08e01a9a534ec7f079702a583a0899ce7#1f1fe1e08e01a9a534ec7f079702a583a0899ce7"
 dependencies = [
  "libc",
 ]

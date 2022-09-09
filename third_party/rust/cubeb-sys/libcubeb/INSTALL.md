@@ -2,12 +2,12 @@
 
 You must have CMake v3.1 or later installed.
 
-1. `git clone --recursive https://github.com/mozilla/cubeb.git`
+1. `git clone --recursive https://github.com/kinetiknz/cubeb.git`
 2. `mkdir cubeb-build`
 3. `cd cubeb-build`
-4. `cmake ../cubeb`
-5. `cmake --build .`
-6. `ctest`
+3. `cmake ../cubeb`
+4. `cmake --build .`
+5. `ctest`
 
 # Windows build notes
 
@@ -41,6 +41,6 @@ To build with MinGW-w64, install the following items:
 - Download and install MinGW-w64 with Win32 threads.
 - Download and install CMake.
 - Run MinGW-w64 Terminal from the Start Menu.
-- Follow the build steps at the top of this file, but at step 4 run:
-  `cmake -G "MinGW Makefiles" ../cubeb`
+- Follow the build steps at the top of this file, but at step 3 run:
+  `cmake -G "MinGW Makefiles" ..`
 - Continue the build steps at the top of this file.

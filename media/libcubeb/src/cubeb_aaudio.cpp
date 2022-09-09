@@ -463,11 +463,10 @@ aaudio_destroy(cubeb * ctx)
   if (ctx->state.notifier.joinable()) {
     ctx->state.notifier.join();
   }
-#ifndef DISABLE_LIBAAUDIO_DLOPEN
+
   if (ctx->libaaudio) {
     dlclose(ctx->libaaudio);
   }
-#endif
   delete ctx;
 }
 
