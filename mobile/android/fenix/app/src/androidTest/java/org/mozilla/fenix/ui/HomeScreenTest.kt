@@ -150,6 +150,7 @@ class HomeScreenTest {
     @Test
     fun dismissOnboardingUsingHelpTest() {
         featureSettingsHelper.setJumpBackCFREnabled(false)
+        featureSettingsHelper.setShowWallpaperOnboarding(false)
 
         homeScreen {
             verifyWelcomeHeader()

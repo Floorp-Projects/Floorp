@@ -34,6 +34,7 @@ class SettingsSearchTest {
             start()
         }
         featureSettingsHelper.setJumpBackCFREnabled(false)
+        featureSettingsHelper.setShowWallpaperOnboarding(false)
     }
 
     @After

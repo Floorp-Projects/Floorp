@@ -37,6 +37,7 @@ class NoNetworkAccessStartupTests {
     @Before
     fun setUp() {
         featureSettingsHelper.setTCPCFREnabled(false)
+        featureSettingsHelper.setShowWallpaperOnboarding(false)
     }
 
     @After
