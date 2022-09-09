@@ -10,10 +10,17 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
+Components.utils.import("resource://gre/modules/AddonManager.jsm")
+
 ChromeUtils.defineModuleGetter(
   this,
   "AppConstants",
   "resource://gre/modules/AppConstants.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "BuiltInThemeConfig",
+  "resource:///modules/BuiltInThemeConfig.jsm",
 );
 // Get the theme variables from the app resource directory.
 // This allows per-app variables.
@@ -244,10 +251,14 @@ LightweightThemeConsumer.prototype = {
         break;
     }
   },
-
-  _update(themeData) {
-    this._lastData = themeData;
-
+  async _update(themeData_) {
+    let themeData
+    if(Services.prefs.getBoolPref("floorp.enable.dualtheme", false)){
+      themeData = JSON.parse(JSON.stringify(themeData_))
+      if(themeData == null) themeData = {theme:{experimental:{colors:{popup_action_color:"rgb(91,91,102)", button:"rgba(207,207,216,.33)", button_hover:"rgba(207,207,216,.66)", button_active:"rgb(207,207,216)", button_primary:"rgb(0, 97, 224)", button_primary_hover:"rgb(2, 80, 187)", button_primary_active:"rgb(5, 62, 148)", button_primary_color:"rgb(251, 251, 254)", error_text_color:"rgb(197,0,66)", input_color:"rgb(21,20,26)", input_background:"rgb(255,255,255)", autocomplete_popup_hover:"rgb(240,240,244)", autocomplete_popup_separator:"rgb(240,240,244)", appmenu_update_icon_color:"#2AC3A2", appmenu_info_icon_color:"#0090ED", tab_icon_overlay_stroke:"rgb(255,255,255)", tab_icon_overlay_fill:"rgb(91,91,102)"}, images:{}, properties:{panel_hover:"color-mix(in srgb, currentColor 12%, transparent)", panel_active:"color-mix(in srgb, currentColor 20%, transparent)", panel_active_darker:"color-mix(in srgb, currentColor 27%, transparent)", toolbar_field_icon_opacity:"0.72", input_border_color:"color-mix(in srgb, currentColor 41%, transparent)", zap_gradient:"linear-gradient(90deg, #9059FF 0%, #FF4AA2 52.08%, #FFBD4F 100%)"}}, accentcolor:"#f0f0f4", icon_color:"rgb(91,91,102)", ntp_background:"#F9F9FB", ntp_text:"rgb(21, 20, 26)", popup:"#fff", popup_border:"rgb(240,240,244)", popup_highlight:"#e0e0e6", popup_highlight_text:"#15141a", popup_text:"rgb(21,20,26)", textcolor:"rgb(21,20,26)", tab_line:"transparent", tab_selected:"#fff", tab_text:"rgb(21,20,26)", toolbarColor:"#f9f9fb", toolbar_bottom_separator:"#ccc", toolbar_field:"#f0f0f4", toolbar_field_border:"transparent", toolbar_field_focus:"white", toolbar_field_text:"rgb(21,20,26)", toolbar_text:"rgb(21,20,26)", toolbar_top_separator:"transparent", color_scheme:"light", id:"default-theme@mozilla.org", version:"1.3"}, darkTheme:{experimental:{colors:{button:"rgb(43,42,51)", button_hover:"rgb(82,82,94)", button_active:"rgb(91,91,102)", button_primary:"rgb(0, 221, 255)", button_primary_hover:"rgb(128, 235, 255)", button_primary_active:"rgb(170, 242, 255)", button_primary_color:"rgb(43, 42, 51)", error_text_color:"rgb(255, 154, 162)", input_background:"#42414D", input_color:"rgb(251,251,254)", input_border:"#8f8f9d", autocomplete_popup_separator:"rgb(82,82,94)", appmenu_update_icon_color:"#54FFBD", appmenu_info_icon_color:"#80EBFF", tab_icon_overlay_stroke:"rgb(66,65,77)", tab_icon_overlay_fill:"rgb(251,251,254)"}, images:{}, properties:{panel_hover:"color-mix(in srgb, currentColor 9%, transparent)", panel_active:"color-mix(in srgb, currentColor 14%, transparent)", panel_active_darker:"color-mix(in srgb, currentColor 25%, transparent)", toolbar_field_icon_opacity:"1", zap_gradient:"linear-gradient(90deg, #9059FF 0%, #FF4AA2 52.08%, #FFBD4F 100%)"}}, accentcolor:"#1c1b22", icon_color:"rgb(251,251,254)", ntp_background:"rgb(43, 42, 51)", ntp_text:"rgb(251, 251, 254)", popup:"rgb(66,65,77)", popup_border:"rgb(82,82,94)", popup_highlight:"rgb(43,42,51)", popup_text:"rgb(251,251,254)", sidebar:"#38383D", sidebar_border:"rgba(255, 255, 255, 0.1)", sidebar_text:"rgb(249, 249, 250)", textcolor:"#fbfbfe", tab_line:"transparent", tab_selected:"rgb(66,65,77)", tab_text:"rgb(251,251,254)", toolbarColor:"#2b2a33", toolbar_bottom_separator:"hsl(240, 5%, 5%)", toolbar_field:"rgb(28,27,34)", toolbar_field_border:"transparent", toolbar_field_focus:"rgb(66,65,77)", toolbar_field_text:"rgb(251,251,254)", toolbar_text:"rgb(251, 251, 254)", toolbar_top_separator:"transparent", id:"default-theme@mozilla.org", version:"1.3"}, experiment:{colors:{popup_action_color:"--urlbar-popup-action-color", button:"--button-bgcolor", button_hover:"--button-hover-bgcolor", button_active:"--button-active-bgcolor", button_primary:"--button-primary-bgcolor", button_primary_hover:"--button-primary-hover-bgcolor", button_primary_active:"--button-primary-active-bgcolor", button_primary_color:"--button-primary-color", error_text_color:"--error-text-color", input_background:"--input-bgcolor", input_color:"--input-color", input_border:"--input-border-color", autocomplete_popup_hover:"--autocomplete-popup-hover-background", autocomplete_popup_separator:"--autocomplete-popup-separator-color", appmenu_update_icon_color:"--panel-banner-item-update-supported-bgcolor", appmenu_info_icon_color:"--panel-banner-item-info-icon-bgcolor", tab_icon_overlay_stroke:"--tab-icon-overlay-stroke", tab_icon_overlay_fill:"--tab-icon-overlay-fill"}, images:null, properties:{panel_hover:"--panel-item-hover-bgcolor", panel_active:"--arrowpanel-dimmed-further", panel_active_darker:"--panel-item-active-bgcolor", toolbar_field_icon_opacity:"--urlbar-icon-fill-opacity", input_border_color:"--input-border-color", zap_gradient:"--panel-separator-zap-gradient"}, stylesheet:null}}
+    }else{
+      themeData = themeData_;
+    }
     const hasDarkTheme = !!themeData.darkTheme;
     let updateGlobalThemeData = true;
     let useDarkTheme = (() => {
@@ -296,6 +307,241 @@ LightweightThemeConsumer.prototype = {
     let theme = useDarkTheme ? themeData.darkTheme : themeData.theme;
     if (!theme) {
       theme = { id: DEFAULT_THEME_ID };
+    }
+if(Services.prefs.getBoolPref("floorp.enable.dualtheme", false)){
+    let kaonasi_dual_theme = []
+    try {
+      kaonasi_dual_theme = JSON.parse(Services.prefs.getStringPref("floorp.dualtheme.theme"))
+    } catch (e) {
+      kaonasi_dual_theme = "error"
+    }
+    if(kaonasi_dual_theme != "error"){
+      let dualtheme_data = {}
+      let dualtheme_experiment = {}
+      let jsondata = {}
+      let theme_path = ""
+      for (let elem of kaonasi_dual_theme){
+        if(BuiltInThemeConfig.has(elem)){
+          theme_path = BuiltInThemeConfig.get(elem).path
+          let res = await fetch(theme_path + "manifest.json")
+          jsondata = await res.json()
+          dualtheme_data = (useDarkTheme && !!jsondata.dark_theme) ? jsondata.dark_theme : jsondata.theme;
+	        dualtheme_experiment = jsondata.theme_experiment
+        }
+        else{
+          let addon = await AddonManager.getAddonByID(elem)
+          theme_path = addon.getResourceURI().displaySpec
+          let res = await fetch(`${theme_path}manifest.json`)
+          jsondata = await res.json()
+          dualtheme_data = (useDarkTheme && !!jsondata.dark_theme) ? jsondata.dark_theme : jsondata.theme;
+	        dualtheme_experiment = jsondata.theme_experiment
+        }
+        if(dualtheme_data.colors != undefined){
+          for (let color of Object.keys(dualtheme_data.colors)) {
+            let val = dualtheme_data.colors[color];
+            if (!val) {
+              continue;
+            }
+            let cssColor = val;
+            if (Array.isArray(val)) {
+              cssColor =
+                  "rgb" + (val.length > 3 ? "a" : "") + "(" + val.join(",") + ")";
+            }
+            switch (color) {
+              case "frame":
+                if (!theme.accentcolor) theme.accentcolor = cssColor;
+                break;
+              case "frame_inactive":
+                if (!theme.accentcolorInactive) theme.accentcolorInactive = cssColor;
+                break;
+              case "tab_background_text":
+                if (!theme.textcolor) theme.textcolor = cssColor;
+                break;
+              case "toolbar":
+                if (!theme.toolbarColor) theme.toolbarColor = cssColor;
+                break;
+              case "toolbar_text":
+              case "bookmark_text":
+                if (!theme.toolbar_text) theme.toolbar_text = cssColor;
+                break;
+              case "icons":
+                if (!theme.icon_color) theme.icon_color = cssColor;
+                break;
+              case "icons_attention":
+                if (!theme.icon_attention_color) theme.icon_attention_color = cssColor;
+                break;
+              case "tab_background_separator":
+              case "tab_loading":
+              case "tab_text":
+              case "tab_line":
+              case "tab_selected":
+              case "toolbar_field":
+              case "toolbar_field_text":
+              case "toolbar_field_border":
+              case "toolbar_field_focus":
+              case "toolbar_field_text_focus":
+              case "toolbar_field_border_focus":
+              case "toolbar_top_separator":
+              case "toolbar_bottom_separator":
+              case "toolbar_vertical_separator":
+              case "button_background_hover":
+              case "button_background_active":
+              case "popup":
+              case "popup_text":
+              case "popup_border":
+              case "popup_highlight":
+              case "popup_highlight_text":
+              case "ntp_background":
+              case "ntp_card_background":
+              case "ntp_text":
+              case "sidebar":
+              case "sidebar_border":
+              case "sidebar_text":
+              case "sidebar_highlight":
+              case "sidebar_highlight_text":
+              case "toolbar_field_highlight":
+              case "toolbar_field_highlight_text":
+                if (!theme[color]) theme[color] = cssColor;
+                break;
+              default:
+                if (
+                  (BuiltInThemeConfig.has(elem) || Services.prefs.getBoolPref("extensions.experiments.enabled",false)) &&
+                  dualtheme_experiment &&
+                  dualtheme_experiment.colors &&
+                  color in dualtheme_experiment.colors
+                ) {
+                  let color_experiment = color
+                  if(!("experiment" in themeData)) themeData.experiment = {"colors":{}}
+                  if(!("colors" in themeData.experiment)) themeData.experiment.colors = {}
+                  if("experimental" in theme && "colors" in theme.experimental){
+                    while(color_experiment in themeData.experiment.colors || color_experiment in theme.experimental.colors){
+                      color_experiment += "_"
+                    }
+                  }
+                  if(!("experimental" in theme)) theme.experimental = {}
+                  theme.experimental.colors = { [color_experiment]:cssColor , ...theme.experimental.colors }
+                  themeData.experiment.colors[color_experiment] = dualtheme_experiment.colors[color]
+                }
+                break;
+            }
+          }
+        }
+
+        if(dualtheme_data.images != undefined){
+          for (let image of Object.keys(dualtheme_data.images)) {
+            let val = dualtheme_data.images[image];
+            if (!val) {
+              continue;
+            }
+            switch (image) {
+              case "additional_backgrounds": {
+                let backgroundImages = val.map(img => (new URL(img.slice(0,2) != "./" ? img : "./" + img,theme_path)).href);
+                if (!theme.additionalBackgrounds) theme.additionalBackgrounds = backgroundImages;
+                break;
+              }
+              case "theme_frame": {
+                if(val.slice(0,2) != "./") val = "./" + val
+                let resolvedURL = (new URL(val,theme_path)).href;
+                if (!theme.headerURL) theme.headerURL = resolvedURL;
+                break;
+              }
+              default: {
+                if (
+                  (BuiltInThemeConfig.has(elem) || Services.prefs.getBoolPref("extensions.experiments.enabled",false)) &&
+                  dualtheme_experiment &&
+                  dualtheme_experiment.images &&
+                  image in dualtheme_experiment.images
+                ) {
+                  let image_experiment = image
+                  if(!("experiment" in themeData)) themeData.experiment = {"images":{}}
+                  if(!("images" in themeData.experiment)) themeData.experiment.images = {}
+                  if("experimental" in theme && "images" in theme.experimental){
+                    while(image_experiment in themeData.experiment.images || image_experiment in theme.experimental.images){
+                      image_experiment += "_"
+                    }
+                  }
+                  if(!("experimental" in theme)) theme.experimental = {}
+                  if(val.slice(0,2) != "./") val = "./" + val
+                  theme.experimental.images = { [image_experiment]:(new URL(val,theme_path)).href , ...theme.experimental.images }
+                  themeData.experiment.images[image_experiment] = dualtheme_experiment.images[image]
+                }
+                break;
+              }
+            }
+          }
+        }
+        if(dualtheme_data.properties != undefined){
+          let additionalBackgroundsCount =
+            (theme.additionalBackgrounds && theme.additionalBackgrounds.length) || 0;
+          const assertValidAdditionalBackgrounds = (property, valueCount) => {
+            if (!additionalBackgroundsCount) {
+              return false;
+            }
+            return true;
+          }
+          for (let property of Object.getOwnPropertyNames(dualtheme_data.properties)) {
+            let val = dualtheme_data.properties[property];
+            if (!val) {
+              continue;
+            }
+            switch (property) {
+              case "additional_backgrounds_alignment": {
+                if (!assertValidAdditionalBackgrounds(property, val.length)) {
+                  break;
+                }
+
+                if (!theme.backgroundsAlignment) theme.backgroundsAlignment = val.join(",");
+                break;
+              }
+              case "additional_backgrounds_tiling": {
+                if (!assertValidAdditionalBackgrounds(property, val.length)) {
+                  break;
+                }
+                let tiling = [];
+                for (let i = 0, l = theme.additionalBackgrounds.length; i < l; ++i) {
+                  tiling.push(val[i] || "no-repeat");
+                }
+                if (!theme.backgroundsTiling) theme.backgroundsTiling = tiling.join(",");
+                break;
+              }
+              case "color_scheme":
+              case "content_color_scheme": {
+                if (!theme[property]) theme[property] = val;
+                break;
+              }
+              default: {
+                if (
+                  (BuiltInThemeConfig.has(elem) || Services.prefs.getBoolPref("extensions.experiments.enabled",false)) &&
+                  dualtheme_experiment &&
+                  dualtheme_experiment.properties &&
+                  property in dualtheme_experiment.properties
+                ) {
+                  let property_experiment = property
+                  if(!("experiment" in themeData)) themeData.experiment = {"properties":{}}
+                  if(!("properties" in themeData.experiment)) themeData.experiment.properties = {}
+                  if("experimental" in theme && "properties" in theme.experimental){
+                    while(property_experiment in themeData.experiment.properties || property_experiment in theme.experimental.properties){
+                      property_experiment += "_"
+                    }
+                  }
+                  if(!("experimental" in theme)) theme.experimental = {}
+                  theme.experimental.properties = { [property_experiment]:val , ...theme.experimental.properties }
+                  themeData.experiment.properties[property_experiment] = dualtheme_experiment.properties[property]
+                }
+                break;
+              }
+            }
+          }
+        }
+        if(dualtheme_experiment != undefined && dualtheme_experiment.stylesheet != undefined && dualtheme_experiment.stylesheet != null && (BuiltInThemeConfig.has(elem) || Services.prefs.getBoolPref("extensions.experiments.enabled",false))) {
+          let val = dualtheme_experiment.stylesheet;
+          if(val.slice(0,2) != "./") val = "./" + val
+          if(!("experiment" in themeData)) themeData.experiment = {"dual_stylesheets":[]}
+          if(!("dual_stylesheets" in themeData.experiment)) themeData.experiment.dual_stylesheets = []
+          themeData.experiment.dual_stylesheets.unshift((new URL(val,theme_path)).href)
+          }
+        }
+      }
     }
 
     let active = (this._active = Object.keys(theme).length);
@@ -352,10 +598,27 @@ LightweightThemeConsumer.prototype = {
     this._win.dispatchEvent(new CustomEvent("windowlwthemeupdate"));
   },
 
+  async set_dual_stylesheets(urls) {
+    for( let elem of urls ) {
+      /* Stylesheet URLs are validated using WebExtension schemas */
+      let dual_stylesheet = this._doc.createElement('style')
+      let styleres = await fetch(elem)
+      let styleres_text = await styleres.text()
+      dual_stylesheet.textContent = styleres_text
+      dual_stylesheet.className = "_dualtheme_stylesheet"
+      this._doc.head.appendChild(dual_stylesheet);
+      if(this._lastExperimentData.dual_stylesheets == undefined) this._lastExperimentData.dual_stylesheets = []
+      this._lastExperimentData.dual_stylesheets.push(dual_stylesheet)
+    }
+  },
+
   _setExperiment(active, experiment, properties) {
     const root = this._doc.documentElement;
     if (this._lastExperimentData) {
-      const { stylesheet, usedVariables } = this._lastExperimentData;
+      const { stylesheet, dual_stylesheets, usedVariables } = this._lastExperimentData;
+      if (dual_stylesheets) {
+        dual_stylesheets.forEach(elem => elem.remove());
+      }
       if (stylesheet) {
         stylesheet.remove();
       }
@@ -403,6 +666,9 @@ LightweightThemeConsumer.prototype = {
     }
     this._lastExperimentData.usedVariables = usedVariables;
 
+    if (experiment.dual_stylesheets) {
+      this.set_dual_stylesheets(experiment.dual_stylesheets)
+    }
     if (experiment.stylesheet) {
       /* Stylesheet URLs are validated using WebExtension schemas */
       let stylesheetAttr = `href="${experiment.stylesheet}" type="text/css"`;

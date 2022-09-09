@@ -63,6 +63,9 @@ pref("floorp.browser.sidebar2.customurl10", "");// サイドバーのカスタ�
 
 pref("browser.disable.nt.image.gb", false);// 画像を表示しない
 
+pref("floorp.enable.dualtheme", false); //デュアルテーマの有効・無効 
+pref("floorp.dualtheme.theme", "[]"); //デュアルテーマのリスト
+
 pref("contentblocking.cryptomining_blocking_enabled", true);
 pref("contentblocking.cryptomining_blocking_enabled",true);
 pref("contentblocking.category", true);

@@ -1469,7 +1469,7 @@ bookmarks-bottom-mode =
  .label = Bookmark bar at the bottom of the browser
 
 material-effect =
- .label = Allow Mica for Everyone to modify the browser design 
+ .label = Allow Mica for Everyone to modify the browser design
 other-preference = Other Preferences
 
 enable-userscript = 
@@ -1645,3 +1645,7 @@ disable-bg-newtab =
  .label = Disable Background Image at { -brand-short-name } Home
 
 how-to-disable-ntbg = To apply this setting, you need to press "Ctrl + Shift + R" in { -brand-short-name } Home and  it's super reload.
+
+## DualTheme
+dualtheme-enable =
+ .label = Enable dual themes
