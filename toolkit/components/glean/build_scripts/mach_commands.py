@@ -76,9 +76,16 @@ def perf_data_review(command_context, bug=None):
 def update_glean_tags(command_context):
     from pathlib import Path
     import yaml
-    from mozbuild.frontend.reader import BuildReader, EmptyConfig
+    from mozbuild.backend.configenvironment import ConfigEnvironment
+    from mozbuild.frontend.reader import BuildReader
 
-    config = EmptyConfig(str((Path(__file__).parent / "../../../../").resolve()))
+    config = ConfigEnvironment(
+        command_context.topsrcdir,
+        command_context.topobjdir,
+        defines=command_context.defines,
+        substs=command_context.substs,
+    )
+
     reader = BuildReader(config)
     bug_components = set()
     for p in reader.read_topsrcdir():
