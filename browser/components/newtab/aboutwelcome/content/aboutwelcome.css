@@ -91,7 +91,7 @@ input {
   border: 1px solid #CFCFD8;
   box-shadow: 0 2px 14px rgba(58, 57, 68, 0.2);
   border-radius: 4px;
-  padding-block: 0 40px;
+  padding-block: 0 24px;
   width: 25em;
 }
 .onboardingContainer.featureCallout .screen[pos=callout] .section-main .main-content .steps {
@@ -101,6 +101,9 @@ input {
 .onboardingContainer.featureCallout .screen[pos=callout] .section-main .main-content .dismiss-button {
   margin-block: 25px -45px;
   z-index: 1;
+}
+.onboardingContainer.featureCallout .screen[pos=callout] .action-buttons {
+  margin-block: 0 16px;
 }
 .onboardingContainer.featureCallout .screen[pos=callout] .action-buttons .primary,
 .onboardingContainer.featureCallout .screen[pos=callout] .action-buttons .secondary-cta .secondary {
