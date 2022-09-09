@@ -57,10 +57,16 @@ set_config(
 # Maintenance service (Windows only)
 # ==============================================================
 
+
+@depends("--enable-updater")
+def maintenance_service_default(updater):
+    return bool(updater)
+
+
 option(
     "--enable-maintenance-service",
     when=target_is_windows,
-    default=target_is_windows,
+    default=maintenance_service_default,
     help="{Enable|Disable} building of maintenance service",
 )
 
@@ -73,15 +79,23 @@ set_config(
     depends_if("--enable-maintenance-service", when=target_is_windows)(lambda _: True),
 )
 
+
+@depends("--enable-maintenance-service", "--enable-updater", when=target_is_windows)
+def check_maintenance_service(mainteance_service, updater):
+    if mainteance_service and not updater:
+        die("--enable-updater is required to --enable-maintenance-service")
+    return mainteance_service
+
+
 # Update agent (currently Windows and macOS only)
 # This is an independent task that runs on a schedule to
 # check for, download, and install updates.
 # ==============================================================
 
 
-@depends("--enable-backgroundtasks", build_project)
-def update_agent_default(backgroundtasks, build_project):
-    return bool(backgroundtasks) and build_project == "browser"
+@depends("--enable-backgroundtasks", "--enable-updater", build_project)
+def update_agent_default(backgroundtasks, updater, build_project):
+    return bool(backgroundtasks) and bool(updater) and build_project == "browser"
 
 
 option(
@@ -102,11 +116,14 @@ set_config(
 @depends(
     "--enable-update-agent",
     "--enable-backgroundtasks",
+    "--enable-updater",
     when=target_is_windows | target_is_osx,
 )
-def check_update_agent(update_agent, backgroundtasks):
+def check_update_agent(update_agent, backgroundtasks, updater):
     if update_agent and not backgroundtasks:
         die("--enable-backgroundtasks is required to --enable-update-agent")
+    if update_agent and not updater:
+        die("--enable-updater is required to --enable-update-agent")
     return update_agent
 
 

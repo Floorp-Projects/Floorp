@@ -44,7 +44,6 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
   ASRouterNewTabHook: "resource://activity-stream/lib/ASRouterNewTabHook.jsm",
   ASRouter: "resource://activity-stream/lib/ASRouter.jsm",
   AsyncShutdown: "resource://gre/modules/AsyncShutdown.jsm",
-  BackgroundUpdate: "resource://gre/modules/BackgroundUpdate.jsm",
   Blocklist: "resource://gre/modules/Blocklist.jsm",
   BrowserUsageTelemetry: "resource:///modules/BrowserUsageTelemetry.jsm",
   BrowserUIUtils: "resource:///modules/BrowserUIUtils.jsm",
@@ -100,10 +99,20 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
   TelemetryUtils: "resource://gre/modules/TelemetryUtils.jsm",
   TRRRacer: "resource:///modules/TRRPerformance.jsm",
   UIState: "resource://services-sync/UIState.jsm",
-  UpdateListener: "resource://gre/modules/UpdateListener.jsm",
   WebChannel: "resource://gre/modules/WebChannel.jsm",
   WindowsRegistry: "resource://gre/modules/WindowsRegistry.jsm",
 });
+
+if (AppConstants.MOZ_UPDATER) {
+  XPCOMUtils.defineLazyModuleGetters(lazy, {
+    UpdateListener: "resource://gre/modules/UpdateListener.jsm",
+  });
+}
+if (AppConstants.MOZ_UPDATE_AGENT) {
+  XPCOMUtils.defineLazyModuleGetters(lazy, {
+    BackgroundUpdate: "resource://gre/modules/BackgroundUpdate.jsm",
+  });
+}
 
 // PluginManager is used in the listeners object below.
 // eslint-disable-next-line mozilla/valid-lazy
@@ -830,12 +839,6 @@ XPCOMUtils.defineLazyGetter(lazy, "gTabbrowserBundle", function() {
 
 const listeners = {
   observers: {
-    "update-downloading": ["UpdateListener"],
-    "update-staged": ["UpdateListener"],
-    "update-downloaded": ["UpdateListener"],
-    "update-available": ["UpdateListener"],
-    "update-error": ["UpdateListener"],
-    "update-swap": ["UpdateListener"],
     "gmp-plugin-crash": ["PluginManager"],
     "plugin-crashed": ["PluginManager"],
   },
@@ -856,6 +859,14 @@ const listeners = {
     }
   },
 };
+if (AppConstants.MOZ_UPDATER) {
+  listeners.observers["update-downloading"] = ["UpdateListener"];
+  listeners.observers["update-staged"] = ["UpdateListener"];
+  listeners.observers["update-downloaded"] = ["UpdateListener"];
+  listeners.observers["update-available"] = ["UpdateListener"];
+  listeners.observers["update-error"] = ["UpdateListener"];
+  listeners.observers["update-swap"] = ["UpdateListener"];
+}
 
 // Seconds of idle before trying to create a bookmarks backup.
 const BOOKMARKS_BACKUP_IDLE_TIME_SEC = 8 * 60;
@@ -2004,7 +2015,11 @@ BrowserGlue.prototype = {
       () => lazy.Normandy.uninit(),
       () => lazy.RFPHelper.uninit(),
       () => lazy.ASRouterNewTabHook.destroy(),
-      () => lazy.UpdateListener.reset(),
+      () => {
+        if (AppConstants.MOZ_UPDATER) {
+          lazy.UpdateListener.reset();
+        }
+      },
     ];
 
     for (let task of tasks) {
@@ -2858,6 +2873,7 @@ BrowserGlue.prototype = {
       },
 
       {
+        condition: AppConstants.MOZ_UPDATER,
         task: () => {
           lazy.UpdateListener.maybeShowUnsupportedNotification();
         },
