@@ -800,7 +800,7 @@ void RsdparsaSdpAttributeList::LoadFmtp(RustAttributeList* attributeList) {
       // The parameter set is unknown so skip it
       continue;
     }
-    fmtpList->PushEntry(std::to_string(payloadType), std::move(fmtpParameters));
+    fmtpList->PushEntry(std::to_string(payloadType), *fmtpParameters);
   }
   SetAttribute(fmtpList.release());
 }

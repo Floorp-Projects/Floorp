@@ -1601,7 +1601,7 @@ TEST_F(JsepTrackTest, NonDefaultAudioSdpFmtpLine) {
     // Set them directly in the offer sdp instead.
     auto params = MakeUnique<SdpFmtpAttributeList::TelephoneEventParameters>();
     params->dtmfTones = "2-9";
-    GetOffer().SetFmtp({"101", std::move(params)});
+    GetOffer().SetFmtp({"101", *params});
   }
 
   {
@@ -1609,7 +1609,7 @@ TEST_F(JsepTrackTest, NonDefaultAudioSdpFmtpLine) {
     // Set them directly in the answer sdp instead.
     auto params = MakeUnique<SdpFmtpAttributeList::TelephoneEventParameters>();
     params->dtmfTones = "0-3,10";
-    GetAnswer().SetFmtp({"101", std::move(params)});
+    GetAnswer().SetFmtp({"101", *params});
   }
 
   OfferAnswer();
