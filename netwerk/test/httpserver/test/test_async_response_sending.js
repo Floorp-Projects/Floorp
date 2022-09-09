@@ -701,11 +701,6 @@ function CustomPipe(name) {
         waiter.eventTarget.dispatch(event, Ci.nsIThread.DISPATCH_NORMAL);
       }
     },
-
-    QueryInterface: ChromeUtils.generateQI([
-      "nsIAsyncInputStream",
-      "nsIInputStream",
-    ]),
   });
 
   /** The output end of this pipe. */
@@ -1050,11 +1045,6 @@ function CustomPipe(name) {
         waiter.eventTarget.dispatch(event, Ci.nsIThread.DISPATCH_NORMAL);
       }
     },
-
-    QueryInterface: ChromeUtils.generateQI([
-      "nsIAsyncOutputStream",
-      "nsIOutputStream",
-    ]),
   });
 }
 

@@ -19,7 +19,7 @@ interface nsIEventTarget;
  * necessary that a non-blocking nsIInputStream implementation also implement
  * nsIAsyncInputStream.
  */
-[scriptable, uuid(a5f255ab-4801-4161-8816-277ac92f6ad1)]
+[scriptable, builtinclass, uuid(a5f255ab-4801-4161-8816-277ac92f6ad1)]
 interface nsIAsyncInputStream : nsIInputStream
 {
     /**

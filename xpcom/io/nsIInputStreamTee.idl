@@ -13,7 +13,7 @@ interface nsIEventTarget;
  * reads the specified amount of data from its |source| and copies that
  * data to its |sink|.  |sink| must be a blocking output stream.
  */
-[scriptable, uuid(90a9d790-3bca-421e-a73b-98f68e13c917)]
+[scriptable, builtinclass, uuid(90a9d790-3bca-421e-a73b-98f68e13c917)]
 interface nsIInputStreamTee : nsIInputStream
 {
     attribute nsIInputStream source;

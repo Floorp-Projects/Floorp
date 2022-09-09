@@ -19,7 +19,7 @@ struct PRFileDesc;
 /**
  * An input stream that allows you to read from a file.
  */
-[scriptable, uuid(e3d56a20-c7ec-11d3-8cda-0060b0fc14a3)]
+[scriptable, builtinclass, uuid(e3d56a20-c7ec-11d3-8cda-0060b0fc14a3)]
 interface nsIFileInputStream : nsIInputStream
 {
     /**
@@ -85,7 +85,7 @@ interface nsIFileInputStream : nsIInputStream
 /**
  * An output stream that lets you stream to a file.
  */
-[scriptable, uuid(e734cac9-1295-4e6f-9684-3ac4e1f91063)]
+[scriptable, builtinclass, uuid(e734cac9-1295-4e6f-9684-3ac4e1f91063)]
 interface nsIFileOutputStream : nsIOutputStream
 {
     /**
@@ -132,7 +132,7 @@ interface nsIFileOutputStream : nsIOutputStream
 /**
  * A stream that allows you to read from a file or stream to a file.
  */
-[scriptable, uuid(82cf605a-8393-4550-83ab-43cd5578e006)]
+[scriptable, builtinclass, uuid(82cf605a-8393-4550-83ab-43cd5578e006)]
 interface nsIFileStream : nsISupports
 {
     /**
@@ -185,7 +185,7 @@ interface nsIFileStream : nsISupports
  * happen when using RemoteLazyInputStream with an underlying file stream, for
  * example.
  */
-[scriptable, uuid(07f679e4-9601-4bd1-b510-cd3852edb881)]
+[scriptable, builtinclass, uuid(07f679e4-9601-4bd1-b510-cd3852edb881)]
 interface nsIFileMetadata : nsISupports
 {
     /**
@@ -207,7 +207,7 @@ interface nsIFileMetadata : nsISupports
     [noscript] PRFileDescPtr getFileDescriptor();
 };
 
-[scriptable, uuid(de15b80b-29ba-4b7f-9220-a3d75b17ae8c)]
+[scriptable, builtinclass, uuid(de15b80b-29ba-4b7f-9220-a3d75b17ae8c)]
 interface nsIAsyncFileMetadata : nsIFileMetadata
 {
     /**

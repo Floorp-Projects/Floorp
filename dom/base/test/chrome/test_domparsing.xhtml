@@ -67,13 +67,17 @@ function runTest(parser, serializer) {
     is(serializer.serializeToString(parser.parseFromString(t.input, t.type)), t.expected,
        "parseFromString test for " + t.type);
 
-    let ostream = {
-      write: function(buf, count) { this.data += buf; return count; }
-    };
     for (let charset of [null, "UTF-8"]) {
-      ostream.data = "";
+      let pipe = Cc["@mozilla.org/pipe;1"].createInstance(Ci.nsIPipe);
+      pipe.init(false, false, 0, 0xffffffff, null);
+      let ostream = pipe.outputStream;
       serializer.serializeToStream(parser.parseFromString(t.input, t.type), ostream, charset);
-      is(ostream.data, t.expected,
+      let istream = Cc["@mozilla.org/scriptableinputstream;1"].createInstance(
+        Ci.nsIScriptableInputStream
+      );
+      istream.init(pipe.inputStream);
+      let data = istream.read(0xffffffff);
+      is(data, t.expected,
          "serializeToStream test for " + t.type + ", charset=" + charset);
     }
 
