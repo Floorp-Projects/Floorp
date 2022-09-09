@@ -395,7 +395,9 @@ xul|checkbox:not([native]):-moz-focusring > .checkbox-check, /* :not([native]) t
 xul|radio[focused="true"] > .radio-check,
 xul|tab:-moz-focusring > .tab-middle > .tab-text {
   box-shadow: none;
-  outline: var(--in-content-focus-outline);
+  /* Don't set `var(--in-content-focus-outline)` here to allow more complicated UIs
+     to use a different color when needed */
+  outline: var(--in-content-focus-outline-width) solid var(--in-content-focus-outline-color);
   outline-offset: var(--in-content-focus-outline-offset);
 }
 
