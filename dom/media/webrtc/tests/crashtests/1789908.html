@@ -1,0 +1,25 @@
+<script>
+window.addEventListener('load', () => {
+  const sdp = `v=0
+o=mozilla...THIS_IS_SDPARTA-99.0 4978061689314146455 0 IN IP4 0.0.0.0
+s=-
+t=0 0
+a=fingerprint:sha-256 1D:E5:0C:97:18:43:38:3D:FF:7D:6A:BF:E3:AC:CA:70:AB:53:5A:35:95:92:4F:98:86:61:CA:5D:D5:9D:5E:41
+a=group:BUNDLE 0
+a=ice-options:trickle
+a=msid-semantic:WMS *
+m=video 9 UDP/TLS/RTP/SAVPF 120
+c=IN IP4 0.0.0.0
+a=fmtp:120 max-fs=12288;max-fr=60
+a=ice-pwd:c3a5e05023a8c38f671aef91ed1802d6
+a=ice-ufrag:91e4526d
+a=setup:actpass
+
+a=rtpmap:120 VP8/90000
+`;
+
+  let a = new RTCPeerConnection()
+  a.setRemoteDescription({sdp, type: "offer"});
+  setTimeout("self.close()", 200)
+})
+</script>
