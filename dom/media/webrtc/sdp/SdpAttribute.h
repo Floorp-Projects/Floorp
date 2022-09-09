@@ -1518,9 +1518,6 @@ class SdpFmtpAttributeList : public SdpAttribute {
 
   class Fmtp {
    public:
-    Fmtp(const std::string& aFormat, UniquePtr<Parameters> aParameters)
-        : format(aFormat), parameters(std::move(aParameters)) {}
-
     Fmtp(const std::string& aFormat, const Parameters& aParameters)
         : format(aFormat), parameters(aParameters.Clone()) {}
 
@@ -1558,8 +1555,8 @@ class SdpFmtpAttributeList : public SdpAttribute {
 
   virtual void Serialize(std::ostream& os) const override;
 
-  void PushEntry(const std::string& format, UniquePtr<Parameters> parameters) {
-    mFmtps.push_back(Fmtp(format, std::move(parameters)));
+  void PushEntry(const std::string& format, const Parameters& parameters) {
+    mFmtps.push_back(Fmtp(format, parameters));
   }
 
   std::vector<Fmtp> mFmtps;
