@@ -147,8 +147,6 @@
   "chrome://remote/content/marionette/actors/MarionetteReftestParent.jsm":
     "remote/marionette/actors/MarionetteReftestParent.jsm",
   "chrome://remote/content/marionette/addon.js": "remote/marionette/addon.js",
-  "chrome://remote/content/marionette/appinfo.js":
-    "remote/marionette/appinfo.js",
   "chrome://remote/content/marionette/atom.js": "remote/marionette/atom.js",
   "chrome://remote/content/marionette/browser.js":
     "remote/marionette/browser.js",
@@ -190,6 +188,7 @@
     "remote/server/WebSocketHandshake.jsm",
   "chrome://remote/content/server/WebSocketTransport.jsm":
     "remote/server/WebSocketTransport.jsm",
+  "chrome://remote/content/shared/AppInfo.jsm": "remote/shared/AppInfo.jsm",
   "chrome://remote/content/shared/Format.jsm": "remote/shared/Format.jsm",
   "chrome://remote/content/shared/Log.jsm": "remote/shared/Log.jsm",
   "chrome://remote/content/shared/MobileTabBrowser.jsm":
