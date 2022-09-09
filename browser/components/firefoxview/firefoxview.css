@@ -434,6 +434,11 @@ details[open] > .page-section-header > .twisty {
 
 .card-body > button.primary {
   margin-inline-start: 0;
+  z-index: 1;
+}
+
+.card-body > .step-content {
+  z-index: 1;
 }
 
 .setup-step {
@@ -449,7 +454,6 @@ details[open] > .page-section-header > .twisty {
 .zap-card::before {
   content: "";
   position: absolute;
-  z-index: -1;
   inset: 0;
   padding: 1px; /* the "border" thickness */
   border-radius: 4px;
