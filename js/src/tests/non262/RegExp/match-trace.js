@@ -25,9 +25,12 @@ function P(A) {
 }
 
 var myRegExp = {
-  get global() {
-    log += "get:global,";
-    return global;
+  get flags() {
+    log += "get:flags,";
+    var flags = "";
+    if (global) flags += "g";
+    if (unicode) flags += "u";
+    return flags;
   },
   get lastIndex() {
     log += "get:lastIndex,";
@@ -36,10 +39,6 @@ var myRegExp = {
   set lastIndex(v) {
     log += "set:lastIndex,";
     assertEq(v, lastIndexExpected[n]);
-  },
-  get unicode() {
-    log += "get:unicode,";
-    return unicode;
   },
   get exec() {
     log += "get:exec,";
@@ -68,8 +67,7 @@ lastIndexExpected = [ 0, ,           ,                ];
 var ret = RegExp.prototype[Symbol.match].call(myRegExp, target);
 assertEq(JSON.stringify(ret), `["abc","ABC"]`);
 assertEq(log,
-         "get:global," +
-         "get:unicode," +
+         "get:flags," +
          "set:lastIndex," +
          "get:exec,call:exec,get:result[0]," +
          "get:exec,call:exec,get:result[0]," +
@@ -83,8 +81,7 @@ lastIndexExpected = [ 0, 5,       21,           ];
 ret = RegExp.prototype[Symbol.match].call(myRegExp, target);
 assertEq(JSON.stringify(ret), `["",""]`);
 assertEq(log,
-         "get:global," +
-         "get:unicode," +
+         "get:flags," +
          "set:lastIndex," +
          "get:exec,call:exec,get:result[0],get:lastIndex,set:lastIndex," +
          "get:exec,call:exec,get:result[0],get:lastIndex,set:lastIndex," +
@@ -106,8 +103,7 @@ lastIndexExpected = [ 0, 3,       5,       5,       9,       10,           ];
 ret = RegExp.prototype[Symbol.match].call(myRegExp, target);
 assertEq(JSON.stringify(ret), `["","","","",""]`);
 assertEq(log,
-         "get:global," +
-         "get:unicode," +
+         "get:flags," +
          "set:lastIndex," +
          "get:exec,call:exec,get:result[0],get:lastIndex,set:lastIndex," +
          "get:exec,call:exec,get:result[0],get:lastIndex,set:lastIndex," +
@@ -124,8 +120,7 @@ lastIndexExpected = [ 0,      ];
 ret = RegExp.prototype[Symbol.match].call(myRegExp, target);
 assertEq(ret, null);
 assertEq(log,
-         "get:global," +
-         "get:unicode," +
+         "get:flags," +
          "set:lastIndex," +
          "get:exec,call:exec,");
 
@@ -140,7 +135,7 @@ ret = RegExp.prototype[Symbol.match].call(myRegExp, target);
 logProxy = false;
 assertEq(JSON.stringify(ret), `["abc"]`);
 assertEq(log,
-         "get:global," +
+         "get:flags," +
          "get:exec,call:exec,");
 
 if (typeof reportCompare === "function")
