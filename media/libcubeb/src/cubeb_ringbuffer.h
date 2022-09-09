@@ -110,8 +110,8 @@ public:
     assert_correct_thread(producer_id);
 #endif
 
-    int rd_idx = read_index_.load(std::memory_order_relaxed);
     int wr_idx = write_index_.load(std::memory_order_relaxed);
+    int rd_idx = read_index_.load(std::memory_order_acquire);
 
     if (full_internal(rd_idx, wr_idx)) {
       return 0;
@@ -154,8 +154,8 @@ public:
     assert_correct_thread(consumer_id);
 #endif
 
-    int wr_idx = write_index_.load(std::memory_order_acquire);
     int rd_idx = read_index_.load(std::memory_order_relaxed);
+    int wr_idx = write_index_.load(std::memory_order_acquire);
 
     if (empty_internal(rd_idx, wr_idx)) {
       return 0;
@@ -172,7 +172,7 @@ public:
     }
 
     read_index_.store(increment_index(rd_idx, to_read),
-                      std::memory_order_relaxed);
+                      std::memory_order_release);
 
     return to_read;
   }
@@ -190,7 +190,7 @@ public:
 #endif
     return available_read_internal(
         read_index_.load(std::memory_order_relaxed),
-        write_index_.load(std::memory_order_relaxed));
+        write_index_.load(std::memory_order_acquire));
   }
   /**
    * Get the number of available elements for consuming.
@@ -205,7 +205,7 @@ public:
     assert_correct_thread(producer_id);
 #endif
     return available_write_internal(
-        read_index_.load(std::memory_order_relaxed),
+        read_index_.load(std::memory_order_acquire),
         write_index_.load(std::memory_order_relaxed));
   }
   /**
