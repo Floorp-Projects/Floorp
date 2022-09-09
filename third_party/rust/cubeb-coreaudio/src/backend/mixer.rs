@@ -180,7 +180,7 @@ impl Mixer {
         assert!(out_channel_count > 0);
 
         cubeb_log!(
-            "Create a mixer with input channel count: {}, input layout: {:?}, \
+            "Creating a mixer with input channel count: {}, input layout: {:?},\
              out channel count: {}, output channels: {:?}",
             in_channel_count,
             input_layout,
@@ -189,7 +189,9 @@ impl Mixer {
         );
 
         let input_channels = if in_channel_count as u32 != input_layout.bits().count_ones() {
-            cubeb_log!("Mismatch between input channels and layout. Apply default layout instead");
+            cubeb_log!(
+                "Mismatch between input channels and layout. Applying default layout instead"
+            );
             get_default_channel_order(in_channel_count)
         } else {
             get_channel_order(input_layout)
