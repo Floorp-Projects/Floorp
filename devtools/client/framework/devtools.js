@@ -5,7 +5,6 @@
 "use strict";
 
 const { Cu } = require("chrome");
-const Services = require("Services");
 const ChromeUtils = require("ChromeUtils");
 
 const {

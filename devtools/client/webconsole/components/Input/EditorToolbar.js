@@ -18,7 +18,6 @@ const EvaluationContextSelector = createFactory(
 
 const actions = require("devtools/client/webconsole/actions/index");
 const { l10n } = require("devtools/client/webconsole/utils/messages");
-const Services = require("Services");
 const isMacOS = Services.appinfo.OS === "Darwin";
 
 // Constants used for defining the direction of JSTerm input history navigation.

@@ -21,7 +21,6 @@ Test that the frame component reacts to source-map pref changse.
 
 window.onload = async function () {
   try {
-    const Services = browserRequire("Services");
     const ReactDOM = browserRequire("devtools/client/shared/vendor/react-dom");
     const React = browserRequire("devtools/client/shared/vendor/react");
     const Frame = React.createFactory(browserRequire("devtools/client/shared/components/Frame"));

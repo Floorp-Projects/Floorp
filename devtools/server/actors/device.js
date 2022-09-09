@@ -5,7 +5,6 @@
 "use strict";
 
 const { Ci, Cc } = require("chrome");
-const Services = require("Services");
 const protocol = require("devtools/shared/protocol");
 
 const { DevToolsServer } = require("devtools/server/devtools-server");

@@ -4,7 +4,6 @@
 
 "use strict";
 
-const Services = require("Services");
 const { LocalizationHelper } = require("devtools/shared/l10n");
 const L10N = new LocalizationHelper(
   "devtools/client/locales/toolbox.properties"

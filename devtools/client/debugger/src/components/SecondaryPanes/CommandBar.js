@@ -22,13 +22,11 @@ import { debugBtn } from "../shared/Button/CommandBarButton";
 import AccessibleImage from "../shared/AccessibleImage";
 import "./CommandBar.css";
 
-import { appinfo } from "devtools-services";
-
 const MenuButton = require("devtools/client/shared/components/menu/MenuButton");
 const MenuItem = require("devtools/client/shared/components/menu/MenuItem");
 const MenuList = require("devtools/client/shared/components/menu/MenuList");
 
-const isMacOS = appinfo.OS === "Darwin";
+const isMacOS = Services.appinfo.OS === "Darwin";
 
 // NOTE: the "resume" command will call either the resume or breakOnNext action
 // depending on whether or not the debugger is paused or running
@@ -57,7 +55,7 @@ const KEYS = {
 };
 
 function getKey(action) {
-  return getKeyForOS(appinfo.OS, action);
+  return getKeyForOS(Services.appinfo.OS, action);
 }
 
 function getKeyForOS(os, action) {

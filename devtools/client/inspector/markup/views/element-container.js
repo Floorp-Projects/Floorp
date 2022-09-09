@@ -4,7 +4,6 @@
 
 "use strict";
 
-const Services = require("Services");
 const MarkupContainer = require("devtools/client/inspector/markup/views/markup-container");
 const ElementEditor = require("devtools/client/inspector/markup/views/element-editor");
 const { ELEMENT_NODE } = require("devtools/shared/dom-node-constants");

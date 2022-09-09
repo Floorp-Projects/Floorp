@@ -4,7 +4,6 @@
 
 "use strict";
 
-const Services = require("Services");
 const {
   getLongStringFullText,
 } = require("devtools/client/shared/string-utils");

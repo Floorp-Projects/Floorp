@@ -4,7 +4,6 @@
 
 "use strict";
 
-const Services = require("Services");
 const { throttle } = require("devtools/shared/throttle");
 
 const BROWSERTOOLBOX_FISSION_ENABLED = "devtools.browsertoolbox.fission";

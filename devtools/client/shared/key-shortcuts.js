@@ -4,7 +4,6 @@
 
 "use strict";
 
-const Services = require("Services");
 const EventEmitter = require("devtools/shared/event-emitter");
 const isOSX = Services.appinfo.OS === "Darwin";
 const { KeyCodes } = require("devtools/client/shared/keycodes");

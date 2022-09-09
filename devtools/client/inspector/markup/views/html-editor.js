@@ -5,7 +5,6 @@
 "use strict";
 
 const Editor = require("devtools/client/shared/sourceeditor/editor");
-const Services = require("Services");
 const EventEmitter = require("devtools/shared/event-emitter");
 
 /**

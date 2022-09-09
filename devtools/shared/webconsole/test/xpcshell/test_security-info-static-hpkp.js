@@ -4,8 +4,6 @@
 
 // Test that NetworkHelper.parseSecurityInfo correctly detects static hpkp pins
 
-const Services = require("Services");
-
 Object.defineProperty(this, "NetworkHelper", {
   get() {
     return require("devtools/shared/webconsole/network-helper");

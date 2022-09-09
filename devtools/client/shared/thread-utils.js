@@ -3,7 +3,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-var Services = require("Services");
 const asyncStoreHelper = require("devtools/client/shared/async-store-helper");
 const {
   validateBreakpointLocation,

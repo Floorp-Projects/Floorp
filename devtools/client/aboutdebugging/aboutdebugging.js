@@ -4,8 +4,6 @@
 
 "use strict";
 
-const Services = require("Services");
-
 const { bindActionCreators } = require("devtools/client/shared/vendor/redux");
 const { createFactory } = require("devtools/client/shared/vendor/react");
 const {

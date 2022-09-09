@@ -350,7 +350,6 @@ module.exports = EventEmitter;
 const isEventHandler = listener =>
   listener && handler in listener && typeof listener[handler] === "function";
 
-const Services = require("Services");
 const { getNthPathExcluding } = require("devtools/shared/platform/stack");
 let loggingEnabled = false;
 

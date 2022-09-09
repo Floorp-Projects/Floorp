@@ -5,7 +5,6 @@
 const { PrefsHelper } = require("devtools/client/shared/prefs");
 
 import { isNode } from "./environment";
-import Services from "devtools-services";
 
 // Schema version to bump when the async store format has changed incompatibly
 // and old stores should be cleared.

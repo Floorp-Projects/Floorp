@@ -4,7 +4,6 @@
 
 "use strict";
 
-const Services = require("Services");
 const osString = Services.appinfo.OS;
 
 // Panels

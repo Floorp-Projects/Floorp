@@ -99,6 +99,9 @@ if (!global.ResizeObserver) {
   };
 }
 
+global.Services = require(mcRoot +
+  "devtools/client/shared/test-helpers/jest-fixtures/Services");
+
 // Mock ChromeUtils.
 global.ChromeUtils = {
   import: () => {},
@@ -140,8 +143,6 @@ requireHacker.global_hook("default", (path, module) => {
       `module.exports = { addProfilerMarker: () => {}, import: () => ({}) }`,
     // Some modules depend on Chrome APIs which don't work in mocha. When such a module
     // is required, replace it with a mock version.
-    Services: () =>
-      getModule("devtools/client/shared/test-helpers/jest-fixtures/Services"),
     "devtools/server/devtools-server": () =>
       `module.exports = {DevToolsServer: {}}`,
     "devtools/client/shared/components/SmartTrace": () =>

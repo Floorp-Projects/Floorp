@@ -5,8 +5,6 @@
 
 "use strict";
 
-const Services = require("Services");
-
 const EXPAND_TAB = "devtools.editor.expandtab";
 const TAB_SIZE = "devtools.editor.tabsize";
 const DETECT_INDENT = "devtools.editor.detectindentation";

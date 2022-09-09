@@ -9,7 +9,6 @@
  * editor tooltips that appear when clicking swatch based editors.
  */
 
-const Services = require("Services");
 const flags = require("devtools/shared/flags");
 const {
   VIEW_NODE_VALUE_TYPE,

@@ -5,7 +5,6 @@
 "use strict";
 
 const { assert } = require("devtools/shared/DevToolsUtils");
-const { appinfo } = require("Services");
 const {
   Component,
   createFactory,
@@ -146,7 +145,7 @@ class MemoryApp extends Component {
     const selectedSnapshot = snapshots.find(s => s.selected);
     const selectedIndex = snapshots.indexOf(selectedSnapshot);
 
-    const isOSX = appinfo.OS == "Darwin";
+    const isOSX = Services.appinfo.OS == "Darwin";
     const isAccelKey = (isOSX && e.metaKey) || (!isOSX && e.ctrlKey);
 
     // On ACCEL+UP, select previous snapshot.

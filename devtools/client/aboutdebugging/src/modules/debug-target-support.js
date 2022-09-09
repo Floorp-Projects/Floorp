@@ -10,8 +10,6 @@ const {
   RUNTIMES,
 } = require("devtools/client/aboutdebugging/src/constants");
 
-const Services = require("Services");
-
 // Process target debugging is disabled by default.
 function isProcessDebuggingSupported() {
   return Services.prefs.getBoolPref(

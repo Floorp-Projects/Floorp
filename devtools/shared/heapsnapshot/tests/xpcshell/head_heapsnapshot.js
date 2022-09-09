@@ -22,7 +22,6 @@ const { addDebuggerToGlobal } = ChromeUtils.import(
 
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 const HeapAnalysesClient = require("devtools/shared/heapsnapshot/HeapAnalysesClient");
-const Services = require("Services");
 const {
   censusReportToCensusTreeNode,
 } = require("devtools/shared/heapsnapshot/census-tree-node");

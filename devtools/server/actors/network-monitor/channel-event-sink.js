@@ -7,7 +7,6 @@
 const { Cc, Ci, Cm, Cr, components } = require("chrome");
 const ChromeUtils = require("ChromeUtils");
 const { ComponentUtils } = require("resource://gre/modules/ComponentUtils.jsm");
-const Services = require("Services");
 
 /**
  * This is a nsIChannelEventSink implementation that monitors channel redirects and

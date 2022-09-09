@@ -4,8 +4,6 @@
 
 "use strict";
 
-const Services = require("Services");
-
 const {
   UPDATE_GRID_COLOR,
   UPDATE_GRID_HIGHLIGHTED,

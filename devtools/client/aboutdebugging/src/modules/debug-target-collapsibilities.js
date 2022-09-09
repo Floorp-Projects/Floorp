@@ -4,8 +4,6 @@
 
 "use strict";
 
-const Services = require("Services");
-
 const PREF_PREFIX = "devtools.aboutdebugging.collapsibilities.";
 const {
   DEBUG_TARGET_PANE,

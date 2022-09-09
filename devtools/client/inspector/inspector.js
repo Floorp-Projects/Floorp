@@ -4,7 +4,6 @@
 
 "use strict";
 
-const Services = require("Services");
 const EventEmitter = require("devtools/shared/event-emitter");
 const flags = require("devtools/shared/flags");
 const { executeSoon } = require("devtools/shared/DevToolsUtils");

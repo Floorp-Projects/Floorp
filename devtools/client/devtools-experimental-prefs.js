@@ -4,8 +4,6 @@
 
 "use strict";
 
-const Services = require("Services");
-
 loader.lazyRequireGetter(
   this,
   "HTMLTooltip",

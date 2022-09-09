@@ -5,7 +5,6 @@
 "use strict";
 
 const { Cu } = require("chrome");
-const Services = require("Services");
 const { Actor, ActorClassWithSpec } = require("devtools/shared/protocol");
 const {
   flexboxSpec,

@@ -9,7 +9,6 @@
 /* eslint-disable no-throw-literal */
 
 const DebuggerNotificationObserver = require("DebuggerNotificationObserver");
-const Services = require("Services");
 const { Cr, Ci } = require("chrome");
 const { Pool } = require("devtools/shared/protocol/Pool");
 const { createValueGrip } = require("devtools/server/actors/object/utils");

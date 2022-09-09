@@ -6,7 +6,6 @@
 
 const { Ci } = require("chrome");
 const { isWindowIncluded } = require("devtools/shared/layout/utils");
-const Services = require("Services");
 const ChromeUtils = require("ChromeUtils");
 const { WebConsoleUtils } = require("devtools/server/actors/webconsole/utils");
 

@@ -23,7 +23,6 @@ Test that openLink function is called if accessible object property is rendered 
 window.onload = async function() {
   try {
     const { gDevTools } = require("devtools/client/framework/devtools");
-    const Services = browserRequire("Services");
     const ReactDOM = browserRequire("devtools/client/shared/vendor/react-dom");
     const { createFactory, createElement } =
       browserRequire("devtools/client/shared/vendor/react");

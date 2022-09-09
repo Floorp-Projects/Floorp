@@ -5,7 +5,6 @@
 "use strict";
 
 var { Ci } = require("chrome");
-var Services = require("Services");
 var { DevToolsServer } = require("devtools/server/devtools-server");
 var { ActorRegistry } = require("devtools/server/actors/utils/actor-registry");
 var DevToolsUtils = require("devtools/shared/DevToolsUtils");

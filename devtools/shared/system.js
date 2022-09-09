@@ -5,7 +5,6 @@
 
 const { Cc, Ci } = require("chrome");
 
-loader.lazyRequireGetter(this, "Services");
 loader.lazyRequireGetter(
   this,
   "DevToolsServer",

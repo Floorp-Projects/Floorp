@@ -7,7 +7,6 @@
 "use strict";
 
 const { Cc, Ci } = require("chrome");
-const Services = require("Services");
 const clipboardHelper = Cc["@mozilla.org/widget/clipboardhelper;1"].getService(
   Ci.nsIClipboardHelper
 );

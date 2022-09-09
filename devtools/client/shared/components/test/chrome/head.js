@@ -15,7 +15,6 @@ var { gDevTools } = require("devtools/client/framework/devtools");
 var { BrowserLoader } = ChromeUtils.import(
   "resource://devtools/shared/loader/browser-loader.js"
 );
-var Services = require("Services");
 var { DevToolsServer } = require("devtools/server/devtools-server");
 var { DevToolsClient } = require("devtools/client/devtools-client");
 var DevToolsUtils = require("devtools/shared/DevToolsUtils");

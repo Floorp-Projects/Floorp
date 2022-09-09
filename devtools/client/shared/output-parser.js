@@ -4,7 +4,6 @@
 
 "use strict";
 
-const Services = require("Services");
 const { angleUtils } = require("devtools/client/shared/css-angle");
 const { colorUtils } = require("devtools/shared/css/color");
 const { getCSSLexer } = require("devtools/shared/css/lexer");

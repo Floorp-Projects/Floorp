@@ -16,7 +16,6 @@ const {
   simulatorSpec,
 } = require("devtools/shared/specs/accessibility");
 const events = require("devtools/shared/event-emitter");
-const Services = require("Services");
 const BROWSER_TOOLBOX_FISSION_ENABLED = Services.prefs.getBoolPref(
   "devtools.browsertoolbox.fission",
   false

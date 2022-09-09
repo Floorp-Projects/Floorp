@@ -4,7 +4,6 @@
 
 "use strict";
 
-var Services = require("Services");
 loader.lazyRequireGetter(
   this,
   "Utils",

@@ -6,8 +6,6 @@
 
 const ResourceCommand = require("devtools/shared/commands/resource/resource-command");
 
-const Services = require("Services");
-
 // This legacy listener is used to retrieve content messages that are cloned from content
 // process to the parent process for BrowserConsole and BrowserToolbox when multiprocess
 // support is disabled.

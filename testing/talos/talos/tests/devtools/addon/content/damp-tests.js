@@ -4,7 +4,6 @@
 
 "use strict";
 
-const Services = require("Services");
 const isWindows = Services.appinfo.OS === "WINNT";
 
 // DAMP is split in sub-suites to run the tests faster on continuous integration.

@@ -5,7 +5,6 @@
 const { loader, require } = ChromeUtils.import(
   "resource://devtools/shared/loader/Loader.jsm"
 );
-const Services = require("Services");
 const EventEmitter = require("devtools/shared/event-emitter");
 const {
   getString,

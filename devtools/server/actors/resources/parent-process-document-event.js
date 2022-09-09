@@ -9,7 +9,6 @@ const {
 } = require("devtools/server/actors/resources/index");
 const { Ci } = require("chrome");
 const ChromeUtils = require("ChromeUtils");
-const Services = require("Services");
 const isEveryFrameTargetEnabled = Services.prefs.getBoolPref(
   "devtools.every-frame-target.enabled",
   false

@@ -35,8 +35,6 @@
 
 "use strict";
 
-const Services = require("Services");
-
 const Curl = {
   /**
    * Generates a cURL command string which can be used from the command line etc.

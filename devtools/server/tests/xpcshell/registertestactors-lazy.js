@@ -10,7 +10,6 @@ var {
   FrontClassWithSpec,
   generateActorSpec,
 } = require("devtools/shared/protocol");
-var Services = require("Services");
 
 const lazySpec = generateActorSpec({
   typeName: "lazy",

@@ -4,7 +4,6 @@
 
 "use strict";
 
-var Services = require("Services");
 var DevToolsUtils = require("devtools/shared/DevToolsUtils");
 loader.lazyRequireGetter(
   this,

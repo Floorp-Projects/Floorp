@@ -4,8 +4,6 @@
 
 "use strict";
 
-const Services = require("Services");
-
 const {
   TYPES: { EXTENSIONS_BGSCRIPT_STATUS },
 } = require("devtools/server/actors/resources/index");

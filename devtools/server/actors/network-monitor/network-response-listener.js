@@ -6,7 +6,6 @@
 
 const { Cc, Ci, Cr, components: Components } = require("chrome");
 const ChromeUtils = require("ChromeUtils");
-const Services = require("Services");
 
 loader.lazyRequireGetter(
   this,

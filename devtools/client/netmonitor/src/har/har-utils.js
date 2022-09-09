@@ -4,7 +4,6 @@
 
 "use strict";
 
-const Services = require("Services");
 const { Ci, Cc, CC } = require("chrome");
 const { XPCOMUtils } = require("resource://gre/modules/XPCOMUtils.sys.mjs");
 

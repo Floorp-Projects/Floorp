@@ -4,8 +4,6 @@
 
 "use strict";
 
-const Services = require("Services");
-
 const ChromeUtils = require("ChromeUtils");
 const { RemoteSettings } = ChromeUtils.import(
   "resource://services-settings/remote-settings.js"

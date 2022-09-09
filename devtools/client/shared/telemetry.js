@@ -10,7 +10,6 @@
 
 "use strict";
 
-const Services = require("Services");
 const TelemetryStopwatch = require("TelemetryStopwatch");
 const { getNthPathExcluding } = require("devtools/shared/platform/stack");
 const {

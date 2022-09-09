@@ -5,7 +5,6 @@
 "use strict";
 
 const protocol = require("devtools/shared/protocol");
-const Services = require("Services");
 
 const {
   heapSnapshotFileSpec,

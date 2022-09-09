@@ -18,7 +18,6 @@ const mappings = {
   redux: "devtools/client/shared/vendor/redux",
   reselect: "devtools/client/shared/vendor/reselect",
   "prop-types": "devtools/client/shared/vendor/react-prop-types",
-  "devtools-services": "Services",
   "wasmparser/dist/cjs/WasmParser": "devtools/client/shared/vendor/WasmParser",
   "wasmparser/dist/cjs/WasmDis": "devtools/client/shared/vendor/WasmDis",
   "framework-actions": "devtools/client/framework/actions/index",

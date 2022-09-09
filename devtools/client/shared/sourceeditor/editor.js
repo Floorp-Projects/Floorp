@@ -40,7 +40,6 @@ const MAX_VERTICAL_OFFSET = 3;
 const RE_JUMP_TO_LINE = /^(\d+):?(\d+)?/;
 const AUTOCOMPLETE_MARK_CLASSNAME = "cm-auto-complete-shadow-text";
 
-const Services = require("Services");
 const EventEmitter = require("devtools/shared/event-emitter");
 const { PrefObserver } = require("devtools/client/shared/prefs");
 const KeyShortcuts = require("devtools/client/shared/key-shortcuts");

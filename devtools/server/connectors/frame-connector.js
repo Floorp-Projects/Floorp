@@ -4,7 +4,6 @@
 
 "use strict";
 
-var Services = require("Services");
 var DevToolsUtils = require("devtools/shared/DevToolsUtils");
 var { dumpn } = DevToolsUtils;
 const { Pool } = require("devtools/shared/protocol/Pool");

@@ -13,7 +13,6 @@ loader.lazyGetter(this, "HighlightersBundle", () => {
 });
 
 loader.lazyGetter(this, "isAndroid", () => {
-  const Services = require("Services");
   return Services.appinfo.OS === "Android";
 });
 

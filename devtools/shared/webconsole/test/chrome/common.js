@@ -18,8 +18,6 @@ const {
   CommandsFactory,
 } = require("devtools/shared/commands/commands-factory");
 
-const Services = require("Services");
-
 // timeStamp are the result of a number in microsecond divided by 1000.
 // so we can't expect a precise number of decimals, or even if there would
 // be decimals at all.

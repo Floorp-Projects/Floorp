@@ -8,7 +8,6 @@ const SOCKET_PATH = "fake/socket/path";
  */
 add_task(async function testParseFileUri() {
   info("Enable devtools.testing for this test to allow mocked modules");
-  const Services = require("Services");
   Services.prefs.setBoolPref("devtools.testing", true);
   registerCleanupFunction(() => {
     Services.prefs.clearUserPref("devtools.testing");

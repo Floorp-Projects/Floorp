@@ -4,7 +4,6 @@
 
 "use strict";
 
-const Services = require("Services");
 const { L10N } = require("devtools/client/netmonitor/src/utils/l10n");
 const {
   formDataURI,

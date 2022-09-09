@@ -4,7 +4,6 @@
 
 "use strict";
 
-const Services = require("Services");
 const Rule = require("devtools/client/inspector/rules/models/rule");
 const UserProperties = require("devtools/client/inspector/rules/models/user-properties");
 const {

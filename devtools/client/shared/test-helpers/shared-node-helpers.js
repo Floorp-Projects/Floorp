@@ -10,6 +10,8 @@
  * Adds mocks for browser-environment global variables/methods to Node global.
  */
 function setMocksInGlobal() {
+  global.Services = require("Services-mock");
+
   global.isWorker = false;
 
   global.loader = {

@@ -9,7 +9,6 @@
 // ⚠️ This should only be used for getting data for objects using CanvasFrameAnonymousContentHelper,
 // that we can't get directly from tests.
 const { Ci, Cc } = require("chrome");
-const Services = require("Services");
 const { getRect, getAdjustedQuads } = require("devtools/shared/layout/utils");
 
 // Set up a dummy environment so that EventUtils works. We need to be careful to

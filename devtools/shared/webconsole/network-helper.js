@@ -66,7 +66,6 @@ const ChromeUtils = require("ChromeUtils");
 const { components, Cc, Ci } = require("chrome");
 loader.lazyImporter(this, "NetUtil", "resource://gre/modules/NetUtil.jsm");
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");
-const Services = require("Services");
 
 loader.lazyGetter(this, "certDecoder", () => {
   const { asn1js } = ChromeUtils.import(

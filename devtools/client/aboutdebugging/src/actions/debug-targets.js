@@ -8,7 +8,6 @@ const { AddonManager } = require("resource://gre/modules/AddonManager.jsm");
 const {
   remoteClientManager,
 } = require("devtools/client/shared/remote-debugging/remote-client-manager");
-const Services = require("Services");
 
 const { l10n } = require("devtools/client/aboutdebugging/src/modules/l10n");
 

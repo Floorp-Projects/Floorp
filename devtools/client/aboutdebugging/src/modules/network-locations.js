@@ -4,8 +4,6 @@
 
 "use strict";
 
-const Services = require("Services");
-
 const NETWORK_LOCATIONS_PREF = "devtools.aboutdebugging.network-locations";
 
 /**

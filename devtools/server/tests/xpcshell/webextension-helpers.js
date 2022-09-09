@@ -15,7 +15,6 @@ const {
   ExtensionTestUtils,
 } = require("resource://testing-common/ExtensionXPCShellUtils.jsm");
 
-const Services = require("Services");
 const { DevToolsServer } = require("devtools/server/devtools-server");
 const { DevToolsClient } = require("devtools/client/devtools-client");
 

@@ -4,7 +4,6 @@
 
 "use strict";
 
-const Services = require("Services");
 const Telemetry = require("devtools/client/shared/telemetry");
 const {
   FrontClassWithSpec,

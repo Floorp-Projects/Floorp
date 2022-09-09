@@ -4,7 +4,6 @@
 
 "use strict";
 
-const Services = require("Services");
 const flags = require("devtools/shared/flags");
 const { throttle } = require("devtools/shared/throttle");
 

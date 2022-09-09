@@ -9,7 +9,6 @@
  */
 
 const { Ci } = require("chrome");
-const Services = require("Services");
 
 loader.lazyRequireGetter(this, "EventEmitter", "devtools/shared/event-emitter");
 loader.lazyRequireGetter(

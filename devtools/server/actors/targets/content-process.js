@@ -12,7 +12,6 @@
  */
 
 const { Cc, Ci, Cu } = require("chrome");
-const Services = require("Services");
 
 const { ThreadActor } = require("devtools/server/actors/thread");
 const { WebConsoleActor } = require("devtools/server/actors/webconsole");

@@ -8,7 +8,6 @@
  * This helper contains the public API that can be used by DAMP tests.
  */
 
-const Services = require("Services");
 const { gDevTools } = require("devtools/client/framework/devtools");
 
 // With Bug 1588203, the talos server supports a dynamic proxy that will

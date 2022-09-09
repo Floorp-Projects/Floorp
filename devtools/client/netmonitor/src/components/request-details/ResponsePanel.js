@@ -9,7 +9,6 @@ const {
 } = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
-const Services = require("Services");
 const { L10N } = require("devtools/client/netmonitor/src/utils/l10n");
 const {
   decodeUnicodeBase64,

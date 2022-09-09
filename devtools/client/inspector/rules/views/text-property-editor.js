@@ -4,7 +4,6 @@
 
 "use strict";
 
-const Services = require("Services");
 const { l10n } = require("devtools/shared/inspector/css-logic");
 const {
   InplaceEditor,

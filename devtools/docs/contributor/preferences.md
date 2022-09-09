@@ -42,16 +42,6 @@ If you are using Launchpad, note that only a subset of nsIPrefService methods ar
 implemented (addObserver and removeObserver). Launchpad relies on a Services shim file
 provided by devtools-module ([code on GitHub](https://github.com/firefox-devtools/devtools-core/blob/master/packages/devtools-modules/src/Services.js)).
 
-### Requiring Services.pref
-
-To require Services and use Services.pref, you can normally use the following snippet:
-
-```javascript
-const Services = require("Services");
-```
-
-In the rare event where you don't have access to the DevTools' `require` method, if it's chrome-privileged environment, the `Services` object should already be available in the global variable.
-
 ### Services.pref.get* and Services.pref.set*
 
 The main APIs you will have to know and use are getters and setters.

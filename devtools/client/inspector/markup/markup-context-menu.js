@@ -4,7 +4,6 @@
 
 "use strict";
 
-const Services = require("Services");
 const { PSEUDO_CLASSES } = require("devtools/shared/css/constants");
 const { LocalizationHelper } = require("devtools/shared/l10n");
 

@@ -4,7 +4,6 @@
 
 "use strict";
 
-const Services = require("Services");
 const {
   WatcherRegistry,
 } = require("devtools/server/actors/watcher/WatcherRegistry.jsm");

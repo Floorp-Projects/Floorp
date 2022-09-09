@@ -12,7 +12,6 @@
  * browser window is ready (i.e. fired browser-delayed-startup-finished event)
  **/
 
-const Services = require("Services");
 const ChromeUtils = require("ChromeUtils");
 
 const lazy = {};

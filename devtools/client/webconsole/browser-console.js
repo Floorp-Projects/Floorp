@@ -4,7 +4,6 @@
 
 "use strict";
 
-const Services = require("Services");
 const WebConsole = require("devtools/client/webconsole/webconsole");
 const { Utils } = require("devtools/client/webconsole/utils");
 

@@ -11,7 +11,6 @@ const {
 } = require("devtools/shared/protocol.js");
 const { nodeSpec, nodeListSpec } = require("devtools/shared/specs/node");
 const { SimpleStringFront } = require("devtools/client/fronts/string");
-const Services = require("Services");
 
 loader.lazyRequireGetter(
   this,

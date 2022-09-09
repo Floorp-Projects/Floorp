@@ -4,7 +4,6 @@
 
 "use strict";
 
-const Services = require("Services");
 const {
   VIEW_NODE_SELECTOR_TYPE,
   VIEW_NODE_PROPERTY_TYPE,

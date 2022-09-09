@@ -44,7 +44,6 @@ loader.lazyRequireGetter(
   true
 );
 
-const Services = require("Services");
 const isMacOS = Services.appinfo.OS === "Darwin";
 
 class ReverseSearchInput extends Component {

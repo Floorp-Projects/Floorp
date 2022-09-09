@@ -4,7 +4,6 @@
 
 "use strict";
 
-const Services = require("Services");
 const ChromeUtils = require("ChromeUtils");
 const { runTest, testSetup, testTeardown } = require("../head");
 

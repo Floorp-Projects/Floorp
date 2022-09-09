@@ -50,8 +50,6 @@
  * we connect it up through its parents.
  */
 
-const Services = require("Services");
-
 const { setTimeout } = require("resource://gre/modules/Timer.jsm");
 const protocol = require("devtools/shared/protocol");
 const { LongStringActor } = require("devtools/server/actors/string");

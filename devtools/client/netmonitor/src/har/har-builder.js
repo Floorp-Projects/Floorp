@@ -4,7 +4,6 @@
 
 "use strict";
 
-const Services = require("Services");
 const appInfo = Services.appinfo;
 const { LocalizationHelper } = require("devtools/shared/l10n");
 const { CurlUtils } = require("devtools/client/shared/curl");

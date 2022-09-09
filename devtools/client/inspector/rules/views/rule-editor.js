@@ -28,7 +28,6 @@ const {
   SELECTOR_ELEMENT,
   SELECTOR_PSEUDO_CLASS,
 } = require("devtools/shared/css/parsing-utils");
-const Services = require("Services");
 const EventEmitter = require("devtools/shared/event-emitter");
 const CssLogic = require("devtools/shared/inspector/css-logic");
 

@@ -18,7 +18,6 @@ const { require } = ChromeUtils.import(
 const { XPCOMUtils } = require("resource://gre/modules/XPCOMUtils.sys.mjs");
 const EventEmitter = require("devtools/shared/event-emitter");
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");
-const Services = require("Services");
 const { getSourceNames } = require("devtools/client/shared/source-utils");
 const { extend } = require("devtools/shared/extend");
 const {
