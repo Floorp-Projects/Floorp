@@ -6,7 +6,6 @@
 :root {
   --content-area-padding-inline: 24px;
   --content-area-padding-block: 16px;
-  --sidebar-width: 200px;
   --header-spacing: 40px;
   --footer-spacing: 80px;
   --card-border-zap-gradient: linear-gradient(90deg, #9059FF 0%, #FF4AA2 52.08%, #FFBD4F 100%);
@@ -92,7 +91,7 @@ h1 {
 }
 
 body > nav {
-  flex: 0 0 var(--sidebar-width);
+  flex: 0 0 auto;
 }
 
 body > main {
@@ -114,7 +113,6 @@ body > main > aside {
 @media (max-width: 76rem) {
   :host,
   :root {
-    --sidebar-width: 40px;
     --content-area-padding-inline: 12px;
   }
   .brand-logo > .brand-feature-name {
@@ -182,6 +180,7 @@ body > main > aside {
   justify-content: space-between;
   align-items: center;
   font-size: 1.75em;
+  white-space: nowrap;
 }
 
 .brand-logo > .brand-icon {
