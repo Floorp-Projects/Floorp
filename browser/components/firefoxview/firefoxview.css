@@ -99,7 +99,7 @@ body > main {
   flex: 1 1 auto;
   display: grid;
   grid-template-columns: 2fr 1fr;
-  grid-template-rows: minmax(0, auto);
+  grid-template-rows: max-content 1fr;
 }
 
 body > main > details {
