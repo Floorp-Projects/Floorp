@@ -3574,8 +3574,8 @@ bool TakeMinidumpForChild(uint32_t childPid, nsIFile** dump,
   if (!pd) return false;
 
   NS_IF_ADDREF(*dump = pd->minidump);
-  // Only Flash process minidumps don't have annotations. Once we get rid of
-  // the Flash processes this check will become redundant.
+  // Only plugin process minidumps taken using the injector don't have
+  // annotations.
   if (!pd->minidumpOnly) {
     aAnnotations = *(pd->annotations);
   }
