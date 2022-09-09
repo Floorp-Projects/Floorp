@@ -16,8 +16,10 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
@@ -25,6 +27,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.CircularProgressIndicator
 import androidx.compose.material.Surface
+import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -37,9 +40,11 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import org.mozilla.fenix.R
+import org.mozilla.fenix.compose.ClickableSubstringLink
 import org.mozilla.fenix.theme.FirefoxTheme
 import org.mozilla.fenix.theme.Theme
 import org.mozilla.fenix.wallpapers.Wallpaper
@@ -48,34 +53,110 @@ import org.mozilla.fenix.wallpapers.Wallpaper
  * The screen for controlling settings around Wallpapers. When a new wallpaper is selected,
  * a snackbar will be displayed.
  *
- * @param wallpapers Wallpapers to add to grid.
+ * @param wallpaperGroups Wallpapers groups to add to grid.
  * @param selectedWallpaper The currently selected wallpaper.
  * @param defaultWallpaper The default wallpaper.
  * @param loadWallpaperResource Callback to handle loading a wallpaper bitmap. Only optional in the default case.
  * @param onSelectWallpaper Callback for when a new wallpaper is selected.
+ * @param onLearnMoreClick Callback for when the learn more action is clicked from the group description.
  */
 @SuppressLint("UnusedMaterialScaffoldPaddingParameter")
 @Composable
 @Suppress("LongParameterList")
 fun WallpaperSettings(
-    wallpapers: List<Wallpaper>,
+    wallpaperGroups: Map<Wallpaper.Collection, List<Wallpaper>>,
     defaultWallpaper: Wallpaper,
     loadWallpaperResource: suspend (Wallpaper) -> Bitmap?,
     selectedWallpaper: Wallpaper,
     onSelectWallpaper: (Wallpaper) -> Unit,
+    onLearnMoreClick: (String) -> Unit,
 ) {
     Column(
         modifier = Modifier
+            .fillMaxWidth()
+            .fillMaxHeight()
             .verticalScroll(rememberScrollState())
-            .background(color = FirefoxTheme.colors.layer1),
+            .background(color = FirefoxTheme.colors.layer1)
+            .padding(
+                end = 16.dp,
+                start = 16.dp,
+                top = 16.dp,
+            ),
     ) {
-        WallpaperThumbnails(
-            wallpapers = wallpapers,
-            defaultWallpaper = defaultWallpaper,
-            loadWallpaperResource = loadWallpaperResource,
-            selectedWallpaper = selectedWallpaper,
-            onSelectWallpaper = { updatedWallpaper -> onSelectWallpaper(updatedWallpaper) },
+        wallpaperGroups.forEach { (collection, wallpapers) ->
+            if (wallpapers.isNotEmpty()) {
+                WallpaperGroupHeading(
+                    collection = collection,
+                    onLearnMoreClick = onLearnMoreClick,
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                WallpaperThumbnails(
+                    wallpapers = wallpapers,
+                    defaultWallpaper = defaultWallpaper,
+                    loadWallpaperResource = loadWallpaperResource,
+                    selectedWallpaper = selectedWallpaper,
+                    onSelectWallpaper = onSelectWallpaper,
+                )
+
+                Spacer(modifier = Modifier.height(32.dp))
+            }
+        }
+    }
+}
+
+@Composable
+private fun WallpaperGroupHeading(
+    collection: Wallpaper.Collection,
+    onLearnMoreClick: (String) -> Unit,
+) {
+    // Since the last new collection of wallpapers was tied directly to an MR release,
+    // it was decided that we should use string resources for these titles
+    // and descriptions so they could be localized.
+    // In the future, we may want to either use the dynamic wallpaper properties with localized fallbacks
+    // or invest in a method of localizing the remote strings themselves.
+    if (collection.name == "classic-firefox") {
+        Text(
+            text = stringResource(R.string.wallpaper_classic_title),
+            color = FirefoxTheme.colors.textSecondary,
+            style = FirefoxTheme.typography.subtitle2,
         )
+    } else {
+        Column {
+            Text(
+                text = stringResource(R.string.wallpaper_limited_edition_title),
+                color = FirefoxTheme.colors.textSecondary,
+                style = FirefoxTheme.typography.subtitle2,
+            )
+
+            Spacer(modifier = Modifier.height(2.dp))
+
+            if (collection.learnMoreUrl.isNullOrEmpty()) {
+                val text = stringResource(R.string.wallpaper_limited_edition_description)
+                Text(
+                    text = text,
+                    color = FirefoxTheme.colors.textSecondary,
+                    style = FirefoxTheme.typography.caption,
+                )
+            } else {
+                val link = stringResource(R.string.wallpaper_learn_more)
+                val text = stringResource(R.string.wallpaper_limited_edition_description_with_learn_more, link)
+                val linkStartIndex = text.indexOf(link)
+                val linkEndIndex = linkStartIndex + link.length
+
+                ClickableSubstringLink(
+                    text = text,
+                    textColor = FirefoxTheme.colors.textSecondary,
+                    linkTextColor = FirefoxTheme.colors.textSecondary,
+                    linkTextDecoration = TextDecoration.Underline,
+                    clickableStartIndex = linkStartIndex,
+                    clickableEndIndex = linkEndIndex,
+                ) {
+                    onLearnMoreClick(collection.learnMoreUrl)
+                }
+            }
+        }
     }
 }
 
@@ -88,8 +169,6 @@ fun WallpaperSettings(
  * @param selectedWallpaper The currently selected wallpaper.
  * @param numColumns The number of columns that will occupy the grid.
  * @param onSelectWallpaper Action to take when a new wallpaper is selected.
- * @param verticalPadding Vertical content padding inside the block.
- * @param horizontalPadding Horizontal content padding inside the block.
  */
 @Composable
 @Suppress("LongParameterList")
@@ -100,39 +179,30 @@ fun WallpaperThumbnails(
     loadWallpaperResource: suspend (Wallpaper) -> Bitmap?,
     onSelectWallpaper: (Wallpaper) -> Unit,
     numColumns: Int = 3,
-    verticalPadding: Int = 30,
-    horizontalPadding: Int = 20,
 ) {
-    Column(
-        modifier = Modifier.padding(
-            vertical = verticalPadding.dp,
-            horizontal = horizontalPadding.dp,
-        ),
-    ) {
-        val numRows = (wallpapers.size + numColumns - 1) / numColumns
-        for (rowIndex in 0 until numRows) {
-            Row {
-                for (columnIndex in 0 until numColumns) {
-                    val itemIndex = rowIndex * numColumns + columnIndex
-                    if (itemIndex < wallpapers.size) {
-                        val wallpaper = wallpapers[itemIndex]
-                        Box(
-                            modifier = Modifier
-                                .weight(1f, fill = true)
-                                .padding(4.dp),
-                        ) {
-                            WallpaperThumbnailItem(
-                                wallpaper = wallpaper,
-                                defaultWallpaper = defaultWallpaper,
-                                loadWallpaperResource = loadWallpaperResource,
-                                isSelected = selectedWallpaper.name == wallpaper.name,
-                                isLoading = wallpaper.assetsFileState == Wallpaper.ImageFileState.Downloading,
-                                onSelect = onSelectWallpaper,
-                            )
-                        }
-                    } else {
-                        Spacer(Modifier.weight(1f))
+    val numRows = (wallpapers.size + numColumns - 1) / numColumns
+    for (rowIndex in 0 until numRows) {
+        Row {
+            for (columnIndex in 0 until numColumns) {
+                val itemIndex = rowIndex * numColumns + columnIndex
+                if (itemIndex < wallpapers.size) {
+                    val wallpaper = wallpapers[itemIndex]
+                    Box(
+                        modifier = Modifier
+                            .weight(1f, fill = true)
+                            .padding(4.dp),
+                    ) {
+                        WallpaperThumbnailItem(
+                            wallpaper = wallpaper,
+                            defaultWallpaper = defaultWallpaper,
+                            loadWallpaperResource = loadWallpaperResource,
+                            isSelected = selectedWallpaper.name == wallpaper.name,
+                            isLoading = wallpaper.assetsFileState == Wallpaper.ImageFileState.Downloading,
+                            onSelect = onSelectWallpaper,
+                        )
                     }
+                } else {
+                    Spacer(Modifier.weight(1f))
                 }
             }
         }
@@ -229,9 +299,10 @@ private fun WallpaperThumbnailsPreview() {
         WallpaperSettings(
             defaultWallpaper = Wallpaper.Default,
             loadWallpaperResource = { null },
-            wallpapers = listOf(Wallpaper.Default),
+            wallpaperGroups = mapOf(Wallpaper.DefaultCollection to listOf(Wallpaper.Default)),
             selectedWallpaper = Wallpaper.Default,
             onSelectWallpaper = {},
+            onLearnMoreClick = {},
         )
     }
 }

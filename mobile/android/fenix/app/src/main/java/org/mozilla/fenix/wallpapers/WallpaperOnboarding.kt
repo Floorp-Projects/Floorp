@@ -91,15 +91,17 @@ fun WallpaperOnboarding(
                 style = FirefoxTheme.typography.caption,
             )
 
+            Spacer(modifier = Modifier.height(16.dp))
+
             WallpaperThumbnails(
                 wallpapers = wallpapers,
                 defaultWallpaper = Wallpaper.Default,
                 selectedWallpaper = currentWallpaper,
                 loadWallpaperResource = { loadWallpaperResource(it) },
                 onSelectWallpaper = { onSelectWallpaper(it) },
-                verticalPadding = 16,
-                horizontalPadding = 0,
             )
+
+            Spacer(modifier = Modifier.height(16.dp))
 
             TextButton(
                 modifier = Modifier

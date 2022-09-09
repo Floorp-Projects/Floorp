@@ -121,6 +121,7 @@ import org.mozilla.fenix.settings.logins.fragment.SavedLoginsAuthFragmentDirecti
 import org.mozilla.fenix.settings.search.AddSearchEngineFragmentDirections
 import org.mozilla.fenix.settings.search.EditCustomSearchEngineFragmentDirections
 import org.mozilla.fenix.settings.studies.StudiesFragmentDirections
+import org.mozilla.fenix.settings.wallpaper.WallpaperSettingsFragmentDirections
 import org.mozilla.fenix.share.AddNewDeviceFragmentDirections
 import org.mozilla.fenix.tabstray.TabsTrayFragment
 import org.mozilla.fenix.tabstray.TabsTrayFragmentDirections
@@ -811,6 +812,8 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
             NavGraphDirections.actionGlobalBrowser(customTabSessionId)
         BrowserDirection.FromHome ->
             HomeFragmentDirections.actionGlobalBrowser(customTabSessionId)
+        BrowserDirection.FromWallpaper ->
+            WallpaperSettingsFragmentDirections.actionGlobalBrowser(customTabSessionId)
         BrowserDirection.FromSearchDialog ->
             SearchDialogFragmentDirections.actionGlobalBrowser(customTabSessionId)
         BrowserDirection.FromSettings ->
