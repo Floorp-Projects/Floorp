@@ -120,6 +120,23 @@ easily edit the file. For your convenience it is included in all generated
 Visual Studio projects, and if you edit and save it within Visual Studio, it
 will pick up the changes immediately.
 
+Handling multiple processes in Visual Studio
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Turn off "Break all processes when one process breaks" to single step a single
+process.
+
+Turning off "Break all processes when one process breaks" adds "Step Into
+Current Process", "Step Over Current Process" and "Step Out Current Process" to
+the "Debug" menu.
+
+To single step a single process with the other processes paused:
+
+- Turn on "Break all processes when one process breaks"
+- Hit a breakpoint which stops all processes
+- Turn off "Break all processes when one process breaks"
+- Now using "Step Into Current Process" will leave the other processes stopped
+  and just advance the current one.
+
 Obtaining ``stdout`` and other ``FILE`` handles
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
