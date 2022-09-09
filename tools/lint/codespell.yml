@@ -28,7 +28,6 @@ codespell:
         - mobile/android/branding/
         - mobile/android/docs/
         - mobile/android/locales/en-US/
-        - mobile/locales/en-US/
         - netwerk/locales/en-US/
         - netwerk/docs/
         - python/docs/

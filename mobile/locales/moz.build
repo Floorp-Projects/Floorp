@@ -6,5 +6,3 @@
 
 with Files("**"):
     BUG_COMPONENT = ("GeckoView", "General")
-
-JAR_MANIFESTS += ["jar.mn"]
