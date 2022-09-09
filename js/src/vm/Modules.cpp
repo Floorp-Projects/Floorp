@@ -1330,10 +1330,7 @@ bool js::ModuleEvaluate(JSContext* cx, Handle<ModuleObject*> moduleArg,
     MOZ_ASSERT(!module->hadEvaluationError());
 
     // Step 10.c. If module.[[AsyncEvaluation]] is false, then:
-    if (!module->isAsyncEvaluating()) {
-      // Step 10.c.i. Assert: module.[[Status]] is evaluated.
-      MOZ_ASSERT(module->status() == ModuleStatus::Evaluated);
-
+    if (module->status() == ModuleStatus::Evaluated) {
       // Step 10.c.ii. Perform ! Call(capability.[[Resolve]], undefined,
       //               undefined).
       if (!ModuleObject::topLevelCapabilityResolve(cx, module)) {
