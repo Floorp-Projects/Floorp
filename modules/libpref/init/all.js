@@ -2083,7 +2083,11 @@ pref("extensions.eventPages.enabled", true);
 // (only allowing same extension urls to be used as action popup urls).
 pref("extensions.manifestV2.actionsPopupURLRestricted", false);
 // Whether "manifest_version: 3" extensions should be allowed to install successfully.
-pref("extensions.manifestV3.enabled", false);
+#ifdef EARLY_BETA_OR_EARLIER
+  pref("extensions.manifestV3.enabled", true);
+#else
+  pref("extensions.manifestV3.enabled", false);
+#endif
 // Whether to enable the unified extensions feature.
 pref("extensions.unifiedExtensions.enabled", false);
 
