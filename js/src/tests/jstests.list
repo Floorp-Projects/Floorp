@@ -620,6 +620,13 @@ skip script test262/built-ins/RegExp/prototype/Symbol.match/get-flags-err.js
 skip script test262/built-ins/RegExp/prototype/Symbol.match/get-unicode-error.js
 skip script test262/built-ins/RegExp/prototype/Symbol.match/flags-tostring-error.js
 
+# https://bugzilla.mozilla.org/show_bug.cgi?id=1781205
+skip script test262/language/statements/async-generator/yield-star-return-then-getter-ticks.js
+skip script test262/language/statements/async-generator/yield-star-promise-not-unwrapped.js
+
+# https://github.com/tc39/proposal-intl-numberformat-v3/pull/107
+skip script test262/intl402/NumberFormat/test-option-useGrouping.js
+
 
 ###########################################################
 # Tests disabled due to issues in test262 importer script #
