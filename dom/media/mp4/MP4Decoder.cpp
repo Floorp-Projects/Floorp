@@ -91,10 +91,10 @@ nsTArray<UniquePtr<TrackInfo>> MP4Decoder::GetTracksInfo(
               "audio/mpeg"_ns, aType));
       continue;
     }
-    // The valid codecs parameter value with mp4 MIME types should be "Opus",
-    // but "opus" is acceptable due to historical reasons.
+    // The valid codecs parameter value with mp4 MIME types should be "Opus" and
+    // "fLaC", but "opus" and "flac" are acceptable due to historical reasons.
     if (codec.EqualsLiteral("opus") || codec.EqualsLiteral("Opus") ||
-        codec.EqualsLiteral("flac")) {
+        codec.EqualsLiteral("flac") || codec.EqualsLiteral("fLaC")) {
       NS_ConvertUTF16toUTF8 c(codec);
       ToLowerCase(c);
       tracks.AppendElement(
