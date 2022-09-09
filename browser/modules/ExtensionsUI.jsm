@@ -457,8 +457,6 @@ var ExtensionsUI = {
       if (browser.ownerGlobal.gUnifiedExtensions.isEnabled) {
         options.popupOptions = {
           position: "bottomright topright",
-          x: 2,
-          y: 0,
         };
       }
 
@@ -518,8 +516,6 @@ var ExtensionsUI = {
       if (browser.ownerGlobal.gUnifiedExtensions.isEnabled) {
         options.popupOptions = {
           position: "bottomright topright",
-          x: 2,
-          y: 0,
         };
       }
 
