@@ -4,7 +4,6 @@
 
 "use strict";
 
-const Services = require("Services");
 const { Actor, ActorClassWithSpec } = require("devtools/shared/protocol");
 const { accessibilitySpec } = require("devtools/shared/specs/accessibility");
 

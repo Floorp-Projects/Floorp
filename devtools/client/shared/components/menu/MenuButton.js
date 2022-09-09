@@ -7,7 +7,6 @@
 
 // A button that toggles a doorhanger menu.
 
-const Services = require("Services");
 const flags = require("devtools/shared/flags");
 const {
   createRef,

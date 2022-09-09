@@ -4,7 +4,6 @@
 
 "use strict";
 
-const Services = require("Services");
 const asyncStorage = require("devtools/shared/async-storage");
 
 const {

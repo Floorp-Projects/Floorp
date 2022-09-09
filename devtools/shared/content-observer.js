@@ -4,7 +4,6 @@
 "use strict";
 
 const { Ci } = require("chrome");
-const Services = require("Services");
 
 const EventEmitter = require("devtools/shared/event-emitter");
 

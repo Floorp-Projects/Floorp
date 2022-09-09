@@ -4,7 +4,6 @@
 
 "use strict";
 
-const Services = require("Services");
 const { safeAsyncMethod } = require("devtools/shared/async-utils");
 const EventEmitter = require("devtools/shared/event-emitter");
 const WalkerEventListener = require("devtools/client/inspector/shared/walker-event-listener");

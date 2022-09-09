@@ -4,7 +4,6 @@
 
 "use strict";
 const { Ci, Cr } = require("chrome");
-const Services = require("Services");
 
 const {
   wildcardToRegExp,

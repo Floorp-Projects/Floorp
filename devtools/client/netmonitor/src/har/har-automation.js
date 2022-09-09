@@ -5,7 +5,6 @@
 "use strict";
 
 const { Ci } = require("chrome");
-const Services = require("Services");
 const {
   HarCollector,
 } = require("devtools/client/netmonitor/src/har/har-collector");

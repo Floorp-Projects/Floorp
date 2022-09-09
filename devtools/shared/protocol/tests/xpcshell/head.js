@@ -6,7 +6,6 @@
 const { require } = ChromeUtils.import(
   "resource://devtools/shared/loader/Loader.jsm"
 );
-const Services = require("Services");
 const { DevToolsServer } = require("devtools/server/devtools-server");
 const { DevToolsClient } = require("devtools/client/devtools-client");
 

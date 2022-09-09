@@ -9,7 +9,6 @@
 /* eslint-disable no-throw-literal */
 
 const { Cu } = require("chrome");
-const Services = require("Services");
 const { Pool } = require("devtools/shared/protocol");
 const {
   LazyPool,

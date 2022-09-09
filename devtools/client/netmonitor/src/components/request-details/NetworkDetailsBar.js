@@ -5,7 +5,6 @@
 "use strict";
 
 const { createFactory } = require("devtools/client/shared/vendor/react");
-const Services = require("Services");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const {

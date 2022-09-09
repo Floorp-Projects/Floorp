@@ -5,7 +5,6 @@
 "use strict";
 
 const { Cc } = require("chrome");
-const Services = require("Services");
 
 loader.lazyGetter(this, "ppmm", () => {
   return Cc["@mozilla.org/parentprocessmessagemanager;1"].getService();

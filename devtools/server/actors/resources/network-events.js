@@ -4,7 +4,6 @@
 
 "use strict";
 
-const Services = require("Services");
 const { Pool } = require("devtools/shared/protocol/Pool");
 const {
   isWindowGlobalPartOfContext,

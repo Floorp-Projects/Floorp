@@ -4,8 +4,6 @@
 
 "use strict";
 
-const Services = require("Services");
-
 // Process script used to forward console calls from content processes to parent process
 const CONTENT_PROCESS_SCRIPT =
   "resource://devtools/server/actors/webconsole/content-process-forward.js";

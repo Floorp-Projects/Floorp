@@ -9,7 +9,6 @@ const {
   createFactory,
 } = require("devtools/client/shared/vendor/react");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
-const Services = require("Services");
 const {
   connect,
 } = require("devtools/client/shared/redux/visibility-handler-connect");

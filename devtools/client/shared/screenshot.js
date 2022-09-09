@@ -6,7 +6,6 @@
 
 const { Cc, Ci } = require("chrome");
 const { LocalizationHelper } = require("devtools/shared/l10n");
-const Services = require("Services");
 
 loader.lazyImporter(this, "Downloads", "resource://gre/modules/Downloads.jsm");
 loader.lazyImporter(this, "FileUtils", "resource://gre/modules/FileUtils.jsm");

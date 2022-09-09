@@ -17,8 +17,6 @@ const MAX_DATA_URL_LENGTH = 40;
  * @constructor
  */
 
-const Services = require("Services");
-
 loader.lazyRequireGetter(
   this,
   "getCSSLexer",

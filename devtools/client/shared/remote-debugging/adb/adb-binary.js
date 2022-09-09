@@ -11,7 +11,6 @@ loader.lazyImporter(
   "ExtensionParent",
   "resource://gre/modules/ExtensionParent.jsm"
 );
-loader.lazyRequireGetter(this, "Services");
 loader.lazyRequireGetter(
   this,
   "FileUtils",

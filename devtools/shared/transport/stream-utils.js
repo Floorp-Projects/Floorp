@@ -5,7 +5,6 @@
 "use strict";
 
 const { Ci, Cc, Cr, CC } = require("chrome");
-const Services = require("Services");
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 const { dumpv } = DevToolsUtils;
 const EventEmitter = require("devtools/shared/event-emitter");

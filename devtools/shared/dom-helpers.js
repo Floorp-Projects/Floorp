@@ -4,8 +4,6 @@
 
 "use strict";
 
-const Services = require("Services");
-
 exports.DOMHelpers = {
   /**
    * A simple way to be notified (once) when a window becomes

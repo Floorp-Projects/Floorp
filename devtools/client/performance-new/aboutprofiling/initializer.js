@@ -68,7 +68,6 @@ const createStore = require("devtools/client/shared/redux/create-store");
 const reducers = require("devtools/client/performance-new/store/reducers");
 const actions = require("devtools/client/performance-new/store/actions");
 const { Ci } = require("chrome");
-const Services = require("Services");
 
 /**
  * Initialize the panel by creating a redux store, and render the root component.

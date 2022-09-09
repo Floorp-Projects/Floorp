@@ -14,7 +14,6 @@
  */
 
 const { Ci } = require("chrome");
-const Services = require("Services");
 const { DevToolsServer } = require("devtools/server/devtools-server");
 const {
   getChildDocShells,

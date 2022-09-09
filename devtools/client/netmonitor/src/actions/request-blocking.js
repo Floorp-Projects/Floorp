@@ -4,8 +4,6 @@
 
 "use strict";
 
-const Services = require("Services");
-
 const {
   ADD_BLOCKED_URL,
   TOGGLE_BLOCKING_ENABLED,

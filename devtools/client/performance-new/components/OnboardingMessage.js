@@ -32,7 +32,6 @@ const Localized = createFactory(
   require("devtools/client/shared/vendor/fluent-react").Localized
 );
 
-const Services = require("Services");
 const { openDocLink } = require("devtools/client/shared/link");
 
 const LEARN_MORE_URL = "https://profiler.firefox.com/docs";

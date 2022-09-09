@@ -8,7 +8,6 @@ const { Cc, Ci, Cu, CC } = require("chrome");
 const protocol = require("devtools/shared/protocol");
 const { LongStringActor } = require("devtools/server/actors/string");
 const { DevToolsServer } = require("devtools/server/devtools-server");
-const Services = require("Services");
 const { isWindowIncluded } = require("devtools/shared/layout/utils");
 const specs = require("devtools/shared/specs/storage");
 const { parseItemValue } = require("devtools/shared/storage/utils");

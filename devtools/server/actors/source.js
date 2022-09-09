@@ -35,8 +35,6 @@ loader.lazyRequireGetter(
   "devtools/shared/DevToolsUtils"
 );
 
-loader.lazyRequireGetter(this, "Services");
-
 const windowsDrive = /^([a-zA-Z]:)/;
 
 function resolveSourceURL(sourceURL, targetActor) {

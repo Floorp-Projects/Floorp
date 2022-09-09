@@ -83,7 +83,6 @@ import {
 } from "../../utils/editor";
 
 import { resizeToggleButton, resizeBreakpointGutter } from "../../utils/ui";
-import Services from "devtools-services";
 
 const { debounce } = require("devtools/shared/debounce");
 

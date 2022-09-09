@@ -33,7 +33,6 @@
 
 const { Cu, CC, Cc, Ci } = require("chrome");
 const EventEmitter = require("devtools/shared/event-emitter");
-const Services = require("Services");
 
 const UDPSocket = CC(
   "@mozilla.org/network/udp-socket;1",

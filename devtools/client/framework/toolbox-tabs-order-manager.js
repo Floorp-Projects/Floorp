@@ -6,7 +6,6 @@
 
 const { AddonManager } = require("resource://gre/modules/AddonManager.jsm");
 const { gDevTools } = require("devtools/client/framework/devtools");
-const Services = require("Services");
 const Telemetry = require("devtools/client/shared/telemetry");
 const TABS_REORDERED_SCALAR = "devtools.toolbox.tabs_reordered";
 const PREFERENCE_NAME = "devtools.toolbox.tabsOrder";

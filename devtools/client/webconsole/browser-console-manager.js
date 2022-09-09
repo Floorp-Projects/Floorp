@@ -4,7 +4,6 @@
 
 "use strict";
 
-var Services = require("Services");
 const {
   CommandsFactory,
 } = require("devtools/shared/commands/commands-factory");

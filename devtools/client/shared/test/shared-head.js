@@ -60,7 +60,6 @@ const { loader, require } = ChromeUtils.import(
 // and so it loaded first before anything else and isn't having access to Services global.
 // Whereas many head.js files from mochitest import this file via loadSubScript
 // and already expose Services as a global.
-var Services = this.Services || require("Services");
 
 const { gDevTools } = require("devtools/client/framework/devtools");
 const {
@@ -330,9 +329,6 @@ function highlighterTestActorBootstrap() {
     "resource://devtools/shared/loader/Loader.jsm"
   );
   _require(HIGHLIGHTER_TEST_ACTOR_URL);
-
-  /* eslint-disable-next-line no-shadow */
-  const Services = _require("Services");
 
   const actorRegistryObserver = subject => {
     const actorRegistry = subject.wrappedJSObject;

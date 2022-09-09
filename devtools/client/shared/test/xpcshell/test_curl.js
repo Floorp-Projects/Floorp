@@ -11,8 +11,6 @@ const curl = require("devtools/client/shared/curl");
 const Curl = curl.Curl;
 const CurlUtils = curl.CurlUtils;
 
-const Services = require("Services");
-
 // Test `Curl.generateCommand` headers forwarding/filtering
 add_task(async function() {
   const request = {

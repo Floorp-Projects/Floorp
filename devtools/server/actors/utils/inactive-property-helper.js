@@ -4,7 +4,6 @@
 
 "use strict";
 
-const Services = require("Services");
 const InspectorUtils = require("InspectorUtils");
 
 loader.lazyRequireGetter(

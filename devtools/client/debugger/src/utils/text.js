@@ -6,10 +6,8 @@
  * Utils for keyboard command strings
  * @module utils/text
  */
-import Services from "devtools-services";
-const { appinfo } = Services;
 
-const isMacOS = appinfo.OS === "Darwin";
+const isMacOS = Services.appinfo.OS === "Darwin";
 
 /**
  * Formats key for use in tooltips

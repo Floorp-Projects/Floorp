@@ -9,8 +9,6 @@ const {
   CommandsFactory,
 } = require("devtools/shared/commands/commands-factory");
 
-const Services = require("Services");
-
 // Always log packets when running tests.
 Services.prefs.setBoolPref("devtools.debugger.log", true);
 SimpleTest.registerCleanupFunction(function() {

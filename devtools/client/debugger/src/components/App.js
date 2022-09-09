@@ -24,7 +24,6 @@ const KeyShortcuts = require("devtools/client/shared/key-shortcuts");
 const SplitBox = require("devtools/client/shared/components/splitter/SplitBox");
 const AppErrorBoundary = require("devtools/client/shared/components/AppErrorBoundary");
 
-import Services from "devtools-services";
 const shortcuts = new KeyShortcuts({ window });
 
 const { appinfo } = Services;

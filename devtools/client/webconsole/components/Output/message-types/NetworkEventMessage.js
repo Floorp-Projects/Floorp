@@ -38,7 +38,6 @@ loader.lazyRequireGetter(
 
 const LEARN_MORE = l10n.getStr("webConsoleMoreInfoLabel");
 
-const Services = require("Services");
 const isMacOS = Services.appinfo.OS === "Darwin";
 
 NetworkEventMessage.displayName = "NetworkEventMessage";

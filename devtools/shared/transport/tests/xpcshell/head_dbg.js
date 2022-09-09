@@ -14,8 +14,6 @@ const { require } = ChromeUtils.import(
 );
 const { NetUtil } = require("resource://gre/modules/NetUtil.jsm");
 
-const Services = require("Services");
-
 // We do not want to log packets by default, because in some tests,
 // we can be sending large amounts of data. The test harness has
 // trouble dealing with logging all the data, and we end up with

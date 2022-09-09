@@ -5,7 +5,6 @@
 const { require } = ChromeUtils.import(
   "resource://devtools/shared/loader/Loader.jsm"
 );
-const Services = require("Services");
 const {
   CommandsFactory,
 } = require("devtools/shared/commands/commands-factory");

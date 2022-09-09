@@ -9,7 +9,6 @@ const {
 } = require("devtools/shared/constants");
 const CssLogic = require("devtools/shared/inspector/css-logic");
 const TextProperty = require("devtools/client/inspector/rules/models/text-property");
-const Services = require("Services");
 
 loader.lazyRequireGetter(
   this,

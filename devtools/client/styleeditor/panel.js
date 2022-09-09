@@ -4,7 +4,6 @@
 
 "use strict";
 
-var Services = require("Services");
 var { XPCOMUtils } = require("resource://gre/modules/XPCOMUtils.sys.mjs");
 var EventEmitter = require("devtools/shared/event-emitter");
 

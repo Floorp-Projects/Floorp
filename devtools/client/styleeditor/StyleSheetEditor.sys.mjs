@@ -11,7 +11,6 @@ const {
   prettifyCSS,
 } = require("devtools/shared/inspector/css-logic");
 const { throttle } = require("devtools/shared/throttle");
-const Services = require("Services");
 const EventEmitter = require("devtools/shared/event-emitter");
 
 const lazy = {};

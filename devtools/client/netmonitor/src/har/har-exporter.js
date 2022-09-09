@@ -4,7 +4,6 @@
 
 "use strict";
 
-const Services = require("Services");
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 const JSZip = require("devtools/client/shared/vendor/jszip");
 const clipboardHelper = require("devtools/shared/platform/clipboard");

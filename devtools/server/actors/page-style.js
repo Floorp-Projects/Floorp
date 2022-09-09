@@ -4,7 +4,6 @@
 
 "use strict";
 
-const Services = require("Services");
 const protocol = require("devtools/shared/protocol");
 const { getCSSLexer } = require("devtools/shared/css/lexer");
 const { LongStringActor } = require("devtools/server/actors/string");

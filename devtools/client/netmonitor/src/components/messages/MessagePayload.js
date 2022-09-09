@@ -16,7 +16,6 @@ const {
   connect,
 } = require("devtools/client/shared/redux/visibility-handler-connect");
 
-const Services = require("Services");
 const { L10N } = require("devtools/client/netmonitor/src/utils/l10n.js");
 const {
   getMessagePayload,

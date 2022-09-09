@@ -4,8 +4,6 @@
 
 "use strict";
 
-const Services = require("Services");
-
 /**
  * This module controls various global flags that can be toggled on and off.
  * These flags are generally used to change the behavior of the code during

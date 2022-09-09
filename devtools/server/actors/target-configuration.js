@@ -17,7 +17,6 @@ const {
 } = require("devtools/server/actors/watcher/browsing-context-helpers.jsm");
 const { SUPPORTED_DATA } = SessionDataHelpers;
 const { TARGET_CONFIGURATION } = SUPPORTED_DATA;
-const Services = require("Services");
 
 // List of options supported by this target configuration actor.
 /* eslint sort-keys: "error" */

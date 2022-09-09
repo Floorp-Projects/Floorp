@@ -13,7 +13,6 @@
  */
 
 const { Ci } = require("chrome");
-const Services = require("Services");
 const {
   connectToFrame,
 } = require("devtools/server/connectors/frame-connector");

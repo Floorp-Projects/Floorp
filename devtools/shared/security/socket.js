@@ -9,7 +9,6 @@ var { Ci, Cc, CC, Cr } = require("chrome");
 // Ensure PSM is initialized to support TLS sockets
 Cc["@mozilla.org/psm;1"].getService(Ci.nsISupports);
 
-var Services = require("Services");
 var DevToolsUtils = require("devtools/shared/DevToolsUtils");
 var { dumpn } = DevToolsUtils;
 loader.lazyRequireGetter(

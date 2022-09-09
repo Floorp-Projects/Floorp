@@ -4,8 +4,6 @@
 
 "use strict";
 
-const Services = require("Services");
-
 // keyword to use in telemetry, as `reason` parameter
 const REASON = "application";
 

@@ -8,7 +8,6 @@ const { FrontClassWithSpec } = protocol;
 const {
   DevToolsServerConnection,
 } = require("devtools/server/devtools-server-connection");
-const Services = require("Services");
 
 const inContentSpec = protocol.generateActorSpec({
   typeName: "inContent",

@@ -4,7 +4,6 @@
 
 "use strict";
 
-const Services = require("Services");
 const TextEditor = require("devtools/client/inspector/markup/views/text-editor");
 const { truncateString } = require("devtools/shared/inspector/utils");
 const {

@@ -4,8 +4,6 @@
 
 "use strict";
 
-const Services = require("Services");
-
 const variableFileContents = require("raw!chrome://devtools/skin/variables.css");
 
 const THEME_SELECTOR_STRINGS = {

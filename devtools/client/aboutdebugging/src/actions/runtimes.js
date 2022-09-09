@@ -4,8 +4,6 @@
 
 "use strict";
 
-const Services = require("Services");
-
 const Actions = require("devtools/client/aboutdebugging/src/actions/index");
 
 const {

@@ -2,7 +2,6 @@
 // http://creativecommons.org/publicdomain/zero/1.0/
 
 "use strict";
-const Services = require("Services");
 const {
   FallibleJSPropertyProvider: JSPropertyProvider,
 } = require("devtools/shared/webconsole/js-property-provider");

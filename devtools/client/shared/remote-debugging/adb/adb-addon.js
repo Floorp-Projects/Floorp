@@ -5,7 +5,6 @@
 "use strict";
 
 const { AddonManager } = require("resource://gre/modules/AddonManager.jsm");
-const Services = require("Services");
 const EventEmitter = require("devtools/shared/event-emitter");
 
 const PREF_ADB_EXTENSION_URL = "devtools.remote.adb.extensionURL";

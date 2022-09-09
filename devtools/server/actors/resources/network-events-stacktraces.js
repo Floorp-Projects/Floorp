@@ -9,7 +9,6 @@ const {
 } = require("devtools/server/actors/resources/index");
 
 const { Ci, components } = require("chrome");
-const Services = require("Services");
 
 loader.lazyRequireGetter(
   this,

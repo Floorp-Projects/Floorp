@@ -5,7 +5,6 @@
 const { Component } = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 
-const Services = require("Services");
 const isMacOS = Services.appinfo.OS === "Darwin";
 
 const {

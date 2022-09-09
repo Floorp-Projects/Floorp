@@ -8,7 +8,6 @@
 const { loader, require } = ChromeUtils.import(
   "resource://devtools/shared/loader/Loader.jsm"
 );
-const Services = require("Services");
 const xpcInspector = require("xpcInspector");
 const { DevToolsServer } = require("devtools/server/devtools-server");
 const { DevToolsClient } = require("devtools/client/devtools-client");

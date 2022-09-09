@@ -12,7 +12,6 @@ const {
   Provider,
   createProvider,
 } = require("devtools/client/shared/vendor/react-redux");
-const Services = require("Services");
 
 const actions = require("devtools/client/webconsole/actions/index");
 const { configureStore } = require("devtools/client/webconsole/store");

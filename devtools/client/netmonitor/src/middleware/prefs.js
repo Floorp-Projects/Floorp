@@ -4,7 +4,6 @@
 
 "use strict";
 
-const Services = require("Services");
 const {
   ENABLE_REQUEST_FILTER_TYPE_ONLY,
   RESET_COLUMNS,

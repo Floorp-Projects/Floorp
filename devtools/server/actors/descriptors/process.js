@@ -21,7 +21,6 @@
  * See devtools/docs/backend/actor-hierarchy.md for more details.
  */
 
-const Services = require("Services");
 const { DevToolsServer } = require("devtools/server/devtools-server");
 const { Cc, Ci } = require("chrome");
 

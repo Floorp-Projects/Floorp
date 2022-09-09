@@ -136,10 +136,9 @@ define(function(require, exports, module) {
 
   // Custom Formatters
   // ToDo: This preference can be removed once the custom formatters feature is stable enough
-  const Services = require("Services");
   // Services.prefs isn't available in jsonviewer. It doesn't matter as we don't want to use
   // custom formatters there
-  if (Services?.prefs) {
+  if (typeof Services == "object" && Services?.prefs) {
     const customFormattersExperimentallyEnabled = Services.prefs.getBoolPref(
       "devtools.custom-formatters",
       false

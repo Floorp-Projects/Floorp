@@ -22,7 +22,6 @@
  */
 
 var { Ci, Cu, Cr, Cc } = require("chrome");
-var Services = require("Services");
 const ChromeUtils = require("ChromeUtils");
 var { ActorRegistry } = require("devtools/server/actors/utils/actor-registry");
 var DevToolsUtils = require("devtools/shared/DevToolsUtils");

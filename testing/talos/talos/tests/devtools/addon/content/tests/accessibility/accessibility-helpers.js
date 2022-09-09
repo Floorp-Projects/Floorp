@@ -4,7 +4,6 @@
 
 "use strict";
 
-const Services = require("Services");
 const { openToolboxAndLog, reloadPageAndLog } = require("damp-test/tests/head");
 
 const PREF_ACCESSIBILITY_FORCE_DISABLED = "accessibility.force_disabled";
