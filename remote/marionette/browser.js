@@ -214,6 +214,10 @@ browser.Context = class {
   closeTab() {
     // If the current window is not a browser then close it directly. Do the
     // same if only one remaining tab is open, or no tab selected at all.
+    //
+    // Note: For GeckoView there will always be a single tab only. But for
+    // consistency with other platforms a specific condition has been added
+    // below as well even it's not really used.
     if (
       !this.tabBrowser ||
       !this.tabBrowser.tabs ||
@@ -228,16 +232,15 @@ browser.Context = class {
     );
     let tabClosed;
 
-    switch (lazy.AppInfo.name) {
-      case "Firefox":
-        tabClosed = new lazy.EventPromise(this.tab, "TabClose");
-        this.tabBrowser.removeTab(this.tab);
-        break;
-
-      default:
-        throw new lazy.error.UnsupportedOperationError(
-          `closeTab() not supported in ${lazy.AppInfo.name}`
-        );
+    if (lazy.AppInfo.isAndroid) {
+      lazy.TabManager.removeTab(this.tab);
+    } else if (lazy.AppInfo.isFirefox) {
+      tabClosed = new lazy.EventPromise(this.tab, "TabClose");
+      this.tabBrowser.removeTab(this.tab);
+    } else {
+      throw new lazy.error.UnsupportedOperationError(
+        `closeTab() not supported for ${lazy.AppInfo.name}`
+      );
     }
 
     return Promise.all([destroyed, tabClosed]);
@@ -249,26 +252,26 @@ browser.Context = class {
   async openTab(focus = false) {
     let tab = null;
 
-    switch (lazy.AppInfo.name) {
-      case "Firefox":
-        const opened = new lazy.EventPromise(this.window, "TabOpen");
-        this.window.BrowserOpenTab();
-        await opened;
+    // Bug 1533058 - For Firefox the TabManager cannot be used yet. As such
+    // handle opening a tab differently for Android.
+    if (lazy.AppInfo.isAndroid) {
+      tab = await lazy.TabManager.addTab({ focus, window: this.window });
+    } else if (lazy.AppInfo.isFirefox) {
+      const opened = new lazy.EventPromise(this.window, "TabOpen");
+      this.window.BrowserOpenTab();
+      await opened;
 
-        tab = this.tabBrowser.selectedTab;
+      tab = this.tabBrowser.selectedTab;
 
-        // The new tab is always selected by default. If focus is not wanted,
-        // the previously tab needs to be selected again.
-        if (!focus) {
-          this.tabBrowser.selectedTab = this.tab;
-        }
-
-        break;
-
-      default:
-        throw new lazy.error.UnsupportedOperationError(
-          `openTab() not supported in ${lazy.AppInfo.name}`
-        );
+      // The new tab is always selected by default. If focus is not wanted,
+      // the previously tab needs to be selected again.
+      if (!focus) {
+        this.tabBrowser.selectedTab = this.tab;
+      }
+    } else {
+      throw new lazy.error.UnsupportedOperationError(
+        `openTab() not supported for ${lazy.AppInfo.name}`
+      );
     }
 
     return tab;

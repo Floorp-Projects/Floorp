@@ -6,6 +6,18 @@
 
 var EXPORTED_SYMBOLS = ["MobileTabBrowser"];
 
+const { XPCOMUtils } = ChromeUtils.importESModule(
+  "resource://gre/modules/XPCOMUtils.sys.mjs"
+);
+
+const lazy = {};
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
+  GeckoViewTabUtil: "resource://gre/modules/GeckoViewTestUtils.jsm",
+
+  windowManager: "chrome://remote/content/shared/WindowManager.jsm",
+});
+
 // GeckoView shim for Desktop's gBrowser
 class MobileTabBrowser {
   constructor(window) {
@@ -45,7 +57,35 @@ class MobileTabBrowser {
     this.window.addEventListener(...arguments);
   }
 
+  /**
+   * Create a new tab.
+   *
+   * @param url URL to load within the newly opended tab.
+   *
+   * @return {Promise<Tab>} The created tab.
+   * @throws {Error} Throws an error if the tab cannot be created.
+   */
+  addTab(url) {
+    return lazy.GeckoViewTabUtil.createNewTab(url);
+  }
+
+  getTabForBrowser(browser) {
+    if (browser != this.selectedBrowser) {
+      throw new Error("GeckoView only supports a single tab");
+    }
+
+    return this.selectedTab;
+  }
+
   removeEventListener() {
     this.window.removeEventListener(...arguments);
+  }
+
+  removeTab(tab) {
+    if (tab != this.selectedTab) {
+      throw new Error("GeckoView only supports a single tab");
+    }
+
+    return lazy.windowManager.closeWindow(this.window);
   }
 }
