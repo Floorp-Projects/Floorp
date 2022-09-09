@@ -515,7 +515,7 @@ class DefaultSessionControlController(
         ) {
             navController.nav(
                 R.id.homeFragment,
-                HomeFragmentDirections.actionGlobalWallpaperOnboardingDialog()
+                HomeFragmentDirections.actionGlobalWallpaperOnboardingDialog(),
             )
             return true
         }
