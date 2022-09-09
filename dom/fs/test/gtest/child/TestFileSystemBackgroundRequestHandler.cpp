@@ -33,9 +33,12 @@ class TestFileSystemBackgroundRequestHandler : public ::testing::Test {
 
 TEST_F(TestFileSystemBackgroundRequestHandler,
        isCreateFileSystemManagerChildSuccessful) {
-  EXPECT_CALL(*mFileSystemManagerChild, Shutdown()).WillOnce([this]() {
-    mFileSystemManagerChild->FileSystemManagerChild::Shutdown();
-  });
+  EXPECT_CALL(*mFileSystemManagerChild, Shutdown())
+      .WillOnce([fileSystemManagerChild =
+                     static_cast<void*>(mFileSystemManagerChild.get())]() {
+        static_cast<TestFileSystemManagerChild*>(fileSystemManagerChild)
+            ->FileSystemManagerChild::Shutdown();
+      });
 
   bool done = false;
   auto testable = GetFileSystemBackgroundRequestHandler();
