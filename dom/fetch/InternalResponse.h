@@ -312,8 +312,8 @@ class InternalResponse final : public AtomicSafeRefCounted<InternalResponse> {
     mChannelInfo.InitFromChannel(aChannel);
   }
 
-  void InitChannelInfo(const mozilla::ipc::IPCChannelInfo& aChannelInfo) {
-    mChannelInfo.InitFromIPCChannelInfo(aChannelInfo);
+  void InitChannelInfo(nsITransportSecurityInfo* aSecurityInfo) {
+    mChannelInfo.InitFromTransportSecurityInfo(aSecurityInfo);
   }
 
   void InitChannelInfo(const ChannelInfo& aChannelInfo) {

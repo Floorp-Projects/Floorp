@@ -5,11 +5,11 @@
 include protocol PCache;
 include protocol PCacheStreamControl;
 include IPCStream;
-include IPCChannelInfo;
 include PBackgroundSharedTypes;
 
 include "mozilla/dom/cache/IPCUtils.h";
 include "mozilla/dom/FetchIPCTypes.h";
+include "mozilla/ipc/TransportSecurityInfoUtils.h";
 
 using HeadersGuardEnum from "mozilla/dom/HeadersBinding.h";
 using Namespace from "mozilla/dom/cache/Types.h";
@@ -24,6 +24,7 @@ using struct mozilla::void_t from "mozilla/ipc/IPCCore.h";
 using nsContentPolicyType from "nsIContentPolicy.h";
 using struct nsID from "nsID.h";
 using nsILoadInfo::CrossOriginEmbedderPolicy from "nsILoadInfo.h";
+[RefCounted] using class nsITransportSecurityInfo from "nsITransportSecurityInfo.h";
 
 namespace mozilla {
 namespace dom {
@@ -80,7 +81,7 @@ struct CacheResponse
   HeadersEntry[] headers;
   HeadersGuardEnum headersGuard;
   CacheReadStream? body;
-  IPCChannelInfo channelInfo;
+  nsITransportSecurityInfo securityInfo;
   PrincipalInfo? principalInfo;
   uint32_t paddingInfo;
   int64_t paddingSize;

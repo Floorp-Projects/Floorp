@@ -7,18 +7,15 @@
 #ifndef mozilla_dom_ChannelInfo_h
 #define mozilla_dom_ChannelInfo_h
 
-#include "nsString.h"
 #include "nsCOMPtr.h"
+#include "nsITransportSecurityInfo.h"
+#include "nsString.h"
 
 class nsIChannel;
 class nsIGlobalObject;
 class nsIURI;
 
 namespace mozilla {
-namespace ipc {
-class IPCChannelInfo;
-}  // namespace ipc
-
 namespace dom {
 
 class Document;
@@ -28,10 +25,9 @@ class Document;
 //
 // When adding new members to this object, the following code needs to be
 // updated:
-// * IPCChannelInfo
-// * InitFromChannel and InitFromIPCChannelInfo members
+// * InitFromChannel and InitFromTransportSecurityInfo members
 // * ResurrectInfoOnChannel member
-// * AsIPCChannelInfo member
+// * SecurityInfo member
 // * constructors and assignment operators for this class.
 // * DOM Cache schema code (in dom/cache/DBSchema.cpp) to ensure that the newly
 //   added member is saved into the DB and loaded from it properly.
@@ -42,8 +38,6 @@ class Document;
 // initialized.  There are assertions ensuring these invariants.
 class ChannelInfo final {
  public:
-  typedef mozilla::ipc::IPCChannelInfo IPCChannelInfo;
-
   ChannelInfo() : mInited(false) {}
 
   ChannelInfo(const ChannelInfo& aRHS) = default;
@@ -53,7 +47,7 @@ class ChannelInfo final {
   void InitFromDocument(Document* aDoc);
   void InitFromChannel(nsIChannel* aChannel);
   void InitFromChromeGlobal(nsIGlobalObject* aGlobal);
-  void InitFromIPCChannelInfo(const IPCChannelInfo& aChannelInfo);
+  void InitFromTransportSecurityInfo(nsITransportSecurityInfo* aSecurityInfo);
 
   // This restores every possible information stored from a previous channel
   // object on a new one.
@@ -61,13 +55,12 @@ class ChannelInfo final {
 
   bool IsInitialized() const { return mInited; }
 
-  IPCChannelInfo AsIPCChannelInfo() const;
+  already_AddRefed<nsITransportSecurityInfo> SecurityInfo() const;
 
  private:
-  void SetSecurityInfo(nsISupports* aSecurityInfo);
+  void SetSecurityInfo(nsITransportSecurityInfo* aSecurityInfo);
 
- private:
-  nsCString mSecurityInfo;
+  nsCOMPtr<nsITransportSecurityInfo> mSecurityInfo;
   bool mInited;
 };
 

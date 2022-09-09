@@ -7,7 +7,13 @@
 #include "mozilla/dom/cache/DBSchema.h"
 
 #include "ipc/IPCMessageUtils.h"
+#include "mozIStorageConnection.h"
+#include "mozIStorageStatement.h"
+#include "mozStorageHelper.h"
 #include "mozilla/BasePrincipal.h"
+#include "mozilla/ResultExtensions.h"
+#include "mozilla/StaticPrefs_extensions.h"
+#include "mozilla/Telemetry.h"
 #include "mozilla/dom/HeadersBinding.h"
 #include "mozilla/dom/InternalHeaders.h"
 #include "mozilla/dom/InternalResponse.h"
@@ -16,24 +22,19 @@
 #include "mozilla/dom/cache/CacheCommon.h"
 #include "mozilla/dom/cache/CacheTypes.h"
 #include "mozilla/dom/cache/SavedTypes.h"
-#include "mozilla/dom/cache/Types.h"
 #include "mozilla/dom/cache/TypeUtils.h"
+#include "mozilla/dom/cache/Types.h"
 #include "mozilla/dom/quota/ResultExtensions.h"
 #include "mozilla/net/MozURL.h"
-#include "mozilla/ResultExtensions.h"
-#include "mozilla/StaticPrefs_extensions.h"
-#include "mozilla/Telemetry.h"
-#include "mozIStorageConnection.h"
-#include "mozIStorageStatement.h"
-#include "mozStorageHelper.h"
-#include "nsCharSeparatedTokenizer.h"
 #include "nsCOMPtr.h"
+#include "nsCharSeparatedTokenizer.h"
 #include "nsComponentManagerUtils.h"
 #include "nsHttp.h"
 #include "nsIContentPolicy.h"
 #include "nsICryptoHash.h"
 #include "nsNetCID.h"
 #include "nsPrintfCString.h"
+#include "nsSerializationHelper.h"
 #include "nsTArray.h"
 
 namespace mozilla::dom::cache::db {
@@ -373,7 +374,7 @@ DeleteEntries(mozIStorageConnection& aConn,
               const nsTArray<EntryId>& aEntryIdList);
 static Result<int32_t, nsresult> InsertSecurityInfo(
     mozIStorageConnection& aConn, nsICryptoHash& aCrypto,
-    const nsACString& aData);
+    nsITransportSecurityInfo* aSecurityInfo);
 static nsresult DeleteSecurityInfo(mozIStorageConnection& aConn, int32_t aId,
                                    int32_t aCount);
 static nsresult DeleteSecurityInfoList(
@@ -1357,16 +1358,26 @@ DeleteEntries(mozIStorageConnection& aConn,
   return result;
 }
 
-Result<int32_t, nsresult> InsertSecurityInfo(mozIStorageConnection& aConn,
-                                             nsICryptoHash& aCrypto,
-                                             const nsACString& aData) {
-  MOZ_DIAGNOSTIC_ASSERT(!aData.IsEmpty());
+Result<int32_t, nsresult> InsertSecurityInfo(
+    mozIStorageConnection& aConn, nsICryptoHash& aCrypto,
+    nsITransportSecurityInfo* aSecurityInfo) {
+  MOZ_DIAGNOSTIC_ASSERT(aSecurityInfo);
+  nsCOMPtr<nsISerializable> serializableSecurityInfo(
+      do_QueryInterface(aSecurityInfo));
+  if (!serializableSecurityInfo) {
+    return Err(NS_ERROR_FAILURE);
+  }
+  nsCString data;
+  nsresult rv = NS_SerializeToString(serializableSecurityInfo, data);
+  if (NS_FAILED(rv)) {
+    return Err(rv);
+  }
 
   // We want to use an index to find existing security blobs, but indexing
   // the full blob would be quite expensive.  Instead, we index a small
   // hash value.  Calculate this hash as the first 8 bytes of the SHA1 of
   // the full data.
-  QM_TRY_INSPECT(const auto& hash, HashCString(aCrypto, aData));
+  QM_TRY_INSPECT(const auto& hash, HashCString(aCrypto, data));
 
   // Next, search for an existing entry for this blob by comparing the hash
   // value first and then the full data.  SQLite is smart enough to use
@@ -1381,11 +1392,11 @@ Result<int32_t, nsresult> InsertSecurityInfo(mozIStorageConnection& aConn,
           // columns are NOT NULL.
           "SELECT id, refcount FROM security_info WHERE hash=:hash AND "
           "data=:data;"_ns,
-          [&hash, &aData](auto& state) -> Result<Ok, nsresult> {
+          [&hash, &data](auto& state) -> Result<Ok, nsresult> {
             QM_TRY(MOZ_TO_RESULT(
                 state.BindUTF8StringAsBlobByName("hash"_ns, hash)));
             QM_TRY(MOZ_TO_RESULT(
-                state.BindUTF8StringAsBlobByName("data"_ns, aData)));
+                state.BindUTF8StringAsBlobByName("data"_ns, data)));
 
             return Ok{};
           }));
@@ -1421,7 +1432,7 @@ Result<int32_t, nsresult> InsertSecurityInfo(mozIStorageConnection& aConn,
                      "VALUES (:hash, :data, 1);"_ns));
 
   QM_TRY(MOZ_TO_RESULT(state->BindUTF8StringAsBlobByName("hash"_ns, hash)));
-  QM_TRY(MOZ_TO_RESULT(state->BindUTF8StringAsBlobByName("data"_ns, aData)));
+  QM_TRY(MOZ_TO_RESULT(state->BindUTF8StringAsBlobByName("data"_ns, data)));
   QM_TRY(MOZ_TO_RESULT(state->Execute()));
 
   {
@@ -1507,10 +1518,9 @@ nsresult InsertEntry(mozIStorageConnection& aConn, CacheId aCacheId,
                                          NS_CRYPTO_HASH_CONTRACTID));
 
   int32_t securityId = -1;
-  if (!aResponse.channelInfo().securityInfo().IsEmpty()) {
+  if (aResponse.securityInfo()) {
     QM_TRY_UNWRAP(securityId,
-                  InsertSecurityInfo(aConn, *crypto,
-                                     aResponse.channelInfo().securityInfo()));
+                  InsertSecurityInfo(aConn, *crypto, aResponse.securityInfo()));
   }
 
   {
@@ -1645,7 +1655,7 @@ nsresult InsertEntry(mozIStorageConnection& aConn, CacheId aCacheId,
     QM_TRY(
         MOZ_TO_RESULT(BindId(*state, "response_body_id"_ns, aResponseBodyId)));
 
-    if (aResponse.channelInfo().securityInfo().IsEmpty()) {
+    if (!aResponse.securityInfo()) {
       QM_TRY(
           MOZ_TO_RESULT(state->BindNullByName("response_security_info_id"_ns)));
     } else {
@@ -1894,8 +1904,22 @@ Result<SavedResponse, nsresult> ReadResponse(mozIStorageConnection& aConn,
     savedResponse.mValue.paddingSize() = paddingSize;
   }
 
-  QM_TRY(MOZ_TO_RESULT(state->GetBlobAsUTF8String(
-      7, savedResponse.mValue.channelInfo().securityInfo())));
+  nsCString data;
+  QM_TRY(MOZ_TO_RESULT(state->GetBlobAsUTF8String(7, data)));
+  if (!data.IsEmpty()) {
+    nsCOMPtr<nsISupports> securityInfoSupports;
+    nsresult rv =
+        NS_DeserializeObject(data, getter_AddRefs(securityInfoSupports));
+    if (NS_FAILED(rv)) {
+      return Err(rv);
+    }
+    nsCOMPtr<nsITransportSecurityInfo> securityInfo(
+        do_QueryInterface(securityInfoSupports));
+    if (!securityInfo) {
+      return Err(NS_ERROR_FAILURE);
+    }
+    savedResponse.mValue.securityInfo() = securityInfo.forget();
+  }
 
   QM_TRY_INSPECT(const int32_t& credentials,
                  MOZ_TO_RESULT_INVOKE_MEMBER(*state, GetInt32, 8));
