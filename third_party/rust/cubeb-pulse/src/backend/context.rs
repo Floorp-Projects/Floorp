@@ -305,7 +305,7 @@ impl ContextOps for PulseContext {
             user_data: *mut c_void,
         ) {
             let list_data = unsafe { &mut *(user_data as *mut PulseDevListData) };
-            let ctx = &(*list_data.context);
+            let ctx = list_data.context;
 
             if eol != 0 {
                 ctx.mainloop.signal();
@@ -366,7 +366,7 @@ impl ContextOps for PulseContext {
             user_data: *mut c_void,
         ) {
             let list_data = unsafe { &mut *(user_data as *mut PulseDevListData) };
-            let ctx = &(*list_data.context);
+            let ctx = list_data.context;
 
             if eol != 0 {
                 ctx.mainloop.signal();
@@ -437,7 +437,7 @@ impl ContextOps for PulseContext {
                     .unwrap_or_default();
             }
 
-            (*list_data.context).mainloop.signal();
+            list_data.context.mainloop.signal();
         }
 
         let mut user_data = PulseDevListData::new(self);
@@ -524,7 +524,7 @@ impl ContextOps for PulseContext {
         user_ptr: *mut c_void,
     ) -> Result<Stream> {
         if self.error {
-            let _ = self.context_init()?;
+            self.context_init()?;
         }
 
         let stm = PulseStream::new(

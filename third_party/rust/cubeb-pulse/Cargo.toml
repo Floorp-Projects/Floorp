@@ -12,7 +12,7 @@ pulse-dlopen = ["pulse-ffi/dlopen"]
 crate-type = ["staticlib", "rlib"]
 
 [dependencies]
-cubeb-backend = "0.10"
+cubeb-backend = "0.10.1"
 pulse-ffi = { path = "pulse-ffi" }
 pulse = { path = "pulse-rs" }
 semver = "1.0"
