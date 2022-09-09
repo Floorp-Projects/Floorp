@@ -12,4 +12,7 @@
 interface CSSContainerRule : CSSConditionRule {
   readonly attribute UTF8String containerName;
   readonly attribute UTF8String containerQuery;
+
+  // Performs a container query look-up for an element.
+  [ChromeOnly] Element? queryContainerFor(Element element);
 };
