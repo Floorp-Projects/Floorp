@@ -10,7 +10,7 @@ extern crate cubeb_sys;
 #[macro_use]
 mod ffi_types;
 
-mod try_call;
+mod call;
 
 mod builders;
 mod channel;

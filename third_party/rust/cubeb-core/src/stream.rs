@@ -123,7 +123,7 @@ impl StreamRef {
     pub fn position(&self) -> Result<u64> {
         let mut position = 0u64;
         unsafe {
-            let _ = try_call!(ffi::cubeb_stream_get_position(self.as_ptr(), &mut position));
+            call!(ffi::cubeb_stream_get_position(self.as_ptr(), &mut position))?;
         }
         Ok(position)
     }
@@ -134,7 +134,7 @@ impl StreamRef {
     pub fn latency(&self) -> Result<u32> {
         let mut latency = 0u32;
         unsafe {
-            let _ = try_call!(ffi::cubeb_stream_get_latency(self.as_ptr(), &mut latency));
+            call!(ffi::cubeb_stream_get_latency(self.as_ptr(), &mut latency))?;
         }
         Ok(latency)
     }
@@ -145,10 +145,10 @@ impl StreamRef {
     pub fn input_latency(&self) -> Result<u32> {
         let mut latency = 0u32;
         unsafe {
-            let _ = try_call!(ffi::cubeb_stream_get_input_latency(
+            call!(ffi::cubeb_stream_get_input_latency(
                 self.as_ptr(),
                 &mut latency
-            ));
+            ))?;
         }
         Ok(latency)
     }
@@ -167,10 +167,10 @@ impl StreamRef {
     pub fn current_device(&self) -> Result<&DeviceRef> {
         let mut device: *mut ffi::cubeb_device = ptr::null_mut();
         unsafe {
-            let _ = try_call!(ffi::cubeb_stream_get_current_device(
+            call!(ffi::cubeb_stream_get_current_device(
                 self.as_ptr(),
                 &mut device
-            ));
+            ))?;
             Ok(DeviceRef::from_ptr(device))
         }
     }

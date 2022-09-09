@@ -48,7 +48,7 @@ impl<'ctx> ::std::ops::Deref for DeviceCollection<'ctx> {
 impl<'ctx> ::std::convert::AsRef<DeviceCollectionRef> for DeviceCollection<'ctx> {
     #[inline]
     fn as_ref(&self) -> &DeviceCollectionRef {
-        &**self
+        self
     }
 }
 

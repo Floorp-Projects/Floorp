@@ -411,22 +411,6 @@ criteria = "safe-to-deploy"
 version = "0.1.3"
 criteria = "safe-to-deploy"
 
-[[exemptions.cubeb]]
-version = "0.10.0"
-criteria = "safe-to-deploy"
-
-[[exemptions.cubeb-backend]]
-version = "0.10.0"
-criteria = "safe-to-deploy"
-
-[[exemptions.cubeb-core]]
-version = "0.10.0"
-criteria = "safe-to-deploy"
-
-[[exemptions.cubeb-sys]]
-version = "0.10.0"
-criteria = "safe-to-deploy"
-
 [[exemptions.d3d12]]
 version = "0.4.1"
 criteria = "safe-to-deploy"
