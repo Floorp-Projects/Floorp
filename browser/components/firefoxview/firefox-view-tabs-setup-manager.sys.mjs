@@ -428,11 +428,6 @@ export const TabsSetupFlowManager = new (class {
     });
   }
 
-  openSyncPreferences(window) {
-    const url = "about:preferences#sync";
-    openTabInWindow(window, url, true);
-  }
-
   syncOpenTabs(containerElem) {
     // Flip the pref on.
     // The observer should trigger re-evaluating state and advance to next step

@@ -239,6 +239,19 @@ add_task(async function test_sync_disconnected_error() {
         .includes("sync-disconnected"),
       "Correct message should show when sync's been disconnected error"
     );
+
+    let preferencesTabPromise = BrowserTestUtils.waitForNewTab(
+      browser.getTabBrowser(),
+      "about:preferences?action=choose-what-to-sync#sync",
+      true
+    );
+    await BrowserTestUtils.synthesizeMouseAtCenter(
+      "#error-state-button",
+      {},
+      browser
+    );
+    let preferencesTab = await preferencesTabPromise;
+    await BrowserTestUtils.removeTab(preferencesTab);
   });
   await tearDown(sandbox);
 });
