@@ -77,7 +77,9 @@ pull_request_rules:
         rebase_fallback: none
   - name: Needs landing - Rebase
     conditions:
-      - check-success=complete-pr
+      - or:
+        - check-success=complete-pr
+        - check-success=complete-push
       - label=pr:needs-landing
       - "#approved-reviews-by>=1"
       - -draft
@@ -90,7 +92,9 @@ pull_request_rules:
         rebase_fallback: none
   - name: Needs landing - Squash
     conditions:
-      - check-success=complete-pr
+      - or:
+        - check-success=complete-pr
+        - check-success=complete-push
       - label=pr:needs-landing-squashed
       - "#approved-reviews-by>=1"
       - -draft
