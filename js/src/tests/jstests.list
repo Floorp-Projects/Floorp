@@ -130,226 +130,6 @@ skip-if(!xulRuntime.shell) script test262/language/global-code/decl-var.js
 skip-if(!xulRuntime.shell) include test262/built-ins/Atomics/notify/jstests.list
 skip-if(!xulRuntime.shell) include test262/built-ins/Atomics/wait/jstests.list
 
-
-##################################################
-# Test262 tests skipped due to SpiderMonkey bugs #
-##################################################
-
-# Lazily resolved "name" and "length" properties on functions violate property key order.
-# https://bugzilla.mozilla.org/show_bug.cgi?id=1629803
-skip script test262/built-ins/Object/keys/order-after-define-property.js
-skip script test262/built-ins/Object/entries/order-after-define-property.js
-skip script test262/language/computed-property-names/class/static/method-number-order.js
-skip script test262/language/computed-property-names/class/static/method-string-order.js
-skip script test262/language/computed-property-names/class/static/method-symbol-order.js
-skip script test262/language/statements/class/definition/fn-length-static-precedence-order.js
-skip script test262/language/statements/class/definition/fn-name-static-precedence-order.js
-skip script test262/built-ins/Object/keys/order-after-define-property-with-function.js
-skip script test262/built-ins/Object/entries/order-after-define-property-with-function.js
-
-# https://bugzilla.mozilla.org/show_bug.cgi?id=1286997
-# Bug 1286997 probably doesn't cover all spec violations.
-skip script test262/language/expressions/assignment/S11.13.1_A5_T5.js
-skip script test262/language/expressions/assignment/S11.13.1_A7_T3.js
-skip script test262/language/expressions/compound-assignment/S11.13.2_A5.10_T5.js
-skip script test262/language/expressions/compound-assignment/S11.13.2_A5.11_T5.js
-skip script test262/language/expressions/compound-assignment/S11.13.2_A5.1_T5.js
-skip script test262/language/expressions/compound-assignment/S11.13.2_A5.2_T5.js
-skip script test262/language/expressions/compound-assignment/S11.13.2_A5.3_T5.js
-skip script test262/language/expressions/compound-assignment/S11.13.2_A5.4_T5.js
-skip script test262/language/expressions/compound-assignment/S11.13.2_A5.5_T5.js
-skip script test262/language/expressions/compound-assignment/S11.13.2_A5.6_T5.js
-skip script test262/language/expressions/compound-assignment/S11.13.2_A5.7_T5.js
-skip script test262/language/expressions/compound-assignment/S11.13.2_A5.8_T5.js
-skip script test262/language/expressions/compound-assignment/S11.13.2_A5.9_T5.js
-skip script test262/language/expressions/compound-assignment/S11.13.2_A7.10_T1.js
-skip script test262/language/expressions/compound-assignment/S11.13.2_A7.10_T2.js
-skip script test262/language/expressions/compound-assignment/S11.13.2_A7.11_T1.js
-skip script test262/language/expressions/compound-assignment/S11.13.2_A7.11_T2.js
-skip script test262/language/expressions/compound-assignment/S11.13.2_A7.1_T1.js
-skip script test262/language/expressions/compound-assignment/S11.13.2_A7.1_T2.js
-skip script test262/language/expressions/compound-assignment/S11.13.2_A7.2_T1.js
-skip script test262/language/expressions/compound-assignment/S11.13.2_A7.2_T2.js
-skip script test262/language/expressions/compound-assignment/S11.13.2_A7.3_T1.js
-skip script test262/language/expressions/compound-assignment/S11.13.2_A7.3_T2.js
-skip script test262/language/expressions/compound-assignment/S11.13.2_A7.4_T1.js
-skip script test262/language/expressions/compound-assignment/S11.13.2_A7.4_T2.js
-skip script test262/language/expressions/compound-assignment/S11.13.2_A7.5_T1.js
-skip script test262/language/expressions/compound-assignment/S11.13.2_A7.5_T2.js
-skip script test262/language/expressions/compound-assignment/S11.13.2_A7.6_T1.js
-skip script test262/language/expressions/compound-assignment/S11.13.2_A7.6_T2.js
-skip script test262/language/expressions/compound-assignment/S11.13.2_A7.7_T1.js
-skip script test262/language/expressions/compound-assignment/S11.13.2_A7.7_T2.js
-skip script test262/language/expressions/compound-assignment/S11.13.2_A7.8_T1.js
-skip script test262/language/expressions/compound-assignment/S11.13.2_A7.8_T2.js
-skip script test262/language/expressions/compound-assignment/S11.13.2_A7.9_T1.js
-skip script test262/language/expressions/compound-assignment/S11.13.2_A7.9_T2.js
-skip script test262/language/expressions/postfix-decrement/S11.3.2_A5_T5.js
-skip script test262/language/expressions/postfix-decrement/S11.3.2_A6_T1.js
-skip script test262/language/expressions/postfix-decrement/S11.3.2_A6_T2.js
-skip script test262/language/expressions/postfix-increment/S11.3.1_A5_T5.js
-skip script test262/language/expressions/postfix-increment/S11.3.1_A6_T1.js
-skip script test262/language/expressions/postfix-increment/S11.3.1_A6_T2.js
-skip script test262/language/expressions/prefix-decrement/S11.4.5_A5_T5.js
-skip script test262/language/expressions/prefix-decrement/S11.4.5_A6_T1.js
-skip script test262/language/expressions/prefix-decrement/S11.4.5_A6_T2.js
-skip script test262/language/expressions/prefix-increment/S11.4.4_A5_T5.js
-skip script test262/language/expressions/prefix-increment/S11.4.4_A6_T1.js
-skip script test262/language/expressions/prefix-increment/S11.4.4_A6_T2.js
-skip script test262/language/expressions/logical-assignment/lgcl-nullish-assignment-operator-lhs-before-rhs.js
-skip script test262/language/expressions/logical-assignment/lgcl-and-assignment-operator-lhs-before-rhs.js
-skip script test262/language/expressions/logical-assignment/lgcl-or-assignment-operator-lhs-before-rhs.js
-
-# https://bugzilla.mozilla.org/show_bug.cgi?id=605515
-skip script test262/language/identifier-resolution/assign-to-global-undefined-strict.js
-skip script test262/language/expressions/postfix-decrement/operator-x-postfix-decrement-calls-putvalue-lhs-newvalue-.js
-skip script test262/language/expressions/assignment/assignment-operator-calls-putvalue-lref--rval-.js
-skip script test262/language/expressions/prefix-increment/operator-prefix-increment-x-calls-putvalue-lhs-newvalue-.js
-skip script test262/language/expressions/prefix-decrement/operator-prefix-decrement-x-calls-putvalue-lhs-newvalue-.js
-skip script test262/language/expressions/postfix-increment/operator-x-postfix-increment-calls-putvalue-lhs-newvalue-.js
-skip script test262/language/expressions/compound-assignment/compound-assignment-operator-calls-putvalue-lref--v--16.js
-skip script test262/language/expressions/compound-assignment/compound-assignment-operator-calls-putvalue-lref--v--8.js
-skip script test262/language/expressions/compound-assignment/compound-assignment-operator-calls-putvalue-lref--v--12.js
-skip script test262/language/expressions/compound-assignment/compound-assignment-operator-calls-putvalue-lref--v--18.js
-skip script test262/language/expressions/compound-assignment/compound-assignment-operator-calls-putvalue-lref--v--14.js
-skip script test262/language/expressions/compound-assignment/compound-assignment-operator-calls-putvalue-lref--v--2.js
-skip script test262/language/expressions/compound-assignment/compound-assignment-operator-calls-putvalue-lref--v--10.js
-skip script test262/language/expressions/compound-assignment/compound-assignment-operator-calls-putvalue-lref--v--6.js
-skip script test262/language/expressions/compound-assignment/compound-assignment-operator-calls-putvalue-lref--v--4.js
-skip script test262/language/expressions/compound-assignment/compound-assignment-operator-calls-putvalue-lref--v-.js
-skip script test262/language/expressions/compound-assignment/compound-assignment-operator-calls-putvalue-lref--v--20.js
-
-# https://bugzilla.mozilla.org/show_bug.cgi?id=1670502
-skip script test262/built-ins/Function/prototype/toString/built-in-function-object.js
-
-# https://bugzilla.mozilla.org/show_bug.cgi?id=1225839
-ignore-flag(--more-compartments) script test262/built-ins/Function/internals/Call/class-ctor-realm.js
-
-# These two tests assume that assignment to function calls is a SyntaxError.  We
-# historically implemented otherwise, as web reality.  Perhaps that can be
-# reevaluated at some point.
-skip script test262/language/expressions/assignmenttargettype/parenthesized-callexpression-arguments.js
-skip script test262/language/expressions/assignmenttargettype/direct-callexpression-arguments.js
-
-# https://bugzilla.mozilla.org/show_bug.cgi?id=1297179
-# All of these tests pass except with --more-compartments.
-ignore-flag(--more-compartments) script test262/built-ins/Proxy/apply/arguments-realm.js
-ignore-flag(--more-compartments) script test262/built-ins/Proxy/apply/trap-is-not-callable-realm.js
-ignore-flag(--more-compartments) script test262/built-ins/Proxy/construct/arguments-realm.js
-ignore-flag(--more-compartments) script test262/built-ins/Proxy/construct/trap-is-not-callable-realm.js
-ignore-flag(--more-compartments) script test262/built-ins/Proxy/defineProperty/desc-realm.js
-ignore-flag(--more-compartments) script test262/built-ins/Proxy/defineProperty/null-handler-realm.js
-ignore-flag(--more-compartments) script test262/built-ins/Proxy/defineProperty/targetdesc-configurable-desc-not-configurable-realm.js
-ignore-flag(--more-compartments) script test262/built-ins/Proxy/defineProperty/targetdesc-not-compatible-descriptor-not-configurable-target-realm.js
-ignore-flag(--more-compartments) script test262/built-ins/Proxy/defineProperty/targetdesc-not-compatible-descriptor-realm.js
-ignore-flag(--more-compartments) script test262/built-ins/Proxy/defineProperty/targetdesc-undefined-not-configurable-descriptor-realm.js
-ignore-flag(--more-compartments) script test262/built-ins/Proxy/defineProperty/targetdesc-undefined-target-is-not-extensible-realm.js
-ignore-flag(--more-compartments) script test262/built-ins/Proxy/defineProperty/trap-is-not-callable-realm.js
-ignore-flag(--more-compartments) script test262/built-ins/Proxy/deleteProperty/trap-is-not-callable-realm.js
-ignore-flag(--more-compartments) script test262/built-ins/Proxy/get/trap-is-not-callable-realm.js
-ignore-flag(--more-compartments) script test262/built-ins/Proxy/getOwnPropertyDescriptor/result-type-is-not-object-nor-undefined-realm.js
-ignore-flag(--more-compartments) script test262/built-ins/Proxy/getOwnPropertyDescriptor/trap-is-not-callable-realm.js
-ignore-flag(--more-compartments) script test262/built-ins/Proxy/getPrototypeOf/trap-is-not-callable-realm.js
-ignore-flag(--more-compartments) script test262/built-ins/Proxy/has/trap-is-not-callable-realm.js
-ignore-flag(--more-compartments) script test262/built-ins/Proxy/isExtensible/trap-is-not-callable-realm.js
-ignore-flag(--more-compartments) script test262/built-ins/Proxy/ownKeys/return-not-list-object-throws-realm.js
-ignore-flag(--more-compartments) script test262/built-ins/Proxy/ownKeys/trap-is-not-callable-realm.js
-ignore-flag(--more-compartments) script test262/built-ins/Proxy/preventExtensions/trap-is-not-callable-realm.js
-ignore-flag(--more-compartments) script test262/built-ins/Proxy/set/trap-is-not-callable-realm.js
-ignore-flag(--more-compartments) script test262/built-ins/Proxy/setPrototypeOf/trap-is-not-callable-realm.js
-
-# Errors thrown from wrong realm, similar to 1225839, 1288457, and 1297179.
-ignore-flag(--more-compartments) script test262/built-ins/Array/length/define-own-prop-length-overflow-realm.js
-skip script test262/built-ins/Function/internals/Construct/derived-return-val-realm.js
-skip script test262/built-ins/Function/internals/Construct/derived-this-uninitialized-realm.js
-
-# https://bugzilla.mozilla.org/show_bug.cgi?id=1317378
-skip script test262/language/statements/do-while/cptn-abrupt-empty.js
-skip script test262/language/statements/do-while/cptn-normal.js
-skip script test262/language/statements/for-in/cptn-decl-abrupt-empty.js
-skip script test262/language/statements/for-in/cptn-decl-itr.js
-skip script test262/language/statements/for-in/cptn-decl-skip-itr.js
-skip script test262/language/statements/for-in/cptn-decl-zero-itr.js
-skip script test262/language/statements/for-in/cptn-expr-abrupt-empty.js
-skip script test262/language/statements/for-in/cptn-expr-itr.js
-skip script test262/language/statements/for-in/cptn-expr-skip-itr.js
-skip script test262/language/statements/for-in/cptn-expr-zero-itr.js
-skip script test262/language/statements/for/cptn-decl-expr-iter.js
-skip script test262/language/statements/for/cptn-decl-expr-no-iter.js
-skip script test262/language/statements/for/cptn-expr-expr-iter.js
-skip script test262/language/statements/for/cptn-expr-expr-no-iter.js
-skip script test262/language/statements/for/head-init-expr-check-empty-inc-empty-completion.js
-skip script test262/language/statements/for/head-init-var-check-empty-inc-empty-completion.js
-skip script test262/language/statements/for-of/cptn-decl-abrupt-empty.js
-skip script test262/language/statements/for-of/cptn-decl-itr.js
-skip script test262/language/statements/for-of/cptn-decl-no-itr.js
-skip script test262/language/statements/for-of/cptn-expr-abrupt-empty.js
-skip script test262/language/statements/for-of/cptn-expr-itr.js
-skip script test262/language/statements/for-of/cptn-expr-no-itr.js
-skip script test262/language/statements/if/cptn-else-false-nrml.js
-skip script test262/language/statements/if/cptn-else-false-abrupt-empty.js
-skip script test262/language/statements/if/cptn-else-true-abrupt-empty.js
-skip script test262/language/statements/if/cptn-else-true-nrml.js
-skip script test262/language/statements/if/cptn-no-else-false.js
-skip script test262/language/statements/if/cptn-no-else-true-abrupt-empty.js
-skip script test262/language/statements/if/cptn-no-else-true-nrml.js
-skip script test262/language/statements/switch/cptn-a-abrupt-empty.js
-skip script test262/language/statements/switch/cptn-abrupt-empty.js
-skip script test262/language/statements/switch/cptn-b-abrupt-empty.js
-skip script test262/language/statements/switch/cptn-b-final.js
-skip script test262/language/statements/switch/cptn-dflt-abrupt-empty.js
-skip script test262/language/statements/switch/cptn-dflt-b-abrupt-empty.js
-skip script test262/language/statements/switch/cptn-dflt-b-final.js
-skip script test262/language/statements/switch/cptn-dflt-final.js
-skip script test262/language/statements/switch/cptn-no-dflt-match-abrupt-empty.js
-skip script test262/language/statements/switch/cptn-no-dflt-match-final.js
-skip script test262/language/statements/switch/cptn-no-dflt-no-match.js
-skip script test262/language/statements/try/cptn-finally-skip-catch.js
-skip script test262/language/statements/try/cptn-finally-wo-catch.js
-skip script test262/language/statements/try/cptn-try.js
-skip script test262/language/statements/while/cptn-abrupt-empty.js
-skip script test262/language/statements/while/cptn-iter.js
-skip script test262/language/statements/while/cptn-no-iter.js
-skip script test262/language/statements/with/cptn-abrupt-empty.js
-skip script test262/language/statements/with/cptn-nrml.js
-
-# Hoisted block-level function named "arguments" not initialized with undefined per B.3.3.1
-# https://bugzilla.mozilla.org/show_bug.cgi?id=1339123
-skip script test262/annexB/language/function-code/block-decl-func-skip-arguments.js
-
-# https://bugzilla.mozilla.org/show_bug.cgi?id=1407587
-skip script test262/language/expressions/assignment/destructuring/keyed-destructuring-property-reference-target-evaluation-order.js
-skip script test262/language/expressions/assignment/destructuring/iterator-destructuring-property-reference-target-evaluation-order.js
-
-# https://bugzilla.mozilla.org/show_bug.cgi?id=1321616
-skip script test262/annexB/built-ins/Function/createdynfn-no-line-terminator-html-close-comment-body.js
-
-# https://bugzilla.mozilla.org/show_bug.cgi?id=1462745
-skip script test262/annexB/language/function-code/block-decl-nested-blocks-with-fun-decl.js
-
-# https://bugzilla.mozilla.org/show_bug.cgi?id=1545038
-# All of these tests pass except with --more-compartments.
-ignore-flag(--more-compartments) script test262/built-ins/String/prototype/valueOf/non-generic-realm.js
-ignore-flag(--more-compartments) script test262/built-ins/String/prototype/valueOf/non-generic-realm.js
-ignore-flag(--more-compartments) script test262/built-ins/String/prototype/toString/non-generic-realm.js
-ignore-flag(--more-compartments) script test262/built-ins/String/prototype/toString/non-generic-realm.js
-ignore-flag(--more-compartments) script test262/built-ins/Proxy/apply/null-handler-realm.js
-ignore-flag(--more-compartments) script test262/built-ins/Proxy/apply/null-handler-realm.js
-ignore-flag(--more-compartments) script test262/built-ins/Proxy/construct/return-not-object-throws-number-realm.js
-ignore-flag(--more-compartments) script test262/built-ins/Proxy/construct/return-not-object-throws-number-realm.js
-ignore-flag(--more-compartments) script test262/built-ins/Proxy/construct/null-handler-realm.js
-ignore-flag(--more-compartments) script test262/built-ins/Proxy/construct/null-handler-realm.js
-ignore-flag(--more-compartments) script test262/built-ins/Proxy/construct/return-not-object-throws-undefined-realm.js
-ignore-flag(--more-compartments) script test262/built-ins/Proxy/construct/return-not-object-throws-undefined-realm.js
-ignore-flag(--more-compartments) script test262/built-ins/Proxy/construct/return-not-object-throws-symbol-realm.js
-ignore-flag(--more-compartments) script test262/built-ins/Proxy/construct/return-not-object-throws-symbol-realm.js
-ignore-flag(--more-compartments) script test262/built-ins/Proxy/construct/return-not-object-throws-string-realm.js
-ignore-flag(--more-compartments) script test262/built-ins/Proxy/construct/return-not-object-throws-string-realm.js
-ignore-flag(--more-compartments) script test262/built-ins/Proxy/construct/return-not-object-throws-null-realm.js
-ignore-flag(--more-compartments) script test262/built-ins/Proxy/construct/return-not-object-throws-null-realm.js
-ignore-flag(--more-compartments) script test262/built-ins/Proxy/construct/return-not-object-throws-boolean-realm.js
-ignore-flag(--more-compartments) script test262/built-ins/Proxy/construct/return-not-object-throws-boolean-realm.js
-
 # Depends upon the SharedArrayBuffer constructor being defined as a global
 # property -- and right now, it's only defined for cross-site-isolated pages
 # that request it using COOP/COEP.
@@ -603,6 +383,226 @@ fails-if(!xulRuntime.shell) script test262/built-ins/TypedArrayConstructors/inte
 fails-if(!xulRuntime.shell) script test262/built-ins/TypedArrayConstructors/internals/Delete/indexed-value-sab-strict-strict.js
 fails-if(!xulRuntime.shell) script test262/language/expressions/class/subclass-builtins/subclass-SharedArrayBuffer.js
 fails-if(!xulRuntime.shell) script test262/language/statements/class/subclass-builtins/subclass-SharedArrayBuffer.js
+
+
+##################################################
+# Test262 tests skipped due to SpiderMonkey bugs #
+##################################################
+
+# Lazily resolved "name" and "length" properties on functions violate property key order.
+# https://bugzilla.mozilla.org/show_bug.cgi?id=1629803
+skip script test262/built-ins/Object/keys/order-after-define-property.js
+skip script test262/built-ins/Object/entries/order-after-define-property.js
+skip script test262/language/computed-property-names/class/static/method-number-order.js
+skip script test262/language/computed-property-names/class/static/method-string-order.js
+skip script test262/language/computed-property-names/class/static/method-symbol-order.js
+skip script test262/language/statements/class/definition/fn-length-static-precedence-order.js
+skip script test262/language/statements/class/definition/fn-name-static-precedence-order.js
+skip script test262/built-ins/Object/keys/order-after-define-property-with-function.js
+skip script test262/built-ins/Object/entries/order-after-define-property-with-function.js
+
+# https://bugzilla.mozilla.org/show_bug.cgi?id=1286997
+# Bug 1286997 probably doesn't cover all spec violations.
+skip script test262/language/expressions/assignment/S11.13.1_A5_T5.js
+skip script test262/language/expressions/assignment/S11.13.1_A7_T3.js
+skip script test262/language/expressions/compound-assignment/S11.13.2_A5.10_T5.js
+skip script test262/language/expressions/compound-assignment/S11.13.2_A5.11_T5.js
+skip script test262/language/expressions/compound-assignment/S11.13.2_A5.1_T5.js
+skip script test262/language/expressions/compound-assignment/S11.13.2_A5.2_T5.js
+skip script test262/language/expressions/compound-assignment/S11.13.2_A5.3_T5.js
+skip script test262/language/expressions/compound-assignment/S11.13.2_A5.4_T5.js
+skip script test262/language/expressions/compound-assignment/S11.13.2_A5.5_T5.js
+skip script test262/language/expressions/compound-assignment/S11.13.2_A5.6_T5.js
+skip script test262/language/expressions/compound-assignment/S11.13.2_A5.7_T5.js
+skip script test262/language/expressions/compound-assignment/S11.13.2_A5.8_T5.js
+skip script test262/language/expressions/compound-assignment/S11.13.2_A5.9_T5.js
+skip script test262/language/expressions/compound-assignment/S11.13.2_A7.10_T1.js
+skip script test262/language/expressions/compound-assignment/S11.13.2_A7.10_T2.js
+skip script test262/language/expressions/compound-assignment/S11.13.2_A7.11_T1.js
+skip script test262/language/expressions/compound-assignment/S11.13.2_A7.11_T2.js
+skip script test262/language/expressions/compound-assignment/S11.13.2_A7.1_T1.js
+skip script test262/language/expressions/compound-assignment/S11.13.2_A7.1_T2.js
+skip script test262/language/expressions/compound-assignment/S11.13.2_A7.2_T1.js
+skip script test262/language/expressions/compound-assignment/S11.13.2_A7.2_T2.js
+skip script test262/language/expressions/compound-assignment/S11.13.2_A7.3_T1.js
+skip script test262/language/expressions/compound-assignment/S11.13.2_A7.3_T2.js
+skip script test262/language/expressions/compound-assignment/S11.13.2_A7.4_T1.js
+skip script test262/language/expressions/compound-assignment/S11.13.2_A7.4_T2.js
+skip script test262/language/expressions/compound-assignment/S11.13.2_A7.5_T1.js
+skip script test262/language/expressions/compound-assignment/S11.13.2_A7.5_T2.js
+skip script test262/language/expressions/compound-assignment/S11.13.2_A7.6_T1.js
+skip script test262/language/expressions/compound-assignment/S11.13.2_A7.6_T2.js
+skip script test262/language/expressions/compound-assignment/S11.13.2_A7.7_T1.js
+skip script test262/language/expressions/compound-assignment/S11.13.2_A7.7_T2.js
+skip script test262/language/expressions/compound-assignment/S11.13.2_A7.8_T1.js
+skip script test262/language/expressions/compound-assignment/S11.13.2_A7.8_T2.js
+skip script test262/language/expressions/compound-assignment/S11.13.2_A7.9_T1.js
+skip script test262/language/expressions/compound-assignment/S11.13.2_A7.9_T2.js
+skip script test262/language/expressions/postfix-decrement/S11.3.2_A5_T5.js
+skip script test262/language/expressions/postfix-decrement/S11.3.2_A6_T1.js
+skip script test262/language/expressions/postfix-decrement/S11.3.2_A6_T2.js
+skip script test262/language/expressions/postfix-increment/S11.3.1_A5_T5.js
+skip script test262/language/expressions/postfix-increment/S11.3.1_A6_T1.js
+skip script test262/language/expressions/postfix-increment/S11.3.1_A6_T2.js
+skip script test262/language/expressions/prefix-decrement/S11.4.5_A5_T5.js
+skip script test262/language/expressions/prefix-decrement/S11.4.5_A6_T1.js
+skip script test262/language/expressions/prefix-decrement/S11.4.5_A6_T2.js
+skip script test262/language/expressions/prefix-increment/S11.4.4_A5_T5.js
+skip script test262/language/expressions/prefix-increment/S11.4.4_A6_T1.js
+skip script test262/language/expressions/prefix-increment/S11.4.4_A6_T2.js
+skip script test262/language/expressions/logical-assignment/lgcl-nullish-assignment-operator-lhs-before-rhs.js
+skip script test262/language/expressions/logical-assignment/lgcl-and-assignment-operator-lhs-before-rhs.js
+skip script test262/language/expressions/logical-assignment/lgcl-or-assignment-operator-lhs-before-rhs.js
+
+# https://bugzilla.mozilla.org/show_bug.cgi?id=605515
+skip script test262/language/identifier-resolution/assign-to-global-undefined-strict.js
+skip script test262/language/expressions/postfix-decrement/operator-x-postfix-decrement-calls-putvalue-lhs-newvalue-.js
+skip script test262/language/expressions/assignment/assignment-operator-calls-putvalue-lref--rval-.js
+skip script test262/language/expressions/prefix-increment/operator-prefix-increment-x-calls-putvalue-lhs-newvalue-.js
+skip script test262/language/expressions/prefix-decrement/operator-prefix-decrement-x-calls-putvalue-lhs-newvalue-.js
+skip script test262/language/expressions/postfix-increment/operator-x-postfix-increment-calls-putvalue-lhs-newvalue-.js
+skip script test262/language/expressions/compound-assignment/compound-assignment-operator-calls-putvalue-lref--v--16.js
+skip script test262/language/expressions/compound-assignment/compound-assignment-operator-calls-putvalue-lref--v--8.js
+skip script test262/language/expressions/compound-assignment/compound-assignment-operator-calls-putvalue-lref--v--12.js
+skip script test262/language/expressions/compound-assignment/compound-assignment-operator-calls-putvalue-lref--v--18.js
+skip script test262/language/expressions/compound-assignment/compound-assignment-operator-calls-putvalue-lref--v--14.js
+skip script test262/language/expressions/compound-assignment/compound-assignment-operator-calls-putvalue-lref--v--2.js
+skip script test262/language/expressions/compound-assignment/compound-assignment-operator-calls-putvalue-lref--v--10.js
+skip script test262/language/expressions/compound-assignment/compound-assignment-operator-calls-putvalue-lref--v--6.js
+skip script test262/language/expressions/compound-assignment/compound-assignment-operator-calls-putvalue-lref--v--4.js
+skip script test262/language/expressions/compound-assignment/compound-assignment-operator-calls-putvalue-lref--v-.js
+skip script test262/language/expressions/compound-assignment/compound-assignment-operator-calls-putvalue-lref--v--20.js
+
+# https://bugzilla.mozilla.org/show_bug.cgi?id=1670502
+skip script test262/built-ins/Function/prototype/toString/built-in-function-object.js
+
+# https://bugzilla.mozilla.org/show_bug.cgi?id=1225839
+ignore-flag(--more-compartments) script test262/built-ins/Function/internals/Call/class-ctor-realm.js
+
+# These two tests assume that assignment to function calls is a SyntaxError.  We
+# historically implemented otherwise, as web reality.  Perhaps that can be
+# reevaluated at some point.
+skip script test262/language/expressions/assignmenttargettype/parenthesized-callexpression-arguments.js
+skip script test262/language/expressions/assignmenttargettype/direct-callexpression-arguments.js
+
+# https://bugzilla.mozilla.org/show_bug.cgi?id=1297179
+# All of these tests pass except with --more-compartments.
+ignore-flag(--more-compartments) script test262/built-ins/Proxy/apply/arguments-realm.js
+ignore-flag(--more-compartments) script test262/built-ins/Proxy/apply/trap-is-not-callable-realm.js
+ignore-flag(--more-compartments) script test262/built-ins/Proxy/construct/arguments-realm.js
+ignore-flag(--more-compartments) script test262/built-ins/Proxy/construct/trap-is-not-callable-realm.js
+ignore-flag(--more-compartments) script test262/built-ins/Proxy/defineProperty/desc-realm.js
+ignore-flag(--more-compartments) script test262/built-ins/Proxy/defineProperty/null-handler-realm.js
+ignore-flag(--more-compartments) script test262/built-ins/Proxy/defineProperty/targetdesc-configurable-desc-not-configurable-realm.js
+ignore-flag(--more-compartments) script test262/built-ins/Proxy/defineProperty/targetdesc-not-compatible-descriptor-not-configurable-target-realm.js
+ignore-flag(--more-compartments) script test262/built-ins/Proxy/defineProperty/targetdesc-not-compatible-descriptor-realm.js
+ignore-flag(--more-compartments) script test262/built-ins/Proxy/defineProperty/targetdesc-undefined-not-configurable-descriptor-realm.js
+ignore-flag(--more-compartments) script test262/built-ins/Proxy/defineProperty/targetdesc-undefined-target-is-not-extensible-realm.js
+ignore-flag(--more-compartments) script test262/built-ins/Proxy/defineProperty/trap-is-not-callable-realm.js
+ignore-flag(--more-compartments) script test262/built-ins/Proxy/deleteProperty/trap-is-not-callable-realm.js
+ignore-flag(--more-compartments) script test262/built-ins/Proxy/get/trap-is-not-callable-realm.js
+ignore-flag(--more-compartments) script test262/built-ins/Proxy/getOwnPropertyDescriptor/result-type-is-not-object-nor-undefined-realm.js
+ignore-flag(--more-compartments) script test262/built-ins/Proxy/getOwnPropertyDescriptor/trap-is-not-callable-realm.js
+ignore-flag(--more-compartments) script test262/built-ins/Proxy/getPrototypeOf/trap-is-not-callable-realm.js
+ignore-flag(--more-compartments) script test262/built-ins/Proxy/has/trap-is-not-callable-realm.js
+ignore-flag(--more-compartments) script test262/built-ins/Proxy/isExtensible/trap-is-not-callable-realm.js
+ignore-flag(--more-compartments) script test262/built-ins/Proxy/ownKeys/return-not-list-object-throws-realm.js
+ignore-flag(--more-compartments) script test262/built-ins/Proxy/ownKeys/trap-is-not-callable-realm.js
+ignore-flag(--more-compartments) script test262/built-ins/Proxy/preventExtensions/trap-is-not-callable-realm.js
+ignore-flag(--more-compartments) script test262/built-ins/Proxy/set/trap-is-not-callable-realm.js
+ignore-flag(--more-compartments) script test262/built-ins/Proxy/setPrototypeOf/trap-is-not-callable-realm.js
+
+# Errors thrown from wrong realm, similar to 1225839, 1288457, and 1297179.
+ignore-flag(--more-compartments) script test262/built-ins/Array/length/define-own-prop-length-overflow-realm.js
+skip script test262/built-ins/Function/internals/Construct/derived-return-val-realm.js
+skip script test262/built-ins/Function/internals/Construct/derived-this-uninitialized-realm.js
+
+# https://bugzilla.mozilla.org/show_bug.cgi?id=1317378
+skip script test262/language/statements/do-while/cptn-abrupt-empty.js
+skip script test262/language/statements/do-while/cptn-normal.js
+skip script test262/language/statements/for-in/cptn-decl-abrupt-empty.js
+skip script test262/language/statements/for-in/cptn-decl-itr.js
+skip script test262/language/statements/for-in/cptn-decl-skip-itr.js
+skip script test262/language/statements/for-in/cptn-decl-zero-itr.js
+skip script test262/language/statements/for-in/cptn-expr-abrupt-empty.js
+skip script test262/language/statements/for-in/cptn-expr-itr.js
+skip script test262/language/statements/for-in/cptn-expr-skip-itr.js
+skip script test262/language/statements/for-in/cptn-expr-zero-itr.js
+skip script test262/language/statements/for/cptn-decl-expr-iter.js
+skip script test262/language/statements/for/cptn-decl-expr-no-iter.js
+skip script test262/language/statements/for/cptn-expr-expr-iter.js
+skip script test262/language/statements/for/cptn-expr-expr-no-iter.js
+skip script test262/language/statements/for/head-init-expr-check-empty-inc-empty-completion.js
+skip script test262/language/statements/for/head-init-var-check-empty-inc-empty-completion.js
+skip script test262/language/statements/for-of/cptn-decl-abrupt-empty.js
+skip script test262/language/statements/for-of/cptn-decl-itr.js
+skip script test262/language/statements/for-of/cptn-decl-no-itr.js
+skip script test262/language/statements/for-of/cptn-expr-abrupt-empty.js
+skip script test262/language/statements/for-of/cptn-expr-itr.js
+skip script test262/language/statements/for-of/cptn-expr-no-itr.js
+skip script test262/language/statements/if/cptn-else-false-nrml.js
+skip script test262/language/statements/if/cptn-else-false-abrupt-empty.js
+skip script test262/language/statements/if/cptn-else-true-abrupt-empty.js
+skip script test262/language/statements/if/cptn-else-true-nrml.js
+skip script test262/language/statements/if/cptn-no-else-false.js
+skip script test262/language/statements/if/cptn-no-else-true-abrupt-empty.js
+skip script test262/language/statements/if/cptn-no-else-true-nrml.js
+skip script test262/language/statements/switch/cptn-a-abrupt-empty.js
+skip script test262/language/statements/switch/cptn-abrupt-empty.js
+skip script test262/language/statements/switch/cptn-b-abrupt-empty.js
+skip script test262/language/statements/switch/cptn-b-final.js
+skip script test262/language/statements/switch/cptn-dflt-abrupt-empty.js
+skip script test262/language/statements/switch/cptn-dflt-b-abrupt-empty.js
+skip script test262/language/statements/switch/cptn-dflt-b-final.js
+skip script test262/language/statements/switch/cptn-dflt-final.js
+skip script test262/language/statements/switch/cptn-no-dflt-match-abrupt-empty.js
+skip script test262/language/statements/switch/cptn-no-dflt-match-final.js
+skip script test262/language/statements/switch/cptn-no-dflt-no-match.js
+skip script test262/language/statements/try/cptn-finally-skip-catch.js
+skip script test262/language/statements/try/cptn-finally-wo-catch.js
+skip script test262/language/statements/try/cptn-try.js
+skip script test262/language/statements/while/cptn-abrupt-empty.js
+skip script test262/language/statements/while/cptn-iter.js
+skip script test262/language/statements/while/cptn-no-iter.js
+skip script test262/language/statements/with/cptn-abrupt-empty.js
+skip script test262/language/statements/with/cptn-nrml.js
+
+# Hoisted block-level function named "arguments" not initialized with undefined per B.3.3.1
+# https://bugzilla.mozilla.org/show_bug.cgi?id=1339123
+skip script test262/annexB/language/function-code/block-decl-func-skip-arguments.js
+
+# https://bugzilla.mozilla.org/show_bug.cgi?id=1407587
+skip script test262/language/expressions/assignment/destructuring/keyed-destructuring-property-reference-target-evaluation-order.js
+skip script test262/language/expressions/assignment/destructuring/iterator-destructuring-property-reference-target-evaluation-order.js
+
+# https://bugzilla.mozilla.org/show_bug.cgi?id=1321616
+skip script test262/annexB/built-ins/Function/createdynfn-no-line-terminator-html-close-comment-body.js
+
+# https://bugzilla.mozilla.org/show_bug.cgi?id=1462745
+skip script test262/annexB/language/function-code/block-decl-nested-blocks-with-fun-decl.js
+
+# https://bugzilla.mozilla.org/show_bug.cgi?id=1545038
+# All of these tests pass except with --more-compartments.
+ignore-flag(--more-compartments) script test262/built-ins/String/prototype/valueOf/non-generic-realm.js
+ignore-flag(--more-compartments) script test262/built-ins/String/prototype/valueOf/non-generic-realm.js
+ignore-flag(--more-compartments) script test262/built-ins/String/prototype/toString/non-generic-realm.js
+ignore-flag(--more-compartments) script test262/built-ins/String/prototype/toString/non-generic-realm.js
+ignore-flag(--more-compartments) script test262/built-ins/Proxy/apply/null-handler-realm.js
+ignore-flag(--more-compartments) script test262/built-ins/Proxy/apply/null-handler-realm.js
+ignore-flag(--more-compartments) script test262/built-ins/Proxy/construct/return-not-object-throws-number-realm.js
+ignore-flag(--more-compartments) script test262/built-ins/Proxy/construct/return-not-object-throws-number-realm.js
+ignore-flag(--more-compartments) script test262/built-ins/Proxy/construct/null-handler-realm.js
+ignore-flag(--more-compartments) script test262/built-ins/Proxy/construct/null-handler-realm.js
+ignore-flag(--more-compartments) script test262/built-ins/Proxy/construct/return-not-object-throws-undefined-realm.js
+ignore-flag(--more-compartments) script test262/built-ins/Proxy/construct/return-not-object-throws-undefined-realm.js
+ignore-flag(--more-compartments) script test262/built-ins/Proxy/construct/return-not-object-throws-symbol-realm.js
+ignore-flag(--more-compartments) script test262/built-ins/Proxy/construct/return-not-object-throws-symbol-realm.js
+ignore-flag(--more-compartments) script test262/built-ins/Proxy/construct/return-not-object-throws-string-realm.js
+ignore-flag(--more-compartments) script test262/built-ins/Proxy/construct/return-not-object-throws-string-realm.js
+ignore-flag(--more-compartments) script test262/built-ins/Proxy/construct/return-not-object-throws-null-realm.js
+ignore-flag(--more-compartments) script test262/built-ins/Proxy/construct/return-not-object-throws-null-realm.js
+ignore-flag(--more-compartments) script test262/built-ins/Proxy/construct/return-not-object-throws-boolean-realm.js
+ignore-flag(--more-compartments) script test262/built-ins/Proxy/construct/return-not-object-throws-boolean-realm.js
 
 # https://bugzilla.mozilla.org/show_bug.cgi?id=1648202
 skip script test262/built-ins/RegExp/named-groups/non-unicode-property-names-valid.js
