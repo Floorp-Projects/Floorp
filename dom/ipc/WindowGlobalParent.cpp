@@ -987,19 +987,9 @@ already_AddRefed<Promise> WindowGlobalParent::GetSecurityInfo(
   }
 
   SendGetSecurityInfo(
-      [promise](Maybe<nsCString>&& aResult) {
-        if (aResult) {
-          nsCOMPtr<nsISupports> infoObj;
-          nsresult rv =
-              NS_DeserializeObject(aResult.value(), getter_AddRefs(infoObj));
-          if (NS_WARN_IF(NS_FAILED(rv))) {
-            promise->MaybeReject(NS_ERROR_FAILURE);
-          }
-          nsCOMPtr<nsITransportSecurityInfo> info = do_QueryInterface(infoObj);
-          if (!info) {
-            promise->MaybeReject(NS_ERROR_FAILURE);
-          }
-          promise->MaybeResolve(info);
+      [promise](const nsCOMPtr<nsITransportSecurityInfo>& aSecurityInfo) {
+        if (aSecurityInfo) {
+          promise->MaybeResolve(aSecurityInfo);
         } else {
           promise->MaybeResolveWithUndefined();
         }

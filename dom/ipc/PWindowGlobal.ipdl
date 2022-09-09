@@ -76,9 +76,9 @@ child:
                      uint32_t aFlags) returns (PaintFragment retval);
 
   /**
-   * Returns the serialized security info associated with this window.
+   * Returns the security info associated with this window.
    */
-  async GetSecurityInfo() returns(nsCString? serializedSecInfo);
+  async GetSecurityInfo() returns(nsITransportSecurityInfo securityInfo);
 
   async DispatchSecurityPolicyViolation(nsString aViolationEventJSON);
 

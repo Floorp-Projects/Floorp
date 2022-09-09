@@ -444,31 +444,31 @@ mozilla::ipc::IPCResult WindowGlobalChild::RecvDrawSnapshot(
 
 mozilla::ipc::IPCResult WindowGlobalChild::RecvGetSecurityInfo(
     GetSecurityInfoResolver&& aResolve) {
-  Maybe<nsCString> result;
+  nsCOMPtr<nsITransportSecurityInfo> securityInfo;
+  auto callResolve =
+      MakeScopeExit([aResolve, &securityInfo]() { aResolve(securityInfo); });
 
-  if (nsCOMPtr<Document> doc = mWindowGlobal->GetDoc()) {
-    nsCOMPtr<nsISupports> secInfo;
-    nsresult rv = NS_OK;
-
-    // First check if there's a failed channel, in case of a certificate
-    // error.
-    if (nsIChannel* failedChannel = doc->GetFailedChannel()) {
-      rv = failedChannel->GetSecurityInfo(getter_AddRefs(secInfo));
-    } else {
-      // When there's no failed channel we should have a regular
-      // security info on the document. In some cases there's no
-      // security info at all, i.e. on HTTP sites.
-      secInfo = doc->GetSecurityInfo();
-    }
-
-    if (NS_SUCCEEDED(rv) && secInfo) {
-      nsCOMPtr<nsISerializable> secInfoSer = do_QueryInterface(secInfo);
-      result.emplace();
-      NS_SerializeToString(secInfoSer, result.ref());
-    }
+  nsCOMPtr<Document> doc = mWindowGlobal->GetDoc();
+  if (!doc) {
+    return IPC_OK();
   }
 
-  aResolve(result);
+  nsCOMPtr<nsISupports> securityInfoSupports;
+  // First check if there's a failed channel, in case of a certificate
+  // error.
+  if (nsIChannel* failedChannel = doc->GetFailedChannel()) {
+    nsresult rv =
+        failedChannel->GetSecurityInfo(getter_AddRefs(securityInfoSupports));
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return IPC_OK();
+    }
+  } else {
+    // When there's no failed channel we should have a regular
+    // security info on the document. In some cases there's no
+    // security info at all, i.e. on HTTP sites.
+    securityInfoSupports = doc->GetSecurityInfo();
+  }
+  securityInfo = do_QueryInterface(securityInfoSupports);
   return IPC_OK();
 }
 
