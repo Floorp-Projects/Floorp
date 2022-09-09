@@ -2132,7 +2132,9 @@ class XPCShellTests(object):
                 self.start_test(test)
                 test.join()
                 self.test_ended(test)
-                if test.failCount > 0 or test.passCount <= 0:
+                if (test.failCount > 0 or test.passCount <= 0) and os.environ.get(
+                    "MOZ_AUTOMATION", 0
+                ) != 0:
                     self.try_again_list.append(test.test_object)
                     continue
                 self.addTestResults(test)
