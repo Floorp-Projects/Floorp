@@ -6,10 +6,6 @@
 
 /*** List items ***/
 
-:root {
-  --downloads-item-height: 6em;
-}
-
 @media (-moz-windows-default-theme) {
   .downloadProgress::-moz-progress-bar {
     background-color: #3c9af8;
