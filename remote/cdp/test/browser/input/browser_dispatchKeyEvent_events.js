@@ -41,7 +41,7 @@ add_task(async function testAltEvents({ client }) {
   const { Input } = client;
 
   await withModifier(Input, "Alt", "alt", "a");
-  if (AppInfo.isMac) {
+  if (isMac) {
     await checkInputContent("a", 1);
   } else {
     await checkInputContent("", 0);
@@ -63,7 +63,7 @@ add_task(async function testControlEvents({ client }) {
 });
 
 add_task(async function testMetaEvents({ client }) {
-  if (!AppInfo.isMac) {
+  if (!isMac) {
     return;
   }
   await setupForInput(PAGE_URL);

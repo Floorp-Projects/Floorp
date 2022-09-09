@@ -15,9 +15,9 @@ const ID_THUNDERBIRD = "{3550f703-e582-4d05-9a08-453d09bdfdc6}";
 
 /**
  * Extends Services.appinfo with further properties that are
- * used by different protocols as handled by the Remote Agent.
+ * used across Marionette.
  *
- * @typedef {object} RemoteAgent.AppInfo
+ * @typedef {object} Marionette.AppInfo
  * @property {Boolean} isAndroid - Whether the application runs on Android.
  * @property {Boolean} isLinux - Whether the application runs on Linux.
  * @property {Boolean} isMac - Whether the application runs on Mac OS.
