@@ -194,6 +194,8 @@ ABORT_SIGNATURES = (
     "static void Abort(const char *)",
     "std::sys_common::backtrace::__rust_end_short_backtrace",
     "rust_begin_unwind",
+    # This started showing up when we enabled dumping inlined functions
+    "MOZ_Crash",
 )
 
 # Similar to above, but matches if the substring appears anywhere in the
