@@ -81,7 +81,7 @@ $max-z-index: 2147483647;
           border: 1px solid #CFCFD8;
           box-shadow: 0 2px 14px rgba(58, 57, 68, 0.2);
           border-radius: 4px;
-          padding-block: 0 40px;
+          padding-block: 0 24px;
           width: 25em;
 
           .steps {
@@ -97,6 +97,8 @@ $max-z-index: 2147483647;
       }
 
       .action-buttons {
+        margin-block: 0 16px;
+
         .primary,
         .secondary-cta .secondary {
           padding: 4px 16px;

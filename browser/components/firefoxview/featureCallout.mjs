@@ -103,7 +103,8 @@ function _createContainer() {
   container.id = CONTAINER_ID;
   container.setAttribute("aria-describedby", `#${CONTAINER_ID} .welcome-text`);
   container.tabIndex = 0;
-  parent.insertAdjacentElement("afterend", container);
+  parent.setAttribute("aria-owns", `${CONTAINER_ID}`);
+  document.body.appendChild(container);
   return container;
 }
 
@@ -119,7 +120,11 @@ function _positionCallout() {
   // Callout should overlap the parent element by 17px (so the box, not
   // including the arrow, will overlap by 5px)
   const arrowWidth = 12;
-  const overlap = 17 - arrowWidth;
+  let overlap = 17;
+  // If we have no overlap, we send the callout the same number of pixels
+  // in the opposite direction
+  overlap = CURRENT_SCREEN?.content?.noCalloutOverlap ? overlap * -1 : overlap;
+  overlap -= arrowWidth;
   // Is the document layout right to left?
   const RTL = document.dir === "rtl";
 
@@ -152,6 +157,9 @@ function _positionCallout() {
   }
 
   const positioners = {
+    // availableSpace should be the space between the edge of the page in the assumed direction
+    // and the edge of the parent (with the callout being intended to fit between those two edges)
+    // while needed space should be the space necessary to fit the callout container
     top: {
       availableSpace:
         document.body.offsetHeight -
@@ -234,11 +242,11 @@ function _positionCallout() {
       return false;
     }
     if (["start", "end"].includes(position)) {
-      if (RTL) {
-        position = position === "start" ? "right" : "left";
-      } else {
-        position = position === "start" ? "left" : "right";
-      }
+      // position here is referencing the direction that the callout container
+      // is pointing to, and therefore should be the _opposite_ side of the arrow
+      // eg. if arrow is at the "end" in LTR layouts, the container is pointing
+      // at an element to the right of itself, while in RTL layouts it is pointing to the left of itself
+      position = RTL ^ (position === "start") ? "left" : "right";
     }
     if (calloutFits(position)) {
       return position;
@@ -354,6 +362,12 @@ async function _loadConfig() {
     context: { source: document.location.pathname.toLowerCase() },
   });
   CONFIG = result.message.content;
+
+  // Only add an impression if we actually have a message to impress
+  if (Object.keys(result.message).length) {
+    lazy.ASRouter.addImpression(result.message);
+  }
+
   CURRENT_SCREEN = CONFIG?.screens?.[CONFIG?.startScreen || 0];
 }
 
@@ -412,5 +426,12 @@ window.addEventListener("DOMContentLoaded", () => {
 // When the window is focused, ensure tour is synced with tours in
 // any other instances of the parent page
 window.addEventListener("visibilitychange", () => {
-  _handlePrefChange();
+  // If we have more than one screen, it means that we're
+  // displaying a feature tour, in which transitions are handled
+  // by the pref change observer.
+  if (CONFIG?.screens.length > 1) {
+    _handlePrefChange();
+  } else {
+    showFeatureCallout();
+  }
 });
