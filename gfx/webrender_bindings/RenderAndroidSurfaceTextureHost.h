@@ -24,7 +24,7 @@ class RenderAndroidSurfaceTextureHost final : public RenderTextureHostSWGL {
   explicit RenderAndroidSurfaceTextureHost(
       const java::GeckoSurfaceTexture::GlobalRef& aSurfTex, gfx::IntSize aSize,
       gfx::SurfaceFormat aFormat, bool aContinuousUpdate,
-      bool aIgnoreTransform);
+      Maybe<gfx::Matrix4x4> aTransformOverride);
 
   wr::WrExternalImage Lock(uint8_t aChannelIndex, gl::GLContext* aGL,
                            wr::ImageRendering aRendering) override;
@@ -59,7 +59,7 @@ class RenderAndroidSurfaceTextureHost final : public RenderTextureHostSWGL {
   // mContinuousUpdate was used for rendering video in the past.
   // It is not used on current gecko.
   const bool mContinuousUpdate;
-  const bool mIgnoreTransform;
+  const Maybe<gfx::Matrix4x4> mTransformOverride;
 
  private:
   virtual ~RenderAndroidSurfaceTextureHost();

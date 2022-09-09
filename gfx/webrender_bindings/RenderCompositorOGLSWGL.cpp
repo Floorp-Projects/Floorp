@@ -200,7 +200,7 @@ void RenderCompositorOGLSWGL::HandleExternalImage(
   // since the effect doesn't hold a strong reference.
   RefPtr<SurfaceTextureSource> layer = new SurfaceTextureSource(
       (TextureSourceProvider*)mCompositor, host->mSurfTex, host->mFormat,
-      target, wrapMode, host->mSize, host->mIgnoreTransform);
+      target, wrapMode, host->mSize, host->mTransformOverride);
   RefPtr<TexturedEffect> texturedEffect =
       CreateTexturedEffect(host->mFormat, layer, aFrameSurface.mFilter,
                            /* isAlphaPremultiplied */ true);
