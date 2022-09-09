@@ -12,9 +12,9 @@ const isEveryFrameTargetEnabled = Services.prefs.getBoolPref(
   "devtools.every-frame-target.enabled",
   false
 );
-const {
-  getAllBrowsingContextsForContext,
-} = require("devtools/server/actors/watcher/browsing-context-helpers.jsm");
+const { getAllBrowsingContextsForContext } = ChromeUtils.importESModule(
+  "resource://devtools/server/actors/watcher/browsing-context-helpers.sys.mjs"
+);
 const {
   WILL_NAVIGATE_TIME_SHIFT,
 } = require("devtools/server/actors/webconsole/listeners/document-events");

@@ -7,16 +7,16 @@ const protocol = require("devtools/shared/protocol");
 const { watcherSpec } = require("devtools/shared/specs/watcher");
 
 const Resources = require("devtools/server/actors/resources/index");
-const {
-  TargetActorRegistry,
-} = require("devtools/server/actors/targets/target-actor-registry.jsm");
-const {
-  WatcherRegistry,
-} = require("devtools/server/actors/watcher/WatcherRegistry.jsm");
+const { TargetActorRegistry } = ChromeUtils.importESModule(
+  "resource://devtools/server/actors/targets/target-actor-registry.sys.mjs"
+);
+const { WatcherRegistry } = ChromeUtils.importESModule(
+  "resource://devtools/server/actors/watcher/WatcherRegistry.sys.mjs"
+);
 const Targets = require("devtools/server/actors/targets/index");
-const {
-  getAllBrowsingContextsForContext,
-} = require("devtools/server/actors/watcher/browsing-context-helpers.jsm");
+const { getAllBrowsingContextsForContext } = ChromeUtils.importESModule(
+  "resource://devtools/server/actors/watcher/browsing-context-helpers.sys.mjs"
+);
 
 const TARGET_HELPERS = {};
 loader.lazyRequireGetter(
