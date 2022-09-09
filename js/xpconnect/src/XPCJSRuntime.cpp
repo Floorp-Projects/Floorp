@@ -719,10 +719,6 @@ void XPCJSRuntime::TraceNativeBlackRoots(JSTracer* trc) {
 void XPCJSRuntime::TraceAdditionalNativeGrayRoots(JSTracer* trc) {
   XPCWrappedNativeScope::TraceWrappedNativesInAllScopes(this, trc);
 
-  for (XPCRootSetElem* e = mVariantRoots; e; e = e->GetNextRoot()) {
-    static_cast<XPCTraceableVariant*>(e)->TraceJS(trc);
-  }
-
   for (XPCRootSetElem* e = mWrappedJSRoots; e; e = e->GetNextRoot()) {
     static_cast<nsXPCWrappedJS*>(e)->TraceJS(trc);
   }
@@ -731,13 +727,6 @@ void XPCJSRuntime::TraceAdditionalNativeGrayRoots(JSTracer* trc) {
 void XPCJSRuntime::TraverseAdditionalNativeRoots(
     nsCycleCollectionNoteRootCallback& cb) {
   XPCWrappedNativeScope::SuspectAllWrappers(cb);
-
-  for (XPCRootSetElem* e = mVariantRoots; e; e = e->GetNextRoot()) {
-    XPCTraceableVariant* v = static_cast<XPCTraceableVariant*>(e);
-    cb.NoteXPCOMRoot(
-        v,
-        XPCTraceableVariant::NS_CYCLE_COLLECTION_INNERCLASS::GetParticipant());
-  }
 
   for (XPCRootSetElem* e = mWrappedJSRoots; e; e = e->GetNextRoot()) {
     cb.NoteXPCOMRoot(
@@ -2797,7 +2786,6 @@ XPCJSRuntime::XPCJSRuntime(JSContext* aCx)
       mGCIsRunning(false),
       mNativesToReleaseArray(),
       mDoingFinalization(false),
-      mVariantRoots(nullptr),
       mWrappedJSRoots(nullptr),
       mAsyncSnowWhiteFreer(new AsyncFreeSnowWhite()) {
   MOZ_COUNT_CTOR_INHERITED(XPCJSRuntime, CycleCollectedJSRuntime);

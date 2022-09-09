@@ -15,10 +15,6 @@
 
 /***************************************************************************/
 
-inline void XPCJSRuntime::AddVariantRoot(XPCTraceableVariant* variant) {
-  variant->AddToRootSet(&mVariantRoots);
-}
-
 inline void XPCJSRuntime::AddWrappedJSRoot(nsXPCWrappedJS* wrappedJS) {
   wrappedJS->AddToRootSet(&mWrappedJSRoots);
 }

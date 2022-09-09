@@ -16,6 +16,7 @@
 #include "js/friend/WindowProxy.h"  // js::ToWindowIfWindowProxy
 #include "js/PropertyAndElement.h"  // JS_GetElement
 #include "js/Wrapper.h"
+#include "mozilla/HoldDropJSObjects.h"
 
 using namespace JS;
 using namespace mozilla;
@@ -52,67 +53,47 @@ XPCVariant::XPCVariant(JSContext* cx, const Value& aJSVal) : mJSVal(aJSVal) {
   } else {
     mReturnRawObject = false;
   }
-}
 
-XPCTraceableVariant::~XPCTraceableVariant() {
-  Value val = GetJSValPreserveColor();
-
-  MOZ_ASSERT(val.isGCThing() || val.isNull(), "Must be traceable or unlinked");
-  bool unroot = val.isGCThing();
-
-  mData.Cleanup();
-
-  if (unroot) {
-    RemoveFromRootSet();
+  if (aJSVal.isGCThing()) {
+    mozilla::HoldJSObjects(this);
   }
 }
 
-void XPCTraceableVariant::TraceJS(JSTracer* trc) {
-  MOZ_ASSERT(GetJSValPreserveColor().isGCThing());
-  JS::TraceEdge(trc, &mJSVal, "XPCTraceableVariant::mJSVal");
-}
+XPCVariant::~XPCVariant() { Cleanup(); }
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(XPCVariant)
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(XPCVariant)
-  JS::Value val = tmp->GetJSValPreserveColor();
-  if (val.isObject()) {
-    NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mJSVal");
-    cb.NoteJSChild(val.toGCCellPtr());
-  }
-
   tmp->mData.Traverse(cb);
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(XPCVariant)
-  JS::Value val = tmp->GetJSValPreserveColor();
-  bool unroot = val.isGCThing();
-
-  tmp->mData.Cleanup();
-
-  if (unroot) {
-    XPCTraceableVariant* v = static_cast<XPCTraceableVariant*>(tmp);
-    v->RemoveFromRootSet();
-  }
-  tmp->mJSVal = JS::NullValue();
+  tmp->Cleanup();
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+
+NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(XPCVariant)
+  NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(mJSVal)
+NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
 // static
 already_AddRefed<XPCVariant> XPCVariant::newVariant(JSContext* cx,
                                                     const Value& aJSVal) {
-  RefPtr<XPCVariant> variant;
-
-  if (!aJSVal.isGCThing()) {
-    variant = new XPCVariant(cx, aJSVal);
-  } else {
-    variant = new XPCTraceableVariant(cx, aJSVal);
-  }
-
+  RefPtr<XPCVariant> variant = new XPCVariant(cx, aJSVal);
   if (!variant->InitializeData(cx)) {
     return nullptr;
   }
 
   return variant.forget();
+}
+
+void XPCVariant::Cleanup() {
+  mData.Cleanup();
+
+  if (!GetJSValPreserveColor().isGCThing()) {
+    return;
+  }
+  mJSVal = JS::NullValue();
+  mozilla::DropJSObjects(this);
 }
 
 // Helper class to give us a namespace for the table based code below.
