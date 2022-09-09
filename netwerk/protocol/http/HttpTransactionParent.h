@@ -17,6 +17,8 @@
 #include "nsITransport.h"
 #include "nsIRequest.h"
 
+class nsITransportSecurityInfo;
+
 namespace mozilla::net {
 
 class ChannelEventQueue;
@@ -48,8 +50,8 @@ class HttpTransactionParent final : public PHttpTransactionParent,
 
   mozilla::ipc::IPCResult RecvOnStartRequest(
       const nsresult& aStatus, const Maybe<nsHttpResponseHead>& aResponseHead,
-      const nsCString& aSecurityInfoSerialization,
-      const bool& aProxyConnectFailed, const TimingStructArgs& aTimings,
+      nsITransportSecurityInfo* aSecurityInfo, const bool& aProxyConnectFailed,
+      const TimingStructArgs& aTimings,
       const int32_t& aProxyConnectResponseCode,
       nsTArray<uint8_t>&& aDataForSniffer, const Maybe<nsCString>& aAltSvcUsed,
       const bool& aDataToChildProcess, const bool& aRestarted,
@@ -93,8 +95,8 @@ class HttpTransactionParent final : public PHttpTransactionParent,
                          HttpConnectionInfoCloneArgs& aArgs);
   void DoOnStartRequest(
       const nsresult& aStatus, const Maybe<nsHttpResponseHead>& aResponseHead,
-      const nsCString& aSecurityInfoSerialization,
-      const bool& aProxyConnectFailed, const TimingStructArgs& aTimings,
+      nsITransportSecurityInfo* aSecurityInfo, const bool& aProxyConnectFailed,
+      const TimingStructArgs& aTimings,
       const int32_t& aProxyConnectResponseCode,
       nsTArray<uint8_t>&& aDataForSniffer, const Maybe<nsCString>& aAltSvcUsed,
       const bool& aDataToChildProcess, const bool& aRestarted,

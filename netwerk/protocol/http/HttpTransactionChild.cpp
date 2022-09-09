@@ -408,22 +408,18 @@ HttpTransactionChild::OnStartRequest(nsIRequest* aRequest) {
 
   mProtocolVersion.Truncate();
 
-  nsCString serializedSecurityInfoOut;
-  nsCOMPtr<nsISupports> secInfoSupp = mTransaction->SecurityInfo();
-  if (secInfoSupp) {
-    nsCOMPtr<nsITransportSecurityInfo> info = do_QueryInterface(secInfoSupp);
+  nsCOMPtr<nsISupports> securityInfoSupports(mTransaction->SecurityInfo());
+  nsCOMPtr<nsITransportSecurityInfo> securityInfo(
+      do_QueryInterface(securityInfoSupports));
+  if (securityInfo) {
     nsAutoCString protocol;
-    if (info && NS_SUCCEEDED(info->GetNegotiatedNPN(protocol)) &&
+    if (NS_SUCCEEDED(securityInfo->GetNegotiatedNPN(protocol)) &&
         !protocol.IsEmpty()) {
       mProtocolVersion.Assign(protocol);
     }
     // Make sure peerId is generated.
     nsAutoCString unused;
-    info->GetPeerId(unused);
-    nsCOMPtr<nsISerializable> secInfoSer = do_QueryInterface(secInfoSupp);
-    if (secInfoSer) {
-      NS_SerializeToString(secInfoSer, serializedSecurityInfoOut);
-    }
+    securityInfo->GetPeerId(unused);
   }
 
   UniquePtr<nsHttpResponseHead> head(mTransaction->TakeResponseHead());
@@ -480,8 +476,7 @@ HttpTransactionChild::OnStartRequest(nsIRequest* aRequest) {
       mTransaction->GetProxyConnectResponseCode();
 
   Unused << SendOnStartRequest(
-      status, optionalHead, serializedSecurityInfoOut,
-      mTransaction->ProxyConnectFailed(),
+      status, optionalHead, securityInfo, mTransaction->ProxyConnectFailed(),
       ToTimingStructArgs(mTransaction->Timings()), proxyConnectResponseCode,
       dataForSniffer, optionalAltSvcUsed, !!mDataBridgeParent,
       mTransaction->TakeRestartedState(), mTransaction->HTTPSSVCReceivedStage(),
