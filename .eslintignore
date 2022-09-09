@@ -218,6 +218,9 @@ toolkit/components/translation/cld2/
 toolkit/mozapps/update/tests/data/xpcshellConstantsPP.js
 toolkit/modules/AppConstants.jsm
 
+# Tests of ESLint command.
+tools/lint/test/files
+
 # Uses special template formatting.
 tools/tryselect/selectors/chooser/templates/chooser.html
 
