@@ -278,6 +278,11 @@ nsIntRect RemoteAccessible::BoundsInCSSPixels() const {
 }
 
 void RemoteAccessible::Language(nsString& aLocale) {
+  if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+    // Not yet supported by the cache.
+    aLocale.Truncate();
+    return;
+  }
   aLocale.Truncate();
 
   RefPtr<IAccessible> acc;
@@ -462,6 +467,10 @@ double RemoteAccessible::CurValue() const {
 }
 
 bool RemoteAccessible::SetCurValue(double aValue) {
+  if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+    // Not yet supported by the cache.
+    return false;
+  }
   RefPtr<IAccessibleValue> acc = QueryInterface<IAccessibleValue>(this);
   if (!acc) {
     return false;
@@ -668,6 +677,10 @@ void RemoteAccessible::TextAtOffset(int32_t aOffset,
 
 bool RemoteAccessible::AddToSelection(int32_t aStartOffset,
                                       int32_t aEndOffset) {
+  if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+    // Not yet supported by the cache.
+    return false;
+  }
   RefPtr<IAccessibleText> acc = QueryInterface<IAccessibleText>(this);
   if (!acc) {
     return false;
@@ -678,6 +691,10 @@ bool RemoteAccessible::AddToSelection(int32_t aStartOffset,
 }
 
 bool RemoteAccessible::RemoveFromSelection(int32_t aSelectionNum) {
+  if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+    // Not yet supported by the cache.
+    return false;
+  }
   RefPtr<IAccessibleText> acc = QueryInterface<IAccessibleText>(this);
   if (!acc) {
     return false;
@@ -724,6 +741,10 @@ void RemoteAccessible::SetCaretOffset(int32_t aOffset) {
 void RemoteAccessible::ScrollSubstringTo(int32_t aStartOffset,
                                          int32_t aEndOffset,
                                          uint32_t aScrollType) {
+  if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+    // Not yet supported by the cache.
+    return;
+  }
   RefPtr<IAccessibleText> acc = QueryInterface<IAccessibleText>(this);
   if (!acc) {
     return;
@@ -741,6 +762,10 @@ void RemoteAccessible::ScrollSubstringToPoint(int32_t aStartOffset,
                                               int32_t aEndOffset,
                                               uint32_t aCoordinateType,
                                               int32_t aX, int32_t aY) {
+  if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+    // Not yet supported by the cache.
+    return;
+  }
   RefPtr<IAccessibleText> acc = QueryInterface<IAccessibleText>(this);
   if (!acc) {
     return;
@@ -763,6 +788,10 @@ void RemoteAccessible::ScrollSubstringToPoint(int32_t aStartOffset,
 }
 
 bool RemoteAccessible::IsLinkValid() {
+  if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+    // Not yet supported by the cache.
+    return false;
+  }
   RefPtr<IAccessibleHyperlink> acc = QueryInterface<IAccessibleHyperlink>(this);
   if (!acc) {
     return false;
@@ -778,6 +807,10 @@ bool RemoteAccessible::IsLinkValid() {
 
 uint32_t RemoteAccessible::AnchorCount(bool* aOk) {
   *aOk = false;
+  if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+    // Not yet supported by the cache.
+    return 0;
+  }
   RefPtr<IGeckoCustom> custom = QueryInterface<IGeckoCustom>(this);
   if (!custom) {
     return 0;
@@ -793,6 +826,10 @@ uint32_t RemoteAccessible::AnchorCount(bool* aOk) {
 }
 
 RemoteAccessible* RemoteAccessible::AnchorAt(uint32_t aIdx) {
+  if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+    // Not yet supported by the cache.
+    return nullptr;
+  }
   RefPtr<IAccessibleHyperlink> link =
       QueryInterface<IAccessibleHyperlink>(this);
   if (!link) {
