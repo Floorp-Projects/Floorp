@@ -642,7 +642,9 @@ skip script test262/harness/detachArrayBuffer.js
 # https://bugzilla.mozilla.org/show_bug.cgi?id=1672850
 skip script test262/built-ins/AsyncFunction/is-not-a-global.js
 
-skip script test262/language/module-code/top-level-await/await-dynamic-import-rejection.js  # Bug 1727925, 1726243
+# https://bugzilla.mozilla.org/show_bug.cgi?id=1727925
+# https://bugzilla.mozilla.org/show_bug.cgi?id=1726243
+skip-if(!xulRuntime.shell) script test262/language/module-code/top-level-await/await-dynamic-import-rejection.js
 
 
 ####################################################
