@@ -13,6 +13,7 @@ remote.jar:
   content/server/WebSocketTransport.jsm (server/WebSocketTransport.jsm)
 
   # shared modules (all protocols)
+  content/shared/AppInfo.jsm (shared/AppInfo.jsm)
   content/shared/Format.jsm (shared/Format.jsm)
   content/shared/Log.jsm (shared/Log.jsm)
   content/shared/MobileTabBrowser.jsm (shared/MobileTabBrowser.jsm)

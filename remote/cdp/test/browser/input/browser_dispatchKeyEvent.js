@@ -50,8 +50,8 @@ add_task(async function testArrowKeys({ client }) {
   await checkInputContent("haHa’", 2);
 
   info("Send ALT/CONTROL + Right");
-  let modCode = isMac ? alt : ctrl;
-  let modKey = isMac ? "Alt" : "Control";
+  const modCode = AppInfo.isMac ? alt : ctrl;
+  const modKey = AppInfo.isMac ? "Alt" : "Control";
   await dispatchKeyEvent(Input, modKey, "rawKeyDown", modCode);
   await dispatchKeyEvent(Input, "ArrowRight", "rawKeyDown", modCode);
   await dispatchKeyEvent(Input, "ArrowRight", "keyUp");
@@ -132,7 +132,7 @@ add_task(async function testSelectDelete({ client }) {
   await sendRawKey(Input, "ArrowLeft");
   await checkInputContent("word 2 word4", 10);
 
-  if (isMac) {
+  if (AppInfo.isMac) {
     info("Send Meta + Backspace (deleteSoftLineBackward)");
     await dispatchKeyEvent(Input, "Meta", "rawKeyDown", meta);
     await sendRawKey(Input, "Backspace", meta);

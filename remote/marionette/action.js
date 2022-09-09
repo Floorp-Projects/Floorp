@@ -16,7 +16,7 @@ const { XPCOMUtils } = ChromeUtils.importESModule(
 const lazy = {};
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
-  AppInfo: "chrome://remote/content/marionette/appinfo.js",
+  AppInfo: "chrome://remote/content/shared/AppInfo.jsm",
   assert: "chrome://remote/content/shared/webdriver/Assert.jsm",
   element: "chrome://remote/content/marionette/element.js",
   error: "chrome://remote/content/shared/webdriver/Errors.jsm",

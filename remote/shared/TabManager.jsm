@@ -13,7 +13,7 @@ const { XPCOMUtils } = ChromeUtils.importESModule(
 const lazy = {};
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
-  AppInfo: "chrome://remote/content/marionette/appinfo.js",
+  AppInfo: "chrome://remote/content/shared/AppInfo.jsm",
   EventPromise: "chrome://remote/content/shared/Sync.jsm",
   MobileTabBrowser: "chrome://remote/content/shared/MobileTabBrowser.jsm",
 });
@@ -108,12 +108,9 @@ var TabManager = {
    *     Tab browser or null if it's not a browser window.
    */
   getTabBrowser(win) {
-    // GeckoView
-    // TODO: Migrate to AppInfo.isAndroid after AppInfo moves to shared/
-    if (Services.appinfo.OS === "Android") {
+    if (lazy.AppInfo.isAndroid) {
       return new lazy.MobileTabBrowser(win);
-      // Firefox
-    } else if ("gBrowser" in win) {
+    } else if (lazy.AppInfo.isFirefox) {
       return win.gBrowser;
     }
 
@@ -298,7 +295,7 @@ var TabManager = {
   supportsTabs() {
     // TODO: Only Firefox supports adding tabs at the moment.
     // Geckoview support should be added via Bug 1506782.
-    return lazy.AppInfo.name === "Firefox";
+    return lazy.AppInfo.isFirefox;
   },
 
   _getWindowForTab(tab) {
