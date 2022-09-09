@@ -8,18 +8,20 @@
 #include "HttpLog.h"
 
 #include "HttpTransactionParent.h"
+
 #include "HttpTrafficAnalyzer.h"
 #include "mozilla/ipc/IPCStreamUtils.h"
-#include "mozilla/net/InputChannelThrottleQueueParent.h"
 #include "mozilla/net/ChannelEventQueue.h"
+#include "mozilla/net/InputChannelThrottleQueueParent.h"
 #include "mozilla/net/SocketProcessParent.h"
 #include "nsHttpHandler.h"
+#include "nsIThreadRetargetableStreamListener.h"
+#include "nsITransportSecurityInfo.h"
+#include "nsNetUtil.h"
 #include "nsQueryObject.h"
 #include "nsSerializationHelper.h"
 #include "nsStreamUtils.h"
 #include "nsStringStream.h"
-#include "nsNetUtil.h"
-#include "nsIThreadRetargetableStreamListener.h"
 
 namespace mozilla::net {
 
@@ -403,24 +405,23 @@ already_AddRefed<nsIEventTarget> HttpTransactionParent::GetNeckoTarget() {
 
 mozilla::ipc::IPCResult HttpTransactionParent::RecvOnStartRequest(
     const nsresult& aStatus, const Maybe<nsHttpResponseHead>& aResponseHead,
-    const nsCString& aSecurityInfoSerialization,
-    const bool& aProxyConnectFailed, const TimingStructArgs& aTimings,
-    const int32_t& aProxyConnectResponseCode,
+    nsITransportSecurityInfo* aSecurityInfo, const bool& aProxyConnectFailed,
+    const TimingStructArgs& aTimings, const int32_t& aProxyConnectResponseCode,
     nsTArray<uint8_t>&& aDataForSniffer, const Maybe<nsCString>& aAltSvcUsed,
     const bool& aDataToChildProcess, const bool& aRestarted,
     const uint32_t& aHTTPSSVCReceivedStage, const bool& aSupportsHttp3) {
   mEventQ->RunOrEnqueue(new NeckoTargetChannelFunctionEvent(
       this, [self = UnsafePtr<HttpTransactionParent>(this), aStatus,
-             aResponseHead, aSecurityInfoSerialization, aProxyConnectFailed,
-             aTimings, aProxyConnectResponseCode,
+             aResponseHead, securityInfo = nsCOMPtr{aSecurityInfo},
+             aProxyConnectFailed, aTimings, aProxyConnectResponseCode,
              aDataForSniffer = CopyableTArray{std::move(aDataForSniffer)},
              aAltSvcUsed, aDataToChildProcess, aRestarted,
              aHTTPSSVCReceivedStage, aSupportsHttp3]() mutable {
         self->DoOnStartRequest(
-            aStatus, aResponseHead, aSecurityInfoSerialization,
-            aProxyConnectFailed, aTimings, aProxyConnectResponseCode,
-            std::move(aDataForSniffer), aAltSvcUsed, aDataToChildProcess,
-            aRestarted, aHTTPSSVCReceivedStage, aSupportsHttp3);
+            aStatus, aResponseHead, securityInfo, aProxyConnectFailed, aTimings,
+            aProxyConnectResponseCode, std::move(aDataForSniffer), aAltSvcUsed,
+            aDataToChildProcess, aRestarted, aHTTPSSVCReceivedStage,
+            aSupportsHttp3);
       }));
   return IPC_OK();
 }
@@ -445,9 +446,8 @@ static void TimingStructArgsToTimingsStruct(const TimingStructArgs& aArgs,
 
 void HttpTransactionParent::DoOnStartRequest(
     const nsresult& aStatus, const Maybe<nsHttpResponseHead>& aResponseHead,
-    const nsCString& aSecurityInfoSerialization,
-    const bool& aProxyConnectFailed, const TimingStructArgs& aTimings,
-    const int32_t& aProxyConnectResponseCode,
+    nsITransportSecurityInfo* aSecurityInfo, const bool& aProxyConnectFailed,
+    const TimingStructArgs& aTimings, const int32_t& aProxyConnectResponseCode,
     nsTArray<uint8_t>&& aDataForSniffer, const Maybe<nsCString>& aAltSvcUsed,
     const bool& aDataToChildProcess, const bool& aRestarted,
     const uint32_t& aHTTPSSVCReceivedStage, const bool& aSupportsHttp3) {
@@ -466,10 +466,7 @@ void HttpTransactionParent::DoOnStartRequest(
   mHTTPSSVCReceivedStage = aHTTPSSVCReceivedStage;
   mSupportsHTTP3 = aSupportsHttp3;
 
-  if (!aSecurityInfoSerialization.IsEmpty()) {
-    NS_DeserializeObject(aSecurityInfoSerialization,
-                         getter_AddRefs(mSecurityInfo));
-  }
+  mSecurityInfo = aSecurityInfo;
 
   if (aResponseHead.isSome()) {
     mResponseHead = MakeUnique<nsHttpResponseHead>(aResponseHead.ref());
