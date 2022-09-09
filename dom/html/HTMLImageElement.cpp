@@ -666,6 +666,15 @@ void HTMLImageElement::NodeInfoChanged(Document* aOldDoc) {
     SetLazyLoading();
   }
 
+  // Run selection algorithm synchronously when an img element's adopting steps
+  // are run, in order to react to changes in the environment, per spec,
+  // https://html.spec.whatwg.org/multipage/images.html#reacting-to-dom-mutations,
+  // and
+  // https://html.spec.whatwg.org/multipage/images.html#reacting-to-environment-changes.
+  if (InResponsiveMode()) {
+    UpdateResponsiveSource();
+  }
+
   // Force reload image if adoption steps are run.
   // If loading is temporarily disabled, don't even launch script runner.
   // Otherwise script runner may run later when someone has reenabled loading.
@@ -844,12 +853,7 @@ void HTMLImageElement::UpdateSourceSyncAndQueueImageTask(
     return;
   }
 
-  RefPtr<ImageLoadTask> task =
-      new ImageLoadTask(this, alwaysLoad, mUseUrgentStartForChannel);
-  // The task checks this to determine if it was the last
-  // queued event, and so earlier tasks are implicitly canceled.
-  mPendingImageLoadTask = task;
-  CycleCollectedJSContext::Get()->DispatchToMicroTask(task.forget());
+  QueueImageLoadTask(alwaysLoad);
 }
 
 bool HTMLImageElement::HaveSrcsetOrInPicture() {
@@ -1302,19 +1306,20 @@ void HTMLImageElement::SetLazyLoading() {
 }
 
 void HTMLImageElement::StartLoadingIfNeeded() {
-  if (LoadingEnabled() && ShouldLoadImage()) {
-    // Use script runner for the case the adopt is from appendChild.
-    // Bug 1076583 - We still behave synchronously in the non-responsive case
-    nsContentUtils::AddScriptRunner(
-        InResponsiveMode()
-            ? NewRunnableMethod<bool, const HTMLSourceElement*>(
-                  "dom::HTMLImageElement::UpdateSourceSyncAndQueueImageTask",
-                  this, &HTMLImageElement::UpdateSourceSyncAndQueueImageTask,
-                  true, nullptr)
-            : NewRunnableMethod<bool>("dom::HTMLImageElement::MaybeLoadImage",
-                                      this, &HTMLImageElement::MaybeLoadImage,
-                                      true));
+  if (!LoadingEnabled() || !ShouldLoadImage()) {
+    return;
   }
+
+  // Use script runner for the case the adopt is from appendChild.
+  // Bug 1076583 - We still behave synchronously in the non-responsive case
+  nsContentUtils::AddScriptRunner(
+      InResponsiveMode()
+          ? NewRunnableMethod<bool>("dom::HTMLImageElement::QueueImageLoadTask",
+                                    this, &HTMLImageElement::QueueImageLoadTask,
+                                    true)
+          : NewRunnableMethod<bool>("dom::HTMLImageElement::MaybeLoadImage",
+                                    this, &HTMLImageElement::MaybeLoadImage,
+                                    true));
 }
 
 void HTMLImageElement::StopLazyLoading(StartLoading aStartLoading) {
@@ -1327,7 +1332,7 @@ void HTMLImageElement::StopLazyLoading(StartLoading aStartLoading) {
     obs->Unobserve(*this);
   }
 
-  if (bool(aStartLoading)) {
+  if (aStartLoading == StartLoading::Yes) {
     StartLoadingIfNeeded();
   }
 }
@@ -1399,6 +1404,15 @@ void HTMLImageElement::SetDensity(double aDensity) {
   if (nsImageFrame* f = do_QueryFrame(GetPrimaryFrame())) {
     f->ResponsiveContentDensityChanged();
   }
+}
+
+void HTMLImageElement::QueueImageLoadTask(bool aAlwaysLoad) {
+  RefPtr<ImageLoadTask> task =
+      new ImageLoadTask(this, aAlwaysLoad, mUseUrgentStartForChannel);
+  // The task checks this to determine if it was the last
+  // queued event, and so earlier tasks are implicitly canceled.
+  mPendingImageLoadTask = task;
+  CycleCollectedJSContext::Get()->DispatchToMicroTask(task.forget());
 }
 
 }  // namespace mozilla::dom
