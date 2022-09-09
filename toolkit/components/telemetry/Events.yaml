@@ -2419,6 +2419,23 @@ networking.captive_portal:
     expiry_version: "112"
 
 security:
+  prefUsage:
+    objects: ["contentProcess"]
+    bug_numbers:
+      - 1782544
+      - 1708798
+    description: >
+      We block certain preferences from being sent to the content process because they contain sensitive
+      user data. Some preferences are blocked by name, others by heuristic. If one of the preferences so
+      blocked is accidently accessed we want to know about it so we can allowlist it or refactor the access.
+    notification_emails:
+      - tom@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - firefox
+    expiry_version: "never"
+    record_in_processes:
+      - all_children
   fissionPrincipals:
     objects: ["contentParent"]
     bug_numbers:
