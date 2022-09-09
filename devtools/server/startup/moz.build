@@ -7,7 +7,7 @@
 DevToolsModules(
     "content-process-script.js",
     "content-process.js",
-    "content-process.jsm",
+    "content-process.sys.mjs",
     "frame.js",
     "worker.js",
 )

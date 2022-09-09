@@ -2,27 +2,22 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
-
-var EXPORTED_SYMBOLS = ["DevToolsFrameChild"];
-
 const { EventEmitter } = ChromeUtils.import(
   "resource://gre/modules/EventEmitter.jsm"
 );
 const Loader = ChromeUtils.import(
   "resource://devtools/shared/loader/Loader.jsm"
 );
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
+
 const lazy = {};
-XPCOMUtils.defineLazyModuleGetters(lazy, {
+ChromeUtils.defineESModuleGetters(lazy, {
   isWindowGlobalPartOfContext:
-    "resource://devtools/server/actors/watcher/browsing-context-helpers.jsm",
+    "resource://devtools/server/actors/watcher/browsing-context-helpers.sys.mjs",
   TargetActorRegistry:
-    "resource://devtools/server/actors/targets/target-actor-registry.jsm",
+    "resource://devtools/server/actors/targets/target-actor-registry.sys.mjs",
   WindowGlobalLogger:
-    "resource://devtools/server/connectors/js-window-actor/WindowGlobalLogger.jsm",
+    "resource://devtools/server/connectors/js-window-actor/WindowGlobalLogger.sys.mjs",
 });
 
 const isEveryFrameTargetEnabled = Services.prefs.getBoolPref(
@@ -42,7 +37,7 @@ function logWindowGlobal(windowGlobal, message) {
   lazy.WindowGlobalLogger.logWindowGlobal(windowGlobal, message);
 }
 
-class DevToolsFrameChild extends JSWindowActorChild {
+export class DevToolsFrameChild extends JSWindowActorChild {
   constructor() {
     super();
 

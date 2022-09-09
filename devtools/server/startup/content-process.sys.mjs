@@ -2,8 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
-
 /*
  * Module that listens for requests to start a `DevToolsServer` for an entire content
  * process.  Loaded into content processes by the main process during
@@ -13,10 +11,7 @@
  * The actual server startup itself is in this JSM so that code can be cached.
  */
 
-/* exported initContentProcessTarget */
-const EXPORTED_SYMBOLS = ["initContentProcessTarget"];
-
-function initContentProcessTarget(msg) {
+export function initContentProcessTarget(msg) {
   const mm = msg.target;
   const prefix = msg.data.prefix;
   const watcherActorID = msg.data.watcherActorID;

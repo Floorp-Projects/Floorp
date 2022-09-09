@@ -13,7 +13,7 @@ DevToolsModules(
     "index.js",
     "parent-process.js",
     "target-actor-mixin.js",
-    "target-actor-registry.jsm",
+    "target-actor-registry.sys.mjs",
     "webextension.js",
     "window-global.js",
     "worker.js",

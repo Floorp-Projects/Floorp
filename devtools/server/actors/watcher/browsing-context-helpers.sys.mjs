@@ -2,15 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
-
-const EXPORTED_SYMBOLS = [
-  "isBrowsingContextPartOfContext",
-  "isWindowGlobalPartOfContext",
-  "getAddonIdForWindowGlobal",
-  "getAllBrowsingContextsForContext",
-];
-
 const isEveryFrameTargetEnabled = Services.prefs.getBoolPref(
   "devtools.every-frame-target.enabled",
   false
@@ -31,7 +22,7 @@ const WEBEXTENSION_FALLBACK_DOC_URL =
  *        helper is used from.
  * @return {String} Returns the addon id if any could found, null otherwise.
  */
-function getAddonIdForWindowGlobal(windowGlobal) {
+export function getAddonIdForWindowGlobal(windowGlobal) {
   const browsingContext = windowGlobal.browsingContext;
   const isParent = CanonicalBrowsingContext.isInstance(browsingContext);
   // documentPrincipal is only exposed on WindowGlobalParent,
@@ -65,6 +56,7 @@ function getAddonIdForWindowGlobal(windowGlobal) {
 
   return null;
 }
+
 /**
  * Helper function to know if a given BrowsingContext should be debugged by scope
  * described by the given session context.
@@ -105,7 +97,7 @@ function getAddonIdForWindowGlobal(windowGlobal) {
 // The goal of this method is to gather all checks done against BrowsingContext and WindowGlobal interfaces
 // which leads it to be a lengthy method. So disable the complexity rule which is counter productive here.
 // eslint-disable-next-line complexity
-function isBrowsingContextPartOfContext(
+export function isBrowsingContextPartOfContext(
   browsingContext,
   sessionContext,
   options = {}
@@ -316,7 +308,11 @@ function _validateWindowGlobal(
  *        Optional arguments passed via a dictionary.
  *        See `isBrowsingContextPartOfContext` jsdoc.
  */
-function isWindowGlobalPartOfContext(windowGlobal, sessionContext, options) {
+export function isWindowGlobalPartOfContext(
+  windowGlobal,
+  sessionContext,
+  options
+) {
   return isBrowsingContextPartOfContext(
     windowGlobal.browsingContext,
     sessionContext,
@@ -344,7 +340,7 @@ function isWindowGlobalPartOfContext(windowGlobal, sessionContext, options) {
  *        If true, we will accept WindowGlobal that runs in the same process as their parent document.
  *        That, even when EFT is disabled.
  */
-function getAllBrowsingContextsForContext(
+export function getAllBrowsingContextsForContext(
   sessionContext,
   { acceptSameProcessIframes = false } = {}
 ) {
@@ -416,6 +412,7 @@ function getAllBrowsingContextsForContext(
     })
   );
 }
+
 if (typeof module == "object") {
   module.exports = {
     isBrowsingContextPartOfContext,

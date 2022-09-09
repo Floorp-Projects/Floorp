@@ -2,16 +2,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
-
-var EXPORTED_SYMBOLS = ["DevToolsWorkerChild"];
-
 const { EventEmitter } = ChromeUtils.import(
   "resource://gre/modules/EventEmitter.jsm"
 );
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 const lazy = {};
 
@@ -30,16 +24,18 @@ XPCOMUtils.defineLazyGetter(lazy, "DevToolsUtils", () =>
   lazy.Loader.require("devtools/shared/DevToolsUtils")
 );
 XPCOMUtils.defineLazyModuleGetters(lazy, {
-  isWindowGlobalPartOfContext:
-    "resource://devtools/server/actors/watcher/browsing-context-helpers.jsm",
   SessionDataHelpers:
     "resource://devtools/server/actors/watcher/SessionDataHelpers.jsm",
+});
+ChromeUtils.defineESModuleGetters(lazy, {
+  isWindowGlobalPartOfContext:
+    "resource://devtools/server/actors/watcher/browsing-context-helpers.sys.mjs",
 });
 
 // Name of the attribute into which we save data in `sharedData` object.
 const SHARED_DATA_KEY_NAME = "DevTools:watchedPerWatcher";
 
-class DevToolsWorkerChild extends JSWindowActorChild {
+export class DevToolsWorkerChild extends JSWindowActorChild {
   constructor() {
     super();
 

@@ -2,10 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
-
-const EXPORTED_SYMBOLS = ["WindowGlobalLogger"];
-
 function getWindowGlobalUri(windowGlobal) {
   let windowGlobalUri = "";
 
@@ -26,7 +22,7 @@ function getWindowGlobalUri(windowGlobal) {
   return windowGlobalUri;
 }
 
-const WindowGlobalLogger = {
+export const WindowGlobalLogger = {
   /**
    * This logger can run from the content or parent process, and windowGlobal
    * will either be of type `WindowGlobalParent` or `WindowGlobalChild`.

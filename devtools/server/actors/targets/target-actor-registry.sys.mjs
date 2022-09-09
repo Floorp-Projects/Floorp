@@ -2,10 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
-
-var EXPORTED_SYMBOLS = ["TargetActorRegistry"];
-
 // Keep track of all WindowGlobal target actors.
 // This is especially used to track the actors using Message manager connector,
 // or the ones running in the parent process.
@@ -15,7 +11,7 @@ var EXPORTED_SYMBOLS = ["TargetActorRegistry"];
 const windowGlobalTargetActors = new Set();
 let xpcShellTargetActor = null;
 
-var TargetActorRegistry = {
+export var TargetActorRegistry = {
   registerTargetActor(targetActor) {
     windowGlobalTargetActors.add(targetActor);
   },
