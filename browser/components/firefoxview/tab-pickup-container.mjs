@@ -161,9 +161,34 @@ class TabPickupContainer extends HTMLDetailsElement {
   }
 
   generateErrorMessage() {
-    // this sync-error fluent string needed a correction, which required a new string ID
-    const errorStateDescriptions = {
-      "sync-error": "generic-sync-error",
+    // We map the error state strings to Fluent string IDs so that it's easier
+    // to change strings in the future without having to update all of the
+    // error state strings.
+    const errorStateStringMappings = {
+      "sync-error": {
+        header: "firefoxview-tabpickup-sync-error-header",
+        description: "firefoxview-tabpickup-generic-sync-error-description",
+        buttonLabel: "firefoxview-tabpickup-sync-error-primarybutton",
+      },
+
+      "fxa-admin-disabled": {
+        header: "firefoxview-tabpickup-fxa-admin-disabled-header",
+        description: "firefoxview-tabpickup-fxa-admin-disabled-description",
+        // The button is hidden for this errorState, so we don't include the
+        // buttonLabel property.
+      },
+
+      "network-offline": {
+        header: "firefoxview-tabpickup-network-offline-header",
+        description: "firefoxview-tabpickup-network-offline-description",
+        buttonLabel: "firefoxview-tabpickup-network-offline-primarybutton",
+      },
+
+      "sync-disconnected": {
+        header: "firefoxview-tabpickup-sync-disconnected-header",
+        description: "firefoxview-tabpickup-sync-disconnected-description",
+        buttonLabel: "firefoxview-tabpickup-sync-disconnected-primarybutton",
+      },
     };
 
     const errorStateHeader = this.querySelector(
@@ -176,12 +201,11 @@ class TabPickupContainer extends HTMLDetailsElement {
 
     document.l10n.setAttributes(
       errorStateHeader,
-      `firefoxview-tabpickup-${this.errorState}-header`
+      errorStateStringMappings[this.errorState].header
     );
     document.l10n.setAttributes(
       errorStateDescription,
-      `firefoxview-tabpickup-${errorStateDescriptions[this.errorState] ||
-        this.errorState}-description`
+      errorStateStringMappings[this.errorState].description
     );
 
     errorStateButton.hidden = this.errorState == "fxa-admin-disabled";
@@ -189,7 +213,7 @@ class TabPickupContainer extends HTMLDetailsElement {
     if (this.errorState != "fxa-admin-disabled") {
       document.l10n.setAttributes(
         errorStateButton,
-        `firefoxview-tabpickup-${this.errorState}-primarybutton`
+        errorStateStringMappings[this.errorState].buttonLabel
       );
       errorStateButton.setAttribute(
         "data-action",
