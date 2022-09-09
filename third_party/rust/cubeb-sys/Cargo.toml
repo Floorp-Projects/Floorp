@@ -11,13 +11,14 @@
 
 [package]
 name = "cubeb-sys"
-version = "0.10.0"
+version = "0.10.1"
 authors = ["Dan Glastonbury <dglastonbury@mozilla.com>"]
 build = "build.rs"
 links = "cubeb"
 description = "Native bindings to the cubeb library"
 license = "ISC"
-repository = "https://github.com/djg/cubeb-rs"
+repository = "https://github.com/mozilla/cubeb-rs"
+
 [build-dependencies.cmake]
 version = "0.1.2"
 
@@ -26,5 +27,6 @@ version = "0.3"
 
 [features]
 gecko-in-tree = []
+
 [badges.circle-ci]
-repository = "djg/cubeb-rs"
+repository = "mozilla/cubeb-rs"

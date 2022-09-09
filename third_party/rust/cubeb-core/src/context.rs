@@ -29,7 +29,7 @@ impl Context {
         let context_name = as_ptr!(context_name);
         let backend_name = as_ptr!(backend_name);
         unsafe {
-            try_call!(ffi::cubeb_init(&mut context, context_name, backend_name));
+            call!(ffi::cubeb_init(&mut context, context_name, backend_name))?;
             Ok(Context::from_ptr(context))
         }
     }
@@ -47,10 +47,10 @@ impl ContextRef {
     pub fn max_channel_count(&self) -> Result<u32> {
         let mut channel_count = 0u32;
         unsafe {
-            let _ = try_call!(ffi::cubeb_get_max_channel_count(
+            call!(ffi::cubeb_get_max_channel_count(
                 self.as_ptr(),
                 &mut channel_count
-            ));
+            ))?;
         }
         Ok(channel_count)
     }
@@ -58,11 +58,11 @@ impl ContextRef {
     pub fn min_latency(&self, params: &StreamParamsRef) -> Result<u32> {
         let mut latency = 0u32;
         unsafe {
-            let _ = try_call!(ffi::cubeb_get_min_latency(
+            call!(ffi::cubeb_get_min_latency(
                 self.as_ptr(),
                 params.as_ptr(),
                 &mut latency
-            ));
+            ))?;
         }
         Ok(latency)
     }
@@ -70,10 +70,10 @@ impl ContextRef {
     pub fn preferred_sample_rate(&self) -> Result<u32> {
         let mut rate = 0u32;
         unsafe {
-            let _ = try_call!(ffi::cubeb_get_preferred_sample_rate(
+            call!(ffi::cubeb_get_preferred_sample_rate(
                 self.as_ptr(),
                 &mut rate
-            ));
+            ))?;
         }
         Ok(rate)
     }
@@ -101,7 +101,7 @@ impl ContextRef {
         let input_stream_params = as_ptr!(input_stream_params);
         let output_stream_params = as_ptr!(output_stream_params);
 
-        let _ = try_call!(ffi::cubeb_stream_init(
+        call!(ffi::cubeb_stream_init(
             self.as_ptr(),
             &mut stm,
             stream_name,
@@ -113,18 +113,18 @@ impl ContextRef {
             data_callback,
             state_callback,
             user_ptr
-        ));
+        ))?;
         Ok(Stream::from_ptr(stm))
     }
 
     pub fn enumerate_devices(&self, devtype: DeviceType) -> Result<DeviceCollection> {
         let mut coll = ffi::cubeb_device_collection::default();
         unsafe {
-            let _ = try_call!(ffi::cubeb_enumerate_devices(
+            call!(ffi::cubeb_enumerate_devices(
                 self.as_ptr(),
                 devtype.bits(),
                 &mut coll
-            ));
+            ))?;
         }
         Ok(DeviceCollection::init_with_ctx(self, coll))
     }
@@ -139,12 +139,12 @@ impl ContextRef {
         callback: ffi::cubeb_device_collection_changed_callback,
         user_ptr: *mut c_void,
     ) -> Result<()> {
-        let _ = try_call!(ffi::cubeb_register_device_collection_changed(
+        call!(ffi::cubeb_register_device_collection_changed(
             self.as_ptr(),
             devtype.bits(),
             callback,
             user_ptr
-        ));
+        ))?;
 
         Ok(())
     }

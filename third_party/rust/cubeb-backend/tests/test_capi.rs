@@ -19,6 +19,7 @@ use std::ptr;
 pub const OPS: Ops = capi_new!(TestContext, TestStream);
 
 struct TestContext {
+    #[allow(dead_code)]
     pub ops: *const Ops,
 }
 
