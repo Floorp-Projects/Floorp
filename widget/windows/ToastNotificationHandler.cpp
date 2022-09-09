@@ -473,6 +473,7 @@ bool ToastNotificationHandler::CreateWindowsNotificationFromXml(
 
   ComPtr<IToastNotification2> notification2;
   hr = mNotification.As(&notification2);
+  NS_ENSURE_TRUE(SUCCEEDED(hr), false);
 
   // Add tag, needed to check if toast is still present in the action center
   // when we receive a dismiss timeout.
