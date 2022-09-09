@@ -40,6 +40,7 @@
 #include "mozilla/StaticPrefsAll.h"
 #include "mozilla/SyncRunnable.h"
 #include "mozilla/Telemetry.h"
+#include "mozilla/TelemetryEventEnums.h"
 #include "mozilla/UniquePtrExtensions.h"
 #include "mozilla/URLPreloader.h"
 #include "mozilla/Variant.h"
@@ -147,6 +148,8 @@ static void ShutdownAlwaysPrefs();
 //===========================================================================
 // Low-level types and operations
 //===========================================================================
+
+Atomic<bool, mozilla::Relaxed> sPrefTelemetryEventEnabled(false);
 
 typedef nsTArray<nsCString> PrefSaveData;
 
@@ -542,18 +545,29 @@ class Pref {
 
   // Other operations.
 
+#define CHECK_SANITIZATION()                                                \
+  if (!XRE_IsParentProcess() && gContentProcessPrefsAreInited &&            \
+      ShouldSanitizePreference(this, XRE_IsContentProcess())) {             \
+    if (!sPrefTelemetryEventEnabled.exchange(true)) {                       \
+      sPrefTelemetryEventEnabled = true;                                    \
+      Telemetry::SetEventRecordingEnabled("security"_ns, true);             \
+    }                                                                       \
+    Telemetry::RecordEvent(                                                 \
+        Telemetry::EventID::Security_Prefusage_Contentprocess,              \
+        mozilla::Some(Name()), mozilla::Nothing());                         \
+    if (sCrashOnBlocklistedPref) {                                          \
+      MOZ_CRASH_UNSAFE_PRINTF(                                              \
+          "Should not access the preference '%s' in the Content Processes", \
+          Name());                                                          \
+    }                                                                       \
+  }
+
   bool GetBoolValue(PrefValueKind aKind = PrefValueKind::User) const {
     MOZ_ASSERT(IsTypeBool());
     MOZ_ASSERT(aKind == PrefValueKind::Default ? HasDefaultValue()
                                                : HasUserValue());
 
-    if (!XRE_IsParentProcess() && sCrashOnBlocklistedPref &&
-        gContentProcessPrefsAreInited &&
-        ShouldSanitizePreference(this, XRE_IsContentProcess())) {
-      MOZ_CRASH_UNSAFE_PRINTF(
-          "Should not access the preference '%s' in the Content Processes",
-          Name());
-    }
+    CHECK_SANITIZATION();
 
     return aKind == PrefValueKind::Default ? mDefaultValue.mBoolVal
                                            : mUserValue.mBoolVal;
@@ -564,13 +578,7 @@ class Pref {
     MOZ_ASSERT(aKind == PrefValueKind::Default ? HasDefaultValue()
                                                : HasUserValue());
 
-    if (!XRE_IsParentProcess() && sCrashOnBlocklistedPref &&
-        gContentProcessPrefsAreInited &&
-        ShouldSanitizePreference(this, XRE_IsContentProcess())) {
-      MOZ_CRASH_UNSAFE_PRINTF(
-          "Should not access the preference '%s' in the Content Processes",
-          Name());
-    }
+    CHECK_SANITIZATION();
 
     return aKind == PrefValueKind::Default ? mDefaultValue.mIntVal
                                            : mUserValue.mIntVal;
@@ -582,17 +590,13 @@ class Pref {
     MOZ_ASSERT(aKind == PrefValueKind::Default ? HasDefaultValue()
                                                : HasUserValue());
 
-    if (!XRE_IsParentProcess() && sCrashOnBlocklistedPref &&
-        gContentProcessPrefsAreInited &&
-        ShouldSanitizePreference(this, XRE_IsContentProcess())) {
-      MOZ_CRASH_UNSAFE_PRINTF(
-          "Should not access the preference '%s' in the Content Processes",
-          Name());
-    }
+    CHECK_SANITIZATION();
 
     return aKind == PrefValueKind::Default ? mDefaultValue.mStringVal
                                            : mUserValue.mStringVal;
   }
+
+#undef CHECK_SANITIZATION
 
   nsDependentCString GetStringValue(
       PrefValueKind aKind = PrefValueKind::User) const {
@@ -1057,12 +1061,23 @@ class MOZ_STACK_CLASS PrefWrapper : public PrefWrapperBase {
       case PrefType::None:
         // This check will be performed in the above functions; but for NoneType
         // we need to do it explicitly, then fall-through.
-        if (!XRE_IsParentProcess() && sCrashOnBlocklistedPref &&
-            gContentProcessPrefsAreInited &&
+        if (!XRE_IsParentProcess() && gContentProcessPrefsAreInited &&
             ShouldSanitizePreference(Name(), XRE_IsContentProcess())) {
-          MOZ_CRASH_UNSAFE_PRINTF(
-              "Should not access the preference '%s' in the Content Processes",
-              Name());
+          if (!sPrefTelemetryEventEnabled.exchange(true)) {
+            sPrefTelemetryEventEnabled = true;
+            Telemetry::SetEventRecordingEnabled("security"_ns, true);
+          }
+
+          Telemetry::RecordEvent(
+              Telemetry::EventID::Security_Prefusage_Contentprocess,
+              mozilla::Some(Name()), mozilla::Nothing());
+
+          if (sCrashOnBlocklistedPref) {
+            MOZ_CRASH_UNSAFE_PRINTF(
+                "Should not access the preference '%s' in the Content "
+                "Processes",
+                Name());
+          }
         }
         [[fallthrough]];
       default:
@@ -1076,11 +1091,22 @@ class MOZ_STACK_CLASS PrefWrapper : public PrefWrapperBase {
     // WantValueKind may short-circuit GetValue functions and cause them to
     // return early, before this check occurs in GetFooValue()
     if (this->is<Pref*>() && !XRE_IsParentProcess() &&
-        sCrashOnBlocklistedPref && gContentProcessPrefsAreInited &&
+        gContentProcessPrefsAreInited &&
         ShouldSanitizePreference(this->as<Pref*>(), XRE_IsContentProcess())) {
-      MOZ_CRASH_UNSAFE_PRINTF(
-          "Should not access the preference '%s' in the Content Processes",
-          Name());
+      if (!sPrefTelemetryEventEnabled.exchange(true)) {
+        sPrefTelemetryEventEnabled = true;
+        Telemetry::SetEventRecordingEnabled("security"_ns, true);
+      }
+
+      Telemetry::RecordEvent(
+          Telemetry::EventID::Security_Prefusage_Contentprocess,
+          mozilla::Some(Name()), mozilla::Nothing());
+
+      if (sCrashOnBlocklistedPref) {
+        MOZ_CRASH_UNSAFE_PRINTF(
+            "Should not access the preference '%s' in the Content Processes",
+            Name());
+      }
     } else if (!this->is<Pref*>()) {
       // While we could use Name() above, and avoid the Variant checks, it
       // would less efficient than needed and we can instead do a debug-only
@@ -5222,12 +5248,22 @@ int32_t Preferences::GetType(const char* aPrefName) {
       return PREF_BOOL;
 
     case PrefType::None:
-      if (!XRE_IsParentProcess() && sCrashOnBlocklistedPref &&
-          gContentProcessPrefsAreInited &&
+      if (!XRE_IsParentProcess() && gContentProcessPrefsAreInited &&
           ShouldSanitizePreference(aPrefName, XRE_IsContentProcess())) {
-        MOZ_CRASH_UNSAFE_PRINTF(
-            "Should not access the preference '%s' in the Content Processes",
-            aPrefName);
+        if (!sPrefTelemetryEventEnabled.exchange(true)) {
+          sPrefTelemetryEventEnabled = true;
+          Telemetry::SetEventRecordingEnabled("security"_ns, true);
+        }
+
+        Telemetry::RecordEvent(
+            Telemetry::EventID::Security_Prefusage_Contentprocess,
+            mozilla::Some(aPrefName), mozilla::Nothing());
+
+        if (sCrashOnBlocklistedPref) {
+          MOZ_CRASH_UNSAFE_PRINTF(
+              "Should not access the preference '%s' in the Content Processes",
+              aPrefName);
+        }
       }
       [[fallthrough]];
 
@@ -5811,46 +5847,70 @@ static void InitStaticPrefsFromShared() {
   // builds, where this scenario involving inconsistent binaries should not
   // occur.
 #define NEVER_PREF(name, cpp_type, default_value)
-#define ALWAYS_PREF(name, base_id, full_id, cpp_type, default_value)           \
-  {                                                                            \
-    StripAtomic<cpp_type> val;                                                 \
-    if (!XRE_IsParentProcess() && IsString<cpp_type>::value &&                 \
-        gContentProcessPrefsAreInited && sCrashOnBlocklistedPref) {            \
-      MOZ_DIAGNOSTIC_ASSERT(                                                   \
-          !ShouldSanitizePreference(name, XRE_IsContentProcess()),             \
-          "Should not access the preference '" name "' in Content Processes"); \
-    }                                                                          \
-    DebugOnly<nsresult> rv = Internals::GetSharedPrefValue(name, &val);        \
-    MOZ_ASSERT(NS_SUCCEEDED(rv), "Failed accessing " name);                    \
-    StaticPrefs::sMirror_##full_id = val;                                      \
+#define ALWAYS_PREF(name, base_id, full_id, cpp_type, default_value)    \
+  {                                                                     \
+    StripAtomic<cpp_type> val;                                          \
+    if (!XRE_IsParentProcess() && IsString<cpp_type>::value &&          \
+        gContentProcessPrefsAreInited &&                                \
+        ShouldSanitizePreference(name, XRE_IsContentProcess())) {       \
+      if (!sPrefTelemetryEventEnabled.exchange(true)) {                 \
+        sPrefTelemetryEventEnabled = true;                              \
+        Telemetry::SetEventRecordingEnabled("security"_ns, true);       \
+      }                                                                 \
+      Telemetry::RecordEvent(                                           \
+          Telemetry::EventID::Security_Prefusage_Contentprocess,        \
+          mozilla::Some(name##_ns), mozilla::Nothing());                \
+      MOZ_DIAGNOSTIC_ASSERT(!sCrashOnBlocklistedPref,                   \
+                            "Should not access the preference '" name   \
+                            "' in Content Processes");                  \
+    }                                                                   \
+    DebugOnly<nsresult> rv = Internals::GetSharedPrefValue(name, &val); \
+    MOZ_ASSERT(NS_SUCCEEDED(rv), "Failed accessing " name);             \
+    StaticPrefs::sMirror_##full_id = val;                               \
   }
 #define ALWAYS_DATAMUTEX_PREF(name, base_id, full_id, cpp_type, default_value) \
   {                                                                            \
     StripAtomic<cpp_type> val;                                                 \
     if (!XRE_IsParentProcess() && IsString<cpp_type>::value &&                 \
-        gContentProcessPrefsAreInited && sCrashOnBlocklistedPref) {            \
-      MOZ_DIAGNOSTIC_ASSERT(                                                   \
-          !ShouldSanitizePreference(name, XRE_IsContentProcess()),             \
-          "Should not access the preference '" name "' in Content Processes"); \
+        gContentProcessPrefsAreInited &&                                       \
+        ShouldSanitizePreference(name, XRE_IsContentProcess())) {              \
+      if (!sPrefTelemetryEventEnabled.exchange(true)) {                        \
+        sPrefTelemetryEventEnabled = true;                                     \
+        Telemetry::SetEventRecordingEnabled("security"_ns, true);              \
+      }                                                                        \
+      Telemetry::RecordEvent(                                                  \
+          Telemetry::EventID::Security_Prefusage_Contentprocess,               \
+          mozilla::Some(name##_ns), mozilla::Nothing());                       \
+      MOZ_DIAGNOSTIC_ASSERT(!sCrashOnBlocklistedPref,                          \
+                            "Should not access the preference '" name          \
+                            "' in Content Processes");                         \
     }                                                                          \
     DebugOnly<nsresult> rv = Internals::GetSharedPrefValue(name, &val);        \
     MOZ_ASSERT(NS_SUCCEEDED(rv), "Failed accessing " name);                    \
     Internals::AssignMirror(StaticPrefs::sMirror_##full_id,                    \
                             std::forward<StripAtomic<cpp_type>>(val));         \
   }
-#define ONCE_PREF(name, base_id, full_id, cpp_type, default_value)             \
-  {                                                                            \
-    cpp_type val;                                                              \
-    if (!XRE_IsParentProcess() && IsString<cpp_type>::value &&                 \
-        gContentProcessPrefsAreInited && sCrashOnBlocklistedPref) {            \
-      MOZ_DIAGNOSTIC_ASSERT(                                                   \
-          !ShouldSanitizePreference(name, XRE_IsContentProcess()),             \
-          "Should not access the preference '" name "' in Content Processes"); \
-    }                                                                          \
-    DebugOnly<nsresult> rv =                                                   \
-        Internals::GetSharedPrefValue(ONCE_PREF_NAME(name), &val);             \
-    MOZ_ASSERT(NS_SUCCEEDED(rv), "Failed accessing " name);                    \
-    StaticPrefs::sMirror_##full_id = val;                                      \
+#define ONCE_PREF(name, base_id, full_id, cpp_type, default_value)    \
+  {                                                                   \
+    cpp_type val;                                                     \
+    if (!XRE_IsParentProcess() && IsString<cpp_type>::value &&        \
+        gContentProcessPrefsAreInited &&                              \
+        ShouldSanitizePreference(name, XRE_IsContentProcess())) {     \
+      if (!sPrefTelemetryEventEnabled.exchange(true)) {               \
+        sPrefTelemetryEventEnabled = true;                            \
+        Telemetry::SetEventRecordingEnabled("security"_ns, true);     \
+      }                                                               \
+      Telemetry::RecordEvent(                                         \
+          Telemetry::EventID::Security_Prefusage_Contentprocess,      \
+          mozilla::Some(name##_ns), mozilla::Nothing());              \
+      MOZ_DIAGNOSTIC_ASSERT(!sCrashOnBlocklistedPref,                 \
+                            "Should not access the preference '" name \
+                            "' in Content Processes");                \
+    }                                                                 \
+    DebugOnly<nsresult> rv =                                          \
+        Internals::GetSharedPrefValue(ONCE_PREF_NAME(name), &val);    \
+    MOZ_ASSERT(NS_SUCCEEDED(rv), "Failed accessing " name);           \
+    StaticPrefs::sMirror_##full_id = val;                             \
   }
 #include "mozilla/StaticPrefListAll.h"
 #undef NEVER_PREF
@@ -5978,6 +6038,7 @@ static const PrefListEntry sDynamicPrefOverrideList[]{
     PREF_LIST_ENTRY("marionette.log.level"),
     PREF_LIST_ENTRY("media.audio_loopback_dev"),
     PREF_LIST_ENTRY("media.decoder-doctor."),
+    PREF_LIST_ENTRY("media.cubeb.output_device"),
     PREF_LIST_ENTRY("media.getusermedia.fake-camera-name"),
     PREF_LIST_ENTRY("media.hls.server.url"),
     PREF_LIST_ENTRY("media.peerconnection.nat_simulator.filtering_type"),
