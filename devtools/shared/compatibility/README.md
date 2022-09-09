@@ -17,14 +17,11 @@ In order to download up-to-date data, you need to run the following commands:
 
 This should save the `css-properties.json` JSON file directly in `devtools/shared/compatibility/dataset/`.
 
-For the browsers data, we need to update the RemoteSettings collection.
-While connected to the Mozilla Corporate VPN (See https://mana.mozilla.org/wiki/display/SD/VPN), log into https://settings-writer.stage.mozaws.net/v1/admin/#/buckets/main/collections/devtools-compatibility-browsers/records (Using `OpenID Connect (LDAP)`). Then copy the authentication header using the icon in the top toolbar.
-You can then run `SERVER=stage AUTH='XXX' yarn update-rs-records`, replacing `XXX` with the value of the authentication header.
+The browsers data are stored in a RemoteSettings collection, and updates are handled by a script in https://github.com/firefox-devtools/remote-settings-mdn-browser-compat-data .
+The script is run every day in automation, and if the data are updated, the team should receive a data review email.
 
-The logs should indicate if the collection was updated, and if so, provide a short summary of the modifications.
-If the collection was updated, then run Firefox, and use the [RemoteSettings DevTools WebExtension](https://github.com/mozilla-extensions/remote-settings-devtools) to use the `Stage (preview)` environment.
+To review the data update, you need to be connected to the Mozilla Corporate VPN (See https://mana.mozilla.org/wiki/display/SD/VPN), log into https://settings-writer.stage.mozaws.net/v1/admin/#/buckets/main/collections/devtools-compatibility-browsers/records (Using `OpenID Connect (LDAP)`)
+Then run Firefox, and use the [RemoteSettings DevTools WebExtension](https://github.com/mozilla-extensions/remote-settings-devtools) to use the `Prod (preview)` environment and restart the browser.
 Then open the compatibility panel and make sure that the updated browsers do appear in the `Settings` panel.
-
-If everything looks right, you can run the same command, on the prod server this time: `SERVER=prod AUTH='XXX' yarn update-rs-records`
 
 Check that all tests still pass. It is possible that changes in the structure or contents of the latest dataset will cause tests to fail. If that is the case, fix the tests. **Do not manually change the contents or structure of the local dataset** because any changes will be overwritten by the next update from the official dataset.
