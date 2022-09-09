@@ -107,6 +107,7 @@ async function waitForEvent(...eventTypes) {
 }
 
 add_task(async function setup() {
+  SimpleTest.requestCompleteLog();
   await SpecialPowers.pushPrefEnv({
       "set": [
         ["media.cache_size", 40000],
@@ -446,17 +447,15 @@ add_task(async function ensure_fullscreen_button() {
 });
 
 add_task(async function ensure_doubleclick_triggers_fullscreen() {
-  const logger = new EventLogger(1);
-  document.addEventListener("mozfullscreenchange", logger);
+  const fullscreenPromise = new Promise(resolve => {
+    document.addEventListener("mozfullscreenchange", resolve, { once: true });
+  });
   const { x, y } = video.getBoundingClientRect();
-  info("attempt double click");
+  info("Simulate double click on media player.");
   synthesizeMouse(video, x, y, { clickCount: 2 });
-  const events = await logger.waitForExpectedEvents();
-  is(
-    events[0].type,
-    "mozfullscreenchange",
-    "Double clicking should trigger fullscreen event"
-  );
+  info("Waiting for fullscreen event...");
+  await fullscreenPromise;
+  ok(true, "Double clicking should trigger fullscreen event");
 });
 
 </script>
