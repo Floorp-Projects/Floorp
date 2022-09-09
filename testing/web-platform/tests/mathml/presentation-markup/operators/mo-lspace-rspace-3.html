@@ -1,37 +1,41 @@
 <!DOCTYPE html>
 <html class="reftest-wait">
+  <head>
+    <title>mo-lspace-rspace-3</title>
+    <link rel="match" href="mo-lspace-rspace-3-ref.html">
+  </head>
   <body>
     <p>
       <math>
-        <mo id="mo1">%</mo>
+        <mo id="mo1">*</mo>
       </math>
     </p>
     <p>
       <math>
-        <mo id="mo2" lspace="3em">%</mo>
+        <mo id="mo2" lspace="3em">*</mo>
       </math>
     </p>
     <p>
       <math>
-        <mo id="mo3">%</mo>
-        <mo>%</mo>
+        <mo id="mo3">*</mo>
+        <mo>*</mo>
       </math>
     </p>
     <p>
       <math>
-        <mo id="mo4" lspace="3em">%</mo>
-        <mo >%</mo>
+        <mo id="mo4" lspace="3em">*</mo>
+        <mo >*</mo>
       </math>
     </p>
     <p>
       <math id="math1">
-        <mo>%</mo>
+        <mo>*</mo>
       </math>
     </p>
     <p>
       <math id="math2">
-        <mo>%</mo>
-        <mo id="mo5">%</mo>
+        <mo>*</mo>
+        <mo id="mo5">*</mo>
       </math>
     </p>
     <script type="text/javascript">
@@ -45,13 +49,13 @@
 
         // Change to/from inferred mrow
         var mo1 = document.createElementNS("http://www.w3.org/1998/Math/MathML", "mo");
-        mo1.innerHTML = "%";
+        mo1.innerHTML = "*";
         document.getElementById("math1").appendChild(mo1);
         document.getElementById("math2").removeChild(document.getElementById("mo5"));
 
         document.documentElement.removeAttribute("class");
       }
-      window.addEventListener("MozReftestInvalidate", doTest);
+      window.addEventListener("load", doTest);
   </script>
   </body>
 </html>
