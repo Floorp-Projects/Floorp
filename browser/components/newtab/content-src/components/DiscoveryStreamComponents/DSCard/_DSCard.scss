@@ -38,12 +38,10 @@ $ds-card-image-gradient-solid: rgba(0, 0, 0, 1);
 
     .card-stp-button-position-wrapper {
       position: absolute;
-      margin-top: -16px;
-      left: 0;
-      right: 0;
-      top: 50%;
+      inset-inline-end: 10px;
+      top: 10px;
       display: flex;
-      justify-content: center;
+      justify-content: end;
       align-items: center;
     }
 
@@ -53,15 +51,13 @@ $ds-card-image-gradient-solid: rgba(0, 0, 0, 1);
       height: 15px;
       width: 15px;
       background-size: 15px;
-    }
-
-    .icon-pocket {
-      fill: $pocket-icon-fill;
+      fill: $white;
     }
 
     .context-menu-button {
       position: static;
       transition: none;
+      border-radius: 3px;
     }
 
     .context-menu-position-container {
@@ -77,21 +73,16 @@ $ds-card-image-gradient-solid: rgba(0, 0, 0, 1);
 
     .card-stp-button {
       display: flex;
-      margin-inline-end: 12px;
+      margin-inline-end: 7px;
       font-weight: 400;
       font-size: 13px;
       line-height: 16px;
-      background-color: var(--newtab-background-color-secondary);
+      background-color: $pocket-icon-fill;
       border: 0;
       border-radius: 4px;
-      padding: 8px;
+      padding: 6px;
       white-space: nowrap;
-
-      &:hover {
-        .icon-pocket-save {
-          fill: $pocket-icon-fill;
-        }
-      }
+      color: $white;
     }
 
     button,

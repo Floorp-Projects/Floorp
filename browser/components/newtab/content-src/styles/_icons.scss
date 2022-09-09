@@ -102,7 +102,8 @@
   }
 
   &.icon-pocket-save {
-    background-image: url('chrome://global/skin/icons/pocket-outline.svg');
+    background-image: url('chrome://global/skin/icons/pocket.svg');
+    fill: $white;
   }
 
   &.icon-pocket-delete {

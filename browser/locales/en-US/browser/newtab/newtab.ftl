@@ -237,8 +237,8 @@ newtab-pocket-cta-text = Save the stories you love in { -pocket-brand-name }, an
 newtab-pocket-pocket-firefox-family = { -pocket-brand-name } is part of the { -brand-product-name } family
 
 # A save to Pocket button that shows over the card thumbnail on hover.
-newtab-pocket-save-to-pocket = Save to { -pocket-brand-name }
-newtab-pocket-saved-to-pocket = Saved to { -pocket-brand-name }
+newtab-pocket-save = Save
+newtab-pocket-saved = Saved
 
 ## Error Fallback Content.
 ## This message and suggested action link are shown in each section of UI that fails to render.

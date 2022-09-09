@@ -402,12 +402,12 @@ export class _DSCard extends React.PureComponent {
                 {this.props.context_type === "pocket" ? (
                   <>
                     <span className="story-badge-icon icon icon-pocket" />
-                    <span data-l10n-id="newtab-pocket-saved-to-pocket" />
+                    <span data-l10n-id="newtab-pocket-saved" />
                   </>
                 ) : (
                   <>
                     <span className="story-badge-icon icon icon-pocket-save" />
-                    <span data-l10n-id="newtab-pocket-save-to-pocket" />
+                    <span data-l10n-id="newtab-pocket-save" />
                   </>
                 )}
               </button>

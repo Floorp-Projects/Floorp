@@ -170,7 +170,8 @@ body[lwt-newtab-brighttext] {
   background-image: url("chrome://global/skin/icons/pocket.svg");
 }
 .icon.icon-pocket-save {
-  background-image: url("chrome://global/skin/icons/pocket-outline.svg");
+  background-image: url("chrome://global/skin/icons/pocket.svg");
+  fill: #FFF;
 }
 .icon.icon-pocket-delete {
   background-image: url("chrome://activity-stream/content/data/content/assets/glyph-pocket-delete-16.svg");
@@ -3292,12 +3293,10 @@ main.has-snippet {
 }
 .ds-card .card-stp-button-hover-background .card-stp-button-position-wrapper {
   position: absolute;
-  margin-top: -16px;
-  left: 0;
-  right: 0;
-  top: 50%;
+  inset-inline-end: 10px;
+  top: 10px;
   display: flex;
-  justify-content: center;
+  justify-content: end;
   align-items: center;
 }
 .ds-card .card-stp-button-hover-background .icon-pocket-save,
@@ -3306,13 +3305,12 @@ main.has-snippet {
   height: 15px;
   width: 15px;
   background-size: 15px;
-}
-.ds-card .card-stp-button-hover-background .icon-pocket {
-  fill: #EF4056;
+  fill: #FFF;
 }
 .ds-card .card-stp-button-hover-background .context-menu-button {
   position: static;
   transition: none;
+  border-radius: 3px;
 }
 .ds-card .card-stp-button-hover-background .context-menu-position-container {
   position: relative;
@@ -3325,18 +3323,16 @@ main.has-snippet {
 }
 .ds-card .card-stp-button-hover-background .card-stp-button {
   display: flex;
-  margin-inline-end: 12px;
+  margin-inline-end: 7px;
   font-weight: 400;
   font-size: 13px;
   line-height: 16px;
-  background-color: var(--newtab-background-color-secondary);
+  background-color: #EF4056;
   border: 0;
   border-radius: 4px;
-  padding: 8px;
+  padding: 6px;
   white-space: nowrap;
-}
-.ds-card .card-stp-button-hover-background .card-stp-button:hover .icon-pocket-save {
-  fill: #EF4056;
+  color: #FFF;
 }
 .ds-card .card-stp-button-hover-background button,
 .ds-card .card-stp-button-hover-background .context-menu {
