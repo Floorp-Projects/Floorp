@@ -18,6 +18,7 @@
 #include "mozilla/StaticPrefs_media.h"
 #include "mozilla/gfx/Tools.h"
 #include "nsMimeTypes.h"
+#include "nsReadableUtils.h"
 
 namespace mozilla {
 
@@ -90,10 +91,15 @@ nsTArray<UniquePtr<TrackInfo>> MP4Decoder::GetTracksInfo(
               "audio/mpeg"_ns, aType));
       continue;
     }
-    if (codec.EqualsLiteral("opus") || codec.EqualsLiteral("flac")) {
+    // The valid codecs parameter value with mp4 MIME types should be "Opus",
+    // but "opus" is acceptable due to historical reasons.
+    if (codec.EqualsLiteral("opus") || codec.EqualsLiteral("Opus") ||
+        codec.EqualsLiteral("flac")) {
+      NS_ConvertUTF16toUTF8 c(codec);
+      ToLowerCase(c);
       tracks.AppendElement(
           CreateTrackInfoWithMIMETypeAndContainerTypeExtraParameters(
-              "audio/"_ns + NS_ConvertUTF16toUTF8(codec), aType));
+              "audio/"_ns + c, aType));
       continue;
     }
     if (IsVP9CodecString(codec)) {
