@@ -214,6 +214,75 @@ IPCResult FileSystemManagerParent::RecvRemoveEntry(
   return IPC_OK();
 }
 
+IPCResult FileSystemManagerParent::RecvMoveEntry(
+    FileSystemMoveEntryRequest&& aRequest, MoveEntryResolver&& aResolver) {
+  LOG(("MoveEntry %s to %s",
+       NS_ConvertUTF16toUTF8(aRequest.handle().entryName()).get(),
+       NS_ConvertUTF16toUTF8(aRequest.destHandle().childName()).get()));
+  MOZ_ASSERT(!aRequest.handle().entryId().IsEmpty());
+  MOZ_ASSERT(!aRequest.destHandle().parentId().IsEmpty());
+  MOZ_ASSERT(mDataManager);
+
+  auto reportError = [&aResolver](const QMResult& aRv) {
+    FileSystemMoveEntryResponse response(ToNSResult(aRv));
+    aResolver(response);
+  };
+
+  QM_TRY_UNWRAP(EntryId parentId,
+                mDataManager->MutableDatabaseManagerPtr()->GetParentEntryId(
+                    aRequest.handle().entryId()),
+                IPC_OK(), reportError);
+  FileSystemChildMetadata sourceHandle;
+  sourceHandle.parentId() = parentId;
+  sourceHandle.childName() = aRequest.handle().entryName();
+
+  QM_TRY_UNWRAP(bool moved,
+                mDataManager->MutableDatabaseManagerPtr()->MoveEntry(
+                    sourceHandle, aRequest.destHandle()),
+                IPC_OK(), reportError);
+
+  fs::FileSystemMoveEntryResponse response(moved ? NS_OK : NS_ERROR_FAILURE);
+  aResolver(response);
+  return IPC_OK();
+}
+
+IPCResult FileSystemManagerParent::RecvRenameEntry(
+    FileSystemRenameEntryRequest&& aRequest, MoveEntryResolver&& aResolver) {
+  // if destHandle's parentId is empty, then we're renaming in the same
+  // directory
+  LOG(("RenameEntry %s to %s",
+       NS_ConvertUTF16toUTF8(aRequest.handle().entryName()).get(),
+       NS_ConvertUTF16toUTF8(aRequest.name()).get()));
+  MOZ_ASSERT(!aRequest.handle().entryId().IsEmpty());
+  MOZ_ASSERT(mDataManager);
+
+  auto reportError = [&aResolver](const QMResult& aRv) {
+    FileSystemMoveEntryResponse response(ToNSResult(aRv));
+    aResolver(response);
+  };
+
+  QM_TRY_UNWRAP(EntryId parentId,
+                mDataManager->MutableDatabaseManagerPtr()->GetParentEntryId(
+                    aRequest.handle().entryId()),
+                IPC_OK(), reportError);
+  FileSystemChildMetadata sourceHandle;
+  sourceHandle.parentId() = parentId;
+  sourceHandle.childName() = aRequest.handle().entryName();
+
+  FileSystemChildMetadata newHandle;
+  newHandle.parentId() = parentId;
+  newHandle.childName() = aRequest.name();
+
+  QM_TRY_UNWRAP(bool moved,
+                mDataManager->MutableDatabaseManagerPtr()->MoveEntry(
+                    sourceHandle, newHandle),
+                IPC_OK(), reportError);
+
+  fs::FileSystemMoveEntryResponse response(moved ? NS_OK : NS_ERROR_FAILURE);
+  aResolver(response);
+  return IPC_OK();
+}
+
 IPCResult FileSystemManagerParent::RecvCloseFile(
     FileSystemGetFileRequest&& aRequest) {
   AssertIsOnIOTarget();

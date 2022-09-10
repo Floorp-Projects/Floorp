@@ -96,6 +96,19 @@ class MockFileSystemRequestHandler : public FileSystemRequestHandler {
                RefPtr<Promise> aPromise),
               (override));
 
+  MOCK_METHOD(void, MoveEntry,
+              (RefPtr<FileSystemManager> & aManager, FileSystemHandle* aHandle,
+               const FileSystemEntryMetadata& aEntry,
+               const FileSystemChildMetadata& aNewEntry,
+               RefPtr<Promise> aPromise),
+              (override));
+
+  MOCK_METHOD(void, RenameEntry,
+              (RefPtr<FileSystemManager> & aManager, FileSystemHandle* aHandle,
+               const FileSystemEntryMetadata& aEntry, const Name& aName,
+               RefPtr<Promise> aPromise),
+              (override));
+
   MOCK_METHOD(void, Resolve,
               (RefPtr<FileSystemManager> & aManager,
                const FileSystemEntryPair& aEndpoints, RefPtr<Promise> aPromise),
