@@ -85,7 +85,7 @@ const BASE_MESSAGES = () => [
             split_narrow_bkg_position: "-155px",
             progress_bar: "true",
             background:
-              "url('chrome://activity-stream/content/data/content/assets/mr-pintaskbar.svg') var(--mr-secondary-position) no-repeat, var(--mr-screen-background-color)",
+              "url('chrome://activity-stream/content/data/content/assets/mr-pintaskbar.svg') var(--mr-secondary-position) no-repeat var(--mr-screen-background-color)",
             logo: {},
             title: {
               string_id: "mr2022-onboarding-existing-pin-header",
@@ -143,7 +143,7 @@ const BASE_MESSAGES = () => [
             split_narrow_bkg_position: "-60px",
             progress_bar: "true",
             background:
-              "url('chrome://activity-stream/content/data/content/assets/mr-settodefault.svg') var(--mr-secondary-position) no-repeat, var(--mr-screen-background-color)",
+              "url('chrome://activity-stream/content/data/content/assets/mr-settodefault.svg') var(--mr-secondary-position) no-repeat var(--mr-screen-background-color)",
             logo: {},
             title: {
               string_id: "mr2022-onboarding-set-default-title",
@@ -178,7 +178,7 @@ const BASE_MESSAGES = () => [
             split_narrow_bkg_position: "-42px",
             progress_bar: "true",
             background:
-              "url('chrome://activity-stream/content/data/content/assets/mr-import.svg') var(--mr-secondary-position) no-repeat, var(--mr-screen-background-color)",
+              "url('chrome://activity-stream/content/data/content/assets/mr-import.svg') var(--mr-secondary-position) no-repeat var(--mr-screen-background-color)",
             logo: {},
             title: {
               string_id: "mr2022-onboarding-import-header",
@@ -214,7 +214,7 @@ const BASE_MESSAGES = () => [
             position: "split",
             split_narrow_bkg_position: "-65px",
             background:
-              "url('chrome://activity-stream/content/data/content/assets/mr-colorways.avif') var(--mr-secondary-position) no-repeat, var(--mr-screen-background-color)",
+              "url('chrome://activity-stream/content/data/content/assets/mr-colorways.avif') var(--mr-secondary-position) no-repeat var(--mr-screen-background-color)",
             progress_bar: true,
             logo: {},
             title: {
@@ -366,7 +366,7 @@ const BASE_MESSAGES = () => [
             position: "split",
             split_narrow_bkg_position: "-160px",
             background:
-              "url('chrome://activity-stream/content/data/content/assets/mr-mobilecrosspromo.svg') var(--mr-secondary-position) no-repeat, var(--mr-screen-background-color)",
+              "url('chrome://activity-stream/content/data/content/assets/mr-mobilecrosspromo.svg') var(--mr-secondary-position) no-repeat var(--mr-screen-background-color)",
             progress_bar: true,
             logo: {},
             title: {
@@ -411,7 +411,7 @@ const BASE_MESSAGES = () => [
             split_narrow_bkg_position: "-100px",
             progress_bar: "true",
             background:
-              "url('chrome://activity-stream/content/data/content/assets/mr-pinprivate.svg') var(--mr-secondary-position) no-repeat, var(--mr-screen-background-color)",
+              "url('chrome://activity-stream/content/data/content/assets/mr-pinprivate.svg') var(--mr-secondary-position) no-repeat var(--mr-screen-background-color)",
             logo: {},
             title: {
               string_id: "mr2022-upgrade-onboarding-pin-private-window-header",
@@ -452,7 +452,7 @@ const BASE_MESSAGES = () => [
             progress_bar: "true",
             dual_action_buttons: true,
             background:
-              "url('chrome://activity-stream/content/data/content/assets/mr-privacysegmentation.svg') var(--mr-secondary-position) no-repeat, var(--mr-screen-background-color)",
+              "url('chrome://activity-stream/content/data/content/assets/mr-privacysegmentation.svg') var(--mr-secondary-position) no-repeat var(--mr-screen-background-color)",
             logo: {},
             title: {
               string_id: "mr2022-onboarding-privacy-segmentation-title",
@@ -506,7 +506,7 @@ const BASE_MESSAGES = () => [
             progress_bar: "true",
             split_narrow_bkg_position: "-228px",
             background:
-              "url('chrome://activity-stream/content/data/content/assets/mr-gratitude.svg') var(--mr-secondary-position) no-repeat, var(--mr-screen-background-color)",
+              "url('chrome://activity-stream/content/data/content/assets/mr-gratitude.svg') var(--mr-secondary-position) no-repeat var(--mr-screen-background-color)",
             logo: {},
             title: {
               string_id: "mr2022-onboarding-gratitude-title",
