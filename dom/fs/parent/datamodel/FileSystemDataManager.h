@@ -105,6 +105,10 @@ class FileSystemDataManager
 
   RefPtr<BoolPromise> OnClose();
 
+  bool LockExclusive(const EntryId& aEntryId);
+
+  void UnlockExclusive(const EntryId& aEntryId);
+
  protected:
   ~FileSystemDataManager();
 
@@ -127,6 +131,7 @@ class FileSystemDataManager
   ThreadBound<BackgroundThreadAccessible> mBackgroundThreadAccessible;
 
   const quota::OriginMetadata mOriginMetadata;
+  nsTHashSet<EntryId> mExclusiveLocks;
   const NotNull<nsCOMPtr<nsISerialEventTarget>> mBackgroundTarget;
   const NotNull<nsCOMPtr<nsIEventTarget>> mIOTarget;
   const NotNull<RefPtr<TaskQueue>> mIOTaskQueue;

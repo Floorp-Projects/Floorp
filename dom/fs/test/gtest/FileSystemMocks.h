@@ -250,6 +250,14 @@ class TestFileSystemManagerChild : public FileSystemManagerChild {
       (override));
 
   MOCK_METHOD(
+      void, SendGetAccessHandle,
+      (const FileSystemGetAccessHandleRequest& request,
+       mozilla::ipc::ResolveCallback<FileSystemGetAccessHandleResponse>&&
+           aResolve,
+       mozilla::ipc::RejectCallback&& aReject),
+      (override));
+
+  MOCK_METHOD(
       void, SendGetFile,
       (const FileSystemGetFileRequest& request,
        mozilla::ipc::ResolveCallback<FileSystemGetFileResponse>&& aResolve,
