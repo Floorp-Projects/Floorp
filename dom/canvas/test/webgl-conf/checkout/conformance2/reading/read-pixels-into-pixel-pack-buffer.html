@@ -29,12 +29,12 @@ function checkFormatAndType()
     for (var ff = 0; ff < invalidFormat.length; ++ff) {
         var format = invalidFormat[ff];
         gl.readPixels(0, 0, 1, 1, format, gl.UNSIGNED_BYTE, 0);
-        wtu.glErrorShouldBe(gl, [gl.INVALID_ENUM, gl.INVALID_OPERATION], "Format should not be able to read as " + wtu.glEnumToString(gl, format));
+        wtu.glErrorShouldBe(gl, gl.INVALID_ENUM, "Format should not be able to read as " + wtu.glEnumToString(gl, format));
     }
     for (var tt = 0; tt < invalidType.length; ++tt) {
         var type = invalidType[tt];
         gl.readPixels(0, 0, 1, 1, gl.RGBA, type, 0);
-        wtu.glErrorShouldBe(gl, [gl.INVALID_ENUM, gl.INVALID_OPERATION], "Type should not be able to read as " + wtu.glEnumToString(gl, type));
+        wtu.glErrorShouldBe(gl, gl.INVALID_ENUM, "Type should not be able to read as " + wtu.glEnumToString(gl, type));
     }
 
     debug("");

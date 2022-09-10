@@ -7,6 +7,8 @@
 <script src="../../js/desktop-gl-constants.js"></script>
 <script src="../../js/js-test-pre.js"></script>
 <script src="../../js/webgl-test-utils.js"></script>
+<script src="../../js/tests/compositing-test.js"></script>
+<script src="../../js/tests/invalid-vertex-attrib-test.js"></script>
 </head>
 <body>
 <script id="vshaderBaseInstanceWithoutExt" type="x-shader/x-vertex">#version 300 es
@@ -310,7 +312,7 @@ function testGlslBuiltins() {
       const vert_src = `\
 #version 300 es
 #line 405
-layout(location = 0) in int a_vertex_id; // Same as first_vert+gl_VertexID
+layout(location = 0) in int a_vertex_id; // Same as gl_VertexID
 out vec4 v_color;
 
 void main() {
@@ -330,7 +332,7 @@ void main() {
       const vert_src = `\
 #version 300 es
 #line 425
-layout(location = 0) in int a_vertex_id; // Same as first_vert+gl_VertexID
+layout(location = 0) in int a_vertex_id; // Same as gl_VertexID
 layout(location = 1) in int a_instance_div1; // Same as base_instance+gl_InstanceID
 layout(location = 2) in int a_instance_div2; // Same as base_instance+floor(gl_InstanceID/2)
 layout(location = 3) in int a_instance_div3; // Same as base_instance+floor(gl_InstanceID/3)
@@ -469,8 +471,13 @@ void main() {
     gl.disable(gl.SCISSOR_TEST);
     gl.clearBufferfv(gl.COLOR, 0, [1,0,0,1]);
 
-    const last_gl_vert_id = desc.base_vert + desc.vert_count - 1;
-    const last_vert_id = desc.first_vert + last_gl_vert_id;
+    // From OpenGL ES 3.2 spec section 10.5
+    // https://www.khronos.org/registry/OpenGL/specs/es/3.2/es_spec_3.2.pdf
+    // The index of any element transferred to the GL by DrawArraysOneInstance
+    // is referred to as its vertex ID, and may be read by a vertex shader as gl_VertexID.
+    // The vertex ID of the ith element transferred is first + i.
+    const last_gl_vert_id = desc.base_vert + desc.first_vert + desc.vert_count - 1;
+    const last_vert_id = last_gl_vert_id;
     const last_inst_id = desc.inst_count - 1;
     const last_inst_div1 = desc.base_inst + last_inst_id;
     const last_inst_div2 = desc.base_inst + Math.floor(last_inst_id / 2);
@@ -506,7 +513,6 @@ function doTest(extensionName, multiDraw) {
     const vs = [
       '#version 300 es',
       config.isMultiDraw ? '#extension GL_ANGLE_multi_draw : require' : '',
-      //'#extension GL_ANGLE_base_vertex_base_instance : require',
       '#define kCountX ' + countX.toString(),
       '#define kCountY ' + countY.toString(),
       'layout(location = 0) in vec2 vPosition;',
@@ -892,10 +898,124 @@ function doTest(extensionName, multiDraw) {
   }
 }
 
-runTest();
 
-const successfullyParsed = true;
+async function runDrawTests(testFn) {
+    function drawArrays(gl) {
+      gl.drawArrays(gl.TRIANGLES, 0, 6);
+    }
+
+    function drawElements(gl) {
+      gl.drawElements(gl.TRIANGLES, 6, gl.UNSIGNED_BYTE, 0);
+    }
+
+    function drawArraysInstanced(gl) {
+      gl.drawArraysInstanced(gl.TRIANGLES, 0, 6, 1);
+    }
+
+    function drawElementsInstanced(gl) {
+      gl.drawElementsInstanced(gl.TRIANGLES, 6, gl.UNSIGNED_BYTE, 0, 1);
+    }
+
+    function drawArraysInstancedBaseInstanceWEBGL(gl) {
+      const ext = gl.getExtension('WEBGL_draw_instanced_base_vertex_base_instance');
+      if (!ext) {
+        throw 'Should not have run this test without WEBGL_draw_instanced_base_vertex_base_instance';
+      }
+
+      ext.drawArraysInstancedBaseInstanceWEBGL(gl.TRIANGLES, 0, 6, 1, 0);
+    }
+
+    function drawElementsInstancedBaseVertexBaseInstanceWEBGL(gl) {
+      const ext = gl.getExtension('WEBGL_draw_instanced_base_vertex_base_instance');
+      if (!ext) {
+        throw 'Should not have run this test without WEBGL_draw_instanced_base_vertex_base_instance';
+      }
+
+      ext.drawElementsInstancedBaseVertexBaseInstanceWEBGL(gl.TRIANGLES, 6, gl.UNSIGNED_BYTE, 0, 1, 0, 0);
+    }
+
+    function multiDrawArraysInstancedBaseInstanceWEBGL(gl) {
+      const ext = gl.getExtension('WEBGL_multi_draw_instanced_base_vertex_base_instance');
+      if (!ext) {
+        throw 'Should not have run this test without WEBGL_multi_draw_instanced_base_vertex_base_instance';
+      }
+      ext.multiDrawArraysInstancedBaseInstanceWEBGL(gl.TRIANGLES, [0], 0, [6], 0, [1], 0, [0], 0, 1);
+    }
+
+    function multiDrawElementsInstancedBaseVertexBaseInstanceWEBGL(gl) {
+      const ext = gl.getExtension('WEBGL_multi_draw_instanced_base_vertex_base_instance');
+      if (!ext) {
+        throw 'Should not have run this test without WEBGL_multi_draw_instanced_base_vertex_base_instance';
+      }
+      ext.multiDrawElementsInstancedBaseVertexBaseInstanceWEBGL(
+          gl.TRIANGLES,
+          [6], 0,   // counts
+          gl.UNSIGNED_BYTE,
+          [0], 0,   // offsets
+          [1], 0,   // instances
+          [0], 0,   // baseVerts
+          [0], 0,   // baseInstances
+          1,        // drawCount
+      );
+    }
+
+    await testFn(drawArrays);             // sanity check
+    await testFn(drawElements);           // sanity check
+    await testFn(drawArraysInstanced);    // sanity check
+    await testFn(drawElementsInstanced);  // sanity check
+
+    // It's only legal to call testFn if the extension is supported,
+    // since the invalid vertex attrib tests, in particular, expect the
+    // draw function to have an effect.
+    if (gl.getExtension('WEBGL_draw_instanced_base_vertex_base_instance')) {
+      await testFn(drawArraysInstancedBaseInstanceWEBGL);
+      await testFn(drawElementsInstancedBaseVertexBaseInstanceWEBGL);
+    }
+    if (gl.getExtension('WEBGL_multi_draw_instanced_base_vertex_base_instance')) {
+      await testFn(multiDrawArraysInstancedBaseInstanceWEBGL);
+      await testFn(multiDrawElementsInstancedBaseVertexBaseInstanceWEBGL);
+    }
+}
+
+async function runCompositingTests() {
+    const compositingTestFn = createCompositingTestFn({
+      webglVersion: 2,
+      shadersFn(gl) {
+        const vs = `\
+        #version 300 es
+        layout(location = 0) in vec4 position;
+        void main() {
+          gl_Position = position;
+        }
+        `;
+        const fs = `\
+        #version 300 es
+        precision highp float;
+        out vec4 fragColor;
+        void main() {
+          fragColor = vec4(1, 0, 0, 1);
+        }
+        `;
+        return [vs, fs];
+      },
+    });
+    await runDrawTests(compositingTestFn);
+}
+
+async function runInvalidAttribTests(gl) {
+  const invalidAttribTestFn = createInvalidAttribTestFn(gl);
+  await runDrawTests(invalidAttribTestFn);
+}
+
+async function main() {
+  runTest();
+  await runInvalidAttribTests(gl);
+  await runCompositingTests();
+  finishTest();
+}
+main();
+
+var successfullyParsed = true;
 </script>
-<script src="../../js/js-test-post.js"></script>
 </body>
 </html>

@@ -1,5 +1,6 @@
 --max-version 1.9.9 constants-and-properties.html
 --min-version 1.0.2 context-attribute-preserve-drawing-buffer.html
+--min-version 1.0.4 context-attribute-preserve-drawing-buffer-antialias.html
 context-attributes-alpha-depth-stencil-antialias.html
 --min-version 1.0.4 context-size-change.html
 --min-version 1.0.4 context-no-alpha-fbo-with-alpha.html
