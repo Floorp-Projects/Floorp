@@ -42,6 +42,10 @@ class FileSystemRequestHandler {
                        const FileSystemEntryMetadata& aFile,
                        RefPtr<Promise> aPromise);
 
+  virtual void GetAccessHandle(RefPtr<FileSystemManager>& aManager,
+                               const FileSystemEntryMetadata& aFile,
+                               const RefPtr<Promise>& aPromise);
+
   virtual void GetEntries(RefPtr<FileSystemManager>& aManager,
                           const EntryId& aDirectory, PageNumber aPage,
                           RefPtr<Promise> aPromise,

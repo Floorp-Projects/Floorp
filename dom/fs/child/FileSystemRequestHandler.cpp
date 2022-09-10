@@ -9,14 +9,25 @@
 #include "FileSystemEntryMetadataArray.h"
 #include "fs/FileSystemConstants.h"
 #include "mozilla/dom/File.h"
+#include "mozilla/dom/FileSystemAccessHandleChild.h"
 #include "mozilla/dom/FileSystemDirectoryHandle.h"
 #include "mozilla/dom/FileSystemFileHandle.h"
 #include "mozilla/dom/FileSystemHandle.h"
 #include "mozilla/dom/FileSystemHelpers.h"
 #include "mozilla/dom/FileSystemManager.h"
 #include "mozilla/dom/FileSystemManagerChild.h"
+#include "mozilla/dom/FileSystemSyncAccessHandle.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/quota/QuotaCommon.h"
+
+namespace mozilla {
+extern LazyLogModule gOPFSLog;
+}
+
+#define LOG(args) MOZ_LOG(mozilla::gOPFSLog, mozilla::LogLevel::Verbose, args)
+
+#define LOG_DEBUG(args) \
+  MOZ_LOG(mozilla::gOPFSLog, mozilla::LogLevel::Debug, args)
 
 namespace mozilla::dom::fs {
 
@@ -87,6 +98,22 @@ RefPtr<FileSystemFileHandle> MakeResolution(
       aGlobal, aManager,
       FileSystemEntryMetadata(aResponse.get_EntryId(), aName,
                               /* directory */ false));
+  return result;
+}
+
+RefPtr<FileSystemSyncAccessHandle> MakeResolution(
+    nsIGlobalObject* aGlobal, FileSystemGetAccessHandleResponse&& aResponse,
+    const RefPtr<FileSystemSyncAccessHandle>& /* aReturns */,
+    const FileSystemEntryMetadata& aMetadata,
+    RefPtr<FileSystemManager>& aManager) {
+  auto* const actor = static_cast<FileSystemAccessHandleChild*>(
+      aResponse.get_PFileSystemAccessHandleChild());
+
+  RefPtr<FileSystemSyncAccessHandle> result =
+      new FileSystemSyncAccessHandle(aGlobal, aManager, actor, aMetadata);
+
+  actor->SetAccessHandle(result);
+
   return result;
 }
 
@@ -353,6 +380,26 @@ void FileSystemRequestHandler::GetFileHandle(
   });
   aManager->Actor()->SendGetFileHandle(request, std::move(onResolve),
                                        std::move(onReject));
+}
+
+void FileSystemRequestHandler::GetAccessHandle(
+    RefPtr<FileSystemManager>& aManager, const FileSystemEntryMetadata& aFile,
+    const RefPtr<Promise>& aPromise) {
+  MOZ_ASSERT(aPromise);
+  LOG(("getAccessHandle"));
+
+  FileSystemGetAccessHandleRequest request(aFile.entryId());
+
+  auto&& onResolve = SelectResolveCallback<FileSystemGetAccessHandleResponse,
+                                           RefPtr<FileSystemSyncAccessHandle>>(
+      aPromise, aFile, aManager);
+  auto&& onReject = GetRejectCallback(aPromise);
+
+  QM_TRY(OkIf(aManager->Actor()), QM_VOID, [aPromise](const auto&) {
+    aPromise->MaybeRejectWithUnknownError("Invalid actor");
+  });
+  aManager->Actor()->SendGetAccessHandle(request, std::move(onResolve),
+                                         std::move(onReject));
 }
 
 void FileSystemRequestHandler::GetFile(
