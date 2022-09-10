@@ -10,11 +10,8 @@
 #include "FileSystemDatabaseManagerVersion001.h"
 #include "FileSystemFileManager.h"
 #include "FileSystemHashSource.h"
-#include "GetDirectoryForOrigin.h"
-#include "SchemaVersion001.h"
 #include "fs/FileSystemConstants.h"
-#include "mozIStorageService.h"
-#include "mozStorageCID.h"
+#include "GetDirectoryForOrigin.h"
 #include "mozilla/Result.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/dom/FileSystemManagerParent.h"
@@ -24,6 +21,8 @@
 #include "mozilla/dom/quota/QuotaManager.h"
 #include "mozilla/dom/quota/ResultExtensions.h"
 #include "mozilla/ipc/BackgroundParent.h"
+#include "mozIStorageService.h"
+#include "mozStorageCID.h"
 #include "nsBaseHashtable.h"
 #include "nsCOMPtr.h"
 #include "nsHashKeys.h"
@@ -33,6 +32,7 @@
 #include "nsServiceManagerUtils.h"
 #include "nsString.h"
 #include "nsThreadUtils.h"
+#include "SchemaVersion001.h"
 
 namespace mozilla::dom::fs::data {
 
@@ -205,11 +205,9 @@ Result<EntryId, QMResult> GetEntryHandle(
 
 FileSystemDataManager::FileSystemDataManager(
     const quota::OriginMetadata& aOriginMetadata,
-    MovingNotNull<nsCOMPtr<nsIEventTarget>> aIOTarget,
     MovingNotNull<RefPtr<TaskQueue>> aIOTaskQueue)
     : mOriginMetadata(aOriginMetadata),
       mBackgroundTarget(WrapNotNull(GetCurrentSerialEventTarget())),
-      mIOTarget(std::move(aIOTarget)),
       mIOTaskQueue(std::move(aIOTaskQueue)),
       mRegCount(0),
       mState(State::Initial) {}
@@ -268,11 +266,10 @@ FileSystemDataManager::GetOrCreateFileSystemDataManager(
   nsCString taskQueueName("OPFS "_ns + aOriginMetadata.mOrigin);
 
   RefPtr<TaskQueue> ioTaskQueue =
-      TaskQueue::Create(do_AddRef(streamTransportService), taskQueueName.get());
+      TaskQueue::Create(streamTransportService.forget(), taskQueueName.get());
 
   auto dataManager = MakeRefPtr<FileSystemDataManager>(
-      aOriginMetadata, WrapMovingNotNull(streamTransportService),
-      WrapMovingNotNull(ioTaskQueue));
+      aOriginMetadata, WrapMovingNotNull(ioTaskQueue));
 
   AddFileSystemDataManager(aOriginMetadata.mOrigin, dataManager);
 
@@ -328,12 +325,6 @@ bool FileSystemDataManager::IsShutdownCompleted() {
   return !gDataManagers;
 }
 
-void FileSystemDataManager::AssertIsOnIOTarget() const {
-  DebugOnly<bool> current = false;
-  MOZ_ASSERT(NS_SUCCEEDED(mIOTarget->IsOnCurrentThread(&current)));
-  MOZ_ASSERT(current);
-}
-
 void FileSystemDataManager::Register() { mRegCount++; }
 
 void FileSystemDataManager::Unregister() {
@@ -374,21 +365,6 @@ RefPtr<BoolPromise> FileSystemDataManager::OnClose() {
   MOZ_ASSERT(mState == State::Closing);
 
   return mClosePromiseHolder.Ensure(__func__);
-}
-
-bool FileSystemDataManager::LockExclusive(const EntryId& aEntryId) {
-  if (mExclusiveLocks.Contains(aEntryId)) {
-    return false;
-  }
-
-  mExclusiveLocks.Insert(aEntryId);
-  return true;
-}
-
-void FileSystemDataManager::UnlockExclusive(const EntryId& aEntryId) {
-  MOZ_ASSERT(mExclusiveLocks.Contains(aEntryId));
-
-  mExclusiveLocks.Remove(aEntryId);
 }
 
 bool FileSystemDataManager::IsInactive() const {

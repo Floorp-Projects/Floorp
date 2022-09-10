@@ -40,9 +40,6 @@ class FileSystemDatabaseManagerVersion001 : public FileSystemDatabaseManager {
 
   virtual Result<int64_t, QMResult> GetUsage() const override;
 
-  virtual Result<EntryId, QMResult> GetParentEntryId(
-      const EntryId& aEntry) const override;
-
   virtual Result<EntryId, QMResult> GetOrCreateDirectory(
       const FileSystemChildMetadata& aHandle, bool aCreate) override;
 
@@ -56,10 +53,6 @@ class FileSystemDatabaseManagerVersion001 : public FileSystemDatabaseManager {
 
   virtual Result<FileSystemDirectoryListing, QMResult> GetDirectoryEntries(
       const EntryId& aParent, PageNumber aPage) const override;
-
-  virtual Result<bool, QMResult> MoveEntry(
-      const FileSystemChildMetadata& aHandle,
-      const FileSystemChildMetadata& aNewDesignation) override;
 
   virtual Result<bool, QMResult> RemoveDirectory(
       const FileSystemChildMetadata& aHandle, bool aRecursive) override;

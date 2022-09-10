@@ -7,10 +7,10 @@
 #ifndef DOM_FS_FILESYSTEMDIRECTORYITERATOR_H_
 #define DOM_FS_FILESYSTEMDIRECTORYITERATOR_H_
 
-#include "mozilla/dom/IterableIterator.h"
 #include "nsCOMPtr.h"
 #include "nsISupports.h"
 #include "nsWrapperCache.h"
+#include "mozilla/dom/IterableIterator.h"
 
 class nsIGlobalObject;
 
