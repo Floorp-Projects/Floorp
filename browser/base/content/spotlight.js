@@ -149,19 +149,12 @@ function renderMultistage(ready) {
   document.body.classList.add("onboardingContainer");
   document.body.id = "root";
 
-  // Prevent applying the default modal shadow and margins because the content
-  // handles styling, including its own modal shadowing.
-  const box = browser.closest(".dialogBox");
-  const dialog = box.closest("dialog");
-  box.classList.add("spotlightBox");
-  dialog?.classList.add("spotlight");
-  // Prevent SubDialog methods from manually setting dialog size.
-  box.setAttribute("sizeto", "available");
-  addEventListener("pagehide", () => {
-    box.classList.remove("spotlightBox");
-    dialog?.classList.remove("spotlight");
-    box.removeAttribute("sizeto");
-  });
+  // The content handles styling including its own modal shadowing.
+  const { classList } = browser.closest(".dialogBox");
+  classList.add("noShadow", "fullScreen");
+  addEventListener("pagehide", () =>
+    classList.remove("noShadow", "fullScreen")
+  );
 
   // Load the bundle to render the content as configured.
   document.head.appendChild(document.createElement("script")).src =
