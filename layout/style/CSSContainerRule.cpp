@@ -63,11 +63,6 @@ void CSSContainerRule::GetContainerQuery(nsACString& aQuery) const {
   Servo_ContainerRule_GetContainerQuery(mRawRule, &aQuery);
 }
 
-Element* CSSContainerRule::QueryContainerFor(const Element& aElement) const {
-  return const_cast<Element*>(
-      Servo_ContainerRule_QueryContainerFor(mRawRule, &aElement));
-}
-
 void CSSContainerRule::SetRawAfterClone(RefPtr<RawServoContainerRule> aRaw) {
   mRawRule = std::move(aRaw);
 
