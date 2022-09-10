@@ -205,9 +205,11 @@ Result<EntryId, QMResult> GetEntryHandle(
 
 FileSystemDataManager::FileSystemDataManager(
     const quota::OriginMetadata& aOriginMetadata,
+    MovingNotNull<nsCOMPtr<nsIEventTarget>> aIOTarget,
     MovingNotNull<RefPtr<TaskQueue>> aIOTaskQueue)
     : mOriginMetadata(aOriginMetadata),
       mBackgroundTarget(WrapNotNull(GetCurrentSerialEventTarget())),
+      mIOTarget(std::move(aIOTarget)),
       mIOTaskQueue(std::move(aIOTaskQueue)),
       mRegCount(0),
       mState(State::Initial) {}
@@ -266,10 +268,11 @@ FileSystemDataManager::GetOrCreateFileSystemDataManager(
   nsCString taskQueueName("OPFS "_ns + aOriginMetadata.mOrigin);
 
   RefPtr<TaskQueue> ioTaskQueue =
-      TaskQueue::Create(streamTransportService.forget(), taskQueueName.get());
+      TaskQueue::Create(do_AddRef(streamTransportService), taskQueueName.get());
 
   auto dataManager = MakeRefPtr<FileSystemDataManager>(
-      aOriginMetadata, WrapMovingNotNull(ioTaskQueue));
+      aOriginMetadata, WrapMovingNotNull(streamTransportService),
+      WrapMovingNotNull(ioTaskQueue));
 
   AddFileSystemDataManager(aOriginMetadata.mOrigin, dataManager);
 
@@ -323,6 +326,12 @@ bool FileSystemDataManager::IsShutdownCompleted() {
   ::mozilla::ipc::AssertIsOnBackgroundThread();
 
   return !gDataManagers;
+}
+
+void FileSystemDataManager::AssertIsOnIOTarget() const {
+  DebugOnly<bool> current = false;
+  MOZ_ASSERT(NS_SUCCEEDED(mIOTarget->IsOnCurrentThread(&current)));
+  MOZ_ASSERT(current);
 }
 
 void FileSystemDataManager::Register() { mRegCount++; }
