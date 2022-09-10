@@ -524,6 +524,9 @@ static void LastRememberedSizeCallback(
       aObserver.Unobserve(*target);
       continue;
     }
+    MOZ_ASSERT(!frame->IsFrameOfType(nsIFrame::eLineParticipant) ||
+                   frame->IsFrameOfType(nsIFrame::eReplaced),
+               "Should have unobserved non-replaced inline.");
     const nsStylePosition* stylePos = frame->StylePosition();
     const WritingMode wm = frame->GetWritingMode();
     bool canRememberBSize = stylePos->ContainIntrinsicBSize(wm).IsAutoLength();

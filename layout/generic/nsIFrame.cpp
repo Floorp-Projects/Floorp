@@ -1449,8 +1449,12 @@ void nsIFrame::HandleLastRememberedSize() {
     const auto containAxes = StyleDisplay()->GetContainSizeAxes();
     if ((canRememberBSize && !containAxes.mBContained) ||
         (canRememberISize && !containAxes.mIContained)) {
-      PresContext()->Document()->ObserveForLastRememberedSize(*element);
-      return;
+      bool isNonReplacedInline = IsFrameOfType(nsIFrame::eLineParticipant) &&
+                                 !IsFrameOfType(nsIFrame::eReplaced);
+      if (!isNonReplacedInline) {
+        PresContext()->Document()->ObserveForLastRememberedSize(*element);
+        return;
+      }
     }
   }
   PresContext()->Document()->UnobserveForLastRememberedSize(*element);
