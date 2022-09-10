@@ -3383,10 +3383,6 @@ void RestyleManager::TakeSnapshotForAttributeChange(Element& aElement,
                                                     nsAtom* aAttribute) {
   MOZ_DIAGNOSTIC_ASSERT(!mInStyleRefresh);
 
-  if (!aElement.HasServoData()) {
-    return;
-  }
-
   bool influencesOtherPseudoClassState;
   if (!NeedToRecordAttrChange(*StyleSet(), aElement, aNameSpaceID, aAttribute,
                               &influencesOtherPseudoClassState)) {
@@ -3398,6 +3394,10 @@ void RestyleManager::TakeSnapshotForAttributeChange(Element& aElement,
   // during the restyle traversal. So just assume that the attribute change can
   // cause the style to change.
   IncrementUndisplayedRestyleGeneration();
+
+  if (!aElement.HasServoData()) {
+    return;
+  }
 
   // Some other random attribute changes may also affect the transitions,
   // so we also set this true here.
