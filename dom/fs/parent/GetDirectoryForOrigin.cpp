@@ -7,15 +7,15 @@
 #include "GetDirectoryForOrigin.h"
 
 #include "FileSystemHashSource.h"
-#include "nsCOMPtr.h"
-#include "nsIFile.h"
-#include "nsDirectoryServiceDefs.h"
 #include "mozilla/Result.h"
 #include "mozilla/ResultExtensions.h"
 #include "mozilla/dom/QMResult.h"
 #include "mozilla/dom/quota/QuotaCommon.h"
 #include "mozilla/dom/quota/QuotaManager.h"
 #include "mozilla/dom/quota/ResultExtensions.h"
+#include "nsCOMPtr.h"
+#include "nsDirectoryServiceDefs.h"
+#include "nsIFile.h"
 
 namespace mozilla::dom::fs {
 

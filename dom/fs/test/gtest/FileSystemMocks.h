@@ -7,13 +7,19 @@
 #ifndef DOM_FS_TEST_GTEST_FILESYSTEMMOCKS_H_
 #define DOM_FS_TEST_GTEST_FILESYSTEMMOCKS_H_
 
-#include "gtest/gtest.h"
-#include "gmock/gmock.h"
+#include <memory>  // We don't have a mozilla shared pointer for pod types
 
 #include "TestHelpers.h"
-
-#include "fs/FileSystemRequestHandler.h"
 #include "fs/FileSystemChildFactory.h"
+#include "fs/FileSystemRequestHandler.h"
+#include "gmock/gmock.h"
+#include "gtest/gtest.h"
+#include "js/Promise.h"
+#include "js/RootingAPI.h"
+#include "jsapi.h"
+#include "mozilla/ErrorResult.h"
+#include "mozilla/ScopeExit.h"
+#include "mozilla/UniquePtr.h"
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/DOMException.h"
@@ -23,19 +29,10 @@
 #include "mozilla/dom/PromiseNativeHandler.h"
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/ipc/PBackgroundSharedTypes.h"
-#include "mozilla/ErrorResult.h"
-#include "mozilla/ScopeExit.h"
-#include "mozilla/UniquePtr.h"
 #include "nsIGlobalObject.h"
 #include "nsISupports.h"
 #include "nsISupportsImpl.h"
 #include "nsITimer.h"
-
-#include "jsapi.h"
-#include "js/Promise.h"
-#include "js/RootingAPI.h"
-
-#include <memory>  // We don't have a mozilla shared pointer for pod types
 
 namespace testing::internal {
 
