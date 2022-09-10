@@ -74,13 +74,13 @@ class Registered {
     }
   }
 
-  Registered() {}
+  Registered() = default;
 
   Registered(const Registered& aOther) : mObject(aOther.mObject) {
     mObject->Register();
   }
 
-  Registered(Registered&& aOther) = default;
+  Registered(Registered&& aOther) noexcept = default;
 
   MOZ_IMPLICIT Registered(RefPtr<T> aObject) : mObject(std::move(aObject)) {
     if (mObject) {
@@ -109,7 +109,7 @@ class Registered {
     return *this;
   }
 
-  Registered<T>& operator=(Registered<T>&& aRhs) {
+  Registered<T>& operator=(Registered<T>&& aRhs) noexcept {
     RefPtr<T> oldObject = std::move(mObject);
     mObject = std::move(aRhs.mObject);
     aRhs.mObject = nullptr;
