@@ -265,53 +265,6 @@ TEST(TestFileSystemDatabaseManagerVersion001, smokeTestCreateRemoveFiles)
   << fileItemRef.entryName();
   ASSERT_EQ(firstChild, fileItemRef.entryId());
 
-  // Non-empty root directory also may not be removed except recursively
-  FileSystemChildMetadata rootChildMeta(getTestOrigin(), u"root"_ns);
-  TEST_TRY_UNWRAP_ERR(
-      rv, dm->RemoveDirectory(rootChildMeta, /* recursive */ false));
-  ASSERT_NSEQ(NS_ERROR_DOM_FILEHANDLE_NOT_ALLOWED_ERR,
-              rv);  // Is this a good error?
-
-  TEST_TRY_UNWRAP(isDeleted,
-                  dm->RemoveDirectory(rootChildMeta, /* recursive */ true));
-  ASSERT_TRUE(isDeleted);
-
-  // Directory listing of root directory works after it has been cleared
-  TEST_TRY_UNWRAP(FileSystemDirectoryListing rEntries,
-                  dm->GetDirectoryEntries(rootId, 0));
-  ASSERT_EQ(0u, rEntries.directories().Length());
-  ASSERT_EQ(0u, rEntries.files().Length());
-
-  // Creating a file under the removed root directory fails
-  TEST_TRY_UNWRAP_ERR(rv,
-                      dm->GetOrCreateFile(firstChildMeta, /* create */ true));
-  ASSERT_NSEQ(NS_ERROR_STORAGE_CONSTRAINT, rv);  // Root doesn't exist
-
-  // Creating a non-child file still fails
-  TEST_TRY_UNWRAP_ERR(rv,
-                      dm->GetOrCreateFile(notAChildMeta, /* create */ true));
-  ASSERT_NSEQ(NS_ERROR_STORAGE_CONSTRAINT, rv);  // Is this a good error?
-
-  // Creating a directory under the removed root directory fails
-  TEST_TRY_UNWRAP_ERR(
-      rv, dm->GetOrCreateDirectory(firstChildMeta, /* create */ true));
-  ASSERT_NSEQ(NS_ERROR_STORAGE_CONSTRAINT, rv);  // Root doesn't exist
-
-  // Creating a non-child directory still fails
-  TEST_TRY_UNWRAP_ERR(
-      rv, dm->GetOrCreateDirectory(notAChildMeta, /* create */ true));
-  ASSERT_NSEQ(NS_ERROR_STORAGE_CONSTRAINT, rv);  // Is this a good error?
-
-  // Creating a root file fails
-  TEST_TRY_UNWRAP_ERR(rv,
-                      dm->GetOrCreateFile(rootChildMeta, /* create */ true));
-  ASSERT_NSEQ(NS_ERROR_STORAGE_CONSTRAINT, rv);  // Is this a good error?
-
-  // Creating a root directory via GetOrCreateDirectory fails
-  TEST_TRY_UNWRAP_ERR(
-      rv, dm->GetOrCreateDirectory(rootChildMeta, /* create */ true));
-  ASSERT_NSEQ(NS_ERROR_STORAGE_CONSTRAINT, rv);  // Is this a good error?
-
   dm->Close();
 }
 
