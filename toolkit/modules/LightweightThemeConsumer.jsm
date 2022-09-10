@@ -259,6 +259,7 @@ LightweightThemeConsumer.prototype = {
     }else{
       themeData = themeData_;
     }
+    this._lastData = themeData;
     const hasDarkTheme = !!themeData.darkTheme;
     let updateGlobalThemeData = true;
     let useDarkTheme = (() => {
