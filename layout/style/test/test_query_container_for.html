@@ -1,0 +1,62 @@
+<!doctype html>
+<title>Test for bug 1789191</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" href="/tests/SimpleTest/test.css"/>
+<style>
+@container (min-width: 0px) {
+}
+
+@container name (min-width: 0px) {
+}
+
+@container (min-height: 0px) {
+}
+
+div {
+  width: 100px;
+  height: 100px;
+  background-color: blue;
+  margin: 10px;
+}
+
+.container-height {
+  container-type: size;
+}
+
+.container-unnamed {
+  container-type: inline-size;
+}
+
+.container-named {
+  container-type: inline-size;
+  container-name: name;
+}
+</style>
+
+<div id="child1"></div>
+
+<div class="container-height" id="container1">
+  <div class="container-named" id="container2">
+    <div class="container-unnamed" id="container3">
+      <div id="child2"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+  let sheet = document.querySelector("style").sheet;
+  let withoutFilter = SpecialPowers.wrap(sheet.cssRules[0]);
+  let withFilter = SpecialPowers.wrap(sheet.cssRules[1]);
+  let heightQuery = SpecialPowers.wrap(sheet.cssRules[2]);
+
+  // Container query selection requires up-to-date layout information.
+  document.body.getBoundingClientRect();
+
+  is(withoutFilter.queryContainerFor(child1), null, "No filter, no container");
+  is(withFilter.queryContainerFor(child1), null, "Filter, no container");
+  is(heightQuery.queryContainerFor(child1), null, "Height, no container");
+
+  is(SpecialPowers.unwrap(withoutFilter.queryContainerFor(child2)), container3, "No filter, container");
+  is(SpecialPowers.unwrap(withFilter.queryContainerFor(child2)), container2, "Filter");
+  is(SpecialPowers.unwrap(heightQuery.queryContainerFor(child2)), container1, "Height");
+</script>
