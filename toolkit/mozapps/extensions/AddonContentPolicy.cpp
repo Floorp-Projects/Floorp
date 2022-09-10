@@ -178,8 +178,6 @@ static const char* allowedHostSchemes[] = {"http", "https", "moz-extension",
  *  worker-src directives may only be the following:
  *    - self
  *    - none
- *    - Any localhost source, (http://localhost, http://127.0.0.1, or any port
- * on those domains)
  */
 class CSPValidator final : public nsCSPSrcVisitor {
  public:

@@ -202,10 +202,10 @@ add_task(async function test_csp_validator_extension_pages() {
   let checkPolicy = (policy, expectedResult, message = null) => {
     info(`Checking policy: ${policy}`);
 
-    let result = cps.validateAddonCSP(
-      policy,
-      Ci.nsIAddonContentPolicy.CSP_ALLOW_LOCALHOST
-    );
+    // While Schemas.jsm uses Ci.nsIAddonContentPolicy.CSP_ALLOW_WASM, we don't
+    // pass that here because we are only verifying that remote scripts are
+    // blocked here.
+    let result = cps.validateAddonCSP(policy, 0);
     equal(result, expectedResult);
   };
 
@@ -273,14 +273,18 @@ add_task(async function test_csp_validator_extension_pages() {
     "\u2018script-src\u2019 directive contains a forbidden 'unsafe-eval' keyword"
   );
 
-  // Localhost is always valid
+  // Localhost is invalid
   for (let src of [
     "http://localhost",
     "https://localhost",
     "http://127.0.0.1",
     "https://127.0.0.1",
   ]) {
-    checkPolicy(`script-src 'self' ${src};`, null);
+    const protocol = src.split(":")[0];
+    checkPolicy(
+      `script-src 'self' ${src};`,
+      `\u2018script-src\u2019 directive contains a forbidden ${protocol}: protocol source`
+    );
   }
 
   let directives = ["script-src", "worker-src"];
