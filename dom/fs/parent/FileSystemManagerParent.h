@@ -34,6 +34,8 @@ class FileSystemManagerParent : public PFileSystemManagerParent {
 
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(FileSystemManagerParent, override)
 
+  void AssertIsOnIOTarget() const;
+
   mozilla::ipc::IPCResult RecvGetRootHandleMsg(
       GetRootHandleMsgResolver&& aResolver);
 
