@@ -1638,7 +1638,7 @@ set-custom-URL-button =
 disable-bg-newtab =
  .label = Disable Background Image at { -brand-short-name } Home
 
-how-to-disable-ntbg = To apply this setting, press "Ctrl + Shift + R" on the { -brand-short-name } Homepage
+how-to-disable-ntbg = To apply this setting, press "Ctrl + Shift + R" on the { -brand-short-name } Homepage.
 
 ## DualTheme
 dualtheme-enable =
