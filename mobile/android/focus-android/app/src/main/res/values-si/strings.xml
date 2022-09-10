@@ -335,6 +335,7 @@
       %1$s will be replaced by the app name (e.g. Firefox Focus) -->
     <string name="preference_default_browser2">%1$s පෙරනිමි අතිරික්සුව කරන්න</string>
 
+    <string name="preference_category_mozilla">මොසිල්ලා</string>
     <string name="preference_mozilla_telemetry2">භාවිත දත්ත යවන්න</string>
 
     <!-- A link to SUMO at the end of the summary (preference_mozilla_telemetry_summary2) of the "Send anonymous usage data" setting. -->
@@ -564,6 +565,14 @@
     <!-- Label for a button in the "tabs tray" to erase the browsing history (closes all tabs and removes associated data). -->
     <string name="tabs_tray_action_erase">පිරික්සුම් ඉතිහාසය මකන්න</string>
 
+    <!-- If the user decides to open the current page in another browser and if Firefox is not installed then we show this
+      item in the list of browsers. Clicking it will open the app store installed on the device (usually that's Google Play). -->
+    <string name="download_firefox">ෆයර්ෆොක්ස් බාගන්න</string>
+
+    <!-- Text shown in the "Your rights" screen.
+    %1$s will be replaced with the name of the app (e.g. Firefox Focus)-->
+    <string name="your_rights_content1"><![CDATA[%1$s යනු මොසිල්ලා සහ අනෙකුත් දායකයින් විසින් සාදන ලද නොමිලේ හා විවෘත කේත මෘදුකාංගයකි.]]></string>
+
     <!-- Text shown in the "Your rights" screen.
     %1$s will be replaced with the name of the app (e.g. Firefox Focus)
     %2$s will be replaced with a URL linking to the MPL (e.g. https://www.mozilla.org/en-US/MPL/) -->
@@ -703,6 +712,9 @@
 
     <!-- Preference for studies -->
     <string name="preference_studies">අධ්‍යන</string>
+
+    <!-- Preference for studies summary-->
+    <string name="preference_studies_summary">ෆයර්ෆොක්ස් මගින් කලින් කලට අධ්‍යන ස්ථාපනය කර ධාවනය කරයි.</string>
 
     <!-- Learn more link for studies, links to an article for more information about studies. -->
     <string name="studies_learn_more">තව දැනගන්න</string>
@@ -876,6 +888,9 @@ The new line here must be kept as the second half of the string is clickable for
     <string name="tab_crash_report_description">පෞද්. අතිරික්සුවක් බැවින් සුරැකීමට හෝ මෙම පටිත්ත ප්‍රත්‍යර්පණය කළ නොහැකිය.</string>
     <!-- Label for button to close the tab-->
     <string name="tab_crash_report_close_tab_button_label">පටිත්ත වසන්න</string>
+
+    <!-- Label for the checkbox to send the tab crash report to Mozilla -->
+    <string name="crash_report_send_crash_label">මොසිල්ලා වෙත බිඳ වැටීම් වාර්තාව යවන්න</string>
 
     <!-- Tracking protection bottom sheet -->
 
