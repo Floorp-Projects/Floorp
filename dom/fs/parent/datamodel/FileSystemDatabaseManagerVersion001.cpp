@@ -8,6 +8,7 @@
 
 #include "FileSystemFileManager.h"
 #include "mozilla/dom/FileSystemDataManager.h"
+#include "mozilla/dom/FileSystemHandle.h"
 #include "mozilla/dom/FileSystemTypes.h"
 #include "mozilla/dom/quota/QuotaCommon.h"
 #include "mozilla/dom/quota/ResultExtensions.h"
@@ -249,6 +250,10 @@ FileSystemDatabaseManagerVersion001::GetOrCreateDirectory(
   MOZ_ASSERT(!aHandle.parentId().IsEmpty());
 
   const auto& name = aHandle.childName();
+  // Belt and suspenders: check here as well as in child.
+  if (!IsValidName(name)) {
+    return Err(QMResult(NS_ERROR_DOM_TYPE_MISMATCH_ERR));
+  }
   MOZ_ASSERT(!name.IsVoid() && !name.IsEmpty());
 
   QM_TRY_UNWRAP(EntryId entryId, fs::data::GetEntryHandle(aHandle));
@@ -323,6 +328,10 @@ Result<EntryId, QMResult> FileSystemDatabaseManagerVersion001::GetOrCreateFile(
   MOZ_ASSERT(!aHandle.parentId().IsEmpty());
 
   const auto& name = aHandle.childName();
+  // Belt and suspenders: check here as well as in child.
+  if (!IsValidName(name)) {
+    return Err(QMResult(NS_ERROR_DOM_TYPE_MISMATCH_ERR));
+  }
   MOZ_ASSERT(!name.IsVoid() && !name.IsEmpty());
 
   QM_TRY_UNWRAP(EntryId entryId, fs::data::GetEntryHandle(aHandle));
