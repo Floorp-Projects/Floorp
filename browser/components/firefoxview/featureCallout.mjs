@@ -28,13 +28,24 @@ XPCOMUtils.defineLazyPreferenceGetter(
   val => JSON.parse(val)
 );
 
+XPCOMUtils.defineLazyPreferenceGetter(
+  lazy,
+  "cfrFeaturesUserPref",
+  "browser.newtabpage.activity-stream.asrouter.userprefs.cfr.features",
+  true,
+  _handlePrefChange
+);
+
 async function _handlePrefChange() {
   if (document.visibilityState === "hidden") {
     return;
   }
   let prefVal = lazy.featureTourProgress;
-  if (prefVal.complete) {
+  // End the tour according to the tour progress pref or if the user disabled
+  // contextual feature recommendations.
+  if (prefVal.complete || !lazy.cfrFeaturesUserPref) {
     _endTour();
+    CURRENT_SCREEN = null;
   } else if (prefVal.screen !== CURRENT_SCREEN?.id) {
     READY = false;
     let container = document.getElementById(CONTAINER_ID);
@@ -412,6 +423,17 @@ async function showFeatureCallout(messageId) {
   // Add handlers for repositioning callout
   _addPositionListeners();
   _setupWindowFunctions();
+
+  // If user has disabled CFR, don't show any callouts. But make sure we load
+  // the necessary stylesheets first, since re-enabling CFR should allow
+  // callouts to be shown without needing to reload. In the future this could
+  // allow adding a CTA to disable recommendations with a label like "Don't show
+  // these again" (or potentially a toggle to re-enable them).
+  if (!lazy.cfrFeaturesUserPref) {
+    CURRENT_SCREEN = null;
+    return;
+  }
+
   await _renderCallout();
 }
 
