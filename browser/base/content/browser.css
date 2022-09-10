@@ -1529,21 +1529,15 @@ toolbar[keyNav=true]:not([collapsed=true], [customizing=true]) toolbartabstop {
 
 .dialogBox {
   background-clip: content-box;
-  border-radius: 8px;
   display: -moz-box;
   margin: 0 3vw;
   padding: 0;
   overflow-x: auto;
 }
 
-.dialogBox:not(.noShadow) {
+.dialogBox:not(.spotlightBox) {
   box-shadow: 0 2px 14px 0 rgba(0, 0, 0, 0.2);
-}
-
-.dialogBox.fullScreen {
-  height: 100vh;
-  width: 100vw;
-  margin: 0;
+  border-radius: 8px;
 }
 
 /*
@@ -1563,6 +1557,12 @@ toolbar[keyNav=true]:not([collapsed=true], [customizing=true]) toolbartabstop {
 }
 
 .dialogBox[sizeto="available"] {
+  width: 100vw;
+  height: 100vh;
+  margin: 0;
+}
+
+.dialogBox:not(.spotlightBox)[sizeto="available"] {
   --box-inline-margin: 4px;
   --box-block-margin: 4px;
   --box-ideal-width: 1000;
@@ -1576,9 +1576,6 @@ toolbar[keyNav=true]:not([collapsed=true], [customizing=true]) toolbartabstop {
   --box-max-height-remaining: calc(100vh - var(--box-top-px));
   max-width: min(max(var(--box-ideal-width) * 1px, var(--box-max-width-ratio)), var(--box-max-width-margin), var(--box-max-width-requested));
   max-height: min(max(var(--box-ideal-height) * 1px, var(--box-max-height-ratio)), var(--box-max-height-margin), var(--box-max-height-requested), var(--box-max-height-remaining));
-  width: 100vw;
-  height: 100vh;
-  margin: 0;
 }
 
 @media (min-width: 550px) {
@@ -1605,6 +1602,11 @@ toolbar[keyNav=true]:not([collapsed=true], [customizing=true]) toolbartabstop {
   }
 }
 
+.dialogStack .dialogBox.spotlightBox[sizeto="available"] {
+  /* Tab modal: subtract the navigator toolbox height from the dialog height. */
+  height: calc(100vh - var(--box-top-px, 0px));
+}
+
 .content-prompt-dialog > .dialogOverlay {
   display: grid;
   place-content: center;
@@ -1613,8 +1615,9 @@ toolbar[keyNav=true]:not([collapsed=true], [customizing=true]) toolbartabstop {
   grid-auto-rows: min(90%, var(--doc-height-px));
 }
 
-:not(.content-prompt-dialog) > .dialogOverlay > .dialogBox {
-  /* Make dialogs overlap with upper chrome UI. */
+:not(.content-prompt-dialog) > .dialogOverlay > .dialogBox:not(.spotlightBox) {
+  /* Make dialogs overlap with upper chrome UI. Not necessary for Spotlight
+  dialogs that are intended to be centered above the window or content area. */
   margin-top: -5px;
 }
 
@@ -1635,6 +1638,13 @@ toolbar[keyNav=true]:not([collapsed=true], [customizing=true]) toolbartabstop {
       calc(100vh - var(--inner-height))
     )
   );
+}
+
+#window-modal-dialog.spotlight {
+  /* Spotlight window modal dialogs should be equal in size to the window. */
+  margin: revert;
+  max-height: 100%;
+  max-width: 100%;
 }
 
 .dialogFrame {
