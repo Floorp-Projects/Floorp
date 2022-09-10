@@ -4,11 +4,8 @@
 
 "use strict";
 
-var EXPORTED_SYMBOLS = ["AboutTabCrashedParent"];
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
 const lazy = {};
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   SessionStore: "resource:///modules/sessionstore/SessionStore.jsm",
@@ -18,7 +15,7 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
 // A list of all of the open about:tabcrashed pages.
 let gAboutTabCrashedPages = new Map();
 
-class AboutTabCrashedParent extends JSWindowActorParent {
+export class AboutTabCrashedParent extends JSWindowActorParent {
   didDestroy() {
     this.removeCrashedPage();
   }
