@@ -47,12 +47,11 @@ using dom::Promise;
 
 #define DEFAULT_CSP_PREF \
   "extensions.webextensions.default-content-security-policy"
-#define DEFAULT_DEFAULT_CSP \
-  "script-src 'self' 'wasm-unsafe-eval'; object-src 'self';"
+#define DEFAULT_DEFAULT_CSP "script-src 'self' 'wasm-unsafe-eval';"
 
 #define DEFAULT_CSP_PREF_V3 \
   "extensions.webextensions.default-content-security-policy.v3"
-#define DEFAULT_DEFAULT_CSP_V3 "script-src 'self'; object-src 'self';"
+#define DEFAULT_DEFAULT_CSP_V3 "script-src 'self';"
 
 #define OBS_TOPIC_PRELOAD_SCRIPT "web-extension-preload-content-script"
 #define OBS_TOPIC_LOAD_SCRIPT "web-extension-load-content-script"

@@ -33,7 +33,9 @@ using namespace mozilla::intl;
  *
  *  - Prevents loading scripts with a non-default JavaScript version.
  *  - Checks custom content security policies for sufficiently stringent
- *    script-src and object-src directives.
+ *    script-src and other script-related directives.
+ *  - We also used to validate object-src similarly to script-src, but that was
+ *    dropped because NPAPI plugins are no longer supported (see bug 1766881).
  */
 
 #define VERSIONED_JS_BLOCKED_MESSAGE                                       \
@@ -172,7 +174,7 @@ static const char* allowedHostSchemes[] = {"http", "https", "moz-extension",
  *  - No keyword sources are allowed other than 'none', 'self', 'unsafe-eval',
  *    and hash sources.
  *
- *  Manifest V3 limits CSP for extension_pages, the script-src, object-src, and
+ *  Manifest V3 limits CSP for extension_pages, the script-src and
  *  worker-src directives may only be the following:
  *    - self
  *    - none
@@ -393,7 +395,7 @@ class CSPValidator final : public nsCSPSrcVisitor {
  * Validates a custom content security policy string for use by an add-on.
  * In particular, ensures that:
  *
- *  - Both object-src and script-src directives are present, and meet
+ *  - That script-src (or default-src) directive is present, and meets
  *    the policies required by the CSPValidator class
  *
  *  - The script-src directive includes the source 'self'
@@ -467,16 +469,6 @@ AddonContentPolicy::ValidateAddonCSP(const nsAString& aPolicyString,
       aResult.Assign(validator.GetError());
     }
     hasValidScriptSrc = true;
-  }
-
-  if (aResult.IsVoid()) {
-    CSPDirective directive = nsIContentSecurityPolicy::OBJECT_SRC_DIRECTIVE;
-    CSPValidator validator(url, directive, !haveValidDefaultSrc,
-                           aPermittedPolicy);
-
-    if (!policy->visitDirectiveSrcs(directive, &validator)) {
-      aResult.Assign(validator.GetError());
-    }
   }
 
   if (aResult.IsVoid()) {

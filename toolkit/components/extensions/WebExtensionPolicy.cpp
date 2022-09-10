@@ -45,13 +45,13 @@ static const char kBackgroundPageHTMLEnd[] =
 #define DEFAULT_BASE_CSP_V2                                            \
   "script-src 'self' https://* http://localhost:* http://127.0.0.1:* " \
   "moz-extension: blob: filesystem: 'unsafe-eval' 'wasm-unsafe-eval' " \
-  "'unsafe-inline'; object-src 'self' moz-extension: blob: filesystem:;"
+  "'unsafe-inline';"
 
 #define BASE_CSP_PREF_V3 \
   "extensions.webextensions.base-content-security-policy.v3"
 #define DEFAULT_BASE_CSP_V3                                  \
   "script-src 'self' 'wasm-unsafe-eval' http://localhost:* " \
-  "http://127.0.0.1:*; object-src 'self';"
+  "http://127.0.0.1:*;"
 
 static const char kRestrictedDomainPref[] =
     "extensions.webextensions.restrictedDomains";
