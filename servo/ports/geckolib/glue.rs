@@ -2984,6 +2984,16 @@ pub extern "C" fn Servo_ContainerRule_GetContainerQuery(
 }
 
 #[no_mangle]
+pub extern "C" fn Servo_ContainerRule_QueryContainerFor(
+    rule: &RawServoContainerRule,
+    element: &RawGeckoElement,
+) -> *const RawGeckoElement {
+    read_locked_arc(rule, |rule: &ContainerRule| {
+        rule.condition.find_container(GeckoElement(element)).map_or(ptr::null(), |result| result.element.0)
+    })
+}
+
+#[no_mangle]
 pub extern "C" fn Servo_ContainerRule_GetContainerName(
     rule: &RawServoContainerRule,
     result: &mut nsACString,
