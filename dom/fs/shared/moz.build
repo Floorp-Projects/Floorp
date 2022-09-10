@@ -9,6 +9,10 @@ EXPORTS.mozilla.dom += [
     "FileSystemTypes.h",
 ]
 
+UNIFIED_SOURCES += [
+    "FileSystemHelpers.cpp",
+]
+
 FINAL_LIBRARY = "xul"
 
 IPDL_SOURCES += [
