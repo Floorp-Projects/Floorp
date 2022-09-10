@@ -352,11 +352,10 @@ let JSWINDOWACTORS = {
 
   AboutTabCrashed: {
     parent: {
-      moduleURI: "resource:///actors/AboutTabCrashedParent.jsm",
+      esModuleURI: "resource:///actors/AboutTabCrashedParent.sys.mjs",
     },
     child: {
-      moduleURI: "resource:///actors/AboutTabCrashedChild.jsm",
-
+      esModuleURI: "resource:///actors/AboutTabCrashedChild.sys.mjs",
       events: {
         DOMDocElementInserted: { capture: true },
       },
