@@ -7,10 +7,10 @@
 #ifndef DOM_FS_PARENT_RESULTSTATEMENT_H_
 #define DOM_FS_PARENT_RESULTSTATEMENT_H_
 
-#include "mozilla/dom/FileSystemTypes.h"
-#include "mozilla/dom/quota/ResultExtensions.h"
-#include "mozilla/dom/quota/QuotaCommon.h"
 #include "mozIStorageStatement.h"
+#include "mozilla/dom/FileSystemTypes.h"
+#include "mozilla/dom/quota/QuotaCommon.h"
+#include "mozilla/dom/quota/ResultExtensions.h"
 #include "nsCOMPtr.h"
 #include "nsString.h"
 
