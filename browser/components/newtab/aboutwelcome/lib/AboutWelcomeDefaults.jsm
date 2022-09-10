@@ -281,7 +281,7 @@ const MR_ABOUT_WELCOME_DEFAULT = {
         position: "split",
         split_narrow_bkg_position: "-155px",
         background:
-          "url('chrome://activity-stream/content/data/content/assets/mr-pintaskbar.svg') var(--mr-secondary-position) no-repeat, var(--mr-screen-background-color)",
+          "url('chrome://activity-stream/content/data/content/assets/mr-pintaskbar.svg') var(--mr-secondary-position) no-repeat var(--mr-screen-background-color)",
         progress_bar: true,
         logo: {},
         title: {
@@ -367,7 +367,7 @@ const MR_ABOUT_WELCOME_DEFAULT = {
         position: "split",
         split_narrow_bkg_position: "-60px",
         background:
-          "url('chrome://activity-stream/content/data/content/assets/mr-settodefault.svg') var(--mr-secondary-position) no-repeat, var(--mr-screen-background-color)",
+          "url('chrome://activity-stream/content/data/content/assets/mr-settodefault.svg') var(--mr-secondary-position) no-repeat var(--mr-screen-background-color)",
         progress_bar: true,
         logo: {},
         title: {
@@ -402,7 +402,7 @@ const MR_ABOUT_WELCOME_DEFAULT = {
         position: "split",
         split_narrow_bkg_position: "-42px",
         background:
-          "url('chrome://activity-stream/content/data/content/assets/mr-import.svg') var(--mr-secondary-position) no-repeat, var(--mr-screen-background-color)",
+          "url('chrome://activity-stream/content/data/content/assets/mr-import.svg') var(--mr-secondary-position) no-repeat var(--mr-screen-background-color)",
         progress_bar: true,
         logo: {},
         title: {
@@ -439,7 +439,7 @@ const MR_ABOUT_WELCOME_DEFAULT = {
         position: "split",
         split_narrow_bkg_position: "-65px",
         background:
-          "url('chrome://activity-stream/content/data/content/assets/mr-colorways.avif') var(--mr-secondary-position) no-repeat, var(--mr-screen-background-color)",
+          "url('chrome://activity-stream/content/data/content/assets/mr-colorways.avif') var(--mr-secondary-position) no-repeat var(--mr-screen-background-color)",
         progress_bar: true,
         logo: {},
         title: {
@@ -576,7 +576,7 @@ const MR_ABOUT_WELCOME_DEFAULT = {
         position: "split",
         split_narrow_bkg_position: "-160px",
         background:
-          "url('chrome://activity-stream/content/data/content/assets/mr-mobilecrosspromo.svg') var(--mr-secondary-position) no-repeat, var(--mr-screen-background-color)",
+          "url('chrome://activity-stream/content/data/content/assets/mr-mobilecrosspromo.svg') var(--mr-secondary-position) no-repeat var(--mr-screen-background-color)",
         progress_bar: true,
         logo: {},
         title: {
@@ -620,7 +620,7 @@ const MR_ABOUT_WELCOME_DEFAULT = {
         position: "split",
         split_narrow_bkg_position: "-228px",
         background:
-          "url('chrome://activity-stream/content/data/content/assets/mr-gratitude.svg') var(--mr-secondary-position) no-repeat, var(--mr-screen-background-color)",
+          "url('chrome://activity-stream/content/data/content/assets/mr-gratitude.svg') var(--mr-secondary-position) no-repeat var(--mr-screen-background-color)",
         progress_bar: true,
         logo: {},
         title: {
