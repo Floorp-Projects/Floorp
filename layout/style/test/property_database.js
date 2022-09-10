@@ -12972,10 +12972,8 @@ if (IsCSSPropertyPrefEnabled("layout.css.container-queries.enabled")) {
     other_values: [
       "style",
       "inline-size",
-      "block-size",
       "size",
       "style inline-size",
-      "block-size style",
       "size style",
     ],
     invalid_values: [
@@ -12986,6 +12984,8 @@ if (IsCSSPropertyPrefEnabled("layout.css.container-queries.enabled")) {
       "style style",
       "inline-size style inline-size",
       "inline-size block-size",
+      "block-size",
+      "block-size style",
       "size inline-size",
       "size block-size",
     ],
@@ -13004,8 +13004,8 @@ if (IsCSSPropertyPrefEnabled("layout.css.container-queries.enabled")) {
     type: CSS_TYPE_TRUE_SHORTHAND,
     subproperties: ["container-type", "container-name"],
     initial_values: ["none"],
-    other_values: ["size", "size / foo bar", "inline-size style / foo"],
-    invalid_values: ["foo / size", "foo bar / size"],
+    other_values: ["foo / size", "foo bar / size", "foo / inline-size", "foo"],
+    invalid_values: ["size / foo", "size / foo bar"],
   };
 }
 
