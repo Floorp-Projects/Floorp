@@ -13,6 +13,9 @@ $container-min-width: 700px;
 $logo-size: 80px;
 $main-section-width: 504px;
 $split-section-width: 400px;
+$split-screen-height: 550px;
+$small-main-section-height: 400px;
+$small-secondary-section-height: 100px;
 $noodle-buffer: 106px;
 
 html {
@@ -58,6 +61,15 @@ body {
     }
 
     .onboardingContainer {
+      // Without this, the container will be 100vh in height. When the dialog
+      // overflows horizontally, the horizontal scrollbar will appear. If the
+      // scrollbars aren't overlay scrollbars (this is controlled by
+      // Theme::ScrollbarStyle), they will take up vertical space in the
+      // viewport, causing the dialog to overflow vertically. This causes the
+      // vertical scrollbar to appear, which takes up horizontal space, causing
+      // the horizontal scrollbar to appear, and so on.
+      height: 100%;
+
       &:dir(rtl) {
         transform: unset;
       }
@@ -69,28 +81,6 @@ body {
       .screen {
         &:dir(rtl) {
           transform: unset;
-        }
-
-        &:not([pos='split']) {
-          .section-main {
-            margin-block: $noodle-buffer auto;
-          }
-        }
-
-        &.with-noodles {
-          .section-main,
-          .section-secondary {
-            margin-block: 50px + $noodle-buffer auto;
-          }
-        }
-
-        &[pos='split'] {
-          @media only screen and (min-width: 800px) {
-            .section-main,
-            .section-secondary {
-              margin-block: 50px + $noodle-buffer auto;
-            }
-          }
         }
       }
     }
@@ -264,11 +254,12 @@ body {
 
     &[pos='split'] {
       margin: auto;
+      min-height: $split-screen-height;
 
       .section-secondary,
       .section-main {
-        width: 400px;
-        height: 550px;
+        width: $split-section-width;
+        height: $split-screen-height;
       }
 
       .secondary-cta.top {
@@ -432,7 +423,7 @@ body {
             z-index: 1;
 
             &.progress-bar {
-              width: 400px;
+              width: $split-section-width;
               margin-inline: -35px;
 
               .indicator {
@@ -527,6 +518,7 @@ body {
 
       @media only screen and (max-width: 800px) {
         flex-direction: column;
+        min-height: $small-main-section-height + $small-secondary-section-height;
 
         .section-secondary,
         .section-main {
@@ -538,7 +530,7 @@ body {
           --mr-secondary-position: center var(--mr-secondary-background-position-y) / 75%;
           border-radius: 8px 8px 0 0;
           margin: auto auto 0;
-          height: 100px;
+          height: $small-secondary-section-height;
 
           .hero-image img {
             margin: 6px 0;
@@ -558,7 +550,7 @@ body {
 
         .section-main {
           margin: 0 auto auto;
-          height: 400px;
+          height: $small-main-section-height;
 
           .main-content {
             border-radius: 0 0 8px 8px;
