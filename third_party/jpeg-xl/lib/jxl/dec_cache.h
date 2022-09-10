@@ -77,35 +77,28 @@ struct PassesDecoderState {
   // Sigma values for EPF.
   ImageF sigma;
 
-  // RGB8 output buffer. If not nullptr, image data will be written to this
-  // buffer instead of being written to the output ImageBundle. The image data
-  // is assumed to have the stride given by `rgb_stride`, hence row `i` starts
-  // at position `i * rgb_stride`.
-  uint8_t* rgb_output;
-  size_t rgb_stride = 0;
-
-  size_t output_channels;
+  // Pixel buffer for image output.
+  void* image_buffer;
+  // Image dimensions before applying undo_orientation.
+  size_t width;
+  size_t height;
+  // Length of a row of image_buffer in bytes (based on oriented width).
+  size_t stride;
+  // Callback for line-by-line output.
+  PixelCallback pixel_callback;
+  // Pixel format of the output pixels, used for buffer and callback output.
+  JxlPixelFormat format;
 
   // Whether to use int16 float-XYB-to-uint8-srgb conversion.
   bool fast_xyb_srgb8_conversion;
 
-  // If true, rgb_output or callback output is RGBA using 4 instead of 3 bytes
-  // per pixel.
-  bool rgb_output_is_rgba;
   // If true, the RGBA output will be unpremultiplied before writing to the
-  // output callback (the output buffer case is handled in ConvertToExternal).
+  // output.
   bool unpremul_alpha;
 
-  bool swap_endianness;
+  // The render pipeline will apply this orientation to bring the image to the
+  // intended display orientation.
   Orientation undo_orientation;
-
-  // Callback for line-by-line output.
-  PixelCallback pixel_callback;
-
-  // Buffer of upsampling * kApplyImageFeaturesTileDim ones.
-  std::vector<float> opaque_alpha;
-  // One row per thread
-  std::vector<std::vector<float>> pixel_callback_rows;
 
   // Used for seeding noise.
   size_t visible_frame_index = 0;
@@ -141,14 +134,13 @@ struct PassesDecoderState {
     b_dm_multiplier =
         std::pow(1 / (1.25f), shared->frame_header.b_qm_scale - 2.0f);
 
-    rgb_output = nullptr;
-    rgb_output_is_rgba = false;
-    output_channels = 3;
-    unpremul_alpha = false;
-    swap_endianness = false;
-    undo_orientation = Orientation::kIdentity;
-    fast_xyb_srgb8_conversion = false;
     pixel_callback = PixelCallback();
+    image_buffer = nullptr;
+
+    fast_xyb_srgb8_conversion = false;
+    unpremul_alpha = false;
+    undo_orientation = Orientation::kIdentity;
+
     used_acs = 0;
 
     upsampler8x = GetUpsamplingStage(shared->metadata->transform_data, 0, 3);

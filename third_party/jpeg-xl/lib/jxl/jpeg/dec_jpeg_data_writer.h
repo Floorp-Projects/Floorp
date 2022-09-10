@@ -14,6 +14,7 @@
 #include <functional>
 
 #include "lib/jxl/codec_in_out.h"
+#include "lib/jxl/jpeg/dec_jpeg_serialization_state.h"
 #include "lib/jxl/jpeg/jpeg_data.h"
 
 namespace jxl {
@@ -24,6 +25,10 @@ namespace jpeg {
 using JPEGOutput = std::function<size_t(const uint8_t* buf, size_t len)>;
 
 Status WriteJpeg(const JPEGData& jpg, const JPEGOutput& out);
+
+// Same as WriteJpeg, but instead of writing to the output, collects statistics
+// about the bit-stream into `ss`.
+Status ProcessJpeg(const JPEGData& jpg, SerializationState* ss);
 
 // Reconstructs the JPEG from the coefficients and metadata in CodecInOut.
 Status EncodeImageJPGCoefficients(const CodecInOut* io, PaddedBytes* bytes);

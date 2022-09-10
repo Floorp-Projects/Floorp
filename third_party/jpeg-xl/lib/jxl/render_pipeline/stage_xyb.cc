@@ -11,6 +11,7 @@
 #include <hwy/highway.h>
 
 #include "lib/jxl/dec_xyb-inl.h"
+#include "lib/jxl/opsin_params.h"
 #include "lib/jxl/sanitizers.h"
 
 HWY_BEFORE_NAMESPACE();
@@ -19,9 +20,11 @@ namespace HWY_NAMESPACE {
 
 class XYBStage : public RenderPipelineStage {
  public:
-  explicit XYBStage(const OpsinParams& opsin_params)
+  explicit XYBStage(const OutputEncodingInfo& output_encoding_info)
       : RenderPipelineStage(RenderPipelineStage::Settings()),
-        opsin_params_(opsin_params) {}
+        opsin_params_(output_encoding_info.opsin_params),
+        output_is_xyb_(output_encoding_info.color_encoding.GetColorSpace() ==
+                       ColorSpace::kXYB) {}
 
   void ProcessRow(const RowInfo& input_rows, const RowInfo& output_rows,
                   size_t xextra, size_t xsize, size_t xpos, size_t ypos,
@@ -42,18 +45,38 @@ class XYBStage : public RenderPipelineStage {
     msan::UnpoisonMemory(row2 + xsize, sizeof(float) * (xsize_v - xsize));
     // TODO(eustas): when using frame origin, addresses might be unaligned;
     //               making them aligned will void performance penalty.
-    for (ssize_t x = -xextra; x < (ssize_t)(xsize + xextra); x += Lanes(d)) {
-      const auto in_opsin_x = LoadU(d, row0 + x);
-      const auto in_opsin_y = LoadU(d, row1 + x);
-      const auto in_opsin_b = LoadU(d, row2 + x);
-      auto r = Undefined(d);
-      auto g = Undefined(d);
-      auto b = Undefined(d);
-      XybToRgb(d, in_opsin_x, in_opsin_y, in_opsin_b, opsin_params_, &r, &g,
-               &b);
-      StoreU(r, d, row0 + x);
-      StoreU(g, d, row1 + x);
-      StoreU(b, d, row2 + x);
+    if (output_is_xyb_) {
+      const auto scale_x = Set(d, kScaledXYBScale[0]);
+      const auto scale_y = Set(d, kScaledXYBScale[1]);
+      const auto scale_bmy = Set(d, kScaledXYBScale[2]);
+      const auto offset_x = Set(d, kScaledXYBOffset[0]);
+      const auto offset_y = Set(d, kScaledXYBOffset[1]);
+      const auto offset_bmy = Set(d, kScaledXYBOffset[2]);
+      for (ssize_t x = -xextra; x < (ssize_t)(xsize + xextra); x += Lanes(d)) {
+        const auto in_x = LoadU(d, row0 + x);
+        const auto in_y = LoadU(d, row1 + x);
+        const auto in_b = LoadU(d, row2 + x);
+        auto out_x = Mul(Add(in_x, offset_x), scale_x);
+        auto out_y = Mul(Add(in_y, offset_y), scale_y);
+        auto out_b = Mul(Add(Sub(in_b, in_y), offset_bmy), scale_bmy);
+        StoreU(out_x, d, row0 + x);
+        StoreU(out_y, d, row1 + x);
+        StoreU(out_b, d, row2 + x);
+      }
+    } else {
+      for (ssize_t x = -xextra; x < (ssize_t)(xsize + xextra); x += Lanes(d)) {
+        const auto in_opsin_x = LoadU(d, row0 + x);
+        const auto in_opsin_y = LoadU(d, row1 + x);
+        const auto in_opsin_b = LoadU(d, row2 + x);
+        auto r = Undefined(d);
+        auto g = Undefined(d);
+        auto b = Undefined(d);
+        XybToRgb(d, in_opsin_x, in_opsin_y, in_opsin_b, opsin_params_, &r, &g,
+                 &b);
+        StoreU(r, d, row0 + x);
+        StoreU(g, d, row1 + x);
+        StoreU(b, d, row2 + x);
+      }
     }
     msan::PoisonMemory(row0 + xsize, sizeof(float) * (xsize_v - xsize));
     msan::PoisonMemory(row1 + xsize, sizeof(float) * (xsize_v - xsize));
@@ -69,11 +92,12 @@ class XYBStage : public RenderPipelineStage {
 
  private:
   const OpsinParams opsin_params_;
+  const bool output_is_xyb_;
 };
 
 std::unique_ptr<RenderPipelineStage> GetXYBStage(
-    const OpsinParams& opsin_params) {
-  return jxl::make_unique<XYBStage>(opsin_params);
+    const OutputEncodingInfo& output_encoding_info) {
+  return jxl::make_unique<XYBStage>(output_encoding_info);
 }
 
 // NOLINTNEXTLINE(google-readability-namespace-comments)
@@ -87,8 +111,8 @@ namespace jxl {
 HWY_EXPORT(GetXYBStage);
 
 std::unique_ptr<RenderPipelineStage> GetXYBStage(
-    const OpsinParams& opsin_params) {
-  return HWY_DYNAMIC_DISPATCH(GetXYBStage)(opsin_params);
+    const OutputEncodingInfo& output_encoding_info) {
+  return HWY_DYNAMIC_DISPATCH(GetXYBStage)(output_encoding_info);
 }
 
 namespace {

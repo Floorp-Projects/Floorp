@@ -72,6 +72,16 @@ if(NOT APPLE AND NOT WIN32 AND NOT HAIKU AND CMAKE_SYSTEM_PROCESSOR MATCHES "x86
   endif()
 endif()
 
+check_cxx_source_compiles(
+   "int main() {
+      #if !defined(HWY_DISABLED_TARGETS)
+      static_assert(false, \"HWY_DISABLED_TARGETS is not defined\");
+      #endif
+      return 0;
+    }"
+  JXL_HWY_DISABLED_TARGETS_FORCED
+)
+
 set(WARNINGS_AS_ERRORS_DEFAULT false)
 
 if((SANITIZER STREQUAL "msan") OR JPEGXL_EMSCRIPTEN)
@@ -119,7 +129,9 @@ set(JPEGXL_ENABLE_PLUGINS false CACHE BOOL
 set(JPEGXL_ENABLE_COVERAGE false CACHE BOOL
     "Enable code coverage tracking for libjxl. This also enables debug and disables optimizations.")
 set(JPEGXL_ENABLE_PROFILER false CACHE BOOL
-    "Builds in support for profiling (printed by tools if extra flags given")
+    "Builds in support for profiling (printed by tools if extra flags given)")
+set(JPEGXL_ENABLE_SIZELESS_VECTORS false CACHE BOOL
+    "Builds in support for SVE/RVV vectorization")
 set(JPEGXL_ENABLE_TRANSCODE_JPEG true CACHE BOOL
     "Builds in support for decoding transcoded JXL files back to JPEG,\
  disabling it makes the decoder reject JXL_DEC_JPEG_RECONSTRUCTION events,\
@@ -260,6 +272,12 @@ add_definitions(
 # Avoid log spam from fopen etc.
 if(MSVC)
   add_definitions(-D_CRT_SECURE_NO_WARNINGS)
+endif()
+
+# TODO(eustas): JXL currently compiles, but does not pass tests...
+if (NOT JXL_HWY_DISABLED_TARGETS_FORCED AND NOT JPEGXL_ENABLE_SIZELESS_VECTORS)
+  add_definitions(-DHWY_DISABLED_TARGETS=\(HWY_SVE|HWY_SVE2|HWY_SVE_256|HWY_SVE2_128|HWY_RVV\))
+  message("Warning: HWY_SVE, HWY_SVE2, HWY_SVE_256, HWY_SVE2_128 and HWY_RVV CPU targets are disabled")
 endif()
 
 # In CMake before 3.12 it is problematic to pass repeated flags like -Xclang.

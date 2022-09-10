@@ -232,9 +232,11 @@ static inline ColorEncoding ColorEncodingFromDescriptor(
     const ColorEncodingDescriptor& desc) {
   ColorEncoding c;
   c.SetColorSpace(desc.color_space);
-  c.white_point = desc.white_point;
-  c.primaries = desc.primaries;
-  c.tf.SetTransferFunction(desc.tf);
+  if (desc.color_space != ColorSpace::kXYB) {
+    c.white_point = desc.white_point;
+    c.primaries = desc.primaries;
+    c.tf.SetTransferFunction(desc.tf);
+  }
   c.rendering_intent = desc.rendering_intent;
   JXL_CHECK(c.CreateICC());
   return c;

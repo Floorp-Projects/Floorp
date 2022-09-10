@@ -27,6 +27,10 @@ const ImageBundle* ToXYB(const ImageBundle& in, ThreadPool* pool,
                          Image3F* JXL_RESTRICT xyb, const JxlCmsInterface& cms,
                          ImageBundle* JXL_RESTRICT linear = nullptr);
 
+// Transforms each color component of the given XYB image into the [0.0, 1.0]
+// interval with an affine transform.
+void ScaleXYB(Image3F* opsin);
+
 // Bt.601 to match JPEG/JFIF. Outputs _signed_ YCbCr values suitable for DCT,
 // see F.1.1.3 of T.81 (because our data type is float, there is no need to add
 // a bias to make the values unsigned).

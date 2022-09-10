@@ -133,7 +133,8 @@ template <typename ContainerType>
 static inline Status WriteFile(const ContainerType& bytes,
                                const std::string& pathname) {
   FileWrapper f(pathname, "wb");
-  if (f == nullptr) return JXL_FAILURE("Failed to open file for writing");
+  if (f == nullptr)
+    return JXL_FAILURE("Failed to open file for writing: %s", pathname.c_str());
 
   size_t pos = 0;
   while (pos < bytes.size()) {

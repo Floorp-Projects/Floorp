@@ -28,6 +28,8 @@ enum class ExtraTF {
   kSRGB,
 };
 
+// NOTE: for XYB colorspace, the created profile can be used to transform a
+// *scaled* XYB image (created by ScaleXYB()) to another colorspace.
 Status MaybeCreateProfile(const ColorEncoding& c,
                           PaddedBytes* JXL_RESTRICT icc);
 
