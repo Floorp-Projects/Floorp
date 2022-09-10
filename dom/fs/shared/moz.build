@@ -16,6 +16,7 @@ UNIFIED_SOURCES += [
 FINAL_LIBRARY = "xul"
 
 IPDL_SOURCES += [
+    "PFileSystemAccessHandle.ipdl",
     "PFileSystemManager.ipdl",
 ]
 
