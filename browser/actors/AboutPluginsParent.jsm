@@ -4,6 +4,8 @@
 
 "use strict";
 
+var EXPORTED_SYMBOLS = ["AboutPluginsParent"];
+
 const lazy = {};
 
 ChromeUtils.defineModuleGetter(
@@ -23,7 +25,7 @@ const NEEDED_PROPS = [
   "description",
 ];
 
-export class AboutPluginsParent extends JSWindowActorParent {
+class AboutPluginsParent extends JSWindowActorParent {
   async receiveMessage(message) {
     switch (message.name) {
       case "RequestPlugins":
