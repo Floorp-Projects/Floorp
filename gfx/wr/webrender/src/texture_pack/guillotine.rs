@@ -26,7 +26,7 @@ impl FreeListBin {
             .rev()
             .find(|(_, &min_size)| min_size <= size.width && min_size <= size.height)
             .map(|(id, _)| FreeListBin(id as u8))
-            .expect("Unable to find a bin!")
+            .unwrap_or_else(|| panic!("Unable to find a bin for {:?}!", size))
     }
 }
 
