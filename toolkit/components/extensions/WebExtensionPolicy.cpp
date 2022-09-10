@@ -49,9 +49,7 @@ static const char kBackgroundPageHTMLEnd[] =
 
 #define BASE_CSP_PREF_V3 \
   "extensions.webextensions.base-content-security-policy.v3"
-#define DEFAULT_BASE_CSP_V3                                  \
-  "script-src 'self' 'wasm-unsafe-eval' http://localhost:* " \
-  "http://127.0.0.1:*;"
+#define DEFAULT_BASE_CSP_V3 "script-src 'self' 'wasm-unsafe-eval';"
 
 static const char kRestrictedDomainPref[] =
     "extensions.webextensions.restrictedDomains";

@@ -34,12 +34,7 @@ baseCSP[2] = {
 };
 // Keep in sync with extensions.webextensions.base-content-security-policy.v3
 baseCSP[3] = {
-  "script-src": [
-    "http://localhost:*",
-    "http://127.0.0.1:*",
-    "'self'",
-    "'wasm-unsafe-eval'",
-  ],
+  "script-src": ["'self'", "'wasm-unsafe-eval'"],
 };
 
 /**
@@ -323,8 +318,8 @@ add_task(async function testCSP() {
   await testPolicy({
     manifest_version: 3,
     customCSP: {
-      "script-src": `'self' http://localhost:123 ${hash}`,
-      "worker-src": `'self' http://127.0.0.1:*`,
+      "script-src": `'self' ${hash}`,
+      "worker-src": `'self'`,
     },
     expects: {
       workerEvalAllowed: false,

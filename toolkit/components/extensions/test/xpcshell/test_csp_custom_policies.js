@@ -203,24 +203,24 @@ add_task(async function test_extension_csp() {
       expectedPolicy: aps.defaultCSPV3,
     },
     {
-      name: "manifest_v3 allows localhost",
+      name: "manifest_v3 disallows localhost",
       manifest: {
         manifest_version: 3,
         content_security_policy: {
           extension_pages: `script-src 'self' https://localhost`,
         },
       },
-      expectedPolicy: `script-src 'self' https://localhost`,
+      expectedPolicy: aps.defaultCSPV3,
     },
     {
-      name: "manifest_v3 allows 127.0.0.1",
+      name: "manifest_v3 disallows 127.0.0.1",
       manifest: {
         manifest_version: 3,
         content_security_policy: {
           extension_pages: `script-src 'self' https://127.0.0.1`,
         },
       },
-      expectedPolicy: `script-src 'self' https://127.0.0.1`,
+      expectedPolicy: aps.defaultCSPV3,
     },
     {
       name: "manifest_v3 allows wasm-unsafe-eval",

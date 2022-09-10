@@ -84,7 +84,7 @@ interface nsIAddonContentPolicy : nsISupports
   /* options to pass to validateAddonCSP
    *
    * Manifest V2 uses CSP_ALLOW_ANY.
-   * In Manifest V3, extension_pages would use CSP_ALLOW_LOCALHOST|CSP_ALLOW_WASM
+   * In Manifest V3, extension_pages would use CSP_ALLOW_WASM
    * and sandbox would use CSP_ALLOW_EVAL.
    */
   const unsigned long CSP_ALLOW_ANY = 0xFFFF;
