@@ -259,6 +259,9 @@ var whitelist = [
   // dom/media/mediacontrol/MediaControlService.cpp
   { file: "resource://gre/localization/en-US/dom/media.ftl" },
 
+  // dom/xml/nsXMLPrettyPrinter.cpp
+  { file: "resource://gre/localization/en-US/dom/XMLPrettyPrint.ftl" },
+
   // tookit/mozapps/update/BackgroundUpdate.jsm
   {
     file:

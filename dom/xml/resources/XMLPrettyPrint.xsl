@@ -3,12 +3,7 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
-<!DOCTYPE overlay [
-  <!ENTITY % prettyPrintDTD SYSTEM "chrome://global/locale/xml/prettyprint.dtd">
-  %prettyPrintDTD;
-  <!ENTITY % globalDTD SYSTEM "chrome://global/locale/global.dtd">
-  %globalDTD;
-]>
+<!DOCTYPE overlay>
 
 <xsl:stylesheet version="1.0"
                 xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
@@ -19,10 +14,8 @@
   <xsl:template match="/">
     <div id="top">
       <link rel="stylesheet" href="chrome://global/content/xml/XMLPrettyPrint.css"/>
-      <div id="header" dir="&locale.dir;">
-        <p>
-          &xml.nostylesheet;
-        </p>
+      <div id="header">
+        <p data-l10n-id="xml-nostylesheet"></p>
       </div>
       <main id="tree" class="highlight">
         <xsl:apply-templates/>
