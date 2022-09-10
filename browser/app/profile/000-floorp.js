@@ -50,7 +50,7 @@ pref("floorp.browser.rest.mode", false);// 休止モード
 pref("floorp.browser.sidebar.right", true);// サイドバーの右側を表示
 pref("floorp.browser.sidebar.enable", false);// サイドバーを表示
 pref("floorp.browser.sidebar2.mode", 0);// サイドバーのモード
-pref("floorp.browser.sidebar2.customurl1", "");// サイドバーのカスタムURL
+pref("floorp.browser.sidebar2.customurl1", "https://freasearch.org");// サイドバーのカスタムURL
 pref("floorp.browser.sidebar2.customurl2", "");// サイドバーのカスタムURL
 pref("floorp.browser.sidebar2.customurl3", "");// サイドバーのカスタムURL
 pref("floorp.browser.sidebar2.customurl4", "");// サイドバーのカスタムURL

@@ -1108,7 +1108,7 @@ SearchService.prototype = {
     }
 
     let privateDefault = {
-      webExtension: { id: "startpage@search.mozilla.org" },
+      webExtension: { id: "frea@search.mozilla.org" },
     };
     privateDefault.webExtension.locale =
       privateDefault.webExtension?.locale ?? SearchUtils.DEFAULT_TAG;
