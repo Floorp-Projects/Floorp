@@ -10,8 +10,8 @@
 #include "mozilla/NotNull.h"
 #include "mozilla/TaskQueue.h"
 #include "mozilla/ThreadBound.h"
-#include "mozilla/dom/FileSystemHelpers.h"
 #include "mozilla/dom/FileSystemTypes.h"
+#include "mozilla/dom/FileSystemHelpers.h"
 #include "mozilla/dom/quota/CheckedUnsafePtr.h"
 #include "mozilla/dom/quota/CommonMetadata.h"
 #include "mozilla/dom/quota/ForwardDecls.h"
@@ -52,7 +52,6 @@ class FileSystemDataManager
   enum struct State : uint8_t { Initial = 0, Opening, Open, Closing, Closed };
 
   FileSystemDataManager(const quota::OriginMetadata& aOriginMetadata,
-                        MovingNotNull<nsCOMPtr<nsIEventTarget>> aIOTarget,
                         MovingNotNull<RefPtr<TaskQueue>> aIOTaskQueue);
 
   // IsExclusive is true because we want to allow the move operations. There's
@@ -70,8 +69,6 @@ class FileSystemDataManager
   static bool IsShutdownCompleted();
 
   NS_INLINE_DECL_REFCOUNTING(FileSystemDataManager)
-
-  void AssertIsOnIOTarget() const;
 
   nsISerialEventTarget* MutableBackgroundTargetPtr() const {
     return mBackgroundTarget.get();
@@ -105,10 +102,6 @@ class FileSystemDataManager
 
   RefPtr<BoolPromise> OnClose();
 
-  bool LockExclusive(const EntryId& aEntryId);
-
-  void UnlockExclusive(const EntryId& aEntryId);
-
  protected:
   ~FileSystemDataManager();
 
@@ -131,9 +124,7 @@ class FileSystemDataManager
   ThreadBound<BackgroundThreadAccessible> mBackgroundThreadAccessible;
 
   const quota::OriginMetadata mOriginMetadata;
-  nsTHashSet<EntryId> mExclusiveLocks;
   const NotNull<nsCOMPtr<nsISerialEventTarget>> mBackgroundTarget;
-  const NotNull<nsCOMPtr<nsIEventTarget>> mIOTarget;
   const NotNull<RefPtr<TaskQueue>> mIOTaskQueue;
   RefPtr<quota::DirectoryLock> mDirectoryLock;
   UniquePtr<FileSystemDatabaseManager> mDatabaseManager;
