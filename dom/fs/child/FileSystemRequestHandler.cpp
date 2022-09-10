@@ -12,6 +12,7 @@
 #include "mozilla/dom/FileSystemDirectoryHandle.h"
 #include "mozilla/dom/FileSystemFileHandle.h"
 #include "mozilla/dom/FileSystemHandle.h"
+#include "mozilla/dom/FileSystemHelpers.h"
 #include "mozilla/dom/FileSystemManager.h"
 #include "mozilla/dom/FileSystemManagerChild.h"
 #include "mozilla/dom/Promise.h"
@@ -258,6 +259,12 @@ void FileSystemRequestHandler::GetDirectoryHandle(
   MOZ_ASSERT(aManager);
   MOZ_ASSERT(!aDirectory.parentId().IsEmpty());
   MOZ_ASSERT(aPromise);
+  LOG(("getDirectoryHandle"));
+
+  if (!IsValidName(aDirectory.childName())) {
+    aPromise->MaybeRejectWithTypeError("Invalid directory name");
+    return;
+  }
 
   FileSystemGetHandleRequest request(aDirectory, aCreate);
 
@@ -281,6 +288,12 @@ void FileSystemRequestHandler::GetFileHandle(
   MOZ_ASSERT(aManager);
   MOZ_ASSERT(!aFile.parentId().IsEmpty());
   MOZ_ASSERT(aPromise);
+  LOG(("getFileHandle"));
+
+  if (!IsValidName(aFile.childName())) {
+    aPromise->MaybeRejectWithTypeError("Invalid filename");
+    return;
+  }
 
   FileSystemGetHandleRequest request(aFile, aCreate);
 
@@ -349,6 +362,12 @@ void FileSystemRequestHandler::RemoveEntry(
   MOZ_ASSERT(aManager);
   MOZ_ASSERT(!aEntry.parentId().IsEmpty());
   MOZ_ASSERT(aPromise);
+  LOG(("removeEntry"));
+
+  if (!IsValidName(aEntry.childName())) {
+    aPromise->MaybeRejectWithTypeError("Invalid name");
+    return;
+  }
 
   FileSystemRemoveEntryRequest request(aEntry, aRecursive);
 
