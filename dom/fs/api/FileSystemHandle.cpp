@@ -103,7 +103,11 @@ already_AddRefed<Promise> FileSystemHandle::IsSameEntry(
     return nullptr;
   }
 
-  promise->MaybeReject(NS_ERROR_NOT_IMPLEMENTED);
+  // Handles the case of "dir = createdir foo; removeEntry(foo); file =
+  // createfile foo; issameentry(dir, file)"
+  const bool result = mMetadata.entryId().Equals(aOther.mMetadata.entryId()) &&
+                      Kind() == aOther.Kind();
+  promise->MaybeResolve(result);
 
   return promise.forget();
 }
