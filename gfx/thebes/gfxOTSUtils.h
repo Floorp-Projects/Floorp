@@ -35,6 +35,8 @@ class gfxOTSExpandingMemoryStream : public ots::OTSStream {
 
   ~gfxOTSExpandingMemoryStream() { mAlloc.Free(mPtr); }
 
+  size_t size() override { return mLimit; }
+
   // Return the buffer, resized to fit its contents (as it may have been
   // over-allocated during growth), and give up ownership of it so the
   // caller becomes responsible to call free() when finished with it.
