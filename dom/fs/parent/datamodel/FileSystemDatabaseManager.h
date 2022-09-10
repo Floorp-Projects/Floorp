@@ -7,10 +7,10 @@
 #ifndef DOM_FS_PARENT_DATAMODEL_FILESYSTEMDATABASEMANAGER_H_
 #define DOM_FS_PARENT_DATAMODEL_FILESYSTEMDATABASEMANAGER_H_
 
+#include "ResultConnection.h"
 #include "mozilla/dom/FileSystemTypes.h"
 #include "mozilla/dom/quota/ForwardDecls.h"
 #include "nsStringFwd.h"
-#include "ResultConnection.h"
 
 template <class T>
 class nsCOMPtr;

@@ -4,10 +4,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "gtest/gtest.h"
-
 #include "FileSystemMocks.h"
-
+#include "gtest/gtest.h"
+#include "mozilla/UniquePtr.h"
 #include "mozilla/dom/FileSystemDirectoryHandle.h"
 #include "mozilla/dom/FileSystemDirectoryHandleBinding.h"
 #include "mozilla/dom/FileSystemDirectoryIterator.h"
@@ -15,8 +14,6 @@
 #include "mozilla/dom/FileSystemHandleBinding.h"
 #include "mozilla/dom/FileSystemManager.h"
 #include "mozilla/dom/StorageManager.h"
-
-#include "mozilla/UniquePtr.h"
 #include "nsIGlobalObject.h"
 
 using ::testing::_;
