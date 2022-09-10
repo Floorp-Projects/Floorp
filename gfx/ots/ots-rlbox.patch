@@ -10,7 +10,7 @@ diff --git a/gfx/ots/src/ots.cc b/gfx/ots/src/ots.cc
  
  // The OpenType Font File
  // http://www.microsoft.com/typography/otspec/otff.htm
-@@ -511,39 +511,9 @@ bool ProcessWOFF(ots::FontFile *header,
+@@ -511,43 +511,9 @@ bool ProcessWOFF(ots::FontFile *header,
    return ProcessGeneric(header, font, woff_tag, output, data, length, tables, file);
  }
  
@@ -32,6 +32,10 @@ diff --git a/gfx/ots/src/ots.cc b/gfx/ots/src/ots.cc
 -  if (decompressed_size > OTS_MAX_DECOMPRESSED_FILE_SIZE) {
 -    return OTS_FAILURE_MSG_HDR("Size of decompressed WOFF 2.0 font exceeds %gMB",
 -                               OTS_MAX_DECOMPRESSED_FILE_SIZE / (1024.0 * 1024.0));
+-  }
+-
+-  if (decompressed_size > output->size()) {
+-    return OTS_FAILURE_MSG_HDR("Size of decompressed WOFF 2.0 font exceeds output size (%gMB)", output->size() / (1024.0 * 1024.0));
 -  }
 -
 -  std::string buf(decompressed_size, 0);
