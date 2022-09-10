@@ -46,7 +46,7 @@ GTEST_API_ ::testing::AssertionResult CmpHelperSTREQ(const char* s1_expression,
 namespace mozilla::dom::fs {
 
 inline std::ostream& operator<<(std::ostream& aOut,
-                                const FileSystemEntryMetadata aMetadata) {
+                                const FileSystemEntryMetadata& aMetadata) {
   return aOut;
 }
 
