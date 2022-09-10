@@ -41,7 +41,7 @@
           </xsl:if>
           <xsl:if test="@*[.='true']">
             <xsl:attribute name="properties">
-              <!-- largeop, movablelimits, stretchy, separator, accent, fence,
+              <!-- largeop, movablelimits, stretchy, separator, fence,
                    symmetric -->
               <xsl:for-each select="@*[.='true']">
                 <xsl:value-of select="name()"/>

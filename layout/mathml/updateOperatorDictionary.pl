@@ -19,7 +19,7 @@ $FILE_SYNTAX_ERRORS = "syntax_errors.txt";
 $MOZ_DICTIONARY = "mathfont.properties";
 
 # dictionary provided by the W3C in "XML Entity Definitions for Characters"
-$WG_DICTIONARY_URL = "http://www.w3.org/2003/entities/2007xml/unicode.xml";
+$WG_DICTIONARY_URL = "https://raw.githubusercontent.com/w3c/xml-entities/gh-pages/unicode.xml";
 
 # XSL stylesheet to extract relevant data from the dictionary
 $DICTIONARY_XSL = "operatorDictionary.xsl";
@@ -161,6 +161,12 @@ if ($ARGV[0] eq "check") {
             $nb_warnings++;
             print $file_syntax_errors "warning: operator is integral but not largeop\n";
         }
+
+        if (@moz[4] && !(@moz[13] eq "vertical")) {
+            $valid = 0;
+            $nb_errors++;
+            print $file_syntax_errors "error: operator is largeop but does not have vertical direction\n";
+        }
         
         $_ = @moz[0];
         if ((m/^(.*)[iI]ntegral(.*)$/) && !@moz[14]) {
@@ -296,7 +302,6 @@ foreach my $entry ($doc->findnodes('/root/entry')) {
     $value[5] = (m/^(.*)movablelimits(.*)$/);
     $value[6] = (m/^(.*)stretchy(.*)$/);
     $value[7] = (m/^(.*)separator(.*)$/);
-    $value[8] = (m/^(.*)accent(.*)$/);
     $value[9] = (m/^(.*)fence(.*)$/);
     $value[10] = (m/^(.*)symmetric(.*)$/);
     $value[15] = (m/^(.*)mirrorable(.*)$/);
@@ -304,6 +309,7 @@ foreach my $entry ($doc->findnodes('/root/entry')) {
     $value[12] = $entry->getAttribute("linebreakstyle");
 
     # not stored in the WG dictionary
+    $value[8] = ""; # accent
     $value[13] = ""; # direction
     $value[14] = ""; # integral
 
@@ -429,7 +435,6 @@ sub generateCommon {
     if ($v[5]) { $entry = "$entry movablelimits"; }
     if ($v[6]) { $entry = "$entry stretchy"; }
     if ($v[7]) { $entry = "$entry separator"; }
-    if ($v[8]) { $entry = "$entry accent"; }
     if ($v[9]) { $entry = "$entry fence"; }
     if ($v[10]) { $entry = "$entry symmetric"; }
     if ($v[15]) { $entry = "$entry mirrorable"; }
@@ -442,9 +447,9 @@ sub completeCommon {
     
     $entry = "$key = $entry";
 
+    if ($v_moz[8]) { $entry = "$entry accent"; }
     if ($v_moz[13]) { $entry = "$entry direction:$v_moz[13]"; }
     if ($v_moz[14]) { $entry = "$entry integral"; }
-    if ($v_moz[15]) { $entry = "$entry mirrorable"; }
 
     if ($v_moz[0]) {
         # keep our previous comment
