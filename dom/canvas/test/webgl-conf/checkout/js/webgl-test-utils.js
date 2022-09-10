@@ -1573,6 +1573,29 @@ var create3DContext = function(opt_canvas, opt_attributes, opt_version) {
   if (!hasAttributeCaseInsensitive(attributes, "antialias")) {
     attributes.antialias = false;
   }
+
+  const parseString = v => v;
+  const parseBoolean = v => v.toLowerCase().startsWith('t') || parseFloat(v) > 0;
+  const params = new URLSearchParams(window.location.search);
+  for (const [key, parseFn] of Object.entries({
+    alpha: parseBoolean,
+    antialias: parseBoolean,
+    depth: parseBoolean,
+    desynchronized: parseBoolean,
+    failIfMajorPerformanceCaveat: parseBoolean,
+    powerPreference: parseString,
+    premultipliedAlpha: parseBoolean,
+    preserveDrawingBuffer: parseBoolean,
+    stencil: parseBoolean,
+  })) {
+    const value = params.get(key);
+    if (value) {
+      const v = parseFn(value);
+      attributes[key] = v;
+      debug(`setting context attribute: ${key} = ${v}`);
+    }
+  }
+
   if (!opt_version) {
     opt_version = getDefault3DContextVersion();
   }
@@ -1607,6 +1630,12 @@ var create3DContext = function(opt_canvas, opt_attributes, opt_version) {
     }
     window._wtu_contexts.push(context);
   }
+
+  if (params.get('showRenderer')) {
+    const ext = context.getExtension('WEBGL_debug_renderer_info');
+    debug(`RENDERER: ${context.getParameter(ext ? ext.UNMASKED_RENDERER_WEBGL : context.RENDERER)}`);
+  }
+
   return context;
 };
 
@@ -2927,14 +2956,6 @@ var requestAnimFrame = function(callback) {
   _requestAnimFrame.call(window, callback);
 };
 
-/**
- * Provides video.requestVideoFrameCallback in a cross browser way.
- * Returns a property, or undefined if unsuported.
- */
-var getRequestVidFrameCallback = function() {
-  return HTMLVideoElement.prototype["requestVideoFrameCallback"];
-};
-
 var _cancelAnimFrame;
 
 /**
@@ -3103,7 +3124,11 @@ var setZeroTimeout = (function() {
 function dispatchPromise(fn) {
   return new Promise((fn_resolve, fn_reject) => {
     setZeroTimeout(() => {
-      fn_resolve(fn());
+      let val;
+      if (fn) {
+        val = fn();
+      }
+      fn_resolve(val);
     });
   });
 }
@@ -3136,22 +3161,30 @@ var runSteps = function(steps) {
  * @param {!function(!HTMLVideoElement): void} callback Function to call when
  *        video is ready.
  */
-function startPlayingAndWaitForVideo(video, callback) {
-  (async () => {
-    video.load(); // reset it
-    video.loop = true;
-    video.muted = true;
-    // See whether setting the preload flag de-flakes video-related tests.
-    video.preload = 'auto';
-    try {
-      await video.play();
-    } catch (e) {
-      testFailed('video.play failed: ' + e);
-      return;
-    }
-    callback(video);
-  })();
-};
+async function startPlayingAndWaitForVideo(video, callback) {
+  if (video.error) {
+    testFailed('Video failed to load: ' + video.error);
+    return;
+  }
+
+  video.loop = true;
+  video.muted = true;
+  // See whether setting the preload flag de-flakes video-related tests.
+  video.preload = 'auto';
+
+  try {
+    await video.play();
+  } catch (e) {
+    testFailed('video.play failed: ' + e);
+    return;
+  }
+
+  if (video.requestVideoFrameCallback) {
+    await new Promise(go => video.requestVideoFrameCallback(go));
+  }
+
+  callback(video);
+}
 
 var getHost = function(url) {
   url = url.replace("\\", "/");
@@ -3290,6 +3323,98 @@ function linearChannelToSRGB(value) {
         value = 1.0;
     }
     return Math.trunc(value * 255 + 0.5);
+}
+
+/**
+ * Return the named color in the specified color space.
+ * @param {string} colorName The name of the color to convert.
+ *        Supported color names are:
+ *            'Red', which is the CSS color color('srgb' 1 0 0 1)
+ *            'Green', which is the CSS color color('srgb' 0 1 0 1)
+ * @param {string} colorSpace The color space to convert to. Supported
+          color spaces are:
+ *            null, which is treated as sRGB
+ *            'srgb'
+ *            'display-p3'.
+ *        Documentation on the formulas for color conversion between
+ *        spaces can be found at
+              https://www.w3.org/TR/css-color-4/#predefined-to-predefined
+ * @return {!Array.<number>} color The color in the specified color
+ *        space as an 8-bit RGBA array with unpremultiplied alpha.
+ */
+var namedColorInColorSpace = function(colorName, colorSpace) {
+  var result;
+  switch (colorSpace) {
+    case undefined:
+    case 'srgb':
+      switch(colorName) {
+        case 'Red':
+          return [255, 0, 0, 255];
+        case 'Green':
+          return [0, 255, 0, 255];
+          break;
+        default:
+          throw 'unexpected color name: ' + colorName;
+      };
+      break;
+    case 'display-p3':
+      switch(colorName) {
+        case 'Red':
+          return [234, 51, 35, 255];
+          break;
+        case 'Green':
+          return [117, 251, 76, 255];
+          break;
+        default:
+          throw 'unexpected color name: ' + colorName;
+      }
+      break;
+    default:
+      throw 'unexpected color space: ' + colorSpace;
+  }
+}
+
+/**
+ * Return the named color as it would be sampled with the specified
+ * internal format
+ * @param {!Array.<number>} color The color as an 8-bit RGBA array.
+ * @param {string} internalformat The internal format.
+ * @return {!Array.<number>} color The color, as it would be sampled by
+ *        the specified internal format, as an 8-bit RGBA array.
+ */
+var colorAsSampledWithInternalFormat = function(color, internalFormat) {
+  switch (internalFormat) {
+    case 'ALPHA':
+      return [0, 0, 0, color[3]];
+    case 'LUMINANCE':
+      return [color[0], color[0], color[0], 255];
+    case 'LUMINANCE_ALPHA':
+      return [color[0], color[0], color[0], color[3]];
+    case 'SRGB8':
+    case 'SRGB8_ALPHA8':
+      return [sRGBChannelToLinear(color[0]),
+              sRGBChannelToLinear(color[1]),
+              sRGBChannelToLinear(color[2]),
+              color[3]];
+    case 'R16F':
+    case 'R32F':
+    case 'R8':
+    case 'R8UI':
+    case 'RED':
+    case 'RED_INTEGER':
+      return [color[0], 0, 0, 0];
+    case 'RG':
+    case 'RG16F':
+    case 'RG32F':
+    case 'RG8':
+    case 'RG8UI':
+    case 'RG_INTEGER':
+      return [color[0], color[1], 0, 0];
+      break;
+    default:
+      break;
+  }
+  return color;
 }
 
 function comparePixels(cmp, ref, tolerance, diff) {
@@ -3511,6 +3636,10 @@ var API = {
 
   // fullscreen api
   setupFullscreen: setupFullscreen,
+
+  // color converter API
+  namedColorInColorSpace: namedColorInColorSpace,
+  colorAsSampledWithInternalFormat: colorAsSampledWithInternalFormat,
 
   // sRGB converter api
   sRGBToLinear: sRGBToLinear,

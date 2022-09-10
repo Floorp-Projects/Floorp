@@ -4,11 +4,12 @@ copy-tex-image-and-sub-image-2d.html
 --min-version 1.0.2 copy-tex-image-2d-formats.html
 --min-version 1.0.4 copy-tex-image-crash.html
 --min-version 1.0.4 copytexsubimage2d-large-partial-copy-corruption.html
---min-version 1.0.4 copytexsubimage2d-subrects.html 
+--min-version 1.0.4 copytexsubimage2d-subrects.html
 --min-version 1.0.4 cube-incomplete-fbo.html
 --min-version 1.0.4 cube-map-uploads-out-of-order.html
 --min-version 1.0.3 default-texture.html
 --min-version 1.0.4 exif-orientation.html
+--min-version 1.0.4 format-filterable-renderable.html
 --min-version 1.0.2 --max-version 1.9.9 gl-get-tex-parameter.html
 gl-pixelstorei.html
 gl-teximage.html

@@ -1,8 +1,10 @@
 --min-version 1.0.4 bind-framebuffer-flush-bug.html
 --min-version 1.0.4 blending.html
 --min-version 1.0.4 canvas-alpha-bug.html
+--min-version 1.0.4 clear-default-framebuffer-with-scissor-test.html
 --min-version 1.0.4 --max-version 1.9.9 clipping-wide-points.html
 --min-version 1.0.4 color-mask-preserved-during-implicit-clears.html
+--min-version 1.0.4 color-mask-should-not-affect-antialiased-framebuffer-resolution.html
 --min-version 1.0.2 culling.html
 --min-version 1.0.4 default-texture-draw-bug.html
 draw-arrays-out-of-bounds.html

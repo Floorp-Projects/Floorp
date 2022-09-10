@@ -15,4 +15,5 @@ promoted-extensions-in-shaders.html
 --min-version 2.0.1 ovr_multiview2_single_view_operations.html
 --min-version 2.0.1 ovr_multiview2_timer_query.html
 --min-version 2.0.1 ovr_multiview2_transform_feedback.html
+--min-version 2.0.1 required-extensions.html
 --min-version 2.0.1 webgl-multi-draw-instanced-base-vertex-base-instance.html
