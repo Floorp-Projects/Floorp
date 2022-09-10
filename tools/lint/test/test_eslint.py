@@ -38,6 +38,19 @@ def test_bad_import(eslint, config, paths):
     assert results == 1
 
 
+def test_rule(eslint, config, create_temp_file):
+    contents = """var re = /foo   bar/;
+    var re = new RegExp("foo   bar");
+
+"""
+    path = create_temp_file(contents, "bad.js")
+    results = eslint(
+        [path], config=config, root=build.topsrcdir, rules=["no-regex-spaces: error"]
+    )
+
+    assert len(results) == 2
+
+
 def test_fix(eslint, config, create_temp_file):
     contents = """/*eslint no-regex-spaces: "error"*/
 

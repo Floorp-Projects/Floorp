@@ -131,6 +131,13 @@ def lint(command_context, *runargs, **lintargs):
     help="Request that eslint automatically fix errors, where possible.",
 )
 @CommandArgument(
+    "--rule",
+    default=[],
+    dest="rules",
+    action="append",
+    help="Specify an additional rule for ESLint to run, e.g. 'no-new-object: error'",
+)
+@CommandArgument(
     "extra_args",
     nargs=argparse.REMAINDER,
     help="Extra args that will be forwarded to eslint.",
