@@ -7,6 +7,9 @@
 #ifndef DOM_FS_SHARED_FILESYSTEMHELPERS_H_
 #define DOM_FS_SHARED_FILESYSTEMHELPERS_H_
 
+#include "FileSystemTypes.h"
+#include "mozilla/RefPtr.h"
+
 namespace mozilla::dom::fs {
 
 // XXX Consider moving this class template to MFBT.
@@ -133,6 +136,11 @@ class Registered {
 
   T* operator->() const { return get(); }
 };
+
+// Spec says valid names don't include (os-dependent) path separators,
+// and is not equal to a dot . or two dots ..
+// We want to use the same validator from both child and parent.
+bool IsValidName(const fs::Name& aName);
 
 }  // namespace mozilla::dom::fs
 
