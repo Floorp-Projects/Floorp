@@ -11,18 +11,13 @@ namespace ots {
 // OpenTypeSTAT
 // -----------------------------------------------------------------------------
 
-bool OpenTypeSTAT::ValidateNameId(uint16_t nameid, bool allowPredefined) {
+bool OpenTypeSTAT::ValidateNameId(uint16_t nameid) {
   OpenTypeNAME* name = static_cast<OpenTypeNAME*>(
       GetFont()->GetTypedTable(OTS_TAG_NAME));
 
   if (!name || !name->IsValidNameId(nameid)) {
     Drop("Invalid nameID: %d", nameid);
     return false;
-  }
-
-  if (!allowPredefined && nameid < 26) {
-    Warning("nameID out of range: %d", nameid);
-    return true;
   }
 
   if ((nameid >= 26 && nameid <= 255) || nameid >= 32768) {
@@ -84,7 +79,7 @@ bool OpenTypeSTAT::Parse(const uint8_t* data, size_t length) {
     if (!CheckTag(axis.axisTag)) {
       return Drop("Bad design axis tag");
     }
-    if (!ValidateNameId(axis.axisNameID, false)) {
+    if (!ValidateNameId(axis.axisNameID)) {
       return true;
     }
   }
