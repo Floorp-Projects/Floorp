@@ -13,7 +13,6 @@
 #include "mozilla/ErrorResult.h"
 #include "mozilla/dom/FileSystemHandleBinding.h"
 #include "mozilla/dom/FileSystemManager.h"
-#include "mozilla/dom/Promise-inl.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/StorageManager.h"
 #include "xpcpublic.h"
@@ -104,76 +103,7 @@ already_AddRefed<Promise> FileSystemHandle::IsSameEntry(
     return nullptr;
   }
 
-  // Handles the case of "dir = createdir foo; removeEntry(foo); file =
-  // createfile foo; issameentry(dir, file)"
-  const bool result = mMetadata.entryId().Equals(aOther.mMetadata.entryId()) &&
-                      Kind() == aOther.Kind();
-  promise->MaybeResolve(result);
-
-  return promise.forget();
-}
-
-already_AddRefed<Promise> FileSystemHandle::Move(const nsAString& aName,
-                                                 ErrorResult& aError) {
-  LOG(("Move %s to %s", NS_ConvertUTF16toUTF8(mMetadata.entryName()).get(),
-       NS_ConvertUTF16toUTF8(aName).get()));
-
-  fs::EntryId parent;  // empty means same directory
-  return Move(parent, aName, aError);
-}
-
-already_AddRefed<Promise> FileSystemHandle::Move(
-    FileSystemDirectoryHandle& aParent, ErrorResult& aError) {
-  LOG(("Move %s to %s/%s", NS_ConvertUTF16toUTF8(mMetadata.entryName()).get(),
-       NS_ConvertUTF16toUTF8(aParent.mMetadata.entryName()).get(),
-       NS_ConvertUTF16toUTF8(mMetadata.entryName()).get()));
-  return Move(aParent, mMetadata.entryName(), aError);
-}
-
-already_AddRefed<Promise> FileSystemHandle::Move(
-    FileSystemDirectoryHandle& aParent, const nsAString& aName,
-    ErrorResult& aError) {
-  LOG(("Move %s to %s/%s", NS_ConvertUTF16toUTF8(mMetadata.entryName()).get(),
-       NS_ConvertUTF16toUTF8(aParent.mMetadata.entryName()).get(),
-       NS_ConvertUTF16toUTF8(aName).get()));
-  return Move(aParent.mMetadata.entryId(), aName, aError);
-}
-
-already_AddRefed<Promise> FileSystemHandle::Move(const fs::EntryId& aParentId,
-                                                 const nsAString& aName,
-                                                 ErrorResult& aError) {
-  RefPtr<Promise> promise = Promise::Create(GetParentObject(), aError);
-  if (aError.Failed()) {
-    return nullptr;
-  }
-
-  fs::Name name(aName);
-  if (!aParentId.IsEmpty()) {
-    fs::FileSystemChildMetadata newMetadata;
-    newMetadata.parentId() = aParentId;
-    newMetadata.childName() = aName;
-    mRequestHandler->MoveEntry(mManager, this, mMetadata, newMetadata, promise);
-  } else {
-    mRequestHandler->RenameEntry(mManager, this, mMetadata, name, promise);
-  }
-
-  // Other handles to this will be broken, and the spec is ok with this, but we
-  // need to update our EntryId and name
-  promise->AddCallbacksWithCycleCollectedArgs(
-      [name](JSContext* aCx, JS::Handle<JS::Value> aValue, ErrorResult& aRv,
-             FileSystemHandle* aHandle) {
-        // XXX Fix entryId!
-        LOG(("Changing FileSystemHandle name from %s to %s",
-             NS_ConvertUTF16toUTF8(aHandle->mMetadata.entryName()).get(),
-             NS_ConvertUTF16toUTF8(name).get()));
-        aHandle->mMetadata.entryName() = name;
-      },
-      [](JSContext* aCx, JS::Handle<JS::Value> aValue, ErrorResult& aRv,
-         FileSystemHandle* aHandle) {
-        LOG(("reject of move for %s",
-             NS_ConvertUTF16toUTF8(aHandle->mMetadata.entryName()).get()));
-      },
-      RefPtr(this));
+  promise->MaybeReject(NS_ERROR_NOT_IMPLEMENTED);
 
   return promise.forget();
 }

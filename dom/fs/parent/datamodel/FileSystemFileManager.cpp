@@ -38,7 +38,8 @@ Result<nsCOMPtr<nsIFile>, QMResult> GetFileDestination(
   MOZ_ALWAYS_TRUE(IsAscii(encoded));
 
   nsString relativePath;
-  relativePath.Append(Substring(encoded, 0, 2));
+  relativePath.Append(encoded.CharAt(0u));
+  relativePath.Append(encoded.CharAt(1u));
 
   QM_TRY(QM_TO_RESULT(destination->AppendRelativePath(relativePath)));
 
