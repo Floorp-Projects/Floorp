@@ -73,6 +73,21 @@ class FileSystemHandle : public nsISupports, public nsWrapperCache {
   virtual bool WriteStructuredClone(JSContext* aCx,
                                     JSStructuredCloneWriter* aWriter) const;
 
+  already_AddRefed<Promise> Move(const nsAString& aName, ErrorResult& aError);
+
+  already_AddRefed<Promise> Move(FileSystemDirectoryHandle& aParent,
+                                 ErrorResult& aError);
+
+  already_AddRefed<Promise> Move(FileSystemDirectoryHandle& aParent,
+                                 const nsAString& aName, ErrorResult& aError);
+
+  already_AddRefed<Promise> Move(const fs::EntryId& aParentId,
+                                 const nsAString& aName, ErrorResult& aError);
+
+  void UpdateMetadata(const fs::FileSystemEntryMetadata& aMetadata) {
+    mMetadata = aMetadata;
+  }
+
  protected:
   virtual ~FileSystemHandle() = default;
 
@@ -88,7 +103,8 @@ class FileSystemHandle : public nsISupports, public nsWrapperCache {
 
   RefPtr<FileSystemManager> mManager;
 
-  const fs::FileSystemEntryMetadata mMetadata;
+  // move() can change names/directories
+  fs::FileSystemEntryMetadata mMetadata;
 
   const UniquePtr<fs::FileSystemRequestHandler> mRequestHandler;
 };

@@ -13,6 +13,14 @@ directory_test(async (t, root) => {
 
 directory_test(async (t, root) => {
   const handle = await createFileWithContents(t, 'file-before', 'foo', root);
+  await handle.move('file-after');
+  const newhandle = await root.getFileHandle('file-after');
+  assert_equals(await getFileContents(newhandle), 'foo');
+  assert_equals(await getFileSize(newhandle), 3);
+}, 'get a handle to a moved file');
+
+directory_test(async (t, root) => {
+  const handle = await createFileWithContents(t, 'file-before', 'foo', root);
   await handle.move('file-before');
 
   assert_array_equals(await getSortedDirectoryEntries(root), ['file-before']);
@@ -55,7 +63,7 @@ directory_test(async (t, root) => {
 
 directory_test(async (t, root) => {
   const handle = await createFileWithContents(t, 'file-before', 'foo', root);
-  await promise_rejects_js(t, TypeError, handle.move('#$23423@352^*3243'));
+  await promise_rejects_js(t, TypeError, handle.move('test/test'));
 
   assert_array_equals(await getSortedDirectoryEntries(root), ['file-before']);
   assert_equals(await getFileContents(handle), 'foo');
@@ -238,8 +246,7 @@ directory_test(async (t, root) => {
 
 directory_test(async (t, root) => {
   const handle = await createFileWithContents(t, 'file-before', 'foo', root);
-  await promise_rejects_js(
-      t, TypeError, handle.move(root, '#$23423@352^*3243'));
+  await promise_rejects_js(t, TypeError, handle.move(root, '..'));
 
   assert_array_equals(await getSortedDirectoryEntries(root), ['file-before']);
   assert_equals(await getFileContents(handle), 'foo');
