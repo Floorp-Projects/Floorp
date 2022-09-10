@@ -642,6 +642,10 @@ bool ProcessGeneric(ots::FontFile *header,
                                OTS_MAX_DECOMPRESSED_FILE_SIZE / (1024.0 * 1024.0));        
   }
 
+  if (uncompressed_sum > output->size()) {
+    return OTS_FAILURE_MSG_HDR("decompressed sum exceeds output size (%gMB)", output->size() / (1024.0 * 1024.0));
+  }
+
   // check that the tables are not overlapping.
   std::vector<std::pair<uint32_t, uint8_t> > overlap_checker;
   for (unsigned i = 0; i < font->num_tables; ++i) {

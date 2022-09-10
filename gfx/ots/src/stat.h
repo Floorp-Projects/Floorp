@@ -24,7 +24,7 @@ class OpenTypeSTAT : public Table {
   bool Serialize(OTSStream* out);
 
  private:
-  bool ValidateNameId(uint16_t nameid, bool allowPredefined = true);
+  bool ValidateNameId(uint16_t nameid);
 
   uint16_t majorVersion;
   uint16_t minorVersion;
