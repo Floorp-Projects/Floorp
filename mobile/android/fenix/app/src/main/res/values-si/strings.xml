@@ -359,6 +359,8 @@
     <string name="errorpage_httpsonly_message_summary">කෙසේ වුවද, ප්‍රහාරකයෙක් සම්බන්ධ වී සිටීමට ද ඉඩ ඇත. මෙම අඩවියට ඔබ ගොඩවදින්නේ නම්, කිසිදු සංවේදී තොරතුරක් ඇතුල් නොකළ යුතුය. ඉදිරියට ගියහොත්, HTTPS-පමණි ප්‍රකාරය තාවකාලිකව මෙම අඩවිය සඳහා අක්‍රිය කෙරේ.</string>
     <!-- Preference for accessibility -->
     <string name="preferences_accessibility">ප්‍රවේශ්‍යතාව</string>
+    <!-- Preference to override the Firefox Account server -->
+    <string name="preferences_override_fxa_server">අභිරුචි ෆයර්ෆොක්ස් ගිණුම් සේවාදායකය</string>
     <!-- Preference to override the Sync token server -->
     <string name="preferences_override_sync_tokenserver">අභිරුචි සමමුහුර්ත සේවාදායකය</string>
     <!-- Toast shown after updating the FxA/Sync server override preferences -->
@@ -375,6 +377,8 @@
     <string name="preferences_gestures">අභින</string>
     <!-- Preference for settings related to visual options -->
     <string name="preferences_customize">රිසිකරණය</string>
+    <!-- Preference description for banner about signing in -->
+    <string moz:RemovedIn="104" name="preferences_sign_in_description" tools:ignore="UnusedResources">ෆයර්ෆොක්ස් ගිණුමක් සමඟ පොත්යොමු, ඉතිහාසය හා තවත් දෑ සමමුහූර්ත කරන්න</string>
     <!-- Preference description for banner about signing in -->
     <string name="preferences_sign_in_description_2">පටිති, පොත්යොමු, මුරපද හා තවත් දෑ සමමුහූර්තයට පිවිසෙන්න.</string>
     <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
@@ -457,6 +461,12 @@
     <!-- Snackbar label for action to view selected wallpaper -->
     <string name="wallpaper_updated_snackbar_action">බලන්න</string>
 
+    <!-- Label for switch which toggles the "tap-to-switch" behavior on home screen logo -->
+    <string moz:removedIn="105" name="wallpaper_tap_to_change_switch_label_1" tools:ignore="UnusedResources">ෆයර්ෆොක්ස් මුල්පිටුවේ ලාංඡනය එබීමෙන් බිතුපත වෙනස් කරන්න</string>
+    <!-- This is the accessibility content description for the wallpapers functionality. Users are
+    able to tap on the app logo in the home screen and can switch to different wallpapers by tapping. -->
+    <string moz:removedIn="105" name="wallpaper_logo_content_description" tools:ignore="UnusedResources">ෆයර්ෆොක්ස් ලාංඡනය - බිතුපත සංශෝධනය, බොත්තම</string>
+
     <!-- Add-on Installation from AMO-->
     <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is not supported -->
     <string name="addon_not_supported_error">එක්කහුව සහාය නොදක්වයි</string>
@@ -504,6 +514,8 @@
     <!-- Send Tab -->
     <!-- Name of the "receive tabs" notification channel. Displayed in the "App notifications" system settings for the app -->
     <string name="fxa_received_tab_channel_name">ලැබුණු පටිති</string>
+    <!-- Description of the "receive tabs" notification channel. Displayed in the "App notifications" system settings for the app -->
+    <string name="fxa_received_tab_channel_description">වෙනත් ෆයර්ෆොක්ස් උපාංගවලින් ලැබුණු පටිති සඳහා දැනුම්දීම්.</string>
     <!--  The body for these is the URL of the tab received  -->
     <string name="fxa_tab_received_notification_name">පටිත්ත ලැබුණි</string>
     <!-- %s is the device name -->
@@ -793,6 +805,9 @@
     <string moz:removedIn="105" name="history_sign_in_message" tools:ignore="UnusedResources">අන් උපාංග වලින් සමමුහූර්ත වූ ඉතිහාසය බැලීමට පිවිසෙන්න.</string>
     <!-- The synced history sign in dialog button text -->
     <string moz:removedIn="105" name="history_sign_in_button" tools:ignore="UnusedResources">පිවිසෙන්න</string>
+
+    <!-- The synced history sign in dialog create a new account link -->
+    <string moz:removedIn="105" name="history_sign_in_create_account" tools:ignore="UnusedResources"><![CDATA[<u>හෝ සමමුහූර්තය ඇරඹීමට ෆයර්ෆොක්ස් ගිණුමක් සාදන්න</u>]]></string>
 
     <!-- Downloads -->
     <!-- Text for the snackbar to confirm that multiple downloads items have been removed -->
@@ -1262,6 +1277,8 @@
     <string name="sign_in_with_camera">කැමරාව සමඟ පිවිසෙන්න</string>
     <!-- Text shown for settings option for sign with email -->
     <string name="sign_in_with_email">වි-තැපෑල යොදාගන්න</string>
+    <!-- Text shown for settings option for create new account text.'Firefox' intentionally hardcoded here.-->
+    <string name="sign_in_create_account_text"><![CDATA[ගිණුමක් නැද්ද? උපාංග අතර ෆයර්ෆොක්ස් සමමුහූර්තයට <u>එකක් සාදන්න</u>]]></string>
     <!-- Text shown in confirmation dialog to sign out of account. The first parameter is the name of the app (e.g. Firefox Preview) -->
     <string name="sign_out_confirmation_message_2">%s ඔබගේ ගිණුම සමග සමමුහූර්ත වීම නවත්වනු ඇත, නමුත් මෙම උපාංගයෙහි ඔබගේ පිරික්සුම් දත්ත කිසිවක් මකා නොදමනු ඇත.</string>
     <!-- Option to continue signing out of account shown in confirmation dialog to sign out of account -->
@@ -1833,6 +1850,8 @@
     <string name="pocket_stories_categories_header">මාතෘකාව අනුව කතා</string>
     <!-- Text of a button allowing users to access an external url for more Pocket recommendations. -->
     <string name="pocket_stories_placeholder_text">තව සොයා ගන්න</string>
+    <!-- Caption for describing a certain feature. The placeholder is for a clickable text (eg: Learn more) which will load an url in a new tab when clicked.  -->
+    <string name="pocket_stories_feature_caption">ෆයර්ෆොක්ස් පවුලේ කොටසකි. %s</string>
     <!-- Clickable text for opening an external link for more information about Pocket. -->
     <string name="pocket_stories_feature_learn_more">තව දැනගන්න</string>
     <!-- Text indicating that the Pocket story that also displays this text is a sponsored story by other 3rd party entity. -->
