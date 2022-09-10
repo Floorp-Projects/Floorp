@@ -91,7 +91,8 @@ add_task(async function test_wasm_v3_blocked_by_default() {
   equal(await extension.awaitMessage("result"), "blocked");
   equal(
     await extension.awaitMessage("violated_csp"),
-    "script-src 'self'; object-src 'self'"
+    "script-src 'self'",
+    "WASM usage violates default CSP in MV3"
   );
   await extension.unload();
 });

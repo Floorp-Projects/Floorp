@@ -204,9 +204,6 @@ add_task(async function test_background_page_injects_scripts_inline() {
         "'self'",
         `'sha256-${inlineScriptSHA256}'`,
         ";",
-        "object-src",
-        "'self'",
-        ";",
       ].join(" "),
     },
     files: {
