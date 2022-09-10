@@ -181,6 +181,34 @@ union FileSystemRemoveEntryResponse
   void_t;
 };
 
+/**
+ * Identifies a file/directory to be moved and the new name, and the
+ * destination directory
+ */
+struct FileSystemMoveEntryRequest
+{
+  FileSystemEntryMetadata handle;
+  FileSystemChildMetadata destHandle;
+};
+
+/**
+ * Identifies a file/directory to be renamed and the new name
+ */
+struct FileSystemRenameEntryRequest
+{
+  FileSystemEntryMetadata handle;
+  Name name;
+};
+
+/**
+ * Contains an error or the new entryId
+ */
+union FileSystemMoveEntryResponse
+{
+  nsresult;
+  void_t;
+};
+
 struct FileSystemQuotaRequest
 {
   FileSystemChildMetadata handle;
@@ -319,6 +347,23 @@ async protocol PFileSystemManager
   [VirtualSendImpl]
   async RemoveEntry(FileSystemRemoveEntryRequest request)
       returns(FileSystemRemoveEntryResponse response);
+
+  /**
+   * Initiates an asynchronous request to move a directory or file with a
+   * given name to a given destination and new name.
+   *
+   * @returns error information
+   */
+  async MoveEntry(FileSystemMoveEntryRequest request)
+      returns(FileSystemMoveEntryResponse response);
+
+  /**
+   * Initiates an asynchronous request to rename a directory or file
+   *
+   * @returns error information
+   */
+  async RenameEntry(FileSystemRenameEntryRequest request)
+      returns(FileSystemMoveEntryResponse response);
 
   /**
    * TODO: documentation

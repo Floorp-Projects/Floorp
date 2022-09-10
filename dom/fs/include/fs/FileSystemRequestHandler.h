@@ -51,6 +51,17 @@ class FileSystemRequestHandler {
                            const FileSystemChildMetadata& aEntry,
                            bool aRecursive, RefPtr<Promise> aPromise);
 
+  virtual void MoveEntry(RefPtr<FileSystemManager>& aManager,
+                         FileSystemHandle* aHandle,
+                         const FileSystemEntryMetadata& aEntry,
+                         const FileSystemChildMetadata& aNewEntry,
+                         RefPtr<Promise> aPromise);
+
+  virtual void RenameEntry(RefPtr<FileSystemManager>& aManager,
+                           FileSystemHandle* aHandle,
+                           const FileSystemEntryMetadata& aEntry,
+                           const Name& aName, RefPtr<Promise> aPromise);
+
   virtual void Resolve(RefPtr<FileSystemManager>& aManager,
                        const FileSystemEntryPair& aEndpoints,
                        RefPtr<Promise> aPromise);
