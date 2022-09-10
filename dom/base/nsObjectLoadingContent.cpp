@@ -2410,7 +2410,9 @@ void nsObjectLoadingContent::SubdocumentImageLoadComplete(nsresult aResult) {
     return;
   }
 
-  MOZ_DIAGNOSTIC_ASSERT_IF(mChannelLoaded, mType == eType_Document);
+  // (mChannelLoaded && mChannel) indicates this is a good state, not any sort
+  // of failures.
+  MOZ_DIAGNOSTIC_ASSERT_IF(mChannelLoaded && mChannel, mType == eType_Document);
 
   NotifyStateChanged(oldType, oldState, true, true);
 }
