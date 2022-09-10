@@ -1804,7 +1804,8 @@ toolbarbutton[part="scrollbutton-down"] {
   padding-inline-end: 8px !important;
 }
 
-menupopup> :is(menu:not(.menu-iconic), menuitem:not(.menuitem-iconic)) {
+menupopup> :is(menu:not(.menu-iconic), menuitem:not(.menuitem-iconic, [checked="true"])) {
+  padding-inline-start: 12px !important;
   background-position: left 1em center;
   background-repeat: no-repeat;
   background-size: 16px;
@@ -1812,12 +1813,8 @@ menupopup> :is(menu:not(.menu-iconic), menuitem:not(.menuitem-iconic)) {
   fill: currentColor;
 }
 menupopup> :is(menu:not(.menu-iconic), menuitem:not(.menuitem-iconic, [type="checkbox"])) {
-  padding-inline-start: calc(1em + 24px) !important;
+  padding-inline-start: 40px !important;
 }
-menupopup> menuitem[type="checkbox"] {
-  padding-inline-start: 12px !important;
-}
-
 
 @media (-moz-platform: macos) {
 
@@ -3433,4 +3430,3 @@ richlistitem[originaltype="loginsFooter"] .ac-site-icon {
 :root:not([lwtheme-mozlightdark], [style*="--lwt-accent-color: rgb(28, 27, 34); --lwt-text-color: rgba(251, 251, 254);"]) #TabsToolbar[brighttext] #tabbrowser-tabs:not([noshadowfortests]) .tabbrowser-tab:is([visuallyselected="true"], [multiselected])>.tab-stack>.tab-background:-moz-lwtheme {
   box-shadow: none !important;
 }
-
