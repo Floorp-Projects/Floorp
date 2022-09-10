@@ -398,3 +398,64 @@ add_task(async function feature_callout_arrow_is_not_flipped_on_ltr() {
     }
   );
 });
+
+add_task(async function feature_callout_respects_cfr_features_pref() {
+  async function toggleCFRFeaturesPref(value, extraPrefs = []) {
+    await SpecialPowers.pushPrefEnv({
+      set: [
+        [
+          "browser.newtabpage.activity-stream.asrouter.userprefs.cfr.features",
+          value,
+        ],
+        ...extraPrefs,
+      ],
+    });
+  }
+
+  await toggleCFRFeaturesPref(true, [[featureTourPref, defaultPrefValue]]);
+
+  await BrowserTestUtils.withNewTab(
+    {
+      gBrowser,
+      url: "about:firefoxview",
+    },
+    async browser => {
+      const { document } = browser.contentWindow;
+
+      await waitForCalloutScreen(document, 1);
+      ok(
+        document.querySelector(calloutSelector),
+        "Feature Callout element exists"
+      );
+
+      await toggleCFRFeaturesPref(false);
+      await waitForCalloutRemoved(document);
+      ok(
+        !document.querySelector(calloutSelector),
+        "Feature Callout element was removed because CFR pref was disabled"
+      );
+    }
+  );
+
+  await BrowserTestUtils.withNewTab(
+    {
+      gBrowser,
+      url: "about:firefoxview",
+    },
+    async browser => {
+      const { document } = browser.contentWindow;
+
+      ok(
+        !document.querySelector(calloutSelector),
+        "Feature Callout element was not created because CFR pref was disabled"
+      );
+
+      await toggleCFRFeaturesPref(true);
+      await waitForCalloutScreen(document, 1);
+      ok(
+        document.querySelector(calloutSelector),
+        "Feature Callout element was created because CFR pref was enabled"
+      );
+    }
+  );
+});
