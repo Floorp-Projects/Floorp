@@ -36,6 +36,8 @@ class FileSystemManagerParent : public PFileSystemManagerParent {
 
   void AssertIsOnIOTarget() const;
 
+  const RefPtr<fs::data::FileSystemDataManager>& DataManagerStrongRef() const;
+
   mozilla::ipc::IPCResult RecvGetRootHandle(GetRootHandleResolver&& aResolver);
 
   mozilla::ipc::IPCResult RecvGetDirectoryHandle(
@@ -44,6 +46,10 @@ class FileSystemManagerParent : public PFileSystemManagerParent {
 
   mozilla::ipc::IPCResult RecvGetFileHandle(
       FileSystemGetHandleRequest&& aRequest, GetFileHandleResolver&& aResolver);
+
+  mozilla::ipc::IPCResult RecvGetAccessHandle(
+      const FileSystemGetAccessHandleRequest& aRequest,
+      GetAccessHandleResolver&& aResolver);
 
   mozilla::ipc::IPCResult RecvGetFile(FileSystemGetFileRequest&& aRequest,
                                       GetFileResolver&& aResolver);
@@ -62,11 +68,6 @@ class FileSystemManagerParent : public PFileSystemManagerParent {
 
   mozilla::ipc::IPCResult RecvRenameEntry(
       FileSystemRenameEntryRequest&& aRequest, MoveEntryResolver&& aResolver);
-
-  mozilla::ipc::IPCResult RecvCloseFile(FileSystemGetFileRequest&& aRequest);
-
-  mozilla::ipc::IPCResult RecvGetAccessHandle(
-      FileSystemGetFileRequest&& aRequest, GetAccessHandleResolver&& aResolver);
 
   mozilla::ipc::IPCResult RecvGetWritable(FileSystemGetFileRequest&& aRequest,
                                           GetWritableResolver&& aResolver);

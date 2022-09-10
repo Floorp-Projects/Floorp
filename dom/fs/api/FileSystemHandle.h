@@ -13,6 +13,15 @@
 #include "nsISupports.h"
 #include "nsWrapperCache.h"
 
+namespace mozilla {
+extern LazyLogModule gOPFSLog;
+}
+
+#define LOG(args) MOZ_LOG(mozilla::gOPFSLog, mozilla::LogLevel::Verbose, args)
+
+#define LOG_DEBUG(args) \
+  MOZ_LOG(mozilla::gOPFSLog, mozilla::LogLevel::Debug, args)
+
 class nsIGlobalObject;
 
 namespace mozilla {
