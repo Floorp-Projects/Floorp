@@ -36,30 +36,26 @@ class FileSystemManagerParent : public PFileSystemManagerParent {
 
   void AssertIsOnIOTarget() const;
 
-  mozilla::ipc::IPCResult RecvGetRootHandleMsg(
-      GetRootHandleMsgResolver&& aResolver);
+  mozilla::ipc::IPCResult RecvGetRootHandle(GetRootHandleResolver&& aResolver);
 
-  mozilla::ipc::IPCResult RecvGetDirectoryHandleMsg(
+  mozilla::ipc::IPCResult RecvGetDirectoryHandle(
       FileSystemGetHandleRequest&& aRequest,
-      GetDirectoryHandleMsgResolver&& aResolver);
+      GetDirectoryHandleResolver&& aResolver);
 
-  mozilla::ipc::IPCResult RecvGetFileHandleMsg(
-      FileSystemGetHandleRequest&& aRequest,
-      GetFileHandleMsgResolver&& aResolver);
+  mozilla::ipc::IPCResult RecvGetFileHandle(
+      FileSystemGetHandleRequest&& aRequest, GetFileHandleResolver&& aResolver);
 
-  mozilla::ipc::IPCResult RecvGetFileMsg(FileSystemGetFileRequest&& aRequest,
-                                         GetFileMsgResolver&& aResolver);
+  mozilla::ipc::IPCResult RecvGetFile(FileSystemGetFileRequest&& aRequest,
+                                      GetFileResolver&& aResolver);
 
-  mozilla::ipc::IPCResult RecvResolveMsg(FileSystemResolveRequest&& aRequest,
-                                         ResolveMsgResolver&& aResolver);
+  mozilla::ipc::IPCResult RecvResolve(FileSystemResolveRequest&& aRequest,
+                                      ResolveResolver&& aResolver);
 
-  mozilla::ipc::IPCResult RecvGetEntriesMsg(
-      FileSystemGetEntriesRequest&& aRequest,
-      GetEntriesMsgResolver&& aResolver);
+  mozilla::ipc::IPCResult RecvGetEntries(FileSystemGetEntriesRequest&& aRequest,
+                                         GetEntriesResolver&& aResolver);
 
-  mozilla::ipc::IPCResult RecvRemoveEntryMsg(
-      FileSystemRemoveEntryRequest&& aRequest,
-      RemoveEntryMsgResolver&& aResolver);
+  mozilla::ipc::IPCResult RecvRemoveEntry(
+      FileSystemRemoveEntryRequest&& aRequest, RemoveEntryResolver&& aResolver);
 
   mozilla::ipc::IPCResult RecvCloseFile(FileSystemGetFileRequest&& aRequest);
 

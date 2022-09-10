@@ -46,8 +46,8 @@ void FileSystemManagerParent::AssertIsOnIOTarget() const {
   mDataManager->AssertIsOnIOTarget();
 }
 
-IPCResult FileSystemManagerParent::RecvGetRootHandleMsg(
-    GetRootHandleMsgResolver&& aResolver) {
+IPCResult FileSystemManagerParent::RecvGetRootHandle(
+    GetRootHandleResolver&& aResolver) {
   AssertIsOnIOTarget();
 
   FileSystemGetHandleResponse response(mRootEntry);
@@ -56,9 +56,9 @@ IPCResult FileSystemManagerParent::RecvGetRootHandleMsg(
   return IPC_OK();
 }
 
-IPCResult FileSystemManagerParent::RecvGetDirectoryHandleMsg(
+IPCResult FileSystemManagerParent::RecvGetDirectoryHandle(
     FileSystemGetHandleRequest&& aRequest,
-    GetDirectoryHandleMsgResolver&& aResolver) {
+    GetDirectoryHandleResolver&& aResolver) {
   AssertIsOnIOTarget();
   MOZ_ASSERT(!aRequest.handle().parentId().IsEmpty());
   MOZ_ASSERT(mDataManager);
@@ -80,9 +80,8 @@ IPCResult FileSystemManagerParent::RecvGetDirectoryHandleMsg(
   return IPC_OK();
 }
 
-IPCResult FileSystemManagerParent::RecvGetFileHandleMsg(
-    FileSystemGetHandleRequest&& aRequest,
-    GetFileHandleMsgResolver&& aResolver) {
+IPCResult FileSystemManagerParent::RecvGetFileHandle(
+    FileSystemGetHandleRequest&& aRequest, GetFileHandleResolver&& aResolver) {
   AssertIsOnIOTarget();
   MOZ_ASSERT(!aRequest.handle().parentId().IsEmpty());
   MOZ_ASSERT(mDataManager);
@@ -104,8 +103,8 @@ IPCResult FileSystemManagerParent::RecvGetFileHandleMsg(
   return IPC_OK();
 }
 
-IPCResult FileSystemManagerParent::RecvGetFileMsg(
-    FileSystemGetFileRequest&& aRequest, GetFileMsgResolver&& aResolver) {
+IPCResult FileSystemManagerParent::RecvGetFile(
+    FileSystemGetFileRequest&& aRequest, GetFileResolver&& aResolver) {
   AssertIsOnIOTarget();
 
   FileSystemGetFileResponse response(NS_ERROR_NOT_IMPLEMENTED);
@@ -114,8 +113,8 @@ IPCResult FileSystemManagerParent::RecvGetFileMsg(
   return IPC_OK();
 }
 
-IPCResult FileSystemManagerParent::RecvResolveMsg(
-    FileSystemResolveRequest&& aRequest, ResolveMsgResolver&& aResolver) {
+IPCResult FileSystemManagerParent::RecvResolve(
+    FileSystemResolveRequest&& aRequest, ResolveResolver&& aResolver) {
   AssertIsOnIOTarget();
   MOZ_ASSERT(!aRequest.endpoints().parentId().IsEmpty());
   MOZ_ASSERT(!aRequest.endpoints().childId().IsEmpty());
@@ -152,8 +151,8 @@ IPCResult FileSystemManagerParent::RecvResolveMsg(
   return IPC_OK();
 }
 
-IPCResult FileSystemManagerParent::RecvGetEntriesMsg(
-    FileSystemGetEntriesRequest&& aRequest, GetEntriesMsgResolver&& aResolver) {
+IPCResult FileSystemManagerParent::RecvGetEntries(
+    FileSystemGetEntriesRequest&& aRequest, GetEntriesResolver&& aResolver) {
   AssertIsOnIOTarget();
   MOZ_ASSERT(!aRequest.parentId().IsEmpty());
   MOZ_ASSERT(mDataManager);
@@ -174,9 +173,8 @@ IPCResult FileSystemManagerParent::RecvGetEntriesMsg(
   return IPC_OK();
 }
 
-IPCResult FileSystemManagerParent::RecvRemoveEntryMsg(
-    FileSystemRemoveEntryRequest&& aRequest,
-    RemoveEntryMsgResolver&& aResolver) {
+IPCResult FileSystemManagerParent::RecvRemoveEntry(
+    FileSystemRemoveEntryRequest&& aRequest, RemoveEntryResolver&& aResolver) {
   AssertIsOnIOTarget();
   MOZ_ASSERT(!aRequest.handle().parentId().IsEmpty());
   MOZ_ASSERT(mDataManager);
