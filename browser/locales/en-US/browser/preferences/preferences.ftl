@@ -1629,12 +1629,6 @@ downloads-mode =
  .label = Download Mode
 treestyletab-mode =
  .label = Tree Style Tab Mode
-CustomURL-mode =
- .label = Custom URL Mode
- 
-set-customurl = Please write custom URL (example: https://www.mozilla.org)
-seted-url = Set URL to
-## seted-url + "" + URL 
 
 custom-URL-option = Set Custom URL
 set-custom-URL-button = 
