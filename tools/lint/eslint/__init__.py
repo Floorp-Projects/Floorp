@@ -45,7 +45,7 @@ def setup(root, **lintargs):
     return setup_helper.eslint_maybe_setup()
 
 
-def lint(paths, config, binary=None, fix=None, setup=None, **lintargs):
+def lint(paths, config, binary=None, fix=None, rules=[], setup=None, **lintargs):
     """Run eslint."""
     log = lintargs["log"]
     setup_helper.set_project_root(lintargs["root"])
@@ -70,6 +70,9 @@ def lint(paths, config, binary=None, fix=None, setup=None, **lintargs):
             ["--ignore-pattern", os.path.relpath(path, lintargs["root"])]
         )
 
+    for rule in rules:
+        extra_args.extend(["--rule", rule])
+
     cmd_args = (
         [
             binary,
@@ -81,6 +84,7 @@ def lint(paths, config, binary=None, fix=None, setup=None, **lintargs):
             "json",
             "--no-error-on-unmatched-pattern",
         ]
+        + rules
         + extra_args
         + exclude_args
         + paths
