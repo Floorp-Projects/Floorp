@@ -195,7 +195,8 @@ async protocol PFileSystemManager
   /**
    * TODO: documentation
    */
-  async GetRootHandleMsg()
+  [VirtualSendImpl]
+  async GetRootHandle()
       returns(FileSystemGetHandleResponse response);
 
   /**
@@ -214,7 +215,8 @@ async protocol PFileSystemManager
    *
    * @returns error or entry handle
    */
-  async GetDirectoryHandleMsg(FileSystemGetHandleRequest request)
+  [VirtualSendImpl]
+  async GetDirectoryHandle(FileSystemGetHandleRequest request)
       returns(FileSystemGetHandleResponse handle);
 
   /**
@@ -233,7 +235,8 @@ async protocol PFileSystemManager
    *
    * @returns error or entry handle
    */
-  async GetFileHandleMsg(FileSystemGetHandleRequest request)
+  [VirtualSendImpl]
+  async GetFileHandle(FileSystemGetHandleRequest request)
       returns(FileSystemGetHandleResponse handle);
 
   /**
@@ -251,7 +254,8 @@ async protocol PFileSystemManager
    *
    * @returns error or file object
    */
-  async GetFileMsg(FileSystemGetFileRequest request)
+  [VirtualSendImpl]
+  async GetFile(FileSystemGetFileRequest request)
       returns(FileSystemGetFileResponse response);
 
   /**
@@ -274,7 +278,8 @@ async protocol PFileSystemManager
    *
    * @returns error or file system path
    */
-  async ResolveMsg(FileSystemResolveRequest request)
+  [VirtualSendImpl]
+  async Resolve(FileSystemResolveRequest request)
       returns(FileSystemResolveResponse response);
 
   /**
@@ -293,7 +298,8 @@ async protocol PFileSystemManager
    *
    * @returns error or iterator
    */
-  async GetEntriesMsg(FileSystemGetEntriesRequest request)
+  [VirtualSendImpl]
+  async GetEntries(FileSystemGetEntriesRequest request)
       returns(FileSystemGetEntriesResponse entries);
 
   /**
@@ -310,7 +316,8 @@ async protocol PFileSystemManager
    *
    * @returns error information
    */
-  async RemoveEntryMsg(FileSystemRemoveEntryRequest request)
+  [VirtualSendImpl]
+  async RemoveEntry(FileSystemRemoveEntryRequest request)
       returns(FileSystemRemoveEntryResponse response);
 
   /**
