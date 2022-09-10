@@ -71,8 +71,12 @@ Status EncodeHeader(const PackedImage& image, size_t bits_per_sample,
 
 Status EncodeImagePNM(const PackedImage& image, size_t bits_per_sample,
                       std::vector<uint8_t>* bytes) {
-  // Choose native for PFM; PGM/PPM require big-endian
-  bool is_little_endian = bits_per_sample > 16 && IsLittleEndian();
+  if (bits_per_sample <= 16 && image.format.endianness != JXL_BIG_ENDIAN) {
+    return JXL_FAILURE("PPM/PGM requires big-endian pixel format.");
+  }
+  bool is_little_endian =
+      (image.format.endianness == JXL_LITTLE_ENDIAN ||
+       (image.format.endianness == JXL_NATIVE_ENDIAN && IsLittleEndian()));
   char header[kMaxHeaderSize];
   int header_size = 0;
   JXL_RETURN_IF_ERROR(EncodeHeader(image, bits_per_sample, is_little_endian,
@@ -130,7 +134,7 @@ class PPMEncoder : public PNMEncoder {
     std::vector<JxlPixelFormat> formats;
     for (const uint32_t num_channels : {1, 2, 3, 4}) {
       for (const JxlDataType data_type : {JXL_TYPE_UINT8, JXL_TYPE_UINT16}) {
-        for (JxlEndianness endianness : {JXL_BIG_ENDIAN, JXL_LITTLE_ENDIAN}) {
+        for (JxlEndianness endianness : {JXL_BIG_ENDIAN}) {
           formats.push_back(JxlPixelFormat{/*num_channels=*/num_channels,
                                            /*data_type=*/data_type,
                                            /*endianness=*/endianness,

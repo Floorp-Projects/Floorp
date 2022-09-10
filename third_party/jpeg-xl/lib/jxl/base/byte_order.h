@@ -9,6 +9,7 @@
 #include <stdint.h>
 #include <string.h>  // memcpy
 
+#include "jxl/types.h"
 #include "lib/jxl/base/compiler_specific.h"
 
 #if JXL_COMPILER_MSVC
@@ -36,10 +37,17 @@ static inline bool IsLittleEndian() {
 }
 #endif
 
+static inline bool SwapEndianness(JxlEndianness endianness) {
+  return ((endianness == JXL_BIG_ENDIAN && IsLittleEndian()) ||
+          (endianness == JXL_LITTLE_ENDIAN && !IsLittleEndian()));
+}
+
 #if JXL_COMPILER_MSVC
+#define JXL_BSWAP16(x) _byteswap_ushort(x)
 #define JXL_BSWAP32(x) _byteswap_ulong(x)
 #define JXL_BSWAP64(x) _byteswap_uint64(x)
 #else
+#define JXL_BSWAP16(x) __builtin_bswap16(x)
 #define JXL_BSWAP32(x) __builtin_bswap32(x)
 #define JXL_BSWAP64(x) __builtin_bswap64(x)
 #endif

@@ -18,6 +18,7 @@ namespace jpeg {
 struct HuffmanCodeTable {
   int depth[256];
   int code[256];
+  void InitDepths() { std::fill(std::begin(depth), std::end(depth), 0); }
 };
 
 // Handles the packing of bits into output bytes.
@@ -36,7 +37,7 @@ struct DCTCodingState {
   // The run length of end-of-band symbols in a progressive scan.
   int eob_run_;
   // The huffman table to be used when flushing the state.
-  const HuffmanCodeTable* cur_ac_huff_;
+  HuffmanCodeTable* cur_ac_huff_;
   // The sequence of currently buffered refinement bits for a successive
   // approximation scan (one where Ah > 0).
   std::vector<int> refinement_bits_;

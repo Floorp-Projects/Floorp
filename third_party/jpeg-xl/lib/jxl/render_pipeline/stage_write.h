@@ -20,18 +20,11 @@ std::unique_ptr<RenderPipelineStage> GetWriteToImageBundleStage(
 // Gets a stage to write color channels to an Image3F.
 std::unique_ptr<RenderPipelineStage> GetWriteToImage3FStage(Image3F* image);
 
-// Gets a stage to write to a uint8 buffer.
-std::unique_ptr<RenderPipelineStage> GetWriteToU8Stage(uint8_t* rgb,
-                                                       size_t stride,
-                                                       size_t height, bool rgba,
-                                                       bool has_alpha,
-                                                       size_t alpha_c);
-
-// Gets a stage to write to a pixel callback.
-std::unique_ptr<RenderPipelineStage> GetWriteToPixelCallbackStage(
-    const PixelCallback& pixel_callback, size_t width, size_t height,
-    size_t num_channels, bool has_alpha, bool unpremul_alpha, size_t alpha_c,
-    bool swap_endianness, Orientation undo_orientation);
+// Gets a stage to write to a pixel callback or image buffer.
+std::unique_ptr<RenderPipelineStage> GetWriteToOutputStage(
+    const PixelCallback& pixel_callback, void* buffer, size_t width,
+    size_t height, size_t stride, JxlPixelFormat format, bool has_alpha,
+    bool unpremul_alpha, size_t alpha_c, Orientation undo_orientation);
 
 }  // namespace jxl
 

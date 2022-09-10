@@ -26,6 +26,8 @@ set(JPEGXL_EXTRAS_SOURCES
   extras/enc/pgx.h
   extras/enc/pnm.cc
   extras/enc/pnm.h
+  extras/encode_jpeg.cc
+  extras/encode_jpeg.h
   extras/exif.cc
   extras/exif.h
   extras/hlg.cc

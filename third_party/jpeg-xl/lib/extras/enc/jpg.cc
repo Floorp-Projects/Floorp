@@ -107,6 +107,7 @@ Status SetChromaSubsampling(const std::string& subsampling,
 }
 
 Status EncodeWithLibJpeg(const PackedImage& image, const JxlBasicInfo& info,
+                         const JxlColorEncoding& color_encoding,
                          const std::vector<uint8_t>& icc,
                          std::vector<uint8_t> exif, size_t quality,
                          const std::string& chroma_subsampling,
@@ -132,6 +133,10 @@ Status EncodeWithLibJpeg(const PackedImage& image, const JxlBasicInfo& info,
   cinfo.optimize_coding = TRUE;
   if (cinfo.input_components == 3) {
     JXL_RETURN_IF_ERROR(SetChromaSubsampling(chroma_subsampling, &cinfo));
+  }
+  if (color_encoding.color_space == JXL_COLOR_SPACE_XYB) {
+    // Tell libjpeg not to convert XYB data to YCbCr.
+    jpeg_set_colorspace(&cinfo, JCS_RGB);
   }
   jpeg_set_quality(&cinfo, quality, TRUE);
   jpeg_start_compress(&cinfo, TRUE);
@@ -200,6 +205,7 @@ Status EncodeWithSJpeg(const PackedImage& image, const JxlBasicInfo& info,
 }
 
 Status EncodeImageJPG(const PackedImage& image, const JxlBasicInfo& info,
+                      const JxlColorEncoding& color_encoding,
                       const std::vector<uint8_t>& icc,
                       std::vector<uint8_t> exif, JpegEncoder encoder,
                       size_t quality, const std::string& chroma_subsampling,
@@ -216,9 +222,9 @@ Status EncodeImageJPG(const PackedImage& image, const JxlBasicInfo& info,
 
   switch (encoder) {
     case JpegEncoder::kLibJpeg:
-      JXL_RETURN_IF_ERROR(EncodeWithLibJpeg(image, info, icc, std::move(exif),
-                                            quality, chroma_subsampling,
-                                            bytes));
+      JXL_RETURN_IF_ERROR(EncodeWithLibJpeg(image, info, color_encoding, icc,
+                                            std::move(exif), quality,
+                                            chroma_subsampling, bytes));
       break;
     case JpegEncoder::kSJpeg:
       JXL_RETURN_IF_ERROR(EncodeWithSJpeg(image, info, icc, std::move(exif),
@@ -281,8 +287,9 @@ class JPEGEncoder : public Encoder {
       JXL_RETURN_IF_ERROR(VerifyPackedImage(frame.color, ppf.info));
       encoded_image->bitstreams.emplace_back();
       JXL_RETURN_IF_ERROR(EncodeImageJPG(
-          frame.color, ppf.info, icc, ppf.metadata.exif, jpeg_encoder, quality,
-          chroma_subsampling, pool, &encoded_image->bitstreams.back()));
+          frame.color, ppf.info, ppf.color_encoding, icc, ppf.metadata.exif,
+          jpeg_encoder, quality, chroma_subsampling, pool,
+          &encoded_image->bitstreams.back()));
     }
     return true;
   }

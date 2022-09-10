@@ -894,20 +894,19 @@ JxlDecoderStatus JxlDecoderSetCoalescing(JxlDecoder* dec, JXL_BOOL coalescing) {
 
 namespace {
 // helper function to get the dimensions of the current image buffer
-void GetCurrentDimensions(const JxlDecoder* dec, size_t& xsize, size_t& ysize,
-                          bool oriented) {
+void GetCurrentDimensions(const JxlDecoder* dec, size_t& xsize, size_t& ysize) {
   if (dec->frame_header->nonserialized_is_preview) {
     xsize = dec->metadata.oriented_preview_xsize(dec->keep_orientation);
     ysize = dec->metadata.oriented_preview_ysize(dec->keep_orientation);
     return;
   }
-  xsize = dec->metadata.oriented_xsize(dec->keep_orientation || !oriented);
-  ysize = dec->metadata.oriented_ysize(dec->keep_orientation || !oriented);
+  xsize = dec->metadata.oriented_xsize(dec->keep_orientation);
+  ysize = dec->metadata.oriented_ysize(dec->keep_orientation);
   if (!dec->coalescing) {
     const auto frame_dim = dec->frame_header->ToFrameDimensions();
     xsize = frame_dim.xsize_upsampled;
     ysize = frame_dim.ysize_upsampled;
-    if (!dec->keep_orientation && oriented &&
+    if (!dec->keep_orientation &&
         static_cast<int>(dec->metadata.m.GetOrientation()) > 4) {
       std::swap(xsize, ysize);
     }
@@ -1075,7 +1074,7 @@ JxlDecoderStatus JxlDecoderReadAllHeaders(JxlDecoder* dec) {
 
 static size_t GetStride(const JxlDecoder* dec, const JxlPixelFormat& format) {
   size_t xsize, ysize;
-  GetCurrentDimensions(dec, xsize, ysize, true);
+  GetCurrentDimensions(dec, xsize, ysize);
   size_t stride = xsize * (BitsPerChannel(format.data_type) *
                            format.num_channels / jxl::kBitsPerByte);
   if (format.align > 1) {
@@ -1464,37 +1463,15 @@ JxlDecoderStatus JxlDecoderProcessCodestream(JxlDecoder* dec) {
         }
       }
 
-      dec->frame_dec->MaybeSetUnpremultiplyAlpha(dec->unpremul_alpha);
-
-      if (dec->image_out_buffer_set && !!dec->image_out_buffer &&
-          dec->image_out_format.data_type == JXL_TYPE_UINT8 &&
-          dec->image_out_format.num_channels >= 3 &&
-          dec->extra_channel_output.empty()) {
-        bool is_rgba = dec->image_out_format.num_channels == 4;
-        dec->frame_dec->MaybeSetRGB8OutputBuffer(
-            reinterpret_cast<uint8_t*>(dec->image_out_buffer),
-            GetStride(dec, dec->image_out_format), is_rgba,
-            !dec->keep_orientation);
-      }
-
-      const bool little_endian =
-          dec->image_out_format.endianness == JXL_LITTLE_ENDIAN ||
-          (dec->image_out_format.endianness == JXL_NATIVE_ENDIAN &&
-           IsLittleEndian());
-      bool swap_endianness = little_endian != IsLittleEndian();
-
-      // TODO(lode): Support more formats than just native endian float32 for
-      // the low-memory callback path
-      if (dec->image_out_buffer_set && !!dec->image_out_init_callback &&
-          !!dec->image_out_run_callback &&
-          dec->image_out_format.data_type == JXL_TYPE_FLOAT &&
-          dec->extra_channel_output.empty()) {
-        dec->frame_dec->SetFloatCallback(
+      if (dec->image_out_buffer_set && dec->extra_channel_output.empty()) {
+        size_t xsize, ysize;
+        GetCurrentDimensions(dec, xsize, ysize);
+        dec->frame_dec->SetImageOutput(
             PixelCallback{
                 dec->image_out_init_callback, dec->image_out_run_callback,
                 dec->image_out_destroy_callback, dec->image_out_init_opaque},
-            dec->image_out_format.num_channels, dec->unpremul_alpha,
-            !dec->keep_orientation, swap_endianness);
+            reinterpret_cast<uint8_t*>(dec->image_out_buffer), xsize, ysize,
+            dec->image_out_format, dec->unpremul_alpha, !dec->keep_orientation);
       }
 
       size_t next_num_passes_to_pause = dec->frame_dec->NextNumPassesToPause();
@@ -2465,7 +2442,7 @@ JXL_EXPORT JxlDecoderStatus JxlDecoderImageOutBufferSize(
     return JXL_API_ERROR("Number of channels is too low for color output");
   }
   size_t xsize, ysize;
-  GetCurrentDimensions(dec, xsize, ysize, true);
+  GetCurrentDimensions(dec, xsize, ysize);
   size_t row_size =
       jxl::DivCeil(xsize * format->num_channels * bits, jxl::kBitsPerByte);
   if (format->align > 1) {
@@ -2526,7 +2503,7 @@ JxlDecoderStatus JxlDecoderExtraChannelBufferSize(const JxlDecoder* dec,
   if (status != JXL_DEC_SUCCESS) return status;
 
   size_t xsize, ysize;
-  GetCurrentDimensions(dec, xsize, ysize, true);
+  GetCurrentDimensions(dec, xsize, ysize);
   size_t row_size =
       jxl::DivCeil(xsize * num_channels * bits, jxl::kBitsPerByte);
   if (format->align > 1) {
@@ -2635,7 +2612,7 @@ JxlDecoderStatus JxlDecoderGetFrameHeader(const JxlDecoder* dec,
   header->name_length = dec->frame_header->name.size();
   header->is_last = dec->frame_header->is_last;
   size_t xsize, ysize;
-  GetCurrentDimensions(dec, xsize, ysize, true);
+  GetCurrentDimensions(dec, xsize, ysize);
   header->layer_info.xsize = xsize;
   header->layer_info.ysize = ysize;
   if (!dec->coalescing && dec->frame_header->custom_size_or_origin) {
@@ -2730,14 +2707,13 @@ JxlDecoderStatus JxlDecoderSetPreferredColorProfile(
       dec->image_out_buffer_set && dec->image_out_format.num_channels < 3) {
     return JXL_API_ERROR("Number of channels is too low for color output");
   }
-  if (color_encoding->color_space == JXL_COLOR_SPACE_UNKNOWN ||
-      color_encoding->color_space == JXL_COLOR_SPACE_XYB) {
-    return JXL_API_ERROR("only RGB or grayscale output supported");
+  if (color_encoding->color_space == JXL_COLOR_SPACE_UNKNOWN) {
+    return JXL_API_ERROR("Unknown output colorspace");
   }
-
   jxl::ColorEncoding c_out;
   JXL_API_RETURN_IF_ERROR(
       ConvertExternalToInternalColorEncoding(*color_encoding, &c_out));
+  JXL_API_RETURN_IF_ERROR(!c_out.ICC().empty());
   auto& output_encoding = dec->passes_state->output_encoding_info;
   if (!c_out.SameColorEncoding(output_encoding.color_encoding)) {
     JXL_API_RETURN_IF_ERROR(output_encoding.MaybeSetColorEncoding(c_out));

@@ -18,6 +18,7 @@
 #include "lib/jxl/base/file_io.h"
 #include "lib/jxl/base/thread_pool_internal.h"
 #include "lib/jxl/enc_color_management.h"
+#include "lib/jxl/enc_xyb.h"
 #include "lib/jxl/image_test_utils.h"
 #include "lib/jxl/test_utils.h"
 #include "lib/jxl/testdata.h"
@@ -313,6 +314,91 @@ TEST_F(ColorManagementTest, HlgOotf) {
   ASSERT_TRUE(grayscale_transform.Run(0, &grayscale_hlg_value,
                                       &linear_grayscale_value));
   EXPECT_THAT(linear_grayscale_value, FloatNear(0.203, 1e-3));
+}
+
+TEST_F(ColorManagementTest, XYBProfile) {
+  ColorEncoding c_xyb;
+  c_xyb.SetColorSpace(ColorSpace::kXYB);
+  c_xyb.rendering_intent = RenderingIntent::kPerceptual;
+  ASSERT_TRUE(c_xyb.CreateICC());
+  ColorEncoding c_native = ColorEncoding::LinearSRGB(false);
+
+  static const size_t kGridDim = 17;
+  static const size_t kNumColors = kGridDim * kGridDim * kGridDim;
+  const JxlCmsInterface& cms = GetJxlCms();
+  ColorSpaceTransform xform(cms);
+  ASSERT_TRUE(
+      xform.Init(c_xyb, c_native, kDefaultIntensityTarget, kNumColors, 1));
+
+  ImageMetadata metadata;
+  metadata.color_encoding = c_native;
+  ImageBundle ib(&metadata);
+  Image3F native(kNumColors, 1);
+  float mul = 1.0f / (kGridDim - 1);
+  for (size_t ir = 0, x = 0; ir < kGridDim; ++ir) {
+    for (size_t ig = 0; ig < kGridDim; ++ig) {
+      for (size_t ib = 0; ib < kGridDim; ++ib, ++x) {
+        native.PlaneRow(0, 0)[x] = ir * mul;
+        native.PlaneRow(1, 0)[x] = ig * mul;
+        native.PlaneRow(2, 0)[x] = ib * mul;
+      }
+    }
+  }
+  ib.SetFromImage(std::move(native), c_native);
+  const Image3F& in = *ib.color();
+  Image3F opsin(kNumColors, 1);
+  ToXYB(ib, nullptr, &opsin, cms, nullptr);
+
+  Image3F opsin2 = CopyImage(opsin);
+  ScaleXYB(&opsin2);
+
+  float* src = xform.BufSrc(0);
+  for (size_t i = 0; i < kNumColors; ++i) {
+    for (size_t c = 0; c < 3; ++c) {
+      src[3 * i + c] = opsin2.PlaneRow(c, 0)[i];
+    }
+  }
+
+  float* dst = xform.BufDst(0);
+  ASSERT_TRUE(xform.Run(0, src, dst));
+
+  Image3F out(kNumColors, 1);
+  for (size_t i = 0; i < kNumColors; ++i) {
+    for (size_t c = 0; c < 3; ++c) {
+      out.PlaneRow(c, 0)[i] = dst[3 * i + c];
+    }
+  }
+
+  auto debug_print_color = [&](size_t i) {
+    printf(
+        "(%f, %f, %f) -> (%9.6f, %f, %f) -> (%f, %f, %f) -> "
+        "(%9.6f, %9.6f, %9.6f)",
+        in.PlaneRow(0, 0)[i], in.PlaneRow(1, 0)[i], in.PlaneRow(2, 0)[i],
+        opsin.PlaneRow(0, 0)[i], opsin.PlaneRow(1, 0)[i],
+        opsin.PlaneRow(2, 0)[i], opsin2.PlaneRow(0, 0)[i],
+        opsin2.PlaneRow(1, 0)[i], opsin2.PlaneRow(2, 0)[i],
+        out.PlaneRow(0, 0)[i], out.PlaneRow(1, 0)[i], out.PlaneRow(2, 0)[i]);
+  };
+
+  float max_err[3] = {};
+  size_t max_err_i[3] = {};
+  for (size_t i = 0; i < kNumColors; ++i) {
+    for (size_t c = 0; c < 3; ++c) {
+      // debug_print_color(i); printf("\n");
+      float err = std::abs(in.PlaneRow(c, 0)[i] - out.PlaneRow(c, 0)[i]);
+      if (err > max_err[c]) {
+        max_err[c] = err;
+        max_err_i[c] = i;
+      }
+    }
+  }
+  static float kMaxError[3] = {8.5e-4, 4e-4, 5e-4};
+  printf("Maximum errors:\n");
+  for (size_t c = 0; c < 3; ++c) {
+    debug_print_color(max_err_i[c]);
+    printf("    %f\n", max_err[c]);
+    EXPECT_LT(max_err[c], kMaxError[c]);
+  }
 }
 
 }  // namespace

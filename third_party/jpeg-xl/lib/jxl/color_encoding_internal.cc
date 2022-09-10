@@ -636,6 +636,7 @@ Status ConvertExternalToInternalColorEncoding(const JxlColorEncoding& external,
     }
   }
   CustomTransferFunction tf;
+  tf.nonserialized_color_space = internal->GetColorSpace();
   if (external.transfer_function == JXL_TRANSFER_FUNCTION_GAMMA) {
     JXL_RETURN_IF_ERROR(tf.SetGamma(external.gamma));
   } else {

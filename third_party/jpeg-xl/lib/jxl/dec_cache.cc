@@ -138,29 +138,26 @@ Status PassesDecoderState::PreparePipeline(ImageBundle* decoded,
     }
   }
 
-  size_t width = options.coalescing
-                     ? frame_header.nonserialized_metadata->xsize()
-                     : shared->frame_dim.xsize_upsampled;
-  size_t height = options.coalescing
-                      ? frame_header.nonserialized_metadata->ysize()
-                      : shared->frame_dim.ysize_upsampled;
-
   if (fast_xyb_srgb8_conversion) {
     JXL_ASSERT(!NeedsBlending(this));
     JXL_ASSERT(!frame_header.CanBeReferenced() ||
                frame_header.save_before_color_transform);
     JXL_ASSERT(!options.render_spotcolors ||
                !decoded->metadata()->Find(ExtraChannel::kSpotColor));
-    builder.AddStage(GetFastXYBTosRGB8Stage(rgb_output, rgb_stride, width,
-                                            height, rgb_output_is_rgba,
-                                            has_alpha, alpha_c));
+    bool is_rgba = (format.num_channels == 4);
+    uint8_t* rgb_output = reinterpret_cast<uint8_t*>(image_buffer);
+    builder.AddStage(GetFastXYBTosRGB8Stage(rgb_output, stride, width, height,
+                                            is_rgba, has_alpha, alpha_c));
   } else {
     bool linear = false;
     if (frame_header.color_transform == ColorTransform::kYCbCr) {
       builder.AddStage(GetYCbCrStage());
     } else if (frame_header.color_transform == ColorTransform::kXYB) {
-      builder.AddStage(GetXYBStage(output_encoding_info.opsin_params));
-      linear = true;
+      builder.AddStage(GetXYBStage(output_encoding_info));
+      if (output_encoding_info.color_encoding.GetColorSpace() !=
+          ColorSpace::kXYB) {
+        linear = true;
+      }
     }  // Nothing to do for kNone.
 
     if (options.coalescing && NeedsBlending(this)) {
@@ -215,14 +212,10 @@ Status PassesDecoderState::PreparePipeline(ImageBundle* decoded,
       linear = false;
     }
 
-    if (pixel_callback.IsPresent()) {
-      builder.AddStage(GetWriteToPixelCallbackStage(
-          pixel_callback, width, height, output_channels, has_alpha,
-          unpremul_alpha, alpha_c, swap_endianness, undo_orientation));
-    } else if (rgb_output) {
-      builder.AddStage(GetWriteToU8Stage(rgb_output, rgb_stride, height,
-                                         rgb_output_is_rgba, has_alpha,
-                                         alpha_c));
+    if (pixel_callback.IsPresent() || image_buffer) {
+      builder.AddStage(GetWriteToOutputStage(
+          pixel_callback, image_buffer, width, height, stride, format,
+          has_alpha, unpremul_alpha, alpha_c, undo_orientation));
     } else {
       builder.AddStage(GetWriteToImageBundleStage(
           decoded, output_encoding_info.color_encoding));

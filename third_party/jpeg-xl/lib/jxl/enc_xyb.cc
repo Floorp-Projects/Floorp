@@ -353,6 +353,18 @@ const ImageBundle* ToXYB(const ImageBundle& in, ThreadPool* pool,
   return HWY_DYNAMIC_DISPATCH(ToXYB)(in, pool, xyb, cms, linear_storage);
 }
 
+void ScaleXYB(Image3F* opsin) {
+  jxl::SubtractFrom(opsin->Plane(1), &opsin->Plane(2));
+  for (size_t y = 0; y < opsin->ysize(); y++) {
+    for (size_t c = 0; c < 3; ++c) {
+      float* row = opsin->PlaneRow(c, y);
+      for (size_t x = 0; x < opsin->xsize(); x++) {
+        row[x] = (row[x] + kScaledXYBOffset[c]) * kScaledXYBScale[c];
+      }
+    }
+  }
+}
+
 HWY_EXPORT(RgbToYcbcr);
 Status RgbToYcbcr(const ImageF& r_plane, const ImageF& g_plane,
                   const ImageF& b_plane, ImageF* y_plane, ImageF* cb_plane,

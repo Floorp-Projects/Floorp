@@ -27,6 +27,7 @@
 #include "lib/jxl/base/status.h"
 #include "lib/jxl/field_encodings.h"
 #include "lib/jxl/linalg.h"  // MatMul, Inv3x3Matrix
+#include "lib/jxl/opsin_params.h"
 #include "lib/jxl/transfer_functions-inl.h"
 
 HWY_BEFORE_NAMESPACE();
@@ -213,6 +214,11 @@ void WriteICCUint16(uint16_t value, size_t pos, PaddedBytes* JXL_RESTRICT icc) {
   (*icc)[pos + 1] = value & 255;
 }
 
+void WriteICCUint8(uint8_t value, size_t pos, PaddedBytes* JXL_RESTRICT icc) {
+  if (icc->size() < pos + 1) icc->resize(pos + 1);
+  (*icc)[pos] = value;
+}
+
 // Writes a 4-character tag
 void WriteICCTag(const char* value, size_t pos, PaddedBytes* JXL_RESTRICT icc) {
   if (icc->size() < pos + 4) icc->resize(pos + 4);
@@ -244,7 +250,9 @@ Status CreateICCHeader(const ColorEncoding& c,
   WriteICCUint32(0, 0, header);  // size, correct value filled in at end
   WriteICCTag(kCmm, 4, header);
   WriteICCUint32(0x04300000u, 8, header);
-  WriteICCTag("mntr", 12, header);
+  const char* profile_type =
+      c.GetColorSpace() == ColorSpace::kXYB ? "scnr" : "mntr";
+  WriteICCTag(profile_type, 12, header);
   WriteICCTag(c.IsGray() ? "GRAY" : "RGB ", 16, header);
   WriteICCTag("XYZ ", 20, header);
 
@@ -354,6 +362,86 @@ Status CreateICCCurvParaTag(std::vector<float> params, size_t curve_type,
   }
   return true;
 }
+
+Status CreateICCLutAtoBTagForXYB(PaddedBytes* JXL_RESTRICT tags) {
+  WriteICCTag("mAB ", tags->size(), tags);
+  WriteICCUint32(0, tags->size(), tags);
+  WriteICCUint8(3, tags->size(), tags);
+  WriteICCUint8(3, tags->size(), tags);
+  WriteICCUint16(0, tags->size(), tags);
+  WriteICCUint32(316, tags->size(), tags);
+  WriteICCUint32(268, tags->size(), tags);
+  WriteICCUint32(148, tags->size(), tags);
+  WriteICCUint32(80, tags->size(), tags);
+  WriteICCUint32(32, tags->size(), tags);
+  JXL_RETURN_IF_ERROR(CreateICCCurvParaTag({1.0f}, 0, tags));
+  JXL_RETURN_IF_ERROR(CreateICCCurvParaTag({1.0f}, 0, tags));
+  JXL_RETURN_IF_ERROR(CreateICCCurvParaTag({1.0f}, 0, tags));
+  WriteICCUint8(2, tags->size(), tags);
+  WriteICCUint8(2, tags->size(), tags);
+  WriteICCUint8(2, tags->size(), tags);
+  WriteICCUint8(0, tags->size(), tags);
+  WriteICCUint32(0, tags->size(), tags);
+  WriteICCUint32(0, tags->size(), tags);
+  WriteICCUint32(0, tags->size(), tags);
+  WriteICCUint8(2, tags->size(), tags);
+  WriteICCUint8(0, tags->size(), tags);
+  WriteICCUint16(0, tags->size(), tags);
+  const float kOffsets[3] = {0.015387, 0.028101, 0.277706};
+  const float kScaling[3] = {1.125, 1.125, 1. / 1.511027};
+  for (size_t ix = 0; ix < 2; ++ix) {
+    for (size_t iy = 0; iy < 2; ++iy) {
+      for (size_t ib = 0; ib < 2; ++ib) {
+        float in_f[3] = {ix * 1.0f, iy * 1.0f, ib * 1.0f};
+        for (size_t c = 0; c < 3; ++c) {
+          in_f[c] /= kScaledXYBScale[c];
+          in_f[c] -= kScaledXYBOffset[c];
+        }
+        float out_f[3];
+        out_f[0] = in_f[1] + in_f[0];
+        out_f[1] = in_f[1] - in_f[0];
+        out_f[2] = in_f[2] + in_f[1];
+        for (int i = 0; i < 3; ++i) {
+          out_f[i] += kOffsets[i];
+          out_f[i] *= kScaling[i];
+        }
+        for (int i = 0; i < 3; ++i) {
+          JXL_RETURN_IF_ERROR(out_f[i] >= 0.f && out_f[i] <= 1.f);
+          uint16_t val = static_cast<uint16_t>(
+              0.5f + 65535 * std::max(0.f, std::min(1.f, out_f[i])));
+          WriteICCUint16(val, tags->size(), tags);
+        }
+      }
+    }
+  }
+  for (size_t i = 0; i < 3; ++i) {
+    const float b =
+        -kOffsets[i] - std::cbrt(jxl::kNegOpsinAbsorbanceBiasRGB[i]);
+    std::vector<float> params = {
+        3,
+        1.0f / kScaling[i],
+        b,
+        0,                                // unused
+        std::max(0.f, -b * kScaling[i]),  // make skcms happy
+        jxl::kNegOpsinAbsorbanceBiasRGB[i],
+        0,  // unused
+    };
+    JXL_RETURN_IF_ERROR(CreateICCCurvParaTag(params, 4, tags));
+  }
+  const double matrix[] = {1.5170095, -1.1065225, 0.071623,
+                           -0.050022, 0.5683655,  -0.018344,
+                           -1.387676, 1.1145555,  0.6857255};
+  for (size_t i = 0; i < 9; ++i) {
+    JXL_RETURN_IF_ERROR(WriteICCS15Fixed16(matrix[i], tags->size(), tags));
+  }
+  JXL_RETURN_IF_ERROR(WriteICCS15Fixed16(0.0f, tags->size(), tags));
+  JXL_RETURN_IF_ERROR(WriteICCS15Fixed16(0.0f, tags->size(), tags));
+  JXL_RETURN_IF_ERROR(WriteICCS15Fixed16(0.0f, tags->size(), tags));
+  JXL_RETURN_IF_ERROR(CreateICCCurvParaTag({1.0f}, 0, tags));
+  JXL_RETURN_IF_ERROR(CreateICCCurvParaTag({1.0f}, 0, tags));
+  JXL_RETURN_IF_ERROR(CreateICCCurvParaTag({1.0f}, 0, tags));
+  return true;
+}
 }  // namespace
 
 Status MaybeCreateProfile(const ColorEncoding& c,
@@ -367,12 +455,18 @@ Status MaybeCreateProfile(const ColorEncoding& c,
   switch (c.GetColorSpace()) {
     case ColorSpace::kRGB:
     case ColorSpace::kGray:
-      break;  // OK
     case ColorSpace::kXYB:
-      return JXL_FAILURE("XYB ICC not yet implemented");
+      break;  // OK
     default:
       return JXL_FAILURE("Invalid CS %u",
                          static_cast<unsigned int>(c.GetColorSpace()));
+  }
+
+  if (c.GetColorSpace() == ColorSpace::kXYB &&
+      c.rendering_intent != RenderingIntent::kPerceptual) {
+    return JXL_FAILURE(
+        "Only perceptual rendering intent implemented for XYB "
+        "ICC profile.");
   }
 
   JXL_RETURN_IF_ERROR(CreateICCHeader(c, &header));
@@ -411,6 +505,12 @@ Status MaybeCreateProfile(const ColorEncoding& c,
     float chad[9];
     JXL_RETURN_IF_ERROR(CreateICCChadMatrix(c.GetWhitePoint(), chad));
 
+    JXL_RETURN_IF_ERROR(CreateICCChadTag(chad, &tags));
+    FinalizeICCTag(&tags, &tag_offset, &tag_size);
+    AddToICCTagTable("chad", tag_offset, tag_size, &tagtable, &offsets);
+  }
+
+  if (c.GetColorSpace() == ColorSpace::kRGB) {
     const PrimariesCIExy primaries = c.GetPrimaries();
     float m[9];
     JXL_RETURN_IF_ERROR(CreateICCRGBMatrix(primaries.r, primaries.g,
@@ -418,10 +518,6 @@ Status MaybeCreateProfile(const ColorEncoding& c,
     float r[3] = {m[0], m[3], m[6]};
     float g[3] = {m[1], m[4], m[7]};
     float b[3] = {m[2], m[5], m[8]};
-
-    JXL_RETURN_IF_ERROR(CreateICCChadTag(chad, &tags));
-    FinalizeICCTag(&tags, &tag_offset, &tag_size);
-    AddToICCTagTable("chad", tag_offset, tag_size, &tagtable, &offsets);
 
     JXL_RETURN_IF_ERROR(CreateICCXYZTag(r, &tags));
     FinalizeICCTag(&tags, &tag_offset, &tag_size);
@@ -436,49 +532,58 @@ Status MaybeCreateProfile(const ColorEncoding& c,
     AddToICCTagTable("bXYZ", tag_offset, tag_size, &tagtable, &offsets);
   }
 
-  if (c.tf.IsGamma()) {
-    float gamma = 1.0 / c.tf.GetGamma();
-    JXL_RETURN_IF_ERROR(
-        CreateICCCurvParaTag({gamma, 1.0, 0.0, 1.0, 0.0}, 3, &tags));
+  if (c.GetColorSpace() == ColorSpace::kXYB) {
+    JXL_RETURN_IF_ERROR(CreateICCLutAtoBTagForXYB(&tags));
+    FinalizeICCTag(&tags, &tag_offset, &tag_size);
+    AddToICCTagTable("A2B0", tag_offset, tag_size, &tagtable, &offsets);
   } else {
-    switch (c.tf.GetTransferFunction()) {
-      case TransferFunction::kHLG:
-        CreateICCCurvCurvTag(
-            HWY_DYNAMIC_DISPATCH(CreateTableCurve)(4096, ExtraTF::kHLG), &tags);
-        break;
-      case TransferFunction::kPQ:
-        CreateICCCurvCurvTag(
-            HWY_DYNAMIC_DISPATCH(CreateTableCurve)(4096, ExtraTF::kPQ), &tags);
-        break;
-      case TransferFunction::kSRGB:
-        JXL_RETURN_IF_ERROR(CreateICCCurvParaTag(
-            {2.4, 1.0 / 1.055, 0.055 / 1.055, 1.0 / 12.92, 0.04045}, 3, &tags));
-        break;
-      case TransferFunction::k709:
-        JXL_RETURN_IF_ERROR(CreateICCCurvParaTag(
-            {1.0 / 0.45, 1.0 / 1.099, 0.099 / 1.099, 1.0 / 4.5, 0.081}, 3,
-            &tags));
-        break;
-      case TransferFunction::kLinear:
-        JXL_RETURN_IF_ERROR(
-            CreateICCCurvParaTag({1.0, 1.0, 0.0, 1.0, 0.0}, 3, &tags));
-        break;
-      case TransferFunction::kDCI:
-        JXL_RETURN_IF_ERROR(
-            CreateICCCurvParaTag({2.6, 1.0, 0.0, 1.0, 0.0}, 3, &tags));
-        break;
-      default:
-        JXL_ABORT("Unknown TF %u",
-                  static_cast<unsigned int>(c.tf.GetTransferFunction()));
+    if (c.tf.IsGamma()) {
+      float gamma = 1.0 / c.tf.GetGamma();
+      JXL_RETURN_IF_ERROR(
+          CreateICCCurvParaTag({gamma, 1.0, 0.0, 1.0, 0.0}, 3, &tags));
+    } else if (c.GetColorSpace() != ColorSpace::kXYB) {
+      switch (c.tf.GetTransferFunction()) {
+        case TransferFunction::kHLG:
+          CreateICCCurvCurvTag(
+              HWY_DYNAMIC_DISPATCH(CreateTableCurve)(4096, ExtraTF::kHLG),
+              &tags);
+          break;
+        case TransferFunction::kPQ:
+          CreateICCCurvCurvTag(
+              HWY_DYNAMIC_DISPATCH(CreateTableCurve)(4096, ExtraTF::kPQ),
+              &tags);
+          break;
+        case TransferFunction::kSRGB:
+          JXL_RETURN_IF_ERROR(CreateICCCurvParaTag(
+              {2.4, 1.0 / 1.055, 0.055 / 1.055, 1.0 / 12.92, 0.04045}, 3,
+              &tags));
+          break;
+        case TransferFunction::k709:
+          JXL_RETURN_IF_ERROR(CreateICCCurvParaTag(
+              {1.0 / 0.45, 1.0 / 1.099, 0.099 / 1.099, 1.0 / 4.5, 0.081}, 3,
+              &tags));
+          break;
+        case TransferFunction::kLinear:
+          JXL_RETURN_IF_ERROR(
+              CreateICCCurvParaTag({1.0, 1.0, 0.0, 1.0, 0.0}, 3, &tags));
+          break;
+        case TransferFunction::kDCI:
+          JXL_RETURN_IF_ERROR(
+              CreateICCCurvParaTag({2.6, 1.0, 0.0, 1.0, 0.0}, 3, &tags));
+          break;
+        default:
+          JXL_ABORT("Unknown TF %u",
+                    static_cast<unsigned int>(c.tf.GetTransferFunction()));
+      }
     }
-  }
-  FinalizeICCTag(&tags, &tag_offset, &tag_size);
-  if (c.IsGray()) {
-    AddToICCTagTable("kTRC", tag_offset, tag_size, &tagtable, &offsets);
-  } else {
-    AddToICCTagTable("rTRC", tag_offset, tag_size, &tagtable, &offsets);
-    AddToICCTagTable("gTRC", tag_offset, tag_size, &tagtable, &offsets);
-    AddToICCTagTable("bTRC", tag_offset, tag_size, &tagtable, &offsets);
+    FinalizeICCTag(&tags, &tag_offset, &tag_size);
+    if (c.IsGray()) {
+      AddToICCTagTable("kTRC", tag_offset, tag_size, &tagtable, &offsets);
+    } else {
+      AddToICCTagTable("rTRC", tag_offset, tag_size, &tagtable, &offsets);
+      AddToICCTagTable("gTRC", tag_offset, tag_size, &tagtable, &offsets);
+      AddToICCTagTable("bTRC", tag_offset, tag_size, &tagtable, &offsets);
+    }
   }
 
   // Tag count

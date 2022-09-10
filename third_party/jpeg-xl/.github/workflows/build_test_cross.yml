@@ -20,7 +20,7 @@ concurrency:
 
 jobs:
   cross_compile_ubuntu:
-    name: Cross-compiling ${{ matrix.build_target }} ${{ matrix.lowprecision }}
+    name: Cross-compiling ${{ matrix.build_target }} ${{ matrix.variant }} 
     runs-on: [ubuntu-22.04]
     container:
       image: debian:bullseye
@@ -29,28 +29,40 @@ jobs:
       matrix:
         include:
           - arch: arm64
-            lowprecision:
             build_target: aarch64-linux-gnu
-            cmake_args: -DCMAKE_CROSSCOMPILING_EMULATOR=/usr/bin/qemu-aarch64-static
+            cmake_args:
+             - -DCMAKE_CROSSCOMPILING_EMULATOR=/usr/bin/qemu-aarch64-static
 
           - arch: arm64
-            lowprecision: lowprecision
+            variant: SVE
             build_target: aarch64-linux-gnu
-            cmake_args: -DCMAKE_CROSSCOMPILING_EMULATOR=/usr/bin/qemu-aarch64-static -DCMAKE_CXX_FLAGS=-DJXL_HIGH_PRECISION=0
+            cmake_args:
+             - -DCMAKE_CROSSCOMPILING_EMULATOR=/usr/bin/qemu-aarch64-static
+             - -DJPEGXL_ENABLE_OPENEXR=off
+             - -DJPEGXL_ENABLE_SIZELESS_VECTORS=on
+            cmake_flags: -march=armv8-a+sve
+            c_compiler: aarch64-linux-gnu-gcc
+            cxx_compiler: aarch64-linux-gnu-g++
+            disable_tests: true
+
+          - arch: arm64
+            variant: lowprecision
+            build_target: aarch64-linux-gnu
+            cmake_args:
+             - -DCMAKE_CROSSCOMPILING_EMULATOR=/usr/bin/qemu-aarch64-static
+             - -DCMAKE_CXX_FLAGS=-DJXL_HIGH_PRECISION=0
 
           - arch: armhf
-            lowprecision:
             build_target: arm-linux-gnueabihf
-            cmake_args: -DCMAKE_CROSSCOMPILING_EMULATOR=/usr/bin/qemu-arm-static
+            cmake_args: [-DCMAKE_CROSSCOMPILING_EMULATOR=/usr/bin/qemu-arm-static]
 
           - arch: i386
-            lowprecision:
             test_in_pr: true
             build_target: i686-linux-gnu
 
     env:
       BUILD_DIR: build
-      WILL_RUN_TESTS: ${{ github.event_name == 'push' || (github.event_name == 'pull_request' && (matrix.test_in_pr || contains(github.event.pull_request.labels.*.name, 'CI:full'))) }}
+      WILL_RUN_TESTS: ${{ (github.event_name == 'push' || (github.event_name == 'pull_request' && (matrix.test_in_pr || contains(github.event.pull_request.labels.*.name, 'CI:full')))) && !matrix.disable_tests }}
 
     steps:
     - name: Setup apt
@@ -100,6 +112,7 @@ jobs:
 
           # Toolchain for cross-compiling.
           clang-11
+          g++-aarch64-linux-gnu
           libc6-dev-${{ matrix.arch }}-cross
           libstdc++-10-dev-${{ matrix.arch }}-cross
           libstdc++-10-dev:${{ matrix.arch }}
@@ -139,8 +152,8 @@ jobs:
           )
         fi
         DEBIAN_FRONTEND=noninteractive apt install -y "${pkgs[@]}"
-        echo "CC=clang-11" >> $GITHUB_ENV
-        echo "CXX=clang++-11" >> $GITHUB_ENV
+        echo "CC=${{ matrix.c_compiler || 'clang-11' }}" >> $GITHUB_ENV
+        echo "CXX=${{ matrix.cxx_compiler || 'clang++-11' }}" >> $GITHUB_ENV
     - name: Checkout the source
       uses: actions/checkout@v2
       with:
@@ -148,10 +161,10 @@ jobs:
         fetch-depth: 1
     - name: Build
       run: |
-        ./ci.sh release \
+        CMAKE_FLAGS="${{ matrix.cmake_flags }}" ./ci.sh release \
           -DJPEGXL_FORCE_SYSTEM_BROTLI=ON \
           -DJPEGXL_ENABLE_JNI=OFF \
-          ${{ matrix.cmake_args }}
+          ${{ join(matrix.cmake_args, ' ') }}
       env:
         SKIP_TEST: 1
         BUILD_TARGET: ${{ matrix.build_target }}

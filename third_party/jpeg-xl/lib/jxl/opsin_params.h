@@ -69,6 +69,18 @@ static const float kNegOpsinAbsorbanceBiasRGB[4] = {
     -kOpsinAbsorbanceBias[0], -kOpsinAbsorbanceBias[1],
     -kOpsinAbsorbanceBias[2], 1.0f};
 
+static const float kScaledXYBOffset[3] = {
+    0.015386134f,
+    0.0f,
+    0.27770459f,
+};
+
+static const float kScaledXYBScale[3] = {
+    22.995788804f,
+    1.183000077f,
+    1.502141333f,
+};
+
 }  // namespace jxl
 
 #endif  // LIB_JXL_OPSIN_PARAMS_H_
