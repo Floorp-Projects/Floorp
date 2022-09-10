@@ -6,6 +6,7 @@ directory_test(async (t, root_dir) => {
     const db = await createDatabase(t, db => {
       const store = db.createObjectStore('store');
     });
+    t.add_cleanup(() => deleteAllDatabases(t));
 
     const value = handles;
 
@@ -27,6 +28,7 @@ directory_test(async (t, root_dir) => {
     const db = await createDatabase(t, db => {
       const store = db.createObjectStore('store');
     });
+    t.add_cleanup(() => deleteAllDatabases(t));
 
     const value = handles;
 
@@ -51,6 +53,7 @@ directory_test(async (t, root_dir) => {
     const db = await createDatabase(t, db => {
       const store = db.createObjectStore('store');
     });
+    t.add_cleanup(() => deleteAllDatabases(t));
 
     const value = {handles, blob: new Blob(["foobar"])};
 
@@ -77,6 +80,7 @@ directory_test(async (t, root_dir) => {
     const db = await createDatabase(t, db => {
       const store = db.createObjectStore('store');
     });
+    t.add_cleanup(() => deleteAllDatabases(t));
 
     const value = handles;
 
@@ -103,6 +107,7 @@ directory_test(async (t, root_dir) => {
     const db = await createDatabase(t, db => {
       const store = db.createObjectStore('store', {keyPath: 'key'});
     });
+    t.add_cleanup(() => deleteAllDatabases(t));
 
     const value = handles;
     let tx = db.transaction('store', 'readwrite');

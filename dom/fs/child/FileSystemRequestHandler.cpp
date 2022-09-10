@@ -9,25 +9,13 @@
 #include "FileSystemEntryMetadataArray.h"
 #include "fs/FileSystemConstants.h"
 #include "mozilla/dom/File.h"
-#include "mozilla/dom/FileSystemAccessHandleChild.h"
 #include "mozilla/dom/FileSystemDirectoryHandle.h"
 #include "mozilla/dom/FileSystemFileHandle.h"
 #include "mozilla/dom/FileSystemHandle.h"
-#include "mozilla/dom/FileSystemHelpers.h"
 #include "mozilla/dom/FileSystemManager.h"
 #include "mozilla/dom/FileSystemManagerChild.h"
-#include "mozilla/dom/FileSystemSyncAccessHandle.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/quota/QuotaCommon.h"
-
-namespace mozilla {
-extern LazyLogModule gOPFSLog;
-}
-
-#define LOG(args) MOZ_LOG(mozilla::gOPFSLog, mozilla::LogLevel::Verbose, args)
-
-#define LOG_DEBUG(args) \
-  MOZ_LOG(mozilla::gOPFSLog, mozilla::LogLevel::Debug, args)
 
 namespace mozilla::dom::fs {
 
@@ -101,22 +89,6 @@ RefPtr<FileSystemFileHandle> MakeResolution(
   return result;
 }
 
-RefPtr<FileSystemSyncAccessHandle> MakeResolution(
-    nsIGlobalObject* aGlobal, FileSystemGetAccessHandleResponse&& aResponse,
-    const RefPtr<FileSystemSyncAccessHandle>& /* aReturns */,
-    const FileSystemEntryMetadata& aMetadata,
-    RefPtr<FileSystemManager>& aManager) {
-  auto* const actor = static_cast<FileSystemAccessHandleChild*>(
-      aResponse.get_PFileSystemAccessHandleChild());
-
-  RefPtr<FileSystemSyncAccessHandle> result =
-      new FileSystemSyncAccessHandle(aGlobal, aManager, actor, aMetadata);
-
-  actor->SetAccessHandle(result);
-
-  return result;
-}
-
 RefPtr<File> MakeResolution(nsIGlobalObject* aGlobal,
                             FileSystemGetFileResponse&& aResponse,
                             const RefPtr<File>& /* aResult */,
@@ -161,59 +133,14 @@ void ResolveCallback(
 
   MOZ_ASSERT(FileSystemRemoveEntryResponse::Tnsresult == aResponse.type());
   const auto& status = aResponse.get_nsresult();
-  switch (status) {
-    case NS_ERROR_FILE_ACCESS_DENIED:
-      aPromise->MaybeRejectWithNotAllowedError("Permission denied");
-      break;
-    case NS_ERROR_DOM_FILESYSTEM_NO_MODIFICATION_ALLOWED_ERR:
-      aPromise->MaybeRejectWithInvalidModificationError("Disallowed by system");
-      break;
-    default:
-      if (NS_FAILED(status)) {
-        aPromise->MaybeRejectWithUnknownError("Unknown failure");
-      } else {
-        aPromise->MaybeResolveWithUndefined();
-      }
-      break;
-  }
-}
-
-template <>
-void ResolveCallback(
-    FileSystemMoveEntryResponse&& aResponse,
-    RefPtr<Promise> aPromise) {  // NOLINT(performance-unnecessary-value-param)
-  MOZ_ASSERT(aPromise);
-  QM_TRY(OkIf(Promise::PromiseState::Pending == aPromise->State()), QM_VOID);
-
-  MOZ_ASSERT(FileSystemMoveEntryResponse::Tnsresult == aResponse.type());
-  const auto& status = aResponse.get_nsresult();
-  switch (status) {
-    case NS_OK:
-      aPromise->MaybeResolveWithUndefined();
-      break;
-    case NS_ERROR_FILE_ACCESS_DENIED:
-      aPromise->MaybeRejectWithNotAllowedError("Permission denied");
-      break;
-    case NS_ERROR_DOM_FILESYSTEM_NO_MODIFICATION_ALLOWED_ERR:
-      aPromise->MaybeRejectWithInvalidModificationError("Disallowed by system");
-      break;
-    case NS_ERROR_DOM_NOT_FOUND_ERR:
-      aPromise->MaybeRejectWithNotFoundError("Entry not found");
-      break;
-    case NS_ERROR_DOM_INVALID_MODIFICATION_ERR:
-      aPromise->MaybeRejectWithInvalidModificationError("Invalid modification");
-      break;
-    case NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR:
-      aPromise->MaybeRejectWithNoModificationAllowedError(
-          "No modification allowed");
-      break;
-    default:
-      if (NS_FAILED(status)) {
-        aPromise->MaybeRejectWithUnknownError("Unknown failure");
-      } else {
-        aPromise->MaybeResolveWithUndefined();
-      }
-      break;
+  if (NS_ERROR_FILE_ACCESS_DENIED == status) {
+    aPromise->MaybeRejectWithNotAllowedError("Permission denied");
+  } else if (NS_ERROR_DOM_FILESYSTEM_NO_MODIFICATION_ALLOWED_ERR == status) {
+    aPromise->MaybeRejectWithInvalidModificationError("Disallowed by system");
+  } else if (NS_FAILED(status)) {
+    aPromise->MaybeRejectWithUnknownError("Unknown failure");
+  } else {
+    aPromise->MaybeResolveWithUndefined();
   }
 }
 
@@ -331,12 +258,6 @@ void FileSystemRequestHandler::GetDirectoryHandle(
   MOZ_ASSERT(aManager);
   MOZ_ASSERT(!aDirectory.parentId().IsEmpty());
   MOZ_ASSERT(aPromise);
-  LOG(("getDirectoryHandle"));
-
-  if (!IsValidName(aDirectory.childName())) {
-    aPromise->MaybeRejectWithTypeError("Invalid directory name");
-    return;
-  }
 
   FileSystemGetHandleRequest request(aDirectory, aCreate);
 
@@ -360,12 +281,6 @@ void FileSystemRequestHandler::GetFileHandle(
   MOZ_ASSERT(aManager);
   MOZ_ASSERT(!aFile.parentId().IsEmpty());
   MOZ_ASSERT(aPromise);
-  LOG(("getFileHandle"));
-
-  if (!IsValidName(aFile.childName())) {
-    aPromise->MaybeRejectWithTypeError("Invalid filename");
-    return;
-  }
 
   FileSystemGetHandleRequest request(aFile, aCreate);
 
@@ -380,26 +295,6 @@ void FileSystemRequestHandler::GetFileHandle(
   });
   aManager->Actor()->SendGetFileHandle(request, std::move(onResolve),
                                        std::move(onReject));
-}
-
-void FileSystemRequestHandler::GetAccessHandle(
-    RefPtr<FileSystemManager>& aManager, const FileSystemEntryMetadata& aFile,
-    const RefPtr<Promise>& aPromise) {
-  MOZ_ASSERT(aPromise);
-  LOG(("getAccessHandle"));
-
-  FileSystemGetAccessHandleRequest request(aFile.entryId());
-
-  auto&& onResolve = SelectResolveCallback<FileSystemGetAccessHandleResponse,
-                                           RefPtr<FileSystemSyncAccessHandle>>(
-      aPromise, aFile, aManager);
-  auto&& onReject = GetRejectCallback(aPromise);
-
-  QM_TRY(OkIf(aManager->Actor()), QM_VOID, [aPromise](const auto&) {
-    aPromise->MaybeRejectWithUnknownError("Invalid actor");
-  });
-  aManager->Actor()->SendGetAccessHandle(request, std::move(onResolve),
-                                         std::move(onReject));
 }
 
 void FileSystemRequestHandler::GetFile(
@@ -454,12 +349,6 @@ void FileSystemRequestHandler::RemoveEntry(
   MOZ_ASSERT(aManager);
   MOZ_ASSERT(!aEntry.parentId().IsEmpty());
   MOZ_ASSERT(aPromise);
-  LOG(("removeEntry"));
-
-  if (!IsValidName(aEntry.childName())) {
-    aPromise->MaybeRejectWithTypeError("Invalid name");
-    return;
-  }
 
   FileSystemRemoveEntryRequest request(aEntry, aRecursive);
 
@@ -472,63 +361,6 @@ void FileSystemRequestHandler::RemoveEntry(
     aPromise->MaybeRejectWithUnknownError("Invalid actor");
   });
   aManager->Actor()->SendRemoveEntry(request, std::move(onResolve),
-                                     std::move(onReject));
-}
-
-void FileSystemRequestHandler::MoveEntry(
-    RefPtr<FileSystemManager>& aManager, FileSystemHandle* aHandle,
-    const FileSystemEntryMetadata& aEntry,
-    const FileSystemChildMetadata& aNewEntry,
-    RefPtr<Promise> aPromise) {  // NOLINT(performance-unnecessary-value-param)
-  MOZ_ASSERT(aPromise);
-  LOG(("MoveEntry"));
-
-  // reject invalid names: empty, path separators, current & parent directories
-  if (!IsValidName(aNewEntry.childName())) {
-    aPromise->MaybeRejectWithTypeError("Invalid name");
-    return;
-  }
-
-  FileSystemMoveEntryRequest request(aEntry, aNewEntry);
-
-  RefPtr<FileSystemHandle> handle(aHandle);
-  auto&& onResolve =
-      SelectResolveCallback<FileSystemMoveEntryResponse, void>(aPromise);
-
-  auto&& onReject = GetRejectCallback(aPromise);
-
-  QM_TRY(OkIf(aManager && aManager->Actor()), QM_VOID, [aPromise](const auto&) {
-    aPromise->MaybeRejectWithUnknownError("Invalid actor");
-  });
-  aManager->Actor()->SendMoveEntry(request, std::move(onResolve),
-                                   std::move(onReject));
-}
-
-void FileSystemRequestHandler::RenameEntry(
-    RefPtr<FileSystemManager>& aManager, FileSystemHandle* aHandle,
-    const FileSystemEntryMetadata& aEntry, const Name& aName,
-    RefPtr<Promise> aPromise) {  // NOLINT(performance-unnecessary-value-param)
-  MOZ_ASSERT(!aEntry.entryId().IsEmpty());
-  MOZ_ASSERT(aPromise);
-  LOG(("RenameEntry"));
-
-  // reject invalid names: empty, path separators, current & parent directories
-  if (!IsValidName(aName)) {
-    aPromise->MaybeRejectWithTypeError("Invalid name");
-    return;
-  }
-
-  FileSystemRenameEntryRequest request(aEntry, aName);
-
-  auto&& onResolve =
-      SelectResolveCallback<FileSystemMoveEntryResponse, void>(aPromise);
-
-  auto&& onReject = GetRejectCallback(aPromise);
-
-  QM_TRY(OkIf(aManager && aManager->Actor()), QM_VOID, [aPromise](const auto&) {
-    aPromise->MaybeRejectWithUnknownError("Invalid actor");
-  });
-  aManager->Actor()->SendRenameEntry(request, std::move(onResolve),
                                      std::move(onReject));
 }
 

@@ -8,7 +8,6 @@
 
 #include "FileSystemDatabaseManager.h"
 #include "mozilla/Maybe.h"
-#include "mozilla/dom/FileSystemAccessHandleParent.h"
 #include "mozilla/dom/FileSystemDataManager.h"
 #include "mozilla/dom/FileSystemTypes.h"
 #include "mozilla/dom/QMResult.h"
@@ -16,7 +15,6 @@
 #include "mozilla/dom/quota/QuotaCommon.h"
 #include "mozilla/dom/quota/ResultExtensions.h"
 #include "mozilla/ipc/BackgroundParent.h"
-#include "mozilla/ipc/FileDescriptorUtils.h"
 #include "nsString.h"
 #include "nsTArray.h"
 
@@ -42,33 +40,17 @@ FileSystemManagerParent::~FileSystemManagerParent() {
   LOG(("Destroying FileSystemManagerParent %p", this));
 }
 
-void FileSystemManagerParent::AssertIsOnIOTarget() const {
-  MOZ_ASSERT(mDataManager);
-
-  mDataManager->AssertIsOnIOTarget();
-}
-
-const RefPtr<fs::data::FileSystemDataManager>&
-FileSystemManagerParent::DataManagerStrongRef() const {
-  return mDataManager;
-}
-
-IPCResult FileSystemManagerParent::RecvGetRootHandle(
-    GetRootHandleResolver&& aResolver) {
-  AssertIsOnIOTarget();
-
+IPCResult FileSystemManagerParent::RecvGetRootHandleMsg(
+    GetRootHandleMsgResolver&& aResolver) {
   FileSystemGetHandleResponse response(mRootEntry);
   aResolver(response);
 
   return IPC_OK();
 }
 
-IPCResult FileSystemManagerParent::RecvGetDirectoryHandle(
+IPCResult FileSystemManagerParent::RecvGetDirectoryHandleMsg(
     FileSystemGetHandleRequest&& aRequest,
-    GetDirectoryHandleResolver&& aResolver) {
-  LOG(("GetDirectoryHandle %s ",
-       NS_ConvertUTF16toUTF8(aRequest.handle().childName()).get()));
-  AssertIsOnIOTarget();
+    GetDirectoryHandleMsgResolver&& aResolver) {
   MOZ_ASSERT(!aRequest.handle().parentId().IsEmpty());
   MOZ_ASSERT(mDataManager);
 
@@ -89,9 +71,9 @@ IPCResult FileSystemManagerParent::RecvGetDirectoryHandle(
   return IPC_OK();
 }
 
-IPCResult FileSystemManagerParent::RecvGetFileHandle(
-    FileSystemGetHandleRequest&& aRequest, GetFileHandleResolver&& aResolver) {
-  AssertIsOnIOTarget();
+IPCResult FileSystemManagerParent::RecvGetFileHandleMsg(
+    FileSystemGetHandleRequest&& aRequest,
+    GetFileHandleMsgResolver&& aResolver) {
   MOZ_ASSERT(!aRequest.handle().parentId().IsEmpty());
   MOZ_ASSERT(mDataManager);
 
@@ -108,80 +90,20 @@ IPCResult FileSystemManagerParent::RecvGetFileHandle(
 
   FileSystemGetHandleResponse response(entryId);
   aResolver(response);
+
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult FileSystemManagerParent::RecvGetAccessHandle(
-    const FileSystemGetAccessHandleRequest& aRequest,
-    GetAccessHandleResolver&& aResolver) {
-  AssertIsOnIOTarget();
-  MOZ_ASSERT(mDataManager);
-
-  if (!mDataManager->LockExclusive(aRequest.entryId())) {
-    aResolver(NS_ERROR_FAILURE);
-    return IPC_OK();
-  }
-
-  auto autoUnlock =
-      MakeScopeExit([self = RefPtr<FileSystemManagerParent>(this), aRequest] {
-        self->mDataManager->UnlockExclusive(aRequest.entryId());
-      });
-
-  auto reportError = [aResolver](nsresult rv) { aResolver(rv); };
-
-  nsString type;
-  fs::TimeStamp lastModifiedMilliSeconds;
-  fs::Path path;
-  nsCOMPtr<nsIFile> file;
-  QM_TRY(MOZ_TO_RESULT(mDataManager->MutableDatabaseManagerPtr()->GetFile(
-             {aRequest.entryId(), aRequest.entryId()}, type,
-             lastModifiedMilliSeconds, path, file)),
-         IPC_OK(), reportError);
-
-  if (MOZ_LOG_TEST(gOPFSLog, mozilla::LogLevel::Debug)) {
-    nsAutoString path;
-    if (NS_SUCCEEDED(file->GetPath(path))) {
-      LOG(("Opening %s", NS_ConvertUTF16toUTF8(path).get()));
-    }
-  }
-
-  FILE* fileHandle;
-  QM_TRY(MOZ_TO_RESULT(file->OpenANSIFileDesc("r+", &fileHandle)), IPC_OK(),
-         reportError);
-
-  LOG(("Opened"));
-
-  FileDescriptor fileDescriptor =
-      mozilla::ipc::FILEToFileDescriptor(fileHandle);
-
-  auto accessHandleParent =
-      MakeRefPtr<FileSystemAccessHandleParent>(this, aRequest.entryId());
-
-  autoUnlock.release();
-
-  if (!SendPFileSystemAccessHandleConstructor(accessHandleParent,
-                                              fileDescriptor)) {
-    aResolver(NS_ERROR_FAILURE);
-    return IPC_OK();
-  }
-
-  aResolver(FileSystemGetAccessHandleResponse(accessHandleParent));
-  return IPC_OK();
-}
-
-IPCResult FileSystemManagerParent::RecvGetFile(
-    FileSystemGetFileRequest&& aRequest, GetFileResolver&& aResolver) {
-  AssertIsOnIOTarget();
-
+IPCResult FileSystemManagerParent::RecvGetFileMsg(
+    FileSystemGetFileRequest&& aRequest, GetFileMsgResolver&& aResolver) {
   FileSystemGetFileResponse response(NS_ERROR_NOT_IMPLEMENTED);
   aResolver(response);
 
   return IPC_OK();
 }
 
-IPCResult FileSystemManagerParent::RecvResolve(
-    FileSystemResolveRequest&& aRequest, ResolveResolver&& aResolver) {
-  AssertIsOnIOTarget();
+IPCResult FileSystemManagerParent::RecvResolveMsg(
+    FileSystemResolveRequest&& aRequest, ResolveMsgResolver&& aResolver) {
   MOZ_ASSERT(!aRequest.endpoints().parentId().IsEmpty());
   MOZ_ASSERT(!aRequest.endpoints().childId().IsEmpty());
   MOZ_ASSERT(mDataManager);
@@ -217,9 +139,8 @@ IPCResult FileSystemManagerParent::RecvResolve(
   return IPC_OK();
 }
 
-IPCResult FileSystemManagerParent::RecvGetEntries(
-    FileSystemGetEntriesRequest&& aRequest, GetEntriesResolver&& aResolver) {
-  AssertIsOnIOTarget();
+IPCResult FileSystemManagerParent::RecvGetEntriesMsg(
+    FileSystemGetEntriesRequest&& aRequest, GetEntriesMsgResolver&& aResolver) {
   MOZ_ASSERT(!aRequest.parentId().IsEmpty());
   MOZ_ASSERT(mDataManager);
 
@@ -239,11 +160,9 @@ IPCResult FileSystemManagerParent::RecvGetEntries(
   return IPC_OK();
 }
 
-IPCResult FileSystemManagerParent::RecvRemoveEntry(
-    FileSystemRemoveEntryRequest&& aRequest, RemoveEntryResolver&& aResolver) {
-  LOG(("RemoveEntry %s",
-       NS_ConvertUTF16toUTF8(aRequest.handle().childName()).get()));
-  AssertIsOnIOTarget();
+IPCResult FileSystemManagerParent::RecvRemoveEntryMsg(
+    FileSystemRemoveEntryRequest&& aRequest,
+    RemoveEntryMsgResolver&& aResolver) {
   MOZ_ASSERT(!aRequest.handle().parentId().IsEmpty());
   MOZ_ASSERT(mDataManager);
 
@@ -282,79 +201,23 @@ IPCResult FileSystemManagerParent::RecvRemoveEntry(
   return IPC_OK();
 }
 
-IPCResult FileSystemManagerParent::RecvMoveEntry(
-    FileSystemMoveEntryRequest&& aRequest, MoveEntryResolver&& aResolver) {
-  LOG(("MoveEntry %s to %s",
-       NS_ConvertUTF16toUTF8(aRequest.handle().entryName()).get(),
-       NS_ConvertUTF16toUTF8(aRequest.destHandle().childName()).get()));
-  MOZ_ASSERT(!aRequest.handle().entryId().IsEmpty());
-  MOZ_ASSERT(!aRequest.destHandle().parentId().IsEmpty());
-  MOZ_ASSERT(mDataManager);
+IPCResult FileSystemManagerParent::RecvCloseFile(
+    FileSystemGetFileRequest&& aRequest) {
+  LOG(("Closing file"));  // painful to print out the id
 
-  auto reportError = [&aResolver](const QMResult& aRv) {
-    FileSystemMoveEntryResponse response(ToNSResult(aRv));
-    aResolver(response);
-  };
-
-  QM_TRY_UNWRAP(EntryId parentId,
-                mDataManager->MutableDatabaseManagerPtr()->GetParentEntryId(
-                    aRequest.handle().entryId()),
-                IPC_OK(), reportError);
-  FileSystemChildMetadata sourceHandle;
-  sourceHandle.parentId() = parentId;
-  sourceHandle.childName() = aRequest.handle().entryName();
-
-  QM_TRY_UNWRAP(bool moved,
-                mDataManager->MutableDatabaseManagerPtr()->MoveEntry(
-                    sourceHandle, aRequest.destHandle()),
-                IPC_OK(), reportError);
-
-  fs::FileSystemMoveEntryResponse response(moved ? NS_OK : NS_ERROR_FAILURE);
-  aResolver(response);
   return IPC_OK();
 }
 
-IPCResult FileSystemManagerParent::RecvRenameEntry(
-    FileSystemRenameEntryRequest&& aRequest, MoveEntryResolver&& aResolver) {
-  // if destHandle's parentId is empty, then we're renaming in the same
-  // directory
-  LOG(("RenameEntry %s to %s",
-       NS_ConvertUTF16toUTF8(aRequest.handle().entryName()).get(),
-       NS_ConvertUTF16toUTF8(aRequest.name()).get()));
-  MOZ_ASSERT(!aRequest.handle().entryId().IsEmpty());
-  MOZ_ASSERT(mDataManager);
-
-  auto reportError = [&aResolver](const QMResult& aRv) {
-    FileSystemMoveEntryResponse response(ToNSResult(aRv));
-    aResolver(response);
-  };
-
-  QM_TRY_UNWRAP(EntryId parentId,
-                mDataManager->MutableDatabaseManagerPtr()->GetParentEntryId(
-                    aRequest.handle().entryId()),
-                IPC_OK(), reportError);
-  FileSystemChildMetadata sourceHandle;
-  sourceHandle.parentId() = parentId;
-  sourceHandle.childName() = aRequest.handle().entryName();
-
-  FileSystemChildMetadata newHandle;
-  newHandle.parentId() = parentId;
-  newHandle.childName() = aRequest.name();
-
-  QM_TRY_UNWRAP(bool moved,
-                mDataManager->MutableDatabaseManagerPtr()->MoveEntry(
-                    sourceHandle, newHandle),
-                IPC_OK(), reportError);
-
-  fs::FileSystemMoveEntryResponse response(moved ? NS_OK : NS_ERROR_FAILURE);
+IPCResult FileSystemManagerParent::RecvGetAccessHandle(
+    FileSystemGetFileRequest&& aRequest, GetAccessHandleResolver&& aResolver) {
+  FileSystemGetAccessHandleResponse response(NS_ERROR_NOT_IMPLEMENTED);
   aResolver(response);
+
   return IPC_OK();
 }
 
 IPCResult FileSystemManagerParent::RecvGetWritable(
     FileSystemGetFileRequest&& aRequest, GetWritableResolver&& aResolver) {
-  AssertIsOnIOTarget();
-
   FileSystemGetAccessHandleResponse response(NS_ERROR_NOT_IMPLEMENTED);
   aResolver(response);
 
@@ -363,8 +226,6 @@ IPCResult FileSystemManagerParent::RecvGetWritable(
 
 IPCResult FileSystemManagerParent::RecvNeedQuota(
     FileSystemQuotaRequest&& aRequest, NeedQuotaResolver&& aResolver) {
-  AssertIsOnIOTarget();
-
   aResolver(0u);
 
   return IPC_OK();
@@ -379,22 +240,17 @@ void FileSystemManagerParent::RequestAllowToClose() {
 
   mRequestedAllowToClose.Flip();
 
+  // XXX Send a message to the child and wait for a response before closing!
+
   InvokeAsync(mDataManager->MutableIOTargetPtr(), __func__,
               [self = RefPtr<FileSystemManagerParent>(this)]() {
-                return self->SendCloseAll();
-              })
-      ->Then(mDataManager->MutableIOTargetPtr(), __func__,
-             [self = RefPtr<FileSystemManagerParent>(this)](
-                 const CloseAllPromise::ResolveOrRejectValue& aValue) {
-               self->Close();
+                self->Close();
 
-               return BoolPromise::CreateAndResolve(true, __func__);
-             });
+                return BoolPromise::CreateAndResolve(true, __func__);
+              });
 }
 
 void FileSystemManagerParent::OnChannelClose() {
-  AssertIsOnIOTarget();
-
   if (!mAllowedToClose) {
     AllowToClose();
   }
@@ -403,8 +259,6 @@ void FileSystemManagerParent::OnChannelClose() {
 }
 
 void FileSystemManagerParent::OnChannelError() {
-  AssertIsOnIOTarget();
-
   if (!mAllowedToClose) {
     AllowToClose();
   }
@@ -413,8 +267,6 @@ void FileSystemManagerParent::OnChannelError() {
 }
 
 void FileSystemManagerParent::AllowToClose() {
-  AssertIsOnIOTarget();
-
   mAllowedToClose.Flip();
 
   InvokeAsync(mDataManager->MutableBackgroundTargetPtr(), __func__,

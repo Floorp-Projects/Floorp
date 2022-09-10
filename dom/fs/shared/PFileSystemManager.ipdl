@@ -2,8 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-include protocol PFileSystemAccessHandle;
-
 include IPCBlob;
 
 using mozilla::dom::fs::ContentType from "mozilla/dom/FileSystemTypes.h";
@@ -118,18 +116,15 @@ union FileSystemGetFileResponse
   FileSystemFileProperties;
 };
 
-/**
- * Contains entry handle information.
- */
-struct FileSystemGetAccessHandleRequest
+struct FileSystemGetAccessHandleData
 {
-  EntryId entryId;
+  FileDescriptor file;
 };
 
 union FileSystemGetAccessHandleResponse
 {
+  FileSystemGetAccessHandleData;
   nsresult;
-  PFileSystemAccessHandle;
 };
 
 /**
@@ -186,34 +181,6 @@ union FileSystemRemoveEntryResponse
   void_t;
 };
 
-/**
- * Identifies a file/directory to be moved and the new name, and the
- * destination directory
- */
-struct FileSystemMoveEntryRequest
-{
-  FileSystemEntryMetadata handle;
-  FileSystemChildMetadata destHandle;
-};
-
-/**
- * Identifies a file/directory to be renamed and the new name
- */
-struct FileSystemRenameEntryRequest
-{
-  FileSystemEntryMetadata handle;
-  Name name;
-};
-
-/**
- * Contains an error or the new entryId
- */
-union FileSystemMoveEntryResponse
-{
-  nsresult;
-  void_t;
-};
-
 struct FileSystemQuotaRequest
 {
   FileSystemChildMetadata handle;
@@ -224,14 +191,11 @@ struct FileSystemQuotaRequest
 
 async protocol PFileSystemManager
 {
-  manages PFileSystemAccessHandle;
-
  parent:
   /**
    * TODO: documentation
    */
-  [VirtualSendImpl]
-  async GetRootHandle()
+  async GetRootHandleMsg()
       returns(FileSystemGetHandleResponse response);
 
   /**
@@ -250,8 +214,7 @@ async protocol PFileSystemManager
    *
    * @returns error or entry handle
    */
-  [VirtualSendImpl]
-  async GetDirectoryHandle(FileSystemGetHandleRequest request)
+  async GetDirectoryHandleMsg(FileSystemGetHandleRequest request)
       returns(FileSystemGetHandleResponse handle);
 
   /**
@@ -270,8 +233,7 @@ async protocol PFileSystemManager
    *
    * @returns error or entry handle
    */
-  [VirtualSendImpl]
-  async GetFileHandle(FileSystemGetHandleRequest request)
+  async GetFileHandleMsg(FileSystemGetHandleRequest request)
       returns(FileSystemGetHandleResponse handle);
 
   /**
@@ -289,16 +251,14 @@ async protocol PFileSystemManager
    *
    * @returns error or file object
    */
-  [VirtualSendImpl]
-  async GetFile(FileSystemGetFileRequest request)
+  async GetFileMsg(FileSystemGetFileRequest request)
       returns(FileSystemGetFileResponse response);
 
   /**
    * TODO: documentation
    */
-  [VirtualSendImpl]
-  async GetAccessHandle(FileSystemGetAccessHandleRequest request)
-      returns(FileSystemGetAccessHandleResponse response);
+  async GetAccessHandle(FileSystemGetFileRequest request)
+      returns(FileSystemGetAccessHandleResponse fileData);
 
   /**
    * TODO: documentation
@@ -314,8 +274,7 @@ async protocol PFileSystemManager
    *
    * @returns error or file system path
    */
-  [VirtualSendImpl]
-  async Resolve(FileSystemResolveRequest request)
+  async ResolveMsg(FileSystemResolveRequest request)
       returns(FileSystemResolveResponse response);
 
   /**
@@ -334,8 +293,7 @@ async protocol PFileSystemManager
    *
    * @returns error or iterator
    */
-  [VirtualSendImpl]
-  async GetEntries(FileSystemGetEntriesRequest request)
+  async GetEntriesMsg(FileSystemGetEntriesRequest request)
       returns(FileSystemGetEntriesResponse entries);
 
   /**
@@ -352,26 +310,14 @@ async protocol PFileSystemManager
    *
    * @returns error information
    */
-  [VirtualSendImpl]
-  async RemoveEntry(FileSystemRemoveEntryRequest request)
+  async RemoveEntryMsg(FileSystemRemoveEntryRequest request)
       returns(FileSystemRemoveEntryResponse response);
 
   /**
-   * Initiates an asynchronous request to move a directory or file with a
-   * given name to a given destination and new name.
-   *
-   * @returns error information
+   * TODO: documentation
+   * So we can implement exclusive access
    */
-  async MoveEntry(FileSystemMoveEntryRequest request)
-      returns(FileSystemMoveEntryResponse response);
-
-  /**
-   * Initiates an asynchronous request to rename a directory or file
-   *
-   * @returns error information
-   */
-  async RenameEntry(FileSystemRenameEntryRequest request)
-      returns(FileSystemMoveEntryResponse response);
+  async CloseFile(FileSystemGetFileRequest request);
 
   /**
    * Request for quota needed to finish a write, beyond the amount preallocated
@@ -380,12 +326,6 @@ async protocol PFileSystemManager
    */
   async NeedQuota(FileSystemQuotaRequest aRequest)
       returns (uint64_t aQuotaGranted);
-
- child:
-  async PFileSystemAccessHandle(FileDescriptor fileDescriptor);
-
-  async CloseAll()
-      returns(nsresult rv);
 };
 
 } // namespace dom
