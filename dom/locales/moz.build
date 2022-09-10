@@ -46,9 +46,6 @@ with Files("en-US/chrome/security/**"):
 with Files("en-US/chrome/svg/**"):
     BUG_COMPONENT = ("Core", "SVG")
 
-with Files("en-US/chrome/xml/**"):
-    BUG_COMPONENT = ("Core", "XML")
-
 with Files("en-US/chrome/xslt/**"):
     BUG_COMPONENT = ("Core", "XSLT")
 

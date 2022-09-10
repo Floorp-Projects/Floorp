@@ -16,6 +16,7 @@
 #include "nsVariant.h"
 #include "mozilla/dom/CustomEvent.h"
 #include "mozilla/dom/DocumentFragment.h"
+#include "mozilla/dom/DocumentL10n.h"
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/dom/ToJSValue.h"
 #include "mozilla/dom/txMozillaXSLTProcessor.h"
@@ -92,6 +93,25 @@ nsresult nsXMLPrettyPrinter::PrettyPrint(Document* aDocument,
 
   // Append the document fragment to the shadow dom.
   shadowRoot->AppendChild(*resultFragment, err);
+  if (NS_WARN_IF(err.Failed())) {
+    return err.StealNSResult();
+  }
+
+  // Create a DocumentL10n, as the XML document is not allowed to have one.
+  // Make it sync so that the test for bug 590812 does not require a setTimeout.
+  RefPtr<DocumentL10n> l10n = DocumentL10n::Create(aDocument, true);
+  NS_ENSURE_TRUE(l10n, NS_ERROR_UNEXPECTED);
+  l10n->AddResourceId("dom/XMLPrettyPrint.ftl"_ns);
+
+  // Localize the shadow DOM header
+  Element* l10nRoot = shadowRoot->GetElementById(u"header"_ns);
+  NS_ENSURE_TRUE(l10nRoot, NS_ERROR_UNEXPECTED);
+  l10n->SetRootInfo(l10nRoot);
+  l10n->ConnectRoot(*l10nRoot, true, err);
+  if (NS_WARN_IF(err.Failed())) {
+    return err.StealNSResult();
+  }
+  RefPtr<Promise> promise = l10n->TranslateRoots(err);
   if (NS_WARN_IF(err.Failed())) {
     return err.StealNSResult();
   }
