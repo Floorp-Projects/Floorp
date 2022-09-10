@@ -236,9 +236,9 @@ class TestStream : public ots::MemoryStream {
   }
 
   uint8_t* data() { return data_; }
-  size_t size() const { return size_; }
+  size_t size() override { return size_; }
 
-  virtual bool WriteRaw(const void *d, size_t length) {
+  bool WriteRaw(const void *d, size_t length) override {
     if (Tell() + length > size_) {
       size_ = Tell() + length;
     }
