@@ -157,7 +157,12 @@ let SyncedTabsInternal = {
       return false;
     }
     // If Sync can't log in we also don't try.
-    if (Weave.Status.login !== Weave.STATUS_OK) {
+    if (
+      !(
+        Weave.Status.login === Weave.STATUS_OK ||
+        Weave.Status.login === Weave.LOGIN_SUCCEEDED
+      )
+    ) {
       lazy.log.info(
         "Can't sync tabs due to the login status",
         Weave.Status.login
