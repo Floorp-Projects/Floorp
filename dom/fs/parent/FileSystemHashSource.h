@@ -7,8 +7,8 @@
 #ifndef DOM_FS_PARENT_FILESYSTEMHASHSOURCE_H_
 #define DOM_FS_PARENT_FILESYSTEMHASHSOURCE_H_
 
-#include "mozilla/dom/FileSystemTypes.h"
 #include "mozilla/Result.h"
+#include "mozilla/dom/FileSystemTypes.h"
 #include "mozilla/dom/QMResult.h"
 #include "mozilla/dom/quota/ResultExtensions.h"
 

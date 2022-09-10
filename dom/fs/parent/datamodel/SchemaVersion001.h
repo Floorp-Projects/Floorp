@@ -7,9 +7,9 @@
 #ifndef DOM_FS_PARENT_DATAMODEL_SCHEMAVERSION001_H_
 #define DOM_FS_PARENT_DATAMODEL_SCHEMAVERSION001_H_
 
+#include "ResultConnection.h"
 #include "mozilla/dom/FileSystemTypes.h"
 #include "mozilla/dom/quota/ForwardDecls.h"
-#include "ResultConnection.h"
 
 namespace mozilla::dom::fs {
 

@@ -4,20 +4,20 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "FileSystemEntryMetadataArray.h"
 #include "FileSystemBackgroundRequestHandler.h"
+#include "FileSystemEntryMetadataArray.h"
 #include "FileSystemMocks.h"
 #include "fs/FileSystemRequestHandler.h"
 #include "gtest/gtest.h"
-#include "mozilla/dom/IPCBlob.h"
+#include "mozilla/SpinEventLoopUntil.h"
+#include "mozilla/UniquePtr.h"
 #include "mozilla/dom/FileSystemManager.h"
 #include "mozilla/dom/FileSystemManagerChild.h"
+#include "mozilla/dom/IPCBlob.h"
 #include "mozilla/dom/PFileSystemManager.h"
 #include "mozilla/dom/StorageManager.h"
 #include "mozilla/ipc/FileDescriptorUtils.h"
 #include "mozilla/ipc/IPCCore.h"
-#include "mozilla/SpinEventLoopUntil.h"
-#include "mozilla/UniquePtr.h"
 
 using ::testing::_;
 using ::testing::ByRef;
