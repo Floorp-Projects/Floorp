@@ -7,14 +7,14 @@
 #include "FileSystemDatabaseManagerVersion001.h"
 
 #include "FileSystemFileManager.h"
+#include "ResultStatement.h"
+#include "mozStorageHelper.h"
 #include "mozilla/dom/FileSystemDataManager.h"
 #include "mozilla/dom/FileSystemHandle.h"
 #include "mozilla/dom/FileSystemTypes.h"
+#include "mozilla/dom/PFileSystemManager.h"
 #include "mozilla/dom/quota/QuotaCommon.h"
 #include "mozilla/dom/quota/ResultExtensions.h"
-#include "mozilla/dom/PFileSystemManager.h"
-#include "mozStorageHelper.h"
-#include "ResultStatement.h"
 
 namespace mozilla::dom {
 

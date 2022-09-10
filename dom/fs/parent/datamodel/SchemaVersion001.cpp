@@ -7,11 +7,11 @@
 #include "SchemaVersion001.h"
 
 #include "FileSystemHashSource.h"
+#include "ResultStatement.h"
 #include "fs/FileSystemConstants.h"
+#include "mozStorageHelper.h"
 #include "mozilla/dom/quota/QuotaCommon.h"
 #include "mozilla/dom/quota/ResultExtensions.h"
-#include "mozStorageHelper.h"
-#include "ResultStatement.h"
 
 namespace mozilla::dom::fs {
 
