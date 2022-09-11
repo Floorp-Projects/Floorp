@@ -38,17 +38,13 @@ class HomeCFRPresenter(
      * Determine the CFR to be shown on the Home screen and show a CFR for the resultant view
      * if any.
      */
-    fun show(): Boolean {
-        return when (val result = getCFRToShow()) {
-            is Result.SyncedTab -> {
-                showSyncedTabCFR(view = result.view)
-                true
+    fun show() {
+        when (val result = getCFRToShow()) {
+            is Result.SyncedTab -> showSyncedTabCFR(view = result.view)
+            is Result.JumpBackIn -> showJumpBackInCFR(view = result.view)
+            else -> {
+                // no-op
             }
-            is Result.JumpBackIn -> {
-                showJumpBackInCFR(view = result.view)
-                true
-            }
-            else -> false
         }
     }
 

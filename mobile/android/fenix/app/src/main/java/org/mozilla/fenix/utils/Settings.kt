@@ -210,7 +210,7 @@ class Settings(private val appContext: Context) : PreferencesHolder {
     /**
      * Indicates if the wallpaper onboarding dialog should be shown.
      */
-    var showWallpaperOnboarding by lazyFeatureFlagPreference(
+    val showWallpaperOnboarding by lazyFeatureFlagPreference(
         key = appContext.getPreferenceKey(R.string.pref_key_wallpapers_onboarding),
         featureFlag = FeatureFlags.wallpaperOnboardingEnabled,
         default = { mr2022Sections[Mr2022Section.WALLPAPERS_SELECTION_TOOL] == true },

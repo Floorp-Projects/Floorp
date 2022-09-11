@@ -66,7 +66,6 @@ class SearchTest {
         featureSettingsHelper.setJumpBackCFREnabled(false)
         featureSettingsHelper.setTCPCFREnabled(false)
         featureSettingsHelper.setPocketEnabled(false)
-        featureSettingsHelper.setShowWallpaperOnboarding(false)
     }
 
     @After

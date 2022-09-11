@@ -27,7 +27,6 @@ import org.mozilla.fenix.home.recentvisits.RecentlyVisitedItem.RecentHistoryGrou
 import org.mozilla.fenix.home.recentvisits.RecentlyVisitedItem.RecentHistoryHighlight
 import org.mozilla.fenix.home.recentvisits.controller.RecentVisitsController
 import org.mozilla.fenix.home.recentvisits.interactor.RecentVisitsInteractor
-import org.mozilla.fenix.wallpapers.WallpaperState
 
 /**
  * Interface for tab related actions in the [SessionControlInteractor].
@@ -163,15 +162,6 @@ interface OnboardingInteractor {
      * Opens a custom tab to privacy notice url. Called when a user clicks on the "read our privacy notice" button.
      */
     fun onReadPrivacyNoticeClicked()
-
-    /**
-     * Show Wallpapers onboarding dialog to onboard users about the feature if conditions are met.
-     * Returns true if the call has been passed down to the controller.
-     *
-     * @param state The wallpaper state.
-     * @return Whether the onboarding dialog is currently shown
-     */
-    fun showWallpapersOnboardingDialog(state: WallpaperState): Boolean
 }
 
 interface CustomizeHomeIteractor {
@@ -330,10 +320,6 @@ class SessionControlInteractor(
 
     override fun onReadPrivacyNoticeClicked() {
         controller.handleReadPrivacyNoticeClicked()
-    }
-
-    override fun showWallpapersOnboardingDialog(state: WallpaperState): Boolean {
-        return controller.handleShowWallpapersOnboardingDialog(state)
     }
 
     override fun onToggleCollectionExpanded(collection: TabCollection, expand: Boolean) {

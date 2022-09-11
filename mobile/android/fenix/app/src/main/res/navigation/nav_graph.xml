@@ -35,11 +35,6 @@
         app:popUpTo="@id/homeFragment" />
 
     <action
-        android:id="@+id/action_global_wallpaper_onboarding_dialog"
-        app:destination="@id/wallpaperOnboardingDialogFragment"
-        app:popUpTo="@id/homeFragment" />
-
-    <action
         android:id="@+id/action_global_search_dialog"
         app:destination="@id/searchDialogFragment"
         app:popUpTo="@id/searchDialogFragment"
@@ -193,10 +188,6 @@
     <dialog
         android:id="@+id/homeOnboardingDialogFragment"
         android:name="org.mozilla.fenix.onboarding.HomeOnboardingDialogFragment" />
-
-    <dialog
-        android:id="@+id/wallpaperOnboardingDialogFragment"
-        android:name="org.mozilla.fenix.onboarding.WallpaperOnboardingDialogFragment" />
 
     <dialog
         android:id="@+id/searchDialogFragment"

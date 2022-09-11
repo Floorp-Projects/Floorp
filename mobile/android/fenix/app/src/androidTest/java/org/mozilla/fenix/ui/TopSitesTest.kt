@@ -55,7 +55,6 @@ class TopSitesTest {
 
         featureSettingsHelper.setJumpBackCFREnabled(false)
         featureSettingsHelper.setTCPCFREnabled(false)
-        featureSettingsHelper.setShowWallpaperOnboarding(false)
     }
 
     @After

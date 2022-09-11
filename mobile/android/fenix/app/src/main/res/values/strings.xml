@@ -458,12 +458,6 @@
     <!-- This is the accessibility content description for the wallpapers functionality. Users are
     able to tap on the app logo in the home screen and can switch to different wallpapers by tapping. -->
     <string name="wallpaper_logo_content_description" moz:removedIn="105" tools:ignore="UnusedResources">Firefox logo - change the wallpaper, button</string>
-    <!-- Wallpaper onboarding dialog header text. -->
-    <string name="wallpapers_onboarding_dialog_title_text">Try a splash of color</string>
-    <!-- Wallpaper onboarding dialog body text. -->
-    <string name="wallpapers_onboarding_dialog_body_text">Choose a wallpaper that speaks to you.</string>
-    <!-- Wallpaper onboarding dialog learn more button text. The button navigates to the wallpaper settings screen. -->
-    <string name="wallpapers_onboarding_dialog_explore_more_button_text">Explore more wallpapers</string>
 
     <!-- Add-on Installation from AMO-->
     <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is not supported -->

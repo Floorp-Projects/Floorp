@@ -147,27 +147,19 @@ private fun WallpaperSnackbar(
  * @param selectedWallpaper The currently selected wallpaper.
  * @param numColumns The number of columns that will occupy the grid.
  * @param onSelectWallpaper Action to take when a new wallpaper is selected.
- * @param verticalPadding Vertical content padding inside the block.
- * @param horizontalPadding Horizontal content padding inside the block.
  */
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 @Suppress("LongParameterList")
-fun WallpaperThumbnails(
+private fun WallpaperThumbnails(
     wallpapers: List<Wallpaper>,
     defaultWallpaper: Wallpaper,
     loadWallpaperResource: suspend (Wallpaper) -> Bitmap?,
     selectedWallpaper: Wallpaper,
     numColumns: Int = 3,
     onSelectWallpaper: (Wallpaper) -> Unit,
-    verticalPadding: Int = 30,
-    horizontalPadding: Int = 20,
 ) {
-    Column(
-        modifier = Modifier.padding(
-            vertical = verticalPadding.dp,
-            horizontal = horizontalPadding.dp,
-        ),
-    ) {
+    Column(modifier = Modifier.padding(vertical = 30.dp, horizontal = 20.dp)) {
         val numRows = (wallpapers.size + numColumns - 1) / numColumns
         for (rowIndex in 0 until numRows) {
             Row {
@@ -175,9 +167,7 @@ fun WallpaperThumbnails(
                     val itemIndex = rowIndex * numColumns + columnIndex
                     if (itemIndex < wallpapers.size) {
                         Box(
-                            modifier = Modifier
-                                .weight(1f, fill = true)
-                                .padding(4.dp),
+                            modifier = Modifier.weight(1f, fill = true).padding(4.dp),
                         ) {
                             WallpaperThumbnailItem(
                                 wallpaper = wallpapers[itemIndex],
