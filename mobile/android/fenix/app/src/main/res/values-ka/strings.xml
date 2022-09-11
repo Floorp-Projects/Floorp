@@ -39,7 +39,9 @@
 
     <!-- Home - Recently saved bookmarks -->
     <!-- Title for the home screen section with recently saved bookmarks. -->
-    <string name="recent_bookmarks_title">ბოლოს ჩანიშნული</string>
+    <string moz:RemovedIn="106" name="recent_bookmarks_title" tools:ignore="UnusedResources">ბოლოს ჩანიშნული</string>
+    <!-- Title for the home screen section with recently saved bookmarks. -->
+    <string name="recently_saved_title">ბოლოს შენახული</string>
     <!-- Content description for the button which navigates the user to show all of their saved bookmarks. -->
     <string name="recently_saved_show_all_content_description_2">ყველა ჩანიშნულის ჩვენება</string>
 
@@ -73,6 +75,12 @@
 
     <!-- Content description for close button used in "contextual feature recommendation" (CFR) popups -->
     <string name="cfr_dismiss_button_default_content_description">დახურვა</string>
+
+    <!-- Total cookie protection "contextual feature recommendation" (CFR) -->
+    <!-- Text for the message displayed in the contextual feature recommendation popup promoting the total cookie protection feature. -->
+    <string name="tcp_cfr_message">ჩვენი ყველაზე მძლავრი საშუალება პირადულობის დასაცავად საიტთაშორისი მეთვალყურეების გამიჯვნაა.</string>
+    <!-- Text displayed that links to website containing documentation about the "Total cookie protection" feature. -->
+    <string name="tcp_cfr_learn_more">გაეცანით ფუნთუშებისგან ყოველმხრივ დაცვას</string>
 
     <!-- Text for the info dialog when camera permissions have been denied but user tries to access a camera feature. -->
     <string name="camera_permissions_needed_message">კამერასთან წვდომაა საჭირო. გადადით Android-პარამეტრებში, შეეხეთ ნებართვებს და შემდეგ დაშვებას.</string>
@@ -130,6 +138,8 @@
     <string name="recent_tabs_see_all_synced_tabs_button_text">ყველა დასინქრონებულის ნახვა</string>
     <!-- Accessibility description for device icon used for recent synced tab -->
     <string name="recent_tabs_synced_device_icon_content_description">დასინქრონებული მოწყობილობა</string>
+    <!-- Text for the dropdown menu to remove a recent synced tab from the homescreen -->
+    <string name="recent_synced_tab_menu_item_remove">მოცილება</string>
     <!-- Text for the menu button to remove a grouped highlight from the user's browsing history
          in the Recently visited section -->
     <string name="recent_tab_menu_item_remove">მოცილება</string>
@@ -244,25 +254,45 @@
 
     <!-- Home onboarding -->
     <!-- Onboarding home screen dialog title text. The first parameter is the name of the application.-->
-    <string name="onboarding_home_screen_title_3">რა სიახლეებითაა %1$s</string>
+    <string moz:RemovedIn="106" name="onboarding_home_screen_title_3" tools:ignore="UnusedResources">რა სიახლეებითაა %1$s</string>
     <!-- Onboarding home screen dialog description text. -->
-    <string name="onboarding_home_screen_description_2">მარტივად განაგრძეთ იქიდან, სადაც შეჩერდით.</string>
+    <string moz:RemovedIn="106" name="onboarding_home_screen_description_2" tools:ignore="UnusedResources">მარტივად განაგრძეთ იქიდან, სადაც შეჩერდით.</string>
     <!-- Onboarding home screen dialog title text for the home section. The first parameter is the name of the application.-->
-    <string name="onboarding_home_screen_section_home_title_3">მორგებული %1$s-გვერდი საწყისად</string>
+    <string moz:RemovedIn="106" name="onboarding_home_screen_section_home_title_3" tools:ignore="UnusedResources">მორგებული %1$s-გვერდი საწყისად</string>
     <!-- Onboarding home screen dialog description text for the home section. -->
-    <string name="onboarding_home_screen_section_home_description_2">გადადით გახსნილ ჩანართებზე, სანიშნებსა და მონახულებულ გვერდებზე.</string>
+    <string moz:RemovedIn="106" name="onboarding_home_screen_section_home_description_2" tools:ignore="UnusedResources">გადადით გახსნილ ჩანართებზე, სანიშნებსა და მონახულებულ გვერდებზე.</string>
     <!-- Onboarding home screen dialog description text for the tab tray section. -->
-    <string name="onboarding_home_screen_section_cleaner_tab_tray_title_2">სუფთა, მოწესრიგებული ჩანართები</string>
+    <string moz:RemovedIn="106" name="onboarding_home_screen_section_cleaner_tab_tray_title_2" tools:ignore="UnusedResources">სუფთა, მოწესრიგებული ჩანართები</string>
 
     <!-- Onboarding home screen dialog description text for the tab tray section. -->
-    <string name="onboarding_home_screen_section_cleaner_tab_tray_description_2">აირიდეთ ჩანართების არეულობა, დახვეწილი განლაგებითა და თვითდახურვით.</string>
+    <string moz:RemovedIn="106" name="onboarding_home_screen_section_cleaner_tab_tray_description_2" tools:ignore="UnusedResources">აირიდეთ ჩანართების არეულობა, დახვეწილი განლაგებითა და თვითდახურვით.</string>
     <!-- Onboarding home screen dialog description text for the history section. -->
-    <string name="onboarding_home_screen_section_useful_history_title_2">ბოლოს მოძიებული</string>
+    <string moz:RemovedIn="106" name="onboarding_home_screen_section_useful_history_title_2" tools:ignore="UnusedResources">ბოლოს მოძიებული</string>
     <!-- Onboarding home screen dialog description text for the history section. -->
-    <string name="onboarding_home_screen_section_useful_history_description_2">კვლავ მოინახულეთ ბოლოს მოძიებულები, საწყისი გვერდიდან და ჩანართებიდან.</string>
+    <string moz:RemovedIn="106" name="onboarding_home_screen_section_useful_history_description_2" tools:ignore="UnusedResources">კვლავ მოინახულეთ ბოლოს მოძიებულები, საწყისი გვერდიდან და ჩანართებიდან.</string>
 
     <!-- Onboarding home screen popup dialog, shown on top of the Jump back in section. Firefox is intentionally hardcoded. -->
-    <string name="onboarding_home_screen_jump_back_contextual_hint" tools:ignore="UnusedResources">Firefox-ის მორგებული საწყისი გვერდით, შეძლებთ მარტივად განაგრძოთ იქიდან, სადაც შეჩერდით. იპოვეთ ბოლოს გახსნილი ჩანართები, სანიშნები და მოძიებული გვერდები.</string>
+    <string moz:RemovedIn="106" name="onboarding_home_screen_jump_back_contextual_hint" tools:ignore="UnusedResources">Firefox-ის მორგებული საწყისი გვერდით შეძლებთ, მარტივად განაგრძოთ იქიდან, სადაც შეჩერდით. იპოვეთ ბოლოს გახსნილი ჩანართები, სანიშნები და მოძიებული გვერდები.</string>
+
+    <!-- Onboarding home screen popup dialog, shown on top of the Jump back in section. -->
+    <string name="onboarding_home_screen_jump_back_contextual_hint_2">გაეცანით მორგებულ საწყის გვერდს. ბოლოდროინდელი ჩანართები, სანიშნები და მოძიებული გვერდები გამოჩნდება აქ.</string>
+    <!-- Home onboarding dialog welcome screen title text. -->
+    <string name="onboarding_home_welcome_title">კეთილი იყოს თქვენი ფეხი დამოუკიდებელ ინტერნეტსივრცეში</string>
+
+    <!-- Home onboarding dialog welcome screen description text. -->
+    <string name="onboarding_home_welcome_description">მეტი ფერი. გაუმჯობესებული პირადულობა. ხალხის მოგებაზე წინ დაყენება მუდამ.</string>
+    <!-- Home onboarding dialog sign into sync screen title text. -->
+    <string name="onboarding_home_sync_title_2">მოქნილად გადაერთეთ ტელეფონიდან ლეპტოპზე და უკან</string>
+    <!-- Home onboarding dialog sign into sync screen description text. -->
+    <string name="onboarding_home_sync_description">განაგრძეთ, სადაც გაჩერდით სხვა მოწყობილობიდან ჩანართების წამოღებით ახლა უკვე საწყის გვერდზე.</string>
+    <!-- Text for the button to continue the onboarding on the home onboarding dialog. -->
+    <string name="onboarding_home_get_started_button">დაიწყეთ</string>
+    <!-- Text for the button to navigate to the sync sign in screen on the home onboarding dialog. -->
+    <string name="onboarding_home_sign_in_button">შესვლა</string>
+    <!-- Text for the button to skip the onboarding on the home onboarding dialog. -->
+    <string name="onboarding_home_skip_button">გამოტოვება</string>
+    <!-- Onboarding home screen sync popup dialog message, shown on top of Recent Synced Tabs in the Jump back in section. -->
+    <string name="sync_cfr_message">თქვენი ჩანართები სინქრონდება! განაგრძეთ იქიდანვე, სადაც შეჩერდით სხვა მოწყობილობაზე.</string>
 
     <!-- Search Widget -->
     <!-- Content description for searching with a widget. The first parameter is the name of the application.-->
@@ -440,11 +470,11 @@
     <!-- Snackbar label for action to view selected wallpaper -->
     <string name="wallpaper_updated_snackbar_action">ნახვა</string>
     <!-- Label for switch which toggles the "tap-to-switch" behavior on home screen logo -->
-    <string name="wallpaper_tap_to_change_switch_label_1">შეცვალეთ ფონი Firefox-ის საწყისი გვერდის ნიშანზე შეხებით</string>
+    <string moz:removedIn="105" name="wallpaper_tap_to_change_switch_label_1" tools:ignore="UnusedResources">შეცვალეთ ფონი Firefox-ის საწყისი გვერდის ნიშანზე შეხებით</string>
 
     <!-- This is the accessibility content description for the wallpapers functionality. Users are
     able to tap on the app logo in the home screen and can switch to different wallpapers by tapping. -->
-    <string name="wallpaper_logo_content_description">Firefox-ლოგო – შეცვალეთ ფონი, ღილაკი</string>
+    <string moz:removedIn="105" name="wallpaper_logo_content_description" tools:ignore="UnusedResources">Firefox-ლოგო – შეცვალეთ ფონი, ღილაკი</string>
 
     <!-- Add-on Installation from AMO-->
     <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is not supported -->
@@ -620,9 +650,9 @@
     <!-- Option for a grid tab view -->
     <string name="tab_view_grid">ბადისებრი</string>
     <!-- Option for search term tab groups -->
-    <string name="tab_view_search_term_tab_groups">ძიების ჯგუფები</string>
+    <string moz:RemovedIn="105" name="tab_view_search_term_tab_groups" tools:ignore="UnusedResources">ძიების ჯგუფები</string>
     <!-- Summary text for search term tab groups -->
-    <string name="tab_view_search_term_tab_groups_summary">დაკავშირებული საიტების დაჯგუფება</string>
+    <string moz:RemovedIn="105" name="tab_view_search_term_tab_groups_summary" tools:ignore="UnusedResources">დაკავშირებული საიტების დაჯგუფება</string>
     <!-- Title of preference that allows a user to auto close tabs after a specified amount of time -->
     <string name="preferences_close_tabs">ჩანართების დახურვა</string>
     <!-- Option for auto closing tabs that will never auto close tabs, always allows user to manually close tabs -->
@@ -727,8 +757,6 @@
     <string name="open_tabs_menu">ჩანართების მენიუს გახსნა</string>
     <!-- Open tabs menu item to save tabs to collection -->
     <string name="tabs_menu_save_to_collection1">ჩანართების კრებულში შენახვა</string>
-    <!-- Content description (not visible, for screen readers etc.): Opens the tab menu when pressed -->
-    <string moz:RemovedIn="103" name="tab_menu" tools:ignore="UnusedResources">ჩანართის მენიუ</string>
     <!-- Text for the menu button to delete a collection -->
     <string name="collection_delete">კრებულის წაშლა</string>
     <!-- Text for the menu button to rename a collection -->
@@ -779,16 +807,16 @@
     <string name="history_empty_message">ისტორია არ არის</string>
 
     <!-- Text for the button inside History screen that opens Synced History screen. History that is coming from other devices -->
-    <string name="history_synced_from_other_devices">სხვა მოწყობილობებიდან დასინქრონებული</string>
+    <string moz:removedIn="105" name="history_synced_from_other_devices" tools:ignore="UnusedResources">სხვა მოწყობილობებიდან დასინქრონებული</string>
     <!-- The page title for browsing history coming from other devices. -->
-    <string name="history_from_other_devices">სხვა მოწყობილობებიდან</string>
+    <string moz:removedIn="105" name="history_from_other_devices" tools:ignore="UnusedResources">სხვა მოწყობილობებიდან</string>
 
     <!-- The synced history sign in dialog message -->
-    <string name="history_sign_in_message">შედით თქვენი სხვა მოწყობილობებიდან ისტორიის სანახავად.</string>
+    <string moz:removedIn="105" name="history_sign_in_message" tools:ignore="UnusedResources">შედით თქვენი სხვა მოწყობილობებიდან ისტორიის სანახავად.</string>
     <!-- The synced history sign in dialog button text -->
-    <string name="history_sign_in_button">შესვლა</string>
+    <string moz:removedIn="105" name="history_sign_in_button" tools:ignore="UnusedResources">შესვლა</string>
     <!-- The synced history sign in dialog create a new account link -->
-    <string name="history_sign_in_create_account"><![CDATA[<u>ან შექმენით Firefox-ანგარიში სინქრონიზაციისთვის</u>]]></string>
+    <string moz:removedIn="105" name="history_sign_in_create_account" tools:ignore="UnusedResources"><![CDATA[<u>ან შექმენით Firefox-ანგარიში სინქრონიზაციისთვის</u>]]></string>
 
     <!-- Downloads -->
     <!-- Text for the snackbar to confirm that multiple downloads items have been removed -->
@@ -1314,6 +1342,8 @@
     <string name="preference_enhanced_tracking_protection_custom_cookies_3">ყველა გარეშე ფუნთუშა (იწვევს ზოგი საიტის გაუმართაობას)</string>
     <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
     <string name="preference_enhanced_tracking_protection_custom_cookies_4">ყველა ფუნთუშა (იწვევს ზოგი საიტის გაუმართაობას)</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
+    <string name="preference_enhanced_tracking_protection_custom_cookies_5">საიტთაშორისი ფუნთუშების გამიჯვნა</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings for tracking content -->
     <string name="preference_enhanced_tracking_protection_custom_tracking_content">მეთვალყურე შიგთავსი</string>
     <!-- Option for enhanced tracking protection for the custom protection settings for tracking content-->
@@ -1337,8 +1367,12 @@
     <string name="etp_social_media_trackers_description">უზღუდავს სოციალურ ქსელებს, ვებსივრცეში თქვენს საქმიანობაზე თვალის მიდევნების საშუალებას.</string>
     <!-- Category of trackers (cross-site tracking cookies) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cookies_title">საიტთაშორისი მეთვალყურე ფუნთუშები</string>
+    <!-- Category of trackers (cross-site tracking cookies) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_cookies_title_2">საიტთაშორისი ფუნთუშები</string>
     <!-- Description of cross-site tracking cookies that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cookies_description">ზღუდავს ფუნთუშებს, რომლებსაც სარეკლამო და ანალიტიკური კომპანიები იყენებენ თქვენზე მონაცემების ერთიანად შეგროვებისთვის, სხვადასხვა საიტიდან.</string>
+    <!-- Description of cross-site tracking cookies that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_cookies_description_2">ფუნთუშებისგან ყოველმხრივი დაცვა ფუნთუშებს იმ საიტის საზღვრებში აქცევს, რომელზეც იმყოფებით და მეთვალყურეები ვეღარ შეძლებენ, საიტებს შორის მიმოსვლისას გადევნონ თვალი.</string>
     <!-- Category of trackers (cryptominers) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cryptominers_title">კრიპტოგამომმუშავებლები</string>
     <!-- Description of cryptominers that can be blocked by Enhanced Tracking Protection -->

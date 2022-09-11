@@ -77,6 +77,12 @@
     <!-- Content description for close button used in "contextual feature recommendation" (CFR) popups -->
     <string name="cfr_dismiss_button_default_content_description">Адхіліць</string>
 
+    <!-- Total cookie protection "contextual feature recommendation" (CFR) -->
+    <!-- Text for the message displayed in the contextual feature recommendation popup promoting the total cookie protection feature. -->
+    <string name="tcp_cfr_message">Наша самая магутная функцыя аховы прыватнасці ізалюе міжсайтавыя трэкеры.</string>
+    <!-- Text displayed that links to website containing documentation about the "Total cookie protection" feature. -->
+    <string name="tcp_cfr_learn_more">Даведайцеся аб поўнай ахове кукаў</string>
+
     <!-- Text for the info dialog when camera permissions have been denied but user tries to access a camera feature. -->
     <string name="camera_permissions_needed_message">Патрабуецца доступ да камеры. Перайдзіце ў налады Android, націсніце &quot;Дазволы&quot;, і затым &quot;Дазволіць&quot;.</string>
     <!-- Text for the positive action button to go to Android Settings to grant permissions. -->
@@ -271,12 +277,25 @@
     <!-- Onboarding home screen popup dialog, shown on top of the Jump back in section. Firefox is intentionally hardcoded. -->
     <string moz:RemovedIn="106" name="onboarding_home_screen_jump_back_contextual_hint" tools:ignore="UnusedResources">Ваша персаналізаваная галоўная старонка Firefox цяпер палягчае працяг адтуль, дзе вы спыніліся. Знайдзіце свае апошнія карткі, закладкі і вынікі пошуку.</string>
 
+    <!-- Onboarding home screen popup dialog, shown on top of the Jump back in section. -->
+    <string name="onboarding_home_screen_jump_back_contextual_hint_2">Сустракайце сваю персаналізаваную хатнюю старонку. Тут будуць паказаны апошнія карткі, закладкі і вынікі пошуку.</string>
+    <!-- Home onboarding dialog welcome screen title text. -->
+    <string name="onboarding_home_welcome_title">Сардэчна запрашаем у незалежны Інтэрнэт</string>
+    <!-- Home onboarding dialog welcome screen description text. -->
+    <string name="onboarding_home_welcome_description">Больш колераў. Лепшая прыватнасць. Тая ж адданасць людзям, а не прыбытку.</string>
+    <!-- Home onboarding dialog sign into sync screen title text. -->
+    <string name="onboarding_home_sync_title_2">Пераходзьце з тэлефона на ноўтбук і назад</string>
+    <!-- Home onboarding dialog sign into sync screen description text. -->
+    <string name="onboarding_home_sync_description">Працягвайце з таго месца, дзе спыніліся, з дапамогай картак з іншых прылад, якія зараз знаходзяцца на вашай хатняй старонцы.</string>
     <!-- Text for the button to continue the onboarding on the home onboarding dialog. -->
     <string name="onboarding_home_get_started_button">Пачаць</string>
     <!-- Text for the button to navigate to the sync sign in screen on the home onboarding dialog. -->
     <string name="onboarding_home_sign_in_button">Увайсці</string>
     <!-- Text for the button to skip the onboarding on the home onboarding dialog. -->
     <string name="onboarding_home_skip_button">Прапусціць</string>
+
+    <!-- Onboarding home screen sync popup dialog message, shown on top of Recent Synced Tabs in the Jump back in section. -->
+    <string name="sync_cfr_message">Вашыя карткі сінхранізуюцца! Працягвайце з таго месца, дзе спыніліся на іншай прыладзе.</string>
 
     <!-- Search Widget -->
     <!-- Content description for searching with a widget. The first parameter is the name of the application.-->
@@ -1337,6 +1356,8 @@
     <string name="preference_enhanced_tracking_protection_custom_cookies_3">Усе кукі трэцяга боку (можа парушыць працу вэб-сайтаў)</string>
     <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
     <string name="preference_enhanced_tracking_protection_custom_cookies_4">Усе кукі (будзе перашкаджаць працы сайтаў)</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
+    <string name="preference_enhanced_tracking_protection_custom_cookies_5">Ізаляваць міжсайтавыя кукі</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings for tracking content -->
     <string name="preference_enhanced_tracking_protection_custom_tracking_content">Элементы сачэння</string>
     <!-- Option for enhanced tracking protection for the custom protection settings for tracking content-->

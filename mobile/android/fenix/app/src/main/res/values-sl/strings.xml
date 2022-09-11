@@ -1379,6 +1379,8 @@
     <string name="etp_cookies_title">Spletni sledilni piškotki</string>
     <!-- Description of cross-site tracking cookies that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cookies_description">Zavrača piškotke, ki jih oglaševalci in analitična podjetja uporabljajo za zbiranje podatkov brskanja na številnih straneh.</string>
+    <!-- Description of cross-site tracking cookies that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_cookies_description_2">Popolna zaščita pred piškotki omeji piškotke na spletno mesto, na katerem se nahajate, tako da jih sledilci ne morejo uporabiti za sledenje med različnimi spletnimi mesti.</string>
     <!-- Category of trackers (cryptominers) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cryptominers_title">Kriptorudarji</string>
     <!-- Description of cryptominers that can be blocked by Enhanced Tracking Protection -->
