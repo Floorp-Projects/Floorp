@@ -511,11 +511,16 @@ toolbarbutton.bookmark-item {
   border-radius: 4px;
   color: inherit;
   fill: currentColor;
-  margin: 0px 0px 10px 0.2em;
-  padding-left: 11px;
-  scale: 1.2;
+  margin: 0px 2.5px 6px 0.2em;
+  padding-left: 8px;
+  scale: 1.0;
   padding-top: 9px;
   padding-bottom: 10px;
+}
+
+#sidebar-select-box{
+border-left: solid 1px var(--arrowpanel-border-color);
+border-right: solid 1px var(--arrowpanel-border-color);
 }
 
 .sidebar2-icon {
@@ -574,7 +579,7 @@ toolbarbutton.bookmark-item {
 }
 
 #select-TST {
-  padding-left: 9px;
+  padding-left: 6px;
   list-style-image: url("chrome://browser/skin/TST-dark.svg");
 }
 

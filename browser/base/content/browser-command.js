@@ -146,21 +146,18 @@
      let sidebar2 = document.getElementById("sidebar2");
      let siderbar2header = document.getElementById("sidebar2-header");
      let sidebarsplit2 = document.getElementById("sidebar-splitter2");
-     let sidebarsplit3 = document.getElementById("sidebar-splitter3");
 
-    if (sidebarsplit2.getAttribute("hidden") == "true" || sidebarsplit3.getAttribute("hidden") == "true") {
+    if (sidebarsplit2.getAttribute("hidden") == "true" || sidebarsplit2.getAttribute("hidden") == "true") {
       sidebar2.style.minWidth = "10em"; 
       sidebar2.style.maxWidth = ""; 
       siderbar2header.style.display = "";
       sidebarsplit2.setAttribute("hidden", "false");
-      sidebarsplit3.setAttribute("hidden", "false");
       displayIcons();
     } else {
       sidebar2.style.minWidth = "0"; 
       sidebar2.style.maxWidth = "0"; 
       siderbar2header.style.display = "none";
       sidebarsplit2.setAttribute("hidden", "true");
-      sidebarsplit3.setAttribute("hidden", "true");
       hideIcons();
     }
   }
