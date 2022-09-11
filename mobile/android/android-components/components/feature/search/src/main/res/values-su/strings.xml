@@ -2,11 +2,11 @@
 <resources>
     <!-- Search Widget -->
     <!-- Content description for searching with a widget. The first parameter is the name of the application.-->
-    <string name="search_widget_content_description">ເປີດແຖບ %1$s ໃໝ່</string>
+    <string name="search_widget_content_description">Buka dina tab %1$s anyar</string>
     <!-- Text preview for smaller sized widgets -->
-    <string name="search_widget_text_short">ຄົ້ນຫາ</string>
+    <string name="search_widget_text_short">Paluruh</string>
     <!-- Text preview for larger sized widgets -->
-    <string name="search_widget_text_long">ຄົ້ນຫາເວັບໄຊທ</string>
+    <string name="search_widget_text_long">Paluruh raramat</string>
     <!-- Content description (not visible, for screen readers etc.): Voice search -->
-    <string name="search_widget_voice">ຄົ້ນຫາດ້ວຍສຽງ</string>
+    <string name="search_widget_voice">Paluruh sora</string>
 </resources>
