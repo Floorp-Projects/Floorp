@@ -8,6 +8,7 @@
 
 #include "cubeb_log.h"
 #include "cubeb_ringbuffer.h"
+#include "cubeb_tracing.h"
 #include <cstdarg>
 #ifdef _WIN32
 #include <windows.h>
@@ -69,10 +70,11 @@ public:
   void run()
   {
     std::thread([this]() {
+      CUBEB_REGISTER_THREAD("cubeb_log");
       while (true) {
         cubeb_log_message msg;
         while (msg_queue.dequeue(&msg, 1)) {
-          LOGV("%s", msg.get());
+          LOG_INTERNAL_NO_FORMAT(CUBEB_LOG_NORMAL, "%s", msg.get());
         }
 #ifdef _WIN32
         Sleep(CUBEB_LOG_BATCH_PRINT_INTERVAL_MS);
@@ -87,6 +89,7 @@ public:
         } while (remainder.tv_sec || remainder.tv_nsec);
 #endif
       }
+      CUBEB_UNREGISTER_THREAD();
     }).detach();
   }
   // Tell the underlying queue the producer thread has changed, so it does not
@@ -123,7 +126,7 @@ cubeb_async_log(char const * fmt, ...)
 }
 
 void
-cubeb_async_log_reset_threads()
+cubeb_async_log_reset_threads(void)
 {
   if (!g_cubeb_log_callback) {
     return;
