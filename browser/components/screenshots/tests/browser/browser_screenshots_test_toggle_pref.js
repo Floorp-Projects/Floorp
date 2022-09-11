@@ -8,8 +8,8 @@ const { XPCOMUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/XPCOMUtils.sys.mjs"
 );
 
-XPCOMUtils.defineLazyModuleGetters(this, {
-  ScreenshotsUtils: "resource:///modules/ScreenshotsUtils.jsm",
+ChromeUtils.defineESModuleGetters(this, {
+  ScreenshotsUtils: "resource:///modules/ScreenshotsUtils.sys.mjs",
 });
 XPCOMUtils.defineLazyGetter(this, "ExtensionManagement", () => {
   const { Management } = ChromeUtils.import(

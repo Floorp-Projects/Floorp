@@ -40,11 +40,7 @@
 
   */
 
-var EXPORTED_SYMBOLS = ["ScreenshotsOverlayChild"];
-
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 const lazy = {};
 
@@ -521,7 +517,7 @@ class AnonymousContentOverlay {
   }
 }
 
-var ScreenshotsOverlayChild = {
+export var ScreenshotsOverlayChild = {
   AnonymousContentOverlay,
 };
 

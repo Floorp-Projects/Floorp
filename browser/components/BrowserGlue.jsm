@@ -28,6 +28,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
   PlacesDBUtils: "resource://gre/modules/PlacesDBUtils.sys.mjs",
   PlacesUIUtils: "resource:///modules/PlacesUIUtils.sys.mjs",
   PlacesUtils: "resource://gre/modules/PlacesUtils.sys.mjs",
+  ScreenshotsUtils: "resource:///modules/ScreenshotsUtils.sys.mjs",
   SearchSERPTelemetry: "resource:///modules/SearchSERPTelemetry.sys.mjs",
   SnapshotMonitor: "resource:///modules/SnapshotMonitor.sys.mjs",
   UrlbarPrefs: "resource:///modules/UrlbarPrefs.sys.mjs",
@@ -87,7 +88,6 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
   SafeBrowsing: "resource://gre/modules/SafeBrowsing.jsm",
   Sanitizer: "resource:///modules/Sanitizer.jsm",
   SaveToPocket: "chrome://pocket/content/SaveToPocket.jsm",
-  ScreenshotsUtils: "resource:///modules/ScreenshotsUtils.jsm",
   SessionStartup: "resource:///modules/sessionstore/SessionStartup.jsm",
   SessionStore: "resource:///modules/sessionstore/SessionStore.jsm",
   ShellService: "resource:///modules/ShellService.jsm",
@@ -697,10 +697,10 @@ let JSWINDOWACTORS = {
 
   ScreenshotsComponent: {
     parent: {
-      moduleURI: "resource:///modules/ScreenshotsUtils.jsm",
+      esModuleURI: "resource:///modules/ScreenshotsUtils.sys.mjs",
     },
     child: {
-      moduleURI: "resource:///actors/ScreenshotsComponentChild.jsm",
+      esModuleURI: "resource:///actors/ScreenshotsComponentChild.sys.mjs",
     },
     enablePreference: "screenshots.browser.component.enabled",
   },
