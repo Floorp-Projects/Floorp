@@ -34,6 +34,7 @@ enum test_direction {
 struct user_state_callback_ret {
   std::atomic<int> cb_count{ 0 };
   std::atomic<int> expected_cb_count{ 0 };
+  std::atomic<int> error_state{ 0 };
 };
 
 // Data callback that always returns 0
@@ -98,10 +99,30 @@ long data_cb_ret_nframes(cubeb_stream * stream, void * user, const void * inputb
   return nframes;
 }
 
-void state_cb_ret(cubeb_stream * stream, void * /*user*/, cubeb_state state)
+// Data callback that always returns CUBEB_ERROR
+long
+data_cb_ret_error(cubeb_stream * stream, void * user, const void * inputbuffer,
+                 void * outputbuffer, long nframes)
+{
+  user_state_callback_ret * u = (user_state_callback_ret *)user;
+  // If this is the first time the callback has been called set our expected
+  // callback count
+  if (u->cb_count == 0) {
+    u->expected_cb_count = 1;
+  }
+  u->cb_count++;
+  if (nframes < 1) {
+    // This shouldn't happen
+    EXPECT_TRUE(false) << "nframes should not be 0 in data callback!";
+  }
+  return CUBEB_ERROR;
+}
+
+void state_cb_ret(cubeb_stream * stream, void * user, cubeb_state state)
 {
   if (stream == NULL)
     return;
+  user_state_callback_ret * u = (user_state_callback_ret *)user;
 
   switch (state) {
   case CUBEB_STATE_STARTED:
@@ -110,11 +131,13 @@ void state_cb_ret(cubeb_stream * stream, void * /*user*/, cubeb_state state)
     fprintf(stderr, "stream stopped\n"); break;
   case CUBEB_STATE_DRAINED:
     fprintf(stderr, "stream drained\n"); break;
+  case CUBEB_STATE_ERROR:
+    fprintf(stderr, "stream error\n");
+    u->error_state.fetch_add(1);
+    break;
   default:
     fprintf(stderr, "unknown stream state %d\n", state);
   }
-
-  return;
 }
 
 void run_test_callback(test_direction direction,
@@ -183,6 +206,10 @@ void run_test_callback(test_direction direction,
 
   ASSERT_EQ(user_state.expected_cb_count, user_state.cb_count) <<
     "Callback called unexpected number of times for " << test_desc << "!";
+  // TODO: On some test configurations, the data_callback is never called.
+  if (data_cb == data_cb_ret_error && user_state.cb_count != 0) {
+    ASSERT_EQ(user_state.error_state, 1) << "Callback expected error state";
+  }
 }
 
 TEST(cubeb, test_input_callback)
@@ -190,6 +217,8 @@ TEST(cubeb, test_input_callback)
   run_test_callback(INPUT_ONLY, data_cb_ret_zero, "input only, return 0");
   run_test_callback(INPUT_ONLY, data_cb_ret_nframes_minus_one, "input only, return nframes - 1");
   run_test_callback(INPUT_ONLY, data_cb_ret_nframes, "input only, return nframes");
+  run_test_callback(INPUT_ONLY, data_cb_ret_error,
+                    "input only, return CUBEB_ERROR");
 }
 
 TEST(cubeb, test_output_callback)
@@ -197,6 +226,8 @@ TEST(cubeb, test_output_callback)
   run_test_callback(OUTPUT_ONLY, data_cb_ret_zero, "output only, return 0");
   run_test_callback(OUTPUT_ONLY, data_cb_ret_nframes_minus_one, "output only, return nframes - 1");
   run_test_callback(OUTPUT_ONLY, data_cb_ret_nframes, "output only, return nframes");
+  run_test_callback(OUTPUT_ONLY, data_cb_ret_error,
+                    "output only, return CUBEB_ERROR");
 }
 
 TEST(cubeb, test_duplex_callback)
@@ -204,4 +235,5 @@ TEST(cubeb, test_duplex_callback)
   run_test_callback(DUPLEX, data_cb_ret_zero, "duplex, return 0");
   run_test_callback(DUPLEX, data_cb_ret_nframes_minus_one, "duplex, return nframes - 1");
   run_test_callback(DUPLEX, data_cb_ret_nframes, "duplex, return nframes");
+  run_test_callback(DUPLEX, data_cb_ret_error, "duplex, return CUBEB_ERROR");
 }

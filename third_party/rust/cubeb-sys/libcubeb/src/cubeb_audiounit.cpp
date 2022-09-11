@@ -541,6 +541,13 @@ audiounit_input_callback(void * user_ptr, AudioUnitRenderActionFlags * flags,
   long outframes = cubeb_resampler_fill(stm->resampler.get(),
                                         stm->input_linear_buffer->data(),
                                         &total_input_frames, NULL, 0);
+  if (outframes < 0) {
+    stm->shutdown = true;
+    OSStatus r = AudioOutputUnitStop(stm->input_unit);
+    assert(r == 0);
+    stm->state_callback(stm, stm->user_ptr, CUBEB_STATE_ERROR);
+    return noErr;
+  }
   stm->draining = outframes < total_input_frames;
 
   // Reset input buffer

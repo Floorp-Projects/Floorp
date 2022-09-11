@@ -123,7 +123,7 @@ cubeb_async_log(char const * fmt, ...)
 }
 
 void
-cubeb_async_log_reset_threads()
+cubeb_async_log_reset_threads(void)
 {
   if (!g_cubeb_log_callback) {
     return;

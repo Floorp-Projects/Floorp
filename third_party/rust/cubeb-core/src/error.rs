@@ -20,7 +20,7 @@ pub enum ErrorCode {
     DeviceUnavailable,
 }
 
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct Error {
     code: ErrorCode,
 }

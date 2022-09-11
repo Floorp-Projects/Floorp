@@ -280,6 +280,7 @@ trigger_user_callback(pa_stream * s, void const * input_data, size_t nbytes,
     if (got < 0) {
       WRAP(pa_stream_cancel_write)(s);
       stm->shutdown = 1;
+      stm->state_callback(stm, stm->user_ptr, CUBEB_STATE_ERROR);
       return;
     }
     // If more iterations move offset of read buffer
@@ -392,6 +393,9 @@ stream_read_callback(pa_stream * s, size_t nbytes, void * u)
         if (got < 0 || (size_t)got != read_frames) {
           WRAP(pa_stream_cancel_write)(s);
           stm->shutdown = 1;
+          if (got < 0) {
+            stm->state_callback(stm, stm->user_ptr, CUBEB_STATE_ERROR);
+          }
           break;
         }
       }
