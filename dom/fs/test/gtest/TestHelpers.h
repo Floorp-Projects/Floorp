@@ -7,10 +7,11 @@
 #ifndef DOM_FS_TEST_GTEST_TESTHELPERS_H_
 #define DOM_FS_TEST_GTEST_TESTHELPERS_H_
 
-#include "ErrorList.h"
 #include "gtest/gtest.h"
-#include "mozilla/ErrorNames.h"
+
+#include "ErrorList.h"
 #include "mozilla/dom/quota/QuotaCommon.h"
+#include "mozilla/ErrorNames.h"
 
 #define ASSERT_NSEQ(lhs, rhs) \
   ASSERT_STREQ(GetStaticErrorName((lhs)), GetStaticErrorName((rhs)))

@@ -12,8 +12,8 @@
 #include "nsComponentManagerUtils.h"
 #include "nsICryptoHash.h"
 #include "nsNetCID.h"
-#include "nsString.h"
 #include "nsStringFwd.h"
+#include "nsString.h"
 
 namespace mozilla::dom::fs::data {
 

@@ -23,6 +23,7 @@ directory_test(async (t, root) => {
   await root.removeEntry('dir-to-remove');
 
   assert_array_equals(await getSortedDirectoryEntries(root), ['file-to-keep']);
+  await promise_rejects_dom(t, 'NotFoundError', getSortedDirectoryEntries(dir));
 }, 'removeEntry() to remove an empty directory');
 
 directory_test(async (t, root) => {
@@ -92,13 +93,11 @@ directory_test(async (t, root) => {
   await createFileWithContents(t, 'file-to-keep', 'abc', root);
 
   const writable = await handle.createWritable();
-  await promise_rejects_dom(
-    t, 'InvalidModificationError', root.removeEntry('file-to-remove'));
+  await root.removeEntry('file-to-remove');
+  await promise_rejects_dom(t, 'NotFoundError', getFileContents(handle));
 
   await writable.close();
-  await root.removeEntry('file-to-remove');
-
   assert_array_equals(
       await getSortedDirectoryEntries(root),
-      ['file-to-keep']);
-}, 'removeEntry() while the file has an open writable fails');
+      ['file-to-keep', 'file-to-remove']);
+}, 'removeEntry() while the file has an open writable succeeds');

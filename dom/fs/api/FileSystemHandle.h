@@ -7,20 +7,11 @@
 #ifndef DOM_FS_FILESYSTEMHANDLE_H_
 #define DOM_FS_FILESYSTEMHANDLE_H_
 
-#include "mozilla/Logging.h"
 #include "mozilla/dom/PFileSystemManager.h"
+#include "mozilla/Logging.h"
 #include "nsCOMPtr.h"
 #include "nsISupports.h"
 #include "nsWrapperCache.h"
-
-namespace mozilla {
-extern LazyLogModule gOPFSLog;
-}
-
-#define LOG(args) MOZ_LOG(mozilla::gOPFSLog, mozilla::LogLevel::Verbose, args)
-
-#define LOG_DEBUG(args) \
-  MOZ_LOG(mozilla::gOPFSLog, mozilla::LogLevel::Debug, args)
 
 class nsIGlobalObject;
 
@@ -82,21 +73,6 @@ class FileSystemHandle : public nsISupports, public nsWrapperCache {
   virtual bool WriteStructuredClone(JSContext* aCx,
                                     JSStructuredCloneWriter* aWriter) const;
 
-  already_AddRefed<Promise> Move(const nsAString& aName, ErrorResult& aError);
-
-  already_AddRefed<Promise> Move(FileSystemDirectoryHandle& aParent,
-                                 ErrorResult& aError);
-
-  already_AddRefed<Promise> Move(FileSystemDirectoryHandle& aParent,
-                                 const nsAString& aName, ErrorResult& aError);
-
-  already_AddRefed<Promise> Move(const fs::EntryId& aParentId,
-                                 const nsAString& aName, ErrorResult& aError);
-
-  void UpdateMetadata(const fs::FileSystemEntryMetadata& aMetadata) {
-    mMetadata = aMetadata;
-  }
-
  protected:
   virtual ~FileSystemHandle() = default;
 
@@ -112,8 +88,7 @@ class FileSystemHandle : public nsISupports, public nsWrapperCache {
 
   RefPtr<FileSystemManager> mManager;
 
-  // move() can change names/directories
-  fs::FileSystemEntryMetadata mMetadata;
+  const fs::FileSystemEntryMetadata mMetadata;
 
   const UniquePtr<fs::FileSystemRequestHandler> mRequestHandler;
 };
