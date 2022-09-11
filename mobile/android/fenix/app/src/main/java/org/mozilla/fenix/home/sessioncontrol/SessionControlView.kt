@@ -218,9 +218,9 @@ class SessionControlView(
 
                     if (!featureRecommended && !context.settings().showHomeOnboardingDialog) {
                         if (!context.settings().showHomeOnboardingDialog && (
-                            context.settings().showSyncCFR ||
-                                context.settings().shouldShowJumpBackInCFR
-                            )
+                                    context.settings().showSyncCFR ||
+                                            context.settings().shouldShowJumpBackInCFR
+                                    )
                         ) {
                             featureRecommended = HomeCFRPresenter(
                                 context = context,
@@ -233,7 +233,7 @@ class SessionControlView(
                             !featureRecommended
                         ) {
                             featureRecommended = interactor.showWallpapersOnboardingDialog(
-                                context.components.appStore.state.wallpaperState,
+                                context.components.appStore.state.wallpaperState
                             )
                         }
                     }

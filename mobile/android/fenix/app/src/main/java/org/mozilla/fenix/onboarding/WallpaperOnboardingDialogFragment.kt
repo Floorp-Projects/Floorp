@@ -59,7 +59,7 @@ class WallpaperOnboardingDialogFragment : BottomSheetDialogFragment() {
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
-        savedInstanceState: Bundle?,
+        savedInstanceState: Bundle?
     ): View = ComposeView(requireContext()).apply {
         setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
 
@@ -85,7 +85,7 @@ class WallpaperOnboardingDialogFragment : BottomSheetDialogFragment() {
                     loadWallpaperResource = { wallpaperUseCases.loadThumbnail(it) },
                     onSelectWallpaper = {
                         coroutineScope.launch { wallpaperUseCases.selectWallpaper(it) }
-                    },
+                    }
                 )
             }
         }

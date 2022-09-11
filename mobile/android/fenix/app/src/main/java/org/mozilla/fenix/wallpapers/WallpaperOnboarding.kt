@@ -57,11 +57,11 @@ fun WallpaperOnboarding(
 ) {
     Surface(
         color = FirefoxTheme.colors.layer2,
-        shape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp),
+        shape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp)
     ) {
         Column(
             modifier = Modifier.padding(16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Icon(
                 painter = painterResource(id = R.drawable.mozac_ic_close),
@@ -70,7 +70,7 @@ fun WallpaperOnboarding(
                 modifier = Modifier
                     .clickable { onCloseClicked() }
                     .size(24.dp)
-                    .align(Alignment.End),
+                    .align(Alignment.End)
             )
 
             Spacer(modifier = Modifier.height(8.dp))
@@ -100,14 +100,14 @@ fun WallpaperOnboarding(
                 selectedWallpaper = currentWallpaper,
                 onSelectWallpaper = { onSelectWallpaper(it) },
                 verticalPadding = 16,
-                horizontalPadding = 0,
+                horizontalPadding = 0
             )
 
             TextButton(
                 modifier = Modifier
                     .align(Alignment.CenterHorizontally)
                     .fillMaxWidth(),
-                onClick = { onBottomButtonClicked() },
+                onClick = { onBottomButtonClicked() }
             ) {
                 Text(
                     text = stringResource(R.string.wallpapers_onboarding_dialog_explore_more_button_text),
@@ -135,7 +135,7 @@ private fun WallpaperSnackbarPreview() {
             onCloseClicked = {},
             onBottomButtonClicked = {},
             loadWallpaperResource = { null },
-            onSelectWallpaper = {},
+            onSelectWallpaper = {}
         )
     }
 }
