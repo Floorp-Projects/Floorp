@@ -7,9 +7,6 @@ const TOP_LEVEL_URL =
 const SAME_ORIGIN = "https://example.com";
 const CROSS_ORIGIN = "https://test1.example.com";
 
-const USE_CREDENTIALLESS = true;
-const NO_CREDENTIALLESS = false;
-
 const RESOURCE_URL =
   getRootDirectory(gTestPath).replace(
     "chrome://mochitests/content",
