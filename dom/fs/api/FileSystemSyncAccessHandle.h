@@ -38,11 +38,11 @@ class FileSystemSyncAccessHandle final : public nsISupports,
   // WebIDL Interface
   uint64_t Read(
       const MaybeSharedArrayBufferViewOrMaybeSharedArrayBuffer& aBuffer,
-      const FileSystemReadWriteOptions& aOptions);
+      const FileSystemReadWriteOptions& aOptions, ErrorResult& aRv);
 
   uint64_t Write(
       const MaybeSharedArrayBufferViewOrMaybeSharedArrayBuffer& aBuffer,
-      const FileSystemReadWriteOptions& aOptions);
+      const FileSystemReadWriteOptions& aOptions, ErrorResult& aRv);
 
   already_AddRefed<Promise> Truncate(uint64_t aSize, ErrorResult& aError);
 

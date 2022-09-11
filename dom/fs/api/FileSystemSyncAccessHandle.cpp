@@ -35,13 +35,15 @@ JSObject* FileSystemSyncAccessHandle::WrapObject(
 
 uint64_t FileSystemSyncAccessHandle::Read(
     const MaybeSharedArrayBufferViewOrMaybeSharedArrayBuffer& aBuffer,
-    const FileSystemReadWriteOptions& aOptions) {
+    const FileSystemReadWriteOptions& aOptions, ErrorResult& aRv) {
+  aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
   return 0;
 }
 
 uint64_t FileSystemSyncAccessHandle::Write(
     const MaybeSharedArrayBufferViewOrMaybeSharedArrayBuffer& aBuffer,
-    const FileSystemReadWriteOptions& aOptions) {
+    const FileSystemReadWriteOptions& aOptions, ErrorResult& aRv) {
+  aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
   return 0;
 }
 
