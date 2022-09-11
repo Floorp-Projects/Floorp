@@ -238,6 +238,9 @@ const PREF_URLBAR_DEFAULTS = new Map([
   // Whether we will match QuickActions within a phrase and not only a prefix.
   ["quickactions.matchInPhrase", true],
 
+  // Whether we show QuickActions when in zero-prefix.
+  ["quickactions.showInZeroPrefix", false],
+
   // Show multiple actions in a random order.
   ["quickactions.randomOrderActions", false],
 

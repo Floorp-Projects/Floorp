@@ -20,6 +20,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
 // These prefs are relative to the `browser.urlbar` branch.
 const ENABLED_PREF = "suggest.quickactions";
 const MATCH_IN_PHRASE_PREF = "quickactions.matchInPhrase";
+const SHOW_IN_ZERO_PREFIX_PREF = "quickactions.showInZeroPrefix";
 const DYNAMIC_TYPE_NAME = "quickactions";
 
 // When the urlbar is first focused and no search term has been
@@ -99,6 +100,11 @@ class ProviderQuickActions extends UrlbarProvider {
    */
   async startQuery(queryContext, addCallback) {
     let input = queryContext.trimmedSearchString.toLowerCase();
+
+    if (!lazy.UrlbarPrefs.get(SHOW_IN_ZERO_PREFIX_PREF) && !input) {
+      return;
+    }
+
     let results = [...(this.#prefixes.get(input) ?? [])];
 
     if (lazy.UrlbarPrefs.get(MATCH_IN_PHRASE_PREF)) {

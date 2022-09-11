@@ -400,6 +400,7 @@ pref("browser.urlbar.suggest.calculator",           false);
   pref("browser.urlbar.suggest.quickactions", true);
   pref("browser.urlbar.shortcuts.quickactions", true);
   pref("browser.urlbar.quickactions.showPrefs", true);
+  pref("browser.urlbar.quickactions.showInZeroPrefix", true);
 #endif
 
 // When `browser.urlbar.bestMatch.enabled` is true, this controls whether best

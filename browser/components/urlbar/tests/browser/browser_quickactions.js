@@ -102,7 +102,7 @@ add_task(async function test_label_command() {
 add_task(async function enter_search_mode_button() {
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     window,
-    value: "",
+    value: "test",
   });
   let oneOffButton = await TestUtils.waitForCondition(() =>
     window.document.getElementById("urlbar-engine-one-off-item-actions")
@@ -692,5 +692,37 @@ add_task(async function test_update() {
     );
   } finally {
     sandbox.restore();
+  }
+});
+
+add_task(async function test_show_in_zero_prefix() {
+  for (const showInZeroPrefix of [false, true]) {
+    info(`Test when quickactions.showInZeroPrefix pref is ${showInZeroPrefix}`);
+    await SpecialPowers.pushPrefEnv({
+      set: [["browser.urlbar.quickactions.showInZeroPrefix", showInZeroPrefix]],
+    });
+    await UrlbarTestUtils.promiseAutocompleteResultPopup({
+      window,
+      value: "",
+    });
+
+    let exists = false;
+    for (
+      let i = 0, count = UrlbarTestUtils.getResultCount(window);
+      i < count;
+      i++
+    ) {
+      const { result } = await UrlbarTestUtils.getDetailsOfResultAt(window, i);
+      if (result.providerName === "quickactions") {
+        exists = true;
+        break;
+      }
+    }
+    Assert.equal(
+      exists,
+      showInZeroPrefix,
+      "Result for quick actions is as expected"
+    );
+    await SpecialPowers.popPrefEnv();
   }
 });
