@@ -40,7 +40,7 @@ import org.mozilla.fenix.theme.Theme
  * @param currentWallpaper The currently selected wallpaper.
  * @param loadWallpaperResource Callback to handle loading a wallpaper bitmap. Only optional in the default case.
  * @param onCloseClicked Callback for when the close button is clicked.
- * @param onExploreMoreButtonClicked Callback for when the bottom text button is clicked.
+ * @param onBottomButtonClicked Callback for when the bottom text button is clicked.
  * @param onSelectWallpaper Callback for when a new wallpaper is selected.
  */
 
@@ -52,7 +52,7 @@ fun WallpaperOnboarding(
     currentWallpaper: Wallpaper,
     loadWallpaperResource: suspend (Wallpaper) -> Bitmap?,
     onCloseClicked: () -> Unit,
-    onExploreMoreButtonClicked: () -> Unit,
+    onBottomButtonClicked: () -> Unit,
     onSelectWallpaper: (Wallpaper) -> Unit,
 ) {
     Surface(
@@ -96,8 +96,8 @@ fun WallpaperOnboarding(
             WallpaperThumbnails(
                 wallpapers = wallpapers,
                 defaultWallpaper = Wallpaper.Default,
-                selectedWallpaper = currentWallpaper,
                 loadWallpaperResource = { loadWallpaperResource(it) },
+                selectedWallpaper = currentWallpaper,
                 onSelectWallpaper = { onSelectWallpaper(it) },
                 verticalPadding = 16,
                 horizontalPadding = 0,
@@ -107,7 +107,7 @@ fun WallpaperOnboarding(
                 modifier = Modifier
                     .align(Alignment.CenterHorizontally)
                     .fillMaxWidth(),
-                onClick = { onExploreMoreButtonClicked() },
+                onClick = { onBottomButtonClicked() },
             ) {
                 Text(
                     text = stringResource(R.string.wallpapers_onboarding_dialog_explore_more_button_text),
@@ -133,7 +133,7 @@ private fun WallpaperSnackbarPreview() {
             wallpapers = listOf(Wallpaper.Default),
             currentWallpaper = Wallpaper.Default,
             onCloseClicked = {},
-            onExploreMoreButtonClicked = {},
+            onBottomButtonClicked = {},
             loadWallpaperResource = { null },
             onSelectWallpaper = {},
         )

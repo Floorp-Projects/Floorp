@@ -90,8 +90,8 @@ fun WallpaperSettings(
             WallpaperThumbnails(
                 wallpapers = wallpapers,
                 defaultWallpaper = defaultWallpaper,
-                selectedWallpaper = selectedWallpaper,
                 loadWallpaperResource = loadWallpaperResource,
+                selectedWallpaper = selectedWallpaper,
                 onSelectWallpaper = { updatedWallpaper ->
                     coroutineScope.launch {
                         scaffoldState.snackbarHostState.showSnackbar(
@@ -154,10 +154,10 @@ private fun WallpaperSnackbar(
 fun WallpaperThumbnails(
     wallpapers: List<Wallpaper>,
     defaultWallpaper: Wallpaper,
-    selectedWallpaper: Wallpaper,
     loadWallpaperResource: suspend (Wallpaper) -> Bitmap?,
-    onSelectWallpaper: (Wallpaper) -> Unit,
+    selectedWallpaper: Wallpaper,
     numColumns: Int = 3,
+    onSelectWallpaper: (Wallpaper) -> Unit,
     verticalPadding: Int = 30,
     horizontalPadding: Int = 20,
 ) {

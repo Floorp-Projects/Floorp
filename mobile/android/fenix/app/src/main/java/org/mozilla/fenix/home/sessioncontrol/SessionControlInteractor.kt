@@ -169,7 +169,7 @@ interface OnboardingInteractor {
      * Returns true if the call has been passed down to the controller.
      *
      * @param state The wallpaper state.
-     * @return Whether the onboarding dialog is currently shown.
+     * @return Whether the onboarding dialog is currently shown
      */
     fun showWallpapersOnboardingDialog(state: WallpaperState): Boolean
 }
