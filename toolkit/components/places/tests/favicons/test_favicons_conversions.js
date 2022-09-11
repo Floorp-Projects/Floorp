@@ -178,3 +178,15 @@ add_task(async function test_scaling_an_oversize_3x160_icon() {
     false
   );
 });
+
+add_task(async function test_animated_16x16_icon() {
+  // in: 16x16 apng, 1791 bytes.
+  // optimized: yes
+  await checkFaviconDataConversion(
+    "favicon-animated16.png",
+    "image/png",
+    1791,
+    true,
+    false
+  );
+});

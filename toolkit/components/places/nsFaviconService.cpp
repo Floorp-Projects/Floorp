@@ -717,25 +717,29 @@ nsresult nsFaviconService::OptimizeIconSizes(IconData& aIcon) {
         newPayload.width = size;
       }
 
-      // If the original payload is png and the size is the same, rescale the
-      // image only if it's larger than the maximum allowed.
+      // If the original payload is png, the size is the same and not animated,
+      // rescale the image only if it's larger than the maximum allowed.
+      bool animated;
       if (newPayload.mimeType.Equals(payload.mimeType) &&
           newPayload.width == frameInfo.width &&
-          payload.data.Length() < nsIFaviconService::MAX_FAVICON_BUFFER_SIZE) {
+          payload.data.Length() < nsIFaviconService::MAX_FAVICON_BUFFER_SIZE &&
+          (NS_FAILED(container->GetAnimated(&animated)) || !animated)) {
         newPayload.data = payload.data;
-      } else {
-        // Otherwise, scale and recompress.
-        // Since EncodeScaledImage uses SYNC_DECODE, it will pick the best
-        // frame.
-        nsCOMPtr<nsIInputStream> iconStream;
-        rv = GetImgTools()->EncodeScaledImage(
-            container, newPayload.mimeType, newPayload.width, newPayload.width,
-            u""_ns, getter_AddRefs(iconStream));
-        NS_ENSURE_SUCCESS(rv, rv);
-        // Read the stream into the new buffer.
-        rv = NS_ConsumeStream(iconStream, UINT32_MAX, newPayload.data);
-        NS_ENSURE_SUCCESS(rv, rv);
+        break;
       }
+
+      // Otherwise, scale and recompress. Rescaling will also take care of
+      // extracting a static image from an animated one.
+      // Since EncodeScaledImage uses SYNC_DECODE, it will pick the best
+      // frame.
+      nsCOMPtr<nsIInputStream> iconStream;
+      rv = GetImgTools()->EncodeScaledImage(container, newPayload.mimeType,
+                                            newPayload.width, newPayload.width,
+                                            u""_ns, getter_AddRefs(iconStream));
+      NS_ENSURE_SUCCESS(rv, rv);
+      // Read the stream into the new buffer.
+      rv = NS_ConsumeStream(iconStream, UINT32_MAX, newPayload.data);
+      NS_ENSURE_SUCCESS(rv, rv);
 
       // If the icon size is good, we are done, otherwise try the next size.
       if (newPayload.data.Length() <
