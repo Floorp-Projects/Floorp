@@ -46,6 +46,17 @@ fn main() {
     let android = target.contains("android");
     let mut cfg = cmake::Config::new("libcubeb");
 
+    if darwin {
+        let cmake_osx_arch = if target.contains("aarch64") {
+            // Apple Silicon
+            "arm64"
+        } else {
+            // Assuming Intel (x86_64)
+            "x86_64"
+        };
+        cfg.define("CMAKE_OSX_ARCHITECTURES", cmake_osx_arch);
+    }
+
     let _ = fs::remove_dir_all(env::var("OUT_DIR").unwrap());
     t!(fs::create_dir_all(env::var("OUT_DIR").unwrap()));
 
@@ -84,6 +95,7 @@ fn main() {
         let _ = pkg_config::find_library("alsa");
         let _ = pkg_config::find_library("libpulse");
         let _ = pkg_config::find_library("jack");
+        let _ = pkg_config::find_library("speexdsp");
         if android {
             println!("cargo:rustc-link-lib=dylib=OpenSLES");
         }

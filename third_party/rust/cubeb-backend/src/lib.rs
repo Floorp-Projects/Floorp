@@ -7,7 +7,7 @@ extern crate cubeb_core;
 
 pub mod capi;
 #[macro_use]
-mod log;
+pub mod log;
 mod ops;
 mod traits;
 
