@@ -1,0 +1,36 @@
+BasedOnStyle: Google
+
+# Prevent the loss of indentation with these macros
+MacroBlockBegin: "^\
+JS_BEGIN_MACRO|\
+NS_INTERFACE_MAP_BEGIN|\
+NS_INTERFACE_TABLE_HEAD|\
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION|\
+NS_IMPL_CYCLE_COLLECTION_.*_BEGIN|\
+NS_INTERFACE_TABLE_HEAD_CYCLE_COLLECTION_INHERITED|\
+NS_INTERFACE_TABLE_BEGIN|\
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED|\
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED|\
+NS_QUERYFRAME_HEAD$"
+MacroBlockEnd: "^\
+JS_END_MACRO|\
+NS_INTERFACE_MAP_END|\
+NS_IMPL_CYCLE_COLLECTION_.*_END|\
+NS_INTERFACE_TABLE_END|\
+NS_INTERFACE_TABLE_TAIL.*|\
+NS_INTERFACE_MAP_END_.*|\
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END_INHERITED|\
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END_INHERITED|\
+NS_QUERYFRAME_TAIL.*$"
+
+SortIncludes: true
+IndentPPDirectives: AfterHash
+StatementMacros: [MARKUPMAP, ASSERT_TRUE, ASSERT_FALSE, TEST, CHECK]
+
+# The Google coding style states:
+# You should do this consistently within a single file, so, when modifying an
+# existing file, use the style in that file.
+# Let's be more prescriptive and default to the one used in the Mozilla
+# coding style
+DerivePointerAlignment: false
+PointerAlignment: Left

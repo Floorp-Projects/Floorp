@@ -10,8 +10,11 @@
 #include "FileSystemDatabaseManagerVersion001.h"
 #include "FileSystemFileManager.h"
 #include "FileSystemHashSource.h"
-#include "fs/FileSystemConstants.h"
 #include "GetDirectoryForOrigin.h"
+#include "SchemaVersion001.h"
+#include "fs/FileSystemConstants.h"
+#include "mozIStorageService.h"
+#include "mozStorageCID.h"
 #include "mozilla/Result.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/dom/FileSystemManagerParent.h"
@@ -21,8 +24,6 @@
 #include "mozilla/dom/quota/QuotaManager.h"
 #include "mozilla/dom/quota/ResultExtensions.h"
 #include "mozilla/ipc/BackgroundParent.h"
-#include "mozIStorageService.h"
-#include "mozStorageCID.h"
 #include "nsBaseHashtable.h"
 #include "nsCOMPtr.h"
 #include "nsHashKeys.h"
@@ -32,7 +33,6 @@
 #include "nsServiceManagerUtils.h"
 #include "nsString.h"
 #include "nsThreadUtils.h"
-#include "SchemaVersion001.h"
 
 namespace mozilla::dom::fs::data {
 
