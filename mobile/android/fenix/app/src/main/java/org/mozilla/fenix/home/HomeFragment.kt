@@ -217,7 +217,6 @@ class HomeFragment : Fragment() {
         if (shouldEnableWallpaper()) {
             wallpapersObserver = WallpapersObserver(
                 appStore = components.appStore,
-                settings = requireContext().settings(),
                 wallpapersUseCases = components.useCases.wallpaperUseCases,
                 wallpaperImageView = binding.wallpaperImageView,
             ).also {
@@ -419,6 +418,7 @@ class HomeFragment : Fragment() {
         getMenuButton()?.dismissMenu()
 
         if (shouldEnableWallpaper()) {
+            // Setting the wallpaper is a potentially expensive operation - can take 100ms.
             // Running this on the Main thread helps to ensure that the just updated configuration
             // will be used when the wallpaper is scaled to match.
             // Otherwise the portrait wallpaper may remain shown on landscape,
@@ -764,12 +764,6 @@ class HomeFragment : Fragment() {
 
         lifecycleScope.launch(IO) {
             requireComponents.reviewPromptController.promptReview(requireActivity())
-        }
-
-        if (shouldEnableWallpaper()) {
-            runBlockingIncrement {
-                wallpapersObserver?.applyCurrentWallpaper()
-            }
         }
     }
 
