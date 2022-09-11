@@ -138,6 +138,7 @@ class ProviderQuickActions extends UrlbarProvider {
         results: results.map(key => ({ key })),
         dynamicType: DYNAMIC_TYPE_NAME,
         helpUrl: this.helpUrl,
+        inputLength: input.length,
       }
     );
     result.suggestedIndex = SUGGESTED_INDEX;
@@ -161,6 +162,7 @@ class ProviderQuickActions extends UrlbarProvider {
               tag: "span",
               attributes: {
                 "data-key": key,
+                "data-input-length": result.payload.inputLength,
                 class: "urlbarView-quickaction-row",
                 role: inActive ? "" : "button",
               },
@@ -224,6 +226,15 @@ class ProviderQuickActions extends UrlbarProvider {
   }
 
   pickResult(result, itemPicked) {
+    let { key, inputLength } = itemPicked.dataset;
+    // We clamp the input length to limit the number of keys to
+    // the number of actions * 10.
+    inputLength = Math.min(inputLength, 10);
+    Services.telemetry.keyedScalarAdd(
+      `quickaction.picked`,
+      `${key}-${inputLength}`,
+      1
+    );
     let options = this.#actions.get(itemPicked.dataset.key).onPick() ?? {};
     if (options.focusContent) {
       itemPicked.ownerGlobal.gBrowser.selectedBrowser.focus();

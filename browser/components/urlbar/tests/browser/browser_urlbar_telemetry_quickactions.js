@@ -49,11 +49,25 @@ add_task(async function test() {
 
   Assert.equal(testActionCalled, 1, "Test action was called");
 
-  assertTelemetryResults(
-    histograms,
-    "quickaction",
-    "1",
-    UrlbarTestUtils.SELECTED_RESULT_METHODS.arrowEnterSelection
+  TelemetryTestUtils.assertHistogram(
+    histograms.resultMethodHist,
+    UrlbarTestUtils.SELECTED_RESULT_METHODS.arrowEnterSelection,
+    1
+  );
+
+  let scalars = TelemetryTestUtils.getProcessScalars("parent", true, true);
+  TelemetryTestUtils.assertKeyedScalar(
+    scalars,
+    `urlbar.picked.quickaction`,
+    1,
+    1
+  );
+
+  TelemetryTestUtils.assertKeyedScalar(
+    scalars,
+    "quickaction.picked",
+    "testaction-10",
+    1
   );
 
   // Clean up for subsequent tests.
@@ -68,15 +82,4 @@ function snapshotHistograms() {
       "FX_URLBAR_SELECTED_RESULT_METHOD"
     ),
   };
-}
-
-function assertTelemetryResults(histograms, type, index, method) {
-  TelemetryTestUtils.assertHistogram(histograms.resultMethodHist, method, 1);
-
-  TelemetryTestUtils.assertKeyedScalar(
-    TelemetryTestUtils.getProcessScalars("parent", true, true),
-    `urlbar.picked.${type}`,
-    index,
-    1
-  );
 }

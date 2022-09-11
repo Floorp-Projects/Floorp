@@ -9,7 +9,7 @@ ChromeUtils.defineESModuleGetters(this, {
     "resource:///modules/UrlbarProviderQuickActions.sys.mjs",
 });
 
-let expectedMatch = key => ({
+let expectedMatch = (key, inputLength) => ({
   type: UrlbarUtils.RESULT_TYPE.DYNAMIC,
   source: UrlbarUtils.RESULT_SOURCE.ACTIONS,
   heuristic: false,
@@ -17,6 +17,7 @@ let expectedMatch = key => ({
     results: [{ key }],
     dynamicType: "quickactions",
     helpUrl: UrlbarProviderQuickActions.helpUrl,
+    inputLength,
   },
 });
 
@@ -67,7 +68,7 @@ add_task(async function quickactions_match() {
   });
   await check_results({
     context,
-    matches: [expectedMatch("newaction")],
+    matches: [expectedMatch("newaction", 3)],
   });
 });
 
@@ -83,7 +84,7 @@ add_task(async function duplicate_matches() {
 
   await check_results({
     context,
-    matches: [expectedMatch("testaction")],
+    matches: [expectedMatch("testaction", 10)],
   });
 
   UrlbarProviderQuickActions.removeAction("testaction");
