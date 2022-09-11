@@ -712,14 +712,11 @@ menupopup menucaption,
   margin-inline-start: 0 !important;
 }
 
-menu>.menu-iconic-text,
-menuitem>.menu-iconic-text {
-  padding-inline-start: var(--uc-contextmenu-menuicon-margin-inline) !important;
-}
+
+
 
 .menu-text,
 .menu-iconic-text {
-  margin-inline-start: 0 !important;
   padding-block: 0 !important;
 }
 
@@ -743,7 +740,6 @@ menuitem:is(.menuitem-iconic:not([data-usercontextid]), [type="checkbox"], [type
 
 .menu-right,
 .menu-accel-container {
-  appearance: none !important;
   margin-inline-end: 0 !important;
   -moz-context-properties: fill;
   fill: currentColor !important;
@@ -984,9 +980,11 @@ menuitem[checked="true"]>.menu-iconic-left,
       }
     }
   }
+  
+  menu>.menu-iconic-text,	
+menuitem>.menu-iconic-text {	
+  padding-inline-start: var(--uc-contextmenu-menuicon-margin-inline) !important;	
 }
-
-@media (-moz-windows-compositor) {
   @supports -moz-bool-pref("uc.tweak.win11-mica") {
 
     /* enable mica appearance */
