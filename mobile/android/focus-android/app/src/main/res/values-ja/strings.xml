@@ -127,9 +127,9 @@
     <string name="about_content"><![CDATA[<p>%1$s ではあなたがすべてをコントロールできます。</p>
 <p>次のようにプライベートブラウザーとして使えます。
   <ul>
-    <li>アプリ内で直接サイトを検索、閲覧。</li>
-    <li>追跡者をブロック (あるいは設定を更新して許可)</li>
-    <li>Cookie、検索履歴、閲覧履歴を消去</li>
+    <li>アプリで適切に検索、閲覧</li>
+    <li>トラッカーをブロック （あるいは設定を更新して許可）</li>
+    <li>検索履歴、閲覧履歴の消去だけでなく Cookie を削除</li>
   </ul>
 </p>
 <p>%1$s は Mozilla が開発しています。私たちのミッションは健全で開かれたインターネットを発展させることです。<br/>
@@ -365,7 +365,7 @@
 
     <!-- Title: Homescreen tips settings toggle to determine whether or not tips are displayed when
      a user first launches the app. -->
-    <string name="preference_homescreen_tips">ホーム画面にヒントを表示</string>
+    <string moz:removedIn="105" name="preference_homescreen_tips" tools:ignore="UnusedResources">ホーム画面にヒントを表示</string>
 
     <!-- Clickable action text that shows when user long-presses on a search engine search field (this is similar to paste or copy when long-pressing a text field) -->
     <string name="action_option_add_search_engine">検索エンジンを追加</string>
@@ -818,7 +818,7 @@
 
     <!-- Tip displayed on home view explaining how to disable enhanced tracking protection
 The new line here must be kept as the second half of the string is clickable for the user. -->
-    <string name="tip_disable_tracking_protection3">サイトのコンテンツが欠けたりおかしな動作をしていますか？\n
+    <string moz:removedIn="105" name="tip_disable_tracking_protection3" tools:ignore="UnusedResources">サイトのコンテンツが欠けたりおかしな動作をしていますか？\n
 強化型トラッキング防止機能をオフにしてみてください</string>
 
     <!-- Tip displayed on home view explaining how to add sites to homescreen
@@ -840,7 +840,7 @@ The new line here must be kept as the second half of the string is clickable for
 
     <!-- Tip displayed on home view explaining how to request the desktop version of a website.
       %1$s is a placeholder for the app name. -->
-    <string name="tip_request_desktop2">サイトの完全版を表示したいときは？\n
+    <string moz:removedIn="105" name="tip_request_desktop2" tools:ignore="UnusedResources">サイトの完全版を表示したいときは？\n
 %1$s メニューからデスクトップサイトをオンにしてください</string>
 
     <!-- Tip displayed on home view explaining how to add a custom autocomplete URL -->
@@ -848,16 +848,16 @@ The new line here must be kept as the second half of the string is clickable for
 
     <!-- Tip displayed on the home view explaining how to use the Allowlist feature.
      "Allowlist" is a replacement for the word whitelist. -->
-    <string name="tip_explain_allowlist3">信頼できるサイトで強化型トラッキング防止機能をオフにしておきたいときは？\n
+    <string moz:removedIn="105" name="tip_explain_allowlist3" tools:ignore="UnusedResources">信頼できるサイトで強化型トラッキング防止機能をオフにしておきたいときは？\n
 設定でサイトを許可リストに追加してください</string>
 
     <!-- Tip displayed on the home view about the changes in the new release.
     %1$s is a placeholder for the app name -->
-    <string name="tip_fresh_look">ご覧のとおり、外観が新しくなりました！\n これと %1$s の他の変更についてお読みください。</string>
+    <string moz:removedIn="105" name="tip_fresh_look" tools:ignore="UnusedResources">ご覧のとおり、外観が新しくなりました！\n これと %1$s の他の変更についてお読みください。</string>
 
     <!-- Tip displayed on the home view about shortcuts
     %1$s is a placeholder for the app name -->
-    <string name="tip_about_shortcuts">よく見るサイトへのショートカットを作成しましょう:\n
+    <string moz:removedIn="105" name="tip_about_shortcuts" tools:ignore="UnusedResources">よく見るサイトへのショートカットを作成しましょう:\n
     %1$s のメニューからショートカットを追加を選択します</string>
 
     <!-- Label for the snackbar when a user opens a new tab -->
@@ -991,6 +991,7 @@ The new line here must be kept as the second half of the string is clickable for
     <string name="tool_tip_dismiss_button_content_description">閉じる</string>
 
     <!-- CFR for Toolbar Delete Icon (Banner Info Message) -->
-    <string name="cfr_for_toolbar_delete_icon">ごみ箱ボタンをタップするだけで、このセッションから個人データやブラウジング履歴などを削除できます。お試しください。</string>
+    <string moz:removedIn="105" name="cfr_for_toolbar_delete_icon" tools:ignore="UnusedResources">ごみ箱ボタンをタップするだけで、このセッションから個人データやブラウジング履歴などを削除できます。お試しください。</string>
+    <string name="cfr_for_toolbar_delete_icon2">ここをタップして、履歴、Cookie、すべて破棄し、新しいタブで新たに始めましょう。</string>
 
 </resources>

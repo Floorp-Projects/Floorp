@@ -266,6 +266,8 @@
     <string name="preference_privacy_should_block_cookies_third_party_tracker_cookies_option">ບັອກຕົວຕິດຕາມຄຸກກີ້ຈາກບຸກຄົນທີ່ສາມເທົ່ານັ້ນ</string>
     <string name="preference_privacy_should_block_cookies_third_party_only_option">ລະງັບຄຸກກີ້ພາຍນອກເທົ່ານັ້ນ</string>
 
+    <string name="preference_privacy_should_block_cookies_yes_option2">ໂດຍ, ແມ່ນແລ້ວ</string>
+
     <!-- Preference Title: Biometrics can be used to unlock Focus if the previous session's data was not erased by the user. -->
     <string name="preference_security_biometric">ນຳໃຊ້ລາຍນິ້ວມືເພື່ອປົດລ໋ອກແອັບ</string>
 
@@ -485,8 +487,14 @@
     <!-- Label of the action that will add the current website to the home screen (shown in the confirmation dialog). -->
     <string name="dialog_addtohomescreen_action_add">ເພີ່ມ</string>
 
+    <!-- Label of the action that will add the current website to the home screen (shown in the confirmation dialog). -->
+    <string name="dialog_addtohomescreen_action_yes">ແມ່ນແລ້ວ</string>
+
     <!-- Label of the action that will close the dialog and not add anything to the home screen (shown in the confirmation dialog). -->
     <string name="dialog_addtohomescreen_action_cancel">ຍົກເລີກ</string>
+
+    <!-- Label of the action that will close the dialog and not add anything to the home screen (shown in the confirmation dialog). -->
+    <string name="dialog_addtohomescreen_action_no">ບໍ່</string>
 
     <!-- The user visible name of the "notification channel" (Android 8+ feature) for the ongoing notification shown while a browsing session is active.
     The recommended maximum length is 40 characters; the value may be truncated if it is too long.
@@ -567,6 +575,9 @@
 
     <!-- Title of Advanced Setting category -->
     <string name="preference_category_advanced">ຂັ້ນສູງ</string>
+
+    <!-- Preference for autoplay -->
+    <string name="preference_autoplay">ຫຼິ້ນອັດຕະໂນມັດ</string>
 
     <!-- Preference to enable remote debugging of the app via USB or Wi-Fi -->
     <string name="preference_remote_debugging">ການດີບັກໄລຍະໄກຜ່ານ USB/Wi-Fi</string>
