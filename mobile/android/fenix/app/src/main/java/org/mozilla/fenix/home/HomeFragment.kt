@@ -115,7 +115,6 @@ import org.mozilla.fenix.tabstray.TabsTrayAccessPoint
 import org.mozilla.fenix.utils.Settings.Companion.TOP_SITES_PROVIDER_MAX_THRESHOLD
 import org.mozilla.fenix.utils.ToolbarPopupWindow
 import org.mozilla.fenix.utils.allowUndo
-import org.mozilla.fenix.wallpapers.WallpaperManager
 import java.lang.ref.WeakReference
 import kotlin.math.min
 
@@ -419,8 +418,7 @@ class HomeFragment : Fragment() {
 
         getMenuButton()?.dismissMenu()
 
-        val isDefaultTheCurrentWallpaper = WallpaperManager.isDefaultTheCurrentWallpaper(requireContext().settings())
-        if (shouldEnableWallpaper() && !isDefaultTheCurrentWallpaper) {
+        if (shouldEnableWallpaper()) {
             // Running this on the Main thread helps to ensure that the just updated configuration
             // will be used when the wallpaper is scaled to match.
             // Otherwise the portrait wallpaper may remain shown on landscape,
@@ -768,8 +766,7 @@ class HomeFragment : Fragment() {
             requireComponents.reviewPromptController.promptReview(requireActivity())
         }
 
-        val isDefaultTheCurrentWallpaper = WallpaperManager.isDefaultTheCurrentWallpaper(requireContext().settings())
-        if (shouldEnableWallpaper() && !isDefaultTheCurrentWallpaper) {
+        if (shouldEnableWallpaper()) {
             runBlockingIncrement {
                 wallpapersObserver?.applyCurrentWallpaper()
             }
