@@ -6717,10 +6717,12 @@ void Document::SetHeaderData(nsAtom* aHeaderField, const nsAString& aData) {
     if (mTrials.IsEnabled(OriginTrial::CoepCredentialless)) {
       InitCOEP(mChannel);
 
-      WindowContext* ctx = GetWindowContext();
-      MOZ_ASSERT(ctx);
-      if (mEmbedderPolicy) {
-        Unused << ctx->SetEmbedderPolicy(mEmbedderPolicy.value());
+      // If we still don't have a WindowContext, WindowContext::OnNewDocument
+      // will take care of this.
+      if (WindowContext* ctx = GetWindowContext()) {
+        if (mEmbedderPolicy) {
+          Unused << ctx->SetEmbedderPolicy(mEmbedderPolicy.value());
+        }
       }
     }
   }
