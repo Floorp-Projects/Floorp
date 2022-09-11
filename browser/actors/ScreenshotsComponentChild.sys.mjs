@@ -5,20 +5,20 @@
 
 "use strict";
 
-var EXPORTED_SYMBOLS = ["ScreenshotsComponentChild"];
-
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 const lazy = {};
 
+ChromeUtils.defineESModuleGetters(lazy, {
+  ScreenshotsOverlayChild:
+    "resource:///modules/ScreenshotsOverlayChild.sys.mjs",
+});
+
 XPCOMUtils.defineLazyModuleGetters(lazy, {
-  ScreenshotsOverlayChild: "resource:///modules/ScreenshotsOverlayChild.jsm",
   DeferredTask: "resource://gre/modules/DeferredTask.jsm",
 });
 
-class ScreenshotsComponentChild extends JSWindowActorChild {
+export class ScreenshotsComponentChild extends JSWindowActorChild {
   receiveMessage(message) {
     switch (message.name) {
       case "Screenshots:ShowOverlay":

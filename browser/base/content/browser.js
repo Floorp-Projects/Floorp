@@ -20,6 +20,7 @@ ChromeUtils.defineESModuleGetters(this, {
   PlacesTransactions: "resource://gre/modules/PlacesTransactions.sys.mjs",
   PlacesUIUtils: "resource:///modules/PlacesUIUtils.sys.mjs",
   PlacesUtils: "resource://gre/modules/PlacesUtils.sys.mjs",
+  ScreenshotsUtils: "resource:///modules/ScreenshotsUtils.sys.mjs",
   UrlbarInput: "resource:///modules/UrlbarInput.sys.mjs",
   UrlbarPrefs: "resource:///modules/UrlbarPrefs.sys.mjs",
   UrlbarProviderSearchTips:
@@ -80,7 +81,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   SafeBrowsing: "resource://gre/modules/SafeBrowsing.jsm",
   Sanitizer: "resource:///modules/Sanitizer.jsm",
   SaveToPocket: "chrome://pocket/content/SaveToPocket.jsm",
-  ScreenshotsUtils: "resource:///modules/ScreenshotsUtils.jsm",
   SessionStartup: "resource:///modules/sessionstore/SessionStartup.jsm",
   SessionStore: "resource:///modules/sessionstore/SessionStore.jsm",
   ShortcutUtils: "resource://gre/modules/ShortcutUtils.jsm",

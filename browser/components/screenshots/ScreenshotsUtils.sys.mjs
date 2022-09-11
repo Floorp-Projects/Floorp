@@ -4,11 +4,7 @@
 
 "use strict";
 
-var EXPORTED_SYMBOLS = ["ScreenshotsUtils", "ScreenshotsComponentParent"];
-
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 const lazy = {};
 
@@ -21,7 +17,7 @@ const PanelPosition = "bottomright topright";
 const PanelOffsetX = -33;
 const PanelOffsetY = -8;
 
-class ScreenshotsComponentParent extends JSWindowActorParent {
+export class ScreenshotsComponentParent extends JSWindowActorParent {
   async receiveMessage(message) {
     let browser = message.target.browsingContext.topFrameElement;
     switch (message.name) {
@@ -50,7 +46,7 @@ class ScreenshotsComponentParent extends JSWindowActorParent {
   }
 }
 
-var ScreenshotsUtils = {
+export var ScreenshotsUtils = {
   initialized: false,
   initialize() {
     if (!this.initialized) {

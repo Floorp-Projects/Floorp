@@ -5,8 +5,8 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 EXTRA_JS_MODULES += [
-    "ScreenshotsOverlayChild.jsm",
-    "ScreenshotsUtils.jsm",
+    "ScreenshotsOverlayChild.sys.mjs",
+    "ScreenshotsUtils.sys.mjs",
 ]
 
 JAR_MANIFESTS += ["jar.mn"]
