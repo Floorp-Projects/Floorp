@@ -134,14 +134,59 @@ void ResolveCallback(
 
   MOZ_ASSERT(FileSystemRemoveEntryResponse::Tnsresult == aResponse.type());
   const auto& status = aResponse.get_nsresult();
-  if (NS_ERROR_FILE_ACCESS_DENIED == status) {
-    aPromise->MaybeRejectWithNotAllowedError("Permission denied");
-  } else if (NS_ERROR_DOM_FILESYSTEM_NO_MODIFICATION_ALLOWED_ERR == status) {
-    aPromise->MaybeRejectWithInvalidModificationError("Disallowed by system");
-  } else if (NS_FAILED(status)) {
-    aPromise->MaybeRejectWithUnknownError("Unknown failure");
-  } else {
-    aPromise->MaybeResolveWithUndefined();
+  switch (status) {
+    case NS_ERROR_FILE_ACCESS_DENIED:
+      aPromise->MaybeRejectWithNotAllowedError("Permission denied");
+      break;
+    case NS_ERROR_DOM_FILESYSTEM_NO_MODIFICATION_ALLOWED_ERR:
+      aPromise->MaybeRejectWithInvalidModificationError("Disallowed by system");
+      break;
+    default:
+      if (NS_FAILED(status)) {
+        aPromise->MaybeRejectWithUnknownError("Unknown failure");
+      } else {
+        aPromise->MaybeResolveWithUndefined();
+      }
+      break;
+  }
+}
+
+template <>
+void ResolveCallback(
+    FileSystemMoveEntryResponse&& aResponse,
+    RefPtr<Promise> aPromise) {  // NOLINT(performance-unnecessary-value-param)
+  MOZ_ASSERT(aPromise);
+  QM_TRY(OkIf(Promise::PromiseState::Pending == aPromise->State()), QM_VOID);
+
+  MOZ_ASSERT(FileSystemMoveEntryResponse::Tnsresult == aResponse.type());
+  const auto& status = aResponse.get_nsresult();
+  switch (status) {
+    case NS_OK:
+      aPromise->MaybeResolveWithUndefined();
+      break;
+    case NS_ERROR_FILE_ACCESS_DENIED:
+      aPromise->MaybeRejectWithNotAllowedError("Permission denied");
+      break;
+    case NS_ERROR_DOM_FILESYSTEM_NO_MODIFICATION_ALLOWED_ERR:
+      aPromise->MaybeRejectWithInvalidModificationError("Disallowed by system");
+      break;
+    case NS_ERROR_DOM_NOT_FOUND_ERR:
+      aPromise->MaybeRejectWithNotFoundError("Entry not found");
+      break;
+    case NS_ERROR_DOM_INVALID_MODIFICATION_ERR:
+      aPromise->MaybeRejectWithInvalidModificationError("Invalid modification");
+      break;
+    case NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR:
+      aPromise->MaybeRejectWithNoModificationAllowedError(
+          "No modification allowed");
+      break;
+    default:
+      if (NS_FAILED(status)) {
+        aPromise->MaybeRejectWithUnknownError("Unknown failure");
+      } else {
+        aPromise->MaybeResolveWithUndefined();
+      }
+      break;
   }
 }
 
@@ -380,6 +425,63 @@ void FileSystemRequestHandler::RemoveEntry(
     aPromise->MaybeRejectWithUnknownError("Invalid actor");
   });
   aManager->Actor()->SendRemoveEntry(request, std::move(onResolve),
+                                     std::move(onReject));
+}
+
+void FileSystemRequestHandler::MoveEntry(
+    RefPtr<FileSystemManager>& aManager, FileSystemHandle* aHandle,
+    const FileSystemEntryMetadata& aEntry,
+    const FileSystemChildMetadata& aNewEntry,
+    RefPtr<Promise> aPromise) {  // NOLINT(performance-unnecessary-value-param)
+  MOZ_ASSERT(aPromise);
+  LOG(("MoveEntry"));
+
+  // reject invalid names: empty, path separators, current & parent directories
+  if (!IsValidName(aNewEntry.childName())) {
+    aPromise->MaybeRejectWithTypeError("Invalid name");
+    return;
+  }
+
+  FileSystemMoveEntryRequest request(aEntry, aNewEntry);
+
+  RefPtr<FileSystemHandle> handle(aHandle);
+  auto&& onResolve =
+      SelectResolveCallback<FileSystemMoveEntryResponse, void>(aPromise);
+
+  auto&& onReject = GetRejectCallback(aPromise);
+
+  QM_TRY(OkIf(aManager && aManager->Actor()), QM_VOID, [aPromise](const auto&) {
+    aPromise->MaybeRejectWithUnknownError("Invalid actor");
+  });
+  aManager->Actor()->SendMoveEntry(request, std::move(onResolve),
+                                   std::move(onReject));
+}
+
+void FileSystemRequestHandler::RenameEntry(
+    RefPtr<FileSystemManager>& aManager, FileSystemHandle* aHandle,
+    const FileSystemEntryMetadata& aEntry, const Name& aName,
+    RefPtr<Promise> aPromise) {  // NOLINT(performance-unnecessary-value-param)
+  MOZ_ASSERT(!aEntry.entryId().IsEmpty());
+  MOZ_ASSERT(aPromise);
+  LOG(("RenameEntry"));
+
+  // reject invalid names: empty, path separators, current & parent directories
+  if (!IsValidName(aName)) {
+    aPromise->MaybeRejectWithTypeError("Invalid name");
+    return;
+  }
+
+  FileSystemRenameEntryRequest request(aEntry, aName);
+
+  auto&& onResolve =
+      SelectResolveCallback<FileSystemMoveEntryResponse, void>(aPromise);
+
+  auto&& onReject = GetRejectCallback(aPromise);
+
+  QM_TRY(OkIf(aManager && aManager->Actor()), QM_VOID, [aPromise](const auto&) {
+    aPromise->MaybeRejectWithUnknownError("Invalid actor");
+  });
+  aManager->Actor()->SendRenameEntry(request, std::move(onResolve),
                                      std::move(onReject));
 }
 

@@ -57,6 +57,12 @@ class FileSystemManagerParent : public PFileSystemManagerParent {
   mozilla::ipc::IPCResult RecvRemoveEntry(
       FileSystemRemoveEntryRequest&& aRequest, RemoveEntryResolver&& aResolver);
 
+  mozilla::ipc::IPCResult RecvMoveEntry(FileSystemMoveEntryRequest&& aRequest,
+                                        MoveEntryResolver&& aResolver);
+
+  mozilla::ipc::IPCResult RecvRenameEntry(
+      FileSystemRenameEntryRequest&& aRequest, MoveEntryResolver&& aResolver);
+
   mozilla::ipc::IPCResult RecvCloseFile(FileSystemGetFileRequest&& aRequest);
 
   mozilla::ipc::IPCResult RecvGetAccessHandle(
