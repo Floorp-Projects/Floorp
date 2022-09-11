@@ -9,12 +9,14 @@ DIRS += [
 ]
 
 EXPORTS.mozilla.dom += [
+    "FileSystemAccessHandleParent.h",
     "FileSystemManagerParent.h",
     "FileSystemManagerParentFactory.h",
     "FileSystemQuotaClient.h",
 ]
 
 UNIFIED_SOURCES += [
+    "FileSystemAccessHandleParent.cpp",
     "FileSystemHashSource.cpp",
     "FileSystemManagerParent.cpp",
     "FileSystemManagerParentFactory.cpp",

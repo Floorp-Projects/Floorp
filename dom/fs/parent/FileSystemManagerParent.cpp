@@ -8,6 +8,7 @@
 
 #include "FileSystemDatabaseManager.h"
 #include "mozilla/Maybe.h"
+#include "mozilla/dom/FileSystemAccessHandleParent.h"
 #include "mozilla/dom/FileSystemDataManager.h"
 #include "mozilla/dom/FileSystemTypes.h"
 #include "mozilla/dom/QMResult.h"
@@ -15,6 +16,7 @@
 #include "mozilla/dom/quota/QuotaCommon.h"
 #include "mozilla/dom/quota/ResultExtensions.h"
 #include "mozilla/ipc/BackgroundParent.h"
+#include "mozilla/ipc/FileDescriptorUtils.h"
 #include "nsString.h"
 #include "nsTArray.h"
 
@@ -46,6 +48,11 @@ void FileSystemManagerParent::AssertIsOnIOTarget() const {
   mDataManager->AssertIsOnIOTarget();
 }
 
+const RefPtr<fs::data::FileSystemDataManager>&
+FileSystemManagerParent::DataManagerStrongRef() const {
+  return mDataManager;
+}
+
 IPCResult FileSystemManagerParent::RecvGetRootHandle(
     GetRootHandleResolver&& aResolver) {
   AssertIsOnIOTarget();
@@ -59,6 +66,8 @@ IPCResult FileSystemManagerParent::RecvGetRootHandle(
 IPCResult FileSystemManagerParent::RecvGetDirectoryHandle(
     FileSystemGetHandleRequest&& aRequest,
     GetDirectoryHandleResolver&& aResolver) {
+  LOG(("GetDirectoryHandle %s ",
+       NS_ConvertUTF16toUTF8(aRequest.handle().childName()).get()));
   AssertIsOnIOTarget();
   MOZ_ASSERT(!aRequest.handle().parentId().IsEmpty());
   MOZ_ASSERT(mDataManager);
@@ -99,7 +108,64 @@ IPCResult FileSystemManagerParent::RecvGetFileHandle(
 
   FileSystemGetHandleResponse response(entryId);
   aResolver(response);
+  return IPC_OK();
+}
 
+mozilla::ipc::IPCResult FileSystemManagerParent::RecvGetAccessHandle(
+    const FileSystemGetAccessHandleRequest& aRequest,
+    GetAccessHandleResolver&& aResolver) {
+  AssertIsOnIOTarget();
+  MOZ_ASSERT(mDataManager);
+
+  if (!mDataManager->LockExclusive(aRequest.entryId())) {
+    aResolver(NS_ERROR_FAILURE);
+    return IPC_OK();
+  }
+
+  auto autoUnlock =
+      MakeScopeExit([self = RefPtr<FileSystemManagerParent>(this), aRequest] {
+        self->mDataManager->UnlockExclusive(aRequest.entryId());
+      });
+
+  auto reportError = [aResolver](nsresult rv) { aResolver(rv); };
+
+  nsString type;
+  fs::TimeStamp lastModifiedMilliSeconds;
+  fs::Path path;
+  nsCOMPtr<nsIFile> file;
+  QM_TRY(MOZ_TO_RESULT(mDataManager->MutableDatabaseManagerPtr()->GetFile(
+             {aRequest.entryId(), aRequest.entryId()}, type,
+             lastModifiedMilliSeconds, path, file)),
+         IPC_OK(), reportError);
+
+  if (MOZ_LOG_TEST(gOPFSLog, mozilla::LogLevel::Debug)) {
+    nsAutoString path;
+    if (NS_SUCCEEDED(file->GetPath(path))) {
+      LOG(("Opening %s", NS_ConvertUTF16toUTF8(path).get()));
+    }
+  }
+
+  FILE* fileHandle;
+  QM_TRY(MOZ_TO_RESULT(file->OpenANSIFileDesc("r+", &fileHandle)), IPC_OK(),
+         reportError);
+
+  LOG(("Opened"));
+
+  FileDescriptor fileDescriptor =
+      mozilla::ipc::FILEToFileDescriptor(fileHandle);
+
+  auto accessHandleParent =
+      MakeRefPtr<FileSystemAccessHandleParent>(this, aRequest.entryId());
+
+  autoUnlock.release();
+
+  if (!SendPFileSystemAccessHandleConstructor(accessHandleParent,
+                                              fileDescriptor)) {
+    aResolver(NS_ERROR_FAILURE);
+    return IPC_OK();
+  }
+
+  aResolver(FileSystemGetAccessHandleResponse(accessHandleParent));
   return IPC_OK();
 }
 
@@ -175,6 +241,8 @@ IPCResult FileSystemManagerParent::RecvGetEntries(
 
 IPCResult FileSystemManagerParent::RecvRemoveEntry(
     FileSystemRemoveEntryRequest&& aRequest, RemoveEntryResolver&& aResolver) {
+  LOG(("RemoveEntry %s",
+       NS_ConvertUTF16toUTF8(aRequest.handle().childName()).get()));
   AssertIsOnIOTarget();
   MOZ_ASSERT(!aRequest.handle().parentId().IsEmpty());
   MOZ_ASSERT(mDataManager);
@@ -283,25 +351,6 @@ IPCResult FileSystemManagerParent::RecvRenameEntry(
   return IPC_OK();
 }
 
-IPCResult FileSystemManagerParent::RecvCloseFile(
-    FileSystemGetFileRequest&& aRequest) {
-  AssertIsOnIOTarget();
-
-  LOG(("Closing file"));  // painful to print out the id
-
-  return IPC_OK();
-}
-
-IPCResult FileSystemManagerParent::RecvGetAccessHandle(
-    FileSystemGetFileRequest&& aRequest, GetAccessHandleResolver&& aResolver) {
-  AssertIsOnIOTarget();
-
-  FileSystemGetAccessHandleResponse response(NS_ERROR_NOT_IMPLEMENTED);
-  aResolver(response);
-
-  return IPC_OK();
-}
-
 IPCResult FileSystemManagerParent::RecvGetWritable(
     FileSystemGetFileRequest&& aRequest, GetWritableResolver&& aResolver) {
   AssertIsOnIOTarget();
@@ -330,14 +379,17 @@ void FileSystemManagerParent::RequestAllowToClose() {
 
   mRequestedAllowToClose.Flip();
 
-  // XXX Send a message to the child and wait for a response before closing!
-
   InvokeAsync(mDataManager->MutableIOTargetPtr(), __func__,
               [self = RefPtr<FileSystemManagerParent>(this)]() {
-                self->Close();
+                return self->SendCloseAll();
+              })
+      ->Then(mDataManager->MutableIOTargetPtr(), __func__,
+             [self = RefPtr<FileSystemManagerParent>(this)](
+                 const CloseAllPromise::ResolveOrRejectValue& aValue) {
+               self->Close();
 
-                return BoolPromise::CreateAndResolve(true, __func__);
-              });
+               return BoolPromise::CreateAndResolve(true, __func__);
+             });
 }
 
 void FileSystemManagerParent::OnChannelClose() {

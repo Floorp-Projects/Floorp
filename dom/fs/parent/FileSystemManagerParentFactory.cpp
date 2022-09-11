@@ -18,7 +18,7 @@
 #include "nsString.h"
 
 namespace mozilla {
-LazyLogModule gOPFSLog("OPFS");
+extern LazyLogModule gOPFSLog;
 }
 
 #define LOG(args) MOZ_LOG(mozilla::gOPFSLog, mozilla::LogLevel::Verbose, args)
@@ -27,7 +27,6 @@ LazyLogModule gOPFSLog("OPFS");
   MOZ_LOG(mozilla::gOPFSLog, mozilla::LogLevel::Debug, args)
 
 namespace mozilla::dom {
-
 mozilla::ipc::IPCResult CreateFileSystemManagerParent(
     const mozilla::ipc::PrincipalInfo& aPrincipalInfo,
     mozilla::ipc::Endpoint<PFileSystemManagerParent>&& aParentEndpoint,
