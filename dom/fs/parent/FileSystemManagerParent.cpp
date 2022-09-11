@@ -40,8 +40,16 @@ FileSystemManagerParent::~FileSystemManagerParent() {
   LOG(("Destroying FileSystemManagerParent %p", this));
 }
 
+void FileSystemManagerParent::AssertIsOnIOTarget() const {
+  MOZ_ASSERT(mDataManager);
+
+  mDataManager->AssertIsOnIOTarget();
+}
+
 IPCResult FileSystemManagerParent::RecvGetRootHandleMsg(
     GetRootHandleMsgResolver&& aResolver) {
+  AssertIsOnIOTarget();
+
   FileSystemGetHandleResponse response(mRootEntry);
   aResolver(response);
 
@@ -51,6 +59,7 @@ IPCResult FileSystemManagerParent::RecvGetRootHandleMsg(
 IPCResult FileSystemManagerParent::RecvGetDirectoryHandleMsg(
     FileSystemGetHandleRequest&& aRequest,
     GetDirectoryHandleMsgResolver&& aResolver) {
+  AssertIsOnIOTarget();
   MOZ_ASSERT(!aRequest.handle().parentId().IsEmpty());
   MOZ_ASSERT(mDataManager);
 
@@ -74,6 +83,7 @@ IPCResult FileSystemManagerParent::RecvGetDirectoryHandleMsg(
 IPCResult FileSystemManagerParent::RecvGetFileHandleMsg(
     FileSystemGetHandleRequest&& aRequest,
     GetFileHandleMsgResolver&& aResolver) {
+  AssertIsOnIOTarget();
   MOZ_ASSERT(!aRequest.handle().parentId().IsEmpty());
   MOZ_ASSERT(mDataManager);
 
@@ -96,6 +106,8 @@ IPCResult FileSystemManagerParent::RecvGetFileHandleMsg(
 
 IPCResult FileSystemManagerParent::RecvGetFileMsg(
     FileSystemGetFileRequest&& aRequest, GetFileMsgResolver&& aResolver) {
+  AssertIsOnIOTarget();
+
   FileSystemGetFileResponse response(NS_ERROR_NOT_IMPLEMENTED);
   aResolver(response);
 
@@ -104,6 +116,7 @@ IPCResult FileSystemManagerParent::RecvGetFileMsg(
 
 IPCResult FileSystemManagerParent::RecvResolveMsg(
     FileSystemResolveRequest&& aRequest, ResolveMsgResolver&& aResolver) {
+  AssertIsOnIOTarget();
   MOZ_ASSERT(!aRequest.endpoints().parentId().IsEmpty());
   MOZ_ASSERT(!aRequest.endpoints().childId().IsEmpty());
   MOZ_ASSERT(mDataManager);
@@ -141,6 +154,7 @@ IPCResult FileSystemManagerParent::RecvResolveMsg(
 
 IPCResult FileSystemManagerParent::RecvGetEntriesMsg(
     FileSystemGetEntriesRequest&& aRequest, GetEntriesMsgResolver&& aResolver) {
+  AssertIsOnIOTarget();
   MOZ_ASSERT(!aRequest.parentId().IsEmpty());
   MOZ_ASSERT(mDataManager);
 
@@ -163,6 +177,7 @@ IPCResult FileSystemManagerParent::RecvGetEntriesMsg(
 IPCResult FileSystemManagerParent::RecvRemoveEntryMsg(
     FileSystemRemoveEntryRequest&& aRequest,
     RemoveEntryMsgResolver&& aResolver) {
+  AssertIsOnIOTarget();
   MOZ_ASSERT(!aRequest.handle().parentId().IsEmpty());
   MOZ_ASSERT(mDataManager);
 
@@ -203,6 +218,8 @@ IPCResult FileSystemManagerParent::RecvRemoveEntryMsg(
 
 IPCResult FileSystemManagerParent::RecvCloseFile(
     FileSystemGetFileRequest&& aRequest) {
+  AssertIsOnIOTarget();
+
   LOG(("Closing file"));  // painful to print out the id
 
   return IPC_OK();
@@ -210,6 +227,8 @@ IPCResult FileSystemManagerParent::RecvCloseFile(
 
 IPCResult FileSystemManagerParent::RecvGetAccessHandle(
     FileSystemGetFileRequest&& aRequest, GetAccessHandleResolver&& aResolver) {
+  AssertIsOnIOTarget();
+
   FileSystemGetAccessHandleResponse response(NS_ERROR_NOT_IMPLEMENTED);
   aResolver(response);
 
@@ -218,6 +237,8 @@ IPCResult FileSystemManagerParent::RecvGetAccessHandle(
 
 IPCResult FileSystemManagerParent::RecvGetWritable(
     FileSystemGetFileRequest&& aRequest, GetWritableResolver&& aResolver) {
+  AssertIsOnIOTarget();
+
   FileSystemGetAccessHandleResponse response(NS_ERROR_NOT_IMPLEMENTED);
   aResolver(response);
 
@@ -226,6 +247,8 @@ IPCResult FileSystemManagerParent::RecvGetWritable(
 
 IPCResult FileSystemManagerParent::RecvNeedQuota(
     FileSystemQuotaRequest&& aRequest, NeedQuotaResolver&& aResolver) {
+  AssertIsOnIOTarget();
+
   aResolver(0u);
 
   return IPC_OK();
@@ -251,6 +274,8 @@ void FileSystemManagerParent::RequestAllowToClose() {
 }
 
 void FileSystemManagerParent::OnChannelClose() {
+  AssertIsOnIOTarget();
+
   if (!mAllowedToClose) {
     AllowToClose();
   }
@@ -259,6 +284,8 @@ void FileSystemManagerParent::OnChannelClose() {
 }
 
 void FileSystemManagerParent::OnChannelError() {
+  AssertIsOnIOTarget();
+
   if (!mAllowedToClose) {
     AllowToClose();
   }
@@ -267,6 +294,8 @@ void FileSystemManagerParent::OnChannelError() {
 }
 
 void FileSystemManagerParent::AllowToClose() {
+  AssertIsOnIOTarget();
+
   mAllowedToClose.Flip();
 
   InvokeAsync(mDataManager->MutableBackgroundTargetPtr(), __func__,
