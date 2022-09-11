@@ -25,6 +25,7 @@ class Result;
 namespace dom::fs {
 
 class FileSystemChildMetadata;
+class FileSystemEntryMetadata;
 class FileSystemDirectoryListing;
 class FileSystemEntryPair;
 
@@ -40,6 +41,16 @@ class FileSystemDatabaseManager {
    * @return Result<int64_t, QMResult> Usage or error
    */
   virtual Result<int64_t, QMResult> GetUsage() const = 0;
+
+  /**
+   * @brief Returns directory identifier for the parent of
+   * a given entry, or error.
+   *
+   * @param aEntry EntryId of an existing file or directory
+   * @return Result<EntryId, QMResult> Directory identifier or error
+   */
+  virtual Result<EntryId, QMResult> GetParentEntryId(
+      const EntryId& aEntry) const = 0;
 
   /**
    * @brief Returns directory identifier, optionally creating it if it doesn't
@@ -89,6 +100,18 @@ class FileSystemDatabaseManager {
    */
   virtual Result<bool, QMResult> RemoveFile(
       const FileSystemChildMetadata& aHandle) = 0;
+
+  /**
+   * @brief Move/Rename a file/directory
+   *
+   * @param aHandle Source directory or file
+   * @param aNewDesignation Destination directory and filename
+   * @return Result<bool, QMResult> False if file didn't exist, otherwise true
+   * or error
+   */
+  virtual Result<bool, QMResult> MoveEntry(
+      const FileSystemChildMetadata& aHandle,
+      const FileSystemChildMetadata& aNewDesignation) = 0;
 
   /**
    * @brief Tries to connect a parent directory to a file system item with a
