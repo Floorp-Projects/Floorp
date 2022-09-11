@@ -7,8 +7,8 @@
 #ifndef DOM_FS_FILESYSTEMHANDLE_H_
 #define DOM_FS_FILESYSTEMHANDLE_H_
 
-#include "mozilla/dom/PFileSystemManager.h"
 #include "mozilla/Logging.h"
+#include "mozilla/dom/PFileSystemManager.h"
 #include "nsCOMPtr.h"
 #include "nsISupports.h"
 #include "nsWrapperCache.h"

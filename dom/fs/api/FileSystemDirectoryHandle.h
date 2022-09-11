@@ -7,9 +7,9 @@
 #ifndef DOM_FS_FILESYSTEMDIRECTORYHANDLE_H_
 #define DOM_FS_FILESYSTEMDIRECTORYHANDLE_H_
 
+#include "mozilla/dom/FileSystemDirectoryIterator.h"
 #include "mozilla/dom/FileSystemHandle.h"
 #include "mozilla/dom/IterableIterator.h"
-#include "mozilla/dom/FileSystemDirectoryIterator.h"
 
 namespace mozilla {
 
