@@ -3414,6 +3414,16 @@ richlistitem[originaltype="loginsFooter"] .ac-site-icon {
 
 }
 
+  /* Icons Color */
+  #appMenu-multiView .subviewbutton::before,
+  #appMenu-proton-update-banner::before,
+  #downloadsHistory .button-icon,
+  .subviewbutton > image {
+    fill: currentColor !important;
+    fill-opacity: var(--toolbarbutton-icon-fill-opacity) !important;
+    -moz-context-properties: fill !important;
+  }
+
 /* #endregion */
 
 :is(:root:not(:-moz-lwtheme),
