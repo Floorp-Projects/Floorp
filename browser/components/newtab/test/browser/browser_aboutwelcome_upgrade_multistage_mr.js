@@ -129,10 +129,10 @@ add_task(async function test_aboutwelcome_upgrade_mr_prefs_off() {
     //Expected selectors:
     ["main.UPGRADE_GET_STARTED"],
     //Unexpected selectors:
-    ["main.PIN_FIREFOX"]
+    ["main.PIN_FIREFOX", ".action-buttons button.secondary"]
   );
 
-  await clickVisibleButton(browser, ".action-buttons button.secondary");
+  await clickVisibleButton(browser, ".action-buttons button.primary");
 
   await test_upgrade_screen_content(
     browser,
@@ -177,7 +177,7 @@ add_task(
       ["main.PIN_FIREFOX"]
     );
 
-    await clickVisibleButton(browser, ".action-buttons button.secondary");
+    await clickVisibleButton(browser, ".action-buttons button.primary");
 
     await test_upgrade_screen_content(
       browser,
@@ -223,7 +223,7 @@ add_task(
       ["main.PIN_FIREFOX"]
     );
 
-    await clickVisibleButton(browser, ".action-buttons button.secondary");
+    await clickVisibleButton(browser, ".action-buttons button.primary");
 
     await test_upgrade_screen_content(
       browser,
@@ -301,7 +301,7 @@ add_task(async function test_aboutwelcome_upgrade_mr_private_pin_get_started() {
     ["input#action-checkbox"]
   );
 
-  await clickVisibleButton(browser, ".action-buttons button.secondary");
+  await clickVisibleButton(browser, ".action-buttons button.primary");
 
   await waitForDialogClose(browser);
   await BrowserTestUtils.removeTab(gBrowser.selectedTab);
@@ -349,7 +349,7 @@ add_task(
       ["input#action-checkbox"]
     );
 
-    await clickVisibleButton(browser, ".action-buttons button.secondary");
+    await clickVisibleButton(browser, ".action-buttons button.primary");
     await waitForDialogClose(browser);
     await BrowserTestUtils.removeTab(gBrowser.selectedTab);
   }

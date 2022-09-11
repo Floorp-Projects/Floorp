@@ -205,7 +205,11 @@ add_task(async function test_aboutwelcome_mr_template_get_started() {
     //Expected selectors:
     ["main.AW_GET_STARTED"],
     //Unexpected selectors:
-    ["main.AW_PIN_FIREFOX", "main.AW_ONLY_DEFAULT"]
+    [
+      "main.AW_PIN_FIREFOX",
+      "main.AW_ONLY_DEFAULT",
+      ".action-buttons .secondary",
+    ]
   );
   sandbox.restore();
 });
