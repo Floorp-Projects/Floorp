@@ -6,15 +6,15 @@
 
 #include "FileSystemMocks.h"
 
-#include <string>
-
 #include "ErrorList.h"
 #include "gtest/gtest-assertion-result.h"
-#include "js/RootingAPI.h"
 #include "jsapi.h"
+#include "js/RootingAPI.h"
 #include "mozilla/dom/FileSystemManager.h"
 #include "nsContentUtils.h"
 #include "nsISupports.h"
+
+#include <string>
 
 namespace testing::internal {
 

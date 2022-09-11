@@ -7,8 +7,6 @@
 #ifndef DOM_FS_FILESYSTEMSYNCACCESSHANDLE_H_
 #define DOM_FS_FILESYSTEMSYNCACCESSHANDLE_H_
 
-#include "mozilla/Logging.h"
-#include "mozilla/dom/PFileSystemManager.h"
 #include "nsCOMPtr.h"
 #include "nsISupports.h"
 #include "nsWrapperCache.h"
@@ -16,44 +14,20 @@
 class nsIGlobalObject;
 
 namespace mozilla {
-extern LazyLogModule gOPFSLog;
 
 class ErrorResult;
 
-namespace ipc {
-class FileDescriptor;
-}  // namespace ipc
-
 namespace dom {
 
-class FileSystemAccessHandleChild;
 struct FileSystemReadWriteOptions;
-class FileSystemManager;
 class MaybeSharedArrayBufferViewOrMaybeSharedArrayBuffer;
 class Promise;
-
-namespace fs {
-class FileSystemRequestHandler;
-}  // namespace fs
 
 class FileSystemSyncAccessHandle final : public nsISupports,
                                          public nsWrapperCache {
  public:
-  FileSystemSyncAccessHandle(nsIGlobalObject* aGlobal,
-                             RefPtr<FileSystemManager>& aManager,
-                             RefPtr<FileSystemAccessHandleChild> aActor,
-                             const fs::FileSystemEntryMetadata& aMetadata,
-                             fs::FileSystemRequestHandler* aRequestHandler);
-
-  FileSystemSyncAccessHandle(nsIGlobalObject* aGlobal,
-                             RefPtr<FileSystemManager>& aManager,
-                             RefPtr<FileSystemAccessHandleChild> aActor,
-                             const fs::FileSystemEntryMetadata& aMetadata);
-
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_WRAPPERCACHE_CLASS(FileSystemSyncAccessHandle)
-
-  void ClearActor();
 
   // WebIDL Boilerplate
   nsIGlobalObject* GetParentObject() const;
@@ -64,11 +38,11 @@ class FileSystemSyncAccessHandle final : public nsISupports,
   // WebIDL Interface
   uint64_t Read(
       const MaybeSharedArrayBufferViewOrMaybeSharedArrayBuffer& aBuffer,
-      const FileSystemReadWriteOptions& aOptions, ErrorResult& aRv);
+      const FileSystemReadWriteOptions& aOptions);
 
   uint64_t Write(
       const MaybeSharedArrayBufferViewOrMaybeSharedArrayBuffer& aBuffer,
-      const FileSystemReadWriteOptions& aOptions, ErrorResult& aRv);
+      const FileSystemReadWriteOptions& aOptions);
 
   already_AddRefed<Promise> Truncate(uint64_t aSize, ErrorResult& aError);
 
@@ -79,17 +53,9 @@ class FileSystemSyncAccessHandle final : public nsISupports,
   already_AddRefed<Promise> Close(ErrorResult& aError);
 
  private:
-  virtual ~FileSystemSyncAccessHandle();
+  virtual ~FileSystemSyncAccessHandle() = default;
 
   nsCOMPtr<nsIGlobalObject> mGlobal;
-
-  RefPtr<FileSystemManager> mManager;
-
-  RefPtr<FileSystemAccessHandleChild> mActor;
-
-  const fs::FileSystemEntryMetadata mMetadata;
-
-  const UniquePtr<fs::FileSystemRequestHandler> mRequestHandler;
 };
 
 }  // namespace dom
