@@ -1365,7 +1365,6 @@ menuitem>.menu-iconic-text {
 }
 
 #navigator-toolbox :-moz-any(.toolbarbutton-1, .scrollbutton-up, .scrollbutton-down) {
-  max-height: 32px !important;
   height: 32px !important;
   min-height: 32px !important;
 }
