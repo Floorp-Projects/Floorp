@@ -36,8 +36,12 @@ XPCOMUtils.defineLazyPreferenceGetter(
   _handlePrefChange
 );
 
+/* Work around the pref callback being run after the document has been unlinked.
+   See bug 1543537. */
+const docWeak = Cu.getWeakReference(document);
 async function _handlePrefChange() {
-  if (document.visibilityState === "hidden") {
+  const doc = docWeak.get();
+  if (!doc || doc.visibilityState === "hidden") {
     return;
   }
   let prefVal = lazy.featureTourProgress;
@@ -48,7 +52,7 @@ async function _handlePrefChange() {
     CURRENT_SCREEN = null;
   } else if (prefVal.screen !== CURRENT_SCREEN?.id) {
     READY = false;
-    let container = document.getElementById(CONTAINER_ID);
+    const container = doc.getElementById(CONTAINER_ID);
     container?.classList.add("hidden");
     // wait for fade out transition
     setTimeout(async () => {
