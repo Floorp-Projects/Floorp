@@ -7,9 +7,6 @@ const TOP_LEVEL_URL =
 const SAME_ORIGIN = "https://example.com";
 const CROSS_ORIGIN = "https://test1.example.com";
 
-const USE_CREDENTIALLESS = true;
-const NO_CREDENTIALLESS = false;
-
 const GET_STATE_URL =
   getRootDirectory(gTestPath).replace(
     "chrome://mochitests/content",
@@ -35,13 +32,22 @@ async function addCookieToOrigin(origin) {
 async function testOrigin(
   fetchOrigin,
   isCredentialless,
+  useMetaTag,
   fetchRequestMode,
   fetchRequestCrendentials,
   expectedCookieResult
 ) {
-  let topLevelUrl = TOP_LEVEL_URL;
+  let params = [];
   if (isCredentialless) {
-    topLevelUrl += "?credentialless";
+    params.push("credentialless");
+  }
+  if (useMetaTag) {
+    params.push("meta");
+  }
+
+  let topLevelUrl = TOP_LEVEL_URL;
+  if (params.length) {
+    topLevelUrl += "?" + params.join("&");
   }
 
   const noCredentiallessTab = await BrowserTestUtils.openNewForegroundTab(
@@ -98,20 +104,20 @@ async function doTest(
   expectedCookieResultForNoCredentialless,
   expectedCookieResultForCredentialless
 ) {
-  await testOrigin(
-    origin,
-    USE_CREDENTIALLESS,
-    fetchRequestMode,
-    fetchRequestCrendentials,
-    expectedCookieResultForCredentialless
-  );
-  await testOrigin(
-    origin,
-    NO_CREDENTIALLESS,
-    fetchRequestMode,
-    fetchRequestCrendentials,
-    expectedCookieResultForNoCredentialless
-  );
+  for (let credentialless of [true, false]) {
+    for (let meta of [true, false]) {
+      await testOrigin(
+        origin,
+        credentialless,
+        meta,
+        fetchRequestMode,
+        fetchRequestCrendentials,
+        credentialless
+          ? expectedCookieResultForCredentialless
+          : expectedCookieResultForNoCredentialless
+      );
+    }
+  }
 }
 
 add_task(async function() {
