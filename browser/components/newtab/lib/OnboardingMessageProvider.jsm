@@ -1017,6 +1017,7 @@ const OnboardingMessageProvider = {
           string_id: "mr2022-onboarding-get-started-primary-button-label",
         };
         delete primary.action.type;
+        delete pinScreen.content.secondary_button;
       }
     }
 
