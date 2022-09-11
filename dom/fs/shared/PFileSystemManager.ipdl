@@ -2,6 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+include protocol PFileSystemAccessHandle;
+
 include IPCBlob;
 
 using mozilla::dom::fs::ContentType from "mozilla/dom/FileSystemTypes.h";
@@ -116,15 +118,18 @@ union FileSystemGetFileResponse
   FileSystemFileProperties;
 };
 
-struct FileSystemGetAccessHandleData
+/**
+ * Contains entry handle information.
+ */
+struct FileSystemGetAccessHandleRequest
 {
-  FileDescriptor file;
+  EntryId entryId;
 };
 
 union FileSystemGetAccessHandleResponse
 {
-  FileSystemGetAccessHandleData;
   nsresult;
+  PFileSystemAccessHandle;
 };
 
 /**
@@ -219,6 +224,8 @@ struct FileSystemQuotaRequest
 
 async protocol PFileSystemManager
 {
+  manages PFileSystemAccessHandle;
+
  parent:
   /**
    * TODO: documentation
@@ -289,8 +296,9 @@ async protocol PFileSystemManager
   /**
    * TODO: documentation
    */
-  async GetAccessHandle(FileSystemGetFileRequest request)
-      returns(FileSystemGetAccessHandleResponse fileData);
+  [VirtualSendImpl]
+  async GetAccessHandle(FileSystemGetAccessHandleRequest request)
+      returns(FileSystemGetAccessHandleResponse response);
 
   /**
    * TODO: documentation
@@ -366,18 +374,18 @@ async protocol PFileSystemManager
       returns(FileSystemMoveEntryResponse response);
 
   /**
-   * TODO: documentation
-   * So we can implement exclusive access
-   */
-  async CloseFile(FileSystemGetFileRequest request);
-
-  /**
    * Request for quota needed to finish a write, beyond the amount preallocated
    * at creation of the AccessHandle. While officially async, this is used in a
    * sync manner from write() by spinning an event loop.
    */
   async NeedQuota(FileSystemQuotaRequest aRequest)
       returns (uint64_t aQuotaGranted);
+
+ child:
+  async PFileSystemAccessHandle(FileDescriptor fileDescriptor);
+
+  async CloseAll()
+      returns(nsresult rv);
 };
 
 } // namespace dom

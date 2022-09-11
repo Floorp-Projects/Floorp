@@ -376,6 +376,21 @@ RefPtr<BoolPromise> FileSystemDataManager::OnClose() {
   return mClosePromiseHolder.Ensure(__func__);
 }
 
+bool FileSystemDataManager::LockExclusive(const EntryId& aEntryId) {
+  if (mExclusiveLocks.Contains(aEntryId)) {
+    return false;
+  }
+
+  mExclusiveLocks.Insert(aEntryId);
+  return true;
+}
+
+void FileSystemDataManager::UnlockExclusive(const EntryId& aEntryId) {
+  MOZ_ASSERT(mExclusiveLocks.Contains(aEntryId));
+
+  mExclusiveLocks.Remove(aEntryId);
+}
+
 bool FileSystemDataManager::IsInactive() const {
   return !mRegCount && !mBackgroundThreadAccessible.Access()->mActors.Count();
 }
