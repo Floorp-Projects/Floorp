@@ -1,6 +1,24 @@
 {
   "data": [
     {
+      "schema": 1662639897392,
+      "derHash": "As4WI1qIuX1hp8Fv9RRuT3ulgIga3CJlADNpi0kSyTk=",
+      "subject": "CN=cnTrus EV SSL CA,O=Zhejiang Huluwa Digital Certification Co.\\, Ltd.,C=CN",
+      "subjectDN": "MGIxCzAJBgNVBAYTAkNOMTgwNgYDVQQKEy9aaGVqaWFuZyBIdWx1d2EgRGlnaXRhbCBDZXJ0aWZpY2F0aW9uIENvLiwgTHRkLjEZMBcGA1UEAxMQY25UcnVzIEVWIFNTTCBDQQ==",
+      "whitelist": false,
+      "attachment": {
+        "hash": "8a2c62796de49738c6648befe89ee8f338658faaa444411e7f508ede4a3c145f",
+        "size": 2268,
+        "filename": "_Fk4GOAtmSo-xJLXixnH1A1pzonFgo4IAGSrf3wfR1k=.pem",
+        "location": "security-state-staging/intermediates/b20d43ab-f8ba-4334-9fe7-9761a8c8df5b.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "/Fk4GOAtmSo+xJLXixnH1A1pzonFgo4IAGSrf3wfR1k=",
+      "crlite_enrolled": true,
+      "id": "3b273f22-4f3a-4737-979e-0157ed65f0b3",
+      "last_modified": 1662857823152
+    },
+    {
       "schema": 1662515823574,
       "derHash": "Yjq+xvhacCisoQ9b3F2BtWtjFN8odD/8yE7KMvNa6EY=",
       "subject": "CN=MuaSSL.com TLS Issuing ECC CA R1,O=Hao Quang Viet Software Company Limited,C=VN",
@@ -431,24 +449,6 @@
       "crlite_enrolled": false,
       "id": "b79706c1-d86c-4666-b8de-81f9823acc9c",
       "last_modified": 1661885823291
-    },
-    {
-      "schema": 1661885333293,
-      "derHash": "As4WI1qIuX1hp8Fv9RRuT3ulgIga3CJlADNpi0kSyTk=",
-      "subject": "CN=cnTrus EV SSL CA,O=Zhejiang Huluwa Digital Certification Co.\\, Ltd.,C=CN",
-      "subjectDN": "MGIxCzAJBgNVBAYTAkNOMTgwNgYDVQQKEy9aaGVqaWFuZyBIdWx1d2EgRGlnaXRhbCBDZXJ0aWZpY2F0aW9uIENvLiwgTHRkLjEZMBcGA1UEAxMQY25UcnVzIEVWIFNTTCBDQQ==",
-      "whitelist": false,
-      "attachment": {
-        "hash": "8a2c62796de49738c6648befe89ee8f338658faaa444411e7f508ede4a3c145f",
-        "size": 2268,
-        "filename": "_Fk4GOAtmSo-xJLXixnH1A1pzonFgo4IAGSrf3wfR1k=.pem",
-        "location": "security-state-staging/intermediates/b20d43ab-f8ba-4334-9fe7-9761a8c8df5b.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "/Fk4GOAtmSo+xJLXixnH1A1pzonFgo4IAGSrf3wfR1k=",
-      "crlite_enrolled": false,
-      "id": "3b273f22-4f3a-4737-979e-0157ed65f0b3",
-      "last_modified": 1661885823283
     },
     {
       "schema": 1661885334134,
@@ -26317,5 +26317,5 @@
       "last_modified": 1559865863642
     }
   ],
-  "timestamp": 1662620223051
+  "timestamp": 1662857823152
 }
