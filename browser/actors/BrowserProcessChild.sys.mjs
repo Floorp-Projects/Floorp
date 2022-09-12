@@ -4,8 +4,6 @@
 
 "use strict";
 
-var EXPORTED_SYMBOLS = ["BrowserProcessChild"];
-
 const lazy = {};
 
 ChromeUtils.defineModuleGetter(
@@ -20,7 +18,7 @@ ChromeUtils.defineModuleGetter(
   "resource:///modules/AboutNewTabService.jsm"
 );
 
-class BrowserProcessChild extends JSProcessActorChild {
+export class BrowserProcessChild extends JSProcessActorChild {
   receiveMessage(message) {
     switch (message.name) {
       case "AboutHomeStartupCache:InputStreams":
