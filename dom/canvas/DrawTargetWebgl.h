@@ -82,7 +82,11 @@ class DrawTargetWebgl : public DrawTarget, public SupportsWeakPtr {
   // Whether or not the WebGL context has valid contents and is being drawn to
   bool mWebglValid = true;
   // Whether or not the clip state has changed since last used by SharedContext.
-  bool mClipDirty = true;
+  bool mClipChanged = true;
+  // Whether or not the clip state needs to be refreshed. Sometimes the clip
+  // state may be overwritten and require a refresh later, even though it has
+  // not changed.
+  bool mRefreshClipState = true;
   // The framebuffer has been modified and should be copied to the swap chain.
   bool mNeedsPresent = true;
   // The number of layers currently pushed.
