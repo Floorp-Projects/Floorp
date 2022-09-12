@@ -1714,6 +1714,10 @@ class AsyncPanZoomController {
 
   bool IsOverscrolled() const;
 
+  // IsPhysicallyOverscrolled() checks whether the APZC is overscrolled
+  // by an overscroll effect which applies a transform to the APZC's contents.
+  bool IsPhysicallyOverscrolled() const;
+
  private:
   bool IsInInvalidOverscroll() const;
 
