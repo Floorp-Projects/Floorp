@@ -42,6 +42,9 @@ browser/components/enterprisepolicies/schemas/schema.jsm
 browser/components/pocket/content/panels/js/tmpl.js
 browser/components/pocket/content/panels/js/vendor.bundle.js
 browser/components/pocket/content/panels/js/main.bundle.js
+# Include the Storybook config files.
+!browser/components/storybook/.storybook/
+!browser/components/storybook/.storybook/*.js
 
 # Ignore newtab files
 browser/components/newtab/aboutwelcome/content/aboutwelcome.bundle.js
