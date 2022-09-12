@@ -6855,7 +6855,16 @@
 var StatusPanel = {
   get panel() {
     delete this.panel;
-    return (this.panel = document.getElementById("statuspanel"));
+    this.panel = document.getElementById("statuspanel");
+    this.panel.addEventListener(
+      "transitionend",
+      this._onTransitionEnd.bind(this)
+    );
+    this.panel.addEventListener(
+      "transitioncancel",
+      this._onTransitionEnd.bind(this)
+    );
+    return this.panel;
   },
 
   get isVisible() {
@@ -6894,6 +6903,7 @@ var StatusPanel = {
     if (this._labelElement.value != text || (text && !this.isVisible)) {
       this.panel.setAttribute("previoustype", this.panel.getAttribute("type"));
       this.panel.setAttribute("type", type);
+
       this._label = text;
       this._labelElement.setAttribute(
         "crop",
@@ -6930,11 +6940,23 @@ var StatusPanel = {
 
     if (val) {
       this._labelElement.value = val;
+      if (this.panel.hidden) {
+        this.panel.hidden = false;
+        // This ensures that the "inactive" attribute removal triggers a
+        // transition.
+        getComputedStyle(this.panel).display;
+      }
       this.panel.removeAttribute("inactive");
       MousePosTracker.addListener(this);
     } else {
       this.panel.setAttribute("inactive", "true");
       MousePosTracker.removeListener(this);
+    }
+  },
+
+  _onTransitionEnd() {
+    if (!this.isVisible) {
+      this.panel.hidden = true;
     }
   },
 
