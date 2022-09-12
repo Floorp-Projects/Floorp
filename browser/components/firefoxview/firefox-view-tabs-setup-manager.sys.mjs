@@ -420,7 +420,7 @@ export const TabsSetupFlowManager = new (class {
 
   async openFxAPairDevice(window) {
     const url = await lazy.fxAccounts.constructor.config.promisePairingURI({
-      entrypoint: "fxa_app_menu", // Bug 1784363 - update to "fx-view" when available
+      entrypoint: "fx-view",
     });
     openTabInWindow(window, url, true);
     Services.telemetry.recordEvent("firefoxview", "fxa_mobile", "sync", null, {
