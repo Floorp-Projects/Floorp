@@ -556,8 +556,9 @@ MOZ_ALWAYS_INLINE bool NativeObject::setShapeAndUpdateSlots(JSContext* cx,
   return true;
 }
 
-MOZ_ALWAYS_INLINE bool NativeObject::setShapeAndUpdateSlotsForNewSlot(
-    JSContext* cx, Shape* newShape, uint32_t slot) {
+MOZ_ALWAYS_INLINE bool NativeObject::setShapeAndAddNewSlot(JSContext* cx,
+                                                           Shape* newShape,
+                                                           uint32_t slot) {
   MOZ_ASSERT(!inDictionaryMode());
   MOZ_ASSERT(!newShape->isDictionary());
   MOZ_ASSERT(newShape->zone() == zone());
@@ -567,8 +568,17 @@ MOZ_ALWAYS_INLINE bool NativeObject::setShapeAndUpdateSlotsForNewSlot(
   MOZ_ASSERT(newShape->slotSpan() == shape()->slotSpan() + 1);
   MOZ_ASSERT(newShape->slotSpan() == slot + 1);
 
-  if (MOZ_UNLIKELY(!updateSlotsForSpan(cx, slot, slot + 1))) {
-    return false;
+  uint32_t numFixed = newShape->numFixedSlots();
+  if (slot < numFixed) {
+    initFixedSlot(slot, UndefinedValue());
+  } else {
+    uint32_t dynamicSlotIndex = slot - numFixed;
+    if (dynamicSlotIndex >= numDynamicSlots()) {
+      if (MOZ_UNLIKELY(!growSlotsForNewSlot(cx, numFixed, slot))) {
+        return false;
+      }
+    }
+    initDynamicSlot(numFixed, slot, UndefinedValue());
   }
 
   setShape(newShape);

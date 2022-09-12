@@ -292,6 +292,21 @@ bool NativeObject::growSlots(JSContext* cx, uint32_t oldCapacity,
   return true;
 }
 
+bool NativeObject::growSlotsForNewSlot(JSContext* cx, uint32_t numFixed,
+                                       uint32_t slot) {
+  MOZ_ASSERT(!inDictionaryMode());
+  MOZ_ASSERT(shape()->slotSpan() == slot);
+  MOZ_ASSERT(shape()->numFixedSlots() == numFixed);
+  MOZ_ASSERT(slot >= numFixed);
+
+  uint32_t newCapacity = calculateDynamicSlots(numFixed, slot + 1, getClass());
+
+  uint32_t oldCapacity = numDynamicSlots();
+  MOZ_ASSERT(oldCapacity < newCapacity);
+
+  return growSlots(cx, oldCapacity, newCapacity);
+}
+
 bool NativeObject::allocateSlots(JSContext* cx, uint32_t newCapacity) {
   MOZ_ASSERT(!hasDynamicSlots());
 
@@ -1332,7 +1347,7 @@ bool js::AddSlotAndCallAddPropHook(JSContext* cx, Handle<NativeObject*> obj,
   MOZ_ASSERT(!id.isInt());
 
   uint32_t slot = newShape->lastProperty().slot();
-  if (!obj->setShapeAndUpdateSlotsForNewSlot(cx, newShape, slot)) {
+  if (!obj->setShapeAndAddNewSlot(cx, newShape, slot)) {
     return false;
   }
   obj->initSlot(slot, v);
