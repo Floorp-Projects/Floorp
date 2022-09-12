@@ -224,7 +224,7 @@ export class ProjectSearch extends Component {
   renderResults = () => {
     const { status, results } = this.props;
     if (!this.props.query) {
-      return;
+      return null;
     }
     if (results.length) {
       return (

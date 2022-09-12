@@ -134,7 +134,8 @@ class Tabs extends PureComponent {
       isVisible() &&
       hiddenTabs.find(tab => tab.id == selectedSource.id)
     ) {
-      return moveTab(selectedSource.url, 0);
+      moveTab(selectedSource.url, 0);
+      return;
     }
 
     this.setState({ hiddenTabs });
@@ -223,7 +224,7 @@ class Tabs extends PureComponent {
   renderTabs() {
     const { tabSources } = this.props;
     if (!tabSources) {
-      return;
+      return null;
     }
 
     return (
@@ -262,7 +263,7 @@ class Tabs extends PureComponent {
   renderCommandBar() {
     const { horizontal, endPanelCollapsed, isPaused } = this.props;
     if (!endPanelCollapsed || !isPaused) {
-      return;
+      return null;
     }
 
     return <CommandBar horizontal={horizontal} />;
@@ -281,7 +282,7 @@ class Tabs extends PureComponent {
   renderEndPanelToggleButton() {
     const { horizontal, endPanelCollapsed, togglePaneCollapse } = this.props;
     if (!horizontal) {
-      return;
+      return null;
     }
 
     return (

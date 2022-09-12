@@ -18,7 +18,7 @@ import {
 
 function isDebugLine(selectedFrame, selectedLocation) {
   if (!selectedFrame) {
-    return;
+    return false;
   }
 
   return (

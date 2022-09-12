@@ -78,6 +78,8 @@ function getDirectoryForSource(source, rootItems) {
         return match;
       }
     }
+
+    return null;
   }
   for (const rootItem of rootItems) {
     // Note that when we are setting a project root, rootItem

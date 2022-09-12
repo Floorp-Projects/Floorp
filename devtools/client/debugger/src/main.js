@@ -24,11 +24,12 @@ async function syncBreakpoints() {
   const breakpointValues = Object.values(sanitizeBreakpoints(breakpoints));
   return Promise.all(
     breakpointValues.map(({ disabled, options, generatedLocation }) => {
-      if (!disabled) {
-        // Set the breakpoint on the server using the generated location as generated
-        // sources are known on server, not original sources.
-        return firefox.clientCommands.setBreakpoint(generatedLocation, options);
+      if (disabled) {
+        return Promise.resolve();
       }
+      // Set the breakpoint on the server using the generated location as generated
+      // sources are known on server, not original sources.
+      return firefox.clientCommands.setBreakpoint(generatedLocation, options);
     })
   );
 }

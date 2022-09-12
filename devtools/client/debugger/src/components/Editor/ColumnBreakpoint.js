@@ -84,7 +84,8 @@ export default class ColumnBreakpoint extends PureComponent {
     // disable column breakpoint on shift-click.
     if (event.shiftKey) {
       const breakpoint = columnBreakpoint.breakpoint;
-      return breakpointActions.toggleDisabledBreakpoint(cx, breakpoint);
+      breakpointActions.toggleDisabledBreakpoint(cx, breakpoint);
+      return;
     }
 
     if (columnBreakpoint.breakpoint) {

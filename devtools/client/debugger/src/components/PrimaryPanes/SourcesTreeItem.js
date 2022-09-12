@@ -323,6 +323,8 @@ class SourceTreeItem extends Component {
         displayURL.filename + (displayURL.search ? displayURL.search : "");
       return unescape(name);
     }
+
+    return null;
   }
 
   renderItemTooltip() {
@@ -340,6 +342,8 @@ class SourceTreeItem extends Component {
     if (item.type == "source") {
       return item.source.url;
     }
+
+    return null;
   }
 
   render() {

@@ -33,6 +33,7 @@ class PaneToggleButton extends PureComponent {
           collapsed ? "expandBreakpoints" : "collapseBreakpoints"
         );
     }
+    return null;
   }
 
   render() {

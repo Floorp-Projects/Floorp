@@ -292,7 +292,7 @@ class Editor extends PureComponent {
     const { codeMirror } = this.state.editor;
     const { selectedSource } = this.props;
     if (!selectedSource) {
-      return;
+      return null;
     }
 
     const line = getCursorLine(codeMirror);
@@ -332,12 +332,8 @@ class Editor extends PureComponent {
       return closeConditionalPanel();
     }
 
-    if (!selectedSource) {
-      return;
-    }
-
-    if (typeof line !== "number") {
-      return;
+    if (!selectedSource || typeof line !== "number") {
+      return null;
     }
 
     return openConditionalPanel(
@@ -445,7 +441,7 @@ class Editor extends PureComponent {
         line
       ).trim();
 
-      return showMenu(event, [
+      showMenu(event, [
         ...createBreakpointItems(cx, location, breakpointActions, lineText),
         { type: "separator" },
         continueToHereItem(cx, location, isPaused, editorActions),
@@ -459,6 +455,7 @@ class Editor extends PureComponent {
           line
         ),
       ]);
+      return;
     }
 
     if (target.getAttribute("id") === "columnmarker") {
@@ -495,7 +492,8 @@ class Editor extends PureComponent {
     }
 
     if (conditionalPanelLocation) {
-      return closeConditionalPanel();
+      closeConditionalPanel();
+      return;
     }
 
     if (gutter === "CodeMirror-foldgutter") {
@@ -513,18 +511,19 @@ class Editor extends PureComponent {
     }
 
     if (isCmd(ev)) {
-      return continueToHere(cx, {
+      continueToHere(cx, {
         line: sourceLine,
         column: undefined,
         sourceId: selectedSource.id,
       });
+      return;
     }
 
-    return addBreakpointAtLine(cx, sourceLine, ev.altKey, ev.shiftKey);
+    addBreakpointAtLine(cx, sourceLine, ev.altKey, ev.shiftKey);
   };
 
   onGutterContextMenu = event => {
-    return this.openMenu(event);
+    this.openMenu(event);
   };
 
   onClick(e) {
@@ -598,11 +597,13 @@ class Editor extends PureComponent {
 
     // check if we previously had a selected source
     if (!selectedSource) {
-      return this.clearEditor();
+      this.clearEditor();
+      return;
     }
 
     if (!selectedSourceTextContent?.value) {
-      return showLoading(editor);
+      showLoading(editor);
+      return;
     }
 
     if (selectedSourceTextContent.state === "rejected") {
@@ -611,15 +612,11 @@ class Editor extends PureComponent {
         value = "Unexpected source error";
       }
 
-      return this.showErrorMessage(value);
+      this.showErrorMessage(value);
+      return;
     }
 
-    return showSourceText(
-      editor,
-      selectedSource,
-      selectedSourceTextContent,
-      symbols
-    );
+    showSourceText(editor, selectedSource, selectedSourceTextContent, symbols);
   }
 
   clearEditor() {

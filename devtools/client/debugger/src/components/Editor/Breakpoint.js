@@ -74,22 +74,25 @@ class Breakpoint extends PureComponent {
 
     const selectedLocation = getSelectedLocation(breakpoint, selectedSource);
     if (event.metaKey) {
-      return editorActions.continueToHere(cx, selectedLocation.line);
+      editorActions.continueToHere(cx, selectedLocation.line);
+      return;
     }
 
     if (event.shiftKey) {
       if (features.columnBreakpoints) {
-        return breakpointActions.toggleBreakpointsAtLine(
+        breakpointActions.toggleBreakpointsAtLine(
           cx,
           !breakpoint.disabled,
           selectedLocation.line
         );
+        return;
       }
 
-      return breakpointActions.toggleDisabledBreakpoint(cx, breakpoint);
+      breakpointActions.toggleDisabledBreakpoint(cx, breakpoint);
+      return;
     }
 
-    return breakpointActions.removeBreakpointsAtLine(
+    breakpointActions.removeBreakpointsAtLine(
       cx,
       selectedLocation.sourceId,
       selectedLocation.line

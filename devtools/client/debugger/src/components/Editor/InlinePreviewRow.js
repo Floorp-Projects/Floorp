@@ -45,10 +45,8 @@ class InlinePreviewRow extends PureComponent {
     }
 
     if (!props) {
-      return assert(
-        !this.bookmark,
-        "Inline Preview widget shouldn't be present."
-      );
+      assert(!this.bookmark, "Inline Preview widget shouldn't be present.");
+      return;
     }
 
     const {

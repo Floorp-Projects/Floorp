@@ -64,7 +64,7 @@ class WhyPaused extends PureComponent {
 
     const { preview } = exception;
     if (!preview || !preview.name || !preview.message) {
-      return;
+      return null;
     }
 
     return `${preview.name}: ${preview.message}`;

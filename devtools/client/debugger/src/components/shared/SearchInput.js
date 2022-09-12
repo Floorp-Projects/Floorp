@@ -137,7 +137,8 @@ class SearchInput extends Component {
   onKeyDown = e => {
     const { onHistoryScroll, onKeyDown } = this.props;
     if (!onHistoryScroll) {
-      return onKeyDown(e);
+      onKeyDown(e);
+      return;
     }
 
     const inputValue = e.target.value;
@@ -146,7 +147,8 @@ class SearchInput extends Component {
 
     if (e.key === "Enter") {
       this.saveEnteredTerm(inputValue);
-      return onKeyDown(e);
+      onKeyDown(e);
+      return;
     }
 
     if (e.key === "ArrowUp") {
@@ -191,15 +193,16 @@ class SearchInput extends Component {
 
   renderSpinner() {
     const { isLoading } = this.props;
-    if (isLoading) {
-      return <AccessibleImage className="loader spin" />;
+    if (!isLoading) {
+      return null;
     }
+    return <AccessibleImage className="loader spin" />;
   }
 
   renderNav() {
     const { count, handleNext, handlePrev } = this.props;
     if ((!handleNext && !handlePrev) || !count || count == 1) {
-      return;
+      return null;
     }
 
     return (
