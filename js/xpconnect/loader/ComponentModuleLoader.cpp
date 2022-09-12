@@ -104,7 +104,7 @@ nsresult ComponentModuleLoader::StartFetch(ModuleLoadRequest* aRequest) {
   JSContext* cx = jsapi.cx();
   RootedScript script(cx);
   nsresult rv =
-      mozJSModuleLoader::LoadSingleModuleScript(cx, aRequest->mURI, &script);
+      mozJSModuleLoader::LoadSingleModuleScript(cx, aRequest, &script);
   MOZ_ASSERT_IF(jsapi.HasException(), NS_FAILED(rv));
   MOZ_ASSERT(bool(script) == NS_SUCCEEDED(rv));
 
