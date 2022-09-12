@@ -2649,6 +2649,11 @@ bool nsPresContext::IsRootContentDocumentCrossProcess() const {
     return false;
   }
 
+  if (BrowsingContext* browsingContext = mDocument->GetBrowsingContext()) {
+    if (browsingContext->GetEmbeddedInContentDocument()) {
+      return false;
+    }
+  }
   return mDocument->IsTopLevelContentDocument();
 }
 
