@@ -53,7 +53,7 @@ already_AddRefed<Promise> FileSystemFileHandle::GetFile(ErrorResult& aError) {
     return nullptr;
   }
 
-  mRequestHandler->GetFile(mManager, mMetadata, promise);
+  promise->MaybeReject(NS_ERROR_NOT_IMPLEMENTED);
 
   return promise.forget();
 }

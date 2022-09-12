@@ -160,7 +160,7 @@ nsresult GetFileAttributes(const FileSystemConnection& aConnection,
   const nsLiteralCString getFileLocation =
       "SELECT type FROM Files INNER JOIN Entries USING(handle) WHERE handle = :entryId;"_ns;
 
-  // TODO: bug 1790391: Request this from filemanager who makes the system call
+  // TODO: Request this from filemanager who makes the system call
   aLastModifiedMilliSeconds = 0;
 
   QM_TRY_UNWRAP(ResultStatement stmt,

@@ -8,11 +8,9 @@
 
 #include "FileSystemDatabaseManager.h"
 #include "mozilla/Maybe.h"
-#include "mozilla/dom/FileBlobImpl.h"
 #include "mozilla/dom/FileSystemAccessHandleParent.h"
 #include "mozilla/dom/FileSystemDataManager.h"
 #include "mozilla/dom/FileSystemTypes.h"
-#include "mozilla/dom/IPCBlobUtils.h"
 #include "mozilla/dom/QMResult.h"
 #include "mozilla/dom/quota/ForwardDecls.h"
 #include "mozilla/dom/quota/QuotaCommon.h"
@@ -175,47 +173,7 @@ IPCResult FileSystemManagerParent::RecvGetFile(
     FileSystemGetFileRequest&& aRequest, GetFileResolver&& aResolver) {
   AssertIsOnIOTarget();
 
-  // XXX Spec https://www.w3.org/TR/FileAPI/#dfn-file wants us to snapshot the
-  // state of the file at getFile() time
-
-  // You can create a File with getFile() even if the file is locked
-  // XXX factor out this part of the code for accesshandle/ and getfile
-  nsString type;
-  TimeStamp lastModified;
-  nsTArray<Name> userPath;
-  nsCOMPtr<nsIFile> fileObject;
-  FileSystemEntryPair pair = {mRootEntry, aRequest.entryId()};
-
-  auto rv = mDataManager->MutableDatabaseManagerPtr()->GetFile(
-      pair, type, lastModified, userPath, fileObject);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    FileSystemGetFileResponse response(rv);
-    aResolver(response);
-    return IPC_OK();
-  }
-
-  if (MOZ_LOG_TEST(gOPFSLog, mozilla::LogLevel::Debug)) {
-    nsAutoString path;
-    if (NS_SUCCEEDED(fileObject->GetPath(path))) {
-      LOG(("Opening %s", NS_ConvertUTF16toUTF8(path).get()));
-    }
-  }
-
-  RefPtr<BlobImpl> blob = MakeRefPtr<FileBlobImpl>(fileObject);
-  if (blob) {
-    IPCBlob ipcBlob;
-    rv = IPCBlobUtils::Serialize(blob, ipcBlob);
-    if (NS_SUCCEEDED(rv)) {
-      FileSystemGetFileResponse response(
-          (FileSystemFileProperties(lastModified, ipcBlob, type, userPath)));
-      aResolver(response);
-      return IPC_OK();
-    }
-  } else {
-    rv = NS_ERROR_FILE_NOT_FOUND;
-  }
-  LOG(("Failed!"));
-  FileSystemGetFileResponse response(rv);
+  FileSystemGetFileResponse response(NS_ERROR_NOT_IMPLEMENTED);
   aResolver(response);
 
   return IPC_OK();
