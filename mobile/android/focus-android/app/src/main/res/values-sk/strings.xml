@@ -461,7 +461,7 @@
     <string name="external_multiple_apps_matched_exit">Ukončiť režim Súkromné prehliadanie?</string>
 
     <!-- Snackbar that will be displayed after a download has completed. %1$s will be replaced with the file name. -->
-    <string name="download_snackbar_finished">Preberanie súboru %1$s sa dokončilo</string>
+    <string name="download_snackbar_finished">Hotovo pre %1$s</string>
 
     <!-- Snackbar action to immediately open the successfully downloaded file. -->
     <string name="download_snackbar_open">Otvoriť</string>

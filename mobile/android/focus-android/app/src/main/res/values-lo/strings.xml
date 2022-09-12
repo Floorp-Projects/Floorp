@@ -457,7 +457,10 @@
 
 
 
-  <!-- First run tour (Default browser): Title -->
+  <!-- Onboarding: Start browsing -->
+    <string name="onboarding_start_browsing">ເລີ່ມການທ່ອງເວັບ</string>
+
+    <!-- First run tour (Default browser): Title -->
     <string name="firstrun_defaultbrowser_title">ເພີ່ມຄວາມເປັນສ່ວນໂຕຂອງທ່ານ</string>
     <!-- First run tour (Default browser): Text. -->
     <string name="firstrun_defaultbrowser_text2">ນຳການທ່ອງເວັບແບບສ່ວນຕົວໄປສູ້ລະດັບຖັດໄປ. ປິດກັ້ນໂຄສະນາແລະເນື້ອຫາອື່ນໆ ທີ່ສາມາດຕິດຕາມທ່ານລະຫວ່າງເວັບໄຊທ໌ແລະຫລຸດເວລາໃນການໂຫລດຫນ້າ,</string>
@@ -576,8 +579,17 @@
     <!-- Title of Advanced Setting category -->
     <string name="preference_category_advanced">ຂັ້ນສູງ</string>
 
+    <!-- Preference for site permissions -->
+    <string name="preference_site_permissions">ສິດທິໃນເວັບໄຊທ</string>
+
     <!-- Preference for autoplay -->
     <string name="preference_autoplay">ຫຼິ້ນອັດຕະໂນມັດ</string>
+
+    <!-- Heading for the instructions to allow a permission -->
+    <string name="phone_feature_blocked_intro">ເພື່ອຕ້ອງການອະນຸຍາດ:</string>
+
+    <!-- Button label that take the user to the Android App setting -->
+    <string name="phone_feature_go_to_settings">ໄປທີ່ການຕັ້ງຄ່າ</string>
 
     <!-- Preference to enable remote debugging of the app via USB or Wi-Fi -->
     <string name="preference_remote_debugging">ການດີບັກໄລຍະໄກຜ່ານ USB/Wi-Fi</string>
