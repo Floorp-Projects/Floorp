@@ -2583,7 +2583,7 @@ BrowserGlue.prototype = {
               true
             );
             let [desc] = await strings.formatValues([
-              "private-browsing-shortcut-text",
+              "private-browsing-shortcut-text-2",
             ]);
             await shellService.createShortcut(
               exe,

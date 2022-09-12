@@ -1154,7 +1154,7 @@ NS_IMETHODIMP nsWindowsShellService::HasMatchingShortcut(
     RefPtr<Localization> l10n = Localization::Create(resIds, true);
     nsAutoCString pbStr;
     IgnoredErrorResult rv;
-    l10n->FormatValueSync("private-browsing-shortcut-text"_ns, {}, pbStr, rv);
+    l10n->FormatValueSync("private-browsing-shortcut-text-2"_ns, {}, pbStr, rv);
     shortcutName.Append(NS_ConvertUTF8toUTF16(pbStr));
     shortcutName.AppendLiteral(".lnk");
   } else {
@@ -1508,7 +1508,7 @@ static nsresult PinCurrentAppToTaskbarAsyncImpl(bool aCheckOnly,
     RefPtr<Localization> l10n = Localization::Create(resIds, true);
     nsAutoCString pbStr;
     IgnoredErrorResult rv;
-    l10n->FormatValueSync("private-browsing-shortcut-text"_ns, {}, pbStr, rv);
+    l10n->FormatValueSync("private-browsing-shortcut-text-2"_ns, {}, pbStr, rv);
     shortcutName.Append(NS_ConvertUTF8toUTF16(pbStr));
     shortcutName.AppendLiteral(".lnk");
   } else {
@@ -1814,7 +1814,8 @@ nsWindowsShellService::ClassifyShortcut(const nsAString& aPath,
       RefPtr<Localization> l10n = Localization::Create(resIds, true);
       nsAutoCString pbStr;
       IgnoredErrorResult rv;
-      l10n->FormatValueSync("private-browsing-shortcut-text"_ns, {}, pbStr, rv);
+      l10n->FormatValueSync("private-browsing-shortcut-text-2"_ns, {}, pbStr,
+                            rv);
       NS_ConvertUTF8toUTF16 widePbStr(pbStr);
       if (wcsstr(shortcutPath.get(), widePbStr.get())) {
         aResult.AppendLiteral("Private");
