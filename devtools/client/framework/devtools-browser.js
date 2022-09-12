@@ -410,6 +410,8 @@ var gDevToolsBrowser = (exports.gDevToolsBrowser = {
       Services.prompt.alert(null, "", msg);
       throw new Error(msg);
     }
+
+    return null;
   },
 
   /**

@@ -209,7 +209,7 @@ async function initBrowserToolboxTask({
   async function destroy() {
     // No need to do anything if `destroy` was already called.
     if (destroyed) {
-      return null;
+      return;
     }
 
     const closePromise = existingProcessClose

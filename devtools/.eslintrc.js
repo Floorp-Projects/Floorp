@@ -33,12 +33,6 @@ module.exports = {
     {
       files: ["client/framework/**"],
       rules: {
-        "consistent-return": "off",
-      },
-    },
-    {
-      files: ["client/framework/**"],
-      rules: {
         "max-nested-callbacks": "off",
       },
     },
