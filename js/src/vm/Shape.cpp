@@ -289,7 +289,7 @@ bool NativeObject::addProperty(JSContext* cx, Handle<NativeObject*> obj,
   }
 
   if (Shape* shape = LookupShapeForAdd(obj->shape(), id, flags, slot)) {
-    return obj->setShapeAndUpdateSlotsForNewSlot(cx, shape, *slot);
+    return obj->setShapeAndAddNewSlot(cx, shape, *slot);
   }
 
   if (obj->inDictionaryMode()) {
@@ -336,7 +336,7 @@ bool NativeObject::addProperty(JSContext* cx, Handle<NativeObject*> obj,
   }
 
   Shape* oldShape = obj->shape();
-  if (!obj->setShapeAndUpdateSlotsForNewSlot(cx, newShape, *slot)) {
+  if (!obj->setShapeAndAddNewSlot(cx, newShape, *slot)) {
     return false;
   }
 

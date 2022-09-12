@@ -614,9 +614,8 @@ class NativeObject : public JSObject {
 
   // Optimized version of setShapeAndUpdateSlots for adding a single property
   // with a slot.
-  MOZ_ALWAYS_INLINE bool setShapeAndUpdateSlotsForNewSlot(JSContext* cx,
-                                                          Shape* newShape,
-                                                          uint32_t slot);
+  MOZ_ALWAYS_INLINE bool setShapeAndAddNewSlot(JSContext* cx, Shape* newShape,
+                                               uint32_t slot);
 
   MOZ_ALWAYS_INLINE bool canReuseShapeForNewProperties(Shape* newShape) const {
     Shape* oldShape = shape();
@@ -884,6 +883,7 @@ class NativeObject : public JSObject {
    * the slots must track changes in the slot span.
    */
   bool growSlots(JSContext* cx, uint32_t oldCapacity, uint32_t newCapacity);
+  bool growSlotsForNewSlot(JSContext* cx, uint32_t numFixed, uint32_t slot);
   void shrinkSlots(JSContext* cx, uint32_t oldCapacity, uint32_t newCapacity);
 
   bool allocateSlots(JSContext* cx, uint32_t newCapacity);
@@ -1234,6 +1234,14 @@ class NativeObject : public JSObject {
     MOZ_ASSERT(slotIsFixed(slot));
     checkStoredValue(value);
     fixedSlots()[slot].init(this, HeapSlot::Slot, slot, value);
+  }
+
+  void initDynamicSlot(uint32_t numFixed, uint32_t slot, const Value& value) {
+    MOZ_ASSERT(numFixedSlots() == numFixed);
+    MOZ_ASSERT(slot >= numFixed);
+    MOZ_ASSERT(slot - numFixed < getSlotsHeader()->capacity());
+    checkStoredValue(value);
+    slots_[slot - numFixed].init(this, HeapSlot::Slot, slot, value);
   }
 
   template <typename T>
