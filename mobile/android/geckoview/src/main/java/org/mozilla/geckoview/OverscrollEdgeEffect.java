@@ -144,6 +144,21 @@ public final class OverscrollEdgeEffect {
   }
 
   /* package */ void setVelocity(final float velocity, final int axis) {
+    if (velocity == 0.0f) {
+      if (axis == AXIS_Y) {
+        mEdges[TOP].onRelease();
+        mEdges[BOTTOM].onRelease();
+      } else {
+        mEdges[LEFT].onRelease();
+        mEdges[RIGHT].onRelease();
+      }
+
+      if (mInvalidationCallback != null) {
+        mInvalidationCallback.run();
+      }
+      return;
+    }
+
     final EdgeEffect edge = getEdgeForAxisAndSide(axis, velocity);
 
     // If we're showing overscroll already, start fading it out.
