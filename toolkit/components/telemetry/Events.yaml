@@ -3485,6 +3485,7 @@ firefoxview:
       Recorded when a tab pickup tab is clicked
     extra_keys:
       position: The position of the tab in the tab pickup list (starting at 1.)
+      deviceType: The type of device the tab came from. Will be "desktop", "phone", or "tablet"
     notification_emails:
       - firefoxview@mozilla.com
     products:
@@ -3493,6 +3494,7 @@ firefoxview:
       - main
     bug_numbers:
       - 1779642
+      - 1789641
     expiry_version: "never"
     release_channel_collection: opt-out
   closed_tabs_open:

@@ -76,6 +76,7 @@ class TabPickupList extends HTMLElement {
     ) {
       const item = event.target.closest(".synced-tab-li");
       let index = [...this.tabsList.children].indexOf(item);
+      let deviceType = item.dataset.deviceType;
       Services.telemetry.recordEvent(
         "firefoxview",
         "tab_pickup",
@@ -83,6 +84,7 @@ class TabPickupList extends HTMLElement {
         null,
         {
           position: (++index).toString(),
+          deviceType,
         }
       );
     }
@@ -173,6 +175,7 @@ class TabPickupList extends HTMLElement {
   generateListItem(tab, index) {
     const li = document.createElement("li");
     li.classList.add("synced-tab-li");
+    li.dataset.deviceType = tab.deviceType;
 
     const targetURI = tab.url;
     const a = document.createElement("a");
