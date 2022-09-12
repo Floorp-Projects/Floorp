@@ -53,6 +53,8 @@ const callExpressionMultiDefinitions = [
 
 const workerImportFilenameMatch = /(.*\/)*((.*?)\.jsm?)/;
 
+let xpidlData;
+
 module.exports = {
   get iniParser() {
     if (!this._iniParser) {
@@ -63,6 +65,46 @@ module.exports = {
 
   get servicesData() {
     return require("./services.json");
+  },
+
+  /**
+   * Obtains xpidl data from the object directory specified in the
+   * environment.
+   *
+   * @returns {Map<string, object>}
+   *   A map of interface names to the interface details.
+   */
+  get xpidlData() {
+    let objdir;
+    if (process.env.MOZ_OBJDIR) {
+      objdir = `${process.env.MOZ_OBJDIR}/config/makefiles/xpidl/`;
+    } else if (process.env.TEST_XPIDLDIR) {
+      objdir = process.env.TEST_XPIDLDIR;
+    }
+    if (!objdir) {
+      throw new Error(
+        "This rule needs MOZ_OBJDIR defining in the environment. It must be a full build."
+      );
+    }
+    if (xpidlData) {
+      return xpidlData;
+    }
+    let files = fs.readdirSync(`${objdir}`);
+    // `Makefile` is an expected file in the directory.
+    if (files.length <= 1) {
+      throw new Error("Missing xpidl files, this rule needs a full build.");
+    }
+    xpidlData = new Map();
+    for (let file of files) {
+      if (!file.endsWith(".xpt")) {
+        continue;
+      }
+      let data = JSON.parse(fs.readFileSync(path.join(`${objdir}`, file)));
+      for (let details of data) {
+        xpidlData.set(details.name, details);
+      }
+    }
+    return xpidlData;
   },
 
   /**
