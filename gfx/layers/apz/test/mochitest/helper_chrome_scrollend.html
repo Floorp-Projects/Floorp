@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="apz_test_utils.js"></script>
+  <script src="apz_test_native_event_utils.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <script src="/tests/SimpleTest/paint_listener.js"></script>
+  <style>
+    html, body { margin: 0; }
+
+    body {
+      height: 10000px;
+    }
+  </style>
+  <script>
+async function test() {
+  var scrollendCount = 0;
+
+  function onScrollend(e) {
+    scrollendCount += 1;
+  }
+
+  // Add chrome-only event listener.
+  SpecialPowers.addChromeEventListener("scrollend", onScrollend, true);
+
+  is(scrollendCount, 0, "A scrollend event should not be triggered yet");
+
+  await promiseFrame();
+
+  let wheelScrollTransformEndPromise = promiseTransformEnd();
+
+  await promiseMoveMouseAndScrollWheelOver(document.documentElement, 100, 100);
+
+  await wheelScrollTransformEndPromise;
+
+  await promiseFrame();
+
+  is(scrollendCount, 1, "A scrollend event should be triggered after user scroll");
+
+  scrollendCount = 0;
+
+  // Call the scrollTo function without behavior: smooth to trigger an instant
+  // programatic scroll.
+  scrollTo({ top: 500, left: 0 });
+
+  // Ensure the refresh driver has ticked.
+  await promiseFrame();
+
+  // A scrollend event should be posted after the refresh driver has ticked.
+  is(scrollendCount, 1, "A scrollend event should be triggered after instant scroll");
+
+  scrollendCount = 0;
+
+  let smoothScrollTransformEndPromise = promiseTransformEnd();
+
+  // Call the scrollTo function with behavior: smooth to trigger a programmatic
+  // scroll that should require some form of async transform.
+  scrollTo({ top: 1000, left: 0, behavior: "smooth" });
+
+  // Ensure the smooth scroll transform has finished.
+  await smoothScrollTransformEndPromise;
+
+  await promiseFrame();
+
+  is(scrollendCount, 1, "A scrollend event should be triggered after smooth scroll");
+}
+waitUntilApzStable()
+.then(test)
+.then(subtestDone, subtestFailed);
+  </script>
+</head>
+<body>
+</body>
+</html>
