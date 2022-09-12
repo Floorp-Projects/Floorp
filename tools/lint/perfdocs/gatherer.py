@@ -78,8 +78,8 @@ class Gatherer(object):
         """
         exclude_dir = [
             ".hg",
-            os.path.join("tools", "lint"),
-            os.path.join("testing", "perfdocs"),
+            str(pathlib.Path("tools", "lint")),
+            str(pathlib.Path("testing", "perfdocs")),
         ]
 
         for path in pathlib.Path(self.workspace_dir).rglob("perfdocs"):
@@ -122,7 +122,7 @@ class Gatherer(object):
         """
 
         # If it was computed before, return it
-        yaml_path = os.path.join(sdt_entry["path"], sdt_entry["yml"])
+        yaml_path = pathlib.Path(sdt_entry["path"], sdt_entry["yml"])
         for entry in self._test_list:
             if entry["yml_path"] == yaml_path:
                 return entry
