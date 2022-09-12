@@ -526,7 +526,7 @@ RefPtr<BoolPromise> FileSystemDataManager::BeginOpen() {
 }
 
 RefPtr<BoolPromise> FileSystemDataManager::BeginClose() {
-  MOZ_ASSERT(mState == State::Open);
+  MOZ_ASSERT(mState != State::Closing && mState != State::Closed);
   MOZ_ASSERT(IsInactive());
 
   mState = State::Closing;
