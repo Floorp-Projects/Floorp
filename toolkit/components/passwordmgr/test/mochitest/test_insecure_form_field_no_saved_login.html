@@ -64,9 +64,7 @@ add_task(async function test_form1_warning_entry() {
   await SimpleTest.promiseFocus(window);
   // Trigger autocomplete popup
   restoreForm();
-  let shownPromise = promiseACShown();
-  synthesizeKey("KEY_ArrowDown"); // open
-  await shownPromise;
+  await openAutocompletePopup();
 
   let popupState = await getPopupState();
   is(popupState.open, true, "Check popup is opened");
