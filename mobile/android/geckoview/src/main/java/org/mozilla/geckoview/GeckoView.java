@@ -23,6 +23,7 @@ import android.os.Build;
 import android.os.Handler;
 import android.util.AttributeSet;
 import android.util.DisplayMetrics;
+import android.util.Log;
 import android.util.SparseArray;
 import android.util.TypedValue;
 import android.view.DisplayCutout;
@@ -987,8 +988,13 @@ public class GeckoView extends FrameLayout {
         final @NonNull Autofill.Node prev,
         final @NonNull Autofill.NodeData data) {
       ensureAutofillManager();
-      if (mAutofillManager != null) {
+      if (mAutofillManager == null) {
+        return;
+      }
+      try {
         mAutofillManager.notifyViewExited(GeckoView.this, data.getId());
+      } catch (final SecurityException e) {
+        Log.e(LOGTAG, "Failed to call AutofillManager.notifyViewExited: ", e);
       }
     }
 
@@ -1008,10 +1014,18 @@ public class GeckoView extends FrameLayout {
       Objects.requireNonNull(focusedData);
 
       ensureAutofillManager();
-      if (mAutofillManager != null) {
+      if (mAutofillManager == null) {
+        return;
+      }
+      try {
         mAutofillManager.notifyViewExited(GeckoView.this, focusedData.getId());
         mAutofillManager.notifyViewEntered(
             GeckoView.this, focusedData.getId(), displayRectForId(session, focused));
+      } catch (final SecurityException e) {
+        Log.e(
+            LOGTAG,
+            "Failed to call AutofillManager.notifyViewExited or AutofillManager.notifyViewEntered: ",
+            e);
       }
     }
 
@@ -1021,9 +1035,14 @@ public class GeckoView extends FrameLayout {
         final @NonNull Autofill.Node focused,
         final @NonNull Autofill.NodeData data) {
       ensureAutofillManager();
-      if (mAutofillManager != null) {
+      if (mAutofillManager == null) {
+        return;
+      }
+      try {
         mAutofillManager.notifyViewEntered(
             GeckoView.this, data.getId(), displayRectForId(session, focused));
+      } catch (final SecurityException e) {
+        Log.e(LOGTAG, "Failed to call AutofillManager.notifyViewEntered: ", e);
       }
     }
 
@@ -1039,18 +1058,28 @@ public class GeckoView extends FrameLayout {
         final @NonNull Autofill.Node node,
         final @NonNull Autofill.NodeData data) {
       ensureAutofillManager();
-      if (mAutofillManager != null) {
+      if (mAutofillManager == null) {
+        return;
+      }
+      try {
         mAutofillManager.notifyValueChanged(
             GeckoView.this, data.getId(), AutofillValue.forText(data.getValue()));
+      } catch (final SecurityException e) {
+        Log.e(LOGTAG, "Failed to call AutofillManager.notifyValueChanged: ", e);
       }
     }
 
     @Override
     public void onSessionCancel(final @NonNull GeckoSession session) {
       ensureAutofillManager();
-      if (mAutofillManager != null) {
+      if (mAutofillManager == null) {
+        return;
+      }
+      try {
         // This line seems necessary for auto-fill to work on the initial page.
         mAutofillManager.cancel();
+      } catch (final SecurityException e) {
+        Log.e(LOGTAG, "Failed to call AutofillManager.cancel: ", e);
       }
     }
 
@@ -1060,17 +1089,27 @@ public class GeckoView extends FrameLayout {
         final @NonNull Autofill.Node node,
         final @NonNull Autofill.NodeData data) {
       ensureAutofillManager();
-      if (mAutofillManager != null) {
+      if (mAutofillManager == null) {
+        return;
+      }
+      try {
         mAutofillManager.commit();
+      } catch (final SecurityException e) {
+        Log.e(LOGTAG, "Failed to call AutofillManager.commit: ", e);
       }
     }
 
     @Override
     public void onSessionStart(final @NonNull GeckoSession session) {
       ensureAutofillManager();
-      if (mAutofillManager != null) {
+      if (mAutofillManager == null) {
+        return;
+      }
+      try {
         // This line seems necessary for auto-fill to work on the initial page.
         mAutofillManager.cancel();
+      } catch (final SecurityException e) {
+        Log.e(LOGTAG, "Failed to call AutofillManager.cancel: ", e);
       }
     }
   }
