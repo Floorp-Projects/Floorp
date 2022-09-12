@@ -4086,6 +4086,10 @@ void AsyncPanZoomController::CancelAnimation(CancelAnimationFlags aFlags) {
 }
 
 void AsyncPanZoomController::ClearOverscroll() {
+  mOverscrollEffect->ClearOverscroll();
+}
+
+void AsyncPanZoomController::ClearPhysicalOverscroll() {
   RecursiveMutexAutoLock lock(mRecursiveMutex);
   mX.ClearOverscroll();
   mY.ClearOverscroll();
