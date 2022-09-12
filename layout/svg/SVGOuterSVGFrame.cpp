@@ -178,7 +178,7 @@ nscoord SVGOuterSVGFrame::GetPrefISize(gfxContext* aRenderingContext) {
           ContainSizeAxesIfApplicable(this).ContainIntrinsicISize(*this)) {
     result = *containISize;
   } else if (isize.IsPercentage()) {
-    if (isize.IsExplicitlySet()) {
+    if (isize.IsExplicitlySet() || StylePosition()->ISize(wm).HasPercent()) {
       // Our containing block's inline-size depends on our inline-size. In this
       // case, return the fallback intrinsic size per
       // https://drafts.csswg.org/css-sizing-3/#intrinsic-sizes
