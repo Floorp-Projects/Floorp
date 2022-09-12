@@ -165,7 +165,7 @@ let JSPROCESSACTORS = {
   // Miscellaneous stuff that needs to be initialized per process.
   BrowserProcess: {
     child: {
-      moduleURI: "resource:///actors/BrowserProcessChild.jsm",
+      esModuleURI: "resource:///actors/BrowserProcessChild.sys.mjs",
       observers: [
         // WebRTC related notifications. They are here to avoid loading WebRTC
         // components when not needed.
