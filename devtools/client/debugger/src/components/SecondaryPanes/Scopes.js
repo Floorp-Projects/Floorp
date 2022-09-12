@@ -126,7 +126,8 @@ class Scopes extends PureComponent {
       };
 
       const menuItems = [removeWatchpointItem];
-      return showMenu(event, menuItems);
+      showMenu(event, menuItems);
+      return;
     }
 
     const addSetWatchpointLabel = L10N.getStr("watchpoints.setWatchpoint");

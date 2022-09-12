@@ -83,7 +83,7 @@ class SourceFooter extends PureComponent {
     } = this.props;
 
     if (!selectedSource) {
-      return;
+      return null;
     }
 
     if (!sourceLoaded && selectedSource.isPrettyPrinted) {
@@ -95,7 +95,7 @@ class SourceFooter extends PureComponent {
     }
 
     if (!canPrettyPrint) {
-      return;
+      return null;
     }
 
     const tooltip = L10N.getStr("sourceTabs.prettyPrint");
@@ -126,12 +126,8 @@ class SourceFooter extends PureComponent {
       sourceLoaded,
     } = this.props;
 
-    if (!selectedSource) {
-      return;
-    }
-
-    if (!shouldBlackbox(selectedSource)) {
-      return;
+    if (!selectedSource || !shouldBlackbox(selectedSource)) {
+      return null;
     }
 
     const blackboxed = isSelectedSourceBlackBoxed;
@@ -160,7 +156,7 @@ class SourceFooter extends PureComponent {
 
   renderToggleButton() {
     if (this.props.horizontal) {
-      return;
+      return null;
     }
 
     return (

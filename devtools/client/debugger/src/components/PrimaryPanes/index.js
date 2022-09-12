@@ -62,7 +62,7 @@ class PrimaryPanes extends Component {
 
   renderOutlineTabs() {
     if (!features.outline) {
-      return;
+      return null;
     }
 
     const sources = formatKeyShortcut(L10N.getStr("sources.header"));

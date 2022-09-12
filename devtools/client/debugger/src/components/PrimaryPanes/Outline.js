@@ -112,7 +112,8 @@ export class Outline extends Component {
     );
 
     if (!enclosedItems.length) {
-      return this.setState({ focusedItem: null });
+      this.setState({ focusedItem: null });
+      return;
     }
 
     // Find the closest item to the selected location to focus

@@ -75,7 +75,8 @@ class Preview extends PureComponent {
     const isTargetException = target.classList.contains(EXCEPTION_MARKER);
 
     if (isTargetException) {
-      return setExceptionPreview(cx, target, tokenPos, editor.codeMirror);
+      setExceptionPreview(cx, target, tokenPos, editor.codeMirror);
+      return;
     }
 
     if (
@@ -91,14 +92,12 @@ class Preview extends PureComponent {
   onMouseUp = () => {
     if (this.props.isPaused) {
       this.setState({ selecting: false });
-      return true;
     }
   };
 
   onMouseDown = () => {
     if (this.props.isPaused) {
       this.setState({ selecting: true });
-      return true;
     }
   };
 

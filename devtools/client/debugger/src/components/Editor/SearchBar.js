@@ -179,7 +179,7 @@ class SearchBar extends Component {
 
     this.traverseResults(e, e.shiftKey);
     e.preventDefault();
-    return this.doSearch(e.target.value);
+    this.doSearch(e.target.value);
   };
 
   onHistoryScroll = query => {

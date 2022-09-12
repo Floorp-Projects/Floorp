@@ -236,7 +236,7 @@ class XHRBreakpoints extends Component {
 
     // The "pause on any" checkbox
     if (!path) {
-      return;
+      return null;
     }
 
     // Finds the xhrbreakpoint so as to not make assumptions about position

@@ -222,7 +222,7 @@ class Expressions extends Component {
     }
 
     if (updating) {
-      return;
+      return null;
     }
 
     let value = getValue(expression);

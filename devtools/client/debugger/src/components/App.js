@@ -280,7 +280,7 @@ class App extends Component {
     const additionalClass = isMacOS ? "mac" : "";
 
     if (!features.shortcuts) {
-      return;
+      return null;
     }
 
     return (
