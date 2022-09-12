@@ -2,6 +2,16 @@ import pytest
 
 
 @pytest.fixture
+def test_origin(url):
+    return url("")
+
+
+@pytest.fixture
+def test_alt_origin(url):
+    return url("", domain="alt")
+
+
+@pytest.fixture
 def test_page(inline):
     return inline("<div>foo</div>")
 
@@ -18,7 +28,9 @@ def test_page_cross_origin(inline):
 
 @pytest.fixture
 def test_page_multiple_frames(inline, test_page, test_page2):
-    return inline(f"<iframe src='{test_page}'></iframe><iframe src='{test_page2}'></iframe>")
+    return inline(
+        f"<iframe src='{test_page}'></iframe><iframe src='{test_page2}'></iframe>"
+    )
 
 
 @pytest.fixture
