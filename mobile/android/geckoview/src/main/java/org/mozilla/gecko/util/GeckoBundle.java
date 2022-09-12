@@ -5,6 +5,7 @@
 
 package org.mozilla.gecko.util;
 
+import android.graphics.Point;
 import android.graphics.RectF;
 import android.os.Build;
 import android.os.Bundle;
@@ -396,6 +397,21 @@ public final class GeckoBundle implements Parcelable {
         (float) rectBundle.getDouble("top"),
         (float) rectBundle.getDouble("right"),
         (float) rectBundle.getDouble("bottom"));
+  }
+
+  /**
+   * Returns the value associated with a Point mapping, or null if the mapping does not exist.
+   *
+   * @param key Key to look for.
+   * @return Point value
+   */
+  public Point getPoint(final String key) {
+    final GeckoBundle ptBundle = getBundle(key);
+    if (ptBundle == null) {
+      return null;
+    }
+
+    return new Point(ptBundle.getInt("x"), ptBundle.getInt("y"));
   }
 
   /**

@@ -10,6 +10,8 @@ FINAL_TARGET_FILES.actors += [
     "ContentDelegateParent.jsm",
     "GeckoViewAutoFillChild.jsm",
     "GeckoViewAutoFillParent.jsm",
+    "GeckoViewClipboardPermissionChild.jsm",
+    "GeckoViewClipboardPermissionParent.jsm",
     "GeckoViewContentChild.jsm",
     "GeckoViewContentParent.jsm",
     "GeckoViewFormValidationChild.jsm",

@@ -92,6 +92,22 @@ const JSWINDOWACTORS = {
     allFrames: true,
     messageManagerGroups: ["browsers"],
   },
+  GeckoViewClipboardPermission: {
+    parent: {
+      moduleURI: "resource:///actors/GeckoViewClipboardPermissionParent.jsm",
+    },
+    child: {
+      moduleURI: "resource:///actors/GeckoViewClipboardPermissionChild.jsm",
+      events: {
+        MozClipboardReadPaste: {},
+        deactivate: { mozSystemGroup: true },
+        mousedown: { capture: true, mozSystemGroup: true },
+        mozvisualscroll: { mozSystemGroup: true },
+        pagehide: { capture: true, mozSystemGroup: true },
+      },
+    },
+    allFrames: true,
+  },
 };
 
 class GeckoViewStartup {
