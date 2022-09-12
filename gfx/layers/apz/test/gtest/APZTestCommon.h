@@ -156,6 +156,10 @@ class MockContentController : public GeckoContentController {
   MOCK_METHOD1(CancelAutoscroll, void(const ScrollableLayerGuid&));
   MOCK_METHOD2(NotifyScaleGestureComplete,
                void(const ScrollableLayerGuid&, float aScale));
+  MOCK_METHOD4(UpdateOverscrollVelocity,
+               void(const ScrollableLayerGuid&, float, float, bool));
+  MOCK_METHOD4(UpdateOverscrollOffset,
+               void(const ScrollableLayerGuid&, float, float, bool));
 };
 
 class MockContentControllerDelayed : public MockContentController {
