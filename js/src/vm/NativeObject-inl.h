@@ -468,46 +468,6 @@ inline NativeObject* NativeObject::create(
   return nobj;
 }
 
-MOZ_ALWAYS_INLINE bool NativeObject::updateSlotsForSpan(JSContext* cx,
-                                                        size_t oldSpan,
-                                                        size_t newSpan) {
-  MOZ_ASSERT(oldSpan != newSpan);
-
-  size_t oldCapacity = numDynamicSlots();
-  size_t newCapacity =
-      calculateDynamicSlots(numFixedSlots(), newSpan, getClass());
-
-  if (oldSpan < newSpan) {
-    if (oldCapacity < newCapacity && !growSlots(cx, oldCapacity, newCapacity)) {
-      return false;
-    }
-
-    if (newSpan == oldSpan + 1) {
-      initSlotUnchecked(oldSpan, UndefinedValue());
-    } else {
-      // Initialize slots [oldSpan, newSpan). Use the *Unchecked version because
-      // the shape's slot span does not reflect the allocated slots at this
-      // point.
-      auto initRange = [](HeapSlot* start, HeapSlot* end) {
-        for (HeapSlot* slot = start; slot < end; slot++) {
-          slot->initAsUndefined();
-        }
-      };
-      forEachSlotRangeUnchecked(oldSpan, newSpan, initRange);
-    }
-  } else {
-    /* Trigger write barriers on the old slots before reallocating. */
-    prepareSlotRangeForOverwrite(newSpan, oldSpan);
-    invalidateSlotRange(newSpan, oldSpan);
-
-    if (oldCapacity > newCapacity) {
-      shrinkSlots(cx, oldCapacity, newCapacity);
-    }
-  }
-
-  return true;
-}
-
 MOZ_ALWAYS_INLINE void NativeObject::initEmptyDynamicSlots() {
   setEmptyDynamicSlots(0);
 }

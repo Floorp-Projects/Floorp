@@ -674,12 +674,6 @@ class NativeObject : public JSObject {
   void checkShapeConsistency() {}
 #endif
 
-  /*
-   * Update the slot span directly for a dictionary object, and allocate
-   * slots to cover the new span if necessary.
-   */
-  bool ensureSlotsForDictionaryObject(JSContext* cx, uint32_t span);
-
   void maybeFreeDictionaryPropSlots(JSContext* cx, DictionaryPropMap* map,
                                     uint32_t mapLength);
 
@@ -1151,10 +1145,6 @@ class NativeObject : public JSObject {
   // size classes will give an object.
   static constexpr uint32_t MAX_FIXED_SLOTS =
       JS::shadow::Object::MAX_FIXED_SLOTS;
-
- protected:
-  MOZ_ALWAYS_INLINE bool updateSlotsForSpan(JSContext* cx, size_t oldSpan,
-                                            size_t newSpan);
 
  private:
   void prepareElementRangeForOverwrite(size_t start, size_t end) {

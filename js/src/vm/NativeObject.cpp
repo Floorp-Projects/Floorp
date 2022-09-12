@@ -226,23 +226,6 @@ mozilla::Maybe<PropertyInfo> js::NativeObject::lookupPure(jsid id) {
   return mozilla::Nothing();
 }
 
-bool NativeObject::ensureSlotsForDictionaryObject(JSContext* cx,
-                                                  uint32_t span) {
-  MOZ_ASSERT(inDictionaryMode());
-
-  size_t oldSpan = dictionaryModeSlotSpan();
-  if (oldSpan == span) {
-    return true;
-  }
-
-  if (!updateSlotsForSpan(cx, oldSpan, span)) {
-    return false;
-  }
-
-  setDictionaryModeSlotSpan(span);
-  return true;
-}
-
 bool NativeObject::growSlots(JSContext* cx, uint32_t oldCapacity,
                              uint32_t newCapacity) {
   MOZ_ASSERT(newCapacity > oldCapacity);
