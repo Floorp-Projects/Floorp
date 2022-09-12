@@ -248,10 +248,10 @@ let JSWINDOWACTORS = {
 
   AboutNewTab: {
     parent: {
-      moduleURI: "resource:///actors/AboutNewTabParent.jsm",
+      esModuleURI: "resource:///actors/AboutNewTabParent.sys.mjs",
     },
     child: {
-      moduleURI: "resource:///actors/AboutNewTabChild.jsm",
+      esModuleURI: "resource:///actors/AboutNewTabChild.sys.mjs",
       events: {
         DOMContentLoaded: {},
         pageshow: {},

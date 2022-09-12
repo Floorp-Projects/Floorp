@@ -4,11 +4,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-var EXPORTED_SYMBOLS = ["AboutNewTabChild"];
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
 const { AppConstants } = ChromeUtils.import(
   "resource://gre/modules/AppConstants.jsm"
 );
@@ -30,7 +27,7 @@ XPCOMUtils.defineLazyPreferenceGetter(
   false
 );
 
-class AboutNewTabChild extends JSWindowActorChild {
+export class AboutNewTabChild extends JSWindowActorChild {
   handleEvent(event) {
     if (event.type == "DOMContentLoaded") {
       // If the separate about:welcome page is enabled, we can skip all of this,
