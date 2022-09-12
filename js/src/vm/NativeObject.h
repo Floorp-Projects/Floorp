@@ -612,10 +612,11 @@ class NativeObject : public JSObject {
   // with the object's new slot span.
   MOZ_ALWAYS_INLINE bool setShapeAndUpdateSlots(JSContext* cx, Shape* newShape);
 
-  // Optimized version of setShapeAndUpdateSlots for adding a single property
-  // with a slot.
+  // Methods optimized for adding/removing a single slot. Must only be used for
+  // non-dictionary objects.
   MOZ_ALWAYS_INLINE bool setShapeAndAddNewSlot(JSContext* cx, Shape* newShape,
                                                uint32_t slot);
+  void setShapeAndRemoveLastSlot(JSContext* cx, Shape* newShape, uint32_t slot);
 
   MOZ_ALWAYS_INLINE bool canReuseShapeForNewProperties(Shape* newShape) const {
     Shape* oldShape = shape();
@@ -1228,6 +1229,14 @@ class NativeObject : public JSObject {
     MOZ_ASSERT(slotIsFixed(slot));
     checkStoredValue(value);
     fixedSlots()[slot].set(this, HeapSlot::Slot, slot, value);
+  }
+
+  void setDynamicSlot(uint32_t numFixed, uint32_t slot, const Value& value) {
+    MOZ_ASSERT(numFixedSlots() == numFixed);
+    MOZ_ASSERT(slot >= numFixed);
+    MOZ_ASSERT(slot - numFixed < getSlotsHeader()->capacity());
+    checkStoredValue(value);
+    slots_[slot - numFixed].set(this, HeapSlot::Slot, slot, value);
   }
 
   void initFixedSlot(uint32_t slot, const Value& value) {
