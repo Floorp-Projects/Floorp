@@ -552,6 +552,7 @@ const Services = {
 };
 
 function pref(name, value) {
+  // eslint-disable-next-line mozilla/valid-services-property
   const thePref = Services.prefs._findOrCreatePref(name, value, true, value);
   thePref._setDefault(value);
 }
