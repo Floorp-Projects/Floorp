@@ -129,7 +129,7 @@ class TrackingProtectionPanelView(
         binding.notBlockingHeader.isGone = bucketedTrackers.loadedIsEmpty()
         binding.blockingHeader.isGone = bucketedTrackers.blockedIsEmpty()
 
-        if (containerView.context.settings().enabledTotalCookieProtectionSetting) {
+        if (containerView.context.settings().enabledTotalCookieProtection) {
             binding.crossSiteTracking.text = containerView.context.getString(R.string.etp_cookies_title_2)
             binding.crossSiteTrackingLoaded.text = containerView.context.getString(R.string.etp_cookies_title_2)
         }
@@ -147,7 +147,7 @@ class TrackingProtectionPanelView(
         binding.detailsMode.visibility = View.VISIBLE
 
         if (category == CROSS_SITE_TRACKING_COOKIES &&
-            containerView.context.settings().enabledTotalCookieProtectionSetting
+            containerView.context.settings().enabledTotalCookieProtection
         ) {
             binding.categoryTitle.setText(R.string.etp_cookies_title_2)
             binding.categoryDescription.setText(R.string.etp_cookies_description_2)

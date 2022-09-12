@@ -28,7 +28,7 @@ class TrackingProtectionBlockingFragmentTest {
 
         mockkStatic("org.mozilla.fenix.ext.ContextKt") {
             every { any<Context>().settings() } returns mockk(relaxed = true) {
-                every { enabledTotalCookieProtectionSetting } returns true
+                every { enabledTotalCookieProtection } returns true
             }
 
             val fragment = createFragment()
@@ -46,7 +46,7 @@ class TrackingProtectionBlockingFragmentTest {
 
         mockkStatic("org.mozilla.fenix.ext.ContextKt") {
             every { any<Context>().settings() } returns mockk(relaxed = true) {
-                every { enabledTotalCookieProtectionSetting } returns false
+                every { enabledTotalCookieProtection } returns false
             }
 
             val fragment = createFragment()

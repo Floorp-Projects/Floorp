@@ -74,7 +74,7 @@ class TrackingProtectionPanelViewTest {
     fun testNormalModeUiCookiesWithTotalCookieProtectionEnabled() {
         mockkStatic("org.mozilla.fenix.ext.ContextKt") {
             every { any<Context>().settings() } returns mockk {
-                every { enabledTotalCookieProtectionSetting } returns true
+                every { enabledTotalCookieProtection } returns true
             }
             val expectedTitle = testContext.getString(R.string.etp_cookies_title_2)
 
@@ -89,7 +89,7 @@ class TrackingProtectionPanelViewTest {
     fun testNormalModeUiCookiesWithTotalCookieProtectionDisabled() {
         mockkStatic("org.mozilla.fenix.ext.ContextKt") {
             every { any<Context>().settings() } returns mockk {
-                every { enabledTotalCookieProtectionSetting } returns false
+                every { enabledTotalCookieProtection } returns false
             }
             val expectedTitle = testContext.getString(R.string.etp_cookies_title)
 
@@ -130,7 +130,7 @@ class TrackingProtectionPanelViewTest {
     fun testPrivateModeUiCookiesWithTotalCookieProtectionEnabled() {
         mockkStatic("org.mozilla.fenix.ext.ContextKt") {
             every { any<Context>().settings() } returns mockk {
-                every { enabledTotalCookieProtectionSetting } returns true
+                every { enabledTotalCookieProtection } returns true
             }
             val expectedTitle = testContext.getString(R.string.etp_cookies_title_2)
             val expectedDescription = testContext.getString(R.string.etp_cookies_description_2)
@@ -153,7 +153,7 @@ class TrackingProtectionPanelViewTest {
     fun testPrivateModeUiCookiesWithTotalCookieProtectionDisabled() {
         mockkStatic("org.mozilla.fenix.ext.ContextKt") {
             every { any<Context>().settings() } returns mockk {
-                every { enabledTotalCookieProtectionSetting } returns false
+                every { enabledTotalCookieProtection } returns false
             }
             val expectedTitle = testContext.getString(R.string.etp_cookies_title)
             val expectedDescription = testContext.getString(R.string.etp_cookies_description)

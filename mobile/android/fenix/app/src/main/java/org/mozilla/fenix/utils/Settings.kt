@@ -586,7 +586,7 @@ class Settings(private val appContext: Context) : PreferencesHolder {
         true,
     )
 
-    val enabledTotalCookieProtectionSetting: Boolean
+    val enabledTotalCookieProtection: Boolean
         get() = mr2022Sections[Mr2022Section.TCP_FEATURE] == true
 
     /**
@@ -599,7 +599,7 @@ class Settings(private val appContext: Context) : PreferencesHolder {
 
     val blockCookiesSelectionInCustomTrackingProtection by stringPreference(
         key = appContext.getPreferenceKey(R.string.pref_key_tracking_protection_custom_cookies_select),
-        default = if (enabledTotalCookieProtectionSetting) {
+        default = if (enabledTotalCookieProtection) {
             appContext.getString(R.string.total_protection)
         } else {
             appContext.getString(R.string.social)
