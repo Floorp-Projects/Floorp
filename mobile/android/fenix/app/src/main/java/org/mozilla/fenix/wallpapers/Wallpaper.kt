@@ -138,16 +138,4 @@ data class Wallpaper(
         Downloaded,
         Error,
     }
-
-    override fun hashCode(): Int {
-        return name.hashCode()
-    }
-
-    override fun equals(other: Any?): Boolean {
-        return if (other is Wallpaper) {
-            this.name == other.name
-        } else {
-            false
-        }
-    }
 }

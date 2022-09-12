@@ -15,6 +15,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import mozilla.components.lib.state.Store
+import org.mozilla.fenix.R
+import org.mozilla.fenix.addons.showSnackBar
 import org.mozilla.fenix.components.AppStore
 import org.mozilla.fenix.components.appstate.AppAction
 import org.mozilla.fenix.components.appstate.AppState
@@ -92,6 +94,13 @@ class WallpapersObserver(
                     bitmap?.let {
                         it.scaleToBottomOfView(wallpaperImageView)
                         wallpaperImageView.isVisible = true
+                    } ?: run {
+                        with(wallpaperImageView) {
+                            showSnackBar(
+                                view = this,
+                                text = resources.getString(R.string.wallpaper_select_error_snackbar_message),
+                            )
+                        }
                     }
                 }
             }
