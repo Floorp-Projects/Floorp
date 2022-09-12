@@ -1001,11 +1001,12 @@ static bool InitializePropertiesFromCompatibleNativeObject(
     }
   }
 
-  size_t span = shape->slotSpan();
-  if (!dst->setShapeAndUpdateSlots(cx, shape)) {
+  uint32_t oldSpan = dst->shape()->slotSpan();
+  uint32_t newSpan = shape->slotSpan();
+  if (!dst->setShapeAndAddNewSlots(cx, shape, oldSpan, newSpan)) {
     return false;
   }
-  for (size_t i = JSCLASS_RESERVED_SLOTS(src->getClass()); i < span; i++) {
+  for (size_t i = JSCLASS_RESERVED_SLOTS(src->getClass()); i < newSpan; i++) {
     dst->setSlot(i, src->getSlot(i));
   }
 

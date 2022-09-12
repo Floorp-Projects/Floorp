@@ -532,25 +532,43 @@ MOZ_ALWAYS_INLINE void NativeObject::setEmptyDynamicSlots(
   MOZ_ASSERT(getSlotsHeader()->dictionarySlotSpan() == dictionarySlotSpan);
 }
 
-MOZ_ALWAYS_INLINE bool NativeObject::setShapeAndUpdateSlots(JSContext* cx,
-                                                            Shape* newShape) {
+MOZ_ALWAYS_INLINE bool NativeObject::setShapeAndAddNewSlots(JSContext* cx,
+                                                            Shape* newShape,
+                                                            uint32_t oldSpan,
+                                                            uint32_t newSpan) {
   MOZ_ASSERT(!inDictionaryMode());
   MOZ_ASSERT(!newShape->isDictionary());
   MOZ_ASSERT(newShape->zone() == zone());
   MOZ_ASSERT(newShape->numFixedSlots() == numFixedSlots());
   MOZ_ASSERT(newShape->getObjectClass() == getClass());
 
-  size_t oldSpan = shape()->slotSpan();
-  size_t newSpan = newShape->slotSpan();
+  MOZ_ASSERT(oldSpan < newSpan);
+  MOZ_ASSERT(shape()->slotSpan() == oldSpan);
+  MOZ_ASSERT(newShape->slotSpan() == newSpan);
 
-  if (oldSpan == newSpan) {
-    setShape(newShape);
-    return true;
+  uint32_t numFixed = newShape->numFixedSlots();
+  if (newSpan > numFixed) {
+    uint32_t oldCapacity = numDynamicSlots();
+    uint32_t newCapacity =
+        calculateDynamicSlots(numFixed, newSpan, newShape->getObjectClass());
+    MOZ_ASSERT(oldCapacity <= newCapacity);
+
+    if (oldCapacity < newCapacity) {
+      if (MOZ_UNLIKELY(!growSlots(cx, oldCapacity, newCapacity))) {
+        return false;
+      }
+    }
   }
 
-  if (MOZ_UNLIKELY(!updateSlotsForSpan(cx, oldSpan, newSpan))) {
-    return false;
-  }
+  // Initialize slots [oldSpan, newSpan). Use the *Unchecked version because
+  // the shape's slot span does not reflect the allocated slots at this
+  // point.
+  auto initRange = [](HeapSlot* start, HeapSlot* end) {
+    for (HeapSlot* slot = start; slot < end; slot++) {
+      slot->initAsUndefined();
+    }
+  };
+  forEachSlotRangeUnchecked(oldSpan, newSpan, initRange);
 
   setShape(newShape);
   return true;

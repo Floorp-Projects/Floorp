@@ -927,7 +927,9 @@ static bool CanAddNewPropertyExcludingProtoFast(PlainObject* obj) {
     MOZ_ASSERT(!Watchtower::watchesPropertyAdd(toPlain),
                "watched objects require Watchtower calls");
     Shape* newShape = fromPlain->shape();
-    if (!toPlain->setShapeAndUpdateSlots(cx, newShape)) {
+    uint32_t oldSpan = 0;
+    uint32_t newSpan = props.length();
+    if (!toPlain->setShapeAndAddNewSlots(cx, newShape, oldSpan, newSpan)) {
       return false;
     }
     for (size_t i = props.length(); i > 0; i--) {
