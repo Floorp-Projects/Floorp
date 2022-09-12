@@ -1384,6 +1384,24 @@ impl From<DrawTarget> for ReadTarget {
     }
 }
 
+/// Parses the major, release, and patch versions from a GL_VERSION string on
+/// Mali devices. For example, for the version string
+/// "OpenGL ES 3.2 v1.r36p0-01eac0.28ab3a577f105e026887e2b4c93552fb" this
+/// returns Some((1, 36, 0)). Returns None if the version cannot be parsed.
+fn parse_mali_version(version_string: &str) -> Option<(u32, u32, u32)> {
+    let (_prefix, version_string) = version_string.split_once("v")?;
+    let (v_str, version_string) = version_string.split_once(".r")?;
+    let v = v_str.parse().ok()?;
+
+    let (r_str, version_string) = version_string.split_once("p")?;
+    let r = r_str.parse().ok()?;
+
+    let (p_str, _) = version_string.split_once("-")?;
+    let p = p_str.parse().ok()?;
+
+    Some((v, r, p))
+}
+
 impl Device {
     pub fn new(
         mut gl: Rc<dyn gl::Gl>,
@@ -1762,11 +1780,25 @@ impl Device {
         let is_adreno_4xx = renderer_name.starts_with("Adreno (TM) 4");
         let requires_alpha_target_full_clear = is_adreno_4xx;
 
+        let mut supports_render_target_invalidate = true;
+
         // On PowerVR Rogue devices we have seen that invalidating render targets after we are done
         // with them can incorrectly cause pending renders to be written to different targets
         // instead. See bug 1719345.
         let is_powervr_rogue = renderer_name.starts_with("PowerVR Rogue");
-        let supports_render_target_invalidate = !is_powervr_rogue;
+        if is_powervr_rogue {
+            supports_render_target_invalidate = false;
+        }
+
+        // On Mali-G78 devices with a driver version v1.r36p0 we have seen that invalidating render
+        // targets can result in image corruption, perhaps due to subsequent reuses of the render
+        // target not correctly reinitializing them to a valid state. See bug 1787520.
+        if renderer_name.starts_with("Mali-G78") {
+            match parse_mali_version(&version_string) {
+                Some(version) if version >= (1, 36, 0) => supports_render_target_invalidate = false,
+                _ => {}
+            }
+        }
 
         // On Linux we we have seen uploads to R8 format textures result in
         // corruption on some AMD cards.
