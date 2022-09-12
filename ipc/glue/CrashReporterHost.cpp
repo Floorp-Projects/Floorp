@@ -28,10 +28,7 @@ bool CrashReporterHost::GenerateCrashReport(base::ProcessId aPid) {
   if (!TakeCrashedChildMinidump(aPid, nullptr)) {
     return false;
   }
-
-  FinalizeCrashReport();
-  RecordCrash(mProcessType, nsICrashService::CRASH_TYPE_CRASH, mDumpID);
-  return true;
+  return FinalizeCrashReport();
 }
 
 RefPtr<nsIFile> CrashReporterHost::TakeCrashedChildMinidump(
@@ -60,7 +57,7 @@ bool CrashReporterHost::AdoptMinidump(nsIFile* aFile,
   return true;
 }
 
-void CrashReporterHost::FinalizeCrashReport() {
+bool CrashReporterHost::FinalizeCrashReport() {
   MOZ_ASSERT(!mFinalized);
   MOZ_ASSERT(HasMinidump());
 
@@ -73,13 +70,11 @@ void CrashReporterHost::FinalizeCrashReport() {
       nsDependentCString(startTime);
 
   CrashReporter::WriteExtraFile(mDumpID, mExtraAnnotations);
-  mFinalized = true;
-}
 
-void CrashReporterHost::DeleteCrashReport() {
-  if (mFinalized && HasMinidump()) {
-    CrashReporter::DeleteMinidumpFilesForID(mDumpID, Some(u"browser"_ns));
-  }
+  RecordCrash(mProcessType, nsICrashService::CRASH_TYPE_CRASH, mDumpID);
+
+  mFinalized = true;
+  return true;
 }
 
 /* static */

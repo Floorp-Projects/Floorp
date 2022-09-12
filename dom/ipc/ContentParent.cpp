@@ -4289,8 +4289,7 @@ void ContentParent::GeneratePairedMinidump(const char* aReason) {
 
     // Generate the report and insert into the queue for submittal.
     if (mCrashReporter->GenerateMinidumpAndPair(this, "browser"_ns)) {
-      mCrashReporter->FinalizeCrashReport();
-      mCreatedPairedMinidumps = true;
+      mCreatedPairedMinidumps = mCrashReporter->FinalizeCrashReport();
     }
   }
 }
@@ -4336,7 +4335,6 @@ void ContentParent::KillHard(const char* aReason) {
   }
 
   if (!KillProcess(otherProcessHandle, base::PROCESS_END_KILLED_BY_USER)) {
-    mCrashReporter->DeleteCrashReport();
     NS_WARNING("failed to kill subprocess!");
   }
 
