@@ -417,7 +417,7 @@ class nsIScrollableFrame : public nsIScrollbarMediator {
   /**
    * Gets the async scroll animation state of this scroll frame.
    *
-   * There are four possible kinds that can overlap.
+   * There are five possible kinds that can overlap.
    * MainThread means async scroll animated by the main thread.
    * APZ scroll animations that are requested from the main thread go through
    * three states: 1) pending, when the main thread has recorded that it wants
@@ -425,13 +425,17 @@ class nsIScrollableFrame : public nsIScrollbarMediator {
    * the request to the compositor (but it hasn't necessarily arrived yet), and
    * 3) in progress, after apz has responded to the main thread that it got the
    * request.
+   * TriggeredByScript means that the async scroll animation was triggered by
+   * script, e.g. Element.scrollTo().
    */
   enum class AnimationState {
-    MainThread,    // mAsyncScroll || mAsyncSmoothMSDScroll
-    APZPending,    // mScrollUpdates.LastElement() is Smooth or SmoothMsd
-    APZRequested,  // mApzAnimationRequested
-    APZInProgress  // mCurrentAPZScrollAnimationType !=
-                   // APZScrollAniationType::No
+    MainThread,        // mAsyncScroll || mAsyncSmoothMSDScroll
+    APZPending,        // mScrollUpdates.LastElement() is Smooth or SmoothMsd
+    APZRequested,      // mApzAnimationRequested
+    APZInProgress,     // mCurrentAPZScrollAnimationType !=
+                       // APZScrollAniationType::No
+    TriggeredByScript  // The animation was triggered with
+                       // ScrollTriggeredByScript::Yes
   };
   virtual mozilla::EnumSet<AnimationState> ScrollAnimationState() const = 0;
 
