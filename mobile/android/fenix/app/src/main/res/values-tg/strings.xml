@@ -368,7 +368,7 @@
     <!-- Message shown in the error page for when trying to access a http website while https only mode is enabled. The message has two paragraphs. This is the first. -->
     <string name="errorpage_httpsonly_message_title">Эҳтимол, сомона танҳо пайвасти «HTTP»-ро дастгирӣ намекунад.</string>
     <!-- Message shown in the error page for when trying to access a http website while https only mode is enabled. The message has two paragraphs. This is the second. -->
-    <string name="errorpage_httpsonly_message_summary">Бо вуҷуди ин, инчунин мумкин аст, ки ҳамлакунанда дахолат мекунад. Агар шумо кори худро бо сомона идома диҳед, шумо набояд ягон маълумоти ҳассоси шахсиро ворид намоед. Агар шумо идома диҳед, реҷаи «Танҳо HTTPS» барои сомона муваққатан ғайрифаъол мешавад.</string>
+    <string name="errorpage_httpsonly_message_summary">Бо вуҷуди ин, инчунин, мумкин аст, ки ҳамлакунанда дахолат мекунад. Агар шумо кори худро бо сомона идома диҳед, шумо набояд ягон маълумоти ҳассоси шахсиро ворид намоед. Агар шумо идома диҳед, реҷаи «Танҳо HTTPS» барои сомона муваққатан ғайрифаъол мешавад.</string>
     <!-- Preference for accessibility -->
     <string name="preferences_accessibility">Қобилияти дастрасӣ</string>
     <!-- Preference to override the Firefox Account server -->
