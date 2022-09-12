@@ -1330,7 +1330,7 @@ bool js::ModuleEvaluate(JSContext* cx, Handle<ModuleObject*> moduleArg,
     }
 
     // Handle OOM when appending to the stack or over-recursion errors.
-    if (stack.empty()) {
+    if (stack.empty() && !module->hadEvaluationError()) {
       module->setEvaluationError(error);
     }
 
