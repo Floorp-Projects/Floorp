@@ -596,6 +596,9 @@ bool DrawTargetWebgl::GenerateComplexClipMask() {
   mSharedContext->SetClipRect(mClipBounds);
   // The Skia target contents was clobbered and is now invalid.
   mSkiaValid = false;
+  // We uploaded a surface, just as if we missed the texture cache, so account
+  // for that here.
+  mProfile.OnCacheMiss();
   return !!data;
 }
 
@@ -3163,6 +3166,9 @@ void DrawTargetWebgl::SharedContext::WaitForShmem() {
     // the Shmem have finished.
     (void)mWebgl->GetError();
     mWaitForShmem = false;
+    // The sync IPDL call can cause expensive round-trips to add up over time,
+    // so account for that here.
+    mCurrentTarget->mProfile.OnReadback();
   }
 }
 
@@ -3173,6 +3179,7 @@ void DrawTargetWebgl::MarkSkiaChanged(const DrawOptions& aOptions) {
       // If the Skia context needs initialization, clear it and enable layering.
       mSkiaValid = true;
       if (mWebglValid) {
+        mProfile.OnLayer();
         mSkiaLayer = true;
         mSkia->Clear();
       }
@@ -3284,8 +3291,9 @@ void DrawTargetWebgl::UsageProfile::EndFrame() {
   float cacheRatio =
       StaticPrefs::gfx_canvas_accelerated_profile_cache_miss_ratio();
   if (mFallbacks > 0 ||
-      mCacheMisses + mReadbacks > cacheRatio * (mCacheMisses + mCacheHits +
-                                                mUncachedDraws + mReadbacks)) {
+      float(mCacheMisses + mReadbacks + mLayers) >
+          cacheRatio * float(mCacheMisses + mCacheHits + mUncachedDraws +
+                             mReadbacks + mLayers)) {
     failed = true;
   }
   if (failed) {
