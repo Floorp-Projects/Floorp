@@ -291,8 +291,8 @@ class MOZ_STACK_CLASS ModuleLoaderInfo {
  public:
   explicit ModuleLoaderInfo(const nsACString& aLocation)
       : mLocation(&aLocation), mIsModule(false) {}
-  explicit ModuleLoaderInfo(nsIURI* aURI, bool aIsModule)
-      : mLocation(nullptr), mURI(aURI), mIsModule(aIsModule) {}
+  explicit ModuleLoaderInfo(JS::loader::ModuleLoadRequest* aRequest)
+      : mLocation(nullptr), mURI(aRequest->mURI), mIsModule(true) {}
 
   nsIIOService* IOService() {
     MOZ_ASSERT(mIOService);
@@ -633,7 +633,7 @@ JSObject* mozJSModuleLoader::GetSharedGlobal(JSContext* aCx) {
 nsresult mozJSModuleLoader::LoadSingleModuleScript(
     JSContext* aCx, JS::loader::ModuleLoadRequest* aRequest,
     MutableHandleScript aScriptOut) {
-  ModuleLoaderInfo info(aRequest->mURI, true);
+  ModuleLoaderInfo info(aRequest);
   nsresult rv = info.EnsureResolvedURI();
   NS_ENSURE_SUCCESS(rv, rv);
 
