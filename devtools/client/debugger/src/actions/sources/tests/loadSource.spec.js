@@ -51,6 +51,100 @@ describe("loadSourceText", () => {
     ).not.toBe(-1);
   });
 
+  it("should load source text for a specific source actor", async () => {
+    const mockContents = {
+      "testSource1-0-actor": "const test1 = 500;",
+      "testSource2-0-actor": "const test2 = 442;",
+    };
+
+    const store = createStore({
+      ...mockCommandClient,
+      sourceContents: ({ actor }) => {
+        return new Promise(resolve => {
+          resolve(createSource(actor, mockContents[actor]));
+        });
+      },
+    });
+    const { dispatch, getState, cx } = store;
+
+    const testSource1 = await dispatch(
+      actions.newGeneratedSources(makeSource("testSource1"))
+    );
+
+    // Load the source text for the specific source actor
+    // specified.
+    await dispatch(
+      actions.loadSourceText({
+        cx,
+        source: testSource1,
+        sourceActor: { actor: "testSource2-0-actor" },
+      })
+    );
+
+    const testSource1Content = selectors.getSourceContent(
+      getState(),
+      testSource1.id
+    );
+
+    expect(
+      testSource1Content &&
+        isFulfilled(testSource1Content) &&
+        testSource1Content.value.type === "text"
+        ? testSource1Content.value.value.indexOf(
+            mockContents["testSource2-0-actor"]
+          )
+        : -1
+    ).not.toBe(-1);
+
+    // Load the source text which has been cached when the source
+    // actor is not specified.
+    await dispatch(
+      actions.loadSourceText({
+        cx,
+        source: testSource1,
+      })
+    );
+
+    const testSource1ContentAfterSecondLoad = selectors.getSourceContent(
+      getState(),
+      testSource1.id
+    );
+
+    expect(
+      testSource1ContentAfterSecondLoad &&
+        isFulfilled(testSource1ContentAfterSecondLoad) &&
+        testSource1ContentAfterSecondLoad.value.type === "text"
+        ? testSource1ContentAfterSecondLoad.value.value.indexOf(
+            mockContents["testSource2-0-actor"]
+          )
+        : -1
+    ).not.toBe(-1);
+
+    // Load the new source text when a different source actor is specified
+    await dispatch(
+      actions.loadSourceText({
+        cx,
+        source: testSource1,
+        sourceActor: { actor: "testSource1-0-actor" },
+      })
+    );
+
+    const testSource1ContentAfterThirdLoad = selectors.getSourceContent(
+      getState(),
+      testSource1.id
+    );
+
+    expect(
+      testSource1ContentAfterThirdLoad &&
+        isFulfilled(testSource1ContentAfterThirdLoad) &&
+        testSource1ContentAfterThirdLoad.value.type === "text"
+        ? testSource1ContentAfterThirdLoad.value.value.indexOf(
+            mockContents["testSource1-0-actor"]
+          )
+        : -1
+    ).not.toBe(-1);
+  });
+
   it("should update breakpoint text when a source loads", async () => {
     const fooOrigContent = createSource("fooOrig", "var fooOrig = 42;");
     const fooGenContent = createSource("fooGen", "var fooGen = 42;");
