@@ -532,30 +532,30 @@ void RangeUpdater::DidMoveNode(const nsINode& aOldParent, uint32_t aOldOffset,
     // Do nothing if moving nodes is occurred while changing the container.
     return;
   }
+  auto AdjustDOMPoint = [&](nsCOMPtr<nsINode>& aNode, uint32_t& aOffset) {
+    if (aNode == &aOldParent) {
+      // If previously pointed the moved content, it should keep pointing it.
+      if (aOffset == aOldOffset) {
+        aNode = const_cast<nsINode*>(&aNewParent);
+        aOffset = aNewOffset;
+      } else if (aOffset > aOldOffset) {
+        aOffset--;
+      }
+      return;
+    }
+    if (aNode == &aNewParent) {
+      if (aOffset > aNewOffset) {
+        aOffset++;
+      }
+    }
+  };
   for (RefPtr<RangeItem>& rangeItem : mArray) {
     if (NS_WARN_IF(!rangeItem)) {
       return;
     }
 
-    // like a delete in aOldParent
-    if (rangeItem->mStartContainer == &aOldParent &&
-        rangeItem->mStartOffset > aOldOffset) {
-      rangeItem->mStartOffset--;
-    }
-    if (rangeItem->mEndContainer == &aOldParent &&
-        rangeItem->mEndOffset > aOldOffset) {
-      rangeItem->mEndOffset--;
-    }
-
-    // and like an insert in aNewParent
-    if (rangeItem->mStartContainer == &aNewParent &&
-        rangeItem->mStartOffset > aNewOffset) {
-      rangeItem->mStartOffset++;
-    }
-    if (rangeItem->mEndContainer == &aNewParent &&
-        rangeItem->mEndOffset > aNewOffset) {
-      rangeItem->mEndOffset++;
-    }
+    AdjustDOMPoint(rangeItem->mStartContainer, rangeItem->mStartOffset);
+    AdjustDOMPoint(rangeItem->mEndContainer, rangeItem->mEndOffset);
   }
 }
 
