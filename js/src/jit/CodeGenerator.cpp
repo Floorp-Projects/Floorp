@@ -11617,6 +11617,11 @@ class OutOfLineStoreElementHole : public OutOfLineCodeBase<CodeGenerator> {
   void accept(CodeGenerator* codegen) override {
     codegen->visitOutOfLineStoreElementHole(this);
   }
+
+  MStoreElementHole* mir() const {
+    return ins_->isStoreElementHoleV() ? ins_->toStoreElementHoleV()->mir()
+                                       : ins_->toStoreElementHoleT()->mir();
+  }
   LInstruction* ins() const { return ins_; }
   Label* rejoinStore() { return &rejoinStore_; }
   bool strict() const { return strict_; }
@@ -11812,6 +11817,11 @@ void CodeGenerator::visitOutOfLineStoreElementHole(
   masm.jump(ool->rejoinStore());
 
   masm.bind(&callStub);
+
+  if (ool->mir()->needsNegativeIntCheck()) {
+    bailoutCmp32(Assembler::LessThan, index, Imm32(0), ins->snapshot());
+  }
+
   saveLive(ins);
 
   pushArg(Imm32(ool->strict()));
@@ -14163,9 +14173,7 @@ void CodeGenerator::visitLoadElementHole(LLoadElementHole* lir) {
 
     masm.bind(&outOfBounds);
 
-    Label negative;
-    masm.branch32(Assembler::LessThan, index, Imm32(0), &negative);
-    bailoutFrom(&negative, lir->snapshot());
+    bailoutCmp32(Assembler::LessThan, index, Imm32(0), lir->snapshot());
 
     masm.bind(&loadUndefined);
   } else {

@@ -3749,6 +3749,9 @@ void LIRGenerator::visitStoreElementHole(MStoreElementHole* ins) {
     }
   }
 
+  if (ins->needsNegativeIntCheck()) {
+    assignSnapshot(lir, ins->bailoutKind());
+  }
   add(lir, ins);
   assignSafepoint(lir, ins);
 }

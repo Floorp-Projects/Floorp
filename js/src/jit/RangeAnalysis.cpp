@@ -3334,6 +3334,13 @@ void MLoadElementHole::collectRangeInfoPreTrunc() {
   }
 }
 
+void MStoreElementHole::collectRangeInfoPreTrunc() {
+  Range indexRange(index());
+  if (indexRange.isFiniteNonNegative()) {
+    needsNegativeIntCheck_ = false;
+  }
+}
+
 void MInt32ToIntPtr::collectRangeInfoPreTrunc() {
   Range inputRange(input());
   if (inputRange.isFiniteNonNegative()) {
