@@ -631,8 +631,9 @@ JSObject* mozJSModuleLoader::GetSharedGlobal(JSContext* aCx) {
 
 /* static */
 nsresult mozJSModuleLoader::LoadSingleModuleScript(
-    JSContext* aCx, nsIURI* aURI, MutableHandleScript aScriptOut) {
-  ModuleLoaderInfo info(aURI, true);
+    JSContext* aCx, JS::loader::ModuleLoadRequest* aRequest,
+    MutableHandleScript aScriptOut) {
+  ModuleLoaderInfo info(aRequest->mURI, true);
   nsresult rv = info.EnsureResolvedURI();
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -640,7 +641,7 @@ nsresult mozJSModuleLoader::LoadSingleModuleScript(
   rv = GetSourceFile(info.ResolvedURI(), getter_AddRefs(sourceFile));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  bool realFile = LocationIsRealFile(aURI);
+  bool realFile = LocationIsRealFile(aRequest->mURI);
 
   RootedScript script(aCx);
   return GetScriptForLocation(aCx, info, sourceFile, realFile, aScriptOut);
