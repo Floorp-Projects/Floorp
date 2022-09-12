@@ -2006,7 +2006,8 @@ class ScrollFrameHelper::AsyncSmoothMSDScroll final
                        const nsSize& aInitialVelocity, const nsRect& aRange,
                        const mozilla::TimeStamp& aStartTime,
                        nsPresContext* aPresContext,
-                       UniquePtr<ScrollSnapTargetIds> aSnapTargetIds)
+                       UniquePtr<ScrollSnapTargetIds> aSnapTargetIds,
+                       ScrollTriggeredByScript aTriggeredByScript)
       : mXAxisModel(aInitialPosition.x, aInitialDestination.x,
                     aInitialVelocity.width,
                     StaticPrefs::layout_css_scroll_behavior_spring_constant(),
@@ -2019,7 +2020,8 @@ class ScrollFrameHelper::AsyncSmoothMSDScroll final
         mLastRefreshTime(aStartTime),
         mCallee(nullptr),
         mOneDevicePixelInAppUnits(aPresContext->DevPixelsToAppUnits(1)),
-        mSnapTargetIds(std::move(aSnapTargetIds)) {
+        mSnapTargetIds(std::move(aSnapTargetIds)),
+        mTriggeredByScript(aTriggeredByScript) {
     Telemetry::SetHistogramRecordingEnabled(
         Telemetry::FX_REFRESH_DRIVER_SYNC_SCROLL_FRAME_DELAY_MS, true);
   }
@@ -2037,9 +2039,11 @@ class ScrollFrameHelper::AsyncSmoothMSDScroll final
                    NSToCoordRound(mYAxisModel.GetPosition()));
   }
 
-  void SetDestination(const nsPoint& aDestination) {
+  void SetDestination(const nsPoint& aDestination,
+                      ScrollTriggeredByScript aTriggeredByScript) {
     mXAxisModel.SetDestination(static_cast<int32_t>(aDestination.x));
     mYAxisModel.SetDestination(static_cast<int32_t>(aDestination.y));
+    mTriggeredByScript = aTriggeredByScript;
   }
 
   void SetRange(const nsRect& aRange) { mRange = aRange; }
@@ -2112,6 +2116,10 @@ class ScrollFrameHelper::AsyncSmoothMSDScroll final
     return std::move(mSnapTargetIds);
   }
 
+  bool WasTriggeredByScript() const {
+    return mTriggeredByScript == ScrollTriggeredByScript::Yes;
+  }
+
  private:
   // Private destructor, to discourage deletion outside of Release():
   ~AsyncSmoothMSDScroll() {
@@ -2130,6 +2138,7 @@ class ScrollFrameHelper::AsyncSmoothMSDScroll final
   ScrollFrameHelper* mCallee;
   nscoord mOneDevicePixelInAppUnits;
   UniquePtr<ScrollSnapTargetIds> mSnapTargetIds;
+  ScrollTriggeredByScript mTriggeredByScript;
 };
 
 // AsyncScroll has ref counting.
@@ -2138,10 +2147,12 @@ class ScrollFrameHelper::AsyncScroll final : public nsARefreshObserver {
   typedef mozilla::TimeStamp TimeStamp;
   typedef mozilla::TimeDuration TimeDuration;
 
-  explicit AsyncScroll(UniquePtr<ScrollSnapTargetIds> aSnapTargetIds)
+  explicit AsyncScroll(UniquePtr<ScrollSnapTargetIds> aSnapTargetIds,
+                       ScrollTriggeredByScript aTriggeredByScript)
       : mOrigin(ScrollOrigin::NotSpecified),
         mCallee(nullptr),
-        mSnapTargetIds(std::move(aSnapTargetIds)) {
+        mSnapTargetIds(std::move(aSnapTargetIds)),
+        mTriggeredByScript(aTriggeredByScript) {
     Telemetry::SetHistogramRecordingEnabled(
         Telemetry::FX_REFRESH_DRIVER_SYNC_SCROLL_FRAME_DELAY_MS, true);
   }
@@ -2238,9 +2249,14 @@ class ScrollFrameHelper::AsyncScroll final : public nsARefreshObserver {
     return std::move(mSnapTargetIds);
   }
 
+  bool WasTriggeredByScript() const {
+    return mTriggeredByScript == ScrollTriggeredByScript::Yes;
+  }
+
  private:
   ScrollFrameHelper* mCallee;
   UniquePtr<ScrollSnapTargetIds> mSnapTargetIds;
+  ScrollTriggeredByScript mTriggeredByScript;
 
   nsRefreshDriver* RefreshDriver(ScrollFrameHelper* aCallee) {
     return aCallee->mOuter->PresContext()->RefreshDriver();
@@ -2365,6 +2381,7 @@ ScrollFrameHelper::ScrollFrameHelper(nsContainerFrame* aOuter, bool aIsRoot)
       mMinimumScaleSizeChanged(false),
       mProcessingScrollEvent(false),
       mApzAnimationRequested(false),
+      mApzAnimationTriggeredByScriptRequested(false),
       mReclampVVOffsetInReflowFinished(false),
       mMayScheduleScrollAnimations(false),
 #ifdef MOZ_WIDGET_ANDROID
@@ -2650,14 +2667,16 @@ void ScrollFrameHelper::ScrollToWithOrigin(nsPoint aScrollPosition,
 
       mAsyncSmoothMSDScroll = new AsyncSmoothMSDScroll(
           GetScrollPosition(), mDestination, currentVelocity,
-          GetLayoutScrollRange(), now, presContext, std::move(snapTargetIds));
+          GetLayoutScrollRange(), now, presContext, std::move(snapTargetIds),
+          aParams.mTriggeredByScript);
 
       mAsyncSmoothMSDScroll->SetRefreshObserver(this);
     } else {
       // A previous smooth MSD scroll is still in progress, so we just need to
       // update its range and destination.
       mAsyncSmoothMSDScroll->SetRange(GetLayoutScrollRange());
-      mAsyncSmoothMSDScroll->SetDestination(mDestination);
+      mAsyncSmoothMSDScroll->SetDestination(mDestination,
+                                            aParams.mTriggeredByScript);
     }
 
     return;
@@ -2669,7 +2688,8 @@ void ScrollFrameHelper::ScrollToWithOrigin(nsPoint aScrollPosition,
   }
 
   if (!mAsyncScroll) {
-    mAsyncScroll = new AsyncScroll(std::move(snapTargetIds));
+    mAsyncScroll =
+        new AsyncScroll(std::move(snapTargetIds), aParams.mTriggeredByScript);
     mAsyncScroll->SetRefreshObserver(this);
   }
 
@@ -4658,6 +4678,8 @@ void ScrollFrameHelper::NotifyApzTransaction() {
   mAllowScrollOriginDowngrade = true;
   mApzScrollPos = GetScrollPosition();
   mApzAnimationRequested = IsLastScrollUpdateAnimating();
+  mApzAnimationTriggeredByScriptRequested =
+      IsLastScrollUpdateTriggeredByScriptAnimating();
   mScrollUpdates.Clear();
   if (mIsRoot) {
     mOuter->PresShell()->SetResolutionUpdated(false);
@@ -7484,20 +7506,54 @@ bool ScrollFrameHelper::IsLastScrollUpdateAnimating() const {
   return false;
 }
 
+bool ScrollFrameHelper::IsLastScrollUpdateTriggeredByScriptAnimating() const {
+  if (!mScrollUpdates.IsEmpty()) {
+    const ScrollPositionUpdate& lastUpdate = mScrollUpdates.LastElement();
+    if (lastUpdate.WasTriggeredByScript() &&
+        (mScrollUpdates.LastElement().GetMode() == ScrollMode::Smooth ||
+         mScrollUpdates.LastElement().GetMode() == ScrollMode::SmoothMsd)) {
+      return true;
+    }
+  }
+  return false;
+}
+
 using AnimationState = nsIScrollableFrame::AnimationState;
 EnumSet<AnimationState> ScrollFrameHelper::ScrollAnimationState() const {
   EnumSet<AnimationState> retval;
   if (IsApzAnimationInProgress()) {
     retval += AnimationState::APZInProgress;
+    if (mCurrentAPZScrollAnimationType ==
+        APZScrollAnimationType::TriggeredByScript) {
+      retval += AnimationState::TriggeredByScript;
+    }
   }
+
   if (mApzAnimationRequested) {
     retval += AnimationState::APZRequested;
+    if (mApzAnimationTriggeredByScriptRequested) {
+      retval += AnimationState::TriggeredByScript;
+    }
   }
+
   if (IsLastScrollUpdateAnimating()) {
     retval += AnimationState::APZPending;
+    if (IsLastScrollUpdateTriggeredByScriptAnimating()) {
+      retval += AnimationState::TriggeredByScript;
+    }
   }
-  if (mAsyncScroll || mAsyncSmoothMSDScroll) {
+  if (mAsyncScroll) {
     retval += AnimationState::MainThread;
+    if (mAsyncScroll->WasTriggeredByScript()) {
+      retval += AnimationState::TriggeredByScript;
+    }
+  }
+
+  if (mAsyncSmoothMSDScroll) {
+    retval += AnimationState::MainThread;
+    if (mAsyncSmoothMSDScroll->WasTriggeredByScript()) {
+      retval += AnimationState::TriggeredByScript;
+    }
   }
   return retval;
 }
@@ -7510,6 +7566,7 @@ void ScrollFrameHelper::ResetScrollInfoIfNeeded(
   if (aGeneration == mScrollGeneration) {
     mLastScrollOrigin = ScrollOrigin::None;
     mApzAnimationRequested = false;
+    mApzAnimationTriggeredByScriptRequested = false;
   }
 
   mScrollGenerationOnApz = aGenerationOnApz;

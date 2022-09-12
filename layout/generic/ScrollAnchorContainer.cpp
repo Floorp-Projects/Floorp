@@ -423,17 +423,19 @@ void ScrollAnchorContainer::ApplyAdjustments() {
   if (!mAnchorNode || mAnchorNodeIsDirty || mDisabled ||
       mScrollFrame->HasPendingScrollRestoration() ||
       mScrollFrame->IsProcessingScrollEvent() ||
-      !mScrollFrame->ScrollAnimationState().isEmpty() ||
+      mScrollFrame->ScrollAnimationState().contains(
+          nsIScrollableFrame::AnimationState::TriggeredByScript) ||
       mScrollFrame->GetScrollPosition() == nsPoint()) {
     ANCHOR_LOG(
         "Ignoring post-reflow (anchor=%p, dirty=%d, disabled=%d, "
-        "pendingRestoration=%d, scrollevent=%d, animating=%d, "
+        "pendingRestoration=%d, scrollevent=%d, scriptAnimating=%d, "
         "zeroScrollPos=%d pendingSuppression=%d, "
         "container=%p).\n",
         mAnchorNode, mAnchorNodeIsDirty, mDisabled,
         mScrollFrame->HasPendingScrollRestoration(),
         mScrollFrame->IsProcessingScrollEvent(),
-        !mScrollFrame->ScrollAnimationState().isEmpty(),
+        mScrollFrame->ScrollAnimationState().contains(
+            nsIScrollableFrame::AnimationState::TriggeredByScript),
         mScrollFrame->GetScrollPosition() == nsPoint(),
         mSuppressAnchorAdjustment, this);
     if (mSuppressAnchorAdjustment) {

@@ -533,6 +533,7 @@ class ScrollFrameHelper : public nsIReflowCallback {
   bool HasScrollUpdates() const { return !mScrollUpdates.IsEmpty(); }
 
   bool IsLastScrollUpdateAnimating() const;
+  bool IsLastScrollUpdateTriggeredByScriptAnimating() const;
   mozilla::EnumSet<AnimationState> ScrollAnimationState() const;
 
   void ResetScrollInfoIfNeeded(const MainThreadScrollGeneration& aGeneration,
@@ -798,6 +799,10 @@ class ScrollFrameHelper : public nsIReflowCallback {
   // the most recent scroll request is a smooth scroll, and it is cleared when
   // mApzAnimationInProgress is updated.
   bool mApzAnimationRequested : 1;
+
+  // Similar to above mApzAnimationRequested but the request came from script,
+  // e.g., scrollBy().
+  bool mApzAnimationTriggeredByScriptRequested : 1;
 
   // Whether we need to reclamp the visual viewport offset in ReflowFinished.
   bool mReclampVVOffsetInReflowFinished : 1;

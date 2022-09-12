@@ -1,0 +1,59 @@
+<!DOCTYPE HTML>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, minimum-scale=1.0">
+<title>Tests scroll anchoring updates in-progress wheel scrolling __relatively__</title>
+<script src="apz_test_utils.js"></script>
+<script src="apz_test_native_event_utils.js"></script>
+<script src="/tests/SimpleTest/paint_listener.js"></script>
+<style>
+  body { margin: 0 }
+  #target > div {
+    height: 500px;
+  }
+</style>
+<div id="target"></div>
+<div class="spacer" style="height: 1000vh"></div>
+<script>
+  const targetElement = document.getElementById("target");
+
+  async function test() {
+    // Fistly send a wheel event to measure the scroll amount of one event.
+    let transformEndPromise = promiseTransformEnd();
+    await synthesizeNativeWheel(window, 50, 50, 0, -50);
+    await transformEndPromise;
+
+    ok(window.scrollY > 0, "Should be scrolled to some amount");
+
+    const firstScrollAmount = window.scrollY;
+
+    // Now send a wheel event again.
+    transformEndPromise = promiseTransformEnd();
+    await synthesizeNativeWheel(window, 50, 50, 0, -50);
+    await promiseApzFlushedRepaints();
+
+    // And insert an element during the wheel scrolling is still in progress.
+    targetElement.appendChild(document.createElement("div"));
+
+    await transformEndPromise;
+
+    // Give scroll offsets a chance to sync.
+    await promiseApzFlushedRepaints();
+
+    // Though in an ideal environment, the expected total scroll amount should
+    // be `firstScrollAmount * 2 + 500`, we don't expect it on our CIs, so we
+    // assume here;
+    // 1) it's greater than double of the first scroll amount since it should
+    //     include the height of the inserted element.
+    // 2) it's greater than the first scroll amount + the height of the inserted
+    //    element.
+    ok(window.scrollY > firstScrollAmount * 2,
+       "the scroll amount should be greater than double of the first scroll amount");
+    ok(window.scrollY > firstScrollAmount + 500,
+       "the scroll amount should also be greater than the first scroll amount + " +
+       "the inserted element height");
+  }
+
+  waitUntilApzStable()
+  .then(test)
+  .then(subtestDone, subtestFailed);
+</script>
