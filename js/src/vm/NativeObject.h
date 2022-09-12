@@ -608,9 +608,11 @@ class NativeObject : public JSObject {
 
   bool isSharedMemory() const { return getElementsHeader()->isSharedMemory(); }
 
-  // Update the object's shape, keeping the number of allocated slots in sync
-  // with the object's new slot span.
-  MOZ_ALWAYS_INLINE bool setShapeAndUpdateSlots(JSContext* cx, Shape* newShape);
+  // Update the object's shape and allocate slots if needed to match the shape's
+  // slot span.
+  MOZ_ALWAYS_INLINE bool setShapeAndAddNewSlots(JSContext* cx, Shape* newShape,
+                                                uint32_t oldSpan,
+                                                uint32_t newSpan);
 
   // Methods optimized for adding/removing a single slot. Must only be used for
   // non-dictionary objects.
