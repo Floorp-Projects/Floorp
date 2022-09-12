@@ -1403,12 +1403,10 @@ static nsresult PinCurrentAppToTaskbarWin10(bool aCheckOnly,
   }
 }
 
-static nsresult PinCurrentAppToTaskbarImpl(bool aCheckOnly,
-                                           bool aPrivateBrowsing,
-                                           const nsAString& aAppUserModelId,
-                                           const nsAString& aShortcutName,
-                                           nsIFile* aShortcutsLogDir,
-                                           nsIFile* greDir) {
+static nsresult PinCurrentAppToTaskbarImpl(
+    bool aCheckOnly, bool aPrivateBrowsing, const nsAString& aAppUserModelId,
+    const nsAString& aShortcutName, nsIFile* aShortcutsLogDir, nsIFile* aGreDir,
+    nsIFile* aProgramsDir) {
   MOZ_DIAGNOSTIC_ASSERT(
       !NS_IsMainThread(),
       "PinCurrentAppToTaskbarImpl should be called off main thread only");
@@ -1429,11 +1427,8 @@ static nsresult PinCurrentAppToTaskbarImpl(bool aCheckOnly,
 
     nsAutoString linkName(aShortcutName);
 
-    nsCOMPtr<nsIFile> exeFile(greDir);
+    nsCOMPtr<nsIFile> exeFile(aGreDir);
     if (aPrivateBrowsing) {
-      if (!NS_SUCCEEDED(rv)) {
-        return NS_ERROR_FAILURE;
-      }
       nsAutoString pbExeStr(PRIVATE_BROWSING_BINARY);
       nsresult rv = exeFile->Append(pbExeStr);
       if (!NS_SUCCEEDED(rv)) {
@@ -1451,12 +1446,16 @@ static nsresult PinCurrentAppToTaskbarImpl(bool aCheckOnly,
       }
     }
 
+    nsCOMPtr<nsIFile> shortcutFile(aProgramsDir);
+    shortcutFile->Append(aShortcutName);
+
     nsTArray<nsString> arguments;
     rv = CreateShortcutImpl(exeFile, arguments, aShortcutName, exeFile,
                             // Icon indexes are defined as Resource IDs, but
                             // CreateShortcutImpl needs an index.
                             IDI_APPICON - 1, aAppUserModelId, FOLDERID_Programs,
-                            linkName, shortcutPath, aShortcutsLogDir);
+                            linkName, shortcutFile->NativePath(),
+                            aShortcutsLogDir);
     if (!NS_SUCCEEDED(rv)) {
       return NS_ERROR_FILE_NOT_FOUND;
     }
@@ -1525,10 +1524,12 @@ static nsresult PinCurrentAppToTaskbarAsyncImpl(bool aCheckOnly,
     shortcutName.AppendLiteral(MOZ_APP_DISPLAYNAME ".lnk");
   }
 
-  nsCOMPtr<nsIFile> greDir, updRoot, shortcutsLogDir;
+  nsCOMPtr<nsIFile> greDir, updRoot, programsDir, shortcutsLogDir;
   nsresult nsrv = NS_GetSpecialDirectory(NS_GRE_DIR, getter_AddRefs(greDir));
   NS_ENSURE_SUCCESS(nsrv, nsrv);
   nsrv = NS_GetSpecialDirectory(XRE_UPDATE_ROOT_DIR, getter_AddRefs(updRoot));
+  NS_ENSURE_SUCCESS(nsrv, nsrv);
+  rv = NS_GetSpecialDirectory(NS_WIN_PROGRAMS_DIR, getter_AddRefs(programsDir));
   NS_ENSURE_SUCCESS(nsrv, nsrv);
   nsrv = updRoot->GetParent(getter_AddRefs(shortcutsLogDir));
   NS_ENSURE_SUCCESS(nsrv, nsrv);
@@ -1540,14 +1541,15 @@ static nsresult PinCurrentAppToTaskbarAsyncImpl(bool aCheckOnly,
       NS_NewRunnableFunction(
           "CheckPinCurrentAppToTaskbarAsync",
           [aCheckOnly, aPrivateBrowsing, shortcutName, aumid = nsString{aumid},
-           shortcutsLogDir, greDir, promiseHolder = std::move(promiseHolder)] {
+           shortcutsLogDir, greDir, programsDir,
+           promiseHolder = std::move(promiseHolder)] {
             nsresult rv = NS_ERROR_FAILURE;
             HRESULT hr = CoInitialize(nullptr);
 
             if (SUCCEEDED(hr)) {
               rv = PinCurrentAppToTaskbarImpl(
                   aCheckOnly, aPrivateBrowsing, aumid, shortcutName,
-                  shortcutsLogDir.get(), greDir.get());
+                  shortcutsLogDir.get(), greDir.get(), programsDir.get());
               CoUninitialize();
             }
 
