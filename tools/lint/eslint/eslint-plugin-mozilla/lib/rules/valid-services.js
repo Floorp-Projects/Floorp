@@ -1,5 +1,5 @@
 /**
- * @fileoverview Require use of Services.* rather than getService.
+ * @fileoverview Ensures that Services uses have valid property names.
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -13,7 +13,7 @@ module.exports = {
   meta: {
     docs: {
       url:
-        "https://firefox-source-docs.mozilla.org/code-quality/lint/linters/eslint-plugin-mozilla/use-services.html",
+        "https://firefox-source-docs.mozilla.org/code-quality/lint/linters/eslint-plugin-mozilla/valid-services.html",
     },
     type: "problem",
   },
