@@ -25,6 +25,7 @@ exports[`sources - pretty print returns a pretty source for a minified file 2`] 
 Object {
   "state": "fulfilled",
   "value": Object {
+    "actorId": undefined,
     "contentType": "text/javascript",
     "type": "text",
     "value": "function base() {

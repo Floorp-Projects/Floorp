@@ -65,12 +65,14 @@ function updateSourceTextContent(state, action) {
     content = rejected(action.error);
   } else if (typeof action.value.text === "string") {
     content = fulfilled({
+      actorId: action.value.actorId,
       type: "text",
       value: action.value.text,
       contentType: action.value.contentType,
     });
   } else {
     content = fulfilled({
+      actorId: action.value.actorId,
       type: "wasm",
       value: action.value.text,
     });
