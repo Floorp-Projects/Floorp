@@ -612,14 +612,6 @@ description#identity-popup-content-verifier,
 
 /* PERMISSIONS */
 
-@media (-moz-box-flexbox-emulation) {
-  /* The extra padding-bottom is there to work around XUL flex (Bug 1368281).
-     This rule and the 1.5em above can both be removed once we are only using CSS flex. */
-  #permission-popup-permissions-content {
-    padding-bottom: 1em;
-  }
-}
-
 .protections-popup-footer-button,
 .protections-popup-category,
 .permission-popup-permission-item {

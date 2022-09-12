@@ -100,18 +100,8 @@ html|textarea {
 
 xul|iframe {
   border: none;
-  width: 100px;
-  height: 100px;
   min-width: 10px;
   min-height: 10px;
-}
-
-@media (-moz-box-flexbox-emulation) {
-  /* In emulation, <iframe> is block instead of inline, so reset the width/height */
-  xul|iframe {
-    width: auto;
-    height: auto;
-  }
 }
 
 /* Label/description formatting */
