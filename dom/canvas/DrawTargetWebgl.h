@@ -8,6 +8,7 @@
 #define _MOZILLA_GFX_DRAWTARGETWEBGL_H
 
 #include "mozilla/gfx/2D.h"
+#include "mozilla/gfx/PathSkia.h"
 #include "mozilla/LinkedList.h"
 #include "mozilla/WeakPtr.h"
 #include "mozilla/ThreadLocal.h"
@@ -94,6 +95,16 @@ class DrawTargetWebgl : public DrawTarget, public SupportsWeakPtr {
 
   RefPtr<TextureHandle> mSnapshotTexture;
 
+  // Store a log of clips currently pushed so that they can be used to init
+  // the clip state of temporary DTs.
+  struct ClipStack {
+    Matrix mTransform;
+    Rect mRect;
+    RefPtr<const Path> mPath;
+  };
+
+  std::vector<ClipStack> mClipStack;
+
   // UsageProfile stores per-frame counters for significant profiling events
   // that assist in determining whether acceleration should still be used for
   // a Canvas2D user.
@@ -174,7 +185,7 @@ class DrawTargetWebgl : public DrawTarget, public SupportsWeakPtr {
     RefPtr<WebGLFramebufferJS> mScratchFramebuffer;
     // Buffer filled with zero data for initializing textures.
     RefPtr<WebGLBufferJS> mZeroBuffer;
-    IntSize mZeroSize;
+    size_t mZeroSize = 0;
     // 1x1 texture with solid white mask for disabling clipping
     RefPtr<WebGLTextureJS> mNoClipMask;
 
