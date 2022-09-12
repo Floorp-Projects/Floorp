@@ -88,6 +88,12 @@
       });
 
       add_task(async function test_browser_color_scheme_dynamic_system() {
+        const ACTIVE_THEME_ID = Services.prefs.getCharPref("extensions.activeThemeID");
+        const DEFAULT_THEME_ID = "default-theme@mozilla.org";
+        if (ACTIVE_THEME_ID != DEFAULT_THEME_ID) {
+          info(`skipping test_browser_color_scheme_dynamic_system because the active theme is ${ACTIVE_THEME_ID} instead of ${DEFAULT_THEME_ID}`);
+          return;
+        }
         for (let dark of [true, false]) {
           await SpecialPowers.pushPrefEnv({
             set: [
