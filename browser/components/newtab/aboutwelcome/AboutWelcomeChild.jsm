@@ -251,22 +251,29 @@ class AboutWelcomeChild extends JSWindowActorChild {
         "AWPage:GET_APP_AND_SYSTEM_LOCALE_INFO"
       );
     }
-    let defaults = lazy.AboutWelcomeDefaults.getDefaults(
-      featureConfig.templateMR
+
+    // The MR2022 onboarding variable overrides the about:welcome templateMR
+    // variable if enrolled.
+    const useMROnboarding = lazy.NimbusFeatures.majorRelease2022.getVariable(
+      "onboarding"
     );
-    // FeatureConfig (from prefs or experiments) has higher precendence
+    const useTemplateMR = useMROnboarding ?? featureConfig.templateMR;
+
+    // FeatureConfig (from experiments) has higher precendence
     // to defaults. But the `screens` property isn't defined we shouldn't
     // override the default with `null`
-    return Cu.cloneInto(
-      await lazy.AboutWelcomeDefaults.prepareContentForReact({
-        ...attributionData,
-        ...experimentMetadata,
-        ...defaults,
-        ...featureConfig,
-        screens: featureConfig.screens ?? defaults.screens,
-      }),
-      this.contentWindow
-    );
+    let defaults = lazy.AboutWelcomeDefaults.getDefaults(useTemplateMR);
+
+    const content = await lazy.AboutWelcomeDefaults.prepareContentForReact({
+      ...attributionData,
+      ...experimentMetadata,
+      ...defaults,
+      ...featureConfig,
+      templateMR: useTemplateMR,
+      screens: featureConfig.screens ?? defaults.screens,
+    });
+
+    return Cu.cloneInto(content, this.contentWindow);
   }
 
   AWGetFeatureConfig() {

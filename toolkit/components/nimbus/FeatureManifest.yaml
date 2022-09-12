@@ -626,3 +626,7 @@ majorRelease2022:
       type: boolean
       fallbackPref: "browser.tabs.firefox-view"
       description: "Whether or not to show the firefox view tab"
+    onboarding:
+      type: boolean
+      fallbackPref: "browser.majorrelease.onboarding"
+      description: "Whether or not to use the MR2022 onboarding settings."
