@@ -514,7 +514,7 @@ bool NativeObject::changeProperty(JSContext* cx, Handle<NativeObject*> obj,
       Rooted<SharedPropMap*> sharedMap(cx, map->asShared());
       SharedPropMap::getPrevious(&sharedMap, &mapLength);
 
-      if (oldProp.hasSlot()) {
+      if (MOZ_LIKELY(oldProp.hasSlot())) {
         *slotOut = oldProp.slot();
         if (!SharedPropMap::addPropertyWithKnownSlot(cx, clasp, &sharedMap,
                                                      &mapLength, id, flags,
@@ -534,7 +534,13 @@ bool NativeObject::changeProperty(JSContext* cx, Handle<NativeObject*> obj,
       if (!newShape) {
         return false;
       }
-      return obj->setShapeAndUpdateSlots(cx, newShape);
+
+      if (MOZ_LIKELY(oldProp.hasSlot())) {
+        MOZ_ASSERT(obj->shape()->slotSpan() == newShape->slotSpan());
+        obj->setShape(newShape);
+        return true;
+      }
+      return obj->setShapeAndAddNewSlot(cx, newShape, *slotOut);
     }
 
     // Changing a non-last property. Switch to dictionary mode and relookup
