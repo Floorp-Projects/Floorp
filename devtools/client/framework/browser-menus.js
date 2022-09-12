@@ -101,7 +101,7 @@ function createToolMenuElements(toolDefinition, doc) {
 
   // Prevent multiple entries for the same tool.
   if (doc.getElementById(menuId)) {
-    return;
+    return null;
   }
 
   const oncommand = async function(id, event) {
@@ -126,9 +126,7 @@ function createToolMenuElements(toolDefinition, doc) {
   menuitem.setAttribute("key", "key_" + id);
   menuitem.addEventListener("command", oncommand);
 
-  return {
-    menuitem,
-  };
+  return menuitem;
 }
 
 /**
@@ -166,7 +164,10 @@ function sendEntryPointTelemetry(window) {
  *        The tool definition after which the tool menu item is to be added.
  */
 function insertToolMenuElements(doc, toolDefinition, prevDef) {
-  const { menuitem } = createToolMenuElements(toolDefinition, doc);
+  const menuitem = createToolMenuElements(toolDefinition, doc);
+  if (!menuitem) {
+    return;
+  }
 
   let ref;
   if (prevDef) {
@@ -210,7 +211,6 @@ exports.removeToolFromMenu = removeToolFromMenu;
  *        The document to which the tool items are to be added.
  */
 function addAllToolsToMenu(doc) {
-  const fragKeys = doc.createDocumentFragment();
   const fragMenuItems = doc.createDocumentFragment();
 
   for (const toolDefinition of gDevTools.getToolDefinitionArray()) {
@@ -218,16 +218,13 @@ function addAllToolsToMenu(doc) {
       continue;
     }
 
-    const elements = createToolMenuElements(toolDefinition, doc);
+    const menuItem = createToolMenuElements(toolDefinition, doc);
 
-    if (!elements) {
+    if (!menuItem) {
       continue;
     }
 
-    if (elements.key) {
-      fragKeys.appendChild(elements.key);
-    }
-    fragMenuItems.appendChild(elements.menuitem);
+    fragMenuItems.appendChild(menuItem);
   }
 
   const mps = doc.getElementById("menu_devtools_remotedebugging");

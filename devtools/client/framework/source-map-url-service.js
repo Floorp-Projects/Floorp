@@ -410,11 +410,8 @@ class SourceMapURLService {
   }
 
   _ensureAllSourcesPopulated() {
-    if (!this._prefValue) {
+    if (!this._prefValue || this._commands.descriptorFront.isWorkerDescriptor) {
       return null;
-    }
-    if (this._commands.descriptorFront.isWorkerDescriptor) {
-      return;
     }
 
     if (!this._sourcesLoading) {
