@@ -105,6 +105,8 @@ void SetLastMousePressEvent(GdkEvent* aEvent) {
   sLastMousePressEvent = event.release();
 }
 
+bool IsRunningUnderSnap() { return g_getenv("SNAP_INSTANCE_NAME") != nullptr; }
+
 bool IsRunningUnderFlatpak() {
   // https://gitlab.gnome.org/GNOME/gtk/-/blob/4300a5c609306ce77cbc8a3580c19201dccd8d13/gdk/gdk.c#L472
   static bool sRunning = [] {
