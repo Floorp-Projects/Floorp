@@ -31,3 +31,35 @@ pdfjs:
       - cdenizet@mozilla.com
       - mcastelluccio@mozilla.com
     expires: 113
+  buttons:
+    type: labeled_counter
+    labels:
+      - presentation_mode
+      - presentation_mode_keyboard
+      - view_bookmark
+      - first_page
+      - last_page
+      - page_rotate_cw
+      - page_rotate_ccw
+      - cursor_select_tool
+      - cursor_hand_tool
+      - scroll_page
+      - scroll_vertical
+      - scroll_horizontal
+      - scroll_wrapped
+      - spread_none
+      - spread_odd
+      - spread_even
+      - document_properties
+    description: >
+      Counts the number of times some actions are executed in the PDF viewer.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1789883
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1789883#2
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - cdenizet@mozilla.com
+      - mcastelluccio@mozilla.com
+    expires: 113
