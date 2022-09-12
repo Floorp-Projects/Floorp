@@ -12,4 +12,6 @@
     <string name="mozac_close_tab">ປິດແທັບ</string>
     <!-- Menu option to duplicate the current tab -->
     <string name="mozac_ui_tabcounter_duplicate_tab">ແທັບທີ່ຊໍ້າກັນ</string>
-    </resources>
+    <!-- Content description of the tab counter toolbar button -->
+    <string name="mozac_tab_counter_content_description">ປຸ່ມແຖບເຄື່ອງມື ໂຕນັບແຖບ.</string>
+</resources>
