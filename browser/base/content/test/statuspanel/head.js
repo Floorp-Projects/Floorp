@@ -44,6 +44,11 @@ async function promiseStatusPanelHidden(win) {
         info("Panel hid after " + e.type + " event");
         panel.removeEventListener("transitionend", l);
         panel.removeEventListener("transitioncancel", l);
+        is(
+          getComputedStyle(panel).display,
+          "none",
+          "Should be hidden for good"
+        );
         resolve();
       }
     };
