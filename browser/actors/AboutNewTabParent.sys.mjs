@@ -4,11 +4,7 @@
 
 "use strict";
 
-var EXPORTED_SYMBOLS = ["AboutNewTabParent"];
-
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 const lazy = {};
 
@@ -16,7 +12,7 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
   ASRouter: "resource://activity-stream/lib/ASRouter.jsm",
 });
 
-class AboutNewTabParent extends JSWindowActorParent {
+export class AboutNewTabParent extends JSWindowActorParent {
   async receiveMessage(message) {
     switch (message.name) {
       case "AboutNewTabVisible":
