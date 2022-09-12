@@ -11743,9 +11743,8 @@ void CodeGenerator::visitStoreElementHoleV(LStoreElementHoleV* lir) {
 
 void CodeGenerator::visitOutOfLineStoreElementHole(
     OutOfLineStoreElementHole* ool) {
-  Register object, elements;
+  Register object, elements, index;
   LInstruction* ins = ool->ins();
-  const LAllocation* index;
   mozilla::Maybe<ConstantOrRegister> value;
   Register spectreTemp;
 
@@ -11753,7 +11752,7 @@ void CodeGenerator::visitOutOfLineStoreElementHole(
     LStoreElementHoleV* store = ins->toStoreElementHoleV();
     object = ToRegister(store->object());
     elements = ToRegister(store->elements());
-    index = store->index();
+    index = ToRegister(store->index());
     value.emplace(
         TypedOrValueRegister(ToValue(store, LStoreElementHoleV::ValueIndex)));
     spectreTemp = ToTempRegisterOrInvalid(store->temp0());
@@ -11761,7 +11760,7 @@ void CodeGenerator::visitOutOfLineStoreElementHole(
     LStoreElementHoleT* store = ins->toStoreElementHoleT();
     object = ToRegister(store->object());
     elements = ToRegister(store->elements());
-    index = store->index();
+    index = ToRegister(store->index());
     if (store->value()->isConstant()) {
       value.emplace(
           ConstantOrRegister(store->value()->toConstant()->toJSValue()));
@@ -11773,8 +11772,6 @@ void CodeGenerator::visitOutOfLineStoreElementHole(
     spectreTemp = ToTempRegisterOrInvalid(store->temp0());
   }
 
-  Register indexReg = ToRegister(index);
-
   // If index == initializedLength, try to bump the initialized length inline.
   // If index > initializedLength, call a stub. Note that this relies on the
   // condition flags sticking from the incoming branch.
@@ -11785,31 +11782,31 @@ void CodeGenerator::visitOutOfLineStoreElementHole(
     defined(JS_CODEGEN_LOONG64)
   // Had to reimplement for MIPS because there are no flags.
   Address initLength(elements, ObjectElements::offsetOfInitializedLength());
-  masm.branch32(Assembler::NotEqual, initLength, indexReg, &callStub);
+  masm.branch32(Assembler::NotEqual, initLength, index, &callStub);
 #else
   masm.j(Assembler::NotEqual, &callStub);
 #endif
 
   // Check array capacity.
   masm.spectreBoundsCheck32(
-      indexReg, Address(elements, ObjectElements::offsetOfCapacity()),
-      spectreTemp, &callStub);
+      index, Address(elements, ObjectElements::offsetOfCapacity()), spectreTemp,
+      &callStub);
 
   // Update initialized length. The capacity guard above ensures this won't
   // overflow, due to MAX_DENSE_ELEMENTS_COUNT.
-  masm.add32(Imm32(1), indexReg);
-  masm.store32(indexReg,
+  masm.add32(Imm32(1), index);
+  masm.store32(index,
                Address(elements, ObjectElements::offsetOfInitializedLength()));
 
   // Update length if length < initializedLength.
   Label dontUpdate;
   masm.branch32(Assembler::AboveOrEqual,
-                Address(elements, ObjectElements::offsetOfLength()), indexReg,
+                Address(elements, ObjectElements::offsetOfLength()), index,
                 &dontUpdate);
-  masm.store32(indexReg, Address(elements, ObjectElements::offsetOfLength()));
+  masm.store32(index, Address(elements, ObjectElements::offsetOfLength()));
   masm.bind(&dontUpdate);
 
-  masm.sub32(Imm32(1), indexReg);
+  masm.sub32(Imm32(1), index);
 
   // Jump to the inline path where we will store the value.
   masm.jump(ool->rejoinStore());
@@ -11819,11 +11816,7 @@ void CodeGenerator::visitOutOfLineStoreElementHole(
 
   pushArg(Imm32(ool->strict()));
   pushArg(value.ref());
-  if (index->isConstant()) {
-    pushArg(Imm32(ToInt32(index)));
-  } else {
-    pushArg(ToRegister(index));
-  }
+  pushArg(index);
   pushArg(object);
 
   using Fn = bool (*)(JSContext*, Handle<NativeObject*>, int32_t, HandleValue,
