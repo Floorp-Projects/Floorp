@@ -7,8 +7,6 @@
 #ifndef vm_PropMap_h
 #define vm_PropMap_h
 
-#include "mozilla/Array.h"
-
 #include "gc/Barrier.h"
 #include "gc/Cell.h"
 #include "js/TypeDecls.h"
@@ -451,9 +449,20 @@ class PropMap : public gc::TenuredCellWithFlags {
   // Cell::flags() method.
   uintptr_t flags() const { return headerFlagsField(); }
 
-  mozilla::Array<GCPtr<PropertyKey>, Capacity> keys_;
+ private:
+  GCPtr<PropertyKey> keys_[Capacity];
 
+ protected:
   PropMap() = default;
+
+  void initKey(uint32_t index, PropertyKey key) {
+    MOZ_ASSERT(index < Capacity);
+    keys_[index].init(key);
+  }
+  void setKey(uint32_t index, PropertyKey key) {
+    MOZ_ASSERT(index < Capacity);
+    keys_[index] = key;
+  }
 
  public:
   bool isCompact() const { return flags() & IsCompactFlag; }
@@ -480,8 +489,14 @@ class PropMap : public gc::TenuredCellWithFlags {
   inline DictionaryPropMap* asDictionary();
   inline const DictionaryPropMap* asDictionary() const;
 
-  bool hasKey(uint32_t index) const { return !keys_[index].isVoid(); }
-  PropertyKey getKey(uint32_t index) const { return keys_[index]; }
+  bool hasKey(uint32_t index) const {
+    MOZ_ASSERT(index < Capacity);
+    return !keys_[index].isVoid();
+  }
+  PropertyKey getKey(uint32_t index) const {
+    MOZ_ASSERT(index < Capacity);
+    return keys_[index];
+  }
 
   uint32_t approximateEntryCount() const;
 
@@ -701,7 +716,7 @@ class SharedPropMap : public PropMap {
 };
 
 class CompactPropMap final : public SharedPropMap {
-  mozilla::Array<CompactPropertyInfo, Capacity> propInfos_;
+  CompactPropertyInfo propInfos_[Capacity];
   TreeData treeData_;
 
   friend class PropMap;
@@ -717,14 +732,14 @@ class CompactPropMap final : public SharedPropMap {
   CompactPropMap(JS::Handle<CompactPropMap*> orig, uint32_t length) {
     setHeaderFlagBits(IsCompactFlag);
     for (uint32_t i = 0; i < length; i++) {
-      keys_[i].init(orig->keys_[i]);
+      initKey(i, orig->getKey(i));
       propInfos_[i] = orig->propInfos_[i];
     }
   }
 
   void initProperty(uint32_t index, PropertyKey key, PropertyInfo prop) {
     MOZ_ASSERT(!hasKey(index));
-    keys_[index].init(key);
+    initKey(index, key);
     propInfos_[index] = CompactPropertyInfo(prop);
   }
 
@@ -756,7 +771,7 @@ class LinkedPropMap final : public PropMap {
   struct Data {
     GCPtr<PropMap*> previous;
     PropMapTable* table = nullptr;
-    mozilla::Array<PropertyInfo, Capacity> propInfos;
+    PropertyInfo propInfos[Capacity];
 
     explicit Data(PropMap* prev) : previous(prev) {}
   };
@@ -847,7 +862,7 @@ class NormalPropMap final : public SharedPropMap {
 
   void initProperty(uint32_t index, PropertyKey key, PropertyInfo prop) {
     MOZ_ASSERT(!hasKey(index));
-    keys_[index].init(key);
+    initKey(index, key);
     linkedData_.propInfos[index] = prop;
   }
 
@@ -913,7 +928,7 @@ class DictionaryPropMap final : public PropMap {
 
   void initProperty(uint32_t index, PropertyKey key, PropertyInfo prop) {
     MOZ_ASSERT(!hasKey(index));
-    keys_[index].init(key);
+    initKey(index, key);
     linkedData_.propInfos[index] = prop;
   }
 
@@ -927,7 +942,7 @@ class DictionaryPropMap final : public PropMap {
     clearHeaderFlagBits(HasPrevFlag);
   }
 
-  void clearProperty(uint32_t index) { keys_[index] = PropertyKey::Void(); }
+  void clearProperty(uint32_t index) { setKey(index, PropertyKey::Void()); }
 
   static void skipTrailingHoles(MutableHandle<DictionaryPropMap*> map,
                                 uint32_t* mapLength);
