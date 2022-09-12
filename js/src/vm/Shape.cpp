@@ -687,6 +687,28 @@ void NativeObject::maybeFreeDictionaryPropSlots(JSContext* cx,
   map->setFreeList(SHAPE_INVALID_SLOT);
 }
 
+void NativeObject::setShapeAndRemoveLastSlot(JSContext* cx, Shape* newShape,
+                                             uint32_t slot) {
+  MOZ_ASSERT(!inDictionaryMode());
+  MOZ_ASSERT(!newShape->isDictionary());
+  MOZ_ASSERT(newShape->slotSpan() == slot);
+
+  uint32_t numFixed = newShape->numFixedSlots();
+  if (slot < numFixed) {
+    setFixedSlot(slot, UndefinedValue());
+  } else {
+    setDynamicSlot(numFixed, slot, UndefinedValue());
+    uint32_t oldCapacity = numDynamicSlots();
+    uint32_t newCapacity = calculateDynamicSlots(numFixed, slot, getClass());
+    MOZ_ASSERT(newCapacity <= oldCapacity);
+    if (newCapacity < oldCapacity) {
+      shrinkSlots(cx, oldCapacity, newCapacity);
+    }
+  }
+
+  setShape(newShape);
+}
+
 /* static */
 bool NativeObject::removeProperty(JSContext* cx, Handle<NativeObject*> obj,
                                   HandleId id) {
@@ -750,10 +772,17 @@ bool NativeObject::removeProperty(JSContext* cx, Handle<NativeObject*> obj,
         return false;
       }
 
-      if (prop.hasSlot()) {
+      if (MOZ_LIKELY(prop.hasSlot())) {
+        if (MOZ_LIKELY(prop.slot() == newShape->slotSpan())) {
+          obj->setShapeAndRemoveLastSlot(cx, newShape, prop.slot());
+          return true;
+        }
+        // Uncommon case: the property is stored in a reserved slot.
+        // See NativeObject::addPropertyInReservedSlot.
+        MOZ_ASSERT(prop.slot() < JSCLASS_RESERVED_SLOTS(obj->getClass()));
         obj->setSlot(prop.slot(), UndefinedValue());
       }
-      MOZ_ALWAYS_TRUE(obj->setShapeAndUpdateSlots(cx, newShape));
+      obj->setShape(newShape);
       return true;
     }
 
