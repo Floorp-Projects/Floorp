@@ -1294,7 +1294,7 @@ JSString* StringReplace(JSContext* cx, HandleString string,
 }
 
 bool SetDenseElement(JSContext* cx, Handle<NativeObject*> obj, int32_t index,
-                     HandleValue value, bool strict) {
+                     HandleValue value) {
   // This function is called from Ion code for StoreElementHole's OOL path.
   // In this case we know the object is native, extensible, and has no indexed
   // properties.
