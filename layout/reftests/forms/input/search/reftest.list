@@ -3,3 +3,6 @@
 != 3.html ref.html
 pref(layout.forms.input-type-search.enabled,true) == search-basic.html ref.html
 pref(layout.forms.input-type-search.enabled,true) != search-with-value.html text-with-value.html
+
+== appearance-textfield.html text.html
+== appearance-textfield-dynamic.html appearance-textfield.html
