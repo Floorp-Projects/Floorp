@@ -170,9 +170,13 @@ nsresult GetDefaultMemoryReportFile(nsIFile** aFile) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-void DeleteMinidumpFilesForID(const nsAString& id) {}
+void DeleteMinidumpFilesForID(const nsAString& aId,
+                              const Maybe<nsString>& aAdditionalMinidump) {}
 
-bool GetMinidumpForID(const nsAString& id, nsIFile** minidump) { return false; }
+bool GetMinidumpForID(const nsAString& id, nsIFile** minidump,
+                      const Maybe<nsString>& aAdditionalMinidump) {
+  return false;
+}
 
 bool GetIDFromMinidump(nsIFile* minidump, nsAString& id) { return false; }
 
