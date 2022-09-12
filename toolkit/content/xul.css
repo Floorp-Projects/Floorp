@@ -419,8 +419,6 @@ treechildren {
 
 tree {
   -moz-box-orient: vertical;
-  width: 10px;
-  height: 10px;
 }
 
 tree[hidecolumnpicker="true"] treecolpicker {
