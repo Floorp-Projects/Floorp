@@ -23,7 +23,7 @@ object Versions {
         const val palette = "1.0.0"
         const val preferences = "1.1.1"
         const val lifecycle = "2.2.0"
-        const val splash_screen = "1.0.0-beta01"
+        const val splash_screen = "1.0.0"
     }
 
     object Google {
