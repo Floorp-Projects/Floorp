@@ -1,0 +1,56 @@
+<!DOCTYPE HTML>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, minimum-scale=1.0">
+<title>Tests scroll anchoring interaction with smooth visual scrolling with set timeout.</title>
+<script src="apz_test_utils.js"></script>
+<script src="apz_test_native_event_utils.js"></script>
+<script src="/tests/SimpleTest/paint_listener.js"></script>
+<style>
+  body { margin: 0 }
+  #target > div {
+    height: 500px;
+  }
+</style>
+<div id="target"></div>
+<div class="spacer" style="height: 200vh"></div>
+<script>
+  const utils = SpecialPowers.DOMWindowUtils;
+  const targetElement = document.getElementById("target");
+
+  async function test() {
+    const destY = window.scrollMaxY;
+    ok(destY > 0, "Should have some scroll range");
+
+    // Scroll to the bottom of the page.
+    window.scrollTo(0, destY);
+
+    is(window.scrollY, window.scrollMaxY, "Should be at the bottom");
+
+    // Register a TransformEnd observer so we can tell when the smooth scroll
+    // animation stops.
+    let transformEndPromise = promiseTransformEnd();
+
+    // Trigger smooth scrolling, and insert an element which takes space into
+    // the DOM in a 20ms setTimeout callback.
+    //
+    // It is important that it actually takes space so as to trigger scroll
+    // anchoring.
+    targetElement.scrollIntoView({ behavior: "smooth" });
+    setTimeout(() => {
+      targetElement.appendChild(document.createElement("div"));
+    }, 20);
+
+    // Wait for the TransformEnd.
+    await transformEndPromise;
+
+    // Give scroll offsets a chance to sync.
+    await promiseApzFlushedRepaints();
+
+    // Check that the async smooth scroll finished.
+    is(window.scrollY, 0, "Should've completed the smooth scroll without getting interrupted by scroll anchoring");
+  }
+
+  waitUntilApzStable()
+  .then(test)
+  .then(subtestDone, subtestFailed);
+</script>

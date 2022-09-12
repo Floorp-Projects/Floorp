@@ -1110,7 +1110,7 @@ class nsHTMLScrollFrame : public nsContainerFrame,
       mozilla::ScrollTriggeredByScript aTriggeredByScript =
           mozilla::ScrollTriggeredByScript::No) final {
     mHelper.ScrollTo(aScrollPosition, aMode, ScrollOrigin::Other, aRange,
-                     aSnapFlags);
+                     aSnapFlags, aTriggeredByScript);
   }
   /**
    * @note This method might destroy the frame, pres shell and other objects.
@@ -1599,7 +1599,7 @@ class nsXULScrollFrame final : public nsBoxFrame,
       mozilla::ScrollTriggeredByScript aTriggeredByScript =
           mozilla::ScrollTriggeredByScript::No) final {
     mHelper.ScrollTo(aScrollPosition, aMode, ScrollOrigin::Other, aRange,
-                     aSnapFlags);
+                     aSnapFlags, aTriggeredByScript);
   }
   /**
    * @note This method might destroy the frame, pres shell and other objects.

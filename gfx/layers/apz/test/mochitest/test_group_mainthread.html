@@ -10,7 +10,19 @@
 
 var subtests = [
   {"file": "helper_scrollby_bug1531796.html"},
+  // This test checks that scroll anchoring isn't invoked just after an async
+  // scroll operation (scrolIntoView) was triggered, in other words, the async
+  // operation happened on the main-thread but it hasn't reached to APZ yet, so
+  // we don't need to set layout.css.scroll-behavior.spring-constant explicitly
+  // since the async scroll animation doesn't need to keep running there.
   {"file": "helper_scroll_anchoring_smooth_scroll.html"},
+  {"file": "helper_scroll_anchoring_smooth_scroll_with_set_timeout.html", prefs: [
+    // Unlike helper_scroll_anchoring_smooth_scroll.html, this test checks that
+    // scroll anchoring __is__ invoked when an async scroll animation triggered
+    // by mouse wheel is running so the animation needs to keep running for a
+    // while.
+    ["layout.css.scroll-behavior.spring-constant", 10]
+  ]},
   {"file": "helper_visualscroll_clamp_restore.html", prefs: [
     ["apz.test.logging_enabled", true],
   ]},
