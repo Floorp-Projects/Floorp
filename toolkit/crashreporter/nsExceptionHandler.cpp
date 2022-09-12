@@ -3042,24 +3042,38 @@ static bool GetMinidumpLimboDir(nsIFile** dir) {
   }
 }
 
-void DeleteMinidumpFilesForID(const nsAString& id) {
+void DeleteMinidumpFilesForID(const nsAString& aId,
+                              const Maybe<nsString>& aAdditionalMinidump) {
   nsCOMPtr<nsIFile> minidumpFile;
-  if (GetMinidumpForID(id, getter_AddRefs(minidumpFile))) {
+  if (GetMinidumpForID(aId, getter_AddRefs(minidumpFile))) {
     minidumpFile->Remove(false);
   }
 
   nsCOMPtr<nsIFile> extraFile;
-  if (GetExtraFileForID(id, getter_AddRefs(extraFile))) {
+  if (GetExtraFileForID(aId, getter_AddRefs(extraFile))) {
     extraFile->Remove(false);
+  }
+
+  if (aAdditionalMinidump && GetMinidumpForID(aId, getter_AddRefs(minidumpFile),
+                                              aAdditionalMinidump)) {
+    minidumpFile->Remove(false);
   }
 }
 
-bool GetMinidumpForID(const nsAString& id, nsIFile** minidump) {
+bool GetMinidumpForID(const nsAString& id, nsIFile** minidump,
+                      const Maybe<nsString>& aAdditionalMinidump) {
   if (!GetMinidumpLimboDir(minidump)) {
     return false;
   }
 
-  (*minidump)->Append(id + u".dmp"_ns);
+  (*minidump)->Append(id);
+
+  if (aAdditionalMinidump) {
+    (*minidump)->Append(u"-"_ns);
+    (*minidump)->Append(*aAdditionalMinidump);
+  }
+
+  (*minidump)->Append(u".dmp"_ns);
 
   bool exists;
   if (NS_FAILED((*minidump)->Exists(&exists)) || !exists) {

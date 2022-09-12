@@ -46,7 +46,10 @@ class CrashReporterHost {
   // If a minidump was already captured (e.g. via the hang reporter), this
   // finalizes the existing report by attaching metadata, writing out the
   // .extra file and notifying the crash service.
-  bool FinalizeCrashReport();
+  void FinalizeCrashReport();
+
+  // Delete any crash report we might have generated.
+  void DeleteCrashReport();
 
   // Generate a paired minidump. This does not take the crash report, as
   // GenerateCrashReport does. After this, FinalizeCrashReport may be called.
