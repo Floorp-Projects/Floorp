@@ -1,0 +1,6077 @@
+[
+  {
+    "consts": [
+      {
+        "name": "ePrompt",
+        "type": {
+          "tag": "TD_UINT8"
+        },
+        "value": 0
+      },
+      {
+        "name": "eDontPromptAndDontUnload",
+        "type": {
+          "tag": "TD_UINT8"
+        },
+        "value": 1
+      },
+      {
+        "name": "eDontPromptAndUnload",
+        "type": {
+          "tag": "TD_UINT8"
+        },
+        "value": 2
+      },
+      {
+        "name": "eAllowNavigation",
+        "type": {
+          "tag": "TD_UINT8"
+        },
+        "value": 0
+      },
+      {
+        "name": "eRequestBlockNavigation",
+        "type": {
+          "tag": "TD_UINT8"
+        },
+        "value": 1
+      },
+      {
+        "name": "eDelayResize",
+        "type": {
+          "tag": "TD_UINT32"
+        },
+        "value": 1
+      }
+    ],
+    "flags": [
+      "builtinclass"
+    ],
+    "methods": [
+      {
+        "flags": [
+          "hidden"
+        ],
+        "name": "init",
+        "params": [
+          {
+            "flags": [
+              "in"
+            ],
+            "type": {
+              "tag": "TD_VOID"
+            }
+          },
+          {
+            "flags": [
+              "in"
+            ],
+            "type": {
+              "tag": "TD_VOID"
+            }
+          },
+          {
+            "flags": [
+              "in"
+            ],
+            "type": {
+              "tag": "TD_VOID"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [
+          "getter",
+          "hasretval"
+        ],
+        "name": "container",
+        "params": [
+          {
+            "flags": [
+              "out"
+            ],
+            "type": {
+              "name": "nsIDocShell",
+              "tag": "TD_INTERFACE_TYPE"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [
+          "setter"
+        ],
+        "name": "container",
+        "params": [
+          {
+            "flags": [
+              "in"
+            ],
+            "type": {
+              "name": "nsIDocShell",
+              "tag": "TD_INTERFACE_TYPE"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [
+          "hidden"
+        ],
+        "name": "loadStart",
+        "params": [
+          {
+            "flags": [
+              "in"
+            ],
+            "type": {
+              "headerFile": "mozilla/dom/Document.h",
+              "name": "Document",
+              "native": "mozilla::dom::Document",
+              "tag": "TD_DOMOBJECT"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [],
+        "name": "loadComplete",
+        "params": [
+          {
+            "flags": [
+              "in"
+            ],
+            "type": {
+              "tag": "TD_UINT32"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [
+          "getter",
+          "hidden",
+          "hasretval"
+        ],
+        "name": "loadCompleted",
+        "params": []
+      },
+      {
+        "flags": [
+          "getter",
+          "hidden",
+          "hasretval"
+        ],
+        "name": "isStopped",
+        "params": []
+      },
+      {
+        "flags": [
+          "hasretval"
+        ],
+        "name": "permitUnload",
+        "params": [
+          {
+            "flags": [
+              "in",
+              "optional"
+            ],
+            "type": {
+              "tag": "TD_UINT8"
+            }
+          },
+          {
+            "flags": [
+              "out"
+            ],
+            "type": {
+              "tag": "TD_BOOL"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [
+          "getter",
+          "hasretval"
+        ],
+        "name": "inPermitUnload",
+        "params": [
+          {
+            "flags": [
+              "out"
+            ],
+            "type": {
+              "tag": "TD_BOOL"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [
+          "hidden"
+        ],
+        "name": "dispatchBeforeUnload",
+        "params": []
+      },
+      {
+        "flags": [
+          "getter",
+          "hasretval"
+        ],
+        "name": "beforeUnloadFiring",
+        "params": [
+          {
+            "flags": [
+              "out"
+            ],
+            "type": {
+              "tag": "TD_BOOL"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [],
+        "name": "pageHide",
+        "params": [
+          {
+            "flags": [
+              "in"
+            ],
+            "type": {
+              "tag": "TD_BOOL"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [],
+        "name": "close",
+        "params": [
+          {
+            "flags": [
+              "in"
+            ],
+            "type": {
+              "name": "nsISHEntry",
+              "tag": "TD_INTERFACE_TYPE"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [],
+        "name": "destroy",
+        "params": []
+      },
+      {
+        "flags": [],
+        "name": "stop",
+        "params": []
+      },
+      {
+        "flags": [
+          "getter",
+          "hasretval"
+        ],
+        "name": "DOMDocument",
+        "params": [
+          {
+            "flags": [
+              "out"
+            ],
+            "type": {
+              "headerFile": "mozilla/dom/Document.h",
+              "name": "Document",
+              "native": "mozilla::dom::Document",
+              "tag": "TD_DOMOBJECT"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [
+          "hidden"
+        ],
+        "name": "getDocument",
+        "params": []
+      },
+      {
+        "flags": [
+          "hidden"
+        ],
+        "name": "setDocument",
+        "params": [
+          {
+            "flags": [
+              "in"
+            ],
+            "type": {
+              "headerFile": "mozilla/dom/Document.h",
+              "name": "Document",
+              "native": "mozilla::dom::Document",
+              "tag": "TD_DOMOBJECT"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [
+          "hidden"
+        ],
+        "name": "getBounds",
+        "params": [
+          {
+            "flags": [
+              "in"
+            ],
+            "type": {
+              "tag": "TD_VOID"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [
+          "hidden"
+        ],
+        "name": "setBounds",
+        "params": [
+          {
+            "flags": [
+              "in"
+            ],
+            "type": {
+              "tag": "TD_VOID"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [
+          "hidden"
+        ],
+        "name": "setBoundsWithFlags",
+        "params": [
+          {
+            "flags": [
+              "in"
+            ],
+            "type": {
+              "tag": "TD_VOID"
+            }
+          },
+          {
+            "flags": [
+              "in"
+            ],
+            "type": {
+              "tag": "TD_UINT32"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [
+          "getter",
+          "hidden",
+          "hasretval"
+        ],
+        "name": "previousViewer",
+        "params": []
+      },
+      {
+        "flags": [
+          "setter",
+          "hidden"
+        ],
+        "name": "previousViewer",
+        "params": [
+          {
+            "flags": [
+              "in"
+            ],
+            "type": {
+              "name": "nsIContentViewer",
+              "tag": "TD_INTERFACE_TYPE"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [],
+        "name": "move",
+        "params": [
+          {
+            "flags": [
+              "in"
+            ],
+            "type": {
+              "tag": "TD_INT32"
+            }
+          },
+          {
+            "flags": [
+              "in"
+            ],
+            "type": {
+              "tag": "TD_INT32"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [],
+        "name": "show",
+        "params": []
+      },
+      {
+        "flags": [],
+        "name": "hide",
+        "params": []
+      },
+      {
+        "flags": [
+          "getter",
+          "hasretval"
+        ],
+        "name": "sticky",
+        "params": [
+          {
+            "flags": [
+              "out"
+            ],
+            "type": {
+              "tag": "TD_BOOL"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [
+          "setter"
+        ],
+        "name": "sticky",
+        "params": [
+          {
+            "flags": [
+              "in"
+            ],
+            "type": {
+              "tag": "TD_BOOL"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [],
+        "name": "open",
+        "params": [
+          {
+            "flags": [
+              "in"
+            ],
+            "type": {
+              "name": "nsISupports",
+              "tag": "TD_INTERFACE_TYPE"
+            }
+          },
+          {
+            "flags": [
+              "in"
+            ],
+            "type": {
+              "name": "nsISHEntry",
+              "tag": "TD_INTERFACE_TYPE"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [],
+        "name": "clearHistoryEntry",
+        "params": []
+      },
+      {
+        "flags": [],
+        "name": "setPageModeForTesting",
+        "params": [
+          {
+            "flags": [
+              "in"
+            ],
+            "type": {
+              "tag": "TD_BOOL"
+            }
+          },
+          {
+            "flags": [
+              "in"
+            ],
+            "type": {
+              "name": "nsIPrintSettings",
+              "tag": "TD_INTERFACE_TYPE"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [],
+        "name": "setPrintSettingsForSubdocument",
+        "params": [
+          {
+            "flags": [
+              "in"
+            ],
+            "type": {
+              "name": "nsIPrintSettings",
+              "tag": "TD_INTERFACE_TYPE"
+            }
+          },
+          {
+            "flags": [
+              "in"
+            ],
+            "type": {
+              "tag": "TD_VOID"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [
+          "getter",
+          "hasretval"
+        ],
+        "name": "historyEntry",
+        "params": [
+          {
+            "flags": [
+              "out"
+            ],
+            "type": {
+              "name": "nsISHEntry",
+              "tag": "TD_INTERFACE_TYPE"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [
+          "getter",
+          "hasretval"
+        ],
+        "name": "isTabModalPromptAllowed",
+        "params": [
+          {
+            "flags": [
+              "out"
+            ],
+            "type": {
+              "tag": "TD_BOOL"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [
+          "getter",
+          "hasretval"
+        ],
+        "name": "isHidden",
+        "params": [
+          {
+            "flags": [
+              "out"
+            ],
+            "type": {
+              "tag": "TD_BOOL"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [
+          "setter"
+        ],
+        "name": "isHidden",
+        "params": [
+          {
+            "flags": [
+              "in"
+            ],
+            "type": {
+              "tag": "TD_BOOL"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [
+          "getter",
+          "hidden",
+          "hasretval"
+        ],
+        "name": "presShell",
+        "params": []
+      },
+      {
+        "flags": [
+          "getter",
+          "hidden",
+          "hasretval"
+        ],
+        "name": "presContext",
+        "params": []
+      },
+      {
+        "flags": [
+          "hidden"
+        ],
+        "name": "setDocumentInternal",
+        "params": [
+          {
+            "flags": [
+              "in"
+            ],
+            "type": {
+              "headerFile": "mozilla/dom/Document.h",
+              "name": "Document",
+              "native": "mozilla::dom::Document",
+              "tag": "TD_DOMOBJECT"
+            }
+          },
+          {
+            "flags": [
+              "in"
+            ],
+            "type": {
+              "tag": "TD_BOOL"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [
+          "hidden"
+        ],
+        "name": "findContainerView",
+        "params": []
+      },
+      {
+        "flags": [
+          "hidden"
+        ],
+        "name": "setNavigationTiming",
+        "params": [
+          {
+            "flags": [
+              "in"
+            ],
+            "type": {
+              "tag": "TD_VOID"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [
+          "getter",
+          "hasretval"
+        ],
+        "name": "deviceFullZoomForTest",
+        "params": [
+          {
+            "flags": [
+              "out"
+            ],
+            "type": {
+              "tag": "TD_FLOAT"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [
+          "getter",
+          "hasretval"
+        ],
+        "name": "authorStyleDisabled",
+        "params": [
+          {
+            "flags": [
+              "out"
+            ],
+            "type": {
+              "tag": "TD_BOOL"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [
+          "setter"
+        ],
+        "name": "authorStyleDisabled",
+        "params": [
+          {
+            "flags": [
+              "in"
+            ],
+            "type": {
+              "tag": "TD_BOOL"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [],
+        "name": "getContentSize",
+        "params": [
+          {
+            "flags": [
+              "out"
+            ],
+            "type": {
+              "tag": "TD_INT32"
+            }
+          },
+          {
+            "flags": [
+              "out"
+            ],
+            "type": {
+              "tag": "TD_INT32"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [],
+        "name": "getContentSizeConstrained",
+        "params": [
+          {
+            "flags": [
+              "in"
+            ],
+            "type": {
+              "tag": "TD_INT32"
+            }
+          },
+          {
+            "flags": [
+              "in"
+            ],
+            "type": {
+              "tag": "TD_INT32"
+            }
+          },
+          {
+            "flags": [
+              "out"
+            ],
+            "type": {
+              "tag": "TD_INT32"
+            }
+          },
+          {
+            "flags": [
+              "out"
+            ],
+            "type": {
+              "tag": "TD_INT32"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [
+          "hidden"
+        ],
+        "name": "getReloadEncodingAndSource",
+        "params": [
+          {
+            "flags": [
+              "out"
+            ],
+            "type": {
+              "tag": "TD_INT32"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [
+          "hidden"
+        ],
+        "name": "setReloadEncodingAndSource",
+        "params": [
+          {
+            "flags": [
+              "in"
+            ],
+            "type": {
+              "tag": "TD_VOID"
+            }
+          },
+          {
+            "flags": [
+              "in"
+            ],
+            "type": {
+              "tag": "TD_INT32"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [
+          "hidden"
+        ],
+        "name": "forgetReloadEncoding",
+        "params": []
+      }
+    ],
+    "name": "nsIContentViewer",
+    "parent": "nsISupports",
+    "uuid": "2da17016-7851-4a45-a7a8-00b360e01595"
+  },
+  {
+    "consts": [
+      {
+        "name": "COPY_IMAGE_TEXT",
+        "type": {
+          "tag": "TD_INT32"
+        },
+        "value": 1
+      },
+      {
+        "name": "COPY_IMAGE_HTML",
+        "type": {
+          "tag": "TD_INT32"
+        },
+        "value": 2
+      },
+      {
+        "name": "COPY_IMAGE_DATA",
+        "type": {
+          "tag": "TD_INT32"
+        },
+        "value": 4
+      },
+      {
+        "name": "COPY_IMAGE_ALL",
+        "type": {
+          "tag": "TD_INT32"
+        },
+        "value": -1
+      }
+    ],
+    "flags": [],
+    "methods": [
+      {
+        "flags": [],
+        "name": "clearSelection",
+        "params": []
+      },
+      {
+        "flags": [],
+        "name": "selectAll",
+        "params": []
+      },
+      {
+        "flags": [],
+        "name": "copySelection",
+        "params": []
+      },
+      {
+        "flags": [
+          "getter",
+          "hasretval"
+        ],
+        "name": "copyable",
+        "params": [
+          {
+            "flags": [
+              "out"
+            ],
+            "type": {
+              "tag": "TD_BOOL"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [],
+        "name": "copyLinkLocation",
+        "params": []
+      },
+      {
+        "flags": [
+          "getter",
+          "hasretval"
+        ],
+        "name": "inLink",
+        "params": [
+          {
+            "flags": [
+              "out"
+            ],
+            "type": {
+              "tag": "TD_BOOL"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [],
+        "name": "copyImage",
+        "params": [
+          {
+            "flags": [
+              "in"
+            ],
+            "type": {
+              "tag": "TD_INT32"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [
+          "getter",
+          "hasretval"
+        ],
+        "name": "inImage",
+        "params": [
+          {
+            "flags": [
+              "out"
+            ],
+            "type": {
+              "tag": "TD_BOOL"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [
+          "hasretval"
+        ],
+        "name": "getContents",
+        "params": [
+          {
+            "flags": [
+              "in"
+            ],
+            "type": {
+              "tag": "TD_PSTRING"
+            }
+          },
+          {
+            "flags": [
+              "in"
+            ],
+            "type": {
+              "tag": "TD_BOOL"
+            }
+          },
+          {
+            "flags": [
+              "out"
+            ],
+            "type": {
+              "tag": "TD_ASTRING"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [
+          "getter",
+          "hasretval"
+        ],
+        "name": "canGetContents",
+        "params": [
+          {
+            "flags": [
+              "out"
+            ],
+            "type": {
+              "tag": "TD_BOOL"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [],
+        "name": "setCommandNode",
+        "params": [
+          {
+            "flags": [
+              "in"
+            ],
+            "type": {
+              "headerFile": "nsIContent.h",
+              "name": "Node",
+              "native": "nsINode",
+              "tag": "TD_DOMOBJECT"
+            }
+          }
+        ]
+      }
+    ],
+    "name": "nsIContentViewerEdit",
+    "parent": "nsISupports",
+    "uuid": "35be2d7e-f29b-48ec-bf7e-80a30a724de3"
+  },
+  {
+    "consts": [
+      {
+        "name": "ENUMERATE_FORWARDS",
+        "type": {
+          "tag": "TD_UINT8"
+        },
+        "value": 0
+      },
+      {
+        "name": "ENUMERATE_BACKWARDS",
+        "type": {
+          "tag": "TD_UINT8"
+        },
+        "value": 1
+      },
+      {
+        "name": "APP_TYPE_UNKNOWN",
+        "type": {
+          "tag": "TD_UINT8"
+        },
+        "value": 0
+      },
+      {
+        "name": "APP_TYPE_MAIL",
+        "type": {
+          "tag": "TD_UINT8"
+        },
+        "value": 1
+      },
+      {
+        "name": "APP_TYPE_EDITOR",
+        "type": {
+          "tag": "TD_UINT8"
+        },
+        "value": 2
+      },
+      {
+        "name": "BUSY_FLAGS_NONE",
+        "type": {
+          "tag": "TD_UINT8"
+        },
+        "value": 0
+      },
+      {
+        "name": "BUSY_FLAGS_BUSY",
+        "type": {
+          "tag": "TD_UINT8"
+        },
+        "value": 1
+      },
+      {
+        "name": "BUSY_FLAGS_BEFORE_PAGE_LOAD",
+        "type": {
+          "tag": "TD_UINT8"
+        },
+        "value": 2
+      },
+      {
+        "name": "BUSY_FLAGS_PAGE_LOADING",
+        "type": {
+          "tag": "TD_UINT8"
+        },
+        "value": 4
+      },
+      {
+        "name": "LOAD_CMD_NORMAL",
+        "type": {
+          "tag": "TD_UINT8"
+        },
+        "value": 1
+      },
+      {
+        "name": "LOAD_CMD_RELOAD",
+        "type": {
+          "tag": "TD_UINT8"
+        },
+        "value": 2
+      },
+      {
+        "name": "LOAD_CMD_HISTORY",
+        "type": {
+          "tag": "TD_UINT8"
+        },
+        "value": 4
+      },
+      {
+        "name": "LOAD_CMD_PUSHSTATE",
+        "type": {
+          "tag": "TD_UINT8"
+        },
+        "value": 8
+      },
+      {
+        "name": "META_VIEWPORT_OVERRIDE_DISABLED",
+        "type": {
+          "tag": "TD_UINT8"
+        },
+        "value": 0
+      },
+      {
+        "name": "META_VIEWPORT_OVERRIDE_ENABLED",
+        "type": {
+          "tag": "TD_UINT8"
+        },
+        "value": 1
+      },
+      {
+        "name": "META_VIEWPORT_OVERRIDE_NONE",
+        "type": {
+          "tag": "TD_UINT8"
+        },
+        "value": 2
+      }
+    ],
+    "flags": [
+      "builtinclass"
+    ],
+    "methods": [
+      {
+        "flags": [],
+        "name": "setCancelContentJSEpoch",
+        "params": [
+          {
+            "flags": [
+              "in"
+            ],
+            "type": {
+              "tag": "TD_INT32"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [
+          "hidden"
+        ],
+        "name": "loadURI",
+        "params": [
+          {
+            "flags": [
+              "in"
+            ],
+            "type": {
+              "tag": "TD_VOID"
+            }
+          },
+          {
+            "flags": [
+              "in"
+            ],
+            "type": {
+              "tag": "TD_BOOL"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [
+          "jscontext"
+        ],
+        "name": "addState",
+        "params": [
+          {
+            "flags": [
+              "in"
+            ],
+            "type": {
+              "tag": "TD_JSVAL"
+            }
+          },
+          {
+            "flags": [
+              "in"
+            ],
+            "type": {
+              "tag": "TD_ASTRING"
+            }
+          },
+          {
+            "flags": [
+              "in"
+            ],
+            "type": {
+              "tag": "TD_ASTRING"
+            }
+          },
+          {
+            "flags": [
+              "in"
+            ],
+            "type": {
+              "tag": "TD_BOOL"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [],
+        "name": "prepareForNewContentModel",
+        "params": []
+      },
+      {
+        "flags": [],
+        "name": "setCurrentURIForSessionStore",
+        "params": [
+          {
+            "flags": [
+              "in"
+            ],
+            "type": {
+              "name": "nsIURI",
+              "tag": "TD_INTERFACE_TYPE"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [
+          "hidden"
+        ],
+        "name": "firePageHideNotification",
+        "params": [
+          {
+            "flags": [
+              "in"
+            ],
+            "type": {
+              "tag": "TD_BOOL"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [
+          "getter",
+          "hidden",
+          "hasretval"
+        ],
+        "name": "presContext",
+        "params": []
+      },
+      {
+        "flags": [
+          "getter",
+          "hidden",
+          "hasretval"
+        ],
+        "name": "presShell",
+        "params": []
+      },
+      {
+        "flags": [
+          "getter",
+          "hidden",
+          "hasretval"
+        ],
+        "name": "eldestPresShell",
+        "params": []
+      },
+      {
+        "flags": [
+          "getter",
+          "hasretval"
+        ],
+        "name": "contentViewer",
+        "params": [
+          {
+            "flags": [
+              "out"
+            ],
+            "type": {
+              "name": "nsIContentViewer",
+              "tag": "TD_INTERFACE_TYPE"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [
+          "getter",
+          "hasretval"
+        ],
+        "name": "outerWindowID",
+        "params": [
+          {
+            "flags": [
+              "out"
+            ],
+            "type": {
+              "tag": "TD_UINT64"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [
+          "getter",
+          "hasretval"
+        ],
+        "name": "chromeEventHandler",
+        "params": [
+          {
+            "flags": [
+              "out"
+            ],
+            "type": {
+              "headerFile": "mozilla/dom/EventTarget.h",
+              "name": "EventTarget",
+              "native": "mozilla::dom::EventTarget",
+              "tag": "TD_DOMOBJECT"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [
+          "setter"
+        ],
+        "name": "chromeEventHandler",
+        "params": [
+          {
+            "flags": [
+              "in"
+            ],
+            "type": {
+              "headerFile": "mozilla/dom/EventTarget.h",
+              "name": "EventTarget",
+              "native": "mozilla::dom::EventTarget",
+              "tag": "TD_DOMOBJECT"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [
+          "getter",
+          "hasretval"
+        ],
+        "name": "customUserAgent",
+        "params": [
+          {
+            "flags": [
+              "out"
+            ],
+            "type": {
+              "tag": "TD_ASTRING"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [
+          "setter"
+        ],
+        "name": "customUserAgent",
+        "params": [
+          {
+            "flags": [
+              "in"
+            ],
+            "type": {
+              "tag": "TD_ASTRING"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [
+          "getter",
+          "hasretval"
+        ],
+        "name": "cssErrorReportingEnabled",
+        "params": [
+          {
+            "flags": [
+              "out"
+            ],
+            "type": {
+              "tag": "TD_BOOL"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [
+          "setter"
+        ],
+        "name": "cssErrorReportingEnabled",
+        "params": [
+          {
+            "flags": [
+              "in"
+            ],
+            "type": {
+              "tag": "TD_BOOL"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [
+          "getter",
+          "hasretval"
+        ],
+        "name": "allowPlugins",
+        "params": [
+          {
+            "flags": [
+              "out"
+            ],
+            "type": {
+              "tag": "TD_BOOL"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [
+          "setter"
+        ],
+        "name": "allowPlugins",
+        "params": [
+          {
+            "flags": [
+              "in"
+            ],
+            "type": {
+              "tag": "TD_BOOL"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [
+          "getter",
+          "hasretval"
+        ],
+        "name": "allowMetaRedirects",
+        "params": [
+          {
+            "flags": [
+              "out"
+            ],
+            "type": {
+              "tag": "TD_BOOL"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [
+          "setter"
+        ],
+        "name": "allowMetaRedirects",
+        "params": [
+          {
+            "flags": [
+              "in"
+            ],
+            "type": {
+              "tag": "TD_BOOL"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [
+          "getter",
+          "hasretval"
+        ],
+        "name": "allowSubframes",
+        "params": [
+          {
+            "flags": [
+              "out"
+            ],
+            "type": {
+              "tag": "TD_BOOL"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [
+          "setter"
+        ],
+        "name": "allowSubframes",
+        "params": [
+          {
+            "flags": [
+              "in"
+            ],
+            "type": {
+              "tag": "TD_BOOL"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [
+          "getter",
+          "hasretval"
+        ],
+        "name": "allowImages",
+        "params": [
+          {
+            "flags": [
+              "out"
+            ],
+            "type": {
+              "tag": "TD_BOOL"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [
+          "setter"
+        ],
+        "name": "allowImages",
+        "params": [
+          {
+            "flags": [
+              "in"
+            ],
+            "type": {
+              "tag": "TD_BOOL"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [
+          "getter",
+          "hasretval"
+        ],
+        "name": "allowMedia",
+        "params": [
+          {
+            "flags": [
+              "out"
+            ],
+            "type": {
+              "tag": "TD_BOOL"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [
+          "setter"
+        ],
+        "name": "allowMedia",
+        "params": [
+          {
+            "flags": [
+              "in"
+            ],
+            "type": {
+              "tag": "TD_BOOL"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [
+          "getter",
+          "hasretval"
+        ],
+        "name": "allowDNSPrefetch",
+        "params": [
+          {
+            "flags": [
+              "out"
+            ],
+            "type": {
+              "tag": "TD_BOOL"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [
+          "setter"
+        ],
+        "name": "allowDNSPrefetch",
+        "params": [
+          {
+            "flags": [
+              "in"
+            ],
+            "type": {
+              "tag": "TD_BOOL"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [
+          "getter",
+          "hasretval"
+        ],
+        "name": "allowWindowControl",
+        "params": [
+          {
+            "flags": [
+              "out"
+            ],
+            "type": {
+              "tag": "TD_BOOL"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [
+          "setter"
+        ],
+        "name": "allowWindowControl",
+        "params": [
+          {
+            "flags": [
+              "in"
+            ],
+            "type": {
+              "tag": "TD_BOOL"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [
+          "getter",
+          "hasretval"
+        ],
+        "name": "allowContentRetargeting",
+        "params": [
+          {
+            "flags": [
+              "out"
+            ],
+            "type": {
+              "tag": "TD_BOOL"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [
+          "setter"
+        ],
+        "name": "allowContentRetargeting",
+        "params": [
+          {
+            "flags": [
+              "in"
+            ],
+            "type": {
+              "tag": "TD_BOOL"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [
+          "getter",
+          "hasretval"
+        ],
+        "name": "allowContentRetargetingOnChildren",
+        "params": [
+          {
+            "flags": [
+              "out"
+            ],
+            "type": {
+              "tag": "TD_BOOL"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [
+          "setter"
+        ],
+        "name": "allowContentRetargetingOnChildren",
+        "params": [
+          {
+            "flags": [
+              "in"
+            ],
+            "type": {
+              "tag": "TD_BOOL"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [
+          "hasretval"
+        ],
+        "name": "getAllDocShellsInSubtree",
+        "params": [
+          {
+            "flags": [
+              "in"
+            ],
+            "type": {
+              "tag": "TD_INT32"
+            }
+          },
+          {
+            "flags": [
+              "in"
+            ],
+            "type": {
+              "tag": "TD_UINT8"
+            }
+          },
+          {
+            "flags": [
+              "out"
+            ],
+            "type": {
+              "element": {
+                "name": "nsIDocShell",
+                "tag": "TD_INTERFACE_TYPE"
+              },
+              "tag": "TD_ARRAY"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [
+          "getter",
+          "hasretval"
+        ],
+        "name": "appType",
+        "params": [
+          {
+            "flags": [
+              "out"
+            ],
+            "type": {
+              "tag": "TD_UINT8"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [
+          "setter"
+        ],
+        "name": "appType",
+        "params": [
+          {
+            "flags": [
+              "in"
+            ],
+            "type": {
+              "tag": "TD_UINT8"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [
+          "getter",
+          "hasretval"
+        ],
+        "name": "allowAuth",
+        "params": [
+          {
+            "flags": [
+              "out"
+            ],
+            "type": {
+              "tag": "TD_BOOL"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [
+          "setter"
+        ],
+        "name": "allowAuth",
+        "params": [
+          {
+            "flags": [
+              "in"
+            ],
+            "type": {
+              "tag": "TD_BOOL"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [
+          "getter",
+          "hasretval"
+        ],
+        "name": "zoom",
+        "params": [
+          {
+            "flags": [
+              "out"
+            ],
+            "type": {
+              "tag": "TD_FLOAT"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [
+          "setter"
+        ],
+        "name": "zoom",
+        "params": [
+          {
+            "flags": [
+              "in"
+            ],
+            "type": {
+              "tag": "TD_FLOAT"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [
+          "hasretval"
+        ],
+        "name": "tabToTreeOwner",
+        "params": [
+          {
+            "flags": [
+              "in"
+            ],
+            "type": {
+              "tag": "TD_BOOL"
+            }
+          },
+          {
+            "flags": [
+              "in"
+            ],
+            "type": {
+              "tag": "TD_BOOL"
+            }
+          },
+          {
+            "flags": [
+              "out"
+            ],
+            "type": {
+              "tag": "TD_BOOL"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [
+          "getter",
+          "hasretval"
+        ],
+        "name": "busyFlags",
+        "params": [
+          {
+            "flags": [
+              "out"
+            ],
+            "type": {
+              "tag": "TD_UINT8"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [
+          "getter",
+          "hasretval"
+        ],
+        "name": "loadType",
+        "params": [
+          {
+            "flags": [
+              "out"
+            ],
+            "type": {
+              "tag": "TD_UINT32"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [
+          "setter"
+        ],
+        "name": "loadType",
+        "params": [
+          {
+            "flags": [
+              "in"
+            ],
+            "type": {
+              "tag": "TD_UINT32"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [
+          "getter",
+          "hasretval"
+        ],
+        "name": "defaultLoadFlags",
+        "params": [
+          {
+            "flags": [
+              "out"
+            ],
+            "type": {
+              "tag": "TD_UINT32"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [
+          "setter"
+        ],
+        "name": "defaultLoadFlags",
+        "params": [
+          {
+            "flags": [
+              "in"
+            ],
+            "type": {
+              "tag": "TD_UINT32"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [
+          "hasretval"
+        ],
+        "name": "isBeingDestroyed",
+        "params": [
+          {
+            "flags": [
+              "out"
+            ],
+            "type": {
+              "tag": "TD_BOOL"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [
+          "getter",
+          "hasretval"
+        ],
+        "name": "isExecutingOnLoadHandler",
+        "params": [
+          {
+            "flags": [
+              "out"
+            ],
+            "type": {
+              "tag": "TD_BOOL"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [
+          "getter",
+          "hasretval"
+        ],
+        "name": "layoutHistoryState",
+        "params": [
+          {
+            "flags": [
+              "out"
+            ],
+            "type": {
+              "name": "nsILayoutHistoryState",
+              "tag": "TD_INTERFACE_TYPE"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [
+          "setter"
+        ],
+        "name": "layoutHistoryState",
+        "params": [
+          {
+            "flags": [
+              "in"
+            ],
+            "type": {
+              "name": "nsILayoutHistoryState",
+              "tag": "TD_INTERFACE_TYPE"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [
+          "getter",
+          "hasretval"
+        ],
+        "name": "loadURIDelegate",
+        "params": [
+          {
+            "flags": [
+              "out"
+            ],
+            "type": {
+              "name": "nsILoadURIDelegate",
+              "tag": "TD_INTERFACE_TYPE"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [],
+        "name": "suspendRefreshURIs",
+        "params": []
+      },
+      {
+        "flags": [],
+        "name": "resumeRefreshURIs",
+        "params": []
+      },
+      {
+        "flags": [],
+        "name": "beginRestore",
+        "params": [
+          {
+            "flags": [
+              "in"
+            ],
+            "type": {
+              "name": "nsIContentViewer",
+              "tag": "TD_INTERFACE_TYPE"
+            }
+          },
+          {
+            "flags": [
+              "in"
+            ],
+            "type": {
+              "tag": "TD_BOOL"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [],
+        "name": "finishRestore",
+        "params": []
+      },
+      {
+        "flags": [],
+        "name": "clearCachedUserAgent",
+        "params": []
+      },
+      {
+        "flags": [],
+        "name": "clearCachedPlatform",
+        "params": []
+      },
+      {
+        "flags": [
+          "getter",
+          "hasretval"
+        ],
+        "name": "restoringDocument",
+        "params": [
+          {
+            "flags": [
+              "out"
+            ],
+            "type": {
+              "tag": "TD_BOOL"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [
+          "getter",
+          "hasretval"
+        ],
+        "name": "useErrorPages",
+        "params": [
+          {
+            "flags": [
+              "out"
+            ],
+            "type": {
+              "tag": "TD_BOOL"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [
+          "setter"
+        ],
+        "name": "useErrorPages",
+        "params": [
+          {
+            "flags": [
+              "in"
+            ],
+            "type": {
+              "tag": "TD_BOOL"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [
+          "hasretval"
+        ],
+        "name": "displayLoadError",
+        "params": [
+          {
+            "flags": [
+              "in"
+            ],
+            "type": {
+              "tag": "TD_UINT32"
+            }
+          },
+          {
+            "flags": [
+              "in"
+            ],
+            "type": {
+              "name": "nsIURI",
+              "tag": "TD_INTERFACE_TYPE"
+            }
+          },
+          {
+            "flags": [
+              "in"
+            ],
+            "type": {
+              "tag": "TD_PWSTRING"
+            }
+          },
+          {
+            "flags": [
+              "in",
+              "optional"
+            ],
+            "type": {
+              "name": "nsIChannel",
+              "tag": "TD_INTERFACE_TYPE"
+            }
+          },
+          {
+            "flags": [
+              "out"
+            ],
+            "type": {
+              "tag": "TD_BOOL"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [
+          "getter",
+          "hasretval"
+        ],
+        "name": "failedChannel",
+        "params": [
+          {
+            "flags": [
+              "out"
+            ],
+            "type": {
+              "name": "nsIChannel",
+              "tag": "TD_INTERFACE_TYPE"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [
+          "getter",
+          "hasretval"
+        ],
+        "name": "previousEntryIndex",
+        "params": [
+          {
+            "flags": [
+              "out"
+            ],
+            "type": {
+              "tag": "TD_INT32"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [
+          "getter",
+          "hasretval"
+        ],
+        "name": "loadedEntryIndex",
+        "params": [
+          {
+            "flags": [
+              "out"
+            ],
+            "type": {
+              "tag": "TD_INT32"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [],
+        "name": "historyPurged",
+        "params": [
+          {
+            "flags": [
+              "in"
+            ],
+            "type": {
+              "tag": "TD_INT32"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [
+          "getter",
+          "hasretval"
+        ],
+        "name": "currentDocumentChannel",
+        "params": [
+          {
+            "flags": [
+              "out"
+            ],
+            "type": {
+              "name": "nsIChannel",
+              "tag": "TD_INTERFACE_TYPE"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [
+          "getter",
+          "hasretval"
+        ],
+        "name": "isInUnload",
+        "params": [
+          {
+            "flags": [
+              "out"
+            ],
+            "type": {
+              "tag": "TD_BOOL"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [
+          "hidden"
+        ],
+        "name": "DetachEditorFromWindow",
+        "params": []
+      },
+      {
+        "flags": [],
+        "name": "exitPrintPreview",
+        "params": []
+      },
+      {
+        "flags": [
+          "getter",
+          "hasretval"
+        ],
+        "name": "historyID",
+        "params": [
+          {
+            "flags": [
+              "out"
+            ],
+            "type": {
+              "tag": "TD_NSID"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [
+          "hidden"
+        ],
+        "name": "HistoryID",
+        "params": []
+      },
+      {
+        "flags": [
+          "getter",
+          "hasretval"
+        ],
+        "name": "isAppTab",
+        "params": [
+          {
+            "flags": [
+              "out"
+            ],
+            "type": {
+              "tag": "TD_BOOL"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [
+          "setter"
+        ],
+        "name": "isAppTab",
+        "params": [
+          {
+            "flags": [
+              "in"
+            ],
+            "type": {
+              "tag": "TD_BOOL"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [],
+        "name": "createAboutBlankContentViewer",
+        "params": [
+          {
+            "flags": [
+              "in"
+            ],
+            "type": {
+              "name": "nsIPrincipal",
+              "tag": "TD_INTERFACE_TYPE"
+            }
+          },
+          {
+            "flags": [
+              "in"
+            ],
+            "type": {
+              "name": "nsIPrincipal",
+              "tag": "TD_INTERFACE_TYPE"
+            }
+          },
+          {
+            "flags": [
+              "in",
+              "optional"
+            ],
+            "type": {
+              "name": "nsIContentSecurityPolicy",
+              "tag": "TD_INTERFACE_TYPE"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [
+          "getter",
+          "hasretval"
+        ],
+        "name": "charset",
+        "params": [
+          {
+            "flags": [
+              "out"
+            ],
+            "type": {
+              "tag": "TD_CSTRING"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [],
+        "name": "forceEncodingDetection",
+        "params": []
+      },
+      {
+        "flags": [
+          "hidden"
+        ],
+        "name": "setParentCharset",
+        "params": [
+          {
+            "flags": [
+              "in"
+            ],
+            "type": {
+              "tag": "TD_VOID"
+            }
+          },
+          {
+            "flags": [
+              "in"
+            ],
+            "type": {
+              "tag": "TD_INT32"
+            }
+          },
+          {
+            "flags": [
+              "in"
+            ],
+            "type": {
+              "name": "nsIPrincipal",
+              "tag": "TD_INTERFACE_TYPE"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [
+          "hidden"
+        ],
+        "name": "getParentCharset",
+        "params": [
+          {
+            "flags": [
+              "out"
+            ],
+            "type": {
+              "tag": "TD_VOID"
+            }
+          },
+          {
+            "flags": [
+              "out"
+            ],
+            "type": {
+              "tag": "TD_INT32"
+            }
+          },
+          {
+            "flags": [
+              "out"
+            ],
+            "type": {
+              "name": "nsIPrincipal",
+              "tag": "TD_INTERFACE_TYPE"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [
+          "getter",
+          "hasretval"
+        ],
+        "name": "recordProfileTimelineMarkers",
+        "params": [
+          {
+            "flags": [
+              "out"
+            ],
+            "type": {
+              "tag": "TD_BOOL"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [
+          "setter"
+        ],
+        "name": "recordProfileTimelineMarkers",
+        "params": [
+          {
+            "flags": [
+              "in"
+            ],
+            "type": {
+              "tag": "TD_BOOL"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [
+          "hasretval"
+        ],
+        "name": "now",
+        "params": [
+          {
+            "flags": [
+              "out"
+            ],
+            "type": {
+              "tag": "TD_DOUBLE"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [
+          "jscontext",
+          "hasretval"
+        ],
+        "name": "popProfileTimelineMarkers",
+        "params": [
+          {
+            "flags": [
+              "out"
+            ],
+            "type": {
+              "tag": "TD_JSVAL"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [],
+        "name": "addWeakPrivacyTransitionObserver",
+        "params": [
+          {
+            "flags": [
+              "in"
+            ],
+            "type": {
+              "name": "nsIPrivacyTransitionObserver",
+              "tag": "TD_INTERFACE_TYPE"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [],
+        "name": "addWeakReflowObserver",
+        "params": [
+          {
+            "flags": [
+              "in"
+            ],
+            "type": {
+              "name": "nsIReflowObserver",
+              "tag": "TD_INTERFACE_TYPE"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [],
+        "name": "removeWeakReflowObserver",
+        "params": [
+          {
+            "flags": [
+              "in"
+            ],
+            "type": {
+              "name": "nsIReflowObserver",
+              "tag": "TD_INTERFACE_TYPE"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [
+          "hidden"
+        ],
+        "name": "notifyReflowObservers",
+        "params": [
+          {
+            "flags": [
+              "in"
+            ],
+            "type": {
+              "tag": "TD_BOOL"
+            }
+          },
+          {
+            "flags": [
+              "in"
+            ],
+            "type": {
+              "tag": "TD_DOUBLE"
+            }
+          },
+          {
+            "flags": [
+              "in"
+            ],
+            "type": {
+              "tag": "TD_DOUBLE"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [
+          "hidden"
+        ],
+        "name": "addWeakScrollObserver",
+        "params": [
+          {
+            "flags": [
+              "in"
+            ],
+            "type": {
+              "name": "nsIScrollObserver",
+              "tag": "TD_INTERFACE_TYPE"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [
+          "hidden"
+        ],
+        "name": "removeWeakScrollObserver",
+        "params": [
+          {
+            "flags": [
+              "in"
+            ],
+            "type": {
+              "name": "nsIScrollObserver",
+              "tag": "TD_INTERFACE_TYPE"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [
+          "hidden"
+        ],
+        "name": "notifyScrollObservers",
+        "params": []
+      },
+      {
+        "flags": [
+          "getter",
+          "hasretval"
+        ],
+        "name": "isTopLevelContentDocShell",
+        "params": [
+          {
+            "flags": [
+              "out"
+            ],
+            "type": {
+              "tag": "TD_BOOL"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [
+          "hasretval"
+        ],
+        "name": "getSameTypeInProcessParentIgnoreBrowserBoundaries",
+        "params": [
+          {
+            "flags": [
+              "out"
+            ],
+            "type": {
+              "name": "nsIDocShell",
+              "tag": "TD_INTERFACE_TYPE"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [
+          "getter",
+          "hasretval"
+        ],
+        "name": "asyncPanZoomEnabled",
+        "params": [
+          {
+            "flags": [
+              "out"
+            ],
+            "type": {
+              "tag": "TD_BOOL"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [
+          "hidden"
+        ],
+        "name": "pluginsAllowedInCurrentDoc",
+        "params": []
+      },
+      {
+        "flags": [
+          "getter",
+          "hasretval"
+        ],
+        "name": "mayEnableCharacterEncodingMenu",
+        "params": [
+          {
+            "flags": [
+              "out"
+            ],
+            "type": {
+              "tag": "TD_BOOL"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [
+          "getter",
+          "hasretval"
+        ],
+        "name": "editor",
+        "params": [
+          {
+            "flags": [
+              "out"
+            ],
+            "type": {
+              "name": "nsIEditor",
+              "tag": "TD_INTERFACE_TYPE"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [
+          "setter"
+        ],
+        "name": "editor",
+        "params": [
+          {
+            "flags": [
+              "in"
+            ],
+            "type": {
+              "name": "nsIEditor",
+              "tag": "TD_INTERFACE_TYPE"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [
+          "getter",
+          "hasretval"
+        ],
+        "name": "editable",
+        "params": [
+          {
+            "flags": [
+              "out"
+            ],
+            "type": {
+              "tag": "TD_BOOL"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [
+          "getter",
+          "hasretval"
+        ],
+        "name": "hasEditingSession",
+        "params": [
+          {
+            "flags": [
+              "out"
+            ],
+            "type": {
+              "tag": "TD_BOOL"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [],
+        "name": "makeEditable",
+        "params": [
+          {
+            "flags": [
+              "in"
+            ],
+            "type": {
+              "tag": "TD_BOOL"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [
+          "hasretval"
+        ],
+        "name": "getCurrentSHEntry",
+        "params": [
+          {
+            "flags": [
+              "out"
+            ],
+            "type": {
+              "name": "nsISHEntry",
+              "tag": "TD_INTERFACE_TYPE"
+            }
+          },
+          {
+            "flags": [
+              "out"
+            ],
+            "type": {
+              "tag": "TD_BOOL"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [
+          "hasretval"
+        ],
+        "name": "isCommandEnabled",
+        "params": [
+          {
+            "flags": [
+              "in"
+            ],
+            "type": {
+              "tag": "TD_PSTRING"
+            }
+          },
+          {
+            "flags": [
+              "out"
+            ],
+            "type": {
+              "tag": "TD_BOOL"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [],
+        "name": "doCommand",
+        "params": [
+          {
+            "flags": [
+              "in"
+            ],
+            "type": {
+              "tag": "TD_PSTRING"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [],
+        "name": "doCommandWithParams",
+        "params": [
+          {
+            "flags": [
+              "in"
+            ],
+            "type": {
+              "tag": "TD_PSTRING"
+            }
+          },
+          {
+            "flags": [
+              "in"
+            ],
+            "type": {
+              "name": "nsICommandParams",
+              "tag": "TD_INTERFACE_TYPE"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [
+          "hidden"
+        ],
+        "name": "IsInvisible",
+        "params": []
+      },
+      {
+        "flags": [
+          "hidden"
+        ],
+        "name": "SetInvisible",
+        "params": [
+          {
+            "flags": [
+              "in"
+            ],
+            "type": {
+              "tag": "TD_BOOL"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [
+          "hidden"
+        ],
+        "name": "GetScriptGlobalObject",
+        "params": []
+      },
+      {
+        "flags": [
+          "hidden"
+        ],
+        "name": "getExtantDocument",
+        "params": []
+      },
+      {
+        "flags": [
+          "getter",
+          "hasretval"
+        ],
+        "name": "deviceSizeIsPageSize",
+        "params": [
+          {
+            "flags": [
+              "out"
+            ],
+            "type": {
+              "tag": "TD_BOOL"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [
+          "setter"
+        ],
+        "name": "deviceSizeIsPageSize",
+        "params": [
+          {
+            "flags": [
+              "in"
+            ],
+            "type": {
+              "tag": "TD_BOOL"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [
+          "hidden"
+        ],
+        "name": "notifyJSRunToCompletionStart",
+        "params": [
+          {
+            "flags": [
+              "in"
+            ],
+            "type": {
+              "tag": "TD_PSTRING"
+            }
+          },
+          {
+            "flags": [
+              "in"
+            ],
+            "type": {
+              "tag": "TD_ASTRING"
+            }
+          },
+          {
+            "flags": [
+              "in"
+            ],
+            "type": {
+              "tag": "TD_ASTRING"
+            }
+          },
+          {
+            "flags": [
+              "in"
+            ],
+            "type": {
+              "tag": "TD_UINT32"
+            }
+          },
+          {
+            "flags": [
+              "in"
+            ],
+            "type": {
+              "tag": "TD_JSVAL"
+            }
+          },
+          {
+            "flags": [
+              "in"
+            ],
+            "type": {
+              "tag": "TD_PSTRING"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [
+          "hidden"
+        ],
+        "name": "notifyJSRunToCompletionStop",
+        "params": []
+      },
+      {
+        "flags": [
+          "getter",
+          "hasretval"
+        ],
+        "name": "hasLoadedNonBlankURI",
+        "params": [
+          {
+            "flags": [
+              "out"
+            ],
+            "type": {
+              "tag": "TD_BOOL"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [
+          "getter",
+          "hasretval"
+        ],
+        "name": "windowDraggingAllowed",
+        "params": [
+          {
+            "flags": [
+              "out"
+            ],
+            "type": {
+              "tag": "TD_BOOL"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [
+          "setter"
+        ],
+        "name": "windowDraggingAllowed",
+        "params": [
+          {
+            "flags": [
+              "in"
+            ],
+            "type": {
+              "tag": "TD_BOOL"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [
+          "getter",
+          "hasretval"
+        ],
+        "name": "currentScrollRestorationIsManual",
+        "params": [
+          {
+            "flags": [
+              "out"
+            ],
+            "type": {
+              "tag": "TD_BOOL"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [
+          "setter"
+        ],
+        "name": "currentScrollRestorationIsManual",
+        "params": [
+          {
+            "flags": [
+              "in"
+            ],
+            "type": {
+              "tag": "TD_BOOL"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [
+          "jscontext",
+          "hasretval"
+        ],
+        "name": "getOriginAttributes",
+        "params": [
+          {
+            "flags": [
+              "out"
+            ],
+            "type": {
+              "tag": "TD_JSVAL"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [
+          "jscontext"
+        ],
+        "name": "setOriginAttributes",
+        "params": [
+          {
+            "flags": [
+              "in"
+            ],
+            "type": {
+              "tag": "TD_JSVAL"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [
+          "getter",
+          "hasretval"
+        ],
+        "name": "editingSession",
+        "params": [
+          {
+            "flags": [
+              "out"
+            ],
+            "type": {
+              "name": "nsIEditingSession",
+              "tag": "TD_INTERFACE_TYPE"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [
+          "getter",
+          "hasretval"
+        ],
+        "name": "browserChild",
+        "params": [
+          {
+            "flags": [
+              "out"
+            ],
+            "type": {
+              "name": "nsIBrowserChild",
+              "tag": "TD_INTERFACE_TYPE"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [
+          "hidden"
+        ],
+        "name": "GetBrowserChild",
+        "params": []
+      },
+      {
+        "flags": [
+          "hidden"
+        ],
+        "name": "GetCommandManager",
+        "params": []
+      },
+      {
+        "flags": [
+          "getter",
+          "hasretval"
+        ],
+        "name": "metaViewportOverride",
+        "params": [
+          {
+            "flags": [
+              "out"
+            ],
+            "type": {
+              "tag": "TD_UINT8"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [
+          "setter"
+        ],
+        "name": "metaViewportOverride",
+        "params": [
+          {
+            "flags": [
+              "in"
+            ],
+            "type": {
+              "tag": "TD_UINT8"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [
+          "getter",
+          "hasretval"
+        ],
+        "name": "useTrackingProtection",
+        "params": [
+          {
+            "flags": [
+              "out"
+            ],
+            "type": {
+              "tag": "TD_BOOL"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [
+          "setter"
+        ],
+        "name": "useTrackingProtection",
+        "params": [
+          {
+            "flags": [
+              "in"
+            ],
+            "type": {
+              "tag": "TD_BOOL"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [
+          "hidden"
+        ],
+        "name": "dispatchLocationChangeEvent",
+        "params": []
+      },
+      {
+        "flags": [
+          "hidden"
+        ],
+        "name": "startDelayedAutoplayMediaComponents",
+        "params": []
+      },
+      {
+        "flags": [
+          "hidden"
+        ],
+        "name": "TakeInitialClientSource",
+        "params": []
+      },
+      {
+        "flags": [],
+        "name": "setColorMatrix",
+        "params": [
+          {
+            "flags": [
+              "in"
+            ],
+            "type": {
+              "element": {
+                "tag": "TD_FLOAT"
+              },
+              "tag": "TD_ARRAY"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [
+          "getter",
+          "hasretval"
+        ],
+        "name": "isForceReloading",
+        "params": [
+          {
+            "flags": [
+              "out"
+            ],
+            "type": {
+              "tag": "TD_BOOL"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [
+          "hasretval"
+        ],
+        "name": "getColorMatrix",
+        "params": [
+          {
+            "flags": [
+              "out"
+            ],
+            "type": {
+              "element": {
+                "tag": "TD_FLOAT"
+              },
+              "tag": "TD_ARRAY"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [
+          "getter",
+          "hasretval"
+        ],
+        "name": "messageManager",
+        "params": [
+          {
+            "flags": [
+              "out"
+            ],
+            "type": {
+              "headerFile": "mozilla/dom/ContentFrameMessageManager.h",
+              "name": "ContentFrameMessageManager",
+              "native": "mozilla::dom::ContentFrameMessageManager",
+              "tag": "TD_DOMOBJECT"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [
+          "hasretval"
+        ],
+        "name": "getHasTrackingContentBlocked",
+        "params": [
+          {
+            "flags": [
+              "out"
+            ],
+            "type": {
+              "tag": "TD_PROMISE"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [
+          "getter",
+          "hidden",
+          "hasretval"
+        ],
+        "name": "isAttemptingToNavigate",
+        "params": []
+      },
+      {
+        "flags": [
+          "getter",
+          "hasretval"
+        ],
+        "name": "isNavigating",
+        "params": [
+          {
+            "flags": [
+              "out"
+            ],
+            "type": {
+              "tag": "TD_BOOL"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [],
+        "name": "synchronizeLayoutHistoryState",
+        "params": []
+      },
+      {
+        "flags": [],
+        "name": "persistLayoutHistoryState",
+        "params": []
+      }
+    ],
+    "name": "nsIDocShell",
+    "parent": "nsIDocShellTreeItem",
+    "uuid": "049234fe-da10-478b-bc5d-bc6f9a1ba63d"
+  },
+  {
+    "consts": [
+      {
+        "name": "typeChrome",
+        "type": {
+          "tag": "TD_INT32"
+        },
+        "value": 0
+      },
+      {
+        "name": "typeContent",
+        "type": {
+          "tag": "TD_INT32"
+        },
+        "value": 1
+      },
+      {
+        "name": "typeContentWrapper",
+        "type": {
+          "tag": "TD_INT32"
+        },
+        "value": 2
+      },
+      {
+        "name": "typeChromeWrapper",
+        "type": {
+          "tag": "TD_INT32"
+        },
+        "value": 3
+      },
+      {
+        "name": "typeAll",
+        "type": {
+          "tag": "TD_INT32"
+        },
+        "value": 2147483647
+      }
+    ],
+    "flags": [
+      "builtinclass"
+    ],
+    "methods": [
+      {
+        "flags": [
+          "getter",
+          "hasretval"
+        ],
+        "name": "name",
+        "params": [
+          {
+            "flags": [
+              "out"
+            ],
+            "type": {
+              "tag": "TD_ASTRING"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [
+          "setter"
+        ],
+        "name": "name",
+        "params": [
+          {
+            "flags": [
+              "in"
+            ],
+            "type": {
+              "tag": "TD_ASTRING"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [
+          "hasretval"
+        ],
+        "name": "nameEquals",
+        "params": [
+          {
+            "flags": [
+              "in"
+            ],
+            "type": {
+              "tag": "TD_ASTRING"
+            }
+          },
+          {
+            "flags": [
+              "out"
+            ],
+            "type": {
+              "tag": "TD_BOOL"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [
+          "getter",
+          "hasretval"
+        ],
+        "name": "itemType",
+        "params": [
+          {
+            "flags": [
+              "out"
+            ],
+            "type": {
+              "tag": "TD_INT32"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [
+          "hidden"
+        ],
+        "name": "ItemType",
+        "params": []
+      },
+      {
+        "flags": [
+          "getter",
+          "hasretval"
+        ],
+        "name": "parent",
+        "params": [
+          {
+            "flags": [
+              "out"
+            ],
+            "type": {
+              "name": "nsIDocShellTreeItem",
+              "tag": "TD_INTERFACE_TYPE"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [
+          "getter",
+          "hasretval"
+        ],
+        "name": "sameTypeParent",
+        "params": [
+          {
+            "flags": [
+              "out"
+            ],
+            "type": {
+              "name": "nsIDocShellTreeItem",
+              "tag": "TD_INTERFACE_TYPE"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [
+          "getter",
+          "hasretval"
+        ],
+        "name": "rootTreeItem",
+        "params": [
+          {
+            "flags": [
+              "out"
+            ],
+            "type": {
+              "name": "nsIDocShellTreeItem",
+              "tag": "TD_INTERFACE_TYPE"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [
+          "getter",
+          "hasretval"
+        ],
+        "name": "sameTypeRootTreeItem",
+        "params": [
+          {
+            "flags": [
+              "out"
+            ],
+            "type": {
+              "name": "nsIDocShellTreeItem",
+              "tag": "TD_INTERFACE_TYPE"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [
+          "getter",
+          "hasretval"
+        ],
+        "name": "treeOwner",
+        "params": [
+          {
+            "flags": [
+              "out"
+            ],
+            "type": {
+              "name": "nsIDocShellTreeOwner",
+              "tag": "TD_INTERFACE_TYPE"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [
+          "hidden"
+        ],
+        "name": "setTreeOwner",
+        "params": [
+          {
+            "flags": [
+              "in"
+            ],
+            "type": {
+              "name": "nsIDocShellTreeOwner",
+              "tag": "TD_INTERFACE_TYPE"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [
+          "getter",
+          "hasretval"
+        ],
+        "name": "childCount",
+        "params": [
+          {
+            "flags": [
+              "out"
+            ],
+            "type": {
+              "tag": "TD_INT32"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [
+          "hidden"
+        ],
+        "name": "addChild",
+        "params": [
+          {
+            "flags": [
+              "in"
+            ],
+            "type": {
+              "name": "nsIDocShellTreeItem",
+              "tag": "TD_INTERFACE_TYPE"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [
+          "hidden"
+        ],
+        "name": "removeChild",
+        "params": [
+          {
+            "flags": [
+              "in"
+            ],
+            "type": {
+              "name": "nsIDocShellTreeItem",
+              "tag": "TD_INTERFACE_TYPE"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [
+          "hasretval"
+        ],
+        "name": "getChildAt",
+        "params": [
+          {
+            "flags": [
+              "in"
+            ],
+            "type": {
+              "tag": "TD_INT32"
+            }
+          },
+          {
+            "flags": [
+              "out"
+            ],
+            "type": {
+              "name": "nsIDocShellTreeItem",
+              "tag": "TD_INTERFACE_TYPE"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [
+          "getter",
+          "hasretval"
+        ],
+        "name": "browsingContext",
+        "params": [
+          {
+            "flags": [
+              "out"
+            ],
+            "type": {
+              "headerFile": "mozilla/dom/BrowsingContext.h",
+              "name": "BrowsingContext",
+              "native": "mozilla::dom::BrowsingContext",
+              "tag": "TD_DOMOBJECT"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [
+          "hidden"
+        ],
+        "name": "getBrowsingContext",
+        "params": []
+      },
+      {
+        "flags": [
+          "getter",
+          "hasretval"
+        ],
+        "name": "domWindow",
+        "params": [
+          {
+            "flags": [
+              "out"
+            ],
+            "type": {
+              "name": "mozIDOMWindowProxy",
+              "tag": "TD_INTERFACE_TYPE"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [
+          "hidden"
+        ],
+        "name": "getDocument",
+        "params": []
+      },
+      {
+        "flags": [
+          "hidden"
+        ],
+        "name": "getWindow",
+        "params": []
+      }
+    ],
+    "name": "nsIDocShellTreeItem",
+    "parent": "nsISupports",
+    "uuid": "9b7c586f-9214-480c-a2c4-49b526fff1a6"
+  },
+  {
+    "consts": [],
+    "flags": [],
+    "methods": [
+      {
+        "flags": [],
+        "name": "contentShellAdded",
+        "params": [
+          {
+            "flags": [
+              "in"
+            ],
+            "type": {
+              "name": "nsIDocShellTreeItem",
+              "tag": "TD_INTERFACE_TYPE"
+            }
+          },
+          {
+            "flags": [
+              "in"
+            ],
+            "type": {
+              "tag": "TD_BOOL"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [],
+        "name": "contentShellRemoved",
+        "params": [
+          {
+            "flags": [
+              "in"
+            ],
+            "type": {
+              "name": "nsIDocShellTreeItem",
+              "tag": "TD_INTERFACE_TYPE"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [
+          "getter",
+          "hasretval"
+        ],
+        "name": "primaryContentShell",
+        "params": [
+          {
+            "flags": [
+              "out"
+            ],
+            "type": {
+              "name": "nsIDocShellTreeItem",
+              "tag": "TD_INTERFACE_TYPE"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [],
+        "name": "remoteTabAdded",
+        "params": [
+          {
+            "flags": [
+              "in"
+            ],
+            "type": {
+              "name": "nsIRemoteTab",
+              "tag": "TD_INTERFACE_TYPE"
+            }
+          },
+          {
+            "flags": [
+              "in"
+            ],
+            "type": {
+              "tag": "TD_BOOL"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [],
+        "name": "remoteTabRemoved",
+        "params": [
+          {
+            "flags": [
+              "in"
+            ],
+            "type": {
+              "name": "nsIRemoteTab",
+              "tag": "TD_INTERFACE_TYPE"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [
+          "getter",
+          "hasretval"
+        ],
+        "name": "primaryRemoteTab",
+        "params": [
+          {
+            "flags": [
+              "out"
+            ],
+            "type": {
+              "name": "nsIRemoteTab",
+              "tag": "TD_INTERFACE_TYPE"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [
+          "getter",
+          "hasretval"
+        ],
+        "name": "primaryContentBrowsingContext",
+        "params": [
+          {
+            "flags": [
+              "out"
+            ],
+            "type": {
+              "headerFile": "mozilla/dom/BrowsingContext.h",
+              "name": "BrowsingContext",
+              "native": "mozilla::dom::BrowsingContext",
+              "tag": "TD_DOMOBJECT"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [],
+        "name": "sizeShellTo",
+        "params": [
+          {
+            "flags": [
+              "in"
+            ],
+            "type": {
+              "name": "nsIDocShellTreeItem",
+              "tag": "TD_INTERFACE_TYPE"
+            }
+          },
+          {
+            "flags": [
+              "in"
+            ],
+            "type": {
+              "tag": "TD_INT32"
+            }
+          },
+          {
+            "flags": [
+              "in"
+            ],
+            "type": {
+              "tag": "TD_INT32"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [],
+        "name": "getPrimaryContentSize",
+        "params": [
+          {
+            "flags": [
+              "out"
+            ],
+            "type": {
+              "tag": "TD_INT32"
+            }
+          },
+          {
+            "flags": [
+              "out"
+            ],
+            "type": {
+              "tag": "TD_INT32"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [],
+        "name": "setPrimaryContentSize",
+        "params": [
+          {
+            "flags": [
+              "in"
+            ],
+            "type": {
+              "tag": "TD_INT32"
+            }
+          },
+          {
+            "flags": [
+              "in"
+            ],
+            "type": {
+              "tag": "TD_INT32"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [],
+        "name": "getRootShellSize",
+        "params": [
+          {
+            "flags": [
+              "out"
+            ],
+            "type": {
+              "tag": "TD_INT32"
+            }
+          },
+          {
+            "flags": [
+              "out"
+            ],
+            "type": {
+              "tag": "TD_INT32"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [],
+        "name": "setRootShellSize",
+        "params": [
+          {
+            "flags": [
+              "in"
+            ],
+            "type": {
+              "tag": "TD_INT32"
+            }
+          },
+          {
+            "flags": [
+              "in"
+            ],
+            "type": {
+              "tag": "TD_INT32"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [],
+        "name": "setPersistence",
+        "params": [
+          {
+            "flags": [
+              "in"
+            ],
+            "type": {
+              "tag": "TD_BOOL"
+            }
+          },
+          {
+            "flags": [
+              "in"
+            ],
+            "type": {
+              "tag": "TD_BOOL"
+            }
+          },
+          {
+            "flags": [
+              "in"
+            ],
+            "type": {
+              "tag": "TD_BOOL"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [],
+        "name": "getPersistence",
+        "params": [
+          {
+            "flags": [
+              "out"
+            ],
+            "type": {
+              "tag": "TD_BOOL"
+            }
+          },
+          {
+            "flags": [
+              "out"
+            ],
+            "type": {
+              "tag": "TD_BOOL"
+            }
+          },
+          {
+            "flags": [
+              "out"
+            ],
+            "type": {
+              "tag": "TD_BOOL"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [
+          "getter",
+          "hasretval"
+        ],
+        "name": "tabCount",
+        "params": [
+          {
+            "flags": [
+              "out"
+            ],
+            "type": {
+              "tag": "TD_UINT32"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [
+          "getter",
+          "hasretval"
+        ],
+        "name": "hasPrimaryContent",
+        "params": [
+          {
+            "flags": [
+              "out"
+            ],
+            "type": {
+              "tag": "TD_BOOL"
+            }
+          }
+        ]
+      }
+    ],
+    "name": "nsIDocShellTreeOwner",
+    "parent": "nsISupports",
+    "uuid": "0e3dc4b1-4cea-4a37-af71-79f0afd07574"
+  },
+  {
+    "consts": [],
+    "flags": [],
+    "methods": [
+      {
+        "flags": [
+          "hasretval"
+        ],
+        "name": "createInstance",
+        "params": [
+          {
+            "flags": [
+              "in"
+            ],
+            "type": {
+              "tag": "TD_PSTRING"
+            }
+          },
+          {
+            "flags": [
+              "in"
+            ],
+            "type": {
+              "name": "nsIChannel",
+              "tag": "TD_INTERFACE_TYPE"
+            }
+          },
+          {
+            "flags": [
+              "in"
+            ],
+            "type": {
+              "name": "nsILoadGroup",
+              "tag": "TD_INTERFACE_TYPE"
+            }
+          },
+          {
+            "flags": [
+              "in"
+            ],
+            "type": {
+              "tag": "TD_CSTRING"
+            }
+          },
+          {
+            "flags": [
+              "in"
+            ],
+            "type": {
+              "name": "nsIDocShell",
+              "tag": "TD_INTERFACE_TYPE"
+            }
+          },
+          {
+            "flags": [
+              "in"
+            ],
+            "type": {
+              "name": "nsISupports",
+              "tag": "TD_INTERFACE_TYPE"
+            }
+          },
+          {
+            "flags": [
+              "out"
+            ],
+            "type": {
+              "name": "nsIStreamListener",
+              "tag": "TD_INTERFACE_TYPE"
+            }
+          },
+          {
+            "flags": [
+              "out"
+            ],
+            "type": {
+              "name": "nsIContentViewer",
+              "tag": "TD_INTERFACE_TYPE"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [
+          "hasretval"
+        ],
+        "name": "createInstanceForDocument",
+        "params": [
+          {
+            "flags": [
+              "in"
+            ],
+            "type": {
+              "name": "nsISupports",
+              "tag": "TD_INTERFACE_TYPE"
+            }
+          },
+          {
+            "flags": [
+              "in"
+            ],
+            "type": {
+              "headerFile": "mozilla/dom/Document.h",
+              "name": "Document",
+              "native": "mozilla::dom::Document",
+              "tag": "TD_DOMOBJECT"
+            }
+          },
+          {
+            "flags": [
+              "in"
+            ],
+            "type": {
+              "tag": "TD_PSTRING"
+            }
+          },
+          {
+            "flags": [
+              "out"
+            ],
+            "type": {
+              "name": "nsIContentViewer",
+              "tag": "TD_INTERFACE_TYPE"
+            }
+          }
+        ]
+      }
+    ],
+    "name": "nsIDocumentLoaderFactory",
+    "parent": "nsISupports",
+    "uuid": "e795239e-9d3c-47c4-b063-9e600fb3b287"
+  },
+  {
+    "consts": [],
+    "flags": [
+      "builtinclass"
+    ],
+    "methods": [
+      {
+        "flags": [
+          "getter",
+          "hasretval"
+        ],
+        "name": "associatedWindow",
+        "params": [
+          {
+            "flags": [
+              "out"
+            ],
+            "type": {
+              "name": "mozIDOMWindowProxy",
+              "tag": "TD_INTERFACE_TYPE"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [
+          "getter",
+          "hasretval"
+        ],
+        "name": "topWindow",
+        "params": [
+          {
+            "flags": [
+              "out"
+            ],
+            "type": {
+              "name": "mozIDOMWindowProxy",
+              "tag": "TD_INTERFACE_TYPE"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [
+          "getter",
+          "hasretval"
+        ],
+        "name": "topFrameElement",
+        "params": [
+          {
+            "flags": [
+              "out"
+            ],
+            "type": {
+              "headerFile": "mozilla/dom/Element.h",
+              "name": "Element",
+              "native": "mozilla::dom::Element",
+              "tag": "TD_DOMOBJECT"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [
+          "getter",
+          "hasretval"
+        ],
+        "name": "isContent",
+        "params": [
+          {
+            "flags": [
+              "out"
+            ],
+            "type": {
+              "tag": "TD_BOOL"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [
+          "getter",
+          "hasretval"
+        ],
+        "name": "usePrivateBrowsing",
+        "params": [
+          {
+            "flags": [
+              "out"
+            ],
+            "type": {
+              "tag": "TD_BOOL"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [
+          "setter"
+        ],
+        "name": "usePrivateBrowsing",
+        "params": [
+          {
+            "flags": [
+              "in"
+            ],
+            "type": {
+              "tag": "TD_BOOL"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [
+          "getter",
+          "hasretval"
+        ],
+        "name": "useRemoteTabs",
+        "params": [
+          {
+            "flags": [
+              "out"
+            ],
+            "type": {
+              "tag": "TD_BOOL"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [
+          "getter",
+          "hasretval"
+        ],
+        "name": "useRemoteSubframes",
+        "params": [
+          {
+            "flags": [
+              "out"
+            ],
+            "type": {
+              "tag": "TD_BOOL"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [
+          "getter",
+          "hasretval"
+        ],
+        "name": "useTrackingProtection",
+        "params": [
+          {
+            "flags": [
+              "out"
+            ],
+            "type": {
+              "tag": "TD_BOOL"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [
+          "setter"
+        ],
+        "name": "useTrackingProtection",
+        "params": [
+          {
+            "flags": [
+              "in"
+            ],
+            "type": {
+              "tag": "TD_BOOL"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [
+          "hidden"
+        ],
+        "name": "SetPrivateBrowsing",
+        "params": [
+          {
+            "flags": [
+              "in"
+            ],
+            "type": {
+              "tag": "TD_BOOL"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [
+          "hidden"
+        ],
+        "name": "SetRemoteTabs",
+        "params": [
+          {
+            "flags": [
+              "in"
+            ],
+            "type": {
+              "tag": "TD_BOOL"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [
+          "hidden"
+        ],
+        "name": "SetRemoteSubframes",
+        "params": [
+          {
+            "flags": [
+              "in"
+            ],
+            "type": {
+              "tag": "TD_BOOL"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [
+          "getter",
+          "jscontext",
+          "hasretval"
+        ],
+        "name": "originAttributes",
+        "params": [
+          {
+            "flags": [
+              "out"
+            ],
+            "type": {
+              "tag": "TD_JSVAL"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [
+          "hidden"
+        ],
+        "name": "GetOriginAttributes",
+        "params": [
+          {
+            "flags": [
+              "out"
+            ],
+            "type": {
+              "tag": "TD_VOID"
+            }
+          }
+        ]
+      }
+    ],
+    "name": "nsILoadContext",
+    "parent": "nsISupports",
+    "uuid": "2813a7a3-d084-4d00-acd0-f76620315c02"
+  },
+  {
+    "consts": [],
+    "flags": [],
+    "methods": [
+      {
+        "flags": [
+          "hasretval"
+        ],
+        "name": "loadURI",
+        "params": [
+          {
+            "flags": [
+              "in"
+            ],
+            "type": {
+              "name": "nsIURI",
+              "tag": "TD_INTERFACE_TYPE"
+            }
+          },
+          {
+            "flags": [
+              "in"
+            ],
+            "type": {
+              "tag": "TD_INT16"
+            }
+          },
+          {
+            "flags": [
+              "in"
+            ],
+            "type": {
+              "tag": "TD_INT32"
+            }
+          },
+          {
+            "flags": [
+              "in"
+            ],
+            "type": {
+              "name": "nsIPrincipal",
+              "tag": "TD_INTERFACE_TYPE"
+            }
+          },
+          {
+            "flags": [
+              "out"
+            ],
+            "type": {
+              "tag": "TD_BOOL"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [
+          "hasretval"
+        ],
+        "name": "handleLoadError",
+        "params": [
+          {
+            "flags": [
+              "in"
+            ],
+            "type": {
+              "name": "nsIURI",
+              "tag": "TD_INTERFACE_TYPE"
+            }
+          },
+          {
+            "flags": [
+              "in"
+            ],
+            "type": {
+              "tag": "TD_UINT32"
+            }
+          },
+          {
+            "flags": [
+              "in"
+            ],
+            "type": {
+              "tag": "TD_INT16"
+            }
+          },
+          {
+            "flags": [
+              "out"
+            ],
+            "type": {
+              "name": "nsIURI",
+              "tag": "TD_INTERFACE_TYPE"
+            }
+          }
+        ]
+      }
+    ],
+    "name": "nsILoadURIDelegate",
+    "parent": "nsISupports",
+    "uuid": "78e42d37-a34c-4d96-b901-25385669aba4"
+  },
+  {
+    "consts": [],
+    "flags": [
+      "function"
+    ],
+    "methods": [
+      {
+        "flags": [],
+        "name": "privateModeChanged",
+        "params": [
+          {
+            "flags": [
+              "in"
+            ],
+            "type": {
+              "tag": "TD_BOOL"
+            }
+          }
+        ]
+      }
+    ],
+    "name": "nsIPrivacyTransitionObserver",
+    "parent": "nsISupports",
+    "uuid": "b4b1449d-0ef0-47f5-b62e-adc57fd49702"
+  },
+  {
+    "consts": [],
+    "flags": [],
+    "methods": [
+      {
+        "flags": [],
+        "name": "reflow",
+        "params": [
+          {
+            "flags": [
+              "in"
+            ],
+            "type": {
+              "tag": "TD_DOUBLE"
+            }
+          },
+          {
+            "flags": [
+              "in"
+            ],
+            "type": {
+              "tag": "TD_DOUBLE"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [],
+        "name": "reflowInterruptible",
+        "params": [
+          {
+            "flags": [
+              "in"
+            ],
+            "type": {
+              "tag": "TD_DOUBLE"
+            }
+          },
+          {
+            "flags": [
+              "in"
+            ],
+            "type": {
+              "tag": "TD_DOUBLE"
+            }
+          }
+        ]
+      }
+    ],
+    "name": "nsIReflowObserver",
+    "parent": "nsISupports",
+    "uuid": "832e692c-c4a6-11e2-8fd1-dce678957a39"
+  },
+  {
+    "consts": [],
+    "flags": [],
+    "methods": [
+      {
+        "flags": [],
+        "name": "refreshURI",
+        "params": [
+          {
+            "flags": [
+              "in"
+            ],
+            "type": {
+              "name": "nsIURI",
+              "tag": "TD_INTERFACE_TYPE"
+            }
+          },
+          {
+            "flags": [
+              "in"
+            ],
+            "type": {
+              "name": "nsIPrincipal",
+              "tag": "TD_INTERFACE_TYPE"
+            }
+          },
+          {
+            "flags": [
+              "in"
+            ],
+            "type": {
+              "tag": "TD_UINT32"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [],
+        "name": "forceRefreshURI",
+        "params": [
+          {
+            "flags": [
+              "in"
+            ],
+            "type": {
+              "name": "nsIURI",
+              "tag": "TD_INTERFACE_TYPE"
+            }
+          },
+          {
+            "flags": [
+              "in"
+            ],
+            "type": {
+              "name": "nsIPrincipal",
+              "tag": "TD_INTERFACE_TYPE"
+            }
+          },
+          {
+            "flags": [
+              "in"
+            ],
+            "type": {
+              "tag": "TD_UINT32"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [],
+        "name": "cancelRefreshURITimers",
+        "params": []
+      },
+      {
+        "flags": [
+          "getter",
+          "hasretval"
+        ],
+        "name": "refreshPending",
+        "params": [
+          {
+            "flags": [
+              "out"
+            ],
+            "type": {
+              "tag": "TD_BOOL"
+            }
+          }
+        ]
+      }
+    ],
+    "name": "nsIRefreshURI",
+    "parent": "nsISupports",
+    "uuid": "a5e61a3c-51bd-45be-ac0c-e87b71860656"
+  },
+  {
+    "consts": [],
+    "flags": [],
+    "methods": [
+      {
+        "flags": [],
+        "name": "onShowTooltip",
+        "params": [
+          {
+            "flags": [
+              "in"
+            ],
+            "type": {
+              "tag": "TD_INT32"
+            }
+          },
+          {
+            "flags": [
+              "in"
+            ],
+            "type": {
+              "tag": "TD_INT32"
+            }
+          },
+          {
+            "flags": [
+              "in"
+            ],
+            "type": {
+              "tag": "TD_ASTRING"
+            }
+          },
+          {
+            "flags": [
+              "in"
+            ],
+            "type": {
+              "tag": "TD_ASTRING"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [],
+        "name": "onHideTooltip",
+        "params": []
+      }
+    ],
+    "name": "nsITooltipListener",
+    "parent": "nsISupports",
+    "uuid": "44b78386-1dd2-11b2-9ad2-e4eee2ca1916"
+  },
+  {
+    "consts": [],
+    "flags": [],
+    "methods": [
+      {
+        "flags": [
+          "hasretval"
+        ],
+        "name": "getNodeText",
+        "params": [
+          {
+            "flags": [
+              "in"
+            ],
+            "type": {
+              "headerFile": "nsIContent.h",
+              "name": "Node",
+              "native": "nsINode",
+              "tag": "TD_DOMOBJECT"
+            }
+          },
+          {
+            "flags": [
+              "out"
+            ],
+            "type": {
+              "tag": "TD_PWSTRING"
+            }
+          },
+          {
+            "flags": [
+              "out"
+            ],
+            "type": {
+              "tag": "TD_PWSTRING"
+            }
+          },
+          {
+            "flags": [
+              "out"
+            ],
+            "type": {
+              "tag": "TD_BOOL"
+            }
+          }
+        ]
+      }
+    ],
+    "name": "nsITooltipTextProvider",
+    "parent": "nsISupports",
+    "uuid": "b128a1e6-44f3-4331-8fbe-5af360ff21ee"
+  },
+  {
+    "consts": [],
+    "flags": [],
+    "methods": [
+      {
+        "flags": [
+          "getter",
+          "hasretval"
+        ],
+        "name": "consumer",
+        "params": [
+          {
+            "flags": [
+              "out"
+            ],
+            "type": {
+              "headerFile": "mozilla/dom/BrowsingContext.h",
+              "name": "BrowsingContext",
+              "native": "mozilla::dom::BrowsingContext",
+              "tag": "TD_DOMOBJECT"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [
+          "setter"
+        ],
+        "name": "consumer",
+        "params": [
+          {
+            "flags": [
+              "in"
+            ],
+            "type": {
+              "headerFile": "mozilla/dom/BrowsingContext.h",
+              "name": "BrowsingContext",
+              "native": "mozilla::dom::BrowsingContext",
+              "tag": "TD_DOMOBJECT"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [
+          "getter",
+          "hasretval"
+        ],
+        "name": "preferredURI",
+        "params": [
+          {
+            "flags": [
+              "out"
+            ],
+            "type": {
+              "name": "nsIURI",
+              "tag": "TD_INTERFACE_TYPE"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [
+          "setter"
+        ],
+        "name": "preferredURI",
+        "params": [
+          {
+            "flags": [
+              "in"
+            ],
+            "type": {
+              "name": "nsIURI",
+              "tag": "TD_INTERFACE_TYPE"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [
+          "getter",
+          "hasretval"
+        ],
+        "name": "fixedURI",
+        "params": [
+          {
+            "flags": [
+              "out"
+            ],
+            "type": {
+              "name": "nsIURI",
+              "tag": "TD_INTERFACE_TYPE"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [
+          "setter"
+        ],
+        "name": "fixedURI",
+        "params": [
+          {
+            "flags": [
+              "in"
+            ],
+            "type": {
+              "name": "nsIURI",
+              "tag": "TD_INTERFACE_TYPE"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [
+          "getter",
+          "hasretval"
+        ],
+        "name": "keywordProviderName",
+        "params": [
+          {
+            "flags": [
+              "out"
+            ],
+            "type": {
+              "tag": "TD_ASTRING"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [
+          "setter"
+        ],
+        "name": "keywordProviderName",
+        "params": [
+          {
+            "flags": [
+              "in"
+            ],
+            "type": {
+              "tag": "TD_ASTRING"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [
+          "getter",
+          "hasretval"
+        ],
+        "name": "keywordAsSent",
+        "params": [
+          {
+            "flags": [
+              "out"
+            ],
+            "type": {
+              "tag": "TD_ASTRING"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [
+          "setter"
+        ],
+        "name": "keywordAsSent",
+        "params": [
+          {
+            "flags": [
+              "in"
+            ],
+            "type": {
+              "tag": "TD_ASTRING"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [
+          "getter",
+          "hasretval"
+        ],
+        "name": "fixupChangedProtocol",
+        "params": [
+          {
+            "flags": [
+              "out"
+            ],
+            "type": {
+              "tag": "TD_BOOL"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [
+          "setter"
+        ],
+        "name": "fixupChangedProtocol",
+        "params": [
+          {
+            "flags": [
+              "in"
+            ],
+            "type": {
+              "tag": "TD_BOOL"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [
+          "getter",
+          "hasretval"
+        ],
+        "name": "fixupCreatedAlternateURI",
+        "params": [
+          {
+            "flags": [
+              "out"
+            ],
+            "type": {
+              "tag": "TD_BOOL"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [
+          "setter"
+        ],
+        "name": "fixupCreatedAlternateURI",
+        "params": [
+          {
+            "flags": [
+              "in"
+            ],
+            "type": {
+              "tag": "TD_BOOL"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [
+          "getter",
+          "hasretval"
+        ],
+        "name": "originalInput",
+        "params": [
+          {
+            "flags": [
+              "out"
+            ],
+            "type": {
+              "tag": "TD_UTF8STRING"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [
+          "setter"
+        ],
+        "name": "originalInput",
+        "params": [
+          {
+            "flags": [
+              "in"
+            ],
+            "type": {
+              "tag": "TD_UTF8STRING"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [
+          "getter",
+          "hasretval"
+        ],
+        "name": "postData",
+        "params": [
+          {
+            "flags": [
+              "out"
+            ],
+            "type": {
+              "name": "nsIInputStream",
+              "tag": "TD_INTERFACE_TYPE"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [
+          "setter"
+        ],
+        "name": "postData",
+        "params": [
+          {
+            "flags": [
+              "in"
+            ],
+            "type": {
+              "name": "nsIInputStream",
+              "tag": "TD_INTERFACE_TYPE"
+            }
+          }
+        ]
+      }
+    ],
+    "name": "nsIURIFixupInfo",
+    "parent": "nsISupports",
+    "uuid": "4819f183-b532-4932-ac09-b309cd853be7"
+  },
+  {
+    "consts": [
+      {
+        "name": "FIXUP_FLAG_NONE",
+        "type": {
+          "tag": "TD_UINT32"
+        },
+        "value": 0
+      },
+      {
+        "name": "FIXUP_FLAG_ALLOW_KEYWORD_LOOKUP",
+        "type": {
+          "tag": "TD_UINT32"
+        },
+        "value": 1
+      },
+      {
+        "name": "FIXUP_FLAGS_MAKE_ALTERNATE_URI",
+        "type": {
+          "tag": "TD_UINT32"
+        },
+        "value": 2
+      },
+      {
+        "name": "FIXUP_FLAG_PRIVATE_CONTEXT",
+        "type": {
+          "tag": "TD_UINT32"
+        },
+        "value": 4
+      },
+      {
+        "name": "FIXUP_FLAG_FIX_SCHEME_TYPOS",
+        "type": {
+          "tag": "TD_UINT32"
+        },
+        "value": 8
+      },
+      {
+        "name": "FIXUP_FLAG_FORCE_ALTERNATE_URI",
+        "type": {
+          "tag": "TD_UINT32"
+        },
+        "value": 16
+      }
+    ],
+    "flags": [],
+    "methods": [
+      {
+        "flags": [
+          "hasretval"
+        ],
+        "name": "getFixupURIInfo",
+        "params": [
+          {
+            "flags": [
+              "in"
+            ],
+            "type": {
+              "tag": "TD_UTF8STRING"
+            }
+          },
+          {
+            "flags": [
+              "in",
+              "optional"
+            ],
+            "type": {
+              "tag": "TD_UINT32"
+            }
+          },
+          {
+            "flags": [
+              "out"
+            ],
+            "type": {
+              "name": "nsIURIFixupInfo",
+              "tag": "TD_INTERFACE_TYPE"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [
+          "hasretval"
+        ],
+        "name": "webNavigationFlagsToFixupFlags",
+        "params": [
+          {
+            "flags": [
+              "in"
+            ],
+            "type": {
+              "tag": "TD_UTF8STRING"
+            }
+          },
+          {
+            "flags": [
+              "in"
+            ],
+            "type": {
+              "tag": "TD_UINT32"
+            }
+          },
+          {
+            "flags": [
+              "out"
+            ],
+            "type": {
+              "tag": "TD_UINT32"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [
+          "hasretval"
+        ],
+        "name": "keywordToURI",
+        "params": [
+          {
+            "flags": [
+              "in"
+            ],
+            "type": {
+              "tag": "TD_UTF8STRING"
+            }
+          },
+          {
+            "flags": [
+              "in",
+              "optional"
+            ],
+            "type": {
+              "tag": "TD_BOOL"
+            }
+          },
+          {
+            "flags": [
+              "out"
+            ],
+            "type": {
+              "name": "nsIURIFixupInfo",
+              "tag": "TD_INTERFACE_TYPE"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [
+          "hasretval"
+        ],
+        "name": "forceHttpFixup",
+        "params": [
+          {
+            "flags": [
+              "in"
+            ],
+            "type": {
+              "tag": "TD_UTF8STRING"
+            }
+          },
+          {
+            "flags": [
+              "out"
+            ],
+            "type": {
+              "name": "nsIURIFixupInfo",
+              "tag": "TD_INTERFACE_TYPE"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [],
+        "name": "checkHost",
+        "params": [
+          {
+            "flags": [
+              "in"
+            ],
+            "type": {
+              "name": "nsIURI",
+              "tag": "TD_INTERFACE_TYPE"
+            }
+          },
+          {
+            "flags": [
+              "in"
+            ],
+            "type": {
+              "name": "nsIDNSListener",
+              "tag": "TD_INTERFACE_TYPE"
+            }
+          },
+          {
+            "flags": [
+              "in",
+              "optional"
+            ],
+            "type": {
+              "tag": "TD_JSVAL"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [
+          "hasretval"
+        ],
+        "name": "isDomainKnown",
+        "params": [
+          {
+            "flags": [
+              "in"
+            ],
+            "type": {
+              "tag": "TD_UTF8STRING"
+            }
+          },
+          {
+            "flags": [
+              "out"
+            ],
+            "type": {
+              "tag": "TD_BOOL"
+            }
+          }
+        ]
+      }
+    ],
+    "name": "nsIURIFixup",
+    "parent": "nsISupports",
+    "uuid": "1da7e9d4-620b-4949-849a-1cd6077b1b2d"
+  },
+  {
+    "consts": [
+      {
+        "name": "LOAD_FLAGS_MASK",
+        "type": {
+          "tag": "TD_UINT32"
+        },
+        "value": 65535
+      },
+      {
+        "name": "LOAD_FLAGS_NONE",
+        "type": {
+          "tag": "TD_UINT32"
+        },
+        "value": 0
+      },
+      {
+        "name": "LOAD_FLAGS_IS_REFRESH",
+        "type": {
+          "tag": "TD_UINT32"
+        },
+        "value": 16
+      },
+      {
+        "name": "LOAD_FLAGS_IS_LINK",
+        "type": {
+          "tag": "TD_UINT32"
+        },
+        "value": 32
+      },
+      {
+        "name": "LOAD_FLAGS_BYPASS_HISTORY",
+        "type": {
+          "tag": "TD_UINT32"
+        },
+        "value": 64
+      },
+      {
+        "name": "LOAD_FLAGS_REPLACE_HISTORY",
+        "type": {
+          "tag": "TD_UINT32"
+        },
+        "value": 128
+      },
+      {
+        "name": "LOAD_FLAGS_BYPASS_CACHE",
+        "type": {
+          "tag": "TD_UINT32"
+        },
+        "value": 256
+      },
+      {
+        "name": "LOAD_FLAGS_BYPASS_PROXY",
+        "type": {
+          "tag": "TD_UINT32"
+        },
+        "value": 512
+      },
+      {
+        "name": "LOAD_FLAGS_CHARSET_CHANGE",
+        "type": {
+          "tag": "TD_UINT32"
+        },
+        "value": 1024
+      },
+      {
+        "name": "LOAD_FLAGS_STOP_CONTENT",
+        "type": {
+          "tag": "TD_UINT32"
+        },
+        "value": 2048
+      },
+      {
+        "name": "LOAD_FLAGS_FROM_EXTERNAL",
+        "type": {
+          "tag": "TD_UINT32"
+        },
+        "value": 4096
+      },
+      {
+        "name": "LOAD_FLAGS_FIRST_LOAD",
+        "type": {
+          "tag": "TD_UINT32"
+        },
+        "value": 16384
+      },
+      {
+        "name": "LOAD_FLAGS_ALLOW_POPUPS",
+        "type": {
+          "tag": "TD_UINT32"
+        },
+        "value": 32768
+      },
+      {
+        "name": "LOAD_FLAGS_BYPASS_CLASSIFIER",
+        "type": {
+          "tag": "TD_UINT32"
+        },
+        "value": 65536
+      },
+      {
+        "name": "LOAD_FLAGS_FORCE_ALLOW_COOKIES",
+        "type": {
+          "tag": "TD_UINT32"
+        },
+        "value": 131072
+      },
+      {
+        "name": "LOAD_FLAGS_DISALLOW_INHERIT_PRINCIPAL",
+        "type": {
+          "tag": "TD_UINT32"
+        },
+        "value": 262144
+      },
+      {
+        "name": "LOAD_FLAGS_ERROR_LOAD_CHANGES_RV",
+        "type": {
+          "tag": "TD_UINT32"
+        },
+        "value": 524288
+      },
+      {
+        "name": "LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP",
+        "type": {
+          "tag": "TD_UINT32"
+        },
+        "value": 1048576
+      },
+      {
+        "name": "LOAD_FLAGS_FIXUP_SCHEME_TYPOS",
+        "type": {
+          "tag": "TD_UINT32"
+        },
+        "value": 2097152
+      },
+      {
+        "name": "LOAD_FLAGS_FORCE_ALLOW_DATA_URI",
+        "type": {
+          "tag": "TD_UINT32"
+        },
+        "value": 4194304
+      },
+      {
+        "name": "LOAD_FLAGS_IS_REDIRECT",
+        "type": {
+          "tag": "TD_UINT32"
+        },
+        "value": 8388608
+      },
+      {
+        "name": "LOAD_FLAGS_DISABLE_TRR",
+        "type": {
+          "tag": "TD_UINT32"
+        },
+        "value": 16777216
+      },
+      {
+        "name": "LOAD_FLAGS_FORCE_TRR",
+        "type": {
+          "tag": "TD_UINT32"
+        },
+        "value": 33554432
+      },
+      {
+        "name": "LOAD_FLAGS_BYPASS_LOAD_URI_DELEGATE",
+        "type": {
+          "tag": "TD_UINT32"
+        },
+        "value": 67108864
+      },
+      {
+        "name": "LOAD_FLAGS_USER_ACTIVATION",
+        "type": {
+          "tag": "TD_UINT32"
+        },
+        "value": 134217728
+      },
+      {
+        "name": "STOP_NETWORK",
+        "type": {
+          "tag": "TD_UINT32"
+        },
+        "value": 1
+      },
+      {
+        "name": "STOP_CONTENT",
+        "type": {
+          "tag": "TD_UINT32"
+        },
+        "value": 2
+      },
+      {
+        "name": "STOP_ALL",
+        "type": {
+          "tag": "TD_UINT32"
+        },
+        "value": 3
+      }
+    ],
+    "flags": [
+      "builtinclass"
+    ],
+    "methods": [
+      {
+        "flags": [
+          "getter",
+          "hasretval"
+        ],
+        "name": "canGoBack",
+        "params": [
+          {
+            "flags": [
+              "out"
+            ],
+            "type": {
+              "tag": "TD_BOOL"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [
+          "getter",
+          "hasretval"
+        ],
+        "name": "canGoForward",
+        "params": [
+          {
+            "flags": [
+              "out"
+            ],
+            "type": {
+              "tag": "TD_BOOL"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [],
+        "name": "goBack",
+        "params": [
+          {
+            "flags": [
+              "in",
+              "optional"
+            ],
+            "type": {
+              "tag": "TD_BOOL"
+            }
+          },
+          {
+            "flags": [
+              "in",
+              "optional"
+            ],
+            "type": {
+              "tag": "TD_BOOL"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [],
+        "name": "goForward",
+        "params": [
+          {
+            "flags": [
+              "in",
+              "optional"
+            ],
+            "type": {
+              "tag": "TD_BOOL"
+            }
+          },
+          {
+            "flags": [
+              "in",
+              "optional"
+            ],
+            "type": {
+              "tag": "TD_BOOL"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [],
+        "name": "gotoIndex",
+        "params": [
+          {
+            "flags": [
+              "in"
+            ],
+            "type": {
+              "tag": "TD_INT32"
+            }
+          },
+          {
+            "flags": [
+              "in",
+              "optional"
+            ],
+            "type": {
+              "tag": "TD_BOOL"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [
+          "jscontext"
+        ],
+        "name": "loadURI",
+        "params": [
+          {
+            "flags": [
+              "in"
+            ],
+            "type": {
+              "tag": "TD_ASTRING"
+            }
+          },
+          {
+            "flags": [
+              "in"
+            ],
+            "type": {
+              "tag": "TD_JSVAL"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [],
+        "name": "binaryLoadURI",
+        "params": [
+          {
+            "flags": [
+              "in"
+            ],
+            "type": {
+              "tag": "TD_ASTRING"
+            }
+          },
+          {
+            "flags": [
+              "in"
+            ],
+            "type": {
+              "tag": "TD_VOID"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [],
+        "name": "reload",
+        "params": [
+          {
+            "flags": [
+              "in"
+            ],
+            "type": {
+              "tag": "TD_UINT32"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [],
+        "name": "stop",
+        "params": [
+          {
+            "flags": [
+              "in"
+            ],
+            "type": {
+              "tag": "TD_UINT32"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [
+          "getter",
+          "hasretval"
+        ],
+        "name": "document",
+        "params": [
+          {
+            "flags": [
+              "out"
+            ],
+            "type": {
+              "headerFile": "mozilla/dom/Document.h",
+              "name": "Document",
+              "native": "mozilla::dom::Document",
+              "tag": "TD_DOMOBJECT"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [
+          "getter",
+          "hasretval"
+        ],
+        "name": "currentURI",
+        "params": [
+          {
+            "flags": [
+              "out"
+            ],
+            "type": {
+              "name": "nsIURI",
+              "tag": "TD_INTERFACE_TYPE"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [
+          "getter",
+          "hasretval"
+        ],
+        "name": "sessionHistory",
+        "params": [
+          {
+            "flags": [
+              "out"
+            ],
+            "type": {
+              "name": "nsISupports",
+              "tag": "TD_INTERFACE_TYPE"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [],
+        "name": "resumeRedirectedLoad",
+        "params": [
+          {
+            "flags": [
+              "in"
+            ],
+            "type": {
+              "tag": "TD_UINT64"
+            }
+          },
+          {
+            "flags": [
+              "in"
+            ],
+            "type": {
+              "tag": "TD_INT32"
+            }
+          }
+        ]
+      }
+    ],
+    "name": "nsIWebNavigation",
+    "parent": "nsISupports",
+    "uuid": "3ade79d4-8cb9-4952-b18d-4f9b63ca0d31"
+  },
+  {
+    "consts": [
+      {
+        "name": "UNSUPPORTED",
+        "type": {
+          "tag": "TD_UINT32"
+        },
+        "value": 0
+      },
+      {
+        "name": "IMAGE",
+        "type": {
+          "tag": "TD_UINT32"
+        },
+        "value": 1
+      },
+      {
+        "name": "FALLBACK",
+        "type": {
+          "tag": "TD_UINT32"
+        },
+        "value": 2
+      },
+      {
+        "name": "OTHER",
+        "type": {
+          "tag": "TD_UINT32"
+        },
+        "value": 32768
+      }
+    ],
+    "flags": [],
+    "methods": [
+      {
+        "flags": [
+          "hasretval"
+        ],
+        "name": "isTypeSupported",
+        "params": [
+          {
+            "flags": [
+              "in"
+            ],
+            "type": {
+              "tag": "TD_CSTRING"
+            }
+          },
+          {
+            "flags": [
+              "out"
+            ],
+            "type": {
+              "tag": "TD_UINT32"
+            }
+          }
+        ]
+      }
+    ],
+    "name": "nsIWebNavigationInfo",
+    "parent": "nsISupports",
+    "uuid": "62a93afb-93a1-465c-84c8-0432264229de"
+  },
+  {
+    "consts": [],
+    "flags": [],
+    "methods": [
+      {
+        "flags": [],
+        "name": "loadPageAsViewSource",
+        "params": [
+          {
+            "flags": [
+              "in"
+            ],
+            "type": {
+              "name": "nsIDocShell",
+              "tag": "TD_INTERFACE_TYPE"
+            }
+          },
+          {
+            "flags": [
+              "in"
+            ],
+            "type": {
+              "tag": "TD_ASTRING"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [
+          "getter",
+          "hasretval"
+        ],
+        "name": "currentDescriptor",
+        "params": [
+          {
+            "flags": [
+              "out"
+            ],
+            "type": {
+              "name": "nsISupports",
+              "tag": "TD_INTERFACE_TYPE"
+            }
+          }
+        ]
+      }
+    ],
+    "name": "nsIWebPageDescriptor",
+    "parent": "nsISupports",
+    "uuid": "6f30b676-3710-4c2c-80b1-0395fb26516e"
+  }
+]
