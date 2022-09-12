@@ -62,6 +62,9 @@ fuzzy(0-128,0-4) == number-reframe-anon-text-field.html number-reframe-anon-text
 != padding-001.html padding-001-notref.html
 == padding-002.html padding-002-ref.html
 
+== appearance-textfield.html text.html
+== appearance-textfield-dynamic.html appearance-textfield.html
+
 fuzzy-if(winWidget&&!nativeThemePref,0-35,0-17) fuzzy-if(!nativeThemePref,0-14,0-4) == clipped-text.html clipped-text-ref.html
 
 fails-if(useDrawSnapshot) needs-focus != caret-right.html caret-right-notref.html
