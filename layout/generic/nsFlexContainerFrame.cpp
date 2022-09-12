@@ -5591,7 +5591,7 @@ void nsFlexContainerFrame::MoveFlexItemToFinalPosition(
 
 nsReflowStatus nsFlexContainerFrame::ReflowFlexItem(
     const FlexboxAxisTracker& aAxisTracker, const ReflowInput& aReflowInput,
-    const FlexItem& aItem, LogicalPoint& aFramePos,
+    const FlexItem& aItem, const LogicalPoint& aFramePos,
     const LogicalSize& aAvailableSize, const nsSize& aContainerSize) {
   FLEX_LOG("Doing final reflow for flex item %p", aItem.Frame());
 
