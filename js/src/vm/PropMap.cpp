@@ -778,7 +778,7 @@ void DictionaryPropMap::maybeCompact(JSContext* cx,
         MOZ_ASSERT(p->map() == readMapCursor);
         MOZ_ASSERT(p->index() == readIndexCursor);
 
-        writeMapCursor->keys_[writeIndexCursor] = key;
+        writeMapCursor->setKey(writeIndexCursor, key);
         writeMapCursor->linkedData_.propInfos[writeIndexCursor] =
             readMapCursor->linkedData_.propInfos[readIndexCursor];
 
