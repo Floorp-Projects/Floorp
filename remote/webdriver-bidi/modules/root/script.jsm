@@ -18,8 +18,11 @@ const lazy = {};
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   assert: "chrome://remote/content/shared/webdriver/Assert.jsm",
+  ContextDescriptorType:
+    "chrome://remote/content/shared/messagehandler/MessageHandler.jsm",
   error: "chrome://remote/content/shared/webdriver/Errors.jsm",
   OwnershipModel: "chrome://remote/content/webdriver-bidi/RemoteValue.jsm",
+  RealmType: "chrome://remote/content/webdriver-bidi/Realm.jsm",
   TabManager: "chrome://remote/content/shared/TabManager.jsm",
   WindowGlobalMessageHandler:
     "chrome://remote/content/shared/messagehandler/WindowGlobalMessageHandler.jsm",
@@ -110,7 +113,7 @@ class ScriptModule extends Module {
    * @returns {ScriptEvaluateResult}
    *
    * @throws {InvalidArgumentError}
-   *     If any of the arguments has not the expected type.
+   *     If any of the arguments does not have the expected type.
    * @throws {NoSuchFrameError}
    *     If the target cannot be found.
    */
@@ -235,7 +238,7 @@ class ScriptModule extends Module {
    * @returns {ScriptEvaluateResult}
    *
    * @throws {InvalidArgumentError}
-   *     If any of the arguments has not the expected type.
+   *     If any of the arguments does not have the expected type.
    * @throws {NoSuchFrameError}
    *     If the target cannot be found.
    */
@@ -281,6 +284,129 @@ class ScriptModule extends Module {
     });
 
     return this.#buildReturnValue(evaluationResult);
+  }
+
+  /**
+   * An object that holds basic information about a realm.
+   *
+   * @typedef BaseRealmInfo
+   *
+   * @property {string} id
+   *     The realm unique identifier.
+   * @property {string} origin
+   *     The serialization of an origin.
+   */
+
+  /**
+   *
+   * @typedef WindowRealmInfoProperties
+   *
+   * @property {string} context
+   *     The browsing context id, associated with the realm.
+   * @property {string=} sandbox
+   *     The name of the sandbox.
+   * @property {RealmType.Window} type
+   *     The window realm type.
+   */
+
+  /**
+   * An object that holds information about a window realm.
+   *
+   * @typedef {BaseRealmInfo & WindowRealmInfoProperties} WindowRealmInfo
+   */
+
+  /**
+   * An object that holds information about a realm.
+   *
+   * @typedef {WindowRealmInfo} RealmInfo
+   */
+
+  /**
+   * An object that holds a list of realms.
+   *
+   * @typedef ScriptGetRealmsResult
+   *
+   * @property {Array<RealmInfo>} realms
+   *     List of realms.
+   */
+
+  /**
+   * Returns a list of all realms, optionally filtered to realms
+   * of a specific type, or to the realms associated with
+   * a specified browsing context.
+   *
+   * @param {Object=} options
+   * @param {string=} context
+   *     The id of the browsing context to filter
+   *     only realms associated with it. If not provided, return realms
+   *     associated with all browsing contexts.
+   * @param {RealmType=} type
+   *     Type of realm to filter.
+   *     If not provided, return realms of all types.
+   *
+   * @returns {ScriptGetRealmsResult}
+   *
+   * @throws {InvalidArgumentError}
+   *     If any of the arguments does not have the expected type.
+   * @throws {NoSuchFrameError}
+   *     If the context cannot be found.
+   */
+  async getRealms(options = {}) {
+    const { context: contextId = null, type = null } = options;
+    const destination = {};
+
+    if (contextId !== null) {
+      lazy.assert.string(
+        contextId,
+        `Expected "context" to be a string, got ${contextId}`
+      );
+      destination.id = this.#getBrowsingContext(contextId).id;
+    } else {
+      destination.contextDescriptor = {
+        type: lazy.ContextDescriptorType.All,
+      };
+    }
+
+    if (type !== null) {
+      const supportedRealmTypes = Object.values(lazy.RealmType);
+      if (!supportedRealmTypes.includes(type)) {
+        throw new lazy.error.InvalidArgumentError(
+          `Expected "type" to be one of ${supportedRealmTypes}, got ${type}`
+        );
+      }
+
+      // Remove this check when other realm types are supported
+      if (type !== lazy.RealmType.Window) {
+        throw new lazy.error.UnsupportedOperationError(
+          `Unsupported "type": ${type}. Only "type" ${lazy.RealmType.Window} is currently supported.`
+        );
+      }
+    }
+
+    let realms = await this.messageHandler.forwardCommand({
+      moduleName: "script",
+      commandName: "getWindowRealms",
+      destination: {
+        type: lazy.WindowGlobalMessageHandler.type,
+        ...destination,
+      },
+    });
+
+    const isBroadcast = !!destination.contextDescriptor;
+    if (!isBroadcast) {
+      realms = [realms];
+    }
+
+    const resultRealms = realms
+      .flat()
+      .map(realm => {
+        // Resolve browsing context to a TabManager id.
+        realm.context = lazy.TabManager.getIdForBrowsingContext(realm.context);
+        return realm;
+      })
+      .filter(realm => realm.context !== null);
+
+    return { realms: resultRealms };
   }
 
   #assertResultOwnership(resultOwnership) {
@@ -355,9 +481,7 @@ class ScriptModule extends Module {
     return rv;
   }
 
-  // realmId is going to be used when the full Realm support is implemented
-  // See Bug 1779231.
-  #getContextFromTarget({ contextId /*, realmId, sandbox*/ }) {
+  #getBrowsingContext(contextId) {
     const context = lazy.TabManager.getBrowsingContextById(contextId);
     if (context === null) {
       throw new lazy.error.NoSuchFrameError(
@@ -372,6 +496,12 @@ class ScriptModule extends Module {
     }
 
     return context;
+  }
+
+  // realmId is going to be used when the full Realm support is implemented
+  // See Bug 1779231.
+  #getContextFromTarget({ contextId /*, realmId, sandbox*/ }) {
+    return this.#getBrowsingContext(contextId);
   }
 
   static get supportedEvents() {

@@ -310,6 +310,22 @@ class ScriptModule extends Module {
 
     return this.#buildReturnValue(rv, realm, awaitPromise, resultOwnership);
   }
+
+  /**
+   * Get realms for the current window global.
+   *
+   * @return {Array<Object>}
+   *     - context {BrowsingContext} The browsing context, associated with the realm.
+   *     - id {string} The realm unique identifier.
+   *     - origin {string} The serialization of an origin.
+   *     - sandbox {string=} The name of the sandbox.
+   *     - type {RealmType.Window} The window realm type.
+   */
+  getWindowRealms() {
+    return [this.#defaultRealm, ...this.#realms.values()].map(realm =>
+      realm.getInfo()
+    );
+  }
 }
 
 const script = ScriptModule;

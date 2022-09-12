@@ -4,7 +4,7 @@
 
 "use strict";
 
-var EXPORTED_SYMBOLS = ["Realm", "WindowRealm"];
+var EXPORTED_SYMBOLS = ["Realm", "RealmType", "WindowRealm"];
 
 const { XPCOMUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/XPCOMUtils.sys.mjs"
@@ -77,6 +77,15 @@ class Realm {
   }
 
   /**
+   * A getter to get a realm origin.
+   *
+   * It's required to be implemented in the sub class.
+   */
+  get origin() {
+    throw new Error("Not implemented");
+  }
+
+  /**
    * Remove the reference corresponding to the provided unique handle.
    *
    * @param {string} handle
@@ -101,6 +110,18 @@ class Realm {
   }
 
   /**
+   * Get the basic realm information.
+   *
+   * @return {BaseRealmInfo}
+   */
+  getInfo() {
+    return {
+      realm: this.#id,
+      origin: this.origin,
+    };
+  }
+
+  /**
    * Retrieve the object corresponding to the provided unique handle.
    *
    * @param {string} handle
@@ -119,6 +140,7 @@ class Realm {
 class WindowRealm extends Realm {
   #globalObject;
   #globalObjectReference;
+  #sandboxName;
   #window;
 
   static type = RealmType.Window;
@@ -136,6 +158,7 @@ class WindowRealm extends Realm {
 
     super();
 
+    this.#sandboxName = sandboxName;
     this.#window = window;
     this.#globalObject =
       sandboxName === null ? this.#window : this.#createSandbox();
@@ -158,6 +181,10 @@ class WindowRealm extends Realm {
 
   get globalObjectReference() {
     return this.#globalObjectReference;
+  }
+
+  get origin() {
+    return this.#window.origin;
   }
 
   #cloneAsDebuggerObject(obj) {
@@ -237,5 +264,25 @@ class WindowRealm extends Realm {
         url: this.#window.document.baseURI,
       }
     );
+  }
+
+  /**
+   * Get the realm information.
+   *
+   * @return {Object}
+   *     - context {BrowsingContext} The browsing context, associated with the realm.
+   *     - id {string} The realm unique identifier.
+   *     - origin {string} The serialization of an origin.
+   *     - sandbox {string|null} The name of the sandbox.
+   *     - type {RealmType.Window} The window realm type.
+   */
+  getInfo() {
+    const baseInfo = super.getInfo();
+    return {
+      ...baseInfo,
+      context: this.#window.browsingContext,
+      sandbox: this.#sandboxName,
+      type: WindowRealm.type,
+    };
   }
 }
