@@ -39,7 +39,7 @@ GdkEvent* GetLastMousePressEvent();
 
 // Return the snap's instance name, or null when not running as a snap.
 const char* GetSnapInstanceName();
-inline bool IsRunningUnderSnap() { return !!GetSnapInstanceName(); }
+bool IsRunningUnderSnap();
 bool IsRunningUnderFlatpak();
 inline bool IsRunningUnderFlatpakOrSnap() {
   return IsRunningUnderFlatpak() || IsRunningUnderSnap();

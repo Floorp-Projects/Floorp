@@ -67,7 +67,7 @@ function simulateSnapEnvironment() {
   let env = Cc["@mozilla.org/process/environment;1"].getService(
     Ci.nsIEnvironment
   );
-  env.set("SNAP_NAME", AppConstants.MOZ_APP_NAME);
+  env.set("SNAP_INSTANCE_NAME", AppConstants.MOZ_APP_NAME);
 
   gIsLegacy = true;
 }
