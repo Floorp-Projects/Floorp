@@ -189,10 +189,10 @@ features:
         type: Map<MR2022Section, Boolean>
         default:
           {
-            "home-onboarding-dialog-existing-users": false,
-            "sync-cfr": false,
-            "wallpapers-selection-tool": false,
-            "jump-back-in-cfr": false,
+            "home-onboarding-dialog-existing-users": true,
+            "sync-cfr": true,
+            "wallpapers-selection-tool": true,
+            "jump-back-in-cfr": true,
             "tcp-cfr": true,
             "tcp-feature": true
           }
