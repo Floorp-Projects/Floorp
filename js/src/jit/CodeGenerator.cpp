@@ -11606,11 +11606,9 @@ void CodeGenerator::visitSpectreMaskIndex(LSpectreMaskIndex* lir) {
 class OutOfLineStoreElementHole : public OutOfLineCodeBase<CodeGenerator> {
   LInstruction* ins_;
   Label rejoinStore_;
-  bool strict_;
 
  public:
-  explicit OutOfLineStoreElementHole(LInstruction* ins, bool strict)
-      : ins_(ins), strict_(strict) {
+  explicit OutOfLineStoreElementHole(LInstruction* ins) : ins_(ins) {
     MOZ_ASSERT(ins->isStoreElementHoleV() || ins->isStoreElementHoleT());
   }
 
@@ -11624,7 +11622,6 @@ class OutOfLineStoreElementHole : public OutOfLineCodeBase<CodeGenerator> {
   }
   LInstruction* ins() const { return ins_; }
   Label* rejoinStore() { return &rejoinStore_; }
-  bool strict() const { return strict_; }
 };
 
 void CodeGenerator::emitStoreHoleCheck(Register elements,
@@ -11705,8 +11702,7 @@ void CodeGenerator::visitStoreHoleValueElement(LStoreHoleValueElement* lir) {
 }
 
 void CodeGenerator::visitStoreElementHoleT(LStoreElementHoleT* lir) {
-  OutOfLineStoreElementHole* ool =
-      new (alloc()) OutOfLineStoreElementHole(lir, current->mir()->strict());
+  auto* ool = new (alloc()) OutOfLineStoreElementHole(lir);
   addOutOfLineCode(ool, lir->mir());
 
   Register elements = ToRegister(lir->elements());
@@ -11726,8 +11722,7 @@ void CodeGenerator::visitStoreElementHoleT(LStoreElementHoleT* lir) {
 }
 
 void CodeGenerator::visitStoreElementHoleV(LStoreElementHoleV* lir) {
-  OutOfLineStoreElementHole* ool =
-      new (alloc()) OutOfLineStoreElementHole(lir, current->mir()->strict());
+  auto* ool = new (alloc()) OutOfLineStoreElementHole(lir);
   addOutOfLineCode(ool, lir->mir());
 
   Register elements = ToRegister(lir->elements());
@@ -11824,13 +11819,11 @@ void CodeGenerator::visitOutOfLineStoreElementHole(
 
   saveLive(ins);
 
-  pushArg(Imm32(ool->strict()));
   pushArg(value.ref());
   pushArg(index);
   pushArg(object);
 
-  using Fn = bool (*)(JSContext*, Handle<NativeObject*>, int32_t, HandleValue,
-                      bool strict);
+  using Fn = bool (*)(JSContext*, Handle<NativeObject*>, int32_t, HandleValue);
   callVM<Fn, jit::SetDenseElement>(ins);
 
   restoreLive(ins);

@@ -556,8 +556,6 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock> {
   void setLoopDepth(uint32_t loopDepth) { loopDepth_ = loopDepth; }
   uint32_t loopDepth() const { return loopDepth_; }
 
-  bool strict() const { return info_.script()->strict(); }
-
   void dumpStack(GenericPrinter& out);
   void dumpStack();
 
