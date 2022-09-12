@@ -74,6 +74,7 @@ import org.mozilla.fenix.GleanMetrics.Events
 import org.mozilla.fenix.GleanMetrics.HomeScreen
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
+import org.mozilla.fenix.addons.showSnackBar
 import org.mozilla.fenix.browser.BrowserAnimator.Companion.getToolbarNavOptions
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 import org.mozilla.fenix.components.FenixSnackbar
@@ -88,6 +89,7 @@ import org.mozilla.fenix.ext.hideToolbar
 import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.runIfFragmentIsAttached
+import org.mozilla.fenix.ext.scaleToBottomOfView
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.gleanplumb.DefaultMessageController
 import org.mozilla.fenix.gleanplumb.MessagingFeature
@@ -115,6 +117,7 @@ import org.mozilla.fenix.tabstray.TabsTrayAccessPoint
 import org.mozilla.fenix.utils.Settings.Companion.TOP_SITES_PROVIDER_MAX_THRESHOLD
 import org.mozilla.fenix.utils.ToolbarPopupWindow
 import org.mozilla.fenix.utils.allowUndo
+import org.mozilla.fenix.wallpapers.Wallpaper
 import java.lang.ref.WeakReference
 import kotlin.math.min
 
@@ -165,8 +168,7 @@ class HomeFragment : Fragment() {
     private var appBarLayout: AppBarLayout? = null
     private lateinit var currentMode: CurrentMode
 
-    @VisibleForTesting
-    internal var wallpapersObserver: WallpapersObserver? = null
+    private var lastAppliedWallpaperName: String = Wallpaper.defaultName
 
     private val topSitesFeature = ViewBoundFeatureWrapper<TopSitesFeature>()
     private val messagingFeature = ViewBoundFeatureWrapper<MessagingFeature>()
@@ -214,15 +216,8 @@ class HomeFragment : Fragment() {
         val activity = activity as HomeActivity
         val components = requireComponents
 
-        if (shouldEnableWallpaper()) {
-            wallpapersObserver = WallpapersObserver(
-                appStore = components.appStore,
-                wallpapersUseCases = components.useCases.wallpaperUseCases,
-                wallpaperImageView = binding.wallpaperImageView,
-            ).also {
-                viewLifecycleOwner.lifecycle.addObserver(it)
-            }
-        }
+        val currentWallpaperName = requireContext().settings().currentWallpaperName
+        applyWallpaper(wallpaperName = currentWallpaperName, orientationChange = false)
 
         currentMode = CurrentMode(
             requireContext(),
@@ -417,16 +412,8 @@ class HomeFragment : Fragment() {
 
         getMenuButton()?.dismissMenu()
 
-        if (shouldEnableWallpaper()) {
-            // Setting the wallpaper is a potentially expensive operation - can take 100ms.
-            // Running this on the Main thread helps to ensure that the just updated configuration
-            // will be used when the wallpaper is scaled to match.
-            // Otherwise the portrait wallpaper may remain shown on landscape,
-            // see https://github.com/mozilla-mobile/fenix/issues/26638
-            runBlockingIncrement {
-                wallpapersObserver?.applyCurrentWallpaper()
-            }
-        }
+        val currentWallpaperName = requireContext().settings().currentWallpaperName
+        applyWallpaper(wallpaperName = currentWallpaperName, orientationChange = true)
     }
 
     /**
@@ -521,6 +508,7 @@ class HomeFragment : Fragment() {
 
         observeSearchEngineChanges()
         observeSearchEngineNameChanges()
+        observeWallpaperUpdates()
 
         HomeMenuBuilder(
             view = view,
@@ -708,7 +696,6 @@ class HomeFragment : Fragment() {
         _sessionControlInteractor = null
         sessionControlView = null
         appBarLayout = null
-        wallpapersObserver = null
         _binding = null
         bundleArgs.clear()
     }
@@ -952,6 +939,49 @@ class HomeFragment : Fragment() {
     @VisibleForTesting
     internal fun shouldEnableWallpaper() =
         (activity as? HomeActivity)?.themeManager?.currentTheme?.isPrivate?.not() ?: false
+
+    private fun applyWallpaper(wallpaperName: String, orientationChange: Boolean) {
+        when {
+            !shouldEnableWallpaper() ||
+                (wallpaperName == lastAppliedWallpaperName && !orientationChange) -> return
+            wallpaperName == Wallpaper.defaultName -> {
+                binding.wallpaperImageView.isVisible = false
+                lastAppliedWallpaperName = wallpaperName
+            }
+            else -> {
+                runBlockingIncrement {
+                    // loadBitmap does file lookups based on name, so we don't need a fully
+                    // qualified type to load the image
+                    val wallpaper = Wallpaper.Default.copy(name = wallpaperName)
+                    val wallpaperImage =
+                        requireComponents.useCases.wallpaperUseCases.loadBitmap(wallpaper)
+                    wallpaperImage?.let {
+                        it.scaleToBottomOfView(binding.wallpaperImageView)
+                        binding.wallpaperImageView.isVisible = true
+                        lastAppliedWallpaperName = wallpaperName
+                    } ?: run {
+                        with(binding.wallpaperImageView) {
+                            isVisible = false
+                            showSnackBar(
+                                view = this,
+                                text = resources.getString(R.string.wallpaper_select_error_snackbar_message),
+                            )
+                        }
+                        lastAppliedWallpaperName = Wallpaper.defaultName
+                    }
+                }
+            }
+        }
+    }
+
+    private fun observeWallpaperUpdates() {
+        consumeFrom(requireComponents.appStore) {
+            val currentWallpaper = it.wallpaperState.currentWallpaper
+            if (currentWallpaper.name != lastAppliedWallpaperName) {
+                applyWallpaper(wallpaperName = currentWallpaper.name, orientationChange = false)
+            }
+        }
+    }
 
     companion object {
         const val ALL_NORMAL_TABS = "all_normal"

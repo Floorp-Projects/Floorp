@@ -5,13 +5,11 @@
 package org.mozilla.fenix.home
 
 import android.content.Context
-import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkStatic
 import io.mockk.spyk
 import io.mockk.verify
-import kotlinx.coroutines.test.runTest
 import mozilla.components.browser.menu.view.MenuButton
 import mozilla.components.browser.state.state.SearchState
 import mozilla.components.browser.state.state.selectedOrDefaultSearchEngine
@@ -19,7 +17,6 @@ import mozilla.components.feature.top.sites.TopSite
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
-import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -108,37 +105,6 @@ class HomeFragmentTest {
         verify(exactly = 1) { menuButton.dismissMenu() }
     }
 
-    @Test
-    fun `GIVEN the user is in normal mode WHEN configuration changes THEN the wallpaper is reapplied`() = runTest {
-        homeFragment.getMenuButton = { null }
-        val observer: WallpapersObserver = mockk(relaxed = true)
-        homeFragment.wallpapersObserver = observer
-        val activity: HomeActivity = mockk {
-            every { themeManager.currentTheme.isPrivate } returns false
-        }
-        every { homeFragment.activity } returns activity
-
-        homeFragment.onConfigurationChanged(mockk(relaxed = true))
-
-        coVerify { observer.applyCurrentWallpaper() }
-    }
-
-    @Test
-    fun `GIVEN the user is in private mode WHEN configuration changes THEN the wallpaper not updated`() = runTest {
-        homeFragment.getMenuButton = { null }
-        val observer: WallpapersObserver = mockk(relaxed = true)
-        homeFragment.wallpapersObserver = observer
-        val activity: HomeActivity = mockk {
-            every { themeManager.currentTheme.isPrivate } returns true
-        }
-        every { homeFragment.activity } returns activity
-
-        homeFragment.onConfigurationChanged(mockk(relaxed = true))
-
-        coVerify(exactly = 0) { observer.applyCurrentWallpaper() }
-    }
-
-    @Test
     fun `GIVEN the user is in normal mode WHEN checking if should enable wallpaper THEN return true`() {
         val activity: HomeActivity = mockk {
             every { themeManager.currentTheme.isPrivate } returns false
@@ -156,15 +122,5 @@ class HomeFragmentTest {
         every { homeFragment.activity } returns activity
 
         assertFalse(homeFragment.shouldEnableWallpaper())
-    }
-
-    @Test
-    fun `GIVEN the wallpaper feature is active WHEN the fragment view is destroyed THEN cleanup the wallpaper observer`() {
-        homeFragment.bundleArgs = mockk(relaxed = true)
-        homeFragment.wallpapersObserver = mockk()
-
-        homeFragment.onDestroyView()
-
-        assertNull(homeFragment.wallpapersObserver)
     }
 }
