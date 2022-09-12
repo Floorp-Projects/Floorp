@@ -294,8 +294,7 @@ bool NativeObject::growSlots(JSContext* cx, uint32_t oldCapacity,
 
 bool NativeObject::growSlotsForNewSlot(JSContext* cx, uint32_t numFixed,
                                        uint32_t slot) {
-  MOZ_ASSERT(!inDictionaryMode());
-  MOZ_ASSERT(shape()->slotSpan() == slot);
+  MOZ_ASSERT(slotSpan() == slot);
   MOZ_ASSERT(shape()->numFixedSlots() == numFixed);
   MOZ_ASSERT(slot >= numFixed);
 
@@ -1038,7 +1037,22 @@ bool NativeObject::allocDictionarySlot(JSContext* cx, Handle<NativeObject*> obj,
 
   *slotp = slotSpan;
 
-  return obj->ensureSlotsForDictionaryObject(cx, slotSpan + 1);
+  uint32_t numFixed = obj->numFixedSlots();
+  if (slotSpan < numFixed) {
+    obj->initFixedSlot(slotSpan, UndefinedValue());
+    obj->setDictionaryModeSlotSpan(slotSpan + 1);
+    return true;
+  }
+
+  uint32_t dynamicSlotIndex = slotSpan - numFixed;
+  if (dynamicSlotIndex >= obj->numDynamicSlots()) {
+    if (MOZ_UNLIKELY(!obj->growSlotsForNewSlot(cx, numFixed, slotSpan))) {
+      return false;
+    }
+  }
+  obj->initDynamicSlot(numFixed, slotSpan, UndefinedValue());
+  obj->setDictionaryModeSlotSpan(slotSpan + 1);
+  return true;
 }
 
 void NativeObject::freeDictionarySlot(uint32_t slot) {
