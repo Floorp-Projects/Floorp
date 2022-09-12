@@ -1,7 +1,8 @@
 valid-ci-uses
 =============
 
-Ensures that property access on ``Ci.<interface>`` are valid.
+Ensures that interface accesses on ``Ci`` are valid, and property accesses on
+``Ci.<interface>`` are also valid.
 
 This rule requires a full build to run, and is not turned on by default. To run
 this rule manually, use:
@@ -13,6 +14,12 @@ this rule manually, use:
 Examples of incorrect code for this rule:
 -----------------------------------------
 
+``nsIFoo`` does not exist.
+
+.. code-block:: js
+
+    Ci.nsIFoo
+
 ``UNKNOWN_CONSTANT`` does not exist on nsIURIFixup.
 
 .. code-block:: js
@@ -21,6 +28,12 @@ Examples of incorrect code for this rule:
 
 Examples of correct code for this rule:
 ---------------------------------------
+
+``nsIFile`` does exist.
+
+.. code-block:: js
+
+    Ci.nsIFile
 
 ``FIXUP_FLAG_NONE`` does exist on nsIURIFixup.
 

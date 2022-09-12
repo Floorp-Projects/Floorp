@@ -87,17 +87,13 @@ function exactGC() {
 
 function resetQuotaManager() {
   return new Promise(function(resolve) {
-    var qm = Cc["@mozilla.org/dom/quota/manager;1"].getService(
-      Ci.nsIQuotaManager
-    );
-
     var prefService = Services.prefs;
 
     // enable quota manager testing mode
     var pref = "dom.quotaManager.testing";
     prefService.getBranch(null).setBoolPref(pref, true);
 
-    var request = qm.reset();
+    var request = Services.qms.reset();
     request.callback = resolve;
 
     // disable quota manager testing mode

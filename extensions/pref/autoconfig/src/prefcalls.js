@@ -6,9 +6,6 @@
 
 /* globals gSandbox */
 
-const nsILDAPURL = Ci.nsILDAPURL;
-const LDAPURLContractID = "@mozilla.org/network/ldap-url;1";
-const nsILDAPSyncQuery = Ci.nsILDAPSyncQuery;
 const LDAPSyncQueryContractID = "@mozilla.org/ldapsyncquery;1";
 
 var gVersion;
@@ -133,13 +130,17 @@ function getLDAPAttributes(host, base, filter, attribs, isSecure) {
       "?sub?" +
       filter;
 
+    // nsILDAP* are only defined in comm-central.
+    // eslint-disable-next-line mozilla/valid-ci-uses
     var url = Services.io.newURI(urlSpec).QueryInterface(Ci.nsILDAPURL);
 
     var ldapquery = Cc[LDAPSyncQueryContractID].createInstance(
-      nsILDAPSyncQuery
+      // eslint-disable-next-line mozilla/valid-ci-uses
+      Ci.nsILDAPSyncQuery
     );
     // default to LDAP v3
     if (!gVersion) {
+      // eslint-disable-next-line mozilla/valid-ci-uses
       gVersion = Ci.nsILDAPConnection.VERSION3;
     }
     // user supplied method
