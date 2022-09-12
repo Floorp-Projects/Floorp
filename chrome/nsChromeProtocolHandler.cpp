@@ -82,7 +82,7 @@ nsChromeProtocolHandler::GetProtocolFlags(uint32_t* result) {
   // and "chrome://navigator/content/navigator.xul".
 
   rv = nsChromeRegistry::Canonify(surl);
-  mozilla::Unused << NS_WARN_IF(NS_FAILED(rv));
+  if (NS_FAILED(rv)) return rv;
 
   surl.forget(result);
   return NS_OK;
