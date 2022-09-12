@@ -855,6 +855,12 @@ panelmultiview[mainViewId="PanelUI-fxa"] #PanelUI-remotetabs-syncnow {
   list-style-image: url(chrome://browser/skin/fxa/sync-illustration-issue.svg);
 }
 
+.PanelUI-fxa-signin-button > .toolbarbutton-text,
+.PanelUI-remotetabs-button > .toolbarbutton-text {
+  /* Overrides toolbar[mode="icons"] from xul.css */
+  display: block;
+}
+
 #PanelUI-remotetabs[mainview] { /* panel anchored to toolbar button might be too skinny */
   min-width: 19em;
 }
