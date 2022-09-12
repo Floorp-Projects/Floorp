@@ -5321,10 +5321,6 @@ std::tuple<nscoord, bool> nsFlexContainerFrame::ReflowChildren(
       // (i.e. its frame rect), instead of the container's content-box:
       framePos += containerContentBoxOrigin;
 
-      // (Intentionally snapshotting this before ApplyRelativePositioning, to
-      // maybe use for setting the flex container's baseline.)
-      const nscoord itemNormalBPos = framePos.B(flexWM);
-
       // Check if we actually need to reflow the item -- if the item's position
       // is below the available space's block-end, push it to our next-in-flow;
       // if it does need a reflow, and we already reflowed it with the right
@@ -5372,7 +5368,7 @@ std::tuple<nscoord, bool> nsFlexContainerFrame::ReflowChildren(
         // edge.
         maxBlockEndEdgeOfChildren =
             std::max(maxBlockEndEdgeOfChildren,
-                     itemNormalBPos + item.Frame()->BSize(flexWM));
+                     framePos.B(flexWM) + item.Frame()->BSize(flexWM));
       }
 
       // If the item has auto margins, and we were tracking the UsedMargin
@@ -5390,7 +5386,7 @@ std::tuple<nscoord, bool> nsFlexContainerFrame::ReflowChildren(
       // children), then use this child's first baseline as the container's
       // baseline.
       if (&item == firstItem && aFlr.mAscent == nscoord_MIN) {
-        aFlr.mAscent = itemNormalBPos + item.ResolvedAscent(true);
+        aFlr.mAscent = framePos.B(flexWM) + item.ResolvedAscent(true);
       }
     }
   }
@@ -5561,10 +5557,11 @@ void nsFlexContainerFrame::PopulateReflowOutput(
 }
 
 void nsFlexContainerFrame::MoveFlexItemToFinalPosition(
-    const FlexItem& aItem, LogicalPoint& aFramePos,
+    const FlexItem& aItem, const LogicalPoint& aFramePos,
     const nsSize& aContainerSize) {
   const WritingMode outerWM = aItem.ContainingBlockWM();
   const nsStyleDisplay* display = aItem.Frame()->StyleDisplay();
+  LogicalPoint pos(aFramePos);
   if (display->IsRelativelyOrStickyPositionedStyle()) {
     // If the item is relatively positioned, look up its offsets (cached from
     // previous reflow). A sticky positioned item can pass a dummy
@@ -5578,13 +5575,13 @@ void nsFlexContainerFrame::MoveFlexItemToFinalPosition(
           "relpos previously-reflowed frame should've cached its offsets");
       logicalOffsets = LogicalMargin(outerWM, *cachedOffsets);
     }
-    ReflowInput::ApplyRelativePositioning(
-        aItem.Frame(), outerWM, logicalOffsets, &aFramePos, aContainerSize);
+    ReflowInput::ApplyRelativePositioning(aItem.Frame(), outerWM,
+                                          logicalOffsets, &pos, aContainerSize);
   }
 
   FLEX_LOG("Moving flex item %p to its desired position %s", aItem.Frame(),
-           ToString(aFramePos).c_str());
-  aItem.Frame()->SetPosition(outerWM, aFramePos, aContainerSize);
+           ToString(pos).c_str());
+  aItem.Frame()->SetPosition(outerWM, pos, aContainerSize);
   PositionFrameView(aItem.Frame());
   PositionChildViews(aItem.Frame());
 }
