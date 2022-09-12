@@ -2489,6 +2489,10 @@ void ScrollFrameHelper::CompleteAsyncScroll(
     ScrollOrigin aOrigin) {
   SetLastSnapTargetIds(std::move(aSnapTargetIds));
 
+  bool isNotHandledByApz =
+      nsLayoutUtils::CanScrollOriginClobberApz(aOrigin) ||
+      ScrollAnimationState().contains(AnimationState::MainThread);
+
   // Apply desired destination range since this is the last step of scrolling.
   RemoveObservers();
   AutoWeakFrame weakFrame(mOuter);
@@ -2499,7 +2503,17 @@ void ScrollFrameHelper::CompleteAsyncScroll(
   // We are done scrolling, set our destination to wherever we actually ended
   // up scrolling to.
   mDestination = GetScrollPosition();
-  PostScrollEndEvent();
+  // Post a `scrollend` event for scrolling not handled by APZ, including:
+  //
+  //  - programmatic instant scrolls
+  //  - the end of a smooth scroll animation running on the main thread
+  //
+  // For scrolling handled by APZ, the `scrollend` event is posted in
+  // SetTransformingByAPZ() when the APZC is transitioning from a transforming
+  // to a non-transforming state (e.g. a transition from PANNING to NOTHING).
+  if (isNotHandledByApz) {
+    PostScrollEndEvent();
+  }
 }
 
 bool ScrollFrameHelper::HasBgAttachmentLocal() const {
