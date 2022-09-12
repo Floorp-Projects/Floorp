@@ -12,6 +12,8 @@
   "license": "MPL-2.0",
   "devDependencies": {
     "@babel/core": "^7.16.0",
+    "@fluent/bundle": "^0.17.1",
+    "@fluent/dom": "^0.8.1",
     "@storybook/addon-actions": "^6.4.8",
     "@storybook/addon-essentials": "^6.4.8",
     "@storybook/addon-links": "^6.4.8",
