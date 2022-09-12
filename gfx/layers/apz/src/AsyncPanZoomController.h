@@ -415,6 +415,7 @@ class AsyncPanZoomController {
    * Clear any overscroll on this APZC.
    */
   void ClearOverscroll();
+  void ClearPhysicalOverscroll();
 
   /**
    * Returns whether this APZC is for an element marked with the 'scrollgrab'
