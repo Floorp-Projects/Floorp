@@ -1,14 +1,14 @@
 
 Cherries picked
 ================================================================================
-Merge base from: ups/main
+Merge base from: moz/main
 
-commit 4996b40a69857919579a12f828188c9f428c402c
-Author: Alexey Knyazev <3479527+lexaknyazev@users.noreply.github.com>
-Date:   Sat Aug 20 01:53:01 2022 +0400
+commit 92af460e46a82d60140b5a1df1379feb79730d3a
+Author: Kelsey Gilbert <jdashg@gmail.com>
+Date:   Tue Sep 6 15:21:32 2022 -0700
 
-    Allow makeXRCompatible in OffscreenCanvas contexts (#3480)
+    Add test for getUniformIndices.
     
-    Fixes failures of:
-    conformance/offscreencanvas/methods.html
-    conformance/offscreencanvas/methods-worker.html
+    Also test to ensure that it returns the correct id by checking the name from getActiveUniform.
+    
+    Firefox bug: https://bugzilla.mozilla.org/show_bug.cgi?id=1755973
