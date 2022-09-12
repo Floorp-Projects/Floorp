@@ -1073,9 +1073,25 @@ bool SandboxBroker::SetSecurityLevelForRDDProcess() {
   mPolicy->SetLockdownDefaultDacl();
   mPolicy->AddRestrictingRandomSid();
 
+  sandbox::MitigationFlags dynamicCodeDisable = 0;
+  // ASAN is not compatible with ACG:
+  // https://bugzilla.mozilla.org/show_bug.cgi?id=1783223#c12
+#if defined(NIGHTLY_BUILD) && !defined(MOZ_ASAN)
+  // msmpeg2vdec.dll will opt out of DYNAMIC_CODE_DISABLE on threads
+  // where it needs to use VirtualProtect
+  dynamicCodeDisable = sandbox::MITIGATION_DYNAMIC_CODE_DISABLE_WITH_OPT_OUT;
+#  ifdef _WIN64
+  if (IsWin10CreatorsUpdateOrLater()) {
+    // later 64bit versions of msmpeg2vdec.dll don't use VirtualProtect
+    // anymore
+    dynamicCodeDisable = sandbox::MITIGATION_DYNAMIC_CODE_DISABLE;
+  }
+#  endif
+#endif
   sandbox::MitigationFlags mitigations =
-      sandbox::MITIGATION_BOTTOM_UP_ASLR | sandbox::MITIGATION_HEAP_TERMINATE |
-      sandbox::MITIGATION_SEHOP | sandbox::MITIGATION_EXTENSION_POINT_DISABLE |
+      dynamicCodeDisable | sandbox::MITIGATION_BOTTOM_UP_ASLR |
+      sandbox::MITIGATION_HEAP_TERMINATE | sandbox::MITIGATION_SEHOP |
+      sandbox::MITIGATION_EXTENSION_POINT_DISABLE |
       sandbox::MITIGATION_DEP_NO_ATL_THUNK | sandbox::MITIGATION_DEP |
       sandbox::MITIGATION_IMAGE_LOAD_PREFER_SYS32;
 
