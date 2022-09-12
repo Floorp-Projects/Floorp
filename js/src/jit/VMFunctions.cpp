@@ -643,25 +643,34 @@ template bool StringsCompare<ComparisonKind::GreaterThanOrEqual>(
 
 bool ArrayPushDense(JSContext* cx, Handle<ArrayObject*> arr, HandleValue v,
                     uint32_t* length) {
-  *length = arr->length();
-  DenseElementResult result =
-      arr->setOrExtendDenseElements(cx, *length, v.address(), 1);
-  if (result != DenseElementResult::Incomplete) {
-    (*length)++;
-    return result == DenseElementResult::Success;
-  }
+  // Shape guards guarantee that the input is an extensible ArrayObject, which
+  // has a writable "length" property and has no other indexed properties.
+  MOZ_ASSERT(arr->isExtensible());
+  MOZ_ASSERT(arr->lengthIsWritable());
+  MOZ_ASSERT(!arr->isIndexed());
 
-  JS::RootedValueArray<3> argv(cx);
-  argv[0].setUndefined();
-  argv[1].setObject(*arr);
-  argv[2].set(v);
-  if (!js::array_push(cx, 1, argv.begin())) {
-    return false;
-  }
+  // Shape guards ensure that there aren't any indexed properties along the
+  // prototype chain.
+  MOZ_ASSERT(!PrototypeMayHaveIndexedProperties(arr));
 
   // Length must fit in an int32 because we guard against overflow before
   // calling this VM function.
-  *length = argv[0].toInt32();
+  uint32_t index = arr->length();
+  MOZ_ASSERT(index < uint32_t(INT32_MAX));
+
+  DenseElementResult result =
+      arr->setOrExtendDenseElements(cx, index, v.address(), 1);
+  if (result != DenseElementResult::Incomplete) {
+    *length = index + 1;
+    return result == DenseElementResult::Success;
+  }
+
+  if (!DefineDataElement(cx, arr, index, v)) {
+    return false;
+  }
+
+  arr->setLength(index + 1);
+  *length = index + 1;
   return true;
 }
 
