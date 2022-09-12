@@ -1,9 +1,12 @@
 <html class="reftest-wait">
 <script>
 window.requestIdleCallback(() => {
-	setTimeout(window.close, 500);
-	setTimeout(() => { document.documentElement.removeAttribute('class'); }, 501);
-})
+	setTimeout(() => {
+		let docElement = document.documentElement;
+		window.close();
+		docElement.removeAttribute('class');
+	}, 500);
+}, { timeout: 1000 });
 </script>
 <script>
 function go() {
