@@ -61,16 +61,17 @@ jobs:
                     firefox-msi-latest-ssl: msi
                     firefox-msix-latest-ssl: msix
                     firefox-pkg-latest-ssl: pkg
-                mozilla-esr91:
+                mozilla-esr102:
                     # when there is one ESR branch both sets of aliases work
                     # when there are two ESR branches ...
                     # ... these always point to the older branch
                     firefox-esr-latest-ssl: installer-ssl
                     firefox-esr-latest: installer
                     firefox-esr-msi-latest-ssl: msi
-                    # firefox-esr-msix-latest-ssl: msix  # uncomment when esr102 replaces esr91
+                    firefox-esr-msix-latest-ssl: msix
                     firefox-esr-pkg-latest-ssl: pkg
-                mozilla-esr102:
+                    # yamllint disable-line rule:comments-indentation
+                # mozilla-esrXX: XXX - to uncomment when we branch next ESR
                     # ... these point to the newer branch
                     firefox-esr-next-latest-ssl: installer-ssl
                     firefox-esr-next-latest: installer
