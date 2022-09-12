@@ -29,6 +29,34 @@ add_task(async function() {
   ok(BrowserTestUtils.is_hidden(dialogOverlay), "The dialog is invisible.");
 
   await SpecialPowers.pushPrefEnv({
+    set: [["intl.accept_languages", "en-US,en-XX,foo"]],
+  });
+  win = await languagesSubdialogOpened();
+  let activeLanguages = win.document.getElementById("activeLanguages").children;
+  ok(
+    activeLanguages[0].id == "en-us",
+    "The ID for 'en-US' locale code is correctly set."
+  );
+  ok(
+    activeLanguages[0].firstChild.value == "English [en-us]",
+    "The name for known 'en-US' locale code is correctly resolved."
+  );
+  ok(
+    activeLanguages[1].id == "en-xx",
+    "The ID for 'en-XX' locale code is correctly set."
+  );
+  ok(
+    activeLanguages[1].firstChild.value == "English [en-xx]",
+    "The name for unknown 'en-XX' locale code is resolved using 'en'."
+  );
+  ok(
+    activeLanguages[2].firstChild.value == " [foo]",
+    "The name for unknown 'foo' locale code is empty."
+  );
+  acceptLanguagesSubdialog(win);
+  await SpecialPowers.popPrefEnv();
+
+  await SpecialPowers.pushPrefEnv({
     set: [
       ["privacy.resistFingerprinting", true],
       ["privacy.spoof_english", 0],
