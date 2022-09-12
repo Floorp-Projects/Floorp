@@ -27,6 +27,7 @@
 #include "PeerConnectionCtx.h"
 #include "RTCRtpTransceiver.h"
 #include "libwebrtcglue/AudioConduit.h"
+#include "call/call.h"
 
 namespace mozilla::dom {
 
