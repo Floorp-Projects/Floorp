@@ -12,6 +12,7 @@ import android.content.ActivityNotFoundException;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Matrix;
+import android.graphics.Point;
 import android.graphics.Rect;
 import android.graphics.RectF;
 import android.os.Build;
@@ -76,6 +77,8 @@ public class BasicSelectionActionDelegate
   protected @Nullable GeckoSession mSession;
   protected @Nullable Selection mSelection;
   protected boolean mRepopulatedMenu;
+
+  private @Nullable ActionMode mActionModeForClipboardPermission;
 
   @TargetApi(Build.VERSION_CODES.M)
   private class Callback2Wrapper extends ActionMode.Callback2 {
@@ -444,6 +447,11 @@ public class BasicSelectionActionDelegate
       return;
     }
 
+    if (mActionModeForClipboardPermission != null) {
+      mActionModeForClipboardPermission.finish();
+      return;
+    }
+
     if (mUseFloatingToolbar) {
       mActionMode = mActivity.startActionMode(new Callback2Wrapper(), ActionMode.TYPE_FLOATING);
     } else {
@@ -472,5 +480,160 @@ public class BasicSelectionActionDelegate
         mActionMode.finish();
         break;
     }
+  }
+
+  /** Callback class of clipboard permission. This is used on pre-M only */
+  private class ClipboardPermissionCallback implements ActionMode.Callback {
+    private GeckoResult<AllowOrDeny> mResult;
+
+    public ClipboardPermissionCallback(final GeckoResult<AllowOrDeny> result) {
+      mResult = result;
+    }
+
+    @Override
+    public boolean onCreateActionMode(final ActionMode actionMode, final Menu menu) {
+      return BasicSelectionActionDelegate.this.onCreateActionModeForClipboardPermission(
+          actionMode, menu);
+    }
+
+    @Override
+    public boolean onPrepareActionMode(final ActionMode actionMode, final Menu menu) {
+      return false;
+    }
+
+    @Override
+    public boolean onActionItemClicked(final ActionMode actionMode, final MenuItem menuItem) {
+      mResult.complete(AllowOrDeny.ALLOW);
+      mResult = null;
+      actionMode.finish();
+      return true;
+    }
+
+    @Override
+    public void onDestroyActionMode(final ActionMode actionMode) {
+      if (mResult != null) {
+        mResult.complete(AllowOrDeny.DENY);
+      }
+      BasicSelectionActionDelegate.this.onDestroyActionModeForClipboardPermission(actionMode);
+    }
+  }
+
+  /** Callback class of clipboard permission for Android M+ */
+  @TargetApi(Build.VERSION_CODES.M)
+  private class ClipboardPermissionCallbackM extends ActionMode.Callback2 {
+    private @Nullable GeckoResult<AllowOrDeny> mResult;
+    private final @NonNull GeckoSession mSession;
+    private final @Nullable Point mPoint;
+
+    public ClipboardPermissionCallbackM(
+        final @NonNull GeckoSession session,
+        final @Nullable Point screenPoint,
+        final @NonNull GeckoResult<AllowOrDeny> result) {
+      mSession = session;
+      mPoint = screenPoint;
+      mResult = result;
+    }
+
+    @Override
+    public boolean onCreateActionMode(final ActionMode actionMode, final Menu menu) {
+      return BasicSelectionActionDelegate.this.onCreateActionModeForClipboardPermission(
+          actionMode, menu);
+    }
+
+    @Override
+    public boolean onPrepareActionMode(final ActionMode actionMode, final Menu menu) {
+      return false;
+    }
+
+    @Override
+    public boolean onActionItemClicked(final ActionMode actionMode, final MenuItem menuItem) {
+      mResult.complete(AllowOrDeny.ALLOW);
+      mResult = null;
+      actionMode.finish();
+      return true;
+    }
+
+    @Override
+    public void onDestroyActionMode(final ActionMode actionMode) {
+      if (mResult != null) {
+        mResult.complete(AllowOrDeny.DENY);
+      }
+      BasicSelectionActionDelegate.this.onDestroyActionModeForClipboardPermission(actionMode);
+    }
+
+    @Override
+    public void onGetContentRect(final ActionMode mode, final View view, final Rect outRect) {
+      super.onGetContentRect(mode, view, outRect);
+
+      if (mPoint == null) {
+        return;
+      }
+
+      outRect.set(mPoint.x, mPoint.y, mPoint.x + 1, mPoint.y + 1);
+    }
+  }
+
+  /**
+   * Show action mode bar to request clipboard permission
+   *
+   * @param session The GeckoSession that initiated the callback.
+   * @param permission An {@link ClipboardPermission} describing the permission being requested.
+   * @return A {@link GeckoResult} with {@link AllowOrDeny}, determining the response to the
+   *     permission request for this site.
+   */
+  @TargetApi(Build.VERSION_CODES.M)
+  @Override
+  public GeckoResult<AllowOrDeny> onShowClipboardPermissionRequest(
+      final GeckoSession session, final ClipboardPermission permission) {
+    ThreadUtils.assertOnUiThread();
+
+    final GeckoResult<AllowOrDeny> result = new GeckoResult<>();
+
+    if (mActionMode != null) {
+      mActionMode.finish();
+      mActionMode = null;
+    }
+    if (mActionModeForClipboardPermission != null) {
+      mActionModeForClipboardPermission.finish();
+      mActionModeForClipboardPermission = null;
+    }
+
+    if (mUseFloatingToolbar) {
+      mActionModeForClipboardPermission =
+          mActivity.startActionMode(
+              new ClipboardPermissionCallbackM(session, permission.screenPoint, result),
+              ActionMode.TYPE_FLOATING);
+    } else {
+      mActionModeForClipboardPermission =
+          mActivity.startActionMode(new ClipboardPermissionCallback(result));
+    }
+
+    return result;
+  }
+
+  /**
+   * Dismiss action mode for requesting clipboard permission popup or model.
+   *
+   * @param session The GeckoSession that initiated the callback.
+   */
+  @Override
+  public void onDismissClipboardPermissionRequest(final GeckoSession session) {
+    ThreadUtils.assertOnUiThread();
+
+    if (mActionModeForClipboardPermission != null) {
+      mActionModeForClipboardPermission.finish();
+      mActionModeForClipboardPermission = null;
+    }
+  }
+
+  /* package */ boolean onCreateActionModeForClipboardPermission(
+      final ActionMode actionMode, final Menu menu) {
+    final MenuItem item = menu.add(/* group */ Menu.NONE, Menu.FIRST, Menu.FIRST, /* title */ "");
+    item.setTitle(android.R.string.paste);
+    return true;
+  }
+
+  /* package */ void onDestroyActionModeForClipboardPermission(final ActionMode actionMode) {
+    mActionModeForClipboardPermission = null;
   }
 }

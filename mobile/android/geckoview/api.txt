@@ -6,6 +6,7 @@ import android.content.res.Configuration;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Matrix;
+import android.graphics.Point;
 import android.graphics.Rect;
 import android.graphics.RectF;
 import android.graphics.Region;
@@ -952,6 +953,9 @@ package org.mozilla.geckoview {
     field @Nullable protected GeckoSession.Window mWindow;
   }
 
+  @Retention(value=RetentionPolicy.SOURCE) public static interface GeckoSession.ClipboardPermissionType {
+  }
+
   public static interface GeckoSession.ContentDelegate {
     method @UiThread default public void onCloseRequest(@NonNull GeckoSession);
     method @UiThread default public void onContextMenu(@NonNull GeckoSession, int, int, @NonNull GeckoSession.ContentDelegate.ContextElement);
@@ -1446,8 +1450,10 @@ package org.mozilla.geckoview {
   }
 
   public static interface GeckoSession.SelectionActionDelegate {
+    method @UiThread default public void onDismissClipboardPermissionRequest(@NonNull GeckoSession);
     method @UiThread default public void onHideAction(@NonNull GeckoSession, int);
     method @UiThread default public void onShowActionRequest(@NonNull GeckoSession, @NonNull GeckoSession.SelectionActionDelegate.Selection);
+    method @Nullable @UiThread default public GeckoResult<AllowOrDeny> onShowClipboardPermissionRequest(@NonNull GeckoSession, @NonNull GeckoSession.SelectionActionDelegate.ClipboardPermission);
     field public static final String ACTION_COLLAPSE_TO_END = "org.mozilla.geckoview.COLLAPSE_TO_END";
     field public static final String ACTION_COLLAPSE_TO_START = "org.mozilla.geckoview.COLLAPSE_TO_START";
     field public static final String ACTION_COPY = "org.mozilla.geckoview.COPY";
@@ -1465,6 +1471,14 @@ package org.mozilla.geckoview {
     field public static final int HIDE_REASON_ACTIVE_SELECTION = 2;
     field public static final int HIDE_REASON_INVISIBLE_SELECTION = 1;
     field public static final int HIDE_REASON_NO_SELECTION = 0;
+    field public static final int PERMISSION_CLIPBOARD_READ = 1;
+  }
+
+  public static class GeckoSession.SelectionActionDelegate.ClipboardPermission {
+    ctor protected ClipboardPermission();
+    field @Nullable public final Point screenPoint;
+    field public final int type;
+    field @NonNull public final String uri;
   }
 
   public static class GeckoSession.SelectionActionDelegate.Selection {

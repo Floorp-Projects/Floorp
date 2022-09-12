@@ -4,6 +4,9 @@
 
 package org.mozilla.geckoview.test
 
+import org.mozilla.geckoview.AllowOrDeny
+import org.mozilla.geckoview.GeckoResult
+import org.mozilla.geckoview.GeckoSession.PromptDelegate
 import org.mozilla.geckoview.GeckoSession.SelectionActionDelegate
 import org.mozilla.geckoview.GeckoSession.SelectionActionDelegate.*
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.AssertCalled
@@ -13,6 +16,7 @@ import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.WithDisplay
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
+import android.graphics.Point;
 import android.graphics.RectF;
 import android.os.Build
 import androidx.test.ext.junit.rules.ActivityScenarioRule
@@ -252,6 +256,117 @@ class SelectionActionDelegateTest : BaseSessionTest() {
         })()"""
         val expectedDiff = RectF(20f, 20f, 20f, 20f) // left, top, right, bottom
         testClientRect(selectedContent, jsCssReset, jsBorder10pxPadding10px, expectedDiff)
+    }
+
+    @WithDisplay(width = 100, height = 100)
+    @Test fun clipboardReadAllow() {
+        assumeThat("Unnecessary to run multiple times", id, equalTo("#text"));
+
+        sessionRule.setPrefsUntilTestEnd(mapOf("dom.events.asyncClipboard.readText" to true))
+
+        val url = createTestUrl(CLIPBOARD_READ_HTML_PATH)
+        mainSession.loadUri(url)
+        mainSession.waitForPageStop()
+
+        // Select allow
+        val result = GeckoResult<Void>()
+        mainSession.delegateDuringNextWait(object : SelectionActionDelegate, PromptDelegate {
+            @AssertCalled(count = 1)
+            override fun onShowClipboardPermissionRequest(
+                    session: GeckoSession, perm: ClipboardPermission):
+                    GeckoResult<AllowOrDeny> {
+                assertThat("URI should match", perm.uri, startsWith(url))
+                assertThat("Type should match", perm.type,
+                        equalTo(SelectionActionDelegate.PERMISSION_CLIPBOARD_READ))
+                assertThat("screenPoint should match", perm.screenPoint, equalTo(Point(50, 50)))
+                return GeckoResult.allow()
+            }
+
+            @AssertCalled(count = 1, order = [2])
+            override fun onAlertPrompt(
+                    session: GeckoSession, prompt: PromptDelegate.AlertPrompt):
+                    GeckoResult<PromptDelegate.PromptResponse> {
+                assertThat("Message should match", "allow", equalTo(prompt.message))
+                result.complete(null)
+                return GeckoResult.fromValue(prompt.dismiss())
+            }
+        })
+
+        mainSession.synthesizeTap(50, 50) // Provides user activation.
+        sessionRule.waitForResult(result)
+    }
+
+    @WithDisplay(width = 100, height = 100)
+    @Test fun clipboardReadDeny() {
+        assumeThat("Unnecessary to run multiple times", id, equalTo("#text"));
+
+        sessionRule.setPrefsUntilTestEnd(mapOf("dom.events.asyncClipboard.readText" to true))
+
+        val url = createTestUrl(CLIPBOARD_READ_HTML_PATH)
+        mainSession.loadUri(url)
+        mainSession.waitForPageStop()
+
+        // Select deny
+        val result = GeckoResult<Void>()
+        mainSession.delegateDuringNextWait(object : SelectionActionDelegate, PromptDelegate {
+            @AssertCalled(count = 1, order = [1])
+            override fun onShowClipboardPermissionRequest(
+                    session: GeckoSession, perm: ClipboardPermission):
+                    GeckoResult<AllowOrDeny>? {
+                assertThat("URI should match", perm.uri, startsWith(url))
+                assertThat("Type should match", perm.type,
+                        equalTo(SelectionActionDelegate.PERMISSION_CLIPBOARD_READ))
+                return GeckoResult.deny()
+            }
+
+            @AssertCalled(count = 1, order = [2])
+            override fun onAlertPrompt(
+                    session: GeckoSession, prompt: PromptDelegate.AlertPrompt):
+                    GeckoResult<PromptDelegate.PromptResponse> {
+                assertThat("Message should match", "deny", equalTo(prompt.message))
+                result.complete(null)
+                return GeckoResult.fromValue(prompt.dismiss())
+            }
+        })
+
+        mainSession.synthesizeTap(50, 50) // Provides user activation.
+        sessionRule.waitForResult(result)
+    }
+
+    @WithDisplay(width = 100, height = 100)
+    @Test fun clipboardReadDeactivate() {
+        assumeThat("Unnecessary to run multiple times", id, equalTo("#text"));
+
+        sessionRule.setPrefsUntilTestEnd(mapOf("dom.events.asyncClipboard.readText" to true))
+
+        val url = createTestUrl(CLIPBOARD_READ_HTML_PATH)
+        mainSession.loadUri(url)
+        mainSession.waitForPageStop()
+
+        val result = GeckoResult<Void>()
+        mainSession.delegateDuringNextWait(object : SelectionActionDelegate {
+            @AssertCalled(count = 1)
+            override fun onShowClipboardPermissionRequest(
+                    session: GeckoSession, perm: ClipboardPermission):
+                    GeckoResult<AllowOrDeny>? {
+                assertThat("Type should match", perm.type,
+                        equalTo(SelectionActionDelegate.PERMISSION_CLIPBOARD_READ))
+                result.complete(null)
+                return GeckoResult()
+            }
+        });
+
+        mainSession.synthesizeTap(50, 50) // Provides user activation.
+        sessionRule.waitForResult(result)
+
+        mainSession.delegateDuringNextWait(object : SelectionActionDelegate {
+            @AssertCalled
+            override fun onDismissClipboardPermissionRequest(session: GeckoSession) {
+            }
+        });
+
+        mainSession.loadTestPath(HELLO_HTML_PATH)
+        sessionRule.waitForPageStop()
     }
 
     /** Interface that defines behavior for a particular type of content */

@@ -13,6 +13,7 @@ import android.content.Context;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.Matrix;
+import android.graphics.Point;
 import android.graphics.PointF;
 import android.graphics.Rect;
 import android.graphics.RectF;
@@ -895,6 +896,8 @@ public class GeckoSession {
             "GeckoView:ShowSelectionAction",
             "GeckoView:HideMagnifier",
             "GeckoView:ShowMagnifier",
+            "GeckoView:ClipboardPermissionRequest",
+            "GeckoView:DismissClipboardPermissionRequest",
           }) {
         @Override
         public void handleMessage(
@@ -902,6 +905,7 @@ public class GeckoSession {
             final String event,
             final GeckoBundle message,
             final EventCallback callback) {
+          Log.d(LOGTAG, "handleMessage: " + event);
           if ("GeckoView:ShowSelectionAction".equals(event)) {
             final @SelectionActionDelegateAction HashSet<String> actionsSet =
                 new HashSet<>(Arrays.asList(message.getStringArray("actions")));
@@ -941,6 +945,25 @@ public class GeckoSession {
             GeckoSession.this.getMagnifier().show(new PointF(origin[0], origin[1]));
           } else if ("GeckoView:HideMagnifier".equals(event)) {
             GeckoSession.this.getMagnifier().dismiss();
+          } else if ("GeckoView:ClipboardPermissionRequest".equals(event)) {
+            final SelectionActionDelegate.ClipboardPermission permission =
+                new SelectionActionDelegate.ClipboardPermission(message);
+
+            final GeckoResult<AllowOrDeny> result =
+                delegate.onShowClipboardPermissionRequest(GeckoSession.this, permission);
+            callback.resolveTo(
+                result.map(
+                    value -> {
+                      if (value == AllowOrDeny.ALLOW) {
+                        return true;
+                      }
+                      if (value == AllowOrDeny.DENY) {
+                        return false;
+                      }
+                      throw new IllegalArgumentException("Invalid response");
+                    }));
+          } else if ("GeckoView:DismissClipboardPermissionRequest".equals(event)) {
+            delegate.onDismissClipboardPermissionRequest(GeckoSession.this);
           }
         }
       };
@@ -3671,6 +3694,63 @@ public class GeckoSession {
     @UiThread
     default void onHideAction(
         @NonNull final GeckoSession session, @SelectionActionDelegateHideReason final int reason) {}
+
+    /**
+     * Permission for reading clipboard data. See: <a
+     * href="https://developer.mozilla.org/en-US/docs/Web/API/Clipboard/readText">Clipboard.readText()</a>
+     */
+    int PERMISSION_CLIPBOARD_READ = 1;
+
+    /** Represents attributes of a clipboard permission. */
+    public class ClipboardPermission {
+      /** The URI associated with this content permission. */
+      public final @NonNull String uri;
+
+      /**
+       * The type of this permission; one of {@link #PERMISSION_CLIPBOARD_READ
+       * PERMISSION_CLIPBOARD_*}.
+       */
+      public final @ClipboardPermissionType int type;
+      /**
+       * The last mouse or touch location in screen coordinates when the permission is requested.
+       */
+      public final @Nullable Point screenPoint;
+
+      /** Empty constructor for tests */
+      protected ClipboardPermission() {
+        this.uri = "";
+        this.type = PERMISSION_CLIPBOARD_READ;
+        this.screenPoint = null;
+      }
+
+      private ClipboardPermission(final @NonNull GeckoBundle bundle) {
+        this.uri = bundle.getString("uri");
+        this.type = PERMISSION_CLIPBOARD_READ;
+        this.screenPoint = bundle.getPoint("screenPoint");
+      }
+    }
+
+    /**
+     * Request clipboard permission.
+     *
+     * @param session The GeckoSession that initiated the callback.
+     * @param permission An {@link ClipboardPermission} describing the permission being requested.
+     * @return A {@link GeckoResult} with {@link AllowOrDeny}, determining the response to the
+     *     permission request for this site.
+     */
+    @UiThread
+    default @Nullable GeckoResult<AllowOrDeny> onShowClipboardPermissionRequest(
+        @NonNull final GeckoSession session, @NonNull ClipboardPermission permission) {
+      return GeckoResult.deny();
+    }
+
+    /**
+     * Dismiss requesting clipboard permission popup or model.
+     *
+     * @param session The GeckoSession that initiated the callback.
+     */
+    @UiThread
+    default void onDismissClipboardPermissionRequest(@NonNull final GeckoSession session) {}
   }
 
   @Retention(RetentionPolicy.SOURCE)
@@ -3706,6 +3786,12 @@ public class GeckoSession {
     SelectionActionDelegate.HIDE_REASON_ACTIVE_SCROLL
   })
   public @interface SelectionActionDelegateHideReason {}
+
+  @Retention(RetentionPolicy.SOURCE)
+  @IntDef({
+    SelectionActionDelegate.PERMISSION_CLIPBOARD_READ,
+  })
+  public @interface ClipboardPermissionType {}
 
   public interface NavigationDelegate {
     /**
