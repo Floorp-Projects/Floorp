@@ -274,10 +274,14 @@ MediaResult RemoteVideoDecoderParent::ProcessDecodedData(
         MediaDataIPDL(data->mOffset, data->mTime, data->mTimecode,
                       data->mDuration, data->mKeyframe),
         video->mDisplay,
-        RemoteImageHolder(mParent,
-                          XRE_IsGPUProcess() ? VideoBridgeSource::GpuProcess
-                                             : VideoBridgeSource::RddProcess,
-                          size, video->mImage->GetColorDepth(), sd),
+        RemoteImageHolder(
+            mParent,
+            XRE_IsGPUProcess()
+                ? VideoBridgeSource::GpuProcess
+                : (XRE_IsRDDProcess()
+                       ? VideoBridgeSource::RddProcess
+                       : VideoBridgeSource::MFMediaEngineCDMProcess),
+            size, video->mImage->GetColorDepth(), sd),
         video->mFrameID);
 
     array.AppendElement(std::move(output));
