@@ -500,7 +500,7 @@ const ColorwayCollections = [
   },
   {
     id: "independent-voices",
-    expiry: "2023-01-24",
+    expiry: "2023-01-17",
     l10nId: {
       title: "colorway-collection-independent-voices",
       description: "colorway-collection-independent-voices-description",
