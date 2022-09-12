@@ -609,10 +609,6 @@ skip script test262/built-ins/AsyncGeneratorPrototype/return/return-state-comple
 skip script test262/built-ins/AsyncGeneratorPrototype/return/return-suspendedStart-broken-promise.js
 skip script test262/built-ins/AsyncGeneratorPrototype/return/return-suspendedYield-broken-promise-try-catch.js
 
-# https://bugzilla.mozilla.org/show_bug.cgi?id=1781205
-skip script test262/language/statements/async-generator/yield-star-return-then-getter-ticks.js
-skip script test262/language/statements/async-generator/yield-star-promise-not-unwrapped.js
-
 # https://github.com/tc39/proposal-intl-numberformat-v3/pull/107
 skip script test262/intl402/NumberFormat/test-option-useGrouping.js
 
