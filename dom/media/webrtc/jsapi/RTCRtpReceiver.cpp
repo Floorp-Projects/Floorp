@@ -401,7 +401,7 @@ nsTArray<RefPtr<RTCStatsPromise>> RTCRtpReceiver::GetStatsInternal() {
                 remote.mBytesSent.Construct(
                     videoStats->rtcp_sender_octets_sent);
                 remote.mRemoteTimestamp.Construct(
-                    (webrtc::Timestamp::Millis(
+                    (webrtc::TimeDelta::Millis(
                          videoStats->rtcp_sender_remote_ntp_timestamp_ms) -
                      webrtc::TimeDelta::Seconds(webrtc::kNtpJan1970))
                         .ms());
