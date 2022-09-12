@@ -45,6 +45,7 @@ EXPORTS.mozilla.loader += [
     "AutoMemMap.h",
     "ComponentModuleLoader.h",
     "ScriptCacheActors.h",
+    "SkipCheckForBrokenURLOrZeroSized.h",
 ]
 
 EXTRA_JS_MODULES += [
