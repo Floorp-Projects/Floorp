@@ -138,10 +138,21 @@ class OverscrollAnimation : public AsyncPanZoomAnimation {
 class OverscrollEffectBase {
  public:
   virtual ~OverscrollEffectBase() = default;
-  virtual void ConsumeOverscroll(ParentLayerPoint& aOverscroll,
-                                 ScrollDirections aOverscrolableDirections) = 0;
-  virtual void HandleFlingOverscroll(const ParentLayerPoint& aVelocity,
-                                     SideBits aOverscrollSideBits) = 0;
+
+  // Try to increase the amount of overscroll by |aOverscroll|. Limited to
+  // directions contained in |aOverscrollableDirections|. Components of
+  // |aOverscroll| in directions that are successfully consumed are dropped.
+  virtual void ConsumeOverscroll(
+      ParentLayerPoint& aOverscroll,
+      ScrollDirections aOverscrollableDirections) = 0;
+
+  // Relieve overscroll. Depending on the implementation, the relief may
+  // be immediate, or gradual (e.g. after an animation) but this starts
+  // the process. |aVelocity| is the current velocity of the APZC, and
+  // |aOverscrollSideBits| contains the side(s) at which the APZC is
+  // overscrolled.
+  virtual void RelieveOverscroll(const ParentLayerPoint& aVelocity,
+                                 SideBits aOverscrollSideBits) = 0;
 };
 
 // A generic overscroll effect, implemented by AsyncPanZoomController itself.
@@ -151,28 +162,28 @@ class GenericOverscrollEffect : public OverscrollEffectBase {
       : mApzc(aApzc) {}
 
   void ConsumeOverscroll(ParentLayerPoint& aOverscroll,
-                         ScrollDirections aOverscrolableDirections) override {
+                         ScrollDirections aOverscrollableDirections) override {
     if (mApzc.mScrollMetadata.PrefersReducedMotion()) {
       return;
     }
 
-    if (aOverscrolableDirections.contains(ScrollDirection::eHorizontal)) {
+    if (aOverscrollableDirections.contains(ScrollDirection::eHorizontal)) {
       mApzc.mX.OverscrollBy(aOverscroll.x);
       aOverscroll.x = 0;
     }
 
-    if (aOverscrolableDirections.contains(ScrollDirection::eVertical)) {
+    if (aOverscrollableDirections.contains(ScrollDirection::eVertical)) {
       mApzc.mY.OverscrollBy(aOverscroll.y);
       aOverscroll.y = 0;
     }
 
-    if (!aOverscrolableDirections.isEmpty()) {
+    if (!aOverscrollableDirections.isEmpty()) {
       mApzc.ScheduleComposite();
     }
   }
 
-  void HandleFlingOverscroll(const ParentLayerPoint& aVelocity,
-                             SideBits aOverscrollSideBits) override {
+  void RelieveOverscroll(const ParentLayerPoint& aVelocity,
+                         SideBits aOverscrollSideBits) override {
     if (mApzc.mScrollMetadata.PrefersReducedMotion()) {
       return;
     }
@@ -192,18 +203,18 @@ class WidgetOverscrollEffect : public OverscrollEffectBase {
       : mApzc(aApzc) {}
 
   void ConsumeOverscroll(ParentLayerPoint& aOverscroll,
-                         ScrollDirections aOverscrolableDirections) override {
+                         ScrollDirections aOverscrollableDirections) override {
     RefPtr<GeckoContentController> controller =
         mApzc.GetGeckoContentController();
-    if (controller && !aOverscrolableDirections.isEmpty()) {
+    if (controller && !aOverscrollableDirections.isEmpty()) {
       controller->UpdateOverscrollOffset(mApzc.GetGuid(), aOverscroll.x,
                                          aOverscroll.y, mApzc.IsRootContent());
       aOverscroll = ParentLayerPoint();
     }
   }
 
-  void HandleFlingOverscroll(const ParentLayerPoint& aVelocity,
-                             SideBits aOverscrollSideBits) override {
+  void RelieveOverscroll(const ParentLayerPoint& aVelocity,
+                         SideBits aOverscrollSideBits) override {
     RefPtr<GeckoContentController> controller =
         mApzc.GetGeckoContentController();
     if (controller) {

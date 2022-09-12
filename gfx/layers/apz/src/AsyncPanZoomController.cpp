@@ -3827,8 +3827,8 @@ void AsyncPanZoomController::HandleFlingOverscroll(
       }
 
       if (!IsZero(residualVelocity)) {
-        mOverscrollEffect->HandleFlingOverscroll(residualVelocity,
-                                                 aOverscrollSideBits);
+        mOverscrollEffect->RelieveOverscroll(residualVelocity,
+                                             aOverscrollSideBits);
       }
     }
   }
