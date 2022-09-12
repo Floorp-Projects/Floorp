@@ -1080,10 +1080,20 @@ static nsresult GetMatchingShortcut(int aCSIDL, const nsAString& aAUMID,
 
 static nsresult FindMatchingShortcut(const nsAString& aAppUserModelId,
                                      const nsAString& aShortcutName,
+                                     const bool aPrivateBrowsing,
                                      nsAutoString& aShortcutPath) {
   wchar_t exePath[MAXPATHLEN] = {};
   if (NS_WARN_IF(NS_FAILED(BinaryPath::GetLong(exePath)))) {
     return NS_ERROR_FAILURE;
+  }
+
+  if (aPrivateBrowsing) {
+    if (!PathRemoveFileSpecW(exePath)) {
+      return NS_ERROR_FAILURE;
+    }
+    if (!PathAppendW(exePath, L"private_browsing.exe")) {
+      return NS_ERROR_FAILURE;
+    }
   }
 
   int shortcutCSIDLs[] = {CSIDL_COMMON_PROGRAMS, CSIDL_PROGRAMS,
@@ -1108,8 +1118,8 @@ static bool HasMatchingShortcutImpl(const nsAString& aAppUserModelId,
                                     const nsAutoString& aShortcutName) {
   // unused by us, but required
   nsAutoString shortcutPath;
-  nsresult rv =
-      FindMatchingShortcut(aAppUserModelId, aShortcutName, shortcutPath);
+  nsresult rv = FindMatchingShortcut(aAppUserModelId, aShortcutName,
+                                     aPrivateBrowsing, shortcutPath);
   if (SUCCEEDED(rv)) {
     return true;
   }
@@ -1404,8 +1414,8 @@ static nsresult PinCurrentAppToTaskbarImpl(bool aCheckOnly,
       "PinCurrentAppToTaskbarImpl should be called off main thread only");
 
   nsAutoString shortcutPath;
-  nsresult rv =
-      FindMatchingShortcut(aAppUserModelId, aShortcutName, shortcutPath);
+  nsresult rv = FindMatchingShortcut(aAppUserModelId, aShortcutName,
+                                     aPrivateBrowsing, shortcutPath);
   if (NS_FAILED(rv)) {
     shortcutPath.Truncate();
   }
