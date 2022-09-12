@@ -141,12 +141,6 @@ XPCOMUtils.defineLazyGetter(this, "gUpdateChecker", function test_gUC() {
   );
 });
 
-XPCOMUtils.defineLazyGetter(this, "gUP", function test_gUP() {
-  return Cc["@mozilla.org/updates/update-prompt;1"].createInstance(
-    Ci.nsIUpdatePrompt
-  );
-});
-
 XPCOMUtils.defineLazyGetter(this, "gDefaultPrefBranch", function test_gDPB() {
   return Services.prefs.getDefaultBranch(null);
 });
