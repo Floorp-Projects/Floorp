@@ -56,9 +56,12 @@ import org.mozilla.fenix.gleanplumb.MessageController
 import org.mozilla.fenix.home.HomeFragment
 import org.mozilla.fenix.home.HomeFragmentDirections
 import org.mozilla.fenix.home.Mode
+import org.mozilla.fenix.onboarding.WallpaperOnboardingDialogFragment
 import org.mozilla.fenix.settings.SupportUtils
 import org.mozilla.fenix.settings.SupportUtils.SumoTopic.PRIVATE_BROWSING_MYTHS
 import org.mozilla.fenix.utils.Settings
+import org.mozilla.fenix.wallpapers.Wallpaper
+import org.mozilla.fenix.wallpapers.WallpaperState
 import mozilla.components.feature.tab.collections.Tab as ComponentTab
 
 /**
@@ -196,6 +199,11 @@ interface SessionControlController {
      * @see [CustomizeHomeIteractor.openCustomizeHomePage]
      */
     fun handleCustomizeHomeTapped()
+
+    /**
+     * @see [OnboardingInteractor.showWallpapersOnboardingDialog]
+     */
+    fun handleShowWallpapersOnboardingDialog(state: WallpaperState): Boolean
 
     /**
      * @see [SessionControlInteractor.reportSessionMetrics]
@@ -499,6 +507,19 @@ class DefaultSessionControlController(
         val directions = HomeFragmentDirections.actionGlobalHomeSettingsFragment()
         navController.nav(navController.currentDestination?.id, directions)
         HomeScreen.customizeHomeClicked.record(NoExtras())
+    }
+
+    override fun handleShowWallpapersOnboardingDialog(state: WallpaperState): Boolean {
+        if (state.availableWallpapers.all { it.thumbnailFileState == Wallpaper.ImageFileState.Downloaded } &&
+            state.availableWallpapers.size >= WallpaperOnboardingDialogFragment.THUMBNAILS_COUNT
+        ) {
+            navController.nav(
+                R.id.homeFragment,
+                HomeFragmentDirections.actionGlobalWallpaperOnboardingDialog(),
+            )
+            return true
+        }
+        return false
     }
 
     override fun handleReadPrivacyNoticeClicked() {

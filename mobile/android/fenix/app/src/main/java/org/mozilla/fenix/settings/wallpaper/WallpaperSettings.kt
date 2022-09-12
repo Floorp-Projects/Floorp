@@ -7,7 +7,6 @@ package org.mozilla.fenix.settings.wallpaper
 import android.annotation.SuppressLint
 import android.graphics.Bitmap
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -91,8 +90,8 @@ fun WallpaperSettings(
             WallpaperThumbnails(
                 wallpapers = wallpapers,
                 defaultWallpaper = defaultWallpaper,
-                loadWallpaperResource = loadWallpaperResource,
                 selectedWallpaper = selectedWallpaper,
+                loadWallpaperResource = loadWallpaperResource,
                 onSelectWallpaper = { updatedWallpaper ->
                     coroutineScope.launch {
                         scaffoldState.snackbarHostState.showSnackbar(
@@ -147,19 +146,27 @@ private fun WallpaperSnackbar(
  * @param selectedWallpaper The currently selected wallpaper.
  * @param numColumns The number of columns that will occupy the grid.
  * @param onSelectWallpaper Action to take when a new wallpaper is selected.
+ * @param verticalPadding Vertical content padding inside the block.
+ * @param horizontalPadding Horizontal content padding inside the block.
  */
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
 @Suppress("LongParameterList")
-private fun WallpaperThumbnails(
+fun WallpaperThumbnails(
     wallpapers: List<Wallpaper>,
     defaultWallpaper: Wallpaper,
-    loadWallpaperResource: suspend (Wallpaper) -> Bitmap?,
     selectedWallpaper: Wallpaper,
-    numColumns: Int = 3,
+    loadWallpaperResource: suspend (Wallpaper) -> Bitmap?,
     onSelectWallpaper: (Wallpaper) -> Unit,
+    numColumns: Int = 3,
+    verticalPadding: Int = 30,
+    horizontalPadding: Int = 20,
 ) {
-    Column(modifier = Modifier.padding(vertical = 30.dp, horizontal = 20.dp)) {
+    Column(
+        modifier = Modifier.padding(
+            vertical = verticalPadding.dp,
+            horizontal = horizontalPadding.dp,
+        ),
+    ) {
         val numRows = (wallpapers.size + numColumns - 1) / numColumns
         for (rowIndex in 0 until numRows) {
             Row {
@@ -167,7 +174,9 @@ private fun WallpaperThumbnails(
                     val itemIndex = rowIndex * numColumns + columnIndex
                     if (itemIndex < wallpapers.size) {
                         Box(
-                            modifier = Modifier.weight(1f, fill = true).padding(4.dp),
+                            modifier = Modifier
+                                .weight(1f, fill = true)
+                                .padding(4.dp),
                         ) {
                             WallpaperThumbnailItem(
                                 wallpaper = wallpapers[itemIndex],

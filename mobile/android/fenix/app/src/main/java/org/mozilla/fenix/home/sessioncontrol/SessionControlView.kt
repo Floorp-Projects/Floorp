@@ -199,6 +199,9 @@ class SessionControlView(
 
     val view: RecyclerView = containerView as RecyclerView
 
+    // We want to limit feature recommendations to one per HomePage visit.
+    var featureRecommended = false
+
     private val sessionControlAdapter = SessionControlAdapter(
         interactor,
         viewLifecycleOwner,
@@ -206,21 +209,33 @@ class SessionControlView(
     )
 
     init {
+        @Suppress("NestedBlockDepth")
         view.apply {
             adapter = sessionControlAdapter
             layoutManager = object : LinearLayoutManager(containerView.context) {
                 override fun onLayoutCompleted(state: RecyclerView.State?) {
                     super.onLayoutCompleted(state)
 
-                    if (!context.settings().showHomeOnboardingDialog && (
-                        context.settings().showSyncCFR ||
-                            context.settings().shouldShowJumpBackInCFR
-                        )
-                    ) {
-                        HomeCFRPresenter(
-                            context = context,
-                            recyclerView = view,
-                        ).show()
+                    if (!featureRecommended && !context.settings().showHomeOnboardingDialog) {
+                        if (!context.settings().showHomeOnboardingDialog && (
+                            context.settings().showSyncCFR ||
+                                context.settings().shouldShowJumpBackInCFR
+                            )
+                        ) {
+                            featureRecommended = HomeCFRPresenter(
+                                context = context,
+                                recyclerView = view,
+                            ).show()
+                        }
+
+                        if (!context.settings().shouldShowJumpBackInCFR &&
+                            context.settings().showWallpaperOnboarding &&
+                            !featureRecommended
+                        ) {
+                            featureRecommended = interactor.showWallpapersOnboardingDialog(
+                                context.components.appStore.state.wallpaperState,
+                            )
+                        }
                     }
 
                     // We want some parts of the home screen UI to be rendered first if they are

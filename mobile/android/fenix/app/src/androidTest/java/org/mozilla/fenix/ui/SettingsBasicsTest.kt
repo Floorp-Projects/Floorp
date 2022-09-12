@@ -70,6 +70,7 @@ class SettingsBasicsTest {
 
         featureSettingsHelper.setJumpBackCFREnabled(false)
         featureSettingsHelper.setTCPCFREnabled(false)
+        featureSettingsHelper.setShowWallpaperOnboarding(false)
     }
 
     @After

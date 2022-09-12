@@ -35,6 +35,7 @@ class CrashReportingTest {
     fun setUp() {
         featureSettingsHelper.setJumpBackCFREnabled(false)
         featureSettingsHelper.setPocketEnabled(false)
+        featureSettingsHelper.setShowWallpaperOnboarding(false)
 
         mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
         mockWebServer = MockWebServer().apply {

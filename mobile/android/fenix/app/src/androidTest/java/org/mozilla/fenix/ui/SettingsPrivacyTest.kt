@@ -64,6 +64,7 @@ class SettingsPrivacyTest {
 
         featureSettingsHelper.setJumpBackCFREnabled(false)
         featureSettingsHelper.setTCPCFREnabled(false)
+        featureSettingsHelper.setShowWallpaperOnboarding(false)
         featureSettingsHelper.disablePwaCFR(true)
 
         if (Build.VERSION.SDK_INT == Build.VERSION_CODES.R) {

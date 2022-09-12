@@ -19,6 +19,7 @@ class FeatureSettingsHelper {
     private var isRecentlyVisitedFeatureEnabled: Boolean = settings.historyMetadataUIFeature
     private var isUserKnowsAboutPwasTrue: Boolean = settings.userKnowsAboutPwas
     private var isTCPCFREnabled: Boolean = settings.shouldShowTotalCookieProtectionCFR
+    private var isWallpaperOnboardingEnabled: Boolean = settings.showWallpaperOnboarding
 
     fun setPocketEnabled(enabled: Boolean) {
         settings.showPocketRecommendationsFeature = enabled
@@ -26,6 +27,10 @@ class FeatureSettingsHelper {
 
     fun setJumpBackCFREnabled(enabled: Boolean) {
         settings.shouldShowJumpBackInCFR = enabled
+    }
+
+    fun setShowWallpaperOnboarding(enabled: Boolean) {
+        settings.showWallpaperOnboarding = enabled
     }
 
     fun setRecentTabsFeatureEnabled(enabled: Boolean) {
@@ -65,5 +70,6 @@ class FeatureSettingsHelper {
         settings.historyMetadataUIFeature = isRecentlyVisitedFeatureEnabled
         settings.userKnowsAboutPwas = isUserKnowsAboutPwasTrue
         settings.shouldShowTotalCookieProtectionCFR = isTCPCFREnabled
+        settings.showWallpaperOnboarding = isWallpaperOnboardingEnabled
     }
 }
