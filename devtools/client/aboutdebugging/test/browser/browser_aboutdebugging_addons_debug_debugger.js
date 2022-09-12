@@ -5,6 +5,11 @@
 /* import-globals-from helper-addons.js */
 Services.scriptloader.loadSubScript(CHROME_URL_ROOT + "helper-addons.js", this);
 
+const { LocalizationHelper } = require("devtools/shared/l10n");
+const L10N = new LocalizationHelper(
+  "devtools/client/locales/toolbox.properties"
+);
+
 add_task(async () => {
   const EXTENSION_NAME = "temporary-web-extension";
   const EXTENSION_ID = "test-devtools@mozilla.org";
@@ -52,14 +57,31 @@ add_task(async () => {
   );
 
   info("Check whether the element displays correctly");
-  const sourceList = panelWin.document.querySelector(".sources-list");
+  let sourceList = panelWin.document.querySelector(".sources-list");
   ok(sourceList, "Source list element displays correctly");
   ok(
     sourceList.textContent.includes("temporary-web-extension"),
     "Extension name displays correctly"
   );
 
+  const waitForLoadedPanelsReload = await watchForLoadedPanelsReload(toolbox);
+
+  info("Reload the addon using a toolbox reload shortcut");
+  toolbox.win.focus();
+  synthesizeKeyShortcut(L10N.getStr("toolbox.reload.key"), toolbox.win);
+
+  await waitForLoadedPanelsReload();
+
+  info("Wait until a new background log message is logged");
+  await waitFor(() => {
+    // As React may re-create a new sources-list element,
+    // fetch the latest instance
+    sourceList = panelWin.document.querySelector(".sources-list");
+    return sourceList?.textContent.includes("temporary-web-extension");
+  }, "Wait for the source to re-appear");
+
   await closeAboutDevtoolsToolbox(document, devtoolsTab, window);
+
   await removeTemporaryExtension(EXTENSION_NAME, document);
   await removeTab(tab);
 });

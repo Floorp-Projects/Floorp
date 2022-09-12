@@ -134,34 +134,19 @@ export default function update(state = initialSourcesTreeState(), action) {
     }
 
     case "NAVIGATE":
-      return initialSourcesTreeState();
-
+      state = initialSourcesTreeState();
+      // WebExtension is being special. A navigation is notified when reloading the add-on,
+      // but the top level target is not being destroyed/re-created. It stays up.
+      // So here, we ensure re-registering the thread so that its related sources keep
+      // being displayed.
+      if (action.mainThread.isWebExtension) {
+        addThread(state, action.mainThread);
+      }
+      return state;
     case "INSERT_THREAD":
-      const thread = action.newThread.actor;
-      // When processing the top level target,
-      // see if we are debugging an extension.
-      if (action.newThread.isTopLevel) {
-        state.isWebExtension = action.newThread.isWebExtension;
-      }
-      let threadItem = state.threadItems.find(item => {
-        return item.threadActorID == thread;
-      });
-      if (!threadItem) {
-        threadItem = createThreadTreeItem(thread);
-        state.threadItems = [...state.threadItems, threadItem];
-      } else {
-        // We force updating the list to trigger mapStateToProps
-        // as the getSourcesTreeSources selector is awaiting for the `thread` attribute
-        // which we will set here.
-        state.threadItems = [...state.threadItems];
-      }
-      // Inject the reducer thread object on Thread Tree Items
-      // (this is handy shortcut to have access to from React components)
-      threadItem.thread = action.newThread;
-      return {
-        ...state,
-      };
-
+      state = { ...state };
+      addThread(state, action.newThread);
+      return state;
     case "REMOVE_THREAD": {
       const index = state.threadItems.findIndex(item => {
         return item.threadActorID == action.threadActorID;
@@ -189,6 +174,30 @@ export default function update(state = initialSourcesTreeState(), action) {
   }
 
   return state;
+}
+
+function addThread(state, thread) {
+  const threadActorID = thread.actor;
+  // When processing the top level target,
+  // see if we are debugging an extension.
+  if (thread.isTopLevel) {
+    state.isWebExtension = thread.isWebExtension;
+  }
+  let threadItem = state.threadItems.find(item => {
+    return item.threadActorID == threadActorID;
+  });
+  if (!threadItem) {
+    threadItem = createThreadTreeItem(threadActorID);
+    state.threadItems = [...state.threadItems, threadItem];
+  } else {
+    // We force updating the list to trigger mapStateToProps
+    // as the getSourcesTreeSources selector is awaiting for the `thread` attribute
+    // which we will set here.
+    state.threadItems = [...state.threadItems];
+  }
+  // Inject the reducer thread object on Thread Tree Items
+  // (this is handy shortcut to have access to from React components)
+  threadItem.thread = thread;
 }
 
 function updateExpanded(state, action) {
