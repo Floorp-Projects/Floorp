@@ -682,8 +682,26 @@ void NativeObject::maybeFreeDictionaryPropSlots(JSContext* cx,
     return;
   }
 
-  uint32_t numReserved = JSCLASS_RESERVED_SLOTS(getClass());
-  MOZ_ALWAYS_TRUE(ensureSlotsForDictionaryObject(cx, numReserved));
+  uint32_t oldSpan = dictionaryModeSlotSpan();
+  uint32_t newSpan = JSCLASS_RESERVED_SLOTS(getClass());
+  if (oldSpan == newSpan) {
+    return;
+  }
+
+  MOZ_ASSERT(newSpan < oldSpan);
+
+  // Trigger write barriers on the old slots before reallocating.
+  prepareSlotRangeForOverwrite(newSpan, oldSpan);
+  invalidateSlotRange(newSpan, oldSpan);
+
+  uint32_t oldCapacity = numDynamicSlots();
+  uint32_t newCapacity =
+      calculateDynamicSlots(numFixedSlots(), newSpan, getClass());
+  if (newCapacity < oldCapacity) {
+    shrinkSlots(cx, oldCapacity, newCapacity);
+  }
+
+  setDictionaryModeSlotSpan(newSpan);
   map->setFreeList(SHAPE_INVALID_SLOT);
 }
 
