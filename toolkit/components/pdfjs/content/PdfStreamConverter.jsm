@@ -471,6 +471,13 @@ class ChromeActions {
       case "editing":
         lazy.PdfJsTelemetry.onEditing(probeInfo.data.type);
         break;
+      case "buttons":
+        const id = probeInfo.data.id.replace(
+          /([A-Z])/g,
+          c => `_${c.toLowerCase()}`
+        );
+        lazy.PdfJsTelemetry.onButtons(id);
+        break;
     }
   }
 

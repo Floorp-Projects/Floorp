@@ -87,4 +87,7 @@ var PdfJsTelemetry = {
       Glean.pdfjs.editing[type].add(1);
     }
   },
+  onButtons(id) {
+    Glean.pdfjs.buttons[id].add(1);
+  },
 };
