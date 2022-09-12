@@ -3,7 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 from __future__ import absolute_import
 
-import os
+import pathlib
 import re
 import shutil
 import tempfile
@@ -35,10 +35,10 @@ class Generator(object):
         if not self._workspace:
             raise Exception("PerfDocs Generator requires a workspace directory.")
         # Template documents without added information reside here
-        self.templates_path = os.path.join(
+        self.templates_path = pathlib.Path(
             self._workspace, "tools", "lint", "perfdocs", "templates"
         )
-        self.perfdocs_path = os.path.join(
+        self.perfdocs_path = pathlib.Path(
             self._workspace, "testing", "perfdocs", "generated"
         )
 
@@ -61,9 +61,9 @@ class Generator(object):
         # Using the verified `perfdocs_tree`, build up the documentation.
         frameworks_info = {}
         for framework in self._perfdocs_tree:
-            yaml_content = read_yaml(os.path.join(framework["path"], framework["yml"]))
+            yaml_content = read_yaml(pathlib.Path(framework["path"], framework["yml"]))
             rst_content = read_file(
-                os.path.join(framework["path"], framework["rst"]), stringify=True
+                pathlib.Path(framework["path"], framework["rst"]), stringify=True
             )
 
             # Gather all tests and descriptions and format them into
@@ -106,7 +106,7 @@ class Generator(object):
                     {
                         "file": static_file,
                         "content": read_file(
-                            os.path.join(framework["path"], static_file), stringify=True
+                            pathlib.Path(framework["path"], static_file), stringify=True
                         ),
                     }
                 )
@@ -121,17 +121,16 @@ class Generator(object):
         # Build the directory that will contain the final result (a tmp dir
         # that will be moved to the final location afterwards)
         try:
-            tmpdir = tempfile.mkdtemp()
-            perfdocs_tmpdir = os.path.join(tmpdir, "generated")
-            os.mkdir(perfdocs_tmpdir)
+            tmpdir = pathlib.Path(tempfile.mkdtemp())
+            perfdocs_tmpdir = pathlib.Path(tmpdir, "generated")
+            perfdocs_tmpdir.mkdir(parents=True, exist_ok=True)
+            perfdocs_tmpdir.chmod(0o766)
         except OSError as e:
             logger.critical("Error creating temp file: {}".format(e))
 
-        success = False or os.path.isdir(perfdocs_tmpdir)
-        if success:
+        if perfdocs_tmpdir.is_dir():
             return perfdocs_tmpdir
-        else:
-            return success
+        return False
 
     def _create_perfdocs(self):
         """
@@ -149,18 +148,18 @@ class Generator(object):
             frameworks.append(framework_name)
             save_file(
                 framework_docs[framework_name]["dynamic"],
-                os.path.join(perfdocs_tmpdir, framework_name),
+                pathlib.Path(perfdocs_tmpdir, framework_name),
             )
 
             for static_name in framework_docs[framework_name]["static"]:
                 save_file(
                     static_name["content"],
-                    os.path.join(perfdocs_tmpdir, static_name["file"].split(".")[0]),
+                    pathlib.Path(perfdocs_tmpdir, static_name["file"].split(".")[0]),
                 )
 
         # Get the main page and add the framework links to it
         mainpage = read_file(
-            os.path.join(self.templates_path, "index.rst"), stringify=True
+            pathlib.Path(self.templates_path, "index.rst"), stringify=True
         )
 
         fmt_frameworks = "\n".join(["  * :doc:`%s`" % name for name in frameworks])
@@ -169,7 +168,7 @@ class Generator(object):
         fmt_mainpage = re.sub(r"{toctree_documentation}", fmt_toctree, mainpage)
         fmt_mainpage = re.sub(r"{test_documentation}", fmt_frameworks, fmt_mainpage)
 
-        save_file(fmt_mainpage, os.path.join(perfdocs_tmpdir, "index"))
+        save_file(fmt_mainpage, pathlib.Path(perfdocs_tmpdir, "index"))
 
         return perfdocs_tmpdir
 
@@ -183,15 +182,15 @@ class Generator(object):
         # checking if they need to be regenerated.
         logger.log("Regenerating perfdocs...")
 
-        if os.path.exists(self.perfdocs_path):
-            shutil.rmtree(self.perfdocs_path)
+        if self.perfdocs_path.exists():
+            shutil.rmtree(str(self.perfdocs_path))
 
         try:
-            saved = shutil.copytree(perfdocs_tmpdir, self.perfdocs_path)
+            saved = shutil.copytree(str(perfdocs_tmpdir), str(self.perfdocs_path))
             if saved:
                 logger.log(
                     "Documentation saved to {}/".format(
-                        re.sub(".*testing", "testing", self.perfdocs_path)
+                        re.sub(".*testing", "testing", str(self.perfdocs_path))
                     )
                 )
         except Exception as e:
@@ -226,14 +225,14 @@ class Generator(object):
             for entry in self._perfdocs_tree:
                 files.extend(
                     [
-                        os.path.join(entry["path"], entry["yml"]),
-                        os.path.join(entry["path"], entry["rst"]),
+                        pathlib.Path(entry["path"], entry["yml"]),
+                        pathlib.Path(entry["path"], entry["rst"]),
                     ]
                 )
             return files
 
         # Throw a warning if there's no need for generating
-        if not os.path.exists(self.perfdocs_path) and not self._generate:
+        if not self.perfdocs_path.exists() and not self._generate:
             # If they don't exist and we are not generating, then throw
             # a linting error and exit.
             logger.warning(

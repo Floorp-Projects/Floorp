@@ -2,6 +2,7 @@ from __future__ import absolute_import, print_function
 
 import logging
 import os
+import pathlib
 import sys
 from collections import defaultdict
 
@@ -227,16 +228,17 @@ def perfdocs_sample():
     )
 
     with temp_dir() as tmpdir:
-        suite_dir = os.path.join(tmpdir, "suite")
-        raptor_dir = os.path.join(tmpdir, "raptor")
-        raptor_suitedir = os.path.join(tmpdir, "raptor", "suite")
-        raptor_another_suitedir = os.path.join(tmpdir, "raptor", "another_suite")
-        perfdocs_dir = os.path.join(tmpdir, "perfdocs")
-        os.mkdir(perfdocs_dir)
-        os.mkdir(suite_dir)
-        os.mkdir(raptor_dir)
-        os.mkdir(raptor_suitedir)
-        os.mkdir(raptor_another_suitedir)
+        suite_dir = pathlib.Path(tmpdir, "suite")
+        raptor_dir = pathlib.Path(tmpdir, "raptor")
+        raptor_suitedir = pathlib.Path(tmpdir, "raptor", "suite")
+        raptor_another_suitedir = pathlib.Path(tmpdir, "raptor", "another_suite")
+        perfdocs_dir = pathlib.Path(tmpdir, "perfdocs")
+
+        perfdocs_dir.mkdir(parents=True, exist_ok=True)
+        suite_dir.mkdir(parents=True, exist_ok=True)
+        raptor_dir.mkdir(parents=True, exist_ok=True)
+        raptor_suitedir.mkdir(parents=True, exist_ok=True)
+        raptor_another_suitedir.mkdir(parents=True, exist_ok=True)
 
         with temp_file(
             "perftest.ini", tempdir=suite_dir, content="[perftest_sample.js]"
@@ -254,7 +256,7 @@ def perfdocs_sample():
             "index.rst", tempdir=perfdocs_dir, content="{documentation}"
         ) as tmpindex:
             yield {
-                "top_dir": tmpdir.replace("\\", "\\\\"),
+                "top_dir": tmpdir,
                 "manifest": tmpmanifest,
                 "example1_manifest": tmpexample1manifest,
                 "example2_manifest": tmpexample2manifest,

@@ -1,6 +1,7 @@
 import contextlib
 from unittest import mock
 import os
+import pathlib
 import pytest
 import shutil
 import tempfile
@@ -92,27 +93,27 @@ test_url = Example_url
 def temp_file(name="temp", tempdir=None, content=None):
     if tempdir is None:
         tempdir = tempfile.mkdtemp()
-    path = os.path.join(tempdir, name)
+    path = pathlib.Path(tempdir, name)
     if content is not None:
-        with open(path, "w", newline="\n") as f:
+        with path.open("w", newline="\n") as f:
             f.write(content)
     try:
         yield path
     finally:
         try:
-            shutil.rmtree(tempdir)
+            shutil.rmtree(str(tempdir))
         except FileNotFoundError:
             pass
 
 
 @contextlib.contextmanager
 def temp_dir():
-    tempdir = tempfile.mkdtemp()
+    tempdir = pathlib.Path(tempfile.mkdtemp())
     try:
         yield tempdir
     finally:
         try:
-            shutil.rmtree(tempdir)
+            shutil.rmtree(str(tempdir))
         except FileNotFoundError:
             pass
 
@@ -140,7 +141,9 @@ def test_perfdocs_start_and_fail(verifier, generator, structured_logger, config,
     from perfdocs.perfdocs import run_perfdocs
 
     with temp_file("bad", content="foo") as temp:
-        run_perfdocs(config, logger=structured_logger, paths=[temp], generate=False)
+        run_perfdocs(
+            config, logger=structured_logger, paths=[str(temp)], generate=False
+        )
         assert PerfDocsLoggerMock.LOGGER == structured_logger
         assert PerfDocsLoggerMock.PATHS == [temp]
         assert PerfDocsLoggerMock.FAILED
@@ -158,7 +161,9 @@ def test_perfdocs_start_and_pass(verifier, generator, structured_logger, config,
 
     PerfDocsLoggerMock.FAILED = False
     with temp_file("bad", content="foo") as temp:
-        run_perfdocs(config, logger=structured_logger, paths=[temp], generate=False)
+        run_perfdocs(
+            config, logger=structured_logger, paths=[str(temp)], generate=False
+        )
         assert PerfDocsLoggerMock.LOGGER == structured_logger
         assert PerfDocsLoggerMock.PATHS == [temp]
         assert not PerfDocsLoggerMock.FAILED
@@ -245,7 +250,7 @@ def test_perfdocs_verifier_validate_yaml_pass(
 
     from perfdocs.verifier import Verifier
 
-    valid = Verifier(top_dir).validate_yaml(yaml_path)
+    valid = Verifier(top_dir).validate_yaml(pathlib.Path(yaml_path))
 
     assert valid
 
@@ -283,7 +288,7 @@ def test_perfdocs_verifier_validate_rst_pass(
 
     from perfdocs.verifier import Verifier
 
-    valid = Verifier(top_dir).validate_rst_content(rst_path)
+    valid = Verifier(top_dir).validate_rst_content(pathlib.Path(rst_path))
 
     assert valid
 
@@ -498,7 +503,7 @@ def test_perfdocs_framework_gatherers(logger, structured_logger, perfdocs_sample
             assert suite == "suite"
             for test, manifest in suitetests.items():
                 assert test == "Example"
-                assert manifest == perfdocs_sample["manifest"]
+                assert pathlib.Path(manifest) == perfdocs_sample["manifest"]
 
 
 @mock.patch("perfdocs.logger.PerfDocLogger")
@@ -537,7 +542,9 @@ def test_perfdocs_framework_gatherers_urls(logger, structured_logger, perfdocs_s
 
     perfdocs_tree = gn._perfdocs_tree[0]
     yaml_content = read_yaml(
-        os.path.join(os.path.join(perfdocs_tree["path"], perfdocs_tree["yml"]))
+        pathlib.Path(
+            os.path.join(os.path.join(perfdocs_tree["path"], perfdocs_tree["yml"]))
+        )
     )
     suites = yaml_content["suites"]
 

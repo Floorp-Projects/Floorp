@@ -4,7 +4,7 @@
 from __future__ import absolute_import, print_function
 
 import os
-import re
+import pathlib
 
 
 def run_perfdocs(config, logger=None, paths=None, generate=True):
@@ -45,23 +45,29 @@ def run_perfdocs(config, logger=None, paths=None, generate=True):
     """
     from perfdocs.logger import PerfDocLogger
 
-    top_dir = os.environ.get("WORKSPACE", None)
-    if not top_dir:
-        floc = os.path.abspath(__file__)
-        top_dir = floc.split("tools")[0]
-    top_dir = top_dir.replace("\\", "\\\\")
+    if not os.environ.get("WORKSPACE", None):
+        floc = pathlib.Path(__file__).absolute()
+        top_dir = pathlib.Path(str(floc).split("tools")[0]).resolve()
+    else:
+        top_dir = pathlib.Path(os.environ.get("WORKSPACE")).resolve()
 
     PerfDocLogger.LOGGER = logger
     PerfDocLogger.TOP_DIR = top_dir
 
     # Convert all the paths to relative ones
-    rel_paths = [re.sub(top_dir, "", path) for path in paths]
+    target_dir = [pathlib.Path(path) for path in paths]
+    rel_paths = []
+    for path in target_dir:
+        try:
+            rel_paths.append(path.relative_to(top_dir))
+        except ValueError:
+            rel_paths.append(path)
+
     PerfDocLogger.PATHS = rel_paths
 
-    target_dir = [os.path.join(top_dir, i) for i in rel_paths]
     for path in target_dir:
-        if not os.path.exists(path):
-            raise Exception("Cannot locate directory at %s" % path)
+        if not path.exists():
+            raise Exception("Cannot locate directory at %s" % str(path))
 
     decision_task_id = os.environ.get("DECISION_TASK_ID", None)
     if decision_task_id:

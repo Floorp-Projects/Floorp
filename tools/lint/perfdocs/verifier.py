@@ -5,6 +5,7 @@ from __future__ import absolute_import
 
 import jsonschema
 import os
+import pathlib
 import re
 
 from perfdocs.logger import PerfDocLogger
@@ -114,7 +115,7 @@ class Verifier(object):
                 for test_name in ytests:
                     foundtest = False
                     for t in framework_info["test_list"][suite]:
-                        tb = os.path.basename(t)
+                        tb = os.path.basename(str(t))
                         tb = re.sub("\..*", "", tb)
                         if test_name == tb:
                             # Found an exact match for the test_name
@@ -162,7 +163,7 @@ class Verifier(object):
             missing_tests = []
             test_to_manifest = {}
             for test_name, manifest_path in test_list.items():
-                tb = os.path.basename(manifest_path)
+                tb = os.path.basename(str(manifest_path))
                 tb = re.sub("\..*", "", tb)
                 if (
                     stests.get(tb, None) is not None
@@ -213,10 +214,15 @@ class Verifier(object):
             """
             Recompute the description in case it's a file.
             """
-            desc_path = os.path.join(self.workspace_dir, desc)
-            if os.path.exists(desc_path) and os.path.isfile(desc_path):
-                with open(desc_path, "r") as f:
-                    desc = f.readlines()
+            desc_path = pathlib.Path(self.workspace_dir, desc)
+
+            try:
+                if desc_path.exists() and desc_path.is_file():
+                    with open(desc_path, "r") as f:
+                        desc = f.readlines()
+            except OSError:
+                pass
+
             return desc
 
         def _parse_descriptions(content):
@@ -287,8 +293,8 @@ class Verifier(object):
         # For each framework, check their files and validate descriptions
         for matched in self._gatherer.perfdocs_tree:
             # Get the paths to the YAML and RST for this framework
-            matched_yml = os.path.join(matched["path"], matched["yml"])
-            matched_rst = os.path.join(matched["path"], matched["rst"])
+            matched_yml = pathlib.Path(matched["path"], matched["yml"])
+            matched_rst = pathlib.Path(matched["path"], matched["rst"])
 
             _valid_files = {
                 "yml": self.validate_yaml(matched_yml),

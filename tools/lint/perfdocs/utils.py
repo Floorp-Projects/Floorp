@@ -6,6 +6,7 @@ from __future__ import absolute_import
 import difflib
 import filecmp
 import os
+import pathlib
 import yaml
 from perfdocs.logger import PerfDocLogger
 
@@ -23,8 +24,10 @@ def save_file(file_content, path, extension="rst"):
     :param str data: Content to write into the file.
     :param str extension: Extension to save the file as.
     """
-    with open("{}.{}".format(path, extension), "w", newline="\n") as f:
-        f.write(file_content)
+    new_file = pathlib.Path("{}.{}".format(str(path), extension))
+    with new_file.open("wb") as f:
+        f.write(file_content.encode("utf-8"))
+    new_file.chmod(0o766)
 
 
 def read_file(path, stringify=False):
@@ -34,7 +37,7 @@ def read_file(path, stringify=False):
     :param str path: Path to the file.
     :return list: List containing the lines in the file.
     """
-    with open(path, "r") as f:
+    with path.open(encoding="utf-8") as f:
         return f.read() if stringify else f.readlines()
 
 
@@ -47,10 +50,12 @@ def read_yaml(yaml_path):
     """
     contents = {}
     try:
-        with open(yaml_path, "r") as f:
+        with yaml_path.open(encoding="utf-8") as f:
             contents = yaml.safe_load(f)
     except Exception as e:
-        logger.warning("Error opening file {}: {}".format(yaml_path, str(e)), yaml_path)
+        logger.warning(
+            "Error opening file {}: {}".format(str(yaml_path), str(e)), str(yaml_path)
+        )
 
     return contents
 
@@ -66,7 +71,7 @@ def are_dirs_equal(dir_1, dir_2):
     :return: True if the directory trees are the same and False otherwise.
     """
 
-    dirs_cmp = filecmp.dircmp(dir_1, dir_2)
+    dirs_cmp = filecmp.dircmp(str(dir_1.resolve()), str(dir_2.resolve()))
     if dirs_cmp.left_only or dirs_cmp.right_only or dirs_cmp.funny_files:
         logger.log("Some files are missing or are funny.")
         for file in dirs_cmp.left_only:
@@ -78,7 +83,7 @@ def are_dirs_equal(dir_1, dir_2):
         return False
 
     _, mismatch, errors = filecmp.cmpfiles(
-        dir_1, dir_2, dirs_cmp.common_files, shallow=False
+        str(dir_1.resolve()), str(dir_2.resolve()), dirs_cmp.common_files, shallow=False
     )
 
     if mismatch or errors:
@@ -86,19 +91,20 @@ def are_dirs_equal(dir_1, dir_2):
 
         # The root for where to save the diff will be different based on
         # whether we are running in CI or not
-        diff_filename = "diff.txt"
-        diff_root = "/builds/worker/"
+        os_root = pathlib.Path.cwd().anchor
+        diff_root = pathlib.Path(os_root, "builds", "worker")
         if not ON_TRY:
-            diff_root = f"{PerfDocLogger.TOP_DIR}artifacts/"
-        diff_path = f"{diff_root}{diff_filename}"
+            diff_root = pathlib.Path(PerfDocLogger.TOP_DIR, "artifacts")
+            diff_root.mkdir(parents=True, exist_ok=True)
 
-        with open(diff_path, "w") as diff_file:
+        diff_path = pathlib.Path(diff_root, "diff.txt")
+        with diff_path.open("w", encoding="utf-8") as diff_file:
             for entry in mismatch:
                 logger.log(f"Mismatch found on {entry}")
 
-                with open(os.path.join(dir_1, entry)) as f:
+                with pathlib.Path(dir_1, entry).open(encoding="utf-8") as f:
                     newlines = f.readlines()
-                with open(os.path.join(dir_2, entry)) as f:
+                with pathlib.Path(dir_2, entry).open(encoding="utf-8") as f:
                     baselines = f.readlines()
                 for line in difflib.unified_diff(
                     baselines, newlines, fromfile="base", tofile="new"
@@ -108,11 +114,13 @@ def are_dirs_equal(dir_1, dir_2):
                 # Here we want to add to diff.txt in a patch format, we use
                 # the basedir to make the file names/paths relative and this is
                 # different in CI vs local runs.
-                basedir = "/builds/worker/checkouts/gecko/"
+                basedir = pathlib.Path(
+                    os_root, "builds", "worker", "checkouts", "gecko"
+                )
                 if not ON_TRY:
                     basedir = diff_root
 
-                relative_path = os.path.join(dir_2, entry).split(basedir)[-1]
+                relative_path = str(pathlib.Path(dir_2, entry)).split(str(basedir))[-1]
                 patch = difflib.unified_diff(
                     baselines, newlines, fromfile=relative_path, tofile=relative_path
                 )
@@ -133,8 +141,8 @@ def are_dirs_equal(dir_1, dir_2):
         return False
 
     for common_dir in dirs_cmp.common_dirs:
-        subdir_1 = os.path.join(dir_1, common_dir)
-        subdir_2 = os.path.join(dir_2, common_dir)
+        subdir_1 = pathlib.Path(dir_1, common_dir)
+        subdir_2 = pathlib.Path(dir_2, common_dir)
         if not are_dirs_equal(subdir_1, subdir_2):
             return False
 

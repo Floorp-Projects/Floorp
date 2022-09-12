@@ -67,7 +67,7 @@ class FrameworkGatherer(object):
             return self._manifest_path
 
         yaml_content = read_yaml(self._yaml_path)
-        self._manifest_path = os.path.join(self.workspace_dir, yaml_content["manifest"])
+        self._manifest_path = pathlib.Path(self.workspace_dir, yaml_content["manifest"])
         return self._manifest_path
 
     def get_suite_list(self):
@@ -121,7 +121,7 @@ class RaptorGatherer(FrameworkGatherer):
         manifest_path = self.get_manifest_path()
 
         # Get the tests from the manifest
-        test_manifest = TestManifest([manifest_path], strict=False)
+        test_manifest = TestManifest([str(manifest_path)], strict=False)
         test_list = test_manifest.active_tests(exists=False, disabled=False)
 
         # Parse the tests into the expected dictionary
@@ -168,7 +168,7 @@ class RaptorGatherer(FrameworkGatherer):
         :return list: the list of the tests
         """
         desc_exclusion = ["here", "manifest", "manifest_relpath", "path", "relpath"]
-        test_manifest = TestManifest([manifest_path], strict=False)
+        test_manifest = TestManifest([str(manifest_path)], strict=False)
         test_list = test_manifest.active_tests(exists=False, disabled=False)
         subtests = {}
         for subtest in test_list:
@@ -323,7 +323,7 @@ class MozperftestGatherer(FrameworkGatherer):
         for path in pathlib.Path(self.workspace_dir).rglob("perftest.ini"):
             if "obj-" in str(path):
                 continue
-            suite_name = re.sub(self.workspace_dir, "", os.path.dirname(path))
+            suite_name = str(path.parent).replace(str(self.workspace_dir), "")
 
             # If the workspace dir doesn't end with a forward-slash,
             # the substitution above won't work completely
@@ -356,7 +356,7 @@ class MozperftestGatherer(FrameworkGatherer):
 class TalosGatherer(FrameworkGatherer):
     def _get_ci_tasks(self):
         with open(
-            os.path.join(self.workspace_dir, "testing", "talos", "talos.json")
+            pathlib.Path(self.workspace_dir, "testing", "talos", "talos.json")
         ) as f:
             config_suites = json.load(f)["suites"]
 
@@ -435,7 +435,13 @@ class TalosGatherer(FrameworkGatherer):
                 elif key == "filters":
                     continue
 
-                result += f"   * {key}: {self._descriptions[title][key]}\n"
+                # On windows, we get the paths in the wrong style
+                value = self._descriptions[title][key]
+                if isinstance(value, dict):
+                    for k, v in value.items():
+                        if isinstance(v, str) and "\\" in v:
+                            value[k] = str(v).replace("\\", r"/")
+                result += r"   * " + key + r": " + str(value) + r"\n"
 
         if self._task_list.get(title, []):
             result += "   * **Test Task**:\n\n"
