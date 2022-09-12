@@ -48,7 +48,7 @@ class RemoteImageHolder final {
   // We need a default for the default constructor, never used in practice.
   layers::VideoBridgeSource mSource = layers::VideoBridgeSource::GpuProcess;
   gfx::IntSize mSize;
-  gfx::ColorDepth mColorDepth;
+  gfx::ColorDepth mColorDepth = gfx::ColorDepth::COLOR_8;
   Maybe<layers::SurfaceDescriptor> mSD;
   RefPtr<layers::IGPUVideoSurfaceManager> mManager;
 };
