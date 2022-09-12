@@ -163,12 +163,6 @@ iframe {
   *|*:root {
     -moz-box-layout: flex;
   }
-
-  browser,
-  editor,
-  iframe {
-    display: block;
-  }
 }
 
 /* Allow the browser to shrink below its intrinsic size, to match legacy
@@ -515,14 +509,6 @@ search-textbox {
 /* Prefix with (xul|*):root to workaround HTML tests loading xul.css */
 :root html|textarea:not([resizable="true"]) {
   resize: none;
-}
-
-@media (-moz-box-flexbox-emulation) {
-  html|*.textbox-input {
-    /* Be block-level, so that -moz-box-flex can take effect, when we are an item
-       in a -moz-box being emulated by modified modern flex. */
-    display: block;
-  }
 }
 
 /********** autocomplete textbox **********/

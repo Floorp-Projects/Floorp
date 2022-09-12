@@ -7,11 +7,11 @@
   <script src="chrome://mochikit/content/tests/SimpleTest/WindowSnapshot.js"></script>
 
   <stack style="align-items: center; height: 300px; width: 200px;">
-    <!-- the bottom 100px is a strip of black that should be vixible through the content iframe -->
+    <!-- the bottom 100px is a strip of black that should be visible through the content iframe -->
     <vbox style="background:pink; border-bottom:100px solid black"/>
     <!-- the middle 100px is a strip of black in the content iframe -->
     <!-- the bottom 100px of the iframe is transparent, the top 100px is yellow -->
-    <iframe type="content" style="border:none;"
+    <iframe type="content" style="border:none; width: 10px; height: 10px;"
             transparent="transparent"
             src="data:text/html,&lt;div style='position:absolute;left:0;top:0;width:100%;height:100px;background:yellow;border-bottom:100px solid black'&gt;"/>
     <!-- the top 100px is a strip of black above the content iframe -->

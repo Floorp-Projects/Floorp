@@ -169,17 +169,6 @@ panelview[mainview] > .panel-header {
   transition: height var(--panelui-subview-transition-duration);
 }
 
-@media (-moz-box-flexbox-emulation) {
-  #tabbrowser-tabs {
-    /* Without this, the tabs container width extends beyond the window width */
-    width: 0;
-  }
-  .tab-stack {
-    /* Without this, pinned tabs get a bit too tall when the tabstrip overflows. */
-    vertical-align: top;
-  }
-}
-
 @supports not -moz-bool-pref("browser.tabs.tabmanager.enabled") {
   #tabbrowser-tabs:not([overflow="true"], [hashiddentabs]) ~ #alltabs-button {
     display: none;
