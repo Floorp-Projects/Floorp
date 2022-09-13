@@ -32,7 +32,12 @@ class nsCookieBannerService final : public nsIObserver,
   bool mIsInitialized = false;
 
   nsCOMPtr<nsICookieBannerListService> mListService;
+
+  // Map of site specific cookie banner rules keyed by domain.
   nsTHashMap<nsCStringHashKey, nsCOMPtr<nsICookieBannerRule>> mRules;
+
+  // Map of global cookie banner rules keyed by id.
+  nsTHashMap<nsCStringHashKey, nsCOMPtr<nsICookieBannerRule>> mGlobalRules;
 
   // Pref change callback which initializes and shuts down the service. This is
   // also called on startup.

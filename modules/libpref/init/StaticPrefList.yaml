@@ -1886,6 +1886,17 @@
   value: 0
   mirror: always
 
+# Enables use of global CookieBannerRules, which apply to all sites. This is
+# used for click rules that can handle common Consent Management Providers
+# (CMP).
+# Enabling this (when the cookie handling feature is enabled) may negatively
+# impact site performance since it requires us to run rule-defined query
+# selectors for every page.
+- name: cookiebanners.service.enableGlobalRules
+  type: bool
+  value: false
+  mirror: always
+
 # Enables the cookie banner cookie injector. The cookie banner cookie injector
 # depends on the above `cookiebanners.service.mode` pref: it would be disabled
 # if the servcie mode is disabled.
