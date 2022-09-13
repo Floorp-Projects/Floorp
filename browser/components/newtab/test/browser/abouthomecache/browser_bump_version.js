@@ -9,7 +9,7 @@
  * document.
  */
 add_task(async function test_bump_version() {
-  await BrowserTestUtils.withNewTab("about:home", async browser => {
+  await withFullyLoadedAboutHome(async browser => {
     // First, ensure that a pre-existing cache exists.
     await simulateRestart(browser);
 

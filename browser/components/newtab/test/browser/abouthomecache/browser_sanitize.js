@@ -15,7 +15,7 @@ add_task(async function test_sanitize() {
     ["session history", Ci.nsIClearDataService.CLEAR_SESSION_HISTORY],
   ];
 
-  await BrowserTestUtils.withNewTab("about:home", async browser => {
+  await withFullyLoadedAboutHome(async browser => {
     for (let [type, flag] of testFlags) {
       await simulateRestart(browser);
       await ensureCachedAboutHome(browser);
