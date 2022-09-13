@@ -496,6 +496,35 @@ bool WasmGcObject::obj_newEnumerate(JSContext* cx, HandleObject obj,
   return true;
 }
 
+static void WriteValTo(const Val& val, FieldType ty, void* dest) {
+  switch (ty.kind()) {
+    case FieldType::I8:
+      *((uint8_t*)dest) = val.i32();
+      break;
+    case FieldType::I16:
+      *((uint16_t*)dest) = val.i32();
+      break;
+    case FieldType::I32:
+      *((uint32_t*)dest) = val.i32();
+      break;
+    case FieldType::I64:
+      *((uint64_t*)dest) = val.i64();
+      break;
+    case FieldType::F32:
+      *((float*)dest) = val.f32();
+      break;
+    case FieldType::F64:
+      *((double*)dest) = val.f64();
+      break;
+    case FieldType::V128:
+      *((V128*)dest) = val.v128();
+      break;
+    case FieldType::Ref:
+      *((GCPtr<AnyRef>*)dest) = val.ref();
+      break;
+  }
+}
+
 #define DEFINE_TYPEDOBJ_CLASS(Name, Trace, Finalize, Moved, Flags)    \
   static const JSClassOps Name##ClassOps = {                          \
       nullptr, /* addProperty */                                      \
@@ -623,6 +652,26 @@ void WasmArrayObject::obj_finalize(JS::GCContext* gcx, JSObject* object) {
   arrayObj.data_ = nullptr;
 }
 
+void WasmArrayObject::storeVal(const Val& val, uint32_t itemIndex) {
+  const ArrayType& arrayType = rttValue_->typeDef().arrayType();
+  size_t elementSize = arrayType.elementType_.size();
+  MOZ_ASSERT(itemIndex < numElements_);
+  uint8_t* data = data_ + elementSize * itemIndex;
+  WriteValTo(val, arrayType.elementType_, data);
+}
+
+void WasmArrayObject::fillVal(const Val& val, uint32_t itemIndex,
+                              uint32_t len) {
+  const ArrayType& arrayType = rttValue_->typeDef().arrayType();
+  size_t elementSize = arrayType.elementType_.size();
+  uint8_t* data = data_;
+  MOZ_ASSERT(itemIndex <= numElements_ && len <= numElements_ - itemIndex);
+  for (uint32_t i = 0; i < len; i++) {
+    WriteValTo(val, arrayType.elementType_, data);
+    data += elementSize;
+  }
+}
+
 DEFINE_TYPEDOBJ_CLASS(WasmArrayObject, WasmArrayObject::obj_trace,
                       WasmArrayObject::obj_finalize, nullptr,
                       JSCLASS_FOREGROUND_FINALIZE);
@@ -723,6 +772,27 @@ void WasmStructObject::obj_finalize(JS::GCContext* gcx, JSObject* object) {
     js_free(structObj.outlineData_);
     structObj.outlineData_ = nullptr;
   }
+}
+
+void WasmStructObject::storeVal(const Val& val, uint32_t fieldIndex) {
+  const StructType& structType = rttValue_->typeDef().structType();
+  FieldType fieldType = structType.fields_[fieldIndex].type;
+  uint32_t fieldOffset = structType.fields_[fieldIndex].offset;
+
+  MOZ_ASSERT(fieldIndex < structType.fields_.length());
+  bool areaIsOutline;
+  uint32_t areaOffset;
+  fieldOffsetToAreaAndOffset(fieldType, fieldOffset, &areaIsOutline,
+                             &areaOffset);
+
+  uint8_t* data;
+  if (areaIsOutline) {
+    data = outlineData_ + areaOffset;
+  } else {
+    data = inlineData_ + areaOffset;
+  }
+
+  WriteValTo(val, fieldType, data);
 }
 
 DEFINE_TYPEDOBJ_CLASS(WasmStructObject, WasmStructObject::obj_trace, nullptr,

@@ -359,6 +359,11 @@ class alignas(16) Instance {
                                uint32_t dstOffset, uint32_t srcOffset,
                                uint32_t len);
 
+#ifdef ENABLE_WASM_GC
+  // Return RttValue of the specified heap type.
+  RttValue* rttCanon(uint32_t typeIndex) const;
+#endif
+
   // Debugger support:
 
   JSString* createDisplayURL(JSContext* cx);
