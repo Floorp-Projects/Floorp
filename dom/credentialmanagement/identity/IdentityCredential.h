@@ -11,6 +11,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/Credential.h"
+#include "mozilla/MozPromise.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsWrapperCache.h"
 
@@ -21,6 +22,11 @@ class IdentityCredential final : public Credential {
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(IdentityCredential,
                                                          Credential)
+
+  typedef MozPromise<RefPtr<IdentityCredential>, nsresult, true>
+      GetIdentityCredentialPromise;
+  typedef MozPromise<Maybe<RefPtr<IdentityCredential>>, nsresult, true>
+      GetMaybeIdentityCredentialPromise;
 
   explicit IdentityCredential(nsPIDOMWindowInner* aParent);
 
@@ -33,6 +39,10 @@ class IdentityCredential final : public Credential {
 
   void GetToken(nsAString& aToken) const;
   void SetToken(const nsAString& aToken);
+
+  static RefPtr<GetIdentityCredentialPromise> DiscoverFromExternalSource(
+      nsPIDOMWindowInner* aParent, const CredentialRequestOptions& aOptions,
+      bool aSameOriginWithAncestors);
 
  private:
   nsAutoString mToken;
