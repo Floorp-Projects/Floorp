@@ -205,7 +205,7 @@ class nsMenuPopupFrame final : public nsBoxFrame,
   // Ensure that a widget has already been created for this view, and create
   // one if it hasn't. If aRecreate is true, destroys any existing widget and
   // creates a new one, regardless of whether one has already been created.
-  void EnsureWidget(bool aRecreate = false);
+  void PrepareWidget(bool aRecreate = false);
 
   nsresult CreateWidgetForView(nsView* aView);
   mozilla::StyleWindowShadow GetShadowStyle();
