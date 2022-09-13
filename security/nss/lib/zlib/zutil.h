@@ -170,7 +170,7 @@ extern z_const char * const z_errmsg[10]; /* indexed by 2-zlib_error */
 #  define OS_CODE 19
 #endif
 
-#if defined(_BEOS_) || defined(RISCOS)
+#if defined(RISCOS)
 #  define fdopen(fd,mode) NULL /* No fdopen() */
 #endif
 

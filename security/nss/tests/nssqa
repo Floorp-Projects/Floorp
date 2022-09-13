@@ -143,9 +143,6 @@ map_os32()
                 MAPPED_OS=Solaris8_forte6
             fi
             ;;
-        OSF1)
-            MAPPED_OS=OSF1V4.0
-            ;;
         Darwin)
             MAPPED_OS=Darwin6.5
             ;;	
@@ -190,8 +187,7 @@ nssqa_main()
 
   if [ $O_WIN = "OFF" -a "$O_TBX" = "OFF" -a $O_LOCAL = "OFF" ] ; then
       if [ ! -h ${NTDIST}/WINNT5.0_DBG.OBJ -o \
-              ! -h ${UXDIST}/SunOS5.8_OPT.OBJ -o \
-              ! -h ${UXDIST}/OSF1V5.0_DBG.OBJ ] ; then
+              ! -h ${UXDIST}/SunOS5.8_OPT.OBJ -o ] ; then
           # determine if all needed symbolic links are present, in case
           # we build on one platform and QA on another
           # create the symbolic links

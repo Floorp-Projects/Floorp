@@ -33,13 +33,6 @@ else
     OS_RELEASE := $(shell uname -r)
 endif
 
-#
-# Force the IRIX64 machines to use IRIX.
-#
-
-ifeq ($(OS_ARCH),IRIX64)
-    OS_ARCH = IRIX
-endif
 
 #
 # Force the older BSD/OS versions to use the new arch name.
@@ -74,20 +67,6 @@ ifeq ($(OS_ARCH),AIX)
 endif
 
 #
-# Distinguish between OSF1 V4.0B and V4.0D
-#
-
-ifeq ($(OS_ARCH)$(OS_RELEASE),OSF1V4.0)
-    OS_VERSION := $(shell uname -v)
-    ifeq ($(OS_VERSION),564)
-	OS_RELEASE := V4.0B
-    endif
-    ifeq ($(OS_VERSION),878)
-	OS_RELEASE := V4.0D
-    endif
-endif
-
-#
 # SINIX changes name to ReliantUNIX with 5.43
 #
 
@@ -103,10 +82,9 @@ endif
 
 #
 # Handle FreeBSD 2.2-STABLE, Linux 2.0.30-osfmach3, and
-# IRIX 6.5-ALPHA-1289139620.
 #
 
-ifeq (,$(filter-out Linux FreeBSD IRIX,$(OS_ARCH)))
+ifeq (,$(filter-out Linux FreeBSD ,$(OS_ARCH)))
     OS_RELEASE := $(shell echo $(OS_RELEASE) | sed 's/-.*//')
 endif
 

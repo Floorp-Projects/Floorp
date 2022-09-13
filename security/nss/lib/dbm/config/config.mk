@@ -15,17 +15,9 @@ DEFINES += -DSTDC_HEADERS -DHAVE_STRERROR
 # Most platforms have snprintf, so it's simpler to list the exceptions.
 #
 HAVE_SNPRINTF = 1
-#
-# OSF1 V4.0D doesn't have snprintf but V5.0A does.
-#
-ifeq ($(OS_TARGET)$(OS_RELEASE),OSF1V4.0D)
-HAVE_SNPRINTF =
-endif
-ifdef HAVE_SNPRINTF
 DEFINES += -DHAVE_SNPRINTF
-endif
 
-ifeq (,$(filter-out DGUX NCR ReliantUNIX SCO_SV SCOOS UNIXWARE,$(OS_TARGET)))
+ifeq (,$(filter-out NCR ReliantUNIX SCO_SV SCOOS UNIXWARE,$(OS_TARGET)))
 DEFINES += -DHAVE_SYS_BYTEORDER_H
 endif
 

@@ -361,18 +361,6 @@
 #  endif
 #endif
 
-#if defined (__BEOS__)
-#  ifdef ZLIB_DLL
-#    ifdef ZLIB_INTERNAL
-#      define ZEXPORT   __declspec(dllexport)
-#      define ZEXPORTVA __declspec(dllexport)
-#    else
-#      define ZEXPORT   __declspec(dllimport)
-#      define ZEXPORTVA __declspec(dllimport)
-#    endif
-#  endif
-#endif
-
 #ifndef ZEXTERN
 #  define ZEXTERN extern
 #endif
