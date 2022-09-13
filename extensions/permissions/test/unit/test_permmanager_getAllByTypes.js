@@ -12,20 +12,21 @@ function check_enumerator(permissionTypes, expectedPermissions) {
     )}`
   );
 
-  permissions.forEach((perm, i) => {
-    info(`Checking permission #${i}`);
-    const [
-      expectedPrincipal,
-      expectedType,
-      expectedCapability,
-    ] = expectedPermissions[i];
-
+  for (const perm of permissions) {
     Assert.ok(perm != null);
-    Assert.ok(perm.principal.equals(expectedPrincipal));
-    Assert.equal(perm.type, expectedType);
-    Assert.equal(perm.capability, expectedCapability);
+
+    // For some reason, the order in which we get the permissions doesn't seem to be
+    // stable when running the test with --verify. As a result, we need to retrieve the
+    // expected permission for the origin and type.
+    const expectedPermission = expectedPermissions.find(
+      ([expectedPrincipal, expectedType]) =>
+        perm.principal.equals(expectedPrincipal) && perm.type === expectedType
+    );
+
+    Assert.ok(expectedPermission !== null, "Found the expected permission");
+    Assert.equal(perm.capability, expectedPermission[2]);
     Assert.equal(perm.expireType, Services.perms.EXPIRE_NEVER);
-  });
+  }
 }
 
 function run_test() {
