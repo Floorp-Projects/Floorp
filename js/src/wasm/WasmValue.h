@@ -575,6 +575,43 @@ struct InternalBarrierMethods<wasm::Val> {
 #endif
 };
 
+template <>
+struct InternalBarrierMethods<wasm::AnyRef> {
+  STATIC_ASSERT_ANYREF_IS_JSOBJECT;
+
+  static bool isMarkable(const wasm::AnyRef v) { return !v.isNull(); }
+
+  static void preBarrier(const wasm::AnyRef v) {
+    if (!v.isNull()) {
+      gc::PreWriteBarrier(v.asJSObject());
+    }
+  }
+
+  static MOZ_ALWAYS_INLINE void postBarrier(wasm::AnyRef* vp,
+                                            const wasm::AnyRef prev,
+                                            const wasm::AnyRef next) {
+    JSObject* prevObj = !prev.isNull() ? prev.asJSObject() : nullptr;
+    JSObject* nextObj = !next.isNull() ? next.asJSObject() : nullptr;
+    if (nextObj) {
+      JSObject::postWriteBarrier(vp->asJSObjectAddress(), prevObj, nextObj);
+    }
+  }
+
+  static void readBarrier(const wasm::AnyRef v) {
+    if (!v.isNull()) {
+      gc::ReadBarrier(v.asJSObject());
+    }
+  }
+
+#ifdef DEBUG
+  static void assertThingIsNotGray(const wasm::AnyRef v) {
+    if (!v.isNull()) {
+      JS::AssertObjectIsNotGray(v.asJSObject());
+    }
+  }
+#endif
+};
+
 }  // namespace js
 
 #endif  // wasm_val_h
