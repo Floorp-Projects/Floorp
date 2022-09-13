@@ -2484,7 +2484,10 @@ class EventManager {
     let { extension } = this.context;
     const resetIdle = () => {
       if (this.resetIdleOnEvent) {
-        extension?.emit("background-script-reset-idle");
+        extension?.emit("background-script-reset-idle", {
+          reason: "event",
+          eventName: this.name,
+        });
       }
     };
 

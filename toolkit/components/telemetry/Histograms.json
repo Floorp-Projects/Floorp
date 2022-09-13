@@ -15659,6 +15659,68 @@
     "description": "The number of times a browserAction popup is preloaded and results in one of the categories, keyed by addon id.",
     "keyed": true
   },
+  "WEBEXT_EVENTPAGE_RUNNING_TIME_MS": {
+    "record_in_processes": ["main"],
+    "products": ["firefox"],
+    "alert_emails": ["addons-dev-internal@mozilla.com", "lgreco@mozilla.com"],
+    "bug_numbers": [1787940],
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "releaseChannelCollection": "opt-out",
+    "high": 60000,
+    "n_buckets": 100,
+    "description": "The amount of time (keyed by addon id) that an event page has been running before being suspended, or the entire addon shutdown."
+  },
+  "WEBEXT_EVENTPAGE_RUNNING_TIME_MS_BY_ADDONID": {
+    "record_in_processes": ["main"],
+    "products": ["firefox"],
+    "alert_emails": ["addons-dev-internal@mozilla.com", "lgreco@mozilla.com"],
+    "bug_numbers": [1787940],
+    "expires_in_version": "113",
+    "kind": "exponential",
+    "keyed": true,
+    "releaseChannelCollection": "opt-out",
+    "high": 60000,
+    "n_buckets": 100,
+    "description": "The amount of time (keyed by addon id) that an event page has been running before being suspended, or the entire addon shutdown."
+  },
+  "WEBEXT_EVENTPAGE_IDLE_RESULT_COUNT": {
+    "record_in_processes": ["main"],
+    "products": ["firefox"],
+    "alert_emails": ["addons-dev-internal@mozilla.com", "lgreco@mozilla.com"],
+    "bug_numbers": [1787940],
+    "expires_in_version": "113",
+    "kind": "categorical",
+    "labels": [
+      "suspend",
+      "reset_other",
+      "reset_event",
+      "reset_listeners",
+      "reset_nativeapp",
+      "reset_streamfilter"
+    ],
+    "releaseChannelCollection": "opt-out",
+    "description": "The number of times an event page hit the idle timeout and results in one of the categories, keyed by addon id."
+  },
+  "WEBEXT_EVENTPAGE_IDLE_RESULT_COUNT_BY_ADDONID": {
+    "record_in_processes": ["main"],
+    "products": ["firefox"],
+    "alert_emails": ["addons-dev-internal@mozilla.com", "lgreco@mozilla.com"],
+    "bug_numbers": [1787940],
+    "expires_in_version": "113",
+    "kind": "categorical",
+    "labels": [
+      "suspend",
+      "reset_other",
+      "reset_event",
+      "reset_listeners",
+      "reset_nativeapp",
+      "reset_streamfilter"
+    ],
+    "releaseChannelCollection": "opt-out",
+    "description": "The number of times an event page hit the idle timeout and results in one of the categories, keyed by addon id.",
+    "keyed": true
+  },
   "WEBEXT_CONTENT_SCRIPT_INJECTION_MS": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "fennec"],

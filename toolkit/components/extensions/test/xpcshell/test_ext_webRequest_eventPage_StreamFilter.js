@@ -127,6 +127,11 @@ async function test_idletimeout_on_streamfilter({
       extension,
       "background-script-reset-idle"
     );
+
+    clearHistograms();
+    assertHistogramEmpty(WEBEXT_EVENTPAGE_IDLE_RESULT_COUNT);
+    assertKeyedHistogramEmpty(WEBEXT_EVENTPAGE_IDLE_RESULT_COUNT_BY_ADDONID);
+
     await extension.terminateBackground();
     info("Wait for 'background-script-reset-idle' event to be emitted");
     await promiseResetIdle;
@@ -134,6 +139,21 @@ async function test_idletimeout_on_streamfilter({
       extension.extension.backgroundContext.contextId,
       contextId,
       "Initial background context is still available as expected"
+    );
+
+    assertHistogramCategoryNotEmpty(WEBEXT_EVENTPAGE_IDLE_RESULT_COUNT, {
+      category: "reset_streamfilter",
+      categories: HISTOGRAM_EVENTPAGE_IDLE_RESULT_CATEGORIES,
+    });
+
+    assertHistogramCategoryNotEmpty(
+      WEBEXT_EVENTPAGE_IDLE_RESULT_COUNT_BY_ADDONID,
+      {
+        keyed: true,
+        key: extension.id,
+        category: "reset_streamfilter",
+        categories: HISTOGRAM_EVENTPAGE_IDLE_RESULT_CATEGORIES,
+      }
     );
   } else {
     const { Management } = ChromeUtils.import(
