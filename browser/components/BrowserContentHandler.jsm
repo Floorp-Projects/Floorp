@@ -1032,17 +1032,27 @@ nsDefaultCommandLineHandler.prototype = {
       while (
         (tag = cmdLine.handleFlagWithParam("notification-windowsTag", false))
       ) {
-        let onUnknownWindowsTag = (unknownTag, launchUrl) => {
-          if (!launchUrl) {
-            console.info(
-              `Completing Windows notification with tag '${unknownTag}' with no associated launchUrl`
+        let onUnknownWindowsTag = (unknownTag, launchUrl, privilegedName) => {
+          console.info(
+            `Completing Windows notification (tag=${JSON.stringify(
+              unknownTag
+            )}, launchUrl=${JSON.stringify(
+              launchUrl
+            )}, privilegedName=${JSON.stringify(privilegedName)}))`
+          );
+          if (privilegedName) {
+            Services.telemetry.setEventRecordingEnabled(
+              "browser.launched_to_handle",
+              true
             );
+            Glean.browserLaunchedToHandle.systemNotification.record({
+              name: privilegedName,
+            });
+          }
+          if (!launchUrl) {
             return;
           }
           let uri = resolveURIInternal(cmdLine, launchUrl);
-          console.info(
-            `Opening ${uri.spec} to complete Windows notification with tag '${unknownTag}'`
-          );
           urilist.push(uri);
         };
 
