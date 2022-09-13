@@ -1368,6 +1368,7 @@ pref("services.sync.prefs.sync.browser.crashReports.unsubmittedCheck.autoSubmit2
 pref("services.sync.prefs.sync.browser.ctrlTab.sortByRecentlyUsed", true);
 pref("services.sync.prefs.sync.browser.discovery.enabled", true);
 pref("services.sync.prefs.sync.browser.download.useDownloadDir", true);
+pref("services.sync.prefs.sync.browser.firefox-view.feature-tour", true);
 pref("services.sync.prefs.sync.browser.formfill.enable", true);
 pref("services.sync.prefs.sync.browser.link.open_newwindow", true);
 pref("services.sync.prefs.sync.browser.menu.showViewImageInfo", true);
