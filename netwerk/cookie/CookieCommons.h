@@ -8,6 +8,7 @@
 
 #include <cstdint>
 #include <functional>
+#include "mozIThirdPartyUtil.h"
 #include "prtime.h"
 #include "nsString.h"
 #include "nsICookie.h"
