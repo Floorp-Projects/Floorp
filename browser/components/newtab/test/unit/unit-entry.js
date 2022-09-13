@@ -123,9 +123,6 @@ const TEST_GLOBAL = {
   AppConstants: {
     MOZILLA_OFFICIAL: true,
     MOZ_APP_VERSION: "69.0a1",
-    isChinaRepack() {
-      return false;
-    },
     isPlatformAndVersionAtMost() {
       return false;
     },
@@ -133,16 +130,6 @@ const TEST_GLOBAL = {
   },
   ASRouterPreferences: {
     console: new ConsoleAPI(),
-  },
-  BrowserUtils: {
-    sendToDeviceEmailsSupported() {
-      return true;
-    },
-  },
-  BuiltInThemes: {
-    findActiveColorwayCollection() {
-      return true;
-    },
   },
   UpdateUtils: { getUpdateChannel() {} },
   BasePromiseWorker: class {

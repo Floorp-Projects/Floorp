@@ -761,26 +761,6 @@ function evaluateWelcomeScreenButtonLabel(removeDefault, content) {
     : "mr1-onboarding-set-default-only-primary-button-label";
 }
 
-function prepareMobileDownload(screens) {
-  let mobileContent = screens.find(screen => screen.id === "AW_MOBILE_DOWNLOAD")
-    .content;
-  if (!lazy.BrowserUtils.sendToDeviceEmailsSupported()) {
-    // If send to device emails are not supported for a user's locale,
-    // remove the send to device link and update the screen text
-    delete mobileContent.cta_paragraph.action;
-    mobileContent.cta_paragraph.text = {
-      string_id: "mr2022-onboarding-no-mobile-download-cta-text",
-    };
-  }
-  // Update CN specific QRCode url
-  if (AppConstants.isChinaRepack()) {
-    mobileContent.hero_image.url = `${mobileContent.hero_image.url.slice(
-      0,
-      mobileContent.hero_image.url.indexOf(".svg")
-    )}-cn.svg`;
-  }
-}
-
 function prepareMRContent(content) {
   // Expand with logic for finalized MR designs
   const { screens } = content;
@@ -789,8 +769,16 @@ function prepareMRContent(content) {
   // and syncing to a mobile device
   if (lazy.usesFirefoxSync && lazy.mobileDevices > 0) {
     removeScreens(screen => screen.id === "AW_MOBILE_DOWNLOAD", screens);
-  } else {
-    prepareMobileDownload(screens);
+  } else if (!lazy.BrowserUtils.sendToDeviceEmailsSupported()) {
+    // If send to device emails are not supported for a user's locale,
+    // remove the send to device link and update the screen text
+    let mobileContent = screens.find(
+      screen => screen.id === "AW_MOBILE_DOWNLOAD"
+    ).content;
+    delete mobileContent.cta_paragraph.action;
+    mobileContent.cta_paragraph.text = {
+      string_id: "mr2022-onboarding-no-mobile-download-cta-text",
+    };
   }
 
   // Remove colorways screen if there is no active colorways collection
