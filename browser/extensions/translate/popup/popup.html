@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/w3css/4/w3.css">
+    <link rel="stylesheet" href="popup.css">
+    
+    <script src="detect-pdf.js"></script>
+</head>
+
+<body style="width: 360px;">
+    <div class="w3-bar" style="width: 280px;" data-popupPanelSection="0">
+        <button class="w3-bar-item w3-button w3-ripple w3-hover-light-blue w3-buttonSelected"
+            style="border-radius: 5px 0px 0px 0px; position: relative;" title="Show original"
+            data-i18n-title="btnRestore" value="original"><span data-i18n="btnMobileOriginal">Original</span><span
+                style="font-size: 9px; position: absolute; bottom: 0; left: 5px;"
+                class="w3-text-pale-blue">Unknown</span></button>
+        <button class="w3-bar-item w3-button w3-ripple w3-hover-light-blue" style="border-radius: 0px 5px 0px 0px;"
+            title="Translate" data-i18n-title="btnTranslate" value="en">English</button>
+    </div>
+    <div class="w3-bar" style="width: 280px;" data-popupPanelSection="2">
+        <button class="w3-bar-item w3-button w3-ripple w3-hover-light-blue" style="border-radius: 0px 0px 0px 5px;"
+            title="Translate" data-i18n-title="btnTranslate" value="es">Spanish</button>
+        <button class="w3-bar-item w3-button w3-ripple w3-hover-light-blue" style="border-radius: 0px 0px 5px 0px;"
+            title="Translate" data-i18n-title="btnTranslate" value="de">German</button>
+    </div>
+
+    <div class="w3-container w3-margin-top" style="font-weight: 500">
+        <div data-popupPanelSection="0">
+            <div id="divAlwaysTranslateThisLang" style="display: none;">
+                <input type="checkbox" class="w3-check" id="cbAlwaysTranslateThisLang">
+                <label id="lblAlwaysTranslateThisLang" for="cbAlwaysTranslateThisLang"
+                    data-i18n="lblAlwaysTranslate">Always translate from</label>
+            </div>
+        </div>
+        <div data-popupPanelSection="1">
+            <input type="checkbox" class="w3-check" id="cbAlwaysTranslateThisSite">
+            <label for="cbAlwaysTranslateThisSite" data-i18n="btnAlwaysTranslate">Always translate this site</label>
+        </div>
+        <div data-popupPanelSection="3">
+            <hr>
+        </div>
+        <div data-popupPanelSection="3">
+            <input type="checkbox" class="w3-check" id="cbShowTranslateSelectedButton">
+            <label for="cbShowTranslateSelectedButton" data-i18n="lblShowTranslateSelectedButton">Show the button to
+                translate the selected text</label>
+        </div>
+        <div data-popupPanelSection="4">
+            <input type="checkbox" class="w3-check" id="cbShowOriginalWhenHovering">
+            <label for="cbShowOriginalWhenHovering" data-i18n="lblShowOriginalTextWhenHovering">Show original text when
+                hovering</label>
+        </div>
+        <div data-popupPanelSection="5">
+            <hr>
+        </div>
+        <div data-popupPanelSection="5">
+            <input type="checkbox" class="w3-check" id="cbShowTranslatedWhenHoveringThisSite">
+            <label for="cbShowTranslatedWhenHoveringThisSite" data-i18n="lblShowTranslatedWhenHoveringThisSite">Show
+                translation when hovering over this site</label>
+        </div>
+        <div data-popupPanelSection="6">
+            <div id="divShowTranslatedWhenHoveringThisLang" style="display: none;">
+                <input type="checkbox" class="w3-check" id="cbShowTranslatedWhenHoveringThisLang">
+                <label id="lblShowTranslatedWhenHoveringThisLang" for="cbShowTranslatedWhenHoveringThisLang"
+                    data-i18n="lblShowTranslatedWhenHoveringThisLang">Show translation when hovering over websites
+                    in</label>
+            </div>
+        </div>
+    </div>
+    </div>
+
+    <div id="moreOrLess" style="height: 32px;">
+        <div id="more" class="w3-display-bottomleft w3-hover-light-grey"
+            style="padding: 8px 60px 8px 20px; font-weight: 500;">
+            <span data-i18n="more">More</span>&nbsp;&nbsp;&nbsp;<i class="arrow down"></i>
+        </div>
+        <div id="less" class="w3-display-bottomright w3-hover-light-grey"
+            style="padding: 8px 20px 8px 60px; font-weight: 500;">
+            <i class="arrow up"></i>&nbsp;&nbsp;&nbsp;<span data-i18n="less">Less</span>
+        </div>
+    </div>
+
+    <div class="w3-display-topright margin10">
+        <div class="w3-hover-light-grey" id="btnSwitchInterfaces"
+            title="Switch between the old interface and the new one" data-i18n-title="swapPopup">
+            <i class="gg-swap"></i>
+        </div>
+    </div>
+
+    <div class="w3-display-topright" style="margin-right: 35px; margin-top: 10px; position: absolute;">
+        <div class="w3-hover-light-gray" style="position: relative;" id="divMenu" title="Options"
+            data-i18n-title="btnOptions">
+            <div class="w3-hover-light-grey" style="border-radius: 50%; padding: 5px;" id="btnMenu"
+                style="position: relative;">
+                <div class="menuDot"></div>
+            </div>
+            <select id="btnOptions" style="font-weight: 500; font-size: small;">
+                <option value="options" selected disabled hidden>Options</option>
+                <option data-i18n="btnChangeLanguages" value="changeLanguage">Change languages</option>
+                <option data-i18n="btnNeverTranslateThisLanguage" value="neverTranslateThisLanguage" style="display: none;">Never translate this language</option>
+                <option data-i18n="btnNeverTranslate" value="neverTranslateThisSite">Never translate this site</option>
+                <option data-i18n="btnAlwaysTranslate" value="alwaysTranslateThisSite" data-popupPanelSection2="1">Always translate this site</option>
+                <optgroup label="" data-popupPanelSection2="6"></optgroup>
+                <option data-i18n="lblShowTranslateSelectedButton" value="showTranslateSelectedButton" data-popupPanelSection2="3">Show the button to translate the selected text</option>
+                <option data-i18n="lblShowOriginalTextWhenHovering" value="showOriginalTextWhenHovering" data-popupPanelSection2="4">Show original text when hovering</option>
+                <option data-i18n="lblShowTranslatedWhenHoveringThisSite" value="showTranslatedWhenHoveringThisSite" data-popupPanelSection2="5">Show translation when hovering over this site</option>
+                <option data-i18n="lblShowTranslatedWhenHoveringThisLang" value="showTranslatedWhenHoveringThisLang" data-popupPanelSection2="6" hidden>Show translation when hovering over websites in</option>
+                <optgroup label="" data-popupPanelSection2="6"></optgroup>
+                <option data-i18n="btnOpenOnGoogleTranslate" value="translateInExternalSite">Open in google translate</option>
+                <option data-i18n="btnMoreOptions" value="moreOptions">More options</option>
+                <option data-i18n="btnDonate" value="donate">Donate</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="w3-display-topright" style="margin-right: 15px; margin-top: 45px; position: absolute; cursor: pointer;">
+        <div id="divIconTranslate" style="position: relative;" title="Switch between translation services"
+            data-i18n-title="swapTranslationService">
+            <img id='iconTranslate' src="/icons/google-translate-32.png" style="position: relative;">
+            <img id='iconSwap' src="/icons/swap-32.png" style="position: absolute; top: 0; left: 0;">
+        </div>
+    </div>
+
+    <div id="helpSwapInterface" style="display: none;">
+        <i id="btnCloseHelpSwapInterface" class="gg-close" style="float: right; cursor: pointer;"></i>
+        <span data-i18n="helpSwapInterface">Click this button to switch between the old and the new interface.</span>
+    </div>
+
+    <script src="/lib/languages.js"></script>
+    <script src="/lib/config.js"></script>
+    <script src="/lib/i18n.js"></script>
+    <script src="popup.js"></script>
+</body>
+
+</html>

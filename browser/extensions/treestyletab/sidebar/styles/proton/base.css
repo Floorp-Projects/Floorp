@@ -1,0 +1,134 @@
+/*
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+*/
+
+:root {
+  --color-animation: 0s ease-out;
+  --tab-border-radius-size: 0.35em;
+  --tab-dropshadow-size: 0.2em;
+}
+
+tab-item,
+.after-tabs button,
+.after-tabs [role="button"] {
+  border: 1px solid transparent;
+  border-width: 1px 0;
+  padding: 0.45em 0.25em;
+}
+
+
+.after-tabs button,
+.after-tabs [role="button"] {
+  padding: 0em;
+}
+
+
+:root.left tab-item:not(.pinned),
+:root.left .after-tabs button:not([data-menu-ui]),
+:root.left .after-tabs [role="button"]:not([data-menu-ui]) {
+  padding-right: 0.35em;
+}
+
+:root.right tab-item:not(.pinned),
+:root.right .after-tabs button:not([data-menu-ui]),
+:root.right .after-tabs [role="button"]:not([data-menu-ui]) {
+  padding-left: 0.35em;
+}
+
+
+/* macOS workaround */
+:root.platform-mac.left #tabbar.overflow tab-item:not(.pinned) {
+  padding-left: var(--scrollbar-placeholder-size); /* it will be enough larger than the default padding */
+}
+:root.platform-mac.right #tabbar.overflow tab-item:not(.pinned) {
+  padding-right: var(--scrollbar-placeholder-size); /* it will be enough larger than the default padding */
+}
+
+
+tab-item tab-label {
+  margin-left: 0.25em;
+  padding: 0 0 0.25em 0;
+}
+
+tab-item tab-favicon {
+  margin-bottom: 0.25em;
+  margin-top: 0.25em;
+}
+
+tab-item {
+  --tab-closebox-offset: calc((var(--tab-size) - 1em) / 2);
+  --tab-closebox-negative-offset: calc((1em - var(--tab-size)) / 2);
+}
+
+/* expand closebox to fill full height of tab */
+tab-item tab-closebox {
+  margin-bottom: var(--tab-closebox-negative-offset);
+  margin-top: var(--tab-closebox-negative-offset);
+  padding: var(--tab-closebox-offset) 0.25em;
+}
+
+tab-item tab-closebox::before,
+tab-item:not(.faviconized) tab-sound-button::before {
+  border-radius: 10%;
+  content: "";
+  display: inline-block;
+  height: calc(var(--svg-small-icon-size) + 0.2em);
+  margin-left: -0.1em;
+  margin-top: -0.1em;
+  width: calc(var(--svg-small-icon-size) + 0.2em);
+  position: absolute;
+}
+
+tab-item tab-closebox:hover::before,
+tab-item:not(.faviconized) tab-sound-button:hover::before {
+  background: var(--tab-text);
+  box-shadow: 0 0 0.1em rgba(255, 255, 255, 0.3);
+  opacity: 0.1;
+}
+
+tab-item tab-closebox:active::before,
+tab-item:not(.faviconized) tab-sound-button:active::before {
+  opacity: 0.2;
+}
+
+tab-item.active tab-closebox:hover::before,
+tab-item:not(.faviconized).active tab-sound-button:hover::before {
+  background: var(--tab-text);
+}
+
+tab-item tab-closebox::after {
+  position: relative;
+}
+
+
+/* multiselection of tabs */
+
+:root {
+  --multiselected-color: var(--browser-selected-tab-bg, var(--browser-toolbar, var(--tab-surface-active)));
+  --multiselected-color-opacity: 1;
+}
+
+.mutiple-highlighted > tab-item.highlighted::after {
+  background: var(--multiselected-color);
+  border-radius: var(--tab-border-radius-size);
+  bottom: var(--tab-dropshadow-size);
+  content: " ";
+  display: block;
+  left: var(--tab-dropshadow-size);
+  opacity: var(--multiselected-color-opacity);
+  pointer-events: none;
+  position: absolute;
+  right: var(--tab-dropshadow-size);
+  top: var(--tab-dropshadow-size);
+  z-index: 10;
+}
+
+/* cancel highlighter for collapsed tree */
+
+.highlighter::before,
+tab-item:not(.faviconized).subtree-collapsed.some-descendants-highlighted .highlighter::after,
+tab-item:not(.faviconized).subtree-collapsed.all-descendants-highlighted .highlighter::after {
+  display: none;
+}

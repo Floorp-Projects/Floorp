@@ -1,0 +1,467 @@
+{
+  "extensionName": {
+    "message": "ウェブページを翻訳"
+  },
+  "extensionDescription": {
+    "message": "GoogleやYandexを使ってリアルタイムでページを翻訳します。"
+  },
+  "pageActionTitle": {
+    "message": "このページを翻訳"
+  },
+  "lblTranslate": {
+    "message": "このページを翻訳しますか？"
+  },
+  "lblTranslating": {
+    "message": "翻訳中..."
+  },
+  "lblTranslated": {
+    "message": "翻訳済み"
+  },
+  "lblError": {
+    "message": "ページを翻訳できませんでした"
+  },
+  "lblAlwaysTranslate": {
+    "message": "$LANGUAGE_NAME$のサイトを常に翻訳する",
+    "placeholders": {
+      "LANGUAGE_NAME": {
+        "content": "$1",
+        "example": "English"
+      }
+    }
+  },
+  "lblTargetLanguage": {
+    "message": "翻訳先の言語 $TARGET_LANGUAGE_NUM$",
+    "placeholders": {
+      "TARGET_LANGUAGE_NUM": {
+        "content": "$1",
+        "example": "2"
+      }
+    }
+  },
+  "btnReset": {
+    "message": "リセット"
+  },
+  "btnTranslate": {
+    "message": "翻訳"
+  },
+  "btnOptions": {
+    "message": "オプション"
+  },
+  "btnRestore": {
+    "message": "原文を表示"
+  },
+  "btnTryAgain": {
+    "message": "再試行する"
+  },
+  "btnOpenOnGoogleTranslate": {
+    "message": "Google翻訳で開く"
+  },
+  "btnDonate": {
+    "message": "寄付する"
+  },
+  "btnNeverTranslate": {
+    "message": "このサイトを翻訳しない"
+  },
+  "btnChangeLanguages": {
+    "message": "言語を変更"
+  },
+  "btnMobileOriginal": {
+    "message": "原文を表示"
+  },
+  "btnMobileTranslated": {
+    "message": "翻訳済み"
+  },
+  "btnMobileNeverTranslate": {
+    "message": "このサイトを翻訳しない"
+  },
+  "btnMobileDonate": {
+    "message": "寄付する"
+  },
+  "optionsNeverTranslate": {
+    "message": "翻訳しないサイト"
+  },
+  "optionsAlwaysTranslate": {
+    "message": "常に翻訳する言語"
+  },
+  "optionPopupConfig": {
+    "message": "モバイルで翻訳ポップアップを表示"
+  },
+  "optionPopupAuto": {
+    "message": "自動"
+  },
+  "optionPopupThreeFingers": {
+    "message": "画面を3本指でタップしたとき"
+  },
+  "msgOpenOnYandexTranslator": {
+    "message": "Yandex翻訳で開く"
+  },
+  "lblOthers": {
+    "message": "その他"
+  },
+  "btnMoreOptions": {
+    "message": "拡張機能の設定"
+  },
+  "lblPlsDonate": {
+    "message": "寄付をして開発者を支援する"
+  },
+  "msgTranslateFor": {
+    "message": "$LANGUAGE_NAME$に翻訳",
+    "placeholders": {
+      "LANGUAGE_NAME": {
+        "content": "$1",
+        "example": "English"
+      }
+    }
+  },
+  "lblShowContextMenu": {
+    "message": "コンテキストメニューに「ページを翻訳する」を表示"
+  },
+  "msgYes": {
+    "message": "有効"
+  },
+  "msgNo": {
+    "message": "無効"
+  },
+  "lblUseNewAlgorithm": {
+    "message": "新しい翻訳アルゴリズムを使用しますか？"
+  },
+  "msgYesRecommended": {
+    "message": "はい（推奨）"
+  },
+  "msgNoUseWidgets": {
+    "message": "いいえ（ウィジェットを使用）"
+  },
+  "optionsPageTitle": {
+    "message": "ウェブページを翻訳 - 設定"
+  },
+  "optionPopupjustWhenIClickTranlateThisSite": {
+    "message": "「このサイトを翻訳」をクリックした時のみ"
+  },
+  "msgEmptyListNeverTranslateSites": {
+    "message": "まだサイトが1つも追加されていません"
+  },
+  "msgEmptyListAlwaysTranslateLanguages": {
+    "message": "まだ言語が追加されていません"
+  },
+  "btnAlwaysTranslate": {
+    "message": "このサイトを常に翻訳する"
+  },
+  "lblAlwaysTranslateSites": {
+    "message": "常に翻訳するサイト"
+  },
+  "msgDonateWithPaypal": {
+    "message": "PayPalで寄付"
+  },
+  "lblDarkMode": {
+    "message": "ダークモード"
+  },
+  "lblShowReleaseNotes": {
+    "message": "拡張機能が更新されたときにリリースノートを表示"
+  },
+  "lblShowTranslateSelectedButton": {
+    "message": "選択したテキストを翻訳するボタンを表示"
+  },
+  "msgAutomatic": {
+    "message": "自動"
+  },
+  "msgTranslateSelectedText": {
+    "message": "選択したテキストを翻訳"
+  },
+  "lblShowTranslateSelectedContextMenu": {
+    "message": "コンテキストメニューに「選択したテキストを翻訳」を表示"
+  },
+  "lblNeverTranslateLangs": {
+    "message": "翻訳しない言語"
+  },
+  "btnNeverTranslateThisLanguage": {
+    "message": "この言語を翻訳しない"
+  },
+  "lblShowOriginalTextWhenHovering": {
+    "message": "マウスオーバー時に原文を表示"
+  },
+  "msgLanguages": {
+    "message": "言語"
+  },
+  "msgSites": {
+    "message": "サイト"
+  },
+  "msgTranslations": {
+    "message": "翻訳"
+  },
+  "msgStyle": {
+    "message": "外観"
+  },
+  "msgHotkeys": {
+    "message": "ショートカット"
+  },
+  "lblMakeDonation": {
+    "message": "寄付する"
+  },
+  "lblReleaseNotes": {
+    "message": "リリースノート"
+  },
+  "lblReport": {
+    "message": "問題の報告"
+  },
+  "lblSettings": {
+    "message": "設定"
+  },
+  "lblAdd": {
+    "message": "追加"
+  },
+  "lblShowTranslatedWhenHovering": {
+    "message": "マウスオーバーしたテキストを翻訳する"
+  },
+  "lblKeyboardShortcuts": {
+    "message": "キーボードショートカット"
+  },
+  "msgToTranslateSites": {
+    "message": "でサイトを翻訳"
+  },
+  "msgThanksForUseExtension": {
+    "message": "この拡張機能をご利用いただきありがとうございます。"
+  },
+  "msgIWillBeGrateful": {
+    "message": "もしご寄付いただければ、本当に感謝いたします。"
+  },
+  "btnAlwaysTranslateThisLanguage": {
+    "message": "この言語を常に翻訳する"
+  },
+  "lblShowTranslatedHoveringSites": {
+    "message": "マウスオーバーしたテキストを翻訳するサイト"
+  },
+  "popupBlueWhenSiteIsTranslated": {
+    "message": "サイトを翻訳した時にポップアップアイコンを青くする"
+  },
+  "more": {
+    "message": "増やす"
+  },
+  "less": {
+    "message": "減らす"
+  },
+  "dontShowIfPageLangIsTargetLang": {
+    "message": "ページの言語が翻訳先言語と同じ場合は表示しない"
+  },
+  "dontShowIfPageLangIsUnknown": {
+    "message": "ページの言語が不明な場合は表示しない"
+  },
+  "dontShowIfSelectedTextIsTargetLang": {
+    "message": "選択したテキストの言語が翻訳先言語と同じ場合は表示しない"
+  },
+  "dontShowIfSelectedTextIsUnknown": {
+    "message": "選択したテキストの言語が不明な場合は表示しない"
+  },
+  "lblShowTranslatedWhenHoveringThisSite": {
+    "message": "このサイトでマウスオーバーしたテキストを翻訳する"
+  },
+  "lblShowTranslatedWhenHoveringThisLang": {
+    "message": "$LANGUAGE_NAME$のサイトでマウスオーバーしたテキストを翻訳する",
+    "placeholders": {
+      "LANGUAGE_NAME": {
+        "content": "$1",
+        "example": "English"
+      }
+    }
+  },
+  "lblShowTranslatedHoveringLangs": {
+    "message": "この言語のサイトでマウスオーバーしたテキストを翻訳"
+  },
+  "msgNoTranslateSelectedText": {
+    "message": "選択したテキストを翻訳しない"
+  },
+  "btnListen": {
+    "message": "聴く"
+  },
+  "btnStopListening": {
+    "message": "停止"
+  },
+  "btnApply": {
+    "message": "適用"
+  },
+  "swapTranslationService": {
+    "message": "翻訳サービスを切り替える"
+  },
+  "swapPopup": {
+    "message": "古いインターフェースと新しいインターフェースを切り替える"
+  },
+  "helpSwapInterface": {
+    "message": "このボタンで、古いインターフェースと新しいインターフェースを切り替えることができます。"
+  },
+  "lblTranslationService": {
+    "message": "翻訳サービス"
+  },
+  "msgUseOldPopupInterface": {
+    "message": "古いポップアップインターフェースを使用"
+  },
+  "lblTranslateInterface": {
+    "message": "インターフェースを翻訳"
+  },
+  "lblButtonInTheAddressBar": {
+    "message": "アドレスバーにボタンを表示"
+  },
+  "lblPageTranslationService": {
+    "message": "ページの翻訳に使用する翻訳サービス"
+  },
+  "lblTextTranslationService": {
+    "message": "テキストの翻訳に使用する翻訳サービス"
+  },
+  "msgStorage": {
+    "message": "ストレージ"
+  },
+  "lblTranslationCache": {
+    "message": "翻訳キャッシュ"
+  },
+  "lblStorageUsed": {
+    "message": "使用している容量:"
+  },
+  "deleteTranslationCache": {
+    "message": "翻訳キャッシュを削除"
+  },
+  "lblPersonalSettings": {
+    "message": "個人設定"
+  },
+  "backupToFile": {
+    "message": "ファイルにバックアップ"
+  },
+  "restoreFromFile": {
+    "message": "ファイルから復元"
+  },
+  "resetToDefault": {
+    "message": "初期設定に戻す"
+  },
+  "doYouWantToDeleteTranslationCache": {
+    "message": "翻訳キャッシュを削除しますか？"
+  },
+  "doYouWantOverwriteAllSettings": {
+    "message": "バックアップファイルの設定を読み込みますか？現在の設定はすべて上書きされます。"
+  },
+  "fileIsCorrupted": {
+    "message": "ファイルが破損しているようです。"
+  },
+  "doYouWantRestoreSettings": {
+    "message": "拡張機能を初期設定に戻しますか？"
+  },
+  "lblTtsSpeed": {
+    "message": "音声読み上げの速度"
+  },
+  "lblEnableDeepL": {
+    "message": "テキストの翻訳サービスとしてDeepLを追加"
+  },
+  "enterShortcut": {
+    "message": "ショートカットを入力"
+  },
+  "hotkeyError_ctrlOrAlt": {
+    "message": "CtrlキーかAltキーを含めてください"
+  },
+  "hotkeyError_letter": {
+    "message": "文字を入力してください"
+  },
+  "hotkeyError_invalid": {
+    "message": "使用できない組み合わせです"
+  },
+  "lblSwitchTranslatedAndOriginal": {
+    "message": "翻訳と原文を切り替える"
+  },
+  "lblRestorePageToOriginal": {
+    "message": "ページを原文に戻す"
+  },
+  "lblTranslatePageToTargetLanguage": {
+    "message": "ページを翻訳先の言語に翻訳"
+  },
+  "lblTranslateTag_pre": {
+    "message": "$HTML_TAG_NAME$タグの内容を翻訳する",
+    "placeholders": {
+      "HTML_TAG_NAME": {
+        "content": "<PRE>"
+      }
+    }
+  },
+  "lbldontsortresults": {
+    "message": "Google翻訳の結果を並べ替えない"
+  },
+  "lbltranslatedynamicallycreatedcontent": {
+    "message": "動的に読み込まれたコンテンツを翻訳"
+  },
+  "calculatestorage": {
+    "message": "計算"
+  },
+  "donatewithpaypal": {
+    "message": "PayPalで寄付"
+  },
+  "lblAutoTranslateWhenClickingALink": {
+    "message": "同じドメイン内でページを移動したとき、移動先のページも自動的に翻訳"
+  },
+  "openNativeShortcutManager": {
+    "message": "ブラウザのショートカット設定を開く"
+  },
+  "lblKeyboardShortcutsSpecial": {
+    "message": "特別なキーボードショートカット"
+  },
+  "lblTranslateSelectedWhenPressTwice": {
+    "message": "$SHORTCUT_KEY$を2回押して選択したテキストを翻訳",
+    "placeholders": {
+      "SHORTCUT_KEY": {
+        "content": "[Ctrl]"
+      }
+    }
+  },
+  "lblTranslateTextOverMouseWhenPressTwice": {
+    "message": "$SHORTCUT_KEY$を2回押してマウスオーバーしているテキストを翻訳",
+    "placeholders": {
+      "SHORTCUT_KEY": {
+        "content": "[Ctrl]"
+      }
+    }
+  },
+  "translateClickingOnce": {
+    "message": "アドレスバーのボタンで即座にページを翻訳（ポップアップを表示するには右クリック）"
+  },
+  "btnShowPopup": {
+    "message": "ポップアップを表示"
+  },
+  "msgToTranslateThisDocument": {
+    "message": "このドキュメント $DOC_TYPE$ を翻訳するには、まずHTMLに変換する必要があります。",
+    "placeholders": {
+      "DOC_TYPE": {
+        "content": "$1",
+        "example": "(.pdf)"
+      }
+    }
+  },
+  "msgSelectServiceConversion": {
+    "message": "変換に使用するサービスを選択"
+  },
+  "msgDownloadingDocument": {
+    "message": "ドキュメントのダウンロード中…"
+  },
+  "msgSendDocument": {
+    "message": "ドキュメントを送信"
+  },
+  "msgErrorDownloadingDocument": {
+    "message": "ドキュメントのダウンロードに失敗"
+  },
+  "msgFileLargerThan": {
+    "message": "このサービスは$FILE_SIZE$より大きいファイルに対応していません。",
+    "placeholders": {
+      "FILE_SIZE": {
+        "content": "$1",
+        "example": "10 MB"
+      }
+    }
+  },
+  "msgPDFtoHTML": {
+    "message": "PDFをHTMLに変換"
+  },
+  "btncopy": {
+    "message": "コピー"
+  },
+  "msgRecents": {
+    "message": "最近"
+  },
+  "msgAll": {
+    "message": "すべて"
+  },
+  "msgPleaseWait": {
+    "message": "処理中…"
+  }
+}

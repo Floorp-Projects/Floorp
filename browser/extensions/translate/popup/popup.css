@@ -1,0 +1,225 @@
+body {
+    user-select: none;
+    font-family: Arial, Helvetica, sans-serif;
+    font-weight: 600;
+    padding: 10px;
+    font-size: 0.8em;
+}
+
+.w3-bar button {
+    width: 50% !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+}
+
+.w3-buttonSelected {
+    background-color: #2196F3;
+}
+
+.margin10 {
+    margin: 10px;
+}
+
+#mdiv {
+    width: 14px;
+    height: 14px;
+}
+
+.mdiv {
+    height: 14px;
+    width: 2px;
+    margin-left: 5px;
+    background-color: black;
+    transform: rotate(45deg);
+    Z-index: 1;
+}
+
+.md {
+    height: 14px;
+    width: 2px;
+    background-color: black;
+    transform: rotate(90deg);
+    Z-index: 2;
+}
+
+#btnMenu {
+    border-radius: 50%;
+    position: relative;
+    padding: 6px;
+    cursor: pointer;
+}
+
+#btnSwitchInterfaces {
+    border-radius: 50%;
+    padding: 10px;
+    cursor: pointer;
+}
+
+.menuDot {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background-image:
+        radial-gradient(black 2px, transparent 2px),
+        radial-gradient(black 2px, transparent 2px),
+        radial-gradient(black 2px, transparent 2px);
+    background-position:
+        center -5px,
+        center center,
+        center 5px;
+}
+
+#iconSwap {
+    display: none;
+}
+
+#divIconTranslate:hover #iconSwap {
+    display: block;
+}
+
+#divIconTranslate:hover #iconTranslate {
+    opacity: 0.6;
+}
+
+#divIconTranslate>img {
+    padding: 0;
+}
+
+#btnOptions {
+    appearance: none;
+    position: absolute;
+    top: 0;
+    left: 0;
+    opacity: 0;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    cursor: pointer;
+}
+
+#divMenu {
+    border-radius: 50%;
+}
+
+button span {
+    pointer-events: none;
+}
+
+input,
+label,
+#more,
+#less {
+    cursor: pointer;
+}
+
+hr {
+    margin-top: 10px;
+    margin-bottom: 4px;
+}
+
+.arrow {
+    border: solid black;
+    border-width: 0 1px 1px 0;
+    display: inline-block;
+    padding: 3px;
+}
+
+.up {
+    transform: rotate(-135deg) translate(0, -3px);
+}
+
+.down {
+    transform: rotate(45deg) translate(0, -3px);
+}
+
+.gg-swap {
+    box-sizing: border-box;
+    position: relative;
+    display: block;
+    transform: scale(var(--ggs, 1));
+    box-shadow:
+        -2px 2px 0,
+        2px -2px 0;
+    width: 6px;
+    height: 2px
+}
+
+.gg-swap::after,
+.gg-swap::before {
+    content: "";
+    display: block;
+    box-sizing: border-box;
+    position: absolute;
+    width: 0;
+    height: 0;
+    border-top: 3px solid transparent;
+    border-bottom: 3px solid transparent
+}
+
+.gg-swap::before {
+    border-left: 3px solid;
+    top: -4px;
+    right: -4px
+}
+
+.gg-swap::after {
+    border-right: 3px solid;
+    bottom: -4px;
+    left: -4px
+}
+
+#helpSwapInterface {
+    position: fixed;
+    top: 40px;
+    right: 4px;
+    background-color: #88f;
+    border-radius: 10px;
+    padding: 10px;
+    max-width: 200px;
+    border: 2px solid black;
+    font-weight: 500;
+}
+
+#helpSwapInterface span:before {
+    content: '';
+    display: block;
+    width: 0;
+    height: 0;
+    position: absolute;
+
+    border-left: 10px solid transparent;
+    border-bottom: 10px solid black;
+    border-right: 10px solid transparent;
+    right: 8px;
+    top: -12px;
+}
+
+.gg-close {
+    box-sizing: border-box;
+    position: relative;
+    display: block;
+    transform: scale(var(--ggs, 1));
+    width: 22px;
+    height: 22px;
+    border: 2px solid transparent;
+    border-radius: 40px
+}
+
+.gg-close::after,
+.gg-close::before {
+    content: "";
+    display: block;
+    box-sizing: border-box;
+    position: absolute;
+    width: 16px;
+    height: 2px;
+    background: currentColor;
+    transform: rotate(45deg);
+    border-radius: 5px;
+    top: 8px;
+    left: 1px
+}
+
+.gg-close::after {
+    transform: rotate(-45deg)
+}
