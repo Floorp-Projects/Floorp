@@ -11,6 +11,7 @@
 
 #preferences-root {
   text-rendering: optimizeLegibility;
+  -moz-box-layout: flex;
 }
 
 @media not print {
