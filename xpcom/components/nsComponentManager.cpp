@@ -1557,4 +1557,23 @@ const nsIServiceManager* Gecko_GetServiceManager() {
 const nsIComponentRegistrar* Gecko_GetComponentRegistrar() {
   return nsComponentManagerImpl::gComponentManager;
 }
+
+// FFI-compatible version of `GetServiceHelper::operator()`.
+nsresult Gecko_GetServiceByModuleID(ModuleID aId, const nsIID* aIID,
+                                    void** aResult) {
+  return nsComponentManagerImpl::gComponentManager->GetService(aId, *aIID,
+                                                               aResult);
+}
+
+// FFI-compatible version of `CreateInstanceHelper::operator()`.
+nsresult Gecko_CreateInstanceByModuleID(ModuleID aId, const nsIID* aIID,
+                                        void** aResult) {
+  const auto& entry = gStaticModules[size_t(aId)];
+  if (!entry.Active()) {
+    return NS_ERROR_FACTORY_NOT_REGISTERED;
+  }
+
+  nsresult rv = entry.CreateInstance(*aIID, aResult);
+  return rv;
+}
 }
