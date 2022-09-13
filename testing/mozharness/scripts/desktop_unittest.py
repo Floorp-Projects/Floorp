@@ -313,6 +313,16 @@ class DesktopUnittest(TestingMixin, MercurialScript, MozbaseMixin, CodeCoverageM
                     "help": "run tests with a conditioned profile",
                 },
             ],
+            [
+                ["--tag"],
+                {
+                    "action": "append",
+                    "dest": "test_tags",
+                    "default": None,
+                    "help": "Filter out tests that don't have the given tag. Can be used multiple "
+                    "times in which case the test must contain at least one of the given tags.",
+                },
+            ],
         ]
         + copy.deepcopy(testing_config_options)
         + copy.deepcopy(code_coverage_config_options)
@@ -600,6 +610,10 @@ class DesktopUnittest(TestingMixin, MercurialScript, MozbaseMixin, CodeCoverageM
                 "jittest",
             ]:
                 base_cmd.append("--disable-fission")
+
+            # Ensure the --tag flag and its params get passed along
+            if c["test_tags"]:
+                base_cmd.extend(["--tag={}".format(t) for t in c["test_tags"]])
 
             # Ignore chunking if we have user specified test paths
             if not (self.verify_enabled or self.per_test_coverage):
