@@ -720,7 +720,7 @@ void nsVideoFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
 
   DisplayBorderBackgroundOutline(aBuilder, aLists);
 
-  if (HidesContent()) {
+  if (IsContentHidden()) {
     return;
   }
 

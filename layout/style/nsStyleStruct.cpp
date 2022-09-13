@@ -3605,7 +3605,7 @@ static nscoord Resolve(const StyleContainIntrinsicSize& aSize,
     Maybe<float> lastSize = aAxis == eLogicalAxisBlock
                                 ? element->GetLastRememberedBSize()
                                 : element->GetLastRememberedISize();
-    if (lastSize && aFrame.HidesContent()) {
+    if (lastSize && aFrame.IsContentHidden()) {
       return CSSPixel::ToAppUnits(*lastSize);
     }
   }

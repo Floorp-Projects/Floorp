@@ -4532,7 +4532,7 @@ void nsFlexContainerFrame::Reflow(nsPresContext* aPresContext,
                                   ReflowOutput& aReflowOutput,
                                   const ReflowInput& aReflowInput,
                                   nsReflowStatus& aStatus) {
-  if (IsHiddenByContentVisibilityOfInFlowParentForLayout()) {
+  if (GetInFlowParent() && GetInFlowParent()->IsContentHiddenForLayout()) {
     return;
   }
 
@@ -5267,6 +5267,9 @@ std::tuple<nscoord, bool> nsFlexContainerFrame::ReflowChildren(
     const LogicalMargin& aBorderPadding,
     const nscoord aSumOfPrevInFlowsChildrenBlockSize,
     const FlexboxAxisTracker& aAxisTracker, FlexLayoutResult& aFlr) {
+  if (IsContentHiddenForLayout()) {
+    return {0, false};
+  }
   // Before giving each child a final reflow, calculate the origin of the
   // flex container's content box (with respect to its border-box), so that
   // we can compute our flex item's final positions.
@@ -5473,7 +5476,7 @@ void nsFlexContainerFrame::PopulateReflowOutput(
     // as their baseline, or our content is hidden in which case, we'll use the
     // wrong baseline (but no big deal).
     NS_WARNING_ASSERTION(
-        aLines[0].IsEmpty(),
+        IsContentHidden() || aLines[0].IsEmpty(),
         "Have flex items but didn't get an ascent - that's odd (or there are "
         "just gigantic sizes involved)");
     // Per spec, synthesize baseline from the flex container's content box
