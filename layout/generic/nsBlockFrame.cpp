@@ -2626,29 +2626,6 @@ void nsBlockFrame::ReflowDirtyLines(BlockReflowState& aState) {
 
   LineIterator line = LinesBegin(), line_end = LinesEnd();
 
-  // Determine if children of this frame could have breaks between them for
-  // page names.
-  //
-  // We need to check for paginated layout, the named-page pref, and if the
-  // available block-size is constrained.
-  //
-  // Note that we need to check for paginated layout as named-pages are only
-  // used during paginated reflow. We need to additionally check for
-  // unconstrained block-size to avoid introducing fragmentation breaks during
-  // "measuring" reflows within an overall paginated reflow, and to avoid
-  // fragmentation in monolithic containers like 'inline-block'.
-  //
-  // Because we can only break for named pages using Class A breakpoints, we
-  // also need to check that the block flow direction of the containing frame
-  // of these items (which is this block) is parallel to that of this page.
-  // See: https://www.w3.org/TR/css-break-3/#btw-blocks
-  const nsPresContext* const presCtx = aState.mPresContext;
-  const bool canBreakForPageNames =
-      aState.mReflowInput.AvailableBSize() != NS_UNCONSTRAINEDSIZE &&
-      presCtx->IsPaginated() && StaticPrefs::layout_css_named_pages_enabled() &&
-      presCtx->GetPresShell()->GetRootFrame()->GetWritingMode().IsVertical() ==
-          GetWritingMode().IsVertical();
-
   // Reflow the lines that are already ours
   for (; line != line_end; ++line, aState.AdvanceToNextLine()) {
     DumpLine(aState, line, deltaBCoord, 0);
@@ -2802,38 +2779,6 @@ void nsBlockFrame::ReflowDirtyLines(BlockReflowState& aState) {
       }
     }
 
-    // Check for a page break caused by CSS named pages.
-    //
-    // We should break for named pages when two frames meet at a class A
-    // breakpoint, where the first frame has a different end page value to the
-    // second frame's start page value. canBreakForPageNames is true iff
-    // children of this frame can form class A breakpoints, and that we are not
-    // in a measurement reflow or in a monolithic container such as
-    // 'inline-block'.
-    //
-    // We specifically do not want to cause a page-break for named pages when
-    // we are at the top of a page. This would otherwise happen when the
-    // previous sibling is an nsPageBreakFrame, or all previous siblings on the
-    // current page are zero-height. The latter may not be per-spec, but is
-    // compatible with Chrome's implementation of named pages.
-    bool shouldBreakForPageName = false;
-    if (canBreakForPageNames && (!aState.mReflowInput.mFlags.mIsTopOfPage ||
-                                 !aState.IsAdjacentWithBStart())) {
-      const nsIFrame* const frame = line->mFirstChild;
-      if (const nsIFrame* prevFrame = frame->GetPrevSibling()) {
-        if (const nsIFrame::PageValues* const pageValues =
-                frame->GetProperty(nsIFrame::PageValuesProperty())) {
-          const nsIFrame::PageValues* const prevPageValues =
-              prevFrame->GetProperty(nsIFrame::PageValuesProperty());
-          if (prevPageValues &&
-              prevPageValues->mEndPageValue != pageValues->mStartPageValue) {
-            shouldBreakForPageName = true;
-            line->MarkDirty();
-          }
-        }
-      }
-    }
-
     if (needToRecoverState && line->IsDirty()) {
       // We need to reconstruct the block-end margin only if we didn't
       // reflow the previous line and we do need to reflow (or repair
@@ -2881,18 +2826,9 @@ void nsBlockFrame::ReflowDirtyLines(BlockReflowState& aState) {
                    "Don't reflow blocks while willReflowAgain is true, reflow "
                    "of block abs-pos children depends on this");
 
-      if (shouldBreakForPageName) {
-        // Immediately fragment for page-name. It is possible we could break
-        // out of the loop right here, but this should make it more similar to
-        // what happens when reflow causes fragmentation.
-        keepGoing = false;
-        PushLines(aState, line.prev());
-        aState.mReflowStatus.SetIncomplete();
-      } else {
-        // Reflow the dirty line. If it's an incremental reflow, then force
-        // it to invalidate the dirty area if necessary
-        ReflowLine(aState, line, &keepGoing);
-      }
+      // Reflow the dirty line. If it's an incremental reflow, then force
+      // it to invalidate the dirty area if necessary
+      ReflowLine(aState, line, &keepGoing);
 
       if (aState.mReflowInput.WillReflowAgainForClearance()) {
         line->MarkDirty();
