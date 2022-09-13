@@ -24,7 +24,7 @@
 #include "hasht.h"
 #include "nssilock.h"
 #include "pkcs11t.h"
-#if defined(XP_UNIX) || defined(XP_BEOS)
+#if defined(XP_UNIX)
 #include "unistd.h"
 #endif
 #include "nssrwlk.h"
@@ -1982,7 +1982,7 @@ SECStatus SSLExp_CallExtensionWriterOnEchInner(PRFileDesc *fd, PRBool enabled);
 
 SEC_END_PROTOS
 
-#if defined(XP_UNIX) || defined(XP_OS2) || defined(XP_BEOS)
+#if defined(XP_UNIX) || defined(XP_OS2)
 #define SSL_GETPID getpid
 #elif defined(WIN32)
 extern int __cdecl _getpid(void);

@@ -314,7 +314,6 @@ map_os64()
 {
   IS_64=""
   case `uname -s` in
-      #OSF1) has been done already - always 64 bit
       SunOS)
           MAPPED_OS=Solaris*8
           IS_64=`(isainfo -v | grep 64)>/dev/null 2>/dev/null && echo 64 bit`
@@ -1200,7 +1199,7 @@ bc()
 ########################################################################
 Ps()
 {
-#AIX, OSF ps -ef, solaris /usr/5bin/ps -ef, win ps -ef but no user id
+#AIX, ps -ef, solaris /usr/5bin/ps -ef, win ps -ef but no user id
 #linux ps -ef, HP
 
     if [ $os_name = "SunOS" ]
