@@ -7,8 +7,6 @@
 with Files("**"):
     BUG_COMPONENT = ("Core", "DOM: Web Authentication")
 
-DIRS += ["identity"]
-
 EXPORTS.mozilla.dom += [
     "Credential.h",
     "CredentialsContainer.h",

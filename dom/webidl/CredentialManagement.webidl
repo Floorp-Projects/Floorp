@@ -5,19 +5,15 @@
  *
  * The origin of this IDL file is
  * https://www.w3.org/TR/credential-management-1/
- * and
- * https://w3c.github.io/webauthn/
- * and
- * https://fedidcg.github.io/FedCM/
  */
 
-[Exposed=Window, SecureContext]
+[Exposed=Window, SecureContext, Pref="security.webauth.webauthn"]
 interface Credential {
   readonly attribute USVString id;
   readonly attribute DOMString type;
 };
 
-[Exposed=Window, SecureContext]
+[Exposed=Window, SecureContext, Pref="security.webauth.webauthn"]
 interface CredentialsContainer {
   [NewObject]
   Promise<Credential?> get(optional CredentialRequestOptions options = {});
@@ -30,21 +26,13 @@ interface CredentialsContainer {
 };
 
 dictionary CredentialRequestOptions {
-  // This is taken from the partial definition in
-  // https://w3c.github.io/webauthn/#sctn-credentialrequestoptions-extension
-  [Pref="security.webauth.webauthn"]
-  PublicKeyCredentialRequestOptions publicKey;
-  // This is taken from the partial definition in
-  // https://fedidcg.github.io/FedCM/#browser-api-credential-request-options
-  [Pref="dom.security.credentialmanagement.identity.enabled"]
-  IdentityCredentialRequestOptions identity;
+  // FIXME: bug 1493860: should this "= {}" be here?
+  PublicKeyCredentialRequestOptions publicKey = {};
   AbortSignal signal;
 };
 
 dictionary CredentialCreationOptions {
-  // This is taken from the partial definition in
-  // https://w3c.github.io/webauthn/#sctn-credentialcreationoptions-extension
-  [Pref="security.webauth.webauthn"]
-  PublicKeyCredentialCreationOptions publicKey;
+  // FIXME: bug 1493860: should this "= {}" be here?
+  PublicKeyCredentialCreationOptions publicKey = {};
   AbortSignal signal;
 };
