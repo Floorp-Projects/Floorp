@@ -21,8 +21,6 @@ class BlobURLChannel final : public nsBaseChannel {
  public:
   BlobURLChannel(nsIURI* aURI, nsILoadInfo* aLoadInfo);
 
-  NS_IMETHOD SetContentType(const nsACString& aContentType) override;
-
  private:
   ~BlobURLChannel() override;
 
