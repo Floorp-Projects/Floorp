@@ -171,7 +171,7 @@ def common_package(config, job, taskdesc, distro, version):
         # Install the necessary build dependencies.
         "(cd ..; mk-build-deps -i -r {package}/debian/control -t '{resolver}' || exit 100) && "
         # Build the package
-        'DEB_BUILD_OPTIONS="parallel=$(nproc) nocheck" dpkg-buildpackage && '
+        'DEB_BUILD_OPTIONS="parallel=$(nproc) nocheck" dpkg-buildpackage -sa && '
         # Copy the artifacts
         "mkdir -p {artifacts}/apt && "
         "dcmd cp ../{package}_*.changes {artifacts}/apt/ && "
