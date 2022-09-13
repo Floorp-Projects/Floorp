@@ -4,19 +4,16 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-with Files("**"):
-    BUG_COMPONENT = ("Core", "DOM: Web Authentication")
 
-DIRS += ["identity"]
+with Files("**"):
+    BUG_COMPONENT = ("Core", "DOM: Credential Management")
 
 EXPORTS.mozilla.dom += [
-    "Credential.h",
-    "CredentialsContainer.h",
+    "IdentityCredential.h",
 ]
 
 UNIFIED_SOURCES += [
-    "Credential.cpp",
-    "CredentialsContainer.cpp",
+    "IdentityCredential.cpp",
 ]
 
 include("/ipc/chromium/chromium-config.mozbuild")
@@ -24,5 +21,3 @@ include("/ipc/chromium/chromium-config.mozbuild")
 FINAL_LIBRARY = "xul"
 
 MOCHITEST_MANIFESTS += ["tests/mochitest/mochitest.ini"]
-BROWSER_CHROME_MANIFESTS += ["tests/browser/browser.ini"]
-CRASHTEST_MANIFESTS += ["tests/crashtests/crashtests.list"]
