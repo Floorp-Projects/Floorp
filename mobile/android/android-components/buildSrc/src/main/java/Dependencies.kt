@@ -35,7 +35,7 @@ object Versions {
 
     // When upgrading mozilla_appservices, also upgrade the version in the
     // `getApplicationServiceVersion()` method in NimbusGradlePlugin.groovy.
-    const val mozilla_appservices = "94.1.0"
+    const val mozilla_appservices = "94.2.0"
 
     // DO NOT MODIFY MANUALLY. This is auto-updated along with GeckoView.
     const val mozilla_glean = "51.2.0"
