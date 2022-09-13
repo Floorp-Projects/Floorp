@@ -257,6 +257,10 @@ class BaseProxyCode {
   }
 
   static onConnect(req, clientSocket, head) {
+    if (global.connect_handler) {
+      global.connect_handler(req, clientSocket, head);
+      return;
+    }
     const net = require("net");
     // Connect to an origin server
     const { port, hostname } = new URL(`https://${req.url}`);
@@ -313,6 +317,10 @@ class BaseHTTPProxy extends BaseNodeServer {
   async stop() {
     this.unregisterFilter();
     await super.stop();
+  }
+
+  async registerConnectHandler(handler) {
+    return this.execute(`global.connect_handler = ${handler.toString()}`);
   }
 }
 
@@ -378,6 +386,7 @@ class NodeHTTPProxyServer extends BaseHTTPProxy {
     await this.execute(BaseProxyCode);
     await this.execute(HTTPProxyCode);
     await this.execute(ADB);
+    await this.execute(`global.connect_handler = null;`);
     this._port = await this.execute(`HTTPProxyCode.startServer(${port})`);
 
     this.registerFilter();
@@ -415,6 +424,7 @@ class NodeHTTPSProxyServer extends BaseHTTPProxy {
     await this.execute(BaseProxyCode);
     await this.execute(HTTPSProxyCode);
     await this.execute(ADB);
+    await this.execute(`global.connect_handler = null;`);
     this._port = await this.execute(`HTTPSProxyCode.startServer(${port})`);
 
     this.registerFilter();
@@ -562,6 +572,7 @@ class NodeHTTP2ProxyServer extends BaseHTTPProxy {
     await this.execute(BaseProxyCode);
     await this.execute(HTTP2ProxyCode);
     await this.execute(ADB);
+    await this.execute(`global.connect_handler = null;`);
     this._port = await this.execute(`HTTP2ProxyCode.startServer(${port})`);
 
     this.registerFilter();
