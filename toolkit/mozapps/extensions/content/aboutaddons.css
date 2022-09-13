@@ -857,8 +857,8 @@ section:not(:empty) ~ #empty-addons-message {
   display: inline-block;
   background-image: var(--card-border-zap-gradient);
   background-origin: border-box;
+  border: 1px solid transparent;
   border-radius: 1.5em;
-  padding: 1px;
 }
 
 #colorways-expiry-date > span {

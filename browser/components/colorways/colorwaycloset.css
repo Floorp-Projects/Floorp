@@ -86,8 +86,8 @@ body > header {
   display: inline-block;
   background: var(--card-border-zap-gradient);
   background-origin: border-box;
+  border: 1px solid transparent;
   border-radius: 1.5em;
-  padding: 1px;
 }
 
 #collection-expiry-date > span {
