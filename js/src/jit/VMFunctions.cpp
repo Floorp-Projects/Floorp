@@ -649,10 +649,6 @@ bool ArrayPushDense(JSContext* cx, Handle<ArrayObject*> arr, HandleValue v,
   MOZ_ASSERT(arr->lengthIsWritable());
   MOZ_ASSERT(!arr->isIndexed());
 
-  // Shape guards ensure that there aren't any indexed properties along the
-  // prototype chain.
-  MOZ_ASSERT(!PrototypeMayHaveIndexedProperties(arr));
-
   // Length must fit in an int32 because we guard against overflow before
   // calling this VM function.
   uint32_t index = arr->length();
