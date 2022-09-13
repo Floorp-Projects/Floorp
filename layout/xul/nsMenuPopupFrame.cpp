@@ -301,7 +301,7 @@ nsPopupLevel nsMenuPopupFrame::PopupLevel(bool aIsNoAutoHide) const {
   return sDefaultLevelIsTop ? ePopupLevelTop : ePopupLevelParent;
 }
 
-void nsMenuPopupFrame::EnsureWidget(bool aRecreate) {
+void nsMenuPopupFrame::PrepareWidget(bool aRecreate) {
   nsView* ourView = GetView();
   if (aRecreate) {
     if (auto* widget = GetWidget()) {
@@ -314,14 +314,11 @@ void nsMenuPopupFrame::EnsureWidget(bool aRecreate) {
   if (!ourView->HasWidget()) {
     CreateWidgetForView(ourView);
   }
-}
-
-static Maybe<ColorScheme> GetWidgetColorScheme(const nsMenuPopupFrame* aFrame) {
-  const auto& scheme = aFrame->StyleUI()->mColorScheme.bits;
-  if (!scheme) {
-    return Nothing();
+  if (nsIWidget* widget = GetWidget()) {
+    // This won't dynamically update the color scheme changes while the widget
+    // is shown, but it's good enough.
+    widget->SetColorScheme(Some(LookAndFeel::ColorSchemeForFrame(this)));
   }
-  return Some(LookAndFeel::ColorSchemeForFrame(aFrame));
 }
 
 nsresult nsMenuPopupFrame::CreateWidgetForView(nsView* aView) {
@@ -397,7 +394,6 @@ nsresult nsMenuPopupFrame::CreateWidgetForView(nsView* aView) {
   widget->SetWindowShadowStyle(GetShadowStyle());
   widget->SetWindowOpacity(StyleUIReset()->mWindowOpacity);
   widget->SetWindowTransform(ComputeWidgetTransform());
-  widget->SetColorScheme(GetWidgetColorScheme(this));
 
   // most popups don't have a title so avoid setting the title if there isn't
   // one
@@ -504,12 +500,6 @@ void nsMenuPopupFrame::DidSetComputedStyle(ComputedStyle* aOldStyle) {
   if (newUI.mMozWindowTransform != oldUI.mMozWindowTransform) {
     if (nsIWidget* widget = GetWidget()) {
       widget->SetWindowTransform(ComputeWidgetTransform());
-    }
-  }
-
-  if (StyleUI()->mColorScheme != aOldStyle->StyleUI()->mColorScheme) {
-    if (nsIWidget* widget = GetWidget()) {
-      widget->SetColorScheme(GetWidgetColorScheme(this));
     }
   }
 
@@ -806,7 +796,7 @@ void nsMenuPopupFrame::InitializePopup(nsIContent* aAnchorContent,
                                        bool aAttributesOverride) {
   auto* widget = GetWidget();
   bool recreateWidget = widget && widget->NeedsRecreateToReshow();
-  EnsureWidget(recreateWidget);
+  PrepareWidget(recreateWidget);
 
   mPopupState = ePopupShowing;
   mAnchorContent = aAnchorContent;
@@ -945,7 +935,7 @@ void nsMenuPopupFrame::InitializePopupAtScreen(nsIContent* aTriggerContent,
                                                bool aIsContextMenu) {
   auto* widget = GetWidget();
   bool recreateWidget = widget && widget->NeedsRecreateToReshow();
-  EnsureWidget(recreateWidget);
+  PrepareWidget(recreateWidget);
 
   mPopupState = ePopupShowing;
   mAnchorContent = nullptr;
@@ -2319,7 +2309,7 @@ nsresult nsMenuPopupFrame::AttributeChanged(int32_t aNameSpaceID,
     // When the remote attribute changes, we need to create a new widget to
     // ensure that it has the correct compositor and transparency settings to
     // match the new value.
-    EnsureWidget(true);
+    PrepareWidget(true);
   }
 
   if (aAttribute == nsGkAtoms::followanchor) {
