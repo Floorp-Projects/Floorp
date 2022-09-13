@@ -208,6 +208,9 @@ export const TabsSetupFlowManager = new (class {
   get currentSetupState() {
     return this.setupState.get(this._currentSetupStateName);
   }
+  get isTabSyncSetupComplete() {
+    return this.currentSetupState.uiStateIndex >= 4;
+  }
   get uiStateIndex() {
     return this.currentSetupState.uiStateIndex;
   }
