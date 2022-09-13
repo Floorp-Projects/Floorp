@@ -24,5 +24,6 @@ test-pref(ui.useOverlayScrollbars,0) ref-pref(ui.useOverlayScrollbars,1) == intr
 
 == listbox-checked-style.html listbox-checked-style-ref.html
 needs-focus != listbox-checked-style.html listbox-checked-style-notref.html
+needs-focus != listbox-focus.html listbox-focus-notref.html
 
 == 1769580.html 1769580-ref.html

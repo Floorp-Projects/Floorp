@@ -113,8 +113,6 @@ HTMLOptionElement* nsListControlFrame::GetCurrentOption() const {
 void nsListControlFrame::PaintFocus(DrawTarget* aDrawTarget, nsPoint aPt) {
   if (mFocused != this) return;
 
-  nsPresContext* presContext = PresContext();
-
   nsIFrame* containerFrame = GetOptionsContainer();
   if (!containerFrame) return;
 
@@ -144,19 +142,16 @@ void nsListControlFrame::PaintFocus(DrawTarget* aDrawTarget, nsPoint aPt) {
   }
   fRect += aPt;
 
-  bool lastItemIsSelected = false;
-  HTMLOptionElement* domOpt = HTMLOptionElement::FromNodeOrNull(focusedContent);
-  if (domOpt) {
-    lastItemIsSelected = domOpt->Selected();
-  }
+  const auto* domOpt = HTMLOptionElement::FromNodeOrNull(focusedContent);
+  const bool isSelected = domOpt && domOpt->Selected();
 
-  // set up back stop colors and then ask L&F service for the real colors
-  nscolor color = LookAndFeel::Color(
-      lastItemIsSelected ? LookAndFeel::ColorID::Selecteditem
-                         : LookAndFeel::ColorID::Selecteditemtext,
-      this);
+  // Set up back stop colors and then ask L&F service for the real colors
+  nscolor color =
+      LookAndFeel::Color(isSelected ? LookAndFeel::ColorID::Selecteditemtext
+                                    : LookAndFeel::ColorID::Selecteditem,
+                         this);
 
-  nsCSSRendering::PaintFocus(presContext, aDrawTarget, fRect, color);
+  nsCSSRendering::PaintFocus(PresContext(), aDrawTarget, fRect, color);
 }
 
 void nsListControlFrame::InvalidateFocus() {
