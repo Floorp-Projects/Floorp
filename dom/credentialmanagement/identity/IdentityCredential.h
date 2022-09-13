@@ -7,26 +7,27 @@
 #ifndef mozilla_dom_IdentityCredential_h
 #define mozilla_dom_IdentityCredential_h
 
-#include "js/TypeDecls.h"
-#include "mozilla/Attributes.h"
-#include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/Credential.h"
+#include "mozilla/dom/IPCIdentityCredential.h"
 #include "mozilla/MozPromise.h"
-#include "nsCycleCollectionParticipant.h"
-#include "nsWrapperCache.h"
+#include "mozilla/Tuple.h"
 
 namespace mozilla::dom {
 
 class IdentityCredential final : public Credential {
  public:
-  NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(IdentityCredential,
-                                                         Credential)
-
   typedef MozPromise<RefPtr<IdentityCredential>, nsresult, true>
       GetIdentityCredentialPromise;
-  typedef MozPromise<Maybe<RefPtr<IdentityCredential>>, nsresult, true>
-      GetMaybeIdentityCredentialPromise;
+  typedef MozPromise<IPCIdentityCredential, nsresult, true>
+      GetIPCIdentityCredentialPromise;
+  typedef MozPromise<bool, nsresult, true> ValidationPromise;
+  typedef MozPromise<IdentityInternalManifest, nsresult, true>
+      GetManifestPromise;
+  typedef MozPromise<Tuple<IdentityInternalManifest, IdentityAccountList>,
+                     nsresult, true>
+      GetAccountListPromise;
+  typedef MozPromise<Tuple<IdentityToken, IdentityAccount>, nsresult, true>
+      GetTokenPromise;
 
   explicit IdentityCredential(nsPIDOMWindowInner* aParent);
 
