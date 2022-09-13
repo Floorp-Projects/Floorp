@@ -1251,19 +1251,20 @@ void Statistics::sendSliceTelemetry(const SliceData& slice) {
   if (slice.budget.isTimeBudget()) {
     TimeDuration budgetDuration = slice.budget.timeBudgetDuration();
     runtime->metrics().GC_BUDGET_MS_2(budgetDuration);
+
     if (IsCurrentlyAnimating(runtime->lastAnimationTime, slice.end)) {
       runtime->metrics().GC_ANIMATION_MS(sliceTime);
     }
 
+    bool wasLongSlice = false;
     if (sliceTime > budgetDuration) {
       // Record how long we went over budget.
       TimeDuration overrun = sliceTime - budgetDuration;
       runtime->metrics().GC_BUDGET_OVERRUN(overrun);
 
       // Long GC slices are those that go 50% or 5ms over their budget.
-      bool wasLongSlice = (overrun > TimeDuration::FromMilliseconds(5)) ||
-                          (overrun > (budgetDuration / int64_t(2)));
-      runtime->metrics().GC_SLICE_WAS_LONG(wasLongSlice);
+      wasLongSlice = (overrun > TimeDuration::FromMilliseconds(5)) ||
+                     (overrun > (budgetDuration / int64_t(2)));
 
       // Record the longest phase in any long slice.
       if (wasLongSlice) {
@@ -1283,6 +1284,9 @@ void Statistics::sendSliceTelemetry(const SliceData& slice) {
         }
       }
     }
+
+    // Record `wasLongSlice` for all TimeBudget slices.
+    runtime->metrics().GC_SLICE_WAS_LONG(wasLongSlice);
   }
 }
 
