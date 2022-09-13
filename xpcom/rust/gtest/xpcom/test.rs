@@ -13,11 +13,12 @@ use nserror::{nsresult, NS_OK};
 use std::ffi::{CStr, CString};
 use std::os::raw::c_char;
 use std::ptr;
-use xpcom::interfaces;
+use xpcom::{interfaces, RefPtr};
 
 #[no_mangle]
 pub unsafe extern "C" fn Rust_ObserveFromRust() -> *const interfaces::nsIObserverService {
-    let obssvc = xpcom::services::get_ObserverService().unwrap();
+    let obssvc: RefPtr<interfaces::nsIObserverService> =
+        xpcom::components::Observer::service().unwrap();
 
     // Define an observer
     #[xpcom(implement(nsIObserver), nonatomic)]

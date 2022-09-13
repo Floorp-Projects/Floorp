@@ -19,7 +19,10 @@ use std::{
     str,
     sync::{Arc, Mutex, RwLock},
 };
-use xpcom::{interfaces::nsIFile, XpCom};
+use xpcom::{
+    interfaces::{nsIFile, nsIObserverService, nsIProperties, nsIXULRuntime},
+    RefPtr, XpCom,
+};
 
 type Manager = rkv::Manager<SafeModeEnvironment>;
 type Rkv = rkv::Rkv<SafeModeEnvironment>;
@@ -79,7 +82,8 @@ fn get_profile_dir() -> XULStoreResult<PathBuf> {
     // a `*mut *mut libc::c_void` in Rust, whereas getter_addrefs() expects
     // a closure with a `*mut *const T` parameter.
 
-    let dir_svc = xpcom::services::get_DirectoryService().ok_or(XULStoreError::Unavailable)?;
+    let dir_svc: RefPtr<nsIProperties> =
+        xpcom::components::Directory::service().map_err(|_| XULStoreError::Unavailable)?;
     let mut profile_dir = xpcom::GetterAddrefs::<nsIFile>::new();
     unsafe {
         dir_svc
@@ -130,7 +134,8 @@ fn observe_profile_change() {
     // But we use a closure returning a result to enable use of the ? operator.
     (|| -> XULStoreResult<()> {
         // Observe profile changes so we can update this directory accordingly.
-        let obs_svc = xpcom::services::get_ObserverService().ok_or(XULStoreError::Unavailable)?;
+        let obs_svc: RefPtr<nsIObserverService> =
+            xpcom::components::Observer::service().map_err(|_| XULStoreError::Unavailable)?;
         let observer = ProfileChangeObserver::new();
         unsafe {
             obs_svc
@@ -147,7 +152,8 @@ fn observe_profile_change() {
 }
 
 fn in_safe_mode() -> XULStoreResult<bool> {
-    let xul_runtime = xpcom::services::get_XULRuntime().ok_or(XULStoreError::Unavailable)?;
+    let xul_runtime: RefPtr<nsIXULRuntime> =
+        xpcom::components::XULRuntime::service().map_err(|_| XULStoreError::Unavailable)?;
     let mut in_safe_mode = false;
     unsafe {
         xul_runtime.GetInSafeMode(&mut in_safe_mode).to_result()?;

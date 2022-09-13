@@ -10,7 +10,7 @@ use nserror::{nsresult, NS_ERROR_FAILURE, NS_OK};
 use nsstring::{nsACString, nsCStr};
 use xpcom::{
     interfaces::{nsIPrefBranch, nsISupports},
-    RefPtr, XpCom,
+    RefPtr,
 };
 
 /// Whether the current value of the localhost testing pref is permitting
@@ -36,9 +36,8 @@ impl UploadPrefObserver {
         // * We control all input to `AddObserverImpl`
         unsafe {
             let pref_obs = Self::allocate(InitUploadPrefObserver {});
-            let pref_service = xpcom::services::get_PrefService().ok_or(NS_ERROR_FAILURE)?;
             let pref_branch: RefPtr<nsIPrefBranch> =
-                (*pref_service).query_interface().ok_or(NS_ERROR_FAILURE)?;
+                xpcom::components::Preferences::service().map_err(|_| NS_ERROR_FAILURE)?;
             let pref_nscstr =
                 &nsCStr::from("datareporting.healthreport.uploadEnabled") as &nsACString;
             (*pref_branch)

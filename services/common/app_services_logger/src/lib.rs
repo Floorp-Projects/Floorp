@@ -25,7 +25,7 @@ use std::{
     },
 };
 use xpcom::{
-    interfaces::{mozIAppServicesLogger, mozIServicesLogSink, nsISupports},
+    interfaces::{mozIAppServicesLogger, mozIServicesLogSink, nsIObserverService, nsISupports},
     RefPtr,
 };
 
@@ -85,7 +85,7 @@ fn ensure_observing_shutdown() {
     if SHUTDOWN_OBSERVED.load(Ordering::Relaxed) {
         return;
     }
-    if let Some(service) = xpcom::services::get_ObserverService() {
+    if let Ok(service) = xpcom::components::Observer::service::<nsIObserverService>() {
         let observer = ShutdownObserver::allocate(InitShutdownObserver {});
         let rv = unsafe {
             service.AddObserver(observer.coerce(), cstr!("xpcom-shutdown").as_ptr(), false)
@@ -110,7 +110,7 @@ impl ShutdownObserver {
         _data: *const u16,
     ) -> Result<(), nsresult> {
         LOGGERS_BY_TARGET.write().unwrap().clear();
-        if let Some(service) = xpcom::services::get_ObserverService() {
+        if let Ok(service) = xpcom::components::Observer::service::<nsIObserverService>() {
             // Ignore errors, since we're already shutting down.
             let _ = unsafe { service.RemoveObserver(self.coerce(), topic) };
         }

@@ -53,7 +53,7 @@ use thin_vec::ThinVec;
 use xpcom::interfaces::{
     nsICRLiteCoverage, nsICRLiteTimestamp, nsICertInfo, nsICertStorage, nsICertStorageCallback,
     nsIFile, nsIHandleReportCallback, nsIIssuerAndSerialRevocationState, nsIMemoryReporter,
-    nsIMemoryReporterManager, nsIRevocationState, nsISerialEventTarget,
+    nsIMemoryReporterManager, nsIProperties, nsIRevocationState, nsISerialEventTarget,
     nsISubjectAndPubKeyRevocationState, nsISupports,
 };
 use xpcom::{nsIID, GetterAddrefs, RefPtr, ThreadBoundRefPtr, XpCom};
@@ -1083,7 +1083,8 @@ impl EncodedSecurityState {
 }
 
 fn get_path_from_directory_service(key: &str) -> Result<PathBuf, nserror::nsresult> {
-    let directory_service = xpcom::services::get_DirectoryService().ok_or(NS_ERROR_FAILURE)?;
+    let directory_service: RefPtr<nsIProperties> =
+        xpcom::components::Directory::service().map_err(|_| NS_ERROR_FAILURE)?;
     let cs_key = CString::new(key).map_err(|_| NS_ERROR_FAILURE)?;
 
     let mut requested_dir = GetterAddrefs::<nsIFile>::new();

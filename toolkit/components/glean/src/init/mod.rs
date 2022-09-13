@@ -13,8 +13,8 @@ use nserror::{nsresult, NS_ERROR_FAILURE};
 use nsstring::{nsACString, nsCString, nsString};
 #[cfg(not(target_os = "android"))]
 use xpcom::interfaces::mozIViaduct;
-use xpcom::interfaces::{nsIFile, nsIXULAppInfo};
-use xpcom::XpCom;
+use xpcom::interfaces::{nsIFile, nsIPrefService, nsIProperties, nsIXULAppInfo, nsIXULRuntime};
+use xpcom::{RefPtr, XpCom};
 
 use glean::{ClientInfoMetrics, Configuration};
 
@@ -233,8 +233,8 @@ fn setup_viaduct() {
 
 /// Construct and return the data_path from the profile dir, or return an error.
 fn get_data_path() -> Result<String, nsresult> {
-    let dir_svc = match xpcom::services::get_DirectoryService() {
-        Some(ds) => ds,
+    let dir_svc: RefPtr<nsIProperties> = match xpcom::components::Directory::service() {
+        Ok(ds) => ds,
         _ => return Err(NS_ERROR_FAILURE),
     };
     let mut profile_dir = xpcom::GetterAddrefs::<nsIFile>::new();
@@ -262,9 +262,11 @@ fn get_data_path() -> Result<String, nsresult> {
 /// build_id ad app_version will be "unknown".
 /// Other problems result in an error being returned instead.
 fn get_app_info() -> Result<(String, String, String), nsresult> {
-    let xul = xpcom::services::get_XULRuntime().ok_or(NS_ERROR_FAILURE)?;
+    let xul: RefPtr<nsIXULRuntime> =
+        xpcom::components::XULRuntime::service().map_err(|_| NS_ERROR_FAILURE)?;
 
-    let pref_service = xpcom::services::get_PrefService().ok_or(NS_ERROR_FAILURE)?;
+    let pref_service: RefPtr<nsIPrefService> =
+        xpcom::components::Preferences::service().map_err(|_| NS_ERROR_FAILURE)?;
     let branch = xpcom::getter_addrefs(|p| {
         // Safe because:
         //  * `null` is explicitly allowed per documentation
