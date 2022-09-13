@@ -92,7 +92,7 @@ jobs:
             find "/home/runner/work/win-cross/VC" -depth -exec rename 's/(.*)\/([^\/]*)/$1\/\L$2/' {} \;
         fi
         chmod -R 777 /home/runner/work/win-cross
-        sed -i '76c //const uint64_t ROOT_CLIP_CHAIN = ~0;' /home/runner/work/Floorp/Floorp/gfx/webrender_bindings/webrender_ffi.h
+        sed -i '76c //const uint64_t ROOT_CLIP_CHAIN = ~0;' /home/runner/work/${{ github.event.repository.name }}/${{ github.event.repository.name }}/gfx/webrender_bindings/webrender_ffi.h
 
         tool_msvc_v=$(ls /home/runner/work/win-cross/vc/tools/msvc | grep "14\..*")
         echo ${tool_msvc_v}
@@ -129,7 +129,7 @@ jobs:
         echo 'ac_add_options --with-app-name=floorp' >> mozconfig
         echo 'ac_add_options --with-app-basename=Floorp' >> mozconfig
         echo 'ac_add_options --with-branding=browser/branding/official' >> mozconfig
-        echo 'ac_add_options --with-l10n-base=/home/runner/work/Floorp/Floorp/l10n-central/l10n-central' >> mozconfig
+        echo 'ac_add_options --with-l10n-base=/home/runner/work/${{ github.event.repository.name }}/${{ github.event.repository.name }}/l10n-central/l10n-central' >> mozconfig
         echo 'ac_add_options --with-wasi-sysroot=/home/runner/work/wasi-sysroot/' >> mozconfig
         echo 'ac_add_options --disable-bits-download' >> mozconfig
         echo 'ac_add_options --disable-crashreporter' >> mozconfig
@@ -155,9 +155,9 @@ jobs:
         echo 'ac_add_options --enable-update-agent' >> mozconfig
         echo 'ac_add_options --enable-bootstrap' >> mozconfig
         
-        echo 'ac_add_options --with-mozilla-api-keyfile=/home/runner/work/Floorp/Floorp/apis/api-mozilla-key' >> mozconfig
-        echo 'ac_add_options --with-google-safebrowsing-api-keyfile=/home/runner/work/Floorp/Floorp/apis/api-google-safe-browsing-key' >> mozconfig
-        echo 'ac_add_options --with-google-location-service-api-keyfile=/home/runner/work/Floorp/Floorp/apis/api-google-location-service-key' >> mozconfig
+        echo 'ac_add_options --with-mozilla-api-keyfile=/home/runner/work/${{ github.event.repository.name }}/${{ github.event.repository.name }}/apis/api-mozilla-key' >> mozconfig
+        echo 'ac_add_options --with-google-safebrowsing-api-keyfile=/home/runner/work/${{ github.event.repository.name }}/${{ github.event.repository.name }}/apis/api-google-safe-browsing-key' >> mozconfig
+        echo 'ac_add_options --with-google-location-service-api-keyfile=/home/runner/work/${{ github.event.repository.name }}/${{ github.event.repository.name }}/apis/api-google-location-service-key' >> mozconfig
 
 
         echo 'ac_add_options --target=x86_64-pc-mingw32' >> mozconfig
@@ -206,6 +206,6 @@ jobs:
       with:
         name: floorp-windows-x64
         path: |
-          /home/runner/work/Floorp/Floorp/obj-x86_64-pc-mingw32/dist/install/sea/*.exe
-          /home/runner/work/Floorp/Floorp/obj-x86_64-pc-mingw32/dist/update.xml
-          /home/runner/work/Floorp/Floorp/obj-x86_64-pc-mingw32/dist/output.mar
+          /home/runner/work/${{ github.event.repository.name }}/${{ github.event.repository.name }}/obj-x86_64-pc-mingw32/dist/install/sea/*.exe
+          /home/runner/work/${{ github.event.repository.name }}/${{ github.event.repository.name }}/obj-x86_64-pc-mingw32/dist/update.xml
+          /home/runner/work/${{ github.event.repository.name }}/${{ github.event.repository.name }}/obj-x86_64-pc-mingw32/dist/output.mar
