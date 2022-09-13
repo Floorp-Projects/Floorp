@@ -436,7 +436,8 @@ details[open] > .page-section-header > .twisty {
   z-index: 1;
 }
 
-.card-body > .step-content {
+.card-body > .step-content,
+.zap-card > button.close {
   z-index: 1;
 }
 
