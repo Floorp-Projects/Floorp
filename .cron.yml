@@ -242,6 +242,17 @@ jobs:
       when:
           - {hour: 16, minute: 0}
 
+    - name: weekly-release-perf
+      job:
+          type: decision-task
+          treeherder-symbol: w-perf
+          target-tasks-method: weekly_release_perf
+          include-push-tasks: true
+      run-on-projects:
+          - mozilla-release
+      when:
+          - {weekday: 'Friday', hour: 16, minute: 0}
+
     - name: raptor-tp6m
       job:
           type: decision-task

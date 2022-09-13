@@ -1196,6 +1196,47 @@ def target_tasks_daily_beta_perf(full_task_graph, parameters, graph_config):
     return [l for l, t in full_task_graph.tasks.items() if filter(t)]
 
 
+@_target_task("weekly_release_perf")
+def target_tasks_weekly_release_perf(full_task_graph, parameters, graph_config):
+    """
+    Select performance tests on the release branch to be run weekly
+    """
+
+    def filter(task):
+        platform = task.attributes.get("test_platform")
+        attributes = task.attributes
+        try_name = attributes.get("raptor_try_name")
+
+        if attributes.get("unittest_suite") != "raptor":
+            return False
+
+        if platform and accept_raptor_android_build(platform):
+            # Select browsertime & geckoview specific tests
+            if "browsertime" and "geckoview" in try_name:
+                if "g5" in platform:
+                    return False
+                if "power" in try_name:
+                    return False
+                if "cpu" in try_name:
+                    return False
+                if "profiling" in try_name:
+                    return False
+                if "-live" in try_name:
+                    return False
+                if "speedometer" in try_name:
+                    return True
+                if "webgl" in try_name:
+                    return True
+                if "tp6m" in try_name:
+                    return True
+                if "youtube-playback" in try_name:
+                    return True
+
+        return False
+
+    return [l for l, t in full_task_graph.tasks.items() if filter(t)]
+
+
 @_target_task("raptor_tp6m")
 def target_tasks_raptor_tp6m(full_task_graph, parameters, graph_config):
     """
