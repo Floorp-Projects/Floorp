@@ -11,7 +11,10 @@ use std::sync::{
 use std::time::{Duration, Instant};
 
 use nserror::{nsresult, NS_ERROR_FAILURE, NS_OK};
-use xpcom::interfaces::nsISupports;
+use xpcom::{
+    interfaces::{nsIObserverService, nsISupports},
+    RefPtr,
+};
 
 // Partially cargo-culted from UploadPrefObserver.
 #[xpcom(implement(nsIObserver), atomic)]
@@ -42,7 +45,8 @@ impl UserActivityObserver {
                 last_edge: RwLock::new(Instant::now()),
                 was_active: AtomicBool::new(false),
             });
-            let obs_service = xpcom::services::get_ObserverService().ok_or(NS_ERROR_FAILURE)?;
+            let obs_service: RefPtr<nsIObserverService> =
+                xpcom::components::Observer::service().map_err(|_| NS_ERROR_FAILURE)?;
             let rv = obs_service.AddObserver(
                 activity_obs.coerce(),
                 cstr!("user-interaction-active").as_ptr(),

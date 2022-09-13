@@ -14,7 +14,7 @@ extern crate nserror;
 use nserror::*;
 
 extern crate xpcom;
-use xpcom::interfaces::nsrefcnt;
+use xpcom::interfaces::{mozIThirdPartyUtil, nsrefcnt};
 use xpcom::{AtomicRefcnt, RefCounted, RefPtr};
 
 extern crate uuid;
@@ -316,7 +316,9 @@ pub extern "C" fn mozurl_origin(url: &MozURL, origin: &mut nsACString) {
 fn get_base_domain(url: &MozURL) -> Result<Option<String>, nsresult> {
     match url.scheme() {
         "ftp" | "http" | "https" | "moz-extension" | "resource" => {
-            let third_party_util = xpcom::services::get_ThirdPartyUtil().unwrap();
+            let third_party_util: RefPtr<mozIThirdPartyUtil> =
+                xpcom::components::ThirdPartyUtil::service()
+                    .map_err(|_| NS_ERROR_ILLEGAL_DURING_SHUTDOWN)?;
 
             let scheme = nsCString::from(url.scheme());
 
