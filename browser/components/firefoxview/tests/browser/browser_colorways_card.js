@@ -50,6 +50,7 @@ function getTestElements(document) {
     container: document.getElementById("colorways"),
     title: document.getElementById("colorways-collection-title"),
     description: document.getElementById("colorways-collection-description"),
+    expiryPill: document.querySelector("#colorways-collection-expiry-date"),
     expiry: document.querySelector("#colorways-collection-expiry-date > span"),
     figure: document.getElementById("colorways-collection-figure"),
     noCollectionNotice: document.getElementById(
@@ -205,6 +206,7 @@ add_task(async function no_active_colorway_test() {
           TEST_COLORWAY_COLLECTION.l10nId.description,
           "Collection description should be shown"
         );
+        ok(!el.expiryPill.hidden, "Expiry pill is shown");
         const expiryL10nAttributes = document.l10n.getAttributes(el.expiry);
         is(
           expiryL10nAttributes.args.expiryDate,
@@ -303,17 +305,7 @@ add_task(async function active_colorway_test() {
           "Independent Voices",
           "Collection name should be shown"
         );
-        const expiryL10nAttributes = document.l10n.getAttributes(el.expiry);
-        is(
-          expiryL10nAttributes.args.expiryDate,
-          TEST_COLORWAY_COLLECTION.expiry.getTime(),
-          "Correct expiry date should be shown"
-        );
-        is(
-          expiryL10nAttributes.id,
-          EXPIRY_DATE_L10N_ID,
-          "Correct expiry date format should be shown"
-        );
+        ok(el.expiryPill.hidden, "Expiry pill is hidden");
 
         document.querySelector("#colorways-button").click();
 
@@ -379,17 +371,7 @@ add_task(async function active_colorway_without_intensity_test() {
           TEST_COLORWAY_COLLECTION.l10nId.title,
           "Collection name should be shown as the description"
         );
-        const expiryL10nAttributes = document.l10n.getAttributes(el.expiry);
-        is(
-          expiryL10nAttributes.args.expiryDate,
-          TEST_COLORWAY_COLLECTION.expiry.getTime(),
-          "Correct expiry date should be shown"
-        );
-        is(
-          expiryL10nAttributes.id,
-          EXPIRY_DATE_L10N_ID,
-          "Correct expiry date format should be shown"
-        );
+        ok(el.expiryPill.hidden, "Expiry pill is hidden");
       }
     );
   } finally {
@@ -433,6 +415,7 @@ add_task(async function active_colorway_is_outdated_test() {
           TEST_COLORWAY_COLLECTION.l10nId.description,
           "Collection description should be shown"
         );
+        ok(!el.expiryPill.hidden, "Expiry pill is shown");
         const expiryL10nAttributes = document.l10n.getAttributes(el.expiry);
         is(
           expiryL10nAttributes.args.expiryDate,
