@@ -30,6 +30,8 @@ var gExceptionPaths = [
   "chrome://activity-stream/content/data/content/tippytop/favicons/",
   // These resources are referenced by messages delivered through Remote Settings
   "chrome://activity-stream/content/data/content/assets/remote/",
+  "chrome://activity-stream/content/data/content/assets/mobile-download-qr-new-user-cn.svg",
+  "chrome://activity-stream/content/data/content/assets/mobile-download-qr-existing-user-cn.svg",
   "chrome://browser/content/assets/moz-vpn.svg",
   "chrome://browser/content/assets/vpn-logo.svg",
   "chrome://browser/content/assets/focus-promo.png",
