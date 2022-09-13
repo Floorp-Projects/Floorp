@@ -11,13 +11,17 @@
 #include "gtest/gtest.h"
 #include "mozilla/SpinEventLoopUntil.h"
 #include "mozilla/UniquePtr.h"
+#include "mozilla/dom/FileBlobImpl.h"
 #include "mozilla/dom/FileSystemManager.h"
 #include "mozilla/dom/FileSystemManagerChild.h"
 #include "mozilla/dom/IPCBlob.h"
+#include "mozilla/dom/IPCBlobUtils.h"
 #include "mozilla/dom/PFileSystemManager.h"
 #include "mozilla/dom/StorageManager.h"
 #include "mozilla/ipc/FileDescriptorUtils.h"
 #include "mozilla/ipc/IPCCore.h"
+#include "nsDirectoryServiceDefs.h"
+#include "nsIFile.h"
 
 using ::testing::_;
 using ::testing::ByRef;
@@ -143,9 +147,24 @@ TEST_F(TestFileSystemRequestHandler, isGetFileHandleSuccessful) {
 TEST_F(TestFileSystemRequestHandler, isGetFileSuccessful) {
   auto fakeResponse = [](const auto& /* aRequest */, auto&& aResolve,
                          auto&& /* aReject */) {
+    // We have to create a temporary file
+    nsCOMPtr<nsIFile> tmpfile;
+    nsresult rv =
+        NS_GetSpecialDirectory(NS_OS_TEMP_DIR, getter_AddRefs(tmpfile));
+    ASSERT_EQ(NS_SUCCEEDED(rv), true);
+
+    rv = tmpfile->AppendNative("GetFileTestBlob"_ns);
+    ASSERT_EQ(NS_SUCCEEDED(rv), true);
+
+    rv = tmpfile->CreateUnique(nsIFile::NORMAL_FILE_TYPE, 0666);
+    ASSERT_EQ(NS_SUCCEEDED(rv), true);
+
+    auto blob = MakeRefPtr<FileBlobImpl>(tmpfile);
+
     TimeStamp last_modified_ms = 0;
-    mozilla::dom::IPCBlob file;
     ContentType type = u"txt"_ns;
+    IPCBlob file;
+    IPCBlobUtils::Serialize(blob, file);
 
     nsTArray<Name> path;
     path.AppendElement(u"root"_ns);
