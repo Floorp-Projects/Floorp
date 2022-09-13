@@ -5502,13 +5502,89 @@ void nsCSSFrameConstructor::AddFrameConstructionItemsInternal(
     return;
   }
 
+  bool pageNameBreak = false;
+  // TODO: We should document why the TextIsOnlyWhitespace() check is needed.
+  // This will be documented as part of fixing Bug 1782324
+  if (aParentFrame && aState.mPresContext->IsPaginated() &&
+      StaticPrefs::layout_css_named_pages_enabled() &&
+      !aContent->TextIsOnlyWhitespace()) {
+    // TODO: This is slightly incorrect! See Bug 1764437
+    // We should be waiting all of our descendent frames to be constructed.
+    //
+    // Alternatively, we could propagate this back up the frame tree after
+    // constructing this frame's first child, inspecting the parent frames and
+    // rewriting their first child page-name.
+    const StylePageName& pageName = aComputedStyle->StylePage()->mPage;
+
+    // Resolve auto against the parent frame's used page name, which has been
+    // determined and set on aState.mAutoPageNameValue. If this item is not
+    // block-level then we use the value that auto resolves to.
+    //
+    // This is to achieve the propagation behavior described in the spec:
+    //
+    // "A start page value and end page value is determined for each box as
+    //  the value (if any) propagated from its first or last child box
+    //  (respectively), else the used value on the box itself."
+    //
+    // "A child propagates its own start or end page value if and only if the
+    //  page property applies to it."
+    //
+    // The page property only applies to "boxes that create class A break
+    // points". When taken together, means that non block-level children do
+    // not propagate start/end page values, and instead we use "the used
+    // value on the box itself", the "box itself" being aParentFrame. This
+    // value has been determined and saved as aState.mAutoPageNameValue
+    //
+    // https://www.w3.org/TR/css-page-3/#using-named-pages
+    // https://www.w3.org/TR/css-break-3/#btw-blocks
+    const nsAtom* const pageNameAtom =
+        (pageName.IsPageName() &&
+         aComputedStyle->StyleDisplay()->IsBlockOutsideStyle())
+            ? pageName.AsPageName().AsAtom()
+            : aState.mAutoPageNameValue;
+
+    // Check if we are the first child of our parent. If so, propagate this
+    // child's page name up the frame tree for every frame while our ancestor
+    // is the first child of its parent.
+    nsIFrame::PageValues* const framePageValues =
+        aParentFrame->GetProperty(nsIFrame::PageValuesProperty());
+    // TODO alaskanemily: This assert should be removed when we move to lazily
+    // setting the PageValuesProperty
+    MOZ_ASSERT(framePageValues,
+               "child box page names should have been created by "
+               "AutoFrameConstructionPageName");
+    if (!framePageValues->mStartPageValue) {
+      framePageValues->mStartPageValue = pageNameAtom;
+      if (nsIFrame* const prevFrame = aParentFrame->GetPrevSibling()) {
+        const nsIFrame::PageValues* const prevPageValues =
+            prevFrame->GetProperty(nsIFrame::PageValuesProperty());
+        if (prevPageValues && prevPageValues->mEndPageValue != pageNameAtom) {
+          pageNameBreak = true;
+        }
+      }
+      // Propagate the start page value back up the frame tree.
+      // If the frame already has mStartPageValue set, then we are not a
+      // descendant of the frame's first child.
+      for (nsContainerFrame* frame = aParentFrame->GetParent(); frame;
+           frame = frame->GetParent()) {
+        nsIFrame::PageValues* const parentPageValues =
+            frame->GetProperty(nsIFrame::PageValuesProperty());
+        if (!parentPageValues || parentPageValues->mStartPageValue) {
+          break;
+        }
+        parentPageValues->mStartPageValue = pageNameAtom;
+      }
+    }
+    framePageValues->mEndPageValue = pageNameAtom;
+  }
+
   const bool canHavePageBreak =
       aFlags.contains(ItemFlag::AllowPageBreak) &&
       aState.mPresContext->IsPaginated() &&
       !display.IsAbsolutelyPositionedStyle() &&
       !(aParentFrame && aParentFrame->IsGridContainerFrame()) &&
       !(bits & FCDATA_IS_TABLE_PART) && !(bits & FCDATA_IS_SVG_TEXT);
-  if (canHavePageBreak && display.BreakBefore()) {
+  if (canHavePageBreak && (pageNameBreak || display.BreakBefore())) {
     AppendPageBreakItem(aContent, aItems);
   }
 
@@ -9549,89 +9625,6 @@ inline void nsCSSFrameConstructor::ConstructFramesFromItemList(
   }
 
   VerifyGridFlexContainerChildren(aParentFrame, aFrameList);
-
-  // Calculate and propagate page-name values for each frame in the frame list.
-  // This will be affected by https://bugzilla.mozilla.org/1782597
-  if (aState.mPresContext->IsPaginated() &&
-      StaticPrefs::layout_css_named_pages_enabled() &&
-      aParentFrame->IsBlockFrameOrSubclass()) {
-    // Set the start/end page values while iterating the frame list, to walk
-    // up the frame tree only once after iterating the frame list.
-    // This also avoids extra property lookups on these frames.
-    const nsAtom* startPageValue = nullptr;
-    const nsAtom* endPageValue = nullptr;
-    for (nsIFrame* f : aFrameList) {
-      // Resolve auto against the parent frame's used page name, which has been
-      // determined and set on aState.mAutoPageNameValue. If this item is not
-      // block-level then we use the value that auto resolves to.
-      //
-      // This is to achieve the propagation behavior described in the spec:
-      //
-      // "A start page value and end page value is determined for each box as
-      //  the value (if any) propagated from its first or last child box
-      //  (respectively), else the used value on the box itself."
-      //
-      // "A child propagates its own start or end page value if and only if the
-      //  page property applies to it."
-      //
-      // The page property only applies to "boxes that create class A break
-      // points". When taken together, this means that non block-level children
-      // do not propagate start/end page values, and instead we use "the used
-      // value on the box itself", the "box itself" being aParentFrame. This
-      // value has been determined and saved as aState.mAutoPageNameValue
-      //
-      // https://www.w3.org/TR/css-page-3/#using-named-pages
-      // https://www.w3.org/TR/css-break-3/#btw-blocks
-      const StylePageName& pageName = f->StylePage()->mPage;
-      const nsAtom* const pageNameAtom =
-          (pageName.IsPageName() && f->IsBlockOutside())
-              ? pageName.AsPageName().AsAtom()
-              : aState.mAutoPageNameValue;
-      nsIFrame::PageValues* pageValues =
-          f->GetProperty(nsIFrame::PageValuesProperty());
-      if (!pageValues) {
-        pageValues = new nsIFrame::PageValues();
-        f->AddProperty(nsIFrame::PageValuesProperty(), pageValues);
-      }
-      MOZ_ASSERT(!pageValues->mStartPageValue == !pageValues->mEndPageValue,
-                 "Both or neither mStartPageValue and mEndPageValue should "
-                 "have been set");
-      if (!pageValues->mStartPageValue) {
-        pageValues->mStartPageValue = pageNameAtom;
-        pageValues->mEndPageValue = pageNameAtom;
-      }
-      if (!startPageValue) {
-        startPageValue = pageValues->mStartPageValue;
-      }
-      endPageValue = pageValues->mEndPageValue;
-    }
-    MOZ_ASSERT(!startPageValue == !endPageValue,
-               "Should have set both or neither page values");
-    if (startPageValue) {
-      // TODO: This is slightly incorrect! See Bug 1764437
-      // We should be waiting all of our descendent frames to be constructed.
-      //
-      // Alternatively, we could propagate this back up the frame tree after
-      // constructing this frame's first child, inspecting the parent frames
-      // and rewriting their first child page-name.
-      for (nsContainerFrame* frame = aParentFrame;
-           frame && frame->IsBlockFrameOrSubclass();
-           frame = frame->GetParent()) {
-        nsIFrame::PageValues* const parentPageValues =
-            frame->GetProperty(nsIFrame::PageValuesProperty());
-        // Propagate the start page value back up the frame tree.
-        // If the frame already has mStartPageValue set, then we are not a
-        // descendant of the frame's first child.
-        if (!parentPageValues) {
-          break;
-        }
-        if (!parentPageValues->mStartPageValue) {
-          parentPageValues->mStartPageValue = startPageValue;
-        }
-        parentPageValues->mEndPageValue = endPageValue;
-      }
-    }
-  }
 
   if (aParentIsWrapperAnonBox) {
     for (nsIFrame* f : aFrameList) {
