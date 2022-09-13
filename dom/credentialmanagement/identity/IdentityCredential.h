@@ -38,6 +38,10 @@ class IdentityCredential final : public Credential {
   virtual JSObject* WrapObject(JSContext* aCx,
                                JS::Handle<JSObject*> aGivenProto) override;
 
+  void CopyValuesFrom(const IPCIdentityCredential& aOther);
+
+  IPCIdentityCredential MakeIPCIdentityCredential();
+
   void GetToken(nsAString& aToken) const;
   void SetToken(const nsAString& aToken);
 
