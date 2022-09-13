@@ -191,7 +191,7 @@
 
 .urlbarView-row[dynamicType=quickactions][label]::before {
   top: -1em;
-  margin-inline-start: 12px;
+  margin-inline-start: 6px;
 }
 
 .urlbarView-row[dynamicType=quickactions] .urlbarView-quickaction-row:hover:not([disabled]) {
