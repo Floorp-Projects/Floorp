@@ -416,6 +416,15 @@ Section "Uninstall"
   DetailPrint $(STATUS_UNINSTALL_MAIN)
   SetDetailsPrint none
 
+  ; Some system cleanup is most easily handled when XPCOM functionality is
+  ; available - e.g. removing notifications from Window's Action Center. We
+  ; handle this in the `uninstall` background task.
+  ;
+  ; Return value is saved to an unused variable to prevent the the error flag
+  ; from being set.
+  Var /GLOBAL UnusedExecCatchReturn
+  ExecWait '"$INSTDIR\${FileMainEXE}" --backgroundtask uninstall' $UnusedExecCatchReturn
+
   ; Delete the app exe to prevent launching the app while we are uninstalling.
   ClearErrors
   ${DeleteFile} "$INSTDIR\${FileMainEXE}"

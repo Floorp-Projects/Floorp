@@ -154,3 +154,7 @@ if CONFIG["MOZ_WIDGET_TOOLKIT"] == "windows":
         "WindowsJumpLists.jsm",
         "WindowsPreviewPerTab.jsm",
     ]
+
+    EXTRA_JS_MODULES.backgroundtasks += [
+        "BackgroundTask_uninstall.jsm",
+    ]
