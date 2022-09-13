@@ -9,7 +9,10 @@
 #include <windows.h>
 #include <appmodel.h>
 #include <ktmw32.h>
+#include <windows.foundation.h>
+#include <wrl/client.h>
 
+#include "ErrorList.h"
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/Buffer.h"
 #include "mozilla/DynamicallyLinkedFunctionPtr.h"
@@ -33,6 +36,18 @@
 
 namespace mozilla {
 namespace widget {
+
+using namespace ABI::Windows::Foundation;
+using namespace Microsoft::WRL;
+using namespace Microsoft::WRL::Wrappers;
+// Needed to disambiguate internal and Windows `ToastNotification` classes.
+using namespace ABI::Windows::UI::Notifications;
+using WinToastNotification = ABI::Windows::UI::Notifications::ToastNotification;
+using IVectorView_ToastNotification =
+    ABI::Windows::Foundation::Collections::IVectorView<WinToastNotification*>;
+using IVectorView_ScheduledToastNotification =
+    ABI::Windows::Foundation::Collections::IVectorView<
+        ScheduledToastNotification*>;
 
 LazyLogModule sWASLog("WindowsAlertsService");
 
@@ -609,6 +624,66 @@ void ToastNotification::RemoveHandler(const nsAString& aAlertName,
     mActiveHandlers.Remove(aAlertName);
     aHandler->UnregisterHandler();
   }
+}
+
+NS_IMETHODIMP
+ToastNotification::RemoveAllNotificationsForInstall() {
+  HRESULT hr = S_OK;
+
+  ComPtr<IToastNotificationManagerStatics> manager;
+  hr = GetActivationFactory(
+      HStringReference(
+          RuntimeClass_Windows_UI_Notifications_ToastNotificationManager)
+          .Get(),
+      &manager);
+  NS_ENSURE_TRUE(SUCCEEDED(hr), NS_ERROR_FAILURE);
+
+  HString aumid;
+  MOZ_ASSERT(mAumid.isSome());
+  hr = aumid.Set(mAumid.ref().get());
+  NS_ENSURE_TRUE(SUCCEEDED(hr), NS_ERROR_FAILURE);
+
+  // Hide toasts in action center.
+  [&]() {
+    ComPtr<IToastNotificationManagerStatics2> manager2;
+    hr = manager.As(&manager2);
+    NS_ENSURE_TRUE_VOID(SUCCEEDED(hr));
+
+    ComPtr<IToastNotificationHistory> history;
+    hr = manager2->get_History(&history);
+    NS_ENSURE_TRUE_VOID(SUCCEEDED(hr));
+
+    hr = history->ClearWithId(aumid.Get());
+    NS_ENSURE_TRUE_VOID(SUCCEEDED(hr));
+  }();
+
+  // Hide scheduled toasts.
+  [&]() {
+    ComPtr<IToastNotifier> notifier;
+    hr = manager->CreateToastNotifierWithId(aumid.Get(), &notifier);
+    NS_ENSURE_TRUE_VOID(SUCCEEDED(hr));
+
+    ComPtr<IVectorView_ScheduledToastNotification> scheduledToasts;
+    hr = notifier->GetScheduledToastNotifications(&scheduledToasts);
+    NS_ENSURE_TRUE_VOID(SUCCEEDED(hr));
+
+    unsigned int schedSize;
+    hr = scheduledToasts->get_Size(&schedSize);
+    NS_ENSURE_TRUE_VOID(SUCCEEDED(hr));
+
+    for (unsigned int i = 0; i < schedSize; i++) {
+      ComPtr<IScheduledToastNotification> schedToast;
+      hr = scheduledToasts->GetAt(i, &schedToast);
+      if (NS_WARN_IF(FAILED(hr))) {
+        continue;
+      }
+
+      hr = notifier->RemoveFromSchedule(schedToast.Get());
+      Unused << NS_WARN_IF(FAILED(hr));
+    }
+  }();
+
+  return NS_OK;
 }
 
 }  // namespace widget
