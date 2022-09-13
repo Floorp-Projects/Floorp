@@ -264,15 +264,9 @@ void RemoteAccessibleBase<Derived>::Value(nsString& aValue) const {
     }
 
     if (IsCombobox()) {
-      Pivot p = Pivot(const_cast<RemoteAccessibleBase<Derived>*>(this));
-      PivotStateRule rule(states::ACTIVE);
-      Accessible* option = p.First(rule);
-      if (!option) {
-        option =
-            const_cast<RemoteAccessibleBase<Derived>*>(this)->GetSelectedItem(
-                0);
-      }
-
+      // For combo boxes, rely on selection state to determine the value.
+      const Accessible* option =
+          const_cast<RemoteAccessibleBase<Derived>*>(this)->GetSelectedItem(0);
       if (option) {
         option->Name(aValue);
       }
