@@ -38,8 +38,11 @@ class GPUVideoImage final : public Image {
 
  public:
   GPUVideoImage(IGPUVideoSurfaceManager* aManager,
-                const SurfaceDescriptorGPUVideo& aSD, const gfx::IntSize& aSize)
-      : Image(nullptr, ImageFormat::GPU_VIDEO), mSize(aSize) {
+                const SurfaceDescriptorGPUVideo& aSD, const gfx::IntSize& aSize,
+                const gfx::ColorDepth& aColorDepth)
+      : Image(nullptr, ImageFormat::GPU_VIDEO),
+        mSize(aSize),
+        mColorDepth(aColorDepth) {
     // Create the TextureClient immediately since the GPUVideoTextureData
     // is responsible for deallocating the SurfaceDescriptor.
     //
@@ -55,6 +58,8 @@ class GPUVideoImage final : public Image {
   virtual ~GPUVideoImage() = default;
 
   gfx::IntSize GetSize() const override { return mSize; }
+
+  gfx::ColorDepth GetColorDepth() const override { return mColorDepth; }
 
   Maybe<SurfaceDescriptor> GetDesc() override {
     return GetDescFromTexClient(mTextureClient);
@@ -89,6 +94,7 @@ class GPUVideoImage final : public Image {
 
  private:
   gfx::IntSize mSize;
+  gfx::ColorDepth mColorDepth;
   RefPtr<TextureClient> mTextureClient;
 };
 

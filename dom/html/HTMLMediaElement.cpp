@@ -2079,6 +2079,10 @@ double HTMLMediaElement::TotalVideoPlayTime() const {
   return mDecoder ? mDecoder->GetTotalVideoPlayTimeInSeconds() : -1.0;
 }
 
+double HTMLMediaElement::TotalVideoHDRPlayTime() const {
+  return mDecoder ? mDecoder->GetTotalVideoHDRPlayTimeInSeconds() : -1.0;
+}
+
 double HTMLMediaElement::VisiblePlayTime() const {
   return mDecoder ? mDecoder->GetVisibleVideoPlayTimeInSeconds() : -1.0;
 }
