@@ -147,6 +147,8 @@ pub const SHT_HISUNW: u32 = 0x6fff_ffff;
 pub const SHT_HIOS: u32 = 0x6fff_ffff;
 /// Start of processor-specific.
 pub const SHT_LOPROC: u32 = 0x7000_0000;
+/// X86-64 unwind information.
+pub const SHT_X86_64_UNWIND: u32 = 0x7000_0001;
 /// End of processor-specific.
 pub const SHT_HIPROC: u32 = 0x7fff_ffff;
 /// Start of application-specific.
@@ -185,8 +187,8 @@ pub const SHF_MASKPROC: u32 = 0xf000_0000;
 pub const SHF_ORDERED: u32 = 1 << 30;
 /// Number of "regular" section header flags
 pub const SHF_NUM_REGULAR_FLAGS: usize = 12;
-// /// Section is excluded unless referenced or allocated (Solaris).
-// pub const SHF_EXCLUDE: u32 = 1U << 31;
+/// Section is excluded unless referenced or allocated (Solaris).
+pub const SHF_EXCLUDE: u32 = 0x80000000; // 1U << 31
 
 pub const SHF_FLAGS: [u32; SHF_NUM_REGULAR_FLAGS] = [
     SHF_WRITE,
@@ -235,6 +237,7 @@ pub fn sht_to_str(sht: u32) -> &'static str {
         SHT_GNU_VERNEED => "SHT_GNU_VERNEED",
         SHT_GNU_VERSYM => "SHT_GNU_VERSYM",
         SHT_LOPROC => "SHT_LOPROC",
+        SHT_X86_64_UNWIND => "SHT_X86_64_UNWIND",
         SHT_HIPROC => "SHT_HIPROC",
         SHT_LOUSER => "SHT_LOUSER",
         SHT_HIUSER => "SHT_HIUSER",
@@ -257,7 +260,7 @@ pub fn shf_to_str(shf: u32) -> &'static str {
         SHF_COMPRESSED => "SHF_COMPRESSED",
         //SHF_MASKOS..SHF_MASKPROC => "SHF_OSFLAG",
         SHF_ORDERED => "SHF_ORDERED",
-        _ => "SHF_UNKNOWN"
+        _ => "SHF_UNKNOWN",
     }
 }
 
@@ -341,7 +344,6 @@ macro_rules! elf_section_header_std_impl { ($size:ty) => {
     } // end if_alloc
 };}
 
-
 pub mod section_header32 {
     pub use crate::elf::section_header::*;
 
@@ -351,7 +353,6 @@ pub mod section_header32 {
 
     elf_section_header_std_impl!(u32);
 }
-
 
 pub mod section_header64 {
 
@@ -425,13 +426,20 @@ if_alloc! {
                 sh_entsize: 0,
             }
         }
-        /// Returns this section header's file offset range
-        pub fn file_range(&self) -> Range<usize> {
-            (self.sh_offset as usize..self.sh_offset as usize + self.sh_size as usize)
+        /// Returns this section header's file offset range,
+        /// if the section occupies space in fhe file.
+        pub fn file_range(&self) -> Option<Range<usize>> {
+            // Sections with type SHT_NOBITS have no data in the file itself,
+            // they only exist in memory.
+            if self.sh_type == SHT_NOBITS {
+                None
+            } else {
+                Some(self.sh_offset as usize..(self.sh_offset as usize).saturating_add(self.sh_size as usize))
+            }
         }
         /// Returns this section header's virtual memory range
         pub fn vm_range(&self) -> Range<usize> {
-            (self.sh_addr as usize..self.sh_addr as usize + self.sh_size as usize)
+            self.sh_addr as usize..(self.sh_addr as usize).saturating_add(self.sh_size as usize)
         }
         /// Parse `count` section headers from `bytes` at `offset`, using the given `ctx`
         #[cfg(feature = "endian_fd")]
@@ -447,6 +455,11 @@ if_alloc! {
                 // above), or the number of section headers overflows SHN_LORESERVE, in which
                 // case the count is stored in the sh_size field of the null section header.
                 count = empty_sh.sh_size as usize;
+            }
+
+            // Sanity check to avoid OOM
+            if count > bytes.len() / Self::size(ctx) {
+                return Err(error::Error::BufferTooShort(count, "section headers"));
             }
             let mut section_headers = Vec::with_capacity(count);
             section_headers.push(empty_sh);
@@ -464,6 +477,12 @@ if_alloc! {
             if overflow || end > size as u64 {
                 let message = format!("Section {} size ({}) + offset ({}) is out of bounds. Overflowed: {}",
                     self.sh_name, self.sh_offset, self.sh_size, overflow);
+                return Err(error::Error::Malformed(message));
+            }
+            let (_, overflow) = self.sh_addr.overflowing_add(self.sh_size);
+            if overflow {
+                let message = format!("Section {} size ({}) + addr ({}) is out of bounds. Overflowed: {}",
+                    self.sh_name, self.sh_addr, self.sh_size, overflow);
                 return Err(error::Error::Malformed(message));
             }
             Ok(())

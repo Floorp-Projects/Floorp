@@ -22,9 +22,9 @@
 // sections.  And further could have still different ordinals when combined
 // by the link-editor.  The value R_ABS is used for relocation entries for
 // absolute symbols which need no further relocation.
-use core::fmt;
 use crate::mach;
-use scroll::{Pread, Pwrite, IOwrite, SizeWith, IOread};
+use core::fmt;
+use scroll::{IOread, IOwrite, Pread, Pwrite, SizeWith};
 
 // TODO: armv7 relocations are scattered, must and r_address with 0x8000_0000 to check if its scattered or not
 #[derive(Copy, Clone, Pread, Pwrite, IOwrite, SizeWith, IOread)]
@@ -125,8 +125,9 @@ pub const X86_64_RELOC_TLV: RelocType = 9;
 pub const GENERIC_RELOC_VANILLA: RelocType = 0;
 pub const GENERIC_RELOC_PAIR: RelocType = 1;
 pub const GENERIC_RELOC_SECTDIFF: RelocType = 2;
-pub const GENERIC_RELOC_LOCAL_SECTDIFF: RelocType = 3;
-pub const GENERIC_RELOC_PB_LA_P: RelocType = 4;
+pub const GENERIC_RELOC_PB_LA_PTR: RelocType = 3;
+pub const GENERIC_RELOC_LOCAL_SECTDIFF: RelocType = 4;
+pub const GENERIC_RELOC_TLV: RelocType = 5;
 
 // arm relocations
 pub const ARM_RELOC_VANILLA: RelocType = GENERIC_RELOC_VANILLA;
@@ -167,62 +168,55 @@ pub const ARM64_RELOC_ADDEND: RelocType = 10;
 pub fn reloc_to_str(reloc: RelocType, cputype: mach::cputype::CpuType) -> &'static str {
     use crate::mach::constants::cputype::*;
     match cputype {
-        CPU_TYPE_ARM64 | CPU_TYPE_ARM64_32 => {
-            match reloc {
-                ARM64_RELOC_UNSIGNED => "ARM64_RELOC_UNSIGNED",
-                ARM64_RELOC_SUBTRACTOR => "ARM64_RELOC_SUBTRACTOR",
-                ARM64_RELOC_BRANCH26 => "ARM64_RELOC_BRANCH26",
-                ARM64_RELOC_PAGE21 => "ARM64_RELOC_PAGE21",
-                ARM64_RELOC_PAGEOFF12 => "ARM64_RELOC_PAGEOFF12",
-                ARM64_RELOC_GOT_LOAD_PAGE21 => "ARM64_RELOC_GOT_LOAD_PAGE21",
-                ARM64_RELOC_GOT_LOAD_PAGEOFF12 => "ARM64_RELOC_GOT_LOAD_PAGEOFF12",
-                ARM64_RELOC_POINTER_TO_GOT => "ARM64_RELOC_POINTER_TO_GOT",
-                ARM64_RELOC_TLVP_LOAD_PAGE21 => "ARM64_RELOC_TLVP_LOAD_PAGE21",
-                ARM64_RELOC_TLVP_LOAD_PAGEOFF12 => "ARM64_RELOC_TLVP_LOAD_PAGEOFF12",
-                ARM64_RELOC_ADDEND => "ARM64_RELOC_ADDEND",
-                _ => "UNKNOWN",
-            }
+        CPU_TYPE_ARM64 | CPU_TYPE_ARM64_32 => match reloc {
+            ARM64_RELOC_UNSIGNED => "ARM64_RELOC_UNSIGNED",
+            ARM64_RELOC_SUBTRACTOR => "ARM64_RELOC_SUBTRACTOR",
+            ARM64_RELOC_BRANCH26 => "ARM64_RELOC_BRANCH26",
+            ARM64_RELOC_PAGE21 => "ARM64_RELOC_PAGE21",
+            ARM64_RELOC_PAGEOFF12 => "ARM64_RELOC_PAGEOFF12",
+            ARM64_RELOC_GOT_LOAD_PAGE21 => "ARM64_RELOC_GOT_LOAD_PAGE21",
+            ARM64_RELOC_GOT_LOAD_PAGEOFF12 => "ARM64_RELOC_GOT_LOAD_PAGEOFF12",
+            ARM64_RELOC_POINTER_TO_GOT => "ARM64_RELOC_POINTER_TO_GOT",
+            ARM64_RELOC_TLVP_LOAD_PAGE21 => "ARM64_RELOC_TLVP_LOAD_PAGE21",
+            ARM64_RELOC_TLVP_LOAD_PAGEOFF12 => "ARM64_RELOC_TLVP_LOAD_PAGEOFF12",
+            ARM64_RELOC_ADDEND => "ARM64_RELOC_ADDEND",
+            _ => "UNKNOWN",
         },
-        CPU_TYPE_X86_64 => {
-            match reloc {
-                X86_64_RELOC_UNSIGNED => "X86_64_RELOC_UNSIGNED",
-                X86_64_RELOC_SIGNED => "X86_64_RELOC_SIGNED",
-                X86_64_RELOC_BRANCH => "X86_64_RELOC_BRANCH",
-                X86_64_RELOC_GOT_LOAD => "X86_64_RELOC_GOT_LOAD",
-                X86_64_RELOC_GOT => "X86_64_RELOC_GOT",
-                X86_64_RELOC_SUBTRACTOR => "X86_64_RELOC_SUBTRACTOR",
-                X86_64_RELOC_SIGNED_1 => "X86_64_RELOC_SIGNED_1",
-                X86_64_RELOC_SIGNED_2 => "X86_64_RELOC_SIGNED_2",
-                X86_64_RELOC_SIGNED_4 => "X86_64_RELOC_SIGNED_4",
-                X86_64_RELOC_TLV => "X86_64_RELOC_TLV",
-                _ => "UNKNOWN",
-            }
+        CPU_TYPE_X86_64 => match reloc {
+            X86_64_RELOC_UNSIGNED => "X86_64_RELOC_UNSIGNED",
+            X86_64_RELOC_SIGNED => "X86_64_RELOC_SIGNED",
+            X86_64_RELOC_BRANCH => "X86_64_RELOC_BRANCH",
+            X86_64_RELOC_GOT_LOAD => "X86_64_RELOC_GOT_LOAD",
+            X86_64_RELOC_GOT => "X86_64_RELOC_GOT",
+            X86_64_RELOC_SUBTRACTOR => "X86_64_RELOC_SUBTRACTOR",
+            X86_64_RELOC_SIGNED_1 => "X86_64_RELOC_SIGNED_1",
+            X86_64_RELOC_SIGNED_2 => "X86_64_RELOC_SIGNED_2",
+            X86_64_RELOC_SIGNED_4 => "X86_64_RELOC_SIGNED_4",
+            X86_64_RELOC_TLV => "X86_64_RELOC_TLV",
+            _ => "UNKNOWN",
         },
-        CPU_TYPE_ARM => {
-            match reloc {
-                ARM_RELOC_VANILLA => "ARM_RELOC_VANILLA",
-                ARM_RELOC_PAIR => "ARM_RELOC_PAIR",
-                ARM_RELOC_SECTDIFF => "ARM_RELOC_SECTDIFF",
-                ARM_RELOC_LOCAL_SECTDIFF => "ARM_RELOC_LOCAL_SECTDIFF",
-                ARM_RELOC_PB_LA_PTR => "ARM_RELOC_PB_LA_PTR",
-                ARM_RELOC_BR24 => "ARM_RELOC_BR24",
-                ARM_THUMB_RELOC_BR22 => "ARM_THUMB_RELOC_BR22",
-                ARM_THUMB_32BIT_BRANCH => "ARM_THUMB_32BIT_BRANCH",
-                ARM_RELOC_HALF => "ARM_RELOC_HALF",
-                ARM_RELOC_HALF_SECTDIFF => "ARM_RELOC_HALF_SECTDIFF",
-                _ => "UNKNOWN",
-            }
+        CPU_TYPE_ARM => match reloc {
+            ARM_RELOC_VANILLA => "ARM_RELOC_VANILLA",
+            ARM_RELOC_PAIR => "ARM_RELOC_PAIR",
+            ARM_RELOC_SECTDIFF => "ARM_RELOC_SECTDIFF",
+            ARM_RELOC_LOCAL_SECTDIFF => "ARM_RELOC_LOCAL_SECTDIFF",
+            ARM_RELOC_PB_LA_PTR => "ARM_RELOC_PB_LA_PTR",
+            ARM_RELOC_BR24 => "ARM_RELOC_BR24",
+            ARM_THUMB_RELOC_BR22 => "ARM_THUMB_RELOC_BR22",
+            ARM_THUMB_32BIT_BRANCH => "ARM_THUMB_32BIT_BRANCH",
+            ARM_RELOC_HALF => "ARM_RELOC_HALF",
+            ARM_RELOC_HALF_SECTDIFF => "ARM_RELOC_HALF_SECTDIFF",
+            _ => "UNKNOWN",
         },
-        CPU_TYPE_X86 => {
-            match reloc {
-                GENERIC_RELOC_VANILLA => "GENERIC_RELOC_VANILLA",
-                GENERIC_RELOC_PAIR => "GENERIC_RELOC_PAIR",
-                GENERIC_RELOC_SECTDIFF => "GENERIC_RELOC_SECTDIFF",
-                GENERIC_RELOC_LOCAL_SECTDIFF => "GENERIC_RELOC_LOCAL_SECTDIFF",
-                GENERIC_RELOC_PB_LA_P => "GENERIC_RELOC_PB_LA_P",
-                _ => "UNKNOWN",
-            }
+        CPU_TYPE_X86 => match reloc {
+            GENERIC_RELOC_VANILLA => "GENERIC_RELOC_VANILLA",
+            GENERIC_RELOC_PAIR => "GENERIC_RELOC_PAIR",
+            GENERIC_RELOC_SECTDIFF => "GENERIC_RELOC_SECTDIFF",
+            GENERIC_RELOC_PB_LA_PTR => "GENERIC_RELOC_PB_LA_PTR",
+            GENERIC_RELOC_LOCAL_SECTDIFF => "GENERIC_RELOC_LOCAL_SECTDIFF",
+            GENERIC_RELOC_TLV => "GENERIC_RELOC_TLV",
+            _ => "UNKNOWN",
         },
-        _ => "BAD_CPUTYPE"
+        _ => "BAD_CPUTYPE",
     }
 }

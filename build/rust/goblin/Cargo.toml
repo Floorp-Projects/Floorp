@@ -1,0 +1,11 @@
+[package]
+name = "goblin"
+version = "0.1.99"
+edition = "2018"
+license = "MPL-2.0"
+
+[lib]
+path = "lib.rs"
+
+[dependencies.goblin]
+version = "0.5.3"

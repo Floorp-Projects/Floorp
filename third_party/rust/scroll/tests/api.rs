@@ -2,26 +2,26 @@
 
 // guard against potential undefined behaviour when borrowing from
 // packed structs. See https://github.com/rust-lang/rust/issues/46043
-#![deny(safe_packed_borrows)]
+#![deny(unaligned_references)]
 
 // #[macro_use] extern crate scroll_derive;
 
-use std::ops::{Deref,  DerefMut};
-use scroll::{ctx, Result, Cread, Pread};
 use scroll::ctx::SizeWith;
+use scroll::{ctx, Cread, Pread, Result};
+use std::ops::{Deref, DerefMut};
 
 #[derive(Default)]
 pub struct Section<'a> {
-    pub sectname:  [u8; 16],
-    pub segname:   [u8; 16],
-    pub addr:      u64,
-    pub size:      u64,
-    pub offset:    u32,
-    pub align:     u32,
-    pub reloff:    u32,
-    pub nreloc:    u32,
-    pub flags:     u32,
-    pub data:      &'a [u8],
+    pub sectname: [u8; 16],
+    pub segname: [u8; 16],
+    pub addr: u64,
+    pub size: u64,
+    pub offset: u32,
+    pub align: u32,
+    pub reloff: u32,
+    pub nreloc: u32,
+    pub flags: u32,
+    pub data: &'a [u8],
 }
 
 impl<'a> Section<'a> {
@@ -44,42 +44,45 @@ impl<'a> ctx::SizeWith for Section<'a> {
 //#[derive(Debug, Clone, Copy, Pread, Pwrite)]
 #[derive(Debug, Clone, Copy)]
 pub struct Section32 {
-    pub sectname:  [u8; 16],
-    pub segname:   [u8; 16],
-    pub addr:      u32,
-    pub size:      u32,
-    pub offset:    u32,
-    pub align:     u32,
-    pub reloff:    u32,
-    pub nreloc:    u32,
-    pub flags:     u32,
+    pub sectname: [u8; 16],
+    pub segname: [u8; 16],
+    pub addr: u32,
+    pub size: u32,
+    pub offset: u32,
+    pub align: u32,
+    pub reloff: u32,
+    pub nreloc: u32,
+    pub flags: u32,
     pub reserved1: u32,
     pub reserved2: u32,
 }
 
 impl<'a> ctx::TryFromCtx<'a, ()> for Section<'a> {
     type Error = scroll::Error;
-    fn try_from_ctx(_bytes: &'a [u8], _ctx: ()) -> ::std::result::Result<(Self, usize), Self::Error> {
+    fn try_from_ctx(
+        _bytes: &'a [u8],
+        _ctx: (),
+    ) -> ::std::result::Result<(Self, usize), Self::Error> {
         let section = Section::default();
         Ok((section, ::std::mem::size_of::<Section>()))
     }
 }
 
 pub struct Segment<'a> {
-    pub cmd:      u32,
-    pub cmdsize:  u32,
-    pub segname:  [u8; 16],
-    pub vmaddr:   u64,
-    pub vmsize:   u64,
-    pub fileoff:  u64,
+    pub cmd: u32,
+    pub cmdsize: u32,
+    pub segname: [u8; 16],
+    pub vmaddr: u64,
+    pub vmsize: u64,
+    pub fileoff: u64,
     pub filesize: u64,
-    pub maxprot:  u32,
+    pub maxprot: u32,
     pub initprot: u32,
-    pub nsects:   u32,
-    pub flags:    u32,
-    pub data:     &'a [u8],
-    offset:       usize,
-    raw_data:     &'a [u8],
+    pub nsects: u32,
+    pub flags: u32,
+    pub data: &'a [u8],
+    offset: usize,
+    raw_data: &'a [u8],
 }
 
 impl<'a> Segment<'a> {
@@ -176,7 +179,10 @@ struct Foo {
 
 impl scroll::ctx::FromCtx<scroll::Endian> for Foo {
     fn from_ctx(bytes: &[u8], ctx: scroll::Endian) -> Self {
-        Foo { foo: bytes.cread_with::<i64>(0, ctx), bar: bytes.cread_with::<u32>(8, ctx) }
+        Foo {
+            foo: bytes.cread_with::<i64>(0, ctx),
+            bar: bytes.cread_with::<u32>(8, ctx),
+        }
     }
 }
 
@@ -188,9 +194,11 @@ impl scroll::ctx::SizeWith<scroll::Endian> for Foo {
 
 #[test]
 fn ioread_api() {
+    use scroll::{IOread, LE};
     use std::io::Cursor;
-    use scroll::{LE, IOread};
-    let bytes_ = [0x01,0x00,0x00,0x00,0x00,0x00,0x00,0x00, 0xef,0xbe,0x00,0x00,];
+    let bytes_ = [
+        0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xef, 0xbe, 0x00, 0x00,
+    ];
     let mut bytes = Cursor::new(bytes_);
     let foo = bytes.ioread_with::<i64>(LE).unwrap();
     let bar = bytes.ioread_with::<u32>(LE).unwrap();
@@ -200,8 +208,8 @@ fn ioread_api() {
     assert!(error.is_err());
     let mut bytes = Cursor::new(bytes_);
     let foo_ = bytes.ioread_with::<Foo>(LE).unwrap();
-    assert_eq!({foo_.foo}, foo);
-    assert_eq!({foo_.bar}, bar);
+    assert_eq!({ foo_.foo }, foo);
+    assert_eq!({ foo_.bar }, bar);
 }
 
 #[repr(packed)]
@@ -212,14 +220,19 @@ struct Bar {
 
 impl scroll::ctx::FromCtx<scroll::Endian> for Bar {
     fn from_ctx(bytes: &[u8], ctx: scroll::Endian) -> Self {
-        Bar { foo: bytes.cread_with(0, ctx), bar: bytes.cread_with(4, ctx) }
+        Bar {
+            foo: bytes.cread_with(0, ctx),
+            bar: bytes.cread_with(4, ctx),
+        }
     }
 }
 
 #[test]
 fn cread_api() {
-    use scroll::{LE, Cread};
-    let bytes = [0x01,0x00,0x00,0x00,0x00,0x00,0x00,0x00, 0xef,0xbe,0x00,0x00,];
+    use scroll::{Cread, LE};
+    let bytes = [
+        0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xef, 0xbe, 0x00, 0x00,
+    ];
     let foo = bytes.cread_with::<u64>(0, LE);
     let bar = bytes.cread_with::<u32>(8, LE);
     assert_eq!(foo, 1);
@@ -228,25 +241,27 @@ fn cread_api() {
 
 #[test]
 fn cread_api_customtype() {
-    use scroll::{LE, Cread};
-    let bytes = [0xff, 0xff, 0xff, 0xff, 0xef,0xbe,0xad,0xde,];
+    use scroll::{Cread, LE};
+    let bytes = [0xff, 0xff, 0xff, 0xff, 0xef, 0xbe, 0xad, 0xde];
     let bar = &bytes[..].cread_with::<Bar>(0, LE);
-    assert_eq!({bar.foo}, -1);
-    assert_eq!({bar.bar}, 0xdeadbeef);
+    assert_eq!({ bar.foo }, -1);
+    assert_eq!({ bar.bar }, 0xdeadbeef);
 }
 
 #[test]
 #[should_panic]
 fn cread_api_badindex() {
     use scroll::Cread;
-    let bytes = [0x01,0x00,0x00,0x00,0x00,0x00,0x00,0x00, 0xef,0xbe,0xad,0xde,];
+    let bytes = [
+        0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xef, 0xbe, 0xad, 0xde,
+    ];
     let _foo = bytes.cread::<i64>(1_000_000);
 }
 
 #[test]
 fn cwrite_api() {
-    use scroll::Cwrite;
     use scroll::Cread;
+    use scroll::Cwrite;
     let mut bytes = [0x0; 16];
     bytes.cwrite::<u64>(42, 0);
     bytes.cwrite::<u32>(0xdeadbeef, 8);
@@ -264,12 +279,14 @@ impl scroll::ctx::IntoCtx<scroll::Endian> for Bar {
 
 #[test]
 fn cwrite_api_customtype() {
-    use scroll::{Cwrite, Cread};
-    let bar = Bar { foo: -1, bar: 0xdeadbeef };
+    use scroll::{Cread, Cwrite};
+    let bar = Bar {
+        foo: -1,
+        bar: 0xdeadbeef,
+    };
     let mut bytes = [0x0; 16];
-    &bytes[..].cwrite::<Bar>(bar, 0);
+    let _ = &bytes[..].cwrite::<Bar>(bar, 0);
     let bar = bytes.cread::<Bar>(0);
-    assert_eq!({bar.foo}, -1);
-    assert_eq!({bar.bar}, 0xdeadbeef);
+    assert_eq!({ bar.foo }, -1);
+    assert_eq!({ bar.bar }, 0xdeadbeef);
 }
-

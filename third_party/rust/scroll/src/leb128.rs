@@ -1,9 +1,9 @@
-use core::u8;
-use core::convert::{From, AsRef};
-use core::result;
-use crate::Pread;
 use crate::ctx::TryFromCtx;
 use crate::error;
+use crate::Pread;
+use core::convert::{AsRef, From};
+use core::result;
+use core::u8;
 
 #[derive(Debug, PartialEq, Copy, Clone)]
 /// An unsigned leb128 integer
@@ -101,7 +101,10 @@ impl<'a> TryFromCtx<'a> for Uleb128 {
             let byte: u8 = src.pread(count)?;
 
             if shift == 63 && byte != 0x00 && byte != 0x01 {
-                return Err(error::Error::BadInput{ size: src.len(), msg: "failed to parse"})
+                return Err(error::Error::BadInput {
+                    size: src.len(),
+                    msg: "failed to parse",
+                });
             }
 
             let low_bits = u64::from(mask_continuation(byte));
@@ -111,7 +114,13 @@ impl<'a> TryFromCtx<'a> for Uleb128 {
             shift += 7;
 
             if byte & CONTINUATION_BIT == 0 {
-                return Ok((Uleb128 { value: result, count }, count));
+                return Ok((
+                    Uleb128 {
+                        value: result,
+                        count,
+                    },
+                    count,
+                ));
             }
         }
     }
@@ -131,7 +140,10 @@ impl<'a> TryFromCtx<'a> for Sleb128 {
             byte = src.gread(offset)?;
 
             if shift == 63 && byte != 0x00 && byte != 0x7f {
-                return Err(error::Error::BadInput{size: src.len(), msg: "failed to parse"})
+                return Err(error::Error::BadInput {
+                    size: src.len(),
+                    msg: "failed to parse",
+                });
             }
 
             let low_bits = i64::from(mask_continuation(byte));
@@ -148,14 +160,20 @@ impl<'a> TryFromCtx<'a> for Sleb128 {
             result |= !0 << shift;
         }
         let count = *offset - o;
-        Ok((Sleb128{ value: result, count }, count))
+        Ok((
+            Sleb128 {
+                value: result,
+                count,
+            },
+            count,
+        ))
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use super::{Uleb128, Sleb128};
     use super::super::LE;
+    use super::{Sleb128, Uleb128};
 
     const CONTINUATION_BIT: u8 = 1 << 7;
     //const SIGN_BIT: u8 = 1 << 6;
@@ -170,7 +188,7 @@ mod tests {
         assert_eq!(130u64, num.into());
         assert_eq!(num.size(), 2);
 
-        let buf = [0x00,0x01];
+        let buf = [0x00, 0x01];
         let bytes = &buf[..];
         let num = bytes.pread::<Uleb128>(0).unwrap();
         println!("num: {:?}", &num);
@@ -192,23 +210,28 @@ mod tests {
         let bytes = &buf[..];
         let num = bytes.pread::<Uleb128>(0).expect("Should read Uleb128");
         assert_eq!(130u64, num.into());
-        assert_eq!(386, bytes.pread_with::<u16>(0, LE).expect("Should read number"));
+        assert_eq!(
+            386,
+            bytes.pread_with::<u16>(0, LE).expect("Should read number")
+        );
     }
 
     #[test]
     fn uleb128_overflow() {
         use super::super::Pread;
-        let buf = [2u8 | CONTINUATION_BIT,
-                   2 | CONTINUATION_BIT,
-                   2 | CONTINUATION_BIT,
-                   2 | CONTINUATION_BIT,
-                   2 | CONTINUATION_BIT,
-                   2 | CONTINUATION_BIT,
-                   2 | CONTINUATION_BIT,
-                   2 | CONTINUATION_BIT,
-                   2 | CONTINUATION_BIT,
-                   2 | CONTINUATION_BIT,
-                   1];
+        let buf = [
+            2u8 | CONTINUATION_BIT,
+            2 | CONTINUATION_BIT,
+            2 | CONTINUATION_BIT,
+            2 | CONTINUATION_BIT,
+            2 | CONTINUATION_BIT,
+            2 | CONTINUATION_BIT,
+            2 | CONTINUATION_BIT,
+            2 | CONTINUATION_BIT,
+            2 | CONTINUATION_BIT,
+            2 | CONTINUATION_BIT,
+            1,
+        ];
         let bytes = &buf[..];
         assert!(bytes.pread::<Uleb128>(0).is_err());
     }
@@ -217,7 +240,10 @@ mod tests {
     fn sleb128() {
         use super::super::Pread;
         let bytes = [0x7fu8 | CONTINUATION_BIT, 0x7e];
-        let num: i64 = bytes.pread::<Sleb128>(0).expect("Should read Sleb128").into();
+        let num: i64 = bytes
+            .pread::<Sleb128>(0)
+            .expect("Should read Sleb128")
+            .into();
         assert_eq!(-129, num);
     }
 }

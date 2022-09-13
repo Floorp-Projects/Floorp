@@ -5,33 +5,30 @@ ast_types! {
         /// Parses `-?[1-9][0-9]*`
         #[derive(Copy)]
         Dec(struct DecLit<'a>(
-            &'a str = ws!(recognize!(do_parse!(
-                opt!(char!('-')) >>
-                one_of!("123456789") >>
-                take_while!(|c: char| c.is_ascii_digit()) >>
-                (())
-            ))),
+            &'a str = crate::whitespace::ws(nom::combinator::recognize(nom::sequence::tuple((
+                nom::combinator::opt(nom::character::complete::char('-')),
+                nom::character::complete::one_of("123456789"),
+                nom::bytes::complete::take_while(nom::AsChar::is_dec_digit)
+            )))),
         )),
         /// Parses `-?0[Xx][0-9A-Fa-f]+)`
         #[derive(Copy)]
         Hex(struct HexLit<'a>(
-            &'a str = ws!(recognize!(do_parse!(
-                opt!(char!('-')) >>
-                char!('0') >>
-                alt!(char!('x') | char!('X')) >>
-                take_while!(|c: char| c.is_ascii_hexdigit()) >>
-                (())
-            ))),
+            &'a str = crate::whitespace::ws(nom::combinator::recognize(nom::sequence::tuple((
+                nom::combinator::opt(nom::character::complete::char('-')),
+                nom::character::complete::char('0'),
+                nom::character::complete::one_of("xX"),
+                nom::bytes::complete::take_while(nom::AsChar::is_hex_digit)
+            )))),
         )),
         /// Parses `-?0[0-7]*`
         #[derive(Copy)]
         Oct(struct OctLit<'a>(
-            &'a str = ws!(recognize!(do_parse!(
-                opt!(char!('-')) >>
-                char!('0') >>
-                take_while!(|c| ('0'..='7').contains(&c)) >>
-                (())
-            ))),
+            &'a str = crate::whitespace::ws(nom::combinator::recognize(nom::sequence::tuple((
+                nom::combinator::opt(nom::character::complete::char('-')),
+                nom::character::complete::char('0'),
+                nom::bytes::complete::take_while(nom::AsChar::is_oct_digit)
+            )))),
         )),
     }
 
@@ -40,11 +37,10 @@ ast_types! {
     /// Follow `/"[^"]*"/`
     #[derive(Copy)]
     struct StringLit<'a>(
-        &'a str = ws!(do_parse!(
-            char!('"') >>
-            s: take_while!(|c| c != '"') >>
-            char!('"') >>
-            (s)
+        &'a str = crate::whitespace::ws(nom::sequence::delimited(
+            nom::character::complete::char('"'),
+            nom::bytes::complete::take_while(|c| c != '"'),
+            nom::character::complete::char('"'),
         )),
     )
 
@@ -82,10 +78,10 @@ ast_types! {
     /// Represents either `true` or `false`
     #[derive(Copy)]
     struct BooleanLit(
-        bool = alt!(
-            weedle!(term!(true)) => {|_| true} |
-            weedle!(term!(false)) => {|_| false}
-        ),
+        bool = nom::branch::alt((
+            nom::combinator::value(true, weedle!(term!(true))),
+            nom::combinator::value(false, weedle!(term!(false))),
+        )),
     )
 
     /// Represents a floating point value, `NaN`, `Infinity`, '+Infinity`
@@ -94,47 +90,39 @@ ast_types! {
         /// Parses `/-?(([0-9]+\.[0-9]*|[0-9]*\.[0-9]+)([Ee][+-]?[0-9]+)?|[0-9]+[Ee][+-]?[0-9]+)/`
         #[derive(Copy)]
         Value(struct FloatValueLit<'a>(
-            &'a str = ws!(recognize!(do_parse!(
-                opt!(char!('-')) >>
-                alt!(
-                    do_parse!(
+            &'a str = crate::whitespace::ws(nom::combinator::recognize(nom::sequence::tuple((
+                nom::combinator::opt(nom::character::complete::char('-')),
+                nom::branch::alt((
+                    nom::combinator::value((), nom::sequence::tuple((
                         // (?:[0-9]+\.[0-9]*|[0-9]*\.[0-9]+)
-                        alt!(
-                            do_parse!(
-                                take_while1!(|c: char| c.is_ascii_digit()) >>
-                                char!('.') >>
-                                take_while!(|c: char| c.is_ascii_digit()) >>
-                                (())
-                            )
-                            |
-                            do_parse!(
-                                take_while!(|c: char| c.is_ascii_digit()) >>
-                                char!('.') >>
-                                take_while1!(|c: char| c.is_ascii_digit()) >>
-                                (())
-                            )
-                        ) >>
+                        nom::branch::alt((
+                            nom::sequence::tuple((
+                                nom::bytes::complete::take_while1(nom::AsChar::is_dec_digit),
+                                nom::character::complete::char('.'),
+                                nom::bytes::complete::take_while(nom::AsChar::is_dec_digit),
+                            )),
+                            nom::sequence::tuple((
+                                nom::bytes::complete::take_while(nom::AsChar::is_dec_digit),
+                                nom::character::complete::char('.'),
+                                nom::bytes::complete::take_while1(nom::AsChar::is_dec_digit),
+                            )),
+                        )),
                         // (?:[Ee][+-]?[0-9]+)?
-                        opt!(do_parse!(
-                            alt!(char!('e') | char!('E')) >>
-                            opt!(alt!(char!('+') | char!('-'))) >>
-                            take_while1!(|c: char| c.is_ascii_digit()) >>
-                            (())
-                        )) >>
-                        (())
-                    )
-                    |
+                        nom::combinator::opt(nom::sequence::tuple((
+                            nom::character::complete::one_of("eE"),
+                            nom::combinator::opt(nom::character::complete::one_of("+-")),
+                            nom::bytes::complete::take_while1(nom::AsChar::is_dec_digit),
+                        ))),
+                    ))),
                     // [0-9]+[Ee][+-]?[0-9]+
-                    do_parse!(
-                        take_while1!(|c: char| c.is_ascii_digit()) >>
-                        alt!(char!('e') | char!('E')) >>
-                        opt!(alt!(char!('+') | char!('-'))) >>
-                        take_while1!(|c: char| c.is_ascii_digit()) >>
-                        (())
-                    )
-                ) >>
-                (())
-            ))),
+                    nom::combinator::value((), nom::sequence::tuple((
+                        nom::bytes::complete::take_while1(nom::AsChar::is_dec_digit),
+                        nom::character::complete::one_of("eE"),
+                        nom::combinator::opt(nom::character::complete::one_of("+-")),
+                        nom::bytes::complete::take_while1(nom::AsChar::is_dec_digit),
+                    ))),
+                )),
+            )))),
         )),
         NegInfinity(term!(-Infinity)),
         Infinity(term!(Infinity)),
@@ -158,7 +146,7 @@ mod test {
         IntegerLit => IntegerLit::Dec(DecLit("123123"))
     });
 
-    test!(should_parse_integer_preceeding_others { "3453 string" =>
+    test!(should_parse_integer_preceding_others { "3453 string" =>
         "string";
         IntegerLit => IntegerLit::Dec(DecLit("3453"))
     });
@@ -198,7 +186,7 @@ mod test {
         FloatLit => FloatLit::Value(FloatValueLit("2345.2345"))
     });
 
-    test!(should_parse_float_preceeding_others { "3453.32334 string" =>
+    test!(should_parse_float_preceding_others { "3453.32334 string" =>
         "string";
         FloatLit => FloatLit::Value(FloatValueLit("3453.32334"))
     });
@@ -208,14 +196,14 @@ mod test {
         FloatLit => FloatLit::Value(FloatValueLit("-435.3435"))
     });
 
-    test!(should_parse_float_exp { "5.3434e23" =>
-        "";
-        FloatLit => FloatLit::Value(FloatValueLit("5.3434e23"))
-    });
-
-    test!(should_parse_float_exp_with_decimal { "3e23" =>
+    test!(should_parse_float_exp { "3e23" =>
         "";
         FloatLit => FloatLit::Value(FloatValueLit("3e23"))
+    });
+
+    test!(should_parse_float_exp_with_decimal { "5.3434e23" =>
+        "";
+        FloatLit => FloatLit::Value(FloatValueLit("5.3434e23"))
     });
 
     test!(should_parse_neg_infinity { "-Infinity" =>

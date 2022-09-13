@@ -6,7 +6,7 @@ edition = "2018"
 license = "MPL-2.0"
 
 [dependencies]
-glean = "51.1.0"
+glean = "51.2.0"
 log = "0.4"
 nserror = { path = "../../../xpcom/rust/nserror" }
 nsstring = { path = "../../../xpcom/rust/nsstring" }

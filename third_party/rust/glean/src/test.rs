@@ -2,6 +2,9 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+use std::sync::{Arc, Barrier, Mutex};
+use std::thread::{self, ThreadId};
+
 use crate::private::PingType;
 use crate::private::{BooleanMetric, CounterMetric, EventMetric, StringMetric};
 
@@ -1130,4 +1133,85 @@ fn test_boolean_get_num_errors() {
     let result = metric.test_get_num_recorded_errors(ErrorType::InvalidLabel);
 
     assert_eq!(result, 0);
+}
+
+#[test]
+fn signaling_done() {
+    let _lock = lock_test();
+
+    // Define a fake uploader that reports back the submission URL
+    // using a crossbeam channel.
+    #[derive(Debug)]
+    pub struct FakeUploader {
+        barrier: Arc<Barrier>,
+        counter: Arc<Mutex<HashMap<ThreadId, u32>>>,
+    }
+    impl net::PingUploader for FakeUploader {
+        fn upload(
+            &self,
+            _url: String,
+            _body: Vec<u8>,
+            _headers: Vec<(String, String)>,
+        ) -> net::UploadResult {
+            let mut map = self.counter.lock().unwrap();
+            *map.entry(thread::current().id()).or_insert(0) += 1;
+
+            // Wait for the sync.
+            self.barrier.wait();
+
+            // Signal that this uploader thread is done.
+            net::UploadResult::done()
+        }
+    }
+
+    // Create a custom configuration to use a fake uploader.
+    let dir = tempfile::tempdir().unwrap();
+    let tmpname = dir.path().to_path_buf();
+
+    // We use a barrier to sync this test thread with the uploader thread.
+    let barrier = Arc::new(Barrier::new(2));
+    // We count how many times `upload` was invoked per thread.
+    let call_count = Arc::new(Mutex::default());
+
+    let cfg = Configuration {
+        data_path: tmpname,
+        application_id: GLOBAL_APPLICATION_ID.into(),
+        upload_enabled: true,
+        max_events: None,
+        delay_ping_lifetime_io: false,
+        server_endpoint: Some("invalid-test-host".into()),
+        uploader: Some(Box::new(FakeUploader {
+            barrier: Arc::clone(&barrier),
+            counter: Arc::clone(&call_count),
+        })),
+        use_core_mps: false,
+    };
+
+    let _t = new_glean(Some(cfg), true);
+
+    // Define a new ping and submit it.
+    const PING_NAME: &str = "test-ping";
+    let custom_ping = private::PingType::new(PING_NAME, true, true, vec![]);
+    custom_ping.submit(None);
+    custom_ping.submit(None);
+
+    // Sync up with the upload thread.
+    barrier.wait();
+
+    // Submit another ping and wait for it to do work.
+    custom_ping.submit(None);
+
+    // Sync up with the upload thread again.
+    // This will not be the same thread as the one before (hopefully).
+    barrier.wait();
+
+    // No one's ever gonna wait for the uploader thread (the RLB doesn't store the handle to it),
+    // so all we can do is hope it finishes within time.
+    std::thread::sleep(std::time::Duration::from_millis(100));
+
+    let map = call_count.lock().unwrap();
+    assert_eq!(2, map.len(), "should have launched 2 uploader threads");
+    for &count in map.values() {
+        assert_eq!(1, count, "each thread should call upload only once");
+    }
 }

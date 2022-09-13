@@ -49,6 +49,7 @@ use scroll::{self, Pread, Pwrite};
 use crate::error;
 
 use crate::pe::data_directories;
+use crate::pe::options;
 use crate::pe::section_table;
 use crate::pe::utils;
 
@@ -346,10 +347,7 @@ pub struct UnwindCode {
 impl<'a> TryFromCtx<'a, UnwindOpContext> for UnwindCode {
     type Error = error::Error;
     #[inline]
-    fn try_from_ctx(
-        bytes: &'a [u8],
-        ctx: UnwindOpContext,
-    ) -> Result<(Self, usize), Self::Error> {
+    fn try_from_ctx(bytes: &'a [u8], ctx: UnwindOpContext) -> Result<(Self, usize), Self::Error> {
         let mut read = 0;
         let code_offset = bytes.gread_with::<u8>(&mut read, scroll::LE)?;
         let operation = bytes.gread_with::<u8>(&mut read, scroll::LE)?;
@@ -590,13 +588,13 @@ impl<'a> UnwindInfo<'a> {
         // whenever flags UNW_FLAG_EHANDLER or UNW_FLAG_UHANDLER are set. The language-specific
         // handler is called as part of the search for an exception handler or as part of an unwind.
         } else if flags & (UNW_FLAG_EHANDLER | UNW_FLAG_UHANDLER) != 0 {
-            let offset = bytes.gread_with::<u32>(&mut offset, scroll::LE)? as usize;
+            let address = bytes.gread_with::<u32>(&mut offset, scroll::LE)?;
             let data = &bytes[offset..];
 
             handler = Some(if flags & UNW_FLAG_EHANDLER != 0 {
-                UnwindHandler::ExceptionHandler(offset as u32, data)
+                UnwindHandler::ExceptionHandler(address, data)
             } else {
-                UnwindHandler::TerminationHandler(offset as u32, data)
+                UnwindHandler::TerminationHandler(address, data)
             });
         }
 
@@ -670,6 +668,23 @@ impl<'a> ExceptionData<'a> {
         sections: &[section_table::SectionTable],
         file_alignment: u32,
     ) -> error::Result<Self> {
+        Self::parse_with_opts(
+            bytes,
+            directory,
+            sections,
+            file_alignment,
+            &options::ParseOptions::default(),
+        )
+    }
+
+    /// Parses exception data from the image at the given offset.
+    pub fn parse_with_opts(
+        bytes: &'a [u8],
+        directory: data_directories::DataDirectory,
+        sections: &[section_table::SectionTable],
+        file_alignment: u32,
+        opts: &options::ParseOptions,
+    ) -> error::Result<Self> {
         let size = directory.size as usize;
 
         if size % RUNTIME_FUNCTION_SIZE != 0 {
@@ -680,7 +695,7 @@ impl<'a> ExceptionData<'a> {
         }
 
         let rva = directory.virtual_address as usize;
-        let offset = utils::find_offset(rva, sections, file_alignment).ok_or_else(|| {
+        let offset = utils::find_offset(rva, sections, file_alignment, opts).ok_or_else(|| {
             error::Error::Malformed(format!("cannot map exception_rva ({:#x}) into offset", rva))
         })?;
 
@@ -765,30 +780,55 @@ impl<'a> ExceptionData<'a> {
     /// Resolves unwind information for the given function entry.
     pub fn get_unwind_info(
         &self,
+        function: RuntimeFunction,
+        sections: &[section_table::SectionTable],
+    ) -> error::Result<UnwindInfo<'a>> {
+        self.get_unwind_info_with_opts(function, sections, &options::ParseOptions::default())
+    }
+
+    /// Resolves unwind information for the given function entry.
+    pub fn get_unwind_info_with_opts(
+        &self,
         mut function: RuntimeFunction,
         sections: &[section_table::SectionTable],
+        opts: &options::ParseOptions,
     ) -> error::Result<UnwindInfo<'a>> {
         while function.unwind_info_address % 2 != 0 {
             let rva = (function.unwind_info_address & !1) as usize;
-            function = self.get_function_by_rva(rva, sections)?;
+            function = self.get_function_by_rva_with_opts(rva, sections, opts)?;
         }
 
         let rva = function.unwind_info_address as usize;
-        let offset = utils::find_offset(rva, sections, self.file_alignment).ok_or_else(|| {
-            error::Error::Malformed(format!("cannot map unwind rva ({:#x}) into offset", rva))
-        })?;
+        let offset =
+            utils::find_offset(rva, sections, self.file_alignment, opts).ok_or_else(|| {
+                error::Error::Malformed(format!("cannot map unwind rva ({:#x}) into offset", rva))
+            })?;
 
         UnwindInfo::parse(self.bytes, offset)
     }
 
+    #[allow(dead_code)]
     fn get_function_by_rva(
         &self,
         rva: usize,
         sections: &[section_table::SectionTable],
     ) -> error::Result<RuntimeFunction> {
-        let offset = utils::find_offset(rva, sections, self.file_alignment).ok_or_else(|| {
-            error::Error::Malformed(format!("cannot map exception rva ({:#x}) into offset", rva))
-        })?;
+        self.get_function_by_rva_with_opts(rva, sections, &options::ParseOptions::default())
+    }
+
+    fn get_function_by_rva_with_opts(
+        &self,
+        rva: usize,
+        sections: &[section_table::SectionTable],
+        opts: &options::ParseOptions,
+    ) -> error::Result<RuntimeFunction> {
+        let offset =
+            utils::find_offset(rva, sections, self.file_alignment, opts).ok_or_else(|| {
+                error::Error::Malformed(format!(
+                    "cannot map exception rva ({:#x}) into offset",
+                    rva
+                ))
+            })?;
 
         self.get_function_by_offset(offset)
     }

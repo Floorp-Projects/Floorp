@@ -58,8 +58,8 @@ impl UuidMetric {
 
         let value = value.into();
 
-        if uuid::Uuid::parse_str(&value).is_ok() {
-            let value = Metric::Uuid(value);
+        if let Ok(uuid) = uuid::Uuid::parse_str(&value) {
+            let value = Metric::Uuid(uuid.to_hyphenated().to_string());
             glean.storage().record(glean, &self.meta, &value)
         } else {
             let msg = format!("Unexpected UUID value '{}'", value);

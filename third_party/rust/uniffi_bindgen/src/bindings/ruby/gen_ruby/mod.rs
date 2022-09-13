@@ -165,8 +165,7 @@ mod filters {
             Type::Boolean => format!("{} ? true : false", nm),
             Type::Object(_) | Type::Enum(_) | Type::Error(_) | Type::Record(_) => nm.to_string(),
             Type::String => format!("{}.to_s", nm),
-            Type::Timestamp => panic!("No support for timestamps in Ruby, yet"),
-            Type::Duration => panic!("No support for durations in Ruby, yet"),
+            Type::Timestamp | Type::Duration => nm.to_string(),
             Type::CallbackInterface(_) => panic!("No support for coercing callback interfaces yet"),
             Type::Optional(t) => format!("({} ? {} : nil)", nm, coerce_rb(nm, t)?),
             Type::Sequence(t) => {
@@ -209,8 +208,6 @@ mod filters {
             | Type::Float64 => nm.to_string(),
             Type::Boolean => format!("({} ? 1 : 0)", nm),
             Type::String => format!("RustBuffer.allocFromString({})", nm),
-            Type::Timestamp => panic!("No support for timestamps in Ruby, yet"),
-            Type::Duration => panic!("No support for durations in Ruby, yet"),
             Type::Object(name) => format!("({}._uniffi_lower {})", class_name_rb(name)?, nm),
             Type::CallbackInterface(_) => panic!("No support for lowering callback interfaces yet"),
             Type::Error(_) => panic!("No support for lowering errors, yet"),
@@ -218,6 +215,8 @@ mod filters {
             | Type::Record(_)
             | Type::Optional(_)
             | Type::Sequence(_)
+            | Type::Timestamp
+            | Type::Duration
             | Type::Map(_, _) => format!(
                 "RustBuffer.alloc_from_{}({})",
                 class_name_rb(&type_.canonical_name())?,
@@ -241,8 +240,6 @@ mod filters {
             Type::Float32 | Type::Float64 => format!("{}.to_f", nm),
             Type::Boolean => format!("1 == {}", nm),
             Type::String => format!("{}.consumeIntoString", nm),
-            Type::Timestamp => panic!("No support for timestamps in Ruby, yet"),
-            Type::Duration => panic!("No support for durations in Ruby, yet"),
             Type::Object(name) => format!("{}._uniffi_allocate({})", class_name_rb(name)?, nm),
             Type::CallbackInterface(_) => panic!("No support for lifting callback interfaces, yet"),
             Type::Error(_) => panic!("No support for lowering errors, yet"),
@@ -250,6 +247,8 @@ mod filters {
             | Type::Record(_)
             | Type::Optional(_)
             | Type::Sequence(_)
+            | Type::Timestamp
+            | Type::Duration
             | Type::Map(_, _) => format!(
                 "{}.consumeInto{}",
                 nm,

@@ -13,7 +13,7 @@ macro_rules! elf_compression_header {
                     .finish()
             }
         }
-    }
+    };
 }
 
 /// ZLIB/DEFLATE algorithm.
@@ -27,59 +27,60 @@ pub const ELFCOMPRESS_LOPROC: u32 = 0x7000_0000;
 /// End of processor-specific.
 pub const ELFCOMPRESS_HIPROC: u32 = 0x7fff_ffff;
 
-macro_rules! elf_compression_header_std_impl { ($size:ty) => {
-
-    #[cfg(test)]
-    mod tests {
-        use super::*;
-        #[test]
-        fn size_of() {
-            assert_eq!(::std::mem::size_of::<CompressionHeader>(), SIZEOF_CHDR);
-        }
-    }
-
-    if_alloc! {
-        use crate::elf::compression_header::CompressionHeader as ElfCompressionHeader;
-
-        use plain::Plain;
-
-        if_std! {
-            use crate::error::Result;
-
-            use std::fs::File;
-            use std::io::{Read, Seek};
-            use std::io::SeekFrom::Start;
+macro_rules! elf_compression_header_std_impl {
+    ($size:ty) => {
+        #[cfg(test)]
+        mod tests {
+            use super::*;
+            #[test]
+            fn size_of() {
+                assert_eq!(::std::mem::size_of::<CompressionHeader>(), SIZEOF_CHDR);
+            }
         }
 
-        impl From<CompressionHeader> for ElfCompressionHeader {
-            fn from(ch: CompressionHeader) -> Self {
-                ElfCompressionHeader {
-                    ch_type: ch.ch_type,
-                    ch_size: u64::from(ch.ch_size),
-                    ch_addralign: u64::from(ch.ch_addralign),
+        if_alloc! {
+            use crate::elf::compression_header::CompressionHeader as ElfCompressionHeader;
+
+            use plain::Plain;
+
+            if_std! {
+                use crate::error::Result;
+
+                use std::fs::File;
+                use std::io::{Read, Seek};
+                use std::io::SeekFrom::Start;
+            }
+
+            impl From<CompressionHeader> for ElfCompressionHeader {
+                fn from(ch: CompressionHeader) -> Self {
+                    ElfCompressionHeader {
+                        ch_type: ch.ch_type,
+                        ch_size: u64::from(ch.ch_size),
+                        ch_addralign: u64::from(ch.ch_addralign),
+                    }
                 }
             }
-        }
 
-        impl CompressionHeader {
-            pub fn from_bytes(bytes: &[u8]) -> CompressionHeader {
-                let mut chdr = CompressionHeader::default();
-                chdr.copy_from_bytes(bytes).expect("buffer is too short for header");
-                chdr
-            }
-
-            #[cfg(feature = "std")]
-            pub fn from_fd(fd: &mut File, offset: u64) -> Result<CompressionHeader> {
-                let mut chdr = CompressionHeader::default();
-                fd.seek(Start(offset))?;
-                unsafe {
-                    fd.read_exact(plain::as_mut_bytes(&mut chdr))?;
+            impl CompressionHeader {
+                pub fn from_bytes(bytes: &[u8]) -> CompressionHeader {
+                    let mut chdr = CompressionHeader::default();
+                    chdr.copy_from_bytes(bytes).expect("buffer is too short for header");
+                    chdr
                 }
-                Ok(chdr)
+
+                #[cfg(feature = "std")]
+                pub fn from_fd(fd: &mut File, offset: u64) -> Result<CompressionHeader> {
+                    let mut chdr = CompressionHeader::default();
+                    fd.seek(Start(offset))?;
+                    unsafe {
+                        fd.read_exact(plain::as_mut_bytes(&mut chdr))?;
+                    }
+                    Ok(chdr)
+                }
             }
-        }
-    } // end if_alloc
-};}
+        } // end if_alloc
+    };
+}
 
 #[cfg(feature = "alloc")]
 use scroll::{Pread, Pwrite, SizeWith};
@@ -118,7 +119,6 @@ pub mod compression_header32 {
         }
     }
 }
-
 
 pub mod compression_header64 {
     pub use crate::elf::compression_header::*;

@@ -3,26 +3,49 @@
 # When uploading crates to the registry Cargo will automatically
 # "normalize" Cargo.toml files for maximal compatibility
 # with all versions of Cargo and also rewrite `path` dependencies
-# to registry (e.g., crates.io) dependencies
+# to registry (e.g., crates.io) dependencies.
 #
-# If you believe there's an error in this file please file an
-# issue against the rust-lang/cargo repository. If you're
-# editing this file be aware that the upstream Cargo.toml
-# will likely look very different (and much more reasonable)
+# If you are reading this file be aware that the original Cargo.toml
+# will likely look very different (and much more reasonable).
+# See Cargo.toml.orig for the original contents.
 
 [package]
-edition = "2018"
+edition = "2021"
+rust-version = "1.56.0"
 name = "goblin"
-version = "0.1.3"
-authors = ["m4b <m4b.github.io@gmail.com>", "seu <seu@panopticon.re>", "Will Glynn <will@willglynn.com>", "Philip Craig <philipjcraig@gmail.com>"]
-include = ["src/**/*", "Cargo.toml", "CHANGELOG.md", "LICENSE", "README.md", "etc/*", "examples/*", "tests/*", "fuzz/**/*"]
+version = "0.5.4"
+authors = [
+    "m4b <m4b.github.io@gmail.com>",
+    "seu <seu@panopticon.re>",
+    "Will Glynn <will@willglynn.com>",
+    "Philip Craig <philipjcraig@gmail.com>",
+    "Lzu Tao <taolzu@gmail.com>",
+]
+include = [
+    "src",
+    "CHANGELOG.md",
+    "Cargo.toml",
+    "LICENSE",
+    "README.md",
+]
 description = "An impish, cross-platform, ELF, Mach-o, and PE binary parsing and loading crate"
 documentation = "https://docs.rs/goblin"
 readme = "README.md"
-keywords = ["binary", "elf", "mach", "pe", "archive"]
-categories = ["parsing", "development-tools::debugging"]
+keywords = [
+    "binary",
+    "elf",
+    "mach",
+    "pe",
+    "archive",
+]
+categories = [
+    "parsing",
+    "development-tools::debugging",
+]
 license = "MIT"
 repository = "https://github.com/m4b/goblin"
+resolver = "2"
+
 [dependencies.log]
 version = "0.4"
 optional = true
@@ -32,21 +55,50 @@ default-features = false
 version = "0.2.3"
 
 [dependencies.scroll]
-version = "0.10"
+version = "0.11"
 default_features = false
 
 [features]
-alloc = ["scroll/derive", "log"]
+alloc = [
+    "scroll/derive",
+    "log",
+]
 archive = ["alloc"]
-default = ["std", "elf32", "elf64", "mach32", "mach64", "pe32", "pe64", "archive", "endian_fd"]
+default = [
+    "std",
+    "elf32",
+    "elf64",
+    "mach32",
+    "mach64",
+    "pe32",
+    "pe64",
+    "archive",
+    "endian_fd",
+]
 elf32 = []
 elf64 = []
 endian_fd = ["alloc"]
-mach32 = ["alloc", "endian_fd"]
-mach64 = ["alloc", "endian_fd"]
-pe32 = ["alloc", "endian_fd"]
-pe64 = ["alloc", "endian_fd"]
-std = ["alloc", "scroll/std"]
+mach32 = [
+    "alloc",
+    "endian_fd",
+]
+mach64 = [
+    "alloc",
+    "endian_fd",
+]
+pe32 = [
+    "alloc",
+    "endian_fd",
+]
+pe64 = [
+    "alloc",
+    "endian_fd",
+]
+std = [
+    "alloc",
+    "scroll/std",
+]
+
 [badges.travis-ci]
 branch = "master"
 repository = "m4b/goblin"

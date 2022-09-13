@@ -8,11 +8,10 @@ struct Data<'a> {
 
 impl<'a> ctx::TryFromCtx<'a, Endian> for Data<'a> {
     type Error = scroll::Error;
-    fn try_from_ctx (src: &'a [u8], endian: Endian)
-                     -> Result<(Self, usize), Self::Error> {
+    fn try_from_ctx(src: &'a [u8], endian: Endian) -> Result<(Self, usize), Self::Error> {
         let name = src.pread::<&'a str>(0)?;
-        let id = src.pread_with(name.len()+1, endian)?;
-        Ok((Data { name: name, id: id }, name.len()+4))
+        let id = src.pread_with(name.len() + 1, endian)?;
+        Ok((Data { name: name, id: id }, name.len() + 4))
     }
 }
 

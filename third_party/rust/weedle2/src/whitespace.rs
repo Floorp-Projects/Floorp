@@ -1,31 +1,34 @@
-use crate::IResult;
+use nom::{IResult, Parser};
 
 pub(crate) fn sp(input: &str) -> IResult<&str, &str> {
-    recognize!(
-        input,
-        many0!(alt!(
-            // ignores line comments
-            do_parse!(tag!("//") >> take_until!("\n") >> char!('\n') >> (()))
-            |
-            // ignores whitespace
-            map!(take_while1!(|c| c == '\t' || c == '\n' || c == '\r' || c == ' '), |_| ())
-            |
-            // ignores block comments
-            do_parse!(tag!("/*") >> take_until!("*/") >> tag!("*/") >> (()))
-        ))
-    )
+    nom::combinator::recognize(nom::multi::many0(nom::branch::alt((
+        // ignores line comments
+        nom::combinator::value(
+            (),
+            nom::sequence::tuple((
+                nom::bytes::complete::tag("//"),
+                nom::bytes::complete::take_until("\n"),
+                nom::bytes::complete::tag("\n"),
+            )),
+        ),
+        // ignores whitespace
+        nom::combinator::value((), nom::character::complete::multispace1),
+        // ignores block comments
+        nom::combinator::value(
+            (),
+            nom::sequence::tuple((
+                nom::bytes::complete::tag("/*"),
+                nom::bytes::complete::take_until("*/"),
+                nom::bytes::complete::tag("*/"),
+            )),
+        ),
+    ))))(input)
 }
 
-/// ws! also ignores line & block comments
-macro_rules! ws (
-    ($i:expr, $($args:tt)*) => ({
-        use $crate::whitespace::sp;
-
-        do_parse!($i,
-            sp >>
-            s: $($args)* >>
-            sp >>
-            (s)
-        )
-    });
-);
+/// ws also ignores line & block comments
+pub(crate) fn ws<'a, F>(inner: F) -> impl FnMut(&'a str) -> IResult<&str, &str>
+where
+    F: Parser<&'a str, &'a str, nom::error::Error<&'a str>>,
+{
+    nom::sequence::delimited(sp, inner, sp)
+}

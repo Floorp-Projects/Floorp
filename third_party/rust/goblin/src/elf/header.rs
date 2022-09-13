@@ -69,7 +69,7 @@ macro_rules! elf_header {
                     .finish()
             }
         }
-    }
+    };
 }
 
 /// No file type.
@@ -84,6 +84,14 @@ pub const ET_DYN: u16 = 3;
 pub const ET_CORE: u16 = 4;
 /// Number of defined types.
 pub const ET_NUM: u16 = 5;
+/// OS-specific range start
+pub const ET_LOOS: u16 = 0xfe00;
+/// OS-specific range end
+pub const ET_HIOS: u16 = 0xfeff;
+/// Processor-specific range start
+pub const ET_LOPROC: u16 = 0xff00;
+/// Processor-specific range end
+pub const ET_HIPROC: u16 = 0xffff;
 
 /// The ELF magic number.
 pub const ELFMAG: &[u8; 4] = b"\x7FELF";
@@ -119,6 +127,40 @@ pub const EV_CURRENT: u8 = 1;
 pub const EI_OSABI: usize = 7;
 /// UNIX System V ABI.
 pub const ELFOSABI_NONE: u8 = 0;
+/// UNIX System V ABI.
+///
+/// Alias.
+pub const ELFOSABI_SYSV: u8 = ELFOSABI_NONE;
+/// HP-UX.
+pub const ELFOSABI_HPUX: u8 = 1;
+/// NetBSD.
+pub const ELFOSABI_NETBSD: u8 = 2;
+/// Object uses GNU ELF extensions.
+pub const ELFOSABI_GNU: u8 = 3;
+/// Object uses GNU ELF extensions.
+///
+/// Alias.
+pub const ELFOSABI_LINUX: u8 = ELFOSABI_GNU;
+/// Sun Solaris.
+pub const ELFOSABI_SOLARIS: u8 = 6;
+/// IBM AIX.
+pub const ELFOSABI_AIX: u8 = 7;
+/// SGI Irix.
+pub const ELFOSABI_IRIX: u8 = 8;
+/// FreeBSD
+pub const ELFOSABI_FREEBSD: u8 = 9;
+/// Compaq TRU64 UNIX.
+pub const ELFOSABI_TRU64: u8 = 10;
+/// Novell Modesto.
+pub const ELFOSABI_MODESTO: u8 = 11;
+/// OpenBSD.
+pub const ELFOSABI_OPENBSD: u8 = 12;
+/// ARM EABI.
+pub const ELFOSABI_ARM_AEABI: u8 = 64;
+/// ARM.
+pub const ELFOSABI_ARM: u8 = 97;
+/// Standalone (embedded) application.
+pub const ELFOSABI_STANDALONE: u8 = 255;
 
 /// ABI version byte index.
 pub const EI_ABIVERSION: usize = 8;
@@ -516,23 +558,22 @@ macro_rules! elf_header_test {
     ($class:expr) => {
         #[cfg(test)]
         mod tests {
-            use scroll::{Pwrite, Pread};
-            use crate::elf::header::Header as ElfHeader;
             use super::*;
-            use crate::container::{Ctx, Container};
+            use crate::container::{Container, Ctx};
+            use crate::elf::header::Header as ElfHeader;
             use alloc::vec::Vec;
+            use scroll::{Pread, Pwrite};
             #[test]
             fn size_of() {
                 assert_eq!(::std::mem::size_of::<Header>(), SIZEOF_EHDR);
             }
             #[test]
-            fn header_read_write () {
-                let crt1: Vec<u8> =
-                    if $class == ELFCLASS64 {
-                        include!("../../etc/crt1.rs")
-                    } else {
-                        include!("../../etc/crt132.rs")
-                    };
+            fn header_read_write() {
+                let crt1: Vec<u8> = if $class == ELFCLASS64 {
+                    include!("../../etc/crt1.rs")
+                } else {
+                    include!("../../etc/crt132.rs")
+                };
                 let header: Header = crt1.pread(0).unwrap();
                 assert_eq!(header.e_type, ET_REL);
                 println!("header: {:?}", &header);
@@ -542,13 +583,12 @@ macro_rules! elf_header_test {
                 assert_eq!(header, header2);
             }
             #[test]
-            fn elfheader_read_write () {
-                let (container, crt1): (Container, Vec<u8>) =
-                    if $class == ELFCLASS64 {
-                        (Container::Big, include!("../../etc/crt1.rs"))
-                    } else {
-                        (Container::Little, include!("../../etc/crt132.rs"))
-                    };
+            fn elfheader_read_write() {
+                let (container, crt1): (Container, Vec<u8>) = if $class == ELFCLASS64 {
+                    (Container::Big, include!("../../etc/crt1.rs"))
+                } else {
+                    (Container::Little, include!("../../etc/crt132.rs"))
+                };
                 let header: Header = crt1.pread(0).unwrap();
                 assert_eq!(header.e_type, ET_REL);
                 println!("header: {:?}", &header);
@@ -564,7 +604,7 @@ macro_rules! elf_header_test {
                 bytes.pwrite(header, 0).unwrap();
             }
         }
-    }
+    };
 }
 
 pub mod header32 {

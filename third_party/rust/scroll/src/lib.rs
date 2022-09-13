@@ -61,7 +61,7 @@
 //! #[cfg(target_endian = "big")]
 //! let bytes: [u8; 4] = [0xef, 0xbe, 0xad, 0xde];
 //!
-//! // We can read a u32 from the array `bytes` at offset 0. 
+//! // We can read a u32 from the array `bytes` at offset 0.
 //! // This will use a default context for the type being parsed;
 //! // in the case of u32 this defines to use the host's endianess.
 //! let number = bytes.pread::<u32>(0).unwrap();
@@ -71,16 +71,25 @@
 //! // Similarly we can also read a single byte at offset 2
 //! // This time using type ascription instead of the turbofish (::<>) operator.
 //! let byte: u8 = bytes.pread(2).unwrap();
+//! #[cfg(target_endian = "little")]
 //! assert_eq!(byte, 0xbe);
+//! #[cfg(target_endian = "big")]
+//! assert_eq!(byte, 0xad);
 //!
 //!
 //! // If required we can also provide a specific parsing context; e.g. if we want to explicitly
 //! // define the endianess to use:
 //! let be_number: u32 = bytes.pread_with(0, scroll::BE).unwrap();
+//! #[cfg(target_endian = "little")]
 //! assert_eq!(be_number, 0xdeadbeef);
+//! #[cfg(target_endian = "big")]
+//! assert_eq!(be_number, 0xefbeadde);
 //!
 //! let be_number16 = bytes.pread_with::<u16>(1, scroll::BE).unwrap();
+//! #[cfg(target_endian = "little")]
 //! assert_eq!(be_number16, 0xadbe);
+//! #[cfg(target_endian = "big")]
+//! assert_eq!(be_number16, 0xbead);
 //!
 //!
 //! // Reads may fail; in this example due to a too large read for the given container.
@@ -174,7 +183,7 @@
 //! }
 //!
 //! // To allow for safe zero-copying scroll allows to specify lifetimes explicitly:
-//! // The context 
+//! // The context
 //! impl<'a> ctx::TryFromCtx<'a, Context> for Data<'a> {
 //!   // If necessary you can set a custom error type here, which will be returned by Pread/Pwrite
 //!   type Error = scroll::Error;
@@ -183,7 +192,7 @@
 //!   // its source buffer without having to resort to copying.
 //!   fn try_from_ctx (src: &'a [u8], ctx: Context)
 //!     // the `usize` returned here is the amount of bytes read.
-//!     -> Result<(Self, usize), Self::Error> 
+//!     -> Result<(Self, usize), Self::Error>
 //!   {
 //!     let offset = &mut 0;
 //!
@@ -214,36 +223,35 @@
 
 #[cfg(feature = "derive")]
 #[allow(unused_imports)]
-pub use scroll_derive::{Pread, Pwrite, SizeWith, IOread, IOwrite};
+pub use scroll_derive::{IOread, IOwrite, Pread, Pwrite, SizeWith};
 
 #[cfg(feature = "std")]
 extern crate core;
 
 pub mod ctx;
-mod pread;
-mod pwrite;
-mod greater;
-mod error;
 mod endian;
+mod error;
+mod greater;
 mod leb128;
 #[cfg(feature = "std")]
 mod lesser;
+mod pread;
+mod pwrite;
 
 pub use crate::endian::*;
-pub use crate::pread::*;
-pub use crate::pwrite::*;
-pub use crate::greater::*;
 pub use crate::error::*;
+pub use crate::greater::*;
 pub use crate::leb128::*;
 #[cfg(feature = "std")]
 pub use crate::lesser::*;
+pub use crate::pread::*;
+pub use crate::pwrite::*;
 
 #[doc(hidden)]
 pub mod export {
-    pub use ::core::result;
     pub use ::core::mem;
+    pub use ::core::result;
 }
-
 
 #[allow(unused)]
 macro_rules! doc_comment {
@@ -260,7 +268,7 @@ doc_comment!(include_str!("../README.md"));
 #[cfg(test)]
 mod tests {
     #[allow(overflowing_literals)]
-    use super::{LE};
+    use super::LE;
 
     #[test]
     fn test_measure_with_bytes() {
@@ -283,7 +291,7 @@ mod tests {
         ($write:ident, $read:ident, $deadbeef:expr) => {
             #[test]
             fn $write() {
-                use super::{Pwrite, Pread, BE};
+                use super::{Pread, Pwrite, BE};
                 let mut bytes: [u8; 8] = [0, 0, 0, 0, 0, 0, 0, 0];
                 let b = &mut bytes[..];
                 b.pwrite_with::<$read>($deadbeef, 0, LE).unwrap();
@@ -291,7 +299,7 @@ mod tests {
                 b.pwrite_with::<$read>($deadbeef, 0, BE).unwrap();
                 assert_eq!(b.pread_with::<$read>(0, BE).unwrap(), $deadbeef);
             }
-        }
+        };
     }
 
     pwrite_test!(pwrite_and_pread_roundtrip_u16, u16, 0xbeef);
@@ -303,7 +311,7 @@ mod tests {
 
     #[test]
     fn pread_with_be() {
-        use super::{Pread};
+        use super::Pread;
         let bytes: [u8; 2] = [0x7e, 0xef];
         let b = &bytes[..];
         let byte: u16 = b.pread_with(0, super::BE).unwrap();
@@ -315,7 +323,7 @@ mod tests {
 
     #[test]
     fn pread() {
-        use super::{Pread};
+        use super::Pread;
         let bytes: [u8; 2] = [0x7e, 0xef];
         let b = &bytes[..];
         let byte: u16 = b.pread(0).unwrap();
@@ -327,11 +335,11 @@ mod tests {
 
     #[test]
     fn pread_slice() {
-        use super::{Pread};
         use super::ctx::StrCtx;
+        use super::Pread;
         let bytes: [u8; 2] = [0x7e, 0xef];
         let b = &bytes[..];
-        let iserr: Result<&str, _>  = b.pread_with(0, StrCtx::Length(3));
+        let iserr: Result<&str, _> = b.pread_with(0, StrCtx::Length(3));
         assert!(iserr.is_err());
         // let bytes2: &[u8]  = b.pread_with(0, 2).unwrap();
         // assert_eq!(bytes2.len(), bytes[..].len());
@@ -342,11 +350,11 @@ mod tests {
 
     #[test]
     fn pread_str() {
-        use super::Pread;
         use super::ctx::*;
+        use super::Pread;
         let bytes: [u8; 2] = [0x2e, 0x0];
         let b = &bytes[..];
-        let s: &str  = b.pread(0).unwrap();
+        let s: &str = b.pread(0).unwrap();
         println!("str: {}", s);
         assert_eq!(s.len(), bytes[..].len() - 1);
         let bytes: &[u8] = b"hello, world!\0some_other_things";
@@ -365,8 +373,8 @@ mod tests {
 
     #[test]
     fn pread_str_weird() {
-        use super::Pread;
         use super::ctx::*;
+        use super::Pread;
         let bytes: &[u8] = b"";
         let hello_world = bytes.pread_with::<&str>(0, StrCtx::Delimiter(NULL));
         println!("1 {:?}", &hello_world);
@@ -375,27 +383,33 @@ mod tests {
         println!("2 {:?}", &error);
         assert!(error.is_err());
         let bytes: &[u8] = b"\0";
-        let null  = bytes.pread::<&str>(0).unwrap();
+        let null = bytes.pread::<&str>(0).unwrap();
         println!("3 {:?}", &null);
         assert_eq!(null.len(), 0);
     }
 
     #[test]
     fn pwrite_str_and_bytes() {
-        use super::{Pread, Pwrite};
         use super::ctx::*;
+        use super::{Pread, Pwrite};
         let astring: &str = "lol hello_world lal\0ala imabytes";
         let mut buffer = [0u8; 33];
         buffer.pwrite(astring, 0).unwrap();
         {
-            let hello_world = buffer.pread_with::<&str>(4, StrCtx::Delimiter(SPACE)).unwrap();
+            let hello_world = buffer
+                .pread_with::<&str>(4, StrCtx::Delimiter(SPACE))
+                .unwrap();
             assert_eq!(hello_world, "hello_world");
         }
         let bytes: &[u8] = b"more\0bytes";
         buffer.pwrite(bytes, 0).unwrap();
-        let more = bytes.pread_with::<&str>(0, StrCtx::Delimiter(NULL)).unwrap();
+        let more = bytes
+            .pread_with::<&str>(0, StrCtx::Delimiter(NULL))
+            .unwrap();
         assert_eq!(more, "more");
-        let bytes = bytes.pread_with::<&str>(more.len() + 1, StrCtx::Delimiter(NULL)).unwrap();
+        let bytes = bytes
+            .pread_with::<&str>(more.len() + 1, StrCtx::Delimiter(NULL))
+            .unwrap();
         assert_eq!(bytes, "bytes");
     }
 
@@ -415,14 +429,16 @@ mod tests {
         fn description(&self) -> &str {
             "ExternalError"
         }
-        fn cause(&self) -> Option<&dyn error::Error> { None}
+        fn cause(&self) -> Option<&dyn error::Error> {
+            None
+        }
     }
 
     impl From<super::Error> for ExternalError {
         fn from(err: super::Error) -> Self {
             //use super::Error::*;
             match err {
-                _ => ExternalError{},
+                _ => ExternalError {},
             }
         }
     }
@@ -434,7 +450,9 @@ mod tests {
         type Error = ExternalError;
         fn try_into_ctx(self, this: &mut [u8], le: super::Endian) -> Result<usize, Self::Error> {
             use super::Pwrite;
-            if this.len() < 2 { return Err((ExternalError {}).into()) }
+            if this.len() < 2 {
+                return Err((ExternalError {}).into());
+            }
             this.pwrite_with(self.0, 0, le)?;
             Ok(2)
         }
@@ -444,7 +462,9 @@ mod tests {
         type Error = ExternalError;
         fn try_from_ctx(this: &'a [u8], le: super::Endian) -> Result<(Self, usize), Self::Error> {
             use super::Pread;
-            if this.len() > 2 { return Err((ExternalError {}).into()) }
+            if this.len() > 2 {
+                return Err((ExternalError {}).into());
+            }
             let n = this.pread_with(0, le)?;
             Ok((Foo(n), 2))
         }
@@ -452,7 +472,7 @@ mod tests {
 
     #[test]
     fn pread_with_iter_bytes() {
-        use super::{Pread};
+        use super::Pread;
         let mut bytes_to: [u8; 8] = [0, 0, 0, 0, 0, 0, 0, 0];
         let bytes_from: [u8; 8] = [1, 2, 3, 4, 5, 6, 7, 8];
         let bytes_to = &mut bytes_to[..];
@@ -481,7 +501,7 @@ mod tests {
                 assert_eq!(deadbeef, $deadbeef as $typ);
                 assert_eq!(offset, ::std::mem::size_of::<$typ>());
             }
-        }
+        };
     }
 
     g_test!(simple_gread_u16, 0xe0f, u16);
@@ -510,7 +530,7 @@ mod tests {
         ($read:ident, $val:expr, $typ:ty) => {
             #[test]
             fn $read() {
-                use super::{LE, BE, Pread, Pwrite};
+                use super::{Pread, Pwrite, BE, LE};
                 let mut buffer = [0u8; 16];
                 let offset = &mut 0;
                 buffer.gwrite_with($val.clone(), offset, LE).unwrap();
@@ -546,7 +566,7 @@ mod tests {
     // useful for ferreting out problems with impls
     #[test]
     fn gread_with_iter_bytes() {
-        use super::{Pread};
+        use super::Pread;
         let mut bytes_to: [u8; 8] = [0, 0, 0, 0, 0, 0, 0, 0];
         let bytes_from: [u8; 8] = [1, 2, 3, 4, 5, 6, 7, 8];
         let bytes_to = &mut bytes_to[..];
@@ -561,7 +581,7 @@ mod tests {
 
     #[test]
     fn gread_inout() {
-        use super::{Pread};
+        use super::Pread;
         let mut bytes_to: [u8; 8] = [0, 0, 0, 0, 0, 0, 0, 0];
         let bytes_from: [u8; 8] = [1, 2, 3, 4, 5, 6, 7, 8];
         let bytes = &bytes_from[..];
@@ -573,7 +593,7 @@ mod tests {
 
     #[test]
     fn gread_with_byte() {
-        use super::{Pread};
+        use super::Pread;
         let bytes: [u8; 1] = [0x7f];
         let b = &bytes[..];
         let offset = &mut 0;
@@ -584,8 +604,8 @@ mod tests {
 
     #[test]
     fn gread_slice() {
-        use super::{Pread};
-        use super::ctx::{StrCtx};
+        use super::ctx::StrCtx;
+        use super::Pread;
         let bytes: [u8; 2] = [0x7e, 0xef];
         let b = &bytes[..];
         let offset = &mut 0;
@@ -595,12 +615,15 @@ mod tests {
         let astring: [u8; 3] = [0x45, 042, 0x44];
         let string = astring.gread_with::<&str>(offset, StrCtx::Length(2));
         match &string {
-            &Ok(_) => {},
-            &Err(ref err) => {println!("{}", &err); panic!();}
+            &Ok(_) => {}
+            &Err(ref err) => {
+                println!("{}", &err);
+                panic!();
+            }
         }
         assert_eq!(string.unwrap(), "E*");
         *offset = 0;
-        let bytes2: &[u8]  = b.gread_with(offset, 2).unwrap();
+        let bytes2: &[u8] = b.gread_with(offset, 2).unwrap();
         assert_eq!(*offset, 2);
         assert_eq!(bytes2.len(), bytes[..].len());
         for i in 0..bytes2.len() {

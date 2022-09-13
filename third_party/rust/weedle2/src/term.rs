@@ -6,34 +6,36 @@ macro_rules! generate_terms {
             pub struct $typ;
 
             impl<'a> $crate::Parse<'a> for $typ {
-                parser!(do_parse!(
-                    ws!(tag!($tok)) >>
-                    ($typ)
+                parser!(nom::combinator::value(
+                    $typ,
+                    crate::whitespace::ws(
+                        nom::bytes::complete::tag($tok)
+                    )
                 ));
             }
         )*
     };
 }
 
-macro_rules! ident_tag (
-    ($i:expr, $tok:expr) => (
-        {
-            match tag!($i, $tok) {
-                Err(e) => Err(e),
-                Ok((i, o)) => {
-                    use nom::{character::is_alphanumeric, Err as NomErr, error::Error, error::ErrorKind};
-                    let mut res = Ok((i, o));
-                    if let Some(&c) = i.as_bytes().first() {
-                        if is_alphanumeric(c) || c == b'_' || c == b'-' {
-                            res = Err(NomErr::Error(Error::new($i, ErrorKind::Tag)));
-                        }
-                    }
-                    res
-                },
-            }
-        }
-    )
-);
+struct AlphaNumUnderscoreDash;
+
+impl nom::FindToken<char> for AlphaNumUnderscoreDash {
+    fn find_token(&self, token: char) -> bool {
+        crate::common::is_alphanum_underscore_dash(token)
+    }
+}
+
+pub(crate) fn ident_tag(tag: &'static str) -> impl FnMut(&str) -> nom::IResult<&str, &str> {
+    move |input| {
+        nom::sequence::terminated(
+            nom::bytes::complete::tag(tag),
+            nom::combinator::not(nom::combinator::map_parser(
+                nom::bytes::complete::take(1usize),
+                nom::bytes::complete::is_a(AlphaNumUnderscoreDash),
+            )),
+        )(input)
+    }
+}
 
 macro_rules! generate_terms_for_names {
     ($( $(#[$attr:meta])* $typ:ident => $tok:expr,)*) => {
@@ -43,9 +45,9 @@ macro_rules! generate_terms_for_names {
             pub struct $typ;
 
             impl<'a> $crate::Parse<'a> for $typ {
-                parser!(do_parse!(
-                    ws!(ident_tag!($tok)) >>
-                    ($typ)
+                parser!(nom::combinator::value(
+                    $typ,
+                    $crate::whitespace::ws($crate::term::ident_tag($tok))
                 ));
             }
         )*

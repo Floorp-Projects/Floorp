@@ -13,7 +13,7 @@ use crate::internal_pings::InternalPings;
 use crate::metrics::{self, ExperimentMetric, Metric, MetricType, PingType, RecordedExperiment};
 use crate::ping::PingMaker;
 use crate::storage::{StorageManager, INTERNAL_STORAGE};
-use crate::upload::{PingUploadManager, PingUploadTask, UploadResult};
+use crate::upload::{PingUploadManager, PingUploadTask, UploadResult, UploadTaskAction};
 use crate::util::{local_now_with_offset, sanitize_application_id};
 use crate::{
     scheduler, system, CommonMetricData, ErrorKind, InternalConfiguration, Lifetime, Result,
@@ -565,9 +565,13 @@ impl Glean {
     ///
     /// * `uuid` - The UUID of the ping in question.
     /// * `status` - The upload result.
-    pub fn process_ping_upload_response(&self, uuid: &str, status: UploadResult) {
+    pub fn process_ping_upload_response(
+        &self,
+        uuid: &str,
+        status: UploadResult,
+    ) -> UploadTaskAction {
         self.upload_manager
-            .process_ping_upload_response(self, uuid, status);
+            .process_ping_upload_response(self, uuid, status)
     }
 
     /// Takes a snapshot for the given store and optionally clear it.

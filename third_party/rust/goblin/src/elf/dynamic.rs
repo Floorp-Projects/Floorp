@@ -225,6 +225,17 @@ pub const DF_BIND_NOW: u64 = 0x0000_0008;
 /// Module uses the static TLS model.
 pub const DF_STATIC_TLS: u64 = 0x0000_0010;
 
+pub fn df_tag_to_str(tag: u64) -> &'static str {
+    match tag {
+        DF_ORIGIN => "DF_ORIGIN",
+        DF_SYMBOLIC => "DF_SYMBOLIC",
+        DF_TEXTREL => "DF_TEXTREL",
+        DF_BIND_NOW => "DF_BIND_NOW",
+        DF_STATIC_TLS => "DF_STATIC_TLS",
+        _ => "UNKNOWN_TAG",
+    }
+}
+
 /// === State flags ===
 /// selectable in the `d_un.d_val` element of the DT_FLAGS_1 entry in the dynamic section.
 ///
@@ -275,6 +286,41 @@ pub const DF_1_SYMINTPOSE: u64 = 0x0080_0000;
 pub const DF_1_GLOBAUDIT: u64 = 0x0100_0000;
 /// Singleton dyn are used.
 pub const DF_1_SINGLETON: u64 = 0x0200_0000;
+/// Object is a Position Independent Executable (PIE).
+pub const DF_1_PIE: u64 = 0x0800_0000;
+
+pub fn df_1_tag_to_str(tag: u64) -> &'static str {
+    match tag {
+        DF_1_NOW => "DF_1_NOW",
+        DF_1_GLOBAL => "DF_1_GLOBAL",
+        DF_1_GROUP => "DF_1_GROUP",
+        DF_1_NODELETE => "DF_1_NODELETE",
+        DF_1_LOADFLTR => "DF_1_LOADFLTR",
+        DF_1_INITFIRST => "DF_1_INITFIRST",
+        DF_1_NOOPEN => "DF_1_NOOPEN",
+        DF_1_ORIGIN => "DF_1_ORIGIN",
+        DF_1_DIRECT => "DF_1_DIRECT",
+        DF_1_TRANS => "DF_1_TRANS",
+        DF_1_INTERPOSE => "DF_1_INTERPOSE",
+        DF_1_NODEFLIB => "DF_1_NODEFLIB",
+        DF_1_NODUMP => "DF_1_NODUMP",
+        DF_1_CONFALT => "DF_1_CONFALT",
+        DF_1_ENDFILTEE => "DF_1_ENDFILTEE",
+        DF_1_DISPRELDNE => "DF_1_DISPRELDNE",
+        DF_1_DISPRELPND => "DF_1_DISPRELPND",
+        DF_1_NODIRECT => "DF_1_NODIRECT",
+        DF_1_IGNMULDEF => "DF_1_IGNMULDEF",
+        DF_1_NOKSYMS => "DF_1_NOKSYMS",
+        DF_1_NOHDR => "DF_1_NOHDR",
+        DF_1_EDITED => "DF_1_EDITED",
+        DF_1_NORELOC => "DF_1_NORELOC",
+        DF_1_SYMINTPOSE => "DF_1_SYMINTPOSE",
+        DF_1_GLOBAUDIT => "DF_1_GLOBAUDIT",
+        DF_1_SINGLETON => "DF_1_SINGLETON",
+        DF_1_PIE => "DF_1_PIE",
+        _ => "UNKNOWN_TAG",
+    }
+}
 
 if_alloc! {
     use core::fmt;
@@ -357,7 +403,6 @@ if_alloc! {
     pub struct Dynamic {
         pub dyns: Vec<Dyn>,
         pub info: DynamicInfo,
-        count: usize,
     }
 
     impl Dynamic {
@@ -381,6 +426,7 @@ if_alloc! {
                         &[]
                     };
                     let size = Dyn::size_with(&ctx);
+                    // the validity of `count` was implicitly checked by reading `bytes`.
                     let count = filesz / size;
                     let mut dyns = Vec::with_capacity(count);
                     let mut offset = 0;
@@ -394,8 +440,7 @@ if_alloc! {
                     for dynamic in &dyns {
                         info.update(phdrs, dynamic);
                     }
-                    let count = dyns.len();
-                    return Ok(Some(Dynamic { dyns: dyns, info: info, count: count }));
+                    return Ok(Some(Dynamic { dyns: dyns, info: info, }));
                 }
             }
             Ok(None)
@@ -403,11 +448,11 @@ if_alloc! {
 
         pub fn get_libraries<'a>(&self, strtab: &Strtab<'a>) -> Vec<&'a str> {
             use log::warn;
-            let count = self.info.needed_count;
+            let count = self.info.needed_count.min(self.dyns.len());
             let mut needed = Vec::with_capacity(count);
             for dynamic in &self.dyns {
                 if dynamic.d_tag as u64 == DT_NEEDED {
-                    if let Some(Ok(lib)) = strtab.get(dynamic.d_val as usize) {
+                    if let Some(lib) = strtab.get_at(dynamic.d_val as usize) {
                         needed.push(lib)
                     } else {
                         warn!("Invalid DT_NEEDED {}", dynamic.d_val)
@@ -519,7 +564,7 @@ macro_rules! elf_dyn_std_impl {
 
             /// Gets the needed libraries from the `_DYNAMIC` array, with the str slices lifetime tied to the dynamic array/strtab's lifetime(s)
             pub unsafe fn get_needed<'a>(dyns: &[Dyn], strtab: *const Strtab<'a>, count: usize) -> Vec<&'a str> {
-                let mut needed = Vec::with_capacity(count);
+                let mut needed = Vec::with_capacity(count.min(dyns.len()));
                 for dynamic in dyns {
                     if u64::from(dynamic.d_tag) == DT_NEEDED {
                         let lib = &(*strtab)[dynamic.d_val as usize];
@@ -540,7 +585,7 @@ macro_rules! elf_dynamic_info_std_impl {
                 if address >= ph.p_vaddr {
                     let offset = address - ph.p_vaddr;
                     if offset < ph.p_memsz {
-                        return ph.p_offset.checked_add(offset );
+                        return ph.p_offset.checked_add(offset);
                     }
                 }
             }
@@ -548,7 +593,7 @@ macro_rules! elf_dynamic_info_std_impl {
         }
 
         /// Important dynamic linking info generated via a single pass through the `_DYNAMIC` array
-        #[derive(Default)]
+        #[derive(Default, PartialEq)]
         pub struct DynamicInfo {
             pub rela: usize,
             pub relasz: usize,
@@ -568,6 +613,8 @@ macro_rules! elf_dynamic_info_std_impl {
             pub pltrelsz: usize,
             pub pltrel: $size,
             pub jmprel: usize,
+            pub verdef: $size,
+            pub verdefnum: $size,
             pub verneed: $size,
             pub verneednum: $size,
             pub versym: $size,
@@ -598,22 +645,34 @@ macro_rules! elf_dynamic_info_std_impl {
                     DT_RELCOUNT => self.relcount = dynamic.d_val as usize,
                     DT_GNU_HASH => self.gnu_hash = vm_to_offset(phdrs, dynamic.d_val),
                     DT_HASH => self.hash = vm_to_offset(phdrs, dynamic.d_val),
-                    DT_STRTAB => self.strtab = vm_to_offset(phdrs, dynamic.d_val).unwrap_or(0) as usize,
+                    DT_STRTAB => {
+                        self.strtab = vm_to_offset(phdrs, dynamic.d_val).unwrap_or(0) as usize
+                    }
                     DT_STRSZ => self.strsz = dynamic.d_val as usize,
-                    DT_SYMTAB => self.symtab = vm_to_offset(phdrs, dynamic.d_val).unwrap_or(0) as usize,
+                    DT_SYMTAB => {
+                        self.symtab = vm_to_offset(phdrs, dynamic.d_val).unwrap_or(0) as usize
+                    }
                     DT_SYMENT => self.syment = dynamic.d_val as usize,
                     DT_PLTGOT => self.pltgot = vm_to_offset(phdrs, dynamic.d_val),
                     DT_PLTRELSZ => self.pltrelsz = dynamic.d_val as usize,
                     DT_PLTREL => self.pltrel = dynamic.d_val as _,
-                    DT_JMPREL => self.jmprel = vm_to_offset(phdrs, dynamic.d_val).unwrap_or(0) as usize, // .rela.plt
+                    DT_JMPREL => {
+                        self.jmprel = vm_to_offset(phdrs, dynamic.d_val).unwrap_or(0) as usize
+                    } // .rela.plt
+                    DT_VERDEF => self.verdef = vm_to_offset(phdrs, dynamic.d_val).unwrap_or(0),
+                    DT_VERDEFNUM => self.verdefnum = vm_to_offset(phdrs, dynamic.d_val).unwrap_or(0),
                     DT_VERNEED => self.verneed = vm_to_offset(phdrs, dynamic.d_val).unwrap_or(0),
                     DT_VERNEEDNUM => self.verneednum = dynamic.d_val as _,
                     DT_VERSYM => self.versym = vm_to_offset(phdrs, dynamic.d_val).unwrap_or(0),
                     DT_INIT => self.init = vm_to_offset(phdrs, dynamic.d_val).unwrap_or(0),
                     DT_FINI => self.fini = vm_to_offset(phdrs, dynamic.d_val).unwrap_or(0),
-                    DT_INIT_ARRAY => self.init_array = vm_to_offset(phdrs, dynamic.d_val).unwrap_or(0),
+                    DT_INIT_ARRAY => {
+                        self.init_array = vm_to_offset(phdrs, dynamic.d_val).unwrap_or(0)
+                    }
                     DT_INIT_ARRAYSZ => self.init_arraysz = dynamic.d_val as _,
-                    DT_FINI_ARRAY => self.fini_array = vm_to_offset(phdrs, dynamic.d_val).unwrap_or(0),
+                    DT_FINI_ARRAY => {
+                        self.fini_array = vm_to_offset(phdrs, dynamic.d_val).unwrap_or(0)
+                    }
                     DT_FINI_ARRAYSZ => self.fini_arraysz = dynamic.d_val as _,
                     DT_NEEDED => self.needed_count += 1,
                     DT_FLAGS => self.flags = dynamic.d_val as _,
@@ -638,6 +697,47 @@ macro_rules! elf_dynamic_info_std_impl {
                     let gnu_hash = self.gnu_hash.unwrap_or(0);
                     let hash = self.hash.unwrap_or(0);
                     let pltgot = self.pltgot.unwrap_or(0);
+
+                    let flags: Vec<&'static str> = [DF_ORIGIN, DF_SYMBOLIC, DF_TEXTREL, DF_BIND_NOW, DF_STATIC_TLS,][..]
+                                    .iter()
+                                    .filter(|f| (self.flags as u64 & *f) != 0)
+                                    .map(|f| df_tag_to_str(*f))
+                                    .collect();
+
+                    let flags_1: Vec<&'static str> = [
+                            DF_1_NOW,
+                            DF_1_GLOBAL,
+                            DF_1_GROUP,
+                            DF_1_NODELETE,
+                            DF_1_LOADFLTR,
+                            DF_1_INITFIRST,
+                            DF_1_NOOPEN,
+                            DF_1_ORIGIN,
+                            DF_1_DIRECT,
+                            DF_1_TRANS,
+                            DF_1_INTERPOSE,
+                            DF_1_NODEFLIB,
+                            DF_1_NODUMP,
+                            DF_1_CONFALT,
+                            DF_1_ENDFILTEE,
+                            DF_1_DISPRELDNE,
+                            DF_1_DISPRELPND,
+                            DF_1_NODIRECT,
+                            DF_1_IGNMULDEF,
+                            DF_1_NOKSYMS,
+                            DF_1_NOHDR,
+                            DF_1_EDITED,
+                            DF_1_NORELOC,
+                            DF_1_SYMINTPOSE,
+                            DF_1_GLOBAUDIT,
+                            DF_1_SINGLETON,
+                            DF_1_PIE,
+                        ][..]
+                        .iter()
+                        .filter(|f| (self.flags_1 as u64 & *f) != 0)
+                        .map(|f| df_1_tag_to_str(*f))
+                        .collect();
+
                     f.debug_struct("DynamicInfo")
                         .field("rela", &format_args!("0x{:x}", self.rela))
                         .field("relasz", &self.relasz)
@@ -653,12 +753,20 @@ macro_rules! elf_dynamic_info_std_impl {
                         .field("pltrelsz", &self.pltrelsz)
                         .field("pltrel", &self.pltrel)
                         .field("jmprel", &format_args!("0x{:x}", self.jmprel))
+                        .field("verdef", &format_args!("0x{:x}", self.verdef))
+                        .field("verdefnum", &self.verdefnum)
                         .field("verneed", &format_args!("0x{:x}", self.verneed))
                         .field("verneednum", &self.verneednum)
                         .field("versym", &format_args!("0x{:x}", self.versym))
                         .field("init", &format_args!("0x{:x}", self.init))
                         .field("fini", &format_args!("0x{:x}", self.fini))
+                        .field("init_array", &format_args!("{:#x}", self.init_array))
+                        .field("init_arraysz", &self.init_arraysz)
                         .field("needed_count", &self.needed_count)
+                        .field("flags", &format_args!("{:#0width$x} {:?}", self.flags, flags, width = core::mem::size_of_val(&self.flags)))
+                        .field("flags_1", &format_args!("{:#0width$x} {:?}", self.flags_1, flags_1, width = core::mem::size_of_val(&self.flags_1)))
+                        .field("soname", &self.soname)
+                        .field("textrel", &self.textrel)
                         .finish()
                 }
             }
@@ -678,7 +786,10 @@ pub mod dyn32 {
     pub const SIZEOF_DYN: usize = 8;
 
     elf_dyn_std_impl!(u32, crate::elf32::program_header::ProgramHeader);
-    elf_dynamic_info_std_impl!(u32, crate::elf::program_header::program_header32::ProgramHeader);
+    elf_dynamic_info_std_impl!(
+        u32,
+        crate::elf::program_header::program_header32::ProgramHeader
+    );
 }
 
 pub mod dyn64 {
@@ -689,5 +800,8 @@ pub mod dyn64 {
     pub const SIZEOF_DYN: usize = 16;
 
     elf_dyn_std_impl!(u64, crate::elf64::program_header::ProgramHeader);
-    elf_dynamic_info_std_impl!(u64, crate::elf::program_header::program_header64::ProgramHeader);
+    elf_dynamic_info_std_impl!(
+        u64,
+        crate::elf::program_header::program_header64::ProgramHeader
+    );
 }

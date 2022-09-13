@@ -1,7 +1,8 @@
 // Copyright (c) 2017 The Rust Project Developers
+// Copyright (c) 2018-2020 The Rust Secure Code Working Group
 // Licensed under the MIT License.
 // Original license:
-// https://github.com/RustSec/platforms-crate/blob/ebbd3403243067ba3096f31684557285e352b639/LICENSE-MIT
+// https://github.com/rustsec/rustsec/blob/2a080f173ad9d8ac7fa260f0a3a6aebf0000de06/platforms/LICENSE-MIT
 //
 // Permission is hereby granted, free of charge, to any
 // person obtaining a copy of this software and associated

@@ -5,6 +5,7 @@
 use anyhow::{Context, Result};
 use askama::Template;
 use heck::{ToShoutySnakeCase, ToSnakeCase, ToUpperCamelCase};
+use once_cell::sync::Lazy;
 use serde::{Deserialize, Serialize};
 use std::borrow::Borrow;
 use std::cell::RefCell;
@@ -25,50 +26,48 @@ mod object;
 mod primitives;
 mod record;
 
-lazy_static::lazy_static! {
-    // Taken from Python's `keyword.py` module.
-    static ref KEYWORDS: HashSet<String> = {
-        let kwlist = vec![
-            "False",
-            "None",
-            "True",
-            "__peg_parser__",
-            "and",
-            "as",
-            "assert",
-            "async",
-            "await",
-            "break",
-            "class",
-            "continue",
-            "def",
-            "del",
-            "elif",
-            "else",
-            "except",
-            "finally",
-            "for",
-            "from",
-            "global",
-            "if",
-            "import",
-            "in",
-            "is",
-            "lambda",
-            "nonlocal",
-            "not",
-            "or",
-            "pass",
-            "raise",
-            "return",
-            "try",
-            "while",
-            "with",
-            "yield",
-        ];
-        HashSet::from_iter(kwlist.into_iter().map(|s| s.to_string()))
-    };
-}
+// Taken from Python's `keyword.py` module.
+static KEYWORDS: Lazy<HashSet<String>> = Lazy::new(|| {
+    let kwlist = vec![
+        "False",
+        "None",
+        "True",
+        "__peg_parser__",
+        "and",
+        "as",
+        "assert",
+        "async",
+        "await",
+        "break",
+        "class",
+        "continue",
+        "def",
+        "del",
+        "elif",
+        "else",
+        "except",
+        "finally",
+        "for",
+        "from",
+        "global",
+        "if",
+        "import",
+        "in",
+        "is",
+        "lambda",
+        "nonlocal",
+        "not",
+        "or",
+        "pass",
+        "raise",
+        "return",
+        "try",
+        "while",
+        "with",
+        "yield",
+    ];
+    HashSet::from_iter(kwlist.into_iter().map(|s| s.to_string()))
+});
 
 // Config options to customize the generated python.
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]

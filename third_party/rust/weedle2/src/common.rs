@@ -1,28 +1,36 @@
 use crate::literal::DefaultValue;
-use crate::term;
-use crate::Parse;
+use crate::{term, IResult, Parse};
+
+pub(crate) fn is_alphanum_underscore_dash(token: char) -> bool {
+    nom::AsChar::is_alphanum(token) || matches!(token, '_' | '-')
+}
+
+fn marker<S>(i: &str) -> IResult<&str, S>
+where
+    S: ::std::default::Default,
+{
+    Ok((i, S::default()))
+}
 
 impl<'a, T: Parse<'a>> Parse<'a> for Option<T> {
-    parser!(opt!(weedle!(T)));
+    parser!(nom::combinator::opt(weedle!(T)));
 }
 
 impl<'a, T: Parse<'a>> Parse<'a> for Box<T> {
-    parser!(do_parse!(inner: weedle!(T) >> (Box::new(inner))));
+    parser!(nom::combinator::map(weedle!(T), Box::new));
 }
 
 /// Parses `item1 item2 item3...`
 impl<'a, T: Parse<'a>> Parse<'a> for Vec<T> {
-    parser!(many0!(weedle!(T)));
+    parser!(nom::multi::many0(T::parse));
 }
 
 impl<'a, T: Parse<'a>, U: Parse<'a>> Parse<'a> for (T, U) {
-    parser!(do_parse!(t: weedle!(T) >> u: weedle!(U) >> ((t, u))));
+    parser!(nom::sequence::tuple((T::parse, U::parse)));
 }
 
 impl<'a, T: Parse<'a>, U: Parse<'a>, V: Parse<'a>> Parse<'a> for (T, U, V) {
-    parser!(do_parse!(
-        t: weedle!(T) >> u: weedle!(U) >> v: weedle!(V) >> ((t, u, v))
-    ));
+    parser!(nom::sequence::tuple((T::parse, U::parse, V::parse)));
 }
 
 ast_types! {
@@ -60,15 +68,15 @@ ast_types! {
 
     /// Parses `(item1, item2, item3,...)?`
     struct Punctuated<T, S> where [T: Parse<'a>, S: Parse<'a> + ::std::default::Default] {
-        list: Vec<T> = separated_list0!(weedle!(S), weedle!(T)),
+        list: Vec<T> = nom::multi::separated_list0(weedle!(S), weedle!(T)),
         separator: S = marker,
     }
 
     /// Parses `item1, item2, item3, ...`
     struct PunctuatedNonEmpty<T, S> where [T: Parse<'a>, S: Parse<'a> + ::std::default::Default] {
-        list: Vec<T> = terminated!(
-            separated_list1!(weedle!(S), weedle!(T)),
-            opt!(weedle!(S))
+        list: Vec<T> = nom::sequence::terminated(
+            nom::multi::separated_list1(weedle!(S), weedle!(T)),
+            nom::combinator::opt(weedle!(S))
         ),
         separator: S = marker,
     }
@@ -80,14 +88,12 @@ ast_types! {
     struct Identifier<'a>(
         // See https://heycam.github.io/webidl/#idl-names for why the leading
         // underscore is trimmed
-        &'a str = ws!(do_parse!(
-            opt!(char!('_')) >>
-            id: recognize!(do_parse!(
-                take_while1!(|c: char| c.is_ascii_alphabetic()) >>
-                take_while!(|c: char| c.is_ascii_alphanumeric() || c == '_' || c == '-') >>
-                (())
-            )) >>
-            (id)
+        &'a str = crate::whitespace::ws(nom::sequence::preceded(
+            nom::combinator::opt(nom::character::complete::char('_')),
+            nom::combinator::recognize(nom::sequence::tuple((
+                nom::bytes::complete::take_while1(nom::AsChar::is_alphanum),
+                nom::bytes::complete::take_while(is_alphanum_underscore_dash),
+            )))
         )),
     )
 
@@ -194,7 +200,7 @@ mod test {
         0 == "hello";
     });
 
-    test!(should_parse_identifier_preceeding_others { "hello  note" =>
+    test!(should_parse_identifier_preceding_others { "hello  note" =>
         "note";
         Identifier;
         0 == "hello";

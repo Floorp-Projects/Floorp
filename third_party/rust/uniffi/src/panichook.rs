@@ -20,7 +20,7 @@ pub fn ensure_setup() {
                 // in the future.
                 ("<unknown>", 0)
             };
-            log::error!("### Rust `panic!` hit at file '{}', line {}", file, line);
+            log::error!("### Rust `panic!` hit at file '{file}', line {line}");
             #[cfg(all(feature = "log_backtraces", not(target_os = "android")))]
             {
                 log::error!("  Complete stack trace:\n{:?}", backtrace::Backtrace::new());

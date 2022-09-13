@@ -45,7 +45,7 @@ namespace glean {
     void glean_set_dirty_flag(boolean flag);
 
     PingUploadTask glean_get_upload_task();
-    void glean_process_ping_upload_response(string uuid, UploadResult result);
+    UploadTaskAction glean_process_ping_upload_response(string uuid, UploadResult result);
 };
 
 // The Glean configuration.
@@ -179,6 +179,19 @@ interface UploadResult {
     //
     // * code: The HTTP status code
     HttpStatus(i32 code);
+
+    // Signal that this uploader is done with work
+    // and won't accept new work.
+    Done(i8 unused);
+};
+
+// Communicating back whether the uploader loop should continue.
+enum UploadTaskAction {
+    // Instruct the caller to continue with work.
+    "Next",
+
+    // Instruct the caller to end work.
+    "End",
 };
 
 // The supported metrics' lifetimes.

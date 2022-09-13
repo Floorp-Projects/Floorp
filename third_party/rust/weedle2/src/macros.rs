@@ -1,56 +1,27 @@
-macro_rules! tag {
-    ($i:expr, $tag: expr) => {
-        nom::bytes::complete::tag($tag)($i)
-    };
-}
-
-macro_rules! take_while {
-    ($input:expr, $submac:ident!( $($args:tt)* )) => {
-        $crate::macros::take_while!($input, (|c| $submac!(c, $($args)*)))
-    };
-    ($input:expr, $f:expr) => {
-        nom::bytes::complete::take_while($f)($input)
-    };
-}
-
-macro_rules! take_while1 {
-    ($input:expr, $submac:ident!( $($args:tt)* )) => {
-        $crate::macros::take_while1!($input, (|c| $submac!(c, $($args)*)))
-    };
-    ($input:expr, $f:expr) => {
-        nom::bytes::complete::take_while1($f)($input)
-    };
-}
-
-macro_rules! take_until {
-    ($i:expr, $substr:expr) => {
-        nom::bytes::complete::take_until($substr)($i)
-    };
-}
-
-macro_rules! one_of {
-    ($i:expr, $inp: expr) => {
-        nom::character::complete::one_of($inp)($i)
-    };
-}
-
-macro_rules! char {
-    ($i:expr, $c: expr) => {
-        nom::character::complete::char($c)($i)
-    };
-}
-
 macro_rules! parser {
-    ($submac:ident!( $($args:tt)* )) => {
+    ($parse:expr) => {
         fn parse(input: &'a str) -> $crate::IResult<&'a str, Self> {
-            $submac!(input, $($args)*)
+            $parse(input)
         }
     };
 }
 
 macro_rules! weedle {
-    ($i:expr, $t:ty) => {
-        <$t as $crate::Parse<'a>>::parse($i)
+    ($t:ty) => {
+        <$t as $crate::Parse<'a>>::parse
+    };
+}
+
+// nom::branch::alt supports at-most 21 parsers, increasing to 42 ones.
+macro_rules! alt {
+    ($member0:expr, $($member1:expr, $member2:expr,)*) => {
+       alt!(@as_expr $member0, $(nom::branch::alt(($member1, $member2)),)+)
+    };
+    ($($member0:expr, $member1:expr,)*) => {
+       alt!(@as_expr $(nom::branch::alt(($member0, $member1)),)+)
+    };
+    (@as_expr $($member:expr,)*) => {
+        nom::branch::alt(($($member,)+))
     };
 }
 
@@ -185,7 +156,7 @@ macro_rules! __ast_tuple_struct {
         $(#[$attr:meta])*
         $name:ident
         [ $($maybe_a:tt)* ]
-        ( $inner:ty = $submac:ident!( $($args:tt)* ), )
+        ( $inner:ty = $parser:expr, )
     ) => (
         $(#[$attr])*
         #[derive(Clone, Debug, Eq, PartialEq, Ord, PartialOrd, Hash)]
@@ -193,9 +164,9 @@ macro_rules! __ast_tuple_struct {
 
         impl<'a> $crate::Parse<'a> for $name<$($maybe_a)*> {
             fn parse(input: &'a str) -> $crate::IResult<&'a str, Self> {
-                use $crate::nom::lib::std::result::Result::*;
+                use nom::lib::std::result::Result::*;
 
-                match $submac!(input, $($args)*) {
+                match $parser(input) {
                     Err(e) => Err(e),
                     Ok((i, inner)) => Ok((i, $name(inner))),
                 }
@@ -246,17 +217,7 @@ macro_rules! __ast_struct {
     );
     (@build_struct_decl
         { $($prev:tt)* }
-        { $field:ident : $type:ty = $submac:ident!( $($args:tt)* ), $($rest:tt)* }
-    ) => (
-        __ast_struct! {
-            @build_struct_decl
-            { $($prev)* $field : $type }
-            { $($rest)* }
-        }
-    );
-    (@build_struct_decl
-        { $($prev:tt)* }
-        { $field:ident : $type:ty = marker, $($rest:tt)* }
+        { $field:ident : $type:ty = $parser:expr, $($rest:tt)* }
     ) => (
         __ast_struct! {
             @build_struct_decl
@@ -269,16 +230,16 @@ macro_rules! __ast_struct {
         { $i:expr, $($field:ident)* }
         { }
     ) => ({
-        use $crate::nom::lib::std::result::Result::Ok;
+        use nom::lib::std::result::Result::Ok;
         Ok(($i, Self { $($field,)* }))
     });
     (@build_parser
         { $i:expr, $($prev:tt)* }
-        { $field:ident : $type:ty = $submac:ident!( $($args:tt)* ), $($rest:tt)* }
+        { $field:ident : $type:ty = $parser:expr, $($rest:tt)* }
     ) => ({
-        use $crate::nom::lib::std::result::Result::*;
+        use nom::lib::std::result::Result::*;
 
-        match $submac!($i, $($args)*) {
+        match $parser($i) {
             Err(e) => Err(e),
             Ok((i, $field)) => {
                 __ast_struct! {
@@ -287,17 +248,6 @@ macro_rules! __ast_struct {
                     { $($rest)* }
                 }
             },
-        }
-    });
-    (@build_parser
-        { $($prev:tt)* }
-        { $field:ident : $type:ty = marker, $($rest:tt)* }
-    ) => ({
-        let $field = ::std::default::Default::default();
-        __ast_struct! {
-            @build_parser
-            { $($prev)* $field }
-            { $($rest)* }
         }
     });
     (@build_parser
@@ -494,7 +444,7 @@ macro_rules! __ast_enum {
     ) => (
         impl<'a> $crate::Parse<'a> for $name<$($maybe_a)*> {
             parser!(alt!(
-                $(weedle!($member) => {From::from})|*
+                $(nom::combinator::map(weedle!($member), From::from),)*
             ));
         }
     );

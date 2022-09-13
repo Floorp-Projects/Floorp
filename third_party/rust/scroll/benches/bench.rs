@@ -11,7 +11,7 @@ fn bench_parallel_cread_with(b: &mut test::Bencher) {
     let nums = vec![0usize; 500_000];
     b.iter(|| {
         let data = black_box(&vec[..]);
-        nums.par_iter().for_each(| offset | {
+        nums.par_iter().for_each(|offset| {
             let _: u16 = black_box(data.cread_with(*offset, LE));
         });
     });
@@ -123,7 +123,7 @@ fn bench_parallel_pread_with(b: &mut test::Bencher) {
     let nums = vec![0usize; 500_000];
     b.iter(|| {
         let data = black_box(&vec[..]);
-        nums.par_iter().for_each(| offset | {
+        nums.par_iter().for_each(|offset| {
             let _: Result<u16, _> = black_box(data.pread_with(*offset, LE));
         });
     });

@@ -24,7 +24,7 @@ use std::env;
 pub fn generate_scaffolding(udl_file: impl AsRef<Utf8Path>) -> Result<()> {
     let udl_file = udl_file.as_ref();
 
-    println!("cargo:rerun-if-changed={}", udl_file);
+    println!("cargo:rerun-if-changed={udl_file}");
     // The UNIFFI_TESTS_DISABLE_EXTENSIONS variable disables some bindings, but it is evaluated
     // at *build* time, so we need to rebuild when it changes.
     println!("cargo:rerun-if-env-changed=UNIFFI_TESTS_DISABLE_EXTENSIONS");

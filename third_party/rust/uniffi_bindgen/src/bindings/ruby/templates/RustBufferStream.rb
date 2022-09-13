@@ -106,6 +106,31 @@ class RustBufferStream
     read(size).force_encoding(Encoding::UTF_8)
   end
 
+  {% when Type::Timestamp -%}
+  # The Timestamp type.
+  ONE_SECOND_IN_NANOSECONDS = 10**9
+
+  def read{{ canonical_type_name }}
+    seconds = unpack_from 8, 'q>'
+    nanoseconds = unpack_from 4, 'L>'
+
+    if seconds < 0
+      nanoseconds = ONE_SECOND_IN_NANOSECONDS - nanoseconds
+    end
+
+    Time.at(seconds, nanoseconds, :nanosecond, in: '+00:00').utc
+  end
+
+  {% when Type::Duration -%}
+  # The Duration type.
+
+  def read{{ canonical_type_name }}
+    seconds = unpack_from 8, 'q>'
+    nanoseconds = unpack_from 4, 'L>'
+
+    Time.at(seconds, nanoseconds, :nanosecond, in: '+00:00').utc
+  end
+
   {% when Type::Object with (object_name) -%}
   # The Object type {{ object_name }}.
 

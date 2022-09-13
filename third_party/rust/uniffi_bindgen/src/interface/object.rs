@@ -136,7 +136,7 @@ impl Object {
         let matches: Vec<_> = self.methods.iter().filter(|m| m.name() == name).collect();
         match matches.len() {
             1 => matches[0].clone(),
-            n => panic!("{} methods named {}", n, name),
+            n => panic!("{n} methods named {name}"),
         }
     }
 
@@ -155,7 +155,7 @@ impl Object {
     }
 
     pub fn derive_ffi_funcs(&mut self, ci_prefix: &str) -> Result<()> {
-        self.ffi_func_free.name = format!("ffi_{}_{}_object_free", ci_prefix, self.name);
+        self.ffi_func_free.name = format!("ffi_{ci_prefix}_{}_object_free", self.name);
         self.ffi_func_free.arguments = vec![FFIArgument {
             name: "ptr".to_string(),
             type_: FFIType::RustArcPtr(self.name().to_string()),
@@ -276,7 +276,7 @@ impl Constructor {
     }
 
     fn derive_ffi_func(&mut self, ci_prefix: &str, obj_name: &str) {
-        self.ffi_func.name = format!("{}_{}_{}", ci_prefix, obj_name, self.name);
+        self.ffi_func.name = format!("{ci_prefix}_{obj_name}_{}", self.name);
         self.ffi_func.arguments = self.arguments.iter().map(Into::into).collect();
         self.ffi_func.return_type = Some(FFIType::RustArcPtr(obj_name.to_string()));
     }
@@ -389,7 +389,7 @@ impl Method {
     }
 
     pub fn derive_ffi_func(&mut self, ci_prefix: &str, obj_prefix: &str) -> Result<()> {
-        self.ffi_func.name = format!("{}_{}_{}", ci_prefix, obj_prefix, self.name);
+        self.ffi_func.name = format!("{ci_prefix}_{obj_prefix}_{}", self.name);
         self.ffi_func.arguments = self.full_arguments().iter().map(Into::into).collect();
         self.ffi_func.return_type = self.return_type.as_ref().map(Into::into);
         Ok(())

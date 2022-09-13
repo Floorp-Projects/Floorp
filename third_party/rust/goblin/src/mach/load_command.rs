@@ -1,9 +1,10 @@
 //! Load commands tell the kernel and dynamic linker anything from how to load this binary into memory, what the entry point is, apple specific information, to which libraries it requires for dynamic linking
 
 use crate::error;
+use core::convert::TryFrom;
 use core::fmt::{self, Display};
 use scroll::{ctx, Endian};
-use scroll::{Pread, Pwrite, IOread, IOwrite, SizeWith};
+use scroll::{IOread, IOwrite, Pread, Pwrite, SizeWith};
 
 ///////////////////////////////////////
 // Load Commands from mach-o/loader.h
@@ -14,13 +15,18 @@ use scroll::{Pread, Pwrite, IOread, IOwrite, SizeWith};
 #[derive(Debug, Clone, Copy, Pread, Pwrite, SizeWith)]
 /// Occurs at the beginning of every load command to serve as a sort of tagged union/enum discriminant
 pub struct LoadCommandHeader {
-  pub cmd: u32,
-  pub cmdsize: u32,
+    pub cmd: u32,
+    pub cmdsize: u32,
 }
 
 impl Display for LoadCommandHeader {
     fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
-        write!(fmt, "LoadCommandHeader: {} size: {}", cmd_to_str(self.cmd), self.cmdsize)
+        write!(
+            fmt,
+            "LoadCommandHeader: {} size: {}",
+            cmd_to_str(self.cmd),
+            self.cmdsize
+        )
     }
 }
 
@@ -34,23 +40,23 @@ pub const SIZEOF_LC_STR: usize = 4;
 #[derive(Debug, Clone, Copy, Pread, Pwrite, IOread, IOwrite, SizeWith)]
 pub struct Section32 {
     /// name of this section
-    pub sectname:  [u8; 16],
+    pub sectname: [u8; 16],
     /// segment this section goes in
-    pub segname:   [u8; 16],
+    pub segname: [u8; 16],
     /// memory address of this section
-    pub addr:      u32,
+    pub addr: u32,
     /// size in bytes of this section
-    pub size:      u32,
+    pub size: u32,
     /// file offset of this section
-    pub offset:    u32,
+    pub offset: u32,
     /// section alignment (power of 2)
-    pub align:     u32,
+    pub align: u32,
     /// file offset of relocation entries
-    pub reloff:    u32,
+    pub reloff: u32,
     /// number of relocation entries
-    pub nreloc:    u32,
+    pub nreloc: u32,
     /// flags (section type and attributes)
-    pub flags:     u32,
+    pub flags: u32,
     /// reserved (for offset or index)
     pub reserved1: u32,
     /// reserved (for count or sizeof)
@@ -64,23 +70,23 @@ pub const SIZEOF_SECTION_32: usize = 68;
 #[derive(Debug, Clone, Copy, Pread, Pwrite, IOread, IOwrite, SizeWith)]
 pub struct Section64 {
     /// name of this section
-    pub sectname:  [u8; 16],
+    pub sectname: [u8; 16],
     /// segment this section goes in
-    pub segname:   [u8; 16],
+    pub segname: [u8; 16],
     /// memory address of this section
-    pub addr:      u64,
+    pub addr: u64,
     /// size in bytes of this section
-    pub size:      u64,
+    pub size: u64,
     /// file offset of this section
-    pub offset:    u32,
+    pub offset: u32,
     /// section alignment (power of 2)
-    pub align:     u32,
+    pub align: u32,
     /// file offset of relocation entries
-    pub reloff:    u32,
+    pub reloff: u32,
     /// number of relocation entries
-    pub nreloc:    u32,
+    pub nreloc: u32,
     /// flags (section type and attributes
-    pub flags:     u32,
+    pub flags: u32,
     /// reserved (for offset or index)
     pub reserved1: u32,
     /// reserved (for count or sizeof)
@@ -94,17 +100,17 @@ pub const SIZEOF_SECTION_64: usize = 80;
 #[repr(C)]
 #[derive(Debug, Clone, Copy, Pread, Pwrite, IOread, IOwrite, SizeWith)]
 pub struct SegmentCommand32 {
-    pub cmd:      u32,
-    pub cmdsize:  u32,
-    pub segname:  [u8; 16],
-    pub vmaddr:   u32,
-    pub vmsize:   u32,
-    pub fileoff:  u32,
+    pub cmd: u32,
+    pub cmdsize: u32,
+    pub segname: [u8; 16],
+    pub vmaddr: u32,
+    pub vmsize: u32,
+    pub fileoff: u32,
     pub filesize: u32,
-    pub maxprot:  u32,
+    pub maxprot: u32,
     pub initprot: u32,
-    pub nsects:   u32,
-    pub flags:    u32,
+    pub nsects: u32,
+    pub flags: u32,
 }
 
 pub const SIZEOF_SEGMENT_COMMAND_32: usize = 56;
@@ -118,17 +124,17 @@ impl SegmentCommand32 {
 #[repr(C)]
 #[derive(Debug, Clone, Copy, Pread, Pwrite, IOread, IOwrite, SizeWith)]
 pub struct SegmentCommand64 {
-    pub cmd:      u32,
-    pub cmdsize:  u32,
-    pub segname:  [u8; 16],
-    pub vmaddr:   u64,
-    pub vmsize:   u64,
-    pub fileoff:  u64,
+    pub cmd: u32,
+    pub cmdsize: u32,
+    pub segname: [u8; 16],
+    pub vmaddr: u64,
+    pub vmsize: u64,
+    pub fileoff: u64,
     pub filesize: u64,
-    pub maxprot:  u32,
+    pub maxprot: u32,
     pub initprot: u32,
-    pub nsects:   u32,
-    pub flags:    u32,
+    pub nsects: u32,
+    pub flags: u32,
 }
 
 pub const SIZEOF_SEGMENT_COMMAND_64: usize = 72;
@@ -150,7 +156,7 @@ pub struct Fvmlib {
     /// library's minor version number
     pub minor_version: u32,
     /// library's header address
-    pub header_addr:   u32,
+    pub header_addr: u32,
 }
 
 pub const SIZEOF_FVMLIB: usize = 12;
@@ -216,7 +222,7 @@ pub struct DylibCommand {
     pub cmdsize: u32,
     /// the library identification
     pub dylib: Dylib,
-  }
+}
 
 pub const SIZEOF_DYLIB_COMMAND: usize = 20;
 
@@ -232,7 +238,7 @@ pub const SIZEOF_DYLIB_COMMAND: usize = 20;
 #[derive(Debug, Clone, Copy, Pread, Pwrite, IOread, IOwrite, SizeWith)]
 pub struct SubFrameworkCommand {
     /// LC_SUB_FRAMEWORK
-    pub cmd:     u32,
+    pub cmd: u32,
     /// includes umbrella string
     pub cmdsize: u32,
     /// the umbrella framework name
@@ -252,7 +258,7 @@ pub const SIZEOF_SUB_FRAMEWORK_COMMAND: usize = 12;
 #[derive(Debug, Clone, Copy, Pread, Pwrite, IOread, IOwrite, SizeWith)]
 pub struct SubClientCommand {
     /// LC_SUB_CLIENT
-    pub cmd:     u32,
+    pub cmd: u32,
     /// includes client string
     pub cmdsize: u32,
     /// the client name
@@ -276,7 +282,7 @@ pub const SIZEOF_SUB_CLIENT_COMMAND: usize = 12;
 #[derive(Debug, Clone, Copy, Pread, Pwrite, IOread, IOwrite, SizeWith)]
 pub struct SubUmbrellaCommand {
     /// LC_SUB_UMBRELLA
-    pub cmd:     u32,
+    pub cmd: u32,
     /// includes sub_umbrella string
     pub cmdsize: u32,
     /// the sub_umbrella framework name
@@ -302,7 +308,7 @@ pub const SIZEOF_SUB_UMBRELLA_COMMAND: usize = 12;
 #[derive(Debug, Clone, Copy, Pread, Pwrite, IOread, IOwrite, SizeWith)]
 pub struct SubLibraryCommand {
     /// LC_SUB_LIBRARY
-    pub cmd:     u32,
+    pub cmd: u32,
     /// includes sub_library string
     pub cmdsize: u32,
     /// the sub_library name
@@ -322,7 +328,7 @@ pub const SIZEOF_SUB_LIBRARY_COMMAND: usize = 12;
 #[derive(Debug, Clone, Copy, Pread, Pwrite, IOread, IOwrite, SizeWith)]
 pub struct PreboundDylibCommand {
     /// LC_PREBOUND_DYLIB
-    pub cmd:     u32,
+    pub cmd: u32,
     /// includes strings
     pub cmdsize: u32,
     /// library's path name
@@ -340,9 +346,9 @@ pub const SIZEOF_PREBOUND_DYLIB_COMMAND: usize = 20;
 #[repr(C)]
 #[derive(Debug, Clone, Copy, Pread, Pwrite, IOread, IOwrite, SizeWith)]
 pub struct DylinkerCommand {
-    pub cmd:     u32,
+    pub cmd: u32,
     pub cmdsize: u32,
-    pub name:    LcStr,
+    pub name: LcStr,
 }
 
 pub const SIZEOF_DYLINKER_COMMAND: usize = 12;
@@ -375,7 +381,7 @@ pub const SIZEOF_DYLINKER_COMMAND: usize = 12;
 #[derive(Copy)]
 pub struct ThreadCommand {
     /// LC_THREAD or  LC_UNIXTHREAD
-    pub cmd:     u32,
+    pub cmd: u32,
     /// total size of this command
     pub cmdsize: u32,
 
@@ -420,7 +426,7 @@ impl ThreadCommand {
                 // }
                 let eip: u32 = self.thread_state[10];
                 Ok(u64::from(eip))
-            },
+            }
             super::cputype::CPU_TYPE_X86_64 => {
                 // struct x86_thread_state64_t {
                 //   uint64_t rax;
@@ -446,8 +452,7 @@ impl ThreadCommand {
                 //   uint64_t gs;
                 // }
                 let rip: u64 =
-                       (u64::from(self.thread_state[32]))
-                    | ((u64::from(self.thread_state[33])) << 32);
+                    (u64::from(self.thread_state[32])) | ((u64::from(self.thread_state[33])) << 32);
                 Ok(rip)
             }
             super::cputype::CPU_TYPE_ARM => {
@@ -472,15 +477,12 @@ impl ThreadCommand {
                 //   uint32_t pad;
                 // }
                 let pc: u64 =
-                       (u64::from(self.thread_state[64]))
-                    | ((u64::from(self.thread_state[65])) << 32);
+                    (u64::from(self.thread_state[64])) | ((u64::from(self.thread_state[65])) << 32);
                 Ok(pc)
             }
             // https://github.com/m4b/goblin/issues/64
             // Probably a G4
-            super::cputype::CPU_TYPE_POWERPC => {
-                Ok(u64::from(self.thread_state[0]))
-            },
+            super::cputype::CPU_TYPE_POWERPC => Ok(u64::from(self.thread_state[0])),
             // I think the G5 was the last motorola powerpc processor used by apple before switching to intel cpus.
             // unfortunately I don't have any binaries on hand to see what its thread state looks like :/
             // super::cputype::CPU_TYPE_POWERPC64 => {
@@ -488,9 +490,10 @@ impl ThreadCommand {
             // Assuming above is added, I don't believe apple ever ported mach-o the mach kernel
             // (and hence its binary format) to any other machines except the above,
             // but I would be happy to learn otherwise
-            _ => {
-                Err(error::Error::Malformed(format!("unable to find instruction pointer for cputype {:?}", cputype)))
-            }
+            _ => Err(error::Error::Malformed(format!(
+                "unable to find instruction pointer for cputype {:?}",
+                cputype
+            ))),
         }
     }
 }
@@ -504,31 +507,43 @@ impl<'a> ctx::TryFromCtx<'a, Endian> for ThreadCommand {
         let flavor: u32 = bytes.pread_with(8, le)?;
         let count: u32 = bytes.pread_with(12, le)?;
 
+        if count > 70 {
+            return Err(error::Error::Malformed(format!(
+                "thread command specifies {} longs for thread state but we handle only 70",
+                count
+            )));
+        }
+
         // get a byte slice of the thread state
         let thread_state_byte_length = count as usize * 4;
-        let thread_state_bytes = &bytes[16..16+thread_state_byte_length];
 
         // check the length
-        if thread_state_bytes.len() < thread_state_byte_length {
-            return Err(error::Error::Malformed(format!("thread command specifies {} bytes for thread state but has only {}", thread_state_byte_length, thread_state_bytes.len())));
+        if bytes.len() < 16 + thread_state_byte_length {
+            return Err(error::Error::Malformed(format!(
+                "thread command specifies {} bytes for thread state but has only {}",
+                thread_state_byte_length,
+                bytes.len()
+            )));
         }
-        if count > 70 {
-            return Err(error::Error::Malformed(format!("thread command specifies {} longs for thread state but we handle only 70", count)));
-        }
+
+        let thread_state_bytes = &bytes[16..16 + thread_state_byte_length];
 
         // read the thread state
-        let mut thread_state: [u32; 70] = [ 0; 70 ];
+        let mut thread_state: [u32; 70] = [0; 70];
         for (i, state) in thread_state.iter_mut().enumerate().take(count as usize) {
-            *state = thread_state_bytes.pread_with(i*4, le)?;
+            *state = thread_state_bytes.pread_with(i * 4, le)?;
         }
 
-        Ok((ThreadCommand{
-            cmd: lc.cmd,
-            cmdsize: lc.cmdsize,
-            flavor,
-            count,
-            thread_state,
-        }, lc.cmdsize as _))
+        Ok((
+            ThreadCommand {
+                cmd: lc.cmd,
+                cmdsize: lc.cmdsize,
+                flavor,
+                count,
+                thread_state,
+            },
+            lc.cmdsize as _,
+        ))
     }
 }
 
@@ -541,10 +556,10 @@ impl Clone for ThreadCommand {
 impl fmt::Debug for ThreadCommand {
     fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
         fmt.debug_struct("ThreadCommand")
-            .field("cmd",          &self.cmd)
-            .field("cmdsize",      &self.cmdsize)
-            .field("flavor",       &self.flavor)
-            .field("count",        &self.count)
+            .field("cmd", &self.cmd)
+            .field("cmdsize", &self.cmdsize)
+            .field("flavor", &self.flavor)
+            .field("count", &self.count)
             .field("thread_state", &&self.thread_state[..])
             .finish()
     }
@@ -560,19 +575,19 @@ impl fmt::Debug for ThreadCommand {
 #[derive(Debug, Clone, Copy, Pread, Pwrite, IOread, IOwrite, SizeWith)]
 pub struct RoutinesCommand32 {
     /// LC_ROUTINES
-    pub cmd:         u32,
+    pub cmd: u32,
     /// total size of this command
-    pub cmdsize:     u32,
+    pub cmdsize: u32,
     /// address of initialization routine
-    pub init_address:u32,
+    pub init_address: u32,
     /// index into the module table that the init routine is defined in
     pub init_module: u32,
-    pub reserved1:   u32,
-    pub reserved2:   u32,
-    pub reserved3:   u32,
-    pub reserved4:   u32,
-    pub reserved5:   u32,
-    pub reserved6:   u32,
+    pub reserved1: u32,
+    pub reserved2: u32,
+    pub reserved3: u32,
+    pub reserved4: u32,
+    pub reserved5: u32,
+    pub reserved6: u32,
 }
 
 /// The 64-bit routines command.  Same use as above.
@@ -580,30 +595,30 @@ pub struct RoutinesCommand32 {
 #[derive(Debug, Clone, Copy, Pread, Pwrite, IOread, IOwrite, SizeWith)]
 pub struct RoutinesCommand64 {
     /// LC_ROUTINES_64
-    pub cmd:          u32,
+    pub cmd: u32,
     /// total size of this command
-    pub cmdsize:      u32,
+    pub cmdsize: u32,
     /// address of initialization routine
     pub init_address: u64,
     /// index into the module table that the init routine is defined in 8 bytes each
-    pub init_module:  u64,
-    pub reserved1:    u64,
-    pub reserved2:    u64,
-    pub reserved3:    u64,
-    pub reserved4:    u64,
-    pub reserved5:    u64,
-    pub reserved6:    u64,
+    pub init_module: u64,
+    pub reserved1: u64,
+    pub reserved2: u64,
+    pub reserved3: u64,
+    pub reserved4: u64,
+    pub reserved5: u64,
+    pub reserved6: u64,
 }
 
 #[repr(C)]
 #[derive(Debug, Clone, Copy, Pread, Pwrite, IOread, IOwrite, SizeWith)]
 pub struct SymtabCommand {
-  pub cmd:     u32,
-  pub cmdsize: u32,
-  pub symoff:  u32,
-  pub nsyms:   u32,
-  pub stroff:  u32,
-  pub strsize: u32,
+    pub cmd: u32,
+    pub cmdsize: u32,
+    pub symoff: u32,
+    pub nsyms: u32,
+    pub stroff: u32,
+    pub strsize: u32,
 }
 
 impl Default for SymtabCommand {
@@ -671,41 +686,41 @@ pub struct DysymtabCommand {
     pub cmd: u32,
     pub cmdsize: u32,
     /// index to local symbols
-    pub ilocalsym:      u32,
+    pub ilocalsym: u32,
     /// number of local symbols
-    pub nlocalsym:      u32,
+    pub nlocalsym: u32,
     /// index to externally defined symbols
-    pub iextdefsym:     u32,
+    pub iextdefsym: u32,
     /// number of externally defined symbols
-    pub nextdefsym:     u32,
+    pub nextdefsym: u32,
     /// index to undefined symbols
-    pub iundefsym:      u32,
+    pub iundefsym: u32,
     /// number of undefined symbols
-    pub nundefsym:      u32,
+    pub nundefsym: u32,
     /// file offset to table of contents
-    pub tocoff:         u32,
+    pub tocoff: u32,
     /// number of entries in table of contents
-    pub ntoc:           u32,
+    pub ntoc: u32,
     /// file offset to module table
-    pub modtaboff:      u32,
+    pub modtaboff: u32,
     /// number of module table entries
-    pub nmodtab:        u32,
+    pub nmodtab: u32,
     /// offset to referenced symbol table
-    pub extrefsymoff:   u32,
+    pub extrefsymoff: u32,
     /// number of referenced symbol table entries
-    pub nextrefsyms:    u32,
+    pub nextrefsyms: u32,
     /// file offset to the indirect symbol table
     pub indirectsymoff: u32,
     /// number of indirect symbol table entries
-    pub nindirectsyms:  u32,
+    pub nindirectsyms: u32,
     /// offset to external relocation entries
-    pub extreloff:      u32,
+    pub extreloff: u32,
     /// number of external relocation entries
-    pub nextrel:        u32,
+    pub nextrel: u32,
     /// offset to local relocation entries
-    pub locreloff:      u32,
+    pub locreloff: u32,
     /// number of local relocation entries
-    pub nlocrel:        u32,
+    pub nlocrel: u32,
 }
 
 impl Default for DysymtabCommand {
@@ -713,24 +728,24 @@ impl Default for DysymtabCommand {
         DysymtabCommand {
             cmd: LC_DYSYMTAB,
             cmdsize: SIZEOF_DYSYMTAB_COMMAND as u32,
-            ilocalsym:      0,
-            nlocalsym:      0,
-            iextdefsym:     0,
-            nextdefsym:     0,
-            iundefsym:      0,
-            nundefsym:      0,
-            tocoff:         0,
-            ntoc:           0,
-            modtaboff:      0,
-            nmodtab:        0,
-            extrefsymoff:   0,
-            nextrefsyms:    0,
+            ilocalsym: 0,
+            nlocalsym: 0,
+            iextdefsym: 0,
+            nextdefsym: 0,
+            iundefsym: 0,
+            nundefsym: 0,
+            tocoff: 0,
+            ntoc: 0,
+            modtaboff: 0,
+            nmodtab: 0,
+            extrefsymoff: 0,
+            nextrefsyms: 0,
             indirectsymoff: 0,
-            nindirectsyms:  0,
-            extreloff:      0,
-            nextrel:        0,
-            locreloff:      0,
-            nlocrel:        0,
+            nindirectsyms: 0,
+            extreloff: 0,
+            nextrel: 0,
+            locreloff: 0,
+            nlocrel: 0,
         }
     }
 }
@@ -932,9 +947,10 @@ pub const SIZEOF_RPATH_COMMAND: usize = 12;
 /// The linkedit_data_command contains the offsets and sizes of a blob
 /// of data in the __LINKEDIT segment.
 #[repr(C)]
-#[derive(Debug, Clone, Copy, Pread, Pwrite, IOread, IOwrite, SizeWith)]
+#[derive(Default, Debug, Clone, Copy, Pread, Pwrite, IOread, IOwrite, SizeWith)]
 pub struct LinkeditDataCommand {
-    /// LC_CODE_SIGNATURE, LC_SEGMENT_SPLIT_INFO, LC_FUNCTION_STARTS, LC_DATA_IN_CODE, LC_DYLIB_CODE_SIGN_DRS or LC_LINKER_OPTIMIZATION_HINT.
+    /// LC_CODE_SIGNATURE, LC_SEGMENT_SPLIT_INFO, LC_FUNCTION_STARTS, LC_DATA_IN_CODE,
+    /// LC_DYLIB_CODE_SIGN_DRS, LC_LINKER_OPTIMIZATION_HINT, LC_DYLD_EXPORTS_TRIE, or LC_DYLD_CHAINED_FIXUPS.
     pub cmd: u32,
     /// sizeof(struct linkedit_data_command)
     pub cmdsize: u32,
@@ -986,13 +1002,43 @@ pub struct EncryptionInfoCommand64 {
 
 pub const SIZEOF_ENCRYPTION_INFO_COMMAND_64: usize = 24;
 
+/// An enumeration of platforms currently identifiable within a version_min_command.
+#[non_exhaustive]
+#[repr(u32)]
+#[derive(Debug)]
+pub enum Platform {
+    Macos = LC_VERSION_MIN_MACOSX,
+    Iphoneos = LC_VERSION_MIN_IPHONEOS,
+    Tvos = LC_VERSION_MIN_TVOS,
+    Watchos = LC_VERSION_MIN_WATCHOS,
+}
+
+impl TryFrom<u32> for Platform {
+    type Error = error::Error;
+
+    fn try_from(cmd: u32) -> Result<Self, Self::Error> {
+        Ok(match cmd {
+            LC_VERSION_MIN_MACOSX => Platform::Macos,
+            LC_VERSION_MIN_IPHONEOS => Platform::Iphoneos,
+            LC_VERSION_MIN_TVOS => Platform::Tvos,
+            LC_VERSION_MIN_WATCHOS => Platform::Watchos,
+            _ => {
+                return Err(error::Error::Malformed(format!(
+                    "unknown platform for load command: {:x}",
+                    cmd
+                )))
+            }
+        })
+    }
+}
+
 /// The version_min_command contains the min OS version on which this
 /// binary was built to run.
 ///
-/// LC_VERSION_MIN_MACOSX or LC_VERSION_MIN_IPHONEOS
 #[repr(C)]
 #[derive(Debug, Clone, Copy, Pread, Pwrite, IOread, IOwrite, SizeWith)]
 pub struct VersionMinCommand {
+    /// LC_VERSION_MIN_MACOSX, LC_VERSION_MIN_IPHONEOS, LC_VERSION_MIN_TVOS, or LC_VERSION_MIN_WATCHOS.
     pub cmd: u32,
     pub cmdsize: u32,
     /// X.Y.Z is encoded in nibbles xxxx.yy.zz
@@ -1002,13 +1048,21 @@ pub struct VersionMinCommand {
 }
 
 impl VersionMinCommand {
-    pub fn new(is_ios: bool) -> Self {
+    pub fn new(platform: Platform) -> Self {
         VersionMinCommand {
-            cmd: if is_ios { LC_VERSION_MIN_IPHONEOS } else { LC_VERSION_MIN_MACOSX },
+            cmd: platform as u32,
             cmdsize: SIZEOF_VERSION_MIN_COMMAND as u32,
             version: 0,
             sdk: 0,
         }
+    }
+
+    pub fn platform(&self) -> Platform {
+        // A panic here indicates an incomplete API change above: VersionMinCommand
+        // can only be constructed from one of the LC_VERSION_* commands or directly
+        // from a Platform, so an error indicates that a new one hasn't been correctly
+        // added to the Platform enum.
+        Platform::try_from(self.cmd).expect("impossible platform (implementation error)")
     }
 }
 
@@ -1168,6 +1222,8 @@ pub const LC_REEXPORT_DYLIB: u32 = 0x1f | LC_REQ_DYLD;
 pub const LC_DYLD_INFO_ONLY: u32 = 0x22 | LC_REQ_DYLD;
 pub const LC_LOAD_UPWARD_DYLIB: u32 = 0x23 | LC_REQ_DYLD;
 pub const LC_MAIN: u32 = 0x28 | LC_REQ_DYLD;
+pub const LC_DYLD_EXPORTS_TRIE: u32 = 0x33 | LC_REQ_DYLD;
+pub const LC_DYLD_CHAINED_FIXUPS: u32 = 0x34 | LC_REQ_DYLD;
 pub const LC_SEGMENT: u32 = 0x1;
 pub const LC_SYMTAB: u32 = 0x2;
 pub const LC_SYMSEG: u32 = 0x3;
@@ -1209,6 +1265,10 @@ pub const LC_DYLIB_CODE_SIGN_DRS: u32 = 0x2B;
 pub const LC_ENCRYPTION_INFO_64: u32 = 0x2C;
 pub const LC_LINKER_OPTION: u32 = 0x2D;
 pub const LC_LINKER_OPTIMIZATION_HINT: u32 = 0x2E;
+pub const LC_VERSION_MIN_TVOS: u32 = 0x2F;
+pub const LC_VERSION_MIN_WATCHOS: u32 = 0x30;
+pub const LC_NOTE: u32 = 0x31;
+pub const LC_BUILD_VERSION: u32 = 0x32;
 
 pub fn cmd_to_str(cmd: u32) -> &'static str {
     match cmd {
@@ -1259,6 +1319,12 @@ pub fn cmd_to_str(cmd: u32) -> &'static str {
         LC_ENCRYPTION_INFO_64 => "LC_ENCRYPTION_INFO_64",
         LC_LINKER_OPTION => "LC_LINKER_OPTION",
         LC_LINKER_OPTIMIZATION_HINT => "LC_LINKER_OPTIMIZATION_HINT",
+        LC_VERSION_MIN_TVOS => "LC_VERSION_MIN_TVOS",
+        LC_VERSION_MIN_WATCHOS => "LC_VERSION_MIN_WATCHOS",
+        LC_NOTE => "LC_NOTE",
+        LC_BUILD_VERSION => "LC_BUILD_VERSION",
+        LC_DYLD_EXPORTS_TRIE => "LC_DYLD_EXPORTS_TRIE",
+        LC_DYLD_CHAINED_FIXUPS => "LC_DYLD_CHAINED_FIXUPS",
         _ => "LC_UNKNOWN",
     }
 }
@@ -1271,54 +1337,58 @@ pub fn cmd_to_str(cmd: u32) -> &'static str {
 #[allow(clippy::large_enum_variant)]
 /// The various load commands as a cast-free variant/enum
 pub enum CommandVariant {
-    Segment32              (SegmentCommand32),
-    Segment64              (SegmentCommand64),
-    Uuid                   (UuidCommand),
-    Symtab                 (SymtabCommand),
-    Symseg                 (SymsegCommand),
-    Thread                 (ThreadCommand),
-    Unixthread             (ThreadCommand),
-    LoadFvmlib             (FvmlibCommand),
-    IdFvmlib               (FvmlibCommand),
-    Ident                  (IdentCommand),
-    Fvmfile                (FvmfileCommand),
-    Prepage                (LoadCommandHeader),
-    Dysymtab               (DysymtabCommand),
-    LoadDylib              (DylibCommand),
-    IdDylib                (DylibCommand),
-    LoadDylinker           (DylinkerCommand),
-    IdDylinker             (DylinkerCommand),
-    PreboundDylib          (PreboundDylibCommand),
-    Routines32             (RoutinesCommand32),
-    Routines64             (RoutinesCommand64),
-    SubFramework           (SubFrameworkCommand),
-    SubUmbrella            (SubUmbrellaCommand),
-    SubClient              (SubClientCommand),
-    SubLibrary             (SubLibraryCommand),
-    TwolevelHints          (TwolevelHintsCommand),
-    PrebindCksum           (PrebindCksumCommand),
-    LoadWeakDylib          (DylibCommand),
-    Rpath                  (RpathCommand),
-    CodeSignature          (LinkeditDataCommand),
-    SegmentSplitInfo       (LinkeditDataCommand),
-    ReexportDylib          (DylibCommand),
-    LazyLoadDylib          (DylibCommand),
-    EncryptionInfo32       (EncryptionInfoCommand32),
-    EncryptionInfo64       (EncryptionInfoCommand64),
-    DyldInfo               (DyldInfoCommand),
-    DyldInfoOnly           (DyldInfoCommand),
-    LoadUpwardDylib        (DylibCommand),
-    VersionMinMacosx       (VersionMinCommand),
-    VersionMinIphoneos     (VersionMinCommand),
-    FunctionStarts         (LinkeditDataCommand),
-    DyldEnvironment        (DylinkerCommand),
-    Main                   (EntryPointCommand),
-    DataInCode             (LinkeditDataCommand),
-    SourceVersion          (SourceVersionCommand),
-    DylibCodeSignDrs       (LinkeditDataCommand),
-    LinkerOption           (LinkeditDataCommand),
-    LinkerOptimizationHint (LinkeditDataCommand),
-    Unimplemented          (LoadCommandHeader),
+    Segment32(SegmentCommand32),
+    Segment64(SegmentCommand64),
+    Uuid(UuidCommand),
+    Symtab(SymtabCommand),
+    Symseg(SymsegCommand),
+    Thread(ThreadCommand),
+    Unixthread(ThreadCommand),
+    LoadFvmlib(FvmlibCommand),
+    IdFvmlib(FvmlibCommand),
+    Ident(IdentCommand),
+    Fvmfile(FvmfileCommand),
+    Prepage(LoadCommandHeader),
+    Dysymtab(DysymtabCommand),
+    LoadDylib(DylibCommand),
+    IdDylib(DylibCommand),
+    LoadDylinker(DylinkerCommand),
+    IdDylinker(DylinkerCommand),
+    PreboundDylib(PreboundDylibCommand),
+    Routines32(RoutinesCommand32),
+    Routines64(RoutinesCommand64),
+    SubFramework(SubFrameworkCommand),
+    SubUmbrella(SubUmbrellaCommand),
+    SubClient(SubClientCommand),
+    SubLibrary(SubLibraryCommand),
+    TwolevelHints(TwolevelHintsCommand),
+    PrebindCksum(PrebindCksumCommand),
+    LoadWeakDylib(DylibCommand),
+    Rpath(RpathCommand),
+    CodeSignature(LinkeditDataCommand),
+    SegmentSplitInfo(LinkeditDataCommand),
+    ReexportDylib(DylibCommand),
+    LazyLoadDylib(DylibCommand),
+    EncryptionInfo32(EncryptionInfoCommand32),
+    EncryptionInfo64(EncryptionInfoCommand64),
+    DyldInfo(DyldInfoCommand),
+    DyldInfoOnly(DyldInfoCommand),
+    LoadUpwardDylib(DylibCommand),
+    VersionMinMacosx(VersionMinCommand),
+    VersionMinIphoneos(VersionMinCommand),
+    FunctionStarts(LinkeditDataCommand),
+    DyldEnvironment(DylinkerCommand),
+    Main(EntryPointCommand),
+    DataInCode(LinkeditDataCommand),
+    SourceVersion(SourceVersionCommand),
+    DylibCodeSignDrs(LinkeditDataCommand),
+    LinkerOption(LinkeditDataCommand),
+    LinkerOptimizationHint(LinkeditDataCommand),
+    VersionMinTvos(VersionMinCommand),
+    VersionMinWatchos(VersionMinCommand),
+    DyldExportsTrie(LinkeditDataCommand),
+    DyldChainedFixups(LinkeditDataCommand),
+    Unimplemented(LoadCommandHeader),
 }
 
 impl<'a> ctx::TryFromCtx<'a, Endian> for CommandVariant {
@@ -1328,56 +1398,221 @@ impl<'a> ctx::TryFromCtx<'a, Endian> for CommandVariant {
         let lc = bytes.pread_with::<LoadCommandHeader>(0, le)?;
         let size = lc.cmdsize as usize;
         //println!("offset {:#x} cmd: {:#x} size: {:?} ctx: {:?}", offset, lc.cmd, size, le);
-        if size > bytes.len() { return Err(error::Error::Malformed(format!("{} has size larger than remainder of binary: {:?}", &lc, bytes.len()))) }
+        if size > bytes.len() {
+            return Err(error::Error::Malformed(format!(
+                "{} has size larger than remainder of binary: {:?}",
+                &lc,
+                bytes.len()
+            )));
+        }
         match lc.cmd {
-            LC_SEGMENT    => {              let comm = bytes.pread_with::<SegmentCommand32>       (0, le)?;  Ok((Segment32              (comm), size))},
-            LC_SEGMENT_64 => {              let comm = bytes.pread_with::<SegmentCommand64>       (0, le)?;  Ok((Segment64              (comm), size))},
-            LC_DYSYMTAB => {                let comm = bytes.pread_with::<DysymtabCommand>        (0, le)?;  Ok((Dysymtab               (comm), size))},
-            LC_LOAD_DYLINKER => {           let comm = bytes.pread_with::<DylinkerCommand>        (0, le)?;  Ok((LoadDylinker           (comm), size))},
-            LC_ID_DYLINKER => {             let comm = bytes.pread_with::<DylinkerCommand>        (0, le)?;  Ok((IdDylinker             (comm), size))},
-            LC_UUID => {                    let comm = bytes.pread_with::<UuidCommand>            (0, le)?;  Ok((Uuid                   (comm), size))},
-            LC_SYMTAB => {                  let comm = bytes.pread_with::<SymtabCommand>          (0, le)?;  Ok((Symtab                 (comm), size))},
-            LC_SYMSEG => {                  let comm = bytes.pread_with::<SymsegCommand>          (0, le)?;  Ok((Symseg                 (comm), size))},
-            LC_THREAD => {                  let comm = bytes.pread_with::<ThreadCommand>          (0, le)?;  Ok((Thread                 (comm), size))},
-            LC_UNIXTHREAD => {              let comm = bytes.pread_with::<ThreadCommand>          (0, le)?;  Ok((Unixthread             (comm), size))},
-            LC_LOADFVMLIB => {              let comm = bytes.pread_with::<FvmlibCommand>          (0, le)?;  Ok((LoadFvmlib             (comm), size))},
-            LC_IDFVMLIB => {                let comm = bytes.pread_with::<FvmlibCommand>          (0, le)?;  Ok((IdFvmlib               (comm), size))},
-            LC_IDENT => {                   let comm = bytes.pread_with::<IdentCommand>           (0, le)?;  Ok((Ident                  (comm), size))},
-            LC_FVMFILE => {                 let comm = bytes.pread_with::<FvmfileCommand>         (0, le)?;  Ok((Fvmfile                (comm), size))},
-            LC_PREPAGE => {                 let comm = bytes.pread_with::<LoadCommandHeader>      (0, le)?;  Ok((Prepage                (comm), size))},
-            LC_LOAD_DYLIB => {              let comm = bytes.pread_with::<DylibCommand>           (0, le)?;  Ok((LoadDylib              (comm), size))},
-            LC_ID_DYLIB => {                let comm = bytes.pread_with::<DylibCommand>           (0, le)?;  Ok((IdDylib                (comm), size))},
-            LC_PREBOUND_DYLIB => {          let comm = bytes.pread_with::<PreboundDylibCommand>   (0, le)?;  Ok((PreboundDylib          (comm), size))},
-            LC_ROUTINES => {                let comm = bytes.pread_with::<RoutinesCommand32>      (0, le)?;  Ok((Routines32             (comm), size))},
-            LC_ROUTINES_64 => {             let comm = bytes.pread_with::<RoutinesCommand64>      (0, le)?;  Ok((Routines64             (comm), size))},
-            LC_SUB_FRAMEWORK => {           let comm = bytes.pread_with::<SubFrameworkCommand>    (0, le)?;  Ok((SubFramework           (comm), size))},
-            LC_SUB_UMBRELLA => {            let comm = bytes.pread_with::<SubUmbrellaCommand>     (0, le)?;  Ok((SubUmbrella            (comm), size))},
-            LC_SUB_CLIENT => {              let comm = bytes.pread_with::<SubClientCommand>       (0, le)?;  Ok((SubClient              (comm), size))},
-            LC_SUB_LIBRARY => {             let comm = bytes.pread_with::<SubLibraryCommand>      (0, le)?;  Ok((SubLibrary             (comm), size))},
-            LC_TWOLEVEL_HINTS => {          let comm = bytes.pread_with::<TwolevelHintsCommand>   (0, le)?;  Ok((TwolevelHints          (comm), size))},
-            LC_PREBIND_CKSUM => {           let comm = bytes.pread_with::<PrebindCksumCommand>    (0, le)?;  Ok((PrebindCksum           (comm), size))},
-            LC_LOAD_WEAK_DYLIB => {         let comm = bytes.pread_with::<DylibCommand>           (0, le)?;  Ok((LoadWeakDylib          (comm), size))},
-            LC_RPATH => {                   let comm = bytes.pread_with::<RpathCommand>           (0, le)?;  Ok((Rpath                  (comm), size))},
-            LC_CODE_SIGNATURE => {          let comm = bytes.pread_with::<LinkeditDataCommand>    (0, le)?;  Ok((CodeSignature          (comm), size))},
-            LC_SEGMENT_SPLIT_INFO => {      let comm = bytes.pread_with::<LinkeditDataCommand>    (0, le)?;  Ok((SegmentSplitInfo       (comm), size))},
-            LC_REEXPORT_DYLIB => {          let comm = bytes.pread_with::<DylibCommand>           (0, le)?;  Ok((ReexportDylib          (comm), size))},
-            LC_LAZY_LOAD_DYLIB => {         let comm = bytes.pread_with::<DylibCommand>           (0, le)?;  Ok((LazyLoadDylib          (comm), size))},
-            LC_ENCRYPTION_INFO => {         let comm = bytes.pread_with::<EncryptionInfoCommand32>(0, le)?;  Ok((EncryptionInfo32       (comm), size))},
-            LC_ENCRYPTION_INFO_64 => {      let comm = bytes.pread_with::<EncryptionInfoCommand64>(0, le)?;  Ok((EncryptionInfo64       (comm), size))},
-            LC_DYLD_INFO => {               let comm = bytes.pread_with::<DyldInfoCommand>        (0, le)?;  Ok((DyldInfo               (comm), size))},
-            LC_DYLD_INFO_ONLY => {          let comm = bytes.pread_with::<DyldInfoCommand>        (0, le)?;  Ok((DyldInfoOnly           (comm), size))},
-            LC_LOAD_UPWARD_DYLIB => {       let comm = bytes.pread_with::<DylibCommand>           (0, le)?;  Ok((LoadUpwardDylib        (comm), size))},
-            LC_VERSION_MIN_MACOSX => {      let comm = bytes.pread_with::<VersionMinCommand>      (0, le)?;  Ok((VersionMinMacosx       (comm), size))},
-            LC_VERSION_MIN_IPHONEOS => {    let comm = bytes.pread_with::<VersionMinCommand>      (0, le)?;  Ok((VersionMinIphoneos     (comm), size))},
-            LC_FUNCTION_STARTS => {         let comm = bytes.pread_with::<LinkeditDataCommand>    (0, le)?;  Ok((FunctionStarts         (comm), size))},
-            LC_DYLD_ENVIRONMENT => {        let comm = bytes.pread_with::<DylinkerCommand>        (0, le)?;  Ok((DyldEnvironment        (comm), size))},
-            LC_MAIN => {                    let comm = bytes.pread_with::<EntryPointCommand>      (0, le)?;  Ok((Main                   (comm), size))},
-            LC_DATA_IN_CODE => {            let comm = bytes.pread_with::<LinkeditDataCommand>    (0, le)?;  Ok((DataInCode             (comm), size))},
-            LC_SOURCE_VERSION => {          let comm = bytes.pread_with::<SourceVersionCommand>   (0, le)?;  Ok((SourceVersion          (comm), size))},
-            LC_DYLIB_CODE_SIGN_DRS => {     let comm = bytes.pread_with::<LinkeditDataCommand>    (0, le)?;  Ok((DylibCodeSignDrs       (comm), size))},
-            LC_LINKER_OPTION => {           let comm = bytes.pread_with::<LinkeditDataCommand>    (0, le)?;  Ok((LinkerOption           (comm), size))},
-            LC_LINKER_OPTIMIZATION_HINT => {let comm = bytes.pread_with::<LinkeditDataCommand>    (0, le)?;  Ok((LinkerOptimizationHint (comm), size))},
-            _ =>                                                                                             Ok((Unimplemented          (lc), size)),
+            LC_SEGMENT => {
+                let comm = bytes.pread_with::<SegmentCommand32>(0, le)?;
+                Ok((Segment32(comm), size))
+            }
+            LC_SEGMENT_64 => {
+                let comm = bytes.pread_with::<SegmentCommand64>(0, le)?;
+                Ok((Segment64(comm), size))
+            }
+            LC_DYSYMTAB => {
+                let comm = bytes.pread_with::<DysymtabCommand>(0, le)?;
+                Ok((Dysymtab(comm), size))
+            }
+            LC_LOAD_DYLINKER => {
+                let comm = bytes.pread_with::<DylinkerCommand>(0, le)?;
+                Ok((LoadDylinker(comm), size))
+            }
+            LC_ID_DYLINKER => {
+                let comm = bytes.pread_with::<DylinkerCommand>(0, le)?;
+                Ok((IdDylinker(comm), size))
+            }
+            LC_UUID => {
+                let comm = bytes.pread_with::<UuidCommand>(0, le)?;
+                Ok((Uuid(comm), size))
+            }
+            LC_SYMTAB => {
+                let comm = bytes.pread_with::<SymtabCommand>(0, le)?;
+                Ok((Symtab(comm), size))
+            }
+            LC_SYMSEG => {
+                let comm = bytes.pread_with::<SymsegCommand>(0, le)?;
+                Ok((Symseg(comm), size))
+            }
+            LC_THREAD => {
+                let comm = bytes.pread_with::<ThreadCommand>(0, le)?;
+                Ok((Thread(comm), size))
+            }
+            LC_UNIXTHREAD => {
+                let comm = bytes.pread_with::<ThreadCommand>(0, le)?;
+                Ok((Unixthread(comm), size))
+            }
+            LC_LOADFVMLIB => {
+                let comm = bytes.pread_with::<FvmlibCommand>(0, le)?;
+                Ok((LoadFvmlib(comm), size))
+            }
+            LC_IDFVMLIB => {
+                let comm = bytes.pread_with::<FvmlibCommand>(0, le)?;
+                Ok((IdFvmlib(comm), size))
+            }
+            LC_IDENT => {
+                let comm = bytes.pread_with::<IdentCommand>(0, le)?;
+                Ok((Ident(comm), size))
+            }
+            LC_FVMFILE => {
+                let comm = bytes.pread_with::<FvmfileCommand>(0, le)?;
+                Ok((Fvmfile(comm), size))
+            }
+            LC_PREPAGE => {
+                let comm = bytes.pread_with::<LoadCommandHeader>(0, le)?;
+                Ok((Prepage(comm), size))
+            }
+            LC_LOAD_DYLIB => {
+                let comm = bytes.pread_with::<DylibCommand>(0, le)?;
+                Ok((LoadDylib(comm), size))
+            }
+            LC_ID_DYLIB => {
+                let comm = bytes.pread_with::<DylibCommand>(0, le)?;
+                Ok((IdDylib(comm), size))
+            }
+            LC_PREBOUND_DYLIB => {
+                let comm = bytes.pread_with::<PreboundDylibCommand>(0, le)?;
+                Ok((PreboundDylib(comm), size))
+            }
+            LC_ROUTINES => {
+                let comm = bytes.pread_with::<RoutinesCommand32>(0, le)?;
+                Ok((Routines32(comm), size))
+            }
+            LC_ROUTINES_64 => {
+                let comm = bytes.pread_with::<RoutinesCommand64>(0, le)?;
+                Ok((Routines64(comm), size))
+            }
+            LC_SUB_FRAMEWORK => {
+                let comm = bytes.pread_with::<SubFrameworkCommand>(0, le)?;
+                Ok((SubFramework(comm), size))
+            }
+            LC_SUB_UMBRELLA => {
+                let comm = bytes.pread_with::<SubUmbrellaCommand>(0, le)?;
+                Ok((SubUmbrella(comm), size))
+            }
+            LC_SUB_CLIENT => {
+                let comm = bytes.pread_with::<SubClientCommand>(0, le)?;
+                Ok((SubClient(comm), size))
+            }
+            LC_SUB_LIBRARY => {
+                let comm = bytes.pread_with::<SubLibraryCommand>(0, le)?;
+                Ok((SubLibrary(comm), size))
+            }
+            LC_TWOLEVEL_HINTS => {
+                let comm = bytes.pread_with::<TwolevelHintsCommand>(0, le)?;
+                Ok((TwolevelHints(comm), size))
+            }
+            LC_PREBIND_CKSUM => {
+                let comm = bytes.pread_with::<PrebindCksumCommand>(0, le)?;
+                Ok((PrebindCksum(comm), size))
+            }
+            LC_LOAD_WEAK_DYLIB => {
+                let comm = bytes.pread_with::<DylibCommand>(0, le)?;
+                Ok((LoadWeakDylib(comm), size))
+            }
+            LC_RPATH => {
+                let comm = bytes.pread_with::<RpathCommand>(0, le)?;
+                Ok((Rpath(comm), size))
+            }
+            LC_CODE_SIGNATURE => {
+                let comm = bytes.pread_with::<LinkeditDataCommand>(0, le)?;
+                Ok((CodeSignature(comm), size))
+            }
+            LC_SEGMENT_SPLIT_INFO => {
+                let comm = bytes.pread_with::<LinkeditDataCommand>(0, le)?;
+                Ok((SegmentSplitInfo(comm), size))
+            }
+            LC_REEXPORT_DYLIB => {
+                let comm = bytes.pread_with::<DylibCommand>(0, le)?;
+                Ok((ReexportDylib(comm), size))
+            }
+            LC_LAZY_LOAD_DYLIB => {
+                let comm = bytes.pread_with::<DylibCommand>(0, le)?;
+                Ok((LazyLoadDylib(comm), size))
+            }
+            LC_ENCRYPTION_INFO => {
+                let comm = bytes.pread_with::<EncryptionInfoCommand32>(0, le)?;
+                Ok((EncryptionInfo32(comm), size))
+            }
+            LC_ENCRYPTION_INFO_64 => {
+                let comm = bytes.pread_with::<EncryptionInfoCommand64>(0, le)?;
+                Ok((EncryptionInfo64(comm), size))
+            }
+            LC_DYLD_INFO => {
+                let comm = bytes.pread_with::<DyldInfoCommand>(0, le)?;
+                Ok((DyldInfo(comm), size))
+            }
+            LC_DYLD_INFO_ONLY => {
+                let comm = bytes.pread_with::<DyldInfoCommand>(0, le)?;
+                Ok((DyldInfoOnly(comm), size))
+            }
+            LC_LOAD_UPWARD_DYLIB => {
+                let comm = bytes.pread_with::<DylibCommand>(0, le)?;
+                Ok((LoadUpwardDylib(comm), size))
+            }
+            LC_VERSION_MIN_MACOSX => {
+                let comm = bytes.pread_with::<VersionMinCommand>(0, le)?;
+                Ok((VersionMinMacosx(comm), size))
+            }
+            LC_VERSION_MIN_IPHONEOS => {
+                let comm = bytes.pread_with::<VersionMinCommand>(0, le)?;
+                Ok((VersionMinIphoneos(comm), size))
+            }
+            LC_FUNCTION_STARTS => {
+                let comm = bytes.pread_with::<LinkeditDataCommand>(0, le)?;
+                Ok((FunctionStarts(comm), size))
+            }
+            LC_DYLD_ENVIRONMENT => {
+                let comm = bytes.pread_with::<DylinkerCommand>(0, le)?;
+                Ok((DyldEnvironment(comm), size))
+            }
+            LC_MAIN => {
+                let comm = bytes.pread_with::<EntryPointCommand>(0, le)?;
+                Ok((Main(comm), size))
+            }
+            LC_DATA_IN_CODE => {
+                let comm = bytes.pread_with::<LinkeditDataCommand>(0, le)?;
+                Ok((DataInCode(comm), size))
+            }
+            LC_SOURCE_VERSION => {
+                let comm = bytes.pread_with::<SourceVersionCommand>(0, le)?;
+                Ok((SourceVersion(comm), size))
+            }
+            LC_DYLIB_CODE_SIGN_DRS => {
+                let comm = bytes.pread_with::<LinkeditDataCommand>(0, le)?;
+                Ok((DylibCodeSignDrs(comm), size))
+            }
+            LC_LINKER_OPTION => {
+                let comm = bytes.pread_with::<LinkeditDataCommand>(0, le)?;
+                Ok((LinkerOption(comm), size))
+            }
+            LC_LINKER_OPTIMIZATION_HINT => {
+                let comm = bytes.pread_with::<LinkeditDataCommand>(0, le)?;
+                Ok((LinkerOptimizationHint(comm), size))
+            }
+            LC_VERSION_MIN_TVOS => {
+                let comm = bytes.pread_with::<VersionMinCommand>(0, le)?;
+                Ok((VersionMinTvos(comm), size))
+            }
+            LC_VERSION_MIN_WATCHOS => {
+                let comm = bytes.pread_with::<VersionMinCommand>(0, le)?;
+                Ok((VersionMinWatchos(comm), size))
+            }
+            LC_DYLD_EXPORTS_TRIE => {
+                let comm = bytes.pread_with::<LinkeditDataCommand>(0, le)?;
+                Ok((DyldExportsTrie(comm), size))
+            }
+            LC_DYLD_CHAINED_FIXUPS => {
+                let comm = bytes.pread_with::<LinkeditDataCommand>(0, le)?;
+                Ok((DyldChainedFixups(comm), size))
+            }
+            // TODO: LC_NOTE (NoteCommand) and LC_BUILD_VERSION (BuildVersionCommand)
+            // are unimplemented.
+            LC_NOTE | LC_BUILD_VERSION | _ => Ok((Unimplemented(lc), size)),
         }
     }
 }
@@ -1386,108 +1621,116 @@ impl CommandVariant {
     pub fn cmdsize(&self) -> usize {
         use self::CommandVariant::*;
         let cmdsize = match *self {
-            Segment32              (comm) => comm.cmdsize,
-            Segment64              (comm) => comm.cmdsize,
-            Uuid                   (comm) => comm.cmdsize,
-            Symtab                 (comm) => comm.cmdsize,
-            Symseg                 (comm) => comm.cmdsize,
-            Thread                 (comm) => comm.cmdsize,
-            Unixthread             (comm) => comm.cmdsize,
-            LoadFvmlib             (comm) => comm.cmdsize,
-            IdFvmlib               (comm) => comm.cmdsize,
-            Ident                  (comm) => comm.cmdsize,
-            Fvmfile                (comm) => comm.cmdsize,
-            Prepage                (comm) => comm.cmdsize,
-            Dysymtab               (comm) => comm.cmdsize,
-            LoadDylib              (comm) => comm.cmdsize,
-            IdDylib                (comm) => comm.cmdsize,
-            LoadDylinker           (comm) => comm.cmdsize,
-            IdDylinker             (comm) => comm.cmdsize,
-            PreboundDylib          (comm) => comm.cmdsize,
-            Routines32             (comm) => comm.cmdsize,
-            Routines64             (comm) => comm.cmdsize,
-            SubFramework           (comm) => comm.cmdsize,
-            SubUmbrella            (comm) => comm.cmdsize,
-            SubClient              (comm) => comm.cmdsize,
-            SubLibrary             (comm) => comm.cmdsize,
-            TwolevelHints          (comm) => comm.cmdsize,
-            PrebindCksum           (comm) => comm.cmdsize,
-            LoadWeakDylib          (comm) => comm.cmdsize,
-            Rpath                  (comm) => comm.cmdsize,
-            CodeSignature          (comm) => comm.cmdsize,
-            SegmentSplitInfo       (comm) => comm.cmdsize,
-            ReexportDylib          (comm) => comm.cmdsize,
-            LazyLoadDylib          (comm) => comm.cmdsize,
-            EncryptionInfo32       (comm) => comm.cmdsize,
-            EncryptionInfo64       (comm) => comm.cmdsize,
-            DyldInfo               (comm) => comm.cmdsize,
-            DyldInfoOnly           (comm) => comm.cmdsize,
-            LoadUpwardDylib        (comm) => comm.cmdsize,
-            VersionMinMacosx       (comm) => comm.cmdsize,
-            VersionMinIphoneos     (comm) => comm.cmdsize,
-            FunctionStarts         (comm) => comm.cmdsize,
-            DyldEnvironment        (comm) => comm.cmdsize,
-            Main                   (comm) => comm.cmdsize,
-            DataInCode             (comm) => comm.cmdsize,
-            SourceVersion          (comm) => comm.cmdsize,
-            DylibCodeSignDrs       (comm) => comm.cmdsize,
-            LinkerOption           (comm) => comm.cmdsize,
-            LinkerOptimizationHint (comm) => comm.cmdsize,
-            Unimplemented          (comm) => comm.cmdsize,
+            Segment32(comm) => comm.cmdsize,
+            Segment64(comm) => comm.cmdsize,
+            Uuid(comm) => comm.cmdsize,
+            Symtab(comm) => comm.cmdsize,
+            Symseg(comm) => comm.cmdsize,
+            Thread(comm) => comm.cmdsize,
+            Unixthread(comm) => comm.cmdsize,
+            LoadFvmlib(comm) => comm.cmdsize,
+            IdFvmlib(comm) => comm.cmdsize,
+            Ident(comm) => comm.cmdsize,
+            Fvmfile(comm) => comm.cmdsize,
+            Prepage(comm) => comm.cmdsize,
+            Dysymtab(comm) => comm.cmdsize,
+            LoadDylib(comm) => comm.cmdsize,
+            IdDylib(comm) => comm.cmdsize,
+            LoadDylinker(comm) => comm.cmdsize,
+            IdDylinker(comm) => comm.cmdsize,
+            PreboundDylib(comm) => comm.cmdsize,
+            Routines32(comm) => comm.cmdsize,
+            Routines64(comm) => comm.cmdsize,
+            SubFramework(comm) => comm.cmdsize,
+            SubUmbrella(comm) => comm.cmdsize,
+            SubClient(comm) => comm.cmdsize,
+            SubLibrary(comm) => comm.cmdsize,
+            TwolevelHints(comm) => comm.cmdsize,
+            PrebindCksum(comm) => comm.cmdsize,
+            LoadWeakDylib(comm) => comm.cmdsize,
+            Rpath(comm) => comm.cmdsize,
+            CodeSignature(comm) => comm.cmdsize,
+            SegmentSplitInfo(comm) => comm.cmdsize,
+            ReexportDylib(comm) => comm.cmdsize,
+            LazyLoadDylib(comm) => comm.cmdsize,
+            EncryptionInfo32(comm) => comm.cmdsize,
+            EncryptionInfo64(comm) => comm.cmdsize,
+            DyldInfo(comm) => comm.cmdsize,
+            DyldInfoOnly(comm) => comm.cmdsize,
+            LoadUpwardDylib(comm) => comm.cmdsize,
+            VersionMinMacosx(comm) => comm.cmdsize,
+            VersionMinIphoneos(comm) => comm.cmdsize,
+            FunctionStarts(comm) => comm.cmdsize,
+            DyldEnvironment(comm) => comm.cmdsize,
+            Main(comm) => comm.cmdsize,
+            DataInCode(comm) => comm.cmdsize,
+            SourceVersion(comm) => comm.cmdsize,
+            DylibCodeSignDrs(comm) => comm.cmdsize,
+            LinkerOption(comm) => comm.cmdsize,
+            LinkerOptimizationHint(comm) => comm.cmdsize,
+            VersionMinTvos(comm) => comm.cmdsize,
+            VersionMinWatchos(comm) => comm.cmdsize,
+            DyldExportsTrie(comm) => comm.cmdsize,
+            DyldChainedFixups(comm) => comm.cmdsize,
+            Unimplemented(comm) => comm.cmdsize,
         };
         cmdsize as usize
     }
     pub fn cmd(&self) -> u32 {
         use self::CommandVariant::*;
         match *self {
-            Segment32              (comm) => comm.cmd,
-            Segment64              (comm) => comm.cmd,
-            Uuid                   (comm) => comm.cmd,
-            Symtab                 (comm) => comm.cmd,
-            Symseg                 (comm) => comm.cmd,
-            Thread                 (comm) => comm.cmd,
-            Unixthread             (comm) => comm.cmd,
-            LoadFvmlib             (comm) => comm.cmd,
-            IdFvmlib               (comm) => comm.cmd,
-            Ident                  (comm) => comm.cmd,
-            Fvmfile                (comm) => comm.cmd,
-            Prepage                (comm) => comm.cmd,
-            Dysymtab               (comm) => comm.cmd,
-            LoadDylib              (comm) => comm.cmd,
-            IdDylib                (comm) => comm.cmd,
-            LoadDylinker           (comm) => comm.cmd,
-            IdDylinker             (comm) => comm.cmd,
-            PreboundDylib          (comm) => comm.cmd,
-            Routines32             (comm) => comm.cmd,
-            Routines64             (comm) => comm.cmd,
-            SubFramework           (comm) => comm.cmd,
-            SubUmbrella            (comm) => comm.cmd,
-            SubClient              (comm) => comm.cmd,
-            SubLibrary             (comm) => comm.cmd,
-            TwolevelHints          (comm) => comm.cmd,
-            PrebindCksum           (comm) => comm.cmd,
-            LoadWeakDylib          (comm) => comm.cmd,
-            Rpath                  (comm) => comm.cmd,
-            CodeSignature          (comm) => comm.cmd,
-            SegmentSplitInfo       (comm) => comm.cmd,
-            ReexportDylib          (comm) => comm.cmd,
-            LazyLoadDylib          (comm) => comm.cmd,
-            EncryptionInfo32       (comm) => comm.cmd,
-            EncryptionInfo64       (comm) => comm.cmd,
-            DyldInfo               (comm) => comm.cmd,
-            DyldInfoOnly           (comm) => comm.cmd,
-            LoadUpwardDylib        (comm) => comm.cmd,
-            VersionMinMacosx       (comm) => comm.cmd,
-            VersionMinIphoneos     (comm) => comm.cmd,
-            FunctionStarts         (comm) => comm.cmd,
-            DyldEnvironment        (comm) => comm.cmd,
-            Main                   (comm) => comm.cmd,
-            DataInCode             (comm) => comm.cmd,
-            SourceVersion          (comm) => comm.cmd,
-            DylibCodeSignDrs       (comm) => comm.cmd,
-            LinkerOption           (comm) => comm.cmd,
-            LinkerOptimizationHint (comm) => comm.cmd,
-            Unimplemented          (comm) => comm.cmd,
+            Segment32(comm) => comm.cmd,
+            Segment64(comm) => comm.cmd,
+            Uuid(comm) => comm.cmd,
+            Symtab(comm) => comm.cmd,
+            Symseg(comm) => comm.cmd,
+            Thread(comm) => comm.cmd,
+            Unixthread(comm) => comm.cmd,
+            LoadFvmlib(comm) => comm.cmd,
+            IdFvmlib(comm) => comm.cmd,
+            Ident(comm) => comm.cmd,
+            Fvmfile(comm) => comm.cmd,
+            Prepage(comm) => comm.cmd,
+            Dysymtab(comm) => comm.cmd,
+            LoadDylib(comm) => comm.cmd,
+            IdDylib(comm) => comm.cmd,
+            LoadDylinker(comm) => comm.cmd,
+            IdDylinker(comm) => comm.cmd,
+            PreboundDylib(comm) => comm.cmd,
+            Routines32(comm) => comm.cmd,
+            Routines64(comm) => comm.cmd,
+            SubFramework(comm) => comm.cmd,
+            SubUmbrella(comm) => comm.cmd,
+            SubClient(comm) => comm.cmd,
+            SubLibrary(comm) => comm.cmd,
+            TwolevelHints(comm) => comm.cmd,
+            PrebindCksum(comm) => comm.cmd,
+            LoadWeakDylib(comm) => comm.cmd,
+            Rpath(comm) => comm.cmd,
+            CodeSignature(comm) => comm.cmd,
+            SegmentSplitInfo(comm) => comm.cmd,
+            ReexportDylib(comm) => comm.cmd,
+            LazyLoadDylib(comm) => comm.cmd,
+            EncryptionInfo32(comm) => comm.cmd,
+            EncryptionInfo64(comm) => comm.cmd,
+            DyldInfo(comm) => comm.cmd,
+            DyldInfoOnly(comm) => comm.cmd,
+            LoadUpwardDylib(comm) => comm.cmd,
+            VersionMinMacosx(comm) => comm.cmd,
+            VersionMinIphoneos(comm) => comm.cmd,
+            FunctionStarts(comm) => comm.cmd,
+            DyldEnvironment(comm) => comm.cmd,
+            Main(comm) => comm.cmd,
+            DataInCode(comm) => comm.cmd,
+            SourceVersion(comm) => comm.cmd,
+            DylibCodeSignDrs(comm) => comm.cmd,
+            LinkerOption(comm) => comm.cmd,
+            LinkerOptimizationHint(comm) => comm.cmd,
+            VersionMinTvos(comm) => comm.cmd,
+            VersionMinWatchos(comm) => comm.cmd,
+            DyldExportsTrie(comm) => comm.cmd,
+            DyldChainedFixups(comm) => comm.cmd,
+            Unimplemented(comm) => comm.cmd,
         }
     }
 }
@@ -1508,6 +1751,9 @@ impl LoadCommand {
         let command = bytes.pread_with::<CommandVariant>(start, le)?;
         let size = command.cmdsize();
         *offset = start + size;
-        Ok(LoadCommand { offset: start, command })
+        Ok(LoadCommand {
+            offset: start,
+            command,
+        })
     }
 }

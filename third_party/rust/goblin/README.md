@@ -1,9 +1,12 @@
-# libgoblin [![Build status][travis-badge]][travis-url] [![crates.io version][crates-goblin-badge]][crates-goblin]
+# libgoblin
+
+[![Actions][actions-badge]][actions-url]
+[![crates.io version][crates-goblin-badge]][crates-goblin]
 
 <!-- Badges' links -->
 
-[travis-badge]: https://travis-ci.org/m4b/goblin.svg?branch=master
-[travis-url]: https://travis-ci.org/m4b/goblin
+[actions-badge]: https://github.com/m4b/goblin/workflows/CI/badge.svg?branch=master
+[actions-url]: https://github.com/m4b/goblin/actions
 [crates-goblin-badge]: https://img.shields.io/crates/v/goblin.svg
 [crates-goblin]: https://crates.io/crates/goblin
 
@@ -17,13 +20,13 @@ https://docs.rs/goblin/
 
 ### Usage
 
-Goblin requires `rustc` 1.36.0.
+Goblin requires `rustc` 1.56.0 (Rust 2021 edition).
 
 Add to your `Cargo.toml`
 
 ```toml
 [dependencies]
-goblin = "0.1"
+goblin = "0.5"
 ```
 
 ### Features
@@ -71,6 +74,9 @@ Here are some things you could do with this crate (or help to implement so they 
 
 <!-- Related projects  -->
 
+[PyO3/maturin]: https://github.com/PyO3/maturin
+[occlum]: https://github.com/occlum/occlum
+[memflow]: https://github.com/memflow/memflow
 [cargo-sym]: https://github.com/m4b/cargo-sym
 [bingrep]: https://github.com/m4b/bingrep
 [faerie]: https://github.com/m4b/faerie
@@ -101,67 +107,129 @@ Thank you all :heart: !
 
 In lexicographic order:
 
+- [@2vg]
+- [@alessandrod]
 - [@amanieu]
+- [@apalm]
 - [@burjui]
+- [@connorkuehl]
+- [@dancrossnyc]
+- [@dureuill]
+- [@Evian-Zhang]
+- [@ExPixel]
 - [@flanfly]
+- [@glandium]
 - [@ibabushkin]
+- [@jackcmay]
 - [@jan-auer]
+- [@jessehui]
 - [@jdub]
+- [@johannst]
 - [@jrmuizel]
 - [@jsgf]
+- [@keith]
 - [@kjempelodott]
+- [@ko1n]
 - [@le-jzr]
+- [@Lichtso]
 - [@lion128]
 - [@llogiq]
 - [@lzutao]
 - [@lzybkr]
 - [@m4b]
+- [@messense]
 - [@mitsuhiko]
+- [@mkroening]
 - [@mre]
+- [@Mrmaxmeier]
+- [n01e0]
+- [@nico-abram]
+- [@npmccallum]
 - [@pchickey]
 - [@philipc]
 - [@Pzixel]
+- [@quake]
 - [@raindev]
 - [@rocallahan]
 - [@sanxiyn]
+- [@skdltmxn]
+- [@sollyucko]
+- [@Swatinem]
+- [@SquareMan]
 - [@tathanhdinh]
 - [@Techno-coder]
 - [@ticki]
+- [@Timmmm]
+- [@Tiwalun]
+- [@track-5]
+- [@tux3]
 - [@wickerwacka]
 - [@willglynn]
+- [@woodruffw]
 - [@wyxloading]
 - [@xcoldhandsx]
 
 <!-- Contributors -->
 
+[@2vg]: https://github.com/2vg
+[@alessandrod]: https://github.com/alessandrod
 [@amanieu]: https://github.com/amanieu
+[@apalm]: https://github.com/apalm
 [@burjui]: https://github.com/burjui
+[@connorkuehl]: https://github.com/connorkuehl
+[@dancrossnyc]: https://github.com/dancrossnyc
+[@dureuill]: https://github.com/dureuill
+[@Evian-Zhang]: https://github.com/Evian-Zhang
+[@ExPixel]: https://github.com/ExPixel
 [@flanfly]: https://github.com/flanfly
+[@glandium]: https://github.com/glandium
 [@ibabushkin]: https://github.com/ibabushkin
+[@jackcmay]: https://github.com/jackcmay
 [@jan-auer]: https://github.com/jan-auer
+[@jessehui]: https://github.com/jessehui
+[@johannst]: https://github.com/johannst
 [@jdub]: https://github.com/jdub
 [@jrmuizel]: https://github.com/jrmuizel
 [@jsgf]: https://github.com/jsgf
+[@keith]: https://github.com/keith
 [@kjempelodott]: https://github.com/kjempelodott
+[@ko1N]: https://github.com/ko1N
 [@le-jzr]: https://github.com/le-jzr
+[@Lichtso]: https://github.com/Lichtso
 [@lion128]: https://github.com/lion128
 [@llogiq]: https://github.com/llogiq
 [@lzutao]: https://github.com/lzutao
 [@lzybkr]: https://github.com/lzybkr
 [@m4b]: https://github.com/m4b
+[@messense]: https://github.com/messense
 [@mitsuhiko]: https://github.com/mitsuhiko
+[@mkroening]: https://github.com/mkroening
 [@mre]: https://github.com/mre
+[@Mrmaxmeier]: https://github.com/Mrmaxmeier
+[n01e0]: https://github.com/n01e0
+[@nico-abram]: https://github.com/nico-abram
+[@npmccallum]: https://github.com/npmccallum
 [@pchickey]: https://github.com/pchickey
 [@philipc]: https://github.com/philipc
 [@Pzixel]: https://github.com/Pzixel
+[@quake]: https://github.com/quake
 [@raindev]: https://github.com/raindev
 [@rocallahan]: https://github.com/rocallahan
 [@sanxiyn]: https://github.com/sanxiyn
+[@skdltmxn]: https://github.com/skdltmxn
+[@sollyucko]: https://github.com/sollyucko
+[@Swatinem]: https://github.com/Swatinem
+[@SquareMan]: https://github.com/SquareMan
 [@tathanhdinh]: https://github.com/tathanhdinh
 [@Techno-coder]: https://github.com/Techno-coder
 [@ticki]: https://github.com/ticki
+[@Timmmm]: https://github.com/Timmmm
+[@Tiwalun]: https://github.com/Tiwalun
+[@track-5]: https://github.com/track-5
+[@tux3]: https://github.com/tux3
 [@wickerwacka]: https://github.com/wickerwaka
 [@willglynn]: https://github.com/willglynn
+[@woodruffw]: https://github.com/woodruffw
 [@wyxloading]: https://github.com/wyxloading
 [@xcoldhandsx]: https://github.com/xcoldhandsx
 
