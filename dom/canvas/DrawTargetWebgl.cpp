@@ -341,6 +341,10 @@ bool DrawTargetWebgl::Init(const IntSize& size, const SurfaceFormat format) {
   mSize = size;
   mFormat = format;
 
+  if (!Factory::AllowedSurfaceSize(size)) {
+    return false;
+  }
+
   if (!sSharedContext.init()) {
     return false;
   }
