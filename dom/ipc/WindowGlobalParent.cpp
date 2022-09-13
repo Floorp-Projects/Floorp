@@ -21,7 +21,6 @@
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/BrowserHost.h"
 #include "mozilla/dom/BrowserParent.h"
-#include "mozilla/dom/IdentityCredential.h"
 #include "mozilla/dom/MediaController.h"
 #include "mozilla/dom/WindowGlobalChild.h"
 #include "mozilla/dom/ChromeUtils.h"
@@ -1375,20 +1374,6 @@ mozilla::ipc::IPCResult WindowGlobalParent::RecvReloadWithHttpsOnlyException() {
 
   BrowsingContext()->Top()->LoadURI(loadState, /* setNavigating */ true);
 
-  return IPC_OK();
-}
-
-IPCResult WindowGlobalParent::RecvDiscoverIdentityCredentialFromExternalSource(
-    const IdentityCredentialRequestOptions& aOptions,
-    const DiscoverIdentityCredentialFromExternalSourceResolver& aResolver) {
-  IdentityCredential::DiscoverFromExternalSourceInMainProcess(
-      DocumentPrincipal(), aOptions)
-      ->Then(
-          GetCurrentSerialEventTarget(), __func__,
-          [aResolver](const IPCIdentityCredential& aResult) {
-            return aResolver(Some(aResult));
-          },
-          [aResolver](nsresult aErr) { aResolver(Nothing()); });
   return IPC_OK();
 }
 
