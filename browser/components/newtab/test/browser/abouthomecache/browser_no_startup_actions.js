@@ -11,7 +11,7 @@
  * could wipe out that state and cause flicker / unnecessary redraws.
  */
 add_task(async function test_no_startup_actions() {
-  await BrowserTestUtils.withNewTab("about:home", async browser => {
+  await withFullyLoadedAboutHome(async browser => {
     // Make sure we have a cached document.
     await clearCache();
     await simulateRestart(browser);

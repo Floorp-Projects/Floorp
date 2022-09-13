@@ -40,6 +40,34 @@ let { AboutHomeStartupCache } = ChromeUtils.import(
 }
 
 /**
+ * Utility function that loads about:home in the current window in a new tab, and waits
+ * for the Discovery Stream cards to finish loading before running the taskFn function.
+ * Once taskFn exits, the about:home tab will be closed.
+ *
+ * @param {function} taskFn
+ *   A function that will be run after about:home has finished loading. This can be
+ *   an async function.
+ * @return {Promise}
+ * @resolves {undefined}
+ */
+// eslint-disable-next-line no-unused-vars
+function withFullyLoadedAboutHome(taskFn) {
+  return BrowserTestUtils.withNewTab("about:home", async browser => {
+    await SpecialPowers.spawn(browser, [], async () => {
+      await ContentTaskUtils.waitForCondition(
+        () =>
+          content.document.querySelectorAll(
+            "[data-section-id='topstories'] .ds-card-link"
+          ).length,
+        "Waiting for Discovery Stream to be rendered."
+      );
+    });
+
+    await taskFn(browser);
+  });
+}
+
+/**
  * Shuts down the AboutHomeStartupCache components in the parent process
  * and privileged about content process, and then restarts them, simulating
  * the parent process having restarted.

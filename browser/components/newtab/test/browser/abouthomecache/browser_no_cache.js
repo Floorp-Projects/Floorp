@@ -10,7 +10,7 @@ requestLongerTimeout(2);
  * about:home document on startup.
  */
 add_task(async function test_no_cache() {
-  await BrowserTestUtils.withNewTab("about:home", async browser => {
+  await withFullyLoadedAboutHome(async browser => {
     await clearCache();
     // We're testing the no-cache case, so we bypass the automatic writing
     // of the cache on shutdown, and we also don't need to wait for the

@@ -11,7 +11,7 @@
 registerCleanupFunction(async () => {
   // When the test completes, make sure we cleanup with a populated cache,
   // since this is the default starting state for these tests.
-  await BrowserTestUtils.withNewTab("about:home", async browser => {
+  await withFullyLoadedAboutHome(async browser => {
     await simulateRestart(browser);
   });
 });
@@ -20,7 +20,7 @@ registerCleanupFunction(async () => {
  * Tests the case where the cache is disabled via the pref.
  */
 add_task(async function test_cache_disabled() {
-  await BrowserTestUtils.withNewTab("about:home", async browser => {
+  await withFullyLoadedAboutHome(async browser => {
     await SpecialPowers.pushPrefEnv({
       set: [["browser.startup.homepage.abouthome_cache.enabled", false]],
     });
@@ -41,7 +41,7 @@ add_task(async function test_cache_disabled() {
  * not set at about:home.
  */
 add_task(async function test_cache_custom_homepage() {
-  await BrowserTestUtils.withNewTab("about:home", async browser => {
+  await withFullyLoadedAboutHome(async browser => {
     await HomePage.set("https://example.com");
     await simulateRestart(browser);
 
@@ -59,7 +59,7 @@ add_task(async function test_cache_custom_homepage() {
  * configured to automatically be restored.
  */
 add_task(async function test_cache_restore_session() {
-  await BrowserTestUtils.withNewTab("about:home", async browser => {
+  await withFullyLoadedAboutHome(async browser => {
     await SpecialPowers.pushPrefEnv({
       set: [["browser.startup.page", 3]],
     });
@@ -80,7 +80,7 @@ add_task(async function test_cache_restore_session() {
  * preloading is disabled.
  */
 add_task(async function test_cache_no_preloading() {
-  await BrowserTestUtils.withNewTab("about:home", async browser => {
+  await withFullyLoadedAboutHome(async browser => {
     await SpecialPowers.pushPrefEnv({
       set: [["browser.newtab.preload", false]],
     });
