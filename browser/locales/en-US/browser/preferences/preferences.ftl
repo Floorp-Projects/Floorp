@@ -1535,8 +1535,8 @@ waterfox-lepton =
 
 privacy-hub-header = Privacy Hub
 
-block-tracker = Learn how to block more ads and trackers:
 block-more-tracker = Block more Ads and Trackers
+block-tracker = This section contains a set of extensions designed to block ads and trackers
 
 view-at-AMO = View at AMO
 uBlock-Origin = uBlock Origin
@@ -1551,7 +1551,7 @@ about-DDG = DuckDuckGo Privacy Essentials replaces a default search engine with 
 ## Fingerprint
 
 fingerprint-header = Resist Fingerprinting & IP address leak
-block-fingerprint = Fingerprinting is the process by which a website collects personal data and device information. This section provides settings to further increase this protection beyond the default blocker.
+block-fingerprint = Fingerprinting is a tracking mechanism that relies on the unique features of your browser and operating system. This section contains settings to further enhance this protection beyond the default blocking.
 enable-firefox-fingerprint-protections = Enable strong protection against fingerprinting
 about-firefox-fingerprint-protection = Enabling protection by Firefox includes forced light mode, disabling some APIs, etc. Some sites may be broken.
 fingerprint-Protection =
