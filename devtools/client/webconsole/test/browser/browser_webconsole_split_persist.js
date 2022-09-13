@@ -35,10 +35,10 @@ add_task(async function() {
 
   is(
     parseInt(getHeightPrefValue(), 10),
-    parseInt(toolbox.webconsolePanel.height, 10),
+    parseInt(toolbox.webconsolePanel.style.height, 10),
     "Panel height matches the pref"
   );
-  toolbox.webconsolePanel.height = 200;
+  toolbox.webconsolePanel.style.height = "200px";
 
   await toolbox.destroy();
 
@@ -62,13 +62,13 @@ add_task(async function() {
     "Height is set based on panel height after closing"
   );
 
-  toolbox.webconsolePanel.height = 1;
+  toolbox.webconsolePanel.style.height = "1px";
   ok(
     toolbox.webconsolePanel.clientHeight > 1,
     "The actual height of the console is bound with a min height"
   );
 
-  toolbox.webconsolePanel.height = 10000;
+  toolbox.webconsolePanel.style.height = "10000px";
   ok(
     toolbox.webconsolePanel.clientHeight < 10000,
     "The actual height of the console is bound with a max height"

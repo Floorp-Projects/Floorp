@@ -967,9 +967,8 @@ Toolbox.prototype = {
       this.webconsolePanel = this.doc.querySelector(
         "#toolbox-panel-webconsole"
       );
-      this.webconsolePanel.height = Services.prefs.getIntPref(
-        SPLITCONSOLE_HEIGHT_PREF
-      );
+      this.webconsolePanel.style.height =
+        Services.prefs.getIntPref(SPLITCONSOLE_HEIGHT_PREF) + "px";
       this.webconsolePanel.addEventListener(
         "resize",
         this._saveSplitConsoleHeight
@@ -1730,7 +1729,7 @@ Toolbox.prototype = {
   _saveSplitConsoleHeight() {
     Services.prefs.setIntPref(
       SPLITCONSOLE_HEIGHT_PREF,
-      this.webconsolePanel.height
+      parseInt(this.webconsolePanel.style.height, 10)
     );
   },
 

@@ -26,7 +26,7 @@ var previousWidth = 0, originalWidth = 0;
 var loadInWindow = false;
 
 function splitterCallback(adjustment) {
-  var newWidth = Number($("leftbox").width); // getBoundingClientRect().width;
+  var newWidth = parseInt($("leftbox").style.width); // getBoundingClientRect().width;
   var expectedWidth = previousWidth + adjustment;
   if (expectedWidth > $("splitterbox").getBoundingClientRect().width)
     expectedWidth = $("splitterbox").getBoundingClientRect().width - $("splitter").getBoundingClientRect().width;
@@ -283,9 +283,9 @@ SimpleTest.waitForFocus(runTests);
   </tooltip>
 
   <hbox id="splitterbox" style="margin-top: 5px;" onmousedown="this.setCapture()">
-    <hbox id="leftbox" width="100" flex="1"/>
+    <hbox id="leftbox" style="width: 100px" flex="1"/>
     <splitter id="splitter" width="5" height="5"/>
-    <hbox id="rightbox" width="100" flex="1"/>
+    <hbox id="rightbox" style="width: 100px" flex="1"/>
   </hbox>
 
   <vbox id="custom" width="10" height="10" onmousedown="this.setCapture(); cachedMouseDown = event;"/>

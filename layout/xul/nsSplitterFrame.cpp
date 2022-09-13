@@ -20,6 +20,7 @@
 #include "nsNameSpaceManager.h"
 #include "nsScrollbarButtonFrame.h"
 #include "nsIDOMEventListener.h"
+#include "nsICSSDeclaration.h"
 #include "nsFrameList.h"
 #include "nsHTMLParts.h"
 #include "mozilla/ComputedStyle.h"
@@ -36,6 +37,7 @@
 #include "mozilla/MouseEvents.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/UniquePtr.h"
+#include "nsStyledElement.h"
 
 using namespace mozilla;
 
@@ -851,34 +853,25 @@ void nsSplitterFrameInner::SetPreferredSize(nsBoxLayoutState& aState,
   nsMargin margin(0, 0, 0, 0);
   aChildBox->GetXULMargin(margin);
 
-  RefPtr<nsAtom> attribute;
-
   if (aIsHorizontal) {
     pref -= (margin.left + margin.right);
-    attribute = nsGkAtoms::width;
   } else {
     pref -= (margin.top + margin.bottom);
-    attribute = nsGkAtoms::height;
   }
 
-  nsIContent* content = aChildBox->GetContent();
-  if (!content->IsElement()) {
+  RefPtr element = nsStyledElement::FromNode(aChildBox->GetContent());
+  if (!element) {
     return;
   }
+
+  nsCOMPtr<nsICSSDeclaration> decl = element->Style();
 
   // set its preferred size.
-  nsAutoString prefValue;
+  nsAutoCString prefValue;
   prefValue.AppendInt(pref / aOnePixel);
-  if (content->AsElement()->AttrValueIs(kNameSpaceID_None, attribute, prefValue,
-                                        eCaseMatters)) {
-    return;
-  }
+  prefValue.AppendLiteral("px");
 
-  AutoWeakFrame weakBox(aChildBox);
-  content->AsElement()->SetAttr(kNameSpaceID_None, attribute, prefValue, true);
-  NS_ENSURE_TRUE_VOID(weakBox.IsAlive());
-  aState.PresShell()->FrameNeedsReflow(aChildBox, IntrinsicDirty::StyleChange,
-                                       NS_FRAME_IS_DIRTY);
+  decl->SetProperty(aIsHorizontal ? "width"_ns : "height"_ns, prefValue, ""_ns, IgnoreErrors());
 }
 
 void nsSplitterFrameInner::AddRemoveSpace(nscoord aDiff,
