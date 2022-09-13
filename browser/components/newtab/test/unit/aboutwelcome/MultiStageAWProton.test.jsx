@@ -240,6 +240,50 @@ describe("MultiStageAboutWelcomeProton module", () => {
     });
   });
 
+  describe("AboutWelcomeDefaults prepareMobileDownload", () => {
+    const TEST_CONTENT = {
+      templateMR: true,
+      screens: [
+        {
+          id: "AW_MOBILE_DOWNLOAD",
+          content: {
+            title: "test",
+            hero_image: {
+              url: "https://example.com/test.svg",
+            },
+            cta_paragraph: {
+              text: {},
+              action: {},
+            },
+          },
+        },
+      ],
+    };
+    it("should not set url for default qrcode svg", async () => {
+      sandbox.stub(AppConstants, "isChinaRepack").returns(false);
+      const data = await AboutWelcomeDefaults.prepareContentForReact(
+        TEST_CONTENT
+      );
+      assert.propertyVal(
+        data.screens[0].content.hero_image,
+        "url",
+        "https://example.com/test.svg"
+      );
+    });
+    it("should set url for cn qrcode svg", async () => {
+      sandbox.stub(AppConstants, "isChinaRepack").returns(true);
+      const data = await AboutWelcomeDefaults.prepareContentForReact(
+        TEST_CONTENT
+      );
+      assert.propertyVal(data, "templateMR", true);
+      assert.propertyVal(
+        data.screens[0].content.hero_image,
+        "url",
+        "https://example.com/test-cn.svg"
+      );
+    });
+  });
+
   describe("AboutWelcomeDefaults prepareContentForReact", () => {
     it("should not set action without screens", async () => {
       const data = await AboutWelcomeDefaults.prepareContentForReact({

@@ -7,6 +7,9 @@
 const { XPCOMUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/XPCOMUtils.sys.mjs"
 );
+const { AppConstants } = ChromeUtils.import(
+  "resource://gre/modules/AppConstants.jsm"
+);
 const { FeatureCalloutMessages } = ChromeUtils.import(
   "resource://activity-stream/lib/FeatureCalloutMessages.jsm"
 );
@@ -976,6 +979,28 @@ const OnboardingMessageProvider = {
       }
     }
 
+    // Helper to prepare mobile download screen content
+    function prepareMobileDownload() {
+      let mobileContent = content.screens.find(
+        screen => screen.id === "UPGRADE_MOBILE_DOWNLOAD"
+      ).content;
+      if (!lazy.BrowserUtils.sendToDeviceEmailsSupported()) {
+        // If send to device emails are not supported for a user's locale,
+        // remove the send to device link and update the screen text
+        delete mobileContent.cta_paragraph.action;
+        mobileContent.cta_paragraph.text = {
+          string_id: "mr2022-onboarding-no-mobile-download-cta-text",
+        };
+      }
+      // Update CN specific QRCode url
+      if (AppConstants.isChinaRepack()) {
+        mobileContent.hero_image.url = `${mobileContent.hero_image.url.slice(
+          0,
+          mobileContent.hero_image.url.indexOf(".svg")
+        )}-cn.svg`;
+      }
+    }
+
     let pinScreen = content.screens?.find(
       screen => screen.id === "UPGRADE_PIN_FIREFOX"
     );
@@ -1050,16 +1075,8 @@ const OnboardingMessageProvider = {
     // Remove mobile download screen if user has sync enabled
     if (lazy.usesFirefoxSync && lazy.mobileDevices > 0) {
       removeScreens(screen => screen.id === "UPGRADE_MOBILE_DOWNLOAD");
-    } else if (!lazy.BrowserUtils.sendToDeviceEmailsSupported()) {
-      // If send to device emails are not supported for a user's locale,
-      // remove the send to device link and update the screen text
-      let mobileContent = content.screens.find(
-        screen => screen.id === "UPGRADE_MOBILE_DOWNLOAD"
-      ).content;
-      delete mobileContent.cta_paragraph.action;
-      mobileContent.cta_paragraph.text = {
-        string_id: "mr2022-onboarding-no-mobile-download-cta-text",
-      };
+    } else {
+      prepareMobileDownload();
     }
 
     // Remove colorways screen if there is no active colorways collection
