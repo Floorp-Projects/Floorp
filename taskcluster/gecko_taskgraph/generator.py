@@ -8,7 +8,7 @@ import copy
 
 import attr
 from taskgraph import filter_tasks
-from taskgraph.config import GraphConfig
+from taskgraph.config import GraphConfig, load_graph_config
 from taskgraph.graph import Graph
 from taskgraph.optimize.base import optimize_task_graph
 from taskgraph.parameters import parameters_loader
@@ -20,7 +20,6 @@ from taskgraph.util.yaml import load_yaml
 
 from .morph import morph
 from .util.verify import verifications
-from .config import load_graph_config
 
 logger = logging.getLogger(__name__)
 
