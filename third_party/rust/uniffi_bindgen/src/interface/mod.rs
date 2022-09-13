@@ -45,11 +45,10 @@
 //!   * Error messages and general developer experience leave a lot to be desired.
 
 use std::{
-    collections::{hash_map::DefaultHasher, HashSet},
+    collections::HashSet,
     convert::TryFrom,
     hash::{Hash, Hasher},
     iter,
-    str::FromStr,
 };
 
 use anyhow::{bail, Result};
@@ -92,6 +91,8 @@ pub struct ComponentInterface {
     types: TypeUniverse,
     /// The unique prefix that we'll use for namespacing when exposing this component's API.
     namespace: String,
+    /// The internal unique prefix used to namespace FFI symbols
+    ffi_namespace: String,
     /// The high-level API provided by the component.
     enums: Vec<Enum>,
     records: Vec<Record>,
@@ -117,7 +118,7 @@ impl ComponentInterface {
         let (remaining, defns) = weedle::Definitions::parse(idl.trim()).unwrap();
         if !remaining.is_empty() {
             println!("Error parsing the IDL. Text remaining to be parsed is:");
-            println!("{}", remaining);
+            println!("{remaining}");
             bail!("parse error");
         }
         // Unconditionally add the String type, which is used by the panic handling
@@ -127,9 +128,19 @@ impl ComponentInterface {
         ci.types.add_type_definitions_from(defns.as_slice())?;
         // With those names resolved, we can build a complete representation of the API.
         APIBuilder::process(&defns, &mut ci)?;
+
+        // The FFI namespace must not be computed on the fly because it could otherwise be
+        // influenced by things added later from proc-macro metadata. Those have their own
+        // namespacing mechanism.
+        assert!(!ci.namespace.is_empty());
+        ci.ffi_namespace = format!("{}_{:x}", ci.namespace, ci.checksum());
+
+        // The following two methods will be called later anyways, but we call them here because
+        // it's convenient for UDL-only tests.
         ci.check_consistency()?;
         // Now that the high-level API is settled, we can derive the low-level FFI.
         ci.derive_ffi_funcs()?;
+
         Ok(ci)
     }
 
@@ -300,18 +311,14 @@ impl ComponentInterface {
     /// TODO: it's not clear to me if the derivation of `Hash` is actually deterministic enough to
     /// ensure the guarantees above, or if it might be sensitive to e.g. compiler-driven re-ordering
     /// of struct field. Let's see how it goes...
-    pub fn checksum(&self) -> u64 {
-        let mut hasher = DefaultHasher::new();
-        // Our implementation of `Hash` mixes in all of the public API of the component,
-        // as well as the version string of uniffi.
-        self.hash(&mut hasher);
-        hasher.finish()
+    pub fn checksum(&self) -> u16 {
+        uniffi_meta::checksum(self)
     }
 
     /// The namespace to use in FFI-level function definitions.
     ///
-    /// The value returned by this method is used as a prefix to namespace all FFI-level functions
-    /// used in this ComponentInterface.
+    /// The value returned by this method is used as a prefix to namespace all UDL-defined FFI
+    /// functions used in this ComponentInterface.
     ///
     /// Since these names are an internal implementation detail that is not typically visible to
     /// consumers, we take the opportunity to add an additional safety guard by including a 4-hex-char
@@ -320,12 +327,9 @@ impl ComponentInterface {
     /// then there is a high probability of checksum mismatch and they will fail to link against the
     /// compiled Rust code. The result will be an ugly inscrutable link-time error, but that is a lot
     /// better than triggering potentially arbitrary memory unsafety!
-    pub fn ffi_namespace(&self) -> String {
-        format!(
-            "{}_{:x}",
-            self.namespace,
-            (self.checksum() & 0x000000000000FFFF) as u16
-        )
+    pub fn ffi_namespace(&self) -> &str {
+        assert!(!self.ffi_namespace.is_empty());
+        &self.ffi_namespace
     }
 
     /// Builtin FFI function for allocating a new `RustBuffer`.
@@ -491,7 +495,14 @@ impl ComponentInterface {
     }
 
     /// Called by `APIBuilder` impls to add a newly-parsed function definition to the `ComponentInterface`.
-    fn add_function_definition(&mut self, defn: Function) -> Result<()> {
+    pub(super) fn add_function_definition(&mut self, defn: Function) -> Result<()> {
+        for arg in &defn.arguments {
+            self.types.add_known_type(arg.type_.clone())?;
+        }
+        if let Some(ty) = &defn.return_type {
+            self.types.add_known_type(ty.clone())?;
+        }
+
         // Since functions are not a first-class type, we have to check for duplicates here
         // rather than relying on the type-finding pass to catch them.
         if self.functions.iter().any(|f| f.name == defn.name) {
@@ -527,7 +538,7 @@ impl ComponentInterface {
     /// This method checks for consistency problems in the declared interface
     /// as a whole, and which can only be detected after we've finished defining
     /// the entire interface.
-    fn check_consistency(&self) -> Result<()> {
+    pub fn check_consistency(&self) -> Result<()> {
         if self.namespace.is_empty() {
             bail!("missing namespace definition");
         }
@@ -549,8 +560,8 @@ impl ComponentInterface {
     ///
     /// This should only be called after the high-level types have been completed defined, otherwise
     /// the resulting set will be missing some entries.
-    fn derive_ffi_funcs(&mut self) -> Result<()> {
-        let ci_prefix = self.ffi_namespace();
+    pub fn derive_ffi_funcs(&mut self) -> Result<()> {
+        let ci_prefix = self.ffi_namespace().to_owned();
         for func in self.functions.iter_mut() {
             func.derive_ffi_func(&ci_prefix)?;
         }
@@ -561,14 +572,6 @@ impl ComponentInterface {
             callback.derive_ffi_funcs(&ci_prefix);
         }
         Ok(())
-    }
-}
-
-/// Convenience implementation for parsing a `ComponentInterface` from a string.
-impl FromStr for ComponentInterface {
-    type Err = anyhow::Error;
-    fn from_str(s: &str) -> Result<Self> {
-        ComponentInterface::from_webidl(s)
     }
 }
 

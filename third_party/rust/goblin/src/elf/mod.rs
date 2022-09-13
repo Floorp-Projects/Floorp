@@ -43,16 +43,18 @@ pub(crate) mod gnu_hash;
 // These are shareable values for the 32/64 bit implementations.
 //
 // They are publicly re-exported by the pub-using module
+pub mod compression_header;
 pub mod header;
 pub mod program_header;
 pub mod section_header;
-pub mod compression_header;
 #[macro_use]
 pub mod sym;
 pub mod dynamic;
 #[macro_use]
 pub mod reloc;
 pub mod note;
+#[cfg(all(any(feature = "elf32", feature = "elf64"), feature = "alloc"))]
+pub mod symver;
 
 macro_rules! if_sylvan {
     ($($i:item)*) => ($(
@@ -69,15 +71,16 @@ if_sylvan! {
     use alloc::vec::Vec;
     use core::cmp;
 
-    pub type Header = header::Header;
-    pub type ProgramHeader = program_header::ProgramHeader;
-    pub type SectionHeader = section_header::SectionHeader;
-    pub type Symtab<'a> = sym::Symtab<'a>;
-    pub type Sym = sym::Sym;
-    pub type Dyn = dynamic::Dyn;
-    pub type Dynamic = dynamic::Dynamic;
-    pub type Reloc = reloc::Reloc;
-    pub type RelocSection<'a> = reloc::RelocSection<'a>;
+    pub use header::Header;
+    pub use program_header::ProgramHeader;
+    pub use section_header::SectionHeader;
+    pub use sym::Symtab;
+    pub use sym::Sym;
+    pub use dynamic::Dyn;
+    pub use dynamic::Dynamic;
+    pub use reloc::Reloc;
+    pub use reloc::RelocSection;
+    pub use symver::{VersymSection, VerdefSection, VerneedSection};
 
     pub type ProgramHeaders = Vec<ProgramHeader>;
     pub type SectionHeaders = Vec<SectionHeader>;
@@ -122,6 +125,13 @@ if_sylvan! {
         pub interpreter: Option<&'a str>,
         /// A list of this binary's dynamic libraries it uses, if there are any
         pub libraries: Vec<&'a str>,
+        /// A list of runtime search paths for this binary's dynamic libraries it uses, if there
+        /// are any. (deprecated)
+        pub rpaths: Vec<&'a str>,
+        /// A list of runtime search paths for this binary's dynamic libraries it uses, if there
+        /// are any.
+        pub runpaths: Vec<&'a str>,
+        /// Whether this is a 64-bit elf or not
         pub is_64: bool,
         /// Whether this is a shared object or not
         pub is_lib: bool,
@@ -129,6 +139,15 @@ if_sylvan! {
         pub entry: u64,
         /// Whether the binary is little endian or not
         pub little_endian: bool,
+        /// Contains the symbol version information from the optional section
+        /// [`SHT_GNU_VERSYM`][section_header::SHT_GNU_VERSYM] (GNU extenstion).
+        pub versym : Option<VersymSection<'a>>,
+        /// Contains the version definition information from the optional section
+        /// [`SHT_GNU_VERDEF`][section_header::SHT_GNU_VERDEF] (GNU extenstion).
+        pub verdef : Option<VerdefSection<'a>>,
+        /// Contains the version needed information from the optional section
+        /// [`SHT_GNU_VERNEED`][section_header::SHT_GNU_VERNEED] (GNU extenstion).
+        pub verneed : Option<VerneedSection<'a>>,
         ctx: Ctx,
     }
 
@@ -144,7 +163,7 @@ if_sylvan! {
                     iters.push(note::NoteDataIterator {
                         data,
                         offset,
-                        size: offset + phdr.p_filesz as usize,
+                        size: offset.saturating_add(phdr.p_filesz as usize),
                         ctx: (alignment, self.ctx)
                     });
                 }
@@ -173,9 +192,7 @@ if_sylvan! {
                     continue;
                 }
 
-                if section_name.is_some() && !self.shdr_strtab
-                    .get(sect.sh_name)
-                    .map_or(false, |r| r.ok() == section_name) {
+                if section_name.is_some() && self.shdr_strtab.get_at(sect.sh_name) != section_name {
                     continue;
                 }
 
@@ -184,7 +201,7 @@ if_sylvan! {
                 iters.push(note::NoteDataIterator {
                     data,
                     offset,
-                    size: offset + sect.sh_size as usize,
+                    size: offset.saturating_add(sect.sh_size as usize),
                     ctx: (alignment, self.ctx)
                 });
             }
@@ -201,22 +218,51 @@ if_sylvan! {
         pub fn is_object_file(&self) -> bool {
             self.header.e_type == header::ET_REL
         }
+
+        /// Parses the contents to get the Header only. This `bytes` buffer should contain at least the length for parsing Header.
+        pub fn parse_header(bytes: &'a [u8]) -> error::Result<Header> {
+            bytes.pread::<Header>(0)
+        }
+
+        /// Lazy parse the ELF contents. This function mainly just assembles an Elf struct. Once we have the struct, we can choose to parse whatever we want.
+        pub fn lazy_parse(header: Header) -> error::Result<Self> {
+            let misc = parse_misc(&header)?;
+
+            Ok(Elf {
+                header,
+                program_headers: vec![],
+                section_headers: Default::default(),
+                shdr_strtab: Default::default(),
+                dynamic: None,
+                dynsyms: Default::default(),
+                dynstrtab: Strtab::default(),
+                syms: Default::default(),
+                strtab: Default::default(),
+                dynrelas: Default::default(),
+                dynrels: Default::default(),
+                pltrelocs: Default::default(),
+                shdr_relocs: Default::default(),
+                soname: None,
+                interpreter: None,
+                libraries: vec![],
+                rpaths: vec![],
+                runpaths: vec![],
+                is_64: misc.is_64,
+                is_lib: misc.is_lib,
+                entry: misc.entry,
+                little_endian: misc.little_endian,
+                ctx: misc.ctx,
+                versym: None,
+                verdef: None,
+                verneed: None,
+            })
+        }
+
         /// Parses the contents of the byte stream in `bytes`, and maybe returns a unified binary
         pub fn parse(bytes: &'a [u8]) -> error::Result<Self> {
-            let header = bytes.pread::<Header>(0)?;
-            let entry = header.e_entry as usize;
-            let is_lib = header.e_type == header::ET_DYN;
-            let is_lsb = header.e_ident[header::EI_DATA] == header::ELFDATA2LSB;
-            let endianness = scroll::Endian::from(is_lsb);
-            let class = header.e_ident[header::EI_CLASS];
-            if class != header::ELFCLASS64 && class != header::ELFCLASS32 {
-                return Err(error::Error::Malformed(format!("Unknown values in ELF ident header: class: {} endianness: {}",
-                                                           class,
-                                                           header.e_ident[header::EI_DATA])));
-            }
-            let is_64 = class == header::ELFCLASS64;
-            let container = if is_64 { Container::Big } else { Container::Little };
-            let ctx = Ctx::new(container, endianness);
+            let header = Self::parse_header(bytes)?;
+            let misc = parse_misc(&header)?;
+            let ctx = misc.ctx;
 
             let program_headers = ProgramHeader::parse(bytes, header.e_phoff as usize, header.e_phnum as usize, ctx)?;
 
@@ -231,7 +277,14 @@ if_sylvan! {
 
             let section_headers = SectionHeader::parse(bytes, header.e_shoff as usize, header.e_shnum as usize, ctx)?;
 
-            let get_strtab = |section_headers: &[SectionHeader], section_idx: usize| {
+            let get_strtab = |section_headers: &[SectionHeader], mut section_idx: usize| {
+                if section_idx == section_header::SHN_XINDEX as usize {
+                    if section_headers.is_empty() {
+                        return Ok(Strtab::default())
+                    }
+                    section_idx = section_headers[0].sh_link as usize;
+                }
+
                 if section_idx >= section_headers.len() {
                     // FIXME: warn! here
                     Ok(Strtab::default())
@@ -247,17 +300,17 @@ if_sylvan! {
 
             let mut syms = Symtab::default();
             let mut strtab = Strtab::default();
-            for shdr in &section_headers {
-                if shdr.sh_type as u32 == section_header::SHT_SYMTAB {
-                    let size = shdr.sh_entsize;
-                    let count = if size == 0 { 0 } else { shdr.sh_size / size };
-                    syms = Symtab::parse(bytes, shdr.sh_offset as usize, count as usize, ctx)?;
-                    strtab = get_strtab(&section_headers, shdr.sh_link as usize)?;
-                }
+            if let Some(shdr) = section_headers.iter().rfind(|shdr| shdr.sh_type as u32 == section_header::SHT_SYMTAB) {
+                let size = shdr.sh_entsize;
+                let count = if size == 0 { 0 } else { shdr.sh_size / size };
+                syms = Symtab::parse(bytes, shdr.sh_offset as usize, count as usize, ctx)?;
+                strtab = get_strtab(&section_headers, shdr.sh_link as usize)?;
             }
 
             let mut soname = None;
             let mut libraries = vec![];
+            let mut rpaths = vec![];
+            let mut runpaths = vec![];
             let mut dynsyms = Symtab::default();
             let mut dynrelas = RelocSection::default();
             let mut dynrels = RelocSection::default();
@@ -273,10 +326,21 @@ if_sylvan! {
 
                 if dyn_info.soname != 0 {
                     // FIXME: warn! here
-                    soname = match dynstrtab.get(dyn_info.soname) { Some(Ok(soname)) => Some(soname), _ => None };
+                    soname = dynstrtab.get_at(dyn_info.soname);
                 }
                 if dyn_info.needed_count > 0 {
                     libraries = dynamic.get_libraries(&dynstrtab);
+                }
+                for dyn_ in &dynamic.dyns {
+                    if dyn_.d_tag == dynamic::DT_RPATH {
+                        if let Some(path) = dynstrtab.get_at(dyn_.d_val as usize) {
+                            rpaths.push(path);
+                        }
+                    } else if dyn_.d_tag == dynamic::DT_RUNPATH {
+                        if let Some(path) = dynstrtab.get_at(dyn_.d_val as usize) {
+                            runpaths.push(path);
+                        }
+                    }
                 }
                 // parse the dynamic relocations
                 dynrelas = RelocSection::parse(bytes, dyn_info.rela, dyn_info.relasz, true, ctx)?;
@@ -311,6 +375,10 @@ if_sylvan! {
                 }
             }
 
+            let versym = symver::VersymSection::parse(bytes, &section_headers, ctx)?;
+            let verdef = symver::VerdefSection::parse(bytes, &section_headers, ctx)?;
+            let verneed = symver::VerneedSection::parse(bytes, &section_headers, ctx)?;
+
             Ok(Elf {
                 header,
                 program_headers,
@@ -328,11 +396,16 @@ if_sylvan! {
                 soname,
                 interpreter,
                 libraries,
-                is_64,
-                is_lib,
-                entry: entry as u64,
-                little_endian: is_lsb,
-                ctx,
+                rpaths,
+                runpaths,
+                is_64: misc.is_64,
+                is_lib: misc.is_lib,
+                entry: misc.entry,
+                little_endian: misc.little_endian,
+                ctx: ctx,
+                versym,
+                verdef,
+                verneed,
             })
         }
     }
@@ -381,11 +454,43 @@ if_sylvan! {
     fn hash_len(bytes: &[u8], offset: usize, machine: u16, ctx: Ctx) -> error::Result<usize> {
         // Based on readelf code.
         let nchain = if (machine == header::EM_FAKE_ALPHA || machine == header::EM_S390) && ctx.container.is_big() {
-            bytes.pread_with::<u64>(offset + 4, ctx.le)? as usize
+            bytes.pread_with::<u64>(offset.saturating_add(4), ctx.le)? as usize
         } else {
-            bytes.pread_with::<u32>(offset + 4, ctx.le)? as usize
+            bytes.pread_with::<u32>(offset.saturating_add(4), ctx.le)? as usize
         };
         Ok(nchain)
+    }
+
+    struct Misc {
+        is_64: bool,
+        is_lib: bool,
+        entry: u64,
+        little_endian: bool,
+        ctx: Ctx,
+    }
+
+    fn parse_misc(header: &Header) -> error::Result<Misc> {
+        let entry = header.e_entry as usize;
+        let is_lib = header.e_type == header::ET_DYN;
+        let is_lsb = header.e_ident[header::EI_DATA] == header::ELFDATA2LSB;
+        let endianness = scroll::Endian::from(is_lsb);
+        let class = header.e_ident[header::EI_CLASS];
+        if class != header::ELFCLASS64 && class != header::ELFCLASS32 {
+            return Err(error::Error::Malformed(format!("Unknown values in ELF ident header: class: {} endianness: {}",
+                                                        class,
+                                                        header.e_ident[header::EI_DATA])));
+        }
+        let is_64 = class == header::ELFCLASS64;
+        let container = if is_64 { Container::Big } else { Container::Little };
+        let ctx = Ctx::new(container, endianness);
+
+        Ok(Misc{
+            is_64,
+            is_lib,
+            entry: entry as u64,
+            little_endian:is_lsb,
+            ctx,
+        })
     }
 }
 
@@ -397,7 +502,7 @@ mod tests {
     fn parse_crt1_64bit() {
         let crt1: Vec<u8> = include!("../../etc/crt1.rs");
         match Elf::parse(&crt1) {
-            Ok (binary) => {
+            Ok(binary) => {
                 assert!(binary.is_64);
                 assert!(!binary.is_lib);
                 assert_eq!(binary.entry, 0);
@@ -414,8 +519,8 @@ mod tests {
                     }
                 }
                 assert!(!syms.is_empty());
-             },
-            Err (err) => {
+            }
+            Err(err) => {
                 panic!("failed: {}", err);
             }
         }
@@ -425,7 +530,7 @@ mod tests {
     fn parse_crt1_32bit() {
         let crt1: Vec<u8> = include!("../../etc/crt132.rs");
         match Elf::parse(&crt1) {
-            Ok (binary) => {
+            Ok(binary) => {
                 assert!(!binary.is_64);
                 assert!(!binary.is_lib);
                 assert_eq!(binary.entry, 0);
@@ -442,10 +547,20 @@ mod tests {
                     }
                 }
                 assert!(!syms.is_empty());
-             },
-            Err (err) => {
+            }
+            Err(err) => {
                 panic!("failed: {}", err);
             }
         }
+    }
+
+    // See https://github.com/m4b/goblin/issues/257
+    #[test]
+    #[allow(unused)]
+    fn no_use_statement_conflict() {
+        use crate::elf::section_header::*;
+        use crate::elf::*;
+
+        fn f(_: SectionHeader) {}
     }
 }

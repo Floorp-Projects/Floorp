@@ -48,7 +48,7 @@ mod filters {
             Type::Optional(t) => format!("std::option::Option<{}>", type_rs(t)?),
             Type::Sequence(t) => format!("std::vec::Vec<{}>", type_rs(t)?),
             Type::Map(k, v) => format!(
-                "std::collections::HashMap<r#{}, r#{}>",
+                "std::collections::HashMap<{}, {}>",
                 type_rs(k)?,
                 type_rs(v)?
             ),
@@ -101,11 +101,11 @@ mod filters {
             // Wrapper types are implemented by generics that wrap the FfiConverter implementation of the
             // inner type.
             Type::Optional(inner) => {
-                format!("std::option::Option<r#{}>", ffi_converter_name(inner)?)
+                format!("std::option::Option<{}>", ffi_converter_name(inner)?)
             }
-            Type::Sequence(inner) => format!("std::vec::Vec<r#{}>", ffi_converter_name(inner)?),
+            Type::Sequence(inner) => format!("std::vec::Vec<{}>", ffi_converter_name(inner)?),
             Type::Map(k, v) => format!(
-                "std::collections::HashMap<r#{}, r#{}>",
+                "std::collections::HashMap<{}, {}>",
                 ffi_converter_name(k)?,
                 ffi_converter_name(v)?
             ),

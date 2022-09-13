@@ -16,8 +16,8 @@ ast_types! {
             optional: Option<term!(optional)>,
             type_: AttributedType<'a>,
             identifier: Identifier<'a>,
-            default: Option<Default<'a>> = map!(
-                cond!(optional.is_some(), weedle!(Option<Default<'a>>)),
+            default: Option<Default<'a>> = nom::combinator::map(
+                nom::combinator::cond(optional.is_some(), weedle!(Option<Default<'a>>)),
                 |default| default.unwrap_or(None)
             ),
         }),

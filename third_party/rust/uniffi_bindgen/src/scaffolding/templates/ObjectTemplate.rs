@@ -61,6 +61,7 @@ pub extern "C" fn {{ ffi_free.name() }}(ptr: *const std::os::raw::c_void, call_s
 {%- for meth in obj.methods() %}
     #[doc(hidden)]
     #[no_mangle]
+    #[allow(clippy::let_unit_value)] // Sometimes we generate code that binds `_retval` to `()`.
     pub extern "C" fn r#{{ meth.ffi_func().name() }}(
         {%- call rs::arg_list_ffi_decl(meth.ffi_func()) %}
     ) {% call rs::return_signature(meth) %} {

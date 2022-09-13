@@ -1,5 +1,5 @@
-use std::io::{Result, Read, Write};
 use crate::ctx::{FromCtx, IntoCtx, SizeWith};
+use std::io::{Read, Result, Write};
 
 /// An extension trait to `std::io::Read` streams; mainly targeted at reading primitive types with
 /// a known size.
@@ -54,8 +54,7 @@ use crate::ctx::{FromCtx, IntoCtx, SizeWith};
 /// assert_eq!({foo_.bar}, bar);
 /// ```
 ///
-pub trait IOread<Ctx: Copy> : Read
-{
+pub trait IOread<Ctx: Copy>: Read {
     /// Reads the type `N` from `Self`, with a default parsing context.
     /// For the primitive numeric types, this will be at the host machine's endianness.
     ///
@@ -73,7 +72,10 @@ pub trait IOread<Ctx: Copy> : Read
     /// assert_eq!(0xefbe, beef);
     /// ```
     #[inline]
-    fn ioread<N: FromCtx<Ctx> + SizeWith<Ctx>>(&mut self) -> Result<N> where Ctx: Default {
+    fn ioread<N: FromCtx<Ctx> + SizeWith<Ctx>>(&mut self) -> Result<N>
+    where
+        Ctx: Default,
+    {
         let ctx = Ctx::default();
         self.ioread_with(ctx)
     }
@@ -115,8 +117,7 @@ impl<Ctx: Copy, R: Read + ?Sized> IOread<Ctx> for R {}
 /// An extension trait to `std::io::Write` streams; this only serializes simple types, like `u8`, `i32`, `f32`, `usize`, etc.
 ///
 /// To write custom types with a single `iowrite::<YourType>` call, implement [`IntoCtx`](ctx/trait.IntoCtx.html) and [`SizeWith`](ctx/trait.SizeWith.html) for `YourType`.
-pub trait IOwrite<Ctx: Copy>: Write
-{
+pub trait IOwrite<Ctx: Copy>: Write {
     /// Writes the type `N` into `Self`, with the parsing context `ctx`.
     /// **NB**: this will panic if the type you're writing has a size greater than 256. Plans are to have this allocate in larger cases.
     ///
@@ -137,7 +138,10 @@ pub trait IOwrite<Ctx: Copy>: Write
     /// assert_eq!(bytes.into_inner(), [0xde, 0xad, 0xbe, 0xef,]);
     /// ```
     #[inline]
-    fn iowrite<N: SizeWith<Ctx> + IntoCtx<Ctx>>(&mut self, n: N) -> Result<()> where Ctx: Default {
+    fn iowrite<N: SizeWith<Ctx> + IntoCtx<Ctx>>(&mut self, n: N) -> Result<()>
+    where
+        Ctx: Default,
+    {
         let ctx = Ctx::default();
         self.iowrite_with(n, ctx)
     }

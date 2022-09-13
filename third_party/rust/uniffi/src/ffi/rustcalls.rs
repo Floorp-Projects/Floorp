@@ -190,7 +190,7 @@ mod test {
     fn function(a: u8) -> i8 {
         match a {
             0 => 100,
-            x => panic!("Unexpected value: {}", x),
+            x => panic!("Unexpected value: {x}"),
         }
     }
 
@@ -240,7 +240,7 @@ mod test {
         match a {
             0 => Ok(100),
             1 => Err(TestError("Error".to_owned())),
-            x => panic!("Unexpected value: {}", x),
+            x => panic!("Unexpected value: {x}"),
         }
     }
 

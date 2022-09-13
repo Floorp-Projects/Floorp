@@ -28,16 +28,13 @@
 //! use goblin::{error, Object};
 //! use std::path::Path;
 //! use std::env;
-//! use std::fs::File;
-//! use std::io::Read;
+//! use std::fs;
 //!
 //! fn run () -> error::Result<()> {
 //!     for (i, arg) in env::args().enumerate() {
 //!         if i == 1 {
 //!             let path = Path::new(arg.as_str());
-//!             let mut fd = File::open(path)?;
-//!             let mut buffer = Vec::new();
-//!             fd.read_to_end(&mut buffer)?;
+//!             let buffer = fs::read(path)?;
 //!             match Object::parse(&buffer)? {
 //!                 Object::Elf(elf) => {
 //!                     println!("elf: {:#?}", &elf);
@@ -114,7 +111,6 @@ pub mod strtab;
 
 /// Binary container size information and byte-order context
 pub mod container {
-    use scroll;
     pub use scroll::Endian;
 
     #[derive(Debug, Copy, Clone, PartialEq)]
@@ -133,11 +129,11 @@ pub mod container {
 
     #[cfg(not(target_pointer_width = "64"))]
     /// The default binary container size - either `Big` or `Little`, depending on whether the host machine's pointer size is 64 or not
-    pub const CONTAINER: Container =  Container::Little;
+    pub const CONTAINER: Container = Container::Little;
 
     #[cfg(target_pointer_width = "64")]
     /// The default binary container size - either `Big` or `Little`, depending on whether the host machine's pointer size is 64 or not
-    pub const CONTAINER: Container =  Container::Big;
+    pub const CONTAINER: Container = Container::Big;
 
     impl Default for Container {
         #[inline]
@@ -163,7 +159,7 @@ pub mod container {
             self.le.is_little()
         }
         /// Create a new binary container context
-        pub fn new (container: Container, le: scroll::Endian) -> Self {
+        pub fn new(container: Container, le: scroll::Endian) -> Self {
             Ctx { container, le }
         }
         /// Return a dubious pointer/address byte size for the container
@@ -171,27 +167,36 @@ pub mod container {
             match self.container {
                 // TODO: require pointer size initialization/setting or default to container size with these values, e.g., avr pointer width will be smaller iirc
                 Container::Little => 4,
-                Container::Big    => 8,
+                Container::Big => 8,
             }
         }
     }
 
     impl From<Container> for Ctx {
         fn from(container: Container) -> Self {
-            Ctx { container, le: scroll::Endian::default() }
+            Ctx {
+                container,
+                le: scroll::Endian::default(),
+            }
         }
     }
 
     impl From<scroll::Endian> for Ctx {
         fn from(le: scroll::Endian) -> Self {
-            Ctx { container: CONTAINER, le }
+            Ctx {
+                container: CONTAINER,
+                le,
+            }
         }
     }
 
     impl Default for Ctx {
         #[inline]
         fn default() -> Self {
-            Ctx { container: Container::default(), le: scroll::Endian::default() }
+            Ctx {
+                container: Container::default(),
+                le: scroll::Endian::default(),
+            }
         }
     }
 }
@@ -274,6 +279,16 @@ if_everything! {
         peek_bytes(&bytes)
     }
 
+    /// Takes a reference to the first 16 bytes of the total bytes slice and convert it to an array for `peek_bytes` to use.
+    /// Returns None if bytes's length is less than 16.
+    fn take_hint_bytes(bytes: &[u8]) -> Option<&[u8; 16]> {
+        use core::convert::TryInto;
+        bytes.get(0..16)
+            .and_then(|hint_bytes_slice| {
+                hint_bytes_slice.try_into().ok()
+            })
+    }
+
     #[derive(Debug)]
     #[allow(clippy::large_enum_variant)]
     /// A parseable object that goblin understands
@@ -290,18 +305,19 @@ if_everything! {
         Unknown(u64),
     }
 
-    // TODO: this could avoid std using peek_bytes
-    #[cfg(feature = "std")]
     impl<'a> Object<'a> {
         /// Tries to parse an `Object` from `bytes`
         pub fn parse(bytes: &[u8]) -> error::Result<Object> {
-            use std::io::Cursor;
-            match peek(&mut Cursor::new(&bytes))? {
-                Hint::Elf(_) => Ok(Object::Elf(elf::Elf::parse(bytes)?)),
-                Hint::Mach(_) | Hint::MachFat(_) => Ok(Object::Mach(mach::Mach::parse(bytes)?)),
-                Hint::Archive => Ok(Object::Archive(archive::Archive::parse(bytes)?)),
-                Hint::PE => Ok(Object::PE(pe::PE::parse(bytes)?)),
-                Hint::Unknown(magic) => Ok(Object::Unknown(magic))
+            if let Some(hint_bytes) = take_hint_bytes(bytes) {
+                match peek_bytes(hint_bytes)? {
+                    Hint::Elf(_) => Ok(Object::Elf(elf::Elf::parse(bytes)?)),
+                    Hint::Mach(_) | Hint::MachFat(_) => Ok(Object::Mach(mach::Mach::parse(bytes)?)),
+                    Hint::Archive => Ok(Object::Archive(archive::Archive::parse(bytes)?)),
+                    Hint::PE => Ok(Object::PE(pe::PE::parse(bytes)?)),
+                    Hint::Unknown(magic) => Ok(Object::Unknown(magic))
+                }
+            } else {
+                Err(error::Error::Malformed(format!("Object is too small.")))
             }
         }
     }
@@ -318,13 +334,13 @@ pub mod elf;
 #[cfg(feature = "elf32")]
 /// The ELF 32-bit struct definitions and associated values, re-exported for easy "type-punning"
 pub mod elf32 {
-    pub use crate::elf::header::header32 as header;
-    pub use crate::elf::program_header::program_header32 as program_header;
-    pub use crate::elf::section_header::section_header32 as section_header;
     pub use crate::elf::dynamic::dyn32 as dynamic;
-    pub use crate::elf::sym::sym32 as sym;
-    pub use crate::elf::reloc::reloc32 as reloc;
+    pub use crate::elf::header::header32 as header;
     pub use crate::elf::note::Nhdr32 as Note;
+    pub use crate::elf::program_header::program_header32 as program_header;
+    pub use crate::elf::reloc::reloc32 as reloc;
+    pub use crate::elf::section_header::section_header32 as section_header;
+    pub use crate::elf::sym::sym32 as sym;
 
     pub mod gnu_hash {
         pub use crate::elf::gnu_hash::hash;
@@ -335,13 +351,13 @@ pub mod elf32 {
 #[cfg(feature = "elf64")]
 /// The ELF 64-bit struct definitions and associated values, re-exported for easy "type-punning"
 pub mod elf64 {
-    pub use crate::elf::header::header64 as header;
-    pub use crate::elf::program_header::program_header64 as program_header;
-    pub use crate::elf::section_header::section_header64 as section_header;
     pub use crate::elf::dynamic::dyn64 as dynamic;
-    pub use crate::elf::sym::sym64 as sym;
-    pub use crate::elf::reloc::reloc64 as reloc;
+    pub use crate::elf::header::header64 as header;
     pub use crate::elf::note::Nhdr64 as Note;
+    pub use crate::elf::program_header::program_header64 as program_header;
+    pub use crate::elf::reloc::reloc64 as reloc;
+    pub use crate::elf::section_header::section_header64 as section_header;
+    pub use crate::elf::sym::sym64 as sym;
 
     pub mod gnu_hash {
         pub use crate::elf::gnu_hash::hash;
@@ -357,3 +373,23 @@ pub mod pe;
 
 #[cfg(feature = "archive")]
 pub mod archive;
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    if_everything! {
+        #[test]
+        fn take_hint_bytes_long_enough() {
+            let bytes_array = [1; 32];
+            let bytes = &bytes_array[..];
+            assert!(take_hint_bytes(bytes).is_some())
+        }
+
+        #[test]
+        fn take_hint_bytes_not_long_enough() {
+            let bytes_array = [1; 8];
+            let bytes = &bytes_array[..];
+            assert!(take_hint_bytes(bytes).is_none())
+        }
+    }
+}

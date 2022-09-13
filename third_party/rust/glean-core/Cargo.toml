@@ -12,7 +12,7 @@
 [package]
 edition = "2018"
 name = "glean-core"
-version = "51.1.0"
+version = "51.2.0"
 authors = [
     "Jan-Erik Rediger <jrediger@mozilla.com>",
     "The Glean Team <glean-team@mozilla.com>",
@@ -73,10 +73,10 @@ version = "1.0.4"
 version = "0.1.40"
 
 [dependencies.uniffi]
-version = "0.19.3"
+version = "0.19.6"
 
 [dependencies.uniffi_macros]
-version = "0.19.3"
+version = "0.19.6"
 
 [dependencies.uuid]
 version = "0.8.1"
@@ -107,7 +107,7 @@ version = "0.4"
 version = "3.1.0"
 
 [build-dependencies.uniffi_build]
-version = "0.19.3"
+version = "0.19.6"
 features = ["builtin-bindgen"]
 
 [target."cfg(not(target_os = \"android\"))".dependencies.env_logger]

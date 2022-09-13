@@ -1,6 +1,7 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+#![cfg_attr(feature = "nightly", feature(proc_macro_expand))]
 
 //! Macros for `uniffi`.
 //!
@@ -11,6 +12,32 @@ use camino::{Utf8Path, Utf8PathBuf};
 use quote::{format_ident, quote};
 use std::env;
 use syn::{bracketed, punctuated::Punctuated, LitStr, Token};
+
+mod export;
+mod util;
+
+use self::export::expand_export;
+
+#[proc_macro_attribute]
+pub fn export(
+    _attr: proc_macro::TokenStream,
+    input: proc_macro::TokenStream,
+) -> proc_macro::TokenStream {
+    let input2 = proc_macro2::TokenStream::from(input.clone());
+
+    let gen_output = || {
+        let mod_path = util::mod_path()?;
+        let item = syn::parse(input)?;
+        expand_export(item, &mod_path)
+    };
+    let output = gen_output().unwrap_or_else(syn::Error::into_compile_error);
+
+    quote! {
+        #input2
+        #output
+    }
+    .into()
+}
 
 /// A macro to build testcases for a component's generated bindings.
 ///

@@ -8,8 +8,7 @@ use scroll::{Pread, Pwrite, SizeWith};
 
 /// standard COFF fields
 #[repr(C)]
-#[derive(Debug, PartialEq, Copy, Clone, Default)]
-#[derive(Pread, Pwrite, SizeWith)]
+#[derive(Debug, PartialEq, Copy, Clone, Default, Pread, Pwrite, SizeWith)]
 pub struct StandardFields32 {
     pub magic: u16,
     pub major_linker_version: u8,
@@ -27,8 +26,7 @@ pub const SIZEOF_STANDARD_FIELDS_32: usize = 28;
 
 /// standard 64-bit COFF fields
 #[repr(C)]
-#[derive(Debug, PartialEq, Copy, Clone, Default)]
-#[derive(Pread, Pwrite, SizeWith)]
+#[derive(Debug, PartialEq, Copy, Clone, Default, Pread, Pwrite, SizeWith)]
 pub struct StandardFields64 {
     pub magic: u16,
     pub major_linker_version: u8,
@@ -96,8 +94,7 @@ pub const MAGIC_64: u16 = 0x20b;
 
 /// Windows specific fields
 #[repr(C)]
-#[derive(Debug, PartialEq, Copy, Clone, Default)]
-#[derive(Pread, Pwrite, SizeWith)]
+#[derive(Debug, PartialEq, Copy, Clone, Default, Pread, Pwrite, SizeWith)]
 pub struct WindowsFields32 {
     pub image_base: u32,
     pub section_alignment: u32,
@@ -126,8 +123,7 @@ pub const SIZEOF_WINDOWS_FIELDS_32: usize = 68;
 
 /// 64-bit Windows specific fields
 #[repr(C)]
-#[derive(Debug, PartialEq, Copy, Clone, Default)]
-#[derive(Pread, Pwrite, SizeWith)]
+#[derive(Debug, PartialEq, Copy, Clone, Default, Pread, Pwrite, SizeWith)]
 pub struct WindowsFields64 {
     pub image_base: u64,
     pub section_alignment: u32,
@@ -145,9 +141,9 @@ pub struct WindowsFields64 {
     pub subsystem: u16,
     pub dll_characteristics: u16,
     pub size_of_stack_reserve: u64,
-    pub size_of_stack_commit:  u64,
-    pub size_of_heap_reserve:  u64,
-    pub size_of_heap_commit:   u64,
+    pub size_of_stack_commit: u64,
+    pub size_of_heap_reserve: u64,
+    pub size_of_heap_commit: u64,
     pub loader_flags: u32,
     pub number_of_rva_and_sizes: u32,
 }
@@ -242,21 +238,15 @@ pub type WindowsFields = WindowsFields64;
 pub struct OptionalHeader {
     pub standard_fields: StandardFields,
     pub windows_fields: WindowsFields,
-    pub data_directories: data_directories::DataDirectories
+    pub data_directories: data_directories::DataDirectories,
 }
 
 impl OptionalHeader {
     pub fn container(&self) -> error::Result<container::Container> {
         match self.standard_fields.magic {
-            MAGIC_32 => {
-                Ok(container::Container::Little)
-            },
-            MAGIC_64 => {
-                Ok(container::Container::Big)
-            },
-            magic => {
-                Err(error::Error::BadMagic(u64::from(magic)))
-            }
+            MAGIC_32 => Ok(container::Container::Little),
+            MAGIC_64 => Ok(container::Container::Big),
+            magic => Err(error::Error::BadMagic(u64::from(magic))),
         }
     }
 }
@@ -271,20 +261,27 @@ impl<'a> ctx::TryFromCtx<'a, Endian> for OptionalHeader {
                 let standard_fields = bytes.gread_with::<StandardFields32>(offset, LE)?.into();
                 let windows_fields = bytes.gread_with::<WindowsFields32>(offset, LE)?.into();
                 (standard_fields, windows_fields)
-            },
+            }
             MAGIC_64 => {
                 let standard_fields = bytes.gread_with::<StandardFields64>(offset, LE)?.into();
                 let windows_fields = bytes.gread_with::<WindowsFields64>(offset, LE)?;
                 (standard_fields, windows_fields)
-            },
-            _ => return Err(error::Error::BadMagic(u64::from(magic)))
+            }
+            _ => return Err(error::Error::BadMagic(u64::from(magic))),
         };
-        let data_directories = data_directories::DataDirectories::parse(&bytes, windows_fields.number_of_rva_and_sizes as usize, offset)?;
-        Ok ((OptionalHeader {
-            standard_fields,
-            windows_fields,
-            data_directories,
-        }, 0)) // TODO: FIXME
+        let data_directories = data_directories::DataDirectories::parse(
+            &bytes,
+            windows_fields.number_of_rva_and_sizes as usize,
+            offset,
+        )?;
+        Ok((
+            OptionalHeader {
+                standard_fields,
+                windows_fields,
+                data_directories,
+            },
+            0,
+        )) // TODO: FIXME
     }
 }
 
@@ -293,18 +290,30 @@ mod tests {
     use super::*;
     #[test]
     fn sizeof_standards32() {
-        assert_eq!(::std::mem::size_of::<StandardFields32>(), SIZEOF_STANDARD_FIELDS_32);
+        assert_eq!(
+            ::std::mem::size_of::<StandardFields32>(),
+            SIZEOF_STANDARD_FIELDS_32
+        );
     }
     #[test]
     fn sizeof_windows32() {
-        assert_eq!(::std::mem::size_of::<WindowsFields32>(), SIZEOF_WINDOWS_FIELDS_32);
+        assert_eq!(
+            ::std::mem::size_of::<WindowsFields32>(),
+            SIZEOF_WINDOWS_FIELDS_32
+        );
     }
     #[test]
     fn sizeof_standards64() {
-        assert_eq!(::std::mem::size_of::<StandardFields64>(), SIZEOF_STANDARD_FIELDS_64);
+        assert_eq!(
+            ::std::mem::size_of::<StandardFields64>(),
+            SIZEOF_STANDARD_FIELDS_64
+        );
     }
     #[test]
     fn sizeof_windows64() {
-        assert_eq!(::std::mem::size_of::<WindowsFields64>(), SIZEOF_WINDOWS_FIELDS_64);
+        assert_eq!(
+            ::std::mem::size_of::<WindowsFields64>(),
+            SIZEOF_WINDOWS_FIELDS_64
+        );
     }
 }

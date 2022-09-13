@@ -71,7 +71,7 @@ impl TypeResolver for &weedle::types::AttributedNonAnyType<'_> {
         if self.attributes.is_some() {
             bail!("type attributes are not supported yet");
         }
-        (&self.type_).resolve_type_expression(types)
+        self.type_.resolve_type_expression(types)
     }
 }
 
@@ -80,7 +80,7 @@ impl TypeResolver for &weedle::types::AttributedType<'_> {
         if self.attributes.is_some() {
             bail!("type attributes are not supported yet");
         }
-        (&self.type_).resolve_type_expression(types)
+        self.type_.resolve_type_expression(types)
     }
 }
 
@@ -132,8 +132,8 @@ impl TypeResolver for weedle::types::RecordKeyType<'_> {
 
 impl TypeResolver for weedle::types::RecordType<'_> {
     fn resolve_type_expression(&self, types: &mut TypeUniverse) -> Result<Type> {
-        let key_type = (&self.generics.body.0).resolve_type_expression(types)?;
-        let value_type = (&self.generics.body.2).resolve_type_expression(types)?;
+        let key_type = self.generics.body.0.resolve_type_expression(types)?;
+        let value_type = self.generics.body.2.resolve_type_expression(types)?;
         types.add_known_type(Type::Map(Box::new(key_type), Box::new(value_type)))
     }
 }

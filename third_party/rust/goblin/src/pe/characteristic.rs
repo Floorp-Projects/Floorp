@@ -91,9 +91,9 @@ pub const IMAGE_FILE_UP_SYSTEM_ONLY: u16 = 0x4000;
 pub const IMAGE_FILE_BYTES_REVERSED_HI: u16 = 0x8000;
 
 pub fn is_dll(characteristics: u16) -> bool {
-  characteristics & IMAGE_FILE_DLL == IMAGE_FILE_DLL
+    characteristics & IMAGE_FILE_DLL == IMAGE_FILE_DLL
 }
 
 pub fn is_exe(characteristics: u16) -> bool {
-  characteristics & IMAGE_FILE_EXECUTABLE_IMAGE == IMAGE_FILE_EXECUTABLE_IMAGE
+    characteristics & IMAGE_FILE_EXECUTABLE_IMAGE == IMAGE_FILE_EXECUTABLE_IMAGE
 }

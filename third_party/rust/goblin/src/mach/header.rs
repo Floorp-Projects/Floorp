@@ -1,14 +1,14 @@
 //! A header contains minimal architecture information, the binary kind, the number of load commands, as well as an endianness hint
 
 use core::fmt;
-use scroll::ctx;
-use scroll::{Pread, Pwrite, SizeWith};
-use scroll::ctx::SizeWith;
 use plain::Plain;
+use scroll::ctx;
+use scroll::ctx::SizeWith;
+use scroll::{Pread, Pwrite, SizeWith};
 
-use crate::mach::constants::cputype::{CpuType, CpuSubType, CPU_SUBTYPE_MASK};
-use crate::error;
 use crate::container::{self, Container};
+use crate::error;
+use crate::mach::constants::cputype::{CpuSubType, CpuType, CPU_SUBTYPE_MASK};
 
 // Constants for the flags field of the mach_header
 /// the object file has no undefined references
@@ -158,8 +158,7 @@ pub fn filetype_to_str(filetype: u32) -> &'static str {
 }
 
 #[repr(C)]
-#[derive(Clone, Copy, Default, Debug)]
-#[derive(Pread, Pwrite, SizeWith)]
+#[derive(Clone, Copy, Default, Debug, Pread, Pwrite, SizeWith)]
 /// A 32-bit Mach-o header
 pub struct Header32 {
     /// mach magic number identifier
@@ -193,8 +192,7 @@ impl Header32 {
 }
 
 #[repr(C)]
-#[derive(Clone, Copy, Default, Debug)]
-#[derive(Pread, Pwrite, SizeWith)]
+#[derive(Clone, Copy, Default, Debug, Pread, Pwrite, SizeWith)]
 /// A 64-bit Mach-o header
 pub struct Header64 {
     /// mach magic number identifier
@@ -262,60 +260,60 @@ impl fmt::Debug for Header {
 }
 
 impl From<Header32> for Header {
-    fn from (header: Header32) -> Self {
+    fn from(header: Header32) -> Self {
         Header {
-            magic:      header.magic,
-            cputype:    header.cputype,
+            magic: header.magic,
+            cputype: header.cputype,
             cpusubtype: header.cpusubtype,
-            filetype:   header.filetype,
-            ncmds:      header.ncmds as usize,
+            filetype: header.filetype,
+            ncmds: header.ncmds as usize,
             sizeofcmds: header.sizeofcmds,
-            flags:      header.flags,
-            reserved:   0,
+            flags: header.flags,
+            reserved: 0,
         }
     }
 }
 
 impl From<Header> for Header32 {
-    fn from (header: Header) -> Self {
+    fn from(header: Header) -> Self {
         Header32 {
-            magic:      header.magic,
-            cputype:    header.cputype,
+            magic: header.magic,
+            cputype: header.cputype,
             cpusubtype: header.cpusubtype,
-            filetype:   header.filetype,
-            ncmds:      header.ncmds as u32,
+            filetype: header.filetype,
+            ncmds: header.ncmds as u32,
             sizeofcmds: header.sizeofcmds,
-            flags:      header.flags,
+            flags: header.flags,
         }
     }
 }
 
 impl From<Header64> for Header {
-    fn from (header: Header64) -> Self {
+    fn from(header: Header64) -> Self {
         Header {
-            magic:      header.magic,
-            cputype:    header.cputype,
+            magic: header.magic,
+            cputype: header.cputype,
             cpusubtype: header.cpusubtype,
-            filetype:   header.filetype,
-            ncmds:      header.ncmds as usize,
+            filetype: header.filetype,
+            ncmds: header.ncmds as usize,
             sizeofcmds: header.sizeofcmds,
-            flags:      header.flags,
-            reserved:   header.reserved,
+            flags: header.flags,
+            reserved: header.reserved,
         }
     }
 }
 
 impl From<Header> for Header64 {
-    fn from (header: Header) -> Self {
+    fn from(header: Header) -> Self {
         Header64 {
-            magic:      header.magic,
-            cputype:    header.cputype,
+            magic: header.magic,
+            cputype: header.cputype,
             cpusubtype: header.cpusubtype,
-            filetype:   header.filetype,
-            ncmds:      header.ncmds as u32,
+            filetype: header.filetype,
+            ncmds: header.ncmds as u32,
             sizeofcmds: header.sizeofcmds,
-            flags:      header.flags,
-            reserved:   header.reserved,
+            flags: header.flags,
+            reserved: header.reserved,
         }
     }
 }
@@ -323,7 +321,7 @@ impl From<Header> for Header64 {
 impl Header {
     pub fn new(ctx: container::Ctx) -> Self {
         let mut header = Header::default();
-        header.magic = if ctx.is_big () { MH_MAGIC_64 } else { MH_MAGIC };
+        header.magic = if ctx.is_big() { MH_MAGIC_64 } else { MH_MAGIC };
         header
     }
     /// Returns the cpu type
@@ -343,12 +341,8 @@ impl Header {
 impl ctx::SizeWith<container::Ctx> for Header {
     fn size_with(container: &container::Ctx) -> usize {
         match container.container {
-            Container::Little => {
-                SIZEOF_HEADER_32
-            },
-            Container::Big => {
-                SIZEOF_HEADER_64
-            },
+            Container::Little => SIZEOF_HEADER_32,
+            Container::Big => SIZEOF_HEADER_64,
         }
     }
 }
@@ -356,33 +350,33 @@ impl ctx::SizeWith<container::Ctx> for Header {
 impl ctx::SizeWith<Container> for Header {
     fn size_with(container: &Container) -> usize {
         match container {
-            Container::Little => {
-                SIZEOF_HEADER_32
-            },
-            Container::Big => {
-                SIZEOF_HEADER_64
-            },
+            Container::Little => SIZEOF_HEADER_32,
+            Container::Big => SIZEOF_HEADER_64,
         }
     }
 }
 
 impl<'a> ctx::TryFromCtx<'a, container::Ctx> for Header {
     type Error = crate::error::Error;
-    fn try_from_ctx(bytes: &'a [u8], container::Ctx { le, container }: container::Ctx) -> error::Result<(Self, usize)> {
+    fn try_from_ctx(
+        bytes: &'a [u8],
+        container::Ctx { le, container }: container::Ctx,
+    ) -> error::Result<(Self, usize)> {
         let size = bytes.len();
         if size < SIZEOF_HEADER_32 || size < SIZEOF_HEADER_64 {
-            let error = error::Error::Malformed("bytes size is smaller than a Mach-o header".into());
+            let error =
+                error::Error::Malformed("bytes size is smaller than a Mach-o header".into());
             Err(error)
         } else {
             match container {
                 Container::Little => {
                     let header = bytes.pread_with::<Header32>(0, le)?;
                     Ok((Header::from(header), SIZEOF_HEADER_32))
-                },
+                }
                 Container::Big => {
                     let header = bytes.pread_with::<Header64>(0, le)?;
                     Ok((Header::from(header), SIZEOF_HEADER_64))
-                },
+                }
             }
         }
     }
@@ -394,7 +388,7 @@ impl ctx::TryIntoCtx<container::Ctx> for Header {
         match ctx.container {
             Container::Little => {
                 bytes.pwrite_with(Header32::from(self), 0, ctx.le)?;
-            },
+            }
             Container::Big => {
                 bytes.pwrite_with(Header64::from(self), 0, ctx.le)?;
             }
@@ -411,18 +405,20 @@ impl ctx::IntoCtx<container::Ctx> for Header {
 
 #[cfg(test)]
 mod tests {
-    use std::mem::size_of;
     use super::*;
+    use std::mem::size_of;
 
     #[test]
     fn test_parse_armv7_header() {
         use crate::mach::constants::cputype::CPU_TYPE_ARM;
         const CPU_SUBTYPE_ARM_V7: u32 = 9;
         use super::Header;
-        use crate::container::{Ctx, Container, Endian};
-        use scroll::{Pread};
+        use crate::container::{Container, Ctx, Endian};
+        use scroll::Pread;
         let bytes = b"\xce\xfa\xed\xfe\x0c\x00\x00\x00\t\x00\x00\x00\n\x00\x00\x00\x06\x00\x00\x00\x8c\r\x00\x00\x00\x00\x00\x00\x1b\x00\x00\x00\x18\x00\x00\x00\xe0\xf7B\xbb\x1c\xf50w\xa6\xf7u\xa3\xba(";
-        let header: Header = bytes.pread_with(0, Ctx::new(Container::Little, Endian::Little)).unwrap();
+        let header: Header = bytes
+            .pread_with(0, Ctx::new(Container::Little, Endian::Little))
+            .unwrap();
         assert_eq!(header.cputype, CPU_TYPE_ARM);
         assert_eq!(header.cpusubtype, CPU_SUBTYPE_ARM_V7);
     }

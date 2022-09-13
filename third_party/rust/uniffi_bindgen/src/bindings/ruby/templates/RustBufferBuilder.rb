@@ -105,6 +105,35 @@ class RustBufferBuilder
     write v
   end
 
+  {% when Type::Timestamp -%}
+  # The Timestamp type.
+  ONE_SECOND_IN_NANOSECONDS = 10**9
+
+  def write_{{ canonical_type_name }}(v)
+    seconds = v.tv_sec
+    nanoseconds = v.tv_nsec
+
+    if seconds < 0
+      nanoseconds = ONE_SECOND_IN_NANOSECONDS - nanoseconds
+    end
+
+    pack_into 8, 'q>', seconds
+    pack_into 4, 'L>', nanoseconds
+  end
+
+  {% when Type::Duration -%}
+  # The Duration type.
+
+  def write_{{ canonical_type_name }}(v)
+    seconds = v.tv_sec
+    nanoseconds = v.tv_nsec
+
+    raise ArgumentError, 'Invalid duration, must be non-negative' if seconds < 0
+
+    pack_into 8, 'Q>', seconds
+    pack_into 4, 'L>', nanoseconds
+  end
+
   {% when Type::Object with (object_name) -%}
   # The Object type {{ object_name }}.
 

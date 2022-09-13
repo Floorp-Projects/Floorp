@@ -2,13 +2,13 @@
 //!
 //! Symbols are essentially a type, offset, and the symbol name
 
-use scroll::ctx;
-use scroll::ctx::SizeWith;
-use scroll::{Pread, Pwrite, SizeWith, IOread, IOwrite};
-use crate::error;
 use crate::container::{self, Container};
+use crate::error;
 use crate::mach::load_command;
 use core::fmt::{self, Debug};
+use scroll::ctx;
+use scroll::ctx::SizeWith;
+use scroll::{IOread, IOwrite, Pread, Pwrite, SizeWith};
 
 // The n_type field really contains four fields which are used via the following masks.
 /// if any of these bits set, a symbolic debugging entry
@@ -38,7 +38,7 @@ pub const MAX_SECT: u8 = 255;
 /// undefined, n_sect == NO_SECT
 pub const N_UNDF: u8 = 0x0;
 /// absolute, n_sect == NO_SECT
-pub const N_ABS:  u8 = 0x2;
+pub const N_ABS: u8 = 0x2;
 /// defined in section number n_sect
 pub const N_SECT: u8 = 0xe;
 /// prebound undefined (defined in a dylib)
@@ -47,37 +47,37 @@ pub const N_PBUD: u8 = 0xc;
 pub const N_INDR: u8 = 0xa;
 
 // n_types when N_STAB
-pub const N_GSYM:    u8 = 0x20;
-pub const N_FNAME:   u8 = 0x22;
-pub const N_FUN:     u8 = 0x24;
-pub const N_STSYM:   u8 = 0x26;
-pub const N_LCSYM:   u8 = 0x28;
-pub const N_BNSYM:   u8 = 0x2e;
-pub const N_PC:      u8 = 0x30;
-pub const N_AST:     u8 = 0x32;
-pub const N_OPT:     u8 = 0x3c;
-pub const N_RSYM:    u8 = 0x40;
-pub const N_SLINE:   u8 = 0x44;
-pub const N_ENSYM:   u8 = 0x4e;
-pub const N_SSYM:    u8 = 0x60;
-pub const N_SO:      u8 = 0x64;
-pub const N_OSO:     u8 = 0x66;
-pub const N_LSYM:    u8 = 0x80;
-pub const N_BINCL:   u8 = 0x82;
-pub const N_SOL:     u8 = 0x84;
-pub const N_PARAMS:  u8 = 0x86;
+pub const N_GSYM: u8 = 0x20;
+pub const N_FNAME: u8 = 0x22;
+pub const N_FUN: u8 = 0x24;
+pub const N_STSYM: u8 = 0x26;
+pub const N_LCSYM: u8 = 0x28;
+pub const N_BNSYM: u8 = 0x2e;
+pub const N_PC: u8 = 0x30;
+pub const N_AST: u8 = 0x32;
+pub const N_OPT: u8 = 0x3c;
+pub const N_RSYM: u8 = 0x40;
+pub const N_SLINE: u8 = 0x44;
+pub const N_ENSYM: u8 = 0x4e;
+pub const N_SSYM: u8 = 0x60;
+pub const N_SO: u8 = 0x64;
+pub const N_OSO: u8 = 0x66;
+pub const N_LSYM: u8 = 0x80;
+pub const N_BINCL: u8 = 0x82;
+pub const N_SOL: u8 = 0x84;
+pub const N_PARAMS: u8 = 0x86;
 pub const N_VERSION: u8 = 0x88;
-pub const N_OLEVEL:  u8 = 0x8a;
-pub const N_PSYM:    u8 = 0xa0;
-pub const N_EINCL:   u8 = 0xa2;
-pub const N_ENTRY:   u8 = 0xa4;
-pub const N_LBRAC:   u8 = 0xc0;
-pub const N_EXCL:    u8 = 0xc2;
-pub const N_RBRAC:   u8 = 0xe0;
-pub const N_BCOMM:   u8 = 0xe2;
-pub const N_ECOMM:   u8 = 0xe4;
-pub const N_ECOML:   u8 = 0xe8;
-pub const N_LENG:    u8 = 0xfe;
+pub const N_OLEVEL: u8 = 0x8a;
+pub const N_PSYM: u8 = 0xa0;
+pub const N_EINCL: u8 = 0xa2;
+pub const N_ENTRY: u8 = 0xa4;
+pub const N_LBRAC: u8 = 0xc0;
+pub const N_EXCL: u8 = 0xc2;
+pub const N_RBRAC: u8 = 0xe0;
+pub const N_BCOMM: u8 = 0xe2;
+pub const N_ECOMM: u8 = 0xe4;
+pub const N_ECOML: u8 = 0xe8;
+pub const N_LENG: u8 = 0xfe;
 
 pub const NLIST_TYPE_MASK: u8 = 0xe;
 pub const NLIST_TYPE_GLOBAL: u8 = 0x1;
@@ -132,7 +132,7 @@ pub fn n_type_to_str(n_type: u8) -> &'static str {
         N_SECT => "N_SECT",
         N_PBUD => "N_PBUD",
         N_INDR => "N_INDR",
-        _ => "UNKNOWN_N_TYPE"
+        _ => "UNKNOWN_N_TYPE",
     }
 }
 
@@ -156,12 +156,12 @@ pub const SIZEOF_NLIST_32: usize = 12;
 impl Debug for Nlist32 {
     fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
         fmt.debug_struct("Nlist32")
-           .field("n_strx", &format_args!("{:04}", self.n_strx))
-           .field("n_type", &format_args!("{:#02x}", self.n_type))
-           .field("n_sect", &format_args!("{:#x}", self.n_sect))
-           .field("n_desc", &format_args!("{:#03x}", self.n_desc))
-           .field("n_value", &format_args!("{:#x}", self.n_value))
-           .finish()
+            .field("n_strx", &format_args!("{:04}", self.n_strx))
+            .field("n_type", &format_args!("{:#02x}", self.n_type))
+            .field("n_sect", &format_args!("{:#x}", self.n_sect))
+            .field("n_desc", &format_args!("{:#03x}", self.n_desc))
+            .field("n_value", &format_args!("{:#x}", self.n_value))
+            .finish()
     }
 }
 
@@ -185,16 +185,16 @@ pub const SIZEOF_NLIST_64: usize = 16;
 impl Debug for Nlist64 {
     fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
         fmt.debug_struct("Nlist64")
-           .field("n_strx", &format_args!("{:04}", self.n_strx))
-           .field("n_type", &format_args!("{:#02x}", self.n_type))
-           .field("n_sect", &format_args!("{:#x}", self.n_sect))
-           .field("n_desc", &format_args!("{:#03x}", self.n_desc))
-           .field("n_value", &format_args!("{:#x}", self.n_value))
-           .finish()
+            .field("n_strx", &format_args!("{:04}", self.n_strx))
+            .field("n_type", &format_args!("{:#02x}", self.n_type))
+            .field("n_sect", &format_args!("{:#x}", self.n_sect))
+            .field("n_desc", &format_args!("{:#03x}", self.n_desc))
+            .field("n_value", &format_args!("{:#x}", self.n_value))
+            .finish()
     }
 }
 
-#[derive(Debug, Clone,)]
+#[derive(Debug, Clone)]
 pub struct Nlist {
     /// index into the string table
     pub n_strx: usize,
@@ -238,12 +238,8 @@ impl Nlist {
 impl ctx::SizeWith<container::Ctx> for Nlist {
     fn size_with(ctx: &container::Ctx) -> usize {
         match ctx.container {
-            Container::Little => {
-                SIZEOF_NLIST_32
-            },
-            Container::Big => {
-                SIZEOF_NLIST_64
-            },
+            Container::Little => SIZEOF_NLIST_32,
+            Container::Big => SIZEOF_NLIST_64,
         }
     }
 }
@@ -298,14 +294,13 @@ impl From<Nlist> for Nlist64 {
 
 impl<'a> ctx::TryFromCtx<'a, container::Ctx> for Nlist {
     type Error = crate::error::Error;
-    fn try_from_ctx(bytes: &'a [u8], container::Ctx { container, le }: container::Ctx) -> crate::error::Result<(Self, usize)> {
+    fn try_from_ctx(
+        bytes: &'a [u8],
+        container::Ctx { container, le }: container::Ctx,
+    ) -> crate::error::Result<(Self, usize)> {
         let nlist = match container {
-            Container::Little => {
-                (bytes.pread_with::<Nlist32>(0, le)?.into(), SIZEOF_NLIST_32)
-            },
-            Container::Big => {
-                (bytes.pread_with::<Nlist64>(0, le)?.into(), SIZEOF_NLIST_64)
-            },
+            Container::Little => (bytes.pread_with::<Nlist32>(0, le)?.into(), SIZEOF_NLIST_32),
+            Container::Big => (bytes.pread_with::<Nlist64>(0, le)?.into(), SIZEOF_NLIST_64),
         };
         Ok(nlist)
     }
@@ -313,14 +308,14 @@ impl<'a> ctx::TryFromCtx<'a, container::Ctx> for Nlist {
 
 impl ctx::TryIntoCtx<container::Ctx> for Nlist {
     type Error = crate::error::Error;
-    fn try_into_ctx(self, bytes: &mut [u8], container::Ctx { container, le }: container::Ctx) -> Result<usize, Self::Error> {
+    fn try_into_ctx(
+        self,
+        bytes: &mut [u8],
+        container::Ctx { container, le }: container::Ctx,
+    ) -> Result<usize, Self::Error> {
         let size = match container {
-            Container::Little => {
-                (bytes.pwrite_with::<Nlist32>(self.into(), 0, le)?)
-            },
-            Container::Big => {
-                (bytes.pwrite_with::<Nlist64>(self.into(), 0, le)?)
-            },
+            Container::Little => (bytes.pwrite_with::<Nlist32>(self.into(), 0, le)?),
+            Container::Big => (bytes.pwrite_with::<Nlist64>(self.into(), 0, le)?),
         };
         Ok(size)
     }
@@ -339,19 +334,26 @@ pub struct SymbolsCtx {
     pub ctx: container::Ctx,
 }
 
-impl<'a, T: ?Sized> ctx::TryFromCtx<'a, SymbolsCtx, T> for Symbols<'a> where T: AsRef<[u8]> {
+impl<'a, T: ?Sized> ctx::TryFromCtx<'a, SymbolsCtx, T> for Symbols<'a>
+where
+    T: AsRef<[u8]>,
+{
     type Error = crate::error::Error;
-    fn try_from_ctx(bytes: &'a T, SymbolsCtx {
-        nsyms, strtab, ctx
-    }: SymbolsCtx) -> crate::error::Result<(Self, usize)> {
+    fn try_from_ctx(
+        bytes: &'a T,
+        SymbolsCtx { nsyms, strtab, ctx }: SymbolsCtx,
+    ) -> crate::error::Result<(Self, usize)> {
         let data = bytes.as_ref();
-        Ok ((Symbols {
-            data,
-            start: 0,
-            nsyms,
-            strtab,
-            ctx,
-        }, data.len()))
+        Ok((
+            Symbols {
+                data,
+                start: 0,
+                nsyms,
+                strtab,
+                ctx,
+            },
+            data.len(),
+        ))
     }
 }
 
@@ -373,15 +375,11 @@ impl<'a> Iterator for SymbolIterator<'a> {
         } else {
             self.count += 1;
             match self.data.gread_with::<Nlist>(&mut self.offset, self.ctx) {
-                Ok(symbol) => {
-                    match self.data.pread(self.strtab + symbol.n_strx) {
-                        Ok(name) => {
-                            Some(Ok((name, symbol)))
-                        },
-                        Err(e) => Some(Err(e.into()))
-                    }
+                Ok(symbol) => match self.data.pread(self.strtab + symbol.n_strx) {
+                    Ok(name) => Some(Ok((name, symbol))),
+                    Err(e) => Some(Err(e.into())),
                 },
-                Err(e) => Some(Err(e))
+                Err(e) => Some(Err(e)),
             }
         }
     }
@@ -409,9 +407,14 @@ impl<'a> Symbols<'a> {
     /// Creates a new symbol table with `count` elements, from the `start` offset, using the string table at `strtab`, with a _default_ ctx.
     ////
     /// **Beware**, this will provide incorrect results if you construct this on a 32-bit mach binary, using a 64-bit machine; use `parse` instead if you want 32/64 bit support
-    pub fn new(bytes: &'a [u8], start: usize, count: usize, strtab: usize) -> error::Result<Symbols<'a>> {
+    pub fn new(
+        bytes: &'a [u8],
+        start: usize,
+        count: usize,
+        strtab: usize,
+    ) -> error::Result<Symbols<'a>> {
         let nsyms = count;
-        Ok (Symbols {
+        Ok(Symbols {
             data: bytes,
             start,
             nsyms,
@@ -419,10 +422,24 @@ impl<'a> Symbols<'a> {
             ctx: container::Ctx::default(),
         })
     }
-    pub fn parse(bytes: &'a [u8], symtab: &load_command::SymtabCommand, ctx: container::Ctx) -> error::Result<Symbols<'a>> {
+    pub fn parse(
+        bytes: &'a [u8],
+        symtab: &load_command::SymtabCommand,
+        ctx: container::Ctx,
+    ) -> error::Result<Symbols<'a>> {
         // we need to normalize the strtab offset before we receive the truncated bytes in pread_with
-        let strtab = symtab.stroff - symtab.symoff;
-        Ok(bytes.pread_with(symtab.symoff as usize, SymbolsCtx { nsyms: symtab.nsyms as usize, strtab: strtab as usize, ctx })?)
+        let strtab = symtab
+            .stroff
+            .checked_sub(symtab.symoff)
+            .ok_or_else(|| error::Error::Malformed("invalid symbol table offset".into()))?;
+        bytes.pread_with(
+            symtab.symoff as usize,
+            SymbolsCtx {
+                nsyms: symtab.nsyms as usize,
+                strtab: strtab as usize,
+                ctx,
+            },
+        )
     }
 
     pub fn iter(&self) -> SymbolIterator<'a> {
@@ -438,7 +455,9 @@ impl<'a> Symbols<'a> {
 
     /// Parses a single Nlist symbol from the binary, with its accompanying name
     pub fn get(&self, index: usize) -> crate::error::Result<(&'a str, Nlist)> {
-        let sym: Nlist = self.data.pread_with(self.start + (index * Nlist::size_with(&self.ctx)), self.ctx)?;
+        let sym: Nlist = self
+            .data
+            .pread_with(self.start + (index * Nlist::size_with(&self.ctx)), self.ctx)?;
         let name = self.data.pread(self.strtab + sym.n_strx)?;
         Ok((name, sym))
     }

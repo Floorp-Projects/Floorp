@@ -1,13 +1,13 @@
 //! A custom Goblin error
 //!
 
-use scroll;
-use core::result;
-use core::fmt;
 use alloc::string::String;
+use core::fmt;
+use core::result;
 #[cfg(feature = "std")]
 use std::{error, io};
 
+#[non_exhaustive]
 #[derive(Debug)]
 /// A custom Goblin error
 pub enum Error {
@@ -20,6 +20,8 @@ pub enum Error {
     /// An IO based error
     #[cfg(feature = "std")]
     IO(io::Error),
+    /// Buffer is too short to hold N items
+    BufferTooShort(usize, &'static str),
 }
 
 #[cfg(feature = "std")]
@@ -28,8 +30,7 @@ impl error::Error for Error {
         match *self {
             Error::IO(ref io) => Some(io),
             Error::Scroll(ref scroll) => Some(scroll),
-            Error::BadMagic(_) => None,
-            Error::Malformed(_) => None,
+            _ => None,
         }
     }
 }
@@ -55,6 +56,7 @@ impl fmt::Display for Error {
             Error::Scroll(ref err) => write!(fmt, "{}", err),
             Error::BadMagic(magic) => write!(fmt, "Invalid magic number: 0x{:x}", magic),
             Error::Malformed(ref msg) => write!(fmt, "Malformed entity: {}", msg),
+            Error::BufferTooShort(n, item) => write!(fmt, "Buffer is too short for {} {}", n, item),
         }
     }
 }

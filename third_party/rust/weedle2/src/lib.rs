@@ -21,23 +21,6 @@
 //!
 //! If any flaws found when parsing string with a valid grammar, create an issue.
 
-// need a higher recusion limit for macros
-#![recursion_limit = "128"]
-
-#[macro_use(
-    alt,
-    cond,
-    do_parse,
-    map,
-    many0,
-    opt,
-    recognize,
-    separated_list0,
-    separated_list1,
-    terminated
-)]
-extern crate nom;
-
 use self::argument::ArgumentList;
 use self::attribute::ExtendedAttributeList;
 use self::common::{Braced, Identifier, Parenthesized, PunctuatedNonEmpty};
@@ -47,7 +30,7 @@ use self::literal::StringLit;
 use self::mixin::MixinMembers;
 use self::namespace::NamespaceMembers;
 use self::types::{AttributedType, ReturnType};
-pub use nom::{error::Error, error::ErrorKind, Err, IResult};
+pub use nom::{error::Error, Err, IResult};
 
 #[macro_use]
 mod macros;

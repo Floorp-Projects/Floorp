@@ -75,7 +75,7 @@ impl CallbackInterface {
     }
 
     pub(super) fn derive_ffi_funcs(&mut self, ci_prefix: &str) {
-        self.ffi_init_callback.name = format!("ffi_{}_{}_init_callback", ci_prefix, self.name);
+        self.ffi_init_callback.name = format!("ffi_{ci_prefix}_{}_init_callback", self.name);
         self.ffi_init_callback.arguments = vec![FFIArgument {
             name: "callback_stub".to_string(),
             type_: FFIType::ForeignCallback,

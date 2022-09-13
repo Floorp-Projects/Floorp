@@ -25,7 +25,7 @@ use crate::{internal_metrics::UploadMetrics, Glean};
 use directory::{PingDirectoryManager, PingPayloadsByDirectory};
 use policy::Policy;
 pub use request::{HeaderMap, PingRequest};
-pub use result::UploadResult;
+pub use result::{UploadResult, UploadTaskAction};
 
 mod directory;
 mod policy;
@@ -655,7 +655,7 @@ impl PingUploadManager {
         glean: &Glean,
         document_id: &str,
         status: UploadResult,
-    ) {
+    ) -> UploadTaskAction {
         use UploadResult::*;
 
         if let Some(label) = status.get_label() {
@@ -688,7 +688,14 @@ impl PingUploadManager {
                 self.recoverable_failure_count
                     .fetch_add(1, Ordering::SeqCst);
             }
+
+            Done { .. } => {
+                log::debug!("Uploader signaled Done. Exiting.");
+                return UploadTaskAction::End;
+            }
         };
+
+        UploadTaskAction::Next
     }
 }
 
@@ -1191,11 +1198,13 @@ mod test {
         // Return the max recoverable error failures in a row
         for _ in 0..max_recoverable_failures {
             match upload_manager.get_upload_task(&glean, false) {
-                PingUploadTask::Upload { request } => upload_manager.process_ping_upload_response(
-                    &glean,
-                    &request.document_id,
-                    UploadResult::recoverable_failure(),
-                ),
+                PingUploadTask::Upload { request } => {
+                    upload_manager.process_ping_upload_response(
+                        &glean,
+                        &request.document_id,
+                        UploadResult::recoverable_failure(),
+                    );
+                }
                 _ => panic!("Expected upload manager to return the next request!"),
             }
         }

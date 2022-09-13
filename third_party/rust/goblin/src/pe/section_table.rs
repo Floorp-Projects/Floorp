@@ -1,7 +1,7 @@
-use alloc::string::{String, ToString};
-use scroll::{ctx, Pread, Pwrite};
 use crate::error::{self, Error};
 use crate::pe::relocation;
+use alloc::string::{String, ToString};
+use scroll::{ctx, Pread, Pwrite};
 
 #[repr(C)]
 #[derive(Debug, PartialEq, Clone, Default)]
@@ -29,18 +29,23 @@ fn base64_decode_string_entry(s: &str) -> Result<usize, ()> {
 
     let mut val = 0;
     for c in s.bytes() {
-        let v = if b'A' <= c && c <= b'Z' { // 00..=25
+        let v = if b'A' <= c && c <= b'Z' {
+            // 00..=25
             c - b'A'
-        } else if b'a' <= c && c <= b'z' { // 26..=51
+        } else if b'a' <= c && c <= b'z' {
+            // 26..=51
             c - b'a' + 26
-        } else if b'0' <= c && c <= b'9' { // 52..=61
+        } else if b'0' <= c && c <= b'9' {
+            // 52..=61
             c - b'0' + 52
-        } else if c == b'+' { // 62
+        } else if c == b'+' {
+            // 62
             62
-        } else if c == b'/' { // 63
+        } else if c == b'/' {
+            // 63
             63
         } else {
-            return Err(())
+            return Err(());
         };
         val = val * 64 + v as usize;
     }
@@ -48,7 +53,11 @@ fn base64_decode_string_entry(s: &str) -> Result<usize, ()> {
 }
 
 impl SectionTable {
-    pub fn parse(bytes: &[u8], offset: &mut usize, string_table_offset: usize) -> error::Result<Self> {
+    pub fn parse(
+        bytes: &[u8],
+        offset: &mut usize,
+        string_table_offset: usize,
+    ) -> error::Result<Self> {
         let mut table = SectionTable::default();
         let mut name = [0u8; 8];
         name.copy_from_slice(bytes.gread_with(offset, 8)?);
@@ -75,12 +84,17 @@ impl SectionTable {
         if self.name[0] == b'/' {
             let idx: usize = if self.name[1] == b'/' {
                 let b64idx = self.name.pread::<&str>(2)?;
-                base64_decode_string_entry(b64idx).map_err(|_|
-                    Error::Malformed(format!("Invalid indirect section name //{}: base64 decoding failed", b64idx)))?
+                base64_decode_string_entry(b64idx).map_err(|_| {
+                    Error::Malformed(format!(
+                        "Invalid indirect section name //{}: base64 decoding failed",
+                        b64idx
+                    ))
+                })?
             } else {
                 let name = self.name.pread::<&str>(1)?;
-                name.parse().map_err(|err|
-                    Error::Malformed(format!("Invalid indirect section name /{}: {}", name, err)))?
+                name.parse().map_err(|err| {
+                    Error::Malformed(format!("Invalid indirect section name /{}: {}", name, err))
+                })?
             };
             Ok(Some(idx))
         } else {
@@ -90,7 +104,8 @@ impl SectionTable {
 
     #[allow(clippy::useless_let_if_seq)]
     pub fn set_name_offset(&mut self, mut idx: usize) -> error::Result<()> {
-        if idx <= 9_999_999 { // 10^7 - 1
+        if idx <= 9_999_999 {
+            // 10^7 - 1
             // write!(&mut self.name[1..], "{}", idx) without using io::Write.
             // We write into a temporary since we calculate digits starting at the right.
             let mut name = [0; 7];
@@ -110,7 +125,8 @@ impl SectionTable {
             self.name[0] = b'/';
             self.name[1..][..len].copy_from_slice(&name[7 - len..]);
             Ok(())
-        } else if idx as u64 <= 0xfff_fff_fff { // 64^6 - 1
+        } else if idx as u64 <= 0xfff_fff_fff {
+            // 64^6 - 1
             self.name[0] = b'/';
             self.name[1] = b'/';
             for i in 0..6 {
@@ -128,18 +144,21 @@ impl SectionTable {
             }
             Ok(())
         } else {
-            Err(Error::Malformed(format!("Invalid section name offset: {}", idx)))
+            Err(Error::Malformed(format!(
+                "Invalid section name offset: {}",
+                idx
+            )))
         }
     }
 
     pub fn name(&self) -> error::Result<&str> {
         match self.real_name.as_ref() {
             Some(s) => Ok(s),
-            None => Ok(self.name.pread(0)?)
+            None => Ok(self.name.pread(0)?),
         }
     }
 
-    pub fn relocations<'a>(&self, bytes: &'a[u8]) -> error::Result<relocation::Relocations<'a>> {
+    pub fn relocations<'a>(&self, bytes: &'a [u8]) -> error::Result<relocation::Relocations<'a>> {
         let offset = self.pointer_to_relocations as usize;
         let number = self.number_of_relocations as usize;
         relocation::Relocations::parse(bytes, offset, number)
@@ -247,7 +266,9 @@ mod tests {
             (10_000_000, b"//AAmJaA"),
             #[cfg(target_pointer_width = "64")]
             (0xfff_fff_fff, b"////////"),
-        ].iter() {
+        ]
+        .iter()
+        {
             section.set_name_offset(offset).unwrap();
             assert_eq!(&section.name, name);
             assert_eq!(section.name_offset().unwrap(), Some(offset));
