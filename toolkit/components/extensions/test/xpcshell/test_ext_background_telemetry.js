@@ -6,11 +6,6 @@ const HISTOGRAM = "WEBEXT_BACKGROUND_PAGE_LOAD_MS";
 const HISTOGRAM_KEYED = "WEBEXT_BACKGROUND_PAGE_LOAD_MS_BY_ADDONID";
 
 add_task(async function test_telemetry() {
-  Services.prefs.setBoolPref(
-    "toolkit.telemetry.testing.overrideProductsCheck",
-    true
-  );
-
   let extension1 = ExtensionTestUtils.loadExtension({
     background() {
       browser.test.sendMessage("loaded");

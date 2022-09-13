@@ -28,15 +28,6 @@ AddonTestUtils.createAppInfo(
 const ADDON_ID = "test-startup-cache-telemetry@xpcshell.mozilla.org";
 
 add_setup(async () => {
-  // Allows to run this telemetry test also on products (e.g. Thunderbird) where
-  // that telemetry wouldn't be actually collected in practice (but to be sure
-  // that it will work on those products as well by just adding the product in
-  // the telemetry metric definitions if it turns out we want to).
-  Services.prefs.setBoolPref(
-    "toolkit.telemetry.testing.overrideProductsCheck",
-    true
-  );
-
   // FOG needs a profile directory to put its data in.
   do_get_profile();
   // FOG needs to be initialized in order for data to flow.
