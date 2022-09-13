@@ -26,6 +26,7 @@ Preferences.addAll([
   { id: "pref.browser.homepage.disable_button.bookmark_page", type: "bool" },
   { id: "pref.browser.homepage.disable_button.restore_default", type: "bool" },
   { id: "browser.newtabpage.enabled", type: "bool" },
+  { id: "browser.disable.nt.image.gb", type: "bool" },
 ]);
 
 const HOMEPAGE_OVERRIDE_KEY = "homepage_override";

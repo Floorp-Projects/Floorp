@@ -1,0 +1,54 @@
+<?xml version="1.0"?>
+
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<?xml-stylesheet href="chrome://global/skin/global.css" type="text/css"?>
+<?xml-stylesheet href="chrome://browser/skin/preferences/preferences.css" type="text/css"?>
+
+<window id="PermissionsDialog"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        xmlns:html="http://www.w3.org/1999/xhtml"
+        data-l10n-attrs="title, style"
+        onload="onLoad();"
+        onunload="onunload();">
+
+  <dialog
+        buttons="accept"
+        data-l10n-id="permission-dialog"
+        data-l10n-attrs="buttonlabelaccept">
+
+  <linkset>
+    <html:link rel="localization" href="branding/brand.ftl"/>
+    <html:link rel="localization" href="browser/preferences/permissions.ftl"/>
+  </linkset>
+
+  <script src="chrome://browser/content/preferences/dialogs/customURL.js"/>
+
+  <vbox class="contentPane">
+    <description id="permissionsText" control="url"/>
+    <separator class="thin"/>
+    <label id="urlLabel" control="url" data-l10n-id="permissions-address"/>
+    <vbox>
+      <html:input id="customURL1" class="URLBox" type="text" value="" placeholder="https://freasearch.org/"/>
+      <html:input id="customURL2" class="URLBox" type="text" value=""/>
+      <html:input id="customURL3" class="URLBox" type="text" value=""/>
+      <html:input id="customURL4" class="URLBox" type="text" value=""/>
+      <html:input id="customURL5" class="URLBox" type="text" value=""/>
+      <html:input id="customURL6" class="URLBox" type="text" value=""/>
+      <html:input id="customURL7" class="URLBox" type="text" value=""/>
+      <html:input id="customURL8" class="URLBox" type="text" value=""/>
+      <html:input id="customURL9" class="URLBox" type="text" value=""/>
+      <html:input id="customURL10" class="URLBox" type="text" value=""/>
+    </vbox>
+    <separator class="thin"/>
+  </vbox>
+
+  <hbox class="actionButtons">
+    <button id="removeAllPermissions"
+            data-l10n-id="permissions-remove-all"
+            oncommand="onSiteDelete();"/>
+  </hbox>
+  </dialog>
+</window>
