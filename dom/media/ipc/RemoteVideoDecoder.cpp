@@ -277,7 +277,7 @@ MediaResult RemoteVideoDecoderParent::ProcessDecodedData(
         RemoteImageHolder(mParent,
                           XRE_IsGPUProcess() ? VideoBridgeSource::GpuProcess
                                              : VideoBridgeSource::RddProcess,
-                          size, sd),
+                          size, video->mImage->GetColorDepth(), sd),
         video->mFrameID);
 
     array.AppendElement(std::move(output));
