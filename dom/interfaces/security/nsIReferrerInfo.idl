@@ -27,6 +27,10 @@ interface nsIReferrerInfo : nsISerializable
    * ReferrerPolicyIDL to set up the ReferrerInfo object from JS. If you need
    * ReferrerPolicy in native code, please directly query it from
    * ReferrerPolicy.webidl.
+   *
+   * Note that the deserialization code assumes that the ReferrerPolicyIDL only
+   * uses one byte. If we would need to change the format here, we should also
+   * update the deserialization code.
    */
   cenum ReferrerPolicyIDL : 8 {
   /**

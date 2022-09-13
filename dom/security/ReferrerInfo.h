@@ -429,6 +429,13 @@ class ReferrerInfo : public nsIReferrerInfo {
                                TrimmingPolicy aTrimmingPolicy,
                                nsACString& aInAndOutTrimmedReferrer) const;
 
+  /**
+   * The helper function to read the old data format before gecko 100 for
+   * deserialization.
+   */
+  nsresult ReadTailDataBeforeGecko100(const uint32_t& aData,
+                                      nsIObjectInputStream* aInputStream);
+
   /*
    * Write message to the error console
    */
