@@ -8,6 +8,7 @@
 
 #include "FileSystemEntryMetadataArray.h"
 #include "fs/FileSystemConstants.h"
+#include "mozilla/dom/BlobImpl.h"
 #include "mozilla/dom/File.h"
 #include "mozilla/dom/FileSystemAccessHandleChild.h"
 #include "mozilla/dom/FileSystemDirectoryHandle.h"
@@ -17,6 +18,7 @@
 #include "mozilla/dom/FileSystemManager.h"
 #include "mozilla/dom/FileSystemManagerChild.h"
 #include "mozilla/dom/FileSystemSyncAccessHandle.h"
+#include "mozilla/dom/IPCBlobUtils.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/quota/QuotaCommon.h"
 
@@ -34,20 +36,6 @@ namespace mozilla::dom::fs {
 using mozilla::ipc::RejectCallback;
 
 namespace {
-
-// TODO: This is just a dummy implementation
-RefPtr<File> MakeGetFileResult(nsIGlobalObject* aGlobal, const nsString& aName,
-                               const nsString& aType,
-                               int64_t aLastModifiedMilliSeconds,
-                               nsTArray<Name>&& aPath, IPCBlob&& /* aFile */,
-                               RefPtr<FileSystemManager>& aManager) {
-  // TODO: Replace with a real implementation
-  RefPtr<File> result = File::CreateMemoryFileWithCustomLastModified(
-      aGlobal, static_cast<void*>(new uint8_t[1]), sizeof(uint8_t), aName,
-      aType, aLastModifiedMilliSeconds);
-
-  return result;
-}
 
 bool MakeResolution(nsIGlobalObject* aGlobal,
                     FileSystemGetEntriesResponse&& aResponse,
@@ -123,10 +111,11 @@ RefPtr<File> MakeResolution(nsIGlobalObject* aGlobal,
                             const Name& aName,
                             RefPtr<FileSystemManager>& aManager) {
   auto& fileProperties = aResponse.get_FileSystemFileProperties();
-  return MakeGetFileResult(aGlobal, aName, fileProperties.type(),
-                           fileProperties.last_modified_ms(),
-                           std::move(fileProperties.path()),
-                           std::move(fileProperties.file()), aManager);
+
+  RefPtr<BlobImpl> blobImpl = IPCBlobUtils::Deserialize(fileProperties.file());
+  MOZ_ASSERT(blobImpl);
+  RefPtr<File> result = File::Create(aGlobal, blobImpl);
+  return result;
 }
 
 template <class TResponse, class... Args>

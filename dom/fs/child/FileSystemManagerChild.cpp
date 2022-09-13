@@ -18,6 +18,9 @@ FileSystemManagerChild::AllocPFileSystemAccessHandleChild(
 
 ::mozilla::ipc::IPCResult FileSystemManagerChild::RecvCloseAll(
     CloseAllResolver&& aResolver) {
+  // NOTE: getFile() creates blobs that read the data from the child;
+  // we'll need to abort any reads and resolve this call only when all
+  // blobs are closed.
   for (const auto& item : ManagedPFileSystemAccessHandleChild()) {
     auto* child = static_cast<FileSystemAccessHandleChild*>(item);
     child->Close();
