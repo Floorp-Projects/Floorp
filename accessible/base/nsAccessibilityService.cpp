@@ -568,10 +568,11 @@ void nsAccessibilityService::TableLayoutGuessMaybeChanged(
     PresShell* aPresShell, nsIContent* aContent) {
   if (DocAccessible* document = GetDocAccessible(aPresShell)) {
     if (LocalAccessible* acc = document->GetAccessible(aContent)) {
-      LocalAccessible* table = nsAccUtils::TableFor(acc);
-      document->FireDelayedEvent(
-          nsIAccessibleEvent::EVENT_TABLE_STYLING_CHANGED, table);
-      document->QueueCacheUpdate(table, CacheDomain::Table);
+      if (LocalAccessible* table = nsAccUtils::TableFor(acc)) {
+        document->FireDelayedEvent(
+            nsIAccessibleEvent::EVENT_TABLE_STYLING_CHANGED, table);
+        document->QueueCacheUpdate(table, CacheDomain::Table);
+      }
     }
   }
 }
