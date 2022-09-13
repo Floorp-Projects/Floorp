@@ -12,17 +12,13 @@ class PictureInPictureVideoWrapper {
     if (container) {
       updateCaptionsFunction("");
       const callback = function(mutationsList, observer) {
-        let textNodeList = container
-          .querySelector(".vjs-text-track-cue")
-          ?.querySelectorAll("div");
-        if (!textNodeList) {
+        let text = container.querySelector("div").innerText;
+        if (!text) {
           updateCaptionsFunction("");
           return;
         }
 
-        updateCaptionsFunction(
-          Array.from(textNodeList, x => x.textContent).join("\n")
-        );
+        updateCaptionsFunction(text);
       };
 
       // immediately invoke the callback function to add subtitles to the PiP window

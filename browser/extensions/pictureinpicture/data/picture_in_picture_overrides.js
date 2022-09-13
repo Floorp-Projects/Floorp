@@ -61,6 +61,12 @@ let AVAILABLE_PIP_OVERRIDES;
       },
     },
 
+    brightcove: {
+      "https://*.brightcove.com/*": {
+        videoWrapperScriptPath: "video-wrappers/videojsWrapper.js",
+      },
+    },
+
     dailymotion: {
       "https://*.dailymotion.com/*": {
         videoWrapperScriptPath: "video-wrappers/dailymotion.js",
@@ -136,6 +142,9 @@ let AVAILABLE_PIP_OVERRIDES;
       "https://*.pbs.org/*": {
         videoWrapperScriptPath: "video-wrappers/videojsWrapper.js",
       },
+      "https://*.pbskids.org/*": {
+        videoWrapperScriptPath: "video-wrappers/videojsWrapper.js",
+      },
     },
 
     piped: {
@@ -172,6 +181,12 @@ let AVAILABLE_PIP_OVERRIDES;
     voot: {
       "https://*.voot.com/*": {
         videoWrapperScriptPath: "video-wrappers/voot.js",
+      },
+    },
+
+    wired: {
+      "https://*.wired.com/*": {
+        videoWrapperScriptPath: "video-wrappers/videojsWrapper.js",
       },
     },
 
