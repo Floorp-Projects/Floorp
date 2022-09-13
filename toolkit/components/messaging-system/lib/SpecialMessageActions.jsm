@@ -310,18 +310,7 @@ const SpecialMessageActions = {
           (data && data.entrypoint) || "snippets",
           (data && data.extraParams) || {}
         );
-        // if a location is specified, use that
-        if (data.where) {
-          window.openLinkIn(url, data.where, {
-            private: false,
-            triggeringPrincipal: Services.scriptSecurityManager.createNullPrincipal(
-              {}
-            ),
-            csp: null,
-          });
-          break;
-        }
-        // If no location was specified, we want to replace the current tab.
+        // We want to replace the current tab.
         window.openLinkIn(url, "current", {
           private: false,
           triggeringPrincipal: Services.scriptSecurityManager.createNullPrincipal(

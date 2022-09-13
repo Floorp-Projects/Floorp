@@ -74,13 +74,7 @@ add_task(async function test_aboutwelcome_mr_template_telemetry() {
   const sandbox = initSandbox();
   const messageStub = sandbox.spy(aboutWelcomeActor, "onContentMessage");
 
-  // In this case we need to click the primary button,
-  // since the only secondary button on the first screen is 'sign in'
-  await clickVisibleButton(browser, "button.primary");
-
-  registerCleanupFunction(() => {
-    sandbox.restore();
-  });
+  await clickVisibleButton(browser, "button.secondary");
 
   const { callCount } = messageStub;
   ok(callCount >= 1, `${callCount} Stub was called`);
