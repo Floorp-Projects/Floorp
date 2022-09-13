@@ -28,6 +28,27 @@ JSObject* IdentityCredential::WrapObject(JSContext* aCx,
   return IdentityCredential_Binding::Wrap(aCx, this, aGivenProto);
 }
 
+IdentityCredential::IdentityCredential(nsPIDOMWindowInner* aParent)
+    : Credential(aParent) {}
+
+void IdentityCredential::CopyValuesFrom(const IPCIdentityCredential& aOther) {
+  this->SetToken(aOther.token());
+  this->SetId(aOther.id());
+  this->SetType(aOther.type());
+}
+
+IPCIdentityCredential IdentityCredential::MakeIPCIdentityCredential() {
+  nsString token, id, type;
+  GetToken(token);
+  GetId(id);
+  GetType(type);
+  IPCIdentityCredential result;
+  result.token() = token;
+  result.id() = id;
+  result.type() = type;
+  return result;
+}
+
 void IdentityCredential::GetToken(nsAString& aToken) const {
   aToken.Assign(mToken);
 }
