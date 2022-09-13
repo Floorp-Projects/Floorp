@@ -139,6 +139,10 @@ already_AddRefed<Promise> CredentialsContainer::Get(
       StaticPrefs::dom_security_credentialmanagement_identity_enabled()) {
     totalOptions += 1;
   }
+  if (aOptions.mIdentity.WasPassed() &&
+      StaticPrefs::dom_security_credentialmanagement_identity_enabled()) {
+    totalOptions += 1;
+  }
   if (totalOptions > 1) {
     return CreateAndRejectWithNotSupported(mParent, aRv);
   }
