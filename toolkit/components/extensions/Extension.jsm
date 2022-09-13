@@ -3063,6 +3063,12 @@ class Extension extends ExtensionData {
         this.permissions.add(PRIVATE_ALLOWED_PERMISSION);
       }
 
+      // Allow other extensions to access static themes in private browsing windows
+      // (See Bug 1790115).
+      if (this.type === "theme") {
+        this.permissions.add(PRIVATE_ALLOWED_PERMISSION);
+      }
+
       // We only want to update the SVG_CONTEXT_PROPERTIES_PERMISSION during install and
       // upgrade/downgrade startups.
       if (INSTALL_AND_UPDATE_STARTUP_REASONS.has(this.startupReason)) {
