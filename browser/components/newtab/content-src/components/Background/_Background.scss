@@ -1,0 +1,30 @@
+#background{
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-position: center center !important;
+  background-repeat: no-repeat !important;
+  background-size: cover !important;
+  opacity: 0.8 !important;
+  z-index: -1 !important;
+  animation: fadeIn 3.7s ease 0s 1 normal !important;
+}
+
+@keyframes fadeIn { 
+  0% {opacity: 0.1 !important} 
+  100% {opacity: 0.8 !important}
+}
+
+@supports -moz-bool-pref("browser.disable.nt.image.gb") {
+  #background, #floorp, #unsplash {
+    display: none !important;
+  }
+}
+
+@supports not -moz-bool-pref("browser.disable.nt.image.gb") {
+  body {
+    background-color: rgba(0, 0, 0, 0.5);
+  }
+}
