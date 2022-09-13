@@ -613,7 +613,7 @@ IntersectionOutput DOMIntersectionObserver::Intersect(
   // true even if both the root and the target elements are in the skipped
   // contents."
   // https://drafts.csswg.org/css-contain/#cv-notes
-  if (targetFrame->AncestorHidesContent()) {
+  if (targetFrame->IsHiddenByContentVisibilityOnAnyAncestor()) {
     return {isSimilarOrigin};
   }
 
