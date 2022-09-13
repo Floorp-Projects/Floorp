@@ -54,6 +54,82 @@ class IdentityCredential final : public Credential {
       nsIPrincipal* aPrincipal,
       const IdentityCredentialRequestOptions& aOptions);
 
+  // Performs a Fetch for the root manifest of the provided identity provider
+  // and validates it as correct. The returned promise resolves with a bool
+  // that is true if everything is valid.
+  //
+  //  Arguments:
+  //    aPrincipal: the caller of navigator.credentials.get()'s principal
+  //    aProvider: the provider to validate the root manifest of
+  //  Return value:
+  //    promise that resolves to a bool that indicates success. Will reject
+  //    when there are network or other errors.
+  //  Side effects:
+  //    Network request to the IDP's well-known from inside a NullPrincipal
+  //    sandbox
+  //
+  static RefPtr<ValidationPromise> CheckRootManifest(
+      nsIPrincipal* aPrincipal, const IdentityProvider& aProvider);
+
+  // Performs a Fetch for the internal manifest of the provided identity
+  // provider. The returned promise resolves with the manifest retrieved.
+  //
+  //  Arguments:
+  //    aPrincipal: the caller of navigator.credentials.get()'s principal
+  //    aProvider: the provider to fetch the root manifest
+  //  Return value:
+  //    promise that resolves to the internal manifest. Will reject
+  //    when there are network or other errors.
+  //  Side effects:
+  //    Network request to the URL in aProvider as the manifest from inside a
+  //    NullPrincipal sandbox
+  //
+  static RefPtr<GetManifestPromise> FetchInternalManifest(
+      nsIPrincipal* aPrincipal, const IdentityProvider& aProvider);
+
+  // Performs a Fetch for the account list from the provided identity
+  // provider. The returned promise resolves with the manifest and the fetched
+  // account list in a tuple of objects. We put the argument manifest in the
+  // tuple to facilitate clean promise chaining.
+  //
+  //  Arguments:
+  //    aPrincipal: the caller of navigator.credentials.get()'s principal
+  //    aProvider: the provider to get account lists from
+  //    aManifest: the provider's internal manifest
+  //  Return value:
+  //    promise that resolves to a Tuple of the passed manifest and the fetched
+  //    account list. Will reject when there are network or other errors.
+  //  Side effects:
+  //    Network request to the provider supplied account endpoint with
+  //    credentials but without any indication of aPrincipal.
+  //
+  static RefPtr<GetAccountListPromise> FetchAccountList(
+      nsIPrincipal* aPrincipal, const IdentityProvider& aProvider,
+      const IdentityInternalManifest& aManifest);
+
+  // Performs a Fetch for a bearer token to the provided identity
+  // provider for a given account. The returned promise resolves with the
+  // account argument and the fetched token in a tuple of objects.
+  // We put the argument account in the
+  // tuple to facilitate clean promise chaining.
+  //
+  //  Arguments:
+  //    aPrincipal: the caller of navigator.credentials.get()'s principal
+  //    aProvider: the provider to get account lists from
+  //    aManifest: the provider's internal manifest
+  //    aAccount: the account to request
+  //  Return value:
+  //    promise that resolves to a Tuple of the passed account and the fetched
+  //    token. Will reject when there are network or other errors.
+  //  Side effects:
+  //    Network request to the provider supplied token endpoint with
+  //    credentials and including information about the requesting principal.
+  //
+  static RefPtr<GetTokenPromise> FetchToken(
+      nsIPrincipal* aPrincipal, const IdentityProvider& aProvider,
+      const IdentityInternalManifest& aManifest,
+      const IdentityAccount& aAccount);
+
  private:
   nsAutoString mToken;
 };
