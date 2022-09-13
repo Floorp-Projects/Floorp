@@ -72,6 +72,9 @@
     <!-- Content description for close button used in "contextual feature recommendation" (CFR) popups -->
     <string name="cfr_dismiss_button_default_content_description">ຍົກເລີກ</string>
 
+    <!-- Text displayed that links to website containing documentation about the "Total cookie protection" feature. -->
+    <string name="tcp_cfr_learn_more">ຮຽນຮູ້ກ່ຽວກັບການປົກປ້ອງຄຸກກີທັງໝົດ</string>
+
     <!-- Text for the info dialog when camera permissions have been denied but user tries to access a camera feature. -->
     <string name="camera_permissions_needed_message">ຕ້ອງການເຂົ້ານຳໃຊ້ກ້ອງ. ໄປທີ່ການຕັ້ງຄ່າ Android ແຕະໃສ່ ສິດ ແລະ ແຕະໃສ່ ອະນຸຍາດ</string>
     <!-- Text for the positive action button to go to Android Settings to grant permissions. -->
@@ -250,11 +253,18 @@
     <!-- Onboarding home screen dialog description text. -->
     <string moz:RemovedIn="106" name="onboarding_home_screen_description_2" tools:ignore="UnusedResources">ທ່ານສາມາດກັບໄປເບິງຫນ້າເວັບທີ່ທ່ານເບິງຄ້າງໄວ້ໄດ້ງ່າຍຂື້ນແລ້ວ.</string>
 
+    <!-- Onboarding home screen dialog title text for the home section. The first parameter is the name of the application.-->
+    <string moz:RemovedIn="106" name="onboarding_home_screen_section_home_title_3" tools:ignore="UnusedResources">ປັບແຕ່ງໜ້າຫຼັກ %1$s</string>
     <!-- Onboarding home screen dialog description text for the home section. -->
     <string moz:RemovedIn="106" name="onboarding_home_screen_section_home_description_2" tools:ignore="UnusedResources">ຂ້າມໄປຫາແທັບທີ່ເປີດຢູ່, ບຸກມມາກ ແລະ ປະຫວັດການທ່ອງເວັບຂອງທ່ານ.</string>
 
+    <!-- Onboarding home screen dialog description text for the tab tray section. -->
+    <string moz:RemovedIn="106" name="onboarding_home_screen_section_cleaner_tab_tray_title_2" tools:ignore="UnusedResources">ສະອາດ, ແຖບທີ່ມີການຈັດການ</string>
     <!-- Onboarding home screen dialog description text for the history section. -->
     <string moz:RemovedIn="106" name="onboarding_home_screen_section_useful_history_title_2" tools:ignore="UnusedResources">ການຄົ້ນຫາຫຼ້າສຸດ</string>
+
+    <!-- Home onboarding dialog welcome screen title text. -->
+    <string name="onboarding_home_welcome_title">ຍິນດີຕ້ອນຮັບສູ່ອິນເຕີເນັດທີບໍ່ມີຂອບຈຳກັດ</string>
 
     <!-- Text preview for smaller sized widgets -->
     <string name="search_widget_text_short">ຄົ້ນຫາ</string>

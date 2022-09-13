@@ -35,9 +35,6 @@
     <!-- Content description on checkmark while tab is selected in multiselect mode in tab tray -->
     <string name="tab_tray_multiselect_selected_content_description">Selectate</string>
 
-    <!-- Title for the button which navigates the user to show all of their saved bookmarks. -->
-    <string moz:removedIn="101" name="recently_saved_show_all" tools:ignore="UnusedResources">Afișează toate</string>
-
     <!-- About content. The first parameter is the name of the application. (For example: Fenix) -->
     <string name="about_content">%1$s este realizat de Mozilla.</string>
 
@@ -225,7 +222,7 @@
     <!-- Preference for settings related to visual options -->
     <string name="preferences_customize">Personalizare</string>
     <!-- Preference description for banner about signing in -->
-    <string name="preferences_sign_in_description">Sincronizează marcajele, istoricul și multe altele cu contul Firefox</string>
+    <string moz:RemovedIn="104" name="preferences_sign_in_description" tools:ignore="UnusedResources">Sincronizează marcajele, istoricul și multe altele cu contul Firefox</string>
     <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
     <string name="preferences_account_default_name">Cont Firefox</string>
     <!-- Preference text for account title when there was an error syncing FxA -->
@@ -333,7 +330,7 @@
 
     <!-- Turn On Sync Preferences -->
     <!-- Header of the Turn on Sync preference view -->
-    <string name="preferences_sync">Activează Sync</string>
+    <string moz:RemovedIn="104" name="preferences_sync" tools:ignore="UnusedResources">Activează Sync</string>
     <!-- Preference for reconnecting to FxA sync -->
     <string name="preferences_sync_sign_in_to_reconnect">Intră în cont pentru reconectare</string>
     <!-- Preference for removing FxA account -->
@@ -450,8 +447,6 @@
     <string name="open_tabs_menu">Meniu de file deschise</string>
     <!-- Open tabs menu item to save tabs to collection -->
     <string name="tabs_menu_save_to_collection1">Salvează filele în colecție</string>
-    <!-- Content description (not visible, for screen readers etc.): Opens the tab menu when pressed -->
-    <string moz:RemovedIn="103" name="tab_menu" tools:ignore="UnusedResources">Meniu de file</string>
     <!-- Text for the menu button to delete a collection -->
     <string name="collection_delete">Șterge colecția</string>
     <!-- Text for the menu button to rename a collection -->
@@ -587,6 +582,8 @@
     <string name="preference_phone_feature_location">Locație</string>
     <!-- Preference for altering the notification access for all websites -->
     <string name="preference_phone_feature_notification">Notificare</string>
+    <!-- Preference for altering the storage access setting for all websites -->
+    <string name="preference_phone_feature_cross_origin_storage_access">Cookie-uri inter-site-uri</string>
     <!-- Label that indicates that a permission must be asked always -->
     <string name="preference_option_phone_feature_ask_to_allow">Solicită pentru a permite</string>
     <!-- Label that indicates that a permission must be blocked -->
@@ -712,8 +709,6 @@
     <string name="snackbar_tab_closed">Filă închisă</string>
     <!-- Text shown in snackbar when user closes all tabs -->
     <string name="snackbar_tabs_closed">File închise</string>
-    <!-- Text shown in snackbar when user adds a site to top sites -->
-    <string moz:RemovedIn="101" name="snackbar_added_to_top_sites" tools:ignore="UnusedResources">Adăugat pe site-urile de top!</string>
     <!-- Text shown in snackbar when user closes a private tab -->
     <string name="snackbar_private_tab_closed">Filă privată închisă</string>
     <!-- Text shown in snackbar when user closes all private tabs -->
@@ -785,7 +780,8 @@
     <string name="delete_browsing_data_on_quit_action">Închide</string>
 
     <!-- Dialog message to the user asking to delete browsing data. -->
-    <string name="delete_browsing_data_prompt_message">Acest lucru va șterge toate datele de navigare.</string>
+    <string moz:removedIn="104" name="delete_browsing_data_prompt_message" tools:ignore="UnusedResources">Acest lucru va șterge toate datele de navigare.</string>
+
     <!-- Dialog message to the user asking to delete browsing data. Parameter will be replaced by app name. -->
     <string name="delete_browsing_data_prompt_message_3">%s va șterge datele de navigare selectate.</string>
     <!-- Text for the cancel button for the data deletion dialog -->
@@ -894,6 +890,8 @@
     <string name="preference_enhanced_tracking_protection_custom_cookies_3">Toate cookie-urile de la terți (poate împiedica funcționarea corectă a site-urilor web)</string>
     <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
     <string name="preference_enhanced_tracking_protection_custom_cookies_4">Toate cookie-urile (va împiedica funcționarea corectă a site-urilor web)</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
+    <string name="preference_enhanced_tracking_protection_custom_cookies_5">Izolează cookie-urile inter-site-uri</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings for tracking content -->
     <string name="preference_enhanced_tracking_protection_custom_tracking_content">Conținut de urmărire</string>
     <!-- Option for enhanced tracking protection for the custom protection settings for tracking content-->
@@ -914,6 +912,8 @@
     <string name="etp_social_media_trackers_description">Limitează capacitatea rețelelor de socializare de a-ți urmări activitatea de navigare pe web.</string>
     <!-- Category of trackers (cross-site tracking cookies) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cookies_title">Cookie-uri de urmărire inter-site-uri</string>
+    <!-- Category of trackers (cross-site tracking cookies) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_cookies_title_2">Cookie-uri inter-site-uri</string>
     <!-- Description of cross-site tracking cookies that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cookies_description">Blochează cookie-urile pe care le folosesc rețelele publicitare și firmele de analitică pentru a compila datele tale de navigare pe mai multe site-uri.</string>
     <!-- Category of trackers (cryptominers) that can be blocked by Enhanced Tracking Protection -->
@@ -1116,8 +1116,6 @@
     <string name="no_site_exceptions">Fără excepții de site</string>
     <!-- Bookmark deletion confirmation -->
     <string name="bookmark_deletion_confirmation">Sigur vrei să ștergi acest marcaj?</string>
-    <!-- Browser menu button that adds a top site to the home fragment -->
-    <string moz:RemovedIn="101" name="browser_menu_add_to_top_sites" tools:ignore="UnusedResources">Adaugă în site-uri principale</string>
     <!-- text shown before the issuer name to indicate who its verified by, parameter is the name of
      the certificate authority that verified the ticket-->
     <string name="certificate_info_verified_by">Verificat de: %1$s</string>
@@ -1168,9 +1166,6 @@
     <!-- The text displayed when a synced device has no tabs to show in the list of Synced Tabs. -->
     <string name="synced_tabs_no_open_tabs">Nicio filă deschisă</string>
 
-    <!-- Top Sites -->
-    <!-- Title text displayed in the dialog when top sites limit is reached. -->
-    <string moz:RemovedIn="101" name="top_sites_max_limit_title" tools:ignore="UnusedResources">A fost atinsă limita de site-uri de top</string>
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">OK, am înțeles</string>
 
