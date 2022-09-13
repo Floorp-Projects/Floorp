@@ -836,6 +836,10 @@ async function expectTerminateBackgroundToResetIdle({ extension, contextId }) {
     "Parent proxy context should have active native app ports tracked"
   );
 
+  clearHistograms();
+  assertHistogramEmpty(WEBEXT_EVENTPAGE_IDLE_RESULT_COUNT);
+  assertKeyedHistogramEmpty(WEBEXT_EVENTPAGE_IDLE_RESULT_COUNT_BY_ADDONID);
+
   info("Trigger background script idle timeout and expect to be reset");
   const promiseResetIdle = promiseExtensionEvent(
     extension,
@@ -848,6 +852,21 @@ async function expectTerminateBackgroundToResetIdle({ extension, contextId }) {
     extension.extension.backgroundContext.contextId,
     contextId,
     "Initial background context is still available as expected"
+  );
+
+  assertHistogramCategoryNotEmpty(WEBEXT_EVENTPAGE_IDLE_RESULT_COUNT, {
+    category: "reset_nativeapp",
+    categories: HISTOGRAM_EVENTPAGE_IDLE_RESULT_CATEGORIES,
+  });
+
+  assertHistogramCategoryNotEmpty(
+    WEBEXT_EVENTPAGE_IDLE_RESULT_COUNT_BY_ADDONID,
+    {
+      keyed: true,
+      key: extension.id,
+      category: "reset_nativeapp",
+      categories: HISTOGRAM_EVENTPAGE_IDLE_RESULT_CATEGORIES,
+    }
   );
 }
 

@@ -31,6 +31,13 @@ add_setup(async () => {
 });
 
 add_task(async function test_eventpage_idle() {
+  clearHistograms();
+
+  assertHistogramEmpty(WEBEXT_EVENTPAGE_RUNNING_TIME_MS);
+  assertKeyedHistogramEmpty(WEBEXT_EVENTPAGE_RUNNING_TIME_MS_BY_ADDONID);
+  assertHistogramEmpty(WEBEXT_EVENTPAGE_IDLE_RESULT_COUNT);
+  assertKeyedHistogramEmpty(WEBEXT_EVENTPAGE_IDLE_RESULT_COUNT_BY_ADDONID);
+
   let extension = ExtensionTestUtils.loadExtension({
     useAddonManager: "permanent",
     manifest: {
@@ -102,7 +109,45 @@ add_task(async function test_eventpage_idle() {
   await extension.awaitMessage("allowPopupsForUserEvents");
   ok(true, "allowPopupsForUserEvents.onChange fired");
 
+  const { id } = extension;
   await extension.unload();
+
+  info("Verify eventpage telemetry recorded");
+
+  assertHistogramSnapshot(
+    WEBEXT_EVENTPAGE_RUNNING_TIME_MS,
+    {
+      keyed: false,
+      processSnapshot: snapshot => snapshot.sum > 0,
+      expectedValue: true,
+    },
+    `Expect stored values in the eventpage running time non-keyed histogram snapshot`
+  );
+
+  assertHistogramSnapshot(
+    WEBEXT_EVENTPAGE_RUNNING_TIME_MS_BY_ADDONID,
+    {
+      keyed: true,
+      processSnapshot: snapshot => snapshot[id]?.sum > 0,
+      expectedValue: true,
+    },
+    `Expect stored values for addon with id ${id} in the eventpage running time keyed histogram snapshot`
+  );
+
+  assertHistogramCategoryNotEmpty(WEBEXT_EVENTPAGE_IDLE_RESULT_COUNT, {
+    category: "suspend",
+    categories: HISTOGRAM_EVENTPAGE_IDLE_RESULT_CATEGORIES,
+  });
+
+  assertHistogramCategoryNotEmpty(
+    WEBEXT_EVENTPAGE_IDLE_RESULT_COUNT_BY_ADDONID,
+    {
+      keyed: true,
+      key: id,
+      category: "suspend",
+      categories: HISTOGRAM_EVENTPAGE_IDLE_RESULT_CATEGORIES,
+    }
+  );
 });
 
 add_task(
@@ -152,6 +197,11 @@ add_task(
 add_task(
   { pref_set: [["extensions.webextensions.runtime.timeout", 1000]] },
   async function test_eventpage_runtime_onSuspend_canceled() {
+    clearHistograms();
+
+    assertHistogramEmpty(WEBEXT_EVENTPAGE_IDLE_RESULT_COUNT);
+    assertKeyedHistogramEmpty(WEBEXT_EVENTPAGE_IDLE_RESULT_COUNT_BY_ADDONID);
+
     let extension = ExtensionTestUtils.loadExtension({
       useAddonManager: "permanent",
       manifest: {
@@ -191,6 +241,21 @@ add_task(
     await extension.awaitMessage("allowPopupsForUserEvents");
     await extension.awaitMessage("suspendCanceled");
     ok(true, "event caused suspend-canceled");
+
+    assertHistogramCategoryNotEmpty(WEBEXT_EVENTPAGE_IDLE_RESULT_COUNT, {
+      category: "reset_event",
+      categories: HISTOGRAM_EVENTPAGE_IDLE_RESULT_CATEGORIES,
+    });
+
+    assertHistogramCategoryNotEmpty(
+      WEBEXT_EVENTPAGE_IDLE_RESULT_COUNT_BY_ADDONID,
+      {
+        keyed: true,
+        key: extension.id,
+        category: "reset_event",
+        categories: HISTOGRAM_EVENTPAGE_IDLE_RESULT_CATEGORIES,
+      }
+    );
 
     await extension.awaitMessage("suspending");
     await promiseExtensionEvent(extension, "shutdown-background-script");
@@ -351,6 +416,11 @@ function createPendingListenerTestExtension() {
 add_task(
   { pref_set: [["extensions.background.idle.timeout", 500]] },
   async function test_eventpage_idle_reset_on_async_listener_unresolved() {
+    clearHistograms();
+
+    assertHistogramEmpty(WEBEXT_EVENTPAGE_IDLE_RESULT_COUNT);
+    assertKeyedHistogramEmpty(WEBEXT_EVENTPAGE_IDLE_RESULT_COUNT_BY_ADDONID);
+
     let extension = createPendingListenerTestExtension();
     await extension.startup();
     await extension.awaitMessage("bg-script-ready");
@@ -386,6 +456,21 @@ add_task(
         pendingListeners: 2,
       },
       "Got the expected idle reset reason and pendingListeners count"
+    );
+
+    assertHistogramCategoryNotEmpty(WEBEXT_EVENTPAGE_IDLE_RESULT_COUNT, {
+      category: "reset_listeners",
+      categories: HISTOGRAM_EVENTPAGE_IDLE_RESULT_CATEGORIES,
+    });
+
+    assertHistogramCategoryNotEmpty(
+      WEBEXT_EVENTPAGE_IDLE_RESULT_COUNT_BY_ADDONID,
+      {
+        keyed: true,
+        key: extension.id,
+        category: "reset_listeners",
+        categories: HISTOGRAM_EVENTPAGE_IDLE_RESULT_CATEGORIES,
+      }
     );
 
     info(

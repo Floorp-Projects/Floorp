@@ -18,6 +18,8 @@ const histograms = {
   browserActionPopupOpen: "WEBEXT_BROWSERACTION_POPUP_OPEN_MS",
   browserActionPreloadResult: "WEBEXT_BROWSERACTION_POPUP_PRELOAD_RESULT_COUNT",
   contentScriptInjection: "WEBEXT_CONTENT_SCRIPT_INJECTION_MS",
+  eventPageRunningTime: "WEBEXT_EVENTPAGE_RUNNING_TIME_MS",
+  eventPageIdleResult: "WEBEXT_EVENTPAGE_IDLE_RESULT_COUNT",
   pageActionPopupOpen: "WEBEXT_PAGEACTION_POPUP_OPEN_MS",
   storageLocalGetJSON: "WEBEXT_STORAGE_LOCAL_GET_MS",
   storageLocalSetJSON: "WEBEXT_STORAGE_LOCAL_SET_MS",
