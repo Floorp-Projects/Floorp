@@ -1,0 +1,11 @@
+{
+	"name": {
+		"message": "閉じたタブを開く"
+	},
+	"description": {
+		"message": "Floorp ブラウザに閉じたタブを開くボタンを追加します"
+	},
+	"manifest_BA_title": {
+		"message": "閉じたタブを開く"
+	}
+}

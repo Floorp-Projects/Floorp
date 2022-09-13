@@ -1,0 +1,467 @@
+{
+  "extensionName": {
+    "message": "वेब पृष्ठों का अनुवाद करें"
+  },
+  "extensionDescription": {
+    "message": "Google या Yandex का उपयोग करके वास्तविक समय में अपने पृष्ठ का अनुवाद करें।"
+  },
+  "pageActionTitle": {
+    "message": "इस पेज का अनुवाद करें"
+  },
+  "lblTranslate": {
+    "message": "इस पेज का अनुवाद करें?"
+  },
+  "lblTranslating": {
+    "message": "अनुवाद हो रहा है ..."
+  },
+  "lblTranslated": {
+    "message": "अनूदित"
+  },
+  "lblError": {
+    "message": "इस पृष्ठ का अनुवाद नहीं किया जा सका"
+  },
+  "lblAlwaysTranslate": {
+    "message": "हमेशा $LANGUAGE_NAME$ से अनुवाद करें",
+    "placeholders": {
+      "LANGUAGE_NAME": {
+        "content": "$1",
+        "example": "English"
+      }
+    }
+  },
+  "lblTargetLanguage": {
+    "message": "Target language $TARGET_LANGUAGE_NUM$",
+    "placeholders": {
+      "TARGET_LANGUAGE_NUM": {
+        "content": "$1",
+        "example": "2"
+      }
+    }
+  },
+  "btnReset": {
+    "message": "रीसेट"
+  },
+  "btnTranslate": {
+    "message": "अनुवाद करना"
+  },
+  "btnOptions": {
+    "message": "विकल्प"
+  },
+  "btnRestore": {
+    "message": "मूल दिखाएँ"
+  },
+  "btnTryAgain": {
+    "message": "पुनः प्रयास करें"
+  },
+  "btnOpenOnGoogleTranslate": {
+    "message": "Google अनुवादक में खोलें"
+  },
+  "btnDonate": {
+    "message": "दान करना"
+  },
+  "btnNeverTranslate": {
+    "message": "इस साइट का अनुवाद कभी मत करो"
+  },
+  "btnChangeLanguages": {
+    "message": "भाषाएं बदलें"
+  },
+  "btnMobileOriginal": {
+    "message": "मूल"
+  },
+  "btnMobileTranslated": {
+    "message": "अनूदित"
+  },
+  "btnMobileNeverTranslate": {
+    "message": "इस साइट का अनुवाद कभी मत करो"
+  },
+  "btnMobileDonate": {
+    "message": "दान करना"
+  },
+  "optionsNeverTranslate": {
+    "message": "इन साइटों का अनुवाद कभी न करें"
+  },
+  "optionsAlwaysTranslate": {
+    "message": "Always translate these languages"
+  },
+  "optionPopupConfig": {
+    "message": "मोबाइल पॉपअप दिखाएं"
+  },
+  "optionPopupAuto": {
+    "message": "खुद ब खुद"
+  },
+  "optionPopupThreeFingers": {
+    "message": "जब मैं स्क्रीन पर तीन उंगलियां छूता हूं"
+  },
+  "msgOpenOnYandexTranslator": {
+    "message": "यैंडेक्स अनुवाद में खोलें"
+  },
+  "lblOthers": {
+    "message": "अन्य"
+  },
+  "btnMoreOptions": {
+    "message": "अधिक विकल्प"
+  },
+  "lblPlsDonate": {
+    "message": "एक दान के साथ डेवलपर की मदद करें"
+  },
+  "msgTranslateFor": {
+    "message": "Translate to $LANGUAGE_NAME$",
+    "placeholders": {
+      "LANGUAGE_NAME": {
+        "content": "$1",
+        "example": "English"
+      }
+    }
+  },
+  "lblShowContextMenu": {
+    "message": "संदर्भ मेनू में पृष्ठ का अनुवाद करने का विकल्प दिखाएं"
+  },
+  "msgYes": {
+    "message": "हाँ"
+  },
+  "msgNo": {
+    "message": "नहीं"
+  },
+  "lblUseNewAlgorithm": {
+    "message": "नए अनुवाद एल्गोरिथ्म का उपयोग करें?"
+  },
+  "msgYesRecommended": {
+    "message": "हाँ (अनुशंसित)"
+  },
+  "msgNoUseWidgets": {
+    "message": "नहीं (विजेट का उपयोग करें)"
+  },
+  "optionsPageTitle": {
+    "message": "वेब पेज का अनुवाद करें - विकल्प"
+  },
+  "optionPopupjustWhenIClickTranlateThisSite": {
+    "message": "केवल जब मैं \"इस साइट का अनुवाद करता हूं\" पर क्लिक करता हूं"
+  },
+  "msgEmptyListNeverTranslateSites": {
+    "message": "आपने इस सूची में कोई साइट नहीं जोड़ी है।"
+  },
+  "msgEmptyListAlwaysTranslateLanguages": {
+    "message": "आपने इस सूची में कोई भी भाषा नहीं जोड़ी है।"
+  },
+  "btnAlwaysTranslate": {
+    "message": "हमेशा इस साइट का अनुवाद करें"
+  },
+  "lblAlwaysTranslateSites": {
+    "message": "हमेशा इस साइट का अनुवाद करें"
+  },
+  "msgDonateWithPaypal": {
+    "message": "पेपैल के साथ दान करें"
+  },
+  "lblDarkMode": {
+    "message": "अंधेरा मोड"
+  },
+  "lblShowReleaseNotes": {
+    "message": "अद्यतन करते समय रिलीज़ नोट दिखाएं"
+  },
+  "lblShowTranslateSelectedButton": {
+    "message": "चयनित पाठ का अनुवाद करने के लिए बटन दिखाएं"
+  },
+  "msgAutomatic": {
+    "message": "स्वचालित"
+  },
+  "msgTranslateSelectedText": {
+    "message": "चयनित विषय को अनूदित करें"
+  },
+  "lblShowTranslateSelectedContextMenu": {
+    "message": "संदर्भ मेनू में पृष्ठ का अनुवाद करने का विकल्प दिखाएं"
+  },
+  "lblNeverTranslateLangs": {
+    "message": "इन साइटों का अनुवाद कभी न करें"
+  },
+  "btnNeverTranslateThisLanguage": {
+    "message": "इस साइट का अनुवाद कभी मत करो"
+  },
+  "lblShowOriginalTextWhenHovering": {
+    "message": "मँडराते समय मूल पाठ दिखाएँ"
+  },
+  "msgLanguages": {
+    "message": "बोली"
+  },
+  "msgSites": {
+    "message": "साइटों"
+  },
+  "msgTranslations": {
+    "message": "अनुवाद"
+  },
+  "msgStyle": {
+    "message": "अंदाज"
+  },
+  "msgHotkeys": {
+    "message": "हॉटकी"
+  },
+  "lblMakeDonation": {
+    "message": "एक दान करें"
+  },
+  "lblReleaseNotes": {
+    "message": "रिलीज नोट्स"
+  },
+  "lblReport": {
+    "message": "समस्या के बारे में बताएं"
+  },
+  "lblSettings": {
+    "message": "समायोजन"
+  },
+  "lblAdd": {
+    "message": "जोड़ना"
+  },
+  "lblShowTranslatedWhenHovering": {
+    "message": "मँडराते समय अनुवादित पाठ दिखाएं"
+  },
+  "lblKeyboardShortcuts": {
+    "message": "कुंजीपटल अल्प मार्ग"
+  },
+  "msgToTranslateSites": {
+    "message": "साइट का अनुवाद करने के लिए"
+  },
+  "msgThanksForUseExtension": {
+    "message": "इस एक्सटेंशन का उपयोग करने के लिए धन्यवाद।"
+  },
+  "msgIWillBeGrateful": {
+    "message": "यदि आप दान कर सकते हैं तो मैं आभारी रहूंगा।"
+  },
+  "btnAlwaysTranslateThisLanguage": {
+    "message": "हमेशा इस भाषा का अनुवाद करें"
+  },
+  "lblShowTranslatedHoveringSites": {
+    "message": "इन साइटों पर मँडराते समय अनुवादित पाठ दिखाएं"
+  },
+  "popupBlueWhenSiteIsTranslated": {
+    "message": "साइट का अनुवाद करने पर पॉप-अप आइकन नीला करें"
+  },
+  "more": {
+    "message": "अधिक"
+  },
+  "less": {
+    "message": "कम"
+  },
+  "dontShowIfPageLangIsTargetLang": {
+    "message": "यह न दिखाएं कि क्या पृष्ठ भाषा लक्ष्य भाषा है"
+  },
+  "dontShowIfPageLangIsUnknown": {
+    "message": "यदि पृष्ठ भाषा अज्ञात है, तो न दिखाएं"
+  },
+  "dontShowIfSelectedTextIsTargetLang": {
+    "message": "यह न दिखाएं कि चयनित पाठ भाषा लक्ष्य भाषा है या नहीं"
+  },
+  "dontShowIfSelectedTextIsUnknown": {
+    "message": "यदि चयनित पाठ भाषा अज्ञात है, तो यह न दिखाएं"
+  },
+  "lblShowTranslatedWhenHoveringThisSite": {
+    "message": "इस साइट पर मँडराते समय अनुवाद दिखाएं"
+  },
+  "lblShowTranslatedWhenHoveringThisLang": {
+    "message": "Show translation when hovering over websites in $LANGUAGE_NAME$",
+    "placeholders": {
+      "LANGUAGE_NAME": {
+        "content": "$1",
+        "example": "English"
+      }
+    }
+  },
+  "lblShowTranslatedHoveringLangs": {
+    "message": "इन भाषाओं वाली साइटों पर मँडराते समय अनुवादित पाठ दिखाएं"
+  },
+  "msgNoTranslateSelectedText": {
+    "message": "चयनित पाठ का अनुवाद न करें"
+  },
+  "btnListen": {
+    "message": "बात सुनो"
+  },
+  "btnStopListening": {
+    "message": "सुनना बंद करो"
+  },
+  "btnApply": {
+    "message": "लागू"
+  },
+  "swapTranslationService": {
+    "message": "अनुवाद सेवाओं के बीच स्विच करें"
+  },
+  "swapPopup": {
+    "message": "पुराने इंटरफ़ेस और नए के बीच स्विच करें"
+  },
+  "helpSwapInterface": {
+    "message": "पुराने और नए इंटरफ़ेस के बीच स्विच करने के लिए इस बटन पर क्लिक करें।"
+  },
+  "lblTranslationService": {
+    "message": "अनुवाद सेवा"
+  },
+  "msgUseOldPopupInterface": {
+    "message": "पुराने पॉपअप इंटरफ़ेस का उपयोग करें"
+  },
+  "lblTranslateInterface": {
+    "message": "Translate the interface"
+  },
+  "lblButtonInTheAddressBar": {
+    "message": "Show button in the address bar"
+  },
+  "lblPageTranslationService": {
+    "message": "Page translation service"
+  },
+  "lblTextTranslationService": {
+    "message": "Text Translation Service"
+  },
+  "msgStorage": {
+    "message": "Storage"
+  },
+  "lblTranslationCache": {
+    "message": "Translation cache"
+  },
+  "lblStorageUsed": {
+    "message": "Storage used:"
+  },
+  "deleteTranslationCache": {
+    "message": "Delete translation cache"
+  },
+  "lblPersonalSettings": {
+    "message": "Personal settings"
+  },
+  "backupToFile": {
+    "message": "Backup to file"
+  },
+  "restoreFromFile": {
+    "message": "Restore from file"
+  },
+  "resetToDefault": {
+    "message": "Restore default settings"
+  },
+  "doYouWantToDeleteTranslationCache": {
+    "message": "Do you want to delete the translation cache?"
+  },
+  "doYouWantOverwriteAllSettings": {
+    "message": "Do you want to overwrite all existing settings using the backup data?"
+  },
+  "fileIsCorrupted": {
+    "message": "The file appears to be corrupted"
+  },
+  "doYouWantRestoreSettings": {
+    "message": "Do you want to restore the extension to its default settings?"
+  },
+  "lblTtsSpeed": {
+    "message": "Text-to-speech audio speed"
+  },
+  "lblEnableDeepL": {
+    "message": "Enable DeepL as a text translation service"
+  },
+  "enterShortcut": {
+    "message": "Type a shortcut"
+  },
+  "hotkeyError_ctrlOrAlt": {
+    "message": "Include Ctrl or Alt"
+  },
+  "hotkeyError_letter": {
+    "message": "Type a letter"
+  },
+  "hotkeyError_invalid": {
+    "message": "Invalid combination"
+  },
+  "lblSwitchTranslatedAndOriginal": {
+    "message": "Switch between the translated and the original page"
+  },
+  "lblRestorePageToOriginal": {
+    "message": "Restore page to original"
+  },
+  "lblTranslatePageToTargetLanguage": {
+    "message": "Translate the page to the target language"
+  },
+  "lblTranslateTag_pre": {
+    "message": "Enable translation for the tag $HTML_TAG_NAME$",
+    "placeholders": {
+      "HTML_TAG_NAME": {
+        "content": "<PRE>"
+      }
+    }
+  },
+  "lbldontsortresults": {
+    "message": "Do not sort the google translate results"
+  },
+  "lbltranslatedynamicallycreatedcontent": {
+    "message": "Translate dynamically created content"
+  },
+  "calculatestorage": {
+    "message": "Calculate"
+  },
+  "donatewithpaypal": {
+    "message": "Donate With PayPal"
+  },
+  "lblAutoTranslateWhenClickingALink": {
+    "message": "Automatically translate when clicking on a link that takes you to the same domain as the current site"
+  },
+  "openNativeShortcutManager": {
+    "message": "Open native shortcut key manager"
+  },
+  "lblKeyboardShortcutsSpecial": {
+    "message": "Special keyboard shortcuts"
+  },
+  "lblTranslateSelectedWhenPressTwice": {
+    "message": "Translate selected text when pressing $SHORTCUT_KEY$ twice",
+    "placeholders": {
+      "SHORTCUT_KEY": {
+        "content": "[Ctrl]"
+      }
+    }
+  },
+  "lblTranslateTextOverMouseWhenPressTwice": {
+    "message": "Translate the text over the mouse cursor when pressing $SHORTCUT_KEY$ twice",
+    "placeholders": {
+      "SHORTCUT_KEY": {
+        "content": "[Ctrl]"
+      }
+    }
+  },
+  "translateClickingOnce": {
+    "message": "Translate the page by clicking once on the button in the address bar. (To see the popup, right-click)"
+  },
+  "btnShowPopup": {
+    "message": "Show popup"
+  },
+  "msgToTranslateThisDocument": {
+    "message": "To translate this document $DOC_TYPE$ it is necessary to convert it to HTML",
+    "placeholders": {
+      "DOC_TYPE": {
+        "content": "$1",
+        "example": "(.pdf)"
+      }
+    }
+  },
+  "msgSelectServiceConversion": {
+    "message": "Select a service to do this conversion"
+  },
+  "msgDownloadingDocument": {
+    "message": "Downloading the document..."
+  },
+  "msgSendDocument": {
+    "message": "Send document"
+  },
+  "msgErrorDownloadingDocument": {
+    "message": "Error downloading document"
+  },
+  "msgFileLargerThan": {
+    "message": "This service does not support files larger than $FILE_SIZE$",
+    "placeholders": {
+      "FILE_SIZE": {
+        "content": "$1",
+        "example": "10 MB"
+      }
+    }
+  },
+  "msgPDFtoHTML": {
+    "message": "PDF to HTML"
+  },
+  "btncopy": {
+    "message": "Copy"
+  },
+  "msgRecents": {
+    "message": "Recents"
+  },
+  "msgAll": {
+    "message": "All"
+  },
+  "msgPleaseWait": {
+    "message": "Please wait..."
+  }
+}

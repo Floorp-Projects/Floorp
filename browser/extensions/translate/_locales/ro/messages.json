@@ -1,0 +1,467 @@
+{
+  "extensionName": {
+    "message": "Tradu Pagini Web"
+  },
+  "extensionDescription": {
+    "message": "Tradu pagina în timp real folosind Google sau Yandex."
+  },
+  "pageActionTitle": {
+    "message": "Tradu această pagină"
+  },
+  "lblTranslate": {
+    "message": "Traduci această pagină?"
+  },
+  "lblTranslating": {
+    "message": "Se traduce ..."
+  },
+  "lblTranslated": {
+    "message": "Tradusă"
+  },
+  "lblError": {
+    "message": "Această pagină nu a putut fi tradusă"
+  },
+  "lblAlwaysTranslate": {
+    "message": "Tradu mereu din $LANGUAGE_NAME$",
+    "placeholders": {
+      "LANGUAGE_NAME": {
+        "content": "$1",
+        "example": "English"
+      }
+    }
+  },
+  "lblTargetLanguage": {
+    "message": "Limba de destinație $TARGET_LANGUAGE_NUM$",
+    "placeholders": {
+      "TARGET_LANGUAGE_NUM": {
+        "content": "$1",
+        "example": "2"
+      }
+    }
+  },
+  "btnReset": {
+    "message": "Restabilește"
+  },
+  "btnTranslate": {
+    "message": "Tradu"
+  },
+  "btnOptions": {
+    "message": "Opţiuni"
+  },
+  "btnRestore": {
+    "message": "Arată originalul"
+  },
+  "btnTryAgain": {
+    "message": "Mai încearcă"
+  },
+  "btnOpenOnGoogleTranslate": {
+    "message": "Deschide în Google Translator"
+  },
+  "btnDonate": {
+    "message": "Donează"
+  },
+  "btnNeverTranslate": {
+    "message": "Nu traduce niciodată acest sit"
+  },
+  "btnChangeLanguages": {
+    "message": "Schimbă limba"
+  },
+  "btnMobileOriginal": {
+    "message": "Originalul"
+  },
+  "btnMobileTranslated": {
+    "message": "Tradusă"
+  },
+  "btnMobileNeverTranslate": {
+    "message": "Nu traduce niciodată acest sit"
+  },
+  "btnMobileDonate": {
+    "message": "Donează"
+  },
+  "optionsNeverTranslate": {
+    "message": "Nu traduce niciodată aceste situri"
+  },
+  "optionsAlwaysTranslate": {
+    "message": "Tradu mereu aceste limbi"
+  },
+  "optionPopupConfig": {
+    "message": "Arată fereastra mobilă"
+  },
+  "optionPopupAuto": {
+    "message": "Automat"
+  },
+  "optionPopupThreeFingers": {
+    "message": "Dacă ating ecranul cu trei degete"
+  },
+  "msgOpenOnYandexTranslator": {
+    "message": "Deschide în Yandex Translate"
+  },
+  "lblOthers": {
+    "message": "Altele"
+  },
+  "btnMoreOptions": {
+    "message": "Alte opțiuni"
+  },
+  "lblPlsDonate": {
+    "message": "Ajută programatorul cu o donație"
+  },
+  "msgTranslateFor": {
+    "message": "Tradu în $LANGUAGE_NAME$",
+    "placeholders": {
+      "LANGUAGE_NAME": {
+        "content": "$1",
+        "example": "English"
+      }
+    }
+  },
+  "lblShowContextMenu": {
+    "message": "Arată opțiunea de a traduce pagina la clic cu tasta din dreapta"
+  },
+  "msgYes": {
+    "message": "Da"
+  },
+  "msgNo": {
+    "message": "Nu"
+  },
+  "lblUseNewAlgorithm": {
+    "message": "Folosești noul algoritm de traducere?"
+  },
+  "msgYesRecommended": {
+    "message": "Da (recomandat)"
+  },
+  "msgNoUseWidgets": {
+    "message": "Nu (folosește widget)"
+  },
+  "optionsPageTitle": {
+    "message": "Tradu Pagini Web - Opțiuni"
+  },
+  "optionPopupjustWhenIClickTranlateThisSite": {
+    "message": "Numai dacă fac clic pe „Tradu acest sit”"
+  },
+  "msgEmptyListNeverTranslateSites": {
+    "message": "Nu ai adăugat niciun sit la această listă."
+  },
+  "msgEmptyListAlwaysTranslateLanguages": {
+    "message": "Nu ai adăugat nicio limbă la această listă."
+  },
+  "btnAlwaysTranslate": {
+    "message": "Tradu mereu acest sit"
+  },
+  "lblAlwaysTranslateSites": {
+    "message": "Tradu mereu aceste situri"
+  },
+  "msgDonateWithPaypal": {
+    "message": "Donează cu PayPal"
+  },
+  "lblDarkMode": {
+    "message": "Fond negru"
+  },
+  "lblShowReleaseNotes": {
+    "message": "Arată informații despre versiune la actualizare"
+  },
+  "lblShowTranslateSelectedButton": {
+    "message": "Arată butonul pentru traducerea textului selecționat"
+  },
+  "msgAutomatic": {
+    "message": "Automat"
+  },
+  "msgTranslateSelectedText": {
+    "message": "Tradu textul selecționat"
+  },
+  "lblShowTranslateSelectedContextMenu": {
+    "message": "Arată opțiunea de a traduce textul selecționat la clic cu tasta din dreapta"
+  },
+  "lblNeverTranslateLangs": {
+    "message": "Nu traduce niciodată aceste limbi"
+  },
+  "btnNeverTranslateThisLanguage": {
+    "message": "Nu traduce niciodată această limbă"
+  },
+  "lblShowOriginalTextWhenHovering": {
+    "message": "Arată textul original dacă se pune săgeata pe el"
+  },
+  "msgLanguages": {
+    "message": "Limbi"
+  },
+  "msgSites": {
+    "message": "Situri"
+  },
+  "msgTranslations": {
+    "message": "Traduceri"
+  },
+  "msgStyle": {
+    "message": "Aspect"
+  },
+  "msgHotkeys": {
+    "message": "Taste rapide"
+  },
+  "lblMakeDonation": {
+    "message": "Fă o donație"
+  },
+  "lblReleaseNotes": {
+    "message": "Note despre versiune"
+  },
+  "lblReport": {
+    "message": "Raportează o problemă"
+  },
+  "lblSettings": {
+    "message": "Reglări"
+  },
+  "lblAdd": {
+    "message": "Adaugă"
+  },
+  "lblShowTranslatedWhenHovering": {
+    "message": "Arată textul tradus dacă se pune săgeata pe el"
+  },
+  "lblKeyboardShortcuts": {
+    "message": "Comenzi rapide"
+  },
+  "msgToTranslateSites": {
+    "message": "Pentru a traduce situl"
+  },
+  "msgThanksForUseExtension": {
+    "message": "Vă mulțumim pentru utilizarea acestei extensii."
+  },
+  "msgIWillBeGrateful": {
+    "message": "Voi fi recunoscător dacă poți face o donație."
+  },
+  "btnAlwaysTranslateThisLanguage": {
+    "message": "Tradu mereu această limbă"
+  },
+  "lblShowTranslatedHoveringSites": {
+    "message": "Arată textul tradus dacă se pune săgeata pe aceste situri"
+  },
+  "popupBlueWhenSiteIsTranslated": {
+    "message": "Fă simbolul albastru dacă situl este tradus"
+  },
+  "more": {
+    "message": "Mult"
+  },
+  "less": {
+    "message": "Puțin"
+  },
+  "dontShowIfPageLangIsTargetLang": {
+    "message": "Nu arăta dacă limba paginii este limba de destinație"
+  },
+  "dontShowIfPageLangIsUnknown": {
+    "message": "Nu arăta dacă limba paginii este necunoscută"
+  },
+  "dontShowIfSelectedTextIsTargetLang": {
+    "message": "Nu arăta dacă limba textului selecționat e limba de destinație"
+  },
+  "dontShowIfSelectedTextIsUnknown": {
+    "message": "Nu arăta dacă limba textului selecționat e necunoscută"
+  },
+  "lblShowTranslatedWhenHoveringThisSite": {
+    "message": "Arată traducerea dacă se pune săgeata pe acest sit"
+  },
+  "lblShowTranslatedWhenHoveringThisLang": {
+    "message": "Arată traducerea dacă se pune săgeata pe situri în $LANGUAGE_NAME$",
+    "placeholders": {
+      "LANGUAGE_NAME": {
+        "content": "$1",
+        "example": "English"
+      }
+    }
+  },
+  "lblShowTranslatedHoveringLangs": {
+    "message": "Arată textul tradus dacă se pune săgeata pe situri care au aceste limbi"
+  },
+  "msgNoTranslateSelectedText": {
+    "message": "Nu traduce textul selecționat"
+  },
+  "btnListen": {
+    "message": "Ascultă"
+  },
+  "btnStopListening": {
+    "message": "Nu mai asculta"
+  },
+  "btnApply": {
+    "message": "Aplică"
+  },
+  "swapTranslationService": {
+    "message": "Schimbă serviciul de traducere"
+  },
+  "swapPopup": {
+    "message": "Alege între interfața veche și cea nouă"
+  },
+  "helpSwapInterface": {
+    "message": "Clic pe acest buton pentru a alege între interfața veche și cea nouă."
+  },
+  "lblTranslationService": {
+    "message": "Serviciu de traducere"
+  },
+  "msgUseOldPopupInterface": {
+    "message": "Folosește vechea interfață"
+  },
+  "lblTranslateInterface": {
+    "message": "Tradu interfața"
+  },
+  "lblButtonInTheAddressBar": {
+    "message": "Arată butonul în spațiul adresei web"
+  },
+  "lblPageTranslationService": {
+    "message": "Serviciul de traducere a paginii"
+  },
+  "lblTextTranslationService": {
+    "message": "Serviciul de traducere a textului"
+  },
+  "msgStorage": {
+    "message": "Stocare"
+  },
+  "lblTranslationCache": {
+    "message": "Memoria cache a traducerii"
+  },
+  "lblStorageUsed": {
+    "message": "Spațiu de stocare utilizat:"
+  },
+  "deleteTranslationCache": {
+    "message": "Șterge memoria cache a traducerii"
+  },
+  "lblPersonalSettings": {
+    "message": "Reglări personale"
+  },
+  "backupToFile": {
+    "message": "Fă o copie de rezervă"
+  },
+  "restoreFromFile": {
+    "message": "Restabilește din copia de rezervă"
+  },
+  "resetToDefault": {
+    "message": "Restabilește reglările inițiale"
+  },
+  "doYouWantToDeleteTranslationCache": {
+    "message": "Vrei să ștergi memoria cache a traducerii?"
+  },
+  "doYouWantOverwriteAllSettings": {
+    "message": "Vrei să schimbi preferințele actuale cu cele din copia de rezervă?"
+  },
+  "fileIsCorrupted": {
+    "message": "Fișierul pare a fi deteriorat"
+  },
+  "doYouWantRestoreSettings": {
+    "message": "Vrei să restabilești reglările inițiale ale extensiei?"
+  },
+  "lblTtsSpeed": {
+    "message": "Viteza de pronunțare a textului"
+  },
+  "lblEnableDeepL": {
+    "message": "Activează DeepL ca serviciu de traducere a textului"
+  },
+  "enterShortcut": {
+    "message": "Tastează o comandă rapidă"
+  },
+  "hotkeyError_ctrlOrAlt": {
+    "message": "Include Ctrl sau Alt"
+  },
+  "hotkeyError_letter": {
+    "message": "Tastează o literă"
+  },
+  "hotkeyError_invalid": {
+    "message": "Combinație incorectă"
+  },
+  "lblSwitchTranslatedAndOriginal": {
+    "message": "Schimbă între pagina tradusă și cea originală"
+  },
+  "lblRestorePageToOriginal": {
+    "message": "Revino la pagina originală"
+  },
+  "lblTranslatePageToTargetLanguage": {
+    "message": "Tradu pagina în limba dorită"
+  },
+  "lblTranslateTag_pre": {
+    "message": "Activează traducerea pentru eticheta $HTML_TAG_NAME$",
+    "placeholders": {
+      "HTML_TAG_NAME": {
+        "content": "<PRE>"
+      }
+    }
+  },
+  "lbldontsortresults": {
+    "message": "Nu aranja rezultatele traducerii Google"
+  },
+  "lbltranslatedynamicallycreatedcontent": {
+    "message": "Tradu conținutul creat dinamic"
+  },
+  "calculatestorage": {
+    "message": "Calculează"
+  },
+  "donatewithpaypal": {
+    "message": "Donează cu PayPal"
+  },
+  "lblAutoTranslateWhenClickingALink": {
+    "message": "Tradu automat dacă se face clic pe o legătură care duce la același domeniu ca al sitului actual"
+  },
+  "openNativeShortcutManager": {
+    "message": "Deschide administratorul nativ de taste rapide"
+  },
+  "lblKeyboardShortcutsSpecial": {
+    "message": "Comenzi rapide speciale"
+  },
+  "lblTranslateSelectedWhenPressTwice": {
+    "message": "Tradu textul selecționat la apăsarea de două ori a $SHORTCUT_KEY$",
+    "placeholders": {
+      "SHORTCUT_KEY": {
+        "content": "[Ctrl]"
+      }
+    }
+  },
+  "lblTranslateTextOverMouseWhenPressTwice": {
+    "message": "Tradu textul dacă se pune săgeata pe el și se apasă de două ori $SHORTCUT_KEY$",
+    "placeholders": {
+      "SHORTCUT_KEY": {
+        "content": "[Ctrl]"
+      }
+    }
+  },
+  "translateClickingOnce": {
+    "message": "Tradu pagina dacă se face clic o dată pe simbolul extensiei. (Pentru a vedea fereastra cu opțiuni, clic-dreapta)"
+  },
+  "btnShowPopup": {
+    "message": "Arată fereastra cu opțiuni"
+  },
+  "msgToTranslateThisDocument": {
+    "message": "Pentru a traduce acest document $DOC_TYPE$ trebuie să-l transformi în HTML",
+    "placeholders": {
+      "DOC_TYPE": {
+        "content": "$1",
+        "example": "(.pdf)"
+      }
+    }
+  },
+  "msgSelectServiceConversion": {
+    "message": "Alege un serviciu pentru a face această transformare"
+  },
+  "msgDownloadingDocument": {
+    "message": "Se descarcă documentul..."
+  },
+  "msgSendDocument": {
+    "message": "Trimite documentul"
+  },
+  "msgErrorDownloadingDocument": {
+    "message": "Eroare la descărcarea documentului"
+  },
+  "msgFileLargerThan": {
+    "message": "Acest serviciu nu acceptă fișiere mai mari de $FILE_SIZE$",
+    "placeholders": {
+      "FILE_SIZE": {
+        "content": "$1",
+        "example": "10 MB"
+      }
+    }
+  },
+  "msgPDFtoHTML": {
+    "message": "PDF în HTML"
+  },
+  "btncopy": {
+    "message": "Copiază"
+  },
+  "msgRecents": {
+    "message": "Recente"
+  },
+  "msgAll": {
+    "message": "Toate"
+  },
+  "msgPleaseWait": {
+    "message": "Aşteaptă..."
+  }
+}
