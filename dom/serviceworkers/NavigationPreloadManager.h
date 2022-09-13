@@ -30,11 +30,13 @@ class NavigationPreloadManager final : public nsISupports,
 
   static bool IsEnabled(JSContext* aCx, JSObject* aGlobal);
 
-  NavigationPreloadManager(nsCOMPtr<nsIGlobalObject>&& aGlobal,
-                           RefPtr<ServiceWorkerRegistration::Inner>& aInner);
+  explicit NavigationPreloadManager(
+      RefPtr<ServiceWorkerRegistration>& aServiceWorkerRegistration);
 
   // Webidl binding
-  nsIGlobalObject* GetParentObject() const { return mGlobal; }
+  nsIGlobalObject* GetParentObject() const {
+    return mServiceWorkerRegistration->GetParentObject();
+  }
 
   JSObject* WrapObject(JSContext* aCx,
                        JS::Handle<JSObject*> aGivenProto) override;
@@ -55,8 +57,7 @@ class NavigationPreloadManager final : public nsISupports,
   // General method for Enable()/Disable()
   already_AddRefed<Promise> SetEnabled(bool aEnabled, ErrorResult& aError);
 
-  nsCOMPtr<nsIGlobalObject> mGlobal;
-  RefPtr<ServiceWorkerRegistration::Inner> mInner;
+  RefPtr<ServiceWorkerRegistration> mServiceWorkerRegistration;
 };
 
 }  // namespace mozilla::dom
