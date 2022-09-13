@@ -9553,7 +9553,8 @@ inline void nsCSSFrameConstructor::ConstructFramesFromItemList(
   // Calculate and propagate page-name values for each frame in the frame list.
   // This will be affected by https://bugzilla.mozilla.org/1782597
   if (aState.mPresContext->IsPaginated() &&
-      StaticPrefs::layout_css_named_pages_enabled()) {
+      StaticPrefs::layout_css_named_pages_enabled() &&
+      aParentFrame->IsBlockFrameOrSubclass()) {
     // Set the start/end page values while iterating the frame list, to walk
     // up the frame tree only once after iterating the frame list.
     // This also avoids extra property lookups on these frames.
@@ -9613,7 +9614,8 @@ inline void nsCSSFrameConstructor::ConstructFramesFromItemList(
       // Alternatively, we could propagate this back up the frame tree after
       // constructing this frame's first child, inspecting the parent frames
       // and rewriting their first child page-name.
-      for (nsContainerFrame* frame = aParentFrame; frame;
+      for (nsContainerFrame* frame = aParentFrame;
+           frame && frame->IsBlockFrameOrSubclass();
            frame = frame->GetParent()) {
         nsIFrame::PageValues* const parentPageValues =
             frame->GetProperty(nsIFrame::PageValuesProperty());

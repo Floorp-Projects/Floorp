@@ -13,6 +13,12 @@ defaults pref(layout.css.named-pages.enabled,true)
 == page-name-inline-block-001.html page-name-inline-block-001-ref.html
 == page-name-inline-block-002.html page-name-inline-block-002-ref.html
 == page-name-inline-block-003.html page-name-inline-block-003-ref.html
+== page-name-flex-001.html page-name-flex-001-ref.html
+== page-name-flex-002.html page-name-flex-002-ref.html
+== page-name-flex-003.html page-name-flex-003-ref.html
+# This is affected by https://bugzilla.mozilla.org/1663079, however we can
+# still expect this to behave the same with break-after and page name breaks.
+== page-name-flex-004.html page-name-flex-004-ref.html
 == page-name-siblings-001.html page-name-siblings-ref.html
 == page-name-siblings-002.html page-name-siblings-ref.html
 == page-name-siblings-003.html page-name-siblings-ref.html
