@@ -117,5 +117,5 @@ object FeatureFlags {
     /**
      * Enables the wallpaper v2 enhancements.
      */
-    val wallpaperV2Enabled = Config.channel.isDebug
+    const val wallpaperV2Enabled = true
 }
