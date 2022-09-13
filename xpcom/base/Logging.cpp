@@ -315,7 +315,7 @@ class LogModuleManager {
         mMainThread(PR_GetCurrentThread()),
         mSetFromEnv(false),
         mAddTimestamp(false),
-        mAddProfilerMarker(false),
+        mCaptureProfilerStack(false),
         mIsRaw(false),
         mIsSync(false),
         mRotate(0),
@@ -358,7 +358,7 @@ class LogModuleManager {
     bool addTimestamp = false;
     bool isSync = false;
     bool isRaw = false;
-    bool isMarkers = false;
+    bool captureStacks = false;
     int32_t rotate = 0;
     int32_t maxSize = 0;
     bool prependHeader = false;
@@ -385,8 +385,8 @@ class LogModuleManager {
     NSPRLogModulesParser(
         modules,
         [this, &shouldAppend, &addTimestamp, &isSync, &isRaw, &rotate, &maxSize,
-         &prependHeader, &isMarkers](const char* aName, LogLevel aLevel,
-                                     int32_t aValue) mutable {
+         &prependHeader, &captureStacks](const char* aName, LogLevel aLevel,
+                                         int32_t aValue) mutable {
           if (strcmp(aName, "append") == 0) {
             shouldAppend = true;
           } else if (strcmp(aName, "timestamp") == 0) {
@@ -401,8 +401,8 @@ class LogModuleManager {
             maxSize = aValue << 20;
           } else if (strcmp(aName, "prependheader") == 0) {
             prependHeader = true;
-          } else if (strcmp(aName, "profilermarkers") == 0) {
-            isMarkers = true;
+          } else if (strcmp(aName, "profilerstacks") == 0) {
+            captureStacks = true;
           } else {
             this->CreateOrGetModule(aName)->SetLevel(aLevel);
           }
@@ -413,7 +413,7 @@ class LogModuleManager {
     mIsSync = isSync;
     mIsRaw = isRaw;
     mRotate = rotate;
-    mAddProfilerMarker = isMarkers;
+    mCaptureProfilerStack = captureStacks;
 
     if (rotate > 0 && shouldAppend) {
       NS_WARNING("MOZ_LOG: when you rotate the log, you cannot use append!");
@@ -520,8 +520,8 @@ class LogModuleManager {
 
   void SetIsSync(bool aIsSync) { mIsSync = aIsSync; }
 
-  void SetRecordMarkers(bool aRecordMarkers) {
-    mAddProfilerMarker = aRecordMarkers;
+  void SetCaptureStacks(bool aCaptureStacks) {
+    mCaptureProfilerStack = aCaptureStacks;
   }
 
   void SetAddTimestamp(bool aAddTimestamp) { mAddTimestamp = aAddTimestamp; }
@@ -603,7 +603,7 @@ class LogModuleManager {
       charsWritten = strlen(buffToWrite);
     }
 
-    if (mAddProfilerMarker && profiler_thread_is_being_profiled_for_markers()) {
+    if (profiler_thread_is_being_profiled_for_markers()) {
       struct LogMarker {
         static constexpr Span<const char> MarkerTypeName() {
           return MakeStringSpan("Log");
@@ -627,8 +627,9 @@ class LogModuleManager {
 
       profiler_add_marker(
           "LogMessages", geckoprofiler::category::OTHER,
-          aStart ? MarkerTiming::IntervalUntilNowFrom(*aStart)
-                 : MarkerTiming::InstantNow(),
+          {aStart ? MarkerTiming::IntervalUntilNowFrom(*aStart)
+                  : MarkerTiming::InstantNow(),
+           MarkerStack::MaybeCapture(mCaptureProfilerStack)},
           LogMarker{}, ProfilerString8View::WrapNullTerminatedString(aName),
           ProfilerString8View::WrapNullTerminatedString(buffToWrite));
     }
@@ -782,7 +783,7 @@ class LogModuleManager {
   PRThread* mMainThread;
   bool mSetFromEnv;
   Atomic<bool, Relaxed> mAddTimestamp;
-  Atomic<bool, Relaxed> mAddProfilerMarker;
+  Atomic<bool, Relaxed> mCaptureProfilerStack;
   Atomic<bool, Relaxed> mIsRaw;
   Atomic<bool, Relaxed> mIsSync;
   int32_t mRotate;
@@ -816,8 +817,8 @@ void LogModule::SetIsSync(bool aIsSync) {
   sLogModuleManager->SetIsSync(aIsSync);
 }
 
-void LogModule::SetRecordMarkers(bool aRecordMarkers) {
-  sLogModuleManager->SetRecordMarkers(aRecordMarkers);
+void LogModule::SetCaptureStacks(bool aCaptureStacks) {
+  sLogModuleManager->SetCaptureStacks(aCaptureStacks);
 }
 
 // This function is defined in gecko_logger/src/lib.rs
