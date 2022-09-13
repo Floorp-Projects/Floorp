@@ -261,26 +261,6 @@ class nsXPConnect final : public nsIXPConnect {
 
 /***************************************************************************/
 
-class XPCRootSetElem {
- public:
-  XPCRootSetElem() : mNext(nullptr), mSelfp(nullptr) {}
-
-  ~XPCRootSetElem() {
-    MOZ_ASSERT(!mNext, "Must be unlinked");
-    MOZ_ASSERT(!mSelfp, "Must be unlinked");
-  }
-
-  inline XPCRootSetElem* GetNextRoot() { return mNext; }
-  void AddToRootSet(XPCRootSetElem** listHead);
-  void RemoveFromRootSet();
-
- private:
-  XPCRootSetElem* mNext;
-  XPCRootSetElem** mSelfp;
-};
-
-/***************************************************************************/
-
 // In the current xpconnect system there can only be one XPCJSContext.
 // So, xpconnect can only be used on one JSContext within the process.
 
@@ -555,8 +535,6 @@ class XPCJSRuntime final : public mozilla::CycleCollectedJSRuntime {
   static void WeakPointerCompartmentCallback(JSTracer* trc,
                                              JS::Compartment* comp, void* data);
 
-  inline void AddWrappedJSRoot(nsXPCWrappedJS* wrappedJS);
-
   void DebugDump(int16_t depth);
 
   bool GCIsRunning() const { return mGCIsRunning; }
@@ -592,8 +570,6 @@ class XPCJSRuntime final : public mozilla::CycleCollectedJSRuntime {
   JSObject* LoaderGlobal();
 
   void DeleteSingletonScopes();
-
-  void SystemIsBeingShutDown();
 
  private:
   explicit XPCJSRuntime(JSContext* aCx);
@@ -636,7 +612,6 @@ class XPCJSRuntime final : public mozilla::CycleCollectedJSRuntime {
   bool mGCIsRunning;
   nsTArray<nsISupports*> mNativesToReleaseArray;
   bool mDoingFinalization;
-  XPCRootSetElem* mWrappedJSRoots;
   nsTArray<xpcGCCallback> extraGCCallbacks;
   JS::GCSliceCallback mPrevGCSliceCallback;
   JS::DoCycleCollectionCallback mPrevDoCycleCollectionCallback;
@@ -1591,8 +1566,7 @@ class XPCWrappedNative final : public nsIXPConnectWrappedNative {
 
 class nsXPCWrappedJS final : protected nsAutoXPTCStub,
                              public nsIXPConnectWrappedJSUnmarkGray,
-                             public nsSupportsWeakReference,
-                             public XPCRootSetElem {
+                             public nsSupportsWeakReference {
  public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_NSIXPCONNECTJSOBJECTHOLDER
@@ -1600,8 +1574,8 @@ class nsXPCWrappedJS final : protected nsAutoXPTCStub,
   NS_DECL_NSIXPCONNECTWRAPPEDJSUNMARKGRAY
   NS_DECL_NSISUPPORTSWEAKREFERENCE
 
-  NS_DECL_CYCLE_COLLECTION_SKIPPABLE_CLASS_AMBIGUOUS(nsXPCWrappedJS,
-                                                     nsIXPConnectWrappedJS)
+  NS_DECL_CYCLE_COLLECTION_SKIPPABLE_SCRIPT_HOLDER_CLASS_AMBIGUOUS(
+      nsXPCWrappedJS, nsIXPConnectWrappedJS)
 
   // This method is defined in XPCWrappedJSClass.cpp to preserve VCS blame.
   NS_IMETHOD CallMethod(uint16_t methodIndex, const nsXPTMethodInfo* info,
@@ -1676,8 +1650,6 @@ class nsXPCWrappedJS final : protected nsAutoXPTCStub,
     }
     mRoot->mOuter = aNative;
   }
-
-  void TraceJS(JSTracer* trc);
 
   // This method is defined in XPCWrappedJSClass.cpp to preserve VCS blame.
   static void DebugDumpInterfaceInfo(const nsXPTInterfaceInfo* aInfo,
