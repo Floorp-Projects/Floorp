@@ -85,10 +85,10 @@ fuzzy-if(geckoview,0-7,0-1) == mouse-click-float-details.html open-float-details
 fuzzy(0-4,0-1) == mouse-click-twice-float-details.html float-details.html # Bug 1316430
 
 # Generated content bits
-== details-after.html single-summary.html
-== details-before.html single-summary.html
+== details-after.html details-after-ref.html
+== details-before.html details-before-ref.html
 == open-details-after.html open-single-summary.html
-== open-details-before.html open-single-summary.html
+== open-details-before.html details-before-ref.html
 
 # Move summary element
 == move-float-summary-to-different-details.html move-float-summary-to-different-details-ref.html

@@ -13,6 +13,8 @@
 
 namespace mozilla::dom {
 
+class HTMLSummaryElement;
+
 // HTMLDetailsElement implements the <details> tag, which is used as a
 // disclosure widget from which the user can obtain additional information or
 // controls. Please see the spec for more information.
@@ -22,22 +24,18 @@ class HTMLDetailsElement final : public nsGenericHTMLElement {
  public:
   using NodeInfo = mozilla::dom::NodeInfo;
 
-  explicit HTMLDetailsElement(already_AddRefed<NodeInfo>&& aNodeInfo)
-      : nsGenericHTMLElement(std::move(aNodeInfo)) {}
+  explicit HTMLDetailsElement(already_AddRefed<NodeInfo>&& aNodeInfo);
 
   NS_IMPL_FROMNODE_HTML_WITH_TAG(HTMLDetailsElement, details)
 
-  nsIContent* GetFirstSummary() const;
+  HTMLSummaryElement* GetFirstSummary() const;
 
   nsresult Clone(NodeInfo* aNodeInfo, nsINode** aResult) const override;
 
-  // Element
-  nsChangeHint GetAttributeChangeHint(const nsAtom* aAttribute,
-                                      int32_t aModType) const override;
-
-  nsresult BeforeSetAttr(int32_t aNameSpaceID, nsAtom* aName,
-                         const nsAttrValueOrString* aValue,
-                         bool aNotify) override;
+  nsresult AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
+                        const nsAttrValue* aValue, const nsAttrValue* aOldValue,
+                        nsIPrincipal* aMaybeScriptedPrincipal,
+                        bool aNotify) override;
 
   bool IsInteractiveHTMLContent() const override { return true; }
 
@@ -48,16 +46,13 @@ class HTMLDetailsElement final : public nsGenericHTMLElement {
     SetHTMLBoolAttr(nsGkAtoms::open, aOpen, aError);
   }
 
-  void ToggleOpen() {
-    ErrorResult rv;
-    SetOpen(!Open(), rv);
-    rv.SuppressException();
-  }
+  void ToggleOpen() { SetOpen(!Open(), IgnoreErrors()); }
 
   virtual void AsyncEventRunning(AsyncEventDispatcher* aEvent) override;
 
  protected:
   virtual ~HTMLDetailsElement();
+  void SetupShadowTree();
 
   JSObject* WrapNode(JSContext* aCx,
                      JS::Handle<JSObject*> aGivenProto) override;
