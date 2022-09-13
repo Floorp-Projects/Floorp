@@ -55,6 +55,3 @@ window.MozXULElement = {
     document.l10n.translateRoots();
   },
 };
-
-// Most companion elements expect this to be on the page already.
-window.MozXULElement.insertFTLIfNeeded("browser/companion.ftl");
