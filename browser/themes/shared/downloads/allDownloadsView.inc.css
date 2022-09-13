@@ -98,3 +98,33 @@
 .downloadIconRetry > .button-box > .button-icon {
   list-style-image: url("chrome://global/skin/icons/reload.svg");
 }
+
+richlistitem.download:nth-child(1) > hbox:nth-child(1) > vbox:nth-child(2) {
+  border-left: solid 0.1px;
+  margin-left: 10px;
+  padding-left: 20px;
+}
+
+#downloadsListBox > richlistitem {
+border-bottom: solid 0.1px var(--in-content-deemphasized-text);
+}
+
+.downloadTypeIcon {
+margin: 15px 13px;
+width: 38px;
+height: 38px;
+}
+
+.downloadContainer{
+border-left: solid 0.1px;
+margin-left: 10px;
+padding-left: 20px;
+}
+
+.downloadTarget{
+font-size: 14px;
+}
+
+#contentAreaDownloadsView {
+  padding: 0 !important;
+}

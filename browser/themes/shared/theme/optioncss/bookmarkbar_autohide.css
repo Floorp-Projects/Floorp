@@ -1,0 +1,13 @@
+#PersonalToolbar {
+    position: relative !important;
+    transition: all 100ms !important;
+    min-height: 0em !important;
+    max-height: 0em !important;
+ }
+  #navigator-toolbox:hover > #PersonalToolbar {
+    transition: all 200ms !important;
+    transition-delay: 0.2s !important;
+    min-height: 3em !important;
+    max-height: 3em !important;
+    z-index: 1;
+ }
