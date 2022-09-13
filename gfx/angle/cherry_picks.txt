@@ -1,3 +1,13 @@
+commit 6a5622459d2c1bbd15bf0661083d9f6d901d2c2a
+Author: Kelsey Gilbert <jgilbert@mozilla.com>
+Date:   Thu Sep 8 17:10:21 2022 -0700
+
+    Import <cmath> in SymbolTable_ESSL_autogen.cpp.
+    
+    Fixes Snap builds of Firefox.
+    
+    Change-Id: I8d71d230d5e4a5a042e6afd4e31342da9a085bed
+
 commit 23851a53779dfd3239b4cceb7f93df9ea6efb9c3
 Author: Jeff Gilbert <jgilbert@mozilla.com>
 Date:   Tue Sep 14 18:11:05 2021 -0700
