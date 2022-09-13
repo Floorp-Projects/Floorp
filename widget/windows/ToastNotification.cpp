@@ -563,13 +563,16 @@ ToastNotification::HandleWindowsTag(const nsAString& aWindowsTag,
 
   MOZ_LOG(sWASLog, LogLevel::Debug, ("aListener [%p]", aListener));
   if (aListener) {
+    bool foundTag;
     nsAutoString launchUrl;
-    MOZ_TRY(ToastNotificationHandler::FindLaunchURLForWindowsTag(
-        aWindowsTag, mAumid.ref(), launchUrl));
+    nsAutoString privilegedName;
+    MOZ_TRY(
+        ToastNotificationHandler::FindLaunchURLAndPrivilegedNameForWindowsTag(
+            aWindowsTag, mAumid.ref(), foundTag, launchUrl, privilegedName));
 
-    MOZ_LOG(sWASLog, LogLevel::Debug,
-            ("Found launchUrl [%s]", NS_ConvertUTF16toUTF8(launchUrl).get()));
-    aListener->HandleUnknownWindowsTag(aWindowsTag, launchUrl);
+    // The tag should always be found, so invoke the callback (even just for
+    // logging).
+    aListener->HandleUnknownWindowsTag(aWindowsTag, launchUrl, privilegedName);
   }
 
   return NS_OK;

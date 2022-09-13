@@ -57,7 +57,7 @@ function makeAlert(options) {
 }
 
 function testAlert(when, { serverEnabled, profD, isBackgroundTaskMode } = {}) {
-  let argumentString = (argument, launchUrl) => {
+  let argumentString = (argument, launchUrl, privilegedName) => {
     // &#xA; is "\n".
     let s = ``;
     if (serverEnabled) {
@@ -70,6 +70,9 @@ function testAlert(when, { serverEnabled, profD, isBackgroundTaskMode } = {}) {
     }
     if (serverEnabled && launchUrl) {
       s += `&#xA;launchUrl&#xA;${launchUrl}`;
+    }
+    if (serverEnabled && privilegedName) {
+      s += `&#xA;privilegedName&#xA;${privilegedName}`;
     }
     if (serverEnabled) {
       s += "&#xA;windowsTag&#xA;";
@@ -157,7 +160,18 @@ function testAlert(when, { serverEnabled, profD, isBackgroundTaskMode } = {}) {
     principal: systemPrincipal,
     actions: systemActions,
   });
-  expected = `<toast launch="${argumentString()}"><visual><binding template="ToastImageAndText03"><image id="1" src="file:///image.png"/><text id="1">title</text><text id="2">text</text></binding></visual><actions>${settingsAction}<action content="dismissTitle" arguments="dismiss" activationType="system"/><action content="snoozeTitle" arguments="snooze" activationType="system"/></actions></toast>`;
+  let settingsActionWithPrivilegedName = isBackgroundTaskMode
+    ? ""
+    : `<action content="Notification settings" arguments="${argumentString(
+        "settings",
+        null,
+        name
+      )}" placement="contextmenu"/>`;
+  expected = `<toast launch="${argumentString(
+    null,
+    null,
+    name
+  )}"><visual><binding template="ToastImageAndText03"><image id="1" src="file:///image.png"/><text id="1">title</text><text id="2">text</text></binding></visual><actions>${settingsActionWithPrivilegedName}<action content="dismissTitle" arguments="dismiss" activationType="system"/><action content="snoozeTitle" arguments="snooze" activationType="system"/></actions></toast>`;
   Assert.equal(
     expected,
     alertsService.getXmlStringForWindowsAlert(alert),
@@ -206,11 +220,13 @@ function testAlert(when, { serverEnabled, profD, isBackgroundTaskMode } = {}) {
     ? ""
     : `<action content="Notification settings" arguments="${argumentString(
         "settings",
-        launchUrl
+        launchUrl,
+        name
       )}" placement="contextmenu"/>`;
   expected = `<toast launch="${argumentString(
     null,
-    launchUrl
+    launchUrl,
+    name
   )}"><visual><binding template="ToastImageAndText03"><image id="1" src="file:///image.png"/><text id="1">title</text><text id="2">text</text></binding></visual><actions>${settingsActionWithLaunchUrl}</actions></toast>`;
   Assert.equal(
     expected.replace("<actions></actions>", "<actions/>"),
