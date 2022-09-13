@@ -129,6 +129,7 @@ class TabsListBase {
     }
     this.tabToElement = new Map();
     this._cleanupListeners();
+    this._clearDropTarget();
   }
 
   _setupListeners() {
@@ -523,6 +524,7 @@ class TabsPanel extends TabsListBase {
     if (this.dropTargetRow) {
       this.dropTargetRow = null;
     }
+    this.dropIndicator.style.top = `0px`;
     this.dropIndicator.collapsed = true;
   }
 
