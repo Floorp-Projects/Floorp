@@ -4,7 +4,10 @@
 
 
 import os
+from taskgraph import config as taskgraph_config
 from taskgraph.util import taskcluster as tc_util, schema
+
+from gecko_taskgraph.config import graph_config_schema
 
 GECKO = os.path.normpath(os.path.realpath(os.path.join(__file__, "..", "..", "..")))
 
@@ -13,6 +16,9 @@ GECKO = os.path.normpath(os.path.realpath(os.path.join(__file__, "..", "..", "..
 # specifies 100, but we also optionally add the decision task id as a dep in
 # taskgraph.create, so let's set this to 99.
 MAX_DEPENDENCIES = 99
+
+# Overwrite Taskgraph's default graph_config_schema with a custom one.
+taskgraph_config.graph_config_schema = graph_config_schema
 
 # Default rootUrl to use if none is given in the environment; this should point
 # to the production Taskcluster deployment used for CI.

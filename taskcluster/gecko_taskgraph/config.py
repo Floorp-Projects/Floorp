@@ -2,16 +2,9 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-
-import os
-import logging
-
-from taskgraph.config import GraphConfig
-from taskgraph.util.schema import Schema, optionally_keyed_by, validate_schema
-from taskgraph.util.yaml import load_yaml
+from taskgraph.util.schema import Schema, optionally_keyed_by
 from voluptuous import Required, Optional, Any
 
-logger = logging.getLogger(__name__)
 
 graph_config_schema = Schema(
     {
@@ -133,19 +126,3 @@ graph_config_schema = Schema(
         Required("expiration-policy"): optionally_keyed_by("project", {str: str}),
     }
 )
-
-
-def validate_graph_config(config):
-    validate_schema(graph_config_schema, config, "Invalid graph configuration:")
-
-
-def load_graph_config(root_dir):
-    config_yml = os.path.join(root_dir, "config.yml")
-    if not os.path.exists(config_yml):
-        raise Exception(f"Couldn't find taskgraph configuration: {config_yml}")
-
-    logger.debug(f"loading config from `{config_yml}`")
-    config = load_yaml(config_yml)
-    logger.debug("validating the graph config.")
-    validate_graph_config(config)
-    return GraphConfig(config=config, root_dir=root_dir)
