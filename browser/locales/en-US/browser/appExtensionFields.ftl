@@ -17,6 +17,12 @@ extension-firefox-compact-dark-description=A theme with a dark color scheme.
 extension-firefox-alpenglow-name=Firefox Alpenglow
 extension-firefox-alpenglow-description=Use a colorful appearance for buttons, menus, and windows.
 
+extension-floorp-material-name=Material Theme
+extension-floorp-material-description=Follow the operating system setting for buttons, menus, and windows
+
+extension-floorp-photon-name=Firefox Photon Theme
+extension-floorp-photon-description=Follow the operating system setting for buttons, menus, and windows
+
 ## Colorway Themes
 ## These themes are variants of a colorway. The colorway is specified in the
 ## $colorway-name variable.

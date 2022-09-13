@@ -836,3 +836,11 @@ data-reporting-notification-message = { -brand-short-name } automatically sends 
 data-reporting-notification-button =
     .label = Choose What I Share
     .accesskey = C
+
+## boss has coming
+rest-mode = Taking a break...
+rest-mode-description = Browser is stopped. press OK or press a key to resume.
+
+Sidebar2 =
+  .label = Browser Manager Sidebar
+  .tooltiptext = Change Sidebar Visibility
