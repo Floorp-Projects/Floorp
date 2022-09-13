@@ -23,7 +23,7 @@ static const char kLoggingPrefClearOnStartup[] =
 static const char kLoggingPrefLogFile[] = "logging.config.LOG_FILE";
 static const char kLoggingPrefAddTimestamp[] = "logging.config.add_timestamp";
 static const char kLoggingPrefSync[] = "logging.config.sync";
-static const char kLoggingPrefMarkers[] = "logging.config.profilermarkers";
+static const char kLoggingPrefStacks[] = "logging.config.profilerstacks";
 
 namespace mozilla {
 
@@ -83,9 +83,9 @@ static void LoadPrefValue(const char* aName) {
     } else if (prefName.EqualsLiteral(kLoggingPrefSync)) {
       bool sync = Preferences::GetBool(aName, false);
       LogModule::SetIsSync(sync);
-    } else if (prefName.EqualsLiteral(kLoggingPrefMarkers)) {
-      bool enableMarkers = Preferences::GetBool(aName, false);
-      LogModule::SetRecordMarkers(enableMarkers);
+    } else if (prefName.EqualsLiteral(kLoggingPrefStacks)) {
+      bool captureStacks = Preferences::GetBool(aName, false);
+      LogModule::SetCaptureStacks(captureStacks);
     }
     return;
   }
