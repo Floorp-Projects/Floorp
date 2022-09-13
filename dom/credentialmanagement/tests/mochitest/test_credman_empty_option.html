@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<head>
+  <title>Credential Management: Handle requests with empty options</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <meta charset=utf-8>
+</head>
+<body>
+<h1>Credential Management: Handle requests with empty options</h1>
+
+<script class="testbody" type="text/javascript">
+"use strict";
+
+SimpleTest.waitForExplicitFinish();
+
+SpecialPowers.pushPrefEnv({"set": [["security.webauth.webauthn", true],
+                                   ["dom.security.credentialmanagement.enabled", true]
+                                 ]},
+async function() {
+  info("testing create({}).")
+  try {
+    await navigator.credentials.create({});
+    ok(false, "Credential creation with no options should be an error.");
+  }
+  catch (err) {
+    is(err.name, "NotSupportedError", "Credential creation with no options is a NotSupportedError");
+  }
+  info("testing get({}).")
+  try {
+    await navigator.credentials.get({});
+    ok(false, "Credential get with no options should be an error.");
+  }
+  catch (err) {
+    is(err.name, "NotSupportedError", "Credential get with no options is a NotSupportedError");
+  }
+  SimpleTest.finish();
+});
+</script>
+</body>
+</html>
