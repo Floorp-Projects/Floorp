@@ -80,12 +80,10 @@ add_task(async function test_empty_first_entry() {
   await restoreForm();
   let popupState = await getPopupState();
   is(popupState.open, false, "Check popup is initially closed");
-  let shownPromise = promiseACShown();
-  synthesizeKey("KEY_ArrowDown");
-  let results = await shownPromise;
+  let autocompleteItems = await openAutocompletePopup();
   popupState = await getPopupState();
   is(popupState.selectedIndex, -1, "Check no entries are selected");
-  checkAutoCompleteResults(results, ["name", "name1", "name2"], hostname, "initial");
+  checkAutoCompleteResults(autocompleteItems, ["name", "name1", "name2"], hostname, "initial");
 
   // Check first entry
   let index0Promise = notifySelectedIndex(0);
@@ -99,9 +97,7 @@ add_task(async function test_empty_first_entry() {
 
 add_task(async function test_empty_second_entry() {
   await restoreForm();
-  let shownPromise = promiseACShown();
-  synthesizeKey("KEY_ArrowDown"); // open
-  await shownPromise;
+  await openAutocompletePopup();
   synthesizeKey("KEY_ArrowDown"); // first
   synthesizeKey("KEY_ArrowDown"); // second
   synthesizeKey("KEY_Enter");
@@ -136,9 +132,7 @@ add_task(async function test_search() {
 
 add_task(async function test_delete_first_entry() {
   await restoreForm();
-  let shownPromise = promiseACShown();
-  synthesizeKey("KEY_ArrowDown");
-  await shownPromise;
+  await openAutocompletePopup();
 
   let index0Promise = notifySelectedIndex(0);
   synthesizeKey("KEY_ArrowDown");
@@ -163,9 +157,7 @@ add_task(async function test_delete_first_entry() {
 
 add_task(async function test_delete_duplicate_entry() {
   await restoreForm();
-  let shownPromise = promiseACShown();
-  synthesizeKey("KEY_ArrowDown");
-  await shownPromise;
+  await openAutocompletePopup();
 
   let index0Promise = notifySelectedIndex(0);
   synthesizeKey("KEY_ArrowDown");

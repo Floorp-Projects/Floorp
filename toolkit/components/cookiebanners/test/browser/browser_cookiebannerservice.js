@@ -3,6 +3,10 @@
 
 "use strict";
 
+function genUUID() {
+  return Services.uuid.generateUUID().number.slice(1, -1);
+}
+
 add_setup(async function() {
   registerCleanupFunction(() => {
     Services.prefs.clearUserPref("cookiebanners.service.mode");
@@ -47,6 +51,7 @@ add_task(async function test_enabled_pref() {
   let rule = Cc["@mozilla.org/cookie-banner-rule;1"].createInstance(
     Ci.nsICookieBannerRule
   );
+  rule.id = genUUID();
   rule.domain = "example.com";
 
   Assert.throws(
@@ -54,15 +59,15 @@ add_task(async function test_enabled_pref() {
       Services.cookieBanners.insertRule(rule);
     },
     /NS_ERROR_NOT_AVAILABLE/,
-    "Should have thrown NS_ERROR_NOT_AVAILABLE for rules insertRule."
+    "Should have thrown NS_ERROR_NOT_AVAILABLE for insertRule."
   );
 
   Assert.throws(
     () => {
-      Services.cookieBanners.removeRuleForDomain("example.com");
+      Services.cookieBanners.removeRule(rule);
     },
     /NS_ERROR_NOT_AVAILABLE/,
-    "Should have thrown NS_ERROR_NOT_AVAILABLE for rules removeRuleForDomain."
+    "Should have thrown NS_ERROR_NOT_AVAILABLE for removeRule."
   );
 
   Assert.throws(
@@ -76,7 +81,7 @@ add_task(async function test_enabled_pref() {
   );
   Assert.throws(
     () => {
-      Services.cookieBanners.getClickRuleForDomain("example.com");
+      Services.cookieBanners.getClickRulesForDomain("example.com");
     },
     /NS_ERROR_NOT_AVAILABLE/,
     "Should have thrown NS_ERROR_NOT_AVAILABLE for rules getClickRuleForDomain."
@@ -272,7 +277,14 @@ add_task(async function test_insertAndGetRule() {
   is(rule.cookiesOptIn.length, 0, "Should have no opt-in cookies.");
 
   info("Getting the click rule for example.com.");
-  let clickRule = Services.cookieBanners.getClickRuleForDomain("example.com");
+  let clickRules = Services.cookieBanners.getClickRulesForDomain("example.com");
+  is(
+    clickRules.length,
+    1,
+    "There should be one domain-specific click rule for example.com"
+  );
+  let [clickRule] = clickRules;
+
   is(
     clickRule.presence,
     "div#presence",
@@ -301,7 +313,15 @@ add_task(async function test_insertAndGetRule() {
   );
 
   info("Getting the click rule for example.org.");
-  let clickRule2 = Services.cookieBanners.getClickRuleForDomain("example.org");
+  let clickRules2 = Services.cookieBanners.getClickRulesForDomain(
+    "example.org"
+  );
+  is(
+    clickRules2.length,
+    1,
+    "There should be one domain-specific click rule for example.org"
+  );
+  let [clickRule2] = clickRules2;
   is(
     clickRule2.presence,
     "div#presence",
@@ -368,6 +388,7 @@ add_task(async function test_removeRule() {
   let rule = Cc["@mozilla.org/cookie-banner-rule;1"].createInstance(
     Ci.nsICookieBannerRule
   );
+  rule.id = genUUID();
   rule.domain = "example.com";
 
   Services.cookieBanners.insertRule(rule);
@@ -375,6 +396,7 @@ add_task(async function test_removeRule() {
   let rule2 = Cc["@mozilla.org/cookie-banner-rule;1"].createInstance(
     Ci.nsICookieBannerRule
   );
+  rule2.id = genUUID();
   rule2.domain = "example.org";
 
   Services.cookieBanners.insertRule(rule2);
@@ -386,7 +408,12 @@ add_task(async function test_removeRule() {
   );
 
   info("Removing rule for non existent example.net");
-  Services.cookieBanners.removeRuleForDomain("example.net");
+  let ruleExampleNet = Cc["@mozilla.org/cookie-banner-rule;1"].createInstance(
+    Ci.nsICookieBannerRule
+  );
+  ruleExampleNet.id = genUUID();
+  ruleExampleNet.domain = "example.net";
+  Services.cookieBanners.removeRule(ruleExampleNet);
 
   is(
     Services.cookieBanners.rules.length,
@@ -394,8 +421,22 @@ add_task(async function test_removeRule() {
     "Cookie banner service still has two rules."
   );
 
-  info("Removing rule for non example.com");
-  Services.cookieBanners.removeRuleForDomain("example.com");
+  info("Removing rule for non existent global rule.");
+  let ruleGlobal = Cc["@mozilla.org/cookie-banner-rule;1"].createInstance(
+    Ci.nsICookieBannerRule
+  );
+  ruleGlobal.id = genUUID();
+  ruleGlobal.domain = "*";
+  Services.cookieBanners.removeRule(ruleGlobal);
+
+  is(
+    Services.cookieBanners.rules.length,
+    2,
+    "Cookie banner service still has two rules."
+  );
+
+  info("Removing rule for example.com");
+  Services.cookieBanners.removeRule(rule);
 
   is(
     Services.cookieBanners.rules.length,
@@ -496,4 +537,154 @@ add_task(async function test_overwriteRule() {
 
   // Cleanup.
   Services.cookieBanners.resetRules(false);
+});
+
+add_task(async function test_globalRules() {
+  info("Enabling cookie banner service with MODE_REJECT");
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["cookiebanners.service.mode", Ci.nsICookieBannerService.MODE_REJECT],
+      ["cookiebanners.service.enableGlobalRules", true],
+    ],
+  });
+
+  info("Clear any preexisting rules");
+  Services.cookieBanners.resetRules(false);
+
+  is(
+    Services.cookieBanners.rules.length,
+    0,
+    "Cookie banner service has no rules initially."
+  );
+
+  info("Insert a site-specific rule for example.com");
+  let rule = Cc["@mozilla.org/cookie-banner-rule;1"].createInstance(
+    Ci.nsICookieBannerRule
+  );
+  rule.id = genUUID();
+  rule.domain = "example.com";
+  rule.addCookie(
+    true,
+    "foo",
+    "new",
+    "example.com",
+    "/",
+    3600,
+    "",
+    false,
+    false,
+    false,
+    0,
+    0
+  );
+  rule.addClickRule("#cookieBannerExample", "#btnOptOut", "#btnOptIn");
+  Services.cookieBanners.insertRule(rule);
+
+  info(
+    "Insert a global rule with a cookie and a click rule. The cookie rule shouldn't be used."
+  );
+  let ruleGlobalA = Cc["@mozilla.org/cookie-banner-rule;1"].createInstance(
+    Ci.nsICookieBannerRule
+  );
+  ruleGlobalA.id = genUUID();
+  ruleGlobalA.domain = "*";
+  ruleGlobalA.addCookie(
+    true,
+    "foo",
+    "new",
+    "example.net",
+    "/",
+    3600,
+    "",
+    false,
+    false,
+    false,
+    0,
+    0
+  );
+  ruleGlobalA.addClickRule("#globalCookieBanner", "#btnOptOut", "#btnOptIn");
+  Services.cookieBanners.insertRule(ruleGlobalA);
+
+  info("Insert a second global rule");
+  let ruleGlobalB = Cc["@mozilla.org/cookie-banner-rule;1"].createInstance(
+    Ci.nsICookieBannerRule
+  );
+  ruleGlobalB.id = genUUID();
+  ruleGlobalB.domain = "*";
+  ruleGlobalB.addClickRule("#globalCookieBannerB", "#btnOptOutB", "#btnOptIn");
+  Services.cookieBanners.insertRule(ruleGlobalB);
+
+  is(
+    Services.cookieBanners.rules.length,
+    3,
+    "Cookie Banner Service has three rules."
+  );
+
+  is(
+    Services.cookieBanners.getCookiesForURI(
+      Services.io.newURI("http://example.com")
+    ).length,
+    1,
+    "There should be a cookie rule for example.com"
+  );
+
+  is(
+    Services.cookieBanners.getClickRulesForDomain("example.com").length,
+    1,
+    "There should be a a click rule for example.com"
+  );
+
+  is(
+    Services.cookieBanners.getCookiesForURI(
+      Services.io.newURI("http://thishasnorule.com")
+    ).length,
+    0,
+    "There should be no cookie rule for thishasnorule.com"
+  );
+
+  let clickRules = Services.cookieBanners.getClickRulesForDomain(
+    Services.io.newURI("http://thishasnorule.com")
+  );
+  is(
+    clickRules.length,
+    2,
+    "There should be two click rules for thishasnorule.com"
+  );
+  ok(
+    clickRules.every(rule => rule.presence.startsWith("#globalCookieBanner")),
+    "The returned click rules should be global rules."
+  );
+
+  info("Disabling global rules");
+  await SpecialPowers.pushPrefEnv({
+    set: [["cookiebanners.service.enableGlobalRules", false]],
+  });
+
+  is(
+    Services.cookieBanners.rules.length,
+    1,
+    "Cookie Banner Service has 1 rule."
+  );
+
+  is(
+    Services.cookieBanners.rules[0].id,
+    rule.id,
+    "It should be the domain specific rule"
+  );
+
+  is(
+    Services.cookieBanners.getCookiesForURI(
+      Services.io.newURI("http://thishasnorule.com")
+    ).length,
+    0,
+    "There should be no cookie rule for thishasnorule.com"
+  );
+
+  is(
+    Services.cookieBanners.getClickRulesForDomain(
+      Services.io.newURI("http://thishasnorule.com")
+    ).length,
+    0,
+    "There should be no click rules for thishasnorule.com since global rules are disabled"
+  );
 });

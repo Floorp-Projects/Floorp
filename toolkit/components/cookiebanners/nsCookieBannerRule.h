@@ -24,6 +24,7 @@ class nsCookieBannerRule final : public nsICookieBannerRule {
  private:
   ~nsCookieBannerRule() = default;
 
+  nsCString mId;
   nsCString mDomain;
   nsTArray<nsCOMPtr<nsICookieRule>> mCookiesOptOut;
   nsTArray<nsCOMPtr<nsICookieRule>> mCookiesOptIn;

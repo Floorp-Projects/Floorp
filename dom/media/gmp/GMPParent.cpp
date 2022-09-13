@@ -792,10 +792,14 @@ static void ApplyGlibcWorkaround(nsCString& aLibs) {
 
 #if defined(XP_WIN)
 static void ApplyOleaut32(nsCString& aLibs) {
-  // Crashes have been seen across most if not all GMP plugins since the
-  // libwebrtc update in bug 1766646. It is still unclear what is triggering the
-  // load of oleaut32.dll, so this serves as a band-aid for now; see bugs
-  // 1785030, 1788592.
+  // In the libwebrtc update in bug 1766646 an include of comdef.h for using
+  // _bstr_t was introduced. This resulted in a dependency on comsupp.lib which
+  // contains a `_variant_t vtMissing` that would get cleared in an exit
+  // handler. VariantClear is defined in oleaut32.dll, and so we'd try to load
+  // oleaut32.dll on exit but get denied by the sandbox.
+  // Note that we had includes of comdef.h before bug 1766646 but it is the use
+  // of _bstr_t that triggers the vtMissing exit handler.
+  // See bug 1788592 for details.
   if (!aLibs.IsEmpty()) {
     aLibs.AppendLiteral(", ");
   }

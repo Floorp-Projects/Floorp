@@ -1295,6 +1295,18 @@
     "n_buckets": 100,
     "description": "Maximum-sized block of contiguous virtual memory (KB)"
   },
+  "MEMORY_COLLECTION_TIME": {
+    "record_in_processes": ["all"],
+    "products": ["firefox"],
+    "alert_emails": ["memshrink-telemetry-alerts@mozilla.com"],
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "low": 1,
+    "high": 60000,
+    "n_buckets": 32,
+    "bug_numbers": [1786864],
+    "description": "Time spent gathering memory telemetry in milliseconds"
+  },
   "MEMORY_JS_COMPARTMENTS_SYSTEM": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "fennec", "thunderbird"],

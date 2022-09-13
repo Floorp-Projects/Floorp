@@ -6046,23 +6046,21 @@ void ClientWebGLContext::GetUniformIndices(
   const auto& res = GetLinkResult(prog);
   auto ret = nsTArray<GLuint>(uniformNames.Length());
 
-  std::unordered_map<std::string, size_t> retIdByName;
-  retIdByName.reserve(ret.Length());
+  for (const auto& queriedNameU16 : uniformNames) {
+    const auto queriedName = ToString(NS_ConvertUTF16toUTF8(queriedNameU16));
+    const auto impliedProperArrayQueriedName = queriedName + "[0]";
 
-  for (const auto i : IntegerRange(uniformNames.Length())) {
-    const auto& name = uniformNames[i];
-    auto nameU8 = ToString(NS_ConvertUTF16toUTF8(name));
-    retIdByName.insert({std::move(nameU8), i});
-    ret.AppendElement(LOCAL_GL_INVALID_INDEX);
-  }
-
-  GLuint i = 0;
-  for (const auto& cur : res.active.activeUniforms) {
-    const auto maybeRetId = MaybeFind(retIdByName, cur.name);
-    if (maybeRetId) {
-      ret[*maybeRetId] = i;
+    GLuint activeId = LOCAL_GL_INVALID_INDEX;
+    for (const auto i : IntegerRange(res.active.activeUniforms.size())) {
+      // O(N^2) ok for small N.
+      const auto& activeInfoForI = res.active.activeUniforms[i];
+      if (queriedName == activeInfoForI.name ||
+          impliedProperArrayQueriedName == activeInfoForI.name) {
+        activeId = i;
+        break;
+      }
     }
-    i += 1;
+    ret.AppendElement(activeId);
   }
 
   retval.SetValue(std::move(ret));

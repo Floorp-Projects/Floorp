@@ -763,6 +763,7 @@ const MESSAGES = () => [
         },
         { action: "callback", title: "Callback" },
       ],
+      tag: "test_toast_notification",
     },
     groups: ["panel-test-provider"],
     targeting: "!hasActiveEnterprisePolicies",

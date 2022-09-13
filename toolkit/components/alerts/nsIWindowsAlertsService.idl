@@ -16,9 +16,12 @@ interface nsIUnknownWindowsTagListener : nsISupports
    *
    * @param {AString} aWindowsTag the tag
    * @param {AString} aLaunchURL associated launch URL, or null.
+   * @param {AString} aPrivilegedName associated alert name if this is a chrome
+   *                                  privileged alert, or null.
    */
   void handleUnknownWindowsTag(in AString aWindowsTag,
-                               in AString aLaunchURL);
+                               in AString aLaunchURL,
+                               in AString aPrivilegedName);
 };
 
 [scriptable, uuid(e01c8066-fb4b-4304-b9c9-ab6ed4a8322c)]

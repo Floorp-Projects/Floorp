@@ -152,6 +152,9 @@ nsCookieBannerService::GetRules(nsTArray<RefPtr<nsICookieBannerRule>>& aRules) {
     return NS_ERROR_NOT_AVAILABLE;
   }
 
+  if (StaticPrefs::cookiebanners_service_enableGlobalRules()) {
+    AppendToArray(aRules, mGlobalRules.Values());
+  }
   AppendToArray(aRules, mRules.Values());
 
   return NS_OK;
@@ -165,6 +168,7 @@ nsCookieBannerService::ResetRules(const bool doImport) {
   }
 
   mRules.Clear();
+  mGlobalRules.Clear();
 
   if (doImport) {
     NS_ENSURE_TRUE(mListService, NS_ERROR_FAILURE);
@@ -251,29 +255,50 @@ nsCookieBannerService::GetCookiesForURI(
 }
 
 NS_IMETHODIMP
-nsCookieBannerService::GetClickRuleForDomain(const nsACString& aDomain,
-                                             nsIClickRule** aRule) {
-  NS_ENSURE_ARG_POINTER(aRule);
+nsCookieBannerService::GetClickRulesForDomain(
+    const nsACString& aDomain, nsTArray<RefPtr<nsIClickRule>>& aRules) {
+  aRules.Clear();
 
   // Service is disabled, throw with empty rule.
   if (!mIsInitialized) {
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  nsCOMPtr<nsICookieBannerRule> rule;
-  nsresult rv = GetRuleForDomain(aDomain, getter_AddRefs(rule));
+  nsCOMPtr<nsICookieBannerRule> ruleForDomain;
+  nsresult rv = GetRuleForDomain(aDomain, getter_AddRefs(ruleForDomain));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // No click rule for the given domain, bail out.
-  if (!rule) {
+  // Extract click rule from an nsICookieBannerRule and if found append it to
+  // the array returned.
+  auto appendClickRule = [&](const nsCOMPtr<nsICookieBannerRule>& bannerRule) {
+    nsCOMPtr<nsIClickRule> clickRule;
+    rv = bannerRule->GetClickRule(getter_AddRefs(clickRule));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    if (clickRule) {
+      aRules.AppendElement(clickRule);
+    }
+
+    return NS_OK;
+  };
+
+  // If there is a domain-specific rule it takes precedence over the global
+  // rules.
+  if (ruleForDomain) {
+    return appendClickRule(ruleForDomain);
+  }
+
+  if (!StaticPrefs::cookiebanners_service_enableGlobalRules()) {
+    // Global rules are disabled, skip adding them.
     return NS_OK;
   }
 
-  nsCOMPtr<nsIClickRule> clickRule;
-  rv = rule->GetClickRule(getter_AddRefs(clickRule));
-  NS_ENSURE_SUCCESS(rv, rv);
+  // Append all global click rules.
+  for (nsICookieBannerRule* globalRule : mGlobalRules.Values()) {
+    rv = appendClickRule(globalRule);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
 
-  clickRule.forget(aRule);
   return NS_OK;
 }
 
@@ -294,6 +319,29 @@ nsCookieBannerService::InsertRule(nsICookieBannerRule* aRule) {
   MOZ_LOG(gCookieBannerLog, LogLevel::Debug,
           ("%s. domain: %s", __FUNCTION__, domain.get()));
 
+  // Global rules are stored in a separate map mGlobalRules.
+  // They are identified by a "*" in the domain field.
+  // They are keyed by the unique ID field.
+  if (domain.EqualsLiteral("*")) {
+    nsAutoCString id;
+    rv = aRule->GetId(id);
+    NS_ENSURE_SUCCESS(rv, rv);
+    NS_ENSURE_TRUE(!id.IsEmpty(), NS_ERROR_FAILURE);
+
+    // Global rules must not have cookies. We shouldn't set cookies for every
+    // site without indication that they handle banners. Click rules are
+    // different, because they have a "presence" indicator and only click if it
+    // is reasonable to do so.
+    rv = aRule->ClearCookies();
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsCOMPtr<nsICookieBannerRule> result =
+        mGlobalRules.InsertOrUpdate(id, aRule);
+    NS_ENSURE_TRUE(result, NS_ERROR_FAILURE);
+
+    return NS_OK;
+  }
+
   nsCOMPtr<nsICookieBannerRule> result = mRules.InsertOrUpdate(domain, aRule);
   NS_ENSURE_TRUE(result, NS_ERROR_FAILURE);
 
@@ -301,19 +349,40 @@ nsCookieBannerService::InsertRule(nsICookieBannerRule* aRule) {
 }
 
 NS_IMETHODIMP
-nsCookieBannerService::RemoveRuleForDomain(const nsACString& aDomain) {
-  NS_ENSURE_TRUE(!aDomain.IsEmpty(), NS_ERROR_FAILURE);
+nsCookieBannerService::RemoveRule(nsICookieBannerRule* aRule) {
+  NS_ENSURE_ARG_POINTER(aRule);
 
   // Service is disabled, throw.
   if (!mIsInitialized) {
     return NS_ERROR_NOT_AVAILABLE;
   }
 
+  nsAutoCString domain;
+  nsresult rv = aRule->GetDomain(domain);
+  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_TRUE(!domain.IsEmpty(), NS_ERROR_FAILURE);
+
+  // Remove global rule by ID.
+  if (domain.EqualsLiteral("*")) {
+    nsAutoCString id;
+    rv = aRule->GetId(id);
+    NS_ENSURE_SUCCESS(rv, rv);
+    NS_ENSURE_TRUE(!id.IsEmpty(), NS_ERROR_FAILURE);
+
+    MOZ_LOG(gCookieBannerLog, LogLevel::Debug,
+            ("%s. Global Rule, id: %s", __FUNCTION__,
+             PromiseFlatCString(id).get()));
+
+    mGlobalRules.Remove(id);
+    return NS_OK;
+  }
+
   MOZ_LOG(gCookieBannerLog, LogLevel::Debug,
-          ("%s. aDomain: %s", __FUNCTION__, PromiseFlatCString(aDomain).get()));
+          ("%s. Domain rule, aDomain: %s", __FUNCTION__,
+           PromiseFlatCString(domain).get()));
 
-  mRules.Remove(aDomain);
-
+  // Remove site specific rule by domain.
+  mRules.Remove(domain);
   return NS_OK;
 }
 

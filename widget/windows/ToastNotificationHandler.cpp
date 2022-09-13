@@ -230,6 +230,11 @@ Result<nsString, nsresult> ToastNotificationHandler::GetLaunchArgument() {
     launchArg += u"\nlaunchUrl\n"_ns + mLaunchUrl;
   }
 
+  if (mIsSystemPrincipal && !mName.IsEmpty()) {
+    // Privileged alerts include any provided name for metrics.
+    launchArg += u"\nprivilegedName\n"_ns + mName;
+  }
+
   // `windowsTag` argument.
   launchArg += u"\nwindowsTag\n"_ns + mWindowsTag;
 
@@ -410,18 +415,15 @@ ComPtr<IXmlDocument> ToastNotificationHandler::CreateToastXmlDocument() {
   hr = toastElements->Item(0, &toastNodeRoot);
   NS_ENSURE_TRUE(SUCCEEDED(hr), nullptr);
 
-  if (mRequireInteraction) {
-    ComPtr<IXmlElement> toastNode;
-    hr = toastNodeRoot.As(&toastNode);
-    NS_ENSURE_TRUE(SUCCEEDED(hr), nullptr);
-
-    success =
-        SetAttribute(toastNode, HStringReference(L"scenario"), u"reminder"_ns);
-    NS_ENSURE_TRUE(success, nullptr);
-  }
   ComPtr<IXmlElement> toastElement;
   hr = toastNodeRoot.As(&toastElement);
   NS_ENSURE_TRUE(SUCCEEDED(hr), nullptr);
+
+  if (mRequireInteraction) {
+    success = SetAttribute(toastElement, HStringReference(L"scenario"),
+                           u"reminder"_ns);
+    NS_ENSURE_TRUE(success, nullptr);
+  }
 
   auto maybeLaunchArg = GetLaunchArgument();
   NS_ENSURE_TRUE(maybeLaunchArg.isOk(), nullptr);
@@ -432,6 +434,26 @@ ComPtr<IXmlDocument> ToastNotificationHandler::CreateToastXmlDocument() {
 
   MOZ_LOG(sWASLog, LogLevel::Debug,
           ("launchArg: '%s'", NS_ConvertUTF16toUTF8(launchArg).get()));
+
+  // On modern Windows (10+), use newer toast layout, which makes images larger.
+  if (IsWin10OrLater()) {
+    ComPtr<IXmlNodeList> bindingElements;
+    hr = toastXml->GetElementsByTagName(HStringReference(L"binding").Get(),
+                                        &bindingElements);
+    NS_ENSURE_TRUE(SUCCEEDED(hr), nullptr);
+
+    ComPtr<IXmlNode> bindingNodeRoot;
+    hr = bindingElements->Item(0, &bindingNodeRoot);
+    NS_ENSURE_TRUE(SUCCEEDED(hr), nullptr);
+
+    ComPtr<IXmlElement> bindingElement;
+    hr = bindingNodeRoot.As(&bindingElement);
+    NS_ENSURE_TRUE(SUCCEEDED(hr), nullptr);
+
+    success = SetAttribute(bindingElement, HStringReference(L"template"),
+                           u"ToastGeneric"_ns);
+    NS_ENSURE_TRUE(success, nullptr);
+  }
 
   ComPtr<IXmlElement> actions;
   hr = toastXml->CreateElement(HStringReference(L"actions").Get(), &actions);
@@ -847,18 +869,23 @@ ToastNotificationHandler::FindNotificationByTag(const nsAString& aWindowsTag,
   return E_FAIL;
 }
 
-/* static */ nsresult ToastNotificationHandler::FindLaunchURLForWindowsTag(
-    const nsAString& aWindowsTag, const nsAString& aAumid,
-    nsAString& aLaunchUrl) {
+/* static */ nsresult
+ToastNotificationHandler::FindLaunchURLAndPrivilegedNameForWindowsTag(
+    const nsAString& aWindowsTag, const nsAString& aAumid, bool& aFoundTag,
+    nsAString& aLaunchUrl, nsAString& aPrivilegedName) {
+  aFoundTag = false;
   aLaunchUrl.Truncate();
+  aPrivilegedName.Truncate();
 
   ComPtr<IToastNotification> toast =
       ToastNotificationHandler::FindNotificationByTag(aWindowsTag, aAumid);
   MOZ_LOG(sWASLog, LogLevel::Debug, ("Found toast [%p]", toast.Get()));
 
   if (!toast) {
-    return NS_ERROR_FAILURE;
+    return NS_OK;
   }
+
+  aFoundTag = true;
 
   HRESULT hr = ToastNotificationHandler::GetLaunchArgumentValueForKey(
       toast, u"launchUrl"_ns, aLaunchUrl);
@@ -867,11 +894,24 @@ ToastNotificationHandler::FindNotificationByTag(const nsAString& aWindowsTag,
     MOZ_LOG(sWASLog, LogLevel::Debug,
             ("Did not find launchUrl [hr=0x%08lX]", hr));
     aLaunchUrl.SetIsVoid(true);
-    return NS_OK;
+  } else {
+    MOZ_LOG(sWASLog, LogLevel::Debug,
+            ("Found launchUrl [%s]", NS_ConvertUTF16toUTF8(aLaunchUrl).get()));
   }
 
-  MOZ_LOG(sWASLog, LogLevel::Debug,
-          ("Found launchUrl [%s]", NS_ConvertUTF16toUTF8(aLaunchUrl).get()));
+  hr = ToastNotificationHandler::GetLaunchArgumentValueForKey(
+      toast, u"privilegedName"_ns, aPrivilegedName);
+
+  if (!SUCCEEDED(hr)) {
+    MOZ_LOG(sWASLog, LogLevel::Debug,
+            ("Did not find privilegedName [hr=0x%08lX]", hr));
+    aPrivilegedName.SetIsVoid(true);
+  } else {
+    MOZ_LOG(sWASLog, LogLevel::Debug,
+            ("Found privilegedName [%s]",
+             NS_ConvertUTF16toUTF8(aPrivilegedName).get()));
+  }
+
   return NS_OK;
 }
 

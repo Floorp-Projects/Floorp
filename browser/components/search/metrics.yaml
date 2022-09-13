@@ -20,8 +20,10 @@ newtab.search:
       `browser.engagement.search_counts.pbm` is set to `true`.
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1766887
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1786670
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1766887
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1786670#c3
     data_sensitivity:
       - interaction
     notification_emails:
@@ -29,7 +31,7 @@ newtab.search:
       - chutten@mozilla.com
       - mmccorquodale@mozilla.com
       - najiang@mozilla.com
-    expires: 107
+    expires: 113
     extra_keys:
       newtab_visit_id: &newtab_visit_id
         description: >
@@ -65,8 +67,10 @@ newtab.search.ad:
       And the SERP is visible.
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1766887
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1786670
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1766887
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1786670#c3
     data_sensitivity:
       - interaction
     notification_emails:
@@ -74,7 +78,7 @@ newtab.search.ad:
       - chutten@mozilla.com
       - mmccorquodale@mozilla.com
       - najiang@mozilla.com
-    expires: 107
+    expires: 113
     extra_keys:
       newtab_visit_id: *newtab_visit_id
       search_access_point: *search_access_point
@@ -97,8 +101,10 @@ newtab.search.ad:
       which was loaded by a seach that began on a newtab page.
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1766887
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1786670
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1766887
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1786670#c3
     data_sensitivity:
       - interaction
     notification_emails:
@@ -106,7 +112,7 @@ newtab.search.ad:
       - chutten@mozilla.com
       - mmccorquodale@mozilla.com
       - najiang@mozilla.com
-    expires: 107
+    expires: 113
     extra_keys:
       newtab_visit_id: *newtab_visit_id
       search_access_point: *search_access_point

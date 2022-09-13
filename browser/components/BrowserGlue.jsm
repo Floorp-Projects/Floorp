@@ -4365,9 +4365,14 @@ BrowserGlue.prototype = {
         return "disallow-postUpdate";
       }
 
-      return lazy.NimbusFeatures.upgradeDialog.getVariable("enabled")
-        ? ""
-        : "disabled";
+      const useMROnboarding = lazy.NimbusFeatures.majorRelease2022.getVariable(
+        "onboarding"
+      );
+      const showUpgradeDialog =
+        useMROnboarding ??
+        lazy.NimbusFeatures.upgradeDialog.getVariable("enabled");
+
+      return showUpgradeDialog ? "" : "disabled";
     })();
 
     // Record why the dialog is showing or not.

@@ -2,23 +2,36 @@
 
 const MR_TEMPLATE_PREF = "browser.aboutwelcome.templateMR";
 
+const { ExperimentAPI } = ChromeUtils.import(
+  "resource://nimbus/ExperimentAPI.jsm"
+);
+const { ExperimentFakes } = ChromeUtils.import(
+  "resource://testing-common/NimbusTestUtils.jsm"
+);
 const { AboutWelcomeParent } = ChromeUtils.import(
   "resource:///actors/AboutWelcomeParent.jsm"
+);
+const { OnboardingMessageProvider } = ChromeUtils.import(
+  "resource://activity-stream/lib/OnboardingMessageProvider.jsm"
 );
 
 async function openMRAboutWelcome() {
   await pushPrefs([MR_TEMPLATE_PREF, true]);
-  await setAboutWelcomePref(true);
+  await setAboutWelcomePref(true); // NB: Calls pushPrefs
   let tab = await BrowserTestUtils.openNewForegroundTab(
     gBrowser,
     "about:welcome",
     true
   );
-  registerCleanupFunction(() => {
-    BrowserTestUtils.removeTab(tab);
-  });
 
-  return tab.linkedBrowser;
+  return {
+    browser: tab.linkedBrowser,
+    cleanup: async () => {
+      BrowserTestUtils.removeTab(tab);
+      await popPrefs(); // for setAboutWelcomePref()
+      await popPrefs(); // for pushPrefs()
+    },
+  };
 }
 
 async function clickVisibleButton(browser, selector) {
@@ -42,34 +55,24 @@ async function clickVisibleButton(browser, selector) {
   });
 }
 
-const sandbox = sinon.createSandbox();
-let isDefaultStub;
-let pinStub;
+function initSandbox({ pin = true, isDefault = false } = {}) {
+  const sandbox = sinon.createSandbox();
+  sandbox.stub(AboutWelcomeParent, "doesAppNeedPin").returns(pin);
+  sandbox.stub(AboutWelcomeParent, "isDefaultBrowser").returns(isDefault);
 
-add_setup(function initSandbox() {
-  pinStub = sandbox.stub(AboutWelcomeParent, "doesAppNeedPin").returns(true);
-  isDefaultStub = sandbox
-    .stub(AboutWelcomeParent, "isDefaultBrowser")
-    .returns(false);
-
-  registerCleanupFunction(() => {
-    sandbox.restore();
-  });
-});
+  return sandbox;
+}
 
 /**
  * Test MR message telemetry
  */
 add_task(async function test_aboutwelcome_mr_template_telemetry() {
-  let browser = await openMRAboutWelcome();
+  let { browser, cleanup } = await openMRAboutWelcome();
   let aboutWelcomeActor = await getAboutWelcomeParent(browser);
 
   // Stub AboutWelcomeParent's Content Message Handler
+  const sandbox = initSandbox();
   const messageStub = sandbox.spy(aboutWelcomeActor, "onContentMessage");
-
-  registerCleanupFunction(() => {
-    sandbox.restore();
-  });
 
   await clickVisibleButton(browser, "button.secondary");
 
@@ -88,6 +91,9 @@ add_task(async function test_aboutwelcome_mr_template_telemetry() {
     clickCall.args[1].message_id.startsWith("MR_WELCOME_DEFAULT"),
     "Telemetry includes MR message id"
   );
+
+  await cleanup();
+  sandbox.restore();
 });
 
 /**
@@ -96,10 +102,9 @@ add_task(async function test_aboutwelcome_mr_template_telemetry() {
 add_task(async function test_aboutwelcome_mr_template_content() {
   await pushPrefs(["browser.shell.checkDefaultBrowser", true]);
 
-  pinStub.returns(true);
-  isDefaultStub.returns(false);
+  const sandbox = initSandbox();
 
-  let browser = await openMRAboutWelcome();
+  let { browser, cleanup } = await openMRAboutWelcome();
 
   await test_screen_content(
     browser,
@@ -132,6 +137,10 @@ add_task(async function test_aboutwelcome_mr_template_content() {
     //Unexpected selectors:
     ["main.AW_CHOOSE_THEME"]
   );
+
+  await cleanup();
+  sandbox.restore();
+  await popPrefs();
 });
 
 /**
@@ -140,10 +149,9 @@ add_task(async function test_aboutwelcome_mr_template_content() {
 add_task(async function test_aboutwelcome_mr_template_content_pin() {
   await pushPrefs(["browser.shell.checkDefaultBrowser", true]);
 
-  pinStub.returns(true);
-  isDefaultStub.returns(true);
+  const sandbox = initSandbox({ isDefault: true });
 
-  let browser = await openMRAboutWelcome();
+  let { browser, cleanup } = await openMRAboutWelcome();
 
   await test_screen_content(
     browser,
@@ -164,6 +172,10 @@ add_task(async function test_aboutwelcome_mr_template_content_pin() {
     //Unexpected selectors:
     ["main.AW_SET_DEFAULT"]
   );
+
+  await cleanup();
+  sandbox.restore();
+  await popPrefs();
 });
 
 /**
@@ -172,10 +184,9 @@ add_task(async function test_aboutwelcome_mr_template_content_pin() {
 add_task(async function test_aboutwelcome_mr_template_only_default() {
   await pushPrefs(["browser.shell.checkDefaultBrowser", true]);
 
-  pinStub.returns(false);
-  isDefaultStub.returns(false);
+  const sandbox = initSandbox({ pin: false });
 
-  let browser = await openMRAboutWelcome();
+  let { browser, cleanup } = await openMRAboutWelcome();
 
   //should render set default
   await test_screen_content(
@@ -186,6 +197,10 @@ add_task(async function test_aboutwelcome_mr_template_only_default() {
     //Unexpected selectors:
     ["main.AW_PIN_FIREFOX"]
   );
+
+  await cleanup();
+  sandbox.restore();
+  await popPrefs();
 });
 /**
  * Test MR template content - Browser is Pinned and set as default
@@ -193,10 +208,9 @@ add_task(async function test_aboutwelcome_mr_template_only_default() {
 add_task(async function test_aboutwelcome_mr_template_get_started() {
   await pushPrefs(["browser.shell.checkDefaultBrowser", true]);
 
-  pinStub.returns(false);
-  isDefaultStub.returns(true);
+  const sandbox = initSandbox({ pin: false, isDefault: true });
 
-  let browser = await openMRAboutWelcome();
+  let { browser, cleanup } = await openMRAboutWelcome();
 
   //should render set default
   await test_screen_content(
@@ -211,7 +225,10 @@ add_task(async function test_aboutwelcome_mr_template_get_started() {
       ".action-buttons .secondary",
     ]
   );
+
+  await cleanup();
   sandbox.restore();
+  await popPrefs();
 });
 
 add_task(async function test_aboutwelcome_show_firefox_view() {
@@ -251,8 +268,8 @@ add_task(async function test_aboutwelcome_show_firefox_view() {
       },
     },
   ];
-  await setAboutWelcomeMultiStage(JSON.stringify(TEST_CONTENT));
-  let browser = await openMRAboutWelcome();
+  await setAboutWelcomeMultiStage(JSON.stringify(TEST_CONTENT)); // NB: calls SpecialPowers.pushPrefEnv
+  let { cleanup, browser } = await openMRAboutWelcome();
 
   // execution
   await test_screen_content(
@@ -269,5 +286,101 @@ add_task(async function test_aboutwelcome_show_firefox_view() {
   assertFirefoxViewTabSelected(gBrowser.ownerGlobal);
 
   // cleanup
+  await SpecialPowers.popPrefEnv(); // for setAboutWelcomeMultiStage
   closeFirefoxViewTab();
+  await cleanup();
+});
+
+add_task(async function test_mr2022_templateMR() {
+  const message = await OnboardingMessageProvider.getMessages().then(msgs =>
+    msgs.find(m => m.id === "FX_MR_106_UPGRADE")
+  );
+
+  const screensJSON = JSON.stringify(message.content.screens);
+
+  await setAboutWelcomeMultiStage(screensJSON); // NB: calls SpecialPowers.pushPrefEnv
+
+  async function runMajorReleaseTest(
+    {
+      onboarding = undefined,
+      templateMR = undefined,
+      fallbackPref = undefined,
+    },
+    expected
+  ) {
+    info("Testing aboutwelcome layout with:");
+    info(`  majorRelease2022.onboarding=${onboarding}`);
+    info(`  aboutwelcome.templateMR=${templateMR}`);
+    info(`  ${MR_TEMPLATE_PREF}=${fallbackPref}`);
+
+    let mr2022Cleanup = async () => {};
+    let aboutWelcomeCleanup = async () => {};
+
+    if (typeof onboarding !== "undefined") {
+      mr2022Cleanup = await ExperimentFakes.enrollWithFeatureConfig({
+        featureId: "majorRelease2022",
+        value: { onboarding },
+      });
+    }
+
+    if (typeof templateMR !== "undefined") {
+      aboutWelcomeCleanup = await ExperimentFakes.enrollWithFeatureConfig({
+        featureId: "aboutwelcome",
+        value: { templateMR },
+      });
+    }
+
+    if (typeof fallbackPref !== "undefined") {
+      await SpecialPowers.pushPrefEnv({
+        set: [[MR_TEMPLATE_PREF, fallbackPref]],
+      });
+    }
+
+    const tab = await BrowserTestUtils.openNewForegroundTab(
+      gBrowser,
+      "about:welcome",
+      true
+    );
+
+    const SELECTOR = `main.screen[pos="split"]`;
+    const args = expected
+      ? ["split layout", [SELECTOR], []]
+      : ["non-split layout", [], [SELECTOR]];
+
+    try {
+      await test_screen_content(tab.linkedBrowser, ...args);
+    } finally {
+      BrowserTestUtils.removeTab(tab);
+
+      if (typeof fallbackPref !== "undefined") {
+        await SpecialPowers.popPrefEnv();
+      }
+
+      await mr2022Cleanup();
+      await aboutWelcomeCleanup();
+    }
+  }
+
+  await ExperimentAPI.ready();
+
+  await runMajorReleaseTest({ onboarding: true }, true);
+  await runMajorReleaseTest({ onboarding: true, templateMR: false }, true);
+  await runMajorReleaseTest({ onboarding: true, fallbackPref: false }, true);
+
+  await runMajorReleaseTest({ onboarding: false }, false);
+  await runMajorReleaseTest({ onboarding: false, templateMR: true }, false);
+  await runMajorReleaseTest({ onboarding: false, fallbackPref: true }, false);
+
+  await runMajorReleaseTest({ templateMR: true }, true);
+  await runMajorReleaseTest({ templateMR: true, fallbackPref: false }, true);
+  await runMajorReleaseTest({ fallbackPref: true }, true);
+
+  await runMajorReleaseTest({ templateMR: false }, false);
+  await runMajorReleaseTest({ templateMR: false, fallbackPref: true }, false);
+  await runMajorReleaseTest({ fallbackPref: false }, false);
+
+  // Check the default case with no experiments or prefs set.
+  await runMajorReleaseTest({}, true);
+
+  await SpecialPowers.popPrefEnv(); // for setAboutWelcomeMultiStage(screensJSON)
 });

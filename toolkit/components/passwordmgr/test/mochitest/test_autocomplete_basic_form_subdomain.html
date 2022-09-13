@@ -94,9 +94,7 @@ add_task(async function test_form1_menu_shows_two_logins_same_usernames_for_diff
   await SimpleTest.promiseFocus(window);
   // Trigger autocomplete popup
   restoreForm();
-  let shownPromise = promiseACShown();
-  synthesizeKey("KEY_ArrowDown"); // open
-  let results = await shownPromise;
+  const autocompleteItems = await openAutocompletePopup();
 
   let popupState = await getPopupState();
   is(popupState.selectedIndex, -1, "Check no entries are selected upon opening");
@@ -106,7 +104,7 @@ add_task(async function test_form1_menu_shows_two_logins_same_usernames_for_diff
   let dateString = await setupScript.sendQuery("getDateString");
   let username = `dsdu1 (${dateString})`;
 
-  checkAutoCompleteResults(results, [username, username], window.location.host, "Check all menuitems are displayed correctly.");
+  checkAutoCompleteResults(autocompleteItems, [username, username], window.location.host, "Check all menuitems are displayed correctly.");
 
   synthesizeKey("KEY_ArrowDown"); // first item
   checkLoginForm(uname, "", pword, ""); // value shouldn't update just by selecting
@@ -118,9 +116,7 @@ add_task(async function test_form1_menu_shows_two_logins_same_usernames_for_diff
 
   restoreForm();
 
-  shownPromise = promiseACShown();
-  synthesizeKey("KEY_ArrowDown"); // open
-  await shownPromise;
+  await openAutocompletePopup();
 
   synthesizeKey("KEY_ArrowDown"); // first item
   synthesizeKey("KEY_ArrowDown"); // second item

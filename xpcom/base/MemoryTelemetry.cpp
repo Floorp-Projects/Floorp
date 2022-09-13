@@ -272,6 +272,7 @@ nsresult MemoryTelemetry::GatherReports(
   // asynchronously, on a background thread.
   RefPtr<Runnable> runnable = NS_NewRunnableFunction(
       "MemoryTelemetry::GatherReports", [mgr, completionRunnable]() mutable {
+        Telemetry::AutoTimer<Telemetry::MEMORY_COLLECTION_TIME> autoTimer;
         RECORD(MEMORY_VSIZE, Vsize, UNITS_BYTES);
 #if !defined(HAVE_64BIT_BUILD) || !defined(XP_WIN)
         RECORD(MEMORY_VSIZE_MAX_CONTIGUOUS, VsizeMaxContiguous, UNITS_BYTES);

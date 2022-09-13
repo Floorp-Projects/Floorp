@@ -80,15 +80,13 @@ add_task(async function test_form1_initial_empty() {
 
 add_task(async function test_form_related_domain_menuitems() {
   await SimpleTest.promiseFocus(window);
-  let shownPromise = promiseACShown();
-  // Trigger autocomplete popup
   restoreForm();
-  let results = await shownPromise;
+  const autocompleteItems = await openAutocompletePopup();
   let popupState = await getPopupState();
   is(popupState.selectedIndex, -1, "Check no entires are selected upon opening");
 
   let expectedMenuItems = ["relatedUser1", "subUser1"];
-  checkAutoCompleteResults(results, expectedMenuItems, window.location.host, "Check all menuitems are displayed correctly");
+  checkAutoCompleteResults(autocompleteItems, expectedMenuItems, window.location.host, "Check all menuitems are displayed correctly");
 
   let acEvents = await getTelemetryEvents({ process: "parent", filterProps: TelemetryFilterPropsAC, clear: true });
   is(acEvents.length, 1, "One autocomplete event");
@@ -109,9 +107,7 @@ add_task(async function test_form_related_domain_menuitems() {
 
   restoreForm();
 
-  shownPromise = promiseACShown();
-  synthesizeKey("KEY_ArrowDown"); // open
-  await shownPromise;
+  await openAutocompletePopup();
 
   synthesizeKey("KEY_ArrowDown"); // first item
   synthesizeKey("KEY_ArrowDown"); // second item

@@ -35,6 +35,7 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
   AboutNewTab: "resource:///modules/AboutNewTab.jsm",
   BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.jsm",
   BuiltInThemes: "resource:///modules/BuiltInThemes.jsm",
+  NimbusFeatures: "resource://nimbus/ExperimentAPI.jsm",
 });
 
 XPCOMUtils.defineLazyGetter(lazy, "fxAccounts", () => {
@@ -781,6 +782,14 @@ const TargetingGetters = {
         themeId && lazy.BuiltInThemes.isColorwayFromCurrentCollection(themeId)
       );
     });
+  },
+  /**
+   * Whether or not the user is in the Major Release 2022 holdback study.
+   */
+  get inMr2022Holdback() {
+    return (
+      lazy.NimbusFeatures.majorRelease2022.getVariable("onboarding") === false
+    );
   },
 };
 

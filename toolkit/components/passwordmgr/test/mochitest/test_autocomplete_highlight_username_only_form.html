@@ -38,13 +38,9 @@ add_setup(async () => {
 
 add_task(async function test_username_field_in_username_only_form_highlight_on_autocomplete() {
   // Test username autocomplete.
-  let username = document.getElementById("uname");
+  const username = document.getElementById("uname");
 
-  username.focus();
-
-  let shownPromise = promiseACShown();
-  synthesizeKey("KEY_ArrowDown");
-  await shownPromise;
+  await openAutocompletePopup(username);
   synthesizeKey("KEY_ArrowDown");
   await synthesizeKey("KEY_Enter");
 

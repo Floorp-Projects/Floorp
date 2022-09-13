@@ -366,6 +366,9 @@ def initialize(topsrcdir):
         "uniffi": MachCommandReference(
             "toolkit/components/uniffi-bindgen-gecko-js/mach_commands.py"
         ),
+        "storybook": MachCommandReference(
+            "browser/components/storybook/mach_commands.py"
+        ),
     }
 
     # Set a reasonable limit to the number of open files.

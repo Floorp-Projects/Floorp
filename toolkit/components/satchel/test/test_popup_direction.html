@@ -37,10 +37,7 @@ add_task(async function test_popup_direction() {
   for (let direction of ["ltr", "rtl"]) {
     document.getElementById("content").style.direction = direction;
 
-    const popupShownPromise = promiseACShown();
-    input.focus();
-    synthesizeKey("KEY_ArrowDown");
-    await popupShownPromise;
+    await openAutocompletePopup(input);
 
     let popupState = await getPopupState();
     is(popupState.direction, direction, "Direction should match.");

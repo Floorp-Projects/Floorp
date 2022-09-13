@@ -19,8 +19,12 @@ let rulesInserted = [];
 let rulesRemoved = [];
 let insertCallback = null;
 
+function genUUID() {
+  return Services.uuid.generateUUID().number.slice(1, -1);
+}
+
 const RULE_A_ORIGINAL = {
-  id: "example.com",
+  id: genUUID(),
   click: {
     optOut: "#fooOut",
     presence: "#foobar",
@@ -39,7 +43,7 @@ const RULE_A_ORIGINAL = {
 };
 
 const RULE_B = {
-  id: "example.org",
+  id: genUUID(),
   click: {
     optOut: "#fooOutB",
     presence: "#foobarB",
@@ -57,7 +61,7 @@ const RULE_B = {
 };
 
 const RULE_C = {
-  id: "example.net",
+  id: genUUID(),
   click: {
     optOut: "#fooOutC",
     presence: "#foobarC",
@@ -76,7 +80,7 @@ const RULE_C = {
 };
 
 const RULE_A_UPDATED = {
-  id: "example.com",
+  id: RULE_A_ORIGINAL,
   click: {
     optOut: "#fooOut",
     optIn: "#barIn",
@@ -99,7 +103,7 @@ const RULE_A_UPDATED = {
 };
 
 const INVALID_RULE_CLICK = {
-  id: "foobar.com",
+  id: genUUID(),
   domain: "foobar.com",
   click: {
     presence: 1,
@@ -109,6 +113,26 @@ const INVALID_RULE_CLICK = {
 
 const INVALID_RULE_EMPTY = {};
 
+const RULE_D_GLOBAL = {
+  id: genUUID(),
+  click: {
+    optOut: "#globalOptOutD",
+    presence: "#globalBannerD",
+  },
+  domain: "*",
+  cookies: {},
+};
+
+const RULE_E_GLOBAL = {
+  id: genUUID(),
+  click: {
+    optOut: "#globalOptOutE",
+    presence: "#globalBannerE",
+  },
+  domain: "*",
+  cookies: {},
+};
+
 // Testing with RemoteSettings requires a profile.
 do_get_profile();
 
@@ -117,8 +141,8 @@ add_setup(async () => {
   Services.prefs.setStringPref("cookiebanners.listService.logLevel", "Debug");
 
   // Stub some nsICookieBannerService methods for easy testing.
-  let removeRuleForDomain = sinon.stub().callsFake(domain => {
-    rulesRemoved.push(domain);
+  let removeRule = sinon.stub().callsFake(rule => {
+    rulesRemoved.push(rule);
   });
 
   let insertRule = sinon.stub().callsFake(rule => {
@@ -127,7 +151,7 @@ add_setup(async () => {
   });
 
   let oldCookieBanners = Services.cookieBanners;
-  Services.cookieBanners = { insertRule, removeRuleForDomain, resetRules() {} };
+  Services.cookieBanners = { insertRule, removeRule, resetRules() {} };
 
   // Remove stubs on test end.
   registerCleanupFunction(() => {
@@ -247,10 +271,10 @@ add_task(async function test_remotesettings_sync() {
   await cookieBannerListService.initForTest();
 
   const payload = {
-    current: [RULE_A_ORIGINAL, RULE_C],
-    created: [RULE_B],
+    current: [RULE_A_ORIGINAL, RULE_C, RULE_D_GLOBAL],
+    created: [RULE_B, RULE_E_GLOBAL],
     updated: [{ old: RULE_A_ORIGINAL, new: RULE_A_UPDATED }],
-    deleted: [RULE_C],
+    deleted: [RULE_C, RULE_D_GLOBAL],
   };
 
   Assert.equal(rulesInserted.length, 0, "No inserted rules initially.");
@@ -259,12 +283,13 @@ add_task(async function test_remotesettings_sync() {
   info("Dispatching artificial RemoteSettings sync event");
   await RemoteSettings(COLLECTION_NAME).emit("sync", { data: payload });
 
-  Assert.equal(rulesInserted.length, 2, "Two inserted rules after sync.");
-  Assert.equal(rulesRemoved.length, 1, "One removed rules after sync.");
+  Assert.equal(rulesInserted.length, 3, "Three inserted rules after sync.");
+  Assert.equal(rulesRemoved.length, 2, "Two removed rules after sync.");
 
-  let ruleA = rulesInserted.find(rule => rule.domain == RULE_A_UPDATED.domain);
-  let ruleB = rulesInserted.find(rule => rule.domain == RULE_B.domain);
-  let ruleCDomain = rulesRemoved[0];
+  let ruleA = rulesInserted.find(rule => rule.id == RULE_A_UPDATED.id);
+  let ruleB = rulesInserted.find(rule => rule.id == RULE_B.id);
+  let ruleE = rulesInserted.find(rule => rule.id == RULE_E_GLOBAL.id);
+  let ruleC = rulesRemoved[0];
 
   info("Testing that service inserted updated version of RULE_A.");
   Assert.equal(
@@ -292,8 +317,13 @@ add_task(async function test_remotesettings_sync() {
     );
   }
 
-  Assert.equal(ruleB.domain, RULE_B.domain, "Should have inserted RULE_B");
-  Assert.equal(ruleCDomain, RULE_C.domain, "Should have removed RULE_C");
+  Assert.equal(ruleB.id, RULE_B.id, "Should have inserted RULE_B");
+  Assert.equal(ruleC.id, RULE_C.id, "Should have removed RULE_C");
+  Assert.equal(
+    ruleE.id,
+    RULE_E_GLOBAL.id,
+    "Should have inserted RULE_E_GLOBAL"
+  );
 
   // Cleanup
   cookieBannerListService.shutdown();

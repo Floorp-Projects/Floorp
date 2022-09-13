@@ -73,7 +73,13 @@ const syncedTabsData5 = [
 const TAB_PICKUP_EVENT = [
   ["firefoxview", "entered", "firefoxview", undefined],
   ["firefoxview", "synced_tabs", "tabs", undefined, { count: "1" }],
-  ["firefoxview", "tab_pickup", "tabs", undefined],
+  [
+    "firefoxview",
+    "tab_pickup",
+    "tabs",
+    undefined,
+    { position: "1", deviceType: "desktop" },
+  ],
 ];
 
 const TAB_PICKUP_OPEN_EVENT = [

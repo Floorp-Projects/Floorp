@@ -40,9 +40,7 @@ add_setup(async () => {
 add_task(async function test_field_highlight_on_pw_field_autocomplete_insecureWarning() {
   // Press enter on insecure warning and check.
   password.focus();
-  let shownPromise = promiseACShown();
-  synthesizeKey("KEY_ArrowDown"); // open popup
-  await shownPromise;
+  await openAutocompletePopup();
   synthesizeKey("KEY_ArrowDown"); // insecure warning
   synthesizeKey("KEY_Enter");
 
@@ -53,10 +51,7 @@ add_task(async function test_field_highlight_on_pw_field_autocomplete_insecureWa
      "Highlight is not applied to the username field if enter key is pressed on the insecure warning item");
 
   // Press tab on insecure warning and check.
-  password.focus();
-  shownPromise = promiseACShown();
-  synthesizeKey("KEY_ArrowDown"); // open popup
-  await shownPromise;
+  await openAutocompletePopup(password);
   synthesizeKey("KEY_ArrowDown"); // insecure warning
   synthesizeKey("KEY_Tab");
 
@@ -76,10 +71,7 @@ function closeCurrentTab() {
 
 add_task(async function test_field_highlight_on_pw_field_autocomplete_footer() {
   // Press enter on the footer and check.
-  password.focus();
-  let shownPromise = promiseACShown();
-  synthesizeKey("KEY_ArrowDown"); // open popup
-  await shownPromise;
+  await openAutocompletePopup(password);
   synthesizeKey("KEY_ArrowUp"); // footer
   synthesizeKey("KEY_Enter");
 
@@ -92,10 +84,7 @@ add_task(async function test_field_highlight_on_pw_field_autocomplete_footer() {
   closeCurrentTab();
 
   // Press tab on the footer and check.
-  password.focus();
-  shownPromise = promiseACShown();
-  synthesizeKey("KEY_ArrowDown"); // open popup
-  await shownPromise;
+  await openAutocompletePopup(password);
   synthesizeKey("KEY_ArrowUp"); // footer
   synthesizeKey("KEY_Tab");
 

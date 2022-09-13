@@ -5,14 +5,15 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "storybook": "concurrently 'start-storybook -p 5703 --no-open' '../../../mach run http://localhost:5703'",
     "build-storybook": "build-storybook",
-    "start-storybook": "start-storybook -p 5703 --no-open"
+    "storybook": "start-storybook -p 5703 --no-open"
   },
   "author": "",
   "license": "MPL-2.0",
   "devDependencies": {
     "@babel/core": "^7.16.0",
+    "@fluent/bundle": "^0.17.1",
+    "@fluent/dom": "^0.8.1",
     "@storybook/addon-actions": "^6.4.8",
     "@storybook/addon-essentials": "^6.4.8",
     "@storybook/addon-links": "^6.4.8",
@@ -20,7 +21,9 @@
     "@storybook/manager-webpack5": "^6.4.8",
     "@storybook/web-components": "^6.4.8",
     "babel-loader": "^8.2.3",
-    "concurrently": "^6.5.0",
     "lit": "^2.2.2"
+  },
+  "dependencies": {
+    "mozilla-central": "file:../../.."
   }
 }
