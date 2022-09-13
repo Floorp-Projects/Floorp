@@ -415,18 +415,15 @@ ComPtr<IXmlDocument> ToastNotificationHandler::CreateToastXmlDocument() {
   hr = toastElements->Item(0, &toastNodeRoot);
   NS_ENSURE_TRUE(SUCCEEDED(hr), nullptr);
 
-  if (mRequireInteraction) {
-    ComPtr<IXmlElement> toastNode;
-    hr = toastNodeRoot.As(&toastNode);
-    NS_ENSURE_TRUE(SUCCEEDED(hr), nullptr);
-
-    success =
-        SetAttribute(toastNode, HStringReference(L"scenario"), u"reminder"_ns);
-    NS_ENSURE_TRUE(success, nullptr);
-  }
   ComPtr<IXmlElement> toastElement;
   hr = toastNodeRoot.As(&toastElement);
   NS_ENSURE_TRUE(SUCCEEDED(hr), nullptr);
+
+  if (mRequireInteraction) {
+    success = SetAttribute(toastElement, HStringReference(L"scenario"),
+                           u"reminder"_ns);
+    NS_ENSURE_TRUE(success, nullptr);
+  }
 
   auto maybeLaunchArg = GetLaunchArgument();
   NS_ENSURE_TRUE(maybeLaunchArg.isOk(), nullptr);
@@ -437,6 +434,26 @@ ComPtr<IXmlDocument> ToastNotificationHandler::CreateToastXmlDocument() {
 
   MOZ_LOG(sWASLog, LogLevel::Debug,
           ("launchArg: '%s'", NS_ConvertUTF16toUTF8(launchArg).get()));
+
+  // On modern Windows (10+), use newer toast layout, which makes images larger.
+  if (IsWin10OrLater()) {
+    ComPtr<IXmlNodeList> bindingElements;
+    hr = toastXml->GetElementsByTagName(HStringReference(L"binding").Get(),
+                                        &bindingElements);
+    NS_ENSURE_TRUE(SUCCEEDED(hr), nullptr);
+
+    ComPtr<IXmlNode> bindingNodeRoot;
+    hr = bindingElements->Item(0, &bindingNodeRoot);
+    NS_ENSURE_TRUE(SUCCEEDED(hr), nullptr);
+
+    ComPtr<IXmlElement> bindingElement;
+    hr = bindingNodeRoot.As(&bindingElement);
+    NS_ENSURE_TRUE(SUCCEEDED(hr), nullptr);
+
+    success = SetAttribute(bindingElement, HStringReference(L"template"),
+                           u"ToastGeneric"_ns);
+    NS_ENSURE_TRUE(success, nullptr);
+  }
 
   ComPtr<IXmlElement> actions;
   hr = toastXml->CreateElement(HStringReference(L"actions").Get(), &actions);
