@@ -32,10 +32,6 @@
           if ('nsICrashReporter' in Ci) {
             dumpID = subject.getPropertyAsAString('dumpID');
             ok(dumpID, "dumpID is present and not an empty string");
-
-            // Let's check whether we have correctly reported OOM.
-            var isLikelyOOM = subject.getPropertyAsBool('isLikelyOOM');
-            is(isLikelyOOM, crashType == 'CRASH_OOM', 'isLikelyOOM is correct');
           }
 
           Services.obs.removeObserver(crashObserver, 'ipc:content-shutdown');
