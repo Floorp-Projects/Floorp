@@ -4,8 +4,12 @@
 
 "use strict";
 
+/* import-globals-from ../../mochitest/states.js */
 /* import-globals-from ../../mochitest/value.js */
-loadScripts({ name: "value.js", dir: MOCHITESTS_DIR });
+loadScripts(
+  { name: "states.js", dir: MOCHITESTS_DIR },
+  { name: "value.js", dir: MOCHITESTS_DIR }
+);
 
 /**
  * Test data has the format of:
@@ -245,4 +249,72 @@ addAccessibleTask(
     );
   },
   { chrome: true, topLevel: true, iframe: true, remoteIframe: true }
+);
+
+/**
+ * Test caching of active state for select options - see bug 1788143.
+ */
+addAccessibleTask(
+  `
+  <select id="select">
+    <option id="first_option">First</option>
+    <option id="second_option">Second</option>
+  </select>`,
+  async function(browser, docAcc) {
+    const select = findAccessibleChildByID(docAcc, "select");
+    is(select.value, "First", "Select initial value correct");
+
+    // Focus the combo box.
+    await invokeFocus(browser, "select");
+
+    // Select the second option (drop-down collapsed).
+    let p = waitForEvents({
+      expected: [
+        [EVENT_SELECTION, "second_option"],
+        [EVENT_TEXT_VALUE_CHANGE, "select"],
+      ],
+      unexpected: [
+        stateChangeEventArgs("second_option", EXT_STATE_ACTIVE, true, true),
+        stateChangeEventArgs("first_option", EXT_STATE_ACTIVE, false, true),
+      ],
+    });
+    await invokeContentTask(browser, [], () => {
+      content.document.getElementById("select").selectedIndex = 1;
+    });
+    await p;
+
+    is(select.value, "Second", "Select value correct after changing option");
+
+    // Expand the combobox dropdown.
+    p = waitForEvent(EVENT_STATE_CHANGE, "ContentSelectDropdown");
+    EventUtils.synthesizeKey("VK_SPACE");
+    await p;
+
+    p = waitForEvents({
+      expected: [
+        [EVENT_SELECTION, "first_option"],
+        [EVENT_TEXT_VALUE_CHANGE, "select"],
+        [EVENT_HIDE, "ContentSelectDropdown"],
+      ],
+      unexpected: [
+        stateChangeEventArgs("first_option", EXT_STATE_ACTIVE, true, true),
+        stateChangeEventArgs("second_option", EXT_STATE_ACTIVE, false, true),
+      ],
+    });
+
+    // Press the up arrow to select the first option (drop-down expanded).
+    // Then, press Enter to confirm the selection and close the dropdown.
+    // We do both of these together to unify testing across platforms, since
+    // events are not entirely consistent on Windows vs. Linux + macOS.
+    EventUtils.synthesizeKey("VK_UP");
+    EventUtils.synthesizeKey("VK_RETURN");
+    await p;
+
+    is(
+      select.value,
+      "First",
+      "Select value correct after changing option back"
+    );
+  },
+  { chrome: true, topLevel: true, iframe: true, remoteIFrame: true }
 );

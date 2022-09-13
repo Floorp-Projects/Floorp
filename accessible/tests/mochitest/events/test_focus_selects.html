@@ -90,11 +90,11 @@
       await p;
 
       p = waitForEvents({
-        expected: [
-          [EVENT_SELECTION, "cb_apple"],
+        expected: [[EVENT_SELECTION, "cb_apple"]],
+        unexpected: [
+          [EVENT_FOCUS],
           stateChangeEventArgs("cb_apple", EXT_STATE_ACTIVE, true, true),
         ],
-        unexpected: [[EVENT_FOCUS]],
       });
       // collapsed combobox keeps a focus
       synthesizeKey("VK_DOWN");
@@ -120,14 +120,14 @@
       await p;
 
       p = waitForEvents({
-        expected: [
-          [EVENT_SELECTION, "cb_orange"],
+        expected: [[EVENT_SELECTION, "cb_orange"]],
+        unexpected: [
+          [EVENT_FOCUS],
           stateChangeEventArgs("cb_orange", EXT_STATE_ACTIVE, true, true),
         ],
-        unexpected: [[EVENT_FOCUS]],
       });
       // An unfocused selectable combobox gets selection change events,
-      // and active state change events, but not focus.
+      // but not focus events nor active state change events.
       getNode("cb_orange").selected = true;
       await p;
 

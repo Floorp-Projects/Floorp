@@ -221,23 +221,6 @@ nsRect HTMLSelectOptionAccessible::RelativeBounds(
   return HyperTextAccessibleWrap::RelativeBounds(aBoundingFrame);
 }
 
-nsresult HTMLSelectOptionAccessible::HandleAccEvent(AccEvent* aEvent) {
-  nsresult rv = HyperTextAccessibleWrap::HandleAccEvent(aEvent);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  AccStateChangeEvent* event = downcast_accEvent(aEvent);
-  if (event && (event->GetState() == states::SELECTED)) {
-    LocalAccessible* widget = ContainerWidget();
-    if (widget && !widget->AreItemsOperable()) {
-      // Collapsed options' ACTIVE state reflects their SELECT state.
-      nsEventShell::FireEvent(this, states::ACTIVE, event->IsStateEnabled(),
-                              true);
-    }
-  }
-
-  return NS_OK;
-}
-
 void HTMLSelectOptionAccessible::ActionNameAt(uint8_t aIndex,
                                               nsAString& aName) {
   if (aIndex == eAction_Select) aName.AssignLiteral("select");
