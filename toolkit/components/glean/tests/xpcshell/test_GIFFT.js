@@ -182,7 +182,8 @@ add_task(async function test_gifft_timing_dist() {
   );
 
   data = Telemetry.getHistogramById("TELEMETRY_TEST_EXPONENTIAL").snapshot();
-  Assert.greaterOrEqual(data.sum, 15, "Histogram's in milliseconds");
+  // Suffers from same cast truncation issue of 9.... and 4.... values
+  Assert.greaterOrEqual(data.sum, 13, "Histogram's in milliseconds");
   Assert.equal(
     2,
     Object.entries(data.values).reduce(
