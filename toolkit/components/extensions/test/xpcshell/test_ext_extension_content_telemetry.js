@@ -15,11 +15,6 @@ add_task(async function test_telemetry() {
     browser.test.sendMessage("content-script-run");
   }
 
-  Services.prefs.setBoolPref(
-    "toolkit.telemetry.testing.overrideProductsCheck",
-    true
-  );
-
   let extension1 = ExtensionTestUtils.loadExtension({
     manifest: {
       content_scripts: [

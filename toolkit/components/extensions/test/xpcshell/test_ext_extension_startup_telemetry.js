@@ -18,11 +18,6 @@ function processKeyedSnapshot(snapshot) {
 }
 
 add_task(async function test_telemetry() {
-  Services.prefs.setBoolPref(
-    "toolkit.telemetry.testing.overrideProductsCheck",
-    true
-  );
-
   let extension1 = ExtensionTestUtils.loadExtension({});
   let extension2 = ExtensionTestUtils.loadExtension({});
 

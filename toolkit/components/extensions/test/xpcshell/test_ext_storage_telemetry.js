@@ -263,11 +263,6 @@ async function test_telemetry_background() {
 }
 
 add_task(async function setup() {
-  Services.prefs.setBoolPref(
-    "toolkit.telemetry.testing.overrideProductsCheck",
-    true
-  );
-
   // Telemetry test setup needed to ensure that the builtin events are defined
   // and they can be collected and verified.
   await TelemetryController.testSetup();
