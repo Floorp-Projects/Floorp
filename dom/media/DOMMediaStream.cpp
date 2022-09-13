@@ -402,6 +402,9 @@ void DOMMediaStream::RemoveTrackInternal(MediaStreamTrack* aTrack) {
 }
 
 already_AddRefed<nsIPrincipal> DOMMediaStream::GetPrincipal() {
+  if (!GetOwner()) {
+    return nullptr;
+  }
   nsCOMPtr<nsIPrincipal> principal =
       nsGlobalWindowInner::Cast(GetOwner())->GetPrincipal();
   for (const auto& t : mTracks) {

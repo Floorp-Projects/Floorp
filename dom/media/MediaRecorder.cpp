@@ -1242,6 +1242,12 @@ void MediaRecorder::Start(const Optional<uint32_t>& aTimeslice,
   //    throw a SecurityError DOMException and abort these steps.
   if (mStream) {
     RefPtr<nsIPrincipal> streamPrincipal = mStream->GetPrincipal();
+    if (!streamPrincipal) {
+      // This is more or less part of the step 7, see below.
+      aResult.ThrowNotSupportedError("The MediaStream is inactive");
+      return;
+    }
+
     if (!PrincipalSubsumes(this, streamPrincipal)) {
       aResult.ThrowSecurityError(
           "The MediaStream's isolation properties disallow access from "
