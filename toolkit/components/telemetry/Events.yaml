@@ -991,6 +991,30 @@ normandy:
       branch: If reason == invalid-branch, the branch that failed validation.
       feature: If reason == invalid-feature, the invalid feature ID.
 
+browser.launched_to_handle:
+  system_notification:
+    objects: ["toast"]
+    description: >
+      Recorded when Firefox launches to complete a native notification popped by
+      a system (chrome privileged) alert.  Windows-only at the time of writing.
+    bug_numbers:
+      - 1788960
+    notification_emails:
+      - nalexander@mozilla.com
+      - rtestard@mozilla.com
+    products:
+      - "firefox"
+    record_in_processes: [main]
+    release_channel_collection: opt-out
+    expiry_version: never
+    extra_keys:
+      name: >
+        The `name` of the system (chrome privileged) alert that Firefox was
+        launched to complete.
+      action: >
+        The `action` of the system (chrome privileged) alert that Firefox was
+        launched to complete.
+
 pwmgr:
   open_management:
     objects: ["aboutprotections", "autocomplete", "capturedoorhanger", "contextmenu", "direct", "fxamenu", "mainmenu", "pageinfo", "preferences", "snippet"]

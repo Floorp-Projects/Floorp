@@ -9,3 +9,32 @@
 $schema: moz://mozilla.org/schemas/glean/metrics/2-0-0
 $tags:
   - 'Firefox :: General'
+
+browser.launched_to_handle:
+  system_notification:
+    type: event
+    description: >
+      Recorded when Firefox launches to complete a native notification popped by
+      a system (chrome privileged) alert.  Windows-only at the time of writing.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1788960
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1788960#c10
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - nalexander@mozilla.com
+      - rtestard@mozilla.com
+    expires: never
+    extra_keys:
+      name:
+        description: >
+          The `name` of the system (chrome privileged) alert that Firefox was
+          launched to complete.
+        type: string
+      action:
+        description: >
+          The `action` of the system (chrome privileged) alert that Firefox was
+          launched to complete.
+        type: string
+    telemetry_mirror: BrowserLaunched_to_handle_SystemNotification_Toast
