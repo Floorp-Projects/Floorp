@@ -80,7 +80,8 @@ th.desc {
 }
 
 .notice {
-  background: -moz-cellhighlight;
+  background-color: -moz-cellhighlight;
+  color: -moz-cellhighlighttext;
   border: 1px solid ThreeDShadow;
   padding: 10px;
 }
