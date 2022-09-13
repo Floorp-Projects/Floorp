@@ -17,6 +17,7 @@ describe("ASRouterTriggerListeners", () => {
     "openBookmarkedURL"
   );
   const openArticleURLListener = ASRouterTriggerListeners.get("openArticleURL");
+  const nthTabClosedListener = ASRouterTriggerListeners.get("nthTabClosed");
   const hosts = ["www.mozilla.com", "www.mozilla.org"];
 
   const regionFake = {
@@ -322,6 +323,55 @@ describe("ASRouterTriggerListeners", () => {
         assert.isTrue(
           frequentVisitsListener._matchPatternSet.patterns.has("foo")
         );
+      });
+    });
+  });
+
+  describe("nthTabClosed", () => {
+    describe("#init", () => {
+      beforeEach(() => {
+        nthTabClosedListener.init(triggerHandler);
+      });
+      afterEach(() => {
+        nthTabClosedListener.uninit();
+      });
+
+      it("should set ._initialized to true and save the triggerHandler", () => {
+        assert.ok(nthTabClosedListener._initialized);
+        assert.equal(nthTabClosedListener._triggerHandler, triggerHandler);
+      });
+
+      it("if already initialised, it should only update the trigger handler", () => {
+        const newTriggerHandler = () => {};
+        nthTabClosedListener.init(newTriggerHandler);
+        assert.ok(nthTabClosedListener._initialized);
+        assert.equal(nthTabClosedListener._triggerHandler, newTriggerHandler);
+      });
+
+      it("should add an event listeners to all existing browser windows", () => {
+        assert.calledOnce(existingWindow.addEventListener);
+        assert.calledWith(existingWindow.addEventListener, "TabClose");
+      });
+    });
+
+    describe("#uninit", () => {
+      beforeEach(async () => {
+        nthTabClosedListener.init(triggerHandler);
+        nthTabClosedListener.uninit();
+      });
+      it("should set ._initialized to false and clear the triggerHandler, closed tabs count", () => {
+        assert.notOk(nthTabClosedListener._initialized);
+        assert.equal(nthTabClosedListener._triggerHandler, null);
+        assert.equal(nthTabClosedListener._closedTabs, 0);
+      });
+
+      it("should do nothing if already uninitialised", () => {
+        nthTabClosedListener.uninit();
+        assert.notOk(nthTabClosedListener._initialized);
+      });
+
+      it("should remove event listeners from all existing browser windows", () => {
+        assert.calledOnce(existingWindow.removeEventListener);
       });
     });
   });

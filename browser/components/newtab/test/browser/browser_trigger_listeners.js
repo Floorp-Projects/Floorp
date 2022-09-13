@@ -114,3 +114,24 @@ add_task(async function test_preferenceObserver() {
   Services.prefs.clearUserPref("bar.foo");
   Assert.ok(stub.notCalled, "Not called after uninit");
 });
+
+add_task(async function test_nthTabClosed() {
+  const handlerStub = sinon.stub();
+  const tabClosedTrigger = ASRouterTriggerListeners.get("nthTabClosed");
+  tabClosedTrigger.uninit();
+  tabClosedTrigger.init(handlerStub);
+
+  let tab1 = await BrowserTestUtils.openNewForegroundTab(gBrowser);
+  let tab2 = await BrowserTestUtils.openNewForegroundTab(gBrowser);
+
+  BrowserTestUtils.removeTab(tab1);
+  Assert.ok(handlerStub.calledOnce, "Called once after first tab closed");
+
+  BrowserTestUtils.removeTab(tab2);
+  Assert.ok(handlerStub.calledTwice, "Called twice after second tab closed");
+
+  handlerStub.resetHistory();
+  tabClosedTrigger.uninit();
+
+  Assert.ok(handlerStub.notCalled, "Not called after uninit");
+});
