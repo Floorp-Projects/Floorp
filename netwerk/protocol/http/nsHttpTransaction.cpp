@@ -19,6 +19,7 @@
 #include "mozilla/ScopeExit.h"
 #include "mozilla/Tokenizer.h"
 #include "mozilla/StaticPrefs_network.h"
+#include "MockHttpAuth.h"
 #include "nsCRT.h"
 #include "nsComponentManagerUtils.h"  // do_CreateInstance
 #include "nsHttpBasicAuth.h"
@@ -2612,6 +2613,9 @@ bool nsHttpTransaction::IsStickyAuthSchemeAt(nsACString const& auth) {
       authenticator = new nsHttpDigestAuth();
     } else if (schema.EqualsLiteral("ntlm")) {
       authenticator = new nsHttpNTLMAuth();
+    } else if (schema.EqualsLiteral("mock_auth") &&
+               PR_GetEnv("XPCSHELL_TEST_PROFILE_DIR")) {
+      authenticator = new MockHttpAuth();
     }
     if (authenticator) {
       uint32_t flags;

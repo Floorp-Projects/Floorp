@@ -130,6 +130,7 @@ UNIFIED_SOURCES += [
     "HttpTransactionChild.cpp",
     "HttpTransactionParent.cpp",
     "InterceptedHttpChannel.cpp",
+    "MockHttpAuth.cpp",
     "NetworkMarker.cpp",
     "nsCORSListenerProxy.cpp",
     "nsHttp.cpp",

@@ -10,6 +10,7 @@
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/StoragePrincipalHelper.h"
 #include "mozilla/Tokenizer.h"
+#include "MockHttpAuth.h"
 #include "nsHttpChannelAuthProvider.h"
 #include "nsCRT.h"
 #include "nsNetUtil.h"
@@ -1176,6 +1177,9 @@ nsresult nsHttpChannelAuthProvider::GetAuthenticator(
     authenticator = nsHttpDigestAuth::GetOrCreate();
   } else if (authType.EqualsLiteral("ntlm")) {
     authenticator = nsHttpNTLMAuth::GetOrCreate();
+  } else if (authType.EqualsLiteral("mock_auth") &&
+             PR_GetEnv("XPCSHELL_TEST_PROFILE_DIR")) {
+    authenticator = MockHttpAuth::Create();
   } else {
     return NS_ERROR_FACTORY_NOT_REGISTERED;
   }
