@@ -943,10 +943,13 @@ bool GCRuntime::freezeSharedAtomsZone() {
   MOZ_ASSERT(!atomsZone()->wasGCStarted());
   MOZ_ASSERT(!atomsZone()->needsIncrementalBarrier());
 
+  AutoAssertEmptyNursery nurseryIsEmpty(rt->mainContextFromOwnThread());
+
   atomsZone()->arenas.clearFreeLists();
 
   for (auto kind : AllAllocKinds()) {
-    for (auto thing = atomsZone()->cellIterUnsafe<TenuredCell>(kind);
+    for (auto thing =
+             atomsZone()->cellIterUnsafe<TenuredCell>(kind, nurseryIsEmpty);
          !thing.done(); thing.next()) {
       TenuredCell* cell = thing.getCell();
       MOZ_ASSERT((cell->is<JSString>() &&
