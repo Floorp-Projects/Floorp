@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+  <!--
+# color_quads.html
+
+* The default is a 400x400 2d canvas, with 0, 16, 235, and 255 "gray" outer
+  quads, and 50%-red, -green, -blue, and -gray inner quads.
+
+* We default to showing the settings pane when loaded without a query string.
+  This way, someone naively opens this in a browser, they can immediately see
+  all available options.
+
+* The "Publish" button updates the url, and so causes the settings pane to
+  hide.
+
+* Clicking on the canvas toggles the settings pane for further editing.
+  -->
+  <head>
+    <meta charset="utf-8">
+    <title>color_quads.html (2022-07-15)</title>
+  </head>
+  <body>
+    <div id="e_settings">
+      Image override: <input id="e_img" type="text">
+
+      <br>
+      <br>Canvas Width: <input id="e_width" type="text" value="400">
+      <br>Canvas Height: <input id="e_height" type="text" value="400">
+      <br>Canvas Colorspace: <input id="e_cspace" type="text">
+      <br>Canvas Context Type: <select id="e_context">
+        <option value="2d" selected="selected">Canvas2D</option>
+        <option value="webgl">WebGL</option>
+      </select>
+      <br>Canvas Context Options: <input id="e_options" type="text" value="{}">
+
+      <br>
+      <br>OuterTopLeft: <input id="e_color_o1" type="text" value="rgb(0,0,0)">
+      <br>OuterTopRight: <input id="e_color_o2" type="text" value="rgb(16,16,16)">
+      <br>OuterBottomLeft: <input id="e_color_o3" type="text" value="rgb(235,235,235)">
+      <br>OuterBottomRight: <input id="e_color_o4" type="text" value="rgb(255,255,255)">
+      <br>
+      <br>InnerTopLeft: <input id="e_color_i1" type="text" value="rgb(127,0,0)">
+      <br>InnerTopRight: <input id="e_color_i2" type="text" value="rgb(0,127,0)">
+      <br>InnerBottomLeft: <input id="e_color_i3" type="text" value="rgb(0,0,127)">
+      <br>InnerBottomRight: <input id="e_color_i4" type="text" value="rgb(127,127,127)">
+      <br><input id="e_publish" type="button" value="Publish">
+      <hr>
+    </div>
+      <div id="e_canvas_holder">
+        <canvas></canvas>
+      </div>
+    <script>
+"use strict";
+
+// document.body.style.backgroundColor = '#fdf';
+
+// -
+
+// Click the canvas to toggle the settings pane.
+e_canvas_holder.addEventListener("click", () => {
+  // Toggle display:none to hide/unhide.
+  e_settings.style.display = e_settings.style.display ? "" : "none";
+});
+
+// Hide settings initially if there's a query string in the url.
+if (window.location.search.startsWith("?")) {
+  e_settings.style.display = "none";
+}
+
+// -
+
+function map(obj, fn) {
+  fn = fn || (x => x);
+  const ret = {};
+  for (const [k,v] of Object.entries(obj)) {
+    ret[k] = fn(v, k);
+  }
+  return ret;
+}
+
+function map_keys_required(obj, keys, fn) {
+  fn = fn || (x => x);
+
+  const ret = {};
+  for (const k of keys) {
+    const v = obj[k];
+    if (v === undefined) throw {k, obj};
+    ret[k] = fn(v, k);
+  }
+  return ret;
+}
+
+function set_device_pixel_size(e, device_size) {
+  const DPR = window.devicePixelRatio;
+  map_keys_required(device_size, ['width', 'height'], (device, k) => {
+    const css = device / DPR;
+    e.style[k] = css + 'px';
+  });
+}
+
+function pad_top_left_to_device_pixels(e) {
+  const DPR = window.devicePixelRatio;
+
+  e.style.padding = '';
+  let css_rect = e.getBoundingClientRect();
+  css_rect = map_keys_required(css_rect, ['left', 'top']);
+
+  const orig_device_rect = {};
+  const snapped_padding = map(css_rect, (css, k) => {
+    const device = orig_device_rect[k] = css * DPR;
+    const device_snapped = Math.round(device);
+    let device_padding = device_snapped - device;
+    // Negative padding is treated as 0.
+    // We want to pad:
+    // * 3.9 -> 4.0
+    // * 3.1 -> 4.0
+    // * 3.00000001 -> 3.0
+    if (device_padding < 0.01) {
+      device_padding += 1;
+    }
+    const css_padding = device_padding / DPR;
+    // console.log({css, k, device, device_snapped, device_padding, css_padding});
+    return css_padding;
+  });
+
+  e.style.paddingLeft = snapped_padding.left + 'px';
+  e.style.paddingTop = snapped_padding.top + 'px';
+  console.log(`[info] At dpr=${DPR}, padding`, css_rect, '(', orig_device_rect, 'device) by', snapped_padding);
+}
+
+// -
+
+const SETTING_NODES = {};
+e_settings.childNodes.forEach(n => {
+  if (!n.id) return;
+  SETTING_NODES[n.id] = n;
+  n._default = n.value;
+});
+
+const URL_PARAMS = new URLSearchParams(window.location.search);
+URL_PARAMS.forEach((v,k) => {
+  const n = SETTING_NODES[k];
+  if (!n) {
+    if (k && !k.startsWith('__')) {
+      console.warn(`Unrecognized setting: ${k} = ${v}`);
+    }
+    return;
+  }
+  n.value = v;
+});
+
+// -
+
+function UNITTEST_STR_EQ(was, expected) {
+  function to_result(src) {
+    let result = src;
+    if (typeof(result) == 'string') {
+      result = eval(result);
+    }
+    let result_str = result.toString();
+    if (result instanceof Array) {
+      result_str = '[' + result_str + ']';
+    }
+    return {src, result, result_str};
+  }
+  was = to_result(was);
+  expected = to_result(expected);
+
+  if (false) {
+    if (was.result_str != expected.result_str) {
+      throw {was, expected};
+    }
+    console.log(`[unittest] OK `, was.src, ` ->  ${was.result_str}  (`, expected.src, `)`);
+  }
+  console.assert(was.result_str == expected.result_str,
+    was.src, ` ->  ${was.result_str}  (`, expected.src, `)`);
+}
+
+// -
+
+/// Non-Premult-Alpha, e.g. [1.0, 1.0, 1.0, 0.5]
+function parse_css_color_npa(str) {
+  const m = /(rgba?)\((.*)\)/.exec(str);
+  if (!m) throw str;
+
+  let vals = m[2];
+  vals = vals.split(',').map(s => parseFloat(s));
+  if (vals.length == 3) {
+    vals.push(1.0);
+  }
+  for (let i = 0; i < 3; i++) {
+    vals[i] /= 255;
+  }
+  return vals;
+}
+UNITTEST_STR_EQ(`parse_css_color_npa('rgb(255,255,255)');`, [1,1,1,1]);
+UNITTEST_STR_EQ(`parse_css_color_npa('rgba(255,255,255)');`, [1,1,1,1]);
+UNITTEST_STR_EQ(`parse_css_color_npa('rgb(20,40,60)');`, '[20/255, 40/255, 60/255, 1]');
+UNITTEST_STR_EQ(`parse_css_color_npa('rgb(20,40,60,0.5)');`, '[20/255, 40/255, 60/255, 0.5]');
+UNITTEST_STR_EQ(`parse_css_color_npa('rgb(20,40,60,0)');`, '[20/255, 40/255, 60/255, 0]');
+
+// -
+
+let e_canvas;
+
+async function draw() {
+  while (e_canvas_holder.firstChild) {
+    e_canvas_holder.removeChild(e_canvas_holder.firstChild);
+  }
+
+  if (e_img.value) {
+    const img = document.createElement("img");
+    img.src = e_img.value;
+    console.log('img.src =', img.src);
+    await img.decode();
+    e_canvas_holder.appendChild(img);
+    set_device_pixel_size(img, {width: img.naturalWidth, height: img.naturalHeight});
+    pad_top_left_to_device_pixels(img);
+    return;
+  }
+
+  e_canvas = document.createElement("canvas");
+
+  let options = eval(`Object.assign(${e_options.value})`);
+  options.colorSpace = e_cspace.value || undefined;
+
+  const context = e_canvas.getContext(e_context.value, options);
+  if (context.drawingBufferColorSpace && options.colorSpace) {
+    context.drawingBufferColorSpace = options.colorSpace;
+  }
+  if (context.getContextAttributes) {
+    options = context.getContextAttributes();
+  }
+  console.log({options});
+
+  // -
+
+  const W = parseInt(e_width.value);
+  const H = parseInt(e_height.value);
+  context.canvas.width = W;
+  context.canvas.height = H;
+  e_canvas_holder.appendChild(e_canvas);
+
+  // If we don't snap to the device pixel grid, borders between color blocks
+  // will be filtered, and this causes a lot of fuzzy() annotations.
+  set_device_pixel_size(e_canvas, e_canvas);
+  pad_top_left_to_device_pixels(e_canvas);
+
+  // -
+
+  let fillFromElem;
+  if (context.fillRect) {
+    const c2d = context;
+    fillFromElem = (e, left, top, w, h) => {
+      if (!e.value) return;
+      c2d.fillStyle = e.value;
+      c2d.fillRect(left, top, w, h);
+    };
+
+  } else if (context.drawArrays) {
+    const gl = context;
+    gl.enable(gl.SCISSOR_TEST);
+    gl.disable(gl.DEPTH_TEST);
+    fillFromElem = (e, left, top, w, h) => {
+      if (!e.value) return;
+      const rgba = parse_css_color_npa(e.value.trim());
+      if (false && options.premultipliedAlpha) {
+        for (let i = 0; i < 3; i++) {
+          rgba[i] *= rgba[3];
+        }
+      }
+
+      const bottom = top+h; // in y-down c2d coords
+      gl.scissor(left, gl.drawingBufferHeight - bottom, w, h);
+      gl.clearColor(...rgba);
+      gl.clear(gl.COLOR_BUFFER_BIT);
+    };
+  }
+
+  // -
+
+  const LEFT_HALF = W/2 | 0; // Round
+  const TOP_HALF = H/2 | 0;
+
+  fillFromElem(e_color_o1, 0        , 0       ,   LEFT_HALF,   TOP_HALF);
+  fillFromElem(e_color_o2, LEFT_HALF, 0       , W-LEFT_HALF,   TOP_HALF);
+  fillFromElem(e_color_o3, 0        , TOP_HALF,   LEFT_HALF, H-TOP_HALF);
+  fillFromElem(e_color_o4, LEFT_HALF, TOP_HALF, W-LEFT_HALF, H-TOP_HALF);
+
+  // -
+
+  const INNER_SCALE = 1/4;
+  const W_INNER = W*INNER_SCALE | 0;
+  const H_INNER = H*INNER_SCALE | 0;
+
+  fillFromElem(e_color_i1, LEFT_HALF-W_INNER, TOP_HALF-H_INNER, W_INNER, H_INNER);
+  fillFromElem(e_color_i2, LEFT_HALF        , TOP_HALF-H_INNER, W_INNER, H_INNER);
+  fillFromElem(e_color_i3, LEFT_HALF-W_INNER, TOP_HALF        , W_INNER, H_INNER);
+  fillFromElem(e_color_i4, LEFT_HALF        , TOP_HALF        , W_INNER, H_INNER);
+}
+
+(async () => {
+  await draw();
+  document.documentElement.removeAttribute("class");
+})();
+
+// -
+
+Object.values(SETTING_NODES).forEach(x => {
+  x.addEventListener("change", draw);
+});
+
+e_publish.addEventListener("click", () => {
+  let settings = [];
+  for (const n of Object.values(SETTING_NODES)) {
+    if (n.value == n._default) continue;
+    settings.push(`${n.id}=${n.value}`);
+  }
+  settings = settings.join("&");
+  if (!settings) {
+    settings = "="; // Empty key-value pair is "publish with default settings"
+  }
+  window.location.search = "?" + settings;
+});
+    </script>
+  </body>
+</html>
