@@ -46,6 +46,18 @@ nsCookieBannerRule::AddCookie(bool aIsOptOut, const nsACString& aName,
 }
 
 NS_IMETHODIMP
+nsCookieBannerRule::GetId(nsACString& aId) {
+  aId.Assign(mId);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsCookieBannerRule::SetId(const nsACString& aId) {
+  mId.Assign(aId);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsCookieBannerRule::GetDomain(nsACString& aDomain) {
   aDomain.Assign(mDomain);
   return NS_OK;

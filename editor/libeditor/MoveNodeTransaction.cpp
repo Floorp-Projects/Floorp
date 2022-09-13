@@ -143,7 +143,7 @@ nsresult MoveNodeTransaction::DoTransactionInternal() {
   }
 
   {
-    AutoMoveNodeSelNotify notifyStoredRRanges(
+    AutoMoveNodeSelNotify notifyStoredRanges(
         htmlEditor->RangeUpdaterRef(), EditorRawDOMPoint(contentToMove),
         newNextSibling ? EditorRawDOMPoint(newNextSibling)
                        : EditorRawDOMPoint::AtEndOf(container));
@@ -219,7 +219,7 @@ NS_IMETHODIMP MoveNodeTransaction::UndoTransaction() {
   }
 
   {
-    AutoMoveNodeSelNotify notifyStoredRRanges(
+    AutoMoveNodeSelNotify notifyStoredRanges(
         htmlEditor->RangeUpdaterRef(), EditorRawDOMPoint(contentToMove),
         oldNextSibling ? EditorRawDOMPoint(oldNextSibling)
                        : EditorRawDOMPoint::AtEndOf(oldContainer));

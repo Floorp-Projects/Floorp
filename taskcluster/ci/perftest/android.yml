@@ -18,13 +18,6 @@ job-defaults:
             --browsertime-geckodriver ${MOZ_FETCHES_DIR}/geckodriver
             --output $MOZ_FETCHES_DIR/../artifacts
 
-hw-g5:
-    worker-type: t-bitbar-gw-perf-g5
-    description: Run ./mach perftest on a G5
-    treeherder:
-        symbol: perftest-g5
-    platform: android-hw-g5-7-0-arm7-shippable/opt
-
 hw-a51:
     worker-type: t-bitbar-gw-perf-a51
     description: Run ./mach perftest on a Samsung Galaxy a51
@@ -46,36 +39,6 @@ hw-p2:
     treeherder:
         symbol: perftest-p2
     platform: android-hw-p2-8-0-android-aarch64-shippable/opt
-
-hw-g5-view-fenix:
-    worker-type: t-bitbar-gw-perf-g5
-    description: Run VIEW perftest on Fenix on a G5
-    treeherder:
-        symbol: perftest(view-fenix)
-    platform: android-hw-g5-7-0-arm7-shippable/opt
-    attributes:
-        cron: true
-        batch: true
-    run:
-        command: >-
-            mkdir -p $MOZ_FETCHES_DIR/../artifacts &&
-            cd $GECKO_PATH &&
-            python3 python/mozperftest/mozperftest/runner.py
-            --flavor mobile-browser
-            --android
-            --android-app-name org.mozilla.fenix
-            --android-activity org.mozilla.fenix.IntentReceiverActivity
-            --android-clear-logcat
-            --android-capture-logcat logcat
-            --perfherder-metrics name:processLaunchToNavStart,shouldAlert:True
-            --android-install-apk fenix_nightly_armeabi_v7a
-            --hooks testing/performance/hooks_android_view.py
-            --perfherder
-            --perfherder-app fenix
-            --browsertime-geckodriver ${MOZ_FETCHES_DIR}/geckodriver
-            --browsertime-iterations 25
-            --output $MOZ_FETCHES_DIR/../artifacts
-            testing/performance/perftest_android_view.js
 
 hw-a51-view-fenix:
     worker-type: t-bitbar-gw-perf-a51
@@ -168,35 +131,6 @@ hw-p2-view-fenix:
             --output $MOZ_FETCHES_DIR/../artifacts
             testing/performance/perftest_android_view.js
 
-hw-g5-view-gv:
-    worker-type: t-bitbar-gw-perf-g5
-    description: Run VIEW perftest on GV on a G5
-    treeherder:
-        symbol: perftest(view-gv)
-    platform: android-hw-g5-7-0-arm7-shippable/opt
-    attributes:
-        cron: false
-    run:
-        command: >-
-            mkdir -p $MOZ_FETCHES_DIR/../artifacts &&
-            cd $GECKO_PATH &&
-            python3 python/mozperftest/mozperftest/runner.py
-            --flavor mobile-browser
-            --android
-            --android-app-name org.mozilla.geckoview_example
-            --android-activity org.mozilla.geckoview_example.GeckoViewActivity
-            --android-clear-logcat
-            --android-capture-logcat logcat
-            --perfherder-metrics processLaunchToNavStart
-            --android-install-apk gve_nightly_api16
-            --hooks testing/performance/hooks_android_view.py
-            --perfherder
-            --perfherder-app geckoview
-            --browsertime-geckodriver ${MOZ_FETCHES_DIR}/geckodriver
-            --browsertime-iterations 14
-            --output $MOZ_FETCHES_DIR/../artifacts
-            testing/performance/perftest_android_view.js
-
 hw-a51-view-gv:
     worker-type: t-bitbar-gw-perf-a51
     description: Run VIEW perftest on GV on a Samsung A51
@@ -284,38 +218,6 @@ hw-p2-view-gv:
             --browsertime-iterations 14
             --output $MOZ_FETCHES_DIR/../artifacts
             testing/performance/perftest_android_view.js
-
-hw-g5-main-fenix:
-    worker-type: t-bitbar-gw-perf-g5
-    description: Run main (home activity) perftest on Fenix on a G5
-    treeherder:
-        symbol: perftest(main-fenix)
-    platform: android-hw-g5-7-0-arm7-shippable/opt
-    attributes:
-        cron: false
-    run:
-        command: >-
-            mkdir -p $MOZ_FETCHES_DIR/../artifacts &&
-            cd $GECKO_PATH &&
-            python3 python/mozperftest/mozperftest/runner.py
-            --flavor mobile-browser
-            --android
-            --android-app-name org.mozilla.fenix
-            --android-activity .App
-            --android-clear-logcat
-            --android-capture-logcat logcat
-            --androidlog
-            --androidlog-first-timestamp ".*Start proc.*org\.mozilla\..*\..*App.*"
-            --androidlog-second-timestamp ".*Fully drawn.*org\.mozilla\..*"
-            --androidlog-subtest-name "MAIN"
-            --android-install-apk fenix_nightly_armeabi_v7a
-            --hooks testing/performance/hooks_android_main.py
-            --perfherder
-            --perfherder-app fenix
-            --browsertime-geckodriver ${MOZ_FETCHES_DIR}/geckodriver
-            --output $MOZ_FETCHES_DIR/../artifacts
-            --browsertime-iterations 14
-            testing/performance/perftest_android_main.js
 
 hw-a51-main-fenix:
     worker-type: t-bitbar-gw-perf-a51
@@ -413,35 +315,6 @@ hw-p2-main-fenix:
             --output $MOZ_FETCHES_DIR/../artifacts
             --browsertime-iterations 14
             testing/performance/perftest_android_main.js
-
-hw-g5-perfstats-gv:
-    worker-type: t-bitbar-gw-perf-g5
-    description: Run PerfStats perftest on GeckoView on a G5
-    treeherder:
-        symbol: perftest(perfstats-gv)
-    platform: android-hw-g5-7-0-arm7-shippable/opt
-    attributes:
-        cron: false
-    run:
-        command: >-
-            mkdir -p $MOZ_FETCHES_DIR/../artifacts &&
-            cd $GECKO_PATH &&
-            python3 python/mozperftest/mozperftest/runner.py
-            --flavor mobile-browser
-            --android
-            --android-app-name org.mozilla.geckoview_example
-            --android-activity org.mozilla.geckoview_example.GeckoViewActivity
-            --android-clear-logcat
-            --android-capture-logcat logcat
-            --android-install-apk gve_nightly_api16
-            --browsertime-geckodriver ${MOZ_FETCHES_DIR}/geckodriver
-            --output $MOZ_FETCHES_DIR/../artifacts
-            --perfherder
-            --perfherder-app geckoview
-            --perfherder-metrics name:HttpChannelCompletion,unit:ms name:HttpChannelCompletion_Cache,unit:ms name:HttpChannelCompletion_Network,unit:ms name:DisplayListBuilding,unit:ms name:Reflowing,unit:ms name:Styling,unit:ms
-            --browsertime-iterations 10
-            --hooks testing/performance/hooks_perfstats.py
-            testing/performance/perftest_perfstats.js
 
 hw-a51-perfstats-gv:
     worker-type: t-bitbar-gw-perf-a51

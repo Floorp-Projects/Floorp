@@ -19,8 +19,10 @@ newtab:
       Looks like `en-US`.
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1766887
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1786670
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1766887
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1786670#c3
     data_sensitivity:
       - interaction
     notification_emails:
@@ -28,7 +30,7 @@ newtab:
       - chutten@mozilla.com
       - mmccorquodale@mozilla.com
       - najiang@mozilla.com
-    expires: 107
+    expires: 113
     send_in_pings:
       - newtab
     lifetime: application
@@ -92,8 +94,10 @@ newtab:
       [detect-user-session-start.js](https://searchfox.org/mozilla-central/source/browser/components/newtab/content-src/lib/detect-user-session-start.js)).
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1766887
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1786670
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1766887
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1786670#c3
     data_sensitivity:
       - interaction
     notification_emails:
@@ -101,7 +105,7 @@ newtab:
       - chutten@mozilla.com
       - mmccorquodale@mozilla.com
       - najiang@mozilla.com
-    expires: 107
+    expires: 113
     extra_keys:
       newtab_visit_id: &newtab_visit_id
         description: >
@@ -132,8 +136,10 @@ newtab:
       Doesn't mean that the newtab was ever visible to a user.
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1766887
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1786670
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1766887
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1786670#c3
     data_sensitivity:
       - interaction
     notification_emails:
@@ -141,7 +147,7 @@ newtab:
       - chutten@mozilla.com
       - mmccorquodale@mozilla.com
       - najiang@mozilla.com
-    expires: 107
+    expires: 113
     extra_keys:
       newtab_visit_id: *newtab_visit_id
     send_in_pings:
@@ -225,8 +231,10 @@ topsites:
       Presently only happens for sponsored tiles.
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1766887
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1786670
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1766887
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1786670#c3
     data_sensitivity:
       - interaction
     notification_emails:
@@ -234,7 +242,7 @@ topsites:
       - chutten@mozilla.com
       - mmccorquodale@mozilla.com
       - najiang@mozilla.com
-    expires: 107
+    expires: 113
     extra_keys:
       newtab_visit_id: *newtab_visit_id
       is_sponsored: &is_sponsored
@@ -252,8 +260,10 @@ topsites:
       options in the context menu.
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1766887
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1786670
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1766887
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1786670#c3
     data_sensitivity:
       - interaction
     notification_emails:
@@ -261,7 +271,7 @@ topsites:
       - chutten@mozilla.com
       - mmccorquodale@mozilla.com
       - najiang@mozilla.com
-    expires: 107
+    expires: 113
     extra_keys:
       newtab_visit_id: *newtab_visit_id
       is_sponsored: *is_sponsored

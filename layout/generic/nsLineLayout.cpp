@@ -886,61 +886,53 @@ void nsLineLayout::ReflowFrame(nsIFrame* aFrame, nsReflowStatus& aReflowStatus,
   bool isEmpty;
   if (frameType == LayoutFrameType::None) {
     isEmpty = pfd->mFrame->IsEmpty();
-  } else {
-    if (LayoutFrameType::Placeholder == frameType) {
-      isEmpty = true;
-      pfd->mIsPlaceholder = true;
-      pfd->mSkipWhenTrimmingWhitespace = true;
-      nsIFrame* outOfFlowFrame = nsLayoutUtils::GetFloatFromPlaceholder(aFrame);
-      if (outOfFlowFrame) {
-        if (psd->mNoWrap &&
-            // We can always place floats in an empty line.
-            !LineIsEmpty() &&
-            // We always place floating letter frames. This kinda sucks. They'd
-            // usually fall into the LineIsEmpty() check anyway, except when
-            // there's something like a ::marker before or what not. We actually
-            // need to place them now, because they're pretty nasty and they
-            // create continuations that are in flow and not a kid of the
-            // previous continuation's parent. We don't want the deferred reflow
-            // of the letter frame to kill a continuation after we've stored it
-            // in the line layout data structures. See bug 1490281 to fix the
-            // underlying issue. When that's fixed this check should be removed.
-            !outOfFlowFrame->IsLetterFrame() &&
-            !GetOutermostLineLayout()
-                 ->mBlockRS->mFlags.mCanHaveOverflowMarkers) {
-          // We'll do this at the next break opportunity.
-          RecordNoWrapFloat(outOfFlowFrame);
-        } else {
-          placedFloat = TryToPlaceFloat(outOfFlowFrame);
-        }
-      }
-    } else if (isText) {
-      // Note non-empty text-frames for inline frame compatibility hackery
-      pfd->mIsTextFrame = true;
-      nsTextFrame* textFrame = static_cast<nsTextFrame*>(pfd->mFrame);
-      isEmpty = !textFrame->HasNoncollapsedCharacters();
-      if (!isEmpty) {
-        pfd->mIsNonEmptyTextFrame = true;
-        nsIContent* content = textFrame->GetContent();
-
-        const nsTextFragment* frag = content->GetText();
-        if (frag) {
-          pfd->mIsNonWhitespaceTextFrame = !content->TextIsOnlyWhitespace();
-        }
-      }
-    } else if (LayoutFrameType::Br == frameType) {
-      pfd->mSkipWhenTrimmingWhitespace = true;
-      isEmpty = false;
-    } else {
-      if (LayoutFrameType::Letter == frameType) {
-        pfd->mIsLetterFrame = true;
-      }
-      if (pfd->mSpan) {
-        isEmpty =
-            !pfd->mSpan->mHasNonemptyContent && pfd->mFrame->IsSelfEmpty();
+  } else if (LayoutFrameType::Placeholder == frameType) {
+    isEmpty = true;
+    pfd->mIsPlaceholder = true;
+    pfd->mSkipWhenTrimmingWhitespace = true;
+    nsIFrame* outOfFlowFrame = nsLayoutUtils::GetFloatFromPlaceholder(aFrame);
+    if (outOfFlowFrame) {
+      if (psd->mNoWrap &&
+          // We can always place floats in an empty line.
+          !LineIsEmpty() &&
+          // We always place floating letter frames. This kinda sucks. They'd
+          // usually fall into the LineIsEmpty() check anyway, except when
+          // there's something like a ::marker before or what not. We actually
+          // need to place them now, because they're pretty nasty and they
+          // create continuations that are in flow and not a kid of the
+          // previous continuation's parent. We don't want the deferred reflow
+          // of the letter frame to kill a continuation after we've stored it
+          // in the line layout data structures. See bug 1490281 to fix the
+          // underlying issue. When that's fixed this check should be removed.
+          !outOfFlowFrame->IsLetterFrame() &&
+          !GetOutermostLineLayout()->mBlockRS->mFlags.mCanHaveOverflowMarkers) {
+        // We'll do this at the next break opportunity.
+        RecordNoWrapFloat(outOfFlowFrame);
       } else {
-        isEmpty = pfd->mFrame->IsEmpty();
+        placedFloat = TryToPlaceFloat(outOfFlowFrame);
       }
+    }
+  } else if (isText) {
+    // Note non-empty text-frames for inline frame compatibility hackery
+    pfd->mIsTextFrame = true;
+    auto* textFrame = static_cast<nsTextFrame*>(pfd->mFrame);
+    isEmpty = !textFrame->HasNoncollapsedCharacters();
+    if (!isEmpty) {
+      pfd->mIsNonEmptyTextFrame = true;
+      pfd->mIsNonWhitespaceTextFrame =
+          !textFrame->GetContent()->TextIsOnlyWhitespace();
+    }
+  } else if (LayoutFrameType::Br == frameType) {
+    pfd->mSkipWhenTrimmingWhitespace = true;
+    isEmpty = false;
+  } else {
+    if (LayoutFrameType::Letter == frameType) {
+      pfd->mIsLetterFrame = true;
+    }
+    if (pfd->mSpan) {
+      isEmpty = !pfd->mSpan->mHasNonemptyContent && pfd->mFrame->IsSelfEmpty();
+    } else {
+      isEmpty = pfd->mFrame->IsEmpty();
     }
   }
   pfd->mIsEmpty = isEmpty;
@@ -1003,8 +995,7 @@ void nsLineLayout::ReflowFrame(nsIFrame* aFrame, nsReflowStatus& aReflowStatus,
     // the frame is going to get reflowed again (and may end up wanting
     // a next-in-flow where it ends up).
     if (aReflowStatus.IsComplete()) {
-      nsIFrame* kidNextInFlow = aFrame->GetNextInFlow();
-      if (nullptr != kidNextInFlow) {
+      if (nsIFrame* kidNextInFlow = aFrame->GetNextInFlow()) {
         // Remove all of the childs next-in-flows. Make sure that we ask
         // the right parent to do the removal (it's possible that the
         // parent is not this because we are executing pullup code)
@@ -1240,7 +1231,7 @@ bool nsLineLayout::CanPlaceFrame(PerFrameData* pfd, bool aNotSafeToBreak,
   }
 
 #ifdef NOISY_CAN_PLACE_FRAME
-  if (nullptr != psd->mFrame) {
+  if (psd->mFrame) {
     psd->mFrame->mFrame->ListTag(stdout);
   }
   printf(": aNotSafeToBreak=%s frame=", aNotSafeToBreak ? "true" : "false");

@@ -29,6 +29,8 @@
 #include "wasm/WasmUtility.h"
 #include "wasm/WasmValidate.h"
 
+#include "wasm/WasmInstance-inl.h"
+
 using namespace js;
 using namespace js::wasm;
 
@@ -57,7 +59,7 @@ static bool ValidateInitExpr(Decoder& d, ModuleEnvironment* env,
       return false;
     }
 
-#ifdef ENABLE_WASM_EXTENDED_CONST
+#if defined(ENABLE_WASM_EXTENDED_CONST) || defined(ENABLE_WASM_GC)
     Nothing nothing;
 #endif
     NothingVector nothings{};
@@ -176,6 +178,55 @@ static bool ValidateInitExpr(Decoder& d, ModuleEnvironment* env,
         break;
       }
 #endif
+#ifdef ENABLE_WASM_GC
+      case uint16_t(Op::GcPrefix): {
+        if (!env->gcEnabled()) {
+          return iter.unrecognizedOpcode(&op);
+        }
+        switch (op.b1) {
+          case uint32_t(GcOp::StructNew): {
+            uint32_t typeIndex;
+            if (!iter.readStructNew(&typeIndex, &nothings)) {
+              return false;
+            }
+            break;
+          }
+          case uint32_t(GcOp::StructNewDefault): {
+            uint32_t typeIndex;
+            if (!iter.readStructNewDefault(&typeIndex)) {
+              return false;
+            }
+            break;
+          }
+          case uint32_t(GcOp::ArrayNew): {
+            uint32_t typeIndex;
+            if (!iter.readArrayNew(&typeIndex, &nothing, &nothing)) {
+              return false;
+            }
+            break;
+          }
+          case uint32_t(GcOp::ArrayNewFixed): {
+            uint32_t typeIndex, len;
+            if (!iter.readArrayNewFixed(&typeIndex, &len)) {
+              return false;
+            }
+            break;
+          }
+          case uint32_t(GcOp::ArrayNewDefault): {
+            uint32_t typeIndex;
+            if (!iter.readArrayNewDefault(&typeIndex, &nothing)) {
+              return false;
+            }
+            break;
+          }
+          default: {
+            return iter.unrecognizedOpcode(&op);
+          }
+        }
+        *literal = Nothing();
+        break;
+      }
+#endif
       default: {
         return iter.unrecognizedOpcode(&op);
       }
@@ -188,7 +239,8 @@ class MOZ_STACK_CLASS InitExprInterpreter {
   explicit InitExprInterpreter(JSContext* cx,
                                const ValVector& globalImportValues,
                                Handle<WasmInstanceObject*> instanceObj)
-      : features(FeatureArgs::build(cx, FeatureOptions())),
+      : cx(cx),
+        features(FeatureArgs::build(cx, FeatureOptions())),
         stack(cx),
         globalImportValues(globalImportValues),
         instanceObj(cx, instanceObj) {}
@@ -201,6 +253,7 @@ class MOZ_STACK_CLASS InitExprInterpreter {
   }
 
  private:
+  JSContext* cx;
   FeatureArgs features;
   RootedValVector stack;
   const ValVector& globalImportValues;
@@ -208,24 +261,30 @@ class MOZ_STACK_CLASS InitExprInterpreter {
 
   Instance& instance() { return instanceObj->instance(); }
 
-  bool pushI32(int32_t c) { return stack.append(Val(uint32_t(c))); }
-  bool pushI64(int64_t c) { return stack.append(Val(uint64_t(c))); }
-  bool pushF32(float c) { return stack.append(Val(c)); }
-  bool pushF64(double c) { return stack.append(Val(c)); }
-  bool pushV128(V128 c) { return stack.append(Val(c)); }
-  bool pushRef(ValType type, AnyRef ref) {
+  [[nodiscard]] bool pushI32(int32_t c) {
+    return stack.append(Val(uint32_t(c)));
+  }
+  [[nodiscard]] bool pushI64(int64_t c) {
+    return stack.append(Val(uint64_t(c)));
+  }
+  [[nodiscard]] bool pushF32(float c) { return stack.append(Val(c)); }
+  [[nodiscard]] bool pushF64(double c) { return stack.append(Val(c)); }
+  [[nodiscard]] bool pushV128(V128 c) { return stack.append(Val(c)); }
+  [[nodiscard]] bool pushRef(ValType type, AnyRef ref) {
     return stack.append(Val(type, ref));
   }
-  bool pushFuncRef(HandleFuncRef ref) {
+  [[nodiscard]] bool pushFuncRef(HandleFuncRef ref) {
     return stack.append(Val(RefType::func(), ref));
   }
 
-#ifdef ENABLE_WASM_EXTENDED_CONST
+#if defined(ENABLE_WASM_EXTENDED_CONST) || defined(ENABLE_WASM_GC)
   int32_t popI32() {
     uint32_t result = stack.back().i32();
     stack.popBack();
     return int32_t(result);
   }
+#endif
+#ifdef ENABLE_WASM_EXTENDED_CONST
   int64_t popI64() {
     uint64_t result = stack.back().i64();
     stack.popBack();
@@ -253,40 +312,117 @@ class MOZ_STACK_CLASS InitExprInterpreter {
   bool evalI32Add() {
     uint32_t a = popI32();
     uint32_t b = popI32();
-    pushI32(a + b);
-    return true;
+    return pushI32(a + b);
   }
   bool evalI32Sub() {
     uint32_t a = popI32();
     uint32_t b = popI32();
-    pushI32(a - b);
-    return true;
+    return pushI32(a - b);
   }
   bool evalI32Mul() {
     uint32_t a = popI32();
     uint32_t b = popI32();
-    pushI32(a * b);
-    return true;
+    return pushI32(a * b);
   }
   bool evalI64Add() {
     uint64_t a = popI64();
     uint64_t b = popI64();
-    pushI64(a + b);
-    return true;
+    return pushI64(a + b);
   }
   bool evalI64Sub() {
     uint64_t a = popI64();
     uint64_t b = popI64();
-    pushI64(a - b);
-    return true;
+    return pushI64(a - b);
   }
   bool evalI64Mul() {
     uint64_t a = popI64();
     uint64_t b = popI64();
-    pushI64(a * b);
-    return true;
+    return pushI64(a * b);
   }
-#endif
+#endif  // ENABLE_WASM_EXTENDED_CONST
+#ifdef ENABLE_WASM_GC
+  WasmStructObject* createStruct(uint32_t typeIndex) {
+    Rooted<RttValue*> rttValue(cx, instance().rttCanon(typeIndex));
+    return WasmStructObject::createStruct(cx, rttValue);
+  }
+
+  bool evalStructNew(uint32_t typeIndex) {
+    Rooted<WasmStructObject*> structObj(cx, createStruct(typeIndex));
+    if (!structObj) {
+      return false;
+    }
+
+    const StructType& structType =
+        instance().metadata().types[typeIndex].structType();
+
+    uint32_t fieldIndex = structType.fields_.length();
+    while (fieldIndex-- > 0) {
+      const Val& val = stack.back();
+      structObj->storeVal(val, fieldIndex);
+      stack.popBack();
+    }
+
+    return pushRef(RefType::fromTypeIndex(typeIndex, false),
+                   AnyRef::fromJSObject(structObj));
+  }
+
+  bool evalStructNewDefault(uint32_t typeIndex) {
+    Rooted<WasmStructObject*> structObj(cx, createStruct(typeIndex));
+    if (!structObj) {
+      return false;
+    }
+
+    return pushRef(RefType::fromTypeIndex(typeIndex, false),
+                   AnyRef::fromJSObject(structObj));
+  }
+
+  WasmArrayObject* createArray(uint32_t typeIndex, uint32_t numElements) {
+    Rooted<RttValue*> rttValue(cx, instance().rttCanon(typeIndex));
+    return WasmArrayObject::createArray(cx, rttValue, numElements);
+  }
+
+  bool evalArrayNew(uint32_t typeIndex) {
+    uint32_t len = popI32();
+    Rooted<WasmArrayObject*> arrayObj(cx, createArray(typeIndex, len));
+    if (!arrayObj) {
+      return false;
+    }
+
+    const Val& val = stack.back();
+    arrayObj->fillVal(val, 0, len);
+    stack.popBack();
+
+    return pushRef(RefType::fromTypeIndex(typeIndex, false),
+                   AnyRef::fromJSObject(arrayObj));
+  }
+
+  bool evalArrayNewDefault(uint32_t typeIndex) {
+    uint32_t len = popI32();
+    Rooted<WasmArrayObject*> arrayObj(cx, createArray(typeIndex, len));
+    if (!arrayObj) {
+      return false;
+    }
+
+    return pushRef(RefType::fromTypeIndex(typeIndex, false),
+                   AnyRef::fromJSObject(arrayObj));
+  }
+
+  bool evalArrayNewFixed(uint32_t typeIndex, uint32_t len) {
+    Rooted<WasmArrayObject*> arrayObj(cx, createArray(typeIndex, len));
+    if (!arrayObj) {
+      return false;
+    }
+
+    for (uint32_t i = len; i-- > 0;) {
+      const Val& val = stack.back();
+      arrayObj->storeVal(val, i);
+      stack.popBack();
+    }
+
+    return pushRef(RefType::fromTypeIndex(typeIndex, false),
+                   AnyRef::fromJSObject(arrayObj));
+  }
+#endif  // ENABLE_WASM_GC
 };
 
 bool InitExprInterpreter::evaluate(JSContext* cx, Decoder& d) {
@@ -399,6 +535,54 @@ bool InitExprInterpreter::evaluate(JSContext* cx, Decoder& d) {
           return false;
         }
         CHECK(evalI64Mul());
+      }
+#endif
+#ifdef ENABLE_WASM_GC
+      case uint16_t(Op::GcPrefix): {
+        switch (op.b1) {
+          case uint32_t(GcOp::StructNew): {
+            uint32_t typeIndex;
+            if (!d.readTypeIndex(&typeIndex)) {
+              return false;
+            }
+            CHECK(evalStructNew(typeIndex));
+          }
+          case uint32_t(GcOp::StructNewDefault): {
+            uint32_t typeIndex;
+            if (!d.readTypeIndex(&typeIndex)) {
+              return false;
+            }
+            CHECK(evalStructNewDefault(typeIndex));
+          }
+          case uint32_t(GcOp::ArrayNew): {
+            uint32_t typeIndex;
+            if (!d.readTypeIndex(&typeIndex)) {
+              return false;
+            }
+            CHECK(evalArrayNew(typeIndex));
+          }
+          case uint32_t(GcOp::ArrayNewFixed): {
+            uint32_t typeIndex, len;
+            if (!d.readTypeIndex(&typeIndex)) {
+              return false;
+            }
+            if (!d.readVarU32(&len)) {
+              return false;
+            }
+            CHECK(evalArrayNewFixed(typeIndex, len));
+          }
+          case uint32_t(GcOp::ArrayNewDefault): {
+            uint32_t typeIndex;
+            if (!d.readTypeIndex(&typeIndex)) {
+              return false;
+            }
+            CHECK(evalArrayNewDefault(typeIndex));
+          }
+          default: {
+            MOZ_CRASH();
+          }
+        }
+        break;
       }
 #endif
       default: {

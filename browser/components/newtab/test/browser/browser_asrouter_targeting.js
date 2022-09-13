@@ -56,6 +56,16 @@ ChromeUtils.defineModuleGetter(
   "AboutNewTab",
   "resource:///modules/AboutNewTab.jsm"
 );
+ChromeUtils.defineModuleGetter(
+  this,
+  "ExperimentAPI",
+  "resource://nimbus/ExperimentAPI.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "ExperimentFakes",
+  "resource://testing-common/NimbusTestUtils.jsm"
+);
 
 // ASRouterTargeting.findMatchingMessage
 add_task(async function find_matching_message() {
@@ -1229,4 +1239,45 @@ add_task(async function check_userEnabledActiveColorway() {
     await ASRouterTargeting.Environment.userEnabledActiveColorway,
     "returns true when an active colorway is enabled"
   );
+});
+
+add_task(async function test_mr2022Holdback() {
+  await ExperimentAPI.ready();
+
+  ok(
+    !ASRouterTargeting.Environment.inMr2022Holdback,
+    "Should not be in holdback (no experiment)"
+  );
+
+  {
+    const doExperimentCleanup = await ExperimentFakes.enrollWithFeatureConfig({
+      featureId: "majorRelease2022",
+      value: {
+        onboarding: true,
+      },
+    });
+
+    ok(
+      !ASRouterTargeting.Environment.inMr2022Holdback,
+      "Should not be in holdback (onboarding = true)"
+    );
+
+    await doExperimentCleanup();
+  }
+
+  {
+    const doExperimentCleanup = await ExperimentFakes.enrollWithFeatureConfig({
+      featureId: "majorRelease2022",
+      value: {
+        onboarding: false,
+      },
+    });
+
+    ok(
+      ASRouterTargeting.Environment.inMr2022Holdback,
+      "Should be in holdback (onboarding = false)"
+    );
+
+    await doExperimentCleanup();
+  }
 });

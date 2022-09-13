@@ -52,9 +52,9 @@ interface nsICookieBannerService : nsISupports {
   Array<nsICookieRule> getCookiesForURI(in nsIURI aURI);
 
   /**
-   * Look up the click rule for a given domain.
+   * Look up the click rules for a given domain.
    */
-  nsIClickRule getClickRuleForDomain(in ACString aDomain);
+  Array<nsIClickRule> getClickRulesForDomain(in ACString aDomain);
 
   /**
    * Insert a cookie banner rule for a domain. If there was previously a rule
@@ -63,8 +63,7 @@ interface nsICookieBannerService : nsISupports {
   void insertRule(in nsICookieBannerRule aRule);
 
   /**
-  * Remove a cookie banner rule by domain. This is a no-op if there is no rule
-  * stored for aDomain.
-  */
-  void removeRuleForDomain(in ACString aDomain);
+   * Remove a cookie banner rule.
+   */
+  void removeRule(in nsICookieBannerRule aRule);
 };

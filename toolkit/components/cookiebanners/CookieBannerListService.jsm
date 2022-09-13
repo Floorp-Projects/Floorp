@@ -141,18 +141,29 @@ class CookieBannerListService {
   #removeRules(rules = []) {
     log("removeRules", rules);
 
+    // For each js rule, construct a temporary nsICookieBannerRule to pass into
+    // Services.cookieBanners.removeRule. For removal only domain and id are
+    // relevant.
     rules
-      .map(rule => rule.domain)
-      .forEach(Services.cookieBanners.removeRuleForDomain);
+      .map(({ id, domain }) => {
+        let rule = Cc["@mozilla.org/cookie-banner-rule;1"].createInstance(
+          Ci.nsICookieBannerRule
+        );
+        rule.id = id;
+        rule.domain = domain;
+        return rule;
+      })
+      .forEach(r => Services.cookieBanners.removeRule(r));
   }
 
   #importRules(rules) {
     log("importRules", rules);
 
-    rules.forEach(({ domain, cookies, click }) => {
+    rules.forEach(({ id, domain, cookies, click }) => {
       let rule = Cc["@mozilla.org/cookie-banner-rule;1"].createInstance(
         Ci.nsICookieBannerRule
       );
+      rule.id = id;
       rule.domain = domain;
 
       // Import the cookie rule.

@@ -40,7 +40,7 @@ XPCOMUtils.defineLazyGetter(lazy, "logConsole", () => {
 });
 
 class CookieBannerChild extends JSWindowActorChild {
-  #clickRule;
+  #clickRules;
   #originalBannerDisplay = null;
   #observerCleanUp;
 
@@ -65,22 +65,23 @@ class CookieBannerChild extends JSWindowActorChild {
     lazy.logConsole.debug(
       `Send message to get rule for ${principal.baseDomain}`
     );
-    let rule;
+    let rules;
 
     try {
-      rule = await this.sendQuery("CookieBanner::GetClickRule", {});
+      rules = await this.sendQuery("CookieBanner::GetClickRules", {});
     } catch (e) {
       lazy.logConsole.warn("Failed to get click rule from parent.");
+      return;
     }
 
-    lazy.logConsole.debug("Got rule:", rule);
-    // We can stop here if we don't have a rule or the target button to click.
-    if (!rule?.target) {
+    lazy.logConsole.debug("Got rules:", rules);
+    // We can stop here if we don't have a rule.
+    if (!rules.length) {
       this.#maybeSendTestMessage();
       return;
     }
 
-    this.#clickRule = rule;
+    this.#clickRules = rules;
 
     await this.handleCookieBanner();
 
@@ -95,43 +96,52 @@ class CookieBannerChild extends JSWindowActorChild {
   /**
    * The function to perform the core logic of handing the cookie banner. It
    * will detect the banner and click the banner button whenever possible
-   * according to the given click rule.
+   * according to the given click rules.
    *
    * @returns A promise which resolves when it finishes auto clicking.
    */
   async handleCookieBanner() {
-    // First, we detect if the banner is shown on the page
-    let bannerFound = await this.#detectBanner();
+    lazy.logConsole.debug("handleCookieBanner", this.document?.location.href);
 
-    if (!bannerFound) {
+    // First, we detect if the banner is shown on the page
+    let rules = await this.#detectBanner();
+
+    if (!rules.length) {
       // The banner was never shown.
       return;
     }
 
     // Hide the banner.
-    this.#hideBanner();
+    let matchedRule = this.#hideBanner(rules);
 
     let successClick = false;
     try {
-      successClick = await this.#clickTarget();
+      successClick = await this.#clickTarget(rules);
     } finally {
       if (!successClick) {
         // We cannot successfully click the target button. Show the banner on
         // the page so that user can interact with the banner.
-        this.#showBanner();
+        this.#showBanner(matchedRule);
       }
+    }
+    if (successClick) {
+      lazy.logConsole.info("Handled cookie banner.", {
+        url: this.document?.location.href,
+        rule: matchedRule,
+      });
     }
   }
 
   /**
    * The helper function to observe the changes on the document with a timeout.
    * It will call the check function when it observes mutations on the document
-   * body. Once the check function returns true, it will resolve with true.
-   * Otherwise, it will resolve to false when it times out.
+   * body. Once the check function returns a truthy value, it will resolve with
+   * that value. Otherwise, it will resolve with null on timeout.
    *
-   * @param {function} [checkFn] The check function.
-   * @param {Number} timeout The time out of the observer.
-   * @returns If the check function returns true before time out.
+   * @param {function} [checkFn] - The check function.
+   * @param {Number} timeout -  The timeout of the observer in ms.
+   * @returns {Promise} - A promise which resolves with the return value of the
+   * check function or null if the function times out.
    */
   #promiseObserve(checkFn, timeout) {
     if (this.#observerCleanUp) {
@@ -144,14 +154,21 @@ class CookieBannerChild extends JSWindowActorChild {
       let win = this.contentWindow;
       let timer;
 
-      let observer = new win.MutationObserver(() => {
-        if (checkFn?.()) {
-          cleanup(true, observer, timer);
+      let observer = new win.MutationObserver(mutationList => {
+        lazy.logConsole.debug(
+          "#promiseObserve: Mutation observed",
+          mutationList
+        );
+
+        let result = checkFn?.();
+        if (result) {
+          cleanup(result, observer, timer);
         }
       });
 
       timer = lazy.setTimeout(() => {
-        cleanup(false, observer);
+        lazy.logConsole.debug("#promiseObserve: timeout");
+        cleanup(null, observer);
       }, timeout);
 
       observer.observe(win.document.body, {
@@ -161,6 +178,12 @@ class CookieBannerChild extends JSWindowActorChild {
       });
 
       let cleanup = (result, observer, timer) => {
+        lazy.logConsole.debug(
+          "#promiseObserve cleanup",
+          result,
+          observer,
+          timer
+        );
         if (observer) {
           observer.disconnect();
           observer = null;
@@ -177,68 +200,117 @@ class CookieBannerChild extends JSWindowActorChild {
       // The clean up function to clean unfinished observer and timer when the
       // actor destroys.
       this.#observerCleanUp = () => {
-        cleanup(false, observer, timer);
+        cleanup(null, observer, timer);
       };
     });
   }
 
   // Detecting if the banner is shown on the page.
   async #detectBanner() {
-    if (!this.#clickRule) {
-      return false;
+    if (!this.#clickRules?.length) {
+      return [];
     }
     lazy.logConsole.debug("Starting to detect the banner");
 
-    let detector = () => {
-      let banner = this.document.querySelector(this.#clickRule.presence);
+    // Returns an array of rules for which a cookie banner exists for the
+    // current site.
+    let presenceDetector = () => {
+      lazy.logConsole.debug("presenceDetector start");
+      let matchingRules = this.#clickRules.filter(rule => {
+        let { presence } = rule;
 
-      return banner && this.#isVisible(banner);
+        let banner = this.document.querySelector(presence);
+        lazy.logConsole.debug("Testing banner el presence", {
+          result: banner,
+          rule,
+          presence,
+        });
+
+        if (!banner) {
+          return false;
+        }
+
+        return this.#isVisible(banner);
+      });
+
+      // For no rules matched return null explicitly so #promiseObserve knows we
+      // want to keep observing.
+      if (!matchingRules.length) {
+        return null;
+      }
+      return matchingRules;
     };
 
-    let found = detector();
+    lazy.logConsole.debug("Initial call to presenceDetector");
+    let rules = presenceDetector();
 
     // If we couldn't detect the banner at the beginning, we register an
     // observer with the timeout to observe if the banner was shown within the
     // timeout.
-    if (
-      !found &&
-      !(await this.#promiseObserve(detector, lazy.observeTimeout))
-    ) {
-      lazy.logConsole.debug("Couldn't detect the banner");
-      return false;
+    if (!rules?.length) {
+      lazy.logConsole.debug(
+        "Initial presenceDetector failed, registering MutationObserver",
+        rules
+      );
+      rules = await this.#promiseObserve(presenceDetector, lazy.observeTimeout);
     }
 
-    lazy.logConsole.debug("Detected the banner");
+    if (!rules?.length) {
+      lazy.logConsole.debug("Couldn't detect the banner", rules);
+      return [];
+    }
 
-    return true;
+    lazy.logConsole.debug("Detected the banner for rules", rules);
+
+    return rules;
   }
 
   // Clicking the target button.
-  async #clickTarget() {
-    if (!this.#clickRule) {
-      return false;
-    }
+  async #clickTarget(rules) {
     lazy.logConsole.debug("Starting to detect the target button");
 
-    let target = this.document.querySelector(this.#clickRule.target);
+    let targetEl;
+    for (let rule of rules) {
+      targetEl = this.document.querySelector(rule.target);
+      if (targetEl) {
+        break;
+      }
+    }
 
     // The target button is not available. We register an observer to wait until
     // it's ready.
-    if (!target) {
-      await this.#promiseObserve(() => {
-        target = this.document.querySelector(this.#clickRule.target);
+    if (!targetEl) {
+      targetEl = await this.#promiseObserve(() => {
+        for (let rule of rules) {
+          let el = this.document.querySelector(rule.target);
 
-        return !!target;
+          lazy.logConsole.debug("Testing button el presence", {
+            result: el,
+            rule,
+            target: rule.target,
+          });
+
+          if (el) {
+            lazy.logConsole.debug(
+              "Found button from rule",
+              rule,
+              rule.target,
+              el
+            );
+            return el;
+          }
+        }
+        return null;
       }, lazy.observeTimeout);
 
-      if (!target) {
+      if (!targetEl) {
         lazy.logConsole.debug("Cannot find the target button.");
         return false;
       }
     }
 
-    lazy.logConsole.debug("Found the target button, click it.");
-    target.click();
+    lazy.logConsole.debug("Found the target button, click it.", targetEl);
+    targetEl.click();
     return true;
   }
 
@@ -252,13 +324,32 @@ class CookieBannerChild extends JSWindowActorChild {
 
   // The helper function to hide the banner. It will store the original display
   // value of the banner, so it can be used to show the banner later if needed.
-  #hideBanner() {
-    let banner = this.document.querySelector(this.#clickRule.hide);
-
+  #hideBanner(rules) {
     if (this.#originalBannerDisplay) {
-      // We've hidden the banner.
-      return;
+      // We've already hidden the banner.
+      return null;
     }
+
+    let banner;
+    let rule;
+    for (let r of rules) {
+      banner = this.document.querySelector(r.hide);
+      if (banner) {
+        rule = r;
+        break;
+      }
+    }
+    // Failed to find banner el to hide.
+    if (!banner) {
+      lazy.logConsole.debug(
+        "Failed to find banner element to hide from rules.",
+        rules
+      );
+      return null;
+    }
+
+    lazy.logConsole.debug("Found banner element to hide from rules.", rules);
+
     this.#originalBannerDisplay = banner.style.display;
 
     // Change the display of the banner right before the style flush occurs to
@@ -266,16 +357,18 @@ class CookieBannerChild extends JSWindowActorChild {
     banner.ownerGlobal.requestAnimationFrame(() => {
       banner.style.display = "none";
     });
+
+    return rule;
   }
 
   // The helper function to show the banner by reverting the display of the
   // banner to the original value.
-  #showBanner() {
+  #showBanner({ hide }) {
     if (this.#originalBannerDisplay === null) {
       // We've never hidden the banner.
       return;
     }
-    let banner = this.document.querySelector(this.#clickRule.hide);
+    let banner = this.document.querySelector(hide);
 
     let originalDisplay = this.#originalBannerDisplay;
     this.#originalBannerDisplay = null;

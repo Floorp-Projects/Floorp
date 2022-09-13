@@ -212,6 +212,9 @@ class WasmArrayObject : public WasmGcObject {
   // Tracing and finalization
   static void obj_trace(JSTracer* trc, JSObject* object);
   static void obj_finalize(JS::GCContext* gcx, JSObject* object);
+
+  void storeVal(const wasm::Val& val, uint32_t itemIndex);
+  void fillVal(const wasm::Val& val, uint32_t itemIndex, uint32_t len);
 };
 
 // Helper to mark all locations that assume that the type of
@@ -294,6 +297,8 @@ class WasmStructObject : public WasmGcObject {
   static void obj_trace(JSTracer* trc, JSObject* object);
   static size_t obj_moved(JSObject* dst, JSObject* src);
   static void obj_finalize(JS::GCContext* gcx, JSObject* object);
+
+  void storeVal(const wasm::Val& val, uint32_t fieldIndex);
 };
 
 // This is ensured by the use of `alignas` on `WasmStructObject::inlineData_`.

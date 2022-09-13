@@ -30,37 +30,39 @@ class CookieBannerParent extends JSWindowActorParent {
       return undefined;
     }
 
-    if (
-      lazy.serviceMode == Ci.nsICookieBannerService.MODE_DISABLED ||
-      message.name != "CookieBanner::GetClickRule"
-    ) {
+    if (message.name != "CookieBanner::GetClickRules") {
       return undefined;
+    }
+
+    if (lazy.serviceMode == Ci.nsICookieBannerService.MODE_DISABLED) {
+      return [];
     }
     let domain = this.manager.documentPrincipal?.baseDomain;
 
     if (!domain) {
-      return null;
+      return [];
     }
 
-    let rule = Services.cookieBanners.getClickRuleForDomain(domain);
+    let rules = Services.cookieBanners.getClickRulesForDomain(domain);
 
-    if (!rule) {
-      return null;
+    if (!rules.length) {
+      return [];
     }
 
-    let target = rule.optOut;
+    return rules.map(rule => {
+      let target = rule.optOut;
 
-    if (
-      lazy.serviceMode == Ci.nsICookieBannerService.MODE_REJECT_OR_ACCEPT &&
-      !target
-    ) {
-      target = rule.optIn;
-    }
-
-    return {
-      hide: rule.hide ?? rule.presence,
-      presence: rule.presence,
-      target,
-    };
+      if (
+        lazy.serviceMode == Ci.nsICookieBannerService.MODE_REJECT_OR_ACCEPT &&
+        !target
+      ) {
+        target = rule.optIn;
+      }
+      return {
+        hide: rule.hide ?? rule.presence,
+        presence: rule.presence,
+        target,
+      };
+    });
   }
 }

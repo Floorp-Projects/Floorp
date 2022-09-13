@@ -227,6 +227,18 @@ function promiseACShown() {
   });
 }
 
+/**
+ * Open autocomplete popup on a field (if it exists) and wait for it to be shown
+ * @param {HTMLInputElement} input - input field to open autocomplete popup on
+ * @returns {Promise} of autocomplete items shown
+ */
+function openAutocompletePopup(input) {
+  input?.focus();
+  const promisePopupShown = promiseACShown();
+  synthesizeKey("KEY_ArrowDown");
+  return promisePopupShown;
+}
+
 function checkACTelemetryEvent(actualEvent, input, augmentedExtra) {
   ok(
     parseInt(actualEvent[4], 10) > 0,

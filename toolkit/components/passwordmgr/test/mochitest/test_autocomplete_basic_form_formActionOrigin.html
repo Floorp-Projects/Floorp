@@ -70,15 +70,13 @@ add_task(async function test_form1_menu_shows_logins_for_different_formActionOri
   await SimpleTest.promiseFocus(window);
   // Trigger autocomplete popup
   restoreForm();
-  let shownPromise = promiseACShown();
-  synthesizeKey("KEY_ArrowDown"); // open
-  let results = await shownPromise;
+  const autocompleteItems = await openAutocompletePopup();
 
   let popupState = await getPopupState();
   is(popupState.selectedIndex, -1, "Check no entries are selected upon opening");
 
   let expectedMenuItems = ["dfsu1"];
-  checkAutoCompleteResults(results, expectedMenuItems, window.location.host, "Check all menuitems are displayed correctly.");
+  checkAutoCompleteResults(autocompleteItems, expectedMenuItems, window.location.host, "Check all menuitems are displayed correctly.");
 
   synthesizeKey("KEY_ArrowDown"); // first item
   checkLoginForm(uname, "", pword, ""); // value shouldn't update just by selecting

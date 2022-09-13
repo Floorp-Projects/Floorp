@@ -62,9 +62,9 @@ class ToastNotificationHandler final
   nsresult SetWindowsTag(const nsAString& aWindowsTag);
 
   // Exposed for consumption by `ToastNotification.cpp`.
-  static nsresult FindLaunchURLForWindowsTag(const nsAString& aWindowsTag,
-                                             const nsAString& aAumid,
-                                             nsAString& aLaunchUrl);
+  static nsresult FindLaunchURLAndPrivilegedNameForWindowsTag(
+      const nsAString& aWindowsTag, const nsAString& aAumid, bool& aFoundTag,
+      nsAString& aLaunchUrl, nsAString& aPrivilegedName);
 
  protected:
   virtual ~ToastNotificationHandler();

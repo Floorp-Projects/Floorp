@@ -893,6 +893,14 @@ bool Instance::initElems(uint32_t tableIndex, const ElemSegment& seg,
   return true;
 }
 
+#ifdef ENABLE_WASM_GC
+RttValue* Instance::rttCanon(uint32_t typeIndex) const {
+  const TypeIdDesc& typeId = metadata().typeIds[typeIndex];
+  return *(RttValue**)addressOfTypeId(typeId);
+}
+
+#endif  // ENABLE_WASM_GC
+
 /* static */ int32_t Instance::tableInit(Instance* instance, uint32_t dstOffset,
                                          uint32_t srcOffset, uint32_t len,
                                          uint32_t segIndex,
