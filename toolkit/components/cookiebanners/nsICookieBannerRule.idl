@@ -15,6 +15,9 @@
 
 [builtinclass, scriptable, uuid(eb1904db-e0d1-4760-a721-db76b1ca3e94)]
 interface nsICookieBannerRule : nsISupports {
+    // Unique identifier for the rule. This is usually a UUID.
+    attribute ACString id;
+
     // Domain of the site to handle the cookie banner for.
     attribute ACString domain;
 
