@@ -57,29 +57,47 @@ export function createFaviconElement(image) {
 }
 
 export function onToggleContainer(detailsContainer) {
-  // <details> elements fire `toggle` events when added to the DOM with the
-  // "open" attribute set, but we don't want to record telemetry for those
-  // as they aren't the result of user action. Ensure we bail out:
-  if (
-    detailsContainer.open &&
-    detailsContainer.ownerDocument.readyState != "complete"
-  ) {
+  // Ignore early `toggle` events, which may either be fired because the
+  // UI sections update visibility on component connected (based on persisted
+  // UI state), or because <details> elements fire `toggle` events when added
+  // to the DOM with the "open" attribute set. In either case, we don't want
+  // to record telemetry as these events aren't the result of user action.
+  if (detailsContainer.ownerDocument.readyState != "complete") {
     return;
   }
 
-  const newFluentString = detailsContainer.open
+  const isOpen = detailsContainer.open;
+  const isTabPickup = detailsContainer.id === "tab-pickup-container";
+
+  const newFluentString = isOpen
     ? "firefoxview-collapse-button-hide"
     : "firefoxview-collapse-button-show";
 
   detailsContainer
     .querySelector(".twisty")
     .setAttribute("data-l10n-id", newFluentString);
-  Services.telemetry.recordEvent(
-    "firefoxview",
-    detailsContainer.id === "tab-pickup-container"
-      ? "tab_pickup_open"
-      : "closed_tabs_open",
-    "tabs",
-    detailsContainer.open.toString()
-  );
+
+  if (isTabPickup) {
+    Services.telemetry.recordEvent(
+      "firefoxview",
+      "tab_pickup_open",
+      "tabs",
+      isOpen.toString()
+    );
+    Services.prefs.setBoolPref(
+      "browser.tabs.firefox-view.ui-state.tab-pickup.open",
+      isOpen
+    );
+  } else {
+    Services.telemetry.recordEvent(
+      "firefoxview",
+      "closed_tabs_open",
+      "tabs",
+      isOpen.toString()
+    );
+    Services.prefs.setBoolPref(
+      "browser.tabs.firefox-view.ui-state.recently-closed-tabs.open",
+      isOpen
+    );
+  }
 }
