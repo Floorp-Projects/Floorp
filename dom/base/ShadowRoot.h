@@ -22,7 +22,6 @@
 
 class nsAtom;
 class nsIContent;
-class nsXBLPrototypeBinding;
 
 namespace mozilla {
 
@@ -158,6 +157,21 @@ class ShadowRoot final : public DocumentFragment,
    * AppendAssignedNode in the slot as needed.
    */
   SlotInsertionPoint SlotInsertionPointFor(nsIContent&);
+
+  /**
+   * Returns the effective slot name for a given slottable. In most cases, this
+   * is just the value of the slot attribute, if any, or the empty string, but
+   * this also deals with the <details> shadow tree specially.
+   */
+  void GetSlotNameFor(const nsIContent&, nsAString&) const;
+
+  /**
+   * Re-assign the current main summary if it has changed.
+   *
+   * Must be called only if mIsDetailsShadowTree is true.
+   */
+  enum class SummaryChangeReason { Deletion, Insertion };
+  void MaybeReassignMainSummary(SummaryChangeReason);
 
  public:
   void AddSlot(HTMLSlotElement* aSlot);
@@ -296,6 +310,9 @@ class ShadowRoot final : public DocumentFragment,
   nsTArray<const Element*> mParts;
 
   bool mIsUAWidget : 1;
+
+  // Whether this is the <details> internal shadow tree.
+  bool mIsDetailsShadowTree : 1;
 
   // https://dom.spec.whatwg.org/#shadowroot-available-to-element-internals
   bool mIsAvailableToElementInternals : 1;
