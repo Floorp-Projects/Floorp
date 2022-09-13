@@ -19559,7 +19559,7 @@ class CGExampleClass(CGBindingImplClass):
             extradeclarations = (
                 "public:\n"
                 "  NS_DECL_CYCLE_COLLECTING_ISUPPORTS\n"
-                "  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(%s)\n"
+                "  NS_DECL_CYCLE_COLLECTION_WRAPPERCACHE_CLASS(%s)\n"
                 "\n" % self.nativeLeafName(descriptor)
             )
 
