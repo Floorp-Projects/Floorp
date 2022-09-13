@@ -24,6 +24,8 @@ const NEWTAB_PREF = "browser.newtabpage.enabled";
 let sandbox;
 
 add_setup(async () => {
+  requestLongerTimeout(2);
+
   await setAboutWelcomePref(true);
 
   sandbox = sinon.createSandbox();

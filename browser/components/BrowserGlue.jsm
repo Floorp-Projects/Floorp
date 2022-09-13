@@ -4308,27 +4308,42 @@ BrowserGlue.prototype = {
     const data = await lazy.OnboardingMessageProvider.getUpgradeMessage();
     const { gBrowser } = lazy.BrowserWindowTracker.getTopWindow();
 
-    // Nice to have -- if the already-selected tab matches isBlankPageUrl(),
-    // don't bother opening a new tab to do this.
-    const tab = gBrowser.addTrustedTab("about:home", {
+    // We'll be adding a new tab open the tab-modal dialog in.
+    let tab;
+
+    const upgradeTabsProgressListener = {
+      onLocationChange(
+        aBrowser,
+        aWebProgress,
+        aRequest,
+        aLocationURI,
+        aFlags,
+        aIsSimulated
+      ) {
+        if (aBrowser === tab.linkedBrowser) {
+          // We're now far enough along in the load that we no longer have to
+          // worry about a call to onLocationChange triggering SubDialog.abort,
+          // so display the dialog
+          const config = {
+            type: "SHOW_SPOTLIGHT",
+            data,
+          };
+          lazy.SpecialMessageActions.handleAction(config, tab.linkedBrowser);
+
+          gBrowser.removeTabsProgressListener(upgradeTabsProgressListener);
+        }
+      },
+    };
+
+    // Make sure we're ready to show the dialog once onLocationChange gets
+    // called.
+    gBrowser.addTabsProgressListener(upgradeTabsProgressListener);
+
+    tab = gBrowser.addTrustedTab("about:home", {
       relatedToCurrent: true,
     });
 
-    // Select a tab, and wait for it to be selected.
-    //
-    // XXX is there any possibility this could race with session restore and
-    // the listener could be called for a different tab?
-    await new Promise(resolve => {
-      gBrowser.addEventListener("TabSwitchDone", resolve, { once: true });
-      gBrowser.selectedTab = tab;
-    });
-
-    // Now that the tab is ready, show the upgrade dialog in it
-    const config = {
-      type: "SHOW_SPOTLIGHT",
-      data,
-    };
-    lazy.SpecialMessageActions.handleAction(config, tab.linkedBrowser);
+    gBrowser.selectedTab = tab;
   },
 
   async _maybeShowDefaultBrowserPrompt() {
