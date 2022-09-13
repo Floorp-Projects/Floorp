@@ -3145,11 +3145,11 @@ static bool IsVisibleAndNotInReplacedElement(nsIFrame* aFrame) {
       aFrame->HasAnyStateBits(NS_FRAME_IS_NONDISPLAY)) {
     return false;
   }
-  if (aFrame->IsContentHidden()) {
+  if (aFrame->HidesContent()) {
     return false;
   }
   for (nsIFrame* f = aFrame->GetParent(); f; f = f->GetParent()) {
-    if (f->IsContentHidden()) {
+    if (f->HidesContent()) {
       return false;
     }
     if (f->IsFrameOfType(nsIFrame::eReplaced) &&
