@@ -131,7 +131,7 @@ class ProviderQuickActions extends UrlbarProvider {
     // but not when we are in the normal url mode on first focus.
     if (
       results.length > ACTIONS_SHOWN_FOCUS &&
-      !queryContext.searchString &&
+      !input &&
       !queryContext.searchMode
     ) {
       results.length = ACTIONS_SHOWN_FOCUS;

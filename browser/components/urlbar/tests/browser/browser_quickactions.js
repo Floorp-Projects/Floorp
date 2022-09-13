@@ -695,6 +695,16 @@ add_task(async function test_update() {
   }
 });
 
+async function hasQuickActions(win) {
+  for (let i = 0, count = UrlbarTestUtils.getResultCount(win); i < count; i++) {
+    const { result } = await UrlbarTestUtils.getDetailsOfResultAt(win, i);
+    if (result.providerName === "quickactions") {
+      return true;
+    }
+  }
+  return false;
+}
+
 add_task(async function test_show_in_zero_prefix() {
   for (const showInZeroPrefix of [false, true]) {
     info(`Test when quickactions.showInZeroPrefix pref is ${showInZeroPrefix}`);
@@ -706,23 +716,53 @@ add_task(async function test_show_in_zero_prefix() {
       value: "",
     });
 
-    let exists = false;
-    for (
-      let i = 0, count = UrlbarTestUtils.getResultCount(window);
-      i < count;
-      i++
-    ) {
-      const { result } = await UrlbarTestUtils.getDetailsOfResultAt(window, i);
-      if (result.providerName === "quickactions") {
-        exists = true;
-        break;
-      }
-    }
     Assert.equal(
-      exists,
+      await hasQuickActions(window),
       showInZeroPrefix,
       "Result for quick actions is as expected"
     );
     await SpecialPowers.popPrefEnv();
   }
+});
+
+add_task(async function test_whitespace() {
+  info("Test with quickactions.showInZeroPrefix pref is false");
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.urlbar.quickactions.showInZeroPrefix", false]],
+  });
+  await UrlbarTestUtils.promiseAutocompleteResultPopup({
+    window,
+    value: " ",
+  });
+  Assert.equal(
+    await hasQuickActions(window),
+    false,
+    "Result for quick actions is not shown"
+  );
+  await SpecialPowers.popPrefEnv();
+
+  info("Test with quickactions.showInZeroPrefix pref is true");
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.urlbar.quickactions.showInZeroPrefix", true]],
+  });
+  await UrlbarTestUtils.promiseAutocompleteResultPopup({
+    window,
+    value: "",
+  });
+  const countForEmpty = window.document.querySelectorAll(
+    ".urlbarView-quickaction-row"
+  ).length;
+  await UrlbarTestUtils.promiseAutocompleteResultPopup({
+    window,
+    value: " ",
+  });
+  const countForWhitespace = window.document.querySelectorAll(
+    ".urlbarView-quickaction-row"
+  ).length;
+  Assert.equal(
+    countForEmpty,
+    countForWhitespace,
+    "Count of quick actions of empty and whitespace are same"
+  );
+  await SpecialPowers.popPrefEnv();
 });
