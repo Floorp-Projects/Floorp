@@ -3975,6 +3975,16 @@ var SessionStoreInternal = {
       }
     }
 
+    if (
+      tabbrowser.selectedTab.hidden &&
+      tabbrowser.visibleTabs.length === removableTabs.length
+    ) {
+      // If all the visible tabs are also removable and the selected tab is hidden, we will later remove the
+      // visible tabs causing the browser to automatically close because the only tab left is hidden.
+      // To prevent the browser from automatically closing, we will leave one other tab open.
+      removableTabs.shift();
+    }
+
     if (tabbrowser.tabs.length == removableTabs.length) {
       canOverwriteTabs = true;
     } else {
