@@ -485,3 +485,116 @@ toolbarbutton.bookmark-item {
 #firefox-view-button {
   list-style-image: url("chrome://branding/content/icon32.png");
 }
+
+#sidebar-button2 {
+  list-style-image: url("chrome://browser/skin/sidebars.svg");
+  fill: rgb(0, 192, 209) !important;
+}
+
+.browser-sidebar2 {
+  -moz-box-ordinal-group: 0 !important;
+  background: var(--toolbar-bgcolor);
+  border: var(--win-sidebar-bgcolor) 0.1px solid;
+} 
+
+#sidebar-select-box {
+  background: var(--toolbar-bgcolor);
+}
+
+#sidebar-select-box {
+  -moz-box-ordinal-group: 0 !important;
+}
+
+.sidepanel-icon {
+  appearance: none;
+  -moz-context-properties: fill, fill-opacity;
+  border-radius: 4px;
+  color: inherit;
+  fill: currentColor;
+  margin: 0px 2.5px 6px 0.2em;
+  padding-left: 8px;
+  scale: 1.0;
+  padding-top: 9px;
+  padding-bottom: 10px;
+}
+
+#sidebar-select-box{
+border-left: solid 1px var(--arrowpanel-border-color);
+border-right: solid 1px var(--arrowpanel-border-color);
+}
+
+.sidebar2-icon {
+  appearance: none;
+  -moz-context-properties: fill, fill-opacity;
+  border-radius: 4px;
+  color: inherit;
+  fill: currentColor;
+  padding: 2px;
+  width: 20px;
+  height: auto;
+}
+
+@media not (prefers-contrast) {
+  .sidebar2-icon:hover, #preferences-icon:hover, .sidepanel-icon:hover {
+    background-color: color-mix(in srgb, currentColor 10%, transparent);
+  }
+}
+
+@media (prefers-contrast) {
+  .sidebar2-icon:hover, .sidepanel-icon:hover {
+    outline: 1px solid currentColor;
+  }
+}
+
+.sidebar2-icon:hover:active, .sidepanel-icon:hover:active {
+  background-color: color-mix(in srgb, currentColor 20%, transparent);
+}
+
+#sidebar2-back {
+  list-style-image: url("chrome://browser/skin/back.svg");
+}
+
+#sidebar2-forward {
+  list-style-image: url("chrome://browser/skin/forward.svg");
+}
+
+#sidebar2-reload {
+  list-style-image: url("chrome://global/skin/icons/reload.svg");
+}
+
+#select-browser-manager {
+  list-style-image: url("chrome://browser/skin/lepton/toolbox.svg");
+}
+
+#select-bookmark{
+  list-style-image: url("chrome://browser/skin/bookmark.svg");
+}
+
+#select-history {
+  list-style-image: url("chrome://browser/skin/history.svg");
+}
+
+#select-download {
+  list-style-image: url("chrome://browser/skin/downloads/downloads.svg");
+}
+
+#select-TST {
+  padding-left: 6px;
+  list-style-image: url("chrome://browser/skin/TST-dark.svg");
+}
+
+#select-CustomURL{
+  list-style-image: url("chrome://global/skin/icons/defaultFavicon.svg");
+}
+
+#preferences-icon{
+  list-style-image: url("chrome://browser/skin/settings.svg");
+}
+
+#passwords-icon{
+  list-style-image: url("chrome://browser/skin/login.svg");
+}
+
+#addons-icon{
+  list-style-image: url("chrome://mozapps/skin/extensions/extension.svg");
+}

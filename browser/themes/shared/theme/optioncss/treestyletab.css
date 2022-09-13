@@ -1,0 +1,145 @@
+/* Sidebar min and max width removal */
+    #sidebar {
+    max-width: none !important;
+    min-width: 0px !important;
+    }
+    /* Hide splitter, when using Tree Style Tab. */
+    #sidebar-box[sidebarcommand="treestyletab_piro_sakura_ne_jp-sidebar-action"] + #sidebar-splitter {
+    display: none !important;
+    }
+    /* Hide sidebar header, when using Tree Style Tab. */
+    #sidebar-box[sidebarcommand="treestyletab_piro_sakura_ne_jp-sidebar-action"] #sidebar-header {
+    visibility: collapse;
+    }
+    
+    /* Shrink sidebar until hovered, when using Tree Style Tab. */
+    :root {
+    --thin-tab-width: 30px;
+    --wide-tab-width: 200px;
+    }
+    #sidebar-box:not([sidebarcommand="treestyletab_piro_sakura_ne_jp-sidebar-action"]) {
+    min-width: var(--wide-tab-width) !important;
+    max-width: none !important;
+    }
+    #sidebar-box[sidebarcommand="treestyletab_piro_sakura_ne_jp-sidebar-action"] {
+    position: relative !important;
+    transition: all 100ms !important;
+    min-width: 3.65em !important;
+    max-width: 3.65em !important;
+    }
+    #sidebar-box[sidebarcommand="treestyletab_piro_sakura_ne_jp-sidebar-action"]:hover {
+    transition: all 200ms !important;
+    transition-delay: 0.2s !important;
+    min-width: 20em !important;
+    max-width: 20em !important;
+    margin-right: calc((20em - 3.65em) * -1) !important;
+    z-index: 1;
+    }
+    /*Allow vertical tabs to be used on the right side as well.*/
+    #sidebar-box[positionend="true"][sidebarcommand="treestyletab_piro_sakura_ne_jp-sidebar-action"]:hover {
+    margin-right: 0 !important;
+    }
+    /*Countermeasure for issue where page width changes when vertical tabs are moved to the right.*/
+    #sidebar-box[positionend="true"][sidebarcommand="treestyletab_piro_sakura_ne_jp-sidebar-action"] ~ vbox {
+    transition: all 100ms !important;
+    }
+    #sidebar-box[positionend="true"][sidebarcommand="treestyletab_piro_sakura_ne_jp-sidebar-action"]:hover ~ vbox {
+    transition: all 200ms !important;
+    transition-delay: 0.2s !important;
+    margin-right: calc(-20em + 3.65em) !important;
+    }
+    
+    /* Hide border on tab bar, force its state to 'scroll', adjust margin-left for width of scrollbar. */
+    #tabbar { border: 0; overflow-y: scroll !important; margin-left: -18px !important; scrollbar-width: auto; }
+    
+    /* Hide .twisty and adjust margins so favicons have 7px on left. */
+    tab-item .twisty {
+    visibility: hidden;
+    margin-left: -12px;
+    }
+    
+    /* Push tab labels slightly to the right so they're completely hidden in collapsed state. */
+    tab-item .label {
+    margin-left: 7px;
+    }
+    
+    /* Hide close buttons on tabs. */
+    tab-item .closebox {
+    visibility: collapse;
+    }
+    
+    tab-item:hover .closebox {
+    visibility: initial;
+    }
+    
+    /* Hide sound playing/muted button. */
+    .sound-button::before {
+    display: none !important;
+    }
+    
+    /* Center the new tab sign in collapsed state. */
+    .newtab-button{
+    padding-left: 0.48em !important;
+    }
+    
+    /* ################################################ */
+    /* ##### COLOR THEME ############################## */
+    /* ################################################ */
+    
+    :root {
+    background-color: #383838;
+    }
+    #tabbar {
+    border-right: 1px solid #1d1d1d;
+    box-shadow: none !important;
+    }
+    tab-item {
+    box-shadow: none !important;
+    }
+    tab-item:hover {
+    filter: opacity(80%) drop-shadow(0px 0px 0px #3498DB);
+    }
+    
+    /* Adjust style for tab that has sound playing. */
+    tab-item.sound-playing .favicon::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    border-radius: 50%;
+    background: #FFFFFF;
+    animation: pulse 2s ease-out 0s infinite;
+    z-index: -1;
+    opacity: 0;
+    }
+    
+    /* Adjust style for tab that is muted. */
+    tab-item.muted {
+    opacity: 0.5;
+    }
+    
+    /* Better alignment of Favicons when collapsed */
+    tab-item[data-level][data-level="0"] tab-item-substance {
+    margin-left: 2% !important;
+    }
+    tab-item[data-level][data-level="1"] tab-item-substance {
+    margin-left: 4% !important;
+    }
+    tab-item[data-level][data-level="2"] tab-item-substance {
+    margin-left: 6% !important;
+    }
+    tab-item[data-level][data-level="3"] tab-item-substance {
+    margin-left: 8% !important;
+    }
+    tab-item[data-level][data-level="4"] tab-item-substance {
+    margin-left: 10% !important;
+    }
+    tab-item[data-level][data-level="5"] tab-item-substance {
+    margin-left: 12% !important;
+    }
+    tab-item[data-level][data-level="6"] tab-item-substance {
+    margin-left: 14% !important;
+    }
+    tab-item[data-level][data-level="7"] tab-item-substance {
+    margin-left: 16% !important;
+    }
