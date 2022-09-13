@@ -10,15 +10,7 @@ REPO_BRANCH_NAME='firefox-android'
 TAG_PREFIX='components-'
 MONOREPO_URL='git@github.com:mozilla-mobile/firefox-android.git'
 
-EXPRESSIONS_FILE_PATH='/tmp/git/expressions.txt'
-REPLACE_MESSAGE_EXPRESSIONS=$(cat <<'EOF'
-regex:^==>[components] 
-regex:(([fF]or|[iI]ssue|[fF]ix(es)?|[cC]loses?)\s+){1,2}#(\d+)==>\1mozilla-mobile/android-components#\4
-regex:([fF]or|[iI]ssue|[fF]ixes?|[cC]loses?)\s+[fF]enix\s*#(\d+)==>\1mozilla-mobile/fenix#\2
-regex:\(#(\d+)\)==>(mozilla-mobile/android-components#\1)
-regex:(\s+)#(\d+)==>\1(mozilla-mobile/android-components#\2)
-EOF
-)
+EXPRESSIONS_FILE_PATH="$SCRIPT_DIR/data/message-expressions.txt"
 
 
 function _is_github_authenticated() {
@@ -41,7 +33,6 @@ function _test_prerequisites() {
 function _setup_temporary_repo() {
     rm -rf "$REPO_PATH"
     mkdir -p "$REPO_PATH"
-    echo "$REPLACE_MESSAGE_EXPRESSIONS" > "$EXPRESSIONS_FILE_PATH"
 
     git clone "git@github.com:mozilla-mobile/$REPO_NAME_TO_SYNC.git" "$REPO_PATH"
     cd "$REPO_PATH"
@@ -52,6 +43,11 @@ function _update_repo_branch() {
     git checkout "$REPO_BRANCH_NAME"
     git rebase main
     git push origin "$REPO_BRANCH_NAME" --force
+}
+
+function _update_repo_numbers() {
+    "$SCRIPT_DIR/generate-repo-numbers.py"
+    "$SCRIPT_DIR/generate-replace-message-expressions.py"
 }
 
 function _rewrite_git_history() {
@@ -76,13 +72,13 @@ function _merge_histories() {
 
 function _clean_up_temporary_repo() {
     rm -rf "$REPO_PATH"
-    rm -f "$EXPRESSIONS_FILE_PATH"
 }
 
 
 _test_prerequisites
 _setup_temporary_repo
 _update_repo_branch
+_update_repo_numbers
 _rewrite_git_history
 _remove_old_tags
 _merge_histories
