@@ -685,6 +685,53 @@ const ASRouterTriggerListeners = new Map([
       },
     },
   ],
+  [
+    "nthTabClosed",
+    {
+      id: "nthTabClosed",
+      _initialized: false,
+      _triggerHandler: null,
+      // Number of tabs the user closed this session
+      _closedTabs: 0,
+
+      init(triggerHandler) {
+        this._triggerHandler = triggerHandler;
+        if (!this._initialized) {
+          lazy.EveryWindow.registerCallback(
+            this.id,
+            win => {
+              win.addEventListener("TabClose", this);
+            },
+            win => {
+              win.removeEventListener("TabClose", this);
+            }
+          );
+          this._initialized = true;
+        }
+      },
+      handleEvent(event) {
+        if (this._initialized) {
+          if (!event.target.ownerGlobal.gBrowser) {
+            return;
+          }
+          const { gBrowser } = event.target.ownerGlobal;
+          this._closedTabs++;
+          this._triggerHandler(gBrowser.selectedBrowser, {
+            id: this.id,
+            context: { tabsClosedCount: this._closedTabs },
+          });
+        }
+      },
+      uninit() {
+        if (this._initialized) {
+          lazy.EveryWindow.unregisterCallback(this.id);
+          this._initialized = false;
+          this._triggerHandler = null;
+          this._closedTabs = 0;
+        }
+      },
+    },
+  ],
 ]);
 
 const EXPORTED_SYMBOLS = ["ASRouterTriggerListeners"];

@@ -239,6 +239,18 @@
           "additionalProperties": false,
           "required": ["id"],
           "description": "Happens when navigating to about:firefoxview or other about pages with Feature Callout tours enabled"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "string",
+              "enum": ["nthTabClosed"]
+            }
+          },
+          "additionalProperties": false,
+          "required": ["id"],
+          "description": "Happens when the user closes n or more tabs in a session"
         }
       ]
     }

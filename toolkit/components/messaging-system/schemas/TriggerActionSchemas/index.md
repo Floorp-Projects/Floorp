@@ -134,3 +134,17 @@ Watch for changes on any number of preferences. Runs when a pref is added, remov
 ### `featureCalloutCheck`
 
 Happens when navigating to about:firefoxview or other about pages with Feature Callout tours enabled
+
+### `nthTabClosed`
+
+Happens when the user closes n or more tabs in a session
+
+```js
+// Register a message with the following trigger id and
+// include the tabsClosedCount context variable in the targeting.
+// Here, the message triggers after two or more tabs are closed.
+{
+  id: "nthTabClosed",
+  targeting: "tabsClosedCount >= 2"
+}
+```
