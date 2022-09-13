@@ -13,7 +13,7 @@ const state = {
         {
           entries: [
             {
-              url: "http://example.org/",
+              url: "https://example.org/",
               triggeringPrincipal_base64,
             },
           ],
