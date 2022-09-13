@@ -12,6 +12,7 @@ if (Services.prefs.getBoolPref("floorp.material.effect.enable", false)) {
   document.getElementsByTagName("head")[0].insertAdjacentElement("beforeend",Tag);
   Tag.setAttribute("id", "micaforeveryone");
 }
+
 Services.prefs.addObserver("floorp.material.effect.enable", function(){
  if (Services.prefs.getBoolPref("floorp.material.effect.enable", false)) {
    var Tag = document.createElement("style");
@@ -28,16 +29,17 @@ Services.prefs.addObserver("floorp.material.effect.enable", function(){
     Tag.innerText = `@import url(chrome://browser/skin/optioncss/treestyletab.css)`
     document.getElementsByTagName("head")[0].insertAdjacentElement("beforeend",Tag);
     Tag.setAttribute("id", "treestyletabopti");
- }
- Services.prefs.addObserver("floorp.Tree-type.verticaltab.optimization", function(){
-   if (Services.prefs.getBoolPref("floorp.Tree-type.verticaltab.optimization", false)) {
-     var Tag = document.createElement("style");
-     Tag.innerText = `@import url(chrome://browser/skin/optioncss/treestyletab.css)`
-     document.getElementsByTagName("head")[0].insertAdjacentElement("beforeend",Tag);
-     Tag.setAttribute("id", "treestyletabopti");
-   }
-   else {
-    document.getElementById("treestyletabopti").remove();
+  }
+
+  Services.prefs.addObserver("floorp.Tree-type.verticaltab.optimization", function(){
+    if (Services.prefs.getBoolPref("floorp.Tree-type.verticaltab.optimization", false)) {
+      var Tag = document.createElement("style");
+      Tag.innerText = `@import url(chrome://browser/skin/optioncss/treestyletab.css)`
+      document.getElementsByTagName("head")[0].insertAdjacentElement("beforeend",Tag);
+      Tag.setAttribute("id", "treestyletabopti");
+    }
+    else {
+      document.getElementById("treestyletabopti").remove();
   }});
 
   if (Services.prefs.getBoolPref("floorp.optimized.msbutton.ope", false)) {    
@@ -54,27 +56,25 @@ Services.prefs.addObserver("floorp.material.effect.enable", function(){
      Tag.setAttribute("id", "optimizedmsbuttonope");
    }
    else {
-     const menuid =document.getElementById("optimizedmsbuttonope");
-     menuid.remove();
+    document.getElementById("optimizedmsbuttonope").remove();
   }});
 
-if (Services.prefs.getBoolPref("floorp.bookmarks.bar.focus.mode", false)) {    
-  var Tag = document.createElement("style");
-  Tag.innerText = `@import url(chrome://browser/skin/optioncss/bookmarkbar_autohide.css)`
-  document.getElementsByTagName("head")[0].insertAdjacentElement("beforeend",Tag);
-  Tag.setAttribute("id", "bookmarkbarfocus");
-}
-
-Services.prefs.addObserver("floorp.bookmarks.bar.focus.mode", function(){
- if (Services.prefs.getBoolPref("floorp.bookmarks.bar.focus.mode", false)) {
-   var Tag = document.createElement("style");
-   Tag.innerText = `@import url(chrome://browser/skin/optioncss/bookmarkbar_autohide.css)`
-   document.getElementsByTagName("head")[0].insertAdjacentElement("beforeend",Tag);
-   Tag.setAttribute("id", "bookmarkbarfocus");
- }
- else {
+  if (Services.prefs.getBoolPref("floorp.bookmarks.bar.focus.mode", false)) {    
+    var Tag = document.createElement("style");
+    Tag.innerText = `@import url(chrome://browser/skin/optioncss/bookmarkbar_autohide.css)`
+    document.getElementsByTagName("head")[0].insertAdjacentElement("beforeend",Tag);
+    Tag.setAttribute("id", "bookmarkbarfocus");
+  }
+   Services.prefs.addObserver("floorp.bookmarks.bar.focus.mode", function(){
+     if (Services.prefs.getBoolPref("floorp.bookmarks.bar.focus.mode", false)) {
+     var Tag = document.createElement("style");
+     Tag.innerText = `@import url(chrome://browser/skin/optioncss/bookmarkbar_autohide.css)`
+     document.getElementsByTagName("head")[0].insertAdjacentElement("beforeend",Tag);
+     Tag.setAttribute("id", "bookmarkbarfocus");
+    }
+  else {
    document.getElementById("bookmarkbarfocus").remove();
- }});
+  }});
 
 
 if (Services.prefs.getBoolPref("floorp.bookmarks.fakestatus.mode", false)) {
@@ -104,8 +104,7 @@ if (Services.prefs.getBoolPref("floorp.bookmarks.fakestatus.mode", false)) {
       Tag.setAttribute("id", "searchbartop");
     }
     else {
-      const menuid =document.getElementById("searchbartop");
-      menuid.remove();
+      document.getElementById("searchbartop").remove();
     }
    }
  )
@@ -142,3 +141,90 @@ Services.prefs.addObserver("floorp.downloading.red.color", function(){
  else {
    document.getElementById("dlredcolor").remove();
  }});
+
+ /*------------------------------------------- sidebar -------------------------------------------*/
+
+ if (Services.prefs.getBoolPref("floorp.browser.sidebar.right", false)) {    
+  var Tag = document.createElement("style");
+  Tag.innerText = `.browser-sidebar2 {-moz-box-ordinal-group: 10 !important;}#sidebar-select-box{-moz-box-ordinal-group: 15 !important;} #sidebar-splitter2 {-moz-box-ordinal-group: 9 !important;}`;
+  document.getElementsByTagName("head")[0].insertAdjacentElement("beforeend",Tag);
+  Tag.setAttribute("id", "sidebar2css");
+}
+Services.prefs.addObserver("floorp.browser.sidebar.right", function(){
+  if (Services.prefs.getBoolPref("floorp.browser.sidebar.right", false)) {
+    var Tag = document.createElement("style");
+    Tag.innerText = `.browser-sidebar2 {-moz-box-ordinal-group: 10 !important;}#sidebar-select-box{-moz-box-ordinal-group: 15 !important;} #sidebar-splitter2 {-moz-box-ordinal-group: 9 !important;}`;
+    document.getElementsByTagName("head")[0].insertAdjacentElement("beforeend",Tag);
+    Tag.setAttribute("id", "sidebar2css");
+  }
+  else {
+    document.getElementById("sidebar2css").remove();
+  }});
+
+  if (!Services.prefs.getBoolPref("floorp.browser.sidebar.enable", false)) {
+      var Tag = document.createElement("style");
+      Tag.innerText = `#sidebar-button2, #wrapper-sidebar-button2, .browser-sidebar2, #sidebar-select-box  {display: none !important;}`;
+      document.getElementsByTagName("head")[0].insertAdjacentElement("beforeend",Tag)
+  }
+
+   if (Services.prefs.getBoolPref("floorp.browser.sidebar.enable", false)) {
+     Services.prefs.addObserver("floorp.browser.sidebar2.mode", function(){
+      setSidebarMode();
+  })};
+
+  if (Services.prefs.getBoolPref("floorp.browser.sidebar.enable", false)) {
+    Services.prefs.addObserver("floorp.browser.sidebar2.customurl1", function(){
+     setSidebarMode();
+     setCustomURL1Favicon();
+     setSidebarIconView();
+  })
+    Services.prefs.addObserver("floorp.browser.sidebar2.customurl2", function(){
+     setSidebarMode();
+     setCustomURL2Favicon();
+     setSidebarIconView();
+  })
+    Services.prefs.addObserver("floorp.browser.sidebar2.customurl3", function(){
+     setSidebarMode();
+     setCustomURL3Favicon();
+     setSidebarIconView();
+  })
+    Services.prefs.addObserver("floorp.browser.sidebar2.customurl4", function(){
+     setSidebarMode();
+     setCustomURL4Favicon();
+     setSidebarIconView();
+  })
+    Services.prefs.addObserver("floorp.browser.sidebar2.customurl5", function(){
+     setSidebarMode();
+     setCustomURL5Favicon();
+     setSidebarIconView();
+  })
+    Services.prefs.addObserver("floorp.browser.sidebar2.customurl6", function(){
+     setSidebarMode();
+     setCustomURL6Favicon();
+     setSidebarIconView();
+  })
+    Services.prefs.addObserver("floorp.browser.sidebar2.customurl7", function(){
+     setSidebarMode();
+     setCustomURL7Favicon();
+     setSidebarIconView();
+  })
+    Services.prefs.addObserver("floorp.browser.sidebar2.customurl8", function(){
+     setSidebarMode();
+     setCustomURL8Favicon();
+     setSidebarIconView();
+  })
+    Services.prefs.addObserver("floorp.browser.sidebar2.customurl9", function(){
+     setSidebarMode();
+     setCustomURL9Favicon();
+     setSidebarIconView();
+  })
+  Services.prefs.addObserver("floorp.browser.sidebar2.customurl10", function(){
+    setSidebarMode();
+    setCustomURL10Favicon();
+    setSidebarIconView();
+ })
+};
+
+setSidebarIconView();
+setSidebarMode();
+setAllfavicons();
