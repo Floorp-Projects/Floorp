@@ -11,7 +11,6 @@ import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.platform.app.InstrumentationRegistry
-import androidx.test.rule.ActivityTestRule
 import androidx.test.uiautomator.By
 import androidx.test.uiautomator.UiDevice
 import androidx.test.uiautomator.Until
@@ -21,10 +20,8 @@ import org.junit.Before
 import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
-import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.helpers.AndroidAssetDispatcher
-import org.mozilla.fenix.helpers.FeatureSettingsHelper
 import org.mozilla.fenix.helpers.HomeActivityTestRule
 import org.mozilla.fenix.helpers.TestAssetHelper
 import org.mozilla.fenix.helpers.TestHelper.mDevice
@@ -40,14 +37,14 @@ import tools.fastlane.screengrab.locale.LocaleTestRule
 class MenuScreenShotTest : ScreenshotTest() {
     private lateinit var mockWebServer: MockWebServer
     private lateinit var mDevice: UiDevice
-    private val featureSettingsHelper = FeatureSettingsHelper()
 
     @Rule
     @JvmField
     val localeTestRule = LocaleTestRule()
 
     @get:Rule
-    var mActivityTestRule: ActivityTestRule<HomeActivity> = HomeActivityTestRule()
+    var mActivityTestRule = HomeActivityTestRule()
+    private val featureSettingsHelper = mActivityTestRule.featureSettingsHelper
 
     @Before
     fun setUp() {
@@ -62,7 +59,6 @@ class MenuScreenShotTest : ScreenshotTest() {
 
     @After
     fun tearDown() {
-        featureSettingsHelper.resetAllFeatureFlags()
         mActivityTestRule.getActivity().finishAndRemoveTask()
         mockWebServer.shutdown()
     }

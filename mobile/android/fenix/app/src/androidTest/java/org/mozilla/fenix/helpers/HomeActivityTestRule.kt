@@ -6,6 +6,7 @@
 
 package org.mozilla.fenix.helpers
 
+import android.app.Activity
 import android.view.ViewConfiguration.getLongPressTimeout
 import androidx.test.espresso.intent.rule.IntentsTestRule
 import androidx.test.rule.ActivityTestRule
@@ -28,6 +29,18 @@ class HomeActivityTestRule(
     private val skipOnboarding: Boolean = false,
 ) :
     ActivityTestRule<HomeActivity>(HomeActivity::class.java, initialTouchMode, launchActivity) {
+
+    /**
+     * Helper for updating various app settings that could interfere with the tests.
+     * Tests that use [HomeActivityTestRule] are expected to rely on this [FeatureSettingsHelper]
+     * instead of instantiating their own.
+     *
+     * The main benefit this brings is better ordering of operations with the settings cleanup
+     * automatically happening just before the [Activity] under test finishes which may as opposed to
+     * cleanup happening earlier and modifying the app behavior.
+     */
+    val featureSettingsHelper = FeatureSettingsHelper()
+
     private val longTapUserPreference = getLongPressTimeout()
 
     override fun beforeActivityLaunched() {
@@ -39,6 +52,7 @@ class HomeActivityTestRule(
     override fun afterActivityFinished() {
         super.afterActivityFinished()
         setLongTapTimeout(longTapUserPreference)
+        featureSettingsHelper.resetAllFeatureFlags()
         closeNotificationShade()
     }
 }

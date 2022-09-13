@@ -14,7 +14,6 @@ import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.mozilla.fenix.helpers.AndroidAssetDispatcher
-import org.mozilla.fenix.helpers.FeatureSettingsHelper
 import org.mozilla.fenix.helpers.HomeActivityTestRule
 import org.mozilla.fenix.helpers.RetryTestRule
 import org.mozilla.fenix.helpers.TestAssetHelper
@@ -43,11 +42,11 @@ import org.mozilla.fenix.ui.robots.notificationShade
 class TabbedBrowsingTest {
     private lateinit var mDevice: UiDevice
     private lateinit var mockWebServer: MockWebServer
-    private val featureSettingsHelper = FeatureSettingsHelper()
 
     /* ktlint-disable no-blank-line-before-rbrace */ // This imposes unreadable grouping.
     @get:Rule
     val activityTestRule = HomeActivityTestRule()
+    private val featureSettingsHelper = activityTestRule.featureSettingsHelper
 
     @Rule
     @JvmField
@@ -70,7 +69,6 @@ class TabbedBrowsingTest {
     @After
     fun tearDown() {
         mockWebServer.shutdown()
-        featureSettingsHelper.resetAllFeatureFlags()
     }
 
     @Test

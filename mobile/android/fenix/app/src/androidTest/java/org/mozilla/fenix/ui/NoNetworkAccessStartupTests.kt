@@ -13,7 +13,6 @@ import org.junit.Rule
 import org.junit.Test
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.settings
-import org.mozilla.fenix.helpers.FeatureSettingsHelper
 import org.mozilla.fenix.helpers.HomeActivityTestRule
 import org.mozilla.fenix.helpers.TestHelper.packageName
 import org.mozilla.fenix.helpers.TestHelper.setNetworkEnabled
@@ -31,8 +30,7 @@ class NoNetworkAccessStartupTests {
 
     @get:Rule
     val activityTestRule = HomeActivityTestRule(launchActivity = false)
-
-    private val featureSettingsHelper = FeatureSettingsHelper()
+    private val featureSettingsHelper = activityTestRule.featureSettingsHelper
 
     @Before
     fun setUp() {
@@ -44,7 +42,6 @@ class NoNetworkAccessStartupTests {
     fun tearDown() {
         // Restoring network connection
         setNetworkEnabled(true)
-        featureSettingsHelper.resetAllFeatureFlags()
     }
 
     // Test running on beta/release builds in CI:

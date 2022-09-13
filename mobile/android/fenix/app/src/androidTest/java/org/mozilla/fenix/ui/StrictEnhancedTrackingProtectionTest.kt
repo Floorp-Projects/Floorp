@@ -12,7 +12,6 @@ import org.junit.Rule
 import org.junit.Test
 import org.mozilla.fenix.customannotations.SmokeTest
 import org.mozilla.fenix.helpers.AndroidAssetDispatcher
-import org.mozilla.fenix.helpers.FeatureSettingsHelper
 import org.mozilla.fenix.helpers.HomeActivityTestRule
 import org.mozilla.fenix.helpers.TestAssetHelper
 import org.mozilla.fenix.ui.robots.enhancedTrackingProtection
@@ -35,10 +34,10 @@ import org.mozilla.fenix.ui.robots.settingsSubMenuEnhancedTrackingProtection
 
 class StrictEnhancedTrackingProtectionTest {
     private lateinit var mockWebServer: MockWebServer
-    private val featureSettingsHelper = FeatureSettingsHelper()
 
     @get:Rule
     val activityTestRule = HomeActivityTestRule()
+    private val featureSettingsHelper = activityTestRule.featureSettingsHelper
 
     @Before
     fun setUp() {
@@ -55,7 +54,6 @@ class StrictEnhancedTrackingProtectionTest {
     @After
     fun tearDown() {
         mockWebServer.shutdown()
-        featureSettingsHelper.resetAllFeatureFlags()
     }
 
     @Test

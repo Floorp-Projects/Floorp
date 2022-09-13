@@ -5,13 +5,11 @@
 package org.mozilla.fenix.ui
 
 import androidx.core.net.toUri
-import org.junit.After
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.mozilla.fenix.R
 import org.mozilla.fenix.customannotations.SmokeTest
-import org.mozilla.fenix.helpers.FeatureSettingsHelper
 import org.mozilla.fenix.helpers.HomeActivityTestRule
 import org.mozilla.fenix.helpers.RetryTestRule
 import org.mozilla.fenix.helpers.TestHelper.getStringResource
@@ -26,10 +24,10 @@ class BrowsingErrorPagesTest {
     private val unwantedSoftwareWarning =
         getStringResource(R.string.mozac_browser_errorpages_safe_browsing_unwanted_uri_title)
     private val harmfulSiteWarning = getStringResource(R.string.mozac_browser_errorpages_safe_harmful_uri_title)
-    private val featureSettingsHelper = FeatureSettingsHelper()
 
     @get: Rule
     val mActivityTestRule = HomeActivityTestRule()
+    private val featureSettingsHelper = mActivityTestRule.featureSettingsHelper
 
     @Rule
     @JvmField
@@ -40,11 +38,6 @@ class BrowsingErrorPagesTest {
         // disabling the jump-back-in pop-up that interferes with the tests.
         featureSettingsHelper.setJumpBackCFREnabled(false)
         featureSettingsHelper.setTCPCFREnabled(false)
-    }
-
-    @After
-    fun tearDown() {
-        featureSettingsHelper.resetAllFeatureFlags()
     }
 
     @SmokeTest
