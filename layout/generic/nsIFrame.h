@@ -3146,22 +3146,22 @@ class nsIFrame : public nsQueryFrame {
   bool IsContentDisabled() const;
 
   /**
-   * Whether this frame hides its contents via the `content-visibility`
-   * property.
+   * Whether the content is hidden via the `content-visibilty` property.
    */
-  bool HidesContent() const;
+  bool IsContentHidden() const;
+
+  /**
+   * Whether the content is hidden via the `content-visibilty` property for
+   * layout. Hidden content might not be hidden for layout when forcing layout
+   * for size queries.
+   */
+  bool IsContentHiddenForLayout() const;
 
   /**
    * Returns true if this frame is entirely hidden due the `content-visibility`
    * property on an ancestor.
    */
-  bool IsHiddenByContentVisibilityOnAnyAncestor() const;
-
-  /**
-   * Returns true is this frame is hidden by its first unskipped in flow
-   * ancestor due to `content-visibility`.
-   */
-  bool IsHiddenByContentVisibilityOfInFlowParentForLayout() const;
+  bool AncestorHidesContent() const;
 
   /**
    * Get the "type" of the frame.
