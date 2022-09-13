@@ -25,6 +25,7 @@ class Promise;
 class PushManager;
 class WorkerPrivate;
 class ServiceWorker;
+class ServiceWorkerRegistrationChild;
 
 #define NS_DOM_SERVICEWORKERREGISTRATION_IID         \
   {                                                  \
@@ -35,37 +36,6 @@ class ServiceWorker;
 
 class ServiceWorkerRegistration final : public DOMEventTargetHelper {
  public:
-  class Inner {
-   public:
-    NS_INLINE_DECL_PURE_VIRTUAL_REFCOUNTING
-
-    virtual void SetServiceWorkerRegistration(
-        ServiceWorkerRegistration* aReg) = 0;
-
-    virtual void ClearServiceWorkerRegistration(
-        ServiceWorkerRegistration* aReg) = 0;
-
-    virtual void Update(const nsCString& aNewestWorkerScriptUrl,
-                        ServiceWorkerRegistrationCallback&& aSuccessCB,
-                        ServiceWorkerFailureCallback&& aFailureCB) = 0;
-
-    virtual void Unregister(ServiceWorkerBoolCallback&& aSuccessCB,
-                            ServiceWorkerFailureCallback&& aFailureCB) = 0;
-
-    // Interface for NavigationPreload
-    virtual void SetNavigationPreloadEnabled(
-        bool aEnabled, ServiceWorkerBoolCallback&& aSuccessCB,
-        ServiceWorkerFailureCallback&& aFailureCB) = 0;
-
-    virtual void SetNavigationPreloadHeader(
-        const nsCString& aHeader, ServiceWorkerBoolCallback&& aSuccessCB,
-        ServiceWorkerFailureCallback&& aFailureCB) = 0;
-
-    virtual void GetNavigationPreloadState(
-        NavigationPreloadGetStateCallback&& aSuccessCB,
-        ServiceWorkerFailureCallback&& aFailureCB) = 0;
-  };
-
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_DOM_SERVICEWORKERREGISTRATION_IID)
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(ServiceWorkerRegistration,
@@ -119,6 +89,17 @@ class ServiceWorkerRegistration final : public DOMEventTargetHelper {
   already_AddRefed<Promise> GetNotifications(
       const GetNotificationOptions& aOptions, ErrorResult& aRv);
 
+  void SetNavigationPreloadEnabled(bool aEnabled,
+                                   ServiceWorkerBoolCallback&& aSuccessCB,
+                                   ServiceWorkerFailureCallback&& aFailureCB);
+
+  void SetNavigationPreloadHeader(const nsCString& aHeader,
+                                  ServiceWorkerBoolCallback&& aSuccessCB,
+                                  ServiceWorkerFailureCallback&& aFailureCB);
+
+  void GetNavigationPreloadState(NavigationPreloadGetStateCallback&& aSuccessCB,
+                                 ServiceWorkerFailureCallback&& aFailureCB);
+
   const ServiceWorkerRegistrationDescriptor& Descriptor() const;
 
   void WhenVersionReached(uint64_t aVersion,
@@ -126,10 +107,14 @@ class ServiceWorkerRegistration final : public DOMEventTargetHelper {
 
   void MaybeDispatchUpdateFoundRunnable();
 
+  void RevokeActor(ServiceWorkerRegistrationChild* aActor);
+
+  void FireUpdateFound();
+
  private:
   ServiceWorkerRegistration(
       nsIGlobalObject* aGlobal,
-      const ServiceWorkerRegistrationDescriptor& aDescriptor, Inner* aInner);
+      const ServiceWorkerRegistrationDescriptor& aDescriptor);
 
   ~ServiceWorkerRegistration();
 
@@ -142,8 +127,11 @@ class ServiceWorkerRegistration final : public DOMEventTargetHelper {
 
   void MaybeDispatchUpdateFound();
 
+  void Shutdown();
+
   ServiceWorkerRegistrationDescriptor mDescriptor;
-  RefPtr<Inner> mInner;
+  RefPtr<ServiceWorkerRegistrationChild> mActor;
+  bool mShutdown;
 
   RefPtr<ServiceWorker> mInstallingWorker;
   RefPtr<ServiceWorker> mWaitingWorker;
