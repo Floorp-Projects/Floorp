@@ -1951,6 +1951,39 @@ function rbigintasuint(i) {
     return i;
 }
 
+let uceFault_nantozero_nan = eval(`(${uceFault})`.replace('uceFault', 'uceFault_nantozero_nan'));
+function rnantozero_nan(i) {
+    // Note: |x| must be Double-typed.
+    var x = (i + 0.5) * NaN;
+    var y = x ? x : +0;
+    if (uceFault_nantozero_nan(i) || uceFault_nantozero_nan(i))
+        assertEq(y, +0);
+    assertRecoveredOnBailout(y, true);
+    return i;
+}
+
+let uceFault_nantozero_poszero = eval(`(${uceFault})`.replace('uceFault', 'uceFault_nantozero_poszero'));
+function rnantozero_poszero(i) {
+    // Note: |x| must be Double-typed.
+    var x = (i + 0.5) * +0;
+    var y = x ? x : +0;
+    if (uceFault_nantozero_poszero(i) || uceFault_nantozero_poszero(i))
+        assertEq(y, +0);
+    assertRecoveredOnBailout(y, true);
+    return i;
+}
+
+let uceFault_nantozero_negzero = eval(`(${uceFault})`.replace('uceFault', 'uceFault_nantozero_negzero'));
+function rnantozero_negzero(i) {
+    // Note: |x| must be Double-typed.
+    var x = (i + 0.5) * -0;
+    var y = x ? x : +0;
+    if (uceFault_nantozero_negzero(i) || uceFault_nantozero_negzero(i))
+        assertEq(y, +0);
+    assertRecoveredOnBailout(y, true);
+    return i;
+}
+
 for (j = 100 - max; j < 100; j++) {
     with({}){} // Do not Ion-compile this loop.
     let i = j < 2 ? (Math.abs(j) % 50) + 2 : j;
@@ -2149,6 +2182,9 @@ for (j = 100 - max; j < 100; j++) {
     rbigintrsh(BigInt(i));
     rbigintasint(BigInt(i));
     rbigintasuint(BigInt(i));
+    rnantozero_nan(i);
+    rnantozero_poszero(i);
+    rnantozero_negzero(i);
 }
 
 // Test that we can refer multiple time to the same recover instruction, as well
