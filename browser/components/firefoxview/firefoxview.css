@@ -274,10 +274,10 @@ body > main > aside {
 
 #colorways-collection-expiry-date {
   display: inline-block;
-  background: linear-gradient(to right, purple, pink, orange);
+  background: var(--card-border-zap-gradient);
   background-origin: border-box;
+  border: 1px solid transparent;
   border-radius: 1.5em;
-  padding: 1px;
   margin: 0.8em 0;
 }
 
@@ -455,8 +455,9 @@ details[open] > .page-section-header > .twisty {
   content: "";
   position: absolute;
   inset: 0;
-  padding: 1px; /* the "border" thickness */
+  border: 1px solid transparent;
   border-radius: 4px;
+  background-origin: border-box;
   background-image: var(--card-border-zap-gradient);
   mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
   mask-composite: exclude;
