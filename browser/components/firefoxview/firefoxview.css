@@ -375,6 +375,18 @@ button.close {
   padding-inline-start: 8px;
 }
 
+@media (prefers-contrast) {
+  .page-section-header {
+    color: ButtonText;
+    background-color: ButtonFace;
+  }
+  .page-section-header:focus-visible {
+    box-shadow: none;
+    outline: var(--in-content-focus-outline);
+    outline-offset: var(--in-content-focus-outline-offset);
+  }
+}
+
 .page-section-header > h1 {
   grid-area: head;
   margin: 0;
@@ -585,6 +597,7 @@ details[open] > .page-section-header > .twisty {
   display: grid;
   grid-template-columns: min-content repeat(5, 1fr) min-content;
   column-gap: 8px;
+  row-gap: 8px;
 }
 
 .closed-tab-li {
@@ -596,12 +609,27 @@ details[open] > .page-section-header > .twisty {
   align-items: center;
 }
 
+@media (prefers-contrast) {
+  .closed-tab-li {
+    color: ButtonText;
+    border-radius: 4px;
+    border: 1px solid ButtonText;
+  }
+}
+
 .closed-tab-li:hover {
   background-color: var(--fxview-element-hover-color);
 }
 
 .closed-tab-li:active {
   background-color: var(--fxview-element-active-color);
+}
+
+.closed-tab-li:focus-visible {
+  box-shadow: none;
+  outline: var(--in-content-focus-outline);
+  outline-offset: var(--in-content-focus-outline-offset);
+  border-radius: 4px;
 }
 
 .closed-tab-li-title {
@@ -629,6 +657,14 @@ details[open] > .page-section-header > .twisty {
   color: inherit;
   text-decoration: none;
   height: 100%;
+}
+
+@media (prefers-contrast) {
+  .synced-tab-a:focus-visible {
+    box-shadow: none;
+    outline: var(--in-content-focus-outline);
+    outline-offset: var(--in-content-focus-outline-offset);
+  }
 }
 
 .closed-tab-li-url,
