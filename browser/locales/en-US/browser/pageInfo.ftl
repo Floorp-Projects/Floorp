@@ -65,12 +65,15 @@ media-dimension =
     .value = Dimensions:
 media-long-desc =
     .value = Long Description:
+media-select-all =
+    .label = Select All
+    .accesskey = e
 media-save-as =
     .label = Save As…
     .accesskey = A
 media-save-image-as =
     .label = Save As…
-    .accesskey = e
+    .accesskey = v
 
 perm-tab =
     .label = Permissions
