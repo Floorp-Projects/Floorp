@@ -8179,7 +8179,7 @@ function RecentSavesContainer({
       var _recentSave$domain_me;
 
       recentSavesCards.push(renderCard({
-        id: recentSave.item_id || recentSave.resolved_id,
+        id: recentSave.id,
         image_src: recentSave.top_image_url,
         raw_image_src: recentSave.top_image_url,
         word_count: recentSave.word_count,
