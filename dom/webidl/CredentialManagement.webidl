@@ -34,6 +34,8 @@ dictionary CredentialRequestOptions {
   // https://w3c.github.io/webauthn/#sctn-credentialrequestoptions-extension
   [Pref="security.webauth.webauthn"]
   PublicKeyCredentialRequestOptions publicKey;
+  // This is taken from the partial definition in
+  // https://fedidcg.github.io/FedCM/#browser-api-credential-request-options
   [Pref="dom.security.credentialmanagement.identity.enabled"]
   IdentityCredentialRequestOptions identity;
   AbortSignal signal;
