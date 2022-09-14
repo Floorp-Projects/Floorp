@@ -5,7 +5,7 @@ function handleRequest(request, response) {
   let qs = new URLSearchParams(request.queryString);
   let asset = qs.get("as");
   let hinted = qs.get("hinted") !== "0";
-
+  let httpCode = qs.get("code");
   // eslint-disable-next-line mozilla/use-services
   let uuidGenerator = Cc["@mozilla.org/uuid-generator;1"].getService(
     Ci.nsIUUIDGenerator
@@ -91,8 +91,11 @@ function handleRequest(request, response) {
   `;
   }
 
-  // main document response
-  response.write("HTTP/1.1 200 OK\r\n");
+  if (!httpCode) {
+    response.write(`HTTP/1.1 ${httpCode} OK\r\n`);
+  } else {
+    response.write(`HTTP/1.1 ${httpCode} Error\r\n`);
+  }
   response.write("Content-Type: text/html;charset=utf-8\r\n");
   response.write("Cache-Control: no-cache\r\n");
   response.write(`Content-Length: ${body.length}\r\n`);
