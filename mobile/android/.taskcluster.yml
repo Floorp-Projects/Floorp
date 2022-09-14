@@ -6,8 +6,7 @@ policy:
 tasks:
     - $let:
           trustDomain: mobile
-          canonicalRepo: git@github.com:mozilla-mobile/firefox-android.git
-          canonicalHttpsRepo: https://github.com/mozilla-mobile/firefox-android
+          canonicalRepo: https://github.com/mozilla-mobile/firefox-android
           # Github events have this stuff in different places...
           ownerEmail:
               $if: 'tasks_for in ["cron", "action"]'
@@ -40,19 +39,19 @@ tasks:
 
           baseRepoUrl:
               $if: 'tasks_for == "github-push"'
-              then: '${event.repository.ssh_url}'
+              then: '${event.repository.html_url}'
               else:
                   $if: 'tasks_for == "github-pull-request"'
-                  then: '${event.pull_request.base.repo.ssh_url}'
+                  then: '${event.pull_request.base.repo.html_url}'
                   else:
                       $if: 'tasks_for in ["cron", "action"]'
                       then: '${repository.url}'
           repoUrl:
               $if: 'tasks_for == "github-push"'
-              then: '${event.repository.ssh_url}'
+              then: '${event.repository.html_url}'
               else:
                   $if: 'tasks_for == "github-pull-request"'
-                  then: '${event.pull_request.head.repo.ssh_url}'
+                  then: '${event.pull_request.head.repo.html_url}'
                   else:
                       $if: 'tasks_for in ["cron", "action"]'
                       then: '${repository.url}'
@@ -129,8 +128,7 @@ tasks:
               $let:
                   level:
                       $if: >
-                         (tasks_for in ["github-push", "action"] && repoUrl == canonicalRepo)
-                         || (tasks_for in ["cron"] && repoUrl == canonicalHttpsRepo)
+                         tasks_for in ["github-push", "action", "cron"] && repoUrl == canonicalRepo
                       then: '3'
                       else: '1'
 
@@ -242,7 +240,6 @@ tasks:
                                       MOBILE_HEAD_REV: '${head_sha}'
                                       MOBILE_PIP_REQUIREMENTS: taskcluster/requirements.txt
                                       MOBILE_REPOSITORY_TYPE: git
-                                      MOBILE_SSH_SECRET_NAME: project/mobile/firefox-android/github-clone-ssh
                                       MOZ_AUTOMATION: "1"
                                       REPOSITORIES: {$json: {mobile: "firefox-android"}}
                                     - $if: 'tasks_for in ["github-pull-request"]'
