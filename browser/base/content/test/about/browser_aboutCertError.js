@@ -204,23 +204,17 @@ add_task(async function checkAdvancedDetails() {
       errorCode.click();
       let div = doc.getElementById("certificateErrorDebugInformation");
       let text = doc.getElementById("certificateErrorText");
-
       Assert.ok(
         content.getComputedStyle(div).display !== "none",
         "Debug information is visible"
       );
-
-      let serhelper = Cc[
-        "@mozilla.org/network/serialization-helper;1"
-      ].getService(Ci.nsISerializationHelper);
-      let serializable = content.docShell.failedChannel.securityInfo
+      let failedCertChain = content.docShell.failedChannel.securityInfo
         .QueryInterface(Ci.nsITransportSecurityInfo)
-        .QueryInterface(Ci.nsISerializable);
-      let serializedSecurityInfo = serhelper.serializeToString(serializable);
+        .failedCertChain.map(cert => cert.getBase64DERString());
       return {
         divDisplay: content.getComputedStyle(div).display,
         text: text.textContent,
-        securityInfoAsString: serializedSecurityInfo,
+        failedCertChain,
       };
     });
     isnot(message.divDisplay, "none", "Debug information is visible");
@@ -237,7 +231,7 @@ add_task(async function checkAdvancedDetails() {
       message.text.includes("HTTP Public Key Pinning: false"),
       "Correct HPKP value found"
     );
-    let certChain = getCertChain(message.securityInfoAsString);
+    let certChain = getCertChainAsString(message.failedCertChain);
     ok(message.text.includes(certChain), "Found certificate chain");
 
     BrowserTestUtils.removeTab(gBrowser.selectedTab);
@@ -291,23 +285,17 @@ add_task(async function checkAdvancedDetailsForHSTS() {
 
     message = await SpecialPowers.spawn(bc, [], async function() {
       let doc = content.document;
-
       let errorCode = doc.getElementById("errorCode");
       errorCode.click();
       let div = doc.getElementById("certificateErrorDebugInformation");
       let text = doc.getElementById("certificateErrorText");
-
-      let serhelper = Cc[
-        "@mozilla.org/network/serialization-helper;1"
-      ].getService(Ci.nsISerializationHelper);
-      let serializable = content.docShell.failedChannel.securityInfo
+      let failedCertChain = content.docShell.failedChannel.securityInfo
         .QueryInterface(Ci.nsITransportSecurityInfo)
-        .QueryInterface(Ci.nsISerializable);
-      let serializedSecurityInfo = serhelper.serializeToString(serializable);
+        .failedCertChain.map(cert => cert.getBase64DERString());
       return {
         divDisplay: content.getComputedStyle(div).display,
         text: text.textContent,
-        securityInfoAsString: serializedSecurityInfo,
+        failedCertChain,
       };
     });
     isnot(message.divDisplay, "none", "Debug information is visible");
@@ -326,7 +314,7 @@ add_task(async function checkAdvancedDetailsForHSTS() {
       message.text.includes("HTTP Public Key Pinning: true"),
       "Correct HPKP value found"
     );
-    let certChain = getCertChain(message.securityInfoAsString);
+    let certChain = getCertChainAsString(message.failedCertChain);
     ok(message.text.includes(certChain), "Found certificate chain");
 
     BrowserTestUtils.removeTab(gBrowser.selectedTab);

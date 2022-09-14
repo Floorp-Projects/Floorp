@@ -5,9 +5,6 @@
 
 var EXPORTED_SYMBOLS = ["NetErrorParent"];
 
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
 const { PrivateBrowsingUtils } = ChromeUtils.import(
   "resource://gre/modules/PrivateBrowsingUtils.jsm"
 );
@@ -29,13 +26,6 @@ ChromeUtils.defineModuleGetter(
   lazy,
   "BrowserUtils",
   "resource://gre/modules/BrowserUtils.jsm"
-);
-
-XPCOMUtils.defineLazyServiceGetter(
-  lazy,
-  "gSerializationHelper",
-  "@mozilla.org/network/serialization-helper;1",
-  "nsISerializationHelper"
 );
 
 class CaptivePortalObserver {
@@ -76,19 +66,6 @@ class NetErrorParent extends JSWindowActorParent {
 
   get browser() {
     return this.browsingContext.top.embedderElement;
-  }
-
-  getSecurityInfo(securityInfoAsString) {
-    if (!securityInfoAsString) {
-      return null;
-    }
-
-    let securityInfo = lazy.gSerializationHelper.deserializeObject(
-      securityInfoAsString
-    );
-    securityInfo.QueryInterface(Ci.nsITransportSecurityInfo);
-
-    return securityInfo;
   }
 
   hasChangedCertPrefs() {
@@ -327,13 +304,8 @@ class NetErrorParent extends JSWindowActorParent {
         switch (message.data.elementId) {
           case "viewCertificate": {
             let window = this.browser.ownerGlobal;
-
-            let securityInfo = this.getSecurityInfo(
-              message.data.securityInfoAsString
-            );
-            let certChain = securityInfo.failedCertChain;
-            let certs = certChain.map(elem =>
-              encodeURIComponent(elem.getBase64DERString())
+            let certs = message.data.failedCertChain.map(certBase64 =>
+              encodeURIComponent(certBase64)
             );
             let certsStringURL = certs.map(elem => `cert=${elem}`);
             certsStringURL = certsStringURL.join("&");
