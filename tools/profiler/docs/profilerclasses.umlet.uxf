@@ -1,0 +1,811 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<diagram program="umlet" version="15.0.0">
+  <zoom_level>10</zoom_level>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>80</x>
+      <y>370</y>
+      <w>340</w>
+      <h>190</h>
+    </coordinates>
+    <panel_attributes>ThreadInfo
+--
+-mName: nsCString
+-mRegisterTime: TimeStamp
+-mThreadId: int
+-mIsMainThread: bool
+--
+NS_INLINE_DECL_THREADSAFE_REFCOUNTING
++Name()
++RegisterTime()
++ThreadId()
++IsMainThread()
+</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>470</x>
+      <y>300</y>
+      <w>600</w>
+      <h>260</h>
+    </coordinates>
+    <panel_attributes>RacyRegisteredThread
+--
+-mProfilingStackOwner: NotNull&lt;RefPtr&lt;ProfilingStackOwner&gt;&gt;
+-mThreadId
+-mSleep: Atomic&lt;int&gt; /* AWAKE, SLEEPING_NOT_OBSERVED, SLEEPING_OBSERVED */
+-mIsBeingProfiled: Atomic&lt;bool, Relaxed&gt;
+--
++SetIsBeingProfiled()
++IsBeingProfiled()
++ReinitializeOnResume()
++CanDuplicateLastSampleDueToSleep()
++SetSleeping()
++SetAwake()
++IsSleeping()
++ThreadId()
++ProfilingStack()
++ProfilingStackOwner()</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>470</x>
+      <y>650</y>
+      <w>350</w>
+      <h>360</h>
+    </coordinates>
+    <panel_attributes>RegisteredThread
+--
+-mPlatformData: UniquePlatformData
+-mStackTop: const void*
+-mThread: nsCOMPtr&lt;nsIThread&gt;
+-mContext: JSContext*
+-mJSSampling: enum {INACTIVE, ACTIVE_REQUESTED, ACTIVE, INACTIVE_REQUESTED}
+-mmJSFlags: uint32_t
+--
++RacyRegisteredThread()
++GetPlatformData()
++StackTop()
++GetRunningEventDelay()
++SizeOfIncludingThis()
++SetJSContext()
++ClearJSContext()
++GetJSContext()
++Info(): RefPtr&lt;ThreadInfo&gt;
++GetEventTarget(): nsCOMPtr&lt;nsIEventTarget&gt;
++ResetMainThread(nsIThread*)
++StartJSSampling()
++StopJSSampling()
++PollJSSampling()
+</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>750</x>
+      <y>550</y>
+      <w>180</w>
+      <h>120</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;&lt;&lt;&lt;&lt;-
+mRacyRegisteredThread</panel_attributes>
+    <additional_attributes>10.0;100.0;10.0;10.0</additional_attributes>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>290</x>
+      <y>550</y>
+      <w>230</w>
+      <h>120</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;&lt;&lt;&lt;-
+mThreadInfo: RefPtr&lt;&gt;</panel_attributes>
+    <additional_attributes>210.0;100.0;10.0;10.0</additional_attributes>
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>70</x>
+      <y>660</y>
+      <w>340</w>
+      <h>190</h>
+    </coordinates>
+    <panel_attributes>PageInformation
+--
+-mBrowsingContextID: uint64_t
+-mInnerWindowID: uint64_t
+-mUrl: nsCString
+-mEmbedderInnerWindowID: uint64_t
+--
+NS_INLINE_DECL_THREADSAFE_REFCOUNTING
++SizeOfIncludingThis(MallocSizeOf)
++Equals(PageInformation*)
++StreamJSON(SpliceableJSONWriter&amp;)
++InnerWindowID()
++BrowsingContextID()
++Url()
++EmbedderInnerWindowID()
++BufferPositionWhenUnregistered(): Maybe&lt;uint64_t&gt;
++NotifyUnregistered(aBufferPosition: uint64_t)</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>760</x>
+      <y>1890</y>
+      <w>570</w>
+      <h>120</h>
+    </coordinates>
+    <panel_attributes>ProfilerBacktrace
+--
+-mName: UniqueFreePtr&lt;char&gt;
+-mThreadId: int
+-mProfileChunkedBuffer: UniquePtr&lt;ProfileChunkedBuffer&gt;
+-mProfileBuffer: UniquePtr&lt;ProfileBuffer&gt;
+--
++StreamJSON(SpliceableJSONWriter&amp;, aProcessStartTime: TimeStamp, UniqueStacks&amp;)
+</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>20</x>
+      <y>2140</y>
+      <w>620</w>
+      <h>580</h>
+    </coordinates>
+    <panel_attributes>ProfileChunkedBuffer
+--
+-mMutex: BaseProfilerMaybeMutex
+-mChunkManager: ProfileBufferChunkManager*
+-mOwnedChunkManager: UniquePtr&lt;ProfileBufferChunkManager&gt;
+-mCurrentChunk: UniquePtr&lt;ProfileBufferChunk&gt;
+-mNextChunks: UniquePtr&lt;ProfileBufferChunk&gt;
+-mRequestedChunkHolder: RefPtr&lt;RequestedChunkRefCountedHolder&gt;
+-mNextChunkRangeStart: ProfileBufferIndex
+-mRangeStart: Atomic&lt;ProfileBufferIndex, ReleaseAcquire&gt;
+-mRangeEnd: ProfileBufferIndex
+-mPushedBlockCount: uint64_t
+-mClearedBlockCount: Atomic&lt;uint64_t, ReleaseAcquire&gt;
+--
++Byte = ProfileBufferChunk::Byte
++Length = ProfileBufferChunk::Length
++IsThreadSafe()
++IsInSession()
++ResetChunkManager()
++SetChunkManager()
++Clear()
++BufferLength(): Maybe&lt;size_t&gt;
++SizeOfExcludingThis(MallocSizeOf)
++SizeOfIncludingThis(MallocSizeOf)
++GetState()
++IsThreadSafeAndLockedOnCurrentThread(): bool
++LockAndRun(Callback&amp;&amp;)
++ReserveAndPut(CallbackEntryBytes&amp;&amp;, Callback&lt;auto(Maybe&lt;ProfileBufferEntryWriter&gt;&amp;)&gt;&amp;&amp;)
++Put(aEntryBytes: Length, Callback&lt;auto(Maybe&lt;ProfileBufferEntryWriter&gt;&amp;)&gt;&amp;&amp;)
++PutFrom(const void*, Length)
++PutObjects(const Ts&amp;...)
++PutObject(const T&amp;)
++GetAllChunks()
++Read(Callback&lt;void(Reader&amp;)&gt;&amp;&amp;): bool
++ReadEach(Callback&lt;void(ProfileBufferEntryReader&amp; [, ProfileBufferBlockIndex])&gt;&amp;&amp;)
++ReadAt(ProfileBufferBlockIndex, Callback&lt;void(Maybe&lt;ProfileBufferEntryReader&gt;&amp;&amp;)&gt;&amp;&amp;)
++AppendContents</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>810</x>
+      <y>2100</y>
+      <w>500</w>
+      <h>620</h>
+    </coordinates>
+    <panel_attributes>ProfileBufferChunk
+--
++Header: {
+    mOffsetFirstBlock; mOffsetPastLastBlock; mDoneTimeStamp;
+    mBufferBytes; mBlockCount; mRangeStart; mProcessId;
+ }
+-InternalHeader: { mHeader: Header; mNext: UniquePtr&lt;ProfileBufferChunk&gt;; }
+--
+-mInternalHeader: InternalHeader
+-mBuffer: Byte /* First byte */
+--
++Byte = uint8_t
++Length = uint32_t
++SpanOfBytes = Span&lt;Byte&gt;
+/+Create(aMinBufferBytes: Length): UniquePtr&lt;ProfileBufferChunk&gt;/
++ReserveInitialBlockAsTail(Length): SpanOfBytes
++ReserveBlock(Length): { SpanOfBytes, ProfileBufferBlockIndex }
++MarkDone()
++MarkRecycled()
++ChunkHeader()
++BufferBytes()
++ChunkBytes()
++SizeOfExcludingThis(MallocSizeOf)
++SizeOfIncludingThis(MallocSizeOf)
++RemainingBytes(): Length
++OffsetFirstBlock(): Length
++OffsetPastLastBlock(): Length
++BlockCount(): Length
++ProcessId(): int
++SetProcessId(int)
++RangeStart(): ProfileBufferIndex
++SetRangeStart(ProfileBufferIndex)
++BufferSpan(): Span&lt;const Byte&gt;
++ByteAt(aOffset: Length)
++GetNext(): maybe-const ProfileBufferChunk*
++ReleaseNext(): UniquePtr&lt;ProfileBufferChunk&gt;
++InsertNext(UniquePtr&lt;ProfileBufferChunk&gt;&amp;&amp;)
++Last(): const ProfileBufferChunk*
++SetLast(UniquePtr&lt;ProfileBufferChunk&gt;&amp;&amp;)
+/+Join(UniquePtr&lt;ProfileBufferChunk&gt;&amp;&amp;, UniquePtr&lt;ProfileBufferChunk&gt;&amp;&amp;)/
+</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>120</x>
+      <y>2850</y>
+      <w>570</w>
+      <h>350</h>
+    </coordinates>
+    <panel_attributes>ProfileBufferEntryReader
+--
+-mCurrentSpan: SpanOfConstBytes
+-mNextSpanOrEmpty: SpanOfConstBytes
+-mCurrentBlockIndex: ProfileBufferBlockIndex
+-mNextBlockIndex: ProfileBufferBlockIndex
+--
++RemainingBytes(): Length
++SetRemainingBytes(Length)
++CurrentBlockIndex(): ProfileBufferBlockIndex
++NextBlockIndex(): ProfileBufferBlockIndex
++EmptyIteratorAtOffset(Length): ProfileBufferEntryReader
++operator*(): const Byte&amp;
++operator++(): ProfileBufferEntryReader&amp;
++operator+=(Length): ProfileBufferEntryReader&amp;
++operator==(const ProfileBufferEntryReader&amp;)
++operator!=(const ProfileBufferEntryReader&amp;)
++ReadULEB128&lt;T&gt;(): T
++ReadBytes(void*, Length)
++ReadIntoObject(T&amp;)
++ReadIntoObjects(Ts&amp;...)
++ReadObject&lt;T&gt;(): T</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>740</x>
+      <y>2850</y>
+      <w>570</w>
+      <h>300</h>
+    </coordinates>
+    <panel_attributes>ProfileBufferEntryWriter
+--
+-mCurrentSpan: SpanOfBytes
+-mNextSpanOrEmpty: SpanOfBytes
+-mCurrentBlockIndex: ProfileBufferBlockIndex
+-mNextBlockIndex: ProfileBufferBlockIndex
+--
++RemainingBytes(): Length
++CurrentBlockIndex(): ProfileBufferBlockIndex
++NextBlockIndex(): ProfileBufferBlockIndex
++operator*(): Byte&amp;
++operator++(): ProfileBufferEntryReader&amp;
++operator+=(Length): ProfileBufferEntryReader&amp;
+/+ULEB128Size(T): unsigned/
++WriteULEB128(T)
+/+SumBytes(const Ts&amp;...): Length/
++WriteFromReader(ProfileBufferEntryReader&amp;, Length)
++WriteObject(const T&amp;)
++WriteObjects(const T&amp;)</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>120</x>
+      <y>3270</y>
+      <w>570</w>
+      <h>80</h>
+    </coordinates>
+    <panel_attributes>ProfileBufferEntryReader::Deserializer&lt;T&gt;
+/to be specialized for all types read from ProfileBufferEntryReader/
+--
+/+ReadInto(ProfileBufferEntryReader&amp;, T&amp;)/
+/+Read&lt;T&gt;(ProfileBufferEntryReader&amp;): T/</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>740</x>
+      <y>3270</y>
+      <w>570</w>
+      <h>80</h>
+    </coordinates>
+    <panel_attributes>ProfileBufferEntryWriter::Serializer&lt;T&gt;
+/to be specialized for all types written into ProfileBufferEntryWriter/
+--
+/+Bytes(const T&amp;): Length/
+/+Write(ProfileBufferEntryWriter&amp;, const T&amp;)/</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>330</x>
+      <y>2710</y>
+      <w>110</w>
+      <h>160</h>
+    </coordinates>
+    <panel_attributes>lt=.&gt;
+&lt;&lt;creates&gt;&gt;</panel_attributes>
+    <additional_attributes>10.0;10.0;60.0;140.0</additional_attributes>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>430</x>
+      <y>2710</y>
+      <w>360</w>
+      <h>160</h>
+    </coordinates>
+    <panel_attributes>lt=.&gt;
+&lt;&lt;creates&gt;&gt;</panel_attributes>
+    <additional_attributes>10.0;10.0;340.0;140.0</additional_attributes>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>660</x>
+      <y>2710</y>
+      <w>260</w>
+      <h>160</h>
+    </coordinates>
+    <panel_attributes>lt=.&gt;
+&lt;&lt;points into&gt;&gt;</panel_attributes>
+    <additional_attributes>10.0;140.0;240.0;10.0</additional_attributes>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>870</x>
+      <y>2710</y>
+      <w>140</w>
+      <h>160</h>
+    </coordinates>
+    <panel_attributes>lt=.&gt;
+&lt;&lt;points into&gt;&gt;</panel_attributes>
+    <additional_attributes>10.0;140.0;80.0;10.0</additional_attributes>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>630</x>
+      <y>2170</y>
+      <w>200</w>
+      <h>40</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;&lt;&lt;&lt;-
+mCurrentChunk</panel_attributes>
+    <additional_attributes>10.0;20.0;180.0;20.0</additional_attributes>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>630</x>
+      <y>2230</y>
+      <w>200</w>
+      <h>40</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;&lt;&lt;&lt;-
+mNextChunks</panel_attributes>
+    <additional_attributes>10.0;20.0;180.0;20.0</additional_attributes>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>1100</x>
+      <y>2030</y>
+      <w>170</w>
+      <h>90</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;&lt;&lt;&lt;-
+mInternalHeader.mNext</panel_attributes>
+    <additional_attributes>10.0;70.0;10.0;20.0;150.0;20.0;150.0;70.0</additional_attributes>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>490</x>
+      <y>3190</y>
+      <w>70</w>
+      <h>100</h>
+    </coordinates>
+    <panel_attributes>lt=.&gt;
+&lt;&lt;uses&gt;&gt;</panel_attributes>
+    <additional_attributes>10.0;10.0;10.0;80.0</additional_attributes>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>580</x>
+      <y>3190</y>
+      <w>230</w>
+      <h>100</h>
+    </coordinates>
+    <panel_attributes>lt=.&gt;
+&lt;&lt;uses&gt;&gt;</panel_attributes>
+    <additional_attributes>10.0;10.0;210.0;80.0</additional_attributes>
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>50</x>
+      <y>1620</y>
+      <w>570</w>
+      <h>410</h>
+    </coordinates>
+    <panel_attributes>ProfileBuffer
+--
+-mFirstSamplingTimeNs: double
+-mLastSamplingTimeNs: double
+-mIntervalNs, etc.: ProfilerStats
+--
++IsThreadSafe(): bool
++AddEntry(const ProfileBufferEntry&amp;): uint64_t
++AddThreadIdEntry(int): uint64_t
++PutObjects(Kind, const Ts&amp;...): ProfileBufferBlockIndex
++CollectCodeLocation(...)
++AddJITInfoForRange(...)
++StreamSamplesToJSON(SpliceableJSONWriter&amp;, aThreadId: int, aSinceTime: double, UniqueStacks&amp;)
++StreamMarkersToJSON(SpliceableJSONWriter&amp;, ...)
++StreamPausedRangesToJSON(SpliceableJSONWriter&amp;, aSinceTime: double)
++StreamProfilerOverheadToJSON(SpliceableJSONWriter&amp;, ...)
++StreamCountersToJSON(SpliceableJSONWriter&amp;, ...)
++DuplicateLsstSample
++DiscardSamplesBeforeTime(aTime: double)
++GetEntry(aPosition: uint64_t): ProfileBufferEntry
++SizeOfExcludingThis(MallocSizeOf)
++SizeOfIncludingThis(MallocSizeOf)
++CollectOverheadStats(...)
++GetProfilerBufferInfo(): ProfilerBufferInfo
++BufferRangeStart(): uint64_t
++BufferRangeEnd(): uint64_t</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>690</x>
+      <y>1620</y>
+      <w>230</w>
+      <h>60</h>
+    </coordinates>
+    <panel_attributes>ProfileBufferEntry
+--
++mKind: Kind
++mStorage: uint8_t[kNumChars=8]</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>930</x>
+      <y>1620</y>
+      <w>440</w>
+      <h>130</h>
+    </coordinates>
+    <panel_attributes>UniqueJSONStrings
+--
+-mStringTableWriter: SpliceableChunkedJSONWriter
+-mStringHashToIndexMap: HashMap&lt;HashNumber, uint32_t&gt;
+--
++SpliceStringTableElements(SpliceableJSONWriter&amp;)
++WriteProperty(JSONWriter&amp;, aName: const char*, aStr: const char*)
++WriteElement(JSONWriter&amp;, aStr: const char*)
++GetOrAddIndex(const char*): uint32_t</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>680</x>
+      <y>1760</y>
+      <w>470</w>
+      <h>110</h>
+    </coordinates>
+    <panel_attributes>UniqueStack
+--
+-mFrameTableWriter: SpliceableChunkedJSONWriter
+-mFrameToIndexMap: HashMap&lt;FrameKey, uint32_t, FrameKeyHasher&gt;
+-mStackTableWriter: SpliceableChunkedJSONWriter
+-mStackToIndexMap: HashMap&lt;StackKey, uint32_t, StackKeyHasher&gt;
+-mJITInfoRanges: Vector&lt;JITFrameInfoForBufferRange&gt;</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>320</x>
+      <y>2020</y>
+      <w>230</w>
+      <h>140</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;&lt;&lt;&lt;-
+mEntries: ProfileChunkedBuffer&amp;</panel_attributes>
+    <additional_attributes>10.0;10.0;10.0;120.0</additional_attributes>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>610</x>
+      <y>1640</y>
+      <w>100</w>
+      <h>40</h>
+    </coordinates>
+    <panel_attributes>lt=.&gt;
+&lt;&lt;uses&gt;&gt;</panel_attributes>
+    <additional_attributes>10.0;20.0;80.0;20.0</additional_attributes>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>610</x>
+      <y>1710</y>
+      <w>340</w>
+      <h>40</h>
+    </coordinates>
+    <panel_attributes>lt=.&gt;
+&lt;&lt;uses&gt;&gt;</panel_attributes>
+    <additional_attributes>10.0;20.0;320.0;20.0</additional_attributes>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>610</x>
+      <y>1800</y>
+      <w>90</w>
+      <h>40</h>
+    </coordinates>
+    <panel_attributes>lt=.&gt;
+&lt;&lt;uses&gt;&gt;</panel_attributes>
+    <additional_attributes>10.0;20.0;70.0;20.0</additional_attributes>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>610</x>
+      <y>1900</y>
+      <w>170</w>
+      <h>40</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;&lt;&lt;&lt;-
+mProfileBuffer</panel_attributes>
+    <additional_attributes>150.0;20.0;10.0;20.0</additional_attributes>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>590</x>
+      <y>1940</y>
+      <w>250</w>
+      <h>220</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;&lt;&lt;&lt;-
+mProfileChunkedBuffer</panel_attributes>
+    <additional_attributes>170.0;10.0;10.0;200.0</additional_attributes>
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>20</x>
+      <y>1030</y>
+      <w>490</w>
+      <h>550</h>
+    </coordinates>
+    <panel_attributes>CorePS
+--
+/-sInstance: CorePS*/
+-mMainThreadId: int
+-mProcessStartTime: TimeStamp
+-mCoreBuffer: ProfileChunkedBuffer
+-mRegisteredThreads: Vector&lt;UniquePtr&lt;RegisteredThread&gt;&gt;
+-mRegisteredPages: Vector&lt;RefPtr&lt;PageInformation&gt;&gt;
+-mCounters: Vector&lt;BaseProfilerCount*&gt;
+-mLul: UniquePtr&lt;lul::LUL&gt; /* linux only */
+-mProcessName: nsAutoCString
+-mJsFrames: JsFrameBuffer
+--
++Create
++Destroy
++Exists(): bool
++AddSizeOf(...)
++MainThreadId()
++ProcessStartTime()
++CoreBuffer()
++RegisteredThreads(PSLockRef)
++JsFrames(PSLockRef)
+/+AppendRegisteredThread(PSLockRef, UniquePtr&lt;RegisteredThread&gt;)/
+/+RemoveRegisteredThread(PSLockRef, RegisteredThread*)/
++RegisteredPages(PSLockRef)
+/+AppendRegisteredPage(PSLockRef, RefPtr&lt;PageInformation&gt;)/
+/+RemoveRegisteredPage(PSLockRef, aRegisteredInnerWindowID: uint64_t)/
+/+ClearRegisteredPages(PSLockRef)/
++Counters(PSLockRef)
++AppendCounter
++RemoveCounter
++Lul(PSLockRef)
++SetLul(PSLockRef, UniquePtr&lt;lul::LUL&gt;)
++ProcessName(PSLockRef)
++SetProcessName(PSLockRef, const nsACString&amp;)
+</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>20</x>
+      <y>1570</y>
+      <w>110</w>
+      <h>590</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;&lt;&lt;&lt;&lt;-
+mCoreBuffer</panel_attributes>
+    <additional_attributes>10.0;10.0;10.0;570.0</additional_attributes>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>160</x>
+      <y>840</y>
+      <w>150</w>
+      <h>210</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;&lt;&lt;&lt;-
+mRegisteredPages</panel_attributes>
+    <additional_attributes>10.0;190.0;10.0;10.0</additional_attributes>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>250</x>
+      <y>840</y>
+      <w>240</w>
+      <h>210</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;&lt;&lt;&lt;-
+mRegisteredThreads</panel_attributes>
+    <additional_attributes>10.0;190.0;220.0;10.0</additional_attributes>
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>920</x>
+      <y>860</y>
+      <w>340</w>
+      <h>190</h>
+    </coordinates>
+    <panel_attributes>SamplerThread
+--
+-mSampler: Sampler
+-mActivityGeneration: uint32_t
+-mIntervalMicroseconds: int
+-mThread /* OS-specific */
+-mPostSamplingCallbackList: UniquePtr&lt;PostSamplingCallbackListItem&gt;
+--
++Run()
++Stop(PSLockRef)
++AppendPostSamplingCallback(PSLockRef, PostSamplingCallback&amp;&amp;)</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>1060</x>
+      <y>600</y>
+      <w>340</w>
+      <h>190</h>
+    </coordinates>
+    <panel_attributes>Sampler
+--
+-mOldSigprofHandler: sigaction
+-mMyPid: int
+-mSamplerTid: int
++sSigHandlerCoordinator
+--
++Disable(PSLockRef)
++SuspendAndSampleAndResumeThread(PSLockRef, const RegisteredThread&amp;, aNow: TimeStamp, const Func&amp;)
+</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>1190</x>
+      <y>780</y>
+      <w>90</w>
+      <h>100</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;&lt;&lt;&lt;&lt;-
+mSampler</panel_attributes>
+    <additional_attributes>10.0;80.0;10.0;10.0</additional_attributes>
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>610</x>
+      <y>1130</y>
+      <w>470</w>
+      <h>400</h>
+    </coordinates>
+    <panel_attributes>ActivePS
+--
+/-sInstance: ActivePS*/
+-mGeneration: const uint32_t
+/-sNextGeneration: uint32_t/
+-mCapacity: const PowerOfTwo
+-mDuration: const Maybe&lt;double&gt;
+-mInterval: const double /* milliseconds */
+-mFeatures: const uint32_t
+-mFilters: Vector&lt;std::string&gt;
+-mActiveBrowsingContextID: uint64_t
+-mProfileBufferChunkManager: ProfileBufferChunkManagerWithLocalLimit
+-mProfileBuffer: ProfileBuffer
+-mLiveProfiledThreads: Vector&lt;LiveProfiledThreadData&gt;
+-mDeadProfiledThreads: Vector&lt;UniquePtr&lt;ProfiledThreadData&gt;&gt;
+-mDeadProfiledPages: Vector&lt;RefPtr&lt;PageInformation&gt;&gt;
+-mSamplerThread: SamplerThread* const
+-mInterposeObserver: RefPtr&lt;ProfilerIOInterposeObserver&gt;
+-mPaused: bool
+-mWasPaused: bool /* linux */
+-mBaseProfileThreads: UniquePtr&lt;char[]&gt;
+-mGeckoIndexWhenBaseProfileAdded: ProfileBufferBlockIndex
+-mExitProfiles: Vector&lt;ExitProfile&gt;
+--
++</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>970</x>
+      <y>1040</y>
+      <w>140</w>
+      <h>110</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;&lt;&lt;&lt;-
+mSamplerThread</panel_attributes>
+    <additional_attributes>10.0;90.0;10.0;10.0</additional_attributes>
+  </element>
+  <element>
+    <id>UMLNote</id>
+    <coordinates>
+      <x>500</x>
+      <y>160</y>
+      <w>510</w>
+      <h>100</h>
+    </coordinates>
+    <panel_attributes>bg=red
+This document pre-dates the generated image profilerclasses-20220913.png!
+Unfortunately, the changes to make the image were lost.
+
+This previous version may still be useful to start reconstructing the image,
+if there is a need to update it.</panel_attributes>
+    <additional_attributes/>
+  </element>
+</diagram>

@@ -1,0 +1,546 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<diagram program="umlet" version="14.3.0">
+  <zoom_level>10</zoom_level>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>70</x>
+      <y>110</y>
+      <w>300</w>
+      <h>70</h>
+    </coordinates>
+    <panel_attributes>/PProfilerParent/
+bg=light_gray
+--
+*+SendAwaitNextChunkManagerUpdate()*
+*+SendDestroyReleasedChunksAtOrBefore()*</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>470</x>
+      <y>20</y>
+      <w>210</w>
+      <h>70</h>
+    </coordinates>
+    <panel_attributes>*ProfileBufferChunkMetadata*
+bg=light_gray
+--
++doneTimeStamp
++bufferBytes
+</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>780</x>
+      <y>110</y>
+      <w>330</w>
+      <h>70</h>
+    </coordinates>
+    <panel_attributes>/PProfilerChild/
+bg=light_gray
+--
+*/+RecvAwaitNextChunkManagerUpdate() = 0/*
+*/+RecvDestroyReleasedChunksAtOrBefore() = 0/*
+</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>110</x>
+      <y>260</y>
+      <w>220</w>
+      <h>70</h>
+    </coordinates>
+    <panel_attributes>ProfilerParent
+--
+*-processId*
+--
+</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>210</x>
+      <y>170</y>
+      <w>30</w>
+      <h>110</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;&lt;-</panel_attributes>
+    <additional_attributes>10.0;10.0;10.0;90.0</additional_attributes>
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>740</x>
+      <y>250</y>
+      <w>410</w>
+      <h>90</h>
+    </coordinates>
+    <panel_attributes>ProfilerChild
+--
+-UpdateStorage: unreleased bytes, released: {pid, rangeStart[ ]}
+--
+*+RecvAwaitNextChunkUpdate()*
+*+RecvDestroyReleasedChunksAtOrBefore()*
+</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>930</x>
+      <y>170</y>
+      <w>30</w>
+      <h>100</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;&lt;-</panel_attributes>
+    <additional_attributes>10.0;10.0;10.0;80.0</additional_attributes>
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>110</x>
+      <y>400</y>
+      <w>220</w>
+      <h>70</h>
+    </coordinates>
+    <panel_attributes>ProfilerParentTracker
+--
+_+Enumerate()_
+_*+ForChild()*_</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>210</x>
+      <y>320</y>
+      <w>190</w>
+      <h>100</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;-
+m1=0..n
+nsTArray&lt;ProfilerParent*&gt;</panel_attributes>
+    <additional_attributes>10.0;10.0;10.0;80.0</additional_attributes>
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>80</x>
+      <y>1070</y>
+      <w>150</w>
+      <h>30</h>
+    </coordinates>
+    <panel_attributes>ProfileBufferChunk</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>380</x>
+      <y>1070</y>
+      <w>210</w>
+      <h>30</h>
+    </coordinates>
+    <panel_attributes>/ProfileBufferChunkManager/</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>180</x>
+      <y>900</y>
+      <w>700</w>
+      <h>50</h>
+    </coordinates>
+    <panel_attributes>ProfileBufferChunkManagerWithLocalLimit
+--
+-mUpdateCallback</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>480</x>
+      <y>940</y>
+      <w>30</w>
+      <h>150</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;&lt;-</panel_attributes>
+    <additional_attributes>10.0;130.0;10.0;10.0</additional_attributes>
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>380</x>
+      <y>1200</y>
+      <w>210</w>
+      <h>30</h>
+    </coordinates>
+    <panel_attributes>ProfileChunkedBuffer</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>410</x>
+      <y>1090</y>
+      <w>140</w>
+      <h>130</h>
+    </coordinates>
+    <panel_attributes>lt=-&gt;&gt;&gt;&gt;
+mChunkManager</panel_attributes>
+    <additional_attributes>10.0;10.0;10.0;110.0</additional_attributes>
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>960</x>
+      <y>1200</y>
+      <w>100</w>
+      <h>30</h>
+    </coordinates>
+    <panel_attributes>CorePS</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>960</x>
+      <y>1040</y>
+      <w>100</w>
+      <h>30</h>
+    </coordinates>
+    <panel_attributes>ActivePS</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>580</x>
+      <y>1200</y>
+      <w>400</w>
+      <h>40</h>
+    </coordinates>
+    <panel_attributes>lt=-&gt;&gt;&gt;&gt;&gt;
+mCoreBuffer</panel_attributes>
+    <additional_attributes>10.0;20.0;380.0;20.0</additional_attributes>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>870</x>
+      <y>940</y>
+      <w>250</w>
+      <h>120</h>
+    </coordinates>
+    <panel_attributes>lt=-&gt;&gt;&gt;&gt;&gt;
+mProfileBufferChunkManager</panel_attributes>
+    <additional_attributes>10.0;10.0;90.0;100.0</additional_attributes>
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>830</x>
+      <y>1140</y>
+      <w>100</w>
+      <h>30</h>
+    </coordinates>
+    <panel_attributes>ProfileBuffer</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>920</x>
+      <y>1060</y>
+      <w>130</w>
+      <h>110</h>
+    </coordinates>
+    <panel_attributes>lt=-&gt;&gt;&gt;&gt;&gt;
+mProfileBuffer</panel_attributes>
+    <additional_attributes>10.0;90.0;40.0;10.0</additional_attributes>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>580</x>
+      <y>1160</y>
+      <w>270</w>
+      <h>70</h>
+    </coordinates>
+    <panel_attributes>lt=-&gt;&gt;&gt;&gt;
+mEntries</panel_attributes>
+    <additional_attributes>10.0;50.0;250.0;10.0</additional_attributes>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>90</x>
+      <y>1090</y>
+      <w>310</w>
+      <h>150</h>
+    </coordinates>
+    <panel_attributes>lt=-&gt;&gt;&gt;&gt;&gt;
+m1=0..1
+mCurrentChunk: UniquePtr&lt;&gt;</panel_attributes>
+    <additional_attributes>10.0;10.0;10.0;130.0;290.0;130.0</additional_attributes>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>210</x>
+      <y>1080</y>
+      <w>200</w>
+      <h>150</h>
+    </coordinates>
+    <panel_attributes>lt=-&gt;&gt;&gt;&gt;&gt;
+m1=0..N
+mNextChunks: UniquePtr&lt;&gt;</panel_attributes>
+    <additional_attributes>20.0;10.0;170.0;130.0</additional_attributes>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>200</x>
+      <y>940</y>
+      <w>230</w>
+      <h>150</h>
+    </coordinates>
+    <panel_attributes>lt=-&gt;&gt;&gt;&gt;&gt;
+m1=0..N
+mReleasedChunks: UniquePtr&lt;&gt;</panel_attributes>
+    <additional_attributes>10.0;130.0;10.0;10.0</additional_attributes>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>530</x>
+      <y>1090</y>
+      <w>270</w>
+      <h>130</h>
+    </coordinates>
+    <panel_attributes>lt=-&gt;&gt;&gt;&gt;&gt;
+mOwnedChunkManager: UniquePtr&lt;&gt;</panel_attributes>
+    <additional_attributes>10.0;10.0;10.0;110.0</additional_attributes>
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>480</x>
+      <y>390</y>
+      <w>550</w>
+      <h>150</h>
+    </coordinates>
+    <panel_attributes>*ProfileBufferGlobalController*
+--
+-mMaximumBytes
+-mCurrentUnreleasedBytesTotal
+-mCurrentUnreleasedBytes: {pid, unreleased bytes}[ ] sorted by pid
+-mCurrentReleasedBytes
+-mReleasedChunks: {doneTimeStamp, bytes, pid}[ ] sorted by timestamp
+-mDestructionCallback: function&lt;void(pid, rangeStart)&gt;
+--
++Update(pid, unreleased bytes, released: ProfileBufferChunkMetadata[ ])</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>320</x>
+      <y>420</y>
+      <w>180</w>
+      <h>40</h>
+    </coordinates>
+    <panel_attributes>lt=-&gt;&gt;&gt;&gt;&gt;
+mController</panel_attributes>
+    <additional_attributes>160.0;20.0;10.0;20.0</additional_attributes>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>20</x>
+      <y>400</y>
+      <w>110</w>
+      <h>80</h>
+    </coordinates>
+    <panel_attributes>lt=-&gt;&gt;&gt;&gt;&gt;
+_sInstance_</panel_attributes>
+    <additional_attributes>90.0;60.0;10.0;60.0;10.0;10.0;90.0;10.0</additional_attributes>
+  </element>
+  <element>
+    <id>UMLNote</id>
+    <coordinates>
+      <x>480</x>
+      <y>250</y>
+      <w>220</w>
+      <h>120</h>
+    </coordinates>
+    <panel_attributes>The controller is only needed
+if there *are* child processes,
+so we can create it with the first
+child (at which point the tracker
+can register itself with the local
+profiler), and destroyed with the
+last child.
+bg=blue</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>690</x>
+      <y>330</y>
+      <w>100</w>
+      <h>80</h>
+    </coordinates>
+    <panel_attributes/>
+    <additional_attributes>10.0;10.0;80.0;60.0</additional_attributes>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>130</x>
+      <y>460</y>
+      <w>200</w>
+      <h>380</h>
+    </coordinates>
+    <panel_attributes>lt=-&gt;&gt;&gt;&gt;
+mParentChunkManager</panel_attributes>
+    <additional_attributes>180.0;360.0;10.0;360.0;10.0;10.0</additional_attributes>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>740</x>
+      <y>330</y>
+      <w>350</w>
+      <h>510</h>
+    </coordinates>
+    <panel_attributes>lt=-&gt;&gt;&gt;&gt;
+mLocalBufferChunkManager</panel_attributes>
+    <additional_attributes>10.0;490.0;330.0;490.0;330.0;10.0</additional_attributes>
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>470</x>
+      <y>650</y>
+      <w>400</w>
+      <h>100</h>
+    </coordinates>
+    <panel_attributes>*ProfileBufferControlledChunkManager::Update*
+--
+-mUnreleasedBytes
+-mReleasedBytes
+-mOldestDoneTimeStamp
+-mNewReleasedChunks: ChunkMetadata[ ]</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>470</x>
+      <y>560</y>
+      <w>400</w>
+      <h>60</h>
+    </coordinates>
+    <panel_attributes>*ProfileBufferControlledChunkManager::ChunkMetadata*
+--
+-mDoneTimeStamp
+-mBufferBytes</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>670</x>
+      <y>610</y>
+      <w>30</w>
+      <h>60</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;.</panel_attributes>
+    <additional_attributes>10.0;10.0;10.0;40.0</additional_attributes>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>670</x>
+      <y>740</y>
+      <w>30</w>
+      <h>60</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;.</panel_attributes>
+    <additional_attributes>10.0;10.0;10.0;40.0</additional_attributes>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>670</x>
+      <y>50</y>
+      <w>130</w>
+      <h>110</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;.</panel_attributes>
+    <additional_attributes>10.0;10.0;110.0;90.0</additional_attributes>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>360</x>
+      <y>50</y>
+      <w>130</w>
+      <h>110</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;.</panel_attributes>
+    <additional_attributes>110.0;10.0;10.0;90.0</additional_attributes>
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>400</x>
+      <y>130</y>
+      <w>350</w>
+      <h>100</h>
+    </coordinates>
+    <panel_attributes>*ProfileBufferChunkManagerUpdate*
+bg=light_gray
+--
+-unreleasedBytes
+-releasedBytes
+-oldestDoneTimeStamp
+-newlyReleasedChunks: ProfileBufferChunkMetadata[ ]</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>310</x>
+      <y>780</y>
+      <w>440</w>
+      <h>70</h>
+    </coordinates>
+    <panel_attributes>*ProfileBufferControlledChunkManager*
+--
+*/+SetUpdateCallback(function&lt;void(update: Update&amp;&amp;)&gt;)/*
+*/+DestroyChunksAtOrBefore(timeStamp)/*</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>480</x>
+      <y>840</y>
+      <w>30</w>
+      <h>80</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;&lt;-</panel_attributes>
+    <additional_attributes>10.0;10.0;10.0;60.0</additional_attributes>
+  </element>
+</diagram>
