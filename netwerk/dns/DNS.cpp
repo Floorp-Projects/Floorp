@@ -213,8 +213,9 @@ bool IsLoopbackHostname(const nsACString& aAsciiHost) {
   nsAutoCString host;
   nsContentUtils::ASCIIToLower(aAsciiHost, host);
 
-  return host.EqualsLiteral("localhost") ||
-         StringEndsWith(host, ".localhost"_ns);
+  return host.EqualsLiteral("localhost") || host.EqualsLiteral("localhost.") ||
+         StringEndsWith(host, ".localhost"_ns) ||
+         StringEndsWith(host, ".localhost."_ns);
 }
 
 bool HostIsIPLiteral(const nsACString& aAsciiHost) {
