@@ -104,7 +104,7 @@ class nsSplitterFrameInner final : public nsIDOMEventListener {
 
   void EnsureOrient();
   void SetPreferredSize(nsBoxLayoutState& aState, nsIFrame* aChildBox,
-                        nscoord aOnePixel, bool aIsHorizontal, nscoord* aSize);
+                        bool aIsHorizontal, nscoord* aSize);
 
   nsSplitterFrame* mOuter;
   bool mDidDrag = false;
@@ -809,12 +809,10 @@ void nsSplitterFrameInner::AdjustChildren(nsPresContext* aPresContext,
 
   nsBoxLayoutState state(aPresContext);
 
-  nscoord onePixel = nsPresContext::CSSPixelsToAppUnits(1);
-
   // first set all the widths.
   nsIFrame* child = nsIFrame::GetChildXULBox(mOuter);
   while (child) {
-    SetPreferredSize(state, child, onePixel, aIsHorizontal, nullptr);
+    SetPreferredSize(state, child, aIsHorizontal, nullptr);
     child = nsIFrame::GetNextXULBox(child);
   }
 
@@ -825,14 +823,13 @@ void nsSplitterFrameInner::AdjustChildren(nsPresContext* aPresContext,
         GetChildBoxForContent(mParentBox, aChildInfos[i].childElem);
 
     if (childBox) {
-      SetPreferredSize(state, childBox, onePixel, aIsHorizontal, &pref);
+      SetPreferredSize(state, childBox, aIsHorizontal, &pref);
     }
   }
 }
 
 void nsSplitterFrameInner::SetPreferredSize(nsBoxLayoutState& aState,
                                             nsIFrame* aChildBox,
-                                            nscoord aOnePixel,
                                             bool aIsHorizontal,
                                             nscoord* aSize) {
   nsRect rect(aChildBox->GetRect());
@@ -861,14 +858,21 @@ void nsSplitterFrameInner::SetPreferredSize(nsBoxLayoutState& aState,
     return;
   }
 
+  // We set both the attribute and the CSS value, so that XUL persist="" keeps
+  // working, see bug 1790712.
+
+  int32_t pixels = pref / AppUnitsPerCSSPixel();
+  nsAutoString attrValue;
+  attrValue.AppendInt(pixels);
+  element->SetAttr(aIsHorizontal ? nsGkAtoms::width : nsGkAtoms::height,
+                   attrValue, IgnoreErrors());
+
   nsCOMPtr<nsICSSDeclaration> decl = element->Style();
 
-  // set its preferred size.
-  nsAutoCString prefValue;
-  prefValue.AppendInt(pref / aOnePixel);
-  prefValue.AppendLiteral("px");
-
-  decl->SetProperty(aIsHorizontal ? "width"_ns : "height"_ns, prefValue, ""_ns,
+  nsAutoCString cssValue;
+  cssValue.AppendInt(pixels);
+  cssValue.AppendLiteral("px");
+  decl->SetProperty(aIsHorizontal ? "width"_ns : "height"_ns, cssValue, ""_ns,
                     IgnoreErrors());
 }
 
