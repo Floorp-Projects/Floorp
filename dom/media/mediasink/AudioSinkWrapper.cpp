@@ -96,35 +96,22 @@ TimeUnit AudioSinkWrapper::GetPosition(TimeStamp* aTimeStamp) {
     // Calculate playback position using system clock if we are still playing,
     // but not rendering the audio, because this audio sink is muted.
     pos = GetSystemClockPosition(t);
-
-    RefPtr<AudioData> audio = mAudioQueue.PeekBack();
-    if (audio) {
-      mLastPacketEndTime = Some(audio->GetEndTime());
-    }
-
+    LOGV("%p: Getting position from the system clock %lf", this,
+         pos.ToSeconds());
     if (mAudioQueue.GetSize() > 0 && IsMuted()) {
       // audio track, but it's muted and won't be dequeued, discard packets that
       // are behind the current media time, to keep the queue size under
       // control.
       DropAudioPacketsIfNeeded(pos);
-    }
-
-    // If muted, it's necessary to manually check if the audio has "ended",
-    // meaning that all the audio packets have been consumed, to resolve the
-    // ended promise. Since we don't get a correct end time by draining the
-    // stream, it's necessary to cap the simulated current time at the maximum
-    // timestamp of the media, to not return a media time that exceeds the
-    // duration.
-    if (mLastPacketEndTime && pos > mLastPacketEndTime.value() &&
-        CheckIfEnded()) {
-      pos = mLastPacketEndTime.value();
-      mEndedPromiseHolder.ResolveIfExists(true, __func__);
-    } else if (!mLastPacketEndTime && CheckIfEnded()) {
-      mEndedPromiseHolder.ResolveIfExists(true, __func__);
+      // If muted, it's necessary to manually check if the audio has "ended",
+      // meaning that all the audio packets have been consumed, to resolve the
+      // ended promise.
+      if (CheckIfEnded()) {
+        MOZ_ASSERT(!mAudioSink);
+        mEndedPromiseHolder.ResolveIfExists(true, __func__);
+      }
     }
     mLastClockSource = ClockSource::SystemClock;
-    LOGV("%p: Getting position from the system clock %lf", this,
-         pos.ToSeconds());
   } else {
     // Return how long we've played if we are not playing.
     pos = mPlayDuration;
@@ -157,7 +144,7 @@ void AudioSinkWrapper::DropAudioPacketsIfNeeded(
     const TimeUnit& aMediaPosition) {
   RefPtr<AudioData> audio = mAudioQueue.PeekFront();
   uint32_t dropped = 0;
-  while (audio && audio->GetEndTime() < aMediaPosition) {
+  while (audio && audio->mTime + audio->mDuration < aMediaPosition) {
     // drop this packet, try the next one
     audio = mAudioQueue.PopFront();
     dropped++;
