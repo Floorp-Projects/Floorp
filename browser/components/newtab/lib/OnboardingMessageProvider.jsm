@@ -329,7 +329,8 @@ const BASE_MESSAGES = () => [
             },
             primary_button: {
               label: {
-                string_id: "mr2022-onboarding-colorway-primary-button-label",
+                string_id:
+                  "mr2022-onboarding-colorway-primary-button-label-continue",
               },
               action: {
                 persistActiveTheme: true,
