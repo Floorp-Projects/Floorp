@@ -362,7 +362,6 @@
 #include "nsISecurityConsoleMessage.h"
 #include "nsISelectionController.h"
 #include "nsISerialEventTarget.h"
-#include "nsISerializable.h"
 #include "nsISimpleEnumerator.h"
 #include "nsISiteSecurityService.h"
 #include "nsISocketProvider.h"
@@ -1592,14 +1591,10 @@ already_AddRefed<mozilla::dom::Promise> Document::AddCertException(
   }
 
   if (XRE_IsContentProcess()) {
-    nsCOMPtr<nsISerializable> certSer = do_QueryInterface(cert);
-    nsCString certSerialized;
-    NS_SerializeToString(certSer, certSerialized);
-
     ContentChild* cc = ContentChild::GetSingleton();
     MOZ_ASSERT(cc);
     OriginAttributes const& attrs = NodePrincipal()->OriginAttributesRef();
-    cc->SendAddCertException(certSerialized, host, port, attrs, aIsTemporary)
+    cc->SendAddCertException(cert, host, port, attrs, aIsTemporary)
         ->Then(GetCurrentSerialEventTarget(), __func__,
                [promise](const mozilla::MozPromise<
                          nsresult, mozilla::ipc::ResponseRejectReason,

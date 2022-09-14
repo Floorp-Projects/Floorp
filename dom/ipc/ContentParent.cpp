@@ -241,7 +241,6 @@
 #include "nsReadableUtils.h"
 #include "nsSHistory.h"
 #include "nsScriptError.h"
-#include "nsSerializationHelper.h"
 #include "nsServiceManagerUtils.h"
 #include "nsStreamUtils.h"
 #include "nsStyleSheetService.h"
@@ -6547,26 +6546,17 @@ mozilla::ipc::IPCResult ContentParent::RecvBHRThreadHang(
 }
 
 mozilla::ipc::IPCResult ContentParent::RecvAddCertException(
-    const nsACString& aSerializedCert, const nsACString& aHostName,
-    int32_t aPort, const OriginAttributes& aOriginAttributes, bool aIsTemporary,
+    nsIX509Cert* aCert, const nsACString& aHostName, int32_t aPort,
+    const OriginAttributes& aOriginAttributes, bool aIsTemporary,
     AddCertExceptionResolver&& aResolver) {
-  nsCOMPtr<nsISupports> certObj;
-  nsresult rv = NS_DeserializeObject(aSerializedCert, getter_AddRefs(certObj));
-  if (NS_SUCCEEDED(rv)) {
-    nsCOMPtr<nsIX509Cert> cert = do_QueryInterface(certObj);
-    if (!cert) {
-      rv = NS_ERROR_INVALID_ARG;
-    } else {
-      nsCOMPtr<nsICertOverrideService> overrideService =
-          do_GetService(NS_CERTOVERRIDE_CONTRACTID);
-      if (!overrideService) {
-        rv = NS_ERROR_FAILURE;
-      } else {
-        rv = overrideService->RememberValidityOverride(
-            aHostName, aPort, aOriginAttributes, cert, aIsTemporary);
-      }
-    }
+  nsCOMPtr<nsICertOverrideService> overrideService =
+      do_GetService(NS_CERTOVERRIDE_CONTRACTID);
+  if (!overrideService) {
+    aResolver(NS_ERROR_FAILURE);
+    return IPC_OK();
   }
+  nsresult rv = overrideService->RememberValidityOverride(
+      aHostName, aPort, aOriginAttributes, aCert, aIsTemporary);
   aResolver(rv);
   return IPC_OK();
 }
