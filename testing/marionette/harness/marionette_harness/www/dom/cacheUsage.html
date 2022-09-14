@@ -1,0 +1,25 @@
+<html>
+    <head>
+        <script>
+            async function getStorageEstimate() {
+                let r = await navigator.storage.estimate();
+                return r.usage;
+            }
+
+            function openCache(id) {
+                return caches.open(id);
+            }
+
+            async function doCacheWork(id, n) {
+                let c = await openCache(id);
+                let body = new Uint8Array(Array(1024).fill(0))
+
+                for (let i = 0; i < n; i++) {
+                    await c.put(new Request(`/data-${i}`), new Response(body))
+                }
+                await caches.delete(id)
+                return "success";
+            }
+        </script>
+    </head>
+</html>
