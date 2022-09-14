@@ -1260,7 +1260,10 @@
         "template": {
           "type": "string",
           "description": "Specify whether the surface is shown as a Spotlight modal or an in-surface Feature Callout dialog",
-          "enum": ["spotlight", "feature_callout"]
+          "enum": [
+            "spotlight",
+            "feature_callout"
+          ]
         }
       },
       "additionalProperties": true,
@@ -1317,6 +1320,36 @@
             "data": {
               "type": "object",
               "description": "Arbitrary data associated with the toast notification."
+            },
+            "actions": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "title": {
+                    "$ref": "resource://activity-stream/schemas/MessagingExperiment.schema.json#/$defs/localizableText",
+                    "description": "The action text to be shown to the user."
+                  },
+                  "action": {
+                    "type": "string",
+                    "description": "Opaque identifer that identifies action."
+                  },
+                  "iconURL": {
+                    "type": "string",
+                    "format": "uri",
+                    "description": "URL of an icon to display with the action."
+                  },
+                  "windowsSystemActivationType": {
+                    "type": "boolean",
+                    "description": "Whether to have Windows process the given `action`."
+                  }
+                },
+                "required": [
+                  "action",
+                  "title"
+                ],
+                "additionalProperties": true
+              }
             }
           },
           "additionalProperties": true,

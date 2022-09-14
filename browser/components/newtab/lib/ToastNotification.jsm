@@ -72,7 +72,15 @@ const ToastNotification = {
     );
 
     if (content.actions) {
-      alert.actions = content.actions;
+      let actions = Cu.cloneInto(content.actions, {});
+      for (let action of actions) {
+        if (action.title) {
+          action.title = await lazy.RemoteL10n.formatLocalizableText(
+            action.title
+          );
+        }
+      }
+      alert.actions = actions;
     }
 
     if (content.launch_url) {

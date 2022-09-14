@@ -770,6 +770,42 @@ const MESSAGES = () => [
     trigger: { id: "backgroundTaskMessage" },
     frequency: { lifetime: 3 },
   },
+  {
+    id: "MR2022_BACKGROUND_UPDATE_TOAST_NOTIFICATION",
+    weight: 100,
+    template: "toast_notification",
+    content: {
+      title: {
+        string_id: "mr2022-background-update-toast-title",
+      },
+      body: {
+        string_id: "mr2022-background-update-toast-text",
+      },
+      image_url:
+        "https://firefox-settings-attachments.cdn.mozilla.net/main-workspace/ms-images/673d2808-e5d8-41b9-957e-f60d53233b97.png",
+      requireInteraction: true,
+      actions: [
+        {
+          action: "open",
+          title: {
+            string_id: "mr2022-background-update-toast-primary-button-label",
+          },
+        },
+        {
+          action: "snooze",
+          windowsSystemActivationType: true,
+          title: {
+            string_id: "mr2022-background-update-toast-secondary-button-label",
+          },
+        },
+      ],
+      tag: "mr2022_background_update",
+    },
+    groups: ["panel-test-provider"],
+    targeting: "!hasActiveEnterprisePolicies",
+    trigger: { id: "backgroundTaskMessage" },
+    frequency: { lifetime: 3 },
+  },
 ];
 
 const PanelTestProvider = {

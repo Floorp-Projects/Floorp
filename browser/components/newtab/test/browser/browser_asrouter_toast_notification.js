@@ -63,6 +63,50 @@ add_task(async function test_showAlert() {
   Assert.equal(alert.text, "Body", "Should match");
 });
 
+// Test that the `title` of each `action` of a toast notification is localized.
+add_task(async function test_actionLocalization() {
+  const l10n = new Localization([
+    "branding/brand.ftl",
+    "browser/newtab/asrouter.ftl",
+  ]);
+  let expectedTitle = await l10n.formatValue(
+    "mr2022-background-update-toast-title"
+  );
+  let expectedText = await l10n.formatValue(
+    "mr2022-background-update-toast-text"
+  );
+  let expectedPrimary = await l10n.formatValue(
+    "mr2022-background-update-toast-primary-button-label"
+  );
+  let expectedSecondary = await l10n.formatValue(
+    "mr2022-background-update-toast-secondary-button-label"
+  );
+
+  showAlertStub.reset();
+
+  let dispatchStub = sinon.stub();
+
+  let message = await getMessage("MR2022_BACKGROUND_UPDATE_TOAST_NOTIFICATION");
+  await ToastNotification.showToastNotification(message, dispatchStub);
+
+  // Test display.
+  Assert.equal(
+    showAlertStub.callCount,
+    1,
+    "AlertsService.showAlert is invoked"
+  );
+
+  let [alert] = showAlertStub.firstCall.args;
+  Assert.equal(alert.title, expectedTitle, "Should match title");
+  Assert.equal(alert.text, expectedText, "Should match text");
+  Assert.equal(alert.actions[0].title, expectedPrimary, "Should match primary");
+  Assert.equal(
+    alert.actions[1].title,
+    expectedSecondary,
+    "Should match secondary"
+  );
+});
+
 // Test that toast notifications report sensible telemetry.
 add_task(async function test_telemetry() {
   let dispatchStub = sinon.stub();
