@@ -636,7 +636,7 @@ class ObserverRegistryTest {
     }
 
     private class TestConsumingObserver(
-        private val shouldConsume: Boolean
+        private val shouldConsume: Boolean,
     ) {
         var notified: Boolean = false
         var notifiedWith: Int? = null

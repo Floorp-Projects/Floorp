@@ -73,7 +73,7 @@ open class ObserverRegistry<T> : Observable<T> {
         val viewObserver = ViewBoundObserver(
             view,
             registry = this,
-            observer = observer
+            observer = observer,
         )
 
         viewObservers[observer] = viewObserver
@@ -182,7 +182,7 @@ open class ObserverRegistry<T> : Observable<T> {
     private open class LifecycleBoundObserver<T>(
         private val owner: LifecycleOwner,
         protected val registry: ObserverRegistry<T>,
-        protected val observer: T
+        protected val observer: T,
     ) : DefaultLifecycleObserver {
 
         @MainThread
@@ -206,7 +206,7 @@ open class ObserverRegistry<T> : Observable<T> {
     private class AutoPauseLifecycleBoundObserver<T>(
         owner: LifecycleOwner,
         private val registry: ObserverRegistry<T>,
-        private val observer: T
+        private val observer: T,
     ) : DefaultLifecycleObserver {
         init {
             if (!owner.lifecycle.currentState.isAtLeast(RESUMED)) {
@@ -230,7 +230,7 @@ open class ObserverRegistry<T> : Observable<T> {
     private class ViewBoundObserver<T>(
         private val view: View,
         private val registry: ObserverRegistry<T>,
-        private val observer: T
+        private val observer: T,
     ) : View.OnAttachStateChangeListener {
         override fun onViewDetachedFromWindow(view: View) {
             registry.unregister(observer)

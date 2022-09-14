@@ -102,10 +102,10 @@ internal class AutofillConfirmFragment : DialogFragment() {
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
         return AlertDialog.Builder(requireContext())
             .setTitle(
-                getString(R.string.mozac_feature_autofill_confirmation_title)
+                getString(R.string.mozac_feature_autofill_confirmation_title),
             )
             .setMessage(
-                getString(R.string.mozac_feature_autofill_confirmation_authenticity, configuration.applicationName)
+                getString(R.string.mozac_feature_autofill_confirmation_authenticity, configuration.applicationName),
             )
             .setPositiveButton(R.string.mozac_feature_autofill_confirmation_yes) { _, _ -> confirmRequest() }
             .setNegativeButton(R.string.mozac_feature_autofill_confirmation_no) { _, _ -> cancelRequest() }

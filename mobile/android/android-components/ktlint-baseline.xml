@@ -6372,10 +6372,6 @@
         <error line="177" column="28" source="trailing-comma-on-declaration-site" />
         <error line="183" column="24" source="trailing-comma-on-call-site" />
     </file>
-    <file name="components/feature/autofill/src/main/java/mozilla/components/feature/autofill/ui/AbstractAutofillConfirmActivity.kt">
-        <error line="104" column="78" source="trailing-comma-on-call-site" />
-        <error line="107" column="116" source="trailing-comma-on-call-site" />
-    </file>
     <file name="components/feature/autofill/src/main/java/mozilla/components/feature/autofill/ui/search/LoginViewHolder.kt">
         <error line="19" column="49" source="trailing-comma-on-declaration-site" />
     </file>
@@ -6732,13 +6728,6 @@
     </file>
     <file name="components/feature/contextmenu/src/main/java/mozilla/components/feature/contextmenu/ContextMenuFeature.kt">
         <error line="55" column="66" source="trailing-comma-on-declaration-site" />
-    </file>
-    <file name="components/feature/contextmenu/src/main/java/mozilla/components/feature/contextmenu/ContextMenuFragment.kt">
-        <error line="74" column="17" source="trailing-comma-on-call-site" />
-        <error line="76" column="27" source="trailing-comma-on-call-site" />
-        <error line="130" column="36" source="trailing-comma-on-declaration-site" />
-        <error line="151" column="41" source="trailing-comma-on-declaration-site" />
-        <error line="154" column="81" source="trailing-comma-on-call-site" />
     </file>
     <file name="components/feature/contextmenu/src/main/java/mozilla/components/feature/contextmenu/ContextMenuUseCases.kt">
         <error line="20" column="24" source="trailing-comma-on-declaration-site" />
@@ -13353,22 +13342,6 @@
         <error line="232" column="22" source="trailing-comma-on-call-site" />
         <error line="245" column="25" source="trailing-comma-on-call-site" />
     </file>
-    <file name="components/lib/state/src/test/java/mozilla/components/lib/state/ext/StoreExtensionsKtTest.kt">
-        <error line="56" column="22" source="trailing-comma-on-call-site" />
-        <error line="73" column="22" source="trailing-comma-on-call-site" />
-        <error line="96" column="22" source="trailing-comma-on-call-site" />
-        <error line="146" column="22" source="trailing-comma-on-call-site" />
-        <error line="201" column="22" source="trailing-comma-on-call-site" />
-        <error line="215" column="22" source="trailing-comma-on-call-site" />
-        <error line="272" column="22" source="trailing-comma-on-call-site" />
-        <error line="296" column="22" source="trailing-comma-on-call-site" />
-        <error line="318" column="22" source="trailing-comma-on-call-site" />
-        <error line="368" column="22" source="trailing-comma-on-call-site" />
-        <error line="417" column="22" source="trailing-comma-on-call-site" />
-        <error line="468" column="22" source="trailing-comma-on-call-site" />
-        <error line="494" column="22" source="trailing-comma-on-call-site" />
-        <error line="523" column="22" source="trailing-comma-on-call-site" />
-    </file>
     <file name="components/lib/state/src/test/java/mozilla/components/lib/state/ext/ViewKtTest.kt">
         <error line="44" column="22" source="trailing-comma-on-call-site" />
     </file>
@@ -14543,12 +14516,6 @@
         <error line="17" column="42" source="trailing-comma-on-declaration-site" />
         <error line="90" column="42" source="trailing-comma-on-call-site" />
     </file>
-    <file name="components/support/base/src/main/java/mozilla/components/support/base/observer/ObserverRegistry.kt">
-        <error line="80" column="32" source="trailing-comma-on-call-site" />
-        <error line="190" column="34" source="trailing-comma-on-declaration-site" />
-        <error line="212" column="20" source="trailing-comma-on-declaration-site" />
-        <error line="234" column="32" source="trailing-comma-on-declaration-site" />
-    </file>
     <file name="components/support/base/src/main/java/mozilla/components/support/base/utils/NamedThreadFactory.kt">
         <error line="16" column="31" source="trailing-comma-on-declaration-site" />
     </file>
@@ -14660,9 +14627,6 @@
         <error line="419" column="18" source="trailing-comma-on-call-site" />
         <error line="420" column="14" source="trailing-comma-on-call-site" />
         <error line="495" column="43" source="trailing-comma-on-declaration-site" />
-    </file>
-    <file name="components/support/base/src/test/java/mozilla/components/support/base/observer/ObserverRegistryTest.kt">
-        <error line="635" column="43" source="trailing-comma-on-declaration-site" />
     </file>
     <file name="components/support/images/src/androidTest/java/mozilla/components/support/images/decoder/OnDeviceAndroidImageDecoderTest.kt">
         <error line="23" column="38" source="trailing-comma-on-call-site" />
