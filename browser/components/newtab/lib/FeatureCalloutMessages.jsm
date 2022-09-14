@@ -78,7 +78,7 @@ const MESSAGES = () => {
         screens: [
           {
             id: "FEATURE_CALLOUT_1",
-            parent_selector: "#tabpickup-steps",
+            parent_selector: "#tab-pickup-container",
             content: {
               position: "callout",
               arrow_position: "top",
@@ -152,7 +152,7 @@ const MESSAGES = () => {
         screens: [
           {
             id: "FEATURE_CALLOUT_1",
-            parent_selector: "#tabpickup-steps",
+            parent_selector: "#tab-pickup-container",
             content: {
               position: "callout",
               arrow_position: "top",
@@ -457,7 +457,7 @@ const MESSAGES = () => {
           },
         ],
       },
-      priority: 2,
+      priority: 3,
       targeting: `!inMr2022Holdback && source == "firefoxview" && "browser.firefox-view.view-count" | preferenceValue > 3 && colorwaysActive && !userEnabledActiveColorway`,
       frequency: { lifetime: 1 },
       trigger: { id: "featureCalloutCheck" },
@@ -474,7 +474,7 @@ const MESSAGES = () => {
         screens: [
           {
             id: "FIREFOX_VIEW_TAB_PICKUP_REMINDER",
-            parent_selector: "#tabpickup-steps",
+            parent_selector: "#tab-pickup-container",
             content: {
               position: "callout",
               arrow_position: "top",
@@ -514,7 +514,7 @@ const MESSAGES = () => {
           },
         ],
       },
-      priority: 1,
+      priority: 2,
       targeting: `!inMr2022Holdback && source == "firefoxview" && "browser.firefox-view.view-count" | preferenceValue > 2
     && (("identity.fxaccounts.enabled" | preferenceValue == false) || !(("services.sync.engine.tabs" | preferenceValue == true) && ("services.sync.username" | preferenceValue)))`,
       frequency: {

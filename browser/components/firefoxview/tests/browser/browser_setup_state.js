@@ -424,7 +424,8 @@ add_task(async function test_tab_sync_enabled() {
       mobilePromo: false,
       mobileConfirmation: false,
     });
-
+    await waitForElementVisible(browser, ".featureCallout .FEATURE_CALLOUT_1");
+    ok(true, "Tab pickup product tour screen renders when sync is enabled");
     ok(
       Services.prefs.getBoolPref("services.sync.engine.tabs", false),
       "tab sync pref should be enabled after button click"
