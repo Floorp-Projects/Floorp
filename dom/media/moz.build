@@ -83,6 +83,7 @@ MOCHITEST_MANIFESTS += [
     "test/mochitest.ini",
     "test/mochitest_background_video.ini",
     "test/mochitest_bugs.ini",
+    "test/mochitest_compat.ini",
     "test/mochitest_eme.ini",
     "test/mochitest_media_recorder.ini",
     "test/mochitest_seek.ini",
