@@ -168,14 +168,7 @@ add_test(function test_processPointerMoveActionOriginStringValidation() {
 add_test(function test_processPointerMoveActionElementOrigin() {
   let state = new action.State();
   const inputTickActions = [
-    {
-      type: "pointer",
-      duration: 5000,
-      subtype: "pointerMove",
-      origin: domEl,
-      x: 0,
-      y: 0,
-    },
+    { type: "pointer", duration: 5000, subtype: "pointerMove", origin: domEl },
   ];
   const chain = action.Chain.fromJSON(state, chainForTick(inputTickActions));
   deepEqual(chain[0][0].origin.element, domEl);
@@ -185,7 +178,7 @@ add_test(function test_processPointerMoveActionElementOrigin() {
 add_test(function test_processPointerMoveActionDefaultOrigin() {
   let state = new action.State();
   const inputTickActions = [
-    { type: "pointer", duration: 5000, subtype: "pointerMove", x: 0, y: 0 },
+    { type: "pointer", duration: 5000, subtype: "pointerMove" },
   ];
   const chain = action.Chain.fromJSON(state, chainForTick(inputTickActions));
   // The default is viewport coordinates which have an origin at [0,0] and don't depend on inputSource
@@ -203,15 +196,22 @@ add_test(function test_processPointerMoveAction() {
       duration: 5000,
       type: "pointerMove",
       origin: undefined,
-      x: 0,
-      y: 0,
+      x: undefined,
+      y: undefined,
     },
     {
       duration: undefined,
       type: "pointerMove",
       origin: domEl,
+      x: undefined,
+      y: undefined,
+    },
+    {
+      duration: 5000,
+      type: "pointerMove",
       x: 0,
-      y: 0,
+      y: undefined,
+      origin: undefined,
     },
     {
       duration: 5000,
@@ -315,8 +315,6 @@ add_test(function test_processPointerAction() {
       {
         type: "pointerMove",
         duration: 2000,
-        x: 0,
-        y: 0,
       },
       {
         type: "pointerUp",
@@ -672,7 +670,7 @@ add_test(function test_computeTickDuration() {
   const inputTickActions = [
     { type: "none", subtype: "pause", duration: 5000 },
     { type: "key", subtype: "pause", duration: 1000 },
-    { type: "pointer", subtype: "pointerMove", duration: 6000, x: 0, y: 0 },
+    { type: "pointer", subtype: "pointerMove", duration: 6000 },
     // invalid because keyDown should not have duration, so duration should be ignored.
     { type: "key", subtype: "keyDown", duration: 100000, value: "a" },
     { type: "pointer", subtype: "pause", duration: expected },
@@ -692,7 +690,7 @@ add_test(function test_computeTickDuration_noDurations() {
     { type: "key", subtype: "keyDown", duration: 100000, value: "a" },
     // undefined duration permitted
     { type: "none", subtype: "pause" },
-    { type: "pointer", subtype: "pointerMove", button: 0, x: 0, y: 0 },
+    { type: "pointer", subtype: "pointerMove", button: 0 },
     { type: "pointer", subtype: "pointerDown", button: 0 },
     { type: "key", subtype: "keyUp", value: "a" },
   ];
