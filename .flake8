@@ -108,22 +108,20 @@ per-file-ignores =
 
     # These paths contain Python-2 only syntax which cause errors since flake8
     # is run with Python 3.
-    browser/app/macversion.py: F633
-    build/**: F633, F821
-    config/**: F633, F821
+    build/compare-mozconfig/compare-mozconfigs.py: F821
+    build/midl.py: F821
+    build/pgo/genpgocert.py: F821
+    config/MozZipFile.py: F821
+    config/check_source_count.py: F821
+    config/tests/unitMozZipFile.py: F821
     ipc/pull-chromium.py: F633
-    js/**: F633, F821
-    memory/**: F821
-    mozglue/**: F821
-    python/mozbuild/**: F821
-    python/mozbuild/mozbuild/test/configure/test_checks_configure.py: E128
-    python/mozversioncontrol/**: F821
-    testing/mozharness/**: F821
-    testing/talos/**: F821
-    toolkit/components/telemetry/**: F821
-    testing/firefox-ui/tests/functional/safebrowsing/test_initial_download.py: F821
-    testing/mochitest/**: F821
-    xpcom/idl-parser/xpidl/**: F633, F821
+    js/src/**: F633, F821
+    python/mozbuild/mozbuild/action/dump_env.py: F821
+    python/mozbuild/mozbuild/dotproperties.py: F821
+    python/mozbuild/mozbuild/testing.py: F821
+    python/mozbuild/mozbuild/util.py: F821
+    testing/mozharness/mozharness/mozilla/testing/android.py: F821
+    testing/mochitest/runtests.py: F821
 
 builtins =
     # For GDB extensions
