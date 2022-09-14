@@ -22,21 +22,21 @@ schema = Schema({
 
 def loader(kind, path, config, params, loaded_tasks):
     """
-    Load tasks based on the jobs dependant kind, designed to attach all dependencies of a single
+    Load tasks based on the tasks dependent kind, designed to attach all dependencies of a single
     kind to the loaded task.
 
     Required ``group-by-fn`` is used to define how we coalesce the
     multiple deps together to pass to transforms, e.g. all kinds specified get
     collapsed by platform with `build-type`
 
-    Optional ``job-template`` kind configuration value, if specified, will be used to
+    Optional ``task-template`` kind configuration value, if specified, will be used to
     pass configuration down to the specified transforms used.
     """
-    job_template = config.get('job-template')
+    task_template = config.get('task-template')
 
     for dep_tasks in group_tasks(config, loaded_tasks):
-        job = {'dependent-tasks': {dep.label: dep for dep in dep_tasks}}
-        if job_template:
-            job.update(copy.deepcopy(job_template))
+        task = {'dependent-tasks': {dep.label: dep for dep in dep_tasks}}
+        if task_template:
+            task.update(copy.deepcopy(task_template))
 
-        yield job
+        yield task

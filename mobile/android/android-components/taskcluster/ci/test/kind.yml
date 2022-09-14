@@ -12,7 +12,7 @@ kind-dependencies:
     - toolchain
 
 
-job-defaults:
+task-defaults:
     attributes:
         build-type: debug
         code-review: true
@@ -48,7 +48,7 @@ job-defaults:
         max-run-time: 2400
 
 
-jobs:
+tasks:
     unit-browser-engine-gecko-nightly:
         description: 'Run unit tests on device for browser component'
         run:

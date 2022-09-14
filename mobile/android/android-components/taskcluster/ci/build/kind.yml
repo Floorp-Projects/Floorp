@@ -27,7 +27,7 @@ files-affecting-components:
     ^gradle.properties$: all-components
     ^gradle/wrapper/gradle-wrapper.properties$: all-components
 
-job-defaults:
+task-defaults:
     artifact-template:
         type: file
         name: public/build/{artifact_file_name}
@@ -85,14 +85,14 @@ job-defaults:
                     - ':{component}:publish'
                 default:
                     by-component:
-                        # No lintRelease on this job, gradle task isn't defined
+                        # No lintRelease on this task, gradle task isn't defined
                         tooling-lint:
                             - ':{component}:assemble'
                             - ':{component}:assembleAndroidTest'
                             - ':{component}:test'
                             - ':{component}:lint'
                             - 'githubBuildDetails'
-                        # No testRelease on this job, gradle task isn't defined
+                        # No testRelease on this task, gradle task isn't defined
                         tooling-detekt:
                             - ':{component}:assemble'
                             - ':{component}:assembleAndroidTest'

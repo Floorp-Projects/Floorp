@@ -26,7 +26,7 @@ schema = Schema({
 
 def loader(kind, path, config, params, loaded_tasks):
     """
-    Load tasks based on the jobs dependant kinds, designed for use as
+    Load tasks based on the tasks dependent kinds, designed for use as
     multiple-dependent needs.
 
     Required ``group-by-fn`` is used to define how we coalesce the
@@ -37,12 +37,12 @@ def loader(kind, path, config, params, loaded_tasks):
     which upstream kind to inherit attrs from. See ``get_primary_dep``.
 
     The `only-for-build-type` kind configuration, if specified, will limit
-    the build types for which a job will be created.
+    the build types for which a task will be created.
 
-    Optional ``job-template`` kind configuration value, if specified, will be used to
+    Optional ``task-template`` kind configuration value, if specified, will be used to
     pass configuration down to the specified transforms used.
     """
-    job_template = config.get('job-template')
+    task_template = config.get('task-template')
 
     for dep_tasks in group_tasks(config, loaded_tasks):
         kinds = [dep.kind for dep in dep_tasks]
@@ -52,12 +52,12 @@ def loader(kind, path, config, params, loaded_tasks):
 
         dep_tasks_per_kind = {dep.kind: dep for dep in dep_tasks}
 
-        job = {'dependent-tasks': dep_tasks_per_kind}
-        job['primary-dependency'] = get_primary_dep(config, dep_tasks_per_kind)
-        if job_template:
-            job.update(copy.deepcopy(job_template))
+        task = {'dependent-tasks': dep_tasks_per_kind}
+        task['primary-dependency'] = get_primary_dep(config, dep_tasks_per_kind)
+        if task_template:
+            task.update(copy.deepcopy(task_template))
 
-        yield job
+        yield task
 
 
 def assert_unique_members(kinds, error_msg=None):

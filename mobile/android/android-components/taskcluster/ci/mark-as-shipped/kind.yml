@@ -19,7 +19,7 @@ group-by: build-type
 only-for-build-types:
     - release
 
-job-template:
+task-template:
     description: Mark Android-Components as shipped in ship-it
     worker-type: ship-it
     scopes:

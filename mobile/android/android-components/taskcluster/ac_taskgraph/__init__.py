@@ -15,9 +15,7 @@ from .build_config import get_components, get_version
 
 extend_parameters_schema({
     Required("pull_request_number"): Any(All(int, Range(min=1)), None),
-    Required("base_rev"): Any(str, None),
     Required("next_version"): Any(str, None),
-    Required("version"): str,
 })
 
 def register(graph_config):
@@ -37,8 +35,4 @@ def get_decision_parameters(graph_config, parameters):
     # Environment is defined in .taskcluster.yml
     pr_number = os.environ.get("MOBILE_PULL_REQUEST_NUMBER", None)
     parameters["pull_request_number"] = None if pr_number is None else int(pr_number)
-    parameters["base_rev"] = os.environ.get("MOBILE_BASE_REV")
-    parameters["head_ref"] = os.environ.get("MOBILE_HEAD_REF")
-    version = get_version()
-    parameters["version"] = version
     parameters.setdefault("next_version", None)

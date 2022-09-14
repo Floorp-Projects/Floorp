@@ -10,7 +10,7 @@ transforms:
     - taskgraph.transforms.cached_tasks:transforms
     - taskgraph.transforms.task:transforms
 
-jobs:
+tasks:
     android-build:
         symbol: I(agb)
         parent: base

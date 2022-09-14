@@ -25,12 +25,20 @@ charset-normalizer==2.0.12 \
 future==0.18.2 \
     --hash=sha256:b1bead90b70cf6ec3f0710ae53a525360fa360d306a86583adc6bf83a4db537d
     # via mozilla-version
+giturlparse==0.10.0 \
+    --hash=sha256:04ba1a3a099c3093fa8d24a422913c6a9b2c2cd22bcffc939cf72e3e98f672d7 \
+    --hash=sha256:2595ab291d30717cda8474b874c9fd509f1b9802ad7f6968c36a45e4b13eb337
+    # via mozilla-repo-urls
 idna==3.3 \
     --hash=sha256:84d9dd047ffa80596e0f246e2eab0b391788b0503584e8945f2368256d2735ff \
     --hash=sha256:9d643ff0a55b762d5cdb124b8eaa99c66322e2157b69160bc32796e824360e6d
     # via requests
 json-e==4.4.3 \
     --hash=sha256:8ed3974faa887ca96a7987298f6550cf2ad35472419a980766b3abe48258de0a
+    # via taskcluster-taskgraph
+mozilla-repo-urls==0.0.3 \
+    --hash=sha256:3b2f9b42111ce3d50ecdcd081a62229e1fdc8f5472adbf405abe12d3ba8e8af5 \
+    --hash=sha256:673c80a4d0ed449093203b88e119e0bf1074026f891c1dd50aa04d534fd0658c
     # via taskcluster-taskgraph
 mozilla-version==1.0.0 \
     --hash=sha256:678093aacc455a49b6feb6eeb922296c191aca4884e815573156b5966b8b051e \
@@ -73,7 +81,9 @@ pyyaml==6.0 \
     # via taskcluster-taskgraph
 redo==2.0.4 \
     --hash=sha256:81066955041c853b0e6491eb65a0877dce45131c4cfa3d42d923fc2aa8f7a043
-    # via taskcluster-taskgraph
+    # via
+    #   -r requirements.in
+    #   taskcluster-taskgraph
 requests==2.27.1 \
     --hash=sha256:68d7c56fd5a8999887728ef304a6d12edc7be74f1cfa47714fc8b414525c9a61 \
     --hash=sha256:f22fa1e554c9ddfd16e6e41ac79759e17be9e492b3587efa038054674760e72d
@@ -88,9 +98,9 @@ slugid==2.0.0 \
     --hash=sha256:a950d98b72691178bdd4d6c52743c4a2aa039207cf7a97d71060a111ff9ba297 \
     --hash=sha256:aec8b0e01c4ad32e38e12d609eab3ec912fd129aaf6b2ded0199b56a5f8fd67c
     # via taskcluster-taskgraph
-taskcluster-taskgraph==1.2.0 \
-    --hash=sha256:ac7b0345b5b8752c5b31c516c9d798d7168bfda8963774def972b0beee349f6e \
-    --hash=sha256:bce1ef59f15b317256214da4d82f19d745bdc1b4497561d753436f4efa32ea39
+taskcluster-taskgraph==3.2.0 \
+    --hash=sha256:941d96fd36c20b0e84e322d2c25be04fe5f258405793af5e086bbec698cbcb17 \
+    --hash=sha256:fafcd1bfd8ec8b2f57db4e4d87d5b881da3ad7119d78d407d22b4b71b805d1bf
     # via -r requirements.in
 taskcluster-urls==13.0.1 \
     --hash=sha256:5e25e7e6818e8877178b175ff43d2e6548afad72694aa125f404a7329ece0973 \
