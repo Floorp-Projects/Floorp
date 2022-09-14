@@ -115,6 +115,12 @@ object TestHelper {
         )
     }
 
+    fun waitUntilSnackbarGone() {
+        mDevice.findObject(
+            UiSelector().resourceId("$packageName:id/snackbar_layout"),
+        ).waitUntilGone(waitingTime)
+    }
+
     fun verifyUrl(urlSubstring: String, resourceName: String, resId: Int) {
         waitUntilObjectIsFound(resourceName)
         mDevice.findObject(UiSelector().text(urlSubstring)).waitForExists(waitingTime)
@@ -249,6 +255,18 @@ object TestHelper {
             )
         } else {
             BrowserRobot().verifyUrl(url)
+        }
+    }
+
+    fun assertPlayStoreOpens() {
+        if (isPackageInstalled(Constants.PackageName.GOOGLE_PLAY_SERVICES)) {
+            try {
+                intended(toPackage(Constants.PackageName.GOOGLE_PLAY_SERVICES))
+            } catch (e: AssertionFailedError) {
+                BrowserRobot().verifyRateOnGooglePlayURL()
+            }
+        } else {
+            BrowserRobot().verifyRateOnGooglePlayURL()
         }
     }
 

@@ -26,6 +26,7 @@ import org.mozilla.fenix.helpers.HomeActivityTestRule
 import org.mozilla.fenix.helpers.RecyclerViewIdlingResource
 import org.mozilla.fenix.helpers.RetryTestRule
 import org.mozilla.fenix.helpers.TestAssetHelper
+import org.mozilla.fenix.helpers.TestHelper
 import org.mozilla.fenix.helpers.TestHelper.longTapSelectItem
 import org.mozilla.fenix.ui.robots.bookmarksMenu
 import org.mozilla.fenix.ui.robots.browserScreen
@@ -526,6 +527,8 @@ class BookmarksTest {
             confirmDeletion()
             verifyDeleteSnackBarText()
             verifyFolderTitle("3")
+            // On some devices we need to wait for the Snackbar to be gone before continuing
+            TestHelper.waitUntilSnackbarGone()
         }.closeMenu {
         }
 

@@ -45,19 +45,11 @@ task-defaults:
         signing-android-test: signing-android-test-nightly
 
 tasks:
-    nightly-x86:
-        run:
-            commands:
-                - [wget, {artifact-reference: '<signing/public/build/x86/target.apk>'}, '-O', app-x86.apk]
-                - [wget, {artifact-reference: '<signing-android-test/public/build/noarch/target.apk>'}, '-O', android-test.apk]
-                - [automation/taskcluster/androidTest/ui-test.sh, x86-start-test, app-x86.apk, android-test.apk, '-1']
-        treeherder:
-            symbol: nightly(startup-x86)
     nightly-arm:
         run:
             commands:
-                - [wget, {artifact-reference: '<signing/public/build/armeabi-v7a/target.apk>'}, '-O', app-arm.apk]
+                - [wget, {artifact-reference: '<signing/public/build/arm64-v8a/target.apk>'}, '-O', app.apk]
                 - [wget, {artifact-reference: '<signing-android-test/public/build/noarch/target.apk>'}, '-O', android-test.apk]
-                - [automation/taskcluster/androidTest/ui-test.sh, arm-start-test, app-arm.apk, android-test.apk, '-1']
+                - [automation/taskcluster/androidTest/ui-test.sh, arm-start-test, app.apk, android-test.apk, '1']
         treeherder:
             symbol: nightly(startup-arm)

@@ -3,6 +3,7 @@
 gcloud:
   results-bucket: fenix_test_artifacts
   record-video: true
+
   timeout: 30m
   async: false
   num-flaky-test-attempts: 1
@@ -19,17 +20,22 @@ gcloud:
   performance-metrics: true
 
   test-targets:
-    - notPackage org.mozilla.fenix.screenshots
-    - notPackage org.mozilla.fenix.syncintegration
+   - class org.mozilla.fenix.ui.NavigationToolbarTest#visitURLTest
+   - class org.mozilla.fenix.ui.HistoryTest#visitedUrlHistoryTest
+   - class org.mozilla.fenix.ui.SmokeTest#openMainMenuSettingsItemTest
+   - class org.mozilla.fenix.ui.SettingsSearchTest#toggleSearchSuggestionsTest
+   - class org.mozilla.fenix.ui.CollectionTest#deleteCollectionTest
+   - class org.mozilla.fenix.ui.SmokeTest#noHistoryInPrivateBrowsingTest
+   - class org.mozilla.fenix.ui.NoNetworkAccessStartupTests#noNetworkConnectionStartupTest
 
   device:
-    - model: Pixel2.arm
-      version: 30
-      locale: en_US
+   - model: Pixel2.arm
+     version: 30
+     locale: en_US
 
 flank:
   project: GOOGLE_PROJECT
-  max-test-shards: 50
+  max-test-shards: 1
   num-test-runs: 1
   output-style: compact
   full-junit-result: true

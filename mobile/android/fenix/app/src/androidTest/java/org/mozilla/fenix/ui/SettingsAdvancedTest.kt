@@ -13,11 +13,10 @@ import org.junit.Rule
 import org.junit.Test
 import org.mozilla.fenix.customannotations.SmokeTest
 import org.mozilla.fenix.helpers.AndroidAssetDispatcher
-import org.mozilla.fenix.helpers.Constants.PackageName.GOOGLE_PLAY_SERVICES
 import org.mozilla.fenix.helpers.FeatureSettingsHelper
 import org.mozilla.fenix.helpers.HomeActivityIntentTestRule
 import org.mozilla.fenix.helpers.TestAssetHelper
-import org.mozilla.fenix.helpers.TestHelper.assertNativeAppOpens
+import org.mozilla.fenix.helpers.TestHelper
 import org.mozilla.fenix.ui.robots.homeScreen
 import org.mozilla.fenix.ui.robots.navigationToolbar
 
@@ -76,7 +75,6 @@ class SettingsAdvancedTest {
     @Test
     fun openLinkInAppTest() {
         val defaultWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 3)
-        val playStoreUrl = "play.google.com/store/apps/details?id=org.mozilla.fenix"
 
         homeScreen {
         }.openThreeDotMenu {
@@ -91,7 +89,7 @@ class SettingsAdvancedTest {
             mDevice.waitForIdle()
             clickLinkMatchingText("Mozilla Playstore link")
             mDevice.waitForIdle()
-            assertNativeAppOpens(GOOGLE_PLAY_SERVICES, playStoreUrl)
+            TestHelper.assertPlayStoreOpens()
         }
     }
 }
