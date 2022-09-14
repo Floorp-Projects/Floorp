@@ -17,7 +17,7 @@ import mozilla.appservices.push.PushException.CommunicationException
 import mozilla.appservices.push.PushException.CommunicationServerException
 import mozilla.appservices.push.PushException.CryptoException
 import mozilla.appservices.push.PushException.GeneralException
-import mozilla.appservices.push.PushException.JSONDeserializeException
+import mozilla.appservices.push.PushException.JsonDeserializeException
 import mozilla.appservices.push.PushException.RequestException
 import mozilla.components.concept.base.crash.CrashReporting
 import mozilla.components.concept.push.EncryptedPushMessage
@@ -366,7 +366,7 @@ internal inline fun exceptionHandler(crossinline onError: (PushError) -> Unit) =
         is GeneralException,
         is CryptoException,
         is CommunicationException,
-        is JSONDeserializeException,
+        is JsonDeserializeException,
         is RequestException,
         is CommunicationServerException -> false
         else -> true
