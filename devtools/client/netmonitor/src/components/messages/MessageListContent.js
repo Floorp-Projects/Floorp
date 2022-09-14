@@ -108,6 +108,11 @@ class MessageListContent extends Component {
       this.initIntersectionObserver = false;
     }
 
+    // In addition to that, we need to reset currentTruncatedNum
+    if (prevProps.messages.length && this.props.messages.length === 0) {
+      this.currentTruncatedNum = 0;
+    }
+
     // If a new connection is selected, scroll to anchor.
     if (channelId !== prevProps.channelId && scrollAnchor) {
       scrollAnchor.scrollIntoView();
@@ -268,7 +273,7 @@ class MessageListContent extends Component {
     let MESSAGES_TRUNCATED;
     const shouldTruncate = messages.length > this.messagesLimit;
     if (shouldTruncate) {
-      // If the checkbox is checked, we display all messages after the currentedTruncatedNum limit.
+      // If the checkbox is checked, we display all messages after the currentTruncatedNum limit.
       // If the checkbox is unchecked, we display all messages after the messagesLimit.
       this.currentTruncatedNum = this.state.checked
         ? this.currentTruncatedNum

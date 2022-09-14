@@ -147,9 +147,9 @@
 }
 
 #messages-view .truncated-messages-warning-icon {
-  width: 12px;
-  height: 12px;
-  margin-inline-end: 8px;
+  width: 16px;
+  height: 16px;
+  margin-inline-end: 5px;
   background-image: url(chrome://devtools/skin/images/info.svg);
   background-repeat: no-repeat;
   -moz-context-properties: fill;
