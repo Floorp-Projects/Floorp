@@ -18,8 +18,8 @@ add_task(async function test_TODO() {
 
   is(
     state.windows[0].selected,
-    1,
-    "The selected tab is Firefox view tab which is the first tab"
+    3,
+    "The selected tab is Firefox view tab which is the third tab"
   );
 
   gBrowser.selectedTab = tab;
@@ -28,7 +28,7 @@ add_task(async function test_TODO() {
 
   // The FxView tab doesn't get recorded in the session state and when we restore we want
   // to open the tab that was previously opened so we record the tab position minus one
-  is(state.windows[0].selected, 2, "The selected tab is the second tab");
+  is(state.windows[0].selected, 1, "The selected tab is the first tab");
 
   gBrowser.removeTab(window.FirefoxViewHandler.tab);
   gBrowser.removeTab(gBrowser.selectedTab);

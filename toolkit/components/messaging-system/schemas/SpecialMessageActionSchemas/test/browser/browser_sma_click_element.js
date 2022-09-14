@@ -112,7 +112,7 @@ async function openFirefoxViewTab(w) {
     w
   );
   assertFirefoxViewTab(w);
-  is(w.gBrowser.tabContainer.selectedIndex, 0, "Firefox View tab is selected");
+  ok(w.FirefoxViewHandler.tab.selected, "Firefox View tab is selected");
   await BrowserTestUtils.browserLoaded(w.FirefoxViewHandler.tab.linkedBrowser);
   return w.FirefoxViewHandler.tab;
 }
@@ -120,11 +120,6 @@ async function openFirefoxViewTab(w) {
 function assertFirefoxViewTab(w) {
   ok(w.FirefoxViewHandler.tab, "Firefox View tab exists");
   ok(w.FirefoxViewHandler.tab?.hidden, "Firefox View tab is hidden");
-  is(
-    w.gBrowser.tabs.indexOf(w.FirefoxViewHandler.tab),
-    0,
-    "Firefox View tab is the first tab"
-  );
   is(
     w.gBrowser.visibleTabs.indexOf(w.FirefoxViewHandler.tab),
     -1,
