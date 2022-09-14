@@ -885,7 +885,7 @@ const BASE_MESSAGES = () => [
       ],
       lifetime: 12,
     },
-    targeting: "doesAppNeedPrivatePin",
+    targeting: "!inMr2022Holdback && doesAppNeedPrivatePin",
   },
 ];
 
