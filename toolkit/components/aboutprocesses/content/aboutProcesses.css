@@ -131,7 +131,7 @@ td:not(:hover) > .profiler-icon:not(.profiler-active) {
   line-height: 50%;
   top: 4px; /* Half the image's height */
   inset-inline-start: -16px;
-  width: 100%;
+  width: 12px;
   -moz-context-properties: fill;
   fill: currentColor;
 }
@@ -140,6 +140,12 @@ td:not(:hover) > .profiler-icon:not(.profiler-active) {
 }
 .twisty.open::before {
   content: url("chrome://global/skin/icons/arrow-down-12.svg");
+}
+.twisty:-moz-focusring {
+  outline: none;
+}
+.twisty:-moz-focusring::before {
+  outline: var(--in-content-focus-outline);
 }
 .indent {
   padding-inline: 48px 0;
