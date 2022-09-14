@@ -47,7 +47,10 @@ class WallpapersUseCases(
     val initialize: InitializeWallpapersUseCase by lazy {
         if (FeatureFlags.wallpaperV2Enabled) {
             val metadataFetcher = WallpaperMetadataFetcher(client)
-            val migrationHelper = LegacyWallpaperMigration(storageRootDirectory)
+            val migrationHelper = LegacyWallpaperMigration(
+                storageRootDirectory = storageRootDirectory,
+                settings = context.settings(),
+            )
             DefaultInitializeWallpaperUseCase(
                 store = store,
                 downloader = downloader,

@@ -7,6 +7,7 @@ package org.mozilla.fenix.wallpapers
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import mozilla.components.support.base.log.logger.Logger
+import org.mozilla.fenix.utils.Settings
 import java.io.File
 import java.io.IOException
 
@@ -14,9 +15,11 @@ import java.io.IOException
  * Manages the migration of legacy wallpapers to the new paths
  *
  * @property storageRootDirectory The top level app-local storage directory.
+ * @property settings Used to update the color of the text shown above wallpapers.
  */
 class LegacyWallpaperMigration(
     private val storageRootDirectory: File,
+    private val settings: Settings,
 ) {
     /**
      * Migrate the legacy wallpaper to the new path and delete the remaining legacy files.
@@ -60,6 +63,11 @@ class LegacyWallpaperMigration(
                     "$targetDirectory/landscape.png",
                 ),
             )
+
+            // If an expired Turning Red wallpaper is successfully migrated
+            if (wallpaperName == TURNING_RED_MEI_WALLPAPER_NAME || wallpaperName == TURNING_RED_PANDA_WALLPAPER_NAME) {
+                settings.currentWallpaperTextColor = TURNING_RED_WALLPAPER_TEXT_COLOR.toLong(radix = 16)
+            }
         } catch (e: IOException) {
             Logger.error("Failed to migrate legacy wallpaper", e)
         }
@@ -67,5 +75,11 @@ class LegacyWallpaperMigration(
         // Delete the remaining legacy files
         File(storageRootDirectory, "wallpapers/portrait").deleteRecursively()
         File(storageRootDirectory, "wallpapers/landscape").deleteRecursively()
+    }
+
+    companion object {
+        const val TURNING_RED_MEI_WALLPAPER_NAME = "mei"
+        const val TURNING_RED_PANDA_WALLPAPER_NAME = "panda"
+        const val TURNING_RED_WALLPAPER_TEXT_COLOR = "FFFBFBFE"
     }
 }

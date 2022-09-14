@@ -1,5 +1,7 @@
 package org.mozilla.fenix.wallpapers
 
+import io.mockk.mockk
+import io.mockk.verify
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -7,12 +9,17 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
+import org.mozilla.fenix.utils.Settings
+import org.mozilla.fenix.wallpapers.LegacyWallpaperMigration.Companion.TURNING_RED_MEI_WALLPAPER_NAME
+import org.mozilla.fenix.wallpapers.LegacyWallpaperMigration.Companion.TURNING_RED_PANDA_WALLPAPER_NAME
+import org.mozilla.fenix.wallpapers.LegacyWallpaperMigration.Companion.TURNING_RED_WALLPAPER_TEXT_COLOR
 import java.io.File
 
 class LegacyWallpaperMigrationTest {
     @Rule
     @JvmField
     val tempFolder = TemporaryFolder()
+    private lateinit var settings: Settings
     private lateinit var wallpapersFolder: File
     private lateinit var migrationHelper: LegacyWallpaperMigration
     private lateinit var portraitLightFolder: File
@@ -23,8 +30,10 @@ class LegacyWallpaperMigrationTest {
     @Before
     fun setup() {
         wallpapersFolder = File(tempFolder.root, "wallpapers")
+        settings = mockk(relaxed = true)
         migrationHelper = LegacyWallpaperMigration(
             storageRootDirectory = tempFolder.root,
+            settings = settings,
         )
     }
 
@@ -83,8 +92,62 @@ class LegacyWallpaperMigrationTest {
             assertFalse(getAllFiles(landscapeOnlyWallpaperName).any { it.exists() })
         }
 
+    @Test
+    fun `GIVEN a Turning Red wallpaper WHEN it is successfully migrated THEN set a matching text color`() {
+        runTest {
+            createAllLegacyFiles(TURNING_RED_MEI_WALLPAPER_NAME)
+            migrationHelper.migrateLegacyWallpaper(TURNING_RED_MEI_WALLPAPER_NAME)
+            assertTrue(getAllFiles(TURNING_RED_MEI_WALLPAPER_NAME).all { it.exists() })
+            verify(exactly = 1) {
+                settings.currentWallpaperTextColor = TURNING_RED_WALLPAPER_TEXT_COLOR.toLong(radix = 16)
+            }
+
+            createAllLegacyFiles(TURNING_RED_PANDA_WALLPAPER_NAME)
+            migrationHelper.migrateLegacyWallpaper(TURNING_RED_PANDA_WALLPAPER_NAME)
+            assertTrue(getAllFiles(TURNING_RED_PANDA_WALLPAPER_NAME).all { it.exists() })
+            verify(exactly = 2) {
+                settings.currentWallpaperTextColor = TURNING_RED_WALLPAPER_TEXT_COLOR.toLong(radix = 16)
+            }
+        }
+    }
+
+    @Test
+    fun `GIVEN a Turning Red wallpaper WHEN it can't be migrated THEN don't set a matching text color`() {
+        runTest {
+            migrationHelper.migrateLegacyWallpaper(TURNING_RED_MEI_WALLPAPER_NAME)
+            migrationHelper.migrateLegacyWallpaper(TURNING_RED_PANDA_WALLPAPER_NAME)
+
+            assertFalse(getAllFiles(TURNING_RED_MEI_WALLPAPER_NAME).all { it.exists() })
+            assertFalse(getAllFiles(TURNING_RED_PANDA_WALLPAPER_NAME).all { it.exists() })
+            verify(exactly = 0) {
+                settings.currentWallpaperTextColor = TURNING_RED_WALLPAPER_TEXT_COLOR.toLong(radix = 16)
+            }
+        }
+    }
+
+    @Test
+    fun `GIVEN legacy wallpapers different than Turning Red WHEN they are tried to be migrated THEN don't set a matching text color`() {
+        runTest {
+            val wallpaper1 = "wallpaper1"
+            val wallpaper2 = "wallpaper2"
+
+            migrationHelper.migrateLegacyWallpaper(wallpaper1)
+            assertFalse(getAllFiles(wallpaper1).all { it.exists() })
+            verify(exactly = 0) {
+                settings.currentWallpaperTextColor = TURNING_RED_WALLPAPER_TEXT_COLOR.toLong(radix = 16)
+            }
+
+            createAllLegacyFiles(wallpaper2)
+            migrationHelper.migrateLegacyWallpaper(wallpaper2)
+            assertTrue(getAllFiles(wallpaper2).all { it.exists() })
+            verify(exactly = 0) {
+                settings.currentWallpaperTextColor = TURNING_RED_WALLPAPER_TEXT_COLOR.toLong(radix = 16)
+            }
+        }
+    }
+
     private fun createAllLegacyFiles(name: String) {
-        if (!this::portraitLightFolder.isInitialized) {
+        if (!this::portraitLightFolder.isInitialized || !portraitLightFolder.exists()) {
             portraitLightFolder = tempFolder.newFolder("wallpapers", "portrait", "light")
             portraitDarkFolder = tempFolder.newFolder("wallpapers", "portrait", "dark")
             landscapeLightFolder = tempFolder.newFolder("wallpapers", "landscape", "light")
