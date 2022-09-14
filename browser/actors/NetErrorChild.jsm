@@ -5,21 +5,11 @@
 
 var EXPORTED_SYMBOLS = ["NetErrorChild"];
 
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
 const { RemotePageChild } = ChromeUtils.import(
   "resource://gre/actors/RemotePageChild.jsm"
 );
 
 const lazy = {};
-
-XPCOMUtils.defineLazyServiceGetter(
-  lazy,
-  "gSerializationHelper",
-  "@mozilla.org/network/serialization-helper;1",
-  "nsISerializationHelper"
-);
 
 ChromeUtils.defineModuleGetter(
   lazy,
@@ -44,17 +34,14 @@ class NetErrorChild extends RemotePageChild {
     this.exportFunctions(exportableFunctions);
   }
 
-  getSerializedSecurityInfo(docShell) {
+  getFailedCertChain(docShell) {
     let securityInfo =
       docShell.failedChannel && docShell.failedChannel.securityInfo;
     if (!securityInfo) {
-      return "";
+      return [];
     }
-    securityInfo
-      .QueryInterface(Ci.nsITransportSecurityInfo)
-      .QueryInterface(Ci.nsISerializable);
-
-    return lazy.gSerializationHelper.serializeToString(securityInfo);
+    securityInfo.QueryInterface(Ci.nsITransportSecurityInfo);
+    return securityInfo.failedCertChain.map(cert => cert.getBase64DERString());
   }
 
   handleEvent(aEvent) {
@@ -69,9 +56,7 @@ class NetErrorChild extends RemotePageChild {
           this.sendAsyncMessage("Browser:CertExceptionError", {
             location: doc.location.href,
             elementId: elem.id,
-            securityInfoAsString: this.getSerializedSecurityInfo(
-              doc.defaultView.docShell
-            ),
+            failedCertChain: this.getFailedCertChain(doc.defaultView.docShell),
           });
         }
         break;
