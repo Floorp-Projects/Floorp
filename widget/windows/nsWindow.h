@@ -698,6 +698,11 @@ class nsWindow final : public nsBaseWidget {
   static void OnCloakEvent(HWND aWnd, bool aCloaked);
   void OnCloakChanged(bool aCloaked);
 
+#ifdef DEBUG
+  virtual nsresult SetHiDPIMode(bool aHiDPI) override;
+  virtual nsresult RestoreHiDPIMode() override;
+#endif
+
   static bool sTouchInjectInitialized;
   static InjectTouchInputPtr sInjectTouchFuncPtr;
   static uint32_t sInstanceCount;
