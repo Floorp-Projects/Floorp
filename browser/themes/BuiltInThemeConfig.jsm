@@ -252,7 +252,7 @@ const BuiltInThemeConfig = new Map([
   [
     "playmaker-balanced-colorway@mozilla.org",
     {
-      version: "1.1",
+      version: "1.1.2",
       path: "resource://builtin-themes/colorways/2022playmaker/balanced/",
       collection: "independent-voices",
       l10nId: {
@@ -336,7 +336,7 @@ const BuiltInThemeConfig = new Map([
   [
     "visionary-balanced-colorway@mozilla.org",
     {
-      version: "1.1",
+      version: "1.1.2",
       path: "resource://builtin-themes/colorways/2022visionary/balanced/",
       collection: "independent-voices",
       l10nId: {
@@ -378,7 +378,7 @@ const BuiltInThemeConfig = new Map([
   [
     "activist-balanced-colorway@mozilla.org",
     {
-      version: "1.1.1",
+      version: "1.1.2",
       path: "resource://builtin-themes/colorways/2022activist/balanced/",
       collection: "independent-voices",
       l10nId: {
@@ -420,7 +420,7 @@ const BuiltInThemeConfig = new Map([
   [
     "dreamer-balanced-colorway@mozilla.org",
     {
-      version: "1.1.1",
+      version: "1.1.2",
       path: "resource://builtin-themes/colorways/2022dreamer/balanced/",
       collection: "independent-voices",
       l10nId: {
