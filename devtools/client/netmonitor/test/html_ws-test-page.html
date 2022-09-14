@@ -12,7 +12,7 @@
   <body>
     <h1>WebSocket Inspection Test Page</h1>
     <script type="text/javascript">
-      /* exported openConnection, closeConnection, sendData */
+      /* exported openConnection, closeConnection, sendData, sendFrames */
       "use strict";
 
       let ws;
@@ -28,6 +28,15 @@
             resolve();
           };
         });
+      }
+
+      function sendFrames(numFramesToSend) {
+        return new Promise(resolve => {
+          for (let i = 0; i < numFramesToSend; i++) {
+            ws.send("Payload " + i);
+          }
+        resolve();
+        })
       }
 
       function closeConnection() {
