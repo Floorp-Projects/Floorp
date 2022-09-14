@@ -30,6 +30,10 @@
   white-space: normal;
 }
 
+.frames .frame-indent {
+  white-space: pre;
+}
+
 .frames .title {
   text-overflow: ellipsis;
   white-space: nowrap;
