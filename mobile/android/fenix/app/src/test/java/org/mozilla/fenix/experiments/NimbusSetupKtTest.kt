@@ -12,7 +12,7 @@ import org.mozilla.experiments.nimbus.internal.NimbusException
 class NimbusSetupKtTest {
     @Test
     fun `WHEN error is reportable THEN return true`() {
-        val error = NimbusException.IOException("bad error")
+        val error = NimbusException.IoException("bad error")
 
         assertTrue(error.isReportableError())
     }
