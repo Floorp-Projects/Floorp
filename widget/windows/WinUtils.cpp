@@ -21,6 +21,7 @@
 #include "mozilla/dom/MouseEventBinding.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/DataSurfaceHelpers.h"
+#include "mozilla/gfx/DisplayConfigWindows.h"
 #include "mozilla/gfx/Logging.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/ProfilerThreadSleep.h"
@@ -2334,6 +2335,164 @@ bool WinUtils::GetTimezoneName(wchar_t* aBuffer) {
 
   return true;
 }
+
+// There are undocumented APIs to query/change the system DPI settings found by
+// https://github.com/lihas/ . We use those APIs only for testing purpose, i.e.
+// in mochitests or some such. To avoid exposing them in our official release
+// builds unexpectedly we restrict them only in debug builds.
+#ifdef DEBUG
+
+#  define DISPLAYCONFIG_DEVICE_INFO_SET_SOURCE_DPI_SCALE (int)-4
+#  define DISPLAYCONFIG_DEVICE_INFO_GET_SOURCE_DPI_SCALE (int)-3
+
+// Following two struts are copied from
+// https://github.com/lihas/windows-DPI-scaling-sample/blob/master/DPIHelper/DpiHelper.h
+
+/*
+ * struct DISPLAYCONFIG_SOURCE_DPI_SCALE_GET
+ * @brief used to fetch min, max, suggested, and currently applied DPI scaling
+ * values. All values are relative to the recommended DPI scaling value Note
+ * that DPI scaling is a property of the source, and not of target.
+ */
+struct DISPLAYCONFIG_SOURCE_DPI_SCALE_GET {
+  DISPLAYCONFIG_DEVICE_INFO_HEADER header;
+  /*
+   * @brief min value of DPI scaling is always 100, minScaleRel gives no. of
+   * steps down from recommended scaling eg. if minScaleRel is -3 => 100 is 3
+   * steps down from recommended scaling => recommended scaling is 175%
+   */
+  int32_t minScaleRel;
+
+  /*
+   * @brief currently applied DPI scaling value wrt the recommended value. eg.
+   * if recommended value is 175%,
+   * => if curScaleRel == 0 the current scaling is 175%, if curScaleRel == -1,
+   * then current scale is 150%
+   */
+  int32_t curScaleRel;
+
+  /*
+   * @brief maximum supported DPI scaling wrt recommended value
+   */
+  int32_t maxScaleRel;
+};
+
+/*
+ * struct DISPLAYCONFIG_SOURCE_DPI_SCALE_SET
+ * @brief set DPI scaling value of a source
+ * Note that DPI scaling is a property of the source, and not of target.
+ */
+struct DISPLAYCONFIG_SOURCE_DPI_SCALE_SET {
+  DISPLAYCONFIG_DEVICE_INFO_HEADER header;
+  /*
+   * @brief The value we want to set. The value should be relative to the
+   * recommended DPI scaling value of source. eg. if scaleRel == 1, and
+   * recommended value is 175% => we are trying to set 200% scaling for the
+   * source
+   */
+  int32_t scaleRel;
+};
+
+static int32_t sCurRelativeScaleStep = std::numeric_limits<int32_t>::max();
+
+static LONG SetRelativeScaleStep(LUID aAdapterId, int32_t aRelativeScaleStep) {
+  DISPLAYCONFIG_SOURCE_DPI_SCALE_SET setDPIScale = {};
+  setDPIScale.header.adapterId = aAdapterId;
+  setDPIScale.header.type = (DISPLAYCONFIG_DEVICE_INFO_TYPE)
+      DISPLAYCONFIG_DEVICE_INFO_SET_SOURCE_DPI_SCALE;
+  setDPIScale.header.size = sizeof(setDPIScale);
+  setDPIScale.scaleRel = aRelativeScaleStep;
+
+  return DisplayConfigSetDeviceInfo(&setDPIScale.header);
+}
+
+nsresult WinUtils::SetHiDPIMode(bool aHiDPI) {
+  if (!IsWin10OrLater()) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  auto config = GetDisplayConfig();
+  if (!config) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  if (config->mPaths.empty()) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  DISPLAYCONFIG_SOURCE_DPI_SCALE_GET dpiScale = {};
+  dpiScale.header.adapterId = config->mPaths[0].targetInfo.adapterId;
+  dpiScale.header.type = (DISPLAYCONFIG_DEVICE_INFO_TYPE)
+      DISPLAYCONFIG_DEVICE_INFO_GET_SOURCE_DPI_SCALE;
+  dpiScale.header.size = sizeof(dpiScale);
+  LONG result = ::DisplayConfigGetDeviceInfo(&dpiScale.header);
+  if (result != ERROR_SUCCESS) {
+    return NS_ERROR_FAILURE;
+  }
+
+  if (dpiScale.minScaleRel == dpiScale.maxScaleRel) {
+    // We can't change the setting at all.
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  if (aHiDPI && dpiScale.curScaleRel == dpiScale.maxScaleRel) {
+    // We've already at the maximum level.
+    if (sCurRelativeScaleStep == std::numeric_limits<int32_t>::max()) {
+      sCurRelativeScaleStep = dpiScale.curScaleRel;
+    }
+    return NS_OK;
+  }
+
+  if (!aHiDPI && dpiScale.curScaleRel == dpiScale.minScaleRel) {
+    // We've already at the minimum level.
+    if (sCurRelativeScaleStep == std::numeric_limits<int32_t>::max()) {
+      sCurRelativeScaleStep = dpiScale.curScaleRel;
+    }
+    return NS_OK;
+  }
+
+  result = SetRelativeScaleStep(
+      config->mPaths[0].targetInfo.adapterId,
+      aHiDPI ? dpiScale.maxScaleRel : dpiScale.minScaleRel);
+  if (result != ERROR_SUCCESS) {
+    return NS_ERROR_FAILURE;
+  }
+
+  if (sCurRelativeScaleStep == std::numeric_limits<int>::max()) {
+    sCurRelativeScaleStep = dpiScale.curScaleRel;
+  }
+
+  return NS_OK;
+}
+
+nsresult WinUtils::RestoreHiDPIMode() {
+  if (!IsWin10OrLater()) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  if (sCurRelativeScaleStep == std::numeric_limits<int>::max()) {
+    // The DPI setting hasn't been changed.
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  auto config = GetDisplayConfig();
+  if (!config) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  if (config->mPaths.empty()) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  LONG result = SetRelativeScaleStep(config->mPaths[0].targetInfo.adapterId,
+                                     sCurRelativeScaleStep);
+  sCurRelativeScaleStep = std::numeric_limits<int32_t>::max();
+  if (result != ERROR_SUCCESS) {
+    return NS_ERROR_FAILURE;
+  }
+  return NS_OK;
+}
+#endif
 
 }  // namespace widget
 }  // namespace mozilla
