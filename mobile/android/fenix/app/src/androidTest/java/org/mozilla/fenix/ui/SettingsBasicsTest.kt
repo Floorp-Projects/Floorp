@@ -5,9 +5,6 @@
 package org.mozilla.fenix.ui
 
 import android.content.res.Configuration
-import androidx.test.espresso.IdlingRegistry
-import java.time.LocalDate
-import java.util.Locale
 import okhttp3.mockwebserver.MockWebServer
 import org.junit.After
 import org.junit.Before
@@ -24,9 +21,10 @@ import org.mozilla.fenix.helpers.RecyclerViewIdlingResource
 import org.mozilla.fenix.helpers.TestAssetHelper
 import org.mozilla.fenix.helpers.TestAssetHelper.getLoremIpsumAsset
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTimeLong
-import org.mozilla.fenix.helpers.TestHelper.runWithSystemLocaleChanged
 import org.mozilla.fenix.helpers.TestHelper.getStringResource
 import org.mozilla.fenix.helpers.TestHelper.mDevice
+import org.mozilla.fenix.helpers.TestHelper.runWithSystemLocaleChanged
+import org.mozilla.fenix.helpers.TestHelper.registerAndCleanupIdlingResources
 import org.mozilla.fenix.ui.SettingsBasicsTest.CreditCard.MOCK_CREDIT_CARD_NUMBER
 import org.mozilla.fenix.ui.SettingsBasicsTest.CreditCard.MOCK_EXPIRATION_MONTH
 import org.mozilla.fenix.ui.SettingsBasicsTest.CreditCard.MOCK_EXPIRATION_YEAR
@@ -39,6 +37,8 @@ import org.mozilla.fenix.ui.util.FRENCH_LANGUAGE_HEADER
 import org.mozilla.fenix.ui.util.FRENCH_SYSTEM_LOCALE_OPTION
 import org.mozilla.fenix.ui.util.FR_SETTINGS
 import org.mozilla.fenix.ui.util.ROMANIAN_LANGUAGE_HEADER
+import java.time.LocalDate
+import java.util.Locale
 
 /**
  *  Tests for verifying the General section of the Settings menu
@@ -48,7 +48,6 @@ class SettingsBasicsTest {
     /* ktlint-disable no-blank-line-before-rbrace */ // This imposes unreadable grouping.
     private lateinit var mockWebServer: MockWebServer
     private val featureSettingsHelper = FeatureSettingsHelper()
-    private var localeListIdlingResource: RecyclerViewIdlingResource? = null
 
     object CreditCard {
         const val MOCK_CREDIT_CARD_NUMBER = "5555555555554444"
@@ -79,10 +78,6 @@ class SettingsBasicsTest {
 
         // resetting modified features enabled setting to default
         featureSettingsHelper.resetAllFeatureFlags()
-
-        if (localeListIdlingResource != null) {
-            IdlingRegistry.getInstance().unregister(localeListIdlingResource)
-        }
     }
 
     private fun getUiTheme(): Boolean {
@@ -279,19 +274,19 @@ class SettingsBasicsTest {
         }.openThreeDotMenu {
         }.openSettings {
         }.openLanguageSubMenu {
-            localeListIdlingResource =
+            registerAndCleanupIdlingResources(
                 RecyclerViewIdlingResource(
                     activityIntentTestRule.activity.findViewById(R.id.locale_list),
                     2,
-                )
-            IdlingRegistry.getInstance().register(localeListIdlingResource)
-            selectLanguage("Romanian")
-            verifyLanguageHeaderIsTranslated(ROMANIAN_LANGUAGE_HEADER)
-            selectLanguage("Français")
-            verifyLanguageHeaderIsTranslated(FRENCH_LANGUAGE_HEADER)
-            selectLanguage(FRENCH_SYSTEM_LOCALE_OPTION)
-            verifyLanguageHeaderIsTranslated(enLanguageHeaderText)
-            IdlingRegistry.getInstance().unregister(localeListIdlingResource)
+                ),
+            ) {
+                selectLanguage("Romanian")
+                verifyLanguageHeaderIsTranslated(ROMANIAN_LANGUAGE_HEADER)
+                selectLanguage("Français")
+                verifyLanguageHeaderIsTranslated(FRENCH_LANGUAGE_HEADER)
+                selectLanguage(FRENCH_SYSTEM_LOCALE_OPTION)
+                verifyLanguageHeaderIsTranslated(enLanguageHeaderText)
+            }
         }
     }
 

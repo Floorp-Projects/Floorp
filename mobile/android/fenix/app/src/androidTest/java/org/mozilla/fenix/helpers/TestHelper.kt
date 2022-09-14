@@ -24,6 +24,7 @@ import androidx.browser.customtabs.CustomTabsIntent
 import androidx.test.espresso.Espresso
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.IdlingRegistry
+import androidx.test.espresso.IdlingResource
 import androidx.test.espresso.action.ViewActions.longClick
 import androidx.test.espresso.assertion.ViewAssertions
 import androidx.test.espresso.intent.Intents.intended
@@ -42,8 +43,6 @@ import androidx.test.uiautomator.UiObjectNotFoundException
 import androidx.test.uiautomator.UiScrollable
 import androidx.test.uiautomator.UiSelector
 import androidx.test.uiautomator.Until
-import java.util.Locale
-import java.util.regex.Pattern
 import junit.framework.AssertionFailedError
 import mozilla.components.browser.state.search.SearchEngine
 import mozilla.components.support.ktx.android.content.appName
@@ -64,6 +63,8 @@ import org.mozilla.fenix.helpers.idlingresource.NetworkConnectionIdlingResource
 import org.mozilla.fenix.ui.robots.BrowserRobot
 import org.mozilla.fenix.utils.IntentUtils
 import org.mozilla.gecko.util.ThreadUtils
+import java.util.Locale
+import java.util.regex.Pattern
 
 object TestHelper {
 
@@ -281,6 +282,29 @@ object TestHelper {
         mDevice.waitForIdle(waitingTimeShort)
 
         return activityManager.appTasks[0].taskInfo.topActivity!!.className == ExternalAppBrowserActivity::class.java.name
+    }
+
+    /**
+     * Run test with automatically registering idling resources and cleanup.
+     *
+     * @param idlingResources zero or more [IdlingResource] to be used when running [testBlock].
+     * @param testBlock test code to execute.
+     */
+    fun registerAndCleanupIdlingResources(
+        vararg idlingResources: IdlingResource,
+        testBlock: () -> Unit,
+    ) {
+        idlingResources.forEach {
+            IdlingRegistry.getInstance().register(it)
+        }
+
+        try {
+            testBlock()
+        } finally {
+            idlingResources.forEach {
+                IdlingRegistry.getInstance().unregister(it)
+            }
+        }
     }
 
     // exit from Menus to home screen or browser

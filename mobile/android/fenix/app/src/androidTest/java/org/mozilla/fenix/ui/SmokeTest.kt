@@ -9,7 +9,6 @@ package org.mozilla.fenix.ui
 import android.view.View
 import androidx.compose.ui.test.junit4.AndroidComposeTestRule
 import androidx.core.net.toUri
-import androidx.test.espresso.IdlingRegistry
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.rule.ActivityTestRule
 import androidx.test.uiautomator.UiDevice
@@ -38,6 +37,7 @@ import org.mozilla.fenix.helpers.TestHelper.assertNativeAppOpens
 import org.mozilla.fenix.helpers.TestHelper.createCustomTabIntent
 import org.mozilla.fenix.helpers.TestHelper.generateRandomString
 import org.mozilla.fenix.helpers.TestHelper.scrollToElementByText
+import org.mozilla.fenix.helpers.TestHelper.registerAndCleanupIdlingResources
 import org.mozilla.fenix.helpers.ViewVisibilityIdlingResource
 import org.mozilla.fenix.ui.robots.browserScreen
 import org.mozilla.fenix.ui.robots.customTabScreen
@@ -60,11 +60,6 @@ import org.mozilla.fenix.ui.util.STRING_ONBOARDING_TRACKING_PROTECTION_HEADER
 class SmokeTest {
     private lateinit var mDevice: UiDevice
     private lateinit var mockWebServer: MockWebServer
-    private var awesomeBar: ViewVisibilityIdlingResource? = null
-    private var addonsListIdlingResource: RecyclerViewIdlingResource? = null
-    private var recentlyClosedTabsListIdlingResource: RecyclerViewIdlingResource? = null
-    private var readerViewNotification: ViewVisibilityIdlingResource? = null
-    private var bookmarksListIdlingResource: RecyclerViewIdlingResource? = null
     private val customMenuItem = "TestMenuItem"
     private lateinit var browserStore: BrowserStore
     private val featureSettingsHelper = FeatureSettingsHelper()
@@ -107,26 +102,6 @@ class SmokeTest {
     @After
     fun tearDown() {
         mockWebServer.shutdown()
-
-        if (awesomeBar != null) {
-            IdlingRegistry.getInstance().unregister(awesomeBar!!)
-        }
-
-        if (addonsListIdlingResource != null) {
-            IdlingRegistry.getInstance().unregister(addonsListIdlingResource!!)
-        }
-
-        if (recentlyClosedTabsListIdlingResource != null) {
-            IdlingRegistry.getInstance().unregister(recentlyClosedTabsListIdlingResource!!)
-        }
-
-        if (bookmarksListIdlingResource != null) {
-            IdlingRegistry.getInstance().unregister(bookmarksListIdlingResource!!)
-        }
-
-        if (readerViewNotification != null) {
-            IdlingRegistry.getInstance().unregister(readerViewNotification)
-        }
 
         // resetting modified features enabled setting to default
         featureSettingsHelper.resetAllFeatureFlags()
@@ -262,14 +237,11 @@ class SmokeTest {
         }.enterURLAndEnterToBrowser(defaultWebPage.url) {
         }.openThreeDotMenu {
         }.openAddonsManagerMenu {
-            addonsListIdlingResource =
-                RecyclerViewIdlingResource(
-                    activityTestRule.activity.findViewById(R.id.add_ons_list),
-                    1,
-                )
-            IdlingRegistry.getInstance().register(addonsListIdlingResource!!)
-            verifyAddonsItems()
-            IdlingRegistry.getInstance().unregister(addonsListIdlingResource!!)
+            registerAndCleanupIdlingResources(
+                RecyclerViewIdlingResource(activityTestRule.activity.findViewById(R.id.add_ons_list), 1),
+            ) {
+                verifyAddonsItems()
+            }
         }
     }
 
@@ -547,11 +519,11 @@ class SmokeTest {
         }.openTabDrawer {
         }.openRecentlyClosedTabs {
             waitForListToExist()
-            recentlyClosedTabsListIdlingResource =
-                RecyclerViewIdlingResource(activityTestRule.activity.findViewById(R.id.recently_closed_list), 1)
-            IdlingRegistry.getInstance().register(recentlyClosedTabsListIdlingResource!!)
-            verifyRecentlyClosedTabsMenuView()
-            IdlingRegistry.getInstance().unregister(recentlyClosedTabsListIdlingResource!!)
+            registerAndCleanupIdlingResources(
+                RecyclerViewIdlingResource(activityTestRule.activity.findViewById(R.id.recently_closed_list), 1),
+            ) {
+                verifyRecentlyClosedTabsMenuView()
+            }
         }.clickRecentlyClosedItem("Test_Page_1") {
             verifyUrl(website.url.toString())
         }
@@ -572,11 +544,11 @@ class SmokeTest {
         }.openTabDrawer {
         }.openRecentlyClosedTabs {
             waitForListToExist()
-            recentlyClosedTabsListIdlingResource =
-                RecyclerViewIdlingResource(activityTestRule.activity.findViewById(R.id.recently_closed_list), 1)
-            IdlingRegistry.getInstance().register(recentlyClosedTabsListIdlingResource!!)
-            verifyRecentlyClosedTabsMenuView()
-            IdlingRegistry.getInstance().unregister(recentlyClosedTabsListIdlingResource!!)
+            registerAndCleanupIdlingResources(
+                RecyclerViewIdlingResource(activityTestRule.activity.findViewById(R.id.recently_closed_list), 1),
+            ) {
+                verifyRecentlyClosedTabsMenuView()
+            }
             clickDeleteRecentlyClosedTabs()
             verifyEmptyRecentlyClosedTabsList()
         }
@@ -769,12 +741,12 @@ class SmokeTest {
             mDevice.waitForIdle()
         }
 
-        readerViewNotification = ViewVisibilityIdlingResource(
-            activityTestRule.activity.findViewById(R.id.mozac_browser_toolbar_page_actions),
-            View.VISIBLE,
-        )
-
-        IdlingRegistry.getInstance().register(readerViewNotification)
+        registerAndCleanupIdlingResources(
+            ViewVisibilityIdlingResource(
+                activityTestRule.activity.findViewById(R.id.mozac_browser_toolbar_page_actions),
+                View.VISIBLE,
+            ),
+        ) {}
 
         navigationToolbar {
             verifyReaderViewDetected(true)

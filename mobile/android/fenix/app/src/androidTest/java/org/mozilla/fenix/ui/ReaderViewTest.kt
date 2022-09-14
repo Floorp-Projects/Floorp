@@ -5,7 +5,6 @@
 package org.mozilla.fenix.ui
 
 import android.view.View
-import androidx.test.espresso.IdlingRegistry
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.uiautomator.UiDevice
 import okhttp3.mockwebserver.MockWebServer
@@ -18,6 +17,7 @@ import org.mozilla.fenix.helpers.AndroidAssetDispatcher
 import org.mozilla.fenix.helpers.HomeActivityIntentTestRule
 import org.mozilla.fenix.helpers.RetryTestRule
 import org.mozilla.fenix.helpers.TestAssetHelper
+import org.mozilla.fenix.helpers.TestHelper.registerAndCleanupIdlingResources
 import org.mozilla.fenix.helpers.ViewVisibilityIdlingResource
 import org.mozilla.fenix.ui.robots.browserScreen
 import org.mozilla.fenix.ui.robots.navigationToolbar
@@ -34,7 +34,6 @@ import org.mozilla.fenix.ui.robots.navigationToolbar
 class ReaderViewTest {
     private lateinit var mockWebServer: MockWebServer
     private lateinit var mDevice: UiDevice
-    private var readerViewNotification: ViewVisibilityIdlingResource? = null
     private val estimatedReadingTime = "1 - 2 minutes"
 
     @get:Rule
@@ -56,7 +55,6 @@ class ReaderViewTest {
     @After
     fun tearDown() {
         mockWebServer.shutdown()
-        IdlingRegistry.getInstance().unregister(readerViewNotification)
     }
 
     /**
@@ -75,12 +73,12 @@ class ReaderViewTest {
             mDevice.waitForIdle()
         }
 
-        readerViewNotification = ViewVisibilityIdlingResource(
-            activityIntentTestRule.activity.findViewById(R.id.mozac_browser_toolbar_page_actions),
-            View.VISIBLE,
-        )
-
-        IdlingRegistry.getInstance().register(readerViewNotification)
+        registerAndCleanupIdlingResources(
+            ViewVisibilityIdlingResource(
+                activityIntentTestRule.activity.findViewById(R.id.mozac_browser_toolbar_page_actions),
+                View.VISIBLE,
+            ),
+        ) {}
 
         navigationToolbar {
             verifyReaderViewDetected(true)
@@ -118,12 +116,12 @@ class ReaderViewTest {
             mDevice.waitForIdle()
         }
 
-        readerViewNotification = ViewVisibilityIdlingResource(
-            activityIntentTestRule.activity.findViewById(R.id.mozac_browser_toolbar_page_actions),
-            View.VISIBLE,
-        )
-
-        IdlingRegistry.getInstance().register(readerViewNotification)
+        registerAndCleanupIdlingResources(
+            ViewVisibilityIdlingResource(
+                activityIntentTestRule.activity.findViewById(R.id.mozac_browser_toolbar_page_actions),
+                View.VISIBLE,
+            ),
+        ) {}
 
         navigationToolbar {
             verifyReaderViewDetected(true)
@@ -156,12 +154,12 @@ class ReaderViewTest {
             mDevice.waitForIdle()
         }
 
-        readerViewNotification = ViewVisibilityIdlingResource(
-            activityIntentTestRule.activity.findViewById(R.id.mozac_browser_toolbar_page_actions),
-            View.VISIBLE,
-        )
-
-        IdlingRegistry.getInstance().register(readerViewNotification)
+        registerAndCleanupIdlingResources(
+            ViewVisibilityIdlingResource(
+                activityIntentTestRule.activity.findViewById(R.id.mozac_browser_toolbar_page_actions),
+                View.VISIBLE,
+            ),
+        ) {}
 
         navigationToolbar {
             verifyReaderViewDetected(true)
@@ -196,12 +194,12 @@ class ReaderViewTest {
             mDevice.waitForIdle()
         }
 
-        readerViewNotification = ViewVisibilityIdlingResource(
-            activityIntentTestRule.activity.findViewById(R.id.mozac_browser_toolbar_page_actions),
-            View.VISIBLE,
-        )
-
-        IdlingRegistry.getInstance().register(readerViewNotification)
+        registerAndCleanupIdlingResources(
+            ViewVisibilityIdlingResource(
+                activityIntentTestRule.activity.findViewById(R.id.mozac_browser_toolbar_page_actions),
+                View.VISIBLE,
+            ),
+        ) {}
 
         navigationToolbar {
             verifyReaderViewDetected(true)
@@ -242,12 +240,12 @@ class ReaderViewTest {
             mDevice.waitForIdle()
         }
 
-        readerViewNotification = ViewVisibilityIdlingResource(
-            activityIntentTestRule.activity.findViewById(R.id.mozac_browser_toolbar_page_actions),
-            View.VISIBLE,
-        )
-
-        IdlingRegistry.getInstance().register(readerViewNotification)
+        registerAndCleanupIdlingResources(
+            ViewVisibilityIdlingResource(
+                activityIntentTestRule.activity.findViewById(R.id.mozac_browser_toolbar_page_actions),
+                View.VISIBLE,
+            ),
+        ) {}
 
         navigationToolbar {
             verifyReaderViewDetected(true)
