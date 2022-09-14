@@ -1512,7 +1512,7 @@
 #
 - name: browser.swipe.navigation-icon-move-distance
   type: uint32_t
-#ifdef XP_WIN
+#if defined(XP_LINUX) || defined(XP_WIN)
   value: 100
 #else
   value: 0
