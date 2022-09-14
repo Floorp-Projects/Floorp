@@ -211,7 +211,7 @@ static LayoutDeviceRect CheckBoxRadioRect(const LayoutDeviceRect& aRect) {
   return LayoutDeviceRect(position, LayoutDeviceSize(size, size));
 }
 
-std::pair<sRGBColor, sRGBColor> Theme::ComputeCheckboxColors(
+std::tuple<sRGBColor, sRGBColor, sRGBColor> Theme::ComputeCheckboxColors(
     const ElementState& aState, StyleAppearance aAppearance,
     const Colors& aColors) {
   MOZ_ASSERT(aAppearance == StyleAppearance::Checkbox ||
@@ -224,31 +224,33 @@ std::pair<sRGBColor, sRGBColor> Theme::ComputeCheckboxColors(
 
   if (isChecked || isIndeterminate) {
     if (isDisabled) {
-      auto color = ComputeBorderColor(aState, aColors, OutlineCoversBorder::No);
-      return std::make_pair(color, color);
+      auto bg = ComputeBorderColor(aState, aColors, OutlineCoversBorder::No);
+      auto fg = aColors.HighContrast()
+                    ? aColors.System(StyleSystemColor::Graytext)
+                    : sRGBColor::White(.8f);
+      return std::make_tuple(bg, bg, fg);
+    }
+
+    if (aColors.HighContrast()) {
+      auto bg = aColors.System(StyleSystemColor::Selecteditem);
+      auto fg = aColors.System(StyleSystemColor::Selecteditemtext);
+      return std::make_tuple(bg, bg, fg);
     }
 
     bool isActive =
         aState.HasAllStates(ElementState::HOVER | ElementState::ACTIVE);
     bool isHovered = aState.HasState(ElementState::HOVER);
-    const auto& color = isActive    ? aColors.Accent().GetDarker()
-                        : isHovered ? aColors.Accent().GetDark()
-                                    : aColors.Accent().Get();
-    return std::make_pair(color, color);
+    const auto& bg = isActive    ? aColors.Accent().GetDarker()
+                     : isHovered ? aColors.Accent().GetDark()
+                                 : aColors.Accent().Get();
+    const auto& fg = aColors.Accent().GetForeground();
+    return std::make_tuple(bg, bg, fg);
   }
 
-  return ComputeTextfieldColors(aState, aColors, OutlineCoversBorder::No);
-}
-
-sRGBColor Theme::ComputeCheckmarkColor(const ElementState& aState,
-                                       const Colors& aColors) {
-  if (aColors.HighContrast()) {
-    return aColors.System(StyleSystemColor::Selecteditemtext);
-  }
-  if (aState.HasState(ElementState::DISABLED)) {
-    return sRGBColor::White(.8f);
-  }
-  return aColors.Accent().GetForeground();
+  auto [bg, border] =
+      ComputeTextfieldColors(aState, aColors, OutlineCoversBorder::No);
+  // We don't paint a checkmark in this case so any color would do.
+  return std::make_tuple(bg, border, sTransparent);
 }
 
 sRGBColor Theme::ComputeBorderColor(const ElementState& aState,
@@ -510,7 +512,7 @@ void Theme::PaintCheckboxControl(DrawTarget& aDrawTarget,
                                  const LayoutDeviceRect& aRect,
                                  const ElementState& aState,
                                  const Colors& aColors, DPIRatio aDpiRatio) {
-  auto [backgroundColor, borderColor] =
+  auto [backgroundColor, borderColor, checkColor] =
       ComputeCheckboxColors(aState, StyleAppearance::Checkbox, aColors);
   {
     const CSSCoord radius = 2.0f;
@@ -524,9 +526,9 @@ void Theme::PaintCheckboxControl(DrawTarget& aDrawTarget,
   }
 
   if (aState.HasState(ElementState::INDETERMINATE)) {
-    PaintIndeterminateMark(aDrawTarget, aRect, aState, aColors);
+    PaintIndeterminateMark(aDrawTarget, aRect, checkColor);
   } else if (aState.HasState(ElementState::CHECKED)) {
-    PaintCheckMark(aDrawTarget, aRect, aState, aColors);
+    PaintCheckMark(aDrawTarget, aRect, checkColor);
   }
 
   if (aState.HasState(ElementState::FOCUSRING)) {
@@ -540,7 +542,7 @@ constexpr CSSCoord kCheckboxRadioBorderBoxSize =
 
 void Theme::PaintCheckMark(DrawTarget& aDrawTarget,
                            const LayoutDeviceRect& aRect,
-                           const ElementState& aState, const Colors& aColors) {
+                           const sRGBColor& aColor) {
   // Points come from the coordinates on a 14X14 (kCheckboxRadioBorderBoxSize)
   // unit box centered at 0,0
   const float checkPolygonX[] = {-4.5f, -1.5f, -0.5f, 5.0f, 4.75f,
@@ -561,14 +563,12 @@ void Theme::PaintCheckMark(DrawTarget& aDrawTarget,
   }
   RefPtr<Path> path = builder->Finish();
 
-  sRGBColor fillColor = ComputeCheckmarkColor(aState, aColors);
-  aDrawTarget.Fill(path, ColorPattern(ToDeviceColor(fillColor)));
+  aDrawTarget.Fill(path, ColorPattern(ToDeviceColor(aColor)));
 }
 
 void Theme::PaintIndeterminateMark(DrawTarget& aDrawTarget,
                                    const LayoutDeviceRect& aRect,
-                                   const ElementState& aState,
-                                   const Colors& aColors) {
+                                   const sRGBColor& aColor) {
   const CSSCoord borderWidth = 2.0f;
   const float scale =
       ThemeDrawing::ScaleToFillRect(aRect, kCheckboxRadioBorderBoxSize);
@@ -579,8 +579,7 @@ void Theme::PaintIndeterminateMark(DrawTarget& aDrawTarget,
   rect.x += (borderWidth * scale) + (borderWidth * scale / 8);
   rect.width -= ((borderWidth * scale) + (borderWidth * scale / 8)) * 2;
 
-  sRGBColor fillColor = ComputeCheckmarkColor(aState, aColors);
-  aDrawTarget.FillRect(rect, ColorPattern(ToDeviceColor(fillColor)));
+  aDrawTarget.FillRect(rect, ColorPattern(ToDeviceColor(aColor)));
 }
 
 template <typename PaintBackendData>
@@ -671,7 +670,7 @@ void Theme::PaintRadioControl(PaintBackendData& aPaintData,
                               const LayoutDeviceRect& aRect,
                               const ElementState& aState, const Colors& aColors,
                               DPIRatio aDpiRatio) {
-  auto [backgroundColor, borderColor] =
+  auto [backgroundColor, borderColor, checkColor] =
       ComputeCheckboxColors(aState, StyleAppearance::Radio, aColors);
   {
     CSSCoord borderWidth = kCheckboxRadioBorderWidth;
@@ -688,7 +687,6 @@ void Theme::PaintRadioControl(PaintBackendData& aPaintData,
         ThemeDrawing::SnapBorderWidth(kCheckboxRadioBorderWidth, aDpiRatio));
     rect.Deflate(width);
 
-    auto checkColor = ComputeCheckmarkColor(aState, aColors);
     PaintStrokedCircle(aPaintData, rect, backgroundColor, checkColor,
                        kCheckboxRadioBorderWidth, aDpiRatio);
   }
