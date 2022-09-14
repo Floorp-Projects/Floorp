@@ -42,27 +42,3 @@ def get_decision_parameters(graph_config, parameters):
     version = get_version()
     parameters["version"] = version
     parameters.setdefault("next_version", None)
-
-    if parameters["tasks_for"] == "github-release":
-        head_tag = parameters["head_tag"]
-        if not head_tag:
-            raise ValueError(
-                "Cannot run github-release if `head_tag` is not defined. Got {}".format(
-                    head_tag
-                )
-            )
-        # XXX: tags are in the format of `v<semver>`
-        if head_tag[1:] != version:
-            raise ValueError(
-                "Cannot run github-release if tag {} is different than in-tree "
-                "{} from buildconfig.yml".format(head_tag[1:], version)
-            )
-        parameters["target_tasks_method"] = "release"
-        version_string = parameters["version"]
-        version = MavenVersion.parse(version_string)
-        if version.is_release:
-            next_version = version.bump("patch_number")
-        else:
-            raise ValueError(f"Unsupported version type: {version.version_type}")
-
-        parameters["next_version"] = str(next_version)
