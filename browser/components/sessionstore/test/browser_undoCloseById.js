@@ -9,13 +9,6 @@ const { SessionStore } = ChromeUtils.import(
   "resource:///modules/sessionstore/SessionStore.jsm"
 );
 
-async function openAndCloseTab(window, url) {
-  let tab = BrowserTestUtils.addTab(window.gBrowser, url);
-  await promiseBrowserLoaded(tab.linkedBrowser, true, url);
-  await TabStateFlusher.flush(tab.linkedBrowser);
-  await promiseRemoveTabAndSessionState(tab);
-}
-
 async function openWindow(url) {
   let win = await promiseNewWindowLoaded();
   let flags = Ci.nsIWebNavigation.LOAD_FLAGS_REPLACE_HISTORY;
