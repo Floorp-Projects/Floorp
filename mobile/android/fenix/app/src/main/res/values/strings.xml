@@ -268,11 +268,15 @@
     <!-- Onboarding home screen popup dialog, shown on top of the Jump back in section. -->
     <string name="onboarding_home_screen_jump_back_contextual_hint_2">Meet your personalized homepage. Recent tabs, bookmarks, and search results will appear here.</string>
     <!-- Home onboarding dialog welcome screen title text. -->
-    <string name="onboarding_home_welcome_title">Welcome to an independent internet</string>
+    <string name="onboarding_home_welcome_title" moz:RemovedIn="106" tools:ignore="UnusedResources">Welcome to an independent internet</string>
+    <!-- Home onboarding dialog welcome screen title text. -->
+    <string name="onboarding_home_welcome_title_2">Welcome to a more personal internet</string>
     <!-- Home onboarding dialog welcome screen description text. -->
     <string name="onboarding_home_welcome_description">More colors. Better privacy. Same commitment to people over profits.</string>
     <!-- Home onboarding dialog sign into sync screen title text. -->
-    <string name="onboarding_home_sync_title_2">Hop from phone to laptop and back</string>
+    <string name="onboarding_home_sync_title_2" moz:RemovedIn="106" tools:ignore="UnusedResources">Hop from phone to laptop and back</string>
+    <!-- Home onboarding dialog sign into sync screen title text. -->
+    <string name="onboarding_home_sync_title_3">Switching screens is easier than ever</string>
     <!-- Home onboarding dialog sign into sync screen description text. -->
     <string name="onboarding_home_sync_description">Pick up where you left off with tabs from other devices now on your homepage.</string>
     <!-- Text for the button to continue the onboarding on the home onboarding dialog. -->
