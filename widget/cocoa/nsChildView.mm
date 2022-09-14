@@ -4641,7 +4641,6 @@ nsresult nsChildView::GetSelectionAsPlaintext(nsAString& aResult) {
   NS_OBJC_END_TRY_BLOCK_RETURN(NS_ERROR_FAILURE);
 }
 
-#ifdef DEBUG
 nsresult nsChildView::SetHiDPIMode(bool aHiDPI) {
   nsCocoaUtils::InvalidateHiDPIState();
   Preferences::SetInt("gfx.hidpi.enabled", aHiDPI ? 1 : 0);
@@ -4655,7 +4654,6 @@ nsresult nsChildView::RestoreHiDPIMode() {
   BackingScaleFactorChanged();
   return NS_OK;
 }
-#endif
 
 #pragma mark -
 

@@ -602,11 +602,6 @@ class WinUtils {
 
   static bool GetTimezoneName(wchar_t* aBuffer);
 
-#ifdef DEBUG
-  static nsresult SetHiDPIMode(bool aHiDPI);
-  static nsresult RestoreHiDPIMode();
-#endif
-
  private:
   static WhitelistVec BuildWhitelist();
 

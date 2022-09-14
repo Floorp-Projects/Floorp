@@ -552,7 +552,7 @@ void nsPresContext::PreferenceChanged(const char* aPrefName) {
       float oldWidthDevPixels = oldWidthAppUnits / oldAppUnitsPerDevPixel;
       float oldHeightDevPixels = oldHeightAppUnits / oldAppUnitsPerDevPixel;
 
-      UIResolutionChangedInternal();
+      AppUnitsPerDevPixelChanged();
 
       nscoord width = NSToCoordRound(oldWidthDevPixels * AppUnitsPerDevPixel());
       nscoord height =

@@ -1112,13 +1112,17 @@ void BrowserParent::UpdateDimensions(const nsIntRect& rect,
 }
 
 DimensionInfo BrowserParent::GetDimensionInfo() {
+  nsCOMPtr<nsIWidget> widget = GetWidget();
+  MOZ_ASSERT(widget);
+  CSSToLayoutDeviceScale widgetScale = widget->GetDefaultScale();
+
   LayoutDeviceIntRect devicePixelRect = ViewAs<LayoutDevicePixel>(
       mRect, PixelCastJustification::LayoutDeviceIsScreenForTabDims);
   LayoutDeviceIntSize devicePixelSize = ViewAs<LayoutDevicePixel>(
       mDimensions, PixelCastJustification::LayoutDeviceIsScreenForTabDims);
 
-  CSSRect unscaledRect = devicePixelRect / mDefaultScale;
-  CSSSize unscaledSize = devicePixelSize / mDefaultScale;
+  CSSRect unscaledRect = devicePixelRect / widgetScale;
+  CSSSize unscaledSize = devicePixelSize / widgetScale;
   DimensionInfo di(unscaledRect, unscaledSize, mClientOffset, mChromeOffset);
   return di;
 }
@@ -3426,11 +3430,6 @@ void BrowserParent::TryCacheDPIAndScale() {
   if (widget) {
     mDPI = widget->GetDPI();
     mRounding = widget->RoundsWidgetCoordinatesTo();
-    if (mDefaultScale != widget->GetDefaultScale()) {
-      // The change of the default scale factor will affect the child dimensions
-      // so we need to invalidate it.
-      mUpdatedDimensions = false;
-    }
     mDefaultScale = widget->GetDefaultScale();
   }
 }

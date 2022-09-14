@@ -6,22 +6,12 @@
 #ifndef mozilla_gfx_thebes_DisplayConfigWindows_h
 #define mozilla_gfx_thebes_DisplayConfigWindows_h
 
-#include <optional>  // for std::optional
-#include <utility>   // for std::pair
-#include <vector>    // for std::vector
-#include <wingdi.h>
+#include <utility>              // for std::pair
 #include "mozilla/gfx/Point.h"  // for IntSize
 #include "nsTArray.h"
 
 namespace mozilla {
 namespace gfx {
-
-struct DisplayConfig {
-  std::vector<DISPLAYCONFIG_PATH_INFO> mPaths;
-  std::vector<DISPLAYCONFIG_MODE_INFO> mModes;
-};
-
-std::optional<DisplayConfig> GetDisplayConfig();
 
 extern bool HasScaledResolution();
 
