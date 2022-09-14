@@ -10,10 +10,6 @@ const { TelemetryTestUtils } = ChromeUtils.import(
   "resource://testing-common/TelemetryTestUtils.jsm"
 );
 
-const { TelemetryController } = ChromeUtils.import(
-  "resource://gre/modules/TelemetryController.jsm"
-);
-
 const nsIBinaryInputStream = Components.Constructor(
   "@mozilla.org/binaryinputstream;1",
   "nsIBinaryInputStream",
@@ -31,7 +27,6 @@ Services.prefs.setBoolPref("network.jar.record_failure_reason", true);
 
 const fileBase = "test_empty_file.zip";
 const file = do_get_file("data/" + fileBase);
-const jarBase = "jar:" + Services.io.newFileURI(file).spec + "!";
 const tmpDir = Services.dirsvc.get("TmpD", Ci.nsIFile);
 var copy;
 
