@@ -50,4 +50,11 @@ interface nsIWindowsAlertsService : nsIAlertsService
    */
   AString getXmlStringForWindowsAlert(in nsIAlertNotification aAlert,
                                       [optional] in AString aWindowsTag);
+
+  /**
+   * Removes all action center and snoozed notifications associated with this
+   * install. Note that this removes all notifications regardless of which profile
+   * they originated from.
+   */
+  void removeAllNotificationsForInstall();
 };
