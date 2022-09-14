@@ -75,6 +75,7 @@ include "mozilla/dom/FeaturePolicyUtils.h";
 include "mozilla/dom/MediaSessionIPCUtils.h";
 include "mozilla/dom/ReferrerInfoUtils.h";
 include "mozilla/ipc/ByteBufUtils.h";
+include "mozilla/ipc/TransportSecurityInfoUtils.h";
 include "mozilla/ipc/URIUtils.h";
 include "mozilla/PermissionDelegateIPCUtils.h";
 
@@ -153,6 +154,7 @@ using mozilla::dom::PerformanceTimingData from "mozilla/dom/PerformanceTiming.h"
 [RefCounted] using mozilla::dom::FeaturePolicy from "mozilla/dom/FeaturePolicy.h";
 using Wireframe from "mozilla/dom/DocumentBinding.h";
 using mozilla::PerfStats::MetricMask from "mozilla/PerfStats.h";
+[RefCounted] using class nsIX509Cert from "nsIX509Cert.h";
 
 union ChromeRegistryItem
 {
@@ -1626,7 +1628,7 @@ parent:
     /*
      * Adds a certificate exception for the given hostname and port.
      */
-    async AddCertException(nsCString aSerializedCert, nsCString aHostName,
+    async AddCertException(nsIX509Cert aCert, nsCString aHostName,
                            int32_t aPort, OriginAttributes aOriginAttributes,
                            bool aIsTemporary)
           returns (nsresult success);

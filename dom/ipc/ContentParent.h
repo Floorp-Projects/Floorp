@@ -59,6 +59,7 @@ class nsIRemoteTab;
 class nsITimer;
 class ParentIdleListener;
 class nsIWidget;
+class nsIX509Cert;
 
 namespace mozilla {
 class PRemoteSpellcheckEngineParent;
@@ -1236,9 +1237,9 @@ class ContentParent final : public PContentParent,
   mozilla::ipc::IPCResult RecvBHRThreadHang(const HangDetails& aHangDetails);
 
   mozilla::ipc::IPCResult RecvAddCertException(
-      const nsACString& aSerializedCert, const nsACString& aHostName,
-      int32_t aPort, const OriginAttributes& aOriginAttributes,
-      bool aIsTemporary, AddCertExceptionResolver&& aResolver);
+      nsIX509Cert* aCert, const nsACString& aHostName, int32_t aPort,
+      const OriginAttributes& aOriginAttributes, bool aIsTemporary,
+      AddCertExceptionResolver&& aResolver);
 
   mozilla::ipc::IPCResult RecvAutomaticStorageAccessPermissionCanBeGranted(
       nsIPrincipal* aPrincipal,

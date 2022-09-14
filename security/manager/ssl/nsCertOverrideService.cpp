@@ -397,8 +397,7 @@ nsCertOverrideService::RememberValidityOverride(
     const nsACString& aHostName, int32_t aPort,
     const OriginAttributes& aOriginAttributes, nsIX509Cert* aCert,
     bool aTemporary) {
-  NS_ENSURE_ARG_POINTER(aCert);
-  if (aHostName.IsEmpty() || !IsAscii(aHostName)) {
+  if (aHostName.IsEmpty() || !IsAscii(aHostName) || !aCert) {
     return NS_ERROR_INVALID_ARG;
   }
   if (aPort < -1) {
