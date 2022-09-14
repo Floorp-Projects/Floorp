@@ -4268,17 +4268,6 @@ var SessionStoreInternal = {
     return Promise.all(windowOpenedPromises);
   },
 
-  /** reset closedId's from previous sessions to ensure these IDs are unique
-   * @param tabData
-   *        an array of data to be restored
-   * @returns the updated tabData array
-   */
-  _resetClosedIds(tabData) {
-    for (let entry of tabData) {
-      entry.closedId = this._nextClosedId++;
-    }
-    return tabData;
-  },
   /**
    * restore features to a single window
    * @param aWindow
@@ -4402,8 +4391,6 @@ var SessionStoreInternal = {
     }
 
     let newClosedTabsData = winData._closedTabs || [];
-    newClosedTabsData = this._resetClosedIds(newClosedTabsData);
-
     let newLastClosedTabGroupCount = winData._lastClosedTabGroupCount || -1;
 
     if (overwriteTabs || firstWindow) {
