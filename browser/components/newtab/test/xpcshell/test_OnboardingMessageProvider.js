@@ -194,3 +194,35 @@ add_task(async function test_schemaValidation() {
     );
   }
 });
+
+add_task(
+  async function test_OnboardingMessageProvider_getPinPrivateWindow_pinPBMPrefDisabled() {
+    Services.prefs.setBoolPref(
+      "browser.startup.upgradeDialog.pinPBM.disabled",
+      true
+    );
+    registerCleanupFunction(() => {
+      Services.prefs.clearUserPref(
+        "browser.startup.upgradeDialog.pinPBM.disabled"
+      );
+    });
+    let sandbox = sinon.createSandbox();
+    // User needs default to ensure Pin Private window shows as third screen after import
+    sandbox
+      .stub(OnboardingMessageProvider, "_doesAppNeedDefault")
+      .resolves(true);
+
+    let pinStub = sandbox.stub(OnboardingMessageProvider, "_doesAppNeedPin");
+    pinStub.resolves(true);
+
+    const message = await OnboardingMessageProvider.getUpgradeMessage();
+    // Pin Private screen is not shown when pref is turned on
+    Assert.ok(
+      !getOnboardingScreenById(
+        message.content.screens,
+        "UPGRADE_PIN_PRIVATE_WINDOW"
+      )
+    );
+    sandbox.restore();
+  }
+);

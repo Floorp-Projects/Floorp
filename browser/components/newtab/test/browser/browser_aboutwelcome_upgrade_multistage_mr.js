@@ -13,6 +13,7 @@ const { TestUtils } = ChromeUtils.import(
 
 const HOMEPAGE_PREF = "browser.startup.homepage";
 const NEWTAB_PREF = "browser.newtabpage.enabled";
+const PINPBM_DISABLED_PREF = "browser.startup.upgradeDialog.pinPBM.disabled";
 
 // A bunch of the helper functions here are variants of the helper functions in
 // browser_aboutwelcome_multistage_mr.js, because the onboarding
@@ -396,5 +397,27 @@ add_task(async function test_aboutwelcome_upgrade_show_firefox_view() {
   assertFirefoxViewTabSelected(gBrowser.ownerGlobal);
 
   closeFirefoxViewTab();
+  await BrowserTestUtils.removeTab(gBrowser.selectedTab);
+});
+
+/*
+ *Checkbox shouldn't be shown if pinPBMDisabled pref is true
+ */
+add_task(async function test_aboutwelcome_upgrade_mr_private_pin_not_needed() {
+  OnboardingMessageProvider._doesAppNeedPin.resolves(true);
+  await pushPrefs([PINPBM_DISABLED_PREF, true]);
+
+  const browser = await openMRUpgradeWelcome(["UPGRADE_PIN_FIREFOX"]);
+
+  await test_upgrade_screen_content(
+    browser,
+    //Expected selectors
+    ["main.UPGRADE_PIN_FIREFOX"],
+    //Unexpected selectors:
+    ["input#action-checkbox"]
+  );
+
+  await clickVisibleButton(browser, ".action-buttons button.secondary");
+  await waitForDialogClose(browser);
   await BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });
