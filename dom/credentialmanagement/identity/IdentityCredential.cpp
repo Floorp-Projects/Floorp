@@ -154,6 +154,83 @@ IdentityCredential::DiscoverFromExternalSourceInMainProcess(
 }
 
 // static
+RefPtr<IdentityCredential::GetIPCIdentityCredentialPromise>
+IdentityCredential::CreateCredential(nsIPrincipal* aPrincipal,
+                                     const IdentityProvider& aProvider) {
+  MOZ_ASSERT(XRE_IsParentProcess());
+  MOZ_ASSERT(aPrincipal);
+
+  nsCOMPtr<nsIPrincipal> argumentPrincipal = aPrincipal;
+
+  return IdentityCredential::CheckRootManifest(aPrincipal, aProvider)
+      ->Then(
+          GetCurrentSerialEventTarget(), __func__,
+          [aProvider, argumentPrincipal](bool valid) {
+            if (valid) {
+              return IdentityCredential::FetchInternalManifest(
+                  argumentPrincipal, aProvider);
+            }
+            return IdentityCredential::GetManifestPromise::CreateAndReject(
+                NS_ERROR_FAILURE, __func__);
+          },
+          [](nsresult error) {
+            return IdentityCredential::GetManifestPromise::CreateAndReject(
+                error, __func__);
+          })
+      ->Then(
+          GetCurrentSerialEventTarget(), __func__,
+          [argumentPrincipal,
+           aProvider](const IdentityInternalManifest& manifest) {
+            return IdentityCredential::FetchAccountList(argumentPrincipal,
+                                                        aProvider, manifest);
+          },
+          [](nsresult error) {
+            return IdentityCredential::GetAccountListPromise::CreateAndReject(
+                error, __func__);
+          })
+      ->Then(
+          GetCurrentSerialEventTarget(), __func__,
+          [argumentPrincipal, aProvider](
+              const Tuple<IdentityInternalManifest, IdentityAccountList>&
+                  promiseResult) {
+            IdentityInternalManifest currentManifest;
+            IdentityAccountList accountList;
+            Tie(currentManifest, accountList) = promiseResult;
+            // Bug 1782088: We currently just use the first account
+            if (!accountList.mAccounts.WasPassed() ||
+                accountList.mAccounts.Value().Length() == 0) {
+              return IdentityCredential::GetTokenPromise::CreateAndReject(
+                  NS_ERROR_FAILURE, __func__);
+            }
+            return IdentityCredential::FetchToken(
+                argumentPrincipal, aProvider, currentManifest,
+                accountList.mAccounts.Value()[0]);
+          },
+          [](nsresult error) {
+            return IdentityCredential::GetTokenPromise::CreateAndReject(
+                error, __func__);
+          })
+      ->Then(
+          GetCurrentSerialEventTarget(), __func__,
+          [aProvider](
+              const Tuple<IdentityToken, IdentityAccount>& promiseResult) {
+            IdentityToken token;
+            IdentityAccount account;
+            Tie(token, account) = promiseResult;
+            IPCIdentityCredential credential;
+            credential.token() = token.mToken;
+            credential.id() = account.mId;
+            credential.type() = u"identity"_ns;
+            return IdentityCredential::GetIPCIdentityCredentialPromise::
+                CreateAndResolve(credential, __func__);
+          },
+          [](nsresult error) {
+            return IdentityCredential::GetIPCIdentityCredentialPromise::
+                CreateAndReject(error, __func__);
+          });
+}
+
+// static
 RefPtr<IdentityCredential::ValidationPromise>
 IdentityCredential::CheckRootManifest(nsIPrincipal* aPrincipal,
                                       const IdentityProvider& aProvider) {

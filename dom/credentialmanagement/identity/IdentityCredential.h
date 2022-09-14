@@ -54,6 +54,23 @@ class IdentityCredential final : public Credential {
       nsIPrincipal* aPrincipal,
       const IdentityCredentialRequestOptions& aOptions);
 
+  // Create an IPC credential that can be passed back to the content process.
+  // This calls a lot of helpers to do the logic of going from a single provider
+  // to a bearer token for an account at that provider.
+  //
+  //  Arguments:
+  //    aPrincipal: the caller of navigator.credentials.get()'s principal
+  //    aProvider: the provider to validate the root manifest of
+  //  Return value:
+  //    a promise resolving to an IPC credential with type "identity", id
+  //    constructed to identify it, and token corresponding to the token
+  //    fetched in FetchToken. This promise may reject with nsresult errors.
+  //  Side effects:
+  //    Will send network requests to the IDP. The details of which are in the
+  //    other static methods here.
+  static RefPtr<GetIPCIdentityCredentialPromise> CreateCredential(
+      nsIPrincipal* aPrincipal, const IdentityProvider& aProvider);
+
   // Performs a Fetch for the root manifest of the provided identity provider
   // and validates it as correct. The returned promise resolves with a bool
   // that is true if everything is valid.
