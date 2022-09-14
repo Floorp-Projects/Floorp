@@ -48,6 +48,7 @@ jobs:
         fetches:
             toolchain:
                 - linux64-rust
+                - linux64-cargo-vet
 
     cron-win:
         description: Cron Job for Updatebot (Windows)

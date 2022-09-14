@@ -27,7 +27,6 @@ apt-get install -y --no-install-recommends \
     libc6-dev \
     python-requests \
     python-requests-unixsocket \
-    python3.5 \
     python3-minimal \
     python3-wheel \
     python3-pip \
@@ -77,7 +76,6 @@ chown -R worker:worker .
 chown -R worker:worker .*
 
 python3 -m pip install -U pip
-python3 -m pip install -U zstandard # Needed by ./mach artifact toolchain
 python3 -m pip install poetry
 
 rm -rf /setup
