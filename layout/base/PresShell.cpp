@@ -5976,6 +5976,7 @@ void PresShell::ClearApproximatelyVisibleFramesList(
 
 void PresShell::MarkFramesInSubtreeApproximatelyVisible(
     nsIFrame* aFrame, const nsRect& aRect, bool aRemoveOnly /* = false */) {
+  MOZ_DIAGNOSTIC_ASSERT(aFrame, "aFrame arg should be a valid frame pointer");
   MOZ_ASSERT(aFrame->PresShell() == this, "wrong presshell");
 
   if (aFrame->TrackingVisibility() && aFrame->StyleVisibility()->IsVisible() &&
