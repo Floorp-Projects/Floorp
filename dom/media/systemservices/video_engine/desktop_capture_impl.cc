@@ -28,6 +28,7 @@
 #include "modules/desktop_capture/desktop_frame.h"
 #include "modules/desktop_capture/desktop_capture_options.h"
 #include "modules/video_capture/video_capture.h"
+#include "mozilla/StaticPrefs_media.h"
 
 #if defined(_WIN32)
 #  include "platform_uithread.h"
@@ -334,6 +335,12 @@ int32_t DesktopCaptureImpl::LazyInitDesktopCapturer() {
   DesktopCaptureOptions options = DesktopCaptureOptions::CreateDefault();
   // Leave desktop effects enabled during WebRTC captures.
   options.set_disable_effects(false);
+
+#if defined(WEBRTC_MAC)
+  if (mozilla::StaticPrefs::media_webrtc_capture_allow_iosurface()) {
+    options.set_allow_iosurface(true);
+  }
+#endif
 
   if (_deviceType == CaptureDeviceType::Screen) {
     std::unique_ptr<DesktopCapturer> pScreenCapturer =
