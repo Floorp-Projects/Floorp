@@ -760,6 +760,7 @@ var pktApi = (function() {
             list: Object.values(data.list)
               .map(item => ({
                 ...item,
+                id: parseInt(item.item_id || item.resolved_id, 10),
                 time_added: parseInt(item.time_added),
               }))
               .sort((a, b) => b.time_added - a.time_added),
