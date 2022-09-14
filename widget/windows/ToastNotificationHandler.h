@@ -33,7 +33,8 @@ class ToastNotificationHandler final
                            const nsAString& aMsg, const nsAString& aHostPort,
                            bool aClickable, bool aRequireInteraction,
                            const nsTArray<RefPtr<nsIAlertAction>>& aActions,
-                           bool aIsSystemPrincipal, const nsAString& aLaunchUrl)
+                           bool aIsSystemPrincipal, const nsAString& aLaunchUrl,
+                           bool aInPrivateBrowsing)
       : mBackend(backend),
         mAumid(aumid),
         mHasImage(false),
@@ -45,6 +46,7 @@ class ToastNotificationHandler final
         mHostPort(aHostPort),
         mClickable(aClickable),
         mRequireInteraction(aRequireInteraction),
+        mInPrivateBrowsing(aInPrivateBrowsing),
         mActions(aActions.Clone()),
         mIsSystemPrincipal(aIsSystemPrincipal),
         mLaunchUrl(aLaunchUrl),
@@ -53,6 +55,8 @@ class ToastNotificationHandler final
   nsresult InitAlertAsync(nsIAlertNotification* aAlert);
 
   void OnWriteBitmapFinished(nsresult rv);
+
+  void HideIfPrivate();
 
   void UnregisterHandler();
 
@@ -108,6 +112,7 @@ class ToastNotificationHandler final
   nsString mHostPort;
   bool mClickable;
   bool mRequireInteraction;
+  bool mInPrivateBrowsing;
   nsTArray<RefPtr<nsIAlertAction>> mActions;
   bool mIsSystemPrincipal;
   nsString mLaunchUrl;
@@ -115,6 +120,7 @@ class ToastNotificationHandler final
 
   nsresult TryShowAlert();
   bool ShowAlert();
+  void HideAlert();
   nsresult AsyncSaveImage(imgIRequest* aRequest);
   nsresult OnWriteBitmapSuccess();
   void SendFinished();
