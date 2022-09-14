@@ -2203,7 +2203,7 @@ nsStyleDisplay::nsStyleDisplay(const Document& aDocument)
       mOriginalDisplay(StyleDisplay::Inline),
       mContain(StyleContain::NONE),
       mContentVisibility(StyleContentVisibility::Visible),
-      mContainerType(StyleContainerType::NORMAL),
+      mContainerType(StyleContainerType::NONE),
       mAppearance(StyleAppearance::None),
       mDefaultAppearance(StyleAppearance::None),
       mPosition(StylePositionProperty::Static),
