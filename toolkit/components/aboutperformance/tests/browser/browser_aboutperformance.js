@@ -90,7 +90,122 @@ add_task(async function init() {
     "after a double click the test tab is selected"
   );
 
-  // Verify we can close a tab using the X button.
+  info("Verify we can toggle subitems using a twisty image button");
+
+  // Find the row with type of Browser for twisty toggle test group.
+  let twistyBtn = doc.querySelector("tr > td.root > .twisty");
+  let groupRow = twistyBtn.parentNode.parentNode;
+
+  // Verify twisty button is properly set up.
+  Assert.ok(
+    twistyBtn.hasAttribute("aria-label"),
+    "the Twisty image button has an aria-label"
+  );
+  Assert.equal(
+    twistyBtn.getAttribute("aria-label"),
+    groupRow.firstChild.textContent,
+    "the Twisty image button's aria-label is the same as the Name of its row"
+  );
+  Assert.equal(
+    twistyBtn.getAttribute("role"),
+    "button",
+    "the Twisty image is programmatically a button"
+  );
+  Assert.equal(
+    twistyBtn.getAttribute("tabindex"),
+    "0",
+    "the Twisty image button is included in the focus order"
+  );
+  Assert.equal(
+    twistyBtn.getAttribute("aria-expanded"),
+    "false",
+    "the Twisty image button is collapsed by default"
+  );
+
+  // Verify we can toggle/show subitems by clicking the twisty button.
+  EventUtils.synthesizeMouseAtCenter(
+    twistyBtn,
+    {},
+    tabAboutPerformance.linkedBrowser.contentWindow
+  );
+  Assert.ok(
+    groupRow.nextSibling.children[0].classList.contains("indent"),
+    "clicking a collapsed Twisty adds subitems after the row"
+  );
+  Assert.equal(
+    twistyBtn.getAttribute("aria-expanded"),
+    "true",
+    "the Twisty image button is expanded after a click"
+  );
+
+  // Verify the twisty button can be focused with a keyboard.
+  twistyBtn.focus();
+  Assert.equal(
+    twistyBtn,
+    doc.activeElement,
+    "the Twisty image button can be focused"
+  );
+  // Verify we can toggle subitems with a keyboard.
+  // Twisty is expanded
+  EventUtils.synthesizeKey(
+    "KEY_Enter",
+    {},
+    tabAboutPerformance.linkedBrowser.contentWindow
+  );
+  Assert.ok(
+    !groupRow.nextSibling.children[0].classList.contains("indent"),
+    "pressing Enter on expanded Twisty removes subitems after the row"
+  );
+  Assert.equal(
+    twistyBtn.getAttribute("aria-expanded"),
+    "false",
+    "the Twisty image button is collapsed after a keypress"
+  );
+  Assert.equal(
+    twistyBtn,
+    doc.activeElement,
+    "the Twisty retains focus after the page is updated"
+  );
+  // Twisty is collapsed
+  EventUtils.synthesizeKey(
+    " ",
+    {},
+    tabAboutPerformance.linkedBrowser.contentWindow
+  );
+  Assert.ok(
+    groupRow.nextSibling.children[0].classList.contains("indent"),
+    "pressing Space on collapsed Twisty adds subitems after the row"
+  );
+  Assert.equal(
+    twistyBtn.getAttribute("aria-expanded"),
+    "true",
+    "the Twisty image button is expanded after a keypress"
+  );
+
+  info("Verify the focus stays on a twisty image button");
+
+  Assert.equal(
+    twistyBtn,
+    doc.activeElement,
+    "the Twisty retains focus after the page is updated"
+  );
+  Assert.notEqual(
+    doc.activeElement.tagName,
+    "body",
+    "the body does not pull the focus after the page is updated"
+  );
+  EventUtils.synthesizeKey(
+    "KEY_Tab",
+    { shiftKey: true },
+    tabAboutPerformance.linkedBrowser.contentWindow
+  );
+  Assert.notEqual(
+    twistyBtn,
+    doc.activeElement,
+    "the Twisty does not pull the focus after the page is updated"
+  );
+
+  info("Verify we can close a tab using the X button");
   // Switch back to about:performance...
   await BrowserTestUtils.switchTab(gBrowser, tabAboutPerformance);
   // ... and click the X button at the end of the row.
