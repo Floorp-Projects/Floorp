@@ -177,7 +177,7 @@ void nsMathMLmoFrame::ProcessTextData() {
 // However, we re-use unchanged values.
 void nsMathMLmoFrame::ProcessOperatorData() {
   // if we have been here before, we will just use our cached form
-  nsOperatorFlags form = NS_MATHML_OPERATOR_GET_FORM(mFlags);
+  uint8_t form = NS_MATHML_OPERATOR_GET_FORM(mFlags);
   nsAutoString value;
   float fontSizeInflation = nsLayoutUtils::FontSizeInflationFor(this);
 
