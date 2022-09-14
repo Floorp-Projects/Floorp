@@ -83,14 +83,30 @@ add_task(async function() {
 
   let iframe = panel.querySelector(".devtools-toolbox-bottom-iframe");
   is(iframe.clientHeight, 100, "The iframe is resized properly");
+  const horzSplitter = panel.querySelector(".devtools-horizontal-splitter");
+  dragElement(horzSplitter, { startX: 1, startY: 1, deltaX: 0, deltaY: -50 });
+  is(iframe.clientHeight, 150, "The iframe was resized by the splitter");
 
   await toolbox.switchHost(Toolbox.HostType.RIGHT);
   iframe = panel.querySelector(".devtools-toolbox-side-iframe");
   iframe.style.minWidth = "1px"; // Disable the min width set in css
   is(iframe.clientWidth, 100, "The iframe is resized properly");
 
+  info("Resize the toolbox manually by 50 pixels");
+  const sideSplitter = panel.querySelector(".devtools-side-splitter");
+  dragElement(sideSplitter, { startX: 1, startY: 1, deltaX: -50, deltaY: 0 });
+  is(iframe.clientWidth, 150, "The iframe was resized by the splitter");
+
   await cleanup(toolbox);
 });
+
+function dragElement(el, { startX, startY, deltaX, deltaY }) {
+  const endX = startX + deltaX;
+  const endY = startY + deltaY;
+  EventUtils.synthesizeMouse(el, startX, startY, { type: "mousedown" }, window);
+  EventUtils.synthesizeMouse(el, endX, endY, { type: "mousemove" }, window);
+  EventUtils.synthesizeMouse(el, endX, endY, { type: "mouseup" }, window);
+}
 
 async function cleanup(toolbox) {
   Services.prefs.clearUserPref("devtools.toolbox.host");
