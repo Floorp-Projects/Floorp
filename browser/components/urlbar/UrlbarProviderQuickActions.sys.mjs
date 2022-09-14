@@ -25,7 +25,7 @@ const DYNAMIC_TYPE_NAME = "quickactions";
 
 // When the urlbar is first focused and no search term has been
 // entered we show a limited number of results.
-const ACTIONS_SHOWN_FOCUS = 5;
+const ACTIONS_SHOWN_FOCUS = 4;
 
 // Default icon shown for actions if no custom one is provided.
 const DEFAULT_ICON = "chrome://global/skin/icons/settings.svg";

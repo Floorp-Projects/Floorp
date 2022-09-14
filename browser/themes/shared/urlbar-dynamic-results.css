@@ -150,9 +150,13 @@
 
 .urlbarView-row[dynamicType=quickactions] .urlbarView-dynamic-quickactions-buttons {
   display: flex;
-  flex-wrap: wrap;
   flex-grow: 1;
   gap: 0.9em 1.8em;
+  max-width: calc(100% - 32px);
+}
+
+#urlbar[searchmode] .urlbarView-row[dynamicType=quickactions] .urlbarView-dynamic-quickactions-buttons {
+  flex-wrap: wrap;
 }
 
 .urlbarView-results[wrap] > .urlbarView-row[dynamicType=quickactions] > .urlbarView-row-inner {
@@ -167,6 +171,7 @@
   padding: .5em;
   margin-top: 2px;
   position: relative;
+  overflow: hidden;
 }
 
 .urlbarView-row[dynamicType=quickactions] .urlbarView-quickaction-row[disabled] {
