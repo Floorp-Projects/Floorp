@@ -3426,6 +3426,11 @@ void BrowserParent::TryCacheDPIAndScale() {
   if (widget) {
     mDPI = widget->GetDPI();
     mRounding = widget->RoundsWidgetCoordinatesTo();
+    if (mDefaultScale != widget->GetDefaultScale()) {
+      // The change of the default scale factor will affect the child dimensions
+      // so we need to invalidate it.
+      mUpdatedDimensions = false;
+    }
     mDefaultScale = widget->GetDefaultScale();
   }
 }
