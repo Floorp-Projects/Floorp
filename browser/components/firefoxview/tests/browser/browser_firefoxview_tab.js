@@ -64,9 +64,8 @@ add_task(async function number_tab_select_shortcut() {
     AppConstants.MOZ_WIDGET_GTK ? { altKey: true } : { accelKey: true },
     win
   );
-  is(
-    win.gBrowser.tabContainer.selectedIndex,
-    1,
+  ok(
+    !win.FirefoxViewHandler.tab.selected,
     "Number shortcut to select the first tab skipped the Firefox View tab"
   );
   await BrowserTestUtils.closeWindow(win);
