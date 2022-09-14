@@ -11,7 +11,7 @@ import org.mozilla.experiments.nimbus.internal.NimbusException
 class NimbusSetupTest {
     @Test
     fun `WHEN error is reportable THEN return true`() {
-        val error = NimbusException.IOException("IOException")
+        val error = NimbusException.IoException("IOException")
 
         assertTrue(error.isReportableError())
     }
