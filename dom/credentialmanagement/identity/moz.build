@@ -10,11 +10,15 @@ with Files("**"):
 
 EXPORTS.mozilla.dom += [
     "IdentityCredential.h",
+    "IdentityCredentialSerializationHelpers.h",
+    "IdentityNetworkHelpers.h",
 ]
 
-UNIFIED_SOURCES += [
-    "IdentityCredential.cpp",
+IPDL_SOURCES += [
+    "IPCIdentityCredential.ipdlh",
 ]
+
+UNIFIED_SOURCES += ["IdentityCredential.cpp"]
 
 include("/ipc/chromium/chromium-config.mozbuild")
 
