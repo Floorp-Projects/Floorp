@@ -402,10 +402,6 @@ saveToPocket:
   hasExposure: false
   isEarlyStartup: true
   variables:
-    layoutRefresh:
-      type: boolean
-      fallbackPref: extensions.pocket.refresh.layout.enabled
-      description: Enable the new Pocket panels.
     emailButton:
       type: boolean
       fallbackPref: extensions.pocket.refresh.emailButton.enabled

@@ -2122,9 +2122,6 @@ pref("extensions.pocket.showHome", true);
 // Possibilities are: `control`, `control-one-button`, `variant_a`, `variant_b`, `variant_c`
 pref("extensions.pocket.loggedOutVariant", "control");
 
-// Enable the new Pocket panels.
-pref("extensions.pocket.refresh.layout.enabled", true);
-
 // Just for the new Pocket panels, enables the email signup button.
 pref("extensions.pocket.refresh.emailButton.enabled", false);
 // Hides the recently saved section in the home panel.
