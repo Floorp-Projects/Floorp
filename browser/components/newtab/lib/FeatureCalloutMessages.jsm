@@ -134,7 +134,7 @@ const MESSAGES = () => {
         ],
       },
       priority: 1,
-      targeting: `source == "firefoxview" && colorwaysActive && ${matchCurrentScreenTargeting(
+      targeting: `!inMr2022Holdback && source == "firefoxview" && colorwaysActive && ${matchCurrentScreenTargeting(
         FIREFOX_VIEW_PREF,
         "FEATURE_CALLOUT_1"
       )}`,
@@ -207,7 +207,7 @@ const MESSAGES = () => {
         ],
       },
       priority: 1,
-      targeting: `source == "firefoxview" && !colorwaysActive && ${matchCurrentScreenTargeting(
+      targeting: `!inMr2022Holdback && source == "firefoxview" && !colorwaysActive && ${matchCurrentScreenTargeting(
         FIREFOX_VIEW_PREF,
         "FEATURE_CALLOUT_1"
       )}`,
@@ -276,7 +276,7 @@ const MESSAGES = () => {
         ],
       },
       priority: 1,
-      targeting: `source == "firefoxview" && colorwaysActive && ${matchCurrentScreenTargeting(
+      targeting: `!inMr2022Holdback && source == "firefoxview" && colorwaysActive && ${matchCurrentScreenTargeting(
         FIREFOX_VIEW_PREF,
         "FEATURE_CALLOUT_2"
       )}`,
@@ -344,7 +344,7 @@ const MESSAGES = () => {
         ],
       },
       priority: 1,
-      targeting: `source == "firefoxview" && !colorwaysActive && ${matchCurrentScreenTargeting(
+      targeting: `!inMr2022Holdback && source == "firefoxview" && !colorwaysActive && ${matchCurrentScreenTargeting(
         FIREFOX_VIEW_PREF,
         "FEATURE_CALLOUT_2"
       )}`,
@@ -419,7 +419,7 @@ const MESSAGES = () => {
         ],
       },
       priority: 1,
-      targeting: `source == "firefoxview" && colorwaysActive && ${matchCurrentScreenTargeting(
+      targeting: `!inMr2022Holdback && source == "firefoxview" && colorwaysActive && ${matchCurrentScreenTargeting(
         FIREFOX_VIEW_PREF,
         "FEATURE_CALLOUT_3"
       )}`,
@@ -458,7 +458,7 @@ const MESSAGES = () => {
         ],
       },
       priority: 2,
-      targeting: `source == "firefoxview" && "browser.firefox-view.view-count" | preferenceValue > 3 && colorwaysActive && !userEnabledActiveColorway`,
+      targeting: `!inMr2022Holdback && source == "firefoxview" && "browser.firefox-view.view-count" | preferenceValue > 3 && colorwaysActive && !userEnabledActiveColorway`,
       frequency: { lifetime: 1 },
       trigger: { id: "featureCalloutCheck" },
     },
@@ -502,7 +502,7 @@ const MESSAGES = () => {
         ],
       },
       priority: 1,
-      targeting: `source == "firefoxview" && "browser.firefox-view.view-count" | preferenceValue > 2
+      targeting: `!inMr2022Holdback && source == "firefoxview" && "browser.firefox-view.view-count" | preferenceValue > 2
     && (("identity.fxaccounts.enabled" | preferenceValue == false) || !(("services.sync.engine.tabs" | preferenceValue == true) && ("services.sync.username" | preferenceValue)))`,
       frequency: {
         lifetime: 1,
