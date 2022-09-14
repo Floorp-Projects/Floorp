@@ -11,7 +11,6 @@ const { TabsSetupFlowManager } = ChromeUtils.importESModule(
 );
 
 const TOPIC_SETUPSTATE_CHANGED = "firefox-view.setupstate.changed";
-const UI_OPEN_STATE = "browser.tabs.firefox-view.ui-state.tab-pickup.open";
 
 class TabPickupContainer extends HTMLDetailsElement {
   constructor() {
@@ -247,10 +246,6 @@ class TabPickupContainer extends HTMLDetailsElement {
 
     mobilePromoElem.hidden = !this._showMobilePromo;
     mobileSuccessElem.hidden = !this._showMobilePairSuccess;
-
-    this.open =
-      !TabsSetupFlowManager.isTabSyncSetupComplete ||
-      Services.prefs.getBoolPref(UI_OPEN_STATE, true);
 
     // show/hide either the setup or tab list containers, creating each as necessary
     if (stateIndex < 4) {
