@@ -126,3 +126,5 @@ LOCAL_INCLUDES += [
 ]
 
 EXTRA_JS_MODULES += ["URIFixup.jsm"]
+
+include("/tools/fuzzing/libfuzzer-config.mozbuild")
