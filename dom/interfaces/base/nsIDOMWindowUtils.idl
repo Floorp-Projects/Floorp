@@ -2209,18 +2209,12 @@ interface nsIDOMWindowUtils : nsISupports {
   bool isCoepCredentialless();
 
   /**
-   * Change the DPI setting for the primary monitor.
-   * This setHiDPIMode and restoreHiDPIMode below are only available on debug
-   * builds since these APIs are supposed to be used in tests.
-   *
-   * Note that on Mac, this API doesn't change the system DPI setting, rather it
-   * changes our internal state of DPI settings, thus it will not invoke the
-   * exact same stuff when the system DPI setting is changed.
-   *
+   * Simulate enabling/disabling HiDPI mode. This function only works on
+   * environments where HiDPI mode is available by default.
    */
   void setHiDPIMode(in boolean aHiDPI);
   /**
-   * Restore the modified HiDPI mode.
+   * Restore the simulated HiDPI mode.
    */
   void restoreHiDPIMode();
 

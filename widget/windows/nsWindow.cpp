@@ -9316,14 +9316,6 @@ bool nsWindow::HandleAppCommandMsg(const MSG& aAppCommandMsg,
   return consumed;
 }
 
-#ifdef DEBUG
-nsresult nsWindow::SetHiDPIMode(bool aHiDPI) {
-  return WinUtils::SetHiDPIMode(aHiDPI);
-}
-
-nsresult nsWindow::RestoreHiDPIMode() { return WinUtils::RestoreHiDPIMode(); }
-#endif
-
 static nsSizeMode GetSizeModeForWindowFrame(HWND aWnd, bool aFullscreenMode) {
   WINDOWPLACEMENT pl;
   pl.length = sizeof(pl);
