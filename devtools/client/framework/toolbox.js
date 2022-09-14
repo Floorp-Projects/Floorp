@@ -1727,10 +1727,10 @@ Toolbox.prototype = {
   },
 
   _saveSplitConsoleHeight() {
-    Services.prefs.setIntPref(
-      SPLITCONSOLE_HEIGHT_PREF,
-      parseInt(this.webconsolePanel.style.height, 10)
-    );
+    const height = parseInt(this.webconsolePanel.style.height, 10);
+    if (!isNaN(height)) {
+      Services.prefs.setIntPref(SPLITCONSOLE_HEIGHT_PREF, height);
+    }
   },
 
   /**
