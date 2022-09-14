@@ -39,7 +39,13 @@ class Listener {
 }
 Listener.prototype.QueryInterface = ChromeUtils.generateQI(["nsIDNSListener"]);
 
-["localhost", "vhost.localhost"].forEach(domain => {
+const DOMAINS = [
+  "localhost",
+  "localhost.",
+  "vhost.localhost",
+  "vhost.localhost.",
+];
+DOMAINS.forEach(domain => {
   add_task(async function test_() {
     let listener1 = new Listener();
     const overrides = ["1.2.3.4", "5.6.7.8"];
