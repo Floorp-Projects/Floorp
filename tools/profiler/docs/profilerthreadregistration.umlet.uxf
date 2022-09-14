@@ -1,0 +1,710 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<diagram program="umlet" version="15.0.0">
+  <zoom_level>10</zoom_level>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>200</x>
+      <y>330</y>
+      <w>370</w>
+      <h>250</h>
+    </coordinates>
+    <panel_attributes>ThreadRegistry::OffThreadRef
+--
++UnlockedConstReaderCRef() const
++WithUnlockedConstReader(F&amp;&amp; aF) const
++UnlockedConstReaderAndAtomicRWCRef() const
++WithUnlockedConstReaderAndAtomicRW(F&amp;&amp; aF) const
++UnlockedConstReaderAndAtomicRWRef()
++WithUnlockedConstReaderAndAtomicRW(F&amp;&amp; aF)
++UnlockedRWForLockedProfilerCRef()
++WithUnlockedRWForLockedProfiler(F&amp;&amp; aF)
++UnlockedRWForLockedProfilerRef()
++WithUnlockedRWForLockedProfiler(F&amp;&amp; aF)
++ConstLockedRWFromAnyThread()
++WithConstLockedRWFromAnyThread(F&amp;&amp; aF)
++LockedRWFromAnyThread()
++WithLockedRWFromAnyThread(F&amp;&amp; aF)</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>310</x>
+      <y>80</y>
+      <w>560</w>
+      <h>160</h>
+    </coordinates>
+    <panel_attributes>ThreadRegistry
+--
+-sRegistryMutex: RegistryMutex (aka BaseProfilerSharedMutex)
+/exclusive lock used during un/registration, shared lock for other accesses/
+--
+friend class ThreadRegistration
+-Register(ThreadRegistration::OnThreadRef)
+-Unregister(ThreadRegistration::OnThreadRef)
+--
++WithOffThreadRef(ProfilerThreadId, auto&amp;&amp; aF) static
++WithOffThreadRefOr(ProfilerThreadId, auto&amp;&amp; aF, auto&amp;&amp; aFallbackReturn) static: auto</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>310</x>
+      <y>630</y>
+      <w>530</w>
+      <h>260</h>
+    </coordinates>
+    <panel_attributes>ThreadRegistration
+--
+-mDataMutex: DataMutex (aka BaseProfilerMutex)
+-mIsOnHeap: bool
+-mIsRegistryLockedSharedOnThisThread: bool
+-tlsThreadRegistration: MOZ_THREAD_LOCAL(ThreadRegistration*)
+-GetTLS() static: tlsThreadRegistration*
+-GetFromTLS() static: ThreadRegistration*
+--
++ThreadRegistration(const char* aName, const void* aStackTop)
++~ThreadRegistration()
++RegisterThread(const char* aName, const void* aStackTop) static: ProfilingStack*
++UnregisterThread() static
++IsRegistered() static: bool
++GetOnThreadPtr() static OnThreadPtr
++WithOnThreadRefOr(auto&amp;&amp; aF, auto&amp;&amp; aFallbackReturn) static: auto
++IsDataMutexLockedOnCurrentThread() static: bool</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>880</x>
+      <y>620</y>
+      <w>450</w>
+      <h>290</h>
+    </coordinates>
+    <panel_attributes>ThreadRegistration::OnThreadRef
+--
++UnlockedConstReaderCRef() const
++WithUnlockedConstReader(auto&amp;&amp; aF) const: auto
++UnlockedConstReaderAndAtomicRWCRef() const
++WithUnlockedConstReaderAndAtomicRW(auto&amp;&amp; aF) const: auto
++UnlockedConstReaderAndAtomicRWRef()
++WithUnlockedConstReaderAndAtomicRW(auto&amp;&amp; aF): auto
++UnlockedRWForLockedProfilerCRef() const
++WithUnlockedRWForLockedProfiler(auto&amp;&amp; aF) const: auto
++UnlockedRWForLockedProfilerRef()
++WithUnlockedRWForLockedProfiler(auto&amp;&amp; aF): auto
++UnlockedReaderAndAtomicRWOnThreadCRef() const
++WithUnlockedReaderAndAtomicRWOnThread(auto&amp;&amp; aF) const: auto
++UnlockedReaderAndAtomicRWOnThreadRef()
++WithUnlockedReaderAndAtomicRWOnThread(auto&amp;&amp; aF): auto
++RWOnThreadWithLock LockedRWOnThread()
++WithLockedRWOnThread(auto&amp;&amp; aF): auto</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>1040</x>
+      <y>440</y>
+      <w>230</w>
+      <h>70</h>
+    </coordinates>
+    <panel_attributes>ThreadRegistration::OnThreadPtr
+--
++operator*(): OnThreadRef
++operator-&gt;(): OnThreadRef</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>450</x>
+      <y>940</y>
+      <w>350</w>
+      <h>240</h>
+    </coordinates>
+    <panel_attributes>ThreadRegistrationData
+--
+-mProfilingStack: ProfilingStack
+-mStackTop: const void* const
+-mThread: nsCOMPtr&lt;nsIThread&gt;
+-mJSContext: JSContext*
+-mJsFrameBuffer: JsFrame*
+-mJSFlags: uint32_t
+-Sleep: Atomic&lt;int&gt;
+-mThreadCpuTimeInNsAtLastSleep: Atomic&lt;uint64_t&gt;
+-mWakeCount: Atomic&lt;uint64_t, Relaxed&gt;
+-mRecordWakeCountMutex: BaseProfilerMutex
+-mAlreadyRecordedWakeCount: uint64_t
+-mAlreadyRecordedCpuTimeInMs: uin64_t
+-mThreadProfilingFeatures: ThreadProfilingFeatures</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>460</x>
+      <y>1220</y>
+      <w>330</w>
+      <h>80</h>
+    </coordinates>
+    <panel_attributes>ThreadRegistrationUnlockedConstReader
+--
++Info() const: const ThreadRegistrationInfo&amp;
++PlatformDataCRef() const: const PlatformData&amp;
++StackTop() const: const void*</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>440</x>
+      <y>1340</y>
+      <w>370</w>
+      <h>190</h>
+    </coordinates>
+    <panel_attributes>ThreadRegistrationUnlockedConstReaderAndAtomicRW
+--
++ProfilingStackCRef() const: const ProfilingStack&amp;
++ProfilingStackRef(): ProfilingStack&amp;
++ProfilingFeatures() const: ThreadProfilingFeatures
++SetSleeping()
++SetAwake()
++GetNewCpuTimeInNs(): uint64_t
++RecordWakeCount() const
++ReinitializeOnResume()
++CanDuplicateLastSampleDueToSleep(): bool
++IsSleeping(): bool</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>460</x>
+      <y>1570</y>
+      <w>330</w>
+      <h>60</h>
+    </coordinates>
+    <panel_attributes>ThreadRegistrationUnlockedRWForLockedProfiler
+--
++GetProfiledThreadData(): const ProfiledThreadData*
++GetProfiliedThreadData(): ProfiledThreadData*</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>430</x>
+      <y>1670</y>
+      <w>390</w>
+      <h>50</h>
+    </coordinates>
+    <panel_attributes>ThreadRegistrationUnlockedReaderAndAtomicRWOnThread
+--
++GetJSContext(): JSContext*</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>380</x>
+      <y>1840</y>
+      <w>490</w>
+      <h>190</h>
+    </coordinates>
+    <panel_attributes>ThreadRegistrationLockedRWFromAnyThread
+--
++SetProfilingFeaturesAndData(
+  ThreadProfilingFeatures, ProfiledThreadData*, const PSAutoLock&amp;)
++ClearProfilingFeaturesAndData(const PSAutoLock&amp;)
++GetJsFrameBuffer() const JsFrame*
++GetEventTarget() const: const nsCOMPtr&lt;nsIEventTarget&gt;
++ResetMainThread()
++GetRunningEventDelay(const TimeStamp&amp;, TimeDuration&amp;, TimeDuration&amp;)
++StartJSSampling(uint32_t)
++StopJSSampling()</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>490</x>
+      <y>2070</y>
+      <w>260</w>
+      <h>80</h>
+    </coordinates>
+    <panel_attributes>ThreadRegistrationLockedRWOnThread
+--
++SetJSContext(JSContext*)
++ClearJSContext()
++PollJSSampling()</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>610</x>
+      <y>1170</y>
+      <w>30</w>
+      <h>70</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;&lt;-</panel_attributes>
+    <additional_attributes>10.0;10.0;10.0;50.0</additional_attributes>
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>500</x>
+      <y>2190</y>
+      <w>240</w>
+      <h>60</h>
+    </coordinates>
+    <panel_attributes>ThreadRegistration::EmbeddedData
+--</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>610</x>
+      <y>1290</y>
+      <w>30</w>
+      <h>70</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;&lt;-</panel_attributes>
+    <additional_attributes>10.0;10.0;10.0;50.0</additional_attributes>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>610</x>
+      <y>1520</y>
+      <w>30</w>
+      <h>70</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;&lt;-</panel_attributes>
+    <additional_attributes>10.0;10.0;10.0;50.0</additional_attributes>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>610</x>
+      <y>1620</y>
+      <w>30</w>
+      <h>70</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;&lt;-</panel_attributes>
+    <additional_attributes>10.0;10.0;10.0;50.0</additional_attributes>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>650</x>
+      <y>1710</y>
+      <w>30</w>
+      <h>150</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;&lt;-</panel_attributes>
+    <additional_attributes>10.0;10.0;10.0;130.0</additional_attributes>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>610</x>
+      <y>2020</y>
+      <w>30</w>
+      <h>70</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;&lt;-</panel_attributes>
+    <additional_attributes>10.0;10.0;10.0;50.0</additional_attributes>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>610</x>
+      <y>2140</y>
+      <w>30</w>
+      <h>70</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;&lt;-</panel_attributes>
+    <additional_attributes>10.0;10.0;10.0;50.0</additional_attributes>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>340</x>
+      <y>880</y>
+      <w>180</w>
+      <h>1370</h>
+    </coordinates>
+    <panel_attributes>lt=-&gt;&gt;&gt;&gt;&gt;
+mData</panel_attributes>
+    <additional_attributes>160.0;1350.0;10.0;1350.0;10.0;10.0</additional_attributes>
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>990</x>
+      <y>930</y>
+      <w>210</w>
+      <h>100</h>
+    </coordinates>
+    <panel_attributes>ThreadRegistrationInfo
+--
++Name(): const char*
++RegisterTime(): const TimeStamp&amp;
++ThreadId(): ProfilerThreadId
++IsMainThread(): bool</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>790</x>
+      <y>980</y>
+      <w>220</w>
+      <h>40</h>
+    </coordinates>
+    <panel_attributes>lt=-&gt;&gt;&gt;&gt;&gt;
+mInfo</panel_attributes>
+    <additional_attributes>200.0;20.0;10.0;20.0</additional_attributes>
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>990</x>
+      <y>1040</y>
+      <w>210</w>
+      <h>50</h>
+    </coordinates>
+    <panel_attributes>PlatformData
+--
+</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>790</x>
+      <y>1040</y>
+      <w>220</w>
+      <h>40</h>
+    </coordinates>
+    <panel_attributes>lt=-&gt;&gt;&gt;&gt;&gt;
+mPlatformData</panel_attributes>
+    <additional_attributes>200.0;20.0;10.0;20.0</additional_attributes>
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>990</x>
+      <y>1100</y>
+      <w>210</w>
+      <h>60</h>
+    </coordinates>
+    <panel_attributes>ProfiledThreadData
+--</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>790</x>
+      <y>1100</y>
+      <w>220</w>
+      <h>40</h>
+    </coordinates>
+    <panel_attributes>lt=-&gt;&gt;&gt;&gt;
+mProfiledThreadData: *</panel_attributes>
+    <additional_attributes>200.0;20.0;10.0;20.0</additional_attributes>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>710</x>
+      <y>480</y>
+      <w>350</w>
+      <h>170</h>
+    </coordinates>
+    <panel_attributes>lt=-&gt;&gt;&gt;&gt;
+m1=0..1
+mThreadRegistration: *</panel_attributes>
+    <additional_attributes>10.0;150.0;330.0;10.0</additional_attributes>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>830</x>
+      <y>580</y>
+      <w>260</w>
+      <h>130</h>
+    </coordinates>
+    <panel_attributes>lt=-&gt;&gt;&gt;&gt;
+m1=1
+mThreadRegistration: *</panel_attributes>
+    <additional_attributes>10.0;110.0;40.0;20.0;220.0;20.0;240.0;40.0</additional_attributes>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>1140</x>
+      <y>500</y>
+      <w>90</w>
+      <h>140</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;.
+&lt;creates&gt;</panel_attributes>
+    <additional_attributes>10.0;120.0;10.0;10.0</additional_attributes>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>780</x>
+      <y>900</y>
+      <w>450</w>
+      <h>380</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;.
+&lt;accesses&gt;</panel_attributes>
+    <additional_attributes>10.0;360.0;430.0;360.0;430.0;10.0</additional_attributes>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>800</x>
+      <y>900</y>
+      <w>510</w>
+      <h>560</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;.
+&lt;accesses&gt;</panel_attributes>
+    <additional_attributes>10.0;540.0;420.0;540.0;420.0;10.0</additional_attributes>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>780</x>
+      <y>900</y>
+      <w>540</w>
+      <h>720</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;.
+&lt;accesses&gt;</panel_attributes>
+    <additional_attributes>10.0;700.0;450.0;700.0;450.0;10.0</additional_attributes>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>810</x>
+      <y>900</y>
+      <w>520</w>
+      <h>820</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;.
+&lt;accesses&gt;</panel_attributes>
+    <additional_attributes>10.0;800.0;430.0;800.0;430.0;10.0</additional_attributes>
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>900</x>
+      <y>2070</y>
+      <w>410</w>
+      <h>80</h>
+    </coordinates>
+    <panel_attributes>ThreadRegistration::OnThreadRef::ConstRWOnThreadWithLock
+--
+-mDataLock: BaseProfilerAutoLock
+--
++DataCRef() const: ThreadRegistrationLockedRWOnThread&amp;
++operator-&gt;() const: ThreadRegistrationLockedRWOnThread&amp;</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>740</x>
+      <y>2100</y>
+      <w>180</w>
+      <h>40</h>
+    </coordinates>
+    <panel_attributes>lt=-&gt;&gt;&gt;&gt;
+mLockedRWOnThread</panel_attributes>
+    <additional_attributes>10.0;20.0;160.0;20.0</additional_attributes>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>1250</x>
+      <y>900</y>
+      <w>90</w>
+      <h>1190</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;.
+&lt;creates&gt;</panel_attributes>
+    <additional_attributes>10.0;1170.0;10.0;10.0</additional_attributes>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>660</x>
+      <y>440</y>
+      <w>400</w>
+      <h>210</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;.
+&lt;creates&gt;</panel_attributes>
+    <additional_attributes>380.0;10.0;10.0;190.0</additional_attributes>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>740</x>
+      <y>880</y>
+      <w>160</w>
+      <h>50</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;.
+&lt;creates&gt;</panel_attributes>
+    <additional_attributes>140.0;30.0;50.0;30.0;10.0;10.0</additional_attributes>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>460</x>
+      <y>230</y>
+      <w>150</w>
+      <h>120</h>
+    </coordinates>
+    <panel_attributes>lt=-&gt;&gt;&gt;&gt;
+m1=0..N
+sRegistryContainer:
+static Vector&lt;&gt;</panel_attributes>
+    <additional_attributes>10.0;100.0;10.0;10.0</additional_attributes>
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>800</x>
+      <y>250</y>
+      <w>470</w>
+      <h>150</h>
+    </coordinates>
+    <panel_attributes>ThreadRegistry::LockedRegistry
+--
+-mRegistryLock: RegistryLockShared (aka BaseProfilerAutoLockShared)
+--
++LockedRegistry()
++~LockedRegistry()
++begin() const: const OffThreadRef*
++end() const: const OffThreadRef*
++begin(): OffThreadRef*
++end(): OffThreadRef*</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>560</x>
+      <y>350</y>
+      <w>260</w>
+      <h>50</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;.
+&lt;accesses with
+shared lock&gt;</panel_attributes>
+    <additional_attributes>10.0;20.0;240.0;20.0</additional_attributes>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>550</x>
+      <y>390</y>
+      <w>330</w>
+      <h>260</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;.
+&lt;updates
+mIsRegistryLockedSharedOnThisThread&gt;</panel_attributes>
+    <additional_attributes>10.0;240.0;310.0;10.0</additional_attributes>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>330</x>
+      <y>570</y>
+      <w>170</w>
+      <h>80</h>
+    </coordinates>
+    <panel_attributes>lt=-&gt;&gt;&gt;&gt;
+m1=1
+mThreadRegistration: *</panel_attributes>
+    <additional_attributes>120.0;60.0;40.0;10.0</additional_attributes>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>280</x>
+      <y>570</y>
+      <w>200</w>
+      <h>710</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;.
+&lt;accesses&gt;</panel_attributes>
+    <additional_attributes>180.0;690.0;10.0;690.0;10.0;10.0</additional_attributes>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>270</x>
+      <y>570</y>
+      <w>190</w>
+      <h>890</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;.
+&lt;accesses&gt;</panel_attributes>
+    <additional_attributes>170.0;870.0;10.0;870.0;10.0;10.0</additional_attributes>
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>200</x>
+      <y>1740</y>
+      <w>440</w>
+      <h>80</h>
+    </coordinates>
+    <panel_attributes>ThreadRegistry::OffThreadRef::{,Const}RWFromAnyThreadWithLock
+--
+-mDataLock: BaseProfilerAutoLock
+--
++DataCRef() {,const}: ThreadRegistrationLockedRWOnThread&amp;
++operator-&gt;() {,const}: ThreadRegistrationLockedRWOnThread&amp;</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>250</x>
+      <y>570</y>
+      <w>90</w>
+      <h>1190</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;.
+&lt;creates&gt;</panel_attributes>
+    <additional_attributes>10.0;1170.0;10.0;10.0</additional_attributes>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>180</x>
+      <y>1810</y>
+      <w>220</w>
+      <h>120</h>
+    </coordinates>
+    <panel_attributes>lt=-&gt;&gt;&gt;&gt;
+mLockedRWFromAnyThread</panel_attributes>
+    <additional_attributes>200.0;100.0;80.0;100.0;80.0;10.0</additional_attributes>
+  </element>
+</diagram>

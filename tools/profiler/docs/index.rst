@@ -19,6 +19,7 @@ while the profiler.firefox.com interface is documented at `profiler.firefox.com/
 .. toctree::
    :maxdepth: 1
 
+   code-overview
    buffer
    instrumenting-javascript
    instrumenting-rust
