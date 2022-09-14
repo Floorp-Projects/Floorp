@@ -10081,6 +10081,11 @@
   value: @IS_EARLY_BETA_OR_EARLIER@
   mirror: always
 
+- name: media.webrtc.capture.allow-iosurface
+  type: RelaxedAtomicBool
+  value: true
+  mirror: always
+
 - name: media.block-autoplay-until-in-foreground
   type: bool
 #if !defined(MOZ_WIDGET_ANDROID)
