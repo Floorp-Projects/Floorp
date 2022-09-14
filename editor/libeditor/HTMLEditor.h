@@ -359,7 +359,7 @@ class HTMLEditor final : public EditorBase,
    * with "font style elements" like <b>, <i>, etc, and <blockquote> to indent,
    * align attribute to align contents, returns false.
    */
-  bool IsCSSEnabled() const { return !IsMailEditor() && mIsCSSPrefChecked; }
+  bool IsCSSEnabled() const { return mIsCSSPrefChecked; }
 
   /**
    * Enable/disable object resizers for <img> elements, <table> elements,
