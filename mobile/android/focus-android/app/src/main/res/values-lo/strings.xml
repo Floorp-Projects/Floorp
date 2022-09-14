@@ -122,6 +122,19 @@
          Clicking this action will launch Focus and perform a search in the default search engine. -->
     <string name="text_selection_search_action">ຄົ້ນຫາຢ່າງເປັນສ່ວນຕົວ</string>
 
+    <!-- Content of about focus. Argument 1 is the app name (Firefox Focus/Firefox Klar/etc).
+         Argument 2 is the url for the learn-more link. -->
+    <string name="about_content"><![CDATA[<p>%1$s ເຮັດໃຫ້ທ່ານສາມາດຄວບຄູມໄດ້.</p>
+<p>ໃຊ້ເປັນແບບບຣາວເຊີສ່ວນຕົວ:
+  <ul>
+    <li>ຄົ້ນຫາ ແລະ ທ່ອງເວັບພາຍໃນແອັບ</li>
+    <li>ບັອກຕົວຕິດຕາມ (ຫລື ອັບເດດການຕັ້ງຄ່າເພື່ອອະນຸຍາດຕົວຕິດຕາມ)</li>
+    <li>ລຶບຄຸກກີ້ລວມທັງປະຫວັດການຄົ້ນຫາ ແລະ ການທ່ອງເວັບອອກ</li>
+  </ul>
+</p>
+<p>%1$s ໄດ້ຮັບການສ້າງຂື້ນມາຈາກ Mozilla. ພາລະກິດຂອງພວກເຮົາແມ່ນສົ່ງເສີມການນຳໃຊ້ອິນເຕີເນັດທີ່ສົມບູນ ແລະ ເປີດກ້ວາງ<br/>
+<a href="%2$s">ຮຽນຮູ້ເພີ່ມເຕີ່ມ</a></p>]]></string>
+
     <!-- Header for the Privacy and Security settings menu -->
     <string name="preference_privacy_and_security_header">ຄວາມເປັນສ່ວນຕົວ ແລະ ຄວາມປອດໄພ</string>
 
@@ -181,8 +194,16 @@
     <!-- Title of "switch" preference that enables/disables autocomplete for the default list -->
     <string name="preference_switch_autocomplete_topsites">ສໍາລັບເວັບໄຊທຍອດນິຍົມ</string>
 
+    <!-- Summary for the toggle to enable autocomplete for the topsites list
+    %s is a placeholder for the app name (e.g. Firefox Focus)-->
+    <string name="preference_autocomplete_topsite_summary2">ເປີດໃຊ້ງານເພື່ອໃຫ້ມີການເຕິມອັດຕະໂນມັດຂອງ %s ຜ່ານ 450 URLs ຍອດນິຍົມໃນແຖບທີ່ຢູ່</string>
+
     <!-- Title of "switch" preference that enables/disables autocomplete for the user-defined list -->
     <string name="preference_switch_autocomplete_user_list">ສຳລັບເວັບໄຊທທີ່ທ່ານເພີ່ມ</string>
+
+    <!-- Summary for the toggle to enable autocomplete for the user-defined list
+     %s is a placeholder for the app name (e.g. Firefox Focus)-->
+    <string name="preference_autocomplete_user_list_summary2">ເປີດໃຊ້ເພື່ອໃຫ້ %s ຕື່ມຂໍ້ມູນ URLs ທີ່ທ່ານມັກໂດຍອັດຕະໂນມັດ.</string>
 
     <!-- Preference category: Manage (user-defined) sites -->
     <string name="preference_category_autocomplete_manage_sites">ຄຸ້ມຄອງເວັບໄຊທ</string>
@@ -192,6 +213,9 @@
 
     <!-- Action at the bottom of the list of custom autocomplete URLs that will open a new screen to add a new URL to the list. -->
     <string name="preference_autocomplete_action_add">+ ເພີ່ມ URL ທີ່ກຳນົດເອງ</string>
+
+    <!-- Explanation text above the list of custom autocomplete URLs. -->
+    <string name="preference_autocomplete_explanation_text">ລາຍຊື່ການຕື່ມຂໍ້ມູນອັດຕະໂນມັດຂອງທ່ານ:</string>
 
     <!-- Action at the bottom of the list of custom autocomplete URLs that will open a new screen to add a new URL to the list. -->
     <string name="preference_autocomplete_action_add2">ເພີ່ມ URL</string>
@@ -266,6 +290,7 @@
     <string name="preference_privacy_should_block_cookies_third_party_tracker_cookies_option">ບັອກຕົວຕິດຕາມຄຸກກີ້ຈາກບຸກຄົນທີ່ສາມເທົ່ານັ້ນ</string>
     <string name="preference_privacy_should_block_cookies_third_party_only_option">ລະງັບຄຸກກີ້ພາຍນອກເທົ່ານັ້ນ</string>
 
+    <string name="preference_privacy_should_block_cookies_cross_site_option">ບລັອກຄຸກກີຂ້າມເວັບໄຊ</string>
     <string name="preference_privacy_should_block_cookies_yes_option2">ໂດຍ, ແມ່ນແລ້ວ</string>
 
     <!-- Preference Title: Biometrics can be used to unlock Focus if the previous session's data was not erased by the user. -->
@@ -326,6 +351,11 @@
     <string name="preference_search_add2">+ ເພີ່ມລະບົບການຊອກຫາຕົວອື່ນ</string>
     <string name="preference_search_remove_title">ລຶບເຄື່ອງມືການຄົ້ນຫາ</string>
     <string name="preference_search_remove">ລຶບ</string>
+
+    <!-- Action for dding an additional search engine to the list -->
+    <string name="preference_search_add3">+ ເພີ່ມລະບົບການຊອກຫາຕົວອື່ນ</string>
+    <!-- Explanation text above the list of search engines-->
+    <string name="preference_select_preferred_engine">ເລືອກລະບົບທີ່ທ່ານຕ້ອງການ:</string>
 
     <!-- Title: Homescreen tips settings toggle to determine whether or not tips are displayed when
      a user first launches the app. -->
@@ -457,7 +487,20 @@
 
 
 
-  <!-- Onboarding: Start browsing -->
+  <!-- Onboarding: Title -->
+    <!-- %1$s will be replaced by the app name and build variant(e.g. Firefox Focus, Firefox Klar Nightly) -->
+    <string name="onboarding_title">ຍິນດີຕ້ອນຮັບສູ່ %s!</string>
+
+    <!-- Onboarding: Description -->
+    <string name="onboarding_description">ການຊອກຫາສ່ວນຕົວລະດັບຕໍ່ໄປເມື່ອທ່ານຕ້ອງການ</string>
+
+    <!-- Onboarding: Incognito Title -->
+    <string name="onboarding_incognito_title">ບ່ອນທີ່ incognito ພົບກັບ invisible</string>
+
+    <!-- Onboarding: Protection Title -->
+    <string name="onboarding_protection_title">ຄວາມເປັນສ່ວນຕົວທີ່ເໝາະກັບທຸກສະຖານະການ</string>
+
+    <!-- Onboarding: Start browsing -->
     <string name="onboarding_start_browsing">ເລີ່ມການທ່ອງເວັບ</string>
 
     <!-- First run tour (Default browser): Title -->
@@ -590,6 +633,30 @@
 
     <!-- Button label that take the user to the Android App setting -->
     <string name="phone_feature_go_to_settings">ໄປທີ່ການຕັ້ງຄ່າ</string>
+
+    <!-- Preference for altering the camera access for all websites -->
+    <string name="preference_phone_feature_camera">ກ້ອງຖ່າຍຮູບ</string>
+
+    <!-- Preference for altering the microphone access for all websites -->
+    <string name="preference_phone_feature_microphone">ໄມໂຄຣໂຟນ</string>
+
+    <!-- Preference for altering the location access for all websites -->
+    <string name="preference_phone_feature_location">ຕຳແຫນ່ງທີ່ຕັ້ງ</string>
+
+    <!-- Preference for altering the notification access for all websites -->
+    <string name="preference_phone_feature_notification">ການແຈ້ງເຕືອນ</string>
+
+    <!-- Label that indicates that a permission must be asked always -->
+    <string name="preference_option_phone_feature_ask_to_allow">ຖາມເພື່ອອະນຸຍາດ</string>
+
+    <!-- Label that indicates that a permission must be blocked -->
+    <string name="preference_option_phone_feature_blocked">ບັອກ</string>
+
+    <!-- Label that indicates that a permission must be allowed -->
+    <string name="preference_option_phone_feature_allowed">ອະນຸຍາດ</string>
+
+    <!--Label that indicates a permission is by the Android OS-->
+    <string name="phone_feature_blocked_by_android">ຖືກບລັອກໂດຍ Android</string>
 
     <!-- Preference to enable remote debugging of the app via USB or Wi-Fi -->
     <string name="preference_remote_debugging">ການດີບັກໄລຍະໄກຜ່ານ USB/Wi-Fi</string>

@@ -59,8 +59,15 @@
          doesn't work correctly with blocked content. -->
     <string name="menu_trackers_blocked_title">నిరోధించిన ట్రాకర్లు</string>
 
+    <!-- Menu item: This is the subtitle for the Trackers blocked menu entry that shows how many
+    trackers have been blocked for the currently loaded website.  -->
+    <string name="menu_trackers_blocked_subtitle">దీన్ని అచేతనం చేయడం కొన్ని సైట్ల సమస్యలు పరిష్కరించవచ్చు</string>
+
     <!-- Menu item: This is the label for turning off content blocking for the current website. -->
     <string name="menu_content_blocking">విషయ నిరోధం</string>
+
+    <!-- This is the subtitle content blocking toggle -->
+    <string name="menu_content_blocking_subtitle">కొన్ని సైట్లను పరిష్కరించడానికి దీనిని అచేతనం చేయండి</string>
 
     <!-- This is a small text at the bottom of the menu shown in a "custom tab" for branding purposes.
      See https://github.com/mozilla-mobile/focus-android/issues/2106
@@ -236,6 +243,9 @@
 
     <string name="preference_performance_block_javascript">జావాస్క్రిప్టును నిరోధించు</string>
 
+    <!-- This text is shown below setting for disabling JavaScript. Some websites may not work correctly when JavaScript is disabled -->
+    <string name="preference_performance_block_javascript_summary">పేజీలు వేగంగా తెరుచుకోవచ్చు, కానీ అనూహ్యంగా ప్రవర్తించవచ్చు కూడా</string>
+
     <!-- This preference does not set Focus as the default browser but instead links to Android's
      "default apps" settings screen or if not supported by this Android version to a SUMO page describing
      how to set Focus as a default browser.
@@ -268,7 +278,7 @@
 
     <!-- Title: Homescreen tips settings toggle to determine whether or not tips are displayed when
      a user first launches the app. -->
-    <string name="preference_homescreen_tips">ముంగిలి తెర చిట్కాలను చూపించు</string>
+    <string moz:removedIn="105" name="preference_homescreen_tips" tools:ignore="UnusedResources">ముంగిలి తెర చిట్కాలను చూపించు</string>
 
     <!-- Clickable action text that shows when user long-presses on a search engine search field (this is similar to paste or copy when long-pressing a text field) -->
     <string name="action_option_add_search_engine">శోధన యంత్రాన్ని చేర్చు</string>
@@ -534,14 +544,14 @@
 
     <!-- Title for the fingerprint authentication dialog box that is shown to the user when opening the app.
      %1$s is replaced with the app name -->
-    <string name="biometric_auth_title">%1$s‌కు తాళంతీయండి</string>
+    <string moz:removedIn="103" name="biometric_auth_title">%1$s‌కు తాళంతీయండి</string>
 
     <!-- Description for the fingerprint authentication dialog box that is shown to the user when opening the app -->
-    <string name="biometric_auth_description">కొనసాగించడానికి వేలిముద్ర సెన్సారును తాకండి.</string>
+    <string moz:removedIn="103" name="biometric_auth_description">కొనసాగించడానికి వేలిముద్ర సెన్సారును తాకండి.</string>
 
     <!-- New session button for the fingerprint authentication dialog box that is shown to the user when opening the app.
      When pressed, the user's previous session is cleared, and authentication is not required. -->
-    <string name="biometric_auth_new_session">కొత్త సెషన్</string>
+    <string moz:removedIn="103" name="biometric_auth_new_session">కొత్త సెషన్</string>
 
     <!-- Description for the fingerprint authentication image. Used for accessibility purposes. -->
     <string name="biometric_auth_image_description">వేలిముద్ర చిహ్నం</string>
@@ -577,8 +587,8 @@
     <!-- Label for the button in the snackbar that switches to the newly opened tab -->
     <string name="open_new_tab_snackbar">మారు</string>
 
-    <!-- Preference for safe browsing which when enabled, blocks dangerous or deceptive webpages that may include phishing or malware -->
-    <string moz:removedIn="97" name="preference_category_safe_browsing">సురక్షిత విహరణ</string>
+    <!-- Preference for switching to a new tab immediately after opening -->
+    <string name="preference_open_new_tab">లంకె కొత్త ట్యాబులో తెరుచుకున్న తక్షణమే దానికి మారు</string>
 
     <!-- Preference title for safe browsing which when enabled, blocks dangerous or deceptive webpages that may include phishing or malware -->
     <string name="preference_safe_browsing_title">ప్రమాదకరమైన, మోసపూరిత సైట్లను నిరోధించు</string>
@@ -588,6 +598,8 @@
 
     <!-- Preference for exceptions tracking protection -->
     <string name="preference_exceptions">మినహాయింపులు</string>
+    <!-- Description for the exceptions preference screen-->
+    <string name="preference_exceptions_description">మీరు ఈ వెబ్‌సైట్లలో విషయ నిరోధాన్ని అచేతనం చేసారు.</string>
     <!-- Menu item to remove existing exceptions. -->
     <string name="preference_exceptions_menu_remove">తొలగించు</string>
     <!-- Button to remove all websites from the exception list -->
