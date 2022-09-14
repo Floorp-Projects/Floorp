@@ -315,9 +315,8 @@ function _isInputAlive(input) {
  *            mechanism. Defaults is false.
  *          fromBrowserToolbox:
  *            Should only be passed when opening a socket for a Browser Toolbox
- *            session. This will skip notifying DevToolsSocketStatus
- *            about the opened socket, to avoid triggering the visual cue in the
- *            URL bar.
+ *            session. DevToolsSocketStatus will track the socket separately to
+ *            avoid triggering the visual cue in the URL bar.
  *          portOrPath:
  *            The port or path to listen on.
  *            If given an integer, the port to listen on.  Use -1 to choose any available
@@ -410,9 +409,9 @@ SocketListener.prototype = {
       dumpn("Socket listening on: " + (self.port || self.portOrPath));
     })()
       .then(() => {
-        if (!self.fromBrowserToolbox) {
-          DevToolsSocketStatus.notifySocketOpened();
-        }
+        DevToolsSocketStatus.notifySocketOpened({
+          fromBrowserToolbox: self.fromBrowserToolbox,
+        });
         this._advertise();
       })
       .catch(e => {
@@ -458,9 +457,9 @@ SocketListener.prototype = {
       this._socket.close();
       this._socket = null;
 
-      if (!this.fromBrowserToolbox) {
-        DevToolsSocketStatus.notifySocketClosed();
-      }
+      DevToolsSocketStatus.notifySocketClosed({
+        fromBrowserToolbox: this.fromBrowserToolbox,
+      });
     }
     this._devToolsServer.removeSocketListener(this);
   },

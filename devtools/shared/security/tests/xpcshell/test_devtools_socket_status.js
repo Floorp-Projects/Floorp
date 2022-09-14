@@ -14,48 +14,67 @@ add_task(async function() {
   Services.prefs.setBoolPref("devtools.debugger.remote-enabled", true);
   Services.prefs.setBoolPref("devtools.debugger.prompt-connection", false);
 
-  info("Without any server started, status should be set to false");
-  checkSocketStatus(false);
+  info("Without any server started, all states should be set to false");
+  checkSocketStatus(false, false);
 
-  info("Start a first server, expect status to change to true");
+  info("Start a first server, expect all states to change to true");
   const server = await setupDevToolsServer({ fromBrowserToolbox: false });
-  checkSocketStatus(true);
+  checkSocketStatus(true, true);
 
-  info("Start another server, expect status to remain true");
+  info("Start another server, expect all states to remain true");
   const otherServer = await setupDevToolsServer({ fromBrowserToolbox: false });
-  checkSocketStatus(true);
+  checkSocketStatus(true, true);
 
-  info("Shutdown one of the servers, expect status to remain true");
+  info("Shutdown one of the servers, expect all states to remain true");
   teardownDevToolsServer(otherServer);
-  checkSocketStatus(true);
+  checkSocketStatus(true, true);
 
-  info("Shutdown the other server, expect status to change to false");
+  info("Shutdown the other server, expect all states to change to false");
   teardownDevToolsServer(server);
-  checkSocketStatus(false);
+  checkSocketStatus(false, false);
 
-  info("Start a 'browser toolbox' server, expect status to remain to false");
+  info(
+    "Start a 'browser toolbox' server, expect only the 'include' state to become true"
+  );
   const browserToolboxServer = await setupDevToolsServer({
     fromBrowserToolbox: true,
   });
-  checkSocketStatus(false);
+  checkSocketStatus(true, false);
 
   info(
-    "Shutdown the 'browser toolbox' server, expect status to remain to false"
+    "Shutdown the 'browser toolbox' server, expect all states to become false"
   );
   teardownDevToolsServer(browserToolboxServer);
-  checkSocketStatus(false);
+  checkSocketStatus(false, false);
 
   Services.prefs.clearUserPref("devtools.debugger.remote-enabled");
   Services.prefs.clearUserPref("devtools.debugger.prompt-connection");
 });
 
-function checkSocketStatus(expected) {
-  const opened = DevToolsSocketStatus.opened;
-  if (expected) {
-    ok(opened, "DevTools socket is opened for connections");
-  } else {
-    ok(!opened, "No DevTools socket is opened for connections");
-  }
+function checkSocketStatus(expectedExcludeFalse, expectedExcludeTrue) {
+  const openedDefault = DevToolsSocketStatus.hasSocketOpened();
+  const openedExcludeFalse = DevToolsSocketStatus.hasSocketOpened({
+    excludeBrowserToolboxSockets: false,
+  });
+  const openedExcludeTrue = DevToolsSocketStatus.hasSocketOpened({
+    excludeBrowserToolboxSockets: true,
+  });
+
+  equal(
+    openedDefault,
+    openedExcludeFalse,
+    "DevToolsSocketStatus.hasSocketOpened should default to excludeBrowserToolboxSockets=false"
+  );
+  equal(
+    openedExcludeFalse,
+    expectedExcludeFalse,
+    "DevToolsSocketStatus matches the expectation for excludeBrowserToolboxSockets=false"
+  );
+  equal(
+    openedExcludeTrue,
+    expectedExcludeTrue,
+    "DevToolsSocketStatus matches the expectation for excludeBrowserToolboxSockets=true"
+  );
 }
 
 async function setupDevToolsServer({ fromBrowserToolbox }) {
