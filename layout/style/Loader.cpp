@@ -108,10 +108,6 @@ mozilla::LazyLogModule sCssLoaderLog("nsCSSLoader");
 
 static mozilla::LazyLogModule gSriPRLog("SRI");
 
-static bool IsPrivilegedURI(nsIURI* aURI) {
-  return aURI->SchemeIs("chrome") || aURI->SchemeIs("resource");
-}
-
 #define LOG_ERROR(args) MOZ_LOG(sCssLoaderLog, mozilla::LogLevel::Error, args)
 #define LOG_WARN(args) MOZ_LOG(sCssLoaderLog, mozilla::LogLevel::Warning, args)
 #define LOG_DEBUG(args) MOZ_LOG(sCssLoaderLog, mozilla::LogLevel::Debug, args)
@@ -173,7 +169,7 @@ bool SheetLoadDataHashKey::KeyEquals(const SheetLoadDataHashKey& aKey) const {
   }
 
   // Chrome URIs ignore everything else.
-  if (IsPrivilegedURI(mURI)) {
+  if (dom::IsChromeURI(mURI)) {
     return true;
   }
 
@@ -1825,8 +1821,8 @@ Result<Loader::LoadSheetResult, nsresult> Loader::LoadStyleLink(
 
   nsINode* requestingNode =
       aInfo.mContent ? static_cast<nsINode*>(aInfo.mContent) : mDocument;
-  const bool syncLoad = aInfo.mContent && aInfo.mContent->IsInUAWidget() &&
-                        IsPrivilegedURI(aInfo.mURI);
+  bool syncLoad = aInfo.mContent && aInfo.mContent->IsInUAWidget() &&
+                  IsChromeURI(aInfo.mURI);
   LOG(("  Link sync load: '%s'", syncLoad ? "true" : "false"));
   MOZ_ASSERT_IF(syncLoad, !aObserver);
 
