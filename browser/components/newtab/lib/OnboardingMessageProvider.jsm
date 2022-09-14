@@ -36,6 +36,13 @@ XPCOMUtils.defineLazyPreferenceGetter(
   0
 );
 
+XPCOMUtils.defineLazyPreferenceGetter(
+  lazy,
+  "hidePrivatePin",
+  "browser.startup.upgradeDialog.pinPBM.disabled",
+  false
+);
+
 const L10N = new Localization([
   "branding/brand.ftl",
   "browser/branding/brandings.ftl",
@@ -1011,7 +1018,8 @@ const OnboardingMessageProvider = {
     );
     const needPin = await this._doesAppNeedPin();
     const needDefault = await this._doesAppNeedDefault();
-    const needPrivatePin = await this._doesAppNeedPin(true);
+    const needPrivatePin =
+      !lazy.hidePrivatePin && (await this._doesAppNeedPin(true));
     const showSegmentation = this._shouldShowPrivacySegmentationScreen();
 
     //If a user has Firefox as default remove import screen
