@@ -15,12 +15,12 @@
 namespace mozilla::dom {
 
 class IPCWorkerRef;
-class ServiceWorkerRegistration;
+class RemoteServiceWorkerRegistrationImpl;
 
 class ServiceWorkerRegistrationChild final
     : public PServiceWorkerRegistrationChild {
   RefPtr<IPCWorkerRef> mIPCWorkerRef;
-  ServiceWorkerRegistration* mOwner;
+  RemoteServiceWorkerRegistrationImpl* mOwner;
   bool mTeardownStarted;
 
   ServiceWorkerRegistrationChild();
@@ -40,9 +40,9 @@ class ServiceWorkerRegistrationChild final
 
   static RefPtr<ServiceWorkerRegistrationChild> Create();
 
-  void SetOwner(ServiceWorkerRegistration* aOwner);
+  void SetOwner(RemoteServiceWorkerRegistrationImpl* aOwner);
 
-  void RevokeOwner(ServiceWorkerRegistration* aOwner);
+  void RevokeOwner(RemoteServiceWorkerRegistrationImpl* aOwner);
 
   void MaybeStartTeardown();
 };

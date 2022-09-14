@@ -23,8 +23,7 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(NavigationPreloadManager)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(NavigationPreloadManager,
-                                      mServiceWorkerRegistration)
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(NavigationPreloadManager, mGlobal)
 
 /* static */
 bool NavigationPreloadManager::IsValidHeader(const nsACString& aHeader) {
@@ -37,8 +36,9 @@ bool NavigationPreloadManager::IsEnabled(JSContext* aCx, JSObject* aGlobal) {
 }
 
 NavigationPreloadManager::NavigationPreloadManager(
-    RefPtr<ServiceWorkerRegistration>& aServiceWorkerRegistration)
-    : mServiceWorkerRegistration(aServiceWorkerRegistration) {}
+    nsCOMPtr<nsIGlobalObject>&& aGlobal,
+    RefPtr<ServiceWorkerRegistration::Inner>& aInner)
+    : mGlobal(aGlobal), mInner(aInner) {}
 
 JSObject* NavigationPreloadManager::WrapObject(
     JSContext* aCx, JS::Handle<JSObject*> aGivenProto) {
@@ -53,12 +53,12 @@ already_AddRefed<Promise> NavigationPreloadManager::SetEnabled(
     return nullptr;
   }
 
-  if (!mServiceWorkerRegistration) {
+  if (!mInner) {
     promise->MaybeReject(NS_ERROR_DOM_INVALID_STATE_ERR);
     return promise.forget();
   }
 
-  mServiceWorkerRegistration->SetNavigationPreloadEnabled(
+  mInner->SetNavigationPreloadEnabled(
       aEnabled,
       [promise](bool aSuccess) {
         if (aSuccess) {
@@ -95,12 +95,12 @@ already_AddRefed<Promise> NavigationPreloadManager::SetHeaderValue(
     return promise.forget();
   }
 
-  if (!mServiceWorkerRegistration) {
+  if (!mInner) {
     promise->MaybeReject(NS_ERROR_DOM_INVALID_STATE_ERR);
     return promise.forget();
   }
 
-  mServiceWorkerRegistration->SetNavigationPreloadHeader(
+  mInner->SetNavigationPreloadHeader(
       nsAutoCString(aHeader),
       [promise](bool aSuccess) {
         if (aSuccess) {
@@ -122,12 +122,12 @@ already_AddRefed<Promise> NavigationPreloadManager::GetState(
     return nullptr;
   }
 
-  if (!mServiceWorkerRegistration) {
+  if (!mInner) {
     promise->MaybeReject(NS_ERROR_DOM_INVALID_STATE_ERR);
     return promise.forget();
   }
 
-  mServiceWorkerRegistration->GetNavigationPreloadState(
+  mInner->GetNavigationPreloadState(
       [promise](NavigationPreloadState&& aState) {
         promise->MaybeResolve(std::move(aState));
       },
