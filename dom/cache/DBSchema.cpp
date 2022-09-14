@@ -202,7 +202,7 @@ const char kTableStorage[] =
 // End schema definition
 // ---------
 
-const uint32_t kMaxEntriesPerStatement = 255;
+const int32_t kMaxEntriesPerStatement = 255;
 
 const uint32_t kPageSize = 4 * 1024;
 
@@ -372,11 +372,6 @@ static Result<std::tuple<nsTArray<nsID>, AutoTArray<IdCount, 16>, int64_t>,
               nsresult>
 DeleteEntries(mozIStorageConnection& aConn,
               const nsTArray<EntryId>& aEntryIdList);
-
-static Result<std::tuple<nsTArray<nsID>, AutoTArray<IdCount, 16>, int64_t>,
-              nsresult>
-DeleteAllCacheEntries(mozIStorageConnection& aConn, CacheId& aCacheId);
-
 static Result<int32_t, nsresult> InsertSecurityInfo(
     mozIStorageConnection& aConn, nsICryptoHash& aCrypto,
     nsITransportSecurityInfo* aSecurityInfo);
@@ -395,9 +390,12 @@ static Result<SavedResponse, nsresult> ReadResponse(
 static Result<SavedRequest, nsresult> ReadRequest(mozIStorageConnection& aConn,
                                                   EntryId aEntryId);
 
-static void AppendListParamsToQuery(nsACString& aQuery, size_t aLen);
+static void AppendListParamsToQuery(nsACString& aQuery,
+                                    const nsTArray<EntryId>& aEntryIdList,
+                                    uint32_t aPos, int32_t aLen);
 static nsresult BindListParamsToQuery(mozIStorageStatement& aState,
-                                      const Span<const EntryId>& aEntryIdList);
+                                      const nsTArray<EntryId>& aEntryIdList,
+                                      uint32_t aPos, int32_t aLen);
 static nsresult BindId(mozIStorageStatement& aState, const nsACString& aName,
                        const nsID* aId);
 static Result<nsID, nsresult> ExtractId(mozIStorageStatement& aState,
@@ -629,10 +627,15 @@ Result<DeletionInfo, nsresult> DeleteCacheId(mozIStorageConnection& aConn,
                                              CacheId aCacheId) {
   MOZ_ASSERT(!NS_IsMainThread());
 
+  // Delete the bodies explicitly as we need to read out the body IDs
+  // anyway.  These body IDs must be deleted one-by-one as content may
+  // still be referencing them invidivually.
+  QM_TRY_INSPECT(const auto& matches, QueryAll(aConn, aCacheId));
+
   // XXX only deletedBodyIdList needs to be non-const
   QM_TRY_UNWRAP(
       (auto [deletedBodyIdList, deletedSecurityIdList, deletedPaddingSize]),
-      DeleteAllCacheEntries(aConn, aCacheId));
+      DeleteEntries(aConn, matches));
 
   QM_TRY(MOZ_TO_RESULT(DeleteSecurityInfoList(aConn, deletedSecurityIdList)));
 
@@ -1198,11 +1201,48 @@ Result<bool, nsresult> MatchByVaryHeader(mozIStorageConnection& aConn,
   return varyHeadersMatch;
 }
 
-static nsresult SelectAndDeleteEntriesInternal(
-    mozIStorageConnection& aConn, const Span<const EntryId>& aEntryIdList,
+static nsresult DeleteEntriesInternal(
+    mozIStorageConnection& aConn, const nsTArray<EntryId>& aEntryIdList,
     nsTArray<nsID>& aDeletedBodyIdListOut,
     nsTArray<IdCount>& aDeletedSecurityIdListOut,
-    int64_t& aDeletedPaddingSizeOut) {
+    int64_t* aDeletedPaddingSizeOut, uint32_t aPos, uint32_t aLen) {
+  MOZ_ASSERT(!NS_IsMainThread());
+  MOZ_DIAGNOSTIC_ASSERT(aDeletedPaddingSizeOut);
+
+  if (aEntryIdList.IsEmpty()) {
+    return NS_OK;
+  }
+
+  MOZ_DIAGNOSTIC_ASSERT(aPos < aEntryIdList.Length());
+
+  // Sqlite limits the number of entries allowed for an IN clause,
+  // so split up larger operations.
+  if (aLen > kMaxEntriesPerStatement) {
+    int64_t overallDeletedPaddingSize = 0;
+    uint32_t curPos = aPos;
+    int32_t remaining = aLen;
+    while (remaining > 0) {
+      int64_t deletedPaddingSize = 0;
+      int32_t max = kMaxEntriesPerStatement;
+      int32_t curLen = std::min(max, remaining);
+      nsresult rv = DeleteEntriesInternal(
+          aConn, aEntryIdList, aDeletedBodyIdListOut, aDeletedSecurityIdListOut,
+          &deletedPaddingSize, curPos, curLen);
+      if (NS_FAILED(rv)) {
+        return rv;
+      }
+
+      MOZ_DIAGNOSTIC_ASSERT(INT64_MAX - deletedPaddingSize >=
+                            overallDeletedPaddingSize);
+      overallDeletedPaddingSize += deletedPaddingSize;
+      curPos += curLen;
+      remaining -= curLen;
+    }
+
+    *aDeletedPaddingSizeOut += overallDeletedPaddingSize;
+    return NS_OK;
+  }
+
   nsAutoCString query(
       "SELECT "
       "request_body_id, "
@@ -1210,15 +1250,15 @@ static nsresult SelectAndDeleteEntriesInternal(
       "response_security_info_id, "
       "response_padding_size "
       "FROM entries WHERE id IN (");
-
-  AppendListParamsToQuery(query, aEntryIdList.Length());
+  AppendListParamsToQuery(query, aEntryIdList, aPos, aLen);
   query.AppendLiteral(")");
 
   QM_TRY_INSPECT(const auto& state, MOZ_TO_RESULT_INVOKE_MEMBER_TYPED(
                                         nsCOMPtr<mozIStorageStatement>, aConn,
                                         CreateStatement, query));
 
-  QM_TRY(MOZ_TO_RESULT(BindListParamsToQuery(*state, aEntryIdList)));
+  QM_TRY(
+      MOZ_TO_RESULT(BindListParamsToQuery(*state, aEntryIdList, aPos, aLen)));
 
   int64_t overallPaddingSize = 0;
 
@@ -1284,12 +1324,12 @@ static nsresult SelectAndDeleteEntriesInternal(
         return Ok{};
       }));
 
-  aDeletedPaddingSizeOut += overallPaddingSize;
+  *aDeletedPaddingSizeOut = overallPaddingSize;
 
   // Dependent records removed via ON DELETE CASCADE
 
   query = "DELETE FROM entries WHERE id IN ("_ns;
-  AppendListParamsToQuery(query, aEntryIdList.Length());
+  AppendListParamsToQuery(query, aEntryIdList, aPos, aLen);
   query.AppendLiteral(")");
 
   {
@@ -1297,44 +1337,11 @@ static nsresult SelectAndDeleteEntriesInternal(
                                           nsCOMPtr<mozIStorageStatement>, aConn,
                                           CreateStatement, query));
 
-    QM_TRY(MOZ_TO_RESULT(BindListParamsToQuery(*state, aEntryIdList)));
+    QM_TRY(
+        MOZ_TO_RESULT(BindListParamsToQuery(*state, aEntryIdList, aPos, aLen)));
 
     QM_TRY(MOZ_TO_RESULT(state->Execute()));
   }
-
-  return NS_OK;
-}
-
-static nsresult DeleteEntriesInternal(
-    mozIStorageConnection& aConn, const nsTArray<EntryId>& aEntryIdList,
-    nsTArray<nsID>& aDeletedBodyIdListOut,
-    nsTArray<IdCount>& aDeletedSecurityIdListOut,
-    int64_t& aDeletedPaddingSizeOut, uint32_t aPos, uint32_t aLen) {
-  MOZ_ASSERT(!NS_IsMainThread());
-
-  if (aEntryIdList.IsEmpty()) {
-    return NS_OK;
-  }
-
-  MOZ_DIAGNOSTIC_ASSERT(aPos < aEntryIdList.Length());
-
-  auto remaining = aLen;
-  uint32_t currPos = 0;
-
-  do {
-    // Sqlite limits the number of entries allowed for an IN clause,
-    // so split up larger operations.
-    auto currLen = std::min(kMaxEntriesPerStatement, remaining);
-
-    SelectAndDeleteEntriesInternal(
-        aConn, Span<const EntryId>(aEntryIdList.Elements() + currPos, currLen),
-        aDeletedBodyIdListOut, aDeletedSecurityIdListOut,
-        aDeletedPaddingSizeOut);
-
-    remaining -= currLen;
-    currPos += currLen;
-
-  } while (remaining > 0);
 
   return NS_OK;
 }
@@ -1344,109 +1351,9 @@ DeleteEntries(mozIStorageConnection& aConn,
               const nsTArray<EntryId>& aEntryIdList) {
   auto result =
       std::make_tuple(nsTArray<nsID>{}, AutoTArray<IdCount, 16>{}, int64_t{0});
-
   QM_TRY(MOZ_TO_RESULT(DeleteEntriesInternal(
       aConn, aEntryIdList, std::get<0>(result), std::get<1>(result),
-      std::get<2>(result), 0, aEntryIdList.Length())));
-
-  return result;
-}
-
-Result<std::tuple<nsTArray<nsID>, AutoTArray<IdCount, 16>, int64_t>, nsresult>
-DeleteAllCacheEntries(mozIStorageConnection& aConn, CacheId& aCacheId) {
-  auto result =
-      std::make_tuple(nsTArray<nsID>{}, AutoTArray<IdCount, 16>{}, int64_t{0});
-  auto& deletedBodyIdList = std::get<0>(result);
-  auto& deletedSecurityIdList = std::get<1>(result);
-  auto& deletedPaddingSize = std::get<2>(result);
-
-  nsAutoCString query(
-      "SELECT "
-      "request_body_id, "
-      "response_body_id, "
-      "response_security_info_id, "
-      "response_padding_size "
-      "FROM entries WHERE cache_id=:cache_id ORDER BY id;"_ns);
-
-  QM_TRY_INSPECT(const auto& state, MOZ_TO_RESULT_INVOKE_MEMBER_TYPED(
-                                        nsCOMPtr<mozIStorageStatement>, aConn,
-                                        CreateStatement, query));
-
-  QM_TRY(MOZ_TO_RESULT(state->BindInt64ByName("cache_id"_ns, aCacheId)));
-
-  QM_TRY(quota::CollectWhileHasResult(
-      *state,
-      [&deletedPaddingSize, &deletedBodyIdList,
-       &deletedSecurityIdList](auto& stmt) -> Result<Ok, nsresult> {
-        // extract 0 to 2 nsID structs per row
-        for (uint32_t i = 0; i < 2; ++i) {
-          QM_TRY_INSPECT(const bool& isNull,
-                         MOZ_TO_RESULT_INVOKE_MEMBER(stmt, GetIsNull, i));
-
-          if (!isNull) {
-            QM_TRY_INSPECT(const auto& id, ExtractId(stmt, i));
-
-            deletedBodyIdList.AppendElement(id);
-          }
-        }
-
-        {  // and then a possible third entry for the security id
-          QM_TRY_INSPECT(const bool& isNull,
-                         MOZ_TO_RESULT_INVOKE_MEMBER(stmt, GetIsNull, 2));
-
-          if (!isNull) {
-            QM_TRY_INSPECT(const int32_t& securityId,
-                           MOZ_TO_RESULT_INVOKE_MEMBER(stmt, GetInt32, 2));
-
-            // XXXtt: Consider using map for aDeletedSecuityIdListOut.
-            auto foundIt = std::find_if(
-                deletedSecurityIdList.begin(), deletedSecurityIdList.end(),
-                [securityId](const auto& deletedSecurityId) {
-                  return deletedSecurityId.mId == securityId;
-                });
-
-            if (foundIt == deletedSecurityIdList.end()) {
-              // Add a new entry for this ID with a count of 1, if it's not in
-              // the list
-              deletedSecurityIdList.AppendElement(IdCount(securityId));
-            } else {
-              // Otherwise, increment the count for this ID
-              foundIt->mCount += 1;
-            }
-          }
-        }
-
-        {
-          // It's possible to have null padding size for non-opaque response
-          QM_TRY_INSPECT(const bool& isNull,
-                         MOZ_TO_RESULT_INVOKE_MEMBER(stmt, GetIsNull, 3));
-
-          if (!isNull) {
-            QM_TRY_INSPECT(const int64_t& paddingSize,
-                           MOZ_TO_RESULT_INVOKE_MEMBER(stmt, GetInt64, 3));
-
-            MOZ_DIAGNOSTIC_ASSERT(paddingSize >= 0);
-            MOZ_DIAGNOSTIC_ASSERT(paddingSize + deletedPaddingSize <= INT_MAX);
-
-            deletedPaddingSize += paddingSize;
-          }
-        }
-
-        return Ok{};
-      }));
-
-  // Dependent records removed via ON DELETE CASCADE
-
-  query = "DELETE FROM entries WHERE cache_id=:cache_id"_ns;
-
-  {
-    QM_TRY_INSPECT(const auto& state, MOZ_TO_RESULT_INVOKE_MEMBER_TYPED(
-                                          nsCOMPtr<mozIStorageStatement>, aConn,
-                                          CreateStatement, query));
-
-    QM_TRY(MOZ_TO_RESULT(state->BindInt64ByName("cache_id"_ns, aCacheId)));
-    QM_TRY(MOZ_TO_RESULT(state->Execute()));
-  }
+      &std::get<2>(result), 0, aEntryIdList.Length())));
 
   return result;
 }
@@ -2164,19 +2071,28 @@ Result<SavedRequest, nsresult> ReadRequest(mozIStorageConnection& aConn,
   return savedRequest;
 }
 
-void AppendListParamsToQuery(nsACString& aQuery, size_t aLen) {
+void AppendListParamsToQuery(nsACString& aQuery,
+                             const nsTArray<EntryId>& aEntryIdList,
+                             uint32_t aPos, int32_t aLen) {
   MOZ_ASSERT(!NS_IsMainThread());
+  MOZ_DIAGNOSTIC_ASSERT((aPos + aLen) <= aEntryIdList.Length());
 
-  aQuery.AppendLiteral("?");
-  for (size_t i = 1; i < aLen; ++i) {
-    aQuery.AppendLiteral(",?");
+  // XXX This seems to be quite inefficient. Can't we do a BulkWrite?
+  for (int32_t i = aPos; i < aLen; ++i) {
+    if (i == 0) {
+      aQuery.AppendLiteral("?");
+    } else {
+      aQuery.AppendLiteral(",?");
+    }
   }
 }
 
 nsresult BindListParamsToQuery(mozIStorageStatement& aState,
-                               const Span<const EntryId>& aEntryIdList) {
+                               const nsTArray<EntryId>& aEntryIdList,
+                               uint32_t aPos, int32_t aLen) {
   MOZ_ASSERT(!NS_IsMainThread());
-  for (size_t i = 0, n = aEntryIdList.Length(); i < n; ++i) {
+  MOZ_DIAGNOSTIC_ASSERT((aPos + aLen) <= aEntryIdList.Length());
+  for (int32_t i = aPos; i < aLen; ++i) {
     QM_TRY(MOZ_TO_RESULT(aState.BindInt32ByIndex(i, aEntryIdList[i])));
   }
   return NS_OK;
