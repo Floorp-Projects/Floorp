@@ -63,7 +63,7 @@ tasks:
               else:
                   $if: 'tasks_for == "github-pull-request"'
                   then: '${event.pull_request.base.sha}'
-                  else: 'UNDEFINED'
+                  else: ''
           head_sha:
               $if: 'tasks_for == "github-push"'
               then: '${event.after}'
