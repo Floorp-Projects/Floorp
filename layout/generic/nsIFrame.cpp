@@ -9942,7 +9942,11 @@ bool nsIFrame::FinishAndStoreOverflow(OverflowAreas& aOverflowAreas,
   if (anyOverflowChanged) {
     SVGObserverUtils::InvalidateDirectRenderingObservers(this);
     if (nsBlockFrame* block = do_QueryFrame(this)) {
-      if (TextOverflow::CanHaveOverflowMarkers(block)) {
+      // NOTE(emilio): we need to use BeforeReflow::Yes, because we want to
+      // invalidate in cases where we _used_ to have an overflow marker and no
+      // longer do.
+      if (TextOverflow::CanHaveOverflowMarkers(
+              block, TextOverflow::BeforeReflow::Yes)) {
         DiscardDisplayItems(this, [](nsDisplayItem* aItem) {
           return aItem->GetType() == DisplayItemType::TYPE_TEXT_OVERFLOW;
         });
