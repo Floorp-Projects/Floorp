@@ -519,7 +519,7 @@
     <!-- Text shown when user enters empty device name -->
     <string name="empty_device_name_error">设备名不能为空。</string>
     <!-- Label indicating that sync is in progress -->
-    <string name="sync_syncing_in_progress">正在同步…</string>
+    <string name="sync_syncing_in_progress">同步中…</string>
     <!-- Label summary indicating that sync failed. The first parameter is the date stamp showing last time it succeeded -->
     <string name="sync_failed_summary">同步失败。上次成功：%s</string>
     <!-- Label summary showing never synced -->

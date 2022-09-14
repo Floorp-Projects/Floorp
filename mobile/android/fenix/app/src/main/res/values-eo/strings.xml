@@ -40,8 +40,10 @@
 
     <!-- Home - Recently saved bookmarks -->
     <!-- Title for the home screen section with recently saved bookmarks. -->
-    <string name="recent_bookmarks_title">Ĵusaj legosignoj</string>
+    <string moz:RemovedIn="106" name="recent_bookmarks_title" tools:ignore="UnusedResources">Ĵusaj legosignoj</string>
 
+    <!-- Title for the home screen section with recently saved bookmarks. -->
+    <string name="recently_saved_title">Ĵuse konservitaj</string>
     <!-- Content description for the button which navigates the user to show all of their saved bookmarks. -->
     <string name="recently_saved_show_all_content_description_2">Montri ĉiujn konservitajn legosignojn</string>
     <!-- Text for the menu button to remove a recently saved bookmark from the user's home screen -->
@@ -74,6 +76,12 @@
 
     <!-- Content description for close button used in "contextual feature recommendation" (CFR) popups -->
     <string name="cfr_dismiss_button_default_content_description">Ignori</string>
+
+    <!-- Total cookie protection "contextual feature recommendation" (CFR) -->
+    <!-- Text for the message displayed in the contextual feature recommendation popup promoting the total cookie protection feature. -->
+    <string name="tcp_cfr_message">Nia ĝisnune plej pova privateca trajto izolas interretejajn spurilojn.</string>
+    <!-- Text displayed that links to website containing documentation about the "Total cookie protection" feature. -->
+    <string name="tcp_cfr_learn_more">Pli da informo pri totalan protekto kontraŭ kuketoj</string>
 
     <!-- Text for the info dialog when camera permissions have been denied but user tries to access a camera feature. -->
     <string name="camera_permissions_needed_message">Aliro al la fimilo postulata. Iru al agordoj de Android, tuŝetu Permesojn kaj poste Permesi.</string>
@@ -130,6 +138,8 @@
     <string name="recent_tabs_see_all_synced_tabs_button_text">Montri ĉiujn spegulitajn langetojn</string>
     <!-- Accessibility description for device icon used for recent synced tab -->
     <string name="recent_tabs_synced_device_icon_content_description">Spegulita aparato</string>
+    <!-- Text for the dropdown menu to remove a recent synced tab from the homescreen -->
+    <string name="recent_synced_tab_menu_item_remove">Forigi</string>
     <!-- Text for the menu button to remove a grouped highlight from the user's browsing history
          in the Recently visited section -->
     <string name="recent_tab_menu_item_remove">Forigi</string>
@@ -246,25 +256,44 @@
 
     <!-- Home onboarding -->
     <!-- Onboarding home screen dialog title text. The first parameter is the name of the application.-->
-    <string name="onboarding_home_screen_title_3">Novaĵoj en %1$s</string>
+    <string moz:RemovedIn="106" name="onboarding_home_screen_title_3" tools:ignore="UnusedResources">Novaĵoj en %1$s</string>
     <!-- Onboarding home screen dialog description text. -->
-    <string name="onboarding_home_screen_description_2">Nun estas pli facile repreni vian retumon tie, kie vi ĝin interrompis.</string>
+    <string moz:RemovedIn="106" name="onboarding_home_screen_description_2" tools:ignore="UnusedResources">Nun estas pli facile repreni vian retumon tie, kie vi ĝin interrompis.</string>
     <!-- Onboarding home screen dialog title text for the home section. The first parameter is the name of the application.-->
-    <string name="onboarding_home_screen_section_home_title_3">Personecigita eka paĝo de %1$s</string>
+    <string moz:RemovedIn="106" name="onboarding_home_screen_section_home_title_3" tools:ignore="UnusedResources">Personecigita eka paĝo de %1$s</string>
     <!-- Onboarding home screen dialog description text for the home section. -->
-    <string name="onboarding_home_screen_section_home_description_2">Iru al viaj malfermitaj langetoj, legosignoj aŭ al retuma historio.</string>
+    <string moz:RemovedIn="106" name="onboarding_home_screen_section_home_description_2" tools:ignore="UnusedResources">Iru al viaj malfermitaj langetoj, legosignoj aŭ al retuma historio.</string>
     <!-- Onboarding home screen dialog description text for the tab tray section. -->
-    <string name="onboarding_home_screen_section_cleaner_tab_tray_title_2">Klaraj kaj organizitaj langetoj</string>
+    <string moz:RemovedIn="106" name="onboarding_home_screen_section_cleaner_tab_tray_title_2" tools:ignore="UnusedResources">Klaraj kaj organizitaj langetoj</string>
     <!-- Onboarding home screen dialog description text for the tab tray section. -->
-    <string name="onboarding_home_screen_section_cleaner_tab_tray_description_2">Evitu havi malordon en viaj langetoj danke al plibonigita aranĝo kaj aŭtomate fermiĝantaj langetoj.</string>
+    <string moz:RemovedIn="106" name="onboarding_home_screen_section_cleaner_tab_tray_description_2" tools:ignore="UnusedResources">Evitu havi malordon en viaj langetoj danke al plibonigita aranĝo kaj aŭtomate fermiĝantaj langetoj.</string>
     <!-- Onboarding home screen dialog description text for the history section. -->
-    <string name="onboarding_home_screen_section_useful_history_title_2">Ĵusaj serĉoj</string>
+    <string moz:RemovedIn="106" name="onboarding_home_screen_section_useful_history_title_2" tools:ignore="UnusedResources">Ĵusaj serĉoj</string>
 
     <!-- Onboarding home screen dialog description text for the history section. -->
-    <string name="onboarding_home_screen_section_useful_history_description_2">Remalfermu viajn lastajn serĉojn de via eka paĝo aŭ langetoj.</string>
+    <string moz:RemovedIn="106" name="onboarding_home_screen_section_useful_history_description_2" tools:ignore="UnusedResources">Remalfermu viajn lastajn serĉojn de via eka paĝo aŭ langetoj.</string>
 
     <!-- Onboarding home screen popup dialog, shown on top of the Jump back in section. Firefox is intentionally hardcoded. -->
-    <string name="onboarding_home_screen_jump_back_contextual_hint" tools:ignore="UnusedResources">Via personecigita eka paĝo de Firefox igas pli facila la taskon repreni vian retumon kie vi ĝin interrompis. Trovu viajn ĵusajn langetojn, legosignojn kaj serĉajn rezultojn.</string>
+    <string moz:RemovedIn="106" name="onboarding_home_screen_jump_back_contextual_hint" tools:ignore="UnusedResources">Via personecigita eka paĝo de Firefox igas pli facila la taskon repreni vian retumon kie vi ĝin interrompis. Trovu viajn ĵusajn langetojn, legosignojn kaj serĉajn rezultojn.</string>
+
+    <!-- Onboarding home screen popup dialog, shown on top of the Jump back in section. -->
+    <string name="onboarding_home_screen_jump_back_contextual_hint_2">Malkovru vian personecigitan ekan paĝon. Ĵusaj langetoj, legosignoj, kaj serĉaj rezultoj aperos ĉi tie.</string>
+    <!-- Home onboarding dialog welcome screen title text. -->
+    <string name="onboarding_home_welcome_title">Bonvenon al sendependa interreto</string>
+    <!-- Home onboarding dialog welcome screen description text. -->
+    <string name="onboarding_home_welcome_description">Pli da koloroj. Pli bona privateco. Sama dediĉo al personoj pli ol al profitoj.</string>
+    <!-- Home onboarding dialog sign into sync screen title text. -->
+    <string name="onboarding_home_sync_title_2">Iru tien kaj reen inter la telefono kaj la komputilo</string>
+    <!-- Home onboarding dialog sign into sync screen description text. -->
+    <string name="onboarding_home_sync_description">Daŭrigu el la loko kie vi haltis kun la langetoj de viaj aliaj aparatoj, kiuj nun aperas en via eka paĝo.</string>
+    <!-- Text for the button to continue the onboarding on the home onboarding dialog. -->
+    <string name="onboarding_home_get_started_button">Unuaj paŝoj</string>
+    <!-- Text for the button to navigate to the sync sign in screen on the home onboarding dialog. -->
+    <string name="onboarding_home_sign_in_button">Komenci seancon</string>
+    <!-- Text for the button to skip the onboarding on the home onboarding dialog. -->
+    <string name="onboarding_home_skip_button">Ignori</string>
+    <!-- Onboarding home screen sync popup dialog message, shown on top of Recent Synced Tabs in the Jump back in section. -->
+    <string name="sync_cfr_message">Viaj langetoj estas spegulataj! Daŭrigu kie vi haltis en via alia aparato.</string>
 
     <!-- Search Widget -->
     <!-- Content description for searching with a widget. The first parameter is the name of the application.-->
@@ -441,10 +470,10 @@
     <string name="wallpaper_updated_snackbar_action">Vidi</string>
 
     <!-- Label for switch which toggles the "tap-to-switch" behavior on home screen logo -->
-    <string name="wallpaper_tap_to_change_switch_label_1">Ŝanĝi ekranfonon per tuŝeto de la emblemo de Firefox en la eka paĝo</string>
+    <string moz:removedIn="105" name="wallpaper_tap_to_change_switch_label_1" tools:ignore="UnusedResources">Ŝanĝi ekranfonon per tuŝeto de la emblemo de Firefox en la eka paĝo</string>
     <!-- This is the accessibility content description for the wallpapers functionality. Users are
     able to tap on the app logo in the home screen and can switch to different wallpapers by tapping. -->
-    <string name="wallpaper_logo_content_description">Emblemo de Firefox – ŝanĝi ekranfonon, butono</string>
+    <string moz:removedIn="105" name="wallpaper_logo_content_description" tools:ignore="UnusedResources">Emblemo de Firefox – ŝanĝi ekranfonon, butono</string>
 
     <!-- Add-on Installation from AMO-->
     <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is not supported -->
@@ -728,8 +757,6 @@
 
     <!-- Open tabs menu item to save tabs to collection -->
     <string name="tabs_menu_save_to_collection1">Konservi langetojn en kolekto</string>
-    <!-- Content description (not visible, for screen readers etc.): Opens the tab menu when pressed -->
-    <string moz:RemovedIn="103" name="tab_menu" tools:ignore="UnusedResources">Menuo de langeto</string>
 
     <!-- Text for the menu button to delete a collection -->
     <string name="collection_delete">Forigi kolekton</string>
@@ -781,16 +808,16 @@
     <string name="history_empty_message">Neniu historio estas ĉi tie</string>
 
     <!-- Text for the button inside History screen that opens Synced History screen. History that is coming from other devices -->
-    <string name="history_synced_from_other_devices">Spegulita de aliaj aparatoj</string>
+    <string moz:removedIn="105" name="history_synced_from_other_devices" tools:ignore="UnusedResources">Spegulita de aliaj aparatoj</string>
     <!-- The page title for browsing history coming from other devices. -->
-    <string name="history_from_other_devices">El aliaj aparatoj</string>
+    <string moz:removedIn="105" name="history_from_other_devices" tools:ignore="UnusedResources">El aliaj aparatoj</string>
 
     <!-- The synced history sign in dialog message -->
-    <string name="history_sign_in_message">Komencu seancon por vidi la spegulitan historion el viaj aliaj aparatoj.</string>
+    <string moz:removedIn="105" name="history_sign_in_message" tools:ignore="UnusedResources">Komencu seancon por vidi la spegulitan historion el viaj aliaj aparatoj.</string>
     <!-- The synced history sign in dialog button text -->
-    <string name="history_sign_in_button">Komenci seancon</string>
+    <string moz:removedIn="105" name="history_sign_in_button" tools:ignore="UnusedResources">Komenci seancon</string>
     <!-- The synced history sign in dialog create a new account link -->
-    <string name="history_sign_in_create_account"><![CDATA[<u>Aŭ kreu konton de Firefox por komenci speguli</u>]]></string>
+    <string moz:removedIn="105" name="history_sign_in_create_account" tools:ignore="UnusedResources"><![CDATA[<u>Aŭ kreu konton de Firefox por komenci speguli</u>]]></string>
 
     <!-- Downloads -->
     <!-- Text for the snackbar to confirm that multiple downloads items have been removed -->
@@ -1323,6 +1350,8 @@
     <string name="preference_enhanced_tracking_protection_custom_cookies_3">Ĉiuj nerektaj kuketoj (tio povus misfunkciigi retejojn)</string>
     <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
     <string name="preference_enhanced_tracking_protection_custom_cookies_4">Ĉiuj kuketoj (tio misfunkciigos retejojn)</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
+    <string name="preference_enhanced_tracking_protection_custom_cookies_5">Izoli interretejajn kuketojn</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings for tracking content -->
     <string name="preference_enhanced_tracking_protection_custom_tracking_content">Spurila enhavo</string>
     <!-- Option for enhanced tracking protection for the custom protection settings for tracking content-->
@@ -1345,8 +1374,12 @@
     <string name="etp_social_media_trackers_description">Limigo de la kapablo de sociaj retoj por spuri vian retumon.</string>
     <!-- Category of trackers (cross-site tracking cookies) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cookies_title">Interretejaj spurilaj kuketoj</string>
+    <!-- Category of trackers (cross-site tracking cookies) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_cookies_title_2">Interretejaj kuketoj</string>
     <!-- Description of cross-site tracking cookies that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cookies_description">Blokado de kuketoj uzataj de reklamaj retoj kaj statistikaj kompanioj por kunigi viajn retajn datumojn el pluraj retejoj.</string>
+    <!-- Description of cross-site tracking cookies that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_cookies_description_2">La totala protekto kontraŭ kuketoj limigas kuketojn al la retejo kie ili estas, tiel ke spuriloj ne povas uzi ilin por sekvi vin inter retejoj.</string>
     <!-- Category of trackers (cryptominers) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cryptominers_title">Miniloj de ĉifromono</string>
     <!-- Description of cryptominers that can be blocked by Enhanced Tracking Protection -->
