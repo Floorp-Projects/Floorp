@@ -492,6 +492,19 @@ const MESSAGES = () => {
                   "chrome://browser/content/callout-tab-pickup-dark.svg",
                 height: "128px",
               },
+              primary_button: {
+                label: {
+                  string_id: "mr1-onboarding-get-started-primary-button-label",
+                },
+                action: {
+                  type: "CLICK_ELEMENT",
+                  navigate: true,
+                  data: {
+                    selector:
+                      "#tab-pickup-container button.primary:not(#error-state-button)",
+                  },
+                },
+              },
               dismiss_button: {
                 action: {
                   navigate: true,
