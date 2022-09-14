@@ -228,3 +228,4 @@ Services.prefs.addObserver("floorp.browser.sidebar.right", function(){
 setSidebarIconView();
 setSidebarMode();
 setAllfavicons();
+changeSidebarVisibility();
