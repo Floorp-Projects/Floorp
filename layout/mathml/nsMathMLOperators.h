@@ -67,14 +67,12 @@ class nsMathMLOperators {
 
   // LookupOperator:
   // Given the string value of an operator and its form (last two bits of
-  // flags), this method returns true if the operator is found in the Operator
-  // Dictionary. Attributes of the operator are returned in the output
-  // parameters. If the operator is not found under the supplied form but is
-  // found under a different form, the method returns true as well. The caller
-  // can test the output parameter aFlags to know exactly under which form the
-  // operator was found in the Operator Dictionary.
-  static bool LookupOperator(const nsString& aOperator,
-                             const nsOperatorFlags aForm,
+  // flags), this method returns attributes of the operator in the output
+  // parameters. If the operator is not found under the supplied form, then the
+  // other forms are tried in the following order: infix, postfix, prefix. The
+  // caller can test the output parameter aFlags to know exactly under which
+  // form the operator was found in the Operator Dictionary.
+  static void LookupOperator(const nsString& aOperator, const uint8_t aForm,
                              nsOperatorFlags* aFlags, float* aLeadingSpace,
                              float* aTrailingSpace);
 
