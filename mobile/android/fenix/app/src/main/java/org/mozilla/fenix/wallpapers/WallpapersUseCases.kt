@@ -13,7 +13,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import mozilla.components.concept.fetch.Client
 import org.mozilla.fenix.FeatureFlags
-import org.mozilla.fenix.GleanMetrics.Wallpapers
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.AppStore
 import org.mozilla.fenix.components.appstate.AppAction
@@ -441,12 +440,6 @@ class WallpapersUseCases(
             settings.currentWallpaperTextColor = wallpaper.textColor ?: 0
             settings.currentWallpaperCardColor = wallpaper.cardColor ?: 0
             store.dispatch(AppAction.WallpaperAction.UpdateCurrentWallpaper(wallpaper))
-            Wallpapers.wallpaperSelected.record(
-                Wallpapers.WallpaperSelectedExtra(
-                    name = wallpaper.name,
-                    themeCollection = wallpaper.collection.name,
-                ),
-            )
             return Wallpaper.ImageFileState.Downloaded
         }
     }
@@ -482,12 +475,6 @@ class WallpapersUseCases(
         private fun selectWallpaper(wallpaper: Wallpaper) {
             settings.currentWallpaperName = wallpaper.name
             store.dispatch(AppAction.WallpaperAction.UpdateCurrentWallpaper(wallpaper))
-            Wallpapers.wallpaperSelected.record(
-                Wallpapers.WallpaperSelectedExtra(
-                    name = wallpaper.name,
-                    themeCollection = wallpaper.collection.name,
-                ),
-            )
         }
 
         private fun dispatchDownloadState(wallpaper: Wallpaper, downloadState: Wallpaper.ImageFileState) {

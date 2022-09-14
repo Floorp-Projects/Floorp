@@ -8095,7 +8095,7 @@ wallpapers:
   wallpaper_selected:
     type: event
     description: |
-      A wallpaper is selected from the settings screen.
+      A wallpaper is selected from the settings screen or onboarding dialog.
     extra_keys:
       name:
         description: The name of the selected wallpaper
@@ -8103,17 +8103,75 @@ wallpapers:
       theme_collection:
         description: The theme collection the selected wallpaper belongs to.
         type: string
+      source:
+        description: |
+          A string that tells us how the user selected the wallpaper.
+          Possible values are: `settings`, `onboarding`
+        type: string
     bugs:
       - https://github.com/mozilla-mobile/fenix/issues/23381
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/23382
+      - https://github.com/mozilla-mobile/fenix/pull/26893
     notification_emails:
       - android-probes@mozilla.com
     data_sensitivity:
       - interaction
-    expires: 114
+    expires: 116
     no_lint:
       - COMMON_PREFIX
+    metadata:
+      tags:
+        - Wallpapers
+  onboarding_opened:
+    type: event
+    description: |
+      The wallpaper onboarding dialog has been displayed.
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/26215
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/26893
+    notification_emails:
+      - android-probes@mozilla.com
+    data_sensitivity:
+      - interaction
+    expires: 116
+    metadata:
+      tags:
+        - Wallpapers
+  onboarding_closed:
+    type: event
+    description: |
+      The wallpaper onboarding dialog has been closed.
+    extra_keys:
+      is_selected:
+        description: Whether or not a wallpaper has been selected.
+        type: boolean
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/26215
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/26893
+    notification_emails:
+      - android-probes@mozilla.com
+    data_sensitivity:
+      - interaction
+    expires: 116
+    metadata:
+      tags:
+        - Wallpapers
+  onboarding_explore_more_click:
+    type: event
+    description: |
+      The wallpaper onboarding learn more button was clicked.
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/26215
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/26893
+    notification_emails:
+      - android-probes@mozilla.com
+    data_sensitivity:
+      - interaction
+    expires: 116
     metadata:
       tags:
         - Wallpapers

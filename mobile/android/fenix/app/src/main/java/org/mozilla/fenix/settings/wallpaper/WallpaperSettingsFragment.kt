@@ -97,6 +97,14 @@ class WallpaperSettingsFragment : Fragment() {
                         findNavController().navigate(R.id.homeFragment)
                     }
                     .show()
+
+                Wallpapers.wallpaperSelected.record(
+                    Wallpapers.WallpaperSelectedExtra(
+                        name = wallpaper.name,
+                        source = "settings",
+                        themeCollection = wallpaper.collection.name,
+                    ),
+                )
             }
             Wallpaper.ImageFileState.Error -> {
                 FenixSnackbar.make(

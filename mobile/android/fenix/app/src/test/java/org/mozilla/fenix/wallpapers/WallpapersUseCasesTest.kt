@@ -20,7 +20,6 @@ import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mozilla.fenix.GleanMetrics.Wallpapers
 import org.mozilla.fenix.components.AppStore
 import org.mozilla.fenix.components.appstate.AppAction
 import org.mozilla.fenix.utils.Settings
@@ -514,7 +513,6 @@ class WallpapersUseCasesTest {
         appStore.waitUntilIdle()
         assertEquals(selectedWallpaper.name, slot.captured)
         assertEquals(selectedWallpaper, appStore.state.wallpaperState.currentWallpaper)
-        assertEquals(selectedWallpaper.name, Wallpapers.wallpaperSelected.testGetValue()?.first()?.extra?.get("name")!!)
         assertEquals(wallpaperFileState, Wallpaper.ImageFileState.Downloaded)
     }
 
@@ -537,7 +535,6 @@ class WallpapersUseCasesTest {
         appStore.waitUntilIdle()
         assertEquals(selectedWallpaper.name, slot.captured)
         assertEquals(selectedWallpaper, appStore.state.wallpaperState.currentWallpaper)
-        assertEquals(selectedWallpaper.name, Wallpapers.wallpaperSelected.testGetValue()?.first()?.extra?.get("name")!!)
         assertEquals(wallpaperFileState, Wallpaper.ImageFileState.Downloaded)
     }
 
