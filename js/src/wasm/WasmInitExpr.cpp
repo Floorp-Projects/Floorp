@@ -239,8 +239,7 @@ class MOZ_STACK_CLASS InitExprInterpreter {
   explicit InitExprInterpreter(JSContext* cx,
                                const ValVector& globalImportValues,
                                Handle<WasmInstanceObject*> instanceObj)
-      : cx(cx),
-        features(FeatureArgs::build(cx, FeatureOptions())),
+      : features(FeatureArgs::build(cx, FeatureOptions())),
         stack(cx),
         globalImportValues(globalImportValues),
         instanceObj(cx, instanceObj) {}
@@ -253,7 +252,6 @@ class MOZ_STACK_CLASS InitExprInterpreter {
   }
 
  private:
-  JSContext* cx;
   FeatureArgs features;
   RootedValVector stack;
   const ValVector& globalImportValues;
@@ -341,13 +339,13 @@ class MOZ_STACK_CLASS InitExprInterpreter {
   }
 #endif  // ENABLE_WASM_EXTENDED_CONST
 #ifdef ENABLE_WASM_GC
-  WasmStructObject* createStruct(uint32_t typeIndex) {
+  WasmStructObject* createStruct(JSContext* cx, uint32_t typeIndex) {
     Rooted<RttValue*> rttValue(cx, instance().rttCanon(typeIndex));
     return WasmStructObject::createStruct(cx, rttValue);
   }
 
-  bool evalStructNew(uint32_t typeIndex) {
-    Rooted<WasmStructObject*> structObj(cx, createStruct(typeIndex));
+  bool evalStructNew(JSContext* cx, uint32_t typeIndex) {
+    Rooted<WasmStructObject*> structObj(cx, createStruct(cx, typeIndex));
     if (!structObj) {
       return false;
     }
@@ -366,8 +364,8 @@ class MOZ_STACK_CLASS InitExprInterpreter {
                    AnyRef::fromJSObject(structObj));
   }
 
-  bool evalStructNewDefault(uint32_t typeIndex) {
-    Rooted<WasmStructObject*> structObj(cx, createStruct(typeIndex));
+  bool evalStructNewDefault(JSContext* cx, uint32_t typeIndex) {
+    Rooted<WasmStructObject*> structObj(cx, createStruct(cx, typeIndex));
     if (!structObj) {
       return false;
     }
@@ -376,14 +374,15 @@ class MOZ_STACK_CLASS InitExprInterpreter {
                    AnyRef::fromJSObject(structObj));
   }
 
-  WasmArrayObject* createArray(uint32_t typeIndex, uint32_t numElements) {
+  WasmArrayObject* createArray(JSContext* cx, uint32_t typeIndex,
+                               uint32_t numElements) {
     Rooted<RttValue*> rttValue(cx, instance().rttCanon(typeIndex));
     return WasmArrayObject::createArray(cx, rttValue, numElements);
   }
 
-  bool evalArrayNew(uint32_t typeIndex) {
+  bool evalArrayNew(JSContext* cx, uint32_t typeIndex) {
     uint32_t len = popI32();
-    Rooted<WasmArrayObject*> arrayObj(cx, createArray(typeIndex, len));
+    Rooted<WasmArrayObject*> arrayObj(cx, createArray(cx, typeIndex, len));
     if (!arrayObj) {
       return false;
     }
@@ -396,9 +395,9 @@ class MOZ_STACK_CLASS InitExprInterpreter {
                    AnyRef::fromJSObject(arrayObj));
   }
 
-  bool evalArrayNewDefault(uint32_t typeIndex) {
+  bool evalArrayNewDefault(JSContext* cx, uint32_t typeIndex) {
     uint32_t len = popI32();
-    Rooted<WasmArrayObject*> arrayObj(cx, createArray(typeIndex, len));
+    Rooted<WasmArrayObject*> arrayObj(cx, createArray(cx, typeIndex, len));
     if (!arrayObj) {
       return false;
     }
@@ -407,8 +406,8 @@ class MOZ_STACK_CLASS InitExprInterpreter {
                    AnyRef::fromJSObject(arrayObj));
   }
 
-  bool evalArrayNewFixed(uint32_t typeIndex, uint32_t len) {
-    Rooted<WasmArrayObject*> arrayObj(cx, createArray(typeIndex, len));
+  bool evalArrayNewFixed(JSContext* cx, uint32_t typeIndex, uint32_t len) {
+    Rooted<WasmArrayObject*> arrayObj(cx, createArray(cx, typeIndex, len));
     if (!arrayObj) {
       return false;
     }
@@ -545,21 +544,21 @@ bool InitExprInterpreter::evaluate(JSContext* cx, Decoder& d) {
             if (!d.readTypeIndex(&typeIndex)) {
               return false;
             }
-            CHECK(evalStructNew(typeIndex));
+            CHECK(evalStructNew(cx, typeIndex));
           }
           case uint32_t(GcOp::StructNewDefault): {
             uint32_t typeIndex;
             if (!d.readTypeIndex(&typeIndex)) {
               return false;
             }
-            CHECK(evalStructNewDefault(typeIndex));
+            CHECK(evalStructNewDefault(cx, typeIndex));
           }
           case uint32_t(GcOp::ArrayNew): {
             uint32_t typeIndex;
             if (!d.readTypeIndex(&typeIndex)) {
               return false;
             }
-            CHECK(evalArrayNew(typeIndex));
+            CHECK(evalArrayNew(cx, typeIndex));
           }
           case uint32_t(GcOp::ArrayNewFixed): {
             uint32_t typeIndex, len;
@@ -569,14 +568,14 @@ bool InitExprInterpreter::evaluate(JSContext* cx, Decoder& d) {
             if (!d.readVarU32(&len)) {
               return false;
             }
-            CHECK(evalArrayNewFixed(typeIndex, len));
+            CHECK(evalArrayNewFixed(cx, typeIndex, len));
           }
           case uint32_t(GcOp::ArrayNewDefault): {
             uint32_t typeIndex;
             if (!d.readTypeIndex(&typeIndex)) {
               return false;
             }
-            CHECK(evalArrayNewDefault(typeIndex));
+            CHECK(evalArrayNewDefault(cx, typeIndex));
           }
           default: {
             MOZ_CRASH();
