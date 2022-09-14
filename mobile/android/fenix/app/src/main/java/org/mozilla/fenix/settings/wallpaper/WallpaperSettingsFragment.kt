@@ -68,11 +68,17 @@ class WallpaperSettingsFragment : Fragment() {
                                 onWallpaperSelected(it, result, this@apply)
                             }
                         },
-                        onLearnMoreClick = { url ->
+                        onLearnMoreClick = { url, collectionName ->
                             (activity as HomeActivity).openToBrowserAndLoad(
                                 searchTermOrURL = url,
                                 newTab = true,
                                 from = BrowserDirection.FromWallpaper,
+                            )
+                            Wallpapers.learnMoreLinkClick.record(
+                                Wallpapers.LearnMoreLinkClickExtra(
+                                    url = url,
+                                    collectionName = collectionName,
+                                ),
                             )
                         },
                     )

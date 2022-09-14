@@ -8175,6 +8175,29 @@ wallpapers:
     metadata:
       tags:
         - Wallpapers
+  learn_more_link_click:
+    type: event
+    description: |
+      The learn more link for a wallpaper collection has been clicked.
+    extra_keys:
+      collection_name:
+        description: The name of the wallpaper collection the link leads to.
+        type: string
+      url:
+        description: The URL associated with the wallpaper collection.
+        type: string
+    bugs:
+      - https://github:com/mozilla-mobile/fenix/issues/26945
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/26990
+    notification_emails:
+      - android-probes@mozilla.com
+    data_sensitivity:
+      - interaction
+    expires: 116
+    metadata:
+      tags:
+        - Wallpapers
 
 recently_visited_homepage:
   history_highlight_opened:

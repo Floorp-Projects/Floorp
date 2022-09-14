@@ -59,6 +59,7 @@ import org.mozilla.fenix.wallpapers.Wallpaper
  * @param loadWallpaperResource Callback to handle loading a wallpaper bitmap. Only optional in the default case.
  * @param onSelectWallpaper Callback for when a new wallpaper is selected.
  * @param onLearnMoreClick Callback for when the learn more action is clicked from the group description.
+ * Parameters are the URL that is clicked and the name of the collection.
  */
 @SuppressLint("UnusedMaterialScaffoldPaddingParameter")
 @Composable
@@ -69,7 +70,7 @@ fun WallpaperSettings(
     loadWallpaperResource: suspend (Wallpaper) -> Bitmap?,
     selectedWallpaper: Wallpaper,
     onSelectWallpaper: (Wallpaper) -> Unit,
-    onLearnMoreClick: (String) -> Unit,
+    onLearnMoreClick: (String, String) -> Unit,
 ) {
     Column(
         modifier = Modifier
@@ -109,7 +110,7 @@ fun WallpaperSettings(
 @Composable
 private fun WallpaperGroupHeading(
     collection: Wallpaper.Collection,
-    onLearnMoreClick: (String) -> Unit,
+    onLearnMoreClick: (String, String) -> Unit,
 ) {
     // Since the last new collection of wallpapers was tied directly to an MR release,
     // it was decided that we should use string resources for these titles
@@ -153,7 +154,7 @@ private fun WallpaperGroupHeading(
                     clickableStartIndex = linkStartIndex,
                     clickableEndIndex = linkEndIndex,
                 ) {
-                    onLearnMoreClick(collection.learnMoreUrl)
+                    onLearnMoreClick(collection.learnMoreUrl, collection.name)
                 }
             }
         }
@@ -302,7 +303,7 @@ private fun WallpaperThumbnailsPreview() {
             wallpaperGroups = mapOf(Wallpaper.DefaultCollection to listOf(Wallpaper.Default)),
             selectedWallpaper = Wallpaper.Default,
             onSelectWallpaper = {},
-            onLearnMoreClick = {},
+            onLearnMoreClick = { _, _ -> },
         )
     }
 }
