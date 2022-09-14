@@ -63,8 +63,8 @@ interface nsIAlertAction : nsISupports
    * we request Windows to process `action`.  At the time of writing, Windows
    * recognizes the following actions:
    *
-   * - `action="dismiss"` dismisses the alert entirely;
-   * - "action="snooze"` snoozes the alert, generally making it disappear before
+   * - `action="dismiss"` dismisses the alert entirely.
+   * - `action="snooze"` snoozes the alert, generally making it disappear before
    *   reappearing a Windows-determined amount of time later.
    *
    * On non-Windows, this field is ignored.
