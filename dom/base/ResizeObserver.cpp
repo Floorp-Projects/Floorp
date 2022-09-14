@@ -191,6 +191,13 @@ void ResizeObservation::Unlink(RemoveFromObserver aRemoveFromObserver) {
 
 bool ResizeObservation::IsActive() const {
   nsIFrame* frame = mTarget->GetPrimaryFrame();
+
+  // As detailed in the css-contain specification, if the target is hidden by
+  // `content-visibility` it should not call its ResizeObservation callbacks.
+  if (frame && frame->AncestorHidesContent()) {
+    return false;
+  }
+
   const WritingMode wm = frame ? frame->GetWritingMode() : WritingMode();
   const LogicalPixelSize size(wm, CalculateBoxSize(mTarget, mObservedBox));
   return mLastReportedSize != size;
