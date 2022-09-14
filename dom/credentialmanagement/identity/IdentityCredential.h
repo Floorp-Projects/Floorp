@@ -49,6 +49,11 @@ class IdentityCredential final : public Credential {
       nsPIDOMWindowInner* aParent, const CredentialRequestOptions& aOptions,
       bool aSameOriginWithAncestors);
 
+  static RefPtr<GetIPCIdentityCredentialPromise>
+  DiscoverFromExternalSourceInMainProcess(
+      nsIPrincipal* aPrincipal,
+      const IdentityCredentialRequestOptions& aOptions);
+
  private:
   nsAutoString mToken;
 };
