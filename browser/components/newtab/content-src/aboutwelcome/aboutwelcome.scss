@@ -3,7 +3,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 @use 'sass:math';
-@import '../styles/normalize';
 @import '../styles/feature-callout';
 
 $break-point-small: 570px;
@@ -151,6 +150,7 @@ body {
     padding: 0;
     transition: var(--transition);
     z-index: 1;
+    box-sizing: border-box;
 
     &.no-steps {
       padding-bottom: 48px;
@@ -354,7 +354,6 @@ body {
               .secondary {
                 // sass-lint:disable-block no-important
                 background-color: var(--in-content-button-background) !important;
-                color: var(--in-content-button-text-color);
                 border: 1px solid var(--in-content-button-border-color);
                 line-height: 12px;
                 font-size: 0.72em;
@@ -1346,6 +1345,7 @@ body {
     transition: var(--transition);
     z-index: -1;
     height: 48px;
+    box-sizing: border-box;
 
     &.has-helptext {
       padding-bottom: 0;
@@ -1361,6 +1361,7 @@ body {
       // using border will show up in Windows High Contrast Mode to improve accessibility.
       border: 3px solid var(--in-content-button-text-color);
       opacity: 0.25;
+      box-sizing: inherit;
 
       &.current {
         opacity: 1;

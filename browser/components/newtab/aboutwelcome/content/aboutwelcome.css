@@ -1,36 +1,6 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-html {
-  box-sizing: border-box;
-}
-
-*,
-*::before,
-*::after {
-  box-sizing: inherit;
-}
-
-*::-moz-focus-inner {
-  border: 0;
-}
-
-body {
-  margin: 0;
-}
-
-button,
-input {
-  background-color: inherit;
-  color: inherit;
-  font-family: inherit;
-  font-size: inherit;
-}
-
-[hidden] {
-  display: none !important;
-}
-
 .onboardingContainer.featureCallout {
   position: absolute;
   transition: opacity 0.5s ease;
@@ -278,6 +248,7 @@ body {
   padding: 0;
   transition: var(--transition);
   z-index: 1;
+  box-sizing: border-box;
 }
 .onboardingContainer .main-content.no-steps {
   padding-bottom: 48px;
@@ -441,7 +412,6 @@ body {
 }
 .onboardingContainer .screen[pos=split] .section-main .main-content .action-buttons .secondary-cta .secondary {
   background-color: var(--in-content-button-background) !important;
-  color: var(--in-content-button-text-color);
   border: 1px solid var(--in-content-button-border-color);
   line-height: 12px;
   font-size: 0.72em;
@@ -1237,6 +1207,7 @@ body {
   transition: var(--transition);
   z-index: -1;
   height: 48px;
+  box-sizing: border-box;
 }
 .onboardingContainer .steps.has-helptext {
   padding-bottom: 0;
@@ -1250,6 +1221,7 @@ body {
   border-radius: 5px;
   border: 3px solid var(--in-content-button-text-color);
   opacity: 0.25;
+  box-sizing: inherit;
 }
 .onboardingContainer .steps .indicator.current {
   opacity: 1;
