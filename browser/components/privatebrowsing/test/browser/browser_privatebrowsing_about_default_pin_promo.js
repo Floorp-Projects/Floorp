@@ -3,7 +3,13 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /* import-globals-from head.js */
+
 const { sinon } = ChromeUtils.import("resource://testing-common/Sinon.jsm");
+
+const sandbox = sinon.createSandbox();
+const { ShellService } = ChromeUtils.import(
+  "resource:///modules/ShellService.jsm"
+);
 
 add_setup(async function() {
   ASRouter.resetMessageState();
@@ -11,22 +17,18 @@ add_setup(async function() {
     set: [["browser.promo.pin.enabled", true]],
   });
   await ASRouter.onPrefChange();
-});
-
-add_task(async function test_pin_promo() {
-  const sandbox = sinon.createSandbox();
   // Stub out the doesAppNeedPin to true so that Pin Promo targeting evaluates true
-  const { ShellService } = ChromeUtils.import(
-    "resource:///modules/ShellService.jsm"
-  );
+
   sandbox
     .stub(ShellService, "doesAppNeedPin")
     .withArgs(true)
     .returns(true);
   registerCleanupFunction(async () => {
-    ASRouter.resetMessageState();
     sandbox.restore();
   });
+});
+
+add_task(async function test_pin_promo() {
   let { win: win1, tab: tab1 } = await openTabAndWaitForRender();
 
   await SpecialPowers.spawn(tab1, [], async function() {
@@ -57,4 +59,58 @@ add_task(async function test_pin_promo() {
   await BrowserTestUtils.closeWindow(win2);
   await BrowserTestUtils.closeWindow(win3);
   await BrowserTestUtils.closeWindow(win4);
+});
+
+add_task(async function test_pin_promo_mr2022_holdback() {
+  ASRouter.resetMessageState();
+  // Set majorRelease2022 feature onboarding variable fallback pref
+  // for inMr2022Holdback targeting to evaluate true
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.majorrelease.onboarding", false]],
+  });
+  await ASRouter.onPrefChange();
+  let { win: win1, tab: tab1 } = await openTabAndWaitForRender();
+
+  await SpecialPowers.spawn(tab1, [], async function() {
+    const promoContainer = content.document.querySelector(".promo");
+    const promoButtonText = content.document.querySelector(
+      "#private-browsing-promo-link"
+    ).textContent;
+
+    ok(promoContainer, "Promo is shown");
+
+    Assert.equal(
+      promoButtonText,
+      "Download Firefox Focus",
+      "Pin Promo not shown for holdback user"
+    );
+  });
+
+  await BrowserTestUtils.closeWindow(win1);
+});
+
+add_task(async function test_pin_promo_mr2022_not_holdback() {
+  ASRouter.resetMessageState();
+  // Set majorRelease2022 feature onboarding variable fallback pref
+  // for inMr2022Holdback targeting to evaluate false
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.majorrelease.onboarding", true]],
+  });
+  await ASRouter.onPrefChange();
+  let { win: win1, tab: tab1 } = await openTabAndWaitForRender();
+
+  await SpecialPowers.spawn(tab1, [], async function() {
+    const promoContainer = content.document.querySelector(".promo");
+    const promoHeader = content.document.getElementById("promo-header");
+
+    ok(promoContainer, "Promo is shown");
+
+    is(
+      promoHeader.textContent,
+      "Private browsing freedom in one click",
+      "Pin Promo is shown"
+    );
+  });
+
+  await BrowserTestUtils.closeWindow(win1);
 });
