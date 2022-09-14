@@ -73,6 +73,8 @@ static ProxyAutoConfig* GetRunning() {
 
 static void SetRunning(ProxyAutoConfig* arg) {
   MOZ_ASSERT(RunningIndex() != 0xdeadbeef);
+  MOZ_DIAGNOSTIC_ASSERT_IF(!arg, GetRunning() != nullptr);
+  MOZ_DIAGNOSTIC_ASSERT_IF(arg, GetRunning() == nullptr);
   PR_SetThreadPrivate(RunningIndex(), arg);
 }
 
@@ -518,7 +520,10 @@ nsresult ProxyAutoConfig::ConfigurePAC(const nsACString& aPACURI,
 
 nsresult ProxyAutoConfig::SetupJS() {
   mJSNeedsSetup = false;
-  MOZ_ASSERT(!GetRunning(), "JIT is running");
+  MOZ_DIAGNOSTIC_ASSERT(!GetRunning(), "JIT is running");
+  if (GetRunning()) {
+    return NS_ERROR_ALREADY_INITIALIZED;
+  }
 
 #if defined(XP_MACOSX)
   nsMacUtilsImpl::EnableTCSMIfAvailable();
