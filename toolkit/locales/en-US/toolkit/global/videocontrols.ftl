@@ -42,6 +42,7 @@ videocontrols-picture-in-picture-toggle-label2 = Pop out this video
 # button. When using this variation, this string appears below the toggle when the
 # mouse hovers the toggle.
 videocontrols-picture-in-picture-explainer2 = More screens are more fun. Play this video in Picture-in-Picture while you browse.
+videocontrols-picture-in-picture-explainer3 = More screens are more fun. Play this video while you do other things.
 
 videocontrols-error-aborted = Video loading stopped.
 videocontrols-error-network = Video playback aborted due to a network error.
