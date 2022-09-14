@@ -1,7 +1,15 @@
 <!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
-<svg width="256" height="512" xmlns="http://www.w3.org/2000/svg">
-  <ellipse ry="256" rx="256" cy="256" cx="0" stroke-width="0" stroke="#000" fill="#38383d"/>
-  <path d="m181.335236,247.749695l-96.549957,0l35.774963,-35.774994a8.33333,8.33333 0 0 0 -11.783325,-11.783325l-49.999969,49.999954a8.33333,8.33333 0 0 0 0,11.782944l49.999969,50a8.33333,8.33333 0 0 0 11.783325,-11.783325l-35.774963,-35.774994l96.549957,0a8.33333,8.33333 0 0 0 0,-16.66626z" fill="rgba(249, 249, 250, .8)"/>
+<svg width="768" height="768" xmlns="http://www.w3.org/2000/svg">
+
+  <defs>
+    <filter id="f1" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="30" />
+    </filter>
+  </defs>
+
+  <ellipse ry="260" rx="260" cy="384" cx="384" stroke-width="0" stroke="#000" fill="context-fill rgba(0,0,0,0)" filter="url(#f1)"/>
+  <ellipse ry="256" rx="256" cy="384" cx="384" stroke-width="0" stroke="#000" fill="#38383d"/>
+  <path d="M 496.10297,368.34523 H 310.64452 l 68.71849,-68.71857 a 16.007116,16.007116 0 0 0 -22.63403,-22.63404 l -96.04269,96.04264 a 16.007116,16.007116 0 0 0 0,22.63331 l 96.04269,96.04274 a 16.007116,16.007116 0 0 0 22.63403,-22.63405 L 310.64452,400.3587 h 185.45845 a 16.007116,16.007116 0 0 0 0,-32.01347 z" fill="rgba(249, 249, 250, .8)" />
 </svg>

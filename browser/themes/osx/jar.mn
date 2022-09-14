@@ -23,4 +23,4 @@ browser.jar:
   skin/classic/browser/share.svg                            (share.svg)
   skin/classic/browser/e10s-64@2x.png                       (../shared/e10s-64@2x.png)
   skin/classic/browser/webRTC-menubar-indicator.css         (../shared/webRTC-menubar-indicator.css)
-  skin/classic/browser/history-swipe-arrow.svg              (../shared/swipe-gesture-icons/history-swipe-arrow.svg)
+  skin/classic/browser/history-swipe-arrow.svg              (swipe-gesture-icons/history-swipe-arrow.svg)
