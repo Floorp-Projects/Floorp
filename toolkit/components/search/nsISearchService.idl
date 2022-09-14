@@ -475,6 +475,11 @@ interface nsISearchService : nsISupports
   Promise setDefaultPrivate(in nsISearchEngine engine);
 
   /**
+   * Whether to display the "Search in Private Window" result in the urlbar.
+   */
+  readonly attribute boolean separatePrivateDefaultUrlbarResultEnabled;
+
+  /**
    * Allows the add-on manager to discover if a WebExtension based search engine
    * may change the default to an application provided search engine.
    * If that WebExtension is on the allow list, then it will override the

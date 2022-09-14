@@ -1083,10 +1083,11 @@ class MuxerUnifiedComplete extends UrlbarMuxer {
     // are other results and all of them are searches.  It should not be shown
     // if the user typed an alias because that's an explicit engine choice.
     if (
-      state.canShowPrivateSearch &&
-      (result.type != UrlbarUtils.RESULT_TYPE.SEARCH ||
-        result.payload.providesSearchMode ||
-        (result.heuristic && result.payload.keyword))
+      !Services.search.separatePrivateDefaultUrlbarResultEnabled ||
+      (state.canShowPrivateSearch &&
+        (result.type != UrlbarUtils.RESULT_TYPE.SEARCH ||
+          result.payload.providesSearchMode ||
+          (result.heuristic && result.payload.keyword)))
     ) {
       state.canShowPrivateSearch = false;
     }

@@ -1243,6 +1243,14 @@ export class SearchService {
       this.#onSeparateDefaultPrefChanged.bind(this)
     );
 
+    XPCOMUtils.defineLazyPreferenceGetter(
+      this,
+      "separatePrivateDefaultUrlbarResultEnabled",
+      lazy.SearchUtils.BROWSER_SEARCH_PREF +
+        "separatePrivateDefault.urlbarResult.enabled",
+      false
+    );
+
     // We need to catch the region being updated
     // during initialisation so we start listening
     // straight away.

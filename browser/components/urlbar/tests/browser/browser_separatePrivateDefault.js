@@ -17,6 +17,7 @@ add_setup(async function() {
   await SpecialPowers.pushPrefEnv({
     set: [
       ["browser.search.separatePrivateDefault.ui.enabled", true],
+      ["browser.search.separatePrivateDefault.urlbarResult.enabled", true],
       ["browser.search.separatePrivateDefault", true],
       ["browser.urlbar.suggest.searches", true],
     ],
@@ -115,6 +116,21 @@ add_task(async function test_search() {
     value: "unique198273982173",
   });
   await AssertPrivateResult(window, await Services.search.getDefault(), false);
+});
+
+add_task(async function test_search_urlbar_result_disabled() {
+  info("Test that 'Search in a Private Window' does not appear when disabled");
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["browser.search.separatePrivateDefault.urlbarResult.enabled", false],
+    ],
+  });
+  await UrlbarTestUtils.promiseAutocompleteResultPopup({
+    window,
+    value: "unique198273982173",
+  });
+  await AssertNoPrivateResult(window);
+  await SpecialPowers.popPrefEnv();
 });
 
 add_task(async function test_search_disabled_suggestions() {

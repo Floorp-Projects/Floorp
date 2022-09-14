@@ -18,6 +18,7 @@ add_setup(async function() {
   await SpecialPowers.pushPrefEnv({
     set: [
       ["browser.search.separatePrivateDefault.ui.enabled", true],
+      ["browser.search.separatePrivateDefault.urlbarResult.enabled", true],
       ["browser.search.separatePrivateDefault", true],
       ["browser.urlbar.suggest.searches", true],
     ],
