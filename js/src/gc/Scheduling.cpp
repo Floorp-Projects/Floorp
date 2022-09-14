@@ -623,8 +623,8 @@ size_t GCHeapThreshold::computeZoneTriggerBytes(
 
 // Parameters for balanced heap limits computation.
 
-// The W0 parameter. How much memory can be traversed in a chosen minimum
-// collection time.
+// The W0 parameter. How much memory can be traversed in the minimum collection
+// time.
 static constexpr double BalancedHeapBaseMB = 5.0;
 
 // The minimum heap limit. Do not constrain the heap to any less than this size.
@@ -632,6 +632,9 @@ static constexpr double MinBalancedHeapLimitMB = 10.0;
 
 // The minimum amount of additional space to allow beyond the retained size.
 static constexpr double MinBalancedHeadroomMB = 3.0;
+
+// The maximum factor by which to expand the heap beyond the retained size.
+static constexpr double MaxHeapGrowth = 3.0;
 
 // The default allocation rate in MB/s allocated by the mutator to use before we
 // have an estimate. Used to set the heap limit for zones that have not yet been
@@ -655,7 +658,8 @@ double GCHeapThreshold::computeBalancedHeapLimit(
   double d = tunables.heapGrowthFactor();  // Rearranged constant 'c'.
   double g = allocationRate;
   double s = collectionRate;
-  double M = W + d * sqrt((W + W0) * (g / s));
+  double f = d * sqrt((W + W0) * (g / s));
+  double M = W + std::min(f, MaxHeapGrowth) * W;
   M = std::max({MinBalancedHeapLimitMB, W + MinBalancedHeadroomMB, M});
 
   return M * double(BytesPerMB);
