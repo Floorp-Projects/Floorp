@@ -3,6 +3,10 @@
 
 "use strict";
 
+const { ASRouter } = ChromeUtils.import(
+  "resource://activity-stream/lib/ASRouter.jsm"
+);
+
 const { BuiltInThemes } = ChromeUtils.import(
   "resource:///modules/BuiltInThemes.jsm"
 );
@@ -20,12 +24,20 @@ const getPrefValueByScreen = screen => {
 };
 const defaultPrefValue = getPrefValueByScreen(1);
 
-const waitForCalloutScreen = async (doc, screenNumber) => {
-  await BrowserTestUtils.waitForCondition(() => {
-    return doc.querySelector(
-      `${calloutSelector}:not(.hidden) .FEATURE_CALLOUT_${screenNumber}`
-    );
-  });
+/**
+ * wait for a feature callout screen of given parameters to be shown
+ * @param {Document} doc the document in which the callout appears
+ * @param {String|Number} screenPostfix Number: the screen number to wait for.
+ *                                      String: the full ID of the screen.
+ */
+const waitForCalloutScreen = async (doc, screenPostfix) => {
+  await BrowserTestUtils.waitForCondition(() =>
+    doc.querySelector(
+      `${calloutSelector}:not(.hidden) .${
+        typeof screenPostfix === "number" ? "FEATURE_CALLOUT_" : ""
+      }${screenPostfix}`
+    )
+  );
 };
 
 const waitForCalloutRemoved = async doc => {
@@ -329,3 +341,67 @@ add_task(async function feature_callout_respects_cfr_features_pref() {
     }
   );
 });
+
+add_task(
+  async function feature_callout_tab_pickup_reminder_primary_click_elm() {
+    await SpecialPowers.pushPrefEnv({
+      set: [[featureTourPref, `{"message":"","screen":"","complete":true}`]],
+    });
+    Services.prefs.setIntPref("browser.firefox-view.view-count", 3);
+    Services.prefs.setBoolPref("identity.fxaccounts.enabled", false);
+    ASRouter.resetMessageState();
+    registerCleanupFunction(() => {
+      Services.prefs.clearUserPref("browser.firefox-view.view-count");
+      Services.prefs.clearUserPref("identity.fxaccounts.enabled");
+      ASRouter.resetMessageState();
+    });
+
+    const expectedUrl = await fxAccounts.constructor.config.promiseConnectAccountURI(
+      "firefoxview"
+    );
+    info(`Expected FxA URL: ${expectedUrl}`);
+
+    await BrowserTestUtils.withNewTab(
+      {
+        gBrowser,
+        url: "about:firefoxview",
+      },
+      async browser => {
+        const { document } = browser.contentWindow;
+        let tabOpened = new Promise(resolve => {
+          gBrowser.tabContainer.addEventListener(
+            "TabOpen",
+            event => {
+              let newTab = event.target;
+              let newBrowser = newTab.linkedBrowser;
+              let result = newTab;
+              BrowserTestUtils.waitForDocLoadAndStopIt(
+                expectedUrl,
+                newBrowser
+              ).then(() => resolve(result));
+            },
+            { once: true }
+          );
+        });
+
+        info("Waiting for callout to render");
+        await waitForCalloutScreen(
+          document,
+          "FIREFOX_VIEW_TAB_PICKUP_REMINDER"
+        );
+
+        info("Clicking primary button");
+        let calloutRemoved = waitForCalloutRemoved(document);
+        await clickPrimaryButton(document);
+        let openedTab = await tabOpened;
+        ok(openedTab, "FxA sign in page opened");
+        // The callout should be removed when primary CTA is clicked
+        await calloutRemoved;
+        BrowserTestUtils.removeTab(openedTab);
+      }
+    );
+    Services.prefs.clearUserPref("browser.firefox-view.view-count");
+    Services.prefs.clearUserPref("identity.fxaccounts.enabled");
+    ASRouter.resetMessageState();
+  }
+);
