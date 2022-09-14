@@ -15,23 +15,49 @@
  * the "remote control" visual cue also used for Marionette and Remote Agent.
  */
 const DevToolsSocketStatus = {
-  _openedSockets: 0,
-
-  notifySocketOpened() {
-    this._openedSockets++;
-    Services.obs.notifyObservers(this, "devtools-socket");
-  },
-
-  notifySocketClosed() {
-    this._openedSockets--;
-    Services.obs.notifyObservers(this, "devtools-socket");
-  },
+  _browserToolboxSockets: 0,
+  _otherSockets: 0,
 
   /**
-   * Returns true if any socket is currently opened for connections.
+   * Check if there are opened DevTools sockets.
+   *
+   * @param {Object=} options
+   * @param {boolean=} options.excludeBrowserToolboxSockets
+   *     Exclude sockets opened by local Browser Toolbox sessions. Defaults to
+   *     false.
+   *
+   * @return {boolean}
+   *     Returns true if there are DevTools sockets opened and matching the
+   *     provided options if any.
    */
-  get opened() {
-    return this._openedSockets > 0;
+  hasSocketOpened(options = {}) {
+    const { excludeBrowserToolboxSockets = false } = options;
+    if (excludeBrowserToolboxSockets) {
+      return this._otherSockets > 0;
+    }
+    return this._browserToolboxSockets + this._otherSockets > 0;
+  },
+
+  notifySocketOpened(options) {
+    const { fromBrowserToolbox } = options;
+    if (fromBrowserToolbox) {
+      this._browserToolboxSockets++;
+    } else {
+      this._otherSockets++;
+    }
+
+    Services.obs.notifyObservers(this, "devtools-socket");
+  },
+
+  notifySocketClosed(options) {
+    const { fromBrowserToolbox } = options;
+    if (fromBrowserToolbox) {
+      this._browserToolboxSockets--;
+    } else {
+      this._otherSockets--;
+    }
+
+    Services.obs.notifyObservers(this, "devtools-socket");
   },
 };
 

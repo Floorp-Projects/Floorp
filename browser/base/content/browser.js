@@ -8379,7 +8379,13 @@ const gRemoteControl = {
   },
 
   getRemoteControlComponent() {
-    if (DevToolsSocketStatus.opened) {
+    // For DevTools sockets, only show the remote control cue if the socket is
+    // not coming from a regular Browser Toolbox debugging session.
+    if (
+      DevToolsSocketStatus.hasSocketOpened({
+        excludeBrowserToolboxSockets: true,
+      })
+    ) {
       return "DevTools";
     }
 
