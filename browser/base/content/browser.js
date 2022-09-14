@@ -9934,7 +9934,7 @@ var FirefoxViewHandler = {
       );
     }
     if (!this.tab) {
-      this.tab = gBrowser.addTrustedTab("about:firefoxview", { index: 0 });
+      this.tab = gBrowser.addTrustedTab("about:firefoxview");
       this.tab.addEventListener("TabClose", this, { once: true });
       gBrowser.tabContainer.addEventListener("TabSelect", this);
       window.addEventListener("activate", this);
