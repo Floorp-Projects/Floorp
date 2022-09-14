@@ -774,6 +774,7 @@ pref("browser.tabs.tooltipsShowPidAndActiveness", false);
 #endif
 
 pref("browser.tabs.firefox-view", true);
+pref("browser.tabs.firefox-view.logLevel", "Warn");
 
 // allow_eval_* is enabled on Firefox Desktop only at this
 // point in time
