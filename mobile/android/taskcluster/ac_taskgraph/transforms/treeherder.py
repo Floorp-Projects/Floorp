@@ -19,9 +19,9 @@ def build_treeherder_definition(config, tasks):
             dep = list(task["dependent-tasks"].values())[0]
 
         task.setdefault("treeherder", {}).update(inherit_treeherder_from_dep(task, dep))
-        job_group = dep.task["extra"]["treeherder"].get("groupSymbol", "?")
+        task_group = dep.task["extra"]["treeherder"].get("groupSymbol", "?")
         job_symbol = task["treeherder"].pop("job-symbol")
-        full_symbol = join_symbol(job_group, job_symbol)
+        full_symbol = join_symbol(task_group, job_symbol)
         task["treeherder"]["symbol"] = full_symbol
 
         yield task

@@ -24,7 +24,7 @@ only-for-build-types:
 group-by: component
 
 
-job-template:
+task-template:
     description: Publish component
     maven-destination: 'maven2/org/mozilla/components/{component}/{version}/{artifact_file_name}'
     run-on-tasks-for: []

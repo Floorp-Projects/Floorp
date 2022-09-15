@@ -21,7 +21,7 @@ only-for-build-types:
     - release
     - nightly
 
-job-template:
+task-template:
     description: Sign component
     index:
         by-build-type:

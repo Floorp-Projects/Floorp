@@ -18,7 +18,7 @@ only-for-build-types:
 
 group-by: build-type
 
-job-template:
+task-template:
     description: Create/Update Github release
     worker-type: github
     worker:

@@ -85,14 +85,14 @@ task-defaults:
                     - ':{component}:publish'
                 default:
                     by-component:
-                        # No lintRelease on this job, gradle task isn't defined
+                        # No lintRelease on this task, gradle task isn't defined
                         tooling-lint:
                             - ':{component}:assemble'
                             - ':{component}:assembleAndroidTest'
                             - ':{component}:test'
                             - ':{component}:lint'
                             - 'githubBuildDetails'
-                        # No testRelease on this job, gradle task isn't defined
+                        # No testRelease on this task, gradle task isn't defined
                         tooling-detekt:
                             - ':{component}:assemble'
                             - ':{component}:assembleAndroidTest'

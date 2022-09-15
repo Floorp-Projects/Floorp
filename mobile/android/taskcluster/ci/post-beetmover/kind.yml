@@ -15,7 +15,7 @@ kind-dependencies:
 
 group-by: build-type
 
-job-template:
+task-template:
     description: Dummy task to wait on all builds before publishing them
     worker-type: succeed
     treeherder:
