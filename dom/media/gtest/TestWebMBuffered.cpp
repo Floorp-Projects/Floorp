@@ -113,3 +113,100 @@ TEST(WebMBuffered, RealDataAppend)
     EXPECT_EQ(mapping[i].mTimecode, gTimecodes[i]);
   }
 }
+
+TEST(WebMBuffered, InvalidEBMLMaxIdLength)
+{
+  WebMBufferedParser parser(0);
+
+  nsTArray<uint8_t> webmData;
+  // This file contains EBMLMaxIdLength=3, but a Segment element (and maybe
+  // others) whose Id VInt has length 4.
+  ReadFile("test_InvalidElementId.webm", webmData);
+
+  nsTArray<WebMTimeDataOffset> mapping;
+  EXPECT_FALSE(parser.Append(webmData.Elements(), webmData.Length(), mapping));
+}
+
+TEST(WebMBuffered, InvalidLargeElementIdLength)
+{
+  WebMBufferedParser parser(0);
+
+  nsTArray<uint8_t> webmData;
+  // This file contains EBMLMaxIdLength=4, but a dummy element whose Id VInt has
+  // length 5.
+  ReadFile("test_InvalidLargeElementId.webm", webmData);
+
+  nsTArray<WebMTimeDataOffset> mapping;
+  EXPECT_FALSE(parser.Append(webmData.Elements(), webmData.Length(), mapping));
+}
+
+TEST(WebMBuffered, InvalidSmallEBMLMaxIdLength)
+{
+  WebMBufferedParser parser(0);
+
+  nsTArray<uint8_t> webmData;
+  // This file contains EBMLMaxIdLength=3.
+  // Per draft-ietf-cellar-matroska-13 EBMLMaxIdLength MUST be 4. But element
+  // ids can also be between 1 and 5 octets long. 5 only if EBMLMaxIdLength
+  // specifies it. At least 3 is too short.
+  ReadFile("test_InvalidSmallEBMLMaxIdLength.webm", webmData);
+
+  nsTArray<WebMTimeDataOffset> mapping;
+  EXPECT_FALSE(parser.Append(webmData.Elements(), webmData.Length(), mapping));
+}
+
+TEST(WebMBuffered, ValidLargeEBMLMaxIdLength)
+{
+  WebMBufferedParser parser(0);
+
+  nsTArray<uint8_t> webmData;
+  // This file contains EBMLMaxIdLength=5 and a dummy element with a 5 octet
+  // long id. Per draft-ietf-cellar-matroska-13 EBMLMaxIdLength MUST be 4. But
+  // element ids can also be between 1 and 5 octets long. 5 only if
+  // EBMLMaxIdLength specifies it. We better tolerate this.
+  ReadFile("test_ValidLargeEBMLMaxIdLength.webm", webmData);
+
+  nsTArray<WebMTimeDataOffset> mapping;
+  EXPECT_TRUE(parser.Append(webmData.Elements(), webmData.Length(), mapping));
+}
+
+TEST(WebMBuffered, InvalidLargeEBMLMaxIdLength)
+{
+  WebMBufferedParser parser(0);
+
+  nsTArray<uint8_t> webmData;
+  // This file contains EBMLMaxIdLength=6.
+  // Per draft-ietf-cellar-matroska-13 EBMLMaxIdLength MUST be 4. But
+  // element ids can also be between 1 and 5 octets long. 5 only if
+  // EBMLMaxIdLength specifies it. At least 6 is too long.
+  ReadFile("test_InvalidLargeEBMLMaxIdLength.webm", webmData);
+
+  nsTArray<WebMTimeDataOffset> mapping;
+  EXPECT_FALSE(parser.Append(webmData.Elements(), webmData.Length(), mapping));
+}
+
+TEST(WebMBuffered, ValidSmallEBMLMaxSizeLength)
+{
+  WebMBufferedParser parser(0);
+
+  nsTArray<uint8_t> webmData;
+  // This file contains EBMLMaxSizeLength=7 and no element with an element size
+  // longer than 7 bytes.
+  ReadFile("test_ValidSmallEBMLMaxSizeLength.webm", webmData);
+
+  nsTArray<WebMTimeDataOffset> mapping;
+  EXPECT_TRUE(parser.Append(webmData.Elements(), webmData.Length(), mapping));
+}
+
+TEST(WebMBuffered, InvalidEBMLMaxSizeLength)
+{
+  WebMBufferedParser parser(0);
+
+  nsTArray<uint8_t> webmData;
+  // This file contains EBMLMaxSizeLength=7, but the Segment element size VInt
+  // has length 8.
+  ReadFile("test_InvalidElementSize.webm", webmData);
+
+  nsTArray<WebMTimeDataOffset> mapping;
+  EXPECT_FALSE(parser.Append(webmData.Elements(), webmData.Length(), mapping));
+}
