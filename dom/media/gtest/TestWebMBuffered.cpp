@@ -17,20 +17,20 @@ using namespace mozilla;
 // SimpleBlocks have the following attributes:
 static const uint64_t gTimecodes[] = {66000000,  160000000, 166000000,
                                       200000000, 233000000, 320000000};
-static const int64_t gEndOffsets[] = {501, 772, 1244, 1380, 1543, 2015};
+static const int64_t gEndOffsets[] = {466, 737, 1209, 1345, 1508, 1980};
 
 TEST(WebMBuffered, BasicTests)
 {
   WebMBufferedParser parser(0);
 
   nsTArray<WebMTimeDataOffset> mapping;
-  parser.Append(nullptr, 0, mapping);
+  EXPECT_TRUE(parser.Append(nullptr, 0, mapping));
   EXPECT_TRUE(mapping.IsEmpty());
   EXPECT_EQ(parser.mStartOffset, 0);
   EXPECT_EQ(parser.mCurrentOffset, 0);
 
   unsigned char buf[] = {0x1a, 0x45, 0xdf, 0xa3};
-  parser.Append(buf, ArrayLength(buf), mapping);
+  EXPECT_TRUE(parser.Append(buf, ArrayLength(buf), mapping));
   EXPECT_TRUE(mapping.IsEmpty());
   EXPECT_EQ(parser.mStartOffset, 0);
   EXPECT_EQ(parser.mCurrentOffset, 4);
@@ -65,7 +65,7 @@ TEST(WebMBuffered, RealData)
   ReadFile("test.webm", webmData);
 
   nsTArray<WebMTimeDataOffset> mapping;
-  parser.Append(webmData.Elements(), webmData.Length(), mapping);
+  EXPECT_TRUE(parser.Append(webmData.Elements(), webmData.Length(), mapping));
   EXPECT_EQ(mapping.Length(), 6u);
   EXPECT_EQ(parser.mStartOffset, 0);
   EXPECT_EQ(parser.mCurrentOffset, int64_t(webmData.Length()));
@@ -73,7 +73,7 @@ TEST(WebMBuffered, RealData)
 
   for (uint32_t i = 0; i < mapping.Length(); ++i) {
     EXPECT_EQ(mapping[i].mEndOffset, gEndOffsets[i]);
-    EXPECT_EQ(mapping[i].mSyncOffset, 361);
+    EXPECT_EQ(mapping[i].mSyncOffset, 326);
     EXPECT_EQ(mapping[i].mTimecode, gTimecodes[i]);
   }
 }
@@ -89,7 +89,7 @@ TEST(WebMBuffered, RealDataAppend)
   uint32_t arrayEntries = mapping.Length();
   size_t offset = 0;
   while (offset < webmData.Length()) {
-    parser.Append(webmData.Elements() + offset, 1, mapping);
+    EXPECT_TRUE(parser.Append(webmData.Elements() + offset, 1, mapping));
     offset += 1;
     EXPECT_EQ(parser.mCurrentOffset, int64_t(offset));
     if (mapping.Length() != arrayEntries) {
@@ -97,7 +97,7 @@ TEST(WebMBuffered, RealDataAppend)
       ASSERT_LE(arrayEntries, 6u);
       uint32_t i = arrayEntries - 1;
       EXPECT_EQ(mapping[i].mEndOffset, gEndOffsets[i]);
-      EXPECT_EQ(mapping[i].mSyncOffset, 361);
+      EXPECT_EQ(mapping[i].mSyncOffset, 326);
       EXPECT_EQ(mapping[i].mTimecode, gTimecodes[i]);
       EXPECT_EQ(parser.GetTimecodeScale(), 500000u);
     }
@@ -109,7 +109,7 @@ TEST(WebMBuffered, RealDataAppend)
 
   for (uint32_t i = 0; i < mapping.Length(); ++i) {
     EXPECT_EQ(mapping[i].mEndOffset, gEndOffsets[i]);
-    EXPECT_EQ(mapping[i].mSyncOffset, 361);
+    EXPECT_EQ(mapping[i].mSyncOffset, 326);
     EXPECT_EQ(mapping[i].mTimecode, gTimecodes[i]);
   }
 }
