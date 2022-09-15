@@ -194,8 +194,7 @@ var PrintUtils = {
       // XXX This can be racy can't it? getPreviewBrowser looks at browser that
       // we set up after opening the dialog. But I guess worst case we just
       // open two dialogs so...
-      Cu.reportError("Tab-modal print UI already open");
-      return null;
+      throw new Error("Tab-modal print UI already open");
     }
 
     // Create the print preview dialog.
