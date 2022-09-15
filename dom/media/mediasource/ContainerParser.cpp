@@ -116,10 +116,9 @@ class WebMContainerParser
 
     WebMBufferedParser parser(0);
     nsTArray<WebMTimeDataOffset> mapping;
-    bool result = parser.Append(aData.Elements(), aData.Length(), mapping);
-    if (!result) {
-      return MediaResult(NS_ERROR_FAILURE,
-                         RESULT_DETAIL("Invalid webm content"));
+    if (auto result = parser.Append(aData.Elements(), aData.Length(), mapping);
+        NS_FAILED(result)) {
+      return result;
     }
     return parser.mInitEndOffset > 0 ? NS_OK : NS_ERROR_NOT_AVAILABLE;
   }
@@ -133,10 +132,9 @@ class WebMContainerParser
     WebMBufferedParser parser(0);
     nsTArray<WebMTimeDataOffset> mapping;
     parser.AppendMediaSegmentOnly();
-    bool result = parser.Append(aData.Elements(), aData.Length(), mapping);
-    if (!result) {
-      return MediaResult(NS_ERROR_FAILURE,
-                         RESULT_DETAIL("Invalid webm content"));
+    if (auto result = parser.Append(aData.Elements(), aData.Length(), mapping);
+        NS_FAILED(result)) {
+      return result;
     }
     return parser.GetClusterOffset() >= 0 ? NS_OK : NS_ERROR_NOT_AVAILABLE;
   }
@@ -178,7 +176,10 @@ class WebMContainerParser
     nsTArray<WebMTimeDataOffset> mapping;
     mapping.AppendElements(mOverlappedMapping);
     mOverlappedMapping.Clear();
-    mParser.Append(aData.Elements(), aData.Length(), mapping);
+    if (auto result = mParser.Append(aData.Elements(), aData.Length(), mapping);
+        NS_FAILED(result)) {
+      return result;
+    }
     if (mResource) {
       mResource->AppendData(aData);
     }

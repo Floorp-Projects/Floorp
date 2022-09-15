@@ -10,6 +10,20 @@
 
 using namespace mozilla;
 
+std::ostream& operator<<(std::ostream& aStream, nsresult aResult) {
+  return aStream << GetStaticErrorName(aResult);
+}
+
+namespace mozilla {
+std::ostream& operator<<(std::ostream& aStream, const MediaResult& aResult) {
+  aStream << aResult.Code();
+  if (!aResult.Message().IsEmpty()) {
+    aStream << " (" << aResult.Message() << ")";
+  }
+  return aStream;
+}
+}  // namespace mozilla
+
 // "test.webm" contains 8 SimpleBlocks in a single Cluster.  The blocks with
 // timecodes 100000000 and are 133000000 skipped by WebMBufferedParser
 // because they occur after a block with timecode 160000000 and the parser
@@ -24,13 +38,13 @@ TEST(WebMBuffered, BasicTests)
   WebMBufferedParser parser(0);
 
   nsTArray<WebMTimeDataOffset> mapping;
-  EXPECT_TRUE(parser.Append(nullptr, 0, mapping));
+  EXPECT_EQ(parser.Append(nullptr, 0, mapping), NS_OK);
   EXPECT_TRUE(mapping.IsEmpty());
   EXPECT_EQ(parser.mStartOffset, 0);
   EXPECT_EQ(parser.mCurrentOffset, 0);
 
   unsigned char buf[] = {0x1a, 0x45, 0xdf, 0xa3};
-  EXPECT_TRUE(parser.Append(buf, ArrayLength(buf), mapping));
+  EXPECT_EQ(parser.Append(buf, ArrayLength(buf), mapping), NS_OK);
   EXPECT_TRUE(mapping.IsEmpty());
   EXPECT_EQ(parser.mStartOffset, 0);
   EXPECT_EQ(parser.mCurrentOffset, 4);
@@ -65,7 +79,8 @@ TEST(WebMBuffered, RealData)
   ReadFile("test.webm", webmData);
 
   nsTArray<WebMTimeDataOffset> mapping;
-  EXPECT_TRUE(parser.Append(webmData.Elements(), webmData.Length(), mapping));
+  EXPECT_EQ(parser.Append(webmData.Elements(), webmData.Length(), mapping),
+            NS_OK);
   EXPECT_EQ(mapping.Length(), 6u);
   EXPECT_EQ(parser.mStartOffset, 0);
   EXPECT_EQ(parser.mCurrentOffset, int64_t(webmData.Length()));
@@ -89,7 +104,7 @@ TEST(WebMBuffered, RealDataAppend)
   uint32_t arrayEntries = mapping.Length();
   size_t offset = 0;
   while (offset < webmData.Length()) {
-    EXPECT_TRUE(parser.Append(webmData.Elements() + offset, 1, mapping));
+    EXPECT_EQ(parser.Append(webmData.Elements() + offset, 1, mapping), NS_OK);
     offset += 1;
     EXPECT_EQ(parser.mCurrentOffset, int64_t(offset));
     if (mapping.Length() != arrayEntries) {
@@ -124,7 +139,8 @@ TEST(WebMBuffered, InvalidEBMLMaxIdLength)
   ReadFile("test_InvalidElementId.webm", webmData);
 
   nsTArray<WebMTimeDataOffset> mapping;
-  EXPECT_FALSE(parser.Append(webmData.Elements(), webmData.Length(), mapping));
+  EXPECT_EQ(parser.Append(webmData.Elements(), webmData.Length(), mapping),
+            NS_ERROR_FAILURE);
 }
 
 TEST(WebMBuffered, InvalidLargeElementIdLength)
@@ -137,7 +153,8 @@ TEST(WebMBuffered, InvalidLargeElementIdLength)
   ReadFile("test_InvalidLargeElementId.webm", webmData);
 
   nsTArray<WebMTimeDataOffset> mapping;
-  EXPECT_FALSE(parser.Append(webmData.Elements(), webmData.Length(), mapping));
+  EXPECT_EQ(parser.Append(webmData.Elements(), webmData.Length(), mapping),
+            NS_ERROR_FAILURE);
 }
 
 TEST(WebMBuffered, InvalidSmallEBMLMaxIdLength)
@@ -152,7 +169,8 @@ TEST(WebMBuffered, InvalidSmallEBMLMaxIdLength)
   ReadFile("test_InvalidSmallEBMLMaxIdLength.webm", webmData);
 
   nsTArray<WebMTimeDataOffset> mapping;
-  EXPECT_FALSE(parser.Append(webmData.Elements(), webmData.Length(), mapping));
+  EXPECT_EQ(parser.Append(webmData.Elements(), webmData.Length(), mapping),
+            NS_ERROR_FAILURE);
 }
 
 TEST(WebMBuffered, ValidLargeEBMLMaxIdLength)
@@ -167,7 +185,8 @@ TEST(WebMBuffered, ValidLargeEBMLMaxIdLength)
   ReadFile("test_ValidLargeEBMLMaxIdLength.webm", webmData);
 
   nsTArray<WebMTimeDataOffset> mapping;
-  EXPECT_TRUE(parser.Append(webmData.Elements(), webmData.Length(), mapping));
+  EXPECT_EQ(parser.Append(webmData.Elements(), webmData.Length(), mapping),
+            NS_OK);
 }
 
 TEST(WebMBuffered, InvalidLargeEBMLMaxIdLength)
@@ -182,7 +201,8 @@ TEST(WebMBuffered, InvalidLargeEBMLMaxIdLength)
   ReadFile("test_InvalidLargeEBMLMaxIdLength.webm", webmData);
 
   nsTArray<WebMTimeDataOffset> mapping;
-  EXPECT_FALSE(parser.Append(webmData.Elements(), webmData.Length(), mapping));
+  EXPECT_EQ(parser.Append(webmData.Elements(), webmData.Length(), mapping),
+            NS_ERROR_FAILURE);
 }
 
 TEST(WebMBuffered, ValidSmallEBMLMaxSizeLength)
@@ -195,7 +215,8 @@ TEST(WebMBuffered, ValidSmallEBMLMaxSizeLength)
   ReadFile("test_ValidSmallEBMLMaxSizeLength.webm", webmData);
 
   nsTArray<WebMTimeDataOffset> mapping;
-  EXPECT_TRUE(parser.Append(webmData.Elements(), webmData.Length(), mapping));
+  EXPECT_EQ(parser.Append(webmData.Elements(), webmData.Length(), mapping),
+            NS_OK);
 }
 
 TEST(WebMBuffered, InvalidEBMLMaxSizeLength)
@@ -208,5 +229,6 @@ TEST(WebMBuffered, InvalidEBMLMaxSizeLength)
   ReadFile("test_InvalidElementSize.webm", webmData);
 
   nsTArray<WebMTimeDataOffset> mapping;
-  EXPECT_FALSE(parser.Append(webmData.Elements(), webmData.Length(), mapping));
+  EXPECT_EQ(parser.Append(webmData.Elements(), webmData.Length(), mapping),
+            NS_ERROR_FAILURE);
 }
