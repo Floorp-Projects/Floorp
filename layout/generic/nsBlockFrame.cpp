@@ -1314,7 +1314,7 @@ void nsBlockFrame::ClearLineClampEllipsis() { ::ClearLineClampEllipsis(this); }
 void nsBlockFrame::Reflow(nsPresContext* aPresContext, ReflowOutput& aMetrics,
                           const ReflowInput& aReflowInput,
                           nsReflowStatus& aStatus) {
-  if (IsHiddenByContentVisibilityOfInFlowParentForLayout()) {
+  if (GetInFlowParent() && GetInFlowParent()->IsContentHiddenForLayout()) {
     FinishAndStoreOverflow(&aMetrics, aReflowInput.mStyleDisplay);
     return;
   }
@@ -2579,6 +2579,10 @@ static bool LinesAreEmpty(const nsLineList& aList) {
 }
 
 void nsBlockFrame::ReflowDirtyLines(BlockReflowState& aState) {
+  if (IsContentHiddenForLayout()) {
+    return;
+  }
+
   bool keepGoing = true;
   bool repositionViews = false;  // should we really need this?
   bool foundAnyClears = aState.mFloatBreakType != StyleClear::None;
@@ -3365,15 +3369,6 @@ void nsBlockFrame::ReflowLine(BlockReflowState& aState, LineIterator aLine,
   aLine->InvalidateCachedIsEmpty();
   aLine->ClearHadFloatPushed();
 
-  // If this line contains a single block that is hidden by `content-visibility`
-  // don't reflow the line. If this line contains inlines and the first one is
-  // hidden by `content-visibility`, all of them are, so avoid reflow in that
-  // case as well.
-  nsIFrame* firstChild = aLine->mFirstChild;
-  if (firstChild->IsHiddenByContentVisibilityOfInFlowParentForLayout()) {
-    return;
-  }
-
   // Now that we know what kind of line we have, reflow it
   if (aLine->IsBlock()) {
     ReflowBlockFrame(aState, aLine, aKeepReflowGoing);
@@ -3582,10 +3577,6 @@ static inline bool IsNonAutoNonZeroBSize(const StyleSize& aCoord) {
 
 /* virtual */
 bool nsBlockFrame::IsSelfEmpty() {
-  if (IsHiddenByContentVisibilityOfInFlowParentForLayout()) {
-    return true;
-  }
-
   // Blocks which are margin-roots (including inline-blocks) cannot be treated
   // as empty for margin-collapsing and other purposes. They're more like
   // replaced elements.
