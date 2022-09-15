@@ -13550,7 +13550,6 @@ asur.store, 1
 asurbernardo.com, 1
 asurepay.cc, 0
 asurgiant.ca, 1
-asus.com, 1
 asustor.com, 1
 asustreiber.de, 1
 asvsa.ch, 0
