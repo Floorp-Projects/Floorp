@@ -435,9 +435,8 @@ ComPtr<IXmlDocument> ToastNotificationHandler::CreateToastXmlDocument() {
   MOZ_LOG(sWASLog, LogLevel::Debug,
           ("launchArg: '%s'", NS_ConvertUTF16toUTF8(launchArg).get()));
 
-  // On modern Windows (10+), use newer toast layout, which makes images larger,
-  // for system (chrome-privileged) toasts.
-  if (IsWin10OrLater() && mIsSystemPrincipal) {
+  // On modern Windows (10+), use newer toast layout, which makes images larger.
+  if (IsWin10OrLater()) {
     ComPtr<IXmlNodeList> bindingElements;
     hr = toastXml->GetElementsByTagName(HStringReference(L"binding").Get(),
                                         &bindingElements);
