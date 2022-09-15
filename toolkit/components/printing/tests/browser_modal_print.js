@@ -40,12 +40,15 @@ add_task(async function testPrintMultiple() {
     assertExpectedPrintPage(helper);
 
     // Trigger the command a few more times, verify the overlay still exists.
-    await helper.startPrint();
-    helper.assertDialogOpen();
-    await helper.startPrint();
-    helper.assertDialogOpen();
-    await helper.startPrint();
-    helper.assertDialogOpen();
+    ignoreAllUncaughtExceptions(true);
+    for (let i = 0; i < 3; ++i) {
+      try {
+        await helper.startPrint();
+      } finally {
+        helper.assertDialogOpen();
+      }
+    }
+    ignoreAllUncaughtExceptions(false);
 
     // Verify it's still the correct page.
     assertExpectedPrintPage(helper);
