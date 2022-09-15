@@ -36,6 +36,7 @@ class SettingsAdvancedTest {
             start()
         }
         featureSettingsHelper.setCfrForTrackingProtectionEnabled(false)
+        featureSettingsHelper.setSearchWidgetDialogEnabled(false)
     }
 
     @After

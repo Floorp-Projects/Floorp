@@ -196,6 +196,14 @@ class UrlInputFragment :
             binding.browserToolbar.editMode()
             isInitialized = true
         }
+
+        if (
+            requireComponents.settings.searchWidgetInstalled &&
+            requireComponents.appStore.state.showSearchWidgetSnackbar
+        ) {
+            ViewUtils.showBrandedSnackbar(view, R.string.promote_search_widget_snackbar_message, 0)
+            requireComponents.appStore.dispatch(AppAction.ShowSearchWidgetSnackBar(false))
+        }
     }
 
     override fun onPause() {
@@ -240,7 +248,6 @@ class UrlInputFragment :
                 TopSitesOverlay()
             }
         }
-
         return binding.root
     }
 

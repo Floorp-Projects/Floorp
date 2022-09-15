@@ -15,11 +15,19 @@ import mozilla.components.support.utils.PendingIntentUtils
 import org.mozilla.focus.R
 import org.mozilla.focus.activity.IntentReceiverActivity
 import org.mozilla.focus.ext.components
+import org.mozilla.focus.session.VisibilityLifeCycleCallback
+import org.mozilla.focus.state.AppAction
 
 class SearchWidgetProvider : AppSearchWidgetProvider() {
 
     override fun onEnabled(context: Context) {
         context.components.settings.addSearchWidgetInstalled(1)
+
+        // The snackBar that informs the user that search widget was added successfully
+        // should appear only if the app is in foreground
+        if (!VisibilityLifeCycleCallback.isInBackground(context)) {
+            context.components.appStore.dispatch(AppAction.ShowSearchWidgetSnackBar(true))
+        }
     }
 
     override fun onDeleted(context: Context, appWidgetIds: IntArray) {

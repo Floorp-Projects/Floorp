@@ -39,6 +39,7 @@ object AppReducer : Reducer<AppState, AppAction> {
             is AppAction.OpenSitePermissionOptionsScreen -> openSitePermissionOptionsScreen(state, action)
             is AppAction.ShowHomeScreen -> showHomeScreen(state)
             is AppAction.ShowOnboardingSecondScreen -> showOnBoardingSecondScreen(state)
+            is AppAction.ShowSearchWidgetSnackBar -> showSearchWidgetSnackBarChanged(state, action)
         }
     }
 }
@@ -184,6 +185,13 @@ private fun secretSettingsStateChanged(state: AppState, action: AppAction.Secret
  */
 private fun showEraseTabsCfrChanged(state: AppState, action: AppAction.ShowEraseTabsCfrChange): AppState {
     return state.copy(showEraseTabsCfr = action.value)
+}
+
+/**
+ * The state of search widget snackBar changed
+ */
+private fun showSearchWidgetSnackBarChanged(state: AppState, action: AppAction.ShowSearchWidgetSnackBar): AppState {
+    return state.copy(showSearchWidgetSnackbar = action.value)
 }
 
 /**

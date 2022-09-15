@@ -44,6 +44,7 @@ class WebControlsTest {
             start()
         }
         featureSettingsHelper.setCfrForTrackingProtectionEnabled(false)
+        featureSettingsHelper.setSearchWidgetDialogEnabled(false)
     }
 
     @After

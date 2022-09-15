@@ -105,4 +105,9 @@ sealed class AppAction : Action {
      * State of show Tracking Protection CFR has changed
      */
     data class ShowTrackingProtectionCfrChange(val value: Map<String, Boolean>) : AppAction()
+
+    /**
+     * State of Snackbar for promote search widget has changed
+     */
+    data class ShowSearchWidgetSnackBar(val value: Boolean) : AppAction()
 }

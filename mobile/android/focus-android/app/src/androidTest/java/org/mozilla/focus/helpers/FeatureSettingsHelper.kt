@@ -19,6 +19,14 @@ class FeatureSettingsHelper {
         settings.shouldShowCfrForTrackingProtection = enabled
     }
 
+    fun setSearchWidgetDialogEnabled(enabled: Boolean) {
+        if (enabled) {
+            settings.addClearBrowsingSessions(4)
+        } else {
+            settings.addClearBrowsingSessions(10)
+        }
+    }
+
     // Important:
     // Use this after each test if you have modified these feature settings
     // to make sure the app goes back to the default state

@@ -135,4 +135,9 @@
     <color name="home_screen_modal_gradient_four">#3C286A</color>
     <color name="home_screen_modal_gradient_five">#21163E</color>
     <color name="home_screen_modal_gradient_six">#1D1133</color>
+
+    <!-- Promote SearchWidget Dialog colors -->
+    <color name="promote_search_widget_dialog_background">#2B2A33</color>
+    <color name="promote_search_widget_dialog_close_button_background">#3B3C3F</color>
+    <color name="promote_search_widget_dialog_add_widget_button_background">#7542E5</color>
 </resources>

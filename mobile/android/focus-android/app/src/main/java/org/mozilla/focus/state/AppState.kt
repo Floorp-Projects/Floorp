@@ -18,6 +18,7 @@ import java.util.UUID
  * whether they have been updated or not
  * @property secretSettingsEnabled A flag which reflects the state of debug secret settings
  * @property showEraseTabsCfr A flag which reflects the state erase tabs CFR
+ * @property showSearchWidgetSnackbar A flag which reflects the state of search widget snackbar
  */
 data class AppState(
     val screen: Screen,
@@ -25,6 +26,7 @@ data class AppState(
     val sitePermissionOptionChange: Boolean = false,
     val secretSettingsEnabled: Boolean = false,
     val showEraseTabsCfr: Boolean = false,
+    val showSearchWidgetSnackbar: Boolean = false,
     val showTrackingProtectionCfrForTab: Map<String, Boolean> = emptyMap(),
 ) : State
 

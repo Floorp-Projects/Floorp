@@ -42,6 +42,7 @@ class LocalSessionStorageTest {
             start()
         }
         featureSettingsHelper.setCfrForTrackingProtectionEnabled(false)
+        featureSettingsHelper.setSearchWidgetDialogEnabled(false)
     }
 
     @After

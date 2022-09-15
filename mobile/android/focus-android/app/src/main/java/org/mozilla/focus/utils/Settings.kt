@@ -386,6 +386,23 @@ class Settings(
             0,
         )
 
+    /**
+     * This is used for promote search widget dialog to appear only at the first data clearing and
+     * at the 5th one.
+     */
+    fun addClearBrowsingSessions(count: Int) {
+        val key = getPreferenceKey(R.string.pref_key_clear_browsing_sessions)
+        val newValue = preferences.getInt(key, 0) + count
+        preferences.edit()
+            .putInt(key, newValue)
+            .apply()
+    }
+
+    fun getClearBrowsingSessions() = preferences.getInt(
+        getPreferenceKey(R.string.pref_key_clear_browsing_sessions),
+        0,
+    )
+
     fun getHttpsOnlyMode(): Engine.HttpsOnlyMode {
         return if (preferences.getBoolean(getPreferenceKey(R.string.pref_key_https_only), true)) {
             Engine.HttpsOnlyMode.ENABLED

@@ -46,6 +46,7 @@ class EnhancedTrackingProtectionSettingsTest {
             dispatcher = MockWebServerHelper.AndroidAssetDispatcher()
             start()
         }
+        featureSettingsHelper.setSearchWidgetDialogEnabled(false)
     }
 
     @After

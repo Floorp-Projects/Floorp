@@ -5,6 +5,7 @@
 package org.mozilla.focus.navigation
 
 import android.os.Build
+import org.mozilla.experiments.nimbus.internal.FeatureHolder
 import org.mozilla.focus.R
 import org.mozilla.focus.activity.MainActivity
 import org.mozilla.focus.autocomplete.AutocompleteAddFragment
@@ -14,6 +15,7 @@ import org.mozilla.focus.autocomplete.AutocompleteSettingsFragment
 import org.mozilla.focus.biometrics.BiometricAuthenticationFragment
 import org.mozilla.focus.exceptions.ExceptionsListFragment
 import org.mozilla.focus.exceptions.ExceptionsRemoveFragment
+import org.mozilla.focus.ext.components
 import org.mozilla.focus.fragment.BrowserFragment
 import org.mozilla.focus.fragment.FirstrunFragment
 import org.mozilla.focus.fragment.UrlInputFragment
@@ -24,6 +26,8 @@ import org.mozilla.focus.fragment.onboarding.OnboardingStep
 import org.mozilla.focus.fragment.onboarding.OnboardingStorage
 import org.mozilla.focus.locale.screen.LanguageFragment
 import org.mozilla.focus.nimbus.FocusNimbus
+import org.mozilla.focus.nimbus.Onboarding
+import org.mozilla.focus.searchwidget.SearchWidgetUtils
 import org.mozilla.focus.settings.GeneralSettingsFragment
 import org.mozilla.focus.settings.InstalledSearchEnginesSettingsFragment
 import org.mozilla.focus.settings.ManualAddSearchEngineSettingsFragment
@@ -59,12 +63,19 @@ class MainActivityNavigation(
         val isShowingBrowser = browserFragment != null
         val crashReporterIsVisible = browserFragment?.crashReporterIsVisible() ?: false
 
+        val onboardingFeature = FocusNimbus.features.onboarding
+        val onboardingConfig = onboardingFeature.value(activity)
+
         if (isShowingBrowser && !crashReporterIsVisible) {
-            ViewUtils.showBrandedSnackbar(
-                activity.findViewById(android.R.id.content),
-                R.string.feedback_erase2,
-                activity.resources.getInteger(R.integer.erase_snackbar_delay),
-            )
+            if (onboardingConfig.isPromoteSearchWidgetDialogEnabled) {
+                showPromoteSearchWidgetDialog(onboardingFeature)
+            } else {
+                ViewUtils.showBrandedSnackbar(
+                    activity.findViewById(android.R.id.content),
+                    R.string.feedback_erase2,
+                    activity.resources.getInteger(R.integer.erase_snackbar_delay),
+                )
+            }
         }
 
         // We add the url input fragment to the layout if it doesn't exist yet.
@@ -88,8 +99,31 @@ class MainActivityNavigation(
         // Ideally we'd make it possible to pause observers while the app is in the background:
         // https://github.com/mozilla-mobile/android-components/issues/876
         transaction
-            .replace(R.id.container, UrlInputFragment.createWithoutSession(), UrlInputFragment.FRAGMENT_TAG)
+            .replace(
+                R.id.container,
+                UrlInputFragment.createWithoutSession(),
+                UrlInputFragment.FRAGMENT_TAG,
+            )
             .commitAllowingStateLoss()
+    }
+
+    /**
+     * Display the widget promo at first data clearing action and if it wasn't added after 5th Focus session.
+     */
+    @Suppress("MagicNumber")
+    private fun showPromoteSearchWidgetDialog(onboardingFeature: FeatureHolder<Onboarding>) {
+        if (!activity.components.settings.searchWidgetInstalled) {
+            val clearBrowsingSessions = activity.components.settings.getClearBrowsingSessions()
+            activity.components.settings.addClearBrowsingSessions(1)
+            onboardingFeature.recordExposure()
+
+            if (
+                clearBrowsingSessions == 0 ||
+                clearBrowsingSessions == 4
+            ) {
+                SearchWidgetUtils.showPromoteSearchWidgetDialog(activity)
+            }
+        }
     }
 
     /**

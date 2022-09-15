@@ -29,6 +29,7 @@ class SearchTest {
     @Before
     fun setUp() {
         featureSettingsHelper.setCfrForTrackingProtectionEnabled(false)
+        featureSettingsHelper.setSearchWidgetDialogEnabled(false)
     }
 
     @After

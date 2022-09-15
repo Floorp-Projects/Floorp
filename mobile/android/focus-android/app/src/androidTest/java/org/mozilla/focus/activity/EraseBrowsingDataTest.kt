@@ -52,6 +52,7 @@ class EraseBrowsingDataTest {
             start()
         }
         featureSettingsHelper.setCfrForTrackingProtectionEnabled(false)
+        featureSettingsHelper.setSearchWidgetDialogEnabled(false)
     }
 
     @After
@@ -60,6 +61,7 @@ class EraseBrowsingDataTest {
         featureSettingsHelper.resetAllFeatureFlags()
     }
 
+    @Ignore("https://github.com/mozilla-mobile/focus-android/issues/7695")
     @SmokeTest
     @Test
     fun trashButtonTest() {

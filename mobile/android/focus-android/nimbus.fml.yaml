@@ -20,6 +20,17 @@ features:
         description: If `true`, the app will show the cfrs
         type: Boolean
         default: false
+      is-promote-search-widget-dialog-enabled:
+        description: If `true`, the app will show the new dialog for promote search widget
+        type: Boolean
+        default: false
+    defaults:
+      - channel: debug
+        value: {
+          "is-enabled": true,
+          "is-cfr-enabled": true,
+          "is-promote-search-widget-dialog-enabled": true,
+        }
 types:
   objects: { }
   enums: { }

@@ -1997,3 +1997,53 @@ search_widget:
     metadata:
       tags:
         - Search
+  promote_dialog_shown:
+    type: event
+    description: |
+      Promote search widget dialog is shown to the user.
+    bugs:
+      - https://github.com/mozilla-mobile/focus-android/issues/7506
+    data_reviews:
+      - https://github.com/mozilla-mobile/focus-android/pull/
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: 119
+    metadata:
+      tags:
+        - Search
+  add_to_home_screen_button:
+    type: event
+    description: |
+      The user has pressed on add search widget
+      to home screen button from promote dialog.
+    bugs:
+      - https://github.com/mozilla-mobile/focus-android/issues/7506
+    data_reviews:
+      - https://github.com/mozilla-mobile/focus-android/pull/
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: 119
+    metadata:
+      tags:
+        - Search
+  widget_was_added:
+    type: event
+    description: |
+      The user has added successfully the search widget from
+      promote search widget dialog.
+    bugs:
+      - https://github.com/mozilla-mobile/focus-android/issues/7506
+    data_reviews:
+      - https://github.com/mozilla-mobile/focus-android/pull/
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: 119
+    metadata:
+      tags:
+        - Search
