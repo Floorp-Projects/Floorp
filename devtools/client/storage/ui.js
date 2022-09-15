@@ -154,7 +154,7 @@ class StorageUI {
     this.table.on(TableWidget.EVENTS.CELL_EDIT, this.editItem);
 
     this.sidebar = this._panelDoc.getElementById("storage-sidebar");
-    this.sidebar.setAttribute("width", "300");
+    this.sidebar.style.width = "300px";
     this.view = new VariablesView(this.sidebar.firstChild, {
       lazyEmpty: true,
       // ms
