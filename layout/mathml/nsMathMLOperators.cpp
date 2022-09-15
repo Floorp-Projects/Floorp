@@ -11,6 +11,7 @@
 #include "nsNetUtil.h"
 #include "nsTArray.h"
 
+#include "mozilla/intl/UnicodeProperties.h"
 #include "nsIPersistentProperties2.h"
 #include "nsISimpleEnumerator.h"
 #include "nsCRT.h"
@@ -35,6 +36,17 @@ static bool gGlobalsInitialized = false;
 static const char16_t kDashCh = char16_t('#');
 static const char16_t kColonCh = char16_t(':');
 
+static uint32_t ToUnicodeCodePoint(const nsString& aOperator) {
+  if (aOperator.Length() == 1) {
+    return aOperator[0];
+  }
+  if (aOperator.Length() == 2 &&
+      NS_IS_SURROGATE_PAIR(aOperator[0], aOperator[1])) {
+    SURROGATE_TO_UCS4(aOperator[0], aOperator[1]);
+  }
+  return 0;
+}
+
 static void SetBooleanProperty(OperatorData* aOperatorData, nsString aName) {
   if (aName.IsEmpty()) return;
 
@@ -54,8 +66,6 @@ static void SetBooleanProperty(OperatorData* aOperatorData, nsString aName) {
     aOperatorData->mFlags |= NS_MATHML_OPERATOR_SYMMETRIC;
   else if (aName.EqualsLiteral("integral"))
     aOperatorData->mFlags |= NS_MATHML_OPERATOR_INTEGRAL;
-  else if (aName.EqualsLiteral("mirrorable"))
-    aOperatorData->mFlags |= NS_MATHML_OPERATOR_MIRRORABLE;
 }
 
 static void SetProperty(OperatorData* aOperatorData, nsString aName,
@@ -382,14 +392,10 @@ void nsMathMLOperators::LookupOperators(const nsString& aOperator,
 
 /* static */
 bool nsMathMLOperators::IsMirrorableOperator(const nsString& aOperator) {
-  // LookupOperator will search infix, postfix and prefix forms of aOperator and
-  // return the first form found. It is assumed that all these forms have same
-  // mirrorability.
-  nsOperatorFlags flags = 0;
-  float dummy;
-  nsMathMLOperators::LookupOperator(aOperator, NS_MATHML_OPERATOR_FORM_INFIX,
-                                    &flags, &dummy, &dummy);
-  return NS_MATHML_OPERATOR_IS_MIRRORABLE(flags);
+  if (auto codePoint = ToUnicodeCodePoint(aOperator)) {
+    return mozilla::intl::UnicodeProperties::IsMirrored(codePoint);
+  }
+  return false;
 }
 
 /* static */

@@ -88,7 +88,6 @@ if ($ARGV[0] eq "compare" && $#ARGV == 1) {
 #     12   | linebreakstyle
 #     13   | direction
 #     14   | integral
-#     15   | mirrorable
 
 # 1) build %moz_hash from $MOZ_DICTIONARY
 
@@ -122,7 +121,6 @@ while (<$file>) {
     if (m/^(.*)direction:([a-z]*)(.*)$/) { $value[13] = $2; }
     else { $value[13] = ""; }
     $value[14] = (m/^(.*)integral(.*)$/);
-    $value[15] = (m/^(.*)mirrorable(.*)$/);
 
     # 1.3) save the key and value
     $moz_hash{$key} = [ @value ];
@@ -304,7 +302,6 @@ foreach my $entry ($doc->findnodes('/root/entry')) {
     $value[7] = (m/^(.*)separator(.*)$/);
     $value[9] = (m/^(.*)fence(.*)$/);
     $value[10] = (m/^(.*)symmetric(.*)$/);
-    $value[15] = (m/^(.*)mirrorable(.*)$/);
     $value[11] = $entry->getAttribute("priority");
     $value[12] = $entry->getAttribute("linebreakstyle");
 
@@ -437,7 +434,6 @@ sub generateCommon {
     if ($v[7]) { $entry = "$entry separator"; }
     if ($v[9]) { $entry = "$entry fence"; }
     if ($v[10]) { $entry = "$entry symmetric"; }
-    if ($v[15]) { $entry = "$entry mirrorable"; }
     return $entry;
 }
 
