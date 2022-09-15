@@ -55,10 +55,10 @@ fun WallpaperOnboarding(
 ) {
     Surface(
         color = FirefoxTheme.colors.layer2,
-        shape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp),
+        shape = RoundedCornerShape(topStart = 8.dp, topEnd = 8.dp),
     ) {
         Column(
-            modifier = Modifier.padding(16.dp),
+            modifier = Modifier.padding(horizontal = 32.dp, vertical = 16.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Icon(
@@ -117,8 +117,6 @@ fun WallpaperOnboarding(
                     style = FirefoxTheme.typography.button,
                 )
             }
-
-            Spacer(modifier = Modifier.height(12.dp))
         }
     }
 }

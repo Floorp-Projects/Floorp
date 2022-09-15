@@ -566,7 +566,7 @@
     <style name="HomeOnboardingDialogStyle" parent="DialogStyleBase"/>
     <style name="WallpaperOnboardingDialogStyle" parent="DialogStyleBase">
         <item name="android:windowIsFloating">true</item>
-        <item name="android:backgroundDimAmount">0.02</item>
+        <item name="android:backgroundDimAmount">0.06</item>
     </style>
     <style name="CreateShortcutDialogButton" parent="Widget.MaterialComponents.Button.TextButton.Dialog">
         <item name="android:layout_width">wrap_content</item>
