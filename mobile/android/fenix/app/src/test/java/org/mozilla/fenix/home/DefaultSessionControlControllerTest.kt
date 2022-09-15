@@ -71,8 +71,11 @@ import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 import org.mozilla.fenix.home.recentbookmarks.RecentBookmark
 import org.mozilla.fenix.home.recenttabs.RecentTab
 import org.mozilla.fenix.home.sessioncontrol.DefaultSessionControlController
+import org.mozilla.fenix.onboarding.WallpaperOnboardingDialogFragment.Companion.THUMBNAILS_SELECTION_COUNT
 import org.mozilla.fenix.settings.SupportUtils
 import org.mozilla.fenix.utils.Settings
+import org.mozilla.fenix.wallpapers.Wallpaper
+import org.mozilla.fenix.wallpapers.WallpaperState
 import mozilla.components.feature.tab.collections.Tab as ComponentTab
 
 @RunWith(FenixRobolectricTestRunner::class) // For gleanTestRule
@@ -879,6 +882,61 @@ class DefaultSessionControlControllerTest {
     }
 
     @Test
+    fun `GIVEN exactly the required amount of downloaded thumbnails with no errors WHEN handling wallpaper dialog THEN dialog is shown`() {
+        val wallpaperState = WallpaperState.default.copy(
+            availableWallpapers = makeFakeRemoteWallpapers(
+                THUMBNAILS_SELECTION_COUNT,
+                false,
+            ),
+        )
+        assert(createController().handleShowWallpapersOnboardingDialog(wallpaperState))
+    }
+
+    @Test
+    fun `GIVEN more than required amount of downloaded thumbnails with no errors WHEN handling wallpaper dialog THEN dialog is shown`() {
+        val wallpaperState = WallpaperState.default.copy(
+            availableWallpapers = makeFakeRemoteWallpapers(
+                THUMBNAILS_SELECTION_COUNT,
+                false,
+            ),
+        )
+        assert(createController().handleShowWallpapersOnboardingDialog(wallpaperState))
+    }
+
+    @Test
+    fun `GIVEN more than required amount of downloaded thumbnails with some errors WHEN handling wallpaper dialog THEN dialog is shown`() {
+        val wallpaperState = WallpaperState.default.copy(
+            availableWallpapers = makeFakeRemoteWallpapers(
+                THUMBNAILS_SELECTION_COUNT + 2,
+                true,
+            ),
+        )
+        assert(createController().handleShowWallpapersOnboardingDialog(wallpaperState))
+    }
+
+    @Test
+    fun `GIVEN fewer than the required amount of downloaded thumbnails WHEN handling wallpaper dialog THEN the dialog is not shown`() {
+        val wallpaperState = WallpaperState.default.copy(
+            availableWallpapers = makeFakeRemoteWallpapers(
+                THUMBNAILS_SELECTION_COUNT - 1,
+                false,
+            ),
+        )
+        assert(!createController().handleShowWallpapersOnboardingDialog(wallpaperState))
+    }
+
+    @Test
+    fun `GIVEN exactly the required amount of downloaded thumbnails with errors WHEN handling wallpaper dialog THEN the dialog is not shown`() {
+        val wallpaperState = WallpaperState.default.copy(
+            availableWallpapers = makeFakeRemoteWallpapers(
+                THUMBNAILS_SELECTION_COUNT,
+                true,
+            ),
+        )
+        assert(!createController().handleShowWallpapersOnboardingDialog(wallpaperState))
+    }
+
+    @Test
     fun handleStartBrowsingClicked() {
         var hideOnboardingInvoked = false
         createController(hideOnboarding = { hideOnboardingInvoked = true }).handleStartBrowsingClicked()
@@ -1255,4 +1313,35 @@ class DefaultSessionControlControllerTest {
             showTabTray = showTabTray,
         )
     }
+
+    private fun makeFakeRemoteWallpapers(size: Int, hasError: Boolean): List<Wallpaper> {
+        val list = mutableListOf<Wallpaper>()
+        for (i in 0 until size) {
+            if (hasError && i == 0) {
+                list.add(makeFakeRemoteWallpaper(Wallpaper.ImageFileState.Error))
+            } else {
+                list.add(makeFakeRemoteWallpaper(Wallpaper.ImageFileState.Downloaded))
+            }
+        }
+        return list
+    }
+
+    private fun makeFakeRemoteWallpaper(
+        thumbnailFileState: Wallpaper.ImageFileState = Wallpaper.ImageFileState.Unavailable,
+    ) = Wallpaper(
+        name = "name",
+        collection = Wallpaper.Collection(
+            name = Wallpaper.firefoxCollectionName,
+            heading = null,
+            description = null,
+            availableLocales = null,
+            startDate = null,
+            endDate = null,
+            learnMoreUrl = null,
+        ),
+        textColor = null,
+        cardColor = null,
+        thumbnailFileState = thumbnailFileState,
+        assetsFileState = Wallpaper.ImageFileState.Unavailable,
+    )
 }

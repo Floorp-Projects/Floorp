@@ -56,7 +56,7 @@ import org.mozilla.fenix.gleanplumb.MessageController
 import org.mozilla.fenix.home.HomeFragment
 import org.mozilla.fenix.home.HomeFragmentDirections
 import org.mozilla.fenix.home.Mode
-import org.mozilla.fenix.onboarding.WallpaperOnboardingDialogFragment
+import org.mozilla.fenix.onboarding.WallpaperOnboardingDialogFragment.Companion.THUMBNAILS_SELECTION_COUNT
 import org.mozilla.fenix.settings.SupportUtils
 import org.mozilla.fenix.settings.SupportUtils.SumoTopic.PRIVATE_BROWSING_MYTHS
 import org.mozilla.fenix.utils.Settings
@@ -510,16 +510,19 @@ class DefaultSessionControlController(
     }
 
     override fun handleShowWallpapersOnboardingDialog(state: WallpaperState): Boolean {
-        if (state.availableWallpapers.all { it.thumbnailFileState == Wallpaper.ImageFileState.Downloaded } &&
-            state.availableWallpapers.size >= WallpaperOnboardingDialogFragment.THUMBNAILS_COUNT
-        ) {
-            navController.nav(
-                R.id.homeFragment,
-                HomeFragmentDirections.actionGlobalWallpaperOnboardingDialog(),
-            )
-            return true
+        return state.availableWallpapers.filter { wallpaper ->
+            wallpaper.thumbnailFileState == Wallpaper.ImageFileState.Downloaded
+        }.size.let { downloadedCount ->
+            // We only display the dialog if enough thumbnails have been downloaded for it.
+            downloadedCount >= THUMBNAILS_SELECTION_COUNT
+        }.also { showOnboarding ->
+            if (showOnboarding) {
+                navController.nav(
+                    R.id.homeFragment,
+                    HomeFragmentDirections.actionGlobalWallpaperOnboardingDialog(),
+                )
+            }
         }
-        return false
     }
 
     override fun handleReadPrivacyNoticeClicked() {

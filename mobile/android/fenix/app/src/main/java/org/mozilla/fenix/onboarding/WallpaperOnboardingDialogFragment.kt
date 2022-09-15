@@ -82,7 +82,7 @@ class WallpaperOnboardingDialogFragment : BottomSheetDialogFragment() {
         setContent {
             FirefoxTheme {
                 val wallpapers = appStore.observeAsComposableState { state ->
-                    state.wallpaperState.availableWallpapers.take(THUMBNAILS_COUNT)
+                    state.wallpaperState.availableWallpapers.take(THUMBNAILS_SELECTION_COUNT)
                 }.value ?: listOf()
                 val currentWallpaper = appStore.observeAsComposableState { state ->
                     state.wallpaperState.currentWallpaper
@@ -127,6 +127,6 @@ class WallpaperOnboardingDialogFragment : BottomSheetDialogFragment() {
     }
 
     companion object {
-        const val THUMBNAILS_COUNT = 6
+        const val THUMBNAILS_SELECTION_COUNT = 6
     }
 }
