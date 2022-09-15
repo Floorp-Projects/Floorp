@@ -17,10 +17,6 @@ xul|menulist[disabled="true"] {
   background-color: var(--in-content-button-background);
 }
 
-xul|menulist:-moz-focusring > xul|*.menulist-label-box {
-  outline: none !important;
-}
-
 html|button {
   /* XUL button min-width */
   min-width: 6.3em;

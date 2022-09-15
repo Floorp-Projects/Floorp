@@ -387,13 +387,13 @@ html|button {
   border: none;
 }
 
-button:-moz-focusring,
-html|select:-moz-focusring,
-html|input:is([type="checkbox"], [type="color"], [type="radio"]):-moz-focusring,
-xul|menulist:-moz-focusring,
-xul|checkbox:not([native]):-moz-focusring > .checkbox-check, /* :not([native]) to win specificity over checkbox.css */
+button:focus-visible,
+html|select:focus-visible,
+html|input:is([type="checkbox"], [type="color"], [type="radio"]):focus-visible,
+xul|menulist:focus-visible,
+xul|checkbox:not([native]):focus-visible > .checkbox-check, /* :not([native]) to win specificity over checkbox.css */
 xul|radio[focused="true"] > .radio-check,
-xul|tab:-moz-focusring > .tab-middle > .tab-text {
+xul|tab:focus-visible > .tab-middle > .tab-text {
   box-shadow: none;
   /* Don't set `var(--in-content-focus-outline)` here to allow more complicated UIs
      to use a different color when needed */
@@ -675,8 +675,8 @@ button.text-link:is(:not([disabled="true"]), :enabled):hover:active {
   text-decoration: none;
 }
 
-html|a:-moz-focusring,
-.text-link:-moz-focusring {
+html|a:focus-visible,
+.text-link:focus-visible {
   outline: var(--in-content-focus-outline);
   outline-offset: 1px;
   border-radius: 4px;
@@ -942,13 +942,13 @@ html|*#categories > html|*.category:dir(rtl) {
   }
 }
 
-#categories[keyboard-navigation="true"]:-moz-focusring > .category[current],
-#categories > .category:-moz-focusring {
+#categories[keyboard-navigation="true"]:focus-visible > .category[current],
+#categories > .category:focus-visible {
   outline: var(--in-content-focus-outline);
   outline-offset: var(--in-content-focus-outline-inset);
 }
 
-html|*#categories[last-input-type="mouse"] > html|button.category:-moz-focusring {
+html|*#categories[last-input-type="mouse"] > html|button.category:focus-visible {
   outline: none;
 }
 
@@ -1316,7 +1316,7 @@ xul|*.sidebar-footer-link {
   color: var(--in-content-button-text-color-hover);
 }
 
-.sidebar-footer-link:-moz-focusring {
+.sidebar-footer-link:focus-visible {
   outline: var(--in-content-focus-outline);
   outline-offset: var(--in-content-focus-outline-inset);
 }
