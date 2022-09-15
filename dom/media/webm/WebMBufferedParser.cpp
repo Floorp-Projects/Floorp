@@ -69,8 +69,9 @@ WebMBufferedParser::WebMBufferedParser(int64_t aOffset)
   }
 }
 
-bool WebMBufferedParser::Append(const unsigned char* aBuffer, uint32_t aLength,
-                                nsTArray<WebMTimeDataOffset>& aMapping) {
+MediaResult WebMBufferedParser::Append(const unsigned char* aBuffer,
+                                       uint32_t aLength,
+                                       nsTArray<WebMTimeDataOffset>& aMapping) {
   static const uint32_t EBML_ID = 0x1a45dfa3;
   static const uint32_t SEGMENT_ID = 0x18538067;
   static const uint32_t SEGINFO_ID = 0x1549a966;
@@ -102,8 +103,10 @@ bool WebMBufferedParser::Append(const unsigned char* aBuffer, uint32_t aLength,
         break;
       case READ_ELEMENT_SIZE:
         if (mVInt.mLength > mEBMLMaxIdLength) {
-          WEBM_DEBUG("Invalid element id of length %" PRIu64, mVInt.mLength);
-          return false;
+          nsPrintfCString detail("Invalid element id of length %" PRIu64,
+                                 mVInt.mLength);
+          WEBM_DEBUG("%s", detail.get());
+          return MediaResult(NS_ERROR_FAILURE, detail);
         }
         mVIntRaw = false;
         mElement.mID = mVInt;
@@ -124,8 +127,10 @@ bool WebMBufferedParser::Append(const unsigned char* aBuffer, uint32_t aLength,
         break;
       case PARSE_ELEMENT:
         if (mVInt.mLength > mEBMLMaxSizeLength) {
-          WEBM_DEBUG("Invalid element size of length %" PRIu64, mVInt.mLength);
-          return false;
+          nsPrintfCString detail("Invalid element size of length %" PRIu64,
+                                 mVInt.mLength);
+          WEBM_DEBUG("%s", detail.get());
+          return MediaResult(NS_ERROR_FAILURE, detail);
         }
         mElement.mSize = mVInt;
         switch (mElement.mID.mValue) {
@@ -173,7 +178,10 @@ bool WebMBufferedParser::Append(const unsigned char* aBuffer, uint32_t aLength,
               WEBM_DEBUG(
                   "The Timecode element must appear before any Block or "
                   "SimpleBlock elements in a Cluster");
-              return false;
+              return MediaResult(
+                  NS_ERROR_FAILURE,
+                  "The Timecode element must appear before any Block or "
+                  "SimpleBlock elements in a Cluster");
             }
             mBlockSize = mElement.mSize.mValue;
             mBlockTimecode = 0;
@@ -192,21 +200,23 @@ bool WebMBufferedParser::Append(const unsigned char* aBuffer, uint32_t aLength,
             if (int64_t currentOffset = mCurrentOffset + (p - aBuffer);
                 currentOffset < mLastInitStartOffset ||
                 currentOffset >= mLastInitStartOffset + mLastInitSize) {
-              WEBM_DEBUG("Unexpected %s outside init segment",
-                         mElement.mID.mValue == EBML_MAX_ID_LENGTH_ID
-                             ? "EBMLMaxIdLength"
-                             : "EBMLMaxSizeLength");
-              return false;
+              nsPrintfCString str("Unexpected %s outside init segment",
+                                  mElement.mID.mValue == EBML_MAX_ID_LENGTH_ID
+                                      ? "EBMLMaxIdLength"
+                                      : "EBMLMaxSizeLength");
+              WEBM_DEBUG("%s", str.get());
+              return MediaResult(NS_ERROR_FAILURE, str);
             }
             if (mElement.mSize.mValue > 8) {
               // https://www.rfc-editor.org/rfc/rfc8794.html (EBML):
               //   An Unsigned Integer Element MUST declare a length from zero
               //   to eight octets.
-              WEBM_DEBUG("Bad length of %s size",
-                         mElement.mID.mValue == EBML_MAX_ID_LENGTH_ID
-                             ? "EBMLMaxIdLength"
-                             : "EBMLMaxSizeLength");
-              return false;
+              nsPrintfCString str("Bad length of %s size",
+                                  mElement.mID.mValue == EBML_MAX_ID_LENGTH_ID
+                                      ? "EBMLMaxIdLength"
+                                      : "EBMLMaxSizeLength");
+              WEBM_DEBUG("%s", str.get());
+              return MediaResult(NS_ERROR_FAILURE, str);
             }
             mVInt = VInt();
             mVIntLeft = mElement.mSize.mValue;
@@ -252,7 +262,8 @@ bool WebMBufferedParser::Append(const unsigned char* aBuffer, uint32_t aLength,
       case READ_TIMECODESCALE:
         if (!mGotTimecodeScale) {
           WEBM_DEBUG("Should get the SegmentInfo first");
-          return false;
+          return MediaResult(NS_ERROR_FAILURE,
+                             "TimecodeScale appeared before SegmentInfo");
         }
         mTimecodeScale = mVInt.mValue;
         mState = READ_ELEMENT_ID;
@@ -280,7 +291,8 @@ bool WebMBufferedParser::Append(const unsigned char* aBuffer, uint32_t aLength,
                   mClusterTimecode >= uint16_t(abs(mBlockTimecode))) {
                 if (!mGotTimecodeScale) {
                   WEBM_DEBUG("Should get the TimecodeScale first");
-                  return false;
+                  return MediaResult(NS_ERROR_FAILURE,
+                                     "Timecode appeared before SegmentInfo");
                 }
                 uint64_t absTimecode = mClusterTimecode + mBlockTimecode;
                 absTimecode *= mTimecodeScale;
@@ -329,8 +341,10 @@ bool WebMBufferedParser::Append(const unsigned char* aBuffer, uint32_t aLength,
           //   Section 4 of [RFC8794] and can be between one and five octets
           //   long. Five-octet-long Element IDs are possible only if declared
           //   in the EBML header.
-          WEBM_DEBUG("Invalid EMBLMaxIdLength %" PRIu64, mVInt.mValue);
-          return false;
+          nsPrintfCString detail("Invalid EMBLMaxIdLength %" PRIu64,
+                                 mVInt.mValue);
+          WEBM_DEBUG("%s", detail.get());
+          return MediaResult(NS_ERROR_FAILURE, detail);
         }
         mEBMLMaxIdLength = mVInt.mValue;
         mState = READ_ELEMENT_ID;
@@ -348,8 +362,10 @@ bool WebMBufferedParser::Append(const unsigned char* aBuffer, uint32_t aLength,
           // (Matroska):
           //   The EBMLMaxSizeLength of the EBML Header MUST be between "1" and
           //   "8" inclusive.
-          WEBM_DEBUG("Invalid EMBLMaxSizeLength %" PRIu64, mVInt.mValue);
-          return false;
+          nsPrintfCString detail("Invalid EMBLMaxSizeLength %" PRIu64,
+                                 mVInt.mValue);
+          WEBM_DEBUG("%s", detail.get());
+          return MediaResult(NS_ERROR_FAILURE, detail);
         }
         mEBMLMaxSizeLength = mVInt.mValue;
         mState = READ_ELEMENT_ID;
@@ -387,7 +403,7 @@ bool WebMBufferedParser::Append(const unsigned char* aBuffer, uint32_t aLength,
   NS_ASSERTION(p == aBuffer + aLength, "Must have parsed to end of data.");
   mCurrentOffset += aLength;
 
-  return true;
+  return NS_OK;
 }
 
 int64_t WebMBufferedParser::EndSegmentOffset(int64_t aOffset) {

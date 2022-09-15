@@ -10,6 +10,7 @@
 #  include "nsTArray.h"
 #  include "mozilla/Mutex.h"
 #  include "MediaResource.h"
+#  include "MediaResult.h"
 
 namespace mozilla {
 
@@ -65,8 +66,8 @@ struct WebMBufferedParser {
   // Steps the parser through aLength bytes of data.  Always consumes
   // aLength bytes.  Updates mCurrentOffset before returning.
   // Returns false if an error was encountered.
-  bool Append(const unsigned char* aBuffer, uint32_t aLength,
-              nsTArray<WebMTimeDataOffset>& aMapping);
+  MediaResult Append(const unsigned char* aBuffer, uint32_t aLength,
+                     nsTArray<WebMTimeDataOffset>& aMapping);
 
   bool operator==(int64_t aOffset) const { return mCurrentOffset == aOffset; }
 
