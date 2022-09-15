@@ -149,7 +149,7 @@ private fun WallpaperGroupHeading(
                 ClickableSubstringLink(
                     text = text,
                     textColor = FirefoxTheme.colors.textSecondary,
-                    linkTextColor = FirefoxTheme.colors.textSecondary,
+                    linkTextColor = FirefoxTheme.colors.textAccent,
                     linkTextDecoration = TextDecoration.Underline,
                     clickableStartIndex = linkStartIndex,
                     clickableEndIndex = linkEndIndex,
