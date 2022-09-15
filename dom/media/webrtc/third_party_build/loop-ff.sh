@@ -6,6 +6,8 @@ LOOP_OUTPUT_LOG=~/log-loop-ff.txt
 # Print an Error message if `set -eE` causes the script to exit due to a failed command
 trap 'echo "*** ERROR *** $? $LINENO loop-ff did not complete successfully!" |& tee -a $LOOP_OUTPUT_LOG' ERR 
 
+source dom/media/webrtc/third_party_build/use_config_env.sh
+
 # If DEBUG_LOOP_FF is set all commands should be printed as they are executed
 if [ ! "x$DEBUG_LOOP_FF" = "x" ]; then
   set -x
