@@ -484,6 +484,9 @@
     <!-- Onboarding: Protection Title -->
     <string name="onboarding_protection_title">Privacidad que se adapta a cualquier situación</string>
 
+    <!-- Onboarding: Protection Description -->
+    <string name="onboarding_protection_description">Tatu kuku samu ña ntyeu, sama ña kunu ku ntyeu.</string>
+
     <!-- Onboarding: Start browsing -->
     <string name="onboarding_start_browsing">Kitsaà Ndaduku</string>
 
@@ -560,7 +563,17 @@
 
 
 
-  <!-- Text shown in prompts for GeckoView -->
+  <!-- Text shown in the "Your rights" screen.
+    %1$s will be replaced with the name of the app (e.g. Firefox Focus)
+    %2$s will be replaced with a URL linking to the MPL (e.g. https://www.mozilla.org/en-US/MPL/) -->
+    <string name="your_rights_content2"><![CDATA[%1$s está disponible para ti bajo los términos de la <a href="%2$s">Licencia Pública de Mozilla</a> y otras licencias de código abierto.]]></string>
+
+    <!-- Text shown in the "Your rights" screen.
+    %1$s will be replaced with the name of the app (e.g. Firefox Focus)
+    %2$s will be replaced with a URL linking to the trademark policy (e.g. https://www.mozilla.org/foundation/trademarks/policy/) -->
+    <string name="your_rights_content3"><![CDATA[Ma ku kuatyu´un marca a licencia tsa fundación Mozilla a inka ña´a, tana logos a sivi Mozilla, Firefox a %1$s. kuntyee nu <a href="%2$s">aquí</a>.]]></string>
+
+    <!-- Text shown in prompts for GeckoView -->
     <string name="gv_prompt_username_hint">Sivìi</string>
     <string name="gv_prompt_password_hint">Tu\'un seè</string>
     <string name="gv_prompt_clear">Stòo</string>
@@ -798,8 +811,16 @@
     <!-- Category of trackers (analytics) that can be blocked by Enhanced Tracking Protection -->
     <string name="analytics">Analítica</string>
 
+    <!-- Preference title for enhanced tracking protection settings -->
+    <string name="enhanced_tracking_protection">Chikavaa ña sau</string>
+    <!-- Enhanced tracking protection preference description when the tracking protection is disabled for this site-->
+    <string name="enhanced_tracking_protection_state_off">Las protecciones están desactivadas para este sitio</string>
+    <!-- Enhanced tracking protection preference description when the tracking protection is enabled for this site-->
+    <string name="enhanced_tracking_protection_state_on">Las protecciones están activadas para este sitio</string>
     <!-- Label that indicates a site is using a secure connection -->
     <string name="secure_connection">Conexión va´a</string>
+    <!-- Label that indicates a site is using a insecure connection -->
+    <string name="insecure_connection">Conexión va´a</string>
     <!-- Title for the list of trackers enhanced tracking ptotection can block-->
     <string name="trackers_and_scripts">Rastreadores y scripts a bloquear</string>
 
