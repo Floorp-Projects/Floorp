@@ -11,6 +11,7 @@
 #include "gtest/gtest.h"
 
 #include "mozilla/Attributes.h"
+#include "mozilla/gtest/MozAssertions.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/gfx/2D.h"
@@ -311,7 +312,7 @@ void WithFilterPipeline(Decoder* aDecoder, Func aFunc, bool aFinish,
                         const Configs&... aConfigs) {
   auto pipe = MakeUnique<typename detail::FilterPipeline<Configs...>::Type>();
   nsresult rv = pipe->Configure(aConfigs...);
-  ASSERT_TRUE(NS_SUCCEEDED(rv));
+  ASSERT_NS_SUCCEEDED(rv);
 
   aFunc(aDecoder, pipe.get());
 
@@ -344,7 +345,7 @@ void AssertConfiguringPipelineFails(Decoder* aDecoder,
   nsresult rv = pipe->Configure(aConfigs...);
 
   // Callers expect configuring the pipeline to fail.
-  ASSERT_TRUE(NS_FAILED(rv));
+  ASSERT_NS_FAILED(rv);
 
   RawAccessFrameRef currentFrame = aDecoder->GetCurrentFrameRef();
   if (currentFrame) {

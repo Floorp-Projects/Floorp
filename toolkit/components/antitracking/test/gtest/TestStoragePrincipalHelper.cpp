@@ -15,6 +15,7 @@
 #include "nsNetUtil.h"
 #include "nsStringFwd.h"
 
+#include "mozilla/gtest/MozAssertions.h"
 #include "mozilla/NullPrincipal.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/RefPtr.h"
@@ -105,13 +106,13 @@ TEST(TestStoragePrincipalHelper, TestCreateNullPrincipal)
   nsCOMPtr<nsIPrincipal> storagePrincipal;
   rv = StoragePrincipalHelper::Create(mockChannel, nullPrincipal, true,
                                       getter_AddRefs(storagePrincipal));
-  EXPECT_TRUE(NS_FAILED(rv)) << "Should fail for NullPrincipal";
+  EXPECT_NS_FAILED(rv) << "Should fail for NullPrincipal";
   EXPECT_FALSE(storagePrincipal);
 
   nsCOMPtr<nsIPrincipal> storagePrincipalSW;
   rv = StoragePrincipalHelper::CreatePartitionedPrincipalForServiceWorker(
       nullPrincipal, cookieJarSettings, getter_AddRefs(storagePrincipalSW));
-  EXPECT_TRUE(NS_FAILED(rv)) << "Should fail for NullPrincipal";
+  EXPECT_NS_FAILED(rv) << "Should fail for NullPrincipal";
   EXPECT_FALSE(storagePrincipal);
 }
 

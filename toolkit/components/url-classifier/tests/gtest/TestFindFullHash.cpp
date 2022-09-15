@@ -45,13 +45,13 @@ TEST(UrlClassifierFindFullHash, Request)
   nsresult rv;
   rv = urlUtil->MakeFindFullHashRequestV4(listNames, listStateArray,
                                           prefixArray, requestBase64);
-  ASSERT_TRUE(NS_SUCCEEDED(rv));
+  ASSERT_NS_SUCCEEDED(rv);
 
   // Base64 URL decode first.
   FallibleTArray<uint8_t> requestBinary;
   rv = Base64URLDecode(requestBase64, Base64URLDecodePaddingPolicy::Require,
                        requestBinary);
-  ASSERT_TRUE(NS_SUCCEEDED(rv));
+  ASSERT_NS_SUCCEEDED(rv);
 
   // Parse the FindFullHash binary and compare with the expected values.
   FindFullHashesRequest r;
@@ -72,7 +72,7 @@ TEST(UrlClassifierFindFullHash, Request)
     uint32_t expectedThreatType;
     rv =
         urlUtil->ConvertListNameToThreatType(listNames[i], &expectedThreatType);
-    ASSERT_TRUE(NS_SUCCEEDED(rv));
+    ASSERT_NS_SUCCEEDED(rv);
     ASSERT_EQ(threatInfo.threat_types(i), (int)expectedThreatType);
   }
 
@@ -156,7 +156,7 @@ class MyParseCallback final : public nsIUrlClassifierParseFindFullHashCallback {
     nsCString tableNames;
     nsresult rv =
         urlUtil->ConvertThreatTypeToListNames(expected.mThreatType, tableNames);
-    ASSERT_TRUE(NS_SUCCEEDED(rv));
+    ASSERT_NS_SUCCEEDED(rv);
     ASSERT_TRUE(aTableNames.Equals(tableNames));
 
     VerifyDuration(aPerHashCacheDuration, expected.mPerHashCacheDuration);

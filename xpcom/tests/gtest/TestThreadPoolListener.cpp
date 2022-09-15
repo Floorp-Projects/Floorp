@@ -15,6 +15,7 @@
 #include "prthread.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/gtest/MozAssertions.h"
 
 #include "mozilla/ReentrantMonitor.h"
 
@@ -136,19 +137,19 @@ TEST(ThreadPoolListener, Test)
   nsCOMPtr<nsIThreadPool> pool = new nsThreadPool();
 
   rv = pool->SetThreadLimit(NUMBER_OF_THREADS);
-  ASSERT_TRUE(NS_SUCCEEDED(rv));
+  ASSERT_NS_SUCCEEDED(rv);
 
   rv = pool->SetIdleThreadLimit(NUMBER_OF_THREADS);
-  ASSERT_TRUE(NS_SUCCEEDED(rv));
+  ASSERT_NS_SUCCEEDED(rv);
 
   rv = pool->SetIdleThreadTimeout(IDLE_THREAD_TIMEOUT);
-  ASSERT_TRUE(NS_SUCCEEDED(rv));
+  ASSERT_NS_SUCCEEDED(rv);
 
   nsCOMPtr<nsIThreadPoolListener> listener = new Listener();
   ASSERT_TRUE(listener);
 
   rv = pool->SetListener(listener);
-  ASSERT_TRUE(NS_SUCCEEDED(rv));
+  ASSERT_NS_SUCCEEDED(rv);
 
   {
     ReentrantMonitorAutoEnter mon(*gReentrantMonitor);
@@ -158,7 +159,7 @@ TEST(ThreadPoolListener, Test)
       ASSERT_TRUE(runnable);
 
       rv = pool->Dispatch(runnable, NS_DISPATCH_NORMAL);
-      ASSERT_TRUE(NS_SUCCEEDED(rv));
+      ASSERT_NS_SUCCEEDED(rv);
     }
 
     gAllRunnablesPosted = true;
@@ -173,7 +174,7 @@ TEST(ThreadPoolListener, Test)
   }
 
   rv = pool->Shutdown();
-  ASSERT_TRUE(NS_SUCCEEDED(rv));
+  ASSERT_NS_SUCCEEDED(rv);
 
   {
     ReentrantMonitorAutoEnter mon(*gReentrantMonitor);

@@ -19,6 +19,7 @@
 #include "prenv.h"
 #include "prio.h"
 #include "prprf.h"
+#include "mozilla/gtest/MozAssertions.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/Printf.h"
 #include "mozilla/UniquePtr.h"
@@ -83,18 +84,18 @@ TEST_F(TestStartupCache, StartupWriteRead) {
   uint32_t len;
 
   rv = sc->PutBuffer(id, UniquePtr<char[]>(strdup(buf)), strlen(buf) + 1);
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  EXPECT_NS_SUCCEEDED(rv);
 
   rv = sc->GetBuffer(id, &outbuf, &len);
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  EXPECT_NS_SUCCEEDED(rv);
   EXPECT_STREQ(buf, outbuf);
 
   rv = sc->ResetStartupWriteTimer();
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  EXPECT_NS_SUCCEEDED(rv);
   WaitForStartupTimer();
 
   rv = sc->GetBuffer(id, &outbuf, &len);
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  EXPECT_NS_SUCCEEDED(rv);
   EXPECT_STREQ(buf, outbuf);
 }
 
@@ -108,7 +109,7 @@ TEST_F(TestStartupCache, WriteInvalidateRead) {
   ASSERT_TRUE(sc);
 
   rv = sc->PutBuffer(id, UniquePtr<char[]>(strdup(buf)), strlen(buf) + 1);
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  EXPECT_NS_SUCCEEDED(rv);
 
   sc->InvalidateCache();
 
@@ -123,7 +124,7 @@ TEST_F(TestStartupCache, WriteObject) {
 
   constexpr auto spec = "http://www.mozilla.org"_ns;
   rv = NS_MutateURI(NS_SIMPLEURIMUTATOR_CONTRACTID).SetSpec(spec).Finalize(obj);
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  EXPECT_NS_SUCCEEDED(rv);
 
   StartupCache* sc = StartupCache::GetSingleton();
 
@@ -137,7 +138,7 @@ TEST_F(TestStartupCache, WriteObject) {
   ASSERT_TRUE(storageStream);
 
   rv = storageStream->Init(256, (uint32_t)-1);
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  EXPECT_NS_SUCCEEDED(rv);
 
   nsCOMPtr<nsIObjectOutputStream> objectOutput =
       do_CreateInstance("@mozilla.org/binaryoutputstream;1");
@@ -146,11 +147,11 @@ TEST_F(TestStartupCache, WriteObject) {
   nsCOMPtr<nsIOutputStream> outputStream = do_QueryInterface(storageStream);
 
   rv = objectOutput->SetOutputStream(outputStream);
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  EXPECT_NS_SUCCEEDED(rv);
 
   nsCOMPtr<nsISupports> objQI(do_QueryInterface(obj));
   rv = objectOutput->WriteObject(objQI, true);
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  EXPECT_NS_SUCCEEDED(rv);
 
   UniquePtr<char[]> buf;
   uint32_t len;
@@ -159,26 +160,26 @@ TEST_F(TestStartupCache, WriteObject) {
   // Since this is a post-startup write, it should be written and
   // available.
   rv = sc->PutBuffer(id, std::move(buf), len);
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  EXPECT_NS_SUCCEEDED(rv);
 
   const char* buf2;
   uint32_t len2;
   nsCOMPtr<nsIObjectInputStream> objectInput;
   rv = sc->GetBuffer(id, &buf2, &len2);
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  EXPECT_NS_SUCCEEDED(rv);
 
   rv = NewObjectInputStreamFromBuffer(buf2, len2, getter_AddRefs(objectInput));
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  EXPECT_NS_SUCCEEDED(rv);
 
   nsCOMPtr<nsISupports> deserialized;
   rv = objectInput->ReadObject(true, getter_AddRefs(deserialized));
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  EXPECT_NS_SUCCEEDED(rv);
 
   nsCOMPtr<nsIURI> uri(do_QueryInterface(deserialized));
   ASSERT_TRUE(uri);
 
   nsCString outSpec;
   rv = uri->GetSpec(outSpec);
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  EXPECT_NS_SUCCEEDED(rv);
   ASSERT_TRUE(outSpec.Equals(spec));
 }

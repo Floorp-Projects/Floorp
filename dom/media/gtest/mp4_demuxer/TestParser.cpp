@@ -7,6 +7,7 @@
 #include "js/Conversions.h"
 #include "MediaData.h"
 #include "mozilla/ArrayUtils.h"
+#include "mozilla/gtest/MozAssertions.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Tuple.h"
 #include "BufferStream.h"
@@ -807,7 +808,7 @@ TEST_F(MP4MetadataTelemetryFixture, Telemetry) {
 
     MP4Metadata metadata(stream);
     nsresult res = metadata.Parse();
-    EXPECT_TRUE(NS_SUCCEEDED(res));
+    EXPECT_NS_SUCCEEDED(res);
     auto audioTrackCount = metadata.GetNumberTracks(TrackInfo::kAudioTrack);
     ASSERT_NE(audioTrackCount.Ref(), MP4Metadata::NumberTracksError());
     auto videoTrackCount = metadata.GetNumberTracks(TrackInfo::kVideoTrack);

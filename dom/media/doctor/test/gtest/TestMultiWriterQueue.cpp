@@ -7,6 +7,7 @@
 #include "MultiWriterQueue.h"
 
 #include "DDTimeStamp.h"
+#include "mozilla/gtest/MozAssertions.h"
 #include "mozilla/Assertions.h"
 #include "nsDeque.h"
 #include "nsIThread.h"
@@ -110,7 +111,7 @@ static void TestMultiWriterQueueMT(int aWriterThreads, int aReaderThreads,
     if (k < aReaderThreads) {
       nsCOMPtr<nsIThread> t;
       nsresult rv = NS_NewNamedThread("MWQThread", getter_AddRefs(t));
-      EXPECT_TRUE(NS_SUCCEEDED(rv));
+      EXPECT_NS_SUCCEEDED(rv);
       NS_ADDREF(array[k] = t);
     } else {
       nsCOMPtr<nsIThread> t;
@@ -129,7 +130,7 @@ static void TestMultiWriterQueueMT(int aWriterThreads, int aReaderThreads,
         ++pushThreadsCompleted;
       });
       nsresult rv = NS_NewNamedThread("MWQThread", getter_AddRefs(t), r);
-      EXPECT_TRUE(NS_SUCCEEDED(rv));
+      EXPECT_NS_SUCCEEDED(rv);
       NS_ADDREF(array[k] = t);
     }
   }

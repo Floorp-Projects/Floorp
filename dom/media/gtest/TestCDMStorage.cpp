@@ -10,6 +10,7 @@
 #include "GMPTestMonitor.h"
 #include "MediaResult.h"
 #include "gtest/gtest.h"
+#include "mozilla/gtest/MozAssertions.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/SchedulerGroup.h"
 #include "mozilla/SpinEventLoopUntil.h"
@@ -27,7 +28,7 @@ static already_AddRefed<nsIThread> GetGMPThread() {
   RefPtr<GeckoMediaPluginService> service =
       GeckoMediaPluginService::GetGeckoMediaPluginService();
   nsCOMPtr<nsIThread> thread;
-  EXPECT_TRUE(NS_SUCCEEDED(service->GetThread(getter_AddRefs(thread))));
+  EXPECT_NS_SUCCEEDED(service->GetThread(getter_AddRefs(thread)));
   return thread.forget();
 }
 
@@ -273,7 +274,7 @@ static bool IsCDMStorageIsEmpty() {
   MOZ_ASSERT(service);
   nsCOMPtr<nsIFile> storage;
   nsresult rv = service->GetStorageDir(getter_AddRefs(storage));
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  EXPECT_NS_SUCCEEDED(rv);
   bool exists = false;
   if (storage) {
     storage->Exists(&exists);
@@ -484,7 +485,7 @@ class CDMStorageTest {
     void operator()(nsIFile* aFile) {
       nsCString salt;
       nsresult rv = ReadSalt(aFile, salt);
-      ASSERT_TRUE(NS_SUCCEEDED(rv));
+      ASSERT_NS_SUCCEEDED(rv);
       if (!MatchOrigin(aFile, mNodeInfo->siteToForget, mNodeInfo->mPattern)) {
         mNodeInfo->mExpectedRemainingNodeIds.AppendElement(salt);
       }
@@ -536,7 +537,7 @@ class CDMStorageTest {
     void operator()(nsIFile* aFile) {
       nsCString salt;
       nsresult rv = ReadSalt(aFile, salt);
-      ASSERT_TRUE(NS_SUCCEEDED(rv));
+      ASSERT_NS_SUCCEEDED(rv);
       // Shouldn't match the origin if we clear correctly.
       EXPECT_FALSE(
           MatchOrigin(aFile, mNodeInfo->siteToForget, mNodeInfo->mPattern))
@@ -565,7 +566,7 @@ class CDMStorageTest {
     void operator()(nsIFile* aFile) {
       nsCString salt;
       nsresult rv = aFile->GetNativeLeafName(salt);
-      ASSERT_TRUE(NS_SUCCEEDED(rv));
+      ASSERT_NS_SUCCEEDED(rv);
       EXPECT_TRUE(mExpectedRemainingNodeIds.RemoveElement(salt))
           << "Failed to remove salt from expected remaining node ids. This "
              "indicates storage that should be forgotten is still persisted!";
@@ -583,10 +584,10 @@ class CDMStorageTest {
   void TestForgetThisSite_Verify(UniquePtr<NodeInfo>&& aSiteInfo) {
     nsresult rv =
         EnumerateCDMStorageDir("id"_ns, NodeIdVerifier(aSiteInfo.get()));
-    EXPECT_TRUE(NS_SUCCEEDED(rv));
+    EXPECT_NS_SUCCEEDED(rv);
 
     rv = EnumerateCDMStorageDir("storage"_ns, StorageVerifier(aSiteInfo.get()));
-    EXPECT_TRUE(NS_SUCCEEDED(rv));
+    EXPECT_NS_SUCCEEDED(rv);
   }
 
   /**
@@ -651,7 +652,7 @@ class CDMStorageTest {
     void operator()(nsIFile* aFile) {
       nsCString salt;
       nsresult rv = ReadSalt(aFile, salt);
-      ASSERT_TRUE(NS_SUCCEEDED(rv));
+      ASSERT_NS_SUCCEEDED(rv);
       if (!MatchBaseDomain(aFile, mNodeInfo->baseDomainToForget)) {
         mNodeInfo->mExpectedRemainingNodeIds.AppendElement(salt);
       }
@@ -705,7 +706,7 @@ class CDMStorageTest {
     void operator()(nsIFile* aFile) {
       nsCString salt;
       nsresult rv = ReadSalt(aFile, salt);
-      ASSERT_TRUE(NS_SUCCEEDED(rv));
+      ASSERT_NS_SUCCEEDED(rv);
       // Shouldn't match the origin if we clear correctly.
       EXPECT_FALSE(MatchBaseDomain(aFile, mNodeInfo->baseDomainToForget))
           << "Found files persisted that match against a domain that should "
@@ -733,7 +734,7 @@ class CDMStorageTest {
     void operator()(nsIFile* aFile) {
       nsCString salt;
       nsresult rv = aFile->GetNativeLeafName(salt);
-      ASSERT_TRUE(NS_SUCCEEDED(rv));
+      ASSERT_NS_SUCCEEDED(rv);
       EXPECT_TRUE(mExpectedRemainingNodeIds.RemoveElement(salt))
           << "Failed to remove salt from expected remaining node ids. This "
              "indicates storage that should be forgotten is still persisted!";
@@ -754,11 +755,11 @@ class CDMStorageTest {
       UniquePtr<BaseDomainNodeInfo>&& aSiteInfo) {
     nsresult rv = EnumerateCDMStorageDir(
         "id"_ns, BaseDomainNodeIdVerifier(aSiteInfo.get()));
-    EXPECT_TRUE(NS_SUCCEEDED(rv));
+    EXPECT_NS_SUCCEEDED(rv);
 
     rv = EnumerateCDMStorageDir("storage"_ns,
                                 BaseDomainStorageVerifier(aSiteInfo.get()));
-    EXPECT_TRUE(NS_SUCCEEDED(rv));
+    EXPECT_NS_SUCCEEDED(rv);
   }
 
   /**
@@ -844,7 +845,7 @@ class CDMStorageTest {
   void TestClearRecentHistory1_Clear() {
     MaxMTimeFinder f;
     nsresult rv = EnumerateCDMStorageDir("id"_ns, f);
-    EXPECT_TRUE(NS_SUCCEEDED(rv));
+    EXPECT_NS_SUCCEEDED(rv);
 
     nsCOMPtr<nsIRunnable> r = NewRunnableMethod(
         "CDMStorageTest::TestClearRecentHistory_CheckEmpty", this,
@@ -856,7 +857,7 @@ class CDMStorageTest {
   void TestClearRecentHistory2_Clear() {
     MaxMTimeFinder f;
     nsresult rv = EnumerateCDMStorageDir("storage"_ns, f);
-    EXPECT_TRUE(NS_SUCCEEDED(rv));
+    EXPECT_NS_SUCCEEDED(rv);
 
     nsCOMPtr<nsIRunnable> r = NewRunnableMethod(
         "CDMStorageTest::TestClearRecentHistory_CheckEmpty", this,
@@ -868,7 +869,7 @@ class CDMStorageTest {
   void TestClearRecentHistory3_Clear() {
     MaxMTimeFinder f;
     nsresult rv = EnumerateCDMStorageDir("storage"_ns, f);
-    EXPECT_TRUE(NS_SUCCEEDED(rv));
+    EXPECT_NS_SUCCEEDED(rv);
 
     nsCOMPtr<nsIRunnable> r = NewRunnableMethod(
         "CDMStorageTest::TestClearRecentHistory_CheckNonEmpty", this,
@@ -890,13 +891,13 @@ class CDMStorageTest {
   void TestClearRecentHistory_CheckEmpty() {
     FileCounter c1;
     nsresult rv = EnumerateCDMStorageDir("id"_ns, c1);
-    EXPECT_TRUE(NS_SUCCEEDED(rv));
+    EXPECT_NS_SUCCEEDED(rv);
     // There should be no files under $profileDir/gmp/$platform/gmp-fake/id/
     EXPECT_EQ(c1.GetCount(), 0);
 
     FileCounter c2;
     rv = EnumerateCDMStorageDir("storage"_ns, c2);
-    EXPECT_TRUE(NS_SUCCEEDED(rv));
+    EXPECT_NS_SUCCEEDED(rv);
     // There should be no files under
     // $profileDir/gmp/$platform/gmp-fake/storage/
     EXPECT_EQ(c2.GetCount(), 0);
@@ -907,14 +908,14 @@ class CDMStorageTest {
   void TestClearRecentHistory_CheckNonEmpty() {
     FileCounter c1;
     nsresult rv = EnumerateCDMStorageDir("id"_ns, c1);
-    EXPECT_TRUE(NS_SUCCEEDED(rv));
+    EXPECT_NS_SUCCEEDED(rv);
     // There should be one directory under
     // $profileDir/gmp/$platform/gmp-fake/id/
     EXPECT_EQ(c1.GetCount(), 1);
 
     FileCounter c2;
     rv = EnumerateCDMStorageDir("storage"_ns, c2);
-    EXPECT_TRUE(NS_SUCCEEDED(rv));
+    EXPECT_NS_SUCCEEDED(rv);
     // There should be one directory under
     // $profileDir/gmp/$platform/gmp-fake/storage/
     EXPECT_EQ(c2.GetCount(), 1);
@@ -1219,14 +1220,14 @@ static nsresult CreateTestDirectory(nsCOMPtr<nsIFile>& aOut) {
 void TestMatchBaseDomain_MatchOrigin() {
   nsCOMPtr<nsIFile> testDir;
   nsresult rv = CreateTestDirectory(testDir);
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  EXPECT_NS_SUCCEEDED(rv);
 
   rv = WriteToFile(testDir, "origin"_ns,
                    "https://video.subdomain.removeme.github.io"_ns);
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  EXPECT_NS_SUCCEEDED(rv);
   rv = WriteToFile(testDir, "topLevelOrigin"_ns,
                    "https://embedder.example.com"_ns);
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  EXPECT_NS_SUCCEEDED(rv);
   bool result = MatchBaseDomain(testDir, "removeme.github.io"_ns);
   EXPECT_TRUE(result);
   testDir->Remove(true);
@@ -1235,14 +1236,14 @@ void TestMatchBaseDomain_MatchOrigin() {
 void TestMatchBaseDomain_MatchTLD() {
   nsCOMPtr<nsIFile> testDir;
   nsresult rv = CreateTestDirectory(testDir);
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  EXPECT_NS_SUCCEEDED(rv);
 
   rv = WriteToFile(testDir, "origin"_ns,
                    "https://video.example.com^userContextId=4"_ns);
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  EXPECT_NS_SUCCEEDED(rv);
   rv = WriteToFile(testDir, "topLevelOrigin"_ns,
                    "https://evil.web.megacorp.co.uk^privateBrowsingId=1"_ns);
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  EXPECT_NS_SUCCEEDED(rv);
   bool result = MatchBaseDomain(testDir, "megacorp.co.uk"_ns);
   EXPECT_TRUE(result);
   testDir->Remove(true);
@@ -1251,14 +1252,14 @@ void TestMatchBaseDomain_MatchTLD() {
 void TestMatchBaseDomain_NoMatch() {
   nsCOMPtr<nsIFile> testDir;
   nsresult rv = CreateTestDirectory(testDir);
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  EXPECT_NS_SUCCEEDED(rv);
 
   rv = WriteToFile(testDir, "origin"_ns,
                    "https://video.example.com^userContextId=4"_ns);
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  EXPECT_NS_SUCCEEDED(rv);
   rv = WriteToFile(testDir, "topLevelOrigin"_ns,
                    "https://evil.web.megacorp.co.uk^privateBrowsingId=1"_ns);
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  EXPECT_NS_SUCCEEDED(rv);
   bool result = MatchBaseDomain(testDir, "longer-example.com"_ns);
   EXPECT_FALSE(result);
   testDir->Remove(true);

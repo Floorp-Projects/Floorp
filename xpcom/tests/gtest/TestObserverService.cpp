@@ -13,6 +13,7 @@
 #include "nsString.h"
 #include "nsWeakReference.h"
 
+#include "mozilla/gtest/MozAssertions.h"
 #include "mozilla/RefPtr.h"
 
 #include "gtest/gtest.h"
@@ -132,7 +133,7 @@ TEST(ObserverService, RemoveObserver)
 
   // Remove from non-existent topic.
   nsresult rv = svc->RemoveObserver(a, "Bar");
-  ASSERT_TRUE(NS_FAILED(rv));
+  ASSERT_NS_FAILED(rv);
 
   // Remove a.
   testResult(svc->RemoveObserver(a, "Foo"));
@@ -142,7 +143,7 @@ TEST(ObserverService, RemoveObserver)
 
   // Attempt to remove c.
   rv = svc->RemoveObserver(c, "Foo");
-  ASSERT_TRUE(NS_FAILED(rv));
+  ASSERT_NS_FAILED(rv);
 }
 
 TEST(ObserverService, EnumerateEmpty)

@@ -69,7 +69,7 @@ class ImageSourceBuffer : public ::testing::Test {
 
  protected:
   void CheckedAppendToBuffer(const char* aData, size_t aLength) {
-    EXPECT_TRUE(NS_SUCCEEDED(mSourceBuffer->Append(aData, aLength)));
+    EXPECT_NS_SUCCEEDED(mSourceBuffer->Append(aData, aLength));
   }
 
   void CheckedAppendToBufferLastByteForLength(size_t aLength) {
@@ -236,7 +236,7 @@ TEST_F(ImageSourceBuffer, Append) {
   SourceBufferIterator iterator = mSourceBuffer->Iterator();
 
   // Write test data to the buffer.
-  EXPECT_TRUE(NS_SUCCEEDED(mSourceBuffer->ExpectLength(sizeof(mData))));
+  EXPECT_NS_SUCCEEDED(mSourceBuffer->ExpectLength(sizeof(mData)));
   CheckedAppendToBuffer(mData, sizeof(mData));
   CheckedCompleteBuffer(iterator, sizeof(mData));
 
@@ -258,7 +258,7 @@ TEST_F(ImageSourceBuffer, HugeAppendFails) {
   // Attempt to write a massive amount of data and verify that it fails. (We'd
   // get a buffer overrun during the test if it succeeds, but if it succeeds
   // that's the least of our problems.)
-  EXPECT_TRUE(NS_FAILED(mSourceBuffer->Append(mData, hugeSize)));
+  EXPECT_NS_FAILED(mSourceBuffer->Append(mData, hugeSize));
   EXPECT_TRUE(mSourceBuffer->IsComplete());
   CheckIteratorIsComplete(iterator, 0, 0, NS_ERROR_OUT_OF_MEMORY);
 }
@@ -273,7 +273,7 @@ TEST_F(ImageSourceBuffer, AppendFromInputStream) {
 
   // Figure out how much data we have.
   uint64_t length;
-  ASSERT_TRUE(NS_SUCCEEDED(inputStream->Available(&length)));
+  ASSERT_NS_SUCCEEDED(inputStream->Available(&length));
 
   // Write test data to the buffer.
   EXPECT_TRUE(
@@ -289,7 +289,7 @@ TEST_F(ImageSourceBuffer, AppendAfterComplete) {
   SourceBufferIterator iterator = mSourceBuffer->Iterator();
 
   // Write test data to the buffer.
-  EXPECT_TRUE(NS_SUCCEEDED(mSourceBuffer->ExpectLength(sizeof(mData))));
+  EXPECT_NS_SUCCEEDED(mSourceBuffer->ExpectLength(sizeof(mData)));
   CheckedAppendToBuffer(mData, sizeof(mData));
   CheckedCompleteBuffer(iterator, sizeof(mData));
 
@@ -299,7 +299,7 @@ TEST_F(ImageSourceBuffer, AppendAfterComplete) {
   CheckIteratorIsComplete(iterator, sizeof(mData));
 
   // Write more data to the completed buffer.
-  EXPECT_TRUE(NS_FAILED(mSourceBuffer->Append(mData, sizeof(mData))));
+  EXPECT_NS_FAILED(mSourceBuffer->Append(mData, sizeof(mData)));
 
   // Try to read with a new iterator and verify that the new data got ignored.
   SourceBufferIterator iterator2 = mSourceBuffer->Iterator();
@@ -337,7 +337,7 @@ TEST_F(ImageSourceBuffer, ExpectLengthAllocatesRequestedCapacity) {
   // byte. We expect this to still result in two chunks, because we trust the
   // initial guess of ExpectLength() but after that it will only allocate chunks
   // of at least MIN_CHUNK_CAPACITY bytes.
-  EXPECT_TRUE(NS_SUCCEEDED(mSourceBuffer->ExpectLength(1)));
+  EXPECT_NS_SUCCEEDED(mSourceBuffer->ExpectLength(1));
   CheckedAppendToBufferInChunks(10, SourceBuffer::MIN_CHUNK_CAPACITY);
   CheckedCompleteBuffer(iterator, SourceBuffer::MIN_CHUNK_CAPACITY);
 
@@ -357,7 +357,7 @@ TEST_F(ImageSourceBuffer, ExpectLengthGrowsAboveMinCapacity) {
   // this to result in only one chunk, because ExpectLength() allows us to
   // allocate a larger first chunk than MIN_CHUNK_CAPACITY bytes.
   const size_t length = 2 * SourceBuffer::MIN_CHUNK_CAPACITY;
-  EXPECT_TRUE(NS_SUCCEEDED(mSourceBuffer->ExpectLength(length)));
+  EXPECT_NS_SUCCEEDED(mSourceBuffer->ExpectLength(length));
   CheckedAppendToBufferInChunks(10, length);
 
   // Verify that the iterator sees a single chunk.
@@ -386,7 +386,7 @@ TEST_F(ImageSourceBuffer, HugeExpectLengthFails) {
   // Attempt to write a massive amount of data and verify that it fails. (We'd
   // get a buffer overrun during the test if it succeeds, but if it succeeds
   // that's the least of our problems.)
-  EXPECT_TRUE(NS_FAILED(mSourceBuffer->ExpectLength(hugeSize)));
+  EXPECT_NS_FAILED(mSourceBuffer->ExpectLength(hugeSize));
   EXPECT_TRUE(mSourceBuffer->IsComplete());
   CheckIteratorIsComplete(iterator, 0, 0, NS_ERROR_INVALID_ARG);
 }

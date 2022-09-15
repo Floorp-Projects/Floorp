@@ -7,6 +7,7 @@
 
 #include "js/RegExp.h"
 #include "mozilla/BinarySearch.h"
+#include "mozilla/gtest/MozAssertions.h"
 #include "mozilla/SpinEventLoopUntil.h"
 #include "mozilla/UntrustedModulesProcessor.h"
 #include "mozilla/WinDllServices.h"
@@ -164,11 +165,11 @@ class UntrustedModulesFixture : public TelemetryTestFixture {
     nsCOMPtr<nsIFile> file;
     EXPECT_TRUE(NS_SUCCEEDED(NS_GetSpecialDirectory(NS_OS_CURRENT_WORKING_DIR,
                                                     getter_AddRefs(file))));
-    EXPECT_TRUE(NS_SUCCEEDED(file->Append(aLeaf)));
+    EXPECT_NS_SUCCEEDED(file->Append(aLeaf));
     bool exists;
     EXPECT_TRUE(NS_SUCCEEDED(file->Exists(&exists)) && exists);
     nsString fullPath;
-    EXPECT_TRUE(NS_SUCCEEDED(file->GetPath(fullPath)));
+    EXPECT_NS_SUCCEEDED(file->GetPath(fullPath));
     return fullPath;
   }
 
@@ -208,7 +209,7 @@ class UntrustedModulesFixture : public TelemetryTestFixture {
 
     UntrustedModulesCollector collector;
     ModuleLoadCounter waitForOne({kTestModules[0]}, {1});
-    EXPECT_TRUE(NS_SUCCEEDED(collector.Collect(waitForOne)));
+    EXPECT_NS_SUCCEEDED(collector.Collect(waitForOne));
     EXPECT_TRUE(waitForOne.Remains({kTestModules[0]}, {0}));
     EXPECT_EQ(collector.Data().length(), 1U);
 
@@ -428,8 +429,8 @@ TEST_F(UntrustedModulesFixture, Serialize) {
   ValidateJSValue(kPattern, ArrayLength(kPattern) - 1,
                   [&backup1, &backup2](
                       Telemetry::UntrustedModulesDataSerializer& aSerializer) {
-                    EXPECT_TRUE(NS_SUCCEEDED(aSerializer.Add(backup1)));
-                    EXPECT_TRUE(NS_SUCCEEDED(aSerializer.Add(backup2)));
+                    EXPECT_NS_SUCCEEDED(aSerializer.Add(backup1));
+                    EXPECT_NS_SUCCEEDED(aSerializer.Add(backup2));
                   });
 }
 

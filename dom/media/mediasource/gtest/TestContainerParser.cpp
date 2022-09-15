@@ -8,6 +8,7 @@
 
 #include "ContainerParser.h"
 #include "mozilla/ArrayUtils.h"
+#include "mozilla/gtest/MozAssertions.h"
 
 using namespace mozilla;
 
@@ -44,7 +45,7 @@ TEST(ContainerParser, ADTSHeader)
 
   // Test a valid header.
   RefPtr<MediaByteBuffer> header = make_adts_header();
-  EXPECT_TRUE(NS_SUCCEEDED(parser->IsInitSegmentPresent(MediaSpan(header))));
+  EXPECT_NS_SUCCEEDED(parser->IsInitSegmentPresent(MediaSpan(header)));
 
   // Test variations.
   uint8_t save = header->ElementAt(1);
@@ -110,7 +111,7 @@ TEST(ContainerParser, ADTSBlankMedia)
 
   // Test the header only.
   RefPtr<MediaByteBuffer> header = make_adts_header();
-  EXPECT_TRUE(NS_SUCCEEDED(parser->IsInitSegmentPresent(MediaSpan(header))));
+  EXPECT_NS_SUCCEEDED(parser->IsInitSegmentPresent(MediaSpan(header)));
 
   // Test with the correct length of (invalid) frame data.
   size_t header_length = header->Length();

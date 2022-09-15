@@ -4,6 +4,7 @@
 #include "mozilla/dom/XMLDocument.h"
 #include "mozilla/dom/ReferrerPolicyBinding.h"
 #include "mozilla/FetchPreloader.h"
+#include "mozilla/gtest/MozAssertions.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/PreloadHashKey.h"
 #include "mozilla/SpinEventLoopUntil.h"
@@ -288,14 +289,14 @@ TEST(TestFetchPreloader, CacheNoneBeforeConsume)
                              mozilla::dom::ReferrerPolicy::_empty, doc)));
 
   RefPtr<FakeListener> listener = new FakeListener();
-  EXPECT_TRUE(NS_SUCCEEDED(preloader->AsyncConsume(listener)));
+  EXPECT_NS_SUCCEEDED(preloader->AsyncConsume(listener));
   EXPECT_FALSE(NS_SUCCEEDED(preloader->AsyncConsume(listener)));
 
-  EXPECT_TRUE(NS_SUCCEEDED(channel->Start()));
-  EXPECT_TRUE(NS_SUCCEEDED(channel->Data("one"_ns)));
-  EXPECT_TRUE(NS_SUCCEEDED(channel->Data("two"_ns)));
-  EXPECT_TRUE(NS_SUCCEEDED(channel->Data("three"_ns)));
-  EXPECT_TRUE(NS_SUCCEEDED(channel->Stop(NS_OK)));
+  EXPECT_NS_SUCCEEDED(channel->Start());
+  EXPECT_NS_SUCCEEDED(channel->Data("one"_ns));
+  EXPECT_NS_SUCCEEDED(channel->Data("two"_ns));
+  EXPECT_NS_SUCCEEDED(channel->Data("three"_ns));
+  EXPECT_NS_SUCCEEDED(channel->Stop(NS_OK));
 
   NS_DispatchToMainThread(NS_NewRunnableFunction("test", [&]() {
     EXPECT_TRUE(listener->mOnStart);
@@ -325,21 +326,21 @@ TEST(TestFetchPreloader, CacheStartBeforeConsume)
       preloader->OpenChannel(key, uri, mozilla::CORS_NONE,
                              mozilla::dom::ReferrerPolicy::_empty, doc)));
 
-  EXPECT_TRUE(NS_SUCCEEDED(channel->Start()));
+  EXPECT_NS_SUCCEEDED(channel->Start());
 
   RefPtr<FakeListener> listener = new FakeListener();
-  EXPECT_TRUE(NS_SUCCEEDED(preloader->AsyncConsume(listener)));
+  EXPECT_NS_SUCCEEDED(preloader->AsyncConsume(listener));
   EXPECT_FALSE(NS_SUCCEEDED(preloader->AsyncConsume(listener)));
 
   NS_DispatchToMainThread(NS_NewRunnableFunction("test", [&]() {
     EXPECT_TRUE(listener->mOnStart);
 
-    EXPECT_TRUE(NS_SUCCEEDED(channel->Data("one"_ns)));
-    EXPECT_TRUE(NS_SUCCEEDED(channel->Data("two"_ns)));
-    EXPECT_TRUE(NS_SUCCEEDED(channel->Data("three"_ns)));
+    EXPECT_NS_SUCCEEDED(channel->Data("one"_ns));
+    EXPECT_NS_SUCCEEDED(channel->Data("two"_ns));
+    EXPECT_NS_SUCCEEDED(channel->Data("three"_ns));
     EXPECT_TRUE(listener->mOnData.EqualsLiteral("onetwothree"));
 
-    EXPECT_TRUE(NS_SUCCEEDED(channel->Stop(NS_OK)));
+    EXPECT_NS_SUCCEEDED(channel->Stop(NS_OK));
     EXPECT_TRUE(listener->mOnStop && *listener->mOnStop == NS_OK);
 
     Yield();
@@ -365,21 +366,21 @@ TEST(TestFetchPreloader, CachePartOfDataBeforeConsume)
       preloader->OpenChannel(key, uri, mozilla::CORS_NONE,
                              mozilla::dom::ReferrerPolicy::_empty, doc)));
 
-  EXPECT_TRUE(NS_SUCCEEDED(channel->Start()));
-  EXPECT_TRUE(NS_SUCCEEDED(channel->Data("one"_ns)));
-  EXPECT_TRUE(NS_SUCCEEDED(channel->Data("two"_ns)));
+  EXPECT_NS_SUCCEEDED(channel->Start());
+  EXPECT_NS_SUCCEEDED(channel->Data("one"_ns));
+  EXPECT_NS_SUCCEEDED(channel->Data("two"_ns));
 
   RefPtr<FakeListener> listener = new FakeListener();
-  EXPECT_TRUE(NS_SUCCEEDED(preloader->AsyncConsume(listener)));
+  EXPECT_NS_SUCCEEDED(preloader->AsyncConsume(listener));
   EXPECT_FALSE(NS_SUCCEEDED(preloader->AsyncConsume(listener)));
 
   NS_DispatchToMainThread(NS_NewRunnableFunction("test", [&]() {
     EXPECT_TRUE(listener->mOnStart);
 
-    EXPECT_TRUE(NS_SUCCEEDED(channel->Data("three"_ns)));
+    EXPECT_NS_SUCCEEDED(channel->Data("three"_ns));
     EXPECT_TRUE(listener->mOnData.EqualsLiteral("onetwothree"));
 
-    EXPECT_TRUE(NS_SUCCEEDED(channel->Stop(NS_OK)));
+    EXPECT_NS_SUCCEEDED(channel->Stop(NS_OK));
     EXPECT_TRUE(listener->mOnStop && *listener->mOnStop == NS_OK);
 
     Yield();
@@ -405,21 +406,21 @@ TEST(TestFetchPreloader, CacheAllDataBeforeConsume)
       preloader->OpenChannel(key, uri, mozilla::CORS_NONE,
                              mozilla::dom::ReferrerPolicy::_empty, doc)));
 
-  EXPECT_TRUE(NS_SUCCEEDED(channel->Start()));
-  EXPECT_TRUE(NS_SUCCEEDED(channel->Data("one"_ns)));
-  EXPECT_TRUE(NS_SUCCEEDED(channel->Data("two"_ns)));
-  EXPECT_TRUE(NS_SUCCEEDED(channel->Data("three"_ns)));
+  EXPECT_NS_SUCCEEDED(channel->Start());
+  EXPECT_NS_SUCCEEDED(channel->Data("one"_ns));
+  EXPECT_NS_SUCCEEDED(channel->Data("two"_ns));
+  EXPECT_NS_SUCCEEDED(channel->Data("three"_ns));
 
   // Request consumation of the preload...
   RefPtr<FakeListener> listener = new FakeListener();
-  EXPECT_TRUE(NS_SUCCEEDED(preloader->AsyncConsume(listener)));
+  EXPECT_NS_SUCCEEDED(preloader->AsyncConsume(listener));
   EXPECT_FALSE(NS_SUCCEEDED(preloader->AsyncConsume(listener)));
 
   NS_DispatchToMainThread(NS_NewRunnableFunction("test", [&]() {
     EXPECT_TRUE(listener->mOnStart);
     EXPECT_TRUE(listener->mOnData.EqualsLiteral("onetwothree"));
 
-    EXPECT_TRUE(NS_SUCCEEDED(channel->Stop(NS_OK)));
+    EXPECT_NS_SUCCEEDED(channel->Stop(NS_OK));
     EXPECT_TRUE(listener->mOnStop && *listener->mOnStop == NS_OK);
 
     Yield();
@@ -445,14 +446,14 @@ TEST(TestFetchPreloader, CacheAllBeforeConsume)
       preloader->OpenChannel(key, uri, mozilla::CORS_NONE,
                              mozilla::dom::ReferrerPolicy::_empty, doc)));
 
-  EXPECT_TRUE(NS_SUCCEEDED(channel->Start()));
-  EXPECT_TRUE(NS_SUCCEEDED(channel->Data("one"_ns)));
-  EXPECT_TRUE(NS_SUCCEEDED(channel->Data("two"_ns)));
-  EXPECT_TRUE(NS_SUCCEEDED(channel->Data("three"_ns)));
-  EXPECT_TRUE(NS_SUCCEEDED(channel->Stop(NS_OK)));
+  EXPECT_NS_SUCCEEDED(channel->Start());
+  EXPECT_NS_SUCCEEDED(channel->Data("one"_ns));
+  EXPECT_NS_SUCCEEDED(channel->Data("two"_ns));
+  EXPECT_NS_SUCCEEDED(channel->Data("three"_ns));
+  EXPECT_NS_SUCCEEDED(channel->Stop(NS_OK));
 
   RefPtr<FakeListener> listener = new FakeListener();
-  EXPECT_TRUE(NS_SUCCEEDED(preloader->AsyncConsume(listener)));
+  EXPECT_NS_SUCCEEDED(preloader->AsyncConsume(listener));
   EXPECT_FALSE(NS_SUCCEEDED(preloader->AsyncConsume(listener)));
 
   NS_DispatchToMainThread(NS_NewRunnableFunction("test", [&]() {
@@ -484,14 +485,14 @@ TEST(TestFetchPreloader, CacheAllBeforeConsumeWithChannelError)
       preloader->OpenChannel(key, uri, mozilla::CORS_NONE,
                              mozilla::dom::ReferrerPolicy::_empty, doc)));
 
-  EXPECT_TRUE(NS_SUCCEEDED(channel->Start()));
-  EXPECT_TRUE(NS_SUCCEEDED(channel->Data("one"_ns)));
-  EXPECT_TRUE(NS_SUCCEEDED(channel->Data("two"_ns)));
-  EXPECT_TRUE(NS_SUCCEEDED(channel->Data("three"_ns)));
-  EXPECT_TRUE(NS_FAILED(channel->Stop(ERROR_ONSTOP)));
+  EXPECT_NS_SUCCEEDED(channel->Start());
+  EXPECT_NS_SUCCEEDED(channel->Data("one"_ns));
+  EXPECT_NS_SUCCEEDED(channel->Data("two"_ns));
+  EXPECT_NS_SUCCEEDED(channel->Data("three"_ns));
+  EXPECT_NS_FAILED(channel->Stop(ERROR_ONSTOP));
 
   RefPtr<FakeListener> listener = new FakeListener();
-  EXPECT_TRUE(NS_SUCCEEDED(preloader->AsyncConsume(listener)));
+  EXPECT_NS_SUCCEEDED(preloader->AsyncConsume(listener));
   EXPECT_FALSE(NS_SUCCEEDED(preloader->AsyncConsume(listener)));
 
   NS_DispatchToMainThread(NS_NewRunnableFunction("test", [&]() {
@@ -523,14 +524,14 @@ TEST(TestFetchPreloader, CacheAllBeforeConsumeWithChannelCancel)
       preloader->OpenChannel(key, uri, mozilla::CORS_NONE,
                              mozilla::dom::ReferrerPolicy::_empty, doc)));
 
-  EXPECT_TRUE(NS_SUCCEEDED(channel->Start()));
-  EXPECT_TRUE(NS_SUCCEEDED(channel->Data("one"_ns)));
-  EXPECT_TRUE(NS_SUCCEEDED(channel->Data("two"_ns)));
+  EXPECT_NS_SUCCEEDED(channel->Start());
+  EXPECT_NS_SUCCEEDED(channel->Data("one"_ns));
+  EXPECT_NS_SUCCEEDED(channel->Data("two"_ns));
   channel->Cancel(ERROR_CANCEL);
-  EXPECT_TRUE(NS_FAILED(channel->Stop(ERROR_CANCEL)));
+  EXPECT_NS_FAILED(channel->Stop(ERROR_CANCEL));
 
   RefPtr<FakeListener> listener = new FakeListener();
-  EXPECT_TRUE(NS_SUCCEEDED(preloader->AsyncConsume(listener)));
+  EXPECT_NS_SUCCEEDED(preloader->AsyncConsume(listener));
   EXPECT_FALSE(NS_SUCCEEDED(preloader->AsyncConsume(listener)));
 
   NS_DispatchToMainThread(NS_NewRunnableFunction("test", [&]() {
@@ -566,16 +567,16 @@ TEST(TestFetchPreloader, CacheAllBeforeConsumeThrowFromOnStartRequest)
       preloader->OpenChannel(key, uri, mozilla::CORS_NONE,
                              mozilla::dom::ReferrerPolicy::_empty, doc)));
 
-  EXPECT_TRUE(NS_SUCCEEDED(channel->Start()));
-  EXPECT_TRUE(NS_SUCCEEDED(channel->Data("one"_ns)));
-  EXPECT_TRUE(NS_SUCCEEDED(channel->Data("two"_ns)));
-  EXPECT_TRUE(NS_SUCCEEDED(channel->Data("three"_ns)));
-  EXPECT_TRUE(NS_SUCCEEDED(channel->Stop(NS_OK)));
+  EXPECT_NS_SUCCEEDED(channel->Start());
+  EXPECT_NS_SUCCEEDED(channel->Data("one"_ns));
+  EXPECT_NS_SUCCEEDED(channel->Data("two"_ns));
+  EXPECT_NS_SUCCEEDED(channel->Data("three"_ns));
+  EXPECT_NS_SUCCEEDED(channel->Stop(NS_OK));
 
   RefPtr<FakeListener> listener = new FakeListener();
   listener->mOnStartResult = ERROR_THROW;
 
-  EXPECT_TRUE(NS_SUCCEEDED(preloader->AsyncConsume(listener)));
+  EXPECT_NS_SUCCEEDED(preloader->AsyncConsume(listener));
   EXPECT_FALSE(NS_SUCCEEDED(preloader->AsyncConsume(listener)));
 
   NS_DispatchToMainThread(NS_NewRunnableFunction("test", [&]() {
@@ -606,16 +607,16 @@ TEST(TestFetchPreloader, CacheAllBeforeConsumeThrowFromOnDataAvailable)
       preloader->OpenChannel(key, uri, mozilla::CORS_NONE,
                              mozilla::dom::ReferrerPolicy::_empty, doc)));
 
-  EXPECT_TRUE(NS_SUCCEEDED(channel->Start()));
-  EXPECT_TRUE(NS_SUCCEEDED(channel->Data("one"_ns)));
-  EXPECT_TRUE(NS_SUCCEEDED(channel->Data("two"_ns)));
-  EXPECT_TRUE(NS_SUCCEEDED(channel->Data("three"_ns)));
-  EXPECT_TRUE(NS_SUCCEEDED(channel->Stop(NS_OK)));
+  EXPECT_NS_SUCCEEDED(channel->Start());
+  EXPECT_NS_SUCCEEDED(channel->Data("one"_ns));
+  EXPECT_NS_SUCCEEDED(channel->Data("two"_ns));
+  EXPECT_NS_SUCCEEDED(channel->Data("three"_ns));
+  EXPECT_NS_SUCCEEDED(channel->Stop(NS_OK));
 
   RefPtr<FakeListener> listener = new FakeListener();
   listener->mOnDataResult = ERROR_THROW;
 
-  EXPECT_TRUE(NS_SUCCEEDED(preloader->AsyncConsume(listener)));
+  EXPECT_NS_SUCCEEDED(preloader->AsyncConsume(listener));
   EXPECT_FALSE(NS_SUCCEEDED(preloader->AsyncConsume(listener)));
 
   NS_DispatchToMainThread(NS_NewRunnableFunction("test", [&]() {
@@ -646,16 +647,16 @@ TEST(TestFetchPreloader, CacheAllBeforeConsumeThrowFromOnStopRequest)
       preloader->OpenChannel(key, uri, mozilla::CORS_NONE,
                              mozilla::dom::ReferrerPolicy::_empty, doc)));
 
-  EXPECT_TRUE(NS_SUCCEEDED(channel->Start()));
-  EXPECT_TRUE(NS_SUCCEEDED(channel->Data("one"_ns)));
-  EXPECT_TRUE(NS_SUCCEEDED(channel->Data("two"_ns)));
-  EXPECT_TRUE(NS_SUCCEEDED(channel->Data("three"_ns)));
-  EXPECT_TRUE(NS_SUCCEEDED(channel->Stop(NS_OK)));
+  EXPECT_NS_SUCCEEDED(channel->Start());
+  EXPECT_NS_SUCCEEDED(channel->Data("one"_ns));
+  EXPECT_NS_SUCCEEDED(channel->Data("two"_ns));
+  EXPECT_NS_SUCCEEDED(channel->Data("three"_ns));
+  EXPECT_NS_SUCCEEDED(channel->Stop(NS_OK));
 
   RefPtr<FakeListener> listener = new FakeListener();
   listener->mOnStopResult = ERROR_THROW;
 
-  EXPECT_TRUE(NS_SUCCEEDED(preloader->AsyncConsume(listener)));
+  EXPECT_NS_SUCCEEDED(preloader->AsyncConsume(listener));
   EXPECT_FALSE(NS_SUCCEEDED(preloader->AsyncConsume(listener)));
 
   NS_DispatchToMainThread(NS_NewRunnableFunction("test", [&]() {
@@ -688,11 +689,11 @@ TEST(TestFetchPreloader, CacheAllBeforeConsumeCancelInOnStartRequest)
       preloader->OpenChannel(key, uri, mozilla::CORS_NONE,
                              mozilla::dom::ReferrerPolicy::_empty, doc)));
 
-  EXPECT_TRUE(NS_SUCCEEDED(channel->Start()));
-  EXPECT_TRUE(NS_SUCCEEDED(channel->Data("one"_ns)));
-  EXPECT_TRUE(NS_SUCCEEDED(channel->Data("two"_ns)));
-  EXPECT_TRUE(NS_SUCCEEDED(channel->Data("three"_ns)));
-  EXPECT_TRUE(NS_SUCCEEDED(channel->Stop(NS_OK)));
+  EXPECT_NS_SUCCEEDED(channel->Start());
+  EXPECT_NS_SUCCEEDED(channel->Data("one"_ns));
+  EXPECT_NS_SUCCEEDED(channel->Data("two"_ns));
+  EXPECT_NS_SUCCEEDED(channel->Data("three"_ns));
+  EXPECT_NS_SUCCEEDED(channel->Stop(NS_OK));
 
   RefPtr<FakeListener> listener = new FakeListener();
   listener->mCancelIn = FakeListener::OnStart;
@@ -700,7 +701,7 @@ TEST(TestFetchPreloader, CacheAllBeforeConsumeCancelInOnStartRequest)
   // status.
   listener->mOnStartResult = ERROR_THROW;
 
-  EXPECT_TRUE(NS_SUCCEEDED(preloader->AsyncConsume(listener)));
+  EXPECT_NS_SUCCEEDED(preloader->AsyncConsume(listener));
   EXPECT_FALSE(NS_SUCCEEDED(preloader->AsyncConsume(listener)));
 
   NS_DispatchToMainThread(NS_NewRunnableFunction("test", [&]() {
@@ -731,11 +732,11 @@ TEST(TestFetchPreloader, CacheAllBeforeConsumeCancelInOnDataAvailable)
       preloader->OpenChannel(key, uri, mozilla::CORS_NONE,
                              mozilla::dom::ReferrerPolicy::_empty, doc)));
 
-  EXPECT_TRUE(NS_SUCCEEDED(channel->Start()));
-  EXPECT_TRUE(NS_SUCCEEDED(channel->Data("one"_ns)));
-  EXPECT_TRUE(NS_SUCCEEDED(channel->Data("two"_ns)));
-  EXPECT_TRUE(NS_SUCCEEDED(channel->Data("three"_ns)));
-  EXPECT_TRUE(NS_SUCCEEDED(channel->Stop(NS_OK)));
+  EXPECT_NS_SUCCEEDED(channel->Start());
+  EXPECT_NS_SUCCEEDED(channel->Data("one"_ns));
+  EXPECT_NS_SUCCEEDED(channel->Data("two"_ns));
+  EXPECT_NS_SUCCEEDED(channel->Data("three"_ns));
+  EXPECT_NS_SUCCEEDED(channel->Stop(NS_OK));
 
   RefPtr<FakeListener> listener = new FakeListener();
   listener->mCancelIn = FakeListener::OnData;
@@ -743,7 +744,7 @@ TEST(TestFetchPreloader, CacheAllBeforeConsumeCancelInOnDataAvailable)
   // status.
   listener->mOnDataResult = ERROR_THROW;
 
-  EXPECT_TRUE(NS_SUCCEEDED(preloader->AsyncConsume(listener)));
+  EXPECT_NS_SUCCEEDED(preloader->AsyncConsume(listener));
   EXPECT_FALSE(NS_SUCCEEDED(preloader->AsyncConsume(listener)));
 
   NS_DispatchToMainThread(NS_NewRunnableFunction("test", [&]() {
@@ -775,19 +776,19 @@ TEST(TestFetchPreloader, CachePartlyBeforeConsumeCancelInOnDataAvailable)
       preloader->OpenChannel(key, uri, mozilla::CORS_NONE,
                              mozilla::dom::ReferrerPolicy::_empty, doc)));
 
-  EXPECT_TRUE(NS_SUCCEEDED(channel->Start()));
-  EXPECT_TRUE(NS_SUCCEEDED(channel->Data("one"_ns)));
-  EXPECT_TRUE(NS_SUCCEEDED(channel->Data("two"_ns)));
+  EXPECT_NS_SUCCEEDED(channel->Start());
+  EXPECT_NS_SUCCEEDED(channel->Data("one"_ns));
+  EXPECT_NS_SUCCEEDED(channel->Data("two"_ns));
 
   RefPtr<FakeListener> listener = new FakeListener();
   listener->mCancelIn = FakeListener::OnData;
 
-  EXPECT_TRUE(NS_SUCCEEDED(preloader->AsyncConsume(listener)));
+  EXPECT_NS_SUCCEEDED(preloader->AsyncConsume(listener));
   EXPECT_FALSE(NS_SUCCEEDED(preloader->AsyncConsume(listener)));
 
   NS_DispatchToMainThread(NS_NewRunnableFunction("test", [&]() {
-    EXPECT_TRUE(NS_FAILED(channel->Data("three"_ns)));
-    EXPECT_TRUE(NS_FAILED(channel->Stop(NS_OK)));
+    EXPECT_NS_FAILED(channel->Data("three"_ns));
+    EXPECT_NS_FAILED(channel->Stop(NS_OK));
 
     EXPECT_TRUE(listener->mOnStart);
     EXPECT_TRUE(listener->mOnData.EqualsLiteral("one"));
@@ -816,22 +817,22 @@ TEST(TestFetchPreloader, CachePartlyBeforeConsumeCancelInOnStartRequestAndRace)
       preloader->OpenChannel(key, uri, mozilla::CORS_NONE,
                              mozilla::dom::ReferrerPolicy::_empty, doc)));
 
-  EXPECT_TRUE(NS_SUCCEEDED(channel->Start()));
-  EXPECT_TRUE(NS_SUCCEEDED(channel->Data("one"_ns)));
-  EXPECT_TRUE(NS_SUCCEEDED(channel->Data("two"_ns)));
+  EXPECT_NS_SUCCEEDED(channel->Start());
+  EXPECT_NS_SUCCEEDED(channel->Data("one"_ns));
+  EXPECT_NS_SUCCEEDED(channel->Data("two"_ns));
 
   // This has to simulate a possibiilty when stream listener notifications from
   // the channel are already pending in the queue while AsyncConsume is called.
   // At this moment the listener has not been notified yet.
   NS_DispatchToMainThread(NS_NewRunnableFunction("test", [&]() {
-    EXPECT_TRUE(NS_SUCCEEDED(channel->Data("three"_ns)));
-    EXPECT_TRUE(NS_SUCCEEDED(channel->Stop(NS_OK)));
+    EXPECT_NS_SUCCEEDED(channel->Data("three"_ns));
+    EXPECT_NS_SUCCEEDED(channel->Stop(NS_OK));
   }));
 
   RefPtr<FakeListener> listener = new FakeListener();
   listener->mCancelIn = FakeListener::OnStart;
 
-  EXPECT_TRUE(NS_SUCCEEDED(preloader->AsyncConsume(listener)));
+  EXPECT_NS_SUCCEEDED(preloader->AsyncConsume(listener));
   EXPECT_FALSE(NS_SUCCEEDED(preloader->AsyncConsume(listener)));
 
   // Check listener's been fed properly.  Expected is to NOT get any data and
@@ -865,22 +866,22 @@ TEST(TestFetchPreloader, CachePartlyBeforeConsumeCancelInOnDataAvailableAndRace)
       preloader->OpenChannel(key, uri, mozilla::CORS_NONE,
                              mozilla::dom::ReferrerPolicy::_empty, doc)));
 
-  EXPECT_TRUE(NS_SUCCEEDED(channel->Start()));
-  EXPECT_TRUE(NS_SUCCEEDED(channel->Data("one"_ns)));
-  EXPECT_TRUE(NS_SUCCEEDED(channel->Data("two"_ns)));
+  EXPECT_NS_SUCCEEDED(channel->Start());
+  EXPECT_NS_SUCCEEDED(channel->Data("one"_ns));
+  EXPECT_NS_SUCCEEDED(channel->Data("two"_ns));
 
   // This has to simulate a possibiilty when stream listener notifications from
   // the channel are already pending in the queue while AsyncConsume is called.
   // At this moment the listener has not been notified yet.
   NS_DispatchToMainThread(NS_NewRunnableFunction("test", [&]() {
-    EXPECT_TRUE(NS_SUCCEEDED(channel->Data("three"_ns)));
-    EXPECT_TRUE(NS_SUCCEEDED(channel->Stop(NS_OK)));
+    EXPECT_NS_SUCCEEDED(channel->Data("three"_ns));
+    EXPECT_NS_SUCCEEDED(channel->Stop(NS_OK));
   }));
 
   RefPtr<FakeListener> listener = new FakeListener();
   listener->mCancelIn = FakeListener::OnData;
 
-  EXPECT_TRUE(NS_SUCCEEDED(preloader->AsyncConsume(listener)));
+  EXPECT_NS_SUCCEEDED(preloader->AsyncConsume(listener));
   EXPECT_FALSE(NS_SUCCEEDED(preloader->AsyncConsume(listener)));
 
   // Check listener's been fed properly.  Expected is to NOT get anything after
@@ -914,22 +915,22 @@ TEST(TestFetchPreloader, CachePartlyBeforeConsumeThrowFromOnStartRequestAndRace)
       preloader->OpenChannel(key, uri, mozilla::CORS_NONE,
                              mozilla::dom::ReferrerPolicy::_empty, doc)));
 
-  EXPECT_TRUE(NS_SUCCEEDED(channel->Start()));
-  EXPECT_TRUE(NS_SUCCEEDED(channel->Data("one"_ns)));
-  EXPECT_TRUE(NS_SUCCEEDED(channel->Data("two"_ns)));
+  EXPECT_NS_SUCCEEDED(channel->Start());
+  EXPECT_NS_SUCCEEDED(channel->Data("one"_ns));
+  EXPECT_NS_SUCCEEDED(channel->Data("two"_ns));
 
   // This has to simulate a possibiilty when stream listener notifications from
   // the channel are already pending in the queue while AsyncConsume is called.
   // At this moment the listener has not been notified yet.
   NS_DispatchToMainThread(NS_NewRunnableFunction("test", [&]() {
-    EXPECT_TRUE(NS_SUCCEEDED(channel->Data("three"_ns)));
-    EXPECT_TRUE(NS_SUCCEEDED(channel->Stop(NS_OK)));
+    EXPECT_NS_SUCCEEDED(channel->Data("three"_ns));
+    EXPECT_NS_SUCCEEDED(channel->Stop(NS_OK));
   }));
 
   RefPtr<FakeListener> listener = new FakeListener();
   listener->mOnStartResult = ERROR_THROW;
 
-  EXPECT_TRUE(NS_SUCCEEDED(preloader->AsyncConsume(listener)));
+  EXPECT_NS_SUCCEEDED(preloader->AsyncConsume(listener));
   EXPECT_FALSE(NS_SUCCEEDED(preloader->AsyncConsume(listener)));
 
   // Check listener's been fed properly.  Expected is to NOT get any data and

@@ -36,13 +36,13 @@ static void CheckMetadata(const ImageTestCase& aTestCase,
   // Figure out how much data we have.
   uint64_t length;
   nsresult rv = inputStream->Available(&length);
-  ASSERT_TRUE(NS_SUCCEEDED(rv));
+  ASSERT_NS_SUCCEEDED(rv);
 
   // Write the data into a SourceBuffer.
   auto sourceBuffer = MakeNotNull<RefPtr<SourceBuffer>>();
   sourceBuffer->ExpectLength(length);
   rv = sourceBuffer->AppendFromInputStream(inputStream, length);
-  ASSERT_TRUE(NS_SUCCEEDED(rv));
+  ASSERT_NS_SUCCEEDED(rv);
   sourceBuffer->Complete(NS_OK);
 
   // Create a metadata decoder.
@@ -211,16 +211,16 @@ TEST_F(ImageDecoderMetadata, NoFrameDelayGIFFullDecode) {
   // Figure out how much data we have.
   uint64_t length;
   nsresult rv = inputStream->Available(&length);
-  ASSERT_TRUE(NS_SUCCEEDED(rv));
+  ASSERT_NS_SUCCEEDED(rv);
 
   // Write the data into the image.
   rv = image->OnImageDataAvailable(nullptr, inputStream, 0,
                                    static_cast<uint32_t>(length));
-  ASSERT_TRUE(NS_SUCCEEDED(rv));
+  ASSERT_NS_SUCCEEDED(rv);
 
   // Let the image know we've sent all the data.
   rv = image->OnImageDataComplete(nullptr, NS_OK, true);
-  ASSERT_TRUE(NS_SUCCEEDED(rv));
+  ASSERT_NS_SUCCEEDED(rv);
 
   RefPtr<ProgressTracker> tracker = image->GetProgressTracker();
   tracker->SyncNotifyProgress(FLAG_LOAD_COMPLETE);
@@ -232,9 +232,9 @@ TEST_F(ImageDecoderMetadata, NoFrameDelayGIFFullDecode) {
   // Ensure that the image's metadata meets our expectations.
   IntSize imageSize(0, 0);
   rv = image->GetWidth(&imageSize.width);
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  EXPECT_NS_SUCCEEDED(rv);
   rv = image->GetHeight(&imageSize.height);
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  EXPECT_NS_SUCCEEDED(rv);
 
   EXPECT_EQ(testCase.mSize.width, imageSize.width);
   EXPECT_EQ(testCase.mSize.height, imageSize.height);
@@ -252,7 +252,7 @@ TEST_F(ImageDecoderMetadata, NoFrameDelayGIFFullDecode) {
                            /* aMarkUsed = */ true);
   ASSERT_EQ(MatchType::EXACT, result.Type());
 
-  EXPECT_TRUE(NS_SUCCEEDED(result.Surface().Seek(0)));
+  EXPECT_NS_SUCCEEDED(result.Surface().Seek(0));
   EXPECT_TRUE(bool(result.Surface()));
 
   RefPtr<imgFrame> partialFrame = result.Surface().GetFrame(1);

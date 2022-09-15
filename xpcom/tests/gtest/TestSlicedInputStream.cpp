@@ -1,5 +1,6 @@
 #include "gtest/gtest.h"
 
+#include "mozilla/gtest/MozAssertions.h"
 #include "mozilla/SlicedInputStream.h"
 #include "mozilla/SpinEventLoopUntil.h"
 #include "nsCOMPtr.h"
@@ -469,7 +470,7 @@ TEST(TestSlicedInputStream, AsyncInputStream)
   nsresult rv = NS_NewPipe2(getter_AddRefs(reader), getter_AddRefs(writer),
                             true, true,  // non-blocking - reader, writer
                             segmentSize, numSegments);
-  ASSERT_TRUE(NS_SUCCEEDED(rv));
+  ASSERT_NS_SUCCEEDED(rv);
 
   nsTArray<char> inputData;
   testing::CreateData(segmentSize, inputData);
@@ -490,13 +491,13 @@ TEST(TestSlicedInputStream, AsyncInputStream)
   RefPtr<testing::InputStreamCallback> cb = new testing::InputStreamCallback();
 
   rv = async->AsyncWait(cb, 0, 0, nullptr);
-  ASSERT_TRUE(NS_SUCCEEDED(rv));
+  ASSERT_NS_SUCCEEDED(rv);
 
   ASSERT_FALSE(cb->Called());
 
   uint32_t numWritten = 0;
   rv = writer->Write(inputData.Elements(), inputData.Length(), &numWritten);
-  ASSERT_TRUE(NS_SUCCEEDED(rv));
+  ASSERT_NS_SUCCEEDED(rv);
 
   ASSERT_TRUE(cb->Called());
 

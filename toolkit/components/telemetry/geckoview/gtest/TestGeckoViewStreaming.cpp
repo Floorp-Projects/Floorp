@@ -5,6 +5,7 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
+#include "mozilla/gtest/MozAssertions.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Services.h"
 #include "mozilla/Telemetry.h"
@@ -164,9 +165,9 @@ TEST_F(TelemetryStreamingFixture, MultipleThreads) {
       "accumulate 14", [&]() { Telemetry::Accumulate(kTestHgram, kSample2); });
 
   nsresult rv = NS_NewNamedThread("t1", getter_AddRefs(t1), r1);
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  EXPECT_NS_SUCCEEDED(rv);
   rv = NS_NewNamedThread("t2", getter_AddRefs(t2), r2);
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  EXPECT_NS_SUCCEEDED(rv);
 
   // Give the threads a chance to do their work.
   PR_Sleep(PR_MillisecondsToInterval(1));

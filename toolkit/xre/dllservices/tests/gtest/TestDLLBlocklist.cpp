@@ -13,6 +13,7 @@
 
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/Char16.h"
+#include "mozilla/gtest/MozAssertions.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsDirectoryServiceUtils.h"
 #include "nsString.h"
@@ -25,13 +26,13 @@ static nsString GetFullPath(const nsAString& aLeaf) {
   EXPECT_TRUE(NS_SUCCEEDED(
       NS_GetSpecialDirectory(NS_OS_CURRENT_WORKING_DIR, getter_AddRefs(f))));
 
-  EXPECT_TRUE(NS_SUCCEEDED(f->Append(aLeaf)));
+  EXPECT_NS_SUCCEEDED(f->Append(aLeaf));
 
   bool exists;
   EXPECT_TRUE(NS_SUCCEEDED(f->Exists(&exists)) && exists);
 
   nsString ret;
-  EXPECT_TRUE(NS_SUCCEEDED(f->GetPath(ret)));
+  EXPECT_NS_SUCCEEDED(f->GetPath(ret));
   return ret;
 }
 
