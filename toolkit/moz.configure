@@ -172,7 +172,9 @@ imply_option("--enable-replace-malloc", dmd, when=compile_environment)
 # ==============================================================
 @depends(target)
 def midir_linux_support(target):
-    return target.kernel == "Linux" and target.os != "Android"
+    return (
+        target.kernel == "Linux" and target.os != "Android" and target.cpu != "riscv64"
+    )
 
 
 @depends(target, midir_linux_support)
