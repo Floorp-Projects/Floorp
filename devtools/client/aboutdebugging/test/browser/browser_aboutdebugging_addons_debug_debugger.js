@@ -40,7 +40,7 @@ add_task(async () => {
     document
   );
 
-  const { devtoolsTab, devtoolsWindow } = await openAboutDevtoolsToolbox(
+  const { devtoolsWindow } = await openAboutDevtoolsToolbox(
     document,
     tab,
     window,
@@ -80,8 +80,7 @@ add_task(async () => {
     return sourceList?.textContent.includes("temporary-web-extension");
   }, "Wait for the source to re-appear");
 
-  await closeAboutDevtoolsToolbox(document, devtoolsTab, window);
-
+  await closeWebExtAboutDevtoolsToolbox(devtoolsWindow, window);
   await removeTemporaryExtension(EXTENSION_NAME, document);
   await removeTab(tab);
 });

@@ -25,7 +25,10 @@ const {
   getCurrentRuntime,
 } = require("devtools/client/aboutdebugging/src/modules/runtimes-state-helper");
 
+const { gDevTools } = require("devtools/client/framework/devtools");
+
 const {
+  DEBUG_TARGETS,
   DEBUG_TARGET_PANE,
   REQUEST_EXTENSIONS_FAILURE,
   REQUEST_EXTENSIONS_START,
@@ -72,29 +75,39 @@ function inspectDebugTarget(type, id) {
   return async ({ dispatch, getState }) => {
     const runtime = getCurrentRuntime(getState().runtimes);
 
-    const urlParams = {
-      id,
-      type,
-    };
-
-    if (runtime.id !== RUNTIMES.THIS_FIREFOX) {
-      urlParams.remoteId = remoteClientManager.getRemoteId(
-        runtime.id,
-        runtime.type
-      );
-    }
-
-    const url = `about:devtools-toolbox?${new window.URLSearchParams(
-      urlParams
-    )}`;
-
-    const existingTab = getTabForUrl(url);
-    if (existingTab) {
-      const navigator = existingTab.ownerGlobal;
-      navigator.gBrowser.selectedTab = existingTab;
-      navigator.focus();
+    if (
+      type == DEBUG_TARGETS.EXTENSION &&
+      runtime.id === RUNTIMES.THIS_FIREFOX
+    ) {
+      // Bug 1780912: To avoid UX issues when debugging local web extensions,
+      // we are opening the toolbox in an independant window.
+      // Whereas all others are opened in new tabs.
+      gDevTools.showToolboxForWebExtension(id);
     } else {
-      window.open(url);
+      const urlParams = {
+        id,
+        type,
+      };
+
+      if (runtime.id !== RUNTIMES.THIS_FIREFOX) {
+        urlParams.remoteId = remoteClientManager.getRemoteId(
+          runtime.id,
+          runtime.type
+        );
+      }
+
+      const url = `about:devtools-toolbox?${new window.URLSearchParams(
+        urlParams
+      )}`;
+
+      const existingTab = getTabForUrl(url);
+      if (existingTab) {
+        const navigator = existingTab.ownerGlobal;
+        navigator.gBrowser.selectedTab = existingTab;
+        navigator.focus();
+      } else {
+        window.open(url);
+      }
     }
 
     dispatch(

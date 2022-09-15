@@ -57,12 +57,13 @@ add_task(async function testWebExtensionsToolboxWebConsole() {
   );
 
   info("Open a toolbox to debug the addon");
-  const { devtoolsTab, devtoolsWindow } = await openAboutDevtoolsToolbox(
+  const { devtoolsWindow } = await openAboutDevtoolsToolbox(
     document,
     tab,
     aboutDebuggingWindow,
     ADDON_NAME
   );
+
   const toolbox = getToolbox(devtoolsWindow);
   const webconsole = await toolbox.selectTool("webconsole");
 
@@ -117,7 +118,7 @@ add_task(async function testWebExtensionsToolboxWebConsole() {
     "Got the expected manifest from WebExtension API"
   );
 
-  await closeAboutDevtoolsToolbox(document, devtoolsTab, aboutDebuggingWindow);
+  await closeWebExtAboutDevtoolsToolbox(devtoolsWindow, aboutDebuggingWindow);
 
   is(
     Services.prefs.getBoolPref("ui.popup.disable_autohide"),
@@ -230,7 +231,6 @@ async function waitForExtension(addonName) {
  */
 function disablePopupAutohide(toolbox) {
   return new Promise(resolve => {
-    toolbox.doc.getElementById("toolbox-meatball-menu-button").click();
     toolbox.doc.addEventListener(
       "popupshown",
       () => {
@@ -242,5 +242,6 @@ function disablePopupAutohide(toolbox) {
       },
       { once: true }
     );
+    toolbox.doc.getElementById("toolbox-meatball-menu-button").click();
   });
 }
