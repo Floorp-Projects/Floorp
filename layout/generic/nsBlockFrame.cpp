@@ -1923,7 +1923,7 @@ void nsBlockFrame::ComputeFinalSize(const ReflowInput& aReflowInput,
   if (aState.mFlags.mIsBEndMarginRoot ||
       NS_UNCONSTRAINEDSIZE != aReflowInput.ComputedBSize()) {
     // When we are a block-end-margin root make sure that our last
-    // childs block-end margin is fully applied. We also do this when
+    // child's block-end margin is fully applied. We also do this when
     // we have a computed height, since in that case the carried out
     // margin is not going to be applied anywhere, so we should note it
     // here to be included in the overflow area.
@@ -1950,6 +1950,12 @@ void nsBlockFrame::ComputeFinalSize(const ReflowInput& aReflowInput,
     // previous margin.
     const nscoord contentBSizeWithBStartBP =
         aState.mBCoord + nonCarriedOutBDirMargin;
+
+    // We don't care about ApplyLineClamp's return value (the line-clamped
+    // content BSize) in this explicit-BSize codepath, but we do still need to
+    // call ApplyLineClamp for ellipsis markers to be placed as-needed.
+    ApplyLineClamp(aState.mReflowInput, this, contentBSizeWithBStartBP);
+
     finalSize.BSize(wm) = ComputeFinalBSize(aState, contentBSizeWithBStartBP);
 
     // If the content block-size is larger than the effective computed
