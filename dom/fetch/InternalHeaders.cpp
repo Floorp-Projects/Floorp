@@ -437,15 +437,15 @@ void InternalHeaders::Fill(const Record<nsCString, nsCString>& aInit,
 
 namespace {
 
-class FillHeaders final : public nsIHttpHeaderVisitor {
+class FillOriginalResponseHeaders final : public nsIHttpHeaderVisitor {
   RefPtr<InternalHeaders> mInternalHeaders;
 
-  ~FillHeaders() = default;
+  ~FillOriginalResponseHeaders() = default;
 
  public:
   NS_DECL_ISUPPORTS
 
-  explicit FillHeaders(InternalHeaders* aInternalHeaders)
+  explicit FillOriginalResponseHeaders(InternalHeaders* aInternalHeaders)
       : mInternalHeaders(aInternalHeaders) {
     MOZ_DIAGNOSTIC_ASSERT(mInternalHeaders);
   }
@@ -457,8 +457,34 @@ class FillHeaders final : public nsIHttpHeaderVisitor {
   }
 };
 
-NS_IMPL_ISUPPORTS(FillHeaders, nsIHttpHeaderVisitor)
+NS_IMPL_ISUPPORTS(FillOriginalResponseHeaders, nsIHttpHeaderVisitor)
 
+class FillMissingResponseHeaders final : public nsIHttpHeaderVisitor {
+  RefPtr<InternalHeaders> mInternalHeaders;
+
+  ~FillMissingResponseHeaders() = default;
+
+ public:
+  NS_DECL_ISUPPORTS
+
+  explicit FillMissingResponseHeaders(InternalHeaders* aInternalHeaders)
+      : mInternalHeaders(aInternalHeaders) {
+    MOZ_DIAGNOSTIC_ASSERT(mInternalHeaders);
+  }
+
+  NS_IMETHOD
+  VisitHeader(const nsACString& aHeader, const nsACString& aValue) override {
+    ErrorResult rv;
+
+    if (!mInternalHeaders->Has(aHeader, rv)) {
+      MOZ_ASSERT(!rv.Failed());
+      mInternalHeaders->Append(aHeader, aValue, IgnoreErrors());
+    }
+    return NS_OK;
+  }
+};
+
+NS_IMPL_ISUPPORTS(FillMissingResponseHeaders, nsIHttpHeaderVisitor)
 }  // namespace
 
 void InternalHeaders::FillResponseHeaders(nsIRequest* aRequest) {
@@ -467,8 +493,23 @@ void InternalHeaders::FillResponseHeaders(nsIRequest* aRequest) {
     return;
   }
 
-  RefPtr<FillHeaders> visitor = new FillHeaders(this);
-  nsresult rv = httpChannel->VisitResponseHeaders(visitor);
+  RefPtr<FillOriginalResponseHeaders> visitor =
+      new FillOriginalResponseHeaders(this);
+  // response headers received from fetch requires extra processing
+  // we need the response headers received in original formats and also include
+  // any headers internally added
+  // nsIHttpChannel does not have any implemenation to give both types of
+  // headers hence, we fetch them seperately and merge them first step is to get
+  // the original response header
+  nsresult rv = httpChannel->VisitOriginalResponseHeaders(visitor);
+  if (NS_FAILED(rv)) {
+    NS_WARNING("failed to fill headers");
+  }
+
+  RefPtr<FillMissingResponseHeaders> visitMissingHeaders =
+      new FillMissingResponseHeaders(this);
+  rv = httpChannel->VisitResponseHeaders(visitMissingHeaders);
+
   if (NS_FAILED(rv)) {
     NS_WARNING("failed to fill headers");
   }
