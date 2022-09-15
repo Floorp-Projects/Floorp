@@ -101,6 +101,9 @@ class nsFormFillController final : public nsIFormFillController,
 
   nsresult StartQueryLoginReputation(mozilla::dom::HTMLInputElement* aInput);
 
+  MOZ_CAN_RUN_SCRIPT NS_IMETHODIMP isLoginManagerField(
+      mozilla::dom::HTMLInputElement* aInput, bool* isLoginManagerField);
+
   // members //////////////////////////////////////////
 
   nsCOMPtr<nsIAutoCompleteController> mController;
@@ -118,8 +121,8 @@ class nsFormFillController final : public nsIFormFillController,
                        nsIAutoCompletePopup>
       mPopups;
 
-  // The observer passed to StartSearch. It will be notified when the search is
-  // complete or the data from a datalist changes.
+  // The observer passed to StartSearch. It will be notified when the search
+  // is complete or the data from a datalist changes.
   nsCOMPtr<nsIAutoCompleteObserver> mLastListener;
 
   // This is cleared by StopSearch().
