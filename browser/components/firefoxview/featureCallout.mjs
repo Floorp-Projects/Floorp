@@ -95,6 +95,7 @@ let CURRENT_SCREEN;
 let CONFIG;
 let RENDER_OBSERVER;
 let READY = false;
+let SAVED_ACTIVE_ELEMENT;
 
 const TRANSITION_MS = 500;
 const CONTAINER_ID = "root";
@@ -326,6 +327,10 @@ function _setupWindowFunctions() {
 }
 
 function _endTour() {
+  // We don't want focus events that happen during teardown to effect
+  // SAVED_ACTIVE_ELEMENT
+  window.removeEventListener("focus", focusHandler, { capture: true });
+
   // wait for fade out transition
   let container = document.getElementById(CONTAINER_ID);
   container?.classList.add("hidden");
@@ -333,6 +338,12 @@ function _endTour() {
     container?.remove();
     _removePositionListeners();
     RENDER_OBSERVER?.disconnect();
+
+    // Put the focus back to the last place the user focused outside of the
+    // featureCallout windows.
+    if (SAVED_ACTIVE_ELEMENT) {
+      SAVED_ACTIVE_ELEMENT.focus({ focusVisible: true });
+    }
   }, TRANSITION_MS);
 }
 
@@ -416,6 +427,9 @@ async function showFeatureCallout(messageId) {
           _positionCallout();
           let container = document.getElementById(CONTAINER_ID);
           container.focus();
+          window.addEventListener("focus", focusHandler, {
+            capture: true, // get the event before retargeting
+          });
           // Alert screen readers to the presence of the callout
           container.setAttribute("role", "alert");
         });
@@ -439,6 +453,28 @@ async function showFeatureCallout(messageId) {
   }
 
   await _renderCallout();
+}
+
+function focusHandler(e) {
+  let container = document.getElementById(CONTAINER_ID);
+  if (!container) {
+    return;
+  }
+
+  // If focus has fired on the feature callout window itself, or on something
+  // contained in that window, ignore it, as we can't possibly place the focus
+  // on it after the callout is closd.
+  if (
+    e.target.id === CONTAINER_ID ||
+    (Node.isInstance(e.target) && container.contains(e.target))
+  ) {
+    return;
+  }
+
+  // Save this so that if the next focus event is re-entering the popup,
+  // then we'll put the focus back here where the user left it once we exit
+  // the feature callout series.
+  SAVED_ACTIVE_ELEMENT = document.activeElement;
 }
 
 window.addEventListener("DOMContentLoaded", () => {
