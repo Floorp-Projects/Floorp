@@ -479,9 +479,9 @@ class MixPolicy final : public TypePolicy {
   }
 };
 
-class CallSetElementPolicy final : public TypePolicy {
+class MegamorphicSetElementPolicy final : public TypePolicy {
  public:
-  constexpr CallSetElementPolicy() = default;
+  constexpr MegamorphicSetElementPolicy() = default;
   EMPTY_DATA_;
   [[nodiscard]] bool adjustInputs(TempAllocator& alloc,
                                   MInstruction* def) const override;

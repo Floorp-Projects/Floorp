@@ -13272,12 +13272,12 @@ void CodeGenerator::visitCallBindVar(LCallBindVar* lir) {
   callVM<Fn, BindVarOperation>(lir);
 }
 
-void CodeGenerator::visitCallSetElement(LCallSetElement* lir) {
+void CodeGenerator::visitMegamorphicSetElement(LMegamorphicSetElement* lir) {
   Register obj = ToRegister(lir->getOperand(0));
   pushArg(Imm32(lir->mir()->strict()));
   pushArg(TypedOrValueRegister(MIRType::Object, AnyRegister(obj)));
-  pushArg(ToValue(lir, LCallSetElement::ValueIndex));
-  pushArg(ToValue(lir, LCallSetElement::IndexIndex));
+  pushArg(ToValue(lir, LMegamorphicSetElement::ValueIndex));
+  pushArg(ToValue(lir, LMegamorphicSetElement::IndexIndex));
   pushArg(obj);
 
   using Fn = bool (*)(JSContext*, HandleObject, HandleValue, HandleValue,

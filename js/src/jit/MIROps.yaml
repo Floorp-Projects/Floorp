@@ -1782,7 +1782,7 @@
 - name: SetPropertyCache
   gen_boilerplate: false
 
-- name: CallSetElement
+- name: MegamorphicSetElement
   gen_boilerplate: false
 
 - name: SetDOMProperty
