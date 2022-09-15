@@ -508,7 +508,6 @@
   height: 100%;
   list-style: none;
   overflow: hidden;
-  margin-inline-end: 40px;
 }
 
 .tree-widget-container:-moz-focusring,
