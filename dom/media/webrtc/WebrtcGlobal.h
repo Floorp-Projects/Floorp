@@ -301,16 +301,33 @@ struct ParamTraits<mozilla::dom::RTCInboundRtpStreamStats> {
     WriteParam(aWriter, aParam.mFrameWidth);
     WriteParam(aWriter, aParam.mFrameHeight);
     WriteParam(aWriter, aParam.mFramesPerSecond);
+    WriteParam(aWriter, aParam.mQpSum);
+    WriteParam(aWriter, aParam.mTotalDecodeTime);
+    WriteParam(aWriter, aParam.mTotalInterFrameDelay);
+    WriteParam(aWriter, aParam.mTotalSquaredInterFrameDelay);
+    WriteParam(aWriter, aParam.mLastPacketReceivedTimestamp);
+    WriteParam(aWriter, aParam.mHeaderBytesReceived);
+    WriteParam(aWriter, aParam.mFecPacketsReceived);
+    WriteParam(aWriter, aParam.mFecPacketsDiscarded);
     WriteParam(aWriter, aParam.mBytesReceived);
     WriteParam(aWriter, aParam.mNackCount);
     WriteParam(aWriter, aParam.mFirCount);
     WriteParam(aWriter, aParam.mPliCount);
+    WriteParam(aWriter, aParam.mTotalProcessingDelay);
+    // Always missing from libwebrtc stats
+    // WriteParam(aWriter, aParam.mEstimatedPlayoutTimestamp);
     WriteParam(aWriter, aParam.mFramesReceived);
     WriteParam(aWriter, aParam.mJitterBufferDelay);
     WriteParam(aWriter, aParam.mJitterBufferEmittedCount);
     WriteParam(aWriter, aParam.mTotalSamplesReceived);
     WriteParam(aWriter, aParam.mConcealedSamples);
     WriteParam(aWriter, aParam.mSilentConcealedSamples);
+    WriteParam(aWriter, aParam.mConcealmentEvents);
+    WriteParam(aWriter, aParam.mInsertedSamplesForDeceleration);
+    WriteParam(aWriter, aParam.mRemovedSamplesForAcceleration);
+    WriteParam(aWriter, aParam.mAudioLevel);
+    WriteParam(aWriter, aParam.mTotalAudioEnergy);
+    WriteParam(aWriter, aParam.mTotalSamplesDuration);
     WriteRTCReceivedRtpStreamStats(aWriter, aParam);
   }
 
@@ -320,16 +337,33 @@ struct ParamTraits<mozilla::dom::RTCInboundRtpStreamStats> {
            ReadParam(aReader, &(aResult->mFrameWidth)) &&
            ReadParam(aReader, &(aResult->mFrameHeight)) &&
            ReadParam(aReader, &(aResult->mFramesPerSecond)) &&
+           ReadParam(aReader, &(aResult->mQpSum)) &&
+           ReadParam(aReader, &(aResult->mTotalDecodeTime)) &&
+           ReadParam(aReader, &(aResult->mTotalInterFrameDelay)) &&
+           ReadParam(aReader, &(aResult->mTotalSquaredInterFrameDelay)) &&
+           ReadParam(aReader, &(aResult->mLastPacketReceivedTimestamp)) &&
+           ReadParam(aReader, &(aResult->mHeaderBytesReceived)) &&
+           ReadParam(aReader, &(aResult->mFecPacketsReceived)) &&
+           ReadParam(aReader, &(aResult->mFecPacketsDiscarded)) &&
            ReadParam(aReader, &(aResult->mBytesReceived)) &&
            ReadParam(aReader, &(aResult->mNackCount)) &&
            ReadParam(aReader, &(aResult->mFirCount)) &&
            ReadParam(aReader, &(aResult->mPliCount)) &&
+           ReadParam(aReader, &(aResult->mTotalProcessingDelay)) &&
+           // Always missing from libwebrtc
+           // ReadParam(aReader, &(aResult->mEstimatedPlayoutTimestamp)) &&
            ReadParam(aReader, &(aResult->mFramesReceived)) &&
            ReadParam(aReader, &(aResult->mJitterBufferDelay)) &&
            ReadParam(aReader, &(aResult->mJitterBufferEmittedCount)) &&
            ReadParam(aReader, &(aResult->mTotalSamplesReceived)) &&
            ReadParam(aReader, &(aResult->mConcealedSamples)) &&
            ReadParam(aReader, &(aResult->mSilentConcealedSamples)) &&
+           ReadParam(aReader, &(aResult->mConcealmentEvents)) &&
+           ReadParam(aReader, &(aResult->mInsertedSamplesForDeceleration)) &&
+           ReadParam(aReader, &(aResult->mRemovedSamplesForAcceleration)) &&
+           ReadParam(aReader, &(aResult->mAudioLevel)) &&
+           ReadParam(aReader, &(aResult->mTotalAudioEnergy)) &&
+           ReadParam(aReader, &(aResult->mTotalSamplesDuration)) &&
            ReadRTCReceivedRtpStreamStats(aReader, aResult);
   }
 };
@@ -398,12 +432,18 @@ struct ParamTraits<mozilla::dom::RTCRemoteInboundRtpStreamStats> {
   static void Write(MessageWriter* aWriter, const paramType& aParam) {
     WriteParam(aWriter, aParam.mLocalId);
     WriteParam(aWriter, aParam.mRoundTripTime);
+    WriteParam(aWriter, aParam.mTotalRoundTripTime);
+    WriteParam(aWriter, aParam.mFractionLost);
+    WriteParam(aWriter, aParam.mRoundTripTimeMeasurements);
     WriteRTCReceivedRtpStreamStats(aWriter, aParam);
   }
 
   static bool Read(MessageReader* aReader, paramType* aResult) {
     return ReadParam(aReader, &(aResult->mLocalId)) &&
            ReadParam(aReader, &(aResult->mRoundTripTime)) &&
+           ReadParam(aReader, &(aResult->mTotalRoundTripTime)) &&
+           ReadParam(aReader, &(aResult->mFractionLost)) &&
+           ReadParam(aReader, &(aResult->mRoundTripTimeMeasurements)) &&
            ReadRTCReceivedRtpStreamStats(aReader, aResult);
   }
 };
