@@ -268,6 +268,13 @@ WindowHost.prototype = {
         flags += ",non-fission";
       }
 
+      // When debugging local Web Extension, the toolbox is opened in an
+      // always foremost top level window in order to be kept visible
+      // when interacting with the Firefox Window.
+      if (this.options?.alwaysOnTop) {
+        flags += ",alwaysontop";
+      }
+
       const win = Services.ww.openWindow(
         null,
         this.WINDOW_URL,

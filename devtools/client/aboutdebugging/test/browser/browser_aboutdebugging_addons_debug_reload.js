@@ -40,6 +40,8 @@ add_task(async function testWebExtensionToolboxReload() {
     document
   );
 
+  // Select the debugger right away to avoid any noise coming from the inspector.
+  await pushPref("devtools.toolbox.selectedTool", "webconsole");
   const { devtoolsDocument, devtoolsWindow } = await openAboutDevtoolsToolbox(
     document,
     tab,

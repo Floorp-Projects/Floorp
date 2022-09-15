@@ -19,6 +19,57 @@
   color: var(--theme-toolbar-color);
 }
 
+.toolbox-toolbar-spacer {
+  flex: 1;
+}
+
+.toolbox-always-on-top {
+  aspect-ratio: 1 / 1;
+  padding: 8px;
+  margin-inline-end: 8px;
+  border: 0;
+  border-radius: 50%;
+  transition: background-color 0.5s ease-in-out;
+}
+
+@media (prefers-reduced-motion) {
+  .toolbox-always-on-top {
+    transition: none;
+  }
+}
+
+.toolbox-always-on-top::before {
+  content: "";
+  display: block;
+  width: 20px;
+  height: 20px;
+  background-size: cover;
+  background-image: url("chrome://devtools/skin/images/command-always-on-top-window.svg");
+  -moz-context-properties: fill;
+  fill: currentColor;
+}
+
+.toolbox-always-on-top:focus {
+  outline: none;
+  background-color: var(--theme-toolbar-hover);
+  box-shadow: var(--toolbox-button-box-shadow-focus);
+}
+:root {
+  --toolbox-button-box-shadow-focus: 0 0 0 1px #0a84ff inset, 0 0 0 1px #0a84ff, 0 0 0 4px rgba(10, 132, 255, 0.3);
+}
+
+.toolbox-always-on-top:hover {
+  background-color: var(--theme-toolbar-hover);
+}
+
+.toolbox-always-on-top.checked:not(.toolbox-is-focused) {
+  background-color: var(--theme-toolbar-background-highlighted);
+}
+
+.toolbox-always-on-top:is(.checked, :active) {
+  color: var(--theme-icon-checked-color);
+}
+
 /*
  *  Debug Target labels with icon layout
  *  +------+------------------------+---------------+
@@ -84,7 +135,7 @@
 }
 
 .debug-target-info .navigation-button:focus {
-  box-shadow: 0 0 0 1px #0a84ff inset, 0 0 0 1px #0a84ff, 0 0 0 4px rgba(10, 132, 255, 0.3)
+  box-shadow: var(--toolbox-button-box-shadow-focus);
 }
 
 .debug-target-info .navigation-button:active {
