@@ -317,6 +317,7 @@ class SessionControlAdapter(
                     view,
                     viewLifecycleOwner,
                     components.core.store,
+                    components.appStore,
                     interactor,
                 )
             OnboardingHeaderViewHolder.LAYOUT_ID -> OnboardingHeaderViewHolder(view)

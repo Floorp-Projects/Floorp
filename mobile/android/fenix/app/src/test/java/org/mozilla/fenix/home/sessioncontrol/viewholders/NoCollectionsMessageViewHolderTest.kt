@@ -18,6 +18,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mozilla.fenix.components.AppStore
 import org.mozilla.fenix.databinding.NoCollectionsMessageBinding
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 import org.mozilla.fenix.home.sessioncontrol.CollectionInteractor
@@ -35,10 +36,14 @@ class NoCollectionsMessageViewHolderTest {
     )
     private lateinit var lifecycleOwner: LifecycleOwner
     private lateinit var interactor: CollectionInteractor
+    private lateinit var appStore: AppStore
 
     @Before
     fun setup() {
         binding = NoCollectionsMessageBinding.inflate(LayoutInflater.from(testContext))
+
+        appStore = AppStore()
+
         lifecycleOwner = mockk(relaxed = true)
         interactor = mockk(relaxed = true)
     }
@@ -46,21 +51,27 @@ class NoCollectionsMessageViewHolderTest {
     @Test
     fun `hide add to collection button when there are no tabs open`() {
         val noTabsStore = BrowserStore()
-        NoCollectionsMessageViewHolder(binding.root, lifecycleOwner, noTabsStore, interactor)
+        NoCollectionsMessageViewHolder(
+            binding.root,
+            lifecycleOwner,
+            noTabsStore,
+            appStore,
+            interactor,
+        )
 
         assertFalse(binding.addTabsToCollectionsButton.isVisible)
     }
 
     @Test
     fun `show add to collection button when there are tabs`() {
-        NoCollectionsMessageViewHolder(binding.root, lifecycleOwner, store, interactor)
+        NoCollectionsMessageViewHolder(binding.root, lifecycleOwner, store, appStore, interactor)
 
         assertTrue(binding.addTabsToCollectionsButton.isVisible)
     }
 
     @Test
     fun `call interactor on click`() {
-        NoCollectionsMessageViewHolder(binding.root, lifecycleOwner, store, interactor)
+        NoCollectionsMessageViewHolder(binding.root, lifecycleOwner, store, appStore, interactor)
 
         binding.addTabsToCollectionsButton.performClick()
         verify { interactor.onAddTabsToCollectionTapped() }
@@ -68,7 +79,7 @@ class NoCollectionsMessageViewHolderTest {
 
     @Test
     fun `hide view and change setting on remove placeholder click`() {
-        NoCollectionsMessageViewHolder(binding.root, lifecycleOwner, store, interactor)
+        NoCollectionsMessageViewHolder(binding.root, lifecycleOwner, store, appStore, interactor)
 
         binding.removeCollectionPlaceholder.performClick()
         verify {

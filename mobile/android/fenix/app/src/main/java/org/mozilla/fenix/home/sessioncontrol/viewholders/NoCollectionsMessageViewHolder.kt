@@ -5,26 +5,28 @@
 package org.mozilla.fenix.home.sessioncontrol.viewholders
 
 import android.view.View
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toArgb
 import androidx.core.view.isVisible
 import androidx.lifecycle.LifecycleOwner
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.map
 import mozilla.components.browser.state.selector.normalTabs
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.lib.state.ext.flowScoped
+import mozilla.components.support.ktx.android.content.getColorFromAttr
 import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifChanged
 import org.mozilla.fenix.R
+import org.mozilla.fenix.components.AppStore
 import org.mozilla.fenix.databinding.NoCollectionsMessageBinding
 import org.mozilla.fenix.ext.increaseTapArea
 import org.mozilla.fenix.home.sessioncontrol.CollectionInteractor
 import org.mozilla.fenix.utils.view.ViewHolder
 
-@OptIn(ExperimentalCoroutinesApi::class)
-open class NoCollectionsMessageViewHolder(
+class NoCollectionsMessageViewHolder(
     view: View,
     viewLifecycleOwner: LifecycleOwner,
     store: BrowserStore,
+    appStore: AppStore,
     interactor: CollectionInteractor,
 ) : ViewHolder(view) {
 
@@ -32,7 +34,6 @@ open class NoCollectionsMessageViewHolder(
         val binding = NoCollectionsMessageBinding.bind(view)
 
         binding.addTabsToCollectionsButton.apply {
-
             setOnClickListener {
                 interactor.onAddTabsToCollectionTapped()
             }
@@ -53,6 +54,30 @@ open class NoCollectionsMessageViewHolder(
                 .ifChanged()
                 .collect { tabs ->
                     binding.addTabsToCollectionsButton.isVisible = tabs > 0
+                }
+        }
+
+        appStore.flowScoped(viewLifecycleOwner) { flow ->
+            flow.map { state -> state.wallpaperState.currentWallpaper.textColor }
+                .ifChanged()
+                .collect { textColor ->
+                    if (textColor == null) {
+                        val context = view.context
+                        binding.noCollectionsHeader.setTextColor(
+                            context.getColorFromAttr(R.attr.textPrimary),
+                        )
+                        binding.noCollectionsDescription.setTextColor(
+                            context.getColorFromAttr(R.attr.textSecondary),
+                        )
+                        binding.removeCollectionPlaceholder.setColorFilter(
+                            context.getColorFromAttr(R.attr.textPrimary),
+                        )
+                    } else {
+                        val color = Color(textColor).toArgb()
+                        binding.noCollectionsHeader.setTextColor(color)
+                        binding.noCollectionsDescription.setTextColor(color)
+                        binding.removeCollectionPlaceholder.setColorFilter(color)
+                    }
                 }
         }
     }
