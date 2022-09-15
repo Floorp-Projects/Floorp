@@ -546,7 +546,7 @@ body {
 @media only screen and (max-width: 800px) {
   .onboardingContainer .screen[pos=split] {
     flex-direction: column;
-    min-height: 500px;
+    min-height: 550px;
   }
   .onboardingContainer .screen[pos=split] .section-secondary,
 .onboardingContainer .screen[pos=split] .section-main {
@@ -573,7 +573,7 @@ body {
   }
   .onboardingContainer .screen[pos=split] .section-main {
     margin: 0 auto auto;
-    height: 400px;
+    height: 450px;
   }
   .onboardingContainer .screen[pos=split] .section-main .main-content {
     border-radius: 0 0 8px 8px;
