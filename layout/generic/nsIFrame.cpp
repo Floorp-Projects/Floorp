@@ -378,7 +378,7 @@ bool nsIFrame::IsVisibleConsideringAncestors(uint32_t aFlags) const {
     nsView* view = frame->GetView();
     if (view && view->GetVisibility() == nsViewVisibility_kHide) return false;
 
-    if (this != frame && frame->IsContentHidden()) return false;
+    if (this != frame && frame->HidesContent()) return false;
 
     nsIFrame* parent = frame->GetParent();
     nsDeckFrame* deck = do_QueryFrame(parent);
@@ -4019,7 +4019,7 @@ void nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder* aBuilder,
     return;
   }
 
-  if (IsContentHidden()) {
+  if (HidesContent()) {
     return;
   }
 
@@ -6750,7 +6750,7 @@ void nsIFrame::DidReflow(nsPresContext* aPresContext,
                          const ReflowInput* aReflowInput) {
   NS_FRAME_TRACE(NS_FRAME_TRACE_CALLS, ("nsIFrame::DidReflow"));
 
-  if (GetInFlowParent() && GetInFlowParent()->IsContentHiddenForLayout()) {
+  if (IsHiddenByContentVisibilityOfInFlowParentForLayout()) {
     return;
   }
 
@@ -6858,7 +6858,7 @@ bool nsIFrame::IsContentDisabled() const {
   return element && element->IsDisabled();
 }
 
-bool nsIFrame::IsContentHidden() const {
+bool nsIFrame::HidesContent() const {
   if (!StyleDisplay()->IsContentVisibilityHidden()) {
     return false;
   }
@@ -6866,18 +6866,30 @@ bool nsIFrame::IsContentHidden() const {
   return IsFrameOfType(nsIFrame::eReplaced) || !StyleDisplay()->IsInlineFlow();
 }
 
-bool nsIFrame::IsContentHiddenForLayout() const {
-  return IsContentHidden() &&
-         !PresShell()->IsForcingLayoutForHiddenContent(this);
+bool nsIFrame::HidesContentForLayout() const {
+  return HidesContent() && !PresShell()->IsForcingLayoutForHiddenContent(this);
 }
 
-bool nsIFrame::AncestorHidesContent() const {
+bool nsIFrame::IsHiddenByContentVisibilityOfInFlowParentForLayout() const {
+  const auto* parent = GetInFlowParent();
+  return parent && parent->HidesContentForLayout() && !Style()->IsAnonBox();
+}
+
+bool nsIFrame::IsHiddenByContentVisibilityOnAnyAncestor() const {
   if (!StaticPrefs::layout_css_content_visibility_enabled()) {
     return false;
   }
 
+  bool isAnonymousBox = Style()->IsAnonBox();
   for (nsIFrame* cur = GetInFlowParent(); cur; cur = cur->GetInFlowParent()) {
-    if (cur->IsContentHidden()) {
+    // Anonymous boxes are not hidden by the content-visibility of their first
+    // non-anonymous ancestor, but can be hidden by ancestors further up the
+    // tree.
+    if (isAnonymousBox && !cur->Style()->IsAnonBox()) {
+      isAnonymousBox = false;
+    }
+
+    if (!isAnonymousBox && cur->HidesContent()) {
       return true;
     }
   }
@@ -8184,16 +8196,22 @@ bool nsIFrame::IsVisibleOrCollapsedForPainting() {
 }
 
 /* virtual */
-bool nsIFrame::IsEmpty() { return false; }
+bool nsIFrame::IsEmpty() {
+  return IsHiddenByContentVisibilityOfInFlowParentForLayout();
+}
 
 bool nsIFrame::CachedIsEmpty() {
-  MOZ_ASSERT(!HasAnyStateBits(NS_FRAME_IS_DIRTY),
-             "Must only be called on reflowed lines");
+  MOZ_ASSERT(!HasAnyStateBits(NS_FRAME_IS_DIRTY) ||
+                 IsHiddenByContentVisibilityOfInFlowParentForLayout(),
+             "Must only be called on reflowed lines or those hidden by "
+             "content-visibility.");
   return IsEmpty();
 }
 
 /* virtual */
-bool nsIFrame::IsSelfEmpty() { return false; }
+bool nsIFrame::IsSelfEmpty() {
+  return IsHiddenByContentVisibilityOfInFlowParentForLayout();
+}
 
 nsresult nsIFrame::GetSelectionController(nsPresContext* aPresContext,
                                           nsISelectionController** aSelCon) {
@@ -11637,7 +11655,7 @@ void nsIFrame::UpdateAnimationVisibility() {
     return;
   }
 
-  bool hidden = AncestorHidesContent();
+  bool hidden = IsHiddenByContentVisibilityOnAnyAncestor();
   if (animationCollection) {
     for (auto& animation : animationCollection->mAnimations) {
       animation->SetHiddenByContentVisibility(hidden);
