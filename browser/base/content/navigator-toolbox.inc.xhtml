@@ -434,15 +434,6 @@
       </toolbarbutton>
     </hbox>
 
-    <toolbarbutton id="unified-extensions-button"
-                   class="toolbarbutton-1"
-                   data-l10n-id="unified-extensions-button"
-                   hidden="true"
-                   onkeypress="gUnifiedExtensions.togglePanel(event)"
-                   onmousedown="gUnifiedExtensions.togglePanel(event)"
-                   overflows="false"
-                   removable="false" />
-
     <toolbarbutton id="nav-bar-overflow-button"
                    class="toolbarbutton-1 chromeclass-toolbar-additional overflow-button"
                    skipintoolbarset="true"
@@ -451,6 +442,15 @@
         <image class="toolbarbutton-animatable-image"/>
       </box>
     </toolbarbutton>
+
+    <toolbarbutton id="unified-extensions-button"
+                   class="toolbarbutton-1"
+                   data-l10n-id="unified-extensions-button"
+                   hidden="true"
+                   onkeypress="gUnifiedExtensions.togglePanel(event)"
+                   onmousedown="gUnifiedExtensions.togglePanel(event)"
+                   overflows="false"
+                   removable="false"/>
 
     <toolbaritem id="PanelUI-button"
                  removable="false">
