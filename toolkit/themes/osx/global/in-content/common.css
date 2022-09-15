@@ -17,11 +17,6 @@ xul|menulist > xul|menupopup > xul|menuitem[selected="true"]::before {
   display: none;
 }
 
-xul|menulist::part(dropmarker) {
-  display: -moz-box;
-  margin-block: 1px;
-}
-
 xul|menulist > xul|menupopup xul|menu,
 xul|menulist > xul|menupopup xul|menuitem {
   padding-inline-end: 34px;

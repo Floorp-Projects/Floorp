@@ -541,6 +541,7 @@ xul|menulist::part(dropmarker) {
   border: none;
   background-color: transparent;
   list-style-image: url("chrome://global/skin/icons/arrow-down-12.svg");
+  -moz-box-align: center;
   -moz-context-properties: fill;
   fill: currentColor;
 }
