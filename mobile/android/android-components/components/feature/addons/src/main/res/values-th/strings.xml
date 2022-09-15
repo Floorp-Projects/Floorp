@@ -38,6 +38,8 @@
     <string name="mozac_feature_addons_permissions_clipboard_read_description">รับข้อมูลจากคลิปบอร์ด</string>
     <!-- Description for clipboard_write permission. -->
     <string name="mozac_feature_addons_permissions_clipboard_write_description">ป้อนข้อมูลไปยังคลิปบอร์ด</string>
+    <!-- Description for declarativeNetRequest permission. -->
+    <string name="mozac_feature_addons_permissions_declarative_net_request_description">ปิดกั้นเนื้อหาบนหน้าใดๆ</string>
     <!-- Description for downloads permission. -->
     <string name="mozac_feature_addons_permissions_downloads_description">ดาวน์โหลดไฟล์และอ่านและเปลี่ยนแปลงประวัติการดาวน์โหลดของเบราว์เซอร์</string>
     <!-- Description for downloads_open permission. -->
