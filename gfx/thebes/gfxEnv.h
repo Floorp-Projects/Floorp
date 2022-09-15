@@ -125,6 +125,9 @@ class gfxEnv final {
   // Offscreen GL context for main layer manager
   DECL_GFX_ENV(MOZ_LAYERS_PREFER_OFFSCREEN)
 
+  // WebGL workarounds
+  DECL_GFX_ENV(MOZ_WEBGL_WORKAROUND_FIRST_AFFECTS_INSTANCE_ID)
+
   // WARNING:
   // For readability reasons, please make sure that you've added your new envvar
   // to the list above in alphabetical order.

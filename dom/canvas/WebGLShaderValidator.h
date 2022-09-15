@@ -35,6 +35,8 @@ class ShaderValidatorResults final {
 
   int mMaxVaryingVectors = 0;
 
+  bool mNeeds_webgl_gl_VertexID_Offset = false;
+
   bool CanLinkTo(const ShaderValidatorResults& vert,
                  nsCString* const out_log) const;
   size_t SizeOfIncludingThis(MallocSizeOf) const;
@@ -49,6 +51,8 @@ class ShaderValidator final {
   const int mMaxVaryingVectors;
 
  public:
+  bool mIfNeeded_webgl_gl_VertexID_Offset = false;
+
   static std::unique_ptr<ShaderValidator> Create(
       GLenum shaderType, ShShaderSpec spec, ShShaderOutput outputLanguage,
       const ShBuiltInResources& resources, ShCompileOptions compileOptions);

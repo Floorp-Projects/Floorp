@@ -11,8 +11,46 @@
 
 namespace mozilla {
 
+static void BindBuffer(gl::GLContext* const gl, const GLenum target,
+                       WebGLBuffer* const buffer) {
+  gl->fBindBuffer(target, buffer ? buffer->mGLName : 0);
+}
+
 WebGLVertexArrayFake::WebGLVertexArrayFake(WebGLContext* webgl)
     : WebGLVertexArray(webgl) {}
+
+void WebGLVertexArray::DoVertexAttrib(const uint32_t index,
+                                      const uint32_t vertOffset) const {
+  const auto& gl = mContext->gl;
+
+  const bool useDivisor =
+      mContext->IsWebGL2() ||
+      mContext->IsExtensionEnabled(WebGLExtensionID::ANGLE_instanced_arrays);
+
+  const auto& binding = mBindings.at(index);
+  const auto& desc = mDescs.at(index);
+
+  if (binding.layout.isArray) {
+    gl->fEnableVertexAttribArray(index);
+  } else {
+    gl->fDisableVertexAttribArray(index);
+  }
+
+  if (useDivisor) {
+    gl->fVertexAttribDivisor(index, binding.layout.divisor);
+  }
+
+  static_assert(IsBufferTargetLazilyBound(LOCAL_GL_ARRAY_BUFFER));
+  BindBuffer(gl, LOCAL_GL_ARRAY_BUFFER, binding.buffer);
+
+  auto desc2 = desc;
+  if (!binding.layout.divisor) {
+    desc2.byteOffset += binding.layout.byteStride * vertOffset;
+  }
+  DoVertexAttribPointer(*gl, index, desc2);
+
+  BindBuffer(gl, LOCAL_GL_ARRAY_BUFFER, nullptr);
+}
 
 void WebGLVertexArrayFake::BindVertexArray() {
   // Go through and re-bind all buffers and setup all
@@ -24,35 +62,11 @@ void WebGLVertexArrayFake::BindVertexArray() {
   static_assert(IsBufferTargetLazilyBound(LOCAL_GL_ARRAY_BUFFER));
   static_assert(!IsBufferTargetLazilyBound(LOCAL_GL_ELEMENT_ARRAY_BUFFER));
 
-  const auto fnBind = [&](const GLenum target, WebGLBuffer* const buffer) {
-    gl->fBindBuffer(target, buffer ? buffer->mGLName : 0);
-  };
-
-  fnBind(LOCAL_GL_ELEMENT_ARRAY_BUFFER, mElementArrayBuffer);
-
-  const bool useDivisor =
-      mContext->IsWebGL2() ||
-      mContext->IsExtensionEnabled(WebGLExtensionID::ANGLE_instanced_arrays);
+  BindBuffer(gl, LOCAL_GL_ELEMENT_ARRAY_BUFFER, mElementArrayBuffer);
 
   for (const auto i : IntegerRange(mContext->MaxVertexAttribs())) {
-    const auto& binding = mBindings[i];
-    const auto& desc = mDescs[i];
-
-    if (binding.layout.isArray) {
-      gl->fEnableVertexAttribArray(i);
-    } else {
-      gl->fDisableVertexAttribArray(i);
-    }
-
-    if (useDivisor) {
-      gl->fVertexAttribDivisor(i, binding.layout.divisor);
-    }
-
-    fnBind(LOCAL_GL_ARRAY_BUFFER, binding.buffer);
-    DoVertexAttribPointer(*gl, i, desc);
+    DoVertexAttrib(i);
   }
-
-  fnBind(LOCAL_GL_ARRAY_BUFFER, nullptr);
 }
 
 }  // namespace mozilla
