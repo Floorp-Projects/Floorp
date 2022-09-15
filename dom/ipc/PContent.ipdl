@@ -1286,6 +1286,11 @@ parent:
     async RequestAnonymousTemporaryFile(uint64_t aID);
 
     /**
+     * Notifies the parent that the child needs no more ForceKill dump.
+     */
+    [Priority=control] async NotifyShutdownSuccess();
+
+    /**
      * Notifies the parent to continue shutting down after the child performs
      * its shutdown tasks.
      */
