@@ -12,6 +12,7 @@
 #include "mozilla/RefPtr.h"
 #include "SoftwareVsyncSource.h"
 #include "VsyncSource.h"
+#include "mozilla/gtest/MozAssertions.h"
 #include "mozilla/Monitor.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/VsyncDispatcher.h"
@@ -90,7 +91,7 @@ static void FlushMainThreadLoop() {
   // before returning.
   nsCOMPtr<nsIThread> mainThread;
   nsresult rv = NS_GetMainThread(getter_AddRefs(mainThread));
-  ASSERT_TRUE(NS_SUCCEEDED(rv));
+  ASSERT_NS_SUCCEEDED(rv);
 
   rv = NS_OK;
   bool processed = true;

@@ -19,6 +19,7 @@
 #include "nsIFile.h"
 
 #include "gtest/gtest.h"
+#include "mozilla/gtest/MozAssertions.h"
 
 using namespace mozilla;
 
@@ -731,7 +732,7 @@ TEST(TArray, test_comptr_array)
     FilePointer f;
     tmpDir->Clone(getter_AddRefs(f));
     ASSERT_TRUE(f);
-    ASSERT_FALSE(NS_FAILED(f->AppendNative(nsDependentCString(kNames[i]))));
+    ASSERT_NS_SUCCEEDED(f->AppendNative(nsDependentCString(kNames[i])));
     fileArray.AppendElement(f);
   }
 

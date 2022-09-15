@@ -4,6 +4,7 @@
 
 #include "TestCommon.h"
 #include "gtest/gtest.h"
+#include "mozilla/gtest/MozAssertions.h"
 #include "nsISocketTransportService.h"
 #include "nsISocketTransport.h"
 #include "nsIServerSocket.h"
@@ -105,18 +106,18 @@ TEST(TestBind, MainTest)
   ASSERT_TRUE(server);
 
   nsresult rv = server->Init(-1, true, -1);
-  ASSERT_TRUE(NS_SUCCEEDED(rv));
+  ASSERT_NS_SUCCEEDED(rv);
 
   int32_t serverPort;
   rv = server->GetPort(&serverPort);
-  ASSERT_TRUE(NS_SUCCEEDED(rv));
+  ASSERT_NS_SUCCEEDED(rv);
 
   RefPtr<WaitForCondition> waiter = new WaitForCondition();
 
   // Listening.
   RefPtr<ServerListener> serverListener = new ServerListener(waiter);
   rv = server->AsyncListen(serverListener);
-  ASSERT_TRUE(NS_SUCCEEDED(rv));
+  ASSERT_NS_SUCCEEDED(rv);
 
   //
   // Client side
@@ -124,7 +125,7 @@ TEST(TestBind, MainTest)
   uint32_t bindingPort = 20000;
   nsCOMPtr<nsISocketTransportService> service =
       do_GetService("@mozilla.org/network/socket-transport-service;1", &rv);
-  ASSERT_TRUE(NS_SUCCEEDED(rv));
+  ASSERT_NS_SUCCEEDED(rv);
 
   nsCOMPtr<nsIInputStream> inputStream;
   RefPtr<ClientInputCallback> clientCallback;
@@ -140,7 +141,7 @@ TEST(TestBind, MainTest)
               rv = service->CreateTransport(nsTArray<nsCString>(),
                                             "127.0.0.1"_ns, serverPort, nullptr,
                                             nullptr, getter_AddRefs(client));
-              ASSERT_TRUE(NS_SUCCEEDED(rv));
+              ASSERT_NS_SUCCEEDED(rv);
 
               // Bind to a port. It's possible that we are binding to a port
               // that is currently in use. If we failed to bind, we try next
@@ -150,14 +151,14 @@ TEST(TestBind, MainTest)
               bindingAddr.inet.ip = 0;
               bindingAddr.inet.port = PR_htons(bindingPort);
               rv = client->Bind(&bindingAddr);
-              ASSERT_TRUE(NS_SUCCEEDED(rv));
+              ASSERT_NS_SUCCEEDED(rv);
 
               // Open IO streams, to make client SocketTransport connect to
               // server.
               clientCallback = new ClientInputCallback(waiter);
               rv = client->OpenInputStream(nsITransport::OPEN_UNBUFFERED, 0, 0,
                                            getter_AddRefs(inputStream));
-              ASSERT_TRUE(NS_SUCCEEDED(rv));
+              ASSERT_NS_SUCCEEDED(rv);
 
               nsCOMPtr<nsIAsyncInputStream> asyncInputStream =
                   do_QueryInterface(inputStream);

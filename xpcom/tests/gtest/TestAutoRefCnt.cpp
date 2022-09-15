@@ -11,6 +11,7 @@
 #include "nsThreadUtils.h"
 
 #include "gtest/gtest.h"
+#include "mozilla/gtest/MozAssertions.h"
 
 using namespace mozilla;
 
@@ -54,7 +55,7 @@ TEST(AutoRefCnt, ThreadSafeAutoRefCntBalance)
     nsresult rv =
         NS_NewNamedThread("AutoRefCnt Test", getter_AddRefs(threads[i]),
                           new nsThreadSafeAutoRefCntRunner);
-    EXPECT_TRUE(NS_SUCCEEDED(rv));
+    EXPECT_NS_SUCCEEDED(rv);
   }
   for (size_t i = 0; i < kThreadCount; i++) {
     threads[i]->Shutdown();

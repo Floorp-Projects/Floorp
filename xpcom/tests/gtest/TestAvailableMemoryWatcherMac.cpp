@@ -7,6 +7,7 @@
 #include "gtest/gtest.h"
 
 #include "AvailableMemoryWatcher.h"
+#include "mozilla/gtest/MozAssertions.h"
 #include "mozilla/SpinEventLoopUntil.h"
 #include "mozilla/Unused.h"
 #include "nsIObserver.h"
@@ -180,7 +181,7 @@ class MemoryWatcherTelemetryEvent {
     // The third token should be a valid floating number.
     nsresult rv;
     tokens[2].ToDouble(&rv);
-    EXPECT_TRUE(NS_SUCCEEDED(rv));
+    EXPECT_NS_SUCCEEDED(rv);
   }
 };
 

@@ -19,10 +19,10 @@ static void CheckMimeType(const char* aContents, size_t aLength,
   nsAutoCString detected;
   nsresult rv = imgLoader::GetMimeTypeFromContent(aContents, aLength, detected);
   if (aExpected) {
-    ASSERT_TRUE(NS_SUCCEEDED(rv));
+    ASSERT_NS_SUCCEEDED(rv);
     EXPECT_TRUE(detected.EqualsASCII(aExpected));
   } else {
-    ASSERT_TRUE(NS_FAILED(rv));
+    ASSERT_NS_FAILED(rv);
     EXPECT_TRUE(detected.IsEmpty());
   }
 }

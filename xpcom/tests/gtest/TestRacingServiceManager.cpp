@@ -15,6 +15,7 @@
 #include "prmon.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/gtest/MozAssertions.h"
 
 #include "mozilla/ReentrantMonitor.h"
 
@@ -215,7 +216,7 @@ TEST(RacingServiceManager, Test)
   // Run the classID test
   nsCOMPtr<nsIThread> newThread;
   rv = NS_NewNamedThread("RacingServMan", getter_AddRefs(newThread), runnable);
-  ASSERT_TRUE(NS_SUCCEEDED(rv));
+  ASSERT_NS_SUCCEEDED(rv);
 
   {
     ReentrantMonitorAutoEnter mon2(*gReentrantMonitor);
@@ -229,7 +230,7 @@ TEST(RacingServiceManager, Test)
   }
 
   nsCOMPtr<nsISupports> component(do_GetService(kFactoryCID1, &rv));
-  ASSERT_TRUE(NS_SUCCEEDED(rv));
+  ASSERT_NS_SUCCEEDED(rv);
 
   // Reset for the contractID test
   gMainThreadWaiting = gCreateInstanceCalled = false;
@@ -237,7 +238,7 @@ TEST(RacingServiceManager, Test)
   component = nullptr;
 
   rv = newThread->Dispatch(runnable, NS_DISPATCH_NORMAL);
-  ASSERT_TRUE(NS_SUCCEEDED(rv));
+  ASSERT_NS_SUCCEEDED(rv);
 
   {
     ReentrantMonitorAutoEnter mon3(*gReentrantMonitor);
@@ -251,7 +252,7 @@ TEST(RacingServiceManager, Test)
   }
 
   component = do_GetService(FACTORY_CONTRACTID, &rv);
-  ASSERT_TRUE(NS_SUCCEEDED(rv));
+  ASSERT_NS_SUCCEEDED(rv);
 
   NS_RELEASE(gFactory);
 }

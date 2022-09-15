@@ -99,7 +99,7 @@ TEST_F(ImageSurfacePipeIntegration, SurfacePipe) {
   auto sink = MakeUnique<SurfaceSink>();
   nsresult rv = sink->Configure(
       SurfaceConfig{decoder, IntSize(100, 100), SurfaceFormat::OS_RGBA, false});
-  ASSERT_TRUE(NS_SUCCEEDED(rv));
+  ASSERT_NS_SUCCEEDED(rv);
 
   pipe = TestSurfacePipeFactory::SurfacePipeFromPipeline(sink);
 

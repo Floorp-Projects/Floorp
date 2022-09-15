@@ -1,4 +1,5 @@
 #include "gtest/gtest.h"
+#include "mozilla/gtest/MozAssertions.h"
 #include "mozilla/intl/AppDateTimeFormat.h"
 #include "mozilla/intl/DateTimeFormat.h"
 
@@ -28,7 +29,7 @@ TEST(AppDateTimeFormat, FormatPRExplodedTime)
   nsAutoString formattedTime;
   nsresult rv =
       AppDateTimeFormat::Format(style, &prExplodedTime, formattedTime);
-  ASSERT_TRUE(NS_SUCCEEDED(rv));
+  ASSERT_NS_SUCCEEDED(rv);
   ASSERT_TRUE(formattedTime.Find(u"January") != kNotFound);
   ASSERT_TRUE(formattedTime.Find(u"1970") != kNotFound);
   ASSERT_TRUE(formattedTime.Find(u"12:00:00 AM") != kNotFound ||
@@ -38,7 +39,7 @@ TEST(AppDateTimeFormat, FormatPRExplodedTime)
 
   rv = AppDateTimeFormat::Format(style, &prExplodedTime, formattedTime);
 
-  ASSERT_TRUE(NS_SUCCEEDED(rv));
+  ASSERT_NS_SUCCEEDED(rv);
   ASSERT_TRUE(formattedTime.Find(u"January") != kNotFound);
   ASSERT_TRUE(formattedTime.Find(u"1970") != kNotFound);
   ASSERT_TRUE(formattedTime.Find(u"12:19:00 AM") != kNotFound ||
@@ -47,7 +48,7 @@ TEST(AppDateTimeFormat, FormatPRExplodedTime)
   prExplodedTime = {0, 0,    0, 7, 1,
                     0, 1970, 4, 0, {(6 * 60 * 60), (1 * 60 * 60)}};
   rv = AppDateTimeFormat::Format(style, &prExplodedTime, formattedTime);
-  ASSERT_TRUE(NS_SUCCEEDED(rv));
+  ASSERT_NS_SUCCEEDED(rv);
   ASSERT_TRUE(formattedTime.Find(u"January") != kNotFound);
   ASSERT_TRUE(formattedTime.Find(u"1970") != kNotFound);
   ASSERT_TRUE(formattedTime.Find(u"7:00:00 AM") != kNotFound ||
@@ -57,7 +58,7 @@ TEST(AppDateTimeFormat, FormatPRExplodedTime)
       0, 0,    29, 11, 1,
       0, 1970, 4,  0,  {(10 * 60 * 60) + (29 * 60), (1 * 60 * 60)}};
   rv = AppDateTimeFormat::Format(style, &prExplodedTime, formattedTime);
-  ASSERT_TRUE(NS_SUCCEEDED(rv));
+  ASSERT_NS_SUCCEEDED(rv);
   ASSERT_TRUE(formattedTime.Find(u"January") != kNotFound);
   ASSERT_TRUE(formattedTime.Find(u"1970") != kNotFound);
   ASSERT_TRUE(formattedTime.Find(u"11:29:00 AM") != kNotFound ||
@@ -65,7 +66,7 @@ TEST(AppDateTimeFormat, FormatPRExplodedTime)
 
   prExplodedTime = {0, 0, 37, 23, 31, 11, 1969, 3, 364, {-(23 * 60), 0}};
   rv = AppDateTimeFormat::Format(style, &prExplodedTime, formattedTime);
-  ASSERT_TRUE(NS_SUCCEEDED(rv));
+  ASSERT_NS_SUCCEEDED(rv);
   ASSERT_TRUE(formattedTime.Find(u"December") != kNotFound);
   ASSERT_TRUE(formattedTime.Find(u"31") != kNotFound);
   ASSERT_TRUE(formattedTime.Find(u"1969") != kNotFound);
@@ -74,7 +75,7 @@ TEST(AppDateTimeFormat, FormatPRExplodedTime)
 
   prExplodedTime = {0, 0, 0, 17, 31, 11, 1969, 3, 364, {-(7 * 60 * 60), 0}};
   rv = AppDateTimeFormat::Format(style, &prExplodedTime, formattedTime);
-  ASSERT_TRUE(NS_SUCCEEDED(rv));
+  ASSERT_NS_SUCCEEDED(rv);
   ASSERT_TRUE(formattedTime.Find(u"December") != kNotFound);
   ASSERT_TRUE(formattedTime.Find(u"31") != kNotFound);
   ASSERT_TRUE(formattedTime.Find(u"1969") != kNotFound);
@@ -85,7 +86,7 @@ TEST(AppDateTimeFormat, FormatPRExplodedTime)
       0,  0,    47, 14,  31,
       11, 1969, 3,  364, {-((10 * 60 * 60) + (13 * 60)), (1 * 60 * 60)}};
   rv = AppDateTimeFormat::Format(style, &prExplodedTime, formattedTime);
-  ASSERT_TRUE(NS_SUCCEEDED(rv));
+  ASSERT_NS_SUCCEEDED(rv);
   ASSERT_TRUE(formattedTime.Find(u"December") != kNotFound);
   ASSERT_TRUE(formattedTime.Find(u"31") != kNotFound);
   ASSERT_TRUE(formattedTime.Find(u"1969") != kNotFound);
@@ -111,7 +112,7 @@ TEST(AppDateTimeFormat, DateFormatSelectors)
 
     nsresult rv =
         AppDateTimeFormat::Format(components, &prExplodedTime, formattedTime);
-    ASSERT_TRUE(NS_SUCCEEDED(rv));
+    ASSERT_NS_SUCCEEDED(rv);
     ASSERT_STREQ("01/1970", NS_ConvertUTF16toUTF8(formattedTime).get());
   }
   {
@@ -121,7 +122,7 @@ TEST(AppDateTimeFormat, DateFormatSelectors)
 
     nsresult rv =
         AppDateTimeFormat::Format(components, &prExplodedTime, formattedTime);
-    ASSERT_TRUE(NS_SUCCEEDED(rv));
+    ASSERT_NS_SUCCEEDED(rv);
     ASSERT_STREQ("January 1970", NS_ConvertUTF16toUTF8(formattedTime).get());
   }
   {
@@ -130,7 +131,7 @@ TEST(AppDateTimeFormat, DateFormatSelectors)
 
     nsresult rv =
         AppDateTimeFormat::Format(components, &prExplodedTime, formattedTime);
-    ASSERT_TRUE(NS_SUCCEEDED(rv));
+    ASSERT_NS_SUCCEEDED(rv);
     ASSERT_STREQ("January", NS_ConvertUTF16toUTF8(formattedTime).get());
   }
   {
@@ -139,7 +140,7 @@ TEST(AppDateTimeFormat, DateFormatSelectors)
 
     nsresult rv =
         AppDateTimeFormat::Format(components, &prExplodedTime, formattedTime);
-    ASSERT_TRUE(NS_SUCCEEDED(rv));
+    ASSERT_NS_SUCCEEDED(rv);
     ASSERT_STREQ("Thu", NS_ConvertUTF16toUTF8(formattedTime).get());
   }
 }
@@ -157,7 +158,7 @@ TEST(AppDateTimeFormat, FormatPRExplodedTimeForeign)
   nsAutoString formattedTime;
   nsresult rv =
       AppDateTimeFormat::Format(style, &prExplodedTime, formattedTime);
-  ASSERT_TRUE(NS_SUCCEEDED(rv));
+  ASSERT_NS_SUCCEEDED(rv);
   ASSERT_TRUE(formattedTime.Find(u"1.") != kNotFound);
   ASSERT_TRUE(formattedTime.Find(u"Januar") != kNotFound);
   ASSERT_TRUE(formattedTime.Find(u"1970") != kNotFound);
@@ -166,7 +167,7 @@ TEST(AppDateTimeFormat, FormatPRExplodedTimeForeign)
 
   prExplodedTime = {0, 0, 19, 0, 1, 0, 1970, 4, 0, {(19 * 60), 0}};
   rv = AppDateTimeFormat::Format(style, &prExplodedTime, formattedTime);
-  ASSERT_TRUE(NS_SUCCEEDED(rv));
+  ASSERT_NS_SUCCEEDED(rv);
   ASSERT_TRUE(formattedTime.Find(u"1.") != kNotFound);
   ASSERT_TRUE(formattedTime.Find(u"Januar") != kNotFound);
   ASSERT_TRUE(formattedTime.Find(u"1970") != kNotFound);
@@ -176,7 +177,7 @@ TEST(AppDateTimeFormat, FormatPRExplodedTimeForeign)
   prExplodedTime = {0, 0,    0, 7, 1,
                     0, 1970, 4, 0, {(6 * 60 * 60), (1 * 60 * 60)}};
   rv = AppDateTimeFormat::Format(style, &prExplodedTime, formattedTime);
-  ASSERT_TRUE(NS_SUCCEEDED(rv));
+  ASSERT_NS_SUCCEEDED(rv);
   ASSERT_TRUE(formattedTime.Find(u"1.") != kNotFound);
   ASSERT_TRUE(formattedTime.Find(u"Januar") != kNotFound);
   ASSERT_TRUE(formattedTime.Find(u"1970") != kNotFound);
@@ -187,7 +188,7 @@ TEST(AppDateTimeFormat, FormatPRExplodedTimeForeign)
       0, 0,    29, 11, 1,
       0, 1970, 4,  0,  {(10 * 60 * 60) + (29 * 60), (1 * 60 * 60)}};
   rv = AppDateTimeFormat::Format(style, &prExplodedTime, formattedTime);
-  ASSERT_TRUE(NS_SUCCEEDED(rv));
+  ASSERT_NS_SUCCEEDED(rv);
   ASSERT_TRUE(formattedTime.Find(u"1.") != kNotFound);
   ASSERT_TRUE(formattedTime.Find(u"Januar") != kNotFound);
   ASSERT_TRUE(formattedTime.Find(u"1970") != kNotFound);
@@ -196,7 +197,7 @@ TEST(AppDateTimeFormat, FormatPRExplodedTimeForeign)
 
   prExplodedTime = {0, 0, 37, 23, 31, 11, 1969, 3, 364, {-(23 * 60), 0}};
   rv = AppDateTimeFormat::Format(style, &prExplodedTime, formattedTime);
-  ASSERT_TRUE(NS_SUCCEEDED(rv));
+  ASSERT_NS_SUCCEEDED(rv);
   ASSERT_TRUE(formattedTime.Find(u"31.") != kNotFound);
   ASSERT_TRUE(formattedTime.Find(u"Dezember") != kNotFound);
   ASSERT_TRUE(formattedTime.Find(u"1969") != kNotFound);
@@ -205,7 +206,7 @@ TEST(AppDateTimeFormat, FormatPRExplodedTimeForeign)
 
   prExplodedTime = {0, 0, 0, 17, 31, 11, 1969, 3, 364, {-(7 * 60 * 60), 0}};
   rv = AppDateTimeFormat::Format(style, &prExplodedTime, formattedTime);
-  ASSERT_TRUE(NS_SUCCEEDED(rv));
+  ASSERT_NS_SUCCEEDED(rv);
   ASSERT_TRUE(formattedTime.Find(u"31.") != kNotFound);
   ASSERT_TRUE(formattedTime.Find(u"Dezember") != kNotFound);
   ASSERT_TRUE(formattedTime.Find(u"1969") != kNotFound);
@@ -216,7 +217,7 @@ TEST(AppDateTimeFormat, FormatPRExplodedTimeForeign)
       0,  0,    47, 14,  31,
       11, 1969, 3,  364, {-((10 * 60 * 60) + (13 * 60)), (1 * 60 * 60)}};
   rv = AppDateTimeFormat::Format(style, &prExplodedTime, formattedTime);
-  ASSERT_TRUE(NS_SUCCEEDED(rv));
+  ASSERT_NS_SUCCEEDED(rv);
   ASSERT_TRUE(formattedTime.Find(u"31.") != kNotFound);
   ASSERT_TRUE(formattedTime.Find(u"Dezember") != kNotFound);
   ASSERT_TRUE(formattedTime.Find(u"1969") != kNotFound);
@@ -241,7 +242,7 @@ TEST(AppDateTimeFormat, DateFormatSelectorsForeign)
 
     nsresult rv =
         AppDateTimeFormat::Format(components, &prExplodedTime, formattedTime);
-    ASSERT_TRUE(NS_SUCCEEDED(rv));
+    ASSERT_NS_SUCCEEDED(rv);
     ASSERT_STREQ("01.1970", NS_ConvertUTF16toUTF8(formattedTime).get());
   }
   {
@@ -251,7 +252,7 @@ TEST(AppDateTimeFormat, DateFormatSelectorsForeign)
 
     nsresult rv =
         AppDateTimeFormat::Format(components, &prExplodedTime, formattedTime);
-    ASSERT_TRUE(NS_SUCCEEDED(rv));
+    ASSERT_NS_SUCCEEDED(rv);
     ASSERT_STREQ("Januar 1970", NS_ConvertUTF16toUTF8(formattedTime).get());
   }
   {
@@ -260,7 +261,7 @@ TEST(AppDateTimeFormat, DateFormatSelectorsForeign)
 
     nsresult rv =
         AppDateTimeFormat::Format(components, &prExplodedTime, formattedTime);
-    ASSERT_TRUE(NS_SUCCEEDED(rv));
+    ASSERT_NS_SUCCEEDED(rv);
     ASSERT_STREQ("Do", NS_ConvertUTF16toUTF8(formattedTime).get());
   }
   {
@@ -269,7 +270,7 @@ TEST(AppDateTimeFormat, DateFormatSelectorsForeign)
 
     nsresult rv =
         AppDateTimeFormat::Format(components, &prExplodedTime, formattedTime);
-    ASSERT_TRUE(NS_SUCCEEDED(rv));
+    ASSERT_NS_SUCCEEDED(rv);
     ASSERT_STREQ("Donnerstag", NS_ConvertUTF16toUTF8(formattedTime).get());
   }
   {
@@ -278,7 +279,7 @@ TEST(AppDateTimeFormat, DateFormatSelectorsForeign)
 
     nsresult rv =
         AppDateTimeFormat::Format(components, &prExplodedTime, formattedTime);
-    ASSERT_TRUE(NS_SUCCEEDED(rv));
+    ASSERT_NS_SUCCEEDED(rv);
     ASSERT_STREQ("Januar", NS_ConvertUTF16toUTF8(formattedTime).get());
   }
   {
@@ -287,7 +288,7 @@ TEST(AppDateTimeFormat, DateFormatSelectorsForeign)
 
     nsresult rv =
         AppDateTimeFormat::Format(components, &prExplodedTime, formattedTime);
-    ASSERT_TRUE(NS_SUCCEEDED(rv));
+    ASSERT_NS_SUCCEEDED(rv);
     ASSERT_STREQ("Do", NS_ConvertUTF16toUTF8(formattedTime).get());
   }
 }

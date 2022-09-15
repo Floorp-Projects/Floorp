@@ -10,6 +10,7 @@
 #include "mozilla/TaskQueue.h"
 
 #include "gtest/gtest.h"
+#include "mozilla/gtest/MozAssertions.h"
 #include "MediaTimer.h"
 #include "mozilla/media/MediaUtils.h"
 #include "VideoUtils.h"
@@ -91,7 +92,7 @@ TEST(DelayedRunnable, BackgroundTaskQueueShutdownTask)
   nsCOMPtr<nsISerialEventTarget> taskQueue;
   nsresult rv = NS_CreateBackgroundTaskQueue("TestDelayedRunnable",
                                              getter_AddRefs(taskQueue));
-  ASSERT_TRUE(NS_SUCCEEDED(rv));
+  ASSERT_NS_SUCCEEDED(rv);
 
   // Leak the queue, so it gets cleaned up by xpcom-shutdown.
   nsISerialEventTarget* tq = taskQueue.forget().take();

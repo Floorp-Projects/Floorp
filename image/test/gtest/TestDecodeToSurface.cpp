@@ -88,7 +88,7 @@ static void RunDecodeToSurface(const ImageTestCase& aTestCase,
   nsCOMPtr<nsIThread> thread;
   nsresult rv =
       NS_NewNamedThread("DecodeToSurface", getter_AddRefs(thread), nullptr);
-  ASSERT_TRUE(NS_SUCCEEDED(rv));
+  ASSERT_NS_SUCCEEDED(rv);
 
   // We run the DecodeToSurface tests off-main-thread to ensure that
   // DecodeToSurface doesn't require any main-thread-only code.
@@ -149,7 +149,7 @@ TEST_F(ImageDecodeToSurface, ICOMultipleSizes) {
   ImageMetadata metadata;
   nsresult rv = ImageOps::DecodeMetadata(
       buffer, nsDependentCString(testCase.mMimeType), metadata);
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  EXPECT_NS_SUCCEEDED(rv);
   ASSERT_TRUE(metadata.HasSize());
   EXPECT_EQ(testCase.mSize, metadata.GetSize().ToUnknownSize());
 

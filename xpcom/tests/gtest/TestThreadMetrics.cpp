@@ -7,6 +7,7 @@
 #include "gtest/gtest.h"
 #include "gmock/gmock.h"
 #include "mozilla/AbstractThread.h"
+#include "mozilla/gtest/MozAssertions.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/dom/DocGroup.h"
 #include "mozilla/dom/Document.h"
@@ -180,7 +181,7 @@ TEST_F(ThreadMetrics, CollectMetrics) {
   // Dispatching a runnable that will last for +50ms
   RefPtr<TimedRunnable> runnable = new TimedRunnable(25, 25);
   rv = Dispatch(runnable);
-  ASSERT_TRUE(NS_SUCCEEDED(rv));
+  ASSERT_NS_SUCCEEDED(rv);
 
   // Flush the queue
   ProcessAllEvents();
@@ -211,7 +212,7 @@ TEST_F(ThreadMetrics, CollectRecursiveMetrics) {
   nsCOMPtr<nsIRunnable> nested = new TimedRunnable(400, 0);
   runnable->AddNestedRunnable({nested});
   rv = Dispatch(runnable);
-  ASSERT_TRUE(NS_SUCCEEDED(rv));
+  ASSERT_NS_SUCCEEDED(rv);
 
   // Flush the queue
   ProcessAllEvents();
@@ -249,7 +250,7 @@ TEST_F(ThreadMetrics, CollectMultipleRecursiveMetrics) {
   }
 
   rv = Dispatch(runnable);
-  ASSERT_TRUE(NS_SUCCEEDED(rv));
+  ASSERT_NS_SUCCEEDED(rv);
 
   // Flush the queue
   ProcessAllEvents();
@@ -289,7 +290,7 @@ TEST_F(ThreadMetrics, CollectMultipleRecursiveMetricsWithTwoDocgroups) {
   runnable->AddNestedRunnable({nested2});
 
   rv = Dispatch(runnable);
-  ASSERT_TRUE(NS_SUCCEEDED(rv));
+  ASSERT_NS_SUCCEEDED(rv);
 
   // Flush the queue
   ProcessAllEvents();
