@@ -295,21 +295,53 @@ describe("Multistage AboutWelcome module", () => {
       assert.strictEqual(variationIndex, 1);
     });
 
-    it("should select a random colorway", () => {
-      sandbox.stub(React, "useEffect").callsFake((fn, vals) => {
-        if (vals?.length === 0) {
-          fn();
-        }
+    describe("random colorways", () => {
+      let test;
+      beforeEach(() => {
+        COLORWAY_SCREEN_PROPS.handleAction = sandbox.stub();
+        sandbox.stub(window, "matchMedia");
+        // eslint-disable-next-line max-nested-callbacks
+        sandbox.stub(React, "useEffect").callsFake((fn, vals) => {
+          if (vals?.length === 0) {
+            fn();
+          }
+        });
+        test = () => {
+          shallow(<Colorways {...COLORWAY_SCREEN_PROPS} />);
+          return COLORWAY_SCREEN_PROPS.handleAction.firstCall.firstArg
+            .currentTarget;
+        };
       });
 
-      const handleAction = sandbox.stub();
-      shallow(
-        <Colorways {...COLORWAY_SCREEN_PROPS} handleAction={handleAction} />
-      );
-      const { value } = handleAction.firstCall.firstArg.currentTarget;
+      it("should select a random colorway", () => {
+        const { value } = test();
 
-      assert.strictEqual(value, "abstract-soft");
-      assert.calledThrice(React.useEffect);
+        assert.strictEqual(value, "abstract-soft");
+        assert.calledThrice(React.useEffect);
+        assert.notCalled(window.matchMedia);
+      });
+
+      it("should select a random soft colorway when not dark", () => {
+        window.matchMedia.returns({ matches: false });
+        COLORWAY_SCREEN_PROPS.content.tiles.darkVariation = 1;
+
+        const { value } = test();
+
+        assert.strictEqual(value, "abstract-soft");
+        assert.calledThrice(React.useEffect);
+        assert.calledOnce(window.matchMedia);
+      });
+
+      it("should select a random bold colorway when dark", () => {
+        window.matchMedia.returns({ matches: true });
+        COLORWAY_SCREEN_PROPS.content.tiles.darkVariation = 1;
+
+        const { value } = test();
+
+        assert.strictEqual(value, "abstract-bold");
+        assert.calledThrice(React.useEffect);
+        assert.calledOnce(window.matchMedia);
+      });
     });
   });
 });
