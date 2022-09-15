@@ -5,6 +5,7 @@
 <resources>
     <!-- Name of the application -->
     <string name="app_name" translatable="false">Firefox Fenix</string>
+    <string name="firefox" translatable="false">Firefox</string>
 
     <!-- Preference for developers -->
     <string name="preference_leakcanary" translatable="false">LeakCanary</string>

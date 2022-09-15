@@ -470,8 +470,8 @@
     <!-- This is the accessibility content description for the wallpapers functionality. Users are
     able to tap on the app logo in the home screen and can switch to different wallpapers by tapping. -->
     <string name="wallpaper_logo_content_description" moz:removedIn="105" tools:ignore="UnusedResources">Firefox logo - change the wallpaper, button</string>
-    <!-- Text for classic wallpapers title. -->
-    <string name="wallpaper_classic_title">Classic Firefox</string>
+    <!-- Text for classic wallpapers title. The first parameter is the Firefox name. -->
+    <string name="wallpaper_classic_title">Classic %s</string>
     <!-- Text for limited edition wallpapers title. -->
     <string name="wallpaper_limited_edition_title">Limited Edition</string>
     <!-- Description text for the limited edition wallpapers with learn more link. The first parameter is the learn more string defined in wallpaper_learn_more-->
