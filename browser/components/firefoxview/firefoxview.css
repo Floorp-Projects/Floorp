@@ -509,12 +509,12 @@ details[open] > .page-section-header > .twisty {
 
 @media (prefers-contrast) {
   .step-progress {
-    background-color: -moz-Dialog;
-    border: 1px solid ButtonText;
+    background-color: SelectedItem;
+    border: 1px solid SelectedItemText;
   }
 
   .step-progress::-moz-progress-bar {
-    background-color: SelectedItem;
+    background-color: SelectedItemText;
   }
 }
 
