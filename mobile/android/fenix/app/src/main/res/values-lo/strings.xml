@@ -343,6 +343,8 @@
     <string name="preferences_https_only_in_all_tabs">ເປີດໃຊ້ໃນທຸກແຖບ</string>
     <!-- Option for the https only setting -->
     <string name="preferences_https_only_in_private_tabs">ເປີດໃຊ້ໃນແຖບສ່ວນຕົວເທົ່ານັ້ນ</string>
+    <!-- Title shown in the error page for when trying to access a http website while https only mode is enabled. -->
+    <string name="errorpage_httpsonly_title">ເວັບໄຊທທີ່ປອດໄພຍັງບໍ່ພ້ອມໃຫ້ໃຊ້ງານ</string>
     <!-- Preference for accessibility -->
     <string name="preferences_accessibility">ສິ່ງອຳນວຍຄວາມສະດວກ</string>
     <!-- Preference to override the Firefox Account server -->
@@ -365,6 +367,8 @@
     <string name="preferences_customize">ການປັບແຕ່ງ</string>
     <!-- Preference description for banner about signing in -->
     <string moz:RemovedIn="104" name="preferences_sign_in_description" tools:ignore="UnusedResources">Sync ບຸກມາກ, ປະຫວັດ, ແລະ ອື່ນໆດ້ວຍບັນຊີ Firefox ຂອງທ່ານ</string>
+    <!-- Preference description for banner about signing in -->
+    <string name="preferences_sign_in_description_2">Sync ແທັບ, ບຸກມາກ, ລະຫັດຜ່ານ ແລະ ອື່ນໆຂອງທ່ານ.</string>
     <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
     <string name="preferences_account_default_name">ບັນຊີ Firefox</string>
     <!-- Preference text for account title when there was an error syncing FxA -->
@@ -441,6 +445,9 @@
     <!-- Title for the customize home screen section with sponsored shortcuts. -->
     <string name="customize_toggle_contile">ທາງລັດສະປອນເຊີ</string>
 
+    <!-- Wallpapers -->
+    <!-- Content description for various wallpapers. The first parameter is the name of the wallpaper -->
+    <string name="wallpapers_item_name_content_description">ລາຍການພາບພື້ນຫຼັງ: %1$s</string>
     <!-- Snackbar message for when wallpaper is selected -->
     <string name="wallpaper_updated_snackbar_message">ອັບເດດຮູບວໍເປເປີແລ້ວ!</string>
     <!-- Snackbar label for action to view selected wallpaper -->
@@ -621,6 +628,8 @@
     <string name="tab_view_list">ລາຍການ</string>
     <!-- Option for a grid tab view -->
     <string name="tab_view_grid">ເສັ້ນຕາຕະລາງ</string>
+    <!-- Option for search term tab groups -->
+    <string moz:RemovedIn="105" name="tab_view_search_term_tab_groups" tools:ignore="UnusedResources">ກຸ່ມຄົ້ນຫາ</string>
     <!-- Title of preference that allows a user to auto close tabs after a specified amount of time -->
     <string name="preferences_close_tabs">ປິດແທັບ</string>
     <!-- Option for auto closing tabs that will never auto close tabs, always allows user to manually close tabs -->

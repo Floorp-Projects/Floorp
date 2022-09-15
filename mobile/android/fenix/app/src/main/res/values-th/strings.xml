@@ -39,8 +39,10 @@
 
     <!-- Home - Recently saved bookmarks -->
     <!-- Title for the home screen section with recently saved bookmarks. -->
-    <string name="recent_bookmarks_title">ที่คั่นหน้าล่าสุด</string>
+    <string moz:RemovedIn="106" name="recent_bookmarks_title" tools:ignore="UnusedResources">ที่คั่นหน้าล่าสุด</string>
 
+    <!-- Title for the home screen section with recently saved bookmarks. -->
+    <string name="recently_saved_title">บันทึกไว้ล่าสุด</string>
     <!-- Content description for the button which navigates the user to show all of their saved bookmarks. -->
     <string name="recently_saved_show_all_content_description_2">แสดงที่คั่นหน้าทั้งหมดที่บันทึกไว้</string>
 
@@ -74,6 +76,12 @@
 
     <!-- Content description for close button used in "contextual feature recommendation" (CFR) popups -->
     <string name="cfr_dismiss_button_default_content_description">ยกเลิก</string>
+
+    <!-- Total cookie protection "contextual feature recommendation" (CFR) -->
+    <!-- Text for the message displayed in the contextual feature recommendation popup promoting the total cookie protection feature. -->
+    <string name="tcp_cfr_message">คุณลักษณะความเป็นส่วนตัวที่ทรงพลังที่สุดของเราแยกตัวติดตามข้ามไซต์</string>
+    <!-- Text displayed that links to website containing documentation about the "Total cookie protection" feature. -->
+    <string name="tcp_cfr_learn_more">เรียนรู้เกี่ยวกับการป้องกันคุกกี้ทั้งหมด</string>
 
     <!-- Text for the info dialog when camera permissions have been denied but user tries to access a camera feature. -->
     <string name="camera_permissions_needed_message">จำเป็นต้องมีการเข้าถึงกล้อง ไปที่การตั้งค่า Android แตะสิทธิอนุญาต แล้วแตะอนุญาต</string>
@@ -132,6 +140,8 @@
     <string name="recent_tabs_see_all_synced_tabs_button_text">ดูแท็บที่ซิงค์ทั้งหมด</string>
     <!-- Accessibility description for device icon used for recent synced tab -->
     <string name="recent_tabs_synced_device_icon_content_description">อุปกรณ์ที่ซิงค์</string>
+    <!-- Text for the dropdown menu to remove a recent synced tab from the homescreen -->
+    <string name="recent_synced_tab_menu_item_remove">เอาออก</string>
     <!-- Text for the menu button to remove a grouped highlight from the user's browsing history
          in the Recently visited section -->
     <string name="recent_tab_menu_item_remove">เอาออก</string>
@@ -249,25 +259,45 @@
 
     <!-- Home onboarding -->
     <!-- Onboarding home screen dialog title text. The first parameter is the name of the application.-->
-    <string name="onboarding_home_screen_title_3">มีอะไรใหม่ใน %1$s</string>
+    <string moz:RemovedIn="106" name="onboarding_home_screen_title_3" tools:ignore="UnusedResources">มีอะไรใหม่ใน %1$s</string>
     <!-- Onboarding home screen dialog description text. -->
-    <string name="onboarding_home_screen_description_2">คุณสามารถกลับมาดูหน้าเว็บที่คุณดูค้างไว้ได้ง่ายขึ้นแล้ว</string>
+    <string moz:RemovedIn="106" name="onboarding_home_screen_description_2" tools:ignore="UnusedResources">คุณสามารถกลับมาดูหน้าเว็บที่คุณดูค้างไว้ได้ง่ายขึ้นแล้ว</string>
     <!-- Onboarding home screen dialog title text for the home section. The first parameter is the name of the application.-->
-    <string name="onboarding_home_screen_section_home_title_3">หน้าแรกของ %1$s ที่ปรับแต่งแบบส่วนตัว</string>
+    <string moz:RemovedIn="106" name="onboarding_home_screen_section_home_title_3" tools:ignore="UnusedResources">หน้าแรกของ %1$s ที่ปรับแต่งแบบส่วนตัว</string>
     <!-- Onboarding home screen dialog description text for the home section. -->
-    <string name="onboarding_home_screen_section_home_description_2">ข้ามไปยังแท็บที่เปิดอยู่ ที่คั่นหน้า และประวัติการเรียกดู</string>
+    <string moz:RemovedIn="106" name="onboarding_home_screen_section_home_description_2" tools:ignore="UnusedResources">ข้ามไปยังแท็บที่เปิดอยู่ ที่คั่นหน้า และประวัติการเรียกดู</string>
     <!-- Onboarding home screen dialog description text for the tab tray section. -->
-    <string name="onboarding_home_screen_section_cleaner_tab_tray_title_2">แท็บที่สะอาดและเป็นระเบียบ</string>
+    <string moz:RemovedIn="106" name="onboarding_home_screen_section_cleaner_tab_tray_title_2" tools:ignore="UnusedResources">แท็บที่สะอาดและเป็นระเบียบ</string>
     <!-- Onboarding home screen dialog description text for the tab tray section. -->
-    <string name="onboarding_home_screen_section_cleaner_tab_tray_description_2">ขจัดความยุ่งเหยิงของแท็บด้วยเลย์เอาต์ที่ได้รับการปรับปรุงและแท็บที่ปิดอัตโนมัติ</string>
+    <string moz:RemovedIn="106" name="onboarding_home_screen_section_cleaner_tab_tray_description_2" tools:ignore="UnusedResources">ขจัดความยุ่งเหยิงของแท็บด้วยเลย์เอาต์ที่ได้รับการปรับปรุงและแท็บที่ปิดอัตโนมัติ</string>
     <!-- Onboarding home screen dialog description text for the history section. -->
-    <string name="onboarding_home_screen_section_useful_history_title_2">ผลค้นหาล่าสุด</string>
+    <string moz:RemovedIn="106" name="onboarding_home_screen_section_useful_history_title_2" tools:ignore="UnusedResources">ผลค้นหาล่าสุด</string>
 
     <!-- Onboarding home screen dialog description text for the history section. -->
-    <string name="onboarding_home_screen_section_useful_history_description_2">เยี่ยมชมการค้นหาล่าสุดของคุณใหม่จากหน้าแรกและแท็บของคุณ</string>
+    <string moz:RemovedIn="106" name="onboarding_home_screen_section_useful_history_description_2" tools:ignore="UnusedResources">เยี่ยมชมการค้นหาล่าสุดของคุณใหม่จากหน้าแรกและแท็บของคุณ</string>
 
     <!-- Onboarding home screen popup dialog, shown on top of the Jump back in section. Firefox is intentionally hardcoded. -->
-    <string name="onboarding_home_screen_jump_back_contextual_hint" tools:ignore="UnusedResources">ขณะนี้หน้าแรกของ Firefox ที่ปรับแต่งแบบคุณได้รับการปรับปรุงให้คุณสามารถกลับมาดูหน้าเว็บที่คุณดูค้างไว้ได้ง่ายขึ้นแล้ว ค้นหาแท็บ ที่คั่นหน้า และผลการค้นหาล่าสุดของคุณ</string>
+    <string moz:RemovedIn="106" name="onboarding_home_screen_jump_back_contextual_hint" tools:ignore="UnusedResources">ขณะนี้หน้าแรกของ Firefox ที่ปรับแต่งแบบคุณได้รับการปรับปรุงให้คุณสามารถกลับมาดูหน้าเว็บที่คุณดูค้างไว้ได้ง่ายขึ้นแล้ว ค้นหาแท็บ ที่คั่นหน้า และผลการค้นหาล่าสุดของคุณ</string>
+
+    <!-- Onboarding home screen popup dialog, shown on top of the Jump back in section. -->
+    <string name="onboarding_home_screen_jump_back_contextual_hint_2">พบกับโฮมเพจส่วนบุคคลของคุณ แท็บล่าสุด ที่คั่นหน้า และผลการค้นหาจะปรากฏที่นี่</string>
+    <!-- Home onboarding dialog welcome screen title text. -->
+    <string name="onboarding_home_welcome_title">ยินดีต้อนรับสู่อินเทอร์เน็ตที่เป็นอิสระ</string>
+    <!-- Home onboarding dialog welcome screen description text. -->
+    <string name="onboarding_home_welcome_description">สีสันที่มากขึ้น ความเป็นส่วนตัวที่ดีขึ้น ให้ความมุ่งมั่นกับผู้คนมากกว่าผลกำไร</string>
+    <!-- Home onboarding dialog sign into sync screen title text. -->
+    <string name="onboarding_home_sync_title_2">สับเปลี่ยนไปมาระหว่างโทรศัพท์กับแล็ปท็อป</string>
+    <!-- Home onboarding dialog sign into sync screen description text. -->
+    <string name="onboarding_home_sync_description">เรียกดูต่อจากที่คุณค้างไว้ด้วยแท็บจากอุปกรณ์อื่นๆ บนหน้าแรกของคุณได้แล้วตอนนี้</string>
+
+    <!-- Text for the button to continue the onboarding on the home onboarding dialog. -->
+    <string name="onboarding_home_get_started_button">เริ่มต้นใช้งาน</string>
+    <!-- Text for the button to navigate to the sync sign in screen on the home onboarding dialog. -->
+    <string name="onboarding_home_sign_in_button">ลงชื่อเข้า</string>
+    <!-- Text for the button to skip the onboarding on the home onboarding dialog. -->
+    <string name="onboarding_home_skip_button">ข้าม</string>
+    <!-- Onboarding home screen sync popup dialog message, shown on top of Recent Synced Tabs in the Jump back in section. -->
+    <string name="sync_cfr_message">กำลังซิงค์แท็บของคุณ! เรียกดูต่อจากที่คุณค้างไว้บนอุปกรณ์อื่นๆ ของคุณ</string>
 
     <!-- Search Widget -->
     <!-- Content description for searching with a widget. The first parameter is the name of the application.-->
@@ -730,8 +760,6 @@
     <string name="open_tabs_menu">เปิดเมนูแท็บ</string>
     <!-- Open tabs menu item to save tabs to collection -->
     <string name="tabs_menu_save_to_collection1">บันทึกแท็บไปยังชุดสะสม</string>
-    <!-- Content description (not visible, for screen readers etc.): Opens the tab menu when pressed -->
-    <string moz:RemovedIn="103" name="tab_menu" tools:ignore="UnusedResources">เมนูแท็บ</string>
 
     <!-- Text for the menu button to delete a collection -->
     <string name="collection_delete">ลบชุดสะสม</string>
@@ -1316,6 +1344,8 @@
     <string name="preference_enhanced_tracking_protection_custom_cookies_3">คุกกี้จากบุคคลที่สามทั้งหมด (อาจส่งผลให้เว็บไซต์ไม่สมบูรณ์)</string>
     <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
     <string name="preference_enhanced_tracking_protection_custom_cookies_4">คุกกี้ทั้งหมด (จะส่งผลให้เว็บไซต์ไม่สมบูรณ์)</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
+    <string name="preference_enhanced_tracking_protection_custom_cookies_5">แยกคุกกี้ข้ามไซต์</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings for tracking content -->
     <string name="preference_enhanced_tracking_protection_custom_tracking_content">ตัวติดตามเนื้อหา</string>
     <!-- Option for enhanced tracking protection for the custom protection settings for tracking content-->
@@ -1338,8 +1368,12 @@
     <string name="etp_social_media_trackers_description">จำกัดความสามารถของเครือข่ายสังคมออนไลน์ในการติดตามกิจกรรมการเรียกดูเว็บของคุณ</string>
     <!-- Category of trackers (cross-site tracking cookies) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cookies_title">คุกกี้ติดตามข้ามไซต์</string>
+    <!-- Category of trackers (cross-site tracking cookies) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_cookies_title_2">คุกกี้ข้ามไซต์</string>
     <!-- Description of cross-site tracking cookies that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cookies_description">ปิดกั้นคุกกี้ที่เครือข่ายโฆษณาและบริษัทวิเคราะห์ใช้เพื่อเก็บรวบรวมข้อมูลการเรียกดูของคุณในหลายไซต์</string>
+    <!-- Description of cross-site tracking cookies that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_cookies_description_2">การป้องกันคุกกี้ทั้งหมดจะแยกคุกกี้สำหรับไซต์ที่คุณเยี่ยมชม ดังนั้นตัวติดตามต่างๆ เช่น เครือข่ายโฆษณา จึงไม่สามารถใช้คุกกี้เหล่านี้เพื่อติดตามคุณบนไซต์ต่าง ๆ ได้</string>
     <!-- Category of trackers (cryptominers) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cryptominers_title">ตัวขุดเหรียญดิจิทัล</string>
     <!-- Description of cryptominers that can be blocked by Enhanced Tracking Protection -->
