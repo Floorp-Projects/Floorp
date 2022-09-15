@@ -82,8 +82,6 @@ class nsHttpHeaderArray {
                                            nsIHttpHeaderVisitor* aVisitor);
   void ClearHeader(const nsHttpAtom& h);
 
-  void PurgeHeaderEntries(const nsHttpAtom& header);
-
   // Find the location of the given header value, or null if none exists.
   const char* FindHeaderValue(const nsHttpAtom& header,
                               const char* value) const {
@@ -119,8 +117,7 @@ class nsHttpHeaderArray {
   uint32_t Count() const { return mHeaders.Length(); }
 
   const char* PeekHeaderAt(uint32_t i, nsHttpAtom& header,
-                           nsACString& headerNameOriginal,
-                           HeaderVariety& variety, nsACString& val) const;
+                           nsACString& headerNameOriginal) const;
 
   void Clear();
 
