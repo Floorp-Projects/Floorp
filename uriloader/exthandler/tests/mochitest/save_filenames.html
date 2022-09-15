@@ -86,14 +86,13 @@
 <!-- simple script -->
 <script id="i22" src="http://localhost:8000/save_filename.sjs?type=js&filename=script1.js" data-filename="script1.js"></script>
 
-<!-- script with invalid extension. Windows doesn't have an association for application/x-javascript
-     so doesn't handle it. -->
+<!-- script with invalid extension. -->
 <script id="i23" src="http://localhost:8000/save_filename.sjs?type=js&filename=script2.exe"
-        data-filename="script2.exe" data-winexeext="js"></script>
+        data-filename="script2.exe"></script>
 
 <!-- script with escaped characters -->
 <script id="i24" src="http://localhost:8000/save_filename.sjs?type=js&filename=script%20%33.exe"
-        data-filename="script 3.exe" data-winexeext="js"></script>
+        data-filename="script 3.exe"></script>
 
 <!-- script with long filename -->
 <script id="i25" src="http://localhost:8000/save_filename.sjs?type=js&filename=script123456789script123456789script123456789script123456789script123456789script123456789script123456789script123456789script123456789script123456789script123456789script123456789script123456789script123456789script123456789script123456789script123456789script123456789.js"
@@ -153,11 +152,11 @@
 
 <!-- script where url filename has no extension and invalid extension in content disposition filename -->
 <script id="i41" src="http://localhost:8000/base?type=js&filename=script5.exe"
-        data-filename="script5.exe" data-winexeext="js"></script>
+        data-filename="script5.exe"></script>
 
 <!-- script where url filename has no extension and escaped characters in content disposition filename-->
 <script id="i42" src="http://localhost:8000/base?type=js&filename=script%20%36.exe"
-        data-filename="script 6.exe" data-winexeext="js"></script>
+        data-filename="script 6.exe"></script>
 
 <!-- text where filename is present -->
 <img id="i43" src="http://localhost:8000/getdata.png?type=text&filename=readme.txt"
@@ -202,11 +201,9 @@
 <img id="i53" src="http://localhost:8000/save_filename.sjs?&filename=notype.png"
      data-nodrag="true" data-filename="notype.png">
 
-<!-- no content type specified. Note that on Windows, .txt is
-     appended when saving as an attachment. This is special-cased
-     in browser_save_filenames.js. -->
+<!-- no content type specified. -->
 <img id="i54" src="http://localhost:8000/save_filename.sjs?&filename=notypebin.exe"
-     data-nodrag="true" data-filename="notypebin.exe" data-winexeext="txt">
+     data-nodrag="true" data-filename="notypebin.exe">
 
 <!-- extension contains invalid characters -->
 <img id="i55" src="http://localhost:8000/save_filename.sjs?type=png&filename=extinvalid.a?*"
@@ -261,7 +258,7 @@
 
 <!-- simple zip file with differing extension -->
 <object id="i68" data="http://localhost:8000/save_filename.sjs?type=zip&filename=simple.jar" data-filename="simple.jar"
-        data-unknown="true" data-winexeext="zip"></object>
+        data-unknown="true"></object>
 
 <!-- simple zip file with no extension -->
 <object id="i69" data="http://localhost:8000/save_filename.sjs?type=zip&filename=simplepack" data-filename="simplepack.zip"
