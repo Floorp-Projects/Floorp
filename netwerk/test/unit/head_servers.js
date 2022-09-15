@@ -236,11 +236,12 @@ class BaseProxyCode {
             proxyresp.statusMessage,
             proxyresp.headers
           );
+          let rawData = "";
           proxyresp.on("data", chunk => {
-            res.write(chunk);
+            rawData += chunk;
           });
           proxyresp.on("end", () => {
-            res.end();
+            res.end(rawData);
           });
         }
       )
@@ -478,19 +479,9 @@ class HTTP2ProxyCode {
                   delete proxyheaders[prop];
                 }
               );
-              try {
-                stream.respond(
-                  Object.assign(
-                    { ":status": proxyresp.statusCode },
-                    proxyheaders
-                  )
-                );
-              } catch (e) {
-                // The channel may have been closed already.
-                if (e.message != "The stream has been destroyed") {
-                  throw e;
-                }
-              }
+              stream.respond(
+                Object.assign({ ":status": proxyresp.statusCode }, proxyheaders)
+              );
               proxyresp.on("data", chunk => {
                 stream.write(chunk);
               });
