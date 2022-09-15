@@ -1,7 +1,12 @@
+commit 50024c70fc8c8f1613275cffe90dea02a20297f3
+Author: Kelsey Gilbert <jdashg@gmail.com>
+Date:   Wed Aug 17 15:01:24 2022 -0700
 
-Cherries picked
-================================================================================
-Merge base from: moz/main
+    Add test of gl_VertexID and gl_InstanceID.
+    
+    Includes details in new test about both state-of-specification, and known errata.
+    
+    Firefox bug: https://bugzilla.mozilla.org/show_bug.cgi?id=1779800
 
 commit 92af460e46a82d60140b5a1df1379feb79730d3a
 Author: Kelsey Gilbert <jdashg@gmail.com>
@@ -12,3 +17,17 @@ Date:   Tue Sep 6 15:21:32 2022 -0700
     Also test to ensure that it returns the correct id by checking the name from getActiveUniform.
     
     Firefox bug: https://bugzilla.mozilla.org/show_bug.cgi?id=1755973
+
+Cherries picked
+================================================================================
+Merge base from: ups/main
+
+commit 4996b40a69857919579a12f828188c9f428c402c
+Author: Alexey Knyazev <3479527+lexaknyazev@users.noreply.github.com>
+Date:   Sat Aug 20 01:53:01 2022 +0400
+
+    Allow makeXRCompatible in OffscreenCanvas contexts (#3480)
+    
+    Fixes failures of:
+    conformance/offscreencanvas/methods.html
+    conformance/offscreencanvas/methods-worker.html

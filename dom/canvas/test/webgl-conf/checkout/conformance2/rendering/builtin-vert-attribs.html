@@ -1,0 +1,408 @@
+<!--
+Copyright (c) 2022 The Khronos Group Inc.
+Use of this source code is governed by an MIT-style license that can be
+found in the LICENSE.txt file.
+-->
+
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset=utf-8>
+<link rel=stylesheet href="../../resources/js-test-style.css"/>
+<script src="../../js/js-test-pre.js"></script>
+<script src="../../js/webgl-test-utils.js"></script>
+</head>
+<body>
+<canvas id=e_canvas width=1 height=1 style="width: 100px; height: 100px;"></canvas>
+<div id=description></div>
+<div id=console></div>
+<script>
+"use strict";
+description('gl_VertexID and gl_InstanceID should behave as per spec.');
+
+//
+
+/*
+So what are gl_VertexID and gl_InstanceID supposed to do?
+In ES 3.0 and GL 4.1 (Core), this is all we get:
+
+# ES 3.0
+
+> (p78) gl_VertexID holds the integer index i implicitly passed by DrawArrays or
+> one of the other drawing commands defined in section 2.9.3. The value of
+> gl_VertexID is defined if and only if all enabled vertex arrays have non-zero buffer
+> object bindings.
+> gl_InstanceID holds the integer instance number of the current primitive in
+> an instanced draw call (see section 2.9.3).
+
+
+# GL 4.1 (Core)
+
+> (p102) gl_VertexID holds the integer index i implicitly passed by DrawArrays or
+> one of the other drawing commands defined in section 2.8.3.
+> gl_InstanceID holds the integer index of the current primitive in an
+> instanced draw call (see section 2.8.3).
+
+
+# ES 3.1
+
+ES 3.1 retains the wording from ES 3.0, but adds the following clarifications:
+
+gl_VertexID:
+> (p252) The index of any element transferred to the GL by DrawArraysOneInstance
+> is referred to as its vertex ID, and may be read by a vertex shader as gl_VertexID.
+> The vertex ID of the ith element transferred is first + i.
+
+> (p254) The index of any element transferred to the GL by
+> DrawElementsOneInstance is referred to as its vertex ID, and may be read by a vertex shader as
+> gl_VertexID. If no element array buffer is bound, the vertex ID of the ith element
+> transferred is indices[i] + basevertex. Otherwise, the vertex ID of the ith
+> element transferred is the sum of basevertex and the value stored in the currently
+> bound element array buffer at offset indices + i.
+
+gl_InstanceID
+> (p255) If an enabled vertex attribute array is instanced (it has a non-zero divisor as
+> specified by VertexAttribDivisor), the element index that is transferred to the GL,
+> for all vertices, is given by
+> `floor(instance / divisor) + baseinstance`
+
+
+# Errata
+
+Drivers generally do implement the ES 3.1 behavior.
+A notable exception is Mac's legacy GL (4.1) driver which has two bugs here.
+(Both ANGLE-on-Metal and the system M1+ GL driver seem correct though)
+
+## gl_InstanceID random for DrawArrays calls
+Use ERRATA.IGNORE_GL_INSTANCE_ID to cause these tests to pass.
+
+## Adds `first` to user-attrib instanced fetch ids in DrawArrays calls.
+Use ERRATA.FIRST_ADDS_TO_INSTANCE to cause these tests to pass.
+*/
+
+const wtu = WebGLTestUtils;
+const gl = wtu.create3DContext('e_canvas');
+
+const ERRATA = {};
+//ERRATA.IGNORE_GL_INSTANCE_ID = true; // Chrome on ANGLE-on-Mac-GL needs this.
+//ERRATA.FIRST_ADDS_TO_INSTANCE = true; // Firefox with MOZ_WEBGL_WORKAROUND_FIRST_AFFECTS_INSTANCE_ID=0 would need this.
+
+debug(`ERRATA: ${JSON.stringify(ERRATA)}`);
+
+function make_vs_point(vid, iid) {
+    return `\
+    #version 300 es
+
+    ${vid.name == 'gl_VertexID' ? '// ' : ''}layout(location=${vid.loc}) in highp int ${vid.name};
+    ${iid.name == 'gl_InstanceID' ? '// ' :''}layout(location=${iid.loc}) in highp int ${iid.name};
+    out vec4 v_color;
+
+    void main() {
+        gl_PointSize = 1.0;
+        gl_Position = vec4(0.0, 0.0, 0.0, 1.0);
+        v_color = vec4(1.0, float(${vid.name}) / 255.0, float(${iid.name}) / 255.0, 1.0);
+#if ${(iid.name == 'gl_InstanceID' && ERRATA.IGNORE_GL_INSTANCE_ID)|0}
+        v_color.b = 0.0;
+#endif
+    }`;
+}
+
+function make_vs_tri(vid, iid) {
+    return `\
+    #version 300 es
+
+    ${vid.name == 'gl_VertexID' ? '// ' : ''}layout(location=${vid.loc}) in highp int ${vid.name};
+    ${iid.name == 'gl_InstanceID' ? '// ' :''}layout(location=${iid.loc}) in highp int ${iid.name};
+    out vec4 v_color;
+
+    void main() {
+        int prim_vert_id = ${vid.name} % 3;
+        int flat_vert_id = ${vid.name} - prim_vert_id + 2;
+        gl_Position = vec4(0.0, 0.0, 0.0, 1.0);
+        gl_Position.x = (prim_vert_id == 1) ? 2.0 : -1.0;
+        gl_Position.y = (prim_vert_id == 2) ? 2.0 : -1.0;
+        v_color = vec4(1.0, float(flat_vert_id) / 255.0, float(${iid.name}) / 255.0, 1.0);
+#if ${(iid.name == 'gl_InstanceID' && ERRATA.IGNORE_GL_INSTANCE_ID)|0}
+        v_color.b = 0.0;
+#endif
+    }`;
+}
+
+const FS = `\
+    #version 300 es
+    precision mediump float;
+
+    in vec4 v_color;
+    out vec4 o_color;
+
+    void main() {
+        o_color = v_color;
+    }
+`;
+
+
+function crossCombine(...args) {
+  function crossCombine2(listA, listB) {
+    const listC = [];
+    for (const a of listA) {
+      for (const b of listB) {
+        const c = Object.assign({}, a, b);
+        listC.push(c);
+      }
+    }
+    return listC;
+  }
+
+  let res = [{}];
+  while (args.length) {
+    const next = args.shift();
+    next[0].defined;
+    res = crossCombine2(res, next);
+  }
+  return res;
+}
+
+/// makeCombiner('foo', [5, 3]) -> [{foo: 5}, {foo: 3}]
+function makeCombiner(key, vals) {
+  const ret = [];
+  for (const val of vals) {
+      const cur = {};
+      cur[key] = val;
+      ret.push(cur);
+  }
+  return ret;
+}
+
+debug('Draw a point with a shader that takes no attributes and verify it fills the whole canvas.');
+
+
+let TESTS = [
+    makeCombiner('vid', [
+        {name: 'a_VertexID', loc:0},
+        {name: 'a_VertexID', loc:2}, // Test 2, so that we're not only testing 0.
+        {name: 'gl_VertexID', loc:-1},
+        {name: 'gl_VertexID', loc:0}, // Enable a vertex array, despite not using it.
+        {name: 'gl_VertexID', loc:2}, // Enable a vertex array, despite not using it.
+    ]),
+    makeCombiner('iid', [
+        {name: 'a_InstanceID', loc:1},
+        {name: 'gl_InstanceID', loc:-1},
+        {name: 'gl_InstanceID', loc:1}, // Enable a vertex array, despite not using it.
+    ]),
+    makeCombiner('separate_vbufs', [true, false]),
+];
+//console.log('a', {TESTS});
+TESTS = crossCombine(...TESTS);
+//console.log('b', {TESTS});
+
+
+let vdata = new Int32Array(1000);
+vdata = vdata.map((v,i) => i);
+const vbuf = gl.createBuffer();
+gl.bindBuffer(gl.ARRAY_BUFFER, vbuf);
+gl.bufferData(gl.ARRAY_BUFFER, vdata, gl.STATIC_DRAW);
+
+
+const vbuf2 = gl.createBuffer();
+gl.bindBuffer(gl.ARRAY_BUFFER, vbuf2);
+gl.bufferData(gl.ARRAY_BUFFER, vdata, gl.STATIC_DRAW);
+
+
+let index_data = new Uint32Array(1000);
+index_data = index_data.map((x,i) => 10+i);
+const index_buffer = gl.createBuffer();
+gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, index_buffer);
+gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, index_data, gl.STATIC_DRAW);
+
+
+gl.disable(gl.DEPTH_TEST);
+
+(async () => {
+    for (const desc of TESTS) {
+        await wtu.dispatchPromise(); // Yield, for responsiveness.
+        debug('');
+        debug('---------------------');
+        debug(`desc: ${JSON.stringify(desc)}`);
+
+        let fn = (vs) => {
+            //console.log({vs});
+            const prog = wtu.setupProgram(gl, [vs, FS]);
+
+            {
+                const WEBGL_debug_shaders = gl.getExtension('WEBGL_debug_shaders');
+                let i = -1;
+                for (const s of gl.getAttachedShaders(prog)) {
+                    i += 1;
+                    debug('');
+                    debug(`shader[${i}] getShaderSource() -> `);
+                    debug(gl.getShaderSource(s));
+                    if (WEBGL_debug_shaders) {
+                        debug(`shader[${i}] getTranslatedShaderSource() -> `);
+                        debug(WEBGL_debug_shaders.getTranslatedShaderSource(s));
+                    }
+                }
+            }
+            return prog;
+        };
+        const point_prog = fn(make_vs_point(desc.vid, desc.iid));
+        const tri_prog = fn(make_vs_tri(desc.vid, desc.iid));
+
+        // -
+
+        gl.bindBuffer(gl.ARRAY_BUFFER, null);
+        for (let i = 0; i <= 2; i++) {
+            gl.disableVertexAttribArray(i);
+            gl.vertexAttribPointer(i, 4, gl.FLOAT, false, 0, 0);
+            gl.vertexAttribDivisor(i, 0);
+        }
+
+        gl.bindBuffer(gl.ARRAY_BUFFER, vbuf);
+        let loc = desc.vid.loc;
+        if (loc != -1) {
+            gl.enableVertexAttribArray(loc);
+            gl.vertexAttribIPointer(loc, 1, gl.INT, 0, 0);
+        };
+
+        if (desc.separate_vbufs) {
+            gl.bindBuffer(gl.ARRAY_BUFFER, vbuf2);
+        }
+        loc = desc.iid.loc;
+        if (loc != -1) {
+            gl.enableVertexAttribArray(loc);
+            gl.vertexAttribIPointer(loc, 1, gl.INT, 0, 0);
+            gl.vertexAttribDivisor(loc, 1);
+        };
+
+        {
+            const err = gl.getError();
+            if (err) throw err; // Broken init.
+        }
+
+        // -
+
+        fn = (eval_str, expected_arr) => {
+            if (ERRATA.IGNORE_GL_INSTANCE_ID) {
+                if (desc.iid.name == 'gl_InstanceID') {
+                    expected_arr = expected_arr.map(x => x);
+                    expected_arr[2] = 0;
+                }
+            }
+
+            debug('');
+            //debug(`${eval_str} -> [${expected_arr.join(', ')}]`);
+            eval(eval_str);
+
+            const err = gl.getError();
+            if (err) throw err; // Broken subtest.
+
+            wtu.checkCanvas(gl, expected_arr, eval_str);
+        }
+
+        gl.useProgram(point_prog);
+
+        gl.clear(gl.COLOR_BUFFER_BIT);
+        fn(`gl.drawArrays(gl.POINTS,   0, 0)`, [0, 0, 0, 0]);
+        fn(`gl.drawArrays(gl.POINTS,   0, 1)`, [255, 0, 0, 255]);
+        fn(`gl.drawArrays(gl.POINTS,   0, 2)`, [255, 1, 0, 255]);
+        if (ERRATA.FIRST_ADDS_TO_INSTANCE) {
+            fn(`gl.drawArrays(gl.POINTS, 100, 2)`, [255, 100+2-1, 100, 255]);
+        } else {
+            fn(`gl.drawArrays(gl.POINTS, 100, 2)`, [255, 100+2-1, 0, 255]);
+        }
+        fn(`gl.drawArrays(gl.POINTS, 0, 255)`, [255, 254, 0, 255]);
+        fn(`gl.drawArrays(gl.POINTS, 0, 256)`, [255, 255, 0, 255]);
+
+        gl.clear(gl.COLOR_BUFFER_BIT);
+        fn(`gl.drawArraysInstanced(gl.POINTS,   0, 0, 1)`, [0, 0, 0, 0]);
+        gl.clear(gl.COLOR_BUFFER_BIT);
+        fn(`gl.drawArraysInstanced(gl.POINTS,   0, 1, 0)`, [0, 0, 0, 0]);
+
+        fn(`gl.drawArraysInstanced(gl.POINTS,   0, 1, 1)`, [255, 0, 0, 255]);
+        fn(`gl.drawArraysInstanced(gl.POINTS,   0, 2, 1)`, [255, 1, 0, 255]);
+        fn(`gl.drawArraysInstanced(gl.POINTS,   0, 1, 2)`, [255, 0, 1, 255]);
+        fn(`gl.drawArraysInstanced(gl.POINTS,   0, 2, 2)`, [255, 1, 1, 255]);
+        if (ERRATA.FIRST_ADDS_TO_INSTANCE) {
+            fn(`gl.drawArraysInstanced(gl.POINTS, 100, 2, 2)`, [255, 100+2-1, 101, 255]);
+        } else {
+            fn(`gl.drawArraysInstanced(gl.POINTS, 100, 2, 2)`, [255, 100+2-1, 1, 255]);
+        }
+        fn(`gl.drawArraysInstanced(gl.POINTS,   0, 255, 255)`, [255, 254, 254, 255]);
+
+        // -
+
+        gl.clear(gl.COLOR_BUFFER_BIT);
+        fn(`gl.drawElements(gl.POINTS,   0, gl.UNSIGNED_INT, 4*0)`, [0, 0, 0, 0]);
+        fn(`gl.drawElements(gl.POINTS,   1, gl.UNSIGNED_INT, 4*0)`, [255, 10+0, 0, 255]);
+        fn(`gl.drawElements(gl.POINTS,   2, gl.UNSIGNED_INT, 4*0)`, [255, 10+1, 0, 255]);
+        fn(`gl.drawElements(gl.POINTS,   2, gl.UNSIGNED_INT, 4*100)`, [255, 100+10+1, 0, 255]);
+        fn(`gl.drawElements(gl.POINTS, 245, gl.UNSIGNED_INT, 4*0)`, [255, 10+244, 0, 255]);
+        fn(`gl.drawElements(gl.POINTS, 246, gl.UNSIGNED_INT, 4*0)`, [255, 10+245, 0, 255]);
+
+        gl.clear(gl.COLOR_BUFFER_BIT);
+        fn(`gl.drawElementsInstanced(gl.POINTS,   0, gl.UNSIGNED_INT, 4*0, 1)`, [0, 0, 0, 0]);
+        gl.clear(gl.COLOR_BUFFER_BIT);
+        fn(`gl.drawElementsInstanced(gl.POINTS,   1, gl.UNSIGNED_INT, 4*0, 0)`, [0, 0, 0, 0]);
+
+        fn(`gl.drawElementsInstanced(gl.POINTS,   1, gl.UNSIGNED_INT, 4*0, 1)`, [255, 10+0, 0, 255]);
+        fn(`gl.drawElementsInstanced(gl.POINTS,   2, gl.UNSIGNED_INT, 4*0, 1)`, [255, 10+1, 0, 255]);
+        fn(`gl.drawElementsInstanced(gl.POINTS,   1, gl.UNSIGNED_INT, 4*0, 2)`, [255, 10+0, 1, 255]);
+        fn(`gl.drawElementsInstanced(gl.POINTS,   2, gl.UNSIGNED_INT, 4*0, 2)`, [255, 10+1, 1, 255]);
+        fn(`gl.drawElementsInstanced(gl.POINTS,   2, gl.UNSIGNED_INT, 4*100, 2)`, [255, 100+10+1, 1, 255]);
+        fn(`gl.drawElementsInstanced(gl.POINTS, 245, gl.UNSIGNED_INT, 4*0, 255)`, [255, 10+244, 254, 255]);
+
+        // -
+
+        gl.useProgram(tri_prog);
+
+        gl.clear(gl.COLOR_BUFFER_BIT);
+        fn(`gl.drawArrays(gl.TRIANGLES,   0, 0*3)`, [0, 0, 0, 0]);
+        fn(`gl.drawArrays(gl.TRIANGLES,   0, 1*3)`, [255, 1*3-1, 0, 255]);
+        fn(`gl.drawArrays(gl.TRIANGLES,   0, 2*3)`, [255, 2*3-1, 0, 255]);
+        if (ERRATA.FIRST_ADDS_TO_INSTANCE) {
+            fn(`gl.drawArrays(gl.TRIANGLES,  90, 2*3)`, [255, 90+2*3-1, 90, 255]);
+        } else {
+            fn(`gl.drawArrays(gl.TRIANGLES,  90, 2*3)`, [255, 90+2*3-1, 0, 255]);
+        }
+
+        gl.clear(gl.COLOR_BUFFER_BIT);
+        fn(`gl.drawArraysInstanced(gl.TRIANGLES,   0, 0, 1)`, [0, 0, 0, 0]);
+        gl.clear(gl.COLOR_BUFFER_BIT);
+        fn(`gl.drawArraysInstanced(gl.TRIANGLES,   0, 1*3, 0)`, [0, 0, 0, 0]);
+
+        fn(`gl.drawArraysInstanced(gl.TRIANGLES,   0, 1*3, 1)`, [255, 1*3-1, 0, 255]);
+        fn(`gl.drawArraysInstanced(gl.TRIANGLES,   0, 2*3, 1)`, [255, 2*3-1, 0, 255]);
+        fn(`gl.drawArraysInstanced(gl.TRIANGLES,   0, 1*3, 2)`, [255, 1*3-1, 1, 255]);
+        fn(`gl.drawArraysInstanced(gl.TRIANGLES,   0, 2*3, 2)`, [255, 2*3-1, 1, 255]);
+        if (ERRATA.FIRST_ADDS_TO_INSTANCE) {
+            fn(`gl.drawArraysInstanced(gl.TRIANGLES, 90, 2*3, 2)`, [255, 90+2*3-1, 91, 255]);
+        } else {
+            fn(`gl.drawArraysInstanced(gl.TRIANGLES, 90, 2*3, 2)`, [255, 90+2*3-1, 1, 255]);
+        }
+
+        // -
+
+        gl.clear(gl.COLOR_BUFFER_BIT);
+        fn(`gl.drawElements(gl.TRIANGLES,   0*3, gl.UNSIGNED_INT, 4*0)`, [0, 0, 0, 0]);
+        fn(`gl.drawElements(gl.TRIANGLES,   1*3, gl.UNSIGNED_INT, 4*0)`, [255, 10+1*3-1, 0, 255]);
+        fn(`gl.drawElements(gl.TRIANGLES,   2*3, gl.UNSIGNED_INT, 4*0)`, [255, 10+2*3-1, 0, 255]);
+        fn(`gl.drawElements(gl.TRIANGLES,   2*3, gl.UNSIGNED_INT, 4*100)`, [255, 100+10+2*3-1, 0, 255]);
+
+        gl.clear(gl.COLOR_BUFFER_BIT);
+        fn(`gl.drawElementsInstanced(gl.TRIANGLES,   0*3, gl.UNSIGNED_INT, 4*0, 1)`, [0, 0, 0, 0]);
+        gl.clear(gl.COLOR_BUFFER_BIT);
+        fn(`gl.drawElementsInstanced(gl.TRIANGLES,   1*3, gl.UNSIGNED_INT, 4*0, 0)`, [0, 0, 0, 0]);
+
+        fn(`gl.drawElementsInstanced(gl.TRIANGLES,   1*3, gl.UNSIGNED_INT, 4*0, 1)`, [255, 10+1*3-1, 0, 255]);
+        fn(`gl.drawElementsInstanced(gl.TRIANGLES,   2*3, gl.UNSIGNED_INT, 4*0, 1)`, [255, 10+2*3-1, 0, 255]);
+        fn(`gl.drawElementsInstanced(gl.TRIANGLES,   1*3, gl.UNSIGNED_INT, 4*0, 2)`, [255, 10+1*3-1, 1, 255]);
+        fn(`gl.drawElementsInstanced(gl.TRIANGLES,   2*3, gl.UNSIGNED_INT, 4*0, 2)`, [255, 10+2*3-1, 1, 255]);
+        fn(`gl.drawElementsInstanced(gl.TRIANGLES,   2*3, gl.UNSIGNED_INT, 4*100, 2)`, [255, 100+10+2*3-1, 1, 255]);
+    }
+
+    finishTest();
+})();
+
+var successfullyParsed = true;
+</script>
+</body>
+</html>
