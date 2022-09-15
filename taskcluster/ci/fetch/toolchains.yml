@@ -271,7 +271,7 @@ libdmg-hfsplus:
     fetch:
         type: git
         repo: https://github.com/mozilla/libdmg-hfsplus/
-        revision: 2ee327795680101d36f9700bd0fb618362237718
+        revision: afebe241604e5f96841637c3d7e301b93b7690be
 
 hfsplus-tools:
     description: hfstools-plus source code
