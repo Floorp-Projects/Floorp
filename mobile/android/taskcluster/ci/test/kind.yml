@@ -35,7 +35,7 @@ task-defaults:
     run-on-tasks-for: [github-push]
     treeherder:
             kind: test
-            platform: 'ui-test/opt'
+            platform: 'AC-ui-test/opt'
             tier: 2
     worker-type: b-android
     worker:

@@ -37,6 +37,6 @@ task-template:
                 default: Android-Components fake release {version}
     treeherder:
         kind: build
-        platform: android-all/opt
+        platform: AC-android-all/opt
         job-symbol: github-release
         tier: 1
