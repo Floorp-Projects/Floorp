@@ -1112,17 +1112,13 @@ void BrowserParent::UpdateDimensions(const nsIntRect& rect,
 }
 
 DimensionInfo BrowserParent::GetDimensionInfo() {
-  nsCOMPtr<nsIWidget> widget = GetWidget();
-  MOZ_ASSERT(widget);
-  CSSToLayoutDeviceScale widgetScale = widget->GetDefaultScale();
-
   LayoutDeviceIntRect devicePixelRect = ViewAs<LayoutDevicePixel>(
       mRect, PixelCastJustification::LayoutDeviceIsScreenForTabDims);
   LayoutDeviceIntSize devicePixelSize = ViewAs<LayoutDevicePixel>(
       mDimensions, PixelCastJustification::LayoutDeviceIsScreenForTabDims);
 
-  CSSRect unscaledRect = devicePixelRect / widgetScale;
-  CSSSize unscaledSize = devicePixelSize / widgetScale;
+  CSSRect unscaledRect = devicePixelRect / mDefaultScale;
+  CSSSize unscaledSize = devicePixelSize / mDefaultScale;
   DimensionInfo di(unscaledRect, unscaledSize, mClientOffset, mChromeOffset);
   return di;
 }
