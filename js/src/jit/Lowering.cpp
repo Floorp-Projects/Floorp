@@ -4800,14 +4800,14 @@ void LIRGenerator::visitSetPropertyCache(MSetPropertyCache* ins) {
   assignSafepoint(lir, ins);
 }
 
-void LIRGenerator::visitCallSetElement(MCallSetElement* ins) {
+void LIRGenerator::visitMegamorphicSetElement(MMegamorphicSetElement* ins) {
   MOZ_ASSERT(ins->object()->type() == MIRType::Object);
   MOZ_ASSERT(ins->index()->type() == MIRType::Value);
   MOZ_ASSERT(ins->value()->type() == MIRType::Value);
 
-  LCallSetElement* lir = new (alloc())
-      LCallSetElement(useRegisterAtStart(ins->object()),
-                      useBoxAtStart(ins->index()), useBoxAtStart(ins->value()));
+  auto* lir = new (alloc()) LMegamorphicSetElement(
+      useRegisterAtStart(ins->object()), useBoxAtStart(ins->index()),
+      useBoxAtStart(ins->value()));
   add(lir, ins);
   assignSafepoint(lir, ins);
 }

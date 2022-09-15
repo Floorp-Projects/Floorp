@@ -2122,7 +2122,7 @@
   num_temps: 1
   mir_op: true
 
-- name: CallSetElement
+- name: MegamorphicSetElement
   operands:
     object: WordSized
     index: BoxedValue
