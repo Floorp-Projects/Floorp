@@ -1040,21 +1040,25 @@ impl<'a, 'b: 'a> Cascade<'a, 'b> {
         builder.mutate_font().unzoom_fonts(device);
     }
 
-    /// Special handling of font-size: math (used for MathML).
-    /// https://w3c.github.io/mathml-core/#the-math-script-level-property
-    /// TODO: Bug: 1788637: Get rid of mScriptSizeMultiplier/mScriptMinSize when
-    /// the corresponding preference for these attributes is removed.
-    /// TODO: Bug: 1548471: MathML Core also does not specify a script min size
-    /// should we unship that feature or standardize it?
+    /// MathML script* attributes do some very weird shit with font-size.
+    ///
+    /// Handle them specially here, separate from other font-size stuff.
+    ///
+    /// How this should interact with lang="" and font-family-dependent sizes is
+    /// not clear to me. For now just pretend those don't exist here.
     #[cfg(feature = "gecko")]
-    fn recompute_math_font_size_if_needed(&mut self) {
+    fn handle_mathml_scriptlevel_if_needed(&mut self) {
         use crate::values::generics::NonNegative;
 
-        // Do not do anything if font-size: math or math-depth is not set.
-        if !self.seen.contains(LonghandId::MathDepth) ||
-           !self.seen.contains(LonghandId::FontSize) ||
-           self.context.builder.get_font().clone_font_size().keyword_info.kw !=
-           specified::FontSizeKeyword::Math {
+        if !self.seen.contains(LonghandId::MathDepth) &&
+            !self.seen.contains(LonghandId::MozScriptMinSize) &&
+            !self.seen.contains(LonghandId::MozScriptSizeMultiplier)
+        {
+            return;
+        }
+
+        // If the user specifies a font-size, just let it be.
+        if self.seen.contains(LonghandId::FontSize) {
             return;
         }
 
@@ -1190,7 +1194,7 @@ impl<'a, 'b: 'a> Cascade<'a, 'b> {
             self.recompute_initial_font_family_if_needed();
             self.prioritize_user_fonts_if_needed();
             self.recompute_keyword_font_size_if_needed();
-            self.recompute_math_font_size_if_needed();
+            self.handle_mathml_scriptlevel_if_needed();
             self.constrain_font_size_if_needed()
         }
     }

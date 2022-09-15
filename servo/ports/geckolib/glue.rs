@@ -7158,19 +7158,14 @@ pub unsafe extern "C" fn Servo_ParseFontShorthandForMatching(
                     Err(..) => return false,
                 }
             },
+            // Map absolute-size keywords to sizes.
             specified::FontSize::Keyword(info) => {
-                let keyword = if info.kw != specified::FontSizeKeyword::Math {
-                  info.kw
-                } else {
-                  specified::FontSizeKeyword::Medium
-                };
-                // Map absolute-size keywords to sizes.
                 let metrics = get_metrics_provider_for_product();
                 // TODO: Maybe get a meaningful language / quirks-mode from the
                 // caller?
                 let language = atom!("x-western");
                 let quirks_mode = QuirksMode::NoQuirks;
-                keyword.to_length_without_context(quirks_mode, &metrics, &language, family).0.px()
+                info.kw.to_length_without_context(quirks_mode, &metrics, &language, family).0.px()
             }
             // smaller, larger not currently supported
             specified::FontSize::Smaller | specified::FontSize::Larger | specified::FontSize::System(_) => {
