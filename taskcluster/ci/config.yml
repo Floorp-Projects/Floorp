@@ -574,16 +574,11 @@ workers:
             implementation: docker-worker
             os: linux
             worker-type: '{alias}-gcp'
-        t-linux-kvm:
+        t-linux-metal:
             provisioner: '{trust-domain}-t'
             implementation: docker-worker
             os: linux
-            worker-type: 't-linux-kvm-gcp'
-        t-linux-kvm-aws:
-            provisioner: '{trust-domain}-t'
-            implementation: docker-worker
-            os: linux
-            worker-type: 't-linux-metal'
+            worker-type: '{alias}'
         t-linux-talos:
             provisioner: releng-hardware
             implementation: generic-worker
