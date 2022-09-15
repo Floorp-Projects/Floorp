@@ -72,7 +72,23 @@ struct Streaming {
       DeserializerTag aTag);
 
   // Retrieve all MarkerTypeFunctions's.
-  MFBT_API static Span<const MarkerTypeFunctions> MarkerTypeFunctionsArray();
+  // While this object lives, no other operations can happen on this list.
+  class LockedMarkerTypeFunctionsList {
+   public:
+    MFBT_API LockedMarkerTypeFunctionsList();
+    MFBT_API ~LockedMarkerTypeFunctionsList();
+
+    LockedMarkerTypeFunctionsList(const LockedMarkerTypeFunctionsList&) =
+        delete;
+    LockedMarkerTypeFunctionsList& operator=(
+        const LockedMarkerTypeFunctionsList&) = delete;
+
+    auto begin() const { return mMarkerTypeFunctionsSpan.begin(); }
+    auto end() const { return mMarkerTypeFunctionsSpan.end(); }
+
+   private:
+    Span<const MarkerTypeFunctions> mMarkerTypeFunctionsSpan;
+  };
 };
 
 // This helper will examine a marker type's `StreamJSONMarkerData` function, see

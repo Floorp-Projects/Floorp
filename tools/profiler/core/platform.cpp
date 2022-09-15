@@ -2652,9 +2652,8 @@ static void StreamCategories(SpliceableJSONWriter& aWriter) {
 
 static void StreamMarkerSchema(SpliceableJSONWriter& aWriter) {
   // Get an array view with all registered marker-type-specific functions.
-  Span<const base_profiler_markers_detail::Streaming::MarkerTypeFunctions>
-      markerTypeFunctionsArray =
-          base_profiler_markers_detail::Streaming::MarkerTypeFunctionsArray();
+  base_profiler_markers_detail::Streaming::LockedMarkerTypeFunctionsList
+      markerTypeFunctionsArray;
   // List of streamed marker names, this is used to spot duplicates.
   std::set<std::string> names;
   // Stream the display schema for each different one. (Duplications may come
