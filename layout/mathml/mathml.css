@@ -9,6 +9,10 @@
 
 @namespace url(http://www.w3.org/1998/Math/MathML);
 
+* {
+  font-size: math;
+}
+
 /**************************************************************************/
 /* <math> - outermost math element                                        */
 /**************************************************************************/
@@ -27,6 +31,7 @@ math {
   text-rendering: optimizeLegibility;
   -moz-float-edge: margin-box;
   math-style: compact;
+  math-depth: 0;
 }
 math[display="block" i] {
   display: block;
