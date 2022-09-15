@@ -495,15 +495,7 @@ class ScriptRequestProcessor : public Runnable {
       : Runnable("dom::ScriptRequestProcessor"),
         mLoader(aLoader),
         mRequest(aRequest) {}
-  NS_IMETHOD Run() override {
-    if (mRequest->IsModuleRequest() &&
-        mRequest->AsModuleRequest()->IsDynamicImport()) {
-      mRequest->AsModuleRequest()->ProcessDynamicImport();
-      return NS_OK;
-    }
-
-    return mLoader->ProcessRequest(mRequest);
-  }
+  NS_IMETHOD Run() override { return mLoader->ProcessRequest(mRequest); }
 };
 
 void ScriptLoader::RunScriptWhenSafe(ScriptLoadRequest* aRequest) {
@@ -1792,6 +1784,11 @@ nsresult ScriptLoader::ProcessRequest(ScriptLoadRequest* aRequest) {
 
   if (aRequest->IsModuleRequest()) {
     ModuleLoadRequest* request = aRequest->AsModuleRequest();
+    if (request->IsDynamicImport()) {
+      request->ProcessDynamicImport();
+      return NS_OK;
+    }
+
     if (request->mModuleScript) {
       if (!request->InstantiateModuleGraph()) {
         request->mModuleScript = nullptr;
@@ -3629,6 +3626,7 @@ void ScriptLoader::AddAsyncRequest(ScriptLoadRequest* aRequest) {
 
 void ScriptLoader::MaybeMoveToLoadedList(ScriptLoadRequest* aRequest) {
   MOZ_ASSERT(aRequest->IsReadyToRun());
+  MOZ_ASSERT(aRequest->IsTopLevel());
 
   // If it's async, move it to the loaded list.
   // aRequest->GetScriptLoadContext()->mInAsyncList really _should_ be in a
@@ -3640,6 +3638,11 @@ void ScriptLoader::MaybeMoveToLoadedList(ScriptLoadRequest* aRequest) {
       RefPtr<ScriptLoadRequest> req = mLoadingAsyncRequests.Steal(aRequest);
       mLoadedAsyncRequests.AppendElement(req);
     }
+  } else if (aRequest->IsModuleRequest() &&
+             aRequest->AsModuleRequest()->IsDynamicImport()) {
+    // Process dynamic imports with async scripts.
+    MOZ_ASSERT(!aRequest->isInList());
+    mLoadedAsyncRequests.AppendElement(aRequest);
   }
 }
 
