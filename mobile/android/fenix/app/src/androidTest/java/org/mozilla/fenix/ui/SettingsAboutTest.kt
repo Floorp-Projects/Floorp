@@ -13,7 +13,6 @@ import org.junit.Before
 import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
-import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.helpers.AndroidAssetDispatcher
 import org.mozilla.fenix.helpers.FeatureSettingsHelper
 import org.mozilla.fenix.helpers.HomeActivityIntentTestRule
@@ -73,8 +72,8 @@ class SettingsAboutTest {
     // ABOUT
     @Test
     fun verifyRateOnGooglePlayRedirect() {
-        val settings = activityIntentTestRule.activity.settings()
-        settings.shouldShowTotalCookieProtectionCFR = false
+        featureSettingsHelper.setTCPCFREnabled(false)
+
         homeScreen {
         }.openThreeDotMenu {
         }.openSettings {
@@ -89,8 +88,7 @@ class SettingsAboutTest {
     @Ignore("Failing, see: https://github.com/mozilla-mobile/fenix/issues/25355")
     @Test
     fun verifyAboutFirefoxPreview() {
-        val settings = activityIntentTestRule.activity.settings()
-        settings.shouldShowJumpBackInCFR = false
+        featureSettingsHelper.setJumpBackCFREnabled(false)
         homeScreen {
         }.openThreeDotMenu {
         }.openSettings {
