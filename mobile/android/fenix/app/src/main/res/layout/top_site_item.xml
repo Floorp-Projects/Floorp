@@ -64,6 +64,7 @@
                     android:textColor="@color/fx_mobile_text_color_secondary"
                     android:textSize="11sp"
                     android:visibility="gone"
+                    android:scrollbars="none"
                     tools:ignore="RtlCompat,SmallSp"
                     tools:visibility="visible"/>
             </LinearLayout>
