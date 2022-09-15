@@ -93,6 +93,12 @@ exports[`DebugTargetInfo component Connection info renders the expected snapshot
       />
     </form>
   </span>
+  <div
+    className="toolbox-toolbar-spacer"
+  />
+  <button
+    className="toolbox-always-on-top"
+  />
 </header>
 `;
 
@@ -149,6 +155,12 @@ exports[`DebugTargetInfo component Target icon renders the expected snapshot for
       http://some.target/url
     </span>
   </span>
+  <div
+    className="toolbox-toolbar-spacer"
+  />
+  <button
+    className="toolbox-always-on-top"
+  />
 </header>
 `;
 
@@ -245,6 +257,12 @@ exports[`DebugTargetInfo component Target icon renders the expected snapshot for
       />
     </form>
   </span>
+  <div
+    className="toolbox-toolbar-spacer"
+  />
+  <button
+    className="toolbox-always-on-top"
+  />
 </header>
 `;
 
@@ -301,6 +319,12 @@ exports[`DebugTargetInfo component Target icon renders the expected snapshot for
       http://some.target/url
     </span>
   </span>
+  <div
+    className="toolbox-toolbar-spacer"
+  />
+  <button
+    className="toolbox-always-on-top"
+  />
 </header>
 `;
 
@@ -371,6 +395,12 @@ exports[`DebugTargetInfo component Target icon renders the expected snapshot for
       http://some.target/url
     </span>
   </span>
+  <div
+    className="toolbox-toolbar-spacer"
+  />
+  <button
+    className="toolbox-always-on-top"
+  />
 </header>
 `;
 

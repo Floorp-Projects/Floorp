@@ -40,6 +40,8 @@ add_task(async () => {
     document
   );
 
+  // Select the debugger right away to avoid any noise coming from the inspector.
+  await pushPref("devtools.toolbox.selectedTool", "jsdebugger");
   const { devtoolsWindow } = await openAboutDevtoolsToolbox(
     document,
     tab,
@@ -47,7 +49,6 @@ add_task(async () => {
     EXTENSION_NAME
   );
   const toolbox = getToolbox(devtoolsWindow);
-  await toolbox.selectTool("jsdebugger");
   const { panelWin } = toolbox.getCurrentPanel();
 
   info("Check the state of redux");
