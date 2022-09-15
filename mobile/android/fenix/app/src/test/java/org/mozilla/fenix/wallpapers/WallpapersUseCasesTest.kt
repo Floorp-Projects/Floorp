@@ -25,6 +25,7 @@ import org.mozilla.fenix.components.appstate.AppAction
 import org.mozilla.fenix.utils.Settings
 import java.util.Calendar
 import java.util.Date
+import kotlin.random.Random
 
 @RunWith(AndroidJUnit4::class)
 class WallpapersUseCasesTest {
@@ -515,10 +516,7 @@ class WallpapersUseCasesTest {
     @Test
     fun `WHEN legacy selected wallpaper usecase invoked THEN storage updated and store receives dispatch`() = runTest {
         val selectedWallpaper = makeFakeRemoteWallpaper(TimeRelation.LATER, "selected")
-        val slot = slot<String>()
-        coEvery { mockFileManager.lookupExpiredWallpaper(any()) } returns null
-        every { mockSettings.currentWallpaperName } returns ""
-        every { mockSettings.currentWallpaperName = capture(slot) } just runs
+        every { mockSettings.currentWallpaperName = any() } just Runs
 
         val wallpaperFileState = WallpapersUseCases.LegacySelectWallpaperUseCase(
             mockSettings,
@@ -526,7 +524,10 @@ class WallpapersUseCasesTest {
         ).invoke(selectedWallpaper)
 
         appStore.waitUntilIdle()
-        assertEquals(selectedWallpaper.name, slot.captured)
+
+        verify { mockSettings.currentWallpaperName = selectedWallpaper.name }
+        verify { mockSettings.currentWallpaperTextColor = selectedWallpaper.textColor!! }
+        verify { mockSettings.currentWallpaperCardColor = selectedWallpaper.cardColor!! }
         assertEquals(selectedWallpaper, appStore.state.wallpaperState.currentWallpaper)
         assertEquals(wallpaperFileState, Wallpaper.ImageFileState.Downloaded)
     }
@@ -600,6 +601,50 @@ class WallpapersUseCasesTest {
         assertEquals(wallpaperFileState, Wallpaper.ImageFileState.Error)
     }
 
+    @Test
+    fun `GIVEN a wallpaper with no text color WHEN it is is selected THEN persist the wallpaper name and missing text color and dispatch the update`() {
+        every { mockSettings.currentWallpaperName = any() } just Runs
+        val store = mockk<AppStore>(relaxed = true)
+        val wallpaperFileState = WallpapersUseCases.DefaultSelectWallpaperUseCase(
+            settings = mockSettings,
+            store = store,
+            fileManager = mockk(),
+            downloader = mockk(),
+        )
+        val wallpaper: Wallpaper = mockk {
+            every { name } returns "Test"
+            every { textColor } returns null
+        }
+
+        wallpaperFileState.selectWallpaper(wallpaper)
+
+        verify { mockSettings.currentWallpaperName = "Test" }
+        verify { mockSettings.currentWallpaperTextColor = 0L }
+        verify { store.dispatch(AppAction.WallpaperAction.UpdateCurrentWallpaper(wallpaper)) }
+    }
+
+    @Test
+    fun `GIVEN a wallpaper with available text color WHEN it is is selected THEN persist the wallpaper name and text color and dispatch the update`() {
+        every { mockSettings.currentWallpaperName = any() } just Runs
+        val store = mockk<AppStore>(relaxed = true)
+        val wallpaperFileState = WallpapersUseCases.DefaultSelectWallpaperUseCase(
+            settings = mockSettings,
+            store = store,
+            fileManager = mockk(),
+            downloader = mockk(),
+        )
+        val wallpaper: Wallpaper = mockk {
+            every { name } returns "Test"
+            every { textColor } returns 321L
+        }
+
+        wallpaperFileState.selectWallpaper(wallpaper)
+
+        verify { mockSettings.currentWallpaperName = "Test" }
+        verify { mockSettings.currentWallpaperTextColor = 321L }
+        verify { store.dispatch(AppAction.WallpaperAction.UpdateCurrentWallpaper(wallpaper)) }
+    }
+
     private enum class TimeRelation {
         BEFORE,
         NOW,
@@ -633,8 +678,8 @@ class WallpapersUseCasesTest {
                     endDate = relativeTime,
                     learnMoreUrl = null,
                 ),
-                textColor = null,
-                cardColor = null,
+                textColor = Random.nextLong(),
+                cardColor = Random.nextLong(),
                 thumbnailFileState = Wallpaper.ImageFileState.Unavailable,
                 assetsFileState = Wallpaper.ImageFileState.Unavailable,
             )
@@ -650,8 +695,8 @@ class WallpapersUseCasesTest {
                     endDate = relativeTime,
                     learnMoreUrl = null,
                 ),
-                textColor = null,
-                cardColor = null,
+                textColor = Random.nextLong(),
+                cardColor = Random.nextLong(),
                 thumbnailFileState = Wallpaper.ImageFileState.Unavailable,
                 assetsFileState = Wallpaper.ImageFileState.Unavailable,
             )

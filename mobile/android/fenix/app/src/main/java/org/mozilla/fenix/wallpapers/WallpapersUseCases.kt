@@ -483,8 +483,10 @@ class WallpapersUseCases(
             }
         }
 
-        private fun selectWallpaper(wallpaper: Wallpaper) {
+        @VisibleForTesting
+        internal fun selectWallpaper(wallpaper: Wallpaper) {
             settings.currentWallpaperName = wallpaper.name
+            settings.currentWallpaperTextColor = wallpaper.textColor ?: 0L
             store.dispatch(AppAction.WallpaperAction.UpdateCurrentWallpaper(wallpaper))
         }
 

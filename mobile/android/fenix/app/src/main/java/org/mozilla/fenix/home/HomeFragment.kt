@@ -5,6 +5,7 @@
 package org.mozilla.fenix.home
 
 import android.annotation.SuppressLint
+import android.content.res.ColorStateList
 import android.content.res.Configuration
 import android.graphics.drawable.BitmapDrawable
 import android.graphics.drawable.ColorDrawable
@@ -128,7 +129,9 @@ class HomeFragment : Fragment() {
     @VisibleForTesting
     internal lateinit var bundleArgs: Bundle
 
-    private var _binding: FragmentHomeBinding? = null
+    @VisibleForTesting
+    @Suppress("VariableNaming")
+    internal var _binding: FragmentHomeBinding? = null
     private val binding get() = _binding!!
 
     private val homeViewModel: HomeScreenViewModel by activityViewModels()
@@ -968,11 +971,29 @@ class HomeFragment : Fragment() {
                                 text = resources.getString(R.string.wallpaper_select_error_snackbar_message),
                             )
                         }
+                        // If setting a wallpaper failed reset also the contrasting text color.
+                        requireContext().settings().currentWallpaperTextColor = 0L
                         lastAppliedWallpaperName = Wallpaper.defaultName
                     }
                 }
             }
         }
+        // Logo color should be updated in all cases.
+        applyWallpaperTextColor()
+    }
+
+    /**
+     * Apply a color better contrasting with the current wallpaper to the Fenix logo and private mode switcher.
+     */
+    @VisibleForTesting
+    internal fun applyWallpaperTextColor() {
+        val tintColor = when (val color = requireContext().settings().currentWallpaperTextColor.toInt()) {
+            0 -> null // a null ColorStateList will clear the current tint
+            else -> ColorStateList.valueOf(color)
+        }
+
+        binding.wordmarkText.imageTintList = tintColor
+        binding.privateBrowsingButton.imageTintList = tintColor
     }
 
     private fun observeWallpaperUpdates() {

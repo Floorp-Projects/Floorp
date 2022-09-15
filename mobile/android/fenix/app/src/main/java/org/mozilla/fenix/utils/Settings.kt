@@ -193,6 +193,7 @@ class Settings(private val appContext: Context) : PreferencesHolder {
 
     /**
      * A cache of the text color to use on text overlaying the current wallpaper.
+     * The value will be `0` if the color is unavailable.
      */
     var currentWallpaperTextColor by longPreference(
         appContext.getPreferenceKey(R.string.pref_key_current_wallpaper_text_color),
