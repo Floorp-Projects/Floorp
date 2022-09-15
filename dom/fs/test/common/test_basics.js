@@ -37,6 +37,16 @@ exported_symbols.testNewDirectoryHandleFromPrototype = async function() {
   }
 };
 
+exported_symbols.testIsSameEntryRoot = async function() {
+  const root = await navigator.storage.getDirectory();
+  try {
+    await root.move(root);
+    Assert.ok(false, "root should not be movable");
+  } catch (ex) {
+    Assert.ok(true, "root isn't movable");
+  }
+};
+
 exported_symbols.testDirectoryHandleSupportsKeysIterator = async function() {
   const root = await navigator.storage.getDirectory();
 
