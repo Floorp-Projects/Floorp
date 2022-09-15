@@ -5132,14 +5132,17 @@ void nsGlobalWindowOuter::PrintOuter(ErrorResult& aError) {
 #ifdef NS_PRINTING
   RefPtr<BrowsingContext> top =
       mBrowsingContext ? mBrowsingContext->Top() : nullptr;
-  bool oldIsPrinting = top && top->GetIsPrinting();
+  if (NS_WARN_IF(top && top->GetIsPrinting())) {
+    return;
+  }
+
   if (top) {
     Unused << top->SetIsPrinting(true);
   }
 
   auto unset = MakeScopeExit([&] {
     if (top) {
-      Unused << top->SetIsPrinting(oldIsPrinting);
+      Unused << top->SetIsPrinting(false);
     }
   });
 
