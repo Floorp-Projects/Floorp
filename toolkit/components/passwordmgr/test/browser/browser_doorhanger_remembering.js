@@ -2,6 +2,10 @@
  * Test capture popup notifications
  */
 
+XPCOMUtils.defineLazyModuleGetters(this, {
+  FormHistoryTestUtils: "resource://testing-common/FormHistoryTestUtils.jsm",
+});
+
 const BRAND_BUNDLE = Services.strings.createBundle(
   "chrome://branding/locale/brand.properties"
 );
@@ -895,6 +899,13 @@ add_task(async function test_saveUsingEnter() {
       (_, data) => data == "addLogin"
     );
 
+    const usernameFieldName = "user";
+
+    await FormHistoryTestUtils.clear(usernameFieldName);
+
+    let historyEntries = await FormHistoryTestUtils.count(usernameFieldName);
+    is(historyEntries, 0, "Should have 0 entries in form history");
+
     info("Waiting for form submit and doorhanger interaction");
     await testSubmittingLoginFormHTTP(
       "subtst_notifications_1.html",
@@ -924,6 +935,9 @@ add_task(async function test_saveUsingEnter() {
     is(login.username, "notifyu1", "Check the username used on the new entry");
     is(login.password, "notifyp1", "Check the password used on the new entry");
     is(login.timesUsed, 1, "Check times used on new entry");
+
+    historyEntries = await FormHistoryTestUtils.count(usernameFieldName);
+    is(historyEntries, 0, "Username should not be stored in form history.");
 
     Services.logins.removeAllUserFacingLogins();
   }
