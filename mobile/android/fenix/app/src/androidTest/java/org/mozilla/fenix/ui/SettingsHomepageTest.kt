@@ -55,6 +55,74 @@ class SettingsHomepageTest {
         featureSettingsHelper.resetAllFeatureFlags()
     }
 
+    @Test
+    fun verifyHomepageSettingsTest() {
+        homeScreen {
+        }.openThreeDotMenu {
+        }.openSettings {
+        }.openHomepageSubMenu {
+            verifyHomePageView()
+        }
+    }
+
+    @Test
+    fun verifyShortcutOptionTest() {
+        // en-US defaults
+        val defaultTopSites = arrayOf(
+            "Top Articles",
+            "Wikipedia",
+            "Google",
+        )
+
+        homeScreen {
+            defaultTopSites.forEach { item ->
+                verifyExistingTopSitesTabs(item)
+            }
+        }.openThreeDotMenu {
+        }.openCustomizeHome {
+            clickShortcutsButton()
+        }.goBack {
+            defaultTopSites.forEach { item ->
+                verifyNotExistingTopSitesList(item)
+            }
+        }
+    }
+
+    @Test
+    fun verifyRecentlyVisitedOptionTest() {
+        featureSettingsHelper.setRecentTabsFeatureEnabled(false)
+        val genericURL = getGenericAsset(mockWebServer, 1)
+
+        navigationToolbar {
+        }.enterURLAndEnterToBrowser(genericURL.url) {
+        }.goToHomescreen {
+            verifyRecentlyVisitedSectionIsDisplayed()
+        }.openThreeDotMenu {
+        }.openCustomizeHome {
+            clickRecentlyVisited()
+        }.goBack {
+            verifyRecentlyVisitedSectionIsNotDisplayed()
+        }
+    }
+
+    @Test
+    fun verifyPocketOptionTest() {
+        featureSettingsHelper.setRecentTabsFeatureEnabled(false)
+        featureSettingsHelper.setRecentlyVisitedFeatureEnabled(false)
+        val genericURL = getGenericAsset(mockWebServer, 1)
+
+        navigationToolbar {
+        }.enterURLAndEnterToBrowser(genericURL.url) {
+        }.goToHomescreen {
+            verifyPocketSectionIsDisplayed()
+        }.openThreeDotMenu {
+        }.openCustomizeHome {
+            clickPocketButton()
+        }.goBack {
+            verifyPocketSectionIsNotDisplayed()
+        }
+    }
+
     @SmokeTest
     @Test
     fun jumpBackInOptionTest() {

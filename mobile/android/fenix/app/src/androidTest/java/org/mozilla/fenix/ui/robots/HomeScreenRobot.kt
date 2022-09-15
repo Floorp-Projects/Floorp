@@ -37,7 +37,6 @@ import mozilla.components.browser.state.state.searchEngines
 import org.hamcrest.CoreMatchers.allOf
 import org.hamcrest.CoreMatchers.containsString
 import org.hamcrest.CoreMatchers.instanceOf
-import org.hamcrest.CoreMatchers.not
 import org.hamcrest.Matchers
 import org.junit.Assert
 import org.junit.Assert.assertFalse
@@ -56,7 +55,6 @@ import org.mozilla.fenix.helpers.TestHelper.packageName
 import org.mozilla.fenix.helpers.TestHelper.scrollToElementByText
 import org.mozilla.fenix.helpers.click
 import org.mozilla.fenix.helpers.ext.waitNotNull
-import org.mozilla.fenix.helpers.matchers.hasItem
 import org.mozilla.fenix.helpers.withBitmapDrawable
 import org.mozilla.fenix.ui.util.STRING_ONBOARDING_ACCOUNT_SIGN_IN_HEADER
 import org.mozilla.fenix.ui.util.STRING_ONBOARDING_TOOLBAR_PLACEMENT_HEADER
@@ -145,8 +143,12 @@ class HomeScreenRobot {
 
     fun verifyJumpBackInSectionIsDisplayed() = assertJumpBackInSectionIsDisplayed()
     fun verifyJumpBackInSectionIsNotDisplayed() = assertJumpBackInSectionIsNotDisplayed()
+    fun verifyRecentlyVisitedSectionIsDisplayed() = assertRecentlyVisitedSectionIsDisplayed()
+    fun verifyRecentlyVisitedSectionIsNotDisplayed() = assertRecentlyVisitedSectionIsNotDisplayed()
     fun verifyRecentBookmarksSectionIsDisplayed() = assertRecentBookmarksSectionIsDisplayed()
     fun verifyRecentBookmarksSectionIsNotDisplayed() = assertRecentBookmarksSectionIsNotDisplayed()
+    fun verifyPocketSectionIsDisplayed() = assertPocketSectionIsDisplayed()
+    fun verifyPocketSectionIsNotDisplayed() = assertPocketSectionIsNotDisplayed()
 
     fun verifyRecentlyVisitedSearchGroupDisplayed(shouldBeDisplayed: Boolean, searchTerm: String, groupSize: Int) {
         // checks if the search group exists in the Recently visited section
@@ -820,11 +822,15 @@ private fun assertSponsoredShortcutTitle(sponsoredShortcutTitle: String, positio
 }
 
 private fun assertNotExistingTopSitesList(title: String) {
-    mDevice.findObject(UiSelector().text(title))
-        .waitUntilGone(waitingTime)
+    mDevice.findObject(UiSelector().text(title)).waitUntilGone(waitingTime)
 
-    onView(allOf(withId(R.id.top_sites_list)))
-        .check(matches(not(hasItem(hasDescendant(withText(title))))))
+    assertFalse(
+        mDevice.findObject(
+            UiSelector()
+                .resourceId("$packageName:id/top_site_title")
+                .textContains(title),
+        ).waitForExists(waitingTime),
+    )
 }
 
 private fun assertSponsoredTopSitesNotDisplayed() {
@@ -852,11 +858,19 @@ private fun assertJumpBackInSectionIsDisplayed() = assertTrue(jumpBackInSection(
 
 private fun assertJumpBackInSectionIsNotDisplayed() = assertFalse(jumpBackInSection().waitForExists(waitingTimeShort))
 
+private fun assertRecentlyVisitedSectionIsDisplayed() = assertTrue(recentlyVisitedSection().waitForExists(waitingTime))
+
+private fun assertRecentlyVisitedSectionIsNotDisplayed() = assertFalse(recentlyVisitedSection().waitForExists(waitingTime))
+
 private fun assertRecentBookmarksSectionIsDisplayed() =
     assertTrue(recentBookmarksSection().waitForExists(waitingTime))
 
 private fun assertRecentBookmarksSectionIsNotDisplayed() =
     assertFalse(recentBookmarksSection().waitForExists(waitingTimeShort))
+
+private fun assertPocketSectionIsDisplayed() = assertTrue(pocketSection().waitForExists(waitingTime))
+
+private fun assertPocketSectionIsNotDisplayed() = assertFalse(pocketSection().waitForExists(waitingTime))
 
 private fun privateBrowsingButton() = onView(withId(R.id.privateBrowsingButton))
 
@@ -867,8 +881,14 @@ private fun tabsCounter() = onView(withId(R.id.tab_button))
 private fun jumpBackInSection() =
     mDevice.findObject(UiSelector().textContains(getStringResource(R.string.recent_tabs_header)))
 
+private fun recentlyVisitedSection() =
+    mDevice.findObject(UiSelector().textContains(getStringResource(R.string.history_metadata_header_2)))
+
 private fun recentBookmarksSection() =
     mDevice.findObject(UiSelector().textContains(getStringResource(R.string.recently_saved_title)))
+
+private fun pocketSection() =
+    mDevice.findObject(UiSelector().textContains(getStringResource(R.string.pocket_stories_header_1)))
 
 private fun startBrowsingButton(): UiObject {
     val startBrowsingButton = mDevice.findObject(UiSelector().resourceId("$packageName:id/finish_button"))
