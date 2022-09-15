@@ -36,6 +36,39 @@ static uint32_t VIntLength(unsigned char aFirstByte, uint32_t* aMask) {
   return count;
 }
 
+constexpr uint8_t EBML_MAX_ID_LENGTH_DEFAULT = 4;
+constexpr uint8_t EBML_MAX_SIZE_LENGTH_DEFAULT = 8;
+
+WebMBufferedParser::WebMBufferedParser(int64_t aOffset)
+    : mStartOffset(aOffset),
+      mCurrentOffset(aOffset),
+      mInitEndOffset(-1),
+      mBlockEndOffset(-1),
+      mState(READ_ELEMENT_ID),
+      mNextState(READ_ELEMENT_ID),
+      mVIntRaw(false),
+      mLastInitStartOffset(-1),
+      mLastInitSize(0),
+      mEBMLMaxIdLength(EBML_MAX_ID_LENGTH_DEFAULT),
+      mEBMLMaxSizeLength(EBML_MAX_SIZE_LENGTH_DEFAULT),
+      mClusterSyncPos(0),
+      mVIntLeft(0),
+      mBlockSize(0),
+      mClusterTimecode(0),
+      mClusterOffset(-1),
+      mClusterEndOffset(-1),
+      mBlockOffset(0),
+      mBlockTimecode(0),
+      mBlockTimecodeLength(0),
+      mSkipBytes(0),
+      mTimecodeScale(1000000),
+      mGotTimecodeScale(false),
+      mGotClusterTimecode(false) {
+  if (mStartOffset != 0) {
+    mState = FIND_CLUSTER_SYNC;
+  }
+}
+
 bool WebMBufferedParser::Append(const unsigned char* aBuffer, uint32_t aLength,
                                 nsTArray<WebMTimeDataOffset>& aMapping) {
   static const uint32_t EBML_ID = 0x1a45dfa3;
@@ -48,6 +81,8 @@ bool WebMBufferedParser::Append(const unsigned char* aBuffer, uint32_t aLength,
   static const unsigned char BLOCKGROUP_ID = 0xa0;
   static const unsigned char BLOCK_ID = 0xa1;
   static const unsigned char SIMPLEBLOCK_ID = 0xa3;
+  static const uint16_t EBML_MAX_ID_LENGTH_ID = 0x42f2;
+  static const uint16_t EBML_MAX_SIZE_LENGTH_ID = 0x42f3;
   static const uint32_t BLOCK_TIMECODE_LENGTH = 2;
 
   static const unsigned char CLUSTER_SYNC_ID[] = {0x1f, 0x43, 0xb6, 0x75};
@@ -66,6 +101,10 @@ bool WebMBufferedParser::Append(const unsigned char* aBuffer, uint32_t aLength,
         mNextState = READ_ELEMENT_SIZE;
         break;
       case READ_ELEMENT_SIZE:
+        if (mVInt.mLength > mEBMLMaxIdLength) {
+          WEBM_DEBUG("Invalid element id of length %" PRIu64, mVInt.mLength);
+          return false;
+        }
         mVIntRaw = false;
         mElement.mID = mVInt;
         mState = READ_VINT;
@@ -84,6 +123,10 @@ bool WebMBufferedParser::Append(const unsigned char* aBuffer, uint32_t aLength,
         }
         break;
       case PARSE_ELEMENT:
+        if (mVInt.mLength > mEBMLMaxSizeLength) {
+          WEBM_DEBUG("Invalid element size of length %" PRIu64, mVInt.mLength);
+          return false;
+        }
         mElement.mSize = mVInt;
         switch (mElement.mID.mValue) {
           case SEGMENT_ID:
@@ -144,11 +187,43 @@ bool WebMBufferedParser::Append(const unsigned char* aBuffer, uint32_t aLength,
             mSkipBytes = mElement.mSize.mValue;
             mState = CHECK_INIT_FOUND;
             break;
+          case EBML_MAX_ID_LENGTH_ID:
+          case EBML_MAX_SIZE_LENGTH_ID:
+            if (int64_t currentOffset = mCurrentOffset + (p - aBuffer);
+                currentOffset < mLastInitStartOffset ||
+                currentOffset >= mLastInitStartOffset + mLastInitSize) {
+              WEBM_DEBUG("Unexpected %s outside init segment",
+                         mElement.mID.mValue == EBML_MAX_ID_LENGTH_ID
+                             ? "EBMLMaxIdLength"
+                             : "EBMLMaxSizeLength");
+              return false;
+            }
+            if (mElement.mSize.mValue > 8) {
+              // https://www.rfc-editor.org/rfc/rfc8794.html (EBML):
+              //   An Unsigned Integer Element MUST declare a length from zero
+              //   to eight octets.
+              WEBM_DEBUG("Bad length of %s size",
+                         mElement.mID.mValue == EBML_MAX_ID_LENGTH_ID
+                             ? "EBMLMaxIdLength"
+                             : "EBMLMaxSizeLength");
+              return false;
+            }
+            mVInt = VInt();
+            mVIntLeft = mElement.mSize.mValue;
+            mState = READ_VINT_REST;
+            mNextState = mElement.mID.mValue == EBML_MAX_ID_LENGTH_ID
+                             ? READ_EBML_MAX_ID_LENGTH
+                             : READ_EBML_MAX_SIZE_LENGTH;
+            break;
           case EBML_ID:
             mLastInitStartOffset =
                 mCurrentOffset + (p - aBuffer) -
                 (mElement.mID.mLength + mElement.mSize.mLength);
-            [[fallthrough]];
+            mLastInitSize = mElement.mSize.mValue;
+            mEBMLMaxIdLength = EBML_MAX_ID_LENGTH_DEFAULT;
+            mEBMLMaxSizeLength = EBML_MAX_SIZE_LENGTH_DEFAULT;
+            mState = READ_ELEMENT_ID;
+            break;
           default:
             mSkipBytes = mElement.mSize.mValue;
             mState = SKIP_DATA;
@@ -235,6 +310,49 @@ bool WebMBufferedParser::Append(const unsigned char* aBuffer, uint32_t aLength,
           mState = SKIP_DATA;
           mNextState = READ_ELEMENT_ID;
         }
+        break;
+      case READ_EBML_MAX_ID_LENGTH:
+        if (mElement.mSize.mLength == 0) {
+          // https://www.rfc-editor.org/rfc/rfc8794.html (EBML):
+          //   If an Empty Element has a default value declared, then the EBML
+          //   Reader MUST interpret the value of the Empty Element as the
+          //   default value.
+          mVInt.mValue = EBML_MAX_ID_LENGTH_DEFAULT;
+        }
+        if (mVInt.mValue < 4 || mVInt.mValue > 5) {
+          // https://www.ietf.org/archive/id/draft-ietf-cellar-matroska-13.html
+          // (Matroska):
+          //   The EBMLMaxIDLength of the EBML Header MUST be "4".
+          //
+          // Also Matroska:
+          //   Element IDs are encoded using the VINT mechanism described in
+          //   Section 4 of [RFC8794] and can be between one and five octets
+          //   long. Five-octet-long Element IDs are possible only if declared
+          //   in the EBML header.
+          WEBM_DEBUG("Invalid EMBLMaxIdLength %" PRIu64, mVInt.mValue);
+          return false;
+        }
+        mEBMLMaxIdLength = mVInt.mValue;
+        mState = READ_ELEMENT_ID;
+        break;
+      case READ_EBML_MAX_SIZE_LENGTH:
+        if (mElement.mSize.mLength == 0) {
+          // https://www.rfc-editor.org/rfc/rfc8794.html (EBML):
+          //   If an Empty Element has a default value declared, then the EBML
+          //   Reader MUST interpret the value of the Empty Element as the
+          //   default value.
+          mVInt.mValue = EBML_MAX_SIZE_LENGTH_DEFAULT;
+        }
+        if (mVInt.mValue < 1 || mVInt.mValue > 8) {
+          // https://www.ietf.org/archive/id/draft-ietf-cellar-matroska-13.html
+          // (Matroska):
+          //   The EBMLMaxSizeLength of the EBML Header MUST be between "1" and
+          //   "8" inclusive.
+          WEBM_DEBUG("Invalid EMBLMaxSizeLength %" PRIu64, mVInt.mValue);
+          return false;
+        }
+        mEBMLMaxSizeLength = mVInt.mValue;
+        mState = READ_ELEMENT_ID;
         break;
       case SKIP_DATA:
         if (mSkipBytes) {
