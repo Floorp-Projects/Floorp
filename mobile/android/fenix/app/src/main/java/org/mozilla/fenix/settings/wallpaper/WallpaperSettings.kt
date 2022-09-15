@@ -79,8 +79,8 @@ fun WallpaperSettings(
             .verticalScroll(rememberScrollState())
             .background(color = FirefoxTheme.colors.layer1)
             .padding(
-                end = 16.dp,
-                start = 16.dp,
+                end = 12.dp,
+                start = 12.dp,
                 top = 16.dp,
             ),
     ) {
@@ -91,7 +91,7 @@ fun WallpaperSettings(
                     onLearnMoreClick = onLearnMoreClick,
                 )
 
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(12.dp))
 
                 WallpaperThumbnails(
                     wallpapers = wallpapers,
