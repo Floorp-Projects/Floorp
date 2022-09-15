@@ -48,7 +48,8 @@ web-platform-tests:
             default: default
     chunks:
         by-test-platform:
-            android.*: 16
+            android.*/debug: 32
+            android.*: 24
             linux.*64-tsan-qr/opt: 32
             linux.*64-asan(-qr)?/opt: 22
             linux.*64-ccov.*/opt: 20

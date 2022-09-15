@@ -150,7 +150,7 @@ reftest:
     virtualization: virtual-with-gpu
     chunks:
         by-test-platform:
-            android-em-7.*: 3
+            android-em-7.*: 6
             linux1804-64(-shippable|-devedition|-qr)?/opt: 5
             linux.*64-tsan-qr/opt: 32
             macosx101.*-64-shippable(-qr)?/opt: 3
