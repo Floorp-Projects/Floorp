@@ -63,4 +63,4 @@ load 1534346-1.html
 load 1604307-1.html
 load 1606499-1.html
 load 1547895-1.html
-load 1747514.html
+skip-if(Android) load 1747514.html # Bug 1780219
