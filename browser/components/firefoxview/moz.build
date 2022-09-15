@@ -7,7 +7,7 @@
 JAR_MANIFESTS += ["jar.mn"]
 
 with Files("**"):
-    BUG_COMPONENT = ("Firefox", "General")
+    BUG_COMPONENT = ("Firefox", "Firefox View")
 
 EXTRA_JS_MODULES += [
     "*.sys.mjs",
