@@ -1162,6 +1162,18 @@ def target_tasks_daily_beta_perf(full_task_graph, parameters, graph_config):
     """
     Select performance tests on the beta branch to be run daily
     """
+    index_path = (
+        f"{graph_config['trust-domain']}.v2.{parameters['project']}.revision."
+        f"{parameters['head_rev']}.taskgraph.decision-daily-beta-perf"
+    )
+    if os.environ.get("MOZ_AUTOMATION") and retry(
+        index_exists,
+        args=(index_path,),
+        kwargs={
+            "reason": "to avoid triggering multiple daily beta perftests off of the same revision",
+        },
+    ):
+        return []
 
     def filter(task):
         platform = task.attributes.get("test_platform")
