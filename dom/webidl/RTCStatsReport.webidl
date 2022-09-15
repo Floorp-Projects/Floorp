@@ -68,21 +68,41 @@ dictionary RTCInboundRtpStreamStats : RTCReceivedRtpStreamStats {
   unsigned long frameWidth;
   unsigned long frameHeight;
   double framesPerSecond;
+  unsigned long long qpSum;
+  double totalDecodeTime;
+  double totalInterFrameDelay;
+  double totalSquaredInterFrameDelay;
+  DOMHighResTimeStamp lastPacketReceivedTimestamp;
+  unsigned long long headerBytesReceived;
+  unsigned long long fecPacketsReceived;
+  unsigned long long fecPacketsDiscarded;
   unsigned long long bytesReceived;
   unsigned long nackCount;
   unsigned long firCount;
   unsigned long pliCount;
+  double totalProcessingDelay;
+  // Always missing from libwebrtc
+  // DOMHighResTimeStamp  estimatedPlayoutTimestamp;
   double jitterBufferDelay;
   unsigned long long jitterBufferEmittedCount;
   unsigned long long totalSamplesReceived;
   unsigned long long concealedSamples;
   unsigned long long silentConcealedSamples;
+  unsigned long long concealmentEvents;
+  unsigned long long insertedSamplesForDeceleration;
+  unsigned long long removedSamplesForAcceleration;
+  double audioLevel;
+  double totalAudioEnergy;
+  double totalSamplesDuration;
   unsigned long framesReceived;
 };
 
 dictionary RTCRemoteInboundRtpStreamStats : RTCReceivedRtpStreamStats {
   DOMString localId;
   double roundTripTime;
+  double totalRoundTripTime;
+  double fractionLost;
+  unsigned long long roundTripTimeMeasurements;
 };
 
 dictionary RTCSentRtpStreamStats : RTCRtpStreamStats {
