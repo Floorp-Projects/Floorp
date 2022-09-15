@@ -1196,6 +1196,9 @@ dependencies = [
 [[package]]
 name = "dap_ffi"
 version = "0.1.0"
+dependencies = [
+ "prio",
+]
 
 [[package]]
 name = "darling"
@@ -4131,6 +4134,20 @@ checksum = "925383efa346730478fb4838dbe9137d2a47675ad789c546d150a6e1dd4ab31c"
 [[package]]
 name = "prefs_parser"
 version = "0.0.1"
+
+[[package]]
+name = "prio"
+version = "0.8.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "41d747fc8ff20e95b1ff2c5c6162143b89a1b08cee1bc8941fada53bfe1b04d3"
+dependencies = [
+ "base64",
+ "byteorder",
+ "getrandom",
+ "serde",
+ "static_assertions",
+ "thiserror",
+]
 
 [[package]]
 name = "proc-macro-error"

@@ -8,3 +8,4 @@ authors = [
 license = "MPL-2.0"
 
 [dependencies]
+prio = {version = "0.8.4", default-features = false }
