@@ -1855,11 +1855,24 @@ void ContentParent::ShutDownProcess(ShutDownMethod aMethod) {
   ShutDownMessageManager();
 }
 
+mozilla::ipc::IPCResult ContentParent::RecvNotifyShutdownSuccess() {
+  if (!mShutdownPending) {
+    return IPC_FAIL(this, "RecvNotifyShutdownSuccess without mShutdownPending");
+  }
+
+  mIsNotifiedShutdownSuccess = true;
+
+  return IPC_OK();
+}
+
 mozilla::ipc::IPCResult ContentParent::RecvFinishShutdown() {
+  if (!mShutdownPending) {
+    return IPC_FAIL(this, "RecvFinishShutdown without mShutdownPending");
+  }
+
   // At this point, we already called ShutDownProcess once with
   // SEND_SHUTDOWN_MESSAGE. To actually close the channel, we call
   // ShutDownProcess again with CLOSE_CHANNEL.
-  MOZ_ASSERT(mShutdownPending);
   if (mCalledClose) {
     MaybeLogBlockShutdownDiagnostics(
         this, "RecvFinishShutdown: Channel already closed.", __FILE__,
@@ -4318,10 +4331,16 @@ void ContentParent::KillHard(const char* aReason) {
   mForceKillTimer = nullptr;
 
   RemoveShutdownBlockers();
+  nsCString reason = nsDependentCString(aReason);
 
-  GeneratePairedMinidump(aReason);
-
-  nsDependentCString reason(aReason);
+  // If we find mIsNotifiedShutdownSuccess there is no reason to blame this
+  // content process, most probably our parent process is just slow in
+  // processing its own main thread queue.
+  if (!mIsNotifiedShutdownSuccess) {
+    GeneratePairedMinidump(aReason);
+  } else {
+    reason = nsDependentCString("KillHard after IsNotifiedShutdownSuccess.");
+  }
   Telemetry::Accumulate(Telemetry::SUBPROCESS_KILL_HARD, reason, 1);
 
   ProcessHandle otherProcessHandle;
