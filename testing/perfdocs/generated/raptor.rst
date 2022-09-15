@@ -16798,7 +16798,7 @@ Tests for page-load performance. The links direct to the actual websites that ar
         - ❌
       * - **browsertime-tp6m-geckoview-wikipedia**
         - ✅
-        - ❌
+        - ✅
         - ❌
         - ❌
       * - **browsertime-tp6m-geckoview-wikipedia-nofis**
@@ -16905,7 +16905,7 @@ Tests for page-load performance. The links direct to the actual websites that ar
         - ❌
       * - **browsertime-tp6m-geckoview-wikipedia**
         - ✅
-        - ❌
+        - ✅
         - ❌
         - ❌
       * - **browsertime-tp6m-geckoview-wikipedia-nofis**
@@ -29332,7 +29332,7 @@ Page-load performance test suite on Android. The links direct to the actual webs
         - ❌
       * - **browsertime-tp6m-geckoview-google-search-restaurants**
         - ✅
-        - ❌
+        - ✅
         - ❌
         - ❌
       * - **browsertime-tp6m-geckoview-google-search-restaurants-nofis**
@@ -29439,7 +29439,7 @@ Page-load performance test suite on Android. The links direct to the actual webs
         - ❌
       * - **browsertime-tp6m-geckoview-google-search-restaurants**
         - ✅
-        - ❌
+        - ✅
         - ❌
         - ❌
       * - **browsertime-tp6m-geckoview-google-search-restaurants-nofis**
@@ -32714,7 +32714,7 @@ Page-load performance test suite on Android. The links direct to the actual webs
         - ❌
       * - **browsertime-tp6m-geckoview-wikipedia**
         - ✅
-        - ❌
+        - ✅
         - ❌
         - ❌
       * - **browsertime-tp6m-geckoview-wikipedia-nofis**
@@ -32821,7 +32821,7 @@ Page-load performance test suite on Android. The links direct to the actual webs
         - ❌
       * - **browsertime-tp6m-geckoview-wikipedia**
         - ✅
-        - ❌
+        - ✅
         - ❌
         - ❌
       * - **browsertime-tp6m-geckoview-wikipedia-nofis**
