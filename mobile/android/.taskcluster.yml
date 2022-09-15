@@ -29,13 +29,9 @@ tasks:
                   $if: 'tasks_for == "github-pull-request"'
                   then: '${event.pull_request.base.repo.full_name}'
                   else:
-                      $if: 'tasks_for == "action"'
-                      # Trim git@github.com:
-                      then: '${repository.url[15:-4]}'
-                      else:
-                          $if: 'tasks_for == "cron"'
-                          # Trim https://github.com/
-                          then: '${repository.url[19:]}'
+                      $if: 'tasks_for in ["cron", "action"]'
+                      # Trim https://github.com/
+                      then: '${repository.url[19:]}'
 
           baseRepoUrl:
               $if: 'tasks_for == "github-push"'
