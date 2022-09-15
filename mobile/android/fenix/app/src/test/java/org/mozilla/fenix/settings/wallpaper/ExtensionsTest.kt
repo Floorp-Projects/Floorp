@@ -31,7 +31,7 @@ class ExtensionsTest {
         val result = listOf(Wallpaper.Default).groupByDisplayableCollection()
 
         assertEquals(1, result.size)
-        assertEquals(listOf(Wallpaper.Default), result[Wallpaper.DefaultCollection])
+        assertEquals(listOf(Wallpaper.Default), result[Wallpaper.ClassicFirefoxCollection])
     }
 
     @Test
@@ -52,6 +52,24 @@ class ExtensionsTest {
 
         assertEquals(2, result.size)
         assertEquals(listOf(Wallpaper.Default) + classicFirefoxWallpapers, result[classicCollection])
+        assertEquals(downloadedSeasonalWallpapers, result[seasonalCollection])
+    }
+
+    @Test
+    fun `GIVEN that classic firefox thumbnails fail to download WHEN grouped by collection THEN default is still available`() {
+        val seasonalCollection = getSeasonalCollection("finally fall")
+        val downloadedSeasonalWallpapers = (0..5).map {
+            generateSeasonalWallpaperCollection(
+                "${seasonalCollection.name}$it",
+                seasonalCollection.name,
+            )
+        }
+        val allWallpapers = listOf(Wallpaper.Default) + downloadedSeasonalWallpapers
+
+        val result = allWallpapers.groupByDisplayableCollection()
+
+        assertEquals(2, result.size)
+        assertEquals(listOf(Wallpaper.Default), result[classicCollection])
         assertEquals(downloadedSeasonalWallpapers, result[seasonalCollection])
     }
 

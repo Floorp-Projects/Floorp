@@ -10,7 +10,7 @@ import org.mozilla.fenix.onboarding.WallpaperOnboardingDialogFragment.Companion.
 import org.mozilla.fenix.wallpapers.Wallpaper
 
 /**
- * The extension function to group wallpapers according to their name.
+ * The extension function to group wallpapers into the appropriate collections for display.
  **/
 fun List<Wallpaper>.groupByDisplayableCollection(): Map<Wallpaper.Collection, List<Wallpaper>> =
     groupBy {
@@ -21,14 +21,20 @@ fun List<Wallpaper>.groupByDisplayableCollection(): Map<Wallpaper.Collection, Li
         val wallpapers = it.value.filter { wallpaper ->
             wallpaper.thumbnailFileState == Wallpaper.ImageFileState.Downloaded
         }
-        if (it.key.name == "classic-firefox") {
+        if (it.key.name == Wallpaper.classicFirefoxCollectionName) {
             it.key to listOf(Wallpaper.Default) + wallpapers
         } else {
             it.key to wallpapers
         }
-    }.toMap().takeIf {
-        it.isNotEmpty()
-    } ?: mapOf(Wallpaper.DefaultCollection to listOf(Wallpaper.Default))
+    }.toMap().let { result ->
+        // Ensure the default is shown in the classic firefox collection even if those wallpapers are
+        // missing
+        if (result.keys.any { it.name == Wallpaper.classicFirefoxCollectionName }) {
+            result
+        } else {
+            result.plus(Wallpaper.ClassicFirefoxCollection to listOf(Wallpaper.Default))
+        }
+    }
 
 /**
  * Returns a list of wallpapers to display in the wallpaper onboarding.
@@ -46,7 +52,7 @@ fun List<Wallpaper>.getWallpapersForOnboarding(): List<Wallpaper> {
     for (wallpaper in this) {
         if (wallpaper == Wallpaper.Default) continue
 
-        if (wallpaper.collection.name == "classic-firefox") {
+        if (wallpaper.collection.name == Wallpaper.classicFirefoxCollectionName) {
             classicWallpapers.add(wallpaper)
         } else {
             seasonalWallpapers.add(wallpaper)
