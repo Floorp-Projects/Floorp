@@ -391,10 +391,10 @@ WorkerScriptLoader::WorkerScriptLoader(
     : mOriginStack(std::move(aOriginStack)),
       mSyncLoopTarget(aSyncLoopTarget),
       mWorkerScriptType(aWorkerScriptType),
-      mCancelMainThread(Nothing()),
       mRv(aRv),
       mCleanedUp(false),
-      mCleanUpLock("cleanUpLock") {
+      mCleanUpLock("cleanUpLock"),
+      mCancelMainThread(Nothing()) {
   aWorkerPrivate->AssertIsOnWorkerThread();
   MOZ_ASSERT(aSyncLoopTarget);
 
@@ -656,6 +656,9 @@ nsresult WorkerScriptLoader::OnStreamComplete(ScriptLoadRequest* aRequest,
                                               nsresult aStatus) {
   AssertIsOnMainThread();
 
+  // We expect our callers to runtime-check this in advance.
+  MOZ_ASSERT(!IsCancelled());
+
   LoadingFinished(aRequest, aStatus);
   return NS_OK;
 }
@@ -708,7 +711,9 @@ nsresult WorkerScriptLoader::LoadScripts(
       nsresult rv = LoadScript(loadContext->mRequest);
       if (NS_WARN_IF(NS_FAILED(rv))) {
         LoadingFinished(loadContext->mRequest, rv);
-        CancelMainThread(rv, &aContextList);
+        // Let any error to be handled as if it was a fetch error when it
+        // comes time to evaluate its script from its load having completed,
+        // that is: do not CancelMainThread already here.
         return rv;
       }
     }
