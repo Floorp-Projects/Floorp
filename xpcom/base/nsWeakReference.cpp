@@ -114,17 +114,10 @@ nsresult nsSupportsWeakReference::GetWeakReference(
   } else {
     MOZ_WEAKREF_ASSERT_OWNINGTHREAD_DELEGATED(mProxy);
   }
-  *aInstancePtr = mProxy;
+  RefPtr<nsWeakReference> rval = mProxy;
+  rval.forget(aInstancePtr);
 
-  nsresult status;
-  if (!*aInstancePtr) {
-    status = NS_ERROR_OUT_OF_MEMORY;
-  } else {
-    NS_ADDREF(*aInstancePtr);
-    status = NS_OK;
-  }
-
-  return status;
+  return NS_OK;
 }
 
 NS_IMPL_ISUPPORTS(nsWeakReference, nsIWeakReference)
