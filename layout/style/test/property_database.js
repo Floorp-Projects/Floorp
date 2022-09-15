@@ -12968,14 +12968,8 @@ if (IsCSSPropertyPrefEnabled("layout.css.container-queries.enabled")) {
     domProp: "containerType",
     inherited: false,
     type: CSS_TYPE_LONGHAND,
-    initial_values: ["none"],
-    other_values: [
-      "style",
-      "inline-size",
-      "size",
-      "style inline-size",
-      "size style",
-    ],
+    initial_values: ["normal"],
+    other_values: ["inline-size", "size"],
     invalid_values: [
       "none style",
       "none inline-size",
