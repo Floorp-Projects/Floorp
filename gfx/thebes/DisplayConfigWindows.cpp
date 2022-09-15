@@ -5,9 +5,6 @@
 
 #include <iostream>
 #include <windows.h>
-#include <wingdi.h>
-#include <optional>
-#include <vector>
 
 #include "DisplayConfigWindows.h"
 
@@ -15,11 +12,6 @@ namespace mozilla {
 namespace gfx {
 
 using namespace std;
-
-struct DisplayConfig {
-  vector<DISPLAYCONFIG_PATH_INFO> mPaths;
-  vector<DISPLAYCONFIG_MODE_INFO> mModes;
-};
 
 optional<DisplayConfig> GetDisplayConfig() {
   LONG result;
