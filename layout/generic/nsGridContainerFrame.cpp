@@ -8428,11 +8428,12 @@ nscoord nsGridContainerFrame::ReflowChildren(GridReflowInput& aState,
                                              nsReflowStatus& aStatus) {
   WritingMode wm = aState.mReflowInput->GetWritingMode();
   nscoord bSize = aContentArea.BSize(wm);
-  MOZ_ASSERT(aState.mReflowInput);
-  MOZ_ASSERT(aStatus.IsEmpty(), "Caller should pass a fresh reflow status!");
-  if (HidesContentForLayout()) {
+  if (IsContentHiddenForLayout()) {
     return bSize;
   }
+
+  MOZ_ASSERT(aState.mReflowInput);
+  MOZ_ASSERT(aStatus.IsEmpty(), "Caller should pass a fresh reflow status!");
 
   OverflowAreas ocBounds;
   nsReflowStatus ocStatus;
@@ -8535,7 +8536,7 @@ void nsGridContainerFrame::Reflow(nsPresContext* aPresContext,
                                   ReflowOutput& aDesiredSize,
                                   const ReflowInput& aReflowInput,
                                   nsReflowStatus& aStatus) {
-  if (IsHiddenByContentVisibilityOfInFlowParentForLayout()) {
+  if (GetInFlowParent() && GetInFlowParent()->IsContentHiddenForLayout()) {
     return;
   }
 

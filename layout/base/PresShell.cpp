@@ -3720,7 +3720,7 @@ void PresShell::DoScrollContentIntoView() {
   NS_ASSERTION(mDidInitialize, "should have done initial reflow by now");
 
   nsIFrame* frame = mContentToScrollTo->GetPrimaryFrame();
-  if (!frame || frame->IsHiddenByContentVisibilityOnAnyAncestor()) {
+  if (!frame || frame->AncestorHidesContent()) {
     mContentToScrollTo->RemoveProperty(nsGkAtoms::scrolling);
     mContentToScrollTo = nullptr;
     return;
@@ -3799,7 +3799,7 @@ bool PresShell::ScrollFrameRectIntoView(nsIFrame* aFrame, const nsRect& aRect,
                                         ScrollAxis aHorizontal,
                                         ScrollFlags aScrollFlags,
                                         const nsIFrame* aTarget) {
-  if (aFrame->IsHiddenByContentVisibilityOnAnyAncestor()) {
+  if (aFrame->AncestorHidesContent()) {
     return false;
   }
 
@@ -11866,7 +11866,7 @@ void PresShell::EnsureReflowIfFrameHasHiddenContent(nsIFrame* aFrame) {
   nsIFrame* topmostFrameWithContentHidden = nullptr;
   for (nsIFrame* cur = aFrame->GetInFlowParent(); cur;
        cur = cur->GetInFlowParent()) {
-    if (cur->HidesContent()) {
+    if (cur->IsContentHidden()) {
       topmostFrameWithContentHidden = cur;
       mHiddenContentInForcedLayout.Insert(cur->GetContent());
     }
