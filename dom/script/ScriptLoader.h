@@ -682,6 +682,8 @@ class ScriptLoader final : public JS::loader::ScriptLoaderInterface {
   // mLoadingAsyncRequests holds async requests while they're loading; when they
   // have been loaded they are moved to mLoadedAsyncRequests.
   ScriptLoadRequestList mLoadingAsyncRequests;
+  // mLoadedAsyncRequests holds async script requests and dynamic module import
+  // requests, which are processed in the same way.
   ScriptLoadRequestList mLoadedAsyncRequests;
   ScriptLoadRequestList mDeferRequests;
   ScriptLoadRequestList mXSLTRequests;

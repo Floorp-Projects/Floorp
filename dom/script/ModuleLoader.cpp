@@ -130,10 +130,9 @@ void ModuleLoader::OnModuleLoadComplete(ModuleLoadRequest* aRequest) {
   MOZ_ASSERT(aRequest->IsReadyToRun());
 
   if (aRequest->IsTopLevel()) {
-    if (aRequest->IsDynamicImport() ||
-        (aRequest->GetScriptLoadContext()->mIsInline &&
-         aRequest->GetScriptLoadContext()->GetParserCreated() ==
-             NOT_FROM_PARSER)) {
+    if (aRequest->GetScriptLoadContext()->mIsInline &&
+        aRequest->GetScriptLoadContext()->GetParserCreated() ==
+            NOT_FROM_PARSER) {
       GetScriptLoader()->RunScriptWhenSafe(aRequest);
     } else {
       GetScriptLoader()->MaybeMoveToLoadedList(aRequest);
