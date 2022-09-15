@@ -239,6 +239,7 @@ const BASE_MESSAGES = () => [
                 theme: "<event>",
               },
               defaultVariationIndex: 1,
+              darkVariation: 2,
               systemVariations: ["light", "automatic", "dark"],
               variations: ["soft", "balanced", "bold"],
               colorways: [

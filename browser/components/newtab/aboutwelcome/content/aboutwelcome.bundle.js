@@ -988,6 +988,7 @@ function computeVariationIndex(themeName, systemVariations, variations, defaultV
 function Colorways(props) {
   let {
     colorways,
+    darkVariation,
     defaultVariationIndex,
     systemVariations,
     variations
@@ -1033,7 +1034,13 @@ function Colorways(props) {
   (0,react__WEBPACK_IMPORTED_MODULE_0__.useEffect)(() => {
     //We don't want the default theme to be selected
     const randomIndex = Math.floor(Math.random() * (colorways.length - 1)) + 1;
-    const randomColorwayId = colorways[randomIndex].id;
+    const randomColorwayId = colorways[randomIndex].id; // Change the variation to be the dark variation if configured and dark.
+    // Additional colorway changes will remain dark while system is unchanged.
+
+    if (darkVariation !== undefined && window.matchMedia("(prefers-color-scheme: dark)").matches) {
+      variations[variationIndex] = variations[darkVariation];
+    }
+
     const value = `${randomColorwayId}-${variations[variationIndex]}`;
     props.handleAction({
       currentTarget: {
