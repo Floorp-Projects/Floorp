@@ -1,0 +1,7 @@
+#!/bin/bash
+
+export MOZ_LIBWEBRTC_SRC="{path-to}/moz-libwebrtc"
+export MOZ_FASTFORWARD_BUG="1790097"
+export MOZ_PRIOR_GIT_BRANCH="moz-mods-chr103-for-rel106"
+
+export MOZ_LIBWEBRTC_COMMIT="mozpatches"
