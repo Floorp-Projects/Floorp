@@ -72,12 +72,22 @@ def cache_task(config, tasks):
         for p in task.get("dependencies", {}).values():
             if p in digests:
                 dependency_digests.append(digests[p])
+            elif config.params["project"] == "toolchains":
+                # The toolchains repository uses non-cached toolchain artifacts. Allow
+                # tasks to use them.
+                cache = None
+                break
             else:
                 raise Exception(
                     "Cached task {} has uncached parent task: {}".format(
                         task["label"], p
                     )
                 )
+
+        if cache is None:
+            yield task
+            continue
+
         digest_data = cache["digest-data"] + sorted(dependency_digests)
         add_optimization(
             config,
