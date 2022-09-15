@@ -562,6 +562,10 @@ bool SetNativeDataPropertyPure(JSContext* cx, JSObject* obj, PropertyName* name,
 bool ObjectHasGetterSetterPure(JSContext* cx, JSObject* objArg, jsid id,
                                GetterSetter* getterSetter);
 
+bool SetElementMegamorphic(JSContext* cx, HandleObject obj, HandleValue index,
+                           HandleValue value, HandleValue receiver,
+                           bool strict);
+
 JSString* TypeOfNameObject(JSObject* obj, JSRuntime* rt);
 
 bool GetPrototypeOf(JSContext* cx, HandleObject target,
