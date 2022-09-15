@@ -98,12 +98,15 @@ function test_rtf_formatBestUnit() {
   {
     // format days-distant dates
     let anchor = new Date("2016-04-10 12:00:00");
-    testRTFBestUnit(anchor, "2016-04-01 00:00", "9 days ago");
+    testRTFBestUnit(anchor, "2016-04-01 00:00", "last week");
+    testRTFBestUnit(anchor, "2016-04-05 00:00", "5 days ago");
     testRTFBestUnit(anchor, "2016-04-09 18:00", "yesterday");
     testRTFBestUnit(anchor, "2016-04-11 09:00", "tomorrow");
-    testRTFBestUnit(anchor, "2016-04-30 23:59", "in 20 days");
-    testRTFBestUnit(anchor, "2016-03-31 23:59", "last month");
-    testRTFBestUnit(anchor, "2016-05-01 00:00", "next month");
+    testRTFBestUnit(anchor, "2016-04-30 23:59", "in 2 weeks");
+    testRTFBestUnit(anchor, "2016-03-31 23:59", "last week");
+    testRTFBestUnit(anchor, "2016-04-18 23:59", "next week");
+    testRTFBestUnit(anchor, "2016-03-03 23:59", "last month");
+    testRTFBestUnit(anchor, "2016-05-12 00:00", "next month");
 
     anchor = new Date("2016-04-06 12:00");
     testRTFBestUnit(anchor, "2016-03-31 23:59", "6 days ago");
@@ -117,13 +120,13 @@ function test_rtf_formatBestUnit() {
     let anchor = new Date("2016-04-10 12:00:00");
     testRTFBestUnit(anchor, "2016-01-01 00:00", "3 months ago");
     testRTFBestUnit(anchor, "2016-03-01 00:00", "last month");
-    testRTFBestUnit(anchor, "2016-05-01 00:00", "next month");
+    testRTFBestUnit(anchor, "2016-05-11 00:00", "next month");
     testRTFBestUnit(anchor, "2016-12-01 23:59", "in 8 months");
 
     anchor = new Date("2017-01-12 18:30");
-    testRTFBestUnit(anchor, "2016-12-29 18:30", "last month");
+    testRTFBestUnit(anchor, "2016-12-14 18:30", "last month");
 
-    anchor = new Date("2016-12-29 18:30");
+    anchor = new Date("2016-12-14 18:30");
     testRTFBestUnit(anchor, "2017-01-12 18:30", "next month");
 
     anchor = new Date("2016-02-28 12:00");
