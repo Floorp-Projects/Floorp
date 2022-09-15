@@ -2121,10 +2121,12 @@ class nsIWidget : public nsISupports {
   virtual void SetWindowButtonRect(WindowButtonType aButtonType,
                                    const LayoutDeviceIntRect& aClientRect) {}
 
+#ifdef DEBUG
   virtual nsresult SetHiDPIMode(bool aHiDPI) {
     return NS_ERROR_NOT_IMPLEMENTED;
   }
   virtual nsresult RestoreHiDPIMode() { return NS_ERROR_NOT_IMPLEMENTED; }
+#endif
 
  protected:
   // keep the list of children.  We also keep track of our siblings.
