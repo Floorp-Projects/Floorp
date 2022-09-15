@@ -1424,7 +1424,7 @@ const LoginHelper = {
    * @returns {boolean} True if any of the rules matches
    */
   isInferredEmailField(element) {
-    const expr = /email/i;
+    const expr = /email|邮箱/i;
 
     if (element.type == "email") {
       return true;
