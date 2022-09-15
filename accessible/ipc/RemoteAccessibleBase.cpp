@@ -935,33 +935,6 @@ uint64_t RemoteAccessibleBase<Derived>::State() {
 
     auto* cbc = mDoc->GetBrowsingContext();
     if (cbc && !cbc->IsActive()) {
-      // If our browsing context is _not_ active, we're in a background tab
-      // and inherently offscreen.
-      state |= states::OFFSCREEN;
-    } else if (this == mDoc) {
-      // mDoc is not stored in its own viewport cache, so we handle it
-      // separately here. See bug 1774197.
-      // We assume top level tab docs are on screen if their BC is active, so
-      // we don't need additional handling for them here. We still need to trap
-      // the case where `this == mDoc && AsDoc()->IsTopLevel()`, otherwise we'll
-      // fail to find mDoc in the following `else if` case, and incorrectly
-      // return the top-level tab document as offscreen.
-      if (!AsDoc()->IsTopLevel()) {
-        // Otherwise, if we're dealing with an iframe (OOP or in process) in the
-        // active browsing context, we use its Outer Doc's position in the
-        // embedding document's viewport to determine if the iframe has been
-        // scrolled offscreen.
-        Accessible* parent = Parent();
-        MOZ_ASSERT(parent && parent->IsRemote(),
-                   "Could not find remote parent for embedded content doc?");
-        RemoteAccessible* outerDoc = parent->AsRemote();
-        DocAccessibleParent* embeddingDocument = outerDoc->Document();
-        if (embeddingDocument &&
-            !embeddingDocument->mOnScreenAccessibles.Contains(outerDoc->ID())) {
-          state |= states::OFFSCREEN;
-        }
-      }
-    } else if (!mDoc->mOnScreenAccessibles.Contains(ID())) {
       state |= states::OFFSCREEN;
     }
   }
