@@ -132,7 +132,7 @@ tasks:
             signing-android-test: signing-android-test-beta
         run:
             commands:
-                - [automation/taskcluster/androidTest/ui-test.sh, arm-beta-tests, app.apk, android-test.apk, '1']
+                - [automation/taskcluster/androidTest/ui-test.sh, arm-beta-tests, app.apk, android-test.apk, '2']
         treeherder:
             symbol: beta(ui-test-arm-beta)
     arm-nightly:
@@ -145,7 +145,7 @@ tasks:
             signing-android-test: signing-android-test-nightly
         run:
             commands:
-                - [automation/taskcluster/androidTest/ui-test.sh, arm-start-test, app.apk, android-test.apk, '1']
+                - [automation/taskcluster/androidTest/ui-test.sh, arm-start-test, app.apk, android-test.apk, '2']
         treeherder:
             symbol: nightly(ui-test-arm-nightly)
     legacy-arm:
@@ -156,6 +156,6 @@ tasks:
         run-on-git-branches: [main]
         run:
             commands:
-                - [automation/taskcluster/androidTest/ui-test.sh, arm-legacy-api-tests, app.apk, android-test.apk, '1']
+                - [automation/taskcluster/androidTest/ui-test.sh, arm-legacy-api-tests, app.apk, android-test.apk, '2']
         treeherder:
             symbol: debug(legacy-arm)
