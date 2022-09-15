@@ -54,6 +54,9 @@ jobs:
                 ./run.sh
         treeherder:
             symbol: system-symbols-mac
+        fetches:
+            toolchain:
+                - linux64-libdmg
     win:
         description: Extract windows system symbols found in crashreports
         attributes:
