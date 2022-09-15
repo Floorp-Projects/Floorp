@@ -322,6 +322,9 @@ Result<EntryId, QMResult> FileSystemDatabaseManagerVersion001::GetParentEntryId(
     return Err(QMResult(NS_ERROR_DOM_NOT_FOUND_ERR));
   }
   QM_TRY_UNWRAP(EntryId parentId, stmt.GetEntryIdByColumn(/* Column */ 0u));
+  if (parentId.IsEmpty()) {  // GetParentEntryId(root) returns ""
+    return Err(QMResult(NS_ERROR_DOM_NOT_FOUND_ERR));
+  }
 
   return parentId;
 }
