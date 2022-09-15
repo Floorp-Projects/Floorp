@@ -152,8 +152,14 @@ class TabPickupContainer extends HTMLDetailsElement {
     showMobilePromo = TabsSetupFlowManager.shouldShowMobilePromo,
     showMobilePairSuccess = TabsSetupFlowManager.shouldShowMobileConnectedSuccess,
     errorState = TabsSetupFlowManager.getErrorType(),
+    waitingForTabs = TabsSetupFlowManager.waitingForTabs,
   } = {}) {
     let needsRender = false;
+    if (waitingForTabs !== this._waitingForTabs) {
+      this._waitingForTabs = waitingForTabs;
+      needsRender = true;
+    }
+
     if (showMobilePromo !== this._showMobilePromo) {
       this._showMobilePromo = showMobilePromo;
       needsRender = true;
@@ -243,7 +249,7 @@ class TabPickupContainer extends HTMLDetailsElement {
     let mobileSuccessElem = this.mobileSuccessElem;
 
     const stateIndex = this._currentSetupStateIndex;
-    const isLoading = stateIndex == 4;
+    const isLoading = this._waitingForTabs;
 
     mobilePromoElem.hidden = !this._showMobilePromo;
     mobileSuccessElem.hidden = !this._showMobilePairSuccess;

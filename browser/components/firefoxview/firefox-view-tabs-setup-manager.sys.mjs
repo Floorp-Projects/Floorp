@@ -34,7 +34,7 @@ XPCOMUtils.defineLazyServiceGetter(
 );
 
 const SYNC_TABS_PREF = "services.sync.engine.tabs";
-const RECENT_TABS_SYNC = "services.sync.lastTabFetch";
+const TOPIC_TABS_CHANGED = "services.sync.tabs.changed";
 const MOBILE_PROMO_DISMISSED_PREF =
   "browser.tabs.firefox-view.mobilePromo.dismissed";
 const LOGGING_PREF = "browser.tabs.firefox-view.logLevel";
@@ -101,18 +101,6 @@ export const TabsSetupFlowManager = new (class {
     });
     this.registerSetupState({
       uiStateIndex: 4,
-      name: "synced-tabs-not-ready",
-      enter: () => {
-        if (!this.didRecentTabSync) {
-          lazy.SyncedTabs.syncTabs();
-        }
-      },
-      exitConditions: () => {
-        return this.didRecentTabSync;
-      },
-    });
-    this.registerSetupState({
-      uiStateIndex: 5,
       name: "synced-tabs-loaded",
       exitConditions: () => {
         // This is the end state
@@ -125,6 +113,7 @@ export const TabsSetupFlowManager = new (class {
     Services.obs.addObserver(this, NETWORK_STATUS_CHANGED);
     Services.obs.addObserver(this, SYNC_SERVICE_ERROR);
     Services.obs.addObserver(this, SYNC_SERVICE_FINISHED);
+    Services.obs.addObserver(this, TOPIC_TABS_CHANGED);
 
     // this.syncTabsPrefEnabled will track the value of the tabs pref
     XPCOMUtils.defineLazyPreferenceGetter(
@@ -133,18 +122,7 @@ export const TabsSetupFlowManager = new (class {
       SYNC_TABS_PREF,
       false,
       () => {
-        this._uiUpdateNeeded = true;
-        this.maybeUpdateUI();
-      }
-    );
-    XPCOMUtils.defineLazyPreferenceGetter(
-      this,
-      "lastTabFetch",
-      RECENT_TABS_SYNC,
-      0,
-      () => {
-        this._uiUpdateNeeded = true;
-        this.maybeUpdateUI();
+        this.maybeUpdateUI(true);
       }
     );
     XPCOMUtils.defineLazyPreferenceGetter(
@@ -153,24 +131,25 @@ export const TabsSetupFlowManager = new (class {
       MOBILE_PROMO_DISMISSED_PREF,
       false,
       () => {
-        this._uiUpdateNeeded = true;
-        this.maybeUpdateUI();
+        this.maybeUpdateUI(true);
       }
     );
 
-    this._uiUpdateNeeded = true;
-    if (this.fxaSignedIn) {
-      this.refreshDevices();
-    }
-    this.maybeUpdateUI();
+    this._lastFxASignedIn = this.fxaSignedIn;
+    this.logger.debug(
+      "TabsSetupFlowManager constructor, fxaSignedIn:",
+      this._lastFxASignedIn
+    );
+    this.onSignedInChange();
   }
 
   resetInternalState() {
     // assign initial values for all the managed internal properties
+    delete this._lastFxASignedIn;
     this._currentSetupStateName = "not-signed-in";
     this._shouldShowSuccessConfirmation = false;
     this._didShowMobilePromo = false;
-    this._uiUpdateNeeded = true;
+    this._waitingForTabs = false;
 
     this.syncHasWorked = false;
 
@@ -204,6 +183,7 @@ export const TabsSetupFlowManager = new (class {
     Services.obs.removeObserver(this, NETWORK_STATUS_CHANGED);
     Services.obs.removeObserver(this, SYNC_SERVICE_ERROR);
     Services.obs.removeObserver(this, SYNC_SERVICE_FINISHED);
+    Services.obs.removeObserver(this, TOPIC_TABS_CHANGED);
   }
   get currentSetupState() {
     return this.setupState.get(this._currentSetupStateName);
@@ -216,8 +196,13 @@ export const TabsSetupFlowManager = new (class {
   }
   get fxaSignedIn() {
     let { UIState } = lazy;
+    let syncState = UIState.get();
     return (
-      UIState.isReady() && UIState.get().status === UIState.STATUS_SIGNED_IN
+      UIState.isReady() &&
+      syncState.status === UIState.STATUS_SIGNED_IN &&
+      // we actually mostly care that the user is signed into sync
+      // syncEnabled just checks the "services.sync.username" pref has a value
+      syncState.syncEnabled
     );
   }
   get secondaryDeviceConnected() {
@@ -226,13 +211,6 @@ export const TabsSetupFlowManager = new (class {
     }
     let recentDevices = lazy.fxAccounts.device?.recentDeviceList?.length;
     return recentDevices > 1;
-  }
-  get didRecentTabSync() {
-    const nowSeconds = Math.floor(Date.now() / 1000);
-    return (
-      nowSeconds - this.lastTabFetch <
-      lazy.SyncedTabs.TABS_FRESH_ENOUGH_INTERVAL_SECONDS
-    );
   }
   get mobileDeviceConnected() {
     if (!this.fxaSignedIn) {
@@ -280,32 +258,126 @@ export const TabsSetupFlowManager = new (class {
       case lazy.UIState.ON_UPDATE:
         this.logger.debug("Handling UIState update");
         this.syncIsConnected = lazy.UIState.get().syncEnabled;
-        this.maybeUpdateUI();
+        if (this._lastFxASignedIn !== this.fxaSignedIn) {
+          this.onSignedInChange();
+        } else {
+          this.maybeUpdateUI();
+        }
+        this._lastFxASignedIn = this.fxaSignedIn;
         break;
       case TOPIC_DEVICELIST_UPDATED:
         this.logger.debug("Handling observer notification:", topic, data);
-        this.refreshDevices();
-        this.maybeUpdateUI();
+        if (this.refreshDevices()) {
+          this.logger.debug(
+            "refreshDevices made changes, calling maybeUpdateUI"
+          );
+          this.maybeUpdateUI(true);
+        }
         break;
       case "fxaccounts:device_connected":
       case "fxaccounts:device_disconnected":
         await lazy.fxAccounts.device.refreshDeviceList();
-        this.maybeUpdateUI();
+        this.maybeUpdateUI(true);
         break;
       case SYNC_SERVICE_ERROR:
+        this.logger.debug(`Handling ${SYNC_SERVICE_ERROR}`);
+        this._waitingForTabs = false;
         this.syncIsWorking = false;
-        this.maybeUpdateUI();
+        this.maybeUpdateUI(true);
         break;
       case NETWORK_STATUS_CHANGED:
         this.networkIsOnline = data == "online";
-        this.maybeUpdateUI();
+        this._waitingForTabs = false;
+        this.maybeUpdateUI(true);
         break;
       case SYNC_SERVICE_FINISHED:
+        this.logger.debug(`Handling ${SYNC_SERVICE_FINISHED}`);
+        this._waitingForTabs = false;
         if (!this.syncIsWorking) {
           this.syncIsWorking = true;
           this.syncHasWorked = true;
-          this.maybeUpdateUI();
         }
+        this.maybeUpdateUI(true);
+        break;
+      case TOPIC_TABS_CHANGED:
+        this.stopWaitingForTabs();
+        break;
+    }
+  }
+
+  get waitingForTabs() {
+    return (
+      // signed in & at least 1 other device is sycning indicates there's something to wait for
+      this.secondaryDeviceConnected &&
+      // last recent tabs request came back empty and we've not had a sync finish (or error) yet
+      this._waitingForTabs
+    );
+  }
+
+  startWaitingForTabs() {
+    if (!this._waitingForTabs) {
+      this._waitingForTabs = true;
+      Services.obs.notifyObservers(null, TOPIC_SETUPSTATE_CHANGED);
+    }
+  }
+
+  stopWaitingForTabs() {
+    if (this._waitingForTabs) {
+      this._waitingForTabs = false;
+      Services.obs.notifyObservers(null, TOPIC_SETUPSTATE_CHANGED);
+    }
+  }
+
+  async onSignedInChange() {
+    this.logger.debug("onSignedInChange, fxaSignedIn:", this.fxaSignedIn);
+    // update UI to make the state change
+    this.maybeUpdateUI(true);
+    if (!this.fxaSignedIn) {
+      // As we just signed out, ensure the waiting flag is reset for next time around
+      this._waitingForTabs = false;
+      return;
+    }
+    // Now we need to figure out if we have recently synced tabs to show
+    // Or, if we are going to need to trigger a tab sync for them
+    const recentTabs = await lazy.SyncedTabs.getRecentTabs(50);
+
+    if (!this.fxaSignedIn) {
+      // We got signed-out in the meantime. We should get an ON_UPDATE which will put us
+      // back in the right state, so we just do nothing here
+      return;
+    }
+
+    // When SyncedTabs has resolved the getRecentTabs promise,
+    // we also know we can update devices-related internal state
+    if (this.refreshDevices()) {
+      this.logger.debug(
+        "onSignedInChange, after refreshDevices, calling maybeUpdateUI"
+      );
+      // give the UI an opportunity to update as secondaryDeviceConnected or
+      // mobileDeviceConnected have changed value
+      this.maybeUpdateUI(true);
+    }
+
+    // If we can't get recent tabs, we need to trigger a request for them
+    const tabSyncNeeded = !recentTabs?.length;
+    this.logger.debug("onSignedInChange, tabSyncNeeded:", tabSyncNeeded);
+
+    if (tabSyncNeeded) {
+      this.startWaitingForTabs();
+      this.logger.debug("onSignedInChange, no recentTabs, calling syncTabs");
+      // If the syncTabs call rejects or resolves false we need to clear the waiting
+      // flag and update UI
+      lazy.SyncedTabs.syncTabs()
+        .catch(ex => {
+          this.logger.debug("onSignedInChange, syncTabs rejected:", ex);
+          this.stopWaitingForTabs();
+        })
+        .then(willSync => {
+          if (!willSync) {
+            this.logger.debug("onSignedInChange, no tab sync expected");
+            this.stopWaitingForTabs();
+          }
+        });
     }
   }
 
@@ -343,24 +415,23 @@ export const TabsSetupFlowManager = new (class {
       secondaryDeviceConnected,
     };
     if (didDeviceStateChange) {
-      this.logger.debug(
-        "refreshDevices: device state did change, call maybeUpdateUI"
-      );
+      this.logger.debug("refreshDevices: device state did change");
       if (!secondaryDeviceConnected) {
         this.logger.debug(
           "We lost a device, now claim sync hasn't worked before."
         );
         this.syncHasWorked = false;
       }
-      this._uiUpdateNeeded = true;
     } else {
       this.logger.debug("refreshDevices: no device state change");
     }
+    return didDeviceStateChange;
   }
 
-  maybeUpdateUI() {
+  maybeUpdateUI(forceUpdate = false) {
     let nextSetupStateName = this._currentSetupStateName;
     let errorState = null;
+    let stateChanged = false;
 
     // state transition conditions
     for (let state of this.setupState.values()) {
@@ -384,11 +455,14 @@ export const TabsSetupFlowManager = new (class {
     ) {
       setupState = state;
       this._currentSetupStateName = nextSetupStateName;
-      this._uiUpdateNeeded = true;
+      stateChanged = true;
     }
-    this.logger.debug("maybeUpdateUI, _uiUpdateNeeded:", this._uiUpdateNeeded);
-    if (this._uiUpdateNeeded) {
-      this._uiUpdateNeeded = false;
+    this.logger.debug(
+      "maybeUpdateUI, will notify update?:",
+      stateChanged,
+      forceUpdate
+    );
+    if (stateChanged || forceUpdate) {
       if (this.shouldShowMobilePromo) {
         this._didShowMobilePromo = true;
       }
@@ -409,8 +483,7 @@ export const TabsSetupFlowManager = new (class {
   dismissMobileConfirmation() {
     this._shouldShowSuccessConfirmation = false;
     this._didShowMobilePromo = false;
-    this._uiUpdateNeeded = true;
-    this.maybeUpdateUI();
+    this.maybeUpdateUI(true);
   }
 
   async openFxASignup(window) {

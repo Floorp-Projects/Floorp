@@ -96,6 +96,7 @@ registerCleanupFunction(async function() {
 });
 
 add_task(async function test_tab_list_ordering() {
+  TabsSetupFlowManager.resetInternalState();
   await BrowserTestUtils.withNewTab(
     {
       gBrowser,
@@ -175,6 +176,7 @@ add_task(async function test_tab_list_ordering() {
 });
 
 add_task(async function test_empty_list_items() {
+  TabsSetupFlowManager.resetInternalState();
   await BrowserTestUtils.withNewTab(
     {
       gBrowser,
@@ -259,6 +261,7 @@ add_task(async function test_empty_list_items() {
 });
 
 add_task(async function test_empty_list() {
+  TabsSetupFlowManager.resetInternalState();
   await BrowserTestUtils.withNewTab(
     {
       gBrowser,
@@ -314,6 +317,7 @@ add_task(async function test_empty_list() {
 });
 
 add_task(async function test_time_updates_correctly() {
+  TabsSetupFlowManager.resetInternalState();
   await SpecialPowers.pushPrefEnv({
     set: [["browser.tabs.firefox-view.updateTimeMs", 100]],
   });
