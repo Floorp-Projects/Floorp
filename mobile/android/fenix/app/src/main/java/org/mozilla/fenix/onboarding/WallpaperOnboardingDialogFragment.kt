@@ -15,6 +15,7 @@ import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.ViewCompositionStrategy
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import kotlinx.coroutines.launch
@@ -23,6 +24,7 @@ import mozilla.telemetry.glean.private.NoExtras
 import org.mozilla.fenix.GleanMetrics.Wallpapers
 import org.mozilla.fenix.NavGraphDirections
 import org.mozilla.fenix.R
+import org.mozilla.fenix.components.FenixSnackbar
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.settings
@@ -103,7 +105,7 @@ class WallpaperOnboardingDialogFragment : BottomSheetDialogFragment() {
                     onSelectWallpaper = {
                         coroutineScope.launch {
                             val result = wallpaperUseCases.selectWallpaper(it)
-                            onWallpaperSelected(it, result)
+                            onWallpaperSelected(it, result, this@WallpaperOnboardingDialogFragment.requireView())
                         }
                     },
                 )
@@ -114,15 +116,33 @@ class WallpaperOnboardingDialogFragment : BottomSheetDialogFragment() {
     private fun onWallpaperSelected(
         wallpaper: Wallpaper,
         result: Wallpaper.ImageFileState,
+        view: View,
     ) {
-        if (result == Wallpaper.ImageFileState.Downloaded) {
-            Wallpapers.wallpaperSelected.record(
-                Wallpapers.WallpaperSelectedExtra(
-                    name = wallpaper.name,
-                    source = "onboarding",
-                    themeCollection = wallpaper.collection.name,
-                ),
-            )
+        when (result) {
+            Wallpaper.ImageFileState.Downloaded -> {
+                Wallpapers.wallpaperSelected.record(
+                    Wallpapers.WallpaperSelectedExtra(
+                        name = wallpaper.name,
+                        source = "onboarding",
+                        themeCollection = wallpaper.collection.name,
+                    ),
+                )
+            }
+            Wallpaper.ImageFileState.Error -> {
+                FenixSnackbar.make(
+                    view = view,
+                    isDisplayedWithBrowserToolbar = false,
+                )
+                    .setText(view.context.getString(R.string.wallpaper_download_error_snackbar_message))
+                    .setAction(view.context.getString(R.string.wallpaper_download_error_snackbar_action)) {
+                        viewLifecycleOwner.lifecycleScope.launch {
+                            val retryResult = wallpaperUseCases.selectWallpaper(wallpaper)
+                            onWallpaperSelected(wallpaper, retryResult, view)
+                        }
+                    }
+                    .show()
+            }
+            else -> { /* noop */ }
         }
     }
 
