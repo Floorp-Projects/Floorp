@@ -3728,7 +3728,7 @@
       }
 
       this._clearMultiSelectionLocked = false;
-      this.avoidSingleSelectedTab();
+      this._avoidSingleSelectedTab();
       // Don't use document.l10n.setAttributes because the FTL file is loaded
       // lazily and we won't be able to resolve the string.
       document.getElementById("History:UndoCloseTab").setAttribute(
@@ -5161,26 +5161,25 @@
      * B and C closing
      * A[pinned] being the only multi-selected tab, selection should be cleared.
      */
-    avoidSingleSelectedTab() {
+    _avoidSingleSelectedTab() {
       if (this.multiSelectedTabsCount == 1) {
         this.clearMultiSelectedTabs();
       }
     },
 
-    switchToNextMultiSelectedTab() {
+    _switchToNextMultiSelectedTab() {
       this._clearMultiSelectionLocked = true;
 
       // Guarantee that _clearMultiSelectionLocked lock gets released.
       try {
-        let lastMultiSelectedTab = gBrowser.lastMultiSelectedTab;
-        if (lastMultiSelectedTab != gBrowser.selectedTab) {
-          gBrowser.selectedTab = lastMultiSelectedTab;
+        let lastMultiSelectedTab = this.lastMultiSelectedTab;
+        if (!lastMultiSelectedTab.selected) {
+          this.selectedTab = lastMultiSelectedTab;
         } else {
           let selectedTabs = ChromeUtils.nondeterministicGetWeakSetKeys(
             this._multiSelectedTabsSet
-          ).filter(tab => tab.isConnected && !tab.closing);
-          let length = selectedTabs.length;
-          gBrowser.selectedTab = selectedTabs[length - 1];
+          ).filter(this._mayTabBeMultiselected);
+          this.selectedTab = selectedTabs.at(-1);
         }
       } catch (e) {
         Cu.reportError(e);
@@ -5203,8 +5202,11 @@
       let { selectedTab, _multiSelectedTabsSet } = this;
       let tabs = ChromeUtils.nondeterministicGetWeakSetKeys(
         _multiSelectedTabsSet
-      ).filter(tab => tab.isConnected && !tab.closing);
-      if (!_multiSelectedTabsSet.has(selectedTab)) {
+      ).filter(this._mayTabBeMultiselected);
+      if (
+        !_multiSelectedTabsSet.has(selectedTab) &&
+        this._mayTabBeMultiselected(selectedTab)
+      ) {
         tabs.push(selectedTab);
       }
       return tabs.sort((a, b) => a._tPos > b._tPos);
@@ -5213,7 +5215,7 @@
     get multiSelectedTabsCount() {
       return ChromeUtils.nondeterministicGetWeakSetKeys(
         this._multiSelectedTabsSet
-      ).filter(tab => tab.isConnected && !tab.closing).length;
+      ).filter(this._mayTabBeMultiselected).length;
     },
 
     get lastMultiSelectedTab() {
@@ -5223,13 +5225,17 @@
       if (tab && tab.isConnected && this._multiSelectedTabsSet.has(tab)) {
         return tab;
       }
-      let selectedTab = gBrowser.selectedTab;
+      let selectedTab = this.selectedTab;
       this.lastMultiSelectedTab = selectedTab;
       return selectedTab;
     },
 
     set lastMultiSelectedTab(aTab) {
       this._lastMultiSelectedTabRef = Cu.getWeakReference(aTab);
+    },
+
+    _mayTabBeMultiselected(aTab) {
+      return aTab.isConnected && !aTab.closing && !aTab.hidden;
     },
 
     _startMultiSelectChange() {
@@ -5250,9 +5256,9 @@
       }
       if (this._multiSelectChangeRemovals.size) {
         if (this._multiSelectChangeRemovals.has(selectedTab)) {
-          this.switchToNextMultiSelectedTab();
+          this._switchToNextMultiSelectedTab();
         }
-        this.avoidSingleSelectedTab();
+        this._avoidSingleSelectedTab();
         noticeable = true;
       }
       this._multiSelectChangeStarted = false;

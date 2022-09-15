@@ -38,6 +38,27 @@ add_task(async function usingTabCloseButton() {
   is(gBrowser.multiSelectedTabsCount, 2, "Two multiselected tabs");
   is(gBrowser.selectedTab, tab1, "Tab1 is active");
 
+  await triggerClickOn(tab3, { ctrlKey: true });
+  is(gBrowser.multiSelectedTabsCount, 3, "Three multiselected tabs");
+  gBrowser.hideTab(tab3);
+  is(
+    gBrowser.multiSelectedTabsCount,
+    2,
+    "Two multiselected tabs after hiding one tab"
+  );
+  gBrowser.showTab(tab3);
+  is(
+    gBrowser.multiSelectedTabsCount,
+    3,
+    "Three multiselected tabs after re-showing hidden tab"
+  );
+  await triggerClickOn(tab3, { ctrlKey: true });
+  is(
+    gBrowser.multiSelectedTabsCount,
+    2,
+    "Two multiselected tabs after ctrl-clicking multiselected tab"
+  );
+
   // Closing a tab which is not multiselected
   let tab4CloseBtn = tab4.closeButton;
   let tab4Closing = BrowserTestUtils.waitForTabClosing(tab4);
