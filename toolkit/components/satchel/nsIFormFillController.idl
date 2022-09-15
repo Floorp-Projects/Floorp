@@ -39,6 +39,13 @@ interface nsIFormFillController : nsISupports
   void detachFromDocument(in Document document);
 
   /*
+   * Returns true if aInput is managed by the login manager.
+   *
+   * @param aInput - The HTML <input> element to tag
+   */
+  [can_run_script] boolean isLoginManagerField(in HTMLInputElement aInput);
+
+  /*
    * Mark the specified <input> element as being managed by password manager.
    * Autocomplete requests will be handed off to the password manager, and will
    * not be stored in form history.

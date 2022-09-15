@@ -294,6 +294,12 @@ nsFormFillController::MarkAsLoginManagerField(HTMLInputElement* aInput) {
   return NS_OK;
 }
 
+MOZ_CAN_RUN_SCRIPT NS_IMETHODIMP nsFormFillController::IsLoginManagerField(
+    HTMLInputElement* aInput, bool* isLoginManagerField) {
+  *isLoginManagerField = mPwmgrInputs.Get(aInput);
+  return NS_OK;
+}
+
 NS_IMETHODIMP
 nsFormFillController::MarkAsAutofillField(HTMLInputElement* aInput) {
   /*
