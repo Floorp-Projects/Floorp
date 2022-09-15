@@ -1321,6 +1321,10 @@ var gUnifiedExtensions = {
       this._button = document.getElementById("unified-extensions-button");
       // TODO: Bug 1778684 - Auto-hide button when there is no active extension.
       this._button.hidden = false;
+
+      document
+        .getElementById("nav-bar")
+        .setAttribute("unifiedextensionsbuttonshown", true);
     }
 
     this._initialized = true;
