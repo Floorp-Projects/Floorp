@@ -227,6 +227,59 @@ static RefPtr<GAppLaunchContext> GetLaunchContext() {
   return context;
 }
 
+#ifdef __OpenBSD__
+// wrappers required for OpenBSD sandboxing with unveil()
+gboolean g_app_info_launch_uris_openbsd(GAppInfo* mApp, const char* uri,
+                                        GAppLaunchContext* context,
+                                        GError** error) {
+  gchar* path = g_filename_from_uri(uri, NULL, NULL);
+  const gchar* bin = g_app_info_get_executable(mApp);
+  if (!bin) {
+    g_warning("no executable found for %s, maybe not unveiled ?",
+              g_app_info_get_name(mApp));
+    return FALSE;
+  }
+  g_debug("spawning %s %s for %s", bin, path, uri);
+  const gchar* const argv[] = {bin, path, NULL};
+
+  GSpawnFlags flags =
+      static_cast<GSpawnFlags>(G_SPAWN_SEARCH_PATH | G_SPAWN_DO_NOT_REAP_CHILD);
+  gboolean result =
+      g_spawn_async(NULL, (char**)argv, NULL, flags, NULL, NULL, NULL, error);
+
+  if (!result) {
+    g_warning("Cannot launch application %s with arg %s: %s", bin, path,
+              (*error)->message);
+    return FALSE;
+  }
+  return TRUE;
+}
+
+gboolean g_app_info_launch_default_for_uri_openbsd(const char* uri,
+                                                   GAppLaunchContext* context,
+                                                   GError** error) {
+  gboolean result_uncertain;
+  gchar* path = g_filename_from_uri(uri, NULL, NULL);
+  gchar* content_type = g_content_type_guess(path, NULL, 0, &result_uncertain);
+  if (content_type != NULL && !result_uncertain) {
+    g_debug("content type for %s: %s", uri, content_type);
+    GAppInfo* app_info = g_app_info_get_default_for_type(content_type, false);
+    if (!app_info) {
+      g_warning("Could not find default handler for content type %s",
+                content_type);
+      g_free(content_type);
+      return FALSE;
+    } else {
+      g_free(content_type);
+      return g_app_info_launch_uris_openbsd(app_info, uri, context, error);
+    }
+  } else {
+    g_warning("Could not find content type for URI: %s", uri);
+    return FALSE;
+  }
+}
+#endif
+
 NS_IMETHODIMP
 nsGIOMimeApp::LaunchWithURI(nsIURI* aUri,
                             mozilla::dom::BrowsingContext* aBrowsingContext) {
@@ -237,8 +290,13 @@ nsGIOMimeApp::LaunchWithURI(nsIURI* aUri,
   uris.data = const_cast<char*>(spec.get());
 
   GUniquePtr<GError> error;
+#ifdef __OpenBSD__
+  gboolean result = g_app_info_launch_uris_openbsd(
+      mApp, spec.get(), GetLaunchContext().get(), getter_Transfers(error));
+#else
   gboolean result = g_app_info_launch_uris(
       mApp, &uris, GetLaunchContext().get(), getter_Transfers(error));
+#endif
   if (!result) {
     g_warning("Cannot launch application: %s", error->message);
     return NS_ERROR_FAILURE;
@@ -494,23 +552,24 @@ nsGIOService::GetAppForMimeType(const nsACString& aMimeType,
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-#if defined(__OpenBSD__) && defined(MOZ_SANDBOX)
-  // g_app_info_get_default_for_type will fail on OpenBSD's veiled filesystem
-  // since we most likely don't have direct access to the binaries that are
-  // registered as defaults for this type.  Fake it up by just executing
-  // xdg-open via gio-launch-desktop (which we do have access to) and letting
-  // it figure out which program to execute for this MIME type
-  RefPtr<GAppInfo> app_info = dont_AddRef(g_app_info_create_from_commandline(
-      "/usr/local/bin/xdg-open",
-      nsPrintfCString("System default for %s", content_type.get()).get(),
-      G_APP_INFO_CREATE_NONE, NULL));
-#else
   RefPtr<GAppInfo> app_info =
       dont_AddRef(g_app_info_get_default_for_type(content_type.get(), false));
-#endif
   if (!app_info) {
     return NS_ERROR_FAILURE;
   }
+#ifdef __OpenBSD__
+  char* t;
+  t = g_find_program_in_path(g_app_info_get_executable(app_info));
+  if (t != nullptr) {
+    g_debug("%s is registered as handler for %s, binary available as %s",
+            g_app_info_get_executable(app_info), content_type.get(), t);
+  } else {
+    g_warning(
+        "%s is registered as handler for %s but not available in PATH "
+        "(missing unveil ?)",
+        g_app_info_get_executable(app_info), content_type.get());
+  }
+#endif
   RefPtr<nsGIOMimeApp> mozApp = new nsGIOMimeApp(app_info.forget());
   mozApp.forget(aApp);
   return NS_OK;
@@ -538,8 +597,13 @@ nsresult nsGIOService::ShowURI(nsIURI* aURI) {
   nsAutoCString spec;
   MOZ_TRY(aURI->GetSpec(spec));
   GUniquePtr<GError> error;
+#ifdef __OpenBSD__
+  if (!g_app_info_launch_default_for_uri_openbsd(spec.get(),
+                                                 GetLaunchContext().get(),
+#else
   if (!g_app_info_launch_default_for_uri(spec.get(), GetLaunchContext().get(),
-                                         getter_Transfers(error))) {
+#endif
+                                                 getter_Transfers(error))) {
     g_warning("Could not launch default application for URI: %s",
               error->message);
     return NS_ERROR_FAILURE;
@@ -552,8 +616,13 @@ static nsresult LaunchPath(const nsACString& aPath) {
       g_file_new_for_commandline_arg(PromiseFlatCString(aPath).get()));
   GUniquePtr<char> spec(g_file_get_uri(file));
   GUniquePtr<GError> error;
+#ifdef __OpenBSD__
+  g_app_info_launch_default_for_uri_openbsd(spec.get(),
+                                            GetLaunchContext().get(),
+#else
   g_app_info_launch_default_for_uri(spec.get(), GetLaunchContext().get(),
-                                    getter_Transfers(error));
+#endif
+                                            getter_Transfers(error));
   if (error) {
     g_warning("Cannot launch default application: %s", error->message);
     return NS_ERROR_FAILURE;
