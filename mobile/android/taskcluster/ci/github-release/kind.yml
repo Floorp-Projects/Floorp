@@ -25,8 +25,8 @@ task-template:
         action: release
         github-project:
             by-level:
-                '3': android-components
-                default: staging-android-components
+                '3': firefox-android
+                default: staging-firefox-android
         is-prerelease:
             by-build-type:
                 release: false
