@@ -8112,10 +8112,9 @@
   rust: true
 
 # Is support for math-depth enabled?
-# This must not be enabled until implementation is complete (see bug 1667090).
 - name: layout.css.math-depth.enabled
   type: RelaxedAtomicBool
-  value: false
+  value: @IS_NIGHTLY_BUILD@
   mirror: always
   rust: true
 
