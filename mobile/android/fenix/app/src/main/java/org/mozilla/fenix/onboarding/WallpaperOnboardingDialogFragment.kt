@@ -28,6 +28,7 @@ import org.mozilla.fenix.components.FenixSnackbar
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.settings
+import org.mozilla.fenix.settings.wallpaper.getWallpapersForOnboarding
 import org.mozilla.fenix.theme.FirefoxTheme
 import org.mozilla.fenix.wallpapers.Wallpaper
 import org.mozilla.fenix.wallpapers.WallpaperOnboarding
@@ -84,7 +85,7 @@ class WallpaperOnboardingDialogFragment : BottomSheetDialogFragment() {
         setContent {
             FirefoxTheme {
                 val wallpapers = appStore.observeAsComposableState { state ->
-                    state.wallpaperState.availableWallpapers.take(THUMBNAILS_SELECTION_COUNT)
+                    state.wallpaperState.availableWallpapers.getWallpapersForOnboarding()
                 }.value ?: listOf()
                 val currentWallpaper = appStore.observeAsComposableState { state ->
                     state.wallpaperState.currentWallpaper
@@ -147,6 +148,13 @@ class WallpaperOnboardingDialogFragment : BottomSheetDialogFragment() {
     }
 
     companion object {
+        // The number of wallpaper thumbnails to display.
         const val THUMBNAILS_SELECTION_COUNT = 6
+
+        // The desired amount of seasonal wallpapers inside of the selector.
+        const val SEASONAL_WALLPAPERS_COUNT = 3
+
+        // The desired amount of seasonal wallpapers inside of the selector.
+        const val CLASSIC_WALLPAPERS_COUNT = 2
     }
 }

@@ -5,6 +5,7 @@
 package org.mozilla.fenix.settings.wallpaper
 
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.mozilla.fenix.wallpapers.Wallpaper
 
@@ -52,6 +53,102 @@ class ExtensionsTest {
         assertEquals(2, result.size)
         assertEquals(listOf(Wallpaper.Default) + classicFirefoxWallpapers, result[classicCollection])
         assertEquals(downloadedSeasonalWallpapers, result[seasonalCollection])
+    }
+
+    @Test
+    fun `GIVEN two collections of appropriate size WHEN fetched for onboarding THEN result contains 3 seasonal and 2 classic`() {
+        val seasonalCollection = getSeasonalCollection("finally fall")
+        val seasonalWallpapers = (0..5).map { generateSeasonalWallpaperCollection("${seasonalCollection.name}$it", seasonalCollection.name) }
+        val classicFirefoxWallpapers = (0..5).map { generateClassicFirefoxWallpaper("firefox$it") }
+        val allWallpapers = listOf(Wallpaper.Default) + classicFirefoxWallpapers + seasonalWallpapers
+
+        val result = allWallpapers.getWallpapersForOnboarding()
+
+        assertEquals(3, result.count { it.collection.name == "finally fall" })
+        assertEquals(2, result.count { it.collection.name == classicCollection.name })
+        assertTrue(result.contains(Wallpaper.Default))
+    }
+
+    @Test
+    fun `GIVEN five collections of insufficient size WHEN fetched for onboarding THEN result contains 3 seasonal and 2 classic`() {
+        val seasonalCollectionA = getSeasonalCollection("finally winter")
+        val seasonalWallpapers = generateSeasonalWallpaperCollection("${seasonalCollectionA.name}$0", seasonalCollectionA.name)
+        val seasonalCollectionB = getSeasonalCollection("finally spring")
+        val seasonalWallpaperB = generateSeasonalWallpaperCollection("${seasonalCollectionB.name}$0", seasonalCollectionB.name)
+        val seasonalCollectionC = getSeasonalCollection("finally summer")
+        val seasonalWallpapersC = generateSeasonalWallpaperCollection("${seasonalCollectionC.name}$0", seasonalCollectionC.name)
+        val seasonalCollectionD = getSeasonalCollection("finally autumn")
+        val seasonalWallpaperD = generateSeasonalWallpaperCollection("${seasonalCollectionD.name}$0", seasonalCollectionD.name)
+        val seasonalCollectionE = getSeasonalCollection("finally vacation")
+        val seasonalWallpapersE = generateSeasonalWallpaperCollection("${seasonalCollectionE.name}$0", seasonalCollectionE.name)
+
+        val classicFirefoxWallpapers = (0..5).map { generateClassicFirefoxWallpaper("firefox$it") }
+        val allWallpapers = listOf(Wallpaper.Default) + classicFirefoxWallpapers + seasonalWallpapers +
+            seasonalWallpaperB + seasonalWallpapersC + seasonalWallpaperD + seasonalWallpapersE
+
+        val result = allWallpapers.getWallpapersForOnboarding()
+
+        assertEquals(3, result.count { it.collection.name != classicCollection.name && it != Wallpaper.Default })
+        assertEquals(2, result.count { it.collection.name == classicCollection.name })
+        assertTrue(result.contains(Wallpaper.Default))
+    }
+
+    @Test
+    fun `GIVEN seasonal collection of insufficient size WHEN grouped for onboarding THEN result contains all seasonal and the rest is classic`() {
+        val seasonalCollection = getSeasonalCollection("finally fall")
+        val seasonalWallpapers = generateSeasonalWallpaperCollection("${seasonalCollection.name}$0", seasonalCollection.name)
+        val classicFirefoxWallpapers = (0..5).map { generateClassicFirefoxWallpaper("firefox$it") }
+        val allWallpapers = listOf(Wallpaper.Default) + classicFirefoxWallpapers + seasonalWallpapers
+
+        val result = allWallpapers.getWallpapersForOnboarding()
+
+        assertEquals(1, result.count { it.collection.name == "finally fall" })
+        assertEquals(4, result.count { it.collection.name == classicCollection.name })
+        assertTrue(result.contains(Wallpaper.Default))
+    }
+
+    @Test
+    fun `GIVEN no seasonal collection WHEN grouped for onboarding THEN result contains all classic`() {
+        val classicFirefoxWallpapers = (0..5).map { generateClassicFirefoxWallpaper("firefox$it") }
+        val allWallpapers = listOf(Wallpaper.Default) + classicFirefoxWallpapers
+
+        val result = allWallpapers.getWallpapersForOnboarding()
+
+        assertEquals(5, result.count { it.collection.name == classicCollection.name })
+        assertTrue(result.contains(Wallpaper.Default))
+    }
+
+    @Test
+    fun `GIVEN insufficient items in classic collection WHEN grouped for onboarding THEN result contains all classic`() {
+        val classicFirefoxWallpapers = (0..2).map { generateClassicFirefoxWallpaper("firefox$it") }
+        val allWallpapers = listOf(Wallpaper.Default) + classicFirefoxWallpapers
+
+        val result = allWallpapers.getWallpapersForOnboarding()
+
+        assertEquals(3, result.count { it.collection.name == classicCollection.name })
+        assertTrue(result.contains(Wallpaper.Default))
+    }
+
+    @Test
+    fun `GIVEN no items in classic collection and some seasonal WHEN grouped for onboarding THEN result contains all seasonal`() {
+        val seasonalCollection = getSeasonalCollection("finally fall")
+        val seasonalWallpapers = (0..5).map { generateSeasonalWallpaperCollection("${seasonalCollection.name}$it", seasonalCollection.name) }
+        val allWallpapers = listOf(Wallpaper.Default) + seasonalWallpapers
+
+        val result = allWallpapers.getWallpapersForOnboarding()
+
+        assertEquals(5, result.count { it.collection.name == "finally fall" })
+        assertTrue(result.contains(Wallpaper.Default))
+    }
+
+    @Test
+    fun `GIVEN no items WHEN grouped for onboarding THEN result contains the default option`() {
+        val allWallpapers = listOf(Wallpaper.Default)
+
+        val result = allWallpapers.getWallpapersForOnboarding()
+
+        assertEquals(1, result.size)
+        assertTrue(result.contains(Wallpaper.Default))
     }
 
     private fun generateClassicFirefoxWallpaper(name: String) = Wallpaper(

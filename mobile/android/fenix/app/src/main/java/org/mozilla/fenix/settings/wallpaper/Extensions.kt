@@ -4,24 +4,65 @@
 
 package org.mozilla.fenix.settings.wallpaper
 
+import org.mozilla.fenix.onboarding.WallpaperOnboardingDialogFragment.Companion.CLASSIC_WALLPAPERS_COUNT
+import org.mozilla.fenix.onboarding.WallpaperOnboardingDialogFragment.Companion.SEASONAL_WALLPAPERS_COUNT
+import org.mozilla.fenix.onboarding.WallpaperOnboardingDialogFragment.Companion.THUMBNAILS_SELECTION_COUNT
 import org.mozilla.fenix.wallpapers.Wallpaper
 
 /**
  * The extension function to group wallpapers according to their name.
  **/
-fun List<Wallpaper>.groupByDisplayableCollection(): Map<Wallpaper.Collection, List<Wallpaper>> = groupBy {
-    it.collection
-}.filter {
-    it.key.name != "default"
-}.map {
-    val wallpapers = it.value.filter { wallpaper ->
-        wallpaper.thumbnailFileState == Wallpaper.ImageFileState.Downloaded
+fun List<Wallpaper>.groupByDisplayableCollection(): Map<Wallpaper.Collection, List<Wallpaper>> =
+    groupBy {
+        it.collection
+    }.filter {
+        it.key.name != "default"
+    }.map {
+        val wallpapers = it.value.filter { wallpaper ->
+            wallpaper.thumbnailFileState == Wallpaper.ImageFileState.Downloaded
+        }
+        if (it.key.name == "classic-firefox") {
+            it.key to listOf(Wallpaper.Default) + wallpapers
+        } else {
+            it.key to wallpapers
+        }
+    }.toMap().takeIf {
+        it.isNotEmpty()
+    } ?: mapOf(Wallpaper.DefaultCollection to listOf(Wallpaper.Default))
+
+/**
+ * Returns a list of wallpapers to display in the wallpaper onboarding.
+ *
+ * The ideal scenario is to return a list of wallpaper in the following order: 1 default, 3 seasonal and
+ * 2 classic wallpapers, but in case where there are less than 3 seasonal wallpapers, the remaining
+ * wallpapers are filled by classic wallpapers. If we have less than 6 wallpapers, return all the available
+ * seasonal and classic wallpapers.
+ */
+fun List<Wallpaper>.getWallpapersForOnboarding(): List<Wallpaper> {
+    val result = mutableListOf(Wallpaper.Default)
+    val classicWallpapers = mutableListOf<Wallpaper>()
+    val seasonalWallpapers = mutableListOf<Wallpaper>()
+
+    for (wallpaper in this) {
+        if (wallpaper == Wallpaper.Default) continue
+
+        if (wallpaper.collection.name == "classic-firefox") {
+            classicWallpapers.add(wallpaper)
+        } else {
+            seasonalWallpapers.add(wallpaper)
+        }
     }
-    if (it.key.name == "classic-firefox") {
-        it.key to listOf(Wallpaper.Default) + wallpapers
+
+    if (seasonalWallpapers.size < SEASONAL_WALLPAPERS_COUNT) {
+        result.addAll(seasonalWallpapers)
+        result.addAll(classicWallpapers.take((THUMBNAILS_SELECTION_COUNT - 1) - seasonalWallpapers.size))
+    } else if (classicWallpapers.size < CLASSIC_WALLPAPERS_COUNT) {
+        result.addAll(seasonalWallpapers.take((THUMBNAILS_SELECTION_COUNT - 1) - classicWallpapers.size))
+        result.addAll(classicWallpapers)
     } else {
-        it.key to wallpapers
+        result.addAll(seasonalWallpapers.take(SEASONAL_WALLPAPERS_COUNT))
+        result.addAll(classicWallpapers.take(CLASSIC_WALLPAPERS_COUNT))
     }
-}.toMap().takeIf {
-    it.isNotEmpty()
-} ?: mapOf(Wallpaper.DefaultCollection to listOf(Wallpaper.Default))
+
+    return result
+}
