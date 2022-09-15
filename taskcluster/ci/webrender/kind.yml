@@ -332,7 +332,7 @@ jobs:
         description: Run debug wrench reftests on Android emulator
         attributes:
             build_platform: android
-        worker-type: t-linux-metal  # privileged:true doesn't work on b-linux
+        worker-type: t-linux-kvm  # privileged:true doesn't work on b-linux
         worker:
             max-run-time: 5400
             docker-image: {in-tree: ubuntu1804-test}
@@ -379,7 +379,7 @@ jobs:
         description: Run release wrench reftests on Android emulator
         attributes:
             build_platform: android
-        worker-type: t-linux-metal  # privileged:true doesn't work on b-linux
+        worker-type: t-linux-kvm  # privileged:true doesn't work on b-linux
         worker:
             max-run-time: 5400
             docker-image: {in-tree: ubuntu1804-test}
