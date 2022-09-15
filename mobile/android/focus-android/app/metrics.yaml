@@ -2004,7 +2004,7 @@ search_widget:
     bugs:
       - https://github.com/mozilla-mobile/focus-android/issues/7506
     data_reviews:
-      - https://github.com/mozilla-mobile/focus-android/pull/
+      - https://github.com/mozilla-mobile/focus-android/pull/7657#issuecomment-1252242947
     data_sensitivity:
       - interaction
     notification_emails:
@@ -2021,7 +2021,7 @@ search_widget:
     bugs:
       - https://github.com/mozilla-mobile/focus-android/issues/7506
     data_reviews:
-      - https://github.com/mozilla-mobile/focus-android/pull/
+      - https://github.com/mozilla-mobile/focus-android/pull/7657#issuecomment-1252242947
     data_sensitivity:
       - interaction
     notification_emails:
@@ -2038,7 +2038,7 @@ search_widget:
     bugs:
       - https://github.com/mozilla-mobile/focus-android/issues/7506
     data_reviews:
-      - https://github.com/mozilla-mobile/focus-android/pull/
+      - https://github.com/mozilla-mobile/focus-android/pull/7657#issuecomment-1252242947
     data_sensitivity:
       - interaction
     notification_emails:

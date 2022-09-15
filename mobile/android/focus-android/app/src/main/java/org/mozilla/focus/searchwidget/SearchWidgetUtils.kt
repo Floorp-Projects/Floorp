@@ -16,6 +16,8 @@ import androidx.compose.ui.platform.ComposeView
 import androidx.lifecycle.ViewTreeLifecycleOwner
 import androidx.savedstate.setViewTreeSavedStateRegistryOwner
 import mozilla.components.support.utils.PendingIntentUtils
+import mozilla.telemetry.glean.private.NoExtras
+import org.mozilla.focus.GleanMetrics.SearchWidget
 import org.mozilla.focus.activity.MainActivity
 import org.mozilla.focus.ui.theme.FocusTheme
 
@@ -54,6 +56,7 @@ object SearchWidgetUtils {
                             PromoteSearchWidgetDialogCompose(
                                 onAddSearchWidgetButtonClick = {
                                     addSearchWidgetToHomeScreen(activity)
+                                    SearchWidget.addToHomeScreenButton.record(NoExtras())
                                 },
                                 onDismiss = {
                                     promoteSearchWidgetDialog.dismiss()
@@ -64,5 +67,6 @@ object SearchWidgetUtils {
                 },
             )
         }.show()
+        SearchWidget.promoteDialogShown.record(NoExtras())
     }
 }

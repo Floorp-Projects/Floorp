@@ -32,6 +32,7 @@ import mozilla.components.support.ktx.android.view.hideKeyboard
 import mozilla.components.support.utils.ThreadUtils
 import org.mozilla.focus.GleanMetrics.BrowserSearch
 import org.mozilla.focus.GleanMetrics.SearchBar
+import org.mozilla.focus.GleanMetrics.SearchWidget
 import org.mozilla.focus.R
 import org.mozilla.focus.activity.MainActivity
 import org.mozilla.focus.databinding.FragmentUrlinputBinding
@@ -202,6 +203,7 @@ class UrlInputFragment :
             requireComponents.appStore.state.showSearchWidgetSnackbar
         ) {
             ViewUtils.showBrandedSnackbar(view, R.string.promote_search_widget_snackbar_message, 0)
+            SearchWidget.widgetWasAdded.record(mozilla.telemetry.glean.private.NoExtras())
             requireComponents.appStore.dispatch(AppAction.ShowSearchWidgetSnackBar(false))
         }
     }
