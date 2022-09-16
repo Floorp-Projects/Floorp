@@ -3,7 +3,7 @@
 set -v -e -x
 
 base="$(realpath "$(dirname "$0")")"
-export PATH="$PATH:/builds/worker/bin:${MOZ_FETCHES_DIR}/dmg:$base"
+export PATH="$PATH:/builds/worker/bin:$base"
 
 DUMP_SYMS_PATH="${MOZ_FETCHES_DIR}/dump_syms/dump_syms"
 
