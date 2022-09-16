@@ -76,7 +76,6 @@ if ($ARGV[0] eq "compare" && $#ARGV == 1) {
 #      0   | description
 #      1   | lspace
 #      2   | rspace
-#      3   | minsize
 #      4   | largeop
 #      5   | movablelimits
 #      6   | stretchy
@@ -84,8 +83,6 @@ if ($ARGV[0] eq "compare" && $#ARGV == 1) {
 #      8   | accent
 #      9   | fence
 #     10   | symmetric
-#     11   | priority
-#     12   | linebreakstyle
 #     13   | direction
 
 # 1) build %moz_hash from $MOZ_DICTIONARY
@@ -107,7 +104,6 @@ while (<$file>) {
     $value[0] = $3;
     if (m/^(.*)lspace:(\d)(.*)$/) { $value[1] = $2; } else { $value[1] = "5"; }
     if (m/^(.*)rspace:(\d)(.*)$/) { $value[2] = $2; } else { $value[2] = "5"; }
-    if (m/^(.*)minsize:(\d)(.*)$/) { $value[3] = $2; } else { $value[3] = "1"; }
     $value[4] = (m/^(.*)largeop(.*)$/);
     $value[5] = (m/^(.*)movablelimits(.*)$/);
     $value[6] = (m/^(.*)stretchy(.*)$/);
@@ -115,8 +111,6 @@ while (<$file>) {
     $value[8] = (m/^(.*)accent(.*)$/);
     $value[9] = (m/^(.*)fence(.*)$/);
     $value[10] = (m/^(.*)symmetric(.*)$/);
-    $value[11] = ""; # we don't store "priority" in our dictionary
-    $value[12] = ""; # we don't store "linebreakstyle" in our dictionary
     if (m/^(.*)direction:([a-z]*)(.*)$/) { $value[13] = $2; }
     else { $value[13] = ""; }
 
@@ -277,8 +271,6 @@ foreach my $entry ($doc->findnodes('/root/entry')) {
     if ($value[1] eq "") { $value[1] = "5"; }
     $value[2] = $entry->getAttribute("rspace");
     if ($value[2] eq "") { $value[2] = "5"; }
-    $value[3] = $entry->getAttribute("minsize");
-    if ($value[3] eq "") { $value[3] = "1"; }
 
     $_ = $entry->getAttribute("properties");
     $value[4] = (m/^(.*)largeop(.*)$/);
@@ -287,8 +279,6 @@ foreach my $entry ($doc->findnodes('/root/entry')) {
     $value[7] = (m/^(.*)separator(.*)$/);
     $value[9] = (m/^(.*)fence(.*)$/);
     $value[10] = (m/^(.*)symmetric(.*)$/);
-    $value[11] = $entry->getAttribute("priority");
-    $value[12] = $entry->getAttribute("linebreakstyle");
 
     # not stored in the WG dictionary
     $value[8] = ""; # accent
@@ -411,7 +401,6 @@ sub generateCommon {
     # helper function to generate the string of data shared by both dictionaries
     my(@v) = @_;
     $entry = "lspace:$v[1] rspace:$v[2]";
-    if ($v[3] ne "1") { $entry = "$entry minsize:$v[3]"; }
     if ($v[4]) { $entry = "$entry largeop"; }
     if ($v[5]) { $entry = "$entry movablelimits"; }
     if ($v[6]) { $entry = "$entry stretchy"; }

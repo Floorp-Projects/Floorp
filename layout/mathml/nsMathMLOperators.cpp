@@ -70,11 +70,6 @@ static void SetProperty(OperatorData* aOperatorData, nsString aName,
                         nsString aValue) {
   if (aName.IsEmpty() || aValue.IsEmpty()) return;
 
-  // XXX These ones are not kept in the dictionary
-  // Support for these requires nsString member variables
-  // maxsize (default: infinity)
-  // minsize (default: 1)
-
   if (aName.EqualsLiteral("direction")) {
     if (aValue.EqualsLiteral("vertical"))
       aOperatorData->mFlags |= NS_MATHML_OPERATOR_DIRECTION_VERTICAL;
