@@ -7272,6 +7272,83 @@ static bool TimeSinceCreation(JSContext* cx, unsigned argc, Value* vp) {
   return true;
 }
 
+static bool GetInnerMostEnvironmentObject(JSContext* cx, unsigned argc,
+                                          Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+
+  FrameIter iter(cx);
+  if (iter.done()) {
+    args.rval().setNull();
+    return true;
+  }
+
+  args.rval().setObjectOrNull(iter.environmentChain(cx));
+  return true;
+}
+
+static bool GetEnclosingEnvironmentObject(JSContext* cx, unsigned argc,
+                                          Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+  if (!args.requireAtLeast(cx, "getEnclosingEnvironmentObject", 1)) {
+    return false;
+  }
+
+  if (!args[0].isObject()) {
+    args.rval().setUndefined();
+    return true;
+  }
+
+  JSObject* envObj = &args[0].toObject();
+
+  if (envObj->is<EnvironmentObject>()) {
+    EnvironmentObject* env = &envObj->as<EnvironmentObject>();
+    args.rval().setObject(env->enclosingEnvironment());
+    return true;
+  }
+
+  if (envObj->is<DebugEnvironmentProxy>()) {
+    DebugEnvironmentProxy* envProxy = &envObj->as<DebugEnvironmentProxy>();
+    args.rval().setObject(envProxy->enclosingEnvironment());
+    return true;
+  }
+
+  args.rval().setNull();
+  return true;
+}
+
+static bool GetEnvironmentObjectType(JSContext* cx, unsigned argc, Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+  if (!args.requireAtLeast(cx, "getEnvironmentObjectType", 1)) {
+    return false;
+  }
+
+  if (!args[0].isObject()) {
+    args.rval().setUndefined();
+    return true;
+  }
+
+  JSObject* envObj = &args[0].toObject();
+
+  if (envObj->is<EnvironmentObject>()) {
+    EnvironmentObject* env = &envObj->as<EnvironmentObject>();
+    JSString* str = JS_NewStringCopyZ(cx, env->typeString());
+    args.rval().setString(str);
+    return true;
+  }
+  if (envObj->is<DebugEnvironmentProxy>()) {
+    DebugEnvironmentProxy* envProxy = &envObj->as<DebugEnvironmentProxy>();
+    EnvironmentObject* env = &envProxy->environment();
+    char buf[256] = {'\0'};
+    SprintfLiteral(buf, "[DebugProxy] %s", env->typeString());
+    JSString* str = JS_NewStringCopyZ(cx, buf);
+    args.rval().setString(str);
+    return true;
+  }
+
+  args.rval().setUndefined();
+  return true;
+}
+
 static bool GetErrorNotes(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
   if (!args.requireAtLeast(cx, "getErrorNotes", 1)) {
@@ -9004,6 +9081,18 @@ JS_FN_HELP("isInStencilCache", IsInStencilCache, 1, 0,
 JS_FN_HELP("waitForStencilCache", WaitForStencilCache, 1, 0,
 "waitForStencilCache(fun)",
 "  Block main thread execution until the function is made available in the cache."),
+
+JS_FN_HELP("getInnerMostEnvironmentObject", GetInnerMostEnvironmentObject, 0, 0,
+"getInnerMostEnvironmentObject()",
+"  Return the inner-most environment object for current execution."),
+
+JS_FN_HELP("getEnclosingEnvironmentObject", GetEnclosingEnvironmentObject, 1, 0,
+"getEnclosingEnvironmentObject(env)",
+"  Return the enclosing environment object for given environment object."),
+
+JS_FN_HELP("getEnvironmentObjectType", GetEnvironmentObjectType, 1, 0,
+"getEnvironmentObjectType(env)",
+"  Return a string represents the type of given environment object."),
 
     JS_FS_HELP_END
 };

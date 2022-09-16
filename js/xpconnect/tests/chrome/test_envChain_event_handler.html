@@ -1,0 +1,137 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1782450
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1782450</title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://global/skin"/>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
+  <script type="application/javascript">
+"use strict";
+
+SimpleTest.waitForExplicitFinish();
+
+// Verify the environment chain for DOM event handlers described in
+// js/src/vm/EnvironmentObject.h.
+
+let count = 0;
+function check(envs, hasEval) {
+  is(envs.length, hasEval ? 8 : 6);
+
+  let i = 0, env;
+
+  if (hasEval) {
+    env = envs[i]; i++;
+    is(env.type, "BlockLexicalEnvironmentObject");
+    is(env.qualified, false);
+    is(env.unqualified, false);
+    is(env.lexical, true, "lexical must live in the function lexical env");
+    is(env.prop, false);
+    is(env.form_prop, false);
+    is(env.document_prop, false);
+    is(env.button_prop, false);
+
+    env = envs[i]; i++;
+    is(env.type, "CallObject");
+    is(env.qualified, true, "qualified var live in the function call object");
+    is(env.unqualified, false);
+    is(env.lexical, false);
+    is(env.prop, false);
+    is(env.form_prop, false);
+    is(env.document_prop, false);
+    is(env.button_prop, false);
+  } else {
+    // qualified var and lexical live in function's frame.
+  }
+
+  env = envs[i]; i++;
+  is(env.type, "NonSyntacticLexicalEnvironmentObject");
+  is(env.qualified, false);
+  is(env.unqualified, false);
+  is(env.lexical, false);
+  is(env.prop, false);
+  is(env.form_prop, false);
+  is(env.document_prop, false);
+  is(env.button_prop, false);
+
+  env = envs[i]; i++;
+  is(env.type, "WithEnvironmentObject");
+  is(env.qualified, false);
+  is(env.unqualified, false);
+  is(env.lexical, false);
+  is(env.prop, true, "this property must live in the with env for button");
+  is(env.form_prop, false);
+  is(env.document_prop, false);
+  is(env.button_prop, true, "button property must live in the with env for button");
+
+  env = envs[i]; i++;
+  is(env.type, "WithEnvironmentObject");
+  is(env.qualified, false);
+  is(env.unqualified, false);
+  is(env.lexical, false);
+  is(env.prop, false);
+  is(env.form_prop, true, "form property must live in the with env for form");
+  is(env.document_prop, false);
+  is(env.button_prop, false);
+
+  env = envs[i]; i++;
+  is(env.type, "WithEnvironmentObject");
+  is(env.qualified, false);
+  is(env.unqualified, false);
+  is(env.lexical, false);
+  is(env.prop, false);
+  is(env.form_prop, false);
+  is(env.document_prop, true, "document property must live in the with env for document");
+  is(env.button_prop, false);
+
+  env = envs[i]; i++;
+  is(env.type, "GlobalLexicalEnvironmentObject");
+  is(env.qualified, false);
+  is(env.unqualified, false);
+  is(env.lexical, false);
+  is(env.prop, false);
+  is(env.form_prop, false);
+  is(env.document_prop, false);
+  is(env.button_prop, false);
+
+  env = envs[i]; i++;
+  is(env.type, "*global*");
+  is(env.qualified, false);
+  is(env.unqualified, true, "unqualified name must live in the global");
+  is(env.lexical, false);
+  is(env.prop, false);
+  is(env.form_prop, false);
+  is(env.document_prop, false);
+  is(env.button_prop, false);
+
+  count++;
+  if (count == 2) {
+    SimpleTest.finish();
+  }
+}
+  </script>
+</head>
+<body>
+<form id="form">
+<button id="button_optimized" onclick="event.preventDefault(); var qualified = 10; unqualified = 20; let lexical = 30; this.prop = 40; const funcs = Cu.getJSTestingFunctions(); const envs = []; let env = funcs.getInnerMostEnvironmentObject(); while (env) { envs.push({ type: funcs.getEnvironmentObjectType(env) || '*global*', qualified: !!Object.getOwnPropertyDescriptor(env, 'qualified'), unqualified: !!Object.getOwnPropertyDescriptor(env, 'unqualified'), lexical: !!Object.getOwnPropertyDescriptor(env, 'lexical'), prop: !!Object.getOwnPropertyDescriptor(env, 'prop'), document_prop: !!Object.getOwnPropertyDescriptor(env, 'document_prop'), form_prop: !!Object.getOwnPropertyDescriptor(env, 'form_prop'), button_prop: !!Object.getOwnPropertyDescriptor(env, 'button_prop'), }); env = funcs.getEnclosingEnvironmentObject(env); } check(envs, false); return false;">Click Me!</button>
+<!-- Put direct eval to de-optimize function scope -->
+<button id="button_unoptimized" onclick="event.preventDefault(); eval(''); var qualified = 10; unqualified = 20; let lexical = 30; this.prop = 40; const funcs = Cu.getJSTestingFunctions(); const envs = []; let env = funcs.getInnerMostEnvironmentObject(); while (env) { envs.push({ type: funcs.getEnvironmentObjectType(env) || '*global*', qualified: !!Object.getOwnPropertyDescriptor(env, 'qualified'), unqualified: !!Object.getOwnPropertyDescriptor(env, 'unqualified'), lexical: !!Object.getOwnPropertyDescriptor(env, 'lexical'), prop: !!Object.getOwnPropertyDescriptor(env, 'prop'), document_prop: !!Object.getOwnPropertyDescriptor(env, 'document_prop'), form_prop: !!Object.getOwnPropertyDescriptor(env, 'form_prop'), button_prop: !!Object.getOwnPropertyDescriptor(env, 'button_prop'), }); env = funcs.getEnclosingEnvironmentObject(env); } check(envs, true);">Click Me!</button>
+</form>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1782450">Mozilla Bug 1782450</a>
+<script type="application/javascript">
+"use strict";
+document.document_prop = 50;
+const form = document.getElementById("form");
+form.form_prop = 50;
+const button_unoptimized = document.getElementById("button_unoptimized");
+button_unoptimized.button_prop = 60;
+button_unoptimized.click();
+const button_optimized = document.getElementById("button_optimized");
+button_optimized.button_prop = 60;
+button_optimized.click();
+</script>
+</body>
+</html>
