@@ -68,6 +68,7 @@ body {
       // vertical scrollbar to appear, which takes up horizontal space, causing
       // the horizontal scrollbar to appear, and so on.
       height: 100%;
+      background-color: transparent;
 
       &:dir(rtl) {
         transform: unset;
