@@ -391,10 +391,10 @@ WorkerScriptLoader::WorkerScriptLoader(
     : mOriginStack(std::move(aOriginStack)),
       mSyncLoopTarget(aSyncLoopTarget),
       mWorkerScriptType(aWorkerScriptType),
+      mCancelMainThread(Nothing()),
       mRv(aRv),
       mCleanedUp(false),
-      mCleanUpLock("cleanUpLock"),
-      mCancelMainThread(Nothing()) {
+      mCleanUpLock("cleanUpLock") {
   aWorkerPrivate->AssertIsOnWorkerThread();
   MOZ_ASSERT(aSyncLoopTarget);
 
@@ -656,9 +656,6 @@ nsresult WorkerScriptLoader::OnStreamComplete(ScriptLoadRequest* aRequest,
                                               nsresult aStatus) {
   AssertIsOnMainThread();
 
-  // We expect our callers to runtime-check this in advance.
-  MOZ_ASSERT(!IsCancelled());
-
   LoadingFinished(aRequest, aStatus);
   return NS_OK;
 }
@@ -691,10 +688,6 @@ void WorkerScriptLoader::CancelMainThread(
         loadContext->mCachePromise->MaybeReject(NS_BINDING_ABORTED);
         loadContext->mCachePromise = nullptr;
       }
-      if (!loadContext->mLoadingFinished) {
-        // Signal that we aborted to ensure proper cleanup.
-        LoadingFinished(loadContext->mRequest, aCancelResult);
-      }
     }
   }
 }
@@ -715,9 +708,7 @@ nsresult WorkerScriptLoader::LoadScripts(
       nsresult rv = LoadScript(loadContext->mRequest);
       if (NS_WARN_IF(NS_FAILED(rv))) {
         LoadingFinished(loadContext->mRequest, rv);
-        // Let any error to be handled as if it was a fetch error when it
-        // comes time to evaluate its script from its load having completed,
-        // that is: do not CancelMainThread already here.
+        CancelMainThread(rv, &aContextList);
         return rv;
       }
     }
@@ -1019,6 +1010,7 @@ void WorkerScriptLoader::TryShutdown() {
 }
 
 void WorkerScriptLoader::ShutdownScriptLoader(bool aResult, bool aMutedError) {
+  mWorkerRef->Private()->AssertIsOnWorkerThread();
   MOZ_ASSERT(AllScriptsExecuted());
 
   if (!aResult) {
@@ -1050,13 +1042,10 @@ void WorkerScriptLoader::ShutdownScriptLoader(bool aResult, bool aMutedError) {
   {
     MutexAutoLock lock(CleanUpLock());
 
-    if (!CleanedUp()) {
-      mWorkerRef->Private()->AssertIsOnWorkerThread();
-      mWorkerRef->Private()->StopSyncLoop(mSyncLoopTarget, aResult);
-    }
+    mWorkerRef->Private()->StopSyncLoop(mSyncLoopTarget, aResult);
+
     // Signal cleanup
     mCleanedUp = true;
-
     // Allow worker shutdown.
     mWorkerRef = nullptr;
   }
