@@ -10,8 +10,8 @@ http://creativecommons.org/publicdomain/zero/1.0/ */
 add_task(async function validate_filename_method() {
   let mimeService = Cc["@mozilla.org/mime;1"].getService(Ci.nsIMIMEService);
 
-  function checkFilename(filename, flags) {
-    return mimeService.validateFileNameForSaving(filename, "image/png", flags);
+  function checkFilename(filename, flags, mime = "image/png") {
+    return mimeService.validateFileNameForSaving(filename, mime, flags);
   }
 
   Assert.equal(checkFilename("basicfile.png", 0), "basicfile.png");
@@ -159,6 +159,10 @@ add_task(async function validate_filename_method() {
     checkFilename("test_ﾃｽﾄ_T\x83E\\S\x83T.pﾃ\x83ng", 0),
     "test_ﾃｽﾄ_T E_S T.png"
   );
+
+  // Check we don't invalidate surrogate pairs when trimming.
+  Assert.equal(checkFilename("test😀", 0, ""), "test😀");
+  Assert.equal(checkFilename("test😀😀", 0, ""), "test😀😀");
 
   // Now check some media types
   Assert.equal(
