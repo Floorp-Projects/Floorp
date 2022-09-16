@@ -782,27 +782,6 @@ video > .caption-box {
             display direction, maybe related with bug 1558431. */
 }
 
-/* details & summary */
-details > summary:-moz-native-anonymous {
-  /* TODO(krosylight): Remove this when fixing bug 1308080 */
-  user-select: none;
-}
-
-details > summary:is(:first-of-type, :-moz-native-anonymous) {
-  display: list-item;
-  counter-increment: list-item 0;
-  list-style: disclosure-closed inside;
-}
-
-details[open] > summary:is(:first-of-type, :-moz-native-anonymous) {
-  list-style-type: disclosure-open;
-}
-
-details > summary:first-of-type > *|* {
-  /* Cancel "list-style-position: inside" inherited from summary. */
-  list-style-position: initial;
-}
-
 /* <dialog> element styles */
 
 dialog {

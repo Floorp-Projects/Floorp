@@ -7,6 +7,11 @@
 #include "mozilla/dom/HTMLDetailsElement.h"
 
 #include "mozilla/dom/HTMLDetailsElementBinding.h"
+#include "mozilla/dom/HTMLSummaryElement.h"
+#include "mozilla/dom/ShadowRoot.h"
+#include "mozilla/ScopeExit.h"
+#include "nsContentUtils.h"
+#include "nsTextNode.h"
 
 NS_IMPL_NS_NEW_HTML_ELEMENT(Details)
 
@@ -16,33 +21,31 @@ HTMLDetailsElement::~HTMLDetailsElement() = default;
 
 NS_IMPL_ELEMENT_CLONE(HTMLDetailsElement)
 
-nsIContent* HTMLDetailsElement::GetFirstSummary() const {
+HTMLDetailsElement::HTMLDetailsElement(already_AddRefed<NodeInfo>&& aNodeInfo)
+    : nsGenericHTMLElement(std::move(aNodeInfo)) {
+  SetupShadowTree();
+}
+
+HTMLSummaryElement* HTMLDetailsElement::GetFirstSummary() const {
   // XXX: Bug 1245032: Might want to cache the first summary element.
   for (nsIContent* child = nsINode::GetFirstChild(); child;
        child = child->GetNextSibling()) {
-    if (child->IsHTMLElement(nsGkAtoms::summary)) {
-      return child;
+    if (auto* summary = HTMLSummaryElement::FromNode(child)) {
+      return summary;
     }
   }
   return nullptr;
 }
 
-nsChangeHint HTMLDetailsElement::GetAttributeChangeHint(
-    const nsAtom* aAttribute, int32_t aModType) const {
-  nsChangeHint hint =
-      nsGenericHTMLElement::GetAttributeChangeHint(aAttribute, aModType);
-  if (aAttribute == nsGkAtoms::open) {
-    hint |= nsChangeHint_ReconstructFrame;
-  }
-  return hint;
-}
-
-nsresult HTMLDetailsElement::BeforeSetAttr(int32_t aNameSpaceID, nsAtom* aName,
-                                           const nsAttrValueOrString* aValue,
-                                           bool aNotify) {
+nsresult HTMLDetailsElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
+                                          const nsAttrValue* aValue,
+                                          const nsAttrValue* aOldValue,
+                                          nsIPrincipal* aMaybeScriptedPrincipal,
+                                          bool aNotify) {
   if (aNameSpaceID == kNameSpaceID_None && aName == nsGkAtoms::open) {
-    bool setOpen = aValue != nullptr;
-    if (Open() != setOpen) {
+    bool wasOpen = !!aOldValue;
+    bool isOpen = !!aValue;
+    if (wasOpen != isOpen) {
       if (mToggleEventDispatcher) {
         mToggleEventDispatcher->Cancel();
       }
@@ -54,8 +57,70 @@ nsresult HTMLDetailsElement::BeforeSetAttr(int32_t aNameSpaceID, nsAtom* aName,
     }
   }
 
-  return nsGenericHTMLElement::BeforeSetAttr(aNameSpaceID, aName, aValue,
-                                             aNotify);
+  return nsGenericHTMLElement::AfterSetAttr(
+      aNameSpaceID, aName, aValue, aOldValue, aMaybeScriptedPrincipal, aNotify);
+}
+
+void HTMLDetailsElement::SetupShadowTree() {
+  const bool kNotify = false;
+  AttachAndSetUAShadowRoot(NotifyUAWidgetSetup::No);
+  RefPtr<ShadowRoot> sr = GetShadowRoot();
+  if (NS_WARN_IF(!sr)) {
+    return;
+  }
+
+  nsNodeInfoManager* nim = OwnerDoc()->NodeInfoManager();
+  RefPtr<NodeInfo> slotNodeInfo = nim->GetNodeInfo(
+      nsGkAtoms::slot, nullptr, kNameSpaceID_XHTML, nsINode::ELEMENT_NODE);
+  {
+    RefPtr<NodeInfo> linkNodeInfo = nim->GetNodeInfo(
+        nsGkAtoms::link, nullptr, kNameSpaceID_XHTML, nsINode::ELEMENT_NODE);
+    RefPtr<nsGenericHTMLElement> link =
+        NS_NewHTMLLinkElement(linkNodeInfo.forget());
+    if (NS_WARN_IF(!link)) {
+      return;
+    }
+    link->SetAttr(nsGkAtoms::rel, u"stylesheet"_ns, IgnoreErrors());
+    link->SetAttr(nsGkAtoms::href,
+                  u"resource://content-accessible/details.css"_ns,
+                  IgnoreErrors());
+    sr->AppendChildTo(link, kNotify, IgnoreErrors());
+  }
+  {
+    RefPtr<nsGenericHTMLElement> slot =
+        NS_NewHTMLSlotElement(do_AddRef(slotNodeInfo));
+    if (NS_WARN_IF(!slot)) {
+      return;
+    }
+    slot->SetAttr(kNameSpaceID_None, nsGkAtoms::name,
+                  u"internal-main-summary"_ns, kNotify);
+    sr->AppendChildTo(slot, kNotify, IgnoreErrors());
+
+    RefPtr<NodeInfo> summaryNodeInfo = nim->GetNodeInfo(
+        nsGkAtoms::summary, nullptr, kNameSpaceID_XHTML, nsINode::ELEMENT_NODE);
+    RefPtr<nsGenericHTMLElement> summary =
+        NS_NewHTMLSummaryElement(summaryNodeInfo.forget());
+    if (NS_WARN_IF(!summary)) {
+      return;
+    }
+
+    nsAutoString defaultSummaryText;
+    nsContentUtils::GetLocalizedString(nsContentUtils::eFORMS_PROPERTIES,
+                                       "DefaultSummary", defaultSummaryText);
+    RefPtr<nsTextNode> description = new (nim) nsTextNode(nim);
+    description->SetText(defaultSummaryText, kNotify);
+    summary->AppendChildTo(description, kNotify, IgnoreErrors());
+
+    slot->AppendChildTo(summary, kNotify, IgnoreErrors());
+  }
+  {
+    RefPtr<nsGenericHTMLElement> slot =
+        NS_NewHTMLSlotElement(slotNodeInfo.forget());
+    if (NS_WARN_IF(!slot)) {
+      return;
+    }
+    sr->AppendChildTo(slot, kNotify, IgnoreErrors());
+  }
 }
 
 void HTMLDetailsElement::AsyncEventRunning(AsyncEventDispatcher* aEvent) {

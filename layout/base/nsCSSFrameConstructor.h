@@ -1381,13 +1381,12 @@ class nsCSSFrameConstructor final : public nsFrameManager {
                                    const nsStyleDisplay* aStyleDisplay,
                                    nsFrameList& aFrameList);
 
-  // ConstructDetailsFrame puts the new frame in aFrameList and
-  // handles the kids of the details.
-  nsIFrame* ConstructDetailsFrame(nsFrameConstructorState& aState,
-                                  FrameConstructionItem& aItem,
-                                  nsContainerFrame* aParentFrame,
-                                  const nsStyleDisplay* aStyleDisplay,
-                                  nsFrameList& aFrameList);
+  // <details> always creates a block per spec.
+  nsIFrame* ConstructDetails(nsFrameConstructorState& aState,
+                             FrameConstructionItem& aItem,
+                             nsContainerFrame* aParentFrame,
+                             const nsStyleDisplay* aStyleDisplay,
+                             nsFrameList& aFrameList);
 
   // Creates a block frame wrapping an anonymous ruby frame.
   nsIFrame* ConstructBlockRubyFrame(nsFrameConstructorState& aState,
@@ -1580,15 +1579,6 @@ class nsCSSFrameConstructor final : public nsFrameManager {
                                      nsFrameList& aFrameList);
 
   /**
-   * Construct a scrollable block frame using the given block frame creation
-   * function.
-   */
-  nsIFrame* ConstructScrollableBlockWithConstructor(
-      nsFrameConstructorState& aState, FrameConstructionItem& aItem,
-      nsContainerFrame* aParentFrame, const nsStyleDisplay* aDisplay,
-      nsFrameList& aFrameList, BlockFrameCreationFunc aConstructor);
-
-  /**
    * Construct a non-scrollable block frame
    */
   nsIFrame* ConstructNonScrollableBlock(nsFrameConstructorState& aState,
@@ -1596,15 +1586,6 @@ class nsCSSFrameConstructor final : public nsFrameManager {
                                         nsContainerFrame* aParentFrame,
                                         const nsStyleDisplay* aDisplay,
                                         nsFrameList& aFrameList);
-
-  /**
-   * Construct a non-scrollable block frame using the given block frame creation
-   * function.
-   */
-  nsIFrame* ConstructNonScrollableBlockWithConstructor(
-      nsFrameConstructorState& aState, FrameConstructionItem& aItem,
-      nsContainerFrame* aParentFrame, const nsStyleDisplay* aDisplay,
-      nsFrameList& aFrameList, BlockFrameCreationFunc aConstructor);
 
   /**
    * This adds FrameConstructionItem objects to aItemsToConstruct for the

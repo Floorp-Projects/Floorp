@@ -1,0 +1,22 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+slot:not([name]) {
+  display: none;
+}
+/* Either the fallback summary (inside the shadow tree), or the slotted main
+   summary. */
+summary,
+slot[name=internal-main-summary]::slotted(summary) {
+  display: list-item;
+  counter-increment: list-item 0;
+  list-style: disclosure-closed inside;
+}
+:host([open]) summary,
+:host([open]) slot[name=internal-main-summary]::slotted(summary) {
+  list-style-type: disclosure-open;
+}
+:host([open]) slot:not([name]) {
+  display: revert;
+}
