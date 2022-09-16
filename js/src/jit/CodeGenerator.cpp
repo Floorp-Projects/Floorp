@@ -2823,7 +2823,9 @@ JitCode* JitRealm::generateRegExpMatcherStub(JSContext* cx) {
     return nullptr;
   }
 
-  CollectPerfSpewerJitCodeProfile(code, "RegExpMatcherStub");
+#ifdef JS_ION_PERF
+  writePerfSpewerJitCodeProfile(code, "RegExpMatcherStub");
+#endif
 #ifdef MOZ_VTUNE
   vtune::MarkStub(code, "RegExpMatcherStub");
 #endif
@@ -3016,7 +3018,9 @@ JitCode* JitRealm::generateRegExpSearcherStub(JSContext* cx) {
     return nullptr;
   }
 
-  CollectPerfSpewerJitCodeProfile(code, "RegExpSearcherStub");
+#ifdef JS_ION_PERF
+  writePerfSpewerJitCodeProfile(code, "RegExpSearcherStub");
+#endif
 #ifdef MOZ_VTUNE
   vtune::MarkStub(code, "RegExpSearcherStub");
 #endif
@@ -3175,7 +3179,9 @@ JitCode* JitRealm::generateRegExpTesterStub(JSContext* cx) {
     return nullptr;
   }
 
-  CollectPerfSpewerJitCodeProfile(code, "RegExpTesterStub");
+#ifdef JS_ION_PERF
+  writePerfSpewerJitCodeProfile(code, "RegExpTesterStub");
+#endif
 #ifdef MOZ_VTUNE
   vtune::MarkStub(code, "RegExpTesterStub");
 #endif
@@ -6599,7 +6605,9 @@ bool CodeGenerator::generateBody() {
         return false;
       }
 
+#ifdef JS_ION_PERF
       perfSpewer_.recordInstruction(masm, iter->op());
+#endif
 #ifdef JS_JITSPEW
       JitSpewStart(JitSpew_Codegen, "                                # LIR=%s",
                    iter->opName());
@@ -10765,7 +10773,9 @@ JitCode* JitRealm::generateStringConcatStub(JSContext* cx) {
   Linker linker(masm);
   JitCode* code = linker.newCode(cx, CodeKind::Other);
 
-  CollectPerfSpewerJitCodeProfile(code, "StringConcatStub");
+#ifdef JS_ION_PERF
+  writePerfSpewerJitCodeProfile(code, "StringConcatStub");
+#endif
 #ifdef MOZ_VTUNE
   vtune::MarkStub(code, "StringConcatStub");
 #endif
@@ -13138,9 +13148,11 @@ bool CodeGenerator::link(JSContext* cx, const WarpSnapshot* snapshot) {
   }
   ionScript->setInvalidationEpilogueOffset(invalidate_.offset());
 
+#if defined(JS_ION_PERF)
   if (PerfEnabled()) {
-    perfSpewer_.saveProfile(script, code);
+    perfSpewer_.writeProfile(script, code);
   }
+#endif
 
 #ifdef MOZ_VTUNE
   vtune::MarkScript(code, script, "ion");

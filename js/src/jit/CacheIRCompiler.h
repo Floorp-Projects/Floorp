@@ -950,10 +950,14 @@ class MOZ_RAII CacheIRCompiler {
   void assertFloatRegisterAvailable(FloatRegister reg);
 #endif
 
+#if defined(JS_ION_PERF)
   InlineCachePerfSpewer perfSpewer_;
+#endif
 
  public:
+#if defined(JS_ION_PERF)
   InlineCachePerfSpewer& perfSpewer() { return perfSpewer_; }
+#endif
 
   void callVMInternal(MacroAssembler& masm, VMFunctionId id);
   template <typename Fn, Fn fn>
