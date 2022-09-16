@@ -361,7 +361,7 @@ open class MainActivity : LocaleAwareAppCompatActivity() {
             return
         }
 
-        super.onBackPressed()
+        super.getOnBackPressedDispatcher().onBackPressed()
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
