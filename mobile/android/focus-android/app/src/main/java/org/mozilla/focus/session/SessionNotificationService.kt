@@ -17,6 +17,7 @@ import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
 import mozilla.components.service.glean.private.NoExtras
 import mozilla.components.support.utils.ThreadUtils
+import mozilla.components.support.utils.ext.stopForegroundCompat
 import org.mozilla.focus.GleanMetrics.Notifications
 import org.mozilla.focus.GleanMetrics.RecentApps
 import org.mozilla.focus.R
@@ -76,7 +77,7 @@ class SessionNotificationService : Service() {
 
         components.tabsUseCases.removeAllTabs()
 
-        stopForeground(true)
+        stopForegroundCompat(true)
         stopSelf()
     }
 
