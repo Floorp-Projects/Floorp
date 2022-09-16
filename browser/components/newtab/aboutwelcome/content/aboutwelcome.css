@@ -369,14 +369,8 @@ body {
 .onboardingContainer .screen[pos=split] .section-main .main-content .main-content-inner {
   min-height: 330px;
 }
-.onboardingContainer .screen[pos=split] .section-main .main-content .main-content-inner .language-switcher-container .secondary {
-  margin-inline-start: 0;
-  margin: 5px 0;
-  color: var(--in-content-primary-button-text-color);
-  background-color: var(--in-content-primary-button-background);
-}
-.onboardingContainer .screen[pos=split] .section-main .main-content .main-content-inner .language-switcher-container .secondary:hover {
-  background-color: var(--in-content-primary-button-background-hover);
+.onboardingContainer .screen[pos=split] .section-main .main-content .main-content-inner .language-switcher-container .primary {
+  margin-bottom: 5px;
 }
 .onboardingContainer .screen[pos=split] .section-main .main-content .action-buttons {
   position: relative;

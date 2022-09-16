@@ -184,7 +184,7 @@ add_task(async function test_aboutwelcome_languageSwitcher_accept() {
   const { browser, flushClickTelemetry } = await openAboutWelcome();
 
   info("Clicking the primary button to start the onboarding process.");
-  await clickVisibleButton(browser, "button.primary");
+  await clickVisibleButton(browser, `button.primary[value="primary_button"]`);
 
   await testScreenContent(
     browser,
@@ -212,7 +212,7 @@ add_task(async function test_aboutwelcome_languageSwitcher_accept() {
     [
       ...liveLanguageSwitchSelectors,
       `button.primary[value="primary_button"]`,
-      `button.secondary[value="decline"]`,
+      `button.primary[value="decline"]`,
     ],
     // Unexpected selectors:
     [
@@ -325,7 +325,7 @@ add_task(async function test_aboutwelcome_languageSwitcher_accept() {
     [
       ...liveLanguageSwitchSelectors,
       `button.primary[value="primary_button"]`,
-      `button.secondary[value="decline"]`,
+      `button.primary[value="decline"]`,
     ],
     // Unexpected selectors:
     [
@@ -335,7 +335,7 @@ add_task(async function test_aboutwelcome_languageSwitcher_accept() {
   );
 
   info("Clicking the primary button to view language switching page.");
-  await clickVisibleButton(browser, "button.primary");
+  await clickVisibleButton(browser, `button.primary[value="primary_button"]`);
 
   await testScreenContent(
     browser,
@@ -398,7 +398,7 @@ add_task(async function test_aboutwelcome_languageSwitcher_decline() {
   const { browser, flushClickTelemetry } = await openAboutWelcome();
 
   info("Clicking the primary button to view language switching page.");
-  await clickVisibleButton(browser, "button.primary");
+  await clickVisibleButton(browser, `button.primary[value="primary_button"]`);
 
   await testScreenContent(
     browser,
@@ -427,7 +427,7 @@ add_task(async function test_aboutwelcome_languageSwitcher_decline() {
     [
       ...liveLanguageSwitchSelectors,
       `button.primary[value="primary_button"]`,
-      `button.secondary[value="decline"]`,
+      `button.primary[value="decline"]`,
     ],
     // Unexpected selectors:
     [
@@ -439,7 +439,7 @@ add_task(async function test_aboutwelcome_languageSwitcher_decline() {
   sinon.assert.notCalled(mockable.setRequestedAppLocales);
 
   info("Clicking the secondary button to skip installing the langpack.");
-  await clickVisibleButton(browser, "button.secondary");
+  await clickVisibleButton(browser, `button.primary[value="decline"]`);
 
   await testScreenContent(
     browser,
@@ -547,7 +547,7 @@ add_task(async function test_aboutwelcome_languageSwitcher_noMatch() {
   const { browser } = await openAboutWelcome();
 
   info("Clicking the primary button to start installing the langpack.");
-  await clickVisibleButton(browser, "button.primary");
+  await clickVisibleButton(browser, `button.primary[value="primary_button"]`);
 
   // Klingon is not supported.
   resolveLangPacks(["es-MX", "es-ES", "fr-FR"]);
@@ -581,7 +581,7 @@ add_task(async function test_aboutwelcome_languageSwitcher_bidiNotSupported() {
   const { browser } = await openAboutWelcome();
 
   info("Clicking the primary button to start installing the langpack.");
-  await clickVisibleButton(browser, "button.primary");
+  await clickVisibleButton(browser, `button.primary[value="primary_button"]`);
 
   await testScreenContent(
     browser,
@@ -615,7 +615,7 @@ add_task(
     const { browser } = await openAboutWelcome();
 
     info("Clicking the primary button to start installing the langpack.");
-    await clickVisibleButton(browser, "button.primary");
+    await clickVisibleButton(browser, `button.primary[value="primary_button"]`);
 
     await testScreenContent(
       browser,
@@ -648,7 +648,7 @@ add_task(async function test_aboutwelcome_languageSwitcher_bidiNotSupported() {
   const { browser } = await openAboutWelcome();
 
   info("Clicking the primary button to start installing the langpack.");
-  await clickVisibleButton(browser, "button.primary");
+  await clickVisibleButton(browser, `button.primary[value="primary_button"]`);
 
   resolveLangPacks(["ar-EG", "es-ES", "fr-FR"]);
 
@@ -681,7 +681,7 @@ add_task(async function test_aboutwelcome_languageSwitcher_cancelWaiting() {
   const { browser, flushClickTelemetry } = await openAboutWelcome();
 
   info("Clicking the primary button to start the onboarding process.");
-  await clickVisibleButton(browser, "button.primary");
+  await clickVisibleButton(browser, `button.primary[value="primary_button"]`);
   resolveLangPacks(["es-MX", "es-ES", "fr-FR"]);
 
   await testScreenContent(
@@ -694,7 +694,7 @@ add_task(async function test_aboutwelcome_languageSwitcher_cancelWaiting() {
   );
 
   info("Clicking the primary button to view language switching page.");
-  await clickVisibleButton(browser, "button.primary");
+  await clickVisibleButton(browser, `button.primary[value="primary_button"]`);
 
   await testScreenContent(
     browser,
@@ -757,7 +757,7 @@ add_task(async function test_aboutwelcome_languageSwitcher_MR() {
   const { browser } = await openAboutWelcome(true);
 
   info("Clicking the primary button to view language switching screen.");
-  await clickVisibleButton(browser, "button.primary");
+  await clickVisibleButton(browser, `button.primary[value="primary_button"]`);
 
   resolveLangPacks(["es-AR"]);
   await testScreenContent(
@@ -770,7 +770,7 @@ add_task(async function test_aboutwelcome_languageSwitcher_MR() {
       `.section-secondary [data-l10n-id="mr2022-onboarding-live-language-text"]`,
       `[data-l10n-id="mr2022-onboarding-live-language-switch-to"]`,
       `button.primary[value="primary_button"]`,
-      `button.secondary`,
+      `button.primary[value="decline"]`,
     ],
     // Unexpected selectors:
     [`[data-l10n-id="onboarding-live-language-header"]`]
