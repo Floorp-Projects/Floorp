@@ -96,10 +96,14 @@ bool HTMLSummaryElement::IsMainSummary() const {
     return false;
   }
 
-  return details->GetFirstSummary() == this || IsRootOfNativeAnonymousSubtree();
+  return details->GetFirstSummary() == this ||
+         GetContainingShadow() == details->GetShadowRoot();
 }
 
 HTMLDetailsElement* HTMLSummaryElement::GetDetails() const {
+  if (HasBeenInUAWidget()) {
+    return HTMLDetailsElement::FromNodeOrNull(GetContainingShadowHost());
+  }
   return HTMLDetailsElement::FromNodeOrNull(GetParent());
 }
 

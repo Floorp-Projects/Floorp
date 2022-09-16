@@ -165,7 +165,6 @@ UNIFIED_SOURCES += [
     "ColumnUtils.cpp",
     "CSSAlignUtils.cpp",
     "CSSOrderAwareFrameIterator.cpp",
-    "DetailsFrame.cpp",
     "FrameChildList.cpp",
     "MathMLTextRunFactory.cpp",
     "nsAbsoluteContainingBlock.cpp",

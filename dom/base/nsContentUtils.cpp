@@ -10721,7 +10721,7 @@ nsContentUtils::GetSubresourceCacheValidationInfo(nsIRequest* aRequest,
         aURI->SchemeIs("moz-extension")) {
       return true;
     }
-    if (dom::IsChromeURI(aURI)) {
+    if (aURI->SchemeIs("chrome") || aURI->SchemeIs("resource")) {
       return !StaticPrefs::nglayout_debug_disable_xul_cache();
     }
     return false;

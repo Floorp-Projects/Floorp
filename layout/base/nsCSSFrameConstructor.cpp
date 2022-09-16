@@ -19,7 +19,6 @@
 #include "mozilla/dom/BindContext.h"
 #include "mozilla/dom/BrowsingContext.h"
 #include "mozilla/dom/GeneratedImageContent.h"
-#include "mozilla/dom/HTMLDetailsElement.h"
 #include "mozilla/dom/HTMLSelectElement.h"
 #include "mozilla/dom/HTMLSharedListElement.h"
 #include "mozilla/dom/HTMLSummaryElement.h"
@@ -110,7 +109,6 @@
 #include "nsIScrollableFrame.h"
 #include "nsBackdropFrame.h"
 #include "nsTransitionManager.h"
-#include "DetailsFrame.h"
 
 #include "nsIPopupContainer.h"
 #ifdef ACCESSIBILITY
@@ -1778,7 +1776,8 @@ void nsCSSFrameConstructor::CreateGeneratedContentItem(
                  aPseudoElement == PseudoStyleType::marker,
              "unexpected aPseudoElement");
 
-  if (HasUAWidget(aOriginatingElement)) {
+  if (HasUAWidget(aOriginatingElement) &&
+      !aOriginatingElement.IsHTMLElement(nsGkAtoms::details)) {
     return;
   }
 
@@ -3209,20 +3208,18 @@ nsIFrame* nsCSSFrameConstructor::ConstructFieldSetFrame(
   return fieldsetFrame;
 }
 
-nsIFrame* nsCSSFrameConstructor::ConstructDetailsFrame(
+nsIFrame* nsCSSFrameConstructor::ConstructDetails(
     nsFrameConstructorState& aState, FrameConstructionItem& aItem,
     nsContainerFrame* aParentFrame, const nsStyleDisplay* aStyleDisplay,
     nsFrameList& aFrameList) {
   if (!aStyleDisplay->IsScrollableOverflow()) {
-    return ConstructNonScrollableBlockWithConstructor(
-        aState, aItem, aParentFrame, aStyleDisplay, aFrameList,
-        NS_NewDetailsFrame);
+    return ConstructNonScrollableBlock(aState, aItem, aParentFrame,
+                                       aStyleDisplay, aFrameList);
   }
 
-  // Build a scroll frame to wrap details frame if necessary.
-  return ConstructScrollableBlockWithConstructor(aState, aItem, aParentFrame,
-                                                 aStyleDisplay, aFrameList,
-                                                 NS_NewDetailsFrame);
+  // Build a scroll frame if necessary.
+  return ConstructScrollableBlock(aState, aItem, aParentFrame, aStyleDisplay,
+                                  aFrameList);
 }
 
 nsIFrame* nsCSSFrameConstructor::ConstructBlockRubyFrame(
@@ -3460,8 +3457,7 @@ nsCSSFrameConstructor::FindHTMLData(const Element& aElement,
       SIMPLE_TAG_CREATE(audio, NS_NewHTMLVideoFrame),
       SIMPLE_TAG_CREATE(progress, NS_NewProgressFrame),
       SIMPLE_TAG_CREATE(meter, NS_NewMeterFrame),
-      COMPLEX_TAG_CREATE(details,
-                         &nsCSSFrameConstructor::ConstructDetailsFrame)};
+      COMPLEX_TAG_CREATE(details, &nsCSSFrameConstructor::ConstructDetails)};
 
   return FindDataByTag(aElement, aStyle, sHTMLData, ArrayLength(sHTMLData));
 }
@@ -4583,15 +4579,6 @@ nsIFrame* nsCSSFrameConstructor::ConstructScrollableBlock(
     nsFrameConstructorState& aState, FrameConstructionItem& aItem,
     nsContainerFrame* aParentFrame, const nsStyleDisplay* aDisplay,
     nsFrameList& aFrameList) {
-  return ConstructScrollableBlockWithConstructor(aState, aItem, aParentFrame,
-                                                 aDisplay, aFrameList,
-                                                 NS_NewBlockFormattingContext);
-}
-
-nsIFrame* nsCSSFrameConstructor::ConstructScrollableBlockWithConstructor(
-    nsFrameConstructorState& aState, FrameConstructionItem& aItem,
-    nsContainerFrame* aParentFrame, const nsStyleDisplay* aDisplay,
-    nsFrameList& aFrameList, BlockFrameCreationFunc aConstructor) {
   nsIContent* const content = aItem.mContent;
   ComputedStyle* const computedStyle = aItem.mComputedStyle;
 
@@ -4603,7 +4590,8 @@ nsIFrame* nsCSSFrameConstructor::ConstructScrollableBlockWithConstructor(
 
   // Create our block frame
   // pass a temporary stylecontext, the correct one will be set later
-  nsContainerFrame* scrolledFrame = aConstructor(mPresShell, computedStyle);
+  nsContainerFrame* scrolledFrame =
+      NS_NewBlockFormattingContext(mPresShell, computedStyle);
 
   // Make sure to AddChild before we call ConstructBlock so that we
   // end up before our descendants in fixed-pos lists as needed.
@@ -4626,14 +4614,6 @@ nsIFrame* nsCSSFrameConstructor::ConstructNonScrollableBlock(
     nsFrameConstructorState& aState, FrameConstructionItem& aItem,
     nsContainerFrame* aParentFrame, const nsStyleDisplay* aDisplay,
     nsFrameList& aFrameList) {
-  return ConstructNonScrollableBlockWithConstructor(
-      aState, aItem, aParentFrame, aDisplay, aFrameList, NS_NewBlockFrame);
-}
-
-nsIFrame* nsCSSFrameConstructor::ConstructNonScrollableBlockWithConstructor(
-    nsFrameConstructorState& aState, FrameConstructionItem& aItem,
-    nsContainerFrame* aParentFrame, const nsStyleDisplay* aDisplay,
-    nsFrameList& aFrameList, BlockFrameCreationFunc aConstructor) {
   ComputedStyle* const computedStyle = aItem.mComputedStyle;
 
   // We want a block formatting context root in paginated contexts for
@@ -4653,7 +4633,7 @@ nsIFrame* nsCSSFrameConstructor::ConstructNonScrollableBlockWithConstructor(
     }
   }
 
-  nsContainerFrame* newFrame = aConstructor(mPresShell, computedStyle);
+  nsContainerFrame* newFrame = NS_NewBlockFrame(mPresShell, computedStyle);
   newFrame->AddStateBits(flags);
   ConstructBlock(
       aState, aItem.mContent,
@@ -5280,35 +5260,6 @@ static bool ShouldSuppressFrameInSelect(const nsIContent* aParent,
   return true;
 }
 
-static bool ShouldSuppressFrameInNonOpenDetails(
-    const HTMLDetailsElement* aDetails, ComputedStyle* aComputedStyle,
-    const nsIContent& aChild) {
-  if (!aDetails || aDetails->Open()) {
-    return false;
-  }
-
-  if (aChild.GetParent() != aDetails) {
-    return true;
-  }
-
-  auto* summary = HTMLSummaryElement::FromNode(aChild);
-  if (summary && summary->IsMainSummary()) {
-    return false;
-  }
-
-  // Don't suppress NAC, unless it's a ::before, inside ::marker, or ::after.
-  if (aChild.IsRootOfNativeAnonymousSubtree() &&
-      !(aChild.IsGeneratedContentContainerForMarker() &&
-        aComputedStyle->StyleList()->mListStylePosition ==
-            NS_STYLE_LIST_STYLE_POSITION_INSIDE) &&
-      !aChild.IsGeneratedContentContainerForBefore() &&
-      !aChild.IsGeneratedContentContainerForAfter()) {
-    return false;
-  }
-
-  return true;
-}
-
 const nsCSSFrameConstructor::FrameConstructionData*
 nsCSSFrameConstructor::FindDataForContent(nsIContent& aContent,
                                           ComputedStyle& aStyle,
@@ -5458,16 +5409,6 @@ void nsCSSFrameConstructor::AddFrameConstructionItemsInternal(
     return;
   }
 
-  // When constructing a child of a non-open <details>, create only the frame
-  // for the main <summary> element, and skip other elements.  This only applies
-  // to things that are not roots of native anonymous subtrees (except for
-  // ::before and ::after); we always want to create "internal" anonymous
-  // content.
-  auto* const details = HTMLDetailsElement::FromNodeOrNull(parent);
-  if (ShouldSuppressFrameInNonOpenDetails(details, aComputedStyle, *aContent)) {
-    return;
-  }
-
   if (aContent->IsHTMLElement(nsGkAtoms::legend) && aParentFrame) {
     const nsFieldSetFrame* const fs = GetFieldSetFrameFor(aParentFrame);
     if (fs && !fs->GetLegend() && !aState.mHasRenderedLegend &&
@@ -5510,16 +5451,6 @@ void nsCSSFrameConstructor::AddFrameConstructionItemsInternal(
       !(bits & FCDATA_IS_TABLE_PART) && !(bits & FCDATA_IS_SVG_TEXT);
   if (canHavePageBreak && display.BreakBefore()) {
     AppendPageBreakItem(aContent, aItems);
-  }
-
-  if (details && details->Open()) {
-    const auto* const summary = HTMLSummaryElement::FromNode(aContent);
-    if (summary && summary->IsMainSummary()) {
-      // If details is open, the main summary needs to be rendered as if it is
-      // the first child, so add the item to the front of the item list.
-      item = aItems.PrependItem(this, data, aContent, do_AddRef(aComputedStyle),
-                                aSuppressWhiteSpaceOptimizations);
-    }
   }
 
   if (!item) {
@@ -8141,9 +8072,6 @@ nsIFrame* nsCSSFrameConstructor::CreateContinuingFrame(
   } else if (LayoutFrameType::RubyTextContainer == frameType) {
     newFrame = NS_NewRubyTextContainerFrame(mPresShell, computedStyle);
     newFrame->Init(content, aParentFrame, aFrame);
-  } else if (LayoutFrameType::Details == frameType) {
-    newFrame = NS_NewDetailsFrame(mPresShell, computedStyle);
-    newFrame->Init(content, aParentFrame, aFrame);
   } else {
     MOZ_CRASH("unexpected frame type");
   }
@@ -8388,24 +8316,6 @@ bool nsCSSFrameConstructor::MaybeRecreateContainerForFrameRemoval(
     TRACE("Fieldset / Legend");
     RecreateFramesForContent(parent->GetContent(), InsertionKind::Async);
     return true;
-  }
-
-  if (parent && parent->IsDetailsFrame()) {
-    HTMLSummaryElement* summary =
-        HTMLSummaryElement::FromNode(aFrame->GetContent());
-    DetailsFrame* detailsFrame = static_cast<DetailsFrame*>(parent);
-
-    // Unlike adding summary element cases, we need to check children of the
-    // parent details frame since at this moment the summary element has been
-    // already removed from the parent details element's child list.
-    if (summary && detailsFrame->HasMainSummaryFrame(aFrame)) {
-      // When removing a summary, we should reframe the parent details frame to
-      // ensure that another summary is used or the default summary is
-      // generated.
-      TRACE("Details / Summary");
-      RecreateFramesForContent(parent->GetContent(), InsertionKind::Async);
-      return true;
-    }
   }
 
   // Now check for possibly needing to reconstruct due to a pseudo parent
@@ -10588,9 +10498,7 @@ void nsCSSFrameConstructor::ConstructBlock(
   // clang-format on
 
   nsBlockFrame* blockFrame = do_QueryFrame(*aNewFrame);
-  MOZ_ASSERT(blockFrame &&
-                 (blockFrame->IsBlockFrame() || blockFrame->IsDetailsFrame()),
-             "not a block frame nor a details frame?");
+  MOZ_ASSERT(blockFrame && blockFrame->IsBlockFrame(), "not a block frame?");
 
   // Create column hierarchy if necessary.
   const bool needsColumn =
@@ -10691,9 +10599,8 @@ nsBlockFrame* nsCSSFrameConstructor::BeginBuildingColumns(
     nsFrameConstructorState& aState, nsIContent* aContent,
     nsContainerFrame* aParentFrame, nsContainerFrame* aColumnContent,
     ComputedStyle* aComputedStyle) {
-  MOZ_ASSERT(
-      aColumnContent->IsBlockFrame() || aColumnContent->IsDetailsFrame(),
-      "aColumnContent should either be a block frame or a details frame.");
+  MOZ_ASSERT(aColumnContent->IsBlockFrame(),
+             "aColumnContent should be a block frame.");
   MOZ_ASSERT(aComputedStyle->StyleColumn()->IsColumnContainerStyle(),
              "No need to build a column hierarchy!");
 
@@ -11279,17 +11186,6 @@ bool nsCSSFrameConstructor::WipeInsertionParent(nsContainerFrame* aFrame) {
     return true;
   }
 
-  // A <details> that's getting new children. When inserting
-  // elements into <details>, we reframe the <details> and let frame constructor
-  // move the main <summary> to the front when constructing the frame
-  // construction items.
-  if (auto* details =
-          HTMLDetailsElement::FromNodeOrNull(aFrame->GetContent())) {
-    TRACE("Details / Summary");
-    RecreateFramesForContent(details, InsertionKind::Async);
-    return true;
-  }
-
   // Reframe the multi-column container whenever elements insert/append
   // into it because we need to reconstruct column-span split.
   if (aFrame->IsColumnSetWrapperFrame()) {
@@ -11578,9 +11474,6 @@ bool nsCSSFrameConstructor::WipeContainingBlock(
 
   // Situation #5 is a frame in multicol subtree that's getting new children.
   if (aFrame->HasAnyStateBits(NS_FRAME_HAS_MULTI_COLUMN_ANCESTOR)) {
-    MOZ_ASSERT(!aFrame->IsDetailsFrame(),
-               "Inserting elements into <details> should have been reframed!");
-
     bool anyColumnSpanItems = false;
     for (FCItemIterator iter(aItems); !iter.IsDone(); iter.Next()) {
       if (iter.item().mComputedStyle->StyleColumn()->IsColumnSpanStyle()) {
