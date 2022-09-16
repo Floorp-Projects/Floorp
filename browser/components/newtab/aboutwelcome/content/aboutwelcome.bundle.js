@@ -1133,8 +1133,6 @@ const MarketplaceButtons = props => {
   })) : null);
 };
 const MobileDownloads = props => {
-  var _QRCode$image_overrid;
-
   const {
     QR_code: QRCode
   } = props.data;
@@ -1145,7 +1143,7 @@ const MobileDownloads = props => {
     "data-l10n-id": QRCode.alt_text.string_id ? QRCode.alt_text.string_id : null,
     className: "qr-code-image",
     alt: typeof QRCode.alt_text === "string" ? QRCode.alt_text : "",
-    src: ((_QRCode$image_overrid = QRCode.image_overrides) === null || _QRCode$image_overrid === void 0 ? void 0 : _QRCode$image_overrid[document.documentElement.lang]) ?? QRCode.image_url
+    src: QRCode.image_url
   }) : null, showEmailLink ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_MSLocalized__WEBPACK_IMPORTED_MODULE_1__.Localized, {
     text: props.data.email.link_text
   }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("button", {
