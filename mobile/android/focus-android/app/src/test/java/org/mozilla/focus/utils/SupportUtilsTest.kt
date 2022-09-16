@@ -2,6 +2,7 @@ package org.mozilla.focus.utils
 
 import android.app.Application
 import androidx.test.core.app.ApplicationProvider
+import mozilla.components.support.utils.ext.getPackageInfoCompat
 import org.junit.Assert.assertEquals
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -26,7 +27,7 @@ class SupportUtilsTest {
     @Throws(Exception::class)
     fun getSumoURLForTopic() {
         val context = ApplicationProvider.getApplicationContext() as Application
-        val versionName = context.packageManager.getPackageInfo(context.packageName, 0).versionName
+        val versionName = context.packageManager.getPackageInfoCompat(context.packageName, 0).versionName
 
         val testTopic = SupportUtils.SumoTopic.TRACKERS
         val testTopicStr = testTopic.topicStr

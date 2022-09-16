@@ -12,6 +12,7 @@ import android.net.Uri
 import androidx.fragment.app.FragmentActivity
 import mozilla.components.browser.state.state.SessionState
 import mozilla.components.feature.customtabs.createCustomTabConfigFromIntent
+import mozilla.components.support.utils.ext.getPackageInfoCompat
 import org.mozilla.focus.BuildConfig
 import org.mozilla.focus.activity.CustomTabActivity
 import org.mozilla.focus.ext.components
@@ -82,7 +83,7 @@ object SupportUtils {
 
     private fun getAppVersion(context: Context): String {
         try {
-            return context.packageManager.getPackageInfo(context.packageName, 0).versionName
+            return context.packageManager.getPackageInfoCompat(context.packageName, 0).versionName
         } catch (e: PackageManager.NameNotFoundException) {
             // This should be impossible - we should always be able to get information about ourselves:
             throw IllegalStateException("Unable find package details for Focus", e)

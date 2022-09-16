@@ -10,6 +10,7 @@ import android.content.Intent
 import android.content.pm.LabeledIntent
 import android.os.Build
 import android.os.Parcelable
+import mozilla.components.support.utils.ext.queryIntentActivitiesCompat
 
 object IntentUtils {
 
@@ -34,7 +35,7 @@ object IntentUtils {
         chooserTitle: CharSequence? = null,
     ): Intent {
         val chooserIntent: Intent
-        val resolveInfos = context.packageManager.queryIntentActivities(intent, 0).toHashSet()
+        val resolveInfos = context.packageManager.queryIntentActivitiesCompat(intent, 0).toHashSet()
 
         val excludedComponentNames = resolveInfos
             .map { it.activityInfo }

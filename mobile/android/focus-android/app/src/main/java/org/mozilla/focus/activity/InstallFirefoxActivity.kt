@@ -14,6 +14,7 @@ import android.os.Bundle
 import android.webkit.WebView
 import mozilla.components.service.glean.private.NoExtras
 import mozilla.components.support.utils.Browsers
+import mozilla.components.support.utils.ext.resolveActivityCompat
 import org.mozilla.focus.GleanMetrics.OpenWith
 import org.mozilla.focus.telemetry.TelemetryWrapper
 import org.mozilla.focus.utils.AppConstants
@@ -57,7 +58,7 @@ class InstallFirefoxActivity : Activity() {
         private const val REDIRECT_URL = "https://app.adjust.com/gs1ao4"
 
         fun resolveAppStore(context: Context): ActivityInfo? {
-            val resolveInfo = context.packageManager.resolveActivity(createStoreIntent(), 0)
+            val resolveInfo = context.packageManager.resolveActivityCompat(createStoreIntent(), 0)
 
             if (resolveInfo?.activityInfo == null) {
                 return null
