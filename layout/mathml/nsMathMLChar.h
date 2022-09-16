@@ -40,11 +40,10 @@ enum {
   NS_STRETCH_LARGER = 0x08,   // don't stretch less than requested size
   // A largeop in displaystyle
   NS_STRETCH_LARGEOP = 0x10,
-  NS_STRETCH_INTEGRAL = 0x20,
 
   // Intended for internal use:
   // Find the widest metrics that might be returned from a vertical stretch
-  NS_STRETCH_MAXWIDTH = 0x40
+  NS_STRETCH_MAXWIDTH = 0x20
 };
 
 // A single glyph in our internal representation is either

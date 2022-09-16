@@ -47,13 +47,12 @@ enum {
   NS_MATHML_OPERATOR_SEPARATOR = 1 << 8,
   NS_MATHML_OPERATOR_MOVABLELIMITS = 1 << 9,
   NS_MATHML_OPERATOR_SYMMETRIC = 1 << 10,
-  NS_MATHML_OPERATOR_INTEGRAL = 1 << 11,
 
   // Additional bits not stored in the dictionary
-  NS_MATHML_OPERATOR_MINSIZE_ABSOLUTE = 1 << 12,
-  NS_MATHML_OPERATOR_MAXSIZE_ABSOLUTE = 1 << 13,
-  NS_MATHML_OPERATOR_LSPACE_ATTR = 1 << 14,
-  NS_MATHML_OPERATOR_RSPACE_ATTR = 1 << 15
+  NS_MATHML_OPERATOR_MINSIZE_ABSOLUTE = 1 << 11,
+  NS_MATHML_OPERATOR_MAXSIZE_ABSOLUTE = 1 << 12,
+  NS_MATHML_OPERATOR_LSPACE_ATTR = 1 << 13,
+  NS_MATHML_OPERATOR_RSPACE_ATTR = 1 << 14
 };
 
 #define NS_MATHML_OPERATOR_SIZE_INFINITY (mozilla::PositiveInfinity<float>())
@@ -88,6 +87,10 @@ class nsMathMLOperators {
 
   // Helper functions used by the nsMathMLChar class.
   static bool IsMirrorableOperator(const nsString& aOperator);
+
+  // Helper functions used by the nsMathMLChar class to determine whether
+  // aOperator corresponds to an integral operator.
+  static bool IsIntegralOperator(const nsString& aOperator);
 
   // Helper function used by the nsMathMLChar class.
   static nsStretchDirection GetStretchyDirection(const nsString& aOperator);
@@ -156,9 +159,6 @@ class nsMathMLOperators {
 
 #define NS_MATHML_OPERATOR_IS_SYMMETRIC(_flags) \
   (NS_MATHML_OPERATOR_SYMMETRIC == ((_flags)&NS_MATHML_OPERATOR_SYMMETRIC))
-
-#define NS_MATHML_OPERATOR_IS_INTEGRAL(_flags) \
-  (NS_MATHML_OPERATOR_INTEGRAL == ((_flags)&NS_MATHML_OPERATOR_INTEGRAL))
 
 #define NS_MATHML_OPERATOR_MINSIZE_IS_ABSOLUTE(_flags) \
   (NS_MATHML_OPERATOR_MINSIZE_ABSOLUTE ==              \

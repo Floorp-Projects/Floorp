@@ -548,9 +548,6 @@ static uint32_t GetStretchHint(nsOperatorFlags aFlags,
     if (aStyleFont->mMathStyle == NS_STYLE_MATH_STYLE_NORMAL &&
         NS_MATHML_OPERATOR_IS_LARGEOP(aFlags)) {
       stretchHint = NS_STRETCH_LARGEOP;  // (largeopOnly, not mask!)
-      if (NS_MATHML_OPERATOR_IS_INTEGRAL(aFlags)) {
-        stretchHint |= NS_STRETCH_INTEGRAL;
-      }
       if (NS_MATHML_OPERATOR_IS_STRETCHY(aFlags)) {
         stretchHint |= NS_STRETCH_NEARER | NS_STRETCH_LARGER;
       }

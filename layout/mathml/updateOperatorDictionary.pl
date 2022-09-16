@@ -87,7 +87,6 @@ if ($ARGV[0] eq "compare" && $#ARGV == 1) {
 #     11   | priority
 #     12   | linebreakstyle
 #     13   | direction
-#     14   | integral
 
 # 1) build %moz_hash from $MOZ_DICTIONARY
 
@@ -120,7 +119,6 @@ while (<$file>) {
     $value[12] = ""; # we don't store "linebreakstyle" in our dictionary
     if (m/^(.*)direction:([a-z]*)(.*)$/) { $value[13] = $2; }
     else { $value[13] = ""; }
-    $value[14] = (m/^(.*)integral(.*)$/);
 
     # 1.3) save the key and value
     $moz_hash{$key} = [ @value ];
@@ -154,25 +152,12 @@ if ($ARGV[0] eq "check") {
             print $file_syntax_errors "error: invalid direction \"$moz[13]\"\n";
         }
 
-        if (!@moz[4] && @moz[14]) {
-            $valid = 0;
-            $nb_warnings++;
-            print $file_syntax_errors "warning: operator is integral but not largeop\n";
-        }
-
         if (@moz[4] && !(@moz[13] eq "vertical")) {
             $valid = 0;
             $nb_errors++;
             print $file_syntax_errors "error: operator is largeop but does not have vertical direction\n";
         }
         
-        $_ = @moz[0];
-        if ((m/^(.*)[iI]ntegral(.*)$/) && !@moz[14]) {
-            $valid = 0;
-            $nb_warnings++;
-            print $file_syntax_errors "warning: operator contains the term \"integral\" in its comment, but is not integral\n";
-        }
-
         if (!$valid) {
             print $file_syntax_errors $entry;
             print $file_syntax_errors "\n";
@@ -308,7 +293,6 @@ foreach my $entry ($doc->findnodes('/root/entry')) {
     # not stored in the WG dictionary
     $value[8] = ""; # accent
     $value[13] = ""; # direction
-    $value[14] = ""; # integral
 
     # 3.3) save the key and value
     push(@wg_keys, $key);
@@ -445,7 +429,6 @@ sub completeCommon {
 
     if ($v_moz[8]) { $entry = "$entry accent"; }
     if ($v_moz[13]) { $entry = "$entry direction:$v_moz[13]"; }
-    if ($v_moz[14]) { $entry = "$entry integral"; }
 
     if ($v_moz[0]) {
         # keep our previous comment
