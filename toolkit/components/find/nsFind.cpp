@@ -143,7 +143,8 @@ static bool IsVisibleNode(const nsINode* aNode) {
     return true;
   }
 
-  if (frame->IsContentHidden() || frame->AncestorHidesContent()) {
+  if (frame->HidesContent() ||
+      frame->IsHiddenByContentVisibilityOnAnyAncestor()) {
     return false;
   }
 

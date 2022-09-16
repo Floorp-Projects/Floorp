@@ -40,14 +40,15 @@ add_task(async () => {
     document
   );
 
-  const { devtoolsTab, devtoolsWindow } = await openAboutDevtoolsToolbox(
+  // Select the debugger right away to avoid any noise coming from the inspector.
+  await pushPref("devtools.toolbox.selectedTool", "jsdebugger");
+  const { devtoolsWindow } = await openAboutDevtoolsToolbox(
     document,
     tab,
     window,
     EXTENSION_NAME
   );
   const toolbox = getToolbox(devtoolsWindow);
-  await toolbox.selectTool("jsdebugger");
   const { panelWin } = toolbox.getCurrentPanel();
 
   info("Check the state of redux");
@@ -80,8 +81,7 @@ add_task(async () => {
     return sourceList?.textContent.includes("temporary-web-extension");
   }, "Wait for the source to re-appear");
 
-  await closeAboutDevtoolsToolbox(document, devtoolsTab, window);
-
+  await closeWebExtAboutDevtoolsToolbox(devtoolsWindow, window);
   await removeTemporaryExtension(EXTENSION_NAME, document);
   await removeTab(tab);
 });

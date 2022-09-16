@@ -11,6 +11,7 @@
 #include "js/CallAndConstruct.h"    // JS_CallFunctionName
 #include "js/PropertyAndElement.h"  // JS_Enumerate, JS_GetElement, JS_GetProperty
 #include "mozilla/CycleCollectedJSContext.h"
+#include "mozilla/gtest/MozAssertions.h"
 #include "mozilla/Unused.h"
 #include "nsTArray.h"
 #include "nsPrintfCString.h"
@@ -295,7 +296,7 @@ void GetEncodedOriginStrings(
   rv = TelemetryOrigin::GetEncodedOriginSnapshot(false /* clear */, aCx,
                                                  &snapshot);
 
-  ASSERT_FALSE(NS_FAILED(rv));
+  ASSERT_NS_SUCCEEDED(rv);
   ASSERT_FALSE(snapshot.isNullOrUndefined())
   << "Encoded snapshot must not be null/undefined.";
 

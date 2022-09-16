@@ -7,6 +7,7 @@
 #include <algorithm>
 #include "gtest/gtest.h"
 #include "Helpers.h"
+#include "mozilla/gtest/MozAssertions.h"
 #include "mozilla/SnappyCompressOutputStream.h"
 #include "mozilla/SnappyUncompressInputStream.h"
 #include "nsIPipe.h"
@@ -51,7 +52,7 @@ static void TestCompress(uint32_t aNumBytes) {
 
   nsAutoCString outputData;
   nsresult rv = NS_ConsumeStream(pipeReader, UINT32_MAX, outputData);
-  ASSERT_TRUE(NS_SUCCEEDED(rv));
+  ASSERT_NS_SUCCEEDED(rv);
 
   ASSERT_LT(outputData.Length(), inputData.Length());
 }
@@ -73,7 +74,7 @@ static void TestCompressUncompress(uint32_t aNumBytes) {
 
   nsAutoCString outputData;
   nsresult rv = NS_ConsumeStream(uncompress, UINT32_MAX, outputData);
-  ASSERT_TRUE(NS_SUCCEEDED(rv));
+  ASSERT_NS_SUCCEEDED(rv);
 
   ASSERT_EQ(inputData.Length(), outputData.Length());
   for (uint32_t i = 0; i < inputData.Length(); ++i) {
@@ -87,7 +88,7 @@ static void TestUncompressCorrupt(const char* aCorruptData,
   nsresult rv = NS_NewByteInputStream(
       getter_AddRefs(source), mozilla::Span(aCorruptData, aCorruptLength),
       NS_ASSIGNMENT_DEPEND);
-  ASSERT_TRUE(NS_SUCCEEDED(rv));
+  ASSERT_NS_SUCCEEDED(rv);
 
   nsCOMPtr<nsIInputStream> uncompress = new SnappyUncompressInputStream(source);
 

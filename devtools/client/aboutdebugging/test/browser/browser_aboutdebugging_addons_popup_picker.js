@@ -54,7 +54,7 @@ add_task(async function testNodePickerInExtensionPopup() {
     document
   );
 
-  const { devtoolsTab, devtoolsWindow } = await openAboutDevtoolsToolbox(
+  const { devtoolsWindow } = await openAboutDevtoolsToolbox(
     document,
     tab,
     window,
@@ -93,7 +93,7 @@ add_task(async function testNodePickerInExtensionPopup() {
   const nodeFront = await onNewNodeFront;
   is(nodeFront.id, "pick-me", "The expected node front was selected");
 
-  await closeAboutDevtoolsToolbox(document, devtoolsTab, window);
+  await closeWebExtAboutDevtoolsToolbox(devtoolsWindow, window);
   await removeTemporaryExtension(ADDON_NAME, document);
   await removeTab(tab);
 });

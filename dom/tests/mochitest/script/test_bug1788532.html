@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+<!--
+Test interaction of dynamic module loading and synchronous XHR.
+
+Load a module A that starts a dynamic import of module B which imports A, then
+run a sync XHR at top level. The dynamic import should complete successfully
+after the XHR has finished loading.
+-->
+<head>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+
+  <script>
+    SimpleTest.waitForExplicitFinish();
+  </script>
+
+  <script type="module" src="./test_bug1788532_moduleA.mjs"></script>
+</head>
+
+</html>

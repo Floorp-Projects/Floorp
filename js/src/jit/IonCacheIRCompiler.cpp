@@ -1638,7 +1638,7 @@ bool IonCacheIRCompiler::emitMegamorphicSetElement(ObjOperandId objId,
 
   using Fn = bool (*)(JSContext*, HandleObject, HandleValue, HandleValue,
                       HandleValue, bool);
-  callVM<Fn, SetObjectElementWithReceiver>(masm);
+  callVM<Fn, SetElementMegamorphic>(masm);
   return true;
 }
 

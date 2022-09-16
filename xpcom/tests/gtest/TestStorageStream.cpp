@@ -7,6 +7,7 @@
 #include <stdlib.h>
 #include "gtest/gtest.h"
 #include "Helpers.h"
+#include "mozilla/gtest/MozAssertions.h"
 #include "nsCOMPtr.h"
 #include "nsICloneableInputStream.h"
 #include "nsIInputStream.h"
@@ -20,7 +21,7 @@ void WriteData(nsIOutputStream* aOut, nsTArray<char>& aData, uint32_t aNumBytes,
                nsACString& aDataWritten) {
   uint32_t n;
   nsresult rv = aOut->Write(aData.Elements(), aNumBytes, &n);
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  EXPECT_NS_SUCCEEDED(rv);
   aDataWritten.Append(aData.Elements(), aNumBytes);
 }
 
@@ -39,22 +40,22 @@ TEST(StorageStreams, Main)
   nsCOMPtr<nsIStorageStream> stor;
 
   rv = NS_NewStorageStream(kData.Length(), UINT32_MAX, getter_AddRefs(stor));
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  EXPECT_NS_SUCCEEDED(rv);
 
   nsCOMPtr<nsIOutputStream> out;
   rv = stor->GetOutputStream(0, getter_AddRefs(out));
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  EXPECT_NS_SUCCEEDED(rv);
 
   WriteData(out, kData, kData.Length(), dataWritten);
   WriteData(out, kData, kData.Length(), dataWritten);
 
   rv = out->Close();
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  EXPECT_NS_SUCCEEDED(rv);
   out = nullptr;
 
   nsCOMPtr<nsIInputStream> in;
   rv = stor->NewInputStream(0, getter_AddRefs(in));
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  EXPECT_NS_SUCCEEDED(rv);
 
   nsCOMPtr<nsICloneableInputStream> cloneable = do_QueryInterface(in);
   ASSERT_TRUE(cloneable != nullptr);
@@ -72,7 +73,7 @@ TEST(StorageStreams, Main)
   // total written equals 20491 bytes
 
   rv = stor->GetOutputStream(dataWritten.Length(), getter_AddRefs(out));
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  EXPECT_NS_SUCCEEDED(rv);
 
   WriteData(out, kData, kData.Length(), dataWritten);
   WriteData(out, kData, kData.Length(), dataWritten);
@@ -80,12 +81,12 @@ TEST(StorageStreams, Main)
   WriteData(out, kData, 11, dataWritten);
 
   rv = out->Close();
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  EXPECT_NS_SUCCEEDED(rv);
   out = nullptr;
 
   // now, read all
   rv = stor->NewInputStream(0, getter_AddRefs(in));
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  EXPECT_NS_SUCCEEDED(rv);
 
   testing::ConsumeAndValidateStream(in, dataWritten);
   in = nullptr;
@@ -104,23 +105,23 @@ TEST(StorageStreams, EarlyInputStream)
   nsCOMPtr<nsIStorageStream> stor;
 
   rv = NS_NewStorageStream(kData.Length(), UINT32_MAX, getter_AddRefs(stor));
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  EXPECT_NS_SUCCEEDED(rv);
 
   // Get input stream before writing data into the output stream
   nsCOMPtr<nsIInputStream> in;
   rv = stor->NewInputStream(0, getter_AddRefs(in));
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  EXPECT_NS_SUCCEEDED(rv);
 
   // Write data to output stream
   nsCOMPtr<nsIOutputStream> out;
   rv = stor->GetOutputStream(0, getter_AddRefs(out));
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  EXPECT_NS_SUCCEEDED(rv);
 
   WriteData(out, kData, kData.Length(), dataWritten);
   WriteData(out, kData, kData.Length(), dataWritten);
 
   rv = out->Close();
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  EXPECT_NS_SUCCEEDED(rv);
   out = nullptr;
 
   // Should be able to consume input stream

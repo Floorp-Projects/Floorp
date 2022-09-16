@@ -405,3 +405,68 @@ add_task(
     ASRouter.resetMessageState();
   }
 );
+
+add_task(async function feature_callout_returns_default_fxview_focus_to_top() {
+  await SpecialPowers.pushPrefEnv({
+    set: [[featureTourPref, defaultPrefValue]],
+  });
+
+  await BrowserTestUtils.withNewTab(
+    {
+      gBrowser,
+      url: "about:firefoxview",
+    },
+    async browser => {
+      const { document } = browser.contentWindow;
+      await waitForCalloutScreen(document, 1);
+
+      ok(
+        document.querySelector(calloutSelector),
+        "Feature Callout element exists"
+      );
+
+      document.querySelector(".dismiss-button").click();
+      await waitForCalloutRemoved(document);
+
+      ok(
+        document.activeElement.localName === "body",
+        "by default focus returns to the document body after callout closes"
+      );
+    }
+  );
+});
+
+add_task(
+  async function feature_callout_returns_moved_fxview_focus_to_previous() {
+    await SpecialPowers.pushPrefEnv({
+      set: [[featureTourPref, defaultPrefValue]],
+    });
+
+    await BrowserTestUtils.withNewTab(
+      {
+        gBrowser,
+        url: "about:firefoxview",
+      },
+      async browser => {
+        const { document } = browser.contentWindow;
+        await waitForCalloutScreen(document, 1);
+
+        // change focus to recently-closed-tabs-container
+        let recentlyClosedHeaderSection = document.querySelector(
+          "#recently-closed-tabs-header-section"
+        );
+        recentlyClosedHeaderSection.focus();
+
+        // close the callout dialog
+        document.querySelector(".dismiss-button").click();
+        await waitForCalloutRemoved(document);
+
+        // verify that the focus landed in the right place
+        ok(
+          document.activeElement.id === "recently-closed-tabs-header-section",
+          "when focus changes away from callout it reverts after callout closes"
+        );
+      }
+    );
+  }
+);

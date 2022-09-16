@@ -11,6 +11,7 @@
 #include "nsTArray.h"
 
 #include "gtest/gtest.h"
+#include "mozilla/gtest/MozAssertions.h"
 
 using namespace mozilla::safebrowsing;
 

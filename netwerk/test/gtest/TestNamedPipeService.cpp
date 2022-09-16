@@ -9,6 +9,7 @@
 #include <windows.h>
 
 #include "mozilla/Atomics.h"
+#include "mozilla/gtest/MozAssertions.h"
 #include "mozilla/Monitor.h"
 #include "nsNamedPipeService.h"
 #include "nsNetCID.h"
@@ -258,15 +259,15 @@ TEST(TestNamedPipeService, Test)
 
   HANDLE readPipe, writePipe;
   nsresult rv = CreateNamedPipe(&readPipe, &writePipe);
-  ASSERT_TRUE(NS_SUCCEEDED(rv));
+  ASSERT_NS_SUCCEEDED(rv);
 
   RefPtr<nsNamedPipeDataObserver> readObserver =
       new nsNamedPipeDataObserver(readPipe);
   RefPtr<nsNamedPipeDataObserver> writeObserver =
       new nsNamedPipeDataObserver(writePipe);
 
-  ASSERT_TRUE(NS_SUCCEEDED(svc->AddDataObserver(readPipe, readObserver)));
-  ASSERT_TRUE(NS_SUCCEEDED(svc->AddDataObserver(writePipe, writeObserver)));
+  ASSERT_NS_SUCCEEDED(svc->AddDataObserver(readPipe, readObserver));
+  ASSERT_NS_SUCCEEDED(svc->AddDataObserver(writePipe, writeObserver));
   ASSERT_EQ(std::size_t(writeObserver->Write(TEST_STR, sizeof(TEST_STR))),
             sizeof(TEST_STR));
 
@@ -275,6 +276,6 @@ TEST(TestNamedPipeService, Test)
             sizeof(TEST_STR));
   ASSERT_STREQ(buffer, TEST_STR) << "I/O mismatch";
 
-  ASSERT_TRUE(NS_SUCCEEDED(svc->RemoveDataObserver(readPipe, readObserver)));
-  ASSERT_TRUE(NS_SUCCEEDED(svc->RemoveDataObserver(writePipe, writeObserver)));
+  ASSERT_NS_SUCCEEDED(svc->RemoveDataObserver(readPipe, readObserver));
+  ASSERT_NS_SUCCEEDED(svc->RemoveDataObserver(writePipe, writeObserver));
 }

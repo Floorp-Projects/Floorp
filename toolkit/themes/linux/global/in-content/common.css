@@ -36,15 +36,6 @@ xul|menulist {
   font-size: inherit;
 }
 
-xul|menulist::part(dropmarker) {
-  display: -moz-box;
-  margin-block: 6px;
-}
-
-xul|menulist:-moz-focusring::part(label-box) {
-  outline: none;
-}
-
 html|button {
   /* XUL button min-width */
   min-width: 6.3em;

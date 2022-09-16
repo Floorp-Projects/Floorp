@@ -38,7 +38,7 @@ TEST_F(ImageSurfaceCache, Factor2) {
   // Figure out how much data we have.
   uint64_t length;
   nsresult rv = inputStream->Available(&length);
-  ASSERT_TRUE(NS_SUCCEEDED(rv));
+  ASSERT_NS_SUCCEEDED(rv);
 
   // Ensures we meet the threshold for FLAG_SYNC_DECODE_IF_FAST to do sync
   // decoding without the implications of FLAG_SYNC_DECODE.
@@ -49,11 +49,11 @@ TEST_F(ImageSurfaceCache, Factor2) {
   // Write the data into the image.
   rv = image->OnImageDataAvailable(nullptr, inputStream, 0,
                                    static_cast<uint32_t>(length));
-  ASSERT_TRUE(NS_SUCCEEDED(rv));
+  ASSERT_NS_SUCCEEDED(rv);
 
   // Let the image know we've sent all the data.
   rv = image->OnImageDataComplete(nullptr, NS_OK, true);
-  ASSERT_TRUE(NS_SUCCEEDED(rv));
+  ASSERT_NS_SUCCEEDED(rv);
 
   RefPtr<ProgressTracker> tracker = image->GetProgressTracker();
   tracker->SyncNotifyProgress(FLAG_LOAD_COMPLETE);

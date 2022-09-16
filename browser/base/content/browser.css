@@ -742,22 +742,31 @@ toolbar:not(#TabsToolbar) > #personal-bookmarks {
   -moz-user-focus: normal;
 }
 
-/* We leave 350px plus whatever space the download button will need when it
- * appears. Normally this should be 16px for the icon, plus 2 * 2px padding
- * plus the toolbarbutton-inner-padding. We're adding 4px to ensure things
- * like rounding on hidpi don't accidentally result in the button going
- * into overflow.
+/* We leave 310px plus whatever space the download and unified extensions
+ * buttons will need when they *both* appear. Normally, for each button, this
+ * should be 16px for the icon, plus 2 * 2px padding plus the
+ * toolbarbutton-inner-padding. We're adding 4px to ensure things like rounding
+ * on hidpi don't accidentally result in the buttons going into overflow.
  */
- #urlbar-container {
-  min-width: calc(350px + 24px + 2 * var(--toolbarbutton-inner-padding));
+#urlbar-container {
+  min-width: calc(310px + 2 * (24px + 2 * var(--toolbarbutton-inner-padding)));
 }
 
-#nav-bar[downloadsbuttonshown] #urlbar-container {
-  min-width: 350px;
+/* When the download button OR the unified extensions button is shown, we leave
+ * 310px plus the space needed for a single button as described above. */
+#nav-bar[downloadsbuttonshown] #urlbar-container,
+#nav-bar[unifiedextensionsbuttonshown] #urlbar-container {
+  min-width: calc(310px + 24px + 2 * var(--toolbarbutton-inner-padding));
+}
+
+/* When both the download and unified extensions buttons are visible, we use
+ * the base min-width value. */
+#nav-bar[downloadsbuttonshown][unifiedextensionsbuttonshown] #urlbar-container {
+  min-width: 310px;
 }
 
 /* Customize mode is difficult to use at moderate window width if the Urlbar
-   remains 350px wide. */
+   remains 310px wide. */
 :root[customizing] #urlbar-container {
   min-width: 280px;
 }
@@ -768,10 +777,14 @@ toolbar:not(#TabsToolbar) > #personal-bookmarks {
 
 @media (max-width: 770px) {
   #urlbar-container {
-    min-width: calc(280px + 24px + 2 * var(--toolbarbutton-inner-padding));
+    min-width: calc(240px + 2 * (24px + 2 * var(--toolbarbutton-inner-padding)));
   }
-  #nav-bar[downloadsbuttonshown] #urlbar-container {
-    min-width: 280px;
+  #nav-bar[downloadsbuttonshown] #urlbar-container,
+  #nav-bar[unifiedextensionsbuttonshown] #urlbar-container {
+    min-width: calc(240px + 24px + 2 * var(--toolbarbutton-inner-padding));
+  }
+  #nav-bar[downloadsbuttonshown][unifiedextensionsbuttonshown] #urlbar-container {
+    min-width: 240px;
   }
   :root[customizing] #urlbar-container {
     min-width: 245px;
@@ -808,10 +821,14 @@ toolbar:not(#TabsToolbar) > #personal-bookmarks {
 }
 @media (max-width: 550px) {
   #urlbar-container {
-    min-width: calc(216px + 24px + 2 * var(--toolbarbutton-inner-padding));
+    min-width: calc(176px + 2 * (24px + 2 * var(--toolbarbutton-inner-padding)));
   }
-  #nav-bar[downloadsbuttonshown] #urlbar-container {
-    min-width: 216px;
+  #nav-bar[downloadsbuttonshown] #urlbar-container,
+  #nav-bar[unifiedextensionsbuttonshown] #urlbar-container {
+    min-width: calc(176px + 24px + 2 * var(--toolbarbutton-inner-padding));
+  }
+  #nav-bar[downloadsbuttonshown][unifiedextensionsbuttonshown] #urlbar-container {
+    min-width: 176px;
   }
   #identity-icon-box {
     max-width: 70px;

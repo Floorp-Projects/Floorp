@@ -54,6 +54,13 @@ add_setup(async function() {
 add_task(async function test_button_enabled_by_pref() {
   const { button } = win.gUnifiedExtensions;
   is(button.hidden, false, "expected button to be visible");
+  is(
+    win.document
+      .getElementById("nav-bar")
+      .getAttribute("unifiedextensionsbuttonshown"),
+    "true",
+    "expected attribute on nav-bar"
+  );
 });
 
 add_task(async function test_button_disabled_by_pref() {
@@ -63,6 +70,12 @@ add_task(async function test_button_disabled_by_pref() {
     "unified-extensions-button"
   );
   is(button.hidden, true, "expected button to be hidden");
+  ok(
+    !anotherWindow.document
+      .getElementById("nav-bar")
+      .hasAttribute("unifiedextensionsbuttonshown"),
+    "expected no attribute on nav-bar"
+  );
 
   await BrowserTestUtils.closeWindow(anotherWindow);
 });

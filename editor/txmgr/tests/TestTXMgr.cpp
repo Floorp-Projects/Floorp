@@ -7,6 +7,7 @@
 
 #include "nsITransactionManager.h"
 #include "nsComponentManagerUtils.h"
+#include "mozilla/gtest/MozAssertions.h"
 #include "mozilla/Likely.h"
 #include "mozilla/EditTransactionBase.h"
 #include "mozilla/TransactionManager.h"
@@ -513,7 +514,7 @@ MOZ_CAN_RUN_SCRIPT_BOUNDARY void quick_test(TestTransactionFactory* factory) {
    *******************************************************************/
 
   rv = mgr->UndoTransaction();
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  EXPECT_NS_SUCCEEDED(rv);
 
   /*******************************************************************
    *
@@ -522,7 +523,7 @@ MOZ_CAN_RUN_SCRIPT_BOUNDARY void quick_test(TestTransactionFactory* factory) {
    *******************************************************************/
 
   rv = mgr->RedoTransaction();
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  EXPECT_NS_SUCCEEDED(rv);
 
   /*******************************************************************
    *
@@ -531,7 +532,7 @@ MOZ_CAN_RUN_SCRIPT_BOUNDARY void quick_test(TestTransactionFactory* factory) {
    *******************************************************************/
 
   rv = mgr->SetMaxTransactionCount(-1);
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  EXPECT_NS_SUCCEEDED(rv);
 
   /*******************************************************************
    *
@@ -540,7 +541,7 @@ MOZ_CAN_RUN_SCRIPT_BOUNDARY void quick_test(TestTransactionFactory* factory) {
    *******************************************************************/
 
   rv = mgr->SetMaxTransactionCount(0);
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  EXPECT_NS_SUCCEEDED(rv);
 
   /*******************************************************************
    *
@@ -549,7 +550,7 @@ MOZ_CAN_RUN_SCRIPT_BOUNDARY void quick_test(TestTransactionFactory* factory) {
    *******************************************************************/
 
   rv = mgr->SetMaxTransactionCount(10);
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  EXPECT_NS_SUCCEEDED(rv);
 
   /*******************************************************************
    *
@@ -558,7 +559,7 @@ MOZ_CAN_RUN_SCRIPT_BOUNDARY void quick_test(TestTransactionFactory* factory) {
    *******************************************************************/
 
   rv = mgr->Clear();
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  EXPECT_NS_SUCCEEDED(rv);
 
   /*******************************************************************
    *
@@ -568,7 +569,7 @@ MOZ_CAN_RUN_SCRIPT_BOUNDARY void quick_test(TestTransactionFactory* factory) {
 
   int32_t numitems;
   rv = mgr->GetNumberOfUndoItems(&numitems);
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  EXPECT_NS_SUCCEEDED(rv);
   EXPECT_EQ(numitems, 0);
 
   /*******************************************************************
@@ -578,7 +579,7 @@ MOZ_CAN_RUN_SCRIPT_BOUNDARY void quick_test(TestTransactionFactory* factory) {
    *******************************************************************/
 
   rv = mgr->GetNumberOfRedoItems(&numitems);
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  EXPECT_NS_SUCCEEDED(rv);
   EXPECT_EQ(numitems, 0);
 
   /*******************************************************************
@@ -590,7 +591,7 @@ MOZ_CAN_RUN_SCRIPT_BOUNDARY void quick_test(TestTransactionFactory* factory) {
   {
     nsCOMPtr<nsITransaction> tx;
     rv = mgr->PeekUndoStack(getter_AddRefs(tx));
-    EXPECT_TRUE(NS_SUCCEEDED(rv));
+    EXPECT_NS_SUCCEEDED(rv);
     EXPECT_EQ(tx, nullptr);
   }
 
@@ -603,7 +604,7 @@ MOZ_CAN_RUN_SCRIPT_BOUNDARY void quick_test(TestTransactionFactory* factory) {
   {
     nsCOMPtr<nsITransaction> tx;
     rv = mgr->PeekRedoStack(getter_AddRefs(tx));
-    EXPECT_TRUE(NS_SUCCEEDED(rv));
+    EXPECT_NS_SUCCEEDED(rv);
     EXPECT_EQ(tx, nullptr);
   }
 
@@ -621,43 +622,43 @@ MOZ_CAN_RUN_SCRIPT_BOUNDARY void quick_test(TestTransactionFactory* factory) {
   nsCOMPtr<nsITransaction> u1, u2, r1, r2;
 
   rv = mgr->SetMaxTransactionCount(10);
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  EXPECT_NS_SUCCEEDED(rv);
 
   tximpl = factory->create(mgr, MERGE_FLAG);
   rv = mgr->DoTransaction(tximpl);
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  EXPECT_NS_SUCCEEDED(rv);
 
   rv = mgr->PeekUndoStack(getter_AddRefs(u1));
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  EXPECT_NS_SUCCEEDED(rv);
   EXPECT_EQ(u1, tximpl);
 
   rv = mgr->PeekRedoStack(getter_AddRefs(r1));
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  EXPECT_NS_SUCCEEDED(rv);
 
   for (i = 1; i <= 20; i++) {
     tximpl = factory->create(mgr, NONE_FLAG);
     rv = mgr->DoTransaction(tximpl);
-    EXPECT_TRUE(NS_SUCCEEDED(rv));
+    EXPECT_NS_SUCCEEDED(rv);
   }
 
   rv = mgr->PeekUndoStack(getter_AddRefs(u2));
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  EXPECT_NS_SUCCEEDED(rv);
   EXPECT_EQ(u1, u2);
 
   rv = mgr->PeekRedoStack(getter_AddRefs(r2));
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  EXPECT_NS_SUCCEEDED(rv);
   EXPECT_EQ(r1, r2);
 
   rv = mgr->GetNumberOfUndoItems(&numitems);
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  EXPECT_NS_SUCCEEDED(rv);
   EXPECT_EQ(numitems, 1);
 
   rv = mgr->GetNumberOfRedoItems(&numitems);
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  EXPECT_NS_SUCCEEDED(rv);
   EXPECT_EQ(numitems, 0);
 
   rv = mgr->Clear();
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  EXPECT_NS_SUCCEEDED(rv);
 
   /*******************************************************************
    *
@@ -669,15 +670,15 @@ MOZ_CAN_RUN_SCRIPT_BOUNDARY void quick_test(TestTransactionFactory* factory) {
   for (i = 1; i <= 20; i++) {
     tximpl = factory->create(mgr, NONE_FLAG);
     rv = mgr->DoTransaction(tximpl);
-    EXPECT_TRUE(NS_SUCCEEDED(rv));
+    EXPECT_NS_SUCCEEDED(rv);
   }
 
   rv = mgr->GetNumberOfUndoItems(&numitems);
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  EXPECT_NS_SUCCEEDED(rv);
   EXPECT_EQ(numitems, 10);
 
   rv = mgr->GetNumberOfRedoItems(&numitems);
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  EXPECT_NS_SUCCEEDED(rv);
   EXPECT_EQ(numitems, 0);
 
   /*******************************************************************
@@ -690,31 +691,31 @@ MOZ_CAN_RUN_SCRIPT_BOUNDARY void quick_test(TestTransactionFactory* factory) {
   u1 = u2 = r1 = r2 = nullptr;
 
   rv = mgr->PeekUndoStack(getter_AddRefs(u1));
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  EXPECT_NS_SUCCEEDED(rv);
 
   rv = mgr->PeekRedoStack(getter_AddRefs(r1));
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  EXPECT_NS_SUCCEEDED(rv);
 
   for (i = 1; i <= 20; i++) {
     tximpl = factory->create(mgr, TRANSIENT_FLAG);
     rv = mgr->DoTransaction(tximpl);
-    EXPECT_TRUE(NS_SUCCEEDED(rv));
+    EXPECT_NS_SUCCEEDED(rv);
   }
 
   rv = mgr->PeekUndoStack(getter_AddRefs(u2));
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  EXPECT_NS_SUCCEEDED(rv);
   EXPECT_EQ(u1, u2);
 
   rv = mgr->PeekRedoStack(getter_AddRefs(r2));
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  EXPECT_NS_SUCCEEDED(rv);
   EXPECT_EQ(r1, r2);
 
   rv = mgr->GetNumberOfUndoItems(&numitems);
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  EXPECT_NS_SUCCEEDED(rv);
   EXPECT_EQ(numitems, 10);
 
   rv = mgr->GetNumberOfRedoItems(&numitems);
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  EXPECT_NS_SUCCEEDED(rv);
   EXPECT_EQ(numitems, 0);
 
   /*******************************************************************
@@ -726,15 +727,15 @@ MOZ_CAN_RUN_SCRIPT_BOUNDARY void quick_test(TestTransactionFactory* factory) {
 
   for (i = 1; i <= 4; i++) {
     rv = mgr->UndoTransaction();
-    EXPECT_TRUE(NS_SUCCEEDED(rv));
+    EXPECT_NS_SUCCEEDED(rv);
   }
 
   rv = mgr->GetNumberOfUndoItems(&numitems);
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  EXPECT_NS_SUCCEEDED(rv);
   EXPECT_EQ(numitems, 6);
 
   rv = mgr->GetNumberOfRedoItems(&numitems);
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  EXPECT_NS_SUCCEEDED(rv);
   EXPECT_EQ(numitems, 4);
 
   /*******************************************************************
@@ -746,15 +747,15 @@ MOZ_CAN_RUN_SCRIPT_BOUNDARY void quick_test(TestTransactionFactory* factory) {
 
   for (i = 1; i <= 2; ++i) {
     rv = mgr->RedoTransaction();
-    EXPECT_TRUE(NS_SUCCEEDED(rv));
+    EXPECT_NS_SUCCEEDED(rv);
   }
 
   rv = mgr->GetNumberOfUndoItems(&numitems);
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  EXPECT_NS_SUCCEEDED(rv);
   EXPECT_EQ(numitems, 8);
 
   rv = mgr->GetNumberOfRedoItems(&numitems);
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  EXPECT_NS_SUCCEEDED(rv);
   EXPECT_EQ(numitems, 2);
 
   /*******************************************************************
@@ -765,14 +766,14 @@ MOZ_CAN_RUN_SCRIPT_BOUNDARY void quick_test(TestTransactionFactory* factory) {
 
   tximpl = factory->create(mgr, NONE_FLAG);
   rv = mgr->DoTransaction(tximpl);
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  EXPECT_NS_SUCCEEDED(rv);
 
   rv = mgr->GetNumberOfUndoItems(&numitems);
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  EXPECT_NS_SUCCEEDED(rv);
   EXPECT_EQ(numitems, 9);
 
   rv = mgr->GetNumberOfRedoItems(&numitems);
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  EXPECT_NS_SUCCEEDED(rv);
   EXPECT_EQ(numitems, 0);
 
   /*******************************************************************
@@ -783,26 +784,26 @@ MOZ_CAN_RUN_SCRIPT_BOUNDARY void quick_test(TestTransactionFactory* factory) {
 
   for (i = 1; i <= 4; ++i) {
     rv = mgr->UndoTransaction();
-    EXPECT_TRUE(NS_SUCCEEDED(rv));
+    EXPECT_NS_SUCCEEDED(rv);
   }
 
   rv = mgr->GetNumberOfUndoItems(&numitems);
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  EXPECT_NS_SUCCEEDED(rv);
   EXPECT_EQ(numitems, 5);
 
   rv = mgr->GetNumberOfRedoItems(&numitems);
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  EXPECT_NS_SUCCEEDED(rv);
   EXPECT_EQ(numitems, 4);
 
   rv = mgr->Clear();
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  EXPECT_NS_SUCCEEDED(rv);
 
   rv = mgr->GetNumberOfUndoItems(&numitems);
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  EXPECT_NS_SUCCEEDED(rv);
   EXPECT_EQ(numitems, 0);
 
   rv = mgr->GetNumberOfRedoItems(&numitems);
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  EXPECT_NS_SUCCEEDED(rv);
   EXPECT_EQ(numitems, 0);
 
   /*******************************************************************
@@ -814,15 +815,15 @@ MOZ_CAN_RUN_SCRIPT_BOUNDARY void quick_test(TestTransactionFactory* factory) {
   for (i = 1; i <= 5; i++) {
     tximpl = factory->create(mgr, NONE_FLAG);
     rv = mgr->DoTransaction(tximpl);
-    EXPECT_TRUE(NS_SUCCEEDED(rv));
+    EXPECT_NS_SUCCEEDED(rv);
   }
 
   rv = mgr->GetNumberOfUndoItems(&numitems);
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  EXPECT_NS_SUCCEEDED(rv);
   EXPECT_EQ(numitems, 5);
 
   rv = mgr->GetNumberOfRedoItems(&numitems);
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  EXPECT_NS_SUCCEEDED(rv);
   EXPECT_EQ(numitems, 0);
 
   /*******************************************************************
@@ -836,28 +837,28 @@ MOZ_CAN_RUN_SCRIPT_BOUNDARY void quick_test(TestTransactionFactory* factory) {
   u1 = u2 = r1 = r2 = nullptr;
 
   rv = mgr->PeekUndoStack(getter_AddRefs(u1));
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  EXPECT_NS_SUCCEEDED(rv);
 
   rv = mgr->PeekRedoStack(getter_AddRefs(r1));
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  EXPECT_NS_SUCCEEDED(rv);
 
   rv = mgr->DoTransaction(tximpl);
   EXPECT_EQ(rv, NS_ERROR_FAILURE);
 
   rv = mgr->PeekUndoStack(getter_AddRefs(u2));
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  EXPECT_NS_SUCCEEDED(rv);
   EXPECT_EQ(u1, u2);
 
   rv = mgr->PeekRedoStack(getter_AddRefs(r2));
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  EXPECT_NS_SUCCEEDED(rv);
   EXPECT_EQ(r1, r2);
 
   rv = mgr->GetNumberOfUndoItems(&numitems);
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  EXPECT_NS_SUCCEEDED(rv);
   EXPECT_EQ(numitems, 5);
 
   rv = mgr->GetNumberOfRedoItems(&numitems);
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  EXPECT_NS_SUCCEEDED(rv);
   EXPECT_EQ(numitems, 0);
 
   /*******************************************************************
@@ -868,33 +869,33 @@ MOZ_CAN_RUN_SCRIPT_BOUNDARY void quick_test(TestTransactionFactory* factory) {
 
   tximpl = factory->create(mgr, THROWS_UNDO_ERROR_FLAG);
   rv = mgr->DoTransaction(tximpl);
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  EXPECT_NS_SUCCEEDED(rv);
 
   u1 = u2 = r1 = r2 = nullptr;
 
   rv = mgr->PeekUndoStack(getter_AddRefs(u1));
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  EXPECT_NS_SUCCEEDED(rv);
 
   rv = mgr->PeekRedoStack(getter_AddRefs(r1));
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  EXPECT_NS_SUCCEEDED(rv);
 
   rv = mgr->UndoTransaction();
   EXPECT_EQ(rv, NS_ERROR_FAILURE);
 
   rv = mgr->PeekUndoStack(getter_AddRefs(u2));
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  EXPECT_NS_SUCCEEDED(rv);
   EXPECT_EQ(u1, u2);
 
   rv = mgr->PeekRedoStack(getter_AddRefs(r2));
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  EXPECT_NS_SUCCEEDED(rv);
   EXPECT_EQ(r1, r2);
 
   rv = mgr->GetNumberOfUndoItems(&numitems);
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  EXPECT_NS_SUCCEEDED(rv);
   EXPECT_EQ(numitems, 6);
 
   rv = mgr->GetNumberOfRedoItems(&numitems);
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  EXPECT_NS_SUCCEEDED(rv);
   EXPECT_EQ(numitems, 0);
 
   /*******************************************************************
@@ -905,7 +906,7 @@ MOZ_CAN_RUN_SCRIPT_BOUNDARY void quick_test(TestTransactionFactory* factory) {
 
   tximpl = factory->create(mgr, THROWS_REDO_ERROR_FLAG);
   rv = mgr->DoTransaction(tximpl);
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  EXPECT_NS_SUCCEEDED(rv);
 
   //
   // Execute a normal transaction to be used in a later test:
@@ -913,7 +914,7 @@ MOZ_CAN_RUN_SCRIPT_BOUNDARY void quick_test(TestTransactionFactory* factory) {
 
   tximpl = factory->create(mgr, NONE_FLAG);
   rv = mgr->DoTransaction(tximpl);
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  EXPECT_NS_SUCCEEDED(rv);
 
   //
   // Undo the 2 transactions just executed.
@@ -921,7 +922,7 @@ MOZ_CAN_RUN_SCRIPT_BOUNDARY void quick_test(TestTransactionFactory* factory) {
 
   for (i = 1; i <= 2; ++i) {
     rv = mgr->UndoTransaction();
-    EXPECT_TRUE(NS_SUCCEEDED(rv));
+    EXPECT_NS_SUCCEEDED(rv);
   }
 
   //
@@ -931,28 +932,28 @@ MOZ_CAN_RUN_SCRIPT_BOUNDARY void quick_test(TestTransactionFactory* factory) {
   u1 = u2 = r1 = r2 = nullptr;
 
   rv = mgr->PeekUndoStack(getter_AddRefs(u1));
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  EXPECT_NS_SUCCEEDED(rv);
 
   rv = mgr->PeekRedoStack(getter_AddRefs(r1));
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  EXPECT_NS_SUCCEEDED(rv);
 
   rv = mgr->RedoTransaction();
   EXPECT_EQ(rv, NS_ERROR_FAILURE);
 
   rv = mgr->PeekUndoStack(getter_AddRefs(u2));
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  EXPECT_NS_SUCCEEDED(rv);
   EXPECT_EQ(u1, u2);
 
   rv = mgr->PeekRedoStack(getter_AddRefs(r2));
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  EXPECT_NS_SUCCEEDED(rv);
   EXPECT_EQ(r1, r2);
 
   rv = mgr->GetNumberOfUndoItems(&numitems);
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  EXPECT_NS_SUCCEEDED(rv);
   EXPECT_EQ(numitems, 6);
 
   rv = mgr->GetNumberOfRedoItems(&numitems);
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  EXPECT_NS_SUCCEEDED(rv);
   EXPECT_EQ(numitems, 2);
 
   /*******************************************************************
@@ -964,27 +965,27 @@ MOZ_CAN_RUN_SCRIPT_BOUNDARY void quick_test(TestTransactionFactory* factory) {
    *******************************************************************/
 
   rv = mgr->SetMaxTransactionCount(0);
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  EXPECT_NS_SUCCEEDED(rv);
 
   rv = mgr->GetNumberOfUndoItems(&numitems);
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  EXPECT_NS_SUCCEEDED(rv);
   EXPECT_EQ(numitems, 0);
 
   rv = mgr->GetNumberOfRedoItems(&numitems);
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  EXPECT_NS_SUCCEEDED(rv);
   EXPECT_EQ(numitems, 0);
 
   for (i = 1; i <= 20; i++) {
     tximpl = factory->create(mgr, NONE_FLAG);
     rv = mgr->DoTransaction(tximpl);
-    EXPECT_TRUE(NS_SUCCEEDED(rv));
+    EXPECT_NS_SUCCEEDED(rv);
 
     rv = mgr->GetNumberOfUndoItems(&numitems);
-    EXPECT_TRUE(NS_SUCCEEDED(rv));
+    EXPECT_NS_SUCCEEDED(rv);
     EXPECT_EQ(numitems, 0);
 
     rv = mgr->GetNumberOfRedoItems(&numitems);
-    EXPECT_TRUE(NS_SUCCEEDED(rv));
+    EXPECT_NS_SUCCEEDED(rv);
     EXPECT_EQ(numitems, 0);
   }
 
@@ -997,61 +998,61 @@ MOZ_CAN_RUN_SCRIPT_BOUNDARY void quick_test(TestTransactionFactory* factory) {
    *******************************************************************/
 
   rv = mgr->SetMaxTransactionCount(-1);
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  EXPECT_NS_SUCCEEDED(rv);
 
   // Push 20 transactions on the undo stack:
 
   for (i = 1; i <= 20; i++) {
     tximpl = factory->create(mgr, NONE_FLAG);
     rv = mgr->DoTransaction(tximpl);
-    EXPECT_TRUE(NS_SUCCEEDED(rv));
+    EXPECT_NS_SUCCEEDED(rv);
 
     rv = mgr->GetNumberOfUndoItems(&numitems);
-    EXPECT_TRUE(NS_SUCCEEDED(rv));
+    EXPECT_NS_SUCCEEDED(rv);
     EXPECT_EQ(numitems, i);
 
     rv = mgr->GetNumberOfRedoItems(&numitems);
-    EXPECT_TRUE(NS_SUCCEEDED(rv));
+    EXPECT_NS_SUCCEEDED(rv);
     EXPECT_EQ(numitems, 0);
   }
 
   for (i = 1; i <= 10; i++) {
     rv = mgr->UndoTransaction();
-    EXPECT_TRUE(NS_SUCCEEDED(rv));
+    EXPECT_NS_SUCCEEDED(rv);
   }
   rv = mgr->GetNumberOfUndoItems(&numitems);
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  EXPECT_NS_SUCCEEDED(rv);
   EXPECT_EQ(numitems, 10);
 
   rv = mgr->GetNumberOfRedoItems(&numitems);
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  EXPECT_NS_SUCCEEDED(rv);
   EXPECT_EQ(numitems, 10);
 
   u1 = u2 = r1 = r2 = nullptr;
 
   rv = mgr->PeekUndoStack(getter_AddRefs(u1));
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  EXPECT_NS_SUCCEEDED(rv);
 
   rv = mgr->PeekRedoStack(getter_AddRefs(r1));
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  EXPECT_NS_SUCCEEDED(rv);
 
   rv = mgr->SetMaxTransactionCount(25);
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  EXPECT_NS_SUCCEEDED(rv);
 
   rv = mgr->PeekUndoStack(getter_AddRefs(u2));
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  EXPECT_NS_SUCCEEDED(rv);
   EXPECT_EQ(u1, u2);
 
   rv = mgr->PeekRedoStack(getter_AddRefs(r2));
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  EXPECT_NS_SUCCEEDED(rv);
   EXPECT_EQ(r1, r2);
 
   rv = mgr->GetNumberOfUndoItems(&numitems);
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  EXPECT_NS_SUCCEEDED(rv);
   EXPECT_EQ(numitems, 10);
 
   rv = mgr->GetNumberOfRedoItems(&numitems);
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  EXPECT_NS_SUCCEEDED(rv);
   EXPECT_EQ(numitems, 10);
 
   /*******************************************************************
@@ -1065,28 +1066,28 @@ MOZ_CAN_RUN_SCRIPT_BOUNDARY void quick_test(TestTransactionFactory* factory) {
   u1 = u2 = r1 = r2 = nullptr;
 
   rv = mgr->PeekUndoStack(getter_AddRefs(u1));
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  EXPECT_NS_SUCCEEDED(rv);
 
   rv = mgr->PeekRedoStack(getter_AddRefs(r1));
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  EXPECT_NS_SUCCEEDED(rv);
 
   rv = mgr->SetMaxTransactionCount(15);
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  EXPECT_NS_SUCCEEDED(rv);
 
   rv = mgr->PeekUndoStack(getter_AddRefs(u2));
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  EXPECT_NS_SUCCEEDED(rv);
   EXPECT_EQ(u1, u2);
 
   rv = mgr->PeekRedoStack(getter_AddRefs(r2));
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  EXPECT_NS_SUCCEEDED(rv);
   EXPECT_EQ(r1, r2);
 
   rv = mgr->GetNumberOfUndoItems(&numitems);
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  EXPECT_NS_SUCCEEDED(rv);
   EXPECT_EQ(numitems, 5);
 
   rv = mgr->GetNumberOfRedoItems(&numitems);
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  EXPECT_NS_SUCCEEDED(rv);
   EXPECT_EQ(numitems, 10);
 
   /*******************************************************************
@@ -1100,28 +1101,28 @@ MOZ_CAN_RUN_SCRIPT_BOUNDARY void quick_test(TestTransactionFactory* factory) {
   u1 = u2 = r1 = r2 = nullptr;
 
   rv = mgr->PeekUndoStack(getter_AddRefs(u1));
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  EXPECT_NS_SUCCEEDED(rv);
 
   rv = mgr->PeekRedoStack(getter_AddRefs(r1));
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  EXPECT_NS_SUCCEEDED(rv);
 
   rv = mgr->SetMaxTransactionCount(5);
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  EXPECT_NS_SUCCEEDED(rv);
 
   rv = mgr->PeekUndoStack(getter_AddRefs(u2));
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  EXPECT_NS_SUCCEEDED(rv);
   EXPECT_FALSE(u2);
 
   rv = mgr->PeekRedoStack(getter_AddRefs(r2));
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  EXPECT_NS_SUCCEEDED(rv);
   EXPECT_EQ(r1, r2);
 
   rv = mgr->GetNumberOfUndoItems(&numitems);
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  EXPECT_NS_SUCCEEDED(rv);
   EXPECT_EQ(numitems, 0);
 
   rv = mgr->GetNumberOfRedoItems(&numitems);
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  EXPECT_NS_SUCCEEDED(rv);
   EXPECT_EQ(numitems, 5);
 
   /*******************************************************************
@@ -1132,39 +1133,39 @@ MOZ_CAN_RUN_SCRIPT_BOUNDARY void quick_test(TestTransactionFactory* factory) {
    *******************************************************************/
 
   rv = mgr->SetMaxTransactionCount(-1);
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  EXPECT_NS_SUCCEEDED(rv);
 
   // Push 20 transactions on the undo stack:
 
   for (i = 1; i <= 20; i++) {
     tximpl = factory->create(mgr, NONE_FLAG);
     rv = mgr->DoTransaction(tximpl);
-    EXPECT_TRUE(NS_SUCCEEDED(rv));
+    EXPECT_NS_SUCCEEDED(rv);
 
     rv = mgr->GetNumberOfUndoItems(&numitems);
-    EXPECT_TRUE(NS_SUCCEEDED(rv));
+    EXPECT_NS_SUCCEEDED(rv);
     EXPECT_EQ(numitems, i);
 
     rv = mgr->GetNumberOfRedoItems(&numitems);
-    EXPECT_TRUE(NS_SUCCEEDED(rv));
+    EXPECT_NS_SUCCEEDED(rv);
     EXPECT_EQ(numitems, 0);
   }
 
   for (i = 1; i <= 10; i++) {
     rv = mgr->UndoTransaction();
-    EXPECT_TRUE(NS_SUCCEEDED(rv));
+    EXPECT_NS_SUCCEEDED(rv);
   }
 
   rv = mgr->GetNumberOfUndoItems(&numitems);
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  EXPECT_NS_SUCCEEDED(rv);
   EXPECT_EQ(numitems, 10);
 
   rv = mgr->GetNumberOfRedoItems(&numitems);
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  EXPECT_NS_SUCCEEDED(rv);
   EXPECT_EQ(numitems, 10);
 
   rv = mgr->Clear();
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  EXPECT_NS_SUCCEEDED(rv);
 }
 
 TEST(TestTXMgr, SimpleTest)
@@ -1237,14 +1238,14 @@ MOZ_CAN_RUN_SCRIPT_BOUNDARY void quick_batch_test(
    *******************************************************************/
 
   nsresult rv = mgr->GetNumberOfUndoItems(&numitems);
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  EXPECT_NS_SUCCEEDED(rv);
   EXPECT_EQ(numitems, 0);
 
   rv = mgr->EndBatch(false);
   EXPECT_EQ(rv, NS_ERROR_FAILURE);
 
   rv = mgr->GetNumberOfUndoItems(&numitems);
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  EXPECT_NS_SUCCEEDED(rv);
   EXPECT_EQ(numitems, 0);
 
   /*******************************************************************
@@ -1255,21 +1256,21 @@ MOZ_CAN_RUN_SCRIPT_BOUNDARY void quick_batch_test(
    *******************************************************************/
 
   rv = mgr->GetNumberOfUndoItems(&numitems);
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  EXPECT_NS_SUCCEEDED(rv);
   EXPECT_EQ(numitems, 0);
 
   rv = mgr->BeginBatch(nullptr);
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  EXPECT_NS_SUCCEEDED(rv);
 
   rv = mgr->GetNumberOfUndoItems(&numitems);
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  EXPECT_NS_SUCCEEDED(rv);
   EXPECT_EQ(numitems, 0);
 
   rv = mgr->EndBatch(false);
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  EXPECT_NS_SUCCEEDED(rv);
 
   rv = mgr->GetNumberOfUndoItems(&numitems);
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  EXPECT_NS_SUCCEEDED(rv);
   EXPECT_EQ(numitems, 0);
 
   int32_t i;
@@ -1283,23 +1284,23 @@ MOZ_CAN_RUN_SCRIPT_BOUNDARY void quick_batch_test(
    *******************************************************************/
 
   rv = mgr->BeginBatch(nullptr);
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  EXPECT_NS_SUCCEEDED(rv);
 
   for (i = 1; i <= 20; i++) {
     tximpl = factory->create(mgr, NONE_FLAG);
     rv = mgr->DoTransaction(tximpl);
-    EXPECT_TRUE(NS_SUCCEEDED(rv));
+    EXPECT_NS_SUCCEEDED(rv);
   }
 
   rv = mgr->GetNumberOfUndoItems(&numitems);
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  EXPECT_NS_SUCCEEDED(rv);
   EXPECT_EQ(numitems, 0);
 
   rv = mgr->EndBatch(false);
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  EXPECT_NS_SUCCEEDED(rv);
 
   rv = mgr->GetNumberOfUndoItems(&numitems);
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  EXPECT_NS_SUCCEEDED(rv);
   EXPECT_EQ(numitems, 1);
 
   nsCOMPtr<nsITransaction> u1, u2, r1, r2;
@@ -1312,37 +1313,37 @@ MOZ_CAN_RUN_SCRIPT_BOUNDARY void quick_batch_test(
    *******************************************************************/
 
   rv = mgr->PeekUndoStack(getter_AddRefs(u1));
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  EXPECT_NS_SUCCEEDED(rv);
 
   rv = mgr->PeekRedoStack(getter_AddRefs(r1));
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  EXPECT_NS_SUCCEEDED(rv);
 
   rv = mgr->BeginBatch(nullptr);
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  EXPECT_NS_SUCCEEDED(rv);
 
   for (i = 1; i <= 20; i++) {
     tximpl = factory->create(mgr, TRANSIENT_FLAG);
     rv = mgr->DoTransaction(tximpl);
-    EXPECT_TRUE(NS_SUCCEEDED(rv));
+    EXPECT_NS_SUCCEEDED(rv);
   }
 
   rv = mgr->EndBatch(false);
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  EXPECT_NS_SUCCEEDED(rv);
 
   rv = mgr->PeekUndoStack(getter_AddRefs(u2));
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  EXPECT_NS_SUCCEEDED(rv);
   EXPECT_EQ(u1, u2);
 
   rv = mgr->PeekRedoStack(getter_AddRefs(r2));
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  EXPECT_NS_SUCCEEDED(rv);
   EXPECT_EQ(r1, r2);
 
   rv = mgr->GetNumberOfUndoItems(&numitems);
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  EXPECT_NS_SUCCEEDED(rv);
   EXPECT_EQ(numitems, 1);
 
   rv = mgr->GetNumberOfRedoItems(&numitems);
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  EXPECT_NS_SUCCEEDED(rv);
   EXPECT_EQ(numitems, 0);
 
   /*******************************************************************
@@ -1353,49 +1354,49 @@ MOZ_CAN_RUN_SCRIPT_BOUNDARY void quick_batch_test(
    *******************************************************************/
 
   rv = mgr->BeginBatch(nullptr);
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  EXPECT_NS_SUCCEEDED(rv);
 
   tximpl = factory->create(mgr, NONE_FLAG);
   rv = mgr->DoTransaction(tximpl);
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  EXPECT_NS_SUCCEEDED(rv);
 
   rv = mgr->GetNumberOfUndoItems(&numitems);
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  EXPECT_NS_SUCCEEDED(rv);
   EXPECT_EQ(numitems, 1);
 
   rv = mgr->BeginBatch(nullptr);
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  EXPECT_NS_SUCCEEDED(rv);
 
   tximpl = factory->create(mgr, NONE_FLAG);
   rv = mgr->DoTransaction(tximpl);
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  EXPECT_NS_SUCCEEDED(rv);
 
   rv = mgr->GetNumberOfUndoItems(&numitems);
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  EXPECT_NS_SUCCEEDED(rv);
   EXPECT_EQ(numitems, 1);
 
   rv = mgr->BeginBatch(nullptr);
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  EXPECT_NS_SUCCEEDED(rv);
 
   tximpl = factory->create(mgr, NONE_FLAG);
   rv = mgr->DoTransaction(tximpl);
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  EXPECT_NS_SUCCEEDED(rv);
 
   rv = mgr->GetNumberOfUndoItems(&numitems);
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  EXPECT_NS_SUCCEEDED(rv);
   EXPECT_EQ(numitems, 1);
 
   rv = mgr->EndBatch(false);
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  EXPECT_NS_SUCCEEDED(rv);
 
   rv = mgr->EndBatch(false);
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  EXPECT_NS_SUCCEEDED(rv);
 
   rv = mgr->EndBatch(false);
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  EXPECT_NS_SUCCEEDED(rv);
 
   rv = mgr->GetNumberOfUndoItems(&numitems);
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  EXPECT_NS_SUCCEEDED(rv);
   EXPECT_EQ(numitems, 2);
 
   /*******************************************************************
@@ -1407,15 +1408,15 @@ MOZ_CAN_RUN_SCRIPT_BOUNDARY void quick_batch_test(
 
   for (i = 1; i <= 2; ++i) {
     rv = mgr->UndoTransaction();
-    EXPECT_TRUE(NS_SUCCEEDED(rv));
+    EXPECT_NS_SUCCEEDED(rv);
   }
 
   rv = mgr->GetNumberOfUndoItems(&numitems);
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  EXPECT_NS_SUCCEEDED(rv);
   EXPECT_EQ(numitems, 0);
 
   rv = mgr->GetNumberOfRedoItems(&numitems);
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  EXPECT_NS_SUCCEEDED(rv);
   EXPECT_EQ(numitems, 2);
 
   /*******************************************************************
@@ -1427,15 +1428,15 @@ MOZ_CAN_RUN_SCRIPT_BOUNDARY void quick_batch_test(
 
   for (i = 1; i <= 2; ++i) {
     rv = mgr->RedoTransaction();
-    EXPECT_TRUE(NS_SUCCEEDED(rv));
+    EXPECT_NS_SUCCEEDED(rv);
   }
 
   rv = mgr->GetNumberOfUndoItems(&numitems);
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  EXPECT_NS_SUCCEEDED(rv);
   EXPECT_EQ(numitems, 2);
 
   rv = mgr->GetNumberOfRedoItems(&numitems);
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  EXPECT_NS_SUCCEEDED(rv);
   EXPECT_EQ(numitems, 0);
 
   /*******************************************************************
@@ -1446,14 +1447,14 @@ MOZ_CAN_RUN_SCRIPT_BOUNDARY void quick_batch_test(
    *******************************************************************/
 
   rv = mgr->UndoTransaction();
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  EXPECT_NS_SUCCEEDED(rv);
 
   rv = mgr->GetNumberOfUndoItems(&numitems);
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  EXPECT_NS_SUCCEEDED(rv);
   EXPECT_EQ(numitems, 1);
 
   rv = mgr->GetNumberOfRedoItems(&numitems);
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  EXPECT_NS_SUCCEEDED(rv);
   EXPECT_EQ(numitems, 1);
 
   /*******************************************************************
@@ -1467,11 +1468,11 @@ MOZ_CAN_RUN_SCRIPT_BOUNDARY void quick_batch_test(
   EXPECT_EQ(rv, NS_ERROR_FAILURE);
 
   rv = mgr->GetNumberOfUndoItems(&numitems);
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  EXPECT_NS_SUCCEEDED(rv);
   EXPECT_EQ(numitems, 1);
 
   rv = mgr->GetNumberOfRedoItems(&numitems);
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  EXPECT_NS_SUCCEEDED(rv);
   EXPECT_EQ(numitems, 1);
 
   /*******************************************************************
@@ -1483,25 +1484,25 @@ MOZ_CAN_RUN_SCRIPT_BOUNDARY void quick_batch_test(
    *******************************************************************/
 
   rv = mgr->BeginBatch(nullptr);
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  EXPECT_NS_SUCCEEDED(rv);
 
   rv = mgr->GetNumberOfUndoItems(&numitems);
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  EXPECT_NS_SUCCEEDED(rv);
   EXPECT_EQ(numitems, 1);
 
   rv = mgr->GetNumberOfRedoItems(&numitems);
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  EXPECT_NS_SUCCEEDED(rv);
   EXPECT_EQ(numitems, 1);
 
   rv = mgr->EndBatch(false);
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  EXPECT_NS_SUCCEEDED(rv);
 
   rv = mgr->GetNumberOfUndoItems(&numitems);
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  EXPECT_NS_SUCCEEDED(rv);
   EXPECT_EQ(numitems, 1);
 
   rv = mgr->GetNumberOfRedoItems(&numitems);
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  EXPECT_NS_SUCCEEDED(rv);
   EXPECT_EQ(numitems, 1);
 
   /*******************************************************************
@@ -1511,31 +1512,31 @@ MOZ_CAN_RUN_SCRIPT_BOUNDARY void quick_batch_test(
    *******************************************************************/
 
   rv = mgr->BeginBatch(nullptr);
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  EXPECT_NS_SUCCEEDED(rv);
 
   for (i = 1; i <= 20; i++) {
     tximpl = factory->create(mgr, NONE_FLAG);
     rv = mgr->DoTransaction(tximpl);
-    EXPECT_TRUE(NS_SUCCEEDED(rv));
+    EXPECT_NS_SUCCEEDED(rv);
   }
 
   rv = mgr->GetNumberOfUndoItems(&numitems);
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  EXPECT_NS_SUCCEEDED(rv);
   EXPECT_EQ(numitems, 1);
 
   rv = mgr->GetNumberOfRedoItems(&numitems);
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  EXPECT_NS_SUCCEEDED(rv);
   EXPECT_EQ(numitems, 1);
 
   rv = mgr->EndBatch(false);
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  EXPECT_NS_SUCCEEDED(rv);
 
   rv = mgr->GetNumberOfUndoItems(&numitems);
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  EXPECT_NS_SUCCEEDED(rv);
   EXPECT_EQ(numitems, 2);
 
   rv = mgr->GetNumberOfRedoItems(&numitems);
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  EXPECT_NS_SUCCEEDED(rv);
   EXPECT_EQ(numitems, 0);
 
   /*******************************************************************
@@ -1548,14 +1549,14 @@ MOZ_CAN_RUN_SCRIPT_BOUNDARY void quick_batch_test(
   // transaction on the undo stack, and one on the redo stack!
 
   rv = mgr->UndoTransaction();
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  EXPECT_NS_SUCCEEDED(rv);
 
   rv = mgr->GetNumberOfUndoItems(&numitems);
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  EXPECT_NS_SUCCEEDED(rv);
   EXPECT_EQ(numitems, 1);
 
   rv = mgr->GetNumberOfRedoItems(&numitems);
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  EXPECT_NS_SUCCEEDED(rv);
   EXPECT_EQ(numitems, 1);
 
   /*******************************************************************
@@ -1569,34 +1570,34 @@ MOZ_CAN_RUN_SCRIPT_BOUNDARY void quick_batch_test(
   u1 = u2 = r1 = r2 = nullptr;
 
   rv = mgr->PeekUndoStack(getter_AddRefs(u1));
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  EXPECT_NS_SUCCEEDED(rv);
 
   rv = mgr->PeekRedoStack(getter_AddRefs(r1));
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  EXPECT_NS_SUCCEEDED(rv);
 
   rv = mgr->BeginBatch(nullptr);
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  EXPECT_NS_SUCCEEDED(rv);
 
   rv = mgr->DoTransaction(tximpl);
   EXPECT_EQ(rv, NS_ERROR_FAILURE);
 
   rv = mgr->EndBatch(false);
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  EXPECT_NS_SUCCEEDED(rv);
 
   rv = mgr->PeekUndoStack(getter_AddRefs(u2));
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  EXPECT_NS_SUCCEEDED(rv);
   EXPECT_EQ(u1, u2);
 
   rv = mgr->PeekRedoStack(getter_AddRefs(r2));
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  EXPECT_NS_SUCCEEDED(rv);
   EXPECT_EQ(r1, r2);
 
   rv = mgr->GetNumberOfUndoItems(&numitems);
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  EXPECT_NS_SUCCEEDED(rv);
   EXPECT_EQ(numitems, 1);
 
   rv = mgr->GetNumberOfRedoItems(&numitems);
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  EXPECT_NS_SUCCEEDED(rv);
   EXPECT_EQ(numitems, 1);
 
   /*******************************************************************
@@ -1608,39 +1609,39 @@ MOZ_CAN_RUN_SCRIPT_BOUNDARY void quick_batch_test(
   tximpl = factory->create(mgr, THROWS_UNDO_ERROR_FLAG);
 
   rv = mgr->BeginBatch(nullptr);
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  EXPECT_NS_SUCCEEDED(rv);
 
   rv = mgr->DoTransaction(tximpl);
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  EXPECT_NS_SUCCEEDED(rv);
 
   rv = mgr->EndBatch(false);
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  EXPECT_NS_SUCCEEDED(rv);
 
   u1 = u2 = r1 = r2 = nullptr;
 
   rv = mgr->PeekUndoStack(getter_AddRefs(u1));
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  EXPECT_NS_SUCCEEDED(rv);
 
   rv = mgr->PeekRedoStack(getter_AddRefs(r1));
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  EXPECT_NS_SUCCEEDED(rv);
 
   rv = mgr->UndoTransaction();
   EXPECT_EQ(rv, NS_ERROR_FAILURE);
 
   rv = mgr->PeekUndoStack(getter_AddRefs(u2));
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  EXPECT_NS_SUCCEEDED(rv);
   EXPECT_EQ(u1, u2);
 
   rv = mgr->PeekRedoStack(getter_AddRefs(r2));
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  EXPECT_NS_SUCCEEDED(rv);
   EXPECT_EQ(r1, r2);
 
   rv = mgr->GetNumberOfUndoItems(&numitems);
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  EXPECT_NS_SUCCEEDED(rv);
   EXPECT_EQ(numitems, 2);
 
   rv = mgr->GetNumberOfRedoItems(&numitems);
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  EXPECT_NS_SUCCEEDED(rv);
   EXPECT_EQ(numitems, 0);
 
   /*******************************************************************
@@ -1652,13 +1653,13 @@ MOZ_CAN_RUN_SCRIPT_BOUNDARY void quick_batch_test(
   tximpl = factory->create(mgr, THROWS_REDO_ERROR_FLAG);
 
   rv = mgr->BeginBatch(nullptr);
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  EXPECT_NS_SUCCEEDED(rv);
 
   rv = mgr->DoTransaction(tximpl);
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  EXPECT_NS_SUCCEEDED(rv);
 
   rv = mgr->EndBatch(false);
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  EXPECT_NS_SUCCEEDED(rv);
 
   //
   // Execute a normal transaction to be used in a later test:
@@ -1666,7 +1667,7 @@ MOZ_CAN_RUN_SCRIPT_BOUNDARY void quick_batch_test(
 
   tximpl = factory->create(mgr, NONE_FLAG);
   rv = mgr->DoTransaction(tximpl);
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  EXPECT_NS_SUCCEEDED(rv);
 
   //
   // Undo the 2 transactions just executed.
@@ -1674,7 +1675,7 @@ MOZ_CAN_RUN_SCRIPT_BOUNDARY void quick_batch_test(
 
   for (i = 1; i <= 2; ++i) {
     rv = mgr->UndoTransaction();
-    EXPECT_TRUE(NS_SUCCEEDED(rv));
+    EXPECT_NS_SUCCEEDED(rv);
   }
 
   //
@@ -1684,28 +1685,28 @@ MOZ_CAN_RUN_SCRIPT_BOUNDARY void quick_batch_test(
   u1 = u2 = r1 = r2 = nullptr;
 
   rv = mgr->PeekUndoStack(getter_AddRefs(u1));
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  EXPECT_NS_SUCCEEDED(rv);
 
   rv = mgr->PeekRedoStack(getter_AddRefs(r1));
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  EXPECT_NS_SUCCEEDED(rv);
 
   rv = mgr->RedoTransaction();
   EXPECT_EQ(rv, NS_ERROR_FAILURE);
 
   rv = mgr->PeekUndoStack(getter_AddRefs(u2));
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  EXPECT_NS_SUCCEEDED(rv);
   EXPECT_EQ(u1, u2);
 
   rv = mgr->PeekRedoStack(getter_AddRefs(r2));
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  EXPECT_NS_SUCCEEDED(rv);
   EXPECT_EQ(r1, r2);
 
   rv = mgr->GetNumberOfUndoItems(&numitems);
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  EXPECT_NS_SUCCEEDED(rv);
   EXPECT_EQ(numitems, 2);
 
   rv = mgr->GetNumberOfRedoItems(&numitems);
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  EXPECT_NS_SUCCEEDED(rv);
   EXPECT_EQ(numitems, 2);
 
   /*******************************************************************
@@ -1717,34 +1718,34 @@ MOZ_CAN_RUN_SCRIPT_BOUNDARY void quick_batch_test(
    *******************************************************************/
 
   rv = mgr->SetMaxTransactionCount(0);
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  EXPECT_NS_SUCCEEDED(rv);
 
   rv = mgr->GetNumberOfUndoItems(&numitems);
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  EXPECT_NS_SUCCEEDED(rv);
   EXPECT_EQ(numitems, 0);
 
   rv = mgr->GetNumberOfRedoItems(&numitems);
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  EXPECT_NS_SUCCEEDED(rv);
   EXPECT_EQ(numitems, 0);
 
   for (i = 1; i <= 20; i++) {
     tximpl = factory->create(mgr, NONE_FLAG);
 
     rv = mgr->BeginBatch(nullptr);
-    EXPECT_TRUE(NS_SUCCEEDED(rv));
+    EXPECT_NS_SUCCEEDED(rv);
 
     rv = mgr->DoTransaction(tximpl);
-    EXPECT_TRUE(NS_SUCCEEDED(rv));
+    EXPECT_NS_SUCCEEDED(rv);
 
     rv = mgr->EndBatch(false);
-    EXPECT_TRUE(NS_SUCCEEDED(rv));
+    EXPECT_NS_SUCCEEDED(rv);
 
     rv = mgr->GetNumberOfUndoItems(&numitems);
-    EXPECT_TRUE(NS_SUCCEEDED(rv));
+    EXPECT_NS_SUCCEEDED(rv);
     EXPECT_EQ(numitems, 0);
 
     rv = mgr->GetNumberOfRedoItems(&numitems);
-    EXPECT_TRUE(NS_SUCCEEDED(rv));
+    EXPECT_NS_SUCCEEDED(rv);
     EXPECT_EQ(numitems, 0);
   }
 
@@ -1756,7 +1757,7 @@ MOZ_CAN_RUN_SCRIPT_BOUNDARY void quick_batch_test(
    *******************************************************************/
 
   rv = mgr->SetMaxTransactionCount(-1);
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  EXPECT_NS_SUCCEEDED(rv);
 
   // Push 20 transactions on the undo stack:
 
@@ -1764,37 +1765,37 @@ MOZ_CAN_RUN_SCRIPT_BOUNDARY void quick_batch_test(
     tximpl = factory->create(mgr, NONE_FLAG);
 
     rv = mgr->BeginBatch(nullptr);
-    EXPECT_TRUE(NS_SUCCEEDED(rv));
+    EXPECT_NS_SUCCEEDED(rv);
 
     rv = mgr->DoTransaction(tximpl);
-    EXPECT_TRUE(NS_SUCCEEDED(rv));
+    EXPECT_NS_SUCCEEDED(rv);
 
     rv = mgr->EndBatch(false);
-    EXPECT_TRUE(NS_SUCCEEDED(rv));
+    EXPECT_NS_SUCCEEDED(rv);
 
     rv = mgr->GetNumberOfUndoItems(&numitems);
-    EXPECT_TRUE(NS_SUCCEEDED(rv));
+    EXPECT_NS_SUCCEEDED(rv);
     EXPECT_EQ(numitems, i);
 
     rv = mgr->GetNumberOfRedoItems(&numitems);
-    EXPECT_TRUE(NS_SUCCEEDED(rv));
+    EXPECT_NS_SUCCEEDED(rv);
     EXPECT_EQ(numitems, 0);
   }
 
   for (i = 1; i <= 10; i++) {
     rv = mgr->UndoTransaction();
-    EXPECT_TRUE(NS_SUCCEEDED(rv));
+    EXPECT_NS_SUCCEEDED(rv);
   }
   rv = mgr->GetNumberOfUndoItems(&numitems);
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  EXPECT_NS_SUCCEEDED(rv);
   EXPECT_EQ(numitems, 10);
 
   rv = mgr->GetNumberOfRedoItems(&numitems);
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  EXPECT_NS_SUCCEEDED(rv);
   EXPECT_EQ(numitems, 10);
 
   rv = mgr->Clear();
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  EXPECT_NS_SUCCEEDED(rv);
 }
 
 TEST(TestTXMgr, SimpleBatchTest)
@@ -1870,7 +1871,7 @@ MOZ_CAN_RUN_SCRIPT_BOUNDARY void stress_test(TestTransactionFactory* factory,
     for (j = 1; j <= i; j++) {
       RefPtr<TestTransaction> tximpl = factory->create(mgr, NONE_FLAG);
       rv = mgr->DoTransaction(tximpl);
-      EXPECT_TRUE(NS_SUCCEEDED(rv));
+      EXPECT_NS_SUCCEEDED(rv);
     }
 
     /*******************************************************************
@@ -1881,7 +1882,7 @@ MOZ_CAN_RUN_SCRIPT_BOUNDARY void stress_test(TestTransactionFactory* factory,
 
     for (j = 1; j <= i; j++) {
       rv = mgr->UndoTransaction();
-      EXPECT_TRUE(NS_SUCCEEDED(rv));
+      EXPECT_NS_SUCCEEDED(rv);
     }
 
     /*******************************************************************
@@ -1892,7 +1893,7 @@ MOZ_CAN_RUN_SCRIPT_BOUNDARY void stress_test(TestTransactionFactory* factory,
 
     for (j = 1; j <= i; j++) {
       rv = mgr->RedoTransaction();
-      EXPECT_TRUE(NS_SUCCEEDED(rv));
+      EXPECT_NS_SUCCEEDED(rv);
     }
 
     /*******************************************************************
@@ -1905,12 +1906,12 @@ MOZ_CAN_RUN_SCRIPT_BOUNDARY void stress_test(TestTransactionFactory* factory,
 
     for (j = 1; j <= i; j++) {
       rv = mgr->UndoTransaction();
-      EXPECT_TRUE(NS_SUCCEEDED(rv));
+      EXPECT_NS_SUCCEEDED(rv);
     }
   }
 
   rv = mgr->Clear();
-  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  EXPECT_NS_SUCCEEDED(rv);
 }
 
 TEST(TestTXMgr, SimpleStressTest)

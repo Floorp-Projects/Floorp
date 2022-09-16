@@ -12,6 +12,7 @@
 #include "WebMDecoder.h"
 #include "WebMDemuxer.h"
 #include "mozilla/AbstractThread.h"
+#include "mozilla/gtest/MozAssertions.h"
 #include "mozilla/SpinEventLoopUntil.h"
 #include "nsMimeTypes.h"
 
@@ -54,7 +55,7 @@ TEST(MediaDataDecoder, H264)
   } else {
     RefPtr<MockMediaResource> resource = new MockMediaResource("gizmo.mp4");
     nsresult rv = resource->Open();
-    EXPECT_TRUE(NS_SUCCEEDED(rv));
+    EXPECT_NS_SUCCEEDED(rv);
 
     BenchmarkRunner runner(new Benchmark(new MP4Demuxer(resource)));
     EXPECT_GT(runner.Run(), 0u);
@@ -73,7 +74,7 @@ TEST(MediaDataDecoder, AV1)
   } else {
     RefPtr<MockMediaResource> resource = new MockMediaResource("av1.mp4");
     nsresult rv = resource->Open();
-    EXPECT_TRUE(NS_SUCCEEDED(rv));
+    EXPECT_NS_SUCCEEDED(rv);
 
     BenchmarkRunner runner(new Benchmark(new MP4Demuxer(resource)));
     EXPECT_GT(runner.Run(), 0u);
@@ -89,7 +90,7 @@ TEST(MediaDataDecoder, VP9)
   } else {
     RefPtr<MockMediaResource> resource = new MockMediaResource("vp9cake.webm");
     nsresult rv = resource->Open();
-    EXPECT_TRUE(NS_SUCCEEDED(rv));
+    EXPECT_NS_SUCCEEDED(rv);
 
     BenchmarkRunner runner(new Benchmark(new WebMDemuxer(resource)));
     EXPECT_GT(runner.Run(), 0u);

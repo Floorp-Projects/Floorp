@@ -13,6 +13,7 @@
 #include "nsNetUtil.h"
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/dom/nsCSPContext.h"
+#include "mozilla/gtest/MozAssertions.h"
 #include "nsComponentManagerUtils.h"
 #include "nsIPrefBranch.h"
 #include "nsIPrefService.h"
@@ -231,7 +232,7 @@ TEST(CSPParser, Directives)
   };
 
   uint32_t policyCount = sizeof(policies) / sizeof(PolicyTest);
-  ASSERT_TRUE(NS_SUCCEEDED(runTestSuite(policies, policyCount, 1)));
+  ASSERT_NS_SUCCEEDED(runTestSuite(policies, policyCount, 1));
 }
 
 // ============================= TestKeywords ========================
@@ -258,7 +259,7 @@ TEST(CSPParser, Keywords)
   };
 
   uint32_t policyCount = sizeof(policies) / sizeof(PolicyTest);
-  ASSERT_TRUE(NS_SUCCEEDED(runTestSuite(policies, policyCount, 1)));
+  ASSERT_NS_SUCCEEDED(runTestSuite(policies, policyCount, 1));
 }
 
 // =================== TestIgnoreUpperLowerCasePolicies ==============
@@ -301,7 +302,7 @@ TEST(CSPParser, IgnoreUpperLowerCasePolicies)
   };
 
   uint32_t policyCount = sizeof(policies) / sizeof(PolicyTest);
-  ASSERT_TRUE(NS_SUCCEEDED(runTestSuite(policies, policyCount, 1)));
+  ASSERT_NS_SUCCEEDED(runTestSuite(policies, policyCount, 1));
 }
 
 // ========================= TestPaths ===============================
@@ -400,7 +401,7 @@ TEST(CSPParser, Paths)
   };
 
   uint32_t policyCount = sizeof(policies) / sizeof(PolicyTest);
-  ASSERT_TRUE(NS_SUCCEEDED(runTestSuite(policies, policyCount, 1)));
+  ASSERT_NS_SUCCEEDED(runTestSuite(policies, policyCount, 1));
 }
 
 // ======================== TestSimplePolicies =======================
@@ -483,7 +484,7 @@ TEST(CSPParser, SimplePolicies)
   };
 
   uint32_t policyCount = sizeof(policies) / sizeof(PolicyTest);
-  ASSERT_TRUE(NS_SUCCEEDED(runTestSuite(policies, policyCount, 1)));
+  ASSERT_NS_SUCCEEDED(runTestSuite(policies, policyCount, 1));
 }
 
 // =================== TestPoliciesWithInvalidSrc ====================
@@ -577,7 +578,7 @@ TEST(CSPParser, PoliciesWithInvalidSrc)
 
   // amount of tests - 1, because the latest should be ignored.
   uint32_t policyCount = (sizeof(policies) / sizeof(PolicyTest)) - 1;
-  ASSERT_TRUE(NS_SUCCEEDED(runTestSuite(policies, policyCount, 1)));
+  ASSERT_NS_SUCCEEDED(runTestSuite(policies, policyCount, 1));
 }
 
 // ============================= TestBadPolicies =======================
@@ -600,7 +601,7 @@ TEST(CSPParser, BadPolicies)
   };
 
   uint32_t policyCount = sizeof(policies) / sizeof(PolicyTest);
-  ASSERT_TRUE(NS_SUCCEEDED(runTestSuite(policies, policyCount, 0)));
+  ASSERT_NS_SUCCEEDED(runTestSuite(policies, policyCount, 0));
 }
 
 // ======================= TestGoodGeneratedPolicies =================
@@ -829,7 +830,7 @@ TEST(CSPParser, GoodGeneratedPolicies)
   };
 
   uint32_t policyCount = sizeof(policies) / sizeof(PolicyTest);
-  ASSERT_TRUE(NS_SUCCEEDED(runTestSuite(policies, policyCount, 1)));
+  ASSERT_NS_SUCCEEDED(runTestSuite(policies, policyCount, 1));
 }
 
 // ==================== TestBadGeneratedPolicies ====================
@@ -856,7 +857,7 @@ TEST(CSPParser, BadGeneratedPolicies)
   };
 
   uint32_t policyCount = sizeof(policies) / sizeof(PolicyTest);
-  ASSERT_TRUE(NS_SUCCEEDED(runTestSuite(policies, policyCount, 0)));
+  ASSERT_NS_SUCCEEDED(runTestSuite(policies, policyCount, 0));
 }
 
 // ============ TestGoodGeneratedPoliciesForPathHandling =============
@@ -980,7 +981,7 @@ TEST(CSPParser, GoodGeneratedPoliciesForPathHandling)
   };
 
   uint32_t policyCount = sizeof(policies) / sizeof(PolicyTest);
-  ASSERT_TRUE(NS_SUCCEEDED(runTestSuite(policies, policyCount, 1)));
+  ASSERT_NS_SUCCEEDED(runTestSuite(policies, policyCount, 1));
 }
 
 // ============== TestBadGeneratedPoliciesForPathHandling ============
@@ -1007,7 +1008,7 @@ TEST(CSPParser, BadGeneratedPoliciesForPathHandling)
   };
 
   uint32_t policyCount = sizeof(policies) / sizeof(PolicyTest);
-  ASSERT_TRUE(NS_SUCCEEDED(runTestSuite(policies, policyCount, 1)));
+  ASSERT_NS_SUCCEEDED(runTestSuite(policies, policyCount, 1));
 }
 
 // ======================== TestFuzzyPolicies ========================

@@ -6,6 +6,7 @@
 
 #include "nsThreadUtils.h"
 #include "mozilla/Atomics.h"
+#include "mozilla/gtest/MozAssertions.h"
 #include "mozilla/RWLock.h"
 #include "mozilla/SyncRunnable.h"
 #include "nsIThread.h"
@@ -80,7 +81,7 @@ TEST(RWLock, SmokeTest)
   // Wait for all the threads to finish.
   for (size_t i = 0; i < sNumThreads; ++i) {
     nsresult rv = threads[i]->Shutdown();
-    EXPECT_TRUE(NS_SUCCEEDED(rv));
+    EXPECT_NS_SUCCEEDED(rv);
   }
 
   EXPECT_EQ(data, (sOuterIterations / sWriteLockIteration) * sNumThreads);

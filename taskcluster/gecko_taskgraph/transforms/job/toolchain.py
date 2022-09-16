@@ -9,7 +9,7 @@ Support for running toolchain-building jobs via dedicated scripts
 import taskgraph
 from mozbuild.shellutil import quote as shell_quote
 
-from taskgraph.util.schema import Schema
+from taskgraph.util.schema import Schema, optionally_keyed_by, resolve_keyed_by
 from voluptuous import Optional, Required, Any
 
 from gecko_taskgraph.transforms.job import (
@@ -61,7 +61,7 @@ toolchain_run_schema = Schema(
             "toolchain-alias",
             description="An alias that can be used instead of the real toolchain job name in "
             "fetch stanzas for jobs.",
-        ): Any(str, [str]),
+        ): optionally_keyed_by("project", Any(None, str, [str])),
         Optional(
             "toolchain-env",
             description="Additional env variables to add to the worker when using this toolchain",
@@ -149,8 +149,15 @@ def common_toolchain(config, job, taskdesc, is_docker):
 
     attributes = taskdesc.setdefault("attributes", {})
     attributes["toolchain-artifact"] = run.pop("toolchain-artifact")
-    if "toolchain-alias" in run:
-        attributes["toolchain-alias"] = run.pop("toolchain-alias")
+    resolve_keyed_by(
+        run,
+        "toolchain-alias",
+        item_name=taskdesc["label"],
+        project=config.params["project"],
+    )
+    alias = run.pop("toolchain-alias", None)
+    if alias:
+        attributes["toolchain-alias"] = alias
     if "toolchain-env" in run:
         attributes["toolchain-env"] = run.pop("toolchain-env")
 

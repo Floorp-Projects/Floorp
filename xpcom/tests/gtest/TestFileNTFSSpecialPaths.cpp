@@ -6,6 +6,7 @@
 #include "prio.h"
 #include "prsystem.h"
 
+#include "mozilla/gtest/MozAssertions.h"
 #include "nsComponentManagerUtils.h"
 #include "nsIFile.h"
 #include "nsILocalFileWin.h"
@@ -282,7 +283,7 @@ TEST(TestFileNTFSSpecialPaths, Normalization)
   // nsIFile::Normalize, because normalization doesn't happen reliably,
   // and where it does happen consumers often don't check for errors.
   nsresult rv = file->InitWithPath(startingFilePath);
-  EXPECT_TRUE(NS_FAILED(rv))
-      << " from normalizing '" << NS_ConvertUTF16toUTF8(startingFilePath).get()
-      << "' rv=" << std::hex << (unsigned int)rv;
+  EXPECT_NS_FAILED(rv) << " from normalizing '"
+                       << NS_ConvertUTF16toUTF8(startingFilePath).get()
+                       << "' rv=" << std::hex << (unsigned int)rv;
 }

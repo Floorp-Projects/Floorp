@@ -2,6 +2,7 @@
 #include "gtest/gtest.h"
 
 #include "ScopedNSSTypes.h"
+#include "mozilla/gtest/MozAssertions.h"
 #include "mozilla/Span.h"
 #include "nss.h"
 #include "secoidt.h"
@@ -46,13 +47,13 @@ TEST_P(psm_HMAC, Test) {
   const HMACTestCase& testCase(GetParam());
   nsresult rv = hmac.Begin(testCase.hashAlg,
                            mozilla::Span(kTestKey, sizeof(kTestKey) - 1));
-  ASSERT_TRUE(NS_SUCCEEDED(rv));
+  ASSERT_NS_SUCCEEDED(rv);
   rv = hmac.Update(reinterpret_cast<const unsigned char*>(kTestInput),
                    sizeof(kTestInput) - 1);
-  ASSERT_TRUE(NS_SUCCEEDED(rv));
+  ASSERT_NS_SUCCEEDED(rv);
   nsTArray<uint8_t> output;
   rv = hmac.End(output);
-  ASSERT_TRUE(NS_SUCCEEDED(rv));
+  ASSERT_NS_SUCCEEDED(rv);
   EXPECT_EQ(output.Length(), testCase.expectedOutput.length());
   for (size_t i = 0; i < output.Length(); i++) {
     EXPECT_EQ(output[i], testCase.expectedOutput[i]);

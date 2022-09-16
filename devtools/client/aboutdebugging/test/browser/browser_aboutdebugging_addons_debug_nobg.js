@@ -37,7 +37,7 @@ add_task(async function testWebExtensionsToolboxNoBackgroundPage() {
   );
 
   info("Open a toolbox to debug the addon");
-  const { devtoolsTab, devtoolsWindow } = await openAboutDevtoolsToolbox(
+  const { devtoolsWindow } = await openAboutDevtoolsToolbox(
     document,
     tab,
     window,
@@ -70,7 +70,7 @@ add_task(async function testWebExtensionsToolboxNoBackgroundPage() {
     "nodeActor has the expected inlineTextChild value"
   );
 
-  await closeAboutDevtoolsToolbox(document, devtoolsTab, window);
+  await closeWebExtAboutDevtoolsToolbox(devtoolsWindow, window);
   await removeTemporaryExtension(ADDON_NOBG_NAME, document);
   await removeTab(tab);
 });

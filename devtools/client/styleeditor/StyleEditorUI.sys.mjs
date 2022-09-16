@@ -337,7 +337,7 @@ export class StyleEditorUI extends EventEmitter {
     );
 
     const nav = this.#panelDoc.querySelector(".splitview-controller");
-    nav.setAttribute("width", Services.prefs.getIntPref(PREF_NAV_WIDTH));
+    nav.style.width = Services.prefs.getIntPref(PREF_NAV_WIDTH) + "px";
   }
 
   #clearFilterInput() {
@@ -955,24 +955,23 @@ export class StyleEditorUI extends EventEmitter {
     );
 
     const sidebar = details.querySelector(".stylesheet-sidebar");
-    sidebar.setAttribute(
-      "width",
-      Services.prefs.getIntPref(PREF_SIDEBAR_WIDTH)
-    );
+    sidebar.style.width = Services.prefs.getIntPref(PREF_SIDEBAR_WIDTH) + "px";
 
     const splitter = details.querySelector(".devtools-side-splitter");
     splitter.addEventListener(
       "mousemove",
       () => {
-        const sidebarWidth = sidebar.getAttribute("width");
-        Services.prefs.setIntPref(PREF_SIDEBAR_WIDTH, sidebarWidth);
+        const sidebarWidth = parseInt(sidebar.style.width, 10);
+        if (!isNaN(sidebarWidth)) {
+          Services.prefs.setIntPref(PREF_SIDEBAR_WIDTH, sidebarWidth);
 
-        // update all @media sidebars for consistency
-        const sidebars = [
-          ...this.#panelDoc.querySelectorAll(".stylesheet-sidebar"),
-        ];
-        for (const mediaSidebar of sidebars) {
-          mediaSidebar.setAttribute("width", sidebarWidth);
+          // update all @media sidebars for consistency
+          const sidebars = [
+            ...this.#panelDoc.querySelectorAll(".stylesheet-sidebar"),
+          ];
+          for (const mediaSidebar of sidebars) {
+            mediaSidebar.style.width = sidebarWidth + "px";
+          }
         }
       },
       eventListenersConfig
@@ -1702,8 +1701,10 @@ export class StyleEditorUI extends EventEmitter {
     this.#tplSummary = null;
 
     const sidebar = this.#panelDoc.querySelector(".splitview-controller");
-    const sidebarWidth = sidebar.getAttribute("width");
-    Services.prefs.setIntPref(PREF_NAV_WIDTH, sidebarWidth);
+    const sidebarWidth = parseInt(sidebar.style.width, 10);
+    if (!isNaN(sidebarWidth)) {
+      Services.prefs.setIntPref(PREF_NAV_WIDTH, sidebarWidth);
+    }
 
     if (this.#sourceMapPrefObserver) {
       this.#sourceMapPrefObserver.off(

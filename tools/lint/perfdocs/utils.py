@@ -27,7 +27,6 @@ def save_file(file_content, path, extension="rst"):
     new_file = pathlib.Path("{}.{}".format(str(path), extension))
     with new_file.open("wb") as f:
         f.write(file_content.encode("utf-8"))
-    new_file.chmod(0o766)
 
 
 def read_file(path, stringify=False):
