@@ -136,6 +136,7 @@ class WorkerScriptLoader final : public nsINamed {
   JS::loader::ScriptLoadRequestList mLoadedRequests;
   Maybe<ServiceWorkerDescriptor> mController;
   WorkerScriptType mWorkerScriptType;
+  Maybe<nsresult> mCancelMainThread;
   ErrorResult& mRv;
   bool mExecutionAborted = false;
   bool mMutedErrorFlag = false;
@@ -214,10 +215,6 @@ class WorkerScriptLoader final : public nsINamed {
 
   bool IsCancelled() { return mCancelMainThread.isSome(); }
 
-  nsresult GetCancelResult() {
-    return (IsCancelled()) ? mCancelMainThread.ref() : NS_OK;
-  }
-
   void CancelMainThread(nsresult aCancelResult,
                         nsTArray<WorkerLoadContext*>* aContextList);
 
@@ -249,8 +246,6 @@ class WorkerScriptLoader final : public nsINamed {
   bool EvaluateScript(JSContext* aCx, ScriptLoadRequest* aRequest);
 
   void LogExceptionToConsole(JSContext* aCx, WorkerPrivate* aWorkerPrivate);
-
-  Maybe<nsresult> mCancelMainThread;
 };
 
 }  // namespace loader
