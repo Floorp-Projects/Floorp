@@ -658,6 +658,24 @@
     <!--Label that indicates a permission is by the Android OS-->
     <string name="phone_feature_blocked_by_android">ຖືກບລັອກໂດຍ Android</string>
 
+    <!-- Preference summary for block autoplay audio only-->
+    <string name="preference_block_autoplay_audio_only_summary">ແນະນຳ</string>
+
+    <!-- Preference for studies -->
+    <string name="preference_studies">ການສຶກສາ</string>
+
+    <!-- Learn more link for studies, links to an article for more information about studies. -->
+    <string name="studies_learn_more">ຮຽນຮູ້ເພີ່ມເຕີມ</string>
+
+    <!-- Title of the remove studies button -->
+    <string name="studies_remove">ລຶບ</string>
+
+    <!-- Title of the active section on the studies list -->
+    <string name="studies_active">ໃຊ້ງານຢູ່</string>
+
+    <!-- Title of the completed section on the studies list -->
+    <string name="studies_completed">ສຳເລັດແລ້ວ</string>
+
     <!-- Preference to enable remote debugging of the app via USB or Wi-Fi -->
     <string name="preference_remote_debugging">ການດີບັກໄລຍະໄກຜ່ານ USB/Wi-Fi</string>
 
