@@ -4,15 +4,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "jit/arm64/SharedICHelpers-arm64.h"
 #include "jit/Bailouts.h"
 #include "jit/BaselineFrame.h"
 #include "jit/CalleeToken.h"
 #include "jit/JitFrames.h"
 #include "jit/JitRuntime.h"
-#ifdef JS_ION_PERF
-#  include "jit/PerfSpewer.h"
-#endif
-#include "jit/arm64/SharedICHelpers-arm64.h"
+#include "jit/PerfSpewer.h"
 #include "jit/VMFunctions.h"
 #include "vm/JitActivation.h"  // js::jit::JitActivation
 #include "vm/JSContext.h"

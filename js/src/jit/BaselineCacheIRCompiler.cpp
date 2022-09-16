@@ -151,9 +151,7 @@ JitCode* BaselineCacheIRCompiler::compile() {
   CacheIRReader reader(writer_);
   do {
     CacheOp op = reader.readOp();
-#ifdef JS_ION_PERF
     perfSpewer_.recordInstruction(masm, op);
-#endif
     switch (op) {
 #define DEFINE_OP(op, ...)                 \
   case CacheOp::op:                        \
@@ -2105,9 +2103,8 @@ ICAttachResult js::jit::AttachBaselineCacheIRStub(
       return ICAttachResult::OOM;
     }
 
-#ifdef JS_ION_PERF
-    comp.perfSpewer().writeProfile(code, name);
-#endif
+    comp.perfSpewer().saveProfile(code, name);
+
     // Allocate the shared CacheIRStubInfo. Note that the
     // putBaselineCacheIRStubCode call below will transfer ownership
     // to the stub code HashMap, so we don't have to worry about freeing
