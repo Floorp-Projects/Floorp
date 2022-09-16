@@ -95,6 +95,7 @@ class WebControlsTest {
         }
     }
 
+    @Ignore("See https://github.com/mozilla-mobile/focus-android/issues/7667")
     @SmokeTest
     @Test
     fun emailLinkTest() {
