@@ -37,11 +37,6 @@ async function openAboutWelcome(json) {
   return tab.linkedBrowser;
 }
 
-function setLocale(locale) {
-  Services.locale.availableLocales = [locale];
-  Services.locale.requestedLocales = [locale];
-}
-
 const ALT_TEXT = BASE_CONTENT.content.tiles.data.QR_code.alt_text;
 
 /**
@@ -114,30 +109,4 @@ add_task(async function test_aboutwelcome_mobile_downloads_qr() {
     // Unexpected selectors:
     ["button.email-link", "li.android", "li.ios"]
   );
-});
-
-/**
- * Test rendering QR code image override for a locale
- */
-add_task(async function test_aboutwelcome_localized_qr_override() {
-  const TEST_LOCALE = "de";
-  setLocale(TEST_LOCALE);
-
-  const DE_QR_CODE_SRC = "chrome://browser/content/assets/klar-qr-code.svg";
-  let SCREEN_CONTENT = structuredClone(BASE_CONTENT);
-  SCREEN_CONTENT.content.tiles.data.QR_code.image_overrides = {
-    de: DE_QR_CODE_SRC,
-  };
-
-  const TEST_JSON = JSON.stringify([SCREEN_CONTENT]);
-  let browser = await openAboutWelcome(TEST_JSON);
-
-  await test_screen_content(
-    browser,
-    "renders screen with localized QR code",
-    // Expected selectors:
-    [`img.qr-code-image[src="${DE_QR_CODE_SRC}"]`]
-  );
-
-  setLocale("en-US"); // revert locale change
 });

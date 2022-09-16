@@ -46,10 +46,7 @@ export const MobileDownloads = props => {
           }
           className="qr-code-image"
           alt={typeof QRCode.alt_text === "string" ? QRCode.alt_text : ""}
-          src={
-            QRCode.image_overrides?.[document.documentElement.lang] ??
-            QRCode.image_url
-          }
+          src={QRCode.image_url}
         />
       ) : null}
       {showEmailLink ? (
