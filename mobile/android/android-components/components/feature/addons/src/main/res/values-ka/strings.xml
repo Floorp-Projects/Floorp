@@ -77,7 +77,7 @@
     <!-- The developer website (Homepage) of the add-on. -->
     <string name="mozac_feature_addons_home_page">მთავარი გვერდი</string>
     <!-- A link where users can find more information about add-ons permissions. -->
-    <string name="mozac_feature_addons_learn_more">ვრცლად, ნებართვების შესახებ</string>
+    <string name="mozac_feature_addons_learn_more">ვრცლად ნებართვების შესახებ</string>
     <!-- The rating of the add-on. -->
     <string name="mozac_feature_addons_rating">შეფასება</string>
     <!-- The settings of the add-on. -->

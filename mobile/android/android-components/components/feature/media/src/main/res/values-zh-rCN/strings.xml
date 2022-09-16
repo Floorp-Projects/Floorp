@@ -17,5 +17,5 @@
     <string name="mozac_feature_media_notification_action_pause">暂停</string>
 
     <!-- Neutral title of the media notification for when a website that is open in private mode. -->
-    <string name="mozac_feature_media_notification_private_mode">有网站正在播放媒体</string>
+    <string name="mozac_feature_media_notification_private_mode">网站正在播放媒体</string>
 </resources>
