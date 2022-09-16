@@ -12,7 +12,7 @@ object Versions {
     // These versions are linked: lint should be X+23.Y.Z of gradle_plugin version, according to:
     // https://github.com/alexjlockwood/android-lint-checks-demo/blob/0245fc027463137b1b4afb97c5295d60dce998b6/dependencies.gradle#L3
     const val android_gradle_plugin = "7.3.0"
-    const val android_lint_api = "30.2.2"
+    const val android_lint_api = "30.3.0"
 
     const val sentry = "5.7.3"
     const val leakcanary = "2.8.1"
