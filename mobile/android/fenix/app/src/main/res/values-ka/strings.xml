@@ -1078,7 +1078,7 @@
     <!-- Text for the warning message on the Add new device screen -->
     <string name="sync_add_new_device_message">მოწყობილობები არაა დაკავშირებული</string>
     <!-- Text for the button to learn about sending tabs -->
-    <string name="sync_add_new_device_learn_button">ვრცლად, ჩანართების გაგზავნის შესახებ…</string>
+    <string name="sync_add_new_device_learn_button">ვრცლად ჩანართების გაგზავნის შესახებ…</string>
     <!-- Text for the button to connect another device -->
     <string name="sync_add_new_device_connect_button">სხვა მოწყობილობის დაკავშირება…</string>
 
@@ -1483,7 +1483,7 @@
     <!-- Description of empty list of saved passwords. Placeholder is replaced with app name.  -->
     <string name="preferences_passwords_saved_logins_description_empty_text">შენახულ ან დასინქრონებულ ანგარიშებს %s გამოაჩენს აქ.</string>
     <!-- Preference to access list of saved logins -->
-    <string name="preferences_passwords_saved_logins_description_empty_learn_more_link">ვრცლად, სინქრონიზაციაზე.</string>
+    <string name="preferences_passwords_saved_logins_description_empty_learn_more_link">ვრცლად სინქრონიზაციაზე.</string>
     <!-- Preference to access list of login exceptions that we never save logins for -->
     <string name="preferences_passwords_exceptions">გამონაკლისები</string>
     <!-- Empty description of list of login exceptions that we never save logins for -->

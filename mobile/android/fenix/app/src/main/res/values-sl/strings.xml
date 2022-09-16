@@ -319,7 +319,7 @@
     <!-- Preference category for general settings -->
     <string name="preferences_category_general">Splošno</string>
     <!-- Preference category for all links about Fenix -->
-    <string name="preferences_category_about">Predstavitev</string>
+    <string name="preferences_category_about">Vizitka</string>
     <!-- Preference for settings related to changing the default search engine -->
     <string name="preferences_default_search_engine">Privzeti iskalnik</string>
     <!-- Preference for settings related to Search -->
