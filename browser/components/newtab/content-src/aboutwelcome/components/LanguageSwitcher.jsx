@@ -261,7 +261,7 @@ export function LanguageSwitcher(props) {
         <div>
           <button
             type="button"
-            className="secondary"
+            className="primary"
             value="decline"
             onClick={event => {
               window.AWSetRequestedLocales(

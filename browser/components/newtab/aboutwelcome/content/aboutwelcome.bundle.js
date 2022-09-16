@@ -1442,7 +1442,7 @@ function LanguageSwitcher(props) {
   }) : // This is the localized name from the Intl.DisplayNames API.
   negotiatedLanguage === null || negotiatedLanguage === void 0 ? void 0 : negotiatedLanguage.langPackDisplayName)), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("button", {
     type: "button",
-    className: "secondary",
+    className: "primary",
     value: "decline",
     onClick: event => {
       window.AWSetRequestedLocales(negotiatedLanguage.originalAppLocales);
