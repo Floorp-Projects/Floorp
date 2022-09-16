@@ -64,7 +64,9 @@ class MOZ_RAII IRGenerator {
   CacheKind cacheKind_;
   ICState::Mode mode_;
   bool isFirstStub_;
+#ifdef JS_ION_PERF
   UniqueChars stubName_;
+#endif
 
   IRGenerator(const IRGenerator&) = delete;
   IRGenerator& operator=(const IRGenerator&) = delete;
@@ -96,7 +98,13 @@ class MOZ_RAII IRGenerator {
 
   const CacheIRWriter& writerRef() const { return writer; }
   CacheKind cacheKind() const { return cacheKind_; }
-  const char* stubName() const { return stubName_.get(); }
+  const char* stubName() const {
+#ifdef JS_ION_PERF
+    return stubName_.get();
+#else
+    return nullptr;
+#endif
+  }
 
   static constexpr char* NotAttached = nullptr;
 };

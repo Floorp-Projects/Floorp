@@ -7,7 +7,9 @@
 #ifndef jit_CodeGenerator_h
 #define jit_CodeGenerator_h
 
-#include "jit/PerfSpewer.h"
+#if defined(JS_ION_PERF)
+#  include "jit/PerfSpewer.h"
+#endif
 #include "js/ScalarType.h"  // js::Scalar::Type
 
 #if defined(JS_CODEGEN_X86)
@@ -361,7 +363,9 @@ class CodeGenerator final : public CodeGeneratorSpecific {
   // Script counts created during code generation.
   IonScriptCounts* scriptCounts_;
 
+#if defined(JS_ION_PERF)
   IonPerfSpewer perfSpewer_;
+#endif
 
   // Bit mask of JitRealm stubs that are to be read-barriered.
   uint32_t realmStubsToReadBarrier_;
