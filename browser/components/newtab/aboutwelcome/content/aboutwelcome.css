@@ -182,6 +182,7 @@ body {
 }
 :root[dialogroot] .onboardingContainer {
   height: 100%;
+  background-color: transparent;
 }
 :root[dialogroot] .onboardingContainer:dir(rtl) {
   transform: unset;
