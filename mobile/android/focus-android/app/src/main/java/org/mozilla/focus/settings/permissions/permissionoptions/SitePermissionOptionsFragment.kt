@@ -11,6 +11,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import mozilla.components.lib.state.ext.observeAsComposableState
+import mozilla.components.support.utils.ext.getParcelableCompat
 import org.mozilla.focus.ext.requireComponents
 import org.mozilla.focus.settings.BaseComposeFragment
 import org.mozilla.focus.settings.permissions.SitePermissionOption
@@ -25,7 +26,7 @@ class SitePermissionOptionsFragment : BaseComposeFragment() {
     private lateinit var sitePermissionOptionsStorage: SitePermissionOptionsStorage
 
     private val sitePermission: SitePermission
-        get() = requireArguments().getParcelable(SITE_PERMISSION)
+        get() = requireArguments().getParcelableCompat(SITE_PERMISSION, SitePermission::class.java)
             ?: throw IllegalAccessError("Site permission is not set for fragment")
 
     companion object {
