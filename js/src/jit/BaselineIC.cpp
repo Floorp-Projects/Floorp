@@ -19,9 +19,7 @@
 #include "jit/JitRuntime.h"
 #include "jit/JitSpewer.h"
 #include "jit/Linker.h"
-#ifdef JS_ION_PERF
-#  include "jit/PerfSpewer.h"
-#endif
+#include "jit/PerfSpewer.h"
 #include "jit/SharedICHelpers.h"
 #include "jit/SharedICRegisters.h"
 #include "jit/VMFunctions.h"
@@ -2476,9 +2474,8 @@ bool JitRuntime::generateBaselineICFallbackCode(JSContext* cx) {
     return false;
   }
 
-#ifdef JS_ION_PERF
-  writePerfSpewerJitCodeProfile(code, "BaselineICFallback");
-#endif
+  CollectPerfSpewerJitCodeProfile(code, "BaselineICFallback");
+
 #ifdef MOZ_VTUNE
   vtune::MarkStub(code, "BaselineICFallback");
 #endif
