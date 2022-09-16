@@ -14,6 +14,7 @@
 #include "jit/JitcodeMap.h"
 #include "jit/JitRuntime.h"
 #include "jit/JSJitFrameIter.h"
+#include "jit/PerfSpewer.h"
 #include "js/ProfilingStack.h"
 #include "vm/FrameIter.h"  // js::OnlyJSJitFrameIter
 #include "vm/JitActivation.h"
@@ -93,6 +94,9 @@ void GeckoProfilerRuntime::enable(bool enabled) {
     cx->jitActivation->setLastProfilingFrame(nullptr);
     cx->jitActivation->setLastProfilingCallSite(nullptr);
   }
+
+  // Reset the jitcode collection, if toggled on
+  jit::ResetPerfSpewer(enabled);
 
   enabled_ = enabled;
 
@@ -426,7 +430,7 @@ GeckoProfilerBaselineOSRMarker::~GeckoProfilerBaselineOSRMarker() {
 
 JS_PUBLIC_API JSScript* ProfilingStackFrame::script() const {
   MOZ_ASSERT(isJsFrame());
-  auto script = reinterpret_cast<JSScript*>(spOrScript.operator void*());
+  auto* script = reinterpret_cast<JSScript*>(spOrScript.operator void*());
   if (!script) {
     return nullptr;
   }
