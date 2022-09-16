@@ -14,7 +14,7 @@ object Versions {
         const val appcompat = "1.3.0"
         const val arch = "2.1.0"
         const val browser = "1.3.0"
-        const val core = "1.8.0"
+        const val core = "1.9.0"
         const val compose = compose_version
         const val compose_constraint_layout = "1.0.1"
         const val constraint_layout = "2.1.4"
