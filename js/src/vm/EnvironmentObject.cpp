@@ -4272,6 +4272,61 @@ JSObject* js::MaybeOptimizeBindGlobalName(JSContext* cx,
   return nullptr;
 }
 
+const char* EnvironmentObject::typeString() const {
+  if (is<CallObject>()) {
+    return "CallObject";
+  }
+  if (is<VarEnvironmentObject>()) {
+    return "VarEnvironmentObject";
+  }
+  if (is<ModuleEnvironmentObject>()) {
+    return "ModuleEnvironmentObject";
+  }
+  if (is<WasmInstanceEnvironmentObject>()) {
+    return "WasmInstanceEnvironmentObject";
+  }
+  if (is<WasmFunctionCallObject>()) {
+    return "WasmFunctionCallObject";
+  }
+  if (is<LexicalEnvironmentObject>()) {
+    if (is<ScopedLexicalEnvironmentObject>()) {
+      if (is<BlockLexicalEnvironmentObject>()) {
+        if (is<NamedLambdaObject>()) {
+          return "NamedLambdaObject";
+        }
+        return "BlockLexicalEnvironmentObject";
+      }
+      if (is<ClassBodyLexicalEnvironmentObject>()) {
+        return "ClassBodyLexicalEnvironmentObject";
+      }
+      return "ScopedLexicalEnvironmentObject";
+    }
+
+    if (is<ExtensibleLexicalEnvironmentObject>()) {
+      if (is<GlobalLexicalEnvironmentObject>()) {
+        return "GlobalLexicalEnvironmentObject";
+      }
+      if (is<NonSyntacticLexicalEnvironmentObject>()) {
+        return "NonSyntacticLexicalEnvironmentObject";
+      }
+      return "ExtensibleLexicalEnvironmentObject";
+    }
+
+    return "LexicalEnvironmentObject";
+  }
+  if (is<NonSyntacticVariablesObject>()) {
+    return "NonSyntacticVariablesObject";
+  }
+  if (is<WithEnvironmentObject>()) {
+    return "WithEnvironmentObject";
+  }
+  if (is<RuntimeLexicalErrorObject>()) {
+    return "RuntimeLexicalErrorObject";
+  }
+
+  return "EnvironmentObject";
+}
+
 #if defined(DEBUG) || defined(JS_JITSPEW)
 static void DumpEnvironmentObject(JSObject* unrootedEnvObj) {
   JSContext* cx = TlsContext.get();
@@ -4294,53 +4349,18 @@ static void DumpEnvironmentObject(JSObject* unrootedEnvObj) {
       break;
     }
 
+    fprintf(stderr, "%s", env->typeString());
+
     Rooted<Scope*> scope(cx);
-    if (env->is<CallObject>()) {
-      fprintf(stderr, "CallObject");
-    } else if (env->is<VarEnvironmentObject>()) {
-      fprintf(stderr, "VarEnvironmentObject");
+    if (env->is<VarEnvironmentObject>()) {
       scope = &env->as<VarEnvironmentObject>().scope();
-    } else if (env->is<ModuleEnvironmentObject>()) {
-      fprintf(stderr, "ModuleEnvironmentObject");
-    } else if (env->is<WasmInstanceEnvironmentObject>()) {
-      fprintf(stderr, "WasmInstanceEnvironmentObject");
+    }
+    if (env->is<WasmInstanceEnvironmentObject>()) {
       scope = &env->as<WasmInstanceEnvironmentObject>().scope();
     } else if (env->is<WasmFunctionCallObject>()) {
-      fprintf(stderr, "WasmFunctionCallObject");
       scope = &env->as<WasmFunctionCallObject>().scope();
-    } else if (env->is<LexicalEnvironmentObject>()) {
-      if (env->is<ScopedLexicalEnvironmentObject>()) {
-        if (env->is<BlockLexicalEnvironmentObject>()) {
-          if (env->is<NamedLambdaObject>()) {
-            fprintf(stderr, "NamedLambdaObject");
-          } else {
-            fprintf(stderr, "BlockLexicalEnvironmentObject");
-          }
-        } else if (env->is<ClassBodyLexicalEnvironmentObject>()) {
-          fprintf(stderr, "ClassBodyLexicalEnvironmentObject");
-        } else {
-          fprintf(stderr, "ScopedLexicalEnvironmentObject");
-        }
-        scope = &env->as<ScopedLexicalEnvironmentObject>().scope();
-      } else if (env->is<ExtensibleLexicalEnvironmentObject>()) {
-        if (env->is<GlobalLexicalEnvironmentObject>()) {
-          fprintf(stderr, "GlobalLexicalEnvironmentObject");
-        } else if (env->is<NonSyntacticLexicalEnvironmentObject>()) {
-          fprintf(stderr, "NonSyntacticLexicalEnvironmentObject");
-        } else {
-          fprintf(stderr, "ExtensibleLexicalEnvironmentObject");
-        }
-      } else {
-        fprintf(stderr, "LexicalEnvironmentObject");
-      }
-    } else if (env->is<NonSyntacticVariablesObject>()) {
-      fprintf(stderr, "NonSyntacticVariablesObject");
-    } else if (env->is<WithEnvironmentObject>()) {
-      fprintf(stderr, "WithEnvironmentObject");
-    } else if (env->is<RuntimeLexicalErrorObject>()) {
-      fprintf(stderr, "RuntimeLexicalErrorObject");
-    } else {
-      fprintf(stderr, "EnvironmentObject");
+    } else if (env->is<ScopedLexicalEnvironmentObject>()) {
+      scope = &env->as<ScopedLexicalEnvironmentObject>().scope();
     }
 
     if (scope) {
