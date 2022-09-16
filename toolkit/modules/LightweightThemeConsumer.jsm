@@ -219,6 +219,10 @@ function LightweightThemeConsumer(aDocument) {
 
 LightweightThemeConsumer.prototype = {
   _lastData: null,
+  dualtheme_count_url:0,
+  protocolHandler: Services.io
+    .getProtocolHandler("resource")
+    .QueryInterface(Ci.nsIResProtocolHandler),
 
   observe(aSubject, aTopic, aData) {
     if (aTopic != "lightweight-theme-styling-update") {
@@ -255,10 +259,10 @@ LightweightThemeConsumer.prototype = {
     let themeData
     if(Services.prefs.getBoolPref("floorp.enable.dualtheme", false)){
       themeData = JSON.parse(JSON.stringify(themeData_))
-      if(themeData == null) themeData = {theme:{experimental:{colors:{popup_action_color:"rgb(91,91,102)", button:"rgba(207,207,216,.33)", button_hover:"rgba(207,207,216,.66)", button_active:"rgb(207,207,216)", button_primary:"rgb(0, 97, 224)", button_primary_hover:"rgb(2, 80, 187)", button_primary_active:"rgb(5, 62, 148)", button_primary_color:"rgb(251, 251, 254)", error_text_color:"rgb(197,0,66)", input_color:"rgb(21,20,26)", input_background:"rgb(255,255,255)", autocomplete_popup_hover:"rgb(240,240,244)", autocomplete_popup_separator:"rgb(240,240,244)", appmenu_update_icon_color:"#2AC3A2", appmenu_info_icon_color:"#0090ED", tab_icon_overlay_stroke:"rgb(255,255,255)", tab_icon_overlay_fill:"rgb(91,91,102)"}, images:{}, properties:{panel_hover:"color-mix(in srgb, currentColor 12%, transparent)", panel_active:"color-mix(in srgb, currentColor 20%, transparent)", panel_active_darker:"color-mix(in srgb, currentColor 27%, transparent)", toolbar_field_icon_opacity:"0.72", input_border_color:"color-mix(in srgb, currentColor 41%, transparent)", zap_gradient:"linear-gradient(90deg, #9059FF 0%, #FF4AA2 52.08%, #FFBD4F 100%)"}}, accentcolor:"#f0f0f4", icon_color:"rgb(91,91,102)", ntp_background:"#F9F9FB", ntp_text:"rgb(21, 20, 26)", popup:"#fff", popup_border:"rgb(240,240,244)", popup_highlight:"#e0e0e6", popup_highlight_text:"#15141a", popup_text:"rgb(21,20,26)", textcolor:"rgb(21,20,26)", tab_line:"transparent", tab_selected:"#fff", tab_text:"rgb(21,20,26)", toolbarColor:"#f9f9fb", toolbar_bottom_separator:"#ccc", toolbar_field:"#f0f0f4", toolbar_field_border:"transparent", toolbar_field_focus:"white", toolbar_field_text:"rgb(21,20,26)", toolbar_text:"rgb(21,20,26)", toolbar_top_separator:"transparent", color_scheme:"light", id:"default-theme@mozilla.org", version:"1.3"}, darkTheme:{experimental:{colors:{button:"rgb(43,42,51)", button_hover:"rgb(82,82,94)", button_active:"rgb(91,91,102)", button_primary:"rgb(0, 221, 255)", button_primary_hover:"rgb(128, 235, 255)", button_primary_active:"rgb(170, 242, 255)", button_primary_color:"rgb(43, 42, 51)", error_text_color:"rgb(255, 154, 162)", input_background:"#42414D", input_color:"rgb(251,251,254)", input_border:"#8f8f9d", autocomplete_popup_separator:"rgb(82,82,94)", appmenu_update_icon_color:"#54FFBD", appmenu_info_icon_color:"#80EBFF", tab_icon_overlay_stroke:"rgb(66,65,77)", tab_icon_overlay_fill:"rgb(251,251,254)"}, images:{}, properties:{panel_hover:"color-mix(in srgb, currentColor 9%, transparent)", panel_active:"color-mix(in srgb, currentColor 14%, transparent)", panel_active_darker:"color-mix(in srgb, currentColor 25%, transparent)", toolbar_field_icon_opacity:"1", zap_gradient:"linear-gradient(90deg, #9059FF 0%, #FF4AA2 52.08%, #FFBD4F 100%)"}}, accentcolor:"#1c1b22", icon_color:"rgb(251,251,254)", ntp_background:"rgb(43, 42, 51)", ntp_text:"rgb(251, 251, 254)", popup:"rgb(66,65,77)", popup_border:"rgb(82,82,94)", popup_highlight:"rgb(43,42,51)", popup_text:"rgb(251,251,254)", sidebar:"#38383D", sidebar_border:"rgba(255, 255, 255, 0.1)", sidebar_text:"rgb(249, 249, 250)", textcolor:"#fbfbfe", tab_line:"transparent", tab_selected:"rgb(66,65,77)", tab_text:"rgb(251,251,254)", toolbarColor:"#2b2a33", toolbar_bottom_separator:"hsl(240, 5%, 5%)", toolbar_field:"rgb(28,27,34)", toolbar_field_border:"transparent", toolbar_field_focus:"rgb(66,65,77)", toolbar_field_text:"rgb(251,251,254)", toolbar_text:"rgb(251, 251, 254)", toolbar_top_separator:"transparent", id:"default-theme@mozilla.org", version:"1.3"}, experiment:{colors:{popup_action_color:"--urlbar-popup-action-color", button:"--button-bgcolor", button_hover:"--button-hover-bgcolor", button_active:"--button-active-bgcolor", button_primary:"--button-primary-bgcolor", button_primary_hover:"--button-primary-hover-bgcolor", button_primary_active:"--button-primary-active-bgcolor", button_primary_color:"--button-primary-color", error_text_color:"--error-text-color", input_background:"--input-bgcolor", input_color:"--input-color", input_border:"--input-border-color", autocomplete_popup_hover:"--autocomplete-popup-hover-background", autocomplete_popup_separator:"--autocomplete-popup-separator-color", appmenu_update_icon_color:"--panel-banner-item-update-supported-bgcolor", appmenu_info_icon_color:"--panel-banner-item-info-icon-bgcolor", tab_icon_overlay_stroke:"--tab-icon-overlay-stroke", tab_icon_overlay_fill:"--tab-icon-overlay-fill"}, images:null, properties:{panel_hover:"--panel-item-hover-bgcolor", panel_active:"--arrowpanel-dimmed-further", panel_active_darker:"--panel-item-active-bgcolor", toolbar_field_icon_opacity:"--urlbar-icon-fill-opacity", input_border_color:"--input-border-color", zap_gradient:"--panel-separator-zap-gradient"}, stylesheet:null}}
     }else{
       themeData = themeData_;
     }
+    this._lastData = themeData;
     const hasDarkTheme = !!themeData.darkTheme;
     let updateGlobalThemeData = true;
     let useDarkTheme = (() => {
@@ -330,7 +334,9 @@ if(Services.prefs.getBoolPref("floorp.enable.dualtheme", false)){
         }
         else{
           let addon = await AddonManager.getAddonByID(elem)
-          theme_path = addon.getResourceURI().displaySpec
+          this.protocolHandler.setSubstitution("j" + this.dualtheme_count_url , Services.io.newURI(addon.getResourceURI().displaySpec, null, null));
+          theme_path = `resource://j${this.dualtheme_count_url}/`
+          this.dualtheme_count_url += 1
           let res = await fetch(`${theme_path}manifest.json`)
           jsondata = await res.json()
           dualtheme_data = (useDarkTheme && !!jsondata.dark_theme) ? jsondata.dark_theme : jsondata.theme;
@@ -598,20 +604,6 @@ if(Services.prefs.getBoolPref("floorp.enable.dualtheme", false)){
     this._win.dispatchEvent(new CustomEvent("windowlwthemeupdate"));
   },
 
-  async set_dual_stylesheets(urls) {
-    for( let elem of urls ) {
-      /* Stylesheet URLs are validated using WebExtension schemas */
-      let dual_stylesheet = this._doc.createElement('style')
-      let styleres = await fetch(elem)
-      let styleres_text = await styleres.text()
-      dual_stylesheet.textContent = styleres_text
-      dual_stylesheet.className = "_dualtheme_stylesheet"
-      this._doc.head.appendChild(dual_stylesheet);
-      if(this._lastExperimentData.dual_stylesheets == undefined) this._lastExperimentData.dual_stylesheets = []
-      this._lastExperimentData.dual_stylesheets.push(dual_stylesheet)
-    }
-  },
-
   _setExperiment(active, experiment, properties) {
     const root = this._doc.documentElement;
     if (this._lastExperimentData) {
@@ -665,9 +657,18 @@ if(Services.prefs.getBoolPref("floorp.enable.dualtheme", false)){
       _setProperty(root, true, variable, value);
     }
     this._lastExperimentData.usedVariables = usedVariables;
-
-    if (experiment.dual_stylesheets) {
-      this.set_dual_stylesheets(experiment.dual_stylesheets)
+    if (experiment.dual_stylesheets && experiment.dual_stylesheets.length != 0) {
+      for( let elem of experiment.dual_stylesheets ) {
+              /* Stylesheet URLs are validated using WebExtension schemas */
+      let stylesheetAttr = `href="${elem}" type="text/css"`;
+      let stylesheet = this._doc.createProcessingInstruction(
+        "xml-stylesheet",
+        stylesheetAttr
+      );
+      this._doc.insertBefore(stylesheet, root);
+      if(this._lastExperimentData.dual_stylesheets == undefined) this._lastExperimentData.dual_stylesheets = []
+      this._lastExperimentData.dual_stylesheets.push(stylesheet)
+      }
     }
     if (experiment.stylesheet) {
       /* Stylesheet URLs are validated using WebExtension schemas */
