@@ -1344,22 +1344,32 @@ Maybe<Rect> DrawTargetSkia::GetGlyphLocalBounds(
   // Limit the amount of internal batch allocations Skia does.
   const uint32_t kMaxGlyphBatchSize = 8192;
 
+  // Avoid using TextBlobBuilder for bounds computations as the conservative
+  // bounds can be wrong due to buggy font metrics. Instead, explicitly compute
+  // tight bounds directly with the SkFont.
+  Vector<SkGlyphID, 32> glyphs;
+  Vector<SkRect, 32> rects;
   Rect bounds;
   for (uint32_t offset = 0; offset < aBuffer.mNumGlyphs;) {
     uint32_t batchSize =
         std::min(aBuffer.mNumGlyphs - offset, kMaxGlyphBatchSize);
-    SkTextBlobBuilder builder;
-    auto runBuffer = builder.allocRunPos(font, batchSize);
-    for (uint32_t i = 0; i < batchSize; i++, offset++) {
-      runBuffer.glyphs[i] = aBuffer.mGlyphs[offset].mIndex;
-      runBuffer.points()[i] = PointToSkPoint(aBuffer.mGlyphs[offset].mPosition);
+    if (glyphs.resizeUninitialized(batchSize) &&
+        rects.resizeUninitialized(batchSize)) {
+      for (uint32_t i = 0; i < batchSize; i++) {
+        glyphs[i] = aBuffer.mGlyphs[offset + i].mIndex;
+      }
+      font.getBounds(glyphs.begin(), batchSize, rects.begin(), nullptr);
+      for (uint32_t i = 0; i < batchSize; i++) {
+        bounds = bounds.Union(SkRectToRect(rects[i]) +
+                              aBuffer.mGlyphs[offset + i].mPosition);
+      }
     }
-
-    sk_sp<SkTextBlob> text = builder.make();
-    SkRect storage;
-    bounds = bounds.Union(
-        SkRectToRect(paint.mPaint.computeFastBounds(text->bounds(), &storage)));
+    offset += batchSize;
   }
+
+  SkRect storage;
+  bounds = SkRectToRect(
+      paint.mPaint.computeFastBounds(RectToSkRect(bounds), &storage));
 
   if (bounds.IsEmpty()) {
     return Nothing();
