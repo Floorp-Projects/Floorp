@@ -162,6 +162,7 @@ EXPORTS.js += [
     "../public/Id.h",
     "../public/Initialization.h",
     "../public/Interrupt.h",
+    "../public/JitCodeAPI.h",
     "../public/JSON.h",
     "../public/LocaleSensitive.h",
     "../public/MapAndSet.h",
