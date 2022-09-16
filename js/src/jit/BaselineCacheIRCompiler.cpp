@@ -1782,7 +1782,7 @@ bool BaselineCacheIRCompiler::emitMegamorphicSetElement(ObjOperandId objId,
 
   using Fn = bool (*)(JSContext*, HandleObject, HandleValue, HandleValue,
                       HandleValue, bool);
-  callVM<Fn, SetObjectElementWithReceiver>(masm);
+  callVM<Fn, SetElementMegamorphic>(masm);
 
   stubFrame.leave(masm);
   return true;

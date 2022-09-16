@@ -165,6 +165,14 @@ iframe {
   }
 }
 
+@media not (-moz-box-flexbox-emulation) {
+  /* These elements create nsButtonBoxFrame, so force legacy layout in
+   * descendants for now. Bug 1790920 is the real fix. */
+  thumb, radio, checkbox, button, scrollbarbutton, treecolpicker {
+    -moz-box-layout: legacy;
+  }
+}
+
 /* Allow the browser to shrink below its intrinsic size, to match legacy
  * behavior */
 browser {

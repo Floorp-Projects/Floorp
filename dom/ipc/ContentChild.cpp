@@ -3055,9 +3055,9 @@ void ContentChild::ShutdownInternal() {
     SendShutdownPerfStats(PerfStats::CollectLocalPerfStatsJSON());
   }
 
-  // Start a timer that will insure we quickly exit after a reasonable
-  // period of time. Prevents shutdown hangs after our connection to the
-  // parent closes.
+  // Start a timer that will ensure we quickly exit after a reasonable period
+  // of time. Prevents shutdown hangs after our connection to the parent
+  // closes or when the parent is too busy to ever kill us.
   CrashReporter::AppendToCrashReportAnnotation(
       CrashReporter::Annotation::IPCShutdownState, "StartForceKillTimer"_ns);
   StartForceKillTimer();
@@ -3065,7 +3065,16 @@ void ContentChild::ShutdownInternal() {
   CrashReporter::AppendToCrashReportAnnotation(
       CrashReporter::Annotation::IPCShutdownState,
       "SendFinishShutdown (sending)"_ns);
+
+  // Notify the parent that we are done with shutdown. This is sent with high
+  // priority and will just flag we are done.
+  Unused << SendNotifyShutdownSuccess();
+
+  // Now tell the parent to actually destroy our channel which will make end
+  // our process. This is expected to be the last event the parent will
+  // ever process for this ContentChild.
   bool sent = SendFinishShutdown();
+
   CrashReporter::AppendToCrashReportAnnotation(
       CrashReporter::Annotation::IPCShutdownState,
       sent ? "SendFinishShutdown (sent)"_ns : "SendFinishShutdown (failed)"_ns);

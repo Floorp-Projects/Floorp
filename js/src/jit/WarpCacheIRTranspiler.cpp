@@ -709,7 +709,7 @@ bool WarpCacheIRTranspiler::emitMegamorphicSetElement(ObjOperandId objId,
   MDefinition* id = getOperand(idId);
   MDefinition* rhs = getOperand(rhsId);
 
-  auto* ins = MCallSetElement::New(alloc(), obj, id, rhs, strict);
+  auto* ins = MMegamorphicSetElement::New(alloc(), obj, id, rhs, strict);
   addEffectful(ins);
 
   return resumeAfter(ins);

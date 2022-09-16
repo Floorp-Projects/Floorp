@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "gtest/gtest.h"
+#include "mozilla/gtest/MozAssertions.h"
 #include "mozilla/ipc/DataPipe.h"
 #include "mozilla/SpinEventLoopUntil.h"
 #include "nsIAsyncInputStream.h"
@@ -35,11 +36,11 @@ TEST(MultiplexInputStream, Seek_SET)
   nsCOMPtr<nsIInputStream> inputStream2;
   nsCOMPtr<nsIInputStream> inputStream3;
   nsresult rv = NS_NewCStringInputStream(getter_AddRefs(inputStream1), buf1);
-  ASSERT_TRUE(NS_SUCCEEDED(rv));
+  ASSERT_NS_SUCCEEDED(rv);
   rv = NS_NewCStringInputStream(getter_AddRefs(inputStream2), buf2);
-  ASSERT_TRUE(NS_SUCCEEDED(rv));
+  ASSERT_NS_SUCCEEDED(rv);
   rv = NS_NewCStringInputStream(getter_AddRefs(inputStream3), buf3);
-  ASSERT_TRUE(NS_SUCCEEDED(rv));
+  ASSERT_NS_SUCCEEDED(rv);
 
   nsCOMPtr<nsIMultiplexInputStream> multiplexStream =
       do_CreateInstance("@mozilla.org/io/multiplex-input-stream;1");
@@ -48,11 +49,11 @@ TEST(MultiplexInputStream, Seek_SET)
   ASSERT_TRUE(stream);
 
   rv = multiplexStream->AppendStream(inputStream1);
-  ASSERT_TRUE(NS_SUCCEEDED(rv));
+  ASSERT_NS_SUCCEEDED(rv);
   rv = multiplexStream->AppendStream(inputStream2);
-  ASSERT_TRUE(NS_SUCCEEDED(rv));
+  ASSERT_NS_SUCCEEDED(rv);
   rv = multiplexStream->AppendStream(inputStream3);
-  ASSERT_TRUE(NS_SUCCEEDED(rv));
+  ASSERT_NS_SUCCEEDED(rv);
 
   int64_t tell;
   uint64_t length;
@@ -63,71 +64,71 @@ TEST(MultiplexInputStream, Seek_SET)
 
   // Seek forward in first input stream
   rv = seekStream->Seek(nsISeekableStream::NS_SEEK_SET, 1);
-  ASSERT_TRUE(NS_SUCCEEDED(rv));
+  ASSERT_NS_SUCCEEDED(rv);
   rv = stream->Available(&length);
-  ASSERT_TRUE(NS_SUCCEEDED(rv));
+  ASSERT_NS_SUCCEEDED(rv);
   ASSERT_EQ((uint64_t)buf1.Length() + buf2.Length() + buf3.Length() - 1,
             length);
   rv = seekStream->Tell(&tell);
-  ASSERT_TRUE(NS_SUCCEEDED(rv));
+  ASSERT_NS_SUCCEEDED(rv);
   ASSERT_EQ(tell, 1);
 
   // Check read is correct
   rv = stream->Read(readBuf, 3, &count);
-  ASSERT_TRUE(NS_SUCCEEDED(rv));
+  ASSERT_NS_SUCCEEDED(rv);
   ASSERT_EQ((uint64_t)3, count);
   rv = stream->Available(&length);
-  ASSERT_TRUE(NS_SUCCEEDED(rv));
+  ASSERT_NS_SUCCEEDED(rv);
   ASSERT_EQ((uint64_t)buf1.Length() + buf2.Length() + buf3.Length() - 4,
             length);
   ASSERT_EQ(0, strncmp(readBuf, "ell", count));
   rv = seekStream->Tell(&tell);
-  ASSERT_TRUE(NS_SUCCEEDED(rv));
+  ASSERT_NS_SUCCEEDED(rv);
   ASSERT_EQ(tell, 4);
 
   // Seek to start of third input stream
   rv = seekStream->Seek(nsISeekableStream::NS_SEEK_SET,
                         buf1.Length() + buf2.Length());
-  ASSERT_TRUE(NS_SUCCEEDED(rv));
+  ASSERT_NS_SUCCEEDED(rv);
   rv = stream->Available(&length);
-  ASSERT_TRUE(NS_SUCCEEDED(rv));
+  ASSERT_NS_SUCCEEDED(rv);
   ASSERT_EQ((uint64_t)buf3.Length(), length);
   rv = seekStream->Tell(&tell);
-  ASSERT_TRUE(NS_SUCCEEDED(rv));
+  ASSERT_NS_SUCCEEDED(rv);
   ASSERT_EQ(tell, int64_t(buf1.Length() + buf2.Length()));
 
   // Check read is correct
   rv = stream->Read(readBuf, 5, &count);
-  ASSERT_TRUE(NS_SUCCEEDED(rv));
+  ASSERT_NS_SUCCEEDED(rv);
   ASSERT_EQ((uint64_t)5, count);
   rv = stream->Available(&length);
-  ASSERT_TRUE(NS_SUCCEEDED(rv));
+  ASSERT_NS_SUCCEEDED(rv);
   ASSERT_EQ((uint64_t)buf3.Length() - 5, length);
   ASSERT_EQ(0, strncmp(readBuf, "Foo b", count));
   rv = seekStream->Tell(&tell);
-  ASSERT_TRUE(NS_SUCCEEDED(rv));
+  ASSERT_NS_SUCCEEDED(rv);
   ASSERT_EQ(tell, int64_t(buf1.Length() + buf2.Length() + 5));
 
   // Seek back to start of second stream (covers bug 1272371)
   rv = seekStream->Seek(nsISeekableStream::NS_SEEK_SET, buf1.Length());
-  ASSERT_TRUE(NS_SUCCEEDED(rv));
+  ASSERT_NS_SUCCEEDED(rv);
   rv = stream->Available(&length);
-  ASSERT_TRUE(NS_SUCCEEDED(rv));
+  ASSERT_NS_SUCCEEDED(rv);
   ASSERT_EQ((uint64_t)buf2.Length() + buf3.Length(), length);
   rv = seekStream->Tell(&tell);
-  ASSERT_TRUE(NS_SUCCEEDED(rv));
+  ASSERT_NS_SUCCEEDED(rv);
   ASSERT_EQ(tell, int64_t(buf1.Length()));
 
   // Check read is correct
   rv = stream->Read(readBuf, 6, &count);
-  ASSERT_TRUE(NS_SUCCEEDED(rv));
+  ASSERT_NS_SUCCEEDED(rv);
   ASSERT_EQ((uint64_t)6, count);
   rv = stream->Available(&length);
-  ASSERT_TRUE(NS_SUCCEEDED(rv));
+  ASSERT_NS_SUCCEEDED(rv);
   ASSERT_EQ((uint64_t)buf2.Length() - 6 + buf3.Length(), length);
   ASSERT_EQ(0, strncmp(readBuf, "The qu", count));
   rv = seekStream->Tell(&tell);
-  ASSERT_TRUE(NS_SUCCEEDED(rv));
+  ASSERT_NS_SUCCEEDED(rv);
   ASSERT_EQ(tell, int64_t(buf1.Length() + 6));
 }
 
@@ -144,11 +145,11 @@ TEST(MultiplexInputStream, Seek_CUR)
   nsCOMPtr<nsIInputStream> inputStream2;
   nsCOMPtr<nsIInputStream> inputStream3;
   nsresult rv = NS_NewCStringInputStream(getter_AddRefs(inputStream1), buf1);
-  ASSERT_TRUE(NS_SUCCEEDED(rv));
+  ASSERT_NS_SUCCEEDED(rv);
   rv = NS_NewCStringInputStream(getter_AddRefs(inputStream2), buf2);
-  ASSERT_TRUE(NS_SUCCEEDED(rv));
+  ASSERT_NS_SUCCEEDED(rv);
   rv = NS_NewCStringInputStream(getter_AddRefs(inputStream3), buf3);
-  ASSERT_TRUE(NS_SUCCEEDED(rv));
+  ASSERT_NS_SUCCEEDED(rv);
 
   nsCOMPtr<nsIMultiplexInputStream> multiplexStream =
       do_CreateInstance("@mozilla.org/io/multiplex-input-stream;1");
@@ -157,11 +158,11 @@ TEST(MultiplexInputStream, Seek_CUR)
   ASSERT_TRUE(stream);
 
   rv = multiplexStream->AppendStream(inputStream1);
-  ASSERT_TRUE(NS_SUCCEEDED(rv));
+  ASSERT_NS_SUCCEEDED(rv);
   rv = multiplexStream->AppendStream(inputStream2);
-  ASSERT_TRUE(NS_SUCCEEDED(rv));
+  ASSERT_NS_SUCCEEDED(rv);
   rv = multiplexStream->AppendStream(inputStream3);
-  ASSERT_TRUE(NS_SUCCEEDED(rv));
+  ASSERT_NS_SUCCEEDED(rv);
 
   int64_t tell;
   uint64_t length;
@@ -172,54 +173,54 @@ TEST(MultiplexInputStream, Seek_CUR)
 
   // Seek forward in first input stream
   rv = seekStream->Seek(nsISeekableStream::NS_SEEK_CUR, 1);
-  ASSERT_TRUE(NS_SUCCEEDED(rv));
+  ASSERT_NS_SUCCEEDED(rv);
   rv = stream->Available(&length);
-  ASSERT_TRUE(NS_SUCCEEDED(rv));
+  ASSERT_NS_SUCCEEDED(rv);
   ASSERT_EQ((uint64_t)buf1.Length() + buf2.Length() + buf3.Length() - 1,
             length);
   rv = seekStream->Tell(&tell);
-  ASSERT_TRUE(NS_SUCCEEDED(rv));
+  ASSERT_NS_SUCCEEDED(rv);
   ASSERT_EQ(tell, 1);
 
   // Check read is correct
   rv = stream->Read(readBuf, 3, &count);
-  ASSERT_TRUE(NS_SUCCEEDED(rv));
+  ASSERT_NS_SUCCEEDED(rv);
   ASSERT_EQ((uint64_t)3, count);
   rv = stream->Available(&length);
-  ASSERT_TRUE(NS_SUCCEEDED(rv));
+  ASSERT_NS_SUCCEEDED(rv);
   ASSERT_EQ((uint64_t)buf1.Length() + buf2.Length() + buf3.Length() - 4,
             length);
   ASSERT_EQ(0, strncmp(readBuf, "ell", count));
   rv = seekStream->Tell(&tell);
-  ASSERT_TRUE(NS_SUCCEEDED(rv));
+  ASSERT_NS_SUCCEEDED(rv);
   ASSERT_EQ(tell, 4);
 
   // Let's go to the second stream
   rv = seekStream->Seek(nsISeekableStream::NS_SEEK_CUR, 11);
-  ASSERT_TRUE(NS_SUCCEEDED(rv));
+  ASSERT_NS_SUCCEEDED(rv);
   rv = seekStream->Tell(&tell);
-  ASSERT_TRUE(NS_SUCCEEDED(rv));
+  ASSERT_NS_SUCCEEDED(rv);
   ASSERT_EQ(tell, 15);
   rv = stream->Read(readBuf, 3, &count);
-  ASSERT_TRUE(NS_SUCCEEDED(rv));
+  ASSERT_NS_SUCCEEDED(rv);
   ASSERT_EQ((uint64_t)3, count);
   ASSERT_EQ(0, strncmp(readBuf, "qui", count));
   rv = seekStream->Tell(&tell);
-  ASSERT_TRUE(NS_SUCCEEDED(rv));
+  ASSERT_NS_SUCCEEDED(rv);
   ASSERT_EQ(tell, 18);
 
   // Let's go back to the first stream
   rv = seekStream->Seek(nsISeekableStream::NS_SEEK_CUR, -9);
-  ASSERT_TRUE(NS_SUCCEEDED(rv));
+  ASSERT_NS_SUCCEEDED(rv);
   rv = seekStream->Tell(&tell);
-  ASSERT_TRUE(NS_SUCCEEDED(rv));
+  ASSERT_NS_SUCCEEDED(rv);
   ASSERT_EQ(tell, 9);
   rv = stream->Read(readBuf, 3, &count);
-  ASSERT_TRUE(NS_SUCCEEDED(rv));
+  ASSERT_NS_SUCCEEDED(rv);
   ASSERT_EQ((uint64_t)3, count);
   ASSERT_EQ(0, strncmp(readBuf, "ldT", count));
   rv = seekStream->Tell(&tell);
-  ASSERT_TRUE(NS_SUCCEEDED(rv));
+  ASSERT_NS_SUCCEEDED(rv);
   ASSERT_EQ(tell, 12);
 }
 
@@ -236,11 +237,11 @@ TEST(MultiplexInputStream, Seek_END)
   nsCOMPtr<nsIInputStream> inputStream2;
   nsCOMPtr<nsIInputStream> inputStream3;
   nsresult rv = NS_NewCStringInputStream(getter_AddRefs(inputStream1), buf1);
-  ASSERT_TRUE(NS_SUCCEEDED(rv));
+  ASSERT_NS_SUCCEEDED(rv);
   rv = NS_NewCStringInputStream(getter_AddRefs(inputStream2), buf2);
-  ASSERT_TRUE(NS_SUCCEEDED(rv));
+  ASSERT_NS_SUCCEEDED(rv);
   rv = NS_NewCStringInputStream(getter_AddRefs(inputStream3), buf3);
-  ASSERT_TRUE(NS_SUCCEEDED(rv));
+  ASSERT_NS_SUCCEEDED(rv);
 
   nsCOMPtr<nsIMultiplexInputStream> multiplexStream =
       do_CreateInstance("@mozilla.org/io/multiplex-input-stream;1");
@@ -249,11 +250,11 @@ TEST(MultiplexInputStream, Seek_END)
   ASSERT_TRUE(stream);
 
   rv = multiplexStream->AppendStream(inputStream1);
-  ASSERT_TRUE(NS_SUCCEEDED(rv));
+  ASSERT_NS_SUCCEEDED(rv);
   rv = multiplexStream->AppendStream(inputStream2);
-  ASSERT_TRUE(NS_SUCCEEDED(rv));
+  ASSERT_NS_SUCCEEDED(rv);
   rv = multiplexStream->AppendStream(inputStream3);
-  ASSERT_TRUE(NS_SUCCEEDED(rv));
+  ASSERT_NS_SUCCEEDED(rv);
 
   int64_t tell;
   uint64_t length;
@@ -262,26 +263,26 @@ TEST(MultiplexInputStream, Seek_END)
 
   // SEEK_END wants <=0 values
   rv = seekStream->Seek(nsISeekableStream::NS_SEEK_END, 1);
-  ASSERT_TRUE(NS_FAILED(rv));
+  ASSERT_NS_FAILED(rv);
 
   // Let's go to the end.
   rv = seekStream->Seek(nsISeekableStream::NS_SEEK_END, 0);
-  ASSERT_TRUE(NS_SUCCEEDED(rv));
+  ASSERT_NS_SUCCEEDED(rv);
   rv = stream->Available(&length);
-  ASSERT_TRUE(NS_SUCCEEDED(rv));
+  ASSERT_NS_SUCCEEDED(rv);
   ASSERT_EQ((uint64_t)0, length);
   rv = seekStream->Tell(&tell);
-  ASSERT_TRUE(NS_SUCCEEDED(rv));
+  ASSERT_NS_SUCCEEDED(rv);
   ASSERT_EQ(tell, int64_t(buf1.Length() + buf2.Length() + buf3.Length()));
 
   // -1
   rv = seekStream->Seek(nsISeekableStream::NS_SEEK_END, -1);
-  ASSERT_TRUE(NS_SUCCEEDED(rv));
+  ASSERT_NS_SUCCEEDED(rv);
   rv = stream->Available(&length);
-  ASSERT_TRUE(NS_SUCCEEDED(rv));
+  ASSERT_NS_SUCCEEDED(rv);
   ASSERT_EQ((uint64_t)1, length);
   rv = seekStream->Tell(&tell);
-  ASSERT_TRUE(NS_SUCCEEDED(rv));
+  ASSERT_NS_SUCCEEDED(rv);
   ASSERT_EQ(tell, int64_t(buf1.Length() + buf2.Length() + buf3.Length() - 1));
 
   // Almost at the beginning
@@ -290,12 +291,12 @@ TEST(MultiplexInputStream, Seek_END)
   tell -= buf2.Length();
   tell -= buf3.Length();
   rv = seekStream->Seek(nsISeekableStream::NS_SEEK_END, tell);
-  ASSERT_TRUE(NS_SUCCEEDED(rv));
+  ASSERT_NS_SUCCEEDED(rv);
   rv = stream->Available(&length);
-  ASSERT_TRUE(NS_SUCCEEDED(rv));
+  ASSERT_NS_SUCCEEDED(rv);
   ASSERT_EQ(length, buf1.Length() + buf2.Length() + buf3.Length() - 1);
   rv = seekStream->Tell(&tell);
-  ASSERT_TRUE(NS_SUCCEEDED(rv));
+  ASSERT_NS_SUCCEEDED(rv);
   ASSERT_EQ(tell, 1);
 }
 
@@ -645,17 +646,17 @@ TEST(MultiplexInputStream, Bufferable)
   buf1.AssignLiteral("Hello ");
   nsCOMPtr<nsIInputStream> inputStream1;
   nsresult rv = NS_NewCStringInputStream(getter_AddRefs(inputStream1), buf1);
-  ASSERT_TRUE(NS_SUCCEEDED(rv));
+  ASSERT_NS_SUCCEEDED(rv);
 
   nsCString buf2;
   buf2.AssignLiteral("world");
   nsCOMPtr<nsIInputStream> inputStream2 = new NonBufferableStringStream(buf2);
 
   rv = multiplexStream->AppendStream(inputStream1);
-  ASSERT_TRUE(NS_SUCCEEDED(rv));
+  ASSERT_NS_SUCCEEDED(rv);
 
   rv = multiplexStream->AppendStream(inputStream2);
-  ASSERT_TRUE(NS_SUCCEEDED(rv));
+  ASSERT_NS_SUCCEEDED(rv);
 
   nsCOMPtr<nsIInputStream> stream(do_QueryInterface(multiplexStream));
   ASSERT_TRUE(!!stream);
@@ -663,7 +664,7 @@ TEST(MultiplexInputStream, Bufferable)
   char buf3[1024];
   uint32_t size = 0;
   rv = stream->ReadSegments(NS_CopySegmentToBuffer, buf3, sizeof(buf3), &size);
-  ASSERT_TRUE(NS_SUCCEEDED(rv));
+  ASSERT_NS_SUCCEEDED(rv);
 
   ASSERT_EQ(size, buf1.Length() + buf2.Length());
   ASSERT_TRUE(!strncmp(buf3, "Hello world", size));
@@ -682,10 +683,10 @@ TEST(MultiplexInputStream, QILengthInputStream)
   {
     nsCOMPtr<nsIInputStream> inputStream;
     nsresult rv = NS_NewCStringInputStream(getter_AddRefs(inputStream), buf);
-    ASSERT_TRUE(NS_SUCCEEDED(rv));
+    ASSERT_NS_SUCCEEDED(rv);
 
     rv = multiplexStream->AppendStream(inputStream);
-    ASSERT_TRUE(NS_SUCCEEDED(rv));
+    ASSERT_NS_SUCCEEDED(rv);
 
     nsCOMPtr<nsIInputStreamLength> fsis = do_QueryInterface(multiplexStream);
     ASSERT_TRUE(!fsis);
@@ -702,7 +703,7 @@ TEST(MultiplexInputStream, QILengthInputStream)
         new testing::LengthInputStream(buf, true, false);
 
     nsresult rv = multiplexStream->AppendStream(inputStream);
-    ASSERT_TRUE(NS_SUCCEEDED(rv));
+    ASSERT_NS_SUCCEEDED(rv);
 
     nsCOMPtr<nsIInputStreamLength> fsis = do_QueryInterface(multiplexStream);
     ASSERT_TRUE(!!fsis);
@@ -719,7 +720,7 @@ TEST(MultiplexInputStream, QILengthInputStream)
         new testing::LengthInputStream(buf, true, true);
 
     nsresult rv = multiplexStream->AppendStream(inputStream);
-    ASSERT_TRUE(NS_SUCCEEDED(rv));
+    ASSERT_NS_SUCCEEDED(rv);
 
     nsCOMPtr<nsIInputStreamLength> fsis = do_QueryInterface(multiplexStream);
     ASSERT_TRUE(!!fsis);
@@ -741,17 +742,17 @@ TEST(MultiplexInputStream, LengthInputStream)
 
   nsCOMPtr<nsIInputStream> inputStream;
   nsresult rv = NS_NewCStringInputStream(getter_AddRefs(inputStream), buf);
-  ASSERT_TRUE(NS_SUCCEEDED(rv));
+  ASSERT_NS_SUCCEEDED(rv);
 
   rv = multiplexStream->AppendStream(inputStream);
-  ASSERT_TRUE(NS_SUCCEEDED(rv));
+  ASSERT_NS_SUCCEEDED(rv);
 
   // A LengthInputStream, non-async.
   RefPtr<testing::LengthInputStream> lengthStream =
       new testing::LengthInputStream(buf, true, false);
 
   rv = multiplexStream->AppendStream(lengthStream);
-  ASSERT_TRUE(NS_SUCCEEDED(rv));
+  ASSERT_NS_SUCCEEDED(rv);
 
   nsCOMPtr<nsIInputStreamLength> fsis = do_QueryInterface(multiplexStream);
   ASSERT_TRUE(!!fsis);
@@ -759,7 +760,7 @@ TEST(MultiplexInputStream, LengthInputStream)
   // Size is the sum of the 2 streams.
   int64_t length;
   rv = fsis->Length(&length);
-  ASSERT_TRUE(NS_SUCCEEDED(rv));
+  ASSERT_NS_SUCCEEDED(rv);
   ASSERT_EQ(int64_t(buf.Length() * 2), length);
 
   // An async LengthInputStream.
@@ -768,7 +769,7 @@ TEST(MultiplexInputStream, LengthInputStream)
                                      NS_BASE_STREAM_WOULD_BLOCK);
 
   rv = multiplexStream->AppendStream(asyncLengthStream);
-  ASSERT_TRUE(NS_SUCCEEDED(rv));
+  ASSERT_NS_SUCCEEDED(rv);
 
   nsCOMPtr<nsIAsyncInputStreamLength> afsis =
       do_QueryInterface(multiplexStream);
@@ -792,10 +793,10 @@ TEST(MultiplexInputStream, LengthInputStream)
   lengthStream = new testing::LengthInputStream(buf, true, false, NS_OK, true);
 
   rv = multiplexStream->AppendStream(lengthStream);
-  ASSERT_TRUE(NS_SUCCEEDED(rv));
+  ASSERT_NS_SUCCEEDED(rv);
 
   rv = fsis->Length(&length);
-  ASSERT_TRUE(NS_SUCCEEDED(rv));
+  ASSERT_NS_SUCCEEDED(rv);
   ASSERT_EQ(-1, length);
 
   // Another async LengthInputStream.
@@ -803,7 +804,7 @@ TEST(MultiplexInputStream, LengthInputStream)
       buf, true, true, NS_BASE_STREAM_WOULD_BLOCK);
 
   rv = multiplexStream->AppendStream(asyncLengthStream);
-  ASSERT_TRUE(NS_SUCCEEDED(rv));
+  ASSERT_NS_SUCCEEDED(rv);
 
   afsis = do_QueryInterface(multiplexStream);
   ASSERT_TRUE(!!afsis);
@@ -835,36 +836,36 @@ void TestMultiplexStreamReadWhileWaiting(nsIAsyncInputStream* pipeIn,
 
   nsCOMPtr<nsIMultiplexInputStream> multiplexStream =
       do_CreateInstance("@mozilla.org/io/multiplex-input-stream;1");
-  ASSERT_TRUE(NS_SUCCEEDED(multiplexStream->AppendStream(pipeIn)));
+  ASSERT_NS_SUCCEEDED(multiplexStream->AppendStream(pipeIn));
 
   nsCOMPtr<nsIInputStream> stringStream;
   ASSERT_TRUE(NS_SUCCEEDED(
       NS_NewCStringInputStream(getter_AddRefs(stringStream), "xxxx\0"_ns)));
-  ASSERT_TRUE(NS_SUCCEEDED(multiplexStream->AppendStream(stringStream)));
+  ASSERT_NS_SUCCEEDED(multiplexStream->AppendStream(stringStream));
 
   nsCOMPtr<nsIAsyncInputStream> asyncMultiplex =
       do_QueryInterface(multiplexStream);
   ASSERT_TRUE(asyncMultiplex);
 
   RefPtr<testing::InputStreamCallback> cb = new testing::InputStreamCallback();
-  ASSERT_TRUE(NS_SUCCEEDED(asyncMultiplex->AsyncWait(cb, 0, 0, mainThread)));
+  ASSERT_NS_SUCCEEDED(asyncMultiplex->AsyncWait(cb, 0, 0, mainThread));
   EXPECT_FALSE(cb->Called());
 
   NS_ProcessPendingEvents(mainThread);
   EXPECT_FALSE(cb->Called());
 
   uint64_t available;
-  ASSERT_TRUE(NS_SUCCEEDED(asyncMultiplex->Available(&available)));
+  ASSERT_NS_SUCCEEDED(asyncMultiplex->Available(&available));
   EXPECT_EQ(available, 0u);
 
   // Write some data to the pipe, which should wake up the async wait message to
   // be delivered.
   char toWrite[] = "1234";
   uint32_t written;
-  ASSERT_TRUE(NS_SUCCEEDED(pipeOut->Write(toWrite, sizeof(toWrite), &written)));
+  ASSERT_NS_SUCCEEDED(pipeOut->Write(toWrite, sizeof(toWrite), &written));
   EXPECT_EQ(written, sizeof(toWrite));
   EXPECT_FALSE(cb->Called());
-  ASSERT_TRUE(NS_SUCCEEDED(asyncMultiplex->Available(&available)));
+  ASSERT_NS_SUCCEEDED(asyncMultiplex->Available(&available));
   EXPECT_EQ(available, sizeof(toWrite));
 
   // Read that data from the stream
@@ -875,14 +876,14 @@ void TestMultiplexStreamReadWhileWaiting(nsIAsyncInputStream* pipeIn,
   EXPECT_EQ(read, sizeof(toRead));
   EXPECT_STREQ(toRead, toWrite);
   EXPECT_FALSE(cb->Called());
-  ASSERT_TRUE(NS_SUCCEEDED(asyncMultiplex->Available(&available)));
+  ASSERT_NS_SUCCEEDED(asyncMultiplex->Available(&available));
   EXPECT_EQ(available, 0u);
 
   // The multiplex stream will have detected the read and prevented the callback
   // from having been called yet.
   NS_ProcessPendingEvents(mainThread);
   EXPECT_FALSE(cb->Called());
-  ASSERT_TRUE(NS_SUCCEEDED(asyncMultiplex->Available(&available)));
+  ASSERT_NS_SUCCEEDED(asyncMultiplex->Available(&available));
   EXPECT_EQ(available, 0u);
 
   // Write more data and close, then make sure we can read everything else in
@@ -892,11 +893,11 @@ void TestMultiplexStreamReadWhileWaiting(nsIAsyncInputStream* pipeIn,
       NS_SUCCEEDED(pipeOut->Write(toWrite2, sizeof(toWrite2), &written)));
   EXPECT_EQ(written, sizeof(toWrite2));
   EXPECT_FALSE(cb->Called());
-  ASSERT_TRUE(NS_SUCCEEDED(asyncMultiplex->Available(&available)));
+  ASSERT_NS_SUCCEEDED(asyncMultiplex->Available(&available));
   EXPECT_EQ(available, sizeof(toWrite2));
 
-  ASSERT_TRUE(NS_SUCCEEDED(pipeOut->Close()));
-  ASSERT_TRUE(NS_SUCCEEDED(asyncMultiplex->Available(&available)));
+  ASSERT_NS_SUCCEEDED(pipeOut->Close());
+  ASSERT_NS_SUCCEEDED(asyncMultiplex->Available(&available));
   // XXX: Theoretically if the multiplex stream could detect it, we could report
   // `sizeof(toWrite2) + 4` because the stream is complete, but there's no way
   // for the multiplex stream to know.
@@ -911,7 +912,7 @@ void TestMultiplexStreamReadWhileWaiting(nsIAsyncInputStream* pipeIn,
       NS_SUCCEEDED(asyncMultiplex->Read(toRead2, sizeof(toRead2), &read)));
   EXPECT_EQ(read, sizeof(toRead2));
   EXPECT_STREQ(toRead2, toWrite2);
-  ASSERT_TRUE(NS_SUCCEEDED(asyncMultiplex->Available(&available)));
+  ASSERT_NS_SUCCEEDED(asyncMultiplex->Available(&available));
   EXPECT_EQ(available, 5u);
 
   // Read the extra data as well.
@@ -920,7 +921,7 @@ void TestMultiplexStreamReadWhileWaiting(nsIAsyncInputStream* pipeIn,
       NS_SUCCEEDED(asyncMultiplex->Read(extraRead, sizeof(extraRead), &read)));
   EXPECT_EQ(read, sizeof(extraRead));
   EXPECT_STREQ(extraRead, "xxxx");
-  ASSERT_TRUE(NS_SUCCEEDED(asyncMultiplex->Available(&available)));
+  ASSERT_NS_SUCCEEDED(asyncMultiplex->Available(&available));
   EXPECT_EQ(available, 0u);
 }
 

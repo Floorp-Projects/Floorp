@@ -469,6 +469,8 @@ class ContentParent final : public PContentParent,
 
   mozilla::ipc::IPCResult RecvFinishShutdown();
 
+  mozilla::ipc::IPCResult RecvNotifyShutdownSuccess();
+
   void MaybeInvokeDragSession(BrowserParent* aParent);
 
   PContentPermissionRequestParent* AllocPContentPermissionRequestParent(
@@ -1645,6 +1647,8 @@ class ContentParent final : public PContentParent,
 
   static uint32_t sMaxContentProcesses;
   static Maybe<TimeStamp> sLastContentProcessLaunch;
+
+  bool mIsNotifiedShutdownSuccess = false;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(ContentParent, NS_CONTENTPARENT_IID)

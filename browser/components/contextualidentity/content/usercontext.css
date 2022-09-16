@@ -121,10 +121,6 @@
   margin: -3px 2px 0;
 }
 
-.userContext-icon-inprefs {
-  margin-inline: 4px 10px;
-}
-
 .userContext-icon,
 .subviewbutton[usercontextid] > .toolbarbutton-icon,
 #userContext-indicator {

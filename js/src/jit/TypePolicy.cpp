@@ -827,8 +827,8 @@ bool CallPolicy::adjustInputs(TempAllocator& alloc, MInstruction* ins) const {
   return true;
 }
 
-bool CallSetElementPolicy::adjustInputs(TempAllocator& alloc,
-                                        MInstruction* ins) const {
+bool MegamorphicSetElementPolicy::adjustInputs(TempAllocator& alloc,
+                                               MInstruction* ins) const {
   // The first operand should be an object.
   if (!SingleObjectPolicy::staticAdjustInputs(alloc, ins)) {
     return false;
@@ -989,26 +989,26 @@ bool ClampPolicy::adjustInputs(TempAllocator& alloc, MInstruction* ins) const {
 }
 
 // Lists of all TypePolicy specializations which are used by MIR Instructions.
-#define TYPE_POLICY_LIST(_)     \
-  _(AllDoublePolicy)            \
-  _(ArithPolicy)                \
-  _(BigIntArithPolicy)          \
-  _(BitwisePolicy)              \
-  _(BoxInputsPolicy)            \
-  _(CallPolicy)                 \
-  _(CallSetElementPolicy)       \
-  _(ClampPolicy)                \
-  _(ComparePolicy)              \
-  _(PowPolicy)                  \
-  _(SignPolicy)                 \
-  _(StoreDataViewElementPolicy) \
-  _(StoreTypedArrayHolePolicy)  \
-  _(StoreUnboxedScalarPolicy)   \
-  _(TestPolicy)                 \
-  _(ToDoublePolicy)             \
-  _(ToInt32Policy)              \
-  _(ToBigIntPolicy)             \
-  _(ToStringPolicy)             \
+#define TYPE_POLICY_LIST(_)      \
+  _(AllDoublePolicy)             \
+  _(ArithPolicy)                 \
+  _(BigIntArithPolicy)           \
+  _(BitwisePolicy)               \
+  _(BoxInputsPolicy)             \
+  _(CallPolicy)                  \
+  _(MegamorphicSetElementPolicy) \
+  _(ClampPolicy)                 \
+  _(ComparePolicy)               \
+  _(PowPolicy)                   \
+  _(SignPolicy)                  \
+  _(StoreDataViewElementPolicy)  \
+  _(StoreTypedArrayHolePolicy)   \
+  _(StoreUnboxedScalarPolicy)    \
+  _(TestPolicy)                  \
+  _(ToDoublePolicy)              \
+  _(ToInt32Policy)               \
+  _(ToBigIntPolicy)              \
+  _(ToStringPolicy)              \
   _(ToInt64Policy)
 
 #define TEMPLATE_TYPE_POLICY_LIST(_)                                          \

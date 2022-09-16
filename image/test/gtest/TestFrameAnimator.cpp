@@ -61,13 +61,13 @@ static void WithFrameAnimatorDecode(const ImageTestCase& aTestCase,
   // Figure out how much data we have.
   uint64_t length;
   nsresult rv = inputStream->Available(&length);
-  ASSERT_TRUE(NS_SUCCEEDED(rv));
+  ASSERT_NS_SUCCEEDED(rv);
 
   // Write the data into a SourceBuffer.
   NotNull<RefPtr<SourceBuffer>> sourceBuffer = WrapNotNull(new SourceBuffer());
   sourceBuffer->ExpectLength(length);
   rv = sourceBuffer->AppendFromInputStream(inputStream, length);
-  ASSERT_TRUE(NS_SUCCEEDED(rv));
+  ASSERT_NS_SUCCEEDED(rv);
   sourceBuffer->Complete(NS_OK);
 
   // Create a metadata decoder first, because otherwise RasterImage will get

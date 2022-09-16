@@ -7,10 +7,6 @@
 @namespace html "http://www.w3.org/1999/xhtml";
 @namespace xul "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 
-xul|menulist::part(dropmarker) {
-  margin-block: 1px;
-}
-
 xul|checkbox,
 xul|radio {
   padding-inline-start: 0;
@@ -19,10 +15,6 @@ xul|radio {
 /* Override menulist.css */
 xul|menulist[disabled="true"] {
   background-color: var(--in-content-button-background);
-}
-
-xul|menulist:-moz-focusring > xul|*.menulist-label-box {
-  outline: none !important;
 }
 
 html|button {

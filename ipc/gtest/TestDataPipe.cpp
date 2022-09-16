@@ -7,6 +7,7 @@
 #include "chrome/common/ipc_message.h"
 #include "gtest/gtest.h"
 
+#include "mozilla/gtest/MozAssertions.h"
 #include "mozilla/ipc/DataPipe.h"
 #include "nsIAsyncInputStream.h"
 #include "nsIAsyncOutputStream.h"
@@ -94,7 +95,7 @@ void ConsumeAndValidateStream(nsIInputStream* aStream,
                               const nsACString& aExpectedData) {
   nsAutoCString outputData;
   nsresult rv = NS_ConsumeStream(aStream, UINT32_MAX, outputData);
-  ASSERT_TRUE(NS_SUCCEEDED(rv));
+  ASSERT_NS_SUCCEEDED(rv);
   ASSERT_EQ(aExpectedData.Length(), outputData.Length());
   ASSERT_TRUE(aExpectedData.Equals(outputData));
 }
@@ -108,7 +109,7 @@ TEST(DataPipe, SegmentedReadWrite)
 
   nsresult rv =
       NewDataPipe(1024, getter_AddRefs(writer), getter_AddRefs(reader));
-  ASSERT_TRUE(NS_SUCCEEDED(rv));
+  ASSERT_NS_SUCCEEDED(rv);
 
   nsCString inputData1;
   CreateData(512, inputData1);
@@ -116,7 +117,7 @@ TEST(DataPipe, SegmentedReadWrite)
   uint32_t numWritten = 0;
   rv = writer->Write(inputData1.BeginReading(), inputData1.Length(),
                      &numWritten);
-  ASSERT_TRUE(NS_SUCCEEDED(rv));
+  ASSERT_NS_SUCCEEDED(rv);
   EXPECT_EQ(numWritten, 512u);
 
   uint64_t available = 0;
@@ -129,7 +130,7 @@ TEST(DataPipe, SegmentedReadWrite)
 
   rv = writer->Write(inputData2.BeginReading(), inputData2.Length(),
                      &numWritten);
-  ASSERT_TRUE(NS_SUCCEEDED(rv));
+  ASSERT_NS_SUCCEEDED(rv);
   EXPECT_EQ(numWritten, 1024u);
 
   rv = reader->Available(&available);
@@ -144,7 +145,7 @@ TEST(DataPipe, SegmentedPartialRead)
 
   nsresult rv =
       NewDataPipe(1024, getter_AddRefs(writer), getter_AddRefs(reader));
-  ASSERT_TRUE(NS_SUCCEEDED(rv));
+  ASSERT_NS_SUCCEEDED(rv);
 
   nsCString inputData1;
   CreateData(512, inputData1);
@@ -152,7 +153,7 @@ TEST(DataPipe, SegmentedPartialRead)
   uint32_t numWritten = 0;
   rv = writer->Write(inputData1.BeginReading(), inputData1.Length(),
                      &numWritten);
-  ASSERT_TRUE(NS_SUCCEEDED(rv));
+  ASSERT_NS_SUCCEEDED(rv);
   EXPECT_EQ(numWritten, 512u);
 
   uint64_t available = 0;
@@ -165,7 +166,7 @@ TEST(DataPipe, SegmentedPartialRead)
 
   rv = writer->Write(inputData2.BeginReading(), inputData2.Length(),
                      &numWritten);
-  ASSERT_TRUE(NS_SUCCEEDED(rv));
+  ASSERT_NS_SUCCEEDED(rv);
   EXPECT_EQ(numWritten, 1024u);
 
   rv = reader->Available(&available);
@@ -173,7 +174,7 @@ TEST(DataPipe, SegmentedPartialRead)
 
   nsAutoCString outputData;
   rv = NS_ReadInputStreamToString(reader, outputData, 768);
-  ASSERT_TRUE(NS_SUCCEEDED(rv));
+  ASSERT_NS_SUCCEEDED(rv);
   ASSERT_EQ(768u, outputData.Length());
   ASSERT_TRUE(Substring(inputData2, 0, 768).Equals(outputData));
 
@@ -182,7 +183,7 @@ TEST(DataPipe, SegmentedPartialRead)
 
   nsAutoCString outputData2;
   rv = NS_ReadInputStreamToString(reader, outputData2, 256);
-  ASSERT_TRUE(NS_SUCCEEDED(rv));
+  ASSERT_NS_SUCCEEDED(rv);
   ASSERT_EQ(256u, outputData2.Length());
   ASSERT_TRUE(Substring(inputData2, 768).Equals(outputData2));
 }
@@ -196,14 +197,14 @@ TEST(DataPipe, Write_AsyncWait)
 
   nsresult rv =
       NewDataPipe(segmentSize, getter_AddRefs(writer), getter_AddRefs(reader));
-  ASSERT_TRUE(NS_SUCCEEDED(rv));
+  ASSERT_NS_SUCCEEDED(rv);
 
   nsCString inputData;
   CreateData(segmentSize, inputData);
 
   uint32_t numWritten = 0;
   rv = writer->Write(inputData.BeginReading(), inputData.Length(), &numWritten);
-  ASSERT_TRUE(NS_SUCCEEDED(rv));
+  ASSERT_NS_SUCCEEDED(rv);
   EXPECT_EQ(numWritten, segmentSize);
 
   rv = writer->Write(inputData.BeginReading(), inputData.Length(), &numWritten);
@@ -212,7 +213,7 @@ TEST(DataPipe, Write_AsyncWait)
   RefPtr<OutputStreamCallback> cb = new OutputStreamCallback();
 
   rv = writer->AsyncWait(cb, 0, 0, GetCurrentSerialEventTarget());
-  ASSERT_TRUE(NS_SUCCEEDED(rv));
+  ASSERT_NS_SUCCEEDED(rv);
 
   NS_ProcessPendingEvents(nullptr);
 
@@ -236,7 +237,7 @@ TEST(DataPipe, Read_AsyncWait)
 
   nsresult rv =
       NewDataPipe(segmentSize, getter_AddRefs(writer), getter_AddRefs(reader));
-  ASSERT_TRUE(NS_SUCCEEDED(rv));
+  ASSERT_NS_SUCCEEDED(rv);
 
   nsCString inputData;
   CreateData(segmentSize, inputData);
@@ -244,7 +245,7 @@ TEST(DataPipe, Read_AsyncWait)
   RefPtr<InputStreamCallback> cb = new InputStreamCallback();
 
   rv = reader->AsyncWait(cb, 0, 0, GetCurrentSerialEventTarget());
-  ASSERT_TRUE(NS_SUCCEEDED(rv));
+  ASSERT_NS_SUCCEEDED(rv);
 
   NS_ProcessPendingEvents(nullptr);
 
@@ -252,7 +253,7 @@ TEST(DataPipe, Read_AsyncWait)
 
   uint32_t numWritten = 0;
   rv = writer->Write(inputData.BeginReading(), inputData.Length(), &numWritten);
-  ASSERT_TRUE(NS_SUCCEEDED(rv));
+  ASSERT_NS_SUCCEEDED(rv);
 
   ASSERT_FALSE(cb->Called());
 
@@ -272,14 +273,14 @@ TEST(DataPipe, Write_AsyncWait_Cancel)
 
   nsresult rv =
       NewDataPipe(segmentSize, getter_AddRefs(writer), getter_AddRefs(reader));
-  ASSERT_TRUE(NS_SUCCEEDED(rv));
+  ASSERT_NS_SUCCEEDED(rv);
 
   nsCString inputData;
   CreateData(segmentSize, inputData);
 
   uint32_t numWritten = 0;
   rv = writer->Write(inputData.BeginReading(), inputData.Length(), &numWritten);
-  ASSERT_TRUE(NS_SUCCEEDED(rv));
+  ASSERT_NS_SUCCEEDED(rv);
   EXPECT_EQ(numWritten, segmentSize);
 
   rv = writer->Write(inputData.BeginReading(), inputData.Length(), &numWritten);
@@ -289,9 +290,9 @@ TEST(DataPipe, Write_AsyncWait_Cancel)
 
   // Register a callback and immediately cancel it.
   rv = writer->AsyncWait(cb, 0, 0, GetCurrentSerialEventTarget());
-  ASSERT_TRUE(NS_SUCCEEDED(rv));
+  ASSERT_NS_SUCCEEDED(rv);
   rv = writer->AsyncWait(nullptr, 0, 0, nullptr);
-  ASSERT_TRUE(NS_SUCCEEDED(rv));
+  ASSERT_NS_SUCCEEDED(rv);
 
   // Even after consuming the stream and processing pending events, the callback
   // shouldn't be called as it was cancelled.
@@ -309,7 +310,7 @@ TEST(DataPipe, Read_AsyncWait_Cancel)
 
   nsresult rv =
       NewDataPipe(segmentSize, getter_AddRefs(writer), getter_AddRefs(reader));
-  ASSERT_TRUE(NS_SUCCEEDED(rv));
+  ASSERT_NS_SUCCEEDED(rv);
 
   nsCString inputData;
   CreateData(segmentSize, inputData);
@@ -318,15 +319,15 @@ TEST(DataPipe, Read_AsyncWait_Cancel)
 
   // Register a callback and immediately cancel it.
   rv = reader->AsyncWait(cb, 0, 0, GetCurrentSerialEventTarget());
-  ASSERT_TRUE(NS_SUCCEEDED(rv));
+  ASSERT_NS_SUCCEEDED(rv);
 
   rv = reader->AsyncWait(nullptr, 0, 0, nullptr);
-  ASSERT_TRUE(NS_SUCCEEDED(rv));
+  ASSERT_NS_SUCCEEDED(rv);
 
   // Write data into the pipe to make the callback become ready.
   uint32_t numWritten = 0;
   rv = writer->Write(inputData.BeginReading(), inputData.Length(), &numWritten);
-  ASSERT_TRUE(NS_SUCCEEDED(rv));
+  ASSERT_NS_SUCCEEDED(rv);
 
   // Even after processing pending events, the callback shouldn't be called as
   // it was cancelled.
@@ -342,7 +343,7 @@ TEST(DataPipe, SerializeReader)
   RefPtr<DataPipeSender> writer;
   nsresult rv =
       NewDataPipe(1024, getter_AddRefs(writer), getter_AddRefs(reader));
-  ASSERT_TRUE(NS_SUCCEEDED(rv));
+  ASSERT_NS_SUCCEEDED(rv);
 
   IPC::Message msg(MSG_ROUTING_NONE, 0);
   IPC::MessageWriter msgWriter(msg);
@@ -350,14 +351,14 @@ TEST(DataPipe, SerializeReader)
 
   uint64_t available = 0;
   rv = reader->Available(&available);
-  ASSERT_TRUE(NS_FAILED(rv));
+  ASSERT_NS_FAILED(rv);
 
   nsCString inputData;
   CreateData(512, inputData);
 
   uint32_t numWritten = 0;
   rv = writer->Write(inputData.BeginReading(), inputData.Length(), &numWritten);
-  ASSERT_TRUE(NS_SUCCEEDED(rv));
+  ASSERT_NS_SUCCEEDED(rv);
 
   RefPtr<DataPipeReceiver> reader2;
   IPC::MessageReader msgReader(msg);
@@ -365,7 +366,7 @@ TEST(DataPipe, SerializeReader)
   ASSERT_TRUE(reader2);
 
   rv = reader2->Available(&available);
-  ASSERT_TRUE(NS_SUCCEEDED(rv));
+  ASSERT_NS_SUCCEEDED(rv);
   ASSERT_EQ(available, 512u);
   ConsumeAndValidateStream(reader2, inputData);
 }

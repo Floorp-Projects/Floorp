@@ -1,0 +1,38 @@
+{
+    "agg_param": null,
+    "agg_result": [
+        1
+    ],
+    "agg_shares": [
+        "ae5483343eb35a52",
+        "51ab7ccac14ca5b0"
+    ],
+    "prep": [
+        {
+            "input_shares": [
+                "ae5483343eb35a52fcb36a62271a7ddb47f09d0ea2c6613807f84ac2e16814c82bcabdc9db5080fdf4f4f778734644fc",
+                "0101010101010101010101010101010101010101010101010101010101010101"
+            ],
+            "measurement": 1,
+            "nonce": "01010101010101010101010101010101",
+            "out_shares": [
+                [
+                    12561809521056635474
+                ],
+                [
+                    5884934548357948848
+                ]
+            ],
+            "prep_messages": [
+                ""
+            ],
+            "prep_shares": [
+                [
+                    "22ce013d3aaa7e7574ed01fe1d074cd845dfbbbc5901cabd487d4e2e228274cc",
+                    "dd31fec1c555818c51ab7ccac14ca5b00aae1c33d835c76dfa9406011a92a8e9"
+                ]
+            ]
+        }
+    ],
+    "verify_key": "01010101010101010101010101010101"
+}

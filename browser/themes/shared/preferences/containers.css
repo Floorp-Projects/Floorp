@@ -43,6 +43,12 @@
   white-space: nowrap;
 }
 
+.userContext-icon-inprefs {
+  margin-inline: 4px 10px;
+  width: 24px;
+  height: 24px;
+}
+
 #containersView richlistitem:last-of-type {
   border-block-end: 0;
 }

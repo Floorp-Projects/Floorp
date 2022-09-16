@@ -2203,7 +2203,7 @@ nsStyleDisplay::nsStyleDisplay(const Document& aDocument)
       mOriginalDisplay(StyleDisplay::Inline),
       mContain(StyleContain::NONE),
       mContentVisibility(StyleContentVisibility::Visible),
-      mContainerType(StyleContainerType::NONE),
+      mContainerType(StyleContainerType::NORMAL),
       mAppearance(StyleAppearance::None),
       mDefaultAppearance(StyleAppearance::None),
       mPosition(StylePositionProperty::Static),
@@ -3605,7 +3605,7 @@ static nscoord Resolve(const StyleContainIntrinsicSize& aSize,
     Maybe<float> lastSize = aAxis == eLogicalAxisBlock
                                 ? element->GetLastRememberedBSize()
                                 : element->GetLastRememberedISize();
-    if (lastSize && aFrame.IsContentHidden()) {
+    if (lastSize && aFrame.HidesContent()) {
       return CSSPixel::ToAppUnits(*lastSize);
     }
   }

@@ -8,6 +8,7 @@
 #include <stdio.h>
 #include "nsISupports.h"
 #include "nsCOMPtr.h"
+#include "mozilla/gtest/MozAssertions.h"
 #include "mozilla/RefPtr.h"
 
 // unknwn.h is needed to build with WIN32_LEAN_AND_MEAN
@@ -74,7 +75,7 @@ TEST(TestCOM, WindowsInterop)
   RefPtr<nsTestCom> t = new nsTestCom();
   IUnknown* iUnknown = nullptr;
   nsresult rv = t->QueryInterface(NS_GET_IID(nsISupports), (void**)&iUnknown);
-  ASSERT_TRUE(NS_SUCCEEDED(rv));
+  ASSERT_NS_SUCCEEDED(rv);
   ASSERT_TRUE(iUnknown);
 
   // Test we can QI an IUnknown to nsITestCom.
@@ -86,7 +87,7 @@ TEST(TestCOM, WindowsInterop)
 
   // Make sure we can call our test function (and the pointer is valid).
   rv = iTestCom->Test();
-  ASSERT_TRUE(NS_SUCCEEDED(rv));
+  ASSERT_NS_SUCCEEDED(rv);
 
   iUnknown->Release();
   iTestCom = nullptr;

@@ -6,6 +6,7 @@
 
 #include "gtest/gtest.h"
 #include "Helpers.h"
+#include "mozilla/gtest/MozAssertions.h"
 #include "nsICloneableInputStream.h"
 #include "nsStringStream.h"
 #include "nsTArray.h"
@@ -24,7 +25,7 @@ static void TestStringStream(uint32_t aNumBytes) {
 
   nsCOMPtr<nsIInputStream> stream;
   nsresult rv = NS_NewCStringInputStream(getter_AddRefs(stream), inputString);
-  ASSERT_TRUE(NS_SUCCEEDED(rv));
+  ASSERT_NS_SUCCEEDED(rv);
 
   testing::ConsumeAndValidateStream(stream, inputString);
 }
@@ -36,7 +37,7 @@ static void TestStringStreamClone(uint32_t aNumBytes) {
 
   nsCOMPtr<nsIInputStream> stream;
   nsresult rv = NS_NewCStringInputStream(getter_AddRefs(stream), inputString);
-  ASSERT_TRUE(NS_SUCCEEDED(rv));
+  ASSERT_NS_SUCCEEDED(rv);
 
   nsCOMPtr<nsICloneableInputStream> cloneable = do_QueryInterface(stream);
   ASSERT_TRUE(cloneable != nullptr);
@@ -85,15 +86,15 @@ TEST(StringStream, CancelInReadSegments)
   nsCOMPtr<nsIInputStream> stream;
   nsresult rv = NS_NewByteInputStream(
       getter_AddRefs(stream), mozilla::Span(buffer, 5), NS_ASSIGNMENT_ADOPT);
-  ASSERT_TRUE(NS_SUCCEEDED(rv));
+  ASSERT_NS_SUCCEEDED(rv);
 
   char buf[100];
   uint32_t count = 0;
   uint64_t available = 0;
   rv = stream->Available(&available);
-  ASSERT_TRUE(NS_SUCCEEDED(rv));
+  ASSERT_NS_SUCCEEDED(rv);
   rv = stream->ReadSegments(CloseStreamThenRead, buf, available, &count);
-  ASSERT_TRUE(NS_SUCCEEDED(rv));
+  ASSERT_NS_SUCCEEDED(rv);
   ASSERT_TRUE(count == 5);
   ASSERT_TRUE(!strcmp(buf, "test"));
 }

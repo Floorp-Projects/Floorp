@@ -98,12 +98,24 @@ class ToolboxToolbar extends Component {
       // undefined means that the option is not relevant in this context
       // (i.e. we're not in a browser toolbox).
       disableAutohide: PropTypes.bool,
+      // Are we displaying the window always on top?
+      //
+      // This is a tri-state value that may be true/false or undefined where
+      // undefined means that the option is not relevant in this context
+      // (i.e. we're not in a local web extension toolbox).
+      alwaysOnTop: PropTypes.bool,
+      // Is the toolbox currently focused?
+      //
+      // This will only be defined when alwaysOnTop is true.
+      focusedState: PropTypes.bool,
       // Function to turn the options panel on / off.
       toggleOptions: PropTypes.func.isRequired,
       // Function to turn the split console on / off.
       toggleSplitConsole: PropTypes.func,
       // Function to turn the disable pop-up autohide behavior on / off.
       toggleNoAutohide: PropTypes.func,
+      // Function to turn the always on top behavior on / off.
+      toggleAlwaysOnTop: PropTypes.func,
       // Function to completely close the toolbox.
       closeToolbox: PropTypes.func,
       // Keep a record of what button is focused.
@@ -409,6 +421,8 @@ class ToolboxToolbar extends Component {
    *        Function to turn the split console on / off.
    * @param {Function} props.toggleNoAutohide
    *        Function to turn the disable pop-up autohide behavior on / off.
+   * @param {Function} props.toggleAlwaysOnTop
+   *        Function to turn the always on top behavior on / off.
    * @param {Function} props.closeToolbox
    *        Completely close the toolbox.
    * @param {Function} props.focusButton
@@ -501,7 +515,14 @@ class ToolboxToolbar extends Component {
       : div({ className: classnames.join(" ") });
 
     const debugTargetInfo = debugTargetData
-      ? DebugTargetInfo({ debugTargetData, L10N, toolbox })
+      ? DebugTargetInfo({
+          alwaysOnTop: this.props.alwaysOnTop,
+          focusedState: this.props.focusedState,
+          toggleAlwaysOnTop: this.props.toggleAlwaysOnTop,
+          debugTargetData,
+          L10N,
+          toolbox,
+        })
       : null;
 
     // Display the toolbar in the MBT and about:debugging MBT if we have server support for it.

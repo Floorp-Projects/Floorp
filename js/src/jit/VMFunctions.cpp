@@ -1686,7 +1686,8 @@ bool GetNativeDataPropertyPure(JSContext* cx, JSObject* obj, PropertyName* name,
 }
 
 static MOZ_ALWAYS_INLINE bool ValueToAtomOrSymbolPure(JSContext* cx,
-                                                      Value& idVal, jsid* id) {
+                                                      const Value& idVal,
+                                                      jsid* id) {
   if (MOZ_LIKELY(idVal.isString())) {
     JSString* s = idVal.toString();
     JSAtom* atom;
@@ -1943,6 +1944,95 @@ bool HasNativeElementPure(JSContext* cx, NativeObject* obj, int32_t index,
 
   vp[0].setBoolean(false);
   return true;
+}
+
+// Fast path for setting/adding a plain object property. This is the common case
+// for megamorphic SetProp/SetElem.
+static bool TryAddOrSetPlainObjectProperty(JSContext* cx,
+                                           Handle<PlainObject*> obj,
+                                           HandleValue keyVal,
+                                           HandleValue value, bool* optimized) {
+  MOZ_ASSERT(!*optimized);
+
+  // The key must be a string or symbol so that we don't have to handle dense
+  // elements here.
+  PropertyKey key;
+  if (!ValueToAtomOrSymbolPure(cx, keyVal, &key)) {
+    return true;
+  }
+
+  // Fast path for changing a data property.
+  uint32_t index;
+  if (PropMap* map = obj->shape()->lookup(cx, key, &index)) {
+    PropertyInfo prop = map->getPropertyInfo(index);
+    if (!prop.isDataProperty() || !prop.writable()) {
+      return true;
+    }
+    obj->setSlot(prop.slot(), value);
+    *optimized = true;
+    return true;
+  }
+
+  // Don't support "__proto__". This lets us take advantage of the
+  // hasNonWritableOrAccessorPropExclProto optimization below.
+  if (MOZ_UNLIKELY(!obj->isExtensible() || key.isAtom(cx->names().proto))) {
+    return true;
+  }
+
+  // Ensure the proto chain contains only plain objects. Deoptimize for accessor
+  // properties and non-writable data properties (we can't shadow non-writable
+  // properties).
+  JSObject* proto = obj->staticPrototype();
+  while (proto) {
+    if (!proto->is<PlainObject>()) {
+      return true;
+    }
+    if (proto->as<PlainObject>().hasNonWritableOrAccessorPropExclProto()) {
+      uint32_t index;
+      if (PropMap* map = proto->shape()->lookup(cx, key, &index)) {
+        PropertyInfo prop = map->getPropertyInfo(index);
+        if (!prop.isDataProperty() || !prop.writable()) {
+          return true;
+        }
+        break;
+      }
+    }
+    proto = proto->as<PlainObject>().staticPrototype();
+  }
+
+#ifdef DEBUG
+  // At this point either the property is missing or it's a writable data
+  // property on the proto chain that we can shadow.
+  {
+    NativeObject* holder = nullptr;
+    PropertyResult prop;
+    MOZ_ASSERT(LookupPropertyPure(cx, obj, key, &holder, &prop));
+    MOZ_ASSERT(obj != holder);
+    MOZ_ASSERT_IF(prop.isFound(), prop.isNativeProperty() &&
+                                      prop.propertyInfo().isDataProperty() &&
+                                      prop.propertyInfo().writable());
+  }
+#endif
+
+  *optimized = true;
+  Rooted<PropertyKey> keyRoot(cx, key);
+  return AddDataPropertyToPlainObject(cx, obj, keyRoot, value);
+}
+
+bool SetElementMegamorphic(JSContext* cx, HandleObject obj, HandleValue index,
+                           HandleValue value, HandleValue receiver,
+                           bool strict) {
+  if (obj->is<PlainObject>()) {
+    bool optimized = false;
+    if (!TryAddOrSetPlainObjectProperty(cx, obj.as<PlainObject>(), index, value,
+                                        &optimized)) {
+      return false;
+    }
+    if (optimized) {
+      return true;
+    }
+  }
+  return SetObjectElementWithReceiver(cx, obj, index, value, receiver, strict);
 }
 
 void HandleCodeCoverageAtPC(BaselineFrame* frame, jsbytecode* pc) {

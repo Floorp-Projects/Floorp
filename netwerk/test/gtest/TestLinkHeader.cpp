@@ -5,6 +5,7 @@
 #include "gtest/gtest-param-test.h"
 #include "gtest/gtest.h"
 
+#include "mozilla/gtest/MozAssertions.h"
 #include "nsNetUtil.h"
 
 using namespace mozilla::net;
@@ -293,7 +294,7 @@ TEST_P(AnchorTest, Anchor) {
   LinkHeader linkHeader = LinkHeaderFromHrefAndAnchor(test.href, test.anchor);
 
   nsCOMPtr<nsIURI> baseURI;
-  ASSERT_TRUE(NS_SUCCEEDED(NS_NewURI(getter_AddRefs(baseURI), test.baseURI)));
+  ASSERT_NS_SUCCEEDED(NS_NewURI(getter_AddRefs(baseURI), test.baseURI));
 
   nsCOMPtr<nsIURI> resolved;
   ASSERT_TRUE(NS_SUCCEEDED(

@@ -5,6 +5,7 @@
 
 #include "gtest/gtest.h"
 #include "mozilla/Base64.h"
+#include "mozilla/gtest/MozAssertions.h"
 #include "nsIInputStream.h"
 
 namespace mozilla {
@@ -85,7 +86,7 @@ TEST(TestBase64Stream, Run)
 
     nsAutoString encodedData;
     nsresult rv = Base64EncodeInputStream(ts, encodedData, input.Length());
-    ASSERT_TRUE(NS_SUCCEEDED(rv));
+    ASSERT_NS_SUCCEEDED(rv);
 
     EXPECT_TRUE(encodedData.EqualsLiteral("SGVsbG8gV29ybGQh"));
   }

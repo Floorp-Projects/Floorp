@@ -12,6 +12,7 @@
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/dom/quota/QuotaManager.h"
 #include "mozilla/dom/quota/QuotaManagerService.h"
+#include "mozilla/gtest/MozAssertions.h"
 #include "nsIPrefBranch.h"
 #include "nsIPrefService.h"
 #include "nsIQuotaCallbacks.h"
@@ -61,7 +62,7 @@ class TestFileSystemDataManager : public ::testing::Test {
     ASSERT_TRUE(observer);
 
     nsresult rv = observer->Observe(nullptr, "profile-do-change", nullptr);
-    ASSERT_TRUE(NS_SUCCEEDED(rv));
+    ASSERT_NS_SUCCEEDED(rv);
 
     AutoJSAPI jsapi;
 
@@ -79,14 +80,14 @@ class TestFileSystemDataManager : public ::testing::Test {
 
     nsCOMPtr<nsIQuotaRequest> request;
     rv = qms->StorageInitialized(getter_AddRefs(request));
-    ASSERT_TRUE(NS_SUCCEEDED(rv));
+    ASSERT_NS_SUCCEEDED(rv);
 
     prefs->SetBoolPref("dom.quotaManager.testing", false);
 
     RefPtr<RequestResolver> resolver = new RequestResolver();
 
     rv = request->SetCallback(resolver);
-    ASSERT_TRUE(NS_SUCCEEDED(rv));
+    ASSERT_NS_SUCCEEDED(rv);
 
     SpinEventLoopUntil("Promise is fulfilled"_ns,
                        [&resolver]() { return resolver->Done(); });
@@ -105,7 +106,7 @@ class TestFileSystemDataManager : public ::testing::Test {
 
     nsresult rv =
         observer->Observe(nullptr, "profile-before-change-qm", nullptr);
-    ASSERT_TRUE(NS_SUCCEEDED(rv));
+    ASSERT_NS_SUCCEEDED(rv);
 
     bool done = false;
 

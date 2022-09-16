@@ -13,6 +13,7 @@
 #include "nsThreadUtils.h"
 
 #include "gtest/gtest.h"
+#include "mozilla/gtest/MozAssertions.h"
 
 using namespace mozilla;
 
@@ -166,7 +167,7 @@ TEST(Atoms, ConcurrentAccessing)
   for (size_t i = 0; i < kThreadCount; i++) {
     nsresult rv = NS_NewNamedThread("Atom Test", getter_AddRefs(threads[i]),
                                     new nsAtomRunner);
-    EXPECT_TRUE(NS_SUCCEEDED(rv));
+    EXPECT_NS_SUCCEEDED(rv);
   }
   for (size_t i = 0; i < kThreadCount; i++) {
     threads[i]->Shutdown();

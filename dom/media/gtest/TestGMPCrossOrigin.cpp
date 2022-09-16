@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "gtest/gtest.h"
+#include "mozilla/gtest/MozAssertions.h"
 #include "mozilla/StaticPtr.h"
 #include "GMPTestMonitor.h"
 #include "GMPVideoDecoderProxy.h"
@@ -103,7 +104,7 @@ class RunTestGMPCrossOrigin : public Base {
     UniquePtr<typename Base::GMPCallbackType> callback(
         new Step2(Base::mMonitor, aGMP, mShouldBeEqual));
     nsresult rv = Base::Get(mOrigin2, std::move(callback));
-    EXPECT_TRUE(NS_SUCCEEDED(rv));
+    EXPECT_NS_SUCCEEDED(rv);
     if (NS_FAILED(rv)) {
       Base::mMonitor.SetFinished();
     }
@@ -114,7 +115,7 @@ class RunTestGMPCrossOrigin : public Base {
     UniquePtr<typename Base::GMPCallbackType> callback(
         new RunTestGMPCrossOrigin<Base>(aMonitor, aOrigin1, aOrigin2));
     nsresult rv = Base::Get(aOrigin1, std::move(callback));
-    EXPECT_TRUE(NS_SUCCEEDED(rv));
+    EXPECT_NS_SUCCEEDED(rv);
     if (NS_FAILED(rv)) {
       aMonitor.SetFinished();
     }
@@ -181,7 +182,7 @@ void GMPTestRunner::DoTest(
   RefPtr<GeckoMediaPluginService> service =
       GeckoMediaPluginService::GetGeckoMediaPluginService();
   nsCOMPtr<nsIThread> thread;
-  EXPECT_TRUE(NS_SUCCEEDED(service->GetThread(getter_AddRefs(thread))));
+  EXPECT_NS_SUCCEEDED(service->GetThread(getter_AddRefs(thread)));
 
   GMPTestMonitor monitor;
   thread->Dispatch(NewRunnableMethod<GMPTestMonitor&>(

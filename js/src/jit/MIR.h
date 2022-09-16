@@ -7808,17 +7808,17 @@ class MSetPropertyCache : public MTernaryInstruction,
   bool strict() const { return strict_; }
 };
 
-class MCallSetElement : public MTernaryInstruction,
-                        public CallSetElementPolicy::Data {
+class MMegamorphicSetElement : public MTernaryInstruction,
+                               public MegamorphicSetElementPolicy::Data {
   bool strict_;
 
-  MCallSetElement(MDefinition* object, MDefinition* index, MDefinition* value,
-                  bool strict)
+  MMegamorphicSetElement(MDefinition* object, MDefinition* index,
+                         MDefinition* value, bool strict)
       : MTernaryInstruction(classOpcode, object, index, value),
         strict_(strict) {}
 
  public:
-  INSTRUCTION_HEADER(CallSetElement)
+  INSTRUCTION_HEADER(MegamorphicSetElement)
   TRIVIAL_NEW_WRAPPERS
   NAMED_OPERANDS((0, object), (1, index), (2, value))
 

@@ -17,6 +17,7 @@
 #include "nsPrintfCString.h"
 
 #include "gtest/gtest.h"
+#include "mozilla/gtest/MozAssertions.h"
 
 #ifdef XP_WIN
 bool gTestWithPrefix_Win = false;
@@ -79,8 +80,7 @@ static bool TestInvalidFileName(nsIFile* aBase, const char* aName) {
   nsCString name = FixName(aName);
   nsresult rv = file->AppendNative(name);
   if (NS_SUCCEEDED(rv)) {
-    EXPECT_FALSE(NS_SUCCEEDED(rv))
-        << "AppendNative with invalid filename " << name.get();
+    EXPECT_NS_FAILED(rv) << "AppendNative with invalid filename " << name.get();
     return false;
   }
 

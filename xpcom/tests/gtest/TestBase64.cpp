@@ -11,6 +11,7 @@
 #include "nsString.h"
 
 #include "gtest/gtest.h"
+#include "mozilla/gtest/MozAssertions.h"
 
 struct Chunk {
   Chunk(uint32_t l, const char* c) : mLength(l), mData(c) {}
@@ -198,12 +199,12 @@ TEST(Base64, StreamEncoder)
 
     nsresult rv;
     rv = encoder->EncodeToString(stream, 0, wideString);
-    ASSERT_TRUE(NS_SUCCEEDED(rv));
+    ASSERT_NS_SUCCEEDED(rv);
 
     stream->Reset();
 
     rv = encoder->EncodeToCString(stream, 0, string);
-    ASSERT_TRUE(NS_SUCCEEDED(rv));
+    ASSERT_NS_SUCCEEDED(rv);
 
     stream->CheckTest(wideString);
     stream->CheckTest(string);
@@ -231,7 +232,7 @@ TEST(Base64, RFC4648Encoding)
     nsDependentCString in(testcase.mInput);
     nsAutoCString out;
     nsresult rv = mozilla::Base64Encode(in, out);
-    ASSERT_TRUE(NS_SUCCEEDED(rv));
+    ASSERT_NS_SUCCEEDED(rv);
     ASSERT_TRUE(out.EqualsASCII(testcase.mOutput));
   }
 
@@ -239,7 +240,7 @@ TEST(Base64, RFC4648Encoding)
     NS_ConvertUTF8toUTF16 in(testcase.mInput);
     nsAutoString out;
     nsresult rv = mozilla::Base64Encode(in, out);
-    ASSERT_TRUE(NS_SUCCEEDED(rv));
+    ASSERT_NS_SUCCEEDED(rv);
     ASSERT_TRUE(out.EqualsASCII(testcase.mOutput));
   }
 }
@@ -251,7 +252,7 @@ TEST(Base64, RFC4648Encoding_TransformAndAppend_EmptyPrefix)
     nsAutoString out;
     nsresult rv =
         mozilla::Base64EncodeAppend(in.BeginReading(), in.Length(), out);
-    ASSERT_TRUE(NS_SUCCEEDED(rv));
+    ASSERT_NS_SUCCEEDED(rv);
     ASSERT_TRUE(out.EqualsASCII(testcase.mOutput));
   }
 }
@@ -263,7 +264,7 @@ TEST(Base64, RFC4648Encoding_TransformAndAppend_NonEmptyPrefix)
     nsAutoString out{u"foo"_ns};
     nsresult rv =
         mozilla::Base64EncodeAppend(in.BeginReading(), in.Length(), out);
-    ASSERT_TRUE(NS_SUCCEEDED(rv));
+    ASSERT_NS_SUCCEEDED(rv);
     ASSERT_TRUE(StringBeginsWith(out, u"foo"_ns));
     ASSERT_TRUE(Substring(out, 3).EqualsASCII(testcase.mOutput));
   }
@@ -275,7 +276,7 @@ TEST(Base64, RFC4648Decoding)
     nsDependentCString out(testcase.mOutput);
     nsAutoCString in;
     nsresult rv = mozilla::Base64Decode(out, in);
-    ASSERT_TRUE(NS_SUCCEEDED(rv));
+    ASSERT_NS_SUCCEEDED(rv);
     ASSERT_TRUE(in.EqualsASCII(testcase.mInput));
   }
 
@@ -283,7 +284,7 @@ TEST(Base64, RFC4648Decoding)
     NS_ConvertUTF8toUTF16 out(testcase.mOutput);
     nsAutoString in;
     nsresult rv = mozilla::Base64Decode(out, in);
-    ASSERT_TRUE(NS_SUCCEEDED(rv));
+    ASSERT_NS_SUCCEEDED(rv);
     ASSERT_TRUE(in.EqualsASCII(testcase.mInput));
   }
 }
@@ -300,7 +301,7 @@ TEST(Base64, RFC4648DecodingRawPointers)
     uint32_t binaryLength = 0;
     nsresult rv = mozilla::Base64Decode(testcase.mOutput, outputLength, &buffer,
                                         &binaryLength);
-    ASSERT_TRUE(NS_SUCCEEDED(rv));
+    ASSERT_NS_SUCCEEDED(rv);
     ASSERT_EQ(binaryLength, inputLength);
     ASSERT_STREQ(testcase.mInput, buffer);
     free(buffer);
@@ -325,7 +326,7 @@ TEST(Base64, NonASCIIEncoding)
     nsDependentCString in(testcase.mInput);
     nsAutoCString out;
     nsresult rv = mozilla::Base64Encode(in, out);
-    ASSERT_TRUE(NS_SUCCEEDED(rv));
+    ASSERT_NS_SUCCEEDED(rv);
     ASSERT_TRUE(out.EqualsASCII(testcase.mOutput));
   }
 }
@@ -337,7 +338,7 @@ TEST(Base64, NonASCIIEncodingWideString)
     // XXX Handles Latin1 despite the name
     AppendASCIItoUTF16(nsDependentCString(testcase.mInput), in);
     nsresult rv = mozilla::Base64Encode(in, out);
-    ASSERT_TRUE(NS_SUCCEEDED(rv));
+    ASSERT_NS_SUCCEEDED(rv);
     ASSERT_TRUE(out.EqualsASCII(testcase.mOutput));
   }
 }
@@ -348,7 +349,7 @@ TEST(Base64, NonASCIIDecoding)
     nsDependentCString out(testcase.mOutput);
     nsAutoCString in;
     nsresult rv = mozilla::Base64Decode(out, in);
-    ASSERT_TRUE(NS_SUCCEEDED(rv));
+    ASSERT_NS_SUCCEEDED(rv);
     ASSERT_TRUE(in.Equals(testcase.mInput));
   }
 }
@@ -360,7 +361,7 @@ TEST(Base64, NonASCIIDecodingWideString)
     // XXX Handles Latin1 despite the name
     AppendASCIItoUTF16(nsDependentCString(testcase.mOutput), out);
     nsresult rv = mozilla::Base64Decode(out, in);
-    ASSERT_TRUE(NS_SUCCEEDED(rv));
+    ASSERT_NS_SUCCEEDED(rv);
     // Can't use EqualsASCII, because our comparison string isn't ASCII.
     for (size_t i = 0; i < in.Length(); ++i) {
       ASSERT_TRUE(((unsigned int)in[i] & 0xff00) == 0);
@@ -378,14 +379,14 @@ TEST(Base64, EncodeNon8BitWideString)
     const nsAutoString non8Bit(u"\x1ff");
     nsAutoString out;
     nsresult rv = mozilla::Base64Encode(non8Bit, out);
-    ASSERT_TRUE(NS_SUCCEEDED(rv));
+    ASSERT_NS_SUCCEEDED(rv);
     ASSERT_TRUE(out.EqualsLiteral("/w=="));
   }
   {
     const nsAutoString non8Bit(u"\xfff");
     nsAutoString out;
     nsresult rv = mozilla::Base64Encode(non8Bit, out);
-    ASSERT_TRUE(NS_SUCCEEDED(rv));
+    ASSERT_NS_SUCCEEDED(rv);
     ASSERT_TRUE(out.EqualsLiteral("/w=="));
   }
 }
@@ -401,7 +402,7 @@ TEST(Base64, DecodeNon8BitWideString)
     ASSERT_EQ(non8Bit.Length(), 4u);
     nsAutoString out;
     nsresult rv = mozilla::Base64Decode(non8Bit, out);
-    ASSERT_TRUE(NS_SUCCEEDED(rv));
+    ASSERT_NS_SUCCEEDED(rv);
     ASSERT_TRUE(out.Equals(expectedOutput));
   }
   {
@@ -409,7 +410,7 @@ TEST(Base64, DecodeNon8BitWideString)
     const nsAutoString expectedOutput(u"\xff");
     nsAutoString out;
     nsresult rv = mozilla::Base64Decode(non8Bit, out);
-    ASSERT_TRUE(NS_SUCCEEDED(rv));
+    ASSERT_NS_SUCCEEDED(rv);
     ASSERT_TRUE(out.Equals(expectedOutput));
   }
 }
@@ -432,7 +433,7 @@ TEST(Base64, TruncateOnInvalidDecodeCString)
   constexpr auto invalid = "@@=="_ns;
   nsAutoCString out("I should be truncated!");
   nsresult rv = mozilla::Base64Decode(invalid, out);
-  ASSERT_TRUE(NS_FAILED(rv));
+  ASSERT_NS_FAILED(rv);
   ASSERT_EQ(out.Length(), 0u);
 }
 
@@ -441,7 +442,7 @@ TEST(Base64, TruncateOnInvalidDecodeWideString)
   constexpr auto invalid = u"@@=="_ns;
   nsAutoString out(u"I should be truncated!");
   nsresult rv = mozilla::Base64Decode(invalid, out);
-  ASSERT_TRUE(NS_FAILED(rv));
+  ASSERT_NS_FAILED(rv);
   ASSERT_EQ(out.Length(), 0u);
 }
 

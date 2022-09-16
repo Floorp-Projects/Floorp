@@ -194,7 +194,7 @@ bool ResizeObservation::IsActive() const {
 
   // As detailed in the css-contain specification, if the target is hidden by
   // `content-visibility` it should not call its ResizeObservation callbacks.
-  if (frame && frame->AncestorHidesContent()) {
+  if (frame && frame->IsHiddenByContentVisibilityOnAnyAncestor()) {
     return false;
   }
 

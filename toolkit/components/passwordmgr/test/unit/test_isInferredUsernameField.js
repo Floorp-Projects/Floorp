@@ -18,7 +18,7 @@ const attributeTestData = [
     expectation: "none",
   },
   {
-    testValues: ["email", "EmaiL", "loginemail"],
+    testValues: ["email", "EmaiL", "loginemail", "邮箱"],
     expectation: "email",
   },
   {
