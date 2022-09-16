@@ -4399,7 +4399,7 @@ nsresult HTMLEditor::HandleCSSIndentAroundRanges(AutoRangeArray& aRanges,
         pointToPutCaret.IsSet()
             ? std::move(pointToPutCaret)
             : aRanges.GetFirstRangeStartPoint<EditorDOMPoint>();
-    if (NS_WARN_IF(!pointToPutCaret.IsSet())) {
+    if (NS_WARN_IF(!pointToInsertDivElement.IsSet())) {
       return NS_ERROR_FAILURE;
     }
 
