@@ -643,6 +643,11 @@
     <!-- Option for auto closing tabs that will auto close tabs after one month -->
     <string name="close_tabs_after_one_month">ຫຼັງຈາກໜຶ່ງເດືອນ</string>
 
+    <!-- Title of preference that allows a user to specify the auto-close settings for open tabs -->
+    <string name="preference_auto_close_tabs" tools:ignore="UnusedResources">ປິດແຖບເປີດອັດຕະໂນມັດ</string>
+
+    <!-- Option for always opening the homepage when re-opening the app -->
+    <string name="opening_screen_homepage">ຫນ້າທຳອິດ</string>
     <!-- Option for always opening the user's last-open tab when re-opening the app -->
     <string name="opening_screen_last_tab">ແທັບສຸດທ້າຍ</string>
     <!-- Summary for tabs preference when auto closing tabs setting is set to manual close-->
@@ -737,6 +742,9 @@
     <!-- Postfix for private WebApp titles, placeholder is replaced with app name -->
     <string name="pwa_site_controls_title_private">%1$s (ໂຫມດສ່ວນຕົວ)</string>
 
+    <!-- Title text for the normal tabs header in the tabs tray which are not part of any tab grouping. -->
+    <string moz:removedIn="104" name="tab_tray_header_title_1" tools:ignore="UnusedResources">ແທັບອື່ນໆ</string>
+
     <!-- Text for the button to clear all history -->
     <string name="history_delete_all">ລຶບປະຫວັດການໃຊ້ງານ</string>
     <!-- Text for the snackbar to confirm that multiple browsing history items has been deleted -->
@@ -763,6 +771,11 @@
     <!-- Text shown when no history exists -->
     <string name="history_empty_message">ບໍ່ມີປະຫວັດການໃຊ້ງານຢູ່ນີ້</string>
 
+
+    <!-- The synced history sign in dialog button text -->
+    <string moz:removedIn="105" name="history_sign_in_button" tools:ignore="UnusedResources">ເຂົ້າສູ່ລະບົບ</string>
+    <!-- The synced history sign in dialog create a new account link -->
+    <string moz:removedIn="105" name="history_sign_in_create_account" tools:ignore="UnusedResources"><![CDATA[<u>ຫຼືສ້າງບັນຊີ Firefox ເພື່ອເລີ່ມຕົ້ນການຊິງຄ໌</u>]]></string>
 
     <!-- Downloads -->
     <!-- Text for the snackbar to confirm that multiple downloads items have been removed -->
@@ -793,6 +806,8 @@
     <string name="bookmark_delete_folder_confirmation_dialog">ທ່ານແນ່ໃຈບໍ່ວ່າທ່ານຕ້ອງການລຶບໂຟລເດີນີ້?</string>
     <!-- Confirmation message for a dialog confirming if the user wants to delete multiple items including folders. Parameter will be replaced by app name. -->
     <string name="bookmark_delete_multiple_folders_confirmation_dialog">%s ຈະລຶບລາຍການທີ່ໄດ້ເລືອກໄວ້</string>
+    <!-- Text for the cancel button on delete bookmark dialog -->
+    <string name="bookmark_delete_negative">ຍົກເລີກ</string>
     <!-- Screen title for adding a bookmarks folder -->
     <string name="bookmark_add_folder">ເພີ່ມໂຟລເດີ</string>
 
@@ -862,10 +877,14 @@
     <string name="phone_feature_recommended">ແນະນຳ</string>
     <!-- Button label for clearing all the information of site permissions-->
     <string name="clear_permissions">ລົບລ້າງສິດ</string>
+    <!-- Text for the OK button on Clear permissions dialog -->
+    <string name="clear_permissions_positive">ຕົກລົງ</string>
     <!-- Text for the cancel button on Clear permissions dialog -->
     <string name="clear_permissions_negative">ຍົກເລີກ</string>
     <!-- Button label for clearing a site permission-->
     <string name="clear_permission">ລົບລ້າງສິດ</string>
+    <!-- Text for the OK button on Clear permission dialog -->
+    <string name="clear_permission_positive">ຕົກລົງ</string>
     <!-- Text for the cancel button on Clear permission dialog -->
     <string name="clear_permission_negative">ຍົກເລີກ</string>
     <!-- Button label for clearing all the information on all sites-->
