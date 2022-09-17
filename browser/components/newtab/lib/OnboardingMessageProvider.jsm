@@ -457,7 +457,7 @@ const BASE_MESSAGES = () => [
           },
         },
         {
-          id: "UPGRADE_PRIVACY_SEGMENTATION",
+          id: "UPGRADE_DATA_RECOMMENDATION",
           content: {
             position: "split",
             split_narrow_bkg_position: "-80px",
@@ -1172,7 +1172,7 @@ const OnboardingMessageProvider = {
 
     if (!showSegmentation) {
       removeScreens(screen =>
-        screen.id?.startsWith("UPGRADE_PRIVACY_SEGMENTATION")
+        screen.id?.startsWith("UPGRADE_DATA_RECOMMENDATION")
       );
     }
 

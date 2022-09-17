@@ -20,11 +20,14 @@ export const MultiStageAboutWelcome = props => {
 
   const [index, setScreenIndex] = useState(props.startScreen);
   useEffect(() => {
+    const screenInitials = screens
+      .map(({ id }) => id?.split("_")[1]?.[0])
+      .join("");
     // Send impression ping when respective screen first renders
     screens.forEach((screen, order) => {
       if (index === order) {
         AboutWelcomeUtils.sendImpressionTelemetry(
-          `${props.message_id}_${order}_${screen.id}`
+          `${props.message_id}_${order}_${screen.id}_${screenInitials}`
         );
       }
     });

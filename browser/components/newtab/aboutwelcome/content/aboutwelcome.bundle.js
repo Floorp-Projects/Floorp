@@ -195,10 +195,17 @@ const MultiStageAboutWelcome = props => {
   } = props;
   const [index, setScreenIndex] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(props.startScreen);
   (0,react__WEBPACK_IMPORTED_MODULE_0__.useEffect)(() => {
-    // Send impression ping when respective screen first renders
+    const screenInitials = screens.map(({
+      id
+    }) => {
+      var _id$split$;
+
+      return id === null || id === void 0 ? void 0 : (_id$split$ = id.split("_")[1]) === null || _id$split$ === void 0 ? void 0 : _id$split$[0];
+    }).join(""); // Send impression ping when respective screen first renders
+
     screens.forEach((screen, order) => {
       if (index === order) {
-        _lib_aboutwelcome_utils__WEBPACK_IMPORTED_MODULE_2__.AboutWelcomeUtils.sendImpressionTelemetry(`${props.message_id}_${order}_${screen.id}`);
+        _lib_aboutwelcome_utils__WEBPACK_IMPORTED_MODULE_2__.AboutWelcomeUtils.sendImpressionTelemetry(`${props.message_id}_${order}_${screen.id}_${screenInitials}`);
       }
     }); // Remember that a new screen has loaded for browser navigation
 

@@ -635,7 +635,8 @@ add_task(async function test_aboutwelcome_start_screen_configured() {
 
   Assert.equal(
     stub.secondCall.args[0].message_id,
-    `MR_WELCOME_DEFAULT_${startScreen}_TEST_START_STEP_${startScreen + 1}`,
+    `MR_WELCOME_DEFAULT_${startScreen}_TEST_START_STEP_${startScreen +
+      1}_${screens.map(({ id }) => id?.split("_")[1]?.[0]).join("")}`,
     "Impression events have the correct message id with start screen configured"
   );
 
