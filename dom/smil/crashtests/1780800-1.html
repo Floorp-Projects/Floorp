@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<head>
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+  const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+  const set = document.createElementNS("http://www.w3.org/2000/svg", "set");
+  svg.appendChild(set);
+  document.documentElement.appendChild(svg);
+  const animation = new Animation();
+  animation.addEventListener("finish", () =>
+    svg.setAttribute("pointer-events", "visible")
+  );
+  animation.startTime = 2713;
+  document.addEventListener("DOMAttrModified", e => {
+    e.originalTarget.setCurrentTime(1.050520798894502e38);
+    document.documentElement.removeAttribute("class");
+  });
+});
+</script>
+</head>
+</html>

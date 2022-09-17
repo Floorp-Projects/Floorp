@@ -7,6 +7,7 @@
 #include "SMILTimeContainer.h"
 
 #include "mozilla/AutoRestore.h"
+#include "mozilla/CheckedInt.h"
 #include "mozilla/SMILTimedElement.h"
 #include "mozilla/SMILTimeValue.h"
 #include <algorithm>
@@ -262,8 +263,12 @@ void SMILTimeContainer::Unlink() {
 
 void SMILTimeContainer::UpdateCurrentTime() {
   SMILTime now = IsPaused() ? mPauseStart : GetParentTime();
-  mCurrentTime = now - mParentOffset;
-  MOZ_ASSERT(mCurrentTime >= 0, "Container has negative time");
+  MOZ_ASSERT(now >= mParentOffset,
+             "Container has negative time with respect to parent");
+  const auto updatedCurrentTime = CheckedInt<SMILTime>(now) - mParentOffset;
+  mCurrentTime = updatedCurrentTime.isValid()
+                     ? updatedCurrentTime.value()
+                     : std::numeric_limits<SMILTime>::max();
 }
 
 void SMILTimeContainer::NotifyTimeChange() {
