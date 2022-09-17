@@ -1068,14 +1068,6 @@ class nsPresContext : public nsISupports, public mozilla::SupportsWeakPtr {
 
   bool IsDeviceSizePageSize();
 
-  bool HasWarnedAboutPositionedTableParts() const {
-    return mHasWarnedAboutPositionedTableParts;
-  }
-
-  void SetHasWarnedAboutPositionedTableParts() {
-    mHasWarnedAboutPositionedTableParts = true;
-  }
-
   bool HasWarnedAboutTooLargeDashedOrDottedRadius() const {
     return mHasWarnedAboutTooLargeDashedOrDottedRadius;
   }
@@ -1363,8 +1355,6 @@ class nsPresContext : public nsISupports, public mozilla::SupportsWeakPtr {
   unsigned mFontFeatureValuesDirty : 1;
 
   unsigned mIsVisual : 1;
-
-  unsigned mHasWarnedAboutPositionedTableParts : 1;
 
   unsigned mHasWarnedAboutTooLargeDashedOrDottedRadius : 1;
 

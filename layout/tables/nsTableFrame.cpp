@@ -250,21 +250,6 @@ bool nsTableFrame::PageBreakAfter(nsIFrame* aSourceFrame,
 
 /* static */
 void nsTableFrame::RegisterPositionedTablePart(nsIFrame* aFrame) {
-  // Supporting relative positioning for table parts other than table cells has
-  // the potential to break sites that apply 'position: relative' to those
-  // parts, expecting nothing to happen. We warn at the console to make tracking
-  // down the issue easy.
-  if (!aFrame->IsTableCellFrame()) {
-    nsIContent* content = aFrame->GetContent();
-    nsPresContext* presContext = aFrame->PresContext();
-    if (content && !presContext->HasWarnedAboutPositionedTableParts()) {
-      presContext->SetHasWarnedAboutPositionedTableParts();
-      nsContentUtils::ReportToConsole(
-          nsIScriptError::warningFlag, "Layout: Tables"_ns, content->OwnerDoc(),
-          nsContentUtils::eLAYOUT_PROPERTIES, "TablePartRelPosWarning");
-    }
-  }
-
   nsTableFrame* tableFrame = nsTableFrame::GetTableFrame(aFrame);
   MOZ_ASSERT(tableFrame, "Should have a table frame here");
   tableFrame = static_cast<nsTableFrame*>(tableFrame->FirstContinuation());
