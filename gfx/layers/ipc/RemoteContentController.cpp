@@ -266,9 +266,12 @@ void RemoteContentController::UpdateOverscrollVelocity(
     GeckoContentController* rootController =
         CompositorBridgeParent::GetGeckoContentControllerForRoot(
             aGuid.mLayersId);
-    MOZ_RELEASE_ASSERT(rootController->IsRemote());
-    Unused << static_cast<RemoteContentController*>(rootController)
-                  ->SendUpdateOverscrollVelocity(aGuid, aX, aY, aIsRootContent);
+    if (rootController) {
+      MOZ_RELEASE_ASSERT(rootController->IsRemote());
+      Unused << static_cast<RemoteContentController*>(rootController)
+                    ->SendUpdateOverscrollVelocity(aGuid, aX, aY,
+                                                   aIsRootContent);
+    }
   }
 }
 
@@ -308,9 +311,11 @@ void RemoteContentController::UpdateOverscrollOffset(
     GeckoContentController* rootController =
         CompositorBridgeParent::GetGeckoContentControllerForRoot(
             aGuid.mLayersId);
-    MOZ_RELEASE_ASSERT(rootController->IsRemote());
-    Unused << static_cast<RemoteContentController*>(rootController)
-                  ->SendUpdateOverscrollOffset(aGuid, aX, aY, aIsRootContent);
+    if (rootController) {
+      MOZ_RELEASE_ASSERT(rootController->IsRemote());
+      Unused << static_cast<RemoteContentController*>(rootController)
+                    ->SendUpdateOverscrollOffset(aGuid, aX, aY, aIsRootContent);
+    }
   }
 }
 
