@@ -8,7 +8,6 @@
 # to the location of the actual manifest.
 
 # TST
-
   skin/classic/browser/TST-dark.svg                                         (../shared/icons/TST-dark.svg)
   skin/classic/browser/TST-light.svg                                        (../shared/icons/TST-light.svg)
 
