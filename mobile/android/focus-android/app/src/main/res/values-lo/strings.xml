@@ -497,8 +497,17 @@
     <!-- Onboarding: Incognito Title -->
     <string name="onboarding_incognito_title">ບ່ອນທີ່ incognito ພົບກັບ invisible</string>
 
+    <!-- Onboarding: History Title -->
+    <string name="onboarding_history_title">ຊອກຫາແບບທີ່ບໍ່ເຄີຍເກີດຂຶ້ນ</string>
+
+    <!-- Onboarding: History Description -->
+    <string name="onboarding_history_description2">ແຕະຄັ້ງດຽວຈະລຶບປະຫວັດການທ່ອງເວັບ ແລະຄຸກກີ້ຂອງເຈົ້າ — ແລະ ຈະຢຸດໂຄສະນາບໍ່ໃຫ້ຕິດຕາມເຈົ້າໄປນຳ.</string>
+
     <!-- Onboarding: Protection Title -->
     <string name="onboarding_protection_title">ຄວາມເປັນສ່ວນຕົວທີ່ເໝາະກັບທຸກສະຖານະການ</string>
+
+    <!-- Onboarding: Protection Description -->
+    <string name="onboarding_protection_description">ຖ້າການທ່ອງເວັບຂອງທ່ານຕ້ອງການປ່ຽນແປງ, ມັນງ່າຍທີ່ຈະປັບຂະໜາດການຕັ້ງຄ່າຄວາມເປັນສ່ວນຕົວຂອງທ່ານຕາມໃຈ</string>
 
     <!-- Onboarding: Start browsing -->
     <string name="onboarding_start_browsing">ເລີ່ມການທ່ອງເວັບ</string>
@@ -541,6 +550,10 @@
 
     <!-- Label of the action that will close the dialog and not add anything to the home screen (shown in the confirmation dialog). -->
     <string name="dialog_addtohomescreen_action_no">ບໍ່</string>
+
+    <!-- When enhanced tracking protection is disabled for the current session then we will show this warning in the "Add to home screen" dialog to
+         let the user know that the shortcut will always be opened with enhanced tracking protection disabled. -->
+    <string name="dialog_addtohomescreen_tracking_protection2">ທາງລັດຈະເປີດພ້ອມປິດການໃຊ້ງານການປ້ອງກັນການຕິດຕາມ</string>
 
     <!-- The user visible name of the "notification channel" (Android 8+ feature) for the ongoing notification shown while a browsing session is active.
     The recommended maximum length is 40 characters; the value may be truncated if it is too long.
@@ -613,11 +626,17 @@
   <!-- Checkbox menu item text to request desktop site -->
     <string name="preference_performance_request_desktop_site">ຂໍໄຊສຳລັບເດສທອບ</string>
 
+    <!-- Checkbox menu item text to request desktop site -->
+    <string name="preference_performance_request_desktop_site2">ໂຫມດເດັກສທັອບ</string>
+
     <!-- Displayed after a user long presses on the URL in a custom tab to copy the URL -->
     <string name="custom_tab_copy_url_action">URL ສຳເນົາແລ້ວ</string>
 
     <!-- Description of what a user may find in the Advanced Setting category, used for debugging -->
     <string name="preference_advanced_summary">ເຄື່ອງມືນັກພັດທະນາ</string>
+
+    <!-- Preference for open links in third party apps -->
+    <string name="preferences_open_links_in_apps">ເປີດລີ້ງໃນແອັບ</string>
 
     <!-- Title of Advanced Setting category -->
     <string name="preference_category_advanced">ຂັ້ນສູງ</string>
@@ -631,8 +650,17 @@
     <!-- Heading for the instructions to allow a permission -->
     <string name="phone_feature_blocked_intro">ເພື່ອຕ້ອງການອະນຸຍາດ:</string>
 
+    <!-- First step for the allowing a permission -->
+    <string name="phone_feature_blocked_step_settings">1. ໄປທີ່ການຕັ້ງຄ່າ Android</string>
+
+    <!-- Second step for the allowing a permission -->
+    <string name="phone_feature_blocked_step_permissions"><![CDATA[2. ແຕະທີ່ <b>ສິດ</b>]]></string>
+
     <!-- Button label that take the user to the Android App setting -->
     <string name="phone_feature_go_to_settings">ໄປທີ່ການຕັ້ງຄ່າ</string>
+
+    <!-- Third step for allowing a permission. The placeholder will be updated by, for example, "Camera" -->
+    <string name="phone_feature_blocked_step_feature"><![CDATA[3. ສະລັບ <b>%1$s</b> ເປັນເປີດ]]></string>
 
     <!-- Preference for altering the camera access for all websites -->
     <string name="preference_phone_feature_camera">ກ້ອງຖ່າຍຮູບ</string>
@@ -658,8 +686,14 @@
     <!--Label that indicates a permission is by the Android OS-->
     <string name="phone_feature_blocked_by_android">ຖືກບລັອກໂດຍ Android</string>
 
+    <!-- Preference for block autoplay audio only-->
+    <string name="preference_block_autoplay_audio_only">ບັອກສຽງຢ່າງດ່ຽວ</string>
+
     <!-- Preference summary for block autoplay audio only-->
     <string name="preference_block_autoplay_audio_only_summary">ແນະນຳ</string>
+
+    <!-- Preference for block autoplay audio and video-->
+    <string name="preference_block_autoplay_audio_video">ບັອກສຽງ ແລະ ວິດີໂອ</string>
 
     <!-- Preference for studies -->
     <string name="preference_studies">ການສຶກສາ</string>
@@ -682,6 +716,9 @@
     <!-- Title for the fingerprint authentication dialog box that is shown to the user when opening the app.
      %1$s is replaced with the app name -->
     <string moz:removedIn="103" name="biometric_auth_title">ປົດລ໋ອກ %1$s</string>
+
+    <!-- Text Button for show biometric prompt -->
+    <string name="show_biometric_button_text">ປົດລັອກ</string>
 
     <!-- Description for the fingerprint authentication dialog box that is shown to the user when opening the app -->
     <string moz:removedIn="103" name="biometric_auth_description">ແຕະເຊັນເຊີ້ລາຍນິ້ວມືເພື່ອດຳເນີນການຕໍ່.</string>
