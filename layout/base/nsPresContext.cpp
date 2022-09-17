@@ -279,6 +279,7 @@ nsPresContext::nsPresContext(dom::Document* aDocument, nsPresContextType aType)
       mCounterStylesDirty(true),
       mFontFeatureValuesDirty(true),
       mIsVisual(false),
+      mUnused(false),
       mHasWarnedAboutTooLargeDashedOrDottedRadius(false),
       mQuirkSheetAdded(false),
       mHadNonBlankPaint(false),
