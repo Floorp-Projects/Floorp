@@ -519,8 +519,8 @@ toolbarbutton.bookmark-item {
 }
 
 #sidebar-select-box{
-border-left: solid 1px var(--arrowpanel-border-color);
-border-right: solid 1px var(--arrowpanel-border-color);
+border-left: 1px solid var(--chrome-content-separator-color);
+border-right: 1px solid var(--chrome-content-separator-color);
 }
 
 .sidebar2-icon {
