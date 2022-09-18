@@ -64,9 +64,15 @@ echo "===loop-ff=== Moving from moz-libwebrtc commit $MOZ_LIBWEBRTC_BASE to $MOZ
 bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh 2>&1| tee -a $LOOP_OUTPUT_LOG
 #bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
 
-MOZ_CHANGED=`hg diff -c tip --stat | egrep -ve "README.moz-ff-commit|README.mozilla|files changed," | wc -l` || echo -n "0" > /dev/null
-GIT_CHANGED=`cd $MOZ_LIBWEBRTC_SRC ; git show --oneline --name-only $MOZ_LIBWEBRTC_NEXT_BASE | wc -l`
-let GIT_CHANGED--
+MOZ_CHANGED=`hg diff -c tip --stat \
+   | egrep -ve "README.moz-ff-commit|README.mozilla|files changed," \
+   | wc -l | tr -d " "` || echo -n "0" > /dev/null
+GIT_CHANGED=`cd $MOZ_LIBWEBRTC_SRC ; \
+   git show --oneline --name-only $MOZ_LIBWEBRTC_NEXT_BASE \
+   | csplit -f gitshow -sk - 2 ; cat gitshow01 \
+   | egrep -ve "^CODE_OF_CONDUCT.md|^ENG_REVIEW_OWNERS|^PRESUBMIT.py|^README.chromium|^WATCHLISTS|^abseil-in-webrtc.md|^codereview.settings|^license_template.txt|^native-api.md|^presubmit_test.py|^presubmit_test_mocks.py|^pylintrc|^style-guide.md" \
+   | wc -l | tr -d " "`
+# let GIT_CHANGED--
 echo "===loop-ff=== Verify number of files changed MOZ($MOZ_CHANGED) GIT($GIT_CHANGED)" 2>&1| tee -a $LOOP_OUTPUT_LOG
 if [ $MOZ_CHANGED -ne $GIT_CHANGED ]; then
   echo "MOZ_CHANGED $MOZ_CHANGED should equal GIT_CHANGED $GIT_CHANGED" 2>&1| tee -a $LOOP_OUTPUT_LOG
