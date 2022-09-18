@@ -21,6 +21,7 @@ use crate::prim_store::{PictureIndex};
 use crate::prim_store::{DeferredResolve, PrimitiveInstance};
 use crate::profiler::{self, TransactionProfile};
 use crate::render_backend::{DataStores, ScratchBuffer};
+use crate::renderer::GpuBufferBuilder;
 use crate::render_target::{RenderTarget, PictureCacheTarget, TextureCacheRenderTarget, PictureCacheTargetKind};
 use crate::render_target::{RenderTargetContext, RenderTargetKind, AlphaRenderTarget, ColorRenderTarget};
 use crate::render_task_graph::{RenderTaskGraph, Pass, SubPassSurface};
@@ -771,6 +772,7 @@ pub fn build_render_pass(
                 let task_id = sub_pass.task_ids[0];
                 let task = &render_tasks[task_id];
                 let target_rect = task.get_target_rect();
+                let mut gpu_buffer_builder = GpuBufferBuilder::new();
 
                 match task.kind {
                     RenderTaskKind::Picture(ref pic_task) => {
@@ -803,6 +805,7 @@ pub fn build_render_pass(
                                 pic_task.raster_spatial_node_index,
                                 pic_task.surface_spatial_node_index,
                                 z_generator,
+                                &mut gpu_buffer_builder,
                             );
                         });
 
@@ -827,6 +830,7 @@ pub fn build_render_pass(
                             },
                             dirty_rect: scissor_rect,
                             valid_rect,
+                            gpu_buffer: gpu_buffer_builder.finalize(),
                         };
 
                         pass.picture_cache.push(target);
@@ -841,6 +845,7 @@ pub fn build_render_pass(
                             },
                             dirty_rect: tile_task.scissor_rect,
                             valid_rect: tile_task.valid_rect,
+                            gpu_buffer: gpu_buffer_builder.finalize(),
                         };
 
                         pass.picture_cache.push(target);

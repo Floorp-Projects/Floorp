@@ -115,6 +115,7 @@ use std::collections::hash_map::Entry;
 use time::precise_time_ns;
 
 mod debug;
+mod gpu_buffer;
 mod gpu_cache;
 mod shade;
 mod vertex;
@@ -124,6 +125,7 @@ pub(crate) mod init;
 pub use debug::DebugRenderer;
 pub use shade::{Shaders, SharedShaders};
 pub use vertex::{desc, VertexArrayKind, MAX_VERTEX_TEXTURE_WIDTH};
+pub use gpu_buffer::{GpuBuffer, GpuBufferBuilder};
 
 /// The size of the array of each type of vertex data texture that
 /// is round-robin-ed each frame during bind_frame_data. Doing this
@@ -328,6 +330,7 @@ pub(crate) enum TextureSampler {
     PrimitiveHeadersF,
     PrimitiveHeadersI,
     ClipMask,
+    GpuBuffer,
 }
 
 impl TextureSampler {
@@ -356,6 +359,7 @@ impl Into<TextureSlot> for TextureSampler {
             TextureSampler::PrimitiveHeadersF => TextureSlot(7),
             TextureSampler::PrimitiveHeadersI => TextureSlot(8),
             TextureSampler::ClipMask => TextureSlot(9),
+            TextureSampler::GpuBuffer => TextureSlot(10),
         }
     }
 }
@@ -2353,6 +2357,34 @@ impl Renderer {
         let _gm = self.gpu_profiler.start_marker("picture cache target");
         let framebuffer_kind = FramebufferKind::Other;
 
+        // Upload experimental GPU buffer texture if there is any data present
+        // TODO: Recycle these textures, upload via PBO or best approach for platform
+        let gpu_buffer_texture = if target.gpu_buffer.is_empty() {
+            None
+        } else {
+            let gpu_buffer_texture = self.device.create_texture(
+                ImageBufferKind::Texture2D,
+                ImageFormat::RGBAF32,
+                target.gpu_buffer.size.width,
+                target.gpu_buffer.size.height,
+                TextureFilter::Nearest,
+                None,
+            );
+
+            self.device.bind_texture(
+                TextureSampler::GpuBuffer,
+                &gpu_buffer_texture,
+                Swizzle::default(),
+            );
+
+            self.device.upload_texture_immediate(
+                &gpu_buffer_texture,
+                &target.gpu_buffer.data,
+            );
+
+            Some(gpu_buffer_texture)
+        };
+
         {
             let _timer = self.gpu_profiler.start_timer(GPU_TAG_SETUP_TARGET);
             self.device.bind_draw_target(draw_target);
@@ -2450,6 +2482,10 @@ impl Renderer {
                     TextureFilter::Nearest,
                 );
             }
+        }
+
+        if let Some(gpu_buffer_texture) = gpu_buffer_texture {
+            self.device.delete_texture(gpu_buffer_texture);
         }
 
         self.device.invalidate_depth_target();
