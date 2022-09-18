@@ -2124,9 +2124,10 @@ security.ui.protections:
       - 1661756
       - 1678201
       - 1739287
+      - 1787249
     description: >
       User arrived on the protection report. This also includes a 'value' attribute which defaults to 'direct' or will be the value that a referring website addds to the url. This also indicates if the vpn banner has been seen.
-    expiry_version: "107"
+    expiry_version: never
     record_in_processes: ["content"]
     release_channel_collection: opt-out
     notification_emails:
@@ -2147,9 +2148,10 @@ security.ui.protections:
       - 1643428
       - 1678201
       - 1739287
+      - 1787249
     description: >
       User closed on the protection report.
-    expiry_version: "107"
+    expiry_version: never
     record_in_processes: ["content"]
     release_channel_collection: opt-out
     notification_emails:
@@ -2171,6 +2173,7 @@ security.ui.protections:
       - 1661756
       - 1678201
       - 1739287
+      - 1787249
     description: >
       User interaction by click events on the protection report.
     objects: [
@@ -2189,7 +2192,7 @@ security.ui.protections:
       "vpn_app_link_android",
       "vpn_app_link_ios",
     ]
-    expiry_version: "107"
+    expiry_version: never
     record_in_processes: ["content"]
     release_channel_collection: opt-out
     notification_emails:
@@ -2208,12 +2211,13 @@ security.ui.app_menu:
       - 1643428
       - 1678201
       - 1739287
+      - 1787249
     description: >
       Privacy and Security click events on app menu.
     objects: [
       "open_full_report",
     ]
-    expiry_version: "107"
+    expiry_version: never
     record_in_processes:
       - main
     release_channel_collection: opt-out
@@ -2232,9 +2236,10 @@ security.ui.protectionspopup:
       - 1643428
       - 1678201
       - 1739287
+      - 1787249
     description: >
       How many times the protections panel was opened.
-    expiry_version: "107"
+    expiry_version: never
     notification_emails:
       - pbz@mozilla.com
       - seceng-telemetry@mozilla.com
@@ -2267,9 +2272,10 @@ security.ui.protectionspopup:
       - 1643428
       - 1678201
       - 1739287
+      - 1787249
     description: >
       User interaction by click events in the protections panel.
-    expiry_version: "107"
+    expiry_version: never
     notification_emails:
       - pbz@mozilla.com
       - seceng-telemetry@mozilla.com
