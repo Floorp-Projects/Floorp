@@ -598,28 +598,3 @@ border-right: solid 1px var(--arrowpanel-border-color);
 #addons-icon{
   list-style-image: url("chrome://mozapps/skin/extensions/extension.svg");
 }
-
-#workspace-personal {
-  list-style-image: url("resource://usercontext-content/fingerprint.svg");
-}
-
-#workspace-vacation {
-  list-style-image: url("resource://usercontext-content/vacation.svg");
-}
-
-#workspace-work {
-  list-style-image: url("resource://usercontext-content/briefcase.svg");
-}
-
-#workspace-private {
-  list-style-image: url("resource://usercontext-content/chill.svg");
-}
-
-#workspace-shopping {
-  list-style-image: url("resource://usercontext-content/cart.svg");
-}
-
-.workspace > .toolbarbutton-icon {
-  width: 20px !important;
-  height: 20px !important;
-}
