@@ -686,6 +686,9 @@
     <!--Label that indicates a permission is by the Android OS-->
     <string name="phone_feature_blocked_by_android">ຖືກບລັອກໂດຍ Android</string>
 
+    <!-- Preference for allow autoplay audio and video-->
+    <string name="preference_allow_audio_video_autoplay">ອະນຸຍາດສຽງ ແລະ ວິດີໂອ</string>
+
     <!-- Preference for block autoplay audio only-->
     <string name="preference_block_autoplay_audio_only">ບັອກສຽງຢ່າງດ່ຽວ</string>
 
@@ -815,5 +818,33 @@
     <string name="crash_report_send_crash_label">ສົ່ງລາຍງານການຂັດຂ້ອງໄປຫາ Mozilla</string>
 
     <!-- Tracking protection bottom sheet -->
+
+    <!-- Category of trackers (content) that can be blocked by Enhanced Tracking Protection -->
+    <string name="content">ເນື້ອຫາ</string>
+    <!-- Category of trackers (advertising) that can be blocked by Enhanced Tracking Protection -->
+    <string name="advertising">ການໂຄສະນາ</string>
+    <!-- Category of trackers (social media) that can be blocked by Enhanced Tracking Protection -->
+    <string name="social">ສັງຄົມ</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Navigate back button description -->
+    <string name="go_back">ກັບຄືນ</string>
+
+    <!-- Top Sites -->
+    <!-- Text for the menu button to remove a top site -->
+    <string name="remove_top_site">ລຶບ</string>
+    <!-- Text for the menu item to remove a top site -->
+    <string name="rename_top_site_item">ປ່ຽນ​ຊື່</string>
+    <!-- Text for the dialog title for renaming a top site -->
+    <string name="rename_top_site">ປ່ຽນ​ຊື່</string>
+    <!-- Placeholder text for the input field of rename top site-->
+    <string name="placeholder_rename_top_site">ຊື່ທາງລັດ</string>
+
+    <!-- Theme Preferences -->
+    <!-- Preference category for changing default theme to dark or light mode -->
+    <string name="preferences_theme">ຊຸດປັບແຕ່ງ</string>
+    <!-- Preference for using light theme -->
+    <string name="preference_light_theme">ແຈ້ງ</string>
+    <!-- Preference for using dark theme -->
+    <string name="preference_dark_theme">ມືດ</string>
 
     </resources>
