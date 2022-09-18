@@ -20,12 +20,12 @@ use crate::picture::{Picture3DContext, PictureCompositeMode, TileKey, calculate_
 use crate::prim_store::{PrimitiveInstanceKind, ClipData, PrimitiveInstanceIndex};
 use crate::prim_store::{PrimitiveInstance, PrimitiveOpacity, SegmentInstanceIndex};
 use crate::prim_store::{BrushSegment, ClipMaskKind, ClipTaskIndex};
-use crate::prim_store::VECS_PER_SEGMENT;
+use crate::prim_store::{VECS_PER_SEGMENT};
 use crate::render_target::RenderTargetContext;
 use crate::render_task_graph::{RenderTaskId, RenderTaskGraph};
 use crate::render_task::{RenderTaskAddress, RenderTaskKind};
 use crate::renderer::{BlendMode, ShaderColorMode};
-use crate::renderer::MAX_VERTEX_TEXTURE_WIDTH;
+use crate::renderer::{MAX_VERTEX_TEXTURE_WIDTH, GpuBufferBuilder};
 use crate::resource_cache::{GlyphFetchResult, ImageProperties, ImageRequest};
 use crate::space::SpaceMapper;
 use crate::surface::SurfaceTileDescriptor;
@@ -827,6 +827,7 @@ impl BatchBuilder {
         root_spatial_node_index: SpatialNodeIndex,
         surface_spatial_node_index: SpatialNodeIndex,
         z_generator: &mut ZBufferIdGenerator,
+        _gpu_buffer_builder: &mut GpuBufferBuilder,
     ) {
         let is_anti_aliased = ctx.data_stores.prim_has_anti_aliasing(prim_instance);
 
