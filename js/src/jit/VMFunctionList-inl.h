@@ -45,7 +45,6 @@ namespace jit {
   _(ArrayConstructorOneArg, js::ArrayConstructorOneArg)                        \
   _(ArrayFromArgumentsObject, js::ArrayFromArgumentsObject)                    \
   _(ArrayJoin, js::jit::ArrayJoin)                                             \
-  _(ArrayPushDense, js::jit::ArrayPushDense)                                   \
   _(ArraySliceDense, js::ArraySliceDense)                                      \
   _(AsyncFunctionAwait, js::AsyncFunctionAwait)                                \
   _(AsyncFunctionResolve, js::AsyncFunctionResolve)                            \

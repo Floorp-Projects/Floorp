@@ -11853,6 +11853,19 @@ void CodeGenerator::visitArrayPopShift(LArrayPopShift* lir) {
   bailoutFrom(&bail, lir->snapshot());
 }
 
+class OutOfLineArrayPush : public OutOfLineCodeBase<CodeGenerator> {
+  LArrayPush* ins_;
+
+ public:
+  explicit OutOfLineArrayPush(LArrayPush* ins) : ins_(ins) {}
+
+  void accept(CodeGenerator* codegen) override {
+    codegen->visitOutOfLineArrayPush(this);
+  }
+
+  LArrayPush* ins() const { return ins_; }
+};
+
 void CodeGenerator::visitArrayPush(LArrayPush* lir) {
   Register obj = ToRegister(lir->object());
   Register elementsTemp = ToRegister(lir->temp0());
@@ -11860,9 +11873,8 @@ void CodeGenerator::visitArrayPush(LArrayPush* lir) {
   ValueOperand value = ToValue(lir, LArrayPush::ValueIndex);
   Register spectreTemp = ToTempRegisterOrInvalid(lir->temp1());
 
-  using Fn = bool (*)(JSContext*, Handle<ArrayObject*>, HandleValue, uint32_t*);
-  OutOfLineCode* ool = oolCallVM<Fn, jit::ArrayPushDense>(
-      lir, ArgList(obj, value), StoreRegisterTo(length));
+  auto* ool = new (alloc()) OutOfLineArrayPush(lir);
+  addOutOfLineCode(ool, lir->mir());
 
   // Load elements and length.
   masm.loadPtr(Address(obj, NativeObject::offsetOfElements()), elementsTemp);
@@ -11894,6 +11906,49 @@ void CodeGenerator::visitArrayPush(LArrayPush* lir) {
                                ObjectElements::offsetOfInitializedLength()));
 
   masm.bind(ool->rejoin());
+}
+
+void CodeGenerator::visitOutOfLineArrayPush(OutOfLineArrayPush* ool) {
+  LArrayPush* ins = ool->ins();
+
+  Register object = ToRegister(ins->object());
+  Register temp = ToRegister(ins->temp0());
+  Register output = ToRegister(ins->output());
+  ValueOperand value = ToValue(ins, LArrayPush::ValueIndex);
+
+  // Save all live volatile registers, except |temp| and |output|, because both
+  // are overwritten anyway.
+  LiveRegisterSet liveRegs = liveVolatileRegs(ins);
+  liveRegs.takeUnchecked(temp);
+  liveRegs.takeUnchecked(output);
+
+  masm.PushRegsInMask(liveRegs);
+
+  masm.Push(value);
+  masm.moveStackPtrTo(output);
+
+  masm.setupAlignedABICall();
+  masm.loadJSContext(temp);
+  masm.passABIArg(temp);
+  masm.passABIArg(object);
+  masm.passABIArg(output);
+
+  using Fn = bool (*)(JSContext*, ArrayObject*, Value*);
+  masm.callWithABI<Fn, jit::ArrayPushDensePure>();
+  masm.storeCallPointerResult(temp);
+
+  masm.freeStack(sizeof(Value));  // Discard pushed Value.
+
+  MOZ_ASSERT(!liveRegs.has(temp));
+  masm.PopRegsInMask(liveRegs);
+
+  bailoutIfFalseBool(temp, ins->snapshot());
+
+  // Load the new length into the output register.
+  masm.loadPtr(Address(object, NativeObject::offsetOfElements()), output);
+  masm.load32(Address(output, ObjectElements::offsetOfLength()), output);
+
+  masm.jump(ool->rejoin());
 }
 
 void CodeGenerator::visitArraySlice(LArraySlice* lir) {

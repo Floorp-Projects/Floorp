@@ -104,6 +104,7 @@ namespace jit {
   _(js::jit::AllocateBigIntNoGC)                                      \
   _(js::jit::AllocateFatInlineString)                                 \
   _(js::jit::AllocateDependentString)                                 \
+  _(js::jit::ArrayPushDensePure)                                      \
   _(js::jit::AssertMapObjectHash)                                     \
   _(js::jit::AssertSetObjectHash)                                     \
   _(js::jit::AssertValidBigIntPtr)                                    \
