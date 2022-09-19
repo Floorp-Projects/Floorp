@@ -495,10 +495,10 @@ function setBrowserDesign() {
   let webpanel = document.getElementById("sidebar2");
   let muteicon = document.getElementById("sidebar2-mute");
   if(muteicon.getAttribute("mute") == "false"){
-    webpanel.mute();
+    webpanel.muted = true;
     muteicon.setAttribute("mute", "true");
   }else{
-    webpanel.unmute();
+    webpanel.muted = false;
     muteicon.setAttribute("mute", "false");
   }
  }
