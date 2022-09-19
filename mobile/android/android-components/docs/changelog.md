@@ -12,11 +12,11 @@ permalink: /changelog/
 * [Configuration](https://github.com/mozilla-mobile/android-components/blob/main/.config.yml)
 
 # 106.0.0
-* [Commits](https://github.com/mozilla-mobile/android-components/compare/v105.0.0...main)
+* [Commits](https://github.com/mozilla-mobile/android-components/compare/v105.0.0..v106.0.0)
 * [Milestone](https://github.com/mozilla-mobile/android-components/milestone/153?closed=1)
-* [Dependencies](https://github.com/mozilla-mobile/android-components/blob/main/buildSrc/src/main/java/Dependencies.kt)
-* [Gecko](https://github.com/mozilla-mobile/android-components/blob/main/buildSrc/src/main/java/Gecko.kt)
-* [Configuration](https://github.com/mozilla-mobile/android-components/blob/main/.config.yml)
+* [Dependencies](https://github.com/mozilla-mobile/android-components/blob/v106.0.0/buildSrc/src/main/java/Dependencies.kt)
+* [Gecko](https://github.com/mozilla-mobile/android-components/blob/v106.0.0/buildSrc/src/main/java/Gecko.kt)
+* [Configuration](https://github.com/mozilla-mobile/android-components/blob/v106.0.0/.config.yml)
 
 * **concept-engine**, **feature-sitepermissions**
   * 🆕 New `name` property for Permission which allows to easily identify and differentiate Permissions.
