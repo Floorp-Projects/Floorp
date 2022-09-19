@@ -591,7 +591,7 @@ static void WebRenderBatchingPrefChangeCallback(const char* aPrefName, void*) {
 static void WebRenderBlobTileSizePrefChangeCallback(const char* aPrefName,
                                                     void*) {
   uint32_t tileSize = Preferences::GetUint(
-      StaticPrefs::GetPrefName_gfx_webrender_blob_tile_size(), 512);
+      StaticPrefs::GetPrefName_gfx_webrender_blob_tile_size(), 256);
   gfx::gfxVars::SetWebRenderBlobTileSize(tileSize);
 }
 
