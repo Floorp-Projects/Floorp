@@ -151,12 +151,16 @@ add_task(async function() {
     await BrowserTestUtils.addTab(gBrowser);
     await BrowserTestUtils.addTab(gBrowser);
     await BrowserTestUtils.addTab(gBrowser);
+    FirefoxViewHandler.tab = await BrowserTestUtils.addTab(gBrowser);
 
+    gBrowser.hideTab(FirefoxViewHandler.tab);
+    FirefoxViewHandler.openTab();
     selectTabs([1, 2, 3, 4, 3]);
     gBrowser.hideTab(gBrowser.tabs[4]);
     selectTabs([2]);
     gBrowser.hideTab(gBrowser.tabs[3]);
 
+    is(gBrowser.tabs[5].hidden, true, "Tab at index 5 is hidden");
     is(gBrowser.tabs[4].hidden, true, "Tab at index 4 is hidden");
     is(gBrowser.tabs[3].hidden, true, "Tab at index 3 is hidden");
     is(gBrowser.tabs[2].hidden, false, "Tab at index 2 is still shown");
@@ -171,11 +175,16 @@ add_task(async function() {
     gBrowser.showTab(gBrowser.tabs[3]);
     await ctrlTabTest([], 4, 3);
     await ctrlTabTest([], 6, 4);
+    FirefoxViewHandler.openTab();
+    // Fx View tab should be visible in the panel while selected.
+    await ctrlTabTest([], 5, 1);
+    // Fx View tab should no longer be visible.
+    await ctrlTabTest([], 1, 4);
 
-    await BrowserTestUtils.removeTab(gBrowser.tabs[4]);
-    await BrowserTestUtils.removeTab(gBrowser.tabs[3]);
-    await BrowserTestUtils.removeTab(gBrowser.tabs[2]);
-    await BrowserTestUtils.removeTab(gBrowser.tabs[1]);
+    for (let i = 5; i > 0; i--) {
+      await BrowserTestUtils.removeTab(gBrowser.tabs[i]);
+    }
+    FirefoxViewHandler.tab = null;
     info("End hidden tabs test");
   }
 
@@ -267,9 +276,11 @@ add_task(async function() {
     await Promise.all(
       gBrowser.tabs.map(tab =>
         SpecialPowers.spawn(tab.linkedBrowser, [], () => {
-          content.window.addEventListener("keyup", () => {
-            content.window._ctrlTabTestKeyupHappend = true;
-          });
+          if (!content.windowGlobalChild?.isInProcess) {
+            content.window.addEventListener("keyup", () => {
+              content.window._ctrlTabTestKeyupHappend = true;
+            });
+          }
         })
       )
     );
