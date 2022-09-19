@@ -375,8 +375,6 @@
     <!-- Preference for settings related to visual options -->
     <string name="preferences_customize">Customize</string>
     <!-- Preference description for banner about signing in -->
-    <string name="preferences_sign_in_description" moz:RemovedIn="104" tools:ignore="UnusedResources">Sync bookmarks, history, and more with your Firefox Account</string>
-    <!-- Preference description for banner about signing in -->
     <string name="preferences_sign_in_description_2">Sign in to sync tabs, bookmarks, passwords, and more.</string>
     <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
     <string name="preferences_account_default_name">Firefox Account</string>
@@ -563,8 +561,6 @@
     <string name="preference_experiments_summary_2">Allows Mozilla to install and run studies</string>
 
     <!-- Turn On Sync Preferences -->
-    <!-- Header of the Turn on Sync preference view -->
-    <string name="preferences_sync" moz:RemovedIn="104" tools:ignore="UnusedResources">Turn on Sync</string>
     <!-- Header of the Sync and save your data preference view -->
     <string name="preferences_sync_2">Sync and save your data</string>
     <!-- Preference for reconnecting to FxA sync -->
@@ -784,8 +780,6 @@
     <string name="delete_from_history">Delete from history</string>
     <!-- Postfix for private WebApp titles, placeholder is replaced with app name -->
     <string name="pwa_site_controls_title_private">%1$s (Private Mode)</string>
-    <!-- Title text for the normal tabs header in the tabs tray which are not part of any tab grouping. -->
-    <string name="tab_tray_header_title_1" moz:removedIn="104" tools:ignore="UnusedResources">Other tabs</string>
 
     <!-- History -->
     <!-- Text for the button to search all history -->
@@ -1184,8 +1178,6 @@
     <!-- Action item in menu for the Delete browsing data on quit feature -->
     <string name="delete_browsing_data_on_quit_action">Quit</string>
 
-    <!-- Dialog message to the user asking to delete browsing data. -->
-    <string moz:removedIn="104" name="delete_browsing_data_prompt_message" tools:ignore="UnusedResources">This will delete all of your browsing data.</string>
     <!-- Title text of a delete browsing data dialog. -->
     <string name="delete_history_prompt_title">Time range to delete</string>
     <!-- Body text of a delete browsing data dialog. -->
