@@ -2,7 +2,7 @@
 ---
 repo: mozilla-central
 created_at: '2021-10-14T12:50:40.073465'
-updated_at: '2022-09-15T13:02:58.399756'
+updated_at: '2022-09-15T13:11:25.389572'
 export:
   path: ./docs/mots/index.rst
   format: rst
@@ -734,8 +734,8 @@ people:
     name: Sergey Galich
     nick: serg
   - &sfink
-    bmo_id: 496930
-    name: ''
+    bmo_id: 359004
+    name: Steve Fink
     nick: sfink
   - &sfoster
     bmo_id: 430165
@@ -3634,5 +3634,5 @@ modules:
         machine_name: webextensions
     machine_name: toolkit
 hashes:
-  config: 799c4025730250056080d7fc391d9c0e3c029010
-  export: d881bdea663fe2286ed99e297ed9daf1fecfdaa6
+  config: 6077586f4c51f8e7b71e136be0cb14b94ca88d2c
+  export: ec21c510674af53b1fa2ffbc5e3b05954f9724d9
