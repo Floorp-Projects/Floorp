@@ -225,8 +225,6 @@ nsIFrame* NS_NewImageBoxFrame(PresShell* aPresShell, ComputedStyle* aStyle);
 
 nsIFrame* NS_NewTextBoxFrame(PresShell* aPresShell, ComputedStyle* aStyle);
 
-nsIFrame* NS_NewButtonBoxFrame(PresShell* aPresShell, ComputedStyle* aStyle);
-
 nsIFrame* NS_NewSplitterFrame(PresShell* aPresShell, ComputedStyle* aStyle);
 
 nsIFrame* NS_NewMenuPopupFrame(PresShell* aPresShell, ComputedStyle* aStyle);
@@ -4104,11 +4102,6 @@ nsCSSFrameConstructor::FindXULTagData(const Element& aElement,
   MOZ_ASSERT(aElement.IsXULElement());
 
   static constexpr FrameConstructionDataByTag sXULTagData[] = {
-      SCROLLABLE_XUL_CREATE(thumb, NS_NewButtonBoxFrame),
-      SCROLLABLE_XUL_CREATE(checkbox, NS_NewButtonBoxFrame),
-      SCROLLABLE_XUL_CREATE(radio, NS_NewButtonBoxFrame),
-      SCROLLABLE_XUL_CREATE(toolbarpaletteitem, NS_NewBoxFrame),
-      SCROLLABLE_XUL_CREATE(treecolpicker, NS_NewButtonBoxFrame),
       SIMPLE_XUL_CREATE(image, NS_NewImageBoxFrame),
       SIMPLE_XUL_CREATE(spacer, NS_NewLeafBoxFrame),
       SIMPLE_XUL_CREATE(treechildren, NS_NewTreeBodyFrame),
@@ -4170,9 +4163,7 @@ nsCSSFrameConstructor::FindXULButtonData(const Element& aElement,
   }
 #endif
 
-  static constexpr FrameConstructionData sXULButtonData =
-      SCROLLABLE_XUL_FCDATA(NS_NewButtonBoxFrame);
-  return &sXULButtonData;
+  return nullptr;
 }
 
 /* static */

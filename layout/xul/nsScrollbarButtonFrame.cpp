@@ -79,7 +79,7 @@ nsresult nsScrollbarButtonFrame::HandleEvent(nsPresContext* aPresContext,
       break;
   }
 
-  return nsButtonBoxFrame::HandleEvent(aPresContext, aEvent, aEventStatus);
+  return nsBoxFrame::HandleEvent(aPresContext, aEvent, aEventStatus);
 }
 
 bool nsScrollbarButtonFrame::HandleButtonPress(nsPresContext* aPresContext,
@@ -134,8 +134,7 @@ bool nsScrollbarButtonFrame::HandleButtonPress(nsPresContext* aPresContext,
     return false;
   }
 
-  nsScrollbarFrame* sb = do_QueryFrame(scrollbar);
-  if (sb) {
+  if (nsScrollbarFrame* sb = do_QueryFrame(scrollbar)) {
     nsIScrollbarMediator* m = sb->GetScrollbarMediator();
     switch (pressedButtonAction) {
       case 0:
@@ -271,5 +270,5 @@ void nsScrollbarButtonFrame::DestroyFrom(nsIFrame* aDestructRoot,
   // Ensure our repeat service isn't going... it's possible that a scrollbar can
   // disappear out from under you while you're in the process of scrolling.
   StopRepeat();
-  nsButtonBoxFrame::DestroyFrom(aDestructRoot, aPostDestroyData);
+  nsBoxFrame::DestroyFrom(aDestructRoot, aPostDestroyData);
 }

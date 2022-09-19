@@ -33,6 +33,11 @@ unified-extensions-item {
   max-width: 20em;
 }
 
+.unified-extensions-item-icon,
+.unified-extensions-item-contents {
+  pointer-events: none;
+}
+
 .unified-extensions-item-name,
 .unified-extensions-item-message {
   display: inherit;

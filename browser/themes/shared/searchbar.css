@@ -70,7 +70,7 @@
 
 .searchbar-engine-one-off-item {
   appearance: none;
-  display: inline-block;
+  display: -moz-inline-box;
   background-color: transparent;
   border: none;
   min-width: 32px;

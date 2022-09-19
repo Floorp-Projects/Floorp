@@ -501,7 +501,6 @@ menupopup::part(drop-indicator) {
   padding: 0;
   align-self: center;
   flex: none;
-  display: block;
   font-size: 0;
 }
 
