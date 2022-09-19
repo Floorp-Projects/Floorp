@@ -6220,7 +6220,7 @@ bool CacheIRCompiler::emitLoadObjectTruthyResult(ObjOperandId objId) {
     masm.setupUnalignedABICall(scratch);
     masm.passABIArg(obj);
     masm.callWithABI<Fn, js::EmulatesUndefined>();
-    masm.convertBoolToInt32(ReturnReg, scratch);
+    masm.storeCallBoolResult(scratch);
     masm.xor32(Imm32(1), scratch);
 
     masm.PopRegsInMask(volatileRegs);
