@@ -10,9 +10,12 @@ function genUUID() {
 add_setup(async function() {
   registerCleanupFunction(() => {
     Services.prefs.clearUserPref("cookiebanners.service.mode");
+    Services.prefs.clearUserPref("cookiebanners.service.mode.privateBrowsing");
     if (
       Services.prefs.getIntPref("cookiebanners.service.mode") !=
-      Ci.nsICookieBannerService.MODE_DISABLED
+        Ci.nsICookieBannerService.MODE_DISABLED ||
+      Services.prefs.getIntPref("cookiebanners.service.mode.privateBrowsing") !=
+        Ci.nsICookieBannerService.MODE_DISABLED
     ) {
       // Restore original rules.
       Services.cookieBanners.resetRules(true);
@@ -26,6 +29,10 @@ add_task(async function test_enabled_pref() {
   await SpecialPowers.pushPrefEnv({
     set: [
       ["cookiebanners.service.mode", Ci.nsICookieBannerService.MODE_DISABLED],
+      [
+        "cookiebanners.service.mode.privateBrowsing",
+        Ci.nsICookieBannerService.MODE_DISABLED,
+      ],
     ],
   });
 
@@ -73,7 +80,8 @@ add_task(async function test_enabled_pref() {
   Assert.throws(
     () => {
       Services.cookieBanners.getCookiesForURI(
-        Services.io.newURI("https://example.com")
+        Services.io.newURI("https://example.com"),
+        false
       );
     },
     /NS_ERROR_NOT_AVAILABLE/,
@@ -115,6 +123,54 @@ add_task(async function test_enabled_pref() {
     Array.isArray(rules),
     "Rules getter should not throw but return an array."
   );
+});
+
+/**
+ * Test both service mode pref combinations to ensure the cookie banner service
+ * is (un-)initialized correctly.
+ */
+add_task(async function test_enabled_pref_pbm_combinations() {
+  const MODES = [
+    Ci.nsICookieBannerService.MODE_DISABLED,
+    Ci.nsICookieBannerService.MODE_REJECT,
+    Ci.nsICookieBannerService.MODE_REJECT_OR_ACCEPT,
+  ];
+
+  // Test all pref combinations
+  MODES.forEach(modeNormal => {
+    MODES.forEach(modePrivate => {
+      info(
+        `cookiebanners.service.mode=${modeNormal}; cookiebanners.service.mode.privateBrowsing=${modePrivate}`
+      );
+      Services.prefs.setIntPref("cookiebanners.service.mode", modeNormal);
+      Services.prefs.setIntPref(
+        "cookiebanners.service.mode.privateBrowsing",
+        modePrivate
+      );
+
+      if (
+        modeNormal == Ci.nsICookieBannerService.MODE_DISABLED &&
+        modePrivate == Ci.nsICookieBannerService.MODE_DISABLED
+      ) {
+        Assert.throws(
+          () => {
+            Services.cookieBanners.rules;
+          },
+          /NS_ERROR_NOT_AVAILABLE/,
+          "Cookie banner service should be disabled. Should throw NS_ERROR_NOT_AVAILABLE for rules getter."
+        );
+      } else {
+        ok(
+          Services.cookieBanners.rules,
+          "Cookie banner service should be enabled, rules getter should not throw."
+        );
+      }
+    });
+  });
+
+  // Cleanup.
+  Services.prefs.clearUserPref("cookiebanners.service.mode");
+  Services.prefs.clearUserPref("cookiebanners.service.mode.privateBrowsing");
 });
 
 add_task(async function test_insertAndGetRule() {
@@ -259,7 +315,8 @@ add_task(async function test_insertAndGetRule() {
 
   info("Getting cookies by URI for example.com.");
   let ruleArray = Services.cookieBanners.getCookiesForURI(
-    Services.io.newURI("http://example.com")
+    Services.io.newURI("http://example.com"),
+    false
   );
   ok(
     ruleArray && Array.isArray(ruleArray),
@@ -300,7 +357,8 @@ add_task(async function test_insertAndGetRule() {
 
   info("Getting cookies by URI for example.org.");
   let ruleArray2 = Services.cookieBanners.getCookiesForURI(
-    Services.io.newURI("http://example.org")
+    Services.io.newURI("http://example.org"),
+    false
   );
   ok(
     ruleArray2 && Array.isArray(ruleArray2),
@@ -342,7 +400,8 @@ add_task(async function test_insertAndGetRule() {
   });
 
   ruleArray2 = Services.cookieBanners.getCookiesForURI(
-    Services.io.newURI("http://example.org")
+    Services.io.newURI("http://example.org"),
+    false
   );
   ok(
     ruleArray2 && Array.isArray(ruleArray2),
@@ -356,7 +415,8 @@ add_task(async function test_insertAndGetRule() {
 
   info("Calling getCookiesForURI for unknown domain.");
   let ruleArrayUnknown = Services.cookieBanners.getCookiesForURI(
-    Services.io.newURI("http://example.net")
+    Services.io.newURI("http://example.net"),
+    false
   );
   ok(
     ruleArrayUnknown && Array.isArray(ruleArrayUnknown),
@@ -622,7 +682,8 @@ add_task(async function test_globalRules() {
 
   is(
     Services.cookieBanners.getCookiesForURI(
-      Services.io.newURI("http://example.com")
+      Services.io.newURI("http://example.com"),
+      false
     ).length,
     1,
     "There should be a cookie rule for example.com"
@@ -636,7 +697,8 @@ add_task(async function test_globalRules() {
 
   is(
     Services.cookieBanners.getCookiesForURI(
-      Services.io.newURI("http://thishasnorule.com")
+      Services.io.newURI("http://thishasnorule.com"),
+      false
     ).length,
     0,
     "There should be no cookie rule for thishasnorule.com"
@@ -674,7 +736,8 @@ add_task(async function test_globalRules() {
 
   is(
     Services.cookieBanners.getCookiesForURI(
-      Services.io.newURI("http://thishasnorule.com")
+      Services.io.newURI("http://thishasnorule.com"),
+      false
     ).length,
     0,
     "There should be no cookie rule for thishasnorule.com"
