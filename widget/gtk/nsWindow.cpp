@@ -1861,8 +1861,15 @@ void nsWindow::UpdateWaylandPopupHierarchy() {
           popup->WaylandPopupIsFirst() &&
           popup->WaylandPopupFitsToplevelWindow(/* aMove */ true)) {
         // Workaround for https://gitlab.gnome.org/GNOME/gtk/-/issues/1986
+        //
+        // ePopupTypePanel types are used for extension popups which may be
+        // resized. If such popup uses move-to-rect, we need to hide it before
+        // resize and show it again. That leads to massive flickering
+        // so use plain move if possible to avoid it.
+        //
         // Bug 1760276 - don't use move-to-rect when popup is inside main
         // Firefox window.
+        //
         // Use it for first popups only due to another mutter bug
         // https://gitlab.gnome.org/GNOME/gtk/-/issues/5089
         // https://bugzilla.mozilla.org/show_bug.cgi?id=1784873
@@ -1877,7 +1884,7 @@ void nsWindow::UpdateWaylandPopupHierarchy() {
         popup->WaylandPopupIsFirst(), useMoveToRect);
 
     popup->mPopupUseMoveToRect = useMoveToRect;
-    popup->WaylandPopupMove();
+    popup->WaylandPopupMoveImpl();
     popup->mPopupChanged = false;
     popup = popup->mWaylandPopupNext;
   }
@@ -1926,10 +1933,10 @@ void nsWindow::NativeMoveResizeWaylandPopupCallback(
   // shown again before move-to-rect callback is fired.
   // It may lead to incorrect popup placement as we may call
   // gtk_window_move() between hide & show.
-  // See Bug 1777919.
+  // See Bug 1777919, 1789581.
 #if MOZ_LOGGING
   if (!mWaitingForMoveToRectCallback) {
-    LOG("  Bogus move-to-rect callback! A compositor bug?");
+    LOG("  Bogus move-to-rect callback! Expect wrong popup coordinates.");
   }
 #endif
 
@@ -2500,9 +2507,8 @@ bool nsWindow::WaylandPopupCheckAndGetAnchor(GdkRectangle* aPopupAnchor,
   }
 
   *aPopupAnchor = DevicePixelsToGdkRectRoundOut(anchorRect);
-  LOG("  move-to-rect call, anchored to rectangle [%d, %d] -> [%d x %d]",
-      aPopupAnchor->x, aPopupAnchor->y, aPopupAnchor->width,
-      aPopupAnchor->height);
+  LOG("  anchored to rectangle [%d, %d] -> [%d x %d]", aPopupAnchor->x,
+      aPopupAnchor->y, aPopupAnchor->width, aPopupAnchor->height);
 
   if (!WaylandPopupAnchorAdjustForParentPopup(aPopupAnchor, aOffset)) {
     LOG("  can't use move-to-rect, anchor is not placed inside of parent "
@@ -2553,7 +2559,38 @@ void nsWindow::WaylandPopupPrepareForMove() {
   }
 }
 
-void nsWindow::WaylandPopupMove() {
+// Plain popup move on Wayland - simply place popup on given location.
+// We can't just call gtk_window_move() as it's not effective on visible
+// popups.
+void nsWindow::WaylandPopupMovePlain(int aX, int aY) {
+  LOG("nsWindow::WaylandPopupMovePlain(%d, %d)", aX, aY);
+
+  // We can directly move only popups based on wl_subsurface type.
+  MOZ_DIAGNOSTIC_ASSERT(gtk_window_get_type_hint(GTK_WINDOW(mShell)) ==
+                        GDK_WINDOW_TYPE_HINT_UTILITY);
+
+  gtk_window_move(GTK_WINDOW(mShell), aX, aY);
+
+  // gtk_window_move() can trick us. When widget is hidden gtk_window_move()
+  // does not move the widget but sets new widget coordinates when widget
+  // is mapped again.
+  //
+  // If popup used move-to-rect before
+  // (GdkWindow has POSITION_METHOD_MOVE_TO_RECT set), popup will use
+  // move-to-rect again when it's mapped and we'll get bogus move-to-rect
+  // callback.
+  //
+  // gdk_window_move() sets position_method to POSITION_METHOD_MOVE_RESIZE
+  // so we'll use plain move when popup is shown.
+  if (!gtk_widget_get_mapped(mShell)) {
+    GdkWindow* window = gtk_widget_get_window(mShell);
+    if (window) {
+      gdk_window_move(window, aX, aY);
+    }
+  }
+}
+
+void nsWindow::WaylandPopupMoveImpl() {
   // Available as of GTK 3.24+
   static auto sGdkWindowMoveToRect = (void (*)(
       GdkWindow*, const GdkRectangle*, GdkGravity, GdkGravity, GdkAnchorHints,
@@ -2578,34 +2615,14 @@ void nsWindow::WaylandPopupMove() {
       mRelativePopupPosition.y);
   LOG("  popup use move to rect %d", mPopupUseMoveToRect);
 
+  WaylandPopupPrepareForMove();
+
   if (!mPopupUseMoveToRect) {
-    // Tooltips/Utility popups positioned by () are created as subsurfaces
-    // with relative position.
-    GdkPoint currentPopupPosition;
-    gtk_window_get_position(GTK_WINDOW(mShell), &currentPopupPosition.x,
-                            &currentPopupPosition.y);
-    LOG("  recent window position (%d, %d)", currentPopupPosition.x,
-        currentPopupPosition.y);
-
-    if (mRelativePopupPosition.x == currentPopupPosition.x &&
-        mRelativePopupPosition.y == currentPopupPosition.y) {
-      LOG("  popup is already positioned, quit");
-      return;
-    }
-
-    WaylandPopupPrepareForMove();
-
-    LOG("  use relative gtk_window_move(%d, %d) for utility/tooltips",
-        mRelativePopupPosition.x, mRelativePopupPosition.y);
-    gtk_window_move(GTK_WINDOW(mShell), mRelativePopupPosition.x,
-                    mRelativePopupPosition.y);
-
+    WaylandPopupMovePlain(mRelativePopupPosition.x, mRelativePopupPosition.y);
     // Layout already should be aware of our bounds, since we didn't change it
     // from the widget side for flipping or so.
     return;
   }
-
-  WaylandPopupPrepareForMove();
 
   // Correct popup position now. It will be updated by gdk_window_move_to_rect()
   // anyway but we need to set it now to avoid a race condition here.
@@ -2619,6 +2636,7 @@ void nsWindow::WaylandPopupMove() {
   }
   mWaitingForMoveToRectCallback = true;
 
+  LOG("  call move-to-rect");
   sGdkWindowMoveToRect(gdkWindow, &gtkAnchorRect,
                        mPopupMoveToRectParams.mAnchorRectType,
                        mPopupMoveToRectParams.mPopupAnchorType,
