@@ -28,6 +28,8 @@ NS_IMPL_ISUPPORTS(nsCookieBannerService, nsICookieBannerService, nsIObserver)
 LazyLogModule gCookieBannerLog("nsCookieBannerService");
 
 static const char kCookieBannerServiceModePref[] = "cookiebanners.service.mode";
+static const char kCookieBannerServiceModePBMPref[] =
+    "cookiebanners.service.mode.privateBrowsing";
 
 static StaticRefPtr<nsCookieBannerService> sCookieBannerServiceSingleton;
 
@@ -38,8 +40,9 @@ already_AddRefed<nsCookieBannerService> nsCookieBannerService::GetSingleton() {
 
     RunOnShutdown([] {
       MOZ_LOG(gCookieBannerLog, LogLevel::Debug,
-              ("RunOnShutdown. Mode: %d",
-               StaticPrefs::cookiebanners_service_mode()));
+              ("RunOnShutdown. Mode: %d. Mode PBM: %d.",
+               StaticPrefs::cookiebanners_service_mode(),
+               StaticPrefs::cookiebanners_service_mode_privateBrowsing()));
 
       // Unregister pref listeners.
       DebugOnly<nsresult> rv = Preferences::UnregisterCallback(
@@ -47,6 +50,11 @@ already_AddRefed<nsCookieBannerService> nsCookieBannerService::GetSingleton() {
       NS_WARNING_ASSERTION(
           NS_SUCCEEDED(rv),
           "Unregistering kCookieBannerServiceModePref callback failed");
+      rv = Preferences::UnregisterCallback(&nsCookieBannerService::OnPrefChange,
+                                           kCookieBannerServiceModePBMPref);
+      NS_WARNING_ASSERTION(
+          NS_SUCCEEDED(rv),
+          "Unregistering kCookieBannerServiceModePBMPref callback failed");
 
       rv = sCookieBannerServiceSingleton->Shutdown();
       NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
@@ -63,8 +71,11 @@ already_AddRefed<nsCookieBannerService> nsCookieBannerService::GetSingleton() {
 void nsCookieBannerService::OnPrefChange(const char* aPref, void* aData) {
   RefPtr<nsCookieBannerService> service = GetSingleton();
 
+  // If the feature is enabled for normal or private browsing, init the service.
   if (StaticPrefs::cookiebanners_service_mode() !=
-      nsICookieBannerService::MODE_DISABLED) {
+          nsICookieBannerService::MODE_DISABLED ||
+      StaticPrefs::cookiebanners_service_mode_privateBrowsing() !=
+          nsICookieBannerService::MODE_DISABLED) {
     MOZ_LOG(
         gCookieBannerLog, LogLevel::Info,
         ("Initializing nsCookieBannerService after pref change. %s", aPref));
@@ -91,14 +102,19 @@ nsCookieBannerService::Observe(nsISupports* aSubject, const char* aTopic,
     return NS_OK;
   }
 
+  nsresult rv = Preferences::RegisterCallback(
+      &nsCookieBannerService::OnPrefChange, kCookieBannerServiceModePBMPref);
+  NS_ENSURE_SUCCESS(rv, rv);
+
   return Preferences::RegisterCallbackAndCall(
       &nsCookieBannerService::OnPrefChange, kCookieBannerServiceModePref);
 }
 
 nsresult nsCookieBannerService::Init() {
   MOZ_LOG(gCookieBannerLog, LogLevel::Debug,
-          ("%s. Mode: %d", __FUNCTION__,
-           StaticPrefs::cookiebanners_service_mode()));
+          ("%s. Mode: %d. Mode PBM: %d.", __FUNCTION__,
+           StaticPrefs::cookiebanners_service_mode(),
+           StaticPrefs::cookiebanners_service_mode_privateBrowsing()));
 
   // Check if already initialized.
   if (mIsInitialized) {
@@ -125,8 +141,9 @@ nsresult nsCookieBannerService::Init() {
 
 nsresult nsCookieBannerService::Shutdown() {
   MOZ_LOG(gCookieBannerLog, LogLevel::Debug,
-          ("%s. Mode: %d", __FUNCTION__,
-           StaticPrefs::cookiebanners_service_mode()));
+          ("%s. Mode: %d. Mode PBM: %d.", __FUNCTION__,
+           StaticPrefs::cookiebanners_service_mode(),
+           StaticPrefs::cookiebanners_service_mode_privateBrowsing()));
 
   // Check if already shutdown.
   if (!mIsInitialized) {
@@ -222,12 +239,47 @@ nsresult nsCookieBannerService::GetRuleForURI(nsIURI* aURI,
 
 NS_IMETHODIMP
 nsCookieBannerService::GetCookiesForURI(
-    nsIURI* aURI, nsTArray<RefPtr<nsICookieRule>>& aCookies) {
+    nsIURI* aURI, const bool aIsPrivateBrowsing,
+    nsTArray<RefPtr<nsICookieRule>>& aCookies) {
+  NS_ENSURE_ARG_POINTER(aURI);
   aCookies.Clear();
+
+  // We only need URI spec for logging, avoid getting it otherwise.
+  if (MOZ_LOG_TEST(gCookieBannerLog, LogLevel::Debug)) {
+    nsAutoCString spec;
+    nsresult rv = aURI->GetSpec(spec);
+    NS_ENSURE_SUCCESS(rv, rv);
+    MOZ_LOG(gCookieBannerLog, LogLevel::Debug,
+            ("%s. aURI: %s. aIsPrivateBrowsing: %d", __FUNCTION__, spec.get(),
+             aIsPrivateBrowsing));
+  }
 
   // Service is disabled, throw with empty array.
   if (!mIsInitialized) {
     return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  // Check which cookie banner service mode applies for this request. This
+  // depends on whether the browser is in private browsing or normal browsing
+  // mode.
+  uint32_t mode;
+  if (aIsPrivateBrowsing) {
+    mode = StaticPrefs::cookiebanners_service_mode_privateBrowsing();
+  } else {
+    mode = StaticPrefs::cookiebanners_service_mode();
+  }
+  MOZ_LOG(
+      gCookieBannerLog, LogLevel::Debug,
+      ("%s. Found nsICookieBannerRule. Computed mode: %d", __FUNCTION__, mode));
+
+  // Service is disabled for current context (normal or private browsing),
+  // return empty array.
+  if (mode == nsICookieBannerService::MODE_DISABLED) {
+    MOZ_LOG(gCookieBannerLog, LogLevel::Debug,
+            ("%s. Returning empty array. Got MODE_DISABLED for "
+             "aIsPrivateBrowsing: %d.",
+             __FUNCTION__, aIsPrivateBrowsing));
+    return NS_OK;
   }
 
   nsCOMPtr<nsICookieBannerRule> rule;
@@ -235,6 +287,9 @@ nsCookieBannerService::GetCookiesForURI(
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (!rule) {
+    MOZ_LOG(gCookieBannerLog, LogLevel::Debug,
+            ("%s. Returning empty array. No nsICookieBannerRule matching URI.",
+             __FUNCTION__));
     return NS_OK;
   }
 
@@ -245,11 +300,16 @@ nsCookieBannerService::GetCookiesForURI(
 
   // MODE_REJECT_OR_ACCEPT: In this mode we will try to opt-out, but if we don't
   // have any opt-out cookies we will fallback to the opt-in cookies.
-  if (StaticPrefs::cookiebanners_service_mode() ==
-          nsICookieBannerService::MODE_REJECT_OR_ACCEPT &&
+  if (mode == nsICookieBannerService::MODE_REJECT_OR_ACCEPT &&
       aCookies.IsEmpty()) {
+    MOZ_LOG(gCookieBannerLog, LogLevel::Debug,
+            ("%s. Returning opt-in cookies.", __FUNCTION__));
+
     return rule->GetCookiesOptIn(aCookies);
   }
+
+  MOZ_LOG(gCookieBannerLog, LogLevel::Debug,
+          ("%s. Returning opt-out cookies.", __FUNCTION__));
 
   return NS_OK;
 }

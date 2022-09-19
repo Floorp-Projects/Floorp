@@ -49,7 +49,7 @@ interface nsICookieBannerService : nsISupports {
    * return none, only reject rules or accept rules if there is no reject rule
    * available.
    */
-  Array<nsICookieRule> getCookiesForURI(in nsIURI aURI);
+  Array<nsICookieRule> getCookiesForURI(in nsIURI aURI, in bool aIsPrivateBrowsing);
 
   /**
    * Look up the click rules for a given domain.

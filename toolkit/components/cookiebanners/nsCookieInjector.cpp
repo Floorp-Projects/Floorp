@@ -17,6 +17,7 @@
 #include "Cookie.h"
 #include "nsIHttpProtocolHandler.h"
 #include "mozilla/StaticPrefs_cookiebanners.h"
+#include "nsNetUtil.h"
 
 namespace mozilla {
 
@@ -41,6 +42,9 @@ already_AddRefed<nsCookieInjector> nsCookieInjector::GetSingleton() {
     NS_WARNING_ASSERTION(
         NS_SUCCEEDED(rv),
         "Failed to register pref listener for kCookieInjectorEnabledPref.");
+
+    rv = Preferences::RegisterCallback(&nsCookieInjector::OnPrefChange,
+                                       kCookieBannerServiceModePBMPref);
     rv = Preferences::RegisterCallbackAndCall(&nsCookieInjector::OnPrefChange,
                                               kCookieBannerServiceModePref);
     NS_WARNING_ASSERTION(
@@ -77,9 +81,16 @@ already_AddRefed<nsCookieInjector> nsCookieInjector::GetSingleton() {
 void nsCookieInjector::OnPrefChange(const char* aPref, void* aData) {
   RefPtr<nsCookieInjector> injector = nsCookieInjector::GetSingleton();
 
-  if (StaticPrefs::cookiebanners_service_mode() !=
-          nsICookieBannerService::MODE_DISABLED &&
-      StaticPrefs::cookiebanners_cookieInjector_enabled()) {
+  // The cookie injector is initialized if enabled by pref and the main service
+  // is enabled (either in private browsing or normal browsing).
+  bool shouldInit =
+      (StaticPrefs::cookiebanners_service_mode() !=
+           nsICookieBannerService::MODE_DISABLED ||
+       StaticPrefs::cookiebanners_service_mode_privateBrowsing() !=
+           nsICookieBannerService::MODE_DISABLED) &&
+      StaticPrefs::cookiebanners_cookieInjector_enabled();
+
+  if (shouldInit) {
     MOZ_LOG(gCookieInjectorLog, LogLevel::Info,
             ("Initializing cookie injector after pref change. %s", aPref));
 
@@ -182,7 +193,8 @@ nsresult nsCookieInjector::MaybeInjectCookies(nsIHttpChannel* aChannel,
   MOZ_LOG(gCookieInjectorLog, LogLevel::Debug,
           ("Looking up rules for %s.", hostPort.get()));
   nsTArray<RefPtr<nsICookieRule>> rules;
-  rv = cookieBannerService->GetCookiesForURI(uri, rules);
+  rv = cookieBannerService->GetCookiesForURI(
+      uri, NS_UsePrivateBrowsing(aChannel), rules);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // No cookie rules found.
