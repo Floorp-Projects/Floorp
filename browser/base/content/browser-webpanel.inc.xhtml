@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-<vbox id="sidebar-select-box" style="width: 3em; max-width: 3em !important; min-width: 3em !important;" class="webpanel-box chromeclass-extrachrome">
+<vbox id="sidebar-select-box" style="height: 100vh !important; overflow: scroll !important; width: 3em; max-width: 3em !important; min-width: 3em !important;" class="webpanel-box chromeclass-extrachrome">
    <spacer flex="15" class="workspace"/>
     <toolbarbutton id="select-browser-manager" class="sidepanel-icon" data-l10n-id="show-browser-manager-sidebar"  oncommand="setBrowserManagerSidebarMode();"/>
     <toolbarbutton id="select-bookmark" class="sidepanel-icon" data-l10n-id="show-bookmark-sidebar"  oncommand="setBookmarksSidebarMode();"/>
@@ -10,16 +10,16 @@
     <toolbarbutton id="select-download" class="sidepanel-icon" data-l10n-id="show-download-sidebar"  oncommand="setDownloadsSidebarMode();"/>
     <toolbarbutton id="select-TST" class="sidepanel-icon" data-l10n-id="show-TST-sidebar"  oncommand="setTreeStyleTabSidebarMode();"/>
 
-    <toolbarbutton id="select-CustomURL1" class="sidepanel-icon webpanel-icon" data-l10n-id="show-CustomURL-sidebar"  oncommand="setCustomSidebarMode1();"/>
-    <toolbarbutton id="select-CustomURL2" class="sidepanel-icon webpanel-icon" data-l10n-id="show-CustomURL-sidebar"  oncommand="setCustomSidebarMode2();" hidden="true"/>
-    <toolbarbutton id="select-CustomURL3" class="sidepanel-icon webpanel-icon" data-l10n-id="show-CustomURL-sidebar"  oncommand="setCustomSidebarMode3();" hidden="true"/>
-    <toolbarbutton id="select-CustomURL4" class="sidepanel-icon webpanel-icon" data-l10n-id="show-CustomURL-sidebar"  oncommand="setCustomSidebarMode4();" hidden="true"/>
-    <toolbarbutton id="select-CustomURL5" class="sidepanel-icon webpanel-icon" data-l10n-id="show-CustomURL-sidebar"  oncommand="setCustomSidebarMode5();" hidden="true"/>
-    <toolbarbutton id="select-CustomURL6" class="sidepanel-icon webpanel-icon" data-l10n-id="show-CustomURL-sidebar"  oncommand="setCustomSidebarMode6();" hidden="true"/>
-    <toolbarbutton id="select-CustomURL7" class="sidepanel-icon webpanel-icon" data-l10n-id="show-CustomURL-sidebar"  oncommand="setCustomSidebarMode7();" hidden="true"/>
-    <toolbarbutton id="select-CustomURL8" class="sidepanel-icon webpanel-icon" data-l10n-id="show-CustomURL-sidebar"  oncommand="setCustomSidebarMode8();" hidden="true"/>
-    <toolbarbutton id="select-CustomURL9" class="sidepanel-icon webpanel-icon" data-l10n-id="show-CustomURL-sidebar"  oncommand="setCustomSidebarMode9();" hidden="true"/>
-    <toolbarbutton id="select-CustomURL10" class="sidepanel-icon webpanel-icon" data-l10n-id="show-CustomURL-sidebar"  oncommand="setCustomSidebarMode10();" hidden="true"/>
+    <toolbarbutton id="select-CustomURL1" class="sidepanel-icon webpanel-icon" oncommand="setCustomSidebarMode1();" hidden="true"/>
+    <toolbarbutton id="select-CustomURL2" class="sidepanel-icon webpanel-icon" oncommand="setCustomSidebarMode2();" hidden="true"/>
+    <toolbarbutton id="select-CustomURL3" class="sidepanel-icon webpanel-icon" oncommand="setCustomSidebarMode3();" hidden="true"/>
+    <toolbarbutton id="select-CustomURL4" class="sidepanel-icon webpanel-icon" oncommand="setCustomSidebarMode4();" hidden="true"/>
+    <toolbarbutton id="select-CustomURL5" class="sidepanel-icon webpanel-icon" oncommand="setCustomSidebarMode5();" hidden="true"/>
+    <toolbarbutton id="select-CustomURL6" class="sidepanel-icon webpanel-icon" oncommand="setCustomSidebarMode6();" hidden="true"/>
+    <toolbarbutton id="select-CustomURL7" class="sidepanel-icon webpanel-icon" oncommand="setCustomSidebarMode7();" hidden="true"/>
+    <toolbarbutton id="select-CustomURL8" class="sidepanel-icon webpanel-icon" oncommand="setCustomSidebarMode8();" hidden="true"/>
+    <toolbarbutton id="select-CustomURL9" class="sidepanel-icon webpanel-icon" oncommand="setCustomSidebarMode9();" hidden="true"/>
+    <toolbarbutton id="select-CustomURL10" class="sidepanel-icon webpanel-icon" oncommand="setCustomSidebarMode10();" hidden="true"/>
 
     <spacer flex="1000"/>
      <toolbarbutton class="sidepanel-icon" data-l10n-id="sidebar-addons-button"  oncommand="BrowserOpenAddonsMgr();" id="addons-icon"/>
