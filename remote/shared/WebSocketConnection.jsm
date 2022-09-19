@@ -15,6 +15,7 @@ const lazy = {};
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   Log: "chrome://remote/content/shared/Log.jsm",
+  truncate: "chrome://remote/content/shared/Format.jsm",
   WebSocketTransport: "chrome://remote/content/server/WebSocketTransport.jsm",
 });
 
@@ -40,6 +41,25 @@ class WebSocketConnection {
     this.transport.ready();
 
     lazy.logger.debug(`${this.constructor.name} ${this.id} accepted`);
+  }
+
+  _log(direction, data) {
+    function replacer(key, value) {
+      if (typeof value === "string") {
+        return lazy.truncate`${value}`;
+      }
+      return value;
+    }
+
+    const payload = JSON.stringify(
+      data,
+      replacer,
+      lazy.Log.verbose ? "\t" : null
+    );
+
+    lazy.logger.trace(
+      `${this.constructor.name} ${this.id} ${direction} ${payload}`
+    );
   }
 
   /**
@@ -73,6 +93,7 @@ class WebSocketConnection {
    *     The object to be sent.
    */
   send(data) {
+    this._log("<-", data);
     this.transport.send(data);
   }
 
@@ -128,6 +149,6 @@ class WebSocketConnection {
    *     JSON-serializable object sent by the client.
    */
   async onPacket(packet) {
-    throw new Error("Not implemented");
+    this._log("->", packet);
   }
 }

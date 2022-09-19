@@ -18,7 +18,6 @@ const lazy = {};
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   Log: "chrome://remote/content/shared/Log.jsm",
-  truncate: "chrome://remote/content/shared/Format.jsm",
   UnknownMethodError: "chrome://remote/content/cdp/Error.jsm",
 });
 
@@ -74,21 +73,6 @@ class CDPConnection extends WebSocketConnection {
     }
 
     this.sessions.set(session.id, session);
-  }
-
-  /**
-   * Send the JSON-serializable object to the CDP client.
-   *
-   * @param {Object} data
-   *     The object to be sent.
-   */
-  send(data) {
-    const payload = JSON.stringify(data, null, lazy.Log.verbose ? "\t" : null);
-    lazy.logger.trace(
-      lazy.truncate`${this.constructor.name} ${this.id} <- ${payload}`
-    );
-
-    super.send(data);
   }
 
   /**
@@ -228,14 +212,7 @@ class CDPConnection extends WebSocketConnection {
    *        JSON-serializable object sent by the client.
    */
   async onPacket(packet) {
-    const payload = JSON.stringify(
-      packet,
-      null,
-      lazy.Log.verbose ? "\t" : null
-    );
-    lazy.logger.trace(
-      lazy.truncate`${this.constructor.name} ${this.id} -> ${payload}`
-    );
+    super.onPacket(packet);
 
     try {
       const { id, method, params, sessionId } = packet;
