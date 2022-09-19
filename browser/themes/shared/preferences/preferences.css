@@ -11,6 +11,7 @@
 
 #preferences-root {
   text-rendering: optimizeLegibility;
+  -moz-box-layout: flex;
 }
 
 @media not print {
@@ -380,6 +381,11 @@ checkbox {
 
 #handlersView > richlistitem {
   min-height: 30px;
+}
+
+#handlersViewHeader > treecol,
+#handlersView > richlistitem > hbox {
+  width: 50%;
 }
 
 #handlersView .actionsMenu {

@@ -71,7 +71,7 @@ pub enum StoreOp {
 
 /// Describes an individual channel within a render pass, such as color, depth, or stencil.
 #[repr(C)]
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq)]
 #[cfg_attr(any(feature = "serial-pass", feature = "trace"), derive(Serialize))]
 #[cfg_attr(any(feature = "serial-pass", feature = "replay"), derive(Deserialize))]
 pub struct PassChannel<V> {
@@ -653,7 +653,7 @@ impl<'a, A: HalApi> RenderPassInfo<'a, A> {
         buffer_guard: &'a Storage<Buffer<A>, id::BufferId>,
         texture_guard: &'a Storage<Texture<A>, id::TextureId>,
     ) -> Result<Self, RenderPassErrorInner> {
-        profiling::scope!("start", "RenderPassInfo");
+        profiling::scope!("RenderPassInfo::start");
 
         // We default to false intentionally, even if depth-stencil isn't used at all.
         // This allows us to use the primary raw pipeline in `RenderPipeline`,
@@ -737,7 +737,7 @@ impl<'a, A: HalApi> RenderPassInfo<'a, A> {
             let view: &TextureView<A> = cmd_buf
                 .trackers
                 .views
-                .add_single(&*view_guard, at.view)
+                .add_single(view_guard, at.view)
                 .ok_or(RenderPassErrorInner::InvalidAttachment(at.view))?;
             check_multiview(view)?;
             add_view(view, "depth")?;
@@ -853,7 +853,7 @@ impl<'a, A: HalApi> RenderPassInfo<'a, A> {
             let color_view: &TextureView<A> = cmd_buf
                 .trackers
                 .views
-                .add_single(&*view_guard, at.view)
+                .add_single(view_guard, at.view)
                 .ok_or(RenderPassErrorInner::InvalidAttachment(at.view))?;
             check_multiview(color_view)?;
             add_view(color_view, "color")?;
@@ -883,7 +883,7 @@ impl<'a, A: HalApi> RenderPassInfo<'a, A> {
                 let resolve_view: &TextureView<A> = cmd_buf
                     .trackers
                     .views
-                    .add_single(&*view_guard, resolve_target)
+                    .add_single(view_guard, resolve_target)
                     .ok_or(RenderPassErrorInner::InvalidAttachment(resolve_target))?;
 
                 check_multiview(resolve_view)?;
@@ -998,7 +998,7 @@ impl<'a, A: HalApi> RenderPassInfo<'a, A> {
         raw: &mut A::CommandEncoder,
         texture_guard: &Storage<Texture<A>, id::TextureId>,
     ) -> Result<(UsageScope<A>, SurfacesInDiscardState), RenderPassErrorInner> {
-        profiling::scope!("finish", "RenderPassInfo");
+        profiling::scope!("RenderPassInfo::finish");
         unsafe {
             raw.end_render_pass();
         }
@@ -1015,7 +1015,7 @@ impl<'a, A: HalApi> RenderPassInfo<'a, A> {
                 self.usage_scope
                     .textures
                     .merge_single(
-                        &*texture_guard,
+                        texture_guard,
                         ra.texture_id.value,
                         Some(ra.selector.clone()),
                         &ra.texture_id.ref_count,
@@ -1091,7 +1091,7 @@ impl<G: GlobalIdentityHandlerFactory> Global<G> {
         color_attachments: &[Option<RenderPassColorAttachment>],
         depth_stencil_attachment: Option<&RenderPassDepthStencilAttachment>,
     ) -> Result<(), RenderPassError> {
-        profiling::scope!("run_render_pass", "CommandEncoder");
+        profiling::scope!("CommandEncoder::run_render_pass");
         let init_scope = PassErrorScope::Pass(encoder_id);
 
         let hub = A::hub(self);
@@ -2454,5 +2454,7 @@ pub mod render_ffi {
                 .commands
                 .push(RenderCommand::ExecuteBundle(bundle_id));
         }
+        pass.current_pipeline.reset();
+        pass.current_bind_groups.reset();
     }
 }

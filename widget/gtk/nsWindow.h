@@ -545,6 +545,9 @@ class nsWindow final : public nsBaseWidget {
 
   // The actual size mode that's in effect.
   nsSizeMode mSizeMode = nsSizeMode_Normal;
+  // The last size mode we've requested. This might not match mSizeMode if
+  // there's a request to change the size mode in progress.
+  nsSizeMode mLastSizeModeRequest = nsSizeMode_Normal;
   nsSizeMode mLastSizeModeBeforeFullscreen = nsSizeMode_Normal;
 
   float mAspectRatio = 0.0f;
@@ -840,18 +843,21 @@ class nsWindow final : public nsBaseWidget {
       nsTArray<nsIWidget*>* aLayoutWidgetHierarchy);
   void CloseAllPopupsBeforeRemotePopup();
   void WaylandPopupHideClosedPopups();
-  void WaylandPopupMove();
   void WaylandPopupPrepareForMove();
+  void WaylandPopupMoveImpl();
+  void WaylandPopupMovePlain(int aX, int aY);
   bool WaylandPopupRemoveNegativePosition(int* aX = nullptr, int* aY = nullptr);
-  bool WaylandPopupCheckAndGetAnchor(GdkRectangle* aPopupAnchor);
-  bool WaylandPopupAnchorAdjustForParentPopup(GdkRectangle* aPopupAnchor);
+  bool WaylandPopupCheckAndGetAnchor(GdkRectangle* aPopupAnchor,
+                                     GdkPoint* aOffset);
+  bool WaylandPopupAnchorAdjustForParentPopup(GdkRectangle* aPopupAnchor,
+                                              GdkPoint* aOffset);
   nsWindow* WaylandPopupGetTopmostWindow();
   bool IsPopupInLayoutPopupChain(nsTArray<nsIWidget*>* aLayoutWidgetHierarchy,
                                  bool aMustMatchParent);
   void WaylandPopupMarkAsClosed();
   void WaylandPopupRemoveClosedPopups();
   void WaylandPopupSetDirectPosition();
-  bool WaylandPopupFitsToplevelWindow();
+  bool WaylandPopupFitsToplevelWindow(bool aMove);
   const WaylandPopupMoveToRectParams WaylandPopupGetPositionFromLayout();
   void WaylandPopupPropagateChangesToLayout(bool aMove, bool aResize);
   nsWindow* WaylandPopupFindLast(nsWindow* aPopup);

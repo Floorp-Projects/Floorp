@@ -20,6 +20,7 @@ use crate::prim_store::gradient::{
     FastLinearGradientInstance, LinearGradientInstance, RadialGradientInstance,
     ConicGradientInstance,
 };
+use crate::renderer::{GpuBuffer, GpuBufferBuilder};
 use crate::render_backend::DataStores;
 use crate::render_task::{RenderTaskKind, RenderTaskAddress};
 use crate::render_task::{RenderTask, ScalingTask, SvgFilterInfo};
@@ -262,6 +263,7 @@ impl RenderTarget for ColorRenderTarget {
     ) {
         profile_scope!("build");
         let mut merged_batches = AlphaBatchContainer::new(None);
+        let mut gpu_buffer_builder = GpuBufferBuilder::new();
 
         for task_id in &self.alpha_tasks {
             profile_scope!("alpha_task");
@@ -312,6 +314,7 @@ impl RenderTarget for ColorRenderTarget {
                             pic_task.raster_spatial_node_index,
                             pic_task.surface_spatial_node_index,
                             z_generator,
+                            &mut gpu_buffer_builder,
                         );
                     });
 
@@ -597,6 +600,7 @@ pub struct PictureCacheTarget {
     pub clear_color: Option<ColorF>,
     pub dirty_rect: DeviceIntRect,
     pub valid_rect: DeviceIntRect,
+    pub gpu_buffer: GpuBuffer,
 }
 
 #[cfg_attr(feature = "capture", derive(Serialize))]

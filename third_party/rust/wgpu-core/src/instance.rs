@@ -155,7 +155,7 @@ impl Surface {
     pub fn get_supported_formats<A: HalApi>(
         &self,
         adapter: &Adapter<A>,
-    ) -> Result<Vec<wgt::TextureFormat>, GetSurfacePreferredFormatError> {
+    ) -> Result<Vec<wgt::TextureFormat>, GetSurfaceSupportError> {
         let suf = A::get_surface(self);
         let mut caps = unsafe {
             profiling::scope!("surface_capabilities");
@@ -163,13 +163,30 @@ impl Surface {
                 .raw
                 .adapter
                 .surface_capabilities(&suf.raw)
-                .ok_or(GetSurfacePreferredFormatError::UnsupportedQueueFamily)?
+                .ok_or(GetSurfaceSupportError::UnsupportedQueueFamily)?
         };
 
         // TODO: maybe remove once we support texture view changing srgb-ness
         caps.formats.sort_by_key(|f| !f.describe().srgb);
 
         Ok(caps.formats)
+    }
+
+    pub fn get_supported_modes<A: HalApi>(
+        &self,
+        adapter: &Adapter<A>,
+    ) -> Result<Vec<wgt::PresentMode>, GetSurfaceSupportError> {
+        let suf = A::get_surface(self);
+        let caps = unsafe {
+            profiling::scope!("surface_capabilities");
+            adapter
+                .raw
+                .adapter
+                .surface_capabilities(&suf.raw)
+                .ok_or(GetSurfaceSupportError::UnsupportedQueueFamily)?
+        };
+
+        Ok(caps.present_modes)
     }
 }
 
@@ -198,8 +215,10 @@ impl<A: HalApi> Adapter<A> {
         use hal::TextureFormatCapabilities as Tfc;
 
         let caps = unsafe { self.raw.adapter.texture_format_capabilities(format) };
-        let mut allowed_usages = format.describe().guaranteed_format_features.allowed_usages;
+        let mut allowed_usages = wgt::TextureUsages::empty();
 
+        allowed_usages.set(wgt::TextureUsages::COPY_SRC, caps.contains(Tfc::COPY_SRC));
+        allowed_usages.set(wgt::TextureUsages::COPY_DST, caps.contains(Tfc::COPY_DST));
         allowed_usages.set(
             wgt::TextureUsages::TEXTURE_BINDING,
             caps.contains(Tfc::SAMPLED),
@@ -341,7 +360,7 @@ pub enum IsSurfaceSupportedError {
 }
 
 #[derive(Clone, Debug, Error)]
-pub enum GetSurfacePreferredFormatError {
+pub enum GetSurfaceSupportError {
     #[error("invalid adapter")]
     InvalidAdapter,
     #[error("invalid surface")]
@@ -405,20 +424,22 @@ impl<G: GlobalIdentityHandlerFactory> Global<G> {
     #[cfg(feature = "raw-window-handle")]
     pub fn instance_create_surface(
         &self,
-        handle: &impl raw_window_handle::HasRawWindowHandle,
+        display_handle: raw_window_handle::RawDisplayHandle,
+        window_handle: raw_window_handle::RawWindowHandle,
         id_in: Input<G, SurfaceId>,
     ) -> SurfaceId {
-        profiling::scope!("create_surface", "Instance");
+        profiling::scope!("Instance::create_surface");
 
         //Note: using a dummy argument to work around the following error:
         //> cannot provide explicit generic arguments when `impl Trait` is used in argument position
         fn init<A: hal::Api>(
             _: A,
             inst: &Option<A::Instance>,
-            handle: &impl raw_window_handle::HasRawWindowHandle,
+            display_handle: raw_window_handle::RawDisplayHandle,
+            window_handle: raw_window_handle::RawWindowHandle,
         ) -> Option<HalSurface<A>> {
             inst.as_ref().and_then(|inst| unsafe {
-                match inst.create_surface(handle) {
+                match inst.create_surface(display_handle, window_handle) {
                     Ok(raw) => Some(HalSurface {
                         raw,
                         //acquired_texture: None,
@@ -434,15 +455,40 @@ impl<G: GlobalIdentityHandlerFactory> Global<G> {
         let surface = Surface {
             presentation: None,
             #[cfg(vulkan)]
-            vulkan: init(hal::api::Vulkan, &self.instance.vulkan, handle),
+            vulkan: init(
+                hal::api::Vulkan,
+                &self.instance.vulkan,
+                display_handle,
+                window_handle,
+            ),
             #[cfg(metal)]
-            metal: init(hal::api::Metal, &self.instance.metal, handle),
+            metal: init(
+                hal::api::Metal,
+                &self.instance.metal,
+                display_handle,
+                window_handle,
+            ),
             #[cfg(dx12)]
-            dx12: init(hal::api::Dx12, &self.instance.dx12, handle),
+            dx12: init(
+                hal::api::Dx12,
+                &self.instance.dx12,
+                display_handle,
+                window_handle,
+            ),
             #[cfg(dx11)]
-            dx11: init(hal::api::Dx11, &self.instance.dx11, handle),
+            dx11: init(
+                hal::api::Dx11,
+                &self.instance.dx11,
+                display_handle,
+                window_handle,
+            ),
             #[cfg(gl)]
-            gl: init(hal::api::Gles, &self.instance.gl, handle),
+            gl: init(
+                hal::api::Gles,
+                &self.instance.gl,
+                display_handle,
+                window_handle,
+            ),
         };
 
         let mut token = Token::root();
@@ -456,7 +502,7 @@ impl<G: GlobalIdentityHandlerFactory> Global<G> {
         layer: *mut std::ffi::c_void,
         id_in: Input<G, SurfaceId>,
     ) -> SurfaceId {
-        profiling::scope!("create_surface_metal", "Instance");
+        profiling::scope!("Instance::create_surface_metal");
 
         let surface = Surface {
             presentation: None,
@@ -485,7 +531,7 @@ impl<G: GlobalIdentityHandlerFactory> Global<G> {
         canvas: &web_sys::HtmlCanvasElement,
         id_in: Input<G, SurfaceId>,
     ) -> SurfaceId {
-        profiling::scope!("create_surface_webgl_canvas", "Instance");
+        profiling::scope!("Instance::create_surface_webgl_canvas");
 
         let surface = Surface {
             presentation: None,
@@ -508,7 +554,7 @@ impl<G: GlobalIdentityHandlerFactory> Global<G> {
         canvas: &web_sys::OffscreenCanvas,
         id_in: Input<G, SurfaceId>,
     ) -> SurfaceId {
-        profiling::scope!("create_surface_webgl_offscreen_canvas", "Instance");
+        profiling::scope!("Instance::create_surface_webgl_offscreen_canvas");
 
         let surface = Surface {
             presentation: None,
@@ -534,7 +580,7 @@ impl<G: GlobalIdentityHandlerFactory> Global<G> {
         visual: *mut std::ffi::c_void,
         id_in: Input<G, SurfaceId>,
     ) -> SurfaceId {
-        profiling::scope!("instance_create_surface_from_visual", "Instance");
+        profiling::scope!("Instance::instance_create_surface_from_visual");
 
         let surface = Surface {
             presentation: None,
@@ -554,7 +600,7 @@ impl<G: GlobalIdentityHandlerFactory> Global<G> {
     }
 
     pub fn surface_drop(&self, id: SurfaceId) {
-        profiling::scope!("drop", "Surface");
+        profiling::scope!("Surface::drop");
         let mut token = Token::root();
         let (surface, _) = self.surfaces.unregister(id, &mut token);
         self.instance.destroy_surface(surface.unwrap());
@@ -593,7 +639,7 @@ impl<G: GlobalIdentityHandlerFactory> Global<G> {
     }
 
     pub fn enumerate_adapters(&self, inputs: AdapterInputs<Input<G, AdapterId>>) -> Vec<AdapterId> {
-        profiling::scope!("enumerate_adapters", "Instance");
+        profiling::scope!("Instance::enumerate_adapters");
 
         let mut adapters = Vec::new();
 
@@ -650,7 +696,7 @@ impl<G: GlobalIdentityHandlerFactory> Global<G> {
         desc: &RequestAdapterOptions,
         inputs: AdapterInputs<Input<G, AdapterId>>,
     ) -> Result<AdapterId, RequestAdapterError> {
-        profiling::scope!("pick_adapter", "Instance");
+        profiling::scope!("Instance::pick_adapter");
 
         fn gather<A: HalApi, I: Clone>(
             _: A,
@@ -769,7 +815,11 @@ impl<G: GlobalIdentityHandlerFactory> Global<G> {
         }
 
         let preferred_gpu = match desc.power_preference {
-            PowerPreference::LowPower => integrated.or(other).or(discrete).or(virt).or(cpu),
+            // Since devices of type "Other" might really be "Unknown" and come from APIs like OpenGL that don't specify device type,
+            // Prefer more Specific types over Other.
+            // This means that backends which do provide accurate device types will be preferred
+            // if their device type indicates an actual hardware GPU (integrated or discrete).
+            PowerPreference::LowPower => integrated.or(discrete).or(other).or(virt).or(cpu),
             PowerPreference::HighPerformance => discrete.or(integrated).or(other).or(virt).or(cpu),
         };
 
@@ -808,7 +858,7 @@ impl<G: GlobalIdentityHandlerFactory> Global<G> {
         hal_adapter: hal::ExposedAdapter<A>,
         input: Input<G, AdapterId>,
     ) -> AdapterId {
-        profiling::scope!("create_adapter_from_hal", "Instance");
+        profiling::scope!("Instance::create_adapter_from_hal");
 
         let mut token = Token::root();
         let fid = A::hub(self).adapters.prepare(input);
@@ -895,7 +945,7 @@ impl<G: GlobalIdentityHandlerFactory> Global<G> {
     }
 
     pub fn adapter_drop<A: HalApi>(&self, adapter_id: AdapterId) {
-        profiling::scope!("drop", "Adapter");
+        profiling::scope!("Adapter::drop");
 
         let hub = A::hub(self);
         let mut token = Token::root();
@@ -920,7 +970,7 @@ impl<G: GlobalIdentityHandlerFactory> Global<G> {
         trace_path: Option<&std::path::Path>,
         id_in: Input<G, DeviceId>,
     ) -> (DeviceId, Option<RequestDeviceError>) {
-        profiling::scope!("request_device", "Adapter");
+        profiling::scope!("Adapter::request_device");
 
         let hub = A::hub(self);
         let mut token = Token::root();
@@ -956,7 +1006,7 @@ impl<G: GlobalIdentityHandlerFactory> Global<G> {
         trace_path: Option<&std::path::Path>,
         id_in: Input<G, DeviceId>,
     ) -> (DeviceId, Option<RequestDeviceError>) {
-        profiling::scope!("create_device_from_hal", "Adapter");
+        profiling::scope!("Adapter::create_device_from_hal");
 
         let hub = A::hub(self);
         let mut token = Token::root();

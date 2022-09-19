@@ -149,7 +149,7 @@ impl<A: HalApi> CommandBuffer<A> {
 
         base.buffers.set_from_tracker(&head.buffers);
         base.textures
-            .set_from_tracker(&*texture_guard, &head.textures);
+            .set_from_tracker(texture_guard, &head.textures);
 
         Self::drain_barriers(raw, base, buffer_guard, texture_guard);
     }
@@ -165,7 +165,7 @@ impl<A: HalApi> CommandBuffer<A> {
 
         base.buffers.set_from_usage_scope(&head.buffers);
         base.textures
-            .set_from_usage_scope(&*texture_guard, &head.textures);
+            .set_from_usage_scope(texture_guard, &head.textures);
 
         Self::drain_barriers(raw, base, buffer_guard, texture_guard);
     }
@@ -341,7 +341,7 @@ impl<G: GlobalIdentityHandlerFactory> Global<G> {
         encoder_id: id::CommandEncoderId,
         _desc: &wgt::CommandBufferDescriptor<Label>,
     ) -> (id::CommandBufferId, Option<CommandEncoderError>) {
-        profiling::scope!("finish", "CommandEncoder");
+        profiling::scope!("CommandEncoder::finish");
 
         let hub = A::hub(self);
         let mut token = Token::root();
@@ -374,7 +374,7 @@ impl<G: GlobalIdentityHandlerFactory> Global<G> {
         encoder_id: id::CommandEncoderId,
         label: &str,
     ) -> Result<(), CommandEncoderError> {
-        profiling::scope!("push_debug_group", "CommandEncoder");
+        profiling::scope!("CommandEncoder::push_debug_group");
 
         let hub = A::hub(self);
         let mut token = Token::root();
@@ -399,7 +399,7 @@ impl<G: GlobalIdentityHandlerFactory> Global<G> {
         encoder_id: id::CommandEncoderId,
         label: &str,
     ) -> Result<(), CommandEncoderError> {
-        profiling::scope!("insert_debug_marker", "CommandEncoder");
+        profiling::scope!("CommandEncoder::insert_debug_marker");
 
         let hub = A::hub(self);
         let mut token = Token::root();
@@ -423,7 +423,7 @@ impl<G: GlobalIdentityHandlerFactory> Global<G> {
         &self,
         encoder_id: id::CommandEncoderId,
     ) -> Result<(), CommandEncoderError> {
-        profiling::scope!("pop_debug_marker", "CommandEncoder");
+        profiling::scope!("CommandEncoder::pop_debug_marker");
 
         let hub = A::hub(self);
         let mut token = Token::root();
@@ -528,6 +528,9 @@ impl BindGroupStateChange {
             dynamic_offsets.extend_from_slice(slice::from_raw_parts(offsets, offset_length));
         }
         false
+    }
+    fn reset(&mut self) {
+        self.last_states = [StateChange::new(); hal::MAX_BIND_GROUPS];
     }
 }
 

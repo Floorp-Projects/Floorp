@@ -106,7 +106,7 @@ pub type Label<'a> = Option<&'a str>;
 pub type MemoryRange = Range<wgt::BufferAddress>;
 pub type FenceValue = u64;
 
-#[derive(Clone, Debug, PartialEq, Error)]
+#[derive(Clone, Debug, Eq, PartialEq, Error)]
 pub enum DeviceError {
     #[error("out of memory")]
     OutOfMemory,
@@ -114,7 +114,7 @@ pub enum DeviceError {
     Lost,
 }
 
-#[derive(Clone, Debug, PartialEq, Error)]
+#[derive(Clone, Debug, Eq, PartialEq, Error)]
 pub enum ShaderError {
     #[error("compilation failed: {0:?}")]
     Compilation(String),
@@ -122,7 +122,7 @@ pub enum ShaderError {
     Device(#[from] DeviceError),
 }
 
-#[derive(Clone, Debug, PartialEq, Error)]
+#[derive(Clone, Debug, Eq, PartialEq, Error)]
 pub enum PipelineError {
     #[error("linkage failed for stage {0:?}: {1}")]
     Linkage(wgt::ShaderStages, String),
@@ -132,7 +132,7 @@ pub enum PipelineError {
     Device(#[from] DeviceError),
 }
 
-#[derive(Clone, Debug, PartialEq, Error)]
+#[derive(Clone, Debug, Eq, PartialEq, Error)]
 pub enum SurfaceError {
     #[error("surface is lost")]
     Lost,
@@ -144,7 +144,7 @@ pub enum SurfaceError {
     Other(&'static str),
 }
 
-#[derive(Clone, Debug, PartialEq, Error)]
+#[derive(Clone, Debug, Eq, PartialEq, Error)]
 #[error("Not supported")]
 pub struct InstanceError;
 
@@ -178,7 +178,8 @@ pub trait Instance<A: Api>: Sized + Send + Sync {
     unsafe fn init(desc: &InstanceDescriptor) -> Result<Self, InstanceError>;
     unsafe fn create_surface(
         &self,
-        rwh: &impl raw_window_handle::HasRawWindowHandle,
+        display_handle: raw_window_handle::RawDisplayHandle,
+        window_handle: raw_window_handle::RawWindowHandle,
     ) -> Result<A::Surface, InstanceError>;
     unsafe fn destroy_surface(&self, surface: A::Surface);
     unsafe fn enumerate_adapters(&self) -> Vec<ExposedAdapter<A>>;
@@ -969,8 +970,8 @@ pub struct ShaderModuleDescriptor<'a> {
 pub struct ProgrammableStage<'a, A: Api> {
     /// The compiled shader module for this stage.
     pub module: &'a A::ShaderModule,
-    /// The name of the entry point in the compiled shader. There must be a function that returns
-    /// void with this name in the shader.
+    /// The name of the entry point in the compiled shader. There must be a function with this name
+    ///  in the shader.
     pub entry_point: &'a str,
 }
 
@@ -1032,7 +1033,7 @@ pub struct RenderPipelineDescriptor<'a, A: Api> {
 
 /// Specifies how the alpha channel of the textures should be handled during (martin mouv i step)
 /// compositing.
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, Copy, Eq, PartialEq)]
 pub enum CompositeAlphaMode {
     /// The alpha channel, if it exists, of the textures is ignored in the
     /// compositing process. Instead, the textures is treated as if it has a
