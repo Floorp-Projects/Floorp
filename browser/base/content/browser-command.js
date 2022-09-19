@@ -66,16 +66,19 @@
 
 /*---------------------------------------------------------------- browser manager sidebar ----------------------------------------------------------------*/
 
-   function displayIcons() {
-     document.getElementById("sidebar2-back").hidden = false;
-     document.getElementById("sidebar2-forward").hidden = false;
-     document.getElementById("sidebar2-reload").hidden = false;
-   }
-   function hideIcons() {
-     document.getElementById("sidebar2-back").hidden = true;
-     document.getElementById("sidebar2-forward").hidden = true;
-     document.getElementById("sidebar2-reload").hidden = true;
-   }
+var sidebar_icons = ["sidebar2-back", "sidebar2-forward", "sidebar2-reload"]
+
+function displayIcons() {
+  sidebar_icons.forEach(function (sbar_icon){
+    document.getElementById(sbar_icon).hidden = false; 
+  })
+}
+
+function hideIcons() {
+  sidebar_icons.forEach(function (sbar_icon) {
+    document.getElementById(sbar_icon).hidden = true; 
+  }) 
+}
 
    async function setTreeStyleTabURL() {
      const sidebar2elem = document.getElementById("sidebar2");
