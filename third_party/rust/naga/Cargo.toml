@@ -1,11 +1,11 @@
 [package]
 name = "naga"
-version = "0.8.0"
+version = "0.9.0"
 authors = ["Naga Developers"]
 edition = "2018"
 description = "Shader translation infrastructure"
 homepage = "https://github.com/gfx-rs/naga"
-repository = "https://github.com/gfx-rs/naga/tree/v0.8"
+repository = "https://github.com/gfx-rs/naga/tree/v0.9"
 keywords = ["shader", "SPIR-V", "GLSL", "MSL"]
 license = "MIT OR Apache-2.0"
 exclude = ["bin/**/*", "tests/**/*", "Cargo.lock", "target/**/*"]
@@ -23,6 +23,7 @@ panic = "abort"
 
 [features]
 default = []
+clone = []
 dot-out = []
 glsl-in = ["pp-rs"]
 glsl-validate = []
@@ -32,10 +33,10 @@ serialize = ["serde", "indexmap/serde-1"]
 deserialize = ["serde", "indexmap/serde-1"]
 spv-in = ["petgraph", "spirv"]
 spv-out = ["spirv"]
-wgsl-in = ["codespan-reporting", "hexf-parse", "unicode-xid"]
+wgsl-in = ["codespan-reporting", "hexf-parse", "termcolor", "unicode-xid"]
 wgsl-out = []
 hlsl-out = []
-span = ["codespan-reporting"]
+span = ["codespan-reporting", "termcolor"]
 validate = []
 
 [[bench]]
@@ -46,7 +47,7 @@ harness = false
 arbitrary = { version = "1.0.2", features = ["derive"], optional = true }
 bitflags = "1.0.5"
 bit-set = "0.5"
-termcolor = "1.0.4"
+termcolor = { version = "1.0.4", optional = true }
 # remove termcolor dep when updating to the next version of codespan-reporting
 # termcolor minimum version was wrong and was fixed in
 # https://github.com/brendanzab/codespan/commit/e99c867339a877731437e7ee6a903a3d03b5439e

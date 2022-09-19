@@ -417,7 +417,7 @@ impl<A: hal::Api> LifetimeTracker<A> {
     }
 
     pub fn cleanup(&mut self, device: &A::Device) {
-        profiling::scope!("cleanup", "LifetimeTracker");
+        profiling::scope!("LifetimeTracker::cleanup");
         unsafe {
             self.free_resources.clean(device);
         }
@@ -896,6 +896,11 @@ impl<A: HalApi> LifetimeTracker<A> {
                         }
                     }
                 } else {
+                    buffer.map_state = resource::BufferMapState::Active {
+                        ptr: std::ptr::NonNull::dangling(),
+                        range: mapping.range,
+                        host: mapping.op.host,
+                    };
                     resource::BufferMapAsyncStatus::Success
                 };
                 pending_callbacks.push((mapping.op, status));

@@ -1,6 +1,5 @@
 use glow::HasContext;
 use parking_lot::{Mutex, MutexGuard};
-use raw_window_handle::{HasRawWindowHandle, RawWindowHandle};
 
 use std::{ffi, os::raw, ptr, sync::Arc, time::Duration};
 
@@ -282,6 +281,7 @@ fn gl_debug_message_callback(source: u32, gltype: u32, id: u32, severity: u32, m
 #[derive(Clone, Debug)]
 struct EglContext {
     instance: Arc<EglInstance>,
+    version: (i32, i32),
     display: egl::Display,
     raw: egl::Context,
     pbuffer: Option<egl::Surface>,
@@ -315,7 +315,27 @@ impl AdapterContext {
         self.egl.is_some()
     }
 
-    #[cfg(feature = "renderdoc")]
+    /// Returns the EGL instance.
+    ///
+    /// This provides access to EGL functions and the ability to load GL and EGL extension functions.
+    pub fn egl_instance(&self) -> Option<&EglInstance> {
+        self.egl.as_ref().map(|egl| &*egl.instance)
+    }
+
+    /// Returns the EGLDisplay corresponding to the adapter context.
+    ///
+    /// Returns [`None`] if the adapter was externally created.
+    pub fn raw_display(&self) -> Option<&egl::Display> {
+        self.egl.as_ref().map(|egl| &egl.display)
+    }
+
+    /// Returns the EGL version the adapter context was created with.
+    ///
+    /// Returns [`None`] if the adapter was externally created.
+    pub fn egl_version(&self) -> Option<(i32, i32)> {
+        self.egl.as_ref().map(|egl| egl.version)
+    }
+
     pub fn raw_context(&self) -> *mut raw::c_void {
         match self.egl {
             Some(ref egl) => egl.raw.as_ptr(),
@@ -535,6 +555,7 @@ impl Inner {
                 display,
                 raw: context,
                 pbuffer,
+                version,
             },
             version,
             supports_native_window,
@@ -748,22 +769,21 @@ impl crate::Instance<super::Api> for Instance {
     #[cfg_attr(target_os = "macos", allow(unused, unused_mut, unreachable_code))]
     unsafe fn create_surface(
         &self,
-        has_handle: &impl HasRawWindowHandle,
+        display_handle: raw_window_handle::RawDisplayHandle,
+        window_handle: raw_window_handle::RawWindowHandle,
     ) -> Result<Surface, crate::InstanceError> {
         use raw_window_handle::RawWindowHandle as Rwh;
-
-        let raw_window_handle = has_handle.raw_window_handle();
 
         #[cfg_attr(any(target_os = "android", feature = "emscripten"), allow(unused_mut))]
         let mut inner = self.inner.lock();
 
-        match raw_window_handle {
-            Rwh::Xlib(_) => {}
-            Rwh::Xcb(_) => {}
-            Rwh::Win32(_) => {}
-            Rwh::AppKit(_) => {}
+        match (window_handle, display_handle) {
+            (Rwh::Xlib(_), _) => {}
+            (Rwh::Xcb(_), _) => {}
+            (Rwh::Win32(_), _) => {}
+            (Rwh::AppKit(_), _) => {}
             #[cfg(target_os = "android")]
-            Rwh::AndroidNdk(handle) => {
+            (Rwh::AndroidNdk(handle), _) => {
                 let format = inner
                     .egl
                     .instance
@@ -778,7 +798,7 @@ impl crate::Instance<super::Api> for Instance {
                 }
             }
             #[cfg(not(feature = "emscripten"))]
-            Rwh::Wayland(handle) => {
+            (Rwh::Wayland(_), raw_window_handle::RawDisplayHandle::Wayland(display_handle)) => {
                 /* Wayland displays are not sharable between surfaces so if the
                  * surface we receive from this handle is from a different
                  * display, we must re-initialize the context.
@@ -788,11 +808,12 @@ impl crate::Instance<super::Api> for Instance {
                 log::warn!("Re-initializing Gles context due to Wayland window");
                 if inner
                     .wl_display
-                    .map(|ptr| ptr != handle.display)
+                    .map(|ptr| ptr != display_handle.display)
                     .unwrap_or(true)
                 {
                     use std::ops::DerefMut;
                     let display_attributes = [egl::ATTRIB_NONE];
+
                     let display = inner
                         .egl
                         .instance
@@ -800,7 +821,7 @@ impl crate::Instance<super::Api> for Instance {
                         .unwrap()
                         .get_platform_display(
                             EGL_PLATFORM_WAYLAND_KHR,
-                            handle.display,
+                            display_handle.display,
                             &display_attributes,
                         )
                         .unwrap();
@@ -810,12 +831,13 @@ impl crate::Instance<super::Api> for Instance {
                             .map_err(|_| crate::InstanceError)?;
 
                     let old_inner = std::mem::replace(inner.deref_mut(), new_inner);
-                    inner.wl_display = Some(handle.display);
+                    inner.wl_display = Some(display_handle.display);
+
                     drop(old_inner);
                 }
             }
             #[cfg(feature = "emscripten")]
-            Rwh::Web(_) => {}
+            (Rwh::Web(_), _) => {}
             other => {
                 log::error!("Unsupported window: {:?}", other);
                 return Err(crate::InstanceError);
@@ -829,7 +851,7 @@ impl crate::Instance<super::Api> for Instance {
             wsi: self.wsi.clone(),
             config: inner.config,
             presentable: inner.supports_native_window,
-            raw_window_handle,
+            raw_window_handle: window_handle,
             swapchain: None,
             srgb_kind: inner.srgb_kind,
         })
@@ -873,6 +895,13 @@ impl crate::Instance<super::Api> for Instance {
 }
 
 impl super::Adapter {
+    /// Creates a new external adapter using the specified loader function.
+    ///
+    /// # Safety
+    ///
+    /// - The underlying OpenGL ES context must be current.
+    /// - The underlying OpenGL ES context must be current when interfacing with any objects returned by
+    ///   wgpu-hal from this adapter.
     pub unsafe fn new_external(
         fun: impl FnMut(&str) -> *const ffi::c_void,
     ) -> Option<crate::ExposedAdapter<super::Api>> {
@@ -880,6 +909,17 @@ impl super::Adapter {
             glow: Mutex::new(glow::Context::from_loader_function(fun)),
             egl: None,
         })
+    }
+
+    pub fn adapter_context(&self) -> &AdapterContext {
+        &self.shared.context
+    }
+}
+
+impl super::Device {
+    /// Returns the underlying EGL context.
+    pub fn context(&self) -> &AdapterContext {
+        &self.shared.context
     }
 }
 
@@ -903,7 +943,7 @@ pub struct Surface {
     wsi: WindowSystemInterface,
     config: egl::Config,
     pub(super) presentable: bool,
-    raw_window_handle: RawWindowHandle,
+    raw_window_handle: raw_window_handle::RawWindowHandle,
     swapchain: Option<Swapchain>,
     srgb_kind: SrgbFrameBufferKind,
 }

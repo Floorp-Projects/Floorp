@@ -326,12 +326,16 @@ bitflags::bitflags! {
         const MAPPABLE_PRIMARY_BUFFERS = 1 << 16;
         /// Allows the user to create uniform arrays of textures in shaders:
         ///
-        /// eg. `uniform texture2D textures[10]`.
+        /// ex.
+        /// `var textures: binding_array<texture_2d<f32>, 10>` (WGSL)\
+        /// `uniform texture2D textures[10]` (GLSL)
         ///
         /// If [`Features::STORAGE_RESOURCE_BINDING_ARRAY`] is supported as well as this, the user
         /// may also create uniform arrays of storage textures.
         ///
-        /// eg. `uniform image2D textures[10]`.
+        /// ex.
+        /// `var textures: array<texture_storage_2d<f32, write>, 10>` (WGSL)\
+        /// `uniform image2D textures[10]` (GLSL)
         ///
         /// This capability allows them to exist and to be indexed by dynamically uniform
         /// values.
@@ -345,7 +349,9 @@ bitflags::bitflags! {
         const TEXTURE_BINDING_ARRAY = 1 << 17;
         /// Allows the user to create arrays of buffers in shaders:
         ///
-        /// eg. `uniform myBuffer { .... } buffer_array[10]`.
+        /// ex.
+        /// `var<uniform> buffer_array: array<MyBuffer, 10>` (WGSL)\
+        /// `uniform myBuffer { ... } buffer_array[10]` (GLSL)
         ///
         /// This capability allows them to exist and to be indexed by dynamically uniform
         /// values.
@@ -353,7 +359,9 @@ bitflags::bitflags! {
         /// If [`Features::STORAGE_RESOURCE_BINDING_ARRAY`] is supported as well as this, the user
         /// may also create arrays of storage buffers.
         ///
-        /// eg. `buffer myBuffer { ... } buffer_array[10]`
+        /// ex.
+        /// `var<storage> buffer_array: array<MyBuffer, 10>` (WGSL)\
+        /// `buffer myBuffer { ... } buffer_array[10]` (GLSL)
         ///
         /// Supported platforms:
         /// - DX12
@@ -376,7 +384,7 @@ bitflags::bitflags! {
         const STORAGE_RESOURCE_BINDING_ARRAY = 1 << 19;
         /// Allows shaders to index sampled texture and storage buffer resource arrays with dynamically non-uniform values:
         ///
-        /// eg. `texture_array[vertex_data]`
+        /// ex. `texture_array[vertex_data]`
         ///
         /// In order to use this capability, the corresponding GLSL extension must be enabled like so:
         ///
@@ -384,13 +392,13 @@ bitflags::bitflags! {
         ///
         /// and then used either as `nonuniformEXT` qualifier in variable declaration:
         ///
-        /// eg. `layout(location = 0) nonuniformEXT flat in int vertex_data;`
+        /// ex. `layout(location = 0) nonuniformEXT flat in int vertex_data;`
         ///
         /// or as `nonuniformEXT` constructor:
         ///
-        /// eg. `texture_array[nonuniformEXT(vertex_data)]`
+        /// ex. `texture_array[nonuniformEXT(vertex_data)]`
         ///
-        /// HLSL does not need any extension.
+        /// WGSL and HLSL do not need any extension.
         ///
         /// Supported platforms:
         /// - DX12
@@ -401,7 +409,7 @@ bitflags::bitflags! {
         const SAMPLED_TEXTURE_AND_STORAGE_BUFFER_ARRAY_NON_UNIFORM_INDEXING = 1 << 20;
         /// Allows shaders to index uniform buffer and storage texture resource arrays with dynamically non-uniform values:
         ///
-        /// eg. `texture_array[vertex_data]`
+        /// ex. `texture_array[vertex_data]`
         ///
         /// In order to use this capability, the corresponding GLSL extension must be enabled like so:
         ///
@@ -409,13 +417,13 @@ bitflags::bitflags! {
         ///
         /// and then used either as `nonuniformEXT` qualifier in variable declaration:
         ///
-        /// eg. `layout(location = 0) nonuniformEXT flat in int vertex_data;`
+        /// ex. `layout(location = 0) nonuniformEXT flat in int vertex_data;`
         ///
         /// or as `nonuniformEXT` constructor:
         ///
-        /// eg. `texture_array[nonuniformEXT(vertex_data)]`
+        /// ex. `texture_array[nonuniformEXT(vertex_data)]`
         ///
-        /// HLSL does not need any extension.
+        /// WGSL and HLSL do not need any extension.
         ///
         /// Supported platforms:
         /// - DX12
@@ -616,6 +624,7 @@ bitflags::bitflags! {
         ///
         /// Supported Platforms:
         /// - Metal
+        /// - Vulkan
         ///
         /// This is a native-only feature.
         const TEXTURE_COMPRESSION_ASTC_HDR = 1 << 40;
@@ -990,7 +999,7 @@ pub struct DownlevelCapabilities {
 impl Default for DownlevelCapabilities {
     fn default() -> Self {
         Self {
-            flags: DownlevelFlags::compliant(),
+            flags: DownlevelFlags::all(),
             limits: DownlevelLimits::default(),
             shader_model: ShaderModel::Sm5,
         }
@@ -1105,11 +1114,11 @@ pub enum ShaderModel {
 
 /// Supported physical device types.
 #[repr(u8)]
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
 #[cfg_attr(feature = "trace", derive(serde::Serialize))]
 #[cfg_attr(feature = "replay", derive(serde::Deserialize))]
 pub enum DeviceType {
-    /// Other.
+    /// Other or Unknown.
     Other,
     /// Integrated GPU with shared CPU/GPU memory.
     IntegratedGpu,
@@ -1124,7 +1133,7 @@ pub enum DeviceType {
 //TODO: convert `vendor` and `device` to `u32`
 
 /// Information about an adapter.
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq)]
 #[cfg_attr(feature = "trace", derive(serde::Serialize))]
 #[cfg_attr(feature = "replay", derive(serde::Deserialize))]
 pub struct AdapterInfo {
@@ -1206,22 +1215,22 @@ bitflags_serde_shim::impl_serde_for_bitflags!(ShaderStages);
 #[cfg_attr(feature = "trace", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 pub enum TextureViewDimension {
-    /// A one dimensional texture. `texture1D` in glsl shaders.
+    /// A one dimensional texture. `texture_1d` in WGSL and `texture1D` in GLSL.
     #[cfg_attr(feature = "serde", serde(rename = "1d"))]
     D1,
-    /// A two dimensional texture. `texture2D` in glsl shaders.
+    /// A two dimensional texture. `texture_2d` in WGSL and `texture2D` in GLSL.
     #[cfg_attr(feature = "serde", serde(rename = "2d"))]
     D2,
-    /// A two dimensional array texture. `texture2DArray` in glsl shaders.
+    /// A two dimensional array texture. `texture_2d_array` in WGSL and `texture2DArray` in GLSL.
     #[cfg_attr(feature = "serde", serde(rename = "2d-array"))]
     D2Array,
-    /// A cubemap texture. `textureCube` in glsl shaders.
+    /// A cubemap texture. `texture_cube` in WGSL and `textureCube` in GLSL.
     #[cfg_attr(feature = "serde", serde(rename = "cube"))]
     Cube,
-    /// A cubemap array texture. `textureCubeArray` in glsl shaders.
+    /// A cubemap array texture. `texture_cube_array` in WGSL and `textureCubeArray` in GLSL.
     #[cfg_attr(feature = "serde", serde(rename = "cube-array"))]
     CubeArray,
-    /// A three dimensional texture. `texture3D` in glsl shaders.
+    /// A three dimensional texture. `texture_3d` in WGSL and `texture3D` in GLSL.
     #[cfg_attr(feature = "serde", serde(rename = "3d"))]
     D3,
 }
@@ -2195,7 +2204,7 @@ impl TextureFormat {
             Self::Rgb10a2Unorm =>        (   native,   float,    linear, msaa_resolve, (1, 1),  4, attachment, 4),
             Self::Rg11b10Float =>        (   native,   float,    linear,         msaa, (1, 1),  4,      basic, 3),
 
-            // Packed 32 bit textures  
+            // Packed 32 bit textures
             Self::Rg32Uint =>            (   native,    uint,    linear,         noaa, (1, 1),  8,  all_flags, 2),
             Self::Rg32Sint =>            (   native,    sint,    linear,         noaa, (1, 1),  8,  all_flags, 2),
             Self::Rg32Float =>           (   native, nearest,    linear,         noaa, (1, 1),  8,  all_flags, 2),
@@ -2203,7 +2212,7 @@ impl TextureFormat {
             Self::Rgba16Sint =>          (   native,    sint,    linear,         msaa, (1, 1),  8,  all_flags, 4),
             Self::Rgba16Float =>         (   native,   float,    linear, msaa_resolve, (1, 1),  8,  all_flags, 4),
 
-            // Packed 32 bit textures  
+            // Packed 32 bit textures
             Self::Rgba32Uint =>          (   native,    uint,    linear,         noaa, (1, 1), 16,  all_flags, 4),
             Self::Rgba32Sint =>          (   native,    sint,    linear,         noaa, (1, 1), 16,  all_flags, 4),
             Self::Rgba32Float =>         (   native, nearest,    linear,         noaa, (1, 1), 16,  all_flags, 4),
@@ -2215,7 +2224,7 @@ impl TextureFormat {
             Self::Depth24PlusStencil8 => (   native,   depth,    linear,         msaa, (1, 1),  4, attachment, 2),
             Self::Depth24UnormStencil8 => (  d24_s8,   depth,    linear,         msaa, (1, 1),  4, attachment, 2),
 
-            // Packed uncompressed  
+            // Packed uncompressed
             Self::Rgb9e5Ufloat =>        (   native,   float,    linear,         noaa, (1, 1),  4,      basic, 3),
 
             // Optional normalized 16-bit-per-channel formats
@@ -2602,13 +2611,17 @@ pub enum CompareFunction {
     Never = 1,
     /// Function passes if new value less than existing value
     Less = 2,
-    /// Function passes if new value is equal to existing value
+    /// Function passes if new value is equal to existing value. When using
+    /// this compare function, make sure to mark your Vertex Shader's `@builtin(position)`
+    /// output as `@invariant` to prevent artifacting.
     Equal = 3,
     /// Function passes if new value is less than or equal to existing value
     LessEqual = 4,
     /// Function passes if new value is greater than existing value
     Greater = 5,
-    /// Function passes if new value is not equal to existing value
+    /// Function passes if new value is not equal to existing value. When using
+    /// this compare function, make sure to mark your Vertex Shader's `@builtin(position)`
+    /// output as `@invariant` to prevent artifacting.
     NotEqual = 6,
     /// Function passes if new value is greater than or equal to existing value
     GreaterEqual = 7,
@@ -2949,20 +2962,75 @@ impl<T> Default for CommandEncoderDescriptor<Option<T>> {
 #[cfg_attr(feature = "trace", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 pub enum PresentMode {
-    /// The presentation engine does **not** wait for a vertical blanking period and
-    /// the request is presented immediately. This is a low-latency presentation mode,
-    /// but visible tearing may be observed. Will fallback to `Fifo` if unavailable on the
-    /// selected  platform and backend. Not optimal for mobile.
-    Immediate = 0,
-    /// The presentation engine waits for the next vertical blanking period to update
-    /// the current image, but frames may be submitted without delay. This is a low-latency
-    /// presentation mode and visible tearing will **not** be observed. Will fallback to `Fifo`
-    /// if unavailable on the selected platform and backend. Not optimal for mobile.
-    Mailbox = 1,
-    /// The presentation engine waits for the next vertical blanking period to update
-    /// the current image. The framerate will be capped at the display refresh rate,
-    /// corresponding to the `VSync`. Tearing cannot be observed. Optimal for mobile.
+    /// Chooses FifoRelaxed -> Fifo based on availability.
+    ///
+    /// Because of the fallback behavior, it is supported everywhere.
+    AutoVsync = 0,
+    /// Chooses Immediate -> Mailbox -> Fifo (on web) based on availability.
+    ///
+    /// Because of the fallback behavior, it is supported everywhere.
+    AutoNoVsync = 1,
+    /// Presentation frames are kept in a First-In-First-Out queue approximately 3 frames
+    /// long. Every vertical blanking period, the presentation engine will pop a frame
+    /// off the queue to display. If there is no frame to display, it will present the same
+    /// frame again until the next vblank.
+    ///
+    /// When a present command is executed on the gpu, the presented image is added on the queue.
+    ///
+    /// No tearing will be observed.
+    ///
+    /// Calls to get_current_texture will block until there is a spot in the queue.
+    ///
+    /// Supported on all platforms.
+    ///
+    /// If you don't know what mode to choose, choose this mode. This is traditionally called "Vsync On".
     Fifo = 2,
+    /// Presentation frames are kept in a First-In-First-Out queue approximately 3 frames
+    /// long. Every vertical blanking period, the presentation engine will pop a frame
+    /// off the queue to display. If there is no frame to display, it will present the
+    /// same frame until there is a frame in the queue. The moment there is a frame in the
+    /// queue, it will immediately pop the frame off the queue.
+    ///
+    /// When a present command is executed on the gpu, the presented image is added on the queue.
+    ///
+    /// Tearing will be observed if frames last more than one vblank as the front buffer.
+    ///
+    /// Calls to get_current_texture will block until there is a spot in the queue.
+    ///
+    /// Supported on AMD on Vulkan.
+    ///
+    /// This is traditionally called "Adaptive Vsync"
+    FifoRelaxed = 3,
+    /// Presentation frames are not queued at all. The moment a present command
+    /// is executed on the GPU, the presented image is swapped onto the front buffer
+    /// immediately.
+    ///
+    /// Tearing can be observed.
+    ///
+    /// Supported on most platforms except older DX12 and Wayland.
+    ///
+    /// This is traditionally called "Vsync Off".
+    Immediate = 4,
+    /// Presentation frames are kept in a single-frame queue. Every vertical blanking period,
+    /// the presentation engine will pop a frame from the queue. If there is no frame to display,
+    /// it will present the same frame again until the next vblank.
+    ///
+    /// When a present command is executed on the gpu, the frame will be put into the queue.
+    /// If there was already a frame in the queue, the new frame will _replace_ the old frame
+    /// on the queue.
+    ///
+    /// No tearing will be observed.
+    ///
+    /// Supported on DX11/12 on Windows 10, NVidia on Vulkan and Wayland on Vulkan.
+    ///
+    /// This is traditionally called "Fast Vsync"
+    Mailbox = 5,
+}
+
+impl Default for PresentMode {
+    fn default() -> Self {
+        Self::Fifo
+    }
 }
 
 bitflags::bitflags! {
@@ -3010,8 +3078,10 @@ pub struct SurfaceConfiguration {
     pub width: u32,
     /// Height of the swap chain. Must be the same size as the surface.
     pub height: u32,
-    /// Presentation mode of the swap chain. FIFO is the only guaranteed to be supported, though
-    /// other formats will automatically fall back to FIFO.
+    /// Presentation mode of the swap chain. Fifo is the only mode guaranteed to be supported.
+    /// FifoRelaxed, Immediate, and Mailbox will crash if unsupported, while AutoVsync and
+    /// AutoNoVsync will gracefully do a designed sets of fallbacks if their primary modes are
+    /// unsupported.
     pub present_mode: PresentMode,
 }
 
@@ -3649,6 +3719,16 @@ pub struct ImageDataLayout {
 pub enum BufferBindingType {
     /// A buffer for uniform values.
     ///
+    /// Example WGSL syntax:
+    /// ```rust,ignore
+    /// struct Globals {
+    ///     a_uniform: vec2<f32>,
+    ///     another_uniform: vec2<f32>,
+    /// }
+    /// @group(0) @binding(0)
+    /// var<uniform> globals: Globals;
+    /// ```
+    ///
     /// Example GLSL syntax:
     /// ```cpp,ignore
     /// layout(std140, binding = 0)
@@ -3660,6 +3740,12 @@ pub enum BufferBindingType {
     Uniform,
     /// A storage buffer.
     ///
+    /// Example WGSL syntax:
+    /// ```rust,ignore
+    /// @group(0) @binding(0)
+    /// var<storage, read_write> my_element: array<vec4<f32>>;
+    /// ```
+    ///
     /// Example GLSL syntax:
     /// ```cpp,ignore
     /// layout (set=0, binding=0) buffer myStorageBuffer {
@@ -3668,7 +3754,15 @@ pub enum BufferBindingType {
     /// ```
     Storage {
         /// If `true`, the buffer can only be read in the shader,
-        /// and it must be annotated with `readonly`.
+        /// and it:
+        /// - may or may not be annotated with `read` (WGSL).
+        /// - must be annotated with `readonly` (GLSL).
+        ///
+        /// Example WGSL syntax:
+        /// ```rust,ignore
+        /// @group(0) @binding(0)
+        /// var<storage, read> my_element: array<vec4<f32>>;
+        /// ```
         ///
         /// Example GLSL syntax:
         /// ```cpp,ignore
@@ -3696,6 +3790,12 @@ impl Default for BufferBindingType {
 pub enum TextureSampleType {
     /// Sampling returns floats.
     ///
+    /// Example WGSL syntax:
+    /// ```rust,ignore
+    /// @group(0) @binding(0)
+    /// var t: texure_2d<f32>;
+    /// ```
+    ///
     /// Example GLSL syntax:
     /// ```cpp,ignore
     /// layout(binding = 0)
@@ -3708,6 +3808,12 @@ pub enum TextureSampleType {
     },
     /// Sampling does the depth reference comparison.
     ///
+    /// Example WGSL syntax:
+    /// ```rust,ignore
+    /// @group(0) @binding(0)
+    /// var t: texture_depth_2d;
+    /// ```
+    ///
     /// Example GLSL syntax:
     /// ```cpp,ignore
     /// layout(binding = 0)
@@ -3716,6 +3822,12 @@ pub enum TextureSampleType {
     Depth,
     /// Sampling returns signed integers.
     ///
+    /// Example WGSL syntax:
+    /// ```rust,ignore
+    /// @group(0) @binding(0)
+    /// var t: texture_2d<i32>;
+    /// ```
+    ///
     /// Example GLSL syntax:
     /// ```cpp,ignore
     /// layout(binding = 0)
@@ -3723,6 +3835,12 @@ pub enum TextureSampleType {
     /// ```
     Sint,
     /// Sampling returns unsigned integers.
+    ///
+    /// Example WGSL syntax:
+    /// ```rust,ignore
+    /// @group(0) @binding(0)
+    /// var t: texture_2d<u32>;
+    /// ```
     ///
     /// Example GLSL syntax:
     /// ```cpp,ignore
@@ -3749,23 +3867,49 @@ impl Default for TextureSampleType {
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 #[cfg_attr(feature = "serde", serde(rename_all = "kebab-case"))]
 pub enum StorageTextureAccess {
-    /// The texture can only be written in the shader and it must be annotated with `writeonly`.
+    /// The texture can only be written in the shader and it:
+    /// - may or may not be annotated with `write` (WGSL).
+    /// - must be annotated with `writeonly` (GLSL).
+    ///
+    /// Example WGSL syntax:
+    /// ```rust,ignore
+    /// @group(0) @binding(0)
+    /// var my_storage_image: texture_storage_2d<f32, write>;
+    /// ```
     ///
     /// Example GLSL syntax:
     /// ```cpp,ignore
     /// layout(set=0, binding=0, r32f) writeonly uniform image2D myStorageImage;
     /// ```
     WriteOnly,
-    /// The texture can only be read in the shader and it must be annotated with `readonly`.
-    /// [`Features::TEXTURE_ADAPTER_SPECIFIC_FORMAT_FEATURES`] must be enabled to use this access mode,
+    /// The texture can only be read in the shader and it must be annotated with `read` (WGSL) or
+    /// `readonly` (GLSL).
+    ///
+    /// [`Features::TEXTURE_ADAPTER_SPECIFIC_FORMAT_FEATURES`] must be enabled to use this access
+    /// mode. This is a native-only extension.
+    ///
+    /// Example WGSL syntax:
+    /// ```rust,ignore
+    /// @group(0) @binding(0)
+    /// var my_storage_image: texture_storage_2d<f32, read>;
+    /// ```
     ///
     /// Example GLSL syntax:
     /// ```cpp,ignore
     /// layout(set=0, binding=0, r32f) readonly uniform image2D myStorageImage;
     /// ```
     ReadOnly,
-    /// The texture can be both read and written in the shader.
-    /// [`Features::TEXTURE_ADAPTER_SPECIFIC_FORMAT_FEATURES`] must be enabled to use this access mode.
+    /// The texture can be both read and written in the shader and must be annotated with
+    /// `read_write` in WGSL.
+    ///
+    /// [`Features::TEXTURE_ADAPTER_SPECIFIC_FORMAT_FEATURES`] must be enabled to use this access
+    /// mode.  This is a nonstandard, native-only extension.
+    ///
+    /// Example WGSL syntax:
+    /// ```rust,ignore
+    /// @group(0) @binding(0)
+    /// var my_storage_image: texture_storage_2d<f32, read_write>;
+    /// ```
     ///
     /// Example GLSL syntax:
     /// ```cpp,ignore
@@ -3830,6 +3974,12 @@ pub enum BindingType {
     },
     /// A sampler that can be used to sample a texture.
     ///
+    /// Example WGSL syntax:
+    /// ```rust,ignore
+    /// @group(0) @binding(0)
+    /// var s: sampler;
+    /// ```
+    ///
     /// Example GLSL syntax:
     /// ```cpp,ignore
     /// layout(binding = 0)
@@ -3840,6 +3990,12 @@ pub enum BindingType {
     /// https://gpuweb.github.io/gpuweb/#dictdef-gpusamplerbindinglayout).
     Sampler(SamplerBindingType),
     /// A texture binding.
+    ///
+    /// Example WGSL syntax:
+    /// ```rust,ignore
+    /// @group(0) @binding(0)
+    /// var t: texture_2d<f32>;
+    /// ```
     ///
     /// Example GLSL syntax:
     /// ```cpp,ignore
@@ -3861,9 +4017,15 @@ pub enum BindingType {
     },
     /// A storage texture.
     ///
+    /// Example WGSL syntax:
+    /// ```rust,ignore
+    /// @group(0) @binding(0)
+    /// var my_storage_image: texture_storage_2d<f32, write>;
+    /// ```
+    ///
     /// Example GLSL syntax:
     /// ```cpp,ignore
-    /// layout(set=0, binding=0, r32f) uniform image2D myStorageImage;
+    /// layout(set=0, binding=0, r32f) writeonly uniform image2D myStorageImage;
     /// ```
     /// Note that the texture format must be specified in the shader as well.
     /// A list of valid formats can be found in the specification here: <https://www.khronos.org/registry/OpenGL/specs/gl/GLSLangSpec.4.60.html#layout-qualifiers>
@@ -3954,7 +4116,7 @@ pub struct ImageCopyTexture<T> {
 
 /// Subresource range within an image
 #[repr(C)]
-#[derive(Clone, Debug, Default, PartialEq)]
+#[derive(Clone, Debug, Default, Eq, PartialEq)]
 #[cfg_attr(feature = "trace", derive(serde::Serialize))]
 #[cfg_attr(feature = "replay", derive(serde::Deserialize))]
 pub struct ImageSubresourceRange {

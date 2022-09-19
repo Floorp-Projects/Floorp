@@ -29,9 +29,9 @@ impl IndirectCommandBufferDescriptorRef {
         unsafe { msg_send![self, setCommandTypes: types] }
     }
 
-    pub fn inherit_buffer(&self) -> bool {
+    pub fn inherit_buffers(&self) -> bool {
         unsafe {
-            match msg_send![self, inheritBuffer] {
+            match msg_send![self, inheritBuffers] {
                 YES => true,
                 NO => false,
                 _ => unreachable!(),
@@ -39,8 +39,8 @@ impl IndirectCommandBufferDescriptorRef {
         }
     }
 
-    pub fn set_inherit_buffer(&self, inherit: bool) {
-        unsafe { msg_send![self, setInheritBuffer: inherit] }
+    pub fn set_inherit_buffers(&self, inherit: bool) {
+        unsafe { msg_send![self, setInheritBuffers: inherit] }
     }
 
     pub fn inherit_pipeline_state(&self) -> bool {

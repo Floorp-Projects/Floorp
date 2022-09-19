@@ -151,8 +151,8 @@ impl CreateShaderModuleError {
 pub struct ProgrammableStageDescriptor<'a> {
     /// The compiled shader module for this stage.
     pub module: ShaderModuleId,
-    /// The name of the entry point in the compiled shader. There must be a function that returns
-    /// void with this name in the shader.
+    /// The name of the entry point in the compiled shader. There must be a function with this name
+    /// in the shader.
     pub entry_point: Cow<'a, str>,
 }
 
@@ -280,8 +280,6 @@ pub struct RenderPipelineDescriptor<'a> {
 
 #[derive(Clone, Debug, Error)]
 pub enum ColorStateError {
-    #[error("output is missing")]
-    Missing,
     #[error("format {0:?} is not renderable")]
     FormatNotRenderable(wgt::TextureFormat),
     #[error("format {0:?} is not blendable")]
@@ -317,8 +315,6 @@ pub enum CreateRenderPipelineError {
     Device(#[from] DeviceError),
     #[error("pipeline layout is invalid")]
     InvalidLayout,
-    #[error("fragment output @location({0}) is invalid")]
-    InvalidFragmentOutputLocation(u32),
     #[error("unable to derive an implicit layout")]
     Implicit(#[from] ImplicitLayoutError),
     #[error("color state [{0}] is invalid")]
@@ -327,6 +323,8 @@ pub enum CreateRenderPipelineError {
     DepthStencilState(#[from] DepthStencilStateError),
     #[error("invalid sample count {0}")]
     InvalidSampleCount(u32),
+    #[error("the number of color attachments {given} exceeds the limit {limit}")]
+    TooManyColorAttachments { given: u32, limit: u32 },
     #[error("the number of vertex buffers {given} exceeds the limit {limit}")]
     TooManyVertexBuffers { given: u32, limit: u32 },
     #[error("the total number of vertex attributes {given} exceeds the limit {limit}")]

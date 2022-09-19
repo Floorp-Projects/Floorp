@@ -136,7 +136,7 @@ pub struct ComputePassDescriptor<'a> {
     pub label: Label<'a>,
 }
 
-#[derive(Clone, Debug, Error, PartialEq)]
+#[derive(Clone, Debug, Error, Eq, PartialEq)]
 pub enum DispatchError {
     #[error("compute pipeline must be set")]
     MissingPipeline,
@@ -328,7 +328,7 @@ impl<G: GlobalIdentityHandlerFactory> Global<G> {
         encoder_id: id::CommandEncoderId,
         base: BasePassRef<ComputeCommand>,
     ) -> Result<(), ComputePassError> {
-        profiling::scope!("run_compute_pass", "CommandEncoder");
+        profiling::scope!("CommandEncoder::run_compute_pass");
         let init_scope = PassErrorScope::Pass(encoder_id);
 
         let hub = A::hub(self);
