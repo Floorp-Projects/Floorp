@@ -234,7 +234,6 @@ namespace jit {
   _(RegExpTesterRaw, js::RegExpTesterRaw)                                      \
   _(SameValue, js::SameValue)                                                  \
   _(SetArrayLength, js::jit::SetArrayLength)                                   \
-  _(SetDenseElement, js::jit::SetDenseElement)                                 \
   _(SetElementMegamorphic, js::jit::SetElementMegamorphic)                     \
   _(SetElementSuper, js::SetElementSuper)                                      \
   _(SetFunctionName, js::SetFunctionName)                                      \

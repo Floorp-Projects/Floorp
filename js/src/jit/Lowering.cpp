@@ -3731,27 +3731,22 @@ void LIRGenerator::visitStoreElementHole(MStoreElementHole* ins) {
   const LUse elements = useRegister(ins->elements());
   const LAllocation index = useRegister(ins->index());
 
-  LDefinition spectreTemp =
-      BoundsCheckNeedsSpectreTemp() ? temp() : LDefinition::BogusTemp();
-
   LInstruction* lir;
   switch (ins->value()->type()) {
     case MIRType::Value:
       lir = new (alloc()) LStoreElementHoleV(object, elements, index,
-                                             useBox(ins->value()), spectreTemp);
+                                             useBox(ins->value()), temp());
       break;
 
     default: {
       const LAllocation value = useRegisterOrNonDoubleConstant(ins->value());
       lir = new (alloc())
-          LStoreElementHoleT(object, elements, index, value, spectreTemp);
+          LStoreElementHoleT(object, elements, index, value, temp());
       break;
     }
   }
 
-  if (ins->needsNegativeIntCheck()) {
-    assignSnapshot(lir, ins->bailoutKind());
-  }
+  assignSnapshot(lir, ins->bailoutKind());
   add(lir, ins);
   assignSafepoint(lir, ins);
 }
