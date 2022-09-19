@@ -286,56 +286,9 @@
   }
 
   function setSidebarIconView() {
-  if(Services.prefs.getStringPref("floorp.browser.sidebar2.customurl1", undefined) != ""){
-    document.getElementById("select-CustomURL1").hidden = false;
-  }else{
-    document.getElementById("select-CustomURL1").hidden = true;
-  }
-  if(Services.prefs.getStringPref("floorp.browser.sidebar2.customurl2", undefined) != ""){
-    document.getElementById("select-CustomURL2").hidden = false;
-  }else{
-    document.getElementById("select-CustomURL2").hidden = true;
-  }
-  if(Services.prefs.getStringPref("floorp.browser.sidebar2.customurl3", undefined) != ""){
-    document.getElementById("select-CustomURL3").hidden = false;
-  }else{
-    document.getElementById("select-CustomURL3").hidden = true;
-  }
-  if(Services.prefs.getStringPref("floorp.browser.sidebar2.customurl4", undefined) != ""){
-    document.getElementById("select-CustomURL4").hidden = false;
-  }else{
-    document.getElementById("select-CustomURL4").hidden = true;
-  }
-  if(Services.prefs.getStringPref("floorp.browser.sidebar2.customurl5", undefined) != ""){
-    document.getElementById("select-CustomURL5").hidden = false;
-  }else{
-    document.getElementById("select-CustomURL5").hidden = true;
-  }
-  if(Services.prefs.getStringPref("floorp.browser.sidebar2.customurl6", undefined) != ""){
-    document.getElementById("select-CustomURL6").hidden = false;
-  }else{
-    document.getElementById("select-CustomURL6").hidden = true;
-  }
-  if(Services.prefs.getStringPref("floorp.browser.sidebar2.customurl7", undefined) != ""){
-    document.getElementById("select-CustomURL7").hidden = false;
-  }else{
-    document.getElementById("select-CustomURL7").hidden = true;
-  }
-  if(Services.prefs.getStringPref("floorp.browser.sidebar2.customurl8", undefined) != ""){
-    document.getElementById("select-CustomURL8").hidden = false;
-  }else{
-    document.getElementById("select-CustomURL8").hidden = true;
-  }
-  if(Services.prefs.getStringPref("floorp.browser.sidebar2.customurl9", undefined) != ""){
-    document.getElementById("select-CustomURL9").hidden = false;
-  }else{
-    document.getElementById("select-CustomURL9").hidden = true;
-  }
-  if(Services.prefs.getStringPref("floorp.browser.sidebar2.customurl10", undefined) != ""){
-    document.getElementById("select-CustomURL10").hidden = false;
-  }else{
-    document.getElementById("select-CustomURL10").hidden = true;
-  }
+    for (let sbar_id = 1; sbar_id < 10; sbar_id++) {
+      document.getElementById("select-CustomURL"+sbar_id).hidden = (Services.prefs.getStringPref("floorp.browser.sidebar2.customurl"+sbar_id, undefined) != "") ? false : true;
+    }
 }
 
 /*---------------------------------------------------------------- design ----------------------------------------------------------------*/
@@ -479,17 +432,10 @@ function setBrowserDesign() {
   }
 
  function setAllfavicons (){
-   document.getElementById("select-CustomURL1").style.listStyleImage = "url(" + "http://www.google.com/s2/favicons?domain=" + Services.prefs.getStringPref("floorp.browser.sidebar2.customurl1") + ")"
-   document.getElementById("select-CustomURL2").style.listStyleImage = "url(" + "http://www.google.com/s2/favicons?domain=" + Services.prefs.getStringPref("floorp.browser.sidebar2.customurl2") + ")"
-   document.getElementById("select-CustomURL3").style.listStyleImage = "url(" + "http://www.google.com/s2/favicons?domain=" + Services.prefs.getStringPref("floorp.browser.sidebar2.customurl3") + ")" 
-   document.getElementById("select-CustomURL4").style.listStyleImage = "url(" + "http://www.google.com/s2/favicons?domain=" + Services.prefs.getStringPref("floorp.browser.sidebar2.customurl4") + ")"
-   document.getElementById("select-CustomURL5").style.listStyleImage = "url(" + "http://www.google.com/s2/favicons?domain=" + Services.prefs.getStringPref("floorp.browser.sidebar2.customurl5") + ")"
-   document.getElementById("select-CustomURL6").style.listStyleImage = "url(" + "http://www.google.com/s2/favicons?domain=" + Services.prefs.getStringPref("floorp.browser.sidebar2.customurl6") + ")"
-   document.getElementById("select-CustomURL7").style.listStyleImage = "url(" + "http://www.google.com/s2/favicons?domain=" + Services.prefs.getStringPref("floorp.browser.sidebar2.customurl7") + ")"
-   document.getElementById("select-CustomURL8").style.listStyleImage = "url(" + "http://www.google.com/s2/favicons?domain=" + Services.prefs.getStringPref("floorp.browser.sidebar2.customurl8") + ")"
-   document.getElementById("select-CustomURL9").style.listStyleImage = "url(" + "http://www.google.com/s2/favicons?domain=" + Services.prefs.getStringPref("floorp.browser.sidebar2.customurl9") + ")"
-   document.getElementById("select-CustomURL10").style.listStyleImage = "url(" + "http://www.google.com/s2/favicons?domain=" + Services.prefs.getStringPref("floorp.browser.sidebar2.customurl10") + ")"
- }
+  for (let sbar_id = 1; sbar_id < 10; sbar_id++) {
+    document.getElementById("select-CustomURL"+sbar_id).style.listStyleImage = "url(" + "http://www.google.com/s2/favicons?domain=" + Services.prefs.getStringPref("floorp.browser.sidebar2.customurl"+sbar_id) + ")"
+  }
+}
 
  function changeMuteStatus () {
   let webpanel = document.getElementById("sidebar2");
