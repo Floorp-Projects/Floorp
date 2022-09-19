@@ -58,7 +58,7 @@ interface BrowserToolbarMenuController {
     fun handleToolbarItemInteraction(item: ToolbarMenu.Item)
 }
 
-@Suppress("LargeClass", "ForbiddenComment")
+@Suppress("LargeClass", "ForbiddenComment", "LongParameterList")
 class DefaultBrowserToolbarMenuController(
     private val store: BrowserStore,
     private val activity: HomeActivity,

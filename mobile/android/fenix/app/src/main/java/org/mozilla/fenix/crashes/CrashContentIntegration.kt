@@ -38,6 +38,8 @@ import org.mozilla.fenix.utils.Settings
  * @param sessionId [String] Id of the tab or custom tab which should be observed for [EngineState.crashed]
  * depending on which [crashReporterView] will be shown or hidden.
  */
+
+@Suppress("LongParameterList")
 class CrashContentIntegration(
     private val browserStore: BrowserStore,
     private val appStore: AppStore,

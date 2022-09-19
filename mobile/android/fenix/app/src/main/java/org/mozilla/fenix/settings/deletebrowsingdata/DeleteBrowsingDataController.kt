@@ -26,6 +26,7 @@ interface DeleteBrowsingDataController {
     suspend fun deleteDownloads()
 }
 
+@Suppress("LongParameterList")
 class DefaultDeleteBrowsingDataController(
     private val removeAllTabs: TabsUseCases.RemoveAllTabsUseCase,
     private val removeAllDownloads: DownloadsUseCases.RemoveAllDownloadsUseCase,

@@ -16,6 +16,7 @@ import mozilla.components.support.base.feature.UserInteractionHandler
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.toolbar.ToolbarMenu
 
+@Suppress("LongParameterList")
 class CustomTabsIntegration(
     store: BrowserStore,
     useCases: CustomTabsUseCases,
