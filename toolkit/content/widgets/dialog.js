@@ -240,73 +240,80 @@
       window.moveTo(xOffset, yOffset);
     }
 
-    postLoadInit(aEvent) {
-      let focusInit = () => {
-        const defaultButton = this.getButton(this.defaultButton);
+    // Give focus to the first focusable element in the dialog
+    _setInitialFocusIfNeeded() {
+      let focusedElt = document.commandDispatcher.focusedElement;
+      if (focusedElt) {
+        return;
+      }
 
-        // give focus to the first focusable element in the dialog
-        let focusedElt = document.commandDispatcher.focusedElement;
-        if (!focusedElt) {
-          Services.focus.moveFocus(
-            window,
-            null,
-            Services.focus.MOVEFOCUS_FORWARD,
-            Services.focus.FLAG_NOPARENTFRAME
-          );
+      const defaultButton = this.getButton(this.defaultButton);
+      Services.focus.moveFocus(
+        window,
+        null,
+        Services.focus.MOVEFOCUS_FORWARD,
+        Services.focus.FLAG_NOPARENTFRAME
+      );
 
-          focusedElt = document.commandDispatcher.focusedElement;
-          if (focusedElt) {
-            var initialFocusedElt = focusedElt;
-            while (
-              focusedElt.localName == "tab" ||
-              focusedElt.getAttribute("noinitialfocus") == "true"
-            ) {
-              Services.focus.moveFocus(
-                window,
-                focusedElt,
-                Services.focus.MOVEFOCUS_FORWARD,
-                Services.focus.FLAG_NOPARENTFRAME
-              );
-              focusedElt = document.commandDispatcher.focusedElement;
-              if (focusedElt) {
-                if (focusedElt == initialFocusedElt) {
-                  if (focusedElt.getAttribute("noinitialfocus") == "true") {
-                    focusedElt.blur();
-                  }
-                  break;
-                }
-              }
-            }
+      focusedElt = document.commandDispatcher.focusedElement;
+      if (!focusedElt) {
+        return; // No focusable element?
+      }
 
-            if (initialFocusedElt.localName == "tab") {
-              if (focusedElt.hasAttribute("dlgtype")) {
-                // We don't want to focus on anonymous OK, Cancel, etc. buttons,
-                // so return focus to the tab itself
-                initialFocusedElt.focus();
-              }
-            } else if (
-              AppConstants.platform != "macosx" &&
-              focusedElt.hasAttribute("dlgtype") &&
-              focusedElt != defaultButton
-            ) {
-              // If the default button is not focusable, then return focus.
-              defaultButton.focus();
-              if (document.commandDispatcher.focusedElement != defaultButton) {
-                initialFocusedElt.focus();
-              }
-            }
+      let firstFocusedElt = focusedElt;
+      while (
+        focusedElt.localName == "tab" ||
+        focusedElt.getAttribute("noinitialfocus") == "true"
+      ) {
+        Services.focus.moveFocus(
+          window,
+          focusedElt,
+          Services.focus.MOVEFOCUS_FORWARD,
+          Services.focus.FLAG_NOPARENTFRAME
+        );
+        focusedElt = document.commandDispatcher.focusedElement;
+        if (focusedElt == firstFocusedElt) {
+          if (focusedElt.getAttribute("noinitialfocus") == "true") {
+            focusedElt.blur();
+          }
+          // Didn't find anything else to focus, we're done.
+          return;
+        }
+      }
+
+      if (firstFocusedElt.localName == "tab") {
+        if (focusedElt.hasAttribute("dlgtype")) {
+          // We don't want to focus on anonymous OK, Cancel, etc. buttons,
+          // so return focus to the tab itself
+          firstFocusedElt.focus();
+        }
+      } else if (
+        AppConstants.platform != "macosx" &&
+        focusedElt.hasAttribute("dlgtype") &&
+        focusedElt != defaultButton
+      ) {
+        defaultButton.focus();
+        if (document.commandDispatcher.focusedElement != defaultButton) {
+          // If the default button is not focusable, then return focus to the
+          // initial element if possible, or blur otherwise.
+          if (firstFocusedElt.getAttribute("noinitialfocus") == "true") {
+            focusedElt.blur();
+          } else {
+            firstFocusedElt.focus();
           }
         }
+      }
+    }
 
-        try {
-          if (defaultButton) {
-            window.notifyDefaultButtonLoaded(defaultButton);
-          }
-        } catch (e) {}
-      };
+    postLoadInit(aEvent) {
+      this._setInitialFocusIfNeeded();
 
-      // Give focus after onload completes, see bug 103197.
-      setTimeout(focusInit, 0);
+      try {
+        const defaultButton = this.getButton(this.defaultButton);
+        if (defaultButton) {
+          window.notifyDefaultButtonLoaded(defaultButton);
+        }
+      } catch (e) {}
 
       if (this._l10nButtons.length) {
         document.l10n.translateElements(this._l10nButtons).then(() => {
