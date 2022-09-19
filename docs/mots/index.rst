@@ -1049,26 +1049,20 @@ JavaScript engine (SpiderMonkey)
     * - Peer(s)
       -
         | `André Bargull (anba) <https://people.mozilla.org/s?query=anba>`__
-        | `Ted Campbell (tcampbell) <https://people.mozilla.org/s?query=tcampbell>`__
-        | `Jon Coppeard (jonco) <https://people.mozilla.org/s?query=jonco>`__
-        | `Steve Fink (sfink) <https://people.mozilla.org/s?query=sfink>`__
         | `Tooru Fujisawa (arai) <https://people.mozilla.org/s?query=arai>`__
-        | `Tom Schuster (evilpie) <https://people.mozilla.org/s?query=evilpie>`__
-        | `Kannan Vijayan (djvj) <https://people.mozilla.org/s?query=djvj>`__
-        | `Jeff Walden (Waldo) <https://people.mozilla.org/s?query=Waldo>`__
-        | `Yulia Startsev (yulia) <https://people.mozilla.org/s?query=yulia>`__
-        | `Matthew Gaudet (mgaudet) <https://people.mozilla.org/s?query=mgaudet>`__
-        | `Iain Ireland (iain) <https://people.mozilla.org/s?query=iain>`__
-        | `Nicolas B (nbp) <https://people.mozilla.org/s?query=nbp>`__
-        | `Caroline Cullen (caroline) <https://people.mozilla.org/s?query=caroline>`__
-        | `Nick Fitzgerald (fitzgen) <https://people.mozilla.org/s?query=fitzgen>`__
-        | `Luke Wagner (luke) <https://people.mozilla.org/s?query=luke>`__
-        | `Dan Gohman (sunfish) <https://people.mozilla.org/s?query=sunfish>`__
         | `Bobby Holley (bholley) <https://people.mozilla.org/s?query=bholley>`__
+        | `Tom Schuster (evilpie) <https://people.mozilla.org/s?query=evilpie>`__
+        | `Iain Ireland (iain) <https://people.mozilla.org/s?query=iain>`__
+        | `Jon Coppeard (jonco) <https://people.mozilla.org/s?query=jonco>`__
+        | `Matthew Gaudet (mgaudet) <https://people.mozilla.org/s?query=mgaudet>`__
+        | `Nicolas B (nbp) <https://people.mozilla.org/s?query=nbp>`__
+        | `Steve Fink (sfink) <https://people.mozilla.org/s?query=sfink>`__
+        | `Ted Campbell (tcampbell) <https://people.mozilla.org/s?query=tcampbell>`__
+        | `Yulia Startsev (yulia) <https://people.mozilla.org/s?query=yulia>`__
     * - Owner(s) Emeritus
       - Brendan Eich, Dave Mandelin, Luke Wagner, Jason Orendorff
     * - Peer(s) Emeritus
-      - Brendan Eich, Hannes Verschore, Blake Kaplan, Bill McCloskey, Shu-yu Guo, Niko Matsakis, Eddy Bruel, David Anderson, Igor Bukanov, Andreas Gal, Eric Faust, Ashley Hauck, Brian Hackett, Till Schneidereit, Nicholas Nethercote, Jason Orendorff
+      - Andreas Gal, Ashley Hauck, Bill McCloskey, Blake Kaplan, Brian Hackett, Caroline Cullen, Dan Gohman, David Anderson, Eddy Bruel, Eric Faust, Hannes Verschore, Igor Bukanov, Jeff Walden, Kannan Vijayan, Nicholas Nethercote, Nick Fitzgerald, Niko Matsakis, Shu-yu Guo, Till Schneidereit
     * - Includes
       -
         | `js/src/\*\*/\* <https://searchfox.org/mozilla-central/search?q=&path=js/src/\*\*/\*>`__

@@ -2,7 +2,7 @@
 ---
 repo: mozilla-central
 created_at: '2021-10-14T12:50:40.073465'
-updated_at: '2022-09-15T13:11:25.389572'
+updated_at: '2022-09-15T13:40:31.045030'
 export:
   path: ./docs/mots/index.rst
   format: rst
@@ -293,8 +293,7 @@ people:
     bmo_id: 566192
     name: Andreas Farre
     nick: farre
-  - &fitzgen
-    bmo_id: 417695
+  - bmo_id: 417695
     name: Nick Fitzgerald
     nick: fitzgen
   - &flod
@@ -773,8 +772,7 @@ people:
     bmo_id: 263117
     name: Martin Stránský
     nick: stransky
-  - &sunfish
-    bmo_id: 468136
+  - bmo_id: 468136
     name: Dan Gohman
     nick: sunfish
   - &Sylvestre
@@ -1685,22 +1683,25 @@ modules:
         - Luke Wagner
         - Jason Orendorff
       peers_emeritus:
-        - Brendan Eich
-        - Hannes Verschore
-        - Blake Kaplan
-        - Bill McCloskey
-        - Shu-yu Guo
-        - Niko Matsakis
-        - Eddy Bruel
-        - David Anderson
-        - Igor Bukanov
         - Andreas Gal
-        - Eric Faust
         - Ashley Hauck
+        - Bill McCloskey
+        - Blake Kaplan
         - Brian Hackett
-        - Till Schneidereit
+        - Caroline Cullen
+        - Dan Gohman
+        - David Anderson
+        - Eddy Bruel
+        - Eric Faust
+        - Hannes Verschore
+        - Igor Bukanov
+        - Jeff Walden
+        - Kannan Vijayan
         - Nicholas Nethercote
-        - Jason Orendorff
+        - Nick Fitzgerald
+        - Niko Matsakis
+        - Shu-yu Guo
+        - Till Schneidereit
       url: https://spidermonkey.dev/
       components:
         - Core::JavaScript Engine
@@ -1713,22 +1714,16 @@ modules:
       - *jandem
     peers:
       - *anba
-      - *tcampbell
-      - *jonco
-      - *sfink
       - *arai
-      - *evilpie
-      - *djvj
-      - *Waldo
-      - *yulia
-      - *mgaudet
-      - *iain
-      - *nbp
-      - *caroline
-      - *fitzgen
-      - *luke
-      - *sunfish
       - *bholley
+      - *evilpie
+      - *iain
+      - *jonco
+      - *mgaudet
+      - *nbp
+      - *sfink
+      - *tcampbell
+      - *yulia
     machine_name: core_javascript
 
   - name: 'Core: JavaScript JIT'
@@ -3634,5 +3629,5 @@ modules:
         machine_name: webextensions
     machine_name: toolkit
 hashes:
-  config: 6077586f4c51f8e7b71e136be0cb14b94ca88d2c
-  export: ec21c510674af53b1fa2ffbc5e3b05954f9724d9
+  config: ccc1047f0b07ae8b254fcb187a89107581830f9e
+  export: 79025fdcf0c3445d6c66eb26504943248baed3cc
