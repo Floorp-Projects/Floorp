@@ -257,6 +257,12 @@ notes = """
 Mozilla-developed package.
 """
 
+[[audits.d3d12]]
+who = "Jim Blandy <jimb@red-bean.com>"
+criteria = "safe-to-deploy"
+delta = "0.4.1 -> 0.5.0"
+notes = "The commits between 0.4.1 and 0.5.0 were all audited by Dzmitry Malyshau or myself."
+
 [[audits.derive_arbitrary]]
 who = "Mike Hommey <mh+mozilla@glandium.org>"
 criteria = "safe-to-run"
