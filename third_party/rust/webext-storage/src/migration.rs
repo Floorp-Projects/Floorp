@@ -224,7 +224,7 @@ fn do_insert(tx: &Transaction<'_>, ext_id: &str, vals: Vec<(String, Value)>) -> 
     Ok(num_entries)
 }
 
-#[derive(Debug, Clone, Default, PartialEq, serde::Serialize, serde::Deserialize)]
+#[derive(Debug, Clone, Default, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 pub struct MigrationInfo {
     /// The number of entries (rows in the original table) we attempted to
     /// migrate. Zero if there was some error in computing this number.

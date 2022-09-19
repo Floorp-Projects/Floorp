@@ -17,7 +17,7 @@ pub struct HeaderName(pub(super) Cow<'static, str>);
 /// instead. This is because it would likely come through as
 /// a network error if we emitted it for local headers, when
 /// it's actually a bug that we'd need to fix.
-#[derive(thiserror::Error, Debug, Clone, PartialEq)]
+#[derive(thiserror::Error, Debug, Clone, PartialEq, Eq)]
 #[error("Invalid header name: {0:?}")]
 pub struct InvalidHeaderName(Cow<'static, str>);
 
@@ -171,12 +171,15 @@ impl From<HeaderName> for Vec<u8> {
 
 macro_rules! partialeq_boilerplate {
     ($T0:ty, $T1:ty) => {
+        // This macro is used for items with and without lifetimes.
+        #[allow(clippy::extra_unused_lifetimes)]
         impl<'a> PartialEq<$T0> for $T1 {
             fn eq(&self, other: &$T0) -> bool {
                 // The &* should invoke Deref::deref if it exists, no-op otherwise.
                 (&*self).eq_ignore_ascii_case(&*other)
             }
         }
+        #[allow(clippy::extra_unused_lifetimes)]
         impl<'a> PartialEq<$T1> for $T0 {
             fn eq(&self, other: &$T1) -> bool {
                 PartialEq::eq(other, self)

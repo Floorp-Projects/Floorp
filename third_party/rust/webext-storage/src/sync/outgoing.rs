@@ -8,7 +8,7 @@
 use interrupt_support::Interruptee;
 use rusqlite::{Connection, Row, Transaction};
 use sql_support::ConnExt;
-use sync15_traits::Payload;
+use sync15::Payload;
 use sync_guid::Guid as SyncGuid;
 
 use crate::error::*;

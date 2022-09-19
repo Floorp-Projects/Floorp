@@ -3,7 +3,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use interrupt_support::Interrupted;
-use sync15_traits::bridged_engine;
 
 #[derive(Debug)]
 pub enum QuotaReason {
@@ -51,7 +50,7 @@ pub enum ErrorKind {
     OpenDatabaseError(#[from] sql_support::open_database::Error),
 
     #[error("{0}")]
-    IncomingPayloadError(#[from] bridged_engine::PayloadError),
+    IncomingPayloadError(#[from] sync15::engine::PayloadError),
 }
 
 error_support::define_error! {
@@ -61,7 +60,7 @@ error_support::define_error! {
         (IoError, std::io::Error),
         (InterruptedError, Interrupted),
         (Utf8Error, std::str::Utf8Error),
-        (IncomingPayloadError, bridged_engine::PayloadError),
+        (IncomingPayloadError, sync15::engine::PayloadError),
         (OpenDatabaseError, sql_support::open_database::Error),
     }
 }

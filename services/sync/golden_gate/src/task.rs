@@ -12,7 +12,8 @@ use atomic_refcell::AtomicRefCell;
 use moz_task::{DispatchOptions, Task, TaskRunnable, ThreadPtrHandle, ThreadPtrHolder};
 use nserror::nsresult;
 use nsstring::{nsACString, nsCString};
-use sync15_traits::{ApplyResults, BridgedEngine, Guid};
+use sync15::engine::{ApplyResults, BridgedEngine};
+use sync15::Guid;
 use thin_vec::ThinVec;
 use xpcom::{
     interfaces::{

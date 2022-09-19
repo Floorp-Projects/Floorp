@@ -7,7 +7,7 @@ use serde_json::{Map, Value as JsonValue};
 
 /// Represents the decrypted payload in a Bso. Provides a minimal layer of type
 /// safety to avoid double-encrypting.
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Payload {
     pub id: Guid,
 

@@ -18,6 +18,7 @@ pub use backend::{note_backend, set_backend, Backend};
 pub use headers::{consts as header_names, Header, HeaderName, Headers, InvalidHeaderName};
 pub use settings::GLOBAL_SETTINGS;
 
+#[allow(clippy::derive_partial_eq_without_eq)]
 pub(crate) mod msg_types {
     include!("mozilla.appservices.httpconfig.protobuf.rs");
 }
@@ -62,7 +63,7 @@ impl std::fmt::Display for Method {
 }
 
 #[must_use = "`Request`'s \"builder\" functions take by move, not by `&mut self`"]
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug)]
 pub struct Request {
     pub method: Method,
     pub url: Url,
@@ -225,7 +226,7 @@ impl Request {
 }
 
 /// A response from the server.
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug)]
 pub struct Response {
     /// The method used to request this response.
     pub request_method: Method,

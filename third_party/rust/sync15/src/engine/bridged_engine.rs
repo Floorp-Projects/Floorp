@@ -6,7 +6,7 @@ use std::{error::Error, fmt};
 
 use serde::{Deserialize, Serialize};
 
-use super::{Guid, Payload, ServerTimestamp};
+use crate::{Guid, Payload, ServerTimestamp};
 
 /// A BridgedEngine acts as a bridge between application-services, rust
 /// implemented sync engines and sync engines as defined by Desktop Firefox.

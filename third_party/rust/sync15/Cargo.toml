@@ -1,0 +1,66 @@
+[package]
+name = "sync15"
+edition = "2021"
+version = "0.1.0"
+authors = ["application-services@mozilla.com"]
+license = "MPL-2.0"
+exclude = ["/android", "/ios"]
+
+[features]
+# The default feature is what mozilla-central wants (we are listed in a `[patch]` section in
+# in m-c's top-level Cargo.toml to make updating easier, but you can't specify features there)
+default = ["sync-engine"]
+
+random-guid = ["sync-guid/random"]
+
+# Some consumers of this just need our encrypted payloads and no other sync functionality.
+crypto = ["rc_crypto", "base16", "base64"]
+
+# Some crates need to implement a "sync engine", but aren't a "sync client" (ie, their
+# engine is used by a "sync client".) Engines don't interact directly with the storage servers,
+# nor do they do their own crypto.
+# See the rustdocs in `crate::engine` for more information about engines.
+sync-engine = ["random-guid"]
+
+# Some crates are a "sync client" and do full management/initialization of server storage,
+# keys, etc and sync one or more engines. This crate has an engine to manage the "clients"
+# collection, so needs the sync-engine feature.
+# See the rustdocs in `crate::client` for more information about clients.
+sync-client = ["sync-engine", "crypto", "viaduct", "url"]
+
+# Some crates just do their own engine but need to pretend they are a client,
+# eg, iOS pre-sync-manager.
+# Consider places:
+# * It always is going to need to supply a "sync-engine".
+# * When used in iOS, due to the lack of sync_manager support, it also needs to
+#   supply a kind of "sync-client". It is *not* necessary to supply this for Android.
+# In a perfect world:
+# * places would also have a feature called, say, "sync-client"
+# * The code needed for iOS would be behind the "sync-client" feature.
+# * The ios megazord would enable the "sync-client" feature, but the android megazord would not.
+#
+# However, that's not yet the case. This "stand-alone" sync feature is used by crates
+# such as places, and is really a marker to help identify the crates which should be
+# upgraded to make the sync-client part truly optional.
+standalone-sync = ["sync-client"]
+
+[dependencies]
+anyhow = "1.0"
+base16 = { version = "0.2", optional = true }
+base64 = { version = "0.13", optional = true }
+error-support = { path = "../support/error" }
+ffi-support = "0.4"
+interrupt-support = { path = "../support/interrupt" }
+lazy_static = "1.4"
+log = "0.4"
+rc_crypto = { path = "../support/rc_crypto", features = ["hawk"], optional = true }
+serde = { version = "1", features = ["derive"] }
+serde_derive = "1"
+serde_json = "1"
+sync-guid = { path = "../support/guid", features = ["random"] }
+thiserror = "1.0"
+url = { version = "2.1", optional = true } # mozilla-central can't yet take 2.2 (see bug 1734538)
+viaduct = { path = "../viaduct", optional = true }
+
+[dev-dependencies]
+env_logger = { version = "0.7", default-features = false }

@@ -19,7 +19,7 @@ serde = "1"
 serde_json = "1"
 serde_derive = "1"
 sql-support = { path = "../support/sql" }
-sync15-traits = {path = "../support/sync15-traits"}
+sync15 = {path = "../../components/sync15", features=["sync-engine"]}
 sync-guid = { path = "../support/guid", features = ["rusqlite_support", "random"] }
 url = { version = "2.1", features = ["serde"] }
 

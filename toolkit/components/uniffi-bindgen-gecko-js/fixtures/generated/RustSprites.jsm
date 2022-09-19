@@ -304,7 +304,7 @@ class Sprite {
     const functionCall = () => {
         FfiConverterOptionalTypePoint.checkType("initialPosition", initialPosition);
         return UniFFIScaffolding.callAsync(
-            66, // sprites:sprites_f59e_Sprite_new
+            66, // sprites:sprites_83ef_Sprite_new
             FfiConverterOptionalTypePoint.lower(initialPosition),
         )
     }
@@ -326,7 +326,7 @@ class Sprite {
         FfiConverterTypePoint.checkType("reference", reference);
         FfiConverterTypeVector.checkType("direction", direction);
         return UniFFIScaffolding.callAsync(
-            67, // sprites:sprites_f59e_Sprite_new_relative_to
+            67, // sprites:sprites_83ef_Sprite_new_relative_to
             FfiConverterTypePoint.lower(reference),
             FfiConverterTypeVector.lower(direction),
         )
@@ -341,7 +341,7 @@ class Sprite {
     const liftError = null;
     const functionCall = () => {
         return UniFFIScaffolding.callAsync(
-            68, // sprites:sprites_f59e_Sprite_get_position
+            68, // sprites:sprites_83ef_Sprite_get_position
             FfiConverterTypeSprite.lower(this),
         )
     }
@@ -356,7 +356,7 @@ class Sprite {
     const functionCall = () => {
         FfiConverterTypePoint.checkType("position", position);
         return UniFFIScaffolding.callAsync(
-            69, // sprites:sprites_f59e_Sprite_move_to
+            69, // sprites:sprites_83ef_Sprite_move_to
             FfiConverterTypeSprite.lower(this),
             FfiConverterTypePoint.lower(position),
         )
@@ -372,7 +372,7 @@ class Sprite {
     const functionCall = () => {
         FfiConverterTypeVector.checkType("direction", direction);
         return UniFFIScaffolding.callAsync(
-            70, // sprites:sprites_f59e_Sprite_move_by
+            70, // sprites:sprites_83ef_Sprite_move_by
             FfiConverterTypeSprite.lower(this),
             FfiConverterTypeVector.lower(direction),
         )
@@ -546,7 +546,7 @@ function translate(position,direction) {
         FfiConverterTypePoint.checkType("position", position);
         FfiConverterTypeVector.checkType("direction", direction);
         return UniFFIScaffolding.callAsync(
-            71, // sprites:sprites_f59e_translate
+            71, // sprites:sprites_83ef_translate
             FfiConverterTypePoint.lower(position),
             FfiConverterTypeVector.lower(direction),
         )

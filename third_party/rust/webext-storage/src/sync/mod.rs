@@ -31,7 +31,7 @@ pub const STORAGE_VERSION: usize = 1;
 // enforced bool must only be ever true it might be possible, but that's quite
 // clumsy for the rest of the code. So we just capture serde's failure to
 // unpack it and treat it as a tombstone.
-#[derive(Debug, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(untagged)]
 pub enum RecordData {
     Data {

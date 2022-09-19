@@ -5,6 +5,10 @@
 //! Manage recording sync telemetry. Assumes some external telemetry
 //! library/code which manages submitting.
 
+use crate::error::Error;
+#[cfg(feature = "sync-client")]
+use crate::error::ErrorResponse;
+
 use std::collections::HashMap;
 use std::time;
 
@@ -773,5 +777,48 @@ mod ping_tests {
                 "version": 1
             }),
         );
+    }
+}
+
+impl<'a> From<&'a Error> for SyncFailure {
+    fn from(e: &Error) -> SyncFailure {
+        match e {
+            #[cfg(feature = "sync-client")]
+            Error::TokenserverHttpError(status) => {
+                if *status == 401 {
+                    SyncFailure::Auth {
+                        from: "tokenserver",
+                    }
+                } else {
+                    SyncFailure::Http { code: *status }
+                }
+            }
+            #[cfg(feature = "sync-client")]
+            Error::BackoffError(_) => SyncFailure::Http { code: 503 },
+            #[cfg(feature = "sync-client")]
+            Error::StorageHttpError(ref e) => match e {
+                ErrorResponse::NotFound { .. } => SyncFailure::Http { code: 404 },
+                ErrorResponse::Unauthorized { .. } => SyncFailure::Auth { from: "storage" },
+                ErrorResponse::PreconditionFailed { .. } => SyncFailure::Http { code: 412 },
+                ErrorResponse::ServerError { status, .. } => SyncFailure::Http { code: *status },
+                ErrorResponse::RequestFailed { status, .. } => SyncFailure::Http { code: *status },
+            },
+            #[cfg(feature = "crypto")]
+            Error::CryptoError(ref e) => SyncFailure::Unexpected {
+                error: e.to_string(),
+            },
+            #[cfg(feature = "sync-client")]
+            Error::RequestError(ref e) => SyncFailure::Unexpected {
+                error: e.to_string(),
+            },
+            #[cfg(feature = "sync-client")]
+            Error::UnexpectedStatus(ref e) => SyncFailure::Http { code: e.status },
+            Error::Interrupted(ref e) => SyncFailure::Unexpected {
+                error: e.to_string(),
+            },
+            e => SyncFailure::Other {
+                error: e.to_string(),
+            },
+        }
     }
 }

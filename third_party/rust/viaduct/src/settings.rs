@@ -13,7 +13,7 @@ use std::time::Duration;
 /// with custom settings. In the reqwest backend this would store a Client, and
 /// in the concept-fetch backend it would only store the settings, and populate
 /// things on the fly.
-#[derive(Debug, PartialEq)]
+#[derive(Debug)]
 #[non_exhaustive]
 pub struct Settings {
     pub read_timeout: Option<Duration>,

@@ -576,7 +576,7 @@ class Optionneur {
     const liftError = null;
     const functionCall = () => {
         return UniFFIScaffolding.callAsync(
-            35, // rondpoint:rondpoint_84bf_Optionneur_new
+            35, // rondpoint:rondpoint_6001_Optionneur_new
         )
     }
     try {
@@ -590,7 +590,7 @@ class Optionneur {
     const functionCall = () => {
         FfiConverterBool.checkType("value", value);
         return UniFFIScaffolding.callAsync(
-            36, // rondpoint:rondpoint_84bf_Optionneur_sinon_boolean
+            36, // rondpoint:rondpoint_6001_Optionneur_sinon_boolean
             FfiConverterTypeOptionneur.lower(this),
             FfiConverterBool.lower(value),
         )
@@ -606,7 +606,7 @@ class Optionneur {
     const functionCall = () => {
         FfiConverterString.checkType("value", value);
         return UniFFIScaffolding.callAsync(
-            37, // rondpoint:rondpoint_84bf_Optionneur_sinon_string
+            37, // rondpoint:rondpoint_6001_Optionneur_sinon_string
             FfiConverterTypeOptionneur.lower(this),
             FfiConverterString.lower(value),
         )
@@ -622,7 +622,7 @@ class Optionneur {
     const functionCall = () => {
         FfiConverterSequencestring.checkType("value", value);
         return UniFFIScaffolding.callAsync(
-            38, // rondpoint:rondpoint_84bf_Optionneur_sinon_sequence
+            38, // rondpoint:rondpoint_6001_Optionneur_sinon_sequence
             FfiConverterTypeOptionneur.lower(this),
             FfiConverterSequencestring.lower(value),
         )
@@ -638,7 +638,7 @@ class Optionneur {
     const functionCall = () => {
         FfiConverterOptionalstring.checkType("value", value);
         return UniFFIScaffolding.callAsync(
-            39, // rondpoint:rondpoint_84bf_Optionneur_sinon_null
+            39, // rondpoint:rondpoint_6001_Optionneur_sinon_null
             FfiConverterTypeOptionneur.lower(this),
             FfiConverterOptionalstring.lower(value),
         )
@@ -654,7 +654,7 @@ class Optionneur {
     const functionCall = () => {
         FfiConverterOptionali32.checkType("value", value);
         return UniFFIScaffolding.callAsync(
-            40, // rondpoint:rondpoint_84bf_Optionneur_sinon_zero
+            40, // rondpoint:rondpoint_6001_Optionneur_sinon_zero
             FfiConverterTypeOptionneur.lower(this),
             FfiConverterOptionali32.lower(value),
         )
@@ -670,7 +670,7 @@ class Optionneur {
     const functionCall = () => {
         FfiConverterU8.checkType("value", value);
         return UniFFIScaffolding.callAsync(
-            41, // rondpoint:rondpoint_84bf_Optionneur_sinon_u8_dec
+            41, // rondpoint:rondpoint_6001_Optionneur_sinon_u8_dec
             FfiConverterTypeOptionneur.lower(this),
             FfiConverterU8.lower(value),
         )
@@ -686,7 +686,7 @@ class Optionneur {
     const functionCall = () => {
         FfiConverterI8.checkType("value", value);
         return UniFFIScaffolding.callAsync(
-            42, // rondpoint:rondpoint_84bf_Optionneur_sinon_i8_dec
+            42, // rondpoint:rondpoint_6001_Optionneur_sinon_i8_dec
             FfiConverterTypeOptionneur.lower(this),
             FfiConverterI8.lower(value),
         )
@@ -702,7 +702,7 @@ class Optionneur {
     const functionCall = () => {
         FfiConverterU16.checkType("value", value);
         return UniFFIScaffolding.callAsync(
-            43, // rondpoint:rondpoint_84bf_Optionneur_sinon_u16_dec
+            43, // rondpoint:rondpoint_6001_Optionneur_sinon_u16_dec
             FfiConverterTypeOptionneur.lower(this),
             FfiConverterU16.lower(value),
         )
@@ -718,7 +718,7 @@ class Optionneur {
     const functionCall = () => {
         FfiConverterI16.checkType("value", value);
         return UniFFIScaffolding.callAsync(
-            44, // rondpoint:rondpoint_84bf_Optionneur_sinon_i16_dec
+            44, // rondpoint:rondpoint_6001_Optionneur_sinon_i16_dec
             FfiConverterTypeOptionneur.lower(this),
             FfiConverterI16.lower(value),
         )
@@ -734,7 +734,7 @@ class Optionneur {
     const functionCall = () => {
         FfiConverterU32.checkType("value", value);
         return UniFFIScaffolding.callAsync(
-            45, // rondpoint:rondpoint_84bf_Optionneur_sinon_u32_dec
+            45, // rondpoint:rondpoint_6001_Optionneur_sinon_u32_dec
             FfiConverterTypeOptionneur.lower(this),
             FfiConverterU32.lower(value),
         )
@@ -750,7 +750,7 @@ class Optionneur {
     const functionCall = () => {
         FfiConverterI32.checkType("value", value);
         return UniFFIScaffolding.callAsync(
-            46, // rondpoint:rondpoint_84bf_Optionneur_sinon_i32_dec
+            46, // rondpoint:rondpoint_6001_Optionneur_sinon_i32_dec
             FfiConverterTypeOptionneur.lower(this),
             FfiConverterI32.lower(value),
         )
@@ -766,7 +766,7 @@ class Optionneur {
     const functionCall = () => {
         FfiConverterU64.checkType("value", value);
         return UniFFIScaffolding.callAsync(
-            47, // rondpoint:rondpoint_84bf_Optionneur_sinon_u64_dec
+            47, // rondpoint:rondpoint_6001_Optionneur_sinon_u64_dec
             FfiConverterTypeOptionneur.lower(this),
             FfiConverterU64.lower(value),
         )
@@ -782,7 +782,7 @@ class Optionneur {
     const functionCall = () => {
         FfiConverterI64.checkType("value", value);
         return UniFFIScaffolding.callAsync(
-            48, // rondpoint:rondpoint_84bf_Optionneur_sinon_i64_dec
+            48, // rondpoint:rondpoint_6001_Optionneur_sinon_i64_dec
             FfiConverterTypeOptionneur.lower(this),
             FfiConverterI64.lower(value),
         )
@@ -798,7 +798,7 @@ class Optionneur {
     const functionCall = () => {
         FfiConverterU8.checkType("value", value);
         return UniFFIScaffolding.callAsync(
-            49, // rondpoint:rondpoint_84bf_Optionneur_sinon_u8_hex
+            49, // rondpoint:rondpoint_6001_Optionneur_sinon_u8_hex
             FfiConverterTypeOptionneur.lower(this),
             FfiConverterU8.lower(value),
         )
@@ -814,7 +814,7 @@ class Optionneur {
     const functionCall = () => {
         FfiConverterI8.checkType("value", value);
         return UniFFIScaffolding.callAsync(
-            50, // rondpoint:rondpoint_84bf_Optionneur_sinon_i8_hex
+            50, // rondpoint:rondpoint_6001_Optionneur_sinon_i8_hex
             FfiConverterTypeOptionneur.lower(this),
             FfiConverterI8.lower(value),
         )
@@ -830,7 +830,7 @@ class Optionneur {
     const functionCall = () => {
         FfiConverterU16.checkType("value", value);
         return UniFFIScaffolding.callAsync(
-            51, // rondpoint:rondpoint_84bf_Optionneur_sinon_u16_hex
+            51, // rondpoint:rondpoint_6001_Optionneur_sinon_u16_hex
             FfiConverterTypeOptionneur.lower(this),
             FfiConverterU16.lower(value),
         )
@@ -846,7 +846,7 @@ class Optionneur {
     const functionCall = () => {
         FfiConverterI16.checkType("value", value);
         return UniFFIScaffolding.callAsync(
-            52, // rondpoint:rondpoint_84bf_Optionneur_sinon_i16_hex
+            52, // rondpoint:rondpoint_6001_Optionneur_sinon_i16_hex
             FfiConverterTypeOptionneur.lower(this),
             FfiConverterI16.lower(value),
         )
@@ -862,7 +862,7 @@ class Optionneur {
     const functionCall = () => {
         FfiConverterU32.checkType("value", value);
         return UniFFIScaffolding.callAsync(
-            53, // rondpoint:rondpoint_84bf_Optionneur_sinon_u32_hex
+            53, // rondpoint:rondpoint_6001_Optionneur_sinon_u32_hex
             FfiConverterTypeOptionneur.lower(this),
             FfiConverterU32.lower(value),
         )
@@ -878,7 +878,7 @@ class Optionneur {
     const functionCall = () => {
         FfiConverterI32.checkType("value", value);
         return UniFFIScaffolding.callAsync(
-            54, // rondpoint:rondpoint_84bf_Optionneur_sinon_i32_hex
+            54, // rondpoint:rondpoint_6001_Optionneur_sinon_i32_hex
             FfiConverterTypeOptionneur.lower(this),
             FfiConverterI32.lower(value),
         )
@@ -894,7 +894,7 @@ class Optionneur {
     const functionCall = () => {
         FfiConverterU64.checkType("value", value);
         return UniFFIScaffolding.callAsync(
-            55, // rondpoint:rondpoint_84bf_Optionneur_sinon_u64_hex
+            55, // rondpoint:rondpoint_6001_Optionneur_sinon_u64_hex
             FfiConverterTypeOptionneur.lower(this),
             FfiConverterU64.lower(value),
         )
@@ -910,7 +910,7 @@ class Optionneur {
     const functionCall = () => {
         FfiConverterI64.checkType("value", value);
         return UniFFIScaffolding.callAsync(
-            56, // rondpoint:rondpoint_84bf_Optionneur_sinon_i64_hex
+            56, // rondpoint:rondpoint_6001_Optionneur_sinon_i64_hex
             FfiConverterTypeOptionneur.lower(this),
             FfiConverterI64.lower(value),
         )
@@ -926,7 +926,7 @@ class Optionneur {
     const functionCall = () => {
         FfiConverterU32.checkType("value", value);
         return UniFFIScaffolding.callAsync(
-            57, // rondpoint:rondpoint_84bf_Optionneur_sinon_u32_oct
+            57, // rondpoint:rondpoint_6001_Optionneur_sinon_u32_oct
             FfiConverterTypeOptionneur.lower(this),
             FfiConverterU32.lower(value),
         )
@@ -942,7 +942,7 @@ class Optionneur {
     const functionCall = () => {
         FfiConverterF32.checkType("value", value);
         return UniFFIScaffolding.callAsync(
-            58, // rondpoint:rondpoint_84bf_Optionneur_sinon_f32
+            58, // rondpoint:rondpoint_6001_Optionneur_sinon_f32
             FfiConverterTypeOptionneur.lower(this),
             FfiConverterF32.lower(value),
         )
@@ -958,7 +958,7 @@ class Optionneur {
     const functionCall = () => {
         FfiConverterF64.checkType("value", value);
         return UniFFIScaffolding.callAsync(
-            59, // rondpoint:rondpoint_84bf_Optionneur_sinon_f64
+            59, // rondpoint:rondpoint_6001_Optionneur_sinon_f64
             FfiConverterTypeOptionneur.lower(this),
             FfiConverterF64.lower(value),
         )
@@ -974,7 +974,7 @@ class Optionneur {
     const functionCall = () => {
         FfiConverterTypeEnumeration.checkType("value", value);
         return UniFFIScaffolding.callAsync(
-            60, // rondpoint:rondpoint_84bf_Optionneur_sinon_enum
+            60, // rondpoint:rondpoint_6001_Optionneur_sinon_enum
             FfiConverterTypeOptionneur.lower(this),
             FfiConverterTypeEnumeration.lower(value),
         )
@@ -1038,7 +1038,7 @@ class Retourneur {
     const liftError = null;
     const functionCall = () => {
         return UniFFIScaffolding.callAsync(
-            6, // rondpoint:rondpoint_84bf_Retourneur_new
+            6, // rondpoint:rondpoint_6001_Retourneur_new
         )
     }
     try {
@@ -1052,7 +1052,7 @@ class Retourneur {
     const functionCall = () => {
         FfiConverterI8.checkType("value", value);
         return UniFFIScaffolding.callAsync(
-            7, // rondpoint:rondpoint_84bf_Retourneur_identique_i8
+            7, // rondpoint:rondpoint_6001_Retourneur_identique_i8
             FfiConverterTypeRetourneur.lower(this),
             FfiConverterI8.lower(value),
         )
@@ -1068,7 +1068,7 @@ class Retourneur {
     const functionCall = () => {
         FfiConverterU8.checkType("value", value);
         return UniFFIScaffolding.callAsync(
-            8, // rondpoint:rondpoint_84bf_Retourneur_identique_u8
+            8, // rondpoint:rondpoint_6001_Retourneur_identique_u8
             FfiConverterTypeRetourneur.lower(this),
             FfiConverterU8.lower(value),
         )
@@ -1084,7 +1084,7 @@ class Retourneur {
     const functionCall = () => {
         FfiConverterI16.checkType("value", value);
         return UniFFIScaffolding.callAsync(
-            9, // rondpoint:rondpoint_84bf_Retourneur_identique_i16
+            9, // rondpoint:rondpoint_6001_Retourneur_identique_i16
             FfiConverterTypeRetourneur.lower(this),
             FfiConverterI16.lower(value),
         )
@@ -1100,7 +1100,7 @@ class Retourneur {
     const functionCall = () => {
         FfiConverterU16.checkType("value", value);
         return UniFFIScaffolding.callAsync(
-            10, // rondpoint:rondpoint_84bf_Retourneur_identique_u16
+            10, // rondpoint:rondpoint_6001_Retourneur_identique_u16
             FfiConverterTypeRetourneur.lower(this),
             FfiConverterU16.lower(value),
         )
@@ -1116,7 +1116,7 @@ class Retourneur {
     const functionCall = () => {
         FfiConverterI32.checkType("value", value);
         return UniFFIScaffolding.callAsync(
-            11, // rondpoint:rondpoint_84bf_Retourneur_identique_i32
+            11, // rondpoint:rondpoint_6001_Retourneur_identique_i32
             FfiConverterTypeRetourneur.lower(this),
             FfiConverterI32.lower(value),
         )
@@ -1132,7 +1132,7 @@ class Retourneur {
     const functionCall = () => {
         FfiConverterU32.checkType("value", value);
         return UniFFIScaffolding.callAsync(
-            12, // rondpoint:rondpoint_84bf_Retourneur_identique_u32
+            12, // rondpoint:rondpoint_6001_Retourneur_identique_u32
             FfiConverterTypeRetourneur.lower(this),
             FfiConverterU32.lower(value),
         )
@@ -1148,7 +1148,7 @@ class Retourneur {
     const functionCall = () => {
         FfiConverterI64.checkType("value", value);
         return UniFFIScaffolding.callAsync(
-            13, // rondpoint:rondpoint_84bf_Retourneur_identique_i64
+            13, // rondpoint:rondpoint_6001_Retourneur_identique_i64
             FfiConverterTypeRetourneur.lower(this),
             FfiConverterI64.lower(value),
         )
@@ -1164,7 +1164,7 @@ class Retourneur {
     const functionCall = () => {
         FfiConverterU64.checkType("value", value);
         return UniFFIScaffolding.callAsync(
-            14, // rondpoint:rondpoint_84bf_Retourneur_identique_u64
+            14, // rondpoint:rondpoint_6001_Retourneur_identique_u64
             FfiConverterTypeRetourneur.lower(this),
             FfiConverterU64.lower(value),
         )
@@ -1180,7 +1180,7 @@ class Retourneur {
     const functionCall = () => {
         FfiConverterF32.checkType("value", value);
         return UniFFIScaffolding.callAsync(
-            15, // rondpoint:rondpoint_84bf_Retourneur_identique_float
+            15, // rondpoint:rondpoint_6001_Retourneur_identique_float
             FfiConverterTypeRetourneur.lower(this),
             FfiConverterF32.lower(value),
         )
@@ -1196,7 +1196,7 @@ class Retourneur {
     const functionCall = () => {
         FfiConverterF64.checkType("value", value);
         return UniFFIScaffolding.callAsync(
-            16, // rondpoint:rondpoint_84bf_Retourneur_identique_double
+            16, // rondpoint:rondpoint_6001_Retourneur_identique_double
             FfiConverterTypeRetourneur.lower(this),
             FfiConverterF64.lower(value),
         )
@@ -1212,7 +1212,7 @@ class Retourneur {
     const functionCall = () => {
         FfiConverterBool.checkType("value", value);
         return UniFFIScaffolding.callAsync(
-            17, // rondpoint:rondpoint_84bf_Retourneur_identique_boolean
+            17, // rondpoint:rondpoint_6001_Retourneur_identique_boolean
             FfiConverterTypeRetourneur.lower(this),
             FfiConverterBool.lower(value),
         )
@@ -1228,7 +1228,7 @@ class Retourneur {
     const functionCall = () => {
         FfiConverterString.checkType("value", value);
         return UniFFIScaffolding.callAsync(
-            18, // rondpoint:rondpoint_84bf_Retourneur_identique_string
+            18, // rondpoint:rondpoint_6001_Retourneur_identique_string
             FfiConverterTypeRetourneur.lower(this),
             FfiConverterString.lower(value),
         )
@@ -1244,7 +1244,7 @@ class Retourneur {
     const functionCall = () => {
         FfiConverterTypeDictionnaireNombresSignes.checkType("value", value);
         return UniFFIScaffolding.callAsync(
-            19, // rondpoint:rondpoint_84bf_Retourneur_identique_nombres_signes
+            19, // rondpoint:rondpoint_6001_Retourneur_identique_nombres_signes
             FfiConverterTypeRetourneur.lower(this),
             FfiConverterTypeDictionnaireNombresSignes.lower(value),
         )
@@ -1260,7 +1260,7 @@ class Retourneur {
     const functionCall = () => {
         FfiConverterTypeDictionnaireNombres.checkType("value", value);
         return UniFFIScaffolding.callAsync(
-            20, // rondpoint:rondpoint_84bf_Retourneur_identique_nombres
+            20, // rondpoint:rondpoint_6001_Retourneur_identique_nombres
             FfiConverterTypeRetourneur.lower(this),
             FfiConverterTypeDictionnaireNombres.lower(value),
         )
@@ -1276,7 +1276,7 @@ class Retourneur {
     const functionCall = () => {
         FfiConverterTypeOptionneurDictionnaire.checkType("value", value);
         return UniFFIScaffolding.callAsync(
-            21, // rondpoint:rondpoint_84bf_Retourneur_identique_optionneur_dictionnaire
+            21, // rondpoint:rondpoint_6001_Retourneur_identique_optionneur_dictionnaire
             FfiConverterTypeRetourneur.lower(this),
             FfiConverterTypeOptionneurDictionnaire.lower(value),
         )
@@ -1340,7 +1340,7 @@ class Stringifier {
     const liftError = null;
     const functionCall = () => {
         return UniFFIScaffolding.callAsync(
-            22, // rondpoint:rondpoint_84bf_Stringifier_new
+            22, // rondpoint:rondpoint_6001_Stringifier_new
         )
     }
     try {
@@ -1354,7 +1354,7 @@ class Stringifier {
     const functionCall = () => {
         FfiConverterString.checkType("value", value);
         return UniFFIScaffolding.callAsync(
-            23, // rondpoint:rondpoint_84bf_Stringifier_well_known_string
+            23, // rondpoint:rondpoint_6001_Stringifier_well_known_string
             FfiConverterTypeStringifier.lower(this),
             FfiConverterString.lower(value),
         )
@@ -1370,7 +1370,7 @@ class Stringifier {
     const functionCall = () => {
         FfiConverterI8.checkType("value", value);
         return UniFFIScaffolding.callAsync(
-            24, // rondpoint:rondpoint_84bf_Stringifier_to_string_i8
+            24, // rondpoint:rondpoint_6001_Stringifier_to_string_i8
             FfiConverterTypeStringifier.lower(this),
             FfiConverterI8.lower(value),
         )
@@ -1386,7 +1386,7 @@ class Stringifier {
     const functionCall = () => {
         FfiConverterU8.checkType("value", value);
         return UniFFIScaffolding.callAsync(
-            25, // rondpoint:rondpoint_84bf_Stringifier_to_string_u8
+            25, // rondpoint:rondpoint_6001_Stringifier_to_string_u8
             FfiConverterTypeStringifier.lower(this),
             FfiConverterU8.lower(value),
         )
@@ -1402,7 +1402,7 @@ class Stringifier {
     const functionCall = () => {
         FfiConverterI16.checkType("value", value);
         return UniFFIScaffolding.callAsync(
-            26, // rondpoint:rondpoint_84bf_Stringifier_to_string_i16
+            26, // rondpoint:rondpoint_6001_Stringifier_to_string_i16
             FfiConverterTypeStringifier.lower(this),
             FfiConverterI16.lower(value),
         )
@@ -1418,7 +1418,7 @@ class Stringifier {
     const functionCall = () => {
         FfiConverterU16.checkType("value", value);
         return UniFFIScaffolding.callAsync(
-            27, // rondpoint:rondpoint_84bf_Stringifier_to_string_u16
+            27, // rondpoint:rondpoint_6001_Stringifier_to_string_u16
             FfiConverterTypeStringifier.lower(this),
             FfiConverterU16.lower(value),
         )
@@ -1434,7 +1434,7 @@ class Stringifier {
     const functionCall = () => {
         FfiConverterI32.checkType("value", value);
         return UniFFIScaffolding.callAsync(
-            28, // rondpoint:rondpoint_84bf_Stringifier_to_string_i32
+            28, // rondpoint:rondpoint_6001_Stringifier_to_string_i32
             FfiConverterTypeStringifier.lower(this),
             FfiConverterI32.lower(value),
         )
@@ -1450,7 +1450,7 @@ class Stringifier {
     const functionCall = () => {
         FfiConverterU32.checkType("value", value);
         return UniFFIScaffolding.callAsync(
-            29, // rondpoint:rondpoint_84bf_Stringifier_to_string_u32
+            29, // rondpoint:rondpoint_6001_Stringifier_to_string_u32
             FfiConverterTypeStringifier.lower(this),
             FfiConverterU32.lower(value),
         )
@@ -1466,7 +1466,7 @@ class Stringifier {
     const functionCall = () => {
         FfiConverterI64.checkType("value", value);
         return UniFFIScaffolding.callAsync(
-            30, // rondpoint:rondpoint_84bf_Stringifier_to_string_i64
+            30, // rondpoint:rondpoint_6001_Stringifier_to_string_i64
             FfiConverterTypeStringifier.lower(this),
             FfiConverterI64.lower(value),
         )
@@ -1482,7 +1482,7 @@ class Stringifier {
     const functionCall = () => {
         FfiConverterU64.checkType("value", value);
         return UniFFIScaffolding.callAsync(
-            31, // rondpoint:rondpoint_84bf_Stringifier_to_string_u64
+            31, // rondpoint:rondpoint_6001_Stringifier_to_string_u64
             FfiConverterTypeStringifier.lower(this),
             FfiConverterU64.lower(value),
         )
@@ -1498,7 +1498,7 @@ class Stringifier {
     const functionCall = () => {
         FfiConverterF32.checkType("value", value);
         return UniFFIScaffolding.callAsync(
-            32, // rondpoint:rondpoint_84bf_Stringifier_to_string_float
+            32, // rondpoint:rondpoint_6001_Stringifier_to_string_float
             FfiConverterTypeStringifier.lower(this),
             FfiConverterF32.lower(value),
         )
@@ -1514,7 +1514,7 @@ class Stringifier {
     const functionCall = () => {
         FfiConverterF64.checkType("value", value);
         return UniFFIScaffolding.callAsync(
-            33, // rondpoint:rondpoint_84bf_Stringifier_to_string_double
+            33, // rondpoint:rondpoint_6001_Stringifier_to_string_double
             FfiConverterTypeStringifier.lower(this),
             FfiConverterF64.lower(value),
         )
@@ -1530,7 +1530,7 @@ class Stringifier {
     const functionCall = () => {
         FfiConverterBool.checkType("value", value);
         return UniFFIScaffolding.callAsync(
-            34, // rondpoint:rondpoint_84bf_Stringifier_to_string_boolean
+            34, // rondpoint:rondpoint_6001_Stringifier_to_string_boolean
             FfiConverterTypeStringifier.lower(this),
             FfiConverterBool.lower(value),
         )
@@ -2266,7 +2266,7 @@ function copieDictionnaire(d) {
     const functionCall = () => {
         FfiConverterTypeDictionnaire.checkType("d", d);
         return UniFFIScaffolding.callAsync(
-            61, // rondpoint:rondpoint_84bf_copie_dictionnaire
+            61, // rondpoint:rondpoint_6001_copie_dictionnaire
             FfiConverterTypeDictionnaire.lower(d),
         )
     }
@@ -2285,7 +2285,7 @@ function copieEnumeration(e) {
     const functionCall = () => {
         FfiConverterTypeEnumeration.checkType("e", e);
         return UniFFIScaffolding.callAsync(
-            62, // rondpoint:rondpoint_84bf_copie_enumeration
+            62, // rondpoint:rondpoint_6001_copie_enumeration
             FfiConverterTypeEnumeration.lower(e),
         )
     }
@@ -2304,7 +2304,7 @@ function copieEnumerations(e) {
     const functionCall = () => {
         FfiConverterSequenceTypeEnumeration.checkType("e", e);
         return UniFFIScaffolding.callAsync(
-            63, // rondpoint:rondpoint_84bf_copie_enumerations
+            63, // rondpoint:rondpoint_6001_copie_enumerations
             FfiConverterSequenceTypeEnumeration.lower(e),
         )
     }
@@ -2323,7 +2323,7 @@ function copieCarte(c) {
     const functionCall = () => {
         FfiConverterMapStringTypeEnumerationAvecDonnees.checkType("c", c);
         return UniFFIScaffolding.callAsync(
-            64, // rondpoint:rondpoint_84bf_copie_carte
+            64, // rondpoint:rondpoint_6001_copie_carte
             FfiConverterMapStringTypeEnumerationAvecDonnees.lower(c),
         )
     }
@@ -2342,7 +2342,7 @@ function switcheroo(b) {
     const functionCall = () => {
         FfiConverterBool.checkType("b", b);
         return UniFFIScaffolding.callAsync(
-            65, // rondpoint:rondpoint_84bf_switcheroo
+            65, // rondpoint:rondpoint_6001_switcheroo
             FfiConverterBool.lower(b),
         )
     }

@@ -17,7 +17,7 @@ use interrupt_support::NeverInterrupts;
 use rusqlite::{Connection, Row, Transaction};
 use serde_json::json;
 use sql_support::ConnExt;
-use sync15_traits::Payload;
+use sync15::Payload;
 use sync_guid::Guid;
 
 // Here we try and simulate everything done by a "full sync", just minus the
