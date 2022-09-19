@@ -749,8 +749,7 @@ bool BaselineCacheIRCompiler::emitSameValueResult(ValOperandId lhsId,
     callVM<Fn, SameValue>(masm);
 
     stubFrame.leave(masm);
-    masm.storeCallPointerResult(scratch);
-    masm.tagValue(JSVAL_TYPE_BOOLEAN, scratch, output.valueReg());
+    masm.tagValue(JSVAL_TYPE_BOOLEAN, ReturnReg, output.valueReg());
   }
 
   masm.bind(&done);
