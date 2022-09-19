@@ -506,7 +506,9 @@ nsresult ProxyAutoConfig::ConfigurePAC(const nsACString& aPACURI,
   // PAC scripts be both UTF-8- and Latin-1-compatible: that is, they must be
   // ASCII.
   mConcatenatedPACData = sAsciiPacUtils;
-  mConcatenatedPACData.Append(aPACScriptData);
+  if (!mConcatenatedPACData.Append(aPACScriptData, mozilla::fallible)) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
 
   mIncludePath = aIncludePath;
   mExtraHeapSize = aExtraHeapSize;
