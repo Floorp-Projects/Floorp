@@ -674,6 +674,9 @@
     <!-- Preference for altering the notification access for all websites -->
     <string name="preference_phone_feature_notification">ການແຈ້ງເຕືອນ</string>
 
+    <!-- Preference for altering the EME access for all websites -->
+    <string name="preference_phone_feature_media_key_system_access">ເນື້ອຫາທີ່ຄວບຄຸມໂດຍ DRM</string>
+
     <!-- Label that indicates that a permission must be asked always -->
     <string name="preference_option_phone_feature_ask_to_allow">ຖາມເພື່ອອະນຸຍາດ</string>
 
@@ -723,12 +726,19 @@
     <!-- Text Button for show biometric prompt -->
     <string name="show_biometric_button_text">ປົດລັອກ</string>
 
+    <!-- Title text for biometric prompt pop-up -->
+    <string name="biometric_prompt_title">ຢືນຢັນການໃຊ້ລາຍນິ້ວມືຂອງທ່ານ</string>
+
     <!-- Description for the fingerprint authentication dialog box that is shown to the user when opening the app -->
     <string moz:removedIn="103" name="biometric_auth_description">ແຕະເຊັນເຊີ້ລາຍນິ້ວມືເພື່ອດຳເນີນການຕໍ່.</string>
 
     <!-- New session button for the fingerprint authentication dialog box that is shown to the user when opening the app.
      When pressed, the user's previous session is cleared, and authentication is not required. -->
     <string moz:removedIn="103" name="biometric_auth_new_session">ວາລະໃໝ່</string>
+
+    <!-- Button for the fingerprint authentication dialog box that is shown to the user when sharing a link to the app
+    while the user has biometric authentication enabled. When pressed, the user's previous session is cleared, and the shared link is opened. -->
+    <string name="biometric_auth_open_link_new_session"></string>
 
     <!-- Description for the fingerprint authentication image. Used for accessibility purposes. -->
     <string name="biometric_auth_image_description">ໄອຄອນລາຍນິ້ວມື</string>
@@ -740,6 +750,9 @@
     <!-- Error text displayed when the user's fingerprint moved too quickly upon re-entering the app
     This is displayed during the authentication flow as the app launches.-->
     <string name="biometric_auth_moved_too_quickly">ຍັບນິ້ວໄວເກີນໄປ. ລອງອີກຄັ້ງ.</string>
+
+    <!-- Title for the prompt to enable search suggestions -->
+    <string name="enable_search_suggestion_title2">ສະແດງຄຳແນະນຳໃນການຄົ້ນຫາບໍ?</string>
 
     <!-- Label used for the "NO button" for the prompt to enable search suggestions -->
     <string name="enable_search_suggestions_no">ບໍ່</string>
@@ -802,6 +815,9 @@
     <!-- Button to remove all websites from the exception list -->
     <string name="preference_exceptions_remove_all_button_label">ລຶບເວັບໄຊທທັງຫມົດ</string>
 
+    <!-- Title for Preference screen for cookie blocking for exceptions tracking protection -->
+    <string name="preference_block_cookies_title">ບລັອກຄຸກກີ້</string>
+
     <!-- Title for the tab crash report screen-->
     <string name="tab_crash_report_title">ແທັບຂັດຂ້ອງ</string>
     <!-- Headline for the tab crash report screen -->
@@ -826,6 +842,9 @@
     <!-- Category of trackers (social media) that can be blocked by Enhanced Tracking Protection -->
     <string name="social">ສັງຄົມ</string>
 
+    <!-- Category of trackers (analytics) that can be blocked by Enhanced Tracking Protection -->
+    <string name="analytics">ການວິເຄາະ</string>
+
     <!-- Content description (not visible, for screen readers etc.): Navigate back button description -->
     <string name="go_back">ກັບຄືນ</string>
 
@@ -846,5 +865,14 @@
     <string name="preference_light_theme">ແຈ້ງ</string>
     <!-- Preference for using dark theme -->
     <string name="preference_dark_theme">ມືດ</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Button that closes the CFR popup -->
+    <string name="cfr_close_button_description">ປິດປັອບອັບ</string>
+
+    <!-- Tool Tip for: Privacy and Security Settings Screen  task : https://github.com/mozilla-mobile/focus-android/issues/6211 -->
+    <!-- Tool Tip Title -->
+    <string name="tool_tip_title">ເຈົ້າໄດ້ຮັບການປົກປ້ອງ!</string>
+    <!-- Tool Tip "X" button Content description (not visible, for screen readers etc.) :Button that closes the tool tip -->
+    <string name="tool_tip_dismiss_button_content_description">ປິດ</string>
 
     </resources>
