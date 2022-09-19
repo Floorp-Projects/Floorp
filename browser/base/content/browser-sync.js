@@ -312,6 +312,7 @@ this.SyncedTabsPanelList = class SyncedTabsPanelList {
 
     let showMoreItem = document.createXULElement("toolbarbutton");
     showMoreItem.setAttribute("itemtype", "showmorebutton");
+    showMoreItem.setAttribute("closemenu", "none");
     showMoreItem.classList.add(
       "subviewbutton",
       "subviewbutton-nav",

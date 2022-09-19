@@ -2224,18 +2224,13 @@ var CustomizableUIInternal = {
       return;
     }
 
-    // If the user hit enter/return, we don't check preventDefault - it makes sense
-    // that this was prevented, but we probably still want to close the panel.
-    // If consumers don't want this to happen, they should specify the closemenu
-    // attribute.
-    if (
-      eventType != "command" &&
-      eventType != "keypress" &&
-      (aEvent.defaultPrevented || aEvent.button != 0)
-    ) {
+    if (eventType == "click" && aEvent.button != 0) {
       return;
     }
 
+    // We don't check preventDefault - it makes sense that this was prevented,
+    // but we probably still want to close the panel. If consumers don't want
+    // this to happen, they should specify the closemenu attribute.
     if (eventType != "command" && this._isOnInteractiveElement(aEvent)) {
       return;
     }
