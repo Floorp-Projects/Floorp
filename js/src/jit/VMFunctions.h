@@ -548,6 +548,9 @@ void HandleCodeCoverageAtPrologue(BaselineFrame* frame);
 bool GetNativeDataPropertyPure(JSContext* cx, JSObject* obj, PropertyName* name,
                                Value* vp);
 
+bool GetNativeDataPropertyPureFallback(JSContext* cx, JSObject* obj,
+                                       PropertyName* name, Value* vp);
+
 bool GetNativeDataPropertyByValuePure(JSContext* cx, JSObject* obj, Value* vp);
 
 template <bool HasOwn>

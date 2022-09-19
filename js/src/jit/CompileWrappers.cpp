@@ -76,6 +76,10 @@ const void* CompileRuntime::addressOfZone() {
   return runtime()->mainContextFromAnyThread()->addressOfZone();
 }
 
+const void* CompileRuntime::addressOfMegamorphicCache() {
+  return &runtime()->caches().megamorphicCache;
+}
+
 const DOMCallbacks* CompileRuntime::DOMcallbacks() {
   return runtime()->DOMcallbacks;
 }

@@ -4228,7 +4228,14 @@ void CodeGenerator::visitMegamorphicLoadSlot(LMegamorphicLoadSlot* lir) {
   Register temp2 = ToRegister(lir->temp2());
   ValueOperand output = ToOutValue(lir);
 
-  Label bail;
+  Label bail, cacheHit;
+  if (JitOptions.enableWatchtowerMegamorphic) {
+    masm.emitMegamorphicCacheLookup(NameToId(lir->mir()->name()), obj, temp0,
+                                    temp1, temp2, output, &bail, &cacheHit);
+  }
+
+  masm.branchIfNonNativeObj(obj, temp0, &bail);
+
   masm.Push(UndefinedValue());
   masm.moveStackPtrTo(temp2);
 
@@ -4242,13 +4249,14 @@ void CodeGenerator::visitMegamorphicLoadSlot(LMegamorphicLoadSlot* lir) {
   masm.passABIArg(temp1);
   masm.passABIArg(temp2);
 
-  masm.callWithABI<Fn, GetNativeDataPropertyPure>();
+  masm.callWithABI<Fn, GetNativeDataPropertyPureFallback>();
 
   MOZ_ASSERT(!output.aliases(ReturnReg));
   masm.Pop(output);
 
   masm.branchIfFalseBool(ReturnReg, &bail);
 
+  masm.bind(&cacheHit);
   bailoutFrom(&bail, lir->snapshot());
 }
 

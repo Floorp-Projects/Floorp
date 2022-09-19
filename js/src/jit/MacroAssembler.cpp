@@ -1898,6 +1898,131 @@ void MacroAssembler::setIsDefinitelyTypedArrayConstructor(Register obj,
   bind(&done);
 }
 
+void MacroAssembler::loadMegamorphicCache(Register dest) {
+  movePtr(ImmPtr(runtime()->addressOfMegamorphicCache()), dest);
+}
+
+void MacroAssembler::emitMegamorphicCacheLookup(
+    PropertyKey id, Register obj, Register scratch1, Register scratch2,
+    Register scratch3, ValueOperand output, Label* fail, Label* cacheHit) {
+  Label cacheMiss, isMissing, dynamicSlot, protoLoopHead, protoLoopTail;
+
+  // scratch1 = obj->shape()
+  loadPtr(Address(obj, JSObject::offsetOfShape()), scratch1);
+
+  movePtr(scratch1, scratch2);
+  movePtr(scratch1, scratch3);
+
+  // scratch2 = (scratch1 >> 3) ^ (scratch1 >> 13) + hash(id)
+  rshiftPtr(Imm32(MegamorphicCache::ShapeHashShift1), scratch2);
+  rshiftPtr(Imm32(MegamorphicCache::ShapeHashShift2), scratch3);
+  xorPtr(scratch3, scratch2);
+  addPtr(Imm32(HashAtomOrSymbolPropertyKey(id)), scratch2);
+
+  // scratch2 %= MegamorphicCache::NumEntries
+  constexpr size_t cacheSize = MegamorphicCache::NumEntries;
+  static_assert(mozilla::IsPowerOfTwo(cacheSize));
+  size_t cacheMask = cacheSize - 1;
+  and32(Imm32(cacheMask), scratch2);
+
+  loadMegamorphicCache(scratch3);
+  // scratch2 = &scratch3->entries_[scratch2]
+  constexpr size_t entrySize = sizeof(MegamorphicCache::Entry);
+  static_assert(sizeof(void*) == 4 || entrySize == 24);
+  if constexpr (sizeof(void*) == 4) {
+    mul32(Imm32(entrySize), scratch2);
+    computeEffectiveAddress(BaseIndex(scratch3, scratch2, TimesOne,
+                                      MegamorphicCache::offsetOfEntries()),
+                            scratch2);
+  } else {
+    computeEffectiveAddress(BaseIndex(scratch2, scratch2, TimesTwo), scratch2);
+    computeEffectiveAddress(BaseIndex(scratch3, scratch2, TimesEight,
+                                      MegamorphicCache::offsetOfEntries()),
+                            scratch2);
+  }
+
+  // if (scratch2->shape_ != scratch1) goto cacheMiss
+  branchPtr(Assembler::NotEqual,
+            Address(scratch2, MegamorphicCache::Entry::offsetOfShape()),
+            scratch1, &cacheMiss);
+
+  // if (scratch2->key_ != id) goto cacheMiss
+  movePropertyKey(id, scratch1);
+  branchPtr(Assembler::NotEqual,
+            Address(scratch2, MegamorphicCache::Entry::offsetOfKey()), scratch1,
+            &cacheMiss);
+
+  // scratch3 = scratch3->generation_
+  load16ZeroExtend(Address(scratch3, MegamorphicCache::offsetOfGeneration()),
+                   scratch3);
+  load16ZeroExtend(
+      Address(scratch2, MegamorphicCache::Entry::offsetOfGeneration()),
+      scratch1);
+  // if (scratch2->generation_ != scratch3) goto cacheMiss
+  branch32(Assembler::NotEqual, scratch1, scratch3, &cacheMiss);
+
+  // scratch3 = scratch2->numHops_
+  load8ZeroExtend(Address(scratch2, MegamorphicCache::Entry::offsetOfNumHops()),
+                  scratch3);
+  // if (scratch3 == NumHopsForMissingOwnProperty) goto cacheMiss
+  branch32(Assembler::Equal, scratch3,
+           Imm32(MegamorphicCache::Entry::NumHopsForMissingOwnProperty),
+           &cacheMiss);
+  // if (scratch3 == NumHopsForMissingProperty) goto isMissing
+  branch32(Assembler::Equal, scratch3,
+           Imm32(MegamorphicCache::Entry::NumHopsForMissingProperty),
+           &isMissing);
+
+  // NOTE: Where this is called, `output` can actually alias `obj`, and before
+  // the last cacheMiss branch above we can't write to `obj`, so we can't
+  // use `output`'s scratch register there. However a cache miss is impossible
+  // now, so we're free to use `output` as we like.
+  Register outputScratch = output.scratchReg();
+  if (!outputScratch.aliases(obj)) {
+    // We're okay with paying this very slight extra cost to avoid a potential
+    // footgun of writing to what callers understand as only an input register.
+    movePtr(obj, outputScratch);
+  }
+  branchTest32(Assembler::Zero, scratch3, scratch3, &protoLoopTail);
+  bind(&protoLoopHead);
+  loadObjProto(outputScratch, outputScratch);
+  branchSub32(Assembler::NonZero, Imm32(1), scratch3, &protoLoopHead);
+  bind(&protoLoopTail);
+
+  // scratch1 = outputScratch->numFixedSlots()
+  loadPtr(Address(outputScratch, JSObject::offsetOfShape()), scratch1);
+  load32(Address(scratch1, Shape::offsetOfImmutableFlags()), scratch1);
+  and32(Imm32(Shape::fixedSlotsMask()), scratch1);
+  rshift32(Imm32(Shape::fixedSlotsShift()), scratch1);
+
+  // scratch3 = scratch2->slot()
+  load16ZeroExtend(Address(scratch2, MegamorphicCache::Entry::offsetOfSlot()),
+                   scratch3);
+  // if (scratch3 >= scratch1) goto dynamicSlot
+  branch32(Assembler::GreaterThanOrEqual, scratch3, scratch1, &dynamicSlot);
+
+  static_assert(sizeof(HeapSlot) == 8);
+  // output = outputScratch->fixedSlots()[scratch3]
+  loadValue(BaseValueIndex(outputScratch, scratch3, sizeof(NativeObject)),
+            output);
+  jump(cacheHit);
+
+  bind(&dynamicSlot);
+  // scratch3 -= scratch1
+  sub32(scratch1, scratch3);
+  // output = outputScratch->slots_[scratch3]
+  loadPtr(Address(outputScratch, NativeObject::offsetOfSlots()), outputScratch);
+  loadValue(BaseValueIndex(outputScratch, scratch3, 0), output);
+  jump(cacheHit);
+
+  bind(&isMissing);
+  // output = undefined
+  moveValue(UndefinedValue(), output);
+  jump(cacheHit);
+
+  bind(&cacheMiss);
+}
+
 void MacroAssembler::guardNonNegativeIntPtrToInt32(Register reg, Label* fail) {
 #ifdef DEBUG
   Label ok;
