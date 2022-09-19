@@ -136,8 +136,8 @@ mozilla::ipc::IPCResult FileSystemManagerParent::RecvGetAccessHandle(
   fs::Path path;
   nsCOMPtr<nsIFile> file;
   QM_TRY(MOZ_TO_RESULT(mDataManager->MutableDatabaseManagerPtr()->GetFile(
-             {mRootEntry, aRequest.entryId()}, type,
-             lastModifiedMilliSeconds, path, file)),
+             {mRootEntry, aRequest.entryId()}, type, lastModifiedMilliSeconds,
+             path, file)),
          IPC_OK(), reportError);
 
   if (MOZ_LOG_TEST(gOPFSLog, mozilla::LogLevel::Debug)) {
@@ -190,8 +190,8 @@ IPCResult FileSystemManagerParent::RecvGetFile(
   fs::Path path;
   nsCOMPtr<nsIFile> fileObject;
   QM_TRY(MOZ_TO_RESULT(mDataManager->MutableDatabaseManagerPtr()->GetFile(
-             {mRootEntry, aRequest.entryId()}, type,
-             lastModifiedMilliSeconds, path, fileObject)),
+             {mRootEntry, aRequest.entryId()}, type, lastModifiedMilliSeconds,
+             path, fileObject)),
          IPC_OK(), reportError);
 
   if (MOZ_LOG_TEST(gOPFSLog, mozilla::LogLevel::Debug)) {
