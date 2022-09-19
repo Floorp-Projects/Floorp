@@ -710,9 +710,12 @@ class MacroAssembler : public MacroAssemblerSpecific {
   //
   //    There are overloads to allow calls to registers and addresses.
   //
-  // 5) Take care of the ReturnReg or ReturnDoubleReg
+  // 5) Take care of the result
   //
-  //      masm.mov(ReturnReg, scratch1);
+  //      masm.storeCallPointerResult(scratch1);
+  //      masm.storeCallBoolResult(scratch1);
+  //      masm.storeCallInt32Result(scratch1);
+  //      masm.storeCallFloatResult(scratch1);
   //
   // 6) Restore the potentially clobbered volatile registers
   //
