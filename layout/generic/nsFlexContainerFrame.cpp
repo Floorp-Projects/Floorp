@@ -3647,10 +3647,9 @@ CrossAxisPositionTracker::CrossAxisPositionTracker(
   if (mPackingSpaceRemaining != 0) {
     if (mAlignContent.primary == StyleAlignFlags::BASELINE ||
         mAlignContent.primary == StyleAlignFlags::LAST_BASELINE) {
-      NS_WARNING(
-          "NYI: "
-          "align-items/align-self:left/right/self-start/self-end/baseline/"
-          "last baseline");
+      // TODO: Bug 1480850 will implement 'align-content: [first/last] baseline'
+      // for flexbox. Until then, behaves as if align-content is 'flex-start' by
+      // doing nothing.
     } else if (mAlignContent.primary == StyleAlignFlags::FLEX_START) {
       // All packing space should go at the end --> nothing to do here.
     } else if (mAlignContent.primary == StyleAlignFlags::FLEX_END) {
