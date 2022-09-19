@@ -29,8 +29,14 @@ class Message {
   }
 
   toString() {
-    let content = JSON.stringify(this.toPacket());
-    return lazy.truncate`${content}`;
+    function replacer(key, value) {
+      if (typeof value === "string") {
+        return lazy.truncate`${value}`;
+      }
+      return value;
+    }
+
+    return JSON.stringify(this.toPacket(), replacer);
   }
 
   /**
