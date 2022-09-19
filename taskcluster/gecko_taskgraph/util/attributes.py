@@ -16,11 +16,9 @@ RELEASE_PROJECTS = {
     "mozilla-central",
     "mozilla-beta",
     "mozilla-release",
-    "mozilla-esr91",
     "mozilla-esr102",
     "comm-central",
     "comm-beta",
-    "comm-esr91",
     "comm-esr102",
     "oak",
 }
