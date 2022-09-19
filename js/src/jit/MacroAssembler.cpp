@@ -1986,7 +1986,7 @@ void MacroAssembler::guardSpecificAtom(Register str, JSAtom* atom,
   passABIArg(scratch);
   passABIArg(str);
   callWithABI<Fn, EqualStringsHelperPure>();
-  mov(ReturnReg, scratch);
+  storeCallPointerResult(scratch);
 
   MOZ_ASSERT(!volatileRegs.has(scratch));
   PopRegsInMask(volatileRegs);
@@ -2024,7 +2024,7 @@ void MacroAssembler::guardStringToInt32(Register str, Register output,
     passABIArg(str);
     passABIArg(output);
     callWithABI<Fn, GetInt32FromStringPure>();
-    mov(ReturnReg, scratch);
+    storeCallPointerResult(scratch);
 
     PopRegsInMask(volatileRegs);
 

@@ -383,7 +383,7 @@ bool BaselineCacheIRCompiler::emitGuardSpecificAtom(StringOperandId strId,
   masm.passABIArg(scratch);
   masm.passABIArg(str);
   masm.callWithABI<Fn, EqualStringsHelperPure>();
-  masm.mov(ReturnReg, scratch);
+  masm.storeCallPointerResult(scratch);
 
   LiveRegisterSet ignore;
   ignore.add(scratch);
@@ -701,7 +701,7 @@ bool BaselineCacheIRCompiler::emitCompareStringResult(JSOp op,
     }
 
     stubFrame.leave(masm);
-    masm.mov(ReturnReg, scratch);
+    masm.storeCallPointerResult(scratch);
   }
   masm.bind(&done);
   masm.tagValue(JSVAL_TYPE_BOOLEAN, scratch, output.valueReg());
@@ -749,7 +749,7 @@ bool BaselineCacheIRCompiler::emitSameValueResult(ValOperandId lhsId,
     callVM<Fn, SameValue>(masm);
 
     stubFrame.leave(masm);
-    masm.mov(ReturnReg, scratch);
+    masm.storeCallPointerResult(scratch);
     masm.tagValue(JSVAL_TYPE_BOOLEAN, scratch, output.valueReg());
   }
 
@@ -837,7 +837,7 @@ bool BaselineCacheIRCompiler::emitAddAndStoreSlotShared(
     masm.load32(numNewSlotsAddr, scratch2);
     masm.passABIArg(scratch2);
     masm.callWithABI<Fn, NativeObject::growSlotsPure>();
-    masm.mov(ReturnReg, scratch1);
+    masm.storeCallPointerResult(scratch1);
 
     LiveRegisterSet ignore;
     ignore.add(scratch1);
@@ -1242,7 +1242,7 @@ bool BaselineCacheIRCompiler::emitStringFromCodeResult(Int32OperandId codeId,
     }
 
     stubFrame.leave(masm);
-    masm.mov(ReturnReg, scratch);
+    masm.storeCallPointerResult(scratch);
   }
 
   masm.bind(&done);
@@ -3051,7 +3051,7 @@ bool BaselineCacheIRCompiler::emitNewArrayObjectResult(uint32_t arrayLength,
     callVM<Fn, NewArrayObjectBaselineFallback>(masm);
 
     stubFrame.leave(masm);
-    masm.mov(ReturnReg, result);
+    masm.storeCallPointerResult(result);
   }
 
   masm.bind(&done);
@@ -3108,7 +3108,7 @@ bool BaselineCacheIRCompiler::emitNewPlainObjectResult(uint32_t numFixedSlots,
     callVM<Fn, NewPlainObjectBaselineFallback>(masm);
 
     stubFrame.leave(masm);
-    masm.mov(ReturnReg, obj);
+    masm.storeCallPointerResult(obj);
   }
 
   masm.bind(&done);

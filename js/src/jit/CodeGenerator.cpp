@@ -4279,7 +4279,7 @@ void CodeGenerator::visitMegamorphicLoadSlotByValue(
   masm.callWithABI<Fn, GetNativeDataPropertyByValuePure>();
 
   MOZ_ASSERT(!idVal.aliases(temp0));
-  masm.mov(ReturnReg, temp0);
+  masm.storeCallPointerResult(temp0);
   masm.Pop(idVal);
 
   uint32_t framePushed = masm.framePushed();
@@ -4317,7 +4317,7 @@ void CodeGenerator::visitMegamorphicStoreSlot(LMegamorphicStoreSlot* lir) {
   masm.callWithABI<Fn, SetNativeDataPropertyPure>();
 
   MOZ_ASSERT(!rhs.aliases(temp0));
-  masm.mov(ReturnReg, temp0);
+  masm.storeCallPointerResult(temp0);
   masm.Pop(rhs);
 
   Label bail;
@@ -4350,7 +4350,7 @@ void CodeGenerator::visitMegamorphicHasProp(LMegamorphicHasProp* lir) {
   }
 
   MOZ_ASSERT(!idVal.aliases(temp0));
-  masm.mov(ReturnReg, temp0);
+  masm.storeCallPointerResult(temp0);
   masm.Pop(idVal);
 
   uint32_t framePushed = masm.framePushed();
@@ -4501,7 +4501,7 @@ void CodeGenerator::visitGuardStringToDouble(LGuardStringToDouble* lir) {
     masm.passABIArg(str);
     masm.passABIArg(temp0);
     masm.callWithABI<Fn, StringToNumberPure>();
-    masm.mov(ReturnReg, temp0);
+    masm.storeCallPointerResult(temp0);
 
     masm.PopRegsInMask(volatileRegs);
 
@@ -6706,9 +6706,7 @@ void CodeGenerator::visitNewArrayCallVM(LNewArray* lir) {
     callVM<Fn, NewArrayOperation>(lir);
   }
 
-  if (ReturnReg != objReg) {
-    masm.movePtr(ReturnReg, objReg);
-  }
+  masm.storeCallPointerResult(objReg);
 
   restoreLive(lir);
 }
@@ -6991,9 +6989,7 @@ void CodeGenerator::visitNewObjectVMCall(LNewObject* lir) {
     }
   }
 
-  if (ReturnReg != objReg) {
-    masm.movePtr(ReturnReg, objReg);
-  }
+  masm.storeCallPointerResult(objReg);
 
   restoreLive(lir);
 }
@@ -16805,7 +16801,7 @@ void CodeGenerator::visitCallObjectHasSparseElement(
   masm.passABIArg(index);
   masm.passABIArg(temp1);
   masm.callWithABI<Fn, HasNativeElementPure>();
-  masm.mov(ReturnReg, temp0);
+  masm.storeCallPointerResult(temp0);
 
   Label bail, ok;
   uint32_t framePushed = masm.framePushed();
