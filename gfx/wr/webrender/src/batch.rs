@@ -816,8 +816,7 @@ impl BatchBuilder {
     // in that picture are being drawn into the same target.
     pub fn add_prim_to_batch(
         &mut self,
-        prim_instance: &PrimitiveInstance,
-        extra_prim_gpu_address: Option<GpuCacheAddress>,
+        cmd: &PrimitiveCommand,
         prim_spatial_node_index: SpatialNodeIndex,
         ctx: &RenderTargetContext,
         gpu_cache: &mut GpuCache,
@@ -827,8 +826,19 @@ impl BatchBuilder {
         root_spatial_node_index: SpatialNodeIndex,
         surface_spatial_node_index: SpatialNodeIndex,
         z_generator: &mut ZBufferIdGenerator,
+        prim_instances: &[PrimitiveInstance],
         _gpu_buffer_builder: &mut GpuBufferBuilder,
     ) {
+        let (prim_instance_index, extra_prim_gpu_address) = match cmd {
+            PrimitiveCommand::Simple { prim_instance_index } => {
+                (prim_instance_index, None)
+            }
+            PrimitiveCommand::Complex { prim_instance_index, gpu_address } => {
+                (prim_instance_index, Some(*gpu_address))
+            }
+        };
+
+        let prim_instance = &prim_instances[prim_instance_index.0 as usize];
         let is_anti_aliased = ctx.data_stores.prim_has_anti_aliasing(prim_instance);
 
         let brush_flags = if is_anti_aliased {
@@ -3769,6 +3779,36 @@ impl<'a, 'rc> RenderTargetContext<'a, 'rc> {
     }
 }
 
+pub enum PrimitiveCommand {
+    Simple {
+        prim_instance_index: PrimitiveInstanceIndex,
+    },
+    Complex {
+        prim_instance_index: PrimitiveInstanceIndex,
+        gpu_address: GpuCacheAddress,
+    },
+}
+
+impl PrimitiveCommand {
+    pub fn simple(
+        prim_instance_index: PrimitiveInstanceIndex,
+    ) -> Self {
+        PrimitiveCommand::Simple {
+            prim_instance_index,
+        }
+    }
+
+    pub fn complex(
+        prim_instance_index: PrimitiveInstanceIndex,
+        gpu_address: GpuCacheAddress,
+    ) -> Self {
+        PrimitiveCommand::Complex {
+            prim_instance_index,
+            gpu_address,
+        }
+    }
+}
+
 // A tightly packed command stored in a command buffer
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
@@ -3869,22 +3909,21 @@ impl CommandBuffer {
     /// Add a primitive to the command buffer
     pub fn add_prim(
         &mut self,
-        prim_instance_index: PrimitiveInstanceIndex,
+        prim_cmd: &PrimitiveCommand,
         spatial_node_index: SpatialNodeIndex,
-        gpu_address: Option<GpuCacheAddress>,
     ) {
         if self.current_spatial_node_index != spatial_node_index {
             self.commands.push(Command::set_spatial_node(spatial_node_index));
             self.current_spatial_node_index = spatial_node_index;
         }
 
-        match gpu_address {
-            Some(gpu_address) => {
+        match *prim_cmd {
+            PrimitiveCommand::Simple { prim_instance_index } => {
+                self.commands.push(Command::draw_simple_prim(prim_instance_index));
+            }
+            PrimitiveCommand::Complex { prim_instance_index, gpu_address } => {
                 self.commands.push(Command::draw_complex_prim(prim_instance_index));
                 self.commands.push(Command::data((gpu_address.u as u32) << 16 | gpu_address.v as u32));
-            }
-            None => {
-                self.commands.push(Command::draw_simple_prim(prim_instance_index));
             }
         }
     }
@@ -3893,7 +3932,7 @@ impl CommandBuffer {
     pub fn iter_prims<F>(
         &self,
         f: &mut F,
-    ) where F: FnMut(PrimitiveInstanceIndex, SpatialNodeIndex, Option<GpuCacheAddress>) {
+    ) where F: FnMut(&PrimitiveCommand, SpatialNodeIndex) {
         let mut current_spatial_node_index = SpatialNodeIndex::INVALID;
         let mut cmd_iter = self.commands.iter();
 
@@ -3904,7 +3943,8 @@ impl CommandBuffer {
             match command {
                 Command::CMD_DRAW_SIMPLE_PRIM => {
                     let prim_instance_index = PrimitiveInstanceIndex(param);
-                    f(prim_instance_index, current_spatial_node_index, None);
+                    let cmd = PrimitiveCommand::simple(prim_instance_index);
+                    f(&cmd, current_spatial_node_index);
                 }
                 Command::CMD_SET_SPATIAL_NODE => {
                     current_spatial_node_index = SpatialNodeIndex(param);
@@ -3916,7 +3956,11 @@ impl CommandBuffer {
                         u: (data.0 >> 16) as u16,
                         v: (data.0 & 0xffff) as u16,
                     };
-                    f(prim_instance_index, current_spatial_node_index, Some(gpu_address));
+                    let cmd = PrimitiveCommand::complex(
+                        prim_instance_index,
+                        gpu_address,
+                    );
+                    f(&cmd, current_spatial_node_index);
                 }
                 _ => {
                     unreachable!();

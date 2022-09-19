@@ -12,6 +12,7 @@ use api::{BoxShadowClipMode, BorderStyle, ClipMode};
 use api::units::*;
 use euclid::Scale;
 use smallvec::SmallVec;
+use crate::batch::PrimitiveCommand;
 use crate::image_tiling::{self, Repetition};
 use crate::border::{get_max_scale_for_border, build_border_instances};
 use crate::clip::{ClipStore};
@@ -71,7 +72,7 @@ pub fn prepare_primitives(
                     PrimitiveInstanceIndex(prim_instance_index as u32),
                 );
 
-                if prepare_prim_for_render(
+                if let Some(ref prim_cmd) = prepare_prim_for_render(
                     store,
                     prim_instance_index,
                     cluster,
@@ -85,14 +86,10 @@ pub fn prepare_primitives(
                     tile_caches,
                     prim_instances,
                 ) {
-                    // First check for coarse visibility (if this primitive was completely off-screen)
-                    let prim_instance = &mut prim_instances[prim_instance_index];
-
                     frame_state.surface_builder.push_prim(
-                        PrimitiveInstanceIndex(prim_instance_index as u32),
+                        prim_cmd,
                         cluster.spatial_node_index,
-                        &prim_instance.vis,
-                        None,
+                        &prim_instances[prim_instance_index].vis,
                         frame_state.cmd_buffers,
                     );
 
@@ -122,7 +119,7 @@ fn prepare_prim_for_render(
     scratch: &mut PrimitiveScratchBuffer,
     tile_caches: &mut FastHashMap<SliceId, Box<TileCacheInstance>>,
     prim_instances: &mut Vec<PrimitiveInstance>,
-) -> bool {
+) -> Option<PrimitiveCommand> {
     profile_scope!("prepare_prim_for_render");
 
     // If we have dependencies, we need to prepare them first, in order
@@ -173,7 +170,7 @@ fn prepare_prim_for_render(
                     );
             }
             None => {
-                return false;
+                return None;
             }
         }
     }
@@ -200,12 +197,13 @@ fn prepare_prim_for_render(
             data_stores,
             scratch,
         ) {
-            return false;
+            return None;
         }
     }
 
-    prepare_interned_prim_for_render(
+    Some(prepare_interned_prim_for_render(
         store,
+        PrimitiveInstanceIndex(prim_instance_index as u32),
         prim_instance,
         cluster,
         plane_split_anchor,
@@ -214,9 +212,7 @@ fn prepare_prim_for_render(
         frame_state,
         data_stores,
         scratch,
-    );
-
-    true
+    ))
 }
 
 /// Prepare an interned primitive for rendering, by requesting
@@ -224,6 +220,7 @@ fn prepare_prim_for_render(
 /// prepare_prim_for_render_inner call for old style primitives.
 fn prepare_interned_prim_for_render(
     store: &mut PrimitiveStore,
+    prim_instance_index: PrimitiveInstanceIndex,
     prim_instance: &mut PrimitiveInstance,
     cluster: &mut PrimitiveCluster,
     plane_split_anchor: PlaneSplitAnchor,
@@ -232,7 +229,7 @@ fn prepare_interned_prim_for_render(
     frame_state: &mut FrameBuildingState,
     data_stores: &mut DataStores,
     scratch: &mut PrimitiveScratchBuffer,
-) {
+) -> PrimitiveCommand {
     let prim_spatial_node_index = cluster.spatial_node_index;
     let device_pixel_scale = frame_state.surfaces[pic_context.surface_index.0].device_pixel_scale;
 
@@ -812,7 +809,9 @@ fn prepare_interned_prim_for_render(
                 }
             }
         }
-    };
+    }
+
+    PrimitiveCommand::simple(prim_instance_index)
 }
 
 

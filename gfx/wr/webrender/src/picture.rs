@@ -99,6 +99,7 @@ use api::{PropertyBinding, PropertyBindingId, FilterPrimitive, RasterSpace};
 use api::{DebugFlags, ImageKey, ColorF, ColorU, PrimitiveFlags};
 use api::{ImageRendering, ColorDepth, YuvRangedColorSpace, YuvFormat, AlphaType};
 use api::units::*;
+use crate::batch::PrimitiveCommand;
 use crate::box_shadow::BLUR_SAMPLE_SCALE;
 use crate::clip::{ClipStore, ClipChainInstance, ClipLeafId, ClipNodeId, ClipTreeBuilder};
 use crate::spatial_tree::{SpatialTree, CoordinateSpaceMapping, SpatialNodeIndex, VisibleFace};
@@ -5882,11 +5883,15 @@ impl PicturePrimitive {
             for child in list {
                 let child_prim_instance = &prim_instances[child.anchor.instance_index.0 as usize];
 
-                frame_state.surface_builder.push_prim(
+                let prim_cmd = PrimitiveCommand::complex(
                     child.anchor.instance_index,
+                    child.gpu_address
+                );
+
+                frame_state.surface_builder.push_prim(
+                    &prim_cmd,
                     child.anchor.spatial_node_index,
                     &child_prim_instance.vis,
-                    Some(child.gpu_address),
                     frame_state.cmd_buffers,
                 );
             }
