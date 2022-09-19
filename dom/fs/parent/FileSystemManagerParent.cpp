@@ -261,19 +261,6 @@ IPCResult FileSystemManagerParent::RecvGetEntries(
     aResolver(response);
   };
 
-  // If it was deleted, we can't find it's parent -- unless it's the root.
-  if (aRequest.parentId() != mRootEntry) {
-    QM_TRY_UNWRAP(EntryId entryId,
-                  mDataManager->MutableDatabaseManagerPtr()->GetParentEntryId(
-                      aRequest.parentId()),
-                  IPC_OK(), reportError);
-    if (entryId.IsEmpty()) {
-      FileSystemGetEntriesResponse response(NS_ERROR_DOM_NOT_FOUND_ERR);
-      aResolver(response);
-      return IPC_OK();
-    }
-  }
-
   QM_TRY_UNWRAP(FileSystemDirectoryListing entries,
                 mDataManager->MutableDatabaseManagerPtr()->GetDirectoryEntries(
                     aRequest.parentId(), aRequest.page()),
@@ -316,7 +303,7 @@ IPCResult FileSystemManagerParent::RecvRemoveEntry(
                 IPC_OK(), reportError);
 
   if (!isDeleted) {
-    FileSystemRemoveEntryResponse response(NS_ERROR_DOM_NOT_FOUND_ERR);
+    FileSystemRemoveEntryResponse response(NS_ERROR_UNEXPECTED);
     aResolver(response);
 
     return IPC_OK();
