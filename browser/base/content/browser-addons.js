@@ -1213,7 +1213,7 @@ customElements.define(
       this._openMenuButton.addEventListener("blur", this);
       this._openMenuButton.addEventListener("focus", this);
 
-      this.addEventListener("click", this);
+      this.addEventListener("command", this);
       this.addEventListener("mouseout", this);
       this.addEventListener("mouseover", this);
 
@@ -1224,11 +1224,7 @@ customElements.define(
       const { target } = event;
 
       switch (event.type) {
-        case "click":
-          if (event.button !== 0) {
-            return;
-          }
-
+        case "command":
           if (target === this._openMenuButton) {
             const popup = target.ownerDocument.getElementById(
               "unified-extensions-context-menu"

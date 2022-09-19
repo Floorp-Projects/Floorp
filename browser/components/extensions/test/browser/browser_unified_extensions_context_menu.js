@@ -528,14 +528,18 @@ add_task(async function test_open_context_menu_with_keyboard() {
 
   await closeChromeContextMenu(contextMenu.id, null, win);
 
-  // Open the context menu by focusing the button and pressing the ENTER key.
-  shown = BrowserTestUtils.waitForEvent(contextMenu, "popupshown");
-  button.focus();
-  is(button, win.document.activeElement, "expected button to be focused");
-  EventUtils.synthesizeKey("KEY_Enter", {}, win);
-  await shown;
+  if (AppConstants.platform != "macosx") {
+    // Open the context menu by focusing the button and pressing the ENTER key.
+    // TODO(emilio): Maybe we should harmonize this behavior across platforms,
+    // we're inconsistent right now.
+    shown = BrowserTestUtils.waitForEvent(contextMenu, "popupshown");
+    button.focus();
+    is(button, win.document.activeElement, "expected button to be focused");
+    EventUtils.synthesizeKey("KEY_Enter", {}, win);
+    await shown;
+    await closeChromeContextMenu(contextMenu.id, null, win);
+  }
 
-  await closeChromeContextMenu(contextMenu.id, null, win);
   await closeExtensionsPanel(win);
 
   await extension.unload();
