@@ -6311,11 +6311,11 @@ bool CacheIRCompiler::emitLoadValueTruthyResult(ValOperandId inputId) {
         masm.setupUnalignedABICall(scratch2);
         masm.passABIArg(obj);
         masm.callWithABI<Fn, js::EmulatesUndefined>();
-        masm.storeCallBoolResult(scratch2);
+        masm.storeCallPointerResult(scratch2);
 
         masm.PopRegsInMask(volatileRegs);
 
-        masm.branchTest32(Assembler::NonZero, scratch2, scratch2, &ifFalse);
+        masm.branchIfTrueBool(scratch2, &ifFalse);
         masm.jump(&ifTrue);
       }
     }
