@@ -11,7 +11,7 @@ use rusqlite::{
     Connection, Row, Transaction,
 };
 use sql_support::ConnExt;
-use sync15_traits::Payload;
+use sync15::Payload;
 use sync_guid::Guid as SyncGuid;
 
 use crate::api::{StorageChanges, StorageValueChange};
@@ -21,7 +21,7 @@ use super::{merge, remove_matching_keys, JsonMap, Record, RecordData};
 
 /// The state data can be in. Could be represented as Option<JsonMap>, but this
 /// is clearer and independent of how the data is stored.
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Eq)]
 pub enum DataState {
     /// The data was deleted.
     Deleted,
@@ -115,7 +115,7 @@ pub fn stage_incoming(
 /// The "state" we find ourselves in when considering an incoming/staging
 /// record. This "state" is the input to calculating the IncomingAction and
 /// carries all the data we need to make the required local changes.
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Eq)]
 pub enum IncomingState {
     /// There's an incoming item, but data for that extension doesn't exist
     /// either in our local data store or in the local mirror. IOW, this is the
@@ -225,7 +225,7 @@ pub fn get_incoming(conn: &Connection) -> Result<Vec<(SyncGuid, IncomingState)>>
 /// This is the set of actions we know how to take *locally* for incoming
 /// records. Which one depends on the IncomingState.
 /// Every state which updates also records the set of changes we should notify
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Eq)]
 pub enum IncomingAction {
     /// We should locally delete the data for this record
     DeleteLocally {
@@ -482,7 +482,7 @@ mod tests {
     use crate::api;
     use interrupt_support::NeverInterrupts;
     use serde_json::{json, Value};
-    use sync15_traits::Payload;
+    use sync15::Payload;
 
     // select simple int
     fn ssi(conn: &Connection, stmt: &str) -> u32 {

@@ -39,7 +39,7 @@ impl From<url::ParseError> for Error {
 ///
 /// Note that it's not a variant on `Error` to distinguish between errors
 /// caused by the network, and errors returned from the server.
-#[derive(thiserror::Error, Debug, Clone, PartialEq)]
+#[derive(thiserror::Error, Debug, Clone)]
 #[error("Error: {method} {url} returned {status}")]
 pub struct UnexpectedStatus {
     pub status: u16,

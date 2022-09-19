@@ -13,13 +13,13 @@ use std::{
     path::{Path, PathBuf},
 };
 
-#[derive(Clone, Copy, PartialEq, Debug)]
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub enum LinkingKind {
     Dynamic { folded_libs: bool },
     Static,
 }
 
-#[derive(Debug, PartialEq, Clone)]
+#[derive(Debug, PartialEq, Eq, Clone)]
 pub struct NoNssDir;
 
 pub fn link_nss() -> Result<(), NoNssDir> {

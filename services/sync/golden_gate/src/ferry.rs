@@ -4,7 +4,7 @@
 
 use nsstring::nsCString;
 use storage_variant::VariantType;
-use sync15_traits::{Guid, IncomingEnvelope};
+use sync15::{engine::IncomingEnvelope, Guid};
 use xpcom::{interfaces::nsIVariant, RefPtr};
 
 /// An operation that runs on the background thread, and optionally passes a

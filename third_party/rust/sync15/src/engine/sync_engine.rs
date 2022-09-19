@@ -2,14 +2,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use crate::{
-    client::ClientData, telemetry, CollectionRequest, Guid, IncomingChangeset, OutgoingChangeset,
-    ServerTimestamp,
-};
+use super::{CollectionRequest, IncomingChangeset, OutgoingChangeset};
+use crate::client_types::ClientData;
+use crate::{telemetry, Guid, ServerTimestamp};
 use anyhow::Result;
 use std::fmt;
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct CollSyncIds {
     pub global: Guid,
     pub coll: Guid,
@@ -21,7 +20,7 @@ pub struct CollSyncIds {
 /// agree on the exact GUIDs, the engine will assume something radical happened
 /// so it can't believe anything it thinks it knows about the state of the
 /// server (ie, it will "reset" then do a full reconcile)
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum EngineSyncAssociation {
     /// This store is disconnected (although it may be connected in the future).
     Disconnected,

@@ -3,8 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 use crate::{Guid, ServerTimestamp};
 use std::borrow::Cow;
-use url::{form_urlencoded as form, Url, UrlQuery};
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct CollectionRequest {
     pub collection: Cow<'static, str>,
     pub full: bool,
@@ -87,68 +86,7 @@ impl CollectionRequest {
         self.commit = v;
         self
     }
-
-    fn build_query(&self, pairs: &mut form::Serializer<'_, UrlQuery<'_>>) {
-        if self.full {
-            pairs.append_pair("full", "1");
-        }
-        if self.limit > 0 {
-            pairs.append_pair("limit", &self.limit.to_string());
-        }
-        if let Some(ids) = &self.ids {
-            // Most ids are 12 characters, and we comma separate them, so 13.
-            let mut buf = String::with_capacity(ids.len() * 13);
-            for (i, id) in ids.iter().enumerate() {
-                if i > 0 {
-                    buf.push(',');
-                }
-                buf.push_str(id.as_str());
-            }
-            pairs.append_pair("ids", &buf);
-        }
-        if let Some(batch) = &self.batch {
-            pairs.append_pair("batch", batch);
-        }
-        if self.commit {
-            pairs.append_pair("commit", "true");
-        }
-        if let Some(ts) = self.older {
-            pairs.append_pair("older", &ts.to_string());
-        }
-        if let Some(ts) = self.newer {
-            pairs.append_pair("newer", &ts.to_string());
-        }
-        if let Some(o) = self.order {
-            pairs.append_pair("sort", o.as_str());
-        }
-        pairs.finish();
-    }
-
-    pub fn build_url(&self, mut base_url: Url) -> Result<Url, UnacceptableBaseUrl> {
-        base_url
-            .path_segments_mut()
-            .map_err(|_| UnacceptableBaseUrl(()))?
-            .extend(&["storage", &self.collection]);
-        self.build_query(&mut base_url.query_pairs_mut());
-        // This is strange but just accessing query_pairs_mut makes you have
-        // a trailing question mark on your url. I don't think anything bad
-        // would happen here, but I don't know, and also, it looks dumb so
-        // I'd rather not have it.
-        if base_url.query() == Some("") {
-            base_url.set_query(None);
-        }
-        Ok(base_url)
-    }
 }
-#[derive(Debug)]
-pub struct UnacceptableBaseUrl(());
-
-impl std::fmt::Display for UnacceptableBaseUrl {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.write_str("Storage server URL is not a base")
-    }
-}
-impl std::error::Error for UnacceptableBaseUrl {}
 
 #[derive(Debug, Clone, Copy, Eq, PartialEq, Ord, PartialOrd, Hash)]
 pub enum RequestOrder {

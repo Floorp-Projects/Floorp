@@ -244,14 +244,14 @@ impl ConnExt for Connection {
 impl<'conn> ConnExt for Transaction<'conn> {
     #[inline]
     fn conn(&self) -> &Connection {
-        &*self
+        self
     }
 }
 
 impl<'conn> ConnExt for Savepoint<'conn> {
     #[inline]
     fn conn(&self) -> &Connection {
-        &*self
+        self
     }
 }
 
@@ -374,7 +374,7 @@ impl<'conn> Drop for UncheckedTransaction<'conn> {
 impl<'conn> ConnExt for UncheckedTransaction<'conn> {
     #[inline]
     fn conn(&self) -> &Connection {
-        &*self
+        self
     }
 }
 

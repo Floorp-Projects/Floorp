@@ -5,7 +5,7 @@ use std::time::Duration;
 
 /// Typesafe way to manage server timestamps without accidentally mixing them up with
 /// local ones.
-#[derive(Debug, Copy, Clone, PartialEq, PartialOrd, Default)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Default)]
 pub struct ServerTimestamp(pub i64);
 
 impl ServerTimestamp {

@@ -13,7 +13,7 @@ use serde_derive::*;
 use std::ops::{Deref, DerefMut};
 use sync_guid::Guid;
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct BsoRecord<T> {
     pub id: Guid,
 
@@ -436,9 +436,9 @@ mod tests {
             .decrypt(&keybundle2)
             .expect_err("Should fail because wrong keybundle");
 
-        // Note: ErrorKind isn't PartialEq, so.
+        // Note: Error isn't PartialEq, so.
         match e {
-            error::SyncTraitsError::CryptoError(_) => {
+            error::Error::CryptoError(_) => {
                 // yay.
             }
             other => {
