@@ -23,6 +23,13 @@ pub enum MTLTextureType {
     D3 = 7,
 }
 
+#[repr(u64)]
+#[derive(Copy, Clone, Debug, Hash, PartialEq, Eq)]
+pub enum MTLTextureCompressionType {
+    Lossless = 0,
+    Lossy = 1,
+}
+
 bitflags! {
     pub struct MTLTextureUsage: NSUInteger {
         const Unknown         = 0x0000;
@@ -155,6 +162,14 @@ impl TextureDescriptorRef {
 
     pub fn set_usage(&self, usage: MTLTextureUsage) {
         unsafe { msg_send![self, setUsage: usage] }
+    }
+
+    pub fn compression_type(&self) -> MTLTextureCompressionType {
+        unsafe { msg_send![self, compressionType] }
+    }
+
+    pub fn set_compression_type(&self, compression_type: MTLTextureCompressionType) {
+        unsafe { msg_send![self, setCompressionType: compression_type] }
     }
 }
 

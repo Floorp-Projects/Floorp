@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.5.0 (2022-07-14)
+
+* **Breaking:** The `RawWindowHandle` variants were split into `RawDisplayHandle` and `RawWindowHandle`.
+* The X11 screen is now present in new `XlibDisplayHandle` and `XcbDisplayHandle`.
+- Add GBM support.
+
 ## 0.4.3 (2022-03-29)
 
 * [Add visual IDs to X11 handles](https://github.com/rust-windowing/raw-window-handle/pull/83)

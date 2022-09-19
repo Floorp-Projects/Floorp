@@ -6160,7 +6160,7 @@
 
 - name: gfx.webrender.blob-tile-size
   type: uint32_t
-  value: 512
+  value: 256
   mirror: always
 
 - name: gfx.webrender.batched-upload-threshold

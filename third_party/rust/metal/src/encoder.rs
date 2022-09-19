@@ -792,6 +792,14 @@ impl RenderCommandEncoderRef {
         }
     }
 
+    pub fn execute_commands_in_buffer(
+        &self,
+        buffer: &IndirectCommandBufferRef,
+        with_range: NSRange,
+    ) {
+        unsafe { msg_send![self, executeCommandsInBuffer:buffer withRange:with_range] }
+    }
+
     pub fn update_fence(&self, fence: &FenceRef, after_stages: MTLRenderStages) {
         unsafe {
             msg_send![self,
