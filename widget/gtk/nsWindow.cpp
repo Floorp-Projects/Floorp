@@ -2428,7 +2428,7 @@ nsWindow::WaylandPopupGetPositionFromLayout() {
 }
 
 bool nsWindow::WaylandPopupAnchorAdjustForParentPopup(
-    GdkRectangle* aPopupAnchor) {
+    GdkRectangle* aPopupAnchor, GdkPoint* aOffset) {
   LOG("nsWindow::WaylandPopupAnchorAdjustForParentPopup");
 
   GtkWindow* parentGtkWindow = gtk_window_get_transient_for(GTK_WINDOW(mShell));
@@ -2458,17 +2458,23 @@ bool nsWindow::WaylandPopupAnchorAdjustForParentPopup(
   GdkRectangle finalRect;
   if (!gdk_rectangle_intersect(aPopupAnchor, &parentWindowRect, &finalRect)) {
     // Popup anchor is outside of parent window - we can't use move-to-rect
-    LOG("  anchor is ourside of parent window!");
-    return false;
+    *aOffset = {mPopupMoveToRectParams.mOffset.x + aPopupAnchor->x,
+                mPopupMoveToRectParams.mOffset.y + aPopupAnchor->y};
+    finalRect = *aPopupAnchor;
+    finalRect.x = finalRect.y = 0;
+  } else {
+    *aOffset = mPopupMoveToRectParams.mOffset;
   }
 
   *aPopupAnchor = finalRect;
   LOG("  anchor is correct %d,%d -> %d x %d", finalRect.x, finalRect.y,
       finalRect.width, finalRect.height);
+  LOG("  anchor offset %d, %d", aOffset->x, aOffset->y);
   return true;
 }
 
-bool nsWindow::WaylandPopupCheckAndGetAnchor(GdkRectangle* aPopupAnchor) {
+bool nsWindow::WaylandPopupCheckAndGetAnchor(GdkRectangle* aPopupAnchor,
+                                             GdkPoint* aOffset) {
   LOG("nsWindow::WaylandPopupCheckAndGetAnchor");
 
   GdkWindow* gdkWindow = gtk_widget_get_window(GTK_WIDGET(mShell));
@@ -2497,7 +2503,7 @@ bool nsWindow::WaylandPopupCheckAndGetAnchor(GdkRectangle* aPopupAnchor) {
       aPopupAnchor->x, aPopupAnchor->y, aPopupAnchor->width,
       aPopupAnchor->height);
 
-  if (!WaylandPopupAnchorAdjustForParentPopup(aPopupAnchor)) {
+  if (!WaylandPopupAnchorAdjustForParentPopup(aPopupAnchor, aOffset)) {
     LOG("  can't use move-to-rect, anchor is not placed inside of parent "
         "window");
     return false;
@@ -2558,8 +2564,10 @@ void nsWindow::WaylandPopupMove() {
   }
 
   GdkRectangle gtkAnchorRect;
+  GdkPoint offset;
   if (mPopupUseMoveToRect) {
-    mPopupUseMoveToRect = WaylandPopupCheckAndGetAnchor(&gtkAnchorRect);
+    mPopupUseMoveToRect =
+        WaylandPopupCheckAndGetAnchor(&gtkAnchorRect, &offset);
   }
 
   LOG("nsWindow::WaylandPopupMove");
@@ -2610,10 +2618,10 @@ void nsWindow::WaylandPopupMove() {
   }
   mWaitingForMoveToRectCallback = true;
 
-  sGdkWindowMoveToRect(
-      gdkWindow, &gtkAnchorRect, mPopupMoveToRectParams.mAnchorRectType,
-      mPopupMoveToRectParams.mPopupAnchorType, mPopupMoveToRectParams.mHints,
-      mPopupMoveToRectParams.mOffset.x, mPopupMoveToRectParams.mOffset.y);
+  sGdkWindowMoveToRect(gdkWindow, &gtkAnchorRect,
+                       mPopupMoveToRectParams.mAnchorRectType,
+                       mPopupMoveToRectParams.mPopupAnchorType,
+                       mPopupMoveToRectParams.mHints, offset.x, offset.y);
 }
 
 void nsWindow::SetZIndex(int32_t aZIndex) {
