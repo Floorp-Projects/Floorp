@@ -11,6 +11,7 @@ import android.app.Dialog
 import android.content.Context
 import android.content.DialogInterface
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.graphics.Color
 import android.graphics.Typeface
 import android.graphics.drawable.ColorDrawable
@@ -655,7 +656,9 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
         when (requestCode) {
             REQUEST_CODE_CAMERA_PERMISSIONS -> qrFeature.withFeature {
                 it.onPermissionsResult(permissions, grantResults)
-                resetFocus()
+                if (grantResults.contains(PackageManager.PERMISSION_DENIED)) {
+                    resetFocus()
+                }
                 requireContext().settings().setCameraPermissionNeededState = false
             }
             else -> super.onRequestPermissionsResult(requestCode, permissions, grantResults)
