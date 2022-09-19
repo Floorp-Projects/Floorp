@@ -2654,19 +2654,30 @@ void nsWindow::SetSizeMode(nsSizeMode aMode) {
 
   // Return if there's no shell or our current state is the same as the mode we
   // were just set to.
-  if (!mShell || mSizeMode == aMode) {
+  if (!mShell) {
+    LOG("    no shell");
+    return;
+  }
+
+  if (mSizeMode == aMode && mLastSizeModeRequest == aMode) {
     LOG("    already set");
     return;
   }
 
-  if (mSizeMode == nsSizeMode_Fullscreen) {
-    LOG("    unfullscreening");
-    MakeFullScreen(false);
-    // NOTE: Fullscreen restoration changes mSizeMode to the state before
-    // fullscreen, but we might need to still transition to aMode.
-    if (mLastSizeModeBeforeFullscreen == aMode) {
-      LOG("    will restore to desired state");
-      return;
+  // It is tempting to try to optimize calls below based only on current
+  // mSizeMode, but that wouldn't work if there's a size-request in flight
+  // (specially before show). See bug 1789823.
+  const auto SizeModeMightBe = [&](nsSizeMode aModeToTest) {
+    if (mSizeMode != mLastSizeModeRequest) {
+      // Arbitrary size mode requests might be ongoing.
+      return true;
+    }
+    return mSizeMode == aModeToTest;
+  };
+
+  if (aMode != nsSizeMode_Fullscreen) {
+    if (SizeModeMightBe(nsSizeMode_Fullscreen)) {
+      MakeFullScreen(false);
     }
   }
 
@@ -2687,16 +2698,17 @@ void nsWindow::SetSizeMode(nsSizeMode aMode) {
       MOZ_FALLTHROUGH_ASSERT("Unknown size mode");
     case nsSizeMode_Normal:
       LOG("    set normal");
-      // nsSizeMode_Normal, really.
-      if (mSizeMode == nsSizeMode_Minimized) {
+      if (SizeModeMightBe(nsSizeMode_Maximized)) {
+        gtk_window_unmaximize(GTK_WINDOW(mShell));
+      }
+      if (SizeModeMightBe(nsSizeMode_Minimized)) {
         gtk_window_deiconify(GTK_WINDOW(mShell));
         // We need this for actual deiconification on mutter.
         gtk_window_present(GTK_WINDOW(mShell));
-      } else if (mSizeMode == nsSizeMode_Maximized) {
-        gtk_window_unmaximize(GTK_WINDOW(mShell));
       }
       break;
   }
+  mLastSizeModeRequest = aMode;
 }
 
 static bool GetWindowManagerName(GdkWindow* gdk_window, nsACString& wmName) {

@@ -545,6 +545,9 @@ class nsWindow final : public nsBaseWidget {
 
   // The actual size mode that's in effect.
   nsSizeMode mSizeMode = nsSizeMode_Normal;
+  // The last size mode we've requested. This might not match mSizeMode if
+  // there's a request to change the size mode in progress.
+  nsSizeMode mLastSizeModeRequest = nsSizeMode_Normal;
   nsSizeMode mLastSizeModeBeforeFullscreen = nsSizeMode_Normal;
 
   float mAspectRatio = 0.0f;
