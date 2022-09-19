@@ -856,7 +856,7 @@ class nsWindow final : public nsBaseWidget {
   void WaylandPopupMarkAsClosed();
   void WaylandPopupRemoveClosedPopups();
   void WaylandPopupSetDirectPosition();
-  bool WaylandPopupFitsToplevelWindow();
+  bool WaylandPopupFitsToplevelWindow(bool aMove);
   const WaylandPopupMoveToRectParams WaylandPopupGetPositionFromLayout();
   void WaylandPopupPropagateChangesToLayout(bool aMove, bool aResize);
   nsWindow* WaylandPopupFindLast(nsWindow* aPopup);
