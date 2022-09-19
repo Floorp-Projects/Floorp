@@ -4229,8 +4229,6 @@ void CodeGenerator::visitMegamorphicLoadSlot(LMegamorphicLoadSlot* lir) {
   ValueOperand output = ToOutValue(lir);
 
   Label bail;
-  masm.branchIfNonNativeObj(obj, temp0, &bail);
-
   masm.Push(UndefinedValue());
   masm.moveStackPtrTo(temp2);
 
@@ -4263,8 +4261,6 @@ void CodeGenerator::visitMegamorphicLoadSlotByValue(
   ValueOperand output = ToOutValue(lir);
 
   Label bail;
-  masm.branchIfNonNativeObj(obj, temp0, &bail);
-
   // idVal will be in vp[0], result will be stored in vp[1].
   masm.reserveStack(sizeof(Value));
   masm.Push(idVal);

@@ -1594,8 +1594,8 @@ static void VerifyCacheEntry(JSContext* cx, NativeObject* obj, PropertyKey key,
 }
 
 static MOZ_ALWAYS_INLINE bool GetNativeDataPropertyPure(JSContext* cx,
-                                                        NativeObject* obj,
-                                                        jsid id, Value* vp) {
+                                                        JSObject* obj, jsid id,
+                                                        Value* vp) {
   // Fast path used by megamorphic IC stubs. Unlike our other property
   // lookup paths, this is optimized to be as fast as possible for simple
   // data property lookups.
@@ -1609,12 +1609,13 @@ static MOZ_ALWAYS_INLINE bool GetNativeDataPropertyPure(JSContext* cx,
   MegamorphicCache::Entry* entry;
   if (JitOptions.enableWatchtowerMegamorphic &&
       cache.lookup(receiverShape, id, &entry)) {
-    VerifyCacheEntry(cx, obj, id, *entry);
+    NativeObject* nobj = &obj->as<NativeObject>();
+    VerifyCacheEntry(cx, nobj, id, *entry);
     if (entry->isDataProperty()) {
       for (size_t i = 0, numHops = entry->numHops(); i < numHops; i++) {
-        obj = &obj->staticPrototype()->as<NativeObject>();
+        nobj = &nobj->staticPrototype()->as<NativeObject>();
       }
-      *vp = obj->getSlot(entry->slot());
+      *vp = nobj->getSlot(entry->slot());
       return true;
     }
     if (entry->isMissingProperty()) {
@@ -1624,12 +1625,17 @@ static MOZ_ALWAYS_INLINE bool GetNativeDataPropertyPure(JSContext* cx,
     MOZ_ASSERT(entry->isMissingOwnProperty());
   }
 
+  if (!obj->is<NativeObject>()) {
+    return false;
+  }
+
+  NativeObject* nobj = &obj->as<NativeObject>();
   size_t numHops = 0;
   while (true) {
-    MOZ_ASSERT(!obj->getOpsLookupProperty());
+    MOZ_ASSERT(!nobj->getOpsLookupProperty());
 
     uint32_t index;
-    if (PropMap* map = obj->shape()->lookup(cx, id, &index)) {
+    if (PropMap* map = nobj->shape()->lookup(cx, id, &index)) {
       PropertyInfo prop = map->getPropertyInfo(index);
       if (!prop.isDataProperty()) {
         return false;
@@ -1638,25 +1644,25 @@ static MOZ_ALWAYS_INLINE bool GetNativeDataPropertyPure(JSContext* cx,
         cache.initEntryForDataProperty(entry, receiverShape, id, numHops,
                                        prop.slot());
       }
-      *vp = obj->getSlot(prop.slot());
+      *vp = nobj->getSlot(prop.slot());
       return true;
     }
 
     // Property not found. Watch out for Class hooks and TypedArrays.
-    if (MOZ_UNLIKELY(!obj->is<PlainObject>())) {
-      if (ClassMayResolveId(cx->names(), obj->getClass(), id, obj)) {
+    if (MOZ_UNLIKELY(!nobj->is<PlainObject>())) {
+      if (ClassMayResolveId(cx->names(), nobj->getClass(), id, nobj)) {
         return false;
       }
 
       // Don't skip past TypedArrayObjects if the id can be a TypedArray index.
-      if (obj->is<TypedArrayObject>()) {
+      if (nobj->is<TypedArrayObject>()) {
         if (MaybeTypedArrayIndexString(id)) {
           return false;
         }
       }
     }
 
-    JSObject* proto = obj->staticPrototype();
+    JSObject* proto = nobj->staticPrototype();
     if (!proto) {
       if (JitOptions.enableWatchtowerMegamorphic) {
         cache.initEntryForMissingProperty(entry, receiverShape, id);
@@ -1668,17 +1674,14 @@ static MOZ_ALWAYS_INLINE bool GetNativeDataPropertyPure(JSContext* cx,
     if (!proto->is<NativeObject>()) {
       return false;
     }
-    obj = &proto->as<NativeObject>();
+    nobj = &proto->as<NativeObject>();
     numHops++;
   }
 }
 
 bool GetNativeDataPropertyPure(JSContext* cx, JSObject* obj, PropertyName* name,
                                Value* vp) {
-  // Condition checked by caller.
-  MOZ_ASSERT(obj->is<NativeObject>());
-  return GetNativeDataPropertyPure(cx, &obj->as<NativeObject>(), NameToId(name),
-                                   vp);
+  return GetNativeDataPropertyPure(cx, obj, NameToId(name), vp);
 }
 
 static MOZ_ALWAYS_INLINE bool ValueToAtomOrSymbolPure(JSContext* cx,
@@ -1721,9 +1724,6 @@ static MOZ_ALWAYS_INLINE bool ValueToAtomOrSymbolPure(JSContext* cx,
 bool GetNativeDataPropertyByValuePure(JSContext* cx, JSObject* obj, Value* vp) {
   AutoUnsafeCallWithABI unsafe;
 
-  // Condition checked by caller.
-  MOZ_ASSERT(obj->is<NativeObject>());
-
   // vp[0] contains the id, result will be stored in vp[1].
   Value idVal = vp[0];
   jsid id;
@@ -1732,7 +1732,7 @@ bool GetNativeDataPropertyByValuePure(JSContext* cx, JSObject* obj, Value* vp) {
   }
 
   Value* res = vp + 1;
-  return GetNativeDataPropertyPure(cx, &obj->as<NativeObject>(), id, res);
+  return GetNativeDataPropertyPure(cx, obj, id, res);
 }
 
 bool SetNativeDataPropertyPure(JSContext* cx, JSObject* obj, PropertyName* name,
