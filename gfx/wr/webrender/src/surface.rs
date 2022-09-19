@@ -3,10 +3,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use api::units::*;
-use crate::batch::{CommandBufferBuilderKind, CommandBufferList, CommandBufferBuilder, CommandBufferIndex};
+use crate::batch::{CommandBufferBuilderKind, CommandBufferList, CommandBufferBuilder, CommandBufferIndex, PrimitiveCommand};
 use crate::internal_types::FastHashMap;
 use crate::picture::{SurfaceInfo, SurfaceIndex, TileKey, SubSliceIndex};
-use crate::prim_store::{PrimitiveInstanceIndex, PictureIndex};
+use crate::prim_store::{PictureIndex};
 use crate::render_task_graph::{RenderTaskId, RenderTaskGraphBuilder};
 use crate::spatial_tree::SpatialNodeIndex;
 use crate::render_target::ResolveOp;
@@ -156,11 +156,10 @@ impl CommandBufferTargets {
     /// Push a new primitive in to the command buffer builder
     fn push_prim(
         &mut self,
-        prim_instance_index: PrimitiveInstanceIndex,
+        prim_cmd: &PrimitiveCommand,
         spatial_node_index: SpatialNodeIndex,
         tile_rect: crate::picture::TileRect,
         sub_slice_index: SubSliceIndex,
-        gpu_address: Option<crate::gpu_cache::GpuCacheAddress>,
         cmd_buffers: &mut CommandBufferList,
     ) {
         match self {
@@ -175,9 +174,8 @@ impl CommandBufferTargets {
                         };
                         if let Some(cmd_buffer_index) = tiles.get(&key) {
                             cmd_buffers.get_mut(*cmd_buffer_index).add_prim(
-                                prim_instance_index,
+                                prim_cmd,
                                 spatial_node_index,
-                                gpu_address,
                             );
                         }
                     }
@@ -186,9 +184,8 @@ impl CommandBufferTargets {
             CommandBufferTargets::Simple { cmd_buffer_index, .. } => {
                 // For simple builders, just add the prim
                 cmd_buffers.get_mut(*cmd_buffer_index).add_prim(
-                    prim_instance_index,
+                    prim_cmd,
                     spatial_node_index,
-                    gpu_address,
                 );
             }
         }
@@ -355,10 +352,9 @@ impl SurfaceBuilder {
     // Push a primitive to the current cmd buffer target(s)
     pub fn push_prim(
         &mut self,
-        prim_instance_index: PrimitiveInstanceIndex,
+        prim_cmd: &PrimitiveCommand,
         spatial_node_index: SpatialNodeIndex,
         vis: &PrimitiveVisibility,
-        gpu_address: Option<crate::gpu_cache::GpuCacheAddress>,
         cmd_buffers: &mut CommandBufferList,
     ) {
         match vis.state {
@@ -367,11 +363,10 @@ impl SurfaceBuilder {
             }
             VisibilityState::Visible { tile_rect, sub_slice_index, .. } => {
                 self.current_cmd_buffers.push_prim(
-                    prim_instance_index,
+                    prim_cmd,
                     spatial_node_index,
                     tile_rect,
                     sub_slice_index,
-                    gpu_address,
                     cmd_buffers,
                 )
             }
