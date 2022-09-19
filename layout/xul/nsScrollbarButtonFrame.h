@@ -15,21 +15,20 @@
 #define nsScrollbarButtonFrame_h___
 
 #include "mozilla/Attributes.h"
-#include "nsButtonBoxFrame.h"
+#include "nsBoxFrame.h"
 #include "nsRepeatService.h"
 
 namespace mozilla {
 class PresShell;
 }  // namespace mozilla
 
-class nsScrollbarButtonFrame final : public nsButtonBoxFrame {
+class nsScrollbarButtonFrame final : public nsBoxFrame {
  public:
   NS_DECL_FRAMEARENA_HELPERS(nsScrollbarButtonFrame)
 
   explicit nsScrollbarButtonFrame(ComputedStyle* aStyle,
                                   nsPresContext* aPresContext)
-      : nsButtonBoxFrame(aStyle, aPresContext, kClassID),
-        mCursorOnThis(false) {}
+      : nsBoxFrame(aStyle, aPresContext, kClassID), mCursorOnThis(false) {}
 
   // Overrides
   virtual void DestroyFrom(nsIFrame* aDestructRoot,
@@ -38,9 +37,9 @@ class nsScrollbarButtonFrame final : public nsButtonBoxFrame {
   friend nsIFrame* NS_NewScrollbarButtonFrame(mozilla::PresShell* aPresShell,
                                               ComputedStyle* aStyle);
 
-  virtual nsresult HandleEvent(nsPresContext* aPresContext,
-                               mozilla::WidgetGUIEvent* aEvent,
-                               nsEventStatus* aEventStatus) override;
+  nsresult HandleEvent(nsPresContext* aPresContext,
+                       mozilla::WidgetGUIEvent* aEvent,
+                       nsEventStatus* aEventStatus) override;
 
   static nsresult GetChildWithTag(nsAtom* atom, nsIFrame* start,
                                   nsIFrame*& result);

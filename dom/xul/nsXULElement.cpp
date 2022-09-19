@@ -11,6 +11,7 @@
 #include "MainThreadUtils.h"
 #include "ReferrerInfo.h"
 #include "Units.h"
+#include "XULButtonElement.h"
 #include "XULFrameElement.h"
 #include "XULMenuElement.h"
 #include "XULPopupElement.h"
@@ -192,6 +193,18 @@ nsXULElement* nsXULElement::Construct(
   if (nodeInfo->Equals(nsGkAtoms::tree)) {
     auto* nim = nodeInfo->NodeInfoManager();
     return new (nim) XULTreeElement(nodeInfo.forget());
+  }
+
+  if (nodeInfo->Equals(nsGkAtoms::checkbox) ||
+      nodeInfo->Equals(nsGkAtoms::radio) ||
+      nodeInfo->Equals(nsGkAtoms::thumb) ||
+      nodeInfo->Equals(nsGkAtoms::button) ||
+      nodeInfo->Equals(nsGkAtoms::toolbarbutton) ||
+      nodeInfo->Equals(nsGkAtoms::toolbarpaletteitem) ||
+      nodeInfo->Equals(nsGkAtoms::treecolpicker) ||
+      nodeInfo->Equals(nsGkAtoms::scrollbarbutton)) {
+    auto* nim = nodeInfo->NodeInfoManager();
+    return new (nim) XULButtonElement(nodeInfo.forget());
   }
 
   return NS_NewBasicXULElement(nodeInfo.forget());

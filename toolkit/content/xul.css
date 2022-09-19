@@ -144,6 +144,15 @@ html|label.toolbarbutton-badge:empty {
   display: none;
 }
 
+.toolbarbutton-icon,
+.toolbarbutton-text,
+.toolbarbutton-badge-stack,
+.toolbarbutton-menu-dropmarker,
+.button-box {
+  /* Preserves legacy behavior */
+  pointer-events: none;
+}
+
 /********** button **********/
 
 button {
@@ -162,14 +171,6 @@ iframe {
 @media (-moz-box-flexbox-emulation) {
   *|*:root {
     -moz-box-layout: flex;
-  }
-}
-
-@media not (-moz-box-flexbox-emulation) {
-  /* These elements create nsButtonBoxFrame, so force legacy layout in
-   * descendants for now. Bug 1790920 is the real fix. */
-  thumb, radio, checkbox, button, scrollbarbutton, treecolpicker {
-    -moz-box-layout: legacy;
   }
 }
 

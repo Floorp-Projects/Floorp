@@ -1261,7 +1261,7 @@ toolbarpaletteitem[place="palette"] {
   margin-bottom: 5px;
   margin-inline-end: 24px;
   overflow: visible;
-  display: inline-block;
+  display: -moz-inline-box;
   vertical-align: top;
 }
 
