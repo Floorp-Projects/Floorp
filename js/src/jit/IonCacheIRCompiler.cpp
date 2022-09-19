@@ -1248,7 +1248,7 @@ bool IonCacheIRCompiler::emitAddAndStoreSlotShared(
     masm.move32(Imm32(numNewSlots), scratch2.ref());
     masm.passABIArg(scratch2.ref());
     masm.callWithABI<Fn, NativeObject::growSlotsPure>();
-    masm.mov(ReturnReg, scratch1);
+    masm.storeCallPointerResult(scratch1);
 
     LiveRegisterSet ignore;
     ignore.add(scratch1);
