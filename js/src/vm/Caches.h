@@ -104,6 +104,12 @@ using EvalCache =
 // The cache is also invalidated on each major GC.
 class MegamorphicCache {
  public:
+  static constexpr size_t NumEntries = 1024;
+  // log2(alignof(Shape))
+  static constexpr size_t ShapeHashShift1 = 3;
+  // ShapeHashShift1 + log2(NumEntries)
+  static constexpr size_t ShapeHashShift2 = ShapeHashShift1 + 10;
+
   class Entry {
     // Receiver object's shape.
     Shape* shape_ = nullptr;
@@ -157,7 +163,6 @@ class MegamorphicCache {
   };
 
  private:
-  static constexpr size_t NumEntries = 1024;
   mozilla::Array<Entry, NumEntries> entries_;
 
   // Generation counter used to invalidate all entries.
@@ -166,8 +171,9 @@ class MegamorphicCache {
   Entry& getEntry(Shape* shape, PropertyKey key) {
     static_assert(mozilla::IsPowerOfTwo(NumEntries),
                   "NumEntries must be a power-of-two for fast modulo");
-    uintptr_t hash = (uintptr_t(shape) ^ (uintptr_t(shape) >> 13)) +
-                     HashAtomOrSymbolPropertyKey(key);
+    uintptr_t hash = uintptr_t(shape) >> ShapeHashShift1;
+    hash ^= uintptr_t(shape) >> ShapeHashShift2;
+    hash += HashAtomOrSymbolPropertyKey(key);
     return entries_[hash % NumEntries];
   }
 
