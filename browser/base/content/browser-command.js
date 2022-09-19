@@ -66,7 +66,7 @@ function restartbrowser() {
 
 /*---------------------------------------------------------------- browser manager sidebar ----------------------------------------------------------------*/
 
-var sidebar_icons = ["sidebar2-back", "sidebar2-forward", "sidebar2-reload"]
+const sidebar_icons = ["sidebar2-back", "sidebar2-forward", "sidebar2-reload"]
 
 function displayIcons() {
   sidebar_icons.forEach(function (sbar_icon) {
