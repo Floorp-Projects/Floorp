@@ -1087,10 +1087,6 @@ criteria = "safe-to-deploy"
 version = "0.1.2"
 criteria = "safe-to-deploy"
 
-[[exemptions.raw-window-handle]]
-version = "0.4.3"
-criteria = "safe-to-deploy"
-
 [[exemptions.redox_syscall]]
 version = "0.2.13"
 criteria = "safe-to-deploy"
