@@ -1047,6 +1047,7 @@
   movable: true
   congruent_to: if_operands_equal
   alias_set: custom
+  might_alias: custom
   clone: true
 
 # Returns obj->elements.
@@ -1379,6 +1380,7 @@
   movable: true
   congruent_to: custom
   alias_set: custom
+  might_alias: custom
 
 - name: GuardProto
   gen_boilerplate: false
