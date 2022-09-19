@@ -264,7 +264,8 @@ enum class AllowedHelperThread {
   GCTask,
   ParseTask,
   IonCompile,
-  GCTaskOrIonCompile
+  GCTaskOrIonCompile,
+  ParseTaskOrIonCompile,
 };
 
 template <AllowedHelperThread Helper>
@@ -291,6 +292,10 @@ template <typename T>
 using MainThreadOrParseData =
     ProtectedDataNoCheckArgs<CheckMainThread<AllowedHelperThread::ParseTask>,
                              T>;
+
+template <typename T>
+using MainThreadOrParseOrIonCompileData = ProtectedDataNoCheckArgs<
+    CheckMainThread<AllowedHelperThread::ParseTaskOrIonCompile>, T>;
 
 template <AllowedHelperThread Helper>
 class CheckZone {

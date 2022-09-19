@@ -461,12 +461,11 @@ class Shape : public gc::CellWithTenuredGCPointer<gc::TenuredCell, BaseShape> {
     return offsetof(Shape, objectFlags_);
   }
 
-#ifdef DEBUG
   static inline size_t offsetOfImmutableFlags() {
     return offsetof(Shape, immutableFlags);
   }
   static inline uint32_t fixedSlotsMask() { return FIXED_SLOTS_MASK; }
-#endif
+  static inline uint32_t fixedSlotsShift() { return FIXED_SLOTS_SHIFT; }
 
  private:
   void updateNewDictionaryShape(ObjectFlags flags, DictionaryPropMap* map,

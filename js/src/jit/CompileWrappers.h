@@ -79,6 +79,7 @@ class CompileRuntime {
   const void* addressOfJitStackLimit();
   const void* addressOfInterruptBits();
   const void* addressOfZone();
+  const void* addressOfMegamorphicCache();
 
 #ifdef DEBUG
   const void* addressOfIonBailAfterCounter();

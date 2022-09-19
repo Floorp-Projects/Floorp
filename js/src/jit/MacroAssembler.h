@@ -5006,6 +5006,13 @@ class MacroAssembler : public MacroAssemblerSpecific {
 
   void setIsDefinitelyTypedArrayConstructor(Register obj, Register output);
 
+  void loadMegamorphicCache(Register dest);
+
+  void emitMegamorphicCacheLookup(PropertyKey id, Register obj,
+                                  Register scratch1, Register scratch2,
+                                  Register scratch3, ValueOperand output,
+                                  Label* fail, Label* cacheHit);
+
   void loadDOMExpandoValueGuardGeneration(
       Register obj, ValueOperand output,
       JS::ExpandoAndGeneration* expandoAndGeneration, uint64_t generation,
