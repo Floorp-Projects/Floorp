@@ -1859,7 +1859,7 @@ void nsWindow::UpdateWaylandPopupHierarchy() {
       }
       if (popup->mPopupHint == ePopupTypePanel &&
           popup->WaylandPopupIsFirst() &&
-          popup->WaylandPopupFitsToplevelWindow()) {
+          popup->WaylandPopupFitsToplevelWindow(/* aMove */ true)) {
         // Workaround for https://gitlab.gnome.org/GNOME/gtk/-/issues/1986
         // Bug 1760276 - don't use move-to-rect when popup is inside main
         // Firefox window.
@@ -2105,8 +2105,8 @@ void nsWindow::WaylandPopupSetDirectPosition() {
   }
 }
 
-bool nsWindow::WaylandPopupFitsToplevelWindow() {
-  LOG("nsWindow::WaylandPopupFitsToplevelWindow()");
+bool nsWindow::WaylandPopupFitsToplevelWindow(bool aMove) {
+  LOG("nsWindow::WaylandPopupFitsToplevelWindow() move %d", aMove);
 
   GtkWindow* parent = gtk_window_get_transient_for(GTK_WINDOW(mShell));
   GtkWindow* tmp = parent;
@@ -2124,7 +2124,8 @@ bool nsWindow::WaylandPopupFitsToplevelWindow() {
   int parentHeight = gdk_window_get_height(toplevelGdkWindow);
   LOG("  parent size %d x %d", parentWidth, parentHeight);
 
-  GdkPoint topLeft = DevicePixelsToGdkPointRoundDown(mBounds.TopLeft());
+  GdkPoint topLeft = aMove ? mPopupPosition
+                           : DevicePixelsToGdkPointRoundDown(mBounds.TopLeft());
   GdkRectangle size = DevicePixelsToGdkSizeRoundUp(mLastSizeRequest);
   LOG("  popup topleft %d, %d size %d x %d", topLeft.x, topLeft.y, size.width,
       size.height);
@@ -2188,7 +2189,7 @@ void nsWindow::NativeMoveResizeWaylandPopup(bool aMove, bool aResize) {
     gtk_window_resize(GTK_WINDOW(mShell), size.width, size.height);
   }
 
-  if (!aMove && WaylandPopupFitsToplevelWindow()) {
+  if (!aMove && WaylandPopupFitsToplevelWindow(aMove)) {
     // Popup position has not been changed and its position/size fits
     // parent window so no need to reposition the window.
     LOG("  fits parent window size, just resize\n");
