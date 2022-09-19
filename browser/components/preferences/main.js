@@ -3234,21 +3234,19 @@ function getLocalHandlerApp(aFile) {
 // eslint-disable-next-line no-undef
 let gHandlerListItemFragment = MozXULElement.parseXULToFragment(`
   <richlistitem>
-    <hbox flex="1" equalsize="always">
-      <hbox class="typeContainer" flex="1" align="center">
-        <image class="typeIcon" width="16" height="16"
-               src="moz-icon://goat?size=16"/>
-        <label class="typeDescription" flex="1" crop="end"/>
-      </hbox>
-      <hbox class="actionContainer" flex="1" align="center">
-        <image class="actionIcon" width="16" height="16"/>
-        <label class="actionDescription" flex="1" crop="end"/>
-      </hbox>
-      <hbox class="actionsMenuContainer" flex="1">
-        <menulist class="actionsMenu" flex="1" crop="end" selectedIndex="1">
-          <menupopup/>
-        </menulist>
-      </hbox>
+    <hbox class="typeContainer" flex="1" align="center">
+      <image class="typeIcon" width="16" height="16"
+              src="moz-icon://goat?size=16"/>
+      <label class="typeDescription" flex="1" crop="end"/>
+    </hbox>
+    <hbox class="actionContainer" flex="1" align="center">
+      <image class="actionIcon" width="16" height="16"/>
+      <label class="actionDescription" flex="1" crop="end"/>
+    </hbox>
+    <hbox class="actionsMenuContainer" flex="1">
+      <menulist class="actionsMenu" flex="1" crop="end" selectedIndex="1">
+        <menupopup/>
+      </menulist>
     </hbox>
   </richlistitem>
 `);
