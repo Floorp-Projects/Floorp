@@ -154,8 +154,18 @@ void ResolveCallback(
     case NS_ERROR_FILE_ACCESS_DENIED:
       aPromise->MaybeRejectWithNotAllowedError("Permission denied");
       break;
+    case NS_ERROR_DOM_NOT_FOUND_ERR:
+      aPromise->MaybeRejectWithNotFoundError("Entry not found");
+      break;
     case NS_ERROR_DOM_FILESYSTEM_NO_MODIFICATION_ALLOWED_ERR:
       aPromise->MaybeRejectWithInvalidModificationError("Disallowed by system");
+      break;
+    case NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR:
+      aPromise->MaybeRejectWithNoModificationAllowedError(
+          "No modification allowed");
+      break;
+    case NS_ERROR_DOM_INVALID_MODIFICATION_ERR:
+      aPromise->MaybeRejectWithInvalidModificationError("Invalid modification");
       break;
     default:
       if (NS_FAILED(status)) {
@@ -183,18 +193,18 @@ void ResolveCallback(
     case NS_ERROR_FILE_ACCESS_DENIED:
       aPromise->MaybeRejectWithNotAllowedError("Permission denied");
       break;
-    case NS_ERROR_DOM_FILESYSTEM_NO_MODIFICATION_ALLOWED_ERR:
-      aPromise->MaybeRejectWithInvalidModificationError("Disallowed by system");
-      break;
     case NS_ERROR_DOM_NOT_FOUND_ERR:
       aPromise->MaybeRejectWithNotFoundError("Entry not found");
       break;
-    case NS_ERROR_DOM_INVALID_MODIFICATION_ERR:
-      aPromise->MaybeRejectWithInvalidModificationError("Invalid modification");
+    case NS_ERROR_DOM_FILESYSTEM_NO_MODIFICATION_ALLOWED_ERR:
+      aPromise->MaybeRejectWithInvalidModificationError("Disallowed by system");
       break;
     case NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR:
       aPromise->MaybeRejectWithNoModificationAllowedError(
           "No modification allowed");
+      break;
+    case NS_ERROR_DOM_INVALID_MODIFICATION_ERR:
+      aPromise->MaybeRejectWithInvalidModificationError("Invalid modification");
       break;
     default:
       if (NS_FAILED(status)) {
@@ -224,7 +234,8 @@ void ResolveCallback(FileSystemResolveResponse&& aResponse,
     return;
   }
 
-  aPromise->MaybeResolveWithUndefined();
+  // Spec says if there is no parent/child relationship, return null
+  aPromise->MaybeResolve(JS::NullHandleValue);
 }
 
 template <class TResponse, class TReturns, class... Args,
