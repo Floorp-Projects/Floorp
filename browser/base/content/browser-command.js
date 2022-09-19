@@ -490,3 +490,15 @@ function setBrowserDesign() {
    document.getElementById("select-CustomURL9").style.listStyleImage = "url(" + "http://www.google.com/s2/favicons?domain=" + Services.prefs.getStringPref("floorp.browser.sidebar2.customurl9") + ")"
    document.getElementById("select-CustomURL10").style.listStyleImage = "url(" + "http://www.google.com/s2/favicons?domain=" + Services.prefs.getStringPref("floorp.browser.sidebar2.customurl10") + ")"
  }
+
+ function changeMuteStatus () {
+  let webpanel = document.getElementById("sidebar2");
+  let muteicon = document.getElementById("sidebar2-mute");
+  if(muteicon.getAttribute("mute") == "false"){
+    webpanel.mute();
+    muteicon.setAttribute("mute", "true");
+  }else{
+    webpanel.unmute();
+    muteicon.setAttribute("mute", "false");
+  }
+ }

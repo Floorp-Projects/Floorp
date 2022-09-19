@@ -562,6 +562,20 @@ border-right: 1px solid var(--chrome-content-separator-color);
   list-style-image: url("chrome://global/skin/icons/reload.svg");
 }
 
+#sidebar2-close {
+  list-style-image: url("chrome://global/skin/icons/close.svg");
+}
+
+#sidebar2-mute {
+  scale: 1.4;
+  list-style-image: url("chrome://browser/skin/tabbrowser/tab-audio-playing-small.svg");
+}
+
+#sidebar2-mute[mute=true]{
+  scale: 1.4;
+  list-style-image: url("chrome://browser/skin/tabbrowser/tab-audio-muted-small.svg") !important;
+}
+
 #select-browser-manager {
   list-style-image: url("chrome://browser/skin/lepton/toolbox.svg");
 }

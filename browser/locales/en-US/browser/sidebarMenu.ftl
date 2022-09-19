@@ -26,6 +26,9 @@ sidebar-forward-button =
 sidebar-reload-button = 
   .tooltiptext = Reload
 
+sidebar-muteAndUnmute-button =
+  .tooltiptext = Mute/Unmute sidebar
+
 show-browser-manager-sidebar =
   .tooltiptext = Show Browser Manager Sidebar
 
