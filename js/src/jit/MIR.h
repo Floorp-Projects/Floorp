@@ -6767,6 +6767,12 @@ class MStoreElementHole
 
   bool needsNegativeIntCheck() const { return needsNegativeIntCheck_; }
 
+  AliasSet getAliasSet() const override {
+    // StoreElementHole can update the initialized length, the array length
+    // or reallocate obj->elements.
+    return AliasSet::Store(AliasSet::ObjectFields | AliasSet::Element);
+  }
+
   void collectRangeInfoPreTrunc() override;
 
   ALLOW_CLONE(MStoreElementHole)
