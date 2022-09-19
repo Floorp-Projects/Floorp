@@ -51,11 +51,19 @@ class AppLinksUseCases(
     private val launchInApp: () -> Boolean = { false },
     private val alwaysDeniedSchemes: Set<String> = ALWAYS_DENY_SCHEMES
 ) {
-    @Suppress("QueryPermissionsNeeded") // We expect our browsers to have the QUERY_ALL_PACKAGES permission
+    @Suppress(
+        "QueryPermissionsNeeded", // We expect our browsers to have the QUERY_ALL_PACKAGES permission
+        "TooGenericExceptionCaught",
+    )
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     internal fun findActivities(intent: Intent): List<ResolveInfo> {
-        return context.packageManager
-            .queryIntentActivities(intent, PackageManager.GET_RESOLVED_FILTER)
+        return try {
+            context.packageManager
+                .queryIntentActivities(intent, PackageManager.GET_RESOLVED_FILTER)
+        } catch (e: RuntimeException) {
+            Logger("AppLinksUseCases").error("failed to query activities", e)
+            emptyList()
+        }
     }
 
     private fun findDefaultActivity(intent: Intent): ResolveInfo? {
@@ -79,7 +87,7 @@ class AppLinksUseCases(
     inner class GetAppLinkRedirect internal constructor(
         private val includeHttpAppLinks: Boolean = false,
         private val ignoreDefaultBrowser: Boolean = false,
-        private val includeInstallAppFallback: Boolean = false
+        private val includeInstallAppFallback: Boolean = false,
     ) {
         operator fun invoke(url: String): AppLinkRedirect {
             val urlHash = (url + includeHttpAppLinks + ignoreDefaultBrowser + includeHttpAppLinks).hashCode()
@@ -184,7 +192,7 @@ class AppLinksUseCases(
      */
     @Suppress("TooGenericExceptionCaught")
     inner class OpenAppLinkRedirect internal constructor(
-        private val context: Context
+        private val context: Context,
     ) {
         /**
          * Tries to open an external app for the provided [appIntent]. Invokes [failedToLaunchAction]
@@ -197,7 +205,7 @@ class AppLinksUseCases(
         operator fun invoke(
             appIntent: Intent?,
             launchInNewTask: Boolean = true,
-            failedToLaunchAction: () -> Unit = {}
+            failedToLaunchAction: () -> Unit = {},
         ) {
             appIntent?.let {
                 try {
@@ -246,35 +254,35 @@ class AppLinksUseCases(
     val interceptedAppLinkRedirect: GetAppLinkRedirect by lazy {
         GetAppLinkRedirect(
             includeHttpAppLinks = false,
-            includeInstallAppFallback = true
+            includeInstallAppFallback = true,
         )
     }
     val appLinkRedirect: GetAppLinkRedirect by lazy {
         GetAppLinkRedirect(
             includeHttpAppLinks = true,
             ignoreDefaultBrowser = false,
-            includeInstallAppFallback = false
+            includeInstallAppFallback = false,
         )
     }
     val appLinkRedirectIncludeInstall: GetAppLinkRedirect by lazy {
         GetAppLinkRedirect(
             includeHttpAppLinks = true,
             ignoreDefaultBrowser = false,
-            includeInstallAppFallback = true
+            includeInstallAppFallback = true,
         )
     }
     private data class RedirectData(
         val appIntent: Intent? = null,
         val fallbackIntent: Intent? = null,
         val marketplaceIntent: Intent? = null,
-        val resolveInfo: ResolveInfo? = null
+        val resolveInfo: ResolveInfo? = null,
     )
 
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     internal data class AppLinkRedirectCache(
         var cacheTimeStamp: Long,
         var cachedUrlHash: Int,
-        var cachedAppLinkRedirect: AppLinkRedirect
+        var cachedAppLinkRedirect: AppLinkRedirect,
     )
 
     companion object {
@@ -284,7 +292,7 @@ class AppLinksUseCases(
         // list of scheme from https://searchfox.org/mozilla-central/source/netwerk/build/components.conf
         internal val ENGINE_SUPPORTED_SCHEMES: Set<String> = setOf(
             "about", "data", "file", "ftp", "http",
-            "https", "moz-extension", "moz-safe-about", "resource", "view-source", "ws", "wss", "blob"
+            "https", "moz-extension", "moz-safe-about", "resource", "view-source", "ws", "wss", "blob",
         )
 
         internal val ALWAYS_DENY_SCHEMES: Set<String> = setOf("jar", "file", "javascript", "data", "about")
