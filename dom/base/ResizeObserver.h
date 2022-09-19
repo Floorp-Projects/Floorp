@@ -71,8 +71,7 @@ class ResizeObservation final : public LinkedListElement<ResizeObservation> {
   NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(ResizeObservation)
   NS_DECL_CYCLE_COLLECTION_NATIVE_CLASS(ResizeObservation)
 
-  ResizeObservation(Element&, ResizeObserver&, ResizeObserverBoxOptions,
-                    WritingMode);
+  ResizeObservation(Element&, ResizeObserver&, ResizeObserverBoxOptions);
 
   Element* Target() const { return mTarget; }
 
