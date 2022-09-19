@@ -5263,6 +5263,8 @@ int32_t Preferences::GetType(const char* aPrefName) {
           MOZ_CRASH_UNSAFE_PRINTF(
               "Should not access the preference '%s' in the Content Processes",
               aPrefName);
+        } else {
+          return PREF_INVALID;
         }
       }
       [[fallthrough]];
@@ -6027,6 +6029,8 @@ static const PrefListEntry sDynamicPrefOverrideList[]{
     PREF_LIST_ENTRY("capability.policy.policynames"),
     PREF_LIST_ENTRY("dom.securecontext.allowlist"),
     PREF_LIST_ENTRY("extensions.foobaz"),
+    PREF_LIST_ENTRY(
+        "extensions.formautofill.creditCards.heuristics.testConfidence"),
     PREF_LIST_ENTRY("general.appname.override"),
     PREF_LIST_ENTRY("general.appversion.override"),
     PREF_LIST_ENTRY("general.buildID.override"),
