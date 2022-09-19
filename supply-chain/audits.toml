@@ -633,6 +633,11 @@ collected by Jim Blandy, a Mozilla employee, over email in July 2022:
 Dzmitry was shown, and agreed to, the 'safe-to-deploy' text.
 """
 
+[[audits.naga]]
+who = "Jim Blandy <jimb@red-bean.com>"
+criteria = "safe-to-deploy"
+delta = "0.8.0 -> 0.9.0"
+
 [[audits.new_debug_unreachable]]
 who = "Bobby Holley <bobbyholley@gmail.com>"
 criteria = "safe-to-deploy"
