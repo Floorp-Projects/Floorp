@@ -920,6 +920,7 @@ var gErrorTests = [
   { name: "bug501279.ogg", type: "audio/ogg" },
   { name: "bug603918.webm", type: "video/webm" },
   { name: "bug604067.webm", type: "video/webm" },
+  { name: "bug1535980.webm", type: "video/webm" },
   { name: "bogus.duh", type: "bogus/duh" },
 ];
 
