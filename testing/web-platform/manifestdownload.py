@@ -92,7 +92,6 @@ def taskcluster_url(logger, commits):
     repos = {
         "mozilla-central": "mozilla-central",
         "integration/autoland": "autoland",
-        "releases/mozilla-esr91": "mozilla-esr91",
         "releases/mozilla-esr102": "mozilla-esr102",
     }
     cset_url = (

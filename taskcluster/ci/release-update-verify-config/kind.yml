@@ -53,7 +53,6 @@ job-defaults:
             by-release-type:
                 beta: "72.0"
                 release(-rc)?: "72.0.2"
-                esr91: "68.0esr"
                 esr102: "68.0esr"
                 default: "default"
 
