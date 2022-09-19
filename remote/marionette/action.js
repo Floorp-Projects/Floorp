@@ -1070,12 +1070,8 @@ class PointerMoveAction extends PointerAction {
       );
     }
     const originObject = Origin.fromJSON(origin);
-    if (x !== undefined) {
-      lazy.assert.integer(x, lazy.pprint`Expected 'x' (${x}) to be an Integer`);
-    }
-    if (y !== undefined) {
-      lazy.assert.integer(y, lazy.pprint`Expected 'y' (${y}) to be an Integer`);
-    }
+    lazy.assert.integer(x, lazy.pprint`Expected 'x' (${x}) to be an Integer`);
+    lazy.assert.integer(y, lazy.pprint`Expected 'y' (${y}) to be an Integer`);
     props.duration = duration;
     props.origin = originObject;
     props.x = x;
@@ -1125,24 +1121,16 @@ class WheelScrollAction extends WheelAction {
       );
     }
     const originObject = Origin.fromJSON(origin);
-    if (x !== undefined) {
-      lazy.assert.integer(x, lazy.pprint`Expected 'x' (${x}) to be an Integer`);
-    }
-    if (y !== undefined) {
-      lazy.assert.integer(y, lazy.pprint`Expected 'y' (${y}) to be an Integer`);
-    }
-    if (deltaX !== undefined) {
-      lazy.assert.integer(
-        deltaX,
-        lazy.pprint`Expected 'deltaX' (${deltaX}) to be an Integer`
-      );
-    }
-    if (deltaY !== undefined) {
-      lazy.assert.integer(
-        deltaY,
-        lazy.pprint`Expected 'deltaY' (${deltaY}) to be an Integer`
-      );
-    }
+    lazy.assert.integer(x, lazy.pprint`Expected 'x' (${x}) to be an Integer`);
+    lazy.assert.integer(y, lazy.pprint`Expected 'y' (${y}) to be an Integer`);
+    lazy.assert.integer(
+      deltaX,
+      lazy.pprint`Expected 'deltaX' (${deltaX}) to be an Integer`
+    );
+    lazy.assert.integer(
+      deltaY,
+      lazy.pprint`Expected 'deltaY' (${deltaY}) to be an Integer`
+    );
 
     return new this(id, {
       duration,
