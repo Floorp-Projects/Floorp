@@ -15,6 +15,7 @@
   --success-box-text-color: #15141A;
 
   --colorways-figure-size: 225px;
+  --colorways-figure-margin: 0 0 1.5em;
   --colorways-grid-template-areas:
     "colorways-figure"
     "colorways-header"
@@ -148,6 +149,7 @@ body > main > aside {
     --colorways-no-collection-notice-margin: 1px;
     --colorways-no-collection-notice-width: 100%;
     --colorways-no-collection-notice-text-color: inherit;
+    --colorways-figure-margin: 0;
   }
 }
 
@@ -295,7 +297,7 @@ body > main > aside {
   justify-content: center;
   width: var(--colorways-figure-size);
   height: var(--colorways-figure-size);
-  margin: 0 0 1.5em;
+  margin: var(--colorways-figure-margin);
 }
 
 #colorways-collection-figure {
