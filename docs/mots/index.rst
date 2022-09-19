@@ -1051,7 +1051,7 @@ JavaScript engine (SpiderMonkey)
         | `André Bargull (anba) <https://people.mozilla.org/s?query=anba>`__
         | `Ted Campbell (tcampbell) <https://people.mozilla.org/s?query=tcampbell>`__
         | `Jon Coppeard (jonco) <https://people.mozilla.org/s?query=jonco>`__
-        | `sfink <https://people.mozilla.org/s?query=sfink>`__
+        | `Steve Fink (sfink) <https://people.mozilla.org/s?query=sfink>`__
         | `Tooru Fujisawa (arai) <https://people.mozilla.org/s?query=arai>`__
         | `Tom Schuster (evilpie) <https://people.mozilla.org/s?query=evilpie>`__
         | `Kannan Vijayan (djvj) <https://people.mozilla.org/s?query=djvj>`__
@@ -1947,7 +1947,7 @@ Tools for checking C++ code looking for problems at compile time, plus tools for
     * - Peer(s)
       -
         | `Nika Layzell (nika) <https://people.mozilla.org/s?query=nika>`__
-        | `sfink <https://people.mozilla.org/s?query=sfink>`__
+        | `Steve Fink (sfink) <https://people.mozilla.org/s?query=sfink>`__
         | `Jeff Muizelaar (jrmuizel) <https://people.mozilla.org/s?query=jrmuizel>`__
     * - Peer(s) Emeritus
       - Birunthan Mohanathas, Ehsan Akhgari
