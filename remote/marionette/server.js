@@ -199,6 +199,11 @@ class TCPConnection {
     this.driver = driverFactory();
   }
 
+  #log(msg) {
+    let dir = msg.origin == lazy.Message.Origin.Client ? "->" : "<-";
+    lazy.logger.debug(`${this.id} ${dir} ${msg.toString()}`);
+  }
+
   /**
    * Debugger transport callback that cleans up
    * after a connection is closed.
@@ -237,7 +242,7 @@ class TCPConnection {
     try {
       msg = lazy.Message.fromPacket(data);
       msg.origin = lazy.Message.Origin.Client;
-      this.log_(msg);
+      this.#log(msg);
     } catch (e) {
       let resp = this.createResponse(data[1]);
       resp.sendError(e);
@@ -389,7 +394,7 @@ class TCPConnection {
    *     The message to send.
    */
   sendMessage(msg) {
-    this.log_(msg);
+    this.#log(msg);
     let payload = msg.toPacket();
     this.sendRaw(payload);
   }
@@ -403,11 +408,6 @@ class TCPConnection {
    */
   sendRaw(payload) {
     this.conn.send(payload);
-  }
-
-  log_(msg) {
-    let dir = msg.origin == lazy.Message.Origin.Client ? "->" : "<-";
-    lazy.logger.debug(`${this.id} ${dir} ${msg}`);
   }
 
   toString() {

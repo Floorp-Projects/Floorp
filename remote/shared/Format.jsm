@@ -18,10 +18,15 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
 
 XPCOMUtils.defineLazyGetter(lazy, "logger", () => lazy.Log.get());
 
+XPCOMUtils.defineLazyPreferenceGetter(
+  lazy,
+  "truncateLog",
+  "remote.log.truncate",
+  false
+);
+
 const ELEMENT_NODE = 1;
 const MAX_STRING_LENGTH = 250;
-
-const PREF_TRUNCATE = "remote.log.truncate";
 
 /**
  * Pretty-print values passed to template strings.
@@ -132,7 +137,6 @@ function pprint(ss, ...values) {
  * Functions named `toJSON` or `toString` on objects will be called.
  */
 function truncate(strings, ...values) {
-  const truncateLog = Services.prefs.getBoolPref(PREF_TRUNCATE, false);
   function walk(obj) {
     const typ = Object.prototype.toString.call(obj);
 
@@ -144,7 +148,7 @@ function truncate(strings, ...values) {
         return obj;
 
       case "[object String]":
-        if (truncateLog && obj.length > MAX_STRING_LENGTH) {
+        if (lazy.truncateLog && obj.length > MAX_STRING_LENGTH) {
           let s1 = obj.substring(0, MAX_STRING_LENGTH / 2);
           let s2 = obj.substring(obj.length - MAX_STRING_LENGTH / 2);
           return `${s1} ... ${s2}`;
