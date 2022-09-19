@@ -4320,9 +4320,7 @@ void CodeGenerator::visitMegamorphicStoreSlot(LMegamorphicStoreSlot* lir) {
   masm.storeCallPointerResult(temp0);
   masm.Pop(rhs);
 
-  Label bail;
-  masm.branchIfFalseBool(temp0, &bail);
-  bailoutFrom(&bail, lir->snapshot());
+  bailoutIfFalseBool(temp0, lir->snapshot());
 }
 
 void CodeGenerator::visitMegamorphicHasProp(LMegamorphicHasProp* lir) {
@@ -4354,17 +4352,15 @@ void CodeGenerator::visitMegamorphicHasProp(LMegamorphicHasProp* lir) {
   masm.Pop(idVal);
 
   uint32_t framePushed = masm.framePushed();
-  Label bail, ok;
+  Label ok;
   masm.branchIfTrueBool(temp0, &ok);
   masm.freeStack(sizeof(Value));  // Discard result Value.
-  masm.jump(&bail);
+  bailout(lir->snapshot());
 
   masm.bind(&ok);
   masm.setFramePushed(framePushed);
   masm.unboxBoolean(Address(masm.getStackPointer(), 0), output);
   masm.freeStack(sizeof(Value));
-
-  bailoutFrom(&bail, lir->snapshot());
 }
 
 void CodeGenerator::visitGuardIsNotArrayBufferMaybeShared(
@@ -4431,7 +4427,7 @@ void CodeGenerator::visitGuardStringToIndex(LGuardStringToIndex* lir) {
   Register str = ToRegister(lir->string());
   Register output = ToRegister(lir->output());
 
-  Label bail, vmCall, done;
+  Label vmCall, done;
   masm.loadStringIndexValue(str, output, &vmCall);
   masm.jump(&done);
 
@@ -4451,12 +4447,10 @@ void CodeGenerator::visitGuardStringToIndex(LGuardStringToIndex* lir) {
     masm.PopRegsInMask(volatileRegs);
 
     // GetIndexFromString returns a negative value on failure.
-    masm.branchTest32(Assembler::Signed, output, output, &bail);
+    bailoutTest32(Assembler::Signed, output, output, lir->snapshot());
   }
 
   masm.bind(&done);
-
-  bailoutFrom(&bail, lir->snapshot());
 }
 
 void CodeGenerator::visitGuardStringToInt32(LGuardStringToInt32* lir) {
@@ -4477,7 +4471,7 @@ void CodeGenerator::visitGuardStringToDouble(LGuardStringToDouble* lir) {
   Register temp0 = ToRegister(lir->temp0());
   Register temp1 = ToRegister(lir->temp1());
 
-  Label bail, vmCall, done;
+  Label vmCall, done;
   // Use indexed value as fast path if possible.
   masm.loadStringIndexValue(str, temp0, &vmCall);
   masm.convertInt32ToDouble(temp0, output);
@@ -4514,14 +4508,12 @@ void CodeGenerator::visitGuardStringToDouble(LGuardStringToDouble* lir) {
       // flow-insensitively, and using it here would confuse the stack height
       // tracking.
       masm.addToStackPtr(Imm32(sizeof(double)));
-      masm.jump(&bail);
+      bailout(lir->snapshot());
     }
     masm.bind(&ok);
     masm.Pop(output);
   }
   masm.bind(&done);
-
-  bailoutFrom(&bail, lir->snapshot());
 }
 
 void CodeGenerator::visitGuardNoDenseElements(LGuardNoDenseElements* guard) {
@@ -4759,11 +4751,9 @@ void CodeGenerator::visitGuardFunctionKind(LGuardFunctionKind* lir) {
 void CodeGenerator::visitGuardFunctionScript(LGuardFunctionScript* lir) {
   Register function = ToRegister(lir->function());
 
-  Label bail;
   Address scriptAddr(function, JSFunction::offsetOfJitInfoOrScript());
-  masm.branchPtr(Assembler::NotEqual, scriptAddr,
-                 ImmGCPtr(lir->mir()->expected()), &bail);
-  bailoutFrom(&bail, lir->snapshot());
+  bailoutCmpPtr(Assembler::NotEqual, scriptAddr,
+                ImmGCPtr(lir->mir()->expected()), lir->snapshot());
 }
 
 // Out-of-line path to update the store buffer.
@@ -6520,7 +6510,7 @@ void CodeGenerator::emitDebugForceBailing(LInstruction* lir) {
 
   AllocatableGeneralRegisterSet regs(GeneralRegisterSet::All());
 
-  Label done, notBail, bail;
+  Label done, notBail;
   masm.branch32(Assembler::Equal, AbsoluteAddress(bailAfterCounterAddr),
                 Imm32(0), &done);
   {
@@ -6534,8 +6524,7 @@ void CodeGenerator::emitDebugForceBailing(LInstruction* lir) {
     masm.branch32(Assembler::NotEqual, temp, Imm32(0), &notBail);
     {
       masm.pop(temp);
-      masm.jump(&bail);
-      bailoutFrom(&bail, lir->snapshot());
+      bailout(lir->snapshot());
     }
     masm.bind(&notBail);
     masm.pop(temp);
@@ -7718,9 +7707,7 @@ void CodeGenerator::visitArrayLength(LArrayLength* lir) {
   masm.load32(length, output);
 
   // Bail out if the length doesn't fit in int32.
-  Label bail;
-  masm.branchTest32(Assembler::Signed, output, output, &bail);
-  bailoutFrom(&bail, lir->snapshot());
+  bailoutTest32(Assembler::Signed, output, output, lir->snapshot());
 }
 
 static void SetLengthFromIndex(MacroAssembler& masm, const LAllocation* index,
@@ -13436,9 +13423,7 @@ void CodeGenerator::visitAllocateAndStoreSlot(LAllocateAndStoreSlot* ins) {
   masm.Pop(value);
   masm.Pop(obj);
 
-  Label bail;
-  masm.branchIfFalseBool(temp0, &bail);
-  bailoutFrom(&bail, ins->snapshot());
+  bailoutIfFalseBool(temp0, ins->snapshot());
 
   masm.storeObjShape(ins->mir()->shape(), obj,
                      [](MacroAssembler& masm, const Address& addr) {
