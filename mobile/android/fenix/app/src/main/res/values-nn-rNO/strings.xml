@@ -277,6 +277,8 @@
     <!-- Onboarding home screen popup dialog, shown on top of the Jump back in section. Firefox is intentionally hardcoded. -->
     <string moz:RemovedIn="106" name="onboarding_home_screen_jump_back_contextual_hint" tools:ignore="UnusedResources">Den personlege Firefox-startsida di gjer det no lettare å fortsetje der du slutta. Finn dei siste fanene, bokmerka og søkjeresultata.</string>
 
+    <!-- Home onboarding dialog welcome screen title text. -->
+    <string name="onboarding_home_welcome_title">Velkomen til eit uavhengig internett</string>
     <!-- Home onboarding dialog sign into sync screen title text. -->
     <string name="onboarding_home_sync_title_2">Byt frå telefonen til datamaskina og tilbake</string>
     <!-- Text for the button to continue the onboarding on the home onboarding dialog. -->
@@ -595,7 +597,7 @@
 
     <!-- Library -->
     <!-- Option in Library to open Downloads page -->
-    <string name="library_downloads">Nedlastngar</string>
+    <string name="library_downloads">Nedlastingar</string>
     <!-- Option in library to open Bookmarks page -->
     <string name="library_bookmarks">Bokmerke</string>
     <!-- Option in library to open Desktop Bookmarks root page -->
