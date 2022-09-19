@@ -382,27 +382,32 @@ ToolbarKeyboardNavigator = {
 
     if (focus.getAttribute("type") == "menu") {
       focus.open = true;
-    } else {
-      // Several buttons specifically don't use command events; e.g. because
-      // they want to activate for middle click. Therefore, simulate a
-      // click event.
-      // If this button does handle command events, that won't trigger here.
-      // Command events have their own keyboard handling: keypress for enter
-      // and keyup for space. We rely on that behavior, since there's no way
-      // for us to reliably know what events a button handles.
-      focus.dispatchEvent(
-        new MouseEvent("click", {
-          bubbles: true,
-          ctrlKey: aEvent.ctrlKey,
-          altKey: aEvent.altKey,
-          shiftKey: aEvent.shiftKey,
-          metaKey: aEvent.metaKey,
-        })
-      );
+      return;
     }
-    // We deliberately don't call aEvent.preventDefault() here so that enter
-    // will trigger a command event handler if appropriate.
-    aEvent.stopPropagation();
+
+    // Several buttons specifically don't use command events; e.g. because
+    // they want to activate for middle click. Therefore, simulate a click
+    // event if we know they handle click explicitly and don't handle
+    // commands.
+    const usesClickInsteadOfCommand = (() => {
+      if (focus.tagName != "toolbarbutton") {
+        return true;
+      }
+      return !focus.hasAttribute("oncommand") && focus.hasAttribute("onclick");
+    })();
+
+    if (!usesClickInsteadOfCommand) {
+      return;
+    }
+    focus.dispatchEvent(
+      new MouseEvent("click", {
+        bubbles: true,
+        ctrlKey: aEvent.ctrlKey,
+        altKey: aEvent.altKey,
+        shiftKey: aEvent.shiftKey,
+        metaKey: aEvent.metaKey,
+      })
+    );
   },
 
   handleEvent(aEvent) {
