@@ -375,8 +375,8 @@ template <ComparisonKind Kind>
 bool StringsCompare(JSContext* cx, HandleString lhs, HandleString rhs,
                     bool* res);
 
-[[nodiscard]] bool ArrayPushDense(JSContext* cx, Handle<ArrayObject*> arr,
-                                  HandleValue v, uint32_t* length);
+[[nodiscard]] bool ArrayPushDensePure(JSContext* cx, ArrayObject* arr,
+                                      Value* v);
 JSString* ArrayJoin(JSContext* cx, HandleObject array, HandleString sep);
 [[nodiscard]] bool SetArrayLength(JSContext* cx, HandleObject obj,
                                   HandleValue value, bool strict);

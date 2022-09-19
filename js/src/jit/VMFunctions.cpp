@@ -641,8 +641,9 @@ template bool StringsCompare<ComparisonKind::LessThan>(JSContext* cx,
 template bool StringsCompare<ComparisonKind::GreaterThanOrEqual>(
     JSContext* cx, HandleString lhs, HandleString rhs, bool* res);
 
-bool ArrayPushDense(JSContext* cx, Handle<ArrayObject*> arr, HandleValue v,
-                    uint32_t* length) {
+bool ArrayPushDensePure(JSContext* cx, ArrayObject* arr, Value* v) {
+  AutoUnsafeCallWithABI unsafe;
+
   // Shape guards guarantee that the input is an extensible ArrayObject, which
   // has a writable "length" property and has no other indexed properties.
   MOZ_ASSERT(arr->isExtensible());
@@ -654,20 +655,11 @@ bool ArrayPushDense(JSContext* cx, Handle<ArrayObject*> arr, HandleValue v,
   uint32_t index = arr->length();
   MOZ_ASSERT(index < uint32_t(INT32_MAX));
 
-  DenseElementResult result =
-      arr->setOrExtendDenseElements(cx, index, v.address(), 1);
-  if (result != DenseElementResult::Incomplete) {
-    *length = index + 1;
-    return result == DenseElementResult::Success;
+  DenseElementResult result = arr->setOrExtendDenseElements(cx, index, v, 1);
+  if (result == DenseElementResult::Failure) {
+    cx->recoverFromOutOfMemory();
   }
-
-  if (!DefineDataElement(cx, arr, index, v)) {
-    return false;
-  }
-
-  arr->setLength(index + 1);
-  *length = index + 1;
-  return true;
+  return result == DenseElementResult::Success;
 }
 
 JSString* ArrayJoin(JSContext* cx, HandleObject array, HandleString sep) {
