@@ -9928,6 +9928,11 @@ var FirefoxViewHandler = {
       gBrowser.removeTab(this.tab);
     }
   },
+  onWidgetAdded(aWidgetId) {
+    if (aWidgetId === this.BUTTON_ID) {
+      this.button.removeAttribute("open");
+    }
+  },
   openTab(event) {
     if (event?.type == "mousedown" && event?.button != 0) {
       return;
