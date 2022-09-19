@@ -2,7 +2,7 @@
 ---
 repo: mozilla-central
 created_at: '2021-10-14T12:50:40.073465'
-updated_at: '2022-08-30T16:18:51.573864'
+updated_at: '2022-09-15T12:48:43.137318'
 export:
   path: ./docs/mots/index.rst
   format: rst
@@ -415,7 +415,7 @@ people:
     nick: jgraham
   - &jhirsch
     bmo_id: 446735
-    name: Jared Hirsch
+    name: ''
     nick: jhirsch
   - &jhlin
     bmo_id: 463180
@@ -423,7 +423,7 @@ people:
     nick: jhlin
   - &jib
     bmo_id: 456498
-    name: On PTO back Aug 29
+    name: Jan-Ivar Bruaroey
     nick: jib
   - &jimm
     bmo_id: 279663
@@ -1696,10 +1696,14 @@ modules:
         - Till Schneidereit
         - Nicholas Nethercote
         - Jason Orendorff
-      group: dev-tech-js-engine
-      url: http://www.mozilla.org/js/spidermonkey, http://developer.mozilla.org/en/docs/About_JavaScript
+      url: https://spidermonkey.dev/
       components:
         - Core::JavaScript Engine
+        - 'Core::JavaScript: GC'
+        - 'Core::JavaScript: Internationalization API'
+        - 'Core::JavaScript: Standard Library'
+        - 'Core::JavaScript: WebAssembly'
+        - Core::js-ctypes
     owners:
       - *jandem
     peers:
@@ -1731,8 +1735,7 @@ modules:
         - David Anderson
         - Shu-yu Guo
         - Hannes Verschore
-      group: dev-tech-js-engine-internals
-      url: http://www.mozilla.org/js/spidermonkey
+      url: https://spidermonkey.dev/
       components:
         - 'Core::JavaScript Engine: JIT'
     owners:
@@ -3626,5 +3629,5 @@ modules:
         machine_name: webextensions
     machine_name: toolkit
 hashes:
-  config: 7955ecb66aa84ff17a6e9ea50a1a51bb01da451a
-  export: f4dffa58efe06fe3150855587b0cedd039fd983e
+  config: f767334c30b08b0064bc8854a092eec96081bd64
+  export: 7889d88fe6392db858321da19d9bdb05641c9cfc
