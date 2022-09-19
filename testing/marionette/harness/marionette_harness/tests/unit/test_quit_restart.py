@@ -6,8 +6,9 @@ from __future__ import absolute_import, print_function
 
 import sys
 import unittest
+from urllib.parse import quote
 
-from six.moves.urllib.parse import quote
+import mozinfo
 
 from marionette_driver import errors
 from marionette_driver.by import By
@@ -412,6 +413,7 @@ class TestQuitRestart(MarionetteTestCase):
 
         self.marionette.start_session()
 
+    @unittest.skipIf(mozinfo.info["ccov"], "Bug 1789085 - Lost ServerSocket connection")
     def test_in_app_quit_with_callback_that_raises_an_exception(self):
         def errorneous_callback():
             raise Exception("foo")
