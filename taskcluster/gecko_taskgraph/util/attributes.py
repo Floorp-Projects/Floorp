@@ -20,7 +20,6 @@ RELEASE_PROJECTS = {
     "comm-central",
     "comm-beta",
     "comm-esr102",
-    "toolchains",
     "oak",
 }
 
