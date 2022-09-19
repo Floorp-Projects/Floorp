@@ -194,14 +194,13 @@ NS_IMPL_FRAMEARENA_HELPERS(nsSplitterFrame)
 
 nsSplitterFrame::nsSplitterFrame(ComputedStyle* aStyle,
                                  nsPresContext* aPresContext)
-    : nsBoxFrame(aStyle, aPresContext, kClassID), mInner(0) {}
+    : nsBoxFrame(aStyle, aPresContext, kClassID) {}
 
 void nsSplitterFrame::DestroyFrom(nsIFrame* aDestructRoot,
                                   PostDestroyData& aPostDestroyData) {
   if (mInner) {
     mInner->RemoveListener();
     mInner->Disconnect();
-    mInner->Release();
     mInner = nullptr;
   }
   nsBoxFrame::DestroyFrom(aDestructRoot, aPostDestroyData);
@@ -227,8 +226,6 @@ void nsSplitterFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
                            nsIFrame* aPrevInFlow) {
   MOZ_ASSERT(!mInner);
   mInner = new nsSplitterFrameInner(this);
-
-  mInner->AddRef();
 
   // determine orientation of parent, and if vertical, set orient to vertical
   // on splitter content, then re-resolve style

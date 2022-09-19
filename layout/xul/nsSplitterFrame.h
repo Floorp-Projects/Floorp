@@ -12,6 +12,7 @@
 #define nsSplitterFrame_h__
 
 #include "mozilla/Attributes.h"
+#include "mozilla/RefPtr.h"
 #include "nsBoxFrame.h"
 
 class nsSplitterFrameInner;
@@ -75,7 +76,7 @@ class nsSplitterFrame final : public nsBoxFrame {
 
  private:
   friend class nsSplitterFrameInner;
-  nsSplitterFrameInner* mInner;
+  RefPtr<nsSplitterFrameInner> mInner;
 
 };  // class nsSplitterFrame
 
