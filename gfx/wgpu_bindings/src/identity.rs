@@ -44,6 +44,7 @@ pub struct IdentityRecyclerFactory {
     free_compute_pipeline: extern "C" fn(id::ComputePipelineId, FactoryParam),
     free_query_set: extern "C" fn(id::QuerySetId, FactoryParam),
     free_buffer: extern "C" fn(id::BufferId, FactoryParam),
+    free_staging_buffer: extern "C" fn(id::StagingBufferId, FactoryParam),
     free_texture: extern "C" fn(id::TextureId, FactoryParam),
     free_texture_view: extern "C" fn(id::TextureViewId, FactoryParam),
     free_sampler: extern "C" fn(id::SamplerId, FactoryParam),
@@ -167,6 +168,16 @@ impl wgc::hub::IdentityHandlerFactory<id::BufferId> for IdentityRecyclerFactory 
             fun: self.free_buffer,
             param: self.param,
             kind: "buffer",
+        }
+    }
+}
+impl wgc::hub::IdentityHandlerFactory<id::StagingBufferId> for IdentityRecyclerFactory {
+    type Filter = IdentityRecycler<id::StagingBufferId>;
+    fn spawn(&self) -> Self::Filter {
+        IdentityRecycler {
+            fun: self.free_staging_buffer,
+            param: self.param,
+            kind: "staging buffer",
         }
     }
 }

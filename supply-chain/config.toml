@@ -723,10 +723,6 @@ criteria = "safe-to-deploy"
 version = "1.0.1"
 criteria = "safe-to-deploy"
 
-[[exemptions.inplace_it]]
-version = "0.3.3"
-criteria = "safe-to-deploy"
-
 [[exemptions.instant]]
 version = "0.1.12"
 criteria = "safe-to-deploy"

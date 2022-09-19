@@ -97,6 +97,7 @@ macro_rules! foreign_obj_type {
         impl ::std::ops::Deref for $ref_ident {
             type Target = $parent_ref;
 
+            #[inline]
             fn deref(&self) -> &$parent_ref {
                 unsafe { &*(self as *const $ref_ident as *const $parent_ref)  }
             }
@@ -255,6 +256,7 @@ where
 {
     type Target = ArrayRef<T>;
 
+    #[inline]
     fn deref(&self) -> &ArrayRef<T> {
         unsafe { mem::transmute(self.as_ptr()) }
     }

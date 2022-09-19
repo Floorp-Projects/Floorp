@@ -13,14 +13,37 @@ use thiserror::Error;
 
 use std::{borrow::Borrow, num::NonZeroU8, ops::Range, ptr::NonNull};
 
+/// The status code provided to the buffer mapping callback.
+///
+/// This is very similar to `Result<(), BufferAccessError>`, except that this is FFI-friendly.
 #[repr(C)]
 #[derive(Debug)]
 pub enum BufferMapAsyncStatus {
+    /// The Buffer is sucessfully mapped, `get_mapped_range` can be called.
+    ///
+    /// All other variants of this enum represent failures to map the buffer.
     Success,
+    /// The buffer is already mapped.
+    ///
+    /// While this is treated as an error, it does not prevent mapped range from being accessed.
+    AlreadyMapped,
+    /// Mapping was already requested.
+    MapAlreadyPending,
+    /// An unknown error.
     Error,
+    /// Mapping was aborted (by unmapping or destroying the buffer before mapping
+    /// happened).
     Aborted,
-    Unknown,
+    /// The context is Lost.
     ContextLost,
+    /// The buffer is in an invalid state.
+    Invalid,
+    /// The range isn't fully contained in the buffer.
+    InvalidRange,
+    /// The range isn't properly aligned.
+    InvalidAlignment,
+    /// Incompatible usage flags.
+    InvalidUsageFlags,
 }
 
 pub(crate) enum BufferMapState<A: hal::Api> {
@@ -56,7 +79,7 @@ unsafe impl Send for BufferMapCallbackC {}
 pub struct BufferMapCallback {
     // We wrap this so creating the enum in the C variant can be unsafe,
     // allowing our call function to be safe.
-    inner: BufferMapCallbackInner,
+    inner: Option<BufferMapCallbackInner>,
 }
 
 enum BufferMapCallbackInner {
@@ -71,33 +94,41 @@ enum BufferMapCallbackInner {
 impl BufferMapCallback {
     pub fn from_rust(callback: Box<dyn FnOnce(BufferMapAsyncStatus) + Send + 'static>) -> Self {
         Self {
-            inner: BufferMapCallbackInner::Rust { callback },
+            inner: Some(BufferMapCallbackInner::Rust { callback }),
         }
     }
 
     /// # Safety
     ///
     /// - The callback pointer must be valid to call with the provided user_data pointer.
-    /// - Both pointers must point to 'static data as the callback may happen at an unspecified time.
+    /// - Both pointers must point to valid memory until the callback is invoked, which may happen at an unspecified time.
     pub unsafe fn from_c(inner: BufferMapCallbackC) -> Self {
         Self {
-            inner: BufferMapCallbackInner::C { inner },
+            inner: Some(BufferMapCallbackInner::C { inner }),
         }
     }
 
-    pub(crate) fn call(self, status: BufferMapAsyncStatus) {
-        match self.inner {
-            BufferMapCallbackInner::Rust { callback } => callback(status),
+    pub(crate) fn call(mut self, status: BufferMapAsyncStatus) {
+        match self.inner.take() {
+            Some(BufferMapCallbackInner::Rust { callback }) => {
+                callback(status);
+            }
             // SAFETY: the contract of the call to from_c says that this unsafe is sound.
-            BufferMapCallbackInner::C { inner } => unsafe {
-                (inner.callback)(status, inner.user_data)
+            Some(BufferMapCallbackInner::C { inner }) => unsafe {
+                (inner.callback)(status, inner.user_data);
             },
+            None => {
+                panic!("Map callback invoked twice");
+            }
         }
     }
+}
 
-    pub(crate) fn call_error(self) {
-        log::error!("wgpu_buffer_map_async failed: buffer mapping is pending");
-        self.call(BufferMapAsyncStatus::Error);
+impl Drop for BufferMapCallback {
+    fn drop(&mut self) {
+        if self.inner.is_some() {
+            panic!("Map callback was leaked");
+        }
     }
 }
 
@@ -116,6 +147,8 @@ pub enum BufferAccessError {
     Destroyed,
     #[error("buffer is already mapped")]
     AlreadyMapped,
+    #[error("buffer map is pending")]
+    MapAlreadyPending,
     #[error(transparent)]
     MissingBufferUsage(#[from] MissingBufferUsageError),
     #[error("buffer is not mapped")]
@@ -139,6 +172,11 @@ pub enum BufferAccessError {
     OutOfBoundsOverrun {
         index: wgt::BufferAddress,
         max: wgt::BufferAddress,
+    },
+    #[error("buffer map range start {start} is greater than end {end}")]
+    NegativeRange {
+        start: wgt::BufferAddress,
+        end: wgt::BufferAddress,
     },
 }
 
@@ -183,6 +221,43 @@ impl<A: hal::Api> Resource for Buffer<A> {
 
     fn life_guard(&self) -> &LifeGuard {
         &self.life_guard
+    }
+}
+
+/// A temporary buffer, consumed by the command that uses it.
+///
+/// A [`StagingBuffer`] is designed for one-shot uploads of data to the GPU. It
+/// is always created mapped, and the command that uses it destroys the buffer
+/// when it is done.
+///
+/// [`StagingBuffer`]s can be created with [`queue_create_staging_buffer`] and
+/// used with [`queue_write_staging_buffer`]. They are also used internally by
+/// operations like [`queue_write_texture`] that need to upload data to the GPU,
+/// but that don't belong to any particular wgpu command buffer.
+///
+/// Used `StagingBuffer`s are accumulated in [`Device::pending_writes`], to be
+/// freed once their associated operation's queue submission has finished
+/// execution.
+///
+/// [`queue_create_staging_buffer`]: Global::queue_create_staging_buffer
+/// [`queue_write_staging_buffer`]: Global::queue_write_staging_buffer
+/// [`queue_write_texture`]: Global::queue_write_texture
+/// [`Device::pending_writes`]: crate::device::Device
+pub struct StagingBuffer<A: hal::Api> {
+    pub(crate) raw: A::Buffer,
+    pub(crate) size: wgt::BufferAddress,
+    pub(crate) is_coherent: bool,
+}
+
+impl<A: hal::Api> Resource for StagingBuffer<A> {
+    const TYPE: &'static str = "StagingBuffer";
+
+    fn life_guard(&self) -> &LifeGuard {
+        unreachable!()
+    }
+
+    fn label(&self) -> &str {
+        "<StagingBuffer>"
     }
 }
 
@@ -270,12 +345,12 @@ impl<G: GlobalIdentityHandlerFactory> Global<G> {
         id: TextureId,
         hal_texture_callback: F,
     ) {
-        profiling::scope!("as_hal", "Texture");
+        profiling::scope!("Texture::as_hal");
 
         let hub = A::hub(self);
         let mut token = Token::root();
         let (guard, _) = hub.textures.read(&mut token);
-        let texture = guard.get(id).ok();
+        let texture = guard.try_get(id).ok().flatten();
         let hal_texture = texture.map(|tex| tex.inner.as_raw().unwrap());
 
         hal_texture_callback(hal_texture);
@@ -289,13 +364,13 @@ impl<G: GlobalIdentityHandlerFactory> Global<G> {
         id: AdapterId,
         hal_adapter_callback: F,
     ) -> R {
-        profiling::scope!("as_hal", "Adapter");
+        profiling::scope!("Adapter::as_hal");
 
         let hub = A::hub(self);
         let mut token = Token::root();
 
         let (guard, _) = hub.adapters.read(&mut token);
-        let adapter = guard.get(id).ok();
+        let adapter = guard.try_get(id).ok().flatten();
         let hal_adapter = adapter.map(|adapter| &adapter.raw.adapter);
 
         hal_adapter_callback(hal_adapter)
@@ -309,12 +384,12 @@ impl<G: GlobalIdentityHandlerFactory> Global<G> {
         id: DeviceId,
         hal_device_callback: F,
     ) -> R {
-        profiling::scope!("as_hal", "Device");
+        profiling::scope!("Device::as_hal");
 
         let hub = A::hub(self);
         let mut token = Token::root();
         let (guard, _) = hub.devices.read(&mut token);
-        let device = guard.get(id).ok();
+        let device = guard.try_get(id).ok().flatten();
         let hal_device = device.map(|device| &device.raw);
 
         hal_device_callback(hal_device)
@@ -372,8 +447,11 @@ pub enum CreateTextureError {
         "Texture descriptor mip level count {requested} is invalid, maximum allowed is {maximum}"
     )]
     InvalidMipLevelCount { requested: u32, maximum: u32 },
-    #[error("Texture usages {0:?} are not allowed on a texture of type {1:?}")]
-    InvalidFormatUsages(wgt::TextureUsages, wgt::TextureFormat),
+    #[error(
+        "Texture usages {0:?} are not allowed on a texture of type {1:?}{}",
+        if *.2 { " due to downlevel restrictions" } else { "" }
+    )]
+    InvalidFormatUsages(wgt::TextureUsages, wgt::TextureFormat, bool),
     #[error("Texture usages {0:?} are not allowed on a texture of dimensions {1:?}")]
     InvalidDimensionUsages(wgt::TextureUsages, wgt::TextureDimension),
     #[error("Texture usage STORAGE_BINDING is not allowed for multisampled textures")]
@@ -401,7 +479,7 @@ impl<A: hal::Api> Borrow<TextureSelector> for Texture<A> {
 }
 
 /// Describes a [`TextureView`].
-#[derive(Clone, Debug, Default, PartialEq)]
+#[derive(Clone, Debug, Default, Eq, PartialEq)]
 #[cfg_attr(feature = "trace", derive(serde::Serialize))]
 #[cfg_attr(feature = "replay", derive(serde::Deserialize), serde(default))]
 pub struct TextureViewDescriptor<'a> {
