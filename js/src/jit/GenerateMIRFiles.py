@@ -128,6 +128,7 @@ def gen_mir_class(
     folds_to,
     congruent_to,
     alias_set,
+    might_alias,
     possibly_calls,
     compute_range,
     can_recover,
@@ -236,6 +237,8 @@ def gen_mir_class(
                 "  AliasSet getAliasSet() const override { "
                 "return AliasSet::None(); }\\\n"
             )
+    if might_alias:
+        code += "  AliasType mightAlias(const MDefinition* store) const override;\\\n"
     if folds_to:
         code += "  MDefinition* foldsTo(TempAllocator& alloc) override;\\\n"
     if congruent_to:
@@ -342,6 +345,9 @@ def generate_mir_header(c_out, yaml_path):
             alias_set = op.get("alias_set", None)
             assert alias_set is None or True or isinstance(alias_set, str)
 
+            might_alias = op.get("might_alias", None)
+            assert might_alias is None or might_alias == "custom"
+
             possibly_calls = op.get("possibly_calls", None)
             assert possibly_calls is None or True or possibly_calls == "custom"
 
@@ -365,6 +371,7 @@ def generate_mir_header(c_out, yaml_path):
                 folds_to,
                 congruent_to,
                 alias_set,
+                might_alias,
                 possibly_calls,
                 compute_range,
                 can_recover,

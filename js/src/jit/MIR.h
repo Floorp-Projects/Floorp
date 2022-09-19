@@ -9007,7 +9007,8 @@ class MObjectStaticProto : public MUnaryInstruction,
   }
   AliasType mightAlias(const MDefinition* def) const override {
     // These instructions never modify the [[Prototype]].
-    if (def->isAddAndStoreSlot() || def->isAllocateAndStoreSlot()) {
+    if (def->isAddAndStoreSlot() || def->isAllocateAndStoreSlot() ||
+        def->isStoreElementHole() || def->isArrayPush()) {
       return AliasType::NoAlias;
     }
     return AliasType::MayAlias;

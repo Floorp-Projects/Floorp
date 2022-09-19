@@ -5978,6 +5978,14 @@ AliasSet MSlots::getAliasSet() const {
   return AliasSet::Load(AliasSet::ObjectFields);
 }
 
+MDefinition::AliasType MSlots::mightAlias(const MDefinition* store) const {
+  // ArrayPush only modifies object elements, but not object slots.
+  if (store->isArrayPush()) {
+    return AliasType::NoAlias;
+  }
+  return MInstruction::mightAlias(store);
+}
+
 AliasSet MElements::getAliasSet() const {
   return AliasSet::Load(AliasSet::ObjectFields);
 }
@@ -6223,6 +6231,14 @@ bool MGuardShape::congruentTo(const MDefinition* ins) const {
 
 AliasSet MGuardShape::getAliasSet() const {
   return AliasSet::Load(AliasSet::ObjectFields);
+}
+
+MDefinition::AliasType MGuardShape::mightAlias(const MDefinition* store) const {
+  // These instructions only modify object elements, but not the shape.
+  if (store->isStoreElementHole() || store->isArrayPush()) {
+    return AliasType::NoAlias;
+  }
+  return MInstruction::mightAlias(store);
 }
 
 MDefinition* MGuardIsNotProxy::foldsTo(TempAllocator& alloc) {
