@@ -721,7 +721,9 @@ namespace jit {
 
 def generate_atomics_header(c_out):
     contents = ""
-    if cpu_arch in ("x86", "x86_64", "arm", "aarch64"):
+    if cpu_arch in ("x86", "x86_64", "aarch64") or (
+        cpu_arch == "arm" and int(buildconfig.substs["ARM_ARCH"]) >= 7
+    ):
         contents += "#define JS_HAVE_GENERATED_ATOMIC_OPS 1"
 
         # `fence` performs a full memory barrier.
