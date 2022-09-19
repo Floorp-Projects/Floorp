@@ -1065,6 +1065,8 @@ JavaScript engine (SpiderMonkey)
         | `Luke Wagner (luke) <https://people.mozilla.org/s?query=luke>`__
         | `Dan Gohman (sunfish) <https://people.mozilla.org/s?query=sunfish>`__
         | `Bobby Holley (bholley) <https://people.mozilla.org/s?query=bholley>`__
+    * - Owner(s) Emeritus
+      - Brendan Eich, Dave Mandelin, Luke Wagner, Jason Orendorff
     * - Peer(s) Emeritus
       - Brendan Eich, Hannes Verschore, Blake Kaplan, Bill McCloskey, Shu-yu Guo, Niko Matsakis, Eddy Bruel, David Anderson, Igor Bukanov, Andreas Gal, Eric Faust, Ashley Hauck, Brian Hackett, Till Schneidereit, Nicholas Nethercote, Jason Orendorff
     * - Includes

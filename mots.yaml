@@ -2,7 +2,7 @@
 ---
 repo: mozilla-central
 created_at: '2021-10-14T12:50:40.073465'
-updated_at: '2022-09-15T12:48:43.137318'
+updated_at: '2022-09-15T13:02:58.399756'
 export:
   path: ./docs/mots/index.rst
   format: rst
@@ -1679,6 +1679,11 @@ modules:
     includes:
       - js/src/**/*
     meta:
+      owners_emeritus:
+        - Brendan Eich
+        - Dave Mandelin
+        - Luke Wagner
+        - Jason Orendorff
       peers_emeritus:
         - Brendan Eich
         - Hannes Verschore
@@ -3629,5 +3634,5 @@ modules:
         machine_name: webextensions
     machine_name: toolkit
 hashes:
-  config: f767334c30b08b0064bc8854a092eec96081bd64
-  export: 7889d88fe6392db858321da19d9bdb05641c9cfc
+  config: 799c4025730250056080d7fc391d9c0e3c029010
+  export: d881bdea663fe2286ed99e297ed9daf1fecfdaa6
