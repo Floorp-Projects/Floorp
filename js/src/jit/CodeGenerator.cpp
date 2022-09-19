@@ -1316,7 +1316,7 @@ void CodeGenerator::emitOOLTestObject(Register objreg,
   masm.setupAlignedABICall();
   masm.passABIArg(objreg);
   masm.callWithABI<Fn, js::EmulatesUndefined>();
-  masm.storeCallBoolResult(scratch);
+  masm.storeCallPointerResult(scratch);
   restoreVolatile(scratch);
 
   masm.branchIfTrueBool(scratch, ifEmulatesUndefined);
@@ -13431,7 +13431,7 @@ void CodeGenerator::visitAllocateAndStoreSlot(LAllocateAndStoreSlot* ins) {
   masm.move32(Imm32(ins->mir()->numNewSlots()), temp1);
   masm.passABIArg(temp1);
   masm.callWithABI<Fn, NativeObject::growSlotsPure>();
-  masm.storeCallBoolResult(temp0);
+  masm.storeCallPointerResult(temp0);
 
   masm.Pop(value);
   masm.Pop(obj);
