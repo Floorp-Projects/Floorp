@@ -1070,12 +1070,10 @@ JavaScript engine (SpiderMonkey)
     * - Includes
       -
         | `js/src/\*\*/\* <https://searchfox.org/mozilla-central/search?q=&path=js/src/\*\*/\*>`__
-    * - Group
-      - dev-tech-js-engine
     * - URL
-      - http://www.mozilla.org/js/spidermonkey, http://developer.mozilla.org/en/docs/About_JavaScript
+      - https://spidermonkey.dev/
     * - Bugzilla Components
-      - Core::JavaScript Engine
+      - Core::JavaScript Engine, Core::JavaScript: GC, Core::JavaScript: Internationalization API, Core::JavaScript: Standard Library, Core::JavaScript: WebAssembly, Core::js-ctypes
 
 Core: JavaScript JIT
 ~~~~~~~~~~~~~~~~~~~~
@@ -1108,10 +1106,8 @@ JavaScript engine's JIT compilers (IonMonkey, Baseline)
     * - Includes
       -
         | `js/src/jit/\*\*/\* <https://searchfox.org/mozilla-central/search?q=&path=js/src/jit/\*\*/\*>`__
-    * - Group
-      - dev-tech-js-engine-internals
     * - URL
-      - http://www.mozilla.org/js/spidermonkey
+      - https://spidermonkey.dev/
     * - Bugzilla Components
       - Core::JavaScript Engine: JIT
 
@@ -2312,7 +2308,7 @@ Submodule of WebRTC responsible for access to media input devices (microphones, 
         | `Randell Jesup (jesup) <https://people.mozilla.org/s?query=jesup>`__
     * - Peer(s)
       -
-        | `On PTO back Aug 29 (jib) <https://people.mozilla.org/s?query=jib>`__
+        | `Jan-Ivar Bruaroey (jib) <https://people.mozilla.org/s?query=jib>`__
         | `Dan Minor (dminor) <https://people.mozilla.org/s?query=dminor>`__
         | `Andreas Pehrson (pehrsons) <https://people.mozilla.org/s?query=pehrsons>`__
     * - Peer(s) Emeritus
@@ -3160,7 +3156,7 @@ Code relating to Screenshots functionality
         | `Sam Foster (sfoster) <https://people.mozilla.org/s?query=sfoster>`__
     * - Peer(s)
       -
-        | `Jared Hirsch (jhirsch) <https://people.mozilla.org/s?query=jhirsch>`__
+        | `jhirsch <https://people.mozilla.org/s?query=jhirsch>`__
         | `Niklas Baumgardner (niklas) <https://people.mozilla.org/s?query=niklas>`__
     * - Owner(s) Emeritus
       - Emma Malysz, Ian Bicking
