@@ -1877,11 +1877,18 @@
 # Prefs starting with "cookiebanners."
 #---------------------------------------------------------------------------
 
-# Controls the cookie banner handling mode.
+# Controls the cookie banner handling mode in normal browsing.
 # 0: Disables all cookie banner handling.
 # 1: Reject-all if possible, otherwise do nothing.
 # 2: Reject-all if possible, otherwise accept-all.
 - name: cookiebanners.service.mode
+  type: uint32_t
+  value: 0
+  mirror: always
+
+# Controls the cookie banner handling mode in private browsing. Same mode
+# options as the normal browsing pref above.
+- name: cookiebanners.service.mode.privateBrowsing
   type: uint32_t
   value: 0
   mirror: always
