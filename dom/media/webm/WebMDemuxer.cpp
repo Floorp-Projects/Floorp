@@ -382,7 +382,9 @@ nsresult WebMDemuxer::ReadMetadata() {
       if (r == -1) {
         return NS_ERROR_FAILURE;
       }
-      if (params.rate > AudioInfo::MAX_RATE ||
+      if (params.rate >
+              static_cast<decltype(params.rate)>(AudioInfo::MAX_RATE) ||
+          params.rate <= static_cast<decltype(params.rate)>(0) ||
           params.channels > AudioConfig::ChannelLayout::MAX_CHANNELS) {
         return NS_ERROR_DOM_MEDIA_METADATA_ERR;
       }
