@@ -843,8 +843,9 @@ class nsWindow final : public nsBaseWidget {
       nsTArray<nsIWidget*>* aLayoutWidgetHierarchy);
   void CloseAllPopupsBeforeRemotePopup();
   void WaylandPopupHideClosedPopups();
-  void WaylandPopupMove();
   void WaylandPopupPrepareForMove();
+  void WaylandPopupMoveImpl();
+  void WaylandPopupMovePlain(int aX, int aY);
   bool WaylandPopupRemoveNegativePosition(int* aX = nullptr, int* aY = nullptr);
   bool WaylandPopupCheckAndGetAnchor(GdkRectangle* aPopupAnchor,
                                      GdkPoint* aOffset);
