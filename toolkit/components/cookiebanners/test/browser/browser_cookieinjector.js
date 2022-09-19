@@ -118,9 +118,12 @@ async function visitTestSites(urls = [ORIGIN_A, ORIGIN_B]) {
 add_setup(async function() {
   registerCleanupFunction(() => {
     Services.prefs.clearUserPref("cookiebanners.service.mode");
+    Services.prefs.clearUserPref("cookiebanners.service.mode.privateBrowsing");
     if (
       Services.prefs.getIntPref("cookiebanners.service.mode") !=
-      Ci.nsICookieBannerService.MODE_DISABLED
+        Ci.nsICookieBannerService.MODE_DISABLED ||
+      Services.prefs.getIntPref("cookiebanners.service.mode.privateBrowsing") !=
+        Ci.nsICookieBannerService.MODE_DISABLED
     ) {
       // Restore original rules.
       Services.cookieBanners.resetRules(true);
@@ -353,7 +356,10 @@ add_task(async function test_cookie_header_and_document() {
 add_task(async function test_pbm() {
   await SpecialPowers.pushPrefEnv({
     set: [
-      ["cookiebanners.service.mode", Ci.nsICookieBannerService.MODE_REJECT],
+      [
+        "cookiebanners.service.mode.privateBrowsing",
+        Ci.nsICookieBannerService.MODE_REJECT,
+      ],
       ["cookiebanners.cookieInjector.enabled", true],
     ],
   });
