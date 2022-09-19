@@ -133,19 +133,20 @@ uint64_t FileSystemSyncAccessHandle::Read(
   // read directly from filehandle, blocking
 
   // Handle seek before read ('at')
+  uint64_t at = 0;  // Spec says default for at is 0 (2.6)
   if (aOptions.mAt.WasPassed()) {
-    uint64_t at = aOptions.mAt.Value();
-    LOG(("%p: Seeking to %" PRIu64, fileDesc, at));
-    int64_t where = PR_Seek64(fileDesc, (PROffset64)at, PR_SEEK_SET);
-    if (where == -1) {
-      LOG(("Read at %" PRIu64 " failed to seek (errno %d)", at, errno));
-      return 0;
-    }
-    if (where != (int64_t)at) {
-      LOG(("Read at %" PRIu64 " failed to seek (%" PRId64 " instead)", at,
-           where));
-      return 0;
-    }
+    at = aOptions.mAt.Value();
+  }
+  LOG(("%p: Seeking to %" PRIu64, fileDesc, at));
+  int64_t where = PR_Seek64(fileDesc, (PROffset64)at, PR_SEEK_SET);
+  if (where == -1) {
+    LOG(("Read at %" PRIu64 " failed to seek (errno %d)", at, errno));
+    return 0;
+  }
+  if (where != (int64_t)at) {
+    LOG(("Read at %" PRIu64 " failed to seek (%" PRId64 " instead)", at,
+         where));
+    return 0;
   }
 
   uint8_t* data;
@@ -195,19 +196,20 @@ uint64_t FileSystemSyncAccessHandle::Write(
   // Write directly from filehandle, blocking
 
   // Handle seek before write ('at')
+  uint64_t at = 0;  // Spec says default for at is 0 (2.6)
   if (aOptions.mAt.WasPassed()) {
-    uint64_t at = aOptions.mAt.Value();
-    LOG(("%p: Seeking to %" PRIu64, fileDesc, at));
-    int64_t where = PR_Seek64(fileDesc, (PROffset64)at, PR_SEEK_SET);
-    if (where == -1) {
-      LOG(("Write at %" PRIu64 " failed to seek (errno %d)", at, errno));
-      return 0;
-    }
-    if (where != (int64_t)at) {
-      LOG(("Write at %" PRIu64 " failed to seek (%" PRId64 " instead)", at,
-           where));
-      return 0;
-    }
+    at = aOptions.mAt.Value();
+  }
+  LOG(("%p: Seeking to %" PRIu64, fileDesc, at));
+  int64_t where = PR_Seek64(fileDesc, (PROffset64)at, PR_SEEK_SET);
+  if (where == -1) {
+    LOG(("Write at %" PRIu64 " failed to seek (errno %d)", at, errno));
+    return 0;
+  }
+  if (where != (int64_t)at) {
+    LOG(("Write at %" PRIu64 " failed to seek (%" PRId64 " instead)", at,
+         where));
+    return 0;
   }
 
   // if we seek past the end of the file and write, it implicitly extends it
