@@ -846,6 +846,12 @@ The core logic is very simple, and acts as an abstraction trait for `Cell<T>`
 and `AtomicT`.
 """
 
+[[audits.raw-window-handle]]
+who = "Jim Blandy <jimb@red-bean.com>"
+criteria = "safe-to-deploy"
+version = "0.5.0"
+notes = "I looked through all the sources of the v0.5.0 crate."
+
 [[audits.rayon]]
 who = "Josh Stone <jistone@redhat.com>"
 criteria = "safe-to-deploy"
