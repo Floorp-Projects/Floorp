@@ -21,7 +21,6 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
   error: "chrome://remote/content/shared/webdriver/Errors.jsm",
   Log: "chrome://remote/content/shared/Log.jsm",
   RemoteAgent: "chrome://remote/content/components/RemoteAgent.jsm",
-  truncate: "chrome://remote/content/shared/Format.jsm",
 });
 
 XPCOMUtils.defineLazyGetter(lazy, "logger", () =>
@@ -74,21 +73,6 @@ class WebDriverBiDiConnection extends WebSocketConnection {
 
     this.session.removeConnection(this);
     this.session = null;
-  }
-
-  /**
-   * Send the JSON-serializable object to the WebDriver BiDi client.
-   *
-   * @param {Object} data
-   *     The object to be sent.
-   */
-  send(data) {
-    const payload = JSON.stringify(data, null, lazy.Log.verbose ? "\t" : null);
-    lazy.logger.debug(
-      lazy.truncate`${this.session?.id || "no session"} <- ${payload}`
-    );
-
-    super.send(data);
   }
 
   /**
@@ -158,14 +142,7 @@ class WebDriverBiDiConnection extends WebSocketConnection {
    *        JSON-serializable object sent by the client
    */
   async onPacket(packet) {
-    const payload = JSON.stringify(
-      packet,
-      null,
-      lazy.Log.verbose ? "\t" : null
-    );
-    lazy.logger.debug(
-      lazy.truncate`${this.session?.id || "no session"} -> ${payload}`
-    );
+    super.onPacket(packet);
 
     const { id, method, params } = packet;
 
