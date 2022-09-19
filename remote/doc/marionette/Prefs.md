@@ -1,9 +1,10 @@
 Preferences
 ===========
 
-There are a couple of preferences associated with the Gecko remote
-protocol:
+There are a couple of [Remote Agent preferences] associated with the Gecko remote
+protocol. Those listed below are additional ones uniquely used for Marionette.
 
+[Remote Agent preferences]: /remote/Prefs.md
 
 `marionette.debugging.clicktostart`
 -----------------------------------
@@ -12,23 +13,6 @@ Delay server startup until a modal dialogue has been clicked to
 allow time for user to set breakpoints in the [Browser Toolbox].
 
 [Browser Toolbox]: /devtools-user/browser_toolbox/index.rst
-
-
-`marionette.log.level` (deprecated)
------------------------------------
-
-This preference used to control the verbosity of the Marionette specific logger.
-Marionette is now using the shared Remote logger, please see `remote.log.level`
-in the [Remote Agent Preferences] documentation.
-
-
-`marionette.log.truncate` (deprecated)
--------------------------
-
-This preference used to control whether long messages were truncated or not.
-Marionette is now using the shared Remote format module, please see `remote.log.truncate`
-in the [Remote Agent Preferences] documentation.
-
 
 `marionette.port`
 -----------------
@@ -41,6 +25,3 @@ port, which can be useful when running multiple Marionette servers
 on the same system.  The effective port is written to the user
 preference file when the server has started and is also logged to
 stdout.
-
-[Remote Agent Preferences]: /remote/Prefs.md
-
