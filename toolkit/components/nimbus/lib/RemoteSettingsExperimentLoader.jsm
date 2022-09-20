@@ -515,7 +515,7 @@ class _RemoteSettingsExperimentLoader {
       description: manifest.description,
       type: "object",
       properties: {},
-      additionalProperties: false,
+      additionalProperties: true,
     };
 
     for (const [varName, desc] of Object.entries(manifest.variables)) {

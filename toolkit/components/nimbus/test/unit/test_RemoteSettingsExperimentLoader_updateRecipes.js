@@ -379,7 +379,7 @@ add_task(async function test_updateRecipes_simpleFeatureInvalidAfterUpdate() {
         type: "boolean",
       },
     },
-    additionalProperties: false,
+    additionalProperties: true,
   };
 
   sinon.spy(loader, "updateRecipes");
