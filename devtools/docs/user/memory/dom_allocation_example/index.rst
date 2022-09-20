@@ -4,7 +4,7 @@ DOM allocation example
 
 This article describes a very simple web page that we'll use to illustrate some features of the Memory tool.
 
-You can try out the site at https://mdn.github.io/performance-scenarios/dom-allocs/alloc.html.
+You can try out the site at https://firefox-devtools.github.io/performance-scenarios/dom-allocs/alloc.html.
 
 It just contains a script that creates a large number of DOM nodes:
 

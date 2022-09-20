@@ -25,7 +25,7 @@ To enable the debugger to work with a source map, you must:
   <br/>
   <br/>
 
-In the video above we load https://mdn.github.io/devtools-examples/sourcemaps-in-console/index.html. This page loads a source called "main.js" that was originally written in CoffeeScript and compiled to JavaScript. The compiled source contains a comment like this, that points to a source map:
+In the video above we load https://firefox-devtools.github.io/devtools-examples/sourcemaps-in-console/index.html. This page loads a source called "main.js" that was originally written in CoffeeScript and compiled to JavaScript. The compiled source contains a comment like this, that points to a source map:
 
 .. code-block:: JavaScript
 

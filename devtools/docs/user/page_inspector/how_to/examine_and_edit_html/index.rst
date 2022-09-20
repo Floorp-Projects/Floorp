@@ -178,7 +178,7 @@ Since Firefox 52, the Inspector displays these whitespace nodes, so you can see 
   :class: center
 
 
-To see this in action, see the demo at https://mdn.github.io/devtools-examples/whitespace-only-demo/index.html.
+To see this in action, see the demo at https://firefox-devtools.github.io/devtools-examples/whitespace-only-demo/index.html.
 
 
 Shadow roots
