@@ -47,19 +47,6 @@ pref("floorp.enable.auto.restart", false);
 
 pref("floorp.browser.rest.mode", false);// 休止モード
 
-pref("floorp.browser.sidebar.right", true);// サイドバーの右側を表示
-pref("floorp.browser.sidebar.enable", true);// サイドバーを表示
-pref("floorp.browser.sidebar2.mode", 0);// サイドバーのモード
-pref("floorp.browser.sidebar2.customurl1", "https://freasearch.org");// サイドバーのカスタムURL
-pref("floorp.browser.sidebar2.customurl2", "https://translate.google.com");// サイドバーのカスタムURL
-pref("floorp.browser.sidebar2.customurl3", "");// サイドバーのカスタムURL
-pref("floorp.browser.sidebar2.customurl4", "");// サイドバーのカスタムURL
-pref("floorp.browser.sidebar2.customurl5", "");// サイドバーのカスタムURL
-pref("floorp.browser.sidebar2.customurl6", "");// サイドバーのカスタムURL
-pref("floorp.browser.sidebar2.customurl7", "");// サイドバーのカスタムURL
-pref("floorp.browser.sidebar2.customurl8", "");// サイドバーのカスタムURL
-pref("floorp.browser.sidebar2.customurl9", "");// サイドバーのカスタムURL
-pref("floorp.browser.sidebar2.customurl10", "");// サイドバーのカスタムURL
 
 pref("browser.disable.nt.image.gb", false);// 画像を表示しない
 
@@ -81,6 +68,29 @@ pref("browser.newtabpage.activity-stream.improvesearch.handoffToAwesomebar", fal
 pref("floorp.memory.free.button", true);
 pref("floorp.entable.deepl.translate", false);
 pref("floorp.multitab.bottommode", false);
+
+pref("floorp.browser.sidebar.right", true);// サイドバーの右側を表示
+pref("floorp.browser.sidebar.enable", true);// サイドバーを表示
+pref("floorp.browser.sidebar2.mode", 0);// サイドバーのモード
+pref("floorp.browser.sidebar2.customurl1", "https://freasearch.org");
+pref("floorp.browser.sidebar2.customurl2", "https://translate.google.com");
+pref("floorp.browser.sidebar2.customurl3", "");
+pref("floorp.browser.sidebar2.customurl4", "");
+pref("floorp.browser.sidebar2.customurl5", "");
+pref("floorp.browser.sidebar2.customurl6", "");
+pref("floorp.browser.sidebar2.customurl7", "");
+pref("floorp.browser.sidebar2.customurl8", "");
+pref("floorp.browser.sidebar2.customurl9", "");
+pref("floorp.browser.sidebar2.customurl10", "");
+pref("floorp.browser.sidebar2.customurl11", "");
+pref("floorp.browser.sidebar2.customurl12", "");
+pref("floorp.browser.sidebar2.customurl13", "");
+pref("floorp.browser.sidebar2.customurl14", "");
+pref("floorp.browser.sidebar2.customurl15", "");
+pref("floorp.browser.sidebar2.customurl16", "");
+pref("floorp.browser.sidebar2.customurl17", "");
+pref("floorp.browser.sidebar2.customurl18", "");
+pref("floorp.browser.sidebar2.customurl19", "");
 /*----------------------------------------------------------------------------------------------------------------------------------*/
 
 //検索エンジン

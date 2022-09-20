@@ -223,6 +223,56 @@ Services.prefs.addObserver("floorp.browser.sidebar.right", function(){
     setCustomURL10Favicon();
     setSidebarIconView();
  })
+  Services.prefs.addObserver("floorp.browser.sidebar2.customurl11", function(){
+    setSidebarMode();
+    setCustomURL11Favicon();
+    setSidebarIconView();
+ })
+  Services.prefs.addObserver("floorp.browser.sidebar2.customurl12", function(){
+    setSidebarMode();
+    setCustomURL12Favicon();
+    setSidebarIconView();
+ })
+  Services.prefs.addObserver("floorp.browser.sidebar2.customurl13", function(){
+    setSidebarMode();
+    setCustomURL13Favicon();
+    setSidebarIconView();
+  })
+  Services.prefs.addObserver("floorp.browser.sidebar2.customurl14", function(){
+    setSidebarMode();
+    setCustomURL14Favicon();
+    setSidebarIconView();
+  })
+  Services.prefs.addObserver("floorp.browser.sidebar2.customurl15", function(){
+    setSidebarMode();
+    setCustomURL15Favicon();
+    setSidebarIconView();
+  })
+  Services.prefs.addObserver("floorp.browser.sidebar2.customurl16", function(){
+    setSidebarMode();
+    setCustomURL16Favicon();
+    setSidebarIconView();
+  })
+  Services.prefs.addObserver("floorp.browser.sidebar2.customurl17", function(){
+    setSidebarMode();
+    setCustomURL17Favicon();
+    setSidebarIconView();
+  })
+  Services.prefs.addObserver("floorp.browser.sidebar2.customurl18", function(){
+    setSidebarMode();
+    setCustomURL18Favicon();
+    setSidebarIconView();
+  })
+  Services.prefs.addObserver("floorp.browser.sidebar2.customurl19", function(){
+    setSidebarMode();
+    setCustomURL19Favicon();
+    setSidebarIconView();
+  })
+  Services.prefs.addObserver("floorp.browser.sidebar2.customurl20", function(){
+    setSidebarMode();
+    setCustomURL20Favicon();
+    setSidebarIconView();
+  })
 };
 
 setSidebarIconView();

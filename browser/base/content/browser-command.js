@@ -157,6 +157,46 @@ function setSidebarMode() {
         webpanel.setAttribute("src", Services.prefs.getStringPref("floorp.browser.sidebar2.customurl10", undefined));
         changeBrowserManagerSidebarConfigShowWebpanels();
         break;
+      case 15:
+        webpanel.setAttribute("src", Services.prefs.getStringPref("floorp.browser.sidebar2.customurl11", undefined));
+        changeBrowserManagerSidebarConfigShowWebpanels();
+        break; 
+      case 16:
+        webpanel.setAttribute("src", Services.prefs.getStringPref("floorp.browser.sidebar2.customurl12", undefined));
+        changeBrowserManagerSidebarConfigShowWebpanels();
+        break; 
+      case 17:
+        webpanel.setAttribute("src", Services.prefs.getStringPref("floorp.browser.sidebar2.customurl13", undefined));
+        changeBrowserManagerSidebarConfigShowWebpanels();
+        break; 
+      case 18:
+        webpanel.setAttribute("src", Services.prefs.getStringPref("floorp.browser.sidebar2.customurl14", undefined));
+        changeBrowserManagerSidebarConfigShowWebpanels();
+        break; 
+      case 19:
+        webpanel.setAttribute("src", Services.prefs.getStringPref("floorp.browser.sidebar2.customurl15", undefined));
+        changeBrowserManagerSidebarConfigShowWebpanels();
+        break; 
+      case 20:
+        webpanel.setAttribute("src", Services.prefs.getStringPref("floorp.browser.sidebar2.customurl16", undefined));
+        changeBrowserManagerSidebarConfigShowWebpanels();
+        break; 
+      case 21:
+        webpanel.setAttribute("src", Services.prefs.getStringPref("floorp.browser.sidebar2.customurl17", undefined));
+        changeBrowserManagerSidebarConfigShowWebpanels();
+        break;
+      case 22:
+        webpanel.setAttribute("src", Services.prefs.getStringPref("floorp.browser.sidebar2.customurl18", undefined));
+        changeBrowserManagerSidebarConfigShowWebpanels();
+        break; 
+      case 23:
+        webpanel.setAttribute("src", Services.prefs.getStringPref("floorp.browser.sidebar2.customurl19", undefined));
+        changeBrowserManagerSidebarConfigShowWebpanels();
+        break; 
+      case 24:
+        webpanel.setAttribute("src", Services.prefs.getStringPref("floorp.browser.sidebar2.customurl20", undefined));
+        changeBrowserManagerSidebarConfigShowWebpanels();
+        break;
     }
   }
 }
@@ -226,7 +266,46 @@ function setCustomURL10Favicon() {
   document.getElementById("select-CustomURL10").style.listStyleImage =
     "url(" + "http://www.google.com/s2/favicons?domain=" + Services.prefs.getStringPref("floorp.browser.sidebar2.customurl10") + ")"
 }
-
+function setCustomURL11Favicon() {
+  document.getElementById("select-CustomURL11").style.listStyleImage =
+    "url(" + "http://www.google.com/s2/favicons?domain=" + Services.prefs.getStringPref("floorp.browser.sidebar2.customurl11") + ")"
+}
+function setCustomURL12Favicon() {
+  document.getElementById("select-CustomURL12").style.listStyleImage =
+    "url(" + "http://www.google.com/s2/favicons?domain=" + Services.prefs.getStringPref("floorp.browser.sidebar2.customurl12") + ")"
+}
+function setCustomURL13Favicon() {
+  document.getElementById("select-CustomURL13").style.listStyleImage =
+    "url(" + "http://www.google.com/s2/favicons?domain=" + Services.prefs.getStringPref("floorp.browser.sidebar2.customurl13") + ")"
+}
+function setCustomURL14Favicon() {
+  document.getElementById("select-CustomURL14").style.listStyleImage =
+    "url(" + "http://www.google.com/s2/favicons?domain=" + Services.prefs.getStringPref("floorp.browser.sidebar2.customurl14") + ")"
+}
+function setCustomURL15Favicon() {
+  document.getElementById("select-CustomURL15").style.listStyleImage =
+    "url(" + "http://www.google.com/s2/favicons?domain=" + Services.prefs.getStringPref("floorp.browser.sidebar2.customurl15") + ")"
+}
+function setCustomURL16Favicon() {
+  document.getElementById("select-CustomURL16").style.listStyleImage =
+    "url(" + "http://www.google.com/s2/favicons?domain=" + Services.prefs.getStringPref("floorp.browser.sidebar2.customurl16") + ")"
+}
+function setCustomURL17Favicon() {
+  document.getElementById("select-CustomURL17").style.listStyleImage =
+    "url(" + "http://www.google.com/s2/favicons?domain=" + Services.prefs.getStringPref("floorp.browser.sidebar2.customurl17") + ")"
+}
+function setCustomURL18Favicon() {
+  document.getElementById("select-CustomURL18").style.listStyleImage =
+    "url(" + "http://www.google.com/s2/favicons?domain=" + Services.prefs.getStringPref("floorp.browser.sidebar2.customurl18") + ")"
+}
+function setCustomURL19Favicon() {
+  document.getElementById("select-CustomURL19").style.listStyleImage =
+    "url(" + "http://www.google.com/s2/favicons?domain=" + Services.prefs.getStringPref("floorp.browser.sidebar2.customurl19") + ")"
+}
+function setCustomURL20Favicon() {
+  document.getElementById("select-CustomURL20").style.listStyleImage =
+    "url(" + "http://www.google.com/s2/favicons?domain=" + Services.prefs.getStringPref("floorp.browser.sidebar2.customurl20") + ")"
+}
 function backSidebarSite() {
   document.getElementById("sidebar2").goBack();  //戻る
 }
@@ -303,9 +382,49 @@ function setCustomSidebarMode10() {
   Services.prefs.setIntPref("floorp.browser.sidebar2.mode", 14);
   ViewBrowserManagerSidebar();
 }
+function setCustomSidebarMode11() {
+  Services.prefs.setIntPref("floorp.browser.sidebar2.mode", 15);
+  ViewBrowserManagerSidebar();
+}
+function setCustomSidebarMode12() {
+  Services.prefs.setIntPref("floorp.browser.sidebar2.mode", 16);
+  ViewBrowserManagerSidebar();
+}
+function setCustomSidebarMode13() {
+  Services.prefs.setIntPref("floorp.browser.sidebar2.mode", 17);
+  ViewBrowserManagerSidebar();
+}
+function setCustomSidebarMode14() {
+  Services.prefs.setIntPref("floorp.browser.sidebar2.mode", 18);
+  ViewBrowserManagerSidebar();
+}
+function setCustomSidebarMode15() {
+  Services.prefs.setIntPref("floorp.browser.sidebar2.mode", 19);
+  ViewBrowserManagerSidebar();
+}
+function setCustomSidebarMode16() {
+  Services.prefs.setIntPref("floorp.browser.sidebar2.mode", 20);
+  ViewBrowserManagerSidebar();
+}
+function setCustomSidebarMode17() {
+  Services.prefs.setIntPref("floorp.browser.sidebar2.mode", 21);
+  ViewBrowserManagerSidebar();
+}
+function setCustomSidebarMode18() {
+  Services.prefs.setIntPref("floorp.browser.sidebar2.mode", 22);
+  ViewBrowserManagerSidebar();
+}
+function setCustomSidebarMode19() {
+  Services.prefs.setIntPref("floorp.browser.sidebar2.mode", 23);
+  ViewBrowserManagerSidebar();
+}
+function setCustomSidebarMode20() {
+  Services.prefs.setIntPref("floorp.browser.sidebar2.mode", 24);
+  ViewBrowserManagerSidebar();
+}
 
 function setSidebarIconView() {
-  for (let sbar_id = 1; sbar_id < 10; sbar_id++) {
+  for (let sbar_id = 1; sbar_id < 21; sbar_id++) {
     document.getElementById("select-CustomURL" + sbar_id).hidden = (Services.prefs.getStringPref("floorp.browser.sidebar2.customurl" + sbar_id, undefined) != "") ? false : true;
   }
 }
@@ -451,7 +570,7 @@ function setTabbarMode() {
 }
 
 function setAllfavicons() {
-  for (let sbar_id = 1; sbar_id < 10; sbar_id++) {
+  for (let sbar_id = 1; sbar_id < 21; sbar_id++) {
     document.getElementById("select-CustomURL" + sbar_id).style.listStyleImage = "url(" + "http://www.google.com/s2/favicons?domain=" + Services.prefs.getStringPref("floorp.browser.sidebar2.customurl" + sbar_id) + ")"
   }
 }
