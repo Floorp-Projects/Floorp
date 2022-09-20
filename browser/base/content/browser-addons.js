@@ -1005,7 +1005,7 @@ var gExtensionsNotifications = {
     const DEFAULT_EXTENSION_ICON =
       "chrome://mozapps/skin/extensions/extensionGeneric.svg";
     button.setAttribute("image", icon || DEFAULT_EXTENSION_ICON);
-    button.className = "addon-banner-item";
+    button.className = "addon-banner-item subviewbutton";
 
     button.addEventListener("command", callback);
     PanelUI.addonNotificationContainer.appendChild(button);

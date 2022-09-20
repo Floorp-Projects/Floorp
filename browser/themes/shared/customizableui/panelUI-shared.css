@@ -441,48 +441,62 @@ toolbarbutton[constrain-size="true"][cui-areatype="menu-panel"] > .toolbarbutton
   display: none;
 }
 
+/* Main menu banner menuitems */
+
+#appMenu-popup .panel-banner-item,
+#appMenu-popup .addon-banner-item {
+  -moz-box-align: start;
+  color: var(--panel-banner-item-color);
+  background-color: var(--panel-banner-item-background-color);
+  margin-bottom: 4px;
+  font-weight: 600;
+}
+
+:root[uidensity="compact"] .panel-banner-item,
+:root[uidensity="compact"] .addon-banner-item {
+  /* Without some padding the button gets too crowded even for compact mode
+     when the text wraps to a newline. */
+  padding-block: 4px;
+}
+
+#appMenu-popup .panel-banner-item:not([disabled]):hover,
+#appMenu-popup .addon-banner-item:not([disabled]):hover {
+  background-color: var(--panel-banner-item-hover-bgcolor);
+}
+
+#appMenu-popup .panel-banner-item:not([disabled]):hover:active,
+#appMenu-popup .addon-banner-item:not([disabled]):hover:active {
+  background-color: var(--panel-banner-item-active-bgcolor);
+}
+
+#appMenu-popup .panel-banner-item > .toolbarbutton-text,
+#appMenu-popup .addon-banner-item > .toolbarbutton-text {
+  display: inline-block;
+  padding: 0;
+}
+
+.panel-banner-item > .toolbarbutton-icon {
+  width: 16px;
+  height: 16px;
+  /* Move the icon to appear after the text label. */
+  -moz-box-ordinal-group: 2;
+}
+
+.addon-banner-item > .toolbarbutton-icon {
+  display: none;
+}
 
 /* Addon banners use that one for the addon's icon and need a content element
    added to put their generic notification in. */
 .addon-banner-item::after {
   content: "";
-  width: 16px;
-  height: 16px;
-  margin-inline: 10px 12px;
   display: -moz-box;
-}
-
-.addon-banner-item {
-  -moz-image-region: rect(0, 16px, 16px, 0);
-}
-
-.panel-banner-item > .toolbarbutton-icon,
-.addon-banner-item > .toolbarbutton-icon {
+  background: url(chrome://global/skin/icons/warning.svg) no-repeat center;
   width: 16px;
   height: 16px;
-}
-
-.addon-banner-item::after {
-  background: url(chrome://global/skin/icons/warning.svg) no-repeat center;
-  margin-inline-end: 8px;
   -moz-context-properties: fill;
   fill: var(--warning-icon-bgcolor);
-}
-
-.addon-banner-item,
-.panel-banner-item {
-  margin: 0 8px 4px;
-  padding: 8px;
-  padding-inline-start: 0;
-  -moz-box-align: start;
-  box-sizing: border-box;
-  appearance: none;
-  box-shadow: none;
-  border: none;
-  border-radius: 4px;
-  transition: background-color;
-  -moz-box-orient: horizontal;
-  font-weight: 600;
+  margin-inline-start: 10px;
 }
 
 /* FxAccount indicator bits. */
@@ -599,33 +613,6 @@ toolbarbutton[constrain-size="true"][cui-areatype="menu-panel"] > .toolbarbutton
   content: url("chrome://global/skin/icons/info-filled.svg");
   -moz-context-properties: fill;
   fill: var(--panel-banner-item-info-icon-bgcolor);
-}
-
-
-/* Tracking Protection Button & Toggle */
-
-.addon-banner-item > .toolbarbutton-text,
-.panel-banner-item > .toolbarbutton-text {
-  text-align: start;
-  margin-inline: 8px;
-  padding: 0;
-}
-
-.addon-banner-item > .toolbarbutton-icon,
-.panel-banner-item > .toolbarbutton-icon {
-  margin-inline-end: 0;
-  /* Move the icon to appear after the text label. */
-  -moz-box-ordinal-group: 2;
-}
-
-.addon-banner-item {
-  flex: 1;
-  padding-inline: 0;
-  width: auto;
-}
-
-.addon-banner-item > .toolbarbutton-icon {
-  display: none;
 }
 
 /* Firefox Account Toolbar Panel */
@@ -900,24 +887,6 @@ panelmultiview[mainViewId="PanelUI-fxa"] #PanelUI-remotetabs-syncnow {
   display: none;
 }
 
-.panel-banner-item,
-.addon-banner-item {
-  color: var(--panel-banner-item-color) !important /* !important overrides the toolbarbutton:hover default style on Linux */;
-  background-color: var(--panel-banner-item-background-color);
-}
-
-.panel-banner-item:not([disabled]):focus,
-.panel-banner-item:not([disabled]):hover,
-.addon-banner-item:not([disabled]):focus,
-.addon-banner-item:not([disabled]):hover {
-  background-color: var(--panel-banner-item-hover-bgcolor);
-}
-
-.panel-banner-item:not([disabled]):hover:active,
-.addon-banner-item:not([disabled]):hover:active {
-  background-color: var(--panel-banner-item-active-bgcolor);
-}
-
 #customization-palette .toolbarbutton-text {
   display: none;
 }
@@ -984,17 +953,12 @@ panelview .toolbarbutton-1,
 #BMB_bookmarksPopup .subviewbutton > .menu-iconic-text,
 #PlacesToolbar menu > .menu-iconic-text,
 #PlacesToolbar menuitem > .menu-iconic-text,
-.addon-banner-item > .toolbarbutton-text,
 .subviewbutton-iconic > .toolbarbutton-text,
 .subviewbutton[image] > .toolbarbutton-text,
 .subviewbutton[targetURI] > .toolbarbutton-text,
 .subviewbutton.bookmark-item > .toolbarbutton-text,
 .subviewbutton[checked="true"] > .toolbarbutton-text {
   padding-inline-start: 8px; /* See '.subviewbutton-iconic > .toolbarbutton-text' rule above. */
-}
-
-.addon-banner-item > .toolbarbutton-text {
-  padding-inline-start: 0;
 }
 
 .subviewbutton-iconic > .toolbarbutton-icon {
