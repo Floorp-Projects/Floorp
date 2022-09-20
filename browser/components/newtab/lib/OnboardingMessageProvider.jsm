@@ -79,6 +79,56 @@ const BASE_MESSAGES = () => [
     trigger: { id: "protectionsPanelOpen" },
   },
   {
+    id: "CFR_FIREFOX_VIEW",
+    groups: ["cfr"],
+    template: "cfr_doorhanger",
+    content: {
+      bucket_id: "CFR_FIREFOX_VIEW",
+      anchor_id: "firefox-view-button",
+      layout: "icon_and_message",
+      icon: "chrome://browser/content/cfr-lightning.svg",
+      icon_dark_theme: "chrome://browser/content/cfr-lightning-dark.svg",
+      icon_class: "cfr-doorhanger-small-icon",
+      heading_text: {
+        string_id: "firefoxview-cfr-header",
+      },
+      text: {
+        string_id: "firefoxview-cfr-body",
+      },
+      buttons: {
+        primary: {
+          label: {
+            string_id: "firefoxview-cfr-primarybutton",
+          },
+          action: {
+            type: "OPEN_FIREFOX_VIEW",
+            navigate: true,
+          },
+        },
+        secondary: [
+          {
+            label: {
+              string_id: "firefoxview-cfr-secondarybutton",
+            },
+            action: {
+              type: "CANCEL",
+            },
+          },
+        ],
+      },
+      skip_address_bar_notifier: true,
+    },
+    frequency: {
+      lifetime: 1,
+    },
+    trigger: {
+      id: "nthTabClosed",
+    },
+    // Avoid breaking existing tests that close tabs for now.
+    targeting:
+      "tabsClosedCount >= 3 && 'browser.firefox-view.view-count'|preferenceValue == 0 && !'browser.newtabpage.activity-stream.asrouter.providers.cfr'|preferenceIsUserSet",
+  },
+  {
     id: "FX_MR_106_UPGRADE",
     template: "spotlight",
     targeting: "true",
