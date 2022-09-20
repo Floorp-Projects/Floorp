@@ -15,13 +15,15 @@ function run_test() {
   registerXPCTestComponents();
 
   // and the tests.
-  test_simple();
-  test_nested();
+  test_simple("@mozilla.org/js/xpc/test/native/ReturnCodeParent;1");
+  test_nested("@mozilla.org/js/xpc/test/native/ReturnCodeParent;1");
+
+  test_simple("@mozilla.org/js/xpc/test/native/ESMReturnCodeParent;1");
+  test_nested("@mozilla.org/js/xpc/test/native/ESMReturnCodeParent;1");
 }
 
-function test_simple() {
-  let parent = Cc["@mozilla.org/js/xpc/test/native/ReturnCodeParent;1"]
-               .createInstance(Ci.nsIXPCTestReturnCodeParent);
+function test_simple(contractID) {
+  let parent = Cc[contractID].createInstance(Ci.nsIXPCTestReturnCodeParent);
   let result;
 
   // flush existing messages before we start testing.
@@ -51,9 +53,8 @@ function test_simple() {
   Assert.deepEqual(getConsoleMessages(), [], "no messages reported with .returnCode");
 }
 
-function test_nested() {
-  let parent = Cc["@mozilla.org/js/xpc/test/native/ReturnCodeParent;1"]
-               .createInstance(Ci.nsIXPCTestReturnCodeParent);
+function test_nested(contractID) {
+  let parent = Cc[contractID].createInstance(Ci.nsIXPCTestReturnCodeParent);
   let result;
 
   // flush existing messages before we start testing.

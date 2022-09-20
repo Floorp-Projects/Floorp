@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /**
- * Test the use of Components.returnCode
+ * Test the use of Components.returnCode with system ESM
  *
  * This ("parent") interface defines a method that in-turn calls another
  * ("child") interface implemented in JS, and returns the nsresult from that
@@ -16,15 +16,15 @@
 #include "nsISupports.idl"
 
 
-[scriptable, uuid(479e4532-95cf-48b8-a99b-8a5881e47138)]
-interface nsIXPCTestReturnCodeParent : nsISupports {
+[scriptable, uuid(494f9336-ad06-46ad-bbb4-b0010e27e12d)]
+interface nsIXPCTestESMReturnCodeParent : nsISupports {
   // Calls the "child" interface with the specified behavior flag.  Returns
   // the NSRESULT from the child interface.
   nsresult callChild(in long childBehavior);
 };
 
-[scriptable, uuid(672cfd34-1fd1-455d-9901-d879fa6fdb95)]
-interface nsIXPCTestReturnCodeChild : nsISupports {
+[scriptable, uuid(dee07408-75d8-4968-a37c-fe0d48ccd1ac)]
+interface nsIXPCTestESMReturnCodeChild : nsISupports {
   void doIt(in long behavior);
 
   // Flags to control that the child does.
