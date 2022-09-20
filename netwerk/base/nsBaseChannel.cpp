@@ -534,9 +534,8 @@ nsBaseChannel::SetNotificationCallbacks(nsIInterfaceRequestor* aCallbacks) {
 }
 
 NS_IMETHODIMP
-nsBaseChannel::GetSecurityInfo(nsISupports** aSecurityInfo) {
-  nsCOMPtr<nsISupports> securityInfo(mSecurityInfo);
-  securityInfo.forget(aSecurityInfo);
+nsBaseChannel::GetSecurityInfo(nsITransportSecurityInfo** aSecurityInfo) {
+  *aSecurityInfo = do_AddRef(mSecurityInfo).take();
   return NS_OK;
 }
 

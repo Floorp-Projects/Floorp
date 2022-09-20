@@ -174,7 +174,7 @@ TRRServiceChannel::Resume() {
 }
 
 NS_IMETHODIMP
-TRRServiceChannel::GetSecurityInfo(nsISupports** securityInfo) {
+TRRServiceChannel::GetSecurityInfo(nsITransportSecurityInfo** securityInfo) {
   NS_ENSURE_ARG_POINTER(securityInfo);
   *securityInfo = do_AddRef(mSecurityInfo).take();
   return NS_OK;

@@ -67,7 +67,7 @@ class TRRServiceChannel : public HttpBaseChannel,
   NS_IMETHOD GetLoadGroup(nsILoadGroup** aLoadGroup) override;
   NS_IMETHOD GetRequestMethod(nsACString& aMethod) override;
   // nsIChannel
-  NS_IMETHOD GetSecurityInfo(nsISupports** aSecurityInfo) override;
+  NS_IMETHOD GetSecurityInfo(nsITransportSecurityInfo** aSecurityInfo) override;
   NS_IMETHOD AsyncOpen(nsIStreamListener* aListener) override;
 
   NS_IMETHOD LogBlockedCORSRequest(const nsAString& aMessage,

@@ -46,7 +46,8 @@
     return !(_to) ? NS_ERROR_NULL_POINTER                                      \
                   : (_to)->SetNotificationCallbacks(aNotificationCallbacks);   \
   }                                                                            \
-  NS_IMETHOD GetSecurityInfo(nsISupports** aSecurityInfo) override {           \
+  NS_IMETHOD GetSecurityInfo(nsITransportSecurityInfo** aSecurityInfo)         \
+      override {                                                               \
     return !(_to) ? NS_ERROR_NULL_POINTER                                      \
                   : (_to)->GetSecurityInfo(aSecurityInfo);                     \
   }                                                                            \

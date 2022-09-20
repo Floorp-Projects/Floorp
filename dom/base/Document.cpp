@@ -1542,19 +1542,12 @@ already_AddRefed<mozilla::dom::Promise> Document::AddCertException(
     return nullptr;
   }
 
-  nsCOMPtr<nsISupports> info;
-  nsCOMPtr<nsITransportSecurityInfo> tsi;
   nsresult rv = NS_OK;
   if (NS_WARN_IF(!mFailedChannel)) {
     promise->MaybeReject(NS_ERROR_DOM_INVALID_STATE_ERR);
     return promise.forget();
   }
 
-  rv = mFailedChannel->GetSecurityInfo(getter_AddRefs(info));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    promise->MaybeReject(rv);
-    return promise.forget();
-  }
   nsCOMPtr<nsIURI> failedChannelURI;
   NS_GetFinalChannelURI(mFailedChannel, getter_AddRefs(failedChannelURI));
   if (!failedChannelURI) {
@@ -1573,7 +1566,12 @@ already_AddRefed<mozilla::dom::Promise> Document::AddCertException(
   int32_t port;
   innerURI->GetPort(&port);
 
-  tsi = do_QueryInterface(info);
+  nsCOMPtr<nsITransportSecurityInfo> tsi;
+  rv = mFailedChannel->GetSecurityInfo(getter_AddRefs(tsi));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    promise->MaybeReject(rv);
+    return promise.forget();
+  }
   if (NS_WARN_IF(!tsi)) {
     promise->MaybeReject(NS_ERROR_DOM_INVALID_STATE_ERR);
     return promise.forget();
@@ -1639,20 +1637,18 @@ void Document::ReloadWithHttpsOnlyException() {
 }
 
 void Document::GetNetErrorInfo(NetErrorInfo& aInfo, ErrorResult& aRv) {
-  nsCOMPtr<nsISupports> info;
-  nsCOMPtr<nsITransportSecurityInfo> tsi;
   nsresult rv = NS_OK;
   if (NS_WARN_IF(!mFailedChannel)) {
     aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
     return;
   }
 
-  rv = mFailedChannel->GetSecurityInfo(getter_AddRefs(info));
+  nsCOMPtr<nsITransportSecurityInfo> tsi;
+  rv = mFailedChannel->GetSecurityInfo(getter_AddRefs(tsi));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     aRv.Throw(rv);
     return;
   }
-  tsi = do_QueryInterface(info);
   if (NS_WARN_IF(!tsi)) {
     aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
     return;
@@ -1711,20 +1707,18 @@ bool Document::IsErrorPage() const {
 
 void Document::GetFailedCertSecurityInfo(FailedCertSecurityInfo& aInfo,
                                          ErrorResult& aRv) {
-  nsCOMPtr<nsISupports> info;
-  nsCOMPtr<nsITransportSecurityInfo> tsi;
   nsresult rv = NS_OK;
   if (NS_WARN_IF(!mFailedChannel)) {
     aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
     return;
   }
 
-  rv = mFailedChannel->GetSecurityInfo(getter_AddRefs(info));
+  nsCOMPtr<nsITransportSecurityInfo> tsi;
+  rv = mFailedChannel->GetSecurityInfo(getter_AddRefs(tsi));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     aRv.Throw(rv);
     return;
   }
-  tsi = do_QueryInterface(info);
   if (NS_WARN_IF(!tsi)) {
     aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
     return;

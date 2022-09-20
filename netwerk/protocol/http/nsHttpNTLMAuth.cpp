@@ -325,15 +325,13 @@ nsHttpNTLMAuth::GenerateCredentials(
     nsCOMPtr<nsIChannel> channel = do_QueryInterface(authChannel, &rv);
     if (NS_FAILED(rv)) return rv;
 
-    nsCOMPtr<nsISupports> security;
-    rv = channel->GetSecurityInfo(getter_AddRefs(security));
+    nsCOMPtr<nsITransportSecurityInfo> securityInfo;
+    rv = channel->GetSecurityInfo(getter_AddRefs(securityInfo));
     if (NS_FAILED(rv)) return rv;
 
-    nsCOMPtr<nsITransportSecurityInfo> secInfo = do_QueryInterface(security);
-
-    if (mUseNative && secInfo) {
+    if (mUseNative && securityInfo) {
       nsCOMPtr<nsIX509Cert> cert;
-      rv = secInfo->GetServerCert(getter_AddRefs(cert));
+      rv = securityInfo->GetServerCert(getter_AddRefs(cert));
       if (NS_FAILED(rv)) return rv;
 
       if (cert) {

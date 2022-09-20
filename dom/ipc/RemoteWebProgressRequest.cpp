@@ -48,7 +48,7 @@ NS_IMETHODIMP RemoteWebProgressRequest::SetNotificationCallbacks(
 }
 
 NS_IMETHODIMP RemoteWebProgressRequest::GetSecurityInfo(
-    nsISupports** aSecurityInfo) {
+    nsITransportSecurityInfo** aSecurityInfo) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 

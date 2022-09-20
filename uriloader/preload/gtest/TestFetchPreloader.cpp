@@ -122,7 +122,8 @@ NS_IMETHODIMP FakeChannel::SetNotificationCallbacks(
     nsIInterfaceRequestor* aCallbacks) {
   return NS_OK;
 }
-NS_IMETHODIMP FakeChannel::GetSecurityInfo(nsISupports** aSecurityInfo) {
+NS_IMETHODIMP FakeChannel::GetSecurityInfo(
+    nsITransportSecurityInfo** aSecurityInfo) {
   return NS_OK;
 }
 NS_IMETHODIMP FakeChannel::GetContentType(nsACString& aContentType) {

@@ -341,7 +341,8 @@ ExternalHelperAppParent::SetNotificationCallbacks(
 }
 
 NS_IMETHODIMP
-ExternalHelperAppParent::GetSecurityInfo(nsISupports** aSecurityInfo) {
+ExternalHelperAppParent::GetSecurityInfo(
+    nsITransportSecurityInfo** aSecurityInfo) {
   *aSecurityInfo = nullptr;
   return NS_OK;
 }

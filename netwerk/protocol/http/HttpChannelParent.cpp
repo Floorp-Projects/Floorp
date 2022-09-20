@@ -1799,13 +1799,11 @@ nsresult HttpChannelParent::OpenAlternativeOutputStream(
 }
 
 already_AddRefed<nsITransportSecurityInfo> HttpChannelParent::SecurityInfo() {
-  nsCOMPtr<nsISupports> secInfoSupp;
-  mChannel->GetSecurityInfo(getter_AddRefs(secInfoSupp));
-  if (!secInfoSupp) {
+  if (!mChannel) {
     return nullptr;
   }
-  nsCOMPtr<nsITransportSecurityInfo> securityInfo(
-      do_QueryInterface(secInfoSupp));
+  nsCOMPtr<nsITransportSecurityInfo> securityInfo;
+  mChannel->GetSecurityInfo(getter_AddRefs(securityInfo));
   return securityInfo.forget();
 }
 

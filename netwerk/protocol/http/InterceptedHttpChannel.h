@@ -243,7 +243,7 @@ class InterceptedHttpChannel final
   Resume(void) override;
 
   NS_IMETHOD
-  GetSecurityInfo(nsISupports** aSecurityInfo) override;
+  GetSecurityInfo(nsITransportSecurityInfo** aSecurityInfo) override;
 
   NS_IMETHOD
   AsyncOpen(nsIStreamListener* aListener) override;

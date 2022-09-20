@@ -1060,12 +1060,11 @@ bool ChannelWrapper::ThirdParty() const {
 
 void ChannelWrapper::GetErrorString(nsString& aRetVal) const {
   if (nsCOMPtr<nsIChannel> chan = MaybeChannel()) {
-    nsCOMPtr<nsISupports> securityInfo;
+    nsCOMPtr<nsITransportSecurityInfo> securityInfo;
     Unused << chan->GetSecurityInfo(getter_AddRefs(securityInfo));
-    if (nsCOMPtr<nsITransportSecurityInfo> tsi =
-            do_QueryInterface(securityInfo)) {
+    if (securityInfo) {
       int32_t errorCode = 0;
-      tsi->GetErrorCode(&errorCode);
+      securityInfo->GetErrorCode(&errorCode);
       if (psm::IsNSSErrorCode(errorCode)) {
         nsCOMPtr<nsINSSErrorsService> nsserr =
             do_GetService(NS_NSS_ERRORS_SERVICE_CONTRACTID);
