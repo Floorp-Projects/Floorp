@@ -15,102 +15,96 @@
 #include "jit/Label.h"
 #include "jit/LIR.h"
 #include "js/AllocPolicy.h"
-#include "js/JitCodeAPI.h"
 #include "js/Vector.h"
 #include "vm/JSScript.h"
 
 namespace {
-struct AutoLockPerfSpewer;
+struct AutoFileLock;
 }
 
-namespace js::jit {
-
-using ProfilerJitCodeVector = Vector<JS::JitCodeRecord, 0, SystemAllocPolicy>;
-
-#ifdef JS_ION_PERF
-void CheckPerf();
-#else
-inline void CheckPerf() {}
-#endif
-void ResetPerfSpewer(bool enabled);
+namespace js {
+namespace jit {
 
 class MBasicBlock;
 class MacroAssembler;
 
-bool PerfEnabled();
+#ifdef JS_ION_PERF
+void CheckPerf();
+bool PerfIREnabled();
+bool PerfSrcEnabled();
+bool PerfFuncEnabled();
+static inline bool PerfEnabled() {
+  return PerfSrcEnabled() || PerfIREnabled() || PerfFuncEnabled();
+}
+#else
+static inline void CheckPerf() {}
+static inline bool PerfSrcEnabled() { return false; }
+static inline bool PerfIREnabled() { return false; }
+static inline bool PerfFuncEnabled() { return false; }
+static inline bool PerfEnabled() { return false; }
+#endif
+
+#ifdef JS_ION_PERF
 
 class PerfSpewer {
  protected:
   struct OpcodeEntry {
     Label addr;
-    unsigned opcode = 0;
+    unsigned lineno;
   };
-  Vector<OpcodeEntry, 0, SystemAllocPolicy> opcodes_;
-
-  uint32_t lir_opcode_length = 0;
-  uint32_t js_opcode_length = 0;
-
-  virtual JS::JitTier GetTier() { return JS::JitTier::Other; }
+  Vector<OpcodeEntry, 1, SystemAllocPolicy> opcodes_;
 
  public:
-  PerfSpewer() = default;
-
-  void saveJitCodeIRInfo(const char* filename, JitCode* code,
-                         JS::JitCodeRecord* profilerRecord,
-                         AutoLockPerfSpewer& lock);
-  static void SaveJitCodeSourceInfo(JSScript* script, JitCode* code,
-                                    JS::JitCodeRecord* record,
-                                    AutoLockPerfSpewer& lock);
-
-  static void CollectJitCodeInfo(const char* desc, JSScript* script,
-                                 JitCode* code, JS::JitCodeRecord*,
-                                 AutoLockPerfSpewer& lock);
-  static void CollectJitCodeInfo(UniqueChars& function_name, JitCode* code,
-                                 JS::JitCodeRecord*, AutoLockPerfSpewer& lock);
-  static void CollectJitCodeInfo(UniqueChars& function_name, void* code_addr,
-                                 uint64_t code_size,
-                                 JS::JitCodeRecord* profilerRecord,
-                                 AutoLockPerfSpewer& lock);
+  void writeJitDumpIRInfo(const char* filename, JitCode* code,
+                          AutoFileLock& lock);
+  static void WriteJitDumpEntry(const char* desc, JSScript* script,
+                                JitCode* code, AutoFileLock& lock);
+  static void WriteJitDumpLoadRecord(char* function_name, JitCode* code,
+                                     AutoFileLock& lock);
+  static void WriteJitDumpLoadRecord(char* function_name, void* code_addr,
+                                     uint64_t code_size, AutoFileLock& lock);
+  static void WriteJitDumpSourceInfo(const char* localfile, JSScript* script,
+                                     JitCode* code, AutoFileLock& lock);
+  static void WriteJitDumpDebugEntry(uint64_t addr, const char* filename,
+                                     uint32_t lineno, uint32_t colno,
+                                     AutoFileLock& lock);
 };
 
-void CollectPerfSpewerJitCodeProfile(JitCode* code, const char* msg);
+void writePerfSpewerJitCodeProfile(JitCode* code, const char* msg);
 
-void CollectPerfSpewerWasmMap(uintptr_t base, uintptr_t size,
-                              const char* filename, const char* annotation);
-void CollectPerfSpewerWasmFunctionMap(uintptr_t base, uintptr_t size,
-                                      const char* filename, unsigned lineno,
-                                      const char* funcName);
+void writePerfSpewerWasmMap(uintptr_t base, uintptr_t size,
+                            const char* filename, const char* annotation);
+void writePerfSpewerWasmFunctionMap(uintptr_t base, uintptr_t size,
+                                    const char* filename, unsigned lineno,
+                                    const char* funcName);
 
 class IonPerfSpewer : public PerfSpewer {
   static UniqueChars lirFilename;
 
-  JS::JitTier GetTier() override { return JS::JitTier::Ion; }
-
  public:
   void recordInstruction(MacroAssembler& masm, LNode::Opcode op);
-  void saveProfile(JSScript* script, JitCode* code);
+  void writeProfile(JSScript* script, JitCode* code);
 };
 
 class BaselinePerfSpewer : public PerfSpewer {
   static UniqueChars jsopFilename;
 
-  JS::JitTier GetTier() override { return JS::JitTier::Baseline; }
-
  public:
   void recordInstruction(MacroAssembler& masm, JSOp op);
-  void saveProfile(JSScript* script, JitCode* code);
+  void writeProfile(JSScript* script, JitCode* code);
 };
 
 class InlineCachePerfSpewer : public PerfSpewer {
   static UniqueChars cacheopFilename;
 
-  JS::JitTier GetTier() override { return JS::JitTier::IC; }
-
  public:
   void recordInstruction(MacroAssembler& masm, CacheOp op);
-  void saveProfile(JitCode* code, const char* name);
+  void writeProfile(JitCode* code, const char* name);
 };
 
-}  // namespace js::jit
+#endif  // JS_ION_PERF
+
+}  // namespace jit
+}  // namespace js
 
 #endif /* jit_PerfSpewer_h */

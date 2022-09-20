@@ -24,7 +24,9 @@
 #include "jit/JitAllocPolicy.h"
 #include "jit/JitContext.h"
 #include "jit/JitSpewer.h"
-#include "jit/PerfSpewer.h"
+#ifdef JS_ION_PERF
+#  include "jit/PerfSpewer.h"
+#endif
 #include "js/Utility.h"
 #include "vm/GeckoProfiler.h"
 
@@ -155,10 +157,12 @@ class MIRGenerator final {
 
   uint64_t minWasmHeapLength_;
 
+#if defined(JS_ION_PERF)
   IonPerfSpewer wasmPerfSpewer_;
 
  public:
   IonPerfSpewer& perfSpewer() { return wasmPerfSpewer_; }
+#endif
 
  public:
   const JitCompileOptions options;

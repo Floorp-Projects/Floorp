@@ -21,7 +21,9 @@
 #include "jit/JitRuntime.h"
 #include "jit/JitSpewer.h"
 #include "jit/Linker.h"
-#include "jit/PerfSpewer.h"
+#ifdef JS_ION_PERF
+#  include "jit/PerfSpewer.h"
+#endif
 #include "jit/SharedICHelpers.h"
 #include "jit/TrialInlining.h"
 #include "jit/VMFunctions.h"
@@ -320,7 +322,9 @@ MethodStatus BaselineCompiler::compile() {
 
   script->jitScript()->setBaselineScript(script, baselineScript.release());
 
-  perfSpewer_.saveProfile(script, code);
+#ifdef JS_ION_PERF
+  perfSpewer_.writeProfile(script, code);
+#endif
 
 #ifdef MOZ_VTUNE
   vtune::MarkScript(code, script, "baseline");
@@ -6358,7 +6362,9 @@ MethodStatus BaselineCompiler::emitBody() {
       return Method_Error;
     }
 
+#ifdef JS_ION_PERF
     perfSpewer_.recordInstruction(masm, op);
+#endif
 
 #define EMIT_OP(OP, ...)                                       \
   case JSOp::OP: {                                             \
@@ -6648,7 +6654,9 @@ bool BaselineInterpreterGenerator::generate(BaselineInterpreter& interpreter) {
                                            tableLoc);
     }
 
-    CollectPerfSpewerJitCodeProfile(code, "BaselineInterpreter");
+#ifdef JS_ION_PERF
+    writePerfSpewerJitCodeProfile(code, "BaselineInterpreter");
+#endif
 
 #ifdef MOZ_VTUNE
     vtune::MarkStub(code, "BaselineInterpreter");
@@ -6753,8 +6761,9 @@ JitCode* JitRuntime::generateDebugTrapHandler(JSContext* cx,
     return nullptr;
   }
 
-  CollectPerfSpewerJitCodeProfile(handlerCode, "DebugTrapHandler");
-
+#ifdef JS_ION_PERF
+  writePerfSpewerJitCodeProfile(handlerCode, "DebugTrapHandler");
+#endif
 #ifdef MOZ_VTUNE
   vtune::MarkStub(handlerCode, "DebugTrapHandler");
 #endif

@@ -30,7 +30,9 @@
 #include "jit/Disassemble.h"
 #include "jit/ExecutableAllocator.h"
 #include "jit/MacroAssembler.h"
-#include "jit/PerfSpewer.h"
+#ifdef JS_ION_PERF
+#  include "jit/PerfSpewer.h"
+#endif
 #include "util/Poison.h"
 #ifdef MOZ_VTUNE
 #  include "vtune/VTuneWrapper.h"
@@ -204,15 +206,19 @@ void wasm::StaticallyUnlink(uint8_t* base, const LinkData& linkData) {
   }
 }
 
+#ifdef JS_ION_PERF
 static bool AppendToString(const char* str, UTF8Bytes* bytes) {
   return bytes->append(str, strlen(str)) && bytes->append('\0');
 }
+#endif
 
 static void SendCodeRangesToProfiler(const ModuleSegment& ms,
                                      const Metadata& metadata,
                                      const CodeRangeVector& codeRanges) {
   bool enabled = false;
+#ifdef JS_ION_PERF
   enabled |= PerfEnabled();
+#endif
 #ifdef MOZ_VTUNE
   enabled |= vtune::IsProfilingActive();
 #endif
@@ -237,6 +243,7 @@ static void SendCodeRangesToProfiler(const ModuleSegment& ms,
     (void)start;
     (void)size;
 
+#ifdef JS_ION_PERF
     if (PerfEnabled()) {
       const char* file = metadata.filename.get();
       if (codeRange.isFunction()) {
@@ -244,31 +251,32 @@ static void SendCodeRangesToProfiler(const ModuleSegment& ms,
           return;
         }
         unsigned line = codeRange.funcLineOrBytecode();
-        CollectPerfSpewerWasmFunctionMap(start, size, file, line, name.begin());
+        writePerfSpewerWasmFunctionMap(start, size, file, line, name.begin());
       } else if (codeRange.isInterpEntry()) {
         if (!AppendToString(" slow entry", &name)) {
           return;
         }
-        CollectPerfSpewerWasmMap(start, size, file, name.begin());
+        writePerfSpewerWasmMap(start, size, file, name.begin());
       } else if (codeRange.isJitEntry()) {
         if (!AppendToString(" fast entry", &name)) {
           return;
         }
-        CollectPerfSpewerWasmMap(start, size, file, name.begin());
+        writePerfSpewerWasmMap(start, size, file, name.begin());
       } else if (codeRange.isImportInterpExit()) {
         if (!AppendToString(" slow exit", &name)) {
           return;
         }
-        CollectPerfSpewerWasmMap(start, size, file, name.begin());
+        writePerfSpewerWasmMap(start, size, file, name.begin());
       } else if (codeRange.isImportJitExit()) {
         if (!AppendToString(" fast exit", &name)) {
           return;
         }
-        CollectPerfSpewerWasmMap(start, size, file, name.begin());
+        writePerfSpewerWasmMap(start, size, file, name.begin());
       } else {
         MOZ_CRASH("unhandled perf hasFuncIndex type");
       }
     }
+#endif
 #ifdef MOZ_VTUNE
     if (!vtune::IsProfilingActive()) {
       continue;

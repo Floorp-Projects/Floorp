@@ -415,9 +415,13 @@ MBasicBlock::MBasicBlock(MIRGraph& graph, const CompileInfo& info,
       mark_(false),
       immediatelyDominated_(graph.alloc()),
       immediateDominator_(nullptr),
-      trackedSite_(site),
+      trackedSite_(site)
+#if defined(JS_ION_PERF) || defined(DEBUG)
+      ,
       lineno_(0u),
-      columnIndex_(0u) {
+      columnIndex_(0u)
+#endif
+{
   MOZ_ASSERT(trackedSite_, "trackedSite_ is non-nullptr");
 }
 

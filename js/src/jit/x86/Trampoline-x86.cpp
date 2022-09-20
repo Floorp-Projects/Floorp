@@ -13,7 +13,9 @@
 #include "jit/JitFrames.h"
 #include "jit/JitRuntime.h"
 #include "jit/JitSpewer.h"
-#include "jit/PerfSpewer.h"
+#ifdef JS_ION_PERF
+#  include "jit/PerfSpewer.h"
+#endif
 #include "jit/VMFunctions.h"
 #include "jit/x86/SharedICHelpers-x86.h"
 #include "vm/JitActivation.h"  // js::jit::JitActivation
