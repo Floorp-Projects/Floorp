@@ -29,7 +29,9 @@
 #include "api/video_codecs/vp8_temporal_layers_factory.h"
 #include "modules/video_coding/codecs/interface/common_constants.h"
 #include "modules/video_coding/codecs/vp8/include/vp8.h"
+#include "modules/video_coding/codecs/vp8/vp8_scalability.h"
 #include "modules/video_coding/include/video_error_codes.h"
+#include "modules/video_coding/svc/scalability_mode_util.h"
 #include "modules/video_coding/utility/simulcast_rate_allocator.h"
 #include "modules/video_coding/utility/simulcast_utility.h"
 #include "rtc_base/checks.h"
@@ -441,6 +443,13 @@ int LibvpxVp8Encoder::InitEncode(const VideoCodec* inst,
     return WEBRTC_VIDEO_CODEC_ERR_PARAMETER;
   }
   if (settings.number_of_cores < 1) {
+    return WEBRTC_VIDEO_CODEC_ERR_PARAMETER;
+  }
+
+  if (absl::optional<ScalabilityMode> scalability_mode =
+          inst->GetScalabilityMode();
+      scalability_mode.has_value() &&
+      !VP8SupportsScalabilityMode(*scalability_mode)) {
     return WEBRTC_VIDEO_CODEC_ERR_PARAMETER;
   }
 

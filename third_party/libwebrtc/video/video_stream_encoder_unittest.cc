@@ -9041,7 +9041,17 @@ TEST_F(ReconfigureEncoderTest, ReconfiguredIfNumTemporalLayerChanges) {
 TEST_F(ReconfigureEncoderTest, ReconfiguredIfScalabilityModeChanges) {
   VideoStream config1 = DefaultConfig();
   VideoStream config2 = config1;
+  config2.scalability_mode = ScalabilityMode::kL2T1;
+
+  RunTest({config1, config2}, /*expected_num_init_encode=*/2);
+}
+
+TEST_F(ReconfigureEncoderTest,
+       UpdatesNumTemporalLayersFromScalabilityModeChanges) {
+  VideoStream config1 = DefaultConfig();
+  VideoStream config2 = config1;
   config2.scalability_mode = ScalabilityMode::kL1T2;
+  config2.num_temporal_layers = 2;
 
   RunTest({config1, config2}, /*expected_num_init_encode=*/2);
 }

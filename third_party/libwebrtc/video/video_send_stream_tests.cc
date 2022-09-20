@@ -133,7 +133,8 @@ class VideoSendStreamTest : public test::CallTest {
 
   void TestTemporalLayers(VideoEncoderFactory* encoder_factory,
                           const std::string& payload_name,
-                          const std::vector<int>& num_temporal_layers);
+                          const std::vector<int>& num_temporal_layers,
+                          const std::vector<ScalabilityMode>& scalability_mode);
 };
 
 TEST_F(VideoSendStreamTest, CanStartStartedStream) {
@@ -3927,7 +3928,8 @@ TEST_F(VideoSendStreamTest, SwitchesToScreenshareAndBack) {
 void VideoSendStreamTest::TestTemporalLayers(
     VideoEncoderFactory* encoder_factory,
     const std::string& payload_name,
-    const std::vector<int>& num_temporal_layers) {
+    const std::vector<int>& num_temporal_layers,
+    const std::vector<ScalabilityMode>& scalability_mode) {
   static constexpr int kMaxBitrateBps = 1000000;
   static constexpr int kMinFramesToObservePerStream = 8;
 
@@ -3937,11 +3939,13 @@ void VideoSendStreamTest::TestTemporalLayers(
    public:
     TemporalLayerObserver(VideoEncoderFactory* encoder_factory,
                           const std::string& payload_name,
-                          const std::vector<int>& num_temporal_layers)
+                          const std::vector<int>& num_temporal_layers,
+                          const std::vector<ScalabilityMode>& scalability_mode)
         : EndToEndTest(kDefaultTimeoutMs),
           encoder_factory_(encoder_factory),
           payload_name_(payload_name),
           num_temporal_layers_(num_temporal_layers),
+          scalability_mode_(scalability_mode),
           depacketizer_(CreateVideoRtpDepacketizer(
               PayloadStringToCodecType(payload_name))) {}
 
@@ -3960,7 +3964,11 @@ void VideoSendStreamTest::TestTemporalLayers(
     }
 
     size_t GetNumVideoStreams() const override {
-      return num_temporal_layers_.size();
+      if (scalability_mode_.empty()) {
+        return num_temporal_layers_.size();
+      } else {
+        return scalability_mode_.size();
+      }
     }
 
     void ModifyVideoConfigs(
@@ -3978,11 +3986,21 @@ void VideoSendStreamTest::TestTemporalLayers(
               /*conference_mode=*/false);
       encoder_config->max_bitrate_bps = kMaxBitrateBps;
 
-      for (size_t i = 0; i < num_temporal_layers_.size(); ++i) {
-        VideoStream& stream = encoder_config->simulcast_layers[i];
-        stream.num_temporal_layers = num_temporal_layers_[i];
-        configured_num_temporal_layers_[send_config->rtp.ssrcs[i]] =
-            num_temporal_layers_[i];
+      if (scalability_mode_.empty()) {
+        for (size_t i = 0; i < num_temporal_layers_.size(); ++i) {
+          VideoStream& stream = encoder_config->simulcast_layers[i];
+          stream.num_temporal_layers = num_temporal_layers_[i];
+          configured_num_temporal_layers_[send_config->rtp.ssrcs[i]] =
+              num_temporal_layers_[i];
+        }
+      } else {
+        for (size_t i = 0; i < scalability_mode_.size(); ++i) {
+          VideoStream& stream = encoder_config->simulcast_layers[i];
+          stream.scalability_mode = scalability_mode_[i];
+
+          configured_num_temporal_layers_[send_config->rtp.ssrcs[i]] =
+              ScalabilityModeToNumTemporalLayers(scalability_mode_[i]);
+        }
       }
     }
 
@@ -4069,13 +4087,14 @@ void VideoSendStreamTest::TestTemporalLayers(
     VideoEncoderFactory* const encoder_factory_;
     const std::string payload_name_;
     const std::vector<int> num_temporal_layers_;
+    const std::vector<ScalabilityMode> scalability_mode_;
     const std::unique_ptr<VideoRtpDepacketizer> depacketizer_;
     // Mapped by SSRC.
     std::map<uint32_t, int> configured_num_temporal_layers_;
     std::map<uint32_t, int> max_observed_tl_idxs_;
     std::map<uint32_t, int> num_observed_frames_;
     std::map<uint32_t, ParsedPacket> last_observed_packet_;
-  } test(encoder_factory, payload_name, num_temporal_layers);
+  } test(encoder_factory, payload_name, num_temporal_layers, scalability_mode);
 
   RunBaseTest(&test);
 }
@@ -4089,7 +4108,8 @@ TEST_F(VideoSendStreamTest, TestTemporalLayersVp8) {
       });
 
   TestTemporalLayers(&encoder_factory, "VP8",
-                     /*num_temporal_layers=*/{2});
+                     /*num_temporal_layers=*/{2},
+                     /*scalability_mode=*/{});
 }
 
 TEST_F(VideoSendStreamTest, TestTemporalLayersVp8Simulcast) {
@@ -4101,7 +4121,8 @@ TEST_F(VideoSendStreamTest, TestTemporalLayersVp8Simulcast) {
       });
 
   TestTemporalLayers(&encoder_factory, "VP8",
-                     /*num_temporal_layers=*/{2, 2});
+                     /*num_temporal_layers=*/{2, 2},
+                     /*scalability_mode=*/{});
 }
 
 TEST_F(VideoSendStreamTest, TestTemporalLayersVp8SimulcastWithDifferentNumTls) {
@@ -4113,7 +4134,8 @@ TEST_F(VideoSendStreamTest, TestTemporalLayersVp8SimulcastWithDifferentNumTls) {
       });
 
   TestTemporalLayers(&encoder_factory, "VP8",
-                     /*num_temporal_layers=*/{3, 1});
+                     /*num_temporal_layers=*/{3, 1},
+                     /*scalability_mode=*/{});
 }
 
 TEST_F(VideoSendStreamTest, TestTemporalLayersVp8SimulcastWithoutSimAdapter) {
@@ -4121,7 +4143,55 @@ TEST_F(VideoSendStreamTest, TestTemporalLayersVp8SimulcastWithoutSimAdapter) {
       []() { return VP8Encoder::Create(); });
 
   TestTemporalLayers(&encoder_factory, "VP8",
-                     /*num_temporal_layers=*/{2, 2});
+                     /*num_temporal_layers=*/{2, 2},
+                     /*scalability_mode=*/{});
+}
+
+TEST_F(VideoSendStreamTest, TestScalabilityModeVp8L1T2) {
+  InternalEncoderFactory internal_encoder_factory;
+  test::FunctionVideoEncoderFactory encoder_factory(
+      [&internal_encoder_factory]() {
+        return std::make_unique<SimulcastEncoderAdapter>(
+            &internal_encoder_factory, SdpVideoFormat("VP8"));
+      });
+
+  TestTemporalLayers(&encoder_factory, "VP8",
+                     /*num_temporal_layers=*/{}, {ScalabilityMode::kL1T2});
+}
+
+TEST_F(VideoSendStreamTest, TestScalabilityModeVp8Simulcast) {
+  InternalEncoderFactory internal_encoder_factory;
+  test::FunctionVideoEncoderFactory encoder_factory(
+      [&internal_encoder_factory]() {
+        return std::make_unique<SimulcastEncoderAdapter>(
+            &internal_encoder_factory, SdpVideoFormat("VP8"));
+      });
+
+  TestTemporalLayers(&encoder_factory, "VP8",
+                     /*num_temporal_layers=*/{},
+                     {ScalabilityMode::kL1T2, ScalabilityMode::kL1T2});
+}
+
+TEST_F(VideoSendStreamTest, TestScalabilityModeVp8SimulcastWithDifferentMode) {
+  InternalEncoderFactory internal_encoder_factory;
+  test::FunctionVideoEncoderFactory encoder_factory(
+      [&internal_encoder_factory]() {
+        return std::make_unique<SimulcastEncoderAdapter>(
+            &internal_encoder_factory, SdpVideoFormat("VP8"));
+      });
+
+  TestTemporalLayers(&encoder_factory, "VP8",
+                     /*num_temporal_layers=*/{},
+                     {ScalabilityMode::kL1T3, ScalabilityMode::kL1T1});
+}
+
+TEST_F(VideoSendStreamTest, TestScalabilityModeVp8SimulcastWithoutSimAdapter) {
+  test::FunctionVideoEncoderFactory encoder_factory(
+      []() { return VP8Encoder::Create(); });
+
+  TestTemporalLayers(&encoder_factory, "VP8",
+                     /*num_temporal_layers=*/{},
+                     {ScalabilityMode::kL1T2, ScalabilityMode::kL1T2});
 }
 
 }  // namespace webrtc
