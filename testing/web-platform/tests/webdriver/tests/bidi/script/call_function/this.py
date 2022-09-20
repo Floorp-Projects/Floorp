@@ -32,7 +32,6 @@ async def test_default_this(bidi_session, top_context):
         await_promise=False,
         target=ContextTarget(top_context["context"]))
 
-    # Note: https://github.com/w3c/webdriver-bidi/issues/251
     recursive_compare({
         "type": 'window',
     }, result)
