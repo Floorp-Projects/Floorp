@@ -8,23 +8,22 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#import "NSString+StdString.h"
+#import "NSString+RTCStdString.h"
 
 #include "absl/strings/string_view.h"
 
-@implementation NSString (StdString)
+@implementation NSString (RTCStdString)
 
 - (std::string)stdString {
-  return [NSString stdStringForString:self];
+  return [NSString rtc_stdStringForString:self];
 }
 
-+ (std::string)stdStringForString:(NSString *)nsString {
++ (std::string)rtc_stdStringForString:(NSString *)nsString {
   NSData *charData = [nsString dataUsingEncoding:NSUTF8StringEncoding];
-  return std::string(reinterpret_cast<const char *>(charData.bytes),
-                     charData.length);
+  return std::string(reinterpret_cast<const char *>(charData.bytes), charData.length);
 }
 
-+ (NSString *)stringForStdString:(const std::string&)stdString {
++ (NSString *)rtc_stringForStdString:(const std::string &)stdString {
   // std::string may contain null termination character so we construct
   // using length.
   return [[NSString alloc] initWithBytes:stdString.data()
@@ -34,9 +33,9 @@
 
 @end
 
-@implementation NSString (AbslStringView)
+@implementation NSString (RTCAbslStringView)
 
-+ (NSString *)stringForAbslStringView:(const absl::string_view)abslStringView {
++ (NSString *)rtc_stringForAbslStringView:(const absl::string_view)abslStringView {
   return [[NSString alloc] initWithBytes:abslStringView.data()
                                   length:abslStringView.length()
                                 encoding:NSUTF8StringEncoding];

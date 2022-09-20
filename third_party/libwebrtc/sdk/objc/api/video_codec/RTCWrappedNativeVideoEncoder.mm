@@ -12,7 +12,7 @@
 
 #import "RTCWrappedNativeVideoEncoder.h"
 #import "base/RTCMacros.h"
-#import "helpers/NSString+StdString.h"
+#import "helpers/NSString+RTCStdString.h"
 
 @implementation RTC_OBJC_TYPE (RTCWrappedNativeVideoEncoder) {
   std::unique_ptr<webrtc::VideoEncoder> _wrappedEncoder;

@@ -16,18 +16,18 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface NSString (StdString)
+@interface NSString (RTCStdString)
 
 @property(nonatomic, readonly) std::string stdString;
 
-+ (std::string)stdStringForString:(NSString *)nsString;
-+ (NSString *)stringForStdString:(const std::string &)stdString;
++ (std::string)rtc_stdStringForString:(NSString *)nsString;
++ (NSString *)rtc_stringForStdString:(const std::string &)stdString;
 
 @end
 
-@interface NSString (AbslStringView)
+@interface NSString (RTCAbslStringView)
 
-+ (NSString *)stringForAbslStringView:(const absl::string_view)abslStringView;
++ (NSString *)rtc_stringForAbslStringView:(const absl::string_view)abslStringView;
 
 @end
 

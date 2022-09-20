@@ -13,7 +13,7 @@
 #import "RTCAudioSource+Private.h"
 #import "RTCMediaStreamTrack+Private.h"
 #import "RTCPeerConnectionFactory+Private.h"
-#import "helpers/NSString+StdString.h"
+#import "helpers/NSString+RTCStdString.h"
 
 #include "rtc_base/checks.h"
 
@@ -28,7 +28,7 @@
   RTC_DCHECK(source);
   RTC_DCHECK(trackId.length);
 
-  std::string nativeId = [NSString stdStringForString:trackId];
+  std::string nativeId = [NSString rtc_stdStringForString:trackId];
   rtc::scoped_refptr<webrtc::AudioTrackInterface> track =
       factory.nativeFactory->CreateAudioTrack(nativeId, source.nativeAudioSource.get());
   if (self = [self initWithFactory:factory nativeTrack:track type:RTCMediaStreamTrackTypeAudio]) {

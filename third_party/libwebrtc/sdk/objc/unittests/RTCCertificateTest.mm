@@ -21,7 +21,7 @@
 #import "api/peerconnection/RTCMediaConstraints.h"
 #import "api/peerconnection/RTCPeerConnection.h"
 #import "api/peerconnection/RTCPeerConnectionFactory.h"
-#import "helpers/NSString+StdString.h"
+#import "helpers/NSString+RTCStdString.h"
 
 @interface RTCCertificateTest : XCTestCase
 @end

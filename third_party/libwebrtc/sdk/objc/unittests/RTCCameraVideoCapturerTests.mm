@@ -19,7 +19,7 @@
 
 #import "base/RTCVideoFrame.h"
 #import "components/capturer/RTCCameraVideoCapturer.h"
-#import "helpers/AVCaptureSession+DevicePosition.h"
+#import "helpers/AVCaptureSession+RTCDevicePosition.h"
 #import "helpers/RTCDispatcher.h"
 #import "helpers/scoped_cftyperef.h"
 
@@ -338,8 +338,8 @@ CMSampleBufferRef createTestSampleBufferRef() {
   CMSampleBufferRef sampleBuffer = createTestSampleBufferRef();
   [self setExif:sampleBuffer];
 
-  AVCaptureDevicePosition cameraPosition = [AVCaptureSession
-                                            devicePositionForSampleBuffer:sampleBuffer];
+  AVCaptureDevicePosition cameraPosition =
+      [AVCaptureSession rtc_devicePositionForSampleBuffer:sampleBuffer];
   EXPECT_EQ(cameraPosition, AVCaptureDevicePositionBack);
 #endif
 }

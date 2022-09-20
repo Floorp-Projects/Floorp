@@ -19,7 +19,7 @@
 #import "sdk/objc/api/peerconnection/RTCEncodedImage+Private.h"
 #import "sdk/objc/api/peerconnection/RTCVideoCodecInfo+Private.h"
 #import "sdk/objc/api/video_codec/RTCWrappedNativeVideoDecoder.h"
-#import "sdk/objc/helpers/NSString+StdString.h"
+#import "sdk/objc/helpers/NSString+RTCStdString.h"
 
 #include "api/video_codecs/sdp_video_format.h"
 #include "api/video_codecs/video_decoder.h"

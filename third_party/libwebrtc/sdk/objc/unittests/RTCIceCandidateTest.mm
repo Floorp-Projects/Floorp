@@ -17,7 +17,7 @@
 
 #import "api/peerconnection/RTCIceCandidate+Private.h"
 #import "api/peerconnection/RTCIceCandidate.h"
-#import "helpers/NSString+StdString.h"
+#import "helpers/NSString+RTCStdString.h"
 
 @interface RTCIceCandidateTest : XCTestCase
 @end
