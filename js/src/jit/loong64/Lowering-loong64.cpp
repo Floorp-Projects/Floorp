@@ -188,6 +188,8 @@ LAllocation LIRGeneratorLOONG64::useByteOpRegisterOrNonDoubleConstant(
   return useRegisterOrNonDoubleConstant(mir);
 }
 
+LDefinition LIRGeneratorLOONG64::tempByteOpRegister() { return temp(); }
+
 LDefinition LIRGeneratorLOONG64::tempToUnbox() { return temp(); }
 
 void LIRGeneratorLOONG64::lowerUntypedPhiInput(MPhi* phi,
