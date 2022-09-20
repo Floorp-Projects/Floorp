@@ -129,6 +129,14 @@ data class Wallpaper(
                 null
             }
         }
+
+        /**
+         * Check if a wallpaper name matches the default. Considers empty strings to be default
+         * since that likely means a wallpaper has never been set.
+         *
+         * @param name The name to check.
+         */
+        fun nameIsDefault(name: String): Boolean = name.isEmpty() || name == defaultName
     }
 
     /**
