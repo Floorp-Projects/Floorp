@@ -29,7 +29,7 @@ async def test_subscribe_twice(bidi_session, top_context, wait_for_event, log_ty
     assert_base_entry(events[0], text=expected_text)
 
     # Wait for some time and check the events array again
-    asyncio.sleep(0.5)
+    await asyncio.sleep(0.5)
     assert len(events) == 1
 
     remove_listener()
@@ -59,7 +59,7 @@ async def test_subscribe_unsubscribe(bidi_session, top_context, wait_for_event, 
     await create_log(bidi_session, top_context, log_type, "text2")
 
     # Wait for some time before checking the events array
-    asyncio.sleep(0.5)
+    await asyncio.sleep(0.5)
     assert len(events) == 0
 
     # Refresh to create a new context
@@ -71,7 +71,7 @@ async def test_subscribe_unsubscribe(bidi_session, top_context, wait_for_event, 
     await create_log(bidi_session, top_context, log_type, "text3")
 
     # Wait for some time before checking the events array
-    asyncio.sleep(0.5)
+    await asyncio.sleep(0.5)
     assert len(events) == 0
 
     # Refresh to create a new context. Note that we refresh to avoid getting
