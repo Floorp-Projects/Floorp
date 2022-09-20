@@ -12,7 +12,7 @@
 #import "RTCMediaStreamTrack+Private.h"
 #import "RTCVideoTrack+Private.h"
 
-#import "helpers/NSString+RTCStdString.h"
+#import "helpers/NSString+StdString.h"
 
 NSString * const kRTCMediaStreamTrackKindAudio =
     @(webrtc::MediaStreamTrackInterface::kAudioKind);
@@ -26,11 +26,11 @@ NSString * const kRTCMediaStreamTrackKindVideo =
 }
 
 - (NSString *)kind {
-  return [NSString rtc_stringForStdString:_nativeTrack->kind()];
+  return [NSString stringForStdString:_nativeTrack->kind()];
 }
 
 - (NSString *)trackId {
-  return [NSString rtc_stringForStdString:_nativeTrack->id()];
+  return [NSString stringForStdString:_nativeTrack->id()];
 }
 
 - (BOOL)isEnabled {

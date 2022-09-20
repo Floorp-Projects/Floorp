@@ -10,7 +10,7 @@
 
 #import "RTCDataChannelConfiguration+Private.h"
 
-#import "helpers/NSString+RTCStdString.h"
+#import "helpers/NSString+StdString.h"
 
 @implementation RTC_OBJC_TYPE (RTCDataChannelConfiguration)
 
@@ -53,11 +53,11 @@
 }
 
 - (NSString *)protocol {
-  return [NSString rtc_stringForStdString:_nativeDataChannelInit.protocol];
+  return [NSString stringForStdString:_nativeDataChannelInit.protocol];
 }
 
 - (void)setProtocol:(NSString *)protocol {
-  _nativeDataChannelInit.protocol = [NSString rtc_stdStringForString:protocol];
+  _nativeDataChannelInit.protocol = [NSString stdStringForString:protocol];
 }
 
 - (BOOL)isNegotiated {

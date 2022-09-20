@@ -10,7 +10,7 @@
 
 #import "RTCIceServer+Private.h"
 
-#import "helpers/NSString+RTCStdString.h"
+#import "helpers/NSString+StdString.h"
 
 @implementation RTC_OBJC_TYPE (RTCIceServer)
 
@@ -121,9 +121,9 @@
 - (webrtc::PeerConnectionInterface::IceServer)nativeServer {
   __block webrtc::PeerConnectionInterface::IceServer iceServer;
 
-  iceServer.username = [NSString rtc_stdStringForString:_username];
-  iceServer.password = [NSString rtc_stdStringForString:_credential];
-  iceServer.hostname = [NSString rtc_stdStringForString:_hostname];
+  iceServer.username = [NSString stdStringForString:_username];
+  iceServer.password = [NSString stdStringForString:_credential];
+  iceServer.hostname = [NSString stdStringForString:_hostname];
 
   [_tlsAlpnProtocols enumerateObjectsUsingBlock:^(NSString *proto, NSUInteger idx, BOOL *stop) {
     iceServer.tls_alpn_protocols.push_back(proto.stdString);
@@ -157,20 +157,20 @@
   NSMutableArray *urls =
       [NSMutableArray arrayWithCapacity:nativeServer.urls.size()];
   for (auto const &url : nativeServer.urls) {
-    [urls addObject:[NSString rtc_stringForStdString:url]];
+    [urls addObject:[NSString stringForStdString:url]];
   }
-  NSString *username = [NSString rtc_stringForStdString:nativeServer.username];
-  NSString *credential = [NSString rtc_stringForStdString:nativeServer.password];
-  NSString *hostname = [NSString rtc_stringForStdString:nativeServer.hostname];
+  NSString *username = [NSString stringForStdString:nativeServer.username];
+  NSString *credential = [NSString stringForStdString:nativeServer.password];
+  NSString *hostname = [NSString stringForStdString:nativeServer.hostname];
   NSMutableArray *tlsAlpnProtocols =
       [NSMutableArray arrayWithCapacity:nativeServer.tls_alpn_protocols.size()];
   for (auto const &proto : nativeServer.tls_alpn_protocols) {
-    [tlsAlpnProtocols addObject:[NSString rtc_stringForStdString:proto]];
+    [tlsAlpnProtocols addObject:[NSString stringForStdString:proto]];
   }
   NSMutableArray *tlsEllipticCurves =
       [NSMutableArray arrayWithCapacity:nativeServer.tls_elliptic_curves.size()];
   for (auto const &curve : nativeServer.tls_elliptic_curves) {
-    [tlsEllipticCurves addObject:[NSString rtc_stringForStdString:curve]];
+    [tlsEllipticCurves addObject:[NSString stringForStdString:curve]];
   }
   RTCTlsCertPolicy tlsCertPolicy;
 

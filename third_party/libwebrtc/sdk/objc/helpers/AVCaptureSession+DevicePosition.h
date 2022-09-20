@@ -13,10 +13,10 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface AVCaptureSession (RTCDevicePosition)
+@interface AVCaptureSession (DevicePosition)
 
 // Check the image's EXIF for the camera the image came from.
-+ (AVCaptureDevicePosition)rtc_devicePositionForSampleBuffer:(CMSampleBufferRef)sampleBuffer;
++ (AVCaptureDevicePosition)devicePositionForSampleBuffer:(CMSampleBufferRef)sampleBuffer;
 
 @end
 

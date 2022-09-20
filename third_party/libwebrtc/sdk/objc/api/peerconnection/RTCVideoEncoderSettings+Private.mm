@@ -10,7 +10,7 @@
 
 #import "RTCVideoEncoderSettings+Private.h"
 
-#import "helpers/NSString+RTCStdString.h"
+#import "helpers/NSString+StdString.h"
 
 @implementation RTC_OBJC_TYPE (RTCVideoEncoderSettings)
 (Private)

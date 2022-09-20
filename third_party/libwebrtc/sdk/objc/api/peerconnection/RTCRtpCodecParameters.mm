@@ -11,7 +11,7 @@
 #import "RTCRtpCodecParameters+Private.h"
 
 #import "RTCMediaStreamTrack.h"
-#import "helpers/NSString+RTCStdString.h"
+#import "helpers/NSString+StdString.h"
 
 #include "media/base/media_constants.h"
 #include "rtc_base/checks.h"
@@ -52,7 +52,7 @@ const NSString * const kRTCH264CodecName = @(cricket::kH264CodecName);
     (const webrtc::RtpCodecParameters &)nativeParameters {
   if (self = [super init]) {
     _payloadType = nativeParameters.payload_type;
-    _name = [NSString rtc_stringForStdString:nativeParameters.name];
+    _name = [NSString stringForStdString:nativeParameters.name];
     switch (nativeParameters.kind) {
       case cricket::MEDIA_TYPE_AUDIO:
         _kind = kRTCMediaStreamTrackKindAudio;
@@ -75,8 +75,8 @@ const NSString * const kRTCH264CodecName = @(cricket::kH264CodecName);
     }
     NSMutableDictionary *parameters = [NSMutableDictionary dictionary];
     for (const auto &parameter : nativeParameters.parameters) {
-      [parameters setObject:[NSString rtc_stringForStdString:parameter.second]
-                     forKey:[NSString rtc_stringForStdString:parameter.first]];
+      [parameters setObject:[NSString stringForStdString:parameter.second]
+                     forKey:[NSString stringForStdString:parameter.first]];
     }
     _parameters = parameters;
   }
@@ -86,7 +86,7 @@ const NSString * const kRTCH264CodecName = @(cricket::kH264CodecName);
 - (webrtc::RtpCodecParameters)nativeParameters {
   webrtc::RtpCodecParameters parameters;
   parameters.payload_type = _payloadType;
-  parameters.name = [NSString rtc_stdStringForString:_name];
+  parameters.name = [NSString stdStringForString:_name];
   // NSString pointer comparison is safe here since "kind" is readonly and only
   // populated above.
   if (_kind == kRTCMediaStreamTrackKindAudio) {
@@ -103,8 +103,8 @@ const NSString * const kRTCH264CodecName = @(cricket::kH264CodecName);
     parameters.num_channels = absl::optional<int>(_numChannels.intValue);
   }
   for (NSString *paramKey in _parameters.allKeys) {
-    std::string key = [NSString rtc_stdStringForString:paramKey];
-    std::string value = [NSString rtc_stdStringForString:_parameters[paramKey]];
+    std::string key = [NSString stdStringForString:paramKey];
+    std::string value = [NSString stdStringForString:_parameters[paramKey]];
     parameters.parameters[key] = value;
   }
   return parameters;

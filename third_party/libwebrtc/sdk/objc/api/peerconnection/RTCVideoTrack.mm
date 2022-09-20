@@ -14,7 +14,7 @@
 #import "RTCPeerConnectionFactory+Private.h"
 #import "RTCVideoSource+Private.h"
 #import "api/RTCVideoRendererAdapter+Private.h"
-#import "helpers/NSString+RTCStdString.h"
+#import "helpers/NSString+StdString.h"
 
 @implementation RTC_OBJC_TYPE (RTCVideoTrack) {
   NSMutableArray *_adapters;
@@ -28,7 +28,7 @@
   NSParameterAssert(factory);
   NSParameterAssert(source);
   NSParameterAssert(trackId.length);
-  std::string nativeId = [NSString rtc_stdStringForString:trackId];
+  std::string nativeId = [NSString stdStringForString:trackId];
   rtc::scoped_refptr<webrtc::VideoTrackInterface> track =
       factory.nativeFactory->CreateVideoTrack(nativeId, source.nativeVideoSource.get());
   if (self = [self initWithFactory:factory nativeTrack:track type:RTCMediaStreamTrackTypeVideo]) {

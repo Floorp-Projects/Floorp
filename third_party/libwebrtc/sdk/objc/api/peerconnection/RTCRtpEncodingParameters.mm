@@ -10,7 +10,7 @@
 
 #import "RTCRtpEncodingParameters+Private.h"
 
-#import "helpers/NSString+RTCStdString.h"
+#import "helpers/NSString+StdString.h"
 
 @implementation RTC_OBJC_TYPE (RTCRtpEncodingParameters)
 
@@ -35,7 +35,7 @@
     (const webrtc::RtpEncodingParameters &)nativeParameters {
   if (self = [super init]) {
     if (!nativeParameters.rid.empty()) {
-      _rid = [NSString rtc_stringForStdString:nativeParameters.rid];
+      _rid = [NSString stringForStdString:nativeParameters.rid];
     }
     _isActive = nativeParameters.active;
     if (nativeParameters.max_bitrate_bps) {
@@ -70,7 +70,7 @@
 - (webrtc::RtpEncodingParameters)nativeParameters {
   webrtc::RtpEncodingParameters parameters;
   if (_rid != nil) {
-    parameters.rid = [NSString rtc_stdStringForString:_rid];
+    parameters.rid = [NSString stdStringForString:_rid];
   }
   parameters.active = _isActive;
   if (_maxBitrateBps != nil) {

@@ -24,7 +24,7 @@
 #import "RTCRtpTransceiver+Private.h"
 #import "RTCSessionDescription+Private.h"
 #import "base/RTCLogging.h"
-#import "helpers/NSString+RTCStdString.h"
+#import "helpers/NSString+StdString.h"
 
 #include <memory>
 
@@ -63,7 +63,7 @@ class SetSessionDescriptionObserver : public webrtc::SetLocalDescriptionObserver
       completion_handler_(nil);
     } else {
       // TODO(hta): Add handling of error.type()
-      NSString *str = [NSString rtc_stringForStdString:error.message()];
+      NSString *str = [NSString stringForStdString:error.message()];
       NSError *err = [NSError errorWithDomain:kRTCPeerConnectionErrorDomain
                                          code:kRTCPeerConnnectionSessionDescriptionError
                                      userInfo:@{NSLocalizedDescriptionKey : str}];
@@ -101,7 +101,7 @@ class CreateSessionDescriptionObserverAdapter
   void OnFailure(RTCError error) override {
     RTC_DCHECK(completion_handler_);
     // TODO(hta): Add handling of error.type()
-    NSString *str = [NSString rtc_stringForStdString:error.message()];
+    NSString *str = [NSString stringForStdString:error.message()];
     NSError* err =
         [NSError errorWithDomain:kRTCPeerConnectionErrorDomain
                             code:kRTCPeerConnnectionSessionDescriptionError
@@ -274,7 +274,7 @@ void PeerConnectionDelegateAdapter::OnIceSelectedCandidatePairChanged(
   RTC_OBJC_TYPE(RTCIceCandidate) *remote_candidate = [[RTC_OBJC_TYPE(RTCIceCandidate) alloc]
       initWithNativeCandidate:remote_candidate_wrapper.release()];
   RTC_OBJC_TYPE(RTCPeerConnection) *peer_connection = peer_connection_;
-  NSString *nsstr_reason = [NSString rtc_stringForStdString:event.reason];
+  NSString *nsstr_reason = [NSString stringForStdString:event.reason];
   if ([peer_connection.delegate
           respondsToSelector:@selector
           (peerConnection:didChangeLocalCandidate:remoteCandidate:lastReceivedMs:changeReason:)]) {
@@ -467,7 +467,7 @@ void PeerConnectionDelegateAdapter::OnRemoveTrack(
         if (error.ok()) {
           completionHandler(nil);
         } else {
-          NSString *str = [NSString rtc_stringForStdString:error.message()];
+          NSString *str = [NSString stringForStdString:error.message()];
           NSError *err = [NSError errorWithDomain:kRTCPeerConnectionErrorDomain
                                              code:static_cast<NSInteger>(error.type())
                                          userInfo:@{NSLocalizedDescriptionKey : str}];
@@ -666,8 +666,8 @@ void PeerConnectionDelegateAdapter::OnRemoveTrack(
 }
 
 - (RTC_OBJC_TYPE(RTCRtpSender) *)senderWithKind:(NSString *)kind streamId:(NSString *)streamId {
-  std::string nativeKind = [NSString rtc_stdStringForString:kind];
-  std::string nativeStreamId = [NSString rtc_stdStringForString:streamId];
+  std::string nativeKind = [NSString stdStringForString:kind];
+  std::string nativeStreamId = [NSString stdStringForString:streamId];
   rtc::scoped_refptr<webrtc::RtpSenderInterface> nativeSender(
       _peerConnection->CreateSender(nativeKind, nativeStreamId));
   return nativeSender ? [[RTC_OBJC_TYPE(RTCRtpSender) alloc] initWithFactory:self.factory

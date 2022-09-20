@@ -10,7 +10,7 @@
 
 #import "RTCRtpHeaderExtension+Private.h"
 
-#import "helpers/NSString+RTCStdString.h"
+#import "helpers/NSString+StdString.h"
 
 @implementation RTC_OBJC_TYPE (RTCRtpHeaderExtension)
 
@@ -25,7 +25,7 @@
 
 - (instancetype)initWithNativeParameters:(const webrtc::RtpExtension &)nativeParameters {
   if (self = [super init]) {
-    _uri = [NSString rtc_stringForStdString:nativeParameters.uri];
+    _uri = [NSString stringForStdString:nativeParameters.uri];
     _id = nativeParameters.id;
     _encrypted = nativeParameters.encrypt;
   }
@@ -34,7 +34,7 @@
 
 - (webrtc::RtpExtension)nativeParameters {
   webrtc::RtpExtension extension;
-  extension.uri = [NSString rtc_stdStringForString:_uri];
+  extension.uri = [NSString stdStringForString:_uri];
   extension.id = _id;
   extension.encrypt = _encrypted;
   return extension;

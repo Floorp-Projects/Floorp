@@ -1,5 +1,5 @@
 /*
- *  Copyright 2018 The WebRTC project authors. All Rights Reserved.
+ *  Copyright 2015 The WebRTC project authors. All Rights Reserved.
  *
  *  Use of this source code is governed by a BSD-style license
  *  that can be found in the LICENSE file in the root of the source
@@ -8,12 +8,4 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#import <UIKit/UIKit.h>
-
-#include "api/video_codecs/h264_profile_level_id.h"
-
-@interface UIDevice (RTCH264Profile)
-
-+ (absl::optional<webrtc::H264ProfileLevelId>)rtc_maxSupportedH264Profile;
-
-@end
+#import "helpers/NSString+StdString.h"

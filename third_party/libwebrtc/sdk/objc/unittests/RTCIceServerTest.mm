@@ -17,7 +17,7 @@
 
 #import "api/peerconnection/RTCIceServer+Private.h"
 #import "api/peerconnection/RTCIceServer.h"
-#import "helpers/NSString+RTCStdString.h"
+#import "helpers/NSString+StdString.h"
 
 @interface RTCIceServerTest : XCTestCase
 @end
@@ -125,10 +125,10 @@
       [[RTC_OBJC_TYPE(RTCIceServer) alloc] initWithNativeServer:nativeServer];
   EXPECT_EQ(1u, iceServer.urlStrings.count);
   EXPECT_EQ("stun:stun.example.net",
-            [NSString rtc_stdStringForString:iceServer.urlStrings.firstObject]);
-  EXPECT_EQ("username", [NSString rtc_stdStringForString:iceServer.username]);
-  EXPECT_EQ("password", [NSString rtc_stdStringForString:iceServer.credential]);
-  EXPECT_EQ("hostname", [NSString rtc_stdStringForString:iceServer.hostname]);
+      [NSString stdStringForString:iceServer.urlStrings.firstObject]);
+  EXPECT_EQ("username", [NSString stdStringForString:iceServer.username]);
+  EXPECT_EQ("password", [NSString stdStringForString:iceServer.credential]);
+  EXPECT_EQ("hostname", [NSString stdStringForString:iceServer.hostname]);
   EXPECT_EQ(2u, iceServer.tlsAlpnProtocols.count);
   EXPECT_EQ(2u, iceServer.tlsEllipticCurves.count);
 }

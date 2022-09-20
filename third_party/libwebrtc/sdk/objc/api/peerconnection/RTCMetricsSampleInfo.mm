@@ -10,7 +10,7 @@
 
 #import "RTCMetricsSampleInfo+Private.h"
 
-#import "helpers/NSString+RTCStdString.h"
+#import "helpers/NSString+StdString.h"
 
 @implementation RTC_OBJC_TYPE (RTCMetricsSampleInfo)
 
@@ -25,7 +25,7 @@
 - (instancetype)initWithNativeSampleInfo:
     (const webrtc::metrics::SampleInfo &)info {
   if (self = [super init]) {
-    _name = [NSString rtc_stringForStdString:info.name];
+    _name = [NSString stringForStdString:info.name];
     _min = info.min;
     _max = info.max;
     _bucketCount = info.bucket_count;

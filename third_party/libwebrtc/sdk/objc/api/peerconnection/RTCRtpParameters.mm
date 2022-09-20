@@ -14,7 +14,7 @@
 #import "RTCRtpCodecParameters+Private.h"
 #import "RTCRtpEncodingParameters+Private.h"
 #import "RTCRtpHeaderExtension+Private.h"
-#import "helpers/NSString+RTCStdString.h"
+#import "helpers/NSString+StdString.h"
 
 @implementation RTC_OBJC_TYPE (RTCRtpParameters)
 
@@ -33,7 +33,7 @@
 - (instancetype)initWithNativeParameters:
     (const webrtc::RtpParameters &)nativeParameters {
   if (self = [super init]) {
-    _transactionId = [NSString rtc_stringForStdString:nativeParameters.transaction_id];
+    _transactionId = [NSString stringForStdString:nativeParameters.transaction_id];
     _rtcp =
         [[RTC_OBJC_TYPE(RTCRtcpParameters) alloc] initWithNativeParameters:nativeParameters.rtcp];
 
@@ -67,7 +67,7 @@
 
 - (webrtc::RtpParameters)nativeParameters {
   webrtc::RtpParameters parameters;
-  parameters.transaction_id = [NSString rtc_stdStringForString:_transactionId];
+  parameters.transaction_id = [NSString stdStringForString:_transactionId];
   parameters.rtcp = [_rtcp nativeParameters];
   for (RTC_OBJC_TYPE(RTCRtpHeaderExtension) * headerExtension in _headerExtensions) {
     parameters.header_extensions.push_back(headerExtension.nativeParameters);

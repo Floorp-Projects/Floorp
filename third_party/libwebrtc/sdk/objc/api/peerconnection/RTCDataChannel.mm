@@ -10,7 +10,7 @@
 
 #import "RTCDataChannel+Private.h"
 
-#import "helpers/NSString+RTCStdString.h"
+#import "helpers/NSString+StdString.h"
 
 #include <memory>
 
@@ -98,7 +98,7 @@ class DataChannelDelegateAdapter : public DataChannelObserver {
 }
 
 - (NSString *)label {
-  return [NSString rtc_stringForStdString:_nativeDataChannel->label()];
+  return [NSString stringForStdString:_nativeDataChannel->label()];
 }
 
 - (BOOL)isReliable {
@@ -122,7 +122,7 @@ class DataChannelDelegateAdapter : public DataChannelObserver {
 }
 
 - (NSString *)protocol {
-  return [NSString rtc_stringForStdString:_nativeDataChannel->protocol()];
+  return [NSString stringForStdString:_nativeDataChannel->protocol()];
 }
 
 - (BOOL)isNegotiated {
