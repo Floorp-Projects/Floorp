@@ -271,8 +271,3 @@ lazyGlobal("setInterval", () => {
 lazyGlobal("WebSocket", () => {
   return Services.appShell.hiddenDOMWindow.WebSocket;
 });
-lazyGlobal("indexedDB", () => {
-  return require("devtools/shared/indexed-db").createDevToolsIndexedDB(
-    indexedDB
-  );
-});
