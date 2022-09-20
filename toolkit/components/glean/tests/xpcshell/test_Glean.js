@@ -68,6 +68,15 @@ add_task(async function test_fog_timespan_works() {
   Assert.ok(Glean.testOnly.canWeTimeIt.testGetValue("test-ping") > 0);
 });
 
+add_task(async function test_fog_timespan_throws_on_stop_wout_start() {
+  Glean.testOnly.canWeTimeIt.stop();
+  Assert.throws(
+    () => Glean.testOnly.canWeTimeIt.testGetValue(),
+    /NS_ERROR_LOSS_OF_SIGNIFICANT_DATA/,
+    "Should throw because stop was called without start."
+  );
+});
+
 add_task(async function test_fog_uuid_works() {
   const kTestUuid = "decafdec-afde-cafd-ecaf-decafdecafde";
   Glean.testOnly.whatIdIt.set(kTestUuid);
