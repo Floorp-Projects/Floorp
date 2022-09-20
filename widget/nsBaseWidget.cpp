@@ -20,6 +20,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/GlobalKeyListener.h"
 #include "mozilla/IMEStateManager.h"
+#include "mozilla/Logging.h"
 #include "mozilla/MouseEvents.h"
 #include "mozilla/NativeKeyBindingsType.h"
 #include "mozilla/Preferences.h"
@@ -85,6 +86,8 @@
 #include "gfxConfig.h"
 #include "nsView.h"
 #include "nsViewManager.h"
+
+static mozilla::LazyLogModule sBaseWidgetLog("BaseWidget");
 
 #ifdef DEBUG
 #  include "nsIObserver.h"
@@ -717,6 +720,10 @@ void nsBaseWidget::PerformFullscreenTransition(FullscreenTransitionStage aStage,
 //
 //-------------------------------------------------------------------------
 void nsBaseWidget::InfallibleMakeFullScreen(bool aFullScreen) {
+#define MOZ_FORMAT_RECT(fmtstr) "[" fmtstr "," fmtstr " " fmtstr "x" fmtstr "]"
+#define MOZ_SPLAT_RECT(rect) \
+  (rect).X(), (rect).Y(), (rect).Width(), (rect).Height()
+
   // Windows which can be made fullscreen are exactly those which are located on
   // the desktop, rather than being a child of some other window.
   MOZ_DIAGNOSTIC_ASSERT(BoundsUseDesktopPixels(),
@@ -758,6 +765,9 @@ void nsBaseWidget::InfallibleMakeFullScreen(bool aFullScreen) {
       return;
     }
 
+    MOZ_LOG(sBaseWidgetLog, LogLevel::Warning,
+            ("window was not resized within InfallibleMakeFullScreen()"));
+
     // Hide chrome and "resize" the window to its current size.
     auto rect = GetBounds();
     adjustOSChrome();
@@ -773,8 +783,54 @@ void nsBaseWidget::InfallibleMakeFullScreen(bool aFullScreen) {
                                     std::remove_reference_t<decltype(rect)>>,
                   "doReposition requires a rectangle using desktop pixels");
 
+    if (MOZ_LOG_TEST(sBaseWidgetLog, LogLevel::Debug)) {
+      const DesktopRect previousSize =
+          GetScreenBounds() / GetDesktopToDeviceScale();
+      MOZ_LOG(sBaseWidgetLog, LogLevel::Debug,
+              ("before resize: " MOZ_FORMAT_RECT("%f"),
+               MOZ_SPLAT_RECT(previousSize)));
+    }
+
     adjustOSChrome();
     Resize(rect.X(), rect.Y(), rect.Width(), rect.Height(), true);
+
+    if (MOZ_LOG_TEST(sBaseWidgetLog, LogLevel::Warning)) {
+      // `rect` may have any underlying data type; coerce to float to
+      // simplify printf-style logging
+      const gfx::RectTyped<DesktopPixel, float> rectAsFloat{rect};
+
+      // The OS may have objected to the target position. That's not necessarily
+      // a problem -- it'll happen regularly on Macs with camera notches in the
+      // monitor, for instance (see bug 1786226) -- but it probably deserves to
+      // be called out.
+      //
+      // Since there's floating-point math involved, the actual values may be
+      // off by a few ulps -- as an upper bound, perhaps 8 * FLT_EPSILON *
+      // max(MOZ_SPLAT_RECT(rect)) -- but 0.01 should be several orders of
+      // magnitude bigger than that.
+
+      const auto postResizeRectRaw = GetScreenBounds();
+      const auto postResizeRect = postResizeRectRaw / GetDesktopToDeviceScale();
+      const bool succeeded = postResizeRect.WithinEpsilonOf(rectAsFloat, 0.01);
+
+      if (succeeded) {
+        MOZ_LOG(sBaseWidgetLog, LogLevel::Debug,
+                ("resized to: " MOZ_FORMAT_RECT("%f"),
+                 MOZ_SPLAT_RECT(rectAsFloat)));
+      } else {
+        MOZ_LOG(sBaseWidgetLog, LogLevel::Warning,
+                ("attempted to resize to: " MOZ_FORMAT_RECT("%f"),
+                 MOZ_SPLAT_RECT(rectAsFloat)));
+        MOZ_LOG(sBaseWidgetLog, LogLevel::Warning,
+                ("... but ended up at: " MOZ_FORMAT_RECT("%f"),
+                 MOZ_SPLAT_RECT(postResizeRect)));
+      }
+
+      MOZ_LOG(
+          sBaseWidgetLog, LogLevel::Verbose,
+          ("(... which, before DPI adjustment, is:" MOZ_FORMAT_RECT("%d") ")",
+           MOZ_SPLAT_RECT(postResizeRectRaw)));
+    }
   };
 
   if (aFullScreen) {
@@ -815,6 +871,8 @@ void nsBaseWidget::InfallibleMakeFullScreen(bool aFullScreen) {
     // Optimization: if where we are is where we were, then where we originally
     // came from is where we're going to go.
     if (currentWinRect == DesktopRect(mSavedBounds->screenRect)) {
+      MOZ_LOG(sBaseWidgetLog, LogLevel::Debug,
+              ("no location change detected; returning to saved location"));
       doReposition(mSavedBounds->windowRect);
       return;
     }
@@ -830,6 +888,9 @@ void nsBaseWidget::InfallibleMakeFullScreen(bool aFullScreen) {
       (N.B.: We do not clamp. If we were only partially on the old display,
       we'll be only partially on the new one, too.)
     */
+
+    MOZ_LOG(sBaseWidgetLog, LogLevel::Debug,
+            ("location change detected; computing new destination"));
 
     // splat: convert an arbitrary Rect into a tuple, for syntactic convenience.
     const auto splat = [](auto rect) {
@@ -867,6 +928,9 @@ void nsBaseWidget::InfallibleMakeFullScreen(bool aFullScreen) {
 
     doReposition(DesktopRect{nx, ny, nw, nh});
   }
+
+#undef MOZ_SPLAT_RECT
+#undef MOZ_FORMAT_RECT
 }
 
 nsresult nsBaseWidget::MakeFullScreen(bool aFullScreen) {
