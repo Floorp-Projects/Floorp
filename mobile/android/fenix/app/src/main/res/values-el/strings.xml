@@ -289,11 +289,15 @@
     <!-- Onboarding home screen popup dialog, shown on top of the Jump back in section. -->
     <string name="onboarding_home_screen_jump_back_contextual_hint_2">Γνωρίστε την εξατομικευμένη αρχική σας σελίδα. Οι πρόσφατες καρτέλες, οι σελιδοδείκτες και τα αποτελέσματα αναζήτησης θα εμφανίζονται εδώ.</string>
     <!-- Home onboarding dialog welcome screen title text. -->
-    <string name="onboarding_home_welcome_title">Καλώς ορίσατε σε ένα ανεξάρτητο διαδίκτυο</string>
+    <string moz:RemovedIn="106" name="onboarding_home_welcome_title" tools:ignore="UnusedResources">Καλώς ορίσατε σε ένα ανεξάρτητο διαδίκτυο</string>
+    <!-- Home onboarding dialog welcome screen title text. -->
+    <string name="onboarding_home_welcome_title_2">Καλώς ορίσατε σε ένα πιο προσωπικό διαδίκτυο</string>
     <!-- Home onboarding dialog welcome screen description text. -->
     <string name="onboarding_home_welcome_description">Περισσότερα χρώματα. Ενισχυμένο απόρρητο. Η ίδια δέσμευση να βάζουμε τον άνθρωπο πάνω από το κέρδος.</string>
     <!-- Home onboarding dialog sign into sync screen title text. -->
-    <string name="onboarding_home_sync_title_2">Εναλλαγή από τηλέφωνο σε υπολογιστή και αντίστροφα</string>
+    <string moz:RemovedIn="106" name="onboarding_home_sync_title_2" tools:ignore="UnusedResources">Εναλλαγή από τηλέφωνο σε υπολογιστή και αντίστροφα</string>
+    <!-- Home onboarding dialog sign into sync screen title text. -->
+    <string name="onboarding_home_sync_title_3">Η εναλλαγή οθονών είναι πιο εύκολη από ποτέ</string>
     <!-- Home onboarding dialog sign into sync screen description text. -->
     <string name="onboarding_home_sync_description">Συνεχίστε από εκεί που σταματήσατε, με καρτέλες από άλλες συσκευές στην αρχική σας σελίδα.</string>
     <!-- Text for the button to continue the onboarding on the home onboarding dialog. -->
@@ -1237,20 +1241,22 @@
     <!-- Onboarding -->
     <!-- Text for onboarding welcome message
     The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_header">Καλώς ορίσατε στο %s!</string>
+    <string moz:RemovedIn="106" name="onboarding_header" tools:ignore="UnusedResources">Καλώς ορίσατε στο %s!</string>
     <!-- text for the Firefox account onboarding sign in card header. The word "Firefox" should not be translated -->
-    <string name="onboarding_account_sign_in_header_1">Συγχρονισμός Firefox μεταξύ συσκευών</string>
+    <string moz:removedIn="106" name="onboarding_account_sign_in_header_1" tools:ignore="UnusedResources">Συγχρονισμός Firefox μεταξύ συσκευών</string>
     <!-- Text for the button to learn more about signing in to your Firefox account. The first parameter is the name of the application.-->
-    <string name="onboarding_manual_sign_in_description_2">Φέρτε σελιδοδείκτες, ιστορικό και κωδικούς πρόσβασης στο %1$s σε αυτήν τη συσκευή.</string>
+    <string moz:removedIn="106" name="onboarding_manual_sign_in_description_2" tools:ignore="UnusedResources">Φέρτε σελιδοδείκτες, ιστορικό και κωδικούς πρόσβασης στο %1$s σε αυτήν τη συσκευή.</string>
     <!-- text for the button to manually sign into Firefox account. -->
-    <string name="onboarding_firefox_account_sign_in_1">Εγγραφή</string>
+    <string moz:removedIn="106" name="onboarding_firefox_account_sign_in_1" tools:ignore="UnusedResources">Εγγραφή</string>
+    <!-- Text for the button to manually sign into Firefox account. -->
+    <string name="onboarding_firefox_account_sign_in">Σύνδεση</string>
     <!-- text to display in the snackbar once account is signed-in -->
     <string name="onboarding_firefox_account_sync_is_on">Το Sync είναι ενεργό</string>
 
     <!-- text for the tracking protection onboarding card header -->
-    <string name="onboarding_tracking_protection_header_3">Μόνιμη προστασία απορρήτου</string>
+    <string moz:removedIn="106" name="onboarding_tracking_protection_header_3" tools:ignore="UnusedResources">Μόνιμη προστασία απορρήτου</string>
     <!-- text for the tracking protection card description. The first parameter is the name of the application.-->
-    <string name="onboarding_tracking_protection_description_4">Το %1$s εμποδίζει την καταγραφή της διαδικτυακής δραστηριότητάς σας από εταιρείες.</string>
+    <string moz:removedIn="106" name="onboarding_tracking_protection_description_4" tools:ignore="UnusedResources">Το %1$s εμποδίζει την καταγραφή της διαδικτυακής δραστηριότητάς σας από εταιρείες.</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
     <string name="onboarding_tracking_protection_standard_button_2">Τυπική (προεπιλογή)</string>
     <!-- text for standard blocking option button description -->
@@ -1262,12 +1268,12 @@
     <!-- text for the toolbar position card header  -->
     <string name="onboarding_toolbar_placement_header_1">Επιλογή τοποθεσίας γραμμής εργαλείων</string>
     <!-- text for the toolbar position card description -->
-    <string name="onboarding_toolbar_placement_description_1">Τοποθετήστε τη γραμμή εργαλείων σε κοντινή απόσταση. Κρατήστε την στο κάτω μέρος ή μετακινήστε την στο πάνω μέρος.</string>
+    <string moz:removedIn="106" name="onboarding_toolbar_placement_description_1" tools:ignore="UnusedResources">Τοποθετήστε τη γραμμή εργαλείων σε κοντινή απόσταση. Κρατήστε την στο κάτω μέρος ή μετακινήστε την στο πάνω μέρος.</string>
     <!-- text for the privacy notice onboarding card header -->
-    <string name="onboarding_privacy_notice_header">Το απόρρητό σας</string>
+    <string moz:removedIn="106" name="onboarding_privacy_notice_header" tools:ignore="UnusedResources">Το απόρρητό σας</string>
     <!-- text for the privacy notice onboarding card description
     The first parameter is the name of the app (e.g. Firefox Preview) Substitute %s for long browser name. -->
-    <string name="onboarding_privacy_notice_description2">Έχουμε σχεδιάσει το %s έτσι, ώστε να ελέγχετε τι κοινοποιείτε στο διαδίκτυο και σε εμάς.</string>
+    <string moz:removedIn="106" name="onboarding_privacy_notice_description2" tools:ignore="UnusedResources">Έχουμε σχεδιάσει το %s έτσι, ώστε να ελέγχετε τι κοινοποιείτε στο διαδίκτυο και σε εμάς.</string>
     <!-- Text for the button to read the privacy notice -->
     <string name="onboarding_privacy_notice_read_button">Διαβάστε τη σημείωση απορρήτου μας</string>
 

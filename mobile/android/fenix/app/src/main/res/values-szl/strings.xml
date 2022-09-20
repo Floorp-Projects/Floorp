@@ -16,6 +16,8 @@
     <string name="search_hint">Szukej abo wkludź adresa</string>
 
 
+    <!-- Placeholder text shown in the search bar when using application search engines -->
+    <string name="application_search_hint">Wkludź szukane słowa</string>
     <!-- No Open Tabs Message Description -->
     <string name="no_open_tabs_description">Sam sie pokożōm twoje ôtwarte karty.</string>
     <!-- No Private Tabs Message Description -->
@@ -39,11 +41,9 @@
 
     <!-- Home - Recently saved bookmarks -->
     <!-- Title for the home screen section with recently saved bookmarks. -->
-    <string name="recent_bookmarks_title">Niydowne zokłodki</string>
-    <!-- Content description for the recently saved bookmarks section on the home screen. -->
-    <string moz:removedIn="100" name="recently_saved_bookmarks_content_description" tools:ignore="UnusedResources">Niydowno spamiyntane zokłodki</string>
-    <!-- Title for the button which navigates the user to show all of their saved bookmarks. -->
-    <string moz:removedIn="101" name="recently_saved_show_all" tools:ignore="UnusedResources">Pokoż wszyske</string>
+    <string moz:RemovedIn="106" name="recent_bookmarks_title" tools:ignore="UnusedResources">Niydowne zokłodki</string>
+    <!-- Title for the home screen section with recently saved bookmarks. -->
+    <string name="recently_saved_title">Ôstatnio spamiyntane</string>
     <!-- Content description for the button which navigates the user to show all of their saved bookmarks. -->
     <string name="recently_saved_show_all_content_description_2">Pokoż wszyske zokłodki</string>
     <!-- Text for the menu button to remove a recently saved bookmark from the user's home screen -->
@@ -78,6 +78,9 @@
     <string name="open_in_app_cfr_positive_button_text">Idź do sztalōnkōw</string>
     <!-- Text for the negative action button -->
     <string name="open_in_app_cfr_negative_button_text">Ôdkoż</string>
+
+    <!-- Content description for close button used in "contextual feature recommendation" (CFR) popups -->
+    <string name="cfr_dismiss_button_default_content_description">Zawrzij</string>
 
     <!-- Text for the info dialog when camera permissions have been denied but user tries to access a camera feature. -->
     <string name="camera_permissions_needed_message">Trza dostympu do kamery. Idź doo sztalōnkōw Androidaa, tyknij &quot;dozwolyństwa&quot; i tyknij &quot;zgoda&quot;.</string>
@@ -125,10 +128,10 @@
     <string name="recent_tabs_show_all_content_description_2">Pokoż knefel wszyskich niydownych kart</string>
     <!-- Title for showing a group item in the 'Jump back in' section of the new tab
         The first parameter is the search term that the user used. (for example: your search for "cat")-->
-    <string name="recent_tabs_search_term">Twoje wyszukowanie „%1$s”</string>
+    <string moz:RemovedIn="105" name="recent_tabs_search_term" tools:ignore="UnusedResources">Twoje wyszukowanie „%1$s”</string>
     <!-- Text for the number of tabs in a group in the 'Jump back in' section of the new tab
         %d is a placeholder for the number of sites in the group. This number will always be more than one. -->
-    <string name="recent_tabs_search_term_count_2">Strōny: %d</string>
+    <string moz:RemovedIn="105" name="recent_tabs_search_term_count_2" tools:ignore="UnusedResources">Strōny: %d</string>
     <!-- Text for button in synced tab card that opens synced tabs tray -->
     <string name="recent_tabs_see_all_synced_tabs_button_text">Ôbocz wszyske synchrōnizowane karty</string>
     <!-- Accessibility description for device icon used for recent synced tab -->
@@ -238,8 +241,6 @@
     <string name="search_suggestions_onboarding_title">Pokazować dorady szukanio we prywatnych ôknach?</string>
     <!-- Search suggestion onboarding hint description text, first parameter is the name of the app defined in app_name (for example: Fenix)-->
     <string name="search_suggestions_onboarding_text">%s bydzie przekazowoł bazowyj wyszukowarce wszysko, co wkludzosz we posku z adresōm.</string>
-    <!-- Search suggestion onboarding hint Learn more link text -->
-    <string moz:RemovedIn="100" name="search_suggestions_onboarding_learn_more_link" tools:ignore="UnusedResources">Przewiydz sie wiyncyj</string>
     <!-- Search engine suggestion title text. The first parameter is the name of teh suggested engine-->
     <string name="search_engine_suggestions_title">Szukej na %s</string>
     <!-- Search engine suggestion description text -->
@@ -250,25 +251,25 @@
 
     <!-- Home onboarding -->
     <!-- Onboarding home screen dialog title text. The first parameter is the name of the application.-->
-    <string name="onboarding_home_screen_title_3">Co je nowego w aplikacyji %1$s</string>
+    <string moz:RemovedIn="106" name="onboarding_home_screen_title_3" tools:ignore="UnusedResources">Co je nowego w aplikacyji %1$s</string>
     <!-- Onboarding home screen dialog description text. -->
-    <string name="onboarding_home_screen_description_2">Teroz je snadnij zacznōńć nazod tam, kaj sie skōńczyło.</string>
+    <string moz:RemovedIn="106" name="onboarding_home_screen_description_2" tools:ignore="UnusedResources">Teroz je snadnij zacznōńć nazod tam, kaj sie skōńczyło.</string>
     <!-- Onboarding home screen dialog title text for the home section. The first parameter is the name of the application.-->
-    <string name="onboarding_home_screen_section_home_title_3">Spersōnalizowano dōmowo strōna aplikacyje %1$s</string>
+    <string moz:RemovedIn="106" name="onboarding_home_screen_section_home_title_3" tools:ignore="UnusedResources">Spersōnalizowano dōmowo strōna aplikacyje %1$s</string>
     <!-- Onboarding home screen dialog description text for the home section. -->
-    <string name="onboarding_home_screen_section_home_description_2">Gibko dostōń do ôtwartych kart, zokłodek i historyje wyszukowanio.</string>
+    <string moz:RemovedIn="106" name="onboarding_home_screen_section_home_description_2" tools:ignore="UnusedResources">Gibko dostōń do ôtwartych kart, zokłodek i historyje wyszukowanio.</string>
     <!-- Onboarding home screen dialog description text for the tab tray section. -->
-    <string name="onboarding_home_screen_section_cleaner_tab_tray_title_2">Klarowne, zorganizowane karty</string>
+    <string moz:RemovedIn="106" name="onboarding_home_screen_section_cleaner_tab_tray_title_2" tools:ignore="UnusedResources">Klarowne, zorganizowane karty</string>
 
     <!-- Onboarding home screen dialog description text for the tab tray section. -->
-    <string name="onboarding_home_screen_section_cleaner_tab_tray_description_2">Zrōb porzōndek skuli lepszego rozłożynio i autōmatycznego zawiyranio kart.</string>
+    <string moz:RemovedIn="106" name="onboarding_home_screen_section_cleaner_tab_tray_description_2" tools:ignore="UnusedResources">Zrōb porzōndek skuli lepszego rozłożynio i autōmatycznego zawiyranio kart.</string>
     <!-- Onboarding home screen dialog description text for the history section. -->
-    <string name="onboarding_home_screen_section_useful_history_title_2">Niydowne szukania</string>
+    <string moz:RemovedIn="106" name="onboarding_home_screen_section_useful_history_title_2" tools:ignore="UnusedResources">Niydowne szukania</string>
     <!-- Onboarding home screen dialog description text for the history section. -->
-    <string name="onboarding_home_screen_section_useful_history_description_2">Wrōć do niydownego szukanio z domowyj strōny i kart.</string>
+    <string moz:RemovedIn="106" name="onboarding_home_screen_section_useful_history_description_2" tools:ignore="UnusedResources">Wrōć do niydownego szukanio z domowyj strōny i kart.</string>
 
     <!-- Onboarding home screen popup dialog, shown on top of the Jump back in section. Firefox is intentionally hardcoded. -->
-    <string name="onboarding_home_screen_jump_back_contextual_hint" tools:ignore="UnusedResources">Twoja spersōnalizowano dōmowo strōna Firefoksa pōmogo teroz snadnij wrōcić tam, kaj sie skōńczyło. Znojdź niydowne karty, zokłodki i wyniki szukanio.</string>
+    <string moz:RemovedIn="106" name="onboarding_home_screen_jump_back_contextual_hint" tools:ignore="UnusedResources">Twoja spersōnalizowano dōmowo strōna Firefoksa pōmogo teroz snadnij wrōcić tam, kaj sie skōńczyło. Znojdź niydowne karty, zokłodki i wyniki szukanio.</string>
 
     <!-- Search Widget -->
     <!-- Content description for searching with a widget. The first parameter is the name of the application.-->
@@ -361,7 +362,7 @@
     <!-- Preference for settings related to visual options -->
     <string name="preferences_customize">Przipasuj</string>
     <!-- Preference description for banner about signing in -->
-    <string name="preferences_sign_in_description">Synchrōnizuj zokłodki, historyjo i inksze ze swojim kōntym Firefox</string>
+    <string moz:RemovedIn="104" name="preferences_sign_in_description" tools:ignore="UnusedResources">Synchrōnizuj zokłodki, historyjo i inksze ze swojim kōntym Firefox</string>
     <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
     <string name="preferences_account_default_name">Kōnto Firefox</string>
     <!-- Preference text for account title when there was an error syncing FxA -->
@@ -448,10 +449,10 @@
     <!-- Snackbar label for action to view selected wallpaper -->
     <string name="wallpaper_updated_snackbar_action">Pokoż</string>
     <!-- Label for switch which toggles the "tap-to-switch" behavior on home screen logo -->
-    <string name="wallpaper_tap_to_change_switch_label_1">Tyknij logo dōmowyj strōny Firefoxa, coby zmiynić tapeta</string>
+    <string moz:removedIn="105" name="wallpaper_tap_to_change_switch_label_1" tools:ignore="UnusedResources">Tyknij logo dōmowyj strōny Firefoxa, coby zmiynić tapeta</string>
     <!-- This is the accessibility content description for the wallpapers functionality. Users are
     able to tap on the app logo in the home screen and can switch to different wallpapers by tapping. -->
-    <string name="wallpaper_logo_content_description">Logo firefoxa - zmiyń tapeta, knefel</string>
+    <string moz:removedIn="105" name="wallpaper_logo_content_description" tools:ignore="UnusedResources">Logo firefoxa - zmiyń tapeta, knefel</string>
 
     <!-- Add-on Installation from AMO-->
     <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is not supported -->
@@ -535,7 +536,7 @@
 
     <!-- Turn On Sync Preferences -->
     <!-- Header of the Turn on Sync preference view -->
-    <string name="preferences_sync">Załōncz synchronizacyjo</string>
+    <string moz:RemovedIn="104" name="preferences_sync" tools:ignore="UnusedResources">Załōncz synchronizacyjo</string>
     <!-- Preference for reconnecting to FxA sync -->
     <string name="preferences_sync_sign_in_to_reconnect">Wloguj sie, coby zaś sie połōnczyć</string>
     <!-- Preference for removing FxA account -->
@@ -625,9 +626,9 @@
     <!-- Option for a grid tab view -->
     <string name="tab_view_grid">Nec</string>
     <!-- Option for search term tab groups -->
-    <string name="tab_view_search_term_tab_groups">Grupy szukanio</string>
+    <string moz:RemovedIn="105" name="tab_view_search_term_tab_groups" tools:ignore="UnusedResources">Grupy szukanio</string>
     <!-- Summary text for search term tab groups -->
-    <string name="tab_view_search_term_tab_groups_summary">Zbiyrej społym powiōnzane strōny </string>
+    <string moz:RemovedIn="105" name="tab_view_search_term_tab_groups_summary" tools:ignore="UnusedResources">Zbiyrej społym powiōnzane strōny </string>
     <!-- Title of preference that allows a user to auto close tabs after a specified amount of time -->
     <string name="preferences_close_tabs">Zawrzij karty</string>
     <!-- Option for auto closing tabs that will never auto close tabs, always allows user to manually close tabs -->
@@ -734,8 +735,6 @@
     <string name="open_tabs_menu">Myni ôtwartych kart</string>
     <!-- Open tabs menu item to save tabs to collection -->
     <string name="tabs_menu_save_to_collection1">Spamiyntej karty do kolekcyje</string>
-    <!-- Content description (not visible, for screen readers etc.): Opens the tab menu when pressed -->
-    <string name="tab_menu">Myni kart</string>
 
 
     <!-- Text for the menu button to delete a collection -->
@@ -756,7 +755,7 @@
     <string name="pwa_site_controls_title_private">%1$s (prywatny tryb)</string>
 
     <!-- Title text for the normal tabs header in the tabs tray which are not part of any tab grouping. -->
-    <string name="tab_tray_header_title_1">Inksze karty</string>
+    <string moz:removedIn="104" name="tab_tray_header_title_1" tools:ignore="UnusedResources">Inksze karty</string>
 
     <!-- History -->
     <!-- Text for the button to search all history -->
@@ -786,9 +785,9 @@
     <string name="history_empty_message">Niy ma sam żodnyj historyje</string>
 
     <!-- Text for the button inside History screen that opens Synced History screen. History that is coming from other devices -->
-    <string name="history_synced_from_other_devices">Synchrōnizowane z inkszych maszin</string>
+    <string moz:removedIn="105" name="history_synced_from_other_devices" tools:ignore="UnusedResources">Synchrōnizowane z inkszych maszin</string>
     <!-- The page title for browsing history coming from other devices. -->
-    <string name="history_from_other_devices">Z inkszych maszin</string>
+    <string moz:removedIn="105" name="history_from_other_devices" tools:ignore="UnusedResources">Z inkszych maszin</string>
 
     <!-- Downloads -->
     <!-- Text for the snackbar to confirm that multiple downloads items have been removed -->
@@ -1075,8 +1074,6 @@
     <string name="snackbar_tabs_closed">Karty sōm zawarte</string>
     <!-- Text shown in snackbar when user bookmarks a list of tabs -->
     <string name="snackbar_message_bookmarks_saved">Zokłodki sōm spamiyntane!</string>
-    <!-- Text shown in snackbar when user adds a site to top sites -->
-    <string moz:RemovedIn="101" name="snackbar_added_to_top_sites" tools:ignore="UnusedResources">Przidane do topowych strōn!</string>
     <!-- Text shown in snackbar when user adds a site to shortcuts -->
     <string name="snackbar_added_to_shortcuts">Przidane do skrōtōw!</string>
     <!-- Text shown in snackbar when user closes a private tab -->
@@ -1155,7 +1152,8 @@
     <string name="delete_browsing_data_on_quit_action">Skōńcz</string>
 
     <!-- Dialog message to the user asking to delete browsing data. -->
-    <string name="delete_browsing_data_prompt_message">Bez to skasujōm sie wszyske dane przeglōndanio.</string>
+    <string moz:removedIn="104" name="delete_browsing_data_prompt_message" tools:ignore="UnusedResources">Bez to skasujōm sie wszyske dane przeglōndanio.</string>
+
     <!-- Dialog message to the user asking to delete browsing data. Parameter will be replaced by app name. -->
     <string name="delete_browsing_data_prompt_message_3">%s skasuje ôbrane dane przeglōndanio.</string>
     <!-- Text for the cancel button for the data deletion dialog -->
@@ -1168,9 +1166,6 @@
     <!-- Text for the snackbar to show the user that the deletion of browsing data is in progress -->
     <string name="deleting_browsing_data_in_progress">Kasowanie danych przeglōndanio…</string>
 
-    <!-- Dialog message to the user asking to delete all history items inside the opened group. -->
-    <string name="delete_history_group_prompt_message">To skasuje wszyske elymynta.</string>
-
     <!-- Text for the cancel button for the history group deletion dialog -->
     <string name="delete_history_group_prompt_cancel">Pociep</string>
     <!-- Text for the allow button for the history group dialog -->
@@ -1178,53 +1173,23 @@
     <!-- Text for the snackbar confirmation that the history group was deleted -->
     <string name="delete_history_group_snackbar">Grupa skasowano</string>
 
-    <!-- Tips -->
-    <!-- text for firefox preview moving tip header "Firefox Preview" and "Firefox Nightly" are intentionally hardcoded -->
-    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_header" tools:ignore="UnusedResources">Firefox Preview to teroz Firefox Nightly</string>
-
-    <!-- text for firefox preview moving tip description -->
-    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_description" tools:ignore="UnusedResources">Firefox Nightly kożdo noc je aktualizowany i mo nowe, eksperymyntalne funkcyje.
-        Może ale być mynij stabilny. Pobier nasza przeglōndarka beta, coby używać stabilniyjszyj wersyje.</string>
-
-    <!-- text for firefox preview moving tip button. "Firefox for Android Beta" is intentionally hardcoded -->
-    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_button_2" tools:ignore="UnusedResources">Pobier Firefoxa Beta na Androida</string>
-
-    <!-- text for firefox preview moving tip header. "Firefox Nightly" is intentionally hardcoded -->
-    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_header_preview_installed" tools:ignore="UnusedResources">Firefox Nightly sie przekludziōł</string>
-
-    <!-- text for firefox preview moving tip description -->
-    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_description_preview_installed" tools:ignore="UnusedResources">Ta aplikacyjo niy bydzie już dostować bezpiecznych aktualizacyji. Przestōń jij używać i przełōncz sie na nowe Nightly.
-        \n\nCoby przeniyś swoje zokłodki, dane logowanio i historyjo do inkszyj aplikacyji, załōż kōnto Firefoxa.</string>
-    <!-- text for firefox preview moving tip button  -->
-    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_button_preview_installed" tools:ignore="UnusedResources">Przełōncz sie na nowe Nightly</string>
-
-    <!-- text for firefox preview moving tip header. "Firefox Nightly" is intentionally hardcoded -->
-    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_header_preview_not_installed" tools:ignore="UnusedResources">Firefox Nightly sie przekludziōł</string>
-    <!-- text for firefox preview moving tip description -->
-    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_description_preview_not_installed" tools:ignore="UnusedResources">Ta aplikacyjo niy bydzie już dostować bezpiecznych aktualizacyji. Pobier nowe Nightly i przestōń jij używać.
-        \n\nCoby przeniyś swoje zokłodki, dane logowanio i historyjo do inkszyj aplikacyji, załōż kōnto Firefoxa.</string>
-    <!-- text for firefox preview moving tip button  -->
-    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_button_preview_not_installed" tools:ignore="UnusedResources">Pobier nowe Nightly</string>
-
     <!-- Onboarding -->
     <!-- Text for onboarding welcome message
     The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_header">%s wito!</string>
+    <string moz:RemovedIn="106" name="onboarding_header" tools:ignore="UnusedResources">%s wito!</string>
     <!-- text for the Firefox account onboarding sign in card header. The word "Firefox" should not be translated -->
-    <string name="onboarding_account_sign_in_header_1">Synchrōnizuj Firefoxa miyndzy maszinami</string>
-    <!-- text for the Firefox account onboarding sign in card header. The first parameter is the name of the application.-->
-    <string moz:RemovedIn="100" name="onboarding_account_sign_in_header_2" tools:ignore="UnusedResources">Synchrōnizuj aplikacyjo %1$s miyndzy maszinami</string>
+    <string moz:removedIn="106" name="onboarding_account_sign_in_header_1" tools:ignore="UnusedResources">Synchrōnizuj Firefoxa miyndzy maszinami</string>
     <!-- Text for the button to learn more about signing in to your Firefox account. The first parameter is the name of the application.-->
-    <string name="onboarding_manual_sign_in_description_2">Przekludź zokłodki, historyjo i hasła do aplikacyje %1$s na tyj maszinie.</string>
+    <string moz:removedIn="106" name="onboarding_manual_sign_in_description_2" tools:ignore="UnusedResources">Przekludź zokłodki, historyjo i hasła do aplikacyje %1$s na tyj maszinie.</string>
     <!-- text for the button to manually sign into Firefox account. -->
-    <string name="onboarding_firefox_account_sign_in_1">Zaregistruj sie</string>
+    <string moz:removedIn="106" name="onboarding_firefox_account_sign_in_1" tools:ignore="UnusedResources">Zaregistruj sie</string>
     <!-- text to display in the snackbar once account is signed-in -->
     <string name="onboarding_firefox_account_sync_is_on">Synchrōnizacyjo je załōnczōno</string>
     <!-- text for the tracking protection onboarding card header -->
-    <string name="onboarding_tracking_protection_header_3">Zawdy z prywatnościōm</string>
+    <string moz:removedIn="106" name="onboarding_tracking_protection_header_3" tools:ignore="UnusedResources">Zawdy z prywatnościōm</string>
 
     <!-- text for the tracking protection card description. The first parameter is the name of the application.-->
-    <string name="onboarding_tracking_protection_description_4">%1$s autōmatycznie niy dowo fyrmōm śledzic cie po kryjōmu po necu.</string>
+    <string moz:removedIn="106" name="onboarding_tracking_protection_description_4" tools:ignore="UnusedResources">%1$s autōmatycznie niy dowo fyrmōm śledzic cie po kryjōmu po necu.</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
     <string name="onboarding_tracking_protection_standard_button_2">Standardowo (bazowe)</string>
     <!-- text for standard blocking option button description -->
@@ -1236,13 +1201,13 @@
     <!-- text for the toolbar position card header  -->
     <string name="onboarding_toolbar_placement_header_1">Ôbier, kaj mo być posek z noczyniami</string>
     <!-- text for the toolbar position card description -->
-    <string name="onboarding_toolbar_placement_description_1">Dej posek z noczyniami na spodku abo na wiyrchu, coby snadnie do niego dostować. </string>
+    <string moz:removedIn="106" name="onboarding_toolbar_placement_description_1" tools:ignore="UnusedResources">Dej posek z noczyniami na spodku abo na wiyrchu, coby snadnie do niego dostować. </string>
 
     <!-- text for the privacy notice onboarding card header -->
-    <string name="onboarding_privacy_notice_header">Twoja prywatność</string>
+    <string moz:removedIn="106" name="onboarding_privacy_notice_header" tools:ignore="UnusedResources">Twoja prywatność</string>
     <!-- text for the privacy notice onboarding card description
     The first parameter is the name of the app (e.g. Firefox Preview) Substitute %s for long browser name. -->
-    <string name="onboarding_privacy_notice_description2">%s dowo ci kōntrola nad tym, co udostympniosz online i co udostympniosz nōm.</string>
+    <string moz:removedIn="106" name="onboarding_privacy_notice_description2" tools:ignore="UnusedResources">%s dowo ci kōntrola nad tym, co udostympniosz online i co udostympniosz nōm.</string>
     <!-- Text for the button to read the privacy notice -->
     <string name="onboarding_privacy_notice_read_button">Poczytej ô naszych prawidłach prywatności</string>
 

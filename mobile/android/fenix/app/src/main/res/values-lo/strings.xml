@@ -466,6 +466,9 @@
     <!-- Snackbar label for action to view selected wallpaper -->
     <string name="wallpaper_updated_snackbar_action">ເບິ່ງ</string>
 
+    <!-- Label for switch which toggles the "tap-to-switch" behavior on home screen logo -->
+    <string moz:removedIn="105" name="wallpaper_tap_to_change_switch_label_1" tools:ignore="UnusedResources">ປ່ຽນຮູບວໍເປເປີໂດຍການແຕະໃສ່ໂລໂກ້ຂອງໜ້າຫຼັກຂອງ Firefox</string>
+
     <!-- Add-on Installation from AMO-->
     <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is not supported -->
     <string name="addon_not_supported_error">Add-on ນີ້ແມ່ນບໍ່ໄດ້ຮັບການຊັບພອດ</string>
@@ -683,6 +686,9 @@
     <!-- Category header of a preference that allows a user to enable or disable the inactive tabs feature -->
     <string name="preferences_inactive_tabs">ຍ້າຍແຖບເກົ່າໄປເປັນແຖບທີບໍ່ມີການເຄື່ອນໄຫວ</string>
 
+    <!-- Title of inactive tabs preference -->
+    <string name="preferences_inactive_tabs_title">ແຖບທີ່ທ່ານບໍ່ໄດ້ເບິ່ງເປັນເວລາສອງອາທິດຈະຖືກຍ້າຍໄປພາກສ່ວນທີ່ບໍ່ເຄື່ອນໄຫວ.</string>
+
     <!-- Studies -->
     <!-- Title of the remove studies button -->
     <string name="studies_remove">ລຶບ</string>
@@ -805,6 +811,8 @@
     <string moz:removedIn="105" name="history_synced_from_other_devices" tools:ignore="UnusedResources">ຊິງຄ໌ຈາກອຸປະກອນອື່ນ</string>
     <!-- The page title for browsing history coming from other devices. -->
     <string moz:removedIn="105" name="history_from_other_devices" tools:ignore="UnusedResources">ຈາກອຸປະກອນອື່ນ</string>
+    <!-- The synced history sign in dialog message -->
+    <string moz:removedIn="105" name="history_sign_in_message" tools:ignore="UnusedResources">ເຂົ້າສູ່ລະບົບເພື່ອເບິ່ງປະຫວັດການຊິງຄ໌ຈາກອຸປະກອນອື່ນຂອງທ່ານ.</string>
     <!-- The synced history sign in dialog button text -->
     <string moz:removedIn="105" name="history_sign_in_button" tools:ignore="UnusedResources">ເຂົ້າສູ່ລະບົບ</string>
     <!-- The synced history sign in dialog create a new account link -->
@@ -1227,12 +1235,16 @@
     <!-- text to display in the snackbar once account is signed-in -->
     <string name="onboarding_firefox_account_sync_is_on">Sync ເປີດຢູ່</string>
 
+    <!-- text for the tracking protection onboarding card header -->
+    <string name="onboarding_tracking_protection_header_3">ຄວາມເປັນສ່ວນຕົວເປີດຕະຫຼອດ</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
     <string name="onboarding_tracking_protection_standard_button_2">ມາດຕະຖານ (ຄ່າພື້ນຖານ)</string>
 
     <!-- text for tracking protection radio button option for strict level of blocking -->
     <string name="onboarding_tracking_protection_strict_option">ເຂັ້ມງວດ</string>
 
+    <!-- text for the toolbar position card header  -->
+    <string name="onboarding_toolbar_placement_header_1">ເລືອກການຈັດວາງແຖບເຄື່ອງມືຂອງທ່ານ</string>
     <!-- text for the privacy notice onboarding card header -->
     <string name="onboarding_privacy_notice_header">ຄວາມເປັນສ່ວນຕົວຂອງທ່ານ</string>
     <!-- Text for the button to read the privacy notice -->
@@ -1245,6 +1257,8 @@
     <!-- text for the theme picker onboarding card header -->
     <string name="onboarding_theme_picker_header">ເລືອກຊຸດປັບແຕ່ງຂອງທ່ານ</string>
 
+    <!-- text for the theme picker onboarding card description -->
+    <string name="onboarding_theme_picker_description_2">ປະຫຍັດແບດເຕີລີ່ ແລະ ສາຍຕາຂອງທ່ານໂດຍເປີດນຳໃຊ້ໂຫມດມືດ.</string>
     <!-- Automatic theme setting (will follow device setting) -->
     <string name="onboarding_theme_automatic_title">ອັດຕະໂນມັດ</string>
     <!-- Summary of automatic theme setting (will follow device setting) -->
@@ -1343,6 +1357,8 @@
 
     <!-- Category of trackers (cross-site tracking cookies) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cookies_title_2">ຄຸກກີຂ້າມເວັບໄຊ</string>
+    <!-- Category of trackers (cryptominers) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_cryptominers_title">ຕົວຂຸດຫລຽນດິຈິຕໍລ</string>
     <!-- Category of trackers (fingerprinters) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_fingerprinters_title">ລາຍນິ້ວມື</string>
     <!-- Category of trackers (tracking content) that can be blocked by Enhanced Tracking Protection -->
@@ -1535,6 +1551,8 @@
     <string name="credit_cards_menu_delete_card">ລຶບບັດ</string>
     <!-- The text for the "Delete card" button for deleting a credit card -->
     <string name="credit_cards_delete_card_button">ລຶບບັດ</string>
+    <!-- The text for the confirmation message of "Delete card" dialog -->
+    <string name="credit_cards_delete_dialog_confirmation">ທ່ານແນ່ໃຈບໍ່ວ່າທ່ານຕ້ອງການລຶບບັດເຄດິດນີ້?</string>
     <!-- The text for the positive button on "Delete card" dialog -->
     <string name="credit_cards_delete_dialog_button">ລຶບ</string>
     <!-- The title for the "Save" menu item for saving a credit card -->
@@ -1599,11 +1617,18 @@
     <!-- The text for the "Delete address" button for deleting an address -->
     <string name="addressess_delete_address_button">ລຶບທີ່ຢູ່</string>
 
+    <!-- The title for the "Delete address" confirmation dialog -->
+    <string name="addressess_confirm_dialog_message">ທ່ານແນ່ໃຈບໍ່ວ່າຕ້ອງການລຶບທີ່ຢູ່ນີ້?</string>
     <!-- The text for the positive button on "Delete address" dialog -->
     <string name="addressess_confirm_dialog_ok_button">ລຶບ</string>
 
     <!-- The text for the negative button on "Delete address" dialog -->
     <string name="addressess_confirm_dialog_cancel_button">ຍົກເລີກ</string>
+
+    <!-- The text for the "Save address" menu item for saving an address -->
+    <string name="address_menu_save_address">ບັນທຶກທີ່ຢູ່</string>
+    <!-- The text for the "Delete address" menu item for deleting an address -->
+    <string name="address_menu_delete_address">ລຶບທີ່ຢູ່</string>
 
     <!-- Title of the Add search engine screen -->
     <string name="search_engine_add_custom_search_engine_title">ເພີ່ມເຄື່ອງມືການຄົ້ນຫາ</string>
@@ -1656,6 +1681,14 @@
     <!-- Third step for the allowing a permission (Fore example: Camera) -->
     <string name="phone_feature_blocked_step_feature"><![CDATA[3. ສະລັບ <b>%1$s</b> ເປັນເປີດ]]></string>
 
+    <!-- Label that indicates a site is using a secure connection -->
+    <string name="quick_settings_sheet_secure_connection_2">ການເຊື່ອມຕໍ່ແມ່ນປອດໄພ</string>
+    <!-- Label that indicates a site is using a insecure connection -->
+    <string name="quick_settings_sheet_insecure_connection_2">ການເຊື່ອມຕໍ່ບໍ່ປອດໄພ</string>
+    <!-- Label to clear site data -->
+    <string name="clear_site_data">ລຶບລ້າງຄຸກກີ້ ແລະຂໍ້ມູນເວັບໄຊ</string>
+    <!-- label shown when there are not site exceptions to show in the site exception settings -->
+    <string name="no_site_exceptions">ບໍ່ມີຂໍ້ຍົກເວັ້ນໃນເວັບໄຊທ໌</string>
     <!-- Browser menu button that adds a shortcut to the home fragment -->
     <string name="browser_menu_add_to_shortcuts">ເພີ່ມທາງລັດ</string>
     <!-- text shown before the issuer name to indicate who its verified by, parameter is the name of
@@ -1672,6 +1705,10 @@
     <string name="dialog_delete_positive">ລຶບ</string>
     <!-- Negative action of a dialog asking to delete login -->
     <string name="dialog_delete_negative">ຍົກເລີກ</string>
+    <!--  The saved login options menu description. -->
+    <string name="login_options_menu">ທາງເລືອກການເຂົ້າສູ່ລະບົບ</string>
+    <!--  The button description to save changes to an edited login. -->
+    <string name="save_changes_to_login">ບັນທຶກການປ່ຽນແປງໃນການເຂົ້າສູ່ລະບົບ.</string>
     <!--  The page title for editing a saved login. -->
     <string name="edit">ແກ້ໄຂ</string>
     <!--  The page title for adding new login. -->
@@ -1714,15 +1751,35 @@
 
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">ໂອເຄ, ເຂົ້າໃຈແລ້ວ</string>
-    <!-- Title text displayed in the rename top site dialog. -->
+    <!-- Label for the preference to show the shortcuts for the most visited top sites on the homepage -->
+    <string name="top_sites_toggle_top_recent_sites_4">ທາງລັດ</string>
+	<!-- Title text displayed in the rename top site dialog. -->
 	<string name="top_sites_rename_dialog_title">ຊື່</string>
-    <!-- Button caption to confirm the renaming of the top site. -->
+    <!-- Hint for renaming title of a shortcut -->
+    <string name="shortcut_name_hint">ຊື່ທາງລັດ</string>
+	<!-- Button caption to confirm the renaming of the top site. -->
 	<string name="top_sites_rename_dialog_ok">ໂອເຄ</string>
 	<!-- Dialog button text for canceling the rename top site prompt. -->
 	<string name="top_sites_rename_dialog_cancel">ຍົກເລີກ</string>
 
+    <!-- Text for the menu button to open the homepage settings. -->
+    <string name="top_sites_menu_settings">ການຕັ້ງຄ່າ</string>
     <!-- Label text displayed for a sponsored top site. -->
     <string name="top_sites_sponsored_label">ໄດ້ຮັບການສະຫນັບສະຫນູນ</string>
+
+    <!-- Inactive tabs in the tabs tray -->
+    <!-- Title text displayed in the tabs tray when a tab has been unused for 14 days. -->
+    <string name="inactive_tabs_title">ແທັບທີບໍ່ໄດ້ໃຊ້ງານ</string>
+    <!-- Content description for closing all inactive tabs -->
+    <string name="inactive_tabs_delete_all">ປິດແທັບທີບໍ່ໄດ້ໃຊ້ງານທັງໝົດ</string>
+
+    <!-- Content description for expanding the inactive tabs section. -->
+    <string name="inactive_tabs_expand_content_description">ຂະຫຍາຍແຖບທີ່ບໍ່ເຄື່ອນໄຫວ</string>
+    <!-- Content description for collapsing the inactive tabs section. -->
+    <string name="inactive_tabs_collapse_content_description">ຫຍໍ້ແຖບທີ່ບໍ່ເຄື່ອນໄຫວ</string>
+
+    <!-- A call to action below the description to allow the user to turn on the auto closing of inactive tabs. -->
+    <string name="inactive_tabs_auto_close_message_action" tools:ignore="UnusedResources">ເປີດປິດອັດຕະໂນມັດ</string>
 
     <!-- Content description for close button in collection placeholder. -->
     <string name="remove_home_collection_placeholder_content_description">ລົບ</string>
@@ -1733,4 +1790,16 @@
     <!-- Content description for privacy content close button -->
     <string name="privacy_content_close_button_content_description">ປິດ</string>
 
-    </resources>
+    <!-- Text of a button allowing users to access an external url for more Pocket recommendations. -->
+    <string name="pocket_stories_placeholder_text">ຄົ້ນຫາເພີ່ມເຕີມ</string>
+    <!-- Clickable text for opening an external link for more information about Pocket. -->
+    <string name="pocket_stories_feature_learn_more">ຮຽນຮູ້ເພີ່ມເຕີມ</string>
+    <!-- Text indicating that the Pocket story that also displays this text is a sponsored story by other 3rd party entity. -->
+    <string name="pocket_stories_sponsor_indication">ໄດ້ຮັບການສະຫນັບສະຫນູນ</string>
+
+    <!-- Snackbar message for enrolling in a Nimbus experiment from the secret settings when Studies preference is Off.-->
+    <string name="experiments_snackbar">ເປີດໃຊ້ງານການສົ່ງຂໍ້ມູນທາງໄກເພື່ອສົ່ງຂໍ້ມູນ.</string>
+    <!-- Snackbar button text to navigate to telemetry settings.-->
+    <string name="experiments_snackbar_button">ໄປທີ່ການຕັ້ງຄ່າ</string>
+    <string name="firefox_suggest_header">Firefox ແນະນໍາ</string>
+</resources>
