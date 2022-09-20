@@ -609,7 +609,7 @@ nsAppStartup::ExitLastWindowClosingSurvivalArea(void) {
 
 NS_IMETHODIMP
 nsAppStartup::GetShuttingDown(bool* aResult) {
-  *aResult = mShuttingDown;
+  *aResult = AppShutdown::IsInOrBeyond(ShutdownPhase::AppShutdownConfirmed);
   return NS_OK;
 }
 
