@@ -58,9 +58,9 @@ class RTPSender {
   uint32_t TimestampOffset() const RTC_LOCKS_EXCLUDED(send_mutex_);
   void SetTimestampOffset(uint32_t timestamp) RTC_LOCKS_EXCLUDED(send_mutex_);
 
-  void SetRid(const std::string& rid) RTC_LOCKS_EXCLUDED(send_mutex_);
+  void SetRid(absl::string_view rid) RTC_LOCKS_EXCLUDED(send_mutex_);
 
-  void SetMid(const std::string& mid) RTC_LOCKS_EXCLUDED(send_mutex_);
+  void SetMid(absl::string_view mid) RTC_LOCKS_EXCLUDED(send_mutex_);
 
   uint16_t SequenceNumber() const RTC_LOCKS_EXCLUDED(send_mutex_);
   void SetSequenceNumber(uint16_t seq) RTC_LOCKS_EXCLUDED(send_mutex_);

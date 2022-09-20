@@ -15,6 +15,7 @@
 #include <string>
 #include <vector>
 
+#include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
 #include "api/field_trials_view.h"
 #include "api/frame_transformer_interface.h"
@@ -258,12 +259,12 @@ class RtpRtcpInterface : public RtcpFeedbackSenderInterface {
   // RIDs are used to identify an RTP stream if SSRCs are not negotiated.
   // If the RID and Repaired RID extensions are not registered, the RID will
   // not be sent.
-  virtual void SetRid(const std::string& rid) = 0;
+  virtual void SetRid(absl::string_view rid) = 0;
 
   // Sets the value for sending in the MID RTP header extension.
   // The MID RTP header extension should be registered for this to do anything.
   // Once set, this value can not be changed or removed.
-  virtual void SetMid(const std::string& mid) = 0;
+  virtual void SetMid(absl::string_view mid) = 0;
 
   // Sets CSRC.
   // `csrcs` - vector of CSRCs
@@ -376,7 +377,7 @@ class RtpRtcpInterface : public RtcpFeedbackSenderInterface {
 
   // Sets RTCP CName (i.e unique identifier).
   // Returns -1 on failure else 0.
-  virtual int32_t SetCNAME(const char* cname) = 0;
+  virtual int32_t SetCNAME(absl::string_view cname) = 0;
 
   // Returns remote NTP.
   // Returns -1 on failure else 0.

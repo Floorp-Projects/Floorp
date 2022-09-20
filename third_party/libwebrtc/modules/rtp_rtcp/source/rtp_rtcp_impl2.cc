@@ -19,6 +19,7 @@
 #include <string>
 #include <utility>
 
+#include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
 #include "api/sequence_checker.h"
 #include "api/transport/field_trial_based_config.h"
@@ -227,13 +228,13 @@ uint32_t ModuleRtpRtcpImpl2::local_media_ssrc() const {
   return rtcp_receiver_.local_media_ssrc();
 }
 
-void ModuleRtpRtcpImpl2::SetRid(const std::string& rid) {
+void ModuleRtpRtcpImpl2::SetRid(absl::string_view rid) {
   if (rtp_sender_) {
     rtp_sender_->packet_generator.SetRid(rid);
   }
 }
 
-void ModuleRtpRtcpImpl2::SetMid(const std::string& mid) {
+void ModuleRtpRtcpImpl2::SetMid(absl::string_view mid) {
   if (rtp_sender_) {
     rtp_sender_->packet_generator.SetMid(mid);
   }
@@ -463,7 +464,7 @@ void ModuleRtpRtcpImpl2::SetRTCPStatus(const RtcpMode method) {
   rtcp_sender_.SetRTCPStatus(method);
 }
 
-int32_t ModuleRtpRtcpImpl2::SetCNAME(const char* c_name) {
+int32_t ModuleRtpRtcpImpl2::SetCNAME(absl::string_view c_name) {
   return rtcp_sender_.SetCNAME(c_name);
 }
 
