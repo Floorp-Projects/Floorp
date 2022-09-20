@@ -112,7 +112,7 @@ Let's get an allocation trace:
 
 1. open the Memory tool
 2. check "Record call stacks"
-3. load https://mdn.github.io/performance-scenarios/dom-allocs/alloc.html
+3. load https://firefox-devtools.github.io/performance-scenarios/dom-allocs/alloc.html
 4. take a snapshot
 5. select "View/Aggregate"
 6. select "Group by/Call Stack"

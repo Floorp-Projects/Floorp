@@ -31,7 +31,7 @@ The Web Audio Editor is not enabled by default in Firefox 32. To enable it, open
 
 
 - the `Voice-change-O-Matic <https://github.com/mdn/voice-change-o-matic>`_, which can apply various effects to the microphone input and also provides a visualisation of the result
-- the `Violent Theremin <https://mdn.github.io/violent-theremin/>`_, which changes the pitch and volume of a sine wave as you move the mouse pointer
+- the `Violent Theremin <https://mdn.github.io/webaudio-examples/violent-theremin/>`_, which changes the pitch and volume of a sine wave as you move the mouse pointer
 
 
 Visualizing the graph

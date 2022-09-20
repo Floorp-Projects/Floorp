@@ -163,7 +163,7 @@ Finally, if you click inside the bar at the top of the timeline, you get a scrub
 Further information about animation compositing
 -----------------------------------------------
 
-If you open `animation-inspector-compositing.html <https://mdn.github.io/devtools-examples/animation-inspector/animation-inspector-compositing.html>`_ and click the red rectangle, a simple `opacity <https://developer.mozilla.org/en-US/docs/Web/CSS/opacity>`_ animation will start. If you look at this in the Animation Inspector in Firefox 49+, you'll see that:
+If you open `animation-inspector-compositing.html <https://firefox-devtools.github.io/devtools-examples/animation-inspector/animation-inspector-compositing.html>`_ and click the red rectangle, a simple `opacity <https://developer.mozilla.org/en-US/docs/Web/CSS/opacity>`_ animation will start. If you look at this in the Animation Inspector in Firefox 49+, you'll see that:
 
 
 - The white lightning bolt icon now indicates whether all the animation properties have been optimized by running them through the compositor, where possible.
@@ -174,7 +174,7 @@ If you open `animation-inspector-compositing.html <https://mdn.github.io/devtool
 .. image:: animation_swoosh_01.png
   :class: border
 
-Let's now look at `animation-inspector-compositing-silly.html <https://mdn.github.io/devtools-examples/animation-inspector/animation-inspector-compositing-silly.html>`_ — this is the same example, except that now once the red rectangle is clicked we animate both the `left <https://developer.mozilla.org/en-US/docs/Web/CSS/left>`_ and `transform <https://developer.mozilla.org/en-US/docs/Web/CSS/transform>`_ (with a translation) properties at the same time as `opacity <https://developer.mozilla.org/en-US/docs/Web/CSS/opacity>`_. It doesn't make much sense to try to animate a geometric property and a translation at the same time — the two effects won't be synchronized — so the ``transform`` property is deliberately not handed over to the compositor to handle. The Animation Inspector will tell you this — look at it now and you'll see that:
+Let's now look at `animation-inspector-compositing-silly.html <https://firefox-devtools.github.io/devtools-examples/animation-inspector/animation-inspector-compositing-silly.html>`_ — this is the same example, except that now once the red rectangle is clicked we animate both the `left <https://developer.mozilla.org/en-US/docs/Web/CSS/left>`_ and `transform <https://developer.mozilla.org/en-US/docs/Web/CSS/transform>`_ (with a translation) properties at the same time as `opacity <https://developer.mozilla.org/en-US/docs/Web/CSS/opacity>`_. It doesn't make much sense to try to animate a geometric property and a translation at the same time — the two effects won't be synchronized — so the ``transform`` property is deliberately not handed over to the compositor to handle. The Animation Inspector will tell you this — look at it now and you'll see that:
 
 
 - The white lightning bolt icon in the bar has been replaced with a grey lightning bolt icon, to indicate that only some of the relevant properties are being optimized by the compositor.
