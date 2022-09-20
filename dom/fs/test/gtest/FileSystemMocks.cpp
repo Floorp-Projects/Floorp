@@ -16,24 +16,7 @@
 #include "nsContentUtils.h"
 #include "nsISupports.h"
 
-namespace testing::internal {
 
-GTEST_API_ ::testing::AssertionResult CmpHelperSTREQ(const char* s1_expression,
-                                                     const char* s2_expression,
-                                                     const nsAString& s1,
-                                                     const nsAString& s2) {
-  if (s1.Equals(s2)) {
-    return ::testing::AssertionSuccess();
-  }
-
-  return ::testing::internal::EqFailure(
-      s1_expression, s2_expression,
-      std::string(NS_ConvertUTF16toUTF8(s1).get()),
-      std::string(NS_ConvertUTF16toUTF8(s2).get()),
-      /* ignore case */ false);
-}
-
-}  // namespace testing::internal
 
 namespace mozilla::dom::fs::test {
 

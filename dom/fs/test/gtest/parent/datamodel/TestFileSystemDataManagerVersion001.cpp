@@ -189,10 +189,31 @@ TEST(TestFileSystemDatabaseManagerVersion001, smokeTestCreateRemoveFiles)
   ASSERT_EQ(0u, entries.directories().Length());
   ASSERT_EQ(1u, entries.files().Length());
 
-  const auto& firstItemRef = entries.files()[0];
+  auto& firstItemRef = entries.files()[0];
   ASSERT_TRUE(u"First"_ns == firstItemRef.entryName())
   << firstItemRef.entryName();
   ASSERT_STREQ(firstChild.get(), firstItemRef.entryId().get());
+
+  nsString type;
+  TimeStamp lastModifiedMilliSeconds;
+  Path path;
+  nsCOMPtr<nsIFile> file;
+  rv = dm->GetFile({rootId, firstItemRef.entryId()}, type,
+                   lastModifiedMilliSeconds, path, file);
+  ASSERT_NSEQ(NS_OK, rv);
+
+  ASSERT_TRUE(type.IsEmpty());
+
+  const int64_t nowMilliSeconds = PR_Now() / 1000;
+  ASSERT_GE(nowMilliSeconds, lastModifiedMilliSeconds);
+  const int64_t expectedMaxDelayMilliSeconds = 100;
+  const int64_t actualDelay = nowMilliSeconds - lastModifiedMilliSeconds;
+  ASSERT_LT(actualDelay, expectedMaxDelayMilliSeconds);
+
+  ASSERT_EQ(1u, path.Length());
+  ASSERT_STREQ(u"First"_ns, path[0]);
+
+  ASSERT_NE(nullptr, file);
 
   // Getting the file entry as directory fails
   TEST_TRY_UNWRAP_ERR(

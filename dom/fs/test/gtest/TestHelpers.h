@@ -12,6 +12,15 @@
 #include "mozilla/ErrorNames.h"
 #include "mozilla/dom/quota/QuotaCommon.h"
 
+namespace testing::internal {
+
+GTEST_API_ ::testing::AssertionResult CmpHelperSTREQ(const char* s1_expression,
+                                                     const char* s2_expression,
+                                                     const nsAString& s1,
+                                                     const nsAString& s2);
+
+}  // namespace testing::internal
+
 #define ASSERT_NSEQ(lhs, rhs) \
   ASSERT_STREQ(GetStaticErrorName((lhs)), GetStaticErrorName((rhs)))
 

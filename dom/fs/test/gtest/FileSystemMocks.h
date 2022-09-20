@@ -34,15 +34,6 @@
 #include "nsISupportsImpl.h"
 #include "nsITimer.h"
 
-namespace testing::internal {
-
-GTEST_API_ ::testing::AssertionResult CmpHelperSTREQ(const char* s1_expression,
-                                                     const char* s2_expression,
-                                                     const nsAString& s1,
-                                                     const nsAString& s2);
-
-}  // namespace testing::internal
-
 namespace mozilla::dom::fs {
 
 inline std::ostream& operator<<(std::ostream& aOut,
