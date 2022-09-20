@@ -63,7 +63,7 @@ class MockDcSctpSocket : public DcSctpSocketInterface {
               (StreamID stream_id, size_t bytes),
               (override));
 
-  MOCK_METHOD(Metrics, GetMetrics, (), (const, override));
+  MOCK_METHOD(absl::optional<Metrics>, GetMetrics, (), (const, override));
 
   MOCK_METHOD(HandoverReadinessStatus,
               GetHandoverReadiness,
@@ -73,8 +73,6 @@ class MockDcSctpSocket : public DcSctpSocketInterface {
               GetHandoverStateAndClose,
               (),
               (override));
-
-  MOCK_METHOD(SctpImplementation, peer_implementation, (), (const));
 };
 
 }  // namespace dcsctp
