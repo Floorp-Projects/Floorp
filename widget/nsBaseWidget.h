@@ -714,7 +714,7 @@ class nsBaseWidget : public nsIWidget, public nsSupportsWeakReference {
   Cursor mCursor;
   nsBorderStyle mBorderStyle;
   LayoutDeviceIntRect mBounds;
-  LayoutDeviceIntRect* mOriginalBounds;
+  mozilla::UniquePtr<LayoutDeviceIntRect> mOriginalBounds;
   bool mIsTiled;
   nsPopupLevel mPopupLevel;
   nsPopupType mPopupType;
