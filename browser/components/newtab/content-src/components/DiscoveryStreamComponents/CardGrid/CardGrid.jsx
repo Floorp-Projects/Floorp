@@ -95,7 +95,22 @@ export function RecentSavesContainer({
     return null;
   }
 
+  let queryParams = `?utm_source=${utmSource}`;
+  if (utmCampaign && utmContent) {
+    queryParams += `&utm_content=${utmContent}&utm_campaign=${utmCampaign}`;
+  }
+
   function renderCard(rec, index) {
+    const url = new URL(rec.url);
+    const urlSearchParams = new URLSearchParams(queryParams);
+    if (rec?.id && !url.href.match(/getpocket\.com\/read/)) {
+      url.href = `https://getpocket.com/read/${rec.id}`;
+    }
+
+    for (let [key, val] of urlSearchParams.entries()) {
+      url.searchParams.set(key, val);
+    }
+
     return (
       <DSCard
         key={`dscard-${rec?.id || index}`}
@@ -108,7 +123,7 @@ export function RecentSavesContainer({
         time_to_read={rec.time_to_read}
         title={rec.title}
         excerpt={rec.excerpt}
-        url={rec.url}
+        url={url.href}
         source={rec.domain}
         isRecentSave={true}
         dispatch={dispatch}
@@ -125,10 +140,6 @@ export function RecentSavesContainer({
     );
   }
 
-  let queryParams = `?utm_source=${utmSource}`;
-  if (utmCampaign && utmContent) {
-    queryParams += `&utm_content=${utmContent}&utm_campaign=${utmCampaign}`;
-  }
   const recentSavesCards = [];
   // We fill the cards with a for loop over an inline map because
   // we want empty placeholders if there are not enough cards.
