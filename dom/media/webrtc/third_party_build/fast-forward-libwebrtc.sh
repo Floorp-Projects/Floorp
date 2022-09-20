@@ -57,15 +57,15 @@ fi
 MOZ_LIBWEBRTC_BASE=`tail -1 third_party/libwebrtc/README.moz-ff-commit`
 # calculate the next commit above our current base commit
 MOZ_LIBWEBRTC_NEXT_BASE=`cd $MOZ_LIBWEBRTC_SRC ; \
-git log --oneline --reverse --ancestry-path $MOZ_LIBWEBRTC_BASE^..main \
+git log --oneline --reverse --ancestry-path $MOZ_LIBWEBRTC_BASE^..master \
  | head -2 | tail -1 | awk '{print$1;}'`
 
 UPSTREAM_ADDED_FILES=""
 
 # After this point:
-# * eE: All commands should succede.
+# * eE: All commands should succeed.
 # * u: All variables should be defined before use.
-# * o pipefail: All stages of all pipes should succede.
+# * o pipefail: All stages of all pipes should succeed.
 set -eEuo pipefail
 
 echo "     MOZ_LIBWEBRTC_BASE: $MOZ_LIBWEBRTC_BASE"
@@ -202,4 +202,6 @@ fi
 echo "-------"
 echo "------- Commit vendored changes from $MOZ_LIBWEBRTC_NEXT_BASE"
 echo "-------"
-hg commit -m "Bug 1766646 - Vendor libwebrtc from $MOZ_LIBWEBRTC_NEXT_BASE"
+hg commit \
+   -m "Bug $MOZ_FASTFORWARD_BUG - Vendor libwebrtc from $MOZ_LIBWEBRTC_NEXT_BASE" \
+   third_party/libwebrtc
