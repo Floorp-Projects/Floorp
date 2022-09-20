@@ -148,17 +148,20 @@ def test_environment(
     env.setdefault("NSS_MAX_MP_PBE_ITERATION_COUNT", "10")
 
     # ASan specific environment stuff
+    if "ASAN_SYMBOLIZER_PATH" in env and os.path.isfile(env["ASAN_SYMBOLIZER_PATH"]):
+        llvmsym = env["ASAN_SYMBOLIZER_PATH"]
+    else:
+        if mozinfo.isMac:
+            llvmSymbolizerDir = ldLibraryPath
+        else:
+            llvmSymbolizerDir = xrePath
+        llvmsym = os.path.join(
+            llvmSymbolizerDir, "llvm-symbolizer" + mozinfo.info["bin_suffix"]
+        )
     asan = bool(mozinfo.info.get("asan"))
     if asan:
         try:
             # Symbolizer support
-            if mozinfo.isMac:
-                llvmSymbolizerDir = ldLibraryPath
-            else:
-                llvmSymbolizerDir = xrePath
-            llvmsym = os.path.join(
-                llvmSymbolizerDir, "llvm-symbolizer" + mozinfo.info["bin_suffix"]
-            )
             if os.path.isfile(llvmsym):
                 env["ASAN_SYMBOLIZER_PATH"] = llvmsym
                 log.info("INFO | runtests.py | ASan using symbolizer at %s" % llvmsym)
@@ -225,7 +228,6 @@ def test_environment(
     tsan = bool(mozinfo.info.get("tsan"))
     if tsan and mozinfo.isLinux:
         # Symbolizer support.
-        llvmsym = os.path.join(xrePath, "llvm-symbolizer")
         if os.path.isfile(llvmsym):
             env["TSAN_OPTIONS"] = "external_symbolizer_path=%s" % llvmsym
             log.info("INFO | runtests.py | TSan using symbolizer at %s" % llvmsym)
