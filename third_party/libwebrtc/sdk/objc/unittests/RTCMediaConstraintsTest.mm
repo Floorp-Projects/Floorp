@@ -9,6 +9,7 @@
  */
 
 #import <Foundation/Foundation.h>
+#import <XCTest/XCTest.h>
 
 #include <memory>
 
@@ -18,11 +19,10 @@
 #import "api/peerconnection/RTCMediaConstraints.h"
 #import "helpers/NSString+StdString.h"
 
-@interface RTCMediaConstraintsTest : NSObject
-- (void)testMediaConstraints;
+@interface RTCMediaConstraintsTests : XCTestCase
 @end
 
-@implementation RTCMediaConstraintsTest
+@implementation RTCMediaConstraintsTests
 
 - (void)testMediaConstraints {
   NSDictionary *mandatory = @{@"key1": @"value1", @"key2": @"value2"};
@@ -56,10 +56,3 @@
 }
 
 @end
-
-TEST(RTCMediaConstraintsTest, MediaConstraintsTest) {
-  @autoreleasepool {
-    RTCMediaConstraintsTest *test = [[RTCMediaConstraintsTest alloc] init];
-    [test testMediaConstraints];
-  }
-}

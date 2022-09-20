@@ -9,6 +9,7 @@
  */
 
 #import <Foundation/Foundation.h>
+#import <XCTest/XCTest.h>
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -30,12 +31,10 @@ extern "C" {
 #include "rtc_base/gunit.h"
 #include "rtc_base/system/unused.h"
 
-@interface RTCPeerConnectionFactoryBuilderTest : NSObject
-- (void)testBuilder;
-- (void)testDefaultComponentsBuilder;
+@interface RTCPeerConnectionFactoryBuilderTests : XCTestCase
 @end
 
-@implementation RTCPeerConnectionFactoryBuilderTest
+@implementation RTCPeerConnectionFactoryBuilderTests
 
 - (void)testBuilder {
   id factoryMock = OCMStrictClassMock([RTC_OBJC_TYPE(RTCPeerConnectionFactory) class]);
@@ -79,17 +78,3 @@ extern "C" {
   OCMVerifyAll(factoryMock);
 }
 @end
-
-TEST(RTCPeerConnectionFactoryBuilderTest, BuilderTest) {
-  @autoreleasepool {
-    RTCPeerConnectionFactoryBuilderTest* test = [[RTCPeerConnectionFactoryBuilderTest alloc] init];
-    [test testBuilder];
-  }
-}
-
-TEST(RTCPeerConnectionFactoryBuilderTest, DefaultComponentsBuilderTest) {
-  @autoreleasepool {
-    RTCPeerConnectionFactoryBuilderTest* test = [[RTCPeerConnectionFactoryBuilderTest alloc] init];
-    [test testDefaultComponentsBuilder];
-  }
-}
