@@ -8,13 +8,11 @@
 const { VariablesView } = ChromeUtils.importESModule(
   "resource://devtools/client/storage/VariablesView.sys.mjs"
 );
-const { globals } = require("devtools/shared/loader/builtin-modules");
-
-const DOMParser = new globals.DOMParser();
-DOMParser.forceEnableXULXBL();
 
 function run_test() {
-  const doc = DOMParser.parseFromString("<div>", "text/html");
+  const parser = new DOMParser();
+  parser.forceEnableXULXBL();
+  const doc = parser.parseFromString("<div>", "text/html");
   const container = doc.body.firstChild;
   ok(container, "Got a container.");
 

@@ -112,6 +112,36 @@ function Sandbox(options) {
     // Do not expose `Components` if you really need them (bad idea!) you
     // still can expose via prototype.
     wantComponents: false,
+    // By default, Sandbox come with a very limited set of global.
+    // The list of all available symbol names is available over there:
+    // https://searchfox.org/mozilla-central/rev/31368c7795f44b7a15531d6c5e52dc97f82cf2d5/js/xpconnect/src/Sandbox.cpp#905-997
+    // Request to expose all meaningful global here:
+    wantGlobalProperties: [
+      "AbortController",
+      "atob",
+      "btoa",
+      "Blob",
+      "crypto",
+      "ChromeUtils",
+      "CSS",
+      "CSSRule",
+      "DOMParser",
+      "Element",
+      "Event",
+      "FileReader",
+      "FormData",
+      "Headers",
+      "indexedDB",
+      "InspectorUtils",
+      "Node",
+      "TextDecoder",
+      "TextEncoder",
+      "URL",
+      "URLSearchParams",
+      "Window",
+      "XMLHttpRequest",
+    ],
+
     sandboxName: options.name,
     sandboxPrototype: "prototype" in options ? options.prototype : {},
     invisibleToDebugger:
