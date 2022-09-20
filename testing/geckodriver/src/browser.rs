@@ -160,10 +160,12 @@ impl LocalBrowser {
             }
         }
         self.process.kill()?;
+
         // Restoring the prefs if the browser fails to stop perhaps doesn't work anyway
         if let Some(prefs_backup) = self.prefs_backup {
             prefs_backup.restore();
         };
+
         Ok(())
     }
 
@@ -228,6 +230,7 @@ fn read_marionette_port(profile_path: &Path) -> Option<u16> {
 pub(crate) struct RemoteBrowser {
     handler: AndroidHandler,
     marionette_port: u16,
+    prefs_backup: Option<PrefsBackup>,
 }
 
 impl RemoteBrowser {
@@ -253,7 +256,7 @@ impl RemoteBrowser {
             ProfileType::Temporary => (Profile::new(profile_root)?, false),
         };
 
-        set_prefs(
+        let prefs_backup = set_prefs(
             handler.marionette_target_port,
             &mut profile,
             is_custom_profile,
@@ -274,11 +277,18 @@ impl RemoteBrowser {
         Ok(RemoteBrowser {
             handler,
             marionette_port,
+            prefs_backup
         })
     }
 
     fn close(self) -> WebDriverResult<()> {
         self.handler.force_stop()?;
+
+        // Restoring the prefs if the browser fails to stop perhaps doesn't work anyway
+        if let Some(prefs_backup) = self.prefs_backup {
+            prefs_backup.restore();
+        };
+
         Ok(())
     }
 
