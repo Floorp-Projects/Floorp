@@ -429,6 +429,10 @@ function filterForcedInclusions(inHosts, outNotForced, outForced) {
       host.forceInclude = true;
       host.error = ERROR_NONE;
       outForced.push(host);
+    } else if (host.name == "asus.com") {
+      dump(
+        "INFO: Excluding asus.com from HSTS preload list (https://bugzilla.mozilla.org/show_bug.cgi?id=1788684)"
+      );
     } else {
       outNotForced.push(host);
     }
