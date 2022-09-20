@@ -51,6 +51,8 @@ const DBVERSION = 1;
 const STORENAME = "keyvaluepairs";
 var db = null;
 
+loader.lazyRequireGetter(this, "indexedDB", "devtools/shared/indexed-db");
+
 function withStore(type, onsuccess, onerror) {
   if (db) {
     const transaction = db.transaction(STORENAME, type);

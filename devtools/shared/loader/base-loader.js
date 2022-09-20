@@ -132,7 +132,6 @@ function Sandbox(options) {
       "FileReader",
       "FormData",
       "Headers",
-      "indexedDB",
       "InspectorUtils",
       "Node",
       "TextDecoder",
