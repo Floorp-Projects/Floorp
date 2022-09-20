@@ -64,20 +64,20 @@ class SmokeTest {
     private lateinit var browserStore: BrowserStore
     private val featureSettingsHelper = FeatureSettingsHelper()
 
-    @get:Rule
+    @get:Rule(order = 0)
     val activityTestRule = AndroidComposeTestRule(
         HomeActivityIntentTestRule(),
         { it.activity },
     )
 
-    @get: Rule
+    @get: Rule(order = 1)
     val intentReceiverActivityTestRule = ActivityTestRule(
         IntentReceiverActivity::class.java,
         true,
         false,
     )
 
-    @Rule
+    @Rule(order = 2)
     @JvmField
     val retryTestRule = RetryTestRule(3)
 
