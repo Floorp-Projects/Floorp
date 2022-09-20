@@ -4093,11 +4093,10 @@ nsresult Http2Session::BufferOutput(const char* buf, uint32_t count,
 }
 
 bool  // static
-Http2Session::ALPNCallback(nsISupports* securityInfo) {
-  nsCOMPtr<nsISSLSocketControl> ssl = do_QueryInterface(securityInfo);
-  LOG3(("Http2Session::ALPNCallback sslsocketcontrol=%p\n", ssl.get()));
-  if (ssl) {
-    int16_t version = ssl->GetSSLVersionOffered();
+Http2Session::ALPNCallback(nsISSLSocketControl* tlsSocketControl) {
+  LOG3(("Http2Session::ALPNCallback sslsocketcontrol=%p\n", tlsSocketControl));
+  if (tlsSocketControl) {
+    int16_t version = tlsSocketControl->GetSSLVersionOffered();
     LOG3(("Http2Session::ALPNCallback version=%x\n", version));
 
     if (version == nsISSLSocketControl::TLS_VERSION_1_2 &&
