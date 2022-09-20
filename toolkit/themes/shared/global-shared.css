@@ -78,6 +78,11 @@
   padding: 0;
 }
 
+moz-input-box,
+html|input {
+  min-width: 0;
+}
+
 html|button,
 html|input,
 html|textarea {
