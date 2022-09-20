@@ -231,6 +231,10 @@ void nsHttpHeaderArray::ClearHeader(const nsHttpAtom& header) {
   }
 }
 
+void nsHttpHeaderArray::PurgeHeaderEntries(const nsHttpAtom& header) {
+  mHeaders.RemoveElementsBy(
+      [header](const auto& entry) { return (entry.header == header); });
+}
 const char* nsHttpHeaderArray::PeekHeader(const nsHttpAtom& header) const {
   const nsEntry* entry = nullptr;
   LookupEntry(header, &entry);
@@ -444,12 +448,16 @@ void nsHttpHeaderArray::FlattenOriginalHeader(nsACString& buf) {
   }
 }
 
-const char* nsHttpHeaderArray::PeekHeaderAt(
-    uint32_t index, nsHttpAtom& header, nsACString& headerNameOriginal) const {
+const char* nsHttpHeaderArray::PeekHeaderAt(uint32_t index, nsHttpAtom& header,
+                                            nsACString& headerNameOriginal,
+                                            HeaderVariety& variety,
+                                            nsACString& val) const {
   const nsEntry& entry = mHeaders[index];
 
   header = entry.header;
   headerNameOriginal = entry.headerNameOriginal;
+  variety = entry.variety;
+  val = entry.value;
   return entry.value.get();
 }
 
