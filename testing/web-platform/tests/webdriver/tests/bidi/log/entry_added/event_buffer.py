@@ -106,7 +106,7 @@ async def test_console_log_cached_message_after_refresh(
     await on_entry_added
 
     # Wait for some time to catch all messages.
-    asyncio.sleep(0.5)
+    await asyncio.sleep(0.5)
 
     # Check that only the cached message was retrieved.
     assert len(events) == 1
