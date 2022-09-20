@@ -27,8 +27,8 @@
 #include "mozilla/LookAndFeel.h"
 #include "mozilla/Unused.h"
 
-#include "nsIAppStartup.h"
 #include "nsIObserverService.h"
+#include "mozilla/AppShutdown.h"
 #include "mozilla/Components.h"
 #include "mozilla/Preferences.h"
 #include "nsIResProtocolHandler.h"
@@ -203,8 +203,7 @@ nsChromeRegistryChrome::Observe(nsISupports* aSubject, const char* aTopic,
 
 NS_IMETHODIMP
 nsChromeRegistryChrome::CheckForNewChrome() {
-  nsCOMPtr<nsIAppStartup> appStartup = components::AppStartup::Service();
-  if (appStartup->GetShuttingDown()) {
+  if (AppShutdown::IsInOrBeyond(ShutdownPhase::AppShutdownConfirmed)) {
     MOZ_ASSERT(false, "checking for new chrome during shutdown");
     return NS_ERROR_UNEXPECTED;
   }

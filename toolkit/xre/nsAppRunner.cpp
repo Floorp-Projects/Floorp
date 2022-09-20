@@ -5480,7 +5480,8 @@ nsresult XREMain::XRE_mainRun() {
     CrashReporter::AnnotateCrashReport(
         CrashReporter::Annotation::useragent_locale, userAgentLocale);
 
-    appStartup->GetShuttingDown(&mShuttingDown);
+    mShuttingDown =
+        AppShutdown::IsInOrBeyond(ShutdownPhase::AppShutdownConfirmed);
 
     if (!mShuttingDown) {
       /* Special-case services that need early access to the command
@@ -5615,14 +5616,16 @@ nsresult XREMain::XRE_mainRun() {
       CrashReporter::AnnotateCrashReport(
           CrashReporter::Annotation::StartupCrash, false);
 
-      appStartup->GetShuttingDown(&mShuttingDown);
+      mShuttingDown =
+          AppShutdown::IsInOrBeyond(ShutdownPhase::AppShutdownConfirmed);
     }
 
     if (!mShuttingDown) {
       rv = cmdLine->Run();
       NS_ENSURE_SUCCESS_LOG(rv, NS_ERROR_FAILURE);
 
-      appStartup->GetShuttingDown(&mShuttingDown);
+      mShuttingDown =
+          AppShutdown::IsInOrBeyond(ShutdownPhase::AppShutdownConfirmed);
     }
 
     if (!mShuttingDown) {
