@@ -316,6 +316,10 @@ class WebRtcVideoChannel : public VideoMediaChannel,
   static std::string CodecSettingsVectorToString(
       const std::vector<VideoCodecSettings>& codecs);
 
+  // Called when the local ssrc changes. Sets `rtcp_receiver_report_ssrc_` and
+  // updates the receive streams.
+  void SetReceiverReportSsrc(uint32_t ssrc) RTC_RUN_ON(&thread_checker_);
+
   // Wrapper for the sender part.
   class WebRtcVideoSendStream {
    public:
@@ -438,6 +442,10 @@ class WebRtcVideoChannel : public VideoMediaChannel,
         const webrtc::FlexfecReceiveStream::Config& flexfec_config);
     ~WebRtcVideoReceiveStream();
 
+    webrtc::VideoReceiveStream& stream();
+    // Return value may be nullptr.
+    webrtc::FlexfecReceiveStream* flexfec_stream();
+
     const std::vector<uint32_t>& GetSsrcs() const;
 
     std::vector<webrtc::RtpSource> GetSources();
@@ -445,7 +453,6 @@ class WebRtcVideoChannel : public VideoMediaChannel,
     // Does not return codecs, they are filled by the owning WebRtcVideoChannel.
     webrtc::RtpParameters GetRtpParameters() const;
 
-    void SetLocalSsrc(uint32_t local_ssrc);
     // TODO(deadbeef): Move these feedback parameters into the recv parameters.
     void SetFeedbackParameters(bool lntf_enabled,
                                bool nack_enabled,
@@ -478,7 +485,7 @@ class WebRtcVideoChannel : public VideoMediaChannel,
             frame_transformer);
 
    private:
-    void RecreateWebRtcVideoStream();
+    void RecreateReceiveStream();
 
     // Applies a new receive codecs configration to `config_`. Returns true
     // if the internal stream needs to be reconstructed, or false if no changes
