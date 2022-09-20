@@ -3,8 +3,14 @@
 # file for logging loop script output
 LOOP_OUTPUT_LOG=~/log-loop-ff.txt
 
+function show_error_msg()
+{
+  echo "*** ERROR *** $? line $1 $0 did not complete successfully!" 2>&1| tee -a $LOOP_OUTPUT_LOG
+  echo "$ERROR_HELP"
+}
+
 # Print an Error message if `set -eE` causes the script to exit due to a failed command
-trap 'echo "*** ERROR *** $? $LINENO loop-ff did not complete successfully!" 2>&1| tee -a $LOOP_OUTPUT_LOG' ERR
+trap 'show_error_msg $LINENO' ERR
 
 source dom/media/webrtc/third_party_build/use_config_env.sh
 
@@ -35,6 +41,7 @@ fi
 
 MOZ_CHANGED=0
 GIT_CHANGED=0
+ERROR_HELP=""
 
 # After this point:
 # * eE: All commands should succeed.
@@ -49,9 +56,33 @@ rm -f $LOOP_OUTPUT_LOG
 # in the loop below
 hg revert -C third_party/libwebrtc/README.moz-ff-commit &> /dev/null
 
-# start off by verifying the vendoring process to make sure no changes have
-# been added to elm to fix bugs.
-bash dom/media/webrtc/third_party_build/verify_vendoring.sh
+# check for a resume situation from fast-forward-libwebrtc.sh
+RESUME=""
+if [ -f log_resume.txt ]; then
+  RESUME=`tail -1 log_resume.txt`
+fi
+
+ERROR_HELP=$"
+It appears that initial vendoring verification has failed.
+- If you have never run the fast-forward process before, you may need to
+  prepare the github repository by running prep_repo.sh.
+- If you have previously run loop-ff.sh successfully, there may be a new
+  change to third_party/libwebrtc that should be extracted and added to
+  the patch stack in github.  It may be as easy as running:
+      (cd dom/media/webrtc/third_party_build && \\
+       python3 extract-for-git.py tip::tip)
+      mv dom/media/webrtc/third_party_build/mailbox.patch \\
+         $MOZ_LIBWEBRTC_SRC
+      (cd $MOZ_LIBWEBRTC_SRC && \\
+       git am mailbox.patch)
+"
+# if we're not in the resume situation from fast-forward-libwebrtc.sh
+if [ "x$RESUME" = "x" ]; then
+  # start off by verifying the vendoring process to make sure no changes have
+  # been added to elm to fix bugs.
+  bash dom/media/webrtc/third_party_build/verify_vendoring.sh
+fi
+ERROR_HELP=""
 
 for (( ; ; )); do
 
@@ -67,6 +98,21 @@ echo "============ loop ff ============" 2>&1| tee -a $LOOP_OUTPUT_LOG
 echo "===loop-ff=== Moving from moz-libwebrtc commit $MOZ_LIBWEBRTC_BASE to $MOZ_LIBWEBRTC_NEXT_BASE" 2>&1| tee -a $LOOP_OUTPUT_LOG
 bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh 2>&1| tee -a $LOOP_OUTPUT_LOG
 
+ERROR_HELP=$"
+The number of files changed in the upstream commit ($GIT_CHANGED) does
+not match the number of files changed in the local Mozilla repo commit
+($MOZ_CHANGED).  This may indicate a mismatch between the vendoring
+script and this script, or it could be a true error in the import
+processing.  Once the issue has been resolved, the following steps
+remain for this commit:
+  # generate moz.build files (may not be necessary)
+  ./mach python python/mozbuild/mozbuild/gn_processor.py \\
+      dom/media/webrtc/third_party_build/gn-configs/webrtc.json
+  # commit the updated moz.build files with the appropriate commit msg
+  bash dom/media/webrtc/third_party_build/commit-build-file-changes.sh
+  # do a (hopefully) quick test build
+  ./mach build
+"
 MOZ_CHANGED=`hg diff -c tip --stat \
    | egrep -ve "README.moz-ff-commit|README.mozilla|files changed," \
    | wc -l | tr -d " "` || echo -n "0" > /dev/null
@@ -80,6 +126,7 @@ if [ $MOZ_CHANGED -ne $GIT_CHANGED ]; then
   echo "MOZ_CHANGED $MOZ_CHANGED should equal GIT_CHANGED $GIT_CHANGED" 2>&1| tee -a $LOOP_OUTPUT_LOG
   exit 1
 fi
+ERROR_HELP=""
 
 MODIFIED_BUILD_RELATED_FILE_CNT=`hg diff -c tip --stat \
     --include 'third_party/libwebrtc/**BUILD.gn' \
@@ -101,8 +148,13 @@ if [ "x$MODIFIED_BUILD_RELATED_FILE_CNT" != "x0" ]; then
   bash dom/media/webrtc/third_party_build/commit-build-file-changes.sh 2>&1| tee -a $LOOP_OUTPUT_LOG
 fi
 
+ERROR_HELP=$"
+The test build has failed.  Most likely this is due to an upstream api change that
+must be reflected in Mozilla code outside of the third_party/libwebrtc directory.
+"
 echo "===loop-ff=== Test build" 2>&1| tee -a $LOOP_OUTPUT_LOG
 ./mach build 2>&1| tee -a $LOOP_OUTPUT_LOG
+ERROR_HELP=""
 
 if [ ! "x$MOZ_STOP_AFTER_COMMIT" = "x" ]; then
 if [ $MOZ_LIBWEBRTC_NEXT_BASE = $MOZ_STOP_AFTER_COMMIT ]; then
