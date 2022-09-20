@@ -457,7 +457,7 @@ function setAllfavicons() {
 }
 
 function changeMuteStatus() {
-  let webpanel = document.getElementById("sidebar2");
+  let webpanel = document.getElementById("webpanel");
   let muteicon = document.getElementById("sidebar2-mute");
   if (muteicon.getAttribute("mute") == "false") {
     webpanel.mute();
