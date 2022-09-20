@@ -596,9 +596,7 @@ function addCertOverride(host) {
     req.onload = reject;
     req.onerror = () => {
       if (req.channel && req.channel.securityInfo) {
-        let securityInfo = req.channel.securityInfo.QueryInterface(
-          Ci.nsITransportSecurityInfo
-        );
+        let securityInfo = req.channel.securityInfo;
         if (securityInfo.serverCert) {
           let cos = Cc["@mozilla.org/security/certoverride;1"].getService(
             Ci.nsICertOverrideService

@@ -208,9 +208,9 @@ add_task(async function checkAdvancedDetails() {
         content.getComputedStyle(div).display !== "none",
         "Debug information is visible"
       );
-      let failedCertChain = content.docShell.failedChannel.securityInfo
-        .QueryInterface(Ci.nsITransportSecurityInfo)
-        .failedCertChain.map(cert => cert.getBase64DERString());
+      let failedCertChain = content.docShell.failedChannel.securityInfo.failedCertChain.map(
+        cert => cert.getBase64DERString()
+      );
       return {
         divDisplay: content.getComputedStyle(div).display,
         text: text.textContent,
@@ -289,9 +289,9 @@ add_task(async function checkAdvancedDetailsForHSTS() {
       errorCode.click();
       let div = doc.getElementById("certificateErrorDebugInformation");
       let text = doc.getElementById("certificateErrorText");
-      let failedCertChain = content.docShell.failedChannel.securityInfo
-        .QueryInterface(Ci.nsITransportSecurityInfo)
-        .failedCertChain.map(cert => cert.getBase64DERString());
+      let failedCertChain = content.docShell.failedChannel.securityInfo.failedCertChain.map(
+        cert => cert.getBase64DERString()
+      );
       return {
         divDisplay: content.getComputedStyle(div).display,
         text: text.textContent,

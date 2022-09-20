@@ -176,9 +176,7 @@ class NetErrorParent extends JSWindowActorParent {
         return;
       }
 
-      let secInfo = request.channel.securityInfo.QueryInterface(
-        Ci.nsITransportSecurityInfo
-      );
+      let secInfo = request.channel.securityInfo;
       if (secInfo.errorCodeString != "SEC_ERROR_UNKNOWN_ISSUER") {
         return;
       }

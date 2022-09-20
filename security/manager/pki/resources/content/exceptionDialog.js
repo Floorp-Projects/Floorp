@@ -93,9 +93,7 @@ function initExceptionDialog() {
  */
 function grabCert(req, evt) {
   if (req.channel && req.channel.securityInfo) {
-    gSecInfo = req.channel.securityInfo.QueryInterface(
-      Ci.nsITransportSecurityInfo
-    );
+    gSecInfo = req.channel.securityInfo;
     gCert = gSecInfo ? gSecInfo.serverCert : null;
   }
   gBroken = evt.type == "error";

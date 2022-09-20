@@ -108,8 +108,6 @@ const SecurityInfo = {
       return info;
     }
 
-    securityInfo.QueryInterface(Ci.nsITransportSecurityInfo);
-
     if (lazy.NSSErrorsService.isNSSErrorCode(securityInfo.errorCode)) {
       // The connection failed.
       info.state = "broken";

@@ -19,9 +19,7 @@ const certOverrideService = Cc[
 ].getService(Ci.nsICertOverrideService);
 
 function checkSecurityInfo(chan, expectPrivateDNS, expectAcceptedECH) {
-  let securityInfo = chan.securityInfo.QueryInterface(
-    Ci.nsITransportSecurityInfo
-  );
+  let securityInfo = chan.securityInfo;
   Assert.equal(
     securityInfo.isAcceptedEch,
     expectAcceptedECH,

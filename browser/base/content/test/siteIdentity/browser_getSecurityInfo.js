@@ -18,7 +18,6 @@ add_task(async function test() {
     await loaded;
 
     let securityInfo = await browser.browsingContext.currentWindowGlobal.getSecurityInfo();
-    securityInfo.QueryInterface(Ci.nsITransportSecurityInfo);
     ok(securityInfo, "Found some security info");
     ok(securityInfo.failedCertChain, "Has a failed cert chain");
     is(
@@ -44,7 +43,6 @@ add_task(async function test() {
     await loaded;
 
     securityInfo = await browser.browsingContext.currentWindowGlobal.getSecurityInfo();
-    securityInfo.QueryInterface(Ci.nsITransportSecurityInfo);
     ok(securityInfo, "Found some security info");
     ok(securityInfo.succeededCertChain, "Has a succeeded cert chain");
     is(securityInfo.errorCode, 0, "Has no error code");
@@ -64,7 +62,6 @@ add_task(async function test() {
 
     // Get the info of the frame, which is HTTPS.
     securityInfo = await browser.browsingContext.children[0].currentWindowGlobal.getSecurityInfo();
-    securityInfo.QueryInterface(Ci.nsITransportSecurityInfo);
     ok(securityInfo, "Found some security info");
     ok(securityInfo.succeededCertChain, "Has a succeeded cert chain");
     is(securityInfo.errorCode, 0, "Has no error code");

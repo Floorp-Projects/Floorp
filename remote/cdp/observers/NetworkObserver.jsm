@@ -366,7 +366,6 @@ function getSecurityDetails(httpChannel) {
   if (!securityInfo) {
     return null;
   }
-  securityInfo.QueryInterface(Ci.nsITransportSecurityInfo);
   if (!securityInfo.serverCert) {
     return null;
   }

@@ -40,7 +40,6 @@ class NetErrorChild extends RemotePageChild {
     if (!securityInfo) {
       return [];
     }
-    securityInfo.QueryInterface(Ci.nsITransportSecurityInfo);
     return securityInfo.failedCertChain.map(cert => cert.getBase64DERString());
   }
 

@@ -62,9 +62,9 @@ add_task(async function checkPermanentExceptionPref() {
         let serhelper = Cc[
           "@mozilla.org/network/serialization-helper;1"
         ].getService(Ci.nsISerializationHelper);
-        let serializable = content.docShell.failedChannel.securityInfo
-          .QueryInterface(Ci.nsITransportSecurityInfo)
-          .QueryInterface(Ci.nsISerializable);
+        let serializable = content.docShell.failedChannel.securityInfo.QueryInterface(
+          Ci.nsISerializable
+        );
         return serhelper.serializeToString(serializable);
       }
     );
