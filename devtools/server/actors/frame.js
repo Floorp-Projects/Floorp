@@ -4,7 +4,6 @@
 
 "use strict";
 
-const { Cu } = require("chrome");
 const Debugger = require("Debugger");
 const { assert } = require("devtools/shared/DevToolsUtils");
 const { Pool } = require("devtools/shared/protocol/Pool");

@@ -9,7 +9,6 @@
 (function(factory) {
   if (this.module && module.id.includes("worker")) {
     // require
-    const { Cc, Ci, Cu, ChromeWorker } = require("chrome");
     const dumpn = require("devtools/shared/DevToolsUtils").dumpn;
     factory.call(
       this,

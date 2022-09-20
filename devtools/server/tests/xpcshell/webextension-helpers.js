@@ -10,7 +10,6 @@
  */
 
 const { FileUtils } = require("resource://gre/modules/FileUtils.jsm");
-const { Ci } = require("chrome");
 const {
   ExtensionTestUtils,
 } = require("resource://testing-common/ExtensionXPCShellUtils.jsm");

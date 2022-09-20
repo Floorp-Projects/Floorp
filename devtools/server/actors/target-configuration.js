@@ -4,7 +4,6 @@
 
 "use strict";
 
-const { Ci } = require("chrome");
 const { ActorClassWithSpec, Actor } = require("devtools/shared/protocol");
 const {
   targetConfigurationSpec,

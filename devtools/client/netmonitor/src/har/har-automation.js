@@ -4,7 +4,6 @@
 
 "use strict";
 
-const { Ci } = require("chrome");
 const {
   HarCollector,
 } = require("devtools/client/netmonitor/src/har/har-collector");

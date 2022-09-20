@@ -4,8 +4,6 @@
 
 "use strict";
 
-const { Cu, Ci } = require("chrome");
-
 loader.lazyRequireGetter(this, "colorUtils", "devtools/shared/css/color", true);
 loader.lazyRequireGetter(this, "AsyncUtils", "devtools/shared/async-utils");
 loader.lazyRequireGetter(this, "flags", "devtools/shared/flags");

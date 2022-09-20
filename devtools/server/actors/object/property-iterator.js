@@ -4,7 +4,6 @@
 
 "use strict";
 
-const { Cu } = require("chrome");
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 const protocol = require("devtools/shared/protocol");
 const {

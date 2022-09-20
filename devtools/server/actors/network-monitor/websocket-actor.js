@@ -4,7 +4,6 @@
 
 "use strict";
 
-const { Cc, Ci } = require("chrome");
 const { Actor, ActorClassWithSpec } = require("devtools/shared/protocol");
 const { webSocketSpec } = require("devtools/shared/specs/websocket");
 const { LongStringActor } = require("devtools/server/actors/string");

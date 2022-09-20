@@ -24,7 +24,6 @@ const BROWSERTOOLBOX_SCOPE_PREF = "devtools.browsertoolbox.scope";
 const BROWSERTOOLBOX_SCOPE_EVERYTHING = "everything";
 const BROWSERTOOLBOX_SCOPE_PARENTPROCESS = "parent-process";
 
-var { Ci, Cc } = require("chrome");
 const { debounce } = require("devtools/shared/debounce");
 const { throttle } = require("devtools/shared/throttle");
 const { safeAsyncMethod } = require("devtools/shared/async-utils");

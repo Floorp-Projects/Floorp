@@ -25,7 +25,6 @@
  *   /dom/webidl/Animation*.webidl
  */
 
-const { Cu } = require("chrome");
 const protocol = require("devtools/shared/protocol");
 const { Actor } = protocol;
 const {

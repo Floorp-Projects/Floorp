@@ -16,9 +16,7 @@ const EventEmitter = require("devtools/shared/event-emitter");
 const lazy = {};
 
 loader.lazyGetter(lazy, "BufferStream", () => {
-  const { CC } = require("chrome");
-
-  return CC(
+  return Components.Constructor(
     "@mozilla.org/io/arraybuffer-input-stream;1",
     "nsIArrayBufferInputStream",
     "setData"

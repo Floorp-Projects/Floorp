@@ -4,8 +4,6 @@
 
 "use strict";
 
-const { Ci } = require("chrome");
-
 const {
   DEBUG_TARGETS,
   REQUEST_WORKERS_SUCCESS,

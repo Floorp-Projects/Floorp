@@ -6,7 +6,6 @@
 
 const { storageTypePool } = require("devtools/server/actors/storage");
 const EventEmitter = require("devtools/shared/event-emitter");
-const { Ci } = require("chrome");
 
 loader.lazyRequireGetter(
   this,

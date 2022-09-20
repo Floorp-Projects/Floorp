@@ -4,7 +4,6 @@
 
 "use strict";
 
-const { Cc, Ci } = require("chrome");
 const { dumpn } = require("devtools/shared/DevToolsUtils");
 const {
   runCommand,

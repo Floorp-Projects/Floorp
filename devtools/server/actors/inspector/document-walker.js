@@ -4,8 +4,6 @@
 
 "use strict";
 
-const { Cc, Ci, Cu } = require("chrome");
-
 loader.lazyRequireGetter(
   this,
   "isShadowRoot",

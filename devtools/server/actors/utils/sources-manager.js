@@ -4,7 +4,6 @@
 
 "use strict";
 
-const { Ci } = require("chrome");
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 const { assert, fetch } = DevToolsUtils;
 const EventEmitter = require("devtools/shared/event-emitter");

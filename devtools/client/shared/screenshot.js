@@ -4,7 +4,6 @@
 
 "use strict";
 
-const { Cc, Ci } = require("chrome");
 const { LocalizationHelper } = require("devtools/shared/l10n");
 
 loader.lazyImporter(this, "Downloads", "resource://gre/modules/Downloads.jsm");

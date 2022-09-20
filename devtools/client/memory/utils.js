@@ -4,8 +4,6 @@
 
 "use strict";
 
-const { Cc, Ci } = require("chrome");
-
 const { LocalizationHelper } = require("devtools/shared/l10n");
 const STRINGS_URI = "devtools/client/locales/memory.properties";
 const L10N = (exports.L10N = new LocalizationHelper(STRINGS_URI));

@@ -4,7 +4,6 @@
 
 "use strict";
 
-const { Ci } = require("chrome");
 const protocol = require("devtools/shared/protocol");
 const { LongStringActor } = require("devtools/server/actors/string");
 const { MediaRuleActor } = require("devtools/server/actors/media-rule");

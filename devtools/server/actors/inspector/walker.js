@@ -4,8 +4,6 @@
 
 "use strict";
 
-const { Ci, Cu } = require("chrome");
-
 const protocol = require("devtools/shared/protocol");
 const { walkerSpec } = require("devtools/shared/specs/walker");
 const { LongStringActor } = require("devtools/server/actors/string");

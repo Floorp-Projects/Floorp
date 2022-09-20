@@ -4,7 +4,6 @@
 
 "use strict";
 
-const { Cu } = require("chrome");
 var { Front } = require("devtools/shared/protocol/Front");
 
 /**

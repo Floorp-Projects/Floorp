@@ -4,8 +4,6 @@
 
 "use strict";
 
-const { Cu } = require("chrome");
-
 const CONSOLE_WORKER_IDS = (exports.CONSOLE_WORKER_IDS = new Set([
   "SharedWorker",
   "ServiceWorker",

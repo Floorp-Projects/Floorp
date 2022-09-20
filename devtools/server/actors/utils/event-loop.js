@@ -5,7 +5,6 @@
 "use strict";
 
 const xpcInspector = require("xpcInspector");
-const { Cu } = require("chrome");
 
 /**
  * An object that represents a nested event loop. It is used as the nest

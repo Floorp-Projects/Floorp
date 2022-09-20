@@ -3,7 +3,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const { Ci } = require("chrome");
 const { rootSpec } = require("devtools/shared/specs/root");
 const {
   FrontClassWithSpec,

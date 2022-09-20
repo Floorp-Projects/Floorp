@@ -21,14 +21,6 @@
  * * @typedef {import("./@types/perf").ProfilerViewMode} ProfilerViewMode
  */
 
-const { createLazyLoaders } = ChromeUtils.import(
-  "resource://devtools/client/performance-new/typescript-lazy-load.jsm.js"
-);
-
-const lazy = createLazyLoaders({
-  Chrome: () => require("chrome"),
-});
-
 /** @type {PerformancePref["UIBaseUrl"]} */
 const UI_BASE_URL_PREF = "devtools.performance.recording.ui-base-url";
 /** @type {PerformancePref["UIBaseUrlPathPref"]} */
@@ -145,7 +137,6 @@ function sharedLibrariesFromProfile(profile) {
  * @type {RestartBrowserWithEnvironmentVariable}
  */
 function restartBrowserWithEnvironmentVariable(envName, value) {
-  const { Cc, Ci } = lazy.Chrome();
   const env = Cc["@mozilla.org/process/environment;1"].getService(
     Ci.nsIEnvironment
   );
@@ -162,7 +153,6 @@ function restartBrowserWithEnvironmentVariable(envName, value) {
  * @type {GetEnvironmentVariable}
  */
 function getEnvironmentVariable(envName) {
-  const { Cc, Ci } = lazy.Chrome();
   const env = Cc["@mozilla.org/process/environment;1"].getService(
     Ci.nsIEnvironment
   );
@@ -175,7 +165,6 @@ function getEnvironmentVariable(envName) {
  * @param {(objdirs: string[]) => unknown} changeObjdirs
  */
 function openFilePickerForObjdir(window, objdirs, changeObjdirs) {
-  const { Cc, Ci } = lazy.Chrome();
   const FilePicker = Cc["@mozilla.org/filepicker;1"].createInstance(
     Ci.nsIFilePicker
   );

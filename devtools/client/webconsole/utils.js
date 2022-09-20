@@ -4,8 +4,6 @@
 
 "use strict";
 
-const { Cc, Ci } = require("chrome");
-
 // Number of terminal entries for the self-xss prevention to go away
 const CONSOLE_ENTRY_THRESHOLD = 5;
 

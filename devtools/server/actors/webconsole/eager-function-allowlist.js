@@ -4,8 +4,6 @@
 
 "use strict";
 
-const { CC, Cu } = require("chrome");
-
 const idlPureAllowlist = require("devtools/server/actors/webconsole/webidl-pure-allowlist");
 
 // TODO: Bug 1616013 - Move more of these to be part of the pure list.
@@ -43,9 +41,9 @@ for (const [key, values] of Object.entries(customEagerFunctions)) {
 }
 
 const natives = [];
-if (CC && Cu) {
+if (Components.Constructor && Cu) {
   const sandbox = Cu.Sandbox(
-    CC("@mozilla.org/systemprincipal;1", "nsIPrincipal")(),
+    Components.Constructor("@mozilla.org/systemprincipal;1", "nsIPrincipal")(),
     {
       invisibleToDebugger: true,
       wantGlobalProperties: Object.keys(mergedFunctions),

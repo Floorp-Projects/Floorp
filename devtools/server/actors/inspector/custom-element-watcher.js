@@ -4,7 +4,6 @@
 
 "use strict";
 
-const { Cu } = require("chrome");
 const InspectorUtils = require("InspectorUtils");
 const EventEmitter = require("devtools/shared/event-emitter");
 

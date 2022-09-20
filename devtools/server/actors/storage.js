@@ -4,7 +4,6 @@
 
 "use strict";
 
-const { Cc, Ci, Cu, CC } = require("chrome");
 const protocol = require("devtools/shared/protocol");
 const { LongStringActor } = require("devtools/server/actors/string");
 const { DevToolsServer } = require("devtools/server/devtools-server");
@@ -62,7 +61,10 @@ loader.lazyGetter(this, "indexedDBForStorage", () => {
   // On xpcshell, we can't instantiate indexedDB without crashing
   try {
     const sandbox = Cu.Sandbox(
-      CC("@mozilla.org/systemprincipal;1", "nsIPrincipal")(),
+      Components.Constructor(
+        "@mozilla.org/systemprincipal;1",
+        "nsIPrincipal"
+      )(),
       { wantGlobalProperties: ["indexedDB"] }
     );
     return sandbox.indexedDB;

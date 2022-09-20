@@ -4,7 +4,6 @@
 
 "use strict";
 
-const { Ci, Cu } = require("chrome");
 const { Actor, ActorClassWithSpec } = require("devtools/shared/protocol");
 const { accessibleSpec } = require("devtools/shared/specs/accessibility");
 const {

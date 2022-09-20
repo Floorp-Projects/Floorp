@@ -371,7 +371,6 @@ declare var ChromeUtils: MockedExports.ChromeUtils;
 declare var PathUtils: PathUtilsInterface;
 
 // These global objects can be used directly in JSM files only.
-// In a CommonJS context you need to import them with `require("chrome")`.
 declare var Cu: MockedExports.Cu;
 declare var Cc: MockedExports.Cc;
 declare var Ci: MockedExports.Ci;

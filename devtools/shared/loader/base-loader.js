@@ -8,8 +8,10 @@
 
 this.EXPORTED_SYMBOLS = ["Loader", "resolveURI", "Module", "Require", "unload"];
 
-const { Constructor: CC } = Components;
-const systemPrincipal = CC("@mozilla.org/systemprincipal;1", "nsIPrincipal")();
+const systemPrincipal = Components.Constructor(
+  "@mozilla.org/systemprincipal;1",
+  "nsIPrincipal"
+)();
 
 const { XPCOMUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/XPCOMUtils.sys.mjs"

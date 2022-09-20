@@ -4,7 +4,6 @@
 
 "use strict";
 
-const { Cc, Ci } = require("chrome");
 loader.lazyImporter(
   this,
   "AddonManager",

@@ -382,9 +382,10 @@ var {
 } = function() {
   // Main thread
   if (typeof Components === "object") {
-    const { Constructor: CC } = Components;
-
-    const principal = CC("@mozilla.org/systemprincipal;1", "nsIPrincipal")();
+    const principal = Components.Constructor(
+      "@mozilla.org/systemprincipal;1",
+      "nsIPrincipal"
+    )();
 
     // To ensure that the this passed to addDebuggerToGlobal is a global, the
     // Debugger object needs to be defined in a sandbox.

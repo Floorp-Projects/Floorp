@@ -3,7 +3,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const { Cc, Ci } = require("chrome");
 const idnService = Cc["@mozilla.org/network/idn-service;1"].getService(
   Ci.nsIIDNService
 );

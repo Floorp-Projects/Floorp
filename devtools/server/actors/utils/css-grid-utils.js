@@ -4,8 +4,6 @@
 
 "use strict";
 
-const { Cu } = require("chrome");
-
 /**
  * Returns the grid fragment array with all the grid fragment data stringifiable.
  *

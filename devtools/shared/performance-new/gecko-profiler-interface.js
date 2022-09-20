@@ -8,8 +8,6 @@
  * not the default-enabled DevTools performance panel.
  */
 
-const { Ci } = require("chrome");
-
 loader.lazyRequireGetter(this, "EventEmitter", "devtools/shared/event-emitter");
 loader.lazyRequireGetter(
   this,

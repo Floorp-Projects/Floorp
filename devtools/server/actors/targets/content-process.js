@@ -11,8 +11,6 @@
  * See devtools/docs/backend/actor-hierarchy.md for more details.
  */
 
-const { Cc, Ci, Cu } = require("chrome");
-
 const { ThreadActor } = require("devtools/server/actors/thread");
 const { WebConsoleActor } = require("devtools/server/actors/webconsole");
 const makeDebugger = require("devtools/server/actors/utils/make-debugger");

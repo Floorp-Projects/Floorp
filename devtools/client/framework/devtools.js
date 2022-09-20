@@ -4,8 +4,6 @@
 
 "use strict";
 
-const { Cu } = require("chrome");
-
 const {
   DevToolsShim,
 } = require("chrome://devtools-startup/content/DevToolsShim.jsm");

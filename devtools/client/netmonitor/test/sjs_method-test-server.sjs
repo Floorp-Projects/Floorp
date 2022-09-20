@@ -3,8 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const CC = Components.Constructor;
-const BinaryInputStream = CC(
+const BinaryInputStream = Components.Constructor(
   "@mozilla.org/binaryinputstream;1",
   "nsIBinaryInputStream",
   "setInputStream"

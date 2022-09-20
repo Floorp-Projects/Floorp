@@ -4,7 +4,6 @@
 
 "use strict";
 
-loader.lazyRequireGetter(this, "Ci", "chrome", true);
 loader.lazyRequireGetter(
   this,
   ["loadSheet", "removeSheet"],

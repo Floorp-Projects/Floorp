@@ -4,7 +4,6 @@
 
 "use strict";
 
-const { Ci } = require("chrome");
 loader.lazyRequireGetter(
   this,
   "NetworkHelper",

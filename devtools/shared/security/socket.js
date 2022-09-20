@@ -4,8 +4,6 @@
 
 "use strict";
 
-var { Ci, Cc, CC, Cr } = require("chrome");
-
 // Ensure PSM is initialized to support TLS sockets
 Cc["@mozilla.org/psm;1"].getService(Ci.nsISupports);
 
@@ -54,7 +52,11 @@ loader.lazyRequireGetter(
 loader.lazyRequireGetter(this, "EventEmitter", "devtools/shared/event-emitter");
 
 DevToolsUtils.defineLazyGetter(this, "nsFile", () => {
-  return CC("@mozilla.org/file/local;1", "nsIFile", "initWithPath");
+  return Components.Constructor(
+    "@mozilla.org/file/local;1",
+    "nsIFile",
+    "initWithPath"
+  );
 });
 
 DevToolsUtils.defineLazyGetter(this, "socketTransportService", () => {

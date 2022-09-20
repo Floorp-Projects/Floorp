@@ -12,7 +12,6 @@
  * See devtools/docs/backend/actor-hierarchy.md for more details.
  */
 
-const { Ci } = require("chrome");
 const {
   connectToFrame,
 } = require("devtools/server/connectors/frame-connector");

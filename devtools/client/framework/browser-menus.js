@@ -12,7 +12,6 @@
  * - devtools/client/definitions for tool-specifics entries
  */
 
-const { Cu } = require("chrome");
 const { LocalizationHelper } = require("devtools/shared/l10n");
 const MENUS_L10N = new LocalizationHelper(
   "devtools/client/locales/menus.properties"

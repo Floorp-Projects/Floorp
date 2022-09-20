@@ -4,7 +4,6 @@
 
 "use strict";
 
-const { Cc, Ci } = require("chrome");
 const {
   CONSOLE_WORKER_IDS,
   WebConsoleUtils,

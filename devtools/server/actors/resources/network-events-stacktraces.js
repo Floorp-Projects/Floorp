@@ -8,8 +8,6 @@ const {
   TYPES: { NETWORK_EVENT_STACKTRACE },
 } = require("devtools/server/actors/resources/index");
 
-const { Ci, components } = require("chrome");
-
 loader.lazyRequireGetter(
   this,
   "ChannelEventSinkFactory",
@@ -135,7 +133,7 @@ class NetworkEventStackTracesWatcher {
         //
         // Convert the nsIStackFrame XPCOM objects to a nice JSON that can be
         // passed around through message managers etc.
-        let frame = components.stack;
+        let frame = Components.stack;
         if (frame?.caller) {
           frame = frame.caller;
           while (frame) {
@@ -160,7 +158,7 @@ class NetworkEventStackTracesWatcher {
         //
         // - The HTTP channel is opened asynchronously or on a different thread
         //   from the code which triggered its creation, in which case the stack
-        //   from components.stack will be empty. The alternate stack will be
+        //   from Components.stack will be empty. The alternate stack will be
         //   for the point we want to associate with the channel.
         //
         // - The channel is not a nsIHttpChannel, and we will receive no

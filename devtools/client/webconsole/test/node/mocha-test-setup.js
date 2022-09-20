@@ -109,7 +109,11 @@ global.ChromeUtils = {
   addProfilerMarker: () => {},
 };
 
-global.Cu = { isInAutomation: true };
+global.Cc = {};
+global.Ci = {};
+global.Cu = { isInAutomation: true, now: () => {} };
+global.Components = { stack: { caller: "" } };
+
 global.define = function() {};
 
 // Used for the HTMLTooltip component.
@@ -138,8 +142,6 @@ requireHacker.global_hook("default", (path, module) => {
         "devtools/client/webconsole/test/browser/stub-generator-helpers"
       ),
 
-    chrome: () =>
-      `module.exports = { Cc: {}, Ci: {}, Cu: { now: () => {}}, components: {stack: {caller: ""}} }`,
     // Some modules depend on Chrome APIs which don't work in mocha. When such a module
     // is required, replace it with a mock version.
     "devtools/server/devtools-server": () =>

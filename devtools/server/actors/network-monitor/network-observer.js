@@ -12,8 +12,6 @@
 // Enable logging all platform events this module listen to
 const DEBUG_PLATFORM_EVENTS = false;
 
-const { Cc, Ci } = require("chrome");
-
 loader.lazyRequireGetter(
   this,
   "ChannelMap",

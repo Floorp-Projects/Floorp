@@ -4,7 +4,7 @@
 
 const StreamUtils = require("devtools/shared/transport/stream-utils");
 
-const StringInputStream = CC(
+const StringInputStream = Components.Constructor(
   "@mozilla.org/io/string-input-stream;1",
   "nsIStringInputStream",
   "setData"

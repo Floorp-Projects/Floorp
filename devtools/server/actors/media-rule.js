@@ -4,7 +4,6 @@
 
 "use strict";
 
-const { Cu } = require("chrome");
 const protocol = require("devtools/shared/protocol");
 const { mediaRuleSpec } = require("devtools/shared/specs/media-rule");
 const InspectorUtils = require("InspectorUtils");
