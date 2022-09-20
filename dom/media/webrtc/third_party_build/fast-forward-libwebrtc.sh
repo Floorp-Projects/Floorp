@@ -1,7 +1,13 @@
 #!/bin/bash
 
+function show_error_msg()
+{
+  echo "*** ERROR *** $? line $1 $0 did not complete successfully!"
+  echo "$ERROR_HELP"
+}
+
 # Print an Error message if `set -eE` causes the script to exit due to a failed command
-trap 'echo "*** ERROR *** $? $LINENO fast-forward-libwebrtc did not complete successfully!"' ERR 
+trap 'show_error_msg $LINENO' ERR
 
 source dom/media/webrtc/third_party_build/use_config_env.sh
 
@@ -27,7 +33,7 @@ if [ "x$MOZ_LIBWEBRTC_COMMIT" = "x" ]; then
   exit
 fi
 
-
+ERROR_HELP=""
 RESUME=""
 if [ -f log_resume.txt ]; then
   RESUME=`tail -1 log_resume.txt`
@@ -85,16 +91,23 @@ echo "-------"
 echo "# base of lastest vendoring" >> third_party/libwebrtc/README.moz-ff-commit
 echo "$MOZ_LIBWEBRTC_NEXT_BASE" >> third_party/libwebrtc/README.moz-ff-commit
 
-
+REBASE_HELP=$"
+The rebase operation onto $MOZ_LIBWEBRTC_NEXT_BASE has failed.  Please
+resolve all the rebase conflicts.  When the github rebase is complete,
+re-run the previous command to resume the fast-forward process.
+"
+#"rebase_mozlibwebrtc_stack help for rebase failure"
 function rebase_mozlibwebrtc_stack {
   echo "-------"
   echo "------- Rebase $MOZ_LIBWEBRTC_COMMIT to $MOZ_LIBWEBRTC_NEXT_BASE"
   echo "-------"
+  ERROR_HELP=$REBASE_HELP
   ( cd $MOZ_LIBWEBRTC_SRC && \
     git checkout -q $MOZ_LIBWEBRTC_COMMIT && \
     git rebase $MOZ_LIBWEBRTC_NEXT_BASE \
     &> log-rebase-moz-libwebrtc.txt \
   )
+  ERROR_HELP=""
 }
 
 function vendor_off_next_commit {
