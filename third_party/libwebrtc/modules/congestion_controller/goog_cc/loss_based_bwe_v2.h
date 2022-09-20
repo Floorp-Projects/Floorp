@@ -85,8 +85,7 @@ class LossBasedBweV2 {
     double temporal_weight_factor = 0.0;
     double bandwidth_backoff_lower_bound_factor = 0.0;
     bool trendline_integration_enabled = false;
-    double delay_based_limit_factor = 1.0;
-    int trendline_window_size = 0;
+    int trendline_observations_window_size = 0;
     double max_increase_factor = 0.0;
     TimeDelta delayed_increase_window = TimeDelta::Zero();
     bool use_acked_bitrate_only_when_overusing = false;
