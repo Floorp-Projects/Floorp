@@ -4,9 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-var EXPORTED_SYMBOLS = ["ContentSearchChild"];
-
-class ContentSearchChild extends JSWindowActorChild {
+export class ContentSearchChild extends JSWindowActorChild {
   handleEvent(event) {
     // The event gets translated into a message that
     // is then sent to the parent.
