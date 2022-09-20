@@ -11,26 +11,15 @@ FOG_ROOT_PATH = path.abspath(
     path.join(path.dirname(__file__), path.pardir, path.pardir)
 )
 sys.path.append(FOG_ROOT_PATH)
-import metrics_index
+from metrics_index import metrics_yamls, pings_yamls, tags_yamls
 
 
-def test_yamls_sorted():
+def test_yamls_sorted(yamls_to_test=[metrics_yamls, pings_yamls, tags_yamls]):
     """
     Ensure the yamls indices are sorted lexicographically.
     """
-    # Ignore lists that are the concatenation of others.
-    to_ignore = ["metrics_yamls", "pings_yamls"]
-
-    # Fetch names of all variables defined in the `metrics_index` module.
-    yaml_lists = [item for item in dir(metrics_index) if not item.startswith("__")]
-    for name in yaml_lists:
-        if name in to_ignore:
-            continue
-
-        yamls_to_test = metrics_index.__dict__[name]
-        assert (
-            sorted(yamls_to_test) == yamls_to_test
-        ), f"{name} must be be lexicographically sorted."
+    for yamls in yamls_to_test:
+        assert sorted(yamls) == yamls, "FOG YAMLs must be lexicographically sorted"
 
 
 if __name__ == "__main__":
