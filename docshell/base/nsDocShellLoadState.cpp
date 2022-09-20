@@ -819,8 +819,7 @@ nsresult nsDocShellLoadState::SetupInheritingPrincipal(
       //
       // We didn't inherit OriginAttributes here as ExpandedPrincipal doesn't
       // have origin attributes.
-      mPrincipalToInherit = NullPrincipal::CreateWithInheritedAttributes(
-          aOriginAttributes, false);
+      mPrincipalToInherit = NullPrincipal::Create(aOriginAttributes);
       mInheritPrincipal = false;
     }
   }
@@ -832,10 +831,16 @@ nsresult nsDocShellLoadState::SetupInheritingPrincipal(
 
   if (mLoadFlags & nsIWebNavigation::LOAD_FLAGS_DISALLOW_INHERIT_PRINCIPAL) {
     mInheritPrincipal = false;
+    // Create a new null principal URI based on our precursor principal.
+    nsCOMPtr<nsIURI> nullPrincipalURI =
+        NullPrincipal::CreateURI(mPrincipalToInherit);
     // If mFirstParty is true and the pref 'privacy.firstparty.isolate' is
     // enabled, we will set firstPartyDomain on the origin attributes.
-    mPrincipalToInherit = NullPrincipal::CreateWithInheritedAttributes(
-        aOriginAttributes, mFirstParty);
+    OriginAttributes attrs(aOriginAttributes);
+    if (mFirstParty) {
+      attrs.SetFirstPartyDomain(true, nullPrincipalURI);
+    }
+    mPrincipalToInherit = NullPrincipal::Create(attrs, nullPrincipalURI);
   }
 
   return NS_OK;
