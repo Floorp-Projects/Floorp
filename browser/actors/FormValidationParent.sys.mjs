@@ -8,8 +8,6 @@
 
 "use strict";
 
-var EXPORTED_SYMBOLS = ["FormValidationParent"];
-
 const lazy = {};
 
 ChromeUtils.defineModuleGetter(
@@ -44,7 +42,7 @@ class PopupShownObserver {
   ]);
 }
 
-class FormValidationParent extends JSWindowActorParent {
+export class FormValidationParent extends JSWindowActorParent {
   constructor() {
     super();
 

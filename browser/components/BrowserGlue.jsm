@@ -535,11 +535,11 @@ let JSWINDOWACTORS = {
 
   FormValidation: {
     parent: {
-      moduleURI: "resource:///actors/FormValidationParent.jsm",
+      esModuleURI: "resource:///actors/FormValidationParent.sys.mjs",
     },
 
     child: {
-      moduleURI: "resource:///actors/FormValidationChild.jsm",
+      esModuleURI: "resource:///actors/FormValidationChild.sys.mjs",
       events: {
         MozInvalidForm: {},
         // Listening to ‘pageshow’ event is only relevant if an invalid form
