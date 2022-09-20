@@ -24,6 +24,7 @@
 #include "mozilla/NativeKeyBindingsType.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/PresShell.h"
+#include "mozilla/ScopeExit.h"
 #include "mozilla/Sprintf.h"
 #include "mozilla/StaticPrefs_apz.h"
 #include "mozilla/StaticPrefs_dom.h"
@@ -721,14 +722,57 @@ void nsBaseWidget::InfallibleMakeFullScreen(bool aFullScreen) {
   MOZ_DIAGNOSTIC_ASSERT(BoundsUseDesktopPixels(),
                         "non-desktop windows cannot be made fullscreen");
 
+  // Ensure that the OS chrome is hidden/shown before we resize and/or exit the
+  // function.
+  //
+  // HideWindowChrome() may (depending on platform, implementation details, and
+  // OS-level user preferences) alter the reported size of the window. The
+  // obvious and principled solution is socks-and-shoes:
+  //   - On entering fullscreen mode: hide window chrome, then perform resize.
+  //   - On leaving fullscreen mode: unperform resize, then show window chrome.
+  //
+  // ... unfortunately, HideWindowChrome() requires Resize() to be called
+  // afterwards (see bug 498835), which prevents this from being done in a
+  // straightforward way.
+  //
+  // Instead, we always call HideWindowChrome() just before we call Resize().
+  // This at least ensures that our measurements are consistently taken in a
+  // pre-transition state.
+  //
+  // ... unfortunately again, coupling HideWindowChrome() to Resize() means that
+  // we have to worry about the possibility of control flows that don't call
+  // Resize() at all. (That shouldn't happen, but it's not trivial to rule out.)
+  // We therefore set up a fallback to fix up the OS chrome if it hasn't been
+  // done at exit time.
+  bool hasAdjustedOSChrome = false;
+  const auto adjustOSChrome = [&]() {
+    if (hasAdjustedOSChrome) {
+      MOZ_ASSERT_UNREACHABLE("window chrome should only be adjusted once");
+      return;
+    }
+    HideWindowChrome(aFullScreen);
+    hasAdjustedOSChrome = true;
+  };
+  const auto adjustChromeOnScopeExit = MakeScopeExit([&]() {
+    if (hasAdjustedOSChrome) {
+      return;
+    }
+
+    // Hide chrome and "resize" the window to its current size.
+    auto rect = GetBounds();
+    adjustOSChrome();
+    Resize(rect.X(), rect.Y(), rect.Width(), rect.Height(), true);
+  });
+
+  // Resize.
   const auto doReposition = [&](auto rect) {
     static_assert(std::is_base_of_v<DesktopPixel,
                                     std::remove_reference_t<decltype(rect)>>,
                   "doReposition requires a rectangle using desktop pixels");
+
+    adjustOSChrome();
     Resize(rect.X(), rect.Y(), rect.Width(), rect.Height(), true);
   };
-
-  HideWindowChrome(aFullScreen);
 
   if (aFullScreen) {
     if (!mOriginalBounds) {
