@@ -721,23 +721,29 @@ void nsBaseWidget::InfallibleMakeFullScreen(bool aFullScreen) {
   MOZ_DIAGNOSTIC_ASSERT(BoundsUseDesktopPixels(),
                         "non-desktop windows cannot be made fullscreen");
 
+  const auto doReposition = [&](auto rect) {
+    static_assert(std::is_base_of_v<DesktopPixel,
+                                    std::remove_reference_t<decltype(rect)>>,
+                  "doReposition requires a rectangle using desktop pixels");
+    Resize(rect.X(), rect.Y(), rect.Width(), rect.Height(), true);
+  };
+
   HideWindowChrome(aFullScreen);
 
   if (aFullScreen) {
     if (!mOriginalBounds) {
-      mOriginalBounds = mozilla::MakeUnique<LayoutDeviceIntRect>();
+      mOriginalBounds = mozilla::MakeUnique<DesktopRect>();
     }
-    *mOriginalBounds = GetScreenBounds();
+    *mOriginalBounds = GetScreenBounds() / GetDesktopToDeviceScale();
+
+    nsCOMPtr<nsIScreen> screen = GetWidgetScreen();
+    if (!screen) {
+      return;
+    }
 
     // Move to top-left corner of screen and size to the screen dimensions
-    nsCOMPtr<nsIScreen> screen = GetWidgetScreen();
-    if (screen) {
-      int32_t left, top, width, height;
-      if (NS_SUCCEEDED(
-              screen->GetRectDisplayPix(&left, &top, &width, &height))) {
-        Resize(left, top, width, height, true);
-      }
-    }
+    const auto screenRect = screen->GetRectDisplayPix();
+    doReposition(screenRect);
   } else {
     if (!mOriginalBounds) {
       // This should never happen, at present, since we don't make windows
@@ -745,9 +751,8 @@ void nsBaseWidget::InfallibleMakeFullScreen(bool aFullScreen) {
       MOZ_ASSERT(false, "fullscreen window did not have saved position");
       return;
     }
-    DesktopRect deskRect = *mOriginalBounds / GetDesktopToDeviceScale();
-    Resize(deskRect.X(), deskRect.Y(), deskRect.Width(), deskRect.Height(),
-           true);
+
+    doReposition(*mOriginalBounds);
   }
 }
 
