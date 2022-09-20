@@ -1077,12 +1077,12 @@ function Colorways(props) {
       colorwayName: label
     })
   }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_MSLocalized__WEBPACK_IMPORTED_MODULE_1__.Localized, {
-    text: typeof label === "object" ? label : {}
+    text: typeof tooltip === "object" ? tooltip : {}
   }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("span", {
     className: "sr-only colorway label",
     id: `${id}-label`,
     "data-l10n-args": JSON.stringify({
-      colorwayName: label
+      colorwayName: tooltip
     })
   })), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_MSLocalized__WEBPACK_IMPORTED_MODULE_1__.Localized, {
     text: typeof label === "object" ? label : {}
