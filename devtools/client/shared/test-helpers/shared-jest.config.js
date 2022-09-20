@@ -21,7 +21,6 @@ module.exports = {
     "ChromeUtils-mock": `${fixturesDir}/ChromeUtils`,
 
     "^promise": `${fixturesDir}/promise`,
-    "^chrome": `${fixturesDir}/Chrome`,
     "^devtools/client/shared/fluent-l10n/fluent-l10n$": `${fixturesDir}/fluent-l10n`,
     "^devtools/client/shared/unicode-url": `${fixturesDir}/unicode-url`,
     // This is needed for the Debugger, for some reason

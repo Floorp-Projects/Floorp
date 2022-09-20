@@ -32,7 +32,6 @@ add_task(async function() {
   // const allowedDupes = [
   //   "@loader/unload.js",
   //   "@loader/options.js",
-  //   "chrome.js",
   //   "resource://devtools/client/netmonitor/src/api.js",
   //   "resource://devtools/client/shared/vendor/redux.js",
   //   "resource://devtools/client/netmonitor/src/connector/index.js",

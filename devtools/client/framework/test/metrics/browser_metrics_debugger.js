@@ -32,7 +32,6 @@ add_task(async function() {
   const allowedDupes = [
     "@loader/unload.js",
     "@loader/options.js",
-    "chrome.js",
     "resource://devtools/client/shared/vendor/fluent-react.js",
     "resource://devtools/client/shared/vendor/react-dom.js",
     "resource://devtools/client/shared/vendor/react.js",

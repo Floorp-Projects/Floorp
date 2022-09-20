@@ -132,6 +132,11 @@ function DevToolsLoader({
 
   this.require = Require(this.loader, { id: "devtools" });
 
+  // Services can't be imported from a Sandbox,
+  // so hand over a reference to builtin-modules.js (all all other modules)
+  // via the globals.
+  this.loader.globals.Services = Services;
+
   // Fetch custom pseudo modules and globals
   const { modules, globals } = this.require(
     "devtools/shared/loader/builtin-modules"

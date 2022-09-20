@@ -28,7 +28,6 @@ add_task(async function() {
   runDuplicatedModulesTest(loaders, [
     "@loader/unload.js",
     "@loader/options.js",
-    "chrome.js",
     "resource://devtools/client/shared/vendor/react.js",
     "resource://devtools/client/shared/vendor/react-dom-factories.js",
     "resource://devtools/client/shared/vendor/react-prop-types.js",
