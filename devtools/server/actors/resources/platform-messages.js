@@ -5,7 +5,6 @@
 "use strict";
 
 const nsIConsoleListenerWatcher = require("devtools/server/actors/resources/utils/nsi-console-listener-watcher");
-const { Ci } = require("chrome");
 
 const {
   TYPES: { PLATFORM_MESSAGE },

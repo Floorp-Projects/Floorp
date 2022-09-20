@@ -13,7 +13,6 @@
 
 "use strict";
 
-const { Cc, Ci } = require("chrome");
 const { gDevTools } = require("devtools/client/framework/devtools");
 
 /**

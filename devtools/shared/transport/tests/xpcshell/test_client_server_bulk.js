@@ -4,7 +4,7 @@
 "use strict";
 
 var { FileUtils } = ChromeUtils.import("resource://gre/modules/FileUtils.jsm");
-var Pipe = CC("@mozilla.org/pipe;1", "nsIPipe", "init");
+var Pipe = Components.Constructor("@mozilla.org/pipe;1", "nsIPipe", "init");
 
 function run_test() {
   initTestDevToolsServer();

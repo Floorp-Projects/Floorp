@@ -14,7 +14,6 @@
 // error packets.
 /* eslint-disable no-throw-literal */
 
-const { Ci } = require("chrome");
 const { DevToolsServer } = require("devtools/server/devtools-server");
 const { XPCOMUtils } = require("resource://gre/modules/XPCOMUtils.sys.mjs");
 const protocol = require("devtools/shared/protocol");

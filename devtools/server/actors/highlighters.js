@@ -4,8 +4,6 @@
 
 "use strict";
 
-const { Ci, Cu } = require("chrome");
-
 const EventEmitter = require("devtools/shared/event-emitter");
 const protocol = require("devtools/shared/protocol");
 const { customHighlighterSpec } = require("devtools/shared/specs/highlighters");

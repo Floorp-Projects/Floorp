@@ -4,7 +4,6 @@
 
 "use strict";
 
-const { Ci, Cc } = require("chrome");
 const nodeFilterConstants = require("devtools/shared/dom-node-filter-constants");
 loader.lazyRequireGetter(
   this,

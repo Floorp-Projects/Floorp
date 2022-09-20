@@ -4,7 +4,6 @@
 
 "use strict";
 
-const { Cc, Ci, Cu } = require("chrome");
 const { reportException } = require("devtools/shared/DevToolsUtils");
 const { expectState } = require("devtools/server/actors/common");
 

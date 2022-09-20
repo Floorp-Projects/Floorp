@@ -3,8 +3,6 @@ http://creativecommons.org/publicdomain/zero/1.0/ */
 
 "use strict";
 
-const { Ci } = require("chrome");
-
 const {
   updateCanDebugWorkers,
   updateWorkers,

@@ -4,13 +4,11 @@
 
 "use strict";
 
-const { CC, Ci, Cc } = require("chrome");
-
-const ArrayBufferInputStream = CC(
+const ArrayBufferInputStream = Components.Constructor(
   "@mozilla.org/io/arraybuffer-input-stream;1",
   "nsIArrayBufferInputStream"
 );
-const BinaryInputStream = CC(
+const BinaryInputStream = Components.Constructor(
   "@mozilla.org/binaryinputstream;1",
   "nsIBinaryInputStream",
   "setInputStream"

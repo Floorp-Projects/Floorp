@@ -27,7 +27,6 @@
 
 "use strict";
 
-const { Cu } = require("chrome");
 const nodeConstants = require("devtools/shared/dom-node-constants");
 const {
   getBindingElementAndPseudo,

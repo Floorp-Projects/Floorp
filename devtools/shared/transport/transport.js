@@ -4,7 +4,6 @@
 
 "use strict";
 
-const { Cc, Cr, CC } = require("chrome");
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 const { dumpn, dumpv } = DevToolsUtils;
 const flags = require("devtools/shared/flags");
@@ -16,7 +15,7 @@ const {
 } = require("devtools/shared/transport/packets");
 
 loader.lazyGetter(this, "ScriptableInputStream", () => {
-  return CC(
+  return Components.Constructor(
     "@mozilla.org/scriptableinputstream;1",
     "nsIScriptableInputStream",
     "init"

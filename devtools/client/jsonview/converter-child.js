@@ -4,8 +4,6 @@
 
 "use strict";
 
-const { components, Ci, Cr, Cu, CC } = require("chrome");
-
 loader.lazyRequireGetter(
   this,
   "NetworkHelper",
@@ -22,12 +20,12 @@ const {
   removeThemeObserver,
 } = require("devtools/client/shared/theme");
 
-const BinaryInput = CC(
+const BinaryInput = Components.Constructor(
   "@mozilla.org/binaryinputstream;1",
   "nsIBinaryInputStream",
   "setInputStream"
 );
-const BufferStream = CC(
+const BufferStream = Components.Constructor(
   "@mozilla.org/io/arraybuffer-input-stream;1",
   "nsIArrayBufferInputStream",
   "setData"
@@ -128,7 +126,7 @@ Converter.prototype = {
 
     // Initialize stuff.
     const win = NetworkHelper.getWindowForRequest(request);
-    if (!win || !components.isSuccessCode(request.status)) {
+    if (!win || !Components.isSuccessCode(request.status)) {
       return;
     }
 
@@ -154,7 +152,7 @@ Converter.prototype = {
 
   onStopRequest(request, statusCode) {
     // Flush data if we haven't been canceled.
-    if (components.isSuccessCode(statusCode)) {
+    if (Components.isSuccessCode(statusCode)) {
       this.decodeAndInsertBuffer(new ArrayBuffer(0), true);
     }
 

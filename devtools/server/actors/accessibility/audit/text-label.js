@@ -4,8 +4,6 @@
 
 "use strict";
 
-const { Ci } = require("chrome");
-
 const {
   accessibility: {
     AUDIT_TYPE: { TEXT_LABEL },

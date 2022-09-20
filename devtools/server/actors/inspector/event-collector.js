@@ -7,7 +7,6 @@
 
 "use strict";
 
-const { Cu } = require("chrome");
 const {
   isAfterPseudoElement,
   isBeforePseudoElement,

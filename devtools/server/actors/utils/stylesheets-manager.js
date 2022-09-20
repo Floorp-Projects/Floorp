@@ -5,7 +5,6 @@
 "use strict";
 
 const EventEmitter = require("devtools/shared/event-emitter");
-const { Ci } = require("chrome");
 const { fetch } = require("devtools/shared/DevToolsUtils");
 const InspectorUtils = require("InspectorUtils");
 const {

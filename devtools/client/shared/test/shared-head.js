@@ -2003,7 +2003,7 @@ async function closeRDM(tab, options) {
 }
 
 function getInputStream(data) {
-  const BufferStream = CC(
+  const BufferStream = Components.Constructor(
     "@mozilla.org/io/arraybuffer-input-stream;1",
     "nsIArrayBufferInputStream",
     "setData"

@@ -4,7 +4,6 @@
 
 "use strict";
 
-const { Cr } = require("chrome");
 const flags = require("devtools/shared/flags");
 
 /**

@@ -10,7 +10,6 @@ const {
   FrontClassWithSpec,
   registerFront,
 } = require("devtools/shared/protocol");
-const { Ci } = require("chrome");
 const { LocalizationHelper } = require("devtools/shared/l10n");
 
 const L10N = new LocalizationHelper(

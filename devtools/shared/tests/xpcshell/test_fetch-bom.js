@@ -4,10 +4,8 @@
 
 // Tests for DevToolsUtils.fetch BOM detection.
 
-const CC = Components.Constructor;
-
 const { HttpServer } = ChromeUtils.import("resource://testing-common/httpd.js");
-const BinaryOutputStream = CC(
+const BinaryOutputStream = Components.Constructor(
   "@mozilla.org/binaryoutputstream;1",
   "nsIBinaryOutputStream",
   "setOutputStream"

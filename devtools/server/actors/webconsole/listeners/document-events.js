@@ -7,7 +7,6 @@
 "use strict";
 
 const EventEmitter = require("devtools/shared/event-emitter");
-const { Ci } = require("chrome");
 
 /**
  * About "navigationStart - ${WILL_NAVIGATE_TIME_SHIFT}ms":

@@ -31,10 +31,9 @@
  * is then available to scanning devices.
  */
 
-const { Cu, CC, Cc, Ci } = require("chrome");
 const EventEmitter = require("devtools/shared/event-emitter");
 
-const UDPSocket = CC(
+const UDPSocket = Components.Constructor(
   "@mozilla.org/network/udp-socket;1",
   "nsIUDPSocket",
   "init"

@@ -8,7 +8,6 @@
 // It basically displays a magnifier that tracks mouse moves and shows a magnified version
 // of the page. On click, it samples the color at the pixel being hovered.
 
-const { Ci, Cc } = require("chrome");
 const {
   CanvasFrameAnonymousContentHelper,
 } = require("devtools/server/actors/highlighters/utils/markup");

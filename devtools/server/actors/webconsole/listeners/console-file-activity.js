@@ -4,8 +4,6 @@
 
 "use strict";
 
-const { Ci } = require("chrome");
-
 /**
  * A WebProgressListener that listens for file loads.
  *

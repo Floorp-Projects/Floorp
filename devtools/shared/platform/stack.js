@@ -7,8 +7,6 @@
 
 "use strict";
 
-const { Cu, components } = require("chrome");
-
 /**
  * Return the Nth path from the stack excluding substr.
  *
@@ -18,7 +16,7 @@ const { Cu, components } = require("chrome");
  *        A segment of the path that should be excluded.
  */
 function getNthPathExcluding(n, substr) {
-  let stack = components.stack.formattedStack.split("\n");
+  let stack = Components.stack.formattedStack.split("\n");
 
   // Remove this method from the stack
   stack = stack.splice(1);
@@ -47,7 +45,7 @@ function getNthPathExcluding(n, substr) {
  * deserialized, passed to callFunctionWithAsyncStack.
  */
 function getStack() {
-  return components.stack.caller;
+  return Components.stack.caller;
 }
 
 /**

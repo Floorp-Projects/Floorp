@@ -62,7 +62,6 @@
 
 "use strict";
 
-const { components, Cc, Ci } = require("chrome");
 loader.lazyImporter(this, "NetUtil", "resource://gre/modules/NetUtil.jsm");
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 
@@ -337,7 +336,7 @@ var NetworkHelper = {
       Ci.nsICachingChannel.LOAD_BYPASS_LOCAL_CACHE_IF_BUSY;
 
     NetUtil.asyncFetch(channel, (inputStream, statusCode, request) => {
-      if (!components.isSuccessCode(statusCode)) {
+      if (!Components.isSuccessCode(statusCode)) {
         callback(null);
         return;
       }

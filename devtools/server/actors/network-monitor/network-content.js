@@ -7,8 +7,6 @@
 const { ActorClassWithSpec, Actor } = require("devtools/shared/protocol");
 const { networkContentSpec } = require("devtools/shared/specs/network-content");
 
-const { Cc, Ci } = require("chrome");
-
 loader.lazyRequireGetter(
   this,
   "NetUtil",

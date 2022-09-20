@@ -21,7 +21,6 @@
  * debug a document living in the parent process.
  */
 
-var { Ci, Cu, Cr, Cc } = require("chrome");
 var { ActorRegistry } = require("devtools/server/actors/utils/actor-registry");
 var DevToolsUtils = require("devtools/shared/DevToolsUtils");
 var { assert } = DevToolsUtils;

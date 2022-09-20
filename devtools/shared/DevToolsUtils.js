@@ -8,7 +8,6 @@
 
 /* General utilities used throughout devtools. */
 
-var { Ci, Cc, Cu, components } = require("chrome");
 var flags = require("devtools/shared/flags");
 var {
   getStack,
@@ -578,7 +577,7 @@ function mainThreadFetch(
 
     // eslint-disable-next-line complexity
     const onResponse = (stream, status, request) => {
-      if (!components.isSuccessCode(status)) {
+      if (!Components.isSuccessCode(status)) {
         reject(new Error(`Failed to fetch ${url}. Code ${status}.`));
         return;
       }
@@ -803,7 +802,7 @@ exports.openFileStream = function(filePath) {
     NetUtil.asyncFetch(
       { uri, loadUsingSystemPrincipal: true },
       (stream, result) => {
-        if (!components.isSuccessCode(result)) {
+        if (!Components.isSuccessCode(result)) {
           reject(new Error(`Could not open "${filePath}": result = ${result}`));
           return;
         }

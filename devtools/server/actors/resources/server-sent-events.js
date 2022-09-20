@@ -4,8 +4,6 @@
 
 "use strict";
 
-const { Cc, Ci } = require("chrome");
-
 const { LongStringActor } = require("devtools/server/actors/string");
 
 const {

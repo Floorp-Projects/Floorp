@@ -13,7 +13,6 @@
  */
 
 const { extend } = require("devtools/shared/extend");
-const { Ci, Cu } = require("chrome");
 
 const {
   ParentProcessTargetActor,

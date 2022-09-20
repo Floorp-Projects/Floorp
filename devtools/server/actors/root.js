@@ -8,7 +8,6 @@
 // error packets.
 /* eslint-disable no-throw-literal */
 
-const { Cu } = require("chrome");
 const { Pool } = require("devtools/shared/protocol");
 const {
   LazyPool,

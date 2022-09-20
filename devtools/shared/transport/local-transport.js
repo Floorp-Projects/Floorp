@@ -4,14 +4,13 @@
 
 "use strict";
 
-const { CC } = require("chrome");
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 const { dumpn } = DevToolsUtils;
 const flags = require("devtools/shared/flags");
 const StreamUtils = require("devtools/shared/transport/stream-utils");
 
 loader.lazyGetter(this, "Pipe", () => {
-  return CC("@mozilla.org/pipe;1", "nsIPipe", "init");
+  return Components.Constructor("@mozilla.org/pipe;1", "nsIPipe", "init");
 });
 
 /**
