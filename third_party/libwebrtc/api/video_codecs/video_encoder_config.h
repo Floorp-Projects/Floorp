@@ -158,6 +158,7 @@ class VideoEncoderConfig {
   rtc::scoped_refptr<VideoStreamFactoryInterface> video_stream_factory;
   std::vector<SpatialLayer> spatial_layers;
   ContentType content_type;
+  bool frame_drop_enabled;
   rtc::scoped_refptr<const EncoderSpecificSettings> encoder_specific_settings;
 
   // Padding will be used up to this bitrate regardless of the bitrate produced

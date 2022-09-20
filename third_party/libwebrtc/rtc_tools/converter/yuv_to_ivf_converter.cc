@@ -127,23 +127,21 @@ class Encoder {
       codec_settings.startBitrate = kBitrateBps;
       codec_settings.minBitrate = kBitrateBps;
       codec_settings.maxBitrate = kBitrateBps;
+      codec_settings.SetFrameDropEnabled(false);
       switch (video_codec_type) {
         case VideoCodecType::kVideoCodecVP8: {
           VideoCodecVP8* vp8_settings = codec_settings.VP8();
-          vp8_settings->frameDroppingOn = false;
           vp8_settings->keyFrameInterval = kKeyFrameIntervalMs;
           vp8_settings->denoisingOn = false;
         } break;
         case VideoCodecType::kVideoCodecVP9: {
           VideoCodecVP9* vp9_settings = codec_settings.VP9();
           vp9_settings->denoisingOn = false;
-          vp9_settings->frameDroppingOn = false;
           vp9_settings->keyFrameInterval = kKeyFrameIntervalMs;
           vp9_settings->automaticResizeOn = false;
         } break;
         case VideoCodecType::kVideoCodecH264: {
           VideoCodecH264* h264_settings = codec_settings.H264();
-          h264_settings->frameDroppingOn = false;
           h264_settings->keyFrameInterval = kKeyFrameIntervalMs;
         } break;
         default:

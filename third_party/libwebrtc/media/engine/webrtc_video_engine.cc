@@ -526,8 +526,6 @@ WebRtcVideoChannel::WebRtcVideoSendStream::ConfigureVideoEncoderSettings(
     // VP9 denoising is disabled by default.
     vp9_settings.denoisingOn = codec_default_denoising ? true : denoising;
     vp9_settings.automaticResizeOn = automatic_resize;
-    // Ensure frame dropping is always enabled.
-    RTC_DCHECK(vp9_settings.frameDroppingOn);
     if (!is_screencast) {
       webrtc::FieldTrialFlag interlayer_pred_experiment_enabled("Enabled");
       webrtc::FieldTrialEnum<webrtc::InterLayerPredMode> inter_layer_pred_mode(
@@ -2511,6 +2509,9 @@ WebRtcVideoChannel::WebRtcVideoSendStream::CreateVideoEncoderConfig(
       !disable_automatic_resize_ && !is_screencast &&
       (parameters_.config.rtp.ssrcs.size() == 1 ||
        NumActiveStreams(rtp_parameters_) == 1);
+
+  // Ensure frame dropping is always enabled.
+  encoder_config.frame_drop_enabled = true;
 
   int max_qp = kDefaultQpMax;
   codec.GetParam(kCodecParamMaxQuantization, &max_qp);

@@ -108,7 +108,6 @@ std::string CodecSpecificToString(const VideoCodec& codec) {
          << static_cast<int>(codec.VP8().numberOfTemporalLayers);
       ss << "\ndenoising: " << codec.VP8().denoisingOn;
       ss << "\nautomatic_resize: " << codec.VP8().automaticResizeOn;
-      ss << "\nframe_dropping: " << codec.VP8().frameDroppingOn;
       ss << "\nkey_frame_interval: " << codec.VP8().keyFrameInterval;
       break;
     case kVideoCodecVP9:
@@ -117,14 +116,12 @@ std::string CodecSpecificToString(const VideoCodec& codec) {
       ss << "\nnum_spatial_layers: "
          << static_cast<int>(codec.VP9().numberOfSpatialLayers);
       ss << "\ndenoising: " << codec.VP9().denoisingOn;
-      ss << "\nframe_dropping: " << codec.VP9().frameDroppingOn;
       ss << "\nkey_frame_interval: " << codec.VP9().keyFrameInterval;
       ss << "\nadaptive_qp_mode: " << codec.VP9().adaptiveQpMode;
       ss << "\nautomatic_resize: " << codec.VP9().automaticResizeOn;
       ss << "\nflexible_mode: " << codec.VP9().flexibleMode;
       break;
     case kVideoCodecH264:
-      ss << "frame_dropping: " << codec.H264().frameDroppingOn;
       ss << "\nkey_frame_interval: " << codec.H264().keyFrameInterval;
       ss << "\nnum_temporal_layers: "
          << static_cast<int>(codec.H264().numberOfTemporalLayers);
@@ -209,20 +206,19 @@ void VideoCodecTestFixtureImpl::Config::SetCodecSettings(
       num_simulcast_streams <= 1 ? 0
                                  : static_cast<uint8_t>(num_simulcast_streams);
 
+  codec_settings.SetFrameDropEnabled(frame_dropper_on);
   switch (codec_settings.codecType) {
     case kVideoCodecVP8:
       codec_settings.VP8()->numberOfTemporalLayers =
           static_cast<uint8_t>(num_temporal_layers);
       codec_settings.VP8()->denoisingOn = denoising_on;
       codec_settings.VP8()->automaticResizeOn = spatial_resize_on;
-      codec_settings.VP8()->frameDroppingOn = frame_dropper_on;
       codec_settings.VP8()->keyFrameInterval = kBaseKeyFrameInterval;
       break;
     case kVideoCodecVP9:
       codec_settings.VP9()->numberOfTemporalLayers =
           static_cast<uint8_t>(num_temporal_layers);
       codec_settings.VP9()->denoisingOn = denoising_on;
-      codec_settings.VP9()->frameDroppingOn = frame_dropper_on;
       codec_settings.VP9()->keyFrameInterval = kBaseKeyFrameInterval;
       codec_settings.VP9()->automaticResizeOn = spatial_resize_on;
       codec_settings.VP9()->numberOfSpatialLayers =
@@ -232,7 +228,6 @@ void VideoCodecTestFixtureImpl::Config::SetCodecSettings(
       codec_settings.qpMax = 63;
       break;
     case kVideoCodecH264:
-      codec_settings.H264()->frameDroppingOn = frame_dropper_on;
       codec_settings.H264()->keyFrameInterval = kBaseKeyFrameInterval;
       codec_settings.H264()->numberOfTemporalLayers =
           static_cast<uint8_t>(num_temporal_layers);
@@ -302,6 +297,7 @@ std::string VideoCodecTestFixtureImpl::Config::ToString() const {
   ss << "\n\n--> codec_settings." << codec_type;
   ss << "complexity: "
      << static_cast<int>(codec_settings.GetVideoEncoderComplexity());
+  ss << "\nframe_dropping: " << codec_settings.GetFrameDropEnabled();
   ss << "\n" << CodecSpecificToString(codec_settings);
   if (codec_settings.numberOfSimulcastStreams > 1) {
     for (int i = 0; i < codec_settings.numberOfSimulcastStreams; ++i) {
