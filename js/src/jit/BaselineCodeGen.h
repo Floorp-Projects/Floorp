@@ -373,9 +373,7 @@ class BaselineCompiler final : private BaselineCompilerCodeGen {
 
   CodeOffset profilerPushToggleOffset_;
 
-#if defined(JS_ION_PERF)
   BaselinePerfSpewer perfSpewer_;
-#endif
 
  public:
   BaselineCompiler(JSContext* cx, TempAllocator& alloc, JSScript* script);
