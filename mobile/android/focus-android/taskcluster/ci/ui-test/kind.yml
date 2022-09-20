@@ -48,19 +48,19 @@ task-defaults:
               path: .firebase_token.json
               json: true
         commands:
-            - [wget, {artifact-reference: '<signed-debug-apk/public/build/focus/x86/target.apk>'}, '-O', app.apk]
+            - [wget, {artifact-reference: '<signed-debug-apk/public/build/focus/arm64-v8a/target.apk>'}, '-O', app.apk]
             - [wget, {artifact-reference: '<signed-android-test/public/build/app-focus-androidTest.apk>'}, '-O', android-test.apk]
 
 tasks:
-    x86-debug:
+    arm-debug:
         description: 'UI tests with firebase'
         run-on-tasks-for: [github-pull-request, github-push]
         run:
             commands:
-                - ['automation/taskcluster/androidTest/ui-test.sh', 'x86', 'app.apk', 'android-test.apk', '-1']
+                - ['automation/taskcluster/androidTest/ui-test.sh', 'arm64-v8a', 'app.apk', 'android-test.apk', '50']
         treeherder:
-            symbol: debug(ui-test-x86)
-    x86-nightly:
+            symbol: debug(ui-test-arm)
+    arm-nightly:
         attributes:
             build-type: nightly-firebase
         description: 'UI tests on Nightly with firebase'
@@ -71,10 +71,10 @@ tasks:
             signed-android-test: signing-android-test-nightly
         run:
             commands:
-                - ['automation/taskcluster/androidTest/ui-test.sh', 'x86-start-test', 'app.apk', 'android-test.apk', '-1']
+                - ['automation/taskcluster/androidTest/ui-test.sh', 'arm-start-test', 'app.apk', 'android-test.apk', '1']
         treeherder:
-            symbol: nightly(ui-test-x86-nightly)
-    x86-beta:
+            symbol: nightly(ui-test-arm-nightly)
+    arm-beta:
         attributes:
             build-type: nightly-firebase
         description: 'UI tests on Beta with firebase'
@@ -85,6 +85,6 @@ tasks:
             signed-android-test: signing-android-test-beta
         run:
             commands:
-                - ['automation/taskcluster/androidTest/ui-test.sh', 'x86-beta-tests', 'app.apk', 'android-test.apk', '-1']
+                - ['automation/taskcluster/androidTest/ui-test.sh', 'arm-beta-tests', 'app.apk', 'android-test.apk', '1']
         treeherder:
-            symbol: beta(ui-test-x86-beta)
+            symbol: beta(ui-test-arm-beta)

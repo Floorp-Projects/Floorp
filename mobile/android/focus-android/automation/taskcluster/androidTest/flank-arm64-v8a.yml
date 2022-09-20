@@ -24,13 +24,13 @@ gcloud:
     - package org.mozilla.focus.privacy
 
   device:
-    - model: Pixel2
+    - model: Pixel2.arm
       version: 30
       locale: en_US
 
 flank:
   project: GOOGLE_PROJECT
-  max-test-shards: -1
+  max-test-shards: 50
   num-test-runs: 1
   output-style: compact
   full-junit-result: true

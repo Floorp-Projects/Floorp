@@ -76,14 +76,10 @@ set +e
 
 if [[ "${device_type}" =~ ^(arm64-v8a|armeabi-v7a|x86_64|x86)$ ]]; then
     flank_template="${PATH_TEST}/flank-${device_type}.yml"
-elif [[ "${device_type}" == "x86-start-test" ]]; then
-    flank_template="${PATH_TEST}/flank-x86-start-test.yml"
 elif [[ "${device_type}" == "arm-start-test" ]]; then
-    flank_template="${PATH_TEST}/flank-armeabi-v7a-start-test.yml"
-elif [[ "${device_type}" == "x86-screenshots-tests" ]]; then
-    flank_template="${PATH_TEST}/flank-x86-screenshots-tests.yml"
-elif [[ "${device_type}" == "x86-beta-tests" ]]; then
-    flank_template="${PATH_TEST}/flank-x86-beta.yml"
+    flank_template="${PATH_TEST}/flank-arm-start-test.yml"
+elif [[ "${device_type}" == "arm-beta-tests" ]]; then
+    flank_template="${PATH_TEST}/flank-arm-beta.yml"
 else
     echo "FAILURE: flank config file not found!"
     exitcode=1
