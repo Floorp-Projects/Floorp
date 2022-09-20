@@ -679,6 +679,10 @@ nsresult nsWindowWatcher::OpenWindowInternal(
       parentOuterWin ? parentOuterWin->GetBrowsingContext() : nullptr);
   nsCOMPtr<nsIDocShell> parentDocShell(parentBC ? parentBC->GetDocShell()
                                                 : nullptr);
+  RefPtr<Document> parentDoc(parentOuterWin ? parentOuterWin->GetDoc()
+                                            : nullptr);
+  nsCOMPtr<nsPIDOMWindowInner> parentInnerWin(
+      parentOuterWin ? parentOuterWin->GetCurrentInnerWindow() : nullptr);
 
   // Return null for any attempt to trigger a load from a discarded browsing
   // context. The spec is non-normative, and doesn't specify what should happen
@@ -715,8 +719,7 @@ nsresult nsWindowWatcher::OpenWindowInternal(
   bool hasChromeParent = !XRE_IsContentProcess();
   if (aParent) {
     // Check if the parent document has chrome privileges.
-    Document* doc = parentOuterWin->GetDoc();
-    hasChromeParent = doc && nsContentUtils::IsChromeDoc(doc);
+    hasChromeParent = parentDoc && nsContentUtils::IsChromeDoc(parentDoc);
   }
 
   bool isCallerChrome = nsContentUtils::LegacyIsCallerChromeOrNativeCode();
@@ -892,22 +895,20 @@ nsresult nsWindowWatcher::OpenWindowInternal(
 
     // If the parent trying to open a new window is sandboxed
     // without 'allow-popups', this is not allowed and we fail here.
-    if (aParent) {
-      if (Document* doc = parentOuterWin->GetDoc()) {
-        // Save sandbox flags for copying to new browsing context (docShell).
-        activeDocsSandboxFlags = doc->GetSandboxFlags();
+    if (parentDoc) {
+      // Save sandbox flags for copying to new browsing context (docShell).
+      activeDocsSandboxFlags = parentDoc->GetSandboxFlags();
 
-        if (!aForceNoOpener) {
-          cspToInheritForAboutBlank = doc->GetCsp();
-          coepToInheritForAboutBlank = doc->GetEmbedderPolicy();
-        }
+      if (!aForceNoOpener) {
+        cspToInheritForAboutBlank = parentDoc->GetCsp();
+        coepToInheritForAboutBlank = parentDoc->GetEmbedderPolicy();
+      }
 
-        // Check to see if this frame is allowed to navigate, but don't check if
-        // we're printing, as that's not a real navigation.
-        if (aPrintKind == PRINT_NONE &&
-            (activeDocsSandboxFlags & SANDBOXED_AUXILIARY_NAVIGATION)) {
-          return NS_ERROR_DOM_INVALID_ACCESS_ERR;
-        }
+      // Check to see if this frame is allowed to navigate, but don't check if
+      // we're printing, as that's not a real navigation.
+      if (aPrintKind == PRINT_NONE &&
+          (activeDocsSandboxFlags & SANDBOXED_AUXILIARY_NAVIGATION)) {
+        return NS_ERROR_DOM_INVALID_ACCESS_ERR;
       }
     }
 
@@ -1214,6 +1215,26 @@ nsresult nsWindowWatcher::OpenWindowInternal(
         }
       }
     }
+
+    // Copy the current session storage for the current domain. Don't perform
+    // the copy if we're forcing noopener, however.
+    if (!aForceNoOpener && subjectPrincipal && parentDocShell &&
+        targetDocShell) {
+      const RefPtr<SessionStorageManager> parentStorageManager =
+          parentDocShell->GetBrowsingContext()->GetSessionStorageManager();
+      const RefPtr<SessionStorageManager> newStorageManager =
+          targetDocShell->GetBrowsingContext()->GetSessionStorageManager();
+
+      if (parentStorageManager && newStorageManager) {
+        RefPtr<Storage> storage;
+        parentStorageManager->GetStorage(
+            parentInnerWin, subjectPrincipal, subjectPrincipal,
+            targetBC->UsePrivateBrowsing(), getter_AddRefs(storage));
+        if (storage) {
+          newStorageManager->CloneStorage(storage);
+        }
+      }
+    }
   }
 
   // We rely on CalculateChromeFlags to decide whether remote (out-of-process)
@@ -1225,9 +1246,6 @@ nsresult nsWindowWatcher::OpenWindowInternal(
       targetBC->UseRemoteSubframes() ==
       !!(chromeFlags & nsIWebBrowserChrome::CHROME_FISSION_WINDOW));
 
-  nsCOMPtr<nsPIDOMWindowInner> parentInnerWin =
-      parentOuterWin ? parentOuterWin->GetCurrentInnerWindow() : nullptr;
-  ;
   RefPtr<nsDocShellLoadState> loadState = aLoadState;
   if (uriToLoad && loadState) {
     // If a URI was passed to this function, open that, not what was passed in
@@ -1262,8 +1280,8 @@ nsresult nsWindowWatcher::OpenWindowInternal(
          screw up focus in the hidden window; see bug 36016.
       */
       RefPtr<Document> doc = GetEntryDocument();
-      if (!doc && parentOuterWin) {
-        doc = parentOuterWin->GetExtantDoc();
+      if (!doc) {
+        doc = parentDoc;
       }
       if (doc) {
         auto referrerInfo = MakeRefPtr<ReferrerInfo>(*doc);
@@ -1341,25 +1359,6 @@ nsresult nsWindowWatcher::OpenWindowInternal(
 
     // Should this pay attention to errors returned by LoadURI?
     targetBC->LoadURI(loadState);
-  }
-
-  // Copy the current session storage for the current domain. Don't perform the
-  // copy if we're forcing noopener, however.
-  if (!aForceNoOpener && subjectPrincipal && parentDocShell && targetDocShell) {
-    const RefPtr<SessionStorageManager> parentStorageManager =
-        parentDocShell->GetBrowsingContext()->GetSessionStorageManager();
-    const RefPtr<SessionStorageManager> newStorageManager =
-        targetDocShell->GetBrowsingContext()->GetSessionStorageManager();
-
-    if (parentStorageManager && newStorageManager) {
-      RefPtr<Storage> storage;
-      parentStorageManager->GetStorage(
-          parentInnerWin, subjectPrincipal, subjectPrincipal,
-          targetBC->UsePrivateBrowsing(), getter_AddRefs(storage));
-      if (storage) {
-        newStorageManager->CloneStorage(storage);
-      }
-    }
   }
 
   if (isNewToplevelWindow) {
