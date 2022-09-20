@@ -452,10 +452,10 @@ let JSWINDOWACTORS = {
 
   ContentSearch: {
     parent: {
-      moduleURI: "resource:///actors/ContentSearchParent.jsm",
+      esModuleURI: "resource:///actors/ContentSearchParent.sys.mjs",
     },
     child: {
-      moduleURI: "resource:///actors/ContentSearchChild.jsm",
+      esModuleURI: "resource:///actors/ContentSearchChild.sys.mjs",
       events: {
         ContentSearchClient: { capture: true, wantUntrusted: true },
       },

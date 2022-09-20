@@ -3,11 +3,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-var EXPORTED_SYMBOLS = ["ContentSearchParent", "ContentSearch"];
-
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 const lazy = {};
 
@@ -89,7 +85,7 @@ let gContentSearchActors = new Set();
  *     data: null
  */
 
-let ContentSearch = {
+export let ContentSearch = {
   initialized: false,
 
   // Inbound events are queued and processed in FIFO order instead of handling
@@ -636,7 +632,7 @@ let ContentSearch = {
   },
 };
 
-class ContentSearchParent extends JSWindowActorParent {
+export class ContentSearchParent extends JSWindowActorParent {
   constructor() {
     super();
     ContentSearch.init();
