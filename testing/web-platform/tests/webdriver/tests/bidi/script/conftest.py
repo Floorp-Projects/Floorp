@@ -26,3 +26,9 @@ def call_function(bidi_session, top_context):
         return result
 
     return call_function
+
+
+@pytest.fixture
+async def default_realm(bidi_session, top_context):
+    realms = await bidi_session.script.get_realms(context=top_context["context"])
+    return realms[0]["realm"]
