@@ -58,7 +58,7 @@ class TabPickupContainer extends HTMLDetailsElement {
       switch (event.target.dataset.action) {
         case "view0-sync-error-action":
         case "view0-network-offline-action": {
-          TabsSetupFlowManager.forceSyncTabs();
+          TabsSetupFlowManager.tryToClearError();
           break;
         }
         case "view1-primary-action": {
