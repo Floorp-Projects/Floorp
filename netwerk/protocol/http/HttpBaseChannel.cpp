@@ -5233,29 +5233,22 @@ IMPL_TIMING_ATTR(RedirectEnd)
 
 #undef IMPL_TIMING_ATTR
 
-mozilla::dom::PerformanceStorage* HttpBaseChannel::GetPerformanceStorage() {
+void HttpBaseChannel::MaybeReportTimingData() {
   // If performance timing is disabled, there is no need for the Performance
   // object anymore.
   if (!LoadTimingEnabled()) {
-    return nullptr;
+    return;
   }
 
   // There is no point in continuing, since the performance object in the parent
   // isn't the same as the one in the child which will be reporting resource
   // performance.
   if (XRE_IsE10sParentProcess()) {
-    return nullptr;
-  }
-  return mLoadInfo->GetPerformanceStorage();
-}
-
-void HttpBaseChannel::MaybeReportTimingData() {
-  if (XRE_IsE10sParentProcess()) {
     return;
   }
 
   mozilla::dom::PerformanceStorage* documentPerformance =
-      GetPerformanceStorage();
+      mLoadInfo->GetPerformanceStorage();
   if (documentPerformance) {
     documentPerformance->AddEntry(this, this);
     return;
@@ -5278,8 +5271,10 @@ void HttpBaseChannel::MaybeReportTimingData() {
     if (!performanceTimingData) {
       return;
     }
-    child->SendReportFrameTimingData(mLoadInfo->GetInnerWindowID(), entryName,
-                                     initiatorType,
+
+    Maybe<LoadInfoArgs> loadInfoArgs;
+    mozilla::ipc::LoadInfoToLoadInfoArgs(mLoadInfo, &loadInfoArgs);
+    child->SendReportFrameTimingData(loadInfoArgs, entryName, initiatorType,
                                      std::move(performanceTimingData));
   }
 }
