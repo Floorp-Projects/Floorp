@@ -16,6 +16,7 @@
 #include "nsCOMPtr.h"
 #include "nsContentUtils.h"
 #include "xpcpublic.h"
+#include "mozilla/AppShutdown.h"
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/Components.h"
 #include "mozilla/ProfilerLabels.h"
@@ -71,11 +72,8 @@ WindowDestroyedEvent::Run() {
     case Phase::Destroying: {
       bool skipNukeCrossCompartment = false;
 #ifndef DEBUG
-      nsCOMPtr<nsIAppStartup> appStartup = components::AppStartup::Service();
-
-      if (appStartup) {
-        appStartup->GetShuttingDown(&skipNukeCrossCompartment);
-      }
+      skipNukeCrossCompartment =
+          AppShutdown::IsInOrBeyond(ShutdownPhase::AppShutdownConfirmed);
 #endif
 
       if (!skipNukeCrossCompartment) {

@@ -194,6 +194,9 @@ interface nsIAppStartup : nsISupports
 
     /**
      * True if the application is in the process of shutting down.
+     * This is functionally equivalent to the C++ call
+     * AppShutdown::IsInOrBeyond(ShutdownPhase::AppShutdownConfirmed);
+     * (which is the preferred way of checking for shutdown in C++).
      */
     [infallible] readonly attribute boolean shuttingDown;
 

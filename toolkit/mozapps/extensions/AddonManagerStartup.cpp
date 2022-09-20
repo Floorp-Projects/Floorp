@@ -16,6 +16,7 @@
 #include "js/TracingAPI.h"
 #include "xpcpublic.h"
 
+#include "mozilla/AppShutdown.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/EndianUtils.h"
 #include "mozilla/Components.h"
@@ -32,7 +33,6 @@
 #include "nsAppRunner.h"
 #include "nsContentUtils.h"
 #include "nsChromeRegistry.h"
-#include "nsIAppStartup.h"
 #include "nsIDOMWindowUtils.h"  // for nsIJSRAIIHelper
 #include "nsIFileURL.h"
 #include "nsIIOService.h"
@@ -756,8 +756,7 @@ RegistryEntries::Destruct() {
 
     // No point in doing I/O to check for new chrome during shutdown, return
     // early in that case.
-    nsCOMPtr<nsIAppStartup> appStartup = components::AppStartup::Service();
-    if (!appStartup || appStartup->GetShuttingDown()) {
+    if (AppShutdown::IsInOrBeyond(ShutdownPhase::AppShutdownConfirmed)) {
       return NS_OK;
     }
 
