@@ -13,6 +13,10 @@ exclude: true
 
 ⚠️  breaking change and deprecation notices
 
+## v107
+- Removed deprecated [`cookieLifetime`][103.2]
+- Removed deprecated `setPermission`, see deprecation note in [v90](#v90)
+
 ## v106
 - Added [`SelectionActionDelegate.onShowClipboardPermissionRequest`][106.1],
   [`SelectionActionDelegate.onDismissClipboardPermissionRequest`][106.2],
@@ -1240,4 +1244,4 @@ to allow adding gecko profiler markers.
 [65.24]: {{javadoc_uri}}/CrashReporter.html#sendCrashReport(android.content.Context,android.os.Bundle,java.lang.String)
 [65.25]: {{javadoc_uri}}/GeckoResult.html
 
-[api-version]: 5dd4f92b49dec51709788671173c5a03b303287b
+[api-version]: bb201329d2b34084e4d2e48364dd2b1447f504a5
