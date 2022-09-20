@@ -137,6 +137,8 @@ function checkDateTimeString(dateString) {
  *
  * @see https://w3c.github.io/webdriver-bidi/#deserialize-value-list
  *
+ * @param {Realm} realm
+ *     The Realm in which the value is deserialized.
  * @param {Array} serializedValueList
  *     List of serialized values.
  *
@@ -165,6 +167,8 @@ function deserializeValueList(realm, serializedValueList) {
  *
  * @see https://w3c.github.io/webdriver-bidi/#deserialize-key-value-list
  *
+ * @param {Realm} realm
+ *     The Realm in which the value is deserialized.
  * @param {Array} serializedKeyValueList
  *     List of serialized key-value.
  *
@@ -206,6 +210,8 @@ function deserializeKeyValueList(realm, serializedKeyValueList) {
  *
  * @see https://w3c.github.io/webdriver-bidi/#deserialize-local-value
  *
+ * @param {Realm} realm
+ *     The Realm in which the value is deserialized.
  * @param {Object} serializedValue
  *     Value of any type to be deserialized.
  *
@@ -279,17 +285,25 @@ function deserialize(realm, serializedValue) {
 
     // Non-primitive protocol values
     case "array":
-      return deserializeValueList(realm, value);
+      const array = realm.cloneIntoRealm([]);
+      deserializeValueList(realm, value).forEach(v => array.push(v));
+      return array;
     case "date":
       // We want to support only Date Time String format,
       // check if the value follows it.
       checkDateTimeString(value);
 
-      return new Date(value);
+      return realm.cloneIntoRealm(new Date(value));
     case "map":
-      return new Map(deserializeKeyValueList(realm, value));
+      const map = realm.cloneIntoRealm(new Map());
+      deserializeKeyValueList(realm, value).forEach(([k, v]) => map.set(k, v));
+      return map;
     case "object":
-      return Object.fromEntries(deserializeKeyValueList(realm, value));
+      const object = realm.cloneIntoRealm({});
+      deserializeKeyValueList(realm, value).forEach(
+        ([k, v]) => (object[k] = v)
+      );
+      return object;
     case "regexp":
       lazy.assert.object(
         value,
@@ -307,14 +321,16 @@ function deserialize(realm, serializedValue) {
         );
       }
       try {
-        return new RegExp(pattern, flags);
+        return realm.cloneIntoRealm(new RegExp(pattern, flags));
       } catch (e) {
         throw new lazy.error.InvalidArgumentError(
           `Failed to deserialize value as RegExp: ${value}`
         );
       }
     case "set":
-      return new Set(deserializeValueList(realm, value));
+      const set = realm.cloneIntoRealm(new Set());
+      deserializeValueList(realm, value).forEach(v => set.add(v));
+      return set;
   }
 
   lazy.logger.warn(`Unsupported type for local value ${type}`);
