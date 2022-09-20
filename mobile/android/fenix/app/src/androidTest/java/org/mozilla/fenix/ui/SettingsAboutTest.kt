@@ -10,7 +10,6 @@ import androidx.test.uiautomator.UiSelector
 import okhttp3.mockwebserver.MockWebServer
 import org.junit.After
 import org.junit.Before
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.mozilla.fenix.helpers.AndroidAssetDispatcher
@@ -85,10 +84,10 @@ class SettingsAboutTest {
         }
     }
 
-    @Ignore("Failing, see: https://github.com/mozilla-mobile/fenix/issues/25355")
     @Test
     fun verifyAboutFirefoxPreview() {
         featureSettingsHelper.setJumpBackCFREnabled(false)
+        featureSettingsHelper.setTCPCFREnabled(false)
         homeScreen {
         }.openThreeDotMenu {
         }.openSettings {
