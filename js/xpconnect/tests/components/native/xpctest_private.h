@@ -79,6 +79,17 @@ class nsXPCTestReturnCodeParent final : public nsIXPCTestReturnCodeParent {
   ~nsXPCTestReturnCodeParent() = default;
 };
 
+class nsXPCTestESMReturnCodeParent final : public nsIXPCTestReturnCodeParent {
+ public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIXPCTESTRETURNCODEPARENT
+
+  nsXPCTestESMReturnCodeParent() = default;
+
+ private:
+  ~nsXPCTestESMReturnCodeParent() = default;
+};
+
 class xpcTestCEnums final : public nsIXPCTestCEnums {
  public:
   NS_DECL_ISUPPORTS
