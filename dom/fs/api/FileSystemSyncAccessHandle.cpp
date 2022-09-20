@@ -327,21 +327,18 @@ already_AddRefed<Promise> FileSystemSyncAccessHandle::Close(
     return nullptr;
   }
 
-  if (!mActor) {
-    promise->MaybeReject(NS_ERROR_DOM_INVALID_STATE_ERR);
-    return promise.forget();
+  if (mActor) {
+    PRFileDesc* fileDesc = mActor->MutableFileDescPtr();
+
+    LOG(("%p: Closing", fileDesc));
+
+    mActor->Close();
+    MOZ_ASSERT(!mActor);
   }
-
-  PRFileDesc* fileDesc = mActor->MutableFileDescPtr();
-
-  MOZ_LOG(mozilla::gOPFSLog, mozilla::LogLevel::Debug,
-          ("%p: Closing", fileDesc));
-
-  mActor->Close();
-  MOZ_ASSERT(!mActor);
 
   promise->MaybeResolveWithUndefined();
 
   return promise.forget();
 }
+
 }  // namespace mozilla::dom
