@@ -131,6 +131,10 @@ class VideoReceiveStream2
 
   void SetSync(Syncable* audio_syncable);
 
+  // Updates the `rtp_video_stream_receiver_`'s `local_ssrc` when the default
+  // sender has been created, changed or removed.
+  void SetLocalSsrc(uint32_t local_ssrc);
+
   // Implements webrtc::VideoReceiveStream.
   void Start() override;
   void Stop() override;
