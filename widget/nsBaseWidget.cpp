@@ -764,8 +764,11 @@ void nsBaseWidget::InfallibleMakeFullScreen(bool aFullScreen) {
     Resize(rect.X(), rect.Y(), rect.Width(), rect.Height(), true);
   });
 
-  // Resize.
-  const auto doReposition = [&](auto rect) {
+  // Attempt to resize to `rect`.
+  //
+  // Returns the actual rectangle resized to. (This may differ from `rect`, if
+  // the OS is unhappy with it. See bug 1786226.)
+  const auto doReposition = [&](auto rect) -> void {
     static_assert(std::is_base_of_v<DesktopPixel,
                                     std::remove_reference_t<decltype(rect)>>,
                   "doReposition requires a rectangle using desktop pixels");
@@ -775,28 +778,94 @@ void nsBaseWidget::InfallibleMakeFullScreen(bool aFullScreen) {
   };
 
   if (aFullScreen) {
-    if (!mOriginalBounds) {
-      mOriginalBounds = mozilla::MakeUnique<DesktopRect>();
+    if (!mSavedBounds) {
+      mSavedBounds = Some(FullscreenSavedState());
     }
-    *mOriginalBounds = GetScreenBounds() / GetDesktopToDeviceScale();
+    // save current position
+    mSavedBounds->windowRect = GetScreenBounds() / GetDesktopToDeviceScale();
 
     nsCOMPtr<nsIScreen> screen = GetWidgetScreen();
     if (!screen) {
       return;
     }
 
-    // Move to top-left corner of screen and size to the screen dimensions
-    const auto screenRect = screen->GetRectDisplayPix();
-    doReposition(screenRect);
+    // Move to fill the screen.
+    doReposition(screen->GetRectDisplayPix());
+    // Save off the new position. (This may differ from GetRectDisplayPix(), if
+    // the OS was unhappy with it. See bug 1786226.)
+    mSavedBounds->screenRect = GetScreenBounds() / GetDesktopToDeviceScale();
   } else {
-    if (!mOriginalBounds) {
+    if (!mSavedBounds) {
       // This should never happen, at present, since we don't make windows
       // fullscreen at their creation time; but it's not logically impossible.
       MOZ_ASSERT(false, "fullscreen window did not have saved position");
       return;
     }
 
-    doReposition(*mOriginalBounds);
+    // Figure out where to go from here.
+    //
+    // Fortunately, since we're currently fullscreen (and other code should be
+    // handling _keeping_ us fullscreen even after display-layout changes),
+    // there's an obvious choice for which display we should attach to; all we
+    // need to determine is where on that display we should go.
+
+    const DesktopRect currentWinRect =
+        GetScreenBounds() / GetDesktopToDeviceScale();
+
+    // Optimization: if where we are is where we were, then where we originally
+    // came from is where we're going to go.
+    if (currentWinRect == DesktopRect(mSavedBounds->screenRect)) {
+      doReposition(mSavedBounds->windowRect);
+      return;
+    }
+
+    /*
+      General case: figure out where we're going to go by dividing where we are
+      by where we were, and then multiplying by where we originally came from.
+
+      Less abstrusely: resize so that we occupy the same proportional position
+      on our current display after leaving fullscreen as we occupied on our
+      previous display before entering fullscreen.
+
+      (N.B.: We do not clamp. If we were only partially on the old display,
+      we'll be only partially on the new one, too.)
+    */
+
+    // splat: convert an arbitrary Rect into a tuple, for syntactic convenience.
+    const auto splat = [](auto rect) {
+      return std::tuple(rect.X(), rect.Y(), rect.Width(), rect.Height());
+    };
+
+    // remap: find the unique affine mapping which transforms `src` to `dst`,
+    // and apply it to `val`.
+    using Range = std::pair<float, float>;
+    const auto remap = [](Range dst, Range src, float val) {
+      // linear interpolation and its inverse: lerp(a, b, invlerp(a, b, t)) == t
+      const auto lerp = [](float lo, float hi, float t) {
+        return lo + t * (hi - lo);
+      };
+      const auto invlerp = [](float lo, float hi, float mid) {
+        return (mid - lo) / (hi - lo);
+      };
+
+      const auto [dst_a, dst_b] = dst;
+      const auto [src_a, src_b] = src;
+      return lerp(dst_a, dst_b, invlerp(src_a, src_b, val));
+    };
+
+    // original position
+    const auto [px, py, pw, ph] = splat(mSavedBounds->windowRect);
+    // source desktop rect
+    const auto [sx, sy, sw, sh] = splat(mSavedBounds->screenRect);
+    // target desktop rect
+    const auto [tx, ty, tw, th] = splat(currentWinRect);
+
+    const float nx = remap({tx, tx + tw}, {sx, sx + sw}, px);
+    const float ny = remap({ty, ty + th}, {sy, sy + sh}, py);
+    const float nw = remap({0, tw}, {0, sw}, pw);
+    const float nh = remap({0, th}, {0, sh}, ph);
+
+    doReposition(DesktopRect{nx, ny, nw, nh});
   }
 }
 
