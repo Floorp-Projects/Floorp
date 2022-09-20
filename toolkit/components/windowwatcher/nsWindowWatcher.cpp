@@ -1350,7 +1350,9 @@ nsresult nsWindowWatcher::OpenWindowInternal(
       // doesn't perfectly model this, as a noopener creation of `about:blank`
       // will replace the global due to a principal mismatch, but it should be
       // unobservable (bug 1694993).
-      if (aForceNoOpener) {
+      // This isn't set for chrome windows, as an about:blank chrome document
+      // needs to inherit its principal from its opener.
+      if (aForceNoOpener && !windowTypeIsChrome) {
         loadFlags |= nsIWebNavigation::LOAD_FLAGS_DISALLOW_INHERIT_PRINCIPAL;
       }
     }
