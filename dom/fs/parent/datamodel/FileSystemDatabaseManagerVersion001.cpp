@@ -156,14 +156,9 @@ Result<bool, QMResult> DoesFileExist(const FileSystemConnection& mConnection,
 }
 
 nsresult GetFileAttributes(const FileSystemConnection& aConnection,
-                           const EntryId& aEntryId,
-                           TimeStamp& aLastModifiedMilliSeconds,
-                           ContentType& aType) {
+                           const EntryId& aEntryId, ContentType& aType) {
   const nsLiteralCString getFileLocation =
       "SELECT type FROM Files INNER JOIN Entries USING(handle) WHERE handle = :entryId;"_ns;
-
-  // TODO: bug 1790391: Request this from filemanager who makes the system call
-  aLastModifiedMilliSeconds = 0;
 
   QM_TRY_UNWRAP(ResultStatement stmt,
                 ResultStatement::Create(aConnection, getFileLocation));
@@ -531,17 +526,19 @@ nsresult FileSystemDatabaseManagerVersion001::GetFile(
 
   const auto& entryId = aEndpoints.childId();
 
-  QM_TRY(MOZ_TO_RESULT(GetFileAttributes(mConnection, entryId,
-                                         lastModifiedMilliSeconds, aType)));
+  QM_TRY_UNWRAP(aFile, mFileManager->GetOrCreateFile(entryId));
+
+  QM_TRY(MOZ_TO_RESULT(GetFileAttributes(mConnection, entryId, aType)));
+
+  PRTime lastModTime = 0;
+  QM_TRY(MOZ_TO_RESULT(aFile->GetLastModifiedTime(&lastModTime)));
+  lastModifiedMilliSeconds = static_cast<TimeStamp>(lastModTime);
 
   QM_TRY_UNWRAP(aPath, ResolveReversedPath(mConnection, aEndpoints));
   if (aPath.IsEmpty()) {
     return NS_ERROR_DOM_NOT_FOUND_ERR;
   }
   aPath.Reverse();
-
-  QM_TRY_UNWRAP(aFile,
-                mFileManager->GetOrCreateFile(entryId));  // Timestamp from here
 
   return NS_OK;
 }

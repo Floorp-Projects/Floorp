@@ -13,6 +13,7 @@ TEST_DIRS += [
 
 UNIFIED_SOURCES = [
     "FileSystemMocks.cpp",
+    "TestHelpers.cpp",
 ]
 
 include("/ipc/chromium/chromium-config.mozbuild")
