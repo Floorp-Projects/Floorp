@@ -10,8 +10,6 @@
 @AB_CD@.jar:
 % locale browser @AB_CD@ %locale/@AB_CD@/browser/
   locale/@AB_CD@/browser/browser.properties       (%chrome/browser.properties)
-  locale/@AB_CD@/browser/config.dtd               (%chrome/config.dtd)
-  locale/@AB_CD@/browser/config.properties        (%chrome/config.properties)
   locale/@AB_CD@/browser/passwordmgr.properties   (%chrome/passwordmgr.properties)
 
 # overrides for toolkit l10n, also for en-US
@@ -31,15 +29,17 @@ relativesrcdir dom/locales:
 
 # Fluent files
 # Note: All rules must be wildcards, as localized files are optional
-# Only run this if we're not en-US, as en-US is already built
-# by toolkit/locales/jar.mn.
 # If you're including files from a subdirectory, ensure that you're
 # putting them into the corresponding subdirectory in the target.
 # The wildcard ** does that for us in toolkit.
 
+[localization] @AB_CD@.jar:
+  mobile/android                                   (%mobile/android/**/*.ftl)
+
+# Only run this if we're not en-US, as en-US is already built
+# by toolkit/locales/jar.mn.
 #define EN_US en-US
 #if AB_CD != EN_US
-[localization] @AB_CD@.jar:
 relativesrcdir toolkit/locales:
 #about:crashes
   crashreporter                                    (%crashreporter/**/*.ftl)

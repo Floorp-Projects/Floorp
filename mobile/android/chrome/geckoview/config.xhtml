@@ -4,13 +4,7 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN"
-  "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd" [
-<!ENTITY % globalDTD SYSTEM "chrome://global/locale/global.dtd" >
-%globalDTD;
-<!ENTITY % configDTD SYSTEM "chrome://browser/locale/config.dtd">
-%configDTD;
-]>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
 
 <html xmlns="http://www.w3.org/1999/xhtml">
 
@@ -19,12 +13,13 @@
     <title>about:config</title>
     <meta charset="UTF-8" />
 
+    <link rel="localization" href="mobile/android/aboutConfig.ftl"/>
     <link rel="stylesheet" href="chrome://geckoview/skin/config.css" type="text/css"/>
     <script type="text/javascript" src="chrome://geckoview/content/config.js"></script>
 </head>
 
-<body dir="&locale.dir;" onload="NewPrefDialog.init(); AboutConfig.init();"
-                         onunload="AboutConfig.uninit();">
+<body onload="NewPrefDialog.init(); AboutConfig.init();"
+      onunload="AboutConfig.uninit();">
 
     <div class="toolbar">
         <div class="toolbar-container">
@@ -32,7 +27,7 @@
 
             <div class="toolbar-item" id="filter-container">
                 <div id="filter-search-button"/>
-                <input id="filter-input" type="search" placeholder="&toolbar.searchPlaceholder;" value=""
+                <input id="filter-input" type="search" data-l10n-id="config-toolbar-search" value=""
                     oninput="AboutConfig.bufferFilterInput();"/>
                 <div id="filter-input-clear-button" onclick="AboutConfig.clearFilterInput();"/>
             </div>
@@ -44,29 +39,29 @@
         <div id="new-pref-container">
             <li class="pref-item" id="new-pref-item">
                 <div class="pref-item-line">
-                    <input class="pref-name" id="new-pref-name" type="text" placeholder="&newPref.namePlaceholder;"
+                    <input class="pref-name" id="new-pref-name" type="text" data-l10n-id="config-new-pref-name"
                         onfocus="NewPrefDialog.focusName(event);"
                         oninput="NewPrefDialog.updateName(event);"/>
                     <select id="new-pref-type" onchange="NewPrefDialog.type = event.target.value;">
-                        <option value="boolean">&newPref.valueBoolean;</option>
-                        <option value="string">&newPref.valueString;</option>
-                        <option value="int">&newPref.valueInteger;</option>
+                        <option value="boolean" data-l10n-id="config-new-pref-value-boolean"></option>
+                        <option value="string" data-l10n-id="config-new-pref-value-string"></option>
+                        <option value="int" data-l10n-id="config-new-pref-value-integer"></option>
                     </select>
                 </div>
 
                 <div class="pref-item-line" id="new-pref-line-boolean">
                     <input class="pref-value" id="new-pref-value-boolean" disabled="disabled"/>
-                    <div class="pref-button toggle" onclick="NewPrefDialog.toggleBoolValue();">&newPref.toggleButton;</div>
+                    <div class="pref-button toggle" onclick="NewPrefDialog.toggleBoolValue();" data-l10n-id="config-pref-toggle-button"></div>
                 </div>
 
                 <div class="pref-item-line" id="new-pref-line-input">
-                    <input class="pref-value" id="new-pref-value-string" placeholder="&newPref.stringPlaceholder;"/>
-                    <input class="pref-value" id="new-pref-value-int" placeholder="&newPref.numberPlaceholder;" type="number"/>
+                    <input class="pref-value" id="new-pref-value-string" data-l10n-id="config-new-pref-string"/>
+                    <input class="pref-value" id="new-pref-value-int" data-l10n-id="config-new-pref-number" type="number"/>
                 </div>
 
                 <div class="pref-item-line">
-                    <div class="pref-button cancel" id="negative-button" onclick="NewPrefDialog.hide();">&newPref.cancelButton;</div>
-                    <div class="pref-button create" id="positive-button" onclick="NewPrefDialog.create(event);"></div>
+                    <div class="pref-button cancel" id="negative-button" onclick="NewPrefDialog.hide();" data-l10n-id="config-new-pref-cancel-button"></div>
+                    <div class="pref-button create" id="positive-button" onclick="NewPrefDialog.create(event);" data-l10n-id="config-new-pref-create-button"></div>
                 </div>
             </li>
         </div>
@@ -80,8 +75,8 @@
     </div>
 
     <menu type="context" id="prefs-context-menu">
-        <menuitem label="&contextMenu.copyPrefName;" onclick="AboutConfig.clipboardCopy('name');"></menuitem>
-        <menuitem label="&contextMenu.copyPrefValue;" onclick="AboutConfig.clipboardCopy('value');"></menuitem>
+        <menuitem data-l10n-id="config-context-menu-copy-pref-name" onclick="AboutConfig.clipboardCopy('name');"></menuitem>
+        <menuitem data-l10n-id="config-context-menu-copy-pref-value" onclick="AboutConfig.clipboardCopy('value');"></menuitem>
     </menu>
 
 </body>
