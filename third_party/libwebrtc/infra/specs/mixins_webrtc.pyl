@@ -203,6 +203,21 @@
       'result_format': 'json'
     }
   },
+  'shards-2': {
+    'swarming': {
+      'shards': 2,
+    },
+  },
+  'shards-4': {
+    'swarming': {
+      'shards': 4,
+    },
+  },
+  'shards-6': {
+    'swarming': {
+      'shards': 6,
+    },
+  },
   'shamu': {
     'swarming': {
       'dimensions': {
