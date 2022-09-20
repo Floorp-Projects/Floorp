@@ -514,8 +514,8 @@ impl Color {
     /// Returns whether this color is allowed in forced-colors mode.
     pub fn honored_in_forced_colors_mode(&self, allow_transparent: bool) -> bool {
         match *self {
-            Color::InheritFromBodyQuirk | Color::CurrentColor => false,
-            Color::System(..) => true,
+            Color::InheritFromBodyQuirk => false,
+            Color::CurrentColor | Color::System(..) => true,
             Color::Numeric { ref parsed, .. } => allow_transparent && parsed.alpha == 0,
             Color::ColorMix(ref mix) => {
                 mix.left.honored_in_forced_colors_mode(allow_transparent) &&
