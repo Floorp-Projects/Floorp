@@ -729,6 +729,9 @@
     <!-- Title text for biometric prompt pop-up -->
     <string name="biometric_prompt_title">ຢືນຢັນການໃຊ້ລາຍນິ້ວມືຂອງທ່ານ</string>
 
+    <!-- Subtitle text for biometric prompt pop-up -->
+    <string name="biometric_prompt_subtitle">ທ່ານສາມາດໃຊ້ລາຍນິ້ວມືຂອງທ່ານເພື່ອສືບຕໍ່ເຊດຊັນແອັບປັດຈຸບັນຂອງທ່ານໄດ້.</string>
+
     <!-- Description for the fingerprint authentication dialog box that is shown to the user when opening the app -->
     <string moz:removedIn="103" name="biometric_auth_description">ແຕະເຊັນເຊີ້ລາຍນິ້ວມືເພື່ອດຳເນີນການຕໍ່.</string>
 
@@ -806,6 +809,9 @@
     <!-- Preference summary for safe browsing which when enabled, blocks dangerous or deceptive webpages that may include phishing or malware -->
     <string name="preference_safe_browsing_summary">ບັອກເວັບໄຊທຕົ້ມຕຸນ ແລະ ຈູ່ໂຈມ, ເວັບໄຊທີ່ມີມອລແວ ແລະ ເວັບໄຊທທີ່ມີຊັອບແວທີ່ບໍ່ຕ້ອງການຕາມທີ່ໄດ້ຮັບການລາຍງານ.</string>
 
+    <!-- Title of the preference to enable "HTTPS-Only" mode -->
+    <string name="preference_https_only_title">ໂໝດ HTTPS ເທົ່ານັ້ນ</string>
+
     <!-- Preference for exceptions tracking protection -->
     <string name="preference_exceptions">ຍົກເວັ້ນ</string>
     <!-- Description for the exceptions preference screen-->
@@ -845,6 +851,11 @@
     <!-- Category of trackers (analytics) that can be blocked by Enhanced Tracking Protection -->
     <string name="analytics">ການວິເຄາະ</string>
 
+    <!-- Label that indicates a site is using a secure connection -->
+    <string name="secure_connection">ການເຊື່ອມຕໍ່ແມ່ນປອດໄພ</string>
+    <!-- Label that indicates a site is using a insecure connection -->
+    <string name="insecure_connection">ການເຊື່ອມຕໍ່ບໍ່ປອດໄພ</string>
+
     <!-- Content description (not visible, for screen readers etc.): Navigate back button description -->
     <string name="go_back">ກັບຄືນ</string>
 
@@ -865,6 +876,15 @@
     <string name="preference_light_theme">ແຈ້ງ</string>
     <!-- Preference for using dark theme -->
     <string name="preference_dark_theme">ມືດ</string>
+
+    <!-- Preference for using using dark or light theme automatically set by battery -->
+    <string name="preference_auto_battery_theme">ຕັ້ງໂດຍຕົວປະຢັດແບດເຕີລີ່</string>
+    <!-- Preference for using following device theme -->
+    <string name="preference_follow_device_theme">ຕາມຊຸດຕົກແຕ່ງອຸປະກອນ</string>
+
+    <!-- Sessions List -->
+    <!-- Content description (not visible, for screen readers etc.): Button that closes a tab n the sessions list -->
+    <string name="close_tab">ປິດແທັບ</string>
 
     <!-- Content description (not visible, for screen readers etc.): Button that closes the CFR popup -->
     <string name="cfr_close_button_description">ປິດປັອບອັບ</string>
