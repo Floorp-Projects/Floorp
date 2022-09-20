@@ -16,6 +16,7 @@
 #include "Http2ConnectTransaction.h"
 #include "base/basictypes.h"
 #include "mozilla/Components.h"
+#include "mozilla/net/SSLTokensCache.h"
 #include "mozilla/ScopeExit.h"
 #include "mozilla/Tokenizer.h"
 #include "mozilla/StaticPrefs_network.h"
@@ -1324,6 +1325,23 @@ bool nsHttpTransaction::ShouldRestartOn0RttError(nsresult reason) {
          mEarlyDataWasAvailable && SecurityErrorThatMayNeedRestart(reason);
 }
 
+static void MaybeRemoveSSLToken(nsISSLSocketControl* aSocketControl) {
+  if (!StaticPrefs::
+          network_http_remove_resumption_token_when_early_data_failed()) {
+    return;
+  }
+
+  nsCOMPtr<nsITransportSecurityInfo> info(do_QueryInterface(aSocketControl));
+  if (!info) {
+    return;
+  }
+
+  nsAutoCString key;
+  info->GetPeerId(key);
+  nsresult rv = SSLTokensCache::RemoveAll(key);
+  LOG(("RemoveSSLToken [key=%s, rv=%" PRIx32 "]", key.get(), rv));
+}
+
 void nsHttpTransaction::Close(nsresult reason) {
   LOG(("nsHttpTransaction::Close [this=%p reason=%" PRIx32 "]\n", this,
        static_cast<uint32_t>(reason)));
@@ -1457,6 +1475,7 @@ void nsHttpTransaction::Close(nsresult reason) {
     }
 
     mDoNotTryEarlyData = true;
+
     // reallySentData is meant to separate the instances where data has
     // been sent by this transaction but buffered at a higher level while
     // a TLS session (perhaps via a tunnel) is setup.
@@ -1750,6 +1769,10 @@ nsresult nsHttpTransaction::Restart() {
   // rewind streams in case we already wrote out the request
   nsCOMPtr<nsISeekableStream> seekable = do_QueryInterface(mRequestStream);
   if (seekable) seekable->Seek(nsISeekableStream::NS_SEEK_SET, 0);
+
+  if (mDoNotTryEarlyData) {
+    MaybeRemoveSSLToken(mTLSSocketControl);
+  }
 
   // clear old connection state...
   {
