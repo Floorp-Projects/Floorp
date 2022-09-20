@@ -5,6 +5,65 @@ from ... import recursive_compare
 
 
 @pytest.mark.asyncio
+async def test_arguments(bidi_session, top_context):
+    result = await bidi_session.script.call_function(
+        function_declaration="(...args)=>{return args}",
+        arguments=[{
+            "type": "string",
+            "value": "ARGUMENT_STRING_VALUE"
+        }, {
+            "type": "number",
+            "value": 42}],
+        await_promise=False,
+        target=ContextTarget(top_context["context"]))
+
+    recursive_compare({
+        "type": "array",
+        "value": [{
+            "type": 'string',
+            "value": 'ARGUMENT_STRING_VALUE'
+        }, {
+            "type": 'number',
+            "value": 42}]},
+        result)
+
+
+@pytest.mark.asyncio
+async def test_default_arguments(bidi_session, top_context):
+    result = await bidi_session.script.call_function(
+        function_declaration="(...args)=>{return args}",
+        await_promise=False,
+        target=ContextTarget(top_context["context"]))
+
+    recursive_compare({
+        "type": "array",
+        "value": []
+    }, result)
+
+
+@pytest.mark.asyncio
+async def test_remote_value_argument(bidi_session, top_context):
+    remote_value_result = await bidi_session.script.evaluate(
+        expression="({SOME_PROPERTY:'SOME_VALUE'})",
+        await_promise=False,
+        result_ownership="root",
+        target=ContextTarget(top_context["context"]))
+
+    remote_value_handle = remote_value_result["handle"]
+
+    result = await bidi_session.script.call_function(
+        function_declaration="(obj)=>{return obj.SOME_PROPERTY;}",
+        arguments=[{
+            "handle": remote_value_handle}],
+        await_promise=False,
+        target=ContextTarget(top_context["context"]))
+
+    assert result == {
+        "type": "string",
+        "value": "SOME_VALUE"}
+
+
+@pytest.mark.asyncio
 @pytest.mark.parametrize(
     "argument, expected",
     [
