@@ -1121,7 +1121,8 @@ void XMLHttpRequestMainThread::GetAllResponseHeaders(
   if (nsCOMPtr<nsIHttpChannel> httpChannel = GetCurrentHttpChannel()) {
     RefPtr<nsHeaderVisitor> visitor =
         new nsHeaderVisitor(*this, WrapNotNull(httpChannel));
-    if (NS_SUCCEEDED(httpChannel->VisitResponseHeaders(visitor))) {
+    if (NS_SUCCEEDED(httpChannel->VisitOriginalResponseHeaders(visitor))) {
+      visitor->MergeDuplicateHeaders();
       aResponseHeaders = visitor->Headers();
     }
     return;
@@ -1155,6 +1156,38 @@ void XMLHttpRequestMainThread::GetAllResponseHeaders(
     }
   }
 }
+
+namespace {
+// used for parsing headers with duplicate entries
+class nsResponseHeaderVisitor final : public nsIHttpHeaderVisitor {
+ public:
+  NS_DECL_ISUPPORTS
+
+  nsResponseHeaderVisitor() = default;
+
+  NS_IMETHOD
+  VisitHeader(const nsACString& aHeader, const nsACString& aValue) override {
+    if (mIsHeaderPresent) {
+      mValue.AppendLiteral(", ");
+    }
+    mValue.Append(aValue);
+    mIsHeaderPresent = true;
+    return NS_OK;
+  }
+
+  void GetValue(nsACString& aValue) { aValue = mValue; }
+
+ private:
+  nsCString mValue;
+
+  // indicates whether a header is already stored during parsing
+  bool mIsHeaderPresent{false};
+
+  virtual ~nsResponseHeaderVisitor() = default;
+};
+
+NS_IMPL_ISUPPORTS(nsResponseHeaderVisitor, nsIHttpHeaderVisitor)
+}  // namespace
 
 void XMLHttpRequestMainThread::GetResponseHeader(const nsACString& header,
                                                  nsACString& _retval,
@@ -1216,11 +1249,16 @@ void XMLHttpRequestMainThread::GetResponseHeader(const nsACString& header,
     return;
   }
 
-  aRv = httpChannel->GetResponseHeader(header, _retval);
+  RefPtr<nsResponseHeaderVisitor> resposeHeaderVisitor =
+      new nsResponseHeaderVisitor();
+
+  aRv = httpChannel->GetOriginalResponseHeader(header, resposeHeaderVisitor);
   if (aRv.ErrorCodeIs(NS_ERROR_NOT_AVAILABLE)) {
     // Means no header
     _retval.SetIsVoid(true);
     aRv.SuppressException();
+  } else if (!aRv.Failed()) {
+    resposeHeaderVisitor->GetValue(_retval);
   }
 }
 
