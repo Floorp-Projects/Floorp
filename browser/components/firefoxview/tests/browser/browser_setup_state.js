@@ -105,6 +105,19 @@ add_setup(async function() {
 
 add_task(async function test_unconfigured_initial_state() {
   await clearAllParentTelemetryEvents();
+  // test with the pref set to show FEATURE TOUR CALLOUT
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      [
+        "browser.firefox-view.feature-tour",
+        JSON.stringify({
+          message: "FIREFOX_VIEW_FEATURE_TOUR",
+          screen: `FEATURE_CALLOUT_1`,
+          complete: false,
+        }),
+      ],
+    ],
+  });
   const sandbox = setupMocks({
     state: UIState.STATUS_NOT_CONFIGURED,
     syncEnabled: false,
