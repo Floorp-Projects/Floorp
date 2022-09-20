@@ -229,14 +229,12 @@ class MockVideoSource : public rtc::VideoSourceInterface<webrtc::VideoFrame> {
 #define EXPECT_FRAME_WAIT(c, w, h, t)                        \
   EXPECT_EQ_WAIT((c), renderer_.num_rendered_frames(), (t)); \
   EXPECT_EQ((w), renderer_.width());                         \
-  EXPECT_EQ((h), renderer_.height());                        \
-  EXPECT_EQ(0, renderer_.errors());
+  EXPECT_EQ((h), renderer_.height());
 
 #define EXPECT_FRAME_ON_RENDERER_WAIT(r, c, w, h, t)   \
   EXPECT_EQ_WAIT((c), (r).num_rendered_frames(), (t)); \
   EXPECT_EQ((w), (r).width());                         \
-  EXPECT_EQ((h), (r).height());                        \
-  EXPECT_EQ(0, (r).errors());
+  EXPECT_EQ((h), (r).height());
 
 namespace cricket {
 class WebRtcVideoEngineTest : public ::testing::Test {
@@ -1438,7 +1436,6 @@ class WebRtcVideoChannelEncodedFrameCallbackTest : public ::testing::Test {
   void DeliverKeyFrameAndWait(uint32_t ssrc) {
     DeliverKeyFrame(ssrc);
     EXPECT_EQ_WAIT(1, renderer_.num_rendered_frames(), kTimeout);
-    EXPECT_EQ(0, renderer_.errors());
   }
 
   static const std::vector<webrtc::SdpVideoFormat> kSdpVideoFormats;
@@ -1469,7 +1466,6 @@ TEST_F(WebRtcVideoChannelEncodedFrameCallbackTest,
   EXPECT_TRUE(channel_->SetSink(kSsrc, &renderer_));
   DeliverKeyFrame(kSsrc);
   EXPECT_EQ_WAIT(1, renderer_.num_rendered_frames(), kTimeout);
-  EXPECT_EQ(0, renderer_.errors());
   channel_->RemoveRecvStream(kSsrc);
 }
 
@@ -1483,7 +1479,6 @@ TEST_F(WebRtcVideoChannelEncodedFrameCallbackTest,
   channel_->SetRecordableEncodedFrameCallback(kSsrc, callback.AsStdFunction());
   DeliverKeyFrame(kSsrc);
   EXPECT_EQ_WAIT(1, renderer_.num_rendered_frames(), kTimeout);
-  EXPECT_EQ(0, renderer_.errors());
   channel_->RemoveRecvStream(kSsrc);
 }
 
@@ -1497,7 +1492,6 @@ TEST_F(WebRtcVideoChannelEncodedFrameCallbackTest,
   channel_->SetRecordableEncodedFrameCallback(kSsrc, callback.AsStdFunction());
   DeliverKeyFrame(kSsrc);
   EXPECT_EQ_WAIT(1, renderer_.num_rendered_frames(), kTimeout);
-  EXPECT_EQ(0, renderer_.errors());
   channel_->RemoveRecvStream(kSsrc);
 }
 
