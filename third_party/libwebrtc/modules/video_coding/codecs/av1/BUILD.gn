@@ -18,6 +18,8 @@ rtc_library("av1_svc_config") {
     "../../../../api/video_codecs:video_codecs_api",
     "../../../../rtc_base:checks",
     "../../../../rtc_base:logging",
+    "../../../../rtc_base:stringutils",
+    "../../svc:scalability_mode_util",
     "../../svc:scalability_structures",
     "../../svc:scalable_video_controller",
   ]

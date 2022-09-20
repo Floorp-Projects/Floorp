@@ -259,7 +259,8 @@ std::vector<VideoCodec> GetPayloadTypesAndDefaultCodecs(
 
 bool IsTemporalLayersSupported(const std::string& codec_name) {
   return absl::EqualsIgnoreCase(codec_name, kVp8CodecName) ||
-         absl::EqualsIgnoreCase(codec_name, kVp9CodecName);
+         absl::EqualsIgnoreCase(codec_name, kVp9CodecName) ||
+         absl::EqualsIgnoreCase(codec_name, kAv1CodecName);
 }
 
 static std::string CodecVectorToString(const std::vector<VideoCodec>& codecs) {

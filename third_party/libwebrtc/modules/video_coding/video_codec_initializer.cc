@@ -263,7 +263,11 @@ VideoCodec VideoCodecInitializer::VideoEncoderConfigToVideoCodec(
       break;
     }
     case kVideoCodecAV1:
-      if (SetAv1SvcConfig(video_codec)) {
+      if (SetAv1SvcConfig(video_codec,
+                          /*num_temporal_layers=*/
+                          streams.back().num_temporal_layers.value_or(1),
+                          /*num_spatial_layers=*/
+                          std::max<int>(config.spatial_layers.size(), 1))) {
         for (size_t i = 0; i < config.spatial_layers.size(); ++i) {
           video_codec.spatialLayers[i].active = config.spatial_layers[i].active;
         }

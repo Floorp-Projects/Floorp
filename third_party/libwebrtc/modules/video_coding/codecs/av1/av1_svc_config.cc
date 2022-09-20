@@ -15,11 +15,26 @@
 #include <memory>
 
 #include "modules/video_coding/svc/create_scalability_structure.h"
+#include "modules/video_coding/svc/scalability_mode_util.h"
 #include "modules/video_coding/svc/scalable_video_controller.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/logging.h"
+#include "rtc_base/strings/string_builder.h"
 
 namespace webrtc {
+namespace {
+absl::optional<ScalabilityMode> BuildScalabilityMode(int num_temporal_layers,
+                                                     int num_spatial_layers) {
+  char name[20];
+  rtc::SimpleStringBuilder ss(name);
+  ss << "L" << num_spatial_layers << "T" << num_temporal_layers;
+  if (num_spatial_layers > 1) {
+    ss << "_KEY";
+  }
+
+  return ScalabilityModeFromString(name);
+}
+}  // namespace
 
 bool LibaomAv1EncoderSupportsScalabilityMode(ScalabilityMode scalability_mode) {
   // For libaom AV1, the scalability mode is supported if we can create the
@@ -27,14 +42,20 @@ bool LibaomAv1EncoderSupportsScalabilityMode(ScalabilityMode scalability_mode) {
   return ScalabilityStructureConfig(scalability_mode) != absl::nullopt;
 }
 
-bool SetAv1SvcConfig(VideoCodec& video_codec) {
+bool SetAv1SvcConfig(VideoCodec& video_codec,
+                     int num_temporal_layers,
+                     int num_spatial_layers) {
   RTC_DCHECK_EQ(video_codec.codecType, kVideoCodecAV1);
 
   absl::optional<ScalabilityMode> scalability_mode =
       video_codec.GetScalabilityMode();
   if (!scalability_mode.has_value()) {
-    RTC_LOG(LS_WARNING) << "Scalability mode is not set, using 'L1T1'.";
-    scalability_mode = ScalabilityMode::kL1T1;
+    scalability_mode =
+        BuildScalabilityMode(num_temporal_layers, num_spatial_layers);
+    if (!scalability_mode) {
+      RTC_LOG(LS_WARNING) << "Scalability mode is not set, using 'L1T1'.";
+      scalability_mode = ScalabilityMode::kL1T1;
+    }
   }
 
   std::unique_ptr<ScalableVideoController> structure =
@@ -44,6 +65,8 @@ bool SetAv1SvcConfig(VideoCodec& video_codec) {
                         << static_cast<int>(*scalability_mode);
     return false;
   }
+
+  video_codec.SetScalabilityMode(*scalability_mode);
 
   ScalableVideoController::StreamLayersConfig info = structure->StreamConfig();
   for (int sl_idx = 0; sl_idx < info.num_spatial_layers; ++sl_idx) {
