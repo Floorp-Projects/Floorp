@@ -839,11 +839,6 @@ interface nsIAccessibleRole : nsISupports
   const unsigned long ROLE_MATHML_ROOT = 141;
 
   /**
-   * A MathML fenced element (mfenced in MathML).
-   */
-  const unsigned long ROLE_MATHML_FENCED = 142;
-
-  /**
    * A MathML enclosed element (menclose in MathML).
    */
   const unsigned long ROLE_MATHML_ENCLOSED = 143;

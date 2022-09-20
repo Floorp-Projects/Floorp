@@ -759,8 +759,8 @@ void nsMathMLChar::SetData(nsString& aData) {
 static bool IsSizeOK(nscoord a, nscoord b, uint32_t aHint) {
   // Normal: True if 'a' is around +/-10% of the target 'b' (10% is
   // 1-DelimiterFactor). This often gives a chance to the base size to
-  // win, especially in the context of <mfenced> without tall elements
-  // or in sloppy markups without protective <mrow></mrow>
+  // win, especially in the context of sloppy markups without protective
+  // <mrow></mrow>
   bool isNormal =
       (aHint & NS_STRETCH_NORMAL) &&
       Abs<float>(a - b) < (1.0f - NS_MATHML_DELIMITER_FACTOR) * float(b);
