@@ -1219,20 +1219,20 @@ bool TokenStreamChars<char16_t, AnyCharsAccess>::getNonAsciiCodePoint(
 }
 
 template <typename Unit, class AnyCharsAccess>
-bool TokenStreamSpecific<Unit, AnyCharsAccess>::getCodePoint(int32_t* cp) {
+bool TokenStreamSpecific<Unit, AnyCharsAccess>::getCodePoint() {
   int32_t unit = getCodeUnit();
   if (unit == EOF) {
     MOZ_ASSERT(anyCharsAccess().flags.isEOF,
                "flags.isEOF should have been set by getCodeUnit()");
-    *cp = EOF;
     return true;
   }
 
   if (isAsciiCodePoint(unit)) {
-    return getFullAsciiCodePoint(unit, cp);
+    return getFullAsciiCodePoint(unit);
   }
 
-  return getNonAsciiCodePoint(unit, cp);
+  int32_t cp;
+  return getNonAsciiCodePoint(unit, &cp);
 }
 
 template <class AnyCharsAccess>
@@ -1540,8 +1540,7 @@ template <typename Unit, class AnyCharsAccess>
 bool TokenStreamSpecific<Unit, AnyCharsAccess>::advance(size_t position) {
   const Unit* end = this->sourceUnits.codeUnitPtrAt(position);
   while (this->sourceUnits.addressOfNextCodeUnit() < end) {
-    int32_t c;
-    if (!getCodePoint(&c)) {
+    if (!getCodePoint()) {
       return false;
     }
   }
@@ -2759,8 +2758,7 @@ template <typename Unit, class AnyCharsAccess>
 
       PeekedCodePoint<Unit> peeked = this->sourceUnits.peekCodePoint();
       if (peeked.isNone()) {
-        int32_t bad;
-        MOZ_ALWAYS_FALSE(getCodePoint(&bad));
+        MOZ_ALWAYS_FALSE(getCodePoint());
         return badToken();
       }
 
@@ -3261,8 +3259,7 @@ template <typename Unit, class AnyCharsAccess>
                 return badToken();
               }
             } else if (MOZ_LIKELY(isAsciiCodePoint(unit))) {
-              int32_t codePoint;
-              if (!getFullAsciiCodePoint(unit, &codePoint)) {
+              if (!getFullAsciiCodePoint(unit)) {
                 return badToken();
               }
             } else {

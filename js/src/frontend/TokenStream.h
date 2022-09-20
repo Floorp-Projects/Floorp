@@ -2081,15 +2081,14 @@ class GeneralTokenStreamChars : public SpecializedTokenStreamCharsBase<Unit> {
 
   /**
    * Given a just-consumed ASCII code unit/point |lead|, consume a full code
-   * point or LineTerminatorSequence (normalizing it to '\n') and store it in
-   * |*codePoint|.  Return true on success, otherwise return false and leave
-   * |*codePoint| undefined on failure.
+   * point or LineTerminatorSequence (normalizing it to '\n'). Return true on
+   * success, otherwise return false.
    *
    * If a LineTerminatorSequence was consumed, also update line/column info.
    *
    * This may change the current |sourceUnits| offset.
    */
-  [[nodiscard]] bool getFullAsciiCodePoint(int32_t lead, int32_t* codePoint) {
+  [[nodiscard]] bool getFullAsciiCodePoint(int32_t lead) {
     MOZ_ASSERT(isAsciiCodePoint(lead),
                "non-ASCII code units must be handled separately");
     MOZ_ASSERT(toUnit(lead) == this->sourceUnits.previousCodeUnit(),
@@ -2098,19 +2097,9 @@ class GeneralTokenStreamChars : public SpecializedTokenStreamCharsBase<Unit> {
     if (MOZ_UNLIKELY(lead == '\r')) {
       matchLineTerminator('\n');
     } else if (MOZ_LIKELY(lead != '\n')) {
-      *codePoint = lead;
       return true;
     }
-
-    *codePoint = '\n';
-    bool ok = updateLineInfoForEOL();
-    if (!ok) {
-#ifdef DEBUG
-      *codePoint = EOF;  // sentinel value to hopefully cause errors
-#endif
-      MOZ_MAKE_MEM_UNDEFINED(codePoint, sizeof(*codePoint));
-    }
-    return ok;
+    return updateLineInfoForEOL();
   }
 
   [[nodiscard]] MOZ_ALWAYS_INLINE bool updateLineInfoForEOL() {
@@ -2504,11 +2493,10 @@ class MOZ_STACK_CLASS TokenStreamSpecific
 
   /**
    * Get the next code point, converting LineTerminatorSequences to '\n' and
-   * updating internal line-counter state if needed.  Return true on success
-   * and store the code point in |*cp|.  Return false and leave |*cp|
-   * undefined on failure.
+   * updating internal line-counter state if needed. Return true on success.
+   * Return false on failure.
    */
-  [[nodiscard]] bool getCodePoint(int32_t* cp);
+  [[nodiscard]] bool getCodePoint();
 
   // If there is an invalid escape in a template, report it and return false,
   // otherwise return true.
