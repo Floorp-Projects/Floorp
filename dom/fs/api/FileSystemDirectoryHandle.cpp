@@ -135,7 +135,9 @@ already_AddRefed<Promise> FileSystemDirectoryHandle::Resolve(
     return nullptr;
   }
 
-  promise->MaybeReject(NS_ERROR_NOT_IMPLEMENTED);
+  fs::FileSystemEntryPair pair(mMetadata.entryId(),
+                               aPossibleDescendant.GetId());
+  mRequestHandler->Resolve(mManager, pair, promise);
 
   return promise.forget();
 }
