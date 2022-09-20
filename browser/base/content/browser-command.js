@@ -81,66 +81,81 @@ function hideIcons() {
 }
 
 async function setTreeStyleTabURL() {
-  const sidebar2elem = document.getElementById("sidebar2");
-
+  const webpanel = document.getElementById("webpanel");
   const { AddonManager } = ChromeUtils.import("resource://gre/modules/AddonManager.jsm");
   let addon = await AddonManager.getAddonByID("treestyletab@piro.sakura.ne.jp");
   let option = await addon.optionsURL;
   let sidebarURL = option.replace("options/options.html", "sidebar/sidebar.html")
   window.setTimeout(() => {
-    sidebar2elem.setAttribute("src", sidebarURL);
-  }, 500);
+    webpanel.setAttribute("src", sidebarURL);
+  }, 50);
 }
 
 function setSidebarMode() {
   if (Services.prefs.getBoolPref("floorp.browser.sidebar.enable", false)) {
     const pref = Services.prefs.getIntPref("floorp.browser.sidebar2.mode", undefined)
     const sidebar2elem = document.getElementById("sidebar2");
+    const webpanel = document.getElementById("webpanel");
     switch (pref) {
       default:
         sidebar2elem.setAttribute("src", "chrome://browser/content/places/places.xhtml");
+        changeBrowserManagerSidebarConfigShowBrowserManagers();
         break;
       case 1:
         sidebar2elem.setAttribute("src", "chrome://browser/content/places/bookmarksSidebar.xhtml");
+        changeBrowserManagerSidebarConfigShowBrowserManagers();
         break;
       case 2:
         sidebar2elem.setAttribute("src", "chrome://browser/content/places/historySidebar.xhtml");
+        changeBrowserManagerSidebarConfigShowBrowserManagers();
         break;
       case 3:
         sidebar2elem.setAttribute("src", "about:downloads");
+        changeBrowserManagerSidebarConfigShowBrowserManagers();
         break;
       case 4:
         setTreeStyleTabURL();
+        changeBrowserManagerSidebarConfigShowWebpanels();
         break;
       case 5:
-        sidebar2elem.setAttribute("src", Services.prefs.getStringPref("floorp.browser.sidebar2.customurl1", undefined));
+        webpanel.setAttribute("src", Services.prefs.getStringPref("floorp.browser.sidebar2.customurl1", undefined));
+        changeBrowserManagerSidebarConfigShowWebpanels();
         break;
       case 6:
-        sidebar2elem.setAttribute("src", Services.prefs.getStringPref("floorp.browser.sidebar2.customurl2", undefined));
+        webpanel.setAttribute("src", Services.prefs.getStringPref("floorp.browser.sidebar2.customurl2", undefined));
+        changeBrowserManagerSidebarConfigShowWebpanels();
         break;
       case 7:
-        sidebar2elem.setAttribute("src", Services.prefs.getStringPref("floorp.browser.sidebar2.customurl3", undefined));
+        webpanel.setAttribute("src", Services.prefs.getStringPref("floorp.browser.sidebar2.customurl3", undefined));
+        changeBrowserManagerSidebarConfigShowWebpanels();
         break;
       case 8:
-        sidebar2elem.setAttribute("src", Services.prefs.getStringPref("floorp.browser.sidebar2.customurl4", undefined));
+        webpanel.setAttribute("src", Services.prefs.getStringPref("floorp.browser.sidebar2.customurl4", undefined));
+        changeBrowserManagerSidebarConfigShowWebpanels();
         break;
       case 9:
-        sidebar2elem.setAttribute("src", Services.prefs.getStringPref("floorp.browser.sidebar2.customurl5", undefined));
+        webpanel.setAttribute("src", Services.prefs.getStringPref("floorp.browser.sidebar2.customurl5", undefined));
+        changeBrowserManagerSidebarConfigShowWebpanels();
         break;
       case 10:
-        sidebar2elem.setAttribute("src", Services.prefs.getStringPref("floorp.browser.sidebar2.customurl6", undefined));
+        webpanel.setAttribute("src", Services.prefs.getStringPref("floorp.browser.sidebar2.customurl6", undefined));
+        changeBrowserManagerSidebarConfigShowWebpanels();
         break;
       case 11:
-        sidebar2elem.setAttribute("src", Services.prefs.getStringPref("floorp.browser.sidebar2.customurl7", undefined));
+        webpanel.setAttribute("src", Services.prefs.getStringPref("floorp.browser.sidebar2.customurl7", undefined));
+        changeBrowserManagerSidebarConfigShowWebpanels();
         break;
       case 12:
-        sidebar2elem.setAttribute("src", Services.prefs.getStringPref("floorp.browser.sidebar2.customurl8", undefined));
+        webpanel.setAttribute("src", Services.prefs.getStringPref("floorp.browser.sidebar2.customurl8", undefined));
+        changeBrowserManagerSidebarConfigShowWebpanels();
         break;
       case 13:
-        sidebar2elem.setAttribute("src", Services.prefs.getStringPref("floorp.browser.sidebar2.customurl9", undefined));
+        webpanel.setAttribute("src", Services.prefs.getStringPref("floorp.browser.sidebar2.customurl9", undefined));
+        changeBrowserManagerSidebarConfigShowWebpanels();
         break;
       case 14:
-        sidebar2elem.setAttribute("src", Services.prefs.getStringPref("floorp.browser.sidebar2.customurl10", undefined));
+        webpanel.setAttribute("src", Services.prefs.getStringPref("floorp.browser.sidebar2.customurl10", undefined));
+        changeBrowserManagerSidebarConfigShowWebpanels();
         break;
     }
   }
@@ -451,4 +466,20 @@ function changeMuteStatus() {
     webpanel.unmute();
     muteicon.setAttribute("mute", "false");
   }
+}
+
+function changeBrowserManagerSidebarConfigShowWebpanels() {
+  try{document.getElementById("sidebar2style").remove();}catch(e){}
+  var Tag = document.createElement("style");
+  Tag.innerText = `#sidebar2{max-height:0 !important;}`
+  document.getElementsByTagName("head")[0].insertAdjacentElement('beforeend', Tag);
+  Tag.setAttribute("id", "sidebar2style");
+}
+
+function changeBrowserManagerSidebarConfigShowBrowserManagers() {
+  try{document.getElementById("sidebar2style").remove();}catch(e){}
+  var Tag = document.createElement("style");
+  Tag.innerText = `#webpanel{max-height:0 !important;}`
+  document.getElementsByTagName("head")[0].insertAdjacentElement('beforeend', Tag);
+  Tag.setAttribute("id", "sidebar2style");
 }

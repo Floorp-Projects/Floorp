@@ -12,9 +12,16 @@
         <toolbarbutton id="sidebar2-close" class="sidebar2-icon" style="margin-right: 0.5em;" data-l10n-id="sidebar-close-button"  oncommand="changeSidebarVisibility();"/>
         </box>
         <browser id="sidebar2"  flex="1" autoscroll="false" disablehistory="true" disablefullscreen="true"
-                 type="content" disableglobalhistory="true" messagemanagergroup="webext-browsers"
-                 webextension-view-type="sidebar" context="contentAreaContextMenu"
-                 autocompletepopup="PopupAutoComplete" initialBrowsingContextGroupId="51" remote="true" maychangeremoteness="true" 
-                 style="width: 18em; max-width: none; min-width: 13m;" tooltip="aHTMLTooltip"/> 
+                 style="width: 18em; max-width: none; min-width: 13m;" tooltip="aHTMLTooltip"
+                 disableglobalhistory="true" messagemanagergroup="webext-browsers"
+                 webextension-view-type="" context="contentAreaContextMenu"
+                 autocompletepopup="PopupAutoComplete" initialBrowsingContextGroupId="51"/> 
+
+        <browser id="webpanel"  flex="1" autoscroll="false" disablehistory="true" disablefullscreen="true"
+                 style="width: 18em; max-width: none; min-width: 13m;" tooltip="aHTMLTooltip"
+                 disableglobalhistory="true" messagemanagergroup="webext-browsers"
+                 webextension-view-type="" context="contentAreaContextMenu"
+                 autocompletepopup="PopupAutoComplete" initialBrowsingContextGroupId="51"
+                 type="content" remote="true" maychangeremoteness="true" /> 
     </vbox>
 <splitter id="sidebar-splitter2" class="browser-sidebar2 chromeclass-extrachrome"  hidden="false"/>
