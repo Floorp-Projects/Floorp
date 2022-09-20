@@ -13,7 +13,7 @@
 #include <memory>
 
 #import "base/RTCLogging.h"
-#import "helpers/NSString+StdString.h"
+#import "helpers/NSString+RTCStdString.h"
 
 @implementation RTC_OBJC_TYPE (RTCIceCandidate)
 
@@ -51,10 +51,10 @@
   candidate->ToString(&sdp);
 
   RTC_OBJC_TYPE(RTCIceCandidate) *rtcCandidate =
-      [self initWithSdp:[NSString stringForStdString:sdp]
+      [self initWithSdp:[NSString rtc_stringForStdString:sdp]
           sdpMLineIndex:candidate->sdp_mline_index()
-                 sdpMid:[NSString stringForStdString:candidate->sdp_mid()]];
-  rtcCandidate->_serverUrl = [NSString stringForStdString:candidate->server_url()];
+                 sdpMid:[NSString rtc_stringForStdString:candidate->sdp_mid()]];
+  rtcCandidate->_serverUrl = [NSString rtc_stringForStdString:candidate->server_url()];
   return rtcCandidate;
 }
 

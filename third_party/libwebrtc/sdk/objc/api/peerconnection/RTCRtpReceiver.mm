@@ -14,7 +14,7 @@
 #import "RTCRtpParameters+Private.h"
 #import "RTCRtpReceiver+Native.h"
 #import "base/RTCLogging.h"
-#import "helpers/NSString+StdString.h"
+#import "helpers/NSString+RTCStdString.h"
 
 #include "api/media_stream_interface.h"
 
@@ -44,7 +44,7 @@ void RtpReceiverDelegateAdapter::OnFirstPacketReceived(
 @synthesize delegate = _delegate;
 
 - (NSString *)receiverId {
-  return [NSString stringForStdString:_nativeRtpReceiver->id()];
+  return [NSString rtc_stringForStdString:_nativeRtpReceiver->id()];
 }
 
 - (RTC_OBJC_TYPE(RTCRtpParameters) *)parameters {

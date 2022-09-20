@@ -10,7 +10,7 @@
 
 #import "RTCCallbackLogger.h"
 
-#import "helpers/NSString+StdString.h"
+#import "helpers/NSString+RTCStdString.h"
 
 #include <memory>
 
@@ -32,7 +32,7 @@ class CallbackLogSink final : public rtc::LogSink {
 
   void OnLogMessage(absl::string_view message) override {
     if (callback_handler_) {
-      callback_handler_([NSString stringForAbslStringView:message]);
+      callback_handler_([NSString rtc_stringForAbslStringView:message]);
     }
   }
 
@@ -54,7 +54,7 @@ class CallbackWithSeverityLogSink final : public rtc::LogSink {
   void OnLogMessage(absl::string_view message, rtc::LoggingSeverity severity) override {
     if (callback_handler_) {
       RTCLoggingSeverity loggingSeverity = NativeSeverityToObjcSeverity(severity);
-      callback_handler_([NSString stringForAbslStringView:message], loggingSeverity);
+      callback_handler_([NSString rtc_stringForAbslStringView:message], loggingSeverity);
     }
   }
 

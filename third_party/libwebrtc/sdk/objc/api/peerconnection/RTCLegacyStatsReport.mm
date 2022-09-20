@@ -11,7 +11,7 @@
 #import "RTCLegacyStatsReport+Private.h"
 
 #import "base/RTCLogging.h"
-#import "helpers/NSString+StdString.h"
+#import "helpers/NSString+RTCStdString.h"
 
 #include "rtc_base/checks.h"
 
@@ -35,18 +35,15 @@
 - (instancetype)initWithNativeReport:(const webrtc::StatsReport &)nativeReport {
   if (self = [super init]) {
     _timestamp = nativeReport.timestamp();
-    _type = [NSString stringForStdString:nativeReport.TypeToString()];
-    _reportId = [NSString stringForStdString:
-        nativeReport.id()->ToString()];
+    _type = [NSString rtc_stringForStdString:nativeReport.TypeToString()];
+    _reportId = [NSString rtc_stringForStdString:nativeReport.id()->ToString()];
 
     NSUInteger capacity = nativeReport.values().size();
     NSMutableDictionary *values =
         [NSMutableDictionary dictionaryWithCapacity:capacity];
     for (auto const &valuePair : nativeReport.values()) {
-      NSString *key = [NSString stringForStdString:
-          valuePair.second->display_name()];
-      NSString *value = [NSString stringForStdString:
-          valuePair.second->ToString()];
+      NSString *key = [NSString rtc_stringForStdString:valuePair.second->display_name()];
+      NSString *value = [NSString rtc_stringForStdString:valuePair.second->ToString()];
 
       // Not expecting duplicate keys.
       RTC_DCHECK(![values objectForKey:key]);

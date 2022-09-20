@@ -11,9 +11,9 @@
 
 #import "RTCH264ProfileLevelId.h"
 
-#import "helpers/NSString+StdString.h"
+#import "helpers/NSString+RTCStdString.h"
 #if defined(WEBRTC_IOS)
-#import "UIDevice+H264Profile.h"
+#import "UIDevice+RTCH264Profile.h"
 #endif
 
 #include "api/video_codecs/h264_profile_level_id.h"
@@ -40,12 +40,12 @@ namespace {
 
 NSString *MaxSupportedLevelForProfile(webrtc::H264Profile profile) {
   const absl::optional<webrtc::H264ProfileLevelId> profileLevelId =
-      [UIDevice maxSupportedH264Profile];
+      [UIDevice rtc_maxSupportedH264Profile];
   if (profileLevelId && profileLevelId->profile >= profile) {
     const absl::optional<std::string> profileString =
         H264ProfileLevelIdToString(webrtc::H264ProfileLevelId(profile, profileLevelId->level));
     if (profileString) {
-      return [NSString stringForStdString:*profileString];
+      return [NSString rtc_stringForStdString:*profileString];
     }
   }
   return nil;

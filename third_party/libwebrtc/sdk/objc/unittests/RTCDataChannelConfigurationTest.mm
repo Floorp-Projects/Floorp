@@ -15,7 +15,7 @@
 
 #import "api/peerconnection/RTCDataChannelConfiguration+Private.h"
 #import "api/peerconnection/RTCDataChannelConfiguration.h"
-#import "helpers/NSString+StdString.h"
+#import "helpers/NSString+RTCStdString.h"
 
 @interface RTCDataChannelConfigurationTest : XCTestCase
 @end
