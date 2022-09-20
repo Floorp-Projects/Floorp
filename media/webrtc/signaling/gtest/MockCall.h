@@ -276,6 +276,10 @@ class MockCall : public webrtc::Call {
 
   void OnLocalSsrcUpdated(webrtc::AudioReceiveStream& stream,
                           uint32_t local_ssrc) override {}
+  void OnLocalSsrcUpdated(webrtc::VideoReceiveStream& stream,
+                          uint32_t local_ssrc) override {}
+  void OnLocalSsrcUpdated(webrtc::FlexfecReceiveStream& stream,
+                          uint32_t local_ssrc) override {}
 
   void OnUpdateSyncGroup(webrtc::AudioReceiveStream& stream,
                          const std::string& sync_group) override {}
