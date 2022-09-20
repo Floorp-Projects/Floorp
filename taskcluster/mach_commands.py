@@ -108,34 +108,6 @@ def get_taskgraph_decision_parser():
                 "help": "Kinds that should not be re-used from the on-push graph.",
             },
         ),
-        (
-            ["--comm-base-repository"],
-            {
-                "required": False,
-                "help": "URL for 'base' comm-* repository to clone",
-            },
-        ),
-        (
-            ["--comm-head-repository"],
-            {
-                "required": False,
-                "help": "URL for 'head' comm-* repository to fetch revision from",
-            },
-        ),
-        (
-            ["--comm-head-ref"],
-            {
-                "required": False,
-                "help": "comm-* Reference (this is same as rev usually for hg)",
-            },
-        ),
-        (
-            ["--comm-head-rev"],
-            {
-                "required": False,
-                "help": "Commit revision to use from head comm-* repository",
-            },
-        ),
     ]
     for arg in extra_args:
         parser.add_argument(*arg[0], **arg[1])
