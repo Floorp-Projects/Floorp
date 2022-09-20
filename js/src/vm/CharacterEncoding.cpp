@@ -13,6 +13,7 @@
 #include "mozilla/TextUtils.h"
 #include "mozilla/Utf8.h"
 
+#include <limits>
 #include <type_traits>
 
 #include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*
@@ -63,7 +64,7 @@ static size_t GetDeflatedUTF8StringLength(const CharT* chars, size_t nchars) {
     if (c < 0x80) {
       continue;
     }
-    uint32_t v;
+    char32_t v;
     if (IsSurrogate(c)) {
       /* nbytes sets 1 length since this is surrogate pair. */
       if (IsTrailSurrogate(c) || (chars + 1) == end) {
@@ -177,14 +178,14 @@ template UTF8CharsZ JS::CharsToNewUTF8CharsZ(
 template UTF8CharsZ JS::CharsToNewUTF8CharsZ(
     ErrorAllocator* cx, const mozilla::Range<const char16_t> chars);
 
-static const uint32_t INVALID_UTF8 = UINT32_MAX;
+static constexpr uint32_t INVALID_UTF8 = std::numeric_limits<char32_t>::max();
 
 /*
  * Convert a UTF-8 character sequence into a UCS-4 character and return that
  * character. It is assumed that the caller already checked that the sequence
  * is valid.
  */
-static uint32_t Utf8ToOneUcs4CharImpl(const uint8_t* utf8Buffer,
+static char32_t Utf8ToOneUcs4CharImpl(const uint8_t* utf8Buffer,
                                       int utf8Length) {
   MOZ_ASSERT(1 <= utf8Length && utf8Length <= 4);
 
@@ -194,12 +195,12 @@ static uint32_t Utf8ToOneUcs4CharImpl(const uint8_t* utf8Buffer,
   }
 
   /* from Unicode 3.1, non-shortest form is illegal */
-  static const uint32_t minucs4Table[] = {0x80, 0x800, NonBMPMin};
+  static const char32_t minucs4Table[] = {0x80, 0x800, NonBMPMin};
 
   MOZ_ASSERT((*utf8Buffer & (0x100 - (1 << (7 - utf8Length)))) ==
              (0x100 - (1 << (8 - utf8Length))));
-  uint32_t ucs4Char = *utf8Buffer++ & ((1 << (7 - utf8Length)) - 1);
-  uint32_t minucs4Char = minucs4Table[utf8Length - 2];
+  char32_t ucs4Char = *utf8Buffer++ & ((1 << (7 - utf8Length)) - 1);
+  char32_t minucs4Char = minucs4Table[utf8Length - 2];
   while (--utf8Length) {
     MOZ_ASSERT((*utf8Buffer & 0xC0) == 0x80);
     ucs4Char = (ucs4Char << 6) | (*utf8Buffer++ & 0x3F);
@@ -216,7 +217,7 @@ static uint32_t Utf8ToOneUcs4CharImpl(const uint8_t* utf8Buffer,
   return ucs4Char;
 }
 
-uint32_t JS::Utf8ToOneUcs4Char(const uint8_t* utf8Buffer, int utf8Length) {
+char32_t JS::Utf8ToOneUcs4Char(const uint8_t* utf8Buffer, int utf8Length) {
   return Utf8ToOneUcs4CharImpl(utf8Buffer, utf8Length);
 }
 
