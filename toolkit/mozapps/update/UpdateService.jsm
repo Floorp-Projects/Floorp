@@ -4796,9 +4796,7 @@ Checker.prototype = {
     // Check whether there is a mitm, i.e. check whether the root cert is
     // built-in or not.
     try {
-      let sslStatus = request.channel
-        .QueryInterface(Ci.nsIRequest)
-        .securityInfo.QueryInterface(Ci.nsITransportSecurityInfo);
+      let sslStatus = request.channel.securityInfo;
       if (sslStatus && sslStatus.succeededCertChain) {
         let rootCert = null;
         // The root cert is the last cert in the chain.
@@ -4866,9 +4864,7 @@ Checker.prototype = {
 
     // Set MitM pref.
     try {
-      var secInfo = request.channel.securityInfo.QueryInterface(
-        Ci.nsITransportSecurityInfo
-      );
+      var secInfo = request.channel.securityInfo;
       if (secInfo.serverCert && secInfo.serverCert.issuerName) {
         Services.prefs.setStringPref(
           "security.pki.mitm_canary_issuer",

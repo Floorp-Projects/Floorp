@@ -117,11 +117,10 @@ function processStsHeader(host, header, status, securityInfo) {
   if (header != null && securityInfo != null) {
     try {
       let uri = Services.io.newURI("https://" + host.name);
-      let secInfo = securityInfo.QueryInterface(Ci.nsITransportSecurityInfo);
       gSSService.processHeader(
         uri,
         header,
-        secInfo,
+        securityInfo,
         {},
         maxAge,
         includeSubdomains

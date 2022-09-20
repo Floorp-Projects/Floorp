@@ -207,9 +207,7 @@ async function testWrapper(alpnAdvertisement) {
   HandshakeTelemetryHelpers.resetHistograms();
   let chan = makeChan(`https://ech-private.example.com`);
   await channelOpenPromise(chan, CL_ALLOW_UNKNOWN_CL);
-  let securityInfo = chan.securityInfo.QueryInterface(
-    Ci.nsITransportSecurityInfo
-  );
+  let securityInfo = chan.securityInfo;
   Assert.ok(securityInfo.isAcceptedEch, "This host should have accepted ECH");
 
   // Only check telemetry if network process is disabled.

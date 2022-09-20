@@ -155,9 +155,7 @@ function checkCert(aChannel, aAllowNonBuiltInCerts, aCerts) {
     return;
   }
 
-  let secInfo = aChannel.securityInfo.QueryInterface(
-    Ci.nsITransportSecurityInfo
-  );
+  let secInfo = aChannel.securityInfo;
   let cert = secInfo.serverCert;
 
   validateCert(cert, aCerts);

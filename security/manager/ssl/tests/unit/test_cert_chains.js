@@ -694,7 +694,6 @@ function run_test() {
     PRErrorCodeSuccess,
     null,
     function withSecurityInfo(aTransportSecurityInfo) {
-      aTransportSecurityInfo.QueryInterface(Ci.nsITransportSecurityInfo);
       test_security_info_serialization(aTransportSecurityInfo, 0);
       equal(
         aTransportSecurityInfo.failedCertChain.length,
@@ -710,7 +709,6 @@ function run_test() {
     SEC_ERROR_EXPIRED_CERTIFICATE,
     null,
     function withSecurityInfo(securityInfo) {
-      securityInfo.QueryInterface(Ci.nsITransportSecurityInfo);
       test_security_info_serialization(
         securityInfo,
         SEC_ERROR_EXPIRED_CERTIFICATE
@@ -736,7 +734,6 @@ function run_test() {
     SEC_ERROR_UNKNOWN_ISSUER,
     null,
     function withSecurityInfo(securityInfo) {
-      securityInfo.QueryInterface(Ci.nsITransportSecurityInfo);
       test_security_info_serialization(securityInfo, SEC_ERROR_UNKNOWN_ISSUER);
       notEqual(
         securityInfo.failedCertChain,
@@ -759,7 +756,6 @@ function run_test() {
     SEC_ERROR_INADEQUATE_KEY_USAGE,
     null,
     function withSecurityInfo(securityInfo) {
-      securityInfo.QueryInterface(Ci.nsITransportSecurityInfo);
       test_security_info_serialization(
         securityInfo,
         SEC_ERROR_INADEQUATE_KEY_USAGE

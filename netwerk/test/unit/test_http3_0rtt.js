@@ -23,7 +23,6 @@ Http3Listener.prototype = {
     Assert.equal(request.responseStatus, 200);
 
     let secinfo = request.securityInfo;
-    secinfo.QueryInterface(Ci.nsITransportSecurityInfo);
     Assert.equal(secinfo.resumed, this.resumed);
     Assert.ok(secinfo.serverCert != null);
   },

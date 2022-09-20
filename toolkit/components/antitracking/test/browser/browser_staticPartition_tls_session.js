@@ -40,9 +40,7 @@ async function waitForLoad(url) {
 
       Services.obs.removeObserver(observer, TOPIC);
 
-      resolve(
-        subject.securityInfo.QueryInterface(Ci.nsITransportSecurityInfo).peerId
-      );
+      resolve(subject.securityInfo.peerId);
     }
     Services.obs.addObserver(observer, TOPIC);
   });

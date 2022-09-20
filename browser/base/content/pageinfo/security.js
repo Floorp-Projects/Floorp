@@ -85,7 +85,6 @@ var security = {
       return retval;
     }
 
-    secInfo.QueryInterface(Ci.nsITransportSecurityInfo);
     let cert = secInfo.serverCert;
     let issuerName = null;
     if (cert) {
