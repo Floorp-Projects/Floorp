@@ -838,7 +838,7 @@ Style Editor
 Keyboard shortcuts for the :doc:`Style editor <../style_editor/index>`.
 
 .. list-table::
-  :widths: 40 20 20 20
+  :widths: 25 25 25 25
   :header-rows: 1
 
   * - **Command**
@@ -856,6 +856,30 @@ Keyboard shortcuts for the :doc:`Style editor <../style_editor/index>`.
     - :kbd:`Cmd` + :kbd:`Space`
     - :kbd:`Ctrl` + :kbd:`Space`
 
+  * - Find Next
+    - :kbd:`Ctrl` + :kbd:`G`
+    - :kbd:`Cmd` + :kbd:`G`
+    - :kbd:`Ctrl` + :kbd:`G`
+
+  * - Find Previous
+    - :kbd:`Shift` + :kbd:`Ctrl` + :kbd:`G`
+    - :kbd:`Shift` + :kbd:`Cmd` + :kbd:`G`
+    - :kbd:`Shift` + :kbd:`Ctrl` + :kbd:`G`
+
+  * - Replace
+    - :kbd:`Shift` + :kbd:`Ctrl` + :kbd:`F`
+    - :kbd:`Cmd` + :kbd:`Option` + :kbd:`F`
+    - :kbd:`Shift` + :kbd:`Ctrl` + :kbd:`F`
+
+  * - Focus the filter input
+    - :kbd:`Ctrl` + :kbd:`P`
+    - :kbd:`Cmd` + :kbd:`P`
+    - :kbd:`Ctrl` + :kbd:`P`
+
+  * - Save file to disk
+    - :kbd:`Ctrl` + :kbd:`S`
+    - :kbd:`Cmd` + :kbd:`S`
+    - :kbd:`Ctrl` + :kbd:`S`
 
 .. _keyboard-shortcuts-eyedropper:
 
@@ -865,7 +889,7 @@ Eyedropper
 Keyboard shortcuts for the :doc:`Eyedropper <../eyedropper/index>`.
 
 .. list-table::
-  :widths: 40 20 20 20
+  :widths: 25 25 25 25
   :header-rows: 1
 
   * - **Command**
@@ -884,11 +908,11 @@ Keyboard shortcuts for the :doc:`Eyedropper <../eyedropper/index>`.
     - :kbd:`Esc`
 
   * - Move by 1 pixel
-    - :kbd:`Arrow keys`
-    - :kbd:`Arrow keys`
-    - :kbd:`Arrow keys`
+    - :kbd:`ArrowKeys`
+    - :kbd:`ArrowKeys`
+    - :kbd:`ArrowKeys`
 
   * - Move by 10 pixels
-    - :kbd:`Shift` + :kbd:`arrow keys`
-    - :kbd:`Shift` + :kbd:`arrow keys`
-    - :kbd:`Shift` + :kbd:`arrow keys`
+    - :kbd:`Shift` + :kbd:`ArrowKeys`
+    - :kbd:`Shift` + :kbd:`ArrowKeys`
+    - :kbd:`Shift` + :kbd:`ArrowKeys`
