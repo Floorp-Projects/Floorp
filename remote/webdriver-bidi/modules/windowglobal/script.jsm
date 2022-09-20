@@ -161,6 +161,26 @@ class ScriptModule extends Module {
     }
   }
 
+  #getRealm(realmId, sandboxName) {
+    if (realmId === null) {
+      return this.#getRealmFromSandboxName(sandboxName);
+    }
+
+    if (this.#defaultRealm.id == realmId) {
+      return this.#defaultRealm;
+    }
+
+    const sandboxRealm = Array.from(this.#realms.values()).find(
+      realm => realm.id === realmId
+    );
+
+    if (sandboxRealm) {
+      return sandboxRealm;
+    }
+
+    throw new lazy.error.NoSuchFrameError(`Realm with id ${realmId} not found`);
+  }
+
   #getRealmFromSandboxName(sandboxName) {
     if (sandboxName === null) {
       return this.#defaultRealm;
@@ -209,7 +229,7 @@ class ScriptModule extends Module {
    *     The arguments to pass to the function call.
    * @param {string} functionDeclaration
    *     The body of the function to call.
-   * @param {string=} realmId [not supported]
+   * @param {string=} realmId
    *     The id of the realm.
    * @param {OwnershipModel} resultOwnership
    *     The ownership model to use for the results of this evaluation.
@@ -230,12 +250,13 @@ class ScriptModule extends Module {
       awaitPromise,
       commandArguments = null,
       functionDeclaration,
+      realmId = null,
       resultOwnership,
       sandbox: sandboxName = null,
       thisParameter = null,
     } = options;
 
-    const realm = this.#getRealmFromSandboxName(sandboxName);
+    const realm = this.#getRealm(realmId, sandboxName);
 
     const deserializedArguments =
       commandArguments !== null
@@ -261,14 +282,14 @@ class ScriptModule extends Module {
    * @param {Object=} options
    * @param {Array<string>} handles
    *     Array of handle ids to disown.
-   * @param {string=} realmId [not supported]
+   * @param {string=} realmId
    *     The id of the realm.
    * @param {string=} sandbox
    *     The name of the sandbox.
    */
   disownHandles(options) {
-    const { handles, sandbox: sandboxName = null } = options;
-    const realm = this.#getRealmFromSandboxName(sandboxName);
+    const { handles, realmId = null, sandbox: sandboxName = null } = options;
+    const realm = this.#getRealm(realmId, sandboxName);
     for (const handle of handles) {
       realm.removeObjectHandle(handle);
     }
@@ -283,7 +304,7 @@ class ScriptModule extends Module {
    *     expression to resolve, if this return value is a Promise.
    * @param {string} expression
    *     The expression to evaluate.
-   * @param {string=} realmId [not supported]
+   * @param {string=} realmId
    *     The id of the realm.
    * @param {OwnershipModel} resultOwnership
    *     The ownership model to use for the results of this evaluation.
@@ -301,11 +322,12 @@ class ScriptModule extends Module {
     const {
       awaitPromise,
       expression,
+      realmId = null,
       resultOwnership,
       sandbox: sandboxName = null,
     } = options;
 
-    const realm = this.#getRealmFromSandboxName(sandboxName);
+    const realm = this.#getRealm(realmId, sandboxName);
     const rv = realm.executeInGlobal(expression);
 
     return this.#buildReturnValue(rv, realm, awaitPromise, resultOwnership);

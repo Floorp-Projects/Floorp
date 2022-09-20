@@ -150,7 +150,7 @@ class ScriptModule extends Module {
     }
 
     const { contextId, realmId, sandbox } = this.#assertTarget(target);
-    const context = this.#getContextFromTarget({ contextId, realmId, sandbox });
+    const context = await this.#getContextFromTarget({ contextId, realmId });
     const evaluationResult = await this.messageHandler.forwardCommand({
       moduleName: "script",
       commandName: "callFunctionDeclaration",
@@ -202,7 +202,7 @@ class ScriptModule extends Module {
     });
 
     const { contextId, realmId, sandbox } = this.#assertTarget(target);
-    const context = this.#getContextFromTarget({ contextId, realmId, sandbox });
+    const context = await this.#getContextFromTarget({ contextId, realmId });
     await this.messageHandler.forwardCommand({
       moduleName: "script",
       commandName: "disownHandles",
@@ -266,7 +266,7 @@ class ScriptModule extends Module {
     this.#assertResultOwnership(resultOwnership);
 
     const { contextId, realmId, sandbox } = this.#assertTarget(target);
-    const context = this.#getContextFromTarget({ contextId, realmId, sandbox });
+    const context = await this.#getContextFromTarget({ contextId, realmId });
     const evaluationResult = await this.messageHandler.forwardCommand({
       moduleName: "script",
       commandName: "evaluateExpression",
@@ -383,30 +383,7 @@ class ScriptModule extends Module {
       }
     }
 
-    let realms = await this.messageHandler.forwardCommand({
-      moduleName: "script",
-      commandName: "getWindowRealms",
-      destination: {
-        type: lazy.WindowGlobalMessageHandler.type,
-        ...destination,
-      },
-    });
-
-    const isBroadcast = !!destination.contextDescriptor;
-    if (!isBroadcast) {
-      realms = [realms];
-    }
-
-    const resultRealms = realms
-      .flat()
-      .map(realm => {
-        // Resolve browsing context to a TabManager id.
-        realm.context = lazy.TabManager.getIdForBrowsingContext(realm.context);
-        return realm;
-      })
-      .filter(realm => realm.context !== null);
-
-    return { realms: resultRealms };
+    return { realms: await this.#getRealmInfos(destination) };
   }
 
   #assertResultOwnership(resultOwnership) {
@@ -435,6 +412,12 @@ class ScriptModule extends Module {
       sandbox = null,
     } = target;
 
+    if (realmId != null && (contextId != null || sandbox != null)) {
+      throw new lazy.error.InvalidArgumentError(
+        `A context and a realm reference are mutually exclusive`
+      );
+    }
+
     if (contextId != null) {
       lazy.assert.string(
         contextId,
@@ -451,9 +434,6 @@ class ScriptModule extends Module {
       lazy.assert.string(
         realmId,
         `Expected "realm" to be a string, got ${realmId}`
-      );
-      throw new lazy.error.UnsupportedOperationError(
-        `realm is not supported yet`
       );
     } else {
       throw new lazy.error.InvalidArgumentError(`No context or realm provided`);
@@ -498,10 +478,49 @@ class ScriptModule extends Module {
     return context;
   }
 
-  // realmId is going to be used when the full Realm support is implemented
-  // See Bug 1779231.
-  #getContextFromTarget({ contextId /*, realmId, sandbox*/ }) {
-    return this.#getBrowsingContext(contextId);
+  async #getContextFromTarget({ contextId, realmId }) {
+    if (contextId !== null) {
+      return this.#getBrowsingContext(contextId);
+    }
+
+    const destination = {
+      contextDescriptor: {
+        type: lazy.ContextDescriptorType.All,
+      },
+    };
+    const realms = await this.#getRealmInfos(destination);
+    const realm = realms.find(realm => realm.realm == realmId);
+
+    if (realm && realm.context !== null) {
+      return this.#getBrowsingContext(realm.context);
+    }
+
+    throw new lazy.error.NoSuchFrameError(`Realm with id ${realmId} not found`);
+  }
+
+  async #getRealmInfos(destination) {
+    let realms = await this.messageHandler.forwardCommand({
+      moduleName: "script",
+      commandName: "getWindowRealms",
+      destination: {
+        type: lazy.WindowGlobalMessageHandler.type,
+        ...destination,
+      },
+    });
+
+    const isBroadcast = !!destination.contextDescriptor;
+    if (!isBroadcast) {
+      realms = [realms];
+    }
+
+    return realms
+      .flat()
+      .map(realm => {
+        // Resolve browsing context to a TabManager id.
+        realm.context = lazy.TabManager.getIdForBrowsingContext(realm.context);
+        return realm;
+      })
+      .filter(realm => realm.context !== null);
   }
 
   static get supportedEvents() {
