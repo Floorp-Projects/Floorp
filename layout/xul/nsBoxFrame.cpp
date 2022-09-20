@@ -108,7 +108,7 @@ NS_QUERYFRAME_TAIL_INHERITING(nsContainerFrame)
 
 nsBoxFrame::nsBoxFrame(ComputedStyle* aStyle, nsPresContext* aPresContext,
                        ClassID aID, bool aIsRoot, nsBoxLayout* aLayoutManager)
-    : nsContainerFrame(aStyle, aPresContext, aID), mFlex(0), mAscent(0) {
+    : nsContainerFrame(aStyle, aPresContext, aID), mAscent(0) {
   AddStateBits(NS_STATE_IS_HORIZONTAL | NS_STATE_AUTO_STRETCH);
 
   if (aIsRoot) AddStateBits(NS_STATE_IS_ROOT);
@@ -673,13 +673,6 @@ nsSize nsBoxFrame::GetXULMaxSize(nsBoxLayoutState& aBoxLayoutState) {
   return size;
 }
 
-int32_t nsBoxFrame::GetXULFlex() {
-  if (XULNeedsRecalc(mFlex)) {
-    mFlex = nsIFrame::ComputeXULFlex(this);
-  }
-  return mFlex;
-}
-
 /**
  * If subclassing please subclass this method not layout.
  * layout will call this method.
@@ -745,7 +738,6 @@ void nsBoxFrame::MarkIntrinsicISizesDirty() {
   XULSizeNeedsRecalc(mPrefSize);
   XULSizeNeedsRecalc(mMinSize);
   XULSizeNeedsRecalc(mMaxSize);
-  XULCoordNeedsRecalc(mFlex);
   XULCoordNeedsRecalc(mAscent);
 
   if (mLayoutManager) {

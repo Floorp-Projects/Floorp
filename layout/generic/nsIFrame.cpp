@@ -194,7 +194,6 @@ struct nsBoxLayoutMetrics {
   nsSize mBlockPrefSize;
   nscoord mBlockAscent;
 
-  nscoord mFlex;
   nscoord mAscent;
 
   nsSize mLastSize;
@@ -5809,7 +5808,6 @@ void nsIFrame::MarkIntrinsicISizesDirty() {
     XULSizeNeedsRecalc(metrics->mMaxSize);
     XULSizeNeedsRecalc(metrics->mBlockPrefSize);
     XULSizeNeedsRecalc(metrics->mBlockMinSize);
-    XULCoordNeedsRecalc(metrics->mFlex);
     XULCoordNeedsRecalc(metrics->mAscent);
   }
 
@@ -10674,13 +10672,8 @@ nsSize nsIFrame::GetXULMaxSize(nsBoxLayoutState& aState) {
   return size;
 }
 
-int32_t nsIFrame::GetXULFlex() {
-  nsBoxLayoutMetrics* metrics = BoxMetrics();
-  if (XULNeedsRecalc(metrics->mFlex)) {
-    metrics->mFlex = nsIFrame::ComputeXULFlex(this);
-  }
-
-  return metrics->mFlex;
+int32_t nsIFrame::GetXULFlex() const {
+  return clamped(int32_t(StyleXUL()->mBoxFlex), 0, nscoord_MAX - 1);
 }
 
 nscoord nsIFrame::GetXULBoxAscent(nsBoxLayoutState& aState) {

@@ -63,7 +63,6 @@ class nsBoxFrame : public nsContainerFrame {
   virtual nsSize GetXULPrefSize(nsBoxLayoutState& aBoxLayoutState) override;
   virtual nsSize GetXULMinSize(nsBoxLayoutState& aBoxLayoutState) override;
   virtual nsSize GetXULMaxSize(nsBoxLayoutState& aBoxLayoutState) override;
-  virtual int32_t GetXULFlex() override;
   virtual nscoord GetXULBoxAscent(nsBoxLayoutState& aBoxLayoutState) override;
   virtual Valignment GetXULVAlign() const override { return mValign; }
   virtual Halignment GetXULHAlign() const override { return mHalign; }
@@ -171,7 +170,6 @@ class nsBoxFrame : public nsContainerFrame {
   nsSize mPrefSize;
   nsSize mMinSize;
   nsSize mMaxSize;
-  nscoord mFlex;
   nscoord mAscent;
 
   nsCOMPtr<nsBoxLayout> mLayoutManager;

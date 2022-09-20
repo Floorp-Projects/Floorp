@@ -542,10 +542,6 @@ bool nsIFrame::AddXULMaxSize(nsIFrame* aBox, nsSize& aSize, bool& aWidthSet,
   return (aWidthSet || aHeightSet);
 }
 
-int32_t nsIFrame::ComputeXULFlex(nsIFrame* aBox) {
-  return clamped(int32_t(aBox->StyleXUL()->mBoxFlex), 0, nscoord_MAX - 1);
-}
-
 void nsIFrame::AddXULBorderAndPadding(nsSize& aSize) {
   AddXULBorderAndPadding(this, aSize);
 }

@@ -23,7 +23,6 @@ class nsLeafBoxFrame : public nsLeafFrame {
   virtual nsSize GetXULPrefSize(nsBoxLayoutState& aState) override;
   virtual nsSize GetXULMinSize(nsBoxLayoutState& aState) override;
   virtual nsSize GetXULMaxSize(nsBoxLayoutState& aState) override;
-  virtual int32_t GetXULFlex() override;
   virtual nscoord GetXULBoxAscent(nsBoxLayoutState& aState) override;
 
   virtual bool IsFrameOfType(uint32_t aFlags) const override {
