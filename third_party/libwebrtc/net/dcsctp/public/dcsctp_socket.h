@@ -170,43 +170,6 @@ enum class SendPacketStatus {
   kError,
 };
 
-// Tracked metrics, which is the return value of GetMetrics. Optional members
-// will be unset when they are not yet known.
-struct Metrics {
-  // Transmission stats and metrics.
-
-  // Number of packets sent.
-  size_t tx_packets_count = 0;
-
-  // Number of messages requested to be sent.
-  size_t tx_messages_count = 0;
-
-  // The current congestion window (cwnd) in bytes, corresponding to spinfo_cwnd
-  // defined in RFC6458.
-  absl::optional<size_t> cwnd_bytes = absl::nullopt;
-
-  // Smoothed round trip time, corresponding to spinfo_srtt defined in RFC6458.
-  absl::optional<int> srtt_ms = absl::nullopt;
-
-  // Number of data items in the retransmission queue that haven’t been
-  // acked/nacked yet and are in-flight. Corresponding to sstat_unackdata
-  // defined in RFC6458. This may be an approximation when there are messages in
-  // the send queue that haven't been fragmented/packetized yet.
-  size_t unack_data_count = 0;
-
-  // Receive stats and metrics.
-
-  // Number of packets received.
-  size_t rx_packets_count = 0;
-
-  // Number of messages received.
-  size_t rx_messages_count = 0;
-
-  // The peer’s last announced receiver window size, corresponding to
-  // sstat_rwnd defined in RFC6458.
-  absl::optional<uint32_t> peer_rwnd_bytes = absl::nullopt;
-};
-
 // Represent known SCTP implementations.
 enum class SctpImplementation {
   // There is not enough information toto determine any SCTP implementation.
@@ -231,6 +194,48 @@ inline constexpr absl::string_view ToString(SctpImplementation implementation) {
       return "other";
   }
 }
+
+// Tracked metrics, which is the return value of GetMetrics. Optional members
+// will be unset when they are not yet known.
+struct Metrics {
+  // Transmission stats and metrics.
+
+  // Number of packets sent.
+  size_t tx_packets_count = 0;
+
+  // Number of messages requested to be sent.
+  size_t tx_messages_count = 0;
+
+  // The current congestion window (cwnd) in bytes, corresponding to spinfo_cwnd
+  // defined in RFC6458.
+  size_t cwnd_bytes = 0;
+
+  // Smoothed round trip time, corresponding to spinfo_srtt defined in RFC6458.
+  int srtt_ms = 0;
+
+  // Number of data items in the retransmission queue that haven’t been
+  // acked/nacked yet and are in-flight. Corresponding to sstat_unackdata
+  // defined in RFC6458. This may be an approximation when there are messages in
+  // the send queue that haven't been fragmented/packetized yet.
+  size_t unack_data_count = 0;
+
+  // Receive stats and metrics.
+
+  // Number of packets received.
+  size_t rx_packets_count = 0;
+
+  // Number of messages received.
+  size_t rx_messages_count = 0;
+
+  // The peer’s last announced receiver window size, corresponding to
+  // sstat_rwnd defined in RFC6458.
+  uint32_t peer_rwnd_bytes = 0;
+
+  // Returns the detected SCTP implementation of the peer. As this is not
+  // explicitly signalled during the connection establishment, heuristics is
+  // used to analyze e.g. the state cookie in the INIT-ACK chunk.
+  SctpImplementation peer_implementation = SctpImplementation::kUnknown;
+};
 
 // Callbacks that the DcSctpSocket will call synchronously to the owning
 // client. It is allowed to call back into the library from callbacks that start
@@ -467,8 +472,9 @@ class DcSctpSocketInterface {
   virtual void SetBufferedAmountLowThreshold(StreamID stream_id,
                                              size_t bytes) = 0;
 
-  // Retrieves the latest metrics.
-  virtual Metrics GetMetrics() const = 0;
+  // Retrieves the latest metrics. If the socket is not fully connected,
+  // `absl::nullopt` will be returned.
+  virtual absl::optional<Metrics> GetMetrics() const = 0;
 
   // Returns empty bitmask if the socket is in the state in which a snapshot of
   // the state can be made by `GetHandoverStateAndClose()`. Return value is
@@ -491,7 +497,10 @@ class DcSctpSocketInterface {
   // If this method is called too early (before
   // `DcSctpSocketCallbacks::OnConnected` has triggered), this will likely
   // return `SctpImplementation::kUnknown`.
-  virtual SctpImplementation peer_implementation() const = 0;
+  ABSL_DEPRECATED("See Metrics::peer_implementation instead")
+  virtual SctpImplementation peer_implementation() const {
+    return SctpImplementation::kUnknown;
+  }
 };
 }  // namespace dcsctp
 
