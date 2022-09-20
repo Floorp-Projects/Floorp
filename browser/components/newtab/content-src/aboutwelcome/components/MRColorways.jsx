@@ -152,12 +152,12 @@ export function Colorways(props) {
                   colorwayName: label,
                 })}
               >
-                <Localized text={typeof label === "object" ? label : {}}>
+                <Localized text={typeof tooltip === "object" ? tooltip : {}}>
                   <span
                     className="sr-only colorway label"
                     id={`${id}-label`}
                     data-l10n-args={JSON.stringify({
-                      colorwayName: label,
+                      colorwayName: tooltip,
                     })}
                   />
                 </Localized>
