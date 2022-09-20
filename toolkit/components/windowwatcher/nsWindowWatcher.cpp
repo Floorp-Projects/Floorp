@@ -822,9 +822,37 @@ nsresult nsWindowWatcher::OpenWindowInternal(
          : nsContentUtils::GetSystemPrincipal();
   MOZ_ASSERT(subjectPrincipal);
 
-  // Only system principals may create chrome windows.
-  MOZ_ASSERT_IF(windowTypeIsChrome,
-                subjectPrincipal && subjectPrincipal->IsSystemPrincipal());
+  nsCOMPtr<nsIPrincipal> newWindowPrincipal;
+  if (!newBC) {
+    if (windowTypeIsChrome) {
+      // If we are creating a chrome window, we must be called with a system
+      // principal, and should inherit that for the new chrome window.
+      MOZ_RELEASE_ASSERT(subjectPrincipal->IsSystemPrincipal(),
+                         "Only system principals can create chrome windows");
+      newWindowPrincipal = subjectPrincipal;
+    } else if (nsContentUtils::IsSystemOrExpandedPrincipal(subjectPrincipal)) {
+      // Don't allow initial about:blank documents to inherit a system or
+      // expanded principal, instead replace it with a null principal. We can't
+      // inherit origin attributes from the system principal, so use the parent
+      // BC if it's available.
+      if (parentBC) {
+        newWindowPrincipal = NullPrincipal::CreateWithInheritedAttributes(
+            parentBC->OriginAttributesRef());
+      } else {
+        newWindowPrincipal = NullPrincipal::CreateWithoutOriginAttributes();
+      }
+    } else if (aForceNoOpener) {
+      // If we're opening a new window with noopener, create a new opaque
+      // principal for the new window, rather than re-using the existing
+      // principal.
+      newWindowPrincipal =
+          NullPrincipal::CreateWithInheritedAttributes(subjectPrincipal);
+    } else {
+      // Finally, if there's an opener relationship and it's not a special
+      // principal, we should inherit that principal for the new window.
+      newWindowPrincipal = subjectPrincipal;
+    }
+  }
 
   // Information used when opening new content windows. This object will be
   // passed through to the inner nsFrameLoader.
@@ -840,14 +868,12 @@ nsresult nsWindowWatcher::OpenWindowInternal(
     // want it to match the current remoteness.
     openWindowInfo->mIsRemote = XRE_IsContentProcess();
 
-    // If we have a non-system non-expanded subject principal, we can inherit
-    // our OriginAttributes from it.
-    if (!nsContentUtils::IsSystemOrExpandedPrincipal(subjectPrincipal)) {
-      openWindowInfo->mOriginAttributes =
-          subjectPrincipal->OriginAttributesRef();
-    } else if (parentBC) {
-      openWindowInfo->mOriginAttributes = parentBC->OriginAttributesRef();
-    }
+    // Inherit our OriginAttributes from the computed new window principal.
+    MOZ_ASSERT(
+        newWindowPrincipal &&
+        !nsContentUtils::IsSystemOrExpandedPrincipal(newWindowPrincipal));
+    openWindowInfo->mOriginAttributes =
+        newWindowPrincipal->OriginAttributesRef();
 
     MOZ_DIAGNOSTIC_ASSERT(
         !parentBC || openWindowInfo->mOriginAttributes.EqualsIgnoringFPD(
@@ -1132,13 +1158,10 @@ nsresult nsWindowWatcher::OpenWindowInternal(
   // sync nature of javascript: loads.
 
   if (windowIsNew) {
-    if (subjectPrincipal &&
-        !nsContentUtils::IsSystemOrExpandedPrincipal(subjectPrincipal) &&
-        newBC->IsContent()) {
-      MOZ_DIAGNOSTIC_ASSERT(
-          subjectPrincipal->OriginAttributesRef().EqualsIgnoringFPD(
-              newBC->OriginAttributesRef()));
-    }
+    MOZ_DIAGNOSTIC_ASSERT(
+        !newBC->IsContent() ||
+        newWindowPrincipal->OriginAttributesRef().EqualsIgnoringFPD(
+            newBC->OriginAttributesRef()));
 
     bool autoPrivateBrowsing =
         Preferences::GetBool("browser.privatebrowsing.autostart");
@@ -1175,7 +1198,7 @@ nsresult nsWindowWatcher::OpenWindowInternal(
       MOZ_ASSERT(windowIsNew);
       MOZ_ASSERT(!win->GetSameProcessOpener() ||
                  win->GetSameProcessOpener() == aParent);
-      win->SetInitialPrincipal(subjectPrincipal, cspToInheritForAboutBlank,
+      win->SetInitialPrincipal(newWindowPrincipal, cspToInheritForAboutBlank,
                                coepToInheritForAboutBlank);
 
       if (aIsPopupSpam) {
@@ -1296,13 +1319,21 @@ nsresult nsWindowWatcher::OpenWindowInternal(
   }
 
   if (uriToLoad && aNavigate) {
-    // XXXBFCache Per spec this should effectively use
-    // LOAD_FLAGS_DISALLOW_INHERIT_PRINCIPAL when noopener is passed to
-    // window.open(). Bug 1694993.
-    loadState->SetLoadFlags(
-        windowIsNew
-            ? static_cast<uint32_t>(nsIWebNavigation::LOAD_FLAGS_FIRST_LOAD)
-            : static_cast<uint32_t>(nsIWebNavigation::LOAD_FLAGS_NONE));
+    uint32_t loadFlags = nsIWebNavigation::LOAD_FLAGS_NONE;
+    if (windowIsNew) {
+      loadFlags |= nsIWebNavigation::LOAD_FLAGS_FIRST_LOAD;
+
+      // Per spec, the explicit navigation to about:blank after the initial
+      // about:blank document in a new window does not occur, so there is no
+      // opportunity for it to inherit the source document's principal. This
+      // doesn't perfectly model this, as a noopener creation of `about:blank`
+      // will replace the global due to a principal mismatch, but it should be
+      // unobservable (bug 1694993).
+      if (aForceNoOpener) {
+        loadFlags |= nsIWebNavigation::LOAD_FLAGS_DISALLOW_INHERIT_PRINCIPAL;
+      }
+    }
+    loadState->SetLoadFlags(loadFlags);
     loadState->SetFirstParty(true);
 
     // Should this pay attention to errors returned by LoadURI?
