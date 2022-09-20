@@ -383,6 +383,7 @@ function _observeRender(container) {
 async function _loadConfig() {
   await lazy.ASRouter.waitForInitialized;
   let result = await lazy.ASRouter.sendTriggerMessage({
+    browser: window.docShell.chromeEventHandler,
     // triggerId and triggerContext
     id: "featureCalloutCheck",
     context: { source: document.location.pathname.toLowerCase() },

@@ -67,6 +67,86 @@ function add24HourImpressionJEXLTargeting(
 const MESSAGES = () => {
   let messages = [
     {
+      id: "FIREFOX_VIEW_SPOTLIGHT",
+      template: "spotlight",
+      content: {
+        id: "FIREFOX_VIEW_PROMO",
+        template: "multistage",
+        modal: "tab",
+        screens: [
+          {
+            id: "DEFAULT_MODAL_UI",
+            content: {
+              title: {
+                fontSize: "32px",
+                fontWeight: 400,
+                string_id: "firefoxview-spotlight-promo-title",
+              },
+              subtitle: {
+                fontSize: "15px",
+                fontWeight: 400,
+                marginBlock: "10px",
+                marginInline: "40px",
+                string_id: "firefoxview-spotlight-promo-subtitle",
+              },
+              logo: { height: "48px" },
+              primary_button: {
+                label: {
+                  string_id: "firefoxview-spotlight-promo-primarybutton",
+                },
+                action: {
+                  type: "SET_PREF",
+                  data: {
+                    pref: {
+                      name: FIREFOX_VIEW_PREF,
+                      value: JSON.stringify({
+                        message: "FIREFOX_VIEW_FEATURE_TOUR",
+                        screen: "FEATURE_CALLOUT_1",
+                        complete: false,
+                      }),
+                    },
+                  },
+                  navigate: true,
+                },
+              },
+              secondary_button: {
+                label: {
+                  string_id: "firefoxview-spotlight-promo-secondarybutton",
+                },
+                action: {
+                  type: "SET_PREF",
+                  data: {
+                    pref: {
+                      name: FIREFOX_VIEW_PREF,
+                      value: JSON.stringify({
+                        message: "FIREFOX_VIEW_FEATURE_TOUR",
+                        screen: "",
+                        complete: true,
+                      }),
+                    },
+                  },
+                  navigate: true,
+                },
+              },
+            },
+          },
+        ],
+      },
+      priority: 1,
+      frequency: {
+        lifetime: 1,
+      },
+      trigger: {
+        id: "featureCalloutCheck",
+      },
+      targeting: `!inMr2022Holdback && source == "firefoxview" &&
+       !'browser.newtabpage.activity-stream.asrouter.providers.cfr'|preferenceIsUserSet &&
+       ${matchCurrentScreenTargeting(
+         FIREFOX_VIEW_PREF,
+         "FIREFOX_VIEW_SPOTLIGHT"
+       )}`,
+    },
+    {
       id: "FIREFOX_VIEW_FEATURE_TOUR_1",
       template: "feature_callout",
       content: {
