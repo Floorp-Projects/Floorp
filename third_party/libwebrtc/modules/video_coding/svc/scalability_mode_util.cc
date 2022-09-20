@@ -139,4 +139,47 @@ absl::string_view ScalabilityModeToString(ScalabilityMode scalability_mode) {
   RTC_CHECK_NOTREACHED();
 }
 
+int ScalabilityModeToNumTemporalLayers(ScalabilityMode scalability_mode) {
+  switch (scalability_mode) {
+    case ScalabilityMode::kL1T1:
+      return 1;
+    case ScalabilityMode::kL1T2:
+    case ScalabilityMode::kL1T2h:
+      return 2;
+    case ScalabilityMode::kL1T3:
+    case ScalabilityMode::kL1T3h:
+      return 3;
+    case ScalabilityMode::kL2T1:
+    case ScalabilityMode::kL2T1h:
+    case ScalabilityMode::kL2T1_KEY:
+      return 1;
+    case ScalabilityMode::kL2T2:
+    case ScalabilityMode::kL2T2h:
+    case ScalabilityMode::kL2T2_KEY:
+    case ScalabilityMode::kL2T2_KEY_SHIFT:
+      return 2;
+    case ScalabilityMode::kL2T3:
+    case ScalabilityMode::kL2T3h:
+    case ScalabilityMode::kL2T3_KEY:
+      return 3;
+    case ScalabilityMode::kL3T1:
+    case ScalabilityMode::kL3T1h:
+    case ScalabilityMode::kL3T1_KEY:
+      return 1;
+    case ScalabilityMode::kL3T2:
+    case ScalabilityMode::kL3T2h:
+    case ScalabilityMode::kL3T2_KEY:
+      return 2;
+    case ScalabilityMode::kL3T3:
+    case ScalabilityMode::kL3T3h:
+    case ScalabilityMode::kL3T3_KEY:
+      return 3;
+    case ScalabilityMode::kS2T1:
+      return 1;
+    case ScalabilityMode::kS3T3:
+      return 3;
+  }
+  RTC_CHECK_NOTREACHED();
+}
+
 }  // namespace webrtc

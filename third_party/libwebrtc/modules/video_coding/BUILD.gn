@@ -287,6 +287,7 @@ rtc_library("video_coding") {
     ":timing",
     ":video_codec_interface",
     ":video_coding_utility",
+    ":webrtc_vp8_scalability",
     ":webrtc_vp9_helpers",
     "..:module_api",
     "..:module_api_public",
@@ -348,6 +349,7 @@ rtc_library("video_coding") {
     "../rtp_rtcp:rtp_rtcp_format",
     "../rtp_rtcp:rtp_video_header",
     "codecs/av1:av1_svc_config",
+    "svc:scalability_mode_util",
   ]
   absl_deps = [
     "//third_party/abseil-cpp/absl/base:core_headers",
@@ -664,6 +666,7 @@ rtc_library("webrtc_vp8") {
     ":video_codec_interface",
     ":video_coding_utility",
     ":webrtc_libvpx_interface",
+    ":webrtc_vp8_scalability",
     ":webrtc_vp8_temporal_layers",
     "../../api:fec_controller_api",
     "../../api:scoped_refptr",
@@ -684,6 +687,7 @@ rtc_library("webrtc_vp8") {
     "../../rtc_base/experiments:rate_control_settings",
     "../../system_wrappers:field_trial",
     "../../system_wrappers:metrics",
+    "svc:scalability_mode_util",
     #"//third_party/libyuv",
   ]
   absl_deps = [
