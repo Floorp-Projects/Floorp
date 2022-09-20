@@ -86,6 +86,19 @@ class Realm {
   }
 
   /**
+   * Ensure the provided object can be used within this realm.
+
+   * @param {Object} object
+   *     Any non-primitive object.
+
+   * @return {Object}
+   *     An object usable in the current realm.
+   */
+  cloneIntoRealm(obj) {
+    return obj;
+  }
+
+  /**
    * Remove the reference corresponding to the provided unique handle.
    *
    * @param {string} handle
@@ -187,16 +200,8 @@ class WindowRealm extends Realm {
     return this.#window.origin;
   }
 
-  #cloneAsDebuggerObject(obj) {
-    // To use an object created in the priviledged Debugger compartment from
-    // the content compartment, we need to first clone it into the target
-    // compartment and then retrieve the corresponding Debugger.Object wrapper.
-    const proxyObject = Cu.cloneInto(
-      obj,
-      this.#globalObjectReference.unsafeDereference()
-    );
-
-    return this.#globalObjectReference.makeDebuggeeValue(proxyObject);
+  #createDebuggerObject(obj) {
+    return this.#globalObjectReference.makeDebuggeeValue(obj);
   }
 
   #createSandbox() {
@@ -209,6 +214,20 @@ class WindowRealm extends Realm {
     };
 
     return new Cu.Sandbox(win, opts);
+  }
+
+  /**
+   * Clone the provided object into the scope of this Realm (either a window
+   * global, or a sandbox).
+   *
+   * @param {Object} obj
+   *     Any non-primitive object.
+   *
+   * @return {Object}
+   *     The cloned object.
+   */
+  cloneIntoRealm(obj) {
+    return Cu.cloneInto(obj, this.#globalObject);
   }
 
   /**
@@ -254,11 +273,16 @@ class WindowRealm extends Realm {
   ) {
     const expression = `(${functionDeclaration}).apply(__bidi_this, __bidi_args)`;
 
+    const args = this.cloneIntoRealm([]);
+    for (const arg of functionArguments) {
+      args.push(arg);
+    }
+
     return this.#globalObjectReference.executeInGlobalWithBindings(
       expression,
       {
-        __bidi_args: this.#cloneAsDebuggerObject(functionArguments),
-        __bidi_this: this.#cloneAsDebuggerObject(thisParameter),
+        __bidi_args: this.#createDebuggerObject(args),
+        __bidi_this: this.#createDebuggerObject(thisParameter),
       },
       {
         url: this.#window.document.baseURI,
