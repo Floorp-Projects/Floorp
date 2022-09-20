@@ -986,6 +986,13 @@ StyleGenericFontFamily Gecko_nsStyleFont_ComputeFallbackFontTypeForLanguage(
   return ThreadSafeGetLangGroupFontPrefs(*aDoc, aLanguage)->GetDefaultGeneric();
 }
 
+Length Gecko_GetBaseSize(const Document* aDoc, nsAtom* aLang,
+                         StyleGenericFontFamily aGeneric) {
+  return ThreadSafeGetLangGroupFontPrefs(*aDoc, aLang)
+      ->GetDefaultFont(aGeneric)
+      ->size;
+}
+
 gfxFontFeatureValueSet* Gecko_ConstructFontFeatureValueSet() {
   return new gfxFontFeatureValueSet();
 }
@@ -1320,17 +1327,6 @@ Length Gecko_nsStyleFont_ComputeMinSize(const nsStyleFont* aFont,
   return minFontSize;
 }
 
-StyleDefaultFontSizes Gecko_GetBaseSize(nsAtom* aLanguage) {
-  LangGroupFontPrefs prefs;
-  nsStaticAtom* langGroupAtom =
-      StaticPresData::Get()->GetUncachedLangGroup(aLanguage);
-  prefs.Initialize(langGroupAtom);
-  return {prefs.mDefaultVariableFont.size,  prefs.mDefaultSerifFont.size,
-          prefs.mDefaultSansSerifFont.size, prefs.mDefaultMonospaceFont.size,
-          prefs.mDefaultCursiveFont.size,   prefs.mDefaultFantasyFont.size,
-          prefs.mDefaultSystemUiFont.size};
-}
-
 static StaticRefPtr<UACacheReporter> gUACacheReporter;
 
 namespace mozilla {
@@ -1385,8 +1381,6 @@ GeckoFontMetrics Gecko_GetFontMetrics(const nsPresContext* aPresContext,
   // ArrayBuffer-backed FontFace objects are handled synchronously.
 
   nsPresContext* presContext = const_cast<nsPresContext*>(aPresContext);
-  presContext->SetUsesFontMetricDependentFontUnits(true);
-
   RefPtr<nsFontMetrics> fm = nsLayoutUtils::GetMetricsFor(
       presContext, aIsVertical, aFont, aFontSize, aUseUserFontSet);
   RefPtr<gfxFont> font = fm->GetThebesFontGroup()->GetFirstValidFont();

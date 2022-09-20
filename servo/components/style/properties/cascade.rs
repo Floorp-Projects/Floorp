@@ -8,7 +8,7 @@ use crate::applicable_declarations::CascadePriority;
 use crate::context::QuirksMode;
 use crate::custom_properties::CustomPropertiesBuilder;
 use crate::dom::TElement;
-use crate::font_metrics::{FontMetricsProvider, FontMetricsOrientation};
+use crate::font_metrics::FontMetricsOrientation;
 use crate::values::specified::length::FontBaseSize;
 use crate::logical_geometry::WritingMode;
 use crate::media_queries::Device;
@@ -60,7 +60,6 @@ pub fn cascade<E>(
     parent_style_ignoring_first_line: Option<&ComputedValues>,
     layout_parent_style: Option<&ComputedValues>,
     visited_rules: Option<&StrongRuleNode>,
-    font_metrics_provider: &dyn FontMetricsProvider,
     quirks_mode: QuirksMode,
     rule_cache: Option<&RuleCache>,
     rule_cache_conditions: &mut RuleCacheConditions,
@@ -77,7 +76,6 @@ where
         parent_style,
         parent_style_ignoring_first_line,
         layout_parent_style,
-        font_metrics_provider,
         CascadeMode::Unvisited { visited_rules },
         quirks_mode,
         rule_cache,
@@ -177,7 +175,6 @@ fn cascade_rules<E>(
     parent_style: Option<&ComputedValues>,
     parent_style_ignoring_first_line: Option<&ComputedValues>,
     layout_parent_style: Option<&ComputedValues>,
-    font_metrics_provider: &dyn FontMetricsProvider,
     cascade_mode: CascadeMode,
     quirks_mode: QuirksMode,
     rule_cache: Option<&RuleCache>,
@@ -200,7 +197,6 @@ where
         parent_style,
         parent_style_ignoring_first_line,
         layout_parent_style,
-        font_metrics_provider,
         cascade_mode,
         quirks_mode,
         rule_cache,
@@ -236,7 +232,6 @@ pub fn apply_declarations<'a, E, I>(
     parent_style: Option<&ComputedValues>,
     parent_style_ignoring_first_line: Option<&ComputedValues>,
     layout_parent_style: Option<&ComputedValues>,
-    font_metrics_provider: &dyn FontMetricsProvider,
     cascade_mode: CascadeMode,
     quirks_mode: QuirksMode,
     rule_cache: Option<&RuleCache>,
@@ -301,7 +296,6 @@ where
         for_smil_animation: false,
         for_non_inherited_property: None,
         container_info: None,
-        font_metrics_provider,
         quirks_mode,
         rule_cache_conditions: RefCell::new(rule_cache_conditions),
     };
@@ -760,7 +754,6 @@ impl<'a, 'b: 'a> Cascade<'a, 'b> {
             visited_parent!(parent_style),
             visited_parent!(parent_style_ignoring_first_line),
             visited_parent!(layout_parent_style),
-            self.context.font_metrics_provider,
             CascadeMode::Visited { writing_mode },
             self.context.quirks_mode,
             // The rule cache doesn't care about caching :visited
@@ -1135,13 +1128,12 @@ impl<'a, 'b: 'a> Cascade<'a, 'b> {
                 SCALE_FACTOR_WHEN_INCREMENTING_MATH_DEPTH_BY_ONE {
                 (parent_font.mScriptSizeMultiplier as f32).powi(delta as i32)
             } else {
-                builder.add_flags(ComputedValueFlags::DEPENDS_ON_SELF_FONT_METRICS);
                 // Script scale factors are independent of orientation.
-                let font_metrics = self.context
-                    .font_metrics_provider
-                    .query(self.context, FontBaseSize::InheritedStyle,
-                           FontMetricsOrientation::Horizontal,
-                           true /* retrieve_math_scales */);
+                let font_metrics = self.context.query_font_metrics(
+                    FontBaseSize::InheritedStyle,
+                    FontMetricsOrientation::Horizontal,
+                    /* retrieve_math_scales = */ true,
+                );
                 scale_factor_for_math_depth_change(
                     parent_font.mMathDepth as i32,
                     font.mMathDepth as i32,
