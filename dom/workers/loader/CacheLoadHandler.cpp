@@ -405,8 +405,10 @@ void CacheLoadHandler::ResolvedCallback(JSContext* aCx,
     mLoadContext->mCacheStatus = WorkerLoadContext::Cached;
 
     if (mLoader->IsCancelled()) {
-      mLoadContext->GetCacheCreator()->DeleteCache(
-          mLoader->mCancelMainThread.ref());
+      auto cacheCreator = mLoadContext->GetCacheCreator();
+      if (cacheCreator) {
+        cacheCreator->DeleteCache(mLoader->GetCancelResult());
+      }
       return;
     }
 
@@ -478,8 +480,10 @@ CacheLoadHandler::OnStreamComplete(nsIStreamLoader* aLoader,
   MOZ_ASSERT(mPrincipalInfo);
 
   if (mLoader->IsCancelled()) {
-    mLoadContext->GetCacheCreator()->DeleteCache(
-        mLoader->mCancelMainThread.ref());
+    auto cacheCreator = mLoadContext->GetCacheCreator();
+    if (cacheCreator) {
+      cacheCreator->DeleteCache(mLoader->GetCancelResult());
+    }
     return NS_OK;
   }
 
