@@ -264,8 +264,8 @@ def build_arm_neon(arm_arch):
     return arm_arch >= 7
 
 
-set_config("BUILD_ARM_NEON", build_arm_neon)
-set_define("BUILD_ARM_NEON", build_arm_neon)
+set_config("BUILD_ARM_NEON", True, when=build_arm_neon)
+set_define("BUILD_ARM_NEON", True, when=build_arm_neon)
 
 
 set_config("ARM_ARCH", depends(arm_target.arm_arch)(lambda x: str(x)))
