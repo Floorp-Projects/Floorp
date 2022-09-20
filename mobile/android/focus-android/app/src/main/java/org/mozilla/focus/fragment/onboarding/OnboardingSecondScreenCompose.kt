@@ -103,6 +103,7 @@ fun OnBoardingSecondScreenCompose(
             Text(
                 text = stringResource(
                     R.string.onboarding_second_screen_title,
+                    stringResource(R.string.onboarding_short_app_name),
                 ),
                 modifier = Modifier
                     .padding(top = 32.dp, start = 16.dp, end = 16.dp),
@@ -112,7 +113,6 @@ fun OnBoardingSecondScreenCompose(
             Text(
                 text = stringResource(
                     R.string.onboarding_second_screen_subtitle_one,
-                    stringResource(R.string.app_name),
                 ),
                 modifier = Modifier
                     .padding(top = 16.dp, start = 16.dp, end = 16.dp),
@@ -122,7 +122,7 @@ fun OnBoardingSecondScreenCompose(
             Text(
                 text = stringResource(
                     R.string.onboarding_second_screen_subtitle_two,
-                    stringResource(R.string.app_name),
+                    stringResource(R.string.onboarding_short_app_name),
                 ),
                 modifier = Modifier
                     .padding(top = 16.dp, start = 16.dp, end = 16.dp),
