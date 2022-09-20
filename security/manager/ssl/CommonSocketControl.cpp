@@ -12,7 +12,7 @@
 #include "SharedSSLState.h"
 #include "sslt.h"
 #include "ssl.h"
-#include "mozilla/StaticPrefs_network.h"
+#include "mozilla/net/SSLTokensCache.h"
 #include "nsICertOverrideService.h"
 #include "nsITlsHandshakeListener.h"
 
@@ -224,7 +224,10 @@ CommonSocketControl::IsAcceptableForHost(const nsACString& hostname,
 }
 
 void CommonSocketControl::RebuildCertificateInfoFromSSLTokenCache() {
-  if (!mSessionCacheInfo) {
+  nsAutoCString key;
+  GetPeerId(key);
+  mozilla::net::SessionCacheInfo info;
+  if (!mozilla::net::SSLTokensCache::GetSessionCacheInfo(key, info)) {
     MOZ_LOG(
         gPIPNSSLog, LogLevel::Debug,
         ("CommonSocketControl::RebuildCertificateInfoFromSSLTokenCache cannot "
@@ -232,7 +235,6 @@ void CommonSocketControl::RebuildCertificateInfoFromSSLTokenCache() {
     return;
   }
 
-  mozilla::net::SessionCacheInfo& info = *mSessionCacheInfo;
   nsCOMPtr<nsIX509Cert> cert(
       new nsNSSCertificate(std::move(info.mServerCertBytes)));
   SetServerCert(cert, info.mEVStatus);

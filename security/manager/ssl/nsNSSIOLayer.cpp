@@ -926,9 +926,7 @@ nsresult nsNSSSocketInfo::SetResumptionTokenFromExternalCache() {
     return rv;
   }
 
-  uint64_t tokenId = 0;
-  mozilla::net::SessionCacheInfo info;
-  rv = mozilla::net::SSLTokensCache::Get(peerId, token, info, &tokenId);
+  rv = mozilla::net::SSLTokensCache::Get(peerId, token);
   if (NS_FAILED(rv)) {
     if (rv == NS_ERROR_NOT_AVAILABLE) {
       // It's ok if we can't find the token.
@@ -941,7 +939,7 @@ nsresult nsNSSSocketInfo::SetResumptionTokenFromExternalCache() {
   SECStatus srv = SSL_SetResumptionToken(mFd, token.Elements(), token.Length());
   if (srv == SECFailure) {
     PRErrorCode error = PR_GetError();
-    mozilla::net::SSLTokensCache::Remove(peerId, tokenId);
+    mozilla::net::SSLTokensCache::Remove(peerId);
     MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
             ("Setting token failed with NSS error %d [id=%s]", error,
              PromiseFlatCString(peerId).get()));
@@ -954,8 +952,6 @@ nsresult nsNSSSocketInfo::SetResumptionTokenFromExternalCache() {
 
     return NS_ERROR_FAILURE;
   }
-
-  SetSessionCacheInfo(std::move(info));
 
   return NS_OK;
 }

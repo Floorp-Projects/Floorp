@@ -19,9 +19,6 @@ namespace net {
 static LazyLogModule gSSLTokensCacheLog("SSLTokensCache");
 #undef LOG
 #define LOG(args) MOZ_LOG(gSSLTokensCacheLog, mozilla::LogLevel::Debug, args)
-#undef LOG5_ENABLED
-#define LOG5_ENABLED() \
-  MOZ_LOG_TEST(mozilla::net::gSSLTokensCacheLog, mozilla::LogLevel::Verbose)
 
 class ExpirationComparator {
  public:
@@ -51,15 +48,6 @@ SessionCacheInfo SessionCacheInfo::Clone() const {
 
 StaticRefPtr<SSLTokensCache> SSLTokensCache::gInstance;
 StaticMutex SSLTokensCache::sLock;
-uint64_t SSLTokensCache::sRecordId = 0;
-
-SSLTokensCache::TokenCacheRecord::~TokenCacheRecord() {
-  if (!gInstance) {
-    return;
-  }
-
-  gInstance->OnRecordDestroyed(this);
-}
 
 uint32_t SSLTokensCache::TokenCacheRecord::Size() const {
   uint32_t size = mToken.Length() + sizeof(mSessionCacheInfo.mEVStatus) +
@@ -81,50 +69,6 @@ void SSLTokensCache::TokenCacheRecord::Reset() {
       nsITransportSecurityInfo::CERTIFICATE_TRANSPARENCY_NOT_APPLICABLE;
   mSessionCacheInfo.mServerCertBytes.Clear();
   mSessionCacheInfo.mSucceededCertChainBytes.reset();
-}
-
-uint32_t SSLTokensCache::TokenCacheEntry::Size() const {
-  uint32_t size = 0;
-  for (const auto& rec : mRecords) {
-    size += rec->Size();
-  }
-  return size;
-}
-
-void SSLTokensCache::TokenCacheEntry::AddRecord(
-    UniquePtr<SSLTokensCache::TokenCacheRecord>&& aRecord,
-    nsTArray<TokenCacheRecord*>& aExpirationArray) {
-  if (mRecords.Length() ==
-      StaticPrefs::network_ssl_tokens_cache_records_per_entry()) {
-    aExpirationArray.RemoveElement(mRecords[0].get());
-    mRecords.RemoveElementAt(0);
-  }
-
-  aExpirationArray.AppendElement(aRecord.get());
-  for (int32_t i = mRecords.Length() - 1; i >= 0; --i) {
-    if (aRecord->mExpirationTime > mRecords[i]->mExpirationTime) {
-      mRecords.InsertElementAt(i + 1, std::move(aRecord));
-      return;
-    }
-  }
-  mRecords.InsertElementAt(0, std::move(aRecord));
-}
-
-UniquePtr<SSLTokensCache::TokenCacheRecord>
-SSLTokensCache::TokenCacheEntry::RemoveWithId(uint64_t aId) {
-  for (int32_t i = mRecords.Length() - 1; i >= 0; --i) {
-    if (mRecords[i]->mId == aId) {
-      UniquePtr<TokenCacheRecord> record = std::move(mRecords[i]);
-      mRecords.RemoveElementAt(i);
-      return record;
-    }
-  }
-  return nullptr;
-}
-
-const UniquePtr<SSLTokensCache::TokenCacheRecord>&
-SSLTokensCache::TokenCacheEntry::Get() {
-  return mRecords[0];
 }
 
 NS_IMPL_ISUPPORTS(SSLTokensCache, nsIMemoryReporter)
@@ -260,53 +204,45 @@ nsresult SSLTokensCache::Put(const nsACString& aKey, const uint8_t* aToken,
     return rv;
   }
 
-  auto makeUniqueRecord = [&]() {
-    auto rec = MakeUnique<TokenCacheRecord>();
-    rec->mKey = aKey;
-    rec->mExpirationTime = aExpirationTime;
-    MOZ_ASSERT(rec->mToken.IsEmpty());
-    rec->mToken.AppendElements(aToken, aTokenLen);
-    rec->mId = ++sRecordId;
-    rec->mSessionCacheInfo.mServerCertBytes = std::move(certBytes);
-
-    rec->mSessionCacheInfo.mSucceededCertChainBytes =
-        succeededCertChainBytes
-            ? Some(TransformIntoNewArray(
-                  *succeededCertChainBytes,
-                  [](auto& element) { return nsTArray(std::move(element)); }))
-            : Nothing();
-
-    if (isEV) {
-      rec->mSessionCacheInfo.mEVStatus = psm::EVStatus::EV;
-    }
-
-    rec->mSessionCacheInfo.mCertificateTransparencyStatus =
-        certificateTransparencyStatus;
-
-    rec->mSessionCacheInfo.mIsBuiltCertChainRootBuiltInRoot =
-        std::move(isBuiltCertChainRootBuiltInRoot);
-    return rec;
-  };
-
-  TokenCacheEntry* const cacheEntry =
+  TokenCacheRecord* const rec =
       gInstance->mTokenCacheRecords.WithEntryHandle(aKey, [&](auto&& entry) {
         if (!entry) {
-          auto rec = makeUniqueRecord();
-          auto cacheEntry = MakeUnique<TokenCacheEntry>();
-          cacheEntry->AddRecord(std::move(rec), gInstance->mExpirationArray);
-          entry.Insert(std::move(cacheEntry));
+          auto rec = MakeUnique<TokenCacheRecord>();
+          rec->mKey = aKey;
+          gInstance->mExpirationArray.AppendElement(rec.get());
+          entry.Insert(std::move(rec));
         } else {
-          // To make sure the cache size is synced, we take away the size of
-          // whole entry and add it back later.
           gInstance->mCacheSize -= entry.Data()->Size();
-          entry.Data()->AddRecord(makeUniqueRecord(),
-                                  gInstance->mExpirationArray);
+          entry.Data()->Reset();
         }
 
         return entry->get();
       });
 
-  gInstance->mCacheSize += cacheEntry->Size();
+  rec->mExpirationTime = aExpirationTime;
+  MOZ_ASSERT(rec->mToken.IsEmpty());
+  rec->mToken.AppendElements(aToken, aTokenLen);
+
+  rec->mSessionCacheInfo.mServerCertBytes = std::move(certBytes);
+
+  rec->mSessionCacheInfo.mSucceededCertChainBytes =
+      succeededCertChainBytes
+          ? Some(TransformIntoNewArray(
+                *succeededCertChainBytes,
+                [](auto& element) { return nsTArray(std::move(element)); }))
+          : Nothing();
+
+  if (isEV) {
+    rec->mSessionCacheInfo.mEVStatus = psm::EVStatus::EV;
+  }
+
+  rec->mSessionCacheInfo.mCertificateTransparencyStatus =
+      certificateTransparencyStatus;
+
+  rec->mSessionCacheInfo.mIsBuiltCertChainRootBuiltInRoot =
+      std::move(isBuiltCertChainRootBuiltInRoot);
+
+  gInstance->mCacheSize += rec->Size();
 
   gInstance->LogStats();
 
@@ -316,8 +252,8 @@ nsresult SSLTokensCache::Put(const nsACString& aKey, const uint8_t* aToken,
 }
 
 // static
-nsresult SSLTokensCache::Get(const nsACString& aKey, nsTArray<uint8_t>& aToken,
-                             SessionCacheInfo& aResult, uint64_t* aTokenId) {
+nsresult SSLTokensCache::Get(const nsACString& aKey,
+                             nsTArray<uint8_t>& aToken) {
   StaticMutexAutoLock lock(sLock);
 
   LOG(("SSLTokensCache::Get [key=%s]", PromiseFlatCString(aKey).get()));
@@ -327,38 +263,13 @@ nsresult SSLTokensCache::Get(const nsACString& aKey, nsTArray<uint8_t>& aToken,
     return NS_ERROR_NOT_INITIALIZED;
   }
 
-  return gInstance->GetLocked(aKey, aToken, aResult, aTokenId);
-}
+  TokenCacheRecord* rec = nullptr;
 
-nsresult SSLTokensCache::GetLocked(const nsACString& aKey,
-                                   nsTArray<uint8_t>& aToken,
-                                   SessionCacheInfo& aResult,
-                                   uint64_t* aTokenId) {
-  sLock.AssertCurrentThreadOwns();
-
-  TokenCacheEntry* cacheEntry = nullptr;
-
-  if (mTokenCacheRecords.Get(aKey, &cacheEntry)) {
-    if (cacheEntry->RecordCount() == 0) {
-      MOZ_ASSERT(false, "Found a cacheEntry with no records");
-      mTokenCacheRecords.Remove(aKey);
-      return NS_ERROR_NOT_AVAILABLE;
+  if (gInstance->mTokenCacheRecords.Get(aKey, &rec)) {
+    if (rec->mToken.Length()) {
+      aToken = rec->mToken.Clone();
+      return NS_OK;
     }
-
-    const UniquePtr<TokenCacheRecord>& rec = cacheEntry->Get();
-    aToken = rec->mToken.Clone();
-    aResult = rec->mSessionCacheInfo.Clone();
-    if (aTokenId) {
-      *aTokenId = rec->mId;
-    }
-    if (StaticPrefs::network_ssl_tokens_cache_use_only_once()) {
-      mCacheSize -= rec->Size();
-      cacheEntry->RemoveWithId(rec->mId);
-      if (cacheEntry->RecordCount() == 0) {
-        mTokenCacheRecords.Remove(aKey);
-      }
-    }
-    return NS_OK;
   }
 
   LOG(("  token not found"));
@@ -366,7 +277,31 @@ nsresult SSLTokensCache::GetLocked(const nsACString& aKey,
 }
 
 // static
-nsresult SSLTokensCache::Remove(const nsACString& aKey, uint64_t aId) {
+bool SSLTokensCache::GetSessionCacheInfo(const nsACString& aKey,
+                                         SessionCacheInfo& aResult) {
+  StaticMutexAutoLock lock(sLock);
+
+  LOG(("SSLTokensCache::GetSessionCacheInfo [key=%s]",
+       PromiseFlatCString(aKey).get()));
+
+  if (!gInstance) {
+    LOG(("  service not initialized"));
+    return false;
+  }
+
+  TokenCacheRecord* rec = nullptr;
+
+  if (gInstance->mTokenCacheRecords.Get(aKey, &rec)) {
+    aResult = rec->mSessionCacheInfo.Clone();
+    return true;
+  }
+
+  LOG(("  token not found"));
+  return false;
+}
+
+// static
+nsresult SSLTokensCache::Remove(const nsACString& aKey) {
   StaticMutexAutoLock lock(sLock);
 
   LOG(("SSLTokensCache::Remove [key=%s]", PromiseFlatCString(aKey).get()));
@@ -376,73 +311,31 @@ nsresult SSLTokensCache::Remove(const nsACString& aKey, uint64_t aId) {
     return NS_ERROR_NOT_INITIALIZED;
   }
 
-  return gInstance->RemoveLocked(aKey, aId);
+  return gInstance->RemoveLocked(aKey);
 }
 
-nsresult SSLTokensCache::RemoveLocked(const nsACString& aKey, uint64_t aId) {
+nsresult SSLTokensCache::RemoveLocked(const nsACString& aKey) {
   sLock.AssertCurrentThreadOwns();
 
-  LOG(("SSLTokensCache::RemoveLocked [key=%s, id=%" PRIu64 "]",
-       PromiseFlatCString(aKey).get(), aId));
+  LOG(("SSLTokensCache::RemoveLocked [key=%s]",
+       PromiseFlatCString(aKey).get()));
 
-  TokenCacheEntry* cacheEntry;
-  if (!mTokenCacheRecords.Get(aKey, &cacheEntry)) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
+  UniquePtr<TokenCacheRecord> rec;
 
-  UniquePtr<TokenCacheRecord> rec = cacheEntry->RemoveWithId(aId);
-  if (!rec) {
+  if (!mTokenCacheRecords.Remove(aKey, &rec)) {
+    LOG(("  token not found"));
     return NS_ERROR_NOT_AVAILABLE;
   }
 
   mCacheSize -= rec->Size();
-  if (cacheEntry->RecordCount() == 0) {
-    mTokenCacheRecords.Remove(aKey);
-  }
 
-  // Release the record immediately, so mExpirationArray can be also updated.
-  rec = nullptr;
+  if (!mExpirationArray.RemoveElement(rec.get())) {
+    MOZ_ASSERT(false, "token not found in mExpirationArray");
+  }
 
   LogStats();
 
   return NS_OK;
-}
-
-// static
-nsresult SSLTokensCache::RemoveAll(const nsACString& aKey) {
-  StaticMutexAutoLock lock(sLock);
-
-  LOG(("SSLTokensCache::RemoveAll [key=%s]", PromiseFlatCString(aKey).get()));
-
-  if (!gInstance) {
-    LOG(("  service not initialized"));
-    return NS_ERROR_NOT_INITIALIZED;
-  }
-
-  return gInstance->RemovAllLocked(aKey);
-}
-
-nsresult SSLTokensCache::RemovAllLocked(const nsACString& aKey) {
-  sLock.AssertCurrentThreadOwns();
-
-  LOG(("SSLTokensCache::RemovAllLocked [key=%s]",
-       PromiseFlatCString(aKey).get()));
-
-  UniquePtr<TokenCacheEntry> cacheEntry;
-  if (!mTokenCacheRecords.Remove(aKey, &cacheEntry)) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
-
-  mCacheSize -= cacheEntry->Size();
-  cacheEntry = nullptr;
-
-  LogStats();
-
-  return NS_OK;
-}
-
-void SSLTokensCache::OnRecordDestroyed(TokenCacheRecord* aRec) {
-  mExpirationArray.RemoveElement(aRec);
 }
 
 void SSLTokensCache::EvictIfNecessary() {
@@ -457,23 +350,17 @@ void SSLTokensCache::EvictIfNecessary() {
   mExpirationArray.Sort(ExpirationComparator());
 
   while (mCacheSize > capacity && mExpirationArray.Length() > 0) {
-    DebugOnly<nsresult> rv =
-        RemoveLocked(mExpirationArray[0]->mKey, mExpirationArray[0]->mId);
-    MOZ_ASSERT(NS_SUCCEEDED(rv),
-               "mExpirationArray and mTokenCacheRecords are out of sync!");
+    if (NS_FAILED(RemoveLocked(mExpirationArray[0]->mKey))) {
+      MOZ_ASSERT(false,
+                 "mExpirationArray and mTokenCacheRecords are out of sync!");
+      mExpirationArray.RemoveElementAt(0);
+    }
   }
 }
 
 void SSLTokensCache::LogStats() {
-  if (!LOG5_ENABLED()) {
-    return;
-  }
   LOG(("SSLTokensCache::LogStats [count=%zu, cacheSize=%u]",
        mExpirationArray.Length(), mCacheSize));
-  for (const auto& ent : mTokenCacheRecords.Values()) {
-    const UniquePtr<TokenCacheRecord>& rec = ent->Get();
-    LOG(("key=%s count=%d", rec->mKey.get(), ent->RecordCount()));
-  }
 }
 
 size_t SSLTokensCache::SizeOfIncludingThis(

@@ -7,8 +7,6 @@
 #ifndef CommonSocketControl_h
 #define CommonSocketControl_h
 
-#include "mozilla/Maybe.h"
-#include "mozilla/net/SSLTokensCache.h"
 #include "nsISSLSocketControl.h"
 #include "TransportSecurityInfo.h"
 
@@ -22,16 +20,10 @@ class CommonSocketControl : public mozilla::psm::TransportSecurityInfo,
 
   uint32_t GetProviderFlags() const { return mProviderFlags; }
   void SetSSLVersionUsed(int16_t version) { mSSLVersionUsed = version; }
-  void SetSessionCacheInfo(mozilla::net::SessionCacheInfo&& aInfo) {
-    mSessionCacheInfo.reset();
-    mSessionCacheInfo.emplace(std::move(aInfo));
-  }
   void RebuildCertificateInfoFromSSLTokenCache();
 
  protected:
   ~CommonSocketControl() = default;
-
-  mozilla::Maybe<mozilla::net::SessionCacheInfo> mSessionCacheInfo;
   bool mHandshakeCompleted;
   bool mJoined;
   bool mSentClientCert;
