@@ -740,7 +740,7 @@ app_opened:
   browse_intent:
     type: event
     description: |
-      The user has opened the app using launcher website shortcut
+      App was opened from a browse intent.
     bugs:
       - https://github.com/mozilla-mobile/focus-android/issues/5547
     data_reviews:
@@ -753,7 +753,7 @@ app_opened:
   text_selection_intent:
     type: event
     description: |
-      The user has opened the app using launcher website shortcut
+      App was opened from a text selection intent.
     bugs:
       - https://github.com/mozilla-mobile/focus-android/issues/5547
     data_reviews:
@@ -766,7 +766,7 @@ app_opened:
   share_intent:
     type: event
     description: |
-      The user has opened the app using launcher website shortcut
+      App was opened from a share intent.
     bugs:
       - https://github.com/mozilla-mobile/focus-android/issues/5547
     data_reviews:
