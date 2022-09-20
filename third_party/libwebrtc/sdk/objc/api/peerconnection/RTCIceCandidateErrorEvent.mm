@@ -10,7 +10,7 @@
 
 #import "RTCIceCandidateErrorEvent+Private.h"
 
-#import "helpers/NSString+RTCStdString.h"
+#import "helpers/NSString+StdString.h"
 
 @implementation RTC_OBJC_TYPE (RTCIceCandidateErrorEvent)
 
@@ -30,11 +30,11 @@
                       errorCode:(const int)errorCode
                       errorText:(const std::string&)errorText {
   if (self = [self init]) {
-    _address = [NSString rtc_stringForStdString:address];
+    _address = [NSString stringForStdString:address];
     _port = port;
-    _url = [NSString rtc_stringForStdString:url];
+    _url = [NSString stringForStdString:url];
     _errorCode = errorCode;
-    _errorText = [NSString rtc_stringForStdString:errorText];
+    _errorText = [NSString stringForStdString:errorText];
   }
   return self;
 }

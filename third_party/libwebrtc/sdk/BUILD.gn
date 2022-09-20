@@ -138,10 +138,10 @@ if (is_ios || is_mac) {
 
   rtc_library("helpers_objc") {
     sources = [
-      "objc/helpers/AVCaptureSession+RTCDevicePosition.h",
-      "objc/helpers/AVCaptureSession+RTCDevicePosition.mm",
-      "objc/helpers/NSString+RTCStdString.h",
-      "objc/helpers/NSString+RTCStdString.mm",
+      "objc/helpers/AVCaptureSession+DevicePosition.h",
+      "objc/helpers/AVCaptureSession+DevicePosition.mm",
+      "objc/helpers/NSString+StdString.h",
+      "objc/helpers/NSString+StdString.mm",
       "objc/helpers/RTCDispatcher+Private.h",
       "objc/helpers/RTCDispatcher.h",
       "objc/helpers/RTCDispatcher.m",
@@ -650,8 +650,8 @@ if (is_ios || is_mac) {
       ]
       if (is_ios) {
         sources += [
-          "objc/components/video_codec/UIDevice+RTCH264Profile.h",
-          "objc/components/video_codec/UIDevice+RTCH264Profile.mm",
+          "objc/components/video_codec/UIDevice+H264Profile.h",
+          "objc/components/video_codec/UIDevice+H264Profile.mm",
         ]
       }
 

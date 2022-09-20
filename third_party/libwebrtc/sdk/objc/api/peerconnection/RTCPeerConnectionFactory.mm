@@ -24,7 +24,7 @@
 #import "base/RTCLogging.h"
 #import "base/RTCVideoDecoderFactory.h"
 #import "base/RTCVideoEncoderFactory.h"
-#import "helpers/NSString+RTCStdString.h"
+#import "helpers/NSString+StdString.h"
 #include "rtc_base/checks.h"
 #include "sdk/objc/native/api/network_monitor_factory.h"
 #include "sdk/objc/native/api/ssl_certificate_verifier.h"

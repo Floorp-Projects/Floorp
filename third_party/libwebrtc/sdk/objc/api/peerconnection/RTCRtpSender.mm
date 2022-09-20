@@ -15,7 +15,7 @@
 #import "RTCRtpParameters+Private.h"
 #import "RTCRtpSender+Native.h"
 #import "base/RTCLogging.h"
-#import "helpers/NSString+RTCStdString.h"
+#import "helpers/NSString+StdString.h"
 
 #include "api/media_stream_interface.h"
 
@@ -27,7 +27,7 @@
 @synthesize dtmfSender = _dtmfSender;
 
 - (NSString *)senderId {
-  return [NSString rtc_stringForStdString:_nativeRtpSender->id()];
+  return [NSString stringForStdString:_nativeRtpSender->id()];
 }
 
 - (RTC_OBJC_TYPE(RTCRtpParameters) *)parameters {
@@ -61,7 +61,7 @@
   std::vector<std::string> nativeStreamIds = _nativeRtpSender->stream_ids();
   NSMutableArray *streamIds = [NSMutableArray arrayWithCapacity:nativeStreamIds.size()];
   for (const auto &s : nativeStreamIds) {
-    [streamIds addObject:[NSString rtc_stringForStdString:s]];
+    [streamIds addObject:[NSString stringForStdString:s]];
   }
   return streamIds;
 }

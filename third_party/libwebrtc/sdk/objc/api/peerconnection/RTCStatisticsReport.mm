@@ -10,7 +10,7 @@
 
 #import "RTCStatisticsReport+Private.h"
 
-#include "helpers/NSString+RTCStdString.h"
+#include "helpers/NSString+StdString.h"
 #include "rtc_base/checks.h"
 
 namespace webrtc {
@@ -33,7 +33,7 @@ NSObject *ValueFromStatsMember(const RTCStatsMemberInterface *member) {
       case RTCStatsMemberInterface::kDouble:
         return [NSNumber numberWithDouble:*member->cast_to<RTCStatsMember<double>>()];
       case RTCStatsMemberInterface::kString:
-        return [NSString rtc_stringForStdString:*member->cast_to<RTCStatsMember<std::string>>()];
+        return [NSString stringForStdString:*member->cast_to<RTCStatsMember<std::string>>()];
       case RTCStatsMemberInterface::kSequenceBool: {
         std::vector<bool> sequence = *member->cast_to<RTCStatsMember<std::vector<bool>>>();
         NSMutableArray *array = [NSMutableArray arrayWithCapacity:sequence.size()];
@@ -87,7 +87,7 @@ NSObject *ValueFromStatsMember(const RTCStatsMemberInterface *member) {
             *member->cast_to<RTCStatsMember<std::vector<std::string>>>();
         NSMutableArray<NSString *> *array = [NSMutableArray arrayWithCapacity:sequence.size()];
         for (const auto &item : sequence) {
-          [array addObject:[NSString rtc_stringForStdString:item]];
+          [array addObject:[NSString stringForStdString:item]];
         }
         return [array copy];
       }
@@ -97,7 +97,7 @@ NSObject *ValueFromStatsMember(const RTCStatsMemberInterface *member) {
         NSMutableDictionary<NSString *, NSNumber *> *dictionary =
             [NSMutableDictionary dictionaryWithCapacity:map.size()];
         for (const auto &item : map) {
-          dictionary[[NSString rtc_stringForStdString:item.first]] = @(item.second);
+          dictionary[[NSString stringForStdString:item.first]] = @(item.second);
         }
         return [dictionary copy];
       }
@@ -107,7 +107,7 @@ NSObject *ValueFromStatsMember(const RTCStatsMemberInterface *member) {
         NSMutableDictionary<NSString *, NSNumber *> *dictionary =
             [NSMutableDictionary dictionaryWithCapacity:map.size()];
         for (const auto &item : map) {
-          dictionary[[NSString rtc_stringForStdString:item.first]] = @(item.second);
+          dictionary[[NSString stringForStdString:item.first]] = @(item.second);
         }
         return [dictionary copy];
       }
@@ -129,7 +129,7 @@ NSObject *ValueFromStatsMember(const RTCStatsMemberInterface *member) {
 
 - (instancetype)initWithStatistics:(const webrtc::RTCStats &)statistics {
   if (self = [super init]) {
-    _id = [NSString rtc_stringForStdString:statistics.id()];
+    _id = [NSString stringForStdString:statistics.id()];
     _timestamp_us = statistics.timestamp_us();
     _type = [NSString stringWithCString:statistics.type() encoding:NSUTF8StringEncoding];
 

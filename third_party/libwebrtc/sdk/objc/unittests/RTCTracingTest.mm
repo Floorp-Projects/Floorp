@@ -16,7 +16,7 @@
 #include "rtc_base/gunit.h"
 
 #import "api/peerconnection/RTCTracing.h"
-#import "helpers/NSString+RTCStdString.h"
+#import "helpers/NSString+StdString.h"
 
 @interface RTCTracingTests : XCTestCase
 @end

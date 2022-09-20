@@ -13,7 +13,7 @@
 #import <Foundation/Foundation.h>
 #include <string.h>
 
-#import "sdk/objc/helpers/NSString+RTCStdString.h"
+#import "sdk/objc/helpers/NSString+StdString.h"
 
 #include "absl/strings/string_view.h"
 #include "rtc_base/checks.h"
@@ -26,20 +26,20 @@ namespace test {
 // therefore removes any prepended folders and uses only the actual file name.
 std::string IOSResourcePath(absl::string_view name, absl::string_view extension) {
   @autoreleasepool {
-    NSString* path = [NSString rtc_stringForAbslStringView:name];
+    NSString* path = [NSString stringForAbslStringView:name];
     NSString* fileName = path.lastPathComponent;
-    NSString* fileType = [NSString rtc_stringForAbslStringView:extension];
+    NSString* fileType = [NSString stringForAbslStringView:extension];
     // Get full pathname for the resource identified by the name and extension.
     NSString* pathString = [[NSBundle mainBundle] pathForResource:fileName
                                                            ofType:fileType];
-    return [NSString rtc_stdStringForString:pathString];
+    return [NSString stdStringForString:pathString];
   }
 }
 
 std::string IOSRootPath() {
   @autoreleasepool {
     NSBundle* mainBundle = [NSBundle mainBundle];
-    return [NSString rtc_stdStringForString:mainBundle.bundlePath] + "/";
+    return [NSString stdStringForString:mainBundle.bundlePath] + "/";
   }
 }
 
@@ -51,7 +51,7 @@ std::string IOSOutputPath()  {
     NSString* tempDir = NSTemporaryDirectory();
     if (tempDir == nil)
         tempDir = @"/tmp";
-    return [NSString rtc_stdStringForString:tempDir];
+    return [NSString stdStringForString:tempDir];
   }
 }
 

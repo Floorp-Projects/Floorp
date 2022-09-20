@@ -15,7 +15,7 @@
 #import "RTCRtpReceiver+Private.h"
 #import "RTCRtpSender+Private.h"
 #import "RTCStatisticsReport+Private.h"
-#import "helpers/NSString+RTCStdString.h"
+#import "helpers/NSString+StdString.h"
 
 #include "rtc_base/checks.h"
 

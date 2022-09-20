@@ -26,7 +26,7 @@
 #import "api/peerconnection/RTCPeerConnectionFactory+Native.h"
 #import "api/peerconnection/RTCPeerConnectionFactory.h"
 #import "api/peerconnection/RTCSessionDescription.h"
-#import "helpers/NSString+RTCStdString.h"
+#import "helpers/NSString+StdString.h"
 
 @interface RTCPeerConnectionTests : XCTestCase
 @end

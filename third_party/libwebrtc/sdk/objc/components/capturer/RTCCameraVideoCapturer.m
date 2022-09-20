@@ -19,7 +19,7 @@
 #import "helpers/UIDevice+RTCDevice.h"
 #endif
 
-#import "helpers/AVCaptureSession+RTCDevicePosition.h"
+#import "helpers/AVCaptureSession+DevicePosition.h"
 #import "helpers/RTCDispatcher+Private.h"
 #include "rtc_base/system/gcd_helpers.h"
 
@@ -256,7 +256,7 @@ const int64_t kNanosecondsPerSecond = 1000000000;
   // Check the image's EXIF for the camera the image came from as the image could have been
   // delayed as we set alwaysDiscardsLateVideoFrames to NO.
   AVCaptureDevicePosition cameraPosition =
-      [AVCaptureSession rtc_devicePositionForSampleBuffer:sampleBuffer];
+      [AVCaptureSession devicePositionForSampleBuffer:sampleBuffer];
   if (cameraPosition != AVCaptureDevicePositionUnspecified) {
     usingFrontCamera = AVCaptureDevicePositionFront == cameraPosition;
   } else {

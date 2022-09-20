@@ -17,7 +17,7 @@
 
 #import "api/peerconnection/RTCMediaConstraints+Private.h"
 #import "api/peerconnection/RTCMediaConstraints.h"
-#import "helpers/NSString+RTCStdString.h"
+#import "helpers/NSString+StdString.h"
 
 @interface RTCMediaConstraintsTests : XCTestCase
 @end

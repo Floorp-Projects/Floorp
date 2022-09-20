@@ -18,7 +18,7 @@
 #import "api/peerconnection/RTCConfiguration+Private.h"
 #import "api/peerconnection/RTCConfiguration.h"
 #import "api/peerconnection/RTCIceServer.h"
-#import "helpers/NSString+RTCStdString.h"
+#import "helpers/NSString+StdString.h"
 
 @interface RTCConfigurationTest : XCTestCase
 @end

@@ -11,7 +11,7 @@
 #import "RTCDtmfSender+Private.h"
 
 #import "base/RTCLogging.h"
-#import "helpers/NSString+RTCStdString.h"
+#import "helpers/NSString+StdString.h"
 
 #include "rtc_base/time_utils.h"
 
@@ -31,11 +31,11 @@
   int durationMs = static_cast<int>(duration * rtc::kNumMillisecsPerSec);
   int interToneGapMs = static_cast<int>(interToneGap * rtc::kNumMillisecsPerSec);
   return _nativeDtmfSender->InsertDtmf(
-      [NSString rtc_stdStringForString:tones], durationMs, interToneGapMs);
+      [NSString stdStringForString:tones], durationMs, interToneGapMs);
 }
 
 - (nonnull NSString *)remainingTones {
-  return [NSString rtc_stringForStdString:_nativeDtmfSender->tones()];
+  return [NSString stringForStdString:_nativeDtmfSender->tones()];
 }
 
 - (NSTimeInterval)duration {

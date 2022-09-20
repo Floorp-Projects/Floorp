@@ -15,7 +15,7 @@
 #import "RTCRtpReceiver+Private.h"
 #import "RTCRtpSender+Private.h"
 #import "base/RTCLogging.h"
-#import "helpers/NSString+RTCStdString.h"
+#import "helpers/NSString+StdString.h"
 
 NSString *const kRTCRtpTransceiverErrorDomain = @"org.webrtc.RTCRtpTranceiver";
 
@@ -59,7 +59,7 @@ NSString *const kRTCRtpTransceiverErrorDomain = @"org.webrtc.RTCRtpTranceiver";
 
 - (NSString *)mid {
   if (_nativeRtpTransceiver->mid()) {
-    return [NSString rtc_stringForStdString:*_nativeRtpTransceiver->mid()];
+    return [NSString stringForStdString:*_nativeRtpTransceiver->mid()];
   } else {
     return nil;
   }

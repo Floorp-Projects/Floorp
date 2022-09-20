@@ -12,7 +12,7 @@
 
 #import "RTCDataChannel+Private.h"
 #import "RTCDataChannelConfiguration+Private.h"
-#import "helpers/NSString+RTCStdString.h"
+#import "helpers/NSString+StdString.h"
 
 @implementation RTC_OBJC_TYPE (RTCPeerConnection)
 (DataChannel)
@@ -20,7 +20,7 @@
     - (nullable RTC_OBJC_TYPE(RTCDataChannel) *)dataChannelForLabel
     : (NSString *)label configuration
     : (RTC_OBJC_TYPE(RTCDataChannelConfiguration) *)configuration {
-  std::string labelString = [NSString rtc_stdStringForString:label];
+  std::string labelString = [NSString stdStringForString:label];
   const webrtc::DataChannelInit nativeInit =
       configuration.nativeDataChannelInit;
   auto result = self.nativePeerConnection->CreateDataChannelOrError(labelString, &nativeInit);

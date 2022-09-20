@@ -11,7 +11,7 @@
 #import "RTCSessionDescription+Private.h"
 
 #import "base/RTCLogging.h"
-#import "helpers/NSString+RTCStdString.h"
+#import "helpers/NSString+StdString.h"
 
 #include "rtc_base/checks.h"
 
@@ -22,7 +22,7 @@
 
 + (NSString *)stringForType:(RTCSdpType)type {
   std::string string = [[self class] stdStringForType:type];
-  return [NSString rtc_stringForStdString:string];
+  return [NSString stringForStdString:string];
 }
 
 + (RTCSdpType)typeForString:(NSString *)string {
@@ -68,7 +68,8 @@
   nativeDescription->ToString(&sdp);
   RTCSdpType type = [[self class] typeForStdString:nativeDescription->type()];
 
-  return [self initWithType:type sdp:[NSString rtc_stringForStdString:sdp]];
+  return [self initWithType:type
+                        sdp:[NSString stringForStdString:sdp]];
 }
 
 + (std::string)stdStringForType:(RTCSdpType)type {

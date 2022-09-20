@@ -15,7 +15,7 @@
 
 #import "api/peerconnection/RTCSessionDescription+Private.h"
 #import "api/peerconnection/RTCSessionDescription.h"
-#import "helpers/NSString+RTCStdString.h"
+#import "helpers/NSString+StdString.h"
 
 @interface RTCSessionDescriptionTests : XCTestCase
 @end

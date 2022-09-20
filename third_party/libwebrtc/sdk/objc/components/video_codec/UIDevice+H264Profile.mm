@@ -8,7 +8,7 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#import "UIDevice+RTCH264Profile.h"
+#import "UIDevice+H264Profile.h"
 #import "helpers/UIDevice+RTCDevice.h"
 
 #include <algorithm>
@@ -196,9 +196,9 @@ absl::optional<H264ProfileLevelId> FindMaxSupportedProfileForDevice(RTCDeviceTyp
 
 }  // namespace
 
-@implementation UIDevice (RTCH264Profile)
+@implementation UIDevice (H264Profile)
 
-+ (absl::optional<webrtc::H264ProfileLevelId>)rtc_maxSupportedH264Profile {
++ (absl::optional<webrtc::H264ProfileLevelId>)maxSupportedH264Profile {
   return FindMaxSupportedProfileForDevice([self deviceType]);
 }
 

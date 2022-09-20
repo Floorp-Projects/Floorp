@@ -10,7 +10,7 @@
 
 #import "RTCRtcpParameters+Private.h"
 
-#import "helpers/NSString+RTCStdString.h"
+#import "helpers/NSString+StdString.h"
 
 @implementation RTC_OBJC_TYPE (RTCRtcpParameters)
 
@@ -24,7 +24,7 @@
 
 - (instancetype)initWithNativeParameters:(const webrtc::RtcpParameters &)nativeParameters {
   if (self = [super init]) {
-    _cname = [NSString rtc_stringForStdString:nativeParameters.cname];
+    _cname = [NSString stringForStdString:nativeParameters.cname];
     _isReducedSize = nativeParameters.reduced_size;
   }
   return self;
@@ -32,7 +32,7 @@
 
 - (webrtc::RtcpParameters)nativeParameters {
   webrtc::RtcpParameters parameters;
-  parameters.cname = [NSString rtc_stdStringForString:_cname];
+  parameters.cname = [NSString stdStringForString:_cname];
   parameters.reduced_size = _isReducedSize;
   return parameters;
 }
