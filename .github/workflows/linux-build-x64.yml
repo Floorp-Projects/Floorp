@@ -28,7 +28,6 @@ jobs:
         echo 'ac_add_options "--enable-optimize=-O2"' >> mozconfig
         echo 'ac_add_options --enable-rust-simd' >> mozconfig
         echo 'ac_add_options RUSTC_OPT_LEVEL=3' >> mozconfig
-        echo 'ac_add_options MOZ_PGO=1' >> mozconfig
         echo 'MOZ_REQUIRE_SIGNING=' >> mozconfig
         echo 'MOZ_DATA_REPORTING=' >> mozconfig
         echo 'MOZ_TELEMETRY_REPORTING=' >> mozconfig

@@ -134,7 +134,7 @@ jobs:
       shell: bash
       run: |
         ./mach bootstrap
-         echo -e "ac_add_options  echo 'ac_add_options --enable-bootstrap" >> mozconfig
+        echo -e "ac_add_options --enable-bootstrap" >> mozconfig
         brew update
         brew install gnu-tar
         brew upgrade
