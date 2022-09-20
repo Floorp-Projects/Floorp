@@ -6,33 +6,34 @@
   <script src="chrome://mochikit/content/tests/SimpleTest/WindowSnapshot.js"></script>
   <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css" />
 </head>
-<body style="height: 100%" onload="setTimeout(onBodyLoad, 0);">
-  <iframe id="test" src="398289-resource.xhtml" width="100%" height="100%">
-  </iframe>
+<body style="height: 100%; margin: 0; overflow: hidden;" onload="setTimeout(onBodyLoad, 0);">
+  <iframe id="test" style="border: 0; width: 100%; height: 100%" scrolling="no" src="398289-resource.xhtml"></iframe>
 
-  <script class="testbody" type="text/javascript">
+  <script class="testbody">
     var snap1, snap2;
-  
     SimpleTest.waitForExplicitFinish();
-  
+
     async function onBodyLoad() {
       window.frames[0].document.getElementById("test").selectedIndex = 0;
       window.frames[0].document.getElementById("test").selectedIndex = 1;
-      
+
+      frames[0].scrollTo(0, 0);
+      scrollTo(0, 0);
       snap1 = await snapshotWindow(window);
-      
+
       document.getElementById("test").onload = onFrameLoad;
       window.frames[0].location.reload();
     }
-    
+
     async function onFrameLoad() {
+      frames[0].scrollTo(0, 0);
+      scrollTo(0, 0);
       snap2 = await snapshotWindow(window);
 
       var equal, str1, str2;
       [equal, str1, str2] = compareSnapshots(snap1, snap2, true);
 
       ok(equal, "persistent attribute in tab box broken, expected: "+str1+" got: "+str2);
-          
       SimpleTest.finish();
     }
   </script>
