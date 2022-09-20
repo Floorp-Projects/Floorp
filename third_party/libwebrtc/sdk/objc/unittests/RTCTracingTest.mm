@@ -9,6 +9,7 @@
  */
 
 #import <Foundation/Foundation.h>
+#import <XCTest/XCTest.h>
 
 #include <vector>
 
@@ -17,11 +18,10 @@
 #import "api/peerconnection/RTCTracing.h"
 #import "helpers/NSString+StdString.h"
 
-@interface RTCTracingTest : NSObject
-- (void)tracingTestNoInitialization;
+@interface RTCTracingTests : XCTestCase
 @end
 
-@implementation RTCTracingTest
+@implementation RTCTracingTests
 
 - (NSString *)documentsFilePathForFileName:(NSString *)fileName {
   NSParameterAssert(fileName.length);
@@ -32,17 +32,10 @@
   return filePath;
 }
 
-- (void)tracingTestNoInitialization {
+- (void)testTracingTestNoInitialization {
   NSString *filePath = [self documentsFilePathForFileName:@"webrtc-trace.txt"];
   EXPECT_EQ(NO, RTCStartInternalCapture(filePath));
   RTCStopInternalCapture();
 }
 
 @end
-
-TEST(RTCTracingTest, TracingTestNoInitialization) {
-  @autoreleasepool {
-    RTCTracingTest *test = [[RTCTracingTest alloc] init];
-    [test tracingTestNoInitialization];
-  }
-}

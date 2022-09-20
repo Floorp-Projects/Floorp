@@ -9,6 +9,7 @@
  */
 
 #import <Foundation/Foundation.h>
+#import <XCTest/XCTest.h>
 
 #include <memory>
 #include <vector>
@@ -27,14 +28,10 @@
 #import "api/peerconnection/RTCSessionDescription.h"
 #import "helpers/NSString+StdString.h"
 
-@interface RTCPeerConnectionTest : NSObject
-- (void)testConfigurationGetter;
-- (void)testWithDependencies;
-- (void)testWithInvalidSDP;
-- (void)testWithInvalidIceCandidate;
+@interface RTCPeerConnectionTests : XCTestCase
 @end
 
-@implementation RTCPeerConnectionTest
+@implementation RTCPeerConnectionTests
 
 - (void)testConfigurationGetter {
   NSArray *urlStrings = @[ @"stun:stun1.example.net" ];
@@ -205,31 +202,3 @@
 }
 
 @end
-
-TEST(RTCPeerConnectionTest, ConfigurationGetterTest) {
-  @autoreleasepool {
-    RTCPeerConnectionTest *test = [[RTCPeerConnectionTest alloc] init];
-    [test testConfigurationGetter];
-  }
-}
-
-TEST(RTCPeerConnectionTest, TestWithDependencies) {
-  @autoreleasepool {
-    RTCPeerConnectionTest *test = [[RTCPeerConnectionTest alloc] init];
-    [test testWithDependencies];
-  }
-}
-
-TEST(RTCPeerConnectionTest, TestWithInvalidSDP) {
-  @autoreleasepool {
-    RTCPeerConnectionTest *test = [[RTCPeerConnectionTest alloc] init];
-    [test testWithInvalidSDP];
-  }
-}
-
-TEST(RTCPeerConnectionTest, TestWithInvalidIceCandidate) {
-  @autoreleasepool {
-    RTCPeerConnectionTest *test = [[RTCPeerConnectionTest alloc] init];
-    [test testWithInvalidIceCandidate];
-  }
-}
