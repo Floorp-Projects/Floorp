@@ -208,7 +208,7 @@ describe("<RecentSavesContainer>", () => {
                 resolved_id: "resolved_id",
                 top_image_url: "top_image_url",
                 title: "title",
-                resolved_url: "resolved_url",
+                resolved_url: "https://resolved_url",
                 domain: "domain",
                 excerpt: "excerpt",
               },
