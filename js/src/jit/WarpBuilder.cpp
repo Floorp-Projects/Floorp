@@ -2063,6 +2063,10 @@ bool WarpBuilder::build_FreshenLexicalEnv(BytecodeLocation loc) {
   MOZ_ASSERT(snapshot);
 
   MDefinition* enclosingEnv = walkEnvironmentChain(1);
+  if (!enclosingEnv) {
+    return false;
+  }
+
   MDefinition* env = current->environmentChain();
   MConstant* templateCst = constant(ObjectValue(*snapshot->templateObj()));
 
@@ -2147,6 +2151,10 @@ bool WarpBuilder::build_RecreateLexicalEnv(BytecodeLocation loc) {
   MOZ_ASSERT(snapshot);
 
   MDefinition* enclosingEnv = walkEnvironmentChain(1);
+  if (!enclosingEnv) {
+    return false;
+  }
+
   MConstant* templateCst = constant(ObjectValue(*snapshot->templateObj()));
 
   auto* ins = MNewLexicalEnvironmentObject::New(alloc(), templateCst);
