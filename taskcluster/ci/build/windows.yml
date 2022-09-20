@@ -119,6 +119,64 @@ win32/opt:
         fetch:
             - upx-3.95-win
 
+win32-fuzzing/debug:
+    description: "Win32 Fuzzing Debug"
+    index:
+        product: firefox
+        job-name: win32-fuzzing-debug
+    attributes:
+        enable-full-crashsymbols: true
+    treeherder:
+        platform: windows2012-32/debug
+        symbol: Bf
+        tier: 1
+    worker-type: b-linux-gcp
+    worker:
+        docker-image: {in-tree: debian11-amd64-build}
+        max-run-time: 7200
+        env:
+            PERFHERDER_EXTRA_OPTIONS: fuzzing
+    run:
+        actions: [get-secrets, build]
+        options: [append-env-variables-from-configs]
+        script: mozharness/scripts/fx_desktop_build.py
+        secrets: true
+        config:
+            - builds/releng_base_firefox.py
+            - builds/releng_base_linux_64_builds.py
+            - builds/taskcluster_sub_win32/debug.py
+        extra-config:
+            stage_platform: win32
+            mozconfig_platform: win32
+            env:
+                LD_PRELOAD: "/builds/worker/fetches/liblowercase/liblowercase.so"
+                LOWERCASE_DIRS: "/builds/worker/fetches/vs"
+        mozconfig-variant: debug-fuzzing
+    run-on-projects: ['trunk']
+    use-sccache: true
+    fetches:
+        toolchain:
+            - linux64-binutils
+            - linux64-clang
+            - linux64-rust-cross
+            - linux64-rust-size
+            - linux64-nasm
+            - linux64-node
+            - linux64-cbindgen
+            - linux64-sccache
+            - linux64-dump_syms
+            - linux64-wine
+            - linux64-liblowercase
+            - linux64-winchecksec
+            - nsis
+            - sysroot-x86_64-linux-gnu
+            - sysroot-wasm32-wasi
+            - win64-vs2017
+        fetch:
+            - upx-3.95-win
+    optimization:
+        skip-unless-expanded: null
+
 win64/debug:
     description: "Win64 Debug"
     index:
