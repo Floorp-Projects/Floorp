@@ -37,9 +37,9 @@ MOZ_CHANGED=0
 GIT_CHANGED=0
 
 # After this point:
-# * eE: All commands should succede.
+# * eE: All commands should succeed.
 # * u: All variables should be defined before use.
-# * o pipefail: All stages of all pipes should succede.
+# * o pipefail: All stages of all pipes should succeed.
 set -eEuo pipefail
 
 # start a new log with every run of this script
@@ -49,6 +49,10 @@ rm -f $LOOP_OUTPUT_LOG
 # in the loop below
 hg revert -C third_party/libwebrtc/README.moz-ff-commit &> /dev/null
 
+# start off by verifying the vendoring process to make sure no changes have
+# been added to elm to fix bugs.
+bash dom/media/webrtc/third_party_build/verify_vendoring.sh
+
 for (( ; ; )); do
 
 # read the last line of README.moz-ff-commit to retrieve our current base
@@ -56,13 +60,12 @@ for (( ; ; )); do
 MOZ_LIBWEBRTC_BASE=`tail -1 third_party/libwebrtc/README.moz-ff-commit`
 # calculate the next commit above our current base commit
 MOZ_LIBWEBRTC_NEXT_BASE=`cd $MOZ_LIBWEBRTC_SRC ; \
-git log --oneline --ancestry-path $MOZ_LIBWEBRTC_BASE^..main \
+git log --oneline --ancestry-path $MOZ_LIBWEBRTC_BASE^..master \
  | tail -2 | head -1 | awk '{print$1;}'`
 
 echo "============ loop ff ============" 2>&1| tee -a $LOOP_OUTPUT_LOG
 echo "===loop-ff=== Moving from moz-libwebrtc commit $MOZ_LIBWEBRTC_BASE to $MOZ_LIBWEBRTC_NEXT_BASE" 2>&1| tee -a $LOOP_OUTPUT_LOG
 bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh 2>&1| tee -a $LOOP_OUTPUT_LOG
-#bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
 
 MOZ_CHANGED=`hg diff -c tip --stat \
    | egrep -ve "README.moz-ff-commit|README.mozilla|files changed," \
@@ -72,7 +75,6 @@ GIT_CHANGED=`cd $MOZ_LIBWEBRTC_SRC ; \
    | csplit -f gitshow -sk - 2 ; cat gitshow01 \
    | egrep -ve "^CODE_OF_CONDUCT.md|^ENG_REVIEW_OWNERS|^PRESUBMIT.py|^README.chromium|^WATCHLISTS|^abseil-in-webrtc.md|^codereview.settings|^license_template.txt|^native-api.md|^presubmit_test.py|^presubmit_test_mocks.py|^pylintrc|^style-guide.md" \
    | wc -l | tr -d " "`
-# let GIT_CHANGED--
 echo "===loop-ff=== Verify number of files changed MOZ($MOZ_CHANGED) GIT($GIT_CHANGED)" 2>&1| tee -a $LOOP_OUTPUT_LOG
 if [ $MOZ_CHANGED -ne $GIT_CHANGED ]; then
   echo "MOZ_CHANGED $MOZ_CHANGED should equal GIT_CHANGED $GIT_CHANGED" 2>&1| tee -a $LOOP_OUTPUT_LOG
@@ -82,7 +84,8 @@ fi
 MODIFIED_BUILD_RELATED_FILE_CNT=`hg diff -c tip --stat \
     --include 'third_party/libwebrtc/**BUILD.gn' \
     --include 'third_party/libwebrtc/webrtc.gni' \
-    | wc -l | tr -d " "`
+    | grep -v "files changed" \
+    | wc -l | tr -d " " || true`
 echo "===loop-ff=== Modified BUILD.gn (or webrtc.gni) files: $MODIFIED_BUILD_RELATED_FILE_CNT" 2>&1| tee -a $LOOP_OUTPUT_LOG
 if [ "x$MODIFIED_BUILD_RELATED_FILE_CNT" != "x0" ]; then
   echo "===loop-ff=== Regenerate build files" 2>&1| tee -a $LOOP_OUTPUT_LOG
@@ -95,7 +98,6 @@ if [ "x$MODIFIED_BUILD_RELATED_FILE_CNT" != "x0" ]; then
     echo "===loop-ff=== Detected modified moz.build files, commiting" 2>&1| tee -a $LOOP_OUTPUT_LOG
   fi
 
-  export UPSTREAM_COMMIT=$MOZ_LIBWEBRTC_NEXT_BASE
   bash dom/media/webrtc/third_party_build/commit-build-file-changes.sh 2>&1| tee -a $LOOP_OUTPUT_LOG
 fi
 
