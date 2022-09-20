@@ -4884,14 +4884,19 @@ mozilla::ipc::IPCResult ContentParent::RecvConsoleMessage(
 }
 
 mozilla::ipc::IPCResult ContentParent::RecvReportFrameTimingData(
-    uint64_t aInnerWindowId, const nsAString& entryName,
-    const nsAString& initiatorType, UniquePtr<PerformanceTimingData>&& aData) {
+    const mozilla::Maybe<LoadInfoArgs>& loadInfoArgs,
+    const nsAString& entryName, const nsAString& initiatorType,
+    UniquePtr<PerformanceTimingData>&& aData) {
   if (!aData) {
     return IPC_FAIL(this, "aData should not be null");
   }
 
+  if (loadInfoArgs.isNothing()) {
+    return IPC_FAIL(this, "loadInfoArgs should not be null");
+  }
+
   RefPtr<WindowGlobalParent> parent =
-      WindowGlobalParent::GetByInnerWindowId(aInnerWindowId);
+      WindowGlobalParent::GetByInnerWindowId(loadInfoArgs->innerWindowID());
   if (!parent || !parent->GetContentParent()) {
     return IPC_OK();
   }
@@ -4900,7 +4905,7 @@ mozilla::ipc::IPCResult ContentParent::RecvReportFrameTimingData(
              "No need to bounce around if in the same process");
 
   Unused << parent->GetContentParent()->SendReportFrameTimingData(
-      aInnerWindowId, entryName, initiatorType, std::move(aData));
+      loadInfoArgs, entryName, initiatorType, std::move(aData));
   return IPC_OK();
 }
 
