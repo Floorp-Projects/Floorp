@@ -408,9 +408,7 @@ HttpTransactionChild::OnStartRequest(nsIRequest* aRequest) {
 
   mProtocolVersion.Truncate();
 
-  nsCOMPtr<nsISupports> securityInfoSupports(mTransaction->SecurityInfo());
-  nsCOMPtr<nsITransportSecurityInfo> securityInfo(
-      do_QueryInterface(securityInfoSupports));
+  nsCOMPtr<nsITransportSecurityInfo> securityInfo(mTransaction->SecurityInfo());
   if (securityInfo) {
     nsAutoCString protocol;
     if (NS_SUCCEEDED(securityInfo->GetNegotiatedNPN(protocol)) &&

@@ -978,9 +978,11 @@ bool nsHttpTransaction::ProxyConnectFailed() { return mProxyConnectFailed; }
 
 bool nsHttpTransaction::DataSentToChildProcess() { return false; }
 
-already_AddRefed<nsISupports> nsHttpTransaction::SecurityInfo() {
+already_AddRefed<nsITransportSecurityInfo> nsHttpTransaction::SecurityInfo() {
   MutexAutoLock lock(mLock);
-  return do_AddRef(mTLSSocketControl);
+  nsCOMPtr<nsITransportSecurityInfo> securityInfo(
+      do_QueryInterface(mTLSSocketControl));
+  return securityInfo.forget();
 }
 
 bool nsHttpTransaction::HasStickyConnection() const {

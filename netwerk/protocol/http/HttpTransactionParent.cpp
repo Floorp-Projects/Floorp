@@ -329,7 +329,8 @@ bool HttpTransactionParent::DataSentToChildProcess() {
   return mDataSentToChildProcess;
 }
 
-already_AddRefed<nsISupports> HttpTransactionParent::SecurityInfo() {
+already_AddRefed<nsITransportSecurityInfo>
+HttpTransactionParent::SecurityInfo() {
   return do_AddRef(mSecurityInfo);
 }
 
