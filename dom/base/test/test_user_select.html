@@ -1,10 +1,12 @@
 <!DOCTYPE>
+<html>
+<head>
 <title>user-select selection tests</title>
-<script src="/tests/SimpleTest/SimpleTest.js"></script>
-<script src="/tests/SimpleTest/EventUtils.js"></script>
-<link rel="stylesheet" href="/tests/SimpleTest/test.css">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<style>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+
+<style type="text/css">
 @font-face {
   font-family: Ahem;
   src: url("Ahem.ttf");
@@ -15,6 +17,10 @@ n { display: none; }
 a { position:absolute; bottom: 0; right:0; }
 .text { user-select: text; }
 </style>
+
+</head>
+<body>
+
 <div id="test1">aaaaaaa<s>bbbbbbbb</s>ccccccc</div>
 <div id="test2"><s>aaaaaaa</s>bbbbbbbbccccccc</div>
 <div id="test3">aaaaaaabbbbbbbb<s>ccccccc</s></div>
@@ -347,3 +353,5 @@ window.onload = function() {
 SimpleTest.waitForExplicitFinish();
 </script>
 </pre>
+</body>
+</html>
