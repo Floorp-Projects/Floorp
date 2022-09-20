@@ -5,12 +5,11 @@
 //! Specified values for font properties
 
 use crate::context::QuirksMode;
-use crate::font_metrics::FontMetricsProvider;
 use crate::parser::{Parse, ParserContext};
 use crate::values::computed::font::{FamilyName, FontFamilyList, SingleFontFamily};
 use crate::values::computed::FontSizeAdjust as ComputedFontSizeAdjust;
 use crate::values::computed::{font as computed, Length, NonNegativeLength};
-use crate::values::computed::{Percentage as ComputedPercentage};
+use crate::values::computed::Percentage as ComputedPercentage;
 use crate::values::computed::{CSSPixelLength, Context, ToComputedValue};
 use crate::values::generics::font::VariationValue;
 use crate::values::generics::font::{
@@ -778,16 +777,13 @@ impl FontSizeKeyword {
     fn to_length(&self, cx: &Context) -> NonNegativeLength {
         let gecko_font = cx.style().get_font().gecko();
         let family = &gecko_font.mFont.family.families;
-        unsafe {
+        let generic = family.single_generic().unwrap_or(computed::GenericFontFamily::None);
+        let base_size = unsafe {
             Atom::with(gecko_font.mLanguage.mRawPtr, |language| {
-                self.to_length_without_context(
-                    cx.quirks_mode,
-                    cx.font_metrics_provider,
-                    language,
-                    family,
-                )
+                cx.device().base_size_for_generic(language, generic)
             })
-        }
+        };
+        self.to_length_without_context(cx.quirks_mode, base_size)
     }
 
     /// Resolve a keyword length without any context, with explicit arguments.
@@ -796,9 +792,7 @@ impl FontSizeKeyword {
     pub fn to_length_without_context(
         &self,
         quirks_mode: QuirksMode,
-        font_metrics_provider: &dyn FontMetricsProvider,
-        language: &Atom,
-        family: &FontFamilyList,
+        base_size: Length,
     ) -> NonNegativeLength {
         // The tables in this function are originally from
         // nsRuleNode::CalcFontPointSize in Gecko:
@@ -843,11 +837,6 @@ impl FontSizeKeyword {
         ];
 
         static FONT_SIZE_FACTORS: [i32; 8] = [60, 75, 89, 100, 120, 150, 200, 300];
-
-        let generic = family
-            .single_generic()
-            .unwrap_or(computed::GenericFontFamily::None);
-        let base_size = font_metrics_provider.get_size(language, generic);
         let base_size_px = base_size.px().round() as i32;
         let html_size = self.html_size() as usize;
         NonNegative(if base_size_px >= 9 && base_size_px <= 16 {

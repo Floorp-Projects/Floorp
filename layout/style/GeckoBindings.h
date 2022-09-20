@@ -464,7 +464,9 @@ mozilla::StyleGenericFontFamily
 Gecko_nsStyleFont_ComputeFallbackFontTypeForLanguage(
     const mozilla::dom::Document*, nsAtom* language);
 
-mozilla::StyleDefaultFontSizes Gecko_GetBaseSize(nsAtom* lang);
+mozilla::Length Gecko_GetBaseSize(const mozilla::dom::Document*,
+                                  nsAtom* language,
+                                  mozilla::StyleGenericFontFamily);
 
 struct GeckoFontMetrics {
   mozilla::Length mXSize;

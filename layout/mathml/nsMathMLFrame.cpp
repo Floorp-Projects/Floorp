@@ -200,7 +200,6 @@ nscoord nsMathMLFrame::CalcLength(nsPresContext* aPresContext,
   }
 
   if (eCSSUnit_XHeight == unit) {
-    aPresContext->SetUsesFontMetricDependentFontUnits(true);
     RefPtr<nsFontMetrics> fm = nsLayoutUtils::GetFontMetricsForComputedStyle(
         aComputedStyle, aPresContext, aFontSizeInflation);
     nscoord xHeight = fm->XHeight();

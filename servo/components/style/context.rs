@@ -9,7 +9,6 @@ use crate::animation::DocumentAnimationSet;
 use crate::bloom::StyleBloom;
 use crate::data::{EagerPseudoStyles, ElementData};
 use crate::dom::{SendElement, TElement};
-use crate::font_metrics::FontMetricsProvider;
 #[cfg(feature = "gecko")]
 use crate::gecko_bindings::structs;
 use crate::parallel::{STACK_SAFETY_MARGIN_KB, STYLE_THREAD_STACK_SIZE_KB};
@@ -640,9 +639,6 @@ pub struct ThreadLocalStyleContext<E: TElement> {
     pub tasks: SequentialTaskList<E>,
     /// Statistics about the traversal.
     pub statistics: PerThreadTraversalStatistics,
-    /// The struct used to compute and cache font metrics from style
-    /// for evaluation of the font-relative em/ch units and font-size
-    pub font_metrics_provider: E::FontMetricsProvider,
     /// A checker used to ensure that parallel.rs does not recurse indefinitely
     /// even on arbitrarily deep trees.  See Gecko bug 1376883.
     pub stack_limit_checker: StackLimitChecker,
@@ -651,33 +647,14 @@ pub struct ThreadLocalStyleContext<E: TElement> {
 }
 
 impl<E: TElement> ThreadLocalStyleContext<E> {
-    /// Creates a new `ThreadLocalStyleContext` from a shared one.
-    #[cfg(feature = "servo")]
-    pub fn new(shared: &SharedStyleContext) -> Self {
+    /// Creates a new `ThreadLocalStyleContext`
+    pub fn new() -> Self {
         ThreadLocalStyleContext {
             sharing_cache: StyleSharingCache::new(),
             rule_cache: RuleCache::new(),
             bloom_filter: StyleBloom::new(),
             tasks: SequentialTaskList(Vec::new()),
             statistics: PerThreadTraversalStatistics::default(),
-            font_metrics_provider: E::FontMetricsProvider::create_from(shared),
-            stack_limit_checker: StackLimitChecker::new(
-                (STYLE_THREAD_STACK_SIZE_KB - STACK_SAFETY_MARGIN_KB) * 1024,
-            ),
-            nth_index_cache: NthIndexCache::default(),
-        }
-    }
-
-    #[cfg(feature = "gecko")]
-    /// Creates a new `ThreadLocalStyleContext` from a shared one.
-    pub fn new(shared: &SharedStyleContext) -> Self {
-        ThreadLocalStyleContext {
-            sharing_cache: StyleSharingCache::new(),
-            rule_cache: RuleCache::new(),
-            bloom_filter: StyleBloom::new(),
-            tasks: SequentialTaskList(Vec::new()),
-            statistics: PerThreadTraversalStatistics::default(),
-            font_metrics_provider: E::FontMetricsProvider::create_from(shared),
             stack_limit_checker: StackLimitChecker::new(
                 (STYLE_THREAD_STACK_SIZE_KB - STACK_SAFETY_MARGIN_KB) * 1024,
             ),

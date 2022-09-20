@@ -29,7 +29,6 @@ use style::dom::{ShowSubtreeData, TDocument, TElement, TNode};
 use style::driver;
 use style::error_reporting::{ContextualParseError, ParseErrorReporter};
 use style::font_face::{self, FontFaceSourceListComponent, FontFaceSourceFormat, Source};
-use style::font_metrics::{get_metrics_provider_for_product, FontMetricsProvider};
 use style::gecko::data::{GeckoStyleSheet, PerDocumentStyleData, PerDocumentStyleDataImpl};
 use style::gecko::restyle_damage::GeckoRestyleDamage;
 use style::gecko::selector_parser::{NonTSPseudoClass, PseudoElement};
@@ -1187,7 +1186,7 @@ pub extern "C" fn Servo_StyleSet_GetBaseComputedValuesForElement(
         TraversalFlags::empty(),
         unsafe { &*snapshots },
     );
-    let mut tlc = ThreadLocalStyleContext::new(&shared);
+    let mut tlc = ThreadLocalStyleContext::new();
     let context = StyleContext {
         shared: &shared,
         thread_local: &mut tlc,
@@ -1238,7 +1237,7 @@ pub extern "C" fn Servo_StyleSet_GetComputedValuesByAddingAnimation(
         TraversalFlags::empty(),
         unsafe { &*snapshots },
     );
-    let mut tlc: ThreadLocalStyleContext<GeckoElement> = ThreadLocalStyleContext::new(&shared);
+    let mut tlc: ThreadLocalStyleContext<GeckoElement> = ThreadLocalStyleContext::new();
     let context = StyleContext {
         shared: &shared,
         thread_local: &mut tlc,
@@ -1971,6 +1970,12 @@ pub extern "C" fn Servo_StyleSet_SetAuthorStyleDisabled(
         AuthorStylesEnabled::Yes
     };
     data.stylist.set_author_styles_enabled(enabled);
+}
+
+#[no_mangle]
+pub extern "C" fn Servo_StyleSet_UsesFontMetrics(raw_data: &RawServoStyleSet) -> bool {
+    let doc_data = PerDocumentStyleData::from_ffi(raw_data);
+    doc_data.borrow().stylist.device().used_font_metrics()
 }
 
 #[no_mangle]
@@ -3871,8 +3876,6 @@ pub unsafe extern "C" fn Servo_ComputedValues_GetForAnonymousBox(
     let pseudo = PseudoElement::from_pseudo_type(pseudo).unwrap();
     debug_assert!(pseudo.is_anon_box());
 
-    let metrics = get_metrics_provider_for_product();
-
     // If the pseudo element is PageContent, we should append @page rules to the
     // precomputed pseudo.
     //
@@ -3906,7 +3909,6 @@ pub unsafe extern "C" fn Servo_ComputedValues_GetForAnonymousBox(
             &guards,
             &pseudo,
             parent_style_or_null.map(|x| &*x),
-            &metrics,
             rule_node,
         )
         .into()
@@ -4078,14 +4080,12 @@ fn get_pseudo_style(
                         // the computed style case is a bit unclear.
                         let inherited_styles = inherited_styles.unwrap_or(styles.primary());
                         let guards = StylesheetGuards::same(guard);
-                        let metrics = get_metrics_provider_for_product();
                         let inputs = CascadeInputs::new_from_style(pseudo_styles);
                         stylist.compute_pseudo_element_style_with_inputs(
                             inputs,
                             pseudo,
                             &guards,
                             Some(inherited_styles),
-                            &metrics,
                             Some(element),
                         )
                     })
@@ -4128,7 +4128,6 @@ fn get_pseudo_style(
                 styles.primary()
             };
             let guards = StylesheetGuards::same(guard);
-            let metrics = get_metrics_provider_for_product();
             stylist.lazily_compute_pseudo_element_style(
                 &guards,
                 element,
@@ -4136,7 +4135,6 @@ fn get_pseudo_style(
                 rule_inclusion,
                 base,
                 is_probe,
-                &metrics,
                 matching_func,
             )
         },
@@ -5856,7 +5854,7 @@ pub extern "C" fn Servo_ResolveStyleLazily(
         TraversalFlags::empty(),
         unsafe { &*snapshots },
     );
-    let mut tlc = ThreadLocalStyleContext::new(&shared);
+    let mut tlc = ThreadLocalStyleContext::new();
     let mut context = StyleContext {
         shared: &shared,
         thread_local: &mut tlc,
@@ -5892,7 +5890,6 @@ pub extern "C" fn Servo_ReparentStyle(
     let guard = global_style_data.shared_lock.read();
     let doc_data = PerDocumentStyleData::from_ffi(raw_data).borrow();
     let inputs = CascadeInputs::new_from_style(style_to_reparent);
-    let metrics = get_metrics_provider_for_product();
     let pseudo = style_to_reparent.pseudo();
     let element = element.map(GeckoElement);
 
@@ -5906,7 +5903,6 @@ pub extern "C" fn Servo_ReparentStyle(
             Some(parent_style),
             Some(parent_style_ignoring_first_line),
             Some(layout_parent_style),
-            &metrics,
             /* rule_cache = */ None,
             &mut RuleCacheConditions::default(),
         )
@@ -5927,7 +5923,6 @@ fn simulate_compute_values_failure(_: &PropertyValuePair) -> bool {
 
 fn create_context_for_animation<'a>(
     per_doc_data: &'a PerDocumentStyleDataImpl,
-    font_metrics_provider: &'a dyn FontMetricsProvider,
     style: &'a ComputedValues,
     parent_style: Option<&'a ComputedValues>,
     for_smil_animation: bool,
@@ -5935,7 +5930,6 @@ fn create_context_for_animation<'a>(
 ) -> Context<'a> {
     Context {
         builder: StyleBuilder::for_animation(per_doc_data.stylist.device(), style, parent_style),
-        font_metrics_provider,
         cached_system_font: None,
         in_media_query: false,
         quirks_mode: per_doc_data.stylist.quirks_mode(),
@@ -6006,7 +6000,6 @@ pub extern "C" fn Servo_GetComputedKeyframeValues(
     computed_keyframes: &mut nsTArray<structs::ComputedKeyframeValues>,
 ) {
     let data = PerDocumentStyleData::from_ffi(raw_data).borrow();
-    let metrics = get_metrics_provider_for_product();
 
     let element = GeckoElement(element);
     let pseudo = PseudoElement::from_pseudo_type(pseudo_type);
@@ -6024,7 +6017,6 @@ pub extern "C" fn Servo_GetComputedKeyframeValues(
     let mut conditions = Default::default();
     let mut context = create_context_for_animation(
         &data,
-        &metrics,
         &style,
         parent_style,
         /* for_smil_animation = */ false,
@@ -6136,7 +6128,6 @@ pub extern "C" fn Servo_GetAnimationValues(
     animation_values: &mut nsTArray<structs::RefPtr<structs::RawServoAnimationValue>>,
 ) {
     let data = PerDocumentStyleData::from_ffi(raw_data).borrow();
-    let metrics = get_metrics_provider_for_product();
 
     let element = GeckoElement(element);
     let parent_element = element.inheritance_parent();
@@ -6149,7 +6140,6 @@ pub extern "C" fn Servo_GetAnimationValues(
     let mut conditions = Default::default();
     let mut context = create_context_for_animation(
         &data,
-        &metrics,
         &style,
         parent_style,
         /* for_smil_animation = */ true,
@@ -6189,7 +6179,6 @@ pub extern "C" fn Servo_AnimationValue_Compute(
     raw_data: &RawServoStyleSet,
 ) -> Strong<RawServoAnimationValue> {
     let data = PerDocumentStyleData::from_ffi(raw_data).borrow();
-    let metrics = get_metrics_provider_for_product();
 
     let element = GeckoElement(element);
     let parent_element = element.inheritance_parent();
@@ -6202,7 +6191,6 @@ pub extern "C" fn Servo_AnimationValue_Compute(
     let mut conditions = Default::default();
     let mut context = create_context_for_animation(
         &data,
-        &metrics,
         style,
         parent_style,
         /* for_smil_animation = */ false,
@@ -7163,12 +7151,9 @@ pub unsafe extern "C" fn Servo_ParseFontShorthandForMatching(
             },
             // Map absolute-size keywords to sizes.
             specified::FontSize::Keyword(info) => {
-                let metrics = get_metrics_provider_for_product();
-                // TODO: Maybe get a meaningful language / quirks-mode from the
-                // caller?
-                let language = atom!("x-western");
+                // TODO: Maybe get a meaningful quirks / base size from the caller?
                 let quirks_mode = QuirksMode::NoQuirks;
-                info.kw.to_length_without_context(quirks_mode, &metrics, &language, family).0.px()
+                info.kw.to_length_without_context(quirks_mode, computed::Length::new(specified::FONT_MEDIUM_PX)).0.px()
             }
             // smaller, larger not currently supported
             specified::FontSize::Smaller | specified::FontSize::Larger | specified::FontSize::System(_) => {

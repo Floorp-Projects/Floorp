@@ -1059,6 +1059,10 @@ already_AddRefed<RawServoAnimationValue> ServoStyleSet::ComputeAnimationValue(
       .Consume();
 }
 
+bool ServoStyleSet::UsesFontMetrics() const {
+  return Servo_StyleSet_UsesFontMetrics(mRawSet.get());
+}
+
 bool ServoStyleSet::EnsureUniqueInnerOnCSSSheets() {
   using SheetOwner = Variant<ServoStyleSet*, ShadowRoot*>;
 
