@@ -18,6 +18,11 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
   Log: "resource://gre/modules/Log.jsm",
   UIState: "resource://services-sync/UIState.jsm",
   SyncedTabs: "resource://services-sync/SyncedTabs.jsm",
+  Weave: "resource://services-sync/main.js",
+});
+
+XPCOMUtils.defineLazyGetter(lazy, "syncUtils", () => {
+  return ChromeUtils.import("resource://services-sync/util.js").Utils;
 });
 
 XPCOMUtils.defineLazyGetter(lazy, "fxAccounts", () => {
@@ -44,6 +49,7 @@ const NETWORK_STATUS_CHANGED = "network:offline-status-changed";
 const SYNC_SERVICE_ERROR = "weave:service:sync:error";
 const FXA_ENABLED = "identity.fxaccounts.enabled";
 const SYNC_SERVICE_FINISHED = "weave:service:sync:finish";
+const PRIMARY_PASSWORD_UNLOCKED = "passwordmgr-crypto-login";
 
 function openTabInWindow(window, url) {
   const {
@@ -74,7 +80,10 @@ export const TabsSetupFlowManager = new (class {
           (this.syncIsWorking || this.syncHasWorked) &&
           !Services.prefs.prefIsLocked(FXA_ENABLED) &&
           // its only an error for sync to not be connected if we are signed-in.
-          (this.syncIsConnected || !this.fxaSignedIn)
+          (this.syncIsConnected || !this.fxaSignedIn) &&
+          // We treat a locked primary password as an error if we are signed-in.
+          // If the user dismisses the prompt to unlock, they can use the "Try again" button to prompt again
+          (!this.isPrimaryPasswordLocked || !this.fxaSignedIn)
         );
       },
     });
@@ -114,6 +123,7 @@ export const TabsSetupFlowManager = new (class {
     Services.obs.addObserver(this, SYNC_SERVICE_ERROR);
     Services.obs.addObserver(this, SYNC_SERVICE_FINISHED);
     Services.obs.addObserver(this, TOPIC_TABS_CHANGED);
+    Services.obs.addObserver(this, PRIMARY_PASSWORD_UNLOCKED);
 
     // this.syncTabsPrefEnabled will track the value of the tabs pref
     XPCOMUtils.defineLazyPreferenceGetter(
@@ -160,11 +170,17 @@ export const TabsSetupFlowManager = new (class {
     };
   }
 
+  get isPrimaryPasswordLocked() {
+    return lazy.syncUtils.mpLocked();
+  }
+
   getErrorType() {
     // this ordering is important for dealing with multiple errors at once
     const errorStates = {
       "network-offline": !this.networkIsOnline,
-      "sync-error": !this.syncIsWorking && !this.syncHasWorked,
+      "sync-error":
+        (!this.syncIsWorking && !this.syncHasWorked) ||
+        this.isPrimaryPasswordLocked,
       "fxa-admin-disabled": Services.prefs.prefIsLocked(FXA_ENABLED),
       "sync-disconnected": !this.syncIsConnected,
     };
@@ -184,6 +200,7 @@ export const TabsSetupFlowManager = new (class {
     Services.obs.removeObserver(this, SYNC_SERVICE_ERROR);
     Services.obs.removeObserver(this, SYNC_SERVICE_FINISHED);
     Services.obs.removeObserver(this, TOPIC_TABS_CHANGED);
+    Services.obs.removeObserver(this, PRIMARY_PASSWORD_UNLOCKED);
   }
   get currentSetupState() {
     return this.setupState.get(this._currentSetupStateName);
@@ -302,6 +319,10 @@ export const TabsSetupFlowManager = new (class {
       case TOPIC_TABS_CHANGED:
         this.stopWaitingForTabs();
         break;
+      case PRIMARY_PASSWORD_UNLOCKED:
+        this.logger.debug(`Handling ${PRIMARY_PASSWORD_UNLOCKED}`);
+        this.tryToClearError();
+        break;
     }
   }
 
@@ -337,6 +358,7 @@ export const TabsSetupFlowManager = new (class {
       this._waitingForTabs = false;
       return;
     }
+
     // Now we need to figure out if we have recently synced tabs to show
     // Or, if we are going to need to trigger a tab sync for them
     const recentTabs = await lazy.SyncedTabs.getRecentTabs(50);
@@ -364,6 +386,10 @@ export const TabsSetupFlowManager = new (class {
 
     if (tabSyncNeeded) {
       this.startWaitingForTabs();
+      this.logger.debug(
+        "isPrimaryPasswordLocked:",
+        this.isPrimaryPasswordLocked
+      );
       this.logger.debug("onSignedInChange, no recentTabs, calling syncTabs");
       // If the syncTabs call rejects or resolves false we need to clear the waiting
       // flag and update UI
@@ -468,6 +494,7 @@ export const TabsSetupFlowManager = new (class {
       }
       if (uiStateIndex == 0) {
         errorState = this.getErrorType();
+        this.logger.debug("maybeUpdateUI, in error state:", errorState);
       }
       Services.obs.notifyObservers(null, TOPIC_SETUPSTATE_CHANGED, errorState);
     }
@@ -510,7 +537,19 @@ export const TabsSetupFlowManager = new (class {
     Services.prefs.setBoolPref(SYNC_TABS_PREF, true);
   }
 
-  forceSyncTabs() {
-    lazy.SyncedTabs.syncTabs(true);
+  tryToClearError() {
+    if (lazy.UIState.isReady() && this.fxaSignedIn) {
+      this.startWaitingForTabs();
+      Services.tm.dispatchToMainThread(() => {
+        this.logger.debug("tryToClearError: triggering new tab sync");
+        lazy.Weave.Service.sync({ why: "tabs", engines: ["tabs"] });
+      });
+    } else {
+      this.logger.debug(
+        `tryToClearError: unable to sync, isReady: ${lazy.UIState.isReady()}, fxaSignedIn: ${
+          this.fxaSignedIn
+        }`
+      );
+    }
   }
 })();
