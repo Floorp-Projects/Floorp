@@ -1010,4 +1010,20 @@ var vectors = [
     data: "<svg><template></template></svg>",
     sanitized: "<html><head></head><body></body></html>",
   },
+  {
+    data: "<svg><use href='http://example.com/test.svg'></svg>",
+    flags: 1, // ParserUtils.SanitizerAllowStyle
+    sanitized: "<html><head></head><body><svg><use></use></svg></body></html>",
+  },
+  {
+    // fragments that reference the same document are allowed.
+    data: "<svg><use href='#x'></svg>",
+    flags: 1, // ParserUtils.SanitizerAllowStyle
+    sanitized: '<html><head></head><body><svg><use href="#x"></use></svg></body></html>',
+  },
+  {
+    data: '<svg><use xlink:href="http://example/#baz"/></svg>',
+    flags: 1, // ParserUtils.SanitizerAllowStyl,
+    sanitized: "<html><head></head><body><svg><use></use></svg></body></html>",
+  },
 ];
