@@ -72,6 +72,12 @@ TEST(OriginAttributes, FirstPartyDomain_default)
   TEST_FPD(u"about:config",
            u"about.ef2a7dd5-93bc-417f-a698-142c3116864f.mozilla");
   TEST_FPD(u"moz-extension://f5b6ca10-5bd4-4ed6-9baf-820dc5152bc1", u"");
+  TEST_FPD(u"moz-nullprincipal:{9bebdabb-828a-4284-8b00-432a968c6e42}",
+           u"9bebdabb-828a-4284-8b00-432a968c6e42.mozilla");
+  TEST_FPD(
+      u"moz-nullprincipal:{9bebdabb-828a-4284-8b00-432a968c6e42}"
+      u"?https://www.example.com",
+      u"9bebdabb-828a-4284-8b00-432a968c6e42.mozilla");
 
   Preferences::SetBool(FPI_PREF, oldFpiPref);
   Preferences::SetBool(SITE_PREF, oldSitePref);
@@ -98,28 +104,12 @@ TEST(OriginAttributes, FirstPartyDomain_site)
   TEST_FPD(u"about:config",
            u"(about,about.ef2a7dd5-93bc-417f-a698-142c3116864f.mozilla)");
   TEST_FPD(u"moz-extension://f5b6ca10-5bd4-4ed6-9baf-820dc5152bc1", u"");
-
-  Preferences::SetBool(FPI_PREF, oldFpiPref);
-  Preferences::SetBool(SITE_PREF, oldSitePref);
-}
-
-TEST(OriginAttributes, NullPrincipal)
-{
-  bool oldFpiPref = Preferences::GetBool(FPI_PREF);
-  Preferences::SetBool(FPI_PREF, true);
-  bool oldSitePref = Preferences::GetBool(SITE_PREF);
-  Preferences::SetBool(SITE_PREF, true);
-
-  constexpr auto spec =
-      u"moz-nullprincipal:{9bebdabb-828a-4284-8b00-432a968c6e42}"_ns;
-  constexpr auto expected = u"9bebdabb-828a-4284-8b00-432a968c6e42.mozilla"_ns;
-
-  nsCOMPtr<nsIURI> uri;
-  NS_NewURI(getter_AddRefs(uri), spec);
-
-  RefPtr<NullPrincipal> prin =
-      NullPrincipal::CreateInternal(OriginAttributes(), true, uri);
-  EXPECT_TRUE(prin->OriginAttributesRef().mFirstPartyDomain.Equals(expected));
+  TEST_FPD(u"moz-nullprincipal:{9bebdabb-828a-4284-8b00-432a968c6e42}",
+           u"9bebdabb-828a-4284-8b00-432a968c6e42.mozilla");
+  TEST_FPD(
+      u"moz-nullprincipal:{9bebdabb-828a-4284-8b00-432a968c6e42}"
+      u"?https://www.example.com",
+      u"9bebdabb-828a-4284-8b00-432a968c6e42.mozilla");
 
   Preferences::SetBool(FPI_PREF, oldFpiPref);
   Preferences::SetBool(SITE_PREF, oldSitePref);
