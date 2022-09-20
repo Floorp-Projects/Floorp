@@ -2390,13 +2390,6 @@ nsSocketTransport::Close(nsresult reason) {
 
   mDoNotRetryToConnect = true;
 
-  if (mCondition == NS_ERROR_NET_RESET && mDNSRecord &&
-      mOutput.ByteCount() == 0) {
-    // If we are here, it's likely that we are retrying a transaction. Blocking
-    // the already used address could increase the successful rate of the retry.
-    mDNSRecord->ReportUnusable(SocketPort());
-  }
-
   mInput.CloseWithStatus(reason);
   mOutput.CloseWithStatus(reason);
   return NS_OK;
