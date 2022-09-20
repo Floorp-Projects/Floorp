@@ -54,11 +54,16 @@ If you add a new definitions file, be sure to edit
 `toolkit/components/glean/metrics_index.py`,
 adding your definitions files to the Python lists therein.
 If you don't, no API will be generated for your metrics and your build will fail.
+You will have to decide which products your metrics will be used in.
+For code that's also used in other Gecko-based products (Firefox Desktop, Firefox for Android, Focus for Android), use `gecko_metrics`.
+For Desktop-only instrumentation use `firefox_desktop_metrics`.
+For other products use their respective lists.
 
-In addition, do not forget to file a bug in `Data Platform and Tools :: General`
-asking for your definitions files to be added to the others for `firefox_desktop`.
-If you don't, your metrics will not show up in datasets and tools
-because the pipeline won't know that they exist.
+Changes to `metrics_index.py` are automatically reflected in the data pipeline once a day
+using the [fog-updater automation in probe-scraper](https://github.com/mozilla/probe-scraper/tree/main/fog-updater).
+Data will not show up in datasets and tools until this happens.
+If something is unclear or data is not showing up in time you will need to file a bug in
+`Data Platform and Tools :: General`.
 
 If you have any questions, be sure to ask on
 [the #glean channel](https://chat.mozilla.org/#/room/#glean:mozilla.org).
