@@ -106,6 +106,13 @@ IS_MACOSX = sys.platform == 'darwin'
 IS_POSIX = os.name == 'posix'
 IS_WINDOWS = os.name == 'nt'
 
+# Both mercurial and git use sha1 as revision idenfiers. Luckily, both define
+# the same value as the null revision.
+#
+# https://github.com/git/git/blob/dc04167d378fb29d30e1647ff6ff51dd182bc9a3/t/oid-info/hash-info#L7
+# https://www.mercurial-scm.org/repo/hg-stable/file/82efc31bd152/mercurial/node.py#l30
+NULL_REVISION = "0000000000000000000000000000000000000000"
+
 
 def print_line(prefix, m):
     now = datetime.datetime.utcnow().isoformat().encode('utf-8')
@@ -557,6 +564,8 @@ def git_checkout(
     destination_path: str,
     head_repo: str,
     base_repo: Optional[str],
+    base_ref: Optional[str],
+    base_rev: Optional[str],
     ref: Optional[str],
     commit: Optional[str],
     ssh_key_file: Optional[Path],
@@ -591,11 +600,47 @@ def git_checkout(
 
         retry_required_command(b'vcs', args, extra_env=env)
 
+    if base_ref:
+        args = [
+            'git',
+            'fetch',
+            'origin',
+            base_ref
+        ]
+
+        retry_required_command(b'vcs', args, cwd=destination_path, extra_env=env)
+
+        # Create local branch so that taskgraph is able to compute differences
+        # between the head branch and the base one, if needed
+        args = [
+            'git',
+            'checkout',
+            base_ref
+        ]
+
+        retry_required_command(b'vcs', args, cwd=destination_path, extra_env=env)
+
+    # When commits are force-pushed (like on a testing branch), base_rev doesn't
+    # exist on base_ref. Fetching it allows taskgraph to compute differences
+    # between the previous state before the force-push and the current state.
+    #
+    # Unlike base_ref just above, there is no need to checkout the revision:
+    # it's immediately avaiable after the fetch.
+    if base_rev and base_rev != NULL_REVISION:
+        args = [
+            'git',
+            'fetch',
+            'origin',
+            base_rev
+        ]
+
+        retry_required_command(b'vcs', args, cwd=destination_path, extra_env=env)
+
     # If a ref isn't provided, we fetch all refs from head_repo, which may be slow
     args = [
         'git',
         'fetch',
-        '--tags',
+        '--no-tags',
         head_repo,
         ref if ref else '+refs/heads/*:refs/remotes/work/*'
     ]
@@ -606,10 +651,30 @@ def git_checkout(
         'git',
         'checkout',
         '-f',
-        commit if commit else ref
     ]
 
+    if ref:
+        args.extend(['-B', ref])
+    args.append(commit if commit else ref)
+
     run_required_command(b'vcs', args, cwd=destination_path)
+
+    if os.path.exists(os.path.join(destination_path, '.gitmodules')):
+        args = [
+            'git',
+            'submodule',
+            'init',
+        ]
+
+        run_required_command(b'vcs', args, cwd=destination_path)
+
+        args = [
+            'git',
+            'submodule',
+            'update',
+        ]
+
+        run_required_command(b'vcs', args, cwd=destination_path)
 
     _clean_git_checkout(destination_path)
 
@@ -818,6 +883,8 @@ def collect_vcs_options(args, project, name):
 
     repo_type = os.environ.get('%s_REPOSITORY_TYPE' % env_prefix)
     base_repo = os.environ.get('%s_BASE_REPOSITORY' % env_prefix)
+    base_ref = os.environ.get('%s_BASE_REF' % env_prefix)
+    base_rev = os.environ.get('%s_BASE_REV' % env_prefix)
     head_repo = os.environ.get('%s_HEAD_REPOSITORY' % env_prefix)
     revision = os.environ.get('%s_HEAD_REV' % env_prefix)
     ref = os.environ.get('%s_HEAD_REF' % env_prefix)
@@ -849,6 +916,8 @@ def collect_vcs_options(args, project, name):
         'checkout': checkout,
         'sparse-profile': sparse_profile,
         'base-repo': base_repo,
+        'base-ref': base_ref,
+        'base-rev': base_rev,
         'head-repo': head_repo,
         'revision': revision,
         'ref': ref,
@@ -896,6 +965,8 @@ def vcs_checkout_from_args(options, *, hgmo_fingerprint):
                 options['checkout'],
                 options['head-repo'],
                 options['base-repo'],
+                options['base-ref'],
+                options['base-rev'],
                 ref,
                 revision,
                 ssh_key_file,

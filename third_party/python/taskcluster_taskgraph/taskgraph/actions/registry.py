@@ -7,6 +7,8 @@ import json
 from collections import namedtuple
 from types import FunctionType
 
+from mozilla_repo_urls import parse
+
 from taskgraph import create
 from taskgraph.config import load_graph_config
 from taskgraph.parameters import Parameters
@@ -291,24 +293,20 @@ def sanity_check_task_scope(callback, parameters, graph_config):
         if action.cb_name == callback:
             break
     else:
-        raise Exception(f"No action with cb_name {callback}")
+        raise ValueError(f"No action with cb_name {callback}")
 
     actionPerm = "generic" if action.generic else action.cb_name
 
     repo_param = "head_repository"
-    head_repository = parameters[repo_param]
-    if not head_repository.startswith(("https://hg.mozilla.org", "https://github.com")):
-        raise Exception(
-            "{} is not either https://hg.mozilla.org or https://github.com !"
-        )
-
-    expected_scope = f"assume:repo:{head_repository[8:]}:action:{actionPerm}"
+    raw_url = parameters[repo_param]
+    parsed_url = parse(raw_url)
+    expected_scope = f"assume:{parsed_url.taskcluster_role_prefix}:action:{actionPerm}"
 
     # the scope should appear literally; no need for a satisfaction check. The use of
     # get_current_scopes here calls the auth service through the Taskcluster Proxy, giving
     # the precise scopes available to this task.
     if expected_scope not in taskcluster.get_current_scopes():
-        raise Exception(f"Expected task scope {expected_scope} for this action")
+        raise ValueError(f"Expected task scope {expected_scope} for this action")
 
 
 def trigger_action_callback(

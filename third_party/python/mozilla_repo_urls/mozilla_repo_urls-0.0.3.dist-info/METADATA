@@ -1,0 +1,16 @@
+Metadata-Version: 2.1
+Name: mozilla-repo-urls
+Version: 0.0.3
+Summary: Process Mozilla's repository URLs. The intent is to centralize URLs parsing.
+Home-page: https://github.com/mozilla-releng/mozilla-repo-urls
+Author: Mozilla Release Engineering
+Author-email: release+python@mozilla.com
+License: MPL2
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3.6
+Classifier: Programming Language :: Python :: 3.7
+Classifier: Programming Language :: Python :: 3.8
+Classifier: Programming Language :: Python :: 3.9
+Classifier: Programming Language :: Python :: 3.10
+Requires-Dist: giturlparse
+

@@ -75,6 +75,7 @@ vendored:third_party/python/ecdsa
 vendored:third_party/python/esprima
 vendored:third_party/python/fluent.migrate
 vendored:third_party/python/fluent.syntax
+vendored:third_party/python/giturlparse
 vendored:third_party/python/gyp/pylib
 vendored:third_party/python/idna
 vendored:third_party/python/idna-ssl
@@ -87,6 +88,7 @@ vendored:third_party/python/jsonschema
 vendored:third_party/python/looseversion
 vendored:third_party/python/MarkupSafe/src
 vendored:third_party/python/mohawk
+vendored:third_party/python/mozilla_repo_urls
 vendored:third_party/python/mozilla_version
 vendored:third_party/python/multidict
 vendored:third_party/python/packaging
