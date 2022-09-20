@@ -452,10 +452,10 @@ inline bool is_int24(int64_t val) {
 }
 
 inline bool IsIdentifierStart(base::uc32 c) {
-  return js::unicode::IsIdentifierStart(uint32_t(c));
+  return js::unicode::IsIdentifierStart(char32_t(c));
 }
 inline bool IsIdentifierPart(base::uc32 c) {
-  return js::unicode::IsIdentifierPart(uint32_t(c));
+  return js::unicode::IsIdentifierPart(char32_t(c));
 }
 
 // Wrappers to disambiguate char16_t and uc16.

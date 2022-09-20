@@ -1303,7 +1303,7 @@ def make_unicode_file(
 
     def write_supplemental_identifier_method(name, group_set, println):
         println("bool")
-        println("js::unicode::{}(uint32_t codePoint)".format(name))
+        println("js::unicode::{}(char32_t codePoint)".format(name))
         println("{")
         for (from_code, to_code) in int_ranges(group_set.keys()):
             println(

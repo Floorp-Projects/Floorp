@@ -1257,7 +1257,7 @@ const uint8_t unicode::folding_index2[] = {
 };
 
 bool
-js::unicode::IsIdentifierStartNonBMP(uint32_t codePoint)
+js::unicode::IsIdentifierStartNonBMP(char32_t codePoint)
 {
     if (codePoint >= 0x10000 && codePoint <= 0x1000B) { // LINEAR B SYLLABLE B008 A .. LINEAR B SYLLABLE B046 JE
         return true;
@@ -2073,7 +2073,7 @@ js::unicode::IsIdentifierStartNonBMP(uint32_t codePoint)
 }
 
 bool
-js::unicode::IsIdentifierPartNonBMP(uint32_t codePoint)
+js::unicode::IsIdentifierPartNonBMP(char32_t codePoint)
 {
     if (codePoint >= 0x10000 && codePoint <= 0x1000B) { // LINEAR B SYLLABLE B008 A .. LINEAR B SYLLABLE B046 JE
         return true;

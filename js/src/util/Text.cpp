@@ -194,7 +194,7 @@ char16_t* js::InflateString(JSContext* cx, const char* bytes, size_t length) {
  * Convert one UCS-4 char and write it into a UTF-8 buffer, which must be at
  * least 4 bytes long.  Return the number of UTF-8 bytes of data written.
  */
-uint32_t js::OneUcs4ToUtf8Char(uint8_t* utf8Buffer, uint32_t ucs4Char) {
+uint32_t js::OneUcs4ToUtf8Char(uint8_t* utf8Buffer, char32_t ucs4Char) {
   MOZ_ASSERT(ucs4Char <= unicode::NonBMPMax);
 
   if (ucs4Char < 0x80) {
