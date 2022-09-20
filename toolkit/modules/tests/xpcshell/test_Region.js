@@ -4,7 +4,9 @@ const { AppConstants } = ChromeUtils.import(
   "resource://gre/modules/AppConstants.jsm"
 );
 const { HttpServer } = ChromeUtils.import("resource://testing-common/httpd.js");
-const { Region } = ChromeUtils.import("resource://gre/modules/Region.jsm");
+const { Region } = ChromeUtils.importESModule(
+  "resource://gre/modules/Region.sys.mjs"
+);
 const { setTimeout } = ChromeUtils.import("resource://gre/modules/Timer.jsm");
 const { TestUtils } = ChromeUtils.import(
   "resource://testing-common/TestUtils.jsm"

@@ -3,8 +3,11 @@
 
 "use strict";
 
+ChromeUtils.defineESModuleGetters(this, {
+  IgnoreLists: "resource://gre/modules/IgnoreLists.sys.mjs",
+});
+
 XPCOMUtils.defineLazyModuleGetters(this, {
-  IgnoreLists: "resource://gre/modules/IgnoreLists.jsm",
   PromiseUtils: "resource://gre/modules/PromiseUtils.jsm",
   RemoteSettings: "resource://services-settings/remote-settings.js",
   RemoteSettingsClient: "resource://services-settings/RemoteSettingsClient.jsm",

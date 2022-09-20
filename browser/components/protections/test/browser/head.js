@@ -12,8 +12,8 @@ const nsLoginInfo = new Components.Constructor(
   "init"
 );
 
-XPCOMUtils.defineLazyModuleGetters(this, {
-  Region: "resource://gre/modules/Region.jsm",
+ChromeUtils.defineESModuleGetters(this, {
+  Region: "resource://gre/modules/Region.sys.mjs",
 });
 
 const { SearchTestUtils } = ChromeUtils.importESModule(

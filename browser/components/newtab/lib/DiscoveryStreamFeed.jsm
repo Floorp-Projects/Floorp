@@ -25,11 +25,9 @@ const { setTimeout, clearTimeout } = ChromeUtils.import(
 const { actionTypes: at, actionCreators: ac } = ChromeUtils.import(
   "resource://activity-stream/common/Actions.jsm"
 );
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "Region",
-  "resource://gre/modules/Region.jsm"
-);
+ChromeUtils.defineESModuleGetters(lazy, {
+  Region: "resource://gre/modules/Region.sys.mjs",
+});
 ChromeUtils.defineModuleGetter(
   lazy,
   "PersistentCache",

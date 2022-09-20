@@ -3,9 +3,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 const lazy = {};
 
@@ -13,8 +11,6 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
   RemoteSettings: "resource://services-settings/remote-settings.js",
   RemoteSettingsClient: "resource://services-settings/RemoteSettingsClient.jsm",
 });
-
-var EXPORTED_SYMBOLS = ["IgnoreLists"];
 
 const SETTINGS_IGNORELIST_KEY = "hijack-blocklists";
 
@@ -95,4 +91,4 @@ class IgnoreListsManager {
   }
 }
 
-const IgnoreLists = new IgnoreListsManager();
+export const IgnoreLists = new IgnoreListsManager();

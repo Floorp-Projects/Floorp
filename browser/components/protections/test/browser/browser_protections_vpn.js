@@ -8,7 +8,9 @@ const { AboutProtectionsParent } = ChromeUtils.import(
   "resource:///actors/AboutProtectionsParent.jsm"
 );
 
-let { Region } = ChromeUtils.import("resource://gre/modules/Region.jsm");
+let { Region } = ChromeUtils.importESModule(
+  "resource://gre/modules/Region.sys.mjs"
+);
 
 const initialHomeRegion = Region._home;
 const initialCurrentRegion = Region._current;

@@ -15,8 +15,11 @@ const { XPCOMUtils } = ChromeUtils.importESModule(
 
 const lazy = {};
 
+ChromeUtils.defineESModuleGetters(lazy, {
+  Region: "resource://gre/modules/Region.sys.mjs",
+});
+
 XPCOMUtils.defineLazyModuleGetters(lazy, {
-  Region: "resource://gre/modules/Region.jsm",
   PingCentre: "resource:///modules/PingCentre.jsm",
 });
 

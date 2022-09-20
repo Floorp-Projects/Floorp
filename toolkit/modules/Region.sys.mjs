@@ -4,11 +4,8 @@
 
 "use strict";
 
-const EXPORTED_SYMBOLS = ["Region"];
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
 const { AppConstants } = ChromeUtils.import(
   "resource://gre/modules/AppConstants.jsm"
 );
@@ -874,7 +871,7 @@ class RegionDetector {
   }
 }
 
-let Region = new RegionDetector();
+export let Region = new RegionDetector();
 Region.init();
 
 // A method that tries to determine if this user is in a US geography.

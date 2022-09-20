@@ -21,9 +21,12 @@ const { RemoteSettings } = ChromeUtils.import(
 
 const lazy = {};
 
+ChromeUtils.defineESModuleGetters(lazy, {
+  Region: "resource://gre/modules/Region.sys.mjs",
+});
+
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   Preferences: "resource://gre/modules/Preferences.jsm",
-  Region: "resource://gre/modules/Region.jsm",
 });
 
 const kGlobalPrefBranch = "doh-rollout";

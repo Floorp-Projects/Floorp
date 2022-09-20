@@ -32,6 +32,7 @@ ChromeUtils.defineModuleGetter(
 );
 ChromeUtils.defineESModuleGetters(this, {
   PlacesTestUtils: "resource://testing-common/PlacesTestUtils.sys.mjs",
+  Region: "resource://gre/modules/Region.sys.mjs",
 });
 ChromeUtils.defineModuleGetter(
   this,
@@ -40,11 +41,6 @@ ChromeUtils.defineModuleGetter(
 );
 const { AppConstants } = ChromeUtils.import(
   "resource://gre/modules/AppConstants.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  this,
-  "Region",
-  "resource://gre/modules/Region.jsm"
 );
 ChromeUtils.defineModuleGetter(
   this,
