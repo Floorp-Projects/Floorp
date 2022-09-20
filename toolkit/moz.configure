@@ -1907,37 +1907,14 @@ with only_when(compile_environment):
                 return namespace(version="2.03", what="VPX")
             return namespace(what="VPX")
 
-    # Building with -mfpu=neon requires either the "softfp" or the
-    # "hardfp" ABI. Depending on the compiler's default target, and the
-    # CFLAGS, the default ABI might be neither, in which case it is the
-    # "softfloat" ABI.
-    # The "softfloat" ABI is binary-compatible with the "softfp" ABI, so
-    # we can safely mix code built with both ABIs. So, if we detect
-    # that compiling uses the "softfloat" ABI, force the use of the
-    # "softfp" ABI instead.
-    # Confusingly, the __SOFTFP__ preprocessor variable indicates the
-    # "softfloat" ABI, not the "softfp" ABI.
-    # Note: VPX_ASFLAGS is also used in CFLAGS.
-    softfp = cxx_compiler.try_compile(
-        body="""
-        #ifndef __SOFTFP__
-        #error "compiler target supports -mfpu=neon, so we don't have to add extra flags"
-        #endif""",
-        when=in_tree_vpx.arm_asm,
-    )
-
-    @depends(in_tree_vpx, vpx_nasm, softfp, target)
-    def vpx_as_flags(vpx, vpx_nasm, softfp, target):
-        flags = []
+    @depends(in_tree_vpx, vpx_nasm, target, neon_flags)
+    def vpx_as_flags(vpx, vpx_nasm, target, neon_flags):
         if vpx and vpx.arm_asm:
             # These flags are a lie; they're just used to enable the requisite
             # opcodes; actual arch detection is done at runtime.
-            flags = ["-march=armv7-a", "-mfpu=neon"]
-            if softfp:
-                flags.append("-mfloat-abi=softfp")
+            return neon_flags
         elif vpx and vpx_nasm and target.os != "WINNT" and target.cpu != "x86_64":
-            flags = ["-DPIC"]
-        return flags
+            return ("-DPIC",)
 
     set_config("VPX_USE_NASM", True, when=vpx_nasm)
     set_config("VPX_ASFLAGS", vpx_as_flags)
@@ -2014,13 +1991,13 @@ with only_when(compile_environment):
         set_config("MOZ_JPEG_CFLAGS", jpeg_flags.cflags)
         set_config("MOZ_JPEG_LIBS", jpeg_flags.ldflags)
 
-    @depends("--with-system-jpeg", target)
-    def in_tree_jpeg_arm(system_jpeg, target):
+    @depends("--with-system-jpeg", target, neon_flags)
+    def in_tree_jpeg_arm(system_jpeg, target, neon_flags):
         if system_jpeg:
             return
 
         if target.cpu == "arm":
-            return ("-march=armv7-a", "-mfpu=neon")
+            return neon_flags
         elif target.cpu == "aarch64":
             return ("-march=armv8-a",)
 
