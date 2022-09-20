@@ -1,6 +1,6 @@
 import pytest
 
-from webdriver.bidi.modules.script import ContextTarget, ScriptEvaluateResultException
+from webdriver.bidi.modules.script import ContextTarget, RealmTarget, ScriptEvaluateResultException
 
 from ... import any_int, any_string, recursive_compare
 from .. import any_stack_trace
@@ -155,4 +155,29 @@ async def test_exception_details(bidi_session, new_tab, await_promise):
             },
         },
         exception.value.result,
+    )
+
+
+@pytest.mark.asyncio
+async def test_target_realm(bidi_session, top_context, default_realm):
+    result = await bidi_session.script.evaluate(
+        raw_result=True,
+        expression="window.foo = 3",
+        target=ContextTarget(top_context["context"], "sandbox"),
+        await_promise=True,
+    )
+    realm = result["realm"]
+
+    # Make sure that sandbox realm id is different from default
+    assert realm != default_realm
+
+    result = await bidi_session.script.evaluate(
+        raw_result=True,
+        expression="window.foo",
+        target=RealmTarget(realm),
+        await_promise=True,
+    )
+
+    recursive_compare(
+        {"realm": realm, "result": {"type": "number", "value": 3}}, result
     )

@@ -2,9 +2,35 @@ import pytest
 
 import webdriver.bidi.error as error
 
-from webdriver.bidi.modules.script import ContextTarget
+from webdriver.bidi.modules.script import ContextTarget, RealmTarget
+
+from .. import assert_handle
 
 pytestmark = pytest.mark.asyncio
+
+
+async def test_realm(bidi_session, top_context, call_function):
+    remote_value = await bidi_session.script.evaluate(
+        raw_result=True,
+        expression="({a:1})",
+        await_promise=False,
+        result_ownership="root",
+        target=ContextTarget(top_context["context"]),
+    )
+
+    assert_handle(remote_value["result"], True)
+
+    result = await call_function("arg => arg.a", [remote_value["result"]])
+
+    assert result == {"type": "number", "value": 1}
+
+    await bidi_session.script.disown(
+        handles=[remote_value["result"]["handle"]],
+        target=RealmTarget(remote_value["realm"]),
+    )
+
+    with pytest.raises(error.InvalidArgumentException):
+        await call_function("arg => arg.a", [remote_value["result"]])
 
 
 async def test_sandbox(bidi_session, top_context, call_function):
