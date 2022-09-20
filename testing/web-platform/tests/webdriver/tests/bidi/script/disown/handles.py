@@ -114,6 +114,12 @@ async def test_multiple_handles_for_same_object(
     result = await call_function("arg => arg.a", [remote_value2])
     assert result == {"type": "number", "value": 1}
 
+    # Check that both handles point to the same value
+    result = await call_function(
+        "(arg1, arg2) => arg1 === arg2", [remote_value1, remote_value2]
+    )
+    assert result == {"type": "boolean", "value": True}
+
     # Disown the handle 1
     await bidi_session.script.disown(
         handles=[remote_value1["handle"]], target=ContextTarget(top_context["context"])
