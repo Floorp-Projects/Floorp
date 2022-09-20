@@ -482,11 +482,13 @@ def write_mozbuild(
         for d, build_data in dirs.items():
             configs_by_dir[d].append((mozbuild_args, build_data))
 
+    mozbuilds = set()
     for relsrcdir, configs in sorted(configs_by_dir.items()):
         target_srcdir = mozpath.join(topsrcdir, relsrcdir)
         mkdir(target_srcdir)
 
         target_mozbuild = mozpath.join(target_srcdir, "moz.build")
+        mozbuilds.add(target_mozbuild)
         with open(target_mozbuild, "w") as fh:
             mb = MozbuildWriter(fh)
             mb.write(license_header)
@@ -541,6 +543,7 @@ def write_mozbuild(
             mb.finalize()
 
     dirs_mozbuild = mozpath.join(srcdir, "moz.build")
+    mozbuilds.add(dirs_mozbuild)
     with open(dirs_mozbuild, "w") as fh:
         mb = MozbuildWriter(fh)
         mb.write(license_header)
@@ -580,6 +583,13 @@ def write_mozbuild(
                     mb.write_mozbuild_list("DIRS", ["/%s" % d for d in common_dirs])
                     if cond:
                         mb.terminate_condition()
+
+    # Remove possibly stale moz.builds
+    for root, dirs, files in os.walk(srcdir):
+        if "moz.build" in files:
+            file = os.path.join(root, "moz.build")
+            if file not in mozbuilds:
+                os.unlink(file)
 
 
 def generate_gn_config(
