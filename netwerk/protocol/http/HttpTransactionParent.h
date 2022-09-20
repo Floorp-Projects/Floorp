@@ -11,13 +11,12 @@
 #include "mozilla/net/HttpTransactionShell.h"
 #include "mozilla/net/NeckoChannelParams.h"
 #include "mozilla/net/PHttpTransactionParent.h"
-#include "nsHttp.h"
 #include "nsCOMPtr.h"
+#include "nsHttp.h"
+#include "nsIRequest.h"
 #include "nsIThreadRetargetableRequest.h"
 #include "nsITransport.h"
-#include "nsIRequest.h"
-
-class nsITransportSecurityInfo;
+#include "nsITransportSecurityInfo.h"
 
 namespace mozilla::net {
 
@@ -122,7 +121,7 @@ class HttpTransactionParent final : public PHttpTransactionParent,
   nsCOMPtr<nsIEventTarget> mODATarget;
   Mutex mEventTargetMutex MOZ_UNANNOTATED{
       "HttpTransactionParent::EventTargetMutex"};
-  nsCOMPtr<nsISupports> mSecurityInfo;
+  nsCOMPtr<nsITransportSecurityInfo> mSecurityInfo;
   UniquePtr<nsHttpResponseHead> mResponseHead;
   UniquePtr<nsHttpHeaderArray> mResponseTrailers;
   RefPtr<ChannelEventQueue> mEventQ;
