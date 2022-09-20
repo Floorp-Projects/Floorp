@@ -118,9 +118,6 @@ class ScriptModule extends Module {
    *     If the target cannot be found.
    */
   async callFunction(options = {}) {
-    // TODO: Bug 1778976. Remove once command is fully supported.
-    this.assertExperimentalCommandsEnabled("script.callFunction");
-
     const {
       arguments: commandArguments = null,
       awaitPromise,
@@ -185,9 +182,6 @@ class ScriptModule extends Module {
    *     a RealmTarget or for ContextTarget.
    */
   async disown(options = {}) {
-    // TODO: Bug 1778976. Remove once command is fully supported.
-    this.assertExperimentalCommandsEnabled("script.disown");
-
     const { handles, target = {} } = options;
 
     lazy.assert.array(
@@ -243,9 +237,6 @@ class ScriptModule extends Module {
    *     If the target cannot be found.
    */
   async evaluate(options = {}) {
-    // TODO: Bug 1778976. Remove once command is fully supported.
-    this.assertExperimentalCommandsEnabled("script.evaluate");
-
     const {
       awaitPromise,
       expression: source,
