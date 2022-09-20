@@ -121,7 +121,7 @@ task-defaults:
                 release: '{component}(BR)'
                 nightly: '{component}(BN)'
                 default: '{component}(B)'
-        platform: android-all/opt
+        platform: AC-android-all/opt
         tier: 1
     worker-type: b-android
     worker:

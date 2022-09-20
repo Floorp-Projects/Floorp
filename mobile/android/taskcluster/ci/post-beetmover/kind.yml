@@ -20,7 +20,7 @@ task-template:
     worker-type: succeed
     treeherder:
         kind: build
-        platform: android-all/opt
+        platform: AC-android-all/opt
         symbol:
             by-build-type:
                 release: post-beetmover-release

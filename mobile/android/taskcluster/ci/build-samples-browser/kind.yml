@@ -33,7 +33,7 @@ task-defaults:
     run-on-tasks-for: [github-pull-request, github-push]
     treeherder:
         kind: build
-        platform: android-all/opt
+        platform: AC-android-all/opt
         tier: 1
     worker-type: b-android
     worker:
