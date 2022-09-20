@@ -182,19 +182,6 @@ public class ContentBlocking {
       }
 
       /**
-       * Set the cookie lifetime.
-       *
-       * @param lifetime The enforced cookie lifetime. Use one of the {@link CookieLifetime} flags.
-       * @return The Builder instance.
-       * @deprecated This feature is not supported anymore.
-       */
-      @Deprecated
-      @DeprecationSchedule(id = "cookie-lifetime-policy", version = 106)
-      public @NonNull Builder cookieLifetime(final @CBCookieLifetime int lifetime) {
-        return this;
-      }
-
-      /**
        * Set the ETP behavior level.
        *
        * @param level The level of ETP blocking to use. Only takes effect if cookie behavior is set
@@ -565,32 +552,6 @@ public class ContentBlocking {
      */
     public @NonNull Settings setCookieBehaviorPrivateMode(final @CBCookieBehavior int behavior) {
       mCookieBehaviorPrivateMode.commit(behavior);
-      return this;
-    }
-
-    /**
-     * Get the assigned cookie lifetime.
-     *
-     * @return The assigned lifetime, as one of {@link CookieLifetime} flags.
-     * @deprecated This feature is not supported anymore. This method always returns 0.
-     */
-    @Deprecated
-    @DeprecationSchedule(id = "cookie-lifetime-policy", version = 106)
-    @SuppressLint("WrongConstant")
-    public @CBCookieLifetime int getCookieLifetime() {
-      return 0;
-    }
-
-    /**
-     * Set the cookie lifetime.
-     *
-     * @param lifetime The enforced cookie lifetime. Use one of the {@link CookieLifetime} flags.
-     * @return This Settings instance.
-     * @deprecated This feature is not supported anymore.
-     */
-    @Deprecated
-    @DeprecationSchedule(id = "cookie-lifetime-policy", version = 106)
-    public @NonNull Settings setCookieLifetime(final @CBCookieLifetime int lifetime) {
       return this;
     }
 
@@ -1248,30 +1209,6 @@ public class ContentBlocking {
     CookieBehavior.ACCEPT_NON_TRACKERS
   })
   public @interface CBCookieBehavior {}
-
-  // Sync values with nsICookieService.idl.
-  // This feature is not supported anymore.
-  @Deprecated
-  @DeprecationSchedule(id = "cookie-lifetime-policy", version = 106)
-  public static class CookieLifetime {
-    /** Accept default cookie lifetime. */
-    public static final int NORMAL = 0;
-
-    /** Downgrade cookie lifetime to this runtime's lifetime. */
-    public static final int RUNTIME = 2;
-
-    /** Limit cookie lifetime to N days. Defaults to 90 days. */
-    public static final int DAYS = 3;
-
-    protected CookieLifetime() {}
-  }
-
-  // This feature is not supported anymore.
-  @Retention(RetentionPolicy.SOURCE)
-  @IntDef({CookieLifetime.NORMAL, CookieLifetime.RUNTIME, CookieLifetime.DAYS})
-  @Deprecated
-  @DeprecationSchedule(id = "cookie-lifetime-policy", version = 106)
-  public @interface CBCookieLifetime {}
 
   @Retention(RetentionPolicy.SOURCE)
   @IntDef({EtpLevel.NONE, EtpLevel.DEFAULT, EtpLevel.STRICT})
