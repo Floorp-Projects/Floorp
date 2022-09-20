@@ -16,6 +16,7 @@
 #include "gc/GCContext.h"
 #include "js/Utility.h"
 #include "threading/ProtectedData.h"
+#include "vm/HelperThreads.h"
 #include "vm/HelperThreadTask.h"
 
 #define JS_MEMBER_FN_PTR_TYPE(ClassT, ReturnT, /* ArgTs */...) \
@@ -35,12 +36,43 @@ class GCRuntime;
 }
 
 class AutoLockHelperThreadState;
+class GCParallelTask;
 class HelperThread;
+
+// A wrapper around a linked list to enforce synchronization.
+class GCParallelTaskList {
+  mozilla::LinkedList<GCParallelTask> tasks;
+
+ public:
+  bool isEmpty(const AutoLockHelperThreadState& lock) {
+    gHelperThreadLock.assertOwnedByCurrentThread();
+    return tasks.isEmpty();
+  }
+
+  void insertBack(GCParallelTask* task, const AutoLockHelperThreadState& lock) {
+    gHelperThreadLock.assertOwnedByCurrentThread();
+    tasks.insertBack(task);
+  }
+
+  GCParallelTask* popFirst(const AutoLockHelperThreadState& lock) {
+    gHelperThreadLock.assertOwnedByCurrentThread();
+    return tasks.popFirst();
+  }
+
+  size_t sizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf,
+                             const AutoLockHelperThreadState& lock) const {
+    gHelperThreadLock.assertOwnedByCurrentThread();
+    return tasks.sizeOfExcludingThis(aMallocSizeOf);
+  }
+};
 
 // A generic task used to dispatch work to the helper thread system.
 // Users override the pure-virtual run() method.
-class GCParallelTask : public mozilla::LinkedListElement<GCParallelTask>,
+class GCParallelTask : private mozilla::LinkedListElement<GCParallelTask>,
                        public HelperThreadTask {
+  friend class mozilla::LinkedList<GCParallelTask>;
+  friend class mozilla::LinkedListElement<GCParallelTask>;
+
  public:
   gc::GCRuntime* const gc;
 

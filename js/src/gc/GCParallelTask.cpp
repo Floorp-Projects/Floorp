@@ -23,6 +23,10 @@ using mozilla::TimeDuration;
 using mozilla::TimeStamp;
 
 js::GCParallelTask::~GCParallelTask() {
+  // The LinkedListElement destructor will remove us from any list we are part
+  // of without synchronization, so ensure that doesn't happen.
+  MOZ_DIAGNOSTIC_ASSERT(!isInList());
+
   // Only most-derived classes' destructors may do the join: base class
   // destructors run after those for derived classes' members, so a join in a
   // base class can't ensure that the task is done using the members. All we

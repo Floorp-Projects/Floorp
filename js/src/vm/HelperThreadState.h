@@ -109,7 +109,6 @@ class GlobalHelperThreadState {
       Vector<js::UniquePtr<FreeDelazifyTask>, 1, SystemAllocPolicy>;
   typedef Vector<UniquePtr<SourceCompressionTask>, 0, SystemAllocPolicy>
       SourceCompressionTaskVector;
-  using GCParallelTaskList = mozilla::LinkedList<GCParallelTask>;
   typedef Vector<PromiseHelperTask*, 0, SystemAllocPolicy>
       PromiseHelperTaskVector;
   typedef Vector<JSContext*, 0, SystemAllocPolicy> ContextVector;
@@ -197,7 +196,7 @@ class GlobalHelperThreadState {
 
  public:
   void addSizeOfIncludingThis(JS::GlobalStats* stats,
-                              AutoLockHelperThreadState& lock) const;
+                              const AutoLockHelperThreadState& lock) const;
 
   size_t maxIonCompilationThreads() const;
   size_t maxWasmCompilationThreads() const;
@@ -332,9 +331,7 @@ class GlobalHelperThreadState {
     return compressionFinishedList_;
   }
 
-  GCParallelTaskList& gcParallelWorklist(const AutoLockHelperThreadState&) {
-    return gcParallelWorklist_;
-  }
+  GCParallelTaskList& gcParallelWorklist() { return gcParallelWorklist_; }
 
   void setGCParallelThreadCount(size_t count,
                                 const AutoLockHelperThreadState&) {
@@ -682,6 +679,7 @@ struct DelazifyTask : public mozilla::LinkedListElement<DelazifyTask>,
       const frontend::CompilationStencil& stencil);
 
   DelazifyTask(JSRuntime* runtime, const JS::ContextOptions& options);
+  ~DelazifyTask();
 
   [[nodiscard]] bool init(
       const JS::ReadOnlyCompileOptions& options,
