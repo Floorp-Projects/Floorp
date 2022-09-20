@@ -57,6 +57,23 @@ tasks:
                   else:
                       $if: 'tasks_for in ["cron", "action"]'
                       then: '${push.branch}'
+          base_ref:
+              $if: 'tasks_for == "github-pull-request"'
+              then: ${event.pull_request.base.ref}
+              else:
+                  # event.base_ref is barely documented[1]. Testing showed it's only
+                  # defined when creating a new branch. It's null when pushing to an
+                  # existing branch
+                  #
+                  # [1] https://docs.github.com/en/developers/webhooks-and-events/webhooks/webhook-events-and-payloads#push
+                  $if: 'tasks_for == "github-push" && event.base_ref'
+                  then: ${event.base_ref}
+                  else:
+                      $if: 'tasks_for == "github-push"'
+                      then: ${event.ref}
+                      else:
+                          $if: 'tasks_for in ["cron", "action"]'
+                          then: '${push.branch}'
           base_sha:
               $if: 'tasks_for == "github-push"'
               then: '${event.before}'
@@ -192,6 +209,7 @@ tasks:
                                 # to `mach taskgraph decision` are all on the command line.
                                 $merge:
                                     - MOBILE_BASE_REPOSITORY: '${baseRepoUrl}'
+                                      MOBILE_BASE_REF: '${base_ref}'
                                       MOBILE_BASE_REV: '${base_sha}'
                                       MOBILE_HEAD_REPOSITORY: '${repoUrl}'
                                       MOBILE_HEAD_REF: '${head_branch}'
@@ -247,6 +265,8 @@ tasks:
                                           --owner='${ownerEmail}'
                                           --level='${level}'
                                           --base-repository="$MOBILE_BASE_REPOSITORY"
+                                          --base-ref="$MOBILE_BASE_REF"
+                                          --base-rev="$MOBILE_BASE_REV"
                                           --head-repository="$MOBILE_HEAD_REPOSITORY"
                                           --head-ref="$MOBILE_HEAD_REF"
                                           --head-rev="$MOBILE_HEAD_REV"
