@@ -316,8 +316,8 @@ class BaseRtpStringExtension {
   static constexpr uint8_t kMaxValueSizeBytes = 16;
 
   static bool Parse(rtc::ArrayView<const uint8_t> data, std::string* str);
-  static size_t ValueSize(const std::string& str) { return str.size(); }
-  static bool Write(rtc::ArrayView<uint8_t> data, const std::string& str);
+  static size_t ValueSize(absl::string_view str) { return str.size(); }
+  static bool Write(rtc::ArrayView<uint8_t> data, absl::string_view str);
 };
 
 class RtpStreamId : public BaseRtpStringExtension {

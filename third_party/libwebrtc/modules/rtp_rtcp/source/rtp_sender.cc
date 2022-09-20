@@ -17,6 +17,7 @@
 #include <utility>
 
 #include "absl/strings/match.h"
+#include "absl/strings/string_view.h"
 #include "api/array_view.h"
 #include "api/rtc_event_log/rtc_event_log.h"
 #include "logging/rtc_event_log/events/rtc_event_rtp_packet_outgoing.h"
@@ -591,19 +592,19 @@ uint32_t RTPSender::TimestampOffset() const {
   return timestamp_offset_;
 }
 
-void RTPSender::SetRid(const std::string& rid) {
+void RTPSender::SetRid(absl::string_view rid) {
   // RID is used in simulcast scenario when multiple layers share the same mid.
   MutexLock lock(&send_mutex_);
   RTC_DCHECK_LE(rid.length(), RtpStreamId::kMaxValueSizeBytes);
-  rid_ = rid;
+  rid_ = std::string(rid);
   UpdateHeaderSizes();
 }
 
-void RTPSender::SetMid(const std::string& mid) {
+void RTPSender::SetMid(absl::string_view mid) {
   // This is configured via the API.
   MutexLock lock(&send_mutex_);
   RTC_DCHECK_LE(mid.length(), RtpMid::kMaxValueSizeBytes);
-  mid_ = mid;
+  mid_ = std::string(mid);
   UpdateHeaderSizes();
 }
 
