@@ -3624,12 +3624,10 @@ nsDocShell::DisplayLoadError(nsresult aError, nsIURI* aURI,
       errorClass = nsINSSErrorsService::ERROR_CLASS_SSL_PROTOCOL;
     }
 
-    nsCOMPtr<nsISupports> securityInfo;
     nsCOMPtr<nsITransportSecurityInfo> tsi;
     if (aFailedChannel) {
-      aFailedChannel->GetSecurityInfo(getter_AddRefs(securityInfo));
+      aFailedChannel->GetSecurityInfo(getter_AddRefs(tsi));
     }
-    tsi = do_QueryInterface(securityInfo);
     if (tsi) {
       uint32_t securityState;
       tsi->GetSecurityState(&securityState);
@@ -6027,13 +6025,12 @@ already_AddRefed<nsIURI> nsDocShell::MaybeFixBadCertDomainErrorURI(
     return nullptr;
   }
 
-  nsCOMPtr<nsISupports> securityInfo;
-  rv = aChannel->GetSecurityInfo(getter_AddRefs(securityInfo));
+  nsCOMPtr<nsITransportSecurityInfo> tsi;
+  rv = aChannel->GetSecurityInfo(getter_AddRefs(tsi));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return nullptr;
   }
 
-  nsCOMPtr<nsITransportSecurityInfo> tsi = do_QueryInterface(securityInfo);
   if (NS_WARN_IF(!tsi)) {
     return nullptr;
   }

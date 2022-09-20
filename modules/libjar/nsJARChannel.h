@@ -83,7 +83,6 @@ class nsJARChannel final : public nsIJARChannel,
   nsCOMPtr<nsISupports> mOwner;
   nsCOMPtr<nsILoadInfo> mLoadInfo;
   nsCOMPtr<nsIInterfaceRequestor> mCallbacks;
-  nsCOMPtr<nsISupports> mSecurityInfo;
   nsCOMPtr<nsIProgressEventSink> mProgressSink;
   nsCOMPtr<nsILoadGroup> mLoadGroup;
   nsCOMPtr<nsIStreamListener> mListener;

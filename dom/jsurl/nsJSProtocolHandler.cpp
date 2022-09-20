@@ -959,7 +959,7 @@ nsJSChannel::SetNotificationCallbacks(nsIInterfaceRequestor* aCallbacks) {
 }
 
 NS_IMETHODIMP
-nsJSChannel::GetSecurityInfo(nsISupports** aSecurityInfo) {
+nsJSChannel::GetSecurityInfo(nsITransportSecurityInfo** aSecurityInfo) {
   return mStreamChannel->GetSecurityInfo(aSecurityInfo);
 }
 

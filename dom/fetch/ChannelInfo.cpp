@@ -23,9 +23,7 @@ void ChannelInfo::InitFromDocument(Document* aDoc) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(!mInited, "Cannot initialize the object twice");
 
-  nsCOMPtr<nsISupports> securityInfoSupports(aDoc->GetSecurityInfo());
-  nsCOMPtr<nsITransportSecurityInfo> securityInfo(
-      do_QueryInterface(securityInfoSupports));
+  nsCOMPtr<nsITransportSecurityInfo> securityInfo(aDoc->GetSecurityInfo());
   if (securityInfo) {
     SetSecurityInfo(securityInfo);
   }
@@ -37,10 +35,8 @@ void ChannelInfo::InitFromChannel(nsIChannel* aChannel) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(!mInited, "Cannot initialize the object twice");
 
-  nsCOMPtr<nsISupports> securityInfoSupports;
-  aChannel->GetSecurityInfo(getter_AddRefs(securityInfoSupports));
-  nsCOMPtr<nsITransportSecurityInfo> securityInfo(
-      do_QueryInterface(securityInfoSupports));
+  nsCOMPtr<nsITransportSecurityInfo> securityInfo;
+  aChannel->GetSecurityInfo(getter_AddRefs(securityInfo));
   if (securityInfo) {
     SetSecurityInfo(securityInfo);
   }

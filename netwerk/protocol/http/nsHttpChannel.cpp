@@ -1874,15 +1874,10 @@ nsresult nsHttpChannel::ProcessSecurityHeaders() {
   // security of the connection.
   NS_ENSURE_TRUE(mSecurityInfo, NS_OK);
 
-  // Get the TransportSecurityInfo
-  nsCOMPtr<nsITransportSecurityInfo> transSecInfo =
-      do_QueryInterface(mSecurityInfo);
-  NS_ENSURE_TRUE(transSecInfo, NS_ERROR_FAILURE);
-
   // Only process HSTS headers for first-party loads. This prevents a
   // proliferation of useless HSTS state for partitioned third parties.
   if (!mLoadInfo->GetIsThirdPartyContextToTopWindow()) {
-    rv = ProcessHSTSHeader(transSecInfo);
+    rv = ProcessHSTSHeader(mSecurityInfo);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
@@ -1901,12 +1896,12 @@ void nsHttpChannel::ProcessSSLInformation() {
     return;
   }
 
-  nsCOMPtr<nsITransportSecurityInfo> securityInfo =
-      do_QueryInterface(mSecurityInfo);
-  if (!securityInfo) return;
+  if (!mSecurityInfo) {
+    return;
+  }
 
   uint32_t state;
-  if (securityInfo && NS_SUCCEEDED(securityInfo->GetSecurityState(&state)) &&
+  if (NS_SUCCEEDED(mSecurityInfo->GetSecurityState(&state)) &&
       (state & nsIWebProgressListener::STATE_IS_BROKEN)) {
     // Send weak crypto warnings to the web console
     if (state & nsIWebProgressListener::STATE_USES_WEAK_CRYPTO) {
@@ -1917,7 +1912,7 @@ void nsHttpChannel::ProcessSSLInformation() {
   }
 
   uint16_t tlsVersion;
-  nsresult rv = securityInfo->GetProtocolVersion(&tlsVersion);
+  nsresult rv = mSecurityInfo->GetProtocolVersion(&tlsVersion);
   if (NS_SUCCEEDED(rv) &&
       tlsVersion != nsITransportSecurityInfo::TLS_VERSION_1_2 &&
       tlsVersion != nsITransportSecurityInfo::TLS_VERSION_1_3) {
@@ -4603,9 +4598,8 @@ void nsHttpChannel::CloseCacheEntry(bool doomOnFailure) {
   } else {
     // Store updated security info, makes cached EV status race less likely
     // (see bug 1040086)
-    nsCOMPtr<nsITransportSecurityInfo> tsi = do_QueryInterface(mSecurityInfo);
-    if (tsi) {
-      mCacheEntry->SetSecurityInfo(tsi);
+    if (mSecurityInfo) {
+      mCacheEntry->SetSecurityInfo(mSecurityInfo);
     }
   }
 
@@ -4747,14 +4741,13 @@ void nsHttpChannel::UpdateInhibitPersistentCachingFlag() {
 nsresult DoAddCacheEntryHeaders(nsHttpChannel* self, nsICacheEntry* entry,
                                 nsHttpRequestHead* requestHead,
                                 nsHttpResponseHead* responseHead,
-                                nsISupports* securityInfo) {
+                                nsITransportSecurityInfo* securityInfo) {
   nsresult rv;
 
   LOG(("nsHttpChannel::AddCacheEntryHeaders [this=%p] begin", self));
   // Store secure data in memory only
-  nsCOMPtr<nsITransportSecurityInfo> tsi = do_QueryInterface(securityInfo);
-  if (tsi) {
-    entry->SetSecurityInfo(tsi);
+  if (securityInfo) {
+    entry->SetSecurityInfo(securityInfo);
   }
 
   // Store the HTTP request method with the cache entry so we can distinguish
@@ -5779,7 +5772,7 @@ nsHttpChannel::Resume() {
 //-----------------------------------------------------------------------------
 
 NS_IMETHODIMP
-nsHttpChannel::GetSecurityInfo(nsISupports** securityInfo) {
+nsHttpChannel::GetSecurityInfo(nsITransportSecurityInfo** securityInfo) {
   NS_ENSURE_ARG_POINTER(securityInfo);
   *securityInfo = do_AddRef(mSecurityInfo).take();
   return NS_OK;

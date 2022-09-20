@@ -635,7 +635,7 @@ nsViewSourceChannel::SetNotificationCallbacks(
 }
 
 NS_IMETHODIMP
-nsViewSourceChannel::GetSecurityInfo(nsISupports** aSecurityInfo) {
+nsViewSourceChannel::GetSecurityInfo(nsITransportSecurityInfo** aSecurityInfo) {
   NS_ENSURE_TRUE(mChannel, NS_ERROR_FAILURE);
 
   return mChannel->GetSecurityInfo(aSecurityInfo);

@@ -734,9 +734,9 @@ nsJARChannel::SetNotificationCallbacks(nsIInterfaceRequestor* aCallbacks) {
 }
 
 NS_IMETHODIMP
-nsJARChannel::GetSecurityInfo(nsISupports** aSecurityInfo) {
+nsJARChannel::GetSecurityInfo(nsITransportSecurityInfo** aSecurityInfo) {
   MOZ_ASSERT(aSecurityInfo, "Null out param");
-  NS_IF_ADDREF(*aSecurityInfo = mSecurityInfo);
+  *aSecurityInfo = nullptr;
   return NS_OK;
 }
 

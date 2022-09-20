@@ -154,7 +154,8 @@ ClassifierDummyChannel::SetNotificationCallbacks(
 }
 
 NS_IMETHODIMP
-ClassifierDummyChannel::GetSecurityInfo(nsISupports** aSecurityInfo) {
+ClassifierDummyChannel::GetSecurityInfo(
+    nsITransportSecurityInfo** aSecurityInfo) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 

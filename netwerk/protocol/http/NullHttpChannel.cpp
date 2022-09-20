@@ -318,7 +318,7 @@ NullHttpChannel::SetNotificationCallbacks(
 }
 
 NS_IMETHODIMP
-NullHttpChannel::GetSecurityInfo(nsISupports** aSecurityInfo) {
+NullHttpChannel::GetSecurityInfo(nsITransportSecurityInfo** aSecurityInfo) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 

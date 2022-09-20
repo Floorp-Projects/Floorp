@@ -6,27 +6,27 @@
 #ifndef nsBaseChannel_h__
 #define nsBaseChannel_h__
 
-#include "mozilla/net/NeckoTargetHolder.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/MozPromise.h"
 #include "mozilla/UniquePtr.h"
-#include "nsString.h"
+#include "mozilla/net/NeckoTargetHolder.h"
+#include "mozilla/net/PrivateBrowsingChannel.h"
 #include "nsCOMPtr.h"
 #include "nsHashPropertyBag.h"
-#include "nsInputStreamPump.h"
-
+#include "nsIAsyncVerifyRedirectCallback.h"
 #include "nsIChannel.h"
-#include "nsIURI.h"
+#include "nsIInterfaceRequestor.h"
 #include "nsILoadGroup.h"
 #include "nsILoadInfo.h"
-#include "nsIStreamListener.h"
-#include "nsIInterfaceRequestor.h"
 #include "nsIProgressEventSink.h"
-#include "nsITransport.h"
-#include "nsIAsyncVerifyRedirectCallback.h"
+#include "nsIStreamListener.h"
 #include "nsIThreadRetargetableRequest.h"
 #include "nsIThreadRetargetableStreamListener.h"
-#include "mozilla/net/PrivateBrowsingChannel.h"
+#include "nsITransport.h"
+#include "nsITransportSecurityInfo.h"
+#include "nsIURI.h"
+#include "nsInputStreamPump.h"
+#include "nsString.h"
 #include "nsThreadUtils.h"
 
 class nsIInputStream;
@@ -187,8 +187,8 @@ class nsBaseChannel
 
   // The security info is a property of the transport-layer, which should be
   // assigned by the subclass.
-  nsISupports* SecurityInfo() { return mSecurityInfo; }
-  void SetSecurityInfo(nsISupports* info) { mSecurityInfo = info; }
+  nsITransportSecurityInfo* SecurityInfo() { return mSecurityInfo; }
+  void SetSecurityInfo(nsITransportSecurityInfo* info) { mSecurityInfo = info; }
 
   // Test the load flags
   bool HasLoadFlag(uint32_t flag) { return (mLoadFlags & flag) != 0; }
@@ -290,7 +290,7 @@ class nsBaseChannel
   nsCOMPtr<nsIProgressEventSink> mProgressSink;
   nsCOMPtr<nsIURI> mOriginalURI;
   nsCOMPtr<nsISupports> mOwner;
-  nsCOMPtr<nsISupports> mSecurityInfo;
+  nsCOMPtr<nsITransportSecurityInfo> mSecurityInfo;
   nsCOMPtr<nsIChannel> mRedirectChannel;
   nsCString mContentType;
   nsCString mContentCharset;

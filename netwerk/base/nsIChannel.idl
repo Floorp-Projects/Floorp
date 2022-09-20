@@ -6,10 +6,11 @@
 #include "nsIRequest.idl"
 #include "nsILoadInfo.idl"
 
-interface nsIURI;
-interface nsIInterfaceRequestor;
 interface nsIInputStream;
+interface nsIInterfaceRequestor;
 interface nsIStreamListener;
+interface nsITransportSecurityInfo;
+interface nsIURI;
 
 %{C++
 #include "nsCOMPtr.h"
@@ -96,7 +97,7 @@ interface nsIChannel : nsIRequest
      * FIXME(bz, bug 1528449) is that still true now that
      * document.open() doesn't do this?
      */
-    readonly attribute nsISupports securityInfo;
+    readonly attribute nsITransportSecurityInfo securityInfo;
 
     /**
      * The MIME type of the channel's content if available.

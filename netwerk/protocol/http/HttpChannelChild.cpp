@@ -1883,7 +1883,7 @@ HttpChannelChild::Resume() {
 //-----------------------------------------------------------------------------
 
 NS_IMETHODIMP
-HttpChannelChild::GetSecurityInfo(nsISupports** aSecurityInfo) {
+HttpChannelChild::GetSecurityInfo(nsITransportSecurityInfo** aSecurityInfo) {
   NS_ENSURE_ARG_POINTER(aSecurityInfo);
   *aSecurityInfo = do_AddRef(mSecurityInfo).take();
   return NS_OK;

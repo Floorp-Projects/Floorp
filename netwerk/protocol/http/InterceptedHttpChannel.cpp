@@ -572,8 +572,9 @@ InterceptedHttpChannel::Resume(void) {
 }
 
 NS_IMETHODIMP
-InterceptedHttpChannel::GetSecurityInfo(nsISupports** aSecurityInfo) {
-  nsCOMPtr<nsISupports> ref(mSecurityInfo);
+InterceptedHttpChannel::GetSecurityInfo(
+    nsITransportSecurityInfo** aSecurityInfo) {
+  nsCOMPtr<nsITransportSecurityInfo> ref(mSecurityInfo);
   ref.forget(aSecurityInfo);
   return NS_OK;
 }

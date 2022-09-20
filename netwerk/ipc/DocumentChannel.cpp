@@ -338,7 +338,8 @@ NS_IMETHODIMP DocumentChannel::SetOwner(nsISupports* aOwner) {
   return NS_OK;
 }
 
-NS_IMETHODIMP DocumentChannel::GetSecurityInfo(nsISupports** aSecurityInfo) {
+NS_IMETHODIMP DocumentChannel::GetSecurityInfo(
+    nsITransportSecurityInfo** aSecurityInfo) {
   *aSecurityInfo = nullptr;
   return NS_OK;
 }

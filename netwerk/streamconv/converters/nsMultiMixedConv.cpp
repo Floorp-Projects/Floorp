@@ -273,7 +273,7 @@ nsPartChannel::SetNotificationCallbacks(nsIInterfaceRequestor* aCallbacks) {
 }
 
 NS_IMETHODIMP
-nsPartChannel::GetSecurityInfo(nsISupports** aSecurityInfo) {
+nsPartChannel::GetSecurityInfo(nsITransportSecurityInfo** aSecurityInfo) {
   return mMultipartChannel->GetSecurityInfo(aSecurityInfo);
 }
 
