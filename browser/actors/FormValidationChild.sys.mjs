@@ -8,13 +8,11 @@
  * the display of the help panel on invalid elements.
  */
 
-var EXPORTED_SYMBOLS = ["FormValidationChild"];
-
 const { LayoutUtils } = ChromeUtils.import(
   "resource://gre/modules/LayoutUtils.jsm"
 );
 
-class FormValidationChild extends JSWindowActorChild {
+export class FormValidationChild extends JSWindowActorChild {
   constructor() {
     super();
     this._validationMessage = "";
