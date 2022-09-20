@@ -72,6 +72,10 @@ void TimespanMetric::SetRaw(uint32_t aDuration) const {
 
 Result<Maybe<uint64_t>, nsCString> TimespanMetric::TestGetValue(
     const nsACString& aPingName) const {
+  nsCString err;
+  if (fog_timespan_test_get_error(mId, &err)) {
+    return Err(err);
+  }
   if (!fog_timespan_test_has_value(mId, &aPingName)) {
     return Maybe<uint64_t>();
   }
