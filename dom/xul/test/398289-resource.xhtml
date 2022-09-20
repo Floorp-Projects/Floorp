@@ -5,6 +5,9 @@
 <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 <dialog buttonlabelaccept="OK"
         buttonlabelcancel="Cancel">
+  <style xmlns="http://www.w3.org/1999/xhtml">
+    .tab-middle { outline: none !important }
+  </style>
 
   <script>
     document.addEventListener("dialogaccept", function() { alert('OK') });
@@ -14,8 +17,8 @@
   <tabbox id="test" flex="1" persist="selectedIndex">
 
     <tabs>
-      <tab style="outline: none" label="One"/>
-      <tab style="outline: none" label="Two"/>
+      <tab label="One"/>
+      <tab label="Two"/>
     </tabs>
 
     <tabpanels flex="1">
