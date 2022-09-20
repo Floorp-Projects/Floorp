@@ -155,7 +155,6 @@ CreateVp9SpecificSettings(VideoStreamConfig video_config) {
   constexpr auto kScreen = VideoStreamConfig::Encoder::ContentType::kScreen;
   VideoStreamConfig::Encoder conf = video_config.encoder;
   VideoCodecVP9 vp9 = VideoEncoder::GetDefaultVp9Settings();
-  vp9.frameDroppingOn = conf.frame_dropping;
   vp9.keyFrameInterval = conf.key_frame_interval.value_or(0);
   vp9.numberOfTemporalLayers = static_cast<uint8_t>(conf.layers.temporal);
   vp9.numberOfSpatialLayers = static_cast<uint8_t>(conf.layers.spatial);
@@ -181,7 +180,6 @@ CreateVp9SpecificSettings(VideoStreamConfig video_config) {
 rtc::scoped_refptr<VideoEncoderConfig::EncoderSpecificSettings>
 CreateVp8SpecificSettings(VideoStreamConfig config) {
   VideoCodecVP8 vp8_settings = VideoEncoder::GetDefaultVp8Settings();
-  vp8_settings.frameDroppingOn = config.encoder.frame_dropping;
   vp8_settings.keyFrameInterval = config.encoder.key_frame_interval.value_or(0);
   vp8_settings.numberOfTemporalLayers = config.encoder.layers.temporal;
   if (config.encoder.layers.spatial * config.encoder.layers.temporal > 1) {
@@ -201,7 +199,6 @@ CreateH264SpecificSettings(VideoStreamConfig config) {
   RTC_DCHECK_EQ(config.encoder.layers.spatial, 1);
 
   VideoCodecH264 h264_settings = VideoEncoder::GetDefaultH264Settings();
-  h264_settings.frameDroppingOn = config.encoder.frame_dropping;
   h264_settings.keyFrameInterval =
       config.encoder.key_frame_interval.value_or(0);
   return rtc::make_ref_counted<VideoEncoderConfig::H264EncoderSpecificSettings>(
@@ -259,6 +256,7 @@ VideoEncoderConfig CreateVideoEncoderConfig(VideoStreamConfig config) {
       config.encoder.max_data_rate.value_or(DataRate::KilobitsPerSec(10000))
           .bps();
 
+  encoder_config.frame_drop_enabled = config.encoder.frame_dropping;
   encoder_config.encoder_specific_settings =
       CreateEncoderSpecificSettings(config);
   if (config.encoder.max_framerate) {

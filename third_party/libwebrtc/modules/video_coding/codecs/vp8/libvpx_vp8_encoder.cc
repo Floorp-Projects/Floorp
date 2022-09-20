@@ -845,7 +845,7 @@ uint32_t LibvpxVp8Encoder::MaxIntraTarget(uint32_t optimalBuffersize) {
 }
 
 uint32_t LibvpxVp8Encoder::FrameDropThreshold(size_t spatial_idx) const {
-  if (!codec_.VP8().frameDroppingOn) {
+  if (!codec_.GetFrameDropEnabled()) {
     return 0;
   }
 

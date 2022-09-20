@@ -52,6 +52,7 @@ VideoEncoderConfig::VideoEncoderConfig()
     : codec_type(kVideoCodecGeneric),
       video_format("Unset"),
       content_type(ContentType::kRealtimeVideo),
+      frame_drop_enabled(false),
       encoder_specific_settings(nullptr),
       min_transmit_bitrate_bps(0),
       max_bitrate_bps(0),
@@ -78,6 +79,7 @@ std::string VideoEncoderConfig::ToString() const {
       ss << "kScreenshare";
       break;
   }
+  ss << ", frame_drop_enabled: " << frame_drop_enabled;
   ss << ", encoder_specific_settings: ";
   ss << (encoder_specific_settings != nullptr ? "(ptr)" : "NULL");
 

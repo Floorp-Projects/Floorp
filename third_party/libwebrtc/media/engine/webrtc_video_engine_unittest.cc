@@ -3427,14 +3427,14 @@ TEST_F(WebRtcVideoChannelTest, VerifyVp8SpecificSettings) {
   ASSERT_TRUE(stream->GetVp8Settings(&vp8_settings)) << "No VP8 config set.";
   EXPECT_FALSE(vp8_settings.denoisingOn);
   EXPECT_TRUE(vp8_settings.automaticResizeOn);
-  EXPECT_TRUE(vp8_settings.frameDroppingOn);
+  EXPECT_TRUE(stream->GetEncoderConfig().frame_drop_enabled);
 
   stream = SetDenoisingOption(last_ssrc_, &frame_forwarder, true);
 
   ASSERT_TRUE(stream->GetVp8Settings(&vp8_settings)) << "No VP8 config set.";
   EXPECT_TRUE(vp8_settings.denoisingOn);
   EXPECT_TRUE(vp8_settings.automaticResizeOn);
-  EXPECT_TRUE(vp8_settings.frameDroppingOn);
+  EXPECT_TRUE(stream->GetEncoderConfig().frame_drop_enabled);
 
   EXPECT_TRUE(channel_->SetVideoSend(last_ssrc_, nullptr, nullptr));
   stream = SetUpSimulcast(true, false);
@@ -3446,7 +3446,7 @@ TEST_F(WebRtcVideoChannelTest, VerifyVp8SpecificSettings) {
   ASSERT_TRUE(stream->GetVp8Settings(&vp8_settings)) << "No VP8 config set.";
   // Autmatic resize off when using simulcast.
   EXPECT_FALSE(vp8_settings.automaticResizeOn);
-  EXPECT_TRUE(vp8_settings.frameDroppingOn);
+  EXPECT_TRUE(stream->GetEncoderConfig().frame_drop_enabled);
 
   // In screen-share mode, denoising is forced off.
   VideoOptions options;
@@ -3460,14 +3460,14 @@ TEST_F(WebRtcVideoChannelTest, VerifyVp8SpecificSettings) {
   EXPECT_FALSE(vp8_settings.denoisingOn);
   // Resizing always off for screen sharing.
   EXPECT_FALSE(vp8_settings.automaticResizeOn);
-  EXPECT_TRUE(vp8_settings.frameDroppingOn);
+  EXPECT_TRUE(stream->GetEncoderConfig().frame_drop_enabled);
 
   stream = SetDenoisingOption(last_ssrc_, &frame_forwarder, true);
 
   ASSERT_TRUE(stream->GetVp8Settings(&vp8_settings)) << "No VP8 config set.";
   EXPECT_FALSE(vp8_settings.denoisingOn);
   EXPECT_FALSE(vp8_settings.automaticResizeOn);
-  EXPECT_TRUE(vp8_settings.frameDroppingOn);
+  EXPECT_TRUE(stream->GetEncoderConfig().frame_drop_enabled);
 
   EXPECT_TRUE(channel_->SetVideoSend(last_ssrc_, nullptr, nullptr));
 }
@@ -3542,13 +3542,13 @@ TEST_F(Vp9SettingsTest, VerifyVp9SpecificSettings) {
   ASSERT_TRUE(stream->GetVp9Settings(&vp9_settings)) << "No VP9 config set.";
   EXPECT_FALSE(vp9_settings.denoisingOn);
   // Frame dropping always on for real time video.
-  EXPECT_TRUE(vp9_settings.frameDroppingOn);
+  EXPECT_TRUE(stream->GetEncoderConfig().frame_drop_enabled);
 
   stream = SetDenoisingOption(last_ssrc_, &frame_forwarder, true);
 
   ASSERT_TRUE(stream->GetVp9Settings(&vp9_settings)) << "No VP9 config set.";
   EXPECT_TRUE(vp9_settings.denoisingOn);
-  EXPECT_TRUE(vp9_settings.frameDroppingOn);
+  EXPECT_TRUE(stream->GetEncoderConfig().frame_drop_enabled);
 
   // In screen-share mode, denoising is forced off.
   VideoOptions options;
@@ -3560,13 +3560,13 @@ TEST_F(Vp9SettingsTest, VerifyVp9SpecificSettings) {
   ASSERT_TRUE(stream->GetVp9Settings(&vp9_settings)) << "No VP9 config set.";
   EXPECT_FALSE(vp9_settings.denoisingOn);
   // Frame dropping always on for screen sharing.
-  EXPECT_TRUE(vp9_settings.frameDroppingOn);
+  EXPECT_TRUE(stream->GetEncoderConfig().frame_drop_enabled);
 
   stream = SetDenoisingOption(last_ssrc_, &frame_forwarder, false);
 
   ASSERT_TRUE(stream->GetVp9Settings(&vp9_settings)) << "No VP9 config set.";
   EXPECT_FALSE(vp9_settings.denoisingOn);
-  EXPECT_TRUE(vp9_settings.frameDroppingOn);
+  EXPECT_TRUE(stream->GetEncoderConfig().frame_drop_enabled);
 
   EXPECT_TRUE(channel_->SetVideoSend(last_ssrc_, nullptr, nullptr));
 }

@@ -235,7 +235,7 @@ VideoCodec CodecSettings(FuzzDataHelper& rng) {
   codec_settings.VP9()->interLayerPred = static_cast<InterLayerPredMode>(
       inter_layer_pred < 3 ? inter_layer_pred : 0);
   codec_settings.VP9()->flexibleMode = (config & (1u << 6)) != 0;
-  codec_settings.VP9()->frameDroppingOn = (config & (1u << 7)) != 0;
+  codec_settings.SetFrameDropEnabled((config & (1u << 7)) != 0);
   codec_settings.mode = VideoCodecMode::kRealtimeVideo;
   return codec_settings;
 }

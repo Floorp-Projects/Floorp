@@ -133,6 +133,7 @@ class ScalingObserver : public test::SendTest {
       stream.scale_resolution_down_by = scale_factor;
       scale_factor *= (payload_name_ == "VP9") ? 1.0 : 2.0;
     }
+    encoder_config->frame_drop_enabled = true;
     SetEncoderSpecific(encoder_config, codec_type, automatic_resize_,
                        streams_active_.size());
   }

@@ -90,7 +90,9 @@ bool RequiresEncoderReset(const VideoCodec& prev_send_codec,
       new_send_codec.qpMax != prev_send_codec.qpMax ||
       new_send_codec.numberOfSimulcastStreams !=
           prev_send_codec.numberOfSimulcastStreams ||
-      new_send_codec.mode != prev_send_codec.mode) {
+      new_send_codec.mode != prev_send_codec.mode ||
+      new_send_codec.GetFrameDropEnabled() !=
+          prev_send_codec.GetFrameDropEnabled()) {
     return true;
   }
 

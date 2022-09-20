@@ -158,4 +158,24 @@ void VideoCodec::SetVideoEncoderComplexity(
   complexity_ = complexity_setting;
 }
 
+bool VideoCodec::GetFrameDropEnabled() const {
+  if (frame_drop_enabled_.has_value()) {
+    return *frame_drop_enabled_;
+  }
+  switch (codecType) {
+    default:
+      return false;
+    case kVideoCodecVP8:
+      return VP8().frameDroppingOn;
+    case kVideoCodecVP9:
+      return VP9().frameDroppingOn;
+    case kVideoCodecH264:
+      return H264().frameDroppingOn;
+  }
+}
+
+void VideoCodec::SetFrameDropEnabled(bool enabled) {
+  frame_drop_enabled_ = enabled;
+}
+
 }  // namespace webrtc

@@ -8772,10 +8772,7 @@ TEST_P(VideoStreamEncoderWithRealEncoderTest, HandlesLayerToggling) {
     }
     if (codec_type_ == VideoCodecType::kVideoCodecH264) {
       // Turn off frame dropping to prevent flakiness.
-      VideoCodecH264 h264_settings = VideoEncoder::GetDefaultH264Settings();
-      h264_settings.frameDroppingOn = false;
-      config.encoder_specific_settings = rtc::make_ref_counted<
-          VideoEncoderConfig::H264EncoderSpecificSettings>(h264_settings);
+      config.frame_drop_enabled = false;
     }
   }
 

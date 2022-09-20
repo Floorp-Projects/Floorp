@@ -2404,7 +2404,7 @@ class VideoCodecConfigObserver : public test::SendTest,
         << "VideoEncoder not initialized.";
 
     // Change encoder settings to actually trigger reconfiguration.
-    encoder_settings_.frameDroppingOn = !encoder_settings_.frameDroppingOn;
+    encoder_config_.frame_drop_enabled = !encoder_config_.frame_drop_enabled;
     encoder_config_.encoder_specific_settings = GetEncoderSpecificSettings();
     SendTask(RTC_FROM_HERE, task_queue_, [&]() {
       stream_->ReconfigureVideoEncoder(std::move(encoder_config_));
@@ -3374,8 +3374,9 @@ void VideoSendStreamTest::TestVp9NonFlexMode(
       EXPECT_EQ(1u, encoder_config->number_of_streams);
       EXPECT_EQ(1u, encoder_config->simulcast_layers.size());
 
+      encoder_config->frame_drop_enabled = false;
+
       vp9_settings_.flexibleMode = false;
-      vp9_settings_.frameDroppingOn = false;
       vp9_settings_.automaticResizeOn = false;
       vp9_settings_.keyFrameInterval = kKeyFrameInterval;
       if (!use_scalability_mode_identifier_) {

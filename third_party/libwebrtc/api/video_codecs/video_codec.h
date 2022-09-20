@@ -118,6 +118,9 @@ class RTC_EXPORT VideoCodec {
   VideoCodecComplexity GetVideoEncoderComplexity() const;
   void SetVideoEncoderComplexity(VideoCodecComplexity complexity_setting);
 
+  bool GetFrameDropEnabled() const;
+  void SetFrameDropEnabled(bool enabled);
+
   // Public variables. TODO(hta): Make them private with accessors.
   VideoCodecType codecType;
 
@@ -181,6 +184,9 @@ class RTC_EXPORT VideoCodec {
   // 'complexity_' indicates the CPU capability of the client. It's used to
   // determine encoder CPU complexity (e.g., cpu_used for VP8, VP9. and AV1).
   absl::optional<VideoCodecComplexity> complexity_;
+  // TODO(bugs.webrtc.org/6883): When unset, GetEnableFrameDrop checks the
+  // codec-specific settings.
+  absl::optional<bool> frame_drop_enabled_;
 };
 
 }  // namespace webrtc

@@ -436,7 +436,7 @@ TEST_F(TestVp8Impl, DontDropKeyframes) {
 
   // Screensharing has the internal frame dropper off, and instead per frame
   // asks ScreenshareLayers to decide if it should be dropped or not.
-  codec_settings_.VP8()->frameDroppingOn = false;
+  codec_settings_.SetFrameDropEnabled(false);
   codec_settings_.mode = VideoCodecMode::kScreensharing;
   // ScreenshareLayers triggers on 2 temporal layers and 1000kbps max bitrate.
   codec_settings_.VP8()->numberOfTemporalLayers = 2;
