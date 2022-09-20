@@ -1,47 +1,23 @@
 import pytest
-from webdriver.bidi.modules.script import ContextTarget, RealmTarget
 
+from webdriver.bidi.modules.script import RealmTarget
 from ... import recursive_compare
 
 
 @pytest.mark.asyncio
-async def test_eval(bidi_session, top_context):
-    result = await bidi_session.script.evaluate(
-        expression="1 + 2",
-        target=ContextTarget(top_context["context"]),
-        await_promise=True)
-
-    assert result == {
-        "type": "number",
-        "value": 3}
-
-
-@pytest.mark.asyncio
-async def test_interact_with_dom(bidi_session, top_context):
-    result = await bidi_session.script.evaluate(
-        expression="'window.location.href: ' + window.location.href",
-        target=ContextTarget(top_context["context"]),
-        await_promise=True)
-
-    assert result == {
-        "type": "string",
-        "value": "window.location.href: about:blank"}
-
-
-@pytest.mark.asyncio
 async def test_target_realm(bidi_session, default_realm):
-    result = await bidi_session.script.evaluate(
+    result = await bidi_session.script.call_function(
         raw_result=True,
-        expression="window.foo = 3",
+        function_declaration="() => { window.foo = 3; }",
         target=RealmTarget(default_realm),
         await_promise=True,
     )
 
-    recursive_compare({"realm": default_realm, "result": {"type": "number", "value": 3}}, result)
+    recursive_compare({"realm": default_realm, "result": {"type": "undefined"}}, result)
 
-    result = await bidi_session.script.evaluate(
+    result = await bidi_session.script.call_function(
         raw_result=True,
-        expression="window.foo",
+        function_declaration="() => window.foo",
         target=RealmTarget(default_realm),
         await_promise=True,
     )
@@ -61,22 +37,22 @@ async def test_different_target_realm(bidi_session):
 
     assert first_tab_default_realm != second_tab_default_realm
 
-    await bidi_session.script.evaluate(
+    await bidi_session.script.call_function(
         raw_result=True,
-        expression="window.foo = 3",
+        function_declaration="() => { window.foo = 3; }",
         target=RealmTarget(first_tab_default_realm),
         await_promise=True,
     )
-    await bidi_session.script.evaluate(
+    await bidi_session.script.call_function(
         raw_result=True,
-        expression="window.foo = 5",
+        function_declaration="() => { window.foo = 5; }",
         target=RealmTarget(second_tab_default_realm),
         await_promise=True,
     )
 
-    top_context_result = await bidi_session.script.evaluate(
+    top_context_result = await bidi_session.script.call_function(
         raw_result=True,
-        expression="window.foo",
+        function_declaration="() => window.foo",
         target=RealmTarget(first_tab_default_realm),
         await_promise=True,
     )
@@ -84,9 +60,9 @@ async def test_different_target_realm(bidi_session):
         {"realm": first_tab_default_realm, "result": {"type": "number", "value": 3}}, top_context_result
     )
 
-    new_context_result = await bidi_session.script.evaluate(
+    new_context_result = await bidi_session.script.call_function(
         raw_result=True,
-        expression="window.foo",
+        function_declaration="() => window.foo",
         target=RealmTarget(second_tab_default_realm),
         await_promise=True,
     )
