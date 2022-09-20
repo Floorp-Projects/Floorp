@@ -83,6 +83,8 @@ TEST(TestFileSystemDatabaseManagerVersion001, smokeTestCreateRemoveDirectories)
   FileSystemDatabaseManagerVersion001* rdm = nullptr;
   ASSERT_NO_FATAL_FAILURE(MakeDatabaseManagerVersion001(rdm));
   UniquePtr<FileSystemDatabaseManagerVersion001> dm(rdm);
+  // if any of these exit early, we have to close
+  auto autoClose = MakeScopeExit([rdm] { rdm->Close(); });
 
   TEST_TRY_UNWRAP(EntryId rootId, data::GetRootHandle(getTestOrigin()));
 
@@ -125,8 +127,8 @@ TEST(TestFileSystemDatabaseManagerVersion001, smokeTestCreateRemoveDirectories)
   ASSERT_EQ(u"Second"_ns, longPath[1]);
 
   FileSystemEntryPair wrongPair(secondChild, rootId);
-  TEST_TRY_UNWRAP_ERR(rv, dm->Resolve(wrongPair));
-  ASSERT_NSEQ(NS_ERROR_DOM_NOT_FOUND_ERR, rv);
+  TEST_TRY_UNWRAP(Path emptyPath, dm->Resolve(wrongPair));
+  ASSERT_TRUE(emptyPath.IsEmpty());
 
   PageNumber page = 0;
   TEST_TRY_UNWRAP(FileSystemDirectoryListing fEntries,
@@ -141,8 +143,7 @@ TEST(TestFileSystemDatabaseManagerVersion001, smokeTestCreateRemoveDirectories)
 
   TEST_TRY_UNWRAP_ERR(
       rv, dm->RemoveDirectory(firstChildMeta, /* recursive */ false));
-  ASSERT_NSEQ(NS_ERROR_DOM_FILEHANDLE_NOT_ALLOWED_ERR,
-              rv);  // Is this a good error?
+  ASSERT_NSEQ(NS_ERROR_DOM_INVALID_MODIFICATION_ERR, rv);
 
   TEST_TRY_UNWRAP(bool isDeleted,
                   dm->RemoveDirectory(firstChildMeta, /* recursive */ true));
@@ -241,8 +242,7 @@ TEST(TestFileSystemDatabaseManagerVersion001, smokeTestCreateRemoveFiles)
   // If recursion is not allowed, the non-empty new directory may not be removed
   TEST_TRY_UNWRAP_ERR(
       rv, dm->RemoveDirectory(secondChildMeta, /* recursive */ false));
-  ASSERT_NSEQ(NS_ERROR_DOM_FILEHANDLE_NOT_ALLOWED_ERR,
-              rv);  // Is this a good error?
+  ASSERT_NSEQ(NS_ERROR_DOM_INVALID_MODIFICATION_ERR, rv);
 
   // If recursion is allowed, the new directory goes away.
   TEST_TRY_UNWRAP(bool isDeleted,
