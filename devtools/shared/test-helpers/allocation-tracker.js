@@ -98,12 +98,12 @@ exports.allocationTracker = function({
       let accept = !!location.match(/devtools/i);
 
       // Also ignore the dedicated Sandbox used to spawn builtin-modules,
-      // as well as its internal Sandbox used to fetch various platform globals.
+      // as well as its internal ChromeDebugger Sandbox.
       // We ignore the global used by the dedicated loader used to load
       // the allocation-tracker module.
       if (
         ref == Cu.getGlobalForObject(builtinGlobal) ||
-        ref == builtinGlobal.internalSandbox
+        ref == Cu.getGlobalForObject(builtinGlobal.modules.ChromeDebugger)
       ) {
         accept = false;
       }
