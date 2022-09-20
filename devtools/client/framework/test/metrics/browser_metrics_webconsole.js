@@ -29,7 +29,6 @@ add_task(async function() {
   const allowedDupes = [
     "@loader/unload.js",
     "@loader/options.js",
-    "chrome.js",
     "resource://devtools/client/webconsole/constants.js",
     "resource://devtools/client/webconsole/utils.js",
     "resource://devtools/client/webconsole/utils/messages.js",

@@ -22,7 +22,6 @@ declare namespace MockedExports {
    */
   interface KnownModules {
     Services: typeof import("Services");
-    chrome: typeof import("chrome");
     "resource://gre/modules/AppConstants.jsm": typeof import("resource://gre/modules/AppConstants.jsm");
     "resource:///modules/CustomizableUI.jsm": typeof import("resource:///modules/CustomizableUI.jsm");
     "resource:///modules/CustomizableWidgets.jsm": typeof import("resource:///modules/CustomizableWidgets.jsm");
@@ -283,13 +282,6 @@ declare namespace MockedExports {
     isInAutomation: boolean;
   }
 
-  const chrome: {
-    Cc: Cc;
-    Ci: Ci;
-    Cu: Cu;
-    Services: Services;
-  };
-
   interface FluentLocalization {
     /**
      * This function sets the attributes data-l10n-id and possibly data-l10n-args
@@ -334,10 +326,6 @@ declare module "devtools/shared/event-emitter2" {
 
 declare module "Services" {
   export = MockedExports.Services;
-}
-
-declare module "chrome" {
-  export = MockedExports.chrome;
 }
 
 declare module "ChromeUtils" {

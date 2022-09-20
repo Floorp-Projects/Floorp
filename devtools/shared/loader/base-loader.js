@@ -8,7 +8,7 @@
 
 this.EXPORTED_SYMBOLS = ["Loader", "resolveURI", "Module", "Require", "unload"];
 
-const { Constructor: CC, manager: Cm } = Components;
+const { Constructor: CC } = Components;
 const systemPrincipal = CC("@mozilla.org/systemprincipal;1", "nsIPrincipal")();
 
 const { XPCOMUtils } = ChromeUtils.importESModule(
@@ -34,7 +34,6 @@ ChromeUtils.defineModuleGetter(
 );
 
 // Define some shortcuts.
-const bind = Function.call.bind(Function.bind);
 function* getOwnIdentifiers(x) {
   yield* Object.getOwnPropertyNames(x);
   yield* Object.getOwnPropertySymbols(x);
@@ -105,13 +104,13 @@ function join(base, ...paths) {
 // - `invisibleToDebugger`: True, if the sandbox is part of the debugger
 //    implementation and should not be tracked by debugger API.
 // For more details see:
-// https://developer.mozilla.org/en/Components.utils.Sandbox
+// @see https://searchfox.org/mozilla-central/rev/0948667bc62415d48abff27e1405fb4ab4d65d75/js/xpconnect/idl/xpccomponents.idl#127-245
 function Sandbox(options) {
   // Normalize options and rename to match `Cu.Sandbox` expectations.
   options = {
-    // Do not expose `Components` if you really need them (bad idea!) you
-    // still can expose via prototype.
-    wantComponents: false,
+    // This will allow exposing Components as well as Cu, Ci and Cr.
+    wantComponents: true,
+
     // By default, Sandbox come with a very limited set of global.
     // The list of all available symbol names is available over there:
     // https://searchfox.org/mozilla-central/rev/31368c7795f44b7a15531d6c5e52dc97f82cf2d5/js/xpconnect/src/Sandbox.cpp#905-997
@@ -149,11 +148,7 @@ function Sandbox(options) {
     freshCompartment: options.freshCompartment || false,
   };
 
-  const sandbox = Cu.Sandbox(systemPrincipal, options);
-
-  delete sandbox.Components;
-
-  return sandbox;
+  return Cu.Sandbox(systemPrincipal, options);
 }
 
 // This allows defining some modules in AMD format while retaining CommonJS
@@ -522,17 +517,6 @@ function Loader(options) {
   const builtinModuleExports = {
     "@loader/unload": destructor,
     "@loader/options": options,
-    chrome: {
-      Cc,
-      Ci,
-      Cu,
-      Cr,
-      Cm,
-      CC: bind(CC, Components),
-      components: Components,
-      ChromeWorker,
-      Services,
-    },
   };
 
   const modules = {};
