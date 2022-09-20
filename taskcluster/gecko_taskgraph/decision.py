@@ -309,15 +309,6 @@ def get_decision_parameters(graph_config, options):
         if n in options
     }
 
-    for n in (
-        "comm_base_repository",
-        "comm_head_repository",
-        "comm_head_rev",
-        "comm_head_ref",
-    ):
-        if n in options and options[n] is not None:
-            parameters[n] = options[n]
-
     commit_message = get_hg_commit_message(os.path.join(GECKO, product_dir))
 
     repo_path = os.getcwd()
