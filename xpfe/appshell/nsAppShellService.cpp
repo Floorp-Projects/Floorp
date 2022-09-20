@@ -746,24 +746,27 @@ nsresult nsAppShellService::JustCreateTopWindow(
                                  nsIWebBrowserChrome::CHROME_FISSION_WINDOW);
 
     // Eagerly create an about:blank content viewer with the right principal
-    // here, rather than letting it happening in the upcoming call to
-    // SetInitialPrincipalToSubject. This avoids creating the about:blank
-    // document and then blowing it away with a second one, which can cause
-    // problems for the top-level chrome window case. See bug 789773. Note that
-    // we don't accept expanded principals here, similar to
-    // SetInitialPrincipalToSubject.
+    // here, rather than letting it happen in the upcoming call to
+    // SetInitialPrincipal. This avoids creating the about:blank document and
+    // then blowing it away with a second one, which can cause problems for the
+    // top-level chrome window case. See bug 789773.
+    // Toplevel chrome windows always have a system principal, so ensure the
+    // initial window is created with that principal.
+    // We need to do this even when creating a chrome window to load a content
+    // window, see bug 799348 comment 13 for details about what previously
+    // happened here due to it using the subject principal.
     if (nsContentUtils::IsInitialized()) {  // Sometimes this happens really
                                             // early. See bug 793370.
-      nsCOMPtr<nsIPrincipal> principal =
-          nsContentUtils::SubjectPrincipalOrSystemIfNativeCaller();
-      if (nsContentUtils::IsExpandedPrincipal(principal)) {
-        principal = nullptr;
-      }
-      // Use the subject (or system) principal as the storage principal too
-      // until the new window finishes navigating and gets a real storage
-      // principal.
+      MOZ_DIAGNOSTIC_ASSERT(
+          nsContentUtils::LegacyIsCallerChromeOrNativeCode(),
+          "Previously, this method would use the subject principal rather than "
+          "hardcoding the system principal");
+      // Use the system principal as the storage principal too until the new
+      // window finishes navigating and gets a real storage principal.
       rv = docShell->CreateAboutBlankContentViewer(
-          principal, principal, /* aCsp = */ nullptr, /* aBaseURI = */ nullptr,
+          nsContentUtils::GetSystemPrincipal(),
+          nsContentUtils::GetSystemPrincipal(),
+          /* aCsp = */ nullptr, /* aBaseURI = */ nullptr,
           /* aIsInitialDocument = */ true);
       NS_ENSURE_SUCCESS(rv, rv);
       RefPtr<Document> doc = docShell->GetDocument();
@@ -847,7 +850,18 @@ nsAppShellService::RegisterTopLevelWindow(nsIAppWindow* aWindow) {
 
   nsCOMPtr<nsPIDOMWindowOuter> domWindow(docShell->GetWindow());
   NS_ENSURE_TRUE(domWindow, NS_ERROR_FAILURE);
-  domWindow->SetInitialPrincipalToSubject(nullptr, Nothing());
+
+  // Toplevel chrome windows always have a system principal, so ensure the
+  // initial window is created with that principal.
+  // We need to do this even when creating a chrome window to load a content
+  // window, see bug 799348 comment 13 for details about what previously
+  // happened here due to it using the subject principal.
+  MOZ_DIAGNOSTIC_ASSERT(
+      nsContentUtils::LegacyIsCallerChromeOrNativeCode(),
+      "Previously, this method would use the subject principal rather than "
+      "hardcoding the system principal");
+  domWindow->SetInitialPrincipal(nsContentUtils::GetSystemPrincipal(), nullptr,
+                                 Nothing());
 
   // tell the window mediator about the new window
   nsCOMPtr<nsIWindowMediator> mediator(

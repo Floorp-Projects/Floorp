@@ -808,6 +808,24 @@ nsresult nsWindowWatcher::OpenWindowInternal(
     }
   }
 
+  // Now that the jsapiChromeGuard has been set, fetch the system principal
+  // potentially configured by it. We want to make sure to respect any principal
+  // changes imposed by that guard throughout this function.
+  //
+  // Note: The check for the current JSContext isn't necessarily sensical.
+  // It's just designed to preserve old semantics during a mass-conversion
+  // patch.
+  // Bug 1498605 verify usages of systemPrincipal here
+  JSContext* cx = nsContentUtils::GetCurrentJSContext();
+  nsCOMPtr<nsIPrincipal> subjectPrincipal =
+      cx ? nsContentUtils::SubjectPrincipal()
+         : nsContentUtils::GetSystemPrincipal();
+  MOZ_ASSERT(subjectPrincipal);
+
+  // Only system principals may create chrome windows.
+  MOZ_ASSERT_IF(windowTypeIsChrome,
+                subjectPrincipal && subjectPrincipal->IsSystemPrincipal());
+
   // Information used when opening new content windows. This object will be
   // passed through to the inner nsFrameLoader.
   RefPtr<nsOpenWindowInfo> openWindowInfo;
@@ -824,10 +842,7 @@ nsresult nsWindowWatcher::OpenWindowInternal(
 
     // If we have a non-system non-expanded subject principal, we can inherit
     // our OriginAttributes from it.
-    nsCOMPtr<nsIPrincipal> subjectPrincipal =
-        nsContentUtils::SubjectPrincipalOrSystemIfNativeCaller();
-    if (subjectPrincipal &&
-        !nsContentUtils::IsSystemOrExpandedPrincipal(subjectPrincipal)) {
+    if (!nsContentUtils::IsSystemOrExpandedPrincipal(subjectPrincipal)) {
       openWindowInfo->mOriginAttributes =
           subjectPrincipal->OriginAttributesRef();
     } else if (parentBC) {
@@ -1115,15 +1130,6 @@ nsresult nsWindowWatcher::OpenWindowInternal(
   // Now we have to set the right opener principal on the new window.  Note
   // that we have to do this _before_ starting any URI loads, thanks to the
   // sync nature of javascript: loads.
-  //
-  // Note: The check for the current JSContext isn't necessarily sensical.
-  // It's just designed to preserve old semantics during a mass-conversion
-  // patch.
-  // Bug 1498605 verify usages of systemPrincipal here
-  JSContext* cx = nsContentUtils::GetCurrentJSContext();
-  nsCOMPtr<nsIPrincipal> subjectPrincipal =
-      cx ? nsContentUtils::SubjectPrincipal()
-         : nsContentUtils::GetSystemPrincipal();
 
   if (windowIsNew) {
     if (subjectPrincipal &&
@@ -1162,16 +1168,15 @@ nsresult nsWindowWatcher::OpenWindowInternal(
     // load--since we really don't know who the owner is, just leave it null.
     NS_ASSERTION(win == newDocShell->GetWindow(), "Different windows??");
 
-    // The principal of the initial about:blank document gets set up in
-    // nsWindowWatcher::AddWindow. Make sure to call it. In the common case
-    // this call already happened when the window was created, but
-    // SetInitialPrincipalToSubject is safe to call multiple times.
+    // Initialize the principal of the initial about:blank document. For
+    // toplevel windows, this call may have already happened when the window was
+    // created, but SetInitialPrincipal is safe to call multiple times.
     if (win) {
       MOZ_ASSERT(windowIsNew);
       MOZ_ASSERT(!win->GetSameProcessOpener() ||
                  win->GetSameProcessOpener() == aParent);
-      win->SetInitialPrincipalToSubject(cspToInheritForAboutBlank,
-                                        coepToInheritForAboutBlank);
+      win->SetInitialPrincipal(subjectPrincipal, cspToInheritForAboutBlank,
+                               coepToInheritForAboutBlank);
 
       if (aIsPopupSpam) {
         MOZ_ASSERT(!newBC->GetIsPopupSpam(),
