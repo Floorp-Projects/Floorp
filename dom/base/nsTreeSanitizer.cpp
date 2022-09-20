@@ -749,7 +749,6 @@ const nsStaticAtom* const kElementsMathML[] = {
     nsGkAtoms::median_,               // median
     nsGkAtoms::menclose_,             // menclose
     nsGkAtoms::merror_,               // merror
-    nsGkAtoms::mfenced_,              // mfenced
     nsGkAtoms::mfrac_,                // mfrac
     nsGkAtoms::mglyph_,               // mglyph
     nsGkAtoms::mi_,                   // mi

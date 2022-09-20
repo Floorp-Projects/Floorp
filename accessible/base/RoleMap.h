@@ -1368,8 +1368,6 @@ ROLE(MATHML_OPERATOR,
     // NS_MATHML_OPERATOR_SEPARATOR bits of nsOperatorFlags, but currently they
     // are only available from the MathML layout code. Hence we just fallback
     // to subrole AXMathOperator for now.
-    // XXX bug 1175747 WebKit also creates anonymous operators for <mfenced>
-    // which have subroles AXMathSeparatorOperator and AXMathFenceOperator.
      0,
      IA2_ROLE_UNKNOWN,
      java::SessionAccessibility::CLASSNAME_VIEW,
@@ -1440,16 +1438,6 @@ ROLE(MATHML_ROOT,
      ATK_ROLE_MATH_ROOT,
      NSAccessibilityGroupRole,
      @"AXMathRoot",
-     0,
-     IA2_ROLE_UNKNOWN,
-     java::SessionAccessibility::CLASSNAME_VIEW,
-     eNoNameRule)
-
-ROLE(MATHML_FENCED,
-     "mathml fenced",
-     ATK_ROLE_SECTION,
-     NSAccessibilityGroupRole,
-     @"AXMathFenced",      // XXX bug 1176970 This should be AXMathFence, but doing so without implementing the whole fence interface seems to make VoiceOver crash, so we present it as a row for now.
      0,
      IA2_ROLE_UNKNOWN,
      java::SessionAccessibility::CLASSNAME_VIEW,

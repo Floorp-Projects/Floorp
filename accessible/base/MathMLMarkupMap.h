@@ -31,9 +31,7 @@ MARKUPMAP(msqrt_, New_HyperText, roles::MATHML_SQUARE_ROOT)
 
 MARKUPMAP(mroot_, New_HyperText, roles::MATHML_ROOT)
 
-MARKUPMAP(mfenced_, New_HyperText, roles::MATHML_FENCED,
-          AttrFromDOM(close, close), AttrFromDOM(open, open),
-          AttrFromDOM(separators_, separators_))
+MARKUPMAP(mfenced_, New_HyperText, roles::MATHML_ROW)
 
 MARKUPMAP(menclose_, New_HyperText, roles::MATHML_ENCLOSED,
           AttrFromDOM(notation_, notation_))

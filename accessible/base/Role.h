@@ -846,11 +846,6 @@ enum Role {
   MATHML_ROOT = 141,
 
   /**
-   * A MathML fenced element (mfenced in MathML).
-   */
-  MATHML_FENCED = 142,
-
-  /**
    * A MathML enclosed element (menclose in MathML).
    */
   MATHML_ENCLOSED = 143,
