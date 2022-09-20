@@ -215,6 +215,14 @@ fi
 echo "-------"
 echo "------- Commit vendored changes from $MOZ_LIBWEBRTC_NEXT_BASE"
 echo "-------"
-hg commit \
-   -m "Bug $MOZ_FASTFORWARD_BUG - Vendor libwebrtc from $MOZ_LIBWEBRTC_NEXT_BASE" \
-   third_party/libwebrtc
+UPSTREAM_SHA=`cd $MOZ_LIBWEBRTC_SRC && \
+    git show --name-only $MOZ_LIBWEBRTC_NEXT_BASE \
+    | grep "^commit " | awk '{ print $NF }'`
+echo "Bug $MOZ_FASTFORWARD_BUG - Vendor libwebrtc from $MOZ_LIBWEBRTC_NEXT_BASE" \
+    > commit_msg.txt
+echo "" >> commit_msg.txt
+echo "Upstream commit: https://webrtc.googlesource.com/src/+/$UPSTREAM_SHA" >> commit_msg.txt
+(cd $MOZ_LIBWEBRTC_SRC && \
+git show --name-only $MOZ_LIBWEBRTC_NEXT_BASE | grep "^ ") >> commit_msg.txt
+
+hg commit -l commit_msg.txt third_party/libwebrtc
