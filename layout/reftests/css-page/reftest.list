@@ -28,6 +28,12 @@ defaults pref(layout.css.named-pages.enabled,true)
 == page-name-orthogonal-writing-002.html page-name-orthogonal-writing-002-ref.html
 == page-name-orthogonal-writing-003.html page-name-orthogonal-writing-003-ref.html
 == page-name-orthogonal-writing-004.html page-name-orthogonal-writing-004-ref.html
+== page-name-propagated-001.html page-name-propagated-001-ref.html
+== page-name-propagated-002.html page-name-propagated-002-ref.html
+== page-name-propagated-003.html page-name-propagated-003-ref.html
+== page-name-propagated-004.html page-name-propagated-004-ref.html
+== page-name-propagated-005.html page-name-propagated-005-ref.html
+== page-name-propagated-006.html page-name-propagated-006-ref.html
 # Auto-generated test cases
 == page-name-two-page-001.html page-name-two-page-ref.html
 == page-name-two-page-002.html page-name-two-page-ref.html

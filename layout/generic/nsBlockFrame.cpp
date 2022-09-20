@@ -2824,9 +2824,11 @@ void nsBlockFrame::ReflowDirtyLines(BlockReflowState& aState) {
       const nsIFrame* const frame = line->mFirstChild;
       if (const nsIFrame* prevFrame = frame->GetPrevSibling()) {
         if (const nsIFrame::PageValues* const pageValues =
-                frame->GetProperty(nsIFrame::PageValuesProperty())) {
+                frame->FirstInFlow()->GetProperty(
+                    nsIFrame::PageValuesProperty())) {
           const nsIFrame::PageValues* const prevPageValues =
-              prevFrame->GetProperty(nsIFrame::PageValuesProperty());
+              prevFrame->FirstInFlow()->GetProperty(
+                  nsIFrame::PageValuesProperty());
           if (prevPageValues &&
               prevPageValues->mEndPageValue != pageValues->mStartPageValue) {
             shouldBreakForPageName = true;

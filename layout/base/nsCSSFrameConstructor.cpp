@@ -9376,6 +9376,26 @@ static void VerifyGridFlexContainerChildren(nsIFrame* aParentFrame,
 #endif
 }
 
+static bool FrameHasOnlyPlaceholderPrevSiblings(const nsIFrame* aFrame) {
+  // Check for prev siblings, ignoring placeholder frames.
+  MOZ_ASSERT(aFrame, "frame must not be null");
+  const nsIFrame* prevSibling = aFrame;
+  do {
+    prevSibling = prevSibling->GetPrevSibling();
+  } while (prevSibling && prevSibling->IsPlaceholderFrame());
+  return !prevSibling;
+}
+
+static bool FrameHasOnlyPlaceholderNextSiblings(const nsIFrame* aFrame) {
+  // Check for next siblings, ignoring placeholder frames.
+  MOZ_ASSERT(aFrame, "frame must not be null");
+  const nsIFrame* nextSibling = aFrame;
+  do {
+    nextSibling = nextSibling->GetNextSibling();
+  } while (nextSibling && nextSibling->IsPlaceholderFrame());
+  return !nextSibling;
+}
+
 inline void nsCSSFrameConstructor::ConstructFramesFromItemList(
     nsFrameConstructorState& aState, FrameConstructionItemList& aItems,
     nsContainerFrame* aParentFrame, bool aParentIsWrapperAnonBox,
@@ -9462,6 +9482,9 @@ inline void nsCSSFrameConstructor::ConstructFramesFromItemList(
     const nsAtom* startPageValue = nullptr;
     const nsAtom* endPageValue = nullptr;
     for (nsIFrame* f : aFrameList) {
+      if (f->IsPlaceholderFrame()) {
+        continue;
+      }
       // Resolve auto against the parent frame's used page name, which has been
       // determined and set on aState.mAutoPageNameValue. If this item is not
       // block-level then we use the value that auto resolves to.
@@ -9509,27 +9532,46 @@ inline void nsCSSFrameConstructor::ConstructFramesFromItemList(
     MOZ_ASSERT(!startPageValue == !endPageValue,
                "Should have set both or neither page values");
     if (startPageValue) {
-      // TODO: This is slightly incorrect! See Bug 1764437
-      // We should be waiting all of our descendent frames to be constructed.
-      //
-      // Alternatively, we could propagate this back up the frame tree after
-      // constructing this frame's first child, inspecting the parent frames
-      // and rewriting their first child page-name.
-      for (nsContainerFrame* frame = aParentFrame;
-           frame && frame->IsBlockFrameOrSubclass();
-           frame = frame->GetParent()) {
-        nsIFrame::PageValues* const parentPageValues =
-            frame->GetProperty(nsIFrame::PageValuesProperty());
-        // Propagate the start page value back up the frame tree.
-        // If the frame already has mStartPageValue set, then we are not a
-        // descendant of the frame's first child.
-        if (!parentPageValues) {
+      // Walk up the frame tree from our parent frame, propagating start and
+      // end page values.
+      // As we go, if we find that, for a frame, we are not contributing one of
+      // the start/end page values, then our subtree will not contribute this
+      // value from that frame onward.
+      // Stop iterating when we are not contributing either start or end
+      // values, when we hit the root frame (no parent), or when we find a
+      // frame that is not a block frame.
+      for (nsContainerFrame* ancestorFrame = aParentFrame;
+           (startPageValue || endPageValue) && ancestorFrame &&
+           ancestorFrame->IsBlockFrameOrSubclass();
+           ancestorFrame = ancestorFrame->GetParent()) {
+        MOZ_ASSERT(!ancestorFrame->GetPrevInFlow(),
+                   "Should not have fragmentation yet");
+
+        nsIFrame::PageValues* const ancestorPageValues =
+            ancestorFrame->GetProperty(nsIFrame::PageValuesProperty());
+
+        if (!ancestorPageValues) {
           break;
         }
-        if (!parentPageValues->mStartPageValue) {
-          parentPageValues->mStartPageValue = startPageValue;
+
+        // Set start/end values if we are still contributing those values.
+        // Once we stop contributing start/end values, we know there is a
+        // sibling subtree that contributed that value to our shared parent
+        // instead of our starting frame's subtree. This means once
+        // startPageValue/endPageValue becomes null, it should stay null and
+        // we no longer need to check for siblings in that direction.
+        if (startPageValue) {
+          ancestorPageValues->mStartPageValue = startPageValue;
+          if (!FrameHasOnlyPlaceholderPrevSiblings(ancestorFrame)) {
+            startPageValue = nullptr;
+          }
         }
-        parentPageValues->mEndPageValue = endPageValue;
+        if (endPageValue) {
+          ancestorPageValues->mEndPageValue = endPageValue;
+          if (!FrameHasOnlyPlaceholderNextSiblings(ancestorFrame)) {
+            endPageValue = nullptr;
+          }
+        }
       }
     }
   }
