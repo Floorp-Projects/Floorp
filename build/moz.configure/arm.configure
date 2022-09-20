@@ -273,8 +273,8 @@ add_old_configure_assignment("ARM_ARCH", depends(arm_target.arm_arch)(lambda x: 
 set_config("MOZ_FPU", arm_target.fpu)
 
 
-@depends(arm_target.float_abi)
-def neon_flags(float_abi):
+@depends(arm_target)
+def neon_flags(arm_target):
     # Building with -mfpu=neon requires either the "softfp" or the
     # "hardfp" ABI. Depending on the compiler's default target, and the
     # CFLAGS, the default ABI might be neither, in which case it is the
@@ -284,8 +284,12 @@ def neon_flags(float_abi):
     # that compiling uses the "softfloat" ABI, force the use of the
     # "softfp" ABI instead.
     flags = ["-mfpu=neon"]
-    if float_abi == "soft":
+    if arm_target.float_abi == "soft":
         flags.append("-mfloat-abi=softfp")
+    if arm_target.arm_arch < 7:
+        # clang needs to be forced to at least armv7 for -mfpu=neon to do
+        # something.
+        flags.append("-march=armv7-a")
     return tuple(flags)
 
 
