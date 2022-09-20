@@ -13,11 +13,11 @@ const { AppConstants } = ChromeUtils.import(
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  Region: "resource://gre/modules/Region.sys.mjs",
   SearchUtils: "resource://gre/modules/SearchUtils.sys.mjs",
 });
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
-  Region: "resource://gre/modules/Region.jsm",
   NimbusFeatures: "resource://nimbus/ExperimentAPI.jsm",
 });
 

@@ -1,6 +1,8 @@
 "use strict";
 
-const { Region } = ChromeUtils.import("resource://gre/modules/Region.jsm");
+const { Region } = ChromeUtils.importESModule(
+  "resource://gre/modules/Region.sys.mjs"
+);
 const { sinon } = ChromeUtils.import("resource://testing-common/Sinon.jsm");
 const { TestUtils } = ChromeUtils.import(
   "resource://testing-common/TestUtils.jsm"

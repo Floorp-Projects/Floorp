@@ -67,11 +67,9 @@ ChromeUtils.defineModuleGetter(
   "RemoteSettings",
   "resource://services-settings/remote-settings.js"
 );
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "Region",
-  "resource://gre/modules/Region.jsm"
-);
+ChromeUtils.defineESModuleGetters(lazy, {
+  Region: "resource://gre/modules/Region.sys.mjs",
+});
 
 XPCOMUtils.defineLazyGetter(lazy, "log", () => {
   const { Logger } = ChromeUtils.import(
