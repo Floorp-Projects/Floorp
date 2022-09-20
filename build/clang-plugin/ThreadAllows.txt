@@ -7,6 +7,7 @@ AutoTestThread
 AwaitIdleMixed
 AwaitIdlePaused
 BGReadURLs
+BHMgr Monitor
 BHMgr Processor
 COM Intcpt Log
 COM MTA
