@@ -195,6 +195,14 @@ optional = false
 python-versions = "*"
 
 [[package]]
+name = "giturlparse"
+version = "0.10.0"
+description = "A Git URL parsing module (supports parsing and rewriting)"
+category = "main"
+optional = false
+python-versions = ">=3.6"
+
+[[package]]
 name = "glean-parser"
 version = "6.1.2"
 description = "Parser tools for Mozilla's Glean telemetry"
@@ -333,6 +341,17 @@ python-versions = "*"
 
 [package.dependencies]
 six = "*"
+
+[[package]]
+name = "mozilla-repo-urls"
+version = "0.0.3"
+description = "Process Mozilla's repository URLs. The intent is to centralize URLs parsing."
+category = "main"
+optional = false
+python-versions = "*"
+
+[package.dependencies]
+giturlparse = "*"
 
 [[package]]
 name = "mozilla-version"
@@ -615,7 +634,7 @@ test = ["pytest", "pytest-cov", "pytest-mock", "httmock", "mock", "setuptools-li
 
 [[package]]
 name = "taskcluster-taskgraph"
-version = "2.0.0"
+version = "3.2.0"
 description = "Build taskcluster taskgraphs"
 category = "main"
 optional = false
@@ -625,6 +644,7 @@ python-versions = "*"
 appdirs = ">=1.4"
 attrs = ">=19.1.0"
 json-e = ">=2.7"
+mozilla-repo-urls = "*"
 PyYAML = ">=5.4"
 redo = ">=2.0"
 requests = ">=2.25"
@@ -737,7 +757,7 @@ testing = ["pytest (>=4.6)", "pytest-checkdocs (>=1.2.3)", "pytest-flake8", "pyt
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.6"
-content-hash = "9d5442add586f045a8bac2403afaade45b7836ae851e906fd598d48c23075eb1"
+content-hash = "e350bab49e867e6242ad7be2ca071a731ffe5162e79553e38f82eba26c421da3"
 
 [metadata.files]
 aiohttp = [
@@ -850,6 +870,10 @@ esprima = [
     {file = "fluent.syntax-0.18.1-py2.py3-none-any.whl", hash = "sha256:0e63679fa4f1b3042565220a5127b4bab842424f07d6a13c12299e3b3835486a"},
     {file = "fluent.syntax-0.18.1.tar.gz", hash = "sha256:3a55f5e605d1b029a65cc8b6492c86ec4608e15447e73db1495de11fd46c104f"},
 ]
+giturlparse = [
+    {file = "giturlparse-0.10.0-py2.py3-none-any.whl", hash = "sha256:04ba1a3a099c3093fa8d24a422913c6a9b2c2cd22bcffc939cf72e3e98f672d7"},
+    {file = "giturlparse-0.10.0.tar.gz", hash = "sha256:2595ab291d30717cda8474b874c9fd509f1b9802ad7f6968c36a45e4b13eb337"},
+]
 glean-parser = [
     {file = "glean_parser-6.1.2-py3-none-any.whl", hash = "sha256:e801af6463b7e0ba79d97ddfc0a58d9d71121c93cea601417571e33fa8142270"},
     {file = "glean_parser-6.1.2.tar.gz", hash = "sha256:12a0fecedc1144d77fa571e0422ff3fea4dbadc381d631bea800a6b2f58f4f7f"},
@@ -944,6 +968,10 @@ markupsafe = [
 mohawk = [
     {file = "mohawk-0.3.4-py2-none-any.whl", hash = "sha256:b3f85ffa93a5c7d2f9cc591246ef9f8ac4a9fa716bfd5bae0377699a2d89d78c"},
     {file = "mohawk-0.3.4.tar.gz", hash = "sha256:e98b331d9fa9ece7b8be26094cbe2d57613ae882133cc755167268a984bc0ab3"},
+]
+mozilla-repo-urls = [
+    {file = "mozilla-repo-urls-0.0.3.tar.gz", hash = "sha256:3b2f9b42111ce3d50ecdcd081a62229e1fdc8f5472adbf405abe12d3ba8e8af5"},
+    {file = "mozilla_repo_urls-0.0.3-py3-none-any.whl", hash = "sha256:673c80a4d0ed449093203b88e119e0bf1074026f891c1dd50aa04d534fd0658c"},
 ]
 mozilla-version = [
     {file = "mozilla-version-0.3.4.tar.gz", hash = "sha256:3ed4deb7a6fb25c83a5346ef4de08ddff9b2ddc4d16dd8fafb4a84978cc71255"},
@@ -1125,8 +1153,8 @@ taskcluster = [
     {file = "taskcluster-44.2.2.tar.gz", hash = "sha256:0266a6a901e1a2ec838984a7f24e7adb6d58f9f2e221a7f613388f8f23f786fc"},
 ]
 taskcluster-taskgraph = [
-    {file = "taskcluster-taskgraph-2.0.0.tar.gz", hash = "sha256:93eff40ba39a29cd290fc25a2124ed9bf5806d87891edd7e8de35df568708141"},
-    {file = "taskcluster_taskgraph-2.0.0-py3-none-any.whl", hash = "sha256:3d22ab488071ddc82997b33fc6c1c524a44bdc7e14b30a274d99dbbdd7389502"},
+    {file = "taskcluster-taskgraph-3.2.0.tar.gz", hash = "sha256:941d96fd36c20b0e84e322d2c25be04fe5f258405793af5e086bbec698cbcb17"},
+    {file = "taskcluster_taskgraph-3.2.0-py3-none-any.whl", hash = "sha256:fafcd1bfd8ec8b2f57db4e4d87d5b881da3ad7119d78d407d22b4b71b805d1bf"},
 ]
 taskcluster-urls = [
     {file = "taskcluster-urls-13.0.1.tar.gz", hash = "sha256:b25e122ecec249c4299ac7b20b08db76e3e2025bdaeb699a9d444556de5fd367"},

@@ -343,7 +343,7 @@ def show_taskgraph(options):
         logging.root.setLevel(logging.DEBUG)
 
     repo = None
-    cur_ref = None
+    cur_rev = None
     diffdir = None
     output_file = options["output_file"]
 
@@ -361,16 +361,16 @@ def show_taskgraph(options):
         # as best we can after we're done. In all known cases, using
         # branch or bookmark (which are both available on the VCS object)
         # as `branch` is preferable to a specific revision.
-        cur_ref = repo.branch or repo.head_ref[:12]
+        cur_rev = repo.branch or repo.head_rev[:12]
 
         diffdir = tempfile.mkdtemp()
         atexit.register(
             shutil.rmtree, diffdir
         )  # make sure the directory gets cleaned up
         options["output_file"] = os.path.join(
-            diffdir, f"{options['graph_attr']}_{cur_ref}"
+            diffdir, f"{options['graph_attr']}_{cur_rev}"
         )
-        print(f"Generating {options['graph_attr']} @ {cur_ref}", file=sys.stderr)
+        print(f"Generating {options['graph_attr']} @ {cur_rev}", file=sys.stderr)
 
     parameters: List[Any[str, Parameters]] = options.pop("parameters")
     if not parameters:
@@ -418,33 +418,33 @@ def show_taskgraph(options):
                 del sys.modules[mod]
 
         if options["diff"] == "default":
-            base_ref = repo.base_ref
+            base_rev = repo.base_rev
         else:
-            base_ref = options["diff"]
+            base_rev = options["diff"]
 
         try:
-            repo.update(base_ref)
-            base_ref = repo.head_ref[:12]
+            repo.update(base_rev)
+            base_rev = repo.head_rev[:12]
             options["output_file"] = os.path.join(
-                diffdir, f"{options['graph_attr']}_{base_ref}"
+                diffdir, f"{options['graph_attr']}_{base_rev}"
             )
-            print(f"Generating {options['graph_attr']} @ {base_ref}", file=sys.stderr)
+            print(f"Generating {options['graph_attr']} @ {base_rev}", file=sys.stderr)
             generate_taskgraph(options, parameters, logdir)
         finally:
-            repo.update(cur_ref)
+            repo.update(cur_rev)
 
         # Generate diff(s)
         diffcmd = [
             "diff",
             "-U20",
             "--report-identical-files",
-            f"--label={options['graph_attr']}@{base_ref}",
-            f"--label={options['graph_attr']}@{cur_ref}",
+            f"--label={options['graph_attr']}@{base_rev}",
+            f"--label={options['graph_attr']}@{cur_rev}",
         ]
 
         for spec in parameters:
-            base_path = os.path.join(diffdir, f"{options['graph_attr']}_{base_ref}")
-            cur_path = os.path.join(diffdir, f"{options['graph_attr']}_{cur_ref}")
+            base_path = os.path.join(diffdir, f"{options['graph_attr']}_{base_rev}")
+            cur_path = os.path.join(diffdir, f"{options['graph_attr']}_{cur_rev}")
 
             params_name = None
             if len(parameters) > 1:
@@ -593,6 +593,15 @@ def image_digest(args):
     help='Type of repository, either "hg" or "git"',
 )
 @argument("--base-repository", required=True, help='URL for "base" repository to clone')
+@argument(
+    "--base-ref", default="", help='Reference of the revision in the "base" repository'
+)
+@argument(
+    "--base-rev",
+    default="",
+    help="Taskgraph decides what to do based on the revision range between "
+    "`--base-rev` and `--head-rev`. Value is determined automatically if not provided",
+)
 @argument(
     "--head-repository",
     required=True,

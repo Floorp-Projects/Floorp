@@ -211,7 +211,7 @@ def use_fetches(config, jobs):
             if value:
                 aliases[f"{config.kind}-{value}"] = label
 
-    for task in config.kind_dependencies_tasks:
+    for task in config.kind_dependencies_tasks.values():
         if task.kind in ("fetch", "toolchain"):
             get_attribute(
                 artifact_names,
@@ -275,8 +275,8 @@ def use_fetches(config, jobs):
                 else:
                     dep_tasks = [
                         task
-                        for task in config.kind_dependencies_tasks
-                        if task.label == dep_label
+                        for label, task in config.kind_dependencies_tasks.items()
+                        if label == dep_label
                     ]
                     if len(dep_tasks) != 1:
                         raise Exception(
