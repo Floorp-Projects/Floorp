@@ -610,7 +610,7 @@ let JSWINDOWACTORS = {
 
   PageInfo: {
     child: {
-      moduleURI: "resource:///actors/PageInfoChild.jsm",
+      esModuleURI: "resource:///actors/PageInfoChild.sys.mjs",
     },
 
     allFrames: true,
