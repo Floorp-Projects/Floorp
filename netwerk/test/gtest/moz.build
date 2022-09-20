@@ -24,6 +24,7 @@ UNIFIED_SOURCES += [
     "TestReadStreamToString.cpp",
     "TestServerTimingHeader.cpp",
     "TestSocketTransportService.cpp",
+    "TestSSLTokensCache.cpp",
     "TestStandardURL.cpp",
     "TestUDPSocket.cpp",
 ]
