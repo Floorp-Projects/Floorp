@@ -26,6 +26,7 @@ html|input {
   text-shadow: inherit;
   box-sizing: border-box;
   -moz-box-flex: 1;
+  min-width: 0;
   text-align: inherit;
 }
 
