@@ -349,7 +349,10 @@ hb_subset_sources = files(
   'graph/gsubgpos-context.hh',
   'graph/gsubgpos-graph.hh',
   'graph/pairpos-graph.hh',
+  'graph/markbasepos-graph.hh',
   'graph/coverage-graph.hh',
+  'graph/classdef-graph.hh',
+  'graph/split-helpers.hh',
   'hb-subset.cc',
   'hb-subset.hh',
 )
@@ -478,7 +481,7 @@ defs_list = [harfbuzz_def]
 version = '0.@0@.0'.format(hb_version_int)
 
 extra_hb_cpp_args = []
-if cpp.get_id() == 'msvc'
+if cpp.get_argument_syntax() == 'msvc'
   if get_option('default_library') != 'static'
     extra_hb_cpp_args += '-DHB_DLL_EXPORT'
   endif
@@ -548,7 +551,7 @@ libharfbuzz_subset_dep = declare_dependency(
 if get_option('tests').enabled()
   # TODO: MSVC gives the following,
   # error LNK2019: unresolved external symbol "unsigned __int64 const * const _hb_NullPool"
-  if cpp.get_id() != 'msvc'
+  if cpp.get_argument_syntax() != 'msvc'
     noinst_programs = {
       'main': 'main.cc',
       'test-basics': 'test.cc',
@@ -558,6 +561,7 @@ if get_option('tests').enabled()
       'test-ot-glyphname': 'test-ot-glyphname.cc',
       'test-ot-gpos-size-params': 'test-gpos-size-params.cc',
       'test-ot-gsub-would-substitute': 'test-gsub-would-substitute.cc',
+      'test-use-table': 'test-use-table.cc',
     }
     foreach name, source : noinst_programs
       executable(name, source,
@@ -579,6 +583,7 @@ if get_option('tests').enabled()
     'test-ot-tag': ['hb-ot-tag.cc'],
     'test-priority-queue': ['test-priority-queue.cc', 'hb-static.cc'],
     'test-repacker': ['test-repacker.cc', 'hb-static.cc', 'graph/gsubgpos-context.cc'],
+    'test-classdef-graph': ['graph/test-classdef-graph.cc', 'hb-static.cc', 'graph/gsubgpos-context.cc'],
     'test-set': ['test-set.cc', 'hb-static.cc'],
     'test-serialize': ['test-serialize.cc', 'hb-static.cc'],
     'test-unicode-ranges': ['test-unicode-ranges.cc'],
@@ -586,7 +591,7 @@ if get_option('tests').enabled()
     'test-bimap': ['test-bimap.cc', 'hb-static.cc'],
   }
   foreach name, source : compiled_tests
-    if cpp.get_id() == 'msvc' and source.contains('hb-static.cc')
+    if cpp.get_argument_syntax() == 'msvc' and source.contains('hb-static.cc')
       # TODO: MSVC doesn't like tests having hb-static.cc, fix them
       continue
     endif
@@ -789,7 +794,7 @@ if get_option('tests').enabled()
   endforeach
   env.set('HBHEADERS', ' '.join(HBHEADERS))
 
-  if cpp.get_id() != 'msvc' and not meson.is_cross_build() # ensure the local tools are usable
+  if cpp.get_argument_syntax() != 'msvc' and not meson.is_cross_build() # ensure the local tools are usable
     dist_check_script += ['check-libstdc++', 'check-static-inits', 'check-symbols']
   endif
 

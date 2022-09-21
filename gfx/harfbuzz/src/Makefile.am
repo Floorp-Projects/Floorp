@@ -321,6 +321,7 @@ noinst_PROGRAMS = \
 	test-ot-glyphname \
 	test-gpos-size-params \
 	test-gsub-would-substitute \
+	test-use-table \
 	$(NULL)
 bin_PROGRAMS =
 
@@ -348,6 +349,10 @@ test_ot_glyphname_SOURCES = test-ot-glyphname.cc
 test_ot_glyphname_CPPFLAGS = $(HBCFLAGS)
 test_ot_glyphname_LDADD = libharfbuzz.la $(HBLIBS)
 
+test_use_table_SOURCES = test-use-table.cc
+test_use_table_CPPFLAGS = $(HBCFLAGS)
+test_use_table_LDADD = libharfbuzz.la $(HBLIBS)
+
 test_gpos_size_params_SOURCES = test-gpos-size-params.cc
 test_gpos_size_params_CPPFLAGS = $(HBCFLAGS)
 test_gpos_size_params_LDADD = libharfbuzz.la $(HBLIBS)
@@ -371,6 +376,7 @@ COMPILED_TESTS = \
 	test-unicode-ranges \
 	test-vector \
 	test-repacker \
+	test-classdef-graph \
 	$(NULL)
 COMPILED_TESTS_CPPFLAGS = $(HBCFLAGS) -DMAIN -UNDEBUG
 COMPILED_TESTS_LDADD = libharfbuzz.la $(HBLIBS)
@@ -416,6 +422,10 @@ test_priority_queue_LDADD = libharfbuzz.la $(HBLIBS)
 test_repacker_SOURCES = test-repacker.cc hb-static.cc graph/gsubgpos-context.cc
 test_repacker_CPPFLAGS = $(HBCFLAGS)
 test_repacker_LDADD = libharfbuzz.la libharfbuzz-subset.la $(HBLIBS)
+
+test_classdef_graph_SOURCES = graph/test-classdef-graph.cc hb-static.cc graph/gsubgpos-context.cc
+test_classdef_graph_CPPFLAGS = $(HBCFLAGS)
+test_classdef_graph_LDADD = libharfbuzz.la libharfbuzz-subset.la $(HBLIBS)
 
 test_set_SOURCES = test-set.cc hb-static.cc
 test_set_CPPFLAGS = $(COMPILED_TESTS_CPPFLAGS)

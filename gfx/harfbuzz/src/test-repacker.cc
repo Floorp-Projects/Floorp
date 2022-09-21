@@ -112,9 +112,9 @@ static void start_lookup (int8_t type,
                           hb_serialize_context_t* c)
 {
   char lookup[] = {
-    0, type, // type
+    0, (char)type, // type
     0, 0, // flag
-    0, num_subtables, // num subtables
+    0, (char)num_subtables, // num subtables
   };
 
   start_object (lookup, 6, c);
@@ -143,28 +143,78 @@ static unsigned add_extension (unsigned child,
 
 }
 
-static unsigned add_coverage (char start, char end,
+// Adds coverage table fro [start, end]
+static unsigned add_coverage (unsigned start, unsigned end,
                               hb_serialize_context_t* c)
 {
   if (end - start == 1)
   {
-    char coverage[] = {
+    uint8_t coverage[] = {
       0, 1, // format
       0, 2, // count
-      0, start, // glyph[0]
-      0, end,   // glyph[1]
+
+      (uint8_t) ((start >> 8) & 0xFF),
+      (uint8_t) (start & 0xFF), // glyph[0]
+
+      (uint8_t) ((end >> 8) & 0xFF),
+      (uint8_t) (end & 0xFF), // glyph[1]
     };
-    return add_object (coverage, 8, c);
+    return add_object ((char*) coverage, 8, c);
   }
 
-  char coverage[] = {
+  uint8_t coverage[] = {
     0, 2, // format
     0, 1, // range count
-    0, start, // start
-    0, end,   // end
+
+    (uint8_t) ((start >> 8) & 0xFF),
+    (uint8_t) (start & 0xFF), // start
+
+    (uint8_t) ((end >> 8) & 0xFF),
+    (uint8_t) (end & 0xFF), // end
+
     0, 0,
   };
-  return add_object (coverage, 10, c);
+  return add_object ((char*) coverage, 10, c);
+}
+
+
+template<typename It>
+static unsigned add_coverage (It it,
+                              hb_serialize_context_t* c)
+{
+  c->push ();
+  OT::Layout::Common::Coverage_serialize (c, it);
+  return c->pop_pack (false);
+}
+
+// Adds a class that maps glyphs from [start_glyph, end_glyph)
+// to classes 1...n
+static unsigned add_class_def (uint16_t start_glyph,
+                               uint16_t end_glyph,
+                               hb_serialize_context_t* c)
+{
+  unsigned count = end_glyph - start_glyph;
+  uint8_t header[] = {
+    0, 1, // format
+
+    (uint8_t) ((start_glyph >> 8) & 0xFF),
+    (uint8_t) (start_glyph & 0xFF), // start_glyph
+
+    (uint8_t) ((count >> 8) & 0xFF),
+    (uint8_t) (count & 0xFF), // count
+  };
+
+  start_object ((char*) header, 6, c);
+  for (uint16_t i = 1; i <= count; i++)
+  {
+    uint8_t class_value[] = {
+      (uint8_t) ((i >> 8) & 0xFF),
+      (uint8_t) (i & 0xFF), // count
+    };
+    extend ((char*) class_value, 2, c);
+  }
+
+  return c->pop_pack (false);
 }
 
 static unsigned add_pair_pos_1 (unsigned* pair_sets,
@@ -192,6 +242,201 @@ static unsigned add_pair_pos_1 (unsigned* pair_sets,
   return c->pop_pack (false);
 }
 
+static unsigned add_pair_pos_2 (unsigned starting_class,
+                                unsigned coverage,
+                                unsigned class_def_1, uint16_t class_def_1_count,
+                                unsigned class_def_2, uint16_t class_def_2_count,
+                                unsigned* device_tables,
+                                hb_serialize_context_t* c)
+{
+  uint8_t format[] = {
+    0, 2
+  };
+
+  start_object ((char*) format, 2, c);
+  add_offset (coverage, c);
+
+  unsigned num_values = 4;
+  uint8_t format1 = 0x01 | 0x02 | 0x08;
+  uint8_t format2 = 0x04;
+  if (device_tables) {
+    format2 |= 0x20;
+    num_values += 1;
+  }
+  uint8_t value_format[] = {
+    0, format1,
+    0, format2,
+  };
+
+  extend ((char*) value_format, 4, c);
+
+  add_offset (class_def_1, c);
+  add_offset (class_def_2, c);
+
+  uint8_t class_counts[] = {
+    (uint8_t) ((class_def_1_count >> 8) & 0xFF),
+    (uint8_t) (class_def_1_count & 0xFF),
+    (uint8_t) ((class_def_2_count >> 8) & 0xFF),
+    (uint8_t) (class_def_2_count & 0xFF),
+  };
+  extend ((char*) class_counts, 4, c);
+
+  unsigned num_bytes_per_record = class_def_2_count * num_values * 2;
+  uint8_t* record = (uint8_t*) calloc (1, num_bytes_per_record);
+  int device_index = 0;
+  for (uint16_t i = 0; i < class_def_1_count; i++)
+  {
+
+    for (uint16_t j = 0; j < class_def_2_count; j++)
+    {
+      for (int k = 0; k < 4; k++) {
+        uint8_t value[] = {
+          (uint8_t) (i + starting_class),
+          (uint8_t) (i + starting_class),
+        };
+        extend ((char*) value, 2, c);
+      }
+
+      if (device_tables) {
+        add_offset (device_tables[device_index++], c);
+      }
+    }
+  }
+  free (record);
+
+  return c->pop_pack (false);
+}
+
+static unsigned add_mark_base_pos_1 (unsigned mark_coverage,
+                                     unsigned base_coverage,
+                                     unsigned mark_array,
+                                     unsigned base_array,
+                                     unsigned class_count,
+                                     hb_serialize_context_t* c)
+{
+  uint8_t format[] = {
+    0, 1
+  };
+
+  start_object ((char*) format, 2, c);
+  add_offset (mark_coverage, c);
+  add_offset (base_coverage, c);
+
+  uint8_t count[] = {
+    (uint8_t) ((class_count >> 8) & 0xFF),
+    (uint8_t) (class_count & 0xFF),
+  };
+  extend ((char*) count, 2, c);
+
+  add_offset (mark_array, c);
+  add_offset (base_array, c);
+
+  return c->pop_pack (false);
+}
+
+template<int mark_count,
+    int class_count,
+    int base_count,
+    int table_count>
+struct MarkBasePosBuffers
+{
+  unsigned base_anchors[class_count * base_count];
+  unsigned mark_anchors[mark_count];
+  uint8_t anchor_buffers[class_count * base_count + 100];
+  uint8_t class_buffer[class_count * 2];
+
+  MarkBasePosBuffers(hb_serialize_context_t* c)
+  {
+    for (unsigned i = 0; i < sizeof(anchor_buffers) / 2; i++)
+    {
+      OT::HBUINT16* value = (OT::HBUINT16*) (&anchor_buffers[2*i]);
+      *value = i;
+    }
+
+    for (unsigned i = 0; i < class_count * base_count; i++)
+    {
+      base_anchors[i] = add_object ((char*) &anchor_buffers[i], 100, c);
+      if (i < class_count) {
+        class_buffer[i*2] = (uint8_t) ((i >> 8) & 0xFF);
+        class_buffer[i*2 + 1] = (uint8_t) (i & 0xFF);
+      }
+    }
+
+    for (unsigned i = 0; i < mark_count; i++)
+    {
+      mark_anchors[i] = add_object ((char*) &anchor_buffers[i], 4, c);
+    }
+  }
+
+  unsigned create_mark_base_pos_1 (unsigned table_index, hb_serialize_context_t* c)
+  {
+    unsigned class_per_table = class_count / table_count;
+    unsigned mark_per_class = mark_count / class_count;
+    unsigned start_class = class_per_table * table_index;
+    unsigned end_class = class_per_table * (table_index + 1) - 1;
+
+    // baseArray
+    uint8_t base_count_buffer[] = {
+      (uint8_t) ((base_count >> 8) & 0xFF),
+      (uint8_t) (base_count & 0xFF),
+
+    };
+    start_object ((char*) base_count_buffer, 2, c);
+    for (unsigned base = 0; base < base_count; base++)
+    {
+      for (unsigned klass = start_class; klass <= end_class; klass++)
+      {
+        unsigned i = base * class_count + klass;
+        add_offset (base_anchors[i], c);
+      }
+    }
+    unsigned base_array = c->pop_pack (false);
+
+    // markArray
+    unsigned num_marks = class_per_table * mark_per_class;
+    uint8_t mark_count_buffer[] = {
+      (uint8_t) ((num_marks >> 8) & 0xFF),
+      (uint8_t) (num_marks & 0xFF),
+    };
+    start_object ((char*) mark_count_buffer, 2, c);
+    for (unsigned mark = 0; mark < mark_count; mark++)
+    {
+      unsigned klass = mark % class_count;
+      if (klass < start_class || klass > end_class) continue;
+      klass -= start_class;
+
+      extend ((char*) &class_buffer[2 * klass], 2, c);
+      add_offset (mark_anchors[mark], c);
+    }
+    unsigned mark_array = c->pop_pack (false);
+
+    // markCoverage
+    auto it =
+        + hb_range ((hb_codepoint_t) mark_count)
+        | hb_filter ([&] (hb_codepoint_t mark) {
+          unsigned klass = mark % class_count;
+          return klass >= class_per_table * table_index &&
+              klass < class_per_table * (table_index + 1);
+        })
+        ;
+    unsigned mark_coverage = add_coverage (it, c);
+
+    // baseCoverage
+    unsigned base_coverage = add_coverage (10, 10 + base_count - 1, c);
+
+    return add_mark_base_pos_1 (mark_coverage,
+                                base_coverage,
+                                mark_array,
+                                base_array,
+                                class_per_table,
+                                c);
+  }
+};
+
+
+
+
+
 static void run_resolve_overflow_test (const char* name,
                                        hb_serialize_context_t& overflowing,
                                        hb_serialize_context_t& expected,
@@ -203,44 +448,32 @@ static void run_resolve_overflow_test (const char* name,
           name);
 
   graph_t graph (overflowing.object_graph ());
+  graph_t expected_graph (expected.object_graph ());
+  if (graph::will_overflow (expected_graph))
+  {
+    expected_graph.assign_spaces ();
+    expected_graph.sort_shortest_distance ();
+  }
 
-
+  // Check that overflow resolution succeeds
   assert (overflowing.offset_overflow ());
-  hb_blob_t* out = hb_resolve_overflows (overflowing.object_graph (),
-                                         tag,
-                                         num_iterations,
-                                         recalculate_extensions);
+  assert (hb_resolve_graph_overflows (tag,
+                                      num_iterations,
+                                      recalculate_extensions,
+                                      graph));
+
+  // Check the graphs can be serialized.
+  hb_blob_t* out = graph::serialize (graph);
   assert (out);
-
-  hb_bytes_t result = out->as_bytes ();
-
-  assert (!expected.offset_overflow ());
-  hb_bytes_t expected_result = expected.copy_bytes ();
-
-  if (result.length != expected_result.length)
-  {
-    printf("result.length (%u) != expected.length (%u).\n",
-           result.length,
-           expected_result.length);
-  }
-  assert (result.length == expected_result.length);
-
-  bool equal = true;
-  for (unsigned i = 0; i < expected_result.length; i++)
-  {
-    if (result[i] != expected_result[i])
-    {
-      equal = false;
-      uint8_t a = result[i];
-      uint8_t b = expected_result[i];
-      printf("%08u: %x != %x\n", i, a, b);
-    }
-  }
-
-  assert (equal);
-
-  expected_result.fini ();
   hb_blob_destroy (out);
+  out = graph::serialize (expected_graph);
+  assert (out);
+  hb_blob_destroy (out);
+
+  // Check the graphs are equivalent
+  graph.normalize ();
+  expected_graph.normalize ();
+  assert (graph == expected_graph);
 }
 
 static void add_virtual_offset (unsigned id,
@@ -1086,18 +1319,144 @@ populate_serializer_with_large_pair_pos_1 (hb_serialize_context_t* c,
   unsigned pair_pos_2 = add_object (large_string.c_str(), 200, c);
 
   if (as_extension) {
-
+    pair_pos_2 = add_extension (pair_pos_2, 2, c);
     for (int i = num_pair_pos_1 - 1; i >= 0; i--)
       pair_pos_1[i] = add_extension (pair_pos_1[i], 2, c);
-    pair_pos_2 = add_extension (pair_pos_2, 2, c);
   }
 
   start_lookup (as_extension ? 9 : 2, 1 + num_pair_pos_1, c);
 
-  add_offset (pair_pos_2, c);
   for (int i = 0; i < num_pair_pos_1; i++)
     add_offset (pair_pos_1[i], c);
+  add_offset (pair_pos_2, c);
 
+  unsigned lookup = finish_lookup (c);
+
+  unsigned lookup_list = add_lookup_list (&lookup, 1, c);
+
+  add_gsubgpos_header (lookup_list, c);
+
+  c->end_serialize();
+}
+
+template<int num_pair_pos_2, int num_class_1, int num_class_2>
+static void
+populate_serializer_with_large_pair_pos_2 (hb_serialize_context_t* c,
+                                           bool as_extension = false,
+                                           bool with_device_tables = false,
+                                           bool extra_table = true)
+{
+  std::string large_string(100000, 'a');
+  c->start_serialize<char> ();
+
+  unsigned coverage[num_pair_pos_2];
+  unsigned class_def_1[num_pair_pos_2];
+  unsigned class_def_2[num_pair_pos_2];
+  unsigned pair_pos_2[num_pair_pos_2];
+
+  unsigned* device_tables = (unsigned*) calloc (num_pair_pos_2 * num_class_1 * num_class_2,
+                                                sizeof(unsigned));
+
+  // Total glyphs = num_class_1 * num_pair_pos_2
+  for (int i = num_pair_pos_2 - 1; i >= 0; i--)
+  {
+    unsigned start_glyph = 5 + i * num_class_1;
+    if (num_class_2 >= num_class_1)
+    {
+      class_def_2[i] = add_class_def (11,
+                                      10 + num_class_2, c);
+      class_def_1[i] = add_class_def (start_glyph + 1,
+                                      start_glyph + num_class_1,
+                                      c);
+    } else {
+      class_def_1[i] = add_class_def (start_glyph + 1,
+                                      start_glyph + num_class_1,
+                                      c);
+      class_def_2[i] = add_class_def (11,
+                                      10 + num_class_2, c);
+    }
+
+    coverage[i] = add_coverage (start_glyph,
+                                start_glyph + num_class_1 - 1,
+                                c);
+
+    if (with_device_tables)
+    {
+      for(int j = (i + 1) * num_class_1 * num_class_2 - 1;
+          j >= i * num_class_1 * num_class_2;
+          j--)
+      {
+        uint8_t table[] = {
+          (uint8_t) ((j >> 8) & 0xFF),
+          (uint8_t) (j & 0xFF),
+        };
+        device_tables[j] = add_object ((char*) table, 2, c);
+      }
+    }
+
+    pair_pos_2[i] = add_pair_pos_2 (1 + i * num_class_1,
+                                    coverage[i],
+                                    class_def_1[i], num_class_1,
+                                    class_def_2[i], num_class_2,
+                                    with_device_tables
+                                    ? &device_tables[i * num_class_1 * num_class_2]
+                                    : nullptr,
+                                    c);
+  }
+
+
+  unsigned pair_pos_1 = 0;
+  if (extra_table) pair_pos_1 = add_object (large_string.c_str(), 100000, c);
+
+  if (as_extension) {
+    for (int i = num_pair_pos_2 - 1; i >= 0; i--)
+      pair_pos_2[i] = add_extension (pair_pos_2[i], 2, c);
+
+    if (extra_table)
+      pair_pos_1 = add_extension (pair_pos_1, 2, c);
+  }
+
+  start_lookup (as_extension ? 9 : 2, 1 + num_pair_pos_2, c);
+
+  if (extra_table)
+    add_offset (pair_pos_1, c);
+
+  for (int i = 0; i < num_pair_pos_2; i++)
+    add_offset (pair_pos_2[i], c);
+
+  unsigned lookup = finish_lookup (c);
+
+  unsigned lookup_list = add_lookup_list (&lookup, 1, c);
+
+  add_gsubgpos_header (lookup_list, c);
+
+  c->end_serialize();
+
+  free (device_tables);
+}
+
+template<int mark_count,
+    int class_count,
+    int base_count,
+    int table_count>
+static void
+populate_serializer_with_large_mark_base_pos_1 (hb_serialize_context_t* c)
+{
+  c->start_serialize<char> ();
+
+  MarkBasePosBuffers<mark_count, class_count, base_count, table_count> buffers (c);
+
+  unsigned mark_base_pos[table_count];
+  for (unsigned i = 0; i < table_count; i++)
+    mark_base_pos[i] = buffers.create_mark_base_pos_1 (i, c);
+
+  for (int i = 0; i < table_count; i++)
+    mark_base_pos[i] = add_extension (mark_base_pos[i], 4, c);
+
+  start_lookup (9, table_count, c);
+
+  for (int i = 0; i < table_count; i++)
+    add_offset (mark_base_pos[i], c);
 
   unsigned lookup = finish_lookup (c);
 
@@ -1523,6 +1882,97 @@ static void test_resolve_with_extension_pair_pos_1_split ()
   free (expected_buffer);
 }
 
+static void test_resolve_with_basic_pair_pos_2_split ()
+{
+  size_t buffer_size = 300000;
+  void* buffer = malloc (buffer_size);
+  assert (buffer);
+  hb_serialize_context_t c (buffer, buffer_size);
+  populate_serializer_with_large_pair_pos_2 <1, 4, 3000>(&c);
+
+  void* expected_buffer = malloc (buffer_size);
+  assert (expected_buffer);
+  hb_serialize_context_t e (expected_buffer, buffer_size);
+  populate_serializer_with_large_pair_pos_2 <2, 2, 3000>(&e, true);
+
+  run_resolve_overflow_test ("test_resolve_with_basic_pair_pos_2_split",
+                             c,
+                             e,
+                             20,
+                             true,
+                             HB_TAG('G', 'P', 'O', 'S'));
+  free (buffer);
+  free (expected_buffer);
+}
+
+static void test_resolve_with_close_to_limit_pair_pos_2_split ()
+{
+  size_t buffer_size = 300000;
+  void* buffer = malloc (buffer_size);
+  assert (buffer);
+  hb_serialize_context_t c (buffer, buffer_size);
+  populate_serializer_with_large_pair_pos_2 <1, 1596, 10>(&c, true, false, false);
+
+  void* expected_buffer = malloc (buffer_size);
+  assert (expected_buffer);
+  hb_serialize_context_t e (expected_buffer, buffer_size);
+  populate_serializer_with_large_pair_pos_2 <2, 798, 10>(&e, true, false, false);
+
+  run_resolve_overflow_test ("test_resolve_with_close_to_limit_pair_pos_2_split",
+                             c,
+                             e,
+                             20,
+                             true,
+                             HB_TAG('G', 'P', 'O', 'S'));
+  free (buffer);
+  free (expected_buffer);
+}
+
+static void test_resolve_with_pair_pos_2_split_with_device_tables ()
+{
+  size_t buffer_size = 300000;
+  void* buffer = malloc (buffer_size);
+  assert (buffer);
+  hb_serialize_context_t c (buffer, buffer_size);
+  populate_serializer_with_large_pair_pos_2 <1, 4, 2000>(&c, false, true);
+
+  void* expected_buffer = malloc (buffer_size);
+  assert (expected_buffer);
+  hb_serialize_context_t e (expected_buffer, buffer_size);
+  populate_serializer_with_large_pair_pos_2 <2, 2, 2000>(&e, true, true);
+
+  run_resolve_overflow_test ("test_resolve_with_pair_pos_2_split_with_device_tables",
+                             c,
+                             e,
+                             20,
+                             true,
+                             HB_TAG('G', 'P', 'O', 'S'));
+  free (buffer);
+  free (expected_buffer);
+}
+
+static void test_resolve_with_basic_mark_base_pos_1_split ()
+{
+  size_t buffer_size = 200000;
+  void* buffer = malloc (buffer_size);
+  assert (buffer);
+  hb_serialize_context_t c (buffer, buffer_size);
+  populate_serializer_with_large_mark_base_pos_1 <40, 10, 110, 1>(&c);
+
+  void* expected_buffer = malloc (buffer_size);
+  assert (expected_buffer);
+  hb_serialize_context_t e (expected_buffer, buffer_size);
+  populate_serializer_with_large_mark_base_pos_1 <40, 10, 110, 2>(&e);
+
+  run_resolve_overflow_test ("test_resolve_with_basic_mark_base_pos_1_split",
+                             c,
+                             e,
+                             20,
+                             true,
+                             HB_TAG('G', 'P', 'O', 'S'));
+  free (buffer);
+  free (expected_buffer);
+}
 
 static void test_resolve_overflows_via_splitting_spaces ()
 {
@@ -1673,7 +2123,14 @@ main (int argc, char **argv)
   test_resolve_with_extension_promotion ();
   test_resolve_with_basic_pair_pos_1_split ();
   test_resolve_with_extension_pair_pos_1_split ();
+  test_resolve_with_basic_pair_pos_2_split ();
+  test_resolve_with_pair_pos_2_split_with_device_tables ();
+  test_resolve_with_close_to_limit_pair_pos_2_split ();
+  test_resolve_with_basic_mark_base_pos_1_split ();
 
+  // TODO(grieger): have run overflow tests compare graph equality not final packed binary.
+  // TODO(grieger): split test where multiple subtables in one lookup are split to test link ordering.
+  // TODO(grieger): split test where coverage table in subtable that is being split is shared.
   // TODO(grieger): test with extensions already mixed in as well.
   // TODO(grieger): test two layer ext promotion setup.
   // TODO(grieger): test sorting by subtables per byte in ext. promotion.
