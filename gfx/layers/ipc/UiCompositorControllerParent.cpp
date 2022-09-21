@@ -70,8 +70,6 @@ mozilla::ipc::IPCResult UiCompositorControllerParent::RecvResume() {
       CompositorBridgeParent::GetCompositorBridgeParentFromLayersId(
           mRootLayerTreeId);
   if (parent) {
-    // Front-end expects a first paint callback upon resume.
-    parent->ForceIsFirstPaint();
     parent->ResumeComposition();
   }
   return IPC_OK();

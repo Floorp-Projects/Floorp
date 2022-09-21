@@ -98,7 +98,6 @@
 #include "mozilla/layers/CompositorSession.h"
 #include "mozilla/layers/LayersTypes.h"
 #include "mozilla/layers/UiCompositorControllerChild.h"
-#include "mozilla/layers/UiCompositorControllerMessageTypes.h"
 #include "mozilla/layers/IAPZCTreeManager.h"
 #include "mozilla/ProfilerLabels.h"
 #include "mozilla/widget/AndroidVsync.h"
@@ -894,15 +893,8 @@ class LayerViewSupport final
   WindowPtr mWindow;
   GeckoSession::Compositor::WeakRef mCompositor;
   Atomic<bool, ReleaseAcquire> mCompositorPaused;
-  // Surface to render into when not using SurfaceControl to composite.
-  java::sdk::Surface::GlobalRef mDefaultSurface;
-  // Optional SurfaceControl to composite into.
+  java::sdk::Surface::GlobalRef mSurface;
   java::sdk::SurfaceControl::GlobalRef mSurfaceControl;
-  // Surface to render into to be composited by SurfaceControl, if enabled.
-  java::sdk::Surface::GlobalRef mChildSurface;
-  // Used to temporarily block the SurfaceControl compositing path, causing us
-  // to render into mDefaultSurface rather than mChildSurface.
-  bool mIsSurfaceControlBlocked = false;
   int32_t mWidth;
   int32_t mHeight;
   // Used to communicate with the gecko compositor from the UI thread.
@@ -1030,20 +1022,19 @@ class LayerViewSupport final
     }
 
     if (!mCompositorPaused) {
-      // If we are using SurfaceControl but mChildSurface is null, that means
-      // the previous surface was destroyed along with the the previous
-      // compositor, and we need to create a new one.
-      if (mSurfaceControl && !mChildSurface) {
-        mChildSurface =
-            java::SurfaceControlManager::GetInstance()->GetChildSurface(
-                mSurfaceControl, mWidth, mHeight);
+      // If we are using SurfaceControl but mSurface is null, that means the
+      // previous surface was destroyed along with the the previous compositor,
+      // and we need to create a new one.
+      if (mSurfaceControl && !mSurface) {
+        mSurface = java::SurfaceControlManager::GetInstance()->GetChildSurface(
+            mSurfaceControl, mWidth, mHeight);
       }
 
       if (auto window{mWindow.Access()}) {
         nsWindow* gkWindow = window->GetNsWindow();
         if (gkWindow) {
           mUiCompositorControllerChild->OnCompositorSurfaceChanged(
-              gkWindow->mWidgetId, GetSurface());
+              gkWindow->mWidgetId, mSurface);
         }
       }
 
@@ -1059,7 +1050,7 @@ class LayerViewSupport final
     if (mSurfaceControl) {
       // If we are using SurfaceControl then we must set the Surface to null
       // here to ensure we create a new one when the new compositor is created.
-      mChildSurface = nullptr;
+      mSurface = nullptr;
     }
 
     if (auto window = mWindow.Access()) {
@@ -1077,13 +1068,7 @@ class LayerViewSupport final
     }
   }
 
-  java::sdk::Surface::Param GetSurface() {
-    if (mSurfaceControl && !mIsSurfaceControlBlocked) {
-      return mChildSurface;
-    }
-
-    return mDefaultSurface;
-  }
+  java::sdk::Surface::Param GetSurface() { return mSurface; }
 
  private:
   already_AddRefed<DataSourceSurface> FlipScreenPixels(
@@ -1203,8 +1188,7 @@ class LayerViewSupport final
     if (mUiCompositorControllerChild) {
       mUiCompositorControllerChild->Pause();
 
-      mDefaultSurface = nullptr;
-      mChildSurface = nullptr;
+      mSurface = nullptr;
       mSurfaceControl = nullptr;
       if (auto window = mWindow.Access()) {
         nsWindow* gkWindow = window->GetNsWindow();
@@ -1247,7 +1231,6 @@ class LayerViewSupport final
 
     mWidth = aWidth;
     mHeight = aHeight;
-    mDefaultSurface = java::sdk::Surface::GlobalRef::From(aSurface);
     mSurfaceControl =
         java::sdk::SurfaceControl::GlobalRef::From(aSurfaceControl);
     if (mSurfaceControl) {
@@ -1255,11 +1238,10 @@ class LayerViewSupport final
       // rather than rendering directly in to the Surface provided by the
       // application. This allows us to work around a bug on some versions of
       // Android when recovering from a GPU process crash.
-      mChildSurface =
-          java::SurfaceControlManager::GetInstance()->GetChildSurface(
-              mSurfaceControl, mWidth, mHeight);
+      mSurface = java::SurfaceControlManager::GetInstance()->GetChildSurface(
+          mSurfaceControl, mWidth, mHeight);
     } else {
-      mChildSurface = nullptr;
+      mSurface = java::sdk::Surface::GlobalRef::From(aSurface);
     }
 
     if (mUiCompositorControllerChild) {
@@ -1268,7 +1250,7 @@ class LayerViewSupport final
         if (gkWindow) {
           // Send new Surface to GPU process, if one exists.
           mUiCompositorControllerChild->OnCompositorSurfaceChanged(
-              gkWindow->mWidgetId, GetSurface());
+              gkWindow->mWidgetId, mSurface);
         }
       }
 
@@ -1325,53 +1307,6 @@ class LayerViewSupport final
     // Use priority queue for timing-sensitive event.
     nsAppShell::PostEvent(
         MakeUnique<LayerViewEvent>(MakeUnique<OnResumedEvent>(aObj)));
-  }
-
-  void BlockSurfaceControl() {
-    MOZ_ASSERT(AndroidBridge::IsJavaUiThread());
-    if (!mIsSurfaceControlBlocked) {
-      mIsSurfaceControlBlocked = true;
-      if (mSurfaceControl && mUiCompositorControllerChild) {
-        // Send the new Surface to the compositor, and call Resume to ensure it
-        // updates it. We additionally need to hide the child SurfaceControl, so
-        // that the default Surface becomes visible, but we do so in
-        // RecvToolbarAnimatorMessage after receiving the first paint signal to
-        // avoid a flash of stale content.
-        if (auto window = mWindow.Access()) {
-          nsWindow* gkWindow = window->GetNsWindow();
-          if (gkWindow) {
-            mUiCompositorControllerChild->OnCompositorSurfaceChanged(
-                gkWindow->mWidgetId, GetSurface());
-          }
-        }
-        if (!mCompositorPaused) {
-          mUiCompositorControllerChild->Resume();
-        }
-      }
-    }
-  }
-
-  void AllowSurfaceControl() {
-    MOZ_ASSERT(AndroidBridge::IsJavaUiThread());
-    if (mIsSurfaceControlBlocked) {
-      mIsSurfaceControlBlocked = false;
-      if (mSurfaceControl && mUiCompositorControllerChild) {
-        // Send the new Surface to the compositor, and call Resume to ensure it
-        // updates it. We additionally need to show the child SurfaceControl but
-        // we do so in RecvToolbarAnimatorMessage after receiving the first
-        // paint signal to avoid a flash of stale content.
-        if (auto window = mWindow.Access()) {
-          nsWindow* gkWindow = window->GetNsWindow();
-          if (gkWindow) {
-            mUiCompositorControllerChild->OnCompositorSurfaceChanged(
-                gkWindow->mWidgetId, GetSurface());
-          }
-        }
-        if (!mCompositorPaused) {
-          mUiCompositorControllerChild->Resume();
-        }
-      }
-    }
   }
 
   void SyncInvalidateAndScheduleComposite() {
@@ -1441,18 +1376,6 @@ class LayerViewSupport final
   }
 
   void RecvToolbarAnimatorMessage(int32_t aMessage) {
-    // On the first paint after blocking/allowing SurfaceControl we need to
-    // hide/show the child Surface. We do so after the first paint has finished
-    // to avoid a flash of stale content.
-    if (aMessage == FIRST_PAINT) {
-      if (mIsSurfaceControlBlocked) {
-        java::SurfaceControlManager::GetInstance()->HideChildSurface(
-            mSurfaceControl);
-      } else {
-        java::SurfaceControlManager::GetInstance()->ShowChildSurface(
-            mSurfaceControl);
-      }
-    }
     auto compositor = GeckoSession::Compositor::LocalRef(mCompositor);
     if (compositor) {
       compositor->RecvToolbarAnimatorMessage(aMessage);
