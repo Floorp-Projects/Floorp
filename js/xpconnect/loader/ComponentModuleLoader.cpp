@@ -9,6 +9,9 @@
 #include "nsISupportsImpl.h"
 
 #include "js/loader/ModuleLoadRequest.h"
+#include "js/RootingAPI.h"          // JS::Rooted
+#include "js/PropertyAndElement.h"  // JS_SetProperty
+#include "js/Value.h"               // JS::Value, JS::NumberValue
 #include "mozJSModuleLoader.h"
 
 using namespace JS::loader;
@@ -123,6 +126,17 @@ nsresult ComponentModuleLoader::StartFetch(ModuleLoadRequest* aRequest) {
     }
     if (!jsapi.StealException(&mLoadException)) {
       return NS_ERROR_OUT_OF_MEMORY;
+    }
+
+    if (mLoadException.isObject()) {
+      // Expose `nsresult`.
+      JS::Rooted<JS::Value> resultVal(cx, JS::NumberValue(uint32_t(rv)));
+      JS::Rooted<JSObject*> exceptionObj(cx, &mLoadException.toObject());
+      if (!JS_SetProperty(cx, exceptionObj, "result", resultVal)) {
+        // Ignore the error and keep reporting the exception without the result
+        // property.
+        JS_ClearPendingException(cx);
+      }
     }
 
     return rv;

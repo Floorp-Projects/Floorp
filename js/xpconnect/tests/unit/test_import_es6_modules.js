@@ -26,6 +26,7 @@ add_task(async function() {
     stack: "testFailure",
     lineNumber: "*",
     columnNumber: "*",
+    result: Cr.NS_ERROR_FILE_NOT_FOUND,
   });
 
   // Test load failure in import.
@@ -36,6 +37,7 @@ add_task(async function() {
     stack: "testFailure",
     lineNumber: "*",
     columnNumber: "*",
+    result: Cr.NS_ERROR_FILE_NOT_FOUND,
   });
 
   // Test parse error.
@@ -171,5 +173,8 @@ function checkException(exception, expected, importLine, importColumn) {
       expectedColumn = importColumn;
     }
     Assert.equal(exception.columnNumber, expectedColumn, "columnNumber");
+  }
+  if ("result" in expected) {
+    Assert.equal(exception.result, expected.result, "result");
   }
 }
