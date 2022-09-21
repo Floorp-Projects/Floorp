@@ -7,15 +7,16 @@
 #ifndef nsINode_h___
 #define nsINode_h___
 
+#include "mozilla/DoublyLinkedList.h"
 #include "mozilla/Likely.h"
 #include "mozilla/UniquePtr.h"
 #include "nsCOMPtr.h"              // for member, local
 #include "nsGkAtoms.h"             // for nsGkAtoms::baseURIProperty
 #include "mozilla/dom/NodeInfo.h"  // member (in nsCOMPtr)
 #include "nsIWeakReference.h"
+#include "nsIMutationObserver.h"
 #include "nsNodeInfoManager.h"  // for use in NodePrincipal()
 #include "nsPropertyTable.h"    // for typedefs
-#include "nsTObserverArray.h"   // for member
 #include "mozilla/ErrorResult.h"
 #include "mozilla/LinkedList.h"
 #include "mozilla/MemoryReporting.h"
@@ -44,7 +45,7 @@ class nsIContent;
 class nsIContentSecurityPolicy;
 class nsIFrame;
 class nsIHTMLCollection;
-class nsIMutationObserver;
+class nsMultiMutationObserver;
 class nsINode;
 class nsINodeList;
 class nsIPrincipal;
@@ -1106,11 +1107,15 @@ class nsINode : public mozilla::dom::EventTarget {
    */
   void AddMutationObserver(nsIMutationObserver* aMutationObserver) {
     nsSlots* s = Slots();
-    NS_ASSERTION(s->mMutationObservers.IndexOf(aMutationObserver) ==
-                     nsTArray<int>::NoIndex,
-                 "Observer already in the list");
-    s->mMutationObservers.AppendElement(aMutationObserver);
+    if (aMutationObserver) {
+      NS_ASSERTION(!s->mMutationObservers.contains(aMutationObserver),
+                   "Observer already in the list");
+
+      s->mMutationObservers.pushBack(aMutationObserver);
+    }
   }
+
+  void AddMutationObserver(nsMultiMutationObserver* aMultiMutationObserver);
 
   /**
    * Same as above, but only adds the observer if its not observing
@@ -1121,9 +1126,14 @@ class nsINode : public mozilla::dom::EventTarget {
    */
   void AddMutationObserverUnlessExists(nsIMutationObserver* aMutationObserver) {
     nsSlots* s = Slots();
-    s->mMutationObservers.AppendElementUnlessExists(aMutationObserver);
+    if (aMutationObserver &&
+        !s->mMutationObservers.contains(aMutationObserver)) {
+      s->mMutationObservers.pushBack(aMutationObserver);
+    }
   }
 
+  void AddMutationObserverUnlessExists(
+      nsMultiMutationObserver* aMultiMutationObserver);
   /**
    * Same as AddMutationObserver, but for nsIAnimationObservers.  This
    * additionally records on the document that animation observers have
@@ -1145,13 +1155,13 @@ class nsINode : public mozilla::dom::EventTarget {
   void RemoveMutationObserver(nsIMutationObserver* aMutationObserver) {
     nsSlots* s = GetExistingSlots();
     if (s) {
-      s->mMutationObservers.RemoveElement(aMutationObserver);
+      s->mMutationObservers.remove(aMutationObserver);
     }
   }
 
-  nsAutoTObserverArray<nsIMutationObserver*, 1>* GetMutationObservers() {
-    return HasSlots() ? &GetExistingSlots()->mMutationObservers : nullptr;
-  }
+  void RemoveMutationObserver(nsMultiMutationObserver* aMultiMutationObserver);
+
+  mozilla::SafeDoublyLinkedList<nsIMutationObserver>* GetMutationObservers();
 
   /**
    * Helper methods to access ancestor node(s) of type T.
@@ -1273,7 +1283,7 @@ class nsINode : public mozilla::dom::EventTarget {
     /**
      * A list of mutation observers
      */
-    nsAutoTObserverArray<nsIMutationObserver*, 1> mMutationObservers;
+    mozilla::SafeDoublyLinkedList<nsIMutationObserver> mMutationObservers;
 
     /**
      * An object implementing NodeList for this content (childNodes)

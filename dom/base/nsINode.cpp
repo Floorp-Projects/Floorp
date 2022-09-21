@@ -651,12 +651,19 @@ DocumentOrShadowRoot* nsINode::GetUncomposedDocOrConnectedShadowRoot() const {
   return nullptr;
 }
 
+mozilla::SafeDoublyLinkedList<nsIMutationObserver>*
+nsINode::GetMutationObservers() {
+  return HasSlots() ? &GetExistingSlots()->mMutationObservers : nullptr;
+}
+
 void nsINode::LastRelease() {
   nsINode::nsSlots* slots = GetExistingSlots();
   if (slots) {
-    if (!slots->mMutationObservers.IsEmpty()) {
-      NS_OBSERVER_ARRAY_NOTIFY_OBSERVERS(slots->mMutationObservers,
-                                         NodeWillBeDestroyed, (this));
+    if (!slots->mMutationObservers.isEmpty()) {
+      for (auto iter = slots->mMutationObservers.begin();
+           iter != slots->mMutationObservers.end(); ++iter) {
+        iter->NodeWillBeDestroyed(this);
+      }
     }
 
     if (IsContent()) {
@@ -3522,6 +3529,29 @@ ParentObject nsINode::GetParentObject() const {
     p.mReflectionScope = ReflectionScope::UAWidget;
   }
   return p;
+}
+
+void nsINode::AddMutationObserver(
+    nsMultiMutationObserver* aMultiMutationObserver) {
+  if (aMultiMutationObserver) {
+    NS_ASSERTION(!aMultiMutationObserver->ContainsNode(this),
+                 "Observer already in the list");
+    aMultiMutationObserver->AddMutationObserverToNode(this);
+  }
+}
+
+void nsINode::AddMutationObserverUnlessExists(
+    nsMultiMutationObserver* aMultiMutationObserver) {
+  if (aMultiMutationObserver && !aMultiMutationObserver->ContainsNode(this)) {
+    aMultiMutationObserver->AddMutationObserverToNode(this);
+  }
+}
+
+void nsINode::RemoveMutationObserver(
+    nsMultiMutationObserver* aMultiMutationObserver) {
+  if (aMultiMutationObserver) {
+    aMultiMutationObserver->RemoveMutationObserverFromNode(this);
+  }
 }
 
 NS_IMPL_ISUPPORTS(nsNodeWeakReference, nsIWeakReference)

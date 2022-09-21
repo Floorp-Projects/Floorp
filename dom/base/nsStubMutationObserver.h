@@ -14,6 +14,7 @@
 #ifndef nsStubMutationObserver_h_
 #define nsStubMutationObserver_h_
 
+#include "nsTHashMap.h"
 #include "nsIMutationObserver.h"
 
 /**
@@ -28,6 +29,53 @@
  *     prediction)
  */
 class nsStubMutationObserver : public nsIMutationObserver {
+ public:
+  NS_DECL_NSIMUTATIONOBSERVER
+};
+
+class MutationObserverWrapper;
+
+/**
+ * @brief Base class for MutationObservers that are used by multiple nodes.
+ *
+ * Mutation Observers are stored inside of a nsINode using a DoublyLinkedList,
+ * restricting the number of nodes a mutation observer can be inserted to one.
+ *
+ * To allow a mutation observer to be used by several nodes, this class
+ * provides a MutationObserverWrapper which implements the nsIMutationObserver
+ * interface and forwards all method calls to this class. For each node this
+ * mutation observer will be used for, a wrapper object is created.
+ */
+class nsMultiMutationObserver : public nsIMutationObserver {
+ public:
+  /**
+   * Adds the mutation observer to aNode by creating a MutationObserverWrapper
+   * and inserting it into aNode.
+   * Does nothing if there already is a mutation observer for aNode.
+   */
+  void AddMutationObserverToNode(nsINode* aNode);
+
+  /**
+   * Removes the mutation observer from aNode.
+   * Does nothing if there is no mutation observer for aNode.
+   */
+  void RemoveMutationObserverFromNode(nsINode* aNode);
+
+  /**
+   * Returns true if there is already a mutation observer for aNode.
+   */
+  bool ContainsNode(const nsINode* aNode) const;
+
+ private:
+  friend class MutationObserverWrapper;
+  nsTHashMap<nsINode*, MutationObserverWrapper*> mWrapperForNode;
+};
+
+/**
+ * Convenience class that provides support for multiple nodes and has
+ * default implementations for nsIMutationObserver.
+ */
+class nsStubMultiMutationObserver : public nsMultiMutationObserver {
  public:
   NS_DECL_NSIMUTATIONOBSERVER
 };
