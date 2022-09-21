@@ -88,7 +88,6 @@ static void moz_container_wayland_destroy(GtkWidget* widget);
 static void moz_container_wayland_map(GtkWidget* widget);
 static gboolean moz_container_wayland_map_event(GtkWidget* widget,
                                                 GdkEventAny* event);
-static void moz_container_wayland_unmap(GtkWidget* widget);
 static void moz_container_wayland_size_allocate(GtkWidget* widget,
                                                 GtkAllocation* allocation);
 static bool moz_container_wayland_surface_create_locked(
@@ -182,7 +181,6 @@ void moz_container_wayland_class_init(MozContainerClass* klass) {
   widget_class->map = moz_container_wayland_map;
   widget_class->map_event = moz_container_wayland_map_event;
   widget_class->destroy = moz_container_wayland_destroy;
-  widget_class->unmap = moz_container_wayland_unmap;
   widget_class->realize = moz_container_realize;
   widget_class->size_allocate = moz_container_wayland_size_allocate;
 }
