@@ -461,7 +461,9 @@ def build_docker_worker_payload(config, task, task_def):
     if worker.get("docker-in-docker"):
         features["dind"] = True
 
-    if task.get("use-sccache"):
+    # Never enable sccache on the toolchains repo, as there is no benefit from it
+    # because each push uses a different compiler.
+    if task.get("use-sccache") and config.params["project"] != "toolchains":
         features["taskclusterProxy"] = True
         task_def["scopes"].append(
             "assume:project:taskcluster:{trust_domain}:level-{level}-sccache-buckets".format(
@@ -728,7 +730,9 @@ def build_generic_worker_payload(config, task, task_def):
 
     env = worker.get("env", {})
 
-    if task.get("use-sccache"):
+    # Never enable sccache on the toolchains repo, as there is no benefit from it
+    # because each push uses a different compiler.
+    if task.get("use-sccache") and config.params["project"] != "toolchains":
         features["taskclusterProxy"] = True
         task_def["scopes"].append(
             "assume:project:taskcluster:{trust_domain}:level-{level}-sccache-buckets".format(
