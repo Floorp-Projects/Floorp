@@ -570,14 +570,22 @@ static void LastRememberedSizeCallback(
     bool canUpdateISize = canRememberISize && !containAxes.mIContained;
     MOZ_ASSERT(canUpdateBSize || canUpdateISize,
                "Should have unobserved if we can't update any size.");
-    AutoTArray<RefPtr<ResizeObserverSize>, 1> retVal;
-    entry->GetContentBoxSize(retVal);
-    const ResizeObserverSize& size = *retVal[0];
+    AutoTArray<RefPtr<ResizeObserverSize>, 1> contentSizeList;
+    entry->GetContentBoxSize(contentSizeList);
+    MOZ_ASSERT(!contentSizeList.IsEmpty());
     if (canUpdateBSize) {
-      target->SetLastRememberedBSize(size.BlockSize());
+      float bSize = 0;
+      for (const auto& current : contentSizeList) {
+        bSize += current->BlockSize();
+      }
+      target->SetLastRememberedBSize(bSize);
     }
     if (canUpdateISize) {
-      target->SetLastRememberedISize(size.InlineSize());
+      float iSize = 0;
+      for (const auto& current : contentSizeList) {
+        iSize = std::max(iSize, current->InlineSize());
+      }
+      target->SetLastRememberedISize(iSize);
     }
   }
 }
