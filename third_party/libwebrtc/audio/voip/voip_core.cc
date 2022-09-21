@@ -61,7 +61,7 @@ bool VoipCore::InitializeIfNeeded() {
   // introduced in the future.
   MutexLock lock(&lock_);
 
-  if (initialized_) {
+  if (audio_device_module_->Initialized()) {
     return true;
   }
 
@@ -115,8 +115,6 @@ bool VoipCore::InitializeIfNeeded() {
       0) {
     RTC_LOG(LS_WARNING) << "Unable to register audio callback.";
   }
-
-  initialized_ = true;
 
   return true;
 }

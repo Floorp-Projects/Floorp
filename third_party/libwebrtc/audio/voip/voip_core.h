@@ -164,9 +164,6 @@ class VoipCore : public VoipEngine,
   // ChannelId.
   std::unordered_map<ChannelId, rtc::scoped_refptr<AudioChannel>> channels_
       RTC_GUARDED_BY(lock_);
-
-  // Boolean flag to ensure initialization only occurs once.
-  bool initialized_ RTC_GUARDED_BY(lock_) = false;
 };
 
 }  // namespace webrtc
