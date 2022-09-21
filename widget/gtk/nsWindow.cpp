@@ -2567,7 +2567,9 @@ void nsWindow::WaylandPopupMovePlain(int aX, int aY) {
 
   // We can directly move only popups based on wl_subsurface type.
   MOZ_DIAGNOSTIC_ASSERT(gtk_window_get_type_hint(GTK_WINDOW(mShell)) ==
-                        GDK_WINDOW_TYPE_HINT_UTILITY);
+                            GDK_WINDOW_TYPE_HINT_UTILITY ||
+                        gtk_window_get_type_hint(GTK_WINDOW(mShell)) ==
+                            GDK_WINDOW_TYPE_HINT_TOOLTIP);
 
   gtk_window_move(GTK_WINDOW(mShell), aX, aY);
 
