@@ -328,22 +328,6 @@ mozilla::ipc::IPCResult FetchEventOpChild::RecvRespondWith(
       break;
   }
 
-  // Preload response is too late to be ready after we receive RespondWith, so
-  // disconnect the promise.
-  // Notice that if mPreloadResponseAvailablePromiseRequestHolder does not
-  // exist. We don't disconnect mPreloadResponseEndPromiseRequestHolder and
-  // cancel the navigation preload fetch here. Since ServiceWorker script could
-  // call FetchEvent.respondWith(FetchEvent.preloadResponse), then we get here
-  // but the navigation preload is not yet finished.
-  if (mPreloadResponseAvailablePromiseRequestHolder.Exists()) {
-    mPreloadResponseAvailablePromiseRequestHolder.Disconnect();
-    mPreloadResponseEndPromiseRequestHolder.Disconnect();
-    if (mPreloadResponseReadyPromises) {
-      RefPtr<FetchService> fetchService = FetchService::GetInstance();
-      fetchService->CancelFetch(std::move(mPreloadResponseReadyPromises));
-    }
-  }
-
   return IPC_OK();
 }
 
@@ -362,6 +346,9 @@ mozilla::ipc::IPCResult FetchEventOpChild::Recv__delete__(
   }
 
   mPromiseHolder.ResolveIfExists(true, __func__);
+
+  // FetchEvent is completed.
+  // Disconnect preload response related promises and cancel the preload.
   mPreloadResponseAvailablePromiseRequestHolder.DisconnectIfExists();
   mPreloadResponseEndPromiseRequestHolder.DisconnectIfExists();
   if (mPreloadResponseReadyPromises) {
