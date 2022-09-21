@@ -165,6 +165,7 @@ TEST_F(TestVp8Impl,
 }
 
 TEST_F(TestVp8Impl, SetRates) {
+  codec_settings_.SetFrameDropEnabled(true);
   auto* const vpx = new NiceMock<MockLibvpxInterface>();
   LibvpxVp8Encoder encoder((std::unique_ptr<LibvpxInterface>(vpx)),
                            VP8Encoder::Settings());
@@ -416,6 +417,7 @@ TEST_F(TestVp8Impl, ScalingDisabledIfAutomaticResizeOff) {
 }
 
 TEST_F(TestVp8Impl, ScalingEnabledIfAutomaticResizeOn) {
+  codec_settings_.SetFrameDropEnabled(true);
   codec_settings_.VP8()->automaticResizeOn = true;
   EXPECT_EQ(WEBRTC_VIDEO_CODEC_OK,
             encoder_->InitEncode(&codec_settings_, kSettings));
