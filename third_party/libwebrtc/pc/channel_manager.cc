@@ -27,7 +27,8 @@ namespace cricket {
 
 // static
 std::unique_ptr<ChannelManager> ChannelManager::Create(
-    std::unique_ptr<MediaEngineInterface> media_engine,
+    MediaEngineInterface* media_engine,
+    rtc::UniqueRandomIdGenerator* ssrc_generator,
     bool enable_rtx,
     rtc::Thread* worker_thread,
     rtc::Thread* network_thread) {
@@ -35,15 +36,16 @@ std::unique_ptr<ChannelManager> ChannelManager::Create(
   RTC_DCHECK(worker_thread);
 
   return absl::WrapUnique(new ChannelManager(
-      std::move(media_engine), enable_rtx, worker_thread, network_thread));
+      media_engine, ssrc_generator, enable_rtx, worker_thread, network_thread));
 }
 
-ChannelManager::ChannelManager(
-    std::unique_ptr<MediaEngineInterface> media_engine,
-    bool enable_rtx,
-    rtc::Thread* worker_thread,
-    rtc::Thread* network_thread)
-    : media_engine_(std::move(media_engine)),
+ChannelManager::ChannelManager(MediaEngineInterface* media_engine,
+                               rtc::UniqueRandomIdGenerator* ssrc_generator,
+                               bool enable_rtx,
+                               rtc::Thread* worker_thread,
+                               rtc::Thread* network_thread)
+    : media_engine_(media_engine),
+      ssrc_generator_(ssrc_generator),
       signaling_thread_(rtc::Thread::Current()),
       worker_thread_(worker_thread),
       network_thread_(network_thread),
@@ -61,14 +63,6 @@ ChannelManager::ChannelManager(
 
 ChannelManager::~ChannelManager() {
   RTC_DCHECK_RUN_ON(signaling_thread_);
-  worker_thread_->Invoke<void>(RTC_FROM_HERE, [&] {
-    RTC_DCHECK_RUN_ON(worker_thread_);
-    // While `media_engine_` is const throughout the ChannelManager's lifetime,
-    // it requires destruction to happen on the worker thread. Instead of
-    // marking the pointer as non-const, we live with this const_cast<> in the
-    // destructor.
-    const_cast<std::unique_ptr<MediaEngineInterface>&>(media_engine_).reset();
-  });
 }
 
 void ChannelManager::GetSupportedAudioSendCodecs(
@@ -152,7 +146,7 @@ std::unique_ptr<VoiceChannel> ChannelManager::CreateVoiceChannel(
   auto voice_channel = std::make_unique<VoiceChannel>(
       worker_thread_, network_thread_, signaling_thread_,
       absl::WrapUnique(media_channel), mid, srtp_required, crypto_options,
-      &ssrc_generator_);
+      ssrc_generator_);
 
   return voice_channel;
 }
@@ -191,7 +185,7 @@ std::unique_ptr<VideoChannel> ChannelManager::CreateVideoChannel(
   auto video_channel = std::make_unique<VideoChannel>(
       worker_thread_, network_thread_, signaling_thread_,
       absl::WrapUnique(media_channel), mid, srtp_required, crypto_options,
-      &ssrc_generator_);
+      ssrc_generator_);
 
   return video_channel;
 }

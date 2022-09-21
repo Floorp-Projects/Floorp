@@ -38,22 +38,31 @@ using ::testing::ReturnRef;
 namespace webrtc {
 
 namespace {
-class ChannelManagerForTest : public cricket::ChannelManager {
+
+class RtpTransceiverTest : public testing::Test {
  public:
-  ChannelManagerForTest()
-      : cricket::ChannelManager(std::make_unique<cricket::FakeMediaEngine>(),
-                                true,
-                                rtc::Thread::Current(),
-                                rtc::Thread::Current()) {}
+  RtpTransceiverTest()
+      : channel_manager_(
+            cricket::ChannelManager::Create(&fake_media_engine_,
+                                            &ssrc_generator_,
+                                            true,
+                                            rtc::Thread::Current(),
+                                            rtc::Thread::Current())) {}
+
+ protected:
+  cricket::ChannelManager* channel_manager() { return channel_manager_.get(); }
+
+ private:
+  cricket::FakeMediaEngine fake_media_engine_;
+  rtc::UniqueRandomIdGenerator ssrc_generator_;
+  std::unique_ptr<cricket::ChannelManager> channel_manager_;
 };
-}  // namespace
 
 // Checks that a channel cannot be set on a stopped `RtpTransceiver`.
-TEST(RtpTransceiverTest, CannotSetChannelOnStoppedTransceiver) {
-  ChannelManagerForTest cm;
+TEST_F(RtpTransceiverTest, CannotSetChannelOnStoppedTransceiver) {
   const std::string content_name("my_mid");
   auto transceiver = rtc::make_ref_counted<RtpTransceiver>(
-      cricket::MediaType::MEDIA_TYPE_AUDIO, &cm);
+      cricket::MediaType::MEDIA_TYPE_AUDIO, channel_manager());
   auto channel1 = std::make_unique<cricket::MockChannelInterface>();
   EXPECT_CALL(*channel1, media_type())
       .WillRepeatedly(Return(cricket::MediaType::MEDIA_TYPE_AUDIO));
@@ -85,11 +94,10 @@ TEST(RtpTransceiverTest, CannotSetChannelOnStoppedTransceiver) {
 }
 
 // Checks that a channel can be unset on a stopped `RtpTransceiver`
-TEST(RtpTransceiverTest, CanUnsetChannelOnStoppedTransceiver) {
-  ChannelManagerForTest cm;
+TEST_F(RtpTransceiverTest, CanUnsetChannelOnStoppedTransceiver) {
   const std::string content_name("my_mid");
   auto transceiver = rtc::make_ref_counted<RtpTransceiver>(
-      cricket::MediaType::MEDIA_TYPE_VIDEO, &cm);
+      cricket::MediaType::MEDIA_TYPE_VIDEO, channel_manager());
   auto channel = std::make_unique<cricket::MockChannelInterface>();
   EXPECT_CALL(*channel, media_type())
       .WillRepeatedly(Return(cricket::MediaType::MEDIA_TYPE_VIDEO));
@@ -114,7 +122,7 @@ TEST(RtpTransceiverTest, CanUnsetChannelOnStoppedTransceiver) {
   EXPECT_EQ(nullptr, transceiver->channel());
 }
 
-class RtpTransceiverUnifiedPlanTest : public ::testing::Test {
+class RtpTransceiverUnifiedPlanTest : public RtpTransceiverTest {
  public:
   RtpTransceiverUnifiedPlanTest()
       : transceiver_(rtc::make_ref_counted<RtpTransceiver>(
@@ -125,8 +133,8 @@ class RtpTransceiverUnifiedPlanTest : public ::testing::Test {
                 rtc::Thread::Current(),
                 rtc::Thread::Current(),
                 receiver_),
-            &channel_manager_,
-            channel_manager_.media_engine()->voice().GetRtpHeaderExtensions(),
+            channel_manager(),
+            channel_manager()->media_engine()->voice().GetRtpHeaderExtensions(),
             /* on_negotiation_needed= */ [] {})) {}
 
   static rtc::scoped_refptr<MockRtpReceiverInternal> MockReceiver() {
@@ -145,7 +153,6 @@ class RtpTransceiverUnifiedPlanTest : public ::testing::Test {
 
   rtc::scoped_refptr<MockRtpReceiverInternal> receiver_ = MockReceiver();
   rtc::scoped_refptr<MockRtpSenderInternal> sender_ = MockSender();
-  ChannelManagerForTest channel_manager_;
   rtc::scoped_refptr<RtpTransceiver> transceiver_;
 };
 
@@ -168,7 +175,7 @@ TEST_F(RtpTransceiverUnifiedPlanTest, StopSetsDirection) {
             *transceiver_->current_direction());
 }
 
-class RtpTransceiverTestForHeaderExtensions : public ::testing::Test {
+class RtpTransceiverTestForHeaderExtensions : public RtpTransceiverTest {
  public:
   RtpTransceiverTestForHeaderExtensions()
       : extensions_(
@@ -192,7 +199,7 @@ class RtpTransceiverTestForHeaderExtensions : public ::testing::Test {
                 rtc::Thread::Current(),
                 rtc::Thread::Current(),
                 receiver_),
-            &channel_manager_,
+            channel_manager(),
             extensions_,
             /* on_negotiation_needed= */ [] {})) {}
 
@@ -218,7 +225,6 @@ class RtpTransceiverTestForHeaderExtensions : public ::testing::Test {
   rtc::scoped_refptr<MockRtpReceiverInternal> receiver_ = MockReceiver();
   rtc::scoped_refptr<MockRtpSenderInternal> sender_ = MockSender();
 
-  ChannelManagerForTest channel_manager_;
   std::vector<RtpHeaderExtensionCapability> extensions_;
   rtc::scoped_refptr<RtpTransceiver> transceiver_;
 };
@@ -403,5 +409,7 @@ TEST_F(RtpTransceiverTestForHeaderExtensions,
                           RtpHeaderExtensionCapability(
                               "uri5", 6, RtpTransceiverDirection::kSendRecv)));
 }
+
+}  // namespace
 
 }  // namespace webrtc

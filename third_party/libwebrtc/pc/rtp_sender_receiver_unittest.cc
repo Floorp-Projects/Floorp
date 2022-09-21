@@ -114,12 +114,12 @@ class RtpSenderReceiverTest
             webrtc::CreateBuiltinVideoBitrateAllocatorFactory()),
         // Create fake media engine/etc. so we can create channels to use to
         // test RtpSenders/RtpReceivers.
-        media_engine_(new cricket::FakeMediaEngine()),
+        media_engine_(std::make_unique<cricket::FakeMediaEngine>()),
         fake_call_(worker_thread_, network_thread_),
         local_stream_(MediaStream::Create(kStreamId1)) {
     worker_thread_->Invoke<void>(RTC_FROM_HERE, [&]() {
       channel_manager_ = cricket::ChannelManager::Create(
-          absl::WrapUnique(media_engine_), false, worker_thread_,
+          media_engine_.get(), &ssrc_generator_, false, worker_thread_,
           network_thread_);
     });
 
@@ -526,8 +526,8 @@ class RtpSenderReceiverTest
   std::unique_ptr<webrtc::RtpTransportInternal> rtp_transport_;
   std::unique_ptr<webrtc::VideoBitrateAllocatorFactory>
       video_bitrate_allocator_factory_;
-  // `media_engine_` is actually owned by `channel_manager_`.
-  cricket::FakeMediaEngine* media_engine_;
+  std::unique_ptr<cricket::FakeMediaEngine> media_engine_;
+  rtc::UniqueRandomIdGenerator ssrc_generator_;
   std::unique_ptr<cricket::ChannelManager> channel_manager_;
   cricket::FakeCall fake_call_;
   std::unique_ptr<cricket::VoiceChannel> voice_channel_;
