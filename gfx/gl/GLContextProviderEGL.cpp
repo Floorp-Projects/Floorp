@@ -346,6 +346,18 @@ EGLSurface GLContextEGL::CreateEGLSurfaceForCompositorWidget(
   }
 
   MOZ_ASSERT(aCompositorWidget);
+#ifdef MOZ_WAYLAND
+  // RenderCompositorEGL does not like EGL_NO_SURFACE as it fallbacks
+  // to SW rendering or claims itself as paused.
+  // In case we're missing valid native window because aCompositorWidget hidden,
+  // just create a fallback EGLSurface.
+  // Actual EGLSurface will be created by widget code later when
+  // aCompositorWidget becomes visible.
+  if (widget::GdkIsWaylandDisplay() && aCompositorWidget->IsHidden()) {
+    mozilla::gfx::IntSize pbSize(16, 16);
+    return CreateWaylandBufferSurface(*egl, aConfig, pbSize);
+  }
+#endif
   EGLNativeWindowType window =
       GET_NATIVE_WINDOW_FROM_COMPOSITOR_WIDGET(aCompositorWidget);
   if (!window) {
