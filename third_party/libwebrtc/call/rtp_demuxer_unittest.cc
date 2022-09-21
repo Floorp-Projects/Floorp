@@ -14,6 +14,7 @@
 #include <set>
 #include <string>
 
+#include "absl/strings/string_view.h"
 #include "call/test/mock_rtp_packet_sink_interface.h"
 #include "modules/rtp_rtcp/include/rtp_header_extension_map.h"
 #include "modules/rtp_rtcp/source/rtp_header_extensions.h"
@@ -60,18 +61,18 @@ class RtpDemuxerTest : public ::testing::Test {
     return AddSink(criteria, sink);
   }
 
-  bool AddSinkOnlyRsid(const std::string& rsid, RtpPacketSinkInterface* sink) {
+  bool AddSinkOnlyRsid(absl::string_view rsid, RtpPacketSinkInterface* sink) {
     RtpDemuxerCriteria criteria(absl::string_view(), rsid);
     return AddSink(criteria, sink);
   }
 
-  bool AddSinkOnlyMid(const std::string& mid, RtpPacketSinkInterface* sink) {
+  bool AddSinkOnlyMid(absl::string_view mid, RtpPacketSinkInterface* sink) {
     RtpDemuxerCriteria criteria(mid);
     return AddSink(criteria, sink);
   }
 
-  bool AddSinkBothMidRsid(const std::string& mid,
-                          const std::string& rsid,
+  bool AddSinkBothMidRsid(absl::string_view mid,
+                          absl::string_view rsid,
                           RtpPacketSinkInterface* sink) {
     RtpDemuxerCriteria criteria(mid, rsid);
     return AddSink(criteria, sink);
@@ -110,7 +111,7 @@ class RtpDemuxerTest : public ::testing::Test {
 
   std::unique_ptr<RtpPacketReceived> CreatePacketWithSsrcMid(
       uint32_t ssrc,
-      const std::string& mid) {
+      absl::string_view mid) {
     RtpPacketReceived::ExtensionManager extension_manager;
     extension_manager.Register<RtpMid>(11);
 
@@ -121,7 +122,7 @@ class RtpDemuxerTest : public ::testing::Test {
 
   std::unique_ptr<RtpPacketReceived> CreatePacketWithSsrcRsid(
       uint32_t ssrc,
-      const std::string& rsid) {
+      absl::string_view rsid) {
     RtpPacketReceived::ExtensionManager extension_manager;
     extension_manager.Register<RtpStreamId>(6);
 
@@ -132,7 +133,7 @@ class RtpDemuxerTest : public ::testing::Test {
 
   std::unique_ptr<RtpPacketReceived> CreatePacketWithSsrcRrid(
       uint32_t ssrc,
-      const std::string& rrid) {
+      absl::string_view rrid) {
     RtpPacketReceived::ExtensionManager extension_manager;
     extension_manager.Register<RepairedRtpStreamId>(7);
 
@@ -143,8 +144,8 @@ class RtpDemuxerTest : public ::testing::Test {
 
   std::unique_ptr<RtpPacketReceived> CreatePacketWithSsrcMidRsid(
       uint32_t ssrc,
-      const std::string& mid,
-      const std::string& rsid) {
+      absl::string_view mid,
+      absl::string_view rsid) {
     RtpPacketReceived::ExtensionManager extension_manager;
     extension_manager.Register<RtpMid>(11);
     extension_manager.Register<RtpStreamId>(6);
@@ -157,8 +158,8 @@ class RtpDemuxerTest : public ::testing::Test {
 
   std::unique_ptr<RtpPacketReceived> CreatePacketWithSsrcRsidRrid(
       uint32_t ssrc,
-      const std::string& rsid,
-      const std::string& rrid) {
+      absl::string_view rsid,
+      absl::string_view rrid) {
     RtpPacketReceived::ExtensionManager extension_manager;
     extension_manager.Register<RtpStreamId>(6);
     extension_manager.Register<RepairedRtpStreamId>(7);

@@ -16,6 +16,7 @@
 #include <utility>
 
 #include "absl/memory/memory.h"
+#include "absl/strings/string_view.h"
 #include "api/audio_codecs/builtin_audio_decoder_factory.h"
 #include "api/rtc_event_log/rtc_event_log.h"
 #include "api/task_queue/default_task_queue_factory.h"
@@ -82,9 +83,9 @@ namespace {
 
 rtc::scoped_refptr<Resource> FindResourceWhoseNameContains(
     const std::vector<rtc::scoped_refptr<Resource>>& resources,
-    const std::string& name_contains) {
+    absl::string_view name_contains) {
   for (const auto& resource : resources) {
-    if (resource->Name().find(name_contains) != std::string::npos)
+    if (resource->Name().find(std::string(name_contains)) != std::string::npos)
       return resource;
   }
   return nullptr;

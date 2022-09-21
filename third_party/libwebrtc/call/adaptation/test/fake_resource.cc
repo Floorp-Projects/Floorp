@@ -13,17 +13,18 @@
 #include <algorithm>
 #include <utility>
 
+#include "absl/strings/string_view.h"
 #include "rtc_base/ref_counted_object.h"
 
 namespace webrtc {
 
 // static
-rtc::scoped_refptr<FakeResource> FakeResource::Create(std::string name) {
+rtc::scoped_refptr<FakeResource> FakeResource::Create(absl::string_view name) {
   return rtc::make_ref_counted<FakeResource>(name);
 }
 
-FakeResource::FakeResource(std::string name)
-    : Resource(), name_(std::move(name)), listener_(nullptr) {}
+FakeResource::FakeResource(absl::string_view name)
+    : Resource(), name_(name), listener_(nullptr) {}
 
 FakeResource::~FakeResource() {}
 

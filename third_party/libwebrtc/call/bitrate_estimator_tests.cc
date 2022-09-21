@@ -41,7 +41,7 @@ class LogObserver {
 
   ~LogObserver() { rtc::LogMessage::RemoveLogToStream(&callback_); }
 
-  void PushExpectedLogLine(const std::string& expected_log_line) {
+  void PushExpectedLogLine(absl::string_view expected_log_line) {
     callback_.PushExpectedLogLine(expected_log_line);
   }
 
@@ -83,9 +83,9 @@ class LogObserver {
 
     bool Wait() { return done_.Wait(test::CallTest::kDefaultTimeoutMs); }
 
-    void PushExpectedLogLine(const std::string& expected_log_line) {
+    void PushExpectedLogLine(absl::string_view expected_log_line) {
       MutexLock lock(&mutex_);
-      expected_log_lines_.push_back(expected_log_line);
+      expected_log_lines_.emplace_back(expected_log_line);
     }
 
    private:

@@ -25,6 +25,7 @@
 #include <string>
 #include <vector>
 
+#include "absl/strings/string_view.h"
 #include "api/transport/field_trial_based_config.h"
 #include "api/video/video_frame.h"
 #include "call/audio_receive_stream.h"
@@ -105,8 +106,8 @@ class FakeAudioReceiveStream final : public webrtc::AudioReceiveStream {
     config_.rtp.local_ssrc = local_ssrc;
   }
 
-  void SetSyncGroup(const std::string& sync_group) {
-    config_.sync_group = sync_group;
+  void SetSyncGroup(absl::string_view sync_group) {
+    config_.sync_group = std::string(sync_group);
   }
 
  private:
@@ -424,7 +425,7 @@ class FakeCall final : public webrtc::Call, public webrtc::PacketReceiver {
   void OnLocalSsrcUpdated(webrtc::FlexfecReceiveStream& stream,
                           uint32_t local_ssrc) override;
   void OnUpdateSyncGroup(webrtc::AudioReceiveStream& stream,
-                         const std::string& sync_group) override;
+                         absl::string_view sync_group) override;
   void OnSentPacket(const rtc::SentPacket& sent_packet) override;
 
   webrtc::TaskQueueBase* const network_thread_;

@@ -13,6 +13,7 @@
 #include <utility>
 
 #include "absl/algorithm/container.h"
+#include "absl/strings/string_view.h"
 #include "api/call/audio_sink.h"
 #include "modules/rtp_rtcp/source/rtp_util.h"
 #include "rtc_base/checks.h"
@@ -728,7 +729,7 @@ void FakeCall::OnLocalSsrcUpdated(webrtc::FlexfecReceiveStream& stream,
 }
 
 void FakeCall::OnUpdateSyncGroup(webrtc::AudioReceiveStream& stream,
-                                 const std::string& sync_group) {
+                                 absl::string_view sync_group) {
   auto& fake_stream = static_cast<FakeAudioReceiveStream&>(stream);
   fake_stream.SetSyncGroup(sync_group);
 }
