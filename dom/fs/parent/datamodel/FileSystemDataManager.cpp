@@ -541,7 +541,10 @@ RefPtr<BoolPromise> FileSystemDataManager::BeginClose() {
                                   self.forget());
                 });
 
-                self->mDatabaseManager = nullptr;
+                if (self->mDatabaseManager) {
+                  self->mDatabaseManager->Close();
+                  self->mDatabaseManager = nullptr;
+                }
 
                 return BoolPromise::CreateAndResolve(true, __func__);
               })
