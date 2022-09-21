@@ -498,10 +498,16 @@ RefPtr<BoolPromise> FileSystemDataManager::BeginOpen() {
                                 self->mOriginMetadata.mOrigin),
                             CreateAndRejectBoolPromiseFromQMResult);
 
+              QM_TRY_UNWRAP(
+                  EntryId rootId,
+                  fs::data::GetRootHandle(self->mOriginMetadata.mOrigin),
+                  CreateAndRejectBoolPromiseFromQMResult);
+
               self->mDatabaseManager =
                   MakeUnique<FileSystemDatabaseManagerVersion001>(
                       std::move(connection),
-                      MakeUnique<FileSystemFileManager>(std::move(fmRes)));
+                      MakeUnique<FileSystemFileManager>(std::move(fmRes)),
+                      rootId);
             }
 
             return BoolPromise::CreateAndResolve(true, __func__);

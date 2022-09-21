@@ -38,7 +38,7 @@ namespace mozilla::dom {
 FileSystemManagerParent::FileSystemManagerParent(
     RefPtr<fs::data::FileSystemDataManager> aDataManager,
     const EntryId& aRootEntry)
-    : mDataManager(std::move(aDataManager)), mRootEntry(aRootEntry) {}
+    : mDataManager(std::move(aDataManager)), mRootResponse(aRootEntry) {}
 
 FileSystemManagerParent::~FileSystemManagerParent() {
   LOG(("Destroying FileSystemManagerParent %p", this));
@@ -59,8 +59,7 @@ IPCResult FileSystemManagerParent::RecvGetRootHandle(
     GetRootHandleResolver&& aResolver) {
   AssertIsOnIOTarget();
 
-  FileSystemGetHandleResponse response(mRootEntry);
-  aResolver(response);
+  aResolver(mRootResponse);
 
   return IPC_OK();
 }
@@ -136,8 +135,7 @@ mozilla::ipc::IPCResult FileSystemManagerParent::RecvGetAccessHandle(
   fs::Path path;
   nsCOMPtr<nsIFile> file;
   QM_TRY(MOZ_TO_RESULT(mDataManager->MutableDatabaseManagerPtr()->GetFile(
-             {mRootEntry, aRequest.entryId()}, type, lastModifiedMilliSeconds,
-             path, file)),
+             aRequest.entryId(), type, lastModifiedMilliSeconds, path, file)),
          IPC_OK(), reportError);
 
   if (MOZ_LOG_TEST(gOPFSLog, mozilla::LogLevel::Debug)) {
@@ -190,8 +188,8 @@ IPCResult FileSystemManagerParent::RecvGetFile(
   fs::Path path;
   nsCOMPtr<nsIFile> fileObject;
   QM_TRY(MOZ_TO_RESULT(mDataManager->MutableDatabaseManagerPtr()->GetFile(
-             {mRootEntry, aRequest.entryId()}, type, lastModifiedMilliSeconds,
-             path, fileObject)),
+             aRequest.entryId(), type, lastModifiedMilliSeconds, path,
+             fileObject)),
          IPC_OK(), reportError);
 
   if (MOZ_LOG_TEST(gOPFSLog, mozilla::LogLevel::Debug)) {
@@ -262,7 +260,7 @@ IPCResult FileSystemManagerParent::RecvGetEntries(
   };
 
   // If it was deleted, we can't find it's parent -- unless it's the root.
-  if (aRequest.parentId() != mRootEntry) {
+  if (aRequest.parentId() != mRootResponse.get_EntryId()) {
     QM_TRY_UNWRAP(EntryId entryId,
                   mDataManager->MutableDatabaseManagerPtr()->GetParentEntryId(
                       aRequest.parentId()),
