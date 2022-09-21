@@ -33,7 +33,7 @@ const known_scripts = {
 
     // Browser front-end
     "resource:///actors/AboutReaderChild.jsm",
-    "resource:///actors/BrowserTabChild.jsm",
+    "resource:///actors/BrowserTabChild.sys.mjs",
     "resource:///actors/LinkHandlerChild.jsm",
     "resource:///actors/PageStyleChild.jsm",
     "resource:///actors/SearchSERPTelemetryChild.jsm",

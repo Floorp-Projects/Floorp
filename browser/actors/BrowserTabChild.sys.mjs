@@ -4,8 +4,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-var EXPORTED_SYMBOLS = ["BrowserTabChild"];
-
 const lazy = {};
 
 ChromeUtils.defineModuleGetter(
@@ -14,7 +12,7 @@ ChromeUtils.defineModuleGetter(
   "resource://gre/modules/E10SUtils.jsm"
 );
 
-class BrowserTabChild extends JSWindowActorChild {
+export class BrowserTabChild extends JSWindowActorChild {
   constructor() {
     super();
     this.rpmInitialized = false;

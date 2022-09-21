@@ -401,10 +401,10 @@ let JSWINDOWACTORS = {
 
   BrowserTab: {
     parent: {
-      moduleURI: "resource:///actors/BrowserTabParent.jsm",
+      esModuleURI: "resource:///actors/BrowserTabParent.sys.mjs",
     },
     child: {
-      moduleURI: "resource:///actors/BrowserTabChild.jsm",
+      esModuleURI: "resource:///actors/BrowserTabChild.sys.mjs",
 
       events: {
         DOMDocElementInserted: {},
