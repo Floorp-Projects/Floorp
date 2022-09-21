@@ -142,17 +142,6 @@ ConfigureVideoEncoderSettings(const VideoCodecConfig& aConfig,
     codec_default_denoising = !denoising;
   }
 
-  if (aConfig.mName == kH264CodecName) {
-    webrtc::VideoCodecH264 h264_settings =
-        webrtc::VideoEncoder::GetDefaultH264Settings();
-    h264_settings.frameDroppingOn = frame_dropping;
-    h264_settings.packetizationMode = aConfig.mPacketizationMode;
-    return rtc::scoped_refptr<
-        webrtc::VideoEncoderConfig::EncoderSpecificSettings>(
-        new rtc::RefCountedObject<
-            webrtc::VideoEncoderConfig::H264EncoderSpecificSettings>(
-            h264_settings));
-  }
   if (aConfig.mName == kVp8CodecName) {
     webrtc::VideoCodecVP8 vp8_settings =
         webrtc::VideoEncoder::GetDefaultVp8Settings();
