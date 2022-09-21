@@ -1921,6 +1921,12 @@ class EditorBase : public nsIEditor,
   }
 
   /**
+   * CollapseSelectionToEnd() collapses the selection to the last leaf content
+   * of the editor.
+   */
+  MOZ_CAN_RUN_SCRIPT nsresult CollapseSelectionToEndOfLastLeafNode() const;
+
+  /**
    * AllowsTransactionsToChangeSelection() returns true if editor allows any
    * transactions to change Selection.  Otherwise, transactions shouldn't
    * change Selection.
@@ -2238,6 +2244,13 @@ class EditorBase : public nsIEditor,
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult FlushPendingSpellCheck();
 
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult EnsureEmptyTextFirstChild();
+
+  /**
+   * InitEditorContentAndSelection() may insert a padding `<br>` element for
+   * if it's required in the anonymous `<div>` element or `<body>` element and
+   * collapse selection at the end if there is no selection ranges.
+   */
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult InitEditorContentAndSelection();
 
   int32_t WrapWidth() const { return mWrapColumn; }
 

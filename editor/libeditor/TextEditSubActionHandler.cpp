@@ -271,16 +271,16 @@ nsresult TextEditor::EnsureCaretNotAtEndOfTextNode() {
     return NS_OK;
   }
 
-  nsresult rv = CollapseSelectionToEndOfTextNode();
+  nsresult rv = CollapseSelectionToEndOfLastLeafNode();
   if (MOZ_UNLIKELY(rv == NS_ERROR_EDITOR_DESTROYED)) {
     NS_WARNING(
-        "TextEditor::CollapseSelectionToEndOfTextNode() caused destroying the "
-        "editor");
+        "EditorBase::CollapseSelectionToEndOfLastLeafNode() caused destroying "
+        "the editor");
     return NS_ERROR_EDITOR_DESTROYED;
   }
   NS_WARNING_ASSERTION(
       NS_SUCCEEDED(rv),
-      "TextEditor::CollapseSelectionToEndOfTextNode() failed, but ignored");
+      "EditorBase::CollapseSelectionToEndOfLastLeafNode() failed, but ignored");
 
   return NS_OK;
 }
