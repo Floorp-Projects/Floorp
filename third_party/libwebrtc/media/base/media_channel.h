@@ -615,6 +615,8 @@ struct VideoReceiverInfo : public MediaReceiverInfo {
   uint64_t total_decode_time_ms = 0;
   // https://w3c.github.io/webrtc-stats/#dom-rtcinboundrtpstreamstats-totalprocessingdelay
   webrtc::TimeDelta total_processing_delay = webrtc::TimeDelta::Millis(0);
+  webrtc::TimeDelta total_assembly_time = webrtc::TimeDelta::Millis(0);
+  uint32_t frames_assembled_from_multiple_packets = 0;
   double total_inter_frame_delay = 0;
   double total_squared_inter_frame_delay = 0;
   int64_t interframe_delay_max_ms = -1;

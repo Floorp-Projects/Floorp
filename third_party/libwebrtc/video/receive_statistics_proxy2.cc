@@ -834,23 +834,31 @@ void ReceiveStatisticsProxy::OnDecodedFrame(const VideoFrame& frame,
   webrtc::TimeDelta processing_delay = webrtc::TimeDelta::Millis(0);
   webrtc::Timestamp current_time = clock_->CurrentTime();
   // TODO(bugs.webrtc.org/13984): some tests do not fill packet_infos().
+  webrtc::TimeDelta assembly_time = webrtc::TimeDelta::Millis(0);
   if (frame.packet_infos().size() > 0) {
-    auto first_packet = std::min_element(
+    const auto [first_packet, last_packet] = std::minmax_element(
         frame.packet_infos().cbegin(), frame.packet_infos().cend(),
         [](const webrtc::RtpPacketInfo& a, const webrtc::RtpPacketInfo& b) {
           return a.receive_time() < b.receive_time();
         });
-    processing_delay = current_time - first_packet->receive_time();
+    if (first_packet->receive_time().IsFinite()) {
+      processing_delay = current_time - first_packet->receive_time();
+      // Extract frame assembly time (i.e. time between earliest and latest
+      // packet arrival). Note: for single-packet frames this will be 0.
+      assembly_time =
+          last_packet->receive_time() - first_packet->receive_time();
+    }
   }
   // See VCMDecodedFrameCallback::Decoded for more info on what thread/queue we
   // may be on. E.g. on iOS this gets called on
   // "com.apple.coremedia.decompressionsession.clientcallback"
   VideoFrameMetaData meta(frame, current_time);
-  worker_thread_->PostTask(ToQueuedTask(task_safety_, [meta, qp, decode_time_ms,
-                                                       processing_delay,
-                                                       content_type, this]() {
-    OnDecodedFrame(meta, qp, decode_time_ms, processing_delay, content_type);
-  }));
+  worker_thread_->PostTask(
+      ToQueuedTask(task_safety_, [meta, qp, decode_time_ms, processing_delay,
+                                  assembly_time, content_type, this]() {
+        OnDecodedFrame(meta, qp, decode_time_ms, processing_delay,
+                       assembly_time, content_type);
+      }));
 }
 
 void ReceiveStatisticsProxy::OnDecodedFrame(
@@ -858,6 +866,7 @@ void ReceiveStatisticsProxy::OnDecodedFrame(
     absl::optional<uint8_t> qp,
     int32_t decode_time_ms,
     webrtc::TimeDelta processing_delay,
+    webrtc::TimeDelta assembly_time,
     VideoContentType content_type) {
   RTC_DCHECK_RUN_ON(&main_thread_);
 
@@ -899,6 +908,10 @@ void ReceiveStatisticsProxy::OnDecodedFrame(
   stats_.decode_ms = decode_time_ms;
   stats_.total_decode_time_ms += decode_time_ms;
   stats_.total_processing_delay += processing_delay;
+  stats_.total_assembly_time += assembly_time;
+  if (!assembly_time.IsZero()) {
+    ++stats_.frames_assembled_from_multiple_packets;
+  }
   if (enable_decode_time_histograms_) {
     UpdateDecodeTimeHistograms(frame_meta.width, frame_meta.height,
                                decode_time_ms);
