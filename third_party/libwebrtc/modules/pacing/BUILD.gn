@@ -57,6 +57,7 @@ rtc_library("pacing") {
     "../../rtc_base:timeutils",
     "../../rtc_base/experiments:field_trial_parser",
     "../../rtc_base/synchronization:mutex",
+    "../../rtc_base/system:unused",
     "../../rtc_base/task_utils:to_queued_task",
     "../../system_wrappers",
     "../../system_wrappers:metrics",

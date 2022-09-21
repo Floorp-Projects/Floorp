@@ -18,6 +18,7 @@
 #include "rtc_base/checks.h"
 #include "rtc_base/experiments/field_trial_parser.h"
 #include "rtc_base/experiments/field_trial_units.h"
+#include "rtc_base/system/unused.h"
 #include "rtc_base/trace_event.h"
 
 namespace webrtc {
@@ -129,16 +130,15 @@ void TaskQueuePacedSender::SetPacingRates(DataRate pacing_rate,
 
 void TaskQueuePacedSender::EnqueuePackets(
     std::vector<std::unique_ptr<RtpPacketToSend>> packets) {
-#if RTC_TRACE_EVENTS_ENABLED
   TRACE_EVENT0(TRACE_DISABLED_BY_DEFAULT("webrtc"),
                "TaskQueuePacedSender::EnqueuePackets");
   for (auto& packet : packets) {
+    RTC_UNUSED(packet);
     TRACE_EVENT2(TRACE_DISABLED_BY_DEFAULT("webrtc"),
                  "TaskQueuePacedSender::EnqueuePackets::Loop",
                  "sequence_number", packet->SequenceNumber(), "rtp_timestamp",
                  packet->Timestamp());
   }
-#endif
 
   task_queue_.PostTask([this, packets_ = std::move(packets)]() mutable {
     RTC_DCHECK_RUN_ON(&task_queue_);
@@ -224,10 +224,8 @@ void TaskQueuePacedSender::MaybeProcessPackets(
     Timestamp scheduled_process_time) {
   RTC_DCHECK_RUN_ON(&task_queue_);
 
-#if RTC_TRACE_EVENTS_ENABLED
   TRACE_EVENT0(TRACE_DISABLED_BY_DEFAULT("webrtc"),
                "TaskQueuePacedSender::MaybeProcessPackets");
-#endif
 
   if (is_shutdown_ || !is_started_) {
     return;
