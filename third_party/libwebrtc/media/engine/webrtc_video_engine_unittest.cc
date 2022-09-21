@@ -3536,19 +3536,51 @@ TEST_F(Vp9SettingsTest, VerifyVp9SpecificSettings) {
   ASSERT_TRUE(stream->GetVp9Settings(&vp9_settings)) << "No VP9 config set.";
   EXPECT_TRUE(vp9_settings.denoisingOn)
       << "VP9 denoising should be on by default.";
+  EXPECT_TRUE(vp9_settings.automaticResizeOn)
+      << "Automatic resize on for one active stream.";
 
   stream = SetDenoisingOption(last_ssrc_, &frame_forwarder, false);
 
   ASSERT_TRUE(stream->GetVp9Settings(&vp9_settings)) << "No VP9 config set.";
   EXPECT_FALSE(vp9_settings.denoisingOn);
-  // Frame dropping always on for real time video.
-  EXPECT_TRUE(stream->GetEncoderConfig().frame_drop_enabled);
+  EXPECT_TRUE(stream->GetEncoderConfig().frame_drop_enabled)
+      << "Frame dropping always on for real time video.";
+  EXPECT_TRUE(vp9_settings.automaticResizeOn);
 
   stream = SetDenoisingOption(last_ssrc_, &frame_forwarder, true);
 
   ASSERT_TRUE(stream->GetVp9Settings(&vp9_settings)) << "No VP9 config set.";
   EXPECT_TRUE(vp9_settings.denoisingOn);
   EXPECT_TRUE(stream->GetEncoderConfig().frame_drop_enabled);
+  EXPECT_TRUE(vp9_settings.automaticResizeOn);
+
+  webrtc::RtpParameters rtp_parameters =
+      channel_->GetRtpSendParameters(last_ssrc_);
+  EXPECT_THAT(
+      rtp_parameters.encodings,
+      ElementsAre(Field(&webrtc::RtpEncodingParameters::scalability_mode,
+                        absl::nullopt)));
+  rtp_parameters.encodings[0].scalability_mode = "L2T1";
+  EXPECT_TRUE(channel_->SetRtpSendParameters(last_ssrc_, rtp_parameters).ok());
+
+  ASSERT_TRUE(stream->GetVp9Settings(&vp9_settings)) << "No VP9 config set.";
+  EXPECT_TRUE(vp9_settings.denoisingOn);
+  EXPECT_TRUE(stream->GetEncoderConfig().frame_drop_enabled);
+  EXPECT_FALSE(vp9_settings.automaticResizeOn)
+      << "Automatic resize off for multiple spatial layers.";
+
+  rtp_parameters = channel_->GetRtpSendParameters(last_ssrc_);
+  EXPECT_THAT(rtp_parameters.encodings,
+              ElementsAre(Field(
+                  &webrtc::RtpEncodingParameters::scalability_mode, "L2T1")));
+  rtp_parameters.encodings[0].scalability_mode = "L1T1";
+  EXPECT_TRUE(channel_->SetRtpSendParameters(last_ssrc_, rtp_parameters).ok());
+
+  ASSERT_TRUE(stream->GetVp9Settings(&vp9_settings)) << "No VP9 config set.";
+  EXPECT_TRUE(vp9_settings.denoisingOn);
+  EXPECT_TRUE(stream->GetEncoderConfig().frame_drop_enabled);
+  EXPECT_TRUE(vp9_settings.automaticResizeOn)
+      << "Automatic resize on for one spatial layer.";
 
   // In screen-share mode, denoising is forced off.
   VideoOptions options;
@@ -3559,14 +3591,17 @@ TEST_F(Vp9SettingsTest, VerifyVp9SpecificSettings) {
 
   ASSERT_TRUE(stream->GetVp9Settings(&vp9_settings)) << "No VP9 config set.";
   EXPECT_FALSE(vp9_settings.denoisingOn);
-  // Frame dropping always on for screen sharing.
-  EXPECT_TRUE(stream->GetEncoderConfig().frame_drop_enabled);
+  EXPECT_TRUE(stream->GetEncoderConfig().frame_drop_enabled)
+      << "Frame dropping always on for screen sharing.";
+  EXPECT_FALSE(vp9_settings.automaticResizeOn)
+      << "Automatic resize off for screencast.";
 
   stream = SetDenoisingOption(last_ssrc_, &frame_forwarder, false);
 
   ASSERT_TRUE(stream->GetVp9Settings(&vp9_settings)) << "No VP9 config set.";
   EXPECT_FALSE(vp9_settings.denoisingOn);
   EXPECT_TRUE(stream->GetEncoderConfig().frame_drop_enabled);
+  EXPECT_FALSE(vp9_settings.automaticResizeOn);
 
   EXPECT_TRUE(channel_->SetVideoSend(last_ssrc_, nullptr, nullptr));
 }

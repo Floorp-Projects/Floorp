@@ -22,6 +22,8 @@ absl::optional<ScalabilityMode> ScalabilityModeFromString(
 
 absl::string_view ScalabilityModeToString(ScalabilityMode scalability_mode);
 
+int ScalabilityModeToNumSpatialLayers(ScalabilityMode scalability_mode);
+
 int ScalabilityModeToNumTemporalLayers(ScalabilityMode scalability_mode);
 
 }  // namespace webrtc
