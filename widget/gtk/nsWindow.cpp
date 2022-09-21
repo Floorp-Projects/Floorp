@@ -4084,7 +4084,10 @@ void nsWindow::OnUnmap() {
     }
   }
 #endif
-  moz_container_wayland_unmap(GTK_WIDGET(mContainer));
+  moz_container_unmap(GTK_WIDGET(mContainer));
+  if (GdkIsWaylandDisplay()) {
+    moz_container_wayland_unmap(GTK_WIDGET(mContainer));
+  }
 }
 
 void nsWindow::OnUnrealize() {
