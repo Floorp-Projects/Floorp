@@ -171,7 +171,7 @@ android-x86-shippable/opt:
         platform: android-5-0-x86-shippable/opt
         symbol: B
     run-on-projects: ['release']
-    worker-type: b-linux
+    worker-type: b-linux-gcp
     worker:
         env:
             TOOLTOOL_MANIFEST: "mobile/android/config/tooltool-manifests/android-x86/releng.manifest"
@@ -202,7 +202,7 @@ android-x86-shippable-lite/opt:
         platform: android-4-1-x86-shippable-lite/opt
         symbol: Bl
     run-on-projects: ['release']
-    worker-type: b-linux
+    worker-type: b-linux-gcp
     worker:
         env:
             TOOLTOOL_MANIFEST: "mobile/android/config/tooltool-manifests/android-x86/releng.manifest"
@@ -284,7 +284,7 @@ android-arm-shippable/opt:
         platform: android-5-0-armv7-shippable/opt
         symbol: Bpgo(B)
     run-on-projects: ['release']
-    worker-type: b-linux
+    worker-type: b-linux-gcp
     worker:
         env:
             TOOLTOOL_MANIFEST: "mobile/android/config/tooltool-manifests/android/releng.manifest"
@@ -315,7 +315,7 @@ android-arm-shippable-lite/opt:
         platform: android-4-1-armv7-shippable-lite/opt
         symbol: Bpgo(Bl)
     run-on-projects: ['release']
-    worker-type: b-linux
+    worker-type: b-linux-gcp
     worker:
         env:
             TOOLTOOL_MANIFEST: "mobile/android/config/tooltool-manifests/android/releng.manifest"
@@ -423,7 +423,7 @@ android-aarch64-shippable/opt:
         platform: android-5-0-aarch64-shippable/opt
         symbol: Bpgo(B)
     run-on-projects: ['release']
-    worker-type: b-linux
+    worker-type: b-linux-gcp
     worker:
         env:
             TOOLTOOL_MANIFEST: "mobile/android/config/tooltool-manifests/android/releng.manifest"
@@ -454,7 +454,7 @@ android-aarch64-shippable-lite/opt:
         platform: android-5-0-aarch64-shippable-lite/opt
         symbol: Bpgo(Bl)
     run-on-projects: ['release']
-    worker-type: b-linux
+    worker-type: b-linux-gcp
     worker:
         env:
             TOOLTOOL_MANIFEST: "mobile/android/config/tooltool-manifests/android/releng.manifest"
@@ -539,7 +539,7 @@ android-x86_64-shippable/opt:
         platform: android-5-0-x86_64-shippable/opt
         symbol: B
     run-on-projects: ['release']
-    worker-type: b-linux
+    worker-type: b-linux-gcp
     worker:
         env:
             TOOLTOOL_MANIFEST: "mobile/android/config/tooltool-manifests/android-x86/releng.manifest"
@@ -570,7 +570,7 @@ android-x86_64-shippable-lite/opt:
         platform: android-5-0-x86_64-shippable-lite/opt
         symbol: Bl
     run-on-projects: ['release']
-    worker-type: b-linux
+    worker-type: b-linux-gcp
     worker:
         env:
             TOOLTOOL_MANIFEST: "mobile/android/config/tooltool-manifests/android-x86/releng.manifest"
