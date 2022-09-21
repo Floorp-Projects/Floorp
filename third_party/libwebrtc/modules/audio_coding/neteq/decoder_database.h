@@ -130,11 +130,6 @@ class DecoderDatabase {
   // Returns the number of decoders registered in the database.
   virtual int Size() const;
 
-  // Resets the database, erasing all registered payload types, and deleting
-  // any AudioDecoder objects that were not externally created and inserted
-  // using InsertExternal().
-  virtual void Reset();
-
   // Replaces the existing set of decoders with the given set. Returns the
   // payload types that were reassigned or removed while doing so.
   virtual std::vector<int> SetCodecs(
@@ -181,12 +176,6 @@ class DecoderDatabase {
   // `rtp_payload_type`, or NULL if none is registered. If the AudioDecoder
   // object does not exist for that decoder, the object is created.
   AudioDecoder* GetDecoder(uint8_t rtp_payload_type) const;
-
-  // Returns if `rtp_payload_type` is registered with a format named `name`.
-  bool IsType(uint8_t rtp_payload_type, const char* name) const;
-
-  // Returns if `rtp_payload_type` is registered with a format named `name`.
-  bool IsType(uint8_t rtp_payload_type, const std::string& name) const;
 
   // Returns true if `rtp_payload_type` is registered as comfort noise.
   bool IsComfortNoise(uint8_t rtp_payload_type) const;

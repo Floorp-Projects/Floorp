@@ -127,8 +127,6 @@ TEST(DecoderDatabase, TypeTests) {
   EXPECT_FALSE(db.IsComfortNoise(kPayloadTypePcmU));
   EXPECT_FALSE(db.IsDtmf(kPayloadTypePcmU));
   EXPECT_FALSE(db.IsRed(kPayloadTypePcmU));
-  EXPECT_FALSE(db.IsType(kPayloadTypePcmU, "isac"));
-  EXPECT_TRUE(db.IsType(kPayloadTypePcmU, "pcmu"));
   EXPECT_TRUE(db.IsComfortNoise(kPayloadTypeCng));
   EXPECT_TRUE(db.IsDtmf(kPayloadTypeDtmf));
   EXPECT_TRUE(db.IsRed(kPayloadTypeRed));
