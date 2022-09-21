@@ -33,6 +33,7 @@ if (rtc_include_tests) {
         "../../../modules/utility:mock_process_thread",
         "../../../test:audio_codec_mocks",
         "../../../test:mock_transport",
+        "../../../test:run_loop",
         "../../../test:test_support",
       ]
     }
@@ -74,6 +75,7 @@ if (rtc_include_tests) {
       "../../../rtc_base:logging",
       "../../../rtc_base:rtc_event",
       "../../../test:mock_transport",
+      "../../../test:run_loop",
       "../../../test:test_support",
     ]
   }
@@ -92,6 +94,7 @@ if (rtc_include_tests) {
       "../../../rtc_base:logging",
       "../../../rtc_base:rtc_event",
       "../../../test:mock_transport",
+      "../../../test:run_loop",
       "../../../test:test_support",
     ]
   }

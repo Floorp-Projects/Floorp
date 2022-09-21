@@ -22,7 +22,10 @@
 
 namespace webrtc {
 
-class IceTransportTest : public ::testing::Test {};
+class IceTransportTest : public ::testing::Test {
+ private:
+  rtc::AutoThread main_thread_;
+};
 
 TEST_F(IceTransportTest, CreateNonSelfDeletingTransport) {
   auto cricket_transport =

@@ -53,6 +53,7 @@ class RtpTransceiverTest : public testing::Test {
   cricket::ChannelManager* channel_manager() { return channel_manager_.get(); }
 
  private:
+  rtc::AutoThread main_thread_;
   cricket::FakeMediaEngine fake_media_engine_;
   rtc::UniqueRandomIdGenerator ssrc_generator_;
   std::unique_ptr<cricket::ChannelManager> channel_manager_;
@@ -151,6 +152,7 @@ class RtpTransceiverUnifiedPlanTest : public RtpTransceiverTest {
     return sender;
   }
 
+  rtc::AutoThread main_thread_;
   rtc::scoped_refptr<MockRtpReceiverInternal> receiver_ = MockReceiver();
   rtc::scoped_refptr<MockRtpSenderInternal> sender_ = MockSender();
   rtc::scoped_refptr<RtpTransceiver> transceiver_;
@@ -222,6 +224,7 @@ class RtpTransceiverTestForHeaderExtensions : public RtpTransceiverTest {
     transceiver_->ClearChannel();
   }
 
+  rtc::AutoThread main_thread_;
   rtc::scoped_refptr<MockRtpReceiverInternal> receiver_ = MockReceiver();
   rtc::scoped_refptr<MockRtpSenderInternal> sender_ = MockSender();
 

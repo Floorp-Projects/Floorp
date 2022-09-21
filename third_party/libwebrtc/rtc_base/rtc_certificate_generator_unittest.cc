@@ -75,6 +75,7 @@ class RTCCertificateGeneratorTest : public ::testing::Test {
  protected:
   static constexpr int kGenerationTimeoutMs = 10000;
 
+  rtc::AutoThread main_thread_;
   scoped_refptr<RTCCertificateGeneratorFixture> fixture_;
 };
 

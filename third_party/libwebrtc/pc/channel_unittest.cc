@@ -1412,6 +1412,7 @@ class ChannelTest : public ::testing::Test, public sigslot::has_slots<> {
     return static_cast<typename T::MediaChannel*>(channel2_->media_channel());
   }
 
+  rtc::AutoThread main_thread_;
   // TODO(pbos): Remove playout from all media channels and let renderers mute
   // themselves.
   const bool verify_playout_;

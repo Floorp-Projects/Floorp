@@ -154,6 +154,7 @@ class PeerConnectionFactoryTest : public ::testing::Test {
     EXPECT_GT(codec.clock_rate, 0);
   }
 
+  rtc::AutoThread main_thread_;
   rtc::scoped_refptr<PeerConnectionFactoryInterface> factory_;
   NullPeerConnectionObserver observer_;
   std::unique_ptr<cricket::FakePortAllocator> port_allocator_;

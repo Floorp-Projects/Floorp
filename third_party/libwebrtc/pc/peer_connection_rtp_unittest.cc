@@ -142,6 +142,8 @@ class PeerConnectionRtpBaseTest : public ::testing::Test {
     return std::make_unique<PeerConnectionWrapper>(
         pc_factory_, result.MoveValue(), std::move(observer));
   }
+
+  rtc::AutoThread main_thread_;
 };
 
 class PeerConnectionRtpTest

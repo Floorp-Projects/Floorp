@@ -5150,6 +5150,7 @@ TEST_F(P2PTransportChannelMostLikelyToWorkFirstTest, TestTcpTurn) {
 // if the channel is not destroyed.
 TEST(P2PTransportChannelResolverTest, HostnameCandidateIsResolved) {
   ResolverFactoryFixture resolver_fixture;
+  rtc::AutoThread main_thread;
   FakePortAllocator allocator(rtc::Thread::Current(), nullptr);
   webrtc::IceTransportInit init;
   init.set_port_allocator(&allocator);
@@ -6082,6 +6083,7 @@ TEST_F(P2PTransportChannelPingTest, TestInitialSelectDampeningBoth) {
 }
 
 TEST(P2PTransportChannel, InjectIceController) {
+  rtc::AutoThread main_thread_;
   MockIceControllerFactory factory;
   FakePortAllocator pa(rtc::Thread::Current(), nullptr);
   EXPECT_CALL(factory, RecordIceControllerCreated()).Times(1);

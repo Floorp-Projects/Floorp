@@ -505,6 +505,7 @@ if (rtc_include_tests) {
         "../rtc_base:rtc_event",
         "../rtc_base:safe_conversions",
         "../rtc_base:task_queue_for_test",
+        "../rtc_base:threading",
         "../rtc_base:timeutils",
         "../rtc_base/synchronization:mutex",
         "../system_wrappers",

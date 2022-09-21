@@ -86,6 +86,7 @@ class VideoRtpReceiverTest : public testing::Test {
     return receiver_->streams()[0]->FindVideoTrack("receiver")->GetSource();
   }
 
+  rtc::AutoThread main_thread_;
   std::unique_ptr<rtc::Thread> worker_thread_;
   NiceMock<MockVideoMediaChannel> channel_;
   rtc::scoped_refptr<VideoRtpReceiver> receiver_;

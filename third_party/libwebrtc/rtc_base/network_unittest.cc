@@ -319,6 +319,7 @@ class NetworkTest : public ::testing::Test, public sigslot::has_slots<> {
 
  protected:
   webrtc::test::ScopedKeyValueConfig field_trials_;
+  rtc::AutoThread main_thread_;
   bool callback_called_;
 };
 

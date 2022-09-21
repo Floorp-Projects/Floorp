@@ -100,6 +100,7 @@ class SctpDataChannelTest : public ::testing::Test {
     webrtc_data_channel_->RegisterObserver(observer_.get());
   }
 
+  rtc::AutoThread main_thread_;
   webrtc::InternalDataChannelInit init_;
   std::unique_ptr<FakeDataChannelController> controller_;
   std::unique_ptr<FakeDataChannelObserver> observer_;
