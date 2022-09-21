@@ -8734,6 +8734,7 @@ void nsWindow::SetCompositorWidgetDelegate(CompositorWidgetDelegate* delegate) {
     MOZ_ASSERT(mCompositorWidgetDelegate,
                "nsWindow::SetCompositorWidgetDelegate called with a "
                "non-PlatformCompositorWidgetDelegate");
+    MOZ_DIAGNOSTIC_ASSERT(mCompositorWidgetDelegate->AsGtkCompositorWidget());
     if (mIsMapped) {
       ConfigureCompositor();
     }
