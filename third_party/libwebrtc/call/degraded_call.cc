@@ -306,6 +306,16 @@ void DegradedCall::OnLocalSsrcUpdated(AudioReceiveStream& stream,
   call_->OnLocalSsrcUpdated(stream, local_ssrc);
 }
 
+void DegradedCall::OnLocalSsrcUpdated(VideoReceiveStream& stream,
+                                      uint32_t local_ssrc) {
+  call_->OnLocalSsrcUpdated(stream, local_ssrc);
+}
+
+void DegradedCall::OnLocalSsrcUpdated(FlexfecReceiveStream& stream,
+                                      uint32_t local_ssrc) {
+  call_->OnLocalSsrcUpdated(stream, local_ssrc);
+}
+
 void DegradedCall::OnUpdateSyncGroup(AudioReceiveStream& stream,
                                      const std::string& sync_group) {
   call_->OnUpdateSyncGroup(stream, sync_group);
