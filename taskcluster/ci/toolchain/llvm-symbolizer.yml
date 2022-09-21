@@ -11,9 +11,9 @@ job-defaults:
         toolchain-artifact: public/build/llvm-symbolizer.tar.zst
     fetches:
         fetch:
-            - clang-14
+            - clang-15
         toolchain:
-            - linux64-clang-14-stage1
+            - linux64-clang-15-stage1
 
 linux64-llvm-symbolizer:
     description: "llvm-symbolizer for Linux"
@@ -22,9 +22,9 @@ linux64-llvm-symbolizer:
     run:
         arguments:
             - x86_64-unknown-linux-gnu
-            - build/build-clang/clang-14.json
+            - build/build-clang/clang-15.json
         resources:
-            - build/build-clang/clang-14.json
+            - build/build-clang/clang-15.json
             - taskcluster/scripts/misc/build-llvm-common.sh
     fetches:
         toolchain:
@@ -37,9 +37,9 @@ macosx64-llvm-symbolizer:
     run:
         arguments:
             - x86_64-apple-darwin
-            - build/build-clang/clang-14.json
+            - build/build-clang/clang-15.json
         resources:
-            - build/build-clang/clang-14.json
+            - build/build-clang/clang-15.json
             - taskcluster/scripts/misc/build-llvm-common.sh
     fetches:
         toolchain:
@@ -52,9 +52,9 @@ win64-llvm-symbolizer:
     run:
         arguments:
             - x86_64-pc-windows-msvc
-            - build/build-clang/clang-14.json
+            - build/build-clang/clang-15.json
         resources:
-            - build/build-clang/clang-14.json
+            - build/build-clang/clang-15.json
             - taskcluster/scripts/misc/build-llvm-common.sh
     fetches:
         toolchain:
