@@ -158,6 +158,7 @@ class HTMLEditor final : public EditorBase,
 
   // EditorBase overrides
   MOZ_CAN_RUN_SCRIPT NS_IMETHOD BeginningOfDocument() final;
+  MOZ_CAN_RUN_SCRIPT NS_IMETHOD EndOfDocument() final;
 
   NS_IMETHOD GetDocumentCharacterSet(nsACString& aCharacterSet) final;
   MOZ_CAN_RUN_SCRIPT NS_IMETHOD
@@ -2684,6 +2685,13 @@ class HTMLEditor final : public EditorBase,
    * And collapse selection at the end if there is no selection ranges.
    */
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult InitEditorContentAndSelection();
+
+  /**
+   * Collapse `Selection` to the last leaf content of the <body> or the document
+   * element.
+   */
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult
+  CollapseSelectionToEndOfLastLeafNodeOfDocument() const;
 
   MOZ_CAN_RUN_SCRIPT nsresult SelectAllInternal() final;
 

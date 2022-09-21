@@ -144,9 +144,11 @@ nsresult HTMLEditor::InitEditorContentAndSelection() {
   //     removed by the web app and if they call `Selection::AddRange()`,
   //     it may cause multiple selection ranges.
   if (!SelectionRef().RangeCount()) {
-    nsresult rv = CollapseSelectionToEndOfLastLeafNode();
+    nsresult rv = CollapseSelectionToEndOfLastLeafNodeOfDocument();
     if (NS_FAILED(rv)) {
-      NS_WARNING("EditorBase::CollapseSelectionToEndOfLastLeafNode() failed");
+      NS_WARNING(
+          "HTMLEditor::CollapseSelectionToEndOfLastLeafNodeOfDocument() "
+          "failed");
       return rv;
     }
   }
