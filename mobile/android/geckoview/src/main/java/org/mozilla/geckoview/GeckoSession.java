@@ -312,12 +312,6 @@ public class GeckoSession {
         int x, int y, int width, int height, Object surface, Object surfaceControl);
 
     @WrapForJNI(calledFrom = "ui", dispatchTo = "current")
-    public native void blockSurfaceControl();
-
-    @WrapForJNI(calledFrom = "ui", dispatchTo = "current")
-    public native void allowSurfaceControl();
-
-    @WrapForJNI(calledFrom = "ui", dispatchTo = "current")
     public native void setMaxToolbarHeight(int height);
 
     @WrapForJNI(calledFrom = "ui", dispatchTo = "gecko")
