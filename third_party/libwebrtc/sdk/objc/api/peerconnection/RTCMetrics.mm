@@ -12,12 +12,14 @@
 
 #import "RTCMetricsSampleInfo+Private.h"
 
+#include "rtc_base/string_utils.h"
+
 void RTCEnableMetrics(void) {
   webrtc::metrics::Enable();
 }
 
 NSArray<RTC_OBJC_TYPE(RTCMetricsSampleInfo) *> *RTCGetAndResetMetrics(void) {
-  std::map<std::string, std::unique_ptr<webrtc::metrics::SampleInfo>>
+  std::map<std::string, std::unique_ptr<webrtc::metrics::SampleInfo>, rtc::AbslStringViewCmp>
       histograms;
   webrtc::metrics::GetAndReset(&histograms);
 

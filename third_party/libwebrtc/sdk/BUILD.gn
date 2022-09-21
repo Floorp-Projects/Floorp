@@ -1039,6 +1039,7 @@ if (is_ios || is_mac) {
         "../rtc_base:logging",
         "../rtc_base:network_constants",
         "../rtc_base:safe_conversions",
+        "../rtc_base:stringutils",
         "../rtc_base:timeutils",
         "../stats:rtc_stats",
         "../system_wrappers:field_trial",

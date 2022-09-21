@@ -836,6 +836,7 @@ if (current_os == "linux" || is_android) {
       ":native_api_jni",
       ":peerconnection_jni",
       "../../pc:peerconnection",
+      "../../rtc_base:stringutils",
       "../../system_wrappers:metrics",
     ]
   }

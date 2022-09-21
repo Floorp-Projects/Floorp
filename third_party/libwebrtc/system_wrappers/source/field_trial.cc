@@ -69,7 +69,7 @@ bool FieldTrialsStringIsValidInternal(const absl::string_view trials) {
 }
 }  // namespace
 
-bool FieldTrialsStringIsValid(const char* trials_string) {
+bool FieldTrialsStringIsValid(absl::string_view trials_string) {
   return FieldTrialsStringIsValidInternal(trials_string);
 }
 
@@ -88,7 +88,8 @@ void InsertOrReplaceFieldTrialStringsInMap(
   }
 }
 
-std::string MergeFieldTrialsStrings(const char* first, const char* second) {
+std::string MergeFieldTrialsStrings(absl::string_view first,
+                                    absl::string_view second) {
   std::map<std::string, std::string> fieldtrial_map;
   InsertOrReplaceFieldTrialStringsInMap(&fieldtrial_map, first);
   InsertOrReplaceFieldTrialStringsInMap(&fieldtrial_map, second);
