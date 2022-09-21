@@ -327,17 +327,9 @@ IPCResult FileSystemManagerParent::RecvMoveEntry(
     aResolver(response);
   };
 
-  QM_TRY_UNWRAP(EntryId parentId,
-                mDataManager->MutableDatabaseManagerPtr()->GetParentEntryId(
-                    aRequest.handle().entryId()),
-                IPC_OK(), reportError);
-  FileSystemChildMetadata sourceHandle;
-  sourceHandle.parentId() = parentId;
-  sourceHandle.childName() = aRequest.handle().entryName();
-
   QM_TRY_UNWRAP(bool moved,
                 mDataManager->MutableDatabaseManagerPtr()->MoveEntry(
-                    sourceHandle, aRequest.destHandle()),
+                    aRequest.handle(), aRequest.destHandle()),
                 IPC_OK(), reportError);
 
   fs::FileSystemMoveEntryResponse response(moved ? NS_OK : NS_ERROR_FAILURE);
@@ -360,21 +352,9 @@ IPCResult FileSystemManagerParent::RecvRenameEntry(
     aResolver(response);
   };
 
-  QM_TRY_UNWRAP(EntryId parentId,
-                mDataManager->MutableDatabaseManagerPtr()->GetParentEntryId(
-                    aRequest.handle().entryId()),
-                IPC_OK(), reportError);
-  FileSystemChildMetadata sourceHandle;
-  sourceHandle.parentId() = parentId;
-  sourceHandle.childName() = aRequest.handle().entryName();
-
-  FileSystemChildMetadata newHandle;
-  newHandle.parentId() = parentId;
-  newHandle.childName() = aRequest.name();
-
   QM_TRY_UNWRAP(bool moved,
-                mDataManager->MutableDatabaseManagerPtr()->MoveEntry(
-                    sourceHandle, newHandle),
+                mDataManager->MutableDatabaseManagerPtr()->RenameEntry(
+                    aRequest.handle(), aRequest.name()),
                 IPC_OK(), reportError);
 
   fs::FileSystemMoveEntryResponse response(moved ? NS_OK : NS_ERROR_FAILURE);
