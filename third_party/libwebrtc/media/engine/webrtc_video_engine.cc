@@ -163,6 +163,7 @@ template <class T>
 std::vector<VideoCodec> GetPayloadTypesAndDefaultCodecs(
     const T* factory,
     bool is_decoder_factory,
+    bool include_rtx,
     const webrtc::FieldTrialsView& trials) {
   if (!factory) {
     return {};
@@ -234,23 +235,25 @@ std::vector<VideoCodec> GetPayloadTypesAndDefaultCodecs(
     output_codecs.push_back(codec);
 
     // Add associated RTX codec for non-FEC codecs.
-    if (!isFecCodec) {
-      // Check if we ran out of payload types.
-      if (payload_type_lower > kLastDynamicPayloadTypeLowerRange) {
-        // TODO(https://bugs.chromium.org/p/webrtc/issues/detail?id=12248):
-        // return an error.
-        RTC_LOG(LS_ERROR) << "Out of dynamic payload types [35,63] after "
-                             "fallback from [96, 127], skipping the rest.";
-        RTC_DCHECK_EQ(payload_type_upper, kLastDynamicPayloadTypeUpperRange);
-        break;
-      }
-      if (IsCodecValidForLowerRange(codec) ||
-          payload_type_upper >= kLastDynamicPayloadTypeUpperRange) {
-        output_codecs.push_back(
-            VideoCodec::CreateRtxCodec(payload_type_lower++, codec.id));
-      } else {
-        output_codecs.push_back(
-            VideoCodec::CreateRtxCodec(payload_type_upper++, codec.id));
+    if (include_rtx) {
+      if (!isFecCodec) {
+        // Check if we ran out of payload types.
+        if (payload_type_lower > kLastDynamicPayloadTypeLowerRange) {
+          // TODO(https://bugs.chromium.org/p/webrtc/issues/detail?id=12248):
+          // return an error.
+          RTC_LOG(LS_ERROR) << "Out of dynamic payload types [35,63] after "
+                               "fallback from [96, 127], skipping the rest.";
+          RTC_DCHECK_EQ(payload_type_upper, kLastDynamicPayloadTypeUpperRange);
+          break;
+        }
+        if (IsCodecValidForLowerRange(codec) ||
+            payload_type_upper >= kLastDynamicPayloadTypeUpperRange) {
+          output_codecs.push_back(
+              VideoCodec::CreateRtxCodec(payload_type_lower++, codec.id));
+        } else {
+          output_codecs.push_back(
+              VideoCodec::CreateRtxCodec(payload_type_upper++, codec.id));
+        }
       }
     }
   }
@@ -651,14 +654,16 @@ VideoMediaChannel* WebRtcVideoEngine::CreateMediaChannel(
                                 encoder_factory_.get(), decoder_factory_.get(),
                                 video_bitrate_allocator_factory);
 }
-std::vector<VideoCodec> WebRtcVideoEngine::send_codecs() const {
+std::vector<VideoCodec> WebRtcVideoEngine::send_codecs(bool include_rtx) const {
   return GetPayloadTypesAndDefaultCodecs(encoder_factory_.get(),
-                                         /*is_decoder_factory=*/false, trials_);
+                                         /*is_decoder_factory=*/false,
+                                         include_rtx, trials_);
 }
 
-std::vector<VideoCodec> WebRtcVideoEngine::recv_codecs() const {
+std::vector<VideoCodec> WebRtcVideoEngine::recv_codecs(bool include_rtx) const {
   return GetPayloadTypesAndDefaultCodecs(decoder_factory_.get(),
-                                         /*is_decoder_factory=*/true, trials_);
+                                         /*is_decoder_factory=*/true,
+                                         include_rtx, trials_);
 }
 
 std::vector<webrtc::RtpHeaderExtensionCapability>
@@ -735,7 +740,8 @@ WebRtcVideoChannel::WebRtcVideoChannel(
   rtcp_receiver_report_ssrc_ = kDefaultRtcpReceiverReportSsrc;
   sending_ = false;
   recv_codecs_ = MapCodecs(GetPayloadTypesAndDefaultCodecs(
-      decoder_factory_, /*is_decoder_factory=*/true, call_->trials()));
+      decoder_factory_, /*is_decoder_factory=*/true,
+      /*include_rtx=*/true, call_->trials()));
   recv_flexfec_payload_type_ =
       recv_codecs_.empty() ? 0 : recv_codecs_.front().flexfec_payload_type;
 }
@@ -1180,7 +1186,7 @@ bool WebRtcVideoChannel::GetChangedRecvParameters(
     const std::vector<VideoCodec> local_supported_codecs =
         GetPayloadTypesAndDefaultCodecs(decoder_factory_,
                                         /*is_decoder_factory=*/true,
-                                        call_->trials());
+                                        /*include_rtx=*/true, call_->trials());
     for (const VideoCodecSettings& mapped_codec : mapped_codecs) {
       if (!FindMatchingCodec(local_supported_codecs, mapped_codec.codec)) {
         RTC_LOG(LS_ERROR)

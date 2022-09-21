@@ -117,35 +117,34 @@ TaskQueueBase* GetCurrentTaskQueueOrThread() {
 
 }  // namespace
 
-RtpTransceiver::RtpTransceiver(
-    cricket::MediaType media_type,
-    cricket::ChannelManager* channel_manager /* = nullptr*/)
+RtpTransceiver::RtpTransceiver(cricket::MediaType media_type,
+                               ConnectionContext* context)
     : thread_(GetCurrentTaskQueueOrThread()),
       unified_plan_(false),
       media_type_(media_type),
-      channel_manager_(channel_manager) {
+      context_(context) {
   RTC_DCHECK(media_type == cricket::MEDIA_TYPE_AUDIO ||
              media_type == cricket::MEDIA_TYPE_VIDEO);
-  RTC_DCHECK(channel_manager_);
+  RTC_DCHECK(context_->channel_manager());
 }
 
 RtpTransceiver::RtpTransceiver(
     rtc::scoped_refptr<RtpSenderProxyWithInternal<RtpSenderInternal>> sender,
     rtc::scoped_refptr<RtpReceiverProxyWithInternal<RtpReceiverInternal>>
         receiver,
-    cricket::ChannelManager* channel_manager,
+    ConnectionContext* context,
     std::vector<RtpHeaderExtensionCapability> header_extensions_offered,
     std::function<void()> on_negotiation_needed)
     : thread_(GetCurrentTaskQueueOrThread()),
       unified_plan_(true),
       media_type_(sender->media_type()),
-      channel_manager_(channel_manager),
+      context_(context),
       header_extensions_to_offer_(std::move(header_extensions_offered)),
       on_negotiation_needed_(std::move(on_negotiation_needed)) {
   RTC_DCHECK(media_type_ == cricket::MEDIA_TYPE_AUDIO ||
              media_type_ == cricket::MEDIA_TYPE_VIDEO);
   RTC_DCHECK_EQ(sender->media_type(), receiver->media_type());
-  RTC_DCHECK(channel_manager_);
+  RTC_DCHECK(context_->channel_manager());
   senders_.push_back(sender);
   receivers_.push_back(receiver);
 }
@@ -173,7 +172,7 @@ RTCError RtpTransceiver::CreateChannel(
     VideoBitrateAllocatorFactory* video_bitrate_allocator_factory,
     std::function<RtpTransportInternal*(absl::string_view)> transport_lookup) {
   RTC_DCHECK_RUN_ON(thread_);
-  if (!channel_manager_->media_engine()) {
+  if (!media_engine()) {
     // TODO(hta): Must be a better way
     return RTCError(RTCErrorType::INTERNAL_ERROR,
                     "No media engine for mid=" + std::string(mid));
@@ -183,7 +182,7 @@ RTCError RtpTransceiver::CreateChannel(
     // TODO(bugs.webrtc.org/11992): CreateVideoChannel internally switches to
     // the worker thread. We shouldn't be using the `call_ptr_` hack here but
     // simply be on the worker thread and use `call_` (update upstream code).
-    new_channel = channel_manager_->CreateVoiceChannel(
+    new_channel = channel_manager()->CreateVoiceChannel(
         call_ptr, media_config, mid, srtp_required, crypto_options,
         audio_options);
 
@@ -193,7 +192,7 @@ RTCError RtpTransceiver::CreateChannel(
     // TODO(bugs.webrtc.org/11992): CreateVideoChannel internally switches to
     // the worker thread. We shouldn't be using the `call_ptr_` hack here but
     // simply be on the worker thread and use `call_` (update upstream code).
-    new_channel = channel_manager_->CreateVideoChannel(
+    new_channel = channel_manager()->CreateVideoChannel(
         call_ptr, media_config, mid, srtp_required, crypto_options,
         video_options, video_bitrate_allocator_factory);
   }
@@ -234,7 +233,7 @@ void RtpTransceiver::SetChannel(
   // Similarly, if the channel() accessor is limited to the network thread, that
   // helps with keeping the channel implementation requirements being met and
   // avoids synchronization for accessing the pointer or network related state.
-  channel_manager_->network_thread()->Invoke<void>(RTC_FROM_HERE, [&]() {
+  context()->network_thread()->Invoke<void>(RTC_FROM_HERE, [&]() {
     if (channel_) {
       channel_->SetFirstPacketReceivedCallback(nullptr);
       channel_->SetRtpTransport(nullptr);
@@ -270,7 +269,7 @@ void RtpTransceiver::ClearChannel() {
   }
   std::unique_ptr<cricket::ChannelInterface> channel_to_delete;
 
-  channel_manager_->network_thread()->Invoke<void>(RTC_FROM_HERE, [&]() {
+  context()->network_thread()->Invoke<void>(RTC_FROM_HERE, [&]() {
     if (channel_) {
       channel_->SetFirstPacketReceivedCallback(nullptr);
       channel_->SetRtpTransport(nullptr);
@@ -291,7 +290,7 @@ void RtpTransceiver::PushNewMediaChannelAndDeleteChannel(
   if (!channel_to_delete && senders_.empty() && receivers_.empty()) {
     return;
   }
-  channel_manager_->worker_thread()->Invoke<void>(RTC_FROM_HERE, [&]() {
+  context()->worker_thread()->Invoke<void>(RTC_FROM_HERE, [&]() {
     // Push down the new media_channel, if any, otherwise clear it.
     auto* media_channel = channel_ ? channel_->media_channel() : nullptr;
     for (const auto& sender : senders_) {
@@ -359,7 +358,7 @@ bool RtpTransceiver::RemoveReceiver(RtpReceiverInterface* receiver) {
   }
 
   (*it)->internal()->Stop();
-  channel_manager_->worker_thread()->Invoke<void>(RTC_FROM_HERE, [&]() {
+  context()->worker_thread()->Invoke<void>(RTC_FROM_HERE, [&]() {
     // `Stop()` will clear the receiver's pointer to the media channel.
     (*it)->internal()->SetMediaChannel(nullptr);
   });
@@ -493,7 +492,7 @@ void RtpTransceiver::StopSendingAndReceiving() {
   for (const auto& receiver : receivers_)
     receiver->internal()->Stop();
 
-  channel_manager_->worker_thread()->Invoke<void>(RTC_FROM_HERE, [&]() {
+  context()->worker_thread()->Invoke<void>(RTC_FROM_HERE, [&]() {
     // 5 Stop receiving media with receiver.
     for (const auto& receiver : receivers_)
       receiver->internal()->SetMediaChannel(nullptr);
@@ -581,15 +580,13 @@ RTCError RtpTransceiver::SetCodecPreferences(
   RTCError result;
   if (media_type_ == cricket::MEDIA_TYPE_AUDIO) {
     std::vector<cricket::AudioCodec> recv_codecs, send_codecs;
-    channel_manager_->GetSupportedAudioReceiveCodecs(&recv_codecs);
-    channel_manager_->GetSupportedAudioSendCodecs(&send_codecs);
-
+    send_codecs = media_engine()->voice().send_codecs();
+    recv_codecs = media_engine()->voice().recv_codecs();
     result = VerifyCodecPreferences(codecs, send_codecs, recv_codecs);
   } else if (media_type_ == cricket::MEDIA_TYPE_VIDEO) {
     std::vector<cricket::VideoCodec> recv_codecs, send_codecs;
-    channel_manager_->GetSupportedVideoReceiveCodecs(&recv_codecs);
-    channel_manager_->GetSupportedVideoSendCodecs(&send_codecs);
-
+    send_codecs = media_engine()->video().send_codecs(context()->use_rtx());
+    recv_codecs = media_engine()->video().recv_codecs(context()->use_rtx());
     result = VerifyCodecPreferences(codecs, send_codecs, recv_codecs);
   }
 

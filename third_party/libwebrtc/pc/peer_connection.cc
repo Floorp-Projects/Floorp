@@ -644,8 +644,8 @@ RTCError PeerConnection::Initialize(
                                                dependencies, context_.get());
 
   rtp_manager_ = std::make_unique<RtpTransmissionManager>(
-      IsUnifiedPlan(), signaling_thread(), worker_thread(), channel_manager(),
-      &usage_pattern_, observer_, stats_.get(), [this]() {
+      IsUnifiedPlan(), context_.get(), &usage_pattern_, observer_, stats_.get(),
+      [this]() {
         RTC_DCHECK_RUN_ON(signaling_thread());
         sdp_handler_->UpdateNegotiationNeeded();
       });
@@ -654,14 +654,12 @@ RTCError PeerConnection::Initialize(
   if (!IsUnifiedPlan()) {
     rtp_manager()->transceivers()->Add(
         RtpTransceiverProxyWithInternal<RtpTransceiver>::Create(
-            signaling_thread(),
-            rtc::make_ref_counted<RtpTransceiver>(cricket::MEDIA_TYPE_AUDIO,
-                                                  channel_manager())));
+            signaling_thread(), rtc::make_ref_counted<RtpTransceiver>(
+                                    cricket::MEDIA_TYPE_AUDIO, context())));
     rtp_manager()->transceivers()->Add(
         RtpTransceiverProxyWithInternal<RtpTransceiver>::Create(
-            signaling_thread(),
-            rtc::make_ref_counted<RtpTransceiver>(cricket::MEDIA_TYPE_VIDEO,
-                                                  channel_manager())));
+            signaling_thread(), rtc::make_ref_counted<RtpTransceiver>(
+                                    cricket::MEDIA_TYPE_VIDEO, context())));
   }
 
   int delay_ms = configuration.report_usage_pattern_delay_ms
@@ -1677,8 +1675,7 @@ void PeerConnection::SetAudioPlayout(bool playout) {
         RTC_FROM_HERE, [this, playout] { SetAudioPlayout(playout); });
     return;
   }
-  auto audio_state =
-      context_->channel_manager()->media_engine()->voice().GetAudioState();
+  auto audio_state = context_->media_engine()->voice().GetAudioState();
   audio_state->SetPlayout(playout);
 }
 
@@ -1688,8 +1685,7 @@ void PeerConnection::SetAudioRecording(bool recording) {
         RTC_FROM_HERE, [this, recording] { SetAudioRecording(recording); });
     return;
   }
-  auto audio_state =
-      context_->channel_manager()->media_engine()->voice().GetAudioState();
+  auto audio_state = context_->media_engine()->voice().GetAudioState();
   audio_state->SetRecording(recording);
 }
 
@@ -1709,7 +1705,7 @@ void PeerConnection::AddAdaptationResource(
 }
 
 bool PeerConnection::ConfiguredForMedia() const {
-  return context_->channel_manager()->media_engine();
+  return context_->media_engine();
 }
 
 bool PeerConnection::StartRtcEventLog(std::unique_ptr<RtcEventLogOutput> output,

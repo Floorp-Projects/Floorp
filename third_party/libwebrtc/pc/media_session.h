@@ -46,6 +46,7 @@ class ConnectionContext;
 namespace cricket {
 
 class ChannelManager;
+class MediaEngineInterface;
 
 // Default RTCP CNAME for unit tests.
 const char kDefaultRtcpCname[] = "DefaultRtcpCname";
@@ -147,8 +148,10 @@ class MediaSessionDescriptionFactory {
   MediaSessionDescriptionFactory(const TransportDescriptionFactory* factory,
                                  rtc::UniqueRandomIdGenerator* ssrc_generator);
   // This helper automatically sets up the factory to get its configuration
-  // from the specified ChannelManager.
-  MediaSessionDescriptionFactory(ChannelManager* cmanager,
+  // from the specified MediaEngine
+  MediaSessionDescriptionFactory(cricket::MediaEngineInterface* media_engine,
+                                 bool rtx_enabled,
+                                 rtc::UniqueRandomIdGenerator* ssrc_generator,
                                  const TransportDescriptionFactory* factory);
 
   const AudioCodecs& audio_sendrecv_codecs() const;
