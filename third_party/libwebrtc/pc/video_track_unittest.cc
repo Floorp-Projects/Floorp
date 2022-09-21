@@ -39,6 +39,7 @@ class VideoTrackTest : public ::testing::Test {
   }
 
  protected:
+  rtc::AutoThread main_thread_;
   rtc::scoped_refptr<FakeVideoTrackSource> video_track_source_;
   rtc::scoped_refptr<VideoTrack> video_track_;
   cricket::FakeFrameSource frame_source_;

@@ -37,7 +37,9 @@ class FakeIceTransport : public IceTransportInternal {
       : name_(name),
         component_(component),
         network_thread_(network_thread ? network_thread
-                                       : rtc::Thread::Current()) {}
+                                       : rtc::Thread::Current()) {
+    RTC_DCHECK(network_thread_);
+  }
   // Must be called either on the network thread, or after the network thread
   // has been shut down.
   ~FakeIceTransport() override {

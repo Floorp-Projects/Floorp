@@ -50,6 +50,7 @@ class AudioRtpReceiverTest : public ::testing::Test {
     receiver_->SetMediaChannel(nullptr);
   }
 
+  rtc::AutoThread main_thread_;
   rtc::Thread* worker_;
   rtc::scoped_refptr<AudioRtpReceiver> receiver_;
   cricket::MockVoiceMediaChannel media_channel_;

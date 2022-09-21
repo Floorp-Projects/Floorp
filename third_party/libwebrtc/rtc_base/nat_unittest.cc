@@ -221,6 +221,7 @@ bool TestConnectivity(const SocketAddress& src, const IPAddress& dst) {
 
 void TestPhysicalInternal(const SocketAddress& int_addr) {
   webrtc::test::ScopedKeyValueConfig field_trials;
+  rtc::AutoThread main_thread;
   PhysicalSocketServer socket_server;
   BasicNetworkManager network_manager(nullptr, &socket_server, &field_trials);
   network_manager.StartUpdating();
@@ -292,6 +293,7 @@ class TestVirtualSocketServer : public VirtualSocketServer {
 }  // namespace
 
 void TestVirtualInternal(int family) {
+  rtc::AutoThread main_thread;
   std::unique_ptr<TestVirtualSocketServer> int_vss(
       new TestVirtualSocketServer());
   std::unique_ptr<TestVirtualSocketServer> ext_vss(

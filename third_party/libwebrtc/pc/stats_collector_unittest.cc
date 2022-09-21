@@ -731,6 +731,9 @@ class StatsCollectorTest : public ::testing::Test {
     EXPECT_EQ(rtc::SrtpCryptoSuiteToName(rtc::kSrtpAes128CmSha1_80),
               srtp_crypto_suite);
   }
+
+ private:
+  rtc::AutoThread main_thread_;
 };
 
 static rtc::scoped_refptr<MockRtpSenderInternal> CreateMockSender(

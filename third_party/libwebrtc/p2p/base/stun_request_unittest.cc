@@ -67,6 +67,7 @@ class StunRequestTest : public ::testing::Test {
   void OnTimeout() { timeout_ = true; }
 
  protected:
+  rtc::AutoThread main_thread_;
   StunRequestManager manager_;
   int request_count_;
   StunMessage* response_;

@@ -85,6 +85,7 @@ class DtlsTransportTest : public ::testing::Test {
     fake_dtls1->SetDestination(fake_dtls2.get());
   }
 
+  rtc::AutoThread main_thread_;
   rtc::scoped_refptr<DtlsTransport> transport_;
   TestDtlsTransportObserver observer_;
 };

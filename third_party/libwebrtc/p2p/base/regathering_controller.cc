@@ -18,6 +18,7 @@ BasicRegatheringController::BasicRegatheringController(
     cricket::IceTransportInternal* ice_transport,
     rtc::Thread* thread)
     : config_(config), ice_transport_(ice_transport), thread_(thread) {
+  RTC_DCHECK(thread_);
   RTC_DCHECK_RUN_ON(thread_);
   RTC_DCHECK(ice_transport_);
   ice_transport_->SignalStateChanged.connect(

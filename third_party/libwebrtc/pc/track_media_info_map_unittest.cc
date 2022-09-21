@@ -191,6 +191,7 @@ class TrackMediaInfoMapTest : public ::testing::Test {
   }
 
  protected:
+  rtc::AutoThread main_thread_;
   cricket::VoiceMediaInfo* voice_media_info_;
   cricket::VideoMediaInfo* video_media_info_;
   std::vector<rtc::scoped_refptr<RtpSenderInternal>> rtp_senders_;

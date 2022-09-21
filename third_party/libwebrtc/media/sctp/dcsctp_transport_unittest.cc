@@ -78,6 +78,7 @@ class Peer {
 }  // namespace
 
 TEST(DcSctpTransportTest, OpenSequence) {
+  rtc::AutoThread main_thread;
   Peer peer_a;
   peer_a.fake_packet_transport_.SetWritable(true);
 
@@ -94,6 +95,7 @@ TEST(DcSctpTransportTest, OpenSequence) {
 // Tests that the close sequence invoked from one end results in the stream to
 // be reset from both ends and all the proper signals are sent.
 TEST(DcSctpTransportTest, CloseSequence) {
+  rtc::AutoThread main_thread;
   Peer peer_a;
   Peer peer_b;
   peer_a.fake_packet_transport_.SetDestination(&peer_b.fake_packet_transport_,
@@ -135,6 +137,7 @@ TEST(DcSctpTransportTest, CloseSequence) {
 // terminates properly. Both peers will think they initiated it, so no
 // OnSignalClosingProcedureStartedRemotely should be called.
 TEST(DcSctpTransportTest, CloseSequenceSimultaneous) {
+  rtc::AutoThread main_thread;
   Peer peer_a;
   Peer peer_b;
   peer_a.fake_packet_transport_.SetDestination(&peer_b.fake_packet_transport_,

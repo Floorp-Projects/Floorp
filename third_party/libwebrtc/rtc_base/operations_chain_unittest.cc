@@ -392,6 +392,7 @@ TEST(OperationsChainTest, IsEmpty) {
 }
 
 TEST(OperationsChainTest, OnChainEmptyCallback) {
+  rtc::AutoThread main_thread;
   OperationTrackerProxy operation_tracker_proxy;
   operation_tracker_proxy.Initialize()->Wait(Event::kForever);
 

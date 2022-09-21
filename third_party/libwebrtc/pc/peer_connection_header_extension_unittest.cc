@@ -111,6 +111,7 @@ class PeerConnectionHeaderExtensionTest
         pc_factory, result.MoveValue(), std::move(observer));
   }
 
+  rtc::AutoThread main_thread_;
   std::vector<RtpHeaderExtensionCapability> extensions_;
 };
 
