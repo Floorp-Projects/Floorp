@@ -122,7 +122,7 @@ struct AspectRatio {
       const LogicalSize& aContentBoxSizeToBoxSizingAdjust) const;
 
   bool operator==(const AspectRatio& aOther) const {
-    return mRatio == aOther.mRatio;
+    return mRatio == aOther.mRatio && mUseBoxSizing == aOther.mUseBoxSizing;
   }
 
   bool operator!=(const AspectRatio& aOther) const {
@@ -130,6 +130,9 @@ struct AspectRatio {
   }
 
   bool operator<(const AspectRatio& aOther) const {
+    MOZ_ASSERT(
+        mUseBoxSizing == aOther.mUseBoxSizing,
+        "Do not compare AspectRatio if their mUseBoxSizing are different.");
     return mRatio < aOther.mRatio;
   }
 
