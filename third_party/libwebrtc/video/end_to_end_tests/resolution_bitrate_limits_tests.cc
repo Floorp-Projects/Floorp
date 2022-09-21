@@ -33,24 +33,31 @@ void SetEncoderSpecific(VideoEncoderConfig* encoder_config,
   }
 }
 
-SpatialLayer GetLayer(int pixels, const VideoCodec& codec) {
+struct BitrateLimits {
+  DataRate min = DataRate::Zero();
+  DataRate max = DataRate::Zero();
+};
+
+BitrateLimits GetLayerBitrateLimits(int pixels, const VideoCodec& codec) {
   if (codec.codecType == VideoCodecType::kVideoCodecVP9) {
     for (size_t i = 0; i < codec.VP9().numberOfSpatialLayers; ++i) {
       if (codec.spatialLayers[i].width * codec.spatialLayers[i].height ==
           pixels) {
-        return codec.spatialLayers[i];
+        return {DataRate::KilobitsPerSec(codec.spatialLayers[i].minBitrate),
+                DataRate::KilobitsPerSec(codec.spatialLayers[i].maxBitrate)};
       }
     }
   } else {
     for (int i = 0; i < codec.numberOfSimulcastStreams; ++i) {
       if (codec.simulcastStream[i].width * codec.simulcastStream[i].height ==
           pixels) {
-        return codec.simulcastStream[i];
+        return {DataRate::KilobitsPerSec(codec.simulcastStream[i].minBitrate),
+                DataRate::KilobitsPerSec(codec.simulcastStream[i].maxBitrate)};
       }
     }
   }
   ADD_FAILURE();
-  return SpatialLayer();
+  return BitrateLimits();
 }
 
 }  // namespace
@@ -147,17 +154,13 @@ class InitEncodeTest : public test::EndToEndTest,
   int32_t InitEncode(const VideoCodec* codec,
                      const Settings& settings) override {
     for (const auto& expected : expectations_) {
-      SpatialLayer layer = GetLayer(expected.pixels, *codec);
+      BitrateLimits limits = GetLayerBitrateLimits(expected.pixels, *codec);
       if (expected.eq_bitrate.min)
-        EXPECT_EQ(*expected.eq_bitrate.min,
-                  DataRate::KilobitsPerSec(layer.minBitrate));
+        EXPECT_EQ(*expected.eq_bitrate.min, limits.min);
       if (expected.eq_bitrate.max)
-        EXPECT_EQ(*expected.eq_bitrate.max,
-                  DataRate::KilobitsPerSec(layer.maxBitrate));
-      EXPECT_NE(expected.ne_bitrate.min,
-                DataRate::KilobitsPerSec(layer.minBitrate));
-      EXPECT_NE(expected.ne_bitrate.max,
-                DataRate::KilobitsPerSec(layer.maxBitrate));
+        EXPECT_EQ(*expected.eq_bitrate.max, limits.max);
+      EXPECT_NE(expected.ne_bitrate.min, limits.min);
+      EXPECT_NE(expected.ne_bitrate.max, limits.max);
     }
     observation_complete_.Set();
     return 0;

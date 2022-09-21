@@ -188,7 +188,7 @@ void ConfigureStream(int width,
                      int min_bitrate,
                      int target_bitrate,
                      float max_framerate,
-                     SpatialLayer* stream,
+                     SimulcastStream* stream,
                      int num_temporal_layers) {
   RTC_DCHECK(stream);
   stream->width = width;
