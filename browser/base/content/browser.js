@@ -1741,7 +1741,6 @@ var gBrowserInit = {
   },
 
   onLoad() {
-    Services.prefs.addObserver("floorp.dualtheme.theme",this.onBeforeInitialXULLayout.bind(this))
     gBrowser.addEventListener("DOMUpdateBlockedPopups", gPopupBlockerObserver);
 
     window.addEventListener("AppCommand", HandleAppCommandEvent, true);
