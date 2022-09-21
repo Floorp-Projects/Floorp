@@ -22,7 +22,7 @@
 
 namespace webrtc {
 
-// Common base interface for MediaReceiveStream based classes and
+// Common base interface for MediaReceiveStreamInterface based classes and
 // FlexfecReceiveStream.
 class ReceiveStreamInterface {
  public:
@@ -72,7 +72,7 @@ class ReceiveStreamInterface {
 };
 
 // Either an audio or video receive stream.
-class MediaReceiveStream : public ReceiveStreamInterface {
+class MediaReceiveStreamInterface : public ReceiveStreamInterface {
  public:
   // Starts stream activity.
   // When a stream is active, it can receive, process and deliver packets.
