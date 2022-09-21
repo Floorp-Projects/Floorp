@@ -35,6 +35,16 @@ Result<bool, QMResult> ApplyEntryExistsQuery(
   return stmt.YesOrNoQuery();
 }
 
+Result<bool, QMResult> ApplyEntryExistsQuery(
+    const FileSystemConnection& aConnection, const nsACString& aQuery,
+    const EntryId& aEntry) {
+  QM_TRY_UNWRAP(ResultStatement stmt,
+                ResultStatement::Create(aConnection, aQuery));
+  QM_TRY(QM_TO_RESULT(stmt.BindEntryIdByName("handle"_ns, aEntry)));
+
+  return stmt.YesOrNoQuery();
+}
+
 Result<bool, QMResult> IsDirectoryEmpty(FileSystemConnection& mConnection,
                                         const EntryId& aEntryId) {
   const nsLiteralCString isDirEmptyQuery =
@@ -90,13 +100,22 @@ Result<bool, QMResult> DoesDirectoryExist(
   const nsCString existsQuery =
       "SELECT EXISTS "
       "(SELECT 1 FROM Directories JOIN Entries USING (handle) "
-      "WHERE Directories.name = :name AND Entries.parent = :parent )"
+      "WHERE Directories.name = :name AND Entries.parent = :parent ) "
       ";"_ns;
 
-  QM_TRY_UNWRAP(bool exists,
-                ApplyEntryExistsQuery(mConnection, existsQuery, aHandle));
+  QM_TRY_RETURN(ApplyEntryExistsQuery(mConnection, existsQuery, aHandle));
+}
 
-  return exists;
+Result<bool, QMResult> DoesDirectoryExist(
+    const FileSystemConnection& mConnection, const EntryId& aEntry) {
+  MOZ_ASSERT(!aEntry.IsEmpty());
+
+  const nsCString existsQuery =
+      "SELECT EXISTS "
+      "(SELECT 1 FROM Directories WHERE handle = :handle ) "
+      ";"_ns;
+
+  QM_TRY_RETURN(ApplyEntryExistsQuery(mConnection, existsQuery, aEntry));
 }
 
 Result<Path, QMResult> ResolveReversedPath(
@@ -146,19 +165,18 @@ Result<bool, QMResult> DoesFileExist(const FileSystemConnection& mConnection,
   const nsCString existsQuery =
       "SELECT EXISTS "
       "(SELECT 1 FROM Files JOIN Entries USING (handle) "
-      "WHERE Files.name = :name AND Entries.parent = :parent )"
+      "WHERE Files.name = :name AND Entries.parent = :parent ) "
       ";"_ns;
 
-  QM_TRY_UNWRAP(bool exists,
-                ApplyEntryExistsQuery(mConnection, existsQuery, aHandle));
-
-  return exists;
+  QM_TRY_RETURN(ApplyEntryExistsQuery(mConnection, existsQuery, aHandle));
 }
 
 nsresult GetFileAttributes(const FileSystemConnection& aConnection,
                            const EntryId& aEntryId, ContentType& aType) {
   const nsLiteralCString getFileLocation =
-      "SELECT type FROM Files INNER JOIN Entries USING(handle) WHERE handle = :entryId;"_ns;
+      "SELECT type FROM Files INNER JOIN Entries USING(handle) "
+      "WHERE handle = :entryId "
+      ";"_ns;
 
   QM_TRY_UNWRAP(ResultStatement stmt,
                 ResultStatement::Create(aConnection, getFileLocation));
@@ -186,6 +204,11 @@ nsresult GetEntries(const FileSystemConnection& aConnection,
   // TODO: Value "pageSize" is shared with the iterator implementation and
   // should be defined in a common place.
   const int32_t pageSize = 1024;
+
+  QM_TRY_UNWRAP(bool exists, DoesDirectoryExist(aConnection, aParent));
+  if (!exists) {
+    return NS_ERROR_DOM_NOT_FOUND_ERR;
+  }
 
   QM_TRY_UNWRAP(ResultStatement stmt,
                 ResultStatement::Create(aConnection, aUnboundStmt));
