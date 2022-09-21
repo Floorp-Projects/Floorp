@@ -18,6 +18,7 @@
 #include <memory>
 #include <vector>
 
+#include "absl/base/attributes.h"
 #include "absl/types/optional.h"
 #include "api/field_trials_view.h"
 #include "api/function_view.h"
@@ -41,11 +42,8 @@ namespace webrtc {
 // externally, via the PacingController::PacketSender interface.
 class PacingController {
  public:
-  // Periodic mode uses the IntervalBudget class for tracking bitrate
-  // budgets, and expected ProcessPackets() to be called a fixed rate,
-  // e.g. every 5ms as implemented by PacedSender.
-  // Dynamic mode allows for arbitrary time delta between calls to
-  // ProcessPackets.
+  // TODO(bugs.webrtc.org/10809): Remove when downsteam usage is gone.
+  // Deprecated, ignored by constructor.
   enum class ProcessMode { kPeriodic, kDynamic };
 
   class PacketSender {
@@ -125,6 +123,11 @@ class PacingController {
 
   PacingController(Clock* clock,
                    PacketSender* packet_sender,
+                   const FieldTrialsView& field_trials);
+
+  ABSL_DEPRECATED("Use constructor without mode parameter instead.")
+  PacingController(Clock* clock,
+                   PacketSender* packet_sender,
                    const FieldTrialsView& field_trials,
                    ProcessMode mode);
 
@@ -144,7 +147,7 @@ class PacingController {
 
   // Sets the pacing rates. Must be called once before packets can be sent.
   void SetPacingRates(DataRate pacing_rate, DataRate padding_rate);
-  DataRate pacing_rate() const { return pacing_bitrate_; }
+  DataRate pacing_rate() const { return media_rate_; }
 
   // Currently audio traffic is not accounted by pacer and passed through.
   // With the introduction of audio BWE audio traffic will be accounted for
@@ -211,7 +214,6 @@ class PacingController {
 
   Timestamp CurrentTime() const;
 
-  const ProcessMode mode_;
   Clock* const clock_;
   PacketSender* const packet_sender_;
   const FieldTrialsView& field_trials_;
@@ -233,19 +235,6 @@ class PacingController {
   mutable Timestamp last_timestamp_;
   bool paused_;
 
-  // In periodic mode, `media_budget_` and `padding_budget_` will be used to
-  // track when packets can be sent.
-  // In dynamic mode, `media_debt_` and `padding_debt_` will be used together
-  // with the target rates.
-
-  // This is the media budget, keeping track of how many bits of media
-  // we can pace out during the current interval.
-  IntervalBudget media_budget_;
-  // This is the padding budget, keeping track of how many bits of padding we're
-  // allowed to send out during the current interval. This budget will be
-  // utilized when there's no media to send.
-  IntervalBudget padding_budget_;
-
   DataSize media_debt_;
   DataSize padding_debt_;
   DataRate media_rate_;
@@ -253,8 +242,6 @@ class PacingController {
 
   BitrateProber prober_;
   bool probing_send_failure_;
-
-  DataRate pacing_bitrate_;
 
   Timestamp last_process_time_;
   Timestamp last_send_time_;

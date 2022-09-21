@@ -54,10 +54,7 @@ TaskQueuePacedSender::TaskQueuePacedSender(
       max_hold_back_window_in_packets_(slacked_pacer_flags_.allow_low_precision
                                            ? 0
                                            : max_hold_back_window_in_packets),
-      pacing_controller_(clock,
-                         packet_sender,
-                         field_trials,
-                         PacingController::ProcessMode::kDynamic),
+      pacing_controller_(clock, packet_sender, field_trials),
       next_process_time_(Timestamp::MinusInfinity()),
       is_started_(false),
       is_shutdown_(false),
