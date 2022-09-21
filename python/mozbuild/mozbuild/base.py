@@ -198,7 +198,7 @@ class MozbuildObject(ProcessExecutionMixin):
         )
 
     def resolve_mozconfig_topobjdir(self, default=None):
-        topobjdir = self.mozconfig["topobjdir"] or default
+        topobjdir = self.mozconfig.get("topobjdir") or default
         if not topobjdir:
             return None
 
