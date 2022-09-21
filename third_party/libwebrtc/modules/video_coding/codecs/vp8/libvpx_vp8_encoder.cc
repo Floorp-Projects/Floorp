@@ -222,16 +222,6 @@ std::unique_ptr<VideoEncoder> VP8Encoder::Create(
                                             std::move(settings));
 }
 
-std::unique_ptr<VideoEncoder> VP8Encoder::Create(
-    std::unique_ptr<Vp8FrameBufferControllerFactory>
-        frame_buffer_controller_factory) {
-  VP8Encoder::Settings settings;
-  settings.frame_buffer_controller_factory =
-      std::move(frame_buffer_controller_factory);
-  return std::make_unique<LibvpxVp8Encoder>(LibvpxInterface::Create(),
-                                            std::move(settings));
-}
-
 vpx_enc_frame_flags_t LibvpxVp8Encoder::EncodeFlags(
     const Vp8FrameConfig& references) {
   RTC_DCHECK(!references.drop_frame);
