@@ -54,9 +54,8 @@ interface nsIRedirectChannelRegistrar : nsISupports
    * channel, all notification from the redirect target channel will be
    * forwarded to this stream listener.
    *
-   * Primarilly used in ParentChannelListener::OnRedirectResult callback
-   * to grab the created parent side of the channel and forward notifications
-   * to it.
+   * Primarilly used in HttpChannelParent::OnRedirectResult callback to grab
+   * the created parent side of the channel and forward notifications to it.
    */
   nsIParentChannel getParentChannel(in uint64_t id);
 
@@ -66,7 +65,7 @@ interface nsIRedirectChannelRegistrar : nsISupports
    * self.  This releases both the real and parent channel registered under
    * the id.
    *
-   * Primarilly used in ParentChannelListener::OnRedirectResult callback.
+   * Primarilly used in HttpChannelParent::OnRedirectResult callback.
    */
   void deregisterChannels(in uint64_t id);
 };

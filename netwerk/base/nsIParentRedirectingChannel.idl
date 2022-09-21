@@ -61,7 +61,7 @@ interface nsIParentRedirectingChannel : nsIParentChannel
    * that moment the nsIParentChannel implementation expects it will be
    * forwarded all notifications from the 'real' channel.
    *
-   * Primarilly used by ParentChannelListener::OnRedirectResult and kept as
+   * Primarilly used by HttpChannelParent::OnRedirectResult and kept as
    * mActiveChannel and mRedirectChannel in that class.
    */
   void completeRedirect(in boolean succeeded);
