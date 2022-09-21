@@ -46,6 +46,15 @@ class LogicalPixelSize {
     }
   }
 
+  gfx::Size PhysicalSize(WritingMode aWM) const {
+    if (!aWM.IsVertical()) {
+      return mSize;
+    }
+    gfx::Size result(mSize);
+    std::swap(result.width, result.height);
+    return result;
+  }
+
   bool operator==(const LogicalPixelSize& aOther) const {
     return mSize == aOther.mSize;
   }
@@ -86,7 +95,7 @@ class ResizeObservation final : public LinkedListElement<ResizeObservation> {
   /**
    * Update current mLastReportedSize with size from aSize.
    */
-  void UpdateLastReportedSize(const gfx::Size& aSize);
+  void UpdateLastReportedSize(const LogicalPixelSize& aSize);
 
   enum class RemoveFromObserver : bool { No, Yes };
   void Unlink(RemoveFromObserver);
@@ -220,9 +229,9 @@ class ResizeObserverEntry final : public nsISupports, public nsWrapperCache {
   NS_DECL_CYCLE_COLLECTION_WRAPPERCACHE_CLASS(ResizeObserverEntry)
 
   ResizeObserverEntry(nsISupports* aOwner, Element& aTarget,
-                      const gfx::Size& aBorderBoxSize,
-                      const gfx::Size& aContentBoxSize,
-                      const gfx::Size& aDevicePixelContentBoxSize)
+                      const LogicalPixelSize& aBorderBoxSize,
+                      const LogicalPixelSize& aContentBoxSize,
+                      const LogicalPixelSize& aDevicePixelContentBoxSize)
       : mOwner(aOwner), mTarget(&aTarget) {
     MOZ_ASSERT(mOwner, "Need a non-null owner");
     MOZ_ASSERT(mTarget, "Need a non-null target element");
@@ -260,11 +269,11 @@ class ResizeObserverEntry final : public nsISupports, public nsWrapperCache {
   ~ResizeObserverEntry() = default;
 
   // Set borderBoxSize.
-  void SetBorderBoxSize(const gfx::Size& aSize);
+  void SetBorderBoxSize(const LogicalPixelSize& aSize);
   // Set contentRect and contentBoxSize.
-  void SetContentRectAndSize(const gfx::Size& aSize);
+  void SetContentRectAndSize(const LogicalPixelSize& aSize);
   // Set devicePixelContentBoxSize.
-  void SetDevicePixelContentSize(const gfx::Size& aSize);
+  void SetDevicePixelContentSize(const LogicalPixelSize& aSize);
 
   nsCOMPtr<nsISupports> mOwner;
   nsCOMPtr<Element> mTarget;
@@ -280,9 +289,8 @@ class ResizeObserverSize final : public nsISupports, public nsWrapperCache {
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_WRAPPERCACHE_CLASS(ResizeObserverSize)
 
-  ResizeObserverSize(nsISupports* aOwner, const gfx::Size& aSize,
-                     const WritingMode aWM)
-      : mOwner(aOwner), mSize(aWM, aSize) {
+  ResizeObserverSize(nsISupports* aOwner, const LogicalPixelSize& aSize)
+      : mOwner(aOwner), mSize(aSize) {
     MOZ_ASSERT(mOwner, "Need a non-null owner");
   }
 

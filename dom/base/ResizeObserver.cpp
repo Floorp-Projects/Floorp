@@ -73,13 +73,12 @@ static nsSize GetContentRectSize(const nsIFrame& aFrame) {
  *
  * https://www.w3.org/TR/resize-observer-1/#calculate-box-size
  */
-static gfx::Size CalculateBoxSize(Element* aTarget,
-                                  ResizeObserverBoxOptions aBox) {
-  gfx::Size size;
+static LogicalPixelSize CalculateBoxSize(Element* aTarget,
+                                         ResizeObserverBoxOptions aBox) {
   nsIFrame* frame = aTarget->GetPrimaryFrame();
 
   if (!frame) {
-    return size;
+    return LogicalPixelSize();
   }
 
   if (frame->HasAnyStateBits(NS_FRAME_SVG_LAYOUT)) {
@@ -87,8 +86,9 @@ static gfx::Size CalculateBoxSize(Element* aTarget,
     // matter what box option you choose, because SVG elements do not use
     // standard CSS box model.
     const gfxRect bbox = SVGUtils::GetBBox(frame);
-    size.width = static_cast<float>(bbox.width);
-    size.height = static_cast<float>(bbox.height);
+    gfx::Size size(static_cast<float>(bbox.width),
+                   static_cast<float>(bbox.height));
+    const WritingMode wm = frame->GetWritingMode();
     if (aBox == ResizeObserverBoxOptions::Device_pixel_content_box) {
       // Per spec, we calculate the inline/block sizes to target’s bounding box
       // {inline|block} length, in integral device pixels, so we round the final
@@ -97,9 +97,9 @@ static gfx::Size CalculateBoxSize(Element* aTarget,
       const LayoutDeviceIntSize snappedSize =
           RoundedToInt(CSSSize::FromUnknownSize(size) *
                        frame->PresContext()->CSSToDevPixelScale());
-      return gfx::Size(snappedSize.ToUnknownSize());
+      return LogicalPixelSize(wm, gfx::Size(snappedSize.ToUnknownSize()));
     }
-    return size;
+    return LogicalPixelSize(wm, size);
   }
 
   // Per the spec, non-replaced inline Elements will always have an empty
@@ -108,47 +108,50 @@ static gfx::Size CalculateBoxSize(Element* aTarget,
   // always return false. (So its observation won't be fired.)
   if (!frame->IsFrameOfType(nsIFrame::eReplaced) &&
       frame->IsFrameOfType(nsIFrame::eLineParticipant)) {
-    return size;
+    return LogicalPixelSize();
   }
 
-  switch (aBox) {
-    case ResizeObserverBoxOptions::Border_box:
-      return CSSPixel::FromAppUnits(frame->GetSize()).ToUnknownSize();
-    case ResizeObserverBoxOptions::Device_pixel_content_box: {
-      // Simply converting from app units to device units is insufficient - we
-      // need to take subpixel snapping into account. Subpixel snapping happens
-      // with respect to the reference frame, so do the dev pixel conversion
-      // with our rectangle positioned relative to the reference frame, then
-      // get the size from there.
-      const auto* referenceFrame = nsLayoutUtils::GetReferenceFrame(frame);
-      // GetOffsetToCrossDoc version handles <iframe>s in addition to normal
-      // cases. We don't expect this to tight loop for additional checks to
-      // matter.
-      const auto offset = frame->GetOffsetToCrossDoc(referenceFrame);
-      const auto contentSize = GetContentRectSize(*frame);
-      // Casting to double here is deliberate to minimize rounding error in
-      // upcoming operations.
-      const auto appUnitsPerDevPixel =
-          static_cast<double>(frame->PresContext()->AppUnitsPerDevPixel());
-      // Calculation here is a greatly simplified version of
-      // `NSRectToSnappedRect` as 1) we're not actually drawing (i.e. no draw
-      // target), and 2) transform does not need to be taken into account.
-      gfx::Rect rect{gfx::Float(offset.X() / appUnitsPerDevPixel),
-                     gfx::Float(offset.Y() / appUnitsPerDevPixel),
-                     gfx::Float(contentSize.Width() / appUnitsPerDevPixel),
-                     gfx::Float(contentSize.Height() / appUnitsPerDevPixel)};
-      gfx::Point tl = rect.TopLeft().Round();
-      gfx::Point br = rect.BottomRight().Round();
+  auto GetFrameSize = [&](nsIFrame* aFrame) {
+    switch (aBox) {
+      case ResizeObserverBoxOptions::Border_box:
+        return CSSPixel::FromAppUnits(frame->GetSize()).ToUnknownSize();
+      case ResizeObserverBoxOptions::Device_pixel_content_box: {
+        // Simply converting from app units to device units is insufficient - we
+        // need to take subpixel snapping into account. Subpixel snapping
+        // happens with respect to the reference frame, so do the dev pixel
+        // conversion with our rectangle positioned relative to the reference
+        // frame, then get the size from there.
+        const auto* referenceFrame = nsLayoutUtils::GetReferenceFrame(frame);
+        // GetOffsetToCrossDoc version handles <iframe>s in addition to normal
+        // cases. We don't expect this to tight loop for additional checks to
+        // matter.
+        const auto offset = frame->GetOffsetToCrossDoc(referenceFrame);
+        const auto contentSize = GetContentRectSize(*frame);
+        // Casting to double here is deliberate to minimize rounding error in
+        // upcoming operations.
+        const auto appUnitsPerDevPixel =
+            static_cast<double>(frame->PresContext()->AppUnitsPerDevPixel());
+        // Calculation here is a greatly simplified version of
+        // `NSRectToSnappedRect` as 1) we're not actually drawing (i.e. no draw
+        // target), and 2) transform does not need to be taken into account.
+        gfx::Rect rect{gfx::Float(offset.X() / appUnitsPerDevPixel),
+                       gfx::Float(offset.Y() / appUnitsPerDevPixel),
+                       gfx::Float(contentSize.Width() / appUnitsPerDevPixel),
+                       gfx::Float(contentSize.Height() / appUnitsPerDevPixel)};
+        gfx::Point tl = rect.TopLeft().Round();
+        gfx::Point br = rect.BottomRight().Round();
 
-      rect.SizeTo(gfx::Size(br.x - tl.x, br.y - tl.y));
-      rect.NudgeToIntegers();
-      return rect.Size().ToUnknownSize();
+        rect.SizeTo(gfx::Size(br.x - tl.x, br.y - tl.y));
+        rect.NudgeToIntegers();
+        return rect.Size().ToUnknownSize();
+      }
+      case ResizeObserverBoxOptions::Content_box:
+      default:
+        break;
     }
-    case ResizeObserverBoxOptions::Content_box:
-    default:
-      break;
-  }
-  return CSSPixel::FromAppUnits(GetContentRectSize(*frame)).ToUnknownSize();
+    return CSSPixel::FromAppUnits(GetContentRectSize(*frame)).ToUnknownSize();
+  };
+  return LogicalPixelSize(frame->GetWritingMode(), GetFrameSize(frame));
 }
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(ResizeObservation)
@@ -189,23 +192,18 @@ void ResizeObservation::Unlink(RemoveFromObserver aRemoveFromObserver) {
 }
 
 bool ResizeObservation::IsActive() const {
-  nsIFrame* frame = mTarget->GetPrimaryFrame();
-
   // As detailed in the css-contain specification, if the target is hidden by
   // `content-visibility` it should not call its ResizeObservation callbacks.
+  nsIFrame* frame = mTarget->GetPrimaryFrame();
   if (frame && frame->IsHiddenByContentVisibilityOnAnyAncestor()) {
     return false;
   }
 
-  const WritingMode wm = frame ? frame->GetWritingMode() : WritingMode();
-  const LogicalPixelSize size(wm, CalculateBoxSize(mTarget, mObservedBox));
-  return mLastReportedSize != size;
+  return mLastReportedSize != CalculateBoxSize(mTarget, mObservedBox);
 }
 
-void ResizeObservation::UpdateLastReportedSize(const gfx::Size& aSize) {
-  nsIFrame* frame = mTarget->GetPrimaryFrame();
-  WritingMode wm = frame ? frame->GetWritingMode() : WritingMode();
-  mLastReportedSize = {wm, aSize};
+void ResizeObservation::UpdateLastReportedSize(const LogicalPixelSize& aSize) {
+  mLastReportedSize = aSize;
 }
 
 // Only needed for refcounted objects.
@@ -310,7 +308,8 @@ void ResizeObserver::Observe(Element& aTarget,
     // See https://github.com/w3c/csswg-drafts/issues/3664 about doing this in
     // the general case, then we won't need this hack for the last remembered
     // size, and will have consistency with IntersectionObserver.
-    observation->UpdateLastReportedSize(gfx::Size(-1, -1));
+    observation->UpdateLastReportedSize(
+        LogicalPixelSize(WritingMode(), gfx::Size(-1, -1)));
     MOZ_ASSERT(observation->IsActive());
   }
   mObservationList.insertBack(observation);
@@ -382,11 +381,11 @@ uint32_t ResizeObserver::BroadcastActiveObservations() {
   for (auto& observation : mActiveTargets) {
     Element* target = observation->Target();
 
-    gfx::Size borderBoxSize =
+    LogicalPixelSize borderBoxSize =
         CalculateBoxSize(target, ResizeObserverBoxOptions::Border_box);
-    gfx::Size contentBoxSize =
+    LogicalPixelSize contentBoxSize =
         CalculateBoxSize(target, ResizeObserverBoxOptions::Content_box);
-    gfx::Size devicePixelContentBoxSize = CalculateBoxSize(
+    LogicalPixelSize devicePixelContentBoxSize = CalculateBoxSize(
         target, ResizeObserverBoxOptions::Device_pixel_content_box);
     RefPtr<ResizeObserverEntry> entry =
         new ResizeObserverEntry(mOwner, *target, borderBoxSize, contentBoxSize,
@@ -479,34 +478,32 @@ void ResizeObserverEntry::GetDevicePixelContentBoxSize(
   aRetVal.AppendElement(mDevicePixelContentBoxSize);
 }
 
-void ResizeObserverEntry::SetBorderBoxSize(const gfx::Size& aSize) {
-  nsIFrame* frame = mTarget->GetPrimaryFrame();
-  const WritingMode wm = frame ? frame->GetWritingMode() : WritingMode();
-  mBorderBoxSize = new ResizeObserverSize(mOwner, aSize, wm);
+void ResizeObserverEntry::SetBorderBoxSize(const LogicalPixelSize& aSize) {
+  mBorderBoxSize = new ResizeObserverSize(mOwner, aSize);
 }
 
-void ResizeObserverEntry::SetContentRectAndSize(const gfx::Size& aSize) {
+void ResizeObserverEntry::SetContentRectAndSize(const LogicalPixelSize& aSize) {
   nsIFrame* frame = mTarget->GetPrimaryFrame();
 
   // 1. Update mContentRect.
   nsMargin padding = frame ? frame->GetUsedPadding() : nsMargin();
   // Per the spec, we need to use the top-left padding offset as the origin of
   // our contentRect.
+  const WritingMode wm = frame ? frame->GetWritingMode() : WritingMode();
+  gfx::Size sizeForRect = aSize.PhysicalSize(wm);
   nsRect rect(nsPoint(padding.left, padding.top),
-              CSSPixel::ToAppUnits(CSSSize::FromUnknownSize(aSize)));
+              CSSPixel::ToAppUnits(CSSSize::FromUnknownSize(sizeForRect)));
   RefPtr<DOMRect> contentRect = new DOMRect(mOwner);
   contentRect->SetLayoutRect(rect);
   mContentRect = std::move(contentRect);
 
   // 2. Update mContentBoxSize.
-  const WritingMode wm = frame ? frame->GetWritingMode() : WritingMode();
-  mContentBoxSize = new ResizeObserverSize(mOwner, aSize, wm);
+  mContentBoxSize = new ResizeObserverSize(mOwner, aSize);
 }
 
-void ResizeObserverEntry::SetDevicePixelContentSize(const gfx::Size& aSize) {
-  nsIFrame* frame = mTarget->GetPrimaryFrame();
-  const WritingMode wm = frame ? frame->GetWritingMode() : WritingMode();
-  mDevicePixelContentBoxSize = new ResizeObserverSize(mOwner, aSize, wm);
+void ResizeObserverEntry::SetDevicePixelContentSize(
+    const LogicalPixelSize& aSize) {
+  mDevicePixelContentBoxSize = new ResizeObserverSize(mOwner, aSize);
 }
 
 static void LastRememberedSizeCallback(
