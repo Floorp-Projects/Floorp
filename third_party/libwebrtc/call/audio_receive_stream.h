@@ -28,7 +28,7 @@
 namespace webrtc {
 class AudioSinkInterface;
 
-class AudioReceiveStream : public MediaReceiveStream {
+class AudioReceiveStream : public MediaReceiveStreamInterface {
  public:
   struct Stats {
     Stats();
