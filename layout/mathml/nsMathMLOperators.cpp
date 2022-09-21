@@ -323,6 +323,16 @@ bool nsMathMLOperators::LookupOperator(const nsString& aOperator,
     return false;
   }
 
+  // Ignore the combining "negation" suffix for 2-character strings.
+  // https://w3c.github.io/mathml-core/#dfn-algorithm-to-determine-the-category-of-an-operator
+  if (aOperator.Length() == 2 &&
+      (aOperator[1] == 0x0338 || aOperator[1] == 0x20D2)) {
+    nsAutoString newOperator;
+    newOperator.Append(aOperator[0]);
+    return LookupOperator(newOperator, aForm, aFlags, aLeadingSpace,
+                          aTrailingSpace);
+  }
+
   if (!gGlobalsInitialized) {
     InitOperatorGlobals();
   }
