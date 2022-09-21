@@ -91,7 +91,7 @@ h1 {
   padding-block: var(--content-area-padding-block);
 }
 
-body > nav {
+#logo-container {
   flex: 0 0 auto;
 }
 
