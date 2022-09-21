@@ -1,10 +1,8 @@
-import math
-import time
-
 import pytest
 from webdriver.bidi.modules.script import ContextTarget
 
 from . import assert_console_entry, create_console_api_message_for_primitive_value
+from ... import any_string, int_interval, recursive_compare
 
 
 @pytest.mark.asyncio
@@ -13,8 +11,8 @@ from . import assert_console_entry, create_console_api_message_for_primitive_val
     [
         ("'TEST'", "TEST"),
         ("'TWO', 'PARAMETERS'", "TWO PARAMETERS"),
-        ("{}", "[object Object]"),
-        ("['1', '2', '3']", "1,2,3"),
+        ("{}", any_string),
+        ("['1', '2', '3']", any_string),
         ("null, undefined", "null undefined"),
     ],
     ids=[
@@ -80,7 +78,7 @@ async def test_timestamp(bidi_session, top_context, wait_for_event, current_time
 
     on_entry_added = wait_for_event("log.entryAdded")
 
-    time_start = current_time()
+    time_start = await current_time()
 
     script = """new Promise(resolve => {
             setTimeout(() => {
@@ -97,11 +95,9 @@ async def test_timestamp(bidi_session, top_context, wait_for_event, current_time
 
     event_data = await on_entry_added
 
-    time_end = current_time()
+    time_end = await current_time()
 
-    assert_console_entry(
-        event_data, text="foo", time_start=time_start, time_end=time_end
-    )
+    assert_console_entry(event_data, text="foo", timestamp=int_interval(time_start, time_end))
 
 
 @pytest.mark.asyncio
