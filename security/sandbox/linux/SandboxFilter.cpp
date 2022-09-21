@@ -646,6 +646,40 @@ class SandboxPolicyCommon : public SandboxPolicyBase {
                              static_cast<socklen_t>(innerArgs[2]));
   }
 
+  static intptr_t StatFsTrap(ArgsRef aArgs, void* aux) {
+    // Warning: the kernel interface is not the C interface.  The
+    // structs are different (<asm/statfs.h> vs. <sys/statfs.h>), and
+    // the statfs64 version takes an additional size parameter.
+    auto path = reinterpret_cast<const char*>(aArgs.args[0]);
+    int fd = open(path, O_RDONLY | O_LARGEFILE);
+    if (fd < 0) {
+      return -errno;
+    }
+
+    intptr_t rv;
+    switch (aArgs.nr) {
+      case __NR_statfs: {
+        auto buf = reinterpret_cast<void*>(aArgs.args[1]);
+        rv = DoSyscall(__NR_fstatfs, fd, buf);
+        break;
+      }
+#ifdef __NR_statfs64
+      case __NR_statfs64: {
+        auto sz = static_cast<size_t>(aArgs.args[1]);
+        auto buf = reinterpret_cast<void*>(aArgs.args[2]);
+        rv = DoSyscall(__NR_fstatfs64, fd, sz, buf);
+        break;
+      }
+#endif
+      default:
+        MOZ_ASSERT(false);
+        rv = -ENOSYS;
+    }
+
+    close(fd);
+    return rv;
+  }
+
  public:
   ResultExpr InvalidSyscall() const override {
     return Trap(BlockedSyscallTrap, nullptr);
@@ -1175,6 +1209,12 @@ class SandboxPolicyCommon : public SandboxPolicyBase {
         return Error(ENOENT);
 #endif  // MOZ_ASAN
 
+        // Replace statfs with open (which may be brokered) and
+        // fstatfs (which is not allowed in this policy, but may be
+        // allowed by subclasses if they wish to enable statfs).
+      CASES_FOR_statfs:
+        return Trap(StatFsTrap, nullptr);
+
       default:
         return SandboxPolicyBase::EvaluateSyscall(sysno);
     }
@@ -1207,40 +1247,6 @@ class ContentSandboxPolicy : public SandboxPolicyCommon {
     // of the real parent pid to see what breaks when we introduce the
     // pid namespace (Bug 1151624).
     return 0;
-  }
-
-  static intptr_t StatFsTrap(ArgsRef aArgs, void* aux) {
-    // Warning: the kernel interface is not the C interface.  The
-    // structs are different (<asm/statfs.h> vs. <sys/statfs.h>), and
-    // the statfs64 version takes an additional size parameter.
-    auto path = reinterpret_cast<const char*>(aArgs.args[0]);
-    int fd = open(path, O_RDONLY | O_LARGEFILE);
-    if (fd < 0) {
-      return -errno;
-    }
-
-    intptr_t rv;
-    switch (aArgs.nr) {
-      case __NR_statfs: {
-        auto buf = reinterpret_cast<void*>(aArgs.args[1]);
-        rv = DoSyscall(__NR_fstatfs, fd, buf);
-        break;
-      }
-#ifdef __NR_statfs64
-      case __NR_statfs64: {
-        auto sz = static_cast<size_t>(aArgs.args[1]);
-        auto buf = reinterpret_cast<void*>(aArgs.args[2]);
-        rv = DoSyscall(__NR_fstatfs64, fd, sz, buf);
-        break;
-      }
-#endif
-      default:
-        MOZ_ASSERT(false);
-        rv = -ENOSYS;
-    }
-
-    close(fd);
-    return rv;
   }
 
  public:
@@ -1385,9 +1391,6 @@ class ContentSandboxPolicy : public SandboxPolicyCommon {
 #ifdef DESKTOP
       case __NR_getppid:
         return Trap(GetPPidTrap, nullptr);
-
-      CASES_FOR_statfs:
-        return Trap(StatFsTrap, nullptr);
 
         // GTK's theme parsing tries to getcwd() while sandboxed, but
         // only during Talos runs.
