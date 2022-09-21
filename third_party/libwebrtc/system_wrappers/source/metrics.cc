@@ -11,6 +11,8 @@
 
 #include <algorithm>
 
+#include "absl/strings/string_view.h"
+#include "rtc_base/string_utils.h"
 #include "rtc_base/synchronization/mutex.h"
 #include "rtc_base/thread_annotations.h"
 
@@ -29,7 +31,7 @@ const int kMaxSampleMapSize = 300;
 
 class RtcHistogram {
  public:
-  RtcHistogram(const std::string& name, int min, int max, int bucket_count)
+  RtcHistogram(absl::string_view name, int min, int max, int bucket_count)
       : min_(min), max_(max), info_(name, min, max, bucket_count) {
     RTC_DCHECK_GT(bucket_count, 0);
   }
@@ -111,7 +113,7 @@ class RtcHistogramMap {
   RtcHistogramMap(const RtcHistogramMap&) = delete;
   RtcHistogramMap& operator=(const RtcHistogramMap&) = delete;
 
-  Histogram* GetCountsHistogram(const std::string& name,
+  Histogram* GetCountsHistogram(absl::string_view name,
                                 int min,
                                 int max,
                                 int bucket_count) {
@@ -121,23 +123,24 @@ class RtcHistogramMap {
       return reinterpret_cast<Histogram*>(it->second.get());
 
     RtcHistogram* hist = new RtcHistogram(name, min, max, bucket_count);
-    map_[name].reset(hist);
+    map_.emplace(name, hist);
     return reinterpret_cast<Histogram*>(hist);
   }
 
-  Histogram* GetEnumerationHistogram(const std::string& name, int boundary) {
+  Histogram* GetEnumerationHistogram(absl::string_view name, int boundary) {
     MutexLock lock(&mutex_);
     const auto& it = map_.find(name);
     if (it != map_.end())
       return reinterpret_cast<Histogram*>(it->second.get());
 
     RtcHistogram* hist = new RtcHistogram(name, 1, boundary, boundary + 1);
-    map_[name].reset(hist);
+    map_.emplace(name, hist);
     return reinterpret_cast<Histogram*>(hist);
   }
 
-  void GetAndReset(
-      std::map<std::string, std::unique_ptr<SampleInfo>>* histograms) {
+  void GetAndReset(std::map<std::string,
+                            std::unique_ptr<SampleInfo>,
+                            rtc::AbslStringViewCmp>* histograms) {
     MutexLock lock(&mutex_);
     for (const auto& kv : map_) {
       std::unique_ptr<SampleInfo> info = kv.second->GetAndReset();
@@ -153,25 +156,25 @@ class RtcHistogramMap {
       kv.second->Reset();
   }
 
-  int NumEvents(const std::string& name, int sample) const {
+  int NumEvents(absl::string_view name, int sample) const {
     MutexLock lock(&mutex_);
     const auto& it = map_.find(name);
     return (it == map_.end()) ? 0 : it->second->NumEvents(sample);
   }
 
-  int NumSamples(const std::string& name) const {
+  int NumSamples(absl::string_view name) const {
     MutexLock lock(&mutex_);
     const auto& it = map_.find(name);
     return (it == map_.end()) ? 0 : it->second->NumSamples();
   }
 
-  int MinSample(const std::string& name) const {
+  int MinSample(absl::string_view name) const {
     MutexLock lock(&mutex_);
     const auto& it = map_.find(name);
     return (it == map_.end()) ? -1 : it->second->MinSample();
   }
 
-  std::map<int, int> Samples(const std::string& name) const {
+  std::map<int, int> Samples(absl::string_view name) const {
     MutexLock lock(&mutex_);
     const auto& it = map_.find(name);
     return (it == map_.end()) ? std::map<int, int>() : it->second->Samples();
@@ -179,8 +182,8 @@ class RtcHistogramMap {
 
  private:
   mutable Mutex mutex_;
-  std::map<std::string, std::unique_ptr<RtcHistogram>> map_
-      RTC_GUARDED_BY(mutex_);
+  std::map<std::string, std::unique_ptr<RtcHistogram>, rtc::AbslStringViewCmp>
+      map_ RTC_GUARDED_BY(mutex_);
 };
 
 // RtcHistogramMap is allocated upon call to Enable().
@@ -223,7 +226,7 @@ RtcHistogramMap* GetMap() {
 // Creates (or finds) histogram.
 // The returned histogram pointer is cached (and used for adding samples in
 // subsequent calls).
-Histogram* HistogramFactoryGetCounts(const std::string& name,
+Histogram* HistogramFactoryGetCounts(absl::string_view name,
                                      int min,
                                      int max,
                                      int bucket_count) {
@@ -236,7 +239,7 @@ Histogram* HistogramFactoryGetCounts(const std::string& name,
 // Creates (or finds) histogram.
 // The returned histogram pointer is cached (and used for adding samples in
 // subsequent calls).
-Histogram* HistogramFactoryGetCountsLinear(const std::string& name,
+Histogram* HistogramFactoryGetCountsLinear(absl::string_view name,
                                            int min,
                                            int max,
                                            int bucket_count) {
@@ -251,7 +254,7 @@ Histogram* HistogramFactoryGetCountsLinear(const std::string& name,
 // Creates (or finds) histogram.
 // The returned histogram pointer is cached (and used for adding samples in
 // subsequent calls).
-Histogram* HistogramFactoryGetEnumeration(const std::string& name,
+Histogram* HistogramFactoryGetEnumeration(absl::string_view name,
                                           int boundary) {
   RtcHistogramMap* map = GetMap();
   if (!map)
@@ -261,7 +264,7 @@ Histogram* HistogramFactoryGetEnumeration(const std::string& name,
 }
 
 // Our default implementation reuses the non-sparse histogram.
-Histogram* SparseHistogramFactoryGetEnumeration(const std::string& name,
+Histogram* SparseHistogramFactoryGetEnumeration(absl::string_view name,
                                                 int boundary) {
   return HistogramFactoryGetEnumeration(name, boundary);
 }
@@ -274,7 +277,7 @@ void HistogramAdd(Histogram* histogram_pointer, int sample) {
 
 #endif  // WEBRTC_EXCLUDE_METRICS_DEFAULT
 
-SampleInfo::SampleInfo(const std::string& name,
+SampleInfo::SampleInfo(absl::string_view name,
                        int min,
                        int max,
                        size_t bucket_count)
@@ -292,7 +295,8 @@ void Enable() {
 }
 
 void GetAndReset(
-    std::map<std::string, std::unique_ptr<SampleInfo>>* histograms) {
+    std::map<std::string, std::unique_ptr<SampleInfo>, rtc::AbslStringViewCmp>*
+        histograms) {
   histograms->clear();
   RtcHistogramMap* map = GetMap();
   if (map)
@@ -305,22 +309,22 @@ void Reset() {
     map->Reset();
 }
 
-int NumEvents(const std::string& name, int sample) {
+int NumEvents(absl::string_view name, int sample) {
   RtcHistogramMap* map = GetMap();
   return map ? map->NumEvents(name, sample) : 0;
 }
 
-int NumSamples(const std::string& name) {
+int NumSamples(absl::string_view name) {
   RtcHistogramMap* map = GetMap();
   return map ? map->NumSamples(name) : 0;
 }
 
-int MinSample(const std::string& name) {
+int MinSample(absl::string_view name) {
   RtcHistogramMap* map = GetMap();
   return map ? map->MinSample(name) : -1;
 }
 
-std::map<int, int> Samples(const std::string& name) {
+std::map<int, int> Samples(absl::string_view name) {
   RtcHistogramMap* map = GetMap();
   return map ? map->Samples(name) : std::map<int, int>();
 }
