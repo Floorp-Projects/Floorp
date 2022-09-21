@@ -190,6 +190,8 @@ bool CheckTag(uint32_t tag_value);
 #define OTS_TAG_CFF  OTS_TAG('C','F','F',' ')
 #define OTS_TAG_CFF2 OTS_TAG('C','F','F','2')
 #define OTS_TAG_CMAP OTS_TAG('c','m','a','p')
+#define OTS_TAG_COLR OTS_TAG('C','O','L','R')
+#define OTS_TAG_CPAL OTS_TAG('C','P','A','L')
 #define OTS_TAG_CVT  OTS_TAG('c','v','t',' ')
 #define OTS_TAG_FEAT OTS_TAG('F','e','a','t')
 #define OTS_TAG_FPGM OTS_TAG('f','p','g','m')
