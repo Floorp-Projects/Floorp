@@ -101,6 +101,10 @@ function setSidebarMode() {
         sidebar2elem.setAttribute("src", "chrome://browser/content/places/places.xhtml");
         changeBrowserManagerSidebarConfigShowBrowserManagers();
         break;
+      case 0:
+        sidebar2elem.setAttribute("src", "chrome://browser/content/syncedtabs/sidebar.xhtml");
+        changeBrowserManagerSidebarConfigShowBrowserManagers();
+        break;
       case 1:
         sidebar2elem.setAttribute("src", "chrome://browser/content/places/bookmarksSidebar.xhtml");
         changeBrowserManagerSidebarConfigShowBrowserManagers();
@@ -323,6 +327,10 @@ function unmuteSidebarSite() {
 }
 
 function setBrowserManagerSidebarMode() {
+  Services.prefs.setIntPref("floorp.browser.sidebar2.mode", -1);
+  ViewBrowserManagerSidebar();
+}
+function setSyncedtabSidebarMode() {
   Services.prefs.setIntPref("floorp.browser.sidebar2.mode", 0);
   ViewBrowserManagerSidebar();
 }

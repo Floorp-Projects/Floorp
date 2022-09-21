@@ -588,6 +588,10 @@ border-right: 1px solid var(--chrome-content-separator-color);
   list-style-image: url("chrome://browser/skin/history.svg");
 }
 
+#select-syncedtab {
+  list-style-image: url("chrome://browser/skin/tab.svg");
+}
+
 #select-download {
   list-style-image: url("chrome://browser/skin/downloads/downloads.svg");
 }
