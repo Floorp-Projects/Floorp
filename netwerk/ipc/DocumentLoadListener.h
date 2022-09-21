@@ -484,25 +484,6 @@ class DocumentLoadListener : public nsIInterfaceRequestor,
                        LogMimeTypeMismatchParams>;
   nsTArray<SecurityWarningFunction> mSecurityWarningFunctions;
 
-  struct OnStartRequestParams {
-    nsCOMPtr<nsIRequest> request;
-  };
-  struct OnDataAvailableParams {
-    nsCOMPtr<nsIRequest> request;
-    nsCString data;
-    uint64_t offset;
-    uint32_t count;
-  };
-  struct OnStopRequestParams {
-    nsCOMPtr<nsIRequest> request;
-    nsresult status;
-  };
-  struct OnAfterLastPartParams {
-    nsresult status;
-  };
-  using StreamListenerFunction =
-      mozilla::Variant<OnStartRequestParams, OnDataAvailableParams,
-                       OnStopRequestParams, OnAfterLastPartParams>;
   // TODO Backtrack this.
   // The set of nsIStreamListener functions that got called on this
   // listener, so that we can replay them onto the replacement channel's
