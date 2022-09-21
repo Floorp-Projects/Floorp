@@ -70,6 +70,7 @@ class ConnectionContext final
   }
 
   cricket::ChannelManager* channel_manager() const;
+  cricket::MediaEngineInterface* media_engine() const;
 
   rtc::Thread* signaling_thread() { return signaling_thread_; }
   const rtc::Thread* signaling_thread() const { return signaling_thread_; }
@@ -121,6 +122,13 @@ class ConnectionContext final
   // channel_manager is accessed both on signaling thread and worker thread.
   // Const after construction, explicitly cleared in destructor.
   std::unique_ptr<cricket::ChannelManager> channel_manager_;
+  const std::unique_ptr<cricket::MediaEngineInterface> media_engine_;
+
+  // This object should be used to generate any SSRC that is not explicitly
+  // specified by the user (or by the remote party).
+  // TODO(bugs.webrtc.org/12666): This variable is used from both the signaling
+  // and worker threads. See if we can't restrict usage to a single thread.
+  rtc::UniqueRandomIdGenerator ssrc_generator_;
   std::unique_ptr<rtc::NetworkMonitorFactory> const network_monitor_factory_
       RTC_GUARDED_BY(signaling_thread_);
   std::unique_ptr<rtc::BasicNetworkManager> default_network_manager_

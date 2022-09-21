@@ -50,7 +50,8 @@ class ChannelManager : public ChannelFactoryInterface {
   // If media_engine is non-nullptr, then the returned ChannelManager instance
   // will own that reference and media engine initialization
   static std::unique_ptr<ChannelManager> Create(
-      std::unique_ptr<MediaEngineInterface> media_engine,
+      MediaEngineInterface* media_engine,
+      rtc::UniqueRandomIdGenerator* ssrc_generator,
       bool enable_rtx,
       rtc::Thread* worker_thread,
       rtc::Thread* network_thread);
@@ -60,8 +61,8 @@ class ChannelManager : public ChannelFactoryInterface {
 
   rtc::Thread* worker_thread() const { return worker_thread_; }
   rtc::Thread* network_thread() const { return network_thread_; }
-  MediaEngineInterface* media_engine() { return media_engine_.get(); }
-  rtc::UniqueRandomIdGenerator& ssrc_generator() { return ssrc_generator_; }
+  MediaEngineInterface* media_engine() { return media_engine_; }
+  rtc::UniqueRandomIdGenerator& ssrc_generator() { return *ssrc_generator_; }
 
   // Retrieves the list of supported audio & video codec types.
   // Can be called before starting the media engine.
@@ -97,28 +98,18 @@ class ChannelManager : public ChannelFactoryInterface {
       override;
 
  protected:
-  ChannelManager(std::unique_ptr<MediaEngineInterface> media_engine,
+  ChannelManager(MediaEngineInterface* media_engine,
+                 rtc::UniqueRandomIdGenerator* ssrc_generator_,
                  bool enable_rtx,
                  rtc::Thread* worker_thread,
                  rtc::Thread* network_thread);
 
-  // Destroys a voice channel created by CreateVoiceChannel.
-  void DestroyVoiceChannel(VoiceChannel* voice_channel);
-
-  // Destroys a video channel created by CreateVideoChannel.
-  void DestroyVideoChannel(VideoChannel* video_channel);
-
  private:
-  const std::unique_ptr<MediaEngineInterface> media_engine_;  // Nullable.
+  MediaEngineInterface* media_engine_;  // Nullable.
+  rtc::UniqueRandomIdGenerator* ssrc_generator_;
   rtc::Thread* const signaling_thread_;
   rtc::Thread* const worker_thread_;
   rtc::Thread* const network_thread_;
-
-  // This object should be used to generate any SSRC that is not explicitly
-  // specified by the user (or by the remote party).
-  // TODO(bugs.webrtc.org/12666): This variable is used from both the signaling
-  // and worker threads. See if we can't restrict usage to a single thread.
-  rtc::UniqueRandomIdGenerator ssrc_generator_;
 
   const bool enable_rtx_;
 };

@@ -99,6 +99,7 @@ ConnectionContext::ConnectionContext(
                                         wraps_current_thread_)),
       trials_(dependencies->trials ? std::move(dependencies->trials)
                                    : std::make_unique<FieldTrialBasedConfig>()),
+      media_engine_(std::move(dependencies->media_engine)),
       network_monitor_factory_(
           std::move(dependencies->network_monitor_factory)),
       call_factory_(std::move(dependencies->call_factory)),
@@ -144,8 +145,9 @@ ConnectionContext::ConnectionContext(
   default_socket_factory_ =
       std::make_unique<rtc::BasicPacketSocketFactory>(socket_factory);
 
+  // TODO(bugs.webrtc.org/13931): Delete ChannelManager when functions gone.
   channel_manager_ = cricket::ChannelManager::Create(
-      std::move(dependencies->media_engine),
+      media_engine_.get(), &ssrc_generator_,
       /*enable_rtx=*/true, worker_thread(), network_thread());
 
   // Set warning levels on the threads, to give warnings when response
@@ -161,6 +163,15 @@ ConnectionContext::ConnectionContext(
 ConnectionContext::~ConnectionContext() {
   RTC_DCHECK_RUN_ON(signaling_thread_);
   channel_manager_.reset(nullptr);
+  worker_thread_->Invoke<void>(RTC_FROM_HERE, [&] {
+    RTC_DCHECK_RUN_ON(worker_thread());
+    // While `media_engine_` is const throughout the ChannelManager's lifetime,
+    // it requires destruction to happen on the worker thread. Instead of
+    // marking the pointer as non-const, we live with this const_cast<> in the
+    // destructor.
+    const_cast<std::unique_ptr<cricket::MediaEngineInterface>&>(media_engine_)
+        .reset();
+  });
 
   // Make sure `worker_thread()` and `signaling_thread()` outlive
   // `default_socket_factory_` and `default_network_manager_`.

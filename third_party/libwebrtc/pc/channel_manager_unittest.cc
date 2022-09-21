@@ -58,7 +58,9 @@ class ChannelManagerTest : public ::testing::Test {
         worker_(rtc::Thread::Current()),
         video_bitrate_allocator_factory_(
             webrtc::CreateBuiltinVideoBitrateAllocatorFactory()),
-        cm_(cricket::ChannelManager::Create(CreateFakeMediaEngine(),
+        media_engine_(CreateFakeMediaEngine()),
+        cm_(cricket::ChannelManager::Create(media_engine_.get(),
+                                            &ssrc_generator_,
                                             false,
                                             worker_,
                                             network_.get())),
@@ -89,6 +91,8 @@ class ChannelManagerTest : public ::testing::Test {
   rtc::Thread* const worker_;
   std::unique_ptr<webrtc::VideoBitrateAllocatorFactory>
       video_bitrate_allocator_factory_;
+  std::unique_ptr<cricket::MediaEngineInterface> media_engine_;
+  rtc::UniqueRandomIdGenerator ssrc_generator_;
   std::unique_ptr<cricket::ChannelManager> cm_;
   cricket::FakeCall fake_call_;
   webrtc::test::ScopedKeyValueConfig field_trials_;
@@ -106,7 +110,7 @@ TEST_F(ChannelManagerTest, SetVideoRtxEnabled) {
   EXPECT_FALSE(ContainsMatchingCodec(recv_codecs, rtx_codec, &field_trials_));
 
   // Enable and check.
-  cm_ = cricket::ChannelManager::Create(CreateFakeMediaEngine(),
+  cm_ = cricket::ChannelManager::Create(media_engine_.get(), &ssrc_generator_,
                                         true, worker_, network_.get());
   cm_->GetSupportedVideoSendCodecs(&send_codecs);
   EXPECT_TRUE(ContainsMatchingCodec(send_codecs, rtx_codec, &field_trials_));
@@ -114,7 +118,7 @@ TEST_F(ChannelManagerTest, SetVideoRtxEnabled) {
   EXPECT_TRUE(ContainsMatchingCodec(recv_codecs, rtx_codec, &field_trials_));
 
   // Disable and check.
-  cm_ = cricket::ChannelManager::Create(CreateFakeMediaEngine(),
+  cm_ = cricket::ChannelManager::Create(media_engine_.get(), &ssrc_generator_,
                                         false, worker_, network_.get());
   cm_->GetSupportedVideoSendCodecs(&send_codecs);
   EXPECT_FALSE(ContainsMatchingCodec(send_codecs, rtx_codec, &field_trials_));
