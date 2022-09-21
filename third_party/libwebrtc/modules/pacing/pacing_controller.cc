@@ -74,12 +74,6 @@ const TimeDelta PacingController::kMaxEarlyProbeProcessing =
 
 PacingController::PacingController(Clock* clock,
                                    PacketSender* packet_sender,
-                                   const FieldTrialsView& field_trials,
-                                   ProcessMode /*mode*/)
-    : PacingController(clock, packet_sender, field_trials) {}
-
-PacingController::PacingController(Clock* clock,
-                                   PacketSender* packet_sender,
                                    const FieldTrialsView& field_trials)
     : clock_(clock),
       packet_sender_(packet_sender),
