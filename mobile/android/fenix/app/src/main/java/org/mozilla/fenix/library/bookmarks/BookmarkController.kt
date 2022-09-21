@@ -45,7 +45,7 @@ interface BookmarkController {
     fun handleCopyUrl(item: BookmarkNode)
     fun handleBookmarkSharing(item: BookmarkNode)
     fun handleOpeningBookmark(item: BookmarkNode, mode: BrowsingMode)
-    fun handleBookmarkFolderOpening(folder: BookmarkNode, mode: BrowsingMode)
+    fun handleBookmarkFolderOpening(folder: BookmarkNode)
 
     /**
      * Handle bookmark nodes deletion
@@ -183,10 +183,10 @@ class DefaultBookmarkController(
         } else if (firstLaunch) onOpenAllInTabsEmpty.invoke()
     }
 
-    override fun handleBookmarkFolderOpening(folder: BookmarkNode, mode: BrowsingMode) {
+    override fun handleBookmarkFolderOpening(folder: BookmarkNode) {
         // potentially heavy function with a lot of bookmarks to open => use a coroutine
         scope.launch {
-            recursiveBookmarkFolderOpening(folder, true, mode)
+            recursiveBookmarkFolderOpening(folder, true)
         }
     }
 

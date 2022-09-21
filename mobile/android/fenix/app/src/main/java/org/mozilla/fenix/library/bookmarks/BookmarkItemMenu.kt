@@ -27,7 +27,6 @@ class BookmarkItemMenu(
         OpenInNewTab,
         OpenInPrivateTab,
         OpenAllInTabs,
-        OpenAllInPrivateTabs,
         Delete,
         ;
     }
@@ -107,16 +106,6 @@ class BookmarkItemMenu(
                     BookmarkNodeType.FOLDER,
                     context.getString(R.string.bookmark_menu_open_all_in_tabs_button),
                     Item.OpenAllInTabs,
-                )
-            } else {
-                null
-            },
-            if (hasAtLeastOneChild) {
-                maybeCreateMenuItem(
-                    itemType,
-                    BookmarkNodeType.FOLDER,
-                    context.getString(R.string.bookmark_menu_open_all_in_privates_button),
-                    Item.OpenAllInPrivateTabs,
                 )
             } else {
                 null

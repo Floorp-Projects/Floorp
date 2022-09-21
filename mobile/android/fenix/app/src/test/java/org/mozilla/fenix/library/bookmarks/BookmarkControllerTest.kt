@@ -381,7 +381,7 @@ class BookmarkControllerTest {
                 }
                 recurseFind(tree, it)
             },
-        ).handleBookmarkFolderOpening(tree, BrowsingMode.Normal)
+        ).handleBookmarkFolderOpening(tree)
 
         assertTrue(showTabTrayInvoked)
         verifyOrder {
@@ -389,40 +389,6 @@ class BookmarkControllerTest {
             addNewTabUseCase.invoke(item.url!!, private = false)
             addNewTabUseCase.invoke(childItem.url!!, private = false)
             homeActivity.browsingModeManager.mode = BrowsingMode.Normal
-        }
-    }
-
-    @Test
-    fun `handleBookmarkFolderOpening should open all bookmarks in private tabs`() {
-        var showTabTrayInvoked = false
-        createController(
-            showTabTray = {
-                showTabTrayInvoked = true
-            },
-            loadBookmarkNode = {
-                fun recurseFind(item: BookmarkNode, guid: String): BookmarkNode? {
-                    if (item.guid == guid) {
-                        return item
-                    } else {
-                        item.children?.iterator()?.forEach {
-                            val res = recurseFind(it, guid)
-                            if (res != null) {
-                                return res
-                            }
-                        }
-                        return null
-                    }
-                }
-                recurseFind(tree, it)
-            },
-        ).handleBookmarkFolderOpening(tree, BrowsingMode.Private)
-
-        assertTrue(showTabTrayInvoked)
-        verifyOrder {
-            addNewTabUseCase.invoke(item.url!!, private = true)
-            addNewTabUseCase.invoke(item.url!!, private = true)
-            addNewTabUseCase.invoke(childItem.url!!, private = true)
-            homeActivity.browsingModeManager.mode = BrowsingMode.Private
         }
     }
 
@@ -436,7 +402,7 @@ class BookmarkControllerTest {
             loadBookmarkNode = {
                 subfolder
             },
-        ).handleBookmarkFolderOpening(subfolder, BrowsingMode.Normal)
+        ).handleBookmarkFolderOpening(subfolder)
 
         assertTrue(onOpenAllInTabsEmptyInvoked)
     }

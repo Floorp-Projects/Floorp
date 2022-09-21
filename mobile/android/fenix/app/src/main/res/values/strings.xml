@@ -858,8 +858,6 @@
     <string name="bookmark_menu_open_in_private_tab_button">Open in private tab</string>
     <!-- Bookmark overflow menu open all in tabs button -->
     <string name="bookmark_menu_open_all_in_tabs_button">Open all in new tabs</string>
-    <!-- Bookmark overflow menu open all in private tabs button -->
-    <string name="bookmark_menu_open_all_in_privates_button">Open all in private tabs</string>
     <!-- Bookmark overflow menu delete button -->
     <string name="bookmark_menu_delete_button">Delete</string>
     <!--Bookmark overflow menu save button -->

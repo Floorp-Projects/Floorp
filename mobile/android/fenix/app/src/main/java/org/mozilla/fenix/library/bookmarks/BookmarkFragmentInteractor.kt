@@ -81,12 +81,7 @@ class BookmarkFragmentInteractor(
 
     override fun onOpenAllInTabs(folder: BookmarkNode) {
         require(folder.type == BookmarkNodeType.FOLDER)
-        bookmarksController.handleBookmarkFolderOpening(folder, BrowsingMode.Normal)
-    }
-
-    override fun onOpenAllInPrivateTabs(folder: BookmarkNode) {
-        require(folder.type == BookmarkNodeType.FOLDER)
-        bookmarksController.handleBookmarkFolderOpening(folder, BrowsingMode.Private)
+        bookmarksController.handleBookmarkFolderOpening(folder)
     }
 
     override fun onDelete(nodes: Set<BookmarkNode>) {
