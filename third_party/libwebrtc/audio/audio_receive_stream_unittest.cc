@@ -146,8 +146,8 @@ struct ConfigHelper {
         rtc::make_ref_counted<MockAudioDecoderFactory>();
   }
 
-  std::unique_ptr<internal::AudioReceiveStream> CreateAudioReceiveStream() {
-    auto ret = std::make_unique<internal::AudioReceiveStream>(
+  std::unique_ptr<AudioReceiveStreamImpl> CreateAudioReceiveStream() {
+    auto ret = std::make_unique<AudioReceiveStreamImpl>(
         Clock::GetRealTimeClock(), &packet_router_, stream_config_,
         audio_state_, &event_log_,
         std::unique_ptr<voe::ChannelReceiveInterface>(channel_receive_));
