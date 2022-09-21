@@ -61,9 +61,6 @@ nsLineBox::nsLineBox(nsIFrame* aFrame, int32_t aCount, bool aIsBlock)
     NS_ASSERTION(aIsBlock == f->IsBlockOutside(), "wrong kind of child frame");
   }
 #endif
-  static_assert(static_cast<int>(StyleClear::Max) <= 15,
-                "FlagBits needs more bits to store the full range of "
-                "break type ('clear') values");
   mChildCount = aCount;
   MarkDirty();
   mFlags.mBlock = aIsBlock;
@@ -207,8 +204,6 @@ static void ListFloats(FILE* out, const char* aPrefix,
       return "leftbr+rightbr";
     case StyleClear::Line:
       return "linebr";
-    case StyleClear::Max:
-      return "leftbr+rightbr+linebr";
   }
   return "unknown";
 }
