@@ -20,16 +20,18 @@ XUL <splitter> collapsing tests
     SimpleTest.waitForExplicitFinish();
 
     async function dragSplitter(offsetX) {
-      var splitterRect = splitter.getBoundingClientRect();
-      var splitterWidth = splitterRect.width;
+      info(`Dragging splitter ${splitter.id} to ${offsetX}`);
+
+      const splitterRect = splitter.getBoundingClientRect();
+      const splitterWidth = splitterRect.width;
       synthesizeMouse(splitter, splitterWidth / 2, 2, {type: "mousedown"});
       synthesizeMouse(splitter, splitterWidth / 2, 1, {type: "mousemove"});
       await new Promise(SimpleTest.executeSoon);
-      SimpleTest.is(splitter.getAttribute("state"), "dragging", "The splitter should be dragged");
+      is(splitter.getAttribute("state"), "dragging", "The splitter should be dragged");
       synthesizeMouse(splitter, offsetX, 1, {type: "mousemove"});
       synthesizeMouse(splitter, offsetX, 1, {type: "mouseup"});
       await new Promise(SimpleTest.executeSoon);
-      var newSplitterRect = splitter.getBoundingClientRect();
+      const newSplitterRect = splitter.getBoundingClientRect();
       is(
         offsetX > 0,
         newSplitterRect.left > splitterRect.left,
@@ -38,16 +40,16 @@ XUL <splitter> collapsing tests
     }
 
     function shouldBeCollapsed(where) {
-      SimpleTest.is(splitter.getAttribute("state"), "collapsed", "The splitter should be collapsed");
-      SimpleTest.is(splitter.getAttribute("substate"), where, "The splitter should be collapsed " + where);
+      is(splitter.getAttribute("state"), "collapsed", "The splitter should be collapsed");
+      is(splitter.getAttribute("substate"), where, "The splitter should be collapsed " + where);
     }
 
     function shouldNotBeCollapsed() {
-      SimpleTest.is(splitter.getAttribute("state"), "", "The splitter should not be collapsed");
+      is(splitter.getAttribute("state"), "", "The splitter should not be collapsed");
     }
 
     async function runPass(isRTL, rightCollapsed, leftCollapsed) {
-      var containerWidth = splitter.parentNode.getBoundingClientRect().width;
+      const containerWidth = splitter.parentNode.getBoundingClientRect().width;
       await dragSplitter(containerWidth);
       if (rightCollapsed) {
         shouldBeCollapsed(isRTL ? "before" : "after");
@@ -66,8 +68,22 @@ XUL <splitter> collapsing tests
     }
 
     var splitter;
+    var activeBox = null;
+    function setActiveBox(element) {
+      if (activeBox) {
+        activeBox.style.display = "none";
+      }
+      if (element) {
+        element.style.display = "";
+        element.getBoundingClientRect();
+      }
+      activeBox = element;
+    }
+
     async function runTests(rtl, splitterId) {
+      info(`Running tests for ${splitterId}`);
       splitter = document.getElementById(splitterId);
+      setActiveBox(splitter.parentNode);
       await runPass(rtl, false, false);
       splitter.setAttribute("collapse", "before");
       await runPass(rtl, rtl, !rtl);
@@ -80,21 +96,35 @@ XUL <splitter> collapsing tests
     async function runAllTests() {
       await runTests(false, "ltr-splitter");
       await runTests(true, "rtl-splitter");
+      await runTests(false, "ltr-flex-splitter");
+      await runTests(true, "rtl-flex-splitter");
       SimpleTest.finish();
     }
 
     addLoadEvent(function() {SimpleTest.executeSoon(runAllTests);});
    ]]></script>
 
-  <hbox style="max-width: 200px; height: 300px; direction: ltr;">
+  <hbox style="display: none; max-width: 200px; height: 300px; direction: ltr;">
     <vbox style="width: 100px; height: 300px;" flex="1"/>
     <splitter id="ltr-splitter" width="5"/>
     <vbox style="width: 100px; height: 300px;" flex="1"/>
   </hbox>
 
-  <hbox style="max-width: 200px; height: 300px; direction: rtl;">
+  <hbox style="display: none; max-width: 200px; height: 300px; direction: rtl;">
     <vbox style="width: 100px; height: 300px;" flex="1"/>
     <splitter id="rtl-splitter" width="5"/>
+    <vbox style="width: 100px; height: 300px;" flex="1"/>
+  </hbox>
+
+  <hbox style="display: none; max-width: 200px; height: 300px; direction: ltr; -moz-box-layout: flex">
+    <vbox style="width: 100px; height: 300px;" flex="1"/>
+    <splitter id="ltr-flex-splitter" width="5"/>
+    <vbox style="width: 100px; height: 300px;" flex="1"/>
+  </hbox>
+
+  <hbox style="display: none; max-width: 200px; height: 300px; direction: rtl; -moz-box-layout: flex">
+    <vbox style="width: 100px; height: 300px;" flex="1"/>
+    <splitter id="rtl-flex-splitter" width="5"/>
     <vbox style="width: 100px; height: 300px;" flex="1"/>
   </hbox>
 
