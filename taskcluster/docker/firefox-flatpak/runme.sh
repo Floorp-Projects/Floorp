@@ -25,8 +25,8 @@ export DATE
 SCRIPT_DIRECTORY="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 TARGET_TAR_XZ_FULL_PATH="$ARTIFACTS_DIR/target.flatpak.tar.xz"
 SOURCE_DEST="${WORKSPACE}/source"
-FREEDESKTOP_VERSION="21.08"
-FIREFOX_BASEAPP_CHANNEL="21.08"
+FREEDESKTOP_VERSION="22.08"
+FIREFOX_BASEAPP_CHANNEL="22.08"
 
 
 # XXX: these commands are temporarily, there's an upcoming fix in the upstream Docker image
