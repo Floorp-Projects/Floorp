@@ -10,6 +10,7 @@ import androidx.test.platform.app.InstrumentationRegistry
 import mozilla.components.support.locale.LocaleManager
 import mozilla.components.support.locale.LocaleUseCases
 import org.junit.After
+import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TestRule
@@ -107,6 +108,7 @@ class SettingsGeneralTest {
         }
     }
 
+    @Ignore("Compose scrolling issue: https://github.com/mozilla-mobile/focus-android/issues/7282")
     @Test
     fun frenchLocaleTest() {
         /* Go to Settings */

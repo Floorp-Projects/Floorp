@@ -22,7 +22,6 @@ import android.os.Build.VERSION.SDK_INT
 import android.os.Bundle
 import android.provider.MediaStore
 import android.provider.MediaStore.setIncludePending
-import android.text.format.DateUtils
 import android.util.Log
 import android.view.KeyEvent
 import androidx.browser.customtabs.CustomTabsIntent
@@ -51,14 +50,15 @@ import org.mozilla.focus.utils.IntentUtils
 import java.io.FileInputStream
 import java.io.IOException
 import java.io.InputStream
+import java.util.concurrent.TimeUnit
 
 @Suppress("TooManyFunctions")
 object TestHelper {
     @JvmField
     var mDevice = UiDevice.getInstance(getInstrumentation())
-    const val waitingTime = DateUtils.SECOND_IN_MILLIS * 15
-    const val pageLoadingTime = DateUtils.SECOND_IN_MILLIS * 25
-    const val waitingTimeShort = DateUtils.SECOND_IN_MILLIS * 5
+    val waitingTime = TimeUnit.SECONDS.toMillis(15)
+    val pageLoadingTime = TimeUnit.SECONDS.toMillis(25)
+    val waitingTimeShort: Long = TimeUnit.SECONDS.toMillis(3)
 
     private val charPool: List<Char> = ('a'..'z') + ('A'..'Z') + ('0'..'9')
     fun randomString(stringLength: Int) =

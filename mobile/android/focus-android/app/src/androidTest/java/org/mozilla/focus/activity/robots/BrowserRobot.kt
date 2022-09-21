@@ -46,17 +46,7 @@ class BrowserRobot {
         )
 
     fun verifyPageContent(expectedText: String) {
-        val sessionLoadedIdlingResource = SessionLoadedIdlingResource()
-
-        mDevice.findObject(UiSelector().resourceId("$packageName:id/engineView"))
-            .waitForExists(waitingTime)
-
-        runWithIdleRes(sessionLoadedIdlingResource) {
-            assertTrue(
-                mDevice.findObject(UiSelector().textContains(expectedText))
-                    .waitForExists(pageLoadingTime),
-            )
-        }
+        mDevice.wait(Until.findObject(By.textContains(expectedText)), waitingTime)
     }
 
     fun verifyTrackingProtectionAlert(expectedText: String) {
