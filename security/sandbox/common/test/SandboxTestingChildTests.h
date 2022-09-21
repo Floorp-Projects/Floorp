@@ -23,6 +23,7 @@
 #    include <sys/prctl.h>
 #    include <sys/resource.h>
 #    include <sys/socket.h>
+#    include <sys/statfs.h>
 #    include <sys/syscall.h>
 #    include <sys/sysmacros.h>
 #    include <sys/time.h>
@@ -463,6 +464,11 @@ void RunTestsContent(SandboxTestingChild* child) {
                      });
   }
 
+  child->ErrnoTest("statfs"_ns, true, [] {
+    struct statfs sf;
+    return statfs("/usr/share", &sf);
+  });
+
 #    ifdef MOZ_X11
   // Check that X11 access is blocked (bug 1129492).
   // This will fail if security.sandbox.content.headless is turned off.
@@ -636,6 +642,11 @@ void RunTestsRDD(SandboxTestingChild* child) {
   // used by fbdev) and numbers starting from 200 (0xc8).
   child->ErrnoValueTest("ioctl_nvidia"_ns, ENOTTY,
                         [] { return ioctl(0, 0x46c8, nullptr); });
+
+  child->ErrnoTest("statfs"_ns, true, [] {
+    struct statfs sf;
+    return statfs("/usr/share", &sf);
+  });
 
 #  elif XP_MACOSX
   RunMacTestLaunchProcess(child);
