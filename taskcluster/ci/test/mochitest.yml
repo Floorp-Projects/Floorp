@@ -509,10 +509,6 @@ mochitest-media:
     description: "Mochitest media run"
     treeherder-symbol: M(mda)
     schedules-component: mochitest-plain
-    worker-type:
-        by-test-platform:
-            linux.*/.*: t-linux-kvm-aws  # Not moving to GCP yet as this suite breaks -> Bug 1789714
-            default: default
     max-run-time:
         by-test-platform:
             windows10-64-2004-ccov.*/.*: 7200
