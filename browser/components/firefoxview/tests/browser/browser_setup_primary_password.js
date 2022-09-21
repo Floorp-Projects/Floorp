@@ -72,15 +72,29 @@ add_task(async function test_primary_password_locked() {
 
     info("notifying of the primary-password unlock");
     const clearErrorSpy = sandbox.spy(TabsSetupFlowManager, "tryToClearError");
+
+    const setupContainer = document.querySelector(".sync-setup-container");
+    // wait until the setup container gets hidden before checking if the tabs container is visible
+    // as it may not exist until then
+    let setupHiddenPromise = BrowserTestUtils.waitForMutationCondition(
+      setupContainer,
+      {
+        attributeFilter: ["hidden"],
+      },
+      () => {
+        return BrowserTestUtils.is_hidden(setupContainer);
+      }
+    );
+
     Services.obs.notifyObservers(null, "passwordmgr-crypto-login");
-    await TestUtils.waitForTick();
+    await setupHiddenPromise;
     ok(
       clearErrorSpy.called,
       "tryToClearError was called when the primary-password unlock notification was received"
     );
-
     // We expect the waiting state until we get a sync update/finished
     info("Setup state:" + TabsSetupFlowManager.currentSetupState.name);
+
     ok(TabsSetupFlowManager.waitingForTabs, "Now waiting for tabs");
     ok(
       document
