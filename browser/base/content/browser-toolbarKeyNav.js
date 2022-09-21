@@ -74,7 +74,7 @@ ToolbarKeyboardNavigator = {
       // This width check excludes the overflow button when there's no overflow.
       let bounds = window.windowUtils.getBoundsWithoutFlushing(aNode);
       if (bounds.width == 0) {
-        return NodeFilter.FILTER_REJECT;
+        return NodeFilter.FILTER_SKIP;
       }
 
       if (this._isButton(aNode)) {

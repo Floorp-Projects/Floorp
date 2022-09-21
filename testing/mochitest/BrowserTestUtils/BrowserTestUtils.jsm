@@ -1829,6 +1829,44 @@ var BrowserTestUtils = {
   },
 
   /**
+   * Create enough tabs to cause a tab overflow in the given window.
+   * @param registerCleanupFunction {Function}
+   *    The test framework doesn't keep its cleanup stuff anywhere accessible,
+   *    so the first argument is a reference to your cleanup registration
+   *    function, allowing us to clean up after you if necessary.
+   * @param win {Window}
+   *    The window where the tabs need to be overflowed.
+   */
+  async overflowTabs(registerCleanupFunction, win) {
+    let { gBrowser } = win;
+    let arrowScrollbox = gBrowser.tabContainer.arrowScrollbox;
+    const originalSmoothScroll = arrowScrollbox.smoothScroll;
+    arrowScrollbox.smoothScroll = false;
+    registerCleanupFunction(() => {
+      arrowScrollbox.smoothScroll = originalSmoothScroll;
+    });
+
+    let width = ele => ele.getBoundingClientRect().width;
+    let tabMinWidth = parseInt(
+      win.getComputedStyle(gBrowser.selectedTab).minWidth
+    );
+    let tabCountForOverflow = Math.ceil(
+      (width(arrowScrollbox) / tabMinWidth) * 1.1
+    );
+    while (gBrowser.tabs.length < tabCountForOverflow) {
+      BrowserTestUtils.addTab(gBrowser, "about:blank", {
+        skipAnimation: true,
+        index: 0,
+      });
+    }
+
+    // Make sure scrolling finished.
+    await new Promise(resolve => {
+      arrowScrollbox.addEventListener("scrollend", resolve, { once: true });
+    });
+  },
+
+  /**
    * Crashes a remote frame tab and cleans up the generated minidumps.
    * Resolves with the data from the .extra file (the crash annotations).
    *
