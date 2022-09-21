@@ -52,14 +52,13 @@ mozilla::LazyLogModule gStorageLog("mozStorage");
 // Checks that the protected code is running on the main-thread only if the
 // connection was also opened on it.
 #ifdef DEBUG
-#  define CHECK_MAINTHREAD_ABUSE()                             \
-    do {                                                       \
-      nsCOMPtr<nsIThread> mainThread = do_GetMainThread();     \
-      NS_WARNING_ASSERTION(                                    \
-          threadOpenedOn == mainThread || !NS_IsMainThread(),  \
-          "Using Storage synchronous API on main-thread, but " \
-          "the connection was "                                \
-          "opened on another thread.");                        \
+#  define CHECK_MAINTHREAD_ABUSE()                                   \
+    do {                                                             \
+      NS_WARNING_ASSERTION(                                          \
+          eventTargetOpenedOn == GetMainThreadSerialEventTarget() || \
+              !NS_IsMainThread(),                                    \
+          "Using Storage synchronous API on main-thread, but "       \
+          "the connection was opened on another thread.");           \
     } while (0)
 #else
 #  define CHECK_MAINTHREAD_ABUSE() \
@@ -298,8 +297,8 @@ class AsyncCloseConnection final : public Runnable {
         mCallbackEvent(aCallbackEvent) {}
 
   NS_IMETHOD Run() override {
-    // This code is executed on the background thread
-    MOZ_ASSERT(NS_GetCurrentThread() != mConnection->threadOpenedOn);
+    // Make sure we don't dispatch to the current thread.
+    MOZ_ASSERT(!IsOnCurrentSerialEventTarget(mConnection->eventTargetOpenedOn));
 
     nsCOMPtr<nsIRunnable> event =
         NewRunnableMethod("storage::Connection::shutdownAsyncThread",
@@ -345,7 +344,7 @@ class AsyncInitializeClone final : public Runnable {
    * @param aReadOnly If |true|, the clone is read only.
    * @param aCallback A callback to trigger once initialization
    *                  is complete. This event will be called on
-   *                  aClone->threadOpenedOn.
+   *                  aClone->eventTargetOpenedOn.
    */
   AsyncInitializeClone(Connection* aConnection, Connection* aClone,
                        const bool aReadOnly,
@@ -372,7 +371,7 @@ class AsyncInitializeClone final : public Runnable {
   nsresult Dispatch(nsresult aResult, nsISupports* aValue) {
     RefPtr<CallbackComplete> event =
         new CallbackComplete(aResult, aValue, mCallback.forget());
-    return mClone->threadOpenedOn->Dispatch(event, NS_DISPATCH_NORMAL);
+    return mClone->eventTargetOpenedOn->Dispatch(event, NS_DISPATCH_NORMAL);
   }
 
   ~AsyncInitializeClone() override {
@@ -429,7 +428,7 @@ Connection::Connection(Service* aService, int aFlags,
                        bool aInterruptible, bool aIgnoreLockingMode)
     : sharedAsyncExecutionMutex("Connection::sharedAsyncExecutionMutex"),
       sharedDBMutex("Connection::sharedDBMutex"),
-      threadOpenedOn(do_GetCurrentThread()),
+      eventTargetOpenedOn(WrapNotNull(GetCurrentSerialEventTarget())),
       mDBConn(nullptr),
       mDefaultTransactionType(mozIStorageConnection::TRANSACTION_DEFERRED),
       mDestroying(false),
@@ -480,7 +479,7 @@ NS_IMETHODIMP_(MozExternalRefCountType) Connection::Release(void) {
     // - One of Service's getConnections() callers had acquired a strong
     //   reference to the Connection that out-lived the last "user" reference,
     //   and now that just got dropped.  Note that this reference could be
-    //   getting dropped on the main thread or Connection->threadOpenedOn
+    //   getting dropped on the main thread or Connection->eventTargetOpenedOn
     //   (because of the NewRunnableMethod used by minimizeMemory).
     //
     // Either way, we should now perform our failsafe Close() and unregister.
@@ -489,12 +488,12 @@ NS_IMETHODIMP_(MozExternalRefCountType) Connection::Release(void) {
     // off the main thread and getConnections() gets called on the main thread,
     // so we use an atomic here to do this exactly once.
     if (mDestroying.compareExchange(false, true)) {
-      // Close the connection, dispatching to the opening thread if we're not
-      // on that thread already and that thread is still accepting runnables.
-      // We do this because it's possible we're on the main thread because of
-      // getConnections(), and we REALLY don't want to transfer I/O to the main
-      // thread if we can avoid it.
-      if (threadOpenedOn->IsOnCurrentThread()) {
+      // Close the connection, dispatching to the opening event target if we're
+      // not on that event target already and that event target is still
+      // accepting runnables. We do this because it's possible we're on the main
+      // thread because of getConnections(), and we REALLY don't want to
+      // transfer I/O to the main thread if we can avoid it.
+      if (IsOnCurrentSerialEventTarget(eventTargetOpenedOn)) {
         // This could cause SpinningSynchronousClose() to be invoked and AddRef
         // triggered for AsyncCloseConnection's strong ref if the conn was ever
         // use for async purposes.  (Main-thread only, though.)
@@ -503,9 +502,9 @@ NS_IMETHODIMP_(MozExternalRefCountType) Connection::Release(void) {
         nsCOMPtr<nsIRunnable> event =
             NewRunnableMethod("storage::Connection::synchronousClose", this,
                               &Connection::synchronousClose);
-        if (NS_FAILED(
-                threadOpenedOn->Dispatch(event.forget(), NS_DISPATCH_NORMAL))) {
-          // The target thread was dead and so we've just leaked our runnable.
+        if (NS_FAILED(eventTargetOpenedOn->Dispatch(event.forget(),
+                                                    NS_DISPATCH_NORMAL))) {
+          // The event target was dead and so we've just leaked our runnable.
           // This should not happen because our non-main-thread consumers should
           // be explicitly closing their connections, not relying on us to close
           // them for them.  (It's okay to let a statement go out of scope for
@@ -542,14 +541,14 @@ int32_t Connection::getSqliteRuntimeStatus(int32_t aStatusOption,
 }
 
 nsIEventTarget* Connection::getAsyncExecutionTarget() {
-  NS_ENSURE_TRUE(threadOpenedOn == NS_GetCurrentThread(), nullptr);
+  NS_ENSURE_TRUE(IsOnCurrentSerialEventTarget(eventTargetOpenedOn), nullptr);
 
-  // Don't return the asynchronous thread if we are shutting down.
+  // Don't return the asynchronous event target if we are shutting down.
   if (mAsyncExecutionThreadShuttingDown) {
     return nullptr;
   }
 
-  // Create the async thread if there's none yet.
+  // Create the async event target if there's none yet.
   if (!mAsyncExecutionThread) {
     static nsThreadPoolNaming naming;
     nsresult rv = NS_NewNamedThread(naming.GetNextThreadName("mozStorage"),
@@ -902,7 +901,7 @@ nsresult Connection::initializeInternal() {
 }
 
 nsresult Connection::initializeOnAsyncThread(nsIFile* aStorageFile) {
-  MOZ_ASSERT(threadOpenedOn != NS_GetCurrentThread());
+  MOZ_ASSERT(!IsOnCurrentSerialEventTarget(eventTargetOpenedOn));
   nsresult rv = aStorageFile
                     ? initialize(aStorageFile)
                     : initialize(kMozStorageMemoryStorageKey, VoidCString());
@@ -1022,27 +1021,18 @@ int Connection::progressHandler() {
 }
 
 nsresult Connection::setClosedState() {
-  // Ensure that we are on the correct thread to close the database.
-  bool onOpenedThread;
-  nsresult rv = threadOpenedOn->IsOnCurrentThread(&onOpenedThread);
-  NS_ENSURE_SUCCESS(rv, rv);
-  if (!onOpenedThread) {
-    NS_ERROR("Must close the database on the thread that you opened it with!");
-    return NS_ERROR_UNEXPECTED;
-  }
-
   // Flag that we are shutting down the async thread, so that
   // getAsyncExecutionTarget knows not to expose/create the async thread.
-  {
-    MutexAutoLock lockedScope(sharedAsyncExecutionMutex);
-    NS_ENSURE_FALSE(mAsyncExecutionThreadShuttingDown, NS_ERROR_UNEXPECTED);
-    mAsyncExecutionThreadShuttingDown = true;
+  MutexAutoLock lockedScope(sharedAsyncExecutionMutex);
+  NS_ENSURE_FALSE(mAsyncExecutionThreadShuttingDown, NS_ERROR_UNEXPECTED);
 
-    // Set the property to null before closing the connection, otherwise the
-    // other functions in the module may try to use the connection after it is
-    // closed.
-    mDBConn = nullptr;
-  }
+  mAsyncExecutionThreadShuttingDown = true;
+
+  // Set the property to null before closing the connection, otherwise the
+  // other functions in the module may try to use the connection after it is
+  // closed.
+  mDBConn = nullptr;
+
   return NS_OK;
 }
 
@@ -1094,12 +1084,12 @@ bool Connection::isClosed() {
 bool Connection::isClosed(MutexAutoLock& lock) { return mConnectionClosed; }
 
 bool Connection::isAsyncExecutionThreadAvailable() {
-  MOZ_ASSERT(threadOpenedOn == NS_GetCurrentThread());
+  MOZ_ASSERT(IsOnCurrentSerialEventTarget(eventTargetOpenedOn));
   return mAsyncExecutionThread && !mAsyncExecutionThreadShuttingDown;
 }
 
 void Connection::shutdownAsyncThread() {
-  MOZ_ASSERT(threadOpenedOn == NS_GetCurrentThread());
+  MOZ_ASSERT(IsOnCurrentSerialEventTarget(eventTargetOpenedOn));
   MOZ_ASSERT(mAsyncExecutionThread);
   MOZ_ASSERT(mAsyncExecutionThreadShuttingDown);
 
@@ -1364,11 +1354,9 @@ nsresult Connection::synchronousClose() {
 
 #ifdef DEBUG
   // Since we're accessing mAsyncExecutionThread, we need to be on the opener
-  // thread. We make this check outside of debug code below in setClosedState,
-  // but this is here to be explicit.
-  bool onOpenerThread = false;
-  (void)threadOpenedOn->IsOnCurrentThread(&onOpenerThread);
-  MOZ_ASSERT(onOpenerThread);
+  // event target. We make this check outside of debug code below in
+  // setClosedState, but this is here to be explicit.
+  MOZ_ASSERT(IsOnCurrentSerialEventTarget(eventTargetOpenedOn));
 #endif  // DEBUG
 
   // Make sure we have not executed any asynchronous statements.
@@ -1405,7 +1393,7 @@ Connection::SpinningSynchronousClose() {
   if (NS_FAILED(rv)) {
     return rv;
   }
-  if (threadOpenedOn != NS_GetCurrentThread()) {
+  if (!IsOnCurrentSerialEventTarget(eventTargetOpenedOn)) {
     return NS_ERROR_NOT_SAME_THREAD;
   }
 
@@ -1702,7 +1690,7 @@ nsresult Connection::initializeClone(Connection* aClone, bool aReadOnly) {
 
 NS_IMETHODIMP
 Connection::Clone(bool aReadOnly, mozIStorageConnection** _connection) {
-  MOZ_ASSERT(threadOpenedOn == NS_GetCurrentThread());
+  MOZ_ASSERT(IsOnCurrentSerialEventTarget(eventTargetOpenedOn));
 
   AUTO_PROFILER_LABEL("Connection::Clone", OTHER);
 
@@ -1738,9 +1726,9 @@ NS_IMETHODIMP
 Connection::Interrupt() {
   MOZ_ASSERT(mInterruptible, "Interrupt method not allowed");
   MOZ_ASSERT_IF(SYNCHRONOUS == mSupportedOperations,
-                threadOpenedOn != NS_GetCurrentThread());
+                !IsOnCurrentSerialEventTarget(eventTargetOpenedOn));
   MOZ_ASSERT_IF(ASYNCHRONOUS == mSupportedOperations,
-                threadOpenedOn == NS_GetCurrentThread());
+                IsOnCurrentSerialEventTarget(eventTargetOpenedOn));
 
   if (!connectionReady()) {
     return NS_ERROR_NOT_INITIALIZED;
@@ -1773,7 +1761,7 @@ Connection::GetDefaultPageSize(int32_t* _defaultPageSize) {
 
 NS_IMETHODIMP
 Connection::GetConnectionReady(bool* _ready) {
-  MOZ_ASSERT(threadOpenedOn == NS_GetCurrentThread());
+  MOZ_ASSERT(IsOnCurrentSerialEventTarget(eventTargetOpenedOn));
   *_ready = connectionReady();
   return NS_OK;
 }
