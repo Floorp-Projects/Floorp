@@ -2383,13 +2383,13 @@ class IDLType(IDLObject):
         "double",
         # Other types
         "any",
+        "undefined",
         "domstring",
         "bytestring",
         "usvstring",
         "utf8string",
         "jsstring",
         "object",
-        "undefined",
         # Funny stuff
         "interface",
         "dictionary",
@@ -2481,7 +2481,7 @@ class IDLType(IDLObject):
         return False
 
     def isUndefined(self):
-        return self.name == "Undefined"
+        return False
 
     def isSequence(self):
         return False
@@ -2546,6 +2546,9 @@ class IDLType(IDLObject):
 
     def isObservableArray(self):
         return False
+
+    def isDictionaryLike(self):
+        return self.isDictionary() or self.isRecord() or self.isCallbackInterface()
 
     def hasClamp(self):
         return self._clamp
@@ -2614,8 +2617,6 @@ class IDLUnresolvedType(IDLType):
             raise WebIDLError("Unresolved type '%s'." % self.name, [self.location])
 
         assert obj
-        if obj.isType():
-            print(obj)
         assert not obj.isType()
         if obj.isTypedef():
             assert self.name.name == obj.identifier.name
@@ -2725,7 +2726,7 @@ class IDLNullableType(IDLParametrizedType):
         return self.inner.isInteger()
 
     def isUndefined(self):
-        return False
+        return self.inner.isUndefined()
 
     def isSequence(self):
         return self.inner.isSequence()
@@ -2861,9 +2862,6 @@ class IDLSequenceType(IDLParametrizedType):
     def prettyName(self):
         return "sequence<%s>" % self.inner.prettyName()
 
-    def isUndefined(self):
-        return False
-
     def isSequence(self):
         return True
 
@@ -2891,7 +2889,8 @@ class IDLSequenceType(IDLParametrizedType):
             # Just forward to the union; it'll deal
             return other.isDistinguishableFrom(self)
         return (
-            other.isPrimitive()
+            other.isUndefined()
+            or other.isPrimitive()
             or other.isString()
             or other.isEnum()
             or other.isInterface()
@@ -2988,9 +2987,6 @@ class IDLObservableArrayType(IDLParametrizedType):
     def prettyName(self):
         return "ObservableArray<%s>" % self.inner.prettyName()
 
-    def isUndefined(self):
-        return False
-
     def isJSONType(self):
         return self.inner.isJSONType()
 
@@ -3058,9 +3054,6 @@ class IDLUnionType(IDLType):
 
     def prettyName(self):
         return "(" + " or ".join(m.prettyName() for m in self.memberTypes) + ")"
-
-    def isUndefined(self):
-        return False
 
     def isUnion(self):
         return True
@@ -3343,9 +3336,6 @@ class IDLWrapperType(IDLType):
     def __str__(self):
         return str(self.name) + " (Wrapper)"
 
-    def isUndefined(self):
-        return False
-
     def isDictionary(self):
         return isinstance(self.inner, IDLDictionary)
 
@@ -3415,7 +3405,8 @@ class IDLWrapperType(IDLType):
         assert self.isInterface() or self.isEnum() or self.isDictionary()
         if self.isEnum():
             return (
-                other.isPrimitive()
+                other.isUndefined()
+                or other.isPrimitive()
                 or other.isInterface()
                 or other.isObject()
                 or other.isCallback()
@@ -3423,7 +3414,7 @@ class IDLWrapperType(IDLType):
                 or other.isSequence()
                 or other.isRecord()
             )
-        if self.isDictionary() and other.nullable():
+        if self.isDictionary() and (other.nullable() or other.isUndefined()):
             return False
         if (
             other.isPrimitive()
@@ -3447,7 +3438,12 @@ class IDLWrapperType(IDLType):
                 self.inner.interfacesBasedOnSelf
                 & other.unroll().inner.interfacesBasedOnSelf
             ) == 0 and (self.isNonCallbackInterface() or other.isNonCallbackInterface())
-        if other.isDictionary() or other.isCallback() or other.isRecord():
+        if (
+            other.isUndefined()
+            or other.isDictionary()
+            or other.isCallback()
+            or other.isRecord()
+        ):
             return self.isNonCallbackInterface()
 
         # Not much else |other| can be
@@ -3564,13 +3560,13 @@ class IDLBuiltinType(IDLType):
         "double",
         # Other types
         "any",
+        "undefined",
         "domstring",
         "bytestring",
         "usvstring",
         "utf8string",
         "jsstring",
         "object",
-        "undefined",
         # Funny stuff
         "ArrayBuffer",
         "ArrayBufferView",
@@ -3600,13 +3596,13 @@ class IDLBuiltinType(IDLType):
         Types.unrestricted_double: IDLType.Tags.unrestricted_double,
         Types.double: IDLType.Tags.double,
         Types.any: IDLType.Tags.any,
+        Types.undefined: IDLType.Tags.undefined,
         Types.domstring: IDLType.Tags.domstring,
         Types.bytestring: IDLType.Tags.bytestring,
         Types.usvstring: IDLType.Tags.usvstring,
         Types.utf8string: IDLType.Tags.utf8string,
         Types.jsstring: IDLType.Tags.jsstring,
         Types.object: IDLType.Tags.object,
-        Types.undefined: IDLType.Tags.undefined,
         Types.ArrayBuffer: IDLType.Tags.interface,
         Types.ArrayBufferView: IDLType.Tags.interface,
         Types.Int8Array: IDLType.Tags.interface,
@@ -3635,13 +3631,13 @@ class IDLBuiltinType(IDLType):
         Types.unrestricted_double: "unrestricted double",
         Types.double: "double",
         Types.any: "any",
+        Types.undefined: "undefined",
         Types.domstring: "DOMString",
         Types.bytestring: "ByteString",
         Types.usvstring: "USVString",
         Types.utf8string: "USVString",  # That's what it is in spec terms
         Types.jsstring: "USVString",  # Again, that's what it is in spec terms
         Types.object: "object",
-        Types.undefined: "undefined",
         Types.ArrayBuffer: "ArrayBuffer",
         Types.ArrayBufferView: "ArrayBufferView",
         Types.Int8Array: "Int8Array",
@@ -3771,6 +3767,9 @@ class IDLBuiltinType(IDLType):
     def isBoolean(self):
         return self._typeTag == IDLBuiltinType.Types.boolean
 
+    def isUndefined(self):
+        return self._typeTag == IDLBuiltinType.Types.undefined
+
     def isNumeric(self):
         return self.isPrimitive() and not self.isBoolean()
 
@@ -3853,9 +3852,11 @@ class IDLBuiltinType(IDLType):
         if other.isUnion():
             # Just forward to the union; it'll deal
             return other.isDistinguishableFrom(self)
-        if self.isBoolean():
-            return (
-                other.isNumeric()
+        if self.isUndefined():
+            return not (other.isUndefined() or other.isDictionaryLike())
+        if self.isPrimitive():
+            if (
+                other.isUndefined()
                 or other.isString()
                 or other.isEnum()
                 or other.isInterface()
@@ -3864,22 +3865,16 @@ class IDLBuiltinType(IDLType):
                 or other.isDictionary()
                 or other.isSequence()
                 or other.isRecord()
-            )
-        if self.isNumeric():
-            return (
-                other.isBoolean()
-                or other.isString()
-                or other.isEnum()
-                or other.isInterface()
-                or other.isObject()
-                or other.isCallback()
-                or other.isDictionary()
-                or other.isSequence()
-                or other.isRecord()
-            )
+            ):
+                return True
+            if self.isBoolean():
+                return other.isNumeric()
+            assert self.isNumeric()
+            return other.isBoolean()
         if self.isString():
             return (
-                other.isPrimitive()
+                other.isUndefined()
+                or other.isPrimitive()
                 or other.isInterface()
                 or other.isObject()
                 or other.isCallback()
@@ -3891,14 +3886,18 @@ class IDLBuiltinType(IDLType):
             # Can't tell "any" apart from anything
             return False
         if self.isObject():
-            return other.isPrimitive() or other.isString() or other.isEnum()
-        if self.isUndefined():
-            return not other.isUndefined()
+            return (
+                other.isUndefined()
+                or other.isPrimitive()
+                or other.isString()
+                or other.isEnum()
+            )
         # Not much else we could be!
         assert self.isSpiderMonkeyInterface()
         # Like interfaces, but we know we're not a callback
         return (
-            other.isPrimitive()
+            other.isUndefined()
+            or other.isPrimitive()
             or other.isString()
             or other.isEnum()
             or other.isCallback()
@@ -4027,6 +4026,9 @@ BuiltinTypes = {
         "UnsignedLongLong",
         IDLBuiltinType.Types.unsigned_long_long,
     ),
+    IDLBuiltinType.Types.undefined: IDLBuiltinType(
+        BuiltinLocation("<builtin type>"), "Undefined", IDLBuiltinType.Types.undefined
+    ),
     IDLBuiltinType.Types.boolean: IDLBuiltinType(
         BuiltinLocation("<builtin type>"), "Boolean", IDLBuiltinType.Types.boolean
     ),
@@ -4066,9 +4068,6 @@ BuiltinTypes = {
     ),
     IDLBuiltinType.Types.object: IDLBuiltinType(
         BuiltinLocation("<builtin type>"), "Object", IDLBuiltinType.Types.object
-    ),
-    IDLBuiltinType.Types.undefined: IDLBuiltinType(
-        BuiltinLocation("<builtin type>"), "Undefined", IDLBuiltinType.Types.undefined
     ),
     IDLBuiltinType.Types.ArrayBuffer: IDLBuiltinType(
         BuiltinLocation("<builtin type>"),
@@ -5983,7 +5982,8 @@ class IDLCallbackType(IDLType):
             # Just forward to the union; it'll deal
             return other.isDistinguishableFrom(self)
         return (
-            other.isPrimitive()
+            other.isUndefined()
+            or other.isPrimitive()
             or other.isString()
             or other.isEnum()
             or other.isNonCallbackInterface()
@@ -7576,6 +7576,12 @@ class Parser(Tokenizer):
         """
         p[0] = IDLNullValue(self.getLocation(p, 1))
 
+    def p_DefaultValueUndefined(self, p):
+        """
+        DefaultValue : UNDEFINED
+        """
+        p[0] = IDLUndefinedValue(self.getLocation(p, 1))
+
     def p_Exception(self, p):
         """
         Exception : EXCEPTION IDENTIFIER Inheritance LBRACE ExceptionMembers RBRACE SEMICOLON
@@ -8468,11 +8474,14 @@ class Parser(Tokenizer):
         DistinguishableType : PrimitiveType Null
                             | ARRAYBUFFER Null
                             | OBJECT Null
+                            | UNDEFINED Null
         """
         if p[1] == "object":
             type = BuiltinTypes[IDLBuiltinType.Types.object]
         elif p[1] == "ArrayBuffer":
             type = BuiltinTypes[IDLBuiltinType.Types.ArrayBuffer]
+        elif p[1] == "undefined":
+            type = BuiltinTypes[IDLBuiltinType.Types.undefined]
         else:
             type = BuiltinTypes[p[1]]
 
@@ -8562,12 +8571,6 @@ class Parser(Tokenizer):
         PrimitiveType : UnsignedIntegerType
         """
         p[0] = p[1]
-
-    def p_PrimitiveTypeUndefined(self, p):
-        """
-        PrimitiveType : UNDEFINED
-        """
-        p[0] = IDLBuiltinType.Types.undefined
 
     def p_PrimitiveTypeBoolean(self, p):
         """

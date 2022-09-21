@@ -832,6 +832,13 @@ class TestInterface : public nsISupports, public nsWrapperCache {
   void ReceiveUnionContainingNull(OwningCanvasPatternOrNullOrCanvasGradient&);
   void ReceiveNullableUnion(Nullable<OwningCanvasPatternOrCanvasGradient>&);
   void ReceiveNullableUnion2(JSContext*, Nullable<OwningObjectOrLong>&);
+  void ReceiveUnionWithUndefined(OwningUndefinedOrCanvasPattern&);
+  void ReceiveUnionWithNullableUndefined(OwningUndefinedOrNullOrCanvasPattern&);
+  void ReceiveUnionWithUndefinedAndNullable(
+      OwningUndefinedOrCanvasPatternOrNull&);
+  void ReceiveNullableUnionWithUndefined(
+      Nullable<OwningUndefinedOrCanvasPattern>&);
+
   void GetWritableUnion(OwningCanvasPatternOrCanvasGradient&);
   void SetWritableUnion(const CanvasPatternOrCanvasGradient&);
   void GetWritableUnionContainingNull(
@@ -840,6 +847,20 @@ class TestInterface : public nsISupports, public nsWrapperCache {
       const CanvasPatternOrNullOrCanvasGradient&);
   void GetWritableNullableUnion(Nullable<OwningCanvasPatternOrCanvasGradient>&);
   void SetWritableNullableUnion(const Nullable<CanvasPatternOrCanvasGradient>&);
+  void GetWritableUnionWithUndefined(OwningUndefinedOrCanvasPattern&);
+  void SetWritableUnionWithUndefined(const UndefinedOrCanvasPattern&);
+  void GetWritableUnionWithNullableUndefined(
+      OwningUndefinedOrNullOrCanvasPattern&);
+  void SetWritableUnionWithNullableUndefined(
+      const UndefinedOrNullOrCanvasPattern&);
+  void GetWritableUnionWithUndefinedAndNullable(
+      OwningUndefinedOrCanvasPatternOrNull&);
+  void SetWritableUnionWithUndefinedAndNullable(
+      const UndefinedOrCanvasPatternOrNull&);
+  void GetWritableNullableUnionWithUndefined(
+      Nullable<OwningUndefinedOrCanvasPattern>&);
+  void SetWritableNullableUnionWithUndefined(
+      const Nullable<UndefinedOrCanvasPattern>&);
 
   // Promise types
   void PassPromise(Promise&);

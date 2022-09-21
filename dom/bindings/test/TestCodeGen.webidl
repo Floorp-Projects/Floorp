@@ -779,10 +779,18 @@ interface TestInterface {
   (CanvasPattern? or CanvasGradient) receiveUnionContainingNull();
   (CanvasPattern or CanvasGradient)? receiveNullableUnion();
   (object or long)? receiveNullableUnion2();
+  (undefined or CanvasPattern) receiveUnionWithUndefined();
+  (undefined? or CanvasPattern) receiveUnionWithNullableUndefined();
+  (undefined or CanvasPattern?) receiveUnionWithUndefinedAndNullable();
+  (undefined or CanvasPattern)? receiveNullableUnionWithUndefined();
 
   attribute (CanvasPattern or CanvasGradient) writableUnion;
   attribute (CanvasPattern? or CanvasGradient) writableUnionContainingNull;
   attribute (CanvasPattern or CanvasGradient)? writableNullableUnion;
+  attribute (undefined or CanvasPattern) writableUnionWithUndefined;
+  attribute (undefined? or CanvasPattern) writableUnionWithNullableUndefined;
+  attribute (undefined or CanvasPattern?) writableUnionWithUndefinedAndNullable;
+  attribute (undefined or CanvasPattern)? writableNullableUnionWithUndefined;
 
   // Promise types
   undefined passPromise(Promise<any> arg);

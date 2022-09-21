@@ -99,7 +99,8 @@ def isTypeCopyConstructible(type):
     # Nullable and sequence stuff doesn't affect copy-constructibility
     type = type.unroll()
     return (
-        type.isPrimitive()
+        type.isUndefined()
+        or type.isPrimitive()
         or type.isString()
         or type.isEnum()
         or (type.isUnion() and CGUnionStruct.isUnionCopyConstructible(type))
@@ -124,6 +125,7 @@ def idlTypeNeedsCycleCollection(type):
     type = type.unroll()  # Takes care of sequences and nullables
     if (
         (type.isPrimitive() and type.tag() in builtinNames)
+        or type.isUndefined()
         or type.isEnum()
         or type.isString()
         or type.isAny()
@@ -184,6 +186,11 @@ def idlTypeNeedsCallContext(type, descriptor=None, allowTreatNonCallableAsNull=F
         else:
             break
 
+    if type.isUndefined():
+        # Clearly doesn't need a method description; we can only get here from
+        # CGHeaders trying to decide whether to include the method description
+        # header.
+        return False
     # The float check needs to come before the isPrimitive() check,
     # because floats are primitives too.
     if type.isFloat():
@@ -226,11 +233,6 @@ def idlTypeNeedsCallContext(type, descriptor=None, allowTreatNonCallableAsNull=F
     if type.isUnion():
         # Can throw if a type not in the union is passed in.
         return True
-    if type.isUndefined():
-        # Clearly doesn't need a method description; we can only get here from
-        # CGHeaders trying to decide whether to include the method description
-        # header.
-        return False
     raise TypeError("Don't know whether type '%s' needs a method description" % type)
 
 
@@ -6443,10 +6445,33 @@ def getJSToNativeConversionInfo(
         if nullable:
             typeName = "Nullable<" + typeName + " >"
 
-        def handleNull(templateBody, setToNullVar, extraConditionForNull=""):
-            nullTest = "%s${val}.isNullOrUndefined()" % extraConditionForNull
-            return CGIfElseWrapper(
-                nullTest, CGGeneric("%s.SetNull();\n" % setToNullVar), templateBody
+        hasUndefinedType = any(t.isUndefined() for t in memberTypes)
+        assert not hasUndefinedType or defaultValue is None
+
+        def handleNull(setToNullVar, extraConditionForNull):
+            if hasUndefinedType:
+                nullTest = "${val}.isNull()"
+            else:
+                nullTest = "${val}.isNullOrUndefined()"
+            return (
+                extraConditionForNull + nullTest,
+                CGGeneric("%s.SetNull();\n" % setToNullVar),
+            )
+
+        elseChain = []
+
+        # The spec does this before anything else, but we do it after checking
+        # for null in the case of a nullable union. In practice this shouldn't
+        # make a difference, but it makes things easier because we first need to
+        # call Construct on our Maybe<...>, before we can set the union type to
+        # undefined, and we do that below after checking for null (see the
+        # 'if nullable:' block below).
+        if hasUndefinedType:
+            elseChain.append(
+                CGIfWrapper(
+                    CGGeneric("%s.SetUndefined();\n" % unionArgumentObj),
+                    "${val}.isUndefined()",
+                )
             )
 
         if type.hasNullableType:
@@ -6457,11 +6482,12 @@ def getJSToNativeConversionInfo(
                 extraConditionForNull = "!(${haveValue}) || "
             else:
                 extraConditionForNull = ""
-            templateBody = handleNull(
-                templateBody,
-                unionArgumentObj,
-                extraConditionForNull=extraConditionForNull,
-            )
+            nullTest, setToNull = handleNull(unionArgumentObj, extraConditionForNull)
+            elseChain.append(CGIfWrapper(setToNull, nullTest))
+
+        if len(elseChain) > 0:
+            elseChain.append(templateBody)
+            templateBody = CGElseChain(elseChain)
 
         declType = CGGeneric(typeName)
         if isOwningUnion:
@@ -6556,9 +6582,8 @@ def getJSToNativeConversionInfo(
                     extraConditionForNull = "(${haveValue}) && "
             else:
                 extraConditionForNull = ""
-            templateBody = handleNull(
-                templateBody, declLoc, extraConditionForNull=extraConditionForNull
-            )
+            nullTest, setToNull = handleNull(declLoc, extraConditionForNull)
+            templateBody = CGIfElseWrapper(nullTest, setToNull, templateBody)
         elif (
             not type.hasNullableType
             and defaultValue
@@ -9131,7 +9156,8 @@ def wrapTypeIntoCurrentCompartment(type, value, isMember=True):
         return CGList(memberWraps, "else ") if len(memberWraps) != 0 else None
 
     if (
-        type.isString()
+        type.isUndefined()
+        or type.isString()
         or type.isPrimitive()
         or type.isEnum()
         or type.isGeckoInterface()
@@ -12460,6 +12486,8 @@ def getUnionAccessorSignatureType(type, descriptorProvider):
 
 
 def getUnionTypeTemplateVars(unionType, type, descriptorProvider, ownsMembers=False):
+    assert not type.isUndefined()
+
     name = getUnionMemberName(type)
     holderName = "m" + name + "Holder"
 
@@ -12693,52 +12721,88 @@ class CGUnionStruct(CGThing):
         moveCases = [assignmentCase]
         traceCases = []
         unionValues = []
-        if self.type.hasNullableType:
-            enumValues.append("eNull")
+
+        def addSpecialType(typename):
+            enumValue = "e" + typename
+            enumValues.append(enumValue)
             methods.append(
                 ClassMethod(
-                    "IsNull",
+                    "Is" + typename,
                     "bool",
                     [],
                     const=True,
                     inline=True,
-                    body="return mType == eNull;\n",
+                    body="return mType == %s;\n" % enumValue,
                     bodyInHeader=True,
                 )
             )
             methods.append(
                 ClassMethod(
-                    "SetNull",
+                    "Set" + typename,
                     "void",
                     [],
                     inline=True,
-                    body=("Uninit();\n" "mType = eNull;\n"),
+                    body=fill(
+                        """
+                        Uninit();
+                        mType = ${enumValue};
+                        """,
+                        enumValue=enumValue,
+                    ),
                     bodyInHeader=True,
                 )
             )
-            destructorCases.append(CGCase("eNull", None))
+            destructorCases.append(CGCase(enumValue, None))
             assignmentCase = CGCase(
-                "eNull",
-                CGGeneric("MOZ_ASSERT(mType == eUninitialized);\n" "mType = eNull;\n"),
+                enumValue,
+                CGGeneric(
+                    fill(
+                        """
+                            MOZ_ASSERT(mType == eUninitialized);
+                            mType = ${enumValue};
+                            """,
+                        enumValue=enumValue,
+                    )
+                ),
             )
             assignmentCases.append(assignmentCase)
             moveCases.append(assignmentCase)
             toJSValCases.append(
                 CGCase(
-                    "eNull",
+                    enumValue,
                     CGGeneric(
-                        "rval.setNull();\n" "return true;\n", CGCase.DONT_ADD_BREAK
+                        fill(
+                            """
+                            rval.set${typename}();
+                            return true;
+                            """,
+                            typename=typename,
+                        )
                     ),
+                    CGCase.DONT_ADD_BREAK,
                 )
             )
+
+        if self.type.hasNullableType:
+            addSpecialType("Null")
 
         hasObjectType = any(t.isObject() for t in self.type.flatMemberTypes)
         skipToJSVal = False
         for t in self.type.flatMemberTypes:
+            if t.isUndefined():
+                addSpecialType("Undefined")
+                continue
+
             vars = getUnionTypeTemplateVars(
                 self.type, t, self.descriptorProvider, ownsMembers=self.ownsMembers
             )
-            if vars["name"] != "Object" or self.ownsMembers:
+            uninit = "Uninit();"
+            if hasObjectType and not self.ownsMembers:
+                uninit = (
+                    'MOZ_ASSERT(mType != eObject, "This will not play well with Rooted");\n'
+                    + uninit
+                )
+            if not t.isObject() or self.ownsMembers:
                 body = fill(
                     """
                     if (mType == e${name}) {
@@ -12763,12 +12827,6 @@ class CGUnionStruct(CGThing):
                         body=body % "MOZ_ASSERT(mType == eUninitialized);",
                     )
                 )
-                uninit = "Uninit();"
-                if hasObjectType and not self.ownsMembers:
-                    uninit = (
-                        'MOZ_ASSERT(mType != eObject, "This will not play well with Rooted");\n'
-                        + uninit
-                    )
                 methods.append(
                     ClassMethod(
                         "SetAs" + vars["name"],
@@ -12803,6 +12861,18 @@ class CGUnionStruct(CGThing):
                             )
                         )
 
+            body = fill("return mType == e${name};\n", **vars)
+            methods.append(
+                ClassMethod(
+                    "Is" + vars["name"],
+                    "bool",
+                    [],
+                    const=True,
+                    bodyInHeader=True,
+                    body=body,
+                )
+            )
+
             body = fill(
                 """
                 MOZ_RELEASE_ASSERT(Is${name}(), "Wrong type!");
@@ -12818,18 +12888,6 @@ class CGUnionStruct(CGThing):
                     [],
                     visibility="private",
                     bodyInHeader=not self.ownsMembers,
-                    body=body,
-                )
-            )
-
-            body = fill("return mType == e${name};\n", **vars)
-            methods.append(
-                ClassMethod(
-                    "Is" + vars["name"],
-                    "bool",
-                    [],
-                    const=True,
-                    bodyInHeader=True,
                     body=body,
                 )
             )
@@ -12871,6 +12929,10 @@ class CGUnionStruct(CGThing):
             )
 
             unionValues.append(fill("UnionMember<${structType} > m${name}", **vars))
+            destructorCases.append(
+                CGCase("e" + vars["name"], CGGeneric("Destroy%s();\n" % vars["name"]))
+            )
+
             enumValues.append("e" + vars["name"])
 
             conversionToJS = self.getConversionToJS(vars, t)
@@ -12881,9 +12943,6 @@ class CGUnionStruct(CGThing):
             else:
                 skipToJSVal = True
 
-            destructorCases.append(
-                CGCase("e" + vars["name"], CGGeneric("Destroy%s();\n" % vars["name"]))
-            )
             assignmentCases.append(
                 CGCase(
                     "e" + vars["name"],
@@ -13148,23 +13207,33 @@ class CGUnionConversionStruct(CGThing):
         )
         methods = []
 
-        if self.type.hasNullableType:
+        def addSpecialType(typename):
             methods.append(
                 ClassMethod(
-                    "SetNull",
+                    "Set" + typename,
                     "bool",
                     [],
-                    body=(
-                        "MOZ_ASSERT(mUnion.mType == mUnion.eUninitialized);\n"
-                        "mUnion.mType = mUnion.eNull;\n"
-                        "return true;\n"
+                    body=fill(
+                        """
+                        MOZ_ASSERT(mUnion.mType == mUnion.eUninitialized);
+                        mUnion.mType = mUnion.${enumValue};
+                        return true;
+                        """,
+                        enumValue="e" + typename,
                     ),
                     inline=True,
                     bodyInHeader=True,
                 )
             )
 
+        if self.type.hasNullableType:
+            addSpecialType("Null")
+
         for t in self.type.flatMemberTypes:
+            if t.isUndefined():
+                addSpecialType("Undefined")
+                continue
+
             vars = getUnionTypeTemplateVars(self.type, t, self.descriptorProvider)
             if vars["setters"]:
                 methods.extend(vars["setters"])
@@ -17712,7 +17781,7 @@ class CGDictionary(CGThing):
             # OK if the dictionary is OK
             return CGDictionary.dictionarySafeToJSONify(type.inner)
 
-        if type.isString() or type.isEnum():
+        if type.isUndefined() or type.isString() or type.isEnum():
             # Strings are always OK.
             return True
 
