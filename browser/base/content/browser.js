@@ -2171,26 +2171,6 @@ var gBrowserInit = {
         return;
       }
 
-      // For custom new window URLs that are not empty, we need to wait for the
-      // page to load before we select the URL bar. So we listen for the "SetURI"
-      // event called in onLocationChange, then select the URL bar.
-      if (!isBlankPageURL(uriToLoad) && HomePage.get(window) == uriToLoad) {
-        gURLBar.inputField.addEventListener(
-          "SetURI",
-          () => {
-            if (
-              initiallyFocusedElement ==
-              document.commandDispatcher.focusedElement
-            ) {
-              gURLBar.select();
-            }
-          },
-          { once: true }
-        );
-        shouldRemoveFocusedAttribute = false;
-        return;
-      }
-
       if (gBrowser.selectedBrowser.isRemoteBrowser) {
         // If the initial browser is remote, in order to optimize for first paint,
         // we'll defer switching focus to that browser until it has painted.
