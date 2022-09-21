@@ -93,11 +93,17 @@ async function setTreeStyleTabURL() {
 
 function setSidebarMode() {
   if (Services.prefs.getBoolPref("floorp.browser.sidebar.enable", false)) {
-    const pref = Services.prefs.getIntPref("floorp.browser.sidebar2.mode", undefined)
+    const modeValuePref = Services.prefs.getIntPref("floorp.browser.sidebar2.mode", undefined);
     const sidebar2elem = document.getElementById("sidebar2");
     const webpanel = document.getElementById("webpanel");
-    switch (pref) {
-      default:
+    const panelWidth = Services.prefs.getIntPref("floorp.browser.sidebar2.width.mode"+ modeValuePref, undefined); 
+  
+    if(panelWidth !== "" || panelWidth !== undefined || panelWidth !== null){
+      document.getElementById("sidebar2-box").setAttribute("width", panelWidth);
+    }
+  
+    switch (modeValuePref) {
+      case -1:
         sidebar2elem.setAttribute("src", "chrome://browser/content/places/places.xhtml");
         changeBrowserManagerSidebarConfigShowBrowserManagers();
         break;
@@ -311,19 +317,19 @@ function setCustomURL20Favicon() {
     "url(" + "http://www.google.com/s2/favicons?domain=" + Services.prefs.getStringPref("floorp.browser.sidebar2.customurl20") + ")"
 }
 function backSidebarSite() {
-  document.getElementById("sidebar2").goBack();  //戻る
+  document.getElementById("webpanel").goBack();  //戻る
 }
 function forwardSidebarSite() {
-  document.getElementById("sidebar2").goForward();  //進む
+  document.getElementById("webpanel").goForward();  //進む
 }
 function reloadSidebarSite() {
-  document.getElementById("sidebar2").reloadWithFlags(Ci.nsIWebNavigation.LOAD_FLAGS_BYPASS_CACHE);  //リロード
+  document.getElementById("webpanel").reloadWithFlags(Ci.nsIWebNavigation.LOAD_FLAGS_BYPASS_CACHE);  //リロード
 }
 function muteSidebarSite() {
-  document.getElementById("sidebar2").mute();  //ミュート
+  document.getElementById("webpanel").mute();  //ミュート
 }
 function unmuteSidebarSite() {
-  document.getElementById("sidebar2").unmute();  //ミュート解除
+  document.getElementById("webpanel").unmute();  //ミュート解除
 }
 
 function setBrowserManagerSidebarMode() {
@@ -435,6 +441,11 @@ function setSidebarIconView() {
   for (let sbar_id = 1; sbar_id < 21; sbar_id++) {
     document.getElementById("select-CustomURL" + sbar_id).hidden = (Services.prefs.getStringPref("floorp.browser.sidebar2.customurl" + sbar_id, undefined) != "") ? false : true;
   }
+}
+
+function keepSidebar2boxWidth() {
+  const pref = Services.prefs.getIntPref("floorp.browser.sidebar2.mode");
+  Services.prefs.setIntPref("floorp.browser.sidebar2.width.mode" + pref, document.getElementById("sidebar2-box").width);
 }
 
 /*---------------------------------------------------------------- design ----------------------------------------------------------------*/
@@ -606,7 +617,7 @@ function changeBrowserManagerSidebarConfigShowWebpanels() {
 function changeBrowserManagerSidebarConfigShowBrowserManagers() {
   try{document.getElementById("sidebar2style").remove();}catch(e){}
   var Tag = document.createElement("style");
-  Tag.innerText = `#webpanel{max-height:0 !important;}`
+  Tag.innerText = `#webpanel{max-height:0 !important;}#sidebar2-reload,#sidebar2-forward,#sidebar2-back{display:none !important;}`
   document.getElementsByTagName("head")[0].insertAdjacentElement('beforeend', Tag);
   Tag.setAttribute("id", "sidebar2style");
 }

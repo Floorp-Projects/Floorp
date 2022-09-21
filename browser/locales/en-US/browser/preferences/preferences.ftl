@@ -1617,22 +1617,12 @@ view-sidebar2-right =
 enable-sidebar2 =
  .label = Enable the Browser Manager Sidebar
 
-sidebar-mode = Choose the Sidebar Mode
+sidebar2-restore =
+ .label = Restore the Sidebar mode when { -brand-short-name } is restarted or load new window
 
-AllInOne-mode =
- .label = Browser Manager Mode
-bookmark-mode =
-  .label = Bookmark Mode
-history-mode =
- .label = History Mode
-downloads-mode =
- .label = Download Mode
-treestyletab-mode =
- .label = Tree Style Tab Mode
-
-custom-URL-option = Set Custom URL
+custom-URL-option = Set Webpanel URLs
 set-custom-URL-button = 
-    .label = Set Custom URL...
+    .label = Set Custom URLs...
     .accesskey = S
 
 disable-bg-newtab =

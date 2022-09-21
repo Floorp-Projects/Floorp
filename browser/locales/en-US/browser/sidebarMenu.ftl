@@ -58,3 +58,6 @@ sidebar-passwords-button =
 
 sidebar-preferences-button =
   .tooltiptext = Open Preferences
+
+sidebar-keepWidth-button =
+  .tooltiptext = Keep This Panel Width

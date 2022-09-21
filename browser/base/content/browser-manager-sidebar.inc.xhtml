@@ -3,12 +3,13 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
     <vbox id="sidebar2-box" class="browser-sidebar2 chromeclass-extrachrome" >
-      <box id="sidebar2-header" style="min-width: 0em; min-height: 2.5em" align="center">
+      <box id="sidebar2-header" style="min-width: 15em; min-height: 2.5em" align="center">
         <toolbarbutton id="sidebar2-back" class="sidebar2-icon" style="margin-left: 0.5em;" data-l10n-id="sidebar-back-button"  oncommand="backSidebarSite();"/>
         <toolbarbutton id="sidebar2-forward" class="sidebar2-icon" style="margin-left: 1em;" data-l10n-id="sidebar-forward-button"  oncommand="forwardSidebarSite();"/>
         <toolbarbutton id="sidebar2-reload" class="sidebar2-icon" style="margin-left: 1em;" data-l10n-id="sidebar-reload-button"  oncommand="reloadSidebarSite();"/>
         <spacer flex="1000"/>
         <toolbarbutton id="sidebar2-mute" class="sidebar2-icon" mute="false" style="margin-right: 0.5em;" data-l10n-id="sidebar-muteAndUnmute-button"  oncommand="changeMuteStatus();"/>
+        <toolbarbutton id="sidebar2-keeppanelwidth" class="sidebar2-icon" style="margin-right: 0.5em;" data-l10n-id="sidebar-keepWidth-button"  oncommand="keepSidebar2boxWidth();"/>
         <toolbarbutton id="sidebar2-close" class="sidebar2-icon" style="margin-right: 0.5em;" data-l10n-id="sidebar-close-button"  oncommand="changeSidebarVisibility();"/>
         </box>
         <browser id="sidebar2"  flex="1" autoscroll="false" disablehistory="true" disablefullscreen="true"

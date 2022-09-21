@@ -35,6 +35,7 @@ browser.jar:
         content/browser/aboutTabCrashed.js            (content/aboutTabCrashed.js)
         content/browser/aboutTabCrashed.xhtml         (content/aboutTabCrashed.xhtml)
         content/browser/browser-UI-custom.js          (content/browser-UI-custom.js)
+        content/browser/browser-manager-sidebar.js    (content/browser-manager-sidebar.js)
         content/browser/browser-design.js             (content/browser-design.js)
         content/browser/browser-startup.js            (content/browser-startup.js)
         content/browser/browser-tabbar.js             (content/browser-tabbar.js)
