@@ -431,7 +431,7 @@ internal class GeckoPromptDelegate(private val geckoEngineSession: GeckoEngineSe
             onClear,
             format,
             onConfirm,
-            onDismiss
+            onDismiss,
         )
 
         return geckoResult
@@ -439,7 +439,7 @@ internal class GeckoPromptDelegate(private val geckoEngineSession: GeckoEngineSe
 
     override fun onAuthPrompt(
         session: GeckoSession,
-        geckoPrompt: PromptDelegate.AuthPrompt
+        geckoPrompt: PromptDelegate.AuthPrompt,
     ): GeckoResult<PromptResponse>? {
         val geckoResult = GeckoResult<PromptResponse>()
         val title = geckoPrompt.title ?: ""
@@ -482,8 +482,8 @@ internal class GeckoPromptDelegate(private val geckoEngineSession: GeckoEngineSe
                     previousFailed,
                     isCrossOrigin,
                     onConfirm,
-                    onDismiss
-                )
+                    onDismiss,
+                ),
             )
         }
         return geckoResult
@@ -491,7 +491,7 @@ internal class GeckoPromptDelegate(private val geckoEngineSession: GeckoEngineSe
 
     override fun onTextPrompt(
         session: GeckoSession,
-        prompt: PromptDelegate.TextPrompt
+        prompt: PromptDelegate.TextPrompt,
     ): GeckoResult<PromptResponse>? {
         val geckoResult = GeckoResult<PromptResponse>()
         val title = prompt.title ?: ""
@@ -512,8 +512,8 @@ internal class GeckoPromptDelegate(private val geckoEngineSession: GeckoEngineSe
                     inputValue,
                     false,
                     onConfirm,
-                    onDismiss
-                )
+                    onDismiss,
+                ),
             )
         }
 
@@ -522,7 +522,7 @@ internal class GeckoPromptDelegate(private val geckoEngineSession: GeckoEngineSe
 
     override fun onColorPrompt(
         session: GeckoSession,
-        prompt: PromptDelegate.ColorPrompt
+        prompt: PromptDelegate.ColorPrompt,
     ): GeckoResult<PromptResponse>? {
         val geckoResult = GeckoResult<PromptResponse>()
         val onConfirm: (String) -> Unit = {
@@ -536,7 +536,7 @@ internal class GeckoPromptDelegate(private val geckoEngineSession: GeckoEngineSe
 
         geckoEngineSession.notifyObservers {
             onPromptRequest(
-                PromptRequest.Color(defaultColor, onConfirm, onDismiss)
+                PromptRequest.Color(defaultColor, onConfirm, onDismiss),
             )
         }
         return geckoResult
@@ -544,7 +544,7 @@ internal class GeckoPromptDelegate(private val geckoEngineSession: GeckoEngineSe
 
     override fun onPopupPrompt(
         session: GeckoSession,
-        prompt: PromptDelegate.PopupPrompt
+        prompt: PromptDelegate.PopupPrompt,
     ): GeckoResult<PromptResponse> {
         val geckoResult = GeckoResult<PromptResponse>()
         val onAllow: () -> Unit = {
@@ -560,7 +560,7 @@ internal class GeckoPromptDelegate(private val geckoEngineSession: GeckoEngineSe
 
         geckoEngineSession.notifyObservers {
             onPromptRequest(
-                PromptRequest.Popup(prompt.targetUri ?: "", onAllow, onDeny)
+                PromptRequest.Popup(prompt.targetUri ?: "", onAllow, onDeny),
             )
         }
         return geckoResult
@@ -568,7 +568,7 @@ internal class GeckoPromptDelegate(private val geckoEngineSession: GeckoEngineSe
 
     override fun onBeforeUnloadPrompt(
         session: GeckoSession,
-        geckoPrompt: BeforeUnloadPrompt
+        geckoPrompt: BeforeUnloadPrompt,
     ): GeckoResult<PromptResponse>? {
         val geckoResult = GeckoResult<PromptResponse>()
         val title = geckoPrompt.title ?: ""
@@ -593,7 +593,7 @@ internal class GeckoPromptDelegate(private val geckoEngineSession: GeckoEngineSe
 
     override fun onSharePrompt(
         session: GeckoSession,
-        prompt: PromptDelegate.SharePrompt
+        prompt: PromptDelegate.SharePrompt,
     ): GeckoResult<PromptResponse> {
         val geckoResult = GeckoResult<PromptResponse>()
         val onSuccess = {
@@ -614,12 +614,12 @@ internal class GeckoPromptDelegate(private val geckoEngineSession: GeckoEngineSe
                     ShareData(
                         title = prompt.title,
                         text = prompt.text,
-                        url = prompt.uri
+                        url = prompt.uri,
                     ),
                     onSuccess,
                     onFailure,
-                    onDismiss
-                )
+                    onDismiss,
+                ),
             )
         }
         return geckoResult
@@ -627,7 +627,7 @@ internal class GeckoPromptDelegate(private val geckoEngineSession: GeckoEngineSe
 
     override fun onButtonPrompt(
         session: GeckoSession,
-        prompt: PromptDelegate.ButtonPrompt
+        prompt: PromptDelegate.ButtonPrompt,
     ): GeckoResult<PromptResponse>? {
         val geckoResult = GeckoResult<PromptResponse>()
         val title = prompt.title ?: ""
@@ -657,10 +657,10 @@ internal class GeckoPromptDelegate(private val geckoEngineSession: GeckoEngineSe
                     "",
                     onConfirmPositiveButton,
                     onConfirmNegativeButton,
-                    onDismiss
+                    onDismiss,
                 ) {
                     onDismiss(false)
-                }
+                },
             )
         }
         return geckoResult
@@ -668,7 +668,7 @@ internal class GeckoPromptDelegate(private val geckoEngineSession: GeckoEngineSe
 
     override fun onRepostConfirmPrompt(
         session: GeckoSession,
-        prompt: PromptDelegate.RepostConfirmPrompt
+        prompt: PromptDelegate.RepostConfirmPrompt,
     ): GeckoResult<PromptResponse>? {
         val geckoResult = GeckoResult<PromptResponse>()
 
@@ -688,8 +688,8 @@ internal class GeckoPromptDelegate(private val geckoEngineSession: GeckoEngineSe
             onPromptRequest(
                 PromptRequest.Repost(
                     onConfirm,
-                    onCancel
-                )
+                    onCancel,
+                ),
             )
         }
         return geckoResult
@@ -705,7 +705,7 @@ internal class GeckoPromptDelegate(private val geckoEngineSession: GeckoEngineSe
         onClear: () -> Unit,
         format: String,
         onConfirm: (String) -> Unit,
-        onDismiss: () -> Unit
+        onDismiss: () -> Unit,
     ) {
         val initialDate = initialDateString.toDate(format)
         val minDate = if (minDateString.isNullOrEmpty()) null else minDateString.toDate()
@@ -733,8 +733,8 @@ internal class GeckoPromptDelegate(private val geckoEngineSession: GeckoEngineSe
                     selectionType,
                     onSelect,
                     onClear,
-                    onDismiss
-                )
+                    onDismiss,
+                ),
             )
         }
     }

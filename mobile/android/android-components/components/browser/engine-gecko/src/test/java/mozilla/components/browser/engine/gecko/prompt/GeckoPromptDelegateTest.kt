@@ -557,11 +557,13 @@ class GeckoPromptDelegateTest {
         var confirmCalled = false
 
         val promptDelegate = GeckoPromptDelegate(mockSession)
-        mockSession.register(object : EngineSession.Observer {
-            override fun onPromptRequest(promptRequest: PromptRequest) {
-                dateRequest = promptRequest
-            }
-        })
+        mockSession.register(
+            object : EngineSession.Observer {
+                override fun onPromptRequest(promptRequest: PromptRequest) {
+                    dateRequest = promptRequest
+                }
+            },
+        )
         val geckoResult =
             promptDelegate.onDateTimePrompt(mock(), geckoDateTimePrompt(type = DATETIME_LOCAL))
         geckoResult!!.accept {
@@ -583,17 +585,19 @@ class GeckoPromptDelegateTest {
         val confirmCaptor = argumentCaptor<String>()
 
         val promptDelegate = GeckoPromptDelegate(mockSession)
-        mockSession.register(object : EngineSession.Observer {
-            override fun onPromptRequest(promptRequest: PromptRequest) {
-                timeSelectionRequest = promptRequest as PromptRequest.TimeSelection
-            }
-        })
+        mockSession.register(
+            object : EngineSession.Observer {
+                override fun onPromptRequest(promptRequest: PromptRequest) {
+                    timeSelectionRequest = promptRequest as PromptRequest.TimeSelection
+                }
+            },
+        )
         val geckoPrompt = geckoDateTimePrompt(
             title = "title",
             type = DATETIME_LOCAL,
             defaultValue = "2018-06-12T19:30",
             minValue = "2018-06-07T00:00",
-            maxValue = "2018-06-14T00:00"
+            maxValue = "2018-06-14T00:00",
         )
         promptDelegate.onDateTimePrompt(mock(), geckoPrompt)
 
@@ -619,8 +623,8 @@ class GeckoPromptDelegateTest {
                 type = 13223,
                 defaultValue = "17:00",
                 minValue = "9:00",
-                maxValue = "18:00"
-            )
+                maxValue = "18:00",
+            ),
         )
     }
 
@@ -658,11 +662,13 @@ class GeckoPromptDelegateTest {
         // Prevent the file from being copied
         doReturn(0L).`when`(promptDelegate).copyFile(any(), any())
 
-        mockSession.register(object : EngineSession.Observer {
-            override fun onPromptRequest(promptRequest: PromptRequest) {
-                filePickerRequest = promptRequest as PromptRequest.File
-            }
-        })
+        mockSession.register(
+            object : EngineSession.Observer {
+                override fun onPromptRequest(promptRequest: PromptRequest) {
+                    filePickerRequest = promptRequest as PromptRequest.File
+                }
+            },
+        )
         var geckoPrompt = geckoFilePrompt(type = GECKO_PROMPT_FILE_TYPE.SINGLE, capture = NONE)
 
         var geckoResult = promptDelegate.onFilePrompt(mock(), geckoPrompt)
@@ -710,13 +716,13 @@ class GeckoPromptDelegateTest {
 
         promptDelegate.onFilePrompt(
             mock(),
-            geckoFilePrompt(type = GECKO_PROMPT_FILE_TYPE.MULTIPLE, capture = USER)
+            geckoFilePrompt(type = GECKO_PROMPT_FILE_TYPE.MULTIPLE, capture = USER),
         )
 
         assertTrue(filePickerRequest.isMultipleFilesSelection)
         assertEquals(
             PromptRequest.File.FacingMode.FRONT_CAMERA,
-            filePickerRequest.captureMode
+            filePickerRequest.captureMode,
         )
     }
 
@@ -730,11 +736,13 @@ class GeckoPromptDelegateTest {
 
         val promptDelegate = spy(GeckoPromptDelegate(mockSession))
 
-        mockSession.register(object : EngineSession.Observer {
-            override fun onPromptRequest(promptRequest: PromptRequest) {
-                loginSaveRequest = promptRequest as PromptRequest.SaveLoginPrompt
-            }
-        })
+        mockSession.register(
+            object : EngineSession.Observer {
+                override fun onPromptRequest(promptRequest: PromptRequest) {
+                    loginSaveRequest = promptRequest as PromptRequest.SaveLoginPrompt
+                }
+            },
+        )
 
         val entry = createLoginEntry()
         val saveOption = Autocomplete.LoginSaveOption(entry.toLoginEntry())
@@ -777,11 +785,13 @@ class GeckoPromptDelegateTest {
         val mockSession = GeckoEngineSession(runtime)
         var loginSaveRequest: PromptRequest.SaveLoginPrompt = mock()
         val promptDelegate = spy(GeckoPromptDelegate(mockSession))
-        mockSession.register(object : EngineSession.Observer {
-            override fun onPromptRequest(promptRequest: PromptRequest) {
-                loginSaveRequest = promptRequest as PromptRequest.SaveLoginPrompt
-            }
-        })
+        mockSession.register(
+            object : EngineSession.Observer {
+                override fun onPromptRequest(promptRequest: PromptRequest) {
+                    loginSaveRequest = promptRequest as PromptRequest.SaveLoginPrompt
+                }
+            },
+        )
         val login = createLogin()
         val saveOption = Autocomplete.LoginSaveOption(login.toLoginEntry())
         val saveLoginPrompt = geckoLoginSavePrompt(arrayOf(saveOption))
@@ -802,11 +812,13 @@ class GeckoPromptDelegateTest {
 
         val promptDelegate = spy(GeckoPromptDelegate(mockSession))
 
-        mockSession.register(object : EngineSession.Observer {
-            override fun onPromptRequest(promptRequest: PromptRequest) {
-                loginSelectRequest = promptRequest as PromptRequest.SelectLoginPrompt
-            }
-        })
+        mockSession.register(
+            object : EngineSession.Observer {
+                override fun onPromptRequest(promptRequest: PromptRequest) {
+                    loginSelectRequest = promptRequest as PromptRequest.SelectLoginPrompt
+                }
+            },
+        )
 
         val login = createLogin()
         val loginSelectOption = Autocomplete.LoginSelectOption(login.toLoginEntry())
@@ -817,7 +829,7 @@ class GeckoPromptDelegateTest {
         var geckoResult =
             promptDelegate.onLoginSelect(
                 mock(),
-                geckoLoginSelectPrompt(arrayOf(loginSelectOption, secondLoginSelectOption))
+                geckoLoginSelectPrompt(arrayOf(loginSelectOption, secondLoginSelectOption)),
             )
 
         geckoResult!!.accept {
@@ -831,7 +843,7 @@ class GeckoPromptDelegateTest {
         val geckoPrompt = geckoLoginSelectPrompt(arrayOf(loginSelectOption, secondLoginSelectOption))
         geckoResult = promptDelegate.onLoginSelect(
             mock(),
-            geckoPrompt
+            geckoPrompt,
         )
 
         geckoResult!!.accept {
@@ -859,7 +871,7 @@ class GeckoPromptDelegateTest {
         httpRealm: String = "httpRealm",
         formActionOrigin: String = "https://www.origin.com",
         usernameField: String = "usernameField",
-        passwordField: String = "passwordField"
+        passwordField: String = "passwordField",
     ) = Login(
         guid = guid,
         origin = origin,
@@ -868,7 +880,7 @@ class GeckoPromptDelegateTest {
         httpRealm = httpRealm,
         formActionOrigin = formActionOrigin,
         usernameField = usernameField,
-        passwordField = passwordField
+        passwordField = passwordField,
     )
 
     fun createLoginEntry(
@@ -878,7 +890,7 @@ class GeckoPromptDelegateTest {
         httpRealm: String = "httpRealm",
         formActionOrigin: String = "https://www.origin.com",
         usernameField: String = "usernameField",
-        passwordField: String = "passwordField"
+        passwordField: String = "passwordField",
     ) = LoginEntry(
         origin = origin,
         password = password,
@@ -886,7 +898,7 @@ class GeckoPromptDelegateTest {
         httpRealm = httpRealm,
         formActionOrigin = formActionOrigin,
         usernameField = usernameField,
-        passwordField = passwordField
+        passwordField = passwordField,
     )
 
     @Test
@@ -899,11 +911,13 @@ class GeckoPromptDelegateTest {
 
         val promptDelegate = spy(GeckoPromptDelegate(mockSession))
 
-        mockSession.register(object : EngineSession.Observer {
-            override fun onPromptRequest(promptRequest: PromptRequest) {
-                saveCreditCardPrompt = promptRequest as PromptRequest.SaveCreditCard
-            }
-        })
+        mockSession.register(
+            object : EngineSession.Observer {
+                override fun onPromptRequest(promptRequest: PromptRequest) {
+                    saveCreditCardPrompt = promptRequest as PromptRequest.SaveCreditCard
+                }
+            },
+        )
 
         val creditCard = CreditCardEntry(
             guid = "1",
@@ -911,14 +925,14 @@ class GeckoPromptDelegateTest {
             number = "4111111111111110",
             expiryMonth = "5",
             expiryYear = "2030",
-            cardType = "amex"
+            cardType = "amex",
         )
         val creditCardSaveOption =
             Autocomplete.CreditCardSaveOption(creditCard.toAutocompleteCreditCard())
 
         var geckoResult = promptDelegate.onCreditCardSave(
             mock(),
-            geckoCreditCardSavePrompt(arrayOf(creditCardSaveOption))
+            geckoCreditCardSavePrompt(arrayOf(creditCardSaveOption)),
         )
 
         geckoResult.accept {
@@ -954,11 +968,13 @@ class GeckoPromptDelegateTest {
         var saveCreditCardPrompt: PromptRequest.SaveCreditCard = mock()
         val promptDelegate = spy(GeckoPromptDelegate(mockSession))
 
-        mockSession.register(object : EngineSession.Observer {
-            override fun onPromptRequest(promptRequest: PromptRequest) {
-                saveCreditCardPrompt = promptRequest as PromptRequest.SaveCreditCard
-            }
-        })
+        mockSession.register(
+            object : EngineSession.Observer {
+                override fun onPromptRequest(promptRequest: PromptRequest) {
+                    saveCreditCardPrompt = promptRequest as PromptRequest.SaveCreditCard
+                }
+            },
+        )
 
         val creditCard = CreditCardEntry(
             guid = "1",
@@ -966,7 +982,7 @@ class GeckoPromptDelegateTest {
             number = "4111111111111110",
             expiryMonth = "5",
             expiryYear = "2030",
-            cardType = "amex"
+            cardType = "amex",
         )
         val creditCardSaveOption =
             Autocomplete.CreditCardSaveOption(creditCard.toAutocompleteCreditCard())
@@ -988,11 +1004,13 @@ class GeckoPromptDelegateTest {
 
         val promptDelegate = spy(GeckoPromptDelegate(mockSession))
 
-        mockSession.register(object : EngineSession.Observer {
-            override fun onPromptRequest(promptRequest: PromptRequest) {
-                selectCreditCardPrompt = promptRequest as PromptRequest.SelectCreditCard
-            }
-        })
+        mockSession.register(
+            object : EngineSession.Observer {
+                override fun onPromptRequest(promptRequest: PromptRequest) {
+                    selectCreditCardPrompt = promptRequest as PromptRequest.SelectCreditCard
+                }
+            },
+        )
 
         val creditCard1 = CreditCardEntry(
             guid = "1",
@@ -1000,7 +1018,7 @@ class GeckoPromptDelegateTest {
             number = "4111111111111110",
             expiryMonth = "5",
             expiryYear = "2030",
-            cardType = "amex"
+            cardType = "amex",
         )
         val creditCardSelectOption1 =
             Autocomplete.CreditCardSelectOption(creditCard1.toAutocompleteCreditCard())
@@ -1011,14 +1029,14 @@ class GeckoPromptDelegateTest {
             number = "4111111111115555",
             expiryMonth = "1",
             expiryYear = "2040",
-            cardType = "amex"
+            cardType = "amex",
         )
         val creditCardSelectOption2 =
             Autocomplete.CreditCardSelectOption(creditCard2.toAutocompleteCreditCard())
 
         var geckoResult = promptDelegate.onCreditCardSelect(
             mock(),
-            geckoSelectCreditCardPrompt(arrayOf(creditCardSelectOption1, creditCardSelectOption2))
+            geckoSelectCreditCardPrompt(arrayOf(creditCardSelectOption1, creditCardSelectOption2)),
         )
 
         geckoResult!!.accept {
@@ -1055,11 +1073,13 @@ class GeckoPromptDelegateTest {
         var authRequest: PromptRequest.Authentication = mock()
 
         val promptDelegate = GeckoPromptDelegate(mockSession)
-        mockSession.register(object : EngineSession.Observer {
-            override fun onPromptRequest(promptRequest: PromptRequest) {
-                authRequest = promptRequest as PromptRequest.Authentication
-            }
-        })
+        mockSession.register(
+            object : EngineSession.Observer {
+                override fun onPromptRequest(promptRequest: PromptRequest) {
+                    authRequest = promptRequest as PromptRequest.Authentication
+                }
+            },
+        )
 
         var geckoPrompt = geckoAuthPrompt(authOptions = mock())
         promptDelegate.onAuthPrompt(mock(), geckoPrompt)
@@ -1120,11 +1140,13 @@ class GeckoPromptDelegateTest {
         var onDismissWasCalled = false
 
         val promptDelegate = GeckoPromptDelegate(mockSession)
-        mockSession.register(object : EngineSession.Observer {
-            override fun onPromptRequest(promptRequest: PromptRequest) {
-                colorRequest = promptRequest as PromptRequest.Color
-            }
-        })
+        mockSession.register(
+            object : EngineSession.Observer {
+                override fun onPromptRequest(promptRequest: PromptRequest) {
+                    colorRequest = promptRequest as PromptRequest.Color
+                }
+            },
+        )
 
         val geckoPrompt = geckoColorPrompt(defaultValue = "#e66465")
         var geckoResult = promptDelegate.onColorPrompt(mock(), geckoPrompt)
@@ -1168,11 +1190,13 @@ class GeckoPromptDelegateTest {
 
         val promptDelegate = GeckoPromptDelegate(mockSession)
 
-        mockSession.register(object : EngineSession.Observer {
-            override fun onPromptRequest(promptRequest: PromptRequest) {
-                request = promptRequest as PromptRequest.TextPrompt
-            }
-        })
+        mockSession.register(
+            object : EngineSession.Observer {
+                override fun onPromptRequest(promptRequest: PromptRequest) {
+                    request = promptRequest as PromptRequest.TextPrompt
+                }
+            },
+        )
 
         var geckoResult = promptDelegate.onTextPrompt(mock(), geckoTextPrompt())
         geckoResult!!.accept {
@@ -1213,11 +1237,13 @@ class GeckoPromptDelegateTest {
 
         val promptDelegate = GeckoPromptDelegate(mockSession)
 
-        mockSession.register(object : EngineSession.Observer {
-            override fun onPromptRequest(promptRequest: PromptRequest) {
-                request = promptRequest as PromptRequest.Popup
-            }
-        })
+        mockSession.register(
+            object : EngineSession.Observer {
+                override fun onPromptRequest(promptRequest: PromptRequest) {
+                    request = promptRequest as PromptRequest.Popup
+                }
+            },
+        )
 
         var geckoPrompt = geckoPopupPrompt(targetUri = "www.popuptest.com/")
         promptDelegate.onPopupPrompt(mock(), geckoPrompt)
@@ -1250,11 +1276,13 @@ class GeckoPromptDelegateTest {
         var request: PromptRequest.BeforeUnload? = null
         val promptDelegate = GeckoPromptDelegate(mockSession)
 
-        mockSession.register(object : EngineSession.Observer {
-            override fun onPromptRequest(promptRequest: PromptRequest) {
-                request = promptRequest as PromptRequest.BeforeUnload
-            }
-        })
+        mockSession.register(
+            object : EngineSession.Observer {
+                override fun onPromptRequest(promptRequest: PromptRequest) {
+                    request = promptRequest as PromptRequest.BeforeUnload
+                }
+            },
+        )
 
         var geckoPrompt = geckoBeforeUnloadPrompt()
         promptDelegate.onBeforeUnloadPrompt(mock(), geckoPrompt)
@@ -1284,15 +1312,17 @@ class GeckoPromptDelegateTest {
         var onBeforeUnloadPromptCancelledCalled = false
         var request: PromptRequest.BeforeUnload = mock()
 
-        mockSession.register(object : EngineSession.Observer {
-            override fun onPromptRequest(promptRequest: PromptRequest) {
-                request = promptRequest as PromptRequest.BeforeUnload
-            }
+        mockSession.register(
+            object : EngineSession.Observer {
+                override fun onPromptRequest(promptRequest: PromptRequest) {
+                    request = promptRequest as PromptRequest.BeforeUnload
+                }
 
-            override fun onBeforeUnloadPromptDenied() {
-                onBeforeUnloadPromptCancelledCalled = true
-            }
-        })
+                override fun onBeforeUnloadPromptDenied() {
+                    onBeforeUnloadPromptCancelledCalled = true
+                }
+            },
+        )
         val prompt = geckoBeforeUnloadPrompt()
         doReturn(false).`when`(prompt).isComplete
 
@@ -1312,11 +1342,13 @@ class GeckoPromptDelegateTest {
 
         val promptDelegate = GeckoPromptDelegate(mockSession)
 
-        mockSession.register(object : EngineSession.Observer {
-            override fun onPromptRequest(promptRequest: PromptRequest) {
-                request = promptRequest as PromptRequest.Share
-            }
-        })
+        mockSession.register(
+            object : EngineSession.Observer {
+                override fun onPromptRequest(promptRequest: PromptRequest) {
+                    request = promptRequest as PromptRequest.Share
+                }
+            },
+        )
 
         var geckoPrompt = geckoSharePrompt()
         var geckoResult = promptDelegate.onSharePrompt(mock(), geckoPrompt)
@@ -1379,11 +1411,13 @@ class GeckoPromptDelegateTest {
 
         val promptDelegate = GeckoPromptDelegate(mockSession)
 
-        mockSession.register(object : EngineSession.Observer {
-            override fun onPromptRequest(promptRequest: PromptRequest) {
-                request = promptRequest as PromptRequest.Confirm
-            }
-        })
+        mockSession.register(
+            object : EngineSession.Observer {
+                override fun onPromptRequest(promptRequest: PromptRequest) {
+                    request = promptRequest as PromptRequest.Confirm
+                }
+            },
+        )
 
         var geckoPrompt = geckoButtonPrompt()
         var geckoResult = promptDelegate.onButtonPrompt(mock(), geckoPrompt)
@@ -1392,7 +1426,6 @@ class GeckoPromptDelegateTest {
         }
 
         with(request) {
-
             assertNotNull(request)
             assertEquals(title, "title")
             assertEquals(message, "message")
@@ -1453,11 +1486,13 @@ class GeckoPromptDelegateTest {
         var onPositiveButtonWasCalled = false
         var onNegativeButtonWasCalled = false
 
-        mockSession.register(object : EngineSession.Observer {
-            override fun onPromptRequest(promptRequest: PromptRequest) {
-                request = promptRequest as PromptRequest.Repost
-            }
-        })
+        mockSession.register(
+            object : EngineSession.Observer {
+                override fun onPromptRequest(promptRequest: PromptRequest) {
+                    request = promptRequest as PromptRequest.Repost
+                }
+            },
+        )
 
         val promptDelegate = GeckoPromptDelegate(mockSession)
 
@@ -1499,11 +1534,13 @@ class GeckoPromptDelegateTest {
         val mockSession = GeckoEngineSession(runtime)
         var request: PromptRequest.Repost = mock()
 
-        mockSession.register(object : EngineSession.Observer {
-            override fun onPromptRequest(promptRequest: PromptRequest) {
-                request = promptRequest as PromptRequest.Repost
-            }
-        })
+        mockSession.register(
+            object : EngineSession.Observer {
+                override fun onPromptRequest(promptRequest: PromptRequest) {
+                    request = promptRequest as PromptRequest.Repost
+                }
+            },
+        )
 
         val promptDelegate = GeckoPromptDelegate(mockSession)
 
@@ -1538,15 +1575,17 @@ class GeckoPromptDelegateTest {
         var onRepostPromptCancelledCalled = false
         var request: PromptRequest.Repost = mock()
 
-        mockSession.register(object : EngineSession.Observer {
-            override fun onPromptRequest(promptRequest: PromptRequest) {
-                request = promptRequest as PromptRequest.Repost
-            }
+        mockSession.register(
+            object : EngineSession.Observer {
+                override fun onPromptRequest(promptRequest: PromptRequest) {
+                    request = promptRequest as PromptRequest.Repost
+                }
 
-            override fun onRepostPromptCancelled() {
-                onRepostPromptCancelledCalled = true
-            }
-        })
+                override fun onRepostPromptCancelled() {
+                    onRepostPromptCancelledCalled = true
+                }
+            },
+        )
         val prompt = geckoRepostPrompt()
         doReturn(false).`when`(prompt).isComplete
 
@@ -1592,11 +1631,13 @@ class GeckoPromptDelegateTest {
         val promptDelegate = spy(GeckoPromptDelegate(mockSession))
 
         // Capture the SelectAddress prompt request
-        mockSession.register(object : EngineSession.Observer {
-            override fun onPromptRequest(promptRequest: PromptRequest) {
-                selectAddressPrompt = promptRequest as PromptRequest.SelectAddress
-            }
-        })
+        mockSession.register(
+            object : EngineSession.Observer {
+                override fun onPromptRequest(promptRequest: PromptRequest) {
+                    selectAddressPrompt = promptRequest as PromptRequest.SelectAddress
+                }
+            },
+        )
 
         val address = Address(
             guid = "1",
@@ -1611,7 +1652,7 @@ class GeckoPromptDelegateTest {
             postalCode = "1",
             country = "Country",
             tel = "1",
-            email = "@"
+            email = "@",
         )
         val addressSelectOption =
             Autocomplete.AddressSelectOption(address.toAutocompleteAddress())
@@ -1621,7 +1662,7 @@ class GeckoPromptDelegateTest {
 
         var geckoResult = promptDelegate.onAddressSelect(
             mock(),
-            geckoPrompt
+            geckoPrompt,
         )
 
         // Verify that the onDismiss callback was called
@@ -1639,7 +1680,7 @@ class GeckoPromptDelegateTest {
 
         geckoResult = promptDelegate.onAddressSelect(
             mock(),
-            geckoPrompt
+            geckoPrompt,
         )
 
         geckoResult.accept {
@@ -1658,7 +1699,7 @@ class GeckoPromptDelegateTest {
 
         geckoResult = promptDelegate.onAddressSelect(
             mock(),
-            geckoPrompt
+            geckoPrompt,
         )
 
         geckoResult.accept {
@@ -1674,7 +1715,7 @@ class GeckoPromptDelegateTest {
         title: String,
         message: String,
         type: Int,
-        choices: Array<out GeckoChoice>
+        choices: Array<out GeckoChoice>,
     ): GeckoSession.PromptDelegate.ChoicePrompt {
         val prompt: GeckoSession.PromptDelegate.ChoicePrompt = mock()
         ReflectionUtils.setField(prompt, "title", title)
@@ -1686,7 +1727,7 @@ class GeckoPromptDelegateTest {
 
     private fun geckoAlertPrompt(
         title: String = "title",
-        message: String = "message"
+        message: String = "message",
     ): GeckoSession.PromptDelegate.AlertPrompt {
         val prompt: GeckoSession.PromptDelegate.AlertPrompt = mock()
         ReflectionUtils.setField(prompt, "title", title)
@@ -1716,7 +1757,7 @@ class GeckoPromptDelegateTest {
         title: String = "title",
         type: Int,
         capture: Int = 0,
-        mimeTypes: Array<out String> = emptyArray()
+        mimeTypes: Array<out String> = emptyArray(),
     ): GeckoSession.PromptDelegate.FilePrompt {
         val prompt: GeckoSession.PromptDelegate.FilePrompt = mock()
         ReflectionUtils.setField(prompt, "title", title)
@@ -1729,7 +1770,7 @@ class GeckoPromptDelegateTest {
     private fun geckoAuthPrompt(
         title: String = "title",
         message: String = "message",
-        authOptions: GeckoSession.PromptDelegate.AuthPrompt.AuthOptions
+        authOptions: GeckoSession.PromptDelegate.AuthPrompt.AuthOptions,
     ): GeckoSession.PromptDelegate.AuthPrompt {
         val prompt: GeckoSession.PromptDelegate.AuthPrompt = mock()
         ReflectionUtils.setField(prompt, "title", title)
@@ -1740,7 +1781,7 @@ class GeckoPromptDelegateTest {
 
     private fun geckoColorPrompt(
         title: String = "title",
-        defaultValue: String = "defaultValue"
+        defaultValue: String = "defaultValue",
     ): GeckoSession.PromptDelegate.ColorPrompt {
         val prompt: GeckoSession.PromptDelegate.ColorPrompt = mock()
         ReflectionUtils.setField(prompt, "title", title)
@@ -1751,7 +1792,7 @@ class GeckoPromptDelegateTest {
     private fun geckoTextPrompt(
         title: String = "title",
         message: String = "message",
-        defaultValue: String = "defaultValue"
+        defaultValue: String = "defaultValue",
     ): GeckoSession.PromptDelegate.TextPrompt {
         val prompt: GeckoSession.PromptDelegate.TextPrompt = mock()
         ReflectionUtils.setField(prompt, "title", title)
@@ -1761,7 +1802,7 @@ class GeckoPromptDelegateTest {
     }
 
     private fun geckoPopupPrompt(
-        targetUri: String = "targetUri"
+        targetUri: String = "targetUri",
     ): GeckoSession.PromptDelegate.PopupPrompt {
         val prompt: GeckoSession.PromptDelegate.PopupPrompt = mock()
         ReflectionUtils.setField(prompt, "targetUri", targetUri)
@@ -1775,7 +1816,7 @@ class GeckoPromptDelegateTest {
     private fun geckoSharePrompt(
         title: String? = "title",
         text: String? = "text",
-        url: String? = "https://example.com"
+        url: String? = "https://example.com",
     ): GeckoSession.PromptDelegate.SharePrompt {
         val prompt: GeckoSession.PromptDelegate.SharePrompt = mock()
         ReflectionUtils.setField(prompt, "title", title)
@@ -1786,7 +1827,7 @@ class GeckoPromptDelegateTest {
 
     private fun geckoButtonPrompt(
         title: String = "title",
-        message: String = "message"
+        message: String = "message",
     ): GeckoSession.PromptDelegate.ButtonPrompt {
         val prompt: GeckoSession.PromptDelegate.ButtonPrompt = mock()
         ReflectionUtils.setField(prompt, "title", title)
@@ -1795,7 +1836,7 @@ class GeckoPromptDelegateTest {
     }
 
     private fun geckoLoginSelectPrompt(
-        loginArray: Array<Autocomplete.LoginSelectOption>
+        loginArray: Array<Autocomplete.LoginSelectOption>,
     ): GeckoSession.PromptDelegate.AutocompleteRequest<Autocomplete.LoginSelectOption> {
         val prompt: GeckoSession.PromptDelegate.AutocompleteRequest<Autocomplete.LoginSelectOption> = mock()
         ReflectionUtils.setField(prompt, "options", loginArray)
@@ -1804,11 +1845,11 @@ class GeckoPromptDelegateTest {
 
     @Suppress("UNCHECKED_CAST")
     private fun geckoLoginSavePrompt(
-        login: Array<Autocomplete.LoginSaveOption>
+        login: Array<Autocomplete.LoginSaveOption>,
     ): GeckoSession.PromptDelegate.AutocompleteRequest<Autocomplete.LoginSaveOption> {
         val prompt = Mockito.mock(
             GeckoSession.PromptDelegate.AutocompleteRequest::class.java,
-            Mockito.RETURNS_DEEP_STUBS // for testing prompt.delegate
+            Mockito.RETURNS_DEEP_STUBS, // for testing prompt.delegate
         ) as GeckoSession.PromptDelegate.AutocompleteRequest<Autocomplete.LoginSaveOption>
 
         ReflectionUtils.setField(prompt, "options", login)
@@ -1824,7 +1865,7 @@ class GeckoPromptDelegateTest {
     }
 
     private fun geckoSelectCreditCardPrompt(
-        creditCards: Array<Autocomplete.CreditCardSelectOption>
+        creditCards: Array<Autocomplete.CreditCardSelectOption>,
     ): GeckoSession.PromptDelegate.AutocompleteRequest<Autocomplete.CreditCardSelectOption> {
         val prompt: GeckoSession.PromptDelegate.AutocompleteRequest<Autocomplete.CreditCardSelectOption> =
             mock()
@@ -1834,7 +1875,7 @@ class GeckoPromptDelegateTest {
 
     private fun geckoSelectAddressPrompt(
         addresses: Array<Autocomplete.AddressSelectOption>,
-        isComplete: Boolean = false
+        isComplete: Boolean = false,
     ): GeckoSession.PromptDelegate.AutocompleteRequest<Autocomplete.AddressSelectOption> {
         val prompt: GeckoSession.PromptDelegate.AutocompleteRequest<Autocomplete.AddressSelectOption> =
             mock()
@@ -1845,11 +1886,11 @@ class GeckoPromptDelegateTest {
 
     @Suppress("UNCHECKED_CAST")
     private fun geckoCreditCardSavePrompt(
-        creditCard: Array<Autocomplete.CreditCardSaveOption>
+        creditCard: Array<Autocomplete.CreditCardSaveOption>,
     ): GeckoSession.PromptDelegate.AutocompleteRequest<Autocomplete.CreditCardSaveOption> {
         val prompt = Mockito.mock(
             GeckoSession.PromptDelegate.AutocompleteRequest::class.java,
-            Mockito.RETURNS_DEEP_STUBS // for testing prompt.delegate
+            Mockito.RETURNS_DEEP_STUBS, // for testing prompt.delegate
         ) as GeckoSession.PromptDelegate.AutocompleteRequest<Autocomplete.CreditCardSaveOption>
 
         ReflectionUtils.setField(prompt, "options", creditCard)
