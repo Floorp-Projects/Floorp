@@ -214,6 +214,9 @@ function LightweightThemeConsumer(aDocument) {
   );
   this._update(LightweightThemeManager.themeData);
 
+  Services.prefs.addObserver("floorp.dualtheme.theme",this.dual_obs.bind(this))
+  Services.prefs.addObserver("floorp.enable.dualtheme",this.dual_obs.bind(this))
+  Services.prefs.addObserver("extensions.experiments.enabled",this.dual_obs.bind(this))
   this._win.addEventListener("unload", this, { once: true });
 }
 
@@ -223,6 +226,13 @@ LightweightThemeConsumer.prototype = {
   protocolHandler: Services.io
     .getProtocolHandler("resource")
     .QueryInterface(Ci.nsIResProtocolHandler),
+	
+  dual_obs(){
+    const { LightweightThemeManager } = ChromeUtils.import(
+      "resource://gre/modules/LightweightThemeManager.jsm"
+    );
+    this._update(LightweightThemeManager.themeData);
+  },
 
   observe(aSubject, aTopic, aData) {
     if (aTopic != "lightweight-theme-styling-update") {
