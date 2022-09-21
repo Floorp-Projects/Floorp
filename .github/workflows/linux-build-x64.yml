@@ -26,8 +26,6 @@ jobs:
         echo 'ac_add_options --enable-bootstrap' >> mozconfig
         echo 'ac_add_options --with-l10n-base=/home/runner/work/${{ github.event.repository.name }}/${{ github.event.repository.name }}/l10n-central/l10n-central' >> mozconfig
         echo 'ac_add_options "--enable-optimize=-O2"' >> mozconfig
-        echo 'ac_add_options --enable-rust-simd' >> mozconfig
-        echo 'ac_add_options RUSTC_OPT_LEVEL=3' >> mozconfig
         echo 'MOZ_REQUIRE_SIGNING=' >> mozconfig
         echo 'MOZ_DATA_REPORTING=' >> mozconfig
         echo 'MOZ_TELEMETRY_REPORTING=' >> mozconfig
