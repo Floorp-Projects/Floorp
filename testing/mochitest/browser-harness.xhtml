@@ -80,14 +80,14 @@
         return this.fileLogger = logger;
       },
       structuredLogger: TestRunner.structuredLogger,
-      dump: function (str) {
+      dump(str) {
         this.structuredLogger.info(str);
 
         if (this.fileLogger)
           this.fileLogger.log(str);
       },
 
-      done: function () {
+      done() {
         if (this.fileLogger)
           this.fileLogger.close();
       }
@@ -108,10 +108,10 @@
     var gErrorCount = 0;
 
     function browserTest(aTestFile) {
-      this.path = aTestFile['url'];
-      this.expected = aTestFile['expected'];
-      this.https_first_disabled = aTestFile['https_first_disabled'] || false,
-      this.allow_xul_xbl = aTestFile['allow_xul_xbl'] || false,
+      this.path = aTestFile.url;
+      this.expected = aTestFile.expected;
+      this.https_first_disabled = aTestFile.https_first_disabled || false;
+      this.allow_xul_xbl = aTestFile.allow_xul_xbl || false;
       this.dumper = gDumper;
       this.results = [];
       this.scope = null;
@@ -223,11 +223,11 @@
       }
 
       // load server.js in so we can share template functions
-      var scriptLoader = Cc["@mozilla.org/moz/jssubscript-loader;1"].
-                           getService(Ci.mozIJSSubScriptLoader);
       var srvScope = {};
-      scriptLoader.loadSubScript('chrome://mochikit/content/server.js',
-                                 srvScope);
+      Services.scriptloader.loadSubScript(
+        'chrome://mochikit/content/server.js',
+        srvScope
+      );
 
       var fileNames = [];
       var fileNameRegexp = /browser_.+\.js$/;
@@ -245,8 +245,6 @@
     }
 
     function createTester(links) {
-      var windowMediator = Cc['@mozilla.org/appshell/window-mediator;1'].
-                             getService(Ci.nsIWindowMediator);
       var winType = null;
       if (gConfig.testRoot == "browser") {
         const IS_THUNDERBIRD = Services.appinfo.ID == "{3550f703-e582-4d05-9a08-453d09bdfdc6}";
@@ -255,7 +253,7 @@
       if (!winType) {
         throw new Error("Unrecognized gConfig.testRoot: " + gConfig.testRoot);
       }
-      var testWin = windowMediator.getMostRecentWindow(winType);
+      var testWin = Services.wm.getMostRecentWindow(winType);
 
       setStatus("Running...");
 
@@ -274,23 +272,20 @@
     }
 
     function executeSoon(callback) {
-      let tm = Cc["@mozilla.org/thread-manager;1"].getService(Ci.nsIThreadManager);
-      tm.dispatchToMainThread(callback);
+      Services.tm.dispatchToMainThread(callback);
     }
 
     function waitForFocus(callback, win) {
       // If "win" is already focused, just call the callback.
-      let fm = Cc["@mozilla.org/focus-manager;1"].getService(Ci.nsIFocusManager);
-      if (fm.focusedWindow == win) {
+      if (Services.focus.focusedWindow == win) {
         executeSoon(callback);
         return;
       }
 
       // Otherwise focus it, and wait for the focus event.
       win.addEventListener("focus", function listener() {
-        win.removeEventListener("focus", listener, true);
         executeSoon(callback);
-      }, true);
+      }, { capture: true, once: true});
       win.focus();
     }
 
@@ -309,8 +304,11 @@
       var failCount = aTests.map(f => f.failCount).reduce(sum);
       var todoCount = aTests.map(f => f.todoCount).reduce(sum);
       log += "<div id=\"summary\" class=\"";
-      log += failCount != 0 ? "failure" :
-               passCount == 0 ? "todo" : "success";
+      if (failCount != 0) {
+        log += "failure";
+      } else {
+        log += passCount == 0 ? "todo" : "success";
+      }
       log += "\">\n<p>Passed: " + passCount + "</p>\n" +
              "<p>Failed: " + failCount;
       if (failCount > 0)
@@ -355,6 +353,7 @@
       window.focus();
 
       // UI
+      // eslint-disable-next-line no-unsanitized/property
       document.getElementById("results").innerHTML = getHTMLLogFromTests(aTests);
       setStatus("Done.");
     }

@@ -20,16 +20,14 @@
 
 function loadTests()
 {
-  window.removeEventListener("load", loadTests, false);
+  window.removeEventListener("load", loadTests);
   getTestList({}, linkAndHookup);
 }
 
 function linkAndHookup(links) {
   // load server.js in so we can share template functions
-  var scriptLoader = Cc["@mozilla.org/moz/jssubscript-loader;1"].
-                       getService(Ci.mozIJSSubScriptLoader);
   var srvScope = {};
-  scriptLoader.loadSubScript('chrome://mochikit/content/server.js',
+  Services.scriptloader.loadSubScript('chrome://mochikit/content/server.js',
                              srvScope);
 
   // generate our test list
@@ -37,6 +35,7 @@ function linkAndHookup(links) {
   var tableContent = srvScope.linksToTableRows(links, 0);
 
   function populate() {
+    // eslint-disable-next-line no-unsanitized/property
     document.getElementById("test-table").innerHTML += tableContent;
   }
   gTestList = JSON.parse(srvScope.jsonArrayOfTestFiles(links));
@@ -45,7 +44,7 @@ function linkAndHookup(links) {
   hookup();
 }
 
-    window.addEventListener("load", loadTests, false);
+    window.addEventListener("load", loadTests);
   ]]>
   </script>
 
