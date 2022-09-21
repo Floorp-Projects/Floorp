@@ -655,7 +655,7 @@ if (rtc_include_tests) {
       "../../test:mock_frame_transformer",
       "../../test:mock_transport",
       "../../test:rtp_test_utils",
-      "../../test:test_common",
+      "../../test:run_loop",
       "../../test:test_support",
       "../../test/time_controller:time_controller",
       "../video_coding:codec_globals_headers",

@@ -260,6 +260,7 @@ if (!is_component_build) {
       "../test:fake_video_codecs",
       "../test:null_transport",
       "../test:rtp_test_utils",
+      "../test:run_loop",
       "../test:run_test",
       "../test:run_test_interface",
       "../test:test_common",

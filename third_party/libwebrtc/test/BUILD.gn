@@ -544,8 +544,8 @@ if (rtc_include_tests && !build_with_chromium) {
       ":perf_test",
       ":rtc_expect_death",
       ":rtp_test_utils",
+      ":run_loop",
       ":scoped_key_value_config",
-      ":test_common",
       ":test_main",
       ":test_support",
       ":test_support_test_artifacts",
@@ -866,6 +866,19 @@ rtc_library("rtc_expect_death") {
   deps = [ ":test_support" ]
 }
 
+rtc_library("run_loop") {
+  testonly = true
+  sources = [
+    "run_loop.cc",
+    "run_loop.h",
+  ]
+  deps = [
+    "../rtc_base:threading",
+    "../rtc_base:timeutils",
+    "../rtc_base/task_utils:to_queued_task",
+  ]
+}
+
 rtc_library("test_common") {
   testonly = true
   sources = [
@@ -877,8 +890,6 @@ rtc_library("test_common") {
     "layer_filtering_transport.cc",
     "layer_filtering_transport.h",
     "rtp_rtcp_observer.h",
-    "run_loop.cc",
-    "run_loop.h",
     "video_decoder_proxy_factory.h",
     "video_encoder_nullable_proxy_factory.h",
     "video_encoder_proxy_factory.h",
@@ -890,6 +901,7 @@ rtc_library("test_common") {
     ":fake_video_codecs",
     ":fileutils",
     ":mock_transport",
+    ":run_loop",
     ":scoped_key_value_config",
     ":test_support",
     ":video_test_common",

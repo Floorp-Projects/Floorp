@@ -968,6 +968,7 @@ if (rtc_include_tests) {
       "../test:null_transport",
       "../test:perf_test",
       "../test:rtp_test_utils",
+      "../test:run_loop",
       "../test:scoped_key_value_config",
       "../test:test_common",
       "../test:test_support",
