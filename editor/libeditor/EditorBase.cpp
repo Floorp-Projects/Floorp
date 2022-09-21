@@ -376,46 +376,6 @@ nsresult EditorBase::EnsureEmptyTextFirstChild() {
   return NS_OK;
 }
 
-nsresult EditorBase::InitEditorContentAndSelection() {
-  MOZ_ASSERT(IsEditActionDataAvailable());
-
-  if (IsTextEditor()) {
-    MOZ_TRY(EnsureEmptyTextFirstChild());
-  } else {
-    nsresult rv = MOZ_KnownLive(AsHTMLEditor())
-                      ->MaybeCreatePaddingBRElementForEmptyEditor();
-    if (NS_FAILED(rv)) {
-      NS_WARNING(
-          "HTMLEditor::MaybeCreatePaddingBRElementForEmptyEditor() failed");
-      return rv;
-    }
-  }
-
-  // If the selection hasn't been set up yet, set it up collapsed to the end of
-  // our editable content.
-  // XXX I think that this shouldn't do it in `HTMLEditor` because it maybe
-  //     removed by the web app and if they call `Selection::AddRange()`,
-  //     it may cause multiple selection ranges.
-  if (!SelectionRef().RangeCount()) {
-    nsresult rv = CollapseSelectionToEndOfLastLeafNode();
-    if (MOZ_UNLIKELY(NS_FAILED(rv))) {
-      NS_WARNING("EditorBase::CollapseSelectionToEndOfLastLeafNode() failed");
-      return rv;
-    }
-  }
-
-  if (IsInPlaintextMode() && !IsSingleLineEditor()) {
-    nsresult rv = EnsurePaddingBRElementInMultilineEditor();
-    if (NS_FAILED(rv)) {
-      NS_WARNING(
-          "EditorBase::EnsurePaddingBRElementInMultilineEditor() failed");
-      return rv;
-    }
-  }
-
-  return NS_OK;
-}
-
 nsresult EditorBase::PostCreateInternal() {
   MOZ_ASSERT(IsEditActionDataAvailable());
 

@@ -138,7 +138,7 @@ nsresult TextEditor::Init(Document& aDocument, Element& aAnonymousDivElement,
 
   rv = InitEditorContentAndSelection();
   if (NS_FAILED(rv)) {
-    NS_WARNING("EditorBase::InitEditorContentAndSelection() failed");
+    NS_WARNING("TextEditor::InitEditorContentAndSelection() failed");
     // XXX Shouldn't we expose `NS_ERROR_EDITOR_DESTROYED` even though this
     //     is a public method?
     mInitSucceeded = false;
@@ -149,6 +149,33 @@ nsresult TextEditor::Init(Document& aDocument, Element& aAnonymousDivElement,
   // we're initializing the editor.
   ClearUndoRedo();
   EnableUndoRedo();
+  return NS_OK;
+}
+
+nsresult TextEditor::InitEditorContentAndSelection() {
+  MOZ_ASSERT(IsEditActionDataAvailable());
+
+  MOZ_TRY(EnsureEmptyTextFirstChild());
+
+  // If the selection hasn't been set up yet, set it up collapsed to the end of
+  // our editable content.
+  if (!SelectionRef().RangeCount()) {
+    nsresult rv = CollapseSelectionToEndOfLastLeafNode();
+    if (NS_FAILED(rv)) {
+      NS_WARNING("EditorBase::CollapseSelectionToEndOfLastLeafNode() failed");
+      return rv;
+    }
+  }
+
+  if (!IsSingleLineEditor()) {
+    nsresult rv = EnsurePaddingBRElementInMultilineEditor();
+    if (NS_FAILED(rv)) {
+      NS_WARNING(
+          "EditorBase::EnsurePaddingBRElementInMultilineEditor() failed");
+      return rv;
+    }
+  }
+
   return NS_OK;
 }
 
