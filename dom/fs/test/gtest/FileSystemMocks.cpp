@@ -16,8 +16,6 @@
 #include "nsContentUtils.h"
 #include "nsISupports.h"
 
-
-
 namespace mozilla::dom::fs::test {
 
 nsIGlobalObject* GetGlobal() {
