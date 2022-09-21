@@ -381,7 +381,8 @@ void ApplyVp9BitrateLimits(const VideoEncoder::EncoderInfo& encoder_info,
                            VideoCodec* codec) {
   if (codec->codecType != VideoCodecType::kVideoCodecVP9 ||
       encoder_config.simulcast_layers.size() <= 1 ||
-      VideoStreamEncoderResourceManager::IsSimulcast(encoder_config)) {
+      VideoStreamEncoderResourceManager::IsSimulcastOrMultipleSpatialLayers(
+          encoder_config)) {
     // Resolution bitrate limits usage is restricted to singlecast.
     return;
   }

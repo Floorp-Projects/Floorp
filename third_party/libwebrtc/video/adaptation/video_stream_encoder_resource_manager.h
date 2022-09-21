@@ -153,7 +153,8 @@ class VideoStreamEncoderResourceManager
   // QualityRampUpExperimentListener implementation.
   void OnQualityRampUp() override;
 
-  static bool IsSimulcast(const VideoEncoderConfig& encoder_config);
+  static bool IsSimulcastOrMultipleSpatialLayers(
+      const VideoEncoderConfig& encoder_config);
 
  private:
   class InitialFrameDropper;
