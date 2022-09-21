@@ -134,19 +134,6 @@ if ($ARGV[0] eq "check") {
     @moz_keys = (keys %moz_hash);
     # check the validity of our private data
     while ($key = pop(@moz_keys)) {
-
-        if ($key =~ /\\u.+\\u.+\\u.+/) {
-            $valid = 0;
-            $nb_errors++;
-            print $file_syntax_errors "error: \"$key\" has more than 2 characters\n";
-        }
-
-        if ($key =~ /\\u20D2\./ || $key =~ /\\u0338\./) {
-            $valid = 0;
-            $nb_errors++;
-            print $file_syntax_errors "error: \"$key\" ends with character U+20D2 or U+0338\n";
-        }
-
         @moz = @{ $moz_hash{$key} };
         $entry = &generateEntry($key, @moz);
         $valid = 1;
