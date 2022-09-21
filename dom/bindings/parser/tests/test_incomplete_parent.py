@@ -5,7 +5,7 @@ def WebIDLTest(parser, harness):
     parser.parse(
         """
         interface TestIncompleteParent : NotYetDefined {
-          void foo();
+          undefined foo();
         };
 
         interface NotYetDefined : EvenHigherOnTheChain {

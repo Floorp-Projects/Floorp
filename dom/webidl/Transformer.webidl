@@ -17,5 +17,5 @@ dictionary Transformer {
 };
 
 callback TransformerStartCallback = any (TransformStreamDefaultController controller);
-callback TransformerFlushCallback = Promise<void> (TransformStreamDefaultController controller);
-callback TransformerTransformCallback = Promise<void> (any chunk, TransformStreamDefaultController controller);
+callback TransformerFlushCallback = Promise<undefined> (TransformStreamDefaultController controller);
+callback TransformerTransformCallback = Promise<undefined> (any chunk, TransformStreamDefaultController controller);

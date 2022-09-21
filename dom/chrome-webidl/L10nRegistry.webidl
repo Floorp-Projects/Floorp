@@ -161,16 +161,16 @@ interface L10nRegistry {
 
   sequence<UTF8String> getAvailableLocales();
 
-  void registerSources(sequence<L10nFileSource> aSources);
-  void updateSources(sequence<L10nFileSource> aSources);
-  void removeSources(sequence<UTF8String> aSources);
+  undefined registerSources(sequence<L10nFileSource> aSources);
+  undefined updateSources(sequence<L10nFileSource> aSources);
+  undefined removeSources(sequence<UTF8String> aSources);
 
   [Throws]
   boolean hasSource(UTF8String aName);
   [Throws]
   L10nFileSource? getSource(UTF8String aName);
   sequence<UTF8String> getSourceNames();
-  void clearSources();
+  undefined clearSources();
 
   [Throws, NewObject]
   FluentBundleIterator generateBundlesSync(sequence<UTF8String> aLocales, sequence<L10nResourceId> aResourceIds);

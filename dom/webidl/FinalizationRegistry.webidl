@@ -7,4 +7,4 @@
  * objects with the browser.
  */
 
-callback FinalizationRegistryCleanupCallback = void();
+callback FinalizationRegistryCleanupCallback = undefined();

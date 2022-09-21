@@ -28,16 +28,16 @@ interface SVGTransform {
   readonly attribute float angle;
 
   [Throws]
-  void setMatrix(optional DOMMatrix2DInit matrix = {});
+  undefined setMatrix(optional DOMMatrix2DInit matrix = {});
   [Throws]
-  void setTranslate(float tx, float ty);
+  undefined setTranslate(float tx, float ty);
   [Throws]
-  void setScale(float sx, float sy);
+  undefined setScale(float sx, float sy);
   [Throws]
-  void setRotate(float angle, float cx, float cy);
+  undefined setRotate(float angle, float cx, float cy);
   [Throws]
-  void setSkewX(float angle);
+  undefined setSkewX(float angle);
   [Throws]
-  void setSkewY(float angle);
+  undefined setSkewY(float angle);
 };
 

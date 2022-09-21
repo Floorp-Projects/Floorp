@@ -35,11 +35,11 @@ interface mixin MozFrameLoaderOwner {
   readonly attribute BrowsingContext? browsingContext;
 
   [ChromeOnly, Throws]
-  void swapFrameLoaders(XULFrameElement aOtherLoaderOwner);
+  undefined swapFrameLoaders(XULFrameElement aOtherLoaderOwner);
 
   [ChromeOnly, Throws]
-  void swapFrameLoaders(HTMLIFrameElement aOtherLoaderOwner);
+  undefined swapFrameLoaders(HTMLIFrameElement aOtherLoaderOwner);
 
   [ChromeOnly, Throws]
-  void changeRemoteness(RemotenessOptions aOptions);
+  undefined changeRemoteness(RemotenessOptions aOptions);
 };

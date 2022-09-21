@@ -33,10 +33,10 @@ interface GamepadServiceTest
 
   [NewObject]
   Promise<unsigned long> newButtonValueEvent(unsigned long index,
-                           unsigned long button,
-                           boolean pressed,
-                           boolean touched,
-                           double value);
+                                             unsigned long button,
+                                             boolean pressed,
+                                             boolean touched,
+                                             double value);
 
   [NewObject]
   Promise<unsigned long> newAxisMoveEvent(unsigned long index,

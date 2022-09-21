@@ -12,19 +12,19 @@ interface WritableStreamDefaultWriter {
   [Throws]
   constructor(WritableStream stream);
 
-  readonly attribute Promise<void> closed;
+  readonly attribute Promise<undefined> closed;
   [Throws] readonly attribute unrestricted double? desiredSize;
-  readonly attribute Promise<void> ready;
+  readonly attribute Promise<undefined> ready;
 
   [Throws]
-  Promise<void> abort(optional any reason);
+  Promise<undefined> abort(optional any reason);
 
   [NewObject]
-  Promise<void> close();
+  Promise<undefined> close();
 
   [Throws]
-  void releaseLock();
+  undefined releaseLock();
 
   [NewObject]
-  Promise<void> write(optional any chunk);
+  Promise<undefined> write(optional any chunk);
 };

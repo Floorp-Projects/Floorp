@@ -19,11 +19,11 @@ interface DedicatedWorkerGlobalScope : WorkerGlobalScope {
   readonly attribute DOMString name;
 
   [Throws]
-  void postMessage(any message, sequence<object> transfer);
+  undefined postMessage(any message, sequence<object> transfer);
   [Throws]
-  void postMessage(any message, optional StructuredSerializeOptions options = {});
+  undefined postMessage(any message, optional StructuredSerializeOptions options = {});
 
-  void close();
+  undefined close();
 
   attribute EventHandler onmessage;
   attribute EventHandler onmessageerror;
@@ -35,5 +35,5 @@ interface DedicatedWorkerGlobalScope : WorkerGlobalScope {
   long requestAnimationFrame(FrameRequestCallback callback);
 
   [Pref="dom.workers.requestAnimationFrame", Throws]
-  void cancelAnimationFrame(long handle);
+  undefined cancelAnimationFrame(long handle);
 };

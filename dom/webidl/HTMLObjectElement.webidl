@@ -45,7 +45,7 @@ interface HTMLObjectElement : HTMLElement {
   readonly attribute DOMString validationMessage;
   boolean checkValidity();
   boolean reportValidity();
-  void setCustomValidity(DOMString error);
+  undefined setCustomValidity(DOMString error);
 };
 
 // http://www.whatwg.org/specs/web-apps/current-work/#HTMLObjectElement-partial
@@ -132,7 +132,7 @@ interface mixin MozObjectLoadingContent {
    * handler to use.
    */
   [ChromeOnly, Throws]
-  void reload(boolean aClearActivation);
+  undefined reload(boolean aClearActivation);
 
   /**
    * The URL of the data/src loaded in the object. This may be null (i.e.
@@ -145,7 +145,7 @@ interface mixin MozObjectLoadingContent {
    * Disable the use of fake plugins and reload the tag if necessary
    */
   [ChromeOnly, Throws]
-  void skipFakePlugins();
+  undefined skipFakePlugins();
 
   [ChromeOnly, Throws, NeedsCallerType]
   readonly attribute unsigned long runID;

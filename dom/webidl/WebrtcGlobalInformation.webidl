@@ -8,22 +8,22 @@ dictionary WebrtcGlobalStatisticsReport {
   sequence<RTCStatsReportInternal> reports = [];
 };
 
-callback WebrtcGlobalStatisticsCallback = void (WebrtcGlobalStatisticsReport reports);
-callback WebrtcGlobalLoggingCallback = void (sequence<DOMString> logMessages);
+callback WebrtcGlobalStatisticsCallback = undefined (WebrtcGlobalStatisticsReport reports);
+callback WebrtcGlobalLoggingCallback = undefined (sequence<DOMString> logMessages);
 
 [ChromeOnly, Exposed=Window]
 namespace WebrtcGlobalInformation {
 
   [Throws]
-  void getAllStats(WebrtcGlobalStatisticsCallback callback,
-                   optional DOMString pcIdFilter);
+  undefined getAllStats(WebrtcGlobalStatisticsCallback callback,
+                        optional DOMString pcIdFilter);
 
-  void clearAllStats();
+  undefined clearAllStats();
 
   [Throws]
-  void getLogging(DOMString pattern, WebrtcGlobalLoggingCallback callback);
+  undefined getLogging(DOMString pattern, WebrtcGlobalLoggingCallback callback);
 
-  void clearLogging();
+  undefined clearLogging();
 
   // NSPR WebRTC Trace debug level (0 - 65535)
   //

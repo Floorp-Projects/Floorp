@@ -167,11 +167,11 @@ interface BrowsingContext {
 
   // Extension to give chrome JS the ability to set the window screen
   // orientation while in RDM.
-  [Throws] void setRDMPaneOrientation(OrientationType type, float rotationAngle);
+  [Throws] undefined setRDMPaneOrientation(OrientationType type, float rotationAngle);
 
   // Extension to give chrome JS the ability to set a maxTouchPoints override
   // while in RDM.
-  [Throws] void setRDMPaneMaxTouchPoints(octet maxTouchPoints);
+  [Throws] undefined setRDMPaneMaxTouchPoints(octet maxTouchPoints);
 
   // The watchedByDevTools flag indicates whether or not DevTools are currently
   // debugging this browsing context.
@@ -241,7 +241,7 @@ interface BrowsingContext {
   readonly attribute ChildSHistory? childSessionHistory;
 
   // Resets the location change rate limit. Used for testing.
-  void resetLocationChangeRateLimit();
+  undefined resetLocationChangeRateLimit();
 
   readonly attribute long childOffset;
 };
@@ -264,8 +264,8 @@ interface CanonicalBrowsingContext : BrowsingContext {
 
   readonly attribute WindowGlobalParent? embedderWindowGlobal;
 
-  void notifyStartDelayedAutoplayMedia();
-  [Throws] void notifyMediaMutedChanged(boolean muted);
+  undefined notifyStartDelayedAutoplayMedia();
+  [Throws] undefined notifyMediaMutedChanged(boolean muted);
 
   readonly attribute nsISecureBrowserUI? secureBrowserUI;
 
@@ -295,7 +295,7 @@ interface CanonicalBrowsingContext : BrowsingContext {
    *        the triggeringPrincipal, the referrer info.
    */
   [Throws]
-  void loadURI(DOMString aURI, optional LoadURIOptions aOptions = {});
+  undefined loadURI(DOMString aURI, optional LoadURIOptions aOptions = {});
 
    /**
     * Print the current document.
@@ -306,28 +306,28 @@ interface CanonicalBrowsingContext : BrowsingContext {
     * @return A Promise that resolves once printing is finished.
     */
   [NewObject, BinaryName="printJS"]
-  Promise<void> print(nsIPrintSettings aPrintSettings);
+  Promise<undefined> print(nsIPrintSettings aPrintSettings);
 
   /**
    * These methods implement the nsIWebNavigation methods of the same names
    */
-  void goBack(optional long aCancelContentJSEpoch, optional boolean aRequireUserInteraction = false, optional boolean aUserActivation = false);
-  void goForward(optional long aCancelContentJSEpoch, optional boolean aRequireUserInteraction  = false, optional boolean aUserActivation = false);
-  void goToIndex(long aIndex, optional long aCancelContentJSEpoch, optional boolean aUserActivation = false);
-  void reload(unsigned long aReloadFlags);
-  void stop(unsigned long aStopFlags);
+  undefined goBack(optional long aCancelContentJSEpoch, optional boolean aRequireUserInteraction = false, optional boolean aUserActivation = false);
+  undefined goForward(optional long aCancelContentJSEpoch, optional boolean aRequireUserInteraction  = false, optional boolean aUserActivation = false);
+  undefined goToIndex(long aIndex, optional long aCancelContentJSEpoch, optional boolean aUserActivation = false);
+  undefined reload(unsigned long aReloadFlags);
+  undefined stop(unsigned long aStopFlags);
 
   readonly attribute nsISHistory? sessionHistory;
 
   readonly attribute MediaController? mediaController;
 
-  void resetScalingZoom();
+  undefined resetScalingZoom();
 
   // The current URI loaded in this BrowsingContext according to nsDocShell.
   // This may not match the current window global's document URI in some cases.
   readonly attribute URI? currentURI;
 
-  void clearRestoreState();
+  undefined clearRestoreState();
 
   /**
    * This allows chrome to override the default choice of whether touch events
@@ -351,7 +351,7 @@ interface CanonicalBrowsingContext : BrowsingContext {
    * `window.open`.
    */
   [Throws]
-  void setCrossGroupOpener(CanonicalBrowsingContext crossGroupOpener);
+  undefined setCrossGroupOpener(CanonicalBrowsingContext crossGroupOpener);
 
   readonly attribute boolean isReplaced;
 
@@ -376,8 +376,8 @@ interface CanonicalBrowsingContext : BrowsingContext {
   /**
    * Notify APZ to stop autoscrolling.
    */
-  void stopApzAutoscroll(unsigned long long aScrollId,
-                         unsigned long aPresShellId);
+  undefined stopApzAutoscroll(unsigned long long aScrollId,
+                              unsigned long aPresShellId);
 };
 
 [Exposed=Window, ChromeOnly]

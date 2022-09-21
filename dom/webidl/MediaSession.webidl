@@ -25,7 +25,7 @@ enum MediaSessionAction {
   "stop",
 };
 
-callback MediaSessionActionHandler = void(MediaSessionActionDetails details);
+callback MediaSessionActionHandler = undefined(MediaSessionActionDetails details);
 
 [Exposed=Window, Pref="dom.media.mediasession.enabled"]
 interface MediaSession {
@@ -33,14 +33,14 @@ interface MediaSession {
 
   attribute MediaSessionPlaybackState playbackState;
 
-  void setActionHandler(MediaSessionAction action, MediaSessionActionHandler? handler);
+  undefined setActionHandler(MediaSessionAction action, MediaSessionActionHandler? handler);
 
   [Throws]
-  void setPositionState(optional MediaPositionState state = {});
+  undefined setPositionState(optional MediaPositionState state = {});
 
   // Fire the action handler. It's test-only for now.
   [ChromeOnly]
-  void notifyHandler(MediaSessionActionDetails details);
+  undefined notifyHandler(MediaSessionActionDetails details);
 };
 
 [Exposed=Window, Pref="dom.media.mediasession.enabled"]

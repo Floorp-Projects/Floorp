@@ -106,7 +106,7 @@ def WebIDLTest(parser, harness):
         parser.parse(
             """
             interface IndexedDeleter {
-              deleter void(unsigned long index);
+              deleter undefined(unsigned long index);
             };
             """
         )

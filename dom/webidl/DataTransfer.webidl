@@ -17,7 +17,7 @@ interface DataTransfer {
 
   readonly attribute DataTransferItemList items;
 
-  void setDragImage(Element image, long x, long y);
+  undefined setDragImage(Element image, long x, long y);
 
   // ReturnValueNeedsContainsHack on .types because lots of extension
   // code was expecting .contains() back when it was a DOMStringList.
@@ -26,9 +26,9 @@ interface DataTransfer {
   [Throws, NeedsSubjectPrincipal]
   DOMString getData(DOMString format);
   [Throws, NeedsSubjectPrincipal]
-  void setData(DOMString format, DOMString data);
+  undefined setData(DOMString format, DOMString data);
   [Throws, NeedsSubjectPrincipal]
-  void clearData(optional DOMString format);
+  undefined clearData(optional DOMString format);
   [NeedsSubjectPrincipal]
   readonly attribute FileList? files;
 };
@@ -44,7 +44,7 @@ partial interface DataTransfer {
    * @throws NO_MODIFICATION_ALLOWED_ERR if the item cannot be modified
    */
   [Throws, UseCounter]
-  void addElement(Element element);
+  undefined addElement(Element element);
 
   /**
    * The number of items being dragged.
@@ -90,7 +90,7 @@ partial interface DataTransfer {
    * @throws NO_MODIFICATION_ALLOWED_ERR if the item cannot be modified
    */
   [Throws, ChromeOnly]
-  void mozClearDataAt(DOMString format, unsigned long index);
+  undefined mozClearDataAt(DOMString format, unsigned long index);
 
   /*
    * A data transfer may store multiple items, each at a given zero-based
@@ -114,7 +114,7 @@ partial interface DataTransfer {
    * @throws NO_MODIFICATION_ALLOWED_ERR if the item cannot be modified
    */
   [Throws, ChromeOnly]
-  void mozSetDataAt(DOMString format, any data, unsigned long index);
+  undefined mozSetDataAt(DOMString format, any data, unsigned long index);
 
   /**
    * Retrieve the data associated with the given format for an item at the
@@ -133,7 +133,7 @@ partial interface DataTransfer {
    * valid within the parent chrome process.
    */
   [ChromeOnly]
-  void updateDragImage(Element image, long x, long y);
+  undefined updateDragImage(Element image, long x, long y);
 
   /**
    * Will be true when the user has cancelled the drag (typically by pressing

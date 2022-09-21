@@ -43,7 +43,7 @@ interface KeyframeEffect : AnimationEffect {
   [Pref="dom.animations-api.compositing.enabled"]
   attribute CompositeOperation              composite;
   [Throws] sequence<object> getKeyframes();
-  [Throws] void             setKeyframes(object? keyframes);
+  [Throws] undefined        setKeyframes(object? keyframes);
 };
 
 // Non-standard extensions

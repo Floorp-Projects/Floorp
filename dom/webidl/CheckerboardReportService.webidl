@@ -46,7 +46,7 @@ interface CheckerboardReportService {
   /**
    * Sets the state of the apz.record_checkerboarding pref.
    */
-  void setRecordingEnabled(boolean aEnabled);
+  undefined setRecordingEnabled(boolean aEnabled);
 
   /**
    * Flush any in-progress checkerboard reports. Since this happens
@@ -56,5 +56,5 @@ interface CheckerboardReportService {
    * this notification, the caller may call getReports() to obtain the flushed
    * reports, along with any other reports that are available.
    */
-  void flushActiveReports();
+  undefined flushActiveReports();
 };

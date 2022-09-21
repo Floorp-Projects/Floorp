@@ -11,7 +11,7 @@
  Func="CanvasUtils::IsOffscreenCanvasEnabled"]
 interface OffscreenCanvasRenderingContext2D {
   [Throws]
-  void commit();
+  undefined commit();
 
   readonly attribute OffscreenCanvas canvas;
 };

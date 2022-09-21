@@ -14,5 +14,5 @@ interface AbortController {
 
   [SameObject] readonly attribute AbortSignal signal;
 
-  void abort(optional any reason);
+  undefined abort(optional any reason);
 };

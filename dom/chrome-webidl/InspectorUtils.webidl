@@ -70,13 +70,13 @@ namespace InspectorUtils {
       optional boolean skipCollapsedWhitespace = true);
 
   sequence<DOMString> getCSSPseudoElementNames();
-  void addPseudoClassLock(Element element,
-                          DOMString pseudoClass,
-                          optional boolean enabled = true);
-  void removePseudoClassLock(Element element, DOMString pseudoClass);
+  undefined addPseudoClassLock(Element element,
+                               DOMString pseudoClass,
+                               optional boolean enabled = true);
+  undefined removePseudoClassLock(Element element, DOMString pseudoClass);
   boolean hasPseudoClassLock(Element element, DOMString pseudoClass);
-  void clearPseudoClassLocks(Element element);
-  [Throws] void parseStyleSheet(CSSStyleSheet sheet, UTF8String input);
+  undefined clearPseudoClassLocks(Element element);
+  [Throws] undefined parseStyleSheet(CSSStyleSheet sheet, UTF8String input);
   boolean isCustomElementName([LegacyNullToEmptyString] DOMString name,
                               DOMString? namespaceURI);
 

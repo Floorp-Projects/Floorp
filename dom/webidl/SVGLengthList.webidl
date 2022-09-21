@@ -15,7 +15,7 @@
 interface SVGLengthList {
   readonly attribute unsigned long numberOfItems;
   [Throws]
-  void clear();
+  undefined clear();
   [Throws]
   SVGLength initialize(SVGLength newItem);
   [Throws]
@@ -29,7 +29,7 @@ interface SVGLengthList {
   [Throws]
   SVGLength appendItem(SVGLength newItem);
   [Throws]
-  setter void (unsigned long index, SVGLength newItem);
+  setter undefined (unsigned long index, SVGLength newItem);
 
   // Mozilla-specific stuff
   readonly attribute unsigned long length; // synonym for numberOfItems

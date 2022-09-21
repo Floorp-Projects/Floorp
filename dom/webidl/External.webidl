@@ -7,6 +7,6 @@
 [LegacyNoInterfaceObject, Exposed=Window]
 interface External {
   [Deprecated="External_AddSearchProvider"]
-  void AddSearchProvider();
-  void IsSearchProviderInstalled();
+  undefined AddSearchProvider();
+  undefined IsSearchProviderInstalled();
 };

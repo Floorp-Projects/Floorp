@@ -20,15 +20,15 @@ interface URLSearchParams {
   constructor(optional (sequence<sequence<USVString>> or
                         record<USVString, USVString> or USVString) init = "");
 
-  void append(USVString name, USVString value);
-  void delete(USVString name);
+  undefined append(USVString name, USVString value);
+  undefined delete(USVString name);
   USVString? get(USVString name);
   sequence<USVString> getAll(USVString name);
   boolean has(USVString name);
-  void set(USVString name, USVString value);
+  undefined set(USVString name, USVString value);
 
   [Throws]
-  void sort();
+  undefined sort();
 
   iterable<USVString, USVString>;
   stringifier;

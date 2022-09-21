@@ -49,9 +49,9 @@ interface PannerNode : AudioNode {
 
     // Uses a 3D cartesian coordinate system
     [Throws]
-    void setPosition(double x, double y, double z);
+    undefined setPosition(double x, double y, double z);
     [Throws]
-    void setOrientation(double x, double y, double z);
+    undefined setOrientation(double x, double y, double z);
 
     // Cartesian coordinate for position
     readonly attribute AudioParam positionX;

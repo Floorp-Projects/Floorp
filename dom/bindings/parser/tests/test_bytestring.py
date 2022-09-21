@@ -75,7 +75,7 @@ def WebIDLTest(parser, harness):
         parser.parse(
             """
             interface OptionalByteString {
-              void passByteString(optional ByteString arg = "hello");
+              undefined passByteString(optional ByteString arg = "hello");
               };
         """
         )

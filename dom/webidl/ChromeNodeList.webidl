@@ -10,7 +10,7 @@ interface ChromeNodeList : NodeList {
   constructor();
 
   [Throws]
-  void append(Node aNode);
+  undefined append(Node aNode);
   [Throws]
-  void remove(Node aNode);
+  undefined remove(Node aNode);
 };

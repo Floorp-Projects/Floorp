@@ -24,7 +24,7 @@ interface ServiceWorkerRegistration : EventTarget {
   readonly attribute ServiceWorkerUpdateViaCache updateViaCache;
 
   [Throws, NewObject]
-  Promise<void> update();
+  Promise<undefined> update();
 
   [Throws, NewObject]
   Promise<boolean> unregister();
@@ -48,7 +48,7 @@ partial interface ServiceWorkerRegistration {
 // https://notifications.spec.whatwg.org/
 partial interface ServiceWorkerRegistration {
   [NewObject, Pref="dom.webnotifications.serviceworker.enabled"]
-  Promise<void> showNotification(DOMString title, optional NotificationOptions options = {});
+  Promise<undefined> showNotification(DOMString title, optional NotificationOptions options = {});
   [NewObject, Pref="dom.webnotifications.serviceworker.enabled"]
   Promise<sequence<Notification>> getNotifications(optional GetNotificationOptions filter = {});
 };

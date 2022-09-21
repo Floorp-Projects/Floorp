@@ -6,7 +6,7 @@
  * https://wicg.github.io/entries-api/#idl-index
  */
 
-callback FileSystemEntriesCallback = void (sequence<FileSystemEntry> entries);
+callback FileSystemEntriesCallback = undefined (sequence<FileSystemEntry> entries);
 
 [Exposed=Window]
 interface FileSystemDirectoryReader {
@@ -14,6 +14,6 @@ interface FileSystemDirectoryReader {
     // readEntries can be called just once. The second time it returns no data.
 
     [Throws]
-    void readEntries(FileSystemEntriesCallback successCallback,
-                     optional ErrorCallback errorCallback);
+    undefined readEntries(FileSystemEntriesCallback successCallback,
+                          optional ErrorCallback errorCallback);
 };

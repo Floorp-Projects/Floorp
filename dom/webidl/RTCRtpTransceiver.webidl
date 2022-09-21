@@ -35,14 +35,14 @@ interface RTCRtpTransceiver {
     readonly attribute RTCRtpTransceiverDirection? currentDirection;
 
     [Throws]
-    void stop();
+    undefined stop();
     // TODO: bug 1396922
-    // void setCodecPreferences(sequence<RTCRtpCodecCapability> codecs);
+    // undefined setCodecPreferences(sequence<RTCRtpCodecCapability> codecs);
 
     [ChromeOnly]
-    void setAddTrackMagic();
+    undefined setAddTrackMagic();
     [ChromeOnly]
-    void setDirectionInternal(RTCRtpTransceiverDirection direction);
+    undefined setDirectionInternal(RTCRtpTransceiverDirection direction);
 
     [ChromeOnly]
     DOMString getKind();

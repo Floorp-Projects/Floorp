@@ -17,7 +17,7 @@ interface ExtensionMockAPI {
   any methodSyncWithReturn(any... args);
 
   [Throws, WebExtensionStub="NoReturn"]
-  void methodNoReturn(any... args);
+  undefined methodNoReturn(any... args);
 
   [Throws, WebExtensionStub="Async"]
   any methodAsync(any arg0, optional Function cb);

@@ -4,7 +4,7 @@ def WebIDLTest(parser, harness):
         parser.parse(
             """
             interface OneNullableInUnion {
-              void foo((object? or DOMString?) arg);
+              undefined foo((object? or DOMString?) arg);
             };
         """
         )
@@ -22,7 +22,7 @@ def WebIDLTest(parser, harness):
         parser.parse(
             """
             interface NullableInNullableUnion {
-              void foo((object? or DOMString)? arg);
+              undefined foo((object? or DOMString)? arg);
             };
         """
         )
@@ -45,7 +45,7 @@ def WebIDLTest(parser, harness):
             interface NullableInUnionNullableUnionHelper {
             };
             interface NullableInUnionNullableUnion {
-              void foo(((object? or DOMString) or NullableInUnionNullableUnionHelper)? arg);
+              undefined foo(((object? or DOMString) or NullableInUnionNullableUnionHelper)? arg);
             };
         """
         )

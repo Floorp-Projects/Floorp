@@ -30,9 +30,9 @@ interface SpeechRecognition : EventTarget {
 
     // methods to drive the speech interaction
     [Throws, NeedsCallerType]
-    void start(optional MediaStream stream);
-    void stop();
-    void abort();
+    undefined start(optional MediaStream stream);
+    undefined stop();
+    undefined abort();
 
     // event methods
     attribute EventHandler onaudiostart;

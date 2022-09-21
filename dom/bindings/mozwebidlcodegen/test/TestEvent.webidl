@@ -1,5 +1,5 @@
 interface EventTarget {
-  void addEventListener();
+  undefined addEventListener();
 };
 
 interface Event {};

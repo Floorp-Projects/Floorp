@@ -33,15 +33,15 @@ interface MediaRecorder : EventTarget {
 
 
   [Throws]
-  void start(optional unsigned long timeslice);
+  undefined start(optional unsigned long timeslice);
   [Throws]
-  void stop();
+  undefined stop();
   [Throws]
-  void pause();
+  undefined pause();
   [Throws]
-  void resume();
+  undefined resume();
   [Throws]
-  void requestData();
+  undefined requestData();
 
   static boolean isTypeSupported(DOMString type);
 };

@@ -26,13 +26,13 @@ interface IDBCursor {
     [SameObject] readonly attribute IDBRequest request;
 
     [Throws]
-    void       advance ([EnforceRange] unsigned long count);
+    undefined  advance ([EnforceRange] unsigned long count);
 
     [Throws]
-    void       continue (optional any key);
+    undefined  continue (optional any key);
 
     [Throws]
-    void       continuePrimaryKey(any key, any primaryKey);
+    undefined  continuePrimaryKey(any key, any primaryKey);
 
     [NewObject, Throws] IDBRequest update(any value);
     [NewObject, Throws] IDBRequest delete();

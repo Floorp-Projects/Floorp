@@ -19,9 +19,9 @@ interface ExtensionPort {
   readonly attribute any error;
 
   [Throws, WebExtensionStub="NoReturn"]
-  void disconnect();
+  undefined disconnect();
   [Throws, WebExtensionStub="NoReturn"]
-  void postMessage(any message);
+  undefined postMessage(any message);
 
   [Replaceable, SameObject]
   readonly attribute ExtensionEventManager onDisconnect;

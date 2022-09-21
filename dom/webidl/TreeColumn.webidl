@@ -34,5 +34,5 @@ interface TreeColumn {
   readonly attribute TreeColumn? previousColumn;
 
   [Throws]
-  void invalidate();
+  undefined invalidate();
 };

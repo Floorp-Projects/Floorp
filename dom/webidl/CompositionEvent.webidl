@@ -32,10 +32,10 @@ dictionary CompositionEventInit : UIEventInit {
 
 partial interface CompositionEvent
 {
-  void initCompositionEvent(DOMString typeArg,
-                            optional boolean canBubbleArg = false,
-                            optional boolean cancelableArg = false,
-                            optional Window? viewArg = null,
-                            optional DOMString? dataArg = null,
-                            optional DOMString localeArg = "");
+  undefined initCompositionEvent(DOMString typeArg,
+                                 optional boolean canBubbleArg = false,
+                                 optional boolean cancelableArg = false,
+                                 optional Window? viewArg = null,
+                                 optional DOMString? dataArg = null,
+                                 optional DOMString localeArg = "");
 };

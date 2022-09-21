@@ -22,13 +22,13 @@ interface History {
   [Throws]
   readonly attribute any state;
   [Throws, NeedsSubjectPrincipal]
-  void go(optional long delta = 0);
+  undefined go(optional long delta = 0);
   [Throws, NeedsCallerType]
-  void back();
+  undefined back();
   [Throws, NeedsCallerType]
-  void forward();
+  undefined forward();
   [Throws, NeedsCallerType]
-  void pushState(any data, DOMString title, optional DOMString? url = null);
+  undefined pushState(any data, DOMString title, optional DOMString? url = null);
   [Throws, NeedsCallerType]
-  void replaceState(any data, DOMString title, optional DOMString? url = null);
+  undefined replaceState(any data, DOMString title, optional DOMString? url = null);
 };

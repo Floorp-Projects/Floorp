@@ -14,11 +14,11 @@ interface FileSystemSyncAccessHandle {
   [Throws] unsigned long long write(([AllowShared] ArrayBufferView or [AllowShared] ArrayBuffer) buffer, optional FileSystemReadWriteOptions options = {});
 
   [NewObject]
-  Promise<void> truncate([EnforceRange] unsigned long long size);
+  Promise<undefined> truncate([EnforceRange] unsigned long long size);
   [NewObject]
   Promise<unsigned long long> getSize();
   [NewObject]
-  Promise<void> flush();
+  Promise<undefined> flush();
   [NewObject]
-  Promise<void> close();
+  Promise<undefined> close();
 };

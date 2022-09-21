@@ -33,17 +33,17 @@ interface CSSStyleSheet : StyleSheet {
   [Throws, NeedsSubjectPrincipal]
   unsigned long insertRule(UTF8String rule, optional unsigned long index = 0);
   [Throws, NeedsSubjectPrincipal]
-  void deleteRule(unsigned long index);
+  undefined deleteRule(unsigned long index);
   [NewObject, Pref="layout.css.constructable-stylesheets.enabled"]
   Promise<CSSStyleSheet> replace(UTF8String text);
   [Throws, Pref="layout.css.constructable-stylesheets.enabled"]
-  void replaceSync(UTF8String text);
+  undefined replaceSync(UTF8String text);
 
   // Non-standard WebKit things.
   [Throws, NeedsSubjectPrincipal, BinaryName="cssRules"]
   readonly attribute CSSRuleList rules;
   [Throws, NeedsSubjectPrincipal, BinaryName="deleteRule"]
-  void removeRule(optional unsigned long index = 0);
+  undefined removeRule(optional unsigned long index = 0);
   [Throws, NeedsSubjectPrincipal]
   long addRule(optional UTF8String selector = "undefined", optional UTF8String style = "undefined", optional unsigned long index);
 };

@@ -75,25 +75,25 @@ interface XULTreeElement : XULElement
   /**
    * Ensures that a row at a given index is visible.
    */
-  void ensureRowIsVisible(long index);
+  undefined ensureRowIsVisible(long index);
 
   /**
    * Ensures that a given cell in the tree is visible.
    */
   [Throws]
-  void ensureCellIsVisible(long row, TreeColumn? col);
+  undefined ensureCellIsVisible(long row, TreeColumn? col);
 
   /**
    * Scrolls such that the row at index is at the top of the visible view.
    */
-  void scrollToRow(long index);
+  undefined scrollToRow(long index);
 
   /**
    * Scroll the tree up or down by numLines lines. Positive
    * values move down in the tree. Prevents scrolling off the
    * end of the tree.
    */
-  void scrollByLines(long numLines);
+  undefined scrollByLines(long numLines);
 
   /**
    * Scroll the tree up or down by numPages pages. A page
@@ -101,16 +101,16 @@ interface XULTreeElement : XULElement
    * Positive values move down in the tree. Prevents scrolling
    * off the end of the tree.
    */
-  void scrollByPages(long numPages);
+  undefined scrollByPages(long numPages);
 
   /**
    * Invalidation methods for fine-grained painting control.
    */
-  void invalidate();
-  void invalidateColumn(TreeColumn? col);
-  void invalidateRow(long index);
-  void invalidateCell(long row, TreeColumn? col);
-  void invalidateRange(long startIndex, long endIndex);
+  undefined invalidate();
+  undefined invalidateColumn(TreeColumn? col);
+  undefined invalidateRow(long index);
+  undefined invalidateCell(long row, TreeColumn? col);
+  undefined invalidateRange(long startIndex, long endIndex);
 
   /**
    * A hit test that can tell you what row the mouse is over.
@@ -152,7 +152,7 @@ interface XULTreeElement : XULElement
    * rows were added or at which rows were removed.  For
    * non-contiguous additions/removals, this method should be called multiple times.
    */
-  void rowCountChanged(long index, long count);
+  undefined rowCountChanged(long index, long count);
 
   /**
    * Notify the tree that the view is about to perform a batch
@@ -160,21 +160,21 @@ interface XULTreeElement : XULElement
    * This must be followed by calling endUpdateBatch(), otherwise the tree
    * will get out of sync.
    */
-  void beginUpdateBatch();
+  undefined beginUpdateBatch();
 
   /**
    * Notify the tree that the view has completed a batch update.
    */
-  void endUpdateBatch();
+  undefined endUpdateBatch();
 
   /**
    * Called on a theme switch to flush out the tree's style and image caches.
    */
-  void clearStyleAndImageCaches();
+  undefined clearStyleAndImageCaches();
 
   /**
    * Remove an image source from the image cache to allow its invalidation.
    */
   [Throws]
-  void removeImageCacheEntry(long row, TreeColumn col);
+  undefined removeImageCacheEntry(long row, TreeColumn col);
 };

@@ -17,10 +17,10 @@ interface MediaQueryList : EventTarget {
   readonly attribute boolean matches;
 
   [Throws]
-  void addListener(EventListener? listener);
+  undefined addListener(EventListener? listener);
 
   [Throws]
-  void removeListener(EventListener? listener);
+  undefined removeListener(EventListener? listener);
 
            attribute EventHandler onchange;
 };

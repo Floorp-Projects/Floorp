@@ -16,7 +16,7 @@ interface DataTransferItemList {
   [Throws, NeedsSubjectPrincipal]
   DataTransferItem? add(File data);
   [Throws, NeedsSubjectPrincipal]
-  void remove(unsigned long index);
+  undefined remove(unsigned long index);
   [Throws, NeedsSubjectPrincipal]
-  void clear();
+  undefined clear();
 };

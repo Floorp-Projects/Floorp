@@ -49,25 +49,25 @@ interface DOMLocalization : Localization {
    * Adds a node to nodes observed for localization
    * related changes.
    */
-  [Throws] void connectRoot(Node aElement);
+  [Throws] undefined connectRoot(Node aElement);
 
   /**
    * Removes a node from nodes observed for localization
    * related changes.
    */
-  [Throws] void disconnectRoot(Node aElement);
+  [Throws] undefined disconnectRoot(Node aElement);
 
   /**
    * Pauses the MutationObserver set to observe
    * localization related DOM mutations.
    */
-  [Throws] void pauseObserving();
+  [Throws] undefined pauseObserving();
 
   /**
    * Resumes the MutationObserver set to observe
    * localization related DOM mutations.
    */
-  [Throws] void resumeObserving();
+  [Throws] undefined resumeObserving();
 
   /**
    * A helper function which allows the user to set localization-specific attributes
@@ -80,7 +80,7 @@ interface DOMLocalization : Localization {
    *
    *    <h1 data-l10n-id="key1" data-l10n-args="{\"emailCount\": 5}"/>
    */
-  [Throws] void setAttributes(Element aElement, DOMString aId, optional object? aArgs);
+  [Throws] undefined setAttributes(Element aElement, DOMString aId, optional object? aArgs);
 
   /**
    * A helper function which allows the user to retrieve a set of localization-specific
@@ -135,7 +135,7 @@ interface DOMLocalization : Localization {
    *    root.resumeObserving();
    *    alert(elem2.textContent);
    */
-  [NewObject] Promise<void> translateElements(sequence<Element> aElements);
+  [NewObject] Promise<undefined> translateElements(sequence<Element> aElements);
 
   /**
    * Triggers translation of all attached roots and sets their
@@ -144,5 +144,5 @@ interface DOMLocalization : Localization {
    * Example:
    *    await document.l10n.translateRoots();
    */
-  [NewObject] Promise<void> translateRoots();
+  [NewObject] Promise<undefined> translateRoots();
 };

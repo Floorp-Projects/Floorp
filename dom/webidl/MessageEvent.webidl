@@ -44,14 +44,14 @@ interface MessageEvent : Event {
    * the similarly-named method on the Event interface, also setting the
    * data, origin, source, and lastEventId attributes of this appropriately.
    */
-  void initMessageEvent(DOMString type,
-                        optional boolean bubbles = false,
-                        optional boolean cancelable = false,
-                        optional any data = null,
-                        optional DOMString origin = "",
-                        optional DOMString lastEventId = "",
-                        optional MessageEventSource? source = null,
-                        optional sequence<MessagePort> ports = []);
+  undefined initMessageEvent(DOMString type,
+                             optional boolean bubbles = false,
+                             optional boolean cancelable = false,
+                             optional any data = null,
+                             optional DOMString origin = "",
+                             optional DOMString lastEventId = "",
+                             optional MessageEventSource? source = null,
+                             optional sequence<MessagePort> ports = []);
 };
 
 dictionary MessageEventInit : EventInit {

@@ -51,21 +51,21 @@ interface MouseEvent : UIEvent {
   readonly attribute long           movementY;
 
   // Deprecated in DOM Level 3:
-void initMouseEvent(DOMString typeArg,
-                    optional boolean canBubbleArg = false,
-                    optional boolean cancelableArg = false,
-                    optional Window? viewArg = null,
-                    optional long detailArg = 0,
-                    optional long screenXArg = 0,
-                    optional long screenYArg = 0,
-                    optional long clientXArg = 0,
-                    optional long clientYArg = 0,
-                    optional boolean ctrlKeyArg = false,
-                    optional boolean altKeyArg = false,
-                    optional boolean shiftKeyArg = false,
-                    optional boolean metaKeyArg = false,
-                    optional short buttonArg = 0,
-                    optional EventTarget? relatedTargetArg = null);
+undefined initMouseEvent(DOMString typeArg,
+                         optional boolean canBubbleArg = false,
+                         optional boolean cancelableArg = false,
+                         optional Window? viewArg = null,
+                         optional long detailArg = 0,
+                         optional long screenXArg = 0,
+                         optional long screenYArg = 0,
+                         optional long clientXArg = 0,
+                         optional long clientYArg = 0,
+                         optional boolean ctrlKeyArg = false,
+                         optional boolean altKeyArg = false,
+                         optional boolean shiftKeyArg = false,
+                         optional boolean metaKeyArg = false,
+                         optional short buttonArg = 0,
+                         optional EventTarget? relatedTargetArg = null);
   // Introduced in DOM Level 3:
   boolean                           getModifierState(DOMString keyArg);
 };
@@ -105,30 +105,30 @@ partial interface MouseEvent
 
   readonly attribute unsigned short mozInputSource;
 
-  void initNSMouseEvent(DOMString typeArg,
-                        optional boolean canBubbleArg = false,
-                        optional boolean cancelableArg = false,
-                        optional Window? viewArg = null,
-                        optional long detailArg = 0,
-                        optional long screenXArg = 0,
-                        optional long screenYArg = 0,
-                        optional long clientXArg = 0,
-                        optional long clientYArg = 0,
-                        optional boolean ctrlKeyArg = false,
-                        optional boolean altKeyArg = false,
-                        optional boolean shiftKeyArg = false,
-                        optional boolean metaKeyArg = false,
-                        optional short buttonArg = 0,
-                        optional EventTarget? relatedTargetArg = null,
-                        optional float pressure = 0,
-                        optional unsigned short inputSourceArg = 0);
+  undefined initNSMouseEvent(DOMString typeArg,
+                             optional boolean canBubbleArg = false,
+                             optional boolean cancelableArg = false,
+                             optional Window? viewArg = null,
+                             optional long detailArg = 0,
+                             optional long screenXArg = 0,
+                             optional long screenYArg = 0,
+                             optional long clientXArg = 0,
+                             optional long clientYArg = 0,
+                             optional boolean ctrlKeyArg = false,
+                             optional boolean altKeyArg = false,
+                             optional boolean shiftKeyArg = false,
+                             optional boolean metaKeyArg = false,
+                             optional short buttonArg = 0,
+                             optional EventTarget? relatedTargetArg = null,
+                             optional float pressure = 0,
+                             optional unsigned short inputSourceArg = 0);
 
   /**
    * preventClickEvent() prevents the following "click", "auxclick" and
    * "dblclick" events of "mousedown" and "mouseup" events.
    */
   [ChromeOnly]
-  void preventClickEvent();
+  undefined preventClickEvent();
 
   /**
    * Returns true if the following "click", "auxclick" and "dblclick"

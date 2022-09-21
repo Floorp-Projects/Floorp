@@ -16,6 +16,6 @@ interface ReadableStreamBYOBReader {
   Promise<ReadableStreamReadResult> read(ArrayBufferView view);
 
   [Throws]
-  void releaseLock();
+  undefined releaseLock();
 };
 ReadableStreamBYOBReader includes ReadableStreamGenericReader;

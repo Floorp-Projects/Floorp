@@ -1,3 +1,3 @@
 interface Parent {
-  void MethodFoo();
+  undefined MethodFoo();
 };

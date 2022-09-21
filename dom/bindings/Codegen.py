@@ -226,7 +226,7 @@ def idlTypeNeedsCallContext(type, descriptor=None, allowTreatNonCallableAsNull=F
     if type.isUnion():
         # Can throw if a type not in the union is passed in.
         return True
-    if type.isVoid():
+    if type.isUndefined():
         # Clearly doesn't need a method description; we can only get here from
         # CGHeaders trying to decide whether to include the method description
         # header.
@@ -7472,7 +7472,7 @@ def getJSToNativeConversionInfo(
             template, declType=declType, declArgs=declArgs, dealWithOptional=isOptional
         )
 
-    if type.isVoid():
+    if type.isUndefined():
         assert not isOptional
         # This one only happens for return values, and its easy: Just
         # ignore the jsval.
@@ -8015,7 +8015,7 @@ def getWrapTemplateForType(
             successCode=successCode,
         )
 
-    if type is None or type.isVoid():
+    if type is None or type.isUndefined():
         return (setUndefined(), True)
 
     if (type.isSequence() or type.isRecord()) and type.nullable():
@@ -8577,7 +8577,7 @@ def getRetvalDeclarationForType(returnType, descriptorProvider, isMember=False):
     5) The name of a function that needs to be called with the return value
        before using it, or None if no function needs to be called.
     """
-    if returnType is None or returnType.isVoid():
+    if returnType is None or returnType.isUndefined():
         # Nothing to declare
         return None, None, None, None, None
     if returnType.isPrimitive() and returnType.tag() in builtinNames:
@@ -8931,7 +8931,7 @@ class CGCallGenerator(CGThing):
         if not static:
             call = CGWrapper(call, pre="%s->" % object)
         call = CGList([call, CGWrapper(args, pre="(", post=")")])
-        if returnType is None or returnType.isVoid() or resultOutParam is not None:
+        if returnType is None or returnType.isUndefined() or resultOutParam is not None:
             assert resultConversion is None
             call = CGList(
                 [
@@ -10078,8 +10078,8 @@ class CGMethodCall(CGThing):
                 # We don't support variadics as the distinguishingArgument yet.
                 # If you want to add support, consider this case:
                 #
-                #   void(long... foo);
-                #   void(long bar, Int32Array baz);
+                #   undefined(long... foo);
+                #   undefined(long bar, Int32Array baz);
                 #
                 # in which we have to convert argument 0 to long before picking
                 # an overload... but all the variadic stuff needs to go into a
@@ -10708,12 +10708,12 @@ class CGSpecializedMethod(CGAbstractStaticMethod):
         prefix = ""
         if self.method.getExtendedAttribute("CrossOriginCallable"):
             for signature in self.method.signatures():
-                # non-void signatures would require us to deal with remote proxies for the
+                # non-undefined signatures would require us to deal with remote proxies for the
                 # return value here.
-                if not signature[0].isVoid():
+                if not signature[0].isUndefined():
                     raise TypeError(
                         "We don't support a method marked as CrossOriginCallable "
-                        "with non-void return type"
+                        "with non-undefined return type"
                     )
             prototypeID, _ = PrototypeIDAndDepth(self.descriptor)
             prefix = fill(
@@ -11902,7 +11902,7 @@ class CGMemberJITInfo(CGThing):
                     False,
                     False,
                     "0",
-                    [BuiltinTypes[IDLBuiltinType.Types.void]],
+                    [BuiltinTypes[IDLBuiltinType.Types.undefined]],
                     None,
                 )
             return result
@@ -12042,7 +12042,7 @@ class CGMemberJITInfo(CGThing):
         if t.nullable():
             # Sometimes it might return null, sometimes not
             return "JSVAL_TYPE_UNKNOWN"
-        if t.isVoid():
+        if t.isUndefined():
             # No return, every time
             return "JSVAL_TYPE_UNDEFINED"
         if t.isSequence():
@@ -12127,7 +12127,7 @@ class CGMemberJITInfo(CGThing):
 
     @staticmethod
     def getJSArgType(t):
-        assert not t.isVoid()
+        assert not t.isUndefined()
         if t.nullable():
             # Sometimes it might return null, sometimes not
             return (
@@ -18749,7 +18749,9 @@ class CGNativeMember(ClassMethod):
             # Mark our getters, which are attrs that
             # have a non-void return type, as const.
             const=(
-                not member.isStatic() and member.isAttr() and not signature[0].isVoid()
+                not member.isStatic()
+                and member.isAttr()
+                and not signature[0].isUndefined()
             ),
             breakAfterReturnDecl=" ",
             breakAfterSelf=breakAfterSelf,
@@ -18778,7 +18780,7 @@ class CGNativeMember(ClassMethod):
         isMember is true, this can be None, since in that case the caller will
         never examine this value.
         """
-        if type.isVoid():
+        if type.isUndefined():
             return "void", "", ""
         if type.isPrimitive() and type.tag() in builtinNames:
             result = CGGeneric(builtinNames[type.tag()])
@@ -19254,7 +19256,10 @@ class CGExampleSetter(CGNativeMember):
             descriptor,
             attr,
             CGSpecializedSetter.makeNativeName(descriptor, attr),
-            (BuiltinTypes[IDLBuiltinType.Types.void], [FakeArgument(attr.type)]),
+            (
+                BuiltinTypes[IDLBuiltinType.Types.undefined],
+                [FakeArgument(attr.type)],
+            ),
             descriptor.getExtendedAttributes(attr, setter=True),
         )
 
@@ -19485,7 +19490,7 @@ class CGExampleObservableArrayCallback(CGNativeMember):
             attr,
             self.makeNativeName(attr, callbackName),
             (
-                BuiltinTypes[IDLBuiltinType.Types.void],
+                BuiltinTypes[IDLBuiltinType.Types.undefined],
                 [
                     FakeArgument(attr.type.inner, "aValue"),
                     FakeArgument(
@@ -19946,7 +19951,10 @@ class CGJSImplSetter(CGJSImplMember):
             descriptor,
             attr,
             CGSpecializedSetter.makeNativeName(descriptor, attr),
-            (BuiltinTypes[IDLBuiltinType.Types.void], [FakeArgument(attr.type)]),
+            (
+                BuiltinTypes[IDLBuiltinType.Types.undefined],
+                [FakeArgument(attr.type)],
+            ),
             descriptor.getExtendedAttributes(attr, setter=True),
             passJSBitsAsNeeded=False,
         )
@@ -19955,7 +19963,7 @@ class CGJSImplSetter(CGJSImplMember):
         callbackArgs = [
             arg.name
             for arg in self.getArgs(
-                BuiltinTypes[IDLBuiltinType.Types.void],
+                BuiltinTypes[IDLBuiltinType.Types.undefined],
                 [FakeArgument(self.member.type)],
             )
         ]
@@ -21319,7 +21327,10 @@ class CallbackSetter(CallbackAccessor):
         CallbackAccessor.__init__(
             self,
             attr,
-            (BuiltinTypes[IDLBuiltinType.Types.void], [FakeArgument(attr.type)]),
+            (
+                BuiltinTypes[IDLBuiltinType.Types.undefined],
+                [FakeArgument(attr.type)],
+            ),
             callbackSetterName(attr, descriptor),
             descriptor,
             spiderMonkeyInterfacesAreStructs,
@@ -21362,7 +21373,7 @@ class CGJSImplInitOperation(CallbackOperationBase):
         assert sig in descriptor.interface.ctor().signatures()
         CallbackOperationBase.__init__(
             self,
-            (BuiltinTypes[IDLBuiltinType.Types.void], sig[1]),
+            (BuiltinTypes[IDLBuiltinType.Types.undefined], sig[1]),
             "__init",
             "__Init",
             descriptor,
@@ -21386,7 +21397,7 @@ class CGJSImplEventHookOperation(CallbackOperationBase):
         CallbackOperationBase.__init__(
             self,
             (
-                BuiltinTypes[IDLBuiltinType.Types.void],
+                BuiltinTypes[IDLBuiltinType.Types.undefined],
                 [FakeArgument(BuiltinTypes[IDLBuiltinType.Types.domstring], "aType")],
             ),
             name,
@@ -21836,7 +21847,7 @@ class CGHelperFunctionGenerator(CallbackMember):
         descriptor,
         name,
         args,
-        returnType=BuiltinTypes[IDLBuiltinType.Types.void],
+        returnType=BuiltinTypes[IDLBuiltinType.Types.undefined],
         needsResultConversion=True,
     ):
         assert returnType.isType()
@@ -22011,7 +22022,7 @@ class CGMaplikeOrSetlikeHelperFunctionGenerator(CGHelperFunctionGenerator):
             assert not needsValueTypeReturn
             args.append(FakeArgument(maplikeOrSetlike.valueType, "aValue"))
 
-        returnType = BuiltinTypes[IDLBuiltinType.Types.void]
+        returnType = BuiltinTypes[IDLBuiltinType.Types.undefined]
         if needsBoolReturn:
             returnType = BuiltinTypes[IDLBuiltinType.Types.boolean]
         elif needsValueTypeReturn:
@@ -22738,7 +22749,7 @@ class CGObservableArrayHelperFunctionGenerator(CGHelperFunctionGenerator):
         descriptor,
         attr,
         name,
-        returnType=BuiltinTypes[IDLBuiltinType.Types.void],
+        returnType=BuiltinTypes[IDLBuiltinType.Types.undefined],
         needsResultConversion=True,
         needsIndexArg=False,
         needsValueArg=False,

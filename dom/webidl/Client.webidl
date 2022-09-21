@@ -23,9 +23,9 @@ interface Client {
   // readonly attribute boolean reserved;
 
   [Throws]
-  void postMessage(any message, sequence<object> transfer);
+  undefined postMessage(any message, sequence<object> transfer);
   [Throws]
-  void postMessage(any message, optional StructuredSerializeOptions aOptions = {});
+  undefined postMessage(any message, optional StructuredSerializeOptions aOptions = {});
 };
 
 [Exposed=ServiceWorker]

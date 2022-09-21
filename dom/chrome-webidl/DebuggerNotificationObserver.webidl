@@ -4,7 +4,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-callback DebuggerNotificationCallback = void (DebuggerNotification n);
+callback DebuggerNotificationCallback = undefined (DebuggerNotification n);
 
 [ChromeOnly, Exposed=(Window, Worker)]
 interface DebuggerNotificationObserver {

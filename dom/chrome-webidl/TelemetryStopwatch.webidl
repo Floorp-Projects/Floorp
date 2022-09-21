@@ -226,7 +226,7 @@ namespace TelemetryStopwatch {
   /**
    * Set the testing mode. Used by tests.
    */
-  void setTestModeEnabled(optional boolean testing = true);
+  undefined setTestModeEnabled(optional boolean testing = true);
 };
 
 dictionary TelemetryStopwatchOptions {

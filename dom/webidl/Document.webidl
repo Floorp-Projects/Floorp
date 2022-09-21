@@ -108,8 +108,8 @@ interface Document : Node {
 
   // NEW
   // No support for prepend/append yet
-  // void prepend((Node or DOMString)... nodes);
-  // void append((Node or DOMString)... nodes);
+  // undefined prepend((Node or DOMString)... nodes);
+  // undefined append((Node or DOMString)... nodes);
 
   // These are not in the spec, but leave them for now for backwards compat.
   // So sort of like Gecko extensions
@@ -156,11 +156,11 @@ partial interface Document {
   [CEReactions, Throws]
   WindowProxy? open(USVString url, DOMString name, DOMString features);
   [CEReactions, Throws]
-  void close();
+  undefined close();
   [CEReactions, Throws]
-  void write(DOMString... text);
+  undefined write(DOMString... text);
   [CEReactions, Throws]
-  void writeln(DOMString... text);
+  undefined writeln(DOMString... text);
 
   // user interaction
   [Pure]
@@ -210,7 +210,7 @@ partial interface Document {
    * @see <https://developer.mozilla.org/en/DOM/document.releaseCapture>
    */
   [Deprecated=DocumentReleaseCapture, Pref="dom.mouse_capture.enabled"]
-  void releaseCapture();
+  undefined releaseCapture();
   /**
    * Use the given DOM element as the source image of target |-moz-element()|.
    *
@@ -241,8 +241,8 @@ partial interface Document {
    * @see <https://developer.mozilla.org/en/DOM/document.mozSetImageElement>
    */
   [UseCounter]
-  void mozSetImageElement(DOMString aImageElementId,
-                          Element? aImageElement);
+  undefined mozSetImageElement(DOMString aImageElementId,
+                               Element? aImageElement);
 
   [ChromeOnly]
   readonly attribute URI? documentURIObject;
@@ -274,12 +274,12 @@ partial interface Document {
   [SameObject] readonly attribute HTMLCollection anchors;
   [SameObject] readonly attribute HTMLCollection applets;
 
-  void clear();
+  undefined clear();
   // @deprecated These are old Netscape 4 methods. Do not use,
   //             the implementation is no-op.
   // XXXbz do we actually need these anymore?
-  void captureEvents();
-  void releaseEvents();
+  undefined captureEvents();
+  undefined releaseEvents();
 
   [SameObject] readonly attribute HTMLAllCollection all;
 };
@@ -298,9 +298,9 @@ partial interface Document {
   readonly attribute boolean mozFullScreenEnabled;
 
   [NewObject]
-  Promise<void> exitFullscreen();
+  Promise<undefined> exitFullscreen();
   [NewObject, BinaryName="exitFullscreen"]
-  Promise<void> mozCancelFullScreen();
+  Promise<undefined> mozCancelFullScreen();
 
   // Events handlers
   attribute EventHandler onfullscreenchange;
@@ -310,7 +310,7 @@ partial interface Document {
 // https://w3c.github.io/pointerlock/#extensions-to-the-document-interface
 // https://w3c.github.io/pointerlock/#extensions-to-the-documentorshadowroot-mixin
 partial interface Document {
-  void exitPointerLock();
+  undefined exitPointerLock();
 
   // Event handlers
   attribute EventHandler onpointerlockchange;
@@ -323,7 +323,7 @@ partial interface Document {
   Promise<any> addCertException(boolean isTemporary);
 
   [Func="Document::CallerIsTrustedAboutHttpsOnlyError"]
-  void reloadWithHttpsOnlyException();
+  undefined reloadWithHttpsOnlyException();
 
   [Func="Document::CallerIsTrustedAboutCertError", Throws]
   FailedCertSecurityInfo getFailedCertSecurityInfo();
@@ -349,7 +349,7 @@ partial interface Document {
     readonly attribute DOMString? preferredStyleSheetSet;
     [Constant]
     readonly attribute DOMStringList styleSheetSets;
-    void enableStyleSheetsForSet (DOMString? name);
+    undefined enableStyleSheetsForSet (DOMString? name);
 };
 
 // https://drafts.csswg.org/cssom-view/#extensions-to-the-document-interface
@@ -453,7 +453,7 @@ partial interface Document {
                             optional BlockParsingOptions options = {});
 
   [Func="nsContentUtils::IsPDFJS", BinaryName="blockUnblockOnloadForPDFJS"]
-  void blockUnblockOnload(boolean block);
+  undefined blockUnblockOnload(boolean block);
 
   // like documentURI, except that for error pages, it returns the URI we were
   // trying to load when we hit an error, rather than the error page's own URI.
@@ -463,7 +463,7 @@ partial interface Document {
   // are ready to start layout.
   // This is used for the  "document_idle" webextension script injection point.
   [ChromeOnly, Throws]
-  readonly attribute Promise<void> documentReadyForIdle;
+  readonly attribute Promise<undefined> documentReadyForIdle;
 
   // Lazily created command dispatcher, returns null if the document is not
   // chrome privileged.
@@ -529,7 +529,7 @@ partial interface Document {
    * instance.
    */
   [ChromeOnly, Throws]
-  void removeAnonymousContent(AnonymousContent aContent);
+  undefined removeAnonymousContent(AnonymousContent aContent);
 };
 
 // http://w3c.github.io/selection-api/#extensions-to-document-interface
@@ -543,12 +543,12 @@ partial interface Document {
   [Pref="dom.storage_access.enabled", NewObject]
   Promise<boolean> hasStorageAccess();
   [Pref="dom.storage_access.enabled", NewObject]
-  Promise<void> requestStorageAccess();
+  Promise<undefined> requestStorageAccess();
   // https://github.com/privacycg/storage-access/pull/100
   [Pref="dom.storage_access.forward_declared.enabled", NewObject]
-  Promise<void> requestStorageAccessUnderSite(DOMString serializedSite);
+  Promise<undefined> requestStorageAccessUnderSite(DOMString serializedSite);
   [Pref="dom.storage_access.forward_declared.enabled", NewObject]
-  Promise<void> completeStorageAccessRequestFromSite(DOMString serializedSite);
+  Promise<undefined> completeStorageAccessRequestFromSite(DOMString serializedSite);
 };
 
 // A privileged API to give chrome privileged code and the content script of the
@@ -556,7 +556,7 @@ partial interface Document {
 // third party.
 partial interface Document {
   [Func="Document::CallerCanAccessPrivilegeSSA", NewObject]
-  Promise<void> requestStorageAccessForOrigin(DOMString thirdPartyOrigin, optional boolean requireUserInteraction = true);
+  Promise<undefined> requestStorageAccessForOrigin(DOMString thirdPartyOrigin, optional boolean requireUserInteraction = true);
 };
 
 enum DocumentAutoplayPolicy {
@@ -581,10 +581,10 @@ partial interface Document {
 // by user gesture.
 partial interface Document {
   [ChromeOnly]
-  void notifyUserGestureActivation();
+  undefined notifyUserGestureActivation();
   // For testing only.
   [ChromeOnly]
-  void clearUserGestureActivation();
+  undefined clearUserGestureActivation();
   [ChromeOnly]
   readonly attribute boolean hasBeenUserGestureActivated;
   [ChromeOnly]
@@ -600,7 +600,7 @@ partial interface Document {
 // document or one of its subdocuments.
 partial interface Document {
   [ChromeOnly]
-  void setSuppressedEventListener(EventListener? aListener);
+  undefined setSuppressedEventListener(EventListener? aListener);
 };
 
 // Allows frontend code to query a CSP which needs to be passed for a
@@ -657,7 +657,7 @@ partial interface Document {
   [ChromeOnly]
   const unsigned short KEYPRESS_EVENT_MODEL_CONFLATED = 2;
   [ChromeOnly]
-  void setKeyPressEventModel(unsigned short aKeyPressEventModel);
+  undefined setKeyPressEventModel(unsigned short aKeyPressEventModel);
 };
 
 // Extensions to return information about about the nodes blocked by the
@@ -683,7 +683,7 @@ partial interface Document {
 // used for testing.
 partial interface Document {
   [ChromeOnly, BinaryName="setUserHasInteracted"]
-  void userInteractionForTesting();
+  undefined userInteractionForTesting();
 };
 
 // Extension for permission delegation.
@@ -699,14 +699,14 @@ partial interface Document {
    * XHR completes successfully.
    */
   [ChromeOnly]
-  void setNotifyFetchSuccess(boolean aShouldNotify);
+  undefined setNotifyFetchSuccess(boolean aShouldNotify);
 
   /*
    * Set whether a form and a password field notify an event when it is
    * removed from the DOM tree.
    */
   [ChromeOnly]
-  void setNotifyFormOrPasswordRemoved(boolean aShouldNotify);
+  undefined setNotifyFormOrPasswordRemoved(boolean aShouldNotify);
 };
 
 // Extension to allow chrome code to detect initial about:blank documents.

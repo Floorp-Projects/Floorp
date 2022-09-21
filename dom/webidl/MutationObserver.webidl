@@ -44,8 +44,8 @@ interface MutationObserver {
   constructor(MutationCallback mutationCallback);
 
   [Throws, NeedsSubjectPrincipal]
-  void observe(Node target, optional MutationObserverInit options = {});
-  void disconnect();
+  undefined observe(Node target, optional MutationObserverInit options = {});
+  undefined disconnect();
   sequence<MutationRecord> takeRecords();
 
   [ChromeOnly, Throws]
@@ -56,7 +56,7 @@ interface MutationObserver {
   attribute boolean mergeAttributeRecords;
 };
 
-callback MutationCallback = void (sequence<MutationRecord> mutations, MutationObserver observer);
+callback MutationCallback = undefined (sequence<MutationRecord> mutations, MutationObserver observer);
 
 dictionary MutationObserverInit {
   boolean childList = false;

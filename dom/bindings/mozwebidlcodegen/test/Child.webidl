@@ -1,3 +1,3 @@
 interface Child : Parent {
-  void ChildBaz();
+  undefined ChildBaz();
 };

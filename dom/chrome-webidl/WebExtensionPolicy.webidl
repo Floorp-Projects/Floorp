@@ -201,19 +201,19 @@ interface WebExtensionPolicy {
    * Register a new content script programmatically.
    */
   [Throws]
-  void registerContentScript(WebExtensionContentScript script);
+  undefined registerContentScript(WebExtensionContentScript script);
 
   /**
    * Unregister a content script.
    */
   [Throws]
-  void unregisterContentScript(WebExtensionContentScript script);
+  undefined unregisterContentScript(WebExtensionContentScript script);
 
   /**
    * Injects the extension's content script into all existing matching windows.
    */
   [Throws]
-  void injectContentScripts();
+  undefined injectContentScripts();
 
   /**
    * Returns the list of currently active extension policies.

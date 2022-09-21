@@ -4,7 +4,7 @@ def WebIDLTest(parser, harness):
         parser.parse(
             """
             interface Foo {
-              [CEReactions(DOMString a)] void foo(boolean arg2);
+              [CEReactions(DOMString a)] undefined foo(boolean arg2);
             };
         """
         )
@@ -58,7 +58,7 @@ def WebIDLTest(parser, harness):
         parser.parse(
             """
             interface Foo {
-              [CEReactions] void foo(boolean arg2);
+              [CEReactions] undefined foo(boolean arg2);
             };
         """
         )

@@ -17,7 +17,7 @@ interface mixin WindowOrWorkerGlobalScope {
   readonly attribute boolean crossOriginIsolated;
 
   [Throws, NeedsCallerType]
-  void reportError(any e);
+  undefined reportError(any e);
 
   // base64 utility methods
   [Throws]
@@ -32,15 +32,15 @@ interface mixin WindowOrWorkerGlobalScope {
   long setTimeout(Function handler, optional long timeout = 0, any... arguments);
   [Throws]
   long setTimeout(DOMString handler, optional long timeout = 0, any... unused);
-  void clearTimeout(optional long handle = 0);
+  undefined clearTimeout(optional long handle = 0);
   [Throws]
   long setInterval(Function handler, optional long timeout = 0, any... arguments);
   [Throws]
   long setInterval(DOMString handler, optional long timeout = 0, any... unused);
-  void clearInterval(optional long handle = 0);
+  undefined clearInterval(optional long handle = 0);
 
   // microtask queuing
-  void queueMicrotask(VoidFunction callback);
+  undefined queueMicrotask(VoidFunction callback);
 
   // ImageBitmap
   [Throws]

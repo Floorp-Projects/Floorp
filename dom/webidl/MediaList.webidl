@@ -12,7 +12,7 @@ interface MediaList {
   readonly attribute unsigned long    length;
   getter UTF8String? item(unsigned long index);
   [Throws]
-  void               deleteMedium(UTF8String oldMedium);
+  undefined          deleteMedium(UTF8String oldMedium);
   [Throws]
-  void               appendMedium(UTF8String newMedium);
+  undefined          appendMedium(UTF8String newMedium);
 };

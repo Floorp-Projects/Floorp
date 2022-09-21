@@ -30,5 +30,5 @@ partial interface HTMLStyleElement {
    * or innerHTML on this element.
    */
   [ChromeOnly]
-  void setDevtoolsAsTriggeringPrincipal();
+  undefined setDevtoolsAsTriggeringPrincipal();
 };

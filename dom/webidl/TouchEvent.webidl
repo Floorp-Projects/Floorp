@@ -24,16 +24,16 @@ interface TouchEvent : UIEvent {
   readonly attribute boolean ctrlKey;
   readonly attribute boolean shiftKey;
 
-  void initTouchEvent(DOMString type,
-                      optional boolean canBubble = false,
-                      optional boolean cancelable = false,
-                      optional Window? view = null,
-                      optional long detail = 0,
-                      optional boolean ctrlKey = false,
-                      optional boolean altKey = false,
-                      optional boolean shiftKey = false,
-                      optional boolean metaKey = false,
-                      optional TouchList? touches = null,
-                      optional TouchList? targetTouches = null,
-                      optional TouchList? changedTouches = null);
+  undefined initTouchEvent(DOMString type,
+                           optional boolean canBubble = false,
+                           optional boolean cancelable = false,
+                           optional Window? view = null,
+                           optional long detail = 0,
+                           optional boolean ctrlKey = false,
+                           optional boolean altKey = false,
+                           optional boolean shiftKey = false,
+                           optional boolean metaKey = false,
+                           optional TouchList? touches = null,
+                           optional TouchList? targetTouches = null,
+                           optional TouchList? changedTouches = null);
 };

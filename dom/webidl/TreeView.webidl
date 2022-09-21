@@ -86,7 +86,7 @@ interface mixin TreeView
    * specifies before/on/after the given |row|.
    */
   [Throws]
-  void drop(long row, long orientation, DataTransfer? dataTransfer);
+  undefined drop(long row, long orientation, DataTransfer? dataTransfer);
 
   /**
    * Methods used by the tree to draw thread lines in the tree.
@@ -139,29 +139,29 @@ interface mixin TreeView
    * Called during initialization to link the view to the front end box object.
    */
   [Throws]
-  void setTree(XULTreeElement? tree);
+  undefined setTree(XULTreeElement? tree);
 
   /**
    * Called on the view when an item is opened or closed.
    */
   [Throws]
-  void toggleOpenState(long row);
+  undefined toggleOpenState(long row);
 
   /**
    * Called on the view when a header is clicked.
    */
   [Throws]
-  void cycleHeader(TreeColumn column);
+  undefined cycleHeader(TreeColumn column);
 
   /**
    * Should be called from a XUL onselect handler whenever the selection changes.
    */
-  void selectionChanged();
+  undefined selectionChanged();
 
   /**
    * Called on the view when a cell in a non-selectable cycling column (e.g., unread/flag/etc.) is clicked.
    */
-  void cycleCell(long row, TreeColumn column);
+  undefined cycleCell(long row, TreeColumn column);
 
   /**
    * isEditable is called to ask the view if the cell contents are editable.
@@ -176,11 +176,11 @@ interface mixin TreeView
    * This method is only called for columns of type other than |text|.
    */
   [Throws]
-  void setCellValue(long row, TreeColumn column, DOMString value);
+  undefined setCellValue(long row, TreeColumn column, DOMString value);
 
   /**
    * setCellText is called when the contents of the cell have been edited by the user.
    */
   [Throws]
-  void setCellText(long row, TreeColumn column, DOMString value);
+  undefined setCellText(long row, TreeColumn column, DOMString value);
 };

@@ -75,7 +75,7 @@ def WebIDLTest(parser, harness):
         parser.parse(
             """
             interface A {
-              void foo(Promise<any>? arg);
+              undefined foo(Promise<any>? arg);
             };
         """
         )

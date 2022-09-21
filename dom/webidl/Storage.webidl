@@ -23,13 +23,13 @@ interface Storage {
   getter DOMString? getItem(DOMString key);
 
   [Throws, NeedsSubjectPrincipal]
-  setter void setItem(DOMString key, DOMString value);
+  setter undefined setItem(DOMString key, DOMString value);
 
   [Throws, NeedsSubjectPrincipal]
-  deleter void removeItem(DOMString key);
+  deleter undefined removeItem(DOMString key);
 
   [Throws, NeedsSubjectPrincipal]
-  void clear();
+  undefined clear();
 
   [ChromeOnly]
   readonly attribute boolean isSessionOnly;
@@ -47,14 +47,14 @@ partial interface Storage {
    * have a similar effect but also impact the state of the snapshot.)
    */
   [Throws, NeedsSubjectPrincipal, Pref="dom.storage.testing"]
-  void open();
+  undefined open();
 
   /**
    * Automatically ends any explicit snapshot and drops the reference to the
    * underlying database, but does not otherwise perturb the database.
    */
   [Throws, NeedsSubjectPrincipal, Pref="dom.storage.testing"]
-  void close();
+  undefined close();
 
   /**
    * Ensures the database has been opened and initiates an explicit snapshot.
@@ -63,7 +63,7 @@ partial interface Storage {
    * `endExplicitSnapshot` or `close`.
    */
   [Throws, NeedsSubjectPrincipal, Pref="dom.storage.testing"]
-  void beginExplicitSnapshot();
+  undefined beginExplicitSnapshot();
 
   /**
    * Checkpoints the explicitly begun snapshot. This is only useful for testing
@@ -72,14 +72,14 @@ partial interface Storage {
    * snapshot before it's ended.
    */
   [Throws, NeedsSubjectPrincipal, Pref="dom.storage.testing"]
-  void checkpointExplicitSnapshot();
+  undefined checkpointExplicitSnapshot();
 
   /**
    * Ends the explicitly begun snapshot and retains the underlying database.
    * Compare with `close` which also drops the reference to the database.
    */
   [Throws, NeedsSubjectPrincipal, Pref="dom.storage.testing"]
-  void endExplicitSnapshot();
+  undefined endExplicitSnapshot();
 
   /**
    * Returns true if the underlying database has been opened, the database is

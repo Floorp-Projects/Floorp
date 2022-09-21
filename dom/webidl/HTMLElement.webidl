@@ -36,7 +36,7 @@ interface HTMLElement : Element {
   [CEReactions, SetterThrows, Pure, Pref="html5.inert.enabled"]
            attribute boolean inert;
   [NeedsCallerType]
-  void click();
+  undefined click();
   [CEReactions, SetterThrows, Pure]
            attribute DOMString accessKey;
   [Pure]

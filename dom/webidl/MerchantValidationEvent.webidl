@@ -22,7 +22,7 @@ interface MerchantValidationEvent : Event {
   readonly attribute DOMString methodName;
   readonly attribute USVString validationURL;
   [Throws]
-  void complete(Promise<any> merchantSessionPromise);
+  undefined complete(Promise<any> merchantSessionPromise);
 };
 
 dictionary MerchantValidationEventInit : EventInit {

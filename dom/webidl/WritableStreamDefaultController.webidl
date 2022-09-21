@@ -10,7 +10,7 @@
 [Exposed=*, Pref="dom.streams.writable_streams.enabled"]
 interface WritableStreamDefaultController {
   [Throws]
-  void error(optional any e);
+  undefined error(optional any e);
 };
 
 // TODO: AbortSignal is not exposed on Worklet

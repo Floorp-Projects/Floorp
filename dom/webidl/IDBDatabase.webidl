@@ -25,8 +25,8 @@ interface IDBDatabase : EventTarget {
         DOMString name,
         optional IDBObjectStoreParameters options = {});
     [Throws]
-    void           deleteObjectStore (DOMString name);
-    void           close ();
+    undefined      deleteObjectStore (DOMString name);
+    undefined      close ();
 
                 attribute EventHandler       onabort;
                 attribute EventHandler       onclose;

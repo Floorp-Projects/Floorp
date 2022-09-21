@@ -237,14 +237,14 @@ interface mixin KeyEventMixin {
   const unsigned long DOM_VK_WIN_OEM_CLEAR  = 0xFE;
 
   [BinaryName="initKeyEventJS", Func="KeyboardEvent::IsInitKeyEventAvailable"]
-  void initKeyEvent(DOMString type,
-                    optional boolean canBubble = false,
-                    optional boolean cancelable = false,
-                    optional Window? view = null,
-                    optional boolean ctrlKey = false,
-                    optional boolean altKey = false,
-                    optional boolean shiftKey = false,
-                    optional boolean metaKey = false,
-                    optional unsigned long keyCode = 0,
-                    optional unsigned long charCode = 0);
+  undefined initKeyEvent(DOMString type,
+                         optional boolean canBubble = false,
+                         optional boolean cancelable = false,
+                         optional Window? view = null,
+                         optional boolean ctrlKey = false,
+                         optional boolean altKey = false,
+                         optional boolean shiftKey = false,
+                         optional boolean metaKey = false,
+                         optional unsigned long keyCode = 0,
+                         optional unsigned long charCode = 0);
 };

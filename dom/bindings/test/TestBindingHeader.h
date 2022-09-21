@@ -582,12 +582,13 @@ class TestInterface : public nsISupports, public nsWrapperCache {
       TestNullableTypedArrayReturn&, TestSequenceReturn&,
       TestNullableSequenceReturn&, TestIntegerArguments&,
       TestInterfaceArguments&, TestStringEnumArguments&, TestObjectArguments&,
-      TestOptionalArguments&, TestVoidConstruction&, TestIntegerConstruction&,
-      TestBooleanConstruction&, TestFloatConstruction&, TestStringConstruction&,
-      TestEnumConstruction&, TestInterfaceConstruction&,
-      TestExternalInterfaceConstruction&, TestCallbackInterfaceConstruction&,
-      TestCallbackConstruction&, TestObjectConstruction&,
-      TestTypedArrayConstruction&, TestSequenceConstruction&);
+      TestOptionalArguments&, TestUndefinedConstruction&,
+      TestIntegerConstruction&, TestBooleanConstruction&,
+      TestFloatConstruction&, TestStringConstruction&, TestEnumConstruction&,
+      TestInterfaceConstruction&, TestExternalInterfaceConstruction&,
+      TestCallbackInterfaceConstruction&, TestCallbackConstruction&,
+      TestObjectConstruction&, TestTypedArrayConstruction&,
+      TestSequenceConstruction&);
 
   // Any types
   void PassAny(JSContext*, JS::Handle<JS::Value>);

@@ -22,35 +22,35 @@ interface PeerConnectionObserver
   constructor(RTCPeerConnection domPC);
 
   /* JSEP callbacks */
-  void onCreateOfferSuccess(DOMString offer);
-  void onCreateOfferError(PCErrorData error);
-  void onCreateAnswerSuccess(DOMString answer);
-  void onCreateAnswerError(PCErrorData error);
-  void onSetDescriptionSuccess();
-  void onSetDescriptionError(PCErrorData error);
-  void onAddIceCandidateSuccess();
-  void onAddIceCandidateError(PCErrorData error);
-  void onIceCandidate(unsigned short level, DOMString mid, DOMString candidate, DOMString ufrag);
+  undefined onCreateOfferSuccess(DOMString offer);
+  undefined onCreateOfferError(PCErrorData error);
+  undefined onCreateAnswerSuccess(DOMString answer);
+  undefined onCreateAnswerError(PCErrorData error);
+  undefined onSetDescriptionSuccess();
+  undefined onSetDescriptionError(PCErrorData error);
+  undefined onAddIceCandidateSuccess();
+  undefined onAddIceCandidateError(PCErrorData error);
+  undefined onIceCandidate(unsigned short level, DOMString mid, DOMString candidate, DOMString ufrag);
 
   /* Data channel callbacks */
-  void notifyDataChannel(RTCDataChannel channel);
+  undefined notifyDataChannel(RTCDataChannel channel);
 
   /* Notification of one of several types of state changed */
-  void onStateChange(PCObserverStateType state);
+  undefined onStateChange(PCObserverStateType state);
 
   /*
     Lets PeerConnectionImpl fire track events on the RTCPeerConnection
   */
-  void fireTrackEvent(RTCRtpReceiver receiver, sequence<MediaStream> streams);
+  undefined fireTrackEvent(RTCRtpReceiver receiver, sequence<MediaStream> streams);
 
   /*
     Lets PeerConnectionImpl fire addstream events on the RTCPeerConnection
   */
-  void fireStreamEvent(MediaStream stream);
+  undefined fireStreamEvent(MediaStream stream);
 
-  void fireNegotiationNeededEvent();
+  undefined fireNegotiationNeededEvent();
 
   /* Packet dump callback */
-  void onPacket(unsigned long level, mozPacketDumpType type, boolean sending,
-                ArrayBuffer packet);
+  undefined onPacket(unsigned long level, mozPacketDumpType type, boolean sending,
+                     ArrayBuffer packet);
 };

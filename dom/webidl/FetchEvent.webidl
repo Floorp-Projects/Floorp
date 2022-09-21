@@ -17,10 +17,10 @@ interface FetchEvent : ExtendableEvent {
   readonly attribute Promise<any> preloadResponse;
   readonly attribute DOMString clientId;
   readonly attribute DOMString resultingClientId;
-  readonly attribute Promise<void> handled;
+  readonly attribute Promise<undefined> handled;
 
   [Throws]
-  void respondWith(Promise<Response> r);
+  undefined respondWith(Promise<Response> r);
 };
 
 dictionary FetchEventInit : EventInit {

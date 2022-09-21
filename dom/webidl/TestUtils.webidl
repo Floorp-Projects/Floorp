@@ -10,5 +10,5 @@
 [Exposed=(Window,Worker),
  Pref="dom.testing.testutils.enabled"]
 namespace TestUtils {
-  [NewObject, Throws] Promise<void> gc();
+  [NewObject, Throws] Promise<undefined> gc();
 };

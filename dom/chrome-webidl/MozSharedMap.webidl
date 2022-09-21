@@ -37,7 +37,7 @@ interface MozWritableSharedMap : MozSharedMap {
    * processes after a short delay.
    */
   [Throws]
-  void set(DOMString name, StructuredClonable value);
+  undefined set(DOMString name, StructuredClonable value);
 
   /**
    * Removes the given key from the map.
@@ -45,10 +45,10 @@ interface MozWritableSharedMap : MozSharedMap {
    * Unless flush() is called, the removal will be broadcast to content
    * processes after a short delay.
    */
-  void delete(DOMString name);
+  undefined delete(DOMString name);
 
   /**
    * Broadcasts any pending changes to all content processes.
    */
-  void flush();
+  undefined flush();
 };

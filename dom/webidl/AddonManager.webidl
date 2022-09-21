@@ -29,7 +29,7 @@ interface Addon {
   readonly attribute boolean canUninstall;
 
   Promise<boolean> uninstall();
-  Promise<void> setEnabled(boolean value);
+  Promise<undefined> setEnabled(boolean value);
 };
 
 [ChromeOnly, JSImplementation="dummy",
@@ -44,8 +44,8 @@ interface AddonInstall : EventTarget {
   // How many total bytes will need to be downloaded or -1 if unknown
   readonly attribute long long maxProgress;
 
-  Promise<void> install();
-  Promise<void> cancel();
+  Promise<undefined> install();
+  Promise<undefined> cancel();
 };
 
 dictionary addonInstallOptions {

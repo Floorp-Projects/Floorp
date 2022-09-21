@@ -17,11 +17,11 @@ interface UIEvent : Event
 
   readonly attribute WindowProxy? view;
   readonly attribute long         detail;
-  void initUIEvent(DOMString aType,
-                   optional boolean aCanBubble = false,
-                   optional boolean aCancelable = false,
-                   optional Window? aView = null,
-                   optional long aDetail = 0);
+  undefined initUIEvent(DOMString aType,
+                        optional boolean aCanBubble = false,
+                        optional boolean aCancelable = false,
+                        optional Window? aView = null,
+                        optional long aDetail = 0);
 };
 
 // Additional DOM0 properties.

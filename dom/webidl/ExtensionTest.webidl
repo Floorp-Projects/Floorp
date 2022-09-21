@@ -26,43 +26,43 @@ interface ExtensionTest {
   // API methods.
 
   [Throws, WebExtensionStub="NotImplementedNoReturn"]
-  void withHandlingUserInput(Function callback);
+  undefined withHandlingUserInput(Function callback);
 
   [Throws, WebExtensionStub="NoReturn"]
-  void notifyFail(DOMString message);
+  undefined notifyFail(DOMString message);
 
   [Throws, WebExtensionStub="NoReturn"]
-  void notifyPass(DOMString message);
+  undefined notifyPass(DOMString message);
   [Throws, WebExtensionStub="NoReturn"]
-  void notifyPass();
+  undefined notifyPass();
 
   [Throws, WebExtensionStub="NoReturn"]
-  void log(DOMString message);
+  undefined log(DOMString message);
 
   [Throws, WebExtensionStub="NoReturn"]
-  void sendMessage(any... args);
+  undefined sendMessage(any... args);
 
   [Throws, WebExtensionStub="NoReturn"]
-  void fail(any message);
+  undefined fail(any message);
   [Throws, WebExtensionStub="NoReturn"]
-  void fail();
+  undefined fail();
 
   [Throws, WebExtensionStub="NoReturn"]
-  void succeed(any message);
+  undefined succeed(any message);
   [Throws, WebExtensionStub="NoReturn"]
-  void succeed();
+  undefined succeed();
 
   [Throws, WebExtensionStub="NoReturn"]
-  void assertTrue(any... args);
+  undefined assertTrue(any... args);
 
   [Throws, WebExtensionStub="NoReturn"]
-  void assertFalse(any... args);
+  undefined assertFalse(any... args);
 
   [Throws, WebExtensionStub="NoReturn"]
-  void assertDeepEq(any... args);
+  undefined assertDeepEq(any... args);
 
   [Throws, WebExtensionStub="AssertEq"]
-  void assertEq(any... args);
+  undefined assertEq(any... args);
 
   [Throws]
   any assertRejects(Promise<any> promise, any expectedError, DOMString message, optional Function callback);
@@ -70,9 +70,9 @@ interface ExtensionTest {
   any assertRejects(Promise<any> promise, any expectedError, optional Function callback);
 
   [Throws]
-  void assertThrows(Function func, any expectedError, DOMString message);
+  undefined assertThrows(Function func, any expectedError, DOMString message);
   [Throws]
-  void assertThrows(Function func, any expectedError);
+  undefined assertThrows(Function func, any expectedError);
 
   // API events.
 

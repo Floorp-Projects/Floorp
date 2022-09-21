@@ -46,20 +46,20 @@ interface Animation : EventTarget {
            attribute EventHandler       oncancel;
   [Pref="dom.animations-api.autoremove.enabled"]
            attribute EventHandler       onremove;
-  void cancel();
+  undefined cancel();
   [Throws]
-  void finish();
+  undefined finish();
   [Throws, BinaryName="playFromJS"]
-  void play();
+  undefined play();
   [Throws, BinaryName="pauseFromJS"]
-  void pause();
-  void updatePlaybackRate (double playbackRate);
+  undefined pause();
+  undefined updatePlaybackRate (double playbackRate);
   [Throws]
-  void reverse();
+  undefined reverse();
   [Pref="dom.animations-api.autoremove.enabled"]
-  void persist();
+  undefined persist();
   [Pref="dom.animations-api.autoremove.enabled", Throws]
-  void commitStyles();
+  undefined commitStyles();
 };
 
 // Non-standard extensions

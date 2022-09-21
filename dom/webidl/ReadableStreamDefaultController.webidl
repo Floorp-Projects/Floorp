@@ -12,11 +12,11 @@ interface ReadableStreamDefaultController {
   readonly attribute unrestricted double? desiredSize;
 
   [Throws]
-  void close();
+  undefined close();
 
   [Throws]
-  void enqueue(optional any chunk);
+  undefined enqueue(optional any chunk);
 
   [Throws]
-  void error(optional any e);
+  undefined error(optional any e);
 };

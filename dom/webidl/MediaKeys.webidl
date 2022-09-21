@@ -31,7 +31,7 @@ interface MediaKeys {
   MediaKeySession createSession(optional MediaKeySessionType sessionType = "temporary");
 
   [NewObject]
-  Promise<void> setServerCertificate(BufferSource serverCertificate);
+  Promise<undefined> setServerCertificate(BufferSource serverCertificate);
 
   [Pref="media.eme.hdcp-policy-check.enabled", NewObject]
   Promise<MediaKeyStatus> getStatusForPolicy(optional MediaKeysPolicy policy = {});

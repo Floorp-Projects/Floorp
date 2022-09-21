@@ -6,11 +6,11 @@
  * https://wicg.github.io/entries-api/#idl-index
  */
 
-callback FileCallback = void (File file);
+callback FileCallback = undefined (File file);
 
 [Exposed=Window]
 interface FileSystemFileEntry : FileSystemEntry {
     [BinaryName="GetFile"]
-    void file (FileCallback successCallback,
-               optional ErrorCallback errorCallback);
+    undefined file (FileCallback successCallback,
+                    optional ErrorCallback errorCallback);
 };

@@ -23,7 +23,7 @@ interface TestInterfaceJS : EventTarget {
   attribute any anyAttr;
   attribute object objectAttr;
   TestInterfaceJSDictionary getDictionaryAttr();
-  void setDictionaryAttr(optional TestInterfaceJSDictionary dict = {});
+  undefined setDictionaryAttr(optional TestInterfaceJSDictionary dict = {});
   any pingPongAny(any arg);
   object pingPongObject(object obj);
   any pingPongObjectOrString((object or DOMString) objOrString);
@@ -44,40 +44,40 @@ interface TestInterfaceJS : EventTarget {
   (Location or TestInterfaceJS) returnBadUnion();
 
   // Test for sequence overloading and union behavior
-  void testSequenceOverload(sequence<DOMString> arg);
-  void testSequenceOverload(DOMString arg);
+  undefined testSequenceOverload(sequence<DOMString> arg);
+  undefined testSequenceOverload(DOMString arg);
 
-  void testSequenceUnion((sequence<DOMString> or DOMString) arg);
+  undefined testSequenceUnion((sequence<DOMString> or DOMString) arg);
 
   // Tests for exception-throwing behavior
   [Throws]
-  void testThrowError();
+  undefined testThrowError();
 
   [Throws]
-  void testThrowDOMException();
+  undefined testThrowDOMException();
 
   [Throws]
-  void testThrowTypeError();
+  undefined testThrowTypeError();
 
   [Throws]
-  void testThrowCallbackError(Function callback);
+  undefined testThrowCallbackError(Function callback);
 
   [Throws]
-  void testThrowXraySelfHosted();
+  undefined testThrowXraySelfHosted();
 
   [Throws]
-  void testThrowSelfHosted();
+  undefined testThrowSelfHosted();
 
   // Tests for promise-rejection behavior
-  Promise<void> testPromiseWithThrowingChromePromiseInit();
-  Promise<void> testPromiseWithThrowingContentPromiseInit(Function func);
-  Promise<void> testPromiseWithDOMExceptionThrowingPromiseInit();
-  Promise<void> testPromiseWithThrowingChromeThenFunction();
-  Promise<void> testPromiseWithThrowingContentThenFunction(AnyCallback func);
-  Promise<void> testPromiseWithDOMExceptionThrowingThenFunction();
-  Promise<void> testPromiseWithThrowingChromeThenable();
-  Promise<void> testPromiseWithThrowingContentThenable(object thenable);
-  Promise<void> testPromiseWithDOMExceptionThrowingThenable();
+  Promise<undefined> testPromiseWithThrowingChromePromiseInit();
+  Promise<undefined> testPromiseWithThrowingContentPromiseInit(Function func);
+  Promise<undefined> testPromiseWithDOMExceptionThrowingPromiseInit();
+  Promise<undefined> testPromiseWithThrowingChromeThenFunction();
+  Promise<undefined> testPromiseWithThrowingContentThenFunction(AnyCallback func);
+  Promise<undefined> testPromiseWithDOMExceptionThrowingThenFunction();
+  Promise<undefined> testPromiseWithThrowingChromeThenable();
+  Promise<undefined> testPromiseWithThrowingContentThenable(object thenable);
+  Promise<undefined> testPromiseWithDOMExceptionThrowingThenable();
 
   // Event handler tests
   attribute EventHandler onsomething;

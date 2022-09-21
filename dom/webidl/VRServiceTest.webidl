@@ -9,7 +9,7 @@
  HeaderFile="mozilla/dom/VRServiceTest.h",
  Exposed=Window]
 interface VRMockDisplay {
-  void create();
+  undefined create();
   attribute boolean capPosition;
   attribute boolean capOrientation;
   attribute boolean capPresent;
@@ -19,28 +19,28 @@ interface VRMockDisplay {
   attribute boolean capStageParameters;
   attribute boolean capMountDetection;
   attribute boolean capPositionEmulated;
-  void setEyeFOV(VREye eye,
-                 double upDegree, double rightDegree,
-                 double downDegree, double leftDegree);
-  void setEyeOffset(VREye eye, double offsetX,
-                    double offsetY, double offsetZ);
-  void setEyeResolution(unsigned long renderWidth,
-                        unsigned long renderHeight);
-  void setConnected(boolean connected);
-  void setMounted(boolean mounted);
-  void setStageSize(double width, double height);
-  [Throws] void setSittingToStandingTransform(Float32Array sittingToStandingTransform);
-  [Throws] void setPose(Float32Array? position, Float32Array? linearVelocity,
-                        Float32Array? linearAcceleration, Float32Array? orientation,
-                        Float32Array? angularVelocity, Float32Array? angularAcceleration);
+  undefined setEyeFOV(VREye eye,
+                      double upDegree, double rightDegree,
+                      double downDegree, double leftDegree);
+  undefined setEyeOffset(VREye eye, double offsetX,
+                         double offsetY, double offsetZ);
+  undefined setEyeResolution(unsigned long renderWidth,
+                             unsigned long renderHeight);
+  undefined setConnected(boolean connected);
+  undefined setMounted(boolean mounted);
+  undefined setStageSize(double width, double height);
+  [Throws] undefined setSittingToStandingTransform(Float32Array sittingToStandingTransform);
+  [Throws] undefined setPose(Float32Array? position, Float32Array? linearVelocity,
+                             Float32Array? linearAcceleration, Float32Array? orientation,
+                             Float32Array? angularVelocity, Float32Array? angularAcceleration);
 };
 
 [Pref="dom.vr.puppet.enabled",
  HeaderFile="mozilla/dom/VRServiceTest.h",
  Exposed=Window]
 interface VRMockController {
-  void create();
-  void clear();
+  undefined create();
+  undefined clear();
   attribute GamepadHand hand;
   attribute boolean capPosition;
   attribute boolean capOrientation;
@@ -49,13 +49,13 @@ interface VRMockController {
   attribute unsigned long axisCount;
   attribute unsigned long buttonCount;
   attribute unsigned long hapticCount;
-  [Throws] void setPose(Float32Array? position, Float32Array? linearVelocity,
-                        Float32Array? linearAcceleration, Float32Array? orientation,
-                        Float32Array? angularVelocity, Float32Array? angularAcceleration);
-  void setButtonPressed(unsigned long buttonIdx, boolean pressed);
-  void setButtonTouched(unsigned long buttonIdx, boolean touched);
-  void setButtonTrigger(unsigned long buttonIdx, double trigger);
-  void setAxisValue(unsigned long axisIdx, double value);
+  [Throws] undefined setPose(Float32Array? position, Float32Array? linearVelocity,
+                             Float32Array? linearAcceleration, Float32Array? orientation,
+                             Float32Array? angularVelocity, Float32Array? angularAcceleration);
+  undefined setButtonPressed(unsigned long buttonIdx, boolean pressed);
+  undefined setButtonTouched(unsigned long buttonIdx, boolean touched);
+  undefined setButtonTrigger(unsigned long buttonIdx, double trigger);
+  undefined setAxisValue(unsigned long axisIdx, double value);
 };
 
 [Pref="dom.vr.puppet.enabled",
@@ -64,21 +64,21 @@ interface VRMockController {
 interface VRServiceTest {
   VRMockDisplay getVRDisplay();
   [Throws] VRMockController getVRController(unsigned long controllerIdx);
-  [NewObject] Promise<void> run();
-  [NewObject] Promise<void> reset();
-  void commit();
-  void end();
-  void clearAll();
-  void timeout(unsigned long duration);
-  void wait(unsigned long duration);
-  void waitSubmit();
-  void waitPresentationStart();
-  void waitPresentationEnd();
+  [NewObject] Promise<undefined> run();
+  [NewObject] Promise<undefined> reset();
+  undefined commit();
+  undefined end();
+  undefined clearAll();
+  undefined timeout(unsigned long duration);
+  undefined wait(unsigned long duration);
+  undefined waitSubmit();
+  undefined waitPresentationStart();
+  undefined waitPresentationEnd();
   [Throws]
-  void waitHapticIntensity(unsigned long controllerIdx, unsigned long hapticIdx, double intensity);
-  void captureFrame();
-  void acknowledgeFrame();
-  void rejectFrame();
-  void startTimer();
-  void stopTimer();
+  undefined waitHapticIntensity(unsigned long controllerIdx, unsigned long hapticIdx, double intensity);
+  undefined captureFrame();
+  undefined acknowledgeFrame();
+  undefined rejectFrame();
+  undefined startTimer();
+  undefined stopTimer();
 };
