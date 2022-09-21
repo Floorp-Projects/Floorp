@@ -570,7 +570,7 @@ function setTabbarMode() {
 }
 
 function setAllfavicons() {
-  for (let sbar_id = 1; sbar_id < 21; sbar_id++) {
+  for (let sbar_id = 1; sbar_id < 20; sbar_id++) {
     document.getElementById("select-CustomURL" + sbar_id).style.listStyleImage = "url(" + "http://www.google.com/s2/favicons?domain=" + Services.prefs.getStringPref("floorp.browser.sidebar2.customurl" + sbar_id) + ")"
   }
 }

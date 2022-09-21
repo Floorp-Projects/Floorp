@@ -91,6 +91,7 @@ pref("floorp.browser.sidebar2.customurl16", "");
 pref("floorp.browser.sidebar2.customurl17", "");
 pref("floorp.browser.sidebar2.customurl18", "");
 pref("floorp.browser.sidebar2.customurl19", "");
+pref("floorp.browser.sidebar2.customurl20", "");
 /*----------------------------------------------------------------------------------------------------------------------------------*/
 
 //検索エンジン
