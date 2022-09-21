@@ -18,6 +18,7 @@ import androidx.test.uiautomator.UiSelector
 import junit.framework.TestCase.assertTrue
 import org.hamcrest.Matchers.allOf
 import org.mozilla.focus.R
+import org.mozilla.focus.ext.getPackageInfoCompat
 import org.mozilla.focus.helpers.TestHelper.appName
 import org.mozilla.focus.helpers.TestHelper.mDevice
 import org.mozilla.focus.helpers.TestHelper.packageName
@@ -35,7 +36,7 @@ class SettingsMozillaMenuRobot {
 
     fun verifyVersionNumbers() {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
-        val packageInfo = context.packageManager.getPackageInfo(context.packageName, 0)
+        val packageInfo = context.packageManager.getPackageInfoCompat(context.packageName, 0)
         val versionName = packageInfo.versionName
         val gvBuildId = org.mozilla.geckoview.BuildConfig.MOZ_APP_BUILDID
         val gvVersion = org.mozilla.geckoview.BuildConfig.MOZ_APP_VERSION

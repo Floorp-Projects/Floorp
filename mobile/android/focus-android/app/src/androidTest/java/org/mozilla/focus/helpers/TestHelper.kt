@@ -46,6 +46,7 @@ import org.junit.Assert
 import org.junit.Assert.assertTrue
 import org.mozilla.focus.R
 import org.mozilla.focus.activity.IntentReceiverActivity
+import org.mozilla.focus.ext.getApplicationInfoCompat
 import org.mozilla.focus.utils.IntentUtils
 import java.io.FileInputStream
 import java.io.IOException
@@ -101,7 +102,7 @@ object TestHelper {
     fun isPackageInstalled(packageName: String): Boolean {
         return try {
             val packageManager = getInstrumentation().context.packageManager
-            packageManager.getApplicationInfo(packageName, 0).enabled
+            packageManager.getApplicationInfoCompat(packageName, 0).enabled
         } catch (exception: PackageManager.NameNotFoundException) {
             Log.d("TestLog", exception.message.toString())
             false
