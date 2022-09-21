@@ -139,6 +139,52 @@ absl::string_view ScalabilityModeToString(ScalabilityMode scalability_mode) {
   RTC_CHECK_NOTREACHED();
 }
 
+InterLayerPredMode ScalabilityModeToInterLayerPredMode(
+    ScalabilityMode scalability_mode) {
+  switch (scalability_mode) {
+    case ScalabilityMode::kL1T1:
+    case ScalabilityMode::kL1T2:
+    case ScalabilityMode::kL1T2h:
+    case ScalabilityMode::kL1T3:
+    case ScalabilityMode::kL1T3h:
+    case ScalabilityMode::kL2T1:
+    case ScalabilityMode::kL2T1h:
+      return InterLayerPredMode::kOn;
+    case ScalabilityMode::kL2T1_KEY:
+      return InterLayerPredMode::kOnKeyPic;
+    case ScalabilityMode::kL2T2:
+    case ScalabilityMode::kL2T2h:
+      return InterLayerPredMode::kOn;
+    case ScalabilityMode::kL2T2_KEY:
+    case ScalabilityMode::kL2T2_KEY_SHIFT:
+      return InterLayerPredMode::kOnKeyPic;
+    case ScalabilityMode::kL2T3:
+    case ScalabilityMode::kL2T3h:
+      return InterLayerPredMode::kOn;
+    case ScalabilityMode::kL2T3_KEY:
+      return InterLayerPredMode::kOnKeyPic;
+    case ScalabilityMode::kL3T1:
+    case ScalabilityMode::kL3T1h:
+      return InterLayerPredMode::kOn;
+    case ScalabilityMode::kL3T1_KEY:
+      return InterLayerPredMode::kOnKeyPic;
+    case ScalabilityMode::kL3T2:
+    case ScalabilityMode::kL3T2h:
+      return InterLayerPredMode::kOn;
+    case ScalabilityMode::kL3T2_KEY:
+      return InterLayerPredMode::kOnKeyPic;
+    case ScalabilityMode::kL3T3:
+    case ScalabilityMode::kL3T3h:
+      return InterLayerPredMode::kOn;
+    case ScalabilityMode::kL3T3_KEY:
+      return InterLayerPredMode::kOnKeyPic;
+    case ScalabilityMode::kS2T1:
+    case ScalabilityMode::kS3T3:
+      return InterLayerPredMode::kOff;
+  }
+  RTC_CHECK_NOTREACHED();
+}
+
 int ScalabilityModeToNumSpatialLayers(ScalabilityMode scalability_mode) {
   switch (scalability_mode) {
     case ScalabilityMode::kL1T1:

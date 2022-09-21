@@ -926,6 +926,8 @@ if (rtc_include_tests) {
       "../modules/video_coding:webrtc_vp9_helpers",
       "../modules/video_coding/codecs/av1:libaom_av1_encoder_if_supported",
       "../modules/video_coding/svc:scalability_mode_util",
+      "../modules/video_coding/svc:scalability_structures",
+      "../modules/video_coding/svc:scalable_video_controller",
       "../rtc_base",
       "../rtc_base:byte_buffer",
       "../rtc_base:checks",

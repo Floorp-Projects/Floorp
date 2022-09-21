@@ -231,6 +231,11 @@ VideoCodec VideoCodecInitializer::VideoEncoderConfigToVideoCodec(
       if (!config.spatial_layers.empty()) {
         // Layering is set explicitly.
         spatial_layers = config.spatial_layers;
+      } else if (scalability_mode.has_value()) {
+        // Layering is set via scalability mode.
+        spatial_layers = GetVp9SvcConfig(video_codec);
+        if (spatial_layers.empty())
+          break;
       } else {
         size_t first_active_layer = 0;
         for (size_t spatial_idx = 0;
