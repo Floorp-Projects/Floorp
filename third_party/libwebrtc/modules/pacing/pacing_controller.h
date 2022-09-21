@@ -126,7 +126,10 @@ class PacingController {
   // it's time to send.
   void EnqueuePacket(std::unique_ptr<RtpPacketToSend> packet);
 
+  // ABSL_DEPRECATED("Use CreateProbeClusters instead")
   void CreateProbeCluster(DataRate bitrate, int cluster_id);
+  void CreateProbeClusters(
+      rtc::ArrayView<const ProbeClusterConfig> probe_cluster_configs);
 
   void Pause();   // Temporarily pause all sending.
   void Resume();  // Resume sending packets.

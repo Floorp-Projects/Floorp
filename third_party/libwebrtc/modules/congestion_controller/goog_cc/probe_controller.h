@@ -51,6 +51,11 @@ struct ProbeControllerConfig {
   FieldTrialOptional<double> second_allocation_probe_scale;
   FieldTrialFlag allocation_allow_further_probing;
   FieldTrialParameter<DataRate> allocation_probe_max;
+
+  // The minimum number probing packets used.
+  FieldTrialParameter<int> min_probe_packets_sent;
+  // The minimum probing duration.
+  FieldTrialParameter<TimeDelta> min_probe_duration;
 };
 
 // This class controls initiation of probing to estimate initial channel

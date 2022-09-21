@@ -28,12 +28,6 @@
 namespace webrtc {
 
 namespace {
-// The minimum number probing packets used.
-constexpr int kMinProbePacketsSent = 5;
-
-// The minimum probing duration in ms.
-constexpr int kMinProbeDurationMs = 15;
-
 // Maximum waiting time from the time of initiating probing to getting
 // the measured results back.
 constexpr int64_t kMaxWaitingTimeForProbingResultMs = 1000;
@@ -101,7 +95,9 @@ ProbeControllerConfig::ProbeControllerConfig(
       first_allocation_probe_scale("alloc_p1", 1),
       second_allocation_probe_scale("alloc_p2", 2),
       allocation_allow_further_probing("alloc_probe_further", false),
-      allocation_probe_max("alloc_probe_max", DataRate::PlusInfinity()) {
+      allocation_probe_max("alloc_probe_max", DataRate::PlusInfinity()),
+      min_probe_packets_sent("min_probe_packets_sent", 5),
+      min_probe_duration("min_probe_duration", TimeDelta::Millis(15)) {
   ParseFieldTrial(
       {&first_exponential_probe_scale, &second_exponential_probe_scale,
        &further_exponential_probe_scale, &further_probe_threshold,
@@ -121,6 +117,8 @@ ProbeControllerConfig::ProbeControllerConfig(
       {&first_allocation_probe_scale, &second_allocation_probe_scale,
        &allocation_allow_further_probing, &allocation_probe_max},
       key_value_config->Lookup("WebRTC-Bwe-AllocationProbing"));
+  ParseFieldTrial({&min_probe_packets_sent, &min_probe_duration},
+                  key_value_config->Lookup("WebRTC-Bwe-ProbingBehavior"));
 }
 
 ProbeControllerConfig::ProbeControllerConfig(const ProbeControllerConfig&) =
@@ -434,8 +432,8 @@ std::vector<ProbeClusterConfig> ProbeController::InitiateProbing(
     config.at_time = Timestamp::Millis(now_ms);
     config.target_data_rate =
         DataRate::BitsPerSec(rtc::dchecked_cast<int>(bitrate));
-    config.target_duration = TimeDelta::Millis(kMinProbeDurationMs);
-    config.target_probe_count = kMinProbePacketsSent;
+    config.target_duration = config_.min_probe_duration;
+    config.target_probe_count = config_.min_probe_packets_sent;
     config.id = next_probe_cluster_id_;
     next_probe_cluster_id_++;
     MaybeLogProbeClusterCreated(event_log_, config);

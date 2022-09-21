@@ -136,10 +136,9 @@ than cause severe delays.
 
 If the bandwidth estimator supports bandwidth probing, it may request a cluster
 of packets to be sent at a specified rate in order to gauge if this causes
-increased delay/loss on the network. Use the `void CreateProbeCluster(DataRate
-bitrate, int cluster_id)` method - packets sent via this `PacketRouter` will be
-marked with the corresponding cluster_id in the attached `PacedPacketInfo`
-struct.
+increased delay/loss on the network. Use the `void CreateProbeCluster(...)`
+method - packets sent via this `PacketRouter` will be marked with the
+corresponding cluster_id in the attached `PacedPacketInfo` struct.
 
 If congestion window pushback is used, the state can be updated using
 `SetCongestionWindow()` and `UpdateOutstandingData()`.
