@@ -512,10 +512,7 @@ WebRtcVideoChannel::WebRtcVideoSendStream::ConfigureVideoEncoderSettings(
   }
 
   if (absl::EqualsIgnoreCase(codec.name, kH264CodecName)) {
-    webrtc::VideoCodecH264 h264_settings =
-        webrtc::VideoEncoder::GetDefaultH264Settings();
-    return rtc::make_ref_counted<
-        webrtc::VideoEncoderConfig::H264EncoderSpecificSettings>(h264_settings);
+    return nullptr;
   }
   if (absl::EqualsIgnoreCase(codec.name, kVp8CodecName)) {
     webrtc::VideoCodecVP8 vp8_settings =
