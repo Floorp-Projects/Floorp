@@ -1912,6 +1912,13 @@ class RDDSandboxPolicy final : public SandboxPolicyCommon {
       case __NR_mknodat:
         return Error(EPERM);
 
+        // Used by the nvidia GPU driver, including in multi-GPU
+        // systems when we intend to use a non-nvidia GPU.  (Also used
+        // by Mesa for its shader cache, but we disable that in this
+        // process.)
+      CASES_FOR_fstatfs:
+        return Allow();
+
         // Pass through the common policy.
       default:
         return SandboxPolicyCommon::EvaluateSyscall(sysno);
