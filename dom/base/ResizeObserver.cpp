@@ -78,6 +78,8 @@ static AutoTArray<LogicalPixelSize, 1> CalculateBoxSize(
   nsIFrame* frame = aTarget->GetPrimaryFrame();
 
   if (!frame) {
+    // TODO: Should this return an empty array instead?
+    // https://github.com/w3c/csswg-drafts/issues/7734
     return {LogicalPixelSize()};
   }
 
@@ -85,6 +87,8 @@ static AutoTArray<LogicalPixelSize, 1> CalculateBoxSize(
     // Per the spec, this target's SVG size is always its bounding box size no
     // matter what box option you choose, because SVG elements do not use
     // standard CSS box model.
+    // TODO: what if the SVG is fragmented?
+    // https://github.com/w3c/csswg-drafts/issues/7736
     const gfxRect bbox = SVGUtils::GetBBox(frame);
     gfx::Size size(static_cast<float>(bbox.width),
                    static_cast<float>(bbox.height));
@@ -106,6 +110,8 @@ static AutoTArray<LogicalPixelSize, 1> CalculateBoxSize(
   // content rect. Therefore, we always use the same trivially-empty size
   // for non-replaced inline elements here, and their IsActive() will
   // always return false. (So its observation won't be fired.)
+  // TODO: Should we use an empty array instead?
+  // https://github.com/w3c/csswg-drafts/issues/7734
   if (!frame->IsFrameOfType(nsIFrame::eReplaced) &&
       frame->IsFrameOfType(nsIFrame::eLineParticipant)) {
     return {LogicalPixelSize()};
@@ -151,7 +157,16 @@ static AutoTArray<LogicalPixelSize, 1> CalculateBoxSize(
     }
     return CSSPixel::FromAppUnits(GetContentRectSize(*frame)).ToUnknownSize();
   };
-  return {LogicalPixelSize(frame->GetWritingMode(), GetFrameSize(frame))};
+  if (!StaticPrefs::dom_resize_observer_support_fragments()) {
+    return {LogicalPixelSize(frame->GetWritingMode(), GetFrameSize(frame))};
+  }
+  AutoTArray<LogicalPixelSize, 1> size;
+  while (frame) {
+    const WritingMode wm = frame->GetWritingMode();
+    size.AppendElement(LogicalPixelSize(wm, GetFrameSize(frame)));
+    frame = frame->GetNextContinuation();
+  }
+  return size;
 }
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(ResizeObservation)

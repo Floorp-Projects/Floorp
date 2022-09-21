@@ -4632,6 +4632,14 @@
   value: true
   mirror: always
 
+# Let Resize Observer report the size of all fragments, and not just the
+# first one, as per CSSWG resolution:
+# https://github.com/w3c/csswg-drafts/issues/3673#issuecomment-467221565
+- name: dom.resize_observer.support_fragments
+  type: bool
+  value: false
+  mirror: always
+
 #---------------------------------------------------------------------------
 # Prefs starting with "editor"
 #---------------------------------------------------------------------------
