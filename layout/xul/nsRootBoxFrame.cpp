@@ -111,11 +111,7 @@ nsRootBoxFrame::nsRootBoxFrame(ComputedStyle* aStyle,
                                nsPresContext* aPresContext)
     : nsBoxFrame(aStyle, aPresContext, kClassID, true),
       mPopupSetFrame(nullptr),
-      mDefaultTooltip(nullptr) {
-  nsCOMPtr<nsBoxLayout> layout;
-  NS_NewStackLayout(layout);
-  SetXULLayoutManager(layout);
-}
+      mDefaultTooltip(nullptr) {}
 
 void nsRootBoxFrame::AppendFrames(ChildListID aListID,
                                   nsFrameList& aFrameList) {
