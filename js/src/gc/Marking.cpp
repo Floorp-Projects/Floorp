@@ -2373,7 +2373,7 @@ GCMarker::GCMarker(JSRuntime* rt)
                                 JS::WeakEdgeTraceAction::Skip)),
       stack(),
       grayPosition(0),
-      color(MarkColor::Black),
+      markColor_(MarkColor::Black),
       delayedMarkingList(nullptr),
       delayedMarkingWorkAdded(false),
       state(MarkingState::NotActive),
@@ -2402,7 +2402,7 @@ bool GCMarker::isDrained() {
 void GCMarker::start() {
   MOZ_ASSERT(state == MarkingState::NotActive);
   state = MarkingState::RegularMarking;
-  color = MarkColor::Black;
+  markColor_ = MarkColor::Black;
 
 #ifdef DEBUG
   queuePos = 0;
@@ -2452,7 +2452,7 @@ inline void GCMarker::forEachDelayedMarkingArena(F&& f) {
 }
 
 void GCMarker::reset() {
-  color = MarkColor::Black;
+  markColor_ = MarkColor::Black;
 
   barrierBuffer().clearAndFree();
   stack.clear();
@@ -2474,14 +2474,14 @@ void GCMarker::reset() {
 }
 
 void GCMarker::setMarkColor(gc::MarkColor newColor) {
-  if (color == newColor) {
+  if (markColor_ == newColor) {
     return;
   }
 
   MOZ_ASSERT(!hasBlackEntries());
 
-  color = newColor;
-  if (color == MarkColor::Black) {
+  markColor_ = newColor;
+  if (markColor_ == MarkColor::Black) {
     grayPosition = stack.position();
   } else {
     grayPosition = SIZE_MAX;
@@ -2621,7 +2621,7 @@ void GCMarker::delayMarkingChildren(Cell* cell) {
   }
   JS::TraceKind kind = MapAllocToTraceKind(arena->getAllocKind());
   MarkColor colorToMark =
-      TraceKindCanBeMarkedGray(kind) ? color : MarkColor::Black;
+      TraceKindCanBeMarkedGray(kind) ? markColor() : MarkColor::Black;
   if (!arena->hasDelayedMarking(colorToMark)) {
     arena->setHasDelayedMarking(colorToMark, true);
     delayedMarkingWorkAdded = true;
@@ -2630,10 +2630,10 @@ void GCMarker::delayMarkingChildren(Cell* cell) {
 
 void GCMarker::markDelayedChildren(Arena* arena) {
   JS::TraceKind kind = MapAllocToTraceKind(arena->getAllocKind());
-  MOZ_ASSERT_IF(color == MarkColor::Gray, TraceKindCanBeMarkedGray(kind));
+  MOZ_ASSERT_IF(markColor() == MarkColor::Gray, TraceKindCanBeMarkedGray(kind));
 
   for (ArenaCellIterUnderGC cell(arena); !cell.done(); cell.next()) {
-    if (cell->isMarked(color)) {
+    if (cell->isMarked(markColor())) {
       JS::TraceChildren(this, JS::GCCellPtr(cell, kind));
     }
   }
