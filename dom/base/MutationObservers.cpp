@@ -56,11 +56,11 @@ static inline nsINode* ForEachAncestorObserver(nsINode* aNode,
   nsINode* last;
   nsINode* node = aNode;
   do {
-    nsAutoTObserverArray<nsIMutationObserver*, 1>* observers =
+    mozilla::SafeDoublyLinkedList<nsIMutationObserver>* observers =
         node->GetMutationObservers();
-    if (observers && !observers->IsEmpty()) {
-      for (nsIMutationObserver* obs : observers->ForwardRange()) {
-        aFunc(obs);
+    if (observers && !observers->isEmpty()) {
+      for (auto iter = observers->begin(); iter != observers->end(); ++iter) {
+        aFunc(&*iter);
       }
     }
     last = node;

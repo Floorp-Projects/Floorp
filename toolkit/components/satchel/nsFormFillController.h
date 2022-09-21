@@ -15,6 +15,7 @@
 #include "nsIDOMEventListener.h"
 #include "nsIFormAutoComplete.h"
 #include "nsCOMPtr.h"
+#include "nsStubMutationObserver.h"
 #include "nsTHashMap.h"
 #include "nsInterfaceHashtable.h"
 #include "nsIDocShell.h"
@@ -40,7 +41,7 @@ class nsFormFillController final : public nsIFormFillController,
                                    public nsIFormAutoCompleteObserver,
                                    public nsIDOMEventListener,
                                    public nsIObserver,
-                                   public nsIMutationObserver {
+                                   public nsMultiMutationObserver {
  public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_NSIFORMFILLCONTROLLER

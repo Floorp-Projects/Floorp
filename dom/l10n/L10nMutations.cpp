@@ -7,6 +7,7 @@
 #include "L10nMutations.h"
 #include "mozilla/dom/DocumentInlines.h"
 #include "nsRefreshDriver.h"
+#include "DOMLocalization.h"
 #include "mozilla/intl/Localization.h"
 
 using namespace mozilla;

@@ -232,8 +232,73 @@ static void TestCustomAccessor() {
   }
 }
 
+static void TestSafeDoubleLinkedList() {
+  mozilla::SafeDoublyLinkedList<SomeClass> list;
+  auto* elt1 = new SomeClass(0);
+  auto* elt2 = new SomeClass(0);
+  auto* elt3 = new SomeClass(0);
+  auto* elt4 = new SomeClass(0);
+  list.pushBack(elt1);
+  list.pushBack(elt2);
+  list.pushBack(elt3);
+  auto iter = list.begin();
+
+  // basic tests for iterator validity
+  MOZ_RELEASE_ASSERT(
+      &*iter == elt1,
+      "iterator returned by begin() must point to the first element!");
+  MOZ_RELEASE_ASSERT(
+      &*(iter.next()) == elt2,
+      "iterator returned by begin() must have the second element as 'next'!");
+  list.remove(elt2);
+  MOZ_RELEASE_ASSERT(
+      &*(iter.next()) == elt3,
+      "After removal of the 2nd element 'next' must point to the 3rd element!");
+  ++iter;
+  MOZ_RELEASE_ASSERT(
+      &*iter == elt3,
+      "After advancing one step the current element must be the 3rd one!");
+  MOZ_RELEASE_ASSERT(!iter.next(), "This is the last element of the list!");
+  list.pushBack(elt4);
+  MOZ_RELEASE_ASSERT(&*(iter.next()) == elt4,
+                     "After adding an element at the end of the list the "
+                     "iterator must be updated!");
+
+  // advance to last element, then remove last element
+  ++iter;
+  list.popBack();
+  MOZ_RELEASE_ASSERT(bool(iter) == false,
+                     "After removing the last element, the iterator pointing "
+                     "to the last element must be empty!");
+
+  // iterate the whole remaining list, increment values
+  for (auto& el : list) {
+    el.incr();
+  }
+  MOZ_RELEASE_ASSERT(elt1->mValue == 1);
+  MOZ_RELEASE_ASSERT(elt2->mValue == 0);
+  MOZ_RELEASE_ASSERT(elt3->mValue == 1);
+  MOZ_RELEASE_ASSERT(elt4->mValue == 0);
+
+  // Removing the first element of the list while iterating must empty the
+  // iterator
+  for (auto it = list.begin(); it != list.end(); ++it) {
+    MOZ_RELEASE_ASSERT(bool(it) == true, "The iterator must contain a value!");
+    list.popFront();
+    MOZ_RELEASE_ASSERT(
+        bool(it) == false,
+        "After removing the first element, the iterator must be empty!");
+  }
+
+  delete elt1;
+  delete elt2;
+  delete elt3;
+  delete elt4;
+}
+
 int main() {
   TestDoublyLinkedList();
   TestCustomAccessor();
+  TestSafeDoubleLinkedList();
   return 0;
 }

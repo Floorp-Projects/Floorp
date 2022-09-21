@@ -10,7 +10,7 @@
 
 #include "mozilla/WeakPtr.h"
 
-#include "nsIMutationObserver.h"
+#include "nsStubMutationObserver.h"
 #include "nsHashKeys.h"
 #include "nsIObserver.h"
 #include "nsTHashMap.h"
@@ -42,7 +42,7 @@ enum {
 // The menu group owner observes DOM mutations, notifies registered nsChangeObservers, and manages
 // command registration.
 // There is one owner per menubar, and one per standalone native menu.
-class nsMenuGroupOwnerX : public nsIMutationObserver, public nsIObserver {
+class nsMenuGroupOwnerX : public nsMultiMutationObserver, public nsIObserver {
  public:
   // Both parameters can be null.
   nsMenuGroupOwnerX(mozilla::dom::Element* aElement, nsMenuBarX* aMenuBarIfMenuBar);

@@ -384,6 +384,8 @@ opaque-types = [
     "mozilla::WeakPtr",
     "nsWritingIterator_reference", "nsReadingIterator_reference",
     "nsTObserverArray",  # <- Inherits from nsAutoTObserverArray<T, 0>
+    "mozilla::DoublyLinkedList",
+    "mozilla::SafeDoublyLinkedList",
     "nsTHashtable",  # <- Inheriting from inner typedefs that clang
                      #    doesn't expose properly.
     "nsTBaseHashSet", # <- Ditto

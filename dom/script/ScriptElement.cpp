@@ -89,7 +89,7 @@ void ScriptElement::ContentInserted(nsIContent* aChild) {
 bool ScriptElement::MaybeProcessScript() {
   nsCOMPtr<nsIContent> cont = do_QueryInterface((nsIScriptElement*)this);
 
-  NS_ASSERTION(cont->DebugGetSlots()->mMutationObservers.Contains(this),
+  NS_ASSERTION(cont->DebugGetSlots()->mMutationObservers.contains(this),
                "You forgot to add self as observer");
 
   if (mAlreadyStarted || !mDoneAddingChildren || !cont->GetComposedDoc() ||

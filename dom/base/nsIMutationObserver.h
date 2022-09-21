@@ -10,6 +10,7 @@
 #include "nsISupports.h"
 
 #include "mozilla/Assertions.h"
+#include "mozilla/DoublyLinkedList.h"
 
 class nsAttrValue;
 class nsAtom;
@@ -92,7 +93,11 @@ struct CharacterDataChangeInfo {
  * Mutation observer interface
  *
  * See nsINode::AddMutationObserver, nsINode::RemoveMutationObserver for how to
- * attach or remove your observers.
+ * attach or remove your observers. nsINode stores mutation observers using a
+ * mozilla::SafeDoublyLinkedList, which is a specialization of the
+ * DoublyLinkedList allowing for adding/removing elements while iterating.
+ * If a mutation observer is intended to be added to multiple nsINode instances,
+ * derive from nsMultiMutationObserver.
  *
  * WARNING: During these notifications, you are not allowed to perform
  * any mutations to the current or any other document, or start a
@@ -102,7 +107,11 @@ struct CharacterDataChangeInfo {
  * done from an async event, as the notification might not be
  * surrounded by BeginUpdate/EndUpdate calls.
  */
-class nsIMutationObserver : public nsISupports {
+class nsIMutationObserver
+    : public nsISupports,
+      mozilla::DoublyLinkedListElement<nsIMutationObserver> {
+  friend struct mozilla::GetDoublyLinkedListElement<nsIMutationObserver>;
+
  public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IMUTATION_OBSERVER_IID)
 
