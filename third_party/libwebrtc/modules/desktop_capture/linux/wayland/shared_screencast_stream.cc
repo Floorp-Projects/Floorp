@@ -608,7 +608,7 @@ void SharedScreenCastStreamPrivate::ProcessBuffer(pw_buffer* buffer) {
       RTC_LOG(LS_ERROR) << "Dropping DMA-BUF modifier: " << modifier_
                         << " and trying to renegotiate stream parameters";
 
-      if (pw_client_version_ >= kDropSingleModifierMinVersion) {
+      if (pw_server_version_ >= kDropSingleModifierMinVersion) {
         modifiers_.erase(
             std::remove(modifiers_.begin(), modifiers_.end(), modifier_),
             modifiers_.end());
