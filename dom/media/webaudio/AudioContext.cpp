@@ -167,7 +167,7 @@ AudioContext::AudioContext(nsPIDOMWindowInner* aWindow, bool aIsOffline,
       mTracksAreSuspended(!aIsOffline),
       mWasAllowedToStart(true),
       mSuspendedByContent(false),
-      mSuspendedByChrome(false),
+      mSuspendedByChrome(aWindow->IsSuspended()),
       mWasEverAllowedToStart(false),
       mWasEverBlockedToStart(false),
       mWouldBeAllowedToStart(true) {
