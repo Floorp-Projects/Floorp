@@ -33,7 +33,6 @@
 #include "mozilla/BasicEvents.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/DisplayPortUtils.h"
-#include "mozilla/GeckoBindings.h"
 #include "mozilla/glean/GleanMetrics.h"
 #include "mozilla/dom/AnonymousContent.h"
 #include "mozilla/dom/BrowserChild.h"
@@ -8974,9 +8973,6 @@ ScrollMetadata nsLayoutUtils::ComputeScrollMetadata(
   if (ShouldDisableApzForElement(aContent)) {
     metadata.SetForceDisableApz(true);
   }
-
-  metadata.SetPrefersReducedMotion(
-      Gecko_MediaFeatures_PrefersReducedMotion(document));
 
   metadata.SetIsPaginatedPresentation(presContext->Type() !=
                                       nsPresContext::eContext_Galley);

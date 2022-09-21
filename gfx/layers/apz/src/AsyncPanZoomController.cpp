@@ -5337,8 +5337,6 @@ void AsyncPanZoomController::NotifyLayersUpdated(
     mScrollMetadata.SetForceDisableApz(aScrollMetadata.IsApzForceDisabled());
     mScrollMetadata.SetIsRDMTouchSimulationActive(
         aScrollMetadata.GetIsRDMTouchSimulationActive());
-    mScrollMetadata.SetPrefersReducedMotion(
-        aScrollMetadata.PrefersReducedMotion());
     mScrollMetadata.SetForceMousewheelAutodir(
         aScrollMetadata.ForceMousewheelAutodir());
     mScrollMetadata.SetForceMousewheelAutodirHonourRoot(
