@@ -1244,8 +1244,8 @@ void nsWindow::HideWaylandToplevelWindow() {
       popup = prev;
     }
   }
-  gtk_widget_hide(mShell);
   WaylandStopVsync();
+  gtk_widget_hide(mShell);
 }
 
 void nsWindow::ShowWaylandToplevelWindow() {
