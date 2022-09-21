@@ -226,12 +226,12 @@ class VideoReceiveStream2Test : public ::testing::TestWithParam<bool> {
     config_.rtp.remote_ssrc = 1111;
     config_.rtp.local_ssrc = 2222;
     config_.renderer = &fake_renderer_;
-    VideoReceiveStream::Decoder h264_decoder;
+    VideoReceiveStreamInterface::Decoder h264_decoder;
     h264_decoder.payload_type = 99;
     h264_decoder.video_format = SdpVideoFormat("H264");
     h264_decoder.video_format.parameters.insert(
         {"sprop-parameter-sets", "Z0IACpZTBYmI,aMljiA=="});
-    VideoReceiveStream::Decoder h265_decoder;
+    VideoReceiveStreamInterface::Decoder h265_decoder;
     h265_decoder.payload_type = 100;
     h265_decoder.video_format = SdpVideoFormat("H265");
 
@@ -240,8 +240,9 @@ class VideoReceiveStream2Test : public ::testing::TestWithParam<bool> {
     RecreateReceiveStream();
   }
 
-  void RecreateReceiveStream(absl::optional<VideoReceiveStream::RecordingState>
-                                 state = absl::nullopt) {
+  void RecreateReceiveStream(
+      absl::optional<VideoReceiveStreamInterface::RecordingState> state =
+          absl::nullopt) {
     if (video_receive_stream_) {
       video_receive_stream_->UnregisterFromTransport();
       video_receive_stream_ = nullptr;
@@ -266,7 +267,7 @@ class VideoReceiveStream2Test : public ::testing::TestWithParam<bool> {
   test::RunLoop loop_;
   NackPeriodicProcessor nack_periodic_processor_;
   testing::NiceMock<MockVideoDecoderFactory> mock_h264_decoder_factory_;
-  VideoReceiveStream::Config config_;
+  VideoReceiveStreamInterface::Config config_;
   internal::CallStats call_stats_;
   testing::NiceMock<MockVideoDecoder> mock_decoder_;
   FakeVideoRenderer fake_renderer_;
@@ -600,7 +601,8 @@ TEST_P(VideoReceiveStream2Test, PassesFrameWhenEncodedFramesCallbackSet) {
   EXPECT_CALL(mock_transport_, SendRtcp);
   EXPECT_CALL(callback, Call);
   video_receive_stream_->SetAndGetRecordingState(
-      VideoReceiveStream::RecordingState(callback.AsStdFunction()), true);
+      VideoReceiveStreamInterface::RecordingState(callback.AsStdFunction()),
+      true);
   video_receive_stream_->OnCompleteFrame(
       MakeFrame(VideoFrameType::kVideoFrameKey, 0));
   EXPECT_TRUE(fake_renderer_.WaitForFrame(kDefaultTimeOut));
@@ -613,11 +615,12 @@ TEST_P(VideoReceiveStream2Test, MovesEncodedFrameDispatchStateWhenReCreating) {
   // Expect a key frame request over RTCP.
   EXPECT_CALL(mock_transport_, SendRtcp).Times(1);
   video_receive_stream_->SetAndGetRecordingState(
-      VideoReceiveStream::RecordingState(callback.AsStdFunction()), true);
+      VideoReceiveStreamInterface::RecordingState(callback.AsStdFunction()),
+      true);
   video_receive_stream_->Stop();
-  VideoReceiveStream::RecordingState old_state =
+  VideoReceiveStreamInterface::RecordingState old_state =
       video_receive_stream_->SetAndGetRecordingState(
-          VideoReceiveStream::RecordingState(), false);
+          VideoReceiveStreamInterface::RecordingState(), false);
   RecreateReceiveStream(std::move(old_state));
   video_receive_stream_->Stop();
 }
@@ -671,7 +674,7 @@ TEST_P(VideoReceiveStream2Test,
   video_receive_stream_->Start();
   testing::MockFunction<void(const RecordableEncodedFrame&)> callback;
   video_receive_stream_->SetAndGetRecordingState(
-      VideoReceiveStream::RecordingState(callback.AsStdFunction()),
+      VideoReceiveStreamInterface::RecordingState(callback.AsStdFunction()),
       /*generate_key_frame=*/false);
 
   InSequence s;
@@ -694,7 +697,7 @@ TEST_P(VideoReceiveStream2Test,
   video_receive_stream_->Start();
   testing::MockFunction<void(const RecordableEncodedFrame&)> callback;
   video_receive_stream_->SetAndGetRecordingState(
-      VideoReceiveStream::RecordingState(callback.AsStdFunction()),
+      VideoReceiveStreamInterface::RecordingState(callback.AsStdFunction()),
       /*generate_key_frame=*/false);
 
   InSequence s;

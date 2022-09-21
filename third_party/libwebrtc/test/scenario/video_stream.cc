@@ -317,16 +317,16 @@ std::unique_ptr<FrameGeneratorInterface> CreateFrameGenerator(
   }
 }
 
-VideoReceiveStream::Config CreateVideoReceiveStreamConfig(
+VideoReceiveStreamInterface::Config CreateVideoReceiveStreamConfig(
     VideoStreamConfig config,
     Transport* feedback_transport,
     VideoDecoderFactory* decoder_factory,
-    VideoReceiveStream::Decoder decoder,
+    VideoReceiveStreamInterface::Decoder decoder,
     rtc::VideoSinkInterface<VideoFrame>* renderer,
     uint32_t local_ssrc,
     uint32_t ssrc,
     uint32_t rtx_ssrc) {
-  VideoReceiveStream::Config recv(feedback_transport);
+  VideoReceiveStreamInterface::Config recv(feedback_transport);
   recv.rtp.transport_cc = config.stream.packet_feedback;
   recv.rtp.local_ssrc = local_ssrc;
   recv.rtp.extensions = GetVideoRtpExtensions(config);
@@ -546,7 +546,7 @@ ReceiveVideoStream::ReceiveVideoStream(CallClient* receiver,
     decoder_factory_ = std::make_unique<InternalDecoderFactory>();
   }
 
-  VideoReceiveStream::Decoder decoder =
+  VideoReceiveStreamInterface::Decoder decoder =
       CreateMatchingDecoder(CodecTypeToPayloadType(config.encoder.codec),
                             CodecTypeToPayloadString(config.encoder.codec));
   size_t num_streams = 1;
@@ -611,9 +611,9 @@ void ReceiveVideoStream::Stop() {
   });
 }
 
-VideoReceiveStream::Stats ReceiveVideoStream::GetStats() const {
+VideoReceiveStreamInterface::Stats ReceiveVideoStream::GetStats() const {
   if (receive_streams_.empty())
-    return VideoReceiveStream::Stats();
+    return VideoReceiveStreamInterface::Stats();
   // TODO(srte): Handle multiple receive streams.
   return receive_streams_.back()->GetStats();
 }

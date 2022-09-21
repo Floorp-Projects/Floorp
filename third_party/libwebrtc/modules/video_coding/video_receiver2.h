@@ -45,7 +45,7 @@ class VideoReceiver2 {
   int32_t Decode(const webrtc::VCMEncodedFrame* frame);
 
   // Notification methods that are used to check our internal state and validate
-  // threading assumptions. These are called by VideoReceiveStream.
+  // threading assumptions. These are called by VideoReceiveStreamInterface.
   // See `IsDecoderThreadRunning()` for more details.
   void DecoderThreadStarting();
   void DecoderThreadStopped();

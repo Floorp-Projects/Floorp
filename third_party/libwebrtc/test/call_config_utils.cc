@@ -16,14 +16,15 @@
 namespace webrtc {
 namespace test {
 
-// Deserializes a JSON representation of the VideoReceiveStream::Config back
-// into a valid object. This will not initialize the decoders or the renderer.
-VideoReceiveStream::Config ParseVideoReceiveStreamJsonConfig(
+// Deserializes a JSON representation of the VideoReceiveStreamInterface::Config
+// back into a valid object. This will not initialize the decoders or the
+// renderer.
+VideoReceiveStreamInterface::Config ParseVideoReceiveStreamJsonConfig(
     webrtc::Transport* transport,
     const Json::Value& json) {
-  auto receive_config = VideoReceiveStream::Config(transport);
+  auto receive_config = VideoReceiveStreamInterface::Config(transport);
   for (const auto& decoder_json : json["decoders"]) {
-    VideoReceiveStream::Decoder decoder;
+    VideoReceiveStreamInterface::Decoder decoder;
     decoder.video_format =
         SdpVideoFormat(decoder_json["payload_name"].asString());
     decoder.payload_type = decoder_json["payload_type"].asInt64();
@@ -69,7 +70,7 @@ VideoReceiveStream::Config ParseVideoReceiveStreamJsonConfig(
 }
 
 Json::Value GenerateVideoReceiveStreamJsonConfig(
-    const VideoReceiveStream::Config& config) {
+    const VideoReceiveStreamInterface::Config& config) {
   Json::Value root_json;
 
   root_json["decoders"] = Json::Value(Json::arrayValue);

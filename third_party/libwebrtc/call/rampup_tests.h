@@ -90,15 +90,15 @@ class RampUpTester : public test::EndToEndTest {
   class VideoStreamFactory;
 
   void ModifySenderBitrateConfig(BitrateConstraints* bitrate_config) override;
-  void OnVideoStreamsCreated(
-      VideoSendStream* send_stream,
-      const std::vector<VideoReceiveStream*>& receive_streams) override;
+  void OnVideoStreamsCreated(VideoSendStream* send_stream,
+                             const std::vector<VideoReceiveStreamInterface*>&
+                                 receive_streams) override;
   std::unique_ptr<test::PacketTransport> CreateSendTransport(
       TaskQueueBase* task_queue,
       Call* sender_call) override;
   void ModifyVideoConfigs(
       VideoSendStream::Config* send_config,
-      std::vector<VideoReceiveStream::Config>* receive_configs,
+      std::vector<VideoReceiveStreamInterface::Config>* receive_configs,
       VideoEncoderConfig* encoder_config) override;
   void ModifyAudioConfigs(
       AudioSendStream::Config* send_config,

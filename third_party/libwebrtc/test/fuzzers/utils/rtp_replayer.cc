@@ -34,7 +34,7 @@ void RtpReplayer::Replay(const std::string& replay_config_filepath,
                          const uint8_t* rtp_dump_data,
                          size_t rtp_dump_size) {
   auto stream_state = std::make_unique<StreamState>();
-  std::vector<VideoReceiveStream::Config> receive_stream_configs =
+  std::vector<VideoReceiveStreamInterface::Config> receive_stream_configs =
       ReadConfigFromFile(replay_config_filepath, &(stream_state->transport));
   return Replay(std::move(stream_state), std::move(receive_stream_configs),
                 rtp_dump_data, rtp_dump_size);
@@ -42,7 +42,7 @@ void RtpReplayer::Replay(const std::string& replay_config_filepath,
 
 void RtpReplayer::Replay(
     std::unique_ptr<StreamState> stream_state,
-    std::vector<VideoReceiveStream::Config> receive_stream_configs,
+    std::vector<VideoReceiveStreamInterface::Config> receive_stream_configs,
     const uint8_t* rtp_dump_data,
     size_t rtp_dump_size) {
   RunLoop loop;
@@ -83,9 +83,9 @@ void RtpReplayer::Replay(
   }
 }
 
-std::vector<VideoReceiveStream::Config> RtpReplayer::ReadConfigFromFile(
-    const std::string& replay_config,
-    Transport* transport) {
+std::vector<VideoReceiveStreamInterface::Config>
+RtpReplayer::ReadConfigFromFile(const std::string& replay_config,
+                                Transport* transport) {
   Json::CharReaderBuilder factory;
   std::unique_ptr<Json::CharReader> json_reader =
       absl::WrapUnique(factory.newCharReader());
@@ -99,7 +99,7 @@ std::vector<VideoReceiveStream::Config> RtpReplayer::ReadConfigFromFile(
     return {};
   }
 
-  std::vector<VideoReceiveStream::Config> receive_stream_configs;
+  std::vector<VideoReceiveStreamInterface::Config> receive_stream_configs;
   receive_stream_configs.reserve(json_configs.size());
   for (const auto& json : json_configs) {
     receive_stream_configs.push_back(
@@ -109,7 +109,7 @@ std::vector<VideoReceiveStream::Config> RtpReplayer::ReadConfigFromFile(
 }
 
 void RtpReplayer::SetupVideoStreams(
-    std::vector<VideoReceiveStream::Config>* receive_stream_configs,
+    std::vector<VideoReceiveStreamInterface::Config>* receive_stream_configs,
     StreamState* stream_state,
     Call* call) {
   stream_state->decoder_factory = std::make_unique<InternalDecoderFactory>();

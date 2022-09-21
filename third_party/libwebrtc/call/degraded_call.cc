@@ -239,13 +239,13 @@ void DegradedCall::DestroyVideoSendStream(VideoSendStream* send_stream) {
   video_send_transport_adapters_.erase(send_stream);
 }
 
-VideoReceiveStream* DegradedCall::CreateVideoReceiveStream(
-    VideoReceiveStream::Config configuration) {
+VideoReceiveStreamInterface* DegradedCall::CreateVideoReceiveStream(
+    VideoReceiveStreamInterface::Config configuration) {
   return call_->CreateVideoReceiveStream(std::move(configuration));
 }
 
 void DegradedCall::DestroyVideoReceiveStream(
-    VideoReceiveStream* receive_stream) {
+    VideoReceiveStreamInterface* receive_stream) {
   call_->DestroyVideoReceiveStream(receive_stream);
 }
 
@@ -307,7 +307,7 @@ void DegradedCall::OnLocalSsrcUpdated(AudioReceiveStream& stream,
   call_->OnLocalSsrcUpdated(stream, local_ssrc);
 }
 
-void DegradedCall::OnLocalSsrcUpdated(VideoReceiveStream& stream,
+void DegradedCall::OnLocalSsrcUpdated(VideoReceiveStreamInterface& stream,
                                       uint32_t local_ssrc) {
   call_->OnLocalSsrcUpdated(stream, local_ssrc);
 }

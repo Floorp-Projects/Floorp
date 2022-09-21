@@ -79,7 +79,7 @@ struct VideoFrameMetaData {
 };
 
 class VideoReceiveStream2
-    : public webrtc::VideoReceiveStream,
+    : public webrtc::VideoReceiveStreamInterface,
       public rtc::VideoSinkInterface<VideoFrame>,
       public NackSender,
       public RtpVideoStreamReceiver2::OnCompleteFrameCallback,
@@ -95,7 +95,7 @@ class VideoReceiveStream2
                       Call* call,
                       int num_cpu_cores,
                       PacketRouter* packet_router,
-                      VideoReceiveStream::Config config,
+                      VideoReceiveStreamInterface::Config config,
                       CallStats* call_stats,
                       Clock* clock,
                       std::unique_ptr<VCMTiming> timing,
@@ -135,7 +135,7 @@ class VideoReceiveStream2
   // sender has been created, changed or removed.
   void SetLocalSsrc(uint32_t local_ssrc);
 
-  // Implements webrtc::VideoReceiveStream.
+  // Implements webrtc::VideoReceiveStreamInterface.
   void Start() override;
   void Stop() override;
 
@@ -143,7 +143,7 @@ class VideoReceiveStream2
   RtpHeaderExtensionMap GetRtpExtensionMap() const override;
   bool transport_cc() const override { return config_.rtp.transport_cc; }
 
-  webrtc::VideoReceiveStream::Stats GetStats() const override;
+  webrtc::VideoReceiveStreamInterface::Stats GetStats() const override;
 
   // SetBaseMinimumPlayoutDelayMs and GetBaseMinimumPlayoutDelayMs are called
   // from webrtc/api level and requested by user code. For e.g. blink/js layer
@@ -225,7 +225,7 @@ class VideoReceiveStream2
   TaskQueueFactory* const task_queue_factory_;
 
   TransportAdapter transport_adapter_;
-  const VideoReceiveStream::Config config_;
+  const VideoReceiveStreamInterface::Config config_;
   const int num_cpu_cores_;
   Call* const call_;
   Clock* const clock_;

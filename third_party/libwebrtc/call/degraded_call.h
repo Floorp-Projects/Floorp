@@ -74,9 +74,10 @@ class DegradedCall : public Call, private PacketReceiver {
       std::unique_ptr<FecController> fec_controller) override;
   void DestroyVideoSendStream(VideoSendStream* send_stream) override;
 
-  VideoReceiveStream* CreateVideoReceiveStream(
-      VideoReceiveStream::Config configuration) override;
-  void DestroyVideoReceiveStream(VideoReceiveStream* receive_stream) override;
+  VideoReceiveStreamInterface* CreateVideoReceiveStream(
+      VideoReceiveStreamInterface::Config configuration) override;
+  void DestroyVideoReceiveStream(
+      VideoReceiveStreamInterface* receive_stream) override;
 
   FlexfecReceiveStream* CreateFlexfecReceiveStream(
       const FlexfecReceiveStream::Config config) override;
@@ -101,7 +102,7 @@ class DegradedCall : public Call, private PacketReceiver {
       int transport_overhead_per_packet) override;
   void OnLocalSsrcUpdated(AudioReceiveStream& stream,
                           uint32_t local_ssrc) override;
-  void OnLocalSsrcUpdated(VideoReceiveStream& stream,
+  void OnLocalSsrcUpdated(VideoReceiveStreamInterface& stream,
                           uint32_t local_ssrc) override;
   void OnLocalSsrcUpdated(FlexfecReceiveStream& stream,
                           uint32_t local_ssrc) override;

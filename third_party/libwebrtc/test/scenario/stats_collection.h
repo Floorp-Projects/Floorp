@@ -90,7 +90,7 @@ class VideoSendStatsCollector {
 };
 class VideoReceiveStatsCollector {
  public:
-  void AddStats(VideoReceiveStream::Stats sample);
+  void AddStats(VideoReceiveStreamInterface::Stats sample);
   CollectedVideoReceiveStats& stats() { return stats_; }
 
  private:

@@ -174,10 +174,10 @@ Timestamp ReceiveTime(const EncodedFrame& frame) {
   return *ts;
 }
 
-// Encapsulates use of the new frame buffer for use in VideoReceiveStream. This
-// behaves the same as the FrameBuffer2Proxy but uses frame_buffer instead.
-// Responsibilities from frame_buffer2, like stats, jitter and frame timing
-// accounting are moved into this pro
+// Encapsulates use of the new frame buffer for use in
+// VideoReceiveStreamInterface. This behaves the same as the FrameBuffer2Proxy
+// but uses frame_buffer instead. Responsibilities from frame_buffer2, like
+// stats, jitter and frame timing accounting are moved into this pro
 class FrameBuffer3Proxy : public FrameBufferProxy {
  public:
   FrameBuffer3Proxy(

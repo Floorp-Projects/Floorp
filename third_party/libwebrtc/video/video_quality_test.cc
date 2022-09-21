@@ -1011,7 +1011,7 @@ void VideoQualityTest::DestroyThumbnailStreams() {
     receiver_call_->DestroyVideoSendStream(thumbnail_send_stream);
   }
   thumbnail_send_streams_.clear();
-  for (VideoReceiveStream* thumbnail_receive_stream :
+  for (VideoReceiveStreamInterface* thumbnail_receive_stream :
        thumbnail_receive_streams_) {
     sender_call_->DestroyVideoReceiveStream(thumbnail_receive_stream);
   }
@@ -1152,12 +1152,12 @@ void VideoQualityTest::StartAudioStreams() {
 void VideoQualityTest::StartThumbnails() {
   for (VideoSendStream* send_stream : thumbnail_send_streams_)
     send_stream->Start();
-  for (VideoReceiveStream* receive_stream : thumbnail_receive_streams_)
+  for (VideoReceiveStreamInterface* receive_stream : thumbnail_receive_streams_)
     receive_stream->Start();
 }
 
 void VideoQualityTest::StopThumbnails() {
-  for (VideoReceiveStream* receive_stream : thumbnail_receive_streams_)
+  for (VideoReceiveStreamInterface* receive_stream : thumbnail_receive_streams_)
     receive_stream->Stop();
   for (VideoSendStream* send_stream : thumbnail_send_streams_)
     send_stream->Stop();

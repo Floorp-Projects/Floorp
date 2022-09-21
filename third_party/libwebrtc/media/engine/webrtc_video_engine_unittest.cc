@@ -153,15 +153,16 @@ const int* FindKeyByValue(const std::map<int, int>& m, int v) {
   return nullptr;
 }
 
-bool HasRtxReceiveAssociation(const webrtc::VideoReceiveStream::Config& config,
-                              int payload_type) {
+bool HasRtxReceiveAssociation(
+    const webrtc::VideoReceiveStreamInterface::Config& config,
+    int payload_type) {
   return FindKeyByValue(config.rtp.rtx_associated_payload_types,
                         payload_type) != nullptr;
 }
 
 // Check that there's an Rtx payload type for each decoder.
 bool VerifyRtxReceiveAssociations(
-    const webrtc::VideoReceiveStream::Config& config) {
+    const webrtc::VideoReceiveStreamInterface::Config& config) {
   for (const auto& decoder : config.decoders) {
     if (!HasRtxReceiveAssociation(config, decoder.payload_type))
       return false;
@@ -4098,7 +4099,7 @@ TEST_F(WebRtcVideoChannelFlexfecRecvTest, SetDefaultRecvCodecsWithoutSsrc) {
       fake_call_->GetVideoReceiveStreams();
   ASSERT_EQ(1U, video_streams.size());
   const FakeVideoReceiveStream& video_stream = *video_streams.front();
-  const webrtc::VideoReceiveStream::Config& video_config =
+  const webrtc::VideoReceiveStreamInterface::Config& video_config =
       video_stream.GetConfig();
   EXPECT_FALSE(video_config.rtp.protected_by_flexfec);
   EXPECT_EQ(video_config.rtp.packet_sink_, nullptr);
@@ -4122,7 +4123,7 @@ TEST_F(WebRtcVideoChannelFlexfecRecvTest, SetDefaultRecvCodecsWithSsrc) {
       fake_call_->GetVideoReceiveStreams();
   ASSERT_EQ(1U, video_streams.size());
   const FakeVideoReceiveStream& video_stream = *video_streams.front();
-  const webrtc::VideoReceiveStream::Config& video_config =
+  const webrtc::VideoReceiveStreamInterface::Config& video_config =
       video_stream.GetConfig();
   EXPECT_TRUE(video_config.rtp.protected_by_flexfec);
   EXPECT_NE(video_config.rtp.packet_sink_, nullptr);
@@ -4144,7 +4145,7 @@ TEST_F(WebRtcVideoChannelFlexfecRecvTest,
       fake_call_->GetVideoReceiveStreams();
   ASSERT_EQ(1U, video_streams.size());
   const FakeVideoReceiveStream* video_stream = video_streams.front();
-  const webrtc::VideoReceiveStream::Config* video_config =
+  const webrtc::VideoReceiveStreamInterface::Config* video_config =
       &video_stream->GetConfig();
   EXPECT_FALSE(video_config->rtp.protected_by_flexfec);
   EXPECT_EQ(video_config->rtp.packet_sink_, nullptr);
@@ -4159,7 +4160,7 @@ TEST_F(WebRtcVideoChannelFlexfecRecvTest,
       << "Enabling FlexFEC should create FlexfecReceiveStream.";
 
   EXPECT_EQ(1U, fake_call_->GetVideoReceiveStreams().size())
-      << "Enabling FlexFEC should not create VideoReceiveStream.";
+      << "Enabling FlexFEC should not create VideoReceiveStreamInterface.";
   EXPECT_EQ(1U, fake_call_->GetFlexfecReceiveStreams().size())
       << "Enabling FlexFEC should create a single FlexfecReceiveStream.";
   video_stream = video_streams.front();
@@ -4187,7 +4188,7 @@ TEST_F(WebRtcVideoChannelFlexfecRecvTest,
       fake_call_->GetVideoReceiveStreams();
   ASSERT_EQ(1U, video_streams.size());
   const FakeVideoReceiveStream* video_stream = video_streams.front();
-  const webrtc::VideoReceiveStream::Config* video_config =
+  const webrtc::VideoReceiveStreamInterface::Config* video_config =
       &video_stream->GetConfig();
   EXPECT_TRUE(video_config->rtp.protected_by_flexfec);
   EXPECT_NE(video_config->rtp.packet_sink_, nullptr);
@@ -4199,9 +4200,9 @@ TEST_F(WebRtcVideoChannelFlexfecRecvTest,
   // Now the count of created streams will be 3 since the video stream had to
   // be recreated on account of the flexfec stream being deleted.
   EXPECT_EQ(3, fake_call_->GetNumCreatedReceiveStreams())
-      << "Disabling FlexFEC should not recreate VideoReceiveStream.";
+      << "Disabling FlexFEC should not recreate VideoReceiveStreamInterface.";
   EXPECT_EQ(1U, fake_call_->GetVideoReceiveStreams().size())
-      << "Disabling FlexFEC should not destroy VideoReceiveStream.";
+      << "Disabling FlexFEC should not destroy VideoReceiveStreamInterface.";
   EXPECT_TRUE(fake_call_->GetFlexfecReceiveStreams().empty())
       << "Disabling FlexFEC should destroy FlexfecReceiveStream.";
   video_stream = video_streams.front();
@@ -4309,7 +4310,7 @@ TEST_F(WebRtcVideoChannelFlexfecRecvTest, SetRecvCodecsWithFec) {
   const std::vector<FakeVideoReceiveStream*>& video_streams =
       fake_call_->GetVideoReceiveStreams();
   const FakeVideoReceiveStream* video_stream = video_streams.front();
-  const webrtc::VideoReceiveStream::Config& video_stream_config =
+  const webrtc::VideoReceiveStreamInterface::Config& video_stream_config =
       video_stream->GetConfig();
   EXPECT_EQ(video_stream_config.rtp.local_ssrc,
             flexfec_stream_config.rtp.local_ssrc);
@@ -4840,7 +4841,7 @@ TEST_F(WebRtcVideoChannelTest, SetRecvCodecsWithPacketization) {
   AddRecvStream(params);
   ASSERT_THAT(fake_call_->GetVideoReceiveStreams(), testing::SizeIs(1));
 
-  const webrtc::VideoReceiveStream::Config& config =
+  const webrtc::VideoReceiveStreamInterface::Config& config =
       fake_call_->GetVideoReceiveStreams()[0]->GetConfig();
   ASSERT_THAT(config.rtp.raw_payload_types, testing::SizeIs(1));
   EXPECT_EQ(config.rtp.raw_payload_types.count(vp8_codec.id), 1U);
@@ -4917,7 +4918,7 @@ TEST_F(WebRtcVideoChannelTest, SetRecvCodecsWithChangedRtxPayloadType) {
   parameters.codecs.push_back(rtx_codec);
   EXPECT_TRUE(channel_->SetRecvParameters(parameters));
   ASSERT_EQ(1U, fake_call_->GetVideoReceiveStreams().size());
-  const webrtc::VideoReceiveStream::Config& config_before =
+  const webrtc::VideoReceiveStreamInterface::Config& config_before =
       fake_call_->GetVideoReceiveStreams()[0]->GetConfig();
   EXPECT_EQ(1U, config_before.rtp.rtx_associated_payload_types.size());
   const int* payload_type_before = FindKeyByValue(
@@ -4930,7 +4931,7 @@ TEST_F(WebRtcVideoChannelTest, SetRecvCodecsWithChangedRtxPayloadType) {
   parameters.codecs[1].id = kUnusedPayloadType2;
   EXPECT_TRUE(channel_->SetRecvParameters(parameters));
   ASSERT_EQ(1U, fake_call_->GetVideoReceiveStreams().size());
-  const webrtc::VideoReceiveStream::Config& config_after =
+  const webrtc::VideoReceiveStreamInterface::Config& config_after =
       fake_call_->GetVideoReceiveStreams()[0]->GetConfig();
   EXPECT_EQ(1U, config_after.rtp.rtx_associated_payload_types.size());
   const int* payload_type_after = FindKeyByValue(
@@ -4960,7 +4961,7 @@ TEST_F(WebRtcVideoChannelTest, SetRecvCodecsRtxWithRtxTime) {
   parameters.codecs.push_back(rtx_codec);
   EXPECT_TRUE(channel_->SetRecvParameters(parameters));
   ASSERT_EQ(1U, fake_call_->GetVideoReceiveStreams().size());
-  const webrtc::VideoReceiveStream::Config& config =
+  const webrtc::VideoReceiveStreamInterface::Config& config =
       fake_call_->GetVideoReceiveStreams()[0]->GetConfig();
 
   const int kRtxTime = 343;
@@ -5023,7 +5024,8 @@ TEST_F(WebRtcVideoChannelTest, SetRecvCodecsAcceptDefaultCodecs) {
   EXPECT_TRUE(channel_->SetRecvParameters(parameters));
 
   FakeVideoReceiveStream* stream = AddRecvStream();
-  const webrtc::VideoReceiveStream::Config& config = stream->GetConfig();
+  const webrtc::VideoReceiveStreamInterface::Config& config =
+      stream->GetConfig();
   EXPECT_EQ(engine_.recv_codecs()[0].name,
             config.decoders[0].video_format.name);
   EXPECT_EQ(engine_.recv_codecs()[0].id, config.decoders[0].payload_type);
@@ -6082,7 +6084,7 @@ TEST_F(WebRtcVideoChannelTest, GetStatsTranslatesSendRtcpPacketTypesCorrectly) {
 TEST_F(WebRtcVideoChannelTest,
        GetStatsTranslatesReceiveRtcpPacketTypesCorrectly) {
   FakeVideoReceiveStream* stream = AddRecvStream();
-  webrtc::VideoReceiveStream::Stats stats;
+  webrtc::VideoReceiveStreamInterface::Stats stats;
   stats.rtcp_packet_type_counts.fir_packets = 2;
   stats.rtcp_packet_type_counts.nack_packets = 3;
   stats.rtcp_packet_type_counts.pli_packets = 4;
@@ -6100,7 +6102,7 @@ TEST_F(WebRtcVideoChannelTest,
 
 TEST_F(WebRtcVideoChannelTest, GetStatsTranslatesDecodeStatsCorrectly) {
   FakeVideoReceiveStream* stream = AddRecvStream();
-  webrtc::VideoReceiveStream::Stats stats;
+  webrtc::VideoReceiveStreamInterface::Stats stats;
   stats.decoder_implementation_name = "decoder_implementation_name";
   stats.decode_ms = 2;
   stats.max_decode_ms = 3;
@@ -6157,7 +6159,7 @@ TEST_F(WebRtcVideoChannelTest, GetStatsTranslatesDecodeStatsCorrectly) {
 TEST_F(WebRtcVideoChannelTest,
        GetStatsTranslatesInterFrameDelayStatsCorrectly) {
   FakeVideoReceiveStream* stream = AddRecvStream();
-  webrtc::VideoReceiveStream::Stats stats;
+  webrtc::VideoReceiveStreamInterface::Stats stats;
   stats.total_inter_frame_delay = 0.123;
   stats.total_squared_inter_frame_delay = 0.00456;
   stream->SetStats(stats);
@@ -6172,7 +6174,7 @@ TEST_F(WebRtcVideoChannelTest,
 
 TEST_F(WebRtcVideoChannelTest, GetStatsTranslatesReceivePacketStatsCorrectly) {
   FakeVideoReceiveStream* stream = AddRecvStream();
-  webrtc::VideoReceiveStream::Stats stats;
+  webrtc::VideoReceiveStreamInterface::Stats stats;
   stats.rtp_stats.packet_counter.payload_bytes = 2;
   stats.rtp_stats.packet_counter.header_bytes = 3;
   stats.rtp_stats.packet_counter.padding_bytes = 4;
@@ -6374,7 +6376,7 @@ TEST_F(WebRtcVideoChannelTest, ReportsSsrcGroupsInStats) {
 
 TEST_F(WebRtcVideoChannelTest, MapsReceivedPayloadTypeToCodecName) {
   FakeVideoReceiveStream* stream = AddRecvStream();
-  webrtc::VideoReceiveStream::Stats stats;
+  webrtc::VideoReceiveStreamInterface::Stats stats;
   cricket::VideoMediaInfo info;
 
   // Report no codec name before receiving.
@@ -8489,7 +8491,8 @@ TEST_F(WebRtcVideoChannelTest, DISABLED_GetRtpReceiveFmtpSprop) {
   EXPECT_TRUE(channel_->SetRecvParameters(parameters));
 
   FakeVideoReceiveStream* recv_stream = AddRecvStream();
-  const webrtc::VideoReceiveStream::Config& cfg = recv_stream->GetConfig();
+  const webrtc::VideoReceiveStreamInterface::Config& cfg =
+      recv_stream->GetConfig();
   webrtc::RtpParameters rtp_parameters =
       channel_->GetRtpReceiveParameters(last_ssrc_);
   ASSERT_EQ(2u, rtp_parameters.codecs.size());

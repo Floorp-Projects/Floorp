@@ -201,7 +201,7 @@ TEST(TransportFeedbackMultiStreamTest, AssignsTransportSequenceNumbers) {
 
     void UpdateReceiveConfig(
         size_t stream_index,
-        VideoReceiveStream::Config* receive_config) override {
+        VideoReceiveStreamInterface::Config* receive_config) override {
       receive_config->rtp.nack.rtp_history_ms = kNackRtpHistoryMs;
       receive_config->rtp.extensions.clear();
       receive_config->rtp.extensions.push_back(
@@ -292,7 +292,7 @@ class TransportFeedbackTester : public test::EndToEndTest {
 
   void ModifyVideoConfigs(
       VideoSendStream::Config* send_config,
-      std::vector<VideoReceiveStream::Config>* receive_configs,
+      std::vector<VideoReceiveStreamInterface::Config>* receive_configs,
       VideoEncoderConfig* encoder_config) override {
     (*receive_configs)[0].rtp.transport_cc = feedback_enabled_;
   }

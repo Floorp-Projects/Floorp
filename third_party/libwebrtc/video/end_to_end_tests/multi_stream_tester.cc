@@ -59,7 +59,7 @@ void MultiStreamTester::RunTest() {
   std::unique_ptr<test::DirectTransport> receiver_transport;
 
   VideoSendStream* send_streams[kNumStreams];
-  VideoReceiveStream* receive_streams[kNumStreams];
+  VideoReceiveStreamInterface* receive_streams[kNumStreams];
   test::FrameGeneratorCapturer* frame_generators[kNumStreams];
   test::FunctionVideoEncoderFactory encoder_factory(
       []() { return VP8Encoder::Create(); });
@@ -99,11 +99,12 @@ void MultiStreamTester::RunTest() {
           send_config.Copy(), encoder_config.Copy());
       send_streams[i]->Start();
 
-      VideoReceiveStream::Config receive_config(receiver_transport.get());
+      VideoReceiveStreamInterface::Config receive_config(
+          receiver_transport.get());
       receive_config.rtp.remote_ssrc = ssrc;
       receive_config.rtp.local_ssrc = test::CallTest::kReceiverLocalVideoSsrc;
       receive_config.decoder_factory = &decoder_factory;
-      VideoReceiveStream::Decoder decoder =
+      VideoReceiveStreamInterface::Decoder decoder =
           test::CreateMatchingDecoder(send_config);
       receive_config.decoders.push_back(decoder);
 
@@ -152,7 +153,7 @@ void MultiStreamTester::UpdateSendConfig(
 
 void MultiStreamTester::UpdateReceiveConfig(
     size_t stream_index,
-    VideoReceiveStream::Config* receive_config) {}
+    VideoReceiveStreamInterface::Config* receive_config) {}
 
 std::unique_ptr<test::DirectTransport> MultiStreamTester::CreateSendTransport(
     TaskQueueBase* task_queue,

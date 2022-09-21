@@ -186,8 +186,10 @@ void MultiCodecReceiveTest::ConfigureDecoders(
   std::set<std::string> unique_payload_names;
   for (const auto& config : configs)
     if (unique_payload_names.insert(config.payload_name).second) {
-      VideoReceiveStream::Decoder decoder = test::CreateMatchingDecoder(
-          PayloadNameToPayloadType(config.payload_name), config.payload_name);
+      VideoReceiveStreamInterface::Decoder decoder =
+          test::CreateMatchingDecoder(
+              PayloadNameToPayloadType(config.payload_name),
+              config.payload_name);
 
       video_receive_configs_[0].decoders.push_back(decoder);
     }

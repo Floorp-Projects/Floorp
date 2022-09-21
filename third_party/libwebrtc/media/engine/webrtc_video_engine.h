@@ -246,8 +246,8 @@ class WebRtcVideoChannel : public VideoMediaChannel,
  private:
   class WebRtcVideoReceiveStream;
 
-  // Finds VideoReceiveStream corresponding to ssrc. Aware of unsignalled ssrc
-  // handling.
+  // Finds VideoReceiveStreamInterface corresponding to ssrc. Aware of
+  // unsignalled ssrc handling.
   WebRtcVideoReceiveStream* FindReceiveStream(uint32_t ssrc)
       RTC_EXCLUSIVE_LOCKS_REQUIRED(thread_checker_);
 
@@ -289,7 +289,7 @@ class WebRtcVideoChannel : public VideoMediaChannel,
     absl::optional<std::vector<webrtc::RtpExtension>> rtp_header_extensions;
     // Keep track of the FlexFEC payload type separately from `codec_settings`.
     // This allows us to recreate the FlexfecReceiveStream separately from the
-    // VideoReceiveStream when the FlexFEC payload type is changed.
+    // VideoReceiveStreamInterface when the FlexFEC payload type is changed.
     absl::optional<int> flexfec_payload_type;
   };
 
@@ -302,7 +302,7 @@ class WebRtcVideoChannel : public VideoMediaChannel,
       RTC_EXCLUSIVE_LOCKS_REQUIRED(thread_checker_);
 
   void ConfigureReceiverRtp(
-      webrtc::VideoReceiveStream::Config* config,
+      webrtc::VideoReceiveStreamInterface::Config* config,
       webrtc::FlexfecReceiveStream::Config* flexfec_config,
       const StreamParams& sp) const
       RTC_EXCLUSIVE_LOCKS_REQUIRED(thread_checker_);
@@ -428,7 +428,7 @@ class WebRtcVideoChannel : public VideoMediaChannel,
   };
 
   // Wrapper for the receiver part, contains configs etc. that are needed to
-  // reconstruct the underlying VideoReceiveStream.
+  // reconstruct the underlying VideoReceiveStreamInterface.
   class WebRtcVideoReceiveStream
       : public rtc::VideoSinkInterface<webrtc::VideoFrame> {
    public:
@@ -436,13 +436,13 @@ class WebRtcVideoChannel : public VideoMediaChannel,
         WebRtcVideoChannel* channel,
         webrtc::Call* call,
         const StreamParams& sp,
-        webrtc::VideoReceiveStream::Config config,
+        webrtc::VideoReceiveStreamInterface::Config config,
         bool default_stream,
         const std::vector<VideoCodecSettings>& recv_codecs,
         const webrtc::FlexfecReceiveStream::Config& flexfec_config);
     ~WebRtcVideoReceiveStream();
 
-    webrtc::VideoReceiveStream& stream();
+    webrtc::VideoReceiveStreamInterface& stream();
     // Return value may be nullptr.
     webrtc::FlexfecReceiveStream* flexfec_stream();
 
@@ -503,9 +503,9 @@ class WebRtcVideoChannel : public VideoMediaChannel,
     // Both `stream_` and `flexfec_stream_` are managed by `this`. They are
     // destroyed by calling call_->DestroyVideoReceiveStream and
     // call_->DestroyFlexfecReceiveStream, respectively.
-    webrtc::VideoReceiveStream* stream_;
+    webrtc::VideoReceiveStreamInterface* stream_;
     const bool default_stream_;
-    webrtc::VideoReceiveStream::Config config_;
+    webrtc::VideoReceiveStreamInterface::Config config_;
     webrtc::FlexfecReceiveStream::Config flexfec_config_;
     webrtc::FlexfecReceiveStream* flexfec_stream_;
 

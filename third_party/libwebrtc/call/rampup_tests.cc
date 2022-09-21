@@ -103,7 +103,7 @@ void RampUpTester::ModifySenderBitrateConfig(
 
 void RampUpTester::OnVideoStreamsCreated(
     VideoSendStream* send_stream,
-    const std::vector<VideoReceiveStream*>& receive_streams) {
+    const std::vector<VideoReceiveStreamInterface*>& receive_streams) {
   send_stream_ = send_stream;
 }
 
@@ -154,7 +154,7 @@ class RampUpTester::VideoStreamFactory
 
 void RampUpTester::ModifyVideoConfigs(
     VideoSendStream::Config* send_config,
-    std::vector<VideoReceiveStream::Config>* receive_configs,
+    std::vector<VideoReceiveStreamInterface::Config>* receive_configs,
     VideoEncoderConfig* encoder_config) {
   send_config->suspend_below_min_bitrate = true;
   encoder_config->number_of_streams = num_video_streams_;
@@ -214,7 +214,7 @@ void RampUpTester::ModifyVideoConfigs(
   }
 
   size_t i = 0;
-  for (VideoReceiveStream::Config& recv_config : *receive_configs) {
+  for (VideoReceiveStreamInterface::Config& recv_config : *receive_configs) {
     recv_config.rtp.transport_cc = transport_cc;
     recv_config.rtp.extensions = send_config->rtp.extensions;
     recv_config.decoders.reserve(1);

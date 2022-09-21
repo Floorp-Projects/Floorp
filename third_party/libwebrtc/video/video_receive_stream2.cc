@@ -184,8 +184,9 @@ constexpr TimeDelta kInactiveStreamThreshold = TimeDelta::Minutes(10);
 
 }  // namespace
 
-TimeDelta DetermineMaxWaitForFrame(const VideoReceiveStream::Config& config,
-                                   bool is_keyframe) {
+TimeDelta DetermineMaxWaitForFrame(
+    const VideoReceiveStreamInterface::Config& config,
+    bool is_keyframe) {
   // A (arbitrary) conversion factor between the remotely signalled NACK buffer
   // time (if not present defaults to 1000ms) and the maximum time we wait for a
   // remote frame. Chosen to not change existing defaults when using not
@@ -206,7 +207,7 @@ VideoReceiveStream2::VideoReceiveStream2(
     Call* call,
     int num_cpu_cores,
     PacketRouter* packet_router,
-    VideoReceiveStream::Config config,
+    VideoReceiveStreamInterface::Config config,
     CallStats* call_stats,
     Clock* clock,
     std::unique_ptr<VCMTiming> timing,
@@ -534,7 +535,7 @@ void VideoReceiveStream2::CreateAndRegisterExternalDecoder(
                                           decoder.payload_type);
 }
 
-VideoReceiveStream::Stats VideoReceiveStream2::GetStats() const {
+VideoReceiveStreamInterface::Stats VideoReceiveStream2::GetStats() const {
   RTC_DCHECK_RUN_ON(&worker_sequence_checker_);
   VideoReceiveStream2::Stats stats = stats_proxy_.GetStats();
   stats.total_bitrate_bps = 0;

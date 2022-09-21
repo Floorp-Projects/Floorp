@@ -627,7 +627,7 @@ ReceiveStatisticsProxy::GetCurrentEstimatedPlayoutNtpTimestampMs(
   return *last_estimated_playout_ntp_timestamp_ms_ + elapsed_ms;
 }
 
-VideoReceiveStream::Stats ReceiveStatisticsProxy::GetStats() const {
+VideoReceiveStreamInterface::Stats ReceiveStatisticsProxy::GetStats() const {
   MutexLock lock(&mutex_);
   // Get current frame rates here, as only updating them on new frames prevents
   // us from ever correctly displaying frame rate of 0.
