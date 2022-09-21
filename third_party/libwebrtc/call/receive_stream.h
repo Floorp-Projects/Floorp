@@ -24,7 +24,7 @@ namespace webrtc {
 
 // Common base interface for MediaReceiveStream based classes and
 // FlexfecReceiveStream.
-class ReceiveStream {
+class ReceiveStreamInterface {
  public:
   // Receive-stream specific RTP settings.
   // TODO(tommi): This struct isn't needed at this level anymore. Move it closer
@@ -68,11 +68,11 @@ class ReceiveStream {
   virtual bool transport_cc() const = 0;
 
  protected:
-  virtual ~ReceiveStream() {}
+  virtual ~ReceiveStreamInterface() {}
 };
 
 // Either an audio or video receive stream.
-class MediaReceiveStream : public ReceiveStream {
+class MediaReceiveStream : public ReceiveStreamInterface {
  public:
   // Starts stream activity.
   // When a stream is active, it can receive, process and deliver packets.
@@ -93,6 +93,10 @@ class MediaReceiveStream : public ReceiveStream {
 
   virtual std::vector<RtpSource> GetSources() const = 0;
 };
+
+// TODO(bugs.webrtc.org/7484): Remove this once downstream usage of the
+// deprecated name is gone.
+using ReceiveStream [[deprecated]] = ReceiveStreamInterface;
 
 }  // namespace webrtc
 
