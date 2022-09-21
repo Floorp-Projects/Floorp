@@ -92,6 +92,10 @@ function withNewBlankTab(taskFn) {
   });
 }
 
+function removeFirefoxViewButton() {
+  CustomizableUI.removeWidgetFromArea("firefox-view-button");
+}
+
 const BOOKMARKS_COUNT = 100;
 
 add_setup(async function() {
@@ -519,4 +523,78 @@ add_task(async function testTabStopsAfterSearchBarAdded() {
   });
   await SpecialPowers.popPrefEnv();
   RemoveOldMenuSideButtons();
+});
+
+// Test tab navigation when the Firefox View button is present
+// and when the button is not present.
+add_task(async function testFirefoxViewButtonNavigation() {
+  // Add enough tabs so that the new-tab-button appears in the toolbar
+  // and the tabs-newtab-button is hidden.
+  await BrowserTestUtils.overflowTabs(registerCleanupFunction, window);
+
+  // Assert that Firefox View button receives focus when tab navigating
+  // forward from the end of web content.
+  // Additionally, ensure that focus is not trapped between the
+  // selected tab and the new-tab button.
+  // Finally, assert that focus is restored to web content when
+  // navigating backwards from the Firefox View button.
+  await BrowserTestUtils.withNewTab(PERMISSIONS_PAGE, async function(aBrowser) {
+    await SpecialPowers.spawn(aBrowser, [], async () => {
+      content.document.querySelector("#camera").focus();
+    });
+
+    await expectFocusAfterKey("Tab", "firefox-view-button");
+    let selectedTab = document.querySelector("tab[selected]");
+    await expectFocusAfterKey("Tab", selectedTab);
+    await expectFocusAfterKey("Tab", "new-tab-button");
+    await expectFocusAfterKey("Shift+Tab", selectedTab);
+    await expectFocusAfterKey("Shift+Tab", "firefox-view-button");
+
+    // Moving from toolbar back into content
+    EventUtils.synthesizeKey("KEY_Tab", { shiftKey: true });
+    await SpecialPowers.spawn(aBrowser, [], async () => {
+      let activeElement = content.document.activeElement;
+      let expectedElement = content.document.querySelector("#camera");
+      is(
+        activeElement,
+        expectedElement,
+        "Focus should be returned to the 'camera' button"
+      );
+    });
+  });
+
+  // Assert that the selected tab receives focus before the new-tab button
+  // if there is no Firefox View button.
+  // Additionally, assert that navigating backwards from the selected tab
+  // restores focus to the last element in the web content.
+  await BrowserTestUtils.withNewTab(PERMISSIONS_PAGE, async function(aBrowser) {
+    removeFirefoxViewButton();
+
+    await SpecialPowers.spawn(aBrowser, [], async () => {
+      content.document.querySelector("#camera").focus();
+    });
+
+    let selectedTab = document.querySelector("tab[selected]");
+    await expectFocusAfterKey("Tab", selectedTab);
+    await expectFocusAfterKey("Tab", "new-tab-button");
+    await expectFocusAfterKey("Shift+Tab", selectedTab);
+
+    // Moving from toolbar back into content
+    EventUtils.synthesizeKey("KEY_Tab", { shiftKey: true });
+    await SpecialPowers.spawn(aBrowser, [], async () => {
+      let activeElement = content.document.activeElement;
+      let expectedElement = content.document.querySelector("#camera");
+      is(
+        activeElement,
+        expectedElement,
+        "Focus should be returned to the 'camera' button"
+      );
+    });
+  });
+
+  // Clean up extra tabs
+  while (gBrowser.tabs.length > 1) {
+    BrowserTestUtils.removeTab(gBrowser.tabs[0]);
+  }
+  CustomizableUI.reset();
 });
