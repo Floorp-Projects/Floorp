@@ -38,7 +38,7 @@ namespace mozilla::dom {
 FileSystemManagerParent::FileSystemManagerParent(
     RefPtr<fs::data::FileSystemDataManager> aDataManager,
     const EntryId& aRootEntry)
-    : mDataManager(std::move(aDataManager)), mRootResponse(aRootEntry) {}
+    : mDataManager(std::move(aDataManager)), mRootEntry(aRootEntry) {}
 
 FileSystemManagerParent::~FileSystemManagerParent() {
   LOG(("Destroying FileSystemManagerParent %p", this));
@@ -59,7 +59,8 @@ IPCResult FileSystemManagerParent::RecvGetRootHandle(
     GetRootHandleResolver&& aResolver) {
   AssertIsOnIOTarget();
 
-  aResolver(mRootResponse);
+  FileSystemGetHandleResponse response(mRootEntry);
+  aResolver(response);
 
   return IPC_OK();
 }
@@ -135,7 +136,8 @@ mozilla::ipc::IPCResult FileSystemManagerParent::RecvGetAccessHandle(
   fs::Path path;
   nsCOMPtr<nsIFile> file;
   QM_TRY(MOZ_TO_RESULT(mDataManager->MutableDatabaseManagerPtr()->GetFile(
-             aRequest.entryId(), type, lastModifiedMilliSeconds, path, file)),
+             {mRootEntry, aRequest.entryId()}, type, lastModifiedMilliSeconds,
+             path, file)),
          IPC_OK(), reportError);
 
   if (MOZ_LOG_TEST(gOPFSLog, mozilla::LogLevel::Debug)) {
@@ -188,8 +190,8 @@ IPCResult FileSystemManagerParent::RecvGetFile(
   fs::Path path;
   nsCOMPtr<nsIFile> fileObject;
   QM_TRY(MOZ_TO_RESULT(mDataManager->MutableDatabaseManagerPtr()->GetFile(
-             aRequest.entryId(), type, lastModifiedMilliSeconds, path,
-             fileObject)),
+             {mRootEntry, aRequest.entryId()}, type, lastModifiedMilliSeconds,
+             path, fileObject)),
          IPC_OK(), reportError);
 
   if (MOZ_LOG_TEST(gOPFSLog, mozilla::LogLevel::Debug)) {
@@ -259,6 +261,19 @@ IPCResult FileSystemManagerParent::RecvGetEntries(
     aResolver(response);
   };
 
+  // If it was deleted, we can't find it's parent -- unless it's the root.
+  if (aRequest.parentId() != mRootEntry) {
+    QM_TRY_UNWRAP(EntryId entryId,
+                  mDataManager->MutableDatabaseManagerPtr()->GetParentEntryId(
+                      aRequest.parentId()),
+                  IPC_OK(), reportError);
+    if (entryId.IsEmpty()) {
+      FileSystemGetEntriesResponse response(NS_ERROR_DOM_NOT_FOUND_ERR);
+      aResolver(response);
+      return IPC_OK();
+    }
+  }
+
   QM_TRY_UNWRAP(FileSystemDirectoryListing entries,
                 mDataManager->MutableDatabaseManagerPtr()->GetDirectoryEntries(
                     aRequest.parentId(), aRequest.page()),
@@ -327,9 +342,17 @@ IPCResult FileSystemManagerParent::RecvMoveEntry(
     aResolver(response);
   };
 
+  QM_TRY_UNWRAP(EntryId parentId,
+                mDataManager->MutableDatabaseManagerPtr()->GetParentEntryId(
+                    aRequest.handle().entryId()),
+                IPC_OK(), reportError);
+  FileSystemChildMetadata sourceHandle;
+  sourceHandle.parentId() = parentId;
+  sourceHandle.childName() = aRequest.handle().entryName();
+
   QM_TRY_UNWRAP(bool moved,
                 mDataManager->MutableDatabaseManagerPtr()->MoveEntry(
-                    aRequest.handle(), aRequest.destHandle()),
+                    sourceHandle, aRequest.destHandle()),
                 IPC_OK(), reportError);
 
   fs::FileSystemMoveEntryResponse response(moved ? NS_OK : NS_ERROR_FAILURE);
@@ -352,9 +375,21 @@ IPCResult FileSystemManagerParent::RecvRenameEntry(
     aResolver(response);
   };
 
+  QM_TRY_UNWRAP(EntryId parentId,
+                mDataManager->MutableDatabaseManagerPtr()->GetParentEntryId(
+                    aRequest.handle().entryId()),
+                IPC_OK(), reportError);
+  FileSystemChildMetadata sourceHandle;
+  sourceHandle.parentId() = parentId;
+  sourceHandle.childName() = aRequest.handle().entryName();
+
+  FileSystemChildMetadata newHandle;
+  newHandle.parentId() = parentId;
+  newHandle.childName() = aRequest.name();
+
   QM_TRY_UNWRAP(bool moved,
-                mDataManager->MutableDatabaseManagerPtr()->RenameEntry(
-                    aRequest.handle(), aRequest.name()),
+                mDataManager->MutableDatabaseManagerPtr()->MoveEntry(
+                    sourceHandle, newHandle),
                 IPC_OK(), reportError);
 
   fs::FileSystemMoveEntryResponse response(moved ? NS_OK : NS_ERROR_FAILURE);

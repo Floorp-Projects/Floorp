@@ -69,15 +69,12 @@ static void MakeDatabaseManagerVersion001(
                               getter_AddRefs(testPath));
   ASSERT_NSEQ(NS_OK, rv);
 
-  TEST_TRY_UNWRAP(EntryId rootId, data::GetRootHandle(getTestOrigin()));
-
   auto fmRes =
       FileSystemFileManager::CreateFileSystemFileManager(std::move(testPath));
   ASSERT_FALSE(fmRes.isErr());
 
   aResult = new FileSystemDatabaseManagerVersion001(
-      std::move(connection), MakeUnique<FileSystemFileManager>(fmRes.unwrap()),
-      rootId);
+      std::move(connection), MakeUnique<FileSystemFileManager>(fmRes.unwrap()));
 }
 
 TEST(TestFileSystemDatabaseManagerVersion001, smokeTestCreateRemoveDirectories)
@@ -201,8 +198,8 @@ TEST(TestFileSystemDatabaseManagerVersion001, smokeTestCreateRemoveFiles)
   TimeStamp lastModifiedMilliSeconds;
   Path path;
   nsCOMPtr<nsIFile> file;
-  rv = dm->GetFile(firstItemRef.entryId(), type, lastModifiedMilliSeconds, path,
-                   file);
+  rv = dm->GetFile({rootId, firstItemRef.entryId()}, type,
+                   lastModifiedMilliSeconds, path, file);
   ASSERT_NSEQ(NS_OK, rv);
 
   ASSERT_TRUE(type.IsEmpty());
