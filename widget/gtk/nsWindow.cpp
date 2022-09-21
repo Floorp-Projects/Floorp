@@ -6448,7 +6448,7 @@ void nsWindow::ResumeCompositorImpl() {
 
   CompositorBridgeChild* remoteRenderer = GetRemoteRenderer();
   MOZ_RELEASE_ASSERT(remoteRenderer);
-  remoteRenderer->SendResumeAsync();
+  remoteRenderer->SendResume();
   remoteRenderer->SendForcePresent(wr::RenderReasons::WIDGET);
   mCompositorState = COMPOSITOR_ENABLED;
 }
