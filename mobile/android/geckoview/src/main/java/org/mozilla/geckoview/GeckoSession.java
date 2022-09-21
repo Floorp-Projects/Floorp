@@ -28,6 +28,7 @@ import android.text.TextUtils;
 import android.util.Base64;
 import android.util.Log;
 import android.view.PointerIcon;
+import android.view.Surface;
 import android.view.View;
 import android.view.ViewStructure;
 import android.view.inputmethod.CursorAnchorInfo;
@@ -68,6 +69,7 @@ import org.mozilla.gecko.EventDispatcher;
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.GeckoThread;
 import org.mozilla.gecko.IGeckoEditableParent;
+import org.mozilla.gecko.MagnifiableSurfaceView;
 import org.mozilla.gecko.NativeQueue;
 import org.mozilla.gecko.annotation.WrapForJNI;
 import org.mozilla.gecko.mozglue.JNIObject;
@@ -170,9 +172,14 @@ public class GeckoSession {
   }
 
   @TargetApi(Build.VERSION_CODES.P)
-  private static class SessionMagnifierP implements GeckoSession.SessionMagnifier {
+  private class SessionMagnifierP implements GeckoSession.SessionMagnifier {
     private @Nullable View mView;
     private @Nullable Magnifier mMagnifier;
+    private final @NonNull Compositor mCompositor;
+
+    private SessionMagnifierP(final Compositor compositor) {
+      mCompositor = compositor;
+    }
 
     @Override
     @UiThread
@@ -206,7 +213,15 @@ public class GeckoSession {
         mMagnifier = new Magnifier(mView);
       }
 
+      if (mView instanceof MagnifiableSurfaceView) {
+        final MagnifiableSurfaceView view = (MagnifiableSurfaceView) mView;
+        view.setMagnifierSurface(mCompositor.getMagnifiableSurface());
+      }
       mMagnifier.show(sourceCenter.x, sourceCenter.y);
+      if (mView instanceof MagnifiableSurfaceView) {
+        final MagnifiableSurfaceView view = (MagnifiableSurfaceView) mView;
+        view.setMagnifierSurface(null);
+      }
     }
 
     @Override
@@ -310,6 +325,12 @@ public class GeckoSession {
     @WrapForJNI(calledFrom = "ui", dispatchTo = "current")
     public native void syncResumeResizeCompositor(
         int x, int y, int width, int height, Object surface, Object surfaceControl);
+
+    // Returns a Surface that content has been rendered in to, which should be used when the
+    // magnifier is shown. This may differ from the Surface we have passed to
+    // syncResumeResizeCompositor().
+    @WrapForJNI(calledFrom = "ui", dispatchTo = "current")
+    public native Surface getMagnifiableSurface();
 
     @WrapForJNI(calledFrom = "ui", dispatchTo = "current")
     public native void setMaxToolbarHeight(int height);
@@ -1632,7 +1653,7 @@ public class GeckoSession {
     ThreadUtils.assertOnUiThread();
     if (mMagnifier == null) {
       if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-        mMagnifier = new SessionMagnifierP();
+        mMagnifier = new SessionMagnifierP(mCompositor);
       } else {
         mMagnifier = new SessionMagnifier() {};
       }

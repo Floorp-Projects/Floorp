@@ -1309,6 +1309,10 @@ class LayerViewSupport final
         MakeUnique<LayerViewEvent>(MakeUnique<OnResumedEvent>(aObj)));
   }
 
+  mozilla::jni::Object::LocalRef GetMagnifiableSurface() {
+    return mozilla::jni::Object::LocalRef::From(GetSurface());
+  }
+
   void SyncInvalidateAndScheduleComposite() {
     if (!mUiCompositorControllerChild) {
       return;
