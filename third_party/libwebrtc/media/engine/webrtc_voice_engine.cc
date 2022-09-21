@@ -260,7 +260,6 @@ webrtc::AudioReceiveStream::Config BuildReceiveStreamConfig(
     size_t jitter_buffer_max_packets,
     bool jitter_buffer_fast_accelerate,
     int jitter_buffer_min_delay_ms,
-    bool jitter_buffer_enable_rtx_handling,
     rtc::scoped_refptr<webrtc::FrameDecryptorInterface> frame_decryptor,
     const webrtc::CryptoOptions& crypto_options,
     rtc::scoped_refptr<webrtc::FrameTransformerInterface> frame_transformer) {
@@ -281,7 +280,6 @@ webrtc::AudioReceiveStream::Config BuildReceiveStreamConfig(
   config.jitter_buffer_max_packets = jitter_buffer_max_packets;
   config.jitter_buffer_fast_accelerate = jitter_buffer_fast_accelerate;
   config.jitter_buffer_min_delay_ms = jitter_buffer_min_delay_ms;
-  config.jitter_buffer_enable_rtx_handling = jitter_buffer_enable_rtx_handling;
   config.frame_decryptor = std::move(frame_decryptor);
   config.crypto_options = crypto_options;
   config.frame_transformer = std::move(frame_transformer);
@@ -400,7 +398,6 @@ void WebRtcVoiceEngine::Init() {
     options.audio_jitter_buffer_max_packets = 200;
     options.audio_jitter_buffer_fast_accelerate = false;
     options.audio_jitter_buffer_min_delay_ms = 0;
-    options.audio_jitter_buffer_enable_rtx_handling = false;
     bool error = ApplyOptions(options);
     RTC_DCHECK(error);
   }
@@ -547,12 +544,6 @@ bool WebRtcVoiceEngine::ApplyOptions(const AudioOptions& options_in) {
                      << *options.audio_jitter_buffer_min_delay_ms;
     audio_jitter_buffer_min_delay_ms_ =
         *options.audio_jitter_buffer_min_delay_ms;
-  }
-  if (options.audio_jitter_buffer_enable_rtx_handling) {
-    RTC_LOG(LS_INFO) << "NetEq handle reordered packets? "
-                     << *options.audio_jitter_buffer_enable_rtx_handling;
-    audio_jitter_buffer_enable_rtx_handling_ =
-        *options.audio_jitter_buffer_enable_rtx_handling;
   }
 
   webrtc::AudioProcessing* ap = apm();
@@ -1958,9 +1949,8 @@ bool WebRtcVoiceMediaChannel::AddRecvStream(const StreamParams& sp) {
       recv_rtp_extensions_, this, engine()->decoder_factory_, decoder_map_,
       codec_pair_id_, engine()->audio_jitter_buffer_max_packets_,
       engine()->audio_jitter_buffer_fast_accelerate_,
-      engine()->audio_jitter_buffer_min_delay_ms_,
-      engine()->audio_jitter_buffer_enable_rtx_handling_,
-      unsignaled_frame_decryptor_, crypto_options_, nullptr);
+      engine()->audio_jitter_buffer_min_delay_ms_, unsignaled_frame_decryptor_,
+      crypto_options_, nullptr);
 
   recv_streams_.insert(std::make_pair(
       ssrc, new WebRtcAudioReceiveStream(std::move(config), call_)));

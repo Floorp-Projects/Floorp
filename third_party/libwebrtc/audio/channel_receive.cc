@@ -94,7 +94,6 @@ class ChannelReceive : public ChannelReceiveInterface,
       size_t jitter_buffer_max_packets,
       bool jitter_buffer_fast_playout,
       int jitter_buffer_min_delay_ms,
-      bool jitter_buffer_enable_rtx_handling,
       bool enable_non_sender_rtt,
       rtc::scoped_refptr<AudioDecoderFactory> decoder_factory,
       absl::optional<AudioCodecPairId> codec_pair_id,
@@ -524,7 +523,6 @@ ChannelReceive::ChannelReceive(
     size_t jitter_buffer_max_packets,
     bool jitter_buffer_fast_playout,
     int jitter_buffer_min_delay_ms,
-    bool jitter_buffer_enable_rtx_handling,
     bool enable_non_sender_rtt,
     rtc::scoped_refptr<AudioDecoderFactory> decoder_factory,
     absl::optional<AudioCodecPairId> codec_pair_id,
@@ -1126,7 +1124,6 @@ std::unique_ptr<ChannelReceiveInterface> CreateChannelReceive(
     size_t jitter_buffer_max_packets,
     bool jitter_buffer_fast_playout,
     int jitter_buffer_min_delay_ms,
-    bool jitter_buffer_enable_rtx_handling,
     bool enable_non_sender_rtt,
     rtc::scoped_refptr<AudioDecoderFactory> decoder_factory,
     absl::optional<AudioCodecPairId> codec_pair_id,
@@ -1138,9 +1135,9 @@ std::unique_ptr<ChannelReceiveInterface> CreateChannelReceive(
       clock, neteq_factory, audio_device_module, rtcp_send_transport,
       rtc_event_log, local_ssrc, remote_ssrc, jitter_buffer_max_packets,
       jitter_buffer_fast_playout, jitter_buffer_min_delay_ms,
-      jitter_buffer_enable_rtx_handling, enable_non_sender_rtt, decoder_factory,
-      codec_pair_id, std::move(frame_decryptor), crypto_options,
-      std::move(frame_transformer), rtcp_event_observer);
+      enable_non_sender_rtt, decoder_factory, codec_pair_id,
+      std::move(frame_decryptor), crypto_options, std::move(frame_transformer),
+      rtcp_event_observer);
 }
 
 }  // namespace voe
