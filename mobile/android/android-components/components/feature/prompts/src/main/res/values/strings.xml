@@ -86,8 +86,6 @@
     <string name="mozac_feature_prompts_dec">Dec</string>
     <!-- Title of the time picker dialog. -->
     <string name="mozac_feature_prompts_set_time">Set time</string>
-    <!-- Text used for the millisecond separator in the time picker. -->
-    <string name="mozac_feature_prompts_millisecond_separator">.</string>
     <!-- Text used for the second separator in the time picker. -->
     <string name="mozac_feature_prompts_second_separator">:</string>
     <!-- Option in expanded select login prompt that links to login settings -->

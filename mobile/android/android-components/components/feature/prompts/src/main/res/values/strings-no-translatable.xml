@@ -18,4 +18,6 @@
         <item>@string/mozac_feature_prompts_nov</item>
         <item>@string/mozac_feature_prompts_dec</item>
     </string-array>
+    <!-- Text used for the millisecond separator in the time picker. -->
+    <string name="mozac_feature_prompts_millisecond_separator">.</string>
 </resources>
