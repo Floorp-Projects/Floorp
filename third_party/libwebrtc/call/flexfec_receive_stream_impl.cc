@@ -213,14 +213,4 @@ RtpHeaderExtensionMap FlexfecReceiveStreamImpl::GetRtpExtensionMap() const {
   return extension_map_;
 }
 
-void FlexfecReceiveStreamImpl::SetLocalSsrc(uint32_t local_ssrc) {
-  RTC_DCHECK_RUN_ON(&packet_sequence_checker_);
-  if (local_ssrc == config_.rtp.local_ssrc)
-    return;
-
-  auto& c = const_cast<Config&>(config_);
-  c.rtp.local_ssrc = local_ssrc;
-  rtp_rtcp_->SetLocalSsrc(local_ssrc);
-}
-
 }  // namespace webrtc

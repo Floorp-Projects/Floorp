@@ -935,11 +935,6 @@ void RtpVideoStreamReceiver2::UpdateRtt(int64_t max_rtt_ms) {
     nack_module_->UpdateRtt(max_rtt_ms);
 }
 
-void RtpVideoStreamReceiver2::OnLocalSsrcChange(uint32_t local_ssrc) {
-  RTC_DCHECK_RUN_ON(&packet_sequence_checker_);
-  rtp_rtcp_->SetLocalSsrc(local_ssrc);
-}
-
 absl::optional<int64_t> RtpVideoStreamReceiver2::LastReceivedPacketMs() const {
   RTC_DCHECK_RUN_ON(&packet_sequence_checker_);
   if (last_received_rtp_system_time_) {
