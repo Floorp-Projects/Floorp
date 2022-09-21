@@ -1794,6 +1794,10 @@ nsresult nsHttpTransaction::Restart() {
   // Use TRANSACTION_RESTART_OTHERS as a catch-all.
   SetRestartReason(TRANSACTION_RESTART_OTHERS);
 
+  // Reset the IP family preferences, so the new connection can try to use
+  // another IPv4 or IPv6 address.
+  gHttpHandler->ConnMgr()->ResetIPFamilyPreference(mConnInfo);
+
   return gHttpHandler->InitiateTransaction(this, mPriority);
 }
 

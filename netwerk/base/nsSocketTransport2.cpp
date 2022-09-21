@@ -2226,6 +2226,13 @@ void nsSocketTransport::OnSocketDetached(PRFileDesc* fd) {
     mOutput.OnSocketReady(mCondition);
   }
 
+  if (mCondition == NS_ERROR_NET_RESET && mDNSRecord &&
+      mOutput.ByteCount() == 0) {
+    // If we are here, it's likely that we are retrying a transaction. Blocking
+    // the already used address could increase the successful rate of the retry.
+    mDNSRecord->ReportUnusable(SocketPort());
+  }
+
   // break any potential reference cycle between the security info object
   // and ourselves by resetting its notification callbacks object.  see
   // bug 285991 for details.
