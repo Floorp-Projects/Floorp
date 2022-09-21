@@ -27,11 +27,9 @@
 #include "modules/congestion_controller/rtp/control_handler.h"
 #include "modules/congestion_controller/rtp/transport_feedback_adapter.h"
 #include "modules/congestion_controller/rtp/transport_feedback_demuxer.h"
-#include "modules/pacing/paced_sender.h"
 #include "modules/pacing/packet_router.h"
 #include "modules/pacing/rtp_packet_pacer.h"
 #include "modules/pacing/task_queue_paced_sender.h"
-#include "modules/utility/include/process_thread.h"
 #include "rtc_base/network_route.h"
 #include "rtc_base/race_checker.h"
 #include "rtc_base/task_queue.h"
@@ -57,7 +55,6 @@ class RtpTransportControllerSend final
       NetworkStatePredictorFactoryInterface* predictor_factory,
       NetworkControllerFactoryInterface* controller_factory,
       const BitrateConstraints& bitrate_config,
-      std::unique_ptr<ProcessThread> process_thread,
       TaskQueueFactory* task_queue_factory,
       const FieldTrialsView& trials);
   ~RtpTransportControllerSend() override;
@@ -134,9 +131,6 @@ class RtpTransportControllerSend final
   struct PacerSettings {
     explicit PacerSettings(const FieldTrialsView& trials);
 
-    bool use_task_queue_pacer() const { return !tq_disabled.Get(); }
-
-    FieldTrialFlag tq_disabled;  // Kill-switch not normally used.
     FieldTrialParameter<TimeDelta> holdback_window;
     FieldTrialParameter<int> holdback_packets;
   };
@@ -159,8 +153,6 @@ class RtpTransportControllerSend final
   void PostUpdates(NetworkControlUpdate update) RTC_RUN_ON(task_queue_);
   void UpdateControlState() RTC_RUN_ON(task_queue_);
   void UpdateCongestedState() RTC_RUN_ON(task_queue_);
-  RtpPacketPacer* pacer();
-  const RtpPacketPacer* pacer() const;
 
   Clock* const clock_;
   RtcEventLog* const event_log_;
@@ -171,10 +163,8 @@ class RtpTransportControllerSend final
   RtpBitrateConfigurator bitrate_configurator_;
   std::map<std::string, rtc::NetworkRoute> network_routes_;
   bool pacer_started_;
-  const std::unique_ptr<ProcessThread> process_thread_;
   const PacerSettings pacer_settings_;
-  std::unique_ptr<PacedSender> process_thread_pacer_;
-  std::unique_ptr<TaskQueuePacedSender> task_queue_pacer_;
+  TaskQueuePacedSender pacer_;
 
   TargetTransferRateObserver* observer_ RTC_GUARDED_BY(task_queue_);
   TransportFeedbackDemuxer feedback_demuxer_;

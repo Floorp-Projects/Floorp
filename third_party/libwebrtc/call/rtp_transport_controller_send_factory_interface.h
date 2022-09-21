@@ -23,8 +23,7 @@ class RtpTransportControllerSendFactoryInterface {
  public:
   virtual std::unique_ptr<RtpTransportControllerSendInterface> Create(
       const RtpTransportConfig& config,
-      Clock* clock,
-      std::unique_ptr<ProcessThread> process_thread) = 0;
+      Clock* clock) = 0;
 
   virtual ~RtpTransportControllerSendFactoryInterface() {}
 };

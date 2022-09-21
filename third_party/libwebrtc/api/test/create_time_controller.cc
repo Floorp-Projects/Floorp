@@ -47,8 +47,7 @@ std::unique_ptr<CallFactoryInterface> CreateTimeControllerBasedCallFactory(
 
       return Call::Create(config, time_controller_->GetClock(), module_thread_,
                           config.rtp_transport_controller_send_factory->Create(
-                              transportConfig, time_controller_->GetClock(),
-                              time_controller_->CreateProcessThread("Pacer")));
+                              transportConfig, time_controller_->GetClock()));
     }
 
    private:
