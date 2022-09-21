@@ -31,6 +31,7 @@
 #include "nsLayoutUtils.h"
 #include "nsDisplayList.h"
 #include "nsContentUtils.h"
+#include "nsFlexContainerFrame.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/Event.h"
 #include "mozilla/dom/MouseEvent.h"
@@ -227,19 +228,6 @@ void nsSplitterFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
   MOZ_ASSERT(!mInner);
   mInner = new nsSplitterFrameInner(this);
 
-  // determine orientation of parent, and if vertical, set orient to vertical
-  // on splitter content, then re-resolve style
-  // XXXbz this is pretty messed up, since this can change whether we should
-  // have a frame at all.  This really needs a better solution.
-  if (aParent && aParent->IsXULBoxFrame()) {
-    if (!aParent->IsXULHorizontal()) {
-      if (!nsContentUtils::HasNonEmptyAttr(aContent, kNameSpaceID_None,
-                                           nsGkAtoms::orient)) {
-        aContent->AsElement()->SetAttr(kNameSpaceID_None, nsGkAtoms::orient,
-                                       u"vertical"_ns, false);
-      }
-    }
-  }
 
   nsBoxFrame::Init(aContent, aParent, aPrevInFlow);
 
@@ -248,10 +236,20 @@ void nsSplitterFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
   mInner->mParentBox = nullptr;
 }
 
+static bool IsValidParentBox(nsIFrame* aFrame) {
+  return aFrame->IsXULBoxFrame() || aFrame->IsFlexContainerFrame();
+}
+
+static nsIFrame* GetValidParentBox(nsIFrame* aChild) {
+  return aChild->GetParent() && IsValidParentBox(aChild->GetParent())
+             ? aChild->GetParent()
+             : nullptr;
+}
+
 NS_IMETHODIMP
 nsSplitterFrame::DoXULLayout(nsBoxLayoutState& aState) {
   if (HasAnyStateBits(NS_FRAME_FIRST_REFLOW)) {
-    mInner->mParentBox = nsIFrame::GetParentXULBox(this);
+    mInner->mParentBox = GetValidParentBox(this);
     mInner->UpdateState();
   }
 
@@ -262,8 +260,9 @@ void nsSplitterFrame::GetInitialOrientation(bool& aIsHorizontal) {
   nsIFrame* box = nsIFrame::GetParentXULBox(this);
   if (box) {
     aIsHorizontal = !box->IsXULHorizontal();
-  } else
+  } else {
     nsBoxFrame::GetInitialOrientation(aIsHorizontal);
+  }
 }
 
 NS_IMETHODIMP
@@ -509,7 +508,7 @@ nsresult nsSplitterFrameInner::MouseDown(Event* aMouseEvent) {
                                      nsGkAtoms::_true, eCaseMatters))
     return NS_OK;
 
-  mParentBox = nsIFrame::GetParentXULBox(mOuter);
+  mParentBox = GetValidParentBox(mOuter);
   if (!mParentBox) {
     return NS_OK;
   }
@@ -560,7 +559,6 @@ nsresult nsSplitterFrameInner::MouseDown(Event* aMouseEvent) {
     count++;
 
     nsIContent* content = childBox->GetContent();
-
     if (auto* element = nsXULElement::FromNode(content)) {
       if (element->NodeInfo()->NameAtom() == nsGkAtoms::splitter) {
         // skip over any splitters
@@ -575,17 +573,22 @@ nsresult nsSplitterFrameInner::MouseDown(Event* aMouseEvent) {
       }
     }
 
-    nsSize prefSize = childBox->GetXULPrefSize(state);
-    nsSize minSize = childBox->GetXULMinSize(state);
-    nsSize maxSize =
-        nsIFrame::XULBoundsCheckMinMax(minSize, childBox->GetXULMaxSize(state));
-    prefSize = nsIFrame::XULBoundsCheck(minSize, prefSize, maxSize);
+    nsSize prefSize;
+    nsSize minSize;
+    nsSize maxSize(NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE);
+    const nscoord flex = childBox->GetXULFlex();
+    // TODO(emilio): Figure out if we need this for regular flexbox.
+    if (childBox->IsXULBoxFrame()) {
+      prefSize = childBox->GetXULPrefSize(state);
+      minSize = childBox->GetXULMinSize(state);
+      maxSize = nsIFrame::XULBoundsCheckMinMax(minSize,
+                                               childBox->GetXULMaxSize(state));
+      prefSize = nsIFrame::XULBoundsCheck(minSize, prefSize, maxSize);
 
-    nsSplitterFrame::AddXULMargin(childBox, minSize);
-    nsSplitterFrame::AddXULMargin(childBox, prefSize);
-    nsSplitterFrame::AddXULMargin(childBox, maxSize);
-
-    nscoord flex = childBox->GetXULFlex();
+      nsSplitterFrame::AddXULMargin(childBox, minSize);
+      nsSplitterFrame::AddXULMargin(childBox, prefSize);
+      nsSplitterFrame::AddXULMargin(childBox, maxSize);
+    }
 
     nsMargin margin;
     childBox->GetXULMargin(margin);
@@ -624,7 +627,21 @@ nsresult nsSplitterFrameInner::MouseDown(Event* aMouseEvent) {
 
   mPressed = true;
 
-  if (!mParentBox->IsXULNormalDirection()) {
+  const bool reverseDirection = [&] {
+    if (mParentBox->IsXULBoxFrame()) {
+      return !mParentBox->IsXULNormalDirection();
+    }
+    MOZ_ASSERT(mParentBox->IsFlexContainerFrame());
+    const FlexboxAxisInfo info(mParentBox);
+    if (!info.mIsRowOriented) {
+      return info.mIsMainAxisReversed;
+    }
+    const bool rtl =
+        mParentBox->StyleVisibility()->mDirection == StyleDirection::Rtl;
+    return info.mIsMainAxisReversed != rtl;
+  }();
+
+  if (reverseDirection) {
     // The before array is really the after array, and the order needs to be
     // reversed. First reverse both arrays.
     Reverse(mChildInfosBefore, mChildInfosBeforeCount);
@@ -739,7 +756,7 @@ void nsSplitterFrameInner::UpdateState() {
   }
 
   if ((SupportsCollapseDirection(Before) || SupportsCollapseDirection(After)) &&
-      mOuter->GetParent()->IsXULBoxFrame()) {
+      IsValidParentBox(mOuter->GetParent())) {
     // Find the splitter's immediate sibling.
     const bool prev = newState == CollapsedBefore || mState == CollapsedBefore;
     nsIFrame* splitterSibling =
@@ -769,7 +786,16 @@ void nsSplitterFrameInner::UpdateState() {
 }
 
 void nsSplitterFrameInner::EnsureOrient() {
-  bool isHorizontal = !mParentBox->HasAnyStateBits(NS_STATE_IS_HORIZONTAL);
+  // If our parent is horizontal, the splitter is vertical and vice-versa.
+  const bool isHorizontal = [&] {
+    if (mParentBox->IsXULBoxFrame()) {
+      return !mParentBox->HasAnyStateBits(NS_STATE_IS_HORIZONTAL);
+    }
+    MOZ_ASSERT(mParentBox->IsFlexContainerFrame());
+    const FlexboxAxisInfo info(mParentBox);
+    return !info.mIsRowOriented;
+  }();
+
   if (isHorizontal)
     mOuter->AddStateBits(NS_STATE_IS_HORIZONTAL);
   else
@@ -778,7 +804,7 @@ void nsSplitterFrameInner::EnsureOrient() {
 
 void nsSplitterFrameInner::AdjustChildren(nsPresContext* aPresContext) {
   EnsureOrient();
-  bool isHorizontal = !mOuter->IsXULHorizontal();
+  const bool isHorizontal = !mOuter->IsXULHorizontal();
 
   AdjustChildren(aPresContext, mChildInfosBefore.get(), mChildInfosBeforeCount,
                  isHorizontal);
@@ -788,13 +814,11 @@ void nsSplitterFrameInner::AdjustChildren(nsPresContext* aPresContext) {
 
 static nsIFrame* GetChildBoxForContent(nsIFrame* aParentBox,
                                        nsIContent* aContent) {
-  nsIFrame* childBox = nsIFrame::GetChildXULBox(aParentBox);
-
-  while (childBox) {
-    if (childBox->GetContent() == aContent) {
-      return childBox;
+  // XXX Can this use GetPrimaryFrame?
+  for (nsIFrame* f : aParentBox->PrincipalChildList()) {
+    if (f->GetContent() == aContent) {
+      return f;
     }
-    childBox = nsIFrame::GetNextXULBox(childBox);
   }
   return nullptr;
 }
@@ -806,19 +830,10 @@ void nsSplitterFrameInner::AdjustChildren(nsPresContext* aPresContext,
 
   nsBoxLayoutState state(aPresContext);
 
-  // first set all the widths.
-  nsIFrame* child = nsIFrame::GetChildXULBox(mOuter);
-  while (child) {
-    SetPreferredSize(state, child, aIsHorizontal, nullptr);
-    child = nsIFrame::GetNextXULBox(child);
-  }
-
-  // now set our changed widths.
   for (int i = 0; i < aCount; i++) {
     nscoord pref = aChildInfos[i].changed;
     nsIFrame* childBox =
         GetChildBoxForContent(mParentBox, aChildInfos[i].childElem);
-
     if (childBox) {
       SetPreferredSize(state, childBox, aIsHorizontal, &pref);
     }
