@@ -705,6 +705,26 @@ Result<bool, QMResult> FileSystemDatabaseManagerVersion001::MoveEntry(
   }
 #endif
 
+  // Are we actually renaming?
+  if ((aHandle.childName() == aNewDesignation.childName()) &&
+      (aHandle.parentId() == aNewDesignation.parentId())) {
+    return true;
+  }
+
+  // XXX Note: the spec doesn't mention this case.  The WPT tests assume
+  // that you can overwrite using move().
+
+  // If the destination file exists, fail explicitly.  Spec author plans to
+  // revise the spec
+  QM_TRY_UNWRAP(exists, DoesFileExist(mConnection, aNewDesignation));
+  if (exists) {
+    return Err(QMResult(NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR));
+  }
+  QM_TRY_UNWRAP(exists, DoesDirectoryExist(mConnection, aNewDesignation));
+  if (exists) {
+    return Err(QMResult(NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR));
+  }
+
   const nsLiteralCString updateEntryParentQuery =
       "UPDATE Entries "
       "SET parent = :parent "
