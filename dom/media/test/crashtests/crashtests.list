@@ -99,6 +99,7 @@ load 1489160.html
 load disconnect-wrong-destination.html
 load analyser-channels-1.html
 load audiocontext-after-unload-1.html
+load audiocontext-after-xhr.html
 load audiocontext-double-suspend.html
 skip-if(Android) load audioworkletnode-after-unload-1.html # Needs secure context
 load buffer-source-duration-1.html
