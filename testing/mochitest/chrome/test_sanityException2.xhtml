@@ -17,6 +17,7 @@ SimpleTest.waitForExplicitFinish();
 ok(true, "a call to ok");
 SimpleTest.executeSoon(function() {
   SimpleTest.expectUncaughtException();
+  // eslint-disable-next-line no-throw-literal
   throw "this is a deliberately thrown exception";
 });
 SimpleTest.executeSoon(function() {

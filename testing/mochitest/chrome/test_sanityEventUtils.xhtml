@@ -17,9 +17,7 @@
   <script type="application/javascript">
   <![CDATA[
     info("\nProfile::EventUtilsLoadTime: " + (loadTime - start) + "\n");
-    var testFile = Cc["@mozilla.org/file/directory_service;1"].
-                      getService(Ci.nsIProperties).
-                      get("CurWorkD", Ci.nsIFile);
+    var testFile = Services.dirsvc.get("CurWorkD", Ci.nsIFile);
     var regularDtForDrag1 = null;
     var gSetDropEffect = true;
     var gData;
@@ -61,7 +59,7 @@
     var dragfile = [[
       { type    : "application/x-moz-file",
         data    : testFile,
-        eqTest  : function(actualData, expectedData) {return expectedData.equals(actualData);} },
+        eqTest(actualData, expectedData) {return expectedData.equals(actualData);} },
       { type    : "Files",
         data    : null }
     ]];
@@ -77,6 +75,7 @@
       switch (aEvent.currentTarget.id) {
         case "drag2" :
           dt.setData("text/plain", "this is text/plain");
+          // fallthrough
         case "drag1" :
           regularDtForDrag1 = dt;
           dt.setData("text/uri-list", "http://www.mozilla.org/");
