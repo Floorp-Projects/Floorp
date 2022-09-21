@@ -854,7 +854,6 @@ struct ScrollMetadata {
         mResolutionUpdated(false),
         mIsRDMTouchSimulationActive(false),
         mDidContentGetPainted(true),
-        mPrefersReducedMotion(false),
         mForceMousewheelAutodir(false),
         mForceMousewheelAutodirHonourRoot(false),
         mIsPaginatedPresentation(false),
@@ -874,7 +873,6 @@ struct ScrollMetadata {
            mResolutionUpdated == aOther.mResolutionUpdated &&
            mIsRDMTouchSimulationActive == aOther.mIsRDMTouchSimulationActive &&
            mDidContentGetPainted == aOther.mDidContentGetPainted &&
-           mPrefersReducedMotion == aOther.mPrefersReducedMotion &&
            mForceMousewheelAutodir == aOther.mForceMousewheelAutodir &&
            mForceMousewheelAutodirHonourRoot ==
                aOther.mForceMousewheelAutodirHonourRoot &&
@@ -949,9 +947,6 @@ struct ScrollMetadata {
   bool GetIsRDMTouchSimulationActive() const {
     return mIsRDMTouchSimulationActive;
   }
-
-  void SetPrefersReducedMotion(bool aValue) { mPrefersReducedMotion = aValue; }
-  bool PrefersReducedMotion() const { return mPrefersReducedMotion; }
 
   void SetForceMousewheelAutodir(bool aValue) {
     mForceMousewheelAutodir = aValue;
@@ -1074,11 +1069,6 @@ struct ScrollMetadata {
   // needs to be able to distinguish these paint-skip transactions so that it
   // can use the correct transforms.
   bool mDidContentGetPainted : 1;
-
-  // Whether the user has requested the system minimze the amount of
-  // non-essential motion it uses (see the prefers-reduced-motion
-  // media query).
-  bool mPrefersReducedMotion : 1;
 
   // Whether privileged code has requested that autodir behaviour be
   // enabled for the scroll frame.

@@ -557,7 +557,6 @@ struct ParamTraits<mozilla::layers::ScrollMetadata>
     WriteParam(aWriter, aParam.mResolutionUpdated);
     WriteParam(aWriter, aParam.mIsRDMTouchSimulationActive);
     WriteParam(aWriter, aParam.mDidContentGetPainted);
-    WriteParam(aWriter, aParam.mPrefersReducedMotion);
     WriteParam(aWriter, aParam.mForceMousewheelAutodir);
     WriteParam(aWriter, aParam.mForceMousewheelAutodirHonourRoot);
     WriteParam(aWriter, aParam.mIsPaginatedPresentation);
@@ -598,8 +597,6 @@ struct ParamTraits<mozilla::layers::ScrollMetadata>
                                 &paramType::SetIsRDMTouchSimulationActive)) &&
            ReadBoolForBitfield(aReader, aResult,
                                &paramType::SetDidContentGetPainted) &&
-           ReadBoolForBitfield(aReader, aResult,
-                               &paramType::SetPrefersReducedMotion) &&
            ReadBoolForBitfield(aReader, aResult,
                                &paramType::SetForceMousewheelAutodir) &&
            ReadBoolForBitfield(
