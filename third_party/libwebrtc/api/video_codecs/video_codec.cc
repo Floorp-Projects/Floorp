@@ -31,8 +31,7 @@ constexpr char kPayloadNameMultiplex[] = "Multiplex";
 }  // namespace
 
 bool VideoCodecVP8::operator==(const VideoCodecVP8& other) const {
-  return (complexity == other.complexity &&
-          numberOfTemporalLayers == other.numberOfTemporalLayers &&
+  return (numberOfTemporalLayers == other.numberOfTemporalLayers &&
           denoisingOn == other.denoisingOn &&
           automaticResizeOn == other.automaticResizeOn &&
           frameDroppingOn == other.frameDroppingOn &&
@@ -40,8 +39,7 @@ bool VideoCodecVP8::operator==(const VideoCodecVP8& other) const {
 }
 
 bool VideoCodecVP9::operator==(const VideoCodecVP9& other) const {
-  return (complexity == other.complexity &&
-          numberOfTemporalLayers == other.numberOfTemporalLayers &&
+  return (numberOfTemporalLayers == other.numberOfTemporalLayers &&
           denoisingOn == other.denoisingOn &&
           frameDroppingOn == other.frameDroppingOn &&
           keyFrameInterval == other.keyFrameInterval &&
@@ -74,7 +72,8 @@ VideoCodec::VideoCodec()
       expect_encode_from_texture(false),
       timing_frame_thresholds({0, 0}),
       legacy_conference_mode(false),
-      codec_specific_() {}
+      codec_specific_(),
+      complexity_(VideoCodecComplexity::kComplexityNormal) {}
 
 VideoCodecVP8* VideoCodec::VP8() {
   RTC_DCHECK_EQ(codecType, kVideoCodecVP8);
@@ -140,17 +139,7 @@ VideoCodecType PayloadStringToCodecType(const std::string& name) {
 }
 
 VideoCodecComplexity VideoCodec::GetVideoEncoderComplexity() const {
-  if (complexity_.has_value()) {
-    return complexity_.value();
-  }
-  switch (codecType) {
-    case kVideoCodecVP8:
-      return VP8().complexity;
-    case kVideoCodecVP9:
-      return VP9().complexity;
-    default:
-      return VideoCodecComplexity::kComplexityNormal;
-  }
+  return complexity_;
 }
 
 void VideoCodec::SetVideoEncoderComplexity(
