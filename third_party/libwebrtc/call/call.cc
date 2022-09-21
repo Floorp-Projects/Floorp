@@ -511,8 +511,7 @@ Call* Call::Create(const Call::Config& config,
 
   return new internal::Call(
       clock, config,
-      transport_controller_factory_.Create(transportConfig, clock,
-                                           std::move(pacer_thread)),
+      transport_controller_factory_.Create(transportConfig, clock),
       std::move(call_thread), config.task_queue_factory);
 }
 

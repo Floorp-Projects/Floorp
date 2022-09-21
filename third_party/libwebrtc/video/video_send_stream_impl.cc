@@ -24,7 +24,7 @@
 #include "api/video_codecs/video_codec.h"
 #include "call/rtp_transport_controller_send_interface.h"
 #include "call/video_send_stream.h"
-#include "modules/pacing/paced_sender.h"
+#include "modules/pacing/pacing_controller.h"
 #include "rtc_base/atomic_ops.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/experiments/alr_experiment.h"
@@ -194,8 +194,7 @@ uint32_t GetInitialEncoderMaxBitrate(int initial_encoder_max_bitrate) {
 
 PacingConfig::PacingConfig(const FieldTrialsView& field_trials)
     : pacing_factor("factor", kStrictPacingMultiplier),
-      max_pacing_delay("max_delay",
-                       TimeDelta::Millis(PacedSender::kMaxQueueLengthMs)) {
+      max_pacing_delay("max_delay", PacingController::kMaxExpectedQueueLength) {
   ParseFieldTrial({&pacing_factor, &max_pacing_delay},
                   field_trials.Lookup("WebRTC-Video-Pacing"));
 }
