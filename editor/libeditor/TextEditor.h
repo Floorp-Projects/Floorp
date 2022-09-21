@@ -110,7 +110,6 @@ class TextEditor final : public EditorBase,
   NS_DECL_NSINAMED
 
   // Overrides of nsIEditor
-  MOZ_CAN_RUN_SCRIPT NS_IMETHOD EndOfDocument() final;
   MOZ_CAN_RUN_SCRIPT NS_IMETHOD InsertLineBreak() final;
   NS_IMETHOD GetTextLength(uint32_t* aCount) final;
   MOZ_CAN_RUN_SCRIPT NS_IMETHOD Paste(int32_t aClipboardType) final {
@@ -533,19 +532,6 @@ class TextEditor final : public EditorBase,
    * returns false even if we may echo password.
    */
   bool CanEchoPasswordNow() const;
-
-  /**
-   * InitEditorContentAndSelection() may insert a padding `<br>` element for
-   * if it's required in the anonymous `<div>` element or `<body>` element and
-   * collapse selection at the end if there is no selection ranges.
-   */
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult InitEditorContentAndSelection();
-
-  /**
-   * Collapse `Selection` to end of the text node in the anonymous <div>
-   * element.
-   */
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult CollapseSelectionToEndOfTextNode();
 
   /**
    * Make the given selection span the entire document.

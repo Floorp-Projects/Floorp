@@ -3,22 +3,21 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "TextEditor.h"
+#include "mozilla/TextEditor.h"
 
 #include <algorithm>
 
-#include "EditAction.h"
 #include "EditAggregateTransaction.h"
-#include "EditorDOMPoint.h"
-#include "HTMLEditor.h"
 #include "HTMLEditUtils.h"
 #include "InternetCiter.h"
 #include "PlaceholderTransaction.h"
 #include "gfxFontUtils.h"
-
 #include "mozilla/dom/DocumentInlines.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/ContentIterator.h"
+#include "mozilla/EditAction.h"
+#include "mozilla/EditorDOMPoint.h"
+#include "mozilla/HTMLEditor.h"
 #include "mozilla/IMEStateManager.h"
 #include "mozilla/LookAndFeel.h"
 #include "mozilla/mozalloc.h"
@@ -32,7 +31,6 @@
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/Selection.h"
 #include "mozilla/dom/StaticRange.h"
-
 #include "nsAString.h"
 #include "nsCRT.h"
 #include "nsCaret.h"
@@ -110,36 +108,6 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(TextEditor)
   NS_INTERFACE_MAP_ENTRY(nsINamed)
 NS_INTERFACE_MAP_END_INHERITING(EditorBase)
 
-NS_IMETHODIMP TextEditor::EndOfDocument() {
-  AutoEditActionDataSetter editActionData(*this, EditAction::eNotEditing);
-  if (NS_WARN_IF(!editActionData.CanHandle())) {
-    return NS_ERROR_NOT_INITIALIZED;
-  }
-  nsresult rv = CollapseSelectionToEndOfTextNode();
-  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                       "TextEditor::CollapseSelectionToEndOfTextNode() failed");
-  // This is low level API for embedders and chrome script so that we can return
-  // raw error code here.
-  return rv;
-}
-
-nsresult TextEditor::CollapseSelectionToEndOfTextNode() {
-  MOZ_ASSERT(IsEditActionDataAvailable());
-
-  Element* anonymousDivElement = GetRoot();
-  if (NS_WARN_IF(!anonymousDivElement)) {
-    return NS_ERROR_NULL_POINTER;
-  }
-
-  RefPtr<Text> textNode =
-      Text::FromNodeOrNull(anonymousDivElement->GetFirstChild());
-  MOZ_ASSERT(textNode);
-  nsresult rv = CollapseSelectionToEndOf(*textNode);
-  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                       "EditorBase::CollapseSelectionToEndOf() failed");
-  return rv;
-}
-
 nsresult TextEditor::Init(Document& aDocument, Element& aAnonymousDivElement,
                           nsISelectionController& aSelectionController,
                           uint32_t aFlags,
@@ -170,7 +138,7 @@ nsresult TextEditor::Init(Document& aDocument, Element& aAnonymousDivElement,
 
   rv = InitEditorContentAndSelection();
   if (NS_FAILED(rv)) {
-    NS_WARNING("TextEditor::InitEditorContentAndSelection() failed");
+    NS_WARNING("EditorBase::InitEditorContentAndSelection() failed");
     // XXX Shouldn't we expose `NS_ERROR_EDITOR_DESTROYED` even though this
     //     is a public method?
     mInitSucceeded = false;
@@ -181,33 +149,6 @@ nsresult TextEditor::Init(Document& aDocument, Element& aAnonymousDivElement,
   // we're initializing the editor.
   ClearUndoRedo();
   EnableUndoRedo();
-  return NS_OK;
-}
-
-nsresult TextEditor::InitEditorContentAndSelection() {
-  MOZ_ASSERT(IsEditActionDataAvailable());
-
-  MOZ_TRY(EnsureEmptyTextFirstChild());
-
-  // If the selection hasn't been set up yet, set it up collapsed to the end of
-  // our editable content.
-  if (!SelectionRef().RangeCount()) {
-    nsresult rv = CollapseSelectionToEndOfTextNode();
-    if (NS_FAILED(rv)) {
-      NS_WARNING("EditorBase::CollapseSelectionToEndOfTextNode() failed");
-      return rv;
-    }
-  }
-
-  if (!IsSingleLineEditor()) {
-    nsresult rv = EnsurePaddingBRElementInMultilineEditor();
-    if (NS_FAILED(rv)) {
-      NS_WARNING(
-          "EditorBase::EnsurePaddingBRElementInMultilineEditor() failed");
-      return rv;
-    }
-  }
-
   return NS_OK;
 }
 

@@ -158,7 +158,6 @@ class HTMLEditor final : public EditorBase,
 
   // EditorBase overrides
   MOZ_CAN_RUN_SCRIPT NS_IMETHOD BeginningOfDocument() final;
-  MOZ_CAN_RUN_SCRIPT NS_IMETHOD EndOfDocument() final;
 
   NS_IMETHOD GetDocumentCharacterSet(nsACString& aCharacterSet) final;
   MOZ_CAN_RUN_SCRIPT NS_IMETHOD
@@ -2683,15 +2682,11 @@ class HTMLEditor final : public EditorBase,
    * InitEditorContentAndSelection() may insert `<br>` elements and padding
    * `<br>` elements if they are required for `<body>` or document element.
    * And collapse selection at the end if there is no selection ranges.
+   * XXX I think that this should work with active editing host unless
+   *     all over the document is ediable (i.e., in design mode or `<body>`
+   *     or `<html>` has `contenteditable` attribute).
    */
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult InitEditorContentAndSelection();
-
-  /**
-   * Collapse `Selection` to the last leaf content of the <body> or the document
-   * element.
-   */
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult
-  CollapseSelectionToEndOfLastLeafNodeOfDocument() const;
 
   MOZ_CAN_RUN_SCRIPT nsresult SelectAllInternal() final;
 

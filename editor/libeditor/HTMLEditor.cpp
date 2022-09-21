@@ -790,45 +790,6 @@ NS_IMETHODIMP HTMLEditor::BeginningOfDocument() {
   return rv;
 }
 
-NS_IMETHODIMP HTMLEditor::EndOfDocument() {
-  AutoEditActionDataSetter editActionData(*this, EditAction::eNotEditing);
-  if (NS_WARN_IF(!editActionData.CanHandle())) {
-    return NS_ERROR_NOT_INITIALIZED;
-  }
-  nsresult rv = CollapseSelectionToEndOfLastLeafNodeOfDocument();
-  NS_WARNING_ASSERTION(
-      NS_SUCCEEDED(rv),
-      "HTMLEditor::CollapseSelectionToEndOfLastLeafNodeOfDocument() failed");
-  // This is low level API for embedders and chrome script so that we can return
-  // raw error code here.
-  return rv;
-}
-
-nsresult HTMLEditor::CollapseSelectionToEndOfLastLeafNodeOfDocument() const {
-  MOZ_ASSERT(IsEditActionDataAvailable());
-
-  RefPtr<Element> bodyOrDocumentElement = GetRoot();
-  if (NS_WARN_IF(!bodyOrDocumentElement)) {
-    return NS_ERROR_NULL_POINTER;
-  }
-
-  auto pointToPutCaret = [&]() -> EditorRawDOMPoint {
-    nsCOMPtr<nsIContent> lastLeafContent = HTMLEditUtils::GetLastLeafContent(
-        *bodyOrDocumentElement, {LeafNodeType::OnlyLeafNode});
-    if (!lastLeafContent) {
-      return EditorRawDOMPoint::AtEndOf(*bodyOrDocumentElement);
-    }
-    // TODO: We should put caret into text node if it's visible.
-    return HTMLEditUtils::IsContainerNode(*lastLeafContent)
-               ? EditorRawDOMPoint::AtEndOf(*lastLeafContent)
-               : EditorRawDOMPoint(lastLeafContent);
-  }();
-  nsresult rv = CollapseSelectionTo(pointToPutCaret);
-  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                       "EditorBase::CollapseSelectionTo() failed");
-  return rv;
-}
-
 void HTMLEditor::InitializeSelectionAncestorLimit(
     nsIContent& aAncestorLimit) const {
   MOZ_ASSERT(IsEditActionDataAvailable());

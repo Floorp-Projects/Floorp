@@ -5,7 +5,6 @@
 
 #include "EditorBase.h"
 
-#include "ErrorList.h"
 #include "mozilla/DebugOnly.h"  // for DebugOnly
 
 #include <stdio.h>   // for nullptr, stdout
@@ -372,6 +371,46 @@ nsresult EditorBase::EnsureEmptyTextFirstChild() {
     root->InsertChildBefore(newTextNode, root->GetFirstChild(), true,
                             ignoredError);
     MOZ_ASSERT(!ignoredError.Failed());
+  }
+
+  return NS_OK;
+}
+
+nsresult EditorBase::InitEditorContentAndSelection() {
+  MOZ_ASSERT(IsEditActionDataAvailable());
+
+  if (IsTextEditor()) {
+    MOZ_TRY(EnsureEmptyTextFirstChild());
+  } else {
+    nsresult rv = MOZ_KnownLive(AsHTMLEditor())
+                      ->MaybeCreatePaddingBRElementForEmptyEditor();
+    if (NS_FAILED(rv)) {
+      NS_WARNING(
+          "HTMLEditor::MaybeCreatePaddingBRElementForEmptyEditor() failed");
+      return rv;
+    }
+  }
+
+  // If the selection hasn't been set up yet, set it up collapsed to the end of
+  // our editable content.
+  // XXX I think that this shouldn't do it in `HTMLEditor` because it maybe
+  //     removed by the web app and if they call `Selection::AddRange()`,
+  //     it may cause multiple selection ranges.
+  if (!SelectionRef().RangeCount()) {
+    nsresult rv = CollapseSelectionToEndOfLastLeafNode();
+    if (MOZ_UNLIKELY(NS_FAILED(rv))) {
+      NS_WARNING("EditorBase::CollapseSelectionToEndOfLastLeafNode() failed");
+      return rv;
+    }
+  }
+
+  if (IsInPlaintextMode() && !IsSingleLineEditor()) {
+    nsresult rv = EnsurePaddingBRElementInMultilineEditor();
+    if (NS_FAILED(rv)) {
+      NS_WARNING(
+          "EditorBase::EnsurePaddingBRElementInMultilineEditor() failed");
+      return rv;
+    }
   }
 
   return NS_OK;
@@ -1344,7 +1383,52 @@ MOZ_CAN_RUN_SCRIPT_BOUNDARY NS_IMETHODIMP EditorBase::BeginningOfDocument() {
   return rv;
 }
 
-NS_IMETHODIMP EditorBase::EndOfDocument() { return NS_ERROR_NOT_IMPLEMENTED; }
+NS_IMETHODIMP EditorBase::EndOfDocument() {
+  AutoEditActionDataSetter editActionData(*this, EditAction::eNotEditing);
+  if (NS_WARN_IF(!editActionData.CanHandle())) {
+    return NS_ERROR_NOT_INITIALIZED;
+  }
+  nsresult rv = CollapseSelectionToEndOfLastLeafNode();
+  NS_WARNING_ASSERTION(
+      NS_SUCCEEDED(rv),
+      "EditorBase::CollapseSelectionToEndOfLastLeafNode() failed");
+  // This is low level API for XUL applcation.  So, we should return raw
+  // error code here.
+  return rv;
+}
+
+nsresult EditorBase::CollapseSelectionToEndOfLastLeafNode() const {
+  MOZ_ASSERT(IsEditActionDataAvailable());
+
+  // XXX Why doesn't this check if the document is alive?
+  if (NS_WARN_IF(!IsInitialized())) {
+    return NS_ERROR_NOT_INITIALIZED;
+  }
+
+  // get the root element
+  Element* rootElement = GetRoot();
+  if (NS_WARN_IF(!rootElement)) {
+    return NS_ERROR_NULL_POINTER;
+  }
+
+  nsIContent* lastLeafContent = rootElement;
+  if (IsTextEditor()) {
+    lastLeafContent = rootElement->GetFirstChild();
+    MOZ_ASSERT(lastLeafContent && lastLeafContent->IsText());
+  } else {
+    for (nsIContent* child = lastLeafContent->GetLastChild();
+         child && HTMLEditUtils::IsContainerNode(*child);
+         child = child->GetLastChild()) {
+      lastLeafContent = child;
+    }
+  }
+
+  nsresult rv =
+      CollapseSelectionToEndOf(OwningNonNull<nsINode>(*lastLeafContent));
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                       "EditorBase::CollapseSelectionToEndOf() failed");
+  return rv;
+}
 
 NS_IMETHODIMP EditorBase::GetDocumentModified(bool* aOutDocModified) {
   if (NS_WARN_IF(!aOutDocModified)) {
