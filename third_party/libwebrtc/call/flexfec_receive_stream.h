@@ -25,7 +25,7 @@
 namespace webrtc {
 
 class FlexfecReceiveStream : public RtpPacketSinkInterface,
-                             public ReceiveStream {
+                             public ReceiveStreamInterface {
  public:
   ~FlexfecReceiveStream() override = default;
 

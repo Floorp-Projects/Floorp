@@ -85,7 +85,7 @@ bool HasTransportSequenceNumber(const RtpHeaderExtensionMap& map) {
          map.IsRegistered(kRtpExtensionTransportSequenceNumber02);
 }
 
-bool UseSendSideBwe(const ReceiveStream* stream) {
+bool UseSendSideBwe(const ReceiveStreamInterface* stream) {
   return stream->transport_cc() &&
          HasTransportSequenceNumber(stream->GetRtpExtensionMap());
 }
@@ -361,7 +361,7 @@ class Call final : public webrtc::Call,
 
   bool IdentifyReceivedPacket(RtpPacketReceived& packet,
                               bool* use_send_side_bwe = nullptr);
-  bool RegisterReceiveStream(uint32_t ssrc, ReceiveStream* stream);
+  bool RegisterReceiveStream(uint32_t ssrc, ReceiveStreamInterface* stream);
   bool UnregisterReceiveStream(uint32_t ssrc);
 
   void UpdateAggregateNetworkState();
@@ -416,7 +416,7 @@ class Call final : public webrtc::Call,
 
   // TODO(bugs.webrtc.org/11993): Move receive_rtp_config_ over to the
   // network thread.
-  std::map<uint32_t, ReceiveStream*> receive_rtp_config_
+  std::map<uint32_t, ReceiveStreamInterface*> receive_rtp_config_
       RTC_GUARDED_BY(&receive_11993_checker_);
 
   // Audio and Video send streams are owned by the client that creates them.
@@ -1701,7 +1701,8 @@ bool Call::IdentifyReceivedPacket(RtpPacketReceived& packet,
   return true;
 }
 
-bool Call::RegisterReceiveStream(uint32_t ssrc, ReceiveStream* stream) {
+bool Call::RegisterReceiveStream(uint32_t ssrc,
+                                 ReceiveStreamInterface* stream) {
   RTC_DCHECK_RUN_ON(&receive_11993_checker_);
   RTC_DCHECK(stream);
   auto inserted = receive_rtp_config_.emplace(ssrc, stream);

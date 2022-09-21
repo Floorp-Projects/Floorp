@@ -58,7 +58,7 @@ class FlexfecReceiveStreamImpl : public FlexfecReceiveStream {
 
   Stats GetStats() const override;
 
-  // ReceiveStream impl.
+  // ReceiveStreamInterface impl.
   void SetRtpExtensions(std::vector<RtpExtension> extensions) override;
   RtpHeaderExtensionMap GetRtpExtensionMap() const override;
 
