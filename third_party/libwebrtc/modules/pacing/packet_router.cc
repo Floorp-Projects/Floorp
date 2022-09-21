@@ -23,6 +23,7 @@
 #include "modules/rtp_rtcp/source/rtp_rtcp_interface.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/logging.h"
+#include "rtc_base/system/unused.h"
 #include "rtc_base/time_utils.h"
 #include "rtc_base/trace_event.h"
 
@@ -214,14 +215,13 @@ std::vector<std::unique_ptr<RtpPacketToSend>> PacketRouter::GeneratePadding(
     }
   }
 
-#if RTC_TRACE_EVENTS_ENABLED
   for (auto& packet : padding_packets) {
+    RTC_UNUSED(packet);
     TRACE_EVENT2(TRACE_DISABLED_BY_DEFAULT("webrtc"),
                  "PacketRouter::GeneratePadding::Loop", "sequence_number",
                  packet->SequenceNumber(), "rtp_timestamp",
                  packet->Timestamp());
   }
-#endif
 
   return padding_packets;
 }
