@@ -47,3 +47,7 @@ explains how to use the Gecko profiler.
 * **(Linux only)** [perf](perf.md) perf is a powerful command-line utility that can measure many different things, including energy estimates and high-context measurements of things such as wakeups.
 * **(Linux-only)** [turbostat](turbostat.md) is a command-line utility that gathers and displays various power-related measurements, with a focus on per-CPU measurements such as frequencies and C-states.
 * **(Linux-only)** [powertop](https://01.org/powertop) is an interactive command-line utility that gathers and displays various power-related measurements.
+
+## Performance Metrics
+
+* [PerfStats](perfstats.md) - A framework for low-overhead collection of internal performance metrics. 
