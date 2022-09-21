@@ -225,7 +225,6 @@ class TopSitesTest {
             navigationToolbar {
             }.enterURLAndEnterToBrowser(defaultWebPage.url) {
                 waitForPageToLoad()
-                verifyPageContent(defaultWebPage.content)
             }
         }
 
