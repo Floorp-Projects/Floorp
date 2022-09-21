@@ -131,7 +131,6 @@ ConfigureVideoEncoderSettings(const VideoCodecConfig& aConfig,
       aConduit->CodecMode() == webrtc::VideoCodecMode::kScreensharing;
   // No automatic resizing when using simulcast or screencast.
   bool automatic_resize = !is_screencast && aConfig.mEncodings.size() <= 1;
-  bool frame_dropping = !is_screencast;
   bool denoising;
   bool codec_default_denoising = false;
   if (is_screencast) {
@@ -148,7 +147,6 @@ ConfigureVideoEncoderSettings(const VideoCodecConfig& aConfig,
     vp8_settings.automaticResizeOn = automatic_resize;
     // VP8 denoising is enabled by default.
     vp8_settings.denoisingOn = codec_default_denoising ? true : denoising;
-    vp8_settings.frameDroppingOn = frame_dropping;
     return rtc::scoped_refptr<
         webrtc::VideoEncoderConfig::EncoderSpecificSettings>(
         new rtc::RefCountedObject<
@@ -167,7 +165,6 @@ ConfigureVideoEncoderSettings(const VideoCodecConfig& aConfig,
     }
     // VP9 denoising is disabled by default.
     vp9_settings.denoisingOn = codec_default_denoising ? false : denoising;
-    vp9_settings.frameDroppingOn = true;  // This must be true for VP9
     return rtc::scoped_refptr<
         webrtc::VideoEncoderConfig::EncoderSpecificSettings>(
         new rtc::RefCountedObject<

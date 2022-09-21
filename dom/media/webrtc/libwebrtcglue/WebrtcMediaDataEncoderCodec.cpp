@@ -244,18 +244,20 @@ already_AddRefed<MediaDataEncoder> WebrtcMediaDataEncoder::CreateEncoder(
       const webrtc::VideoCodecVP8& vp8 = aCodecSettings->VP8();
       const webrtc::VideoCodecComplexity complexity =
           aCodecSettings->GetVideoEncoderComplexity();
+      const bool frameDropEnabled = aCodecSettings->GetFrameDropEnabled();
       params.SetCodecSpecific(MediaDataEncoder::VPXSpecific::VP8(
           MapComplexity(complexity), false, vp8.numberOfTemporalLayers,
-          vp8.denoisingOn, vp8.automaticResizeOn, vp8.frameDroppingOn));
+          vp8.denoisingOn, vp8.automaticResizeOn, frameDropEnabled));
       break;
     }
     case webrtc::VideoCodecType::kVideoCodecVP9: {
       const webrtc::VideoCodecVP9& vp9 = aCodecSettings->VP9();
       const webrtc::VideoCodecComplexity complexity =
           aCodecSettings->GetVideoEncoderComplexity();
+      const bool frameDropEnabled = aCodecSettings->GetFrameDropEnabled();
       params.SetCodecSpecific(MediaDataEncoder::VPXSpecific::VP9(
           MapComplexity(complexity), false, vp9.numberOfTemporalLayers,
-          vp9.denoisingOn, vp9.automaticResizeOn, vp9.frameDroppingOn,
+          vp9.denoisingOn, vp9.automaticResizeOn, frameDropEnabled,
           vp9.adaptiveQpMode, vp9.numberOfSpatialLayers, vp9.flexibleMode));
       break;
     }
