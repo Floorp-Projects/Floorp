@@ -259,10 +259,6 @@ luci.bucket(
         acl.entry(acl.BUILDBUCKET_TRIGGERER, groups = [
             "project-webrtc-ci-schedulers",
         ]),
-        acl.entry(acl.BUILDBUCKET_TRIGGERER, groups = [
-            # Allow Pinpoint to trigger builds for bisection
-            "service-account-chromeperf",
-        ]),
     ],
 )
 
@@ -271,6 +267,10 @@ luci.bucket(
     acls = [
         acl.entry(acl.BUILDBUCKET_TRIGGERER, users = [
             "webrtc-ci-builder@chops-service-accounts.iam.gserviceaccount.com",
+        ]),
+        acl.entry(acl.BUILDBUCKET_TRIGGERER, groups = [
+            # Allow Pinpoint to trigger builds for bisection
+            "service-account-chromeperf",
         ]),
     ],
 )
