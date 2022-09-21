@@ -151,6 +151,9 @@ class FakePeerConnectionForStats : public FakePeerConnectionBase {
       : network_thread_(rtc::Thread::Current()),
         worker_thread_(rtc::Thread::Current()),
         signaling_thread_(rtc::Thread::Current()),
+        // TODO(hta): remove separate thread variables and use context.
+        dependencies_(MakeDependencies()),
+        context_(ConnectionContext::Create(&dependencies_)),
         local_streams_(StreamCollection::Create()),
         remote_streams_(StreamCollection::Create()) {}
 
@@ -158,6 +161,14 @@ class FakePeerConnectionForStats : public FakePeerConnectionBase {
     for (auto transceiver : transceivers_) {
       transceiver->internal()->ClearChannel();
     }
+  }
+
+  static PeerConnectionFactoryDependencies MakeDependencies() {
+    PeerConnectionFactoryDependencies dependencies;
+    dependencies.network_thread = rtc::Thread::Current();
+    dependencies.worker_thread = rtc::Thread::Current();
+    dependencies.signaling_thread = rtc::Thread::Current();
+    return dependencies;
   }
 
   rtc::scoped_refptr<StreamCollection> mutable_local_streams() {
@@ -213,8 +224,7 @@ class FakePeerConnectionForStats : public FakePeerConnectionBase {
     auto voice_channel = std::make_unique<VoiceChannelForTesting>(
         worker_thread_, network_thread_, signaling_thread_,
         std::move(voice_media_channel), mid, kDefaultSrtpRequired,
-        webrtc::CryptoOptions(), &channel_manager_.ssrc_generator(),
-        transport_name);
+        webrtc::CryptoOptions(), context_->ssrc_generator(), transport_name);
     GetOrCreateFirstTransceiverOfType(cricket::MEDIA_TYPE_AUDIO)
         ->internal()
         ->SetChannel(std::move(voice_channel),
@@ -233,8 +243,7 @@ class FakePeerConnectionForStats : public FakePeerConnectionBase {
     auto video_channel = std::make_unique<VideoChannelForTesting>(
         worker_thread_, network_thread_, signaling_thread_,
         std::move(video_media_channel), mid, kDefaultSrtpRequired,
-        webrtc::CryptoOptions(), &channel_manager_.ssrc_generator(),
-        transport_name);
+        webrtc::CryptoOptions(), context_->ssrc_generator(), transport_name);
     GetOrCreateFirstTransceiverOfType(cricket::MEDIA_TYPE_VIDEO)
         ->internal()
         ->SetChannel(std::move(video_channel),
@@ -407,7 +416,7 @@ class FakePeerConnectionForStats : public FakePeerConnectionBase {
     }
     auto transceiver = RtpTransceiverProxyWithInternal<RtpTransceiver>::Create(
         signaling_thread_,
-        rtc::make_ref_counted<RtpTransceiver>(media_type, &channel_manager_));
+        rtc::make_ref_counted<RtpTransceiver>(media_type, context_.get()));
     transceivers_.push_back(transceiver);
     return transceiver;
   }
@@ -420,6 +429,7 @@ class FakePeerConnectionForStats : public FakePeerConnectionBase {
                                   true,
                                   worker,
                                   network) {}
+    rtc::UniqueRandomIdGenerator* ssrc_generator() { return &ssrc_generator_; }
 
    private:
     rtc::UniqueRandomIdGenerator ssrc_generator_;
@@ -429,7 +439,8 @@ class FakePeerConnectionForStats : public FakePeerConnectionBase {
   rtc::Thread* const worker_thread_;
   rtc::Thread* const signaling_thread_;
 
-  TestChannelManager channel_manager_{worker_thread_, network_thread_};
+  PeerConnectionFactoryDependencies dependencies_;
+  rtc::scoped_refptr<ConnectionContext> context_;
 
   rtc::scoped_refptr<StreamCollection> local_streams_;
   rtc::scoped_refptr<StreamCollection> remote_streams_;

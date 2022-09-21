@@ -25,6 +25,7 @@
 #include "api/crypto_params.h"
 #include "media/base/codec.h"
 #include "media/base/media_constants.h"
+#include "media/base/media_engine.h"
 #include "media/base/sdp_video_format_utils.h"
 #include "media/sctp/sctp_transport_internal.h"
 #include "p2p/base/p2p_constants.h"
@@ -1571,14 +1572,17 @@ MediaSessionDescriptionFactory::MediaSessionDescriptionFactory(
 }
 
 MediaSessionDescriptionFactory::MediaSessionDescriptionFactory(
-    ChannelManager* channel_manager,
+    cricket::MediaEngineInterface* media_engine,
+    bool rtx_enabled,
+    rtc::UniqueRandomIdGenerator* ssrc_generator,
     const TransportDescriptionFactory* transport_desc_factory)
-    : MediaSessionDescriptionFactory(transport_desc_factory,
-                                     &channel_manager->ssrc_generator()) {
-  channel_manager->GetSupportedAudioSendCodecs(&audio_send_codecs_);
-  channel_manager->GetSupportedAudioReceiveCodecs(&audio_recv_codecs_);
-  channel_manager->GetSupportedVideoSendCodecs(&video_send_codecs_);
-  channel_manager->GetSupportedVideoReceiveCodecs(&video_recv_codecs_);
+    : MediaSessionDescriptionFactory(transport_desc_factory, ssrc_generator) {
+  if (media_engine) {
+    audio_send_codecs_ = media_engine->voice().send_codecs();
+    audio_recv_codecs_ = media_engine->voice().recv_codecs();
+    video_send_codecs_ = media_engine->video().send_codecs(rtx_enabled);
+    video_recv_codecs_ = media_engine->video().recv_codecs(rtx_enabled);
+  }
   ComputeAudioCodecsIntersectionAndUnion();
   ComputeVideoCodecsIntersectionAndUnion();
 }

@@ -1598,6 +1598,7 @@ rtc_library("rtp_transceiver") {
     ":channel",
     ":channel_interface",
     ":channel_manager",
+    ":connection_context",
     ":peer_connection_sdp_methods",
     ":proxy",
     ":rtp_media_utils",

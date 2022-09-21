@@ -76,7 +76,6 @@ class ChannelManagerTest : public ::testing::Test {
                                 cricket::CN_AUDIO, kDefaultSrtpRequired,
                                 webrtc::CryptoOptions(), AudioOptions());
     ASSERT_TRUE(voice_channel != nullptr);
-
     std::unique_ptr<cricket::VideoChannel> video_channel =
         cm_->CreateVideoChannel(&fake_call_, cricket::MediaConfig(),
                                 cricket::CN_VIDEO, kDefaultSrtpRequired,
@@ -98,34 +97,6 @@ class ChannelManagerTest : public ::testing::Test {
   cricket::FakeCall fake_call_;
   webrtc::test::ScopedKeyValueConfig field_trials_;
 };
-
-TEST_F(ChannelManagerTest, SetVideoRtxEnabled) {
-  std::vector<VideoCodec> send_codecs;
-  std::vector<VideoCodec> recv_codecs;
-  const VideoCodec rtx_codec(96, "rtx");
-
-  // By default RTX is disabled.
-  cm_->GetSupportedVideoSendCodecs(&send_codecs);
-  EXPECT_FALSE(ContainsMatchingCodec(send_codecs, rtx_codec, &field_trials_));
-  cm_->GetSupportedVideoSendCodecs(&recv_codecs);
-  EXPECT_FALSE(ContainsMatchingCodec(recv_codecs, rtx_codec, &field_trials_));
-
-  // Enable and check.
-  cm_ = cricket::ChannelManager::Create(media_engine_.get(), &ssrc_generator_,
-                                        true, worker_, network_.get());
-  cm_->GetSupportedVideoSendCodecs(&send_codecs);
-  EXPECT_TRUE(ContainsMatchingCodec(send_codecs, rtx_codec, &field_trials_));
-  cm_->GetSupportedVideoSendCodecs(&recv_codecs);
-  EXPECT_TRUE(ContainsMatchingCodec(recv_codecs, rtx_codec, &field_trials_));
-
-  // Disable and check.
-  cm_ = cricket::ChannelManager::Create(media_engine_.get(), &ssrc_generator_,
-                                        false, worker_, network_.get());
-  cm_->GetSupportedVideoSendCodecs(&send_codecs);
-  EXPECT_FALSE(ContainsMatchingCodec(send_codecs, rtx_codec, &field_trials_));
-  cm_->GetSupportedVideoSendCodecs(&recv_codecs);
-  EXPECT_FALSE(ContainsMatchingCodec(recv_codecs, rtx_codec, &field_trials_));
-}
 
 TEST_F(ChannelManagerTest, CreateDestroyChannels) {
   auto rtp_dtls_transport = std::make_unique<FakeDtlsTransport>(

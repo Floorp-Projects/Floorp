@@ -17,10 +17,10 @@
 
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
+#include "api/peer_connection_interface.h"
 #include "api/rtp_parameters.h"
 #include "media/base/fake_media_engine.h"
 #include "media/base/media_engine.h"
-#include "pc/channel_manager.h"
 #include "pc/test/mock_channel_interface.h"
 #include "pc/test/mock_rtp_receiver_internal.h"
 #include "pc/test/mock_rtp_sender_internal.h"
@@ -42,28 +42,36 @@ namespace {
 class RtpTransceiverTest : public testing::Test {
  public:
   RtpTransceiverTest()
-      : channel_manager_(
-            cricket::ChannelManager::Create(&fake_media_engine_,
-                                            &ssrc_generator_,
-                                            true,
-                                            rtc::Thread::Current(),
-                                            rtc::Thread::Current())) {}
+      : dependencies_(MakeDependencies()),
+        context_(ConnectionContext::Create(&dependencies_)) {}
 
  protected:
-  cricket::ChannelManager* channel_manager() { return channel_manager_.get(); }
+  cricket::MediaEngineInterface* media_engine() {
+    return context_->media_engine();
+  }
+  ConnectionContext* context() { return context_.get(); }
 
  private:
   rtc::AutoThread main_thread_;
-  cricket::FakeMediaEngine fake_media_engine_;
-  rtc::UniqueRandomIdGenerator ssrc_generator_;
-  std::unique_ptr<cricket::ChannelManager> channel_manager_;
+
+  static PeerConnectionFactoryDependencies MakeDependencies() {
+    PeerConnectionFactoryDependencies d;
+    d.network_thread = rtc::Thread::Current();
+    d.worker_thread = rtc::Thread::Current();
+    d.signaling_thread = rtc::Thread::Current();
+    d.media_engine = std::make_unique<cricket::FakeMediaEngine>();
+    return d;
+  }
+
+  PeerConnectionFactoryDependencies dependencies_;
+  rtc::scoped_refptr<ConnectionContext> context_;
 };
 
 // Checks that a channel cannot be set on a stopped `RtpTransceiver`.
 TEST_F(RtpTransceiverTest, CannotSetChannelOnStoppedTransceiver) {
   const std::string content_name("my_mid");
   auto transceiver = rtc::make_ref_counted<RtpTransceiver>(
-      cricket::MediaType::MEDIA_TYPE_AUDIO, channel_manager());
+      cricket::MediaType::MEDIA_TYPE_AUDIO, context());
   auto channel1 = std::make_unique<cricket::MockChannelInterface>();
   EXPECT_CALL(*channel1, media_type())
       .WillRepeatedly(Return(cricket::MediaType::MEDIA_TYPE_AUDIO));
@@ -98,7 +106,7 @@ TEST_F(RtpTransceiverTest, CannotSetChannelOnStoppedTransceiver) {
 TEST_F(RtpTransceiverTest, CanUnsetChannelOnStoppedTransceiver) {
   const std::string content_name("my_mid");
   auto transceiver = rtc::make_ref_counted<RtpTransceiver>(
-      cricket::MediaType::MEDIA_TYPE_VIDEO, channel_manager());
+      cricket::MediaType::MEDIA_TYPE_VIDEO, context());
   auto channel = std::make_unique<cricket::MockChannelInterface>();
   EXPECT_CALL(*channel, media_type())
       .WillRepeatedly(Return(cricket::MediaType::MEDIA_TYPE_VIDEO));
@@ -134,8 +142,8 @@ class RtpTransceiverUnifiedPlanTest : public RtpTransceiverTest {
                 rtc::Thread::Current(),
                 rtc::Thread::Current(),
                 receiver_),
-            channel_manager(),
-            channel_manager()->media_engine()->voice().GetRtpHeaderExtensions(),
+            context(),
+            media_engine()->voice().GetRtpHeaderExtensions(),
             /* on_negotiation_needed= */ [] {})) {}
 
   static rtc::scoped_refptr<MockRtpReceiverInternal> MockReceiver() {
@@ -201,7 +209,7 @@ class RtpTransceiverTestForHeaderExtensions : public RtpTransceiverTest {
                 rtc::Thread::Current(),
                 rtc::Thread::Current(),
                 receiver_),
-            channel_manager(),
+            context(),
             extensions_,
             /* on_negotiation_needed= */ [] {})) {}
 

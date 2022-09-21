@@ -48,8 +48,7 @@ ChannelManager::ChannelManager(MediaEngineInterface* media_engine,
       ssrc_generator_(ssrc_generator),
       signaling_thread_(rtc::Thread::Current()),
       worker_thread_(worker_thread),
-      network_thread_(network_thread),
-      enable_rtx_(enable_rtx) {
+      network_thread_(network_thread) {
   RTC_DCHECK_RUN_ON(signaling_thread_);
   RTC_DCHECK(worker_thread_);
   RTC_DCHECK(network_thread_);
@@ -63,56 +62,6 @@ ChannelManager::ChannelManager(MediaEngineInterface* media_engine,
 
 ChannelManager::~ChannelManager() {
   RTC_DCHECK_RUN_ON(signaling_thread_);
-}
-
-void ChannelManager::GetSupportedAudioSendCodecs(
-    std::vector<AudioCodec>* codecs) const {
-  if (!media_engine_) {
-    return;
-  }
-  *codecs = media_engine_->voice().send_codecs();
-}
-
-void ChannelManager::GetSupportedAudioReceiveCodecs(
-    std::vector<AudioCodec>* codecs) const {
-  if (!media_engine_) {
-    return;
-  }
-  *codecs = media_engine_->voice().recv_codecs();
-}
-
-void ChannelManager::GetSupportedVideoSendCodecs(
-    std::vector<VideoCodec>* codecs) const {
-  if (!media_engine_) {
-    return;
-  }
-  codecs->clear();
-
-  std::vector<VideoCodec> video_codecs = media_engine_->video().send_codecs();
-  for (const auto& video_codec : video_codecs) {
-    if (!enable_rtx_ &&
-        absl::EqualsIgnoreCase(kRtxCodecName, video_codec.name)) {
-      continue;
-    }
-    codecs->push_back(video_codec);
-  }
-}
-
-void ChannelManager::GetSupportedVideoReceiveCodecs(
-    std::vector<VideoCodec>* codecs) const {
-  if (!media_engine_) {
-    return;
-  }
-  codecs->clear();
-
-  std::vector<VideoCodec> video_codecs = media_engine_->video().recv_codecs();
-  for (const auto& video_codec : video_codecs) {
-    if (!enable_rtx_ &&
-        absl::EqualsIgnoreCase(kRtxCodecName, video_codec.name)) {
-      continue;
-    }
-    codecs->push_back(video_codec);
-  }
 }
 
 std::unique_ptr<VoiceChannel> ChannelManager::CreateVoiceChannel(

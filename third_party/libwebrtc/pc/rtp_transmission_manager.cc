@@ -37,17 +37,13 @@ static const char kDefaultVideoSenderId[] = "defaultv0";
 
 RtpTransmissionManager::RtpTransmissionManager(
     bool is_unified_plan,
-    rtc::Thread* signaling_thread,
-    rtc::Thread* worker_thread,
-    cricket::ChannelManager* channel_manager,
+    ConnectionContext* context,
     UsagePattern* usage_pattern,
     PeerConnectionObserver* observer,
     StatsCollectorInterface* stats,
     std::function<void()> on_negotiation_needed)
     : is_unified_plan_(is_unified_plan),
-      signaling_thread_(signaling_thread),
-      worker_thread_(worker_thread),
-      channel_manager_(channel_manager),
+      context_(context),
       usage_pattern_(usage_pattern),
       observer_(observer),
       stats_(stats),
@@ -271,7 +267,7 @@ RtpTransmissionManager::CreateAndAddTransceiver(
   auto transceiver = RtpTransceiverProxyWithInternal<RtpTransceiver>::Create(
       signaling_thread(),
       rtc::make_ref_counted<RtpTransceiver>(
-          sender, receiver, channel_manager(),
+          sender, receiver, context_,
           sender->media_type() == cricket::MEDIA_TYPE_AUDIO
               ? media_engine()->voice().GetRtpHeaderExtensions()
               : media_engine()->video().GetRtpHeaderExtensions(),
@@ -691,7 +687,7 @@ RtpTransmissionManager::FindReceiverById(const std::string& receiver_id) const {
 }
 
 cricket::MediaEngineInterface* RtpTransmissionManager::media_engine() const {
-  return channel_manager()->media_engine();
+  return context_->media_engine();
 }
 
 }  // namespace webrtc

@@ -76,9 +76,7 @@ struct RtpSenderInfo {
 class RtpTransmissionManager : public RtpSenderBase::SetStreamsObserver {
  public:
   RtpTransmissionManager(bool is_unified_plan,
-                         rtc::Thread* signaling_thread,
-                         rtc::Thread* worker_thread,
-                         cricket::ChannelManager* channel_manager,
+                         ConnectionContext* context,
                          UsagePattern* usage_pattern,
                          PeerConnectionObserver* observer,
                          StatsCollectorInterface* stats_,
@@ -212,9 +210,8 @@ class RtpTransmissionManager : public RtpSenderBase::SetStreamsObserver {
   cricket::VideoMediaChannel* video_media_channel() const;
 
  private:
-  rtc::Thread* signaling_thread() const { return signaling_thread_; }
-  rtc::Thread* worker_thread() const { return worker_thread_; }
-  cricket::ChannelManager* channel_manager() const { return channel_manager_; }
+  rtc::Thread* signaling_thread() const { return context_->signaling_thread(); }
+  rtc::Thread* worker_thread() const { return context_->worker_thread(); }
   bool IsUnifiedPlan() const { return is_unified_plan_; }
   void NoteUsageEvent(UsageEvent event) {
     usage_pattern_->NoteUsageEvent(event);
@@ -246,6 +243,10 @@ class RtpTransmissionManager : public RtpSenderBase::SetStreamsObserver {
 
   cricket::MediaEngineInterface* media_engine() const;
 
+  rtc::UniqueRandomIdGenerator* ssrc_generator() const {
+    return context_->ssrc_generator();
+  }
+
   TransceiverList transceivers_;
 
   // These lists store sender info seen in local/remote descriptions.
@@ -260,9 +261,7 @@ class RtpTransmissionManager : public RtpSenderBase::SetStreamsObserver {
 
   bool closed_ = false;
   bool const is_unified_plan_;
-  rtc::Thread* const signaling_thread_;
-  rtc::Thread* const worker_thread_;
-  cricket::ChannelManager* const channel_manager_;
+  ConnectionContext* context_;
   UsagePattern* usage_pattern_;
   PeerConnectionObserver* observer_;
   StatsCollectorInterface* const stats_;

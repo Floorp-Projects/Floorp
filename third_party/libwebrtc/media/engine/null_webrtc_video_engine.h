@@ -37,6 +37,13 @@ class NullWebRtcVideoEngine : public VideoEngineInterface {
   std::vector<VideoCodec> recv_codecs() const override {
     return std::vector<VideoCodec>();
   }
+  std::vector<VideoCodec> send_codecs(bool) const override {
+    return std::vector<VideoCodec>();
+  }
+
+  std::vector<VideoCodec> recv_codecs(bool) const override {
+    return std::vector<VideoCodec>();
+  }
 
   std::vector<webrtc::RtpHeaderExtensionCapability> GetRtpHeaderExtensions()
       const override {
