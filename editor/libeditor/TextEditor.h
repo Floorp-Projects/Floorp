@@ -534,13 +534,6 @@ class TextEditor final : public EditorBase,
   bool CanEchoPasswordNow() const;
 
   /**
-   * InitEditorContentAndSelection() may insert a padding `<br>` element for
-   * if it's required in the anonymous `<div>` element or `<body>` element and
-   * collapse selection at the end if there is no selection ranges.
-   */
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult InitEditorContentAndSelection();
-
-  /**
    * Make the given selection span the entire document.
    */
   MOZ_CAN_RUN_SCRIPT nsresult SelectEntireDocument() final;

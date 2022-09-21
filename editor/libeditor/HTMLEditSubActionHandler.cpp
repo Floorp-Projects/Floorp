@@ -131,33 +131,10 @@ HTMLEditor::CreateRangeIncludingAdjuscentWhiteSpaces(
 nsresult HTMLEditor::InitEditorContentAndSelection() {
   MOZ_ASSERT(IsEditActionDataAvailable());
 
-  nsresult rv = MaybeCreatePaddingBRElementForEmptyEditor();
+  nsresult rv = EditorBase::InitEditorContentAndSelection();
   if (NS_FAILED(rv)) {
-    NS_WARNING(
-        "HTMLEditor::MaybeCreatePaddingBRElementForEmptyEditor() failed");
+    NS_WARNING("EditorBase::InitEditorContentAndSelection() failed");
     return rv;
-  }
-
-  // If the selection hasn't been set up yet, set it up collapsed to the end of
-  // our editable content.
-  // XXX I think that this shouldn't do it in `HTMLEditor` because it maybe
-  //     removed by the web app and if they call `Selection::AddRange()`,
-  //     it may cause multiple selection ranges.
-  if (!SelectionRef().RangeCount()) {
-    nsresult rv = CollapseSelectionToEndOfLastLeafNode();
-    if (NS_FAILED(rv)) {
-      NS_WARNING("EditorBase::CollapseSelectionToEndOfLastLeafNode() failed");
-      return rv;
-    }
-  }
-
-  if (IsInPlaintextMode()) {
-    nsresult rv = EnsurePaddingBRElementInMultilineEditor();
-    if (NS_FAILED(rv)) {
-      NS_WARNING(
-          "EditorBase::EnsurePaddingBRElementInMultilineEditor() failed");
-      return rv;
-    }
   }
 
   Element* bodyOrDocumentElement = GetRoot();
