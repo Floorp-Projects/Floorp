@@ -408,7 +408,11 @@ static const bool PerZoneGCEnabled = false;
 static const bool CompactingEnabled = true;
 
 /* JSGC_BALANCED_HEAP_LIMITS_ENABLED */
+#ifdef FUZZING
 static const bool BalancedHeapLimitsEnabled = false;
+#else
+static const bool BalancedHeapLimitsEnabled = true;
+#endif
 
 /* JSGC_INCREMENTAL_WEAKMAP_ENABLED */
 static const bool IncrementalWeakMapMarkingEnabled = true;

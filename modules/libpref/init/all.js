@@ -1041,7 +1041,7 @@ pref("javascript.options.mem.gc_high_frequency_large_heap_growth", 150);
 pref("javascript.options.mem.gc_low_frequency_heap_growth", 150);
 
 // JSGC_BALANCED_HEAP_LIMITS_ENABLED
-pref("javascript.options.mem.gc_balanced_heap_limits", false);
+pref("javascript.options.mem.gc_balanced_heap_limits", true);
 
 // JSGC_HEAP_GROWTH_FACTOR
 pref("javascript.options.mem.gc_heap_growth_factor", 50);
