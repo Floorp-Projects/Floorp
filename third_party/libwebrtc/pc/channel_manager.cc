@@ -121,34 +121,6 @@ void ChannelManager::GetSupportedVideoReceiveCodecs(
   }
 }
 
-RtpHeaderExtensions ChannelManager::GetDefaultEnabledAudioRtpHeaderExtensions()
-    const {
-  if (!media_engine_)
-    return {};
-  return GetDefaultEnabledRtpHeaderExtensions(media_engine_->voice());
-}
-
-std::vector<webrtc::RtpHeaderExtensionCapability>
-ChannelManager::GetSupportedAudioRtpHeaderExtensions() const {
-  if (!media_engine_)
-    return {};
-  return media_engine_->voice().GetRtpHeaderExtensions();
-}
-
-RtpHeaderExtensions ChannelManager::GetDefaultEnabledVideoRtpHeaderExtensions()
-    const {
-  if (!media_engine_)
-    return {};
-  return GetDefaultEnabledRtpHeaderExtensions(media_engine_->video());
-}
-
-std::vector<webrtc::RtpHeaderExtensionCapability>
-ChannelManager::GetSupportedVideoRtpHeaderExtensions() const {
-  if (!media_engine_)
-    return {};
-  return media_engine_->video().GetRtpHeaderExtensions();
-}
-
 std::unique_ptr<VoiceChannel> ChannelManager::CreateVoiceChannel(
     webrtc::Call* call,
     const MediaConfig& media_config,
@@ -222,17 +194,6 @@ std::unique_ptr<VideoChannel> ChannelManager::CreateVideoChannel(
       &ssrc_generator_);
 
   return video_channel;
-}
-
-bool ChannelManager::StartAecDump(webrtc::FileWrapper file,
-                                  int64_t max_size_bytes) {
-  RTC_DCHECK_RUN_ON(worker_thread_);
-  return media_engine_->voice().StartAecDump(std::move(file), max_size_bytes);
-}
-
-void ChannelManager::StopAecDump() {
-  RTC_DCHECK_RUN_ON(worker_thread_);
-  media_engine_->voice().StopAecDump();
 }
 
 }  // namespace cricket
