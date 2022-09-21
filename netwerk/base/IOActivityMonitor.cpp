@@ -8,6 +8,8 @@
 #include "nsSocketTransport2.h"
 #include "nsSocketTransportService2.h"
 #include "nsThreadUtils.h"
+#include "mozilla/Atomics.h"
+#include "mozilla/ClearOnShutdown.h"
 #include "mozilla/dom/Promise.h"
 #include "prerror.h"
 #include "prio.h"
@@ -18,6 +20,7 @@ using namespace mozilla;
 using namespace mozilla::net;
 
 mozilla::StaticRefPtr<IOActivityMonitor> gInstance;
+static Atomic<bool> gActivated(false);
 static PRDescIdentity sNetActivityMonitorLayerIdentity;
 static PRIOMethods sNetActivityMonitorLayerMethods;
 static PRIOMethods* sNetActivityMonitorLayerMethodsPtr = nullptr;
@@ -253,11 +256,12 @@ IOActivityMonitor::IOActivityMonitor() : mLock("IOActivityMonitor::mLock") {
 // static
 void IOActivityMonitor::RequestActivities(dom::Promise* aPromise) {
   MOZ_ASSERT(aPromise);
-  RefPtr<IOActivityMonitor> mon(gInstance);
-  if (!IsActive()) {
+  RefPtr<IOActivityMonitor> mon = IOActivityMonitor::Get();
+  if (!mon) {
     aPromise->MaybeReject(NS_ERROR_FAILURE);
     return;
   }
+
   mon->RequestActivitiesInternal(aPromise);
 }
 
@@ -288,14 +292,24 @@ void IOActivityMonitor::RequestActivitiesInternal(dom::Promise* aPromise) {
   aPromise->MaybeResolve(activities);
 }
 
-// static
 NS_IMETHODIMP
 IOActivityMonitor::GetName(nsACString& aName) {
   aName.AssignLiteral("IOActivityMonitor");
   return NS_OK;
 }
 
-bool IOActivityMonitor::IsActive() { return gInstance != nullptr; }
+// static
+bool IOActivityMonitor::IsActive() { return gActivated; }
+
+// static
+already_AddRefed<IOActivityMonitor> IOActivityMonitor::Get() {
+  if (!gActivated) {
+    return nullptr;
+  }
+
+  RefPtr<IOActivityMonitor> mon = gInstance;
+  return mon.forget();
+}
 
 nsresult IOActivityMonitor::Init() {
   if (IsActive()) {
@@ -305,6 +319,8 @@ nsresult IOActivityMonitor::Init() {
   nsresult rv = mon->InitInternal();
   if (NS_SUCCEEDED(rv)) {
     gInstance = mon;
+    ClearOnShutdown(&gInstance);
+    gActivated = true;
   }
   return rv;
 }
@@ -332,7 +348,7 @@ nsresult IOActivityMonitor::InitInternal() {
 }
 
 nsresult IOActivityMonitor::Shutdown() {
-  RefPtr<IOActivityMonitor> mon(gInstance);
+  RefPtr<IOActivityMonitor> mon = IOActivityMonitor::Get();
   if (!mon) {
     return NS_ERROR_NOT_INITIALIZED;
   }
@@ -342,13 +358,13 @@ nsresult IOActivityMonitor::Shutdown() {
 nsresult IOActivityMonitor::ShutdownInternal() {
   mozilla::MutexAutoLock lock(mLock);
   mActivities.Clear();
-  gInstance = nullptr;
+  gActivated = false;
   return NS_OK;
 }
 
 nsresult IOActivityMonitor::MonitorSocket(PRFileDesc* aFd) {
-  RefPtr<IOActivityMonitor> mon(gInstance);
-  if (!IsActive()) {
+  RefPtr<IOActivityMonitor> mon = IOActivityMonitor::Get();
+  if (!mon) {
     return NS_OK;
   }
   PRFileDesc* layer;
@@ -372,8 +388,8 @@ nsresult IOActivityMonitor::MonitorSocket(PRFileDesc* aFd) {
 }
 
 nsresult IOActivityMonitor::MonitorFile(PRFileDesc* aFd, const char* aPath) {
-  RefPtr<IOActivityMonitor> mon(gInstance);
-  if (!IsActive()) {
+  RefPtr<IOActivityMonitor> mon = IOActivityMonitor::Get();
+  if (!mon) {
     return NS_OK;
   }
   PRFileDesc* layer;
@@ -428,7 +444,7 @@ bool IOActivityMonitor::IncrementActivity(const nsACString& aLocation,
 
 nsresult IOActivityMonitor::Write(const nsACString& aLocation,
                                   uint32_t aAmount) {
-  RefPtr<IOActivityMonitor> mon(gInstance);
+  RefPtr<IOActivityMonitor> mon = IOActivityMonitor::Get();
   if (!mon) {
     return NS_ERROR_FAILURE;
   }
@@ -436,7 +452,7 @@ nsresult IOActivityMonitor::Write(const nsACString& aLocation,
 }
 
 nsresult IOActivityMonitor::Write(PRFileDesc* fd, uint32_t aAmount) {
-  RefPtr<IOActivityMonitor> mon(gInstance);
+  RefPtr<IOActivityMonitor> mon = IOActivityMonitor::Get();
   if (!mon) {
     return NS_ERROR_FAILURE;
   }
@@ -453,7 +469,7 @@ nsresult IOActivityMonitor::WriteInternal(const nsACString& aLocation,
 }
 
 nsresult IOActivityMonitor::Read(PRFileDesc* fd, uint32_t aAmount) {
-  RefPtr<IOActivityMonitor> mon(gInstance);
+  RefPtr<IOActivityMonitor> mon = IOActivityMonitor::Get();
   if (!mon) {
     return NS_ERROR_FAILURE;
   }
@@ -462,7 +478,7 @@ nsresult IOActivityMonitor::Read(PRFileDesc* fd, uint32_t aAmount) {
 
 nsresult IOActivityMonitor::Read(const nsACString& aLocation,
                                  uint32_t aAmount) {
-  RefPtr<IOActivityMonitor> mon(gInstance);
+  RefPtr<IOActivityMonitor> mon = IOActivityMonitor::Get();
   if (!mon) {
     return NS_ERROR_FAILURE;
   }
