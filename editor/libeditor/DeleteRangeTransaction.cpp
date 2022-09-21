@@ -119,9 +119,8 @@ NS_IMETHODIMP DeleteRangeTransaction::DoTransaction() {
 
   OwningNonNull<EditorBase> editorBase = *mEditorBase;
   rv = editorBase->CollapseSelectionTo(EditorRawDOMPoint(startRef));
-  NS_WARNING_ASSERTION(
-      NS_SUCCEEDED(rv),
-      "EditorBase::CollapseSelectionToEndOfLastLeafNode() failed");
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                       "EditorBase::CollapseSelectionTo() failed");
   return rv;
 }
 
