@@ -704,8 +704,14 @@
     <!-- Preference for studies -->
     <string name="preference_studies">ການສຶກສາ</string>
 
+    <!-- Preference for studies summary-->
+    <string name="preference_studies_summary">Firefox ອາດຈະຕິດຕັ້ງແລະດໍາເນີນການສຶກສາເປັນບາງເວລາ.</string>
+
     <!-- Learn more link for studies, links to an article for more information about studies. -->
     <string name="studies_learn_more">ຮຽນຮູ້ເພີ່ມເຕີມ</string>
+
+    <!-- Dialog message shown when some changes are made on studies -->
+    <string name="studies_restart_app">ແອັບພລິເຄຊັນຈະປິດເພື່ອນຳໃຊ້ການປ່ຽນແປງ</string>
 
     <!-- Title of the remove studies button -->
     <string name="studies_remove">ລຶບ</string>
@@ -881,6 +887,9 @@
     <string name="preference_auto_battery_theme">ຕັ້ງໂດຍຕົວປະຢັດແບດເຕີລີ່</string>
     <!-- Preference for using following device theme -->
     <string name="preference_follow_device_theme">ຕາມຊຸດຕົກແຕ່ງອຸປະກອນ</string>
+
+    <!-- The title of the error page for websites that do not support HTTPS when HTTPS-Only is turned on  -->
+    <string name="errorpage_httpsonly_title">ເວັບໄຊທີ່ທ່ານຮ້ອງຂໍບໍ່ຮອງຮັບ HTTPS</string>
 
     <!-- Sessions List -->
     <!-- Content description (not visible, for screen readers etc.): Button that closes a tab n the sessions list -->
