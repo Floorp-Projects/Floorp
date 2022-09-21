@@ -265,7 +265,6 @@ class BookmarksTest {
     }
 
     @Test
-    @Ignore("Failing after compose migration. See: https://github.com/mozilla-mobile/fenix/issues/26087")
     fun openAllInTabsTest() {
         val nbPages = 4
         val webPages = List(nbPages) {
@@ -311,7 +310,6 @@ class BookmarksTest {
     }
 
     @Test
-    @Ignore("Failing after compose migration. See: https://github.com/mozilla-mobile/fenix/issues/26087")
     fun openAllInPrivateTabsTest() {
         val nbPages = 4
         val webPages = List(nbPages) {
