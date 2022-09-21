@@ -113,12 +113,6 @@ int DecoderDatabase::Size() const {
   return static_cast<int>(decoders_.size());
 }
 
-void DecoderDatabase::Reset() {
-  decoders_.clear();
-  active_decoder_type_ = -1;
-  active_cng_decoder_type_ = -1;
-}
-
 std::vector<int> DecoderDatabase::SetCodecs(
     const std::map<int, SdpAudioFormat>& codecs) {
   // First collect all payload types that we'll remove or reassign, then remove
@@ -261,16 +255,6 @@ ComfortNoiseDecoder* DecoderDatabase::GetActiveCngDecoder() const {
 AudioDecoder* DecoderDatabase::GetDecoder(uint8_t rtp_payload_type) const {
   const DecoderInfo* info = GetDecoderInfo(rtp_payload_type);
   return info ? info->GetDecoder() : nullptr;
-}
-
-bool DecoderDatabase::IsType(uint8_t rtp_payload_type, const char* name) const {
-  const DecoderInfo* info = GetDecoderInfo(rtp_payload_type);
-  return info && info->IsType(name);
-}
-
-bool DecoderDatabase::IsType(uint8_t rtp_payload_type,
-                             const std::string& name) const {
-  return IsType(rtp_payload_type, name.c_str());
 }
 
 bool DecoderDatabase::IsComfortNoise(uint8_t rtp_payload_type) const {
