@@ -1204,7 +1204,9 @@ Toolbox.prototype = {
     }
 
     // Add zoom-related shortcuts.
-    if (!this._hostOptions || this._hostOptions.zoom === true) {
+    if (this.hostType != Toolbox.HostType.PAGE) {
+      // When the toolbox is rendered in a tab (ie host type is PAGE), the
+      // zoom should be handled by the default browser shortcuts.
       ZoomKeys.register(this.win, this.shortcuts);
     }
   },
