@@ -66,22 +66,8 @@ XUL <splitter> collapsing tests
     }
 
     var splitter;
-    var activeBox = null;
-    function setActiveBox(element) {
-      if (activeBox) {
-        activeBox.style.display = "none";
-      }
-      if (element) {
-        element.style.display = "";
-        element.getBoundingClientRect();
-      }
-      activeBox = element;
-    }
-
     async function runTests(rtl, splitterId) {
-      info(`Running tests for ${splitterId}`);
       splitter = document.getElementById(splitterId);
-      setActiveBox(splitter.parentNode);
       await runPass(rtl, false, false);
       splitter.setAttribute("collapse", "before");
       await runPass(rtl, rtl, !rtl);
@@ -94,35 +80,21 @@ XUL <splitter> collapsing tests
     async function runAllTests() {
       await runTests(false, "ltr-splitter");
       await runTests(true, "rtl-splitter");
-      await runTests(false, "ltr-flex-splitter");
-      await runTests(true, "rtl-flex-splitter");
       SimpleTest.finish();
     }
 
     addLoadEvent(function() {SimpleTest.executeSoon(runAllTests);});
    ]]></script>
 
-  <hbox style="display: none; max-width: 200px; height: 300px; direction: ltr;">
+  <hbox style="max-width: 200px; height: 300px; direction: ltr;">
     <vbox style="width: 100px; height: 300px;" flex="1"/>
     <splitter id="ltr-splitter" width="5"/>
     <vbox style="width: 100px; height: 300px;" flex="1"/>
   </hbox>
 
-  <hbox style="display: none; max-width: 200px; height: 300px; direction: rtl;">
+  <hbox style="max-width: 200px; height: 300px; direction: rtl;">
     <vbox style="width: 100px; height: 300px;" flex="1"/>
     <splitter id="rtl-splitter" width="5"/>
-    <vbox style="width: 100px; height: 300px;" flex="1"/>
-  </hbox>
-
-  <hbox style="display: none; max-width: 200px; height: 300px; direction: ltr; -moz-box-layout: flex">
-    <vbox style="width: 100px; height: 300px;" flex="1"/>
-    <splitter id="ltr-flex-splitter" width="5"/>
-    <vbox style="width: 100px; height: 300px;" flex="1"/>
-  </hbox>
-
-  <hbox style="display: none; max-width: 200px; height: 300px; direction: rtl; -moz-box-layout: flex">
-    <vbox style="width: 100px; height: 300px;" flex="1"/>
-    <splitter id="rtl-flex-splitter" width="5"/>
     <vbox style="width: 100px; height: 300px;" flex="1"/>
   </hbox>
 
