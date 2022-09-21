@@ -29,6 +29,7 @@
 class nsIFile;
 class nsIFileURL;
 class nsIEventTarget;
+class nsISerialEventTarget;
 class nsIThread;
 
 namespace mozilla {
@@ -178,10 +179,9 @@ class Connection final : public mozIStorageConnection,
   SQLiteMutex sharedDBMutex;
 
   /**
-   * References the thread this database was opened on.  This MUST be thread it
-   * is closed on.
+   * References the event target this database was opened on.
    */
-  const nsCOMPtr<nsIThread> threadOpenedOn;
+  const nsCOMPtr<nsISerialEventTarget> eventTargetOpenedOn;
 
   /**
    * Closes the SQLite database, and warns about any non-finalized statements.

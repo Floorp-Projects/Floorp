@@ -12,6 +12,7 @@
  */
 
 #include "sqlite3.h"
+#include "nsISerialEventTarget.h"
 #include "nsIVariant.h"
 #include "nsError.h"
 #include "js/TypeDecls.h"
@@ -137,6 +138,14 @@ nsresult DoBindStringAsBlobByIndex(T* aThis, uint32_t aIndex, const V& aValue) {
   return aThis->BindBlobByIndex(
       aIndex, reinterpret_cast<const uint8_t*>(aValue.BeginReading()),
       aValue.Length() * sizeof(char_type));
+}
+
+/**
+ * Utility function to check if a serial event target may run runnables
+ * on the current thread.
+ */
+inline bool IsOnCurrentSerialEventTarget(nsISerialEventTarget* aTarget) {
+  return aTarget->IsOnCurrentThread();
 }
 
 }  // namespace storage

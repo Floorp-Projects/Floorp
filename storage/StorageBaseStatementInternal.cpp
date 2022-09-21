@@ -28,11 +28,11 @@ class AsyncStatementFinalizer : public Runnable {
    *
    * @param aStatement
    *        We need the AsyncStatement to be able to get at the sqlite3_stmt;
-   *        we only access/create it on the async thread.
+   *        we only access/create it on the async event target.
    * @param aConnection
-   *        We need the connection to know what thread to release the statement
-   *        on.  We release the statement on that thread since releasing the
-   *        statement might end up releasing the connection too.
+   *        We need the connection to know what event target to release the
+   *        statement on. We release the statement on that event target since
+   *        releasing the statement might end up releasing the connection too.
    */
   AsyncStatementFinalizer(StorageBaseStatementInternal* aStatement,
                           Connection* aConnection)
@@ -46,8 +46,8 @@ class AsyncStatementFinalizer : public Runnable {
       mStatement->mAsyncStatement = nullptr;
     }
 
-    nsCOMPtr<nsIThread> targetThread(mConnection->threadOpenedOn);
-    NS_ProxyRelease("AsyncStatementFinalizer::mStatement", targetThread,
+    nsCOMPtr<nsIEventTarget> target(mConnection->eventTargetOpenedOn);
+    NS_ProxyRelease("AsyncStatementFinalizer::mStatement", target,
                     mStatement.forget());
     return NS_OK;
   }
@@ -71,8 +71,8 @@ class LastDitchSqliteStatementFinalizer : public Runnable {
    *        is possible that the statement going out of scope invoking us
    *        might have the last reference to the connection and so trigger
    *        an attempt to close the connection which is doomed to fail
-   *        (because the asynchronous execution thread must exist which will
-   *        trigger the failure case).
+   *        (because the asynchronous execution event target must exist which
+   *        will trigger the failure case).
    * @param aStatement
    *        The sqlite3_stmt to finalize.  This object takes ownership /
    *        responsibility for the instance and all other references to it
@@ -90,7 +90,7 @@ class LastDitchSqliteStatementFinalizer : public Runnable {
     (void)::sqlite3_finalize(mAsyncStatement);
     mAsyncStatement = nullptr;
 
-    nsCOMPtr<nsIThread> target(mConnection->threadOpenedOn);
+    nsCOMPtr<nsIEventTarget> target(mConnection->eventTargetOpenedOn);
     (void)::NS_ProxyRelease("LastDitchSqliteStatementFinalizer::mConnection",
                             target, mConnection.forget());
     return NS_OK;
@@ -128,12 +128,9 @@ void StorageBaseStatementInternal::asyncFinalize() {
 void StorageBaseStatementInternal::destructorAsyncFinalize() {
   if (!mAsyncStatement) return;
 
-  bool isOwningThread = false;
-  (void)mDBConnection->threadOpenedOn->IsOnCurrentThread(&isOwningThread);
-  if (isOwningThread) {
-    // If we are the owning thread (currently that means we're also the
-    // main thread), then we can get the async target and just dispatch
-    // to it.
+  if (IsOnCurrentSerialEventTarget(mDBConnection->eventTargetOpenedOn)) {
+    // If we are the owning event target (currently that means we're also the
+    // main thread), then we can get the async target and just dispatch to it.
     nsIEventTarget* target = mDBConnection->getAsyncExecutionTarget();
     if (target) {
       nsCOMPtr<nsIRunnable> event =
@@ -141,8 +138,8 @@ void StorageBaseStatementInternal::destructorAsyncFinalize() {
       (void)target->Dispatch(event, NS_DISPATCH_NORMAL);
     }
   } else {
-    // If we're not the owning thread, assume we're the async thread, and
-    // just run the statement.
+    // If we're not the owning event target, assume we're the async event
+    // target, and just run the statement.
     nsCOMPtr<nsIRunnable> event =
         new LastDitchSqliteStatementFinalizer(mDBConnection, mAsyncStatement);
     (void)event->Run();
