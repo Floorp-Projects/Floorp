@@ -73,17 +73,17 @@ class InitEncodeTest : public test::EndToEndTest,
                        public test::FakeEncoder {
  public:
   struct Bitrate {
-    const absl::optional<uint32_t> min;
-    const absl::optional<uint32_t> max;
+    const absl::optional<DataRate> min;
+    const absl::optional<DataRate> max;
   };
   struct TestConfig {
     const bool active;
-    const Bitrate bitrate_bps;
+    const Bitrate bitrate;
   };
   struct Expectation {
     const uint32_t pixels = 0;
-    const Bitrate eq_bitrate_bps;
-    const Bitrate ne_bitrate_bps;
+    const Bitrate eq_bitrate;
+    const Bitrate ne_bitrate;
   };
 
   InitEncodeTest(const std::string& payload_name,
@@ -124,8 +124,8 @@ class InitEncodeTest : public test::EndToEndTest,
             payload_name_, /*max qp*/ 0, /*screencast*/ false,
             /*screenshare enabled*/ false);
     encoder_config->max_bitrate_bps = -1;
-    if (configs_.size() == 1 && configs_[0].bitrate_bps.max)
-      encoder_config->max_bitrate_bps = *configs_[0].bitrate_bps.max;
+    if (configs_.size() == 1 && configs_[0].bitrate.max)
+      encoder_config->max_bitrate_bps = configs_[0].bitrate.max->bps();
     if (payload_name_ == "VP9") {
       // Simulcast layers indicates which spatial layers are active.
       encoder_config->simulcast_layers.resize(configs_.size());
@@ -134,10 +134,10 @@ class InitEncodeTest : public test::EndToEndTest,
     for (int i = configs_.size() - 1; i >= 0; --i) {
       VideoStream& stream = encoder_config->simulcast_layers[i];
       stream.active = configs_[i].active;
-      if (configs_[i].bitrate_bps.min)
-        stream.min_bitrate_bps = *configs_[i].bitrate_bps.min;
-      if (configs_[i].bitrate_bps.max)
-        stream.max_bitrate_bps = *configs_[i].bitrate_bps.max;
+      if (configs_[i].bitrate.min)
+        stream.min_bitrate_bps = configs_[i].bitrate.min->bps();
+      if (configs_[i].bitrate.max)
+        stream.max_bitrate_bps = configs_[i].bitrate.max->bps();
       stream.scale_resolution_down_by = scale_factor;
       scale_factor *= (payload_name_ == "VP9") ? 1.0 : 2.0;
     }
@@ -148,12 +148,16 @@ class InitEncodeTest : public test::EndToEndTest,
                      const Settings& settings) override {
     for (const auto& expected : expectations_) {
       SpatialLayer layer = GetLayer(expected.pixels, *codec);
-      if (expected.eq_bitrate_bps.min)
-        EXPECT_EQ(*expected.eq_bitrate_bps.min, layer.minBitrate * 1000);
-      if (expected.eq_bitrate_bps.max)
-        EXPECT_EQ(*expected.eq_bitrate_bps.max, layer.maxBitrate * 1000);
-      EXPECT_NE(expected.ne_bitrate_bps.min, layer.minBitrate * 1000);
-      EXPECT_NE(expected.ne_bitrate_bps.max, layer.maxBitrate * 1000);
+      if (expected.eq_bitrate.min)
+        EXPECT_EQ(*expected.eq_bitrate.min,
+                  DataRate::KilobitsPerSec(layer.minBitrate));
+      if (expected.eq_bitrate.max)
+        EXPECT_EQ(*expected.eq_bitrate.max,
+                  DataRate::KilobitsPerSec(layer.maxBitrate));
+      EXPECT_NE(expected.ne_bitrate.min,
+                DataRate::KilobitsPerSec(layer.minBitrate));
+      EXPECT_NE(expected.ne_bitrate.max,
+                DataRate::KilobitsPerSec(layer.maxBitrate));
     }
     observation_complete_.Set();
     return 0;
@@ -188,23 +192,23 @@ TEST_P(ResolutionBitrateLimitsTest, LimitsApplied) {
       "min_bitrate_bps:32000,"
       "max_bitrate_bps:3333000/");
 
-  InitEncodeTest test(
-      payload_name_,
-      {{/*active=*/true, /*bitrate_bps=*/{absl::nullopt, absl::nullopt}}},
-      // Expectations:
-      {{1280 * 720,
-        /*eq_bitrate_bps=*/{32000, 3333000},
-        /*ne_bitrate_bps=*/{absl::nullopt, absl::nullopt}}});
+  InitEncodeTest test(payload_name_, {{.active = true}},
+                      // Expectations:
+                      {{.pixels = 1280 * 720,
+                        .eq_bitrate = {DataRate::KilobitsPerSec(32),
+                                       DataRate::KilobitsPerSec(3333)}}});
   RunBaseTest(&test);
 }
 
 TEST_P(ResolutionBitrateLimitsTest, EncodingsApplied) {
   InitEncodeTest test(payload_name_,
-                      {{/*active=*/true, /*bitrate_bps=*/{22000, 3555000}}},
+                      {{.active = true,
+                        .bitrate = {DataRate::KilobitsPerSec(22),
+                                    DataRate::KilobitsPerSec(3555)}}},
                       // Expectations:
-                      {{1280 * 720,
-                        /*eq_bitrate_bps=*/{22000, 3555000},
-                        /*ne_bitrate_bps=*/{absl::nullopt, absl::nullopt}}});
+                      {{.pixels = 1280 * 720,
+                        .eq_bitrate = {DataRate::KilobitsPerSec(22),
+                                       DataRate::KilobitsPerSec(3555)}}});
   RunBaseTest(&test);
 }
 
@@ -217,11 +221,13 @@ TEST_P(ResolutionBitrateLimitsTest, IntersectionApplied) {
       "max_bitrate_bps:3333000/");
 
   InitEncodeTest test(payload_name_,
-                      {{/*active=*/true, /*bitrate_bps=*/{22000, 1555000}}},
+                      {{.active = true,
+                        .bitrate = {DataRate::KilobitsPerSec(22),
+                                    DataRate::KilobitsPerSec(1555)}}},
                       // Expectations:
-                      {{1280 * 720,
-                        /*eq_bitrate_bps=*/{32000, 1555000},
-                        /*ne_bitrate_bps=*/{absl::nullopt, absl::nullopt}}});
+                      {{.pixels = 1280 * 720,
+                        .eq_bitrate = {DataRate::KilobitsPerSec(32),
+                                       DataRate::KilobitsPerSec(1555)}}});
   RunBaseTest(&test);
 }
 
@@ -233,15 +239,12 @@ TEST_P(ResolutionBitrateLimitsTest, LimitsAppliedMiddleActive) {
       "min_bitrate_bps:21000|32000,"
       "max_bitrate_bps:2222000|3333000/");
 
-  InitEncodeTest test(
-      payload_name_,
-      {{/*active=*/false, /*bitrate_bps=*/{absl::nullopt, absl::nullopt}},
-       {/*active=*/true, /*bitrate_bps=*/{absl::nullopt, absl::nullopt}},
-       {/*active=*/false, /*bitrate_bps=*/{absl::nullopt, absl::nullopt}}},
-      // Expectations:
-      {{640 * 360,
-        /*eq_bitrate_bps=*/{21000, 2222000},
-        /*ne_bitrate_bps=*/{absl::nullopt, absl::nullopt}}});
+  InitEncodeTest test(payload_name_,
+                      {{.active = false}, {.active = true}, {.active = false}},
+                      // Expectations:
+                      {{.pixels = 640 * 360,
+                        .eq_bitrate = {DataRate::KilobitsPerSec(21),
+                                       DataRate::KilobitsPerSec(2222)}}});
 
   RunBaseTest(&test);
 }
@@ -254,15 +257,16 @@ TEST_P(ResolutionBitrateLimitsTest, IntersectionAppliedMiddleActive) {
       "min_bitrate_bps:31000|32000,"
       "max_bitrate_bps:2222000|3333000/");
 
-  InitEncodeTest test(
-      payload_name_,
-      {{/*active=*/false, /*bitrate_bps=*/{absl::nullopt, absl::nullopt}},
-       {/*active=*/true, /*bitrate_bps=*/{30000, 1555000}},
-       {/*active=*/false, /*bitrate_bps=*/{absl::nullopt, absl::nullopt}}},
-      // Expectations:
-      {{640 * 360,
-        /*eq_bitrate_bps=*/{31000, 1555000},
-        /*ne_bitrate_bps=*/{absl::nullopt, absl::nullopt}}});
+  InitEncodeTest test(payload_name_,
+                      {{.active = false},
+                       {.active = true,
+                        .bitrate = {DataRate::KilobitsPerSec(30),
+                                    DataRate::KilobitsPerSec(1555)}},
+                       {.active = false}},
+                      // Expectations:
+                      {{.pixels = 640 * 360,
+                        .eq_bitrate = {DataRate::KilobitsPerSec(31),
+                                       DataRate::KilobitsPerSec(1555)}}});
   RunBaseTest(&test);
 }
 
@@ -273,16 +277,13 @@ TEST_P(ResolutionBitrateLimitsTest, DefaultLimitsAppliedMiddleActive) {
               PayloadStringToCodecType(payload_name_), 640 * 360);
 
   InitEncodeTest test(
-      payload_name_,
-      {{/*active=*/false, /*bitrate_bps=*/{absl::nullopt, absl::nullopt}},
-       {/*active=*/true, /*bitrate_bps=*/{absl::nullopt, absl::nullopt}},
-       {/*active=*/false, /*bitrate_bps=*/{absl::nullopt, absl::nullopt}}},
+      payload_name_, {{.active = false}, {.active = true}, {.active = false}},
       // Expectations:
-      {{640 * 360,
-        /*eq_bitrate_bps=*/
-        {kDefaultSinglecastLimits360p->min_bitrate_bps,
-         kDefaultSinglecastLimits360p->max_bitrate_bps},
-        /*ne_bitrate_bps=*/{absl::nullopt, absl::nullopt}}});
+      {{.pixels = 640 * 360,
+        .eq_bitrate = {
+            DataRate::BitsPerSec(kDefaultSinglecastLimits360p->min_bitrate_bps),
+            DataRate::BitsPerSec(
+                kDefaultSinglecastLimits360p->max_bitrate_bps)}}});
 
   RunBaseTest(&test);
 }
@@ -295,15 +296,12 @@ TEST_P(ResolutionBitrateLimitsTest, LimitsAppliedHighestActive) {
       "min_bitrate_bps:31000|32000,"
       "max_bitrate_bps:2222000|3333000/");
 
-  InitEncodeTest test(
-      payload_name_,
-      {{/*active=*/false, /*bitrate_bps=*/{absl::nullopt, absl::nullopt}},
-       {/*active=*/false, /*bitrate_bps=*/{absl::nullopt, absl::nullopt}},
-       {/*active=*/true, /*bitrate_bps=*/{absl::nullopt, absl::nullopt}}},
-      // Expectations:
-      {{1280 * 720,
-        /*eq_bitrate_bps=*/{32000, 3333000},
-        /*ne_bitrate_bps=*/{absl::nullopt, absl::nullopt}}});
+  InitEncodeTest test(payload_name_,
+                      {{.active = false}, {.active = false}, {.active = true}},
+                      // Expectations:
+                      {{.pixels = 1280 * 720,
+                        .eq_bitrate = {DataRate::KilobitsPerSec(32),
+                                       DataRate::KilobitsPerSec(3333)}}});
   RunBaseTest(&test);
 }
 
@@ -315,15 +313,16 @@ TEST_P(ResolutionBitrateLimitsTest, IntersectionAppliedHighestActive) {
       "min_bitrate_bps:31000|32000,"
       "max_bitrate_bps:2222000|3333000/");
 
-  InitEncodeTest test(
-      payload_name_,
-      {{/*active=*/false, /*bitrate_bps=*/{absl::nullopt, absl::nullopt}},
-       {/*active=*/false, /*bitrate_bps=*/{absl::nullopt, absl::nullopt}},
-       {/*active=*/true, /*bitrate_bps=*/{30000, 1555000}}},
-      // Expectations:
-      {{1280 * 720,
-        /*eq_bitrate_bps=*/{32000, 1555000},
-        /*ne_bitrate_bps=*/{absl::nullopt, absl::nullopt}}});
+  InitEncodeTest test(payload_name_,
+                      {{.active = false},
+                       {.active = false},
+                       {.active = true,
+                        .bitrate = {DataRate::KilobitsPerSec(30),
+                                    DataRate::KilobitsPerSec(1555)}}},
+                      // Expectations:
+                      {{.pixels = 1280 * 720,
+                        .eq_bitrate = {DataRate::KilobitsPerSec(32),
+                                       DataRate::KilobitsPerSec(1555)}}});
   RunBaseTest(&test);
 }
 
@@ -335,17 +334,14 @@ TEST_P(ResolutionBitrateLimitsTest, LimitsNotAppliedLowestActive) {
       "min_bitrate_bps:31000|32000,"
       "max_bitrate_bps:2222000|3333000/");
 
-  InitEncodeTest test(
-      payload_name_,
-      {{/*active=*/true, /*bitrate_bps=*/{absl::nullopt, absl::nullopt}},
-       {/*active=*/false, /*bitrate_bps=*/{absl::nullopt, absl::nullopt}}},
-      // Expectations:
-      {{640 * 360,
-        /*eq_bitrate_bps=*/{absl::nullopt, absl::nullopt},
-        /*ne_bitrate_bps=*/{31000, 2222000}},
-       {1280 * 720,
-        /*eq_bitrate_bps=*/{absl::nullopt, absl::nullopt},
-        /*ne_bitrate_bps=*/{32000, 3333000}}});
+  InitEncodeTest test(payload_name_, {{.active = true}, {.active = false}},
+                      // Expectations:
+                      {{.pixels = 640 * 360,
+                        .ne_bitrate = {DataRate::KilobitsPerSec(31),
+                                       DataRate::KilobitsPerSec(2222)}},
+                       {.pixels = 1280 * 720,
+                        .ne_bitrate = {DataRate::KilobitsPerSec(32),
+                                       DataRate::KilobitsPerSec(3333)}}});
   RunBaseTest(&test);
 }
 
@@ -357,17 +353,14 @@ TEST_P(ResolutionBitrateLimitsTest, LimitsNotAppliedSimulcast) {
       "min_bitrate_bps:31000|32000,"
       "max_bitrate_bps:2222000|3333000/");
 
-  InitEncodeTest test(
-      payload_name_,
-      {{/*active=*/true, /*bitrate_bps=*/{absl::nullopt, absl::nullopt}},
-       {/*active=*/true, /*bitrate_bps=*/{absl::nullopt, absl::nullopt}}},
-      // Expectations:
-      {{640 * 360,
-        /*eq_bitrate_bps=*/{absl::nullopt, absl::nullopt},
-        /*ne_bitrate_bps=*/{31000, 2222000}},
-       {1280 * 720,
-        /*eq_bitrate_bps=*/{absl::nullopt, absl::nullopt},
-        /*ne_bitrate_bps=*/{32000, 3333000}}});
+  InitEncodeTest test(payload_name_, {{.active = true}, {.active = true}},
+                      // Expectations:
+                      {{.pixels = 640 * 360,
+                        .ne_bitrate = {DataRate::KilobitsPerSec(31),
+                                       DataRate::KilobitsPerSec(2222)}},
+                       {.pixels = 1280 * 720,
+                        .ne_bitrate = {DataRate::KilobitsPerSec(32),
+                                       DataRate::KilobitsPerSec(3333)}}});
   RunBaseTest(&test);
 }
 
