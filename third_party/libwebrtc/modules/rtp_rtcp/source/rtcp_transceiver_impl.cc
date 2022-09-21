@@ -37,7 +37,7 @@
 #include "rtc_base/numerics/divide_round.h"
 #include "rtc_base/task_utils/repeating_task.h"
 #include "rtc_base/task_utils/to_queued_task.h"
-#include "rtc_base/time_utils.h"
+#include "system_wrappers/include/clock.h"
 
 namespace webrtc {
 namespace {
@@ -562,13 +562,15 @@ void RtcpTransceiverImpl::ReschedulePeriodicCompoundPackets() {
 }
 
 void RtcpTransceiverImpl::SchedulePeriodicCompoundPackets(TimeDelta delay) {
-  periodic_task_handle_ =
-      RepeatingTaskHandle::DelayedStart(config_.task_queue, delay, [this] {
+  periodic_task_handle_ = RepeatingTaskHandle::DelayedStart(
+      config_.task_queue, delay,
+      [this] {
         RTC_DCHECK(config_.schedule_periodic_compound_packets);
         RTC_DCHECK(ready_to_send_);
         SendPeriodicCompoundPacket();
         return config_.report_period;
-      });
+      },
+      TaskQueueBase::DelayPrecision::kLow, config_.clock);
 }
 
 std::vector<uint32_t> RtcpTransceiverImpl::FillReports(

@@ -44,6 +44,10 @@ bool RtcpTransceiverConfig::Validate() const {
                       << " more than " << IP_PACKET_SIZE << " is unsupported.";
     return false;
   }
+  if (clock == nullptr) {
+    RTC_LOG(LS_ERROR) << debug_id << "clock must be set";
+    return false;
+  }
   if (!outgoing_transport) {
     RTC_LOG(LS_ERROR) << debug_id << "outgoing transport must be set";
     return false;
