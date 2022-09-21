@@ -8,6 +8,7 @@
 #define DOM_FS_PARENT_DATAMODEL_FILESYSTEMDATABASEMANAGERVERSION001_H_
 
 #include "FileSystemDatabaseManager.h"
+#include "nsStringFwd.h"
 
 namespace mozilla::dom::fs::data {
 
@@ -33,10 +34,13 @@ class FileSystemFileManager;
  */
 class FileSystemDatabaseManagerVersion001 : public FileSystemDatabaseManager {
  public:
-  explicit FileSystemDatabaseManagerVersion001(
+  FileSystemDatabaseManagerVersion001(
       fs::data::FileSystemConnection&& aConnection,
-      UniquePtr<FileSystemFileManager>&& aFileManager)
-      : mConnection(aConnection), mFileManager(std::move(aFileManager)) {}
+      UniquePtr<FileSystemFileManager>&& aFileManager,
+      const EntryId& aRootEntry)
+      : mConnection(aConnection),
+        mFileManager(std::move(aFileManager)),
+        mRootEntry(aRootEntry) {}
 
   virtual Result<int64_t, QMResult> GetUsage() const override;
 
@@ -49,9 +53,8 @@ class FileSystemDatabaseManagerVersion001 : public FileSystemDatabaseManager {
   virtual Result<EntryId, QMResult> GetOrCreateFile(
       const FileSystemChildMetadata& aHandle, bool aCreate) override;
 
-  virtual nsresult GetFile(const FileSystemEntryPair& aEndpoints,
-                           nsString& aType, TimeStamp& lastModifiedMilliSeconds,
-                           Path& aPath,
+  virtual nsresult GetFile(const EntryId& aEntryId, nsString& aType,
+                           TimeStamp& lastModifiedMilliSeconds, Path& aPath,
                            nsCOMPtr<nsIFile>& aFile) const override;
 
   virtual Result<FileSystemDirectoryListing, QMResult> GetDirectoryEntries(
@@ -80,6 +83,8 @@ class FileSystemDatabaseManagerVersion001 : public FileSystemDatabaseManager {
   FileSystemConnection mConnection;
 
   UniquePtr<FileSystemFileManager> mFileManager;
+
+  const EntryId mRootEntry;
 };
 
 }  // namespace mozilla::dom::fs::data
