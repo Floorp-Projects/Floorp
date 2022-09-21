@@ -14,6 +14,9 @@ permalink: /changelog/
 * **nimbus-gradle-plugin**:
   * Updated the plugin to use the version of application services defined in the buildSrc Dependencies.
 
+* **browser-engine-gecko**:qwe
+  * 🚒 Bug fixed [fenix issue #16943](https://github.com/mozilla-mobile/fenix/issues/26943) - Prevent crashes when accessing a time picker with blank step value.
+
 # 106.0.0
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v105.0.0..v106.0.0)
 * [Milestone](https://github.com/mozilla-mobile/android-components/milestone/153?closed=1)

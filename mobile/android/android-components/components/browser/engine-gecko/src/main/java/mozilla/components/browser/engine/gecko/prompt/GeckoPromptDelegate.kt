@@ -397,15 +397,20 @@ internal class GeckoPromptDelegate(private val geckoEngineSession: GeckoEngineSe
             onConfirm("")
         }
         val initialDateString = prompt.defaultValue ?: ""
+        val stepValue = if (prompt.stepValue.isNullOrBlank()) {
+            null
+        } else {
+            prompt.stepValue
+        }
 
         val format = when (prompt.type) {
             DATE -> "yyyy-MM-dd"
             MONTH -> "yyyy-MM"
             WEEK -> "yyyy-'W'ww"
             TIME -> {
-                if (shouldShowMillisecondsPicker(prompt.stepValue?.toFloat())) {
+                if (shouldShowMillisecondsPicker(stepValue?.toFloat())) {
                     "HH:mm:ss.SSS"
-                } else if (shouldShowSecondsPicker(prompt.stepValue?.toFloat())) {
+                } else if (shouldShowSecondsPicker(stepValue?.toFloat())) {
                     "HH:mm:ss"
                 } else {
                     "HH:mm"
@@ -422,7 +427,7 @@ internal class GeckoPromptDelegate(private val geckoEngineSession: GeckoEngineSe
             initialDateString,
             prompt.minValue,
             prompt.maxValue,
-            prompt.stepValue,
+            stepValue,
             onClear,
             format,
             onConfirm,

@@ -498,6 +498,59 @@ class GeckoPromptDelegateTest {
     }
 
     @Test
+    fun `onDateTimePrompt DATETIME_TYPE_TIME with stepValue time parameter must format time correctly`() {
+        val mockSession = GeckoEngineSession(runtime)
+        var timeSelectionRequest: PromptRequest.TimeSelection? = null
+        val confirmCaptor = argumentCaptor<String>()
+
+        val promptDelegate = GeckoPromptDelegate(mockSession)
+        mockSession.register(object : EngineSession.Observer {
+            override fun onPromptRequest(promptRequest: PromptRequest) {
+                timeSelectionRequest = promptRequest as PromptRequest.TimeSelection
+            }
+        })
+        val minutesGeckoPrompt = geckoDateTimePrompt(
+            type = TIME,
+            defaultValue = "17:00",
+            stepValue = "",
+        )
+        val secondsGeckoPrompt = geckoDateTimePrompt(
+            type = TIME,
+            defaultValue = "17:00:00",
+            stepValue = "1",
+        )
+        val millisecondsGeckoPrompt = geckoDateTimePrompt(
+            type = TIME,
+            defaultValue = "17:00:00.000",
+            stepValue = "0.1",
+        )
+
+        promptDelegate.onDateTimePrompt(mock(), minutesGeckoPrompt)
+
+        var selectedTime = "17:00"
+        assertNotNull(timeSelectionRequest)
+        (timeSelectionRequest as PromptRequest.TimeSelection).onConfirm(selectedTime.toDate("HH:mm"))
+        verify(minutesGeckoPrompt).confirm(confirmCaptor.capture())
+        assertEquals(selectedTime, confirmCaptor.value)
+
+        promptDelegate.onDateTimePrompt(mock(), secondsGeckoPrompt)
+
+        selectedTime = "17:00:25"
+        assertNotNull(timeSelectionRequest)
+        (timeSelectionRequest as PromptRequest.TimeSelection).onConfirm(selectedTime.toDate("HH:mm:ss"))
+        verify(secondsGeckoPrompt).confirm(confirmCaptor.capture())
+        assertEquals(selectedTime, confirmCaptor.value)
+
+        promptDelegate.onDateTimePrompt(mock(), millisecondsGeckoPrompt)
+
+        selectedTime = "17:00:20.100"
+        assertNotNull(timeSelectionRequest)
+        (timeSelectionRequest as PromptRequest.TimeSelection).onConfirm(selectedTime.toDate("HH:mm:ss.SSS"))
+        verify(millisecondsGeckoPrompt).confirm(confirmCaptor.capture())
+        assertEquals(selectedTime, confirmCaptor.value)
+    }
+
+    @Test
     fun `onDateTimePrompt called with DATETIME_TYPE_DATETIME_LOCAL must provide a TimeSelection PromptRequest`() {
         val mockSession = GeckoEngineSession(runtime)
         var dateRequest: PromptRequest? = null
@@ -1646,7 +1699,8 @@ class GeckoPromptDelegateTest {
         type: Int,
         defaultValue: String = "",
         minValue: String = "",
-        maxValue: String = ""
+        maxValue: String = "",
+        stepValue: String = "",
     ): GeckoSession.PromptDelegate.DateTimePrompt {
         val prompt: GeckoSession.PromptDelegate.DateTimePrompt = mock()
         ReflectionUtils.setField(prompt, "title", title)
@@ -1654,6 +1708,7 @@ class GeckoPromptDelegateTest {
         ReflectionUtils.setField(prompt, "defaultValue", defaultValue)
         ReflectionUtils.setField(prompt, "minValue", minValue)
         ReflectionUtils.setField(prompt, "maxValue", maxValue)
+        ReflectionUtils.setField(prompt, "stepValue", stepValue)
         return prompt
     }
 
