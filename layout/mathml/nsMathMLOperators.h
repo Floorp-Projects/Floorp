@@ -66,24 +66,21 @@ class nsMathMLOperators {
   // LookupOperator:
   // Given the string value of an operator and its form (last two bits of
   // flags), this method returns attributes of the operator in the output
-  // parameters. If the operator is not found under the supplied form, then the
-  // other forms are tried in the following order: infix, postfix, prefix. The
-  // caller can test the output parameter aFlags to know exactly under which
-  // form the operator was found in the Operator Dictionary.
-  static void LookupOperator(const nsString& aOperator, const uint8_t aForm,
+  // parameters. The return value indicates whether an entry was found.
+  static bool LookupOperator(const nsString& aOperator, const uint8_t aForm,
                              nsOperatorFlags* aFlags, float* aLeadingSpace,
                              float* aTrailingSpace);
 
-  // LookupOperators:
-  // Helper to return all the forms under which an operator is listed in the
-  // Operator Dictionary. The caller must pass arrays of size 4, and use
-  // aFlags[NS_MATHML_OPERATOR_FORM_{INFIX|POSTFIX|PREFIX}],
-  // aLeadingSpace[], etc, to access the attributes of the operator under a
-  // particular form. If the operator wasn't found under a form, its entry
-  // aFlags[form] is set to zero.
-  static void LookupOperators(const nsString& aOperator,
-                              nsOperatorFlags* aFlags, float* aLeadingSpace,
-                              float* aTrailingSpace);
+  // LookupOperatorWithFallback:
+  // Same as LookupOperator but if the operator is not found under the supplied
+  // form, then the other forms are tried in the following order: infix, postfix
+  // prefix. The caller can test the output parameter aFlags to know exactly
+  // under which form the operator was found in the Operator Dictionary.
+  static bool LookupOperatorWithFallback(const nsString& aOperator,
+                                         const uint8_t aForm,
+                                         nsOperatorFlags* aFlags,
+                                         float* aLeadingSpace,
+                                         float* aTrailingSpace);
 
   // Helper functions used by the nsMathMLChar class.
   static bool IsMirrorableOperator(const nsString& aOperator);
