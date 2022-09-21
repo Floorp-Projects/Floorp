@@ -53,6 +53,7 @@ body {
   --fxview-background-color: var(--newtab-background-color, var(--in-content-page-background));
   --fxview-element-hover-color: color-mix(in srgb, var(--fxview-background-color) 90%, currentColor);
   --fxview-element-active-color: color-mix(in srgb, var(--fxview-background-color) 80%, currentColor);
+  --fxview-element-hover-text-color: var(--newtab-text-primary-color);
   --fxview-contrast-border: color-mix(in hsl, currentColor 45%, transparent);
   --fxview-text-secondary-color: color-mix(in srgb, currentColor 80%, transparent);
   --newtab-background-color-secondary: #FFF;
@@ -61,6 +62,7 @@ body {
   /* ensure utility button hover states match those of the rest of the page */
   --in-content-button-background-hover: var(--fxview-element-hover-color);
   --in-content-button-background-active: var(--fxview-element-active-color);
+  --in-content-button-text-color-hover: var(--fxview-element-hover-text-color);
 
   display: flex;
   justify-content: center;
@@ -77,6 +79,14 @@ body {
     --fxview-element-hover-color: color-mix(in srgb, var(--fxview-background-color) 80%, white);
     --fxview-element-active-color: color-mix(in srgb, var(--fxview-background-color) 60%, white);
     --newtab-background-color-secondary: #42414d;
+  }
+}
+
+@media (prefers-contrast) {
+  body {
+    --fxview-element-hover-color: ButtonText;
+    --fxview-element-active-color: ButtonText;
+    --fxview-element-hover-text-color: ButtonFace;
   }
 }
 
@@ -414,7 +424,7 @@ button.close {
 
 @media (prefers-contrast) {
   .page-section-header > .twisty {
-    border: 1px solid currentColor;
+    border: 1px solid ButtonText;
   }
 }
 
@@ -424,6 +434,7 @@ details[open] > .page-section-header > .twisty {
 
 .page-section-header:hover > .twisty {
   background-color: var(--fxview-element-hover-color);
+  color: var(--fxview-element-hover-text-color);
 }
 
 .page-section-header:hover:active > .twisty {
@@ -623,10 +634,12 @@ details[open] > .page-section-header > .twisty {
 
 .closed-tab-li:hover {
   background-color: var(--fxview-element-hover-color);
+  color: var(--fxview-element-hover-text-color);
 }
 
 .closed-tab-li:active {
   background-color: var(--fxview-element-active-color);
+  color: var(--fxview-element-hover-text-color);
 }
 
 .closed-tab-li:focus-visible {
