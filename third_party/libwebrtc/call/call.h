@@ -127,6 +127,10 @@ class Call {
   // send streams needs to be updated.
   virtual void OnLocalSsrcUpdated(AudioReceiveStream& stream,
                                   uint32_t local_ssrc) = 0;
+  virtual void OnLocalSsrcUpdated(VideoReceiveStream& stream,
+                                  uint32_t local_ssrc) = 0;
+  virtual void OnLocalSsrcUpdated(FlexfecReceiveStream& stream,
+                                  uint32_t local_ssrc) = 0;
 
   virtual void OnUpdateSyncGroup(AudioReceiveStream& stream,
                                  const std::string& sync_group) = 0;

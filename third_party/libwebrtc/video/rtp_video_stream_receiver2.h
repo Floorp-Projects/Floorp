@@ -185,6 +185,9 @@ class RtpVideoStreamReceiver2 : public LossNotificationSender,
   // Called by VideoReceiveStream when stats are updated.
   void UpdateRtt(int64_t max_rtt_ms);
 
+  // Called when the local_ssrc is changed to match with a sender.
+  void OnLocalSsrcChange(uint32_t local_ssrc);
+
   absl::optional<int64_t> LastReceivedPacketMs() const;
   absl::optional<int64_t> LastReceivedKeyframePacketMs() const;
 
