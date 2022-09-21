@@ -162,7 +162,27 @@ def WebIDLTest(parser, harness):
         "circumstance (so not as the argument of a callback)",
     )
 
-    # FIXME Once we support async iterators we should test them here
+    parser = parser.reset()
+    threw = False
+
+    try:
+        parser.parse(
+            """
+            interface Foo {
+              async iterable(undefined name);
+            };
+            """
+        )
+        results = parser.finish()
+    except:
+        threw = True
+
+    harness.ok(
+        threw,
+        "undefined must not be used as the type of an argument in any "
+        "circumstance (so not as the argument of an async iterable "
+        "iterator)",
+    )
 
     parser = parser.reset()
     threw = False
@@ -183,4 +203,44 @@ def WebIDLTest(parser, harness):
         threw,
         "undefined must not be used as the type of an argument in any "
         "circumstance (so not as the argument of a static operation)",
+    )
+
+    parser = parser.reset()
+    threw = False
+
+    try:
+        parser.parse(
+            """
+            interface Foo {
+              const undefined FOO = undefined;
+            };
+            """
+        )
+        results = parser.finish()
+    except:
+        threw = True
+
+    harness.ok(
+        threw,
+        "undefined is not a valid type for a constant",
+    )
+
+    parser = parser.reset()
+    threw = False
+
+    try:
+        parser.parse(
+            """
+            interface Foo {
+              const any FOO = undefined;
+            };
+            """
+        )
+        results = parser.finish()
+    except:
+        threw = True
+
+    harness.ok(
+        threw,
+        "undefined is not a valid value for a constant",
     )
