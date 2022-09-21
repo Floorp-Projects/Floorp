@@ -344,7 +344,7 @@ six = "*"
 
 [[package]]
 name = "mozilla-repo-urls"
-version = "0.0.3"
+version = "0.1.0"
 description = "Process Mozilla's repository URLs. The intent is to centralize URLs parsing."
 category = "main"
 optional = false
@@ -757,7 +757,7 @@ testing = ["pytest (>=4.6)", "pytest-checkdocs (>=1.2.3)", "pytest-flake8", "pyt
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.6"
-content-hash = "e350bab49e867e6242ad7be2ca071a731ffe5162e79553e38f82eba26c421da3"
+content-hash = "8d6ca3f8d79aba9b649bbb5289490421a3d59936bff074ba5bb651e3f32546c7"
 
 [metadata.files]
 aiohttp = [
@@ -970,8 +970,8 @@ mohawk = [
     {file = "mohawk-0.3.4.tar.gz", hash = "sha256:e98b331d9fa9ece7b8be26094cbe2d57613ae882133cc755167268a984bc0ab3"},
 ]
 mozilla-repo-urls = [
-    {file = "mozilla-repo-urls-0.0.3.tar.gz", hash = "sha256:3b2f9b42111ce3d50ecdcd081a62229e1fdc8f5472adbf405abe12d3ba8e8af5"},
-    {file = "mozilla_repo_urls-0.0.3-py3-none-any.whl", hash = "sha256:673c80a4d0ed449093203b88e119e0bf1074026f891c1dd50aa04d534fd0658c"},
+    {file = "mozilla-repo-urls-0.1.0.tar.gz", hash = "sha256:aa43ebcc4744b4cf20bf27f8dff885e82efee21a0219ba20f6bd99931cabd7b9"},
+    {file = "mozilla_repo_urls-0.1.0-py3-none-any.whl", hash = "sha256:5978abd796ae2b51a66e571754f0c559050cb4a024f2bf401471fa7ac4afd54e"},
 ]
 mozilla-version = [
     {file = "mozilla-version-0.3.4.tar.gz", hash = "sha256:3ed4deb7a6fb25c83a5346ef4de08ddff9b2ddc4d16dd8fafb4a84978cc71255"},

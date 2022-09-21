@@ -9,6 +9,11 @@ class RepoUrlParsed(giturlparse.result.GitUrlParsed):
         return self.platform == "hgmo"
 
     @property
+    def git_cinnabar(self) -> bool:
+        # https://github.com/glandium/git-cinnabar
+        return len(self.protocols) > 0 and self.protocols[0].startswith("hg::")
+
+    @property
     def repo_name(self) -> str:
         return self.repo_path.split("/")[-1]
 
@@ -23,7 +28,7 @@ class RepoUrlParsed(giturlparse.result.GitUrlParsed):
 
     @property
     def repo_type(self) -> str:
-        return "hg" if self.platform == "hgmo" else "git"
+        return "hg" if self.platform == "hgmo" and not self.git_cinnabar else "git"
 
     @property
     def taskcluster_role_prefix(self) -> str:

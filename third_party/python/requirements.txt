@@ -175,9 +175,9 @@ markupsafe==1.1.1; python_version >= "2.7" and python_full_version < "3.0.0" or 
 mohawk==0.3.4 \
     --hash=sha256:b3f85ffa93a5c7d2f9cc591246ef9f8ac4a9fa716bfd5bae0377699a2d89d78c \
     --hash=sha256:e98b331d9fa9ece7b8be26094cbe2d57613ae882133cc755167268a984bc0ab3
-mozilla-repo-urls==0.0.3 \
-    --hash=sha256:3b2f9b42111ce3d50ecdcd081a62229e1fdc8f5472adbf405abe12d3ba8e8af5 \
-    --hash=sha256:673c80a4d0ed449093203b88e119e0bf1074026f891c1dd50aa04d534fd0658c
+mozilla-repo-urls==0.1.0 \
+    --hash=sha256:aa43ebcc4744b4cf20bf27f8dff885e82efee21a0219ba20f6bd99931cabd7b9 \
+    --hash=sha256:5978abd796ae2b51a66e571754f0c559050cb4a024f2bf401471fa7ac4afd54e
 mozilla-version==0.3.4 \
     --hash=sha256:3ed4deb7a6fb25c83a5346ef4de08ddff9b2ddc4d16dd8fafb4a84978cc71255 \
     --hash=sha256:ce5741c2e7d12c30b53de9f79e30d6ac2a8bd4c93be711d30c7a7a08e32a094f
