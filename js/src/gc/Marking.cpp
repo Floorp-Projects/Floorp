@@ -2246,10 +2246,14 @@ inline bool MarkStack::push(const SlotsOrElementsRange& array) {
 }
 
 inline const MarkStack::TaggedPtr& MarkStack::peekPtr() const {
+  MOZ_ASSERT(!isEmpty());
   return stack()[topIndex_ - 1];
 }
 
-inline MarkStack::Tag MarkStack::peekTag() const { return peekPtr().tag(); }
+inline MarkStack::Tag MarkStack::peekTag() const {
+  MOZ_ASSERT(!isEmpty());
+  return peekPtr().tag();
+}
 
 inline MarkStack::TaggedPtr MarkStack::popPtr() {
   MOZ_ASSERT(!isEmpty());
@@ -2474,7 +2478,6 @@ void GCMarker::setMarkColor(gc::MarkColor newColor) {
     return;
   }
 
-  MOZ_ASSERT(runtime()->gc.state() == State::Sweep);
   MOZ_ASSERT(!hasBlackEntries());
 
   color = newColor;
@@ -2625,11 +2628,10 @@ void GCMarker::delayMarkingChildren(Cell* cell) {
   }
 }
 
-void GCMarker::markDelayedChildren(Arena* arena, MarkColor color) {
+void GCMarker::markDelayedChildren(Arena* arena) {
   JS::TraceKind kind = MapAllocToTraceKind(arena->getAllocKind());
   MOZ_ASSERT_IF(color == MarkColor::Gray, TraceKindCanBeMarkedGray(kind));
 
-  AutoSetMarkColor setColor(*this, color);
   for (ArenaCellIterUnderGC cell(arena); !cell.done(); cell.next()) {
     if (cell->isMarked(color)) {
       JS::TraceChildren(this, JS::GCCellPtr(cell, kind));
@@ -2651,16 +2653,24 @@ bool GCMarker::processDelayedMarkingList(MarkColor color, SliceBudget& budget) {
   // be set again if the arena is re-added. Iterate the list until no new arenas
   // were added.
 
+  AutoSetMarkColor setColor(*this, color);
+
   do {
     delayedMarkingWorkAdded = false;
     for (Arena* arena = delayedMarkingList; arena;
          arena = arena->getNextDelayedMarking()) {
-      if (!arena->hasDelayedMarking(color)) {
-        continue;
+      if (arena->hasDelayedMarking(color)) {
+        arena->setHasDelayedMarking(color, false);
+        markDelayedChildren(arena);
+        budget.step(150);
+        if (budget.isOverBudget()) {
+          return false;
+        }
       }
-      arena->setHasDelayedMarking(color, false);
-      markDelayedChildren(arena, color);
-      budget.step(150);
+    }
+    while ((color == MarkColor::Black && hasBlackEntries()) ||
+           (color == MarkColor::Gray && hasGrayEntries())) {
+      processMarkStackTop(budget);
       if (budget.isOverBudget()) {
         return false;
       }

@@ -439,7 +439,7 @@ class GCMarker final : public JSTracer {
 
   inline void processMarkStackTop(SliceBudget& budget);
 
-  void markDelayedChildren(gc::Arena* arena, gc::MarkColor color);
+  void markDelayedChildren(gc::Arena* arena);
   [[nodiscard]] bool markAllDelayedChildren(SliceBudget& budget,
                                             ShouldReportMarkTime reportTime);
   bool processDelayedMarkingList(gc::MarkColor color, SliceBudget& budget);
