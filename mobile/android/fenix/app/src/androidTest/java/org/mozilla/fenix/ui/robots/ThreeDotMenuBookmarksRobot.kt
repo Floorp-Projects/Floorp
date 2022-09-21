@@ -52,13 +52,6 @@ class ThreeDotMenuBookmarksRobot {
             return TabDrawerRobot.Transition()
         }
 
-        fun clickOpenAllInTabs(interact: TabDrawerRobot.() -> Unit): TabDrawerRobot.Transition {
-            openAllInTabsButton().click()
-
-            TabDrawerRobot().interact()
-            return TabDrawerRobot.Transition()
-        }
-
         fun clickDelete(interact: BookmarksRobot.() -> Unit): BookmarksRobot.Transition {
             deleteButton().click()
 
@@ -77,7 +70,5 @@ private fun shareButton() = onView(withText("Share"))
 private fun openInNewTabButton() = onView(withText("Open in new tab"))
 
 private fun openInPrivateTabButton() = onView(withText("Open in private tab"))
-
-private fun openAllInTabsButton() = onView(withText("Open All Bookmarks"))
 
 private fun deleteButton() = onView(withText("Delete"))

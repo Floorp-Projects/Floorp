@@ -359,55 +359,6 @@ class BookmarkControllerTest {
     }
 
     @Test
-    fun `handleBookmarkFolderOpening should open all bookmarks in normal tabs`() {
-        var showTabTrayInvoked = false
-        createController(
-            showTabTray = {
-                showTabTrayInvoked = true
-            },
-            loadBookmarkNode = {
-                fun recurseFind(item: BookmarkNode, guid: String): BookmarkNode? {
-                    if (item.guid == guid) {
-                        return item
-                    } else {
-                        item.children?.iterator()?.forEach {
-                            val res = recurseFind(it, guid)
-                            if (res != null) {
-                                return res
-                            }
-                        }
-                        return null
-                    }
-                }
-                recurseFind(tree, it)
-            },
-        ).handleBookmarkFolderOpening(tree)
-
-        assertTrue(showTabTrayInvoked)
-        verifyOrder {
-            addNewTabUseCase.invoke(item.url!!, private = false)
-            addNewTabUseCase.invoke(item.url!!, private = false)
-            addNewTabUseCase.invoke(childItem.url!!, private = false)
-            homeActivity.browsingModeManager.mode = BrowsingMode.Normal
-        }
-    }
-
-    @Test
-    fun `handleBookmarkFolderOpening for an empty folder should show toast`() {
-        var onOpenAllInTabsEmptyInvoked = false
-        createController(
-            onOpenAllInTabsEmpty = {
-                onOpenAllInTabsEmptyInvoked = true
-            },
-            loadBookmarkNode = {
-                subfolder
-            },
-        ).handleBookmarkFolderOpening(subfolder)
-
-        assertTrue(onOpenAllInTabsEmptyInvoked)
-    }
-
-    @Test
     fun `handleBookmarkDeletion for an item should properly call a passed in delegate`() {
         var deleteBookmarkNodesInvoked = false
         createController(
@@ -477,7 +428,6 @@ class BookmarkControllerTest {
     private fun createController(
         loadBookmarkNode: suspend (String) -> BookmarkNode? = { _ -> null },
         showSnackbar: (String) -> Unit = { _ -> },
-        onOpenAllInTabsEmpty: () -> Unit = { },
         deleteBookmarkNodes: (Set<BookmarkNode>, BookmarkRemoveType) -> Unit = { _, _ -> },
         deleteBookmarkFolder: (Set<BookmarkNode>) -> Unit = { _ -> },
         showTabTray: () -> Unit = { },
@@ -492,7 +442,6 @@ class BookmarkControllerTest {
             tabsUseCases = tabsUseCases,
             loadBookmarkNode = loadBookmarkNode,
             showSnackbar = showSnackbar,
-            onOpenAllInTabsEmpty = onOpenAllInTabsEmpty,
             deleteBookmarkNodes = deleteBookmarkNodes,
             deleteBookmarkFolder = deleteBookmarkFolder,
             showTabTray = showTabTray,

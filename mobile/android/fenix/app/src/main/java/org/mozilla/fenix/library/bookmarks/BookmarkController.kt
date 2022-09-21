@@ -15,7 +15,6 @@ import mozilla.appservices.places.BookmarkRoot
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.prompt.ShareData
 import mozilla.components.concept.storage.BookmarkNode
-import mozilla.components.concept.storage.BookmarkNodeType
 import mozilla.components.feature.tabs.TabsUseCases
 import mozilla.components.service.fxa.sync.SyncReason
 import org.mozilla.fenix.BrowserDirection
@@ -45,7 +44,6 @@ interface BookmarkController {
     fun handleCopyUrl(item: BookmarkNode)
     fun handleBookmarkSharing(item: BookmarkNode)
     fun handleOpeningBookmark(item: BookmarkNode, mode: BrowsingMode)
-    fun handleBookmarkFolderOpening(folder: BookmarkNode)
 
     /**
      * Handle bookmark nodes deletion
@@ -77,7 +75,6 @@ class DefaultBookmarkController(
     private val tabsUseCases: TabsUseCases?,
     private val loadBookmarkNode: suspend (String) -> BookmarkNode?,
     private val showSnackbar: (String) -> Unit,
-    private val onOpenAllInTabsEmpty: () -> Unit,
     private val deleteBookmarkNodes: (Set<BookmarkNode>, BookmarkRemoveType) -> Unit,
     private val deleteBookmarkFolder: (Set<BookmarkNode>) -> Unit,
     private val showTabTray: () -> Unit,
@@ -159,35 +156,6 @@ class DefaultBookmarkController(
     override fun handleOpeningBookmark(item: BookmarkNode, mode: BrowsingMode) {
         openInNewTab(item.url!!, mode)
         showTabTray()
-    }
-
-    private suspend fun recursiveBookmarkFolderOpening(folder: BookmarkNode, firstLaunch: Boolean = false) {
-        val node = loadBookmarkNode.invoke(folder.guid) ?: return
-        if (!node.children.isNullOrEmpty()) {
-            if (firstLaunch) invokePendingDeletion.invoke()
-
-            node.children!!.iterator().forEach {
-                when (it.type) {
-                    BookmarkNodeType.FOLDER -> recursiveBookmarkFolderOpening(it, mode = mode)
-                    BookmarkNodeType.ITEM -> {
-                        it.url?.let { url -> tabsUseCases?.addTab?.invoke(url, private = (mode == BrowsingMode.Private)) }
-                    }
-                    BookmarkNodeType.SEPARATOR -> {}
-                }
-            }.also {
-                if (firstLaunch) {
-                    activity.browsingModeManager.mode = BrowsingMode.fromBoolean(mode == BrowsingMode.Private)
-                    showTabTray()
-                }
-            }
-        } else if (firstLaunch) onOpenAllInTabsEmpty.invoke()
-    }
-
-    override fun handleBookmarkFolderOpening(folder: BookmarkNode) {
-        // potentially heavy function with a lot of bookmarks to open => use a coroutine
-        scope.launch {
-            recursiveBookmarkFolderOpening(folder, true)
-        }
     }
 
     override fun handleBookmarkDeletion(nodes: Set<BookmarkNode>, removeType: BookmarkRemoveType) {

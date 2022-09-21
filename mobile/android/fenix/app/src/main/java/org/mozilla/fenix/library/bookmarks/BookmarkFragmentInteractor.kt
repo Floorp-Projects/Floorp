@@ -79,11 +79,6 @@ class BookmarkFragmentInteractor(
         }
     }
 
-    override fun onOpenAllInTabs(folder: BookmarkNode) {
-        require(folder.type == BookmarkNodeType.FOLDER)
-        bookmarksController.handleBookmarkFolderOpening(folder)
-    }
-
     override fun onDelete(nodes: Set<BookmarkNode>) {
         if (nodes.find { it.type == BookmarkNodeType.SEPARATOR } != null) {
             throw IllegalStateException("Cannot delete separators")

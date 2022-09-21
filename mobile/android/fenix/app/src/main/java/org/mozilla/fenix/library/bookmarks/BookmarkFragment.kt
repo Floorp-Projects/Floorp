@@ -101,7 +101,6 @@ class BookmarkFragment : LibraryPageFragment<BookmarkNode>(), UserInteractionHan
                 tabsUseCases = activity?.components?.useCases?.tabsUseCases,
                 loadBookmarkNode = ::loadBookmarkNode,
                 showSnackbar = ::showSnackBarWithText,
-                onOpenAllInTabsEmpty = ::onOpenAllInTabsEmpty,
                 deleteBookmarkNodes = ::deleteMulti,
                 deleteBookmarkFolder = ::showRemoveFolderDialog,
                 showTabTray = ::showTabTray,
@@ -291,27 +290,6 @@ class BookmarkFragment : LibraryPageFragment<BookmarkNode>(), UserInteractionHan
                 val rootNode = node - pendingBookmarksToDelete
                 bookmarkInteractor.onBookmarksChanged(rootNode)
             }
-    }
-
-    private fun alertHeavyOpen(n: Int, function: () -> (Unit)) {
-        AlertDialog.Builder(requireContext()).apply {
-            setTitle(R.string.open_all_warning_title)
-            setMessage(String.format(context.getString(R.string.open_all_warning_message), n))
-            setPositiveButton(
-                R.string.open_all_warning_confirm,
-            ) { dialog, _ ->
-                function()
-                dialog.dismiss()
-            }
-            setNegativeButton(
-                R.string.open_all_warning_cancel,
-            ) { dialog: DialogInterface, _ ->
-                dialog.dismiss()
-            }
-            setCancelable(false)
-            create()
-            show()
-        }
     }
 
     private fun deleteMulti(

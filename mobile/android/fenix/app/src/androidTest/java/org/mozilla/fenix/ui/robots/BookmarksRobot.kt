@@ -150,19 +150,10 @@ class BookmarksRobot {
             .click()
     }
 
-    fun createFolder(name: String, parent: String? = null) {
+    fun createFolder(name: String) {
         clickAddFolderButton()
         addNewFolderName(name)
-        if (!parent.isNullOrBlank()) {
-            setParentFolder(parent)
-        }
         saveNewFolder()
-    }
-
-    fun setParentFolder(parentName: String) {
-        clickParentFolderSelector()
-        selectFolder(parentName)
-        navigateUp()
     }
 
     fun clickAddFolderButton() {
