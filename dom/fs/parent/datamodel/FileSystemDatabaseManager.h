@@ -43,6 +43,16 @@ class FileSystemDatabaseManager {
   virtual Result<int64_t, QMResult> GetUsage() const = 0;
 
   /**
+   * @brief Returns directory identifier for the parent of
+   * a given entry, or error.
+   *
+   * @param aEntry EntryId of an existing file or directory
+   * @return Result<EntryId, QMResult> Directory identifier or error
+   */
+  virtual Result<EntryId, QMResult> GetParentEntryId(
+      const EntryId& aEntry) const = 0;
+
+  /**
    * @brief Returns directory identifier, optionally creating it if it doesn't
    * exist
    *
@@ -64,9 +74,9 @@ class FileSystemDatabaseManager {
   /**
    * @brief Returns the properties of a file corresponding to a file handle
    */
-  virtual nsresult GetFile(const EntryId& aEntryId, nsString& aType,
-                           TimeStamp& lastModifiedMilliSeconds, Path& aPath,
-                           nsCOMPtr<nsIFile>& aFile) const = 0;
+  virtual nsresult GetFile(const FileSystemEntryPair& aEndpoints,
+                           nsString& aType, TimeStamp& lastModifiedMilliSeconds,
+                           Path& aPath, nsCOMPtr<nsIFile>& aFile) const = 0;
 
   virtual Result<FileSystemDirectoryListing, QMResult> GetDirectoryEntries(
       const EntryId& aParent, PageNumber aPage) const = 0;
@@ -92,26 +102,15 @@ class FileSystemDatabaseManager {
       const FileSystemChildMetadata& aHandle) = 0;
 
   /**
-   * @brief Rename a file/directory
+   * @brief Move/Rename a file/directory
    *
    * @param aHandle Source directory or file
-   * @param aNewName New entry name
-   * @return Result<bool, QMResult> False if entry didn't exist, otherwise true
-   * or error
-   */
-  virtual Result<bool, QMResult> RenameEntry(
-      const FileSystemEntryMetadata& aHandle, const Name& aNewName) = 0;
-
-  /**
-   * @brief Move a file/directory
-   *
-   * @param aHandle Source directory or file
-   * @param aNewDesignation Destination directory and entry name
-   * @return Result<bool, QMResult> False if entry didn't exist, otherwise true
+   * @param aNewDesignation Destination directory and filename
+   * @return Result<bool, QMResult> False if file didn't exist, otherwise true
    * or error
    */
   virtual Result<bool, QMResult> MoveEntry(
-      const FileSystemEntryMetadata& aHandle,
+      const FileSystemChildMetadata& aHandle,
       const FileSystemChildMetadata& aNewDesignation) = 0;
 
   /**
