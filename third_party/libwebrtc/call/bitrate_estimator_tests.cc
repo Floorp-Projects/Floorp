@@ -141,7 +141,8 @@ class BitrateEstimatorTest : public test::CallTest {
       test::FillEncoderConfiguration(kVideoCodecVP8, 1, &video_encoder_config);
       SetVideoEncoderConfig(video_encoder_config);
 
-      receive_config_ = VideoReceiveStream::Config(receive_transport_.get());
+      receive_config_ =
+          VideoReceiveStreamInterface::Config(receive_transport_.get());
       // receive_config_.decoders will be set by every stream separately.
       receive_config_.rtp.remote_ssrc = GetVideoSendConfig()->rtp.ssrcs[0];
       receive_config_.rtp.local_ssrc = kReceiverLocalVideoSsrc;
@@ -195,7 +196,7 @@ class BitrateEstimatorTest : public test::CallTest {
                               DegradationPreference::MAINTAIN_FRAMERATE);
       send_stream_->Start();
 
-      VideoReceiveStream::Decoder decoder;
+      VideoReceiveStreamInterface::Decoder decoder;
       test_->receive_config_.decoder_factory = &decoder_factory_;
       decoder.payload_type = test_->GetVideoSendConfig()->rtp.payload_type;
       decoder.video_format =
@@ -237,7 +238,7 @@ class BitrateEstimatorTest : public test::CallTest {
     BitrateEstimatorTest* test_;
     bool is_sending_receiving_;
     VideoSendStream* send_stream_;
-    VideoReceiveStream* video_receive_stream_;
+    VideoReceiveStreamInterface* video_receive_stream_;
     std::unique_ptr<test::FrameGeneratorCapturer> frame_generator_capturer_;
 
     test::FunctionVideoDecoderFactory decoder_factory_;
@@ -246,7 +247,7 @@ class BitrateEstimatorTest : public test::CallTest {
   LogObserver receiver_log_;
   std::unique_ptr<test::DirectTransport> send_transport_;
   std::unique_ptr<test::DirectTransport> receive_transport_;
-  VideoReceiveStream::Config receive_config_;
+  VideoReceiveStreamInterface::Config receive_config_;
   std::vector<Stream*> streams_;
 };
 

@@ -88,7 +88,8 @@ TEST_F(StatsEndToEndTest, GetStats) {
 
     bool CheckReceiveStats() {
       for (size_t i = 0; i < receive_streams_.size(); ++i) {
-        VideoReceiveStream::Stats stats = receive_streams_[i]->GetStats();
+        VideoReceiveStreamInterface::Stats stats =
+            receive_streams_[i]->GetStats();
         EXPECT_EQ(expected_receive_ssrcs_[i], stats.ssrc);
 
         // Make sure all fields have been populated.
@@ -243,7 +244,7 @@ TEST_F(StatsEndToEndTest, GetStats) {
 
     void ModifyVideoConfigs(
         VideoSendStream::Config* send_config,
-        std::vector<VideoReceiveStream::Config>* receive_configs,
+        std::vector<VideoReceiveStreamInterface::Config>* receive_configs,
         VideoEncoderConfig* encoder_config) override {
       // Set low simulcast bitrates to not have to wait for bandwidth ramp-up.
       encoder_config->max_bitrate_bps = 50000;
@@ -281,9 +282,9 @@ TEST_F(StatsEndToEndTest, GetStats) {
 
     size_t GetNumVideoStreams() const override { return kNumSimulcastStreams; }
 
-    void OnVideoStreamsCreated(
-        VideoSendStream* send_stream,
-        const std::vector<VideoReceiveStream*>& receive_streams) override {
+    void OnVideoStreamsCreated(VideoSendStream* send_stream,
+                               const std::vector<VideoReceiveStreamInterface*>&
+                                   receive_streams) override {
       send_stream_ = send_stream;
       receive_streams_ = receive_streams;
       task_queue_ = TaskQueueBase::Current();
@@ -327,7 +328,7 @@ TEST_F(StatsEndToEndTest, GetStats) {
     }
 
     test::FunctionVideoEncoderFactory encoder_factory_;
-    std::vector<VideoReceiveStream*> receive_streams_;
+    std::vector<VideoReceiveStreamInterface*> receive_streams_;
     std::map<std::string, bool> receive_stats_filled_;
 
     VideoSendStream* send_stream_ = nullptr;
@@ -353,7 +354,7 @@ TEST_F(StatsEndToEndTest, TimingFramesAreReported) {
    private:
     void ModifyVideoConfigs(
         VideoSendStream::Config* send_config,
-        std::vector<VideoReceiveStream::Config>* receive_configs,
+        std::vector<VideoReceiveStreamInterface::Config>* receive_configs,
         VideoEncoderConfig* encoder_config) override {
       send_config->rtp.extensions.clear();
       send_config->rtp.extensions.push_back(
@@ -365,9 +366,9 @@ TEST_F(StatsEndToEndTest, TimingFramesAreReported) {
       }
     }
 
-    void OnVideoStreamsCreated(
-        VideoSendStream* send_stream,
-        const std::vector<VideoReceiveStream*>& receive_streams) override {
+    void OnVideoStreamsCreated(VideoSendStream* send_stream,
+                               const std::vector<VideoReceiveStreamInterface*>&
+                                   receive_streams) override {
       receive_streams_ = receive_streams;
       task_queue_ = TaskQueueBase::Current();
     }
@@ -389,7 +390,7 @@ TEST_F(StatsEndToEndTest, TimingFramesAreReported) {
       });
     }
 
-    std::vector<VideoReceiveStream*> receive_streams_;
+    std::vector<VideoReceiveStreamInterface*> receive_streams_;
     TaskQueueBase* task_queue_ = nullptr;
   } test;
 
@@ -404,9 +405,9 @@ TEST_F(StatsEndToEndTest, TestReceivedRtpPacketStats) {
         : EndToEndTest(kDefaultTimeoutMs), task_queue_(task_queue) {}
 
    private:
-    void OnVideoStreamsCreated(
-        VideoSendStream* send_stream,
-        const std::vector<VideoReceiveStream*>& receive_streams) override {
+    void OnVideoStreamsCreated(VideoSendStream* send_stream,
+                               const std::vector<VideoReceiveStreamInterface*>&
+                                   receive_streams) override {
       receive_stream_ = receive_streams[0];
     }
 
@@ -416,7 +417,8 @@ TEST_F(StatsEndToEndTest, TestReceivedRtpPacketStats) {
       if (sent_rtp_ >= kNumRtpPacketsToSend) {
         // Need to check the stats on the correct thread.
         task_queue_->PostTask(ToQueuedTask(task_safety_flag_, [this]() {
-          VideoReceiveStream::Stats stats = receive_stream_->GetStats();
+          VideoReceiveStreamInterface::Stats stats =
+              receive_stream_->GetStats();
           if (kNumRtpPacketsToSend == stats.rtp_stats.packet_counter.packets) {
             observation_complete_.Set();
           }
@@ -432,7 +434,7 @@ TEST_F(StatsEndToEndTest, TestReceivedRtpPacketStats) {
           << "Timed out while verifying number of received RTP packets.";
     }
 
-    VideoReceiveStream* receive_stream_ = nullptr;
+    VideoReceiveStreamInterface* receive_stream_ = nullptr;
     uint32_t sent_rtp_ = 0;
     TaskQueueBase* const task_queue_;
     rtc::scoped_refptr<PendingTaskSafetyFlag> task_safety_flag_ =
@@ -627,7 +629,7 @@ TEST_F(StatsEndToEndTest, VerifyNackStats) {
             stream_stats.rtcp_packet_type_counts.nack_packets;
       }
       for (const auto& receive_stream : receive_streams_) {
-        VideoReceiveStream::Stats stats = receive_stream->GetStats();
+        VideoReceiveStreamInterface::Stats stats = receive_stream->GetStats();
         receive_stream_nack_packets +=
             stats.rtcp_packet_type_counts.nack_packets;
       }
@@ -649,15 +651,15 @@ TEST_F(StatsEndToEndTest, VerifyNackStats) {
 
     void ModifyVideoConfigs(
         VideoSendStream::Config* send_config,
-        std::vector<VideoReceiveStream::Config>* receive_configs,
+        std::vector<VideoReceiveStreamInterface::Config>* receive_configs,
         VideoEncoderConfig* encoder_config) override {
       send_config->rtp.nack.rtp_history_ms = kNackRtpHistoryMs;
       (*receive_configs)[0].rtp.nack.rtp_history_ms = kNackRtpHistoryMs;
     }
 
-    void OnVideoStreamsCreated(
-        VideoSendStream* send_stream,
-        const std::vector<VideoReceiveStream*>& receive_streams) override {
+    void OnVideoStreamsCreated(VideoSendStream* send_stream,
+                               const std::vector<VideoReceiveStreamInterface*>&
+                                   receive_streams) override {
       send_stream_ = send_stream;
       receive_streams_ = receive_streams;
     }
@@ -672,7 +674,7 @@ TEST_F(StatsEndToEndTest, VerifyNackStats) {
     uint64_t sent_rtp_packets_ RTC_GUARDED_BY(&mutex_) = 0;
     uint16_t dropped_rtp_packet_ RTC_GUARDED_BY(&mutex_) = 0;
     bool dropped_rtp_packet_requested_ RTC_GUARDED_BY(&mutex_) = false;
-    std::vector<VideoReceiveStream*> receive_streams_;
+    std::vector<VideoReceiveStreamInterface*> receive_streams_;
     VideoSendStream* send_stream_ = nullptr;
     absl::optional<int64_t> start_runtime_ms_;
     TaskQueueBase* const task_queue_;

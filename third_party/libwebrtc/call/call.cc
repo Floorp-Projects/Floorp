@@ -99,7 +99,7 @@ const int* FindKeyByValue(const std::map<int, int>& m, int v) {
 }
 
 std::unique_ptr<rtclog::StreamConfig> CreateRtcLogStreamConfig(
-    const VideoReceiveStream::Config& config) {
+    const VideoReceiveStreamInterface::Config& config) {
   auto rtclog_config = std::make_unique<rtclog::StreamConfig>();
   rtclog_config->remote_ssrc = config.rtp.remote_ssrc;
   rtclog_config->local_ssrc = config.rtp.local_ssrc;
@@ -231,10 +231,10 @@ class Call final : public webrtc::Call,
       std::unique_ptr<FecController> fec_controller) override;
   void DestroyVideoSendStream(webrtc::VideoSendStream* send_stream) override;
 
-  webrtc::VideoReceiveStream* CreateVideoReceiveStream(
-      webrtc::VideoReceiveStream::Config configuration) override;
+  webrtc::VideoReceiveStreamInterface* CreateVideoReceiveStream(
+      webrtc::VideoReceiveStreamInterface::Config configuration) override;
   void DestroyVideoReceiveStream(
-      webrtc::VideoReceiveStream* receive_stream) override;
+      webrtc::VideoReceiveStreamInterface* receive_stream) override;
 
   FlexfecReceiveStream* CreateFlexfecReceiveStream(
       const FlexfecReceiveStream::Config config) override;
@@ -267,7 +267,7 @@ class Call final : public webrtc::Call,
 
   void OnLocalSsrcUpdated(webrtc::AudioReceiveStream& stream,
                           uint32_t local_ssrc) override;
-  void OnLocalSsrcUpdated(VideoReceiveStream& stream,
+  void OnLocalSsrcUpdated(VideoReceiveStreamInterface& stream,
                           uint32_t local_ssrc) override;
   void OnLocalSsrcUpdated(FlexfecReceiveStream& stream,
                           uint32_t local_ssrc) override;
@@ -1128,8 +1128,8 @@ void Call::DestroyVideoSendStream(webrtc::VideoSendStream* send_stream) {
   delete send_stream_impl;
 }
 
-webrtc::VideoReceiveStream* Call::CreateVideoReceiveStream(
-    webrtc::VideoReceiveStream::Config configuration) {
+webrtc::VideoReceiveStreamInterface* Call::CreateVideoReceiveStream(
+    webrtc::VideoReceiveStreamInterface::Config configuration) {
   TRACE_EVENT0("webrtc", "Call::CreateVideoReceiveStream");
   RTC_DCHECK_RUN_ON(worker_thread_);
 
@@ -1172,7 +1172,7 @@ webrtc::VideoReceiveStream* Call::CreateVideoReceiveStream(
 }
 
 void Call::DestroyVideoReceiveStream(
-    webrtc::VideoReceiveStream* receive_stream) {
+    webrtc::VideoReceiveStreamInterface* receive_stream) {
   TRACE_EVENT0("webrtc", "Call::DestroyVideoReceiveStream");
   RTC_DCHECK_RUN_ON(worker_thread_);
   RTC_DCHECK(receive_stream != nullptr);
@@ -1381,7 +1381,8 @@ void Call::OnLocalSsrcUpdated(webrtc::AudioReceiveStream& stream,
                                                                    : nullptr);
 }
 
-void Call::OnLocalSsrcUpdated(VideoReceiveStream& stream, uint32_t local_ssrc) {
+void Call::OnLocalSsrcUpdated(VideoReceiveStreamInterface& stream,
+                              uint32_t local_ssrc) {
   RTC_DCHECK_RUN_ON(worker_thread_);
   static_cast<VideoReceiveStream2&>(stream).SetLocalSsrc(local_ssrc);
 }

@@ -105,7 +105,7 @@ TEST_F(RetransmissionEndToEndTest, ReceivesAndRetransmitsNack) {
 
     void ModifyVideoConfigs(
         VideoSendStream::Config* send_config,
-        std::vector<VideoReceiveStream::Config>* receive_configs,
+        std::vector<VideoReceiveStreamInterface::Config>* receive_configs,
         VideoEncoderConfig* encoder_config) override {
       send_config->rtp.nack.rtp_history_ms = kNackRtpHistoryMs;
       (*receive_configs)[0].rtp.nack.rtp_history_ms = kNackRtpHistoryMs;
@@ -209,9 +209,9 @@ TEST_F(RetransmissionEndToEndTest,
     explicit KeyframeRequestObserver(TaskQueueBase* task_queue)
         : clock_(Clock::GetRealTimeClock()), task_queue_(task_queue) {}
 
-    void OnVideoStreamsCreated(
-        VideoSendStream* send_stream,
-        const std::vector<VideoReceiveStream*>& receive_streams) override {
+    void OnVideoStreamsCreated(VideoSendStream* send_stream,
+                               const std::vector<VideoReceiveStreamInterface*>&
+                                   receive_streams) override {
       RTC_DCHECK_EQ(1, receive_streams.size());
       send_stream_ = send_stream;
       receive_stream_ = receive_streams[0];
@@ -265,7 +265,7 @@ TEST_F(RetransmissionEndToEndTest,
    private:
     Clock* const clock_;
     VideoSendStream* send_stream_;
-    VideoReceiveStream* receive_stream_;
+    VideoReceiveStreamInterface* receive_stream_;
     TaskQueueBase* const task_queue_;
     rtc::Event test_done_;
     bool frame_decoded_ = false;
@@ -331,7 +331,7 @@ void RetransmissionEndToEndTest::ReceivesPliAndRecovers(int rtp_history_ms) {
 
     void ModifyVideoConfigs(
         VideoSendStream::Config* send_config,
-        std::vector<VideoReceiveStream::Config>* receive_configs,
+        std::vector<VideoReceiveStreamInterface::Config>* receive_configs,
         VideoEncoderConfig* encoder_config) override {
       send_config->rtp.nack.rtp_history_ms = rtp_history_ms_;
       (*receive_configs)[0].rtp.nack.rtp_history_ms = rtp_history_ms_;
@@ -438,7 +438,7 @@ void RetransmissionEndToEndTest::DecodesRetransmittedFrame(bool enable_rtx,
 
     void ModifyVideoConfigs(
         VideoSendStream::Config* send_config,
-        std::vector<VideoReceiveStream::Config>* receive_configs,
+        std::vector<VideoReceiveStreamInterface::Config>* receive_configs,
         VideoEncoderConfig* encoder_config) override {
       send_config->rtp.nack.rtp_history_ms = kNackRtpHistoryMs;
 

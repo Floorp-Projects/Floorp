@@ -202,8 +202,8 @@ class RtpVideoStreamReceiverTest : public ::testing::Test {
   }
 
  protected:
-  static VideoReceiveStream::Config CreateConfig() {
-    VideoReceiveStream::Config config(nullptr);
+  static VideoReceiveStreamInterface::Config CreateConfig() {
+    VideoReceiveStreamInterface::Config config(nullptr);
     config.rtp.remote_ssrc = 1111;
     config.rtp.local_ssrc = 2222;
     config.rtp.red_payload_type = kRedPayloadType;
@@ -211,7 +211,7 @@ class RtpVideoStreamReceiverTest : public ::testing::Test {
   }
 
   webrtc::test::ScopedKeyValueConfig field_trials_;
-  VideoReceiveStream::Config config_;
+  VideoReceiveStreamInterface::Config config_;
   MockNackSender mock_nack_sender_;
   MockKeyFrameRequestSender mock_key_frame_request_sender_;
   MockTransport mock_transport_;

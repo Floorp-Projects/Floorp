@@ -15,7 +15,7 @@
 //   webrtc::AudioSendStream
 //   webrtc::AudioReceiveStream
 //   webrtc::VideoSendStream
-//   webrtc::VideoReceiveStream
+//   webrtc::VideoReceiveStreamInterface
 
 #ifndef MEDIA_ENGINE_FAKE_WEBRTC_CALL_H_
 #define MEDIA_ENGINE_FAKE_WEBRTC_CALL_H_
@@ -231,17 +231,19 @@ class FakeVideoSendStream final
   int num_encoder_reconfigurations_ = 0;
 };
 
-class FakeVideoReceiveStream final : public webrtc::VideoReceiveStream {
+class FakeVideoReceiveStream final
+    : public webrtc::VideoReceiveStreamInterface {
  public:
-  explicit FakeVideoReceiveStream(webrtc::VideoReceiveStream::Config config);
+  explicit FakeVideoReceiveStream(
+      webrtc::VideoReceiveStreamInterface::Config config);
 
-  const webrtc::VideoReceiveStream::Config& GetConfig() const;
+  const webrtc::VideoReceiveStreamInterface::Config& GetConfig() const;
 
   bool IsReceiving() const;
 
   void InjectFrame(const webrtc::VideoFrame& frame);
 
-  void SetStats(const webrtc::VideoReceiveStream::Stats& stats);
+  void SetStats(const webrtc::VideoReceiveStreamInterface::Stats& stats);
 
   std::vector<webrtc::RtpSource> GetSources() const override {
     return std::vector<webrtc::RtpSource>();
@@ -269,7 +271,7 @@ class FakeVideoReceiveStream final : public webrtc::VideoReceiveStream {
   void GenerateKeyFrame() override {}
 
  private:
-  // webrtc::VideoReceiveStream implementation.
+  // webrtc::VideoReceiveStreamInterface implementation.
   void SetRtpExtensions(std::vector<webrtc::RtpExtension> extensions) override;
   webrtc::RtpHeaderExtensionMap GetRtpExtensionMap() const override;
   bool transport_cc() const override { return config_.rtp.transport_cc; }
@@ -277,7 +279,7 @@ class FakeVideoReceiveStream final : public webrtc::VideoReceiveStream {
   void Start() override;
   void Stop() override;
 
-  webrtc::VideoReceiveStream::Stats GetStats() const override;
+  webrtc::VideoReceiveStreamInterface::Stats GetStats() const override;
 
   bool SetBaseMinimumPlayoutDelayMs(int delay_ms) override {
     base_mininum_playout_delay_ms_ = delay_ms;
@@ -288,9 +290,9 @@ class FakeVideoReceiveStream final : public webrtc::VideoReceiveStream {
     return base_mininum_playout_delay_ms_;
   }
 
-  webrtc::VideoReceiveStream::Config config_;
+  webrtc::VideoReceiveStreamInterface::Config config_;
   bool receiving_;
-  webrtc::VideoReceiveStream::Stats stats_;
+  webrtc::VideoReceiveStreamInterface::Stats stats_;
 
   int base_mininum_playout_delay_ms_ = 0;
 };
@@ -385,10 +387,10 @@ class FakeCall final : public webrtc::Call, public webrtc::PacketReceiver {
       webrtc::VideoEncoderConfig encoder_config) override;
   void DestroyVideoSendStream(webrtc::VideoSendStream* send_stream) override;
 
-  webrtc::VideoReceiveStream* CreateVideoReceiveStream(
-      webrtc::VideoReceiveStream::Config config) override;
+  webrtc::VideoReceiveStreamInterface* CreateVideoReceiveStream(
+      webrtc::VideoReceiveStreamInterface::Config config) override;
   void DestroyVideoReceiveStream(
-      webrtc::VideoReceiveStream* receive_stream) override;
+      webrtc::VideoReceiveStreamInterface* receive_stream) override;
 
   webrtc::FlexfecReceiveStream* CreateFlexfecReceiveStream(
       const webrtc::FlexfecReceiveStream::Config config) override;
@@ -420,7 +422,7 @@ class FakeCall final : public webrtc::Call, public webrtc::PacketReceiver {
       int transport_overhead_per_packet) override;
   void OnLocalSsrcUpdated(webrtc::AudioReceiveStream& stream,
                           uint32_t local_ssrc) override;
-  void OnLocalSsrcUpdated(webrtc::VideoReceiveStream& stream,
+  void OnLocalSsrcUpdated(webrtc::VideoReceiveStreamInterface& stream,
                           uint32_t local_ssrc) override;
   void OnLocalSsrcUpdated(webrtc::FlexfecReceiveStream& stream,
                           uint32_t local_ssrc) override;

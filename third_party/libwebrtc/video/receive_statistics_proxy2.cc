@@ -653,11 +653,11 @@ ReceiveStatisticsProxy::GetCurrentEstimatedPlayoutNtpTimestampMs(
   return *last_estimated_playout_ntp_timestamp_ms_ + elapsed_ms;
 }
 
-VideoReceiveStream::Stats ReceiveStatisticsProxy::GetStats() const {
+VideoReceiveStreamInterface::Stats ReceiveStatisticsProxy::GetStats() const {
   RTC_DCHECK_RUN_ON(&main_thread_);
 
-  // Like VideoReceiveStream::GetStats, called on the worker thread from
-  // StatsCollector::ExtractMediaInfo via worker_thread()->Invoke().
+  // Like VideoReceiveStreamInterface::GetStats, called on the worker thread
+  // from StatsCollector::ExtractMediaInfo via worker_thread()->Invoke().
   // WebRtcVideoChannel::GetStats(), GetVideoReceiverInfo.
 
   // Get current frame rates here, as only updating them on new frames prevents

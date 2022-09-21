@@ -17,9 +17,9 @@ namespace webrtc {
 namespace test {
 
 TEST(CallConfigUtils, MarshalUnmarshalProcessSameObject) {
-  VideoReceiveStream::Config recv_config(nullptr);
+  VideoReceiveStreamInterface::Config recv_config(nullptr);
 
-  VideoReceiveStream::Decoder decoder;
+  VideoReceiveStreamInterface::Decoder decoder;
   decoder.payload_type = 10;
   decoder.video_format.name = "test";
   decoder.video_format.parameters["99"] = "b";
@@ -37,7 +37,7 @@ TEST(CallConfigUtils, MarshalUnmarshalProcessSameObject) {
   recv_config.rtp.rtx_associated_payload_types[10] = 10;
   recv_config.rtp.extensions.emplace_back("uri", 128, true);
 
-  VideoReceiveStream::Config unmarshaled_config =
+  VideoReceiveStreamInterface::Config unmarshaled_config =
       ParseVideoReceiveStreamJsonConfig(
           nullptr, GenerateVideoReceiveStreamJsonConfig(recv_config));
 

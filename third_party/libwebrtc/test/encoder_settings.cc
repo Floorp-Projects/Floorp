@@ -131,16 +131,16 @@ void FillEncoderConfiguration(VideoCodecType codec_type,
   }
 }
 
-VideoReceiveStream::Decoder CreateMatchingDecoder(
+VideoReceiveStreamInterface::Decoder CreateMatchingDecoder(
     int payload_type,
     const std::string& payload_name) {
-  VideoReceiveStream::Decoder decoder;
+  VideoReceiveStreamInterface::Decoder decoder;
   decoder.payload_type = payload_type;
   decoder.video_format = SdpVideoFormat(payload_name);
   return decoder;
 }
 
-VideoReceiveStream::Decoder CreateMatchingDecoder(
+VideoReceiveStreamInterface::Decoder CreateMatchingDecoder(
     const VideoSendStream::Config& config) {
   return CreateMatchingDecoder(config.rtp.payload_type,
                                config.rtp.payload_name);

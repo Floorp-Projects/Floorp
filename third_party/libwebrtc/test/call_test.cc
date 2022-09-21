@@ -309,7 +309,7 @@ void CallTest::SetSendUlpFecConfig(VideoSendStream::Config* send_config) {
 }
 
 void CallTest::SetReceiveUlpFecConfig(
-    VideoReceiveStream::Config* receive_config) {
+    VideoReceiveStreamInterface::Config* receive_config) {
   receive_config->rtp.red_payload_type = kRedPayloadType;
   receive_config->rtp.ulpfec_payload_type = kUlpfecPayloadType;
   receive_config->rtp.rtx_associated_payload_types[kRtxRedPayloadType] =
@@ -353,7 +353,7 @@ void CallTest::CreateMatchingVideoReceiveConfigs(
 }
 
 void CallTest::AddMatchingVideoReceiveConfigs(
-    std::vector<VideoReceiveStream::Config>* receive_configs,
+    std::vector<VideoReceiveStreamInterface::Config>* receive_configs,
     const VideoSendStream::Config& video_send_config,
     Transport* rtcp_send_transport,
     bool send_side_bwe,
@@ -362,7 +362,7 @@ void CallTest::AddMatchingVideoReceiveConfigs(
     bool receiver_reference_time_report,
     int rtp_history_ms) {
   RTC_DCHECK(!video_send_config.rtp.ssrcs.empty());
-  VideoReceiveStream::Config default_config(rtcp_send_transport);
+  VideoReceiveStreamInterface::Config default_config(rtcp_send_transport);
   default_config.rtp.transport_cc = send_side_bwe;
   default_config.rtp.local_ssrc = kReceiverLocalVideoSsrc;
   for (const RtpExtension& extension : video_send_config.rtp.extensions)
@@ -374,7 +374,8 @@ void CallTest::AddMatchingVideoReceiveConfigs(
   default_config.renderer = &fake_renderer_;
 
   for (size_t i = 0; i < video_send_config.rtp.ssrcs.size(); ++i) {
-    VideoReceiveStream::Config video_recv_config(default_config.Copy());
+    VideoReceiveStreamInterface::Config video_recv_config(
+        default_config.Copy());
     video_recv_config.decoders.clear();
     if (!video_send_config.rtp.rtx.ssrcs.empty()) {
       video_recv_config.rtp.rtx_ssrc = video_send_config.rtp.rtx.ssrcs[i];
@@ -382,7 +383,7 @@ void CallTest::AddMatchingVideoReceiveConfigs(
           video_send_config.rtp.payload_type;
     }
     video_recv_config.rtp.remote_ssrc = video_send_config.rtp.ssrcs[i];
-    VideoReceiveStream::Decoder decoder;
+    VideoReceiveStreamInterface::Decoder decoder;
 
     decoder.payload_type = video_send_config.rtp.payload_type;
     decoder.video_format = SdpVideoFormat(video_send_config.rtp.payload_name);
@@ -592,7 +593,7 @@ void CallTest::Start() {
 void CallTest::StartVideoStreams() {
   for (VideoSendStream* video_send_stream : video_send_streams_)
     video_send_stream->Start();
-  for (VideoReceiveStream* video_recv_stream : video_receive_streams_)
+  for (VideoReceiveStreamInterface* video_recv_stream : video_receive_streams_)
     video_recv_stream->Start();
 }
 
@@ -608,7 +609,7 @@ void CallTest::Stop() {
 void CallTest::StopVideoStreams() {
   for (VideoSendStream* video_send_stream : video_send_streams_)
     video_send_stream->Stop();
-  for (VideoReceiveStream* video_recv_stream : video_receive_streams_)
+  for (VideoReceiveStreamInterface* video_recv_stream : video_receive_streams_)
     video_recv_stream->Stop();
 }
 
@@ -621,7 +622,7 @@ void CallTest::DestroyStreams() {
 
   DestroyVideoSendStreams();
 
-  for (VideoReceiveStream* video_recv_stream : video_receive_streams_)
+  for (VideoReceiveStreamInterface* video_recv_stream : video_receive_streams_)
     receiver_call_->DestroyVideoReceiveStream(video_recv_stream);
 
   for (FlexfecReceiveStream* flexfec_recv_stream : flexfec_receive_streams_)
@@ -781,7 +782,7 @@ size_t BaseTest::GetNumFlexfecStreams() const {
 
 void BaseTest::ModifyVideoConfigs(
     VideoSendStream::Config* send_config,
-    std::vector<VideoReceiveStream::Config>* receive_configs,
+    std::vector<VideoReceiveStreamInterface::Config>* receive_configs,
     VideoEncoderConfig* encoder_config) {}
 
 void BaseTest::ModifyVideoCaptureStartResolution(int* width,
@@ -793,7 +794,7 @@ void BaseTest::ModifyVideoDegradationPreference(
 
 void BaseTest::OnVideoStreamsCreated(
     VideoSendStream* send_stream,
-    const std::vector<VideoReceiveStream*>& receive_streams) {}
+    const std::vector<VideoReceiveStreamInterface*>& receive_streams) {}
 
 void BaseTest::ModifyAudioConfigs(
     AudioSendStream::Config* send_config,

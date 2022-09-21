@@ -174,7 +174,8 @@ void VideoSendStatsCollector::AddStats(VideoSendStream::Stats sample,
   last_update_ = at_time;
 }
 
-void VideoReceiveStatsCollector::AddStats(VideoReceiveStream::Stats sample) {
+void VideoReceiveStatsCollector::AddStats(
+    VideoReceiveStreamInterface::Stats sample) {
   if (sample.decode_ms > 0)
     stats_.decode_time.AddSampleMs(sample.decode_ms);
   if (sample.max_decode_ms > 0)
