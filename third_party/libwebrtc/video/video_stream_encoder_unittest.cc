@@ -9108,6 +9108,11 @@ TEST(VideoStreamEncoderSimpleTest, CreateDestroy) {
       VideoStreamEncoder::BitrateAllocationCallbackType::
           kVideoBitrateAllocation,
       field_trials);
+
+  // Stop the encoder explicitly. This additional step tests if we could
+  // hang when calling stop and the TQ has been stopped and/or isn't accepting
+  // any more tasks.
+  encoder->Stop();
 }
 
 TEST(VideoStreamEncoderFrameCadenceTest, ActivatesFrameCadenceOnContentType) {

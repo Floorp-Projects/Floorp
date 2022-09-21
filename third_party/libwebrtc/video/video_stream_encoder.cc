@@ -731,31 +731,32 @@ void VideoStreamEncoder::Stop() {
 
   rtc::Event shutdown_event;
 
-  encoder_queue_.PostTask([this, &shutdown_event] {
-    RTC_DCHECK_RUN_ON(&encoder_queue_);
-    if (resource_adaptation_processor_) {
-      stream_resource_manager_.StopManagedResources();
-      for (auto* constraint : adaptation_constraints_) {
-        video_stream_adapter_->RemoveAdaptationConstraint(constraint);
-      }
-      for (auto& resource : additional_resources_) {
-        stream_resource_manager_.RemoveResource(resource);
-      }
-      additional_resources_.clear();
-      video_stream_adapter_->RemoveRestrictionsListener(this);
-      video_stream_adapter_->RemoveRestrictionsListener(
-          &stream_resource_manager_);
-      resource_adaptation_processor_->RemoveResourceLimitationsListener(
-          &stream_resource_manager_);
-      stream_resource_manager_.SetAdaptationProcessor(nullptr, nullptr);
-      resource_adaptation_processor_.reset();
-    }
-    rate_allocator_ = nullptr;
-    ReleaseEncoder();
-    encoder_ = nullptr;
-    frame_cadence_adapter_ = nullptr;
-    shutdown_event.Set();
-  });
+  encoder_queue_.PostTask(webrtc::ToQueuedTask(
+      [this] {
+        RTC_DCHECK_RUN_ON(&encoder_queue_);
+        if (resource_adaptation_processor_) {
+          stream_resource_manager_.StopManagedResources();
+          for (auto* constraint : adaptation_constraints_) {
+            video_stream_adapter_->RemoveAdaptationConstraint(constraint);
+          }
+          for (auto& resource : additional_resources_) {
+            stream_resource_manager_.RemoveResource(resource);
+          }
+          additional_resources_.clear();
+          video_stream_adapter_->RemoveRestrictionsListener(this);
+          video_stream_adapter_->RemoveRestrictionsListener(
+              &stream_resource_manager_);
+          resource_adaptation_processor_->RemoveResourceLimitationsListener(
+              &stream_resource_manager_);
+          stream_resource_manager_.SetAdaptationProcessor(nullptr, nullptr);
+          resource_adaptation_processor_.reset();
+        }
+        rate_allocator_ = nullptr;
+        ReleaseEncoder();
+        encoder_ = nullptr;
+        frame_cadence_adapter_ = nullptr;
+      },
+      [&shutdown_event]() { shutdown_event.Set(); }));
   shutdown_event.Wait(rtc::Event::kForever);
 }
 
