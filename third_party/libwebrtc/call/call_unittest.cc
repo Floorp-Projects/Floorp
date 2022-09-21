@@ -199,8 +199,8 @@ TEST(CallTest, CreateDestroy_AssociateAudioSendReceiveStreams_RecvFirst) {
     AudioSendStream* send_stream = call->CreateAudioSendStream(send_config);
     EXPECT_NE(send_stream, nullptr);
 
-    internal::AudioReceiveStream* internal_recv_stream =
-        static_cast<internal::AudioReceiveStream*>(recv_stream);
+    AudioReceiveStreamImpl* internal_recv_stream =
+        static_cast<AudioReceiveStreamImpl*>(recv_stream);
     EXPECT_EQ(send_stream,
               internal_recv_stream->GetAssociatedSendStreamForTesting());
 
@@ -232,8 +232,8 @@ TEST(CallTest, CreateDestroy_AssociateAudioSendReceiveStreams_SendFirst) {
         call->CreateAudioReceiveStream(recv_config);
     EXPECT_NE(recv_stream, nullptr);
 
-    internal::AudioReceiveStream* internal_recv_stream =
-        static_cast<internal::AudioReceiveStream*>(recv_stream);
+    AudioReceiveStreamImpl* internal_recv_stream =
+        static_cast<AudioReceiveStreamImpl*>(recv_stream);
     EXPECT_EQ(send_stream,
               internal_recv_stream->GetAssociatedSendStreamForTesting());
 

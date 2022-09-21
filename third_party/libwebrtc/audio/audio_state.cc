@@ -55,7 +55,7 @@ void AudioState::AddReceivingStream(webrtc::AudioReceiveStream* stream) {
   RTC_DCHECK_EQ(0, receiving_streams_.count(stream));
   receiving_streams_.insert(stream);
   if (!config_.audio_mixer->AddSource(
-          static_cast<internal::AudioReceiveStream*>(stream))) {
+          static_cast<AudioReceiveStreamImpl*>(stream))) {
     RTC_DLOG(LS_ERROR) << "Failed to add source to mixer.";
   }
 
@@ -78,7 +78,7 @@ void AudioState::RemoveReceivingStream(webrtc::AudioReceiveStream* stream) {
   auto count = receiving_streams_.erase(stream);
   RTC_DCHECK_EQ(1, count);
   config_.audio_mixer->RemoveSource(
-      static_cast<internal::AudioReceiveStream*>(stream));
+      static_cast<AudioReceiveStreamImpl*>(stream));
   UpdateNullAudioPollerState();
   if (receiving_streams_.empty()) {
     config_.audio_device_module->StopPlayout();
