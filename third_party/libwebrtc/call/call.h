@@ -15,6 +15,7 @@
 #include <string>
 #include <vector>
 
+#include "absl/strings/string_view.h"
 #include "api/adaptation/resource.h"
 #include "api/media_types.h"
 #include "api/task_queue/task_queue_base.h"
@@ -133,7 +134,7 @@ class Call {
                                   uint32_t local_ssrc) = 0;
 
   virtual void OnUpdateSyncGroup(AudioReceiveStream& stream,
-                                 const std::string& sync_group) = 0;
+                                 absl::string_view sync_group) = 0;
 
   virtual void OnSentPacket(const rtc::SentPacket& sent_packet) = 0;
 

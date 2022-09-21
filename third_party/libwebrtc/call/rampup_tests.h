@@ -17,6 +17,7 @@
 #include <utility>
 #include <vector>
 
+#include "absl/strings/string_view.h"
 #include "api/rtc_event_log/rtc_event_log.h"
 #include "api/task_queue/task_queue_base.h"
 #include "api/test/simulated_network.h"
@@ -43,7 +44,7 @@ class RampUpTester : public test::EndToEndTest {
                size_t num_flexfec_streams,
                unsigned int start_bitrate_bps,
                int64_t min_run_time_ms,
-               const std::string& extension_type,
+               absl::string_view extension_type,
                bool rtx,
                bool red,
                bool report_perf_stats,
@@ -65,9 +66,9 @@ class RampUpTester : public test::EndToEndTest {
                        size_t* padding_sent,
                        size_t* media_sent) const;
 
-  void ReportResult(const std::string& measurement,
+  void ReportResult(absl::string_view measurement,
                     size_t value,
-                    const std::string& units,
+                    absl::string_view units,
                     test::ImproveDirection improve_direction) const;
   void TriggerTestDone();
 
@@ -128,7 +129,7 @@ class RampUpDownUpTester : public RampUpTester {
                      size_t num_audio_streams,
                      size_t num_flexfec_streams,
                      unsigned int start_bitrate_bps,
-                     const std::string& extension_type,
+                     absl::string_view extension_type,
                      bool rtx,
                      bool red,
                      const std::vector<int>& loss_rates,
