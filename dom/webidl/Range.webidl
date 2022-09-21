@@ -21,23 +21,23 @@ interface Range : AbstractRange {
   readonly attribute Node commonAncestorContainer;
 
   [Throws, BinaryName="setStartJS"]
-  void setStart(Node refNode, unsigned long offset);
+  undefined setStart(Node refNode, unsigned long offset);
   [Throws, BinaryName="setEndJS"]
-  void setEnd(Node refNode, unsigned long offset);
+  undefined setEnd(Node refNode, unsigned long offset);
   [Throws, BinaryName="setStartBeforeJS"]
-  void setStartBefore(Node refNode);
+  undefined setStartBefore(Node refNode);
   [Throws, BinaryName="setStartAfterJS"]
-  void setStartAfter(Node refNode);
+  undefined setStartAfter(Node refNode);
   [Throws, BinaryName="setEndBeforeJS"]
-  void setEndBefore(Node refNode);
+  undefined setEndBefore(Node refNode);
   [Throws, BinaryName="setEndAfterJS"]
-  void setEndAfter(Node refNode);
+  undefined setEndAfter(Node refNode);
   [BinaryName="collapseJS"]
-  void collapse(optional boolean toStart = false);
+  undefined collapse(optional boolean toStart = false);
   [Throws, BinaryName="selectNodeJS"]
-  void selectNode(Node refNode);
+  undefined selectNode(Node refNode);
   [Throws, BinaryName="selectNodeContentsJS"]
-  void selectNodeContents(Node refNode);
+  undefined selectNodeContents(Node refNode);
 
   const unsigned short START_TO_START = 0;
   const unsigned short START_TO_END = 1;
@@ -46,18 +46,18 @@ interface Range : AbstractRange {
   [Throws]
   short compareBoundaryPoints(unsigned short how, Range sourceRange);
   [CEReactions, Throws]
-  void deleteContents();
+  undefined deleteContents();
   [CEReactions, Throws]
   DocumentFragment extractContents();
   [CEReactions, Throws]
   DocumentFragment cloneContents();
   [CEReactions, Throws]
-  void insertNode(Node node);
+  undefined insertNode(Node node);
   [CEReactions, Throws]
-  void surroundContents(Node newParent);
+  undefined surroundContents(Node newParent);
 
   Range cloneRange();
-  void detach();
+  undefined detach();
 
   [Throws]
   boolean isPointInRange(Node node, unsigned long offset);

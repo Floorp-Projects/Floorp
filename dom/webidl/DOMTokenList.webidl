@@ -19,9 +19,9 @@ interface DOMTokenList {
   [Pure]
   boolean contains(DOMString token);
   [CEReactions, Throws]
-  void add(DOMString... tokens);
+  undefined add(DOMString... tokens);
   [CEReactions, Throws]
-  void remove(DOMString... tokens);
+  undefined remove(DOMString... tokens);
   [CEReactions, Throws]
   boolean replace(DOMString token, DOMString newToken);
   [CEReactions, Throws]

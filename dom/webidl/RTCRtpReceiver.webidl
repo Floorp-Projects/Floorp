@@ -19,9 +19,9 @@ interface RTCRtpReceiver {
 
   // test-only: for testing getContributingSources
   [ChromeOnly]
-  void mozInsertAudioLevelForContributingSource(unsigned long source,
-                                                DOMHighResTimeStamp timestamp,
-                                                unsigned long rtpTimestamp,
-                                                boolean hasLevel,
-                                                byte level);
+  undefined mozInsertAudioLevelForContributingSource(unsigned long source,
+                                                     DOMHighResTimeStamp timestamp,
+                                                     unsigned long rtpTimestamp,
+                                                     boolean hasLevel,
+                                                     byte level);
 };

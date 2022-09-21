@@ -223,11 +223,11 @@ typedef OfflineResourceList ApplicationCache;
   [Replaceable, Throws] readonly attribute BarProp statusbar;
   [Replaceable, Throws] readonly attribute BarProp toolbar;
   [Throws] attribute DOMString status;
-  [Throws, CrossOriginCallable, NeedsCallerType] void close();
+  [Throws, CrossOriginCallable, NeedsCallerType] undefined close();
   [Throws, CrossOriginReadable] readonly attribute boolean closed;
-  [Throws] void stop();
-  [Throws, CrossOriginCallable, NeedsCallerType] void focus();
-  [Throws, CrossOriginCallable, NeedsCallerType] void blur();
+  [Throws] undefined stop();
+  [Throws, CrossOriginCallable, NeedsCallerType] undefined focus();
+  [Throws, CrossOriginCallable, NeedsCallerType] undefined blur();
   [Replaceable, Pref="dom.window.event.enabled"] readonly attribute any event;
 
   // other browsing contexts
@@ -252,12 +252,12 @@ typedef OfflineResourceList ApplicationCache;
   [Throws, SecureContext, Pref="browser.cache.offline.enable"] readonly attribute ApplicationCache applicationCache;
 
   // user prompts
-  [Throws, NeedsSubjectPrincipal] void alert();
-  [Throws, NeedsSubjectPrincipal] void alert(DOMString message);
+  [Throws, NeedsSubjectPrincipal] undefined alert();
+  [Throws, NeedsSubjectPrincipal] undefined alert(DOMString message);
   [Throws, NeedsSubjectPrincipal] boolean confirm(optional DOMString message = "");
   [Throws, NeedsSubjectPrincipal] DOMString? prompt(optional DOMString message = "", optional DOMString default = "");
   [Throws, Pref="dom.enable_window_print"]
-  void print();
+  undefined print();
 
   // Returns a window that you can use for a print preview.
   //
@@ -270,10 +270,10 @@ typedef OfflineResourceList ApplicationCache;
 
   [Throws, CrossOriginCallable, NeedsSubjectPrincipal,
    BinaryName="postMessageMoz"]
-  void postMessage(any message, DOMString targetOrigin, optional sequence<object> transfer = []);
+  undefined postMessage(any message, DOMString targetOrigin, optional sequence<object> transfer = []);
   [Throws, CrossOriginCallable, NeedsSubjectPrincipal,
    BinaryName="postMessageMoz"]
-  void postMessage(any message, optional WindowPostMessageOptions options = {});
+  undefined postMessage(any message, optional WindowPostMessageOptions options = {});
 
   // also has obsolete members
 };
@@ -295,8 +295,8 @@ Window includes WindowLocalStorage;
 
 // http://www.whatwg.org/specs/web-apps/current-work/
 partial interface Window {
-  void captureEvents();
-  void releaseEvents();
+  undefined captureEvents();
+  undefined releaseEvents();
 };
 
 // https://dvcs.w3.org/hg/editing/raw-file/tip/editing.html
@@ -332,14 +332,14 @@ partial interface Window {
   [Replaceable, Throws] readonly attribute Screen screen;
 
   // browsing context
-  //[Throws] void moveTo(double x, double y);
-  //[Throws] void moveBy(double x, double y);
-  //[Throws] void resizeTo(double x, double y);
-  //[Throws] void resizeBy(double x, double y);
-  [Throws, NeedsCallerType] void moveTo(long x, long y);
-  [Throws, NeedsCallerType] void moveBy(long x, long y);
-  [Throws, NeedsCallerType] void resizeTo(long x, long y);
-  [Throws, NeedsCallerType] void resizeBy(long x, long y);
+  //[Throws] undefined moveTo(double x, double y);
+  //[Throws] undefined moveBy(double x, double y);
+  //[Throws] undefined resizeTo(double x, double y);
+  //[Throws] undefined resizeBy(double x, double y);
+  [Throws, NeedsCallerType] undefined moveTo(long x, long y);
+  [Throws, NeedsCallerType] undefined moveBy(long x, long y);
+  [Throws, NeedsCallerType] undefined resizeTo(long x, long y);
+  [Throws, NeedsCallerType] undefined resizeBy(long x, long y);
 
   // viewport
   // These are writable because we allow chrome to write them.  And they need
@@ -351,17 +351,17 @@ partial interface Window {
   [Throws, NeedsCallerType] attribute any innerHeight;
 
   // viewport scrolling
-  void scroll(unrestricted double x, unrestricted double y);
-  void scroll(optional ScrollToOptions options = {});
-  void scrollTo(unrestricted double x, unrestricted double y);
-  void scrollTo(optional ScrollToOptions options = {});
-  void scrollBy(unrestricted double x, unrestricted double y);
-  void scrollBy(optional ScrollToOptions options = {});
+  undefined scroll(unrestricted double x, unrestricted double y);
+  undefined scroll(optional ScrollToOptions options = {});
+  undefined scrollTo(unrestricted double x, unrestricted double y);
+  undefined scrollTo(optional ScrollToOptions options = {});
+  undefined scrollBy(unrestricted double x, unrestricted double y);
+  undefined scrollBy(optional ScrollToOptions options = {});
   // mozScrollSnap is used by chrome to perform scroll snapping after the
   // user performs actions that may affect scroll position
   // mozScrollSnap is deprecated, to be replaced by a web accessible API, such
   // as an extension to the ScrollOptions dictionary.  See bug 1137937.
-  [ChromeOnly] void mozScrollSnap();
+  [ChromeOnly] undefined mozScrollSnap();
   // The four properties below are double per spec at the moment, but whether
   // that will continue is unclear.
   [Replaceable, Throws] readonly attribute double scrollX;
@@ -419,17 +419,17 @@ partial interface Window {
   /**
    * Method for scrolling this window by a number of lines.
    */
-  void                      scrollByLines(long numLines, optional ScrollOptions options = {});
+  undefined                 scrollByLines(long numLines, optional ScrollOptions options = {});
 
   /**
    * Method for scrolling this window by a number of pages.
    */
-  void                      scrollByPages(long numPages, optional ScrollOptions options = {});
+  undefined                 scrollByPages(long numPages, optional ScrollOptions options = {});
 
   /**
    * Method for sizing this window to the content in the window.
    */
-  [Throws, NeedsCallerType] void sizeToContent();
+  [Throws, NeedsCallerType] undefined sizeToContent();
 
   // XXX Shouldn't this be in nsIDOMChromeWindow?
   [ChromeOnly, Replaceable, Throws] readonly attribute XULControllers controllers;
@@ -463,7 +463,7 @@ partial interface Window {
   [Throws] attribute boolean fullScreen;
 
   // XXX Should this be in nsIDOMChromeWindow?
-  void                      updateCommands(DOMString action,
+  undefined                 updateCommands(DOMString action,
                                            optional Selection? sel = null,
                                            optional short reason = 0);
 
@@ -492,13 +492,13 @@ partial interface Window {
            [Pref="device.sensors.ambientLight.enabled"]
            attribute EventHandler ondevicelight;
 
-  void                      dump(DOMString str);
+  undefined                 dump(DOMString str);
 
   /**
    * This method is here for backwards compatibility with 4.x only,
    * its implementation is a no-op
    */
-  void                      setResizable(boolean resizable);
+  undefined                 setResizable(boolean resizable);
 
   /**
    * This is the scriptable version of
@@ -615,31 +615,31 @@ partial interface Window {
            attribute nsIBrowserDOMWindow? browserDOMWindow;
 
   [Throws, Func="nsGlobalWindowInner::IsPrivilegedChromeWindow"]
-  void                      getAttention();
+  undefined                 getAttention();
 
   [Throws, Func="nsGlobalWindowInner::IsPrivilegedChromeWindow"]
-  void                      getAttentionWithCycleCount(long aCycleCount);
+  undefined                 getAttentionWithCycleCount(long aCycleCount);
 
   [Throws, Func="nsGlobalWindowInner::IsPrivilegedChromeWindow"]
-  void                      setCursor(UTF8String cursor);
+  undefined                 setCursor(UTF8String cursor);
 
   [Func="nsGlobalWindowInner::IsPrivilegedChromeWindow"]
-  void                      maximize();
+  undefined                 maximize();
   [Func="nsGlobalWindowInner::IsPrivilegedChromeWindow"]
-  void                      minimize();
+  undefined                 minimize();
   [Func="nsGlobalWindowInner::IsPrivilegedChromeWindow"]
-  void                      restore();
+  undefined                 restore();
   [Func="nsGlobalWindowInner::IsPrivilegedChromeWindow"]
   DOMString                 getWorkspaceID();
   [Func="nsGlobalWindowInner::IsPrivilegedChromeWindow"]
-  void                      moveToWorkspace(DOMString workspaceID);
+  undefined                 moveToWorkspace(DOMString workspaceID);
 
   /**
    * Notify a default button is loaded on a dialog or a wizard.
    * defaultButton is the default button.
    */
   [Throws, Func="nsGlobalWindowInner::IsPrivilegedChromeWindow"]
-  void notifyDefaultButtonLoaded(Element defaultButton);
+  undefined notifyDefaultButtonLoaded(Element defaultButton);
 
   [Func="nsGlobalWindowInner::IsPrivilegedChromeWindow"]
   readonly attribute ChromeMessageBroadcaster messageManager;
@@ -749,14 +749,14 @@ partial interface Window {
   unsigned long requestIdleCallback(IdleRequestCallback callback,
                                     optional IdleRequestOptions options = {});
   [Func="nsGlobalWindowInner::IsRequestIdleCallbackEnabled"]
-  void          cancelIdleCallback(unsigned long handle);
+  undefined     cancelIdleCallback(unsigned long handle);
 };
 
 dictionary IdleRequestOptions {
   unsigned long timeout;
 };
 
-callback IdleRequestCallback = void (IdleDeadline deadline);
+callback IdleRequestCallback = undefined (IdleDeadline deadline);
 
 partial interface Window {
   /**
@@ -812,8 +812,8 @@ partial interface Window {
 partial interface Window {
   // The marks are values between 0 and scrollMax{X,Y} - scrollMin{X,Y}.
   [ChromeOnly]
-  void setScrollMarks(sequence<unsigned long> marks,
-                      optional boolean onHorizontalScrollbar = false);
+  undefined setScrollMarks(sequence<unsigned long> marks,
+                           optional boolean onHorizontalScrollbar = false);
 };
 
 dictionary WindowPostMessageOptions : StructuredSerializeOptions {

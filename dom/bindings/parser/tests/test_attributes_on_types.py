@@ -22,17 +22,17 @@ def WebIDLTest(parser, harness):
                 attribute [EnforceRange] long foo;
                 attribute [Clamp] long bar;
                 attribute [LegacyNullToEmptyString] DOMString baz;
-                void method([EnforceRange] long foo, [Clamp] long bar,
-                            [LegacyNullToEmptyString] DOMString baz);
-                void method2(optional [EnforceRange] long foo, optional [Clamp] long bar,
-                             optional [LegacyNullToEmptyString] DOMString baz);
-                void method3(optional [LegacyNullToEmptyString] UTF8String foo = "");
+                undefined method([EnforceRange] long foo, [Clamp] long bar,
+                                 [LegacyNullToEmptyString] DOMString baz);
+                undefined method2(optional [EnforceRange] long foo, optional [Clamp] long bar,
+                                  optional [LegacyNullToEmptyString] DOMString baz);
+                undefined method3(optional [LegacyNullToEmptyString] UTF8String foo = "");
             };
             interface C {
                 attribute [EnforceRange] long? foo;
                 attribute [Clamp] long? bar;
-                void method([EnforceRange] long? foo, [Clamp] long? bar);
-                void method2(optional [EnforceRange] long? foo, optional [Clamp] long? bar);
+                undefined method([EnforceRange] long? foo, [Clamp] long? bar);
+                undefined method2(optional [EnforceRange] long? foo, optional [Clamp] long? bar);
             };
             interface Setlike {
                 setlike<[Clamp] long>;
@@ -162,13 +162,13 @@ def WebIDLTest(parser, harness):
             interface B {
                 attribute Foo typedefFoo;
                 attribute [AllowShared] ArrayBufferView foo;
-                void method([AllowShared] ArrayBufferView foo);
-                void method2(optional [AllowShared] ArrayBufferView foo);
+                undefined method([AllowShared] ArrayBufferView foo);
+                undefined method2(optional [AllowShared] ArrayBufferView foo);
             };
             interface C {
                 attribute [AllowShared] ArrayBufferView? foo;
-                void method([AllowShared] ArrayBufferView? foo);
-                void method2(optional [AllowShared] ArrayBufferView? foo);
+                undefined method([AllowShared] ArrayBufferView? foo);
+                undefined method2(optional [AllowShared] ArrayBufferView? foo);
             };
             interface Setlike {
                 setlike<[AllowShared] ArrayBufferView>;
@@ -236,7 +236,7 @@ def WebIDLTest(parser, harness):
             "optional arguments",
             """
             interface Foo {
-                void foo(%s optional %s foo);
+                undefined foo(%s optional %s foo);
             };
         """,
         ),
@@ -292,7 +292,7 @@ def WebIDLTest(parser, harness):
             "partial interface",
             """
             interface Foo {
-              void foo();
+              undefined foo();
             };
             %s
             partial interface Foo {
@@ -322,7 +322,7 @@ def WebIDLTest(parser, harness):
             "partial namespace",
             """
             namespace Foo {
-              void foo();
+              undefined foo();
             };
             %s
             partial namespace Foo {
@@ -533,7 +533,7 @@ def WebIDLTest(parser, harness):
         parser.parse(
             """
             interface Foo {
-               void foo([Clamp] Bar arg);
+               undefined foo([Clamp] Bar arg);
             };
             typedef long Bar;
         """
@@ -554,7 +554,7 @@ def WebIDLTest(parser, harness):
         parser.parse(
             """
             interface Foo {
-               void foo(Bar arg);
+               undefined foo(Bar arg);
             };
             typedef [Clamp] long Bar;
         """

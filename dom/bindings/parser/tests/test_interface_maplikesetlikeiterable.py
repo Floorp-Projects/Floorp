@@ -585,7 +585,7 @@ def WebIDLTest(parser, harness):
                        interface Foo1 {
                        %s;
                        [Throws]
-                       void %s(long test1, double test2, double test3);
+                       undefined %s(long test1, double test2, double test3);
                        };
                        """
                 % (likeMember, conflictName),
@@ -598,7 +598,7 @@ def WebIDLTest(parser, harness):
                        interface Foo1 {
                        %s;
                        [Throws]
-                       void %s(long test1, double test2, double test3);
+                       undefined %s(long test1, double test2, double test3);
                        };
                        """
                 % (likeMember, conflictName),
@@ -608,7 +608,7 @@ def WebIDLTest(parser, harness):
             "Conflicting inherited method: %s and %s" % (likeMember, conflictName),
             """
                    interface Foo1 {
-                   void %s(long test1, double test2, double test3);
+                   undefined %s(long test1, double test2, double test3);
                    };
                    interface Foo2 : Foo1 {
                    %s;
@@ -621,7 +621,7 @@ def WebIDLTest(parser, harness):
             """
                    interface Foo1 {
                    %s;
-                   static void %s(long test1, double test2, double test3);
+                   static undefined %s(long test1, double test2, double test3);
                    };
                    """
             % (likeMember, conflictName),
@@ -675,7 +675,7 @@ def WebIDLTest(parser, harness):
                maplike<long, long>;
                };
                interface Foo2 : Foo1 {
-               void entries();
+               undefined entries();
                };
                """,
         mapRWMembers,
@@ -691,7 +691,7 @@ def WebIDLTest(parser, harness):
                interface Foo2 : Foo1 {
                };
                interface Foo3 : Foo2 {
-               void entries();
+               undefined entries();
                };
                """,
         mapRWMembers,
@@ -705,7 +705,7 @@ def WebIDLTest(parser, harness):
                maplike<long, long>;
                };
                interface mixin Foo2 {
-               void entries();
+               undefined entries();
                };
                Foo1 includes Foo2;
                """,
@@ -718,7 +718,7 @@ def WebIDLTest(parser, harness):
                maplike<long, long>;
                };
                interface mixin Foo2 {
-               void entries();
+               undefined entries();
                };
                interface Foo3 : Foo1 {
                };
@@ -732,7 +732,7 @@ def WebIDLTest(parser, harness):
         "Inheritance of name collision with child maplike/setlike",
         """
                interface Foo1 {
-               void entries();
+               undefined entries();
                };
                interface Foo2 : Foo1 {
                maplike<long, long>;
@@ -744,7 +744,7 @@ def WebIDLTest(parser, harness):
         "Inheritance of multi-level name collision with child maplike/setlike",
         """
                interface Foo1 {
-               void entries();
+               undefined entries();
                };
                interface Foo2 : Foo1 {
                };
@@ -841,7 +841,7 @@ def WebIDLTest(parser, harness):
                maplike<long, long>;
                };
                interface Foo2 : Foo1 {
-               void clear();
+               undefined clear();
                };
                """,
         mapRWMembers,

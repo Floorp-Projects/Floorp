@@ -49,5 +49,5 @@ interface TreeColumns {
    * This method is called whenever a treecol is added or removed and
    * the column cache needs to be rebuilt.
    */
-  void invalidateColumns();
+  undefined invalidateColumns();
 };

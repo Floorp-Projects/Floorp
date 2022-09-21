@@ -45,11 +45,11 @@ interface HTMLFormElement : HTMLElement {
   getter nsISupports (DOMString name);
 
   [Throws]
-  void submit();
+  undefined submit();
   [Throws]
-  void requestSubmit(optional HTMLElement? submitter = null);
+  undefined requestSubmit(optional HTMLElement? submitter = null);
   [CEReactions]
-  void reset();
+  undefined reset();
   boolean checkValidity();
   boolean reportValidity();
 };

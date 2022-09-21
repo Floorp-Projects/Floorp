@@ -41,5 +41,5 @@ partial interface StorageManager {
 [SecureContext]
 partial interface StorageManager {
   [ChromeOnly]
-  void shutdown();
+  undefined shutdown();
 };

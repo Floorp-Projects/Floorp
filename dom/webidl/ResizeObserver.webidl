@@ -22,12 +22,12 @@ interface ResizeObserver {
     [Throws]
     constructor(ResizeObserverCallback callback);
 
-    void observe(Element target, optional ResizeObserverOptions options = {});
-    void unobserve(Element target);
-    void disconnect();
+    undefined observe(Element target, optional ResizeObserverOptions options = {});
+    undefined unobserve(Element target);
+    undefined disconnect();
 };
 
-callback ResizeObserverCallback = void (sequence<ResizeObserverEntry> entries, ResizeObserver observer);
+callback ResizeObserverCallback = undefined (sequence<ResizeObserverEntry> entries, ResizeObserver observer);
 
 [Exposed=Window]
 interface ResizeObserverEntry {

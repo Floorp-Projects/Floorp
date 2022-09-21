@@ -55,5 +55,5 @@ namespace UniFFIScaffolding {
   UniFFIPointer readPointer(unsigned long long id, ArrayBuffer buff, long position);
 
   [Throws]
-  void writePointer(unsigned long long id, UniFFIPointer ptr, ArrayBuffer buff, long position);
+  undefined writePointer(unsigned long long id, UniFFIPointer ptr, ArrayBuffer buff, long position);
 };

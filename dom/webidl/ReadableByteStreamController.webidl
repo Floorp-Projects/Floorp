@@ -15,11 +15,11 @@ interface ReadableByteStreamController {
   readonly attribute unrestricted double? desiredSize;
 
   [Throws]
-  void close();
+  undefined close();
 
   [Throws]
-  void enqueue(ArrayBufferView chunk);
+  undefined enqueue(ArrayBufferView chunk);
 
   [Throws]
-  void error(optional any e);
+  undefined error(optional any e);
 };

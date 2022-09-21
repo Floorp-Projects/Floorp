@@ -12,10 +12,10 @@
 [Exposed=(ServiceWorker), LegacyNoInterfaceObject]
 interface ExtensionEventManager {
   [Throws]
-  void    addListener(Function callback, optional object listenerOptions);
+  undefined addListener(Function callback, optional object listenerOptions);
 
   [Throws]
-  void    removeListener(Function callback);
+  undefined removeListener(Function callback);
 
   [Throws]
   boolean hasListener(Function callback);

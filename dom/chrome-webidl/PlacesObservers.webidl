@@ -4,7 +4,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-callback PlacesEventCallback = void (sequence<PlacesEvent> events);
+callback PlacesEventCallback = undefined (sequence<PlacesEvent> events);
 
 [ChromeOnly, Exposed=Window]
 interface PlacesWeakCallbackWrapper {
@@ -15,18 +15,18 @@ interface PlacesWeakCallbackWrapper {
 [ChromeOnly, Exposed=Window]
 namespace PlacesObservers {
   [Throws]
-  void addListener(sequence<PlacesEventType> eventTypes,
-                   PlacesEventCallback listener);
+  undefined addListener(sequence<PlacesEventType> eventTypes,
+                        PlacesEventCallback listener);
   [Throws]
-  void addListener(sequence<PlacesEventType> eventTypes,
-                   PlacesWeakCallbackWrapper listener);
+  undefined addListener(sequence<PlacesEventType> eventTypes,
+                        PlacesWeakCallbackWrapper listener);
   [Throws]
-  void removeListener(sequence<PlacesEventType> eventTypes,
-                      PlacesEventCallback listener);
+  undefined removeListener(sequence<PlacesEventType> eventTypes,
+                           PlacesEventCallback listener);
   [Throws]
-  void removeListener(sequence<PlacesEventType> eventTypes,
-                      PlacesWeakCallbackWrapper listener);
+  undefined removeListener(sequence<PlacesEventType> eventTypes,
+                           PlacesWeakCallbackWrapper listener);
   [Throws]
-  void notifyListeners(sequence<PlacesEvent> events);
+  undefined notifyListeners(sequence<PlacesEvent> events);
 };
 

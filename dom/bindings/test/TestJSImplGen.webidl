@@ -8,7 +8,7 @@ typedef TestJSImplInterface AnotherNameForTestJSImplInterface;
 typedef TestJSImplInterface YetAnotherNameForTestJSImplInterface;
 typedef TestJSImplInterface? NullableTestJSImplInterface;
 
-callback MyTestCallback = void();
+callback MyTestCallback = undefined();
 
 enum MyTestEnum {
   "a",
@@ -34,15 +34,15 @@ interface TestJSImplInterface {
   // XXXbz add tests for throwing versions of all the integer stuff
   readonly attribute byte readonlyByte;
   attribute byte writableByte;
-  void passByte(byte arg);
+  undefined passByte(byte arg);
   byte receiveByte();
-  void passOptionalByte(optional byte arg);
-  void passOptionalByteBeforeRequired(optional byte arg1, byte arg2);
-  void passOptionalByteWithDefault(optional byte arg = 0);
-  void passOptionalByteWithDefaultBeforeRequired(optional byte arg1 = 0, byte arg2);
-  void passNullableByte(byte? arg);
-  void passOptionalNullableByte(optional byte? arg);
-  void passVariadicByte(byte... arg);
+  undefined passOptionalByte(optional byte arg);
+  undefined passOptionalByteBeforeRequired(optional byte arg1, byte arg2);
+  undefined passOptionalByteWithDefault(optional byte arg = 0);
+  undefined passOptionalByteWithDefaultBeforeRequired(optional byte arg1 = 0, byte arg2);
+  undefined passNullableByte(byte? arg);
+  undefined passOptionalNullableByte(optional byte? arg);
+  undefined passVariadicByte(byte... arg);
   // [Cached] is not supported in JS-implemented WebIDL.
   //[Cached, Pure]
   //readonly attribute byte cachedByte;
@@ -69,52 +69,52 @@ interface TestJSImplInterface {
 
   readonly attribute short readonlyShort;
   attribute short writableShort;
-  void passShort(short arg);
+  undefined passShort(short arg);
   short receiveShort();
-  void passOptionalShort(optional short arg);
-  void passOptionalShortWithDefault(optional short arg = 5);
+  undefined passOptionalShort(optional short arg);
+  undefined passOptionalShortWithDefault(optional short arg = 5);
 
   readonly attribute long readonlyLong;
   attribute long writableLong;
-  void passLong(long arg);
+  undefined passLong(long arg);
   long receiveLong();
-  void passOptionalLong(optional long arg);
-  void passOptionalLongWithDefault(optional long arg = 7);
+  undefined passOptionalLong(optional long arg);
+  undefined passOptionalLongWithDefault(optional long arg = 7);
 
   readonly attribute long long readonlyLongLong;
   attribute long long writableLongLong;
-  void passLongLong(long long arg);
+  undefined passLongLong(long long arg);
   long long receiveLongLong();
-  void passOptionalLongLong(optional long long arg);
-  void passOptionalLongLongWithDefault(optional long long arg = -12);
+  undefined passOptionalLongLong(optional long long arg);
+  undefined passOptionalLongLongWithDefault(optional long long arg = -12);
 
   readonly attribute octet readonlyOctet;
   attribute octet writableOctet;
-  void passOctet(octet arg);
+  undefined passOctet(octet arg);
   octet receiveOctet();
-  void passOptionalOctet(optional octet arg);
-  void passOptionalOctetWithDefault(optional octet arg = 19);
+  undefined passOptionalOctet(optional octet arg);
+  undefined passOptionalOctetWithDefault(optional octet arg = 19);
 
   readonly attribute unsigned short readonlyUnsignedShort;
   attribute unsigned short writableUnsignedShort;
-  void passUnsignedShort(unsigned short arg);
+  undefined passUnsignedShort(unsigned short arg);
   unsigned short receiveUnsignedShort();
-  void passOptionalUnsignedShort(optional unsigned short arg);
-  void passOptionalUnsignedShortWithDefault(optional unsigned short arg = 2);
+  undefined passOptionalUnsignedShort(optional unsigned short arg);
+  undefined passOptionalUnsignedShortWithDefault(optional unsigned short arg = 2);
 
   readonly attribute unsigned long readonlyUnsignedLong;
   attribute unsigned long writableUnsignedLong;
-  void passUnsignedLong(unsigned long arg);
+  undefined passUnsignedLong(unsigned long arg);
   unsigned long receiveUnsignedLong();
-  void passOptionalUnsignedLong(optional unsigned long arg);
-  void passOptionalUnsignedLongWithDefault(optional unsigned long arg = 6);
+  undefined passOptionalUnsignedLong(optional unsigned long arg);
+  undefined passOptionalUnsignedLongWithDefault(optional unsigned long arg = 6);
 
   readonly attribute unsigned long long readonlyUnsignedLongLong;
   attribute unsigned long long  writableUnsignedLongLong;
-  void passUnsignedLongLong(unsigned long long arg);
+  undefined passUnsignedLongLong(unsigned long long arg);
   unsigned long long receiveUnsignedLongLong();
-  void passOptionalUnsignedLongLong(optional unsigned long long arg);
-  void passOptionalUnsignedLongLongWithDefault(optional unsigned long long arg = 17);
+  undefined passOptionalUnsignedLongLong(optional unsigned long long arg);
+  undefined passOptionalUnsignedLongLongWithDefault(optional unsigned long long arg = 17);
 
   attribute float writableFloat;
   attribute unrestricted float writableUnrestrictedFloat;
@@ -124,27 +124,27 @@ interface TestJSImplInterface {
   attribute unrestricted double writableUnrestrictedDouble;
   attribute double? writableNullableDouble;
   attribute unrestricted double? writableNullableUnrestrictedDouble;
-  void passFloat(float arg1, unrestricted float arg2,
-                 float? arg3, unrestricted float? arg4,
-                 double arg5, unrestricted double arg6,
-                 double? arg7, unrestricted double? arg8,
-                 sequence<float> arg9, sequence<unrestricted float> arg10,
-                 sequence<float?> arg11, sequence<unrestricted float?> arg12,
-                 sequence<double> arg13, sequence<unrestricted double> arg14,
-                 sequence<double?> arg15, sequence<unrestricted double?> arg16);
+  undefined passFloat(float arg1, unrestricted float arg2,
+                      float? arg3, unrestricted float? arg4,
+                      double arg5, unrestricted double arg6,
+                      double? arg7, unrestricted double? arg8,
+                      sequence<float> arg9, sequence<unrestricted float> arg10,
+                      sequence<float?> arg11, sequence<unrestricted float?> arg12,
+                      sequence<double> arg13, sequence<unrestricted double> arg14,
+                      sequence<double?> arg15, sequence<unrestricted double?> arg16);
   [LenientFloat]
-  void passLenientFloat(float arg1, unrestricted float arg2,
-                        float? arg3, unrestricted float? arg4,
-                        double arg5, unrestricted double arg6,
-                        double? arg7, unrestricted double? arg8,
-                        sequence<float> arg9,
-                        sequence<unrestricted float> arg10,
-                        sequence<float?> arg11,
-                        sequence<unrestricted float?> arg12,
-                        sequence<double> arg13,
-                        sequence<unrestricted double> arg14,
-                        sequence<double?> arg15,
-                        sequence<unrestricted double?> arg16);
+  undefined passLenientFloat(float arg1, unrestricted float arg2,
+                             float? arg3, unrestricted float? arg4,
+                             double arg5, unrestricted double arg6,
+                             double? arg7, unrestricted double? arg8,
+                             sequence<float> arg9,
+                             sequence<unrestricted float> arg10,
+                             sequence<float?> arg11,
+                             sequence<unrestricted float?> arg12,
+                             sequence<double> arg13,
+                             sequence<unrestricted double> arg14,
+                             sequence<double?> arg15,
+                             sequence<unrestricted double?> arg16);
   [LenientFloat]
   attribute float lenientFloatAttr;
   [LenientFloat]
@@ -159,17 +159,17 @@ interface TestJSImplInterface {
   TestJSImplInterface? receiveWeakNullableSelf();
 
   // A version to test for casting to TestJSImplInterface&
-  void passSelf(TestJSImplInterface arg);
-  void passNullableSelf(TestJSImplInterface? arg);
+  undefined passSelf(TestJSImplInterface arg);
+  undefined passNullableSelf(TestJSImplInterface? arg);
   attribute TestJSImplInterface nonNullSelf;
   attribute TestJSImplInterface? nullableSelf;
   // [Cached] is not supported in JS-implemented WebIDL.
   //[Cached, Pure]
   //readonly attribute TestJSImplInterface cachedSelf;
   // Optional arguments
-  void passOptionalSelf(optional TestJSImplInterface? arg);
-  void passOptionalNonNullSelf(optional TestJSImplInterface arg);
-  void passOptionalSelfWithDefault(optional TestJSImplInterface? arg = null);
+  undefined passOptionalSelf(optional TestJSImplInterface? arg);
+  undefined passOptionalNonNullSelf(optional TestJSImplInterface arg);
+  undefined passOptionalSelfWithDefault(optional TestJSImplInterface? arg = null);
 
   // Non-wrapper-cache interface types
   [NewObject]
@@ -191,28 +191,28 @@ interface TestJSImplInterface {
   TestExternalInterface? receiveNullableExternal();
   TestExternalInterface receiveWeakExternal();
   TestExternalInterface? receiveWeakNullableExternal();
-  void passExternal(TestExternalInterface arg);
-  void passNullableExternal(TestExternalInterface? arg);
+  undefined passExternal(TestExternalInterface arg);
+  undefined passNullableExternal(TestExternalInterface? arg);
   attribute TestExternalInterface nonNullExternal;
   attribute TestExternalInterface? nullableExternal;
   // Optional arguments
-  void passOptionalExternal(optional TestExternalInterface? arg);
-  void passOptionalNonNullExternal(optional TestExternalInterface arg);
-  void passOptionalExternalWithDefault(optional TestExternalInterface? arg = null);
+  undefined passOptionalExternal(optional TestExternalInterface? arg);
+  undefined passOptionalNonNullExternal(optional TestExternalInterface arg);
+  undefined passOptionalExternalWithDefault(optional TestExternalInterface? arg = null);
 
   // Callback interface types
   TestCallbackInterface receiveCallbackInterface();
   TestCallbackInterface? receiveNullableCallbackInterface();
   TestCallbackInterface receiveWeakCallbackInterface();
   TestCallbackInterface? receiveWeakNullableCallbackInterface();
-  void passCallbackInterface(TestCallbackInterface arg);
-  void passNullableCallbackInterface(TestCallbackInterface? arg);
+  undefined passCallbackInterface(TestCallbackInterface arg);
+  undefined passNullableCallbackInterface(TestCallbackInterface? arg);
   attribute TestCallbackInterface nonNullCallbackInterface;
   attribute TestCallbackInterface? nullableCallbackInterface;
   // Optional arguments
-  void passOptionalCallbackInterface(optional TestCallbackInterface? arg);
-  void passOptionalNonNullCallbackInterface(optional TestCallbackInterface arg);
-  void passOptionalCallbackInterfaceWithDefault(optional TestCallbackInterface? arg = null);
+  undefined passOptionalCallbackInterface(optional TestCallbackInterface? arg);
+  undefined passOptionalNonNullCallbackInterface(optional TestCallbackInterface arg);
+  undefined passOptionalCallbackInterfaceWithDefault(optional TestCallbackInterface? arg = null);
 
   // Sequence types
   // [Cached] is not supported in JS-implemented WebIDL.
@@ -230,11 +230,11 @@ interface TestJSImplInterface {
   sequence<long>? receiveNullableSequence();
   sequence<long?> receiveSequenceOfNullableInts();
   sequence<long?>? receiveNullableSequenceOfNullableInts();
-  void passSequence(sequence<long> arg);
-  void passNullableSequence(sequence<long>? arg);
-  void passSequenceOfNullableInts(sequence<long?> arg);
-  void passOptionalSequenceOfNullableInts(optional sequence<long?> arg);
-  void passOptionalNullableSequenceOfNullableInts(optional sequence<long?>? arg);
+  undefined passSequence(sequence<long> arg);
+  undefined passNullableSequence(sequence<long>? arg);
+  undefined passSequenceOfNullableInts(sequence<long?> arg);
+  undefined passOptionalSequenceOfNullableInts(optional sequence<long?> arg);
+  undefined passOptionalNullableSequenceOfNullableInts(optional sequence<long?>? arg);
   sequence<TestJSImplInterface> receiveCastableObjectSequence();
   sequence<TestCallbackInterface> receiveCallbackObjectSequence();
   sequence<TestJSImplInterface?> receiveNullableCastableObjectSequence();
@@ -245,24 +245,24 @@ interface TestJSImplInterface {
   sequence<TestJSImplInterface?> receiveWeakNullableCastableObjectSequence();
   sequence<TestJSImplInterface>? receiveWeakCastableObjectNullableSequence();
   sequence<TestJSImplInterface?>? receiveWeakNullableCastableObjectNullableSequence();
-  void passCastableObjectSequence(sequence<TestJSImplInterface> arg);
-  void passNullableCastableObjectSequence(sequence<TestJSImplInterface?> arg);
-  void passCastableObjectNullableSequence(sequence<TestJSImplInterface>? arg);
-  void passNullableCastableObjectNullableSequence(sequence<TestJSImplInterface?>? arg);
-  void passOptionalSequence(optional sequence<long> arg);
-  void passOptionalSequenceWithDefaultValue(optional sequence<long> arg = []);
-  void passOptionalNullableSequence(optional sequence<long>? arg);
-  void passOptionalNullableSequenceWithDefaultValue(optional sequence<long>? arg = null);
-  void passOptionalNullableSequenceWithDefaultValue2(optional sequence<long>? arg = []);
-  void passOptionalObjectSequence(optional sequence<TestJSImplInterface> arg);
-  void passExternalInterfaceSequence(sequence<TestExternalInterface> arg);
-  void passNullableExternalInterfaceSequence(sequence<TestExternalInterface?> arg);
+  undefined passCastableObjectSequence(sequence<TestJSImplInterface> arg);
+  undefined passNullableCastableObjectSequence(sequence<TestJSImplInterface?> arg);
+  undefined passCastableObjectNullableSequence(sequence<TestJSImplInterface>? arg);
+  undefined passNullableCastableObjectNullableSequence(sequence<TestJSImplInterface?>? arg);
+  undefined passOptionalSequence(optional sequence<long> arg);
+  undefined passOptionalSequenceWithDefaultValue(optional sequence<long> arg = []);
+  undefined passOptionalNullableSequence(optional sequence<long>? arg);
+  undefined passOptionalNullableSequenceWithDefaultValue(optional sequence<long>? arg = null);
+  undefined passOptionalNullableSequenceWithDefaultValue2(optional sequence<long>? arg = []);
+  undefined passOptionalObjectSequence(optional sequence<TestJSImplInterface> arg);
+  undefined passExternalInterfaceSequence(sequence<TestExternalInterface> arg);
+  undefined passNullableExternalInterfaceSequence(sequence<TestExternalInterface?> arg);
 
   sequence<DOMString> receiveStringSequence();
   sequence<ByteString> receiveByteStringSequence();
   sequence<UTF8String> receiveUTF8StringSequence();
   // Callback interface problem.  See bug 843261.
-  //void passStringSequence(sequence<DOMString> arg);
+  //undefined passStringSequence(sequence<DOMString> arg);
   sequence<any> receiveAnySequence();
   sequence<any>? receiveNullableAnySequence();
   //XXXbz No support for sequence of sequence return values yet.
@@ -271,31 +271,31 @@ interface TestJSImplInterface {
   sequence<object> receiveObjectSequence();
   sequence<object?> receiveNullableObjectSequence();
 
-  void passSequenceOfSequences(sequence<sequence<long>> arg);
-  void passSequenceOfSequencesOfSequences(sequence<sequence<sequence<long>>> arg);
+  undefined passSequenceOfSequences(sequence<sequence<long>> arg);
+  undefined passSequenceOfSequencesOfSequences(sequence<sequence<sequence<long>>> arg);
   //XXXbz No support for sequence of sequence return values yet.
   //sequence<sequence<long>> receiveSequenceOfSequences();
 
   // record types
-  void passRecord(record<DOMString, long> arg);
-  void passNullableRecord(record<DOMString, long>? arg);
-  void passRecordOfNullableInts(record<DOMString, long?> arg);
-  void passOptionalRecordOfNullableInts(optional record<DOMString, long?> arg);
-  void passOptionalNullableRecordOfNullableInts(optional record<DOMString, long?>? arg);
-  void passCastableObjectRecord(record<DOMString, TestInterface> arg);
-  void passNullableCastableObjectRecord(record<DOMString, TestInterface?> arg);
-  void passCastableObjectNullableRecord(record<DOMString, TestInterface>? arg);
-  void passNullableCastableObjectNullableRecord(record<DOMString, TestInterface?>? arg);
-  void passOptionalRecord(optional record<DOMString, long> arg);
-  void passOptionalNullableRecord(optional record<DOMString, long>? arg);
-  void passOptionalNullableRecordWithDefaultValue(optional record<DOMString, long>? arg = null);
-  void passOptionalObjectRecord(optional record<DOMString, TestInterface> arg);
-  void passExternalInterfaceRecord(record<DOMString, TestExternalInterface> arg);
-  void passNullableExternalInterfaceRecord(record<DOMString, TestExternalInterface?> arg);
-  void passStringRecord(record<DOMString, DOMString> arg);
-  void passByteStringRecord(record<DOMString, ByteString> arg);
-  void passUTF8StringRecord(record<DOMString, UTF8String> arg);
-  void passRecordOfRecords(record<DOMString, record<DOMString, long>> arg);
+  undefined passRecord(record<DOMString, long> arg);
+  undefined passNullableRecord(record<DOMString, long>? arg);
+  undefined passRecordOfNullableInts(record<DOMString, long?> arg);
+  undefined passOptionalRecordOfNullableInts(optional record<DOMString, long?> arg);
+  undefined passOptionalNullableRecordOfNullableInts(optional record<DOMString, long?>? arg);
+  undefined passCastableObjectRecord(record<DOMString, TestInterface> arg);
+  undefined passNullableCastableObjectRecord(record<DOMString, TestInterface?> arg);
+  undefined passCastableObjectNullableRecord(record<DOMString, TestInterface>? arg);
+  undefined passNullableCastableObjectNullableRecord(record<DOMString, TestInterface?>? arg);
+  undefined passOptionalRecord(optional record<DOMString, long> arg);
+  undefined passOptionalNullableRecord(optional record<DOMString, long>? arg);
+  undefined passOptionalNullableRecordWithDefaultValue(optional record<DOMString, long>? arg = null);
+  undefined passOptionalObjectRecord(optional record<DOMString, TestInterface> arg);
+  undefined passExternalInterfaceRecord(record<DOMString, TestExternalInterface> arg);
+  undefined passNullableExternalInterfaceRecord(record<DOMString, TestExternalInterface?> arg);
+  undefined passStringRecord(record<DOMString, DOMString> arg);
+  undefined passByteStringRecord(record<DOMString, ByteString> arg);
+  undefined passUTF8StringRecord(record<DOMString, UTF8String> arg);
+  undefined passRecordOfRecords(record<DOMString, record<DOMString, long>> arg);
   record<DOMString, long> receiveRecord();
   record<DOMString, long>? receiveNullableRecord();
   record<DOMString, long?> receiveRecordOfNullableInts();
@@ -305,84 +305,84 @@ interface TestJSImplInterface {
   record<DOMString, any> receiveAnyRecord();
 
   // Typed array types
-  void passArrayBuffer(ArrayBuffer arg);
-  void passNullableArrayBuffer(ArrayBuffer? arg);
-  void passOptionalArrayBuffer(optional ArrayBuffer arg);
-  void passOptionalNullableArrayBuffer(optional ArrayBuffer? arg);
-  void passOptionalNullableArrayBufferWithDefaultValue(optional ArrayBuffer? arg= null);
-  void passArrayBufferView(ArrayBufferView arg);
-  void passInt8Array(Int8Array arg);
-  void passInt16Array(Int16Array arg);
-  void passInt32Array(Int32Array arg);
-  void passUint8Array(Uint8Array arg);
-  void passUint16Array(Uint16Array arg);
-  void passUint32Array(Uint32Array arg);
-  void passUint8ClampedArray(Uint8ClampedArray arg);
-  void passFloat32Array(Float32Array arg);
-  void passFloat64Array(Float64Array arg);
-  void passSequenceOfArrayBuffers(sequence<ArrayBuffer> arg);
-  void passSequenceOfNullableArrayBuffers(sequence<ArrayBuffer?> arg);
-  void passRecordOfArrayBuffers(record<DOMString, ArrayBuffer> arg);
-  void passRecordOfNullableArrayBuffers(record<DOMString, ArrayBuffer?> arg);
-  void passVariadicTypedArray(Float32Array... arg);
-  void passVariadicNullableTypedArray(Float32Array?... arg);
+  undefined passArrayBuffer(ArrayBuffer arg);
+  undefined passNullableArrayBuffer(ArrayBuffer? arg);
+  undefined passOptionalArrayBuffer(optional ArrayBuffer arg);
+  undefined passOptionalNullableArrayBuffer(optional ArrayBuffer? arg);
+  undefined passOptionalNullableArrayBufferWithDefaultValue(optional ArrayBuffer? arg= null);
+  undefined passArrayBufferView(ArrayBufferView arg);
+  undefined passInt8Array(Int8Array arg);
+  undefined passInt16Array(Int16Array arg);
+  undefined passInt32Array(Int32Array arg);
+  undefined passUint8Array(Uint8Array arg);
+  undefined passUint16Array(Uint16Array arg);
+  undefined passUint32Array(Uint32Array arg);
+  undefined passUint8ClampedArray(Uint8ClampedArray arg);
+  undefined passFloat32Array(Float32Array arg);
+  undefined passFloat64Array(Float64Array arg);
+  undefined passSequenceOfArrayBuffers(sequence<ArrayBuffer> arg);
+  undefined passSequenceOfNullableArrayBuffers(sequence<ArrayBuffer?> arg);
+  undefined passRecordOfArrayBuffers(record<DOMString, ArrayBuffer> arg);
+  undefined passRecordOfNullableArrayBuffers(record<DOMString, ArrayBuffer?> arg);
+  undefined passVariadicTypedArray(Float32Array... arg);
+  undefined passVariadicNullableTypedArray(Float32Array?... arg);
   Uint8Array receiveUint8Array();
   attribute Uint8Array uint8ArrayAttr;
 
   // DOMString types
-  void passString(DOMString arg);
-  void passNullableString(DOMString? arg);
-  void passOptionalString(optional DOMString arg);
-  void passOptionalStringWithDefaultValue(optional DOMString arg = "abc");
-  void passOptionalNullableString(optional DOMString? arg);
-  void passOptionalNullableStringWithDefaultValue(optional DOMString? arg = null);
-  void passVariadicString(DOMString... arg);
+  undefined passString(DOMString arg);
+  undefined passNullableString(DOMString? arg);
+  undefined passOptionalString(optional DOMString arg);
+  undefined passOptionalStringWithDefaultValue(optional DOMString arg = "abc");
+  undefined passOptionalNullableString(optional DOMString? arg);
+  undefined passOptionalNullableStringWithDefaultValue(optional DOMString? arg = null);
+  undefined passVariadicString(DOMString... arg);
 
   // ByteString types
-  void passByteString(ByteString arg);
-  void passNullableByteString(ByteString? arg);
-  void passOptionalByteString(optional ByteString arg);
-  void passOptionalByteStringWithDefaultValue(optional ByteString arg = "abc");
-  void passOptionalNullableByteString(optional ByteString? arg);
-  void passOptionalNullableByteStringWithDefaultValue(optional ByteString? arg = null);
-  void passVariadicByteString(ByteString... arg);
-  void passUnionByteString((ByteString or long) arg);
-  void passOptionalUnionByteString(optional (ByteString or long) arg);
-  void passOptionalUnionByteStringWithDefaultValue(optional (ByteString or long) arg = "abc");
+  undefined passByteString(ByteString arg);
+  undefined passNullableByteString(ByteString? arg);
+  undefined passOptionalByteString(optional ByteString arg);
+  undefined passOptionalByteStringWithDefaultValue(optional ByteString arg = "abc");
+  undefined passOptionalNullableByteString(optional ByteString? arg);
+  undefined passOptionalNullableByteStringWithDefaultValue(optional ByteString? arg = null);
+  undefined passVariadicByteString(ByteString... arg);
+  undefined passUnionByteString((ByteString or long) arg);
+  undefined passOptionalUnionByteString(optional (ByteString or long) arg);
+  undefined passOptionalUnionByteStringWithDefaultValue(optional (ByteString or long) arg = "abc");
 
   // UTF8String types
-  void passUTF8String(UTF8String arg);
-  void passNullableUTF8String(UTF8String? arg);
-  void passOptionalUTF8String(optional UTF8String arg);
-  void passOptionalUTF8StringWithDefaultValue(optional UTF8String arg = "abc");
-  void passOptionalNullableUTF8String(optional UTF8String? arg);
-  void passOptionalNullableUTF8StringWithDefaultValue(optional UTF8String? arg = null);
-  void passVariadicUTF8String(UTF8String... arg);
-  void passUnionUTF8String((UTF8String or long) arg);
-  void passOptionalUnionUTF8String(optional (UTF8String or long) arg);
-  void passOptionalUnionUTF8StringWithDefaultValue(optional (UTF8String or long) arg = "abc");
+  undefined passUTF8String(UTF8String arg);
+  undefined passNullableUTF8String(UTF8String? arg);
+  undefined passOptionalUTF8String(optional UTF8String arg);
+  undefined passOptionalUTF8StringWithDefaultValue(optional UTF8String arg = "abc");
+  undefined passOptionalNullableUTF8String(optional UTF8String? arg);
+  undefined passOptionalNullableUTF8StringWithDefaultValue(optional UTF8String? arg = null);
+  undefined passVariadicUTF8String(UTF8String... arg);
+  undefined passUnionUTF8String((UTF8String or long) arg);
+  undefined passOptionalUnionUTF8String(optional (UTF8String or long) arg);
+  undefined passOptionalUnionUTF8StringWithDefaultValue(optional (UTF8String or long) arg = "abc");
 
   // USVString types
-  void passSVS(USVString arg);
-  void passNullableSVS(USVString? arg);
-  void passOptionalSVS(optional USVString arg);
-  void passOptionalSVSWithDefaultValue(optional USVString arg = "abc");
-  void passOptionalNullableSVS(optional USVString? arg);
-  void passOptionalNullableSVSWithDefaultValue(optional USVString? arg = null);
-  void passVariadicSVS(USVString... arg);
+  undefined passSVS(USVString arg);
+  undefined passNullableSVS(USVString? arg);
+  undefined passOptionalSVS(optional USVString arg);
+  undefined passOptionalSVSWithDefaultValue(optional USVString arg = "abc");
+  undefined passOptionalNullableSVS(optional USVString? arg);
+  undefined passOptionalNullableSVSWithDefaultValue(optional USVString? arg = null);
+  undefined passVariadicSVS(USVString... arg);
   USVString receiveSVS();
 
   // JSString types
-  void passJSString(JSString arg);
-  // void passNullableJSString(JSString? arg); // NOT SUPPORTED YET
-  // void passOptionalJSString(optional JSString arg); // NOT SUPPORTED YET
-  void passOptionalJSStringWithDefaultValue(optional JSString arg = "abc");
-  // void passOptionalNullableJSString(optional JSString? arg); // NOT SUPPORTED YET
-  // void passOptionalNullableJSStringWithDefaultValue(optional JSString? arg = null); // NOT SUPPORTED YET
-  // void passVariadicJSString(JSString... arg); // NOT SUPPORTED YET
-  // void passRecordOfJSString(record<DOMString, JSString> arg); // NOT SUPPORTED YET
-  // void passSequenceOfJSString(sequence<JSString> arg); // NOT SUPPORTED YET
-  // void passUnionJSString((JSString or long) arg); // NOT SUPPORTED YET
+  undefined passJSString(JSString arg);
+  // undefined passNullableJSString(JSString? arg); // NOT SUPPORTED YET
+  // undefined passOptionalJSString(optional JSString arg); // NOT SUPPORTED YET
+  undefined passOptionalJSStringWithDefaultValue(optional JSString arg = "abc");
+  // undefined passOptionalNullableJSString(optional JSString? arg); // NOT SUPPORTED YET
+  // undefined passOptionalNullableJSStringWithDefaultValue(optional JSString? arg = null); // NOT SUPPORTED YET
+  // undefined passVariadicJSString(JSString... arg); // NOT SUPPORTED YET
+  // undefined passRecordOfJSString(record<DOMString, JSString> arg); // NOT SUPPORTED YET
+  // undefined passSequenceOfJSString(sequence<JSString> arg); // NOT SUPPORTED YET
+  // undefined passUnionJSString((JSString or long) arg); // NOT SUPPORTED YET
   JSString receiveJSString();
   // sequence<JSString> receiveJSStringSequence(); // NOT SUPPORTED YET
   // (JSString or long) receiveJSStringUnion(); // NOT SUPPORTED YET
@@ -391,201 +391,201 @@ interface TestJSImplInterface {
   attribute JSString jsStringAttr;
 
   // Enumerated types
-  void passEnum(MyTestEnum arg);
-  void passNullableEnum(MyTestEnum? arg);
-  void passOptionalEnum(optional MyTestEnum arg);
-  void passEnumWithDefault(optional MyTestEnum arg = "a");
-  void passOptionalNullableEnum(optional MyTestEnum? arg);
-  void passOptionalNullableEnumWithDefaultValue(optional MyTestEnum? arg = null);
-  void passOptionalNullableEnumWithDefaultValue2(optional MyTestEnum? arg = "a");
+  undefined passEnum(MyTestEnum arg);
+  undefined passNullableEnum(MyTestEnum? arg);
+  undefined passOptionalEnum(optional MyTestEnum arg);
+  undefined passEnumWithDefault(optional MyTestEnum arg = "a");
+  undefined passOptionalNullableEnum(optional MyTestEnum? arg);
+  undefined passOptionalNullableEnumWithDefaultValue(optional MyTestEnum? arg = null);
+  undefined passOptionalNullableEnumWithDefaultValue2(optional MyTestEnum? arg = "a");
   MyTestEnum receiveEnum();
   MyTestEnum? receiveNullableEnum();
   attribute MyTestEnum enumAttribute;
   readonly attribute MyTestEnum readonlyEnumAttribute;
 
   // Callback types
-  void passCallback(MyTestCallback arg);
-  void passNullableCallback(MyTestCallback? arg);
-  void passOptionalCallback(optional MyTestCallback arg);
-  void passOptionalNullableCallback(optional MyTestCallback? arg);
-  void passOptionalNullableCallbackWithDefaultValue(optional MyTestCallback? arg = null);
+  undefined passCallback(MyTestCallback arg);
+  undefined passNullableCallback(MyTestCallback? arg);
+  undefined passOptionalCallback(optional MyTestCallback arg);
+  undefined passOptionalNullableCallback(optional MyTestCallback? arg);
+  undefined passOptionalNullableCallbackWithDefaultValue(optional MyTestCallback? arg = null);
   MyTestCallback receiveCallback();
   MyTestCallback? receiveNullableCallback();
   // Hmm. These two don't work, I think because I need a locally modified version of TestTreatAsNullCallback.
-  //void passNullableTreatAsNullCallback(TestTreatAsNullCallback? arg);
-  //void passOptionalNullableTreatAsNullCallback(optional TestTreatAsNullCallback? arg);
-  void passOptionalNullableTreatAsNullCallbackWithDefaultValue(optional TestTreatAsNullCallback? arg = null);
+  //undefined passNullableTreatAsNullCallback(TestTreatAsNullCallback? arg);
+  //undefined passOptionalNullableTreatAsNullCallback(optional TestTreatAsNullCallback? arg);
+  undefined passOptionalNullableTreatAsNullCallbackWithDefaultValue(optional TestTreatAsNullCallback? arg = null);
 
   // Any types
-  void passAny(any arg);
-  void passVariadicAny(any... arg);
-  void passOptionalAny(optional any arg);
-  void passAnyDefaultNull(optional any arg = null);
-  void passSequenceOfAny(sequence<any> arg);
-  void passNullableSequenceOfAny(sequence<any>? arg);
-  void passOptionalSequenceOfAny(optional sequence<any> arg);
-  void passOptionalNullableSequenceOfAny(optional sequence<any>? arg);
-  void passOptionalSequenceOfAnyWithDefaultValue(optional sequence<any>? arg = null);
-  void passSequenceOfSequenceOfAny(sequence<sequence<any>> arg);
-  void passSequenceOfNullableSequenceOfAny(sequence<sequence<any>?> arg);
-  void passNullableSequenceOfNullableSequenceOfAny(sequence<sequence<any>?>? arg);
-  void passOptionalNullableSequenceOfNullableSequenceOfAny(optional sequence<sequence<any>?>? arg);
-  void passRecordOfAny(record<DOMString, any> arg);
-  void passNullableRecordOfAny(record<DOMString, any>? arg);
-  void passOptionalRecordOfAny(optional record<DOMString, any> arg);
-  void passOptionalNullableRecordOfAny(optional record<DOMString, any>? arg);
-  void passOptionalRecordOfAnyWithDefaultValue(optional record<DOMString, any>? arg = null);
-  void passRecordOfRecordOfAny(record<DOMString, record<DOMString, any>> arg);
-  void passRecordOfNullableRecordOfAny(record<DOMString, record<DOMString, any>?> arg);
-  void passNullableRecordOfNullableRecordOfAny(record<DOMString, record<DOMString, any>?>? arg);
-  void passOptionalNullableRecordOfNullableRecordOfAny(optional record<DOMString, record<DOMString, any>?>? arg);
-  void passOptionalNullableRecordOfNullableSequenceOfAny(optional record<DOMString, sequence<any>?>? arg);
-  void passOptionalNullableSequenceOfNullableRecordOfAny(optional sequence<record<DOMString, any>?>? arg);
+  undefined passAny(any arg);
+  undefined passVariadicAny(any... arg);
+  undefined passOptionalAny(optional any arg);
+  undefined passAnyDefaultNull(optional any arg = null);
+  undefined passSequenceOfAny(sequence<any> arg);
+  undefined passNullableSequenceOfAny(sequence<any>? arg);
+  undefined passOptionalSequenceOfAny(optional sequence<any> arg);
+  undefined passOptionalNullableSequenceOfAny(optional sequence<any>? arg);
+  undefined passOptionalSequenceOfAnyWithDefaultValue(optional sequence<any>? arg = null);
+  undefined passSequenceOfSequenceOfAny(sequence<sequence<any>> arg);
+  undefined passSequenceOfNullableSequenceOfAny(sequence<sequence<any>?> arg);
+  undefined passNullableSequenceOfNullableSequenceOfAny(sequence<sequence<any>?>? arg);
+  undefined passOptionalNullableSequenceOfNullableSequenceOfAny(optional sequence<sequence<any>?>? arg);
+  undefined passRecordOfAny(record<DOMString, any> arg);
+  undefined passNullableRecordOfAny(record<DOMString, any>? arg);
+  undefined passOptionalRecordOfAny(optional record<DOMString, any> arg);
+  undefined passOptionalNullableRecordOfAny(optional record<DOMString, any>? arg);
+  undefined passOptionalRecordOfAnyWithDefaultValue(optional record<DOMString, any>? arg = null);
+  undefined passRecordOfRecordOfAny(record<DOMString, record<DOMString, any>> arg);
+  undefined passRecordOfNullableRecordOfAny(record<DOMString, record<DOMString, any>?> arg);
+  undefined passNullableRecordOfNullableRecordOfAny(record<DOMString, record<DOMString, any>?>? arg);
+  undefined passOptionalNullableRecordOfNullableRecordOfAny(optional record<DOMString, record<DOMString, any>?>? arg);
+  undefined passOptionalNullableRecordOfNullableSequenceOfAny(optional record<DOMString, sequence<any>?>? arg);
+  undefined passOptionalNullableSequenceOfNullableRecordOfAny(optional sequence<record<DOMString, any>?>? arg);
   any receiveAny();
 
   // object types
-  void passObject(object arg);
-  void passVariadicObject(object... arg);
-  void passNullableObject(object? arg);
-  void passVariadicNullableObject(object... arg);
-  void passOptionalObject(optional object arg);
-  void passOptionalNullableObject(optional object? arg);
-  void passOptionalNullableObjectWithDefaultValue(optional object? arg = null);
-  void passSequenceOfObject(sequence<object> arg);
-  void passSequenceOfNullableObject(sequence<object?> arg);
-  void passNullableSequenceOfObject(sequence<object>? arg);
-  void passOptionalNullableSequenceOfNullableSequenceOfObject(optional sequence<sequence<object>?>? arg);
-  void passOptionalNullableSequenceOfNullableSequenceOfNullableObject(optional sequence<sequence<object?>?>? arg);
-  void passRecordOfObject(record<DOMString, object> arg);
+  undefined passObject(object arg);
+  undefined passVariadicObject(object... arg);
+  undefined passNullableObject(object? arg);
+  undefined passVariadicNullableObject(object... arg);
+  undefined passOptionalObject(optional object arg);
+  undefined passOptionalNullableObject(optional object? arg);
+  undefined passOptionalNullableObjectWithDefaultValue(optional object? arg = null);
+  undefined passSequenceOfObject(sequence<object> arg);
+  undefined passSequenceOfNullableObject(sequence<object?> arg);
+  undefined passNullableSequenceOfObject(sequence<object>? arg);
+  undefined passOptionalNullableSequenceOfNullableSequenceOfObject(optional sequence<sequence<object>?>? arg);
+  undefined passOptionalNullableSequenceOfNullableSequenceOfNullableObject(optional sequence<sequence<object?>?>? arg);
+  undefined passRecordOfObject(record<DOMString, object> arg);
   object receiveObject();
   object? receiveNullableObject();
 
   // Union types
-  void passUnion((object or long) arg);
-  // Some union tests are debug-only to avoid creating all those
+  undefined passUnion((object or long) arg);
+  // Some union tests are debug-only to aundefined creating all those
   // unused union types in opt builds.
 #ifdef DEBUG
-  void passUnion2((long or boolean) arg);
-  void passUnion3((object or long or boolean) arg);
-  void passUnion4((Node or long or boolean) arg);
-  void passUnion5((object or boolean) arg);
-  void passUnion6((object or DOMString) arg);
-  void passUnion7((object or DOMString or long) arg);
-  void passUnion8((object or DOMString or boolean) arg);
-  void passUnion9((object or DOMString or long or boolean) arg);
-  void passUnion10(optional (EventInit or long) arg = {});
-  void passUnion11(optional (CustomEventInit or long) arg = {});
-  void passUnion12(optional (EventInit or long) arg = 5);
-  void passUnion13(optional (object or long?) arg = null);
-  void passUnion14(optional (object or long?) arg = 5);
-  void passUnion15((sequence<long> or long) arg);
-  void passUnion16(optional (sequence<long> or long) arg);
-  void passUnion17(optional (sequence<long>? or long) arg = 5);
-  void passUnion18((sequence<object> or long) arg);
-  void passUnion19(optional (sequence<object> or long) arg);
-  void passUnion20(optional (sequence<object> or long) arg = []);
-  void passUnion21((record<DOMString, long> or long) arg);
-  void passUnion22((record<DOMString, object> or long) arg);
-  void passUnion23((sequence<ImageData> or long) arg);
-  void passUnion24((sequence<ImageData?> or long) arg);
-  void passUnion25((sequence<sequence<ImageData>> or long) arg);
-  void passUnion26((sequence<sequence<ImageData?>> or long) arg);
-  void passUnion27(optional (sequence<DOMString> or EventInit) arg = {});
-  void passUnion28(optional (EventInit or sequence<DOMString>) arg = {});
-  void passUnionWithCallback((EventHandler or long) arg);
-  void passUnionWithByteString((ByteString or long) arg);
-  void passUnionWithUTF8String((UTF8String or long) arg);
-  void passUnionWithRecord((record<DOMString, DOMString> or DOMString) arg);
-  void passUnionWithRecordAndSequence((record<DOMString, DOMString> or sequence<DOMString>) arg);
-  void passUnionWithSequenceAndRecord((sequence<DOMString> or record<DOMString, DOMString>) arg);
-  void passUnionWithSVS((USVString or long) arg);
+  undefined passUnion2((long or boolean) arg);
+  undefined passUnion3((object or long or boolean) arg);
+  undefined passUnion4((Node or long or boolean) arg);
+  undefined passUnion5((object or boolean) arg);
+  undefined passUnion6((object or DOMString) arg);
+  undefined passUnion7((object or DOMString or long) arg);
+  undefined passUnion8((object or DOMString or boolean) arg);
+  undefined passUnion9((object or DOMString or long or boolean) arg);
+  undefined passUnion10(optional (EventInit or long) arg = {});
+  undefined passUnion11(optional (CustomEventInit or long) arg = {});
+  undefined passUnion12(optional (EventInit or long) arg = 5);
+  undefined passUnion13(optional (object or long?) arg = null);
+  undefined passUnion14(optional (object or long?) arg = 5);
+  undefined passUnion15((sequence<long> or long) arg);
+  undefined passUnion16(optional (sequence<long> or long) arg);
+  undefined passUnion17(optional (sequence<long>? or long) arg = 5);
+  undefined passUnion18((sequence<object> or long) arg);
+  undefined passUnion19(optional (sequence<object> or long) arg);
+  undefined passUnion20(optional (sequence<object> or long) arg = []);
+  undefined passUnion21((record<DOMString, long> or long) arg);
+  undefined passUnion22((record<DOMString, object> or long) arg);
+  undefined passUnion23((sequence<ImageData> or long) arg);
+  undefined passUnion24((sequence<ImageData?> or long) arg);
+  undefined passUnion25((sequence<sequence<ImageData>> or long) arg);
+  undefined passUnion26((sequence<sequence<ImageData?>> or long) arg);
+  undefined passUnion27(optional (sequence<DOMString> or EventInit) arg = {});
+  undefined passUnion28(optional (EventInit or sequence<DOMString>) arg = {});
+  undefined passUnionWithCallback((EventHandler or long) arg);
+  undefined passUnionWithByteString((ByteString or long) arg);
+  undefined passUnionWithUTF8String((UTF8String or long) arg);
+  undefined passUnionWithRecord((record<DOMString, DOMString> or DOMString) arg);
+  undefined passUnionWithRecordAndSequence((record<DOMString, DOMString> or sequence<DOMString>) arg);
+  undefined passUnionWithSequenceAndRecord((sequence<DOMString> or record<DOMString, DOMString>) arg);
+  undefined passUnionWithSVS((USVString or long) arg);
 #endif
-  void passUnionWithNullable((object? or long) arg);
-  void passNullableUnion((object or long)? arg);
-  void passOptionalUnion(optional (object or long) arg);
-  void passOptionalNullableUnion(optional (object or long)? arg);
-  void passOptionalNullableUnionWithDefaultValue(optional (object or long)? arg = null);
-  //void passUnionWithInterfaces((TestJSImplInterface or TestExternalInterface) arg);
-  //void passUnionWithInterfacesAndNullable((TestJSImplInterface? or TestExternalInterface) arg);
-  //void passUnionWithSequence((sequence<object> or long) arg);
-  void passUnionWithArrayBuffer((ArrayBuffer or long) arg);
-  void passUnionWithString((DOMString or object) arg);
+  undefined passUnionWithNullable((object? or long) arg);
+  undefined passNullableUnion((object or long)? arg);
+  undefined passOptionalUnion(optional (object or long) arg);
+  undefined passOptionalNullableUnion(optional (object or long)? arg);
+  undefined passOptionalNullableUnionWithDefaultValue(optional (object or long)? arg = null);
+  //undefined passUnionWithInterfaces((TestJSImplInterface or TestExternalInterface) arg);
+  //undefined passUnionWithInterfacesAndNullable((TestJSImplInterface? or TestExternalInterface) arg);
+  //undefined passUnionWithSequence((sequence<object> or long) arg);
+  undefined passUnionWithArrayBuffer((ArrayBuffer or long) arg);
+  undefined passUnionWithString((DOMString or object) arg);
   // Using an enum in a union.  Note that we use some enum not declared in our
   // binding file, because UnionTypes.h will need to include the binding header
   // for this enum.  Pick an enum from an interface that won't drag in too much
   // stuff.
-  void passUnionWithEnum((SupportedType or object) arg);
+  undefined passUnionWithEnum((SupportedType or object) arg);
 
   // Trying to use a callback in a union won't include the test
   // headers, unfortunately, so won't compile.
-  //  void passUnionWithCallback((MyTestCallback or long) arg);
-  void passUnionWithObject((object or long) arg);
-  //void passUnionWithDict((Dict or long) arg);
+  //  undefined passUnionWithCallback((MyTestCallback or long) arg);
+  undefined passUnionWithObject((object or long) arg);
+  //undefined passUnionWithDict((Dict or long) arg);
 
-  void passUnionWithDefaultValue1(optional (double or DOMString) arg = "");
-  void passUnionWithDefaultValue2(optional (double or DOMString) arg = 1);
-  void passUnionWithDefaultValue3(optional (double or DOMString) arg = 1.5);
-  void passUnionWithDefaultValue4(optional (float or DOMString) arg = "");
-  void passUnionWithDefaultValue5(optional (float or DOMString) arg = 1);
-  void passUnionWithDefaultValue6(optional (float or DOMString) arg = 1.5);
-  void passUnionWithDefaultValue7(optional (unrestricted double or DOMString) arg = "");
-  void passUnionWithDefaultValue8(optional (unrestricted double or DOMString) arg = 1);
-  void passUnionWithDefaultValue9(optional (unrestricted double or DOMString) arg = 1.5);
-  void passUnionWithDefaultValue10(optional (unrestricted double or DOMString) arg = Infinity);
-  void passUnionWithDefaultValue11(optional (unrestricted float or DOMString) arg = "");
-  void passUnionWithDefaultValue12(optional (unrestricted float or DOMString) arg = 1);
-  void passUnionWithDefaultValue13(optional (unrestricted float or DOMString) arg = Infinity);
-  void passUnionWithDefaultValue14(optional (double or ByteString) arg = "");
-  void passUnionWithDefaultValue15(optional (double or ByteString) arg = 1);
-  void passUnionWithDefaultValue16(optional (double or ByteString) arg = 1.5);
-  void passUnionWithDefaultValue17(optional (double or SupportedType) arg = "text/html");
-  void passUnionWithDefaultValue18(optional (double or SupportedType) arg = 1);
-  void passUnionWithDefaultValue19(optional (double or SupportedType) arg = 1.5);
-  void passUnionWithDefaultValue20(optional (double or USVString) arg = "abc");
-  void passUnionWithDefaultValue21(optional (double or USVString) arg = 1);
-  void passUnionWithDefaultValue22(optional (double or USVString) arg = 1.5);
-  void passUnionWithDefaultValue23(optional (double or UTF8String) arg = "");
-  void passUnionWithDefaultValue24(optional (double or UTF8String) arg = 1);
-  void passUnionWithDefaultValue25(optional (double or UTF8String) arg = 1.5);
+  undefined passUnionWithDefaultValue1(optional (double or DOMString) arg = "");
+  undefined passUnionWithDefaultValue2(optional (double or DOMString) arg = 1);
+  undefined passUnionWithDefaultValue3(optional (double or DOMString) arg = 1.5);
+  undefined passUnionWithDefaultValue4(optional (float or DOMString) arg = "");
+  undefined passUnionWithDefaultValue5(optional (float or DOMString) arg = 1);
+  undefined passUnionWithDefaultValue6(optional (float or DOMString) arg = 1.5);
+  undefined passUnionWithDefaultValue7(optional (unrestricted double or DOMString) arg = "");
+  undefined passUnionWithDefaultValue8(optional (unrestricted double or DOMString) arg = 1);
+  undefined passUnionWithDefaultValue9(optional (unrestricted double or DOMString) arg = 1.5);
+  undefined passUnionWithDefaultValue10(optional (unrestricted double or DOMString) arg = Infinity);
+  undefined passUnionWithDefaultValue11(optional (unrestricted float or DOMString) arg = "");
+  undefined passUnionWithDefaultValue12(optional (unrestricted float or DOMString) arg = 1);
+  undefined passUnionWithDefaultValue13(optional (unrestricted float or DOMString) arg = Infinity);
+  undefined passUnionWithDefaultValue14(optional (double or ByteString) arg = "");
+  undefined passUnionWithDefaultValue15(optional (double or ByteString) arg = 1);
+  undefined passUnionWithDefaultValue16(optional (double or ByteString) arg = 1.5);
+  undefined passUnionWithDefaultValue17(optional (double or SupportedType) arg = "text/html");
+  undefined passUnionWithDefaultValue18(optional (double or SupportedType) arg = 1);
+  undefined passUnionWithDefaultValue19(optional (double or SupportedType) arg = 1.5);
+  undefined passUnionWithDefaultValue20(optional (double or USVString) arg = "abc");
+  undefined passUnionWithDefaultValue21(optional (double or USVString) arg = 1);
+  undefined passUnionWithDefaultValue22(optional (double or USVString) arg = 1.5);
+  undefined passUnionWithDefaultValue23(optional (double or UTF8String) arg = "");
+  undefined passUnionWithDefaultValue24(optional (double or UTF8String) arg = 1);
+  undefined passUnionWithDefaultValue25(optional (double or UTF8String) arg = 1.5);
 
-  void passNullableUnionWithDefaultValue1(optional (double or DOMString)? arg = "");
-  void passNullableUnionWithDefaultValue2(optional (double or DOMString)? arg = 1);
-  void passNullableUnionWithDefaultValue3(optional (double or DOMString)? arg = null);
-  void passNullableUnionWithDefaultValue4(optional (float or DOMString)? arg = "");
-  void passNullableUnionWithDefaultValue5(optional (float or DOMString)? arg = 1);
-  void passNullableUnionWithDefaultValue6(optional (float or DOMString)? arg = null);
-  void passNullableUnionWithDefaultValue7(optional (unrestricted double or DOMString)? arg = "");
-  void passNullableUnionWithDefaultValue8(optional (unrestricted double or DOMString)? arg = 1);
-  void passNullableUnionWithDefaultValue9(optional (unrestricted double or DOMString)? arg = null);
-  void passNullableUnionWithDefaultValue10(optional (unrestricted float or DOMString)? arg = "");
-  void passNullableUnionWithDefaultValue11(optional (unrestricted float or DOMString)? arg = 1);
-  void passNullableUnionWithDefaultValue12(optional (unrestricted float or DOMString)? arg = null);
-  void passNullableUnionWithDefaultValue13(optional (double or ByteString)? arg = "");
-  void passNullableUnionWithDefaultValue14(optional (double or ByteString)? arg = 1);
-  void passNullableUnionWithDefaultValue15(optional (double or ByteString)? arg = 1.5);
-  void passNullableUnionWithDefaultValue16(optional (double or ByteString)? arg = null);
-  void passNullableUnionWithDefaultValue17(optional (double or SupportedType)? arg = "text/html");
-  void passNullableUnionWithDefaultValue18(optional (double or SupportedType)? arg = 1);
-  void passNullableUnionWithDefaultValue19(optional (double or SupportedType)? arg = 1.5);
-  void passNullableUnionWithDefaultValue20(optional (double or SupportedType)? arg = null);
-  void passNullableUnionWithDefaultValue21(optional (double or USVString)? arg = "abc");
-  void passNullableUnionWithDefaultValue22(optional (double or USVString)? arg = 1);
-  void passNullableUnionWithDefaultValue23(optional (double or USVString)? arg = 1.5);
-  void passNullableUnionWithDefaultValue24(optional (double or USVString)? arg = null);
-  void passNullableUnionWithDefaultValue25(optional (double or UTF8String)? arg = "");
-  void passNullableUnionWithDefaultValue26(optional (double or UTF8String)? arg = 1);
-  void passNullableUnionWithDefaultValue27(optional (double or UTF8String)? arg = 1.5);
-  void passNullableUnionWithDefaultValue28(optional (double or UTF8String)? arg = null);
+  undefined passNullableUnionWithDefaultValue1(optional (double or DOMString)? arg = "");
+  undefined passNullableUnionWithDefaultValue2(optional (double or DOMString)? arg = 1);
+  undefined passNullableUnionWithDefaultValue3(optional (double or DOMString)? arg = null);
+  undefined passNullableUnionWithDefaultValue4(optional (float or DOMString)? arg = "");
+  undefined passNullableUnionWithDefaultValue5(optional (float or DOMString)? arg = 1);
+  undefined passNullableUnionWithDefaultValue6(optional (float or DOMString)? arg = null);
+  undefined passNullableUnionWithDefaultValue7(optional (unrestricted double or DOMString)? arg = "");
+  undefined passNullableUnionWithDefaultValue8(optional (unrestricted double or DOMString)? arg = 1);
+  undefined passNullableUnionWithDefaultValue9(optional (unrestricted double or DOMString)? arg = null);
+  undefined passNullableUnionWithDefaultValue10(optional (unrestricted float or DOMString)? arg = "");
+  undefined passNullableUnionWithDefaultValue11(optional (unrestricted float or DOMString)? arg = 1);
+  undefined passNullableUnionWithDefaultValue12(optional (unrestricted float or DOMString)? arg = null);
+  undefined passNullableUnionWithDefaultValue13(optional (double or ByteString)? arg = "");
+  undefined passNullableUnionWithDefaultValue14(optional (double or ByteString)? arg = 1);
+  undefined passNullableUnionWithDefaultValue15(optional (double or ByteString)? arg = 1.5);
+  undefined passNullableUnionWithDefaultValue16(optional (double or ByteString)? arg = null);
+  undefined passNullableUnionWithDefaultValue17(optional (double or SupportedType)? arg = "text/html");
+  undefined passNullableUnionWithDefaultValue18(optional (double or SupportedType)? arg = 1);
+  undefined passNullableUnionWithDefaultValue19(optional (double or SupportedType)? arg = 1.5);
+  undefined passNullableUnionWithDefaultValue20(optional (double or SupportedType)? arg = null);
+  undefined passNullableUnionWithDefaultValue21(optional (double or USVString)? arg = "abc");
+  undefined passNullableUnionWithDefaultValue22(optional (double or USVString)? arg = 1);
+  undefined passNullableUnionWithDefaultValue23(optional (double or USVString)? arg = 1.5);
+  undefined passNullableUnionWithDefaultValue24(optional (double or USVString)? arg = null);
+  undefined passNullableUnionWithDefaultValue25(optional (double or UTF8String)? arg = "");
+  undefined passNullableUnionWithDefaultValue26(optional (double or UTF8String)? arg = 1);
+  undefined passNullableUnionWithDefaultValue27(optional (double or UTF8String)? arg = 1.5);
+  undefined passNullableUnionWithDefaultValue28(optional (double or UTF8String)? arg = null);
 
-  void passSequenceOfUnions(sequence<(CanvasPattern or CanvasGradient)> arg);
-  void passSequenceOfUnions2(sequence<(object or long)> arg);
-  void passVariadicUnion((CanvasPattern or CanvasGradient)... arg);
+  undefined passSequenceOfUnions(sequence<(CanvasPattern or CanvasGradient)> arg);
+  undefined passSequenceOfUnions2(sequence<(object or long)> arg);
+  undefined passVariadicUnion((CanvasPattern or CanvasGradient)... arg);
 
-  void passSequenceOfNullableUnions(sequence<(CanvasPattern or CanvasGradient)?> arg);
-  void passVariadicNullableUnion((CanvasPattern or CanvasGradient)?... arg);
-  void passRecordOfUnions(record<DOMString, (CanvasPattern or CanvasGradient)> arg);
+  undefined passSequenceOfNullableUnions(sequence<(CanvasPattern or CanvasGradient)?> arg);
+  undefined passVariadicNullableUnion((CanvasPattern or CanvasGradient)?... arg);
+  undefined passRecordOfUnions(record<DOMString, (CanvasPattern or CanvasGradient)> arg);
   // XXXbz no move constructor on some unions
-  // void passRecordOfUnions2(record<DOMString, (object or long)> arg);
+  // undefined passRecordOfUnions2(record<DOMString, (object or long)> arg);
 
   (CanvasPattern or CanvasGradient) receiveUnion();
   (object or long) receiveUnion2();
@@ -598,24 +598,24 @@ interface TestJSImplInterface {
   attribute (CanvasPattern or CanvasGradient)? writableNullableUnion;
 
   // Promise types
-  void passPromise(Promise<any> arg);
-  void passOptionalPromise(optional Promise<any> arg);
-  void passPromiseSequence(sequence<Promise<any>> arg);
+  undefined passPromise(Promise<any> arg);
+  undefined passOptionalPromise(optional Promise<any> arg);
+  undefined passPromiseSequence(sequence<Promise<any>> arg);
   Promise<any> receivePromise();
   Promise<any> receiveAddrefedPromise();
 
   // binaryNames tests
   [BinaryName="methodRenamedTo"]
-  void methodRenamedFrom();
+  undefined methodRenamedFrom();
   [BinaryName="methodRenamedTo"]
-  void methodRenamedFrom(byte argument);
+  undefined methodRenamedFrom(byte argument);
   [BinaryName="attributeGetterRenamedTo"]
   readonly attribute byte attributeGetterRenamedFrom;
   [BinaryName="attributeRenamedTo"]
   attribute byte attributeRenamedFrom;
 
-  void passDictionary(optional Dict x = {});
-  void passDictionary2(Dict x);
+  undefined passDictionary(optional Dict x = {});
+  undefined passDictionary2(Dict x);
   // [Cached] is not supported in JS-implemented WebIDL.
   //[Cached, Pure]
   //readonly attribute Dict readonlyDictionary;
@@ -631,25 +631,25 @@ interface TestJSImplInterface {
   //attribute Dict writableFrozenDictionary;
   Dict receiveDictionary();
   Dict? receiveNullableDictionary();
-  void passOtherDictionary(optional GrandparentDict x = {});
-  void passSequenceOfDictionaries(sequence<Dict> x);
-  void passRecordOfDictionaries(record<DOMString, GrandparentDict> x);
+  undefined passOtherDictionary(optional GrandparentDict x = {});
+  undefined passSequenceOfDictionaries(sequence<Dict> x);
+  undefined passRecordOfDictionaries(record<DOMString, GrandparentDict> x);
   // No support for nullable dictionaries inside a sequence (nor should there be)
-  //  void passSequenceOfNullableDictionaries(sequence<Dict?> x);
-  void passDictionaryOrLong(optional Dict x = {});
-  void passDictionaryOrLong(long x);
+  //  undefined passSequenceOfNullableDictionaries(sequence<Dict?> x);
+  undefined passDictionaryOrLong(optional Dict x = {});
+  undefined passDictionaryOrLong(long x);
 
-  void passDictContainingDict(optional DictContainingDict arg = {});
-  void passDictContainingSequence(optional DictContainingSequence arg = {});
+  undefined passDictContainingDict(optional DictContainingDict arg = {});
+  undefined passDictContainingSequence(optional DictContainingSequence arg = {});
   DictContainingSequence receiveDictContainingSequence();
-  void passVariadicDictionary(Dict... arg);
+  undefined passVariadicDictionary(Dict... arg);
 
   // EnforceRange/Clamp tests
-  void dontEnforceRangeOrClamp(byte arg);
-  void doEnforceRange([EnforceRange] byte arg);
-  void doEnforceRangeNullable([EnforceRange] byte? arg);
-  void doClamp([Clamp] byte arg);
-  void doClampNullable([Clamp] byte? arg);
+  undefined dontEnforceRangeOrClamp(byte arg);
+  undefined doEnforceRange([EnforceRange] byte arg);
+  undefined doEnforceRangeNullable([EnforceRange] byte? arg);
+  undefined doClamp([Clamp] byte arg);
+  undefined doClampNullable([Clamp] byte? arg);
   attribute [EnforceRange] byte enforcedByte;
   attribute [EnforceRange] byte? enforcedByteNullable;
   attribute [Clamp] byte clampedByte;
@@ -657,9 +657,9 @@ interface TestJSImplInterface {
 
   // Typedefs
   const myLong myLongConstant = 5;
-  void exerciseTypedefInterfaces1(AnotherNameForTestJSImplInterface arg);
+  undefined exerciseTypedefInterfaces1(AnotherNameForTestJSImplInterface arg);
   AnotherNameForTestJSImplInterface exerciseTypedefInterfaces2(NullableTestJSImplInterface arg);
-  void exerciseTypedefInterfaces3(YetAnotherNameForTestJSImplInterface arg);
+  undefined exerciseTypedefInterfaces3(YetAnotherNameForTestJSImplInterface arg);
 
   // Deprecated methods and attributes
   [Deprecated="Components"]
@@ -667,14 +667,14 @@ interface TestJSImplInterface {
   [Deprecated="Components"]
   byte deprecatedMethod();
   [Deprecated="Components"]
-  void deprecatedMethodWithContext(any arg);
+  undefined deprecatedMethodWithContext(any arg);
 
   // Static methods and attributes
   // FIXME: Bug 863952 Static things are not supported yet
   /*
   static attribute boolean staticAttribute;
-  static void staticMethod(boolean arg);
-  static void staticMethodWithContext(any arg);
+  static undefined staticMethod(boolean arg);
+  static undefined staticMethodWithContext(any arg);
 
   // Deprecated static methods and attributes
   [Deprecated="Components"]
@@ -686,55 +686,55 @@ interface TestJSImplInterface {
   */
 
   // Overload resolution tests
-  //void overload1(DOMString... strs);
+  //undefined overload1(DOMString... strs);
   boolean overload1(TestJSImplInterface arg);
   TestJSImplInterface overload1(DOMString strs, TestJSImplInterface arg);
-  void overload2(TestJSImplInterface arg);
-  void overload2(optional Dict arg = {});
-  void overload2(boolean arg);
-  void overload2(DOMString arg);
-  void overload3(TestJSImplInterface arg);
-  void overload3(MyTestCallback arg);
-  void overload3(boolean arg);
-  void overload4(TestJSImplInterface arg);
-  void overload4(TestCallbackInterface arg);
-  void overload4(DOMString arg);
-  void overload5(long arg);
-  void overload5(MyTestEnum arg);
-  void overload6(long arg);
-  void overload6(boolean arg);
-  void overload7(long arg);
-  void overload7(boolean arg);
-  void overload7(ByteString arg);
-  void overload8(long arg);
-  void overload8(TestJSImplInterface arg);
-  void overload9(long? arg);
-  void overload9(DOMString arg);
-  void overload10(long? arg);
-  void overload10(object arg);
-  void overload11(long arg);
-  void overload11(DOMString? arg);
-  void overload12(long arg);
-  void overload12(boolean? arg);
-  void overload13(long? arg);
-  void overload13(boolean arg);
-  void overload14(optional long arg);
-  void overload14(TestInterface arg);
-  void overload15(long arg);
-  void overload15(optional TestInterface arg);
-  void overload16(long arg);
-  void overload16(optional TestInterface? arg);
-  void overload17(sequence<long> arg);
-  void overload17(record<DOMString, long> arg);
-  void overload18(record<DOMString, DOMString> arg);
-  void overload18(sequence<DOMString> arg);
-  void overload19(sequence<long> arg);
-  void overload19(optional Dict arg = {});
-  void overload20(optional Dict arg = {});
-  void overload20(sequence<long> arg);
+  undefined overload2(TestJSImplInterface arg);
+  undefined overload2(optional Dict arg = {});
+  undefined overload2(boolean arg);
+  undefined overload2(DOMString arg);
+  undefined overload3(TestJSImplInterface arg);
+  undefined overload3(MyTestCallback arg);
+  undefined overload3(boolean arg);
+  undefined overload4(TestJSImplInterface arg);
+  undefined overload4(TestCallbackInterface arg);
+  undefined overload4(DOMString arg);
+  undefined overload5(long arg);
+  undefined overload5(MyTestEnum arg);
+  undefined overload6(long arg);
+  undefined overload6(boolean arg);
+  undefined overload7(long arg);
+  undefined overload7(boolean arg);
+  undefined overload7(ByteString arg);
+  undefined overload8(long arg);
+  undefined overload8(TestJSImplInterface arg);
+  undefined overload9(long? arg);
+  undefined overload9(DOMString arg);
+  undefined overload10(long? arg);
+  undefined overload10(object arg);
+  undefined overload11(long arg);
+  undefined overload11(DOMString? arg);
+  undefined overload12(long arg);
+  undefined overload12(boolean? arg);
+  undefined overload13(long? arg);
+  undefined overload13(boolean arg);
+  undefined overload14(optional long arg);
+  undefined overload14(TestInterface arg);
+  undefined overload15(long arg);
+  undefined overload15(optional TestInterface arg);
+  undefined overload16(long arg);
+  undefined overload16(optional TestInterface? arg);
+  undefined overload17(sequence<long> arg);
+  undefined overload17(record<DOMString, long> arg);
+  undefined overload18(record<DOMString, DOMString> arg);
+  undefined overload18(sequence<DOMString> arg);
+  undefined overload19(sequence<long> arg);
+  undefined overload19(optional Dict arg = {});
+  undefined overload20(optional Dict arg = {});
+  undefined overload20(sequence<long> arg);
 
   // Variadic handling
-  void passVariadicThirdArg(DOMString arg1, long arg2, TestJSImplInterface... arg3);
+  undefined passVariadicThirdArg(DOMString arg1, long arg2, TestJSImplInterface... arg3);
 
   // Conditionally exposed methods/attributes
   [Pref="dom.webidl.test1"]
@@ -756,13 +756,13 @@ interface TestJSImplInterface {
   [Pref="dom.webidl.test1", Func="nsGenericHTMLElement::LegacyTouchAPIEnabled"]
   readonly attribute boolean prefable9;
   [Pref="dom.webidl.test1"]
-  void prefable10();
+  undefined prefable10();
   [Pref="dom.webidl.test1", Func="nsGenericHTMLElement::LegacyTouchAPIEnabled"]
-  void prefable11();
+  undefined prefable11();
   [Pref="dom.webidl.test1", Func="TestFuncControlledMember"]
   readonly attribute boolean prefable12;
   [Pref="dom.webidl.test1", Func="nsGenericHTMLElement::LegacyTouchAPIEnabled"]
-  void prefable13();
+  undefined prefable13();
   [Pref="dom.webidl.test1", Func="TestFuncControlledMember"]
   readonly attribute boolean prefable14;
   [Func="TestFuncControlledMember"]
@@ -770,13 +770,13 @@ interface TestJSImplInterface {
   [Func="TestFuncControlledMember"]
   readonly attribute boolean prefable16;
   [Pref="dom.webidl.test1", Func="TestFuncControlledMember"]
-  void prefable17();
+  undefined prefable17();
   [Func="TestFuncControlledMember"]
-  void prefable18();
+  undefined prefable18();
   [Func="TestFuncControlledMember"]
-  void prefable19();
+  undefined prefable19();
   [Pref="dom.webidl.test1", Func="TestFuncControlledMember", ChromeOnly]
-  void prefable20();
+  undefined prefable20();
 
   // Conditionally exposed methods/attributes involving [SecureContext]
   [SecureContext]
@@ -788,13 +788,13 @@ interface TestJSImplInterface {
   [SecureContext, Pref="dom.webidl.test1", Func="TestFuncControlledMember"]
   readonly attribute boolean conditionalOnSecureContext4;
   [SecureContext]
-  void conditionalOnSecureContext5();
+  undefined conditionalOnSecureContext5();
   [SecureContext, Pref="dom.webidl.test1"]
-  void conditionalOnSecureContext6();
+  undefined conditionalOnSecureContext6();
   [SecureContext, Pref="dom.webidl.test1", Func="nsGenericHTMLElement::LegacyTouchAPIEnabled"]
-  void conditionalOnSecureContext7();
+  undefined conditionalOnSecureContext7();
   [SecureContext, Pref="dom.webidl.test1", Func="TestFuncControlledMember"]
-  void conditionalOnSecureContext8();
+  undefined conditionalOnSecureContext8();
 
   // Miscellania
   [LegacyLenientThis] attribute long attrWithLenientThis;
@@ -807,28 +807,28 @@ interface TestJSImplInterface {
   //   [Unforgeable, ChromeOnly] long unforgeableMethod2();
   // FIXME: Bug 863955 No stringifiers yet
   //   stringifier;
-  void passRenamedInterface(TestRenamedInterface arg);
+  undefined passRenamedInterface(TestRenamedInterface arg);
   [PutForwards=writableByte] readonly attribute TestJSImplInterface putForwardsAttr;
   [PutForwards=writableByte, LegacyLenientThis] readonly attribute TestJSImplInterface putForwardsAttr2;
   [PutForwards=writableByte, ChromeOnly] readonly attribute TestJSImplInterface putForwardsAttr3;
-  [Throws] void throwingMethod();
+  [Throws] undefined throwingMethod();
   [Throws] attribute boolean throwingAttr;
   [GetterThrows] attribute boolean throwingGetterAttr;
   [SetterThrows] attribute boolean throwingSetterAttr;
-  [CanOOM] void canOOMMethod();
+  [CanOOM] undefined canOOMMethod();
   [CanOOM] attribute boolean canOOMAttr;
   [GetterCanOOM] attribute boolean canOOMGetterAttr;
   [SetterCanOOM] attribute boolean canOOMSetterAttr;
-  [CEReactions] void ceReactionsMethod();
-  [CEReactions] void ceReactionsMethodOverload();
-  [CEReactions] void ceReactionsMethodOverload(DOMString bar);
+  [CEReactions] undefined ceReactionsMethod();
+  [CEReactions] undefined ceReactionsMethodOverload();
+  [CEReactions] undefined ceReactionsMethodOverload(DOMString bar);
   [CEReactions] attribute boolean ceReactionsAttr;
   // NeedsSubjectPrincipal not supported on JS-implemented things for
   // now, because we always pass in the caller principal anyway.
-  //  [NeedsSubjectPrincipal] void needsSubjectPrincipalMethod();
+  //  [NeedsSubjectPrincipal] undefined needsSubjectPrincipalMethod();
   //  [NeedsSubjectPrincipal] attribute boolean needsSubjectPrincipalAttr;
   // legacycaller short(unsigned long arg1, TestInterface arg2);
-  void passArgsWithDefaults(optional long arg1,
+  undefined passArgsWithDefaults(optional long arg1,
                             optional TestInterface? arg2 = null,
                             optional Dict arg3 = {}, optional double arg4 = 5.0,
                             optional float arg5);
@@ -838,7 +838,7 @@ interface TestJSImplInterface {
   [Default] object toJSON();
 
   attribute byte dashed-attribute;
-  void dashed-method();
+  undefined dashed-method();
 
   // [NonEnumerable] tests
   [NonEnumerable]
@@ -846,7 +846,7 @@ interface TestJSImplInterface {
   [NonEnumerable]
   const boolean nonEnumerableConst = true;
   [NonEnumerable]
-  void nonEnumerableMethod();
+  undefined nonEnumerableMethod();
 
   // [AllowShared] tests
   attribute [AllowShared] ArrayBufferViewTypedef allowSharedArrayBufferViewTypedef;
@@ -855,13 +855,13 @@ interface TestJSImplInterface {
   attribute [AllowShared] ArrayBuffer allowSharedArrayBuffer;
   attribute [AllowShared] ArrayBuffer? allowSharedNullableArrayBuffer;
 
-  void passAllowSharedArrayBufferViewTypedef(AllowSharedArrayBufferViewTypedef foo);
-  void passAllowSharedArrayBufferView([AllowShared] ArrayBufferView foo);
-  void passAllowSharedNullableArrayBufferView([AllowShared] ArrayBufferView? foo);
-  void passAllowSharedArrayBuffer([AllowShared] ArrayBuffer foo);
-  void passAllowSharedNullableArrayBuffer([AllowShared] ArrayBuffer? foo);
-  void passUnionArrayBuffer((DOMString or ArrayBuffer) foo);
-  void passUnionAllowSharedArrayBuffer((DOMString or [AllowShared] ArrayBuffer) foo);
+  undefined passAllowSharedArrayBufferViewTypedef(AllowSharedArrayBufferViewTypedef foo);
+  undefined passAllowSharedArrayBufferView([AllowShared] ArrayBufferView foo);
+  undefined passAllowSharedNullableArrayBufferView([AllowShared] ArrayBufferView? foo);
+  undefined passAllowSharedArrayBuffer([AllowShared] ArrayBuffer foo);
+  undefined passAllowSharedNullableArrayBuffer([AllowShared] ArrayBuffer? foo);
+  undefined passUnionArrayBuffer((DOMString or ArrayBuffer) foo);
+  undefined passUnionAllowSharedArrayBuffer((DOMString or [AllowShared] ArrayBuffer) foo);
 
   // If you add things here, add them to TestCodeGen as well
 };

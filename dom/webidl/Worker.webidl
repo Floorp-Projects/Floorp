@@ -17,12 +17,12 @@ interface Worker : EventTarget {
   [Throws]
   constructor(USVString scriptURL, optional WorkerOptions options = {});
 
-  void terminate();
+  undefined terminate();
 
   [Throws]
-  void postMessage(any message, sequence<object> transfer);
+  undefined postMessage(any message, sequence<object> transfer);
   [Throws]
-  void postMessage(any message, optional StructuredSerializeOptions aOptions = {});
+  undefined postMessage(any message, optional StructuredSerializeOptions aOptions = {});
 
   attribute EventHandler onmessage;
   attribute EventHandler onmessageerror;

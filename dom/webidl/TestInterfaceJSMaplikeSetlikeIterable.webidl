@@ -11,8 +11,8 @@ interface TestInterfaceMaplike {
   constructor();
 
   maplike<DOMString, long>;
-  void setInternal(DOMString aKey, long aValue);
-  void clearInternal();
+  undefined setInternal(DOMString aKey, long aValue);
+  undefined clearInternal();
   boolean deleteInternal(DOMString aKey);
   boolean hasInternal(DOMString aKey);
   [Throws]
@@ -26,8 +26,8 @@ interface TestInterfaceMaplikeObject {
   constructor();
 
   readonly maplike<DOMString, TestInterfaceMaplike>;
-  void setInternal(DOMString aKey);
-  void clearInternal();
+  undefined setInternal(DOMString aKey);
+  undefined clearInternal();
   boolean deleteInternal(DOMString aKey);
   boolean hasInternal(DOMString aKey);
   [Throws]
@@ -41,8 +41,8 @@ interface TestInterfaceMaplikeJSObject {
   constructor();
 
   readonly maplike<DOMString, object>;
-  void setInternal(DOMString aKey, object aObject);
-  void clearInternal();
+  undefined setInternal(DOMString aKey, object aObject);
+  undefined clearInternal();
   boolean deleteInternal(DOMString aKey);
   boolean hasInternal(DOMString aKey);
   [Throws]

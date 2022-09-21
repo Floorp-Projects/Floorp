@@ -20,9 +20,9 @@ interface ServiceWorker : EventTarget {
   attribute EventHandler onstatechange;
 
   [Throws]
-  void postMessage(any message, sequence<object> transferable);
+  undefined postMessage(any message, sequence<object> transferable);
   [Throws]
-  void postMessage(any message, optional StructuredSerializeOptions options = {});
+  undefined postMessage(any message, optional StructuredSerializeOptions options = {});
 };
 
 ServiceWorker includes AbstractWorker;

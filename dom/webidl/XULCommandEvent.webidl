@@ -43,16 +43,16 @@ interface XULCommandEvent : UIEvent
    * Creates a new command event with the given attributes.
    */
   [Throws]
-  void initCommandEvent(DOMString type,
-                        optional boolean canBubble = false,
-                        optional boolean cancelable = false,
-                        optional Window? view = null,
-                        optional long detail = 0,
-                        optional boolean ctrlKey = false,
-                        optional boolean altKey = false,
-                        optional boolean shiftKey = false,
-                        optional boolean metaKey = false,
-                        optional short buttonArg = 0,
-                        optional Event? sourceEvent = null,
-                        optional unsigned short inputSource = 0);
+  undefined initCommandEvent(DOMString type,
+                             optional boolean canBubble = false,
+                             optional boolean cancelable = false,
+                             optional Window? view = null,
+                             optional long detail = 0,
+                             optional boolean ctrlKey = false,
+                             optional boolean altKey = false,
+                             optional boolean shiftKey = false,
+                             optional boolean metaKey = false,
+                             optional short buttonArg = 0,
+                             optional Event? sourceEvent = null,
+                             optional unsigned short inputSource = 0);
 };

@@ -148,7 +148,7 @@ class TestWebIDLCodegenManager(unittest.TestCase):
             child = state["webidls"]["Child.webidl"]
             self.assertEqual(len(child["inputs"]), 2)
             self.assertEqual(len(child["outputs"]), 2)
-            self.assertEqual(child["sha1"], "c41527cad3bc161fa6e7909e48fa11f9eca0468b")
+            self.assertEqual(child["sha1"], "c34c40b0fa0ac57c2834ee282efe0681e4dacc35")
 
     def test_generate_build_files_load_state(self):
         """State should be equivalent when instantiating a new instance."""

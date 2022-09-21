@@ -7,7 +7,7 @@
 [LegacyUnenumerableNamedProperties,
  Exposed=Window]
 interface PluginArray {
-  void refresh();
+  undefined refresh();
   readonly attribute unsigned long length;
   getter Plugin? item(unsigned long index);
   getter Plugin? namedItem(DOMString name);

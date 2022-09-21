@@ -23,7 +23,7 @@ def WebIDLTest(parser, harness):
     parser.parse(
         """
         interface X {
-          void foo(optional sequence<long> arg = []);
+          undefined foo(optional sequence<long> arg = []);
         };
     """
     )

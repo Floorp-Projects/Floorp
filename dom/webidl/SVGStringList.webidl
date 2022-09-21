@@ -15,7 +15,7 @@ interface SVGStringList {
   readonly attribute unsigned long length;
   readonly attribute unsigned long numberOfItems;
 
-  void clear();
+  undefined clear();
   [Throws]
   DOMString initialize(DOMString newItem);
   [Throws]
@@ -29,5 +29,5 @@ interface SVGStringList {
   DOMString removeItem(unsigned long index);
   [Throws]
   DOMString appendItem(DOMString newItem);
-  //setter void (unsigned long index, DOMString newItem);
+  //setter undefined (unsigned long index, DOMString newItem);
 };

@@ -48,22 +48,22 @@ interface MediaController : EventTarget {
   attribute EventHandler onpositionstatechange;
   attribute EventHandler onsupportedkeyschange;
 
-  void focus();
-  void play();
-  void pause();
-  void stop();
-  void prevTrack();
-  void nextTrack();
-  void seekBackward();
-  void seekForward();
-  void skipAd();
-  void seekTo(double seekTime, optional boolean fastSeek = false);
+  undefined focus();
+  undefined play();
+  undefined pause();
+  undefined stop();
+  undefined prevTrack();
+  undefined nextTrack();
+  undefined seekBackward();
+  undefined seekForward();
+  undefined skipAd();
+  undefined seekTo(double seekTime, optional boolean fastSeek = false);
 };
 
 [ChromeOnly,Exposed=Window,HeaderFile="mozilla/dom/MediaControlService.h"]
 namespace MediaControlService {
   // This is used to generate fake media control keys event in testing.
-  void generateMediaControlKey(MediaControlKey aKey);
+  undefined generateMediaControlKey(MediaControlKey aKey);
 
   // This is used to get the media metadata from the current main controller in
   // testing.

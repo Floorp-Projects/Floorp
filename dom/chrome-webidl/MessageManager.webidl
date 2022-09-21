@@ -237,9 +237,9 @@ interface mixin MessageListenerManagerMixin
    * the main process. Default is false.
    */
   [Throws]
-  void addMessageListener(DOMString messageName,
-                          MessageListener listener,
-                          optional boolean listenWhenClosed = false);
+  undefined addMessageListener(DOMString messageName,
+                               MessageListener listener,
+                               optional boolean listenWhenClosed = false);
 
   /**
    * Undo an |addMessageListener| call -- that is, calling this causes us to no
@@ -249,8 +249,8 @@ interface mixin MessageListenerManagerMixin
    * addWeakMessageListener; use removeWeakMessageListener for that.
    */
   [Throws]
-  void removeMessageListener(DOMString messageName,
-                             MessageListener listener);
+  undefined removeMessageListener(DOMString messageName,
+                                  MessageListener listener);
 
   /**
    * This is just like addMessageListener, except the message manager holds a
@@ -260,15 +260,15 @@ interface mixin MessageListenerManagerMixin
    * called in any order.
    */
   [Throws]
-  void addWeakMessageListener(DOMString messageName,
-                              MessageListener listener);
+  undefined addWeakMessageListener(DOMString messageName,
+                                   MessageListener listener);
 
   /**
    * This undoes an |addWeakMessageListener| call.
    */
   [Throws]
-  void removeWeakMessageListener(DOMString messageName,
-                                 MessageListener listener);
+  undefined removeWeakMessageListener(DOMString messageName,
+                                      MessageListener listener);
 };
 
 /**
@@ -303,9 +303,9 @@ interface mixin MessageSenderMixin {
    *         to a cross-process frame whose process has crashed.
    */
   [Throws]
-  void sendAsyncMessage(optional DOMString? messageName = null,
-                        optional any obj,
-                        optional any transfers);
+  undefined sendAsyncMessage(optional DOMString? messageName = null,
+                             optional any obj,
+                             optional any transfers);
 
   /**
    * For remote browsers there is always a corresponding process message
@@ -365,7 +365,7 @@ interface mixin MessageManagerGlobal
   /**
    * Print a string to stdout.
    */
-  void dump(DOMString str);
+  undefined dump(DOMString str);
 
   /**
    * Ascii base64 data to binary data and vice versa
@@ -386,13 +386,13 @@ interface mixin FrameScriptLoader
    * only if the frame is already available.
    */
   [Throws]
-  void loadFrameScript(DOMString url, boolean allowDelayedLoad,
-                       optional boolean runInGlobalScope = false);
+  undefined loadFrameScript(DOMString url, boolean allowDelayedLoad,
+                            optional boolean runInGlobalScope = false);
 
   /**
    * Removes |url| from the list of scripts which support delayed load.
    */
-  void removeDelayedFrameScript(DOMString url);
+  undefined removeDelayedFrameScript(DOMString url);
 
   /**
    * Returns all delayed scripts that will be loaded once a (remote)
@@ -413,12 +413,12 @@ interface mixin ProcessScriptLoader
    * only if the frame is already available.
    */
   [Throws]
-  void loadProcessScript(DOMString url, boolean allowDelayedLoad);
+  undefined loadProcessScript(DOMString url, boolean allowDelayedLoad);
 
   /**
    * Removes |url| from the list of scripts which support delayed load.
    */
-  void removeDelayedProcessScript(DOMString url);
+  undefined removeDelayedProcessScript(DOMString url);
 
   /**
    * Returns all delayed scripts that will be loaded once a (remote)
@@ -514,8 +514,8 @@ interface MessageBroadcaster : MessageListenerManager
    * sensitive data.  Use with extreme caution.
    */
   [Throws]
-  void broadcastAsyncMessage(optional DOMString? messageName = null,
-                             optional any obj);
+  undefined broadcastAsyncMessage(optional DOMString? messageName = null,
+                                  optional any obj);
 
   /**
    * Number of subordinate message managers.
@@ -531,7 +531,7 @@ interface MessageBroadcaster : MessageListenerManager
    * Some processes are kept alive after their last tab/window are closed for testing
    * (see dom.ipc.keepProcessesAlive). This function releases those.
    */
-   void releaseCachedProcesses();
+   undefined releaseCachedProcesses();
 };
 
 /**

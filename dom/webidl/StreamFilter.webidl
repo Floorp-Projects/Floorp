@@ -71,13 +71,13 @@ interface StreamFilter : EventTarget {
    * will be delivered until the request is resumed.
    */
   [Throws]
-  void suspend();
+  undefined suspend();
 
   /**
    * Resumes delivery of data for a suspended request.
    */
   [Throws]
-  void resume();
+  undefined resume();
 
   /**
    * Closes the request. After this is called, no more data may be written to
@@ -87,7 +87,7 @@ interface StreamFilter : EventTarget {
    * disconnect() has already been called.
    */
   [Throws]
-  void close();
+  undefined close();
 
   /**
    * Disconnects the stream filter from the request. After this is called, no
@@ -95,14 +95,14 @@ interface StreamFilter : EventTarget {
    * will be written directly to the output stream.
    */
   [Throws]
-  void disconnect();
+  undefined disconnect();
 
   /**
    * Writes a chunk of data to the output stream. This may not be called
    * before the "start" event has been received.
    */
   [Throws]
-  void write((ArrayBuffer or Uint8Array) data);
+  undefined write((ArrayBuffer or Uint8Array) data);
 
   /**
    * Returns the current status of the stream.

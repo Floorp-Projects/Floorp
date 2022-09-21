@@ -4,7 +4,7 @@ def WebIDLTest(parser, harness):
         parser.parse(
             """
             interface AnyNotInUnion {
-              void foo((any or DOMString) arg);
+              undefined foo((any or DOMString) arg);
             };
         """
         )

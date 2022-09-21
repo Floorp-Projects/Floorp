@@ -64,8 +64,8 @@ dictionary SignResponse {
     DOMString? errorMessage;
 };
 
-callback U2FRegisterCallback = void(RegisterResponse response);
-callback U2FSignCallback = void(SignResponse response);
+callback U2FRegisterCallback = undefined(RegisterResponse response);
+callback U2FSignCallback = undefined(SignResponse response);
 
 [SecureContext, Pref="security.webauth.u2f",
  Exposed=Window]
@@ -87,11 +87,11 @@ interface U2F {
 
   // A way to generate the actual implementation of register()
   [Unexposed, Throws, BinaryName="Register"]
-  void register_impl(DOMString appId,
-                     sequence<RegisterRequest> registerRequests,
-                     sequence<RegisteredKey> registeredKeys,
-                     U2FRegisterCallback callback,
-                     optional long? opt_timeoutSeconds);
+  undefined register_impl(DOMString appId,
+                          sequence<RegisterRequest> registerRequests,
+                          sequence<RegisteredKey> registeredKeys,
+                          U2FRegisterCallback callback,
+                          optional long? opt_timeoutSeconds);
 
   // Returns a Function.  It's readonly + [LenientSetter] to keep the Google
   // U2F polyfill from stomping on the value.
@@ -100,9 +100,9 @@ interface U2F {
 
   // A way to generate the actual implementation of sign()
   [Unexposed, Throws, BinaryName="Sign"]
-  void sign_impl (DOMString appId,
-                  DOMString challenge,
-                  sequence<RegisteredKey> registeredKeys,
-                  U2FSignCallback callback,
-                  optional long? opt_timeoutSeconds);
+  undefined sign_impl (DOMString appId,
+                       DOMString challenge,
+                       sequence<RegisteredKey> registeredKeys,
+                       U2FSignCallback callback,
+                       optional long? opt_timeoutSeconds);
 };

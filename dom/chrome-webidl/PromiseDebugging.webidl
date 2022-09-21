@@ -49,7 +49,7 @@ callback interface UncaughtRejectionObserver {
    * @param p A Promise that was previously left in uncaught state is
    * now caught, i.e. it is not the last in its chain anymore.
    */
-  void onConsumed(object p);
+  undefined onConsumed(object p);
 };
 
 [ChromeOnly, Exposed=Window]
@@ -105,6 +105,6 @@ namespace PromiseDebugging {
    * Adding an observer twice will cause it to be notified twice
    * of events.
    */
-  void addUncaughtRejectionObserver(UncaughtRejectionObserver o);
+  undefined addUncaughtRejectionObserver(UncaughtRejectionObserver o);
   boolean removeUncaughtRejectionObserver(UncaughtRejectionObserver o);
 };

@@ -15,8 +15,8 @@ interface MozStorageStatementParams
   getter any(DOMString name);
 
   [Throws]
-  setter void(unsigned long index, any arg);
+  setter undefined(unsigned long index, any arg);
 
   [Throws]
-  setter void(DOMString name, any arg);
+  setter undefined(DOMString name, any arg);
 };

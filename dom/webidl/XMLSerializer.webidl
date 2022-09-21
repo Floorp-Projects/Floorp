@@ -35,6 +35,6 @@ interface XMLSerializer {
    *                a document, the document's character set will be used.
    */
   [Throws, ChromeOnly]
-  void serializeToStream(Node root, OutputStream stream, DOMString? charset);
+  undefined serializeToStream(Node root, OutputStream stream, DOMString? charset);
 };
 

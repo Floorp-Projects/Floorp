@@ -12,4 +12,4 @@
  */
 callback Function = any(any... arguments);
 
-callback VoidFunction = void ();
+callback VoidFunction = undefined ();

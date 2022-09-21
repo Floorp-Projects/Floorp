@@ -20,17 +20,17 @@ interface Clipboard : EventTarget {
   Promise<DOMString> readText();
 
   [Pref="dom.events.asyncClipboard.clipboardItem", NewObject, NeedsSubjectPrincipal]
-  Promise<void> write(ClipboardItems data);
+  Promise<undefined> write(ClipboardItems data);
 
   [NewObject, NeedsSubjectPrincipal]
-  Promise<void> writeText(DOMString data);
+  Promise<undefined> writeText(DOMString data);
 };
 
 partial interface Clipboard {
   // @param allowed true, if the user allowed (e.g. clicked) the "Paste" menuitem.
   //                false, when the menupopup was dismissed.
   [ChromeOnly]
-  void onUserReactedToPasteMenuPopup(boolean allowed);
+  undefined onUserReactedToPasteMenuPopup(boolean allowed);
 };
 
 typedef (DOMString or Blob) ClipboardItemDataType;

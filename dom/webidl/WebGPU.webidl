@@ -161,7 +161,7 @@ interface GPUDevice: EventTarget {
     // Overriding the name to avoid collision with `class Queue` in gcc
     [SameObject, BinaryName="getQueue"] readonly attribute GPUQueue queue;
 
-    void destroy();
+    undefined destroy();
 
     [NewObject, Throws]
     GPUBuffer createBuffer(GPUBufferDescriptor descriptor);
@@ -232,7 +232,7 @@ typedef (GPUOutOfMemoryError or GPUValidationError) GPUError;
 partial interface GPUDevice {
     [Throws]
     readonly attribute Promise<GPUDeviceLostInfo> lost;
-    void pushErrorScope(GPUErrorFilter filter);
+    undefined pushErrorScope(GPUErrorFilter filter);
     [NewObject]
     Promise<GPUError?> popErrorScope();
     [Exposed=(Window,DedicatedWorker)]
@@ -280,13 +280,13 @@ interface GPUMapMode
  Exposed=(Window,DedicatedWorker)]
 interface GPUBuffer {
     [NewObject]
-    Promise<void> mapAsync(GPUMapModeFlags mode, optional GPUSize64 offset = 0, optional GPUSize64 size);
+    Promise<undefined> mapAsync(GPUMapModeFlags mode, optional GPUSize64 offset = 0, optional GPUSize64 size);
     [NewObject, Throws]
     ArrayBuffer getMappedRange(optional GPUSize64 offset = 0, optional GPUSize64 size);
     [Throws]
-    void unmap();
+    undefined unmap();
     [Throws]
-    void destroy();
+    undefined destroy();
 };
 GPUBuffer includes GPUObjectBase;
 
@@ -403,7 +403,7 @@ interface GPUTexture {
     [NewObject]
     GPUTextureView createView(optional GPUTextureViewDescriptor descriptor = {});
 
-    void destroy();
+    undefined destroy();
 };
 GPUTexture includes GPUObjectBase;
 
@@ -962,38 +962,38 @@ interface GPUCommandEncoder {
     [NewObject]
     GPURenderPassEncoder beginRenderPass(GPURenderPassDescriptor descriptor);
 
-    void copyBufferToBuffer(
+    undefined copyBufferToBuffer(
         GPUBuffer source,
         GPUSize64 sourceOffset,
         GPUBuffer destination,
         GPUSize64 destinationOffset,
         GPUSize64 size);
 
-    void copyBufferToTexture(
+    undefined copyBufferToTexture(
         GPUImageCopyBuffer source,
         GPUImageCopyTexture destination,
         GPUExtent3D copySize);
 
-    void copyTextureToBuffer(
+    undefined copyTextureToBuffer(
         GPUImageCopyTexture source,
         GPUImageCopyBuffer destination,
         GPUExtent3D copySize);
 
-    void copyTextureToTexture(
+    undefined copyTextureToTexture(
         GPUImageCopyTexture source,
         GPUImageCopyTexture destination,
         GPUExtent3D copySize);
 
     /*
-    void copyImageBitmapToTexture(
+    undefined copyImageBitmapToTexture(
         GPUImageBitmapCopyView source,
         GPUImageCopyTexture destination,
         GPUExtent3D copySize);
     */
 
-    void pushDebugGroup(USVString groupLabel);
-    void popDebugGroup();
-    void insertDebugMarker(USVString markerLabel);
+    undefined pushDebugGroup(USVString groupLabel);
+    undefined popDebugGroup();
+    undefined insertDebugMarker(USVString markerLabel);
 
     [NewObject]
     GPUCommandBuffer finish(optional GPUCommandBufferDescriptor descriptor = {});
@@ -1001,60 +1001,60 @@ interface GPUCommandEncoder {
 GPUCommandEncoder includes GPUObjectBase;
 
 interface mixin GPUProgrammablePassEncoder {
-    void setBindGroup(GPUIndex32 index, GPUBindGroup bindGroup,
-                      optional sequence<GPUBufferDynamicOffset> dynamicOffsets = []);
+    undefined setBindGroup(GPUIndex32 index, GPUBindGroup bindGroup,
+                           optional sequence<GPUBufferDynamicOffset> dynamicOffsets = []);
 
-    void pushDebugGroup(USVString groupLabel);
-    void popDebugGroup();
-    void insertDebugMarker(USVString markerLabel);
+    undefined pushDebugGroup(USVString groupLabel);
+    undefined popDebugGroup();
+    undefined insertDebugMarker(USVString markerLabel);
 };
 
 // Render Pass
 interface mixin GPURenderEncoderBase {
-    void setPipeline(GPURenderPipeline pipeline);
+    undefined setPipeline(GPURenderPipeline pipeline);
 
-    void setIndexBuffer(GPUBuffer buffer, GPUIndexFormat indexFormat, optional GPUSize64 offset = 0, optional GPUSize64 size = 0);
-    void setVertexBuffer(GPUIndex32 slot, GPUBuffer buffer, optional GPUSize64 offset = 0, optional GPUSize64 size = 0);
+    undefined setIndexBuffer(GPUBuffer buffer, GPUIndexFormat indexFormat, optional GPUSize64 offset = 0, optional GPUSize64 size = 0);
+    undefined setVertexBuffer(GPUIndex32 slot, GPUBuffer buffer, optional GPUSize64 offset = 0, optional GPUSize64 size = 0);
 
-    void draw(GPUSize32 vertexCount,
-              optional GPUSize32 instanceCount = 1,
-              optional GPUSize32 firstVertex = 0,
-              optional GPUSize32 firstInstance = 0);
-    void drawIndexed(GPUSize32 indexCount,
-                     optional GPUSize32 instanceCount = 1,
-                     optional GPUSize32 firstIndex = 0,
-                     optional GPUSignedOffset32 baseVertex = 0,
-                     optional GPUSize32 firstInstance = 0);
+    undefined draw(GPUSize32 vertexCount,
+                   optional GPUSize32 instanceCount = 1,
+                   optional GPUSize32 firstVertex = 0,
+                   optional GPUSize32 firstInstance = 0);
+    undefined drawIndexed(GPUSize32 indexCount,
+                          optional GPUSize32 instanceCount = 1,
+                          optional GPUSize32 firstIndex = 0,
+                          optional GPUSignedOffset32 baseVertex = 0,
+                          optional GPUSize32 firstInstance = 0);
 
-    void drawIndirect(GPUBuffer indirectBuffer, GPUSize64 indirectOffset);
-    void drawIndexedIndirect(GPUBuffer indirectBuffer, GPUSize64 indirectOffset);
+    undefined drawIndirect(GPUBuffer indirectBuffer, GPUSize64 indirectOffset);
+    undefined drawIndexedIndirect(GPUBuffer indirectBuffer, GPUSize64 indirectOffset);
 };
 
 [Pref="dom.webgpu.enabled",
  Exposed=(Window,DedicatedWorker)]
 interface GPURenderPassEncoder {
-    void setViewport(float x, float y,
-                     float width, float height,
-                     float minDepth, float maxDepth);
+    undefined setViewport(float x, float y,
+                          float width, float height,
+                          float minDepth, float maxDepth);
 
-    void setScissorRect(GPUIntegerCoordinate x, GPUIntegerCoordinate y,
-                        GPUIntegerCoordinate width, GPUIntegerCoordinate height);
+    undefined setScissorRect(GPUIntegerCoordinate x, GPUIntegerCoordinate y,
+                             GPUIntegerCoordinate width, GPUIntegerCoordinate height);
 
-    void setBlendConstant(GPUColor color);
-    void setStencilReference(GPUStencilValue reference);
+    undefined setBlendConstant(GPUColor color);
+    undefined setStencilReference(GPUStencilValue reference);
 
-    //void beginOcclusionQuery(GPUSize32 queryIndex);
-    //void endOcclusionQuery();
+    //undefined beginOcclusionQuery(GPUSize32 queryIndex);
+    //undefined endOcclusionQuery();
 
-    //void beginPipelineStatisticsQuery(GPUQuerySet querySet, GPUSize32 queryIndex);
-    //void endPipelineStatisticsQuery();
+    //undefined beginPipelineStatisticsQuery(GPUQuerySet querySet, GPUSize32 queryIndex);
+    //undefined endPipelineStatisticsQuery();
 
-    //void writeTimestamp(GPUQuerySet querySet, GPUSize32 queryIndex);
+    //undefined writeTimestamp(GPUQuerySet querySet, GPUSize32 queryIndex);
 
-    void executeBundles(sequence<GPURenderBundle> bundles);
+    undefined executeBundles(sequence<GPURenderBundle> bundles);
 
     [Throws]
-    void endPass();
+    undefined endPass();
 };
 GPURenderPassEncoder includes GPUObjectBase;
 GPURenderPassEncoder includes GPUProgrammablePassEncoder;
@@ -1067,12 +1067,12 @@ dictionary GPUComputePassDescriptor : GPUObjectDescriptorBase {
 [Pref="dom.webgpu.enabled",
  Exposed=(Window,DedicatedWorker)]
 interface GPUComputePassEncoder {
-    void setPipeline(GPUComputePipeline pipeline);
-    void dispatchWorkgroups(GPUSize32 x, optional GPUSize32 y = 1, optional GPUSize32 z = 1);
-    void dispatchWorkgroupsIndirect(GPUBuffer indirectBuffer, GPUSize64 indirectOffset);
+    undefined setPipeline(GPUComputePipeline pipeline);
+    undefined dispatchWorkgroups(GPUSize32 x, optional GPUSize32 y = 1, optional GPUSize32 z = 1);
+    undefined dispatchWorkgroupsIndirect(GPUBuffer indirectBuffer, GPUSize64 indirectOffset);
 
     [Throws]
-    void endPass();
+    undefined endPass();
 };
 GPUComputePassEncoder includes GPUObjectBase;
 GPUComputePassEncoder includes GPUProgrammablePassEncoder;
@@ -1145,7 +1145,7 @@ dictionary GPUQuerySetDescriptor : GPUObjectDescriptorBase {
 [Pref="dom.webgpu.enabled",
  Exposed=(Window,DedicatedWorker)]
 interface GPUQuerySet {
-    void destroy();
+    undefined destroy();
 };
 GPUQuerySet includes GPUObjectBase;
 
@@ -1157,13 +1157,13 @@ GPUQuerySet includes GPUObjectBase;
 [Pref="dom.webgpu.enabled",
  Exposed=(Window,DedicatedWorker)]
 interface GPUQueue {
-    void submit(sequence<GPUCommandBuffer> buffers);
+    undefined submit(sequence<GPUCommandBuffer> buffers);
 
     //TODO:
-    //Promise<void> onSubmittedWorkDone();
+    //Promise<undefined> onSubmittedWorkDone();
 
     [Throws]
-    void writeBuffer(
+    undefined writeBuffer(
         GPUBuffer buffer,
         GPUSize64 bufferOffset,
         BufferSource data,
@@ -1171,14 +1171,14 @@ interface GPUQueue {
         optional GPUSize64 size);
 
     [Throws]
-    void writeTexture(
+    undefined writeTexture(
       GPUImageCopyTexture destination,
       BufferSource data,
       GPUImageDataLayout dataLayout,
       GPUExtent3D size);
 
     [Throws]
-    void copyExternalImageToTexture(
+    undefined copyExternalImageToTexture(
       GPUImageCopyExternalImage source,
       GPUImageCopyTextureTagged destination,
       GPUExtent3D copySize);
@@ -1204,8 +1204,8 @@ enum GPUCanvasCompositingAlphaMode {
 interface GPUCanvasContext {
     // Calling configure() a second time invalidates the previous one,
     // and all of the textures it's produced.
-    void configure(GPUCanvasConfiguration descriptor);
-    void unconfigure();
+    undefined configure(GPUCanvasConfiguration descriptor);
+    undefined unconfigure();
 
     GPUTextureFormat getPreferredFormat(GPUAdapter adapter);
     [Throws]

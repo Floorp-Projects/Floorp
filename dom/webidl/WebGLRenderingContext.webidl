@@ -555,33 +555,33 @@ interface mixin WebGLRenderingContextBase {
     [Throws, NeedsCallerType]
     object? getExtension(DOMString name);
 
-    void activeTexture(GLenum texture);
-    void attachShader(WebGLProgram program, WebGLShader shader);
-    void bindAttribLocation(WebGLProgram program, GLuint index, DOMString name);
-    void bindBuffer(GLenum target, WebGLBuffer? buffer);
-    void bindFramebuffer(GLenum target, WebGLFramebuffer? framebuffer);
-    void bindRenderbuffer(GLenum target, WebGLRenderbuffer? renderbuffer);
-    void bindTexture(GLenum target, WebGLTexture? texture);
-    void blendColor(GLfloat red, GLfloat green, GLfloat blue, GLfloat alpha);
-    void blendEquation(GLenum mode);
-    void blendEquationSeparate(GLenum modeRGB, GLenum modeAlpha);
-    void blendFunc(GLenum sfactor, GLenum dfactor);
-    void blendFuncSeparate(GLenum srcRGB, GLenum dstRGB,
-                           GLenum srcAlpha, GLenum dstAlpha);
+    undefined activeTexture(GLenum texture);
+    undefined attachShader(WebGLProgram program, WebGLShader shader);
+    undefined bindAttribLocation(WebGLProgram program, GLuint index, DOMString name);
+    undefined bindBuffer(GLenum target, WebGLBuffer? buffer);
+    undefined bindFramebuffer(GLenum target, WebGLFramebuffer? framebuffer);
+    undefined bindRenderbuffer(GLenum target, WebGLRenderbuffer? renderbuffer);
+    undefined bindTexture(GLenum target, WebGLTexture? texture);
+    undefined blendColor(GLfloat red, GLfloat green, GLfloat blue, GLfloat alpha);
+    undefined blendEquation(GLenum mode);
+    undefined blendEquationSeparate(GLenum modeRGB, GLenum modeAlpha);
+    undefined blendFunc(GLenum sfactor, GLenum dfactor);
+    undefined blendFuncSeparate(GLenum srcRGB, GLenum dstRGB,
+                                GLenum srcAlpha, GLenum dstAlpha);
 
     [WebGLHandlesContextLoss] GLenum checkFramebufferStatus(GLenum target);
-    void clear(GLbitfield mask);
-    void clearColor(GLfloat red, GLfloat green, GLfloat blue, GLfloat alpha);
-    void clearDepth(GLclampf depth);
-    void clearStencil(GLint s);
-    void colorMask(GLboolean red, GLboolean green, GLboolean blue, GLboolean alpha);
-    void compileShader(WebGLShader shader);
+    undefined clear(GLbitfield mask);
+    undefined clearColor(GLfloat red, GLfloat green, GLfloat blue, GLfloat alpha);
+    undefined clearDepth(GLclampf depth);
+    undefined clearStencil(GLint s);
+    undefined colorMask(GLboolean red, GLboolean green, GLboolean blue, GLboolean alpha);
+    undefined compileShader(WebGLShader shader);
 
-    void copyTexImage2D(GLenum target, GLint level, GLenum internalformat,
-                        GLint x, GLint y, GLsizei width, GLsizei height,
-                        GLint border);
-    void copyTexSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset,
-                           GLint x, GLint y, GLsizei width, GLsizei height);
+    undefined copyTexImage2D(GLenum target, GLint level, GLenum internalformat,
+                             GLint x, GLint y, GLsizei width, GLsizei height,
+                             GLint border);
+    undefined copyTexSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset,
+                                GLint x, GLint y, GLsizei width, GLsizei height);
 
     WebGLBuffer? createBuffer();
     WebGLFramebuffer? createFramebuffer();
@@ -590,36 +590,36 @@ interface mixin WebGLRenderingContextBase {
     WebGLShader? createShader(GLenum type);
     WebGLTexture? createTexture();
 
-    void cullFace(GLenum mode);
+    undefined cullFace(GLenum mode);
 
-    void deleteBuffer(WebGLBuffer? buffer);
-    void deleteFramebuffer(WebGLFramebuffer? framebuffer);
-    void deleteProgram(WebGLProgram? program);
-    void deleteRenderbuffer(WebGLRenderbuffer? renderbuffer);
-    void deleteShader(WebGLShader? shader);
-    void deleteTexture(WebGLTexture? texture);
+    undefined deleteBuffer(WebGLBuffer? buffer);
+    undefined deleteFramebuffer(WebGLFramebuffer? framebuffer);
+    undefined deleteProgram(WebGLProgram? program);
+    undefined deleteRenderbuffer(WebGLRenderbuffer? renderbuffer);
+    undefined deleteShader(WebGLShader? shader);
+    undefined deleteTexture(WebGLTexture? texture);
 
-    void depthFunc(GLenum func);
-    void depthMask(GLboolean flag);
-    void depthRange(GLclampf zNear, GLclampf zFar);
-    void detachShader(WebGLProgram program, WebGLShader shader);
-    void disable(GLenum cap);
-    void disableVertexAttribArray(GLuint index);
-    void drawArrays(GLenum mode, GLint first, GLsizei count);
-    void drawElements(GLenum mode, GLsizei count, GLenum type, GLintptr offset);
+    undefined depthFunc(GLenum func);
+    undefined depthMask(GLboolean flag);
+    undefined depthRange(GLclampf zNear, GLclampf zFar);
+    undefined detachShader(WebGLProgram program, WebGLShader shader);
+    undefined disable(GLenum cap);
+    undefined disableVertexAttribArray(GLuint index);
+    undefined drawArrays(GLenum mode, GLint first, GLsizei count);
+    undefined drawElements(GLenum mode, GLsizei count, GLenum type, GLintptr offset);
 
-    void enable(GLenum cap);
-    void enableVertexAttribArray(GLuint index);
-    void finish();
-    void flush();
-    void framebufferRenderbuffer(GLenum target, GLenum attachment,
-                                 GLenum renderbuffertarget,
-                                 WebGLRenderbuffer? renderbuffer);
-    void framebufferTexture2D(GLenum target, GLenum attachment, GLenum textarget,
-                              WebGLTexture? texture, GLint level);
-    void frontFace(GLenum mode);
+    undefined enable(GLenum cap);
+    undefined enableVertexAttribArray(GLuint index);
+    undefined finish();
+    undefined flush();
+    undefined framebufferRenderbuffer(GLenum target, GLenum attachment,
+                                      GLenum renderbuffertarget,
+                                      WebGLRenderbuffer? renderbuffer);
+    undefined framebufferTexture2D(GLenum target, GLenum attachment, GLenum textarget,
+                                   WebGLTexture? texture, GLint level);
+    undefined frontFace(GLenum mode);
 
-    void generateMipmap(GLenum target);
+    undefined generateMipmap(GLenum target);
 
     [NewObject]
     WebGLActiveInfo? getActiveAttrib(WebGLProgram program, GLuint index);
@@ -663,7 +663,7 @@ interface mixin WebGLRenderingContextBase {
 
     [WebGLHandlesContextLoss] GLintptr getVertexAttribOffset(GLuint index, GLenum pname);
 
-    void hint(GLenum target, GLenum mode);
+    undefined hint(GLenum target, GLenum mode);
     [WebGLHandlesContextLoss] GLboolean isBuffer(WebGLBuffer? buffer);
     [WebGLHandlesContextLoss] GLboolean isEnabled(GLenum cap);
     [WebGLHandlesContextLoss] GLboolean isFramebuffer(WebGLFramebuffer? framebuffer);
@@ -671,150 +671,150 @@ interface mixin WebGLRenderingContextBase {
     [WebGLHandlesContextLoss] GLboolean isRenderbuffer(WebGLRenderbuffer? renderbuffer);
     [WebGLHandlesContextLoss] GLboolean isShader(WebGLShader? shader);
     [WebGLHandlesContextLoss] GLboolean isTexture(WebGLTexture? texture);
-    void lineWidth(GLfloat width);
-    void linkProgram(WebGLProgram program);
-    void pixelStorei(GLenum pname, GLint param);
-    void polygonOffset(GLfloat factor, GLfloat units);
+    undefined lineWidth(GLfloat width);
+    undefined linkProgram(WebGLProgram program);
+    undefined pixelStorei(GLenum pname, GLint param);
+    undefined polygonOffset(GLfloat factor, GLfloat units);
 
-    void renderbufferStorage(GLenum target, GLenum internalformat,
+    undefined renderbufferStorage(GLenum target, GLenum internalformat,
                              GLsizei width, GLsizei height);
-    void sampleCoverage(GLclampf value, GLboolean invert);
-    void scissor(GLint x, GLint y, GLsizei width, GLsizei height);
+    undefined sampleCoverage(GLclampf value, GLboolean invert);
+    undefined scissor(GLint x, GLint y, GLsizei width, GLsizei height);
 
-    void shaderSource(WebGLShader shader, DOMString source);
+    undefined shaderSource(WebGLShader shader, DOMString source);
 
-    void stencilFunc(GLenum func, GLint ref, GLuint mask);
-    void stencilFuncSeparate(GLenum face, GLenum func, GLint ref, GLuint mask);
-    void stencilMask(GLuint mask);
-    void stencilMaskSeparate(GLenum face, GLuint mask);
-    void stencilOp(GLenum fail, GLenum zfail, GLenum zpass);
-    void stencilOpSeparate(GLenum face, GLenum fail, GLenum zfail, GLenum zpass);
+    undefined stencilFunc(GLenum func, GLint ref, GLuint mask);
+    undefined stencilFuncSeparate(GLenum face, GLenum func, GLint ref, GLuint mask);
+    undefined stencilMask(GLuint mask);
+    undefined stencilMaskSeparate(GLenum face, GLuint mask);
+    undefined stencilOp(GLenum fail, GLenum zfail, GLenum zpass);
+    undefined stencilOpSeparate(GLenum face, GLenum fail, GLenum zfail, GLenum zpass);
 
-    void texParameterf(GLenum target, GLenum pname, GLfloat param);
-    void texParameteri(GLenum target, GLenum pname, GLint param);
+    undefined texParameterf(GLenum target, GLenum pname, GLfloat param);
+    undefined texParameteri(GLenum target, GLenum pname, GLint param);
 
-    void uniform1f(WebGLUniformLocation? location, GLfloat x);
-    void uniform2f(WebGLUniformLocation? location, GLfloat x, GLfloat y);
-    void uniform3f(WebGLUniformLocation? location, GLfloat x, GLfloat y, GLfloat z);
-    void uniform4f(WebGLUniformLocation? location, GLfloat x, GLfloat y, GLfloat z, GLfloat w);
+    undefined uniform1f(WebGLUniformLocation? location, GLfloat x);
+    undefined uniform2f(WebGLUniformLocation? location, GLfloat x, GLfloat y);
+    undefined uniform3f(WebGLUniformLocation? location, GLfloat x, GLfloat y, GLfloat z);
+    undefined uniform4f(WebGLUniformLocation? location, GLfloat x, GLfloat y, GLfloat z, GLfloat w);
 
-    void uniform1i(WebGLUniformLocation? location, GLint x);
-    void uniform2i(WebGLUniformLocation? location, GLint x, GLint y);
-    void uniform3i(WebGLUniformLocation? location, GLint x, GLint y, GLint z);
-    void uniform4i(WebGLUniformLocation? location, GLint x, GLint y, GLint z, GLint w);
+    undefined uniform1i(WebGLUniformLocation? location, GLint x);
+    undefined uniform2i(WebGLUniformLocation? location, GLint x, GLint y);
+    undefined uniform3i(WebGLUniformLocation? location, GLint x, GLint y, GLint z);
+    undefined uniform4i(WebGLUniformLocation? location, GLint x, GLint y, GLint z, GLint w);
 
-    void useProgram(WebGLProgram? program);
-    void validateProgram(WebGLProgram program);
+    undefined useProgram(WebGLProgram? program);
+    undefined validateProgram(WebGLProgram program);
 
-    void vertexAttrib1f(GLuint indx, GLfloat x);
-    void vertexAttrib1fv(GLuint indx, Float32List values);
-    void vertexAttrib2f(GLuint indx, GLfloat x, GLfloat y);
-    void vertexAttrib2fv(GLuint indx, Float32List values);
-    void vertexAttrib3f(GLuint indx, GLfloat x, GLfloat y, GLfloat z);
-    void vertexAttrib3fv(GLuint indx, Float32List values);
-    void vertexAttrib4f(GLuint indx, GLfloat x, GLfloat y, GLfloat z, GLfloat w);
-    void vertexAttrib4fv(GLuint indx, Float32List values);
-    void vertexAttribPointer(GLuint indx, GLint size, GLenum type,
-                             GLboolean normalized, GLsizei stride, GLintptr offset);
+    undefined vertexAttrib1f(GLuint indx, GLfloat x);
+    undefined vertexAttrib1fv(GLuint indx, Float32List values);
+    undefined vertexAttrib2f(GLuint indx, GLfloat x, GLfloat y);
+    undefined vertexAttrib2fv(GLuint indx, Float32List values);
+    undefined vertexAttrib3f(GLuint indx, GLfloat x, GLfloat y, GLfloat z);
+    undefined vertexAttrib3fv(GLuint indx, Float32List values);
+    undefined vertexAttrib4f(GLuint indx, GLfloat x, GLfloat y, GLfloat z, GLfloat w);
+    undefined vertexAttrib4fv(GLuint indx, Float32List values);
+    undefined vertexAttribPointer(GLuint indx, GLint size, GLenum type,
+                                  GLboolean normalized, GLsizei stride, GLintptr offset);
 
-    void viewport(GLint x, GLint y, GLsizei width, GLsizei height);
+    undefined viewport(GLint x, GLint y, GLsizei width, GLsizei height);
 };
 
 [Exposed=(Window,Worker),
  Func="mozilla::dom::OffscreenCanvas::PrefEnabledOnWorkerThread"]
 interface WebGLRenderingContext {
     // bufferData has WebGL2 overloads.
-    void bufferData(GLenum target, GLsizeiptr size, GLenum usage);
-    void bufferData(GLenum target, [AllowShared] ArrayBuffer? data, GLenum usage);
-    void bufferData(GLenum target, [AllowShared] ArrayBufferView data, GLenum usage);
+    undefined bufferData(GLenum target, GLsizeiptr size, GLenum usage);
+    undefined bufferData(GLenum target, [AllowShared] ArrayBuffer? data, GLenum usage);
+    undefined bufferData(GLenum target, [AllowShared] ArrayBufferView data, GLenum usage);
     // bufferSubData has WebGL2 overloads.
-    void bufferSubData(GLenum target, GLintptr offset, [AllowShared] ArrayBuffer data);
-    void bufferSubData(GLenum target, GLintptr offset, [AllowShared] ArrayBufferView data);
+    undefined bufferSubData(GLenum target, GLintptr offset, [AllowShared] ArrayBuffer data);
+    undefined bufferSubData(GLenum target, GLintptr offset, [AllowShared] ArrayBufferView data);
 
     // compressedTexImage2D has WebGL2 overloads.
-    void compressedTexImage2D(GLenum target, GLint level, GLenum internalformat,
-                              GLsizei width, GLsizei height, GLint border,
-                              [AllowShared] ArrayBufferView data);
+    undefined compressedTexImage2D(GLenum target, GLint level, GLenum internalformat,
+                                   GLsizei width, GLsizei height, GLint border,
+                                   [AllowShared] ArrayBufferView data);
     // compressedTexSubImage2D has WebGL2 overloads.
-    void compressedTexSubImage2D(GLenum target, GLint level,
-                                 GLint xoffset, GLint yoffset,
-                                 GLsizei width, GLsizei height, GLenum format,
-                                 [AllowShared] ArrayBufferView data);
+    undefined compressedTexSubImage2D(GLenum target, GLint level,
+                                      GLint xoffset, GLint yoffset,
+                                      GLsizei width, GLsizei height, GLenum format,
+                                      [AllowShared] ArrayBufferView data);
 
     // readPixels has WebGL2 overloads.
     [Throws, NeedsCallerType]
-    void readPixels(GLint x, GLint y, GLsizei width, GLsizei height,
+    undefined readPixels(GLint x, GLint y, GLsizei width, GLsizei height,
                     GLenum format, GLenum type, [AllowShared] ArrayBufferView? pixels);
 
     // texImage2D has WebGL2 overloads.
     // Overloads must share [Throws].
     [Throws] // Can't actually throw.
-    void texImage2D(GLenum target, GLint level, GLint internalformat,
-                    GLsizei width, GLsizei height, GLint border, GLenum format,
-                    GLenum type, [AllowShared] ArrayBufferView? pixels);
+    undefined texImage2D(GLenum target, GLint level, GLint internalformat,
+                         GLsizei width, GLsizei height, GLint border, GLenum format,
+                         GLenum type, [AllowShared] ArrayBufferView? pixels);
     [Throws] // Can't actually throw.
-    void texImage2D(GLenum target, GLint level, GLint internalformat,
-                    GLenum format, GLenum type, ImageBitmap pixels);
+    undefined texImage2D(GLenum target, GLint level, GLint internalformat,
+                         GLenum format, GLenum type, ImageBitmap pixels);
     [Throws] // Can't actually throw.
-    void texImage2D(GLenum target, GLint level, GLint internalformat,
-                    GLenum format, GLenum type, ImageData pixels);
+    undefined texImage2D(GLenum target, GLint level, GLint internalformat,
+                         GLenum format, GLenum type, ImageData pixels);
     [Throws]
-    void texImage2D(GLenum target, GLint level, GLint internalformat,
-                    GLenum format, GLenum type, HTMLImageElement image); // May throw DOMException
+    undefined texImage2D(GLenum target, GLint level, GLint internalformat,
+                         GLenum format, GLenum type, HTMLImageElement image); // May throw DOMException
     [Throws]
-    void texImage2D(GLenum target, GLint level, GLint internalformat,
-                    GLenum format, GLenum type, HTMLCanvasElement canvas); // May throw DOMException
+    undefined texImage2D(GLenum target, GLint level, GLint internalformat,
+                         GLenum format, GLenum type, HTMLCanvasElement canvas); // May throw DOMException
     [Throws]
-    void texImage2D(GLenum target, GLint level, GLint internalformat,
-                    GLenum format, GLenum type, HTMLVideoElement video); // May throw DOMException
+    undefined texImage2D(GLenum target, GLint level, GLint internalformat,
+                         GLenum format, GLenum type, HTMLVideoElement video); // May throw DOMException
     [Throws]
-    void texImage2D(GLenum target, GLint level, GLint internalformat,
-                    GLenum format, GLenum type, OffscreenCanvas canvas); // May throw DOMException
+    undefined texImage2D(GLenum target, GLint level, GLint internalformat,
+                         GLenum format, GLenum type, OffscreenCanvas canvas); // May throw DOMException
 
     // texSubImage2D has WebGL2 overloads.
     [Throws] // Can't actually throw.
-    void texSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset,
-                       GLsizei width, GLsizei height,
-                       GLenum format, GLenum type, [AllowShared] ArrayBufferView? pixels);
+    undefined texSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset,
+                            GLsizei width, GLsizei height,
+                            GLenum format, GLenum type, [AllowShared] ArrayBufferView? pixels);
     [Throws] // Can't actually throw.
-    void texSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset,
-                       GLenum format, GLenum type, ImageBitmap pixels);
+    undefined texSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset,
+                            GLenum format, GLenum type, ImageBitmap pixels);
     [Throws] // Can't actually throw.
-    void texSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset,
-                       GLenum format, GLenum type, ImageData pixels);
+    undefined texSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset,
+                            GLenum format, GLenum type, ImageData pixels);
     [Throws]
-    void texSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset,
-                       GLenum format, GLenum type, HTMLImageElement image); // May throw DOMException
+    undefined texSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset,
+                            GLenum format, GLenum type, HTMLImageElement image); // May throw DOMException
     [Throws]
-    void texSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset,
-                       GLenum format, GLenum type, HTMLCanvasElement canvas); // May throw DOMException
+    undefined texSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset,
+                            GLenum format, GLenum type, HTMLCanvasElement canvas); // May throw DOMException
     [Throws]
-    void texSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset,
-                       GLenum format, GLenum type, HTMLVideoElement video); // May throw DOMException
+    undefined texSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset,
+                            GLenum format, GLenum type, HTMLVideoElement video); // May throw DOMException
     [Throws]
-    void texSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset,
-                       GLenum format, GLenum type, OffscreenCanvas canvas); // May throw DOMException
+    undefined texSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset,
+                            GLenum format, GLenum type, OffscreenCanvas canvas); // May throw DOMException
 
     // uniform*fv have WebGL2 overloads, or rather extensions, that are not
     // distinguishable from the WebGL1 versions when called with two arguments.
-    void uniform1fv(WebGLUniformLocation? location, Float32List data);
-    void uniform2fv(WebGLUniformLocation? location, Float32List data);
-    void uniform3fv(WebGLUniformLocation? location, Float32List data);
-    void uniform4fv(WebGLUniformLocation? location, Float32List data);
+    undefined uniform1fv(WebGLUniformLocation? location, Float32List data);
+    undefined uniform2fv(WebGLUniformLocation? location, Float32List data);
+    undefined uniform3fv(WebGLUniformLocation? location, Float32List data);
+    undefined uniform4fv(WebGLUniformLocation? location, Float32List data);
 
     // uniform*iv have WebGL2 overloads, or rather extensions, that are not
     // distinguishable from the WebGL1 versions when called with two arguments.
-    void uniform1iv(WebGLUniformLocation? location, Int32List data);
-    void uniform2iv(WebGLUniformLocation? location, Int32List data);
-    void uniform3iv(WebGLUniformLocation? location, Int32List data);
-    void uniform4iv(WebGLUniformLocation? location, Int32List data);
+    undefined uniform1iv(WebGLUniformLocation? location, Int32List data);
+    undefined uniform2iv(WebGLUniformLocation? location, Int32List data);
+    undefined uniform3iv(WebGLUniformLocation? location, Int32List data);
+    undefined uniform4iv(WebGLUniformLocation? location, Int32List data);
 
     // uniformMatrix*fv have WebGL2 overloads, or rather extensions, that are
     // not distinguishable from the WebGL1 versions when called with two
     // arguments.
-    void uniformMatrix2fv(WebGLUniformLocation? location, GLboolean transpose, Float32List data);
-    void uniformMatrix3fv(WebGLUniformLocation? location, GLboolean transpose, Float32List data);
-    void uniformMatrix4fv(WebGLUniformLocation? location, GLboolean transpose, Float32List data);
+    undefined uniformMatrix2fv(WebGLUniformLocation? location, GLboolean transpose, Float32List data);
+    undefined uniformMatrix3fv(WebGLUniformLocation? location, GLboolean transpose, Float32List data);
+    undefined uniformMatrix4fv(WebGLUniformLocation? location, GLboolean transpose, Float32List data);
 };
 
 WebGLRenderingContext includes WebGLRenderingContextBase;
@@ -982,8 +982,8 @@ interface EXT_frag_depth
 [LegacyNoInterfaceObject,
  Exposed=(Window,Worker)]
 interface WEBGL_lose_context {
-    void loseContext();
-    void restoreContext();
+    undefined loseContext();
+    undefined restoreContext();
 };
 
 [LegacyNoInterfaceObject,
@@ -1056,7 +1056,7 @@ interface WEBGL_draw_buffers {
     const GLenum MAX_COLOR_ATTACHMENTS_WEBGL = 0x8CDF;
     const GLenum MAX_DRAW_BUFFERS_WEBGL      = 0x8824;
 
-    void drawBuffersWEBGL(sequence<GLenum> buffers);
+    undefined drawBuffersWEBGL(sequence<GLenum> buffers);
 };
 
 [LegacyNoInterfaceObject,
@@ -1110,9 +1110,9 @@ interface OES_vertex_array_object {
     const GLenum VERTEX_ARRAY_BINDING_OES = 0x85B5;
 
     WebGLVertexArrayObject? createVertexArrayOES();
-    void deleteVertexArrayOES(WebGLVertexArrayObject? arrayObject);
+    undefined deleteVertexArrayOES(WebGLVertexArrayObject? arrayObject);
     [WebGLHandlesContextLoss] GLboolean isVertexArrayOES(WebGLVertexArrayObject? arrayObject);
-    void bindVertexArrayOES(WebGLVertexArrayObject? arrayObject);
+    undefined bindVertexArrayOES(WebGLVertexArrayObject? arrayObject);
 };
 
 [LegacyNoInterfaceObject,
@@ -1120,9 +1120,9 @@ interface OES_vertex_array_object {
 interface ANGLE_instanced_arrays {
     const GLenum VERTEX_ATTRIB_ARRAY_DIVISOR_ANGLE = 0x88FE;
 
-    void drawArraysInstancedANGLE(GLenum mode, GLint first, GLsizei count, GLsizei primcount);
-    void drawElementsInstancedANGLE(GLenum mode, GLsizei count, GLenum type, GLintptr offset, GLsizei primcount);
-    void vertexAttribDivisorANGLE(GLuint index, GLuint divisor);
+    undefined drawArraysInstancedANGLE(GLenum mode, GLint first, GLsizei count, GLsizei primcount);
+    undefined drawElementsInstancedANGLE(GLenum mode, GLsizei count, GLenum type, GLintptr offset, GLsizei primcount);
+    undefined vertexAttribDivisorANGLE(GLuint index, GLuint divisor);
 };
 
 [LegacyNoInterfaceObject,
@@ -1148,11 +1148,11 @@ interface EXT_disjoint_timer_query {
     const GLenum GPU_DISJOINT_EXT = 0x8FBB;
 
     WebGLQuery? createQueryEXT();
-    void deleteQueryEXT(WebGLQuery? query);
+    undefined deleteQueryEXT(WebGLQuery? query);
     [WebGLHandlesContextLoss] boolean isQueryEXT(WebGLQuery? query);
-    void beginQueryEXT(GLenum target, WebGLQuery query);
-    void endQueryEXT(GLenum target);
-    void queryCounterEXT(WebGLQuery query, GLenum target);
+    undefined beginQueryEXT(GLenum target, WebGLQuery query);
+    undefined endQueryEXT(GLenum target);
+    undefined queryCounterEXT(WebGLQuery query, GLenum target);
     any getQueryEXT(GLenum target, GLenum pname);
     any getQueryObjectEXT(WebGLQuery query, GLenum pname);
 };
@@ -1183,30 +1183,30 @@ interface OES_fbo_render_mipmap {
 [LegacyNoInterfaceObject,
  Exposed=(Window,Worker)]
 interface WEBGL_explicit_present {
-    void present();
+    undefined present();
 };
 
 // https://www.khronos.org/registry/webgl/extensions/OES_draw_buffers_indexed/
 [Exposed=(Window,Worker), LegacyNoInterfaceObject]
 interface OES_draw_buffers_indexed {
-  void enableiOES(GLenum target, GLuint index);
+  undefined enableiOES(GLenum target, GLuint index);
 
-  void disableiOES(GLenum target, GLuint index);
+  undefined disableiOES(GLenum target, GLuint index);
 
-  void blendEquationiOES(GLuint buf, GLenum mode);
+  undefined blendEquationiOES(GLuint buf, GLenum mode);
 
-  void blendEquationSeparateiOES(GLuint buf,
-                                 GLenum modeRGB, GLenum modeAlpha);
+  undefined blendEquationSeparateiOES(GLuint buf,
+                                      GLenum modeRGB, GLenum modeAlpha);
 
-  void blendFunciOES(GLuint buf,
-                     GLenum src, GLenum dst);
+  undefined blendFunciOES(GLuint buf,
+                          GLenum src, GLenum dst);
 
-  void blendFuncSeparateiOES(GLuint buf,
-                             GLenum srcRGB, GLenum dstRGB,
-                             GLenum srcAlpha, GLenum dstAlpha);
+  undefined blendFuncSeparateiOES(GLuint buf,
+                                  GLenum srcRGB, GLenum dstRGB,
+                                  GLenum srcAlpha, GLenum dstAlpha);
 
-  void colorMaskiOES(GLuint buf,
-                     GLboolean r, GLboolean g, GLboolean b, GLboolean a);
+  undefined colorMaskiOES(GLuint buf,
+                          GLboolean r, GLboolean g, GLboolean b, GLboolean a);
 };
 
 // https://immersive-web.github.io/webxr/#dom-webglcontextattributes-xrcompatible
@@ -1218,5 +1218,5 @@ partial dictionary WebGLContextAttributes {
 // https://immersive-web.github.io/webxr/#dom-webglrenderingcontextbase-makexrcompatible
 partial interface mixin WebGLRenderingContextBase {
     [NewObject, Pref="dom.vr.webxr.enabled"]
-    Promise<void> makeXRCompatible();
+    Promise<undefined> makeXRCompatible();
 };

@@ -36,8 +36,8 @@ interface AudioBufferSourceNode : AudioScheduledSourceNode {
     attribute double loopEnd;
 
     [Throws]
-    void start(optional double when = 0, optional double grainOffset = 0,
-               optional double grainDuration);
+    undefined start(optional double when = 0, optional double grainOffset = 0,
+                    optional double grainDuration);
 };
 
 // Mozilla extensions

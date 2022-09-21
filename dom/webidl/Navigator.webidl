@@ -82,11 +82,11 @@ interface mixin NavigatorOnLine {
 interface mixin NavigatorContentUtils {
   // content handler registration
   [Throws, ChromeOnly]
-  void checkProtocolHandlerAllowed(DOMString scheme, URI handlerURI, URI documentURI);
+  undefined checkProtocolHandlerAllowed(DOMString scheme, URI handlerURI, URI documentURI);
   [Throws, SecureContext]
-  void registerProtocolHandler(DOMString scheme, DOMString url);
+  undefined registerProtocolHandler(DOMString scheme, DOMString url);
   // NOT IMPLEMENTED
-  //void unregisterProtocolHandler(DOMString scheme, DOMString url);
+  //undefined unregisterProtocolHandler(DOMString scheme, DOMString url);
 };
 
 [SecureContext]
@@ -97,7 +97,7 @@ interface mixin NavigatorStorage {
 
 interface mixin NavigatorStorageUtils {
   // NOT IMPLEMENTED
-  //void yieldForStorageUpdates();
+  //undefined yieldForStorageUpdates();
 };
 
 partial interface Navigator {
@@ -168,8 +168,8 @@ partial interface Navigator {
      * @param persistent make the permission session-persistent
      */
     [ChromeOnly]
-    void setVibrationPermission(boolean permitted,
-                                optional boolean persistent = true);
+    undefined setVibrationPermission(boolean permitted,
+                                     optional boolean persistent = true);
 };
 
 partial interface Navigator {
@@ -225,7 +225,7 @@ partial interface Navigator {
   [ChromeOnly, Pref="dom.vr.enabled"]
   readonly attribute boolean isWebVRContentPresenting;
   [ChromeOnly, Pref="dom.vr.enabled"]
-  void requestVRPresentation(VRDisplay display);
+  undefined requestVRPresentation(VRDisplay display);
 };
 partial interface Navigator {
   [Pref="dom.vr.puppet.enabled"]
@@ -244,8 +244,8 @@ partial interface Navigator {
   Promise<MIDIAccess> requestMIDIAccess(optional MIDIOptions options = {});
 };
 
-callback NavigatorUserMediaSuccessCallback = void (MediaStream stream);
-callback NavigatorUserMediaErrorCallback = void (MediaStreamError error);
+callback NavigatorUserMediaSuccessCallback = undefined (MediaStream stream);
+callback NavigatorUserMediaErrorCallback = undefined (MediaStreamError error);
 
 partial interface Navigator {
   [Throws, Func="Navigator::HasUserMediaSupport"]
@@ -256,9 +256,9 @@ partial interface Navigator {
    Func="Navigator::HasUserMediaSupport",
    NeedsCallerType,
    UseCounter]
-  void mozGetUserMedia(MediaStreamConstraints constraints,
-                       NavigatorUserMediaSuccessCallback successCallback,
-                       NavigatorUserMediaErrorCallback errorCallback);
+  undefined mozGetUserMedia(MediaStreamConstraints constraints,
+                            NavigatorUserMediaSuccessCallback successCallback,
+                            NavigatorUserMediaErrorCallback errorCallback);
 };
 
 // Service Workers/Navigation Controllers
@@ -316,7 +316,7 @@ partial interface Navigator {
 // https://wicg.github.io/web-share/#navigator-interface
 partial interface Navigator {
   [SecureContext, NewObject, Func="Navigator::HasShareSupport"]
-  Promise<void> share(optional ShareData data = {});
+  Promise<undefined> share(optional ShareData data = {});
   [SecureContext, Func="Navigator::HasShareSupport"]
   boolean canShare(optional ShareData data = {});
 };

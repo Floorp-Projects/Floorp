@@ -29,12 +29,12 @@ interface Report {
 interface ReportingObserver {
   [Throws]
   constructor(ReportingObserverCallback callback, optional ReportingObserverOptions options = {});
-  void observe();
-  void disconnect();
+  undefined observe();
+  undefined disconnect();
   ReportList takeRecords();
 };
 
-callback ReportingObserverCallback = void (sequence<Report> reports, ReportingObserver observer);
+callback ReportingObserverCallback = undefined (sequence<Report> reports, ReportingObserver observer);
 
 dictionary ReportingObserverOptions {
   sequence<DOMString> types;
@@ -64,7 +64,7 @@ interface TestingDeprecatedInterface {
   constructor();
 
   [Deprecated="DeprecatedTestingMethod"]
-  void deprecatedMethod();
+  undefined deprecatedMethod();
 
   [Deprecated="DeprecatedTestingAttribute"]
   readonly attribute boolean deprecatedAttribute;

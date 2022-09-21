@@ -4,9 +4,9 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-callback SetDeleteObjectCallback = void (object value, unsigned long index);
-callback SetDeleteBooleanCallback = void (boolean value, unsigned long index);
-callback SetDeleteInterfaceCallback = void (TestInterfaceObservableArray value, unsigned long index);
+callback SetDeleteObjectCallback = undefined (object value, unsigned long index);
+callback SetDeleteBooleanCallback = undefined (boolean value, unsigned long index);
+callback SetDeleteInterfaceCallback = undefined (TestInterfaceObservableArray value, unsigned long index);
 
 dictionary ObservableArrayCallbacks {
   SetDeleteObjectCallback setObjectCallback;
@@ -37,25 +37,25 @@ interface TestInterfaceObservableArray {
   object objectElementAtInternal(unsigned long index);
 
   [Throws]
-  void booleanReplaceElementAtInternal(unsigned long index, boolean value);
+  undefined booleanReplaceElementAtInternal(unsigned long index, boolean value);
   [Throws]
-  void interfaceReplaceElementAtInternal(unsigned long index, TestInterfaceObservableArray value);
+  undefined interfaceReplaceElementAtInternal(unsigned long index, TestInterfaceObservableArray value);
   [Throws]
-  void objectReplaceElementAtInternal(unsigned long index, object value);
+  undefined objectReplaceElementAtInternal(unsigned long index, object value);
 
   [Throws]
-  void booleanAppendElementInternal(boolean value);
+  undefined booleanAppendElementInternal(boolean value);
   [Throws]
-  void interfaceAppendElementInternal(TestInterfaceObservableArray value);
+  undefined interfaceAppendElementInternal(TestInterfaceObservableArray value);
   [Throws]
-  void objectAppendElementInternal(object value);
+  undefined objectAppendElementInternal(object value);
 
   [Throws]
-  void booleanRemoveLastElementInternal();
+  undefined booleanRemoveLastElementInternal();
   [Throws]
-  void interfaceRemoveLastElementInternal();
+  undefined interfaceRemoveLastElementInternal();
   [Throws]
-  void objectRemoveLastElementInternal();
+  undefined objectRemoveLastElementInternal();
 
   [Throws]
   unsigned long booleanLengthInternal();

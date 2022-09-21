@@ -120,7 +120,7 @@ namespace IOUtils {
    *         a DOMException.
    */
   [NewObject]
-  Promise<void> move(DOMString sourcePath, DOMString destPath, optional MoveOptions options = {});
+  Promise<undefined> move(DOMString sourcePath, DOMString destPath, optional MoveOptions options = {});
   /**
    * Removes a file or directory at |path| according to |options|.
    *
@@ -131,7 +131,7 @@ namespace IOUtils {
    *         with a DOMException.
    */
   [NewObject]
-  Promise<void> remove(DOMString path, optional RemoveOptions options = {});
+  Promise<undefined> remove(DOMString path, optional RemoveOptions options = {});
   /**
    * Creates a new directory at |path| according to |options|.
    *
@@ -141,7 +141,7 @@ namespace IOUtils {
    *         rejects with a DOMException.
    */
   [NewObject]
-  Promise<void> makeDirectory(DOMString path, optional MakeDirectoryOptions options = {});
+  Promise<undefined> makeDirectory(DOMString path, optional MakeDirectoryOptions options = {});
   /**
    * Obtains information about a file, such as size, modification dates, etc.
    *
@@ -168,7 +168,7 @@ namespace IOUtils {
    *         with a DOMException.
    */
   [NewObject]
-  Promise<void> copy(DOMString sourcePath, DOMString destPath, optional CopyOptions options = {});
+  Promise<undefined> copy(DOMString sourcePath, DOMString destPath, optional CopyOptions options = {});
   /**
    * Updates the |modification| time for the file at |path|.
    *
@@ -218,7 +218,7 @@ namespace IOUtils {
    *         rejects with a DOMException.
    */
   [NewObject]
-  Promise<void> setPermissions(DOMString path, unsigned long permissions, optional boolean honorUmask = true);
+  Promise<undefined> setPermissions(DOMString path, unsigned long permissions, optional boolean honorUmask = true);
   /**
    * Return whether or not the file exists at the given path.
    *
@@ -286,7 +286,7 @@ namespace IOUtils {
    * @return A promise that resolves is the attributes were set successfully.
    */
   [NewObject]
-  Promise<void> setWindowsAttributes(DOMString path, optional WindowsFileAttributes attrs = {});
+  Promise<undefined> setWindowsAttributes(DOMString path, optional WindowsFileAttributes attrs = {});
 #elif defined(XP_MACOSX)
   /**
    * Return whether or not the file has a specific extended attribute.
@@ -321,7 +321,7 @@ namespace IOUtils {
    *         attribute, or rejects with an error.
    */
   [NewObject]
-  Promise<void> setMacXAttr(DOMString path, UTF8String attr, Uint8Array value);
+  Promise<undefined> setMacXAttr(DOMString path, UTF8String attr, Uint8Array value);
   /**
    * Delete the extended attribute on a file.
    *
@@ -332,7 +332,7 @@ namespace IOUtils {
    *         with an error.
    */
   [NewObject]
-  Promise<void> delMacXAttr(DOMString path, UTF8String attr);
+  Promise<undefined> delMacXAttr(DOMString path, UTF8String attr);
 #endif
 };
 
@@ -412,13 +412,13 @@ interface SyncReadFile {
    *               range is given by |dest.length|.)
    */
   [Throws]
-  void readBytesInto(Uint8Array dest, long long offset);
+  undefined readBytesInto(Uint8Array dest, long long offset);
 
   /**
    * Close the file. Subsequent calls to readBytesInto will throw.
    * If the file is not closed manually, it will be closed once this object is GC'ed.
    */
-  void close();
+  undefined close();
 };
 
 /**

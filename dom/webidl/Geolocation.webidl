@@ -19,18 +19,18 @@ dictionary PositionOptions {
 [Exposed=Window]
 interface Geolocation {
   [Throws, NeedsCallerType]
-  void getCurrentPosition(PositionCallback successCallback,
-                          optional PositionErrorCallback? errorCallback = null,
-                          optional PositionOptions options = {});
+  undefined getCurrentPosition(PositionCallback successCallback,
+                               optional PositionErrorCallback? errorCallback = null,
+                               optional PositionOptions options = {});
 
   [Throws, NeedsCallerType]
   long watchPosition(PositionCallback successCallback,
                      optional PositionErrorCallback? errorCallback = null,
                      optional PositionOptions options = {});
 
-  void clearWatch(long watchId);
+  undefined clearWatch(long watchId);
 };
 
-callback PositionCallback = void (GeolocationPosition position);
+callback PositionCallback = undefined (GeolocationPosition position);
 
-callback PositionErrorCallback = void (GeolocationPositionError positionError);
+callback PositionErrorCallback = undefined (GeolocationPositionError positionError);

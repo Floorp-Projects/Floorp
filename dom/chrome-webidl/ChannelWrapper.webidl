@@ -101,7 +101,7 @@ interface ChannelWrapper : EventTarget {
    * constants from nsILoadInfo.idl
    */
   [Throws]
-  void cancel(unsigned long result, optional unsigned long reason = 0);
+  undefined cancel(unsigned long result, optional unsigned long reason = 0);
 
   /**
    * Redirects the wrapped HTTP channel to the given URI. For other channel
@@ -109,7 +109,7 @@ interface ChannelWrapper : EventTarget {
    * the behavior is the same as nsIHttpChannel.redirectTo.
    */
   [Throws]
-  void redirectTo(URI url);
+  undefined redirectTo(URI url);
 
   /**
    * Requests an upgrade of the HTTP channel to a secure request. For other channel
@@ -121,20 +121,20 @@ interface ChannelWrapper : EventTarget {
    * results in the redirect happening rather than the upgrade request.
    */
   [Throws]
-  void upgradeToSecure();
+  undefined upgradeToSecure();
 
   /**
    * Suspends the underlying channel.  The profilerText parameter is only used
    * to annotate profiles.
    */
   [Throws]
-  void suspend(ByteString profileMarkerText);
+  undefined suspend(ByteString profileMarkerText);
 
   /**
    * Resumes (un-suspends) the underlying channel.
    */
   [Throws]
-  void resume();
+  undefined resume();
 
   /**
    * The content type of the request, usually as read from the Content-Type
@@ -197,7 +197,7 @@ interface ChannelWrapper : EventTarget {
    * Register's this channel as traceable by the given add-on when accessed
    * via the process of the given RemoteTab.
    */
-  void registerTraceableChannel(WebExtensionPolicy extension, RemoteTab? remoteTab);
+  undefined registerTraceableChannel(WebExtensionPolicy extension, RemoteTab? remoteTab);
 
   /**
    * The current HTTP status code of the request. This will be 0 if a response
@@ -240,7 +240,7 @@ interface ChannelWrapper : EventTarget {
    * Checks the request's current status and dispatches an error event if the
    * request has failed and one has not already been dispatched.
    */
-  void errorCheck();
+  undefined errorCheck();
 
 
   /**
@@ -414,7 +414,7 @@ interface ChannelWrapper : EventTarget {
    * For non-HTTP requests, throws NS_ERROR_UNEXPECTED.
    */
   [Throws]
-  void setRequestHeader(ByteString header,
+  undefined setRequestHeader(ByteString header,
                         ByteString value,
                         optional boolean merge = false);
 
@@ -432,7 +432,7 @@ interface ChannelWrapper : EventTarget {
    * getResponseHeaders() for details.
    */
   [Throws]
-  void setResponseHeader(ByteString header,
+  undefined setResponseHeader(ByteString header,
                          ByteString value,
                          optional boolean merge = false);
 

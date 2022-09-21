@@ -12,20 +12,20 @@ interface MouseScrollEvent : MouseEvent
 
   readonly attribute long axis;
 
-  void initMouseScrollEvent(DOMString type,
-                            optional boolean canBubble = false,
-                            optional boolean cancelable = false,
-                            optional Window? view = null,
-                            optional long detail = 0,
-                            optional long screenX = 0,
-                            optional long screenY = 0,
-                            optional long clientX = 0,
-                            optional long clientY = 0,
-                            optional boolean ctrlKey = false,
-                            optional boolean altKey = false,
-                            optional boolean shiftKey = false,
-                            optional boolean metaKey = false,
-                            optional short button = 0,
-                            optional EventTarget? relatedTarget = null,
-                            optional long axis = 0);
+  undefined initMouseScrollEvent(DOMString type,
+                                 optional boolean canBubble = false,
+                                 optional boolean cancelable = false,
+                                 optional Window? view = null,
+                                 optional long detail = 0,
+                                 optional long screenX = 0,
+                                 optional long screenY = 0,
+                                 optional long clientX = 0,
+                                 optional long clientY = 0,
+                                 optional boolean ctrlKey = false,
+                                 optional boolean altKey = false,
+                                 optional boolean shiftKey = false,
+                                 optional boolean metaKey = false,
+                                 optional short button = 0,
+                                 optional EventTarget? relatedTarget = null,
+                                 optional long axis = 0);
 };

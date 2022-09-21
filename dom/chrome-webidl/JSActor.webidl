@@ -7,8 +7,8 @@
 
 interface mixin JSActor {
     [Throws]
-    void sendAsyncMessage(DOMString messageName,
-                          optional any obj);
+    undefined sendAsyncMessage(DOMString messageName,
+                               optional any obj);
 
     [NewObject]
     Promise<any> sendQuery(DOMString messageName,
@@ -26,7 +26,7 @@ interface mixin JSActor {
  */
 [Exposed=Window]
 callback interface MozObserverCallback {
-  void observe(nsISupports subject, ByteString topic, DOMString? data);
+  undefined observe(nsISupports subject, ByteString topic, DOMString? data);
 };
 
 /**
@@ -34,7 +34,7 @@ callback interface MozObserverCallback {
  * `actorCreated` methods on JSActors.
  */
 [MOZ_CAN_RUN_SCRIPT_BOUNDARY]
-callback MozJSActorCallback = void();
+callback MozJSActorCallback = undefined();
 
 /**
  * The didDestroy method, if present, will be called after the actor is no

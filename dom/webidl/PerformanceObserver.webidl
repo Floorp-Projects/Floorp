@@ -15,8 +15,8 @@ dictionary PerformanceObserverInit {
   DOMHighResTimeStamp durationThreshold;
 };
 
-callback PerformanceObserverCallback = void (PerformanceObserverEntryList entries,
-                                             PerformanceObserver observer);
+callback PerformanceObserverCallback = undefined (PerformanceObserverEntryList entries,
+                                                  PerformanceObserver observer);
 
 [Pref="dom.enable_performance_observer",
  Exposed=(Window,Worker)]
@@ -24,8 +24,8 @@ interface PerformanceObserver {
     [Throws]
     constructor(PerformanceObserverCallback callback);
 
-    [Throws] void observe(optional PerformanceObserverInit options = {});
-    void disconnect();
+    [Throws] undefined observe(optional PerformanceObserverInit options = {});
+    undefined disconnect();
     PerformanceEntryList takeRecords();
     static readonly attribute object supportedEntryTypes;
 };

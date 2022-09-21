@@ -30,9 +30,9 @@ interface HTMLCanvasElement : HTMLElement {
   DOMString toDataURL(optional DOMString type = "",
                       optional any encoderOptions);
   [Throws, NeedsSubjectPrincipal]
-  void toBlob(BlobCallback callback,
-              optional DOMString type = "",
-              optional any encoderOptions);
+  undefined toBlob(BlobCallback callback,
+                   optional DOMString type = "",
+                   optional any encoderOptions);
 };
 
 // Mozilla specific bits
@@ -65,9 +65,9 @@ interface MozCanvasPrintState
   readonly attribute nsISupports context;
 
   // To be called when rendering to the context is done.
-  void done();
+  undefined done();
 };
 
-callback PrintCallback = void(MozCanvasPrintState ctx);
+callback PrintCallback = undefined(MozCanvasPrintState ctx);
 
-callback BlobCallback = void(Blob? blob);
+callback BlobCallback = undefined(Blob? blob);

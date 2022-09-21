@@ -36,38 +36,38 @@ interface Selection {
    * Adds a range to the current selection.
    */
   [Throws, BinaryName="addRangeJS"]
-  void      addRange(Range range);
+  undefined addRange(Range range);
   /**
    * Removes a range from the current selection.
    */
   [Throws, BinaryName="removeRangeAndUnselectFramesAndNotifyListeners"]
-  void      removeRange(Range range);
+  undefined removeRange(Range range);
   /**
    * Removes all ranges from the current selection.
    */
   [Throws]
-  void      removeAllRanges();
+  undefined removeAllRanges();
   [Throws, BinaryName="RemoveAllRanges"]
-  void      empty();
+  undefined empty();
   [Throws, BinaryName="collapseJS"]
-  void      collapse(Node? node, optional unsigned long offset = 0);
+  undefined collapse(Node? node, optional unsigned long offset = 0);
   [Throws, BinaryName="collapseJS"]
-  void      setPosition(Node? node, optional unsigned long offset = 0);
+  undefined setPosition(Node? node, optional unsigned long offset = 0);
   [Throws, BinaryName="collapseToStartJS"]
-  void      collapseToStart();
+  undefined collapseToStart();
   [Throws, BinaryName="collapseToEndJS"]
-  void      collapseToEnd();
+  undefined collapseToEnd();
   [Throws, BinaryName="extendJS"]
-  void      extend(Node node, optional unsigned long offset = 0);
+  undefined extend(Node node, optional unsigned long offset = 0);
   [Throws, BinaryName="setBaseAndExtentJS"]
-  void      setBaseAndExtent(Node anchorNode,
+  undefined setBaseAndExtent(Node anchorNode,
                              unsigned long anchorOffset,
                              Node focusNode,
                              unsigned long focusOffset);
   [Throws, BinaryName="selectAllChildrenJS"]
-  void      selectAllChildren(Node node);
+  undefined selectAllChildren(Node node);
   [CEReactions, Throws]
-  void      deleteFromDocument();
+  undefined deleteFromDocument();
   [Throws]
   boolean   containsNode(Node node,
                          optional boolean allowPartialContainment = false);
@@ -77,8 +77,8 @@ interface Selection {
 // Additional methods not currently in the spec
 partial interface Selection {
   [Throws]
-  void modify(DOMString alter, DOMString direction,
-              DOMString granularity);
+  undefined modify(DOMString alter, DOMString direction,
+                   DOMString granularity);
 };
 
 // Additional chrome-only methods.
@@ -97,9 +97,9 @@ partial interface Selection {
   [ChromeOnly,Throws]
   DOMString  toStringWithFormat(DOMString formatType, unsigned long flags, long wrapColumn);
   [ChromeOnly]
-  void  addSelectionListener(nsISelectionListener newListener);
+  undefined  addSelectionListener(nsISelectionListener newListener);
   [ChromeOnly]
-  void  removeSelectionListener(nsISelectionListener listenerToRemove);
+  undefined  removeSelectionListener(nsISelectionListener listenerToRemove);
 
   [ChromeOnly,BinaryName="rawType"]
   readonly attribute short selectionType;
@@ -125,7 +125,7 @@ partial interface Selection {
    * @param aHPercent how to align the frame horizontally.
    */
   [ChromeOnly,Throws]
-  void scrollIntoView(short aRegion, boolean aIsSynchronous, short aVPercent, short aHPercent);
+  undefined scrollIntoView(short aRegion, boolean aIsSynchronous, short aVPercent, short aHPercent);
 
   /**
    * setColors() sets custom colors for the selection.
@@ -148,12 +148,12 @@ partial interface Selection {
    *                             selection.
    */
   [ChromeOnly,Throws]
-  void setColors(DOMString aForegroundColor, DOMString aBackgroundColor,
-                 DOMString aAltForegroundColor, DOMString aAltBackgroundColor);
+  undefined setColors(DOMString aForegroundColor, DOMString aBackgroundColor,
+                      DOMString aAltForegroundColor, DOMString aAltBackgroundColor);
 
   /**
    * resetColors() forget the customized colors which were set by setColors().
    */
   [ChromeOnly,Throws]
-  void resetColors();
+  undefined resetColors();
 };

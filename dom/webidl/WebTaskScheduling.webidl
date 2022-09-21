@@ -39,5 +39,5 @@ interface TaskController : AbortController {
   constructor(optional TaskControllerInit init = {});
 
   [Throws]
-  void setPriority(TaskPriority priority);
+  undefined setPriority(TaskPriority priority);
 };

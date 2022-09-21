@@ -63,6 +63,6 @@ interface IDBObjectStore {
     IDBIndex   index (DOMString name);
 
     [Throws]
-    void       deleteIndex (DOMString indexName);
+    undefined       deleteIndex (DOMString indexName);
 };
 

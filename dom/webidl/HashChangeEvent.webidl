@@ -16,11 +16,11 @@ interface HashChangeEvent : Event
   readonly attribute DOMString oldURL;
   readonly attribute DOMString newURL;
 
-  void initHashChangeEvent(DOMString typeArg,
-                           optional boolean canBubbleArg = false,
-                           optional boolean cancelableArg = false,
-                           optional DOMString oldURLArg = "",
-                           optional DOMString newURLArg = "");
+  undefined initHashChangeEvent(DOMString typeArg,
+                                optional boolean canBubbleArg = false,
+                                optional boolean cancelableArg = false,
+                                optional DOMString oldURLArg = "",
+                                optional DOMString newURLArg = "");
 };
 
 dictionary HashChangeEventInit : EventInit

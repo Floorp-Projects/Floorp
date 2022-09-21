@@ -10,8 +10,8 @@
  * liability, trademark and document use rules apply.
  */
 
-callback DecodeSuccessCallback = void (AudioBuffer decodedData);
-callback DecodeErrorCallback = void (DOMException error);
+callback DecodeSuccessCallback = undefined (AudioBuffer decodedData);
+callback DecodeErrorCallback = undefined (DOMException error);
 
 enum AudioContextState {
     "suspended",
@@ -30,7 +30,7 @@ interface BaseAudioContext : EventTarget {
     readonly        attribute AudioWorklet         audioWorklet;
 
     [NewObject]
-    Promise<void> resume();
+    Promise<undefined> resume();
 
                     attribute EventHandler         onstatechange;
 

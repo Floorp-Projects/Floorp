@@ -14,10 +14,10 @@ def WebIDLTest(parser, harness):
       };
       interface Bar {
         // Bit of a pain to get things that have dictionary types
-        void passDict(Dict arg);
-        void passFoo(Foo arg);
-        void passNullableUnion((object? or DOMString) arg);
-        void passNullable(Foo? arg);
+        undefined passDict(Dict arg);
+        undefined passFoo(Foo arg);
+        undefined passNullableUnion((object? or DOMString) arg);
+        undefined passNullable(Foo? arg);
       };
     """
     )
@@ -66,13 +66,13 @@ def WebIDLTest(parser, harness):
     parser.parse(
         """
       interface TestIface {
-        void passKid(Kid arg);
-        void passParent(Parent arg);
-        void passGrandparent(Grandparent arg);
-        void passUnrelated1(Unrelated1 arg);
-        void passUnrelated2(Unrelated2 arg);
-        void passArrayBuffer(ArrayBuffer arg);
-        void passArrayBuffer(ArrayBufferView arg);
+        undefined passKid(Kid arg);
+        undefined passParent(Parent arg);
+        undefined passGrandparent(Grandparent arg);
+        undefined passUnrelated1(Unrelated1 arg);
+        undefined passUnrelated2(Unrelated2 arg);
+        undefined passArrayBuffer(ArrayBuffer arg);
+        undefined passArrayBuffer(ArrayBufferView arg);
       };
 
       interface Kid : Parent {};
@@ -113,10 +113,10 @@ def WebIDLTest(parser, harness):
         """
       interface Dummy {};
       interface TestIface {
-        void method(long arg1, TestIface arg2);
-        void method(long arg1, long arg2);
-        void method(long arg1, Dummy arg2);
-        void method(DOMString arg1, DOMString arg2, DOMString arg3);
+        undefined method(long arg1, TestIface arg2);
+        undefined method(long arg1, long arg2);
+        undefined method(long arg1, Dummy arg2);
+        undefined method(DOMString arg1, DOMString arg2, DOMString arg3);
       };
     """
     )
@@ -133,10 +133,10 @@ def WebIDLTest(parser, harness):
             """
           interface Dummy {};
           interface TestIface {
-            void method(long arg1, TestIface arg2);
-            void method(long arg1, long arg2);
-            void method(any arg1,  Dummy arg2);
-            void method(DOMString arg1, DOMString arg2, DOMString arg3);
+            undefined method(long arg1, TestIface arg2);
+            undefined method(long arg1, long arg2);
+            undefined method(any arg1,  Dummy arg2);
+            undefined method(DOMString arg1, DOMString arg2, DOMString arg3);
           };
         """
         )
@@ -157,10 +157,10 @@ def WebIDLTest(parser, harness):
             """
           interface Dummy {};
           interface TestIface {
-            void method(long arg1, TestIface arg2);
-            void method(long arg1, long arg2);
-            void method(any arg1,  DOMString arg2);
-            void method(DOMString arg1, DOMString arg2, DOMString arg3);
+            undefined method(long arg1, TestIface arg2);
+            undefined method(long arg1, long arg2);
+            undefined method(any arg1,  DOMString arg2);
+            undefined method(DOMString arg1, DOMString arg2, DOMString arg3);
           };
         """
         )
@@ -360,7 +360,7 @@ def WebIDLTest(parser, harness):
           };
         """
         methodTemplate = """
-            void myMethod(%s arg);"""
+            undefined myMethod(%s arg);"""
         methods = (methodTemplate % type1) + (methodTemplate % type2)
         idl = idlTemplate % methods
         parser = parser.reset()

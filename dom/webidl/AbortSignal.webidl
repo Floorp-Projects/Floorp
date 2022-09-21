@@ -15,7 +15,7 @@ interface AbortSignal : EventTarget {
 
   readonly attribute boolean aborted;
   readonly attribute any reason;
-  [Throws] void throwIfAborted();
+  [Throws] undefined throwIfAborted();
 
   attribute EventHandler onabort;
 };

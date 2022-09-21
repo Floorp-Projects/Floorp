@@ -32,11 +32,11 @@ interface PaymentResponse : EventTarget {
   readonly attribute DOMString?      payerPhone;
 
   [NewObject]
-  Promise<void> complete(optional PaymentComplete result = "unknown");
+  Promise<undefined> complete(optional PaymentComplete result = "unknown");
 
   // If the dictionary argument has no required members, it must be optional.
   [NewObject]
-  Promise<void> retry(optional PaymentValidationErrors errorFields = {});
+  Promise<undefined> retry(optional PaymentValidationErrors errorFields = {});
 
   attribute EventHandler onpayerdetailchange;
 };

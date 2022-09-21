@@ -14,16 +14,16 @@ interface ElementInternals {
 
   // Form-associated custom elements
   [Throws]
-  void setFormValue((File or USVString or FormData)? value,
-                    optional (File or USVString or FormData)? state);
+  undefined setFormValue((File or USVString or FormData)? value,
+                         optional (File or USVString or FormData)? state);
 
   [Throws]
   readonly attribute HTMLFormElement? form;
 
   [Throws]
-  void setValidity(optional ValidityStateFlags flags = {},
-                   optional DOMString message,
-                   optional HTMLElement anchor);
+  undefined setValidity(optional ValidityStateFlags flags = {},
+                        optional DOMString message,
+                        optional HTMLElement anchor);
   [Throws]
   readonly attribute boolean willValidate;
   [Throws]

@@ -18,10 +18,10 @@ interface WritableStream {
   readonly attribute boolean locked;
 
   [Throws]
-  Promise<void> abort(optional any reason);
+  Promise<undefined> abort(optional any reason);
 
   [NewObject]
-  Promise<void> close();
+  Promise<undefined> close();
 
   [Throws]
   WritableStreamDefaultWriter getWriter();

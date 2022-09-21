@@ -16,39 +16,39 @@ interface FuzzingFunctions {
   /**
    * Synchronously perform a garbage collection.
    */
-  static void garbageCollect();
+  static undefined garbageCollect();
  
   /**
    * Synchronously perform a compacting garbage collection.
    */
-  static void garbageCollectCompacting();
+  static undefined garbageCollectCompacting();
 
   /**
    * Trigger a forced crash.
    */
-  static void crash(optional DOMString reason = "");
+  static undefined crash(optional DOMString reason = "");
 
   /**
    * Synchronously perform a cycle collection.
    */
-  static void cycleCollect();
+  static undefined cycleCollect();
 
   /**
    * Send a memory pressure event, causes shrinking GC, cycle collection and
    * other actions.
    */
-  static void memoryPressure();
+  static undefined memoryPressure();
 
   /**
    * Enable accessibility.
    */
   [Throws]
-  static void enableAccessibility();
+  static undefined enableAccessibility();
 
   /**
    * Send IPC fuzzing ready event to parent.
    */
-  static void signalIPCReady();
+  static undefined signalIPCReady();
 
   /**
    * synthesizeKeyboardEvents() synthesizes a set of "keydown",
@@ -130,6 +130,6 @@ interface FuzzingFunctions {
    *                                   keyCode: KeyboardEvent.DOM_VK_COLON });
    */
   [Throws]
-  static void synthesizeKeyboardEvents(DOMString aKeyValue,
-                                       optional KeyboardEventInit aDictionary = {});
+  static undefined synthesizeKeyboardEvents(DOMString aKeyValue,
+                                            optional KeyboardEventInit aDictionary = {});
 };

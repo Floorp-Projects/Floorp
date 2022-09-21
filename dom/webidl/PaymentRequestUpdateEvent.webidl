@@ -18,7 +18,7 @@ interface PaymentRequestUpdateEvent : Event {
               optional PaymentRequestUpdateEventInit eventInitDict = {});
 
   [Throws]
-  void updateWith(Promise<PaymentDetailsUpdate> detailsPromise);
+  undefined updateWith(Promise<PaymentDetailsUpdate> detailsPromise);
 };
 
 dictionary PaymentRequestUpdateEventInit : EventInit {

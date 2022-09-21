@@ -64,7 +64,7 @@ interface Notification : EventTarget {
   [Constant]
   readonly attribute any data;
 
-  void close();
+  undefined close();
 };
 
 typedef (unsigned long or sequence<unsigned long>) VibratePattern;
@@ -101,7 +101,7 @@ enum NotificationPermission {
   "granted"
 };
 
-callback NotificationPermissionCallback = void (NotificationPermission permission);
+callback NotificationPermissionCallback = undefined (NotificationPermission permission);
 
 enum NotificationDirection {
   "auto",

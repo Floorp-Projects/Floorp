@@ -8,12 +8,12 @@ def WebIDLTest(parser, harness):
         interface TestSecureContextOnInterface {
           const octet TEST_CONSTANT = 0;
           readonly attribute byte testAttribute;
-          void testMethod(byte foo);
+          undefined testMethod(byte foo);
         };
         partial interface TestSecureContextOnInterface {
           const octet TEST_CONSTANT_2 = 0;
           readonly attribute byte testAttribute2;
-          void testMethod2(byte foo);
+          undefined testMethod2(byte foo);
         };
     """
     )
@@ -59,13 +59,13 @@ def WebIDLTest(parser, harness):
         partial interface TestSecureContextOnInterfaceAfterPartialInterface {
           const octet TEST_CONSTANT_2 = 0;
           readonly attribute byte testAttribute2;
-          void testMethod2(byte foo);
+          undefined testMethod2(byte foo);
         };
         [SecureContext]
         interface TestSecureContextOnInterfaceAfterPartialInterface {
           const octet TEST_CONSTANT = 0;
           readonly attribute byte testAttribute;
-          void testMethod(byte foo);
+          undefined testMethod(byte foo);
         };
      """
     )
@@ -110,13 +110,13 @@ def WebIDLTest(parser, harness):
         interface TestSecureContextOnPartialInterface {
           const octet TEST_CONSTANT = 0;
           readonly attribute byte testAttribute;
-          void testMethod(byte foo);
+          undefined testMethod(byte foo);
         };
         [SecureContext]
         partial interface TestSecureContextOnPartialInterface {
           const octet TEST_CONSTANT_2 = 0;
           readonly attribute byte testAttribute2;
-          void testMethod2(byte foo);
+          undefined testMethod2(byte foo);
         };
     """
     )
@@ -167,10 +167,10 @@ def WebIDLTest(parser, harness):
           [SecureContext]
           readonly attribute byte testSecureAttribute;
           readonly attribute byte testNonSecureAttribute2;
-          void testNonSecureMethod1(byte foo);
+          undefined testNonSecureMethod1(byte foo);
           [SecureContext]
-          void testSecureMethod(byte foo);
-          void testNonSecureMethod2(byte foo);
+          undefined testSecureMethod(byte foo);
+          undefined testNonSecureMethod2(byte foo);
         };
     """
     )
@@ -235,10 +235,10 @@ def WebIDLTest(parser, harness):
           [SecureContext]
           readonly attribute byte testSecureAttribute;
           readonly attribute byte testNonSecureAttribute2;
-          void testNonSecureMethod1(byte foo);
+          undefined testNonSecureMethod1(byte foo);
           [SecureContext]
-          void testSecureMethod(byte foo);
-          void testNonSecureMethod2(byte foo);
+          undefined testSecureMethod(byte foo);
+          undefined testNonSecureMethod2(byte foo);
         };
     """
     )
@@ -308,10 +308,10 @@ def WebIDLTest(parser, harness):
             """
             interface TestSecureContextForOverloads1 {
               [SecureContext]
-              void testSecureMethod(byte foo);
+              undefined testSecureMethod(byte foo);
             };
             partial interface TestSecureContextForOverloads1 {
-              void testSecureMethod(byte foo, byte bar);
+              undefined testSecureMethod(byte foo, byte bar);
             };
         """
         )
@@ -330,11 +330,11 @@ def WebIDLTest(parser, harness):
             """
             interface TestSecureContextForOverloads2 {
               [SecureContext]
-              void testSecureMethod(byte foo);
+              undefined testSecureMethod(byte foo);
             };
             partial interface TestSecureContextForOverloads2 {
               [SecureContext]
-              void testSecureMethod(byte foo, byte bar);
+              undefined testSecureMethod(byte foo, byte bar);
             };
         """
         )
@@ -354,7 +354,7 @@ def WebIDLTest(parser, harness):
             [SecureContext]
             interface TestSecureContextOnInterfaceAndMember {
               [SecureContext]
-              void testSecureMethod(byte foo);
+              undefined testSecureMethod(byte foo);
             };
         """
         )
@@ -375,7 +375,7 @@ def WebIDLTest(parser, harness):
             [SecureContext]
             partial interface TestSecureContextOnPartialInterfaceAndMember {
               [SecureContext]
-              void testSecureMethod(byte foo);
+              undefined testSecureMethod(byte foo);
             };
         """
         )
@@ -397,7 +397,7 @@ def WebIDLTest(parser, harness):
             };
             partial interface TestSecureContextOnInterfaceAndPartialInterfaceMember {
               [SecureContext]
-              void testSecureMethod(byte foo);
+              undefined testSecureMethod(byte foo);
             };
         """
         )
@@ -418,7 +418,7 @@ def WebIDLTest(parser, harness):
             interface TestSecureContextOnInheritedInterface {
             };
             interface TestSecureContextNotOnInheritingInterface : TestSecureContextOnInheritedInterface {
-              void testSecureMethod(byte foo);
+              undefined testSecureMethod(byte foo);
             };
         """
         )
@@ -441,7 +441,7 @@ def WebIDLTest(parser, harness):
         interface mixin TestNonSecureContextMixin {
           const octet TEST_CONSTANT_2 = 0;
           readonly attribute byte testAttribute2;
-          void testMethod2(byte foo);
+          undefined testMethod2(byte foo);
         };
         TestSecureContextInterfaceThatIncludesNonSecureContextMixin includes TestNonSecureContextMixin;
      """
@@ -479,7 +479,7 @@ def WebIDLTest(parser, harness):
         """
         [LegacyNoInterfaceObject, SecureContext]
         interface TestSecureContextLegacyNoInterfaceObject {
-          void testSecureMethod(byte foo);
+          undefined testSecureMethod(byte foo);
         };
     """
     )

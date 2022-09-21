@@ -59,8 +59,8 @@ def WebIDLTest(parser, harness):
     parser.parse(
         """
         interface TestClamp {
-          void testClamp([Clamp] long foo);
-          void testNotClamp(long foo);
+          undefined testClamp([Clamp] long foo);
+          undefined testNotClamp(long foo);
         };
     """
     )
@@ -82,7 +82,7 @@ def WebIDLTest(parser, harness):
         parser.parse(
             """
             interface TestClamp2 {
-              void testClamp([Clamp=something] long foo);
+              undefined testClamp([Clamp=something] long foo);
             };
         """
         )
@@ -96,8 +96,8 @@ def WebIDLTest(parser, harness):
     parser.parse(
         """
         interface TestEnforceRange {
-          void testEnforceRange([EnforceRange] long foo);
-          void testNotEnforceRange(long foo);
+          undefined testEnforceRange([EnforceRange] long foo);
+          undefined testNotEnforceRange(long foo);
         };
     """
     )
@@ -120,7 +120,7 @@ def WebIDLTest(parser, harness):
         parser.parse(
             """
             interface TestEnforceRange2 {
-              void testEnforceRange([EnforceRange=something] long foo);
+              undefined testEnforceRange([EnforceRange=something] long foo);
             };
         """
         )

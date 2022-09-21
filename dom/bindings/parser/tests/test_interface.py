@@ -118,11 +118,11 @@ def WebIDLTest(parser, harness):
             constructor();
             constructor(long arg);
             readonly attribute boolean x;
-            void foo();
+            undefined foo();
         };
         partial interface A {
             readonly attribute boolean y;
-            void foo(long arg);
+            undefined foo(long arg);
         };
     """
     )
@@ -163,13 +163,13 @@ def WebIDLTest(parser, harness):
         """
         partial interface A {
             readonly attribute boolean y;
-            void foo(long arg);
+            undefined foo(long arg);
         };
         interface A {
             constructor();
             constructor(long arg);
             readonly attribute boolean x;
-            void foo();
+            undefined foo();
         };
     """
     )

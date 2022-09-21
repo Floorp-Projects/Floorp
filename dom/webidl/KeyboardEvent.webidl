@@ -41,16 +41,16 @@ interface KeyboardEvent : UIEvent
   readonly attribute DOMString code;
 
   [BinaryName="initKeyboardEventJS"]
-  void initKeyboardEvent(DOMString typeArg,
-                         optional boolean bubblesArg = false,
-                         optional boolean cancelableArg = false,
-                         optional Window? viewArg = null,
-                         optional DOMString keyArg = "",
-                         optional unsigned long locationArg = 0,
-                         optional boolean ctrlKey = false,
-                         optional boolean altKey = false,
-                         optional boolean shiftKey = false,
-                         optional boolean metaKey = false);
+  undefined initKeyboardEvent(DOMString typeArg,
+                              optional boolean bubblesArg = false,
+                              optional boolean cancelableArg = false,
+                              optional Window? viewArg = null,
+                              optional DOMString keyArg = "",
+                              optional unsigned long locationArg = 0,
+                              optional boolean ctrlKey = false,
+                              optional boolean altKey = false,
+                              optional boolean shiftKey = false,
+                              optional boolean metaKey = false);
 
   // This returns the initialized dictionary for generating a
   // same-type keyboard event

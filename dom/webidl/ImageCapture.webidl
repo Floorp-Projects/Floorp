@@ -25,9 +25,9 @@ interface ImageCapture : EventTarget {
   // attribute EventHandler onframegrab;
 
   // [Throws]
-  // void setOptions (PhotoSettings? photoSettings);
+  // undefined setOptions (PhotoSettings? photoSettings);
   [Throws]
-  void takePhoto();
+  undefined takePhoto();
   // [Throws]
-  // void getFrame();
+  // undefined getFrame();
 };

@@ -53,8 +53,8 @@ partial interface Performance {
 // https://w3c.github.io/resource-timing/#sec-extensions-performance-interface
 [Exposed=(Window,Worker)]
 partial interface Performance {
-  void clearResourceTimings();
-  void setResourceTimingBufferSize(unsigned long maxSize);
+  undefined clearResourceTimings();
+  undefined setResourceTimingBufferSize(unsigned long maxSize);
   attribute EventHandler onresourcetimingbufferfull;
 };
 
@@ -84,10 +84,10 @@ dictionary PerformanceMeasureOptions {
 partial interface Performance {
   [Throws]
   PerformanceMark mark(DOMString markName, optional PerformanceMarkOptions markOptions = {});
-  void clearMarks(optional DOMString markName);
+  undefined clearMarks(optional DOMString markName);
   [Throws]
   PerformanceMeasure measure(DOMString measureName, optional (DOMString or PerformanceMeasureOptions) startOrMeasureOptions = {}, optional DOMString endMark);
-  void clearMeasures(optional DOMString measureName);
+  undefined clearMeasures(optional DOMString measureName);
 };
 
 [Exposed=Window]

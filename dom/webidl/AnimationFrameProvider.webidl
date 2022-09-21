@@ -7,9 +7,9 @@
  * https://html.spec.whatwg.org/multipage/imagebitmap-and-animations.html#animation-frames
  */
 
-callback FrameRequestCallback = void (DOMHighResTimeStamp time);
+callback FrameRequestCallback = undefined (DOMHighResTimeStamp time);
 
 interface mixin AnimationFrameProvider {
   [Throws] long requestAnimationFrame(FrameRequestCallback callback);
-  [Throws] void cancelAnimationFrame(long handle);
+  [Throws] undefined cancelAnimationFrame(long handle);
 };

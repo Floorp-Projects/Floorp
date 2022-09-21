@@ -14,8 +14,8 @@ interface ImageDocument : HTMLDocument {
   readonly attribute boolean imageIsResized;
 
   /* Resize the image to fit visible area. */
-  void shrinkToFit();
+  undefined shrinkToFit();
 
   /* Restore image original size. */
-  void restoreImage();
+  undefined restoreImage();
 };

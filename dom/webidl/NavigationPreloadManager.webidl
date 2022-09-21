@@ -11,11 +11,11 @@
  Exposed=(Window,Worker)]
 interface NavigationPreloadManager {
   [NewObject]
-  Promise<void> enable();
+  Promise<undefined> enable();
   [NewObject]
-  Promise<void> disable();
+  Promise<undefined> disable();
   [NewObject]
-  Promise<void> setHeaderValue(ByteString value);
+  Promise<undefined> setHeaderValue(ByteString value);
   [NewObject]
   Promise<NavigationPreloadState> getState();
 };

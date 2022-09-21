@@ -20,7 +20,7 @@ interface WorkerGlobalScope : EventTarget {
   readonly attribute WorkerNavigator navigator;
 
   [Throws]
-  void importScripts(DOMString... urls);
+  undefined importScripts(DOMString... urls);
 
   attribute OnErrorEventHandler onerror;
 
@@ -39,7 +39,7 @@ WorkerGlobalScope includes WindowOrWorkerGlobalScope;
 // Mozilla extensions
 partial interface WorkerGlobalScope {
 
-  void dump(optional DOMString str);
+  undefined dump(optional DOMString str);
 
   // https://w3c.github.io/hr-time/#the-performance-attribute
   [Constant, Cached, Replaceable, BinaryName="getPerformance"]

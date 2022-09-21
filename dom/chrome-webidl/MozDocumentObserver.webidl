@@ -6,8 +6,8 @@
 
 [Exposed=Window]
 callback interface MozDocumentCallback {
-  void onNewDocument(MozDocumentMatcher matcher, WindowProxy window);
-  void onPreloadDocument(MozDocumentMatcher matcher, LoadInfo loadInfo);
+  undefined onNewDocument(MozDocumentMatcher matcher, WindowProxy window);
+  undefined onPreloadDocument(MozDocumentMatcher matcher, LoadInfo loadInfo);
 };
 
 [ChromeOnly, Exposed=Window]
@@ -15,6 +15,6 @@ interface MozDocumentObserver {
   constructor(MozDocumentCallback callbacks);
 
   [Throws]
-  void observe(sequence<MozDocumentMatcher> matchers);
-  void disconnect();
+  undefined observe(sequence<MozDocumentMatcher> matchers);
+  undefined disconnect();
 };

@@ -15,7 +15,7 @@ interface TimeEvent : Event
 {
   readonly attribute long         detail;
   readonly attribute WindowProxy? view;
-  void initTimeEvent(DOMString aType,
-                     optional Window? aView = null,
-                     optional long aDetail = 0);
+  undefined initTimeEvent(DOMString aType,
+                          optional Window? aView = null,
+                          optional long aDetail = 0);
 };

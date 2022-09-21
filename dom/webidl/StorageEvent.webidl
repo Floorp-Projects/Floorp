@@ -22,14 +22,14 @@ interface StorageEvent : Event
   readonly attribute Storage? storageArea;
 
   // Bug 1016053 - This is not spec compliant.
-  void initStorageEvent(DOMString type,
-                        optional boolean canBubble = false,
-                        optional boolean cancelable = false,
-                        optional DOMString? key = null,
-                        optional DOMString? oldValue = null,
-                        optional DOMString? newValue = null,
-                        optional DOMString? url = null,
-                        optional Storage? storageArea = null);
+  undefined initStorageEvent(DOMString type,
+                             optional boolean canBubble = false,
+                             optional boolean cancelable = false,
+                             optional DOMString? key = null,
+                             optional DOMString? oldValue = null,
+                             optional DOMString? newValue = null,
+                             optional DOMString? url = null,
+                             optional Storage? storageArea = null);
 };
 
 dictionary StorageEventInit : EventInit

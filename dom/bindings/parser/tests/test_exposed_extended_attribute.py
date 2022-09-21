@@ -10,7 +10,7 @@ def WebIDLTest(parser, harness):
 
       [Exposed=(Foo,Bar1)]
       interface Iface {
-        void method1();
+        undefined method1();
 
         [Exposed=Bar1]
         readonly attribute any attr;
@@ -18,7 +18,7 @@ def WebIDLTest(parser, harness):
 
       [Exposed=Foo]
       partial interface Iface {
-        void method2();
+        undefined method2();
       };
     """
     )
@@ -76,7 +76,7 @@ def WebIDLTest(parser, harness):
 
       [Exposed=Foo]
       interface Iface2 {
-        void method3();
+        undefined method3();
       };
     """
     )
@@ -114,12 +114,12 @@ def WebIDLTest(parser, harness):
 
       [Exposed=Foo]
       interface Iface3 {
-        void method4();
+        undefined method4();
       };
 
       [Exposed=(Foo,Bar1)]
       interface mixin Mixin {
-        void method5();
+        undefined method5();
       };
 
       Iface3 includes Mixin;
@@ -192,7 +192,7 @@ def WebIDLTest(parser, harness):
             """
             interface Bar {
               [Exposed=Foo]
-              void operation();
+              undefined operation();
             };
         """
         )
@@ -232,7 +232,7 @@ def WebIDLTest(parser, harness):
             [Exposed=Foo]
             interface Baz {
               [Exposed=Bar]
-              void method();
+              undefined method();
             };
         """
         )
@@ -253,12 +253,12 @@ def WebIDLTest(parser, harness):
 
         [Exposed=Foo]
         interface Baz {
-          void method();
+          undefined method();
         };
 
         [Exposed=Bar]
         interface mixin Mixin {
-          void otherMethod();
+          undefined otherMethod();
         };
 
         Baz includes Mixin;
@@ -299,12 +299,12 @@ def WebIDLTest(parser, harness):
 
         [Exposed=*]
         interface Baz {
-          void methodWild();
+          undefined methodWild();
         };
 
         [Exposed=Bar]
         interface mixin Mixin {
-          void methodNotWild();
+          undefined methodNotWild();
         };
 
         Baz includes Mixin;
@@ -348,7 +348,7 @@ def WebIDLTest(parser, harness):
             [Exposed=Foo]
             interface Baz {
               [Exposed=*]
-              void method();
+              undefined method();
             };
         """
         )
@@ -371,7 +371,7 @@ def WebIDLTest(parser, harness):
 
             [Exposed=(Foo,*)]
             interface Baz {
-              void method();
+              undefined method();
             };
         """
         )

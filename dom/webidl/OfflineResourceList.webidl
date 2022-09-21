@@ -34,14 +34,14 @@ interface OfflineResourceList : EventTarget {
    * Begin the application update process on the associated application cache.
    */
   [Throws, UseCounter]
-  void update();
+  undefined update();
 
   /**
    * Swap in the newest version of the application cache, or disassociate
    * from the cache if the cache group is obsolete.
    */
   [Throws, UseCounter]
-  void swapCache();
+  undefined swapCache();
 
   /* Events */
   [UseCounter]
@@ -109,7 +109,7 @@ partial interface OfflineResourceList {
    *        The resource to add.
    */
   [Throws]
-  void mozAdd(DOMString uri);
+  undefined mozAdd(DOMString uri);
 
   /**
    * Remove an item from the list of dynamically-managed entries.  If this
@@ -120,5 +120,5 @@ partial interface OfflineResourceList {
    *        The resource to remove.
    */
   [Throws]
-  void mozRemove(DOMString uri);
+  undefined mozRemove(DOMString uri);
 };

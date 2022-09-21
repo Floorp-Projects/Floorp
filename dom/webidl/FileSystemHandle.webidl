@@ -15,11 +15,11 @@ interface FileSystemHandle {
 
   /* https://whatpr.org/fs/10.html#api-filesystemhandle */
   [NewObject]
-  Promise<void> move(USVString name);
+  Promise<undefined> move(USVString name);
   [NewObject]
-  Promise<void> move(FileSystemDirectoryHandle parent);
+  Promise<undefined> move(FileSystemDirectoryHandle parent);
   [NewObject]
-  Promise<void> move(FileSystemDirectoryHandle parent, USVString name);
+  Promise<undefined> move(FileSystemDirectoryHandle parent, USVString name);
   
   [NewObject]
   Promise<boolean> isSameEntry(FileSystemHandle other);

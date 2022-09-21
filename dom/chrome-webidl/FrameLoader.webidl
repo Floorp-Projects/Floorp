@@ -60,7 +60,7 @@ interface FrameLoader {
    * Force a remote browser to recompute its dimension and screen position.
    */
   [Throws]
-  void requestUpdatePosition();
+  undefined requestUpdatePosition();
 
   /**
    * Force a TabStateFlush from native sessionStoreListeners.
@@ -68,17 +68,17 @@ interface FrameLoader {
    * flushed.
    */
   [NewObject]
-  Promise<void> requestTabStateFlush();
+  Promise<undefined> requestTabStateFlush();
 
   /**
    * Force Epoch update in native sessionStoreListeners.
    */
-  void requestEpochUpdate(unsigned long aEpoch);
+  undefined requestEpochUpdate(unsigned long aEpoch);
 
   /**
    * Request a session history update in native sessionStoreListeners.
    */
-  void requestSHistoryUpdate();
+  undefined requestSHistoryUpdate();
 
   /**
    * Creates a print preview document in this frame, or updates the existing
@@ -103,7 +103,7 @@ interface FrameLoader {
   /**
    * Inform the print preview document that we're done with it.
    */
-  void exitPrintPreview();
+  undefined exitPrintPreview();
 
   /**
    * The element which owns this frame loader.
@@ -178,8 +178,8 @@ interface FrameLoader {
 interface mixin WebBrowserPersistable
 {
   [Throws]
-  void startPersistence(BrowsingContext? aContext,
-                        nsIWebBrowserPersistDocumentReceiver aRecv);
+  undefined startPersistence(BrowsingContext? aContext,
+                             nsIWebBrowserPersistDocumentReceiver aRecv);
 };
 
 enum PrintPreviewOrientation {

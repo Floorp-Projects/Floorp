@@ -43,5 +43,5 @@ interface DocumentL10n : DOMLocalization {
    * the `TranslateFragment` be available immediately when `DocumentL10n` becomes
    * available.
    */
-  [Throws] void connectRoot(Node aElement, optional boolean aTranslate = false);
+  [Throws] undefined connectRoot(Node aElement, optional boolean aTranslate = false);
 };

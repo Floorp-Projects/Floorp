@@ -43,7 +43,7 @@ interface FluentBundle {
   [Pure, Cached]
   readonly attribute sequence<UTF8String> locales;
 
-  void addResource(FluentResource aResource, optional FluentBundleAddResourceOptions aOptions = {});
+  undefined addResource(FluentResource aResource, optional FluentBundleAddResourceOptions aOptions = {});
   boolean hasMessage(UTF8String id);
   FluentMessage? getMessage(UTF8String id);
   [Throws]

@@ -184,19 +184,19 @@ For example, this Web IDL:
 ``` webidl
 interface MyInterface
 {
-  void doSomething(long number);
+  undefined doSomething(long number);
   double doSomething(MyInterface? otherInstance);
 
   [Throws]
   MyInterface doSomethingElse(optional long maybeNumber);
   [Throws]
-  void doSomethingElse(MyInterface otherInstance);
+  undefined doSomethingElse(MyInterface otherInstance);
 
-  void doTheOther(any something);
+  undefined doTheOther(any something);
 
-  void doYetAnotherThing(optional boolean actuallyDoIt = false);
+  undefined doYetAnotherThing(optional boolean actuallyDoIt = false);
 
-  static void staticOperation(any arg);
+  static undefined staticOperation(any arg);
 };
 ```
 
@@ -240,8 +240,8 @@ arguments and the attribute's type as the return type.
 
 The setter's name is `Set` followed by the name of the attribute with
 the first letter converted to uppercase. The method signature looks just
-like an operation with a void return value and a single argument whose
-type is the attribute's type.
+like an operation with an undefined return value and a single argument
+whose type is the attribute's type.
 
 ### C++ reflections of Web IDL constructors
 
@@ -736,7 +736,7 @@ For example, this Web IDL:
 ``` webidl
 interface MyInterface {
   attribute MyInterface myAttr;
-  void passNullable(MyInterface? arg);
+  undefined passNullable(MyInterface? arg);
   MyInterface? doSomething(sequence<MyInterface> arg);
   MyInterface doTheOther(sequence<MyInterface?> arg);
   readonly attribute MyInterface? nullableAttr;
@@ -766,9 +766,9 @@ example, this Web IDL:
 
 ``` webidl
 interface Test {
-  void passTypedArrayBuffer(ArrayBuffer arg);
-  void passTypedArray(ArrayBufferView arg);
-  void passInt16Array(Int16Array? arg);
+  undefined passTypedArrayBuffer(ArrayBuffer arg);
+  undefined passTypedArray(ArrayBufferView arg);
+  undefined passInt16Array(Int16Array? arg);
 }
 ```
 
@@ -831,7 +831,7 @@ dictionary Dict {
 };
 
 interface Test {
-  void initSomething(optional Dict arg = {});
+  undefined initSomething(optional Dict arg = {});
 };
 ```
 
@@ -1046,10 +1046,10 @@ union, with "Or" inserted between them, and for an owning struct
 "Owning" prepended. So for example, this IDL:
 
 ``` webidl
-void passUnion((object or long) arg);
+undefined passUnion((object or long) arg);
 (object or long) receiveUnion();
-void passSequenceOfUnions(sequence<(object or long)> arg);
-void passOtherUnion((HTMLDivElement or ArrayBuffer or EventInit) arg);
+undefined passSequenceOfUnions(sequence<(object or long)> arg);
+undefined passOtherUnion((HTMLDivElement or ArrayBuffer or EventInit) arg);
 ```
 
 would correspond to these C++ function declarations:
@@ -1288,7 +1288,7 @@ class InterfaceWithNamedGetter
 public:
   int32_t NamedGetter(const nsAString& aName, bool& aFound);
   bool NameIsEnumerable(const nsAString& aName);
-  void GetSupportedNames(unsigned aFlags, nsTArray<nsString>& aNames);
+  undefined GetSupportedNames(unsigned aFlags, nsTArray<nsString>& aNames);
 };
 ```
 
@@ -1349,7 +1349,7 @@ as the property for the method. For example:
 
 ``` webidl
 interface MyInterface {
-  [Alias=performSomething] void doSomething();
+  [Alias=performSomething] undefined doSomething();
 };
 ```
 
@@ -1775,7 +1775,7 @@ For example, given this IDL:
 ``` webidl
 interface InterfaceWithRenamedThings {
   [BinaryName="renamedMethod"]
-  void someMethod();
+  undefined someMethod();
   [BinaryName="renamedAttribute"]
   attribute long someAttribute;
 };
@@ -2180,7 +2180,7 @@ interface MyNumber {
   constructor(optional long firstNumber);
   attribute long value;
   readonly attribute long otherValue;
-  void doNothing();
+  undefined doNothing();
 };
 ```
 
@@ -2226,7 +2226,7 @@ found in a directory based on its name.
 [JSImplementation="@mozilla.org/dom/foo;1"]
 interface Foo {
   [StaticClassOverride="mozilla::dom::OtherClass"]
-  static Promise<void> doSomething();
+  static Promise<undefined> doSomething();
 };
 ```
 
@@ -2239,7 +2239,7 @@ Rather than calling into a method on the JS implementation; calling
 With JS-implemented Web IDL, the `init` method should only return
 undefined. If any other value, such as `null`, is returned, the
 bindings code will assert or crash. In other words, it acts like it has
-a "void" return type. Preference or permission checking should be
+an "undefined" return type. Preference or permission checking should be
 implemented by adding an extended attribute to the Web IDL interface.
 This has the advantage that if the check fails, the constructor or
 object will not show up at all.
@@ -2383,7 +2383,7 @@ JavaScript:
 [JSImplementation="some-contract"]
 interface MyEventTarget : EventTarget {
   attribute EventHandler onmyevent;
-  void dispatchTheEvent(); // Sends a "myevent" event to this EventTarget
+  undefined dispatchTheEvent(); // Sends a "myevent" event to this EventTarget
 }
 ```
 

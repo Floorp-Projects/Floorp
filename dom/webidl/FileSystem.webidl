@@ -11,9 +11,9 @@ dictionary FileSystemFlags {
     boolean exclusive = false;
 };
 
-callback FileSystemEntryCallback = void (FileSystemEntry entry);
+callback FileSystemEntryCallback = undefined (FileSystemEntry entry);
 
-callback ErrorCallback = void (DOMException err);
+callback ErrorCallback = undefined (DOMException err);
 
 [Exposed=Window]
 interface FileSystem {

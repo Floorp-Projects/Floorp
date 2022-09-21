@@ -14,7 +14,7 @@
  Exposed=Window]
 interface AudioListener {
     // Uses a 3D cartesian coordinate system
-    void setPosition(double x, double y, double z);
-    void setOrientation(double x, double y, double z, double xUp, double yUp, double zUp);
+    undefined setPosition(double x, double y, double z);
+    undefined setOrientation(double x, double y, double z, double xUp, double yUp, double zUp);
 };
 

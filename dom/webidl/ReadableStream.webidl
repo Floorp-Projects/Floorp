@@ -8,7 +8,7 @@ interface ReadableStream {
   readonly attribute boolean locked;
 
   [NewObject]
-  Promise<void> cancel(optional any reason);
+  Promise<undefined> cancel(optional any reason);
 
   [Throws]
   ReadableStreamReader getReader(optional ReadableStreamGetReaderOptions options = {});
@@ -17,7 +17,7 @@ interface ReadableStream {
   ReadableStream pipeThrough(ReadableWritablePair transform, optional StreamPipeOptions options = {});
 
   [Pref="dom.streams.pipeTo.enabled", NewObject]
-  Promise<void> pipeTo(WritableStream destination, optional StreamPipeOptions options = {});
+  Promise<undefined> pipeTo(WritableStream destination, optional StreamPipeOptions options = {});
 
   [Throws]
   sequence<ReadableStream> tee();

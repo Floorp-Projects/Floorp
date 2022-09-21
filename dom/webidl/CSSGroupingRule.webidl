@@ -14,5 +14,5 @@ interface CSSGroupingRule : CSSRule {
   [Throws]
   unsigned long insertRule(UTF8String rule, optional unsigned long index = 0);
   [Throws]
-  void deleteRule(unsigned long index);
+  undefined deleteRule(unsigned long index);
 };

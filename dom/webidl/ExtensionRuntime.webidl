@@ -40,7 +40,7 @@ interface ExtensionRuntime {
   any setUninstallURL(optional Function callback);
 
   [Throws, WebExtensionStub="NoReturn"]
-  void reload();
+  undefined reload();
 
   [Throws, WebExtensionStub="ReturnsPort"]
   ExtensionPort connect(DOMString extensionId, any connectInfo);

@@ -27,7 +27,7 @@ interface FileSystemDirectoryHandle : FileSystemHandle {
   Promise<FileSystemDirectoryHandle> getDirectoryHandle(USVString name, optional FileSystemGetDirectoryOptions options = {});
 
   [NewObject]
-  Promise<void> removeEntry(USVString name, optional FileSystemRemoveOptions options = {});
+  Promise<undefined> removeEntry(USVString name, optional FileSystemRemoveOptions options = {});
 
   [NewObject]
   Promise<sequence<USVString>?> resolve(FileSystemHandle possibleDescendant);
