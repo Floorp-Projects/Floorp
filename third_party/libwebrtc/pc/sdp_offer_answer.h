@@ -576,6 +576,7 @@ class SdpOfferAnswerHandler : public SdpStateProvider,
   // ==================================================================
   // Access to pc_ variables
   cricket::ChannelManager* channel_manager() const;
+  cricket::MediaEngineInterface* media_engine() const;
   TransceiverList* transceivers();
   const TransceiverList* transceivers() const;
   DataChannelController* data_channel_controller();

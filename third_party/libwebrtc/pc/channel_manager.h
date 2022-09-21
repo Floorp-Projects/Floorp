@@ -69,12 +69,6 @@ class ChannelManager : public ChannelFactoryInterface {
   void GetSupportedAudioReceiveCodecs(std::vector<AudioCodec>* codecs) const;
   void GetSupportedVideoSendCodecs(std::vector<VideoCodec>* codecs) const;
   void GetSupportedVideoReceiveCodecs(std::vector<VideoCodec>* codecs) const;
-  RtpHeaderExtensions GetDefaultEnabledAudioRtpHeaderExtensions() const;
-  std::vector<webrtc::RtpHeaderExtensionCapability>
-  GetSupportedAudioRtpHeaderExtensions() const;
-  RtpHeaderExtensions GetDefaultEnabledVideoRtpHeaderExtensions() const;
-  std::vector<webrtc::RtpHeaderExtensionCapability>
-  GetSupportedVideoRtpHeaderExtensions() const;
 
   // The operations below all occur on the worker thread.
   // The caller is responsible for ensuring that destruction happens
@@ -101,14 +95,6 @@ class ChannelManager : public ChannelFactoryInterface {
       const VideoOptions& options,
       webrtc::VideoBitrateAllocatorFactory* video_bitrate_allocator_factory)
       override;
-
-  // Starts AEC dump using existing file, with a specified maximum file size in
-  // bytes. When the limit is reached, logging will stop and the file will be
-  // closed. If max_size_bytes is set to <= 0, no limit will be used.
-  bool StartAecDump(webrtc::FileWrapper file, int64_t max_size_bytes);
-
-  // Stops recording AEC dump.
-  void StopAecDump();
 
  protected:
   ChannelManager(std::unique_ptr<MediaEngineInterface> media_engine,
