@@ -8162,7 +8162,27 @@ var MailIntegration = {
   },
 };
 
-function BrowserOpenAddonsMgr(aView) {
+/**
+ * Open about:addons page by given view id.
+ * @param {String} aView
+ *                 View id of page that will open.
+ *                 e.g. "addons://discover/"
+ * @param {Object} options
+ *        {
+ *          selectTabByViewId: If true, if there is the tab opening page having
+ *                             same view id, select the tab. Else if the current
+ *                             page is blank, load on it. Otherwise, open a new
+ *                             tab, then load on it.
+ *                             If false, if there is the tab opening
+ *                             about:addoons page, select the tab and load page
+ *                             for view id on it. Otherwise, leave the loading
+ *                             behavior to switchToTabHavingURI().
+ *                             If no options, handles as false.
+ *        }
+ * @returns {Promise} When the Promise resolves, returns window object loaded the
+ *                    view id.
+ */
+function BrowserOpenAddonsMgr(aView, { selectTabByViewId = false } = {}) {
   return new Promise(resolve => {
     let emWindow;
     let browserWindow;
@@ -8170,6 +8190,13 @@ function BrowserOpenAddonsMgr(aView) {
     var receivePong = function(aSubject, aTopic, aData) {
       let browserWin = aSubject.browsingContext.topChromeWindow;
       if (!emWindow || browserWin == window /* favor the current window */) {
+        if (
+          selectTabByViewId &&
+          aSubject.gViewController.currentViewId !== aView
+        ) {
+          return;
+        }
+
         emWindow = aSubject;
         browserWindow = browserWin;
       }
@@ -8179,7 +8206,7 @@ function BrowserOpenAddonsMgr(aView) {
     Services.obs.removeObserver(receivePong, "EM-pong");
 
     if (emWindow) {
-      if (aView) {
+      if (aView && !selectTabByViewId) {
         emWindow.loadView(aView);
       }
       let tab = browserWindow.gBrowser.getTabForBrowser(
@@ -8191,9 +8218,16 @@ function BrowserOpenAddonsMgr(aView) {
       return;
     }
 
-    // This must be a new load, else the ping/pong would have
-    // found the window above.
-    switchToTabHavingURI("about:addons", true);
+    if (selectTabByViewId) {
+      const target = isBlankPageURL(gBrowser.currentURI.spec)
+        ? "current"
+        : "tab";
+      openTrustedLinkIn("about:addons", target);
+    } else {
+      // This must be a new load, else the ping/pong would have
+      // found the window above.
+      switchToTabHavingURI("about:addons", true);
+    }
 
     Services.obs.addObserver(function observer(aSubject, aTopic, aData) {
       Services.obs.removeObserver(observer, aTopic);

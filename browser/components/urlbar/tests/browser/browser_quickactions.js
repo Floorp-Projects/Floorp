@@ -308,10 +308,86 @@ add_task(async function test_other_search_mode() {
 });
 
 let COMMANDS_TESTS = [
-  ["add-ons", async () => isSelected("button[name=discover]")],
-  ["plugins", async () => isSelected("button[name=plugin]")],
-  ["extensions", async () => isSelected("button[name=extension]")],
-  ["themes", async () => isSelected("button[name=theme]")],
+  {
+    cmd: "add-ons",
+    uri: "about:addons",
+    testFun: async () => isSelected("button[name=discover]"),
+  },
+  {
+    cmd: "plugins",
+    uri: "about:addons",
+    testFun: async () => isSelected("button[name=plugin]"),
+  },
+  {
+    cmd: "extensions",
+    uri: "about:addons",
+    testFun: async () => isSelected("button[name=extension]"),
+  },
+  {
+    cmd: "themes",
+    uri: "about:addons",
+    testFun: async () => isSelected("button[name=theme]"),
+  },
+  {
+    cmd: "add-ons",
+    setup: async () => {
+      const onLoad = BrowserTestUtils.browserLoaded(
+        gBrowser.selectedBrowser,
+        false,
+        "http://example.com/"
+      );
+      BrowserTestUtils.loadURI(gBrowser.selectedBrowser, "http://example.com/");
+      await onLoad;
+    },
+    uri: "about:addons",
+    isNewTab: true,
+    testFun: async () => isSelected("button[name=discover]"),
+  },
+  {
+    cmd: "plugins",
+    setup: async () => {
+      const onLoad = BrowserTestUtils.browserLoaded(
+        gBrowser.selectedBrowser,
+        false,
+        "http://example.com/"
+      );
+      BrowserTestUtils.loadURI(gBrowser.selectedBrowser, "http://example.com/");
+      await onLoad;
+    },
+    uri: "about:addons",
+    isNewTab: true,
+    testFun: async () => isSelected("button[name=plugin]"),
+  },
+  {
+    cmd: "extensions",
+    setup: async () => {
+      const onLoad = BrowserTestUtils.browserLoaded(
+        gBrowser.selectedBrowser,
+        false,
+        "http://example.com/"
+      );
+      BrowserTestUtils.loadURI(gBrowser.selectedBrowser, "http://example.com/");
+      await onLoad;
+    },
+    uri: "about:addons",
+    isNewTab: true,
+    testFun: async () => isSelected("button[name=extension]"),
+  },
+  {
+    cmd: "themes",
+    setup: async () => {
+      const onLoad = BrowserTestUtils.browserLoaded(
+        gBrowser.selectedBrowser,
+        false,
+        "http://example.com/"
+      );
+      BrowserTestUtils.loadURI(gBrowser.selectedBrowser, "http://example.com/");
+      await onLoad;
+    },
+    uri: "about:addons",
+    isNewTab: true,
+    testFun: async () => isSelected("button[name=theme]"),
+  },
 ];
 
 let isSelected = async selector =>
@@ -322,21 +398,36 @@ let isSelected = async selector =>
   });
 
 add_task(async function test_pages() {
-  for (const [cmd, testFun] of COMMANDS_TESTS) {
+  for (const { cmd, uri, setup, isNewTab, testFun } of COMMANDS_TESTS) {
     info(`Testing ${cmd} command is triggered`);
     let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser);
+
+    if (setup) {
+      info("Setup");
+      await setup();
+    }
+
+    let onLoad = isNewTab
+      ? BrowserTestUtils.waitForNewTab(gBrowser, uri, true)
+      : BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser, false, uri);
+
     await UrlbarTestUtils.promiseAutocompleteResultPopup({
       window,
       value: cmd,
     });
     EventUtils.synthesizeKey("KEY_ArrowDown", {}, window);
     EventUtils.synthesizeKey("KEY_Enter", {}, window);
-    await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
+
+    const newTab = await onLoad;
 
     Assert.ok(
       await testFun(),
       `The command "${cmd}" passed completed its test`
     );
+
+    if (isNewTab) {
+      await BrowserTestUtils.removeTab(newTab);
+    }
     await BrowserTestUtils.removeTab(tab);
   }
 });
@@ -442,6 +533,69 @@ add_task(async function test_about_pages_refocused() {
 
     BrowserTestUtils.removeTab(secondTab);
     BrowserTestUtils.removeTab(firstTab);
+  }
+});
+
+add_task(async function test_about_addons_pages_refocused() {
+  let testData = [
+    {
+      cmd: "add-ons",
+      testFun: async () => isSelected("button[name=discover]"),
+    },
+    {
+      cmd: "plugins",
+      testFun: async () => isSelected("button[name=plugin]"),
+    },
+    {
+      cmd: "extensions",
+      testFun: async () => isSelected("button[name=extension]"),
+    },
+    {
+      cmd: "themes",
+      testFun: async () => isSelected("button[name=theme]"),
+    },
+  ];
+
+  info("Pick all actions related about:addons");
+  let originalTab = gBrowser.selectedTab;
+  for (const { cmd, testFun } of testData) {
+    await BrowserTestUtils.openNewForegroundTab(gBrowser);
+    await UrlbarTestUtils.promiseAutocompleteResultPopup({
+      window,
+      value: cmd,
+    });
+    EventUtils.synthesizeKey("KEY_ArrowDown", {}, window);
+    EventUtils.synthesizeKey("KEY_Enter", {}, window);
+    await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
+    Assert.ok(await testFun(), "The page content is correct");
+  }
+  Assert.equal(
+    gBrowser.tabs.length,
+    testData.length + 1,
+    "Tab length is correct"
+  );
+
+  info("Pick all again");
+  for (const { cmd, testFun } of testData) {
+    await UrlbarTestUtils.promiseAutocompleteResultPopup({
+      window,
+      value: cmd,
+    });
+    EventUtils.synthesizeKey("KEY_ArrowDown", {}, window);
+    EventUtils.synthesizeKey("KEY_Enter", {}, window);
+    await BrowserTestUtils.waitForCondition(() => testFun());
+    Assert.ok(true, "The tab correspondent action is selected");
+  }
+  Assert.equal(
+    gBrowser.tabs.length,
+    testData.length + 1,
+    "Tab length is not changed"
+  );
+
+  for (const tab of gBrowser.tabs) {
+    if (tab !== originalTab) {
+      BrowserTestUtils.removeTab(tab);
+    }
   }
 });
 
