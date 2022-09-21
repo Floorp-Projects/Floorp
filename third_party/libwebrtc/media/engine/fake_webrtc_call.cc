@@ -715,18 +715,6 @@ void FakeCall::OnLocalSsrcUpdated(webrtc::AudioReceiveStream& stream,
   fake_stream.SetLocalSsrc(local_ssrc);
 }
 
-void FakeCall::OnLocalSsrcUpdated(webrtc::VideoReceiveStream& stream,
-                                  uint32_t local_ssrc) {
-  auto& fake_stream = static_cast<FakeVideoReceiveStream&>(stream);
-  fake_stream.SetLocalSsrc(local_ssrc);
-}
-
-void FakeCall::OnLocalSsrcUpdated(webrtc::FlexfecReceiveStream& stream,
-                                  uint32_t local_ssrc) {
-  auto& fake_stream = static_cast<FakeFlexfecReceiveStream&>(stream);
-  fake_stream.SetLocalSsrc(local_ssrc);
-}
-
 void FakeCall::OnUpdateSyncGroup(webrtc::AudioReceiveStream& stream,
                                  const std::string& sync_group) {
   auto& fake_stream = static_cast<FakeAudioReceiveStream&>(stream);

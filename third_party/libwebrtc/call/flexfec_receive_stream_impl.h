@@ -62,10 +62,6 @@ class FlexfecReceiveStreamImpl : public FlexfecReceiveStream {
   void SetRtpExtensions(std::vector<RtpExtension> extensions) override;
   RtpHeaderExtensionMap GetRtpExtensionMap() const override;
 
-  // Updates the `rtp_video_stream_receiver_`'s `local_ssrc` when the default
-  // sender has been created, changed or removed.
-  void SetLocalSsrc(uint32_t local_ssrc);
-
   uint32_t remote_ssrc() const { return config_.rtp.remote_ssrc; }
   bool transport_cc() const override {
     RTC_DCHECK_RUN_ON(&packet_sequence_checker_);
@@ -77,8 +73,8 @@ class FlexfecReceiveStreamImpl : public FlexfecReceiveStream {
 
   RtpHeaderExtensionMap extension_map_;
 
-  // Config. Mostly const, local_ssrc may change, which is an exception
-  // case that's specifically handled in `SetLocalSsrc`, which must be
+  // Config. Mostly const, header extensions may change, which is an exception
+  // case that's specifically handled in `SetRtpExtensions`, which must be
   // called on the `packet_sequence_checker` thread.
   const Config config_;
 

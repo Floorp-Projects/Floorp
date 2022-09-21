@@ -250,10 +250,6 @@ class FakeVideoReceiveStream final : public webrtc::VideoReceiveStream {
     return base_mininum_playout_delay_ms_;
   }
 
-  void SetLocalSsrc(uint32_t local_ssrc) {
-    config_.rtp.local_ssrc = local_ssrc;
-  }
-
   void SetFrameDecryptor(rtc::scoped_refptr<webrtc::FrameDecryptorInterface>
                              frame_decryptor) override {}
 
@@ -298,10 +294,6 @@ class FakeFlexfecReceiveStream final : public webrtc::FlexfecReceiveStream {
  public:
   explicit FakeFlexfecReceiveStream(
       const webrtc::FlexfecReceiveStream::Config config);
-
-  void SetLocalSsrc(uint32_t local_ssrc) {
-    config_.rtp.local_ssrc = local_ssrc;
-  }
 
   void SetRtpExtensions(std::vector<webrtc::RtpExtension> extensions) override;
   webrtc::RtpHeaderExtensionMap GetRtpExtensionMap() const override;
@@ -418,10 +410,6 @@ class FakeCall final : public webrtc::Call, public webrtc::PacketReceiver {
   void OnAudioTransportOverheadChanged(
       int transport_overhead_per_packet) override;
   void OnLocalSsrcUpdated(webrtc::AudioReceiveStream& stream,
-                          uint32_t local_ssrc) override;
-  void OnLocalSsrcUpdated(webrtc::VideoReceiveStream& stream,
-                          uint32_t local_ssrc) override;
-  void OnLocalSsrcUpdated(webrtc::FlexfecReceiveStream& stream,
                           uint32_t local_ssrc) override;
   void OnUpdateSyncGroup(webrtc::AudioReceiveStream& stream,
                          const std::string& sync_group) override;
