@@ -88,6 +88,7 @@ static void moz_container_wayland_destroy(GtkWidget* widget);
 static void moz_container_wayland_map(GtkWidget* widget);
 static gboolean moz_container_wayland_map_event(GtkWidget* widget,
                                                 GdkEventAny* event);
+static void moz_container_wayland_unmap(GtkWidget* widget);
 static void moz_container_wayland_size_allocate(GtkWidget* widget,
                                                 GtkAllocation* allocation);
 static bool moz_container_wayland_surface_create_locked(
@@ -181,6 +182,7 @@ void moz_container_wayland_class_init(MozContainerClass* klass) {
   widget_class->map = moz_container_wayland_map;
   widget_class->map_event = moz_container_wayland_map_event;
   widget_class->destroy = moz_container_wayland_destroy;
+  widget_class->unmap = moz_container_wayland_unmap;
   widget_class->realize = moz_container_realize;
   widget_class->size_allocate = moz_container_wayland_size_allocate;
 }
@@ -361,8 +363,7 @@ static void moz_gdk_wayland_window_remove_frame_callback_surface_locked(
       frame_clock, FuncToGpointer(after_frame_clock_after_paint), container);
 }
 
-void moz_container_wayland_unmap(GtkWidget* widget) {
-  MozContainer* container = MOZ_CONTAINER(widget);
+static void moz_container_wayland_unmap_internal(MozContainer* container) {
   MozContainerWayland* wl_container = &container->wl_container;
   MutexAutoLock lock(*wl_container->container_lock);
 
@@ -450,6 +451,19 @@ void moz_container_wayland_map(GtkWidget* widget) {
 
   if (gtk_widget_get_has_window(widget)) {
     gdk_window_show(gtk_widget_get_window(widget));
+  }
+}
+
+void moz_container_wayland_unmap(GtkWidget* widget) {
+  LOGCONTAINER("%s [%p]\n", __FUNCTION__,
+               (void*)moz_container_get_nsWindow(MOZ_CONTAINER(widget)));
+
+  g_return_if_fail(IS_MOZ_CONTAINER(widget));
+  gtk_widget_set_mapped(widget, FALSE);
+
+  if (gtk_widget_get_has_window(widget)) {
+    gdk_window_hide(gtk_widget_get_window(widget));
+    moz_container_wayland_unmap_internal(MOZ_CONTAINER(widget));
   }
 }
 
