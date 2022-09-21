@@ -12,10 +12,10 @@ import android.net.Uri
 import androidx.fragment.app.FragmentActivity
 import mozilla.components.browser.state.state.SessionState
 import mozilla.components.feature.customtabs.createCustomTabConfigFromIntent
-import mozilla.components.support.utils.ext.getPackageInfoCompat
 import org.mozilla.focus.BuildConfig
 import org.mozilla.focus.activity.CustomTabActivity
 import org.mozilla.focus.ext.components
+import org.mozilla.focus.ext.getPackageInfoCompat
 import org.mozilla.focus.locale.Locales
 import org.mozilla.focus.state.AppAction
 import java.io.UnsupportedEncodingException

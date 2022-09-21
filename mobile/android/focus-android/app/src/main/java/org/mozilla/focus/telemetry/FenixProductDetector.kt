@@ -7,7 +7,7 @@ package org.mozilla.focus.telemetry
 import android.content.Context
 import android.content.pm.ActivityInfo
 import android.content.pm.PackageManager
-import mozilla.components.support.utils.ext.getPackageInfoCompat
+import org.mozilla.focus.ext.getPackageInfoCompat
 
 object FenixProductDetector {
     enum class FenixVersion(val packageName: String) {
