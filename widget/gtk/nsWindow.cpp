@@ -191,7 +191,6 @@ static int is_parent_grab_leave(GdkEventCrossing* aEvent);
 static gboolean expose_event_cb(GtkWidget* widget, cairo_t* cr);
 static gboolean configure_event_cb(GtkWidget* widget, GdkEventConfigure* event);
 static void widget_map_cb(GtkWidget* widget);
-static void widget_unmap_cb(GtkWidget* widget);
 static void widget_unrealize_cb(GtkWidget* widget);
 static void size_allocate_cb(GtkWidget* widget, GtkAllocation* allocation);
 static void toplevel_window_size_allocate_cb(GtkWidget* widget,
@@ -1244,8 +1243,8 @@ void nsWindow::HideWaylandToplevelWindow() {
       popup = prev;
     }
   }
-  WaylandStopVsync();
   gtk_widget_hide(mShell);
+  WaylandStopVsync();
 }
 
 void nsWindow::ShowWaylandToplevelWindow() {
@@ -3442,10 +3441,6 @@ void* nsWindow::GetNativeData(uint32_t aDataType) {
 #endif
 #ifdef MOZ_WAYLAND
       if (GdkIsWaylandDisplay()) {
-        if (mCompositorWidgetDelegate) {
-          MOZ_DIAGNOSTIC_ASSERT(
-              !mCompositorWidgetDelegate->AsGtkCompositorWidget()->IsHidden());
-        }
         eglWindow = moz_container_wayland_get_egl_window(
             mContainer, FractionalScaleFactor());
       }
@@ -4054,40 +4049,12 @@ gboolean nsWindow::OnConfigureEvent(GtkWidget* aWidget,
 
 void nsWindow::OnMap() {
   LOG("nsWindow::OnMap");
-  // Gtk mapped widget to screen. Configure underlying GdkWindow properly
+  // Gtk mapped out widget to screen. Configure underlying GdkWindow properly
   // as our rendering target.
   // This call means we have X11 (or Wayland) window we can render to by GL
   // so we need to notify compositor about it.
   mIsMapped = true;
   ConfigureGdkWindow();
-}
-
-void nsWindow::OnUnmap() {
-  LOG("nsWindow::OnUnmap");
-
-  // wl_surface owned by mContainer is going to be deleted.
-  // Make sure we don't paint to it on Wayland.
-  if (GdkIsWaylandDisplay() && mCompositorWidgetDelegate) {
-    mCompositorWidgetDelegate->DisableRendering();
-  }
-#ifdef MOZ_WAYLAND
-  if (moz_container_wayland_has_egl_window(mContainer)) {
-    // Widget is backed by OpenGL EGLSurface created over wl_surface
-    // owned by mContainer.
-    // RenderCompositorEGL::Resume() deletes recent EGLSurface based on
-    // wl_surface owned by mContainer and creates a new fallback EGLSurface.
-    // Then we can delete wl_surface in moz_container_wayland_unmap().
-    // We don't want to pause compositor as it may lead to whole
-    // browser freeze (Bug 1777664).
-    if (CompositorBridgeChild* remoteRenderer = GetRemoteRenderer()) {
-      remoteRenderer->SendResume();
-    }
-  }
-#endif
-  moz_container_unmap(GTK_WIDGET(mContainer));
-  if (GdkIsWaylandDisplay()) {
-    moz_container_wayland_unmap(GTK_WIDGET(mContainer));
-  }
 }
 
 void nsWindow::OnUnrealize() {
@@ -6117,6 +6084,9 @@ nsresult nsWindow::Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
                    G_CALLBACK(widget_composited_changed_cb), nullptr);
   g_signal_connect(mShell, "property-notify-event",
                    G_CALLBACK(property_notify_event_cb), nullptr);
+  g_signal_connect(mShell, "map", G_CALLBACK(widget_map_cb), nullptr);
+  g_signal_connect(mShell, "unrealize", G_CALLBACK(widget_unrealize_cb),
+                   nullptr);
 
   if (mWindowType == eWindowType_toplevel) {
     g_signal_connect_after(mShell, "size_allocate",
@@ -6148,10 +6118,6 @@ nsresult nsWindow::Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
                          G_CALLBACK(settings_xft_dpi_changed_cb), this);
 
   // Widget signals
-  g_signal_connect(mContainer, "map", G_CALLBACK(widget_map_cb), nullptr);
-  g_signal_connect(mContainer, "unmap", G_CALLBACK(widget_unmap_cb), nullptr);
-  g_signal_connect(mContainer, "unrealize", G_CALLBACK(widget_unrealize_cb),
-                   nullptr);
   g_signal_connect_after(mContainer, "size_allocate",
                          G_CALLBACK(size_allocate_cb), nullptr);
   g_signal_connect(mContainer, "hierarchy-changed",
@@ -6451,7 +6417,7 @@ void nsWindow::ResumeCompositorImpl() {
 
   CompositorBridgeChild* remoteRenderer = GetRemoteRenderer();
   MOZ_RELEASE_ASSERT(remoteRenderer);
-  remoteRenderer->SendResume();
+  remoteRenderer->SendResumeAsync();
   remoteRenderer->SendForcePresent(wr::RenderReasons::WIDGET);
   mCompositorState = COMPOSITOR_ENABLED;
 }
@@ -7873,14 +7839,6 @@ static void widget_map_cb(GtkWidget* widget) {
     return;
   }
   window->OnMap();
-}
-
-static void widget_unmap_cb(GtkWidget* widget) {
-  RefPtr<nsWindow> window = get_window_for_gtk_widget(widget);
-  if (!window) {
-    return;
-  }
-  window->OnUnmap();
 }
 
 static void widget_unrealize_cb(GtkWidget* widget) {
