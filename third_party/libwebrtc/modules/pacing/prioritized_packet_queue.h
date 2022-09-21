@@ -48,12 +48,6 @@ class PrioritizedPacketQueue : public PacingController::PacketQueue {
 
   class QueuedPacket {
    public:
-    QueuedPacket(QueuedPacket&&) = default;
-    QueuedPacket& operator=(QueuedPacket&&) = default;
-
-    QueuedPacket(const QueuedPacket&) = delete;
-    QueuedPacket& operator=(const QueuedPacket&) = delete;
-
     DataSize PacketSize() const;
 
     std::unique_ptr<RtpPacketToSend> packet;
