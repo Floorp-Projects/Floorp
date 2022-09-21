@@ -166,6 +166,17 @@ who = "Mike Hommey <mh+mozilla@glandium.org>"
 criteria = "safe-to-deploy"
 delta = "0.2.2 -> 0.2.4"
 
+[[audits.comedy]]
+who = "Nick Alexander <nalexander@mozilla.com>"
+criteria = "safe-to-deploy"
+version = "0.2.0"
+notes = """
+The comedy crate was written by Adam Gashlin for Mozilla's use.  The entire
+comedy 0.2.0 crate is full of `unsafe` code and makes many assumptions about
+memory and layout, but there is no particular processing of untrusted input
+here.
+"""
+
 [[audits.cpufeatures]]
 who = "Mike Hommey <mh+mozilla@glandium.org>"
 criteria = "safe-to-deploy"
@@ -331,6 +342,16 @@ delta = "0.4.4 -> 0.4.5"
 who = "Mike Hommey <mh+mozilla@glandium.org>"
 criteria = "safe-to-deploy"
 delta = "1.7.0 -> 1.8.0"
+
+[[audits.filetime_win]]
+who = "Nick Alexander <nalexander@mozilla.com>"
+criteria = "safe-to-deploy"
+version = "0.2.0"
+notes = """
+filetime_win was written by Adam Gashlin for Mozilla's use.  The `unsafe` code
+blocks in filetime_win 0.2.0 are straight-forward invocations of `mem::zeroed`
+and expected invocations of Win32 APIs (with error handling as appropriate).
+"""
 
 [[audits.flagset]]
 who = "Ryan Hunt <rhunt@eqrion.net>"
