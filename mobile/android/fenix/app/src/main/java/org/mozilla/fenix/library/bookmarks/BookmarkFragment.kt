@@ -101,7 +101,7 @@ class BookmarkFragment : LibraryPageFragment<BookmarkNode>(), UserInteractionHan
                 tabsUseCases = activity?.components?.useCases?.tabsUseCases,
                 loadBookmarkNode = ::loadBookmarkNode,
                 showSnackbar = ::showSnackBarWithText,
-                alertHeavyOpen = ::alertHeavyOpen,
+                onOpenAllInTabsEmpty = ::onOpenAllInTabsEmpty,
                 deleteBookmarkNodes = ::deleteMulti,
                 deleteBookmarkFolder = ::showRemoveFolderDialog,
                 showTabTray = ::showTabTray,
@@ -272,11 +272,11 @@ class BookmarkFragment : LibraryPageFragment<BookmarkNode>(), UserInteractionHan
         return bookmarkView.onBackPressed()
     }
 
-    private suspend fun loadBookmarkNode(guid: String, recursive: Boolean = false): BookmarkNode? = withContext(IO) {
+    private suspend fun loadBookmarkNode(guid: String): BookmarkNode? = withContext(IO) {
         // Only runs if the fragment is attached same as [runIfFragmentIsAttached]
         context?.let {
             requireContext().bookmarkStorage
-                .getTree(guid, recursive)
+                .getTree(guid, false)
                 ?.let { desktopFolders.withOptionalDesktopFolders(it) }
         }
     }

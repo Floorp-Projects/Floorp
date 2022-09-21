@@ -620,15 +620,6 @@
     <!-- Content description (not visible, for screen readers etc.): "Close button for library settings" -->
     <string name="content_description_close_button">Close</string>
 
-    <!-- Title to show in alert when a lot of tabs are to be opened -->
-    <string name="open_all_warning_title">Confirm open</string>
-    <!-- Message to show in alert when a lot of tabs are to be opened -->
-    <string name="open_all_warning_message">You are about to open %d tabs. This might slow down Firefox. Are you sure you want to continue ?</string>
-    <!-- Dialog button text for confirming open all tabs -->
-    <string name="open_all_warning_confirm">Open tabs</string>
-    <!-- Dialog button text for canceling open all tabs -->
-    <string name="open_all_warning_cancel">Cancel</string>
-
     <!-- Text to show users they have one site in the history group section of the History fragment.
     %d is a placeholder for the number of sites in the group. -->
     <string name="history_search_group_site">%d site</string>
