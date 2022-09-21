@@ -33,7 +33,7 @@ static void moz_container_init(MozContainer* container);
 
 /* widget class methods */
 static void moz_container_map(GtkWidget* widget);
-static void moz_container_unmap(GtkWidget* widget);
+void moz_container_unmap(GtkWidget* widget);
 static void moz_container_size_allocate(GtkWidget* widget,
                                         GtkAllocation* allocation);
 void moz_container_realize(GtkWidget* widget);
@@ -136,7 +136,6 @@ void moz_container_class_init(MozContainerClass* klass) {
   GtkWidgetClass* widget_class = GTK_WIDGET_CLASS(klass);
 
   widget_class->map = moz_container_map;
-  widget_class->unmap = moz_container_unmap;
   widget_class->realize = moz_container_realize;
   widget_class->size_allocate = moz_container_size_allocate;
 

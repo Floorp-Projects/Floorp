@@ -79,6 +79,7 @@ struct _MozContainerClass {
 
 GType moz_container_get_type(void);
 GtkWidget* moz_container_new(void);
+void moz_container_unmap(GtkWidget* widget);
 void moz_container_put(MozContainer* container, GtkWidget* child_widget, gint x,
                        gint y);
 void moz_container_force_default_visual(MozContainer* container);

@@ -361,7 +361,8 @@ static void moz_gdk_wayland_window_remove_frame_callback_surface_locked(
       frame_clock, FuncToGpointer(after_frame_clock_after_paint), container);
 }
 
-static void moz_container_wayland_unmap_internal(MozContainer* container) {
+void moz_container_wayland_unmap(GtkWidget* widget) {
+  MozContainer* container = MOZ_CONTAINER(widget);
   MozContainerWayland* wl_container = &container->wl_container;
   MutexAutoLock lock(*wl_container->container_lock);
 
@@ -449,19 +450,6 @@ void moz_container_wayland_map(GtkWidget* widget) {
 
   if (gtk_widget_get_has_window(widget)) {
     gdk_window_show(gtk_widget_get_window(widget));
-  }
-}
-
-void moz_container_wayland_unmap(GtkWidget* widget) {
-  LOGCONTAINER("%s [%p]\n", __FUNCTION__,
-               (void*)moz_container_get_nsWindow(MOZ_CONTAINER(widget)));
-
-  g_return_if_fail(IS_MOZ_CONTAINER(widget));
-  gtk_widget_set_mapped(widget, FALSE);
-
-  if (gtk_widget_get_has_window(widget)) {
-    gdk_window_hide(gtk_widget_get_window(widget));
-    moz_container_wayland_unmap_internal(MOZ_CONTAINER(widget));
   }
 }
 
