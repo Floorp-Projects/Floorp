@@ -645,6 +645,16 @@ static bool IsFlexfecCodec(const C& codec) {
   return absl::EqualsIgnoreCase(codec.name, kFlexfecCodecName);
 }
 
+template <class C>
+static bool IsUlpfecCodec(const C& codec) {
+  return absl::EqualsIgnoreCase(codec.name, kUlpfecCodecName);
+}
+
+template <class C>
+static bool IsComfortNoiseCodec(const C& codec) {
+  return absl::EqualsIgnoreCase(codec.name, kComfortNoiseCodecName);
+}
+
 // Create a media content to be offered for the given `sender_options`,
 // according to the given options.rtcp_mux, session_options.is_muc, codecs,
 // secure_transport, crypto, and current_streams. If we don't currently have
@@ -1347,8 +1357,7 @@ static void NegotiateRtpHeaderExtensions(
 static void StripCNCodecs(AudioCodecs* audio_codecs) {
   audio_codecs->erase(std::remove_if(audio_codecs->begin(), audio_codecs->end(),
                                      [](const AudioCodec& codec) {
-                                       return absl::EqualsIgnoreCase(
-                                           codec.name, kComfortNoiseCodecName);
+                                       return IsComfortNoiseCodec(codec);
                                      }),
                       audio_codecs->end());
 }
@@ -2646,6 +2655,13 @@ bool MediaSessionDescriptionFactory::AddAudioContentForAnswer(
     StripCNCodecs(&filtered_codecs);
   }
 
+  // Determine if we have media codecs in common.
+  bool has_common_media_codecs =
+      std::find_if(filtered_codecs.begin(), filtered_codecs.end(),
+                   [](const AudioCodec& c) {
+                     return !(IsRedCodec(c) || IsComfortNoiseCodec(c));
+                   }) != filtered_codecs.end();
+
   bool bundle_enabled = offer_description->HasGroup(GROUP_TYPE_BUNDLE) &&
                         session_options.bundle_enabled;
   auto audio_answer = std::make_unique<AudioContentDescription>();
@@ -2670,7 +2686,7 @@ bool MediaSessionDescriptionFactory::AddAudioContentForAnswer(
   bool secure = bundle_transport ? bundle_transport->description.secure()
                                  : audio_transport->secure();
   bool rejected = media_description_options.stopped ||
-                  offer_content->rejected ||
+                  offer_content->rejected || !has_common_media_codecs ||
                   !IsMediaProtocolSupported(MEDIA_TYPE_AUDIO,
                                             audio_answer->protocol(), secure);
   if (!AddTransportAnswer(media_description_options.mid,
@@ -2766,6 +2782,13 @@ bool MediaSessionDescriptionFactory::AddVideoContentForAnswer(
     filtered_codecs = ComputeCodecsUnion<VideoCodec>(
         filtered_codecs, other_video_codecs, field_trials);
   }
+  // Determine if we have media codecs in common.
+  bool has_common_media_codecs =
+      std::find_if(
+          filtered_codecs.begin(), filtered_codecs.end(),
+          [](const VideoCodec& c) {
+            return !(IsRedCodec(c) || IsUlpfecCodec(c) || IsFlexfecCodec(c));
+          }) != filtered_codecs.end();
 
   if (session_options.raw_packetization_for_video) {
     for (VideoCodec& codec : filtered_codecs) {
@@ -2793,12 +2816,12 @@ bool MediaSessionDescriptionFactory::AddVideoContentForAnswer(
           filtered_rtp_header_extensions(default_video_rtp_header_extensions),
           ssrc_generator_, enable_encrypted_rtp_header_extensions_,
           current_streams, bundle_enabled, video_answer.get())) {
-    return false;  // Failed the sessin setup.
+    return false;  // Failed the session setup.
   }
   bool secure = bundle_transport ? bundle_transport->description.secure()
                                  : video_transport->secure();
   bool rejected = media_description_options.stopped ||
-                  offer_content->rejected ||
+                  offer_content->rejected || !has_common_media_codecs ||
                   !IsMediaProtocolSupported(MEDIA_TYPE_VIDEO,
                                             video_answer->protocol(), secure);
   if (!AddTransportAnswer(media_description_options.mid,
