@@ -58,8 +58,6 @@ struct RTC_EXPORT AudioOptions {
   absl::optional<bool> audio_jitter_buffer_fast_accelerate;
   // Audio receiver jitter buffer (NetEq) minimum target delay in milliseconds.
   absl::optional<int> audio_jitter_buffer_min_delay_ms;
-  // Audio receiver jitter buffer (NetEq) should handle retransmitted packets.
-  absl::optional<bool> audio_jitter_buffer_enable_rtx_handling;
   // Enable combined audio+bandwidth BWE.
   // TODO(pthatcher): This flag is set from the
   // "googCombinedAudioVideoBwe", but not used anywhere. So delete it,
