@@ -20,6 +20,7 @@
 #include "api/video/video_bitrate_allocation.h"
 #include "api/video/video_codec_type.h"
 #include "api/video_codecs/scalability_mode.h"
+#include "api/video_codecs/simulcast_stream.h"
 #include "api/video_codecs/spatial_layer.h"
 #include "rtc_base/system/rtc_export.h"
 
@@ -138,7 +139,7 @@ class RTC_EXPORT VideoCodec {
 
   unsigned int qpMax;
   unsigned char numberOfSimulcastStreams;
-  SpatialLayer simulcastStream[kMaxSimulcastStreams];
+  SimulcastStream simulcastStream[kMaxSimulcastStreams];
   SpatialLayer spatialLayers[kMaxSpatialLayers];
 
   VideoCodecMode mode;
