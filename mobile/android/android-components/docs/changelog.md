@@ -11,6 +11,9 @@ permalink: /changelog/
 * [Gecko](https://github.com/mozilla-mobile/android-components/blob/main/buildSrc/src/main/java/Gecko.kt)
 * [Configuration](https://github.com/mozilla-mobile/android-components/blob/main/.config.yml)
 
+* **nimbus-gradle-plugin**:
+  * Updated the plugin to use the version of application services defined in the buildSrc Dependencies.
+
 # 106.0.0
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v105.0.0..v106.0.0)
 * [Milestone](https://github.com/mozilla-mobile/android-components/milestone/153?closed=1)
@@ -31,9 +34,6 @@ permalink: /changelog/
 * **feature-accounts-push**:
   * ⚠️ **This is a breaking change**: `FxaPushSupportFeature` now requires to be explicitly started with `initialize`.
   * The constructor for `FxaPushSupportFeature` has a `coroutineScope` parameter that defaults to a `CoroutineScope(Dispatchers.IO)`.
-
-* **nimbus-gradle-plugin**:
-  * Updated the plugin to use the version of application services defined in the buildSrc Dependencies. 
 
 # 105.0.0
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v104.0.0...v105.0.0)
