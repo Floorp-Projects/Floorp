@@ -282,7 +282,7 @@ class MockCall : public webrtc::Call {
                           uint32_t local_ssrc) override {}
 
   void OnUpdateSyncGroup(webrtc::AudioReceiveStream& stream,
-                         const std::string& sync_group) override {}
+                         absl::string_view sync_group) override {}
 
   void OnSentPacket(const rtc::SentPacket& sent_packet) override {}
 
