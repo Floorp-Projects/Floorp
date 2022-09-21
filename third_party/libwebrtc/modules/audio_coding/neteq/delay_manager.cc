@@ -122,8 +122,6 @@ absl::optional<int> DelayManager::Update(uint32_t timestamp,
     target_level_ms_ = std::min(target_level_ms_, maximum_delay_ms_);
   }
   if (packet_len_ms_ > 0) {
-    // Target level should be at least one packet.
-    target_level_ms_ = std::max(target_level_ms_, packet_len_ms_);
     // Limit to 75% of maximum buffer size.
     target_level_ms_ = std::min(
         target_level_ms_, 3 * max_packets_in_buffer_ * packet_len_ms_ / 4);
@@ -178,8 +176,7 @@ bool DelayManager::SetMinimumDelay(int delay_ms) {
 bool DelayManager::SetMaximumDelay(int delay_ms) {
   // If `delay_ms` is zero then it unsets the maximum delay and target level is
   // unconstrained by maximum delay.
-  if (delay_ms != 0 &&
-      (delay_ms < minimum_delay_ms_ || delay_ms < packet_len_ms_)) {
+  if (delay_ms != 0 && delay_ms < minimum_delay_ms_) {
     // Maximum delay shouldn't be less than minimum delay or less than a packet.
     return false;
   }

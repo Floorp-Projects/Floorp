@@ -88,9 +88,6 @@ TEST_F(DelayManagerTest, MaxDelay) {
   EXPECT_TRUE(dm_.SetMaximumDelay(kMaxDelayMs));
   InsertNextPacket();
   EXPECT_EQ(kMaxDelayMs, dm_.TargetDelayMs());
-
-  // Target level at least should be one packet.
-  EXPECT_FALSE(dm_.SetMaximumDelay(kFrameSizeMs - 1));
 }
 
 TEST_F(DelayManagerTest, MinDelay) {
