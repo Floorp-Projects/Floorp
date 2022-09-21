@@ -331,10 +331,6 @@ criteria = "safe-to-deploy"
 version = "0.11.1"
 criteria = "safe-to-deploy"
 
-[[exemptions.comedy]]
-version = "0.2.0"
-criteria = "safe-to-deploy"
-
 [[exemptions.cookie]]
 version = "0.16.0"
 criteria = "safe-to-run"
@@ -525,10 +521,6 @@ criteria = "safe-to-deploy"
 
 [[exemptions.ffi-support]]
 version = "0.4.4"
-criteria = "safe-to-deploy"
-
-[[exemptions.filetime_win]]
-version = "0.2.0"
 criteria = "safe-to-deploy"
 
 [[exemptions.flate2]]
