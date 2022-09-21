@@ -356,10 +356,24 @@ add_task(async function test_about_pages_refocused() {
       uri: "about:preferences",
     },
     {
+      firstInput: "add-ons",
+      uri: "about:addons",
+      component: "button[name=discover]",
+    },
+    {
+      firstInput: "extensions",
+      uri: "about:addons",
+      component: "button[name=extension]",
+    },
+    {
       firstInput: "plugins",
-      secondInput: "add-ons",
       uri: "about:addons",
       component: "button[name=plugin]",
+    },
+    {
+      firstInput: "themes",
+      uri: "about:addons",
+      component: "button[name=theme]",
     },
     {
       firstLoad: "about:preferences#home",
