@@ -285,11 +285,15 @@
     <!-- Onboarding home screen popup dialog, shown on top of the Jump back in section. -->
     <string name="onboarding_home_screen_jump_back_contextual_hint_2">Ismerje meg személyre szabott kezdőlapját. Itt jelennek meg a legutóbbi lapok, könyvjelzők és keresési találatok.</string>
     <!-- Home onboarding dialog welcome screen title text. -->
-    <string name="onboarding_home_welcome_title">Üdvözöljük egy független interneten</string>
+    <string moz:RemovedIn="106" name="onboarding_home_welcome_title" tools:ignore="UnusedResources">Üdvözöljük egy független interneten</string>
+    <!-- Home onboarding dialog welcome screen title text. -->
+    <string name="onboarding_home_welcome_title_2">Üdvözöljük egy személyesebb interneten</string>
     <!-- Home onboarding dialog welcome screen description text. -->
     <string name="onboarding_home_welcome_description">Több szín. Jobb adatvédelem. Ugyanaz az elkötelezettség: az emberek a profit előtt.</string>
     <!-- Home onboarding dialog sign into sync screen title text. -->
-    <string name="onboarding_home_sync_title_2">Váltson át a telefonról a laptopra és vissza</string>
+    <string moz:RemovedIn="106" name="onboarding_home_sync_title_2" tools:ignore="UnusedResources">Váltson át a telefonról a laptopra és vissza</string>
+    <!-- Home onboarding dialog sign into sync screen title text. -->
+    <string name="onboarding_home_sync_title_3">A képernyők közötti váltás egyszerűbb, mint valaha</string>
     <!-- Home onboarding dialog sign into sync screen description text. -->
     <string name="onboarding_home_sync_description">Folytassa onnan, ahol abbahagyta, és most már a kezdőlapján megjelennek a többi eszközről származó lapjai is.</string>
     <!-- Text for the button to continue the onboarding on the home onboarding dialog. -->
@@ -477,12 +481,35 @@
     <!-- Snackbar label for action to view selected wallpaper -->
     <string name="wallpaper_updated_snackbar_action">Nézet</string>
 
+    <!-- Snackbar message for when wallpaper couldn't be downloaded -->
+    <string name="wallpaper_download_error_snackbar_message">Nem sikerült letölteni a háttérképet</string>
+    <!-- Snackbar label for action to retry downloading the wallpaper -->
+    <string name="wallpaper_download_error_snackbar_action">Próbálja újra</string>
+    <!-- Snackbar message for when wallpaper couldn't be selected because of the disk error -->
+    <string name="wallpaper_select_error_snackbar_message">Nem sikerült megváltoztatni a háttérképet</string>
+    <!-- Text displayed that links to website containing documentation about the "Limited Edition" wallpapers. -->
+    <string name="wallpaper_learn_more">További tudnivalók</string>
     <!-- Label for switch which toggles the "tap-to-switch" behavior on home screen logo -->
     <string moz:removedIn="105" name="wallpaper_tap_to_change_switch_label_1" tools:ignore="UnusedResources">A háttérkép módosításához koppintson a Firefox kezdőlap logójára</string>
 
     <!-- This is the accessibility content description for the wallpapers functionality. Users are
     able to tap on the app logo in the home screen and can switch to different wallpapers by tapping. -->
     <string moz:removedIn="105" name="wallpaper_logo_content_description" tools:ignore="UnusedResources">Firefox logó – háttérkép megváltoztatása, gomb</string>
+
+    <!-- Text for classic wallpapers title. The first parameter is the Firefox name. -->
+    <string name="wallpaper_classic_title">Klasszikus %s</string>
+    <!-- Text for limited edition wallpapers title. -->
+    <string name="wallpaper_limited_edition_title">Korlátozott kiadás</string>
+    <!-- Description text for the limited edition wallpapers with learn more link. The first parameter is the learn more string defined in wallpaper_learn_more-->
+    <string name="wallpaper_limited_edition_description_with_learn_more">Az új Független hangok gyűjtemény. %s</string>
+    <!-- Description text for the limited edition wallpapers. -->
+    <string name="wallpaper_limited_edition_description">Az új Független hangok gyűjtemény.</string>
+    <!-- Wallpaper onboarding dialog header text. -->
+    <string name="wallpapers_onboarding_dialog_title_text">Próbáljon ki egy kis színt</string>
+    <!-- Wallpaper onboarding dialog body text. -->
+    <string name="wallpapers_onboarding_dialog_body_text">Válasszon olyan háttérképet, amely Önhöz szól.</string>
+    <!-- Wallpaper onboarding dialog learn more button text. The button navigates to the wallpaper settings screen. -->
+    <string name="wallpapers_onboarding_dialog_explore_more_button_text">Fedezzen fel további háttérképeket</string>
 
     <!-- Add-on Installation from AMO-->
     <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is not supported -->
@@ -1235,19 +1262,33 @@
     <!-- Onboarding -->
     <!-- Text for onboarding welcome message
     The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_header">Üdvözli a %s!</string>
+    <string moz:RemovedIn="106" name="onboarding_header" tools:ignore="UnusedResources">Üdvözli a %s!</string>
+    <!-- Text for onboarding welcome header. -->
+    <string name="onboarding_header_2">Üdvözöljük egy jobb interneten</string>
+    <!-- Text for the onboarding welcome message. -->
+    <string name="onboarding_message">Egy böngésző az emberekért, nem a haszonért.</string>
     <!-- text for the Firefox account onboarding sign in card header. The word "Firefox" should not be translated -->
-    <string name="onboarding_account_sign_in_header_1">A Firefox szinkronizálása az eszközök közt</string>
+    <string moz:removedIn="106" name="onboarding_account_sign_in_header_1" tools:ignore="UnusedResources">A Firefox szinkronizálása az eszközök közt</string>
+    <!-- Text for the Firefox account onboarding sign in card header. -->
+    <string name="onboarding_account_sign_in_header">Folytassa ott, ahol abbahagyta</string>
     <!-- Text for the button to learn more about signing in to your Firefox account. The first parameter is the name of the application.-->
-    <string name="onboarding_manual_sign_in_description_2">Adjon hozzá könyvjelzőket, előzményeket és jelszavakat a %1$shoz ezen az eszközön.</string>
+    <string moz:removedIn="106" name="onboarding_manual_sign_in_description_2" tools:ignore="UnusedResources">Adjon hozzá könyvjelzőket, előzményeket és jelszavakat a %1$shoz ezen az eszközön.</string>
+    <!-- Text for the button to learn more about signing in to your Firefox account. -->
+    <string name="onboarding_manual_sign_in_description">Szinkronizálja a lapokat és a jelszavakat az eszközök között a zökkenőmentes képernyőváltás érdekében.</string>
     <!-- text for the button to manually sign into Firefox account. -->
-    <string name="onboarding_firefox_account_sign_in_1">Regisztráció</string>
+    <string moz:removedIn="106" name="onboarding_firefox_account_sign_in_1" tools:ignore="UnusedResources">Regisztráció</string>
+    <!-- Text for the button to manually sign into Firefox account. -->
+    <string name="onboarding_firefox_account_sign_in">Bejelentkezés</string>
     <!-- text to display in the snackbar once account is signed-in -->
     <string name="onboarding_firefox_account_sync_is_on">A Sync be van kapcsolva</string>
     <!-- text for the tracking protection onboarding card header -->
-    <string name="onboarding_tracking_protection_header_3">Mindig bekapcsolt adatvédelem</string>
+    <string moz:removedIn="106" name="onboarding_tracking_protection_header_3" tools:ignore="UnusedResources">Mindig bekapcsolt adatvédelem</string>
+    <!-- Text for the tracking protection onboarding card header -->
+    <string name="onboarding_tracking_protection_header">Adatvédelem alapértelmezetten</string>
     <!-- text for the tracking protection card description. The first parameter is the name of the application.-->
-    <string name="onboarding_tracking_protection_description_4">A %1$s automatikusan megakadályozza, hogy a cégek titokban kövessék Önt a weben.</string>
+    <string moz:removedIn="106" name="onboarding_tracking_protection_description_4" tools:ignore="UnusedResources">A %1$s automatikusan megakadályozza, hogy a cégek titokban kövessék Önt a weben.</string>
+    <!-- Text for the tracking protection card description. -->
+    <string name="onboarding_tracking_protection_description">Bemutatkozik a Teljes sütivédelem, amely megakadályozza, hogy a nyomkövetők arra használhassák a sütiket, hogy kövessék a webhelyek között.</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
     <string name="onboarding_tracking_protection_standard_button_2">Normál (alapértelmezett)</string>
     <!-- text for standard blocking option button description -->
@@ -1259,16 +1300,24 @@
     <!-- text for the toolbar position card header  -->
     <string name="onboarding_toolbar_placement_header_1">Válassza ki az eszköztár elhelyezését</string>
     <!-- text for the toolbar position card description -->
-    <string name="onboarding_toolbar_placement_description_1">Helyezze az eszköztárat könnyen elérhető helyre. Tartsa az alján, vagy mozgassa a tetejére.</string>
+    <string moz:removedIn="106" name="onboarding_toolbar_placement_description_1" tools:ignore="UnusedResources">Helyezze az eszköztárat könnyen elérhető helyre. Tartsa az alján, vagy mozgassa a tetejére.</string>
+    <!-- Text for the toolbar position card description -->
+    <string name="onboarding_toolbar_placement_description">Tartsa továbbra is lent, vagy vigye a tetejére.</string>
     <!-- text for the privacy notice onboarding card header -->
-    <string name="onboarding_privacy_notice_header">Adatvédelem</string>
+    <string moz:removedIn="106" name="onboarding_privacy_notice_header" tools:ignore="UnusedResources">Adatvédelem</string>
+    <!-- Text for the privacy notice onboarding card header -->
+    <string name="onboarding_privacy_notice_header_1">Ön irányítja az adatait</string>
     <!-- text for the privacy notice onboarding card description
     The first parameter is the name of the app (e.g. Firefox Preview) Substitute %s for long browser name. -->
-    <string name="onboarding_privacy_notice_description2">Úgy terveztük a %s böngészőt, hogy irányítást adjunk afelett, hogy mit oszt meg online, és mit oszt meg velünk.
+    <string moz:removedIn="106" name="onboarding_privacy_notice_description2" tools:ignore="UnusedResources">Úgy terveztük a %s böngészőt, hogy irányítást adjunk afelett, hogy mit oszt meg online, és mit oszt meg velünk.
     </string>
+    <!-- Text for the privacy notice onboarding card description. -->
+    <string name="onboarding_privacy_notice_description">A Firefox irányítást ad afelett, hogy mit oszt meg online, és mit oszt meg velünk.</string>
     <!-- Text for the button to read the privacy notice -->
     <string name="onboarding_privacy_notice_read_button">Olvassa el az adatvédelmi nyilatkozatunkat</string>
 
+    <!-- Text for the conclusion onboarding message -->
+    <string name="onboarding_conclusion_header">Készen áll, hogy egy csodálatos internetet nyisson ki?</string>
     <!-- text for the button to finish onboarding -->
     <string name="onboarding_finish">Böngészés megkezdése</string>
 

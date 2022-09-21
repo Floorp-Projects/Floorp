@@ -281,11 +281,15 @@
     <!-- Onboarding home screen popup dialog, shown on top of the Jump back in section. -->
     <string name="onboarding_home_screen_jump_back_contextual_hint_2">Դիտեք ձեր անհատականացված գլխավոր էջը: Վերջին ներդիրները, էջանիշները և որոնման արդյունքները կհայտնվեն այստեղ:</string>
     <!-- Home onboarding dialog welcome screen title text. -->
-    <string name="onboarding_home_welcome_title">Բարի գալուստ անկախ համացանց</string>
+    <string moz:RemovedIn="106" name="onboarding_home_welcome_title" tools:ignore="UnusedResources">Բարի գալուստ անկախ համացանց</string>
+    <!-- Home onboarding dialog welcome screen title text. -->
+    <string name="onboarding_home_welcome_title_2">Բարի գալուստ ավելի անձնական համացանց</string>
     <!-- Home onboarding dialog welcome screen description text. -->
     <string name="onboarding_home_welcome_description">Ավելի շատ գույներ: Ավելի լավ գաղտնիություն: Նույն հանձնառությունը մարդկանց նկատմամբ շահույթի նկատմամբ:</string>
     <!-- Home onboarding dialog sign into sync screen title text. -->
-    <string name="onboarding_home_sync_title_2">Անցեք հեռախոսից նոութբուք և հետ</string>
+    <string moz:RemovedIn="106" name="onboarding_home_sync_title_2" tools:ignore="UnusedResources">Անցեք հեռախոսից նոութբուք և հետ</string>
+    <!-- Home onboarding dialog sign into sync screen title text. -->
+    <string name="onboarding_home_sync_title_3">Էկրանների փոխարկումն ավելի հեշտ է, քան երբևէ</string>
     <!-- Home onboarding dialog sign into sync screen description text. -->
     <string name="onboarding_home_sync_description">Շարունակեք այնտեղ, որտեղ դադարեցիք, այլ սարքերի ներդիրներով՝ այժմ ձեր գլխավոր էջում:</string>
     <!-- Text for the button to continue the onboarding on the home onboarding dialog. -->
@@ -471,12 +475,35 @@
     <string name="wallpaper_updated_snackbar_message">Պաստառն արդիացվեց:</string>
     <!-- Snackbar label for action to view selected wallpaper -->
     <string name="wallpaper_updated_snackbar_action">Տեսք</string>
+    <!-- Snackbar message for when wallpaper couldn't be downloaded -->
+    <string name="wallpaper_download_error_snackbar_message">Չհաջողվեց ներբեռնել պաստառը</string>
+    <!-- Snackbar label for action to retry downloading the wallpaper -->
+    <string name="wallpaper_download_error_snackbar_action">Կրկին փորձեք</string>
+    <!-- Snackbar message for when wallpaper couldn't be selected because of the disk error -->
+    <string name="wallpaper_select_error_snackbar_message">Չհաջողվեց փոխել պաստառը</string>
+    <!-- Text displayed that links to website containing documentation about the "Limited Edition" wallpapers. -->
+    <string name="wallpaper_learn_more">Իմանալ ավելին</string>
     <!-- Label for switch which toggles the "tap-to-switch" behavior on home screen logo -->
     <string moz:removedIn="105" name="wallpaper_tap_to_change_switch_label_1" tools:ignore="UnusedResources">Փոխեք պաստառը՝ կտտացնելով Firefox-ի գլխավոր էջի պատկերանշանին</string>
 
     <!-- This is the accessibility content description for the wallpapers functionality. Users are
     able to tap on the app logo in the home screen and can switch to different wallpapers by tapping. -->
     <string moz:removedIn="105" name="wallpaper_logo_content_description" tools:ignore="UnusedResources">Firefox լոգոն` փոխել պաստառը, կոճակը</string>
+
+    <!-- Text for classic wallpapers title. The first parameter is the Firefox name. -->
+    <string name="wallpaper_classic_title">Դասական %s</string>
+    <!-- Text for limited edition wallpapers title. -->
+    <string name="wallpaper_limited_edition_title">Սահմանափակ թողարկում</string>
+    <!-- Description text for the limited edition wallpapers with learn more link. The first parameter is the learn more string defined in wallpaper_learn_more-->
+    <string name="wallpaper_limited_edition_description_with_learn_more">Անկախ ձայների նոր հավաքածուն։ %s</string>
+    <!-- Description text for the limited edition wallpapers. -->
+    <string name="wallpaper_limited_edition_description">Անկախ ձայների նոր հավաքածու։</string>
+    <!-- Wallpaper onboarding dialog header text. -->
+    <string name="wallpapers_onboarding_dialog_title_text">Փորձեք գույն շաղ տալ</string>
+    <!-- Wallpaper onboarding dialog body text. -->
+    <string name="wallpapers_onboarding_dialog_body_text">Ընտրեք պաստառ, որը խոսում է ձեզ հետ:</string>
+    <!-- Wallpaper onboarding dialog learn more button text. The button navigates to the wallpaper settings screen. -->
+    <string name="wallpapers_onboarding_dialog_explore_more_button_text">Ուսումնասիրեք ավելի շատ պաստառներ</string>
 
     <!-- Add-on Installation from AMO-->
     <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is not supported -->
@@ -1222,20 +1249,34 @@
     <!-- Onboarding -->
     <!-- Text for onboarding welcome message
     The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_header">Բարի գալուստ %s:</string>
+    <string moz:RemovedIn="106" name="onboarding_header" tools:ignore="UnusedResources">Բարի գալուստ %s:</string>
 
+    <!-- Text for onboarding welcome header. -->
+    <string name="onboarding_header_2">Բարի գալուստ ավելի լավ համացանց</string>
+    <!-- Text for the onboarding welcome message. -->
+    <string name="onboarding_message">Զննարկիչ, որը ստեղծված է մարդկանց համար, ոչ առևտրային:</string>
     <!-- text for the Firefox account onboarding sign in card header. The word "Firefox" should not be translated -->
-    <string name="onboarding_account_sign_in_header_1">Համաժամեցնել Firefox-ը</string>
+    <string moz:removedIn="106" name="onboarding_account_sign_in_header_1" tools:ignore="UnusedResources">Համաժամեցնել Firefox-ը</string>
+    <!-- Text for the Firefox account onboarding sign in card header. -->
+    <string name="onboarding_account_sign_in_header">Շարունակեք այնտեղից, որտեղ որ կանգնել էիք:</string>
     <!-- Text for the button to learn more about signing in to your Firefox account. The first parameter is the name of the application.-->
-    <string name="onboarding_manual_sign_in_description_2">Այս սարքում բերեք էջանիշները, պատմությունը և գաղտնաբառերը %1$s-ում:</string>
+    <string moz:removedIn="106" name="onboarding_manual_sign_in_description_2" tools:ignore="UnusedResources">Այս սարքում բերեք էջանիշները, պատմությունը և գաղտնաբառերը %1$s-ում:</string>
+    <!-- Text for the button to learn more about signing in to your Firefox account. -->
+    <string name="onboarding_manual_sign_in_description">Համաժամացրեք ներդիրներն ու գաղտնաբառերը սարքերի միջև՝ էկրանն անխափան փոխելու համար:</string>
     <!-- text for the button to manually sign into Firefox account. -->
-    <string name="onboarding_firefox_account_sign_in_1">Գրանցվել</string>
+    <string moz:removedIn="106" name="onboarding_firefox_account_sign_in_1" tools:ignore="UnusedResources">Գրանցվել</string>
+    <!-- Text for the button to manually sign into Firefox account. -->
+    <string name="onboarding_firefox_account_sign_in">Մուտք գործել</string>
     <!-- text to display in the snackbar once account is signed-in -->
     <string name="onboarding_firefox_account_sync_is_on">Համաժամեցումը միացված է</string>
     <!-- text for the tracking protection onboarding card header -->
-    <string name="onboarding_tracking_protection_header_3">Միշտ գաղտնիություն</string>
+    <string moz:removedIn="106" name="onboarding_tracking_protection_header_3" tools:ignore="UnusedResources">Միշտ գաղտնիություն</string>
+    <!-- Text for the tracking protection onboarding card header -->
+    <string name="onboarding_tracking_protection_header">Գաղտնիության պաշտպանություն սկզբնադիր</string>
     <!-- text for the tracking protection card description. The first parameter is the name of the application.-->
-    <string name="onboarding_tracking_protection_description_4">%1$s-ը ինքնաշխատ կանգնեցնում է ընկերություններին՝ Ձեզ առցանց հետևելուց:</string>
+    <string moz:removedIn="106" name="onboarding_tracking_protection_description_4" tools:ignore="UnusedResources">%1$s-ը ինքնաշխատ կանգնեցնում է ընկերություններին՝ Ձեզ առցանց հետևելուց:</string>
+    <!-- Text for the tracking protection card description. -->
+    <string name="onboarding_tracking_protection_description">Հատկանշվում է Total Cookie Protection-ը, որը թույլ չի տալիս հետագծողներին օգտագործել թխուկներ՝ կայքերում ձեզ հետապնդելու համար:</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
     <string name="onboarding_tracking_protection_standard_button_2">Ստանդարտ (սկզբնադիր)</string>
     <!-- text for standard blocking option button description -->
@@ -1247,16 +1288,24 @@
     <!-- text for the toolbar position card header  -->
     <string name="onboarding_toolbar_placement_header_1">Ընտրեք գործիքագոտու տեղը</string>
     <!-- text for the toolbar position card description -->
-    <string name="onboarding_toolbar_placement_description_1">Գործիքագոտին դրեք հեշտ հասանելի տեղ: Պահեք այն ներքևում կամ տեղափոխեք վերև:</string>
+    <string moz:removedIn="106" name="onboarding_toolbar_placement_description_1" tools:ignore="UnusedResources">Գործիքագոտին դրեք հեշտ հասանելի տեղ: Պահեք այն ներքևում կամ տեղափոխեք վերև:</string>
+    <!-- Text for the toolbar position card description -->
+    <string name="onboarding_toolbar_placement_description">Պահեք այն ներքևում կամ տեղափոխեք այն վերև:</string>
     <!-- text for the privacy notice onboarding card header -->
-    <string name="onboarding_privacy_notice_header">Ձեր գաղտնիությունը</string>
+    <string moz:removedIn="106" name="onboarding_privacy_notice_header" tools:ignore="UnusedResources">Ձեր գաղտնիությունը</string>
 
+    <!-- Text for the privacy notice onboarding card header -->
+    <string name="onboarding_privacy_notice_header_1">Դուք վերահսկում եք ձեր տվյալները</string>
     <!-- text for the privacy notice onboarding card description
     The first parameter is the name of the app (e.g. Firefox Preview) Substitute %s for long browser name. -->
-    <string name="onboarding_privacy_notice_description2">Մենք պատրաստել ենք %s-ը, որպեսզի դուք կառավարեք այն, ինչ համօգտագործում եք առցանց և թե ինչով եք կիսվում մեզ հետ:</string>
+    <string moz:removedIn="106" name="onboarding_privacy_notice_description2" tools:ignore="UnusedResources">Մենք պատրաստել ենք %s-ը, որպեսզի դուք կառավարեք այն, ինչ համօգտագործում եք առցանց և թե ինչով եք կիսվում մեզ հետ:</string>
+    <!-- Text for the privacy notice onboarding card description. -->
+    <string name="onboarding_privacy_notice_description">Firefox-ը ձեզ հնարավորություն է տալիս վերահսկել, թե ինչ եք կիսվում առցանց և ինչ եք կիսում մեզ հետ:</string>
     <!-- Text for the button to read the privacy notice -->
     <string name="onboarding_privacy_notice_read_button">Կարդացեք մեր գաղտնիության ծանուցումը</string>
 
+    <!-- Text for the conclusion onboarding message -->
+    <string name="onboarding_conclusion_header">Պատրա՞ստ եք բացել զարմանահրաշ համացանցը:</string>
     <!-- text for the button to finish onboarding -->
     <string name="onboarding_finish">Սկսել դիտարկումը</string>
 

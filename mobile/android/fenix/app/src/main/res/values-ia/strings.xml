@@ -1302,6 +1302,8 @@
     <string name="onboarding_account_sign_in_header">Reprende de ubi tu lassava</string>
     <!-- Text for the button to learn more about signing in to your Firefox account. The first parameter is the name of the application.-->
     <string moz:removedIn="106" name="onboarding_manual_sign_in_description_2" tools:ignore="UnusedResources">Apporta marcapaginas, chronologia e contrasignos de %1$s sur iste dispositivo.</string>
+    <!-- Text for the button to learn more about signing in to your Firefox account. -->
+    <string name="onboarding_manual_sign_in_description">Synchronisa schedas e contrasignos inter apparatos pro facilemente mutar schermo.</string>
     <!-- text for the button to manually sign into Firefox account. -->
     <string moz:removedIn="106" name="onboarding_firefox_account_sign_in_1" tools:ignore="UnusedResources">Inscribe te</string>
     <!-- Text for the button to manually sign into Firefox account. -->
@@ -1314,6 +1316,8 @@
     <string name="onboarding_tracking_protection_header">Preconfigurate pro le vita private</string>
     <!-- text for the tracking protection card description. The first parameter is the name of the application.-->
     <string moz:removedIn="106" name="onboarding_tracking_protection_description_4" tools:ignore="UnusedResources">%1$s automaticamente impedi le companias de sequer secretemente tu movimentos circum le Web.</string>
+    <!-- Text for the tracking protection card description. -->
+    <string name="onboarding_tracking_protection_description">Eligente le Protection total del cookies, tu stoppa le traciatores de usar le cookies pro sequer te furtivemente circum le web.</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
     <string name="onboarding_tracking_protection_standard_button_2">Standard (predefinite)</string>
     <!-- text for standard blocking option button description -->
@@ -1327,6 +1331,8 @@
     <string name="onboarding_toolbar_placement_header_1">Elige le ubication de tu barra del instrumentos</string>
     <!-- text for the toolbar position card description -->
     <string moz:removedIn="106" name="onboarding_toolbar_placement_description_1" tools:ignore="UnusedResources">Pone le barra del instrumentos pro attinger lo facilemente.</string>
+    <!-- Text for the toolbar position card description -->
+    <string name="onboarding_toolbar_placement_description">Mantene lo fundo pagina o move lo in alto.</string>
     <!-- text for the privacy notice onboarding card header -->
     <string moz:removedIn="106" name="onboarding_privacy_notice_header" tools:ignore="UnusedResources">Tu confidentialitate</string>
     <!-- Text for the privacy notice onboarding card header -->

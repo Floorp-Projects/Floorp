@@ -278,11 +278,13 @@
     <!-- Onboarding home screen popup dialog, shown on top of the Jump back in section. -->
     <string name="onboarding_home_screen_jump_back_contextual_hint_2">آپݨے ذاتی تھئے مکھ پنّے نال ملو۔ حالیہ ٹیباں، نشانیاں تے ڳولݨ نتیجے اتھ ظاہر تھیسن۔</string>
     <!-- Home onboarding dialog welcome screen title text. -->
-    <string name="onboarding_home_welcome_title">آزاد انٹرنیٹ وچ ست بسم اللہ</string>
+    <string moz:RemovedIn="106" name="onboarding_home_welcome_title" tools:ignore="UnusedResources">آزاد انٹرنیٹ وچ ست بسم اللہ</string>
     <!-- Home onboarding dialog welcome screen description text. -->
     <string name="onboarding_home_welcome_description">ٻئے رنگ۔ چنگی رازداری۔ نفعے کنوں ودھ لوکاں نال پریت پالݨ۔</string>
     <!-- Home onboarding dialog sign into sync screen title text. -->
-    <string name="onboarding_home_sync_title_2">فون سیٹ کنوں لیپ ٹاپ تے ہاپ کرو تے ولدا واپس وی</string>
+    <string moz:RemovedIn="106" name="onboarding_home_sync_title_2" tools:ignore="UnusedResources">فون سیٹ کنوں لیپ ٹاپ تے ہاپ کرو تے ولدا واپس وی</string>
+    <!-- Home onboarding dialog sign into sync screen title text. -->
+    <string name="onboarding_home_sync_title_3">سکریناں سوئچ کرݨ ہݨ پہلے کنوں ٻہوں سوکھا ہے</string>
     <!-- Home onboarding dialog sign into sync screen description text. -->
     <string name="onboarding_home_sync_description">آپݨے مکھ پنّے تے ٻئی ڈیوائساں دے  ٹیباں نال  اُتھاؤں شروع کرو جتھوں تساں چھوڑیا ہائی۔</string>
     <!-- Text for the button to continue the onboarding on the home onboarding dialog. -->
@@ -472,11 +474,18 @@
     <!-- Snackbar label for action to view selected wallpaper -->
     <string name="wallpaper_updated_snackbar_action">نظارہ</string>
 
+    <!-- Snackbar label for action to retry downloading the wallpaper -->
+    <string name="wallpaper_download_error_snackbar_action">ولدا کوشش کرو</string>
+    <!-- Text displayed that links to website containing documentation about the "Limited Edition" wallpapers. -->
+    <string name="wallpaper_learn_more">ٻیا سِکھو</string>
     <!-- Label for switch which toggles the "tap-to-switch" behavior on home screen logo -->
     <string moz:removedIn="105" name="wallpaper_tap_to_change_switch_label_1" tools:ignore="UnusedResources">فائرفوکس مکھ پنے لوگو تے انگل پھیرݨ نال وال پیپر وٹاؤ</string>
     <!-- This is the accessibility content description for the wallpapers functionality. Users are
     able to tap on the app logo in the home screen and can switch to different wallpapers by tapping. -->
     <string moz:removedIn="105" name="wallpaper_logo_content_description" tools:ignore="UnusedResources">فائر فوکس لوگو ــ وال پیپر وٹاؤ، بٹݨ</string>
+
+    <!-- Text for limited edition wallpapers title. -->
+    <string name="wallpaper_limited_edition_title">محدود ایڈیشن</string>
 
     <!-- Add-on Installation from AMO-->
     <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is not supported -->
@@ -1231,20 +1240,22 @@
     <!-- Onboarding -->
     <!-- Text for onboarding welcome message
     The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_header">%s وچ ست بسم اللہ!</string>
+    <string moz:RemovedIn="106" name="onboarding_header" tools:ignore="UnusedResources">%s وچ ست بسم اللہ!</string>
     <!-- text for the Firefox account onboarding sign in card header. The word "Firefox" should not be translated -->
-    <string name="onboarding_account_sign_in_header_1">ڈیوائساں دے درمیان فائرفوکس ہم وقت کرو</string>
+    <string moz:removedIn="106" name="onboarding_account_sign_in_header_1" tools:ignore="UnusedResources">ڈیوائساں دے درمیان فائرفوکس ہم وقت کرو</string>
     <!-- Text for the button to learn more about signing in to your Firefox account. The first parameter is the name of the application.-->
-    <string name="onboarding_manual_sign_in_description_2">ایں ڈیوائس تے کتاب نشانیاں، تاریخ تے پاس ورڈ %1$s تے گھن آؤ۔ </string>
+    <string moz:removedIn="106" name="onboarding_manual_sign_in_description_2" tools:ignore="UnusedResources">ایں ڈیوائس تے کتاب نشانیاں، تاریخ تے پاس ورڈ %1$s تے گھن آؤ۔ </string>
     <!-- text for the button to manually sign into Firefox account. -->
-    <string name="onboarding_firefox_account_sign_in_1">سائن اپ</string>
+    <string moz:removedIn="106" name="onboarding_firefox_account_sign_in_1" tools:ignore="UnusedResources">سائن اپ</string>
 
+    <!-- Text for the button to manually sign into Firefox account. -->
+    <string name="onboarding_firefox_account_sign_in">سائن ان</string>
     <!-- text to display in the snackbar once account is signed-in -->
     <string name="onboarding_firefox_account_sync_is_on">ہم وقت کرݨ چالو ہے</string>
     <!-- text for the tracking protection onboarding card header -->
-    <string name="onboarding_tracking_protection_header_3">ہمیشہ رازداری تے</string>
+    <string moz:removedIn="106" name="onboarding_tracking_protection_header_3" tools:ignore="UnusedResources">ہمیشہ رازداری تے</string>
     <!-- text for the tracking protection card description. The first parameter is the name of the application.-->
-    <string name="onboarding_tracking_protection_description_4">%1$s خودکار طور تے کمپنیاں کوں ویب تے  تہاکوں خفیہ فالو کرݨ کنوں روکیندے۔</string>
+    <string moz:removedIn="106" name="onboarding_tracking_protection_description_4" tools:ignore="UnusedResources">%1$s خودکار طور تے کمپنیاں کوں ویب تے  تہاکوں خفیہ فالو کرݨ کنوں روکیندے۔</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
     <string name="onboarding_tracking_protection_standard_button_2">معیاری (پہلے کنوں مقرر)</string>
     <!-- text for standard blocking option button description -->
@@ -1256,13 +1267,13 @@
     <!-- text for the toolbar position card header  -->
     <string name="onboarding_toolbar_placement_header_1">آپݨے ٹول بار دی جاء چُݨو</string>
     <!-- text for the toolbar position card description -->
-    <string name="onboarding_toolbar_placement_description_1">ٹول بار کوں سوکھی پہنچ آلی جاء تے رکھو۔ ایں کوں تل وچ رکھو یا چوٹی تے گھن ون٘ڄو۔ </string>
+    <string moz:removedIn="106" name="onboarding_toolbar_placement_description_1" tools:ignore="UnusedResources">ٹول بار کوں سوکھی پہنچ آلی جاء تے رکھو۔ ایں کوں تل وچ رکھو یا چوٹی تے گھن ون٘ڄو۔ </string>
     <!-- text for the privacy notice onboarding card header -->
-    <string name="onboarding_privacy_notice_header">تہاݙی رازداری</string>
+    <string moz:removedIn="106" name="onboarding_privacy_notice_header" tools:ignore="UnusedResources">تہاݙی رازداری</string>
 
     <!-- text for the privacy notice onboarding card description
     The first parameter is the name of the app (e.g. Firefox Preview) Substitute %s for long browser name. -->
-    <string name="onboarding_privacy_notice_description2">تساں جہڑی شئے تساں ساکوں شیئر کرو یا آن لائن شیئر کریندے ہو اوں کوں تہاݙے ڳاٻو وچ ݙیوݨ سانگے اساں %s کوں بݨایا ہے۔</string>
+    <string moz:removedIn="106" name="onboarding_privacy_notice_description2" tools:ignore="UnusedResources">تساں جہڑی شئے تساں ساکوں شیئر کرو یا آن لائن شیئر کریندے ہو اوں کوں تہاݙے ڳاٻو وچ ݙیوݨ سانگے اساں %s کوں بݨایا ہے۔</string>
     <!-- Text for the button to read the privacy notice -->
     <string name="onboarding_privacy_notice_read_button">ساݙا رازداری نوٹس پڑھو</string>
 
