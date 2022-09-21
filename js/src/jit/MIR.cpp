@@ -2659,6 +2659,12 @@ MDefinition* MMinMax::foldsTo(TempAllocator& alloc) {
         // When neither value is NaN:
         // max(x, min(x, y)) = x
         // min(x, max(x, y)) = x
+
+        // Ensure that any bailouts that we depend on to guarantee that |y| is
+        // Int32 are not removed.
+        auto* otherOp = operand == other->lhs() ? other->rhs() : other->lhs();
+        otherOp->setGuardRangeBailoutsUnchecked();
+
         return operand;
       }
     }
