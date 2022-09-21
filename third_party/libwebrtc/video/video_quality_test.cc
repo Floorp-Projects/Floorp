@@ -905,10 +905,7 @@ void VideoQualityTest::SetupVideo(Transport* send_transport,
             rtc::make_ref_counted<
                 VideoEncoderConfig::Vp9EncoderSpecificSettings>(vp9_settings);
       } else if (params_.video[video_idx].codec == "H264") {
-        VideoCodecH264 h264_settings = VideoEncoder::GetDefaultH264Settings();
-        video_encoder_configs_[video_idx].encoder_specific_settings =
-            rtc::make_ref_counted<
-                VideoEncoderConfig::H264EncoderSpecificSettings>(h264_settings);
+        video_encoder_configs_[video_idx].encoder_specific_settings = nullptr;
       }
     }
     total_streams_used += num_video_substreams;

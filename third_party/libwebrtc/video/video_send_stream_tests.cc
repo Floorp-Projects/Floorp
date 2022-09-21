@@ -2435,9 +2435,7 @@ class VideoCodecConfigObserver : public test::SendTest,
 };
 
 template <>
-void VideoCodecConfigObserver<VideoCodecH264>::InitCodecSpecifics() {
-  encoder_settings_ = VideoEncoder::GetDefaultH264Settings();
-}
+void VideoCodecConfigObserver<VideoCodecH264>::InitCodecSpecifics() {}
 
 template <>
 void VideoCodecConfigObserver<VideoCodecH264>::VerifyCodecSpecifics(
@@ -2454,18 +2452,16 @@ void VideoCodecConfigObserver<VideoCodecH264>::VerifyCodecSpecifics(
 
   // Set expected temporal layers as they should have been set when
   // reconfiguring the encoder and not match the set config.
-  VideoCodecH264 encoder_settings = encoder_settings_;
+  VideoCodecH264 encoder_settings = VideoEncoder::GetDefaultH264Settings();
   encoder_settings.numberOfTemporalLayers =
       kVideoCodecConfigObserverNumberOfTemporalLayers;
-  EXPECT_EQ(
-      0, memcmp(&config.H264(), &encoder_settings, sizeof(encoder_settings_)));
+  EXPECT_EQ(config.H264(), encoder_settings);
 }
 
 template <>
 rtc::scoped_refptr<VideoEncoderConfig::EncoderSpecificSettings>
 VideoCodecConfigObserver<VideoCodecH264>::GetEncoderSpecificSettings() const {
-  return rtc::make_ref_counted<VideoEncoderConfig::H264EncoderSpecificSettings>(
-      encoder_settings_);
+  return nullptr;
 }
 
 template <>
