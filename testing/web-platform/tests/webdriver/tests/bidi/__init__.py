@@ -1,4 +1,4 @@
-from typing import Any
+from typing import Any, Callable
 
 
 # Compares 2 objects recursively.
@@ -33,3 +33,15 @@ def any_string(actual: Any) -> None:
 
 def any_int(actual: Any) -> None:
     assert isinstance(actual, int)
+
+
+def any_list(actual: Any) -> None:
+    assert isinstance(actual, list)
+
+
+def int_interval(start: int, end: int) -> Callable[[Any], None]:
+    def _(actual: Any) -> None:
+        any_int(actual)
+        assert start <= actual <= end
+
+    return _
