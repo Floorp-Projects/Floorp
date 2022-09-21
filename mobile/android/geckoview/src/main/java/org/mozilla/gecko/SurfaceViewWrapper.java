@@ -36,7 +36,7 @@ public class SurfaceViewWrapper {
   }
 
   private void initSurfaceView(final Context context) {
-    mSurfaceView = new SurfaceView(context);
+    mSurfaceView = new MagnifiableSurfaceView(context);
     mSurfaceView.setBackgroundColor(Color.TRANSPARENT);
     mSurfaceView.getHolder().setFormat(PixelFormat.TRANSPARENT);
     mView = mSurfaceView;
