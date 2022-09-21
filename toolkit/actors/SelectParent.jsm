@@ -113,6 +113,7 @@ var SelectParentHelper = {
 
     menupopup.setAttribute("style", "");
     menupopup.style.colorScheme = isDarkBackground ? "dark" : "light";
+    menupopup.style.direction = selectStyle.direction;
 
     stylesheet = doc.createElementNS("http://www.w3.org/1999/xhtml", "style");
     stylesheet.setAttribute("id", "ContentSelectDropdownStylesheet");
@@ -781,7 +782,6 @@ class SelectParent extends JSWindowActorParent {
         let menulist = this._menulist || this._createMenulist();
 
         let data = message.data;
-        menulist.menupopup.style.direction = data.style.direction;
 
         SelectParentHelper.populate(
           menulist,
