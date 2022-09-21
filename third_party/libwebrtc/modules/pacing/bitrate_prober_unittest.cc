@@ -12,6 +12,7 @@
 
 #include <algorithm>
 
+#include "api/units/data_rate.h"
 #include "test/explicit_key_value_config.h"
 #include "test/gtest.h"
 
@@ -32,8 +33,16 @@ TEST(BitrateProberTest, VerifyStatesAndTimeBetweenProbes) {
   const DataSize kProbeSize = DataSize::Bytes(1000);
   const TimeDelta kMinProbeDuration = TimeDelta::Millis(15);
 
-  prober.CreateProbeCluster(kTestBitrate1, now, 0);
-  prober.CreateProbeCluster(kTestBitrate2, now, 1);
+  prober.CreateProbeCluster({.at_time = now,
+                             .target_data_rate = kTestBitrate1,
+                             .target_duration = TimeDelta::Millis(15),
+                             .target_probe_count = 5,
+                             .id = 0});
+  prober.CreateProbeCluster({.at_time = now,
+                             .target_data_rate = kTestBitrate2,
+                             .target_duration = TimeDelta::Millis(15),
+                             .target_probe_count = 5,
+                             .id = 1});
   EXPECT_FALSE(prober.is_probing());
 
   prober.OnIncomingPacket(kProbeSize);
@@ -85,7 +94,11 @@ TEST(BitrateProberTest, DoesntProbeWithoutRecentPackets) {
   Timestamp now = Timestamp::Zero();
   EXPECT_EQ(prober.NextProbeTime(now), Timestamp::PlusInfinity());
 
-  prober.CreateProbeCluster(DataRate::KilobitsPerSec(900), now, 0);
+  prober.CreateProbeCluster({.at_time = now,
+                             .target_data_rate = DataRate::KilobitsPerSec(900),
+                             .target_duration = TimeDelta::Millis(15),
+                             .target_probe_count = 5,
+                             .id = 0});
   EXPECT_FALSE(prober.is_probing());
 
   prober.OnIncomingPacket(kProbeSize);
@@ -94,37 +107,7 @@ TEST(BitrateProberTest, DoesntProbeWithoutRecentPackets) {
   prober.ProbeSent(now, kProbeSize);
 }
 
-TEST(BitrateProberTest, DoesntDiscardDelayedProbesInLegacyMode) {
-  const TimeDelta kMaxProbeDelay = TimeDelta::Millis(3);
-  const test::ExplicitKeyValueConfig trials(
-      "WebRTC-Bwe-ProbingBehavior/"
-      "abort_delayed_probes:0,"
-      "max_probe_delay:3ms/");
-  BitrateProber prober(trials);
-  const DataSize kProbeSize = DataSize::Bytes(1000);
-
-  Timestamp now = Timestamp::Zero();
-  prober.CreateProbeCluster(DataRate::KilobitsPerSec(900), now, 0);
-  prober.OnIncomingPacket(kProbeSize);
-  EXPECT_TRUE(prober.is_probing());
-  EXPECT_EQ(prober.CurrentCluster(now)->probe_cluster_id, 0);
-  // Advance to first probe time and indicate sent probe.
-  now = std::max(now, prober.NextProbeTime(now));
-  prober.ProbeSent(now, kProbeSize);
-
-  // Advance time 1ms past timeout for the next probe.
-  Timestamp next_probe_time = prober.NextProbeTime(now);
-  EXPECT_GT(next_probe_time, now);
-  now += next_probe_time - now + kMaxProbeDelay + TimeDelta::Millis(1);
-
-  EXPECT_EQ(prober.NextProbeTime(now), Timestamp::PlusInfinity());
-  // Check that legacy behaviour where prober is reset in TimeUntilNextProbe is
-  // no longer there. Probes are no longer retried if they are timed out.
-  prober.OnIncomingPacket(kProbeSize);
-  EXPECT_EQ(prober.NextProbeTime(now), Timestamp::PlusInfinity());
-}
-
-TEST(BitrateProberTest, DiscardsDelayedProbesWhenNotInLegacyMode) {
+TEST(BitrateProberTest, DiscardsDelayedProbes) {
   const TimeDelta kMaxProbeDelay = TimeDelta::Millis(3);
   const test::ExplicitKeyValueConfig trials(
       "WebRTC-Bwe-ProbingBehavior/"
@@ -136,7 +119,11 @@ TEST(BitrateProberTest, DiscardsDelayedProbesWhenNotInLegacyMode) {
   Timestamp now = Timestamp::Zero();
 
   // Add two probe clusters.
-  prober.CreateProbeCluster(DataRate::KilobitsPerSec(900), now, /*id=*/0);
+  prober.CreateProbeCluster({.at_time = now,
+                             .target_data_rate = DataRate::KilobitsPerSec(900),
+                             .target_duration = TimeDelta::Millis(15),
+                             .target_probe_count = 5,
+                             .id = 0});
 
   prober.OnIncomingPacket(kProbeSize);
   EXPECT_TRUE(prober.is_probing());
@@ -173,8 +160,11 @@ TEST(BitrateProberTest, VerifyProbeSizeOnHighBitrate) {
 
   const DataRate kHighBitrate = DataRate::KilobitsPerSec(10000);  // 10 Mbps
 
-  prober.CreateProbeCluster(kHighBitrate, Timestamp::Millis(0),
-                            /*cluster_id=*/0);
+  prober.CreateProbeCluster({.at_time = Timestamp::Millis(0),
+                             .target_data_rate = kHighBitrate,
+                             .target_duration = TimeDelta::Millis(15),
+                             .target_probe_count = 5,
+                             .id = 0});
   // Probe size should ensure a minimum of 1 ms interval.
   EXPECT_GT(prober.RecommendedMinProbeSize(),
             kHighBitrate * TimeDelta::Millis(1));
@@ -189,7 +179,12 @@ TEST(BitrateProberTest, MinumumNumberOfProbingPackets) {
   const DataSize kPacketSize = DataSize::Bytes(1000);
 
   Timestamp now = Timestamp::Millis(0);
-  prober.CreateProbeCluster(kBitrate, now, 0);
+  prober.CreateProbeCluster({.at_time = Timestamp::Millis(0),
+                             .target_data_rate = kBitrate,
+                             .target_duration = TimeDelta::Millis(15),
+                             .target_probe_count = 5,
+                             .id = 0});
+
   prober.OnIncomingPacket(kPacketSize);
   for (int i = 0; i < 5; ++i) {
     EXPECT_TRUE(prober.is_probing());
@@ -207,7 +202,11 @@ TEST(BitrateProberTest, ScaleBytesUsedForProbing) {
   const DataSize kExpectedDataSent = kBitrate * TimeDelta::Millis(15);
 
   Timestamp now = Timestamp::Millis(0);
-  prober.CreateProbeCluster(kBitrate, now, /*cluster_id=*/0);
+  prober.CreateProbeCluster({.at_time = Timestamp::Millis(0),
+                             .target_data_rate = kBitrate,
+                             .target_duration = TimeDelta::Millis(15),
+                             .target_probe_count = 5,
+                             .id = 0});
   prober.OnIncomingPacket(kPacketSize);
   DataSize data_sent = DataSize::Zero();
   while (data_sent < kExpectedDataSent) {
@@ -227,7 +226,11 @@ TEST(BitrateProberTest, HighBitrateProbing) {
   const DataSize kExpectedDataSent = kBitrate * TimeDelta::Millis(15);
 
   Timestamp now = Timestamp::Millis(0);
-  prober.CreateProbeCluster(kBitrate, now, 0);
+  prober.CreateProbeCluster({.at_time = Timestamp::Millis(0),
+                             .target_data_rate = kBitrate,
+                             .target_duration = TimeDelta::Millis(15),
+                             .target_probe_count = 5,
+                             .id = 0});
   prober.OnIncomingPacket(kPacketSize);
   DataSize data_sent = DataSize::Zero();
   while (data_sent < kExpectedDataSent) {
@@ -249,15 +252,27 @@ TEST(BitrateProberTest, ProbeClusterTimeout) {
   const TimeDelta kTimeout = TimeDelta::Millis(5000);
 
   Timestamp now = Timestamp::Millis(0);
-  prober.CreateProbeCluster(kBitrate, now, /*cluster_id=*/0);
+  prober.CreateProbeCluster({.at_time = now,
+                             .target_data_rate = kBitrate,
+                             .target_duration = TimeDelta::Millis(15),
+                             .target_probe_count = 5,
+                             .id = 0});
   prober.OnIncomingPacket(kSmallPacketSize);
   EXPECT_FALSE(prober.is_probing());
   now += kTimeout;
-  prober.CreateProbeCluster(kBitrate / 10, now, /*cluster_id=*/1);
+  prober.CreateProbeCluster({.at_time = now,
+                             .target_data_rate = kBitrate / 10,
+                             .target_duration = TimeDelta::Millis(15),
+                             .target_probe_count = 5,
+                             .id = 1});
   prober.OnIncomingPacket(kSmallPacketSize);
   EXPECT_FALSE(prober.is_probing());
   now += TimeDelta::Millis(1);
-  prober.CreateProbeCluster(kBitrate / 10, now, /*cluster_id=*/2);
+  prober.CreateProbeCluster({.at_time = now,
+                             .target_data_rate = kBitrate / 10,
+                             .target_duration = TimeDelta::Millis(15),
+                             .target_probe_count = 5,
+                             .id = 2});
   prober.OnIncomingPacket(kSmallPacketSize);
   EXPECT_TRUE(prober.is_probing());
   DataSize data_sent = DataSize::Zero();
