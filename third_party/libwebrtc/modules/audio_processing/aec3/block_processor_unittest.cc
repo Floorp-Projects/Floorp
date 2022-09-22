@@ -321,7 +321,7 @@ TEST(BlockProcessor, ExternalDelayAppliedCorrectlyWithInitialCaptureCalls) {
              const absl::optional<DelayEstimate>& /*external_delay*/,
              RenderBuffer* render_buffer, Block* /*linear_output*/,
              Block* capture) {
-            const auto& render = render_buffer->Block(0);
+            const auto& render = render_buffer->GetBlock(0);
             const auto render_view = render.View(/*band=*/0, /*channel=*/0);
             const auto capture_view = capture->View(/*band=*/0, /*channel=*/0);
             for (size_t i = 0; i < kBlockSize; ++i) {

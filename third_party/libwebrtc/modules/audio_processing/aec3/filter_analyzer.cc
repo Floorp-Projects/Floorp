@@ -131,7 +131,7 @@ void FilterAnalyzer::AnalyzeRegion(
 
     st_ch.consistent_estimate = st_ch.consistent_filter_detector.Detect(
         h_highpass_[ch], region_,
-        render_buffer.Block(-filter_delays_blocks_[ch]), st_ch.peak_index,
+        render_buffer.GetBlock(-filter_delays_blocks_[ch]), st_ch.peak_index,
         filter_delays_blocks_[ch]);
   }
 }

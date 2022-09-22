@@ -245,7 +245,7 @@ void EchoRemoverImpl::ProcessCapture(
     Block* linear_output,
     Block* capture) {
   ++block_counter_;
-  const Block& x = render_buffer->Block(0);
+  const Block& x = render_buffer->GetBlock(0);
   Block* y = capture;
   RTC_DCHECK(render_buffer);
   RTC_DCHECK(y);

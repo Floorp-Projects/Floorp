@@ -207,7 +207,7 @@ void AecState::Update(
   }
 
   const Block& aligned_render_block =
-      render_buffer.Block(-delay_state_.MinDirectPathFilterDelay());
+      render_buffer.GetBlock(-delay_state_.MinDirectPathFilterDelay());
 
   // Update render counters.
   bool active_render = false;
