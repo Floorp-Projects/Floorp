@@ -243,7 +243,6 @@ void AndroidNetworkMonitor::Start() {
   if (started_) {
     return;
   }
-  reset();
   started_ = true;
   surface_cellular_types_ =
       field_trials_.IsEnabled("WebRTC-SurfaceCellularTypes");
@@ -266,15 +265,6 @@ void AndroidNetworkMonitor::Start() {
           env, field_trials_.Lookup("WebRTC-NetworkMonitorAutoDetect")));
 }
 
-void AndroidNetworkMonitor::reset() {
-  RTC_DCHECK_RUN_ON(network_thread_);
-  network_handle_by_address_.clear();
-  network_info_by_handle_.clear();
-  adapter_type_by_name_.clear();
-  vpn_underlying_adapter_type_by_name_.clear();
-  network_preference_by_adapter_type_.clear();
-}
-
 void AndroidNetworkMonitor::Stop() {
   RTC_DCHECK_RUN_ON(network_thread_);
   if (!started_) {
@@ -291,7 +281,8 @@ void AndroidNetworkMonitor::Stop() {
   Java_NetworkMonitor_stopMonitoring(env, j_network_monitor_,
                                      jlongFromPointer(this));
 
-  reset();
+  network_handle_by_address_.clear();
+  network_info_by_handle_.clear();
 }
 
 // The implementation is largely taken from UDPSocketPosix::BindToNetwork in
@@ -426,7 +417,6 @@ void AndroidNetworkMonitor::OnNetworkConnected_n(
   for (const rtc::IPAddress& address : network_info.ip_addresses) {
     network_handle_by_address_[address] = network_info.handle;
   }
-  RTC_CHECK(adapter_type_by_name_.size() == network_info_by_handle_.size());
   InvokeNetworksChangedCallback();
 }
 
@@ -482,12 +472,8 @@ void AndroidNetworkMonitor::OnNetworkDisconnected_n(NetworkHandle handle) {
     for (const rtc::IPAddress& address : iter->second.ip_addresses) {
       network_handle_by_address_.erase(address);
     }
-    adapter_type_by_name_.erase(iter->second.interface_name);
-    vpn_underlying_adapter_type_by_name_.erase(iter->second.interface_name);
     network_info_by_handle_.erase(iter);
   }
-
-  RTC_CHECK(adapter_type_by_name_.size() == network_info_by_handle_.size());
 }
 
 void AndroidNetworkMonitor::OnNetworkPreference_n(
@@ -505,17 +491,8 @@ void AndroidNetworkMonitor::OnNetworkPreference_n(
 void AndroidNetworkMonitor::SetNetworkInfos(
     const std::vector<NetworkInformation>& network_infos) {
   RTC_DCHECK_RUN_ON(network_thread_);
-
-  // We expect this method to be called once directly after startMonitoring.
-  // All the caches should be empty.
-  RTC_CHECK(network_handle_by_address_.empty());
-  RTC_CHECK(network_info_by_handle_.empty());
-  RTC_CHECK(adapter_type_by_name_.empty());
-  RTC_CHECK(vpn_underlying_adapter_type_by_name_.empty());
-  RTC_CHECK(network_preference_by_adapter_type_.empty());
-
-  // ...but reset just in case.
-  reset();
+  network_handle_by_address_.clear();
+  network_info_by_handle_.clear();
   RTC_LOG(LS_INFO) << "Android network monitor found " << network_infos.size()
                    << " networks";
   for (const NetworkInformation& network : network_infos) {
