@@ -1404,8 +1404,18 @@ static inline StallSpecs GetStallSpecs() {
   // though, so it's probably not going to matter whether we stall here or not.)
   return maxStall;
 #  elif defined(NIGHTLY_BUILD)
-  // On Nightly, always stall, for experiment's sake (bug 1785162).
-  return maxStall;
+  // On Nightly, partly for experiment's sake (bug 1785162):
+  //
+  switch (GetGeckoProcessType()) {
+    // For the main process, stall for the maximum permissible time period. (The
+    // main process is the most important one to keep alive.)
+    case GeckoProcessType::GeckoProcessType_Default:
+      return maxStall;
+
+    // For all other process types, stall for at most half as long.
+    default:
+      return {.maxAttempts = kMaxAttempts / 2, .delayMs = kDelayMs};
+  }
 #  else
   // In the main process, always stall.
   if (GetGeckoProcessType() == GeckoProcessType::GeckoProcessType_Default) {
