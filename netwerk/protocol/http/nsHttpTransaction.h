@@ -98,8 +98,9 @@ class nsHttpTransaction final : public nsAHttpTransaction,
   // Sets mPendingTime to the current time stamp or to a null time stamp (if now
   // is false)
   void SetPendingTime(bool now = true) {
+    mozilla::MutexAutoLock lock(mLock);
     if (!now && !mPendingTime.IsNull()) {
-      // Remember how long it took. We will use this vaule to record
+      // Remember how long it took. We will use this value to record
       // TRANSACTION_WAIT_TIME_HTTP2_SUP_HTTP3 telemetry, but we need to wait
       // for the response headers.
       mPendingDurationTime = TimeStamp::Now() - mPendingTime;
@@ -111,7 +112,10 @@ class nsHttpTransaction final : public nsAHttpTransaction,
       mPendingTime = now ? TimeStamp::Now() : TimeStamp();
     }
   }
-  TimeStamp GetPendingTime() { return mPendingTime; }
+  TimeStamp GetPendingTime() override {
+    mozilla::MutexAutoLock lock(mLock);
+    return mPendingTime;
+  }
 
   // overload of nsAHttpTransaction::RequestContext()
   nsIRequestContext* RequestContext() override { return mRequestContext.get(); }

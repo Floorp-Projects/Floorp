@@ -187,6 +187,10 @@ class nsHttpChannel final : public HttpBaseChannel,
   NS_IMETHOD GetRequestStart(mozilla::TimeStamp* aRequestStart) override;
   NS_IMETHOD GetResponseStart(mozilla::TimeStamp* aResponseStart) override;
   NS_IMETHOD GetResponseEnd(mozilla::TimeStamp* aResponseEnd) override;
+
+  NS_IMETHOD GetTransactionPending(
+      mozilla::TimeStamp* aTransactionPending) override;
+
   // nsICorsPreflightCallback
   NS_IMETHOD OnPreflightSucceeded() override;
   NS_IMETHOD OnPreflightFailed(nsresult aError) override;

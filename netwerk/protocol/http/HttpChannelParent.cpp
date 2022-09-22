@@ -1011,6 +1011,9 @@ static ResourceTimingStructArgs GetTimingAttributes(HttpBaseChannel* aChannel) {
 
   aChannel->GetCacheReadEnd(&timeStamp);
   args.cacheReadEnd() = timeStamp;
+
+  aChannel->GetTransactionPending(&timeStamp);
+  args.transactionPending() = timeStamp;
   return args;
 }
 

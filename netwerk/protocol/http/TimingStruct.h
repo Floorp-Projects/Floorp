@@ -36,6 +36,8 @@ struct ResourceTimingStruct : TimingStruct {
   // the rest of the timings so the timing information in the child is complete.
   TimeStamp cacheReadStart;
   TimeStamp cacheReadEnd;
+
+  TimeStamp connectionPending;
 };
 
 }  // namespace net

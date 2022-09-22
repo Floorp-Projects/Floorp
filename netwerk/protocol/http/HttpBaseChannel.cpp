@@ -5220,6 +5220,12 @@ HttpBaseChannel::GetCacheReadEnd(TimeStamp* _retval) {
 }
 
 NS_IMETHODIMP
+HttpBaseChannel::GetTransactionPending(TimeStamp* _retval) {
+  *_retval = mTransactionPendingTime;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 HttpBaseChannel::GetInitiatorType(nsAString& aInitiatorType) {
   aInitiatorType = mInitiatorType;
   return NS_OK;
@@ -5267,6 +5273,7 @@ IMPL_TIMING_ATTR(CacheReadStart)
 IMPL_TIMING_ATTR(CacheReadEnd)
 IMPL_TIMING_ATTR(RedirectStart)
 IMPL_TIMING_ATTR(RedirectEnd)
+IMPL_TIMING_ATTR(TransactionPending)
 
 #undef IMPL_TIMING_ATTR
 
