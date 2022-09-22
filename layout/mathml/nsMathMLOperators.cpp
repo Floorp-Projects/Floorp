@@ -317,6 +317,12 @@ bool nsMathMLOperators::LookupOperator(const nsString& aOperator,
   NS_ASSERTION(aFlags && aLeadingSpace && aTrailingSpace, "bad usage");
   NS_ASSERTION(aForm > 0 && aForm < 4, "*** invalid call ***");
 
+  // Operator strings must be of length 1 or 2 in UTF-16.
+  // https://w3c.github.io/mathml-core/#dfn-algorithm-to-determine-the-category-of-an-operator
+  if (aOperator.IsEmpty() || aOperator.Length() > 2) {
+    return false;
+  }
+
   if (!gGlobalsInitialized) {
     InitOperatorGlobals();
   }
