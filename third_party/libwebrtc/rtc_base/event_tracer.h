@@ -73,7 +73,7 @@ class EventTracer {
 namespace rtc {
 namespace tracing {
 // Set up internal event tracer.
-RTC_EXPORT void SetupInternalTracer();
+RTC_EXPORT void SetupInternalTracer(bool enable_all_categories = true);
 RTC_EXPORT bool StartInternalCapture(absl::string_view filename);
 RTC_EXPORT void StartInternalCaptureToFile(FILE* file);
 RTC_EXPORT void StopInternalCapture();
