@@ -11,14 +11,21 @@
 #ifndef API_VIDEO_CODECS_SIMULCAST_STREAM_H_
 #define API_VIDEO_CODECS_SIMULCAST_STREAM_H_
 
-#include "api/video_codecs/spatial_layer.h"
-
 namespace webrtc {
 
 // TODO(bugs.webrtc.org/6883): Unify with struct VideoStream, part of
 // VideoEncoderConfig.
-// TODO(bugs.webrtc.org/11607): Make this a separate type, rather than an alias.
-using SimulcastStream = SpatialLayer;
+struct SimulcastStream {
+  int width;
+  int height;
+  float maxFramerate;  // fps.
+  unsigned char numberOfTemporalLayers;
+  unsigned int maxBitrate;     // kilobits/sec.
+  unsigned int targetBitrate;  // kilobits/sec.
+  unsigned int minBitrate;     // kilobits/sec.
+  unsigned int qpMax;          // minimum quality
+  bool active;                 // encoded and sent.
+};
 
 }  // namespace webrtc
 #endif  // API_VIDEO_CODECS_SIMULCAST_STREAM_H_
