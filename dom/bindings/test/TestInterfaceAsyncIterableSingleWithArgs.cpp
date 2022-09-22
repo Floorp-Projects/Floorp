@@ -35,25 +35,18 @@ JSObject* TestInterfaceAsyncIterableSingleWithArgs::WrapObject(
                                                                 aGivenProto);
 }
 
-void TestInterfaceAsyncIterableSingleWithArgs::InitAsyncIterator(
-    Iterator* aIterator, const TestInterfaceAsyncIteratorOptions& aOptions,
-    ErrorResult& aError) {
-  UniquePtr<IteratorData> data(
-      new IteratorData{0, aOptions.mMultiplier, aOptions.mBlockingPromises});
-  aIterator->SetData((void*)data.release());
-}
-
-void TestInterfaceAsyncIterableSingleWithArgs::DestroyAsyncIterator(
-    Iterator* aIterator) {
-  auto* data = reinterpret_cast<IteratorData*>(aIterator->GetData());
-  delete data;
+void TestInterfaceAsyncIterableSingleWithArgs::InitAsyncIteratorData(
+    IteratorData& aData, Iterator::IteratorType aType,
+    const TestInterfaceAsyncIteratorOptions& aOptions, ErrorResult& aError) {
+  aData.mMultiplier = aOptions.mMultiplier;
+  aData.mBlockingPromises = aOptions.mBlockingPromises;
 }
 
 already_AddRefed<Promise>
 TestInterfaceAsyncIterableSingleWithArgs::GetNextPromise(Iterator* aIterator,
                                                          ErrorResult& aRv) {
   return TestInterfaceAsyncIterableSingle::GetNextPromise(
-      aIterator, reinterpret_cast<IteratorData*>(aIterator->GetData()), aRv);
+      aIterator, aIterator->Data(), aRv);
 }
 
 }  // namespace mozilla::dom

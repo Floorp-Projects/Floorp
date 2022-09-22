@@ -38,19 +38,19 @@ class TestInterfaceAsyncIterableDoubleUnion final : public nsISupports,
   static already_AddRefed<TestInterfaceAsyncIterableDoubleUnion> Constructor(
       const GlobalObject& aGlobal, ErrorResult& rv);
 
+  struct IteratorData {
+    uint32_t mIndex = 0;
+  };
+
   using Iterator = AsyncIterableIterator<TestInterfaceAsyncIterableDoubleUnion>;
-  void InitAsyncIterator(Iterator* aIterator, ErrorResult& aError);
-  void DestroyAsyncIterator(Iterator* aIterator);
+
+  void InitAsyncIteratorData(IteratorData& aData, Iterator::IteratorType aType,
+                             ErrorResult& aError) {}
+
   already_AddRefed<Promise> GetNextPromise(Iterator* aIterator,
                                            ErrorResult& aRv);
 
  private:
-  struct IteratorData {
-    explicit IteratorData(int32_t aIndex) : mIndex(aIndex) {}
-
-    uint32_t mIndex;
-  };
-
   virtual ~TestInterfaceAsyncIterableDoubleUnion() = default;
   void ResolvePromise(Iterator* aIterator, Promise* aPromise);
 
