@@ -283,6 +283,7 @@ class nsWindow final : public nsBaseWidget {
   nsIFrame* GetFrame() const;
   nsWindow* GetEffectiveParent();
   bool IsDestroyed() const { return mIsDestroyed; }
+  bool IsMapped() const { return mIsMapped; }
   bool IsPopup() const;
   bool IsWaylandPopup() const;
   bool IsPIPWindow() const { return mIsPIPWindow; };
