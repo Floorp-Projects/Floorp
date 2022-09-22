@@ -30,11 +30,13 @@ namespace dcsctp {
 
 RRSendQueue::RRSendQueue(absl::string_view log_prefix,
                          size_t buffer_size,
+                         StreamPriority default_priority,
                          std::function<void(StreamID)> on_buffered_amount_low,
                          size_t total_buffered_amount_low_threshold,
                          std::function<void()> on_total_buffered_amount_low)
     : log_prefix_(std::string(log_prefix) + "fcfs: "),
       buffer_size_(buffer_size),
+      default_priority_(default_priority),
       on_buffered_amount_low_(std::move(on_buffered_amount_low)),
       total_buffered_amount_(std::move(on_total_buffered_amount_low)) {
   total_buffered_amount_.SetLowThreshold(total_buffered_amount_low_threshold);
@@ -75,6 +77,7 @@ void RRSendQueue::OutgoingStream::AddHandoverState(
   state.next_ssn = next_ssn_.value();
   state.next_ordered_mid = next_ordered_mid_.value();
   state.next_unordered_mid = next_unordered_mid_.value();
+  state.priority = *priority_;
 }
 
 bool RRSendQueue::IsConsistent() const {
@@ -515,10 +518,26 @@ RRSendQueue::OutgoingStream& RRSendQueue::GetOrCreateStreamInfo(
   return streams_
       .emplace(stream_id,
                OutgoingStream(
-                   stream_id,
+                   stream_id, default_priority_,
                    [this, stream_id]() { on_buffered_amount_low_(stream_id); },
                    total_buffered_amount_))
       .first->second;
+}
+
+void RRSendQueue::SetStreamPriority(StreamID stream_id,
+                                    StreamPriority priority) {
+  OutgoingStream& stream = GetOrCreateStreamInfo(stream_id);
+
+  stream.set_priority(priority);
+  RTC_DCHECK(IsConsistent());
+}
+
+StreamPriority RRSendQueue::GetStreamPriority(StreamID stream_id) const {
+  auto stream_it = streams_.find(stream_id);
+  if (stream_it == streams_.end()) {
+    return default_priority_;
+  }
+  return stream_it->second.priority();
 }
 
 HandoverReadinessStatus RRSendQueue::GetHandoverReadiness() const {
@@ -542,12 +561,12 @@ void RRSendQueue::RestoreFromState(const DcSctpSocketHandoverState& state) {
   for (const DcSctpSocketHandoverState::OutgoingStream& state_stream :
        state.tx.streams) {
     StreamID stream_id(state_stream.id);
-    streams_.emplace(stream_id, OutgoingStream(
-                                    stream_id,
-                                    [this, stream_id]() {
-                                      on_buffered_amount_low_(stream_id);
-                                    },
-                                    total_buffered_amount_, &state_stream));
+    streams_.emplace(
+        stream_id,
+        OutgoingStream(
+            stream_id, StreamPriority(state_stream.priority),
+            [this, stream_id]() { on_buffered_amount_low_(stream_id); },
+            total_buffered_amount_, &state_stream));
   }
 }
 }  // namespace dcsctp
