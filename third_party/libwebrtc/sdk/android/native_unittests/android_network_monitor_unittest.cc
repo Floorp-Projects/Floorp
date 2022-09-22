@@ -62,10 +62,6 @@ class AndroidNetworkMonitorTest : public ::testing::Test {
     network_monitor_->Stop();
   }
 
-  void Disconnect(jni::NetworkHandle handle) {
-    network_monitor_->OnNetworkDisconnected_n(handle);
-  }
-
  protected:
   test::ScopedKeyValueConfig field_trials_;
   rtc::AutoThread main_thread_;
@@ -174,64 +170,6 @@ TEST_F(AndroidNetworkMonitorTest, TestUnderlyingVpnType) {
 
   EXPECT_EQ(rtc::ADAPTER_TYPE_WIFI,
             network_monitor_->GetVpnUnderlyingAdapterType("v4-wlan0"));
-}
-
-// Verify that Disconnect makes interface unavailable.
-TEST_F(AndroidNetworkMonitorTest, Disconnect) {
-  network_monitor_->Start();
-
-  jni::NetworkHandle ipv4_handle = 100;
-  rtc::IPAddress ipv4_address(kTestIpv4Address);
-  jni::NetworkInformation net_info =
-      CreateNetworkInformation("wlan0", ipv4_handle, ipv4_address);
-  net_info.type = jni::NETWORK_WIFI;
-  network_monitor_->SetNetworkInfos({net_info});
-
-  EXPECT_TRUE(network_monitor_->IsAdapterAvailable("wlan0"));
-  EXPECT_TRUE(network_monitor_
-                  ->FindNetworkHandleFromAddressOrName(ipv4_address, "v4-wlan0")
-                  .has_value());
-  EXPECT_EQ(network_monitor_->GetAdapterType("v4-wlan0"),
-            rtc::ADAPTER_TYPE_WIFI);
-
-  // Check that values are reset on disconnect().
-  Disconnect(ipv4_handle);
-  EXPECT_FALSE(network_monitor_->IsAdapterAvailable("wlan0"));
-  EXPECT_FALSE(
-      network_monitor_
-          ->FindNetworkHandleFromAddressOrName(ipv4_address, "v4-wlan0")
-          .has_value());
-  EXPECT_EQ(network_monitor_->GetAdapterType("v4-wlan0"),
-            rtc::ADAPTER_TYPE_UNKNOWN);
-}
-
-// Verify that Stop() resets all caches.
-TEST_F(AndroidNetworkMonitorTest, Reset) {
-  network_monitor_->Start();
-
-  jni::NetworkHandle ipv4_handle = 100;
-  rtc::IPAddress ipv4_address(kTestIpv4Address);
-  jni::NetworkInformation net_info =
-      CreateNetworkInformation("wlan0", ipv4_handle, ipv4_address);
-  net_info.type = jni::NETWORK_WIFI;
-  network_monitor_->SetNetworkInfos({net_info});
-
-  EXPECT_TRUE(network_monitor_->IsAdapterAvailable("wlan0"));
-  EXPECT_TRUE(network_monitor_
-                  ->FindNetworkHandleFromAddressOrName(ipv4_address, "v4-wlan0")
-                  .has_value());
-  EXPECT_EQ(network_monitor_->GetAdapterType("v4-wlan0"),
-            rtc::ADAPTER_TYPE_WIFI);
-
-  // Check that values are reset on Stop().
-  network_monitor_->Stop();
-  EXPECT_FALSE(network_monitor_->IsAdapterAvailable("wlan0"));
-  EXPECT_FALSE(
-      network_monitor_
-          ->FindNetworkHandleFromAddressOrName(ipv4_address, "v4-wlan0")
-          .has_value());
-  EXPECT_EQ(network_monitor_->GetAdapterType("v4-wlan0"),
-            rtc::ADAPTER_TYPE_UNKNOWN);
 }
 
 }  // namespace test
