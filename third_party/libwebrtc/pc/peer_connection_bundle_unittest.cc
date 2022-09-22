@@ -224,9 +224,8 @@ class PeerConnectionBundleBaseTest : public ::testing::Test {
 
   WrapperPtr CreatePeerConnection(const RTCConfiguration& config) {
     auto* fake_network = NewFakeNetwork();
-    auto port_allocator = std::make_unique<cricket::BasicPortAllocator>(
-        fake_network,
-        std::make_unique<rtc::BasicPacketSocketFactory>(vss_.get()));
+    auto port_allocator =
+        std::make_unique<cricket::BasicPortAllocator>(fake_network);
     port_allocator->set_flags(cricket::PORTALLOCATOR_DISABLE_TCP |
                               cricket::PORTALLOCATOR_DISABLE_RELAY);
     port_allocator->set_step_delay(cricket::kMinimumStepDelay);
