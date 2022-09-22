@@ -272,7 +272,7 @@ class AecState {
     bool SaturatedEcho() const { return saturated_echo_; }
 
     // Updates the detection decision based on new data.
-    void Update(rtc::ArrayView<const std::vector<float>> x,
+    void Update(const Block& x,
                 bool saturated_capture,
                 bool usable_linear_estimate,
                 rtc::ArrayView<const SubtractorOutput> subtractor_output,

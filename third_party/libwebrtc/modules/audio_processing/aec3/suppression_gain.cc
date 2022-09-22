@@ -110,13 +110,13 @@ float SuppressionGain::UpperBandsGain(
         comfort_noise_spectrum,
     const absl::optional<int>& narrow_peak_band,
     bool saturated_echo,
-    const std::vector<std::vector<std::vector<float>>>& render,
+    const Block& render,
     const std::array<float, kFftLengthBy2Plus1>& low_band_gain) const {
-  RTC_DCHECK_LT(0, render.size());
-  if (render.size() == 1) {
+  RTC_DCHECK_LT(0, render.NumBands());
+  if (render.NumBands() == 1) {
     return 1.f;
   }
-  const size_t num_render_channels = render[0].size();
+  const int num_render_channels = render.NumChannels();
 
   if (narrow_peak_band &&
       (*narrow_peak_band > static_cast<int>(kFftLengthBy2Plus1 - 10))) {
@@ -135,16 +135,19 @@ float SuppressionGain::UpperBandsGain(
   // Compute the upper and lower band energies.
   const auto sum_of_squares = [](float a, float b) { return a + b * b; };
   float low_band_energy = 0.f;
-  for (size_t ch = 0; ch < num_render_channels; ++ch) {
+  for (int ch = 0; ch < num_render_channels; ++ch) {
+    // TODO(bugs.webrtc.org/14108): Fix the computation below to compute the
+    // energy for each channel.
     const float channel_energy = std::accumulate(
-        render[0][0].begin(), render[0][0].end(), 0.f, sum_of_squares);
+        render.begin(/*band=0*/ 0, /*channel=*/0),
+        render.end(/*band=0*/ 0, /*channel=*/0), 0.f, sum_of_squares);
     low_band_energy = std::max(low_band_energy, channel_energy);
   }
   float high_band_energy = 0.f;
-  for (size_t k = 1; k < render.size(); ++k) {
-    for (size_t ch = 0; ch < num_render_channels; ++ch) {
+  for (int k = 1; k < render.NumBands(); ++k) {
+    for (int ch = 0; ch < num_render_channels; ++ch) {
       const float energy = std::accumulate(
-          render[k][ch].begin(), render[k][ch].end(), 0.f, sum_of_squares);
+          render.begin(k, ch), render.end(k, ch), 0.f, sum_of_squares);
       high_band_energy = std::max(high_band_energy, energy);
     }
   }
@@ -372,7 +375,7 @@ void SuppressionGain::GetGain(
         comfort_noise_spectrum,
     const RenderSignalAnalyzer& render_signal_analyzer,
     const AecState& aec_state,
-    const std::vector<std::vector<std::vector<float>>>& render,
+    const Block& render,
     bool clock_drift,
     float* high_bands_gain,
     std::array<float, kFftLengthBy2Plus1>* low_band_gain) {
@@ -417,20 +420,17 @@ void SuppressionGain::SetInitialState(bool state) {
 
 // Detects when the render signal can be considered to have low power and
 // consist of stationary noise.
-bool SuppressionGain::LowNoiseRenderDetector::Detect(
-    const std::vector<std::vector<std::vector<float>>>& render) {
+bool SuppressionGain::LowNoiseRenderDetector::Detect(const Block& render) {
   float x2_sum = 0.f;
   float x2_max = 0.f;
-  for (const auto& x_ch : render[0]) {
-    for (const auto& x_k : x_ch) {
+  for (int ch = 0; ch < render.NumChannels(); ++ch) {
+    for (float x_k : render.View(/*band=*/0, ch)) {
       const float x2 = x_k * x_k;
       x2_sum += x2;
       x2_max = std::max(x2_max, x2);
     }
   }
-  const size_t num_render_channels = render[0].size();
-  x2_sum = x2_sum / num_render_channels;
-  ;
+  x2_sum = x2_sum / render.NumChannels();
 
   constexpr float kThreshold = 50.f * 50.f * 64.f;
   const bool low_noise_render =

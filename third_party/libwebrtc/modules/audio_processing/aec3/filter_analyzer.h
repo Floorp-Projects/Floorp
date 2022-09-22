@@ -20,6 +20,7 @@
 #include "api/array_view.h"
 #include "api/audio/echo_canceller3_config.h"
 #include "modules/audio_processing/aec3/aec3_common.h"
+#include "modules/audio_processing/aec3/block.h"
 
 namespace webrtc {
 
@@ -93,7 +94,7 @@ class FilterAnalyzer {
     void Reset();
     bool Detect(rtc::ArrayView<const float> filter_to_analyze,
                 const FilterRegion& region,
-                rtc::ArrayView<const std::vector<float>> x_block,
+                const Block& x_block,
                 size_t peak_index,
                 int delay_blocks);
 

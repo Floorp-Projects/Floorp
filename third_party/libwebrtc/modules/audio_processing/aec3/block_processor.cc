@@ -49,14 +49,12 @@ class BlockProcessorImpl final : public BlockProcessor {
 
   ~BlockProcessorImpl() override;
 
-  void ProcessCapture(
-      bool echo_path_gain_change,
-      bool capture_signal_saturation,
-      std::vector<std::vector<std::vector<float>>>* linear_output,
-      std::vector<std::vector<std::vector<float>>>* capture_block) override;
+  void ProcessCapture(bool echo_path_gain_change,
+                      bool capture_signal_saturation,
+                      Block* linear_output,
+                      Block* capture_block) override;
 
-  void BufferRender(
-      const std::vector<std::vector<std::vector<float>>>& block) override;
+  void BufferRender(const Block& block) override;
 
   void UpdateEchoLeakageStatus(bool leakage_detected) override;
 
@@ -104,21 +102,20 @@ BlockProcessorImpl::BlockProcessorImpl(
 
 BlockProcessorImpl::~BlockProcessorImpl() = default;
 
-void BlockProcessorImpl::ProcessCapture(
-    bool echo_path_gain_change,
-    bool capture_signal_saturation,
-    std::vector<std::vector<std::vector<float>>>* linear_output,
-    std::vector<std::vector<std::vector<float>>>* capture_block) {
+void BlockProcessorImpl::ProcessCapture(bool echo_path_gain_change,
+                                        bool capture_signal_saturation,
+                                        Block* linear_output,
+                                        Block* capture_block) {
   RTC_DCHECK(capture_block);
-  RTC_DCHECK_EQ(NumBandsForRate(sample_rate_hz_), capture_block->size());
-  RTC_DCHECK_EQ(kBlockSize, (*capture_block)[0][0].size());
+  RTC_DCHECK_EQ(NumBandsForRate(sample_rate_hz_), capture_block->NumBands());
 
   capture_call_counter_++;
 
   data_dumper_->DumpRaw("aec3_processblock_call_order",
                         static_cast<int>(BlockProcessorApiCall::kCapture));
-  data_dumper_->DumpWav("aec3_processblock_capture_input", kBlockSize,
-                        &(*capture_block)[0][0][0], 16000, 1);
+  data_dumper_->DumpWav("aec3_processblock_capture_input",
+                        capture_block->View(/*band=*/0, /*channel=*/0), 16000,
+                        1);
 
   if (render_properly_started_) {
     if (!capture_properly_started_) {
@@ -159,8 +156,9 @@ void BlockProcessorImpl::ProcessCapture(
       delay_controller_->Reset(false);
   }
 
-  data_dumper_->DumpWav("aec3_processblock_capture_input2", kBlockSize,
-                        &(*capture_block)[0][0][0], 16000, 1);
+  data_dumper_->DumpWav("aec3_processblock_capture_input2",
+                        capture_block->View(/*band=*/0, /*channel=*/0), 16000,
+                        1);
 
   bool has_delay_estimator = !config_.delay.use_external_delay_estimator;
   if (has_delay_estimator) {
@@ -169,7 +167,7 @@ void BlockProcessorImpl::ProcessCapture(
     // alignment.
     estimated_delay_ = delay_controller_->GetDelay(
         render_buffer_->GetDownsampledRenderBuffer(), render_buffer_->Delay(),
-        (*capture_block)[0]);
+        *capture_block);
 
     if (estimated_delay_) {
       bool delay_change =
@@ -202,16 +200,14 @@ void BlockProcessorImpl::ProcessCapture(
   metrics_.UpdateCapture(false);
 }
 
-void BlockProcessorImpl::BufferRender(
-    const std::vector<std::vector<std::vector<float>>>& block) {
-  RTC_DCHECK_EQ(NumBandsForRate(sample_rate_hz_), block.size());
-  RTC_DCHECK_EQ(kBlockSize, block[0][0].size());
+void BlockProcessorImpl::BufferRender(const Block& block) {
+  RTC_DCHECK_EQ(NumBandsForRate(sample_rate_hz_), block.NumBands());
   data_dumper_->DumpRaw("aec3_processblock_call_order",
                         static_cast<int>(BlockProcessorApiCall::kRender));
-  data_dumper_->DumpWav("aec3_processblock_render_input", kBlockSize,
-                        &block[0][0][0], 16000, 1);
-  data_dumper_->DumpWav("aec3_processblock_render_input2", kBlockSize,
-                        &block[0][0][0], 16000, 1);
+  data_dumper_->DumpWav("aec3_processblock_render_input",
+                        block.View(/*band=*/0, /*channel=*/0), 16000, 1);
+  data_dumper_->DumpWav("aec3_processblock_render_input2",
+                        block.View(/*band=*/0, /*channel=*/0), 16000, 1);
 
   render_event_ = render_buffer_->Insert(block);
 

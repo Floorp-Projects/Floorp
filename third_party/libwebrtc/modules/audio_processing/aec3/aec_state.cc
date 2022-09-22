@@ -206,15 +206,16 @@ void AecState::Update(
                         strong_not_saturated_render_blocks_);
   }
 
-  const std::vector<std::vector<float>>& aligned_render_block =
-      render_buffer.Block(-delay_state_.MinDirectPathFilterDelay())[0];
+  const Block& aligned_render_block =
+      render_buffer.Block(-delay_state_.MinDirectPathFilterDelay());
 
   // Update render counters.
   bool active_render = false;
-  for (size_t ch = 0; ch < aligned_render_block.size(); ++ch) {
-    const float render_energy = std::inner_product(
-        aligned_render_block[ch].begin(), aligned_render_block[ch].end(),
-        aligned_render_block[ch].begin(), 0.f);
+  for (int ch = 0; ch < aligned_render_block.NumChannels(); ++ch) {
+    const float render_energy =
+        std::inner_product(aligned_render_block.begin(/*block=*/0, ch),
+                           aligned_render_block.end(/*block=*/0, ch),
+                           aligned_render_block.begin(/*block=*/0, ch), 0.f);
     if (render_energy > (config_.render_levels.active_render_limit *
                          config_.render_levels.active_render_limit) *
                             kFftLengthBy2) {
@@ -446,7 +447,7 @@ void AecState::FilteringQualityAnalyzer::Update(
 }
 
 void AecState::SaturationDetector::Update(
-    rtc::ArrayView<const std::vector<float>> x,
+    const Block& x,
     bool saturated_capture,
     bool usable_linear_estimate,
     rtc::ArrayView<const SubtractorOutput> subtractor_output,
@@ -466,8 +467,9 @@ void AecState::SaturationDetector::Update(
     }
   } else {
     float max_sample = 0.f;
-    for (auto& channel : x) {
-      for (float sample : channel) {
+    for (int ch = 0; ch < x.NumChannels(); ++ch) {
+      rtc::ArrayView<const float, kBlockSize> x_ch = x.View(/*band=*/0, ch);
+      for (float sample : x_ch) {
         max_sample = std::max(max_sample, fabsf(sample));
       }
     }

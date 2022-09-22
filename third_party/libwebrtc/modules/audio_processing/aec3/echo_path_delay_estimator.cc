@@ -59,9 +59,7 @@ void EchoPathDelayEstimator::Reset(bool reset_delay_confidence) {
 
 absl::optional<DelayEstimate> EchoPathDelayEstimator::EstimateDelay(
     const DownsampledRenderBuffer& render_buffer,
-    const std::vector<std::vector<float>>& capture) {
-  RTC_DCHECK_EQ(kBlockSize, capture[0].size());
-
+    const Block& capture) {
   std::array<float, kBlockSize> downsampled_capture_data;
   rtc::ArrayView<float> downsampled_capture(downsampled_capture_data.data(),
                                             sub_block_size_);
