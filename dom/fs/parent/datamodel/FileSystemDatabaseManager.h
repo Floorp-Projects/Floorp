@@ -74,9 +74,9 @@ class FileSystemDatabaseManager {
   /**
    * @brief Returns the properties of a file corresponding to a file handle
    */
-  virtual nsresult GetFile(const FileSystemEntryPair& aEndpoints,
-                           nsString& aType, TimeStamp& lastModifiedMilliSeconds,
-                           Path& aPath, nsCOMPtr<nsIFile>& aFile) const = 0;
+  virtual nsresult GetFile(const EntryId& aEntryId, nsString& aType,
+                           TimeStamp& lastModifiedMilliSeconds, Path& aPath,
+                           nsCOMPtr<nsIFile>& aFile) const = 0;
 
   virtual Result<FileSystemDirectoryListing, QMResult> GetDirectoryEntries(
       const EntryId& aParent, PageNumber aPage) const = 0;
