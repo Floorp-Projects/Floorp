@@ -14,7 +14,7 @@
 
 #include "absl/types/optional.h"
 #include "api/units/time_delta.h"
-#include "modules/video_coding/timing.h"
+#include "modules/video_coding/timing/timing.h"
 #include "rtc_base/containers/flat_map.h"
 #include "test/gmock.h"
 #include "test/gtest.h"

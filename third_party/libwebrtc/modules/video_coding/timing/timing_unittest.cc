@@ -8,7 +8,7 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "modules/video_coding/timing.h"
+#include "modules/video_coding/timing/timing.h"
 
 #include "api/units/frequency.h"
 #include "api/units/time_delta.h"

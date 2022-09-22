@@ -28,7 +28,7 @@
 #include "modules/video_coding/media_opt_util.h"
 #include "modules/video_coding/packet.h"
 #include "modules/video_coding/receiver.h"
-#include "modules/video_coding/timing.h"
+#include "modules/video_coding/timing/timing.h"
 #include "modules/video_coding/video_coding_impl.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/location.h"

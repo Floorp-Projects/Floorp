@@ -20,7 +20,7 @@
 #include "modules/video_coding/jitter_buffer_common.h"
 #include "modules/video_coding/packet.h"
 #include "modules/video_coding/test/stream_generator.h"
-#include "modules/video_coding/timing.h"
+#include "modules/video_coding/timing/timing.h"
 #include "rtc_base/checks.h"
 #include "system_wrappers/include/clock.h"
 #include "test/gtest.h"

@@ -21,7 +21,7 @@
 #include "api/transport/field_trial_based_config.h"
 #include "api/video/video_stream_decoder.h"
 #include "modules/video_coding/frame_buffer2.h"
-#include "modules/video_coding/timing.h"
+#include "modules/video_coding/timing/timing.h"
 #include "rtc_base/memory/always_valid_pointer.h"
 #include "rtc_base/platform_thread.h"
 #include "rtc_base/synchronization/mutex.h"
