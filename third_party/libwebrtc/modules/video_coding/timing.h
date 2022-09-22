@@ -47,6 +47,7 @@ class VCMTiming {
   void SetJitterDelay(TimeDelta required_delay);
 
   // Set/get the minimum playout delay from capture to render.
+  TimeDelta min_playout_delay() const;
   void set_min_playout_delay(TimeDelta min_playout_delay);
 
   // Set/get the maximum playout delay from capture to render in ms.

@@ -14,6 +14,7 @@
 
 #include "api/units/time_delta.h"
 #include "rtc_base/experiments/field_trial_parser.h"
+#include "rtc_base/logging.h"
 #include "rtc_base/time/timestamp_extrapolator.h"
 #include "system_wrappers/include/clock.h"
 
@@ -61,6 +62,11 @@ void VCMTiming::set_render_delay(TimeDelta render_delay) {
   render_delay_ = render_delay;
 }
 
+TimeDelta VCMTiming::min_playout_delay() const {
+  MutexLock lock(&mutex_);
+  return min_playout_delay_;
+}
+
 void VCMTiming::set_min_playout_delay(TimeDelta min_playout_delay) {
   MutexLock lock(&mutex_);
   min_playout_delay_ = min_playout_delay;
@@ -68,7 +74,18 @@ void VCMTiming::set_min_playout_delay(TimeDelta min_playout_delay) {
 
 void VCMTiming::set_max_playout_delay(TimeDelta max_playout_delay) {
   MutexLock lock(&mutex_);
-  max_playout_delay_ = max_playout_delay;
+  if (max_playout_delay_ != max_playout_delay) {
+    if (min_playout_delay_ > max_playout_delay) {
+      RTC_LOG(LS_ERROR)
+          << "Playout delays set incorrectly: min playout delay ("
+          << min_playout_delay_ << ") > max playout delay ("
+          << max_playout_delay
+          << "). This is undefined behaviour. Application writers should "
+             "ensure that the min delay is always less than or equals max "
+             "delay.";
+    }
+    max_playout_delay_ = max_playout_delay;
+  }
 }
 
 void VCMTiming::SetJitterDelay(TimeDelta jitter_delay) {
