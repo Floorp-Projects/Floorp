@@ -7,11 +7,9 @@ import tarfile
 import tempfile
 import zipfile
 
+import mozfile
 import mozunit
 import pytest
-
-import mozfile
-
 import stubs
 
 
@@ -127,6 +125,29 @@ def test_extract_ignore(tmpdir, bundlepath):
     mozfile.extract(bundlepath, dest, ignore=ignore)
 
     assert sorted(os.listdir(dest)) == ["bar.txt", "foo.txt"]
+
+
+def test_tarball_escape(tmpdir):
+    """Ensures that extracting a tarball can't write outside of the intended
+    destination directory.
+    """
+    workdir = tmpdir.mkdir("workdir")
+    os.chdir(workdir)
+
+    # Generate a "malicious" bundle.
+    with open("bad.txt", "w") as fh:
+        fh.write("pwned!")
+
+    def change_name(tarinfo):
+        tarinfo.name = "../" + tarinfo.name
+        return tarinfo
+
+    with tarfile.open("evil.tar", "w:xz") as tar:
+        tar.add("bad.txt", filter=change_name)
+
+    with pytest.raises(RuntimeError):
+        mozfile.extract_tarball("evil.tar", workdir)
+    assert not os.path.exists(tmpdir.join("bad.txt"))
 
 
 if __name__ == "__main__":
