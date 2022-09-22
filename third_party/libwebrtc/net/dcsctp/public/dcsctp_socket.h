@@ -430,6 +430,15 @@ class DcSctpSocketInterface {
   // Update the options max_message_size.
   virtual void SetMaxMessageSize(size_t max_message_size) = 0;
 
+  // Sets the priority of an outgoing stream. The initial value, when not set,
+  // is `DcSctpOptions::default_stream_priority`.
+  virtual void SetStreamPriority(StreamID stream_id,
+                                 StreamPriority priority) = 0;
+
+  // Returns the currently set priority for an outgoing stream. The initial
+  // value, when not set, is `DcSctpOptions::default_stream_priority`.
+  virtual StreamPriority GetStreamPriority(StreamID stream_id) const = 0;
+
   // Sends the message `message` using the provided send options.
   // Sending a message is an asynchrous operation, and the `OnError` callback
   // may be invoked to indicate any errors in sending the message.

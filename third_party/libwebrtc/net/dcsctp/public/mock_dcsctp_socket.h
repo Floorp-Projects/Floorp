@@ -41,6 +41,16 @@ class MockDcSctpSocket : public DcSctpSocketInterface {
 
   MOCK_METHOD(void, SetMaxMessageSize, (size_t max_message_size), (override));
 
+  MOCK_METHOD(void,
+              SetStreamPriority,
+              (StreamID stream_id, StreamPriority priority),
+              (override));
+
+  MOCK_METHOD(StreamPriority,
+              GetStreamPriority,
+              (StreamID stream_id),
+              (const, override));
+
   MOCK_METHOD(SendStatus,
               Send,
               (DcSctpMessage message, const SendOptions& send_options),

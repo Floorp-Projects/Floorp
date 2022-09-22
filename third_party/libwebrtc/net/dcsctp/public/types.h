@@ -31,6 +31,10 @@ using TimeoutID = webrtc::StrongAlias<class TimeoutTag, uint64_t>;
 // other messages on the same stream.
 using IsUnordered = webrtc::StrongAlias<class IsUnorderedTag, bool>;
 
+// Stream priority, where higher values indicate higher priority. The meaning of
+// this value and how it's used depends on the stream scheduler.
+using StreamPriority = webrtc::StrongAlias<class StreamPriorityTag, uint16_t>;
+
 // Duration, as milliseconds. Overflows after 24 days.
 class DurationMs : public webrtc::StrongAlias<class DurationMsTag, int32_t> {
  public:
