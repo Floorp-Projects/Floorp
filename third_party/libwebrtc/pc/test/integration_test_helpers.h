@@ -1715,6 +1715,20 @@ class PeerConnectionIntegrationBaseTest : public ::testing::Test {
 
   PeerConnectionIntegrationWrapper* caller() { return caller_.get(); }
 
+  // Destroy peerconnections.
+  // This can be used to ensure that all pointers to on-stack mocks
+  // get dropped before exit.
+  void DestroyPeerConnections() {
+    if (caller_) {
+      caller_->pc()->Close();
+    }
+    if (callee_) {
+      callee_->pc()->Close();
+    }
+    caller_.reset();
+    callee_.reset();
+  }
+
   // Set the `caller_` to the `wrapper` passed in and return the
   // original `caller_`.
   PeerConnectionIntegrationWrapper* SetCallerPcWrapperAndReturnCurrent(
