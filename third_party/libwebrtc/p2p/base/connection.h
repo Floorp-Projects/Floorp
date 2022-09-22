@@ -243,9 +243,6 @@ class Connection : public CandidatePairInterface {
   // Prints pings_since_last_response_ into a string.
   void PrintPingsSinceLastResponse(std::string* pings, size_t max);
 
-  bool reported() const;
-  void set_reported(bool reported);
-
   // `set_selected` is only used for logging in ToString above.  The flag is
   // set true by P2PTransportChannel for its selected candidate pair.
   // TODO(tommi): Remove `selected()` once not referenced downstream.
@@ -436,7 +433,6 @@ class Connection : public CandidatePairInterface {
   absl::optional<int> unwritable_min_checks_ RTC_GUARDED_BY(network_thread_);
   absl::optional<int> inactive_timeout_ RTC_GUARDED_BY(network_thread_);
 
-  bool reported_ RTC_GUARDED_BY(network_thread_);
   IceCandidatePairState state_ RTC_GUARDED_BY(network_thread_);
   // Time duration to switch from receiving to not receiving.
   absl::optional<int> receiving_timeout_ RTC_GUARDED_BY(network_thread_);
