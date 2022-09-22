@@ -25,4 +25,11 @@ class WallpaperTest {
 
         assertFalse(result)
     }
+
+    @Test
+    fun `GIVEN the legacy wallpaper default name none WHEN checking whether the current wallpaper should be default THEN return true`() {
+        val result = Wallpaper.nameIsDefault("NONE")
+
+        assertTrue(result)
+    }
 }
