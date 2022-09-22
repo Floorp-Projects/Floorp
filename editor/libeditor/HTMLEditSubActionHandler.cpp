@@ -4069,7 +4069,7 @@ HTMLEditor::FormatBlockContainerWithTransaction(
     if (MOZ_UNLIKELY(removeBlockContainerElementsResult.isErr())) {
       NS_WARNING(
           "HTMLEditor::RemoveBlockContainerElementsWithTransaction() failed");
-      removeBlockContainerElementsResult.unwrapErr();
+      return removeBlockContainerElementsResult.propagateErr();
     }
     return RefPtr<Element>();
   }
