@@ -165,35 +165,23 @@ BasicPortAllocator::BasicPortAllocator(
   Init(relay_port_factory, nullptr);
   RTC_DCHECK(relay_port_factory_ != nullptr);
   RTC_DCHECK(network_manager_ != nullptr);
-  RTC_CHECK(socket_factory_ != nullptr);
+  RTC_DCHECK(socket_factory_ != nullptr);
   SetConfiguration(ServerAddresses(), std::vector<RelayServerConfig>(), 0,
                    webrtc::NO_PRUNE, customizer);
 }
 
-BasicPortAllocator::BasicPortAllocator(
-    rtc::NetworkManager* network_manager,
-    std::unique_ptr<rtc::PacketSocketFactory> owned_socket_factory)
-    : network_manager_(network_manager),
-      socket_factory_(std::move(owned_socket_factory)) {
+BasicPortAllocator::BasicPortAllocator(rtc::NetworkManager* network_manager)
+    : network_manager_(network_manager), socket_factory_(nullptr) {
   Init(nullptr, nullptr);
   RTC_DCHECK(relay_port_factory_ != nullptr);
   RTC_DCHECK(network_manager_ != nullptr);
-  RTC_CHECK(socket_factory_ != nullptr);
 }
 
-BasicPortAllocator::BasicPortAllocator(
-    rtc::NetworkManager* network_manager,
-    std::unique_ptr<rtc::PacketSocketFactory> owned_socket_factory,
-    const ServerAddresses& stun_servers)
-    : network_manager_(network_manager),
-      socket_factory_(std::move(owned_socket_factory)) {
-  Init(nullptr, nullptr);
-  RTC_DCHECK(relay_port_factory_ != nullptr);
-  RTC_DCHECK(network_manager_ != nullptr);
-  RTC_CHECK(socket_factory_ != nullptr);
-  SetConfiguration(stun_servers, std::vector<RelayServerConfig>(), 0,
-                   webrtc::NO_PRUNE, nullptr);
-}
+BasicPortAllocator::BasicPortAllocator(rtc::NetworkManager* network_manager,
+                                       const ServerAddresses& stun_servers)
+    : BasicPortAllocator(network_manager,
+                         /*socket_factory=*/nullptr,
+                         stun_servers) {}
 
 BasicPortAllocator::BasicPortAllocator(rtc::NetworkManager* network_manager,
                                        rtc::PacketSocketFactory* socket_factory,
@@ -202,7 +190,6 @@ BasicPortAllocator::BasicPortAllocator(rtc::NetworkManager* network_manager,
   Init(nullptr, nullptr);
   RTC_DCHECK(relay_port_factory_ != nullptr);
   RTC_DCHECK(network_manager_ != nullptr);
-  RTC_CHECK(socket_factory_ != nullptr);
   SetConfiguration(stun_servers, std::vector<RelayServerConfig>(), 0,
                    webrtc::NO_PRUNE, nullptr);
 }
@@ -407,6 +394,11 @@ void BasicPortAllocatorSession::SetCandidateFilter(uint32_t filter) {
 void BasicPortAllocatorSession::StartGettingPorts() {
   RTC_DCHECK_RUN_ON(network_thread_);
   state_ = SessionState::GATHERING;
+  if (!socket_factory_) {
+    owned_socket_factory_.reset(
+        new rtc::BasicPacketSocketFactory(network_thread_->socketserver()));
+    socket_factory_ = owned_socket_factory_.get();
+  }
 
   network_thread_->PostTask(webrtc::ToQueuedTask(
       network_safety_, [this] { GetPortConfigurations(); }));
