@@ -22,6 +22,7 @@ treeherder:
         browser-toolbar: browser-toolbar
         compose-awesomebar: compose-engine
         compose-browser-toolbar: awesomebar-browser-toolbar
+        compose-cfr: compose-cfr
         compose-engine: compose-engine
         compose-tabstray: compose-tabstray
         concept-awesomebar: concept-awesomebar

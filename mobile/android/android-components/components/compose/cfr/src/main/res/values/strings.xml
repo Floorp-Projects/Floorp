@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<resources>
+    <!-- Content description (not visible, for screen readers etc.): Description for the close button of a Contextual Feature Recommendation Popup. -->
+    <string name="mozac_cfr_dismiss_button_content_description">Dismiss</string>
+</resources>

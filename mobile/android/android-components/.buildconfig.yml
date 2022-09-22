@@ -8,6 +8,10 @@ projects:
     path: components/compose/browser-toolbar
     description: 'A customizable toolbar for browsers using Jetpack Compose.'
     publish: true
+  compose-cfr:
+    path: components/compose/cfr
+    description: 'A standard Contextual Feature Recommendation popup using Jetpack Compose.'
+    publish: true
   compose-engine:
     path: components/compose/engine
     description: 'A component for integrating a concept-engine implementation into Jetpack Compose UI.'
