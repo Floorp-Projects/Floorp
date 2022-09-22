@@ -304,13 +304,12 @@ void AcmReceiver::GetNetworkStatistics(
       neteq_lifetime_stat.removed_samples_for_acceleration;
   acm_stat->fecPacketsReceived = neteq_lifetime_stat.fec_packets_received;
   acm_stat->fecPacketsDiscarded = neteq_lifetime_stat.fec_packets_discarded;
+  acm_stat->packetsDiscarded = neteq_lifetime_stat.packets_discarded;
 
   NetEqOperationsAndState neteq_operations_and_state =
       neteq_->GetOperationsAndState();
   acm_stat->packetBufferFlushes =
       neteq_operations_and_state.packet_buffer_flushes;
-  acm_stat->packetsDiscarded =
-      neteq_operations_and_state.discarded_primary_packets;
 }
 
 int AcmReceiver::LastAudioSampleRate() const {

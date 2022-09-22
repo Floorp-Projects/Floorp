@@ -651,8 +651,8 @@ TEST_F(NetEqImplTest, ReorderedPacket) {
   // out-of-order packet should have been discarded.
   EXPECT_TRUE(packet_buffer_->Empty());
 
-  // NetEq `discarded_primary_packets` should capture this packet discard.
-  EXPECT_EQ(1u, neteq_->GetOperationsAndState().discarded_primary_packets);
+  // NetEq `packets_discarded` should capture this packet discard.
+  EXPECT_EQ(1u, neteq_->GetLifetimeStatistics().packets_discarded);
 
   // Verify `output.packet_infos_`. Expect to only see the second packet.
   ASSERT_THAT(output.packet_infos_, SizeIs(1));
