@@ -98,18 +98,19 @@ void TestInterfaceAsyncIterableSingle::ResolvePromise(
     IterableIteratorBase* aIterator, IteratorData* aData) {
   AutoJSAPI jsapi;
   if (NS_WARN_IF(!jsapi.Init(mParent))) {
+    aData->mPromise->MaybeRejectWithInvalidStateError(
+        "Couldn't get the global.");
     return;
   }
   JSContext* cx = jsapi.cx();
-  ErrorResult rv;
+
   if (aData->mIndex >= 10) {
-    iterator_utils::ResolvePromiseForFinished(cx, aData->mPromise, rv);
+    iterator_utils::ResolvePromiseForFinished(cx, aData->mPromise);
   } else {
     JS::Rooted<JS::Value> value(cx);
     Unused << ToJSValue(
         cx, (int32_t)(aData->mIndex * 9 % 7 * aData->mMultiplier), &value);
-    iterator_utils::ResolvePromiseWithKeyOrValue(cx, aData->mPromise, value,
-                                                 rv);
+    iterator_utils::ResolvePromiseWithKeyOrValue(cx, aData->mPromise, value);
 
     aData->mIndex++;
   }

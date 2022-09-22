@@ -47,17 +47,14 @@ void KeyAndValueReturn(JSContext* aCx, JS::Handle<JS::Value> aKey,
                        JS::Handle<JS::Value> aValue,
                        JS::MutableHandle<JSObject*> aResult, ErrorResult& aRv);
 
-void ResolvePromiseForFinished(JSContext* aCx, Promise* aPromise,
-                               ErrorResult& aRv);
+void ResolvePromiseForFinished(JSContext* aCx, Promise* aPromise);
 
 void ResolvePromiseWithKeyOrValue(JSContext* aCx, Promise* aPromise,
-                                  JS::Handle<JS::Value> aKeyOrValue,
-                                  ErrorResult& aRv);
+                                  JS::Handle<JS::Value> aKeyOrValue);
 
 void ResolvePromiseWithKeyAndValue(JSContext* aCx, Promise* aPromise,
                                    JS::Handle<JS::Value> aKey,
-                                   JS::Handle<JS::Value> aValue,
-                                   ErrorResult& aRv);
+                                   JS::Handle<JS::Value> aValue);
 }  // namespace iterator_utils
 
 class IterableIteratorBase : public nsISupports {
