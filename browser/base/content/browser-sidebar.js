@@ -662,6 +662,10 @@ var SidebarUI = {
   },
 };
 
+/* Work around the pref callback being run after the document has been unlinked.
+   See bug 1543537. */
+var docWeak = Cu.getWeakReference(document);
+
 // Add getters related to the position here, since we will want them
 // available for both startDelayedLoad and init.
 XPCOMUtils.defineLazyPreferenceGetter(
@@ -669,5 +673,11 @@ XPCOMUtils.defineLazyPreferenceGetter(
   "_positionStart",
   SidebarUI.POSITION_START_PREF,
   true,
-  SidebarUI.setPosition.bind(SidebarUI)
+  () => {
+    let doc = docWeak.get();
+    if (!doc) {
+      return;
+    }
+    SidebarUI.setPosition();
+  }
 );
