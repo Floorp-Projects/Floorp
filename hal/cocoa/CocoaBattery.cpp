@@ -195,13 +195,11 @@ void MacPowerInformationService::BeginListening() {
 }
 
 void MacPowerInformationService::StopListening() {
-  MOZ_ASSERT(mRunLoopSource,
-             "IOPS Notification Loop Source not set up. "
-             "(StopListening without BeginListening)");
-
-  ::CFRunLoopRemoveSource(::CFRunLoopGetCurrent(), mRunLoopSource,
-                          kCFRunLoopDefaultMode);
-  mRunLoopSource = nullptr;
+  if (mRunLoopSource) {
+    ::CFRunLoopRemoveSource(::CFRunLoopGetCurrent(), mRunLoopSource,
+                            kCFRunLoopDefaultMode);
+    mRunLoopSource = nullptr;
+  }
 }
 
 void MacPowerInformationService::HandleChange(void* aContext) {
