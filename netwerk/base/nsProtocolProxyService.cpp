@@ -2375,7 +2375,8 @@ void nsProtocolProxyService::PruneProxyInfo(const nsProtocolInfo& info,
     }
   }
 
-  if (allNonDirectProxiesDisabled) {
+  if (allNonDirectProxiesDisabled &&
+      StaticPrefs::network_proxy_retry_failed_proxies()) {
     LOG(("All proxies are disabled, so trying all again"));
   } else {
     // remove any disabled proxies.
