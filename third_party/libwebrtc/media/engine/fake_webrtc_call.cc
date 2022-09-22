@@ -110,10 +110,7 @@ void FakeAudioReceiveStream::SetDecoderMap(
   config_.decoder_map = std::move(decoder_map);
 }
 
-void FakeAudioReceiveStream::SetUseTransportCcAndNackHistory(
-    bool use_transport_cc,
-    int history_ms) {
-  config_.rtp.transport_cc = use_transport_cc;
+void FakeAudioReceiveStream::SetNackHistory(int history_ms) {
   config_.rtp.nack.rtp_history_ms = history_ms;
 }
 

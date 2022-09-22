@@ -217,6 +217,11 @@ bool AudioReceiveStreamImpl::transport_cc() const {
   return config_.rtp.transport_cc;
 }
 
+void AudioReceiveStreamImpl::SetTransportCc(bool transport_cc) {
+  RTC_DCHECK_RUN_ON(&worker_thread_checker_);
+  config_.rtp.transport_cc = transport_cc;
+}
+
 bool AudioReceiveStreamImpl::IsRunning() const {
   RTC_DCHECK_RUN_ON(&worker_thread_checker_);
   return playing_;
@@ -236,18 +241,17 @@ void AudioReceiveStreamImpl::SetDecoderMap(
   channel_receive_->SetReceiveCodecs(config_.decoder_map);
 }
 
-void AudioReceiveStreamImpl::SetUseTransportCcAndNackHistory(
-    bool use_transport_cc,
-    int history_ms) {
+void AudioReceiveStreamImpl::SetNackHistory(int history_ms) {
   RTC_DCHECK_RUN_ON(&worker_thread_checker_);
   RTC_DCHECK_GE(history_ms, 0);
-  config_.rtp.transport_cc = use_transport_cc;
-  if (config_.rtp.nack.rtp_history_ms != history_ms) {
-    config_.rtp.nack.rtp_history_ms = history_ms;
-    // TODO(solenberg): Config NACK history window (which is a packet count),
-    // using the actual packet size for the configured codec.
-    channel_receive_->SetNACKStatus(history_ms != 0, history_ms / 20);
-  }
+
+  if (config_.rtp.nack.rtp_history_ms == history_ms)
+    return;
+
+  config_.rtp.nack.rtp_history_ms = history_ms;
+  // TODO(solenberg): Config NACK history window (which is a packet count),
+  // using the actual packet size for the configured codec.
+  channel_receive_->SetNACKStatus(history_ms != 0, history_ms / 20);
 }
 
 void AudioReceiveStreamImpl::SetNonSenderRttMeasurement(bool enabled) {
