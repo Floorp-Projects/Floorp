@@ -263,10 +263,6 @@ class VideoReceiveStreamInterface : public MediaReceiveStreamInterface {
     // to one of the audio streams.
     std::string sync_group;
 
-    // Target delay in milliseconds. A positive value indicates this stream is
-    // used for streaming instead of a real-time call.
-    int target_delay_ms = 0;
-
     // An optional custom frame decryptor that allows the entire frame to be
     // decrypted in whatever way the caller choses. This is not required by
     // default.
