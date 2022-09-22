@@ -288,9 +288,9 @@ class AsyncIterableIterator : public AsyncIterableIteratorBase {
 namespace binding_detail {
 
 template <typename T>
-using IterableIteratorWrapFunc = bool (*)(
-    JSContext* aCx, IterableIterator<T>* aObject,
-    JS::Handle<JSObject*> aGivenProto, JS::MutableHandle<JSObject*> aReflector);
+using IterableIteratorWrapFunc =
+    bool (*)(JSContext* aCx, IterableIterator<T>* aObject,
+             JS::MutableHandle<JSObject*> aReflector);
 
 template <typename T, IterableIteratorWrapFunc<T> WrapFunc>
 class WrappableIterableIterator final : public IterableIterator<T> {
@@ -299,7 +299,8 @@ class WrappableIterableIterator final : public IterableIterator<T> {
 
   bool WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto,
                   JS::MutableHandle<JSObject*> aObj) {
-    return (*WrapFunc)(aCx, this, aGivenProto, aObj);
+    MOZ_ASSERT(!aGivenProto);
+    return (*WrapFunc)(aCx, this, aObj);
   }
 };
 
@@ -336,9 +337,9 @@ class AsyncIterableIteratorNoReturn : public AsyncIterableIterator<T>,
 };
 
 template <typename T>
-using AsyncIterableIteratorWrapFunc = bool (*)(
-    JSContext* aCx, AsyncIterableIteratorNoReturn<T>* aObject,
-    JS::Handle<JSObject*> aGivenProto, JS::MutableHandle<JSObject*> aReflector);
+using AsyncIterableIteratorWrapFunc =
+    bool (*)(JSContext* aCx, AsyncIterableIteratorNoReturn<T>* aObject,
+             JS::MutableHandle<JSObject*> aReflector);
 
 template <typename T, AsyncIterableIteratorWrapFunc<T> WrapFunc>
 class WrappableAsyncIterableIterator final
@@ -348,7 +349,8 @@ class WrappableAsyncIterableIterator final
 
   bool WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto,
                   JS::MutableHandle<JSObject*> aObj) {
-    return (*WrapFunc)(aCx, this, aGivenProto, aObj);
+    MOZ_ASSERT(!aGivenProto);
+    return (*WrapFunc)(aCx, this, aObj);
   }
 };
 
