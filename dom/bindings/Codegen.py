@@ -22231,43 +22231,41 @@ class CGIterableMethodGenerator(CGGeneric):
             assert descriptor.interface.maplikeOrSetlikeOrIterable.isPairIterator()
             assert len(args) == 0
 
-            binding = descriptor.interface.identifier.name + "Iterator_Binding"
-            iterClass = f"mozilla::dom::binding_detail::WrappableIterableIterator<{descriptor.nativeType}>"
-            init = ""
+            wrap = f"{descriptor.interface.identifier.name}Iterator_Binding::Wrap"
+            iterClass = f"mozilla::dom::binding_detail::WrappableIterableIterator<{descriptor.nativeType}, &{wrap}>"
         else:
-            assert descriptor.interface.isAsyncIterable()
+            wrap = f"{descriptor.interface.identifier.name}AsyncIterator_Binding::Wrap"
+            iterClass = f"mozilla::dom::binding_detail::WrappableAsyncIterableIterator<{descriptor.nativeType}, &{wrap}>"
 
-            binding = descriptor.interface.identifier.name + "AsyncIterator_Binding"
-            iterClass = f"mozilla::dom::binding_detail::WrappableAsyncIterableIterator<{descriptor.nativeType}>"
-            init = fill(
+        createIterator = fill(
+            """
+            typedef ${iterClass} itrType;
+            RefPtr<itrType> result(new itrType(self,
+                                               itrType::IteratorType::${itrMethod}));
+            """,
+            iterClass=iterClass,
+            itrMethod=methodName.title(),
+        )
+
+        if descriptor.interface.isAsyncIterable():
+            args.append("initError")
+            createIterator = fill(
                 """
+                $*{createIterator}
                 {
                   ErrorResult initError;
-                  self->InitAsyncIterator(result.get(), ${args}initError);
+                  self->InitAsyncIterator(result, ${args});
                   if (initError.MaybeSetPendingException(cx, "Asynchronous iterator initialization steps for ${ifaceName} failed")) {
                     return false;
                   }
                 }
                 """,
-                args="".join(a + ", " for a in args),
+                createIterator=createIterator,
+                args=", ".join(args),
                 ifaceName=descriptor.interface.identifier.name,
             )
-        CGGeneric.__init__(
-            self,
-            fill(
-                """
-                typedef ${iterClass} itrType;
-                RefPtr<itrType> result(new itrType(self,
-                                                   itrType::IteratorType::${itrMethod},
-                                                   &${binding}::Wrap));
-                $*{init}
-                """,
-                iterClass=iterClass,
-                itrMethod=methodName.title(),
-                binding=binding,
-                init=init,
-            ),
-        )
+
+        CGGeneric.__init__(self, createIterator)
 
 
 def getObservableArrayBackingObject(descriptor, attr, errorReturn="return false;\n"):
