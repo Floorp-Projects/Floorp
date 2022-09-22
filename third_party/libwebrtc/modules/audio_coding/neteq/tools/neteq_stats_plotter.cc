@@ -100,6 +100,8 @@ void NetEqStatsPlotter::SimulationEnded(int64_t simulation_time_ms) {
            lifetime_stats.inserted_samples_for_deceleration);
     printf("  generated_noise_samples: %" PRIu64 "\n",
            lifetime_stats.generated_noise_samples);
+    printf("  packets_discarded: %" PRIu64 "\n",
+           lifetime_stats.packets_discarded);
   }
 }
 

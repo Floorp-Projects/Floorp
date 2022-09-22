@@ -235,7 +235,7 @@ void StatisticsCalculator::GeneratedNoiseSamples(size_t num_samples) {
 }
 
 void StatisticsCalculator::PacketsDiscarded(size_t num_packets) {
-  operations_and_state_.discarded_primary_packets += num_packets;
+  lifetime_stats_.packets_discarded += num_packets;
 }
 
 void StatisticsCalculator::SecondaryPacketsDiscarded(size_t num_packets) {
