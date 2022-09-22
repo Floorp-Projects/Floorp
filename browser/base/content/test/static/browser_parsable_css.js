@@ -319,7 +319,7 @@ function processCSSRules(container) {
       continue;
     }
     if (!rule.style) {
-      continue; // @layer (statement), @scroll-timeline, @font-feature-values, @counter-style
+      continue; // @layer (statement), @font-feature-values, @counter-style
     }
     // Extract urls from the css text.
     // Note: CSSRule.style.cssText always has double quotes around URLs even

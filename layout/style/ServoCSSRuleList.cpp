@@ -20,7 +20,6 @@
 #include "mozilla/dom/CSSMozDocumentRule.h"
 #include "mozilla/dom/CSSNamespaceRule.h"
 #include "mozilla/dom/CSSPageRule.h"
-#include "mozilla/dom/CSSScrollTimelineRule.h"
 #include "mozilla/dom/CSSStyleRule.h"
 #include "mozilla/dom/CSSSupportsRule.h"
 #include "mozilla/IntegerRange.h"
@@ -91,7 +90,6 @@ css::Rule* ServoCSSRuleList::GetRule(uint32_t aIndex) {
       CASE_RULE(CounterStyle, CounterStyle)
       CASE_RULE(LayerBlock, LayerBlock)
       CASE_RULE(LayerStatement, LayerStatement)
-      CASE_RULE(ScrollTimeline, ScrollTimeline)
       CASE_RULE(Container, Container)
 #undef CASE_RULE
       case StyleCssRuleType::Viewport:
@@ -260,7 +258,6 @@ void ServoCSSRuleList::SetRawContents(RefPtr<ServoCssRules> aNewRules,
       CASE_FOR(CounterStyle, CounterStyle)
       CASE_FOR(LayerBlock, LayerBlock)
       CASE_FOR(LayerStatement, LayerStatement)
-      CASE_FOR(ScrollTimeline, ScrollTimeline)
       CASE_FOR(Container, Container)
       case StyleCssRuleType::Keyframe:
         MOZ_ASSERT_UNREACHABLE("keyframe rule cannot be here");

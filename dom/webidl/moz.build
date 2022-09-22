@@ -494,7 +494,6 @@ WEBIDL_FILES = [
     "CSSPseudoElement.webidl",
     "CSSRule.webidl",
     "CSSRuleList.webidl",
-    "CSSScrollTimelineRule.webidl",
     "CSSStyleDeclaration.webidl",
     "CSSStyleRule.webidl",
     "CSSStyleSheet.webidl",
