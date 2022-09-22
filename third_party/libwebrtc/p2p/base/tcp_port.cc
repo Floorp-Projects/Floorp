@@ -506,7 +506,7 @@ void TCPConnection::OnClose(rtc::AsyncPacketSocket* socket, int error) {
     // We don't attempt reconnect right here. This is to avoid a case where the
     // shutdown is intentional and reconnect is not necessary. We only reconnect
     // when the connection is used to Send() or Ping().
-    port()->thread()->PostDelayedTask(
+    network_thread()->PostDelayedTask(
         webrtc::ToQueuedTask(network_safety_,
                              [this]() {
                                if (pretending_to_be_writable_) {
@@ -585,7 +585,7 @@ void TCPConnection::CreateOutgoingTcpSocket() {
     // the StunRequests from the request_map_. And if this is in the stack
     // of Connection::Ping(), we are still using the request.
     // Unwind the stack and defer the FailAndPrune.
-    port()->thread()->PostTask(
+    network_thread()->PostTask(
         webrtc::ToQueuedTask(network_safety_, [this]() { FailAndPrune(); }));
   }
 }
@@ -596,8 +596,11 @@ void TCPConnection::ConnectSocketSignals(rtc::AsyncPacketSocket* socket) {
   }
   socket->SignalReadPacket.connect(this, &TCPConnection::OnReadPacket);
   socket->SignalReadyToSend.connect(this, &TCPConnection::OnReadyToSend);
-  socket->SubscribeClose(
-      this, [this](rtc::AsyncPacketSocket* s, int err) { OnClose(s, err); });
+  socket->SubscribeClose(this, [this, safety = network_safety_.flag()](
+                                   rtc::AsyncPacketSocket* s, int err) {
+    if (safety->alive())
+      OnClose(s, err);
+  });
 }
 
 }  // namespace cricket
