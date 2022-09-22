@@ -127,7 +127,7 @@
       'Perf Linux Bionic': 'release_bot_x64',
       'Perf Linux Trusty': 'release_bot_x64',
       'Perf Mac 11': 'release_bot_x64',
-      'Perf Mac M1 Arm64 12': 'linux_mac_crosscompile_arm64',
+      'Perf Mac M1 Arm64 12': 'release_bot_x64',
       'Perf Win7': 'release_bot_x64',
     },
     'internal.client.webrtc': {
@@ -276,11 +276,6 @@
       'libfuzzer', 'asan', 'optimize_for_fuzzing', 'openh264',
       'pure_release_bot', 'x64'
     ],
-    'linux_mac_crosscompile_arm64': [
-      'release_bot',
-      'arm64',
-      'mac',
-    ],
     'mac_asan_clang_release_bot_x64': [
       'asan',
       'clang',
@@ -407,9 +402,6 @@
     },
     'lsan': {
       'gn_args': 'is_lsan=true',
-    },
-    'mac': {
-      'gn_args': 'target_os="mac"'
     },
     'minimal_symbols': {
       'gn_args': 'symbol_level=1',
