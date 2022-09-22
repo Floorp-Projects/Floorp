@@ -89,15 +89,6 @@ absl::optional<ProtocolType> StringToProto(absl::string_view proto_name) {
   return absl::nullopt;
 }
 
-bool StringToProto(const char* value, ProtocolType* proto) {
-  if (absl::optional<ProtocolType> type = StringToProto(value);
-      type.has_value()) {
-    *proto = *type;
-    return true;
-  }
-  return false;
-}
-
 // RFC 6544, TCP candidate encoding rules.
 const int DISCARD_PORT = 9;
 const char TCPTYPE_ACTIVE_STR[] = "active";
