@@ -3988,14 +3988,14 @@ class nsIFrame : public nsQueryFrame {
     }
   }
 
+  mozilla::ContainSizeAxes GetContainSizeAxes() const;
+
   Maybe<nscoord> ContainIntrinsicBSize(nscoord aNoneValue = 0) const {
-    return StyleDisplay()->GetContainSizeAxes().ContainIntrinsicBSize(
-        *this, aNoneValue);
+    return GetContainSizeAxes().ContainIntrinsicBSize(*this, aNoneValue);
   }
 
   Maybe<nscoord> ContainIntrinsicISize(nscoord aNoneValue = 0) const {
-    return StyleDisplay()->GetContainSizeAxes().ContainIntrinsicISize(
-        *this, aNoneValue);
+    return GetContainSizeAxes().ContainIntrinsicISize(*this, aNoneValue);
   }
 
  protected:

@@ -1543,27 +1543,10 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleDisplay {
 
   bool IsContainAny() const { return !!EffectiveContainment(); }
 
-  mozilla::ContainSizeAxes GetContainSizeAxes() const {
-    const auto contain = EffectiveContainment();
-    // Short circuit for no containment whatsoever
-    if (!contain) {
-      return mozilla::ContainSizeAxes(false, false);
-    }
-    // Note: The spec for size containment says it should
-    // have no effect on non-atomic, inline-level boxes. We
-    // don't check for these here because we don't know
-    // what type of element is involved. Callers are
-    // responsible for checking if the box in question is
-    // non-atomic and inline-level, and creating an
-    // exemption as necessary.
-    if (IsInternalRubyDisplayType() ||
-        DisplayInside() == mozilla::StyleDisplayInside::Table ||
-        IsInnerTableStyle()) {
-      return mozilla::ContainSizeAxes(false, false);
-    }
-    return mozilla::ContainSizeAxes(
-        static_cast<bool>(contain & StyleContain::INLINE_SIZE),
-        static_cast<bool>(contain & StyleContain::BLOCK_SIZE));
+  bool PrecludesSizeContainment() const {
+    return IsInternalRubyDisplayType() ||
+           DisplayInside() == mozilla::StyleDisplayInside::Table ||
+           IsInnerTableStyle();
   }
 
   bool IsContentVisibilityVisible() const {
@@ -1685,7 +1668,6 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleDisplay {
   IsFixedPosContainingBlockForContainLayoutAndPaintSupportingFrames() const;
   inline bool IsFixedPosContainingBlockForTransformSupportingFrames() const;
 
- private:
   StyleContain EffectiveContainment() const {
     auto contain = mContain;
     // content-visibility and container-type implicitly enable some containment
@@ -1699,6 +1681,9 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleDisplay {
       case StyleContentVisibility::Visible:
         break;
       case StyleContentVisibility::Auto:
+        // `content-visibility:auto` also applies size containment when content
+        // is not relevant (and therefore skipped). This is checked in
+        // nsIFrame::GetContainSizeAxes.
         contain |=
             StyleContain::LAYOUT | StyleContain::PAINT | StyleContain::STYLE;
         break;

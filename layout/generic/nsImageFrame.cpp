@@ -623,7 +623,7 @@ static IntrinsicSize ComputeIntrinsicSize(imgIContainer* aImage,
                                           bool aUseMappedRatio,
                                           nsImageFrame::Kind aKind,
                                           const nsImageFrame& aFrame) {
-  const auto containAxes = aFrame.StyleDisplay()->GetContainSizeAxes();
+  const auto containAxes = aFrame.GetContainSizeAxes();
   if (containAxes.IsBoth()) {
     return containAxes.ContainIntrinsicSize(IntrinsicSize(0, 0), aFrame);
   }
@@ -703,8 +703,7 @@ bool nsImageFrame::UpdateIntrinsicSize() {
 static AspectRatio ComputeIntrinsicRatio(imgIContainer* aImage,
                                          bool aUseMappedRatio,
                                          const nsImageFrame& aFrame) {
-  const ComputedStyle& style = *aFrame.Style();
-  if (style.StyleDisplay()->GetContainSizeAxes().IsAny()) {
+  if (aFrame.GetContainSizeAxes().IsAny()) {
     return AspectRatio();
   }
 
@@ -714,7 +713,7 @@ static AspectRatio ComputeIntrinsicRatio(imgIContainer* aImage,
     }
   }
   if (aUseMappedRatio) {
-    const StyleAspectRatio& ratio = style.StylePosition()->mAspectRatio;
+    const StyleAspectRatio& ratio = aFrame.StylePosition()->mAspectRatio;
     if (ratio.auto_ && ratio.HasRatio()) {
       // Return the mapped intrinsic aspect ratio stored in
       // nsStylePosition::mAspectRatio.
@@ -1202,7 +1201,7 @@ bool nsImageFrame::IsForMarkerPseudo() const {
 }
 
 void nsImageFrame::EnsureIntrinsicSizeAndRatio() {
-  const auto containAxes = StyleDisplay()->GetContainSizeAxes();
+  const auto containAxes = GetContainSizeAxes();
   if (containAxes.IsBoth()) {
     // If we have 'contain:size', then we have no intrinsic aspect ratio,
     // and the intrinsic size is determined by contain-intrinsic-size,

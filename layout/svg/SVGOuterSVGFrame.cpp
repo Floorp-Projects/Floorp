@@ -95,7 +95,7 @@ static inline ContainSizeAxes ContainSizeAxesIfApplicable(
   if (!aFrame->GetContent()->GetParent()) {
     return ContainSizeAxes(false, false);
   }
-  return aFrame->StyleDisplay()->GetContainSizeAxes();
+  return aFrame->GetContainSizeAxes();
 }
 
 void SVGOuterSVGFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,

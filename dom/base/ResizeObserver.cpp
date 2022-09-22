@@ -565,7 +565,7 @@ static void LastRememberedSizeCallback(
                "Should have removed the last remembered block size.");
     MOZ_ASSERT(canRememberISize || !target->HasLastRememberedISize(),
                "Should have removed the last remembered inline size.");
-    const auto containAxes = frame->StyleDisplay()->GetContainSizeAxes();
+    const auto containAxes = frame->GetContainSizeAxes();
     bool canUpdateBSize = canRememberBSize && !containAxes.mBContained;
     bool canUpdateISize = canRememberISize && !containAxes.mIContained;
     MOZ_ASSERT(canUpdateBSize || canUpdateISize,
