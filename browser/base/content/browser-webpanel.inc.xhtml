@@ -3,37 +3,36 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 <vbox id="sidebar-select-box" style="height: 100vh !important; overflow: scroll !important; width: 3em; max-width: 3em !important; min-width: 3em !important;" class="webpanel-box chromeclass-extrachrome">
-   <spacer flex="15" class="workspace"/>
-    <toolbarbutton id="select-browser-manager" class="sidepanel-icon" data-l10n-id="show-browser-manager-sidebar"  oncommand="setBrowserManagerSidebarMode();"/>
-    <toolbarbutton id="select-bookmark" class="sidepanel-icon" data-l10n-id="show-bookmark-sidebar"  oncommand="setBookmarksSidebarMode();"/>
-    <toolbarbutton id="select-history" class="sidepanel-icon" data-l10n-id="show-history-sidebar"  oncommand="setHistorySidebarMode();"/>
-    <toolbarbutton id="select-syncedtab" class="sidepanel-icon" data-l10n-id="show-bookmark-sidebar"  oncommand="setSyncedtabSidebarMode();"/>
-    <toolbarbutton id="select-download" class="sidepanel-icon" data-l10n-id="show-download-sidebar"  oncommand="setDownloadsSidebarMode();"/>
-    <toolbarbutton id="select-TST" class="sidepanel-icon" data-l10n-id="show-TST-sidebar"  oncommand="setTreeStyleTabSidebarMode();"/>
+	<spacer flex="15" class="workspace"/>
+	<toolbarbutton id="select-browser-manager" class="sidepanel-icon" data-l10n-id="show-browser-manager-sidebar" oncommand="setCustomSidebarMode(0);"/>
+	<toolbarbutton id="select-bookmark" class="sidepanel-icon" data-l10n-id="show-bookmark-sidebar" oncommand="setCustomSidebarMode(1);"/>
+	<toolbarbutton id="select-history" class="sidepanel-icon" data-l10n-id="show-history-sidebar" oncommand="setCustomSidebarMode(2);"/>
+	<toolbarbutton id="select-download" class="sidepanel-icon" data-l10n-id="show-download-sidebar" oncommand="setCustomSidebarMode(3);"/>
+	<toolbarbutton id="select-TST" class="sidepanel-icon" data-l10n-id="show-TST-sidebar" oncommand="setCustomSidebarMode(4);"/>
 
-    <toolbarbutton id="select-CustomURL1" class="sidepanel-icon webpanel-icon" oncommand="setCustomSidebarMode1();" hidden="true"/>
-    <toolbarbutton id="select-CustomURL2" class="sidepanel-icon webpanel-icon" oncommand="setCustomSidebarMode2();" hidden="true"/>
-    <toolbarbutton id="select-CustomURL3" class="sidepanel-icon webpanel-icon" oncommand="setCustomSidebarMode3();" hidden="true"/>
-    <toolbarbutton id="select-CustomURL4" class="sidepanel-icon webpanel-icon" oncommand="setCustomSidebarMode4();" hidden="true"/>
-    <toolbarbutton id="select-CustomURL5" class="sidepanel-icon webpanel-icon" oncommand="setCustomSidebarMode5();" hidden="true"/>
-    <toolbarbutton id="select-CustomURL6" class="sidepanel-icon webpanel-icon" oncommand="setCustomSidebarMode6();" hidden="true"/>
-    <toolbarbutton id="select-CustomURL7" class="sidepanel-icon webpanel-icon" oncommand="setCustomSidebarMode7();" hidden="true"/>
-    <toolbarbutton id="select-CustomURL8" class="sidepanel-icon webpanel-icon" oncommand="setCustomSidebarMode8();" hidden="true"/>
-    <toolbarbutton id="select-CustomURL9" class="sidepanel-icon webpanel-icon" oncommand="setCustomSidebarMode9();" hidden="true"/>
-    <toolbarbutton id="select-CustomURL10" class="sidepanel-icon webpanel-icon" oncommand="setCustomSidebarMode10();" hidden="true"/>
-    <toolbarbutton id="select-CustomURL11" class="sidepanel-icon webpanel-icon" oncommand="setCustomSidebarMode11();" hidden="true"/>
-    <toolbarbutton id="select-CustomURL12" class="sidepanel-icon webpanel-icon" oncommand="setCustomSidebarMode12();" hidden="true"/>
-    <toolbarbutton id="select-CustomURL13" class="sidepanel-icon webpanel-icon" oncommand="setCustomSidebarMode13();" hidden="true"/>
-    <toolbarbutton id="select-CustomURL14" class="sidepanel-icon webpanel-icon" oncommand="setCustomSidebarMode14();" hidden="true"/>
-    <toolbarbutton id="select-CustomURL15" class="sidepanel-icon webpanel-icon" oncommand="setCustomSidebarMode15();" hidden="true"/>
-    <toolbarbutton id="select-CustomURL16" class="sidepanel-icon webpanel-icon" oncommand="setCustomSidebarMode16();" hidden="true"/>
-    <toolbarbutton id="select-CustomURL17" class="sidepanel-icon webpanel-icon" oncommand="setCustomSidebarMode17();" hidden="true"/>
-    <toolbarbutton id="select-CustomURL18" class="sidepanel-icon webpanel-icon" oncommand="setCustomSidebarMode18();" hidden="true"/>
-    <toolbarbutton id="select-CustomURL19" class="sidepanel-icon webpanel-icon" oncommand="setCustomSidebarMode19();" hidden="true"/>
-    <toolbarbutton id="select-CustomURL20" class="sidepanel-icon webpanel-icon" oncommand="setCustomSidebarMode20();" hidden="true"/>
-
-    <spacer flex="1000"/>
-     <toolbarbutton class="sidepanel-icon" data-l10n-id="sidebar-addons-button"  oncommand="BrowserOpenAddonsMgr();" id="addons-icon"/>
-     <toolbarbutton class="sidepanel-icon" data-l10n-id="sidebar-passwords-button"  oncommand="LoginHelper.openPasswordManager(window, { entryPoint: 'mainmenu' });" id="passwords-icon"/>
-     <toolbarbutton class="sidepanel-icon" data-l10n-id="sidebar-preferences-button"  oncommand="openPreferences();" id="preferences-icon"/>
+	<toolbarbutton id="select-CustomURL1" class="sidepanel-icon webpanel-icon" oncommand="setCustomSidebarMode(5);" hidden="true"/>
+	<toolbarbutton id="select-CustomURL2" class="sidepanel-icon webpanel-icon" oncommand="setCustomSidebarMode(6);" hidden="true"/>
+	<toolbarbutton id="select-CustomURL3" class="sidepanel-icon webpanel-icon" oncommand="setCustomSidebarMode(7);" hidden="true"/>
+	<toolbarbutton id="select-CustomURL4" class="sidepanel-icon webpanel-icon" oncommand="setCustomSidebarMode(8);" hidden="true"/>
+	<toolbarbutton id="select-CustomURL5" class="sidepanel-icon webpanel-icon" oncommand="setCustomSidebarMode(9);" hidden="true"/>
+	<toolbarbutton id="select-CustomURL6" class="sidepanel-icon webpanel-icon" oncommand="setCustomSidebarMode(10);" hidden="true"/>
+	<toolbarbutton id="select-CustomURL7" class="sidepanel-icon webpanel-icon" oncommand="setCustomSidebarMode(11);" hidden="true"/>
+	<toolbarbutton id="select-CustomURL8" class="sidepanel-icon webpanel-icon" oncommand="setCustomSidebarMode(12);" hidden="true"/>
+	<toolbarbutton id="select-CustomURL9" class="sidepanel-icon webpanel-icon" oncommand="setCustomSidebarMode(13);" hidden="true"/>
+	<toolbarbutton id="select-CustomURL10" class="sidepanel-icon webpanel-icon" oncommand="setCustomSidebarMode(14);" hidden="true"/>
+	<toolbarbutton id="select-CustomURL11" class="sidepanel-icon webpanel-icon" oncommand="setCustomSidebarMode(15);" hidden="true"/>
+	<toolbarbutton id="select-CustomURL12" class="sidepanel-icon webpanel-icon" oncommand="setCustomSidebarMode(16);" hidden="true"/>
+	<toolbarbutton id="select-CustomURL13" class="sidepanel-icon webpanel-icon" oncommand="setCustomSidebarMode(17);" hidden="true"/>
+	<toolbarbutton id="select-CustomURL14" class="sidepanel-icon webpanel-icon" oncommand="setCustomSidebarMode(18);" hidden="true"/>
+	<toolbarbutton id="select-CustomURL15" class="sidepanel-icon webpanel-icon" oncommand="setCustomSidebarMode(19);" hidden="true"/>
+	<toolbarbutton id="select-CustomURL16" class="sidepanel-icon webpanel-icon" oncommand="setCustomSidebarMode(20);" hidden="true"/>
+	<toolbarbutton id="select-CustomURL17" class="sidepanel-icon webpanel-icon" oncommand="setCustomSidebarMode(21);" hidden="true"/>
+	<toolbarbutton id="select-CustomURL18" class="sidepanel-icon webpanel-icon" oncommand="setCustomSidebarMode(22);" hidden="true"/>
+	<toolbarbutton id="select-CustomURL19" class="sidepanel-icon webpanel-icon" oncommand="setCustomSidebarMode(23);" hidden="true"/>
+	<toolbarbutton id="select-CustomURL20" class="sidepanel-icon webpanel-icon" oncommand="setCustomSidebarMode(24);" hidden="true"/>
+   
+	<spacer flex="1000"/>
+	<toolbarbutton class="sidepanel-icon" data-l10n-id="sidebar-addons-button"  oncommand="BrowserOpenAddonsMgr();" id="addons-icon"/>
+	<toolbarbutton class="sidepanel-icon" data-l10n-id="sidebar-passwords-button"  oncommand="LoginHelper.openPasswordManager(window, { entryPoint: 'mainmenu' });" id="passwords-icon"/>
+	<toolbarbutton class="sidepanel-icon" data-l10n-id="sidebar-preferences-button"  oncommand="openPreferences();" id="preferences-icon"/>
 </vbox>

@@ -258,109 +258,17 @@ function unmuteSidebarSite() {
   document.getElementById("webpanel").unmute();  //ミュート解除
 }
 
-function setBrowserManagerSidebarMode() {
-  Services.prefs.setIntPref("floorp.browser.sidebar2.mode", -1);
-  ViewBrowserManagerSidebar();
-}
-function setSyncedtabSidebarMode() {
-  Services.prefs.setIntPref("floorp.browser.sidebar2.mode", 0);
-  ViewBrowserManagerSidebar();
-}
-function setBookmarksSidebarMode() {
-  Services.prefs.setIntPref("floorp.browser.sidebar2.mode", 1);
-  ViewBrowserManagerSidebar();
-}
-function setHistorySidebarMode() {
-  Services.prefs.setIntPref("floorp.browser.sidebar2.mode", 2);
-  ViewBrowserManagerSidebar();
-}
-function setDownloadsSidebarMode() {
-  Services.prefs.setIntPref("floorp.browser.sidebar2.mode", 3);
-  ViewBrowserManagerSidebar();
-}
-function setTreeStyleTabSidebarMode() {
-  Services.prefs.setIntPref("floorp.browser.sidebar2.mode", 4);
-  ViewBrowserManagerSidebar();
-}
-function setCustomSidebarMode1() {
-  Services.prefs.setIntPref("floorp.browser.sidebar2.mode", 5);
-  ViewBrowserManagerSidebar();
-}
-function setCustomSidebarMode2() {
-  Services.prefs.setIntPref("floorp.browser.sidebar2.mode", 6);
-  ViewBrowserManagerSidebar();
-}
-function setCustomSidebarMode3() {
-  Services.prefs.setIntPref("floorp.browser.sidebar2.mode", 7);
-  ViewBrowserManagerSidebar();
-}
-function setCustomSidebarMode4() {
-  Services.prefs.setIntPref("floorp.browser.sidebar2.mode", 8);
-  ViewBrowserManagerSidebar();
-}
-function setCustomSidebarMode5() {
-  Services.prefs.setIntPref("floorp.browser.sidebar2.mode", 9);
-  ViewBrowserManagerSidebar();
-}
-function setCustomSidebarMode6() {
-  Services.prefs.setIntPref("floorp.browser.sidebar2.mode", 10);
-  ViewBrowserManagerSidebar();
-}
-function setCustomSidebarMode7() {
-  Services.prefs.setIntPref("floorp.browser.sidebar2.mode", 11);
-  ViewBrowserManagerSidebar();
-}
-function setCustomSidebarMode8() {
-  Services.prefs.setIntPref("floorp.browser.sidebar2.mode", 12);
-  ViewBrowserManagerSidebar();
-}
-function setCustomSidebarMode9() {
-  Services.prefs.setIntPref("floorp.browser.sidebar2.mode", 13);
-  ViewBrowserManagerSidebar();
-}
-function setCustomSidebarMode10() {
-  Services.prefs.setIntPref("floorp.browser.sidebar2.mode", 14);
-  ViewBrowserManagerSidebar();
-}
-function setCustomSidebarMode11() {
-  Services.prefs.setIntPref("floorp.browser.sidebar2.mode", 15);
-  ViewBrowserManagerSidebar();
-}
-function setCustomSidebarMode12() {
-  Services.prefs.setIntPref("floorp.browser.sidebar2.mode", 16);
-  ViewBrowserManagerSidebar();
-}
-function setCustomSidebarMode13() {
-  Services.prefs.setIntPref("floorp.browser.sidebar2.mode", 17);
-  ViewBrowserManagerSidebar();
-}
-function setCustomSidebarMode14() {
-  Services.prefs.setIntPref("floorp.browser.sidebar2.mode", 18);
-  ViewBrowserManagerSidebar();
-}
-function setCustomSidebarMode15() {
-  Services.prefs.setIntPref("floorp.browser.sidebar2.mode", 19);
-  ViewBrowserManagerSidebar();
-}
-function setCustomSidebarMode16() {
-  Services.prefs.setIntPref("floorp.browser.sidebar2.mode", 20);
-  ViewBrowserManagerSidebar();
-}
-function setCustomSidebarMode17() {
-  Services.prefs.setIntPref("floorp.browser.sidebar2.mode", 21);
-  ViewBrowserManagerSidebar();
-}
-function setCustomSidebarMode18() {
-  Services.prefs.setIntPref("floorp.browser.sidebar2.mode", 22);
-  ViewBrowserManagerSidebar();
-}
-function setCustomSidebarMode19() {
-  Services.prefs.setIntPref("floorp.browser.sidebar2.mode", 23);
-  ViewBrowserManagerSidebar();
-}
-function setCustomSidebarMode20() {
-  Services.prefs.setIntPref("floorp.browser.sidebar2.mode", 24);
-  ViewBrowserManagerSidebar();
+/* Sidebar Modes
+  0 - Browser Manager Sidebar Mode
+  1 - Bookmark Sidebar Mode
+  2 - History Sidebar Mode
+  3 - Download Sidebar Mode
+  4 - Tree Style Sidebar Mode
+  [5 - To the end] - Custom URL Modes
+ */ 
+  function setCustomSidebarMode(sidebar_mode_id) {
+	Services.prefs.setIntPref("floorp.browser.sidebar2.mode", sidebar_mode_id);
+	ViewBrowserManagerSidebar()
 }
 
 function setSidebarIconView() {
