@@ -500,7 +500,6 @@
       {
         "args": [
           "--write_perf_output_on_ios",
-          "--nologs",
           "--xcode-build-version",
           "12d4e",
           "--out-dir",

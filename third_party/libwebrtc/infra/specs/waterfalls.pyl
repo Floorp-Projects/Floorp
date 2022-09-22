@@ -302,7 +302,7 @@
           'resultdb-gtest-json-format'
         ],
         'test_suites': {
-          'isolated_scripts': 'desktop_perf_tests',
+          'isolated_scripts': 'webrtc_perf_tests',
         },
       },
       'Perf Win7': {
@@ -337,8 +337,11 @@
           'out_dir_arg'
         ],
         'test_suites': {
-          'isolated_scripts': 'ios_perf_tests',
+          'isolated_scripts': 'webrtc_perf_tests',
         },
+        'args': [
+          '--write_perf_output_on_ios',
+        ],
       },
       'iOS64 Release': {
         'mixins': [
