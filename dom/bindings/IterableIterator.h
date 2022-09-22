@@ -238,39 +238,50 @@ class AsyncIterableIteratorBase : public IterableIteratorBase {
 
 template <typename T>
 class AsyncIterableIterator : public AsyncIterableIteratorBase {
+ private:
+  using IteratorData = typename T::IteratorData;
+
  public:
   AsyncIterableIterator(T* aIterableObj, IteratorType aIteratorType)
       : AsyncIterableIteratorBase(aIteratorType), mIterableObj(aIterableObj) {
     MOZ_ASSERT(mIterableObj);
   }
 
-  void SetData(void* aData) { mData = aData; }
-
-  void* GetData() { return mData; }
+  IteratorData& Data() { return mData; }
 
  protected:
-  virtual ~AsyncIterableIterator() {
-    // As long as iterable object does not hold strong ref to its iterators,
-    // iterators will not be added to CC graph, thus make sure
-    // DestroyAsyncIterator still take place.
-    if (mIterableObj) {
-      mIterableObj->DestroyAsyncIterator(this);
-    }
+  // We'd prefer to use ImplCycleCollectionTraverse/ImplCycleCollectionUnlink on
+  // the iterator data, but unfortunately that doesn't work because it's
+  // dependent on the template parameter. Instead we detect if the data
+  // structure has Traverse and Unlink functions and call those.
+  template <typename Data>
+  auto TraverseData(Data& aData, nsCycleCollectionTraversalCallback& aCallback,
+                    int) -> decltype(aData.Traverse(aCallback)) {
+    return aData.Traverse(aCallback);
   }
+  template <typename Data>
+  void TraverseData(Data& aData, nsCycleCollectionTraversalCallback& aCallback,
+                    double) {}
+
+  template <typename Data>
+  auto UnlinkData(Data& aData, int) -> decltype(aData.Unlink()) {
+    return aData.Unlink();
+  }
+  template <typename Data>
+  void UnlinkData(Data& aData, double) {}
 
   // Since we're templated on a binding, we need to possibly CC it, but can't do
   // that through macros. So it happens here.
-  // DestroyAsyncIterator is expected to assume that its AsyncIterableIterator
-  // does not need access to mData anymore. AsyncIterator does not manage mData
-  // so it should be release and null out explicitly.
   void UnlinkHelper() final {
-    mIterableObj->DestroyAsyncIterator(this);
-    mIterableObj = nullptr;
+    AsyncIterableIterator<T>* tmp = this;
+    NS_IMPL_CYCLE_COLLECTION_UNLINK(mIterableObj);
+    UnlinkData(tmp->mData, 0);
   }
 
   virtual void TraverseHelper(nsCycleCollectionTraversalCallback& cb) override {
     AsyncIterableIterator<T>* tmp = this;
     NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mIterableObj);
+    TraverseData(tmp->mData, cb, 0);
   }
 
   // 3.7.10.1. Default asynchronous iterator objects
@@ -282,7 +293,7 @@ class AsyncIterableIterator : public AsyncIterableIteratorBase {
   // See AsyncIterableIteratorBase
 
   // Opaque data of the backing object.
-  void* mData{nullptr};
+  IteratorData mData;
 };
 
 namespace binding_detail {

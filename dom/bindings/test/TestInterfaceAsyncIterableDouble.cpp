@@ -54,18 +54,6 @@ nsPIDOMWindowInner* TestInterfaceAsyncIterableDouble::GetParentObject() const {
   return mParent;
 }
 
-void TestInterfaceAsyncIterableDouble::InitAsyncIterator(Iterator* aIterator,
-                                                         ErrorResult& aError) {
-  UniquePtr<IteratorData> data(new IteratorData(0));
-  aIterator->SetData((void*)data.release());
-}
-
-void TestInterfaceAsyncIterableDouble::DestroyAsyncIterator(
-    Iterator* aIterator) {
-  auto* data = reinterpret_cast<IteratorData*>(aIterator->GetData());
-  delete data;
-}
-
 already_AddRefed<Promise> TestInterfaceAsyncIterableDouble::GetNextPromise(
     Iterator* aIterator, ErrorResult& aRv) {
   RefPtr<Promise> promise = Promise::Create(mParent->AsGlobal(), aRv);
@@ -82,10 +70,10 @@ already_AddRefed<Promise> TestInterfaceAsyncIterableDouble::GetNextPromise(
 
 void TestInterfaceAsyncIterableDouble::ResolvePromise(Iterator* aIterator,
                                                       Promise* aPromise) {
-  IteratorData* data = reinterpret_cast<IteratorData*>(aIterator->GetData());
+  IteratorData& data = aIterator->Data();
 
   // Test data: ['a', 'b'], ['c', 'd'], ['e', 'f']
-  uint32_t idx = data->mIndex;
+  uint32_t idx = data.mIndex;
   if (idx >= mValues.Length()) {
     iterator_utils::ResolvePromiseForFinished(aPromise);
   } else {
@@ -102,7 +90,7 @@ void TestInterfaceAsyncIterableDouble::ResolvePromise(Iterator* aIterator,
         break;
     }
 
-    data->mIndex++;
+    data.mIndex++;
   }
 }
 

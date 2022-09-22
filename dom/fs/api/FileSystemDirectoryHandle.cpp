@@ -12,7 +12,6 @@
 #include "js/TypeDecls.h"
 #include "mozilla/ErrorResult.h"
 #include "mozilla/dom/FileSystemDirectoryHandleBinding.h"
-#include "mozilla/dom/FileSystemDirectoryIterator.h"
 #include "mozilla/dom/FileSystemHandleBinding.h"
 #include "mozilla/dom/FileSystemManager.h"
 #include "mozilla/dom/PFileSystemManager.h"
@@ -51,26 +50,15 @@ FileSystemHandleKind FileSystemDirectoryHandle::Kind() const {
   return FileSystemHandleKind::Directory;
 }
 
-void FileSystemDirectoryHandle::InitAsyncIterator(
-    FileSystemDirectoryHandle::iterator_t* aIterator, ErrorResult& aError) {
-  aIterator->SetData(
-      static_cast<void*>(fs::FileSystemDirectoryIteratorFactory::Create(
-                             mMetadata, aIterator->GetIteratorType())
-                             .release()));
-}
-
-void FileSystemDirectoryHandle::DestroyAsyncIterator(
-    FileSystemDirectoryHandle::iterator_t* aIterator) {
-  auto* it =
-      static_cast<FileSystemDirectoryIterator::Impl*>(aIterator->GetData());
-  delete it;
-  aIterator->SetData(nullptr);
+void FileSystemDirectoryHandle::InitAsyncIteratorData(
+    IteratorData& aData, iterator_t::IteratorType aType, ErrorResult& aError) {
+  aData.mImpl =
+      fs::FileSystemDirectoryIteratorFactory::Create(mMetadata, aType);
 }
 
 already_AddRefed<Promise> FileSystemDirectoryHandle::GetNextPromise(
     FileSystemDirectoryHandle::iterator_t* aIterator, ErrorResult& aError) {
-  return static_cast<FileSystemDirectoryIterator::Impl*>(aIterator->GetData())
-      ->Next(mGlobal, mManager, aError);
+  return aIterator->Data().mImpl->Next(mGlobal, mManager, aError);
 }
 
 already_AddRefed<Promise> FileSystemDirectoryHandle::GetFileHandle(
