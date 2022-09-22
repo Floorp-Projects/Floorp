@@ -110,7 +110,6 @@ std::string VideoReceiveStreamInterface::Config::ToString() const {
   ss << ", render_delay_ms: " << render_delay_ms;
   if (!sync_group.empty())
     ss << ", sync_group: " << sync_group;
-  ss << ", target_delay_ms: " << target_delay_ms;
   ss << '}';
 
   return ss.str();

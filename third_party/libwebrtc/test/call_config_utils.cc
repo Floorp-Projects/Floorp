@@ -37,7 +37,6 @@ VideoReceiveStreamInterface::Config ParseVideoReceiveStreamJsonConfig(
     receive_config.decoders.push_back(decoder);
   }
   receive_config.render_delay_ms = json["render_delay_ms"].asInt64();
-  receive_config.target_delay_ms = json["target_delay_ms"].asInt64();
   receive_config.rtp.remote_ssrc = json["rtp"]["remote_ssrc"].asInt64();
   receive_config.rtp.local_ssrc = json["rtp"]["local_ssrc"].asInt64();
   receive_config.rtp.rtcp_mode =
@@ -118,7 +117,6 @@ Json::Value GenerateVideoReceiveStreamJsonConfig(
   root_json["rtp"] = rtp_json;
 
   root_json["render_delay_ms"] = config.render_delay_ms;
-  root_json["target_delay_ms"] = config.target_delay_ms;
 
   return root_json;
 }
