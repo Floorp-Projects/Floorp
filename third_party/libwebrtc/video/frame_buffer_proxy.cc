@@ -24,6 +24,7 @@
 #include "modules/video_coding/frame_buffer2.h"
 #include "modules/video_coding/frame_helpers.h"
 #include "modules/video_coding/timing/inter_frame_delay.h"
+#include "modules/video_coding/timing/jitter_estimator.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/logging.h"
 #include "rtc_base/thread_annotations.h"
@@ -515,8 +516,7 @@ class FrameBuffer3Proxy : public FrameBufferProxy {
   const std::unique_ptr<FrameDecodeScheduler> frame_decode_scheduler_
       RTC_GUARDED_BY(&worker_sequence_checker_);
 
-  VCMJitterEstimator jitter_estimator_
-      RTC_GUARDED_BY(&worker_sequence_checker_);
+  JitterEstimator jitter_estimator_ RTC_GUARDED_BY(&worker_sequence_checker_);
   InterFrameDelay inter_frame_delay_ RTC_GUARDED_BY(&worker_sequence_checker_);
   bool keyframe_required_ RTC_GUARDED_BY(&worker_sequence_checker_) = false;
   std::unique_ptr<FrameBuffer> buffer_
