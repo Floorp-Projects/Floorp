@@ -12,6 +12,7 @@
 #define TEST_PC_E2E_ANALYZER_VIDEO_DEFAULT_VIDEO_QUALITY_ANALYZER_H_
 
 #include <atomic>
+#include <cstdint>
 #include <deque>
 #include <map>
 #include <memory>
@@ -30,6 +31,7 @@
 #include "rtc_base/event.h"
 #include "rtc_base/platform_thread.h"
 #include "rtc_base/synchronization/mutex.h"
+#include "rtc_base/thread_annotations.h"
 #include "system_wrappers/include/clock.h"
 #include "test/pc/e2e/analyzer/video/default_video_quality_analyzer_cpu_measurer.h"
 #include "test/pc/e2e/analyzer/video/default_video_quality_analyzer_frames_comparator.h"
@@ -86,6 +88,8 @@ class DefaultVideoQualityAnalyzer : public VideoQualityAnalyzerInterface {
   std::set<StatsKey> GetKnownVideoStreams() const;
   VideoStreamsInfo GetKnownStreams() const;
   FrameCounters GetGlobalCounters() const;
+  // Returns frame counter for frames received without frame id set.
+  std::map<std::string, FrameCounters> GetUnknownSenderFrameCounters() const;
   // Returns frame counter per stream label. Valid stream labels can be obtained
   // by calling GetKnownVideoStreams()
   std::map<StatsKey, FrameCounters> GetPerStreamCounters() const;
@@ -314,6 +318,10 @@ class DefaultVideoQualityAnalyzer : public VideoQualityAnalyzerInterface {
     std::map<absl::string_view, size_t> index_;
   };
 
+  // Returns next frame id to use. Frame ID can't be `VideoFrame::kNotSetId`,
+  // because this value is reserved by `VideoFrame` as "ID not set".
+  uint16_t GetNextFrameId() RTC_EXCLUSIVE_LOCKS_REQUIRED(mutex_);
+
   // Report results for all metrics for all streams.
   void ReportResults();
   void ReportResults(const std::string& test_case_name,
@@ -337,13 +345,15 @@ class DefaultVideoQualityAnalyzer : public VideoQualityAnalyzerInterface {
   std::string ToMetricName(const InternalStatsKey& key) const
       RTC_EXCLUSIVE_LOCKS_REQUIRED(mutex_);
 
+  static const uint16_t kStartingFrameId = 1;
+
   const DefaultVideoQualityAnalyzerOptions options_;
   webrtc::Clock* const clock_;
-  std::atomic<uint16_t> next_frame_id_{0};
 
   std::string test_label_;
 
   mutable Mutex mutex_;
+  uint16_t next_frame_id_ RTC_GUARDED_BY(mutex_) = kStartingFrameId;
   std::unique_ptr<NamesCollection> peers_ RTC_GUARDED_BY(mutex_);
   State state_ RTC_GUARDED_BY(mutex_) = State::kNew;
   Timestamp start_time_ RTC_GUARDED_BY(mutex_) = Timestamp::MinusInfinity();
@@ -365,6 +375,10 @@ class DefaultVideoQualityAnalyzer : public VideoQualityAnalyzerInterface {
       RTC_GUARDED_BY(mutex_);
   // Global frames count for all video streams.
   FrameCounters frame_counters_ RTC_GUARDED_BY(mutex_);
+  // Frame counters for received frames without video frame id set.
+  // Map from peer name to the frame counters.
+  std::map<std::string, FrameCounters> unknown_sender_frame_counters_
+      RTC_GUARDED_BY(mutex_);
   // Frame counters per each stream per each receiver.
   std::map<InternalStatsKey, FrameCounters> stream_frame_counters_
       RTC_GUARDED_BY(mutex_);

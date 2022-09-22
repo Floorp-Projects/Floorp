@@ -212,14 +212,16 @@ void VideoQualityAnalyzerInjectionHelper::OnFrame(absl::string_view peer_name,
   frame_copy.set_video_frame_buffer(I420Buffer::Copy(*i420_buffer));
   analyzer_->OnFrameRendered(peer_name, frame_copy);
 
-  std::string stream_label = analyzer_->GetStreamLabel(frame.id());
-  std::vector<std::unique_ptr<rtc::VideoSinkInterface<VideoFrame>>>* sinks =
-      PopulateSinks(ReceiverStream(peer_name, stream_label));
-  if (sinks == nullptr) {
-    return;
-  }
-  for (auto& sink : *sinks) {
-    sink->OnFrame(frame);
+  if (frame.id() != VideoFrame::kNotSetId) {
+    std::string stream_label = analyzer_->GetStreamLabel(frame.id());
+    std::vector<std::unique_ptr<rtc::VideoSinkInterface<VideoFrame>>>* sinks =
+        PopulateSinks(ReceiverStream(peer_name, stream_label));
+    if (sinks == nullptr) {
+      return;
+    }
+    for (auto& sink : *sinks) {
+      sink->OnFrame(frame);
+    }
   }
 }
 
