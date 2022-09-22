@@ -6,6 +6,7 @@
 # in the file PATENTS.  All contributing project authors may
 # be found in the AUTHORS file in the root of the source tree.
 
+import("//third_party/libaom/options.gni")
 import("../webrtc.gni")
 if (is_ios) {
   import("//build/config/ios/ios_sdk.gni")
@@ -750,8 +751,13 @@ if (is_ios || is_mac) {
         ":wrapped_native_codec_objc",
         "../media:rtc_media_base",
         "../modules/video_coding/codecs/av1:libaom_av1_decoder",
-        "../modules/video_coding/codecs/av1:libaom_av1_encoder",
       ]
+
+      defines = []
+      if (enable_libaom) {
+        defines += [ "RTC_USE_LIBAOM_AV1_ENCODER" ]
+        deps += [ "../modules/video_coding/codecs/av1:libaom_av1_encoder" ]
+      }
     }
 
     # Build the PeerConnectionFactory without audio/video support.
