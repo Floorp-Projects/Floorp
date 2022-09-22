@@ -16,7 +16,7 @@
   <script type="application/javascript"
           src="../states.js" />
   <script type="application/javascript"
-          src="../events.js" />
+          src="../promisified-events.js" />
   <script type="application/javascript"
           src="../browser.js"></script>
 
@@ -26,94 +26,60 @@
     ////////////////////////////////////////////////////////////////////////////
     // Tests
 
-    function getAnchorJumpInTabDocument(aTabIdx)
-    {
-      var tabDoc = aTabIdx ? tabDocumentAt(aTabIdx) : currentTabDocument();
-      return tabDoc.querySelector("a[name='link1']");
-    }
-
-    function loadTab(aURL)
-    {
-      this.eventSeq = [
-        new asyncInvokerChecker(EVENT_DOCUMENT_LOAD_COMPLETE, currentTabDocument),
-        new asyncInvokerChecker(EVENT_SCROLLING_START, getAnchorJumpInTabDocument)
-      ];
-
-      this.invoke = function loadTab_invoke()
-      {
-        tabBrowser().loadURI(aURL, {
-          triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
-        });
-        // Flush layout, so as to guarantee that the a11y tree is constructed.
-        browserDocument().documentElement.getBoundingClientRect();
-      }
-
-      this.getID = function loadTab_getID()
-      {
-        return "load tab: " + aURL;
+    function matchesAnchorJumpInTabDocument(aTabIdx) {
+      return evt => {
+        let tabDoc = aTabIdx ? tabDocumentAt(aTabIdx) : currentTabDocument();
+        let anchorAcc = getAccessible(tabDoc.querySelector("a[name='link1']"));
+        return anchorAcc == evt.accessible;
       }
     }
 
-    function loadTabInBackground(aURL)
-    {
-      this.eventSeq = [
-        new invokerChecker(EVENT_DOCUMENT_LOAD_COMPLETE, tabDocumentAt, 1)
-      ];
-
-      this.unexpectedEventSeq = [
-        new invokerChecker(EVENT_SCROLLING_START, getAnchorJumpInTabDocument, 1)
-      ];
-
-      this.invoke = function loadTabInBackground_invoke()
-      {
-        tabBrowser().loadOneTab(aURL, {
-          referrerURI: null,
-          charset: "",
-          postData: null,
-          inBackground: true,
-          triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
-        });
-        // Flush layout, so as to guarantee that the a11y tree is constructed.
-        browserDocument().documentElement.getBoundingClientRect();
-      }
-
-      this.getID = function loadTabInBackground_getID()
-      {
-        return "load tab in background: " + aURL;
+    function matchesTabDocumentAt(aTabIdx) {
+      return evt => {
+        let tabDoc = aTabIdx ? tabDocumentAt(aTabIdx) : currentTabDocument();
+        return getAccessible(tabDoc) == evt.accessible;
       }
     }
 
-    function switchToBackgroundTab()
-    {
-      this.eventSeq = [
-        new invokerChecker(EVENT_SCROLLING_START, getAnchorJumpInTabDocument)
-      ];
+    async function doTest() {
+      const URL = "http://mochi.test:8888/a11y/accessible/tests/mochitest/events/scroll.html#link1";
+      let evtProm = waitForEvents([
+        [EVENT_DOCUMENT_LOAD_COMPLETE, currentTabDocument],
+        [EVENT_SCROLLING_START, matchesAnchorJumpInTabDocument()],
+      ], "Load foreground tab then scroll to anchor");
 
-      this.invoke = function switchToBackgroundTab_invoke()
-      {
-        tabBrowser().selectTabAtIndex(1);
-      }
+      tabBrowser().loadURI(URL, {
+        triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
+      });
+      // Flush layout, so as to guarantee that the a11y tree is constructed.
+      browserDocument().documentElement.getBoundingClientRect();
+      await evtProm;
 
-      this.getID = function switchToBackgroundTab_getID()
-      {
-        return "switch to background tab";
-      }
-    }
 
-    //gA11yEventDumpToConsole = true; // debug stuff
+      evtProm = waitForEvents({
+        expected: [[EVENT_DOCUMENT_LOAD_COMPLETE, matchesTabDocumentAt(1)]],
+        unexpected: [[EVENT_SCROLLING_START, matchesAnchorJumpInTabDocument(1)]],
+      }, "Load background tab, don't dispatch scroll to anchor event");
 
-    var gQueue = null;
-    function doTest()
-    {
-      gQueue = new eventQueue();
+      tabBrowser().loadOneTab(URL, {
+        referrerURI: null,
+        charset: "",
+        postData: null,
+        inBackground: true,
+        triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
+      });
+      // Flush layout, so as to guarantee that the a11y tree is constructed.
+      browserDocument().documentElement.getBoundingClientRect();
+      await evtProm;
 
-      var url = "http://mochi.test:8888/a11y/accessible/tests/mochitest/events/scroll.html#link1";
-      gQueue.push(new loadTab(url));
-      gQueue.push(new loadTabInBackground(url));
-      gQueue.push(new switchToBackgroundTab());
-      gQueue.onFinish = function() { closeBrowserWindow(); }
+      evtProm = waitForEvent(EVENT_SCROLLING_START,
+        matchesAnchorJumpInTabDocument(),
+        "Scroll to anchor event dispatched when switching to loaded doc.");
+      tabBrowser().selectTabAtIndex(1);
+      await evtProm;
 
-      gQueue.invoke(); // Will call SimpleTest.finish();
+      closeBrowserWindow();
+      SimpleTest.finish();
     }
 
     SimpleTest.waitForExplicitFinish();
