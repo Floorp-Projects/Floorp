@@ -58,26 +58,17 @@ class FakeNetworkMonitor : public NetworkMonitorInterface {
   void Start() override { started_ = true; }
   void Stop() override { started_ = false; }
   bool started() { return started_; }
-  AdapterType GetAdapterType(absl::string_view if_name) override {
-    // Note that the name matching rules are different from the
-    // GetAdapterTypeFromName in NetworkManager.
+  InterfaceInfo GetInterfaceInfo(absl::string_view if_name) override {
+    InterfaceInfo if_info = {
+        .adapter_type = ADAPTER_TYPE_UNKNOWN,
+        .available = absl::c_count(unavailable_adapters_, if_name) == 0,
+    };
     if (absl::StartsWith(if_name, "wifi")) {
-      return ADAPTER_TYPE_WIFI;
+      if_info.adapter_type = ADAPTER_TYPE_WIFI;
+    } else if (absl::StartsWith(if_name, "cellular")) {
+      if_info.adapter_type = ADAPTER_TYPE_CELLULAR;
     }
-    if (absl::StartsWith(if_name, "cellular")) {
-      return ADAPTER_TYPE_CELLULAR;
-    }
-    return ADAPTER_TYPE_UNKNOWN;
-  }
-  AdapterType GetVpnUnderlyingAdapterType(absl::string_view if_name) override {
-    return ADAPTER_TYPE_UNKNOWN;
-  }
-  NetworkPreference GetNetworkPreference(absl::string_view if_name) override {
-    return NetworkPreference::NEUTRAL;
-  }
-
-  bool IsAdapterAvailable(absl::string_view if_name) override {
-    return absl::c_count(unavailable_adapters_, if_name) == 0;
+    return if_info;
   }
 
   // Used to test IsAdapterAvailable.

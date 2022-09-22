@@ -542,6 +542,25 @@ bool BasicNetworkManager::CreateNetworks(
 }
 
 #elif defined(WEBRTC_POSIX)
+NetworkMonitorInterface::InterfaceInfo BasicNetworkManager::GetInterfaceInfo(
+    struct ifaddrs* cursor) const {
+  if (cursor->ifa_flags & IFF_LOOPBACK) {
+    return {
+        .adapter_type = ADAPTER_TYPE_LOOPBACK,
+        .underlying_type_for_vpn = ADAPTER_TYPE_UNKNOWN,
+        .network_preference = NetworkPreference::NEUTRAL,
+        .available = true,
+    };
+  } else if (network_monitor_) {
+    return network_monitor_->GetInterfaceInfo(cursor->ifa_name);
+  } else {
+    return {.adapter_type = GetAdapterTypeFromName(cursor->ifa_name),
+            .underlying_type_for_vpn = ADAPTER_TYPE_UNKNOWN,
+            .network_preference = NetworkPreference::NEUTRAL,
+            .available = true};
+  }
+}
+
 void BasicNetworkManager::ConvertIfAddrs(
     struct ifaddrs* interfaces,
     IfAddrsConverter* ifaddrs_converter,
@@ -584,65 +603,64 @@ void BasicNetworkManager::ConvertIfAddrs(
           reinterpret_cast<sockaddr_in6*>(cursor->ifa_addr)->sin6_scope_id;
     }
 
-    AdapterType adapter_type = ADAPTER_TYPE_UNKNOWN;
-    AdapterType vpn_underlying_adapter_type = ADAPTER_TYPE_UNKNOWN;
-    NetworkPreference network_preference = NetworkPreference::NEUTRAL;
-    if (cursor->ifa_flags & IFF_LOOPBACK) {
-      adapter_type = ADAPTER_TYPE_LOOPBACK;
-    } else {
-      // If there is a network_monitor, use it to get the adapter type.
-      // Otherwise, get the adapter type based on a few name matching rules.
-      if (network_monitor_) {
-        adapter_type = network_monitor_->GetAdapterType(cursor->ifa_name);
-        network_preference =
-            network_monitor_->GetNetworkPreference(cursor->ifa_name);
-      }
-      if (adapter_type == ADAPTER_TYPE_UNKNOWN) {
-        adapter_type = GetAdapterTypeFromName(cursor->ifa_name);
-      }
-    }
-
-    if (adapter_type == ADAPTER_TYPE_VPN && network_monitor_) {
-      vpn_underlying_adapter_type =
-          network_monitor_->GetVpnUnderlyingAdapterType(cursor->ifa_name);
-    }
-
     int prefix_length = CountIPMaskBits(mask);
     prefix = TruncateIP(ip, prefix_length);
-
-    if (adapter_type != ADAPTER_TYPE_VPN &&
-        IsConfiguredVpn(prefix, prefix_length)) {
-      vpn_underlying_adapter_type = adapter_type;
-      adapter_type = ADAPTER_TYPE_VPN;
-    }
-
     std::string key =
         MakeNetworkKey(std::string(cursor->ifa_name), prefix, prefix_length);
+
     auto iter = current_networks.find(key);
-    if (iter == current_networks.end()) {
-      // TODO(phoglund): Need to recognize other types as well.
-      auto network =
-          std::make_unique<Network>(cursor->ifa_name, cursor->ifa_name, prefix,
-                                    prefix_length, adapter_type);
-      network->set_default_local_address_provider(this);
-      network->set_scope_id(scope_id);
-      network->AddIP(ip);
-      network->set_ignored(IsIgnoredNetwork(*network));
-      network->set_underlying_type_for_vpn(vpn_underlying_adapter_type);
-      network->set_network_preference(network_preference);
-      if (include_ignored || !network->ignored()) {
-        current_networks[key] = network.get();
-        networks->push_back(std::move(network));
+    if (iter != current_networks.end()) {
+      // We have already added this network, simply add extra IP.
+      iter->second->AddIP(ip);
+#if RTC_DCHECK_IS_ON
+      // Validate that different IP of same network has same properties
+      auto existing_network = iter->second;
+
+      NetworkMonitorInterface::InterfaceInfo if_info = GetInterfaceInfo(cursor);
+      if (if_info.adapter_type != ADAPTER_TYPE_VPN &&
+          IsConfiguredVpn(prefix, prefix_length)) {
+        if_info.underlying_type_for_vpn = if_info.adapter_type;
+        if_info.adapter_type = ADAPTER_TYPE_VPN;
       }
+
+      RTC_DCHECK(existing_network->type() == if_info.adapter_type);
+      RTC_DCHECK(existing_network->underlying_type_for_vpn() ==
+                 if_info.underlying_type_for_vpn);
+      RTC_DCHECK(existing_network->network_preference() ==
+                 if_info.network_preference);
+      if (!if_info.available) {
+        RTC_DCHECK(existing_network->ignored());
+      }
+#endif  // RTC_DCHECK_IS_ON
+      continue;
+    }
+
+    // Create a new network.
+    NetworkMonitorInterface::InterfaceInfo if_info = GetInterfaceInfo(cursor);
+
+    // Check manually configured VPN override.
+    if (if_info.adapter_type != ADAPTER_TYPE_VPN &&
+        IsConfiguredVpn(prefix, prefix_length)) {
+      if_info.underlying_type_for_vpn = if_info.adapter_type;
+      if_info.adapter_type = ADAPTER_TYPE_VPN;
+    }
+
+    auto network =
+        std::make_unique<Network>(cursor->ifa_name, cursor->ifa_name, prefix,
+                                  prefix_length, if_info.adapter_type);
+    network->set_default_local_address_provider(this);
+    network->set_scope_id(scope_id);
+    network->AddIP(ip);
+    if (!if_info.available) {
+      network->set_ignored(true);
     } else {
-      Network* existing_network = iter->second;
-      existing_network->AddIP(ip);
-      if (adapter_type != ADAPTER_TYPE_UNKNOWN) {
-        existing_network->set_type(adapter_type);
-        existing_network->set_underlying_type_for_vpn(
-            vpn_underlying_adapter_type);
-      }
-      existing_network->set_network_preference(network_preference);
+      network->set_ignored(IsIgnoredNetwork(*network));
+    }
+    network->set_underlying_type_for_vpn(if_info.underlying_type_for_vpn);
+    network->set_network_preference(if_info.network_preference);
+    if (include_ignored || !network->ignored()) {
+      current_networks[key] = network.get();
+      networks->push_back(std::move(network));
     }
   }
 }
@@ -803,10 +821,10 @@ bool BasicNetworkManager::CreateNetworks(
               adapter_type = ADAPTER_TYPE_UNKNOWN;
               break;
           }
-          auto vpn_underlying_adapter_type = ADAPTER_TYPE_UNKNOWN;
+          auto underlying_type_for_vpn = ADAPTER_TYPE_UNKNOWN;
           if (adapter_type != ADAPTER_TYPE_VPN &&
               IsConfiguredVpn(prefix, prefix_length)) {
-            vpn_underlying_adapter_type = adapter_type;
+            underlying_type_for_vpn = adapter_type;
             adapter_type = ADAPTER_TYPE_VPN;
           }
           if (adapter_type != ADAPTER_TYPE_VPN &&
@@ -814,13 +832,13 @@ bool BasicNetworkManager::CreateNetworks(
                   reinterpret_cast<const uint8_t*>(
                       adapter_addrs->PhysicalAddress),
                   adapter_addrs->PhysicalAddressLength))) {
-            vpn_underlying_adapter_type = adapter_type;
+            underlying_type_for_vpn = adapter_type;
             adapter_type = ADAPTER_TYPE_VPN;
           }
 
           auto network = std::make_unique<Network>(name, description, prefix,
                                                    prefix_length, adapter_type);
-          network->set_underlying_type_for_vpn(vpn_underlying_adapter_type);
+          network->set_underlying_type_for_vpn(underlying_type_for_vpn);
           network->set_default_local_address_provider(this);
           network->set_mdns_responder_provider(this);
           network->set_scope_id(scope_id);
@@ -870,11 +888,6 @@ bool BasicNetworkManager::IsIgnoredNetwork(const Network& network) const {
     return true;
   }
 #endif
-
-  if (network_monitor_ &&
-      !network_monitor_->IsAdapterAvailable(network.name())) {
-    return true;
-  }
 
   // Ignore any networks with a 0.x.y.z IP
   if (network.prefix().family() == AF_INET) {
