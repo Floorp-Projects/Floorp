@@ -16,29 +16,10 @@ module.exports = {
     browser: true,
     es2021: true,
     "mozilla/privileged": true,
+    "mozilla/specific": true,
   },
 
   extends: ["eslint:recommended", "plugin:prettier/recommended"],
-
-  globals: {
-    // These are all specific to Firefox unless otherwise stated.
-    Cc: false,
-    ChromeUtils: false,
-    Ci: false,
-    Components: false,
-    Cr: false,
-    Cu: false,
-    Debugger: false,
-    InstallTrigger: false,
-    // https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/InternalError
-    InternalError: true,
-    Services: false,
-    // https://developer.mozilla.org/docs/Web/API/Window/dump
-    dump: true,
-    openDialog: false,
-    // https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/uneval
-    uneval: false,
-  },
 
   overrides: [
     {
