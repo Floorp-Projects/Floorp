@@ -29,7 +29,6 @@ vendoring:
     - docs
     - scan-build-install.sh
     - src/cubeb-jni-instances.h
-    - src/cubeb-sles.h
     - src/cubeb_assert.h
     - src/cubeb_audiotrack.c
     - src/cubeb_kai.c
@@ -43,7 +42,6 @@ vendoring:
     - include/cubeb_export.h
     - include/moz.build
     - src/cubeb-jni-instances.h
-    - src/cubeb-sles.h
     - src/cubeb_assert.h
     - src/cubeb_osx_run_loop.c
     - src/moz.build
