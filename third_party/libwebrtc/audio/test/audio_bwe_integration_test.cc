@@ -105,9 +105,9 @@ class NoBandwidthDropAfterDtx : public AudioBweTest {
   NoBandwidthDropAfterDtx()
       : sender_call_(nullptr), stats_poller_("stats poller task queue") {}
 
-  void ModifyAudioConfigs(
-      AudioSendStream::Config* send_config,
-      std::vector<AudioReceiveStream::Config>* receive_configs) override {
+  void ModifyAudioConfigs(AudioSendStream::Config* send_config,
+                          std::vector<AudioReceiveStreamInterface::Config>*
+                              receive_configs) override {
     send_config->send_codec_spec = AudioSendStream::Config::SendCodecSpec(
         test::CallTest::kAudioSendPayloadType,
         {"OPUS",
@@ -120,7 +120,7 @@ class NoBandwidthDropAfterDtx : public AudioBweTest {
     send_config->rtp.extensions.push_back(
         RtpExtension(RtpExtension::kTransportSequenceNumberUri,
                      kTransportSequenceNumberExtensionId));
-    for (AudioReceiveStream::Config& recv_config : *receive_configs) {
+    for (AudioReceiveStreamInterface::Config& recv_config : *receive_configs) {
       recv_config.rtp.transport_cc = true;
       recv_config.rtp.extensions = send_config->rtp.extensions;
       recv_config.rtp.remote_ssrc = send_config->rtp.ssrc;

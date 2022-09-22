@@ -61,9 +61,10 @@ class DegradedCall : public Call, private PacketReceiver {
       const AudioSendStream::Config& config) override;
   void DestroyAudioSendStream(AudioSendStream* send_stream) override;
 
-  AudioReceiveStream* CreateAudioReceiveStream(
-      const AudioReceiveStream::Config& config) override;
-  void DestroyAudioReceiveStream(AudioReceiveStream* receive_stream) override;
+  AudioReceiveStreamInterface* CreateAudioReceiveStream(
+      const AudioReceiveStreamInterface::Config& config) override;
+  void DestroyAudioReceiveStream(
+      AudioReceiveStreamInterface* receive_stream) override;
 
   VideoSendStream* CreateVideoSendStream(
       VideoSendStream::Config config,
@@ -100,13 +101,13 @@ class DegradedCall : public Call, private PacketReceiver {
   void SignalChannelNetworkState(MediaType media, NetworkState state) override;
   void OnAudioTransportOverheadChanged(
       int transport_overhead_per_packet) override;
-  void OnLocalSsrcUpdated(AudioReceiveStream& stream,
+  void OnLocalSsrcUpdated(AudioReceiveStreamInterface& stream,
                           uint32_t local_ssrc) override;
   void OnLocalSsrcUpdated(VideoReceiveStreamInterface& stream,
                           uint32_t local_ssrc) override;
   void OnLocalSsrcUpdated(FlexfecReceiveStream& stream,
                           uint32_t local_ssrc) override;
-  void OnUpdateSyncGroup(AudioReceiveStream& stream,
+  void OnUpdateSyncGroup(AudioReceiveStreamInterface& stream,
                          absl::string_view sync_group) override;
   void OnSentPacket(const rtc::SentPacket& sent_packet) override;
 

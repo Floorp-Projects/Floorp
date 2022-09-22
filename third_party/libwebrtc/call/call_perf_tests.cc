@@ -190,7 +190,7 @@ void CallPerfTest::TestAudioVideoSync(FecMode fec,
   std::unique_ptr<test::PacketTransport> receive_transport;
 
   AudioSendStream* audio_send_stream;
-  AudioReceiveStream* audio_receive_stream;
+  AudioReceiveStreamInterface* audio_receive_stream;
   std::unique_ptr<DriftingClock> drifting_clock;
 
   SendTask(RTC_FROM_HERE, task_queue(), [&]() {
@@ -273,7 +273,7 @@ void CallPerfTest::TestAudioVideoSync(FecMode fec,
     video_receive_configs_[0].renderer = observer.get();
     video_receive_configs_[0].sync_group = kSyncGroup;
 
-    AudioReceiveStream::Config audio_recv_config;
+    AudioReceiveStreamInterface::Config audio_recv_config;
     audio_recv_config.rtp.remote_ssrc = kAudioSendSsrc;
     audio_recv_config.rtp.local_ssrc = kAudioRecvSsrc;
     audio_recv_config.rtcp_send_transport = receive_transport.get();
@@ -1021,9 +1021,9 @@ void CallPerfTest::TestMinAudioVideoBitrate(int test_bitrate_from,
 
     size_t GetNumAudioStreams() const override { return 1; }
 
-    void ModifyAudioConfigs(
-        AudioSendStream::Config* send_config,
-        std::vector<AudioReceiveStream::Config>* receive_configs) override {
+    void ModifyAudioConfigs(AudioSendStream::Config* send_config,
+                            std::vector<AudioReceiveStreamInterface::Config>*
+                                receive_configs) override {
       send_config->send_codec_spec->target_bitrate_bps =
           absl::optional<int>(kOpusBitrateFbBps);
     }

@@ -33,7 +33,7 @@
 
 namespace webrtc {
 
-std::string AudioReceiveStream::Config::Rtp::ToString() const {
+std::string AudioReceiveStreamInterface::Config::Rtp::ToString() const {
   char ss_buf[1024];
   rtc::SimpleStringBuilder ss(ss_buf);
   ss << "{remote_ssrc: " << remote_ssrc;
@@ -54,7 +54,7 @@ std::string AudioReceiveStream::Config::Rtp::ToString() const {
   return ss.str();
 }
 
-std::string AudioReceiveStream::Config::ToString() const {
+std::string AudioReceiveStreamInterface::Config::ToString() const {
   char ss_buf[1024];
   rtc::SimpleStringBuilder ss(ss_buf);
   ss << "{rtp: " << rtp.ToString();
@@ -72,7 +72,7 @@ std::unique_ptr<voe::ChannelReceiveInterface> CreateChannelReceive(
     Clock* clock,
     webrtc::AudioState* audio_state,
     NetEqFactory* neteq_factory,
-    const webrtc::AudioReceiveStream::Config& config,
+    const webrtc::AudioReceiveStreamInterface::Config& config,
     RtcEventLog* event_log) {
   RTC_DCHECK(audio_state);
   internal::AudioState* internal_audio_state =
@@ -93,7 +93,7 @@ AudioReceiveStreamImpl::AudioReceiveStreamImpl(
     Clock* clock,
     PacketRouter* packet_router,
     NetEqFactory* neteq_factory,
-    const webrtc::AudioReceiveStream::Config& config,
+    const webrtc::AudioReceiveStreamInterface::Config& config,
     const rtc::scoped_refptr<webrtc::AudioState>& audio_state,
     webrtc::RtcEventLog* event_log)
     : AudioReceiveStreamImpl(clock,
@@ -110,7 +110,7 @@ AudioReceiveStreamImpl::AudioReceiveStreamImpl(
 AudioReceiveStreamImpl::AudioReceiveStreamImpl(
     Clock* clock,
     PacketRouter* packet_router,
-    const webrtc::AudioReceiveStream::Config& config,
+    const webrtc::AudioReceiveStreamInterface::Config& config,
     const rtc::scoped_refptr<webrtc::AudioState>& audio_state,
     webrtc::RtcEventLog* event_log,
     std::unique_ptr<voe::ChannelReceiveInterface> channel_receive)
@@ -167,7 +167,7 @@ void AudioReceiveStreamImpl::UnregisterFromTransport() {
 }
 
 void AudioReceiveStreamImpl::ReconfigureForTesting(
-    const webrtc::AudioReceiveStream::Config& config) {
+    const webrtc::AudioReceiveStreamInterface::Config& config) {
   RTC_DCHECK_RUN_ON(&worker_thread_checker_);
 
   // SSRC can't be changed mid-stream.
@@ -282,10 +282,10 @@ RtpHeaderExtensionMap AudioReceiveStreamImpl::GetRtpExtensionMap() const {
   return RtpHeaderExtensionMap(config_.rtp.extensions);
 }
 
-webrtc::AudioReceiveStream::Stats AudioReceiveStreamImpl::GetStats(
+webrtc::AudioReceiveStreamInterface::Stats AudioReceiveStreamImpl::GetStats(
     bool get_and_clear_legacy_stats) const {
   RTC_DCHECK_RUN_ON(&worker_thread_checker_);
-  webrtc::AudioReceiveStream::Stats stats;
+  webrtc::AudioReceiveStreamInterface::Stats stats;
   stats.remote_ssrc = remote_ssrc();
 
   webrtc::CallReceiveStatistics call_stats =

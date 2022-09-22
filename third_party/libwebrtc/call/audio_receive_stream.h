@@ -28,7 +28,7 @@
 namespace webrtc {
 class AudioSinkInterface;
 
-class AudioReceiveStream : public MediaReceiveStreamInterface {
+class AudioReceiveStreamInterface : public MediaReceiveStreamInterface {
  public:
   struct Stats {
     Stats();
@@ -150,14 +150,14 @@ class AudioReceiveStream : public MediaReceiveStreamInterface {
     // decrypted in whatever way the caller choses. This is not required by
     // default.
     // TODO(tommi): Remove this member variable from the struct. It's not
-    // a part of the AudioReceiveStream state but rather a pass through
+    // a part of the AudioReceiveStreamInterface state but rather a pass through
     // variable.
     rtc::scoped_refptr<webrtc::FrameDecryptorInterface> frame_decryptor;
 
     // An optional frame transformer used by insertable streams to transform
     // encoded frames.
     // TODO(tommi): Remove this member variable from the struct. It's not
-    // a part of the AudioReceiveStream state but rather a pass through
+    // a part of the AudioReceiveStreamInterface state but rather a pass through
     // variable.
     rtc::scoped_refptr<webrtc::FrameTransformerInterface> frame_transformer;
   };
@@ -208,8 +208,14 @@ class AudioReceiveStream : public MediaReceiveStreamInterface {
   virtual const std::vector<RtpExtension>& GetRtpExtensions() const = 0;
 
  protected:
-  virtual ~AudioReceiveStream() {}
+  virtual ~AudioReceiveStreamInterface() {}
 };
+
+// TODO(bugs.webrtc.org/7484): Remove this once downstream usage of the
+// deprecated name is gone.
+using AudioReceiveStream [[deprecated("Use AudioReceiveStreamInterface")]] =
+    AudioReceiveStreamInterface;
+
 }  // namespace webrtc
 
 #endif  // CALL_AUDIO_RECEIVE_STREAM_H_

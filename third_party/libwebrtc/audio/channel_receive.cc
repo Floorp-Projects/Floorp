@@ -318,13 +318,13 @@ void ChannelReceive::OnReceivedPayloadData(
     // packet as discarded.
 
     // If we have a source_tracker_, tell it that the frame has been
-    // "delivered". Normally, this happens in AudioReceiveStream when audio
-    // frames are pulled out, but when playout is muted, nothing is pulling
-    // frames. The downside of this approach is that frames delivered this way
-    // won't be delayed for playout, and therefore will be unsynchronized with
-    // (a) audio delay when playing and (b) any audio/video synchronization. But
-    // the alternative is that muting playout also stops the SourceTracker from
-    // updating RtpSource information.
+    // "delivered". Normally, this happens in AudioReceiveStreamInterface when
+    // audio frames are pulled out, but when playout is muted, nothing is
+    // pulling frames. The downside of this approach is that frames delivered
+    // this way won't be delayed for playout, and therefore will be
+    // unsynchronized with (a) audio delay when playing and (b) any audio/video
+    // synchronization. But the alternative is that muting playout also stops
+    // the SourceTracker from updating RtpSource information.
     if (source_tracker_) {
       RtpPacketInfos::vector_type packet_vector = {
           RtpPacketInfo(rtpHeader, clock_->CurrentTime())};

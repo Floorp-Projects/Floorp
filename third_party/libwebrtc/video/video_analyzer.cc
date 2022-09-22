@@ -194,7 +194,8 @@ void VideoAnalyzer::SetReceiveStream(VideoReceiveStreamInterface* stream) {
   receive_stream_ = stream;
 }
 
-void VideoAnalyzer::SetAudioReceiveStream(AudioReceiveStream* recv_stream) {
+void VideoAnalyzer::SetAudioReceiveStream(
+    AudioReceiveStreamInterface* recv_stream) {
   MutexLock lock(&lock_);
   RTC_CHECK(!audio_receive_stream_);
   audio_receive_stream_ = recv_stream;
@@ -526,7 +527,7 @@ void VideoAnalyzer::PollStats() {
   }
 
   if (audio_receive_stream_ != nullptr) {
-    AudioReceiveStream::Stats receive_stats =
+    AudioReceiveStreamInterface::Stats receive_stats =
         audio_receive_stream_->GetStats(/*get_and_clear_legacy_stats=*/true);
     audio_expand_rate_.AddSample(receive_stats.expand_rate);
     audio_accelerate_rate_.AddSample(receive_stats.accelerate_rate);

@@ -297,9 +297,9 @@ class TransportFeedbackTester : public test::EndToEndTest {
     (*receive_configs)[0].rtp.transport_cc = feedback_enabled_;
   }
 
-  void ModifyAudioConfigs(
-      AudioSendStream::Config* send_config,
-      std::vector<AudioReceiveStream::Config>* receive_configs) override {
+  void ModifyAudioConfigs(AudioSendStream::Config* send_config,
+                          std::vector<AudioReceiveStreamInterface::Config>*
+                              receive_configs) override {
     send_config->rtp.extensions.clear();
     send_config->rtp.extensions.push_back(
         RtpExtension(RtpExtension::kTransportSequenceNumberUri,
@@ -448,9 +448,9 @@ TEST_F(TransportFeedbackEndToEndTest, TransportSeqNumOnAudioAndVideo) {
     size_t GetNumVideoStreams() const override { return 1; }
     size_t GetNumAudioStreams() const override { return 1; }
 
-    void ModifyAudioConfigs(
-        AudioSendStream::Config* send_config,
-        std::vector<AudioReceiveStream::Config>* receive_configs) override {
+    void ModifyAudioConfigs(AudioSendStream::Config* send_config,
+                            std::vector<AudioReceiveStreamInterface::Config>*
+                                receive_configs) override {
       send_config->rtp.extensions.clear();
       send_config->rtp.extensions.push_back(
           RtpExtension(RtpExtension::kTransportSequenceNumberUri,

@@ -294,7 +294,8 @@ class WebRtcVoiceEngineTestFake : public ::testing::TestWithParam<bool> {
     return GetSendStream(ssrc).GetConfig();
   }
 
-  const webrtc::AudioReceiveStream::Config& GetRecvStreamConfig(uint32_t ssrc) {
+  const webrtc::AudioReceiveStreamInterface::Config& GetRecvStreamConfig(
+      uint32_t ssrc) {
     return GetRecvStream(ssrc).GetConfig();
   }
 
@@ -656,8 +657,9 @@ class WebRtcVoiceEngineTestFake : public ::testing::TestWithParam<bool> {
               stats.ana_statistics.uplink_packet_loss_fraction);
   }
 
-  webrtc::AudioReceiveStream::Stats GetAudioReceiveStreamStats() const {
-    webrtc::AudioReceiveStream::Stats stats;
+  webrtc::AudioReceiveStreamInterface::Stats GetAudioReceiveStreamStats()
+      const {
+    webrtc::AudioReceiveStreamInterface::Stats stats;
     stats.remote_ssrc = 123;
     stats.payload_bytes_rcvd = 456;
     stats.header_and_padding_bytes_rcvd = 67;
@@ -824,7 +826,7 @@ TEST_P(WebRtcVoiceEngineTestFake, CreateSendStream) {
 TEST_P(WebRtcVoiceEngineTestFake, CreateRecvStream) {
   EXPECT_TRUE(SetupChannel());
   EXPECT_TRUE(AddRecvStream(kSsrcX));
-  const webrtc::AudioReceiveStream::Config& config =
+  const webrtc::AudioReceiveStreamInterface::Config& config =
       GetRecvStreamConfig(kSsrcX);
   EXPECT_EQ(kSsrcX, config.rtp.remote_ssrc);
   EXPECT_EQ(0xFA17FA17, config.rtp.local_ssrc);
@@ -3578,7 +3580,8 @@ TEST_P(WebRtcVoiceEngineTestFake, PreservePlayoutWhenRecreateRecvStream) {
   channel_->SetPlayout(true);
   EXPECT_TRUE(GetRecvStream(kSsrcX).started());
 
-  // Changing RTP header extensions will recreate the AudioReceiveStream.
+  // Changing RTP header extensions will recreate the
+  // AudioReceiveStreamInterface.
   cricket::AudioRecvParameters parameters;
   parameters.extensions.push_back(
       webrtc::RtpExtension(webrtc::RtpExtension::kAudioLevelUri, 12));

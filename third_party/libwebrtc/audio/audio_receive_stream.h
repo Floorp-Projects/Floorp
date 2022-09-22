@@ -42,7 +42,7 @@ namespace internal {
 class AudioSendStream;
 }  // namespace internal
 
-class AudioReceiveStreamImpl final : public webrtc::AudioReceiveStream,
+class AudioReceiveStreamImpl final : public webrtc::AudioReceiveStreamInterface,
                                      public AudioMixer::Source,
                                      public Syncable {
  public:
@@ -50,14 +50,14 @@ class AudioReceiveStreamImpl final : public webrtc::AudioReceiveStream,
       Clock* clock,
       PacketRouter* packet_router,
       NetEqFactory* neteq_factory,
-      const webrtc::AudioReceiveStream::Config& config,
+      const webrtc::AudioReceiveStreamInterface::Config& config,
       const rtc::scoped_refptr<webrtc::AudioState>& audio_state,
       webrtc::RtcEventLog* event_log);
   // For unit tests, which need to supply a mock channel receive.
   AudioReceiveStreamImpl(
       Clock* clock,
       PacketRouter* packet_router,
-      const webrtc::AudioReceiveStream::Config& config,
+      const webrtc::AudioReceiveStreamInterface::Config& config,
       const rtc::scoped_refptr<webrtc::AudioState>& audio_state,
       webrtc::RtcEventLog* event_log,
       std::unique_ptr<voe::ChannelReceiveInterface> channel_receive);
@@ -82,7 +82,7 @@ class AudioReceiveStreamImpl final : public webrtc::AudioReceiveStream,
   // network thread.
   void UnregisterFromTransport();
 
-  // webrtc::AudioReceiveStream implementation.
+  // webrtc::AudioReceiveStreamInterface implementation.
   void Start() override;
   void Stop() override;
   bool transport_cc() const override;
@@ -100,7 +100,7 @@ class AudioReceiveStreamImpl final : public webrtc::AudioReceiveStream,
   const std::vector<RtpExtension>& GetRtpExtensions() const override;
   RtpHeaderExtensionMap GetRtpExtensionMap() const override;
 
-  webrtc::AudioReceiveStream::Stats GetStats(
+  webrtc::AudioReceiveStreamInterface::Stats GetStats(
       bool get_and_clear_legacy_stats) const override;
   void SetSink(AudioSinkInterface* sink) override;
   void SetGain(float gain) override;
@@ -145,7 +145,8 @@ class AudioReceiveStreamImpl final : public webrtc::AudioReceiveStream,
   const AudioSendStream* GetAssociatedSendStreamForTesting() const;
 
   // TODO(tommi): Remove this method.
-  void ReconfigureForTesting(const webrtc::AudioReceiveStream::Config& config);
+  void ReconfigureForTesting(
+      const webrtc::AudioReceiveStreamInterface::Config& config);
 
  private:
   internal::AudioState* audio_state() const;
@@ -159,7 +160,7 @@ class AudioReceiveStreamImpl final : public webrtc::AudioReceiveStream,
   // that belong to the network thread. Once the packets are fully delivered
   // on the network thread, this comment will be deleted.
   RTC_NO_UNIQUE_ADDRESS SequenceChecker packet_sequence_checker_;
-  webrtc::AudioReceiveStream::Config config_;
+  webrtc::AudioReceiveStreamInterface::Config config_;
   rtc::scoped_refptr<webrtc::AudioState> audio_state_;
   SourceTracker source_tracker_;
   const std::unique_ptr<voe::ChannelReceiveInterface> channel_receive_;

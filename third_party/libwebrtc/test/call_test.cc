@@ -420,12 +420,12 @@ void CallTest::CreateMatchingAudioConfigs(Transport* transport,
       audio_send_config_, audio_decoder_factory_, transport, sync_group));
 }
 
-AudioReceiveStream::Config CallTest::CreateMatchingAudioConfig(
+AudioReceiveStreamInterface::Config CallTest::CreateMatchingAudioConfig(
     const AudioSendStream::Config& send_config,
     rtc::scoped_refptr<AudioDecoderFactory> audio_decoder_factory,
     Transport* transport,
     std::string sync_group) {
-  AudioReceiveStream::Config audio_config;
+  AudioReceiveStreamInterface::Config audio_config;
   audio_config.rtp.local_ssrc = kReceiverLocalAudioSsrc;
   audio_config.rtcp_send_transport = transport;
   audio_config.rtp.remote_ssrc = send_config.rtp.ssrc;
@@ -586,7 +586,7 @@ void CallTest::Start() {
   if (audio_send_stream_) {
     audio_send_stream_->Start();
   }
-  for (AudioReceiveStream* audio_recv_stream : audio_receive_streams_)
+  for (AudioReceiveStreamInterface* audio_recv_stream : audio_receive_streams_)
     audio_recv_stream->Start();
 }
 
@@ -598,7 +598,7 @@ void CallTest::StartVideoStreams() {
 }
 
 void CallTest::Stop() {
-  for (AudioReceiveStream* audio_recv_stream : audio_receive_streams_)
+  for (AudioReceiveStreamInterface* audio_recv_stream : audio_receive_streams_)
     audio_recv_stream->Stop();
   if (audio_send_stream_) {
     audio_send_stream_->Stop();
@@ -617,7 +617,7 @@ void CallTest::DestroyStreams() {
   if (audio_send_stream_)
     sender_call_->DestroyAudioSendStream(audio_send_stream_);
   audio_send_stream_ = nullptr;
-  for (AudioReceiveStream* audio_recv_stream : audio_receive_streams_)
+  for (AudioReceiveStreamInterface* audio_recv_stream : audio_receive_streams_)
     receiver_call_->DestroyAudioReceiveStream(audio_recv_stream);
 
   DestroyVideoSendStreams();
@@ -798,11 +798,11 @@ void BaseTest::OnVideoStreamsCreated(
 
 void BaseTest::ModifyAudioConfigs(
     AudioSendStream::Config* send_config,
-    std::vector<AudioReceiveStream::Config>* receive_configs) {}
+    std::vector<AudioReceiveStreamInterface::Config>* receive_configs) {}
 
 void BaseTest::OnAudioStreamsCreated(
     AudioSendStream* send_stream,
-    const std::vector<AudioReceiveStream*>& receive_streams) {}
+    const std::vector<AudioReceiveStreamInterface*>& receive_streams) {}
 
 void BaseTest::ModifyFlexfecConfigs(
     std::vector<FlexfecReceiveStream::Config>* receive_configs) {}

@@ -1145,7 +1145,7 @@ void VideoQualityTest::CreateCapturers() {
 
 void VideoQualityTest::StartAudioStreams() {
   audio_send_stream_->Start();
-  for (AudioReceiveStream* audio_recv_stream : audio_receive_streams_)
+  for (AudioReceiveStreamInterface* audio_recv_stream : audio_receive_streams_)
     audio_recv_stream->Start();
 }
 
