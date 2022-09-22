@@ -137,6 +137,7 @@ if (is_android) {
     deps = [
       ":libjingle_peerconnection_jni",
       ":libjingle_peerconnection_metrics_default_jni",
+      ":native_api_jni",
       ":video_egl_jni",
       "../../pc:libjingle_peerconnection",
       "../../rtc_base",
@@ -563,8 +564,6 @@ if (current_os == "linux" || is_android) {
       "src/jni/android_histogram.cc",
       "src/jni/android_network_monitor.cc",
       "src/jni/android_network_monitor.h",
-      "src/jni/class_loader.h",
-      "src/jni/class_reference_holder.h",
       "src/jni/jni_common.cc",
       "src/jni/jni_helpers.cc",
       "src/jni/jni_helpers.h",
@@ -1566,6 +1565,7 @@ if (is_android) {
       ":instrumentationtests_jni",
       ":libjingle_peerconnection_jni",
       ":libjingle_peerconnection_metrics_default_jni",
+      ":native_api_jni",
       "../../pc:libjingle_peerconnection",
       "../../rtc_base",
     ]
