@@ -91,6 +91,10 @@
 #  include <sys/utsname.h>
 #endif
 
+#if defined(MOZ_WIDGET_GTK)
+#  include "mozilla/WidgetUtilsGtk.h"
+#endif
+
 #if defined(XP_WIN)
 #  include <windows.h>
 #  include "mozilla/WindowsVersion.h"
@@ -156,6 +160,25 @@ static nsCString GetDeviceModelId() {
     return std::move(deviceString);
   }
   return std::move(deviceModelId);
+}
+#endif
+
+#ifdef XP_UNIX
+static bool IsRunningUnderUbuntuSnap() {
+#  if defined(MOZ_WIDGET_GTK)
+  if (!widget::IsRunningUnderSnap()) {
+    return false;
+  }
+
+  char version[100];
+  if (PR_GetSystemInfo(PR_SI_RELEASE_BUILD, version, sizeof(version)) ==
+      PR_SUCCESS) {
+    if (strstr(version, "Ubuntu")) {
+      return true;
+    }
+  }
+#  endif
+  return false;
 }
 #endif
 
@@ -826,6 +849,12 @@ void nsHttpHandler::InitUserAgentComponents() {
       "X11"
 #endif
   );
+
+#ifdef XP_UNIX
+  if (IsRunningUnderUbuntuSnap()) {
+    mPlatform.AppendLiteral("; Ubuntu");
+  }
+#endif
 
 #ifdef ANDROID
   nsCOMPtr<nsIPropertyBag2> infoService =

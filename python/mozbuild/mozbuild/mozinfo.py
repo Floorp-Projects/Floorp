@@ -9,6 +9,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 
 import json
 import os
+import platform
 import re
 import six
 
@@ -144,6 +145,8 @@ def build_dict(config, env=os.environ):
         and "MOZ_ANDROID_MIN_SDK_VERSION" in substs
     ):
         d["android_min_sdk"] = substs["MOZ_ANDROID_MIN_SDK_VERSION"]
+
+    d["is_ubuntu"] = "Ubuntu" in platform.version()
 
     return d
 

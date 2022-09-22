@@ -6,7 +6,11 @@
 
 TEST_DIRS += ["httpserver", "gtest", "http3server"]
 
-BROWSER_CHROME_MANIFESTS += ["browser/browser.ini"]
+BROWSER_CHROME_MANIFESTS += [
+    "browser/browser.ini",
+    "useragent/nonsnap.ini",
+    "useragent/snap.ini",
+]
 MOCHITEST_MANIFESTS += ["mochitests/mochitest.ini"]
 
 XPCSHELL_TESTS_MANIFESTS += [
