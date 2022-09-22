@@ -190,6 +190,7 @@ const presets = {
     threads: [
       "cubeb",
       "audio",
+      "BackgroundThreadPool",
       "camera",
       "capture",
       "Compositor",
