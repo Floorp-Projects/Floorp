@@ -58,6 +58,13 @@ void BaseCapturerPipeWire::OnScreenCastSessionClosed() {
   }
 }
 
+void BaseCapturerPipeWire::UpdateResolution(uint32_t width, uint32_t height) {
+  if (!capturer_failed_) {
+    options_.screencast_stream()->UpdateScreenCastStreamResolution(width,
+                                                                   height);
+  }
+}
+
 void BaseCapturerPipeWire::Start(Callback* callback) {
   RTC_DCHECK(!callback_);
   RTC_DCHECK(callback);
