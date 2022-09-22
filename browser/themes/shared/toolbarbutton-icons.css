@@ -493,12 +493,12 @@ toolbarbutton.bookmark-item {
 
 .browser-sidebar2 {
   -moz-box-ordinal-group: 0 !important;
-  background: var(--toolbar-bgcolor);
+  background: var(--toolbar-field-background-color);
   border: var(--win-sidebar-bgcolor) 0.1px solid;
 } 
 
 #sidebar-select-box {
-  background: var(--toolbar-bgcolor);
+  background: var(--toolbar-field-background-color);
 }
 
 #sidebar-select-box {
@@ -511,16 +511,14 @@ toolbarbutton.bookmark-item {
   border-radius: 4px;
   color: inherit;
   fill: currentColor;
-  margin: 0px 2.5px 6px 0.2em;
-  padding-left: 8px;
+  margin: 5px 5px 5px 4px;
+  padding: 11px 7px 11px 10px;
   scale: 1.0;
-  padding-top: 9px;
-  padding-bottom: 10px;
 }
 
 #sidebar-select-box{
-border-left: 1px solid var(--chrome-content-separator-color);
-border-right: 1px solid var(--chrome-content-separator-color);
+  border-left: 1px solid var(--chrome-content-separator-color);
+  border-right: 1px solid var(--chrome-content-separator-color);
 }
 
 .sidebar2-icon {
@@ -534,9 +532,16 @@ border-right: 1px solid var(--chrome-content-separator-color);
   height: auto;
 }
 
+.sidepanel-icon[checked="true"] {
+  background-color: var(--tab-selected-bgcolor, var(--toolbar-bgcolor));
+  background-color: color-mix(in srgb, currentColor 20%, transparent) !important;
+  box-shadow: 0 0 4px rgba(0,0,0,.4) !important;
+}
+
 @media not (prefers-contrast) {
   .sidebar2-icon:hover, #preferences-icon:hover, .sidepanel-icon:hover {
-    background-color: color-mix(in srgb, currentColor 10%, transparent);
+    background-color: var(--tab-selected-bgcolor, var(--toolbar-bgcolor));
+    box-shadow: 0 0 4px rgba(0,0,0,.4);
   }
 }
 
@@ -544,10 +549,6 @@ border-right: 1px solid var(--chrome-content-separator-color);
   .sidebar2-icon:hover, .sidepanel-icon:hover {
     outline: 1px solid currentColor;
   }
-}
-
-.sidebar2-icon:hover:active, .sidepanel-icon:hover:active {
-  background-color: color-mix(in srgb, currentColor 20%, transparent);
 }
 
 #sidebar2-back {
@@ -601,7 +602,6 @@ border-right: 1px solid var(--chrome-content-separator-color);
 }
 
 #select-TST {
-  padding-left: 6px;
   list-style-image: url("chrome://browser/skin/TST-dark.svg");
 }
 
