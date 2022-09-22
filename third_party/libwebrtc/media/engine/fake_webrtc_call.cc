@@ -427,11 +427,6 @@ FakeFlexfecReceiveStream::GetConfig() const {
   return config_;
 }
 
-// TODO(brandtr): Implement when the stats have been designed.
-webrtc::FlexfecReceiveStream::Stats FakeFlexfecReceiveStream::GetStats() const {
-  return webrtc::FlexfecReceiveStream::Stats();
-}
-
 void FakeFlexfecReceiveStream::OnRtpPacket(const webrtc::RtpPacketReceived&) {
   RTC_DCHECK_NOTREACHED() << "Not implemented.";
 }
