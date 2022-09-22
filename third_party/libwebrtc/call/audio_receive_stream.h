@@ -211,11 +211,6 @@ class AudioReceiveStreamInterface : public MediaReceiveStreamInterface {
   virtual ~AudioReceiveStreamInterface() {}
 };
 
-// TODO(bugs.webrtc.org/7484): Remove this once downstream usage of the
-// deprecated name is gone.
-using AudioReceiveStream [[deprecated("Use AudioReceiveStreamInterface")]] =
-    AudioReceiveStreamInterface;
-
 }  // namespace webrtc
 
 #endif  // CALL_AUDIO_RECEIVE_STREAM_H_
