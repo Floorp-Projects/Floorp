@@ -2333,51 +2333,6 @@ TEST(DcSctpSocketTest, CloseStreamsWithPendingRequest) {
   absl::optional<DcSctpMessage> msg6 = z.cb.ConsumeReceivedMessage();
   ASSERT_TRUE(msg6.has_value());
   EXPECT_EQ(msg6->stream_id(), StreamID(3));
-}
-
-TEST(DcSctpSocketTest, StreamsHaveInitialPriority) {
-  DcSctpOptions options = {.default_stream_priority = StreamPriority(42)};
-  SocketUnderTest a("A", options);
-
-  EXPECT_EQ(a.socket.GetStreamPriority(StreamID(1)),
-            options.default_stream_priority);
-
-  a.socket.Send(DcSctpMessage(StreamID(2), PPID(53), {1, 2}), kSendOptions);
-
-  EXPECT_EQ(a.socket.GetStreamPriority(StreamID(2)),
-            options.default_stream_priority);
-}
-
-TEST(DcSctpSocketTest, CanChangeStreamPriority) {
-  DcSctpOptions options = {.default_stream_priority = StreamPriority(42)};
-  SocketUnderTest a("A", options);
-
-  a.socket.SetStreamPriority(StreamID(1), StreamPriority(43));
-  EXPECT_EQ(a.socket.GetStreamPriority(StreamID(1)), StreamPriority(43));
-
-  a.socket.Send(DcSctpMessage(StreamID(2), PPID(53), {1, 2}), kSendOptions);
-
-  a.socket.SetStreamPriority(StreamID(2), StreamPriority(43));
-  EXPECT_EQ(a.socket.GetStreamPriority(StreamID(2)), StreamPriority(43));
-}
-
-TEST_P(DcSctpSocketParametrizedTest, WillHandoverPriority) {
-  DcSctpOptions options = {.default_stream_priority = StreamPriority(42)};
-  auto a = std::make_unique<SocketUnderTest>("A", options);
-  SocketUnderTest z("Z");
-
-  ConnectSockets(*a, z);
-
-  a->socket.SetStreamPriority(StreamID(1), StreamPriority(43));
-  a->socket.Send(DcSctpMessage(StreamID(2), PPID(53), {1, 2}), kSendOptions);
-  a->socket.SetStreamPriority(StreamID(2), StreamPriority(43));
-
-  ExchangeMessages(*a, z);
-
-  a = MaybeHandoverSocket(std::move(a));
-
-  EXPECT_EQ(a->socket.GetStreamPriority(StreamID(1)), StreamPriority(43));
-  EXPECT_EQ(a->socket.GetStreamPriority(StreamID(2)), StreamPriority(43));
-}
+}  // namespace
 }  // namespace
 }  // namespace dcsctp

@@ -32,7 +32,6 @@ constexpr TimeMs kNow = TimeMs(0);
 constexpr StreamID kStreamID(1);
 constexpr PPID kPPID(53);
 constexpr size_t kMaxQueueSize = 1000;
-constexpr StreamPriority kDefaultPriority(10);
 constexpr size_t kBufferedAmountLowThreshold = 500;
 constexpr size_t kOneFragmentPacketSize = 100;
 constexpr size_t kTwoFragmentPacketSize = 101;
@@ -42,7 +41,6 @@ class RRSendQueueTest : public testing::Test {
   RRSendQueueTest()
       : buf_("log: ",
              kMaxQueueSize,
-             kDefaultPriority,
              on_buffered_amount_low_.AsStdFunction(),
              kBufferedAmountLowThreshold,
              on_total_buffered_amount_low_.AsStdFunction()) {}
@@ -760,40 +758,6 @@ TEST_F(RRSendQueueTest, WillStayInAStreamAsLongAsThatMessageIsSending) {
   EXPECT_THAT(chunk4.data.payload, SizeIs(1));
 
   EXPECT_FALSE(buf_.Produce(kNow, kOneFragmentPacketSize).has_value());
-}
-
-TEST_F(RRSendQueueTest, StreamsHaveInitialPriority) {
-  EXPECT_EQ(buf_.GetStreamPriority(StreamID(1)), kDefaultPriority);
-
-  buf_.Add(kNow, DcSctpMessage(StreamID(2), kPPID, std::vector<uint8_t>(40)));
-  EXPECT_EQ(buf_.GetStreamPriority(StreamID(2)), kDefaultPriority);
-}
-
-TEST_F(RRSendQueueTest, CanChangeStreamPriority) {
-  buf_.SetStreamPriority(StreamID(1), StreamPriority(42));
-  EXPECT_EQ(buf_.GetStreamPriority(StreamID(1)), StreamPriority(42));
-
-  buf_.Add(kNow, DcSctpMessage(StreamID(2), kPPID, std::vector<uint8_t>(40)));
-  buf_.SetStreamPriority(StreamID(2), StreamPriority(42));
-  EXPECT_EQ(buf_.GetStreamPriority(StreamID(2)), StreamPriority(42));
-}
-
-TEST_F(RRSendQueueTest, WillHandoverPriority) {
-  buf_.SetStreamPriority(StreamID(1), StreamPriority(42));
-
-  buf_.Add(kNow, DcSctpMessage(StreamID(2), kPPID, std::vector<uint8_t>(40)));
-  buf_.SetStreamPriority(StreamID(2), StreamPriority(42));
-
-  DcSctpSocketHandoverState state;
-  buf_.AddHandoverState(state);
-
-  RRSendQueue q2("log: ", kMaxQueueSize, kDefaultPriority,
-                 on_buffered_amount_low_.AsStdFunction(),
-                 kBufferedAmountLowThreshold,
-                 on_total_buffered_amount_low_.AsStdFunction());
-  q2.RestoreFromState(state);
-  EXPECT_EQ(q2.GetStreamPriority(StreamID(1)), StreamPriority(42));
-  EXPECT_EQ(q2.GetStreamPriority(StreamID(2)), StreamPriority(42));
 }
 }  // namespace
 }  // namespace dcsctp
