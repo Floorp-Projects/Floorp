@@ -19,8 +19,6 @@ UNIFIED_SOURCES += [
     'cff.cc',
     'cff_charstring.cc',
     'cmap.cc',
-    'colr.cc',
-    'cpal.cc',
     'cvar.cc',
     'cvt.cc',
     'feat.cc',
