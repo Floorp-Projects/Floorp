@@ -44,8 +44,8 @@ void BaseCapturerPipeWire::OnScreenCastRequestResult(RequestResponse result,
                                                      uint32_t stream_node_id,
                                                      int fd) {
   if (result != RequestResponse::kSuccess ||
-      !options_.screencast_stream()->StartScreenCastStream(stream_node_id,
-                                                           fd)) {
+      !options_.screencast_stream()->StartScreenCastStream(
+          stream_node_id, fd, options_.get_width(), options_.get_height())) {
     capturer_failed_ = true;
     RTC_LOG(LS_ERROR) << "ScreenCastPortal failed: "
                       << static_cast<uint>(result);
