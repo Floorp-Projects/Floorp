@@ -868,6 +868,7 @@ if (is_win || is_android) {
       deps += [
         "../modules/utility",
         "../sdk/android:libjingle_peerconnection_jni",
+        "../sdk/android:native_api_jni",
       ]
     }
   }
