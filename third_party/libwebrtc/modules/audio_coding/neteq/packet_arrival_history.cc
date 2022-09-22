@@ -23,12 +23,16 @@ PacketArrivalHistory::PacketArrivalHistory(int window_size_ms)
 void PacketArrivalHistory::Insert(uint32_t rtp_timestamp,
                                   int64_t arrival_time_ms) {
   RTC_DCHECK(sample_rate_khz_ > 0);
-  int64_t unwrapped_rtp_timestamp_ms =
-      timestamp_unwrapper_.Unwrap(rtp_timestamp) / sample_rate_khz_;
-  history_.emplace_back(unwrapped_rtp_timestamp_ms, arrival_time_ms);
+  int64_t unwrapped_rtp_timestamp = timestamp_unwrapper_.Unwrap(rtp_timestamp);
+  if (!newest_rtp_timestamp_ ||
+      unwrapped_rtp_timestamp > *newest_rtp_timestamp_) {
+    newest_rtp_timestamp_ = unwrapped_rtp_timestamp;
+  }
+  history_.emplace_back(unwrapped_rtp_timestamp / sample_rate_khz_,
+                        arrival_time_ms);
   MaybeUpdateCachedArrivals(history_.back());
   while (history_.front().rtp_timestamp_ms + window_size_ms_ <
-         unwrapped_rtp_timestamp_ms) {
+         unwrapped_rtp_timestamp / sample_rate_khz_) {
     if (&history_.front() == min_packet_arrival_) {
       min_packet_arrival_ = nullptr;
     }
@@ -59,6 +63,7 @@ void PacketArrivalHistory::Reset() {
   min_packet_arrival_ = nullptr;
   max_packet_arrival_ = nullptr;
   timestamp_unwrapper_ = TimestampUnwrapper();
+  newest_rtp_timestamp_ = absl::nullopt;
 }
 
 int PacketArrivalHistory::GetDelayMs(uint32_t rtp_timestamp,
@@ -76,6 +81,15 @@ int PacketArrivalHistory::GetMaxDelayMs() const {
     return 0;
   }
   return GetPacketArrivalDelayMs(*max_packet_arrival_);
+}
+
+bool PacketArrivalHistory::IsNewestRtpTimestamp(uint32_t rtp_timestamp) const {
+  if (!newest_rtp_timestamp_) {
+    return false;
+  }
+  int64_t unwrapped_rtp_timestamp =
+      timestamp_unwrapper_.UnwrapWithoutUpdate(rtp_timestamp);
+  return unwrapped_rtp_timestamp == *newest_rtp_timestamp_;
 }
 
 int PacketArrivalHistory::GetPacketArrivalDelayMs(

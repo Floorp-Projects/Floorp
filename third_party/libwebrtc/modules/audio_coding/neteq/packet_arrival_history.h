@@ -13,8 +13,8 @@
 
 #include <cstdint>
 #include <deque>
-#include <memory>
 
+#include "absl/types/optional.h"
 #include "api/neteq/tick_timer.h"
 #include "modules/include/module_common_types_public.h"
 
@@ -34,16 +34,20 @@ class PacketArrivalHistory {
   // `(time_ms - p.arrival_time_ms) - (rtp_timestamp - p.rtp_timestamp)`
   // where `p` is chosen as the packet arrival in the history that maximizes the
   // delay.
-  int GetDelayMs(uint32_t rtp_timestamp, int64_t times_ms) const;
+  int GetDelayMs(uint32_t rtp_timestamp, int64_t time_ms) const;
 
   // Get the maximum packet arrival delay observed in the history.
   int GetMaxDelayMs() const;
+
+  bool IsNewestRtpTimestamp(uint32_t rtp_timestamp) const;
 
   void Reset();
 
   void set_sample_rate(int sample_rate) {
     sample_rate_khz_ = sample_rate / 1000;
   }
+
+  size_t size() const { return history_.size(); }
 
  private:
   struct PacketArrival {
@@ -69,6 +73,7 @@ class PacketArrivalHistory {
   const PacketArrival* max_packet_arrival_ = nullptr;
   const int window_size_ms_;
   TimestampUnwrapper timestamp_unwrapper_;
+  absl::optional<int64_t> newest_rtp_timestamp_;
   int sample_rate_khz_ = 0;
 };
 
