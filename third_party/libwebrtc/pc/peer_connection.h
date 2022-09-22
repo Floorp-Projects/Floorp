@@ -273,6 +273,9 @@ class PeerConnection : public PeerConnectionInternal,
       rtc::scoped_refptr<RtpTransceiverProxyWithInternal<RtpTransceiver>>>
   GetTransceiversInternal() const override {
     RTC_DCHECK_RUN_ON(signaling_thread());
+    if (!ConfiguredForMedia()) {
+      return {};
+    }
     return rtp_manager()->transceivers()->List();
   }
 

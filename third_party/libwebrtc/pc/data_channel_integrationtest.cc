@@ -58,10 +58,24 @@ namespace {
 
 class DataChannelIntegrationTest
     : public PeerConnectionIntegrationBaseTest,
-      public ::testing::WithParamInterface<SdpSemantics> {
+      public ::testing::WithParamInterface<std::tuple<SdpSemantics, bool>> {
  protected:
   DataChannelIntegrationTest()
-      : PeerConnectionIntegrationBaseTest(GetParam()) {}
+      : PeerConnectionIntegrationBaseTest(std::get<0>(GetParam())),
+        allow_media_(std::get<1>(GetParam())) {}
+  bool allow_media() { return allow_media_; }
+
+  bool CreatePeerConnectionWrappers() {
+    if (allow_media_) {
+      return PeerConnectionIntegrationBaseTest::CreatePeerConnectionWrappers();
+    }
+    return PeerConnectionIntegrationBaseTest::
+        CreatePeerConnectionWrappersWithoutMediaEngine();
+  }
+
+ private:
+  // True if media is allowed to be added
+  const bool allow_media_;
 };
 
 // Fake clock must be set before threads are started to prevent race on
@@ -173,14 +187,18 @@ TEST_P(DataChannelIntegrationTest, EndToEndCallWithSctpDataChannel) {
   // Expect that data channel created on caller side will show up for callee as
   // well.
   caller()->CreateDataChannel();
-  caller()->AddAudioVideoTracks();
-  callee()->AddAudioVideoTracks();
+  if (allow_media()) {
+    caller()->AddAudioVideoTracks();
+    callee()->AddAudioVideoTracks();
+  }
   caller()->CreateAndSetAndSignalOffer();
   ASSERT_TRUE_WAIT(SignalingStateStable(), kDefaultTimeout);
-  // Ensure the existence of the SCTP data channel didn't impede audio/video.
-  MediaExpectations media_expectations;
-  media_expectations.ExpectBidirectionalAudioAndVideo();
-  ASSERT_TRUE(ExpectNewFrames(media_expectations));
+  if (allow_media()) {
+    // Ensure the existence of the SCTP data channel didn't impede audio/video.
+    MediaExpectations media_expectations;
+    media_expectations.ExpectBidirectionalAudioAndVideo();
+    ASSERT_TRUE(ExpectNewFrames(media_expectations));
+  }
   // Caller data channel should already exist (it created one). Callee data
   // channel may not exist yet, since negotiation happens in-band, not in SDP.
   ASSERT_NE(nullptr, caller()->data_channel());
@@ -202,7 +220,7 @@ TEST_P(DataChannelIntegrationTest, EndToEndCallWithSctpDataChannel) {
 // data channel only, and sends messages of various sizes.
 TEST_P(DataChannelIntegrationTest,
        EndToEndCallWithSctpDataChannelVariousSizes) {
-  ASSERT_TRUE(CreatePeerConnectionWrappersWithoutMediaEngine());
+  ASSERT_TRUE(CreatePeerConnectionWrappers());
   ConnectFakeSignaling();
   // Expect that data channel created on caller side will show up for callee as
   // well.
@@ -241,7 +259,7 @@ TEST_P(DataChannelIntegrationTest,
 // data channel only, and sends empty messages
 TEST_P(DataChannelIntegrationTest,
        EndToEndCallWithSctpDataChannelEmptyMessages) {
-  ASSERT_TRUE(CreatePeerConnectionWrappersWithoutMediaEngine());
+  ASSERT_TRUE(CreatePeerConnectionWrappers());
   ConnectFakeSignaling();
   // Expect that data channel created on caller side will show up for callee as
   // well.
@@ -291,7 +309,7 @@ TEST_P(DataChannelIntegrationTest,
   // this test does not use TURN.
   const size_t kLowestSafePayloadSizeLimit = 1225;
 
-  ASSERT_TRUE(CreatePeerConnectionWrappersWithoutMediaEngine());
+  ASSERT_TRUE(CreatePeerConnectionWrappers());
   ConnectFakeSignaling();
   // Expect that data channel created on caller side will show up for callee as
   // well.
@@ -328,7 +346,7 @@ TEST_P(DataChannelIntegrationTest, EndToEndCallWithSctpDataChannelHarmfulMtu) {
   // The size of the smallest message that fails to be delivered.
   const size_t kMessageSizeThatIsNotDelivered = 1157;
 
-  ASSERT_TRUE(CreatePeerConnectionWrappersWithoutMediaEngine());
+  ASSERT_TRUE(CreatePeerConnectionWrappers());
   ConnectFakeSignaling();
   caller()->CreateDataChannel();
   caller()->CreateAndSetAndSignalOffer();
@@ -369,8 +387,10 @@ TEST_P(DataChannelIntegrationTest, CalleeClosesSctpDataChannel) {
   ASSERT_TRUE(CreatePeerConnectionWrappers());
   ConnectFakeSignaling();
   caller()->CreateDataChannel();
-  caller()->AddAudioVideoTracks();
-  callee()->AddAudioVideoTracks();
+  if (allow_media()) {
+    caller()->AddAudioVideoTracks();
+    callee()->AddAudioVideoTracks();
+  }
   caller()->CreateAndSetAndSignalOffer();
   ASSERT_TRUE_WAIT(SignalingStateStable(), kDefaultTimeout);
   ASSERT_NE(nullptr, caller()->data_channel());
@@ -406,8 +426,10 @@ TEST_P(DataChannelIntegrationTest, SctpDataChannelConfigSentToOtherSide) {
   init.id = 53;
   init.maxRetransmits = 52;
   caller()->CreateDataChannel("data-channel", &init);
-  caller()->AddAudioVideoTracks();
-  callee()->AddAudioVideoTracks();
+  if (allow_media()) {
+    caller()->AddAudioVideoTracks();
+    callee()->AddAudioVideoTracks();
+  }
   caller()->CreateAndSetAndSignalOffer();
   ASSERT_TRUE_WAIT(SignalingStateStable(), kDefaultTimeout);
   ASSERT_TRUE_WAIT(callee()->data_channel() != nullptr, kDefaultTimeout);
@@ -429,7 +451,7 @@ TEST_P(DataChannelIntegrationTest, StressTestUnorderedSctpDataChannel) {
   virtual_socket_server()->set_delay_stddev(5);
   virtual_socket_server()->UpdateDelayDistribution();
   // Normal procedure, but with unordered data channel config.
-  ASSERT_TRUE(CreatePeerConnectionWrappersWithoutMediaEngine());
+  ASSERT_TRUE(CreatePeerConnectionWrappers());
   ConnectFakeSignaling();
   webrtc::DataChannelInit init;
   init.ordered = false;
@@ -633,6 +655,10 @@ TEST_P(DataChannelIntegrationTest, StressTestOpenCloseChannelWithDelay) {
 // This test sets up a call between two parties with audio, and video. When
 // audio and video are setup and flowing, an SCTP data channel is negotiated.
 TEST_P(DataChannelIntegrationTest, AddSctpDataChannelInSubsequentOffer) {
+  // This test can't be performed without media.
+  if (!allow_media()) {
+    return;
+  }
   ASSERT_TRUE(CreatePeerConnectionWrappers());
   ConnectFakeSignaling();
   // Do initial offer/answer with audio/video.
@@ -665,6 +691,10 @@ TEST_P(DataChannelIntegrationTest, AddSctpDataChannelInSubsequentOffer) {
 // Effectively the inverse of the test above. This was broken in M57; see
 // https://crbug.com/711243
 TEST_P(DataChannelIntegrationTest, SctpDataChannelToAudioVideoUpgrade) {
+  // This test can't be performed without media.
+  if (!allow_media()) {
+    return;
+  }
   ASSERT_TRUE(CreatePeerConnectionWrappers());
   ConnectFakeSignaling();
   // Do initial offer/answer with just data channel.
@@ -724,6 +754,10 @@ TEST_P(DataChannelIntegrationTest,
 // Test that after closing PeerConnections, they stop sending any packets
 // (ICE, DTLS, RTP...).
 TEST_P(DataChannelIntegrationTest, ClosingConnectionStopsPacketFlow) {
+  // This test can't be performed without media.
+  if (!allow_media()) {
+    return;
+  }
   // Set up audio/video/data, wait for some frames to be received.
   ASSERT_TRUE(CreatePeerConnectionWrappers());
   ConnectFakeSignaling();
@@ -1055,8 +1089,9 @@ TEST_P(DataChannelIntegrationTest,
 
 INSTANTIATE_TEST_SUITE_P(DataChannelIntegrationTest,
                          DataChannelIntegrationTest,
-                         Values(SdpSemantics::kPlanB_DEPRECATED,
-                                SdpSemantics::kUnifiedPlan));
+                         Combine(Values(SdpSemantics::kPlanB_DEPRECATED,
+                                        SdpSemantics::kUnifiedPlan),
+                                 testing::Bool()));
 
 TEST_F(DataChannelIntegrationTestUnifiedPlan,
        EndToEndCallWithBundledSctpDataChannel) {
