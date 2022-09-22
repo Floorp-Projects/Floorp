@@ -60,7 +60,8 @@ nsPIDOMWindowInner* TestInterfaceAsyncIterableDoubleUnion::GetParentObject()
   return mParent;
 }
 
-already_AddRefed<Promise> TestInterfaceAsyncIterableDoubleUnion::GetNextPromise(
+already_AddRefed<Promise>
+TestInterfaceAsyncIterableDoubleUnion::GetNextIterationResult(
     Iterator* aIterator, ErrorResult& aRv) {
   RefPtr<Promise> promise = Promise::Create(mParent->AsGlobal(), aRv);
   if (NS_WARN_IF(aRv.Failed())) {
@@ -68,7 +69,7 @@ already_AddRefed<Promise> TestInterfaceAsyncIterableDoubleUnion::GetNextPromise(
   }
 
   NS_DispatchToMainThread(NewRunnableMethod<RefPtr<Iterator>, RefPtr<Promise>>(
-      "TestInterfaceAsyncIterableDoubleUnion::GetNextPromise", this,
+      "TestInterfaceAsyncIterableDoubleUnion::GetNextIterationResult", this,
       &TestInterfaceAsyncIterableDoubleUnion::ResolvePromise, aIterator,
       promise));
 

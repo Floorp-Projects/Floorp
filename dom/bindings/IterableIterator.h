@@ -212,6 +212,7 @@ class IterableIterator : public IterableIteratorBase {
 namespace binding_detail {
 
 class AsyncIterableNextImpl;
+class AsyncIterableReturnImpl;
 
 }  // namespace binding_detail
 
@@ -225,6 +226,7 @@ class AsyncIterableIteratorBase : public IterableIteratorBase {
 
  private:
   friend class binding_detail::AsyncIterableNextImpl;
+  friend class binding_detail::AsyncIterableReturnImpl;
 
   // 3.7.10.1. Default asynchronous iterator objects
   // Target is in AsyncIterableIterator
@@ -320,13 +322,31 @@ class AsyncIterableNextImpl {
   already_AddRefed<Promise> Next(JSContext* aCx,
                                  AsyncIterableIteratorBase* aObject,
                                  nsISupports* aGlobalObject, ErrorResult& aRv);
-  virtual already_AddRefed<Promise> GetNextPromise(ErrorResult& aRv) = 0;
+  virtual already_AddRefed<Promise> GetNextResult(ErrorResult& aRv) = 0;
 
  private:
   already_AddRefed<Promise> NextSteps(JSContext* aCx,
                                       AsyncIterableIteratorBase* aObject,
                                       nsIGlobalObject* aGlobalObject,
                                       ErrorResult& aRv);
+};
+
+class AsyncIterableReturnImpl {
+ protected:
+  already_AddRefed<Promise> Return(JSContext* aCx,
+                                   AsyncIterableIteratorBase* aObject,
+                                   nsISupports* aGlobalObject,
+                                   JS::Handle<JS::Value> aValue,
+                                   ErrorResult& aRv);
+  virtual already_AddRefed<Promise> GetReturnPromise(
+      JSContext* aCx, JS::Handle<JS::Value> aValue, ErrorResult& aRv) = 0;
+
+ private:
+  already_AddRefed<Promise> ReturnSteps(JSContext* aCx,
+                                        AsyncIterableIteratorBase* aObject,
+                                        nsIGlobalObject* aGlobalObject,
+                                        JS::Handle<JS::Value> aValue,
+                                        ErrorResult& aRv);
 };
 
 template <typename T>
@@ -341,22 +361,49 @@ class AsyncIterableIteratorNoReturn : public AsyncIterableIterator<T>,
   }
 
  protected:
-  already_AddRefed<Promise> GetNextPromise(ErrorResult& aRv) override {
-    return this->mIterableObj->GetNextPromise(
+  already_AddRefed<Promise> GetNextResult(ErrorResult& aRv) override {
+    return this->mIterableObj->GetNextIterationResult(
         static_cast<AsyncIterableIterator<T>*>(this), aRv);
   }
 };
 
 template <typename T>
-using AsyncIterableIteratorWrapFunc =
-    bool (*)(JSContext* aCx, AsyncIterableIteratorNoReturn<T>* aObject,
-             JS::MutableHandle<JSObject*> aReflector);
-
-template <typename T, AsyncIterableIteratorWrapFunc<T> WrapFunc>
-class WrappableAsyncIterableIterator final
-    : public AsyncIterableIteratorNoReturn<T> {
+class AsyncIterableIteratorWithReturn : public AsyncIterableIteratorNoReturn<T>,
+                                        public AsyncIterableReturnImpl {
  public:
+  already_AddRefed<Promise> Return(JSContext* aCx, JS::Handle<JS::Value> aValue,
+                                   ErrorResult& aRv) {
+    return AsyncIterableReturnImpl::Return(
+        aCx, this, this->mIterableObj->GetParentObject(), aValue, aRv);
+  }
+
+ protected:
   using AsyncIterableIteratorNoReturn<T>::AsyncIterableIteratorNoReturn;
+
+  already_AddRefed<Promise> GetReturnPromise(JSContext* aCx,
+                                             JS::Handle<JS::Value> aValue,
+                                             ErrorResult& aRv) override {
+    return this->mIterableObj->IteratorReturn(
+        aCx, static_cast<AsyncIterableIterator<T>*>(this), aValue, aRv);
+  }
+};
+
+template <typename T, bool NeedReturnMethod>
+using AsyncIterableIteratorNative =
+    std::conditional_t<NeedReturnMethod, AsyncIterableIteratorWithReturn<T>,
+                       AsyncIterableIteratorNoReturn<T>>;
+
+template <typename T, bool NeedReturnMethod>
+using AsyncIterableIteratorWrapFunc = bool (*)(
+    JSContext* aCx, AsyncIterableIteratorNative<T, NeedReturnMethod>* aObject,
+    JS::MutableHandle<JSObject*> aReflector);
+
+template <typename T, bool NeedReturnMethod,
+          AsyncIterableIteratorWrapFunc<T, NeedReturnMethod> WrapFunc,
+          typename Base = AsyncIterableIteratorNative<T, NeedReturnMethod>>
+class WrappableAsyncIterableIterator final : public Base {
+ public:
+  using Base::Base;
 
   bool WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto,
                   JS::MutableHandle<JSObject*> aObj) {

@@ -41,8 +41,8 @@ class TestInterfaceAsyncIterableSingle : public nsISupports,
       const TestInterfaceAsyncIterableSingleOptions& aOptions, ErrorResult& rv);
 
   using Iterator = AsyncIterableIterator<TestInterfaceAsyncIterableSingle>;
-  already_AddRefed<Promise> GetNextPromise(Iterator* aIterator,
-                                           ErrorResult& aRv);
+  already_AddRefed<Promise> GetNextIterationResult(Iterator* aIterator,
+                                                   ErrorResult& aRv);
 
   struct IteratorData {
     void Traverse(nsCycleCollectionTraversalCallback& cb);
@@ -58,9 +58,8 @@ class TestInterfaceAsyncIterableSingle : public nsISupports,
                              ErrorResult& aError);
 
  protected:
-  already_AddRefed<Promise> GetNextPromise(IterableIteratorBase* aIterator,
-                                           IteratorData& aData,
-                                           ErrorResult& aRv);
+  already_AddRefed<Promise> GetNextIterationResult(
+      IterableIteratorBase* aIterator, IteratorData& aData, ErrorResult& aRv);
 
   virtual ~TestInterfaceAsyncIterableSingle() = default;
 

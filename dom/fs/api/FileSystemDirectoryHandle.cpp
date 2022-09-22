@@ -56,7 +56,7 @@ void FileSystemDirectoryHandle::InitAsyncIteratorData(
       fs::FileSystemDirectoryIteratorFactory::Create(mMetadata, aType);
 }
 
-already_AddRefed<Promise> FileSystemDirectoryHandle::GetNextPromise(
+already_AddRefed<Promise> FileSystemDirectoryHandle::GetNextIterationResult(
     FileSystemDirectoryHandle::iterator_t* aIterator, ErrorResult& aError) {
   return aIterator->Data().mImpl->Next(mGlobal, mManager, aError);
 }

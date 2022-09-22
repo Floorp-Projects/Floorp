@@ -5,6 +5,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/dom/TestInterfaceAsyncIterableSingleWithArgs.h"
+#include "js/Value.h"
 #include "mozilla/dom/TestInterfaceJSMaplikeSetlikeIterableBinding.h"
 #include "nsPIDOMWindow.h"
 #include "mozilla/dom/BindingUtils.h"
@@ -12,6 +13,30 @@
 #include "mozilla/dom/Promise-inl.h"
 
 namespace mozilla::dom {
+
+NS_IMPL_CYCLE_COLLECTION_CLASS(TestInterfaceAsyncIterableSingleWithArgs)
+
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(
+    TestInterfaceAsyncIterableSingleWithArgs, TestInterfaceAsyncIterableSingle)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(
+    TestInterfaceAsyncIterableSingleWithArgs, TestInterfaceAsyncIterableSingle)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+
+NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN_INHERITED(
+    TestInterfaceAsyncIterableSingleWithArgs, TestInterfaceAsyncIterableSingle)
+  NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(mReturnLastCalledWith)
+NS_IMPL_CYCLE_COLLECTION_TRACE_END
+
+NS_IMPL_ADDREF_INHERITED(TestInterfaceAsyncIterableSingleWithArgs,
+                         TestInterfaceAsyncIterableSingle)
+NS_IMPL_RELEASE_INHERITED(TestInterfaceAsyncIterableSingleWithArgs,
+                          TestInterfaceAsyncIterableSingle)
+
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(
+    TestInterfaceAsyncIterableSingleWithArgs)
+NS_INTERFACE_MAP_END_INHERITING(TestInterfaceAsyncIterableSingle)
 
 // static
 already_AddRefed<TestInterfaceAsyncIterableSingleWithArgs>
@@ -43,10 +68,26 @@ void TestInterfaceAsyncIterableSingleWithArgs::InitAsyncIteratorData(
 }
 
 already_AddRefed<Promise>
-TestInterfaceAsyncIterableSingleWithArgs::GetNextPromise(Iterator* aIterator,
-                                                         ErrorResult& aRv) {
-  return TestInterfaceAsyncIterableSingle::GetNextPromise(
+TestInterfaceAsyncIterableSingleWithArgs::GetNextIterationResult(
+    Iterator* aIterator, ErrorResult& aRv) {
+  return TestInterfaceAsyncIterableSingle::GetNextIterationResult(
       aIterator, aIterator->Data(), aRv);
+}
+
+already_AddRefed<Promise>
+TestInterfaceAsyncIterableSingleWithArgs::IteratorReturn(
+    JSContext* aCx, Iterator* aIterator, JS::Handle<JS::Value> aValue,
+    ErrorResult& aRv) {
+  ++mReturnCallCount;
+
+  RefPtr<Promise> promise = Promise::Create(GetParentObject()->AsGlobal(), aRv);
+  if (NS_WARN_IF(aRv.Failed())) {
+    return nullptr;
+  }
+
+  mReturnLastCalledWith = aValue;
+  promise->MaybeResolve(JS::UndefinedHandleValue);
+  return promise.forget();
 }
 
 }  // namespace mozilla::dom
