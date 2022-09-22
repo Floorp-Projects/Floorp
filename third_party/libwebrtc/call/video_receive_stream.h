@@ -305,10 +305,6 @@ class VideoReceiveStreamInterface : public MediaReceiveStreamInterface {
   virtual ~VideoReceiveStreamInterface() {}
 };
 
-// TODO(bugs.webrtc.org/7484): Remove this once downstream usage of the
-// deprecated name is gone.
-using VideoReceiveStream [[deprecated]] = VideoReceiveStreamInterface;
-
 }  // namespace webrtc
 
 #endif  // CALL_VIDEO_RECEIVE_STREAM_H_
