@@ -20,6 +20,8 @@ class nsIGlobalObject;
 namespace mozilla {
 
 class ErrorResult;
+enum UseCounter : int16_t;
+enum class UseCounterWorker : int16_t;
 
 namespace ipc {
 class PrincipalInfo;

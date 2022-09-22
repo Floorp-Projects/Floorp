@@ -15,6 +15,7 @@
 #include "mozilla/dom/InternalRequest.h"
 #include "mozilla/dom/Request.h"
 #include "mozilla/dom/Response.h"
+#include "mozilla/dom/RootedDictionary.h"
 #include "mozilla/dom/cache/CacheTypes.h"
 #include "mozilla/dom/cache/ReadStream.h"
 #include "mozilla/ipc/BackgroundChild.h"
