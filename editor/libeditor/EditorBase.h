@@ -1921,12 +1921,6 @@ class EditorBase : public nsIEditor,
   }
 
   /**
-   * CollapseSelectionToEnd() collapses the selection to the last leaf content
-   * of the editor.
-   */
-  MOZ_CAN_RUN_SCRIPT nsresult CollapseSelectionToEndOfLastLeafNode() const;
-
-  /**
    * AllowsTransactionsToChangeSelection() returns true if editor allows any
    * transactions to change Selection.  Otherwise, transactions shouldn't
    * change Selection.
