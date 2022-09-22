@@ -4064,29 +4064,31 @@ void nsWindow::OnMap() {
 void nsWindow::OnUnmap() {
   LOG("nsWindow::OnUnmap");
 
+#ifdef MOZ_WAYLAND
   // wl_surface owned by mContainer is going to be deleted.
   // Make sure we don't paint to it on Wayland.
-  if (GdkIsWaylandDisplay() && mCompositorWidgetDelegate) {
-    mCompositorWidgetDelegate->DisableRendering();
-  }
-#ifdef MOZ_WAYLAND
-  if (moz_container_wayland_has_egl_window(mContainer)) {
-    // Widget is backed by OpenGL EGLSurface created over wl_surface
-    // owned by mContainer.
-    // RenderCompositorEGL::Resume() deletes recent EGLSurface based on
-    // wl_surface owned by mContainer and creates a new fallback EGLSurface.
-    // Then we can delete wl_surface in moz_container_wayland_unmap().
-    // We don't want to pause compositor as it may lead to whole
-    // browser freeze (Bug 1777664).
-    if (CompositorBridgeChild* remoteRenderer = GetRemoteRenderer()) {
-      remoteRenderer->SendResume();
+  if (GdkIsWaylandDisplay()) {
+    if (mCompositorWidgetDelegate) {
+      mCompositorWidgetDelegate->DisableRendering();
+    }
+    if (moz_container_wayland_has_egl_window(mContainer)) {
+      // Widget is backed by OpenGL EGLSurface created over wl_surface
+      // owned by mContainer.
+      // RenderCompositorEGL::Resume() deletes recent EGLSurface based on
+      // wl_surface owned by mContainer and creates a new fallback EGLSurface.
+      // Then we can delete wl_surface in moz_container_wayland_unmap().
+      // We don't want to pause compositor as it may lead to whole
+      // browser freeze (Bug 1777664).
+      if (CompositorBridgeChild* remoteRenderer = GetRemoteRenderer()) {
+        remoteRenderer->SendResume();
+      }
+    }
+    if (GdkIsWaylandDisplay()) {
+      moz_container_wayland_unmap(GTK_WIDGET(mContainer));
     }
   }
 #endif
   moz_container_unmap(GTK_WIDGET(mContainer));
-  if (GdkIsWaylandDisplay()) {
-    moz_container_wayland_unmap(GTK_WIDGET(mContainer));
-  }
 }
 
 void nsWindow::OnUnrealize() {
