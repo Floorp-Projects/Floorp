@@ -632,7 +632,7 @@ cubeb_enumerate_devices(cubeb * context, cubeb_device_type devtype,
   int rv;
   if ((devtype & (CUBEB_DEVICE_TYPE_INPUT | CUBEB_DEVICE_TYPE_OUTPUT)) == 0)
     return CUBEB_ERROR_INVALID_PARAMETER;
-  if (collection == NULL)
+  if (context == NULL || collection == NULL)
     return CUBEB_ERROR_INVALID_PARAMETER;
   if (!context->ops->enumerate_devices)
     return CUBEB_ERROR_NOT_SUPPORTED;
