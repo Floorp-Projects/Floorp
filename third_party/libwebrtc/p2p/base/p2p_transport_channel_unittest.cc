@@ -6097,15 +6097,13 @@ class ForgetLearnedStateController : public cricket::BasicIceController {
       const cricket::IceControllerFactoryArgs& args)
       : cricket::BasicIceController(args) {}
 
-  SwitchResult SortAndSwitchConnection(IceControllerEvent reason) override {
+  SwitchResult SortAndSwitchConnection(IceSwitchReason reason) override {
     auto result = cricket::BasicIceController::SortAndSwitchConnection(reason);
     if (forget_connnection_) {
       result.connections_to_forget_state_on.push_back(forget_connnection_);
       forget_connnection_ = nullptr;
     }
-    result.recheck_event =
-        IceControllerEvent(IceControllerEvent::ICE_CONTROLLER_RECHECK);
-    result.recheck_event->recheck_delay_ms = 100;
+    result.recheck_event.emplace(IceSwitchReason::ICE_CONTROLLER_RECHECK, 100);
     return result;
   }
 
