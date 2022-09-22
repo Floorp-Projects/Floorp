@@ -360,15 +360,18 @@ html {
               }
 
               .arrow-icon {
-                background: url('chrome://browser/skin/forward.svg') no-repeat right 8px center;
-                background-size: 12px;
-                padding-inline-end: 24px;
                 -moz-context-properties: fill;
                 fill: currentColor;
 
-                &:dir(rtl) {
+                &::after {
+                  content: '';
+                  padding-inline-end: 12px;
+                  margin-inline-start: 4px;
+                  background: url('chrome://browser/skin/forward.svg') no-repeat center / 12px;
+                }
+
+                &:dir(rtl)::after {
                   background-image: url('chrome://browser/skin/back.svg');
-                  background-position-x: left 8px;
                 }
               }
             }
