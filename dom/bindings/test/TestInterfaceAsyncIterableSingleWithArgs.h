@@ -26,10 +26,10 @@ class TestInterfaceAsyncIterableSingleWithArgs final
 
   using Iterator =
       AsyncIterableIterator<TestInterfaceAsyncIterableSingleWithArgs>;
-  void InitAsyncIterator(Iterator* aIterator,
-                         const TestInterfaceAsyncIteratorOptions& aOptions,
-                         ErrorResult& aError);
-  void DestroyAsyncIterator(Iterator* aIterator);
+
+  void InitAsyncIteratorData(IteratorData& aData, Iterator::IteratorType aType,
+                             const TestInterfaceAsyncIteratorOptions& aOptions,
+                             ErrorResult& aError);
 
   already_AddRefed<Promise> GetNextPromise(Iterator* aIterator,
                                            ErrorResult& aRv);
