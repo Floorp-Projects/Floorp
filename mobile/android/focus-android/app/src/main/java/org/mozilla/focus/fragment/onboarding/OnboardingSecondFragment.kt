@@ -69,6 +69,7 @@ class OnboardingSecondFragment : Fragment() {
                     )
                 }
             }
+            isTransitionGroup = true
         }
     }
 }

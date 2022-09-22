@@ -140,6 +140,7 @@ class CFRPopup(
         anchor.post {
             CFRPopupFullScreenLayout(container, anchor, text, properties, onDismiss).apply {
                 this.show()
+                isTransitionGroup = true
             }
         }
     }

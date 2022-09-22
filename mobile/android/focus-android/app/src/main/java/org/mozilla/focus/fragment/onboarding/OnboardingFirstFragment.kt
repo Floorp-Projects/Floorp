@@ -56,6 +56,7 @@ class OnboardingFirstFragment : Fragment() {
                     )
                 }
             }
+            isTransitionGroup = true
         }
     }
 }

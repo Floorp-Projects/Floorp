@@ -64,6 +64,7 @@ object SearchWidgetUtils {
                             )
                         }
                     }
+                    isTransitionGroup = true
                 },
             )
         }.show()

@@ -46,6 +46,7 @@ class BiometricAuthenticationFragment : BaseFragment(), AuthenticationDelegate {
                     }
                 }
             }
+            isTransitionGroup = true
         }
     }
 

@@ -114,6 +114,7 @@ abstract class BaseComposeFragment : Fragment() {
                     }
                 }
             }
+            isTransitionGroup = true
         }
     }
 }
