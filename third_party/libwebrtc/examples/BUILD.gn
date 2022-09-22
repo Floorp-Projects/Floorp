@@ -96,7 +96,7 @@ if (is_android) {
     apk_name = "AppRTCMobile"
     android_manifest = "androidapp/AndroidManifest.xml"
     min_sdk_version = 21
-    target_sdk_version = 29
+    target_sdk_version = 31
 
     deps = [
       ":AppRTCMobile_javalib",
@@ -206,7 +206,7 @@ if (is_android) {
     apk_name = "AppRTCMobileTest"
     android_manifest = "androidtests/AndroidManifest.xml"
     min_sdk_version = 21
-    target_sdk_version = 21
+    target_sdk_version = 31
 
     sources = [
       "androidtests/src/org/appspot/apprtc/test/PeerConnectionClientTest.java",
