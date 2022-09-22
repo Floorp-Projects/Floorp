@@ -2458,18 +2458,13 @@ bool nsWindow::WaylandPopupAnchorAdjustForParentPopup(
 
   GdkRectangle finalRect;
   if (!gdk_rectangle_intersect(aPopupAnchor, &parentWindowRect, &finalRect)) {
-    // Popup anchor is outside of parent window - we can't use move-to-rect
-    *aOffset = {mPopupMoveToRectParams.mOffset.x + aPopupAnchor->x,
-                mPopupMoveToRectParams.mOffset.y + aPopupAnchor->y};
-    finalRect = *aPopupAnchor;
-    finalRect.x = finalRect.y = 0;
-  } else {
-    *aOffset = mPopupMoveToRectParams.mOffset;
+    return false;
   }
-
   *aPopupAnchor = finalRect;
   LOG("  anchor is correct %d,%d -> %d x %d", finalRect.x, finalRect.y,
       finalRect.width, finalRect.height);
+
+  *aOffset = mPopupMoveToRectParams.mOffset;
   LOG("  anchor offset %d, %d", aOffset->x, aOffset->y);
   return true;
 }
