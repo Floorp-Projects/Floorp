@@ -23,6 +23,10 @@ XPCOMUtils.defineLazyServiceGetters(lazy, {
   WindowsUIUtils: ["@mozilla.org/windows-ui-utils;1", "nsIWindowsUIUtils"],
 });
 
+XPCOMUtils.defineLazyModuleGetters(lazy, {
+  PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.jsm",
+});
+
 const { Rect, Point } = ChromeUtils.import(
   "resource://gre/modules/Geometry.jsm"
 );
@@ -469,6 +473,10 @@ var PictureInPicture = {
     let features =
       `${PLAYER_FEATURES},top=${top},left=${left},outerWidth=${width},` +
       `outerHeight=${height}`;
+
+    if (lazy.PrivateBrowsingUtils.isWindowPrivate(parentWin)) {
+      features += ",private";
+    }
 
     let pipWindow = Services.ww.openWindow(
       parentWin,
