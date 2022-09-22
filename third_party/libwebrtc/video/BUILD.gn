@@ -57,6 +57,7 @@ rtc_library("video") {
     ":frame_cadence_adapter",
     ":frame_decode_scheduler",
     ":frame_dumping_decoder",
+    ":unique_timestamp_counter",
     ":video_receive_stream_timeout_tracker",
     ":video_stream_encoder_impl",
     "../api:array_view",
@@ -179,6 +180,7 @@ rtc_source_set("video_legacy") {
   ]
   deps = [
     ":frame_dumping_decoder",
+    ":unique_timestamp_counter",
     ":video",
     "../api:array_view",
     "../api:field_trials_view",
@@ -527,6 +529,13 @@ rtc_library("video_stream_encoder_impl") {
   ]
 }
 
+rtc_library("unique_timestamp_counter") {
+  sources = [
+    "unique_timestamp_counter.cc",
+    "unique_timestamp_counter.h",
+  ]
+}
+
 if (rtc_include_tests) {
   rtc_library("video_mocks") {
     testonly = true
@@ -828,6 +837,7 @@ if (rtc_include_tests) {
       "stats_counter_unittest.cc",
       "stream_synchronization_unittest.cc",
       "task_queue_frame_decode_scheduler_unittest.cc",
+      "unique_timestamp_counter_unittest.cc",
       "video_receive_stream2_unittest.cc",
       "video_receive_stream_timeout_tracker_unittest.cc",
       "video_send_stream_impl_unittest.cc",
@@ -843,6 +853,7 @@ if (rtc_include_tests) {
       ":frame_decode_scheduler",
       ":frame_decode_timing",
       ":task_queue_frame_decode_scheduler",
+      ":unique_timestamp_counter",
       ":video",
       ":video_mocks",
       ":video_receive_stream_timeout_tracker",

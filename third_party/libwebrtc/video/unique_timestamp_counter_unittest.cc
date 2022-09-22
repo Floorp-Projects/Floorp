@@ -7,7 +7,7 @@
  *  in the file PATENTS.  All contributing project authors may
  *  be found in the AUTHORS file in the root of the source tree.
  */
-#include "modules/video_coding/unique_timestamp_counter.h"
+#include "video/unique_timestamp_counter.h"
 
 #include "test/gtest.h"
 
