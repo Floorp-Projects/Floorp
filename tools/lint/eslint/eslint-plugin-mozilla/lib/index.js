@@ -30,6 +30,7 @@ module.exports = {
     simpletest: require("../lib/environments/simpletest.js"),
     sjs: require("../lib/environments/sjs.js"),
     "special-powers-sandbox": require("../lib/environments/special-powers-sandbox.js"),
+    specific: require("../lib/environments/specific"),
     privileged: require("../lib/environments/privileged.js"),
     xpcshell: require("../lib/environments/xpcshell.js"),
   },

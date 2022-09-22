@@ -22,6 +22,7 @@ module.exports = {
         // "tools/lint/eslint/eslint-plugin-mozilla/lib/configs/recommended.js".
         es2021: false,
         "mozilla/privileged": false,
+        "mozilla/specific": false,
 
         // Enable SpiderMonkey's self-hosted environment.
         "spidermonkey-js/environment": true,
@@ -136,22 +137,6 @@ module.exports = {
         Record: "off",
         Temporal: "off",
         Tuple: "off",
-
-        // Undefine globals from Mozilla recommended file
-        // "tools/lint/eslint/eslint-plugin-mozilla/lib/configs/recommended.js".
-        Cc: "off",
-        ChromeUtils: "off",
-        Ci: "off",
-        Components: "off",
-        Cr: "off",
-        Cu: "off",
-        Debugger: "off",
-        InstallTrigger: "off",
-        InternalError: "off",
-        Services: "off",
-        dump: "off",
-        openDialog: "off",
-        uneval: "off",
       },
     },
   ],
