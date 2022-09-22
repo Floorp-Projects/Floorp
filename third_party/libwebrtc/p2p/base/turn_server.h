@@ -108,7 +108,7 @@ class TurnServerAllocation : public rtc::MessageHandlerAutoCleanup,
                         const rtc::SocketAddress& addr,
                         const int64_t& packet_time_us);
 
-  static int ComputeLifetime(const TurnMessage* msg);
+  static int ComputeLifetime(const TurnMessage& msg);
   bool HasPermission(const rtc::IPAddress& addr);
   void AddPermission(const rtc::IPAddress& addr);
   Permission* FindPermission(const rtc::IPAddress& addr) const;

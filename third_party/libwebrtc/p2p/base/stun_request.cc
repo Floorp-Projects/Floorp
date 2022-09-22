@@ -193,12 +193,10 @@ void StunRequestManager::SendPacket(const void* data,
 
 StunRequest::StunRequest(StunRequestManager& manager)
     : manager_(manager),
-      msg_(new StunMessage()),
+      msg_(new StunMessage(STUN_INVALID_MESSAGE_TYPE)),
       tstamp_(0),
       count_(0),
-      timeout_(false) {
-  msg_->SetTransactionID(rtc::CreateRandomString(kStunTransactionIdLength));
-}
+      timeout_(false) {}
 
 StunRequest::StunRequest(StunRequestManager& manager,
                          std::unique_ptr<StunMessage> message)
@@ -207,7 +205,7 @@ StunRequest::StunRequest(StunRequestManager& manager,
       tstamp_(0),
       count_(0),
       timeout_(false) {
-  msg_->SetTransactionID(rtc::CreateRandomString(kStunTransactionIdLength));
+  RTC_DCHECK(!msg_->transaction_id().empty());
 }
 
 StunRequest::~StunRequest() {
@@ -215,10 +213,15 @@ StunRequest::~StunRequest() {
 }
 
 void StunRequest::Construct() {
-  if (msg_->type() == 0) {
-    Prepare(msg_.get());
-    RTC_DCHECK(msg_->type() != 0);
-  }
+  // TODO(tommi): The implementation assumes that Construct() is only called
+  // once (see `StunRequestManager::SendDelayed` below). However, these steps to
+  // construct a request object are odd to have at this level (virtual method
+  // called from the parent class, _after_ construction) and also triggered
+  // from a different class... via a "Send" method.
+  // Remove `Prepare`, `Construct` and make construction of the message objects
+  // separate from the StunRequest and StunRequestManager classes.
+  Prepare(msg_.get());
+  RTC_DCHECK_NE(msg_->type(), 0);
 }
 
 int StunRequest::type() {

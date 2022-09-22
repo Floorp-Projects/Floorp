@@ -761,7 +761,6 @@ TEST_F(StunTest, ReadLegacyMessage) {
 
 TEST_F(StunTest, SetIPv6XorAddressAttributeOwner) {
   StunMessage msg;
-  StunMessage msg2;
   size_t size = ReadStunMessage(&msg, kStunMessageWithIPv6XorMappedAddress);
 
   rtc::IPAddress test_address(kIPv6TestAddress1);
@@ -775,7 +774,7 @@ TEST_F(StunTest, SetIPv6XorAddressAttributeOwner) {
                             test_address);
 
   // Owner with a different transaction ID.
-  msg2.SetTransactionID("ABCDABCDABCD");
+  StunMessage msg2(STUN_INVALID_MESSAGE_TYPE, "ABCDABCDABCD");
   StunXorAddressAttribute addr2(STUN_ATTR_XOR_MAPPED_ADDRESS, 20, NULL);
   addr2.SetIP(addr->ipaddr());
   addr2.SetPort(addr->port());
@@ -809,7 +808,6 @@ TEST_F(StunTest, SetIPv4XorAddressAttributeOwner) {
   // should _not_ be affected by a change in owner. IPv4 XOR address uses the
   // magic cookie value which is fixed.
   StunMessage msg;
-  StunMessage msg2;
   size_t size = ReadStunMessage(&msg, kStunMessageWithIPv4XorMappedAddress);
 
   rtc::IPAddress test_address(kIPv4TestAddress1);
@@ -823,7 +821,7 @@ TEST_F(StunTest, SetIPv4XorAddressAttributeOwner) {
                             test_address);
 
   // Owner with a different transaction ID.
-  msg2.SetTransactionID("ABCDABCDABCD");
+  StunMessage msg2(STUN_INVALID_MESSAGE_TYPE, "ABCDABCDABCD");
   StunXorAddressAttribute addr2(STUN_ATTR_XOR_MAPPED_ADDRESS, 20, NULL);
   addr2.SetIP(addr->ipaddr());
   addr2.SetPort(addr->port());
@@ -893,13 +891,12 @@ TEST_F(StunTest, CreateAddressInArbitraryOrder) {
 }
 
 TEST_F(StunTest, WriteMessageWithIPv6AddressAttribute) {
-  StunMessage msg;
   size_t size = sizeof(kStunMessageWithIPv6MappedAddress);
 
   rtc::IPAddress test_ip(kIPv6TestAddress1);
 
-  msg.SetType(STUN_BINDING_REQUEST);
-  msg.SetTransactionID(
+  StunMessage msg(
+      STUN_BINDING_REQUEST,
       std::string(reinterpret_cast<const char*>(kTestTransactionId1),
                   kStunTransactionIdLength));
   CheckStunTransactionID(msg, kTestTransactionId1, kStunTransactionIdLength);
@@ -922,13 +919,12 @@ TEST_F(StunTest, WriteMessageWithIPv6AddressAttribute) {
 }
 
 TEST_F(StunTest, WriteMessageWithIPv4AddressAttribute) {
-  StunMessage msg;
   size_t size = sizeof(kStunMessageWithIPv4MappedAddress);
 
   rtc::IPAddress test_ip(kIPv4TestAddress1);
 
-  msg.SetType(STUN_BINDING_RESPONSE);
-  msg.SetTransactionID(
+  StunMessage msg(
+      STUN_BINDING_RESPONSE,
       std::string(reinterpret_cast<const char*>(kTestTransactionId1),
                   kStunTransactionIdLength));
   CheckStunTransactionID(msg, kTestTransactionId1, kStunTransactionIdLength);
@@ -951,13 +947,12 @@ TEST_F(StunTest, WriteMessageWithIPv4AddressAttribute) {
 }
 
 TEST_F(StunTest, WriteMessageWithIPv6XorAddressAttribute) {
-  StunMessage msg;
   size_t size = sizeof(kStunMessageWithIPv6XorMappedAddress);
 
   rtc::IPAddress test_ip(kIPv6TestAddress1);
 
-  msg.SetType(STUN_BINDING_RESPONSE);
-  msg.SetTransactionID(
+  StunMessage msg(
+      STUN_BINDING_RESPONSE,
       std::string(reinterpret_cast<const char*>(kTestTransactionId2),
                   kStunTransactionIdLength));
   CheckStunTransactionID(msg, kTestTransactionId2, kStunTransactionIdLength);
@@ -981,13 +976,12 @@ TEST_F(StunTest, WriteMessageWithIPv6XorAddressAttribute) {
 }
 
 TEST_F(StunTest, WriteMessageWithIPv4XoreAddressAttribute) {
-  StunMessage msg;
   size_t size = sizeof(kStunMessageWithIPv4XorMappedAddress);
 
   rtc::IPAddress test_ip(kIPv4TestAddress1);
 
-  msg.SetType(STUN_BINDING_RESPONSE);
-  msg.SetTransactionID(
+  StunMessage msg(
+      STUN_BINDING_RESPONSE,
       std::string(reinterpret_cast<const char*>(kTestTransactionId1),
                   kStunTransactionIdLength));
   CheckStunTransactionID(msg, kTestTransactionId1, kStunTransactionIdLength);
@@ -1083,11 +1077,10 @@ TEST_F(StunTest, ReadMessageWithAnUnknownAttribute) {
 }
 
 TEST_F(StunTest, WriteMessageWithAnErrorCodeAttribute) {
-  StunMessage msg;
   size_t size = sizeof(kStunMessageWithErrorAttribute);
 
-  msg.SetType(STUN_BINDING_ERROR_RESPONSE);
-  msg.SetTransactionID(
+  StunMessage msg(
+      STUN_BINDING_ERROR_RESPONSE,
       std::string(reinterpret_cast<const char*>(kTestTransactionId1),
                   kStunTransactionIdLength));
   CheckStunTransactionID(msg, kTestTransactionId1, kStunTransactionIdLength);
@@ -1105,11 +1098,10 @@ TEST_F(StunTest, WriteMessageWithAnErrorCodeAttribute) {
 }
 
 TEST_F(StunTest, WriteMessageWithAUInt16ListAttribute) {
-  StunMessage msg;
   size_t size = sizeof(kStunMessageWithUInt16ListAttribute);
 
-  msg.SetType(STUN_BINDING_REQUEST);
-  msg.SetTransactionID(
+  StunMessage msg(
+      STUN_BINDING_REQUEST,
       std::string(reinterpret_cast<const char*>(kTestTransactionId2),
                   kStunTransactionIdLength));
   CheckStunTransactionID(msg, kTestTransactionId2, kStunTransactionIdLength);
@@ -1475,7 +1467,7 @@ static const unsigned char kRelayMessage[] = {
 
 // Test that we can read the GTURN-specific fields.
 TEST_F(StunTest, ReadRelayMessage) {
-  RelayMessage msg, msg2;
+  RelayMessage msg;
 
   const char* input = reinterpret_cast<const char*>(kRelayMessage);
   size_t size = sizeof(kRelayMessage);
@@ -1486,8 +1478,7 @@ TEST_F(StunTest, ReadRelayMessage) {
   EXPECT_EQ(size - 20, msg.length());
   EXPECT_EQ("0123456789ab", msg.transaction_id());
 
-  msg2.SetType(STUN_BINDING_REQUEST);
-  msg2.SetTransactionID("0123456789ab");
+  RelayMessage msg2(STUN_BINDING_REQUEST, "0123456789ab");
 
   in_addr legacy_in_addr;
   legacy_in_addr.s_addr = htonl(17U);
@@ -1710,7 +1701,7 @@ TEST_F(StunTest, CopyAttribute) {
 
 // Test Clone
 TEST_F(StunTest, Clone) {
-  IceMessage msg;
+  IceMessage msg(0, "0123456789ab");
   {
     auto errorcode = StunAttribute::CreateErrorCode();
     errorcode->SetCode(kTestErrorCode);
@@ -1735,9 +1726,6 @@ TEST_F(StunTest, Clone) {
   }
   auto copy = msg.Clone();
   ASSERT_NE(nullptr, copy.get());
-
-  msg.SetTransactionID("0123456789ab");
-  copy->SetTransactionID("0123456789ab");
 
   rtc::ByteBufferWriter out1;
   EXPECT_TRUE(msg.Write(&out1));
@@ -1812,21 +1800,18 @@ TEST_F(StunTest, EqualAttributes) {
 }
 
 TEST_F(StunTest, ReduceTransactionIdIsHostOrderIndependent) {
-  std::string transaction_id = "abcdefghijkl";
-  StunMessage message;
-  ASSERT_TRUE(message.SetTransactionID(transaction_id));
+  const std::string transaction_id = "abcdefghijkl";
+  StunMessage message(0, transaction_id);
   uint32_t reduced_transaction_id = message.reduced_transaction_id();
   EXPECT_EQ(reduced_transaction_id, 1835954016u);
 }
 
 TEST_F(StunTest, GoogMiscInfo) {
-  StunMessage msg;
+  StunMessage msg(STUN_BINDING_REQUEST, "ABCDEFGHIJKL");
   const size_t size =
       /* msg header */ 20 +
       /* attr header */ 4 +
       /* 3 * 2 rounded to multiple of 4 */ 8;
-  msg.SetType(STUN_BINDING_REQUEST);
-  msg.SetTransactionID("ABCDEFGH");
   auto list =
       StunAttribute::CreateUInt16ListAttribute(STUN_ATTR_GOOG_MISC_INFO);
   list->AddTypeAtIndex(0, 0x1U);
@@ -1861,9 +1846,7 @@ TEST_F(StunTest, IsStunMethod) {
 }
 
 TEST_F(StunTest, SizeRestrictionOnAttributes) {
-  StunMessage msg;
-  msg.SetType(STUN_BINDING_REQUEST);
-  msg.SetTransactionID("ABCDEFGH");
+  StunMessage msg(STUN_BINDING_REQUEST, "ABCDEFGHIJKL");
   auto long_username = StunAttribute::CreateByteString(STUN_ATTR_USERNAME);
   std::string long_string(509, 'x');
   long_username->CopyBytes(long_string.c_str(), long_string.size());

@@ -756,14 +756,12 @@ class PortTest : public ::testing::Test, public sigslot::has_slots<> {
     EXPECT_TRUE_WAIT(ch2.conn() == NULL, kDefaultTimeout);
   }
 
-  std::unique_ptr<IceMessage> CreateStunMessage(int type) {
-    auto msg = std::make_unique<IceMessage>();
-    msg->SetType(type);
-    msg->SetTransactionID("TESTTESTTEST");
+  std::unique_ptr<IceMessage> CreateStunMessage(StunMessageType type) {
+    auto msg = std::make_unique<IceMessage>(type, "TESTTESTTEST");
     return msg;
   }
   std::unique_ptr<IceMessage> CreateStunMessageWithUsername(
-      int type,
+      StunMessageType type,
       const std::string& username) {
     std::unique_ptr<IceMessage> msg = CreateStunMessage(type);
     msg->AddAttribute(std::make_unique<StunByteStringAttribute>(
@@ -2319,7 +2317,7 @@ TEST_F(PortTest, TestHandleStunMessageBadFingerprint) {
 
   // Now, add a fingerprint, but munge the message so it's not valid.
   in_msg->AddFingerprint();
-  in_msg->SetTransactionID("TESTTESTBADD");
+  in_msg->SetTransactionIdForTesting("TESTTESTBADD");
   WriteStunMessage(*in_msg, buf.get());
   EXPECT_FALSE(port->GetStunMessage(buf->Data(), buf->Length(), addr, &out_msg,
                                     &username));
@@ -2337,7 +2335,7 @@ TEST_F(PortTest, TestHandleStunMessageBadFingerprint) {
 
   // Now, add a fingerprint, but munge the message so it's not valid.
   in_msg->AddFingerprint();
-  in_msg->SetTransactionID("TESTTESTBADD");
+  in_msg->SetTransactionIdForTesting("TESTTESTBADD");
   WriteStunMessage(*in_msg, buf.get());
   EXPECT_FALSE(port->GetStunMessage(buf->Data(), buf->Length(), addr, &out_msg,
                                     &username));
@@ -2356,7 +2354,7 @@ TEST_F(PortTest, TestHandleStunMessageBadFingerprint) {
 
   // Now, add a fingerprint, but munge the message so it's not valid.
   in_msg->AddFingerprint();
-  in_msg->SetTransactionID("TESTTESTBADD");
+  in_msg->SetTransactionIdForTesting("TESTTESTBADD");
   WriteStunMessage(*in_msg, buf.get());
   EXPECT_FALSE(port->GetStunMessage(buf->Data(), buf->Length(), addr, &out_msg,
                                     &username));
@@ -3413,7 +3411,7 @@ TEST_F(PortTest, TestErrorResponseMakesGoogPingFallBackToStunBinding) {
   // But rather than the RESPONSE...feedback an error.
   StunMessage error_response;
   error_response.SetType(GOOG_PING_ERROR_RESPONSE);
-  error_response.SetTransactionID(response2->transaction_id());
+  error_response.SetTransactionIdForTesting(response2->transaction_id());
   error_response.AddMessageIntegrity32("rpass");
   rtc::ByteBufferWriter buf;
   error_response.Write(&buf);

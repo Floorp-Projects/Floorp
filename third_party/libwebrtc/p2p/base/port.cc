@@ -754,13 +754,10 @@ void Port::SendBindingErrorResponse(StunMessage* message,
              message->type() == GOOG_PING_REQUEST);
 
   // Fill in the response message.
-  StunMessage response;
-  if (message->type() == STUN_BINDING_REQUEST) {
-    response.SetType(STUN_BINDING_ERROR_RESPONSE);
-  } else {
-    response.SetType(GOOG_PING_ERROR_RESPONSE);
-  }
-  response.SetTransactionID(message->transaction_id());
+  StunMessage response(message->type() == STUN_BINDING_REQUEST
+                           ? STUN_BINDING_ERROR_RESPONSE
+                           : GOOG_PING_ERROR_RESPONSE,
+                       message->transaction_id());
 
   // When doing GICE, we need to write out the error code incorrectly to
   // maintain backwards compatiblility.
@@ -805,9 +802,7 @@ void Port::SendUnknownAttributesErrorResponse(
   RTC_DCHECK(message->type() == STUN_BINDING_REQUEST);
 
   // Fill in the response message.
-  StunMessage response;
-  response.SetType(STUN_BINDING_ERROR_RESPONSE);
-  response.SetTransactionID(message->transaction_id());
+  StunMessage response(STUN_BINDING_ERROR_RESPONSE, message->transaction_id());
 
   auto error_attr = StunAttribute::CreateErrorCode();
   error_attr->SetCode(STUN_ERROR_UNKNOWN_ATTRIBUTE);

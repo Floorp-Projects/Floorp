@@ -137,12 +137,8 @@ void StunProber::Requester::SendStunRequest() {
   RTC_DCHECK(thread_checker_.IsCurrent());
   requests_.push_back(new Request());
   Request& request = *(requests_.back());
-  cricket::StunMessage message;
-
   // Random transaction ID, STUN_BINDING_REQUEST
-  message.SetTransactionID(
-      rtc::CreateRandomString(cricket::kStunTransactionIdLength));
-  message.SetType(cricket::STUN_BINDING_REQUEST);
+  cricket::StunMessage message(cricket::STUN_BINDING_REQUEST);
 
   std::unique_ptr<rtc::ByteBufferWriter> request_packet(
       new rtc::ByteBufferWriter(nullptr, kMaxUdpBufferSize));
