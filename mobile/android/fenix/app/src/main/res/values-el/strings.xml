@@ -1268,12 +1268,16 @@
     <string moz:RemovedIn="106" name="onboarding_header" tools:ignore="UnusedResources">Καλώς ορίσατε στο %s!</string>
     <!-- Text for onboarding welcome header. -->
     <string name="onboarding_header_2">Καλώς ήρθατε σε ένα καλύτερο διαδίκτυο</string>
+    <!-- Text for the onboarding welcome message. -->
+    <string name="onboarding_message">Ένα πρόγραμμα περιήγησης που δημιουργήθηκε για τους ανθρώπους, όχι το κέρδος.</string>
     <!-- text for the Firefox account onboarding sign in card header. The word "Firefox" should not be translated -->
     <string moz:removedIn="106" name="onboarding_account_sign_in_header_1" tools:ignore="UnusedResources">Συγχρονισμός Firefox μεταξύ συσκευών</string>
     <!-- Text for the Firefox account onboarding sign in card header. -->
     <string name="onboarding_account_sign_in_header">Συνεχίστε από εκεί που σταματήσατε</string>
     <!-- Text for the button to learn more about signing in to your Firefox account. The first parameter is the name of the application.-->
     <string moz:removedIn="106" name="onboarding_manual_sign_in_description_2" tools:ignore="UnusedResources">Φέρτε σελιδοδείκτες, ιστορικό και κωδικούς πρόσβασης στο %1$s σε αυτήν τη συσκευή.</string>
+    <!-- Text for the button to learn more about signing in to your Firefox account. -->
+    <string name="onboarding_manual_sign_in_description">Συγχρονίστε καρτέλες και κωδικούς πρόσβασης με τις συσκευές σας για απρόσκοπτη εναλλαγή οθονών.</string>
     <!-- text for the button to manually sign into Firefox account. -->
     <string moz:removedIn="106" name="onboarding_firefox_account_sign_in_1" tools:ignore="UnusedResources">Εγγραφή</string>
     <!-- Text for the button to manually sign into Firefox account. -->
@@ -1287,6 +1291,8 @@
     <string name="onboarding_tracking_protection_header">Προστασία απορρήτου από προεπιλογή</string>
     <!-- text for the tracking protection card description. The first parameter is the name of the application.-->
     <string moz:removedIn="106" name="onboarding_tracking_protection_description_4" tools:ignore="UnusedResources">Το %1$s εμποδίζει την καταγραφή της διαδικτυακής δραστηριότητάς σας από εταιρείες.</string>
+    <!-- Text for the tracking protection card description. -->
+    <string name="onboarding_tracking_protection_description">Η Ολική προστασία cookie εμποδίζει τη χρήση των cookies από ιχνηλάτες που σας καταγράφουν μεταξύ ιστοτόπων.</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
     <string name="onboarding_tracking_protection_standard_button_2">Τυπική (προεπιλογή)</string>
     <!-- text for standard blocking option button description -->
@@ -1299,6 +1305,8 @@
     <string name="onboarding_toolbar_placement_header_1">Επιλογή τοποθεσίας γραμμής εργαλείων</string>
     <!-- text for the toolbar position card description -->
     <string moz:removedIn="106" name="onboarding_toolbar_placement_description_1" tools:ignore="UnusedResources">Τοποθετήστε τη γραμμή εργαλείων σε κοντινή απόσταση. Κρατήστε την στο κάτω μέρος ή μετακινήστε την στο πάνω μέρος.</string>
+    <!-- Text for the toolbar position card description -->
+    <string name="onboarding_toolbar_placement_description">Διατηρήστε τη στο κάτω μέρος ή μετακινήστε τη στο πάνω μέρος.</string>
     <!-- text for the privacy notice onboarding card header -->
     <string moz:removedIn="106" name="onboarding_privacy_notice_header" tools:ignore="UnusedResources">Το απόρρητό σας</string>
     <!-- Text for the privacy notice onboarding card header -->
@@ -1311,6 +1319,8 @@
     <!-- Text for the button to read the privacy notice -->
     <string name="onboarding_privacy_notice_read_button">Διαβάστε τη σημείωση απορρήτου μας</string>
 
+    <!-- Text for the conclusion onboarding message -->
+    <string name="onboarding_conclusion_header">Θέλετε να ανοίξετε ένα καταπληκτικό διαδίκτυο;</string>
     <!-- text for the button to finish onboarding -->
     <string name="onboarding_finish">Έναρξη περιήγησης</string>
 

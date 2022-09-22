@@ -285,6 +285,8 @@
     <string name="onboarding_home_screen_jump_back_contextual_hint_2">Spoznajte svojo prilagojeno domačo stran. Tukaj bodo prikazani nedavni zavihki, zaznamki in zadetki iskanja.</string>
     <!-- Home onboarding dialog welcome screen title text. -->
     <string moz:RemovedIn="106" name="onboarding_home_welcome_title" tools:ignore="UnusedResources">Dobrodošli v neodvisnem internetu</string>
+    <!-- Home onboarding dialog welcome screen title text. -->
+    <string name="onboarding_home_welcome_title_2">Dobrodošli v bolj osebnem internetu</string>
     <!-- Home onboarding dialog welcome screen description text. -->
     <string name="onboarding_home_welcome_description">Več barve. Večja zasebnost. Enaka zavezanost ljudem namesto dobičku.</string>
     <!-- Home onboarding dialog sign into sync screen title text. -->
@@ -482,6 +484,8 @@
 
     <!-- Snackbar message for when wallpaper couldn't be downloaded -->
     <string name="wallpaper_download_error_snackbar_message">Ozadja ni bilo mogoče prenesti</string>
+    <!-- Snackbar label for action to retry downloading the wallpaper -->
+    <string name="wallpaper_download_error_snackbar_action">Poskusi znova</string>
     <!-- Snackbar message for when wallpaper couldn't be selected because of the disk error -->
     <string name="wallpaper_select_error_snackbar_message">Ozadja ni bilo mogoče spremeniti</string>
     <!-- Text displayed that links to website containing documentation about the "Limited Edition" wallpapers. -->
@@ -492,8 +496,16 @@
     able to tap on the app logo in the home screen and can switch to different wallpapers by tapping. -->
     <string moz:removedIn="105" name="wallpaper_logo_content_description" tools:ignore="UnusedResources">Logtip Firefoxa – spremeni ozadje, gumb</string>
 
+    <!-- Text for limited edition wallpapers title. -->
+    <string name="wallpaper_limited_edition_title">Omejena izdaja</string>
+    <!-- Description text for the limited edition wallpapers with learn more link. The first parameter is the learn more string defined in wallpaper_learn_more-->
+    <string name="wallpaper_limited_edition_description_with_learn_more">Nova kolekcija Neodvisni glasovi. %s</string>
+    <!-- Description text for the limited edition wallpapers. -->
+    <string name="wallpaper_limited_edition_description">Nova kolekcija Neodvisni glasovi.</string>
     <!-- Wallpaper onboarding dialog header text. -->
     <string name="wallpapers_onboarding_dialog_title_text">Poskusite s kančkom barve</string>
+    <!-- Wallpaper onboarding dialog body text. -->
+    <string name="wallpapers_onboarding_dialog_body_text">Izberite ozadje, ki vas nagovarja.</string>
     <!-- Wallpaper onboarding dialog learn more button text. The button navigates to the wallpaper settings screen. -->
     <string name="wallpapers_onboarding_dialog_explore_more_button_text">Raziščite več ozadij</string>
 

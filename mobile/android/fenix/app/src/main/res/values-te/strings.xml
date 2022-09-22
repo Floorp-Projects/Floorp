@@ -38,12 +38,10 @@
 
     <!-- Home - Recently saved bookmarks -->
     <!-- Title for the home screen section with recently saved bookmarks. -->
-    <string name="recent_bookmarks_title">ఇటీవలి ఇష్టాంశాలు</string>
-    <!-- Content description for the recently saved bookmarks section on the home screen. -->
-    <string moz:removedIn="100" name="recently_saved_bookmarks_content_description" tools:ignore="UnusedResources">ఇటీవల భద్రపరచిన ఇష్టాంశాలు</string>
-    <!-- Title for the button which navigates the user to show all of their saved bookmarks. -->
-    <string moz:removedIn="101" name="recently_saved_show_all" tools:ignore="UnusedResources">అన్నీ చూపించు</string>
+    <string moz:RemovedIn="106" name="recent_bookmarks_title" tools:ignore="UnusedResources">ఇటీవలి ఇష్టాంశాలు</string>
 
+    <!-- Title for the home screen section with recently saved bookmarks. -->
+    <string name="recently_saved_title">ఇటీవల భద్రపరచినవి</string>
     <!-- Text for the menu button to remove a recently saved bookmark from the user's home screen -->
     <string name="recently_saved_menu_item_remove">తీసివేయి</string>
 
@@ -96,10 +94,10 @@
     <string name="recent_tabs_show_all">అన్నీ చూపించు</string>
     <!-- Title for showing a group item in the 'Jump back in' section of the new tab
         The first parameter is the search term that the user used. (for example: your search for "cat")-->
-    <string name="recent_tabs_search_term">\&quot;%1$s\&quot; కోసం మీ వెతుకులాటలు</string>
+    <string moz:RemovedIn="105" name="recent_tabs_search_term" tools:ignore="UnusedResources">\&quot;%1$s\&quot; కోసం మీ వెతుకులాటలు</string>
     <!-- Text for the number of tabs in a group in the 'Jump back in' section of the new tab
         %d is a placeholder for the number of sites in the group. This number will always be more than one. -->
-    <string name="recent_tabs_search_term_count_2">%d సైట్లు</string>
+    <string moz:RemovedIn="105" name="recent_tabs_search_term_count_2" tools:ignore="UnusedResources">%d సైట్లు</string>
     <!-- Text for the menu button to remove a grouped highlight from the user's browsing history
          in the Recently visited section -->
     <string name="recent_tab_menu_item_remove">తీసివేయి</string>
@@ -197,8 +195,6 @@
     <string name="search_suggestions_onboarding_title">అంతరంగిక సెషన్లలో వెతుకుడు సలహాలను అనుమతించాలా?</string>
     <!-- Search suggestion onboarding hint description text, first parameter is the name of the app defined in app_name (for example: Fenix)-->
     <string name="search_suggestions_onboarding_text">చిరునామా పట్టీలో మీరు వ్రాసిన ప్రతిదాన్ని %s మీ అప్రమేయ శోధన యంత్రంతో పంచుకుంటుంది.</string>
-    <!-- Search suggestion onboarding hint Learn more link text -->
-    <string moz:RemovedIn="100" name="search_suggestions_onboarding_learn_more_link" tools:ignore="UnusedResources">ఇంకా తెలుసుకోండి</string>
 
     <!-- Search engine suggestion title text. The first parameter is the name of teh suggested engine-->
     <string name="search_engine_suggestions_title">%s‌లో వెతకండి</string>
@@ -208,11 +204,14 @@
 
     <!-- Home onboarding -->
     <!-- Onboarding home screen dialog title text. The first parameter is the name of the application.-->
-    <string name="onboarding_home_screen_title_3">%1$sలో కొత్తవి ఏమిటి</string>
+    <string moz:RemovedIn="106" name="onboarding_home_screen_title_3" tools:ignore="UnusedResources">%1$sలో కొత్తవి ఏమిటి</string>
     <!-- Onboarding home screen dialog description text. -->
-    <string name="onboarding_home_screen_description_2">ఇంతకుముందు మీరు ఆపిన చోటనుండి మొదలుపెట్టడం ఇప్పుడు తేలిక.</string>
+    <string moz:RemovedIn="106" name="onboarding_home_screen_description_2" tools:ignore="UnusedResources">ఇంతకుముందు మీరు ఆపిన చోటనుండి మొదలుపెట్టడం ఇప్పుడు తేలిక.</string>
     <!-- Onboarding home screen dialog description text for the history section. -->
-    <string name="onboarding_home_screen_section_useful_history_title_2">ఇటీవలి వెతుకులాటలు</string>
+    <string moz:RemovedIn="106" name="onboarding_home_screen_section_useful_history_title_2" tools:ignore="UnusedResources">ఇటీవలి వెతుకులాటలు</string>
+
+    <!-- Text for the button to skip the onboarding on the home onboarding dialog. -->
+    <string name="onboarding_home_skip_button">దాటవేయి</string>
 
     <!-- Search Widget -->
     <!-- Content description for searching with a widget. The first parameter is the name of the application.-->
@@ -292,7 +291,7 @@
     <!-- Preference for settings related to visual options -->
     <string name="preferences_customize">అభిమతీకరణ</string>
     <!-- Preference description for banner about signing in -->
-    <string name="preferences_sign_in_description">మీ Firefox ఖాతాతో ఇష్టాంశాలను, సంకేతపదాలను, ఇంకా మరెన్నిటినో సింక్ చేసుకోండి</string>
+    <string moz:RemovedIn="104" name="preferences_sign_in_description" tools:ignore="UnusedResources">మీ Firefox ఖాతాతో ఇష్టాంశాలను, సంకేతపదాలను, ఇంకా మరెన్నిటినో సింక్ చేసుకోండి</string>
     <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
     <string name="preferences_account_default_name">Firefox ఖాతా</string>
     <!-- Preference text for account title when there was an error syncing FxA -->
@@ -355,6 +354,11 @@
 
     <!-- Snackbar label for action to view selected wallpaper -->
     <string name="wallpaper_updated_snackbar_action">చూడండి</string>
+
+    <!-- Snackbar label for action to retry downloading the wallpaper -->
+    <string name="wallpaper_download_error_snackbar_action">మళ్ళీ ప్రయత్నించు</string>
+    <!-- Text displayed that links to website containing documentation about the "Limited Edition" wallpapers. -->
+    <string name="wallpaper_learn_more">ఇంకా తెలుసుకోండి</string>
 
     <!-- Add-on Installation from AMO-->
     <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is not supported -->
@@ -436,7 +440,7 @@
 
     <!-- Turn On Sync Preferences -->
     <!-- Header of the Turn on Sync preference view -->
-    <string name="preferences_sync">సింక్‌ను చేతనించు</string>
+    <string moz:RemovedIn="104" name="preferences_sync" tools:ignore="UnusedResources">సింక్‌ను చేతనించు</string>
     <!-- Preference for reconnecting to FxA sync -->
     <string name="preferences_sync_sign_in_to_reconnect">మళ్ళీ అనుసంధానించడానికి ప్రవేశించండి</string>
     <!-- Preference for removing FxA account -->
@@ -603,8 +607,6 @@
     <string name="open_tabs_menu">తెరిచివున్న ట్యాబుల మెనూ</string>
     <!-- Open tabs menu item to save tabs to collection -->
     <string name="tabs_menu_save_to_collection1">ట్యాబులను సేకరణకు భద్రపరచు</string>
-    <!-- Content description (not visible, for screen readers etc.): Opens the tab menu when pressed -->
-    <string name="tab_menu">ట్యాబు మెనూ</string>
 
     <!-- Text for the menu button to delete a collection -->
     <string name="collection_delete">సేకరణను తొలగించు</string>
@@ -625,7 +627,7 @@
     <string name="pwa_site_controls_title_private">%1$s (అంతరంగిక రీతి)</string>
 
     <!-- Title text for the normal tabs header in the tabs tray which are not part of any tab grouping. -->
-    <string name="tab_tray_header_title_1">ఇతర ట్యాబులు</string>
+    <string moz:removedIn="104" name="tab_tray_header_title_1" tools:ignore="UnusedResources">ఇతర ట్యాబులు</string>
 
     <!-- Text for the button to clear all history -->
     <string name="history_delete_all">చరిత్రను తొలగించు</string>
@@ -930,8 +932,6 @@
     <string name="snackbar_tabs_closed">ట్యాబులు మూసివేయబడ్డాయి</string>
     <!-- Text shown in snackbar when user bookmarks a list of tabs -->
     <string name="snackbar_message_bookmarks_saved">ఇష్టాంశాలు భద్రమయ్యాయి!</string>
-    <!-- Text shown in snackbar when user adds a site to top sites -->
-    <string moz:RemovedIn="101" name="snackbar_added_to_top_sites" tools:ignore="UnusedResources">మేటి సైట్లకు చేర్చబడింది!</string>
     <!-- Text shown in snackbar when user closes a private tab -->
     <string name="snackbar_private_tab_closed">అంతరంగిక ట్యాబు మూసివేయబడింది</string>
     <!-- Text shown in snackbar when user closes all private tabs -->
@@ -1013,7 +1013,12 @@
     <string name="delete_browsing_data_on_quit_action">నిష్క్రమించు</string>
 
     <!-- Dialog message to the user asking to delete browsing data. -->
-    <string name="delete_browsing_data_prompt_message">ఇది మీ విహరణ డేటా అంతటినీ తొలగించివేస్తుంది.</string>
+    <string moz:removedIn="104" name="delete_browsing_data_prompt_message" tools:ignore="UnusedResources">ఇది మీ విహరణ డేటా అంతటినీ తొలగించివేస్తుంది.</string>
+    <!-- Radio button in the delete browsing data dialog to delete history items for today and yesterday. -->
+    <string name="delete_history_prompt_button_today_and_yesterday">ఈరోజు, నిన్న</string>
+    <!-- Radio button in the delete browsing data dialog to delete all history. -->
+    <string name="delete_history_prompt_button_everything">అన్నీ</string>
+
     <!-- Dialog message to the user asking to delete browsing data. Parameter will be replaced by app name. -->
     <string name="delete_browsing_data_prompt_message_3">ఎంచుకున్న డేటాను %s తొలగిస్తుంది.</string>
     <!-- Text for the cancel button for the data deletion dialog -->
@@ -1028,44 +1033,19 @@
     <!-- Text for the snackbar to show the user that the deletion of browsing data is in progress -->
     <string name="deleting_browsing_data_in_progress">విహరణ డేటా తొలగింపబడుతూంది…</string>
 
-    <!-- Dialog message to the user asking to delete all history items inside the opened group. -->
-    <string name="delete_history_group_prompt_message">ఇది అంశాలన్నిటినీ తొలగిస్తుంది.</string>
     <!-- Text for the cancel button for the history group deletion dialog -->
     <string name="delete_history_group_prompt_cancel">రద్దుచేయి</string>
     <!-- Text for the allow button for the history group dialog -->
     <string name="delete_history_group_prompt_allow">తొలగించు</string>
 
-    <!-- Tips -->
-    <!-- text for firefox preview moving tip header "Firefox Preview" and "Firefox Nightly" are intentionally hardcoded -->
-    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_header" tools:ignore="UnusedResources">Firefox Preview ఇప్పుడు Firefox Nightly అయింది</string>
-    <!-- text for firefox preview moving tip description -->
-    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_description" tools:ignore="UnusedResources">Firefox నైట్లీ ప్రతి రాత్రీ కొత్త ప్రయోగాత్మక సౌలభ్యాలతో తాజాకరించబడుతుంది.
-        అయితే, ఇదంత స్థిరంగా ఉండకపోవచ్చు. మరి కొతం సుస్థిరమైన అనుభవం కోసం మా బీటా విహారిణిని దించుకోండి.</string>
-    <!-- text for firefox preview moving tip button. "Firefox for Android Beta" is intentionally hardcoded -->
-    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_button_2" tools:ignore="UnusedResources">ఆండ్రాయిడ్ కోసం Firefox బీటాను పొందండి</string>
-
-    <!-- text for firefox preview moving tip header. "Firefox Nightly" is intentionally hardcoded -->
-    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_header_preview_installed" tools:ignore="UnusedResources">Firefox నైట్లీ తరలించబడింది</string>
-    <!-- text for firefox preview moving tip description -->
-    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_description_preview_installed" tools:ignore="UnusedResources">ఈ అనువర్తనానికి ఇకపై భద్రతా తాజాకరణలు రావు. ఈ అనువర్తనాన్ని వాడటం మానివేసి, కొత్త నైట్లీకి మారండి.
-        \n\nమీ ఇష్టాంశాలను, ప్రవేశాలను, చరిత్రను మరో అనువర్తనానికి బదిలీ చేయడానికి, ఒక Firefox ఖాతాను సృష్టించుకోండి.</string>
-    <!-- text for firefox preview moving tip button  -->
-    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_button_preview_installed" tools:ignore="UnusedResources">కొత్త నైట్లీకి మారండి</string>
-
-    <!-- text for firefox preview moving tip header. "Firefox Nightly" is intentionally hardcoded -->
-    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_header_preview_not_installed" tools:ignore="UnusedResources">Firefox నైట్లీ తరలించబడింది</string>
-    <!-- text for firefox preview moving tip description -->
-    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_description_preview_not_installed" tools:ignore="UnusedResources">ఈ అనువర్తనానికి ఇకపై భద్రతా తాజాకరణలు రావు. కొత్త నైట్లీని తెచ్చుకొని, ఈ అనువర్తనాన్ని వాడటం మానివేయండి.
-        \n\nమీ ఇష్టాంశాలను, ప్రవేశాలను, చరిత్రను మరో అనువర్తనానికి బదిలీ చేయడానికి, ఒక Firefox ఖాతాను సృష్టించుకోండి.</string>
-    <!-- text for firefox preview moving tip button  -->
-    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_button_preview_not_installed" tools:ignore="UnusedResources">కొత్త నైట్లీని పొందండి</string>
-
     <!-- Onboarding -->
     <!-- Text for onboarding welcome message
     The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_header">%sకి స్వాగతం!</string>
+    <string moz:RemovedIn="106" name="onboarding_header" tools:ignore="UnusedResources">%sకి స్వాగతం!</string>
+    <!-- Text for onboarding welcome header. -->
+    <string name="onboarding_header_2">మెరుగైన అంతర్జాలానికి స్వాగతం</string>
     <!-- text for the button to manually sign into Firefox account. -->
-    <string name="onboarding_firefox_account_sign_in_1">నమోదవ్వండి</string>
+    <string moz:removedIn="106" name="onboarding_firefox_account_sign_in_1" tools:ignore="UnusedResources">నమోదవ్వండి</string>
     <!-- text to display in the snackbar once account is signed-in -->
     <string name="onboarding_firefox_account_sync_is_on">సింక్ చేతనంగా ఉంది</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
@@ -1075,7 +1055,7 @@
     <!-- text for the toolbar position card header  -->
     <string name="onboarding_toolbar_placement_header_1">పనిముట్లపట్టీ ఎక్కడ ఉండాలో ఎంచుకోండి</string>
     <!-- text for the privacy notice onboarding card header -->
-    <string name="onboarding_privacy_notice_header">మీ అంతరంగికత</string>
+    <string moz:removedIn="106" name="onboarding_privacy_notice_header" tools:ignore="UnusedResources">మీ అంతరంగికత</string>
     <!-- Text for the button to read the privacy notice -->
     <string name="onboarding_privacy_notice_read_button">మా గోప్యతా నోటీసును చదవండి</string>
 
@@ -1363,6 +1343,7 @@
     <string name="preferences_credit_cards_manage_saved_cards">భద్రపరచిన కార్డుల నిర్వహణ</string>
     <!-- Preference option for adding an address -->
     <string name="preferences_addresses_add_address">చిరునామాను చేర్చు</string>
+
     <!-- Title of the "Add card" screen -->
     <string name="credit_cards_add_card">కార్డును చేర్చు</string>
     <!-- Title of the "Edit card" screen -->
@@ -1403,16 +1384,22 @@
 
     <!-- Title of the "Add address" screen -->
     <string name="addresses_add_address">చిరునామాను చేర్చు</string>
-    <!-- The header for the full name of an address -->
-    <string name="addresses_full_name">పూర్తి పేరు</string>
+    <!-- The header for the first name of an address -->
+    <string name="addresses_first_name">మొదటి పేరు</string>
+    <!-- The header for the middle name of an address -->
+    <string name="addresses_middle_name">మధ్య పేరు</string>
+    <!-- The header for the last name of an address -->
+    <string name="addresses_last_name">ఇంటి పేరు</string>
     <!-- The header for the street address of an address -->
     <string name="addresses_street_address">వీధి చిరునామా</string>
     <!-- The header for the city of an address -->
     <string name="addresses_city">నగరం</string>
-    <!-- The header for the state of an address -->
+    <!-- The header for the subregion of an address when "state" should be used -->
     <string name="addresses_state">రాష్ట్రం</string>
     <!-- The header for the zip code of an address -->
     <string name="addresses_zip">జిప్</string>
+    <!-- The header for the country or region of an address -->
+    <string name="addresses_country">దేశం లేదా ప్రాంతం</string>
     <!-- The header for the phone number of an address -->
     <string name="addresses_phone">ఫోను</string>
     <!-- The header for the email of an address -->
@@ -1423,6 +1410,13 @@
     <string name="addresses_cancel_button">రద్దుచేయి</string>
     <!-- The text for the "Delete address" button for deleting an address -->
     <string name="addressess_delete_address_button">చిరునామాను తొలగించు</string>
+
+    <!-- The title for the "Delete address" confirmation dialog -->
+    <string name="addressess_confirm_dialog_message">ఈ చిరునామాను నిజంగానే తొలగించాలనుకుంటున్నారా?</string>
+    <!-- The text for the positive button on "Delete address" dialog -->
+    <string name="addressess_confirm_dialog_ok_button">తొలగించు</string>
+    <!-- The text for the negative button on "Delete address" dialog -->
+    <string name="addressess_confirm_dialog_cancel_button">రద్దుచేయి</string>
 
     <!-- Title of the Add search engine screen -->
     <string name="search_engine_add_custom_search_engine_title">శోధన యంత్రం చేర్పు</string>
@@ -1464,19 +1458,6 @@
     <!-- Text shown when a user successfully deletes a custom search engine -->
     <string name="search_delete_search_engine_success_message">%s తొలగించబడింది</string>
 
-    <!-- Title text shown for the migration screen to the new browser. Placeholder replaced with app name -->
-    <string moz:removedIn="100" name="migration_title" tools:ignore="UnusedResources">పూర్తి సరికొత్త %s‌కి స్వాగతం</string>
-    <!-- Description text followed by a list of things migrating (e.g. Bookmarks, History). Placeholder replaced with app name-->
-    <string moz:removedIn="100" name="migration_description" tools:ignore="UnusedResources">మెరుగైన పనితీరుతో, ఆన్‌లైనులో మరింత చేయడానికి మీకు తోడ్పడే సౌలభ్యాలతో పూర్తిగా మళ్ళీ రూపకల్పన చేయబడ్డ విహారిణి సిద్ధంగా ఉంది.\n\nమేము %s‌ని దీనితో తాజాకరించేవరకూ వేచివుండండి: మీ</string>
-    <!-- Text on the disabled button while in progress. Placeholder replaced with app name -->
-    <string moz:removedIn="100" name="migration_updating_app_button_text" tools:ignore="UnusedResources">%s తాజాకరించబడుతోండి…</string>
-    <!-- Text on the enabled button. Placeholder replaced with app name-->
-    <string moz:removedIn="100" name="migration_update_app_button" tools:ignore="UnusedResources">%sను మొదలుపెట్టు</string>
-    <!-- Accessibility description text for a completed migration item -->
-    <string moz:removedIn="100" name="migration_icon_description" tools:ignore="UnusedResources">తరలింపు పూర్తయింది</string>
-    <!--Text on list of migrated items (e.g. Settings, History, etc.)-->
-    <string moz:removedIn="100" name="migration_text_passwords" tools:ignore="UnusedResources">సంకేతపదాలు</string>
-
     <!-- Heading for the instructions to allow a permission -->
     <string name="phone_feature_blocked_intro">దీనిని అనుమతించడానికి:</string>
     <!-- First step for the allowing a permission -->
@@ -1504,10 +1485,6 @@
     <string name="no_site_exceptions">సైటు మినహాయింపులేమీ లేవు</string>
     <!-- Bookmark deletion confirmation -->
     <string name="bookmark_deletion_confirmation">ఈ ఇష్టాంశాన్ని మీరు నిజంగానే తొలగించాలనుకుంటున్నారా?</string>
-    <!-- Browser menu button that adds a top site to the home fragment -->
-    <string moz:RemovedIn="101" name="browser_menu_add_to_top_sites" tools:ignore="UnusedResources">మేటి సైట్లకు చేర్చు</string>
-    <!-- Browser menu button that removes a top site from the home fragment -->
-    <string moz:RemovedIn="101" name="browser_menu_remove_from_top_sites" tools:ignore="UnusedResources">మేటి సైట్ల నుండి తీసివేయి</string>
     <!-- text shown before the issuer name to indicate who its verified by, parameter is the name of
      the certificate authority that verified the ticket-->
     <string name="certificate_info_verified_by">తనిఖీ చేసినవారు: %1$s</string>
@@ -1566,16 +1543,11 @@
     <!-- The text displayed when a synced device has no tabs to show in the list of Synced Tabs. -->
     <string name="synced_tabs_no_open_tabs">తెరిచివున్న ట్యాబులు లేవు</string>
 
-    <!-- Top Sites -->
-    <!-- Title text displayed in the dialog when top sites limit is reached. -->
-    <string moz:RemovedIn="101" name="top_sites_max_limit_title" tools:ignore="UnusedResources">మేటి సైట్ల పరిమితి చేరుకున్నారు</string>
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">సరే, అర్థమయ్యింది</string>
 
     <!-- Title text displayed in the rename top site dialog. -->
 	<string name="top_sites_rename_dialog_title">పేరు</string>
-	<!-- Hint for renaming title of a top site -->
-	<string moz:RemovedIn="101" name="top_site_name_hint" tools:ignore="UnusedResources">మేటి సైటు పేరు</string>
     <!-- Button caption to confirm the renaming of the top site. -->
 	<string name="top_sites_rename_dialog_ok">సరే</string>
 	<!-- Dialog button text for canceling the rename top site prompt. -->
@@ -1611,4 +1583,4 @@
 
     <!-- Snackbar button text to navigate to telemetry settings.-->
     <string name="experiments_snackbar_button">అమరికలకు వెళ్ళు</string>
-</resources>
+    </resources>

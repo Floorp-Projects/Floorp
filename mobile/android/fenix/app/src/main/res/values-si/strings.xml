@@ -1323,7 +1323,7 @@
     <!-- Text shown for sign in pairing when ready -->
     <string name="sign_in_ready_for_scan">පරිලෝකනයට සූදානම්</string>
     <!-- Text shown for settings option for sign with pairing -->
-    <string name="sign_in_with_camera">කැමරාව සමඟ පිවිසෙන්න</string>
+    <string name="sign_in_with_camera">රූගතය සමඟ පිවිසෙන්න</string>
     <!-- Text shown for settings option for sign with email -->
     <string name="sign_in_with_email">වි-තැපෑල යොදාගන්න</string>
     <!-- Text shown for settings option for create new account text.'Firefox' intentionally hardcoded here.-->
