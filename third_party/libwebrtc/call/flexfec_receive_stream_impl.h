@@ -63,10 +63,10 @@ class FlexfecReceiveStreamImpl : public FlexfecReceiveStream {
   // sender has been created, changed or removed.
   void SetLocalSsrc(uint32_t local_ssrc);
 
-  uint32_t remote_ssrc() const { return config_.rtp.remote_ssrc; }
+  uint32_t remote_ssrc() const { return remote_ssrc_; }
   bool transport_cc() const override {
     RTC_DCHECK_RUN_ON(&packet_sequence_checker_);
-    return config_.rtp.transport_cc;
+    return transport_cc_;
   }
 
  private:
@@ -74,10 +74,8 @@ class FlexfecReceiveStreamImpl : public FlexfecReceiveStream {
 
   RtpHeaderExtensionMap extension_map_;
 
-  // Config. Mostly const, local_ssrc may change, which is an exception
-  // case that's specifically handled in `SetLocalSsrc`, which must be
-  // called on the `packet_sequence_checker` thread.
-  const Config config_;
+  const uint32_t remote_ssrc_;
+  bool transport_cc_ RTC_GUARDED_BY(packet_sequence_checker_);
 
   // Erasure code interfacing.
   const std::unique_ptr<FlexfecReceiver> receiver_;
