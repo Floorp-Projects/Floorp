@@ -208,6 +208,8 @@ class PeerConnectionE2EQualityTestFixture {
     // if it's spec is `Spec::kNone`.
     bool IsRegular() const { return spec_ == Spec::kNone; }
 
+    std::string ToString() const;
+
    private:
     size_t width_ = 0;
     size_t height_ = 0;
