@@ -1112,12 +1112,13 @@ bool ParseCandidate(absl::string_view message,
   }
   SocketAddress address(connection_address, port);
 
-  cricket::ProtocolType protocol;
-  if (!StringToProto(transport.c_str(), &protocol)) {
+  absl::optional<cricket::ProtocolType> protocol =
+      cricket::StringToProto(transport);
+  if (!protocol) {
     return ParseFailed(first_line, "Unsupported transport type.", error);
   }
   bool tcp_protocol = false;
-  switch (protocol) {
+  switch (*protocol) {
     // Supported protocols.
     case cricket::PROTO_UDP:
       break;
@@ -1225,7 +1226,7 @@ bool ParseCandidate(absl::string_view message,
     }
   }
 
-  *candidate = Candidate(component_id, cricket::ProtoToString(protocol),
+  *candidate = Candidate(component_id, cricket::ProtoToString(*protocol),
                          address, priority, username, password, candidate_type,
                          generation, foundation, network_id, network_cost);
   candidate->set_related_address(related_address);
