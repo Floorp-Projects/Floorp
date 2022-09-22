@@ -345,8 +345,8 @@ mr2022-onboarding-colorway-primary-button-label-continue = Set and continue
 mr2022-onboarding-existing-colorway-checkbox-label = Make { -firefox-home-brand-name } your colorful homepage
 
 mr2022-onboarding-colorway-label-default = Default
-mr2022-onboarding-colorway-tooltip-default =
-  .title = Default
+mr2022-onboarding-colorway-tooltip-default2 =
+  .title = Current { -brand-short-name } colors
 mr2022-onboarding-colorway-description-default = <b>Use my current { -brand-short-name } colors.</b>
 
 mr2022-onboarding-colorway-label-playmaker = Playmaker
