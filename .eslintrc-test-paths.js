@@ -202,6 +202,7 @@ const extraBrowserTestPaths = [
   "layout/base/tests/",
   "layout/style/test/",
   "layout/xul/test/",
+  "netwerk/test/useragent/",
   "parser/htmlparser/tests/mochitest/",
   "security/sandbox/test/",
   "testing/mochitest/baselinecoverage/browser_chrome/",
