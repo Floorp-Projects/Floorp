@@ -9,3 +9,22 @@
 $schema: moz://mozilla.org/schemas/glean/metrics/2-0-0
 $tags:
   - 'Core :: Networking'
+
+network:
+  open_to_transaction_pending:
+    type: timing_distribution
+    description: >
+      The time spent from HttpChannelChild::AsyncOpen to adding the transaction
+      to the nsHttpConnectionMgr
+    time_unit: millisecond
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1789468
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1789468
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - necko@mozilla.com
+      - acreskey@mozilla.com
+    expires: never
+    telemetry_mirror: NETWORK_ASYNC_OPEN_TO_TRANSACTION_PENDING_MS

@@ -91,6 +91,10 @@ interface nsITimedChannel : nsISupports {
   [noscript] readonly attribute TimeStamp cacheReadStart;
   [noscript] readonly attribute TimeStamp cacheReadEnd;
 
+  // The time when the transaction was submitted to the Connection Manager.
+  // Not reported to resource/navigation timing, only for performance telemetry.
+  [noscript] readonly attribute TimeStamp transactionPending;
+
   // All following are PRTime versions of the above.
   readonly attribute PRTime channelCreationTime;
   readonly attribute PRTime asyncOpenTime;
@@ -113,6 +117,8 @@ interface nsITimedChannel : nsISupports {
   readonly attribute PRTime cacheReadEndTime;
   readonly attribute PRTime redirectStartTime;
   readonly attribute PRTime redirectEndTime;
+  // Not reported to resource/navigation timing, only for performance telemetry.
+  readonly attribute PRTime transactionPendingTime;
 
   // If this attribute is false, this resource MUST NOT be reported in resource timing.
   [noscript] attribute boolean reportResourceTiming;

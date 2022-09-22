@@ -504,6 +504,8 @@ struct ResourceTimingStructArgs {
   // the rest of the timings so the timing information in the child is complete.
   TimeStamp cacheReadStart;
   TimeStamp cacheReadEnd;
+
+  TimeStamp transactionPending;
 };
 
 struct HttpActivity

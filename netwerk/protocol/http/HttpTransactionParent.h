@@ -76,6 +76,8 @@ class HttpTransactionParent final : public PHttpTransactionParent,
                                              const nsCString& aRequestString);
   mozilla::ipc::IPCResult RecvEarlyHint(const nsCString& aValue);
 
+  virtual mozilla::TimeStamp GetPendingTime() override;
+
   already_AddRefed<nsIEventTarget> GetNeckoTarget();
 
   void SetSniffedTypeToChannel(

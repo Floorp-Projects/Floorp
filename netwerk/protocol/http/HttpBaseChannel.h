@@ -715,6 +715,7 @@ class HttpBaseChannel : public nsHashPropertyBag,
   TimeStamp mAsyncOpenTime;
   TimeStamp mCacheReadStart;
   TimeStamp mCacheReadEnd;
+  TimeStamp mTransactionPendingTime;
   TimeStamp mLaunchServiceWorkerStart;
   TimeStamp mLaunchServiceWorkerEnd;
   TimeStamp mDispatchFetchEventStart;

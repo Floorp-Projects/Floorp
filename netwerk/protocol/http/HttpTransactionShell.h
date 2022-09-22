@@ -133,6 +133,8 @@ class HttpTransactionShell : public nsISupports {
 
   virtual TimingStruct Timings() = 0;
 
+  virtual mozilla::TimeStamp GetPendingTime() = 0;
+
   // Called to set/find out if the transaction generated a complete response.
   virtual bool ResponseIsComplete() = 0;
   virtual int64_t GetTransferSize() = 0;

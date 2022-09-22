@@ -754,6 +754,12 @@ NullHttpChannel::GetCacheReadEnd(mozilla::TimeStamp* aCacheReadEnd) {
 }
 
 NS_IMETHODIMP
+NullHttpChannel::GetTransactionPending(mozilla::TimeStamp* aRetVal) {
+  *aRetVal = mAsyncOpenTime;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 NullHttpChannel::GetIsMainDocumentChannel(bool* aValue) {
   *aValue = false;
   return NS_OK;
@@ -834,6 +840,7 @@ IMPL_TIMING_ATTR(CacheReadStart)
 IMPL_TIMING_ATTR(CacheReadEnd)
 IMPL_TIMING_ATTR(RedirectStart)
 IMPL_TIMING_ATTR(RedirectEnd)
+IMPL_TIMING_ATTR(TransactionPending)
 
 #undef IMPL_TIMING_ATTR
 

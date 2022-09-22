@@ -6723,6 +6723,16 @@ nsHttpChannel::GetResponseEnd(TimeStamp* _retval) {
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsHttpChannel::GetTransactionPending(TimeStamp* _retval) {
+  if (mTransaction) {
+    *_retval = mTransaction->GetPendingTime();
+  } else {
+    *_retval = mTransactionPendingTime;
+  }
+  return NS_OK;
+}
+
 //-----------------------------------------------------------------------------
 // nsHttpChannel::nsIHttpAuthenticableChannel
 //-----------------------------------------------------------------------------
@@ -7294,6 +7304,7 @@ nsHttpChannel::OnStopRequest(nsIRequest* request, nsresult status) {
 
     // at this point, we're done with the transaction
     mTransactionTimings = mTransaction->Timings();
+    mTransactionPendingTime = mTransaction->GetPendingTime();
     mTransaction = nullptr;
     mTransactionPump = nullptr;
 
