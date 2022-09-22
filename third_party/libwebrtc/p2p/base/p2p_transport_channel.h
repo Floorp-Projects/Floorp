@@ -254,7 +254,7 @@ class RTC_EXPORT P2PTransportChannel : public IceTransportInternal {
   }
 
   // Returns true if it's possible to send packets on `connection`.
-  bool ReadyToSend(Connection* connection) const;
+  bool ReadyToSend(const Connection* connection) const;
   bool PresumedWritable(const Connection* conn) const;
   void UpdateConnectionStates();
   void RequestSortAndStateUpdate(IceControllerEvent reason_to_sort);
@@ -265,6 +265,7 @@ class RTC_EXPORT P2PTransportChannel : public IceTransportInternal {
   void SortConnectionsAndUpdateState(IceControllerEvent reason_to_sort);
   void SortConnections();
   void SortConnectionsIfNeeded();
+  rtc::NetworkRoute ConfigureNetworkRoute(const Connection* conn);
   void SwitchSelectedConnection(Connection* conn, IceControllerEvent reason);
   void UpdateState();
   void HandleAllTimedOut();

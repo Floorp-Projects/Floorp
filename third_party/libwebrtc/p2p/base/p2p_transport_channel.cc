@@ -203,8 +203,6 @@ P2PTransportChannel::P2PTransportChannel(
   IceControllerFactoryArgs args{
       [this] { return GetState(); }, [this] { return GetIceRole(); },
       [this](const Connection* connection) {
-        // TODO(webrtc:10647/jonaso): Figure out a way to remove friendship
-        // between P2PTransportChannel and Connection.
         return IsPortPruned(connection->port()) ||
                IsRemoteCandidatePruned(connection->remote_candidate());
       },
@@ -1832,6 +1830,24 @@ void P2PTransportChannel::PruneConnections() {
   }
 }
 
+rtc::NetworkRoute P2PTransportChannel::ConfigureNetworkRoute(
+    const Connection* conn) {
+  RTC_DCHECK_RUN_ON(network_thread_);
+  return {
+      .connected = ReadyToSend(conn),
+      .local = CreateRouteEndpointFromCandidate(
+          /* local= */ true, conn->local_candidate(),
+          /* uses_turn= */
+          conn->port()->Type() == RELAY_PORT_TYPE),
+      .remote = CreateRouteEndpointFromCandidate(
+          /* local= */ false, conn->remote_candidate(),
+          /* uses_turn= */ conn->remote_candidate().type() == RELAY_PORT_TYPE),
+      .last_sent_packet_id = last_sent_packet_id_,
+      .packet_overhead =
+          conn->local_candidate().address().ipaddr().overhead() +
+          GetProtocolOverhead(conn->local_candidate().protocol())};
+}
+
 // Change the selected connection, and let listeners know.
 void P2PTransportChannel::SwitchSelectedConnection(Connection* conn,
                                                    IceControllerEvent reason) {
@@ -1865,21 +1881,7 @@ void P2PTransportChannel::SwitchSelectedConnection(Connection* conn,
       SignalReadyToSend(this);
     }
 
-    network_route_.emplace(rtc::NetworkRoute());
-    network_route_->connected = ReadyToSend(selected_connection_);
-    network_route_->local = CreateRouteEndpointFromCandidate(
-        /* local= */ true, selected_connection_->local_candidate(),
-        /* uses_turn= */ selected_connection_->port()->Type() ==
-            RELAY_PORT_TYPE);
-    network_route_->remote = CreateRouteEndpointFromCandidate(
-        /* local= */ false, selected_connection_->remote_candidate(),
-        /* uses_turn= */ selected_connection_->remote_candidate().type() ==
-            RELAY_PORT_TYPE);
-
-    network_route_->last_sent_packet_id = last_sent_packet_id_;
-    network_route_->packet_overhead =
-        selected_connection_->local_candidate().address().ipaddr().overhead() +
-        GetProtocolOverhead(selected_connection_->local_candidate().protocol());
+    network_route_.emplace(ConfigureNetworkRoute(selected_connection_));
   } else {
     RTC_LOG(LS_INFO) << ToString() << ": No selected connection";
   }
@@ -2051,7 +2053,7 @@ void P2PTransportChannel::HandleAllTimedOut() {
     OnSelectedConnectionDestroyed();
 }
 
-bool P2PTransportChannel::ReadyToSend(Connection* connection) const {
+bool P2PTransportChannel::ReadyToSend(const Connection* connection) const {
   RTC_DCHECK_RUN_ON(network_thread_);
   // Note that we allow sending on an unreliable connection, because it's
   // possible that it became unreliable simply due to bad chance.
