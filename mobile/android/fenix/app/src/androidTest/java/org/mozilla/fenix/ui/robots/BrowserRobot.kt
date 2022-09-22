@@ -475,11 +475,28 @@ class BrowserRobot {
     }
 
     fun verifySaveLoginPromptIsShown() {
-        mDevice.findObject(UiSelector().text("test@example.com")).waitForExists(waitingTime)
-        val submitButton = mDevice.findObject(By.res("submit"))
-        submitButton.clickAndWait(Until.newWindow(), waitingTime)
-        // Click save to save the login
-        mDevice.waitNotNull(Until.findObjects(text("Save")))
+        for (i in 1..RETRY_COUNT) {
+            try {
+                mDevice.findObject(
+                    UiSelector()
+                        .text("submit")
+                        .resourceId("submit")
+                        .className("android.widget.Button"),
+                )
+                    .also { it.waitForExists(waitingTime) }
+                    .also { it.clickAndWaitForNewWindow(waitingTime) }
+
+                break
+            } catch (e: UiObjectNotFoundException) {
+                if (i == RETRY_COUNT) {
+                    throw e
+                } else {
+                    browserScreen {
+                    }.openThreeDotMenu {
+                    }.refreshPage { }
+                }
+            }
+        }
     }
 
     fun verifyUpdateLoginPromptIsShown() {
