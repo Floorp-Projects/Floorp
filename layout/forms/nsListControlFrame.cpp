@@ -213,7 +213,7 @@ nscoord nsListControlFrame::CalcBSizeOfARow() {
   // either of which may be visible or invisible, may use different
   // fonts, etc.
   nscoord rowBSize(0);
-  if (StyleDisplay()->GetContainSizeAxes().mBContained ||
+  if (GetContainSizeAxes().mBContained ||
       !GetMaxRowBSize(GetOptionsContainer(), GetWritingMode(), &rowBSize)) {
     // We don't have any <option>s or <optgroup> labels with a frame.
     // (Or we're size-contained in block axis, which has the same outcome for

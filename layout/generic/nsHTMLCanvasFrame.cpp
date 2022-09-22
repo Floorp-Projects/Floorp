@@ -437,7 +437,7 @@ nscoord nsHTMLCanvasFrame::GetPrefISize(gfxContext* aRenderingContext) {
 
 /* virtual */
 IntrinsicSize nsHTMLCanvasFrame::GetIntrinsicSize() {
-  const auto containAxes = StyleDisplay()->GetContainSizeAxes();
+  const auto containAxes = GetContainSizeAxes();
   IntrinsicSize size = containAxes.IsBoth()
                            ? IntrinsicSize(0, 0)
                            : IntrinsicSizeFromCanvasSize(GetCanvasSize());
@@ -446,7 +446,7 @@ IntrinsicSize nsHTMLCanvasFrame::GetIntrinsicSize() {
 
 /* virtual */
 AspectRatio nsHTMLCanvasFrame::GetIntrinsicRatio() const {
-  if (StyleDisplay()->GetContainSizeAxes().IsAny()) {
+  if (GetContainSizeAxes().IsAny()) {
     return AspectRatio();
   }
 

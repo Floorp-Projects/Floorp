@@ -311,7 +311,7 @@ void nsVideoFrame::Reflow(nsPresContext* aPresContext, ReflowOutput& aMetrics,
         // Resolve our own BSize based on the controls' size in the
         // same axis. Unless we're size-contained, in which case we
         // have to behave as if we have an intrinsic size of 0.
-        if (aReflowInput.mStyleDisplay->GetContainSizeAxes().mBContained) {
+        if (GetContainSizeAxes().mBContained) {
           contentBoxBSize = 0;
         } else {
           contentBoxBSize = myWM.IsOrthogonalTo(wm) ? kidDesiredSize.ISize(wm)
@@ -420,7 +420,7 @@ AspectRatio nsVideoFrame::GetIntrinsicRatio() const {
   }
 
   // 'contain:[inline-]size' replaced elements have no intrinsic ratio.
-  if (StyleDisplay()->GetContainSizeAxes().IsAny()) {
+  if (GetContainSizeAxes().IsAny()) {
     return AspectRatio();
   }
 
@@ -470,7 +470,7 @@ bool nsVideoFrame::ShouldDisplayPoster() const {
 }
 
 IntrinsicSize nsVideoFrame::GetIntrinsicSize() {
-  const auto containAxes = StyleDisplay()->GetContainSizeAxes();
+  const auto containAxes = GetContainSizeAxes();
   const auto isVideo = HasVideoElement();
   // Intrinsic size will be given by contain-intrinsic-size if the element is
   // size-contained. If both axes have containment, ContainIntrinsicSize() will
