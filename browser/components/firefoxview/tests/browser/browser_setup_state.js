@@ -237,9 +237,9 @@ add_task(async function test_2nd_desktop_connected() {
     is(fxAccounts.device.recentDeviceList?.length, 2, "2 devices connected");
     ok(
       fxAccounts.device.recentDeviceList?.every(
-        device => device.type !== "mobile"
+        device => device.type !== "mobile" && device.type !== "tablet"
       ),
-      "No connected device is type:mobile"
+      "No connected device is type:mobile or type:tablet"
     );
     checkMobilePromo(browser, {
       mobilePromo: false,
@@ -281,9 +281,53 @@ add_task(async function test_mobile_connected() {
     is(fxAccounts.device.recentDeviceList?.length, 2, "2 devices connected");
     ok(
       fxAccounts.device.recentDeviceList?.some(
-        device => device.type !== "mobile"
+        device => device.type == "mobile"
       ),
       "A connected device is type:mobile"
+    );
+    checkMobilePromo(browser, {
+      mobilePromo: false,
+      mobileConfirmation: false,
+    });
+  });
+  await tearDown(sandbox);
+});
+
+add_task(async function test_tablet_connected() {
+  const sandbox = setupMocks({
+    state: UIState.STATUS_SIGNED_IN,
+    fxaDevices: [
+      {
+        id: 1,
+        name: "This Device",
+        isCurrentDevice: true,
+        type: "desktop",
+      },
+      {
+        id: 2,
+        name: "Other Device",
+        type: "tablet",
+      },
+    ],
+  });
+  await withFirefoxView({}, async browser => {
+    // ensure tab sync is false so we don't skip onto next step
+    ok(
+      !Services.prefs.getBoolPref("services.sync.engine.tabs", false),
+      "services.sync.engine.tabs is initially false"
+    );
+
+    Services.obs.notifyObservers(null, UIState.ON_UPDATE);
+    await waitForVisibleSetupStep(browser, {
+      expectedVisible: "#tabpickup-steps-view3",
+    });
+
+    is(fxAccounts.device.recentDeviceList?.length, 2, "2 devices connected");
+    ok(
+      fxAccounts.device.recentDeviceList?.some(
+        device => device.type == "tablet"
+      ),
+      "A connected device is type:tablet"
     );
     checkMobilePromo(browser, {
       mobilePromo: false,

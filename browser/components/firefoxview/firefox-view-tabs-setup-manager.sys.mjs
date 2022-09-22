@@ -234,7 +234,7 @@ export const TabsSetupFlowManager = new (class {
       return false;
     }
     let mobileClients = lazy.fxAccounts.device.recentDeviceList?.filter(
-      device => device.type == "mobile"
+      device => device.type == "mobile" || device.type == "tablet"
     );
     return mobileClients?.length > 0;
   }
