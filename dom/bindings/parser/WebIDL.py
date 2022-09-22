@@ -8902,10 +8902,16 @@ class Parser(Tokenizer):
                 def simpleExtendedAttr(str):
                     return IDLExtendedAttribute(iface.location, (str,))
 
+                if isinstance(iterable, IDLAsyncIterable):
+                    nextReturnType = IDLPromiseType(
+                        iterable.location, BuiltinTypes[IDLBuiltinType.Types.any]
+                    )
+                else:
+                    nextReturnType = BuiltinTypes[IDLBuiltinType.Types.object]
                 nextMethod = IDLMethod(
                     iface.location,
                     IDLUnresolvedIdentifier(iface.location, "next"),
-                    BuiltinTypes[IDLBuiltinType.Types.object],
+                    nextReturnType,
                     [],
                 )
                 nextMethod.addExtendedAttributes([simpleExtendedAttr("Throws")])

@@ -50,8 +50,7 @@ class FileSystemDirectoryHandle final : public FileSystemHandle {
 
   void DestroyAsyncIterator(iterator_t* aIterator);
 
-  [[nodiscard]] already_AddRefed<Promise> GetNextPromise(JSContext* aCx,
-                                                         iterator_t* aIterator,
+  [[nodiscard]] already_AddRefed<Promise> GetNextPromise(iterator_t* aIterator,
                                                          ErrorResult& aError);
 
   already_AddRefed<Promise> GetFileHandle(

@@ -67,61 +67,42 @@ void TestInterfaceAsyncIterableDouble::DestroyAsyncIterator(
 }
 
 already_AddRefed<Promise> TestInterfaceAsyncIterableDouble::GetNextPromise(
-    JSContext* aCx, Iterator* aIterator, ErrorResult& aRv) {
+    Iterator* aIterator, ErrorResult& aRv) {
   RefPtr<Promise> promise = Promise::Create(mParent->AsGlobal(), aRv);
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
   }
 
-  auto* data = reinterpret_cast<IteratorData*>(aIterator->GetData());
-  data->mPromise = promise;
-
-  NS_DispatchToMainThread(NS_NewRunnableFunction(
-      "TestInterfaceAsyncIterableDouble::GetNextPromise",
-      [self = RefPtr{this}, iterator = RefPtr{aIterator}] {
-        self->ResolvePromise(iterator);
-      }));
+  NS_DispatchToMainThread(NewRunnableMethod<RefPtr<Iterator>, RefPtr<Promise>>(
+      "TestInterfaceAsyncIterableDouble::GetNextPromise", this,
+      &TestInterfaceAsyncIterableDouble::ResolvePromise, aIterator, promise));
 
   return promise.forget();
 }
 
-void TestInterfaceAsyncIterableDouble::ResolvePromise(Iterator* aIterator) {
+void TestInterfaceAsyncIterableDouble::ResolvePromise(Iterator* aIterator,
+                                                      Promise* aPromise) {
   IteratorData* data = reinterpret_cast<IteratorData*>(aIterator->GetData());
-
-  AutoJSAPI jsapi;
-  if (NS_WARN_IF(!jsapi.Init(mParent))) {
-    data->mPromise->MaybeRejectWithInvalidStateError(
-        "Couldn't get the global.");
-    return;
-  }
-  JSContext* cx = jsapi.cx();
 
   // Test data: ['a', 'b'], ['c', 'd'], ['e', 'f']
   uint32_t idx = data->mIndex;
   if (idx >= mValues.Length()) {
-    iterator_utils::ResolvePromiseForFinished(cx, data->mPromise);
+    iterator_utils::ResolvePromiseForFinished(aPromise);
   } else {
-    JS::Rooted<JS::Value> key(cx);
-    JS::Rooted<JS::Value> value(cx);
     switch (aIterator->GetIteratorType()) {
       case IterableIteratorBase::IteratorType::Keys:
-        Unused << ToJSValue(cx, mValues[idx].first, &key);
-        iterator_utils::ResolvePromiseWithKeyOrValue(cx, data->mPromise, key);
+        aPromise->MaybeResolve(mValues[idx].first);
         break;
       case IterableIteratorBase::IteratorType::Values:
-        Unused << ToJSValue(cx, mValues[idx].second, &value);
-        iterator_utils::ResolvePromiseWithKeyOrValue(cx, data->mPromise, value);
+        aPromise->MaybeResolve(mValues[idx].second);
         break;
       case IterableIteratorBase::IteratorType::Entries:
-        Unused << ToJSValue(cx, mValues[idx].first, &key);
-        Unused << ToJSValue(cx, mValues[idx].second, &value);
-        iterator_utils::ResolvePromiseWithKeyAndValue(cx, data->mPromise, key,
-                                                      value);
+        iterator_utils::ResolvePromiseWithKeyAndValue(
+            aPromise, mValues[idx].first, mValues[idx].second);
         break;
     }
 
     data->mIndex++;
-    data->mPromise = nullptr;
   }
 }
 

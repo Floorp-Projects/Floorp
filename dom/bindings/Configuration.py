@@ -757,6 +757,8 @@ class Descriptor(DescriptorProvider):
         if name in self.implicitJSContext:
             attrs.append("implicitJSContext")
         if member.isMethod():
+            if self.interface.isAsyncIteratorInterface() and name == "next":
+                attrs.append("implicitJSContext")
             # JSObject-returning [NewObject] methods must be fallible,
             # since they have to (fallibly) allocate the new JSObject.
             if member.getExtendedAttribute("NewObject"):
@@ -1050,7 +1052,10 @@ def iteratorNativeType(descriptor):
     assert iterableDecl.isPairIterator() or descriptor.interface.isAsyncIterable()
     if descriptor.interface.isIterable():
         return "mozilla::dom::IterableIterator<%s>" % descriptor.nativeType
-    return "mozilla::dom::AsyncIterableIterator<%s>" % descriptor.nativeType
+    return (
+        "mozilla::dom::binding_detail::AsyncIterableIteratorNoReturn<%s>"
+        % descriptor.nativeType
+    )
 
 
 def findInnermostType(t):

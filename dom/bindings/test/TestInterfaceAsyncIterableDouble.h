@@ -41,7 +41,7 @@ class TestInterfaceAsyncIterableDouble final : public nsISupports,
   using Iterator = AsyncIterableIterator<TestInterfaceAsyncIterableDouble>;
   void InitAsyncIterator(Iterator* aIterator, ErrorResult& aError);
   void DestroyAsyncIterator(Iterator* aIterator);
-  already_AddRefed<Promise> GetNextPromise(JSContext* aCx, Iterator* aIterator,
+  already_AddRefed<Promise> GetNextPromise(Iterator* aIterator,
                                            ErrorResult& aRv);
 
  private:
@@ -57,7 +57,7 @@ class TestInterfaceAsyncIterableDouble final : public nsISupports,
     uint32_t mIndex;
   };
   virtual ~TestInterfaceAsyncIterableDouble() = default;
-  void ResolvePromise(Iterator* aIterator);
+  void ResolvePromise(Iterator* aIterator, Promise* aPromise);
 
   nsCOMPtr<nsPIDOMWindowInner> mParent;
   nsTArray<std::pair<nsString, nsString>> mValues;

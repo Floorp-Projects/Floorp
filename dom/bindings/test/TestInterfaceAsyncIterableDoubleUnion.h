@@ -41,24 +41,18 @@ class TestInterfaceAsyncIterableDoubleUnion final : public nsISupports,
   using Iterator = AsyncIterableIterator<TestInterfaceAsyncIterableDoubleUnion>;
   void InitAsyncIterator(Iterator* aIterator, ErrorResult& aError);
   void DestroyAsyncIterator(Iterator* aIterator);
-  already_AddRefed<Promise> GetNextPromise(JSContext* aCx, Iterator* aIterator,
+  already_AddRefed<Promise> GetNextPromise(Iterator* aIterator,
                                            ErrorResult& aRv);
 
  private:
   struct IteratorData {
     explicit IteratorData(int32_t aIndex) : mIndex(aIndex) {}
-    ~IteratorData() {
-      if (mPromise) {
-        mPromise->MaybeReject(NS_ERROR_DOM_ABORT_ERR);
-        mPromise = nullptr;
-      }
-    }
-    RefPtr<Promise> mPromise;
+
     uint32_t mIndex;
   };
 
   virtual ~TestInterfaceAsyncIterableDoubleUnion() = default;
-  void ResolvePromise(Iterator* aIterator);
+  void ResolvePromise(Iterator* aIterator, Promise* aPromise);
 
   nsCOMPtr<nsPIDOMWindowInner> mParent;
   nsTArray<std::pair<nsString, OwningStringOrLong>> mValues;
