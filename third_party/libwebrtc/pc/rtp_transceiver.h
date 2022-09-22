@@ -108,7 +108,7 @@ class RtpTransceiver : public RtpTransceiverInterface,
   // Not copyable or movable.
   RtpTransceiver(const RtpTransceiver&) = delete;
   RtpTransceiver& operator=(const RtpTransceiver&) = delete;
-  // RtpTransceiver(RtpTransceiver&&) = delete;
+  RtpTransceiver(RtpTransceiver&&) = delete;
   RtpTransceiver& operator=(RtpTransceiver&&) = delete;
 
   // Returns the Voice/VideoChannel set for this transceiver. May be null if
