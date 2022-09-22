@@ -108,7 +108,7 @@ class SettingsGeneralTest {
         }
     }
 
-    @Ignore("Compose scrolling issue: https://github.com/mozilla-mobile/focus-android/issues/7282")
+    @Ignore("Compose scrolling issue: https://github.com/mozilla-mobile/focus-android/issues/7718")
     @Test
     fun frenchLocaleTest() {
         /* Go to Settings */
