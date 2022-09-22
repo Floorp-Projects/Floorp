@@ -7,6 +7,7 @@
 # be found in the AUTHORS file in the root of the source tree.
 
 import("//build/config/linux/pkg_config.gni")
+import("//third_party/libaom/options.gni")
 import("../webrtc.gni")
 
 group("media") {
@@ -208,24 +209,32 @@ rtc_library("rtc_internal_video_codecs") {
     "../api/video:video_rtp_headers",
     "../api/video_codecs:rtc_software_fallback_wrappers",
     "../api/video_codecs:video_codecs_api",
+    "../api/video_codecs:video_encoder_factory_template",
+    "../api/video_codecs:video_encoder_factory_template_libvpx_vp8_adapter",
+    "../api/video_codecs:video_encoder_factory_template_libvpx_vp9_adapter",
+    "../api/video_codecs:video_encoder_factory_template_open_h264_adapter",
     "../call:call_interfaces",
     "../call:video_stream_api",
     "../modules/video_coding:video_codec_interface",
     "../modules/video_coding:webrtc_h264",
     "../modules/video_coding:webrtc_multiplex",
     "../modules/video_coding:webrtc_vp8",
-    "../modules/video_coding:webrtc_vp8_scalability",
     "../modules/video_coding:webrtc_vp9",
-    "../modules/video_coding/codecs/av1:av1_svc_config",
     "../modules/video_coding/codecs/av1:libaom_av1_decoder",
-    "../modules/video_coding/codecs/av1:libaom_av1_encoder_if_supported",
-    "../modules/video_coding/svc:scalability_mode_util",
     "../rtc_base:checks",
     "../rtc_base:logging",
     "../rtc_base/system:rtc_export",
     "../system_wrappers:field_trial",
     #"../test:fake_video_codecs",
   ]
+
+  if (enable_libaom) {
+    defines += [ "RTC_USE_LIBAOM_AV1_ENCODER" ]
+    deps += [
+      "../api/video_codecs:video_encoder_factory_template_libaom_av1_adapter",
+    ]
+  }
+
   if (rtc_include_dav1d_in_internal_decoder_factory) {
     deps += [ "../modules/video_coding/codecs/av1:dav1d_decoder" ]
   }
@@ -618,7 +627,6 @@ if (rtc_include_tests) {
         "../modules/video_coding:webrtc_h264",
         "../modules/video_coding:webrtc_vp8",
         "../modules/video_coding/codecs/av1:libaom_av1_decoder",
-        "../modules/video_coding/codecs/av1:libaom_av1_encoder_if_supported",
         "../p2p:p2p_test_utils",
         "../rtc_base",
         "../rtc_base:byte_order",
@@ -647,6 +655,11 @@ if (rtc_include_tests) {
         "../test:video_test_common",
         "../test/time_controller",
       ]
+
+      if (enable_libaom) {
+        defines += [ "RTC_USE_LIBAOM_AV1_ENCODER" ]
+      }
+
       absl_deps = [
         "//third_party/abseil-cpp/absl/algorithm:container",
         "//third_party/abseil-cpp/absl/memory",
