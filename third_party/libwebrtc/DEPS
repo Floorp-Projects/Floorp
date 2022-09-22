@@ -162,7 +162,7 @@ deps = {
   },
   # WebRTC-only dependency (not present in Chromium).
   'src/third_party/gtest-parallel':
-    'https://chromium.googlesource.com/external/github.com/google/gtest-parallel@42ce42ff35f8313066c247f02d431a1c603ae4a0',
+    'https://chromium.googlesource.com/external/github.com/google/gtest-parallel@e28fc0e83f54105af859e68e068e3ec05d87c3b7',
   'src/third_party/google-truth': {
       'packages': [
           {
