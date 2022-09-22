@@ -15,6 +15,7 @@
 #include "mozilla/dom/Request.h"
 #include "mozilla/dom/RequestBinding.h"
 #include "mozilla/dom/Response.h"
+#include "mozilla/dom/RootedDictionary.h"
 #include "mozilla/ipc/BackgroundChild.h"
 #include "mozilla/ipc/PBackgroundChild.h"
 #include "mozilla/ipc/PBackgroundSharedTypes.h"

@@ -40,6 +40,7 @@
 #include "mozilla/dom/PromiseNativeHandler.h"
 #include "mozilla/dom/PushEventBinding.h"
 #include "mozilla/dom/RequestBinding.h"
+#include "mozilla/dom/RootedDictionary.h"
 #include "mozilla/dom/WorkerDebugger.h"
 #include "mozilla/dom/WorkerRef.h"
 #include "mozilla/dom/WorkerRunnable.h"
