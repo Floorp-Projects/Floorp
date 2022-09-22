@@ -429,7 +429,6 @@ open class FenixApplication : LocaleAwareApplication(), Provider {
             // experiment on features close to startup.
             // But we need viaduct (the RustHttp client) to be ready before we do.
             components.analytics.experiments.apply {
-                initialize()
                 setupNimbusObserver(this)
             }
         }

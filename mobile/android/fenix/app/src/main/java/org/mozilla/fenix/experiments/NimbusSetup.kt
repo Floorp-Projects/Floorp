@@ -7,8 +7,8 @@ package org.mozilla.fenix.experiments
 import android.content.Context
 import android.net.Uri
 import android.os.StrictMode
-import mozilla.components.service.nimbus.NimbusApi
 import mozilla.components.service.nimbus.Nimbus
+import mozilla.components.service.nimbus.NimbusApi
 import mozilla.components.service.nimbus.NimbusAppInfo
 import mozilla.components.service.nimbus.NimbusDisabled
 import mozilla.components.service.nimbus.NimbusServerSettings
@@ -16,11 +16,13 @@ import mozilla.components.support.base.log.logger.Logger
 import org.mozilla.experiments.nimbus.NimbusInterface
 import org.mozilla.experiments.nimbus.internal.EnrolledExperiment
 import org.mozilla.experiments.nimbus.internal.NimbusException
+import org.mozilla.experiments.nimbus.joinOrTimeout
 import org.mozilla.fenix.BuildConfig
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.nimbus.FxNimbus
+import org.mozilla.fenix.perf.runBlockingIncrement
 
 /**
  * Fenix specific observer of Nimbus events.
@@ -33,6 +35,14 @@ private val observer = object : NimbusInterface.Observer {
         FxNimbus.invalidateCachedValues()
     }
 }
+
+/**
+ * The maximum amount of time the app launch will be blocked to load experiments from disk.
+ *
+ * ⚠️ This value was decided from analyzing the Focus metrics (nimbus_initial_fetch) for the ideal
+ * timeout. We should NOT change this value without collecting more metrics first.
+ */
+private const val TIME_OUT_LOADING_EXPERIMENT_FROM_DISK_MS = 200L
 
 @Suppress("TooGenericExceptionCaught")
 fun createNimbus(context: Context, url: String?): NimbusApi {
@@ -88,32 +98,32 @@ fun createNimbus(context: Context, url: String?): NimbusApi {
             // generated code.
             register(observer)
 
-            // This performs the minimal amount of work required to load branch and enrolment data
-            // into memory. If `getExperimentBranch` is called from another thread between here
-            // and the next nimbus disk write (setting `globalUserParticipation` or
-            // `applyPendingExperiments()`) then this has you covered.
-            // This call does its work on the db thread.
-            initialize()
+            val isFirstNimbusRun = context.settings().isFirstNimbusRun
+
+            // We always want `Nimbus.initialize` to happen ASAP and before any features (engine/UI)
+            // have been initialized. For that reason, we use runBlocking here to avoid
+            // inconsistency in the experiments.
+            // We can safely do this because Nimbus does most of it's work on background threads,
+            // except for loading the initial experiments from disk. For this reason, we have a
+            // `joinOrTimeout` to limit the blocking until TIME_OUT_LOADING_EXPERIMENT_FROM_DISK_MS.
+            runBlockingIncrement {
+                val job = initialize(
+                    isFirstNimbusRun || url.isNullOrBlank(),
+                    R.raw.initial_experiments,
+                )
+                // We only read from disk when loading first-run experiments. This is the only time
+                // that we should join and block. Otherwise, we don't want to wait.
+                if (isFirstNimbusRun) {
+                    context.settings().isFirstNimbusRun = false
+                    job.joinOrTimeout(TIME_OUT_LOADING_EXPERIMENT_FROM_DISK_MS)
+                }
+            }
 
             if (!enabled) {
                 // This opts out of nimbus experiments. It involves writing to disk, so does its
                 // work on the db thread.
                 globalUserParticipation = enabled
             }
-
-            if (context.settings().isFirstNimbusRun || url.isNullOrBlank()) {
-                setExperimentsLocally(R.raw.initial_experiments)
-                context.settings().isFirstNimbusRun = false
-            }
-
-            // We may have downloaded experiments on a previous run, so let's start using them
-            // now. We didn't do this earlier, so as to make getExperimentBranch and friends returns
-            // the same thing throughout the session. This call does its work on the db thread.
-            applyPendingExperiments()
-
-            // Now fetch the experiments from the server. These will be available for feature
-            // configuration on the next run of the app. This call launches on the fetch thread.
-            fetchExperiments()
         }
     } catch (e: Throwable) {
         // Something went wrong. We'd like not to, but stability of the app is more important than
