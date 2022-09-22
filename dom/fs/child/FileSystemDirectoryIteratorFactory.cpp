@@ -22,51 +22,23 @@ namespace mozilla::dom::fs {
 
 namespace {
 
-inline JSContext* GetContext(const RefPtr<Promise>& aPromise) {
-  AutoJSAPI jsapi;
-  if (NS_WARN_IF(!jsapi.Init(aPromise->GetGlobalObject()))) {
-    return nullptr;
-  }
-  return jsapi.cx();
-}
-
 template <IterableIteratorBase::IteratorType Type>
 struct ValueResolver;
 
 template <>
 struct ValueResolver<IterableIteratorBase::Keys> {
-  nsresult operator()(nsIGlobalObject* aGlobal,
-                      RefPtr<FileSystemManager>& aManager,
-                      const FileSystemEntryMetadata& aValue,
-                      const RefPtr<Promise>& aPromise, ErrorResult& aError) {
-    JSContext* cx = GetContext(aPromise);
-    if (!cx) {
-      return NS_ERROR_UNEXPECTED;
-    }
-
-    JS::Rooted<JS::Value> key(cx);
-
-    if (!ToJSValue(cx, aValue.entryName(), &key)) {
-      return NS_ERROR_INVALID_ARG;
-    }
-
-    iterator_utils::ResolvePromiseWithKeyOrValue(cx, aPromise.get(), key);
-
-    return NS_OK;
+  void operator()(nsIGlobalObject* aGlobal, RefPtr<FileSystemManager>& aManager,
+                  const FileSystemEntryMetadata& aValue,
+                  const RefPtr<Promise>& aPromise) {
+    aPromise->MaybeResolve(aValue.entryName());
   }
 };
 
 template <>
 struct ValueResolver<IterableIteratorBase::Values> {
-  nsresult operator()(nsIGlobalObject* aGlobal,
-                      RefPtr<FileSystemManager>& aManager,
-                      const FileSystemEntryMetadata& aValue,
-                      const RefPtr<Promise>& aPromise, ErrorResult& aError) {
-    JSContext* cx = GetContext(aPromise);
-    if (!cx) {
-      return NS_ERROR_UNEXPECTED;
-    }
-
+  void operator()(nsIGlobalObject* aGlobal, RefPtr<FileSystemManager>& aManager,
+                  const FileSystemEntryMetadata& aValue,
+                  const RefPtr<Promise>& aPromise) {
     RefPtr<FileSystemHandle> handle;
 
     if (aValue.directory()) {
@@ -75,33 +47,15 @@ struct ValueResolver<IterableIteratorBase::Values> {
       handle = new FileSystemFileHandle(aGlobal, aManager, aValue);
     }
 
-    JS::Rooted<JS::Value> value(cx);
-    if (!ToJSValue(cx, handle, &value)) {
-      return NS_ERROR_INVALID_ARG;
-    }
-
-    iterator_utils::ResolvePromiseWithKeyOrValue(cx, aPromise.get(), value);
-
-    return NS_OK;
+    aPromise->MaybeResolve(std::move(handle));
   }
 };
 
 template <>
 struct ValueResolver<IterableIteratorBase::Entries> {
-  nsresult operator()(nsIGlobalObject* aGlobal,
-                      RefPtr<FileSystemManager>& aManager,
-                      const FileSystemEntryMetadata& aValue,
-                      const RefPtr<Promise>& aPromise, ErrorResult& aError) {
-    JSContext* cx = GetContext(aPromise);
-    if (!cx) {
-      return NS_ERROR_UNEXPECTED;
-    }
-
-    JS::Rooted<JS::Value> key(cx);
-    if (!ToJSValue(cx, aValue.entryName(), &key)) {
-      return NS_ERROR_INVALID_ARG;
-    }
-
+  void operator()(nsIGlobalObject* aGlobal, RefPtr<FileSystemManager>& aManager,
+                  const FileSystemEntryMetadata& aValue,
+                  const RefPtr<Promise>& aPromise) {
     RefPtr<FileSystemHandle> handle;
 
     if (aValue.directory()) {
@@ -110,15 +64,8 @@ struct ValueResolver<IterableIteratorBase::Entries> {
       handle = new FileSystemFileHandle(aGlobal, aManager, aValue);
     }
 
-    JS::Rooted<JS::Value> value(cx);
-    if (!ToJSValue(cx, handle, &value)) {
-      return NS_ERROR_INVALID_ARG;
-    }
-
-    iterator_utils::ResolvePromiseWithKeyAndValue(cx, aPromise.get(), key,
-                                                  value);
-
-    return NS_OK;
+    iterator_utils::ResolvePromiseWithKeyAndValue(aPromise, aValue.entryName(),
+                                                  handle);
   }
 };
 
@@ -141,27 +88,16 @@ class DoubleBufferQueueImpl
   // XXX This doesn't have to be public
   void ResolveValue(nsIGlobalObject* aGlobal,
                     RefPtr<FileSystemManager>& aManager,
-                    const Maybe<DataType>& aValue, RefPtr<Promise> aPromise,
-                    ErrorResult& aError) {
+                    const Maybe<DataType>& aValue, RefPtr<Promise> aPromise) {
     MOZ_ASSERT(aPromise);
     MOZ_ASSERT(aPromise.get());
 
-    AutoJSAPI jsapi;
-    if (NS_WARN_IF(!jsapi.Init(aPromise->GetGlobalObject()))) {
-      aPromise->MaybeReject(NS_ERROR_DOM_UNKNOWN_ERR);
-      aError = NS_ERROR_DOM_UNKNOWN_ERR;
-      return;
-    }
-
-    JSContext* aCx = jsapi.cx();
-    MOZ_ASSERT(aCx);
-
     if (!aValue) {
-      iterator_utils::ResolvePromiseForFinished(aCx, aPromise.get());
+      iterator_utils::ResolvePromiseForFinished(aPromise);
       return;
     }
 
-    ValueResolver{}(aGlobal, aManager, *aValue, aPromise, aError);
+    ValueResolver{}(aGlobal, aManager, *aValue, aPromise);
   }
 
   already_AddRefed<Promise> Next(nsIGlobalObject* aGlobal,
@@ -172,7 +108,7 @@ class DoubleBufferQueueImpl
       return nullptr;
     }
 
-    next(aGlobal, aManager, promise, aError);
+    next(aGlobal, aManager, promise);
 
     return promise.forget();
   }
@@ -181,7 +117,7 @@ class DoubleBufferQueueImpl
 
  protected:
   void next(nsIGlobalObject* aGlobal, RefPtr<FileSystemManager>& aManager,
-            RefPtr<Promise> aResult, ErrorResult& aError) {
+            RefPtr<Promise> aResult) {
     MOZ_ASSERT(aResult);
 
     Maybe<DataType> rawValue;
@@ -193,7 +129,7 @@ class DoubleBufferQueueImpl
       ErrorResult rv;
       RefPtr<Promise> promise = Promise::Create(aGlobal, rv);
       if (rv.Failed()) {
-        aResult->MaybeReject(NS_ERROR_DOM_UNKNOWN_ERR);
+        aResult->MaybeReject(std::move(rv));
         return;
       }
 
@@ -223,7 +159,7 @@ class DoubleBufferQueueImpl
             }
 
             IgnoredErrorResult rv;
-            ResolveValue(global, manager, value, aResult, rv);
+            ResolveValue(global, manager, value, aResult);
           },
           [](nsresult aRv) {});
       promise->AppendNativeHandler(listener);
@@ -237,7 +173,7 @@ class DoubleBufferQueueImpl
 
     nextInternal(rawValue);
 
-    ResolveValue(aGlobal, aManager, rawValue, aResult, aError);
+    ResolveValue(aGlobal, aManager, rawValue, aResult);
   }
 
   bool nextInternal(Maybe<DataType>& aNext) {

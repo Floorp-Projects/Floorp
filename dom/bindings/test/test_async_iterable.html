@@ -14,17 +14,22 @@ add_task(async function init() {
   await SpecialPowers.pushPrefEnv({set: [["dom.expose_test_interfaces", true]]});
 });
 
-async function check_single_result(itr, multiplier = 1) {
-  let values = [];
-  for await (let v of itr) {
-    values.push(v);
-  }
-  is(values.length, 10, `AsyncIterableSingle: should returns 10 elements`);
+async function check_single_result_values(values, multiplier = 1) {
+  dump(JSON.stringify(values));
+  is(values.length, 10, `AsyncIterableSingle: should return 10 elements`);
   for (let i = 0; i < 10; i++) {
     let expected = i * 9 % 7 * multiplier;
     is(values[i], expected,
       `AsyncIterableSingle: should be ${expected}, get ${values[i]}`);
   }
+}
+
+async function check_single_result(itr, multiplier = 1) {
+  let values = [];
+  for await (let v of itr) {
+    values.push(v);
+  }
+  check_single_result_values(values, multiplier);
 }
 
 async function test_data_single() {
@@ -58,6 +63,50 @@ async function test_data_single() {
 
   await check_single_result(itr, 1);
   await check_single_result(itr.values({ multiplier: 2 }), 2);
+
+  // eslint-disable-next-line no-undef
+  itr = new TestInterfaceAsyncIterableSingle();
+  let itrValues = itr.values();
+  let values = [];
+  for (let i = 0; i < 10; ++i) {
+    values.push(itrValues.next());
+  }
+  check_single_result_values(await Promise.all(values).then(v => v.map(w => w.value)));
+
+  // Test that there is only one ongoing promise at a time.
+  // Async iterables return a promise that is then resolved with the iterator
+  // value. We create an array of unresolved promises here, one promise for
+  // every result that we expect from the iterator. We pass that array of
+  // promises to the .value() method of the
+  // TestInterfaceAsyncIterableSingleWithArgs, and it will chain the resolving
+  // of each resulting iterator value on the corresponding promise from this
+  // array. We then resolve the promises in the array one by one in reverse
+  // order. This tries to make sure that the iterator always resolves the
+  // promises in the order of iteration.
+  let unblockers = [];
+  let blockingPromises = [];
+  for (let i = 0; i < 10; ++i) {
+    let unblocker;
+    let promise = new Promise((resolve, reject) => {
+      unblocker = resolve;
+    });
+    unblockers.push(unblocker);
+    blockingPromises.push(promise);
+  }
+
+  // eslint-disable-next-line no-undef
+  itr = new TestInterfaceAsyncIterableSingleWithArgs();
+  itrValues = itr.values({ blockingPromises });
+  values = [];
+  for (let i = 0; i < 10; ++i) {
+    values.push(itrValues.next());
+  }
+  unblockers.reverse();
+  for (let unblocker of unblockers) {
+    unblocker();
+  }
+
+  check_single_result_values(await Promise.all(values).then(v => v.map(w => w.value)));
 }
 
 async function test_data_double() {

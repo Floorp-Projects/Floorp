@@ -31,6 +31,7 @@
 #include "js/TypeDecls.h"
 #include "js/Value.h"
 #include "nsISupports.h"
+#include "mozilla/AlreadyAddRefed.h"
 #include "mozilla/dom/IterableIteratorBinding.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/RootedDictionary.h"
@@ -39,7 +40,19 @@
 
 namespace mozilla::dom {
 
+namespace binding_details {
+
+// JS::MagicValue(END_OF_ITERATION) is the value we use for
+// https://webidl.spec.whatwg.org/#end-of-iteration. It shouldn't be returned to
+// JS, because AsyncIterableIteratorBase::NextSteps will detect it and will
+// return the result of CreateIterResultObject(undefined, true) instead
+// (discarding the magic value).
+static const JSWhyMagic END_OF_ITERATION = JS_GENERIC_MAGIC;
+
+}  // namespace binding_details
+
 namespace iterator_utils {
+
 void DictReturn(JSContext* aCx, JS::MutableHandle<JSObject*> aResult,
                 bool aDone, JS::Handle<JS::Value> aValue, ErrorResult& aRv);
 
@@ -47,14 +60,16 @@ void KeyAndValueReturn(JSContext* aCx, JS::Handle<JS::Value> aKey,
                        JS::Handle<JS::Value> aValue,
                        JS::MutableHandle<JSObject*> aResult, ErrorResult& aRv);
 
-void ResolvePromiseForFinished(JSContext* aCx, Promise* aPromise);
+inline void ResolvePromiseForFinished(Promise* aPromise) {
+  aPromise->MaybeResolve(JS::MagicValue(binding_details::END_OF_ITERATION));
+}
 
-void ResolvePromiseWithKeyOrValue(JSContext* aCx, Promise* aPromise,
-                                  JS::Handle<JS::Value> aKeyOrValue);
+template <typename Key, typename Value>
+void ResolvePromiseWithKeyAndValue(Promise* aPromise, const Key& aKey,
+                                   const Value& aValue) {
+  aPromise->MaybeResolve(MakeTuple(aKey, aValue));
+}
 
-void ResolvePromiseWithKeyAndValue(JSContext* aCx, Promise* aPromise,
-                                   JS::Handle<JS::Value> aKey,
-                                   JS::Handle<JS::Value> aValue);
 }  // namespace iterator_utils
 
 class IterableIteratorBase : public nsISupports {
@@ -209,43 +224,45 @@ class IterableIterator final : public IterableIteratorBase {
   uint32_t mIndex;
 };
 
-template <typename T>
-class AsyncIterableIterator final : public IterableIteratorBase,
-                                    public SupportsWeakPtr {
- public:
-  typedef bool (*WrapFunc)(JSContext* aCx, AsyncIterableIterator<T>* aObject,
-                           JS::Handle<JSObject*> aGivenProto,
-                           JS::MutableHandle<JSObject*> aReflector);
+namespace binding_detail {
 
-  explicit AsyncIterableIterator(T* aIterableObj, IteratorType aIteratorType,
-                                 WrapFunc aWrapFunc)
-      : mIterableObj(aIterableObj),
-        mIteratorType(aIteratorType),
-        mWrapFunc(aWrapFunc) {
+class AsyncIterableNextImpl;
+
+}  // namespace binding_detail
+
+class AsyncIterableIteratorBase : public IterableIteratorBase {
+ public:
+  IteratorType GetIteratorType() { return mIteratorType; }
+
+ protected:
+  explicit AsyncIterableIteratorBase(IteratorType aIteratorType)
+      : mIteratorType(aIteratorType) {}
+
+ private:
+  friend class binding_detail::AsyncIterableNextImpl;
+
+  // 3.7.10.1. Default asynchronous iterator objects
+  // Target is in AsyncIterableIterator
+  // Kind
+  IteratorType mIteratorType;
+  // Ongoing promise
+  RefPtr<Promise> mOngoingPromise;
+  // Is finished
+  bool mIsFinished = false;
+};
+
+template <typename T>
+class AsyncIterableIterator : public AsyncIterableIteratorBase,
+                              public SupportsWeakPtr {
+ public:
+  AsyncIterableIterator(T* aIterableObj, IteratorType aIteratorType)
+      : AsyncIterableIteratorBase(aIteratorType), mIterableObj(aIterableObj) {
     MOZ_ASSERT(mIterableObj);
-    MOZ_ASSERT(mWrapFunc);
   }
 
   void SetData(void* aData) { mData = aData; }
 
   void* GetData() { return mData; }
-
-  IteratorType GetIteratorType() { return mIteratorType; }
-
-  void Next(JSContext* aCx, JS::MutableHandle<JSObject*> aResult,
-            ErrorResult& aRv) {
-    RefPtr<Promise> promise = mIterableObj->GetNextPromise(aCx, this, aRv);
-    if (!promise) {
-      aRv.Throw(NS_ERROR_FAILURE);
-      return;
-    }
-    aResult.set(promise->PromiseObj());
-  }
-
-  bool WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto,
-                  JS::MutableHandle<JSObject*> aObj) {
-    return (*mWrapFunc)(aCx, this, aGivenProto, aObj);
-  }
 
  protected:
   virtual ~AsyncIterableIterator() {
@@ -272,15 +289,79 @@ class AsyncIterableIterator final : public IterableIteratorBase,
     NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mIterableObj);
   }
 
-  // Binding Implementation object that we're iterating over.
+  // 3.7.10.1. Default asynchronous iterator objects
+  // Target
   RefPtr<T> mIterableObj;
-  // Tells whether this is a key, value, or entries iterator.
-  IteratorType mIteratorType;
-  // Function pointer to binding-type-specific Wrap() call for this iterator.
-  WrapFunc mWrapFunc;
+  // Kind
+  // Ongoing promise
+  // Is finished
+  // See AsyncIterableIteratorBase
+
   // Opaque data of the backing object.
   void* mData{nullptr};
 };
+
+namespace binding_detail {
+
+template <typename T>
+using WrappableIterableIterator = IterableIterator<T>;
+
+class AsyncIterableNextImpl {
+ protected:
+  already_AddRefed<Promise> Next(JSContext* aCx,
+                                 AsyncIterableIteratorBase* aObject,
+                                 nsISupports* aGlobalObject, ErrorResult& aRv);
+  virtual already_AddRefed<Promise> GetNextPromise(ErrorResult& aRv) = 0;
+
+ private:
+  already_AddRefed<Promise> NextSteps(JSContext* aCx,
+                                      AsyncIterableIteratorBase* aObject,
+                                      nsIGlobalObject* aGlobalObject,
+                                      ErrorResult& aRv);
+};
+
+template <typename T>
+class AsyncIterableIteratorNoReturn : public AsyncIterableIterator<T>,
+                                      public AsyncIterableNextImpl {
+ public:
+  using WrapFunc = bool (*)(JSContext* aCx,
+                            AsyncIterableIteratorNoReturn<T>* aObject,
+                            JS::Handle<JSObject*> aGivenProto,
+                            JS::MutableHandle<JSObject*> aReflector);
+  using AsyncIterableIteratorBase::IteratorType;
+
+  AsyncIterableIteratorNoReturn(T* aIterableObj, IteratorType aIteratorType,
+                                WrapFunc aWrapFunc)
+      : AsyncIterableIterator<T>(aIterableObj, aIteratorType),
+        mWrapFunc(aWrapFunc) {
+    MOZ_ASSERT(mWrapFunc);
+  }
+
+  bool WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto,
+                  JS::MutableHandle<JSObject*> aObj) {
+    return (*mWrapFunc)(aCx, this, aGivenProto, aObj);
+  }
+
+  already_AddRefed<Promise> Next(JSContext* aCx, ErrorResult& aRv) {
+    return AsyncIterableNextImpl::Next(
+        aCx, this, this->mIterableObj->GetParentObject(), aRv);
+  }
+
+ protected:
+  already_AddRefed<Promise> GetNextPromise(ErrorResult& aRv) override {
+    return this->mIterableObj->GetNextPromise(
+        static_cast<AsyncIterableIterator<T>*>(this), aRv);
+  }
+
+ private:
+  // Function pointer to binding-type-specific Wrap() call for this iterator.
+  WrapFunc mWrapFunc;
+};
+
+template <typename T>
+using WrappableAsyncIterableIterator = AsyncIterableIteratorNoReturn<T>;
+
+}  // namespace binding_detail
 
 }  // namespace mozilla::dom
 
