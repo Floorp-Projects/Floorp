@@ -162,13 +162,27 @@ constexpr int kSupportGoogPingVersionResponseIndex =
 
 namespace cricket {
 
+class Connection::ConnectionRequest : public StunRequest {
+ public:
+  ConnectionRequest(StunRequestManager& manager, Connection* connection);
+  void Prepare(StunMessage* message) override;
+  void OnResponse(StunMessage* response) override;
+  void OnErrorResponse(StunMessage* response) override;
+  void OnTimeout() override;
+  void OnSent() override;
+  int resend_delay() override;
+
+ private:
+  Connection* const connection_;
+};
+
 // A ConnectionRequest is a STUN binding used to determine writability.
-ConnectionRequest::ConnectionRequest(StunRequestManager& manager,
-                                     Connection* connection)
+Connection::ConnectionRequest::ConnectionRequest(StunRequestManager& manager,
+                                                 Connection* connection)
     : StunRequest(manager, std::make_unique<IceMessage>()),
       connection_(connection) {}
 
-void ConnectionRequest::Prepare(StunMessage* message) {
+void Connection::ConnectionRequest::Prepare(StunMessage* message) {
   RTC_DCHECK_RUN_ON(connection_->network_thread_);
   message->SetType(STUN_BINDING_REQUEST);
   std::string username;
@@ -258,22 +272,22 @@ void ConnectionRequest::Prepare(StunMessage* message) {
   }
 }
 
-void ConnectionRequest::OnResponse(StunMessage* response) {
+void Connection::ConnectionRequest::OnResponse(StunMessage* response) {
   RTC_DCHECK_RUN_ON(connection_->network_thread_);
   connection_->OnConnectionRequestResponse(this, response);
 }
 
-void ConnectionRequest::OnErrorResponse(StunMessage* response) {
+void Connection::ConnectionRequest::OnErrorResponse(StunMessage* response) {
   RTC_DCHECK_RUN_ON(connection_->network_thread_);
   connection_->OnConnectionRequestErrorResponse(this, response);
 }
 
-void ConnectionRequest::OnTimeout() {
+void Connection::ConnectionRequest::OnTimeout() {
   RTC_DCHECK_RUN_ON(connection_->network_thread_);
   connection_->OnConnectionRequestTimeout(this);
 }
 
-void ConnectionRequest::OnSent() {
+void Connection::ConnectionRequest::OnSent() {
   RTC_DCHECK_RUN_ON(connection_->network_thread_);
   connection_->OnConnectionRequestSent(this);
   // Each request is sent only once.  After a single delay , the request will
@@ -281,7 +295,7 @@ void ConnectionRequest::OnSent() {
   set_timed_out();
 }
 
-int ConnectionRequest::resend_delay() {
+int Connection::ConnectionRequest::resend_delay() {
   return CONNECTION_RESPONSE_TIMEOUT;
 }
 
@@ -1313,7 +1327,7 @@ void Connection::LogCandidatePairEvent(webrtc::IceCandidatePairEventType type,
   ice_event_log_->LogCandidatePairEvent(type, id(), transaction_id);
 }
 
-void Connection::OnConnectionRequestResponse(ConnectionRequest* request,
+void Connection::OnConnectionRequestResponse(StunRequest* request,
                                              StunMessage* response) {
   RTC_DCHECK_RUN_ON(network_thread_);
   // Log at LS_INFO if we receive a ping response on an unwritable
@@ -1498,7 +1512,7 @@ ConnectionInfo Connection::stats() {
   return stats_;
 }
 
-void Connection::MaybeUpdateLocalCandidate(ConnectionRequest* request,
+void Connection::MaybeUpdateLocalCandidate(StunRequest* request,
                                            StunMessage* response) {
   // RFC 5245
   // The agent checks the mapped address from the STUN response.  If the
