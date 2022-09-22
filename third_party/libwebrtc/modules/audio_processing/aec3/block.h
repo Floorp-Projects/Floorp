@@ -19,54 +19,72 @@
 
 namespace webrtc {
 
+// Contains one or more channels of 4 milliseconds of audio data.
+// The audio is split in one or more frequency bands, each with a sampling
+// rate of 16 kHz.
 class Block {
  public:
   Block(int num_bands, int num_channels, float default_value = 0.0f)
-      : data_(num_bands,
-              std::vector<std::array<float, kBlockSize>>(
-                  num_channels,
-                  std::array<float, kBlockSize>({default_value}))) {}
+      : num_bands_(num_bands),
+        num_channels_(num_channels),
+        data_(num_bands * num_channels * kBlockSize, default_value) {}
 
   // Returns the number of bands.
-  int NumBands() const { return data_.size(); }
+  int NumBands() const { return num_bands_; }
 
   // Returns the number of channels.
-  int NumChannels() const { return data_[0].size(); }
+  int NumChannels() const { return num_channels_; }
 
-  // Modifies the number of channels.
+  // Modifies the number of channels and sets all samples to zero.
   void SetNumChannels(int num_channels) {
-    for (std::vector<std::array<float, kBlockSize>>& block_band : data_) {
-      block_band.resize(num_channels, std::array<float, kBlockSize>({0.0f}));
-    }
+    num_channels_ = num_channels;
+    data_.resize(num_bands_ * num_channels_ * kBlockSize);
+    std::fill(data_.begin(), data_.end(), 0.0f);
   }
 
   // Iterators for accessing the data.
-  auto begin(int band, int channel) { return data_[band][channel].begin(); }
-
-  auto begin(int band, int channel) const {
-    return data_[band][channel].begin();
+  auto begin(int band, int channel) {
+    return data_.begin() + GetIndex(band, channel);
   }
 
-  auto end(int band, int channel) { return data_[band][channel].end(); }
+  auto begin(int band, int channel) const {
+    return data_.begin() + GetIndex(band, channel);
+  }
 
-  auto end(int band, int channel) const { return data_[band][channel].end(); }
+  auto end(int band, int channel) { return begin(band, channel) + kBlockSize; }
+
+  auto end(int band, int channel) const {
+    return begin(band, channel) + kBlockSize;
+  }
 
   // Access data via ArrayView.
   rtc::ArrayView<float, kBlockSize> View(int band, int channel) {
-    return rtc::ArrayView<float, kBlockSize>(data_[band][channel].data(),
+    return rtc::ArrayView<float, kBlockSize>(&data_[GetIndex(band, channel)],
                                              kBlockSize);
   }
 
   rtc::ArrayView<const float, kBlockSize> View(int band, int channel) const {
-    return rtc::ArrayView<const float, kBlockSize>(data_[band][channel].data(),
-                                                   kBlockSize);
+    return rtc::ArrayView<const float, kBlockSize>(
+        &data_[GetIndex(band, channel)], kBlockSize);
   }
 
   // Lets two Blocks swap audio data.
-  void Swap(Block& b) { data_.swap(b.data_); }
+  void Swap(Block& b) {
+    std::swap(num_bands_, b.num_bands_);
+    std::swap(num_channels_, b.num_channels_);
+    data_.swap(b.data_);
+  }
 
  private:
-  std::vector<std::vector<std::array<float, kBlockSize>>> data_;
+  // Returns the index of the first sample of the requested |band| and
+  // |channel|.
+  int GetIndex(int band, int channel) const {
+    return (band * num_channels_ + channel) * kBlockSize;
+  }
+
+  int num_bands_;
+  int num_channels_;
+  std::vector<float> data_;
 };
 
 }  // namespace webrtc
