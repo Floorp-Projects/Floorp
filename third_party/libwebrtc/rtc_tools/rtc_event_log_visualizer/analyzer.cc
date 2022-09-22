@@ -150,7 +150,9 @@ absl::optional<uint32_t> EstimateRtpClockFrequency(
   }
   RTC_LOG(LS_WARNING) << "Failed to estimate RTP clock frequency: Estimate "
                       << estimated_frequency
-                      << " not close to any stardard RTP frequency.";
+                      << " not close to any standard RTP frequency."
+                      << " Last timestamp " << last_rtp_timestamp
+                      << " first timestamp " << first_rtp_timestamp;
   return absl::nullopt;
 }
 
