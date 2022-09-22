@@ -51,12 +51,12 @@ static void TestCrashyOperation(const char* label, void (*aCrashyOperation)()) {
     }
 
     // Child: perform the crashy operation.
-    fprintf(stderr,
-            "TestCrashyOperation %s: The following crash is expected. Do not "
-            "panic.\n",
-            label);
+    FILE* stderr_dup = fdopen(dup(fileno(stderr)), "w");
+    // We don't want MOZ_CRASH from the crashy operation to print out its
+    // error message and stack-trace, which would be confusing and irrelevant.
+    fclose(stderr);
     aCrashyOperation();
-    fprintf(stderr, "TestCrashyOperation %s: didn't crash?!\n", label);
+    fprintf(stderr_dup, "TestCrashyOperation %s: didn't crash?!\n", label);
     ASSERT_TRUE(false);  // shouldn't reach here
   }
 
