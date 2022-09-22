@@ -136,11 +136,9 @@ float SuppressionGain::UpperBandsGain(
   const auto sum_of_squares = [](float a, float b) { return a + b * b; };
   float low_band_energy = 0.f;
   for (int ch = 0; ch < num_render_channels; ++ch) {
-    // TODO(bugs.webrtc.org/14108): Fix the computation below to compute the
-    // energy for each channel.
-    const float channel_energy = std::accumulate(
-        render.begin(/*band=0*/ 0, /*channel=*/0),
-        render.end(/*band=0*/ 0, /*channel=*/0), 0.f, sum_of_squares);
+    const float channel_energy =
+        std::accumulate(render.begin(/*band=*/0, ch),
+                        render.end(/*band=*/0, ch), 0.0f, sum_of_squares);
     low_band_energy = std::max(low_band_energy, channel_energy);
   }
   float high_band_energy = 0.f;
