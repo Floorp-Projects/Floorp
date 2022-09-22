@@ -309,7 +309,6 @@ Connection::Connection(rtc::WeakPtr<Port> port,
       last_ping_received_(0),
       last_data_received_(0),
       last_ping_response_received_(0),
-      reported_(false),
       state_(IceCandidatePairState::WAITING),
       time_created_ms_(rtc::TimeMillis()),
       field_trials_(&kDefaultFieldTrials),
@@ -901,16 +900,6 @@ void Connection::PrintPingsSinceLastResponse(std::string* s, size_t max) {
   *s = oss.str();
 }
 
-bool Connection::reported() const {
-  RTC_DCHECK_RUN_ON(network_thread_);
-  return reported_;
-}
-
-void Connection::set_reported(bool reported) {
-  RTC_DCHECK_RUN_ON(network_thread_);
-  reported_ = reported;
-}
-
 bool Connection::selected() const {
   RTC_DCHECK_RUN_ON(network_thread_);
   return selected_;
@@ -1486,7 +1475,6 @@ ConnectionInfo Connection::stats() {
   stats_.receiving = receiving_;
   stats_.writable = write_state_ == STATE_WRITABLE;
   stats_.timeout = write_state_ == STATE_WRITE_TIMEOUT;
-  stats_.new_connection = !reported_;
   stats_.rtt = rtt_;
   stats_.key = this;
   stats_.state = state_;

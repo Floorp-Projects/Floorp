@@ -1653,7 +1653,6 @@ bool P2PTransportChannel::GetStats(IceTransportStats* ice_transport_stats) {
     stats.remote_candidate = SanitizeRemoteCandidate(stats.remote_candidate);
     stats.best_connection = (selected_connection_ == connection);
     ice_transport_stats->connection_infos.push_back(std::move(stats));
-    connection->set_reported(true);
   }
 
   ice_transport_stats->selected_candidate_pair_changes =
