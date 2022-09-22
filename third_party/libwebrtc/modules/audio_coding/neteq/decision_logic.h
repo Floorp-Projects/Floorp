@@ -191,7 +191,6 @@ class DecisionLogic : public NetEqController {
   std::unique_ptr<TickTimer::Countdown> timescale_countdown_;
   int num_consecutive_expands_ = 0;
   int time_stretched_cn_samples_ = 0;
-  bool last_pack_cng_or_dtmf_ = true;
   bool buffer_flush_ = false;
   int last_playout_delay_ms_ = 0;
 };
