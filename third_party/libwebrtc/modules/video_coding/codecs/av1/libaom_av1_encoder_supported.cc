@@ -20,7 +20,7 @@ std::unique_ptr<VideoEncoder> CreateLibaomAv1EncoderIfSupported() {
   return CreateLibaomAv1Encoder();
 }
 #else
-const bool kIsLibaomAv1EncoderSupported = false;
+ABSL_CONST_INIT const bool kIsLibaomAv1EncoderSupported = false;
 std::unique_ptr<VideoEncoder> CreateLibaomAv1EncoderIfSupported() {
   return nullptr;
 }
