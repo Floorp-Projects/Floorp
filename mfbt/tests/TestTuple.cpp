@@ -292,6 +292,59 @@ static bool TestTieIgnore() {
   return true;
 }
 
+template <typename... Elements, typename F>
+static void CheckForEachCall(const Tuple<Elements...>& aTuple,
+                             F&& CallForEach) {
+  constexpr std::size_t tupleSize = sizeof...(Elements);
+
+  Tuple<Elements...> checkResult;
+  std::size_t i = 0;
+  auto createResult = [&](auto& aElem) {
+    static_assert(tupleSize == 3,
+                  "Need to deal with more/less cases in the switch below");
+
+    CHECK(i < tupleSize);
+    switch (i) {
+      case 0:
+        Get<0>(checkResult) = aElem;
+        break;
+      case 1:
+        Get<1>(checkResult) = aElem;
+        break;
+      case 2:
+        Get<2>(checkResult) = aElem;
+        break;
+    }
+    ++i;
+  };
+
+  CallForEach(aTuple, createResult);
+
+  CHECK(checkResult == aTuple);
+}
+
+static bool TestForEach() {
+  Tuple<int, float, char> tuple = MakeTuple(42, 0.5f, 'c');
+
+  CheckForEachCall(
+      tuple, [](auto& aTuple, auto&& aLambda) { aTuple.ForEach(aLambda); });
+
+  CheckForEachCall(
+      tuple, [](auto& aTuple, auto&& aLambda) { ForEach(aTuple, aLambda); });
+
+  CheckForEachCall(tuple, [](auto& aTuple, auto&& aLambda) {
+    const decltype(aTuple)& constTuple = aTuple;
+    constTuple.ForEach(aLambda);
+  });
+
+  CheckForEachCall(tuple, [](auto& aTuple, auto&& aLambda) {
+    const decltype(aTuple)& constTuple = aTuple;
+    ForEach(constTuple, aLambda);
+  });
+
+  return true;
+}
+
 int main() {
   TestConstruction();
   TestConstructionFromMozPair();
@@ -304,5 +357,6 @@ int main() {
   TestTie();
   TestTieIgnore();
   TestTieMozPair();
+  TestForEach();
   return 0;
 }
