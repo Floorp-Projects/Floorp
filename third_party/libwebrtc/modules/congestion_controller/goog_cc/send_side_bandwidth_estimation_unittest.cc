@@ -10,7 +10,6 @@
 
 #include "modules/congestion_controller/goog_cc/send_side_bandwidth_estimation.h"
 
-#include "api/network_state_predictor.h"
 #include "api/rtc_event_log/rtc_event.h"
 #include "logging/rtc_event_log/events/rtc_event_bwe_update_loss_based.h"
 #include "logging/rtc_event_log/mock/mock_rtc_event_log.h"
@@ -55,8 +54,7 @@ void TestProbing(bool use_delay_based) {
   // Initial REMB applies immediately.
   if (use_delay_based) {
     bwe.UpdateDelayBasedEstimate(Timestamp::Millis(now_ms),
-                                 DataRate::BitsPerSec(kRembBps),
-                                 BandwidthUsage::kBwNormal);
+                                 DataRate::BitsPerSec(kRembBps));
   } else {
     bwe.UpdateReceiverEstimate(Timestamp::Millis(now_ms),
                                DataRate::BitsPerSec(kRembBps));
@@ -68,8 +66,7 @@ void TestProbing(bool use_delay_based) {
   now_ms += 2001;
   if (use_delay_based) {
     bwe.UpdateDelayBasedEstimate(Timestamp::Millis(now_ms),
-                                 DataRate::BitsPerSec(kSecondRembBps),
-                                 BandwidthUsage::kBwNormal);
+                                 DataRate::BitsPerSec(kSecondRembBps));
   } else {
     bwe.UpdateReceiverEstimate(Timestamp::Millis(now_ms),
                                DataRate::BitsPerSec(kSecondRembBps));
@@ -160,8 +157,7 @@ TEST(SendSideBweTest, SettingSendBitrateOverridesDelayBasedEstimate) {
                      Timestamp::Millis(now_ms));
 
   bwe.UpdateDelayBasedEstimate(Timestamp::Millis(now_ms),
-                               DataRate::BitsPerSec(kDelayBasedBitrateBps),
-                               BandwidthUsage::kBwNormal);
+                               DataRate::BitsPerSec(kDelayBasedBitrateBps));
   bwe.UpdateEstimate(Timestamp::Millis(now_ms));
   EXPECT_GE(bwe.target_rate().bps(), kInitialBitrateBps);
   EXPECT_LE(bwe.target_rate().bps(), kDelayBasedBitrateBps);
