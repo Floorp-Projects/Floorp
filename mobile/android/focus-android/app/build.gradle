@@ -229,6 +229,8 @@ dependencies {
     implementation Dependencies.androidx_recyclerview
     implementation Dependencies.androidx_savedstate
     implementation Dependencies.androidx_splash_screen
+    implementation Dependencies.androidx_transition
+
     implementation Dependencies.google_accompanist_insets_ui
     implementation Dependencies.google_play
 

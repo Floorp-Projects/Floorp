@@ -26,6 +26,7 @@ object Versions {
         const val lifecycle = "2.5.1"
         const val saved_state = "1.2.0"
         const val splash_screen = "1.0.0"
+        const val transition = "1.4.0"
     }
 
     object Google {
@@ -83,6 +84,7 @@ object Dependencies {
     const val androidx_lifecycle_viewmodel = "androidx.lifecycle:lifecycle-viewmodel-ktx:${Versions.AndroidX.lifecycle}"
     const val androidx_splash_screen = "androidx.core:core-splashscreen:${Versions.AndroidX.splash_screen}"
     const val androidx_savedstate = "androidx.savedstate:savedstate-ktx:${Versions.AndroidX.saved_state}"
+    const val androidx_transition = "androidx.transition:transition:${Versions.AndroidX.transition}"
 
     const val google_material = "com.google.android.material:material:${Versions.Google.material}"
     const val google_accompanist_insets_ui = "com.google.accompanist:accompanist-insets-ui:${Versions.Google.accompanist}"
