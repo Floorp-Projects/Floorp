@@ -227,13 +227,15 @@ class NativeThenHandler<ResolveCallback, RejectCallback, std::tuple<Args...>,
 
 }  // anonymous namespace
 
-template <typename ResolveCallback, typename RejectCallback, typename... Args>
-Promise::ThenResult<ResolveCallback, Args...>
-Promise::ThenCatchWithCycleCollectedArgsImpl(
+template <typename ResolveCallback, typename RejectCallback, typename... Args,
+          typename... JSArgs>
+Result<RefPtr<Promise>, nsresult>
+Promise::ThenCatchWithCycleCollectedArgsJSImpl(
     Maybe<ResolveCallback>&& aOnResolve, Maybe<RejectCallback>&& aOnReject,
-    Args&&... aArgs) {
-  using HandlerType = NativeThenHandler<ResolveCallback, RejectCallback,
-                                        std::tuple<Args...>, std::tuple<>>;
+    std::tuple<Args...>&& aArgs, std::tuple<JSArgs...>&& aJSArgs) {
+  using HandlerType =
+      NativeThenHandler<ResolveCallback, RejectCallback, std::tuple<Args...>,
+                        std::tuple<JSArgs...>>;
 
   ErrorResult rv;
   RefPtr<Promise> promise = Promise::Create(GetParentObject(), rv);
@@ -241,10 +243,11 @@ Promise::ThenCatchWithCycleCollectedArgsImpl(
     return Err(rv.StealNSResult());
   }
 
-  auto* handler = new (fallible) HandlerType(
-      promise, std::forward<Maybe<ResolveCallback>>(aOnResolve),
-      std::forward<Maybe<RejectCallback>>(aOnReject),
-      std::make_tuple(std::forward<Args>(aArgs)...), std::make_tuple());
+  auto* handler = new (fallible)
+      HandlerType(promise, std::forward<Maybe<ResolveCallback>>(aOnResolve),
+                  std::forward<Maybe<RejectCallback>>(aOnReject),
+                  std::forward<std::tuple<Args...>>(aArgs),
+                  std::forward<std::tuple<JSArgs...>>(aJSArgs));
 
   if (!handler) {
     return Err(NS_ERROR_OUT_OF_MEMORY);
@@ -252,6 +255,17 @@ Promise::ThenCatchWithCycleCollectedArgsImpl(
 
   AppendNativeHandler(handler);
   return std::move(promise);
+}
+
+template <typename ResolveCallback, typename RejectCallback, typename... Args>
+Promise::ThenResult<ResolveCallback, Args...>
+Promise::ThenCatchWithCycleCollectedArgsImpl(
+    Maybe<ResolveCallback>&& aOnResolve, Maybe<RejectCallback>&& aOnReject,
+    Args&&... aArgs) {
+  return ThenCatchWithCycleCollectedArgsJSImpl(
+      std::forward<Maybe<ResolveCallback>>(aOnResolve),
+      std::forward<Maybe<RejectCallback>>(aOnReject),
+      std::make_tuple(std::forward<Args>(aArgs)...), std::make_tuple());
 }
 
 template <typename ResolveCallback, typename RejectCallback, typename... Args>
@@ -279,28 +293,22 @@ Promise::ThenResult<Callback, Args...> Promise::CatchWithCycleCollectedArgs(
                                              std::forward<Args>(aArgs)...);
 }
 
+template <typename ResolveCallback, typename RejectCallback, typename ArgsTuple,
+          typename JSArgsTuple>
+Result<RefPtr<Promise>, nsresult> Promise::ThenCatchWithCycleCollectedArgsJS(
+    ResolveCallback&& aOnResolve, RejectCallback&& aOnReject, ArgsTuple&& aArgs,
+    JSArgsTuple&& aJSArgs) {
+  return ThenCatchWithCycleCollectedArgsJSImpl(
+      Some(aOnResolve), Some(aOnReject), std::forward<ArgsTuple>(aArgs),
+      std::forward<JSArgsTuple>(aJSArgs));
+}
+
 template <typename Callback, typename ArgsTuple, typename JSArgsTuple>
 Result<RefPtr<Promise>, nsresult> Promise::ThenWithCycleCollectedArgsJS(
     Callback&& aOnResolve, ArgsTuple&& aArgs, JSArgsTuple&& aJSArgs) {
-  using HandlerType =
-      NativeThenHandler<Callback, Callback, ArgsTuple, JSArgsTuple>;
-
-  ErrorResult rv;
-  RefPtr<Promise> promise = Promise::Create(GetParentObject(), rv);
-  if (rv.Failed()) {
-    return Err(rv.StealNSResult());
-  }
-
-  auto* handler = new (fallible) HandlerType(
-      promise, Some(aOnResolve), Maybe<Callback>(Nothing()),
+  return ThenCatchWithCycleCollectedArgsJSImpl(
+      Some(aOnResolve), Maybe<Callback>(Nothing()),
       std::forward<ArgsTuple>(aArgs), std::forward<JSArgsTuple>(aJSArgs));
-
-  if (!handler) {
-    return Err(NS_ERROR_OUT_OF_MEMORY);
-  }
-
-  AppendNativeHandler(handler);
-  return std::move(promise);
 }
 
 template <typename ResolveCallback, typename RejectCallback, typename... Args>
