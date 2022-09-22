@@ -318,6 +318,7 @@ rtc_library("frame_cadence_adapter") {
     "../rtc_base/synchronization:mutex",
     "../rtc_base/system:no_unique_address",
     "../rtc_base/task_utils:pending_task_safety_flag",
+    "../rtc_base/task_utils:repeating_task",
     "../rtc_base/task_utils:to_queued_task",
     "../system_wrappers",
     "../system_wrappers:field_trial",
