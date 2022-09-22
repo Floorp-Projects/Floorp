@@ -166,6 +166,13 @@ def bindgen_clang_compiler(
     if sysroot_path:
         flags.extend(("--sysroot", sysroot_path))
     info = check_compiler([clang_path] + flags, "C++", target)
+    # Usually, one check_compiler pass would be enough, but when cross-compiling
+    # and the host and target don't use the same default C++ standard, we don't
+    # get the --std flag, so try again. This is the same thing as valid_compiler()
+    # does in toolchain.configure.
+    if info.flags:
+        flags += info.flags
+        info = check_compiler([clang_path] + flags, "C++", target)
     return namespace(
         path=clang_path,
         flags=flags + info.flags,
