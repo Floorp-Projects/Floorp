@@ -191,6 +191,7 @@ static int is_parent_grab_leave(GdkEventCrossing* aEvent);
 static gboolean expose_event_cb(GtkWidget* widget, cairo_t* cr);
 static gboolean configure_event_cb(GtkWidget* widget, GdkEventConfigure* event);
 static void widget_map_cb(GtkWidget* widget);
+static void widget_unmap_cb(GtkWidget* widget);
 static void widget_unrealize_cb(GtkWidget* widget);
 static void size_allocate_cb(GtkWidget* widget, GtkAllocation* allocation);
 static void toplevel_window_size_allocate_cb(GtkWidget* widget,
@@ -4048,12 +4049,17 @@ gboolean nsWindow::OnConfigureEvent(GtkWidget* aWidget,
 
 void nsWindow::OnMap() {
   LOG("nsWindow::OnMap");
-  // Gtk mapped out widget to screen. Configure underlying GdkWindow properly
+  // Gtk mapped widget to screen. Configure underlying GdkWindow properly
   // as our rendering target.
   // This call means we have X11 (or Wayland) window we can render to by GL
   // so we need to notify compositor about it.
   mIsMapped = true;
   ConfigureGdkWindow();
+}
+
+void nsWindow::OnUnmap() {
+  LOG("nsWindow::OnUnmap");
+  moz_container_wayland_unmap(GTK_WIDGET(mContainer));
 }
 
 void nsWindow::OnUnrealize() {
@@ -6083,9 +6089,6 @@ nsresult nsWindow::Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
                    G_CALLBACK(widget_composited_changed_cb), nullptr);
   g_signal_connect(mShell, "property-notify-event",
                    G_CALLBACK(property_notify_event_cb), nullptr);
-  g_signal_connect(mShell, "map", G_CALLBACK(widget_map_cb), nullptr);
-  g_signal_connect(mShell, "unrealize", G_CALLBACK(widget_unrealize_cb),
-                   nullptr);
 
   if (mWindowType == eWindowType_toplevel) {
     g_signal_connect_after(mShell, "size_allocate",
@@ -6117,6 +6120,10 @@ nsresult nsWindow::Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
                          G_CALLBACK(settings_xft_dpi_changed_cb), this);
 
   // Widget signals
+  g_signal_connect(mContainer, "map", G_CALLBACK(widget_map_cb), nullptr);
+  g_signal_connect(mContainer, "unmap", G_CALLBACK(widget_unmap_cb), nullptr);
+  g_signal_connect(mContainer, "unrealize", G_CALLBACK(widget_unrealize_cb),
+                   nullptr);
   g_signal_connect_after(mContainer, "size_allocate",
                          G_CALLBACK(size_allocate_cb), nullptr);
   g_signal_connect(mContainer, "hierarchy-changed",
@@ -7838,6 +7845,14 @@ static void widget_map_cb(GtkWidget* widget) {
     return;
   }
   window->OnMap();
+}
+
+static void widget_unmap_cb(GtkWidget* widget) {
+  RefPtr<nsWindow> window = get_window_for_gtk_widget(widget);
+  if (!window) {
+    return;
+  }
+  window->OnUnmap();
 }
 
 static void widget_unrealize_cb(GtkWidget* widget) {

@@ -71,6 +71,7 @@ class MozContainerSurfaceLock {
 
 void moz_container_wayland_class_init(MozContainerClass* klass);
 void moz_container_wayland_init(MozContainerWayland* container);
+void moz_container_wayland_unmap(GtkWidget* widget);
 
 struct wl_egl_window* moz_container_wayland_get_egl_window(
     MozContainer* container, double scale);
