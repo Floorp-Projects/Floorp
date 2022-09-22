@@ -189,13 +189,13 @@ void DegradedCall::DestroyAudioSendStream(AudioSendStream* send_stream) {
   audio_send_transport_adapters_.erase(send_stream);
 }
 
-AudioReceiveStream* DegradedCall::CreateAudioReceiveStream(
-    const AudioReceiveStream::Config& config) {
+AudioReceiveStreamInterface* DegradedCall::CreateAudioReceiveStream(
+    const AudioReceiveStreamInterface::Config& config) {
   return call_->CreateAudioReceiveStream(config);
 }
 
 void DegradedCall::DestroyAudioReceiveStream(
-    AudioReceiveStream* receive_stream) {
+    AudioReceiveStreamInterface* receive_stream) {
   call_->DestroyAudioReceiveStream(receive_stream);
 }
 
@@ -302,7 +302,7 @@ void DegradedCall::OnAudioTransportOverheadChanged(
   call_->OnAudioTransportOverheadChanged(transport_overhead_per_packet);
 }
 
-void DegradedCall::OnLocalSsrcUpdated(AudioReceiveStream& stream,
+void DegradedCall::OnLocalSsrcUpdated(AudioReceiveStreamInterface& stream,
                                       uint32_t local_ssrc) {
   call_->OnLocalSsrcUpdated(stream, local_ssrc);
 }
@@ -317,7 +317,7 @@ void DegradedCall::OnLocalSsrcUpdated(FlexfecReceiveStream& stream,
   call_->OnLocalSsrcUpdated(stream, local_ssrc);
 }
 
-void DegradedCall::OnUpdateSyncGroup(AudioReceiveStream& stream,
+void DegradedCall::OnUpdateSyncGroup(AudioReceiveStreamInterface& stream,
                                      absl::string_view sync_group) {
   call_->OnUpdateSyncGroup(stream, sync_group);
 }

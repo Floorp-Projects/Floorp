@@ -1605,9 +1605,9 @@ TEST_F(VideoSendStreamTest, ChangingNetworkRoute) {
       (*receive_configs)[0].rtp.transport_cc = true;
     }
 
-    void ModifyAudioConfigs(
-        AudioSendStream::Config* send_config,
-        std::vector<AudioReceiveStream::Config>* receive_configs) override {
+    void ModifyAudioConfigs(AudioSendStream::Config* send_config,
+                            std::vector<AudioReceiveStreamInterface::Config>*
+                                receive_configs) override {
       RTC_DCHECK_RUN_ON(&task_queue_thread_);
       send_config->rtp.extensions.clear();
       send_config->rtp.extensions.push_back(RtpExtension(

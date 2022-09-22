@@ -84,7 +84,7 @@ namespace voe {
 
 class ChannelSendInterface;
 
-// Interface class needed for AudioReceiveStream tests that use a
+// Interface class needed for AudioReceiveStreamInterface tests that use a
 // MockChannelReceive.
 
 class ChannelReceiveInterface : public RtpPacketSinkInterface {

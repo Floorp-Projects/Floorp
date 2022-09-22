@@ -134,7 +134,7 @@ std::unique_ptr<rtclog::StreamConfig> CreateRtcLogStreamConfig(
 }
 
 std::unique_ptr<rtclog::StreamConfig> CreateRtcLogStreamConfig(
-    const AudioReceiveStream::Config& config) {
+    const AudioReceiveStreamInterface::Config& config) {
   auto rtclog_config = std::make_unique<rtclog::StreamConfig>();
   rtclog_config->remote_ssrc = config.rtp.remote_ssrc;
   rtclog_config->local_ssrc = config.rtp.local_ssrc;
@@ -217,10 +217,10 @@ class Call final : public webrtc::Call,
       const webrtc::AudioSendStream::Config& config) override;
   void DestroyAudioSendStream(webrtc::AudioSendStream* send_stream) override;
 
-  webrtc::AudioReceiveStream* CreateAudioReceiveStream(
-      const webrtc::AudioReceiveStream::Config& config) override;
+  webrtc::AudioReceiveStreamInterface* CreateAudioReceiveStream(
+      const webrtc::AudioReceiveStreamInterface::Config& config) override;
   void DestroyAudioReceiveStream(
-      webrtc::AudioReceiveStream* receive_stream) override;
+      webrtc::AudioReceiveStreamInterface* receive_stream) override;
 
   webrtc::VideoSendStream* CreateVideoSendStream(
       webrtc::VideoSendStream::Config config,
@@ -265,14 +265,14 @@ class Call final : public webrtc::Call,
   void OnAudioTransportOverheadChanged(
       int transport_overhead_per_packet) override;
 
-  void OnLocalSsrcUpdated(webrtc::AudioReceiveStream& stream,
+  void OnLocalSsrcUpdated(webrtc::AudioReceiveStreamInterface& stream,
                           uint32_t local_ssrc) override;
   void OnLocalSsrcUpdated(VideoReceiveStreamInterface& stream,
                           uint32_t local_ssrc) override;
   void OnLocalSsrcUpdated(FlexfecReceiveStream& stream,
                           uint32_t local_ssrc) override;
 
-  void OnUpdateSyncGroup(webrtc::AudioReceiveStream& stream,
+  void OnUpdateSyncGroup(webrtc::AudioReceiveStreamInterface& stream,
                          absl::string_view sync_group) override;
 
   void OnSentPacket(const rtc::SentPacket& sent_packet) override;
@@ -955,8 +955,8 @@ void Call::DestroyAudioSendStream(webrtc::AudioSendStream* send_stream) {
   delete send_stream;
 }
 
-webrtc::AudioReceiveStream* Call::CreateAudioReceiveStream(
-    const webrtc::AudioReceiveStream::Config& config) {
+webrtc::AudioReceiveStreamInterface* Call::CreateAudioReceiveStream(
+    const webrtc::AudioReceiveStreamInterface::Config& config) {
   TRACE_EVENT0("webrtc", "Call::CreateAudioReceiveStream");
   RTC_DCHECK_RUN_ON(worker_thread_);
   EnsureStarted();
@@ -990,7 +990,7 @@ webrtc::AudioReceiveStream* Call::CreateAudioReceiveStream(
 }
 
 void Call::DestroyAudioReceiveStream(
-    webrtc::AudioReceiveStream* receive_stream) {
+    webrtc::AudioReceiveStreamInterface* receive_stream) {
   TRACE_EVENT0("webrtc", "Call::DestroyAudioReceiveStream");
   RTC_DCHECK_RUN_ON(worker_thread_);
   RTC_DCHECK(receive_stream != nullptr);
@@ -1369,7 +1369,7 @@ void Call::UpdateAggregateNetworkState() {
   transport_send_->OnNetworkAvailability(aggregate_network_up);
 }
 
-void Call::OnLocalSsrcUpdated(webrtc::AudioReceiveStream& stream,
+void Call::OnLocalSsrcUpdated(webrtc::AudioReceiveStreamInterface& stream,
                               uint32_t local_ssrc) {
   RTC_DCHECK_RUN_ON(worker_thread_);
   webrtc::AudioReceiveStreamImpl& receive_stream =
@@ -1393,7 +1393,7 @@ void Call::OnLocalSsrcUpdated(FlexfecReceiveStream& stream,
   static_cast<FlexfecReceiveStreamImpl&>(stream).SetLocalSsrc(local_ssrc);
 }
 
-void Call::OnUpdateSyncGroup(webrtc::AudioReceiveStream& stream,
+void Call::OnUpdateSyncGroup(webrtc::AudioReceiveStreamInterface& stream,
                              absl::string_view sync_group) {
   RTC_DCHECK_RUN_ON(worker_thread_);
   webrtc::AudioReceiveStreamImpl& receive_stream =

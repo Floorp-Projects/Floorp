@@ -13,7 +13,7 @@
 //
 //   webrtc::Call
 //   webrtc::AudioSendStream
-//   webrtc::AudioReceiveStream
+//   webrtc::AudioReceiveStreamInterface
 //   webrtc::VideoSendStream
 //   webrtc::VideoReceiveStreamInterface
 
@@ -83,15 +83,16 @@ class FakeAudioSendStream final : public webrtc::AudioSendStream {
   bool muted_ = false;
 };
 
-class FakeAudioReceiveStream final : public webrtc::AudioReceiveStream {
+class FakeAudioReceiveStream final
+    : public webrtc::AudioReceiveStreamInterface {
  public:
   explicit FakeAudioReceiveStream(
       int id,
-      const webrtc::AudioReceiveStream::Config& config);
+      const webrtc::AudioReceiveStreamInterface::Config& config);
 
   int id() const { return id_; }
-  const webrtc::AudioReceiveStream::Config& GetConfig() const;
-  void SetStats(const webrtc::AudioReceiveStream::Stats& stats);
+  const webrtc::AudioReceiveStreamInterface::Config& GetConfig() const;
+  void SetStats(const webrtc::AudioReceiveStreamInterface::Stats& stats);
   int received_packets() const { return received_packets_; }
   bool VerifyLastPacket(const uint8_t* data, size_t length) const;
   const webrtc::AudioSinkInterface* sink() const { return sink_; }
@@ -130,7 +131,7 @@ class FakeAudioReceiveStream final : public webrtc::AudioReceiveStream {
   const std::vector<webrtc::RtpExtension>& GetRtpExtensions() const override;
   webrtc::RtpHeaderExtensionMap GetRtpExtensionMap() const override;
 
-  webrtc::AudioReceiveStream::Stats GetStats(
+  webrtc::AudioReceiveStreamInterface::Stats GetStats(
       bool get_and_clear_legacy_stats) const override;
   void SetSink(webrtc::AudioSinkInterface* sink) override;
   void SetGain(float gain) override;
@@ -146,8 +147,8 @@ class FakeAudioReceiveStream final : public webrtc::AudioReceiveStream {
   }
 
   int id_ = -1;
-  webrtc::AudioReceiveStream::Config config_;
-  webrtc::AudioReceiveStream::Stats stats_;
+  webrtc::AudioReceiveStreamInterface::Config config_;
+  webrtc::AudioReceiveStreamInterface::Stats stats_;
   int received_packets_ = 0;
   webrtc::AudioSinkInterface* sink_ = nullptr;
   float gain_ = 1.0f;
@@ -377,10 +378,10 @@ class FakeCall final : public webrtc::Call, public webrtc::PacketReceiver {
       const webrtc::AudioSendStream::Config& config) override;
   void DestroyAudioSendStream(webrtc::AudioSendStream* send_stream) override;
 
-  webrtc::AudioReceiveStream* CreateAudioReceiveStream(
-      const webrtc::AudioReceiveStream::Config& config) override;
+  webrtc::AudioReceiveStreamInterface* CreateAudioReceiveStream(
+      const webrtc::AudioReceiveStreamInterface::Config& config) override;
   void DestroyAudioReceiveStream(
-      webrtc::AudioReceiveStream* receive_stream) override;
+      webrtc::AudioReceiveStreamInterface* receive_stream) override;
 
   webrtc::VideoSendStream* CreateVideoSendStream(
       webrtc::VideoSendStream::Config config,
@@ -420,13 +421,13 @@ class FakeCall final : public webrtc::Call, public webrtc::PacketReceiver {
                                  webrtc::NetworkState state) override;
   void OnAudioTransportOverheadChanged(
       int transport_overhead_per_packet) override;
-  void OnLocalSsrcUpdated(webrtc::AudioReceiveStream& stream,
+  void OnLocalSsrcUpdated(webrtc::AudioReceiveStreamInterface& stream,
                           uint32_t local_ssrc) override;
   void OnLocalSsrcUpdated(webrtc::VideoReceiveStreamInterface& stream,
                           uint32_t local_ssrc) override;
   void OnLocalSsrcUpdated(webrtc::FlexfecReceiveStream& stream,
                           uint32_t local_ssrc) override;
-  void OnUpdateSyncGroup(webrtc::AudioReceiveStream& stream,
+  void OnUpdateSyncGroup(webrtc::AudioReceiveStreamInterface& stream,
                          absl::string_view sync_group) override;
   void OnSentPacket(const rtc::SentPacket& sent_packet) override;
 

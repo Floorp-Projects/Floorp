@@ -62,7 +62,7 @@ class VideoAnalyzer : public PacketReceiver,
   void SetCall(Call* call);
   void SetSendStream(VideoSendStream* stream);
   void SetReceiveStream(VideoReceiveStreamInterface* stream);
-  void SetAudioReceiveStream(AudioReceiveStream* recv_stream);
+  void SetAudioReceiveStream(AudioReceiveStreamInterface* recv_stream);
 
   rtc::VideoSinkInterface<VideoFrame>* InputInterface();
   rtc::VideoSourceInterface<VideoFrame>* OutputInterface();
@@ -222,7 +222,7 @@ class VideoAnalyzer : public PacketReceiver,
   Call* call_;
   VideoSendStream* send_stream_;
   VideoReceiveStreamInterface* receive_stream_;
-  AudioReceiveStream* audio_receive_stream_;
+  AudioReceiveStreamInterface* audio_receive_stream_;
   CapturedFrameForwarder captured_frame_forwarder_;
   const std::string test_label_;
   FILE* const graph_data_output_file_;

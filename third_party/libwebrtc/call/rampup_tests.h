@@ -100,9 +100,9 @@ class RampUpTester : public test::EndToEndTest {
       VideoSendStream::Config* send_config,
       std::vector<VideoReceiveStreamInterface::Config>* receive_configs,
       VideoEncoderConfig* encoder_config) override;
-  void ModifyAudioConfigs(
-      AudioSendStream::Config* send_config,
-      std::vector<AudioReceiveStream::Config>* receive_configs) override;
+  void ModifyAudioConfigs(AudioSendStream::Config* send_config,
+                          std::vector<AudioReceiveStreamInterface::Config>*
+                              receive_configs) override;
   void ModifyFlexfecConfigs(
       std::vector<FlexfecReceiveStream::Config>* receive_configs) override;
   void OnCallsCreated(Call* sender_call, Call* receiver_call) override;

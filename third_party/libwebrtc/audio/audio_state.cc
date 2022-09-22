@@ -50,7 +50,8 @@ AudioTransport* AudioState::audio_transport() {
   return &audio_transport_;
 }
 
-void AudioState::AddReceivingStream(webrtc::AudioReceiveStream* stream) {
+void AudioState::AddReceivingStream(
+    webrtc::AudioReceiveStreamInterface* stream) {
   RTC_DCHECK(thread_checker_.IsCurrent());
   RTC_DCHECK_EQ(0, receiving_streams_.count(stream));
   receiving_streams_.insert(stream);
@@ -73,7 +74,8 @@ void AudioState::AddReceivingStream(webrtc::AudioReceiveStream* stream) {
   }
 }
 
-void AudioState::RemoveReceivingStream(webrtc::AudioReceiveStream* stream) {
+void AudioState::RemoveReceivingStream(
+    webrtc::AudioReceiveStreamInterface* stream) {
   RTC_DCHECK(thread_checker_.IsCurrent());
   auto count = receiving_streams_.erase(stream);
   RTC_DCHECK_EQ(1, count);

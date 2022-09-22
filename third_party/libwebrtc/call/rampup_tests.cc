@@ -256,7 +256,7 @@ void RampUpTester::ModifyVideoConfigs(
 
 void RampUpTester::ModifyAudioConfigs(
     AudioSendStream::Config* send_config,
-    std::vector<AudioReceiveStream::Config>* receive_configs) {
+    std::vector<AudioReceiveStreamInterface::Config>* receive_configs) {
   if (num_audio_streams_ == 0)
     return;
 
@@ -278,7 +278,7 @@ void RampUpTester::ModifyAudioConfigs(
         extension_type_.c_str(), kTransportSequenceNumberExtensionId));
   }
 
-  for (AudioReceiveStream::Config& recv_config : *receive_configs) {
+  for (AudioReceiveStreamInterface::Config& recv_config : *receive_configs) {
     recv_config.rtp.transport_cc = transport_cc;
     recv_config.rtp.extensions = send_config->rtp.extensions;
     recv_config.rtp.remote_ssrc = send_config->rtp.ssrc;

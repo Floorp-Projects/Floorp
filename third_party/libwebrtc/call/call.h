@@ -67,10 +67,10 @@ class Call {
 
   virtual void DestroyAudioSendStream(AudioSendStream* send_stream) = 0;
 
-  virtual AudioReceiveStream* CreateAudioReceiveStream(
-      const AudioReceiveStream::Config& config) = 0;
+  virtual AudioReceiveStreamInterface* CreateAudioReceiveStream(
+      const AudioReceiveStreamInterface::Config& config) = 0;
   virtual void DestroyAudioReceiveStream(
-      AudioReceiveStream* receive_stream) = 0;
+      AudioReceiveStreamInterface* receive_stream) = 0;
 
   virtual VideoSendStream* CreateVideoSendStream(
       VideoSendStream::Config config,
@@ -126,14 +126,14 @@ class Call {
 
   // Called when a receive stream's local ssrc has changed and association with
   // send streams needs to be updated.
-  virtual void OnLocalSsrcUpdated(AudioReceiveStream& stream,
+  virtual void OnLocalSsrcUpdated(AudioReceiveStreamInterface& stream,
                                   uint32_t local_ssrc) = 0;
   virtual void OnLocalSsrcUpdated(VideoReceiveStreamInterface& stream,
                                   uint32_t local_ssrc) = 0;
   virtual void OnLocalSsrcUpdated(FlexfecReceiveStream& stream,
                                   uint32_t local_ssrc) = 0;
 
-  virtual void OnUpdateSyncGroup(AudioReceiveStream& stream,
+  virtual void OnUpdateSyncGroup(AudioReceiveStreamInterface& stream,
                                  absl::string_view sync_group) = 0;
 
   virtual void OnSentPacket(const rtc::SentPacket& sent_packet) = 0;

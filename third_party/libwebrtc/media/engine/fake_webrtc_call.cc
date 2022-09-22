@@ -74,16 +74,16 @@ webrtc::AudioSendStream::Stats FakeAudioSendStream::GetStats(
 
 FakeAudioReceiveStream::FakeAudioReceiveStream(
     int id,
-    const webrtc::AudioReceiveStream::Config& config)
+    const webrtc::AudioReceiveStreamInterface::Config& config)
     : id_(id), config_(config) {}
 
-const webrtc::AudioReceiveStream::Config& FakeAudioReceiveStream::GetConfig()
-    const {
+const webrtc::AudioReceiveStreamInterface::Config&
+FakeAudioReceiveStream::GetConfig() const {
   return config_;
 }
 
 void FakeAudioReceiveStream::SetStats(
-    const webrtc::AudioReceiveStream::Stats& stats) {
+    const webrtc::AudioReceiveStreamInterface::Stats& stats) {
   stats_ = stats;
 }
 
@@ -141,7 +141,7 @@ webrtc::RtpHeaderExtensionMap FakeAudioReceiveStream::GetRtpExtensionMap()
   return webrtc::RtpHeaderExtensionMap(config_.rtp.extensions);
 }
 
-webrtc::AudioReceiveStream::Stats FakeAudioReceiveStream::GetStats(
+webrtc::AudioReceiveStreamInterface::Stats FakeAudioReceiveStream::GetStats(
     bool get_and_clear_legacy_stats) const {
   return stats_;
 }
@@ -543,8 +543,8 @@ void FakeCall::DestroyAudioSendStream(webrtc::AudioSendStream* send_stream) {
   }
 }
 
-webrtc::AudioReceiveStream* FakeCall::CreateAudioReceiveStream(
-    const webrtc::AudioReceiveStream::Config& config) {
+webrtc::AudioReceiveStreamInterface* FakeCall::CreateAudioReceiveStream(
+    const webrtc::AudioReceiveStreamInterface::Config& config) {
   audio_receive_streams_.push_back(
       new FakeAudioReceiveStream(next_stream_id_++, config));
   ++num_created_receive_streams_;
@@ -552,7 +552,7 @@ webrtc::AudioReceiveStream* FakeCall::CreateAudioReceiveStream(
 }
 
 void FakeCall::DestroyAudioReceiveStream(
-    webrtc::AudioReceiveStream* receive_stream) {
+    webrtc::AudioReceiveStreamInterface* receive_stream) {
   auto it = absl::c_find(audio_receive_streams_,
                          static_cast<FakeAudioReceiveStream*>(receive_stream));
   if (it == audio_receive_streams_.end()) {
@@ -709,7 +709,7 @@ void FakeCall::SignalChannelNetworkState(webrtc::MediaType media,
 void FakeCall::OnAudioTransportOverheadChanged(
     int transport_overhead_per_packet) {}
 
-void FakeCall::OnLocalSsrcUpdated(webrtc::AudioReceiveStream& stream,
+void FakeCall::OnLocalSsrcUpdated(webrtc::AudioReceiveStreamInterface& stream,
                                   uint32_t local_ssrc) {
   auto& fake_stream = static_cast<FakeAudioReceiveStream&>(stream);
   fake_stream.SetLocalSsrc(local_ssrc);
@@ -727,7 +727,7 @@ void FakeCall::OnLocalSsrcUpdated(webrtc::FlexfecReceiveStream& stream,
   fake_stream.SetLocalSsrc(local_ssrc);
 }
 
-void FakeCall::OnUpdateSyncGroup(webrtc::AudioReceiveStream& stream,
+void FakeCall::OnUpdateSyncGroup(webrtc::AudioReceiveStreamInterface& stream,
                                  absl::string_view sync_group) {
   auto& fake_stream = static_cast<FakeAudioReceiveStream&>(stream);
   fake_stream.SetSyncGroup(sync_group);

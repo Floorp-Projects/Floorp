@@ -38,7 +38,7 @@ void CreateAnalyzedStream(Scenario* s,
     caller->SendTask([&]() { send_stats = video->send()->GetStats(); });
     collectors->video_send.AddStats(send_stats, s->Now());
 
-    AudioReceiveStream::Stats receive_stats;
+    AudioReceiveStreamInterface::Stats receive_stats;
     caller->SendTask([&]() { receive_stats = audio->receive()->GetStats(); });
     collectors->audio_receive.AddStats(receive_stats);
 
