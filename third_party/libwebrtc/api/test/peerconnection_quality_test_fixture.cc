@@ -10,17 +10,35 @@
 
 #include "api/test/peerconnection_quality_test_fixture.h"
 
+#include <string>
+
 #include "absl/types/optional.h"
 #include "api/array_view.h"
 #include "rtc_base/checks.h"
+#include "rtc_base/strings/string_builder.h"
 
 namespace webrtc {
 namespace webrtc_pc_e2e {
+namespace {
 
 using VideoCodecConfig = ::webrtc::webrtc_pc_e2e::
     PeerConnectionE2EQualityTestFixture::VideoCodecConfig;
 using VideoSubscription = ::webrtc::webrtc_pc_e2e::
     PeerConnectionE2EQualityTestFixture::VideoSubscription;
+
+std::string SpecToString(
+    PeerConnectionE2EQualityTestFixture::VideoResolution::VideoResolution::Spec
+        spec) {
+  switch (spec) {
+    case PeerConnectionE2EQualityTestFixture::VideoResolution::Spec::kNone:
+      return "None";
+    case PeerConnectionE2EQualityTestFixture::VideoResolution::Spec::
+        kMaxFromSender:
+      return "MaxFromSender";
+  }
+}
+
+}  // namespace
 
 PeerConnectionE2EQualityTestFixture::VideoResolution::VideoResolution(
     size_t width,
@@ -39,6 +57,14 @@ bool PeerConnectionE2EQualityTestFixture::VideoResolution::operator==(
   }
   return width_ == other.width_ && height_ == other.height_ &&
          fps_ == other.fps_ && spec_ == other.spec_;
+}
+
+std::string PeerConnectionE2EQualityTestFixture::VideoResolution::ToString()
+    const {
+  rtc::StringBuilder out;
+  out << "{ width=" << width_ << ", height=" << height_ << ", fps=" << fps_
+      << ", spec=" << SpecToString(spec_) << " }";
+  return out.Release();
 }
 
 bool PeerConnectionE2EQualityTestFixture::VideoSubscription::operator==(
