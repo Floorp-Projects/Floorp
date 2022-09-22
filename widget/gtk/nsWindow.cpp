@@ -4056,6 +4056,10 @@ void nsWindow::OnMap() {
 void nsWindow::OnUnmap() {
   LOG("nsWindow::OnUnmap");
 
+  // Mark window as unmapped. It can be still used for rendering on X11
+  // untill OnUnrealize is called.
+  mIsMapped = false;
+
 #ifdef MOZ_WAYLAND
   // wl_surface owned by mContainer is going to be deleted.
   // Make sure we don't paint to it on Wayland.
@@ -4089,7 +4093,6 @@ void nsWindow::OnUnrealize() {
   // hierarchy is still available.
   // This call means we *don't* have X11 (or Wayland) window we can render to.
   LOG("nsWindow::OnUnrealize GdkWindow %p", mGdkWindow);
-  mIsMapped = false;
   ReleaseGdkWindow();
 }
 

@@ -170,7 +170,7 @@ void WindowSurfaceProvider::EndRemoteDrawingInRegion(
   if (GdkIsWaylandDisplay()) {
     // We're called too early or we're unmapped.
     // Don't draw anything.
-    if (!mWidget || mWidget->IsDestroyed()) {
+    if (!mWidget || !mWidget->IsMapped()) {
       return;
     }
     if (moz_container_wayland_is_commiting_to_parent(
@@ -180,7 +180,7 @@ void WindowSurfaceProvider::EndRemoteDrawingInRegion(
       NS_DispatchToMainThread(NS_NewRunnableFunction(
           "WindowSurfaceProvider::EndRemoteDrawingInRegion",
           [widget = RefPtr{mWidget}, this, aInvalidRegion]() {
-            if (widget->IsDestroyed()) {
+            if (!widget->IsMapped()) {
               return;
             }
             MutexAutoLock lock(mMutex);
