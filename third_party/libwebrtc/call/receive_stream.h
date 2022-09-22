@@ -94,10 +94,6 @@ class MediaReceiveStreamInterface : public ReceiveStreamInterface {
   virtual std::vector<RtpSource> GetSources() const = 0;
 };
 
-// TODO(bugs.webrtc.org/7484): Remove this once downstream usage of the
-// deprecated name is gone.
-using ReceiveStream [[deprecated]] = ReceiveStreamInterface;
-
 }  // namespace webrtc
 
 #endif  // CALL_RECEIVE_STREAM_H_
