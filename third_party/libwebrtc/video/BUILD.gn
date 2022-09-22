@@ -864,6 +864,7 @@ if (rtc_include_tests) {
       "../api:create_frame_generator",
       "../api:fake_frame_decryptor",
       "../api:fake_frame_encryptor",
+      "../api:field_trials_view",
       "../api:frame_generator_api",
       "../api:libjingle_peerconnection_api",
       "../api:mock_fec_controller_override",

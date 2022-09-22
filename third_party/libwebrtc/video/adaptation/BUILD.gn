@@ -90,6 +90,7 @@ if (rtc_include_tests) {
     ]
     deps = [
       ":video_adaptation",
+      "../../api:field_trials_view",
       "../../api:scoped_refptr",
       "../../api/task_queue:task_queue",
       "../../api/units:time_delta",
@@ -114,6 +115,7 @@ if (rtc_include_tests) {
       "../../rtc_base/task_utils:to_queued_task",
       "../../test:field_trial",
       "../../test:rtc_expect_death",
+      "../../test:scoped_key_value_config",
       "../../test:test_support",
       "../../test/time_controller:time_controller",
     ]
