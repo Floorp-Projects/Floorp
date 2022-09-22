@@ -265,8 +265,8 @@ class Port : public PortInterface,
   // PortAllocatorSession, and is now being assigned to an ICE transport.
   // Updates the information for candidates as well.
   void SetIceParameters(int component,
-                        const std::string& username_fragment,
-                        const std::string& password);
+                        absl::string_view username_fragment,
+                        absl::string_view password);
 
   // Fired when candidates are discovered by the port. When all candidates
   // are discovered that belong to port SignalAddressReady is fired.
@@ -367,8 +367,7 @@ class Port : public PortInterface,
   void OnReadyToSend();
 
   // Called when the Connection discovers a local peer reflexive candidate.
-  // Returns the index of the new local candidate.
-  size_t AddPrflxCandidate(const Candidate& local);
+  void AddPrflxCandidate(const Candidate& local);
 
   int16_t network_cost() const { return network_cost_; }
 
@@ -406,7 +405,8 @@ class Port : public PortInterface,
                   const std::string& url,
                   bool is_final);
 
-  void FinishAddingAddress(const Candidate& c, bool is_final);
+  void FinishAddingAddress(const Candidate& c, bool is_final)
+      RTC_RUN_ON(thread_);
 
   virtual void PostAddAddress(bool is_final);
 
@@ -481,7 +481,7 @@ class Port : public PortInterface,
   // username_fragment().
   std::string ice_username_fragment_;
   std::string password_;
-  std::vector<Candidate> candidates_;
+  std::vector<Candidate> candidates_ RTC_GUARDED_BY(thread_);
   AddressMap connections_;
   int timeout_delay_;
   bool enable_port_packets_;
@@ -508,7 +508,7 @@ class Port : public PortInterface,
 
   bool MaybeObfuscateAddress(Candidate* c,
                              const std::string& type,
-                             bool is_final);
+                             bool is_final) RTC_RUN_ON(thread_);
 
   friend class Connection;
   webrtc::CallbackList<PortInterface*> port_destroyed_callback_list_;

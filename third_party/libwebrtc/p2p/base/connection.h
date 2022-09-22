@@ -15,6 +15,7 @@
 #include <string>
 #include <vector>
 
+#include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
 #include "api/candidate.h"
 #include "api/transport/stun.h"
@@ -202,6 +203,10 @@ class Connection : public CandidatePairInterface {
   // the current time, which is compared against various timeouts.
   void UpdateState(int64_t now);
 
+  void UpdateLocalIceParameters(int component,
+                                absl::string_view username_fragment,
+                                absl::string_view password);
+
   // Called when this connection should try checking writability again.
   int64_t last_ping_sent() const;
   void Ping(int64_t now);
@@ -284,6 +289,9 @@ class Connection : public CandidatePairInterface {
   // Check if we sent `val` pings without receving a response.
   bool TooManyOutstandingPings(const absl::optional<int>& val) const;
 
+  // Called by Port when the network cost changes.
+  void SetLocalCandidateNetworkCost(uint16_t cost);
+
   void SetIceFieldTrials(const IceFieldTrials* field_trials);
   const rtc::EventBasedExponentialMovingAverage& GetRttEstimate() const {
     return rtt_estimate_;
@@ -357,7 +365,7 @@ class Connection : public CandidatePairInterface {
   webrtc::TaskQueueBase* const network_thread_;
   const uint32_t id_;
   rtc::WeakPtr<Port> port_;
-  size_t local_candidate_index_ RTC_GUARDED_BY(network_thread_);
+  Candidate local_candidate_ RTC_GUARDED_BY(network_thread_);
   Candidate remote_candidate_;
 
   ConnectionInfo stats_;
