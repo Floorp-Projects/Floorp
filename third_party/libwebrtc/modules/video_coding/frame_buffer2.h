@@ -22,8 +22,8 @@
 #include "api/sequence_checker.h"
 #include "api/video/encoded_frame.h"
 #include "modules/video_coding/include/video_coding_defines.h"
-#include "modules/video_coding/jitter_estimator.h"
 #include "modules/video_coding/timing/inter_frame_delay.h"
+#include "modules/video_coding/timing/jitter_estimator.h"
 #include "modules/video_coding/utility/decoded_frames_history.h"
 #include "rtc_base/event.h"
 #include "rtc_base/experiments/field_trial_parser.h"
@@ -39,7 +39,7 @@ namespace webrtc {
 
 class Clock;
 class VCMReceiveStatisticsCallback;
-class VCMJitterEstimator;
+class JitterEstimator;
 class VCMTiming;
 
 namespace video_coding {
@@ -176,7 +176,7 @@ class FrameBuffer {
   int64_t latest_return_time_ms_ RTC_GUARDED_BY(mutex_);
   bool keyframe_required_ RTC_GUARDED_BY(mutex_);
 
-  VCMJitterEstimator jitter_estimator_ RTC_GUARDED_BY(mutex_);
+  JitterEstimator jitter_estimator_ RTC_GUARDED_BY(mutex_);
   VCMTiming* const timing_ RTC_GUARDED_BY(mutex_);
   InterFrameDelay inter_frame_delay_ RTC_GUARDED_BY(mutex_);
   absl::optional<int64_t> last_continuous_frame_ RTC_GUARDED_BY(mutex_);

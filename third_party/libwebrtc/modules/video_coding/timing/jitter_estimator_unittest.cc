@@ -7,6 +7,8 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
+#include "modules/video_coding/timing/jitter_estimator.h"
+
 #include <stdint.h>
 
 #include <memory>
@@ -17,7 +19,6 @@
 #include "api/units/data_size.h"
 #include "api/units/frequency.h"
 #include "api/units/time_delta.h"
-#include "modules/video_coding/jitter_estimator.h"
 #include "rtc_base/experiments/jitter_upper_bound_experiment.h"
 #include "rtc_base/numerics/histogram_percentile_counter.h"
 #include "rtc_base/strings/string_builder.h"
@@ -28,18 +29,17 @@
 
 namespace webrtc {
 
-class TestVCMJitterEstimator : public ::testing::Test {
+class TestJitterEstimator : public ::testing::Test {
  protected:
-  TestVCMJitterEstimator() : fake_clock_(0) {}
+  TestJitterEstimator() : fake_clock_(0) {}
 
   virtual void SetUp() {
-    estimator_ =
-        std::make_unique<VCMJitterEstimator>(&fake_clock_, field_trials_);
+    estimator_ = std::make_unique<JitterEstimator>(&fake_clock_, field_trials_);
   }
 
   SimulatedClock fake_clock_;
   test::ScopedKeyValueConfig field_trials_;
-  std::unique_ptr<VCMJitterEstimator> estimator_;
+  std::unique_ptr<JitterEstimator> estimator_;
 };
 
 // Generates some simple test data in the form of a sawtooth wave.
@@ -66,7 +66,7 @@ class ValueGenerator {
 };
 
 // 5 fps, disable jitter delay altogether.
-TEST_F(TestVCMJitterEstimator, TestLowRate) {
+TEST_F(TestJitterEstimator, TestLowRate) {
   ValueGenerator gen(10);
   TimeDelta time_delta = 1 / Frequency::Hertz(5);
   for (int i = 0; i < 60; ++i) {
@@ -79,7 +79,7 @@ TEST_F(TestVCMJitterEstimator, TestLowRate) {
   }
 }
 
-TEST_F(TestVCMJitterEstimator, TestLowRateDisabled) {
+TEST_F(TestJitterEstimator, TestLowRateDisabled) {
   test::ScopedKeyValueConfig field_trials(
       field_trials_, "WebRTC-ReducedJitterDelayKillSwitch/Enabled/");
   SetUp();
@@ -96,7 +96,7 @@ TEST_F(TestVCMJitterEstimator, TestLowRateDisabled) {
   }
 }
 
-TEST_F(TestVCMJitterEstimator, TestUpperBound) {
+TEST_F(TestJitterEstimator, TestUpperBound) {
   struct TestContext {
     TestContext()
         : upper_bound(0.0),
@@ -143,8 +143,8 @@ TEST_F(TestVCMJitterEstimator, TestUpperBound) {
     for (int i = 0; i < 100; ++i) {
       estimator_->UpdateEstimate(gen.Delay(), gen.FrameSize());
       fake_clock_.AdvanceTime(time_delta);
-      estimator_->FrameNacked();      // To test rtt_mult.
-      estimator_->UpdateRtt(kRtt);    // To test rtt_mult.
+      estimator_->FrameNacked();    // To test rtt_mult.
+      estimator_->UpdateRtt(kRtt);  // To test rtt_mult.
       context.percentiles.Add(
           estimator_
               ->GetJitterEstimate(context.rtt_mult, context.rtt_mult_add_cap_ms)

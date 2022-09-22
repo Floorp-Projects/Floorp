@@ -25,8 +25,8 @@
 #include "modules/video_coding/include/video_coding.h"
 #include "modules/video_coding/include/video_coding_defines.h"
 #include "modules/video_coding/jitter_buffer_common.h"
-#include "modules/video_coding/jitter_estimator.h"
 #include "modules/video_coding/timing/inter_frame_delay.h"
+#include "modules/video_coding/timing/jitter_estimator.h"
 #include "rtc_base/synchronization/mutex.h"
 #include "rtc_base/thread_annotations.h"
 
@@ -253,7 +253,7 @@ class VCMJitterBuffer {
 
   // Jitter estimation.
   // Filter for estimating jitter.
-  VCMJitterEstimator jitter_estimate_;
+  JitterEstimator jitter_estimate_;
   // Calculates network delays used for jitter calculations.
   InterFrameDelay inter_frame_delay_;
   VCMJitterSample waiting_for_completion_;

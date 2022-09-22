@@ -30,6 +30,26 @@ rtc_library("inter_frame_delay") {
   absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
 }
 
+rtc_library("jitter_estimator") {
+  sources = [
+    "jitter_estimator.cc",
+    "jitter_estimator.h",
+  ]
+  deps = [
+    ":rtt_filter",
+    "../../../api:field_trials_view",
+    "../../../api/units:data_size",
+    "../../../api/units:frequency",
+    "../../../api/units:time_delta",
+    "../../../api/units:timestamp",
+    "../../../rtc_base",
+    "../../../rtc_base:safe_conversions",
+    "../../../rtc_base/experiments:jitter_upper_bound_experiment",
+    "../../../system_wrappers",
+  ]
+  absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
+}
+
 rtc_library("rtt_filter") {
   sources = [
     "rtt_filter.cc",
@@ -47,15 +67,24 @@ rtc_library("timing_unittests") {
   testonly = true
   sources = [
     "inter_frame_delay_unittest.cc",
+    "jitter_estimator_unittest.cc",
     "rtt_filter_unittest.cc",
   ]
   deps = [
     ":inter_frame_delay",
+    ":jitter_estimator",
     ":rtt_filter",
+    "../../../api:array_view",
+    "../../../api/units:data_size",
     "../../../api/units:frequency",
     "../../../api/units:time_delta",
     "../../../api/units:timestamp",
+    "../../../rtc_base:histogram_percentile_counter",
+    "../../../rtc_base:stringutils",
+    "../../../rtc_base:timeutils",
+    "../../../rtc_base/experiments:jitter_upper_bound_experiment",
     "../../../system_wrappers:system_wrappers",
+    "../../../test:scoped_key_value_config",
     "../../../test:test_support",
   ]
   absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
