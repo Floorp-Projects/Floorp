@@ -9,12 +9,12 @@
   <script type="application/javascript" src="animation_utils.js"></script>
   <style type="text/css">
     @keyframes transform_anim {
-      from { transform: translate(50px) }
-      to { transform: translate(150px) }
+      from { transform: translate(50px); }
+      to { transform: translate(150px); }
     }
 
     @keyframes always_fifty {
-      from, to { transform: translate(50px) }
+      from, to { transform: translate(50px); }
     }
 
     @keyframes geometry {
@@ -150,6 +150,131 @@ addAsyncAnimTest(async function() {
   omta_is_approx("transform", { tx: 100 }, 0.1, RunningOn.Compositor,
                  "scroll transform animations should runs on compositor " +
                  "thread");
+
+  done_div();
+  done_scroller();
+});
+
+
+// The scroll-linked animation with an underlying value and make it go from the
+// active phase to the before phase.
+addAsyncAnimTest(async function() {
+  let scroller = new_scroller();
+  new_div("animation: always_fifty 5s linear 5s scroll_timeline; " +
+          "transform: translate(25px);");
+  await waitForPaintsFlushed();
+
+  // NOTE: getOMTAStyle() can't detect the animation is running on the
+  // compositor during the delay phase.
+  omta_is_approx("transform", { tx: 25 }, 0.1, RunningOn.Either,
+                 "The scroll animation is in delay");
+
+  scroller.scrollTop = 75;
+  await waitForPaintsFlushed();
+
+  omta_is_approx("transform", { tx: 50 }, 0.1, RunningOn.Compositor,
+                 "scroll transform animations should runs on compositor " +
+                 "thread");
+
+  // Use setAsyncScrollOffset() to update apz (compositor thread only) to make
+  // sure Bug 1776077 is reproducible.
+  let utils = SpecialPowers.wrap(window).windowUtils;
+  utils.setAsyncScrollOffset(scroller, 0, -50);
+  utils.advanceTimeAndRefresh(16);
+  utils.restoreNormalRefresh();
+  await waitForPaints();
+
+  // NOTE: setAsyncScrollOffset() doesn't update main thread, so we check the
+  // OMTA style directly.
+  let compositorStr =
+    SpecialPowers.DOMWindowUtils.getOMTAStyle(gDiv, "transform");
+  ok(compositorStr === "matrix(1, 0, 0, 1, 25, 0)",
+     "scroll animations is in delay phase before calling main thread style " +
+     "udpate");
+
+  scroller.scrollTop = 25;
+  await waitForPaintsFlushed();
+
+  compositorStr = SpecialPowers.DOMWindowUtils.getOMTAStyle(gDiv, "transform");
+  ok(compositorStr === "",
+     "scroll animation in delay phase clears its OMTA style");
+  omta_is_approx("transform", { tx: 25 }, 0.1, RunningOn.Either,
+                 "The scroll animation is in delay");
+
+  done_div();
+  done_scroller();
+});
+
+// The scroll-linked animation without an underlying value and make it go from
+// the active phase to the before phase.
+addAsyncAnimTest(async function() {
+  let scroller = new_scroller();
+  new_div("animation: always_fifty 5s linear 5s scroll_timeline; ");
+  await waitForPaintsFlushed();
+
+  // NOTE: getOMTAStyle() can't detect the animation is running on the
+  // compositor during the delay phase.
+  omta_is_approx("transform", { tx: 0 }, 0.1, RunningOn.Either,
+                 "The scroll animation is in delay");
+
+  scroller.scrollTop = 75;
+  await waitForPaintsFlushed();
+
+  omta_is_approx("transform", { tx: 50 }, 0.1, RunningOn.Compositor,
+                 "scroll transform animations should runs on compositor " +
+                 "thread");
+
+  // Use setAsyncScrollOffset() to update apz (compositor thread only) to make
+  // sure Bug 1776077 is reproducible.
+  let utils = SpecialPowers.wrap(window).windowUtils;
+  utils.setAsyncScrollOffset(scroller, 0, -50);
+  utils.advanceTimeAndRefresh(16);
+  utils.restoreNormalRefresh();
+  await waitForPaints();
+
+  // NOTE: setAsyncScrollOffset() doesn't update main thread, so we check the
+  // OMTA style directly.
+  let compositorStr =
+    SpecialPowers.DOMWindowUtils.getOMTAStyle(gDiv, "transform");
+  ok(compositorStr === "matrix(1, 0, 0, 1, 0, 0)",
+     "scroll animations is in delay phase before calling main thread style " +
+     "udpate");
+
+  done_div();
+  done_scroller();
+});
+
+// The scroll-linked animation is in delay, together with other runing
+// animations.
+addAsyncAnimTest(async function() {
+  let scroller = new_scroller();
+  new_div("animation: transform_anim 10s linear -5s paused, " +
+          "           always_fifty 5s linear 5s scroll_timeline;");
+  await waitForPaintsFlushed();
+
+  omta_is_approx("transform", { tx: 100 }, 0.1, RunningOn.Compositor,
+                 "The scroll animation is in delay");
+
+  scroller.scrollTop = 75;
+  await waitForPaintsFlushed();
+
+  omta_is_approx("transform", { tx: 50 }, 0.1, RunningOn.Compositor,
+                 "scroll transform animations should runs on compositor " +
+                 "thread");
+
+  let utils = SpecialPowers.wrap(window).windowUtils;
+  utils.setAsyncScrollOffset(scroller, 0, -50);
+  utils.advanceTimeAndRefresh(16);
+  utils.restoreNormalRefresh();
+  await waitForPaints();
+
+  // NOTE: setAsyncScrollOffset() doesn't update main thread, so we check the
+  // OMTA style directly.
+  let compositorStr =
+    SpecialPowers.DOMWindowUtils.getOMTAStyle(gDiv, "transform");
+  ok(compositorStr === "matrix(1, 0, 0, 1, 100, 0)",
+     "scroll animations is in delay phase before calling main thread style " +
+     "udpate");
 
   done_div();
   done_scroller();

@@ -18,6 +18,7 @@
 #include "mozilla/StaticPrefs_layout.h"
 #include "nsIContent.h"
 #include "nsLayoutUtils.h"
+#include "nsPresContextInlines.h"
 #include "nsStyleTransformMatrix.h"
 #include "PuppetWidget.h"
 
