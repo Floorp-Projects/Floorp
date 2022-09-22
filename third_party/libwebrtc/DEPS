@@ -2256,6 +2256,17 @@ hooks = [
     'action': ['python3', 'src/build/mac_toolchain.py'],
   },
   {
+    # Update the Fuchsia SDK if necessary.
+    'name': 'Download Fuchsia SDK',
+    'pattern': '.',
+    'condition': 'checkout_fuchsia',
+    'action': [
+      'python3',
+      'src/build/fuchsia/update_sdk.py',
+      '--default-bucket=fuchsia',
+    ],
+  },
+  {
     # Note: On Win, this should run after win_toolchain, as it may use it.
     'name': 'clang',
     'pattern': '.',
