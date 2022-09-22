@@ -61,11 +61,6 @@ let gExceptionsList = [
     type: "single-quote",
   },
   {
-    file: "mathfont.properties",
-    key: "operator.\\u002E\\u002E\\u002E.postfix",
-    type: "ellipsis",
-  },
-  {
     file: "layout_errors.properties",
     key: "ImageMapRectBoundsError",
     type: "double-quote",
