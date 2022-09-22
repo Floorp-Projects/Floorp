@@ -1517,6 +1517,7 @@ class BuildDriver(MozbuildObject):
 
             suppressed_by_dir = Counter()
 
+            warnings = []
             for warning in sorted(monitor.instance_warnings):
                 path = mozpath.normsep(warning["filename"])
                 if path.startswith(self.topsrcdir):
@@ -1535,6 +1536,17 @@ class BuildDriver(MozbuildObject):
 
                     continue
 
+                warnings.append(warning)
+
+            for d, count in sorted(suppressed_by_dir.items()):
+                self.log(
+                    logging.WARNING,
+                    "suppressed_warning",
+                    {"dir": d, "count": count},
+                    "(suppressed {count} warnings in {dir})",
+                )
+
+            for warning in warnings:
                 if warning["column"] is not None:
                     self.log(
                         logging.WARNING,
@@ -1549,14 +1561,6 @@ class BuildDriver(MozbuildObject):
                         warning,
                         "warning: {normpath}:{line} [{flag}] {message}",
                     )
-
-            for d, count in sorted(suppressed_by_dir.items()):
-                self.log(
-                    logging.WARNING,
-                    "suppressed_warning",
-                    {"dir": d, "count": count},
-                    "(suppressed {count} warnings in {dir})",
-                )
 
         high_finder, finder_percent = monitor.have_high_finder_usage()
         if high_finder:
