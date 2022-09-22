@@ -30,6 +30,7 @@
 #include "rtc_base/synchronization/mutex.h"
 #include "rtc_base/system/no_unique_address.h"
 #include "rtc_base/task_utils/pending_task_safety_flag.h"
+#include "rtc_base/task_utils/repeating_task.h"
 #include "rtc_base/task_utils/to_queued_task.h"
 #include "rtc_base/thread_annotations.h"
 #include "rtc_base/time_utils.h"
@@ -204,6 +205,10 @@ class ZeroHertzAdapterMode : public AdapterMode {
   // Convergent state of each of the configured simulcast layers.
   std::vector<SpatialLayerTracker> layer_trackers_
       RTC_GUARDED_BY(sequence_checker_);
+  // Repeating task handle used for requesting refresh frames until arrival, as
+  // they can be dropped in various places in the capture pipeline.
+  RepeatingTaskHandle refresh_frame_requester_
+      RTC_GUARDED_BY(sequence_checker_);
 
   ScopedTaskSafety safety_;
 };
@@ -286,9 +291,6 @@ class FrameCadenceAdapterImpl : public FrameCadenceAdapterInterface {
   // `queue_`.
   std::atomic<int> frames_scheduled_for_processing_{0};
 
-  // Whether to ask for a refresh frame on activation of zero-hertz mode.
-  bool should_request_refresh_frame_ RTC_GUARDED_BY(queue_) = false;
-
   ScopedTaskSafetyDetached safety_;
 };
 
@@ -299,13 +301,19 @@ ZeroHertzAdapterMode::ZeroHertzAdapterMode(
     double max_fps)
     : queue_(queue), clock_(clock), callback_(callback), max_fps_(max_fps) {
   sequence_checker_.Detach();
+  refresh_frame_requester_ = RepeatingTaskHandle::Start(queue_, [this] {
+    RTC_DLOG(LS_VERBOSE) << __func__ << " RequestRefreshFrame";
+    if (callback_)
+      callback_->RequestRefreshFrame();
+    return frame_delay_;
+  });
 }
 
 void ZeroHertzAdapterMode::ReconfigureParameters(
     const FrameCadenceAdapterInterface::ZeroHertzModeParams& params) {
   RTC_DCHECK_RUN_ON(&sequence_checker_);
-  RTC_LOG(LS_INFO) << __func__ << " this " << this << " num_simulcast_layers "
-                   << params.num_simulcast_layers;
+  RTC_DLOG(LS_INFO) << __func__ << " this " << this << " num_simulcast_layers "
+                    << params.num_simulcast_layers;
 
   // Start as unconverged.
   layer_trackers_.clear();
@@ -350,6 +358,7 @@ void ZeroHertzAdapterMode::OnFrame(Timestamp post_time,
   RTC_DCHECK_RUN_ON(&sequence_checker_);
   RTC_DLOG(LS_VERBOSE) << "ZeroHertzAdapterMode::" << __func__ << " this "
                        << this;
+  refresh_frame_requester_.Stop();
 
   // Assume all enabled layers are unconverged after frame entry.
   ResetQualityConvergenceInfo();
@@ -383,15 +392,9 @@ absl::optional<uint32_t> ZeroHertzAdapterMode::GetInputFrameRateFps() {
 void ZeroHertzAdapterMode::ProcessKeyFrameRequest() {
   RTC_DCHECK_RUN_ON(&sequence_checker_);
 
-  // If no frame was ever passed to us, request a refresh frame from the source.
-  if (current_frame_id_ == 0) {
-    RTC_LOG(LS_INFO)
-        << __func__ << " this " << this
-        << " requesting refresh frame due to no frames received yet.";
-    callback_->RequestRefreshFrame();
-    return;
-  }
-
+  // If we're new and don't have a frame, there's no need to request refresh
+  // frames as this was being triggered for us when zero-hz mode was set up.
+  //
   // The next frame encoded will be a key frame. Reset quality convergence so we
   // don't get idle repeats shortly after, because key frames need a lot of
   // refinement frames.
@@ -609,8 +612,6 @@ void FrameCadenceAdapterImpl::ProcessKeyFrameRequest() {
   RTC_DCHECK_RUN_ON(queue_);
   if (zero_hertz_adapter_)
     zero_hertz_adapter_->ProcessKeyFrameRequest();
-  else
-    should_request_refresh_frame_ = true;
 }
 
 void FrameCadenceAdapterImpl::OnFrame(const VideoFrame& frame) {
@@ -682,12 +683,6 @@ void FrameCadenceAdapterImpl::MaybeReconfigureAdapters(
       zero_hertz_adapter_.emplace(queue_, clock_, callback_,
                                   source_constraints_->max_fps.value());
       RTC_LOG(LS_INFO) << "Zero hertz mode activated.";
-
-      if (should_request_refresh_frame_) {
-        // Ensure we get a first frame to work with.
-        should_request_refresh_frame_ = false;
-        callback_->RequestRefreshFrame();
-      }
       zero_hertz_adapter_created_timestamp_ = clock_->CurrentTime();
     }
     zero_hertz_adapter_->ReconfigureParameters(zero_hertz_params_.value());
