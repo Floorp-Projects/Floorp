@@ -57,8 +57,7 @@ class TestInterfaceAsyncIterableDouble final : public nsISupports,
     uint32_t mIndex;
   };
   virtual ~TestInterfaceAsyncIterableDouble() = default;
-  void ResolvePromise(IteratorData* aData,
-                      IterableIteratorBase::IteratorType aType);
+  void ResolvePromise(Iterator* aIterator);
 
   nsCOMPtr<nsPIDOMWindowInner> mParent;
   nsTArray<std::pair<nsString, nsString>> mValues;

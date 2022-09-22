@@ -58,8 +58,7 @@ class TestInterfaceAsyncIterableDoubleUnion final : public nsISupports,
   };
 
   virtual ~TestInterfaceAsyncIterableDoubleUnion() = default;
-  void ResolvePromise(IteratorData* aData,
-                      IterableIteratorBase::IteratorType aType);
+  void ResolvePromise(Iterator* aIterator);
 
   nsCOMPtr<nsPIDOMWindowInner> mParent;
   nsTArray<std::pair<nsString, OwningStringOrLong>> mValues;
