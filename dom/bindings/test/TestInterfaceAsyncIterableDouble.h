@@ -38,24 +38,19 @@ class TestInterfaceAsyncIterableDouble final : public nsISupports,
   static already_AddRefed<TestInterfaceAsyncIterableDouble> Constructor(
       const GlobalObject& aGlobal, ErrorResult& rv);
 
+  struct IteratorData {
+    uint32_t mIndex = 0;
+  };
+
   using Iterator = AsyncIterableIterator<TestInterfaceAsyncIterableDouble>;
-  void InitAsyncIterator(Iterator* aIterator, ErrorResult& aError);
-  void DestroyAsyncIterator(Iterator* aIterator);
+
+  void InitAsyncIteratorData(IteratorData& aData, Iterator::IteratorType aType,
+                             ErrorResult& aError) {}
+
   already_AddRefed<Promise> GetNextPromise(Iterator* aIterator,
                                            ErrorResult& aRv);
 
  private:
-  struct IteratorData {
-    explicit IteratorData(int32_t aIndex) : mIndex(aIndex) {}
-    ~IteratorData() {
-      if (mPromise) {
-        mPromise->MaybeReject(NS_ERROR_DOM_ABORT_ERR);
-        mPromise = nullptr;
-      }
-    }
-    RefPtr<Promise> mPromise;
-    uint32_t mIndex;
-  };
   virtual ~TestInterfaceAsyncIterableDouble() = default;
   void ResolvePromise(Iterator* aIterator, Promise* aPromise);
 

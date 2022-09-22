@@ -22279,13 +22279,14 @@ class CGIterableMethodGenerator(CGGeneric):
                 $*{createIterator}
                 {
                   ErrorResult initError;
-                  self->InitAsyncIterator(result, ${args});
+                  self->InitAsyncIteratorData(result->Data(), itrType::IteratorType::${itrMethod}, ${args});
                   if (initError.MaybeSetPendingException(cx, "Asynchronous iterator initialization steps for ${ifaceName} failed")) {
                     return false;
                   }
                 }
                 """,
                 createIterator=createIterator,
+                itrMethod=methodName.title(),
                 args=", ".join(args),
                 ifaceName=descriptor.interface.identifier.name,
             )
