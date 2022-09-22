@@ -55,10 +55,7 @@
         addObject:[[RTC_OBJC_TYPE(RTCVideoCodecInfo) alloc] initWithName:kRTCVideoCodecVp9Name]];
   }
 
-  if ([RTC_OBJC_TYPE(RTCVideoEncoderAV1) isSupported]) {
-    [result
-        addObject:[[RTC_OBJC_TYPE(RTCVideoCodecInfo) alloc] initWithName:kRTCVideoCodecAv1Name]];
-  }
+  [result addObject:[[RTC_OBJC_TYPE(RTCVideoCodecInfo) alloc] initWithName:kRTCVideoCodecAv1Name]];
 
   return result;
 }
@@ -71,8 +68,7 @@
   } else if ([info.name isEqualToString:kRTCVideoCodecVp9Name] &&
              [RTC_OBJC_TYPE(RTCVideoEncoderVP9) isSupported]) {
     return [RTC_OBJC_TYPE(RTCVideoEncoderVP9) vp9Encoder];
-  } else if ([info.name isEqualToString:kRTCVideoCodecAv1Name] &&
-             [RTC_OBJC_TYPE(RTCVideoEncoderAV1) isSupported]) {
+  } else if ([info.name isEqualToString:kRTCVideoCodecAv1Name]) {
     return [RTC_OBJC_TYPE(RTCVideoEncoderAV1) av1Encoder];
   }
 

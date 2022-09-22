@@ -515,7 +515,7 @@ if (is_android) {
     visibility = [ "*" ]
     sources = [
       "api/org/webrtc/LibaomAv1Decoder.java",
-      "api/org/webrtc/LibaomAv1EncoderIfSupported.java",
+      "api/org/webrtc/LibaomAv1Encoder.java",
     ]
     deps = [
       ":base_java",
@@ -885,16 +885,15 @@ if (current_os == "linux" || is_android) {
     ]
   }
 
-  rtc_library("libaom_av1_jni_if_supported") {
+  rtc_library("libaom_av1_decoder_if_supported_jni") {
     visibility = [ "*" ]
     allow_poison = [ "software_video_codecs" ]
     sources = [ "src/jni/libaom_av1_codec.cc" ]
     deps = [
       ":base_jni",
-      ":generated_libaom_av1_jni_if_supported",
+      ":generated_libaom_av1_decoder_if_supported_jni",
       ":video_jni",
       "../../modules/video_coding/codecs/av1:libaom_av1_decoder",
-      "../../modules/video_coding/codecs/av1:libaom_av1_encoder_if_supported",
     ]
   }
 
@@ -914,7 +913,7 @@ if (current_os == "linux" || is_android) {
     visibility = [ "*" ]
     allow_poison = [ "software_video_codecs" ]
     deps = [
-      ":libaom_av1_jni_if_supported",
+      ":libaom_av1_decoder_if_supported_jni",
       ":libvpx_vp8_jni",
       ":libvpx_vp9_jni",
     ]
@@ -1371,11 +1370,8 @@ if (current_os == "linux" || is_android) {
     jni_generator_include = "//sdk/android/src/jni/jni_generator_helper.h"
   }
 
-  generate_jni("generated_libaom_av1_jni_if_supported") {
-    sources = [
-      "api/org/webrtc/LibaomAv1Decoder.java",
-      "api/org/webrtc/LibaomAv1EncoderIfSupported.java",
-    ]
+  generate_jni("generated_libaom_av1_decoder_if_supported_jni") {
+    sources = [ "api/org/webrtc/LibaomAv1Decoder.java" ]
 
     namespace = "webrtc::jni"
     jni_generator_include = "//sdk/android/src/jni/jni_generator_helper.h"
