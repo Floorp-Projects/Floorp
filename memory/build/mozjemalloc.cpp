@@ -1386,23 +1386,33 @@ constexpr size_t kMaxAttempts = 10;
 // Microsoft's documentation for ::Sleep() for details.)
 constexpr size_t kDelayMs = 50;
 
+struct StallSpecs {
+  size_t maxAttempts;
+  size_t delayMs;
+};
+
+static constexpr StallSpecs maxStall = {.maxAttempts = kMaxAttempts,
+                                        .delayMs = kDelayMs};
+static constexpr StallSpecs doNotStall
+    [[maybe_unused]] = {.maxAttempts = 0, .delayMs = 0};
+
 Atomic<bool> sHasStalled{false};
-static inline bool ShouldStallAndRetry() {
+static inline StallSpecs GetStallSpecs() {
 #  if defined(JS_STANDALONE)
   // GetGeckoProcessType() isn't available in this configuration. (SpiderMonkey
   // on Windows mostly skips this in favor of directly calling ::VirtualAlloc(),
   // though, so it's probably not going to matter whether we stall here or not.)
-  return true;
+  return maxStall;
 #  elif defined(NIGHTLY_BUILD)
   // On Nightly, always stall, for experiment's sake (bug 1785162).
-  return true;
+  return maxStall;
 #  else
   // In the main process, always stall.
   if (GetGeckoProcessType() == GeckoProcessType::GeckoProcessType_Default) {
-    return true;
+    return maxStall;
   }
   // Otherwise, stall at most once.
-  return sHasStalled.compareExchange(false, true);
+  return sHasStalled.compareExchange(false, true) ? maxStall : doNotStall;
 #  endif
 }
 
@@ -1438,13 +1448,11 @@ static inline bool ShouldStallAndRetry() {
     if (!(flAllocationType & MEM_COMMIT)) return nullptr;
   }
 
-  // Also return if we just aren't supposed to be retrying at the moment, for
-  // whatever reason.
-  if (!ShouldStallAndRetry()) return nullptr;
+  // Retry as many times as desired (possibly zero).
+  const StallSpecs stallSpecs = GetStallSpecs();
 
-  // Otherwise, retry.
-  for (size_t i = 0; i < kMaxAttempts; ++i) {
-    ::Sleep(kDelayMs);
+  for (size_t i = 0; i < stallSpecs.maxAttempts; ++i) {
+    ::Sleep(stallSpecs.delayMs);
     void* ptr = ::VirtualAlloc(lpAddress, dwSize, flAllocationType, flProtect);
 
     if (ptr) {
