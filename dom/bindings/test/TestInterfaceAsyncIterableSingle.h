@@ -41,31 +41,35 @@ class TestInterfaceAsyncIterableSingle : public nsISupports,
       const TestInterfaceAsyncIterableSingleOptions& aOptions, ErrorResult& rv);
 
   using Iterator = AsyncIterableIterator<TestInterfaceAsyncIterableSingle>;
-  already_AddRefed<Promise> GetNextIterationResult(Iterator* aIterator,
-                                                   ErrorResult& aRv);
-
-  struct IteratorData {
-    void Traverse(nsCycleCollectionTraversalCallback& cb);
-    void Unlink();
-
-    uint32_t mIndex = 0;
-    uint32_t mMultiplier = 1;
-    Sequence<OwningNonNull<Promise>> mBlockingPromises;
-    size_t mBlockingPromisesIndex = 0;
-  };
-
-  void InitAsyncIteratorData(IteratorData& aData, Iterator::IteratorType aType,
-                             ErrorResult& aError);
+  void InitAsyncIterator(Iterator* aIterator, ErrorResult& aError);
+  void DestroyAsyncIterator(Iterator* aIterator);
+  already_AddRefed<Promise> GetNextPromise(JSContext* aCx, Iterator* aIterator,
+                                           ErrorResult& aRv);
 
  protected:
-  already_AddRefed<Promise> GetNextIterationResult(
-      IterableIteratorBase* aIterator, IteratorData& aData, ErrorResult& aRv);
+  struct IteratorData {
+    IteratorData(int32_t aIndex, uint32_t aMultiplier)
+        : mIndex(aIndex), mMultiplier(aMultiplier) {}
+    ~IteratorData() {
+      if (mPromise) {
+        mPromise->MaybeReject(NS_ERROR_DOM_ABORT_ERR);
+        mPromise = nullptr;
+      }
+    }
+    RefPtr<Promise> mPromise;
+    uint32_t mIndex;
+    uint32_t mMultiplier;
+  };
+
+  already_AddRefed<Promise> GetNextPromise(JSContext* aCx,
+                                           IterableIteratorBase* aIterator,
+                                           IteratorData* aData,
+                                           ErrorResult& aRv);
 
   virtual ~TestInterfaceAsyncIterableSingle() = default;
 
  private:
-  void ResolvePromise(IterableIteratorBase* aIterator, IteratorData& aData,
-                      Promise* aPromise);
+  void ResolvePromise(IterableIteratorBase* aIterator, IteratorData* aData);
 
   nsCOMPtr<nsPIDOMWindowInner> mParent;
   bool mFailToInit;

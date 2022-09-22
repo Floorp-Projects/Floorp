@@ -38,21 +38,28 @@ class TestInterfaceAsyncIterableDoubleUnion final : public nsISupports,
   static already_AddRefed<TestInterfaceAsyncIterableDoubleUnion> Constructor(
       const GlobalObject& aGlobal, ErrorResult& rv);
 
-  struct IteratorData {
-    uint32_t mIndex = 0;
-  };
-
   using Iterator = AsyncIterableIterator<TestInterfaceAsyncIterableDoubleUnion>;
-
-  void InitAsyncIteratorData(IteratorData& aData, Iterator::IteratorType aType,
-                             ErrorResult& aError) {}
-
-  already_AddRefed<Promise> GetNextIterationResult(Iterator* aIterator,
-                                                   ErrorResult& aRv);
+  void InitAsyncIterator(Iterator* aIterator, ErrorResult& aError);
+  void DestroyAsyncIterator(Iterator* aIterator);
+  already_AddRefed<Promise> GetNextPromise(JSContext* aCx, Iterator* aIterator,
+                                           ErrorResult& aRv);
 
  private:
+  struct IteratorData {
+    explicit IteratorData(int32_t aIndex) : mIndex(aIndex) {}
+    ~IteratorData() {
+      if (mPromise) {
+        mPromise->MaybeReject(NS_ERROR_DOM_ABORT_ERR);
+        mPromise = nullptr;
+      }
+    }
+    RefPtr<Promise> mPromise;
+    uint32_t mIndex;
+  };
+
   virtual ~TestInterfaceAsyncIterableDoubleUnion() = default;
-  void ResolvePromise(Iterator* aIterator, Promise* aPromise);
+  void ResolvePromise(IteratorData* aData,
+                      IterableIteratorBase::IteratorType aType);
 
   nsCOMPtr<nsPIDOMWindowInner> mParent;
   nsTArray<std::pair<nsString, OwningStringOrLong>> mValues;

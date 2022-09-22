@@ -116,7 +116,7 @@ struct TupleImpl<Index> {
   bool operator==(const TupleImpl<Index>& aOther) const { return true; }
 
   template <typename F>
-  void ForEach(const F& aFunc) const {}
+  void ForEach(const F& aFunc) {}
 };
 
 /*
@@ -449,7 +449,7 @@ inline void ForEach(Tuple<>& aTuple, const F& aFunc) {}
 
 template <typename F, typename... Elements>
 void ForEach(const Tuple<Elements...>& aTuple, const F& aFunc) {
-  aTuple.ForEach(aFunc);
+  aTuple.ForEach(aTuple, aFunc);
 }
 
 template <typename F, typename... Elements>
