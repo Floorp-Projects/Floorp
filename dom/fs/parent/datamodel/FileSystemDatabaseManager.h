@@ -43,16 +43,6 @@ class FileSystemDatabaseManager {
   virtual Result<int64_t, QMResult> GetUsage() const = 0;
 
   /**
-   * @brief Returns directory identifier for the parent of
-   * a given entry, or error.
-   *
-   * @param aEntry EntryId of an existing file or directory
-   * @return Result<EntryId, QMResult> Directory identifier or error
-   */
-  virtual Result<EntryId, QMResult> GetParentEntryId(
-      const EntryId& aEntry) const = 0;
-
-  /**
    * @brief Returns directory identifier, optionally creating it if it doesn't
    * exist
    *
@@ -102,15 +92,26 @@ class FileSystemDatabaseManager {
       const FileSystemChildMetadata& aHandle) = 0;
 
   /**
-   * @brief Move/Rename a file/directory
+   * @brief Rename a file/directory
    *
    * @param aHandle Source directory or file
-   * @param aNewDesignation Destination directory and filename
-   * @return Result<bool, QMResult> False if file didn't exist, otherwise true
+   * @param aNewName New entry name
+   * @return Result<bool, QMResult> False if entry didn't exist, otherwise true
+   * or error
+   */
+  virtual Result<bool, QMResult> RenameEntry(
+      const FileSystemEntryMetadata& aHandle, const Name& aNewName) = 0;
+
+  /**
+   * @brief Move a file/directory
+   *
+   * @param aHandle Source directory or file
+   * @param aNewDesignation Destination directory and entry name
+   * @return Result<bool, QMResult> False if entry didn't exist, otherwise true
    * or error
    */
   virtual Result<bool, QMResult> MoveEntry(
-      const FileSystemChildMetadata& aHandle,
+      const FileSystemEntryMetadata& aHandle,
       const FileSystemChildMetadata& aNewDesignation) = 0;
 
   /**
