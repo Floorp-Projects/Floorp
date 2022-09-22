@@ -280,7 +280,7 @@ static void BuildRtpContentAttributes(const MediaContentDescription* media_desc,
                                       const cricket::MediaType media_type,
                                       int msid_signaling,
                                       std::string* message);
-static void BuildRtpMap(const MediaContentDescription* media_desc,
+static void BuildRtpmap(const MediaContentDescription* media_desc,
                         const cricket::MediaType media_type,
                         std::string* message);
 static void BuildCandidate(const std::vector<Candidate>& candidates,
@@ -1682,7 +1682,7 @@ void BuildRtpContentAttributes(const MediaContentDescription* media_desc,
   // RFC 4566
   // a=rtpmap:<payload type> <encoding name>/<clock rate>
   // [/<encodingparameters>]
-  BuildRtpMap(media_desc, media_type, message);
+  BuildRtpmap(media_desc, media_type, message);
 
   for (const StreamParams& track : media_desc->streams()) {
     // Build the ssrc-group lines.
@@ -1882,7 +1882,7 @@ bool GetParameter(const std::string& name,
   return true;
 }
 
-void BuildRtpMap(const MediaContentDescription* media_desc,
+void BuildRtpmap(const MediaContentDescription* media_desc,
                  const cricket::MediaType media_type,
                  std::string* message) {
   RTC_DCHECK(message != NULL);
@@ -2852,7 +2852,7 @@ T GetCodecWithPayloadType(const std::vector<T>& codecs, int payload_type) {
   return ret_val;
 }
 
-// Updates or creates a new codec entry in the audio description.
+// Updates or creates a new codec entry in the media description.
 template <class T, class U>
 void AddOrReplaceCodec(MediaContentDescription* content_desc, const U& codec) {
   T* desc = static_cast<T*>(content_desc);
@@ -3596,8 +3596,19 @@ bool ParseRtpmapAttribute(absl::string_view line,
   if (!GetValueFromString(line, codec_params[1], &clock_rate, error)) {
     return false;
   }
+
   if (media_type == cricket::MEDIA_TYPE_VIDEO) {
     VideoContentDescription* video_desc = media_desc->as_video();
+    for (const cricket::VideoCodec& existing_codec : video_desc->codecs()) {
+      if (payload_type == existing_codec.id &&
+          (encoding_name != existing_codec.name ||
+           clock_rate != existing_codec.clockrate)) {
+        return ParseFailed(
+            line,
+            "Duplicate payload type with conflicting codec name or clock rate.",
+            error);
+      }
+    }
     UpdateCodec(payload_type, encoding_name, video_desc);
   } else if (media_type == cricket::MEDIA_TYPE_AUDIO) {
     // RFC 4566
@@ -3616,6 +3627,17 @@ bool ParseRtpmapAttribute(absl::string_view line,
     }
 
     AudioContentDescription* audio_desc = media_desc->as_audio();
+    for (const cricket::AudioCodec& existing_codec : audio_desc->codecs()) {
+      if (payload_type == existing_codec.id &&
+          (encoding_name != existing_codec.name ||
+           clock_rate != existing_codec.clockrate ||
+           channels != existing_codec.channels)) {
+        return ParseFailed(line,
+                           "Duplicate payload type with conflicting codec "
+                           "name, clock rate or number of channels.",
+                           error);
+      }
+    }
     UpdateCodec(payload_type, encoding_name, clock_rate, 0, channels,
                 audio_desc);
   }
