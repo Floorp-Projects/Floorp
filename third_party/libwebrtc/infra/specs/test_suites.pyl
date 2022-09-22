@@ -138,12 +138,6 @@
         'mixins': ['shards-4'],
       },
     },
-    'ios_perf_tests': {
-      'webrtc_perf_tests': {
-        'mixins': ['perf-webrtc-perf-tests'],
-        'args': ['--write_perf_output_on_ios', '--nologs']
-      },
-    },
     'ios_simulator_tests': {
       'apprtcmobile_tests': {
         'mixins': ['xcode_parallelization']
@@ -227,6 +221,11 @@
         'swarming': {
           'shards': 4
         },
+      },
+    },
+    'webrtc_perf_tests': {
+      'webrtc_perf_tests': {
+        'mixins': ['perf-webrtc-perf-tests'],
       },
     },
     'win_video_capture_tests': {
