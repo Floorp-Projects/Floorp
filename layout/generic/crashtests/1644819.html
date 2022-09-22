@@ -10,10 +10,6 @@
 </style>
 <script>
 window.onload = () => {
-  getSelection().collapse(
-    document.querySelector("dl"),
-    document.querySelector("dl").childNodes.length
-  );
   document.execCommand("selectAll");
   document.execCommand("selectAll");
   document.execCommand("backColor", false, "r");
