@@ -196,6 +196,9 @@
     <!-- To be removed once the new hint has been translated -->
     <string name="preference_autocomplete_add_example">ఉదాహరణ: example.com</string>
 
+    <!-- Confirmation "snackbar" shown after a new custom autocomplete URL has been added. -->
+    <string name="preference_autocomplete_add_confirmation">కొత్త అభిమత చిరునామా చేర్చబడింది.</string>
+
     <!-- Menu item to remove existing autocomplete URLs. -->
     <string name="preference_autocomplete_menu_remove">తీసివేయి</string>
 
@@ -224,6 +227,9 @@
     <string name="preference_privacy_should_block_cookies_third_party_only_option">3-వ పక్షం కుకీలను మాత్రమే నిరోధించు</string>
 
     <string name="preference_privacy_should_block_cookies_cross_site_option">క్రాస్-సైటు కుకీలను నిరోధించు</string>
+
+    <!-- Preference Title: Biometrics can be used to unlock Focus if the previous session's data was not erased by the user. -->
+    <string name="preference_security_biometric">అనువర్తనపు తాళం తీయడానికి వేలిముద్రను వాడు</string>
 
     <!-- Preference Title: Secure Mode is a setting that prevents the app's content to show up in the "recent apps" screen
          and prevents the user from taking screenshots or casting the app to other displays. -->

@@ -830,6 +830,9 @@
     <!-- Title for Preference screen for cookie blocking for exceptions tracking protection -->
     <string name="preference_block_cookies_title">ບລັອກຄຸກກີ້</string>
 
+    <!-- Message for Preference screen for cookie blocking for exceptions tracking protection -->
+    <string name="preference_category_block_cookies">ທ່ານຕ້ອງການບລັອກຄຸກກີບໍ?</string>
+
     <!-- Title for the tab crash report screen-->
     <string name="tab_crash_report_title">ແທັບຂັດຂ້ອງ</string>
     <!-- Headline for the tab crash report screen -->
@@ -847,6 +850,8 @@
 
     <!-- Tracking protection bottom sheet -->
 
+    <!-- Label for the total number of trackers blocked. %s represents the app install date -->
+    <string name="trackers_count_note">ບລັອກຕົວຕິດຕາມຕັ້ງແຕ່ %s</string>
     <!-- Category of trackers (content) that can be blocked by Enhanced Tracking Protection -->
     <string name="content">ເນື້ອຫາ</string>
     <!-- Category of trackers (advertising) that can be blocked by Enhanced Tracking Protection -->
@@ -857,6 +862,12 @@
     <!-- Category of trackers (analytics) that can be blocked by Enhanced Tracking Protection -->
     <string name="analytics">ການວິເຄາະ</string>
 
+    <!-- Preference title for enhanced tracking protection settings -->
+    <string name="enhanced_tracking_protection">ເພີ່ມການປ້ອງກັນການຕິດຕາມ</string>
+    <!-- Enhanced tracking protection preference description when the tracking protection is disabled for this site-->
+    <string name="enhanced_tracking_protection_state_off">ການປົກປ້ອງຖືກປິດໄວ້ສຳລັບເວັບໄຊນີ້</string>
+    <!-- Enhanced tracking protection preference description when the tracking protection is enabled for this site-->
+    <string name="enhanced_tracking_protection_state_on">ການປົກປ້ອງແມ່ນເປີດຢູ່ສຳລັບເວັບໄຊນີ້</string>
     <!-- Label that indicates a site is using a secure connection -->
     <string name="secure_connection">ການເຊື່ອມຕໍ່ແມ່ນປອດໄພ</string>
     <!-- Label that indicates a site is using a insecure connection -->
