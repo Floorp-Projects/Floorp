@@ -29,6 +29,10 @@
 #include "sdk/android/src/jni/jni_helpers.h"
 
 namespace webrtc {
+namespace test {
+class AndroidNetworkMonitorTest;
+}  // namespace test
+
 namespace jni {
 
 typedef int64_t NetworkHandle;
@@ -88,12 +92,8 @@ class AndroidNetworkMonitor : public rtc::NetworkMonitorInterface {
       int socket_fd,
       const rtc::IPAddress& address,
       absl::string_view if_name) override;
-  rtc::AdapterType GetAdapterType(absl::string_view if_name) override;
-  rtc::AdapterType GetVpnUnderlyingAdapterType(
-      absl::string_view if_name) override;
-  rtc::NetworkPreference GetNetworkPreference(
-      absl::string_view if_name) override;
-  bool IsAdapterAvailable(absl::string_view if_name) override;
+
+  InterfaceInfo GetInterfaceInfo(absl::string_view if_name) override;
 
   // Always expected to be called on the network thread.
   void SetNetworkInfos(const std::vector<NetworkInformation>& network_infos);
@@ -120,11 +120,13 @@ class AndroidNetworkMonitor : public rtc::NetworkMonitorInterface {
       absl::string_view ifname) const;
 
  private:
+  void reset();
   void OnNetworkConnected_n(const NetworkInformation& network_info);
   void OnNetworkDisconnected_n(NetworkHandle network_handle);
   void OnNetworkPreference_n(NetworkType type,
                              rtc::NetworkPreference preference);
 
+  rtc::NetworkPreference GetNetworkPreference(rtc::AdapterType) const;
   absl::optional<NetworkHandle> FindNetworkHandleFromIfname(
       absl::string_view ifname) const;
 
@@ -133,10 +135,8 @@ class AndroidNetworkMonitor : public rtc::NetworkMonitorInterface {
   ScopedJavaGlobalRef<jobject> j_network_monitor_;
   rtc::Thread* const network_thread_;
   bool started_ RTC_GUARDED_BY(network_thread_) = false;
-  std::map<std::string, rtc::AdapterType, rtc::AbslStringViewCmp>
-      adapter_type_by_name_ RTC_GUARDED_BY(network_thread_);
-  std::map<std::string, rtc::AdapterType, rtc::AbslStringViewCmp>
-      vpn_underlying_adapter_type_by_name_ RTC_GUARDED_BY(network_thread_);
+  std::map<std::string, NetworkHandle, rtc::AbslStringViewCmp>
+      network_handle_by_if_name_ RTC_GUARDED_BY(network_thread_);
   std::map<rtc::IPAddress, NetworkHandle> network_handle_by_address_
       RTC_GUARDED_BY(network_thread_);
   std::map<NetworkHandle, NetworkInformation> network_info_by_handle_
@@ -163,6 +163,8 @@ class AndroidNetworkMonitor : public rtc::NetworkMonitorInterface {
       RTC_PT_GUARDED_BY(network_thread_) = nullptr;
 
   const FieldTrialsView& field_trials_;
+
+  friend class webrtc::test::AndroidNetworkMonitorTest;
 };
 
 class AndroidNetworkMonitorFactory : public rtc::NetworkMonitorFactory {
