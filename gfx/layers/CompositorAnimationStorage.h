@@ -19,6 +19,7 @@
 
 namespace mozilla {
 namespace layers {
+class APZSampler;
 class Animation;
 class CompositorBridgeParent;
 class OMTAController;
@@ -182,6 +183,20 @@ class CompositorAnimationStorage final {
    */
   void SetAnimatedValue(uint64_t aId, AnimatedValue* aPreviousValue,
                         nscolor aColor);
+
+  using JankedAnimationMap =
+      std::unordered_map<LayersId, nsTArray<uint64_t>, LayersId::HashFn>;
+
+  /*
+   * Store the animated values from |aAnimationValues|.
+   */
+  void StoreAnimatedValue(
+      nsCSSPropertyID aProperty, uint64_t aId,
+      const std::unique_ptr<AnimationStorageData>& aAnimationStorageData,
+      const AutoTArray<RefPtr<RawServoAnimationValue>, 1>& aAnimationValues,
+      const MutexAutoLock& aProofOfMapLock,
+      const RefPtr<APZSampler>& aApzSampler, AnimatedValue* aAnimatedValueEntry,
+      JankedAnimationMap& aJankedAnimationMap);
 
  private:
   AnimatedValueTable mAnimatedValues;

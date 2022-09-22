@@ -203,6 +203,87 @@ static ParentLayerRect GetClipRectForPartialPrerender(
   return aPartialPrerenderData.clipRect();
 }
 
+void CompositorAnimationStorage::StoreAnimatedValue(
+    nsCSSPropertyID aProperty, uint64_t aId,
+    const std::unique_ptr<AnimationStorageData>& aAnimationStorageData,
+    const AutoTArray<RefPtr<RawServoAnimationValue>, 1>& aAnimationValues,
+    const MutexAutoLock& aProofOfMapLock, const RefPtr<APZSampler>& aApzSampler,
+    AnimatedValue* aAnimatedValueEntry,
+    JankedAnimationMap& aJankedAnimationMap) {
+  switch (aProperty) {
+    case eCSSProperty_background_color: {
+      SetAnimatedValue(aId, aAnimatedValueEntry,
+                       Servo_AnimationValue_GetColor(aAnimationValues[0],
+                                                     NS_RGBA(0, 0, 0, 0)));
+      break;
+    }
+    case eCSSProperty_opacity: {
+      MOZ_ASSERT(aAnimationValues.Length() == 1);
+      SetAnimatedValue(aId, aAnimatedValueEntry,
+                       Servo_AnimationValue_GetOpacity(aAnimationValues[0]));
+      break;
+    }
+    case eCSSProperty_rotate:
+    case eCSSProperty_scale:
+    case eCSSProperty_translate:
+    case eCSSProperty_transform:
+    case eCSSProperty_offset_path:
+    case eCSSProperty_offset_distance:
+    case eCSSProperty_offset_rotate:
+    case eCSSProperty_offset_anchor: {
+      MOZ_ASSERT(aAnimationStorageData->mTransformData);
+
+      const TransformData& transformData =
+          *aAnimationStorageData->mTransformData;
+      MOZ_ASSERT(transformData.origin() == nsPoint());
+
+      gfx::Matrix4x4 frameTransform =
+          AnimationHelper::ServoAnimationValueToMatrix4x4(
+              aAnimationValues, transformData,
+              aAnimationStorageData->mCachedMotionPath);
+
+      if (const Maybe<PartialPrerenderData>& partialPrerenderData =
+              transformData.partialPrerenderData()) {
+        gfx::Matrix4x4 transform = frameTransform;
+        transform.PostTranslate(
+            partialPrerenderData->position().ToUnknownPoint());
+
+        gfx::Matrix4x4 transformInClip =
+            partialPrerenderData->transformInClip();
+        if (aApzSampler && partialPrerenderData->scrollId() !=
+                               ScrollableLayerGuid::NULL_SCROLL_ID) {
+          AsyncTransform asyncTransform = aApzSampler->GetCurrentAsyncTransform(
+              aAnimationStorageData->mLayersId,
+              partialPrerenderData->scrollId(), LayoutAndVisual,
+              aProofOfMapLock);
+          transformInClip.PostTranslate(
+              asyncTransform.mTranslation.ToUnknownPoint());
+        }
+        transformInClip = transform * transformInClip;
+
+        ParentLayerRect clipRect = GetClipRectForPartialPrerender(
+            aAnimationStorageData->mLayersId, *partialPrerenderData,
+            aApzSampler, aProofOfMapLock);
+        if (AnimationHelper::ShouldBeJank(
+                partialPrerenderData->rect(),
+                partialPrerenderData->overflowedSides(), transformInClip,
+                clipRect)) {
+          if (aAnimatedValueEntry) {
+            frameTransform = aAnimatedValueEntry->Transform().mFrameTransform;
+          }
+          aJankedAnimationMap[aAnimationStorageData->mLayersId].AppendElement(
+              aId);
+        }
+      }
+
+      SetAnimatedValue(aId, aAnimatedValueEntry, frameTransform, transformData);
+      break;
+    }
+    default:
+      MOZ_ASSERT_UNREACHABLE("Unhandled animated property");
+  }
+}
+
 bool CompositorAnimationStorage::SampleAnimations(
     const OMTAController* aOMTAController, TimeStamp aPreviousFrameTime,
     TimeStamp aCurrentFrameTime) {
@@ -216,8 +297,7 @@ bool CompositorAnimationStorage::SampleAnimations(
     return isAnimating;
   }
 
-  std::unordered_map<LayersId, nsTArray<uint64_t>, LayersId::HashFn> janked;
-
+  JankedAnimationMap janked;
   RefPtr<APZSampler> apzSampler = mCompositorBridge->GetAPZSampler();
 
   auto callback = [&](const MutexAutoLock& aProofOfMapLock) {
@@ -243,8 +323,8 @@ bool CompositorAnimationStorage::SampleAnimations(
         continue;
       }
 
-      const PropertyAnimationGroup& lastPropertyAnimationGroup =
-          animationStorageData->mAnimation.LastElement();
+      const nsCSSPropertyID lastPropertyAnimationGroupProperty =
+          animationStorageData->mAnimation.LastElement().mProperty;
 
       PROFILER_MARKER(
           "SampleAnimation", GRAPHICS,
@@ -252,82 +332,12 @@ bool CompositorAnimationStorage::SampleAnimations(
               MarkerThreadId(CompositorThreadHolder::GetThreadId()),
               MarkerInnerWindowId(mCompositorBridge->GetInnerWindowId())),
           CompositorAnimationMarker, iter.first,
-          lastPropertyAnimationGroup.mProperty);
+          lastPropertyAnimationGroupProperty);
 
       // Store the AnimatedValue
-      switch (lastPropertyAnimationGroup.mProperty) {
-        case eCSSProperty_background_color: {
-          SetAnimatedValue(iter.first, previousValue,
-                           Servo_AnimationValue_GetColor(animationValues[0],
-                                                         NS_RGBA(0, 0, 0, 0)));
-          break;
-        }
-        case eCSSProperty_opacity: {
-          MOZ_ASSERT(animationValues.Length() == 1);
-          SetAnimatedValue(iter.first, previousValue,
-                           Servo_AnimationValue_GetOpacity(animationValues[0]));
-          break;
-        }
-        case eCSSProperty_rotate:
-        case eCSSProperty_scale:
-        case eCSSProperty_translate:
-        case eCSSProperty_transform:
-        case eCSSProperty_offset_path:
-        case eCSSProperty_offset_distance:
-        case eCSSProperty_offset_rotate:
-        case eCSSProperty_offset_anchor: {
-          MOZ_ASSERT(animationStorageData->mTransformData);
-
-          const TransformData& transformData =
-              *animationStorageData->mTransformData;
-          MOZ_ASSERT(transformData.origin() == nsPoint());
-
-          gfx::Matrix4x4 frameTransform =
-              AnimationHelper::ServoAnimationValueToMatrix4x4(
-                  animationValues, transformData,
-                  animationStorageData->mCachedMotionPath);
-
-          if (const Maybe<PartialPrerenderData>& partialPrerenderData =
-                  transformData.partialPrerenderData()) {
-            gfx::Matrix4x4 transform = frameTransform;
-            transform.PostTranslate(
-                partialPrerenderData->position().ToUnknownPoint());
-
-            gfx::Matrix4x4 transformInClip =
-                partialPrerenderData->transformInClip();
-            if (apzSampler && partialPrerenderData->scrollId() !=
-                                  ScrollableLayerGuid::NULL_SCROLL_ID) {
-              AsyncTransform asyncTransform =
-                  apzSampler->GetCurrentAsyncTransform(
-                      animationStorageData->mLayersId,
-                      partialPrerenderData->scrollId(), LayoutAndVisual,
-                      aProofOfMapLock);
-              transformInClip.PostTranslate(
-                  asyncTransform.mTranslation.ToUnknownPoint());
-            }
-            transformInClip = transform * transformInClip;
-
-            ParentLayerRect clipRect = GetClipRectForPartialPrerender(
-                animationStorageData->mLayersId, *partialPrerenderData,
-                apzSampler, aProofOfMapLock);
-            if (AnimationHelper::ShouldBeJank(
-                    partialPrerenderData->rect(),
-                    partialPrerenderData->overflowedSides(), transformInClip,
-                    clipRect)) {
-              if (previousValue) {
-                frameTransform = previousValue->Transform().mFrameTransform;
-              }
-              janked[animationStorageData->mLayersId].AppendElement(iter.first);
-            }
-          }
-
-          SetAnimatedValue(iter.first, previousValue, frameTransform,
-                           transformData);
-          break;
-        }
-        default:
-          MOZ_ASSERT_UNREACHABLE("Unhandled animated property");
-      }
+      StoreAnimatedValue(lastPropertyAnimationGroupProperty, iter.first,
+                         animationStorageData, animationValues, aProofOfMapLock,
+                         apzSampler, previousValue, janked);
     }
   };
 
