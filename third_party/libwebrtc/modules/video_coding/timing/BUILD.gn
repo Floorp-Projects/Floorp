@@ -42,6 +42,7 @@ rtc_library("rtt_filter") {
   ]
 }
 
+if (!build_with_mozilla) {
 rtc_library("timing_unittests") {
   testonly = true
   sources = [
@@ -58,4 +59,5 @@ rtc_library("timing_unittests") {
     "../../../test:test_support",
   ]
   absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
+}
 }
