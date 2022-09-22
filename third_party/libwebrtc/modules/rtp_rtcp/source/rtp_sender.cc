@@ -181,6 +181,7 @@ RTPSender::RTPSender(const RtpRtcpInterface::Configuration& config,
       max_packet_size_(IP_PACKET_SIZE - 28),  // Default is IP-v4/UDP.
       rtp_header_extension_map_(config.extmap_allow_mixed),
       // RTP variables
+      rid_(config.rid),
       always_send_mid_and_rid_(config.always_send_mid_and_rid),
       ssrc_has_acked_(false),
       rtx_ssrc_has_acked_(false),
@@ -188,12 +189,14 @@ RTPSender::RTPSender(const RtpRtcpInterface::Configuration& config,
       rtx_(kRtxOff),
       supports_bwe_extension_(false),
       retransmission_rate_limiter_(config.retransmission_rate_limiter) {
-  UpdateHeaderSizes();
   // This random initialization is not intended to be cryptographic strong.
   timestamp_offset_ = random_.Rand<uint32_t>();
 
   RTC_DCHECK(paced_sender_);
   RTC_DCHECK(packet_history_);
+  RTC_DCHECK_LE(rid_.size(), RtpStreamId::kMaxValueSizeBytes);
+
+  UpdateHeaderSizes();
 }
 
 RTPSender::~RTPSender() {
