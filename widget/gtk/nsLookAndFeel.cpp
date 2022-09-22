@@ -1557,12 +1557,15 @@ void nsLookAndFeel::GetGtkContentTheme(LookAndFeelTheme& aTheme) {
 
 static nscolor GetBackgroundColor(
     GtkStyleContext* aStyle, nscolor aForForegroundColor,
-    GtkStateFlags aState = GTK_STATE_FLAG_NORMAL) {
+    GtkStateFlags aState = GTK_STATE_FLAG_NORMAL,
+    nscolor aOverBackgroundColor = NS_TRANSPARENT) {
   GdkRGBA gdkColor;
   gtk_style_context_get_background_color(aStyle, aState, &gdkColor);
   nscolor color = GDK_RGBA_TO_NS_RGBA(gdkColor);
   if (NS_GET_A(color)) {
-    return color;
+    if (color != aOverBackgroundColor) {
+      return color;
+    }
   }
 
   // Try to synthesize a color from a background-image.
@@ -1835,7 +1838,8 @@ void nsLookAndFeel::PerThemeData::Init() {
   mMenuHoverText = GDK_RGBA_TO_NS_RGBA(color);
   mMenuHover = NS_ComposeColors(
       mMenuBackground,
-      GetBackgroundColor(style, mMenuHoverText, GTK_STATE_FLAG_PRELIGHT));
+      GetBackgroundColor(style, mMenuHoverText, GTK_STATE_FLAG_PRELIGHT,
+                         mMenuBackground));
 
   GtkWidget* parent = gtk_fixed_new();
   GtkWidget* window = gtk_window_new(GTK_WINDOW_POPUP);
