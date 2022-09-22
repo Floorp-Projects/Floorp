@@ -995,10 +995,6 @@ browser[tabmodalPromptShowing], browser[tabDialogShowing] {
   -moz-user-focus: none !important;
 }
 
-#browser {
-  -moz-box-layout: flex;
-}
-
 /* Status panel */
 
 #statuspanel:not([hidden]) {
@@ -1567,7 +1563,6 @@ toolbar[keyNav=true]:not([collapsed=true], [customizing=true]) toolbartabstop {
 }
 
 .dialogBox[sizeto="available"] {
-  --box-top-px: 0px; /* Overridden using inline style */
   --box-inline-margin: 4px;
   --box-block-margin: 4px;
   --box-ideal-width: 1000;
@@ -1615,7 +1610,7 @@ toolbar[keyNav=true]:not([collapsed=true], [customizing=true]) toolbartabstop {
 
 .dialogStack .dialogBox.spotlightBox[sizeto="available"] {
   /* Tab modal: subtract the navigator toolbox height from the dialog height. */
-  height: calc(100vh - var(--box-top-px));
+  height: calc(100vh - var(--box-top-px, 0px));
 }
 
 .content-prompt-dialog > .dialogOverlay {
