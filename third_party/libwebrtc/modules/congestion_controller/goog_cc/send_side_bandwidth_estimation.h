@@ -98,9 +98,7 @@ class SendSideBandwidthEstimation {
   void UpdateReceiverEstimate(Timestamp at_time, DataRate bandwidth);
 
   // Call when a new delay-based estimate is available.
-  void UpdateDelayBasedEstimate(Timestamp at_time,
-                                DataRate bitrate,
-                                BandwidthUsage delay_detector_state);
+  void UpdateDelayBasedEstimate(Timestamp at_time, DataRate bitrate);
 
   // Call when we receive a RTCP message with a ReceiveBlock.
   void UpdatePacketsLost(int64_t packets_lost,
@@ -119,8 +117,8 @@ class SendSideBandwidthEstimation {
   int GetMinBitrate() const;
   void SetAcknowledgedRate(absl::optional<DataRate> acknowledged_rate,
                            Timestamp at_time);
-  void UpdateLossBasedEstimatorFromFeedbackVector(
-      const TransportPacketsFeedback& report);
+  void UpdateLossBasedEstimator(const TransportPacketsFeedback& report,
+                                BandwidthUsage delay_detector_state);
 
  private:
   friend class GoogCcStatePrinter;
@@ -203,7 +201,6 @@ class SendSideBandwidthEstimation {
   LossBasedBandwidthEstimation loss_based_bandwidth_estimator_v1_;
   LossBasedBweV2 loss_based_bandwidth_estimator_v2_;
   FieldTrialFlag disable_receiver_limit_caps_only_;
-  BandwidthUsage delay_detector_state_;
 };
 }  // namespace webrtc
 #endif  // MODULES_CONGESTION_CONTROLLER_GOOG_CC_SEND_SIDE_BANDWIDTH_ESTIMATION_H_
