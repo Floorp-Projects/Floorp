@@ -70,7 +70,6 @@ class ConnectionContext final
     return sctp_factory_.get();
   }
 
-  cricket::ChannelManager* channel_manager() const;
   cricket::MediaEngineInterface* media_engine() const {
     return media_engine_.get();
   }
@@ -128,9 +127,6 @@ class ConnectionContext final
   // Accessed both on signaling thread and worker thread.
   std::unique_ptr<FieldTrialsView> const trials_;
 
-  // channel_manager is accessed both on signaling thread and worker thread.
-  // Const after construction, explicitly cleared in destructor.
-  std::unique_ptr<cricket::ChannelManager> channel_manager_;
   const std::unique_ptr<cricket::MediaEngineInterface> media_engine_;
 
   // This object should be used to generate any SSRC that is not explicitly

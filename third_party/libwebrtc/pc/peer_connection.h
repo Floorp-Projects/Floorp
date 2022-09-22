@@ -593,10 +593,6 @@ class PeerConnection : public PeerConnectionInternal,
                      int64_t packet_time_us)>
   InitializeRtcpCallback();
 
-  cricket::ChannelManager* channel_manager() {
-    return context_->channel_manager();
-  }
-
   const rtc::scoped_refptr<ConnectionContext> context_;
   // Field trials active for this PeerConnection is the first of:
   // a) Specified in PeerConnectionDependencies (owned).

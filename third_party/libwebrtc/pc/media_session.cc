@@ -29,7 +29,6 @@
 #include "media/base/sdp_video_format_utils.h"
 #include "media/sctp/sctp_transport_internal.h"
 #include "p2p/base/p2p_constants.h"
-#include "pc/channel_manager.h"
 #include "pc/media_protocol_names.h"
 #include "pc/rtp_media_utils.h"
 #include "pc/used_ids.h"

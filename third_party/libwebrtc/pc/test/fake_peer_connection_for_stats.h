@@ -20,7 +20,6 @@
 
 #include "media/base/fake_media_engine.h"
 #include "pc/channel.h"
-#include "pc/channel_manager.h"
 #include "pc/stream_collection.h"
 #include "pc/test/fake_data_channel_controller.h"
 #include "pc/test/fake_peer_connection_base.h"
@@ -420,20 +419,6 @@ class FakePeerConnectionForStats : public FakePeerConnectionBase {
     transceivers_.push_back(transceiver);
     return transceiver;
   }
-
-  class TestChannelManager : public cricket::ChannelManager {
-   public:
-    TestChannelManager(rtc::Thread* worker, rtc::Thread* network)
-        : cricket::ChannelManager(nullptr,
-                                  &ssrc_generator_,
-                                  true,
-                                  worker,
-                                  network) {}
-    rtc::UniqueRandomIdGenerator* ssrc_generator() { return &ssrc_generator_; }
-
-   private:
-    rtc::UniqueRandomIdGenerator ssrc_generator_;
-  };
 
   rtc::Thread* const network_thread_;
   rtc::Thread* const worker_thread_;

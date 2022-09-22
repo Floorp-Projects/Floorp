@@ -33,7 +33,6 @@
 #include "p2p/base/port_allocator.h"
 #include "p2p/client/basic_port_allocator.h"
 #include "pc/audio_track.h"
-#include "pc/channel_manager.h"
 #include "pc/local_audio_source.h"
 #include "pc/media_stream.h"
 #include "pc/media_stream_proxy.h"
@@ -198,7 +197,6 @@ void PeerConnectionFactory::StopAecDump() {
 
 cricket::MediaEngineInterface* PeerConnectionFactory::media_engine() const {
   RTC_DCHECK(context_);
-  RTC_DCHECK(context_->channel_manager());
   return context_->media_engine();
 }
 
