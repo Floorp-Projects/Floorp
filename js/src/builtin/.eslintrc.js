@@ -101,6 +101,12 @@ module.exports = {
             message:
               "for-of loops must use allowContentIter() or allowContentIterWith()",
           },
+          {
+            selector:
+              "CallExpression[callee.name='TO_PROPERTY_KEY'] > :not(Identifier).arguments:first-child",
+            message:
+              "TO_PROPERTY_KEY macro must be called with a simple identifier",
+          },
         ],
       },
 

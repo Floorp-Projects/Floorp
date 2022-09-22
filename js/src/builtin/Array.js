@@ -309,9 +309,10 @@ function ArrayGroup(callbackfn /*, thisArg*/) {
      * Let propertyKey be ? ToPropertyKey(
      *   ? Call(callbackfn, thisArg, « kValue, 𝔽(k), O »)).
      */
-    var propertyKey = TO_PROPERTY_KEY(
-      callContentFunction(callbackfn, thisArg, kValue, k, O)
-    );
+    var propertyKey = callContentFunction(callbackfn, thisArg, kValue, k, O);
+
+    // Split the step to ensure single evaluation in the TO_PROPERTY_KEY macro.
+    propertyKey = TO_PROPERTY_KEY(propertyKey);
 
     /* Step 6.d. Perform ! AddValueToKeyedGroup(groups, propertyKey, kValue). */
     var elements = object[propertyKey];
