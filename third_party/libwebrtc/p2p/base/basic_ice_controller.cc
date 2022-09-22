@@ -415,7 +415,7 @@ BasicIceController::GetBestWritableConnectionPerNetwork() const {
 
 IceControllerInterface::SwitchResult
 BasicIceController::HandleInitialSelectDampening(
-    IceSwitchReason reason,
+    IceControllerEvent reason,
     const Connection* new_connection) {
   if (!field_trials_->initial_select_dampening.has_value() &&
       !field_trials_->initial_select_dampening_ping_received.has_value()) {
@@ -464,13 +464,13 @@ BasicIceController::HandleInitialSelectDampening(
   }
 
   RTC_LOG(LS_INFO) << "delay initial selection up to " << min_delay << "ms";
-  return {.connection = absl::nullopt,
-          .recheck_event = IceControllerEvent(
-              IceSwitchReason::ICE_CONTROLLER_RECHECK, min_delay)};
+  reason.type = IceControllerEvent::ICE_CONTROLLER_RECHECK;
+  reason.recheck_delay_ms = min_delay;
+  return {absl::nullopt, reason};
 }
 
 IceControllerInterface::SwitchResult BasicIceController::ShouldSwitchConnection(
-    IceSwitchReason reason,
+    IceControllerEvent reason,
     const Connection* new_connection) {
   if (!ReadyToSend(new_connection) || selected_connection_ == new_connection) {
     return {absl::nullopt, absl::nullopt};
@@ -503,8 +503,9 @@ IceControllerInterface::SwitchResult BasicIceController::ShouldSwitchConnection(
     // threshold, the new connection is in a better receiving state than the
     // currently selected connection. So we need to re-check whether it needs
     // to be switched at a later time.
-    recheck_event.emplace(reason,
-                          config_.receiving_switching_delay_or_default());
+    recheck_event = reason;
+    recheck_event->recheck_delay_ms =
+        config_.receiving_switching_delay_or_default();
   }
 
   if (cmp < 0) {
@@ -523,7 +524,7 @@ IceControllerInterface::SwitchResult BasicIceController::ShouldSwitchConnection(
 }
 
 IceControllerInterface::SwitchResult
-BasicIceController::SortAndSwitchConnection(IceSwitchReason reason) {
+BasicIceController::SortAndSwitchConnection(IceControllerEvent reason) {
   // Find the best alternative connection by sorting.  It is important to note
   // that amongst equal preference, writable connections, this will choose the
   // one whose estimated latency is lowest.  So it is the only one that we
