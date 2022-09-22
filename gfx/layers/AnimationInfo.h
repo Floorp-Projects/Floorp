@@ -75,9 +75,6 @@ class AnimationInfo final {
   // ClearAnimations clears animations on this layer.
   void ClearAnimations();
   void ClearAnimationsForNextTransaction();
-  void SetCompositorAnimations(
-      const LayersId& aLayersId,
-      const CompositorAnimations& aCompositorAnimations);
   bool StartPendingAnimations(const TimeStamp& aReadyTime);
   void TransferMutatedFlagToLayer(Layer* aLayer);
 

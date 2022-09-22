@@ -83,15 +83,6 @@ void AnimationInfo::ClearAnimationsForNextTransaction() {
   mPendingAnimations->Clear();
 }
 
-void AnimationInfo::SetCompositorAnimations(
-    const LayersId& aLayersId,
-    const CompositorAnimations& aCompositorAnimations) {
-  mCompositorAnimationsId = aCompositorAnimations.id();
-
-  mStorageData = AnimationHelper::ExtractAnimations(
-      aLayersId, aCompositorAnimations.animations());
-}
-
 bool AnimationInfo::StartPendingAnimations(const TimeStamp& aReadyTime) {
   bool updated = false;
   for (size_t animIdx = 0, animEnd = mAnimations.Length(); animIdx < animEnd;
