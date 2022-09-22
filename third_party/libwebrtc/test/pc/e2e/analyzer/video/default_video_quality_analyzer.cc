@@ -18,6 +18,7 @@
 #include "api/numerics/samples_stats_counter.h"
 #include "api/units/time_delta.h"
 #include "api/video/i420_buffer.h"
+#include "api/video/video_frame.h"
 #include "common_video/libyuv/include/webrtc_libyuv.h"
 #include "rtc_base/logging.h"
 #include "rtc_base/platform_thread.h"
@@ -155,14 +156,15 @@ uint16_t DefaultVideoQualityAnalyzer::OnFrameCaptured(
     const std::string& stream_label,
     const webrtc::VideoFrame& frame) {
   // `next_frame_id` is atomic, so we needn't lock here.
-  uint16_t frame_id = next_frame_id_++;
   Timestamp captured_time = Now();
   Timestamp start_time = Timestamp::MinusInfinity();
   size_t peer_index = -1;
   size_t peers_count = -1;
   size_t stream_index;
+  uint16_t frame_id = VideoFrame::kNotSetId;
   {
     MutexLock lock(&mutex_);
+    frame_id = GetNextFrameId();
     RTC_CHECK_EQ(state_, State::kActive)
         << "DefaultVideoQualityAnalyzer has to be started before use";
     // Create a local copy of `start_time_`, peer's index and total peers count
@@ -338,6 +340,12 @@ void DefaultVideoQualityAnalyzer::OnFramePreDecode(
 
   size_t peer_index = peers_->index(peer_name);
 
+  if (frame_id == VideoFrame::kNotSetId) {
+    frame_counters_.received++;
+    unknown_sender_frame_counters_[std::string(peer_name)].received++;
+    return;
+  }
+
   auto it = captured_frames_in_flight_.find(frame_id);
   if (it == captured_frames_in_flight_.end() ||
       it->second.HasReceivedTime(peer_index)) {
@@ -379,6 +387,12 @@ void DefaultVideoQualityAnalyzer::OnFrameDecoded(
 
   size_t peer_index = peers_->index(peer_name);
 
+  if (frame.id() == VideoFrame::kNotSetId) {
+    frame_counters_.decoded++;
+    unknown_sender_frame_counters_[std::string(peer_name)].decoded++;
+    return;
+  }
+
   auto it = captured_frames_in_flight_.find(frame.id());
   if (it == captured_frames_in_flight_.end() ||
       it->second.HasDecodeEndTime(peer_index)) {
@@ -411,6 +425,12 @@ void DefaultVideoQualityAnalyzer::OnFrameRendered(
       << "DefaultVideoQualityAnalyzer has to be started before use";
 
   size_t peer_index = peers_->index(peer_name);
+
+  if (frame.id() == VideoFrame::kNotSetId) {
+    frame_counters_.rendered++;
+    unknown_sender_frame_counters_[std::string(peer_name)].rendered++;
+    return;
+  }
 
   auto frame_it = captured_frames_in_flight_.find(frame.id());
   if (frame_it == captured_frames_in_flight_.end() ||
@@ -719,6 +739,12 @@ FrameCounters DefaultVideoQualityAnalyzer::GetGlobalCounters() const {
   return frame_counters_;
 }
 
+std::map<std::string, FrameCounters>
+DefaultVideoQualityAnalyzer::GetUnknownSenderFrameCounters() const {
+  MutexLock lock(&mutex_);
+  return unknown_sender_frame_counters_;
+}
+
 std::map<StatsKey, FrameCounters>
 DefaultVideoQualityAnalyzer::GetPerStreamCounters() const {
   MutexLock lock(&mutex_);
@@ -743,6 +769,14 @@ AnalyzerStats DefaultVideoQualityAnalyzer::GetAnalyzerStats() const {
   return analyzer_stats_;
 }
 
+uint16_t DefaultVideoQualityAnalyzer::GetNextFrameId() {
+  uint16_t frame_id = next_frame_id_++;
+  if (next_frame_id_ == VideoFrame::kNotSetId) {
+    next_frame_id_ = 1;
+  }
+  return frame_id;
+}
+
 void DefaultVideoQualityAnalyzer::ReportResults() {
   using ::webrtc::test::ImproveDirection;
 
@@ -754,10 +788,19 @@ void DefaultVideoQualityAnalyzer::ReportResults() {
   test::PrintResult("cpu_usage", "", test_label_.c_str(), GetCpuUsagePercent(),
                     "%", false, ImproveDirection::kSmallerIsBetter);
   LogFrameCounters("Global", frame_counters_);
-  for (auto& item : frames_comparator_.stream_stats()) {
-    LogFrameCounters(ToStatsKey(item.first).ToString(),
-                     stream_frame_counters_.at(item.first));
-    LogStreamInternalStats(ToStatsKey(item.first).ToString(), item.second,
+  if (!unknown_sender_frame_counters_.empty()) {
+    RTC_LOG(LS_INFO) << "Received frame counters with unknown frame id:";
+    for (const auto& [peer_name, frame_counters] :
+         unknown_sender_frame_counters_) {
+      LogFrameCounters(peer_name, frame_counters);
+    }
+  }
+  RTC_LOG(LS_INFO) << "Received frame counters per stream:";
+  for (const auto& [stats_key, stream_stats] :
+       frames_comparator_.stream_stats()) {
+    LogFrameCounters(ToStatsKey(stats_key).ToString(),
+                     stream_frame_counters_.at(stats_key));
+    LogStreamInternalStats(ToStatsKey(stats_key).ToString(), stream_stats,
                            start_time_);
   }
   if (!analyzer_stats_.comparisons_queue_size.IsEmpty()) {

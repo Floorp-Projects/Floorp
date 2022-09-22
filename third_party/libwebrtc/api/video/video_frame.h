@@ -29,6 +29,9 @@ namespace webrtc {
 
 class RTC_EXPORT VideoFrame {
  public:
+  // Value used to signal that `VideoFrame::id()` is not set.
+  static constexpr uint16_t kNotSetId = 0;
+
   struct RTC_EXPORT UpdateRect {
     int offset_x;
     int offset_y;
@@ -99,7 +102,7 @@ class RTC_EXPORT VideoFrame {
     Builder& set_packet_infos(RtpPacketInfos packet_infos);
 
    private:
-    uint16_t id_ = 0;
+    uint16_t id_ = kNotSetId;
     rtc::scoped_refptr<webrtc::VideoFrameBuffer> video_frame_buffer_;
     int64_t timestamp_us_ = 0;
     uint32_t timestamp_rtp_ = 0;
@@ -134,12 +137,12 @@ class RTC_EXPORT VideoFrame {
   // Get frame size in pixels.
   uint32_t size() const;
 
-  // Get frame ID. Returns 0 if ID is not set. Not guaranteed to be transferred
-  // from the sender to the receiver, but preserved on the sender side. The id
-  // should be propagated between all frame modifications during its lifetime
-  // from capturing to sending as encoded image. It is intended to be unique
-  // over a time window of a few minutes for the peer connection to which the
-  // corresponding video stream belongs to.
+  // Get frame ID. Returns `kNotSetId` if ID is not set. Not guaranteed to be
+  // transferred from the sender to the receiver, but preserved on the sender
+  // side. The id should be propagated between all frame modifications during
+  // its lifetime from capturing to sending as encoded image. It is intended to
+  // be unique over a time window of a few minutes for the peer connection to
+  // which the corresponding video stream belongs to.
   uint16_t id() const { return id_; }
   void set_id(uint16_t id) { id_ = id; }
 

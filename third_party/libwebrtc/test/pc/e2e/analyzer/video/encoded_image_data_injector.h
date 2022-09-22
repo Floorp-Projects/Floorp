@@ -14,6 +14,7 @@
 #include <cstdint>
 #include <utility>
 
+#include "absl/types/optional.h"
 #include "api/video/encoded_image.h"
 
 namespace webrtc {
@@ -34,7 +35,7 @@ class EncodedImageDataInjector {
 };
 
 struct EncodedImageExtractionResult {
-  uint16_t id;
+  absl::optional<uint16_t> id;
   EncodedImage image;
   // Is true if encoded image should be discarded. It is used to filter out
   // unnecessary spatial layers and simulcast streams.

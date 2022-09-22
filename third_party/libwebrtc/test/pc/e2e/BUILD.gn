@@ -74,6 +74,7 @@ if (!build_with_chromium) {
     sources = [ "analyzer/video/encoded_image_data_injector.h" ]
 
     deps = [ "../../../api/video:encoded_image" ]
+    absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
   }
 
   rtc_library("single_process_encoded_image_data_injector") {
@@ -673,6 +674,7 @@ if (!build_with_chromium) {
       "../../../rtc_base:checks",
       "../../../rtc_base:criticalsection",
       "../../../rtc_base:logging",
+      "../../../rtc_base:macromagic",
       "../../../rtc_base:platform_thread",
       "../../../rtc_base:rtc_event",
       "../../../rtc_base:rtc_numerics",
