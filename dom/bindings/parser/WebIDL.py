@@ -8886,7 +8886,6 @@ class Parser(Tokenizer):
             if isinstance(p, IDLInterface):
                 interfaceStatements.append(p)
 
-        iterableIteratorIface = None
         for iface in interfaceStatements:
             iterable = None
             # We haven't run finish() on the interface yet, so we don't know
