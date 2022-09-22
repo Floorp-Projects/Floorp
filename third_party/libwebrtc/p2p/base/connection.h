@@ -55,21 +55,6 @@ struct CandidatePair final : public CandidatePairInterface {
   Candidate remote;
 };
 
-// A ConnectionRequest is a simple STUN ping used to determine writability.
-class ConnectionRequest : public StunRequest {
- public:
-  ConnectionRequest(StunRequestManager& manager, Connection* connection);
-  void Prepare(StunMessage* message) override;
-  void OnResponse(StunMessage* response) override;
-  void OnErrorResponse(StunMessage* response) override;
-  void OnTimeout() override;
-  void OnSent() override;
-  int resend_delay() override;
-
- private:
-  Connection* const connection_;
-};
-
 // Represents a communication link between a port on the local client and a
 // port on the remote client.
 class Connection : public CandidatePairInterface {
@@ -329,6 +314,9 @@ class Connection : public CandidatePairInterface {
   void set_remote_nomination(uint32_t remote_nomination);
 
  protected:
+  // A ConnectionRequest is a simple STUN ping used to determine writability.
+  class ConnectionRequest;
+
   // Constructs a new connection to the given remote port.
   Connection(rtc::WeakPtr<Port> port, size_t index, const Candidate& candidate);
 
@@ -336,7 +324,7 @@ class Connection : public CandidatePairInterface {
   void OnSendStunPacket(const void* data, size_t size, StunRequest* req);
 
   // Callbacks from ConnectionRequest
-  virtual void OnConnectionRequestResponse(ConnectionRequest* req,
+  virtual void OnConnectionRequestResponse(StunRequest* req,
                                            StunMessage* response);
   void OnConnectionRequestErrorResponse(ConnectionRequest* req,
                                         StunMessage* response)
@@ -380,8 +368,7 @@ class Connection : public CandidatePairInterface {
  private:
   // Update the local candidate based on the mapped address attribute.
   // If the local candidate changed, fires SignalStateChange.
-  void MaybeUpdateLocalCandidate(ConnectionRequest* request,
-                                 StunMessage* response)
+  void MaybeUpdateLocalCandidate(StunRequest* request, StunMessage* response)
       RTC_RUN_ON(network_thread_);
 
   void LogCandidatePairConfig(webrtc::IceCandidatePairConfigType type)
@@ -467,8 +454,6 @@ class Connection : public CandidatePairInterface {
   const IceFieldTrials* field_trials_;
   rtc::EventBasedExponentialMovingAverage rtt_estimate_
       RTC_GUARDED_BY(network_thread_);
-
-  friend class ConnectionRequest;
 };
 
 // ProxyConnection defers all the interesting work to the port.

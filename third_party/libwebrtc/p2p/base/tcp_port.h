@@ -148,7 +148,7 @@ class TCPConnection : public Connection, public sigslot::has_slots<> {
  protected:
   // Set waiting_for_stun_binding_complete_ to false to allow data packets in
   // addition to what Port::OnConnectionRequestResponse does.
-  void OnConnectionRequestResponse(ConnectionRequest* req,
+  void OnConnectionRequestResponse(StunRequest* req,
                                    StunMessage* response) override;
 
  private:
