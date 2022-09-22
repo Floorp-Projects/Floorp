@@ -534,6 +534,11 @@ nsFocusManager::MoveFocus(mozIDOMWindowProxy* aWindow, Element* aStartElement,
 
   NS_ENSURE_TRUE(window, NS_ERROR_FAILURE);
 
+  // Flush to ensure that focusability of descendants is computed correctly.
+  if (RefPtr<Document> doc = window->GetExtantDoc()) {
+    doc->FlushPendingNotifications(FlushType::EnsurePresShellInitAndFrames);
+  }
+
   bool noParentTraversal = aFlags & FLAG_NOPARENTFRAME;
   nsCOMPtr<nsIContent> newFocus;
   nsresult rv = DetermineElementToMoveFocus(window, aStartElement, aType,
