@@ -8,8 +8,8 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef MODULES_VIDEO_CODING_TIMING_H_
-#define MODULES_VIDEO_CODING_TIMING_H_
+#ifndef MODULES_VIDEO_CODING_TIMING_TIMING_H_
+#define MODULES_VIDEO_CODING_TIMING_TIMING_H_
 
 #include <memory>
 
@@ -155,4 +155,4 @@ class VCMTiming {
 };
 }  // namespace webrtc
 
-#endif  // MODULES_VIDEO_CODING_TIMING_H_
+#endif  // MODULES_VIDEO_CODING_TIMING_TIMING_H_

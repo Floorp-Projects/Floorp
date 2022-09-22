@@ -16,7 +16,7 @@
 #include <functional>
 
 #include "api/task_queue/task_queue_base.h"
-#include "modules/video_coding/timing.h"
+#include "modules/video_coding/timing/timing.h"
 #include "rtc_base/task_utils/pending_task_safety_flag.h"
 #include "system_wrappers/include/clock.h"
 

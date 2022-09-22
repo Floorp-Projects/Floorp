@@ -9,7 +9,7 @@
  */
 
 #include "modules/video_coding/frame_buffer2.h"
-#include "modules/video_coding/timing.h"
+#include "modules/video_coding/timing/timing.h"
 #include "test/scoped_key_value_config.h"
 #include "test/time_controller/simulated_time_controller.h"
 

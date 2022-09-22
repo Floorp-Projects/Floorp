@@ -18,7 +18,7 @@
 #include "api/task_queue/task_queue_base.h"
 #include "api/video/encoded_frame.h"
 #include "modules/video_coding/include/video_coding_defines.h"
-#include "modules/video_coding/timing.h"
+#include "modules/video_coding/timing/timing.h"
 #include "rtc_base/task_queue.h"
 #include "system_wrappers/include/clock.h"
 #include "video/decode_synchronizer.h"

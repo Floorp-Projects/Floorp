@@ -17,7 +17,7 @@
 #include "api/task_queue/default_task_queue_factory.h"
 #include "api/video_codecs/video_decoder.h"
 #include "common_video/test/utilities.h"
-#include "modules/video_coding/timing.h"
+#include "modules/video_coding/timing/timing.h"
 #include "rtc_base/event.h"
 #include "rtc_base/synchronization/mutex.h"
 #include "system_wrappers/include/clock.h"
