@@ -18,6 +18,7 @@
 #include <utility>
 #include <vector>
 
+#include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
 #include "api/candidate.h"
 #include "api/field_trials_view.h"
@@ -125,7 +126,10 @@ class CandidateStats {
 typedef std::vector<CandidateStats> CandidateStatsList;
 
 const char* ProtoToString(ProtocolType proto);
-bool StringToProto(const char* value, ProtocolType* proto);
+absl::optional<ProtocolType> StringToProto(absl::string_view proto_name);
+
+// TODO(bugs.webrtc.org/13579): Delete once downstream usage is updated.
+[[deprecated]] bool StringToProto(const char* value, ProtocolType* proto);
 
 struct ProtocolAddress {
   rtc::SocketAddress address;

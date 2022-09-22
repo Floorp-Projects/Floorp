@@ -183,12 +183,15 @@ static RTCErrorType ParseIceServerUrl(
       RTC_LOG(LS_WARNING) << "Transport parameter missing value.";
       return RTCErrorType::SYNTAX_ERROR;
     }
-    if (!cricket::StringToProto(tokens[1].c_str(), &turn_transport_type) ||
-        (turn_transport_type != cricket::PROTO_UDP &&
-         turn_transport_type != cricket::PROTO_TCP)) {
+
+    absl::optional<cricket::ProtocolType> proto =
+        cricket::StringToProto(tokens[1]);
+    if (!proto ||
+        (*proto != cricket::PROTO_UDP && *proto != cricket::PROTO_TCP)) {
       RTC_LOG(LS_WARNING) << "Transport parameter should always be udp or tcp.";
       return RTCErrorType::SYNTAX_ERROR;
     }
+    turn_transport_type = *proto;
   }
 
   std::string hoststring;

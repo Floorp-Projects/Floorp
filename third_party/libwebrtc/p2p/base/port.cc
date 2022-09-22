@@ -80,12 +80,20 @@ const char* ProtoToString(ProtocolType proto) {
   return PROTO_NAMES[proto];
 }
 
-bool StringToProto(const char* value, ProtocolType* proto) {
+absl::optional<ProtocolType> StringToProto(absl::string_view proto_name) {
   for (size_t i = 0; i <= PROTO_LAST; ++i) {
-    if (absl::EqualsIgnoreCase(PROTO_NAMES[i], value)) {
-      *proto = static_cast<ProtocolType>(i);
-      return true;
+    if (absl::EqualsIgnoreCase(PROTO_NAMES[i], proto_name)) {
+      return static_cast<ProtocolType>(i);
     }
+  }
+  return absl::nullopt;
+}
+
+bool StringToProto(const char* value, ProtocolType* proto) {
+  if (absl::optional<ProtocolType> type = StringToProto(value);
+      type.has_value()) {
+    *proto = *type;
+    return true;
   }
   return false;
 }
