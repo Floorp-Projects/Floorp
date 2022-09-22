@@ -12,46 +12,71 @@
 
 #include <string>
 
+#include "p2p/base/ice_switch_reason.h"
+
 namespace cricket {
 
 std::string IceControllerEvent::ToString() const {
-  std::string reason;
-  switch (type) {
-    case REMOTE_CANDIDATE_GENERATION_CHANGE:
-      reason = "remote candidate generation maybe changed";
-      break;
-    case NETWORK_PREFERENCE_CHANGE:
-      reason = "network preference changed";
-      break;
-    case NEW_CONNECTION_FROM_LOCAL_CANDIDATE:
-      reason = "new candidate pairs created from a new local candidate";
-      break;
-    case NEW_CONNECTION_FROM_REMOTE_CANDIDATE:
-      reason = "new candidate pairs created from a new remote candidate";
-      break;
-    case NEW_CONNECTION_FROM_UNKNOWN_REMOTE_ADDRESS:
-      reason = "a new candidate pair created from an unknown remote address";
-      break;
-    case NOMINATION_ON_CONTROLLED_SIDE:
-      reason = "nomination on the controlled side";
-      break;
-    case DATA_RECEIVED:
-      reason = "data received";
-      break;
-    case CONNECT_STATE_CHANGE:
-      reason = "candidate pair state changed";
-      break;
-    case SELECTED_CONNECTION_DESTROYED:
-      reason = "selected candidate pair destroyed";
-      break;
-    case ICE_CONTROLLER_RECHECK:
-      reason = "ice-controller-request-recheck";
-      break;
-  }
+  std::string str = IceSwitchReasonToString(reason);
   if (recheck_delay_ms) {
-    reason += " (after delay: " + std::to_string(recheck_delay_ms) + ")";
+    str += " (after delay: " + std::to_string(recheck_delay_ms) + ")";
   }
-  return reason;
+  return str;
+}
+
+// TODO(bugs.webrtc.org/14125) remove when Type is replaced with
+// IceSwitchReason.
+IceControllerEvent::Type IceControllerEvent::FromIceSwitchReason(
+    IceSwitchReason reason) {
+  switch (reason) {
+    case IceSwitchReason::REMOTE_CANDIDATE_GENERATION_CHANGE:
+      return IceControllerEvent::REMOTE_CANDIDATE_GENERATION_CHANGE;
+    case IceSwitchReason::NETWORK_PREFERENCE_CHANGE:
+      return IceControllerEvent::NETWORK_PREFERENCE_CHANGE;
+    case IceSwitchReason::NEW_CONNECTION_FROM_LOCAL_CANDIDATE:
+      return IceControllerEvent::NEW_CONNECTION_FROM_LOCAL_CANDIDATE;
+    case IceSwitchReason::NEW_CONNECTION_FROM_REMOTE_CANDIDATE:
+      return IceControllerEvent::NEW_CONNECTION_FROM_REMOTE_CANDIDATE;
+    case IceSwitchReason::NEW_CONNECTION_FROM_UNKNOWN_REMOTE_ADDRESS:
+      return IceControllerEvent::NEW_CONNECTION_FROM_UNKNOWN_REMOTE_ADDRESS;
+    case IceSwitchReason::NOMINATION_ON_CONTROLLED_SIDE:
+      return IceControllerEvent::NOMINATION_ON_CONTROLLED_SIDE;
+    case IceSwitchReason::DATA_RECEIVED:
+      return IceControllerEvent::DATA_RECEIVED;
+    case IceSwitchReason::CONNECT_STATE_CHANGE:
+      return IceControllerEvent::CONNECT_STATE_CHANGE;
+    case IceSwitchReason::SELECTED_CONNECTION_DESTROYED:
+      return IceControllerEvent::SELECTED_CONNECTION_DESTROYED;
+    case IceSwitchReason::ICE_CONTROLLER_RECHECK:
+      return IceControllerEvent::ICE_CONTROLLER_RECHECK;
+  }
+}
+
+// TODO(bugs.webrtc.org/14125) remove when Type is replaced with
+// IceSwitchReason.
+IceSwitchReason IceControllerEvent::FromType(IceControllerEvent::Type type) {
+  switch (type) {
+    case IceControllerEvent::REMOTE_CANDIDATE_GENERATION_CHANGE:
+      return IceSwitchReason::REMOTE_CANDIDATE_GENERATION_CHANGE;
+    case IceControllerEvent::NETWORK_PREFERENCE_CHANGE:
+      return IceSwitchReason::NETWORK_PREFERENCE_CHANGE;
+    case IceControllerEvent::NEW_CONNECTION_FROM_LOCAL_CANDIDATE:
+      return IceSwitchReason::NEW_CONNECTION_FROM_LOCAL_CANDIDATE;
+    case IceControllerEvent::NEW_CONNECTION_FROM_REMOTE_CANDIDATE:
+      return IceSwitchReason::NEW_CONNECTION_FROM_REMOTE_CANDIDATE;
+    case IceControllerEvent::NEW_CONNECTION_FROM_UNKNOWN_REMOTE_ADDRESS:
+      return IceSwitchReason::NEW_CONNECTION_FROM_UNKNOWN_REMOTE_ADDRESS;
+    case IceControllerEvent::NOMINATION_ON_CONTROLLED_SIDE:
+      return IceSwitchReason::NOMINATION_ON_CONTROLLED_SIDE;
+    case IceControllerEvent::DATA_RECEIVED:
+      return IceSwitchReason::DATA_RECEIVED;
+    case IceControllerEvent::CONNECT_STATE_CHANGE:
+      return IceSwitchReason::CONNECT_STATE_CHANGE;
+    case IceControllerEvent::SELECTED_CONNECTION_DESTROYED:
+      return IceSwitchReason::SELECTED_CONNECTION_DESTROYED;
+    case IceControllerEvent::ICE_CONTROLLER_RECHECK:
+      return IceSwitchReason::ICE_CONTROLLER_RECHECK;
+  }
 }
 
 }  // namespace cricket
