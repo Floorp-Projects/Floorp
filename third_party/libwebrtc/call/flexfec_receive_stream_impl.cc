@@ -31,14 +31,6 @@
 
 namespace webrtc {
 
-std::string FlexfecReceiveStream::Stats::ToString(int64_t time_ms) const {
-  char buf[1024];
-  rtc::SimpleStringBuilder ss(buf);
-  ss << "FlexfecReceiveStream stats: " << time_ms
-     << ", {flexfec_bitrate_bps: " << flexfec_bitrate_bps << "}";
-  return ss.str();
-}
-
 std::string FlexfecReceiveStream::Config::ToString() const {
   char buf[1024];
   rtc::SimpleStringBuilder ss(buf);
@@ -194,12 +186,6 @@ void FlexfecReceiveStreamImpl::OnRtpPacket(const RtpPacketReceived& packet) {
   if (packet.Ssrc() == remote_ssrc()) {
     rtp_receive_statistics_->OnRtpPacket(packet);
   }
-}
-
-// TODO(brandtr): Implement this member function when we have designed the
-// stats for FlexFEC.
-FlexfecReceiveStreamImpl::Stats FlexfecReceiveStreamImpl::GetStats() const {
-  return FlexfecReceiveStream::Stats();
 }
 
 void FlexfecReceiveStreamImpl::SetRtpExtensions(

@@ -29,13 +29,6 @@ class FlexfecReceiveStream : public RtpPacketSinkInterface,
  public:
   ~FlexfecReceiveStream() override = default;
 
-  struct Stats {
-    std::string ToString(int64_t time_ms) const;
-
-    // TODO(brandtr): Add appropriate stats here.
-    int flexfec_bitrate_bps;
-  };
-
   struct Config {
     explicit Config(Transport* rtcp_send_transport);
     Config(const Config&);
@@ -66,8 +59,6 @@ class FlexfecReceiveStream : public RtpPacketSinkInterface,
     // Transport for outgoing RTCP packets.
     Transport* rtcp_send_transport = nullptr;
   };
-
-  virtual Stats GetStats() const = 0;
 };
 
 }  // namespace webrtc
