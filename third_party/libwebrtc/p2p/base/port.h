@@ -128,9 +128,6 @@ typedef std::vector<CandidateStats> CandidateStatsList;
 const char* ProtoToString(ProtocolType proto);
 absl::optional<ProtocolType> StringToProto(absl::string_view proto_name);
 
-// TODO(bugs.webrtc.org/13579): Delete once downstream usage is updated.
-[[deprecated]] bool StringToProto(const char* value, ProtocolType* proto);
-
 struct ProtocolAddress {
   rtc::SocketAddress address;
   ProtocolType proto;
