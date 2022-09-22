@@ -101,10 +101,6 @@ class ScrollTimeline final : public AnimationTimeline {
     }
   };
 
-  static already_AddRefed<ScrollTimeline> FromRule(
-      const RawServoScrollTimelineRule& aRule, Document* aDocument,
-      const NonOwningAnimationTarget& aTarget);
-
   static already_AddRefed<ScrollTimeline> FromAnonymousScroll(
       Document* aDocument, const NonOwningAnimationTarget& aTarget,
       StyleScrollAxis aAxis, StyleScroller aScroller);
