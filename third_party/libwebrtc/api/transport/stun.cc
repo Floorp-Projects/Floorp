@@ -11,6 +11,7 @@
 #include "api/transport/stun.h"
 
 #include <string.h>
+
 #include <algorithm>
 #include <cstdint>
 #include <iterator>
@@ -20,6 +21,7 @@
 #include "rtc_base/byte_order.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/crc32.h"
+#include "rtc_base/helpers.h"
 #include "rtc_base/logging.h"
 #include "rtc_base/message_digest.h"
 
@@ -34,11 +36,11 @@ const int k127Utf8CharactersLengthInBytes = 508;
 const int kMessageIntegrityAttributeLength = 20;
 const int kTheoreticalMaximumAttributeLength = 65535;
 
-uint32_t ReduceTransactionId(const std::string& transaction_id) {
+uint32_t ReduceTransactionId(absl::string_view transaction_id) {
   RTC_DCHECK(transaction_id.length() == cricket::kStunTransactionIdLength ||
-             transaction_id.length() ==
-                 cricket::kStunLegacyTransactionIdLength);
-  ByteBufferReader reader(transaction_id.c_str(), transaction_id.length());
+             transaction_id.length() == cricket::kStunLegacyTransactionIdLength)
+      << transaction_id.length();
+  ByteBufferReader reader(transaction_id.data(), transaction_id.size());
   uint32_t result = 0;
   uint32_t next;
   while (reader.ReadUInt32(&next)) {
@@ -102,10 +104,15 @@ const int SERVER_NOT_REACHABLE_ERROR = 701;
 // StunMessage
 
 StunMessage::StunMessage()
-    : type_(0),
-      length_(0),
-      transaction_id_(EMPTY_TRANSACTION_ID),
-      stun_magic_cookie_(kStunMagicCookie) {
+    : StunMessage(STUN_INVALID_MESSAGE_TYPE, EMPTY_TRANSACTION_ID) {}
+
+StunMessage::StunMessage(uint16_t type)
+    : StunMessage(type, GenerateTransactionId()) {}
+
+StunMessage::StunMessage(uint16_t type, absl::string_view transaction_id)
+    : type_(type),
+      transaction_id_(transaction_id),
+      reduced_transaction_id_(ReduceTransactionId(transaction_id_)) {
   RTC_DCHECK(IsValidTransactionId(transaction_id_));
 }
 
@@ -116,15 +123,6 @@ bool StunMessage::IsLegacy() const {
     return true;
   RTC_DCHECK(transaction_id_.size() == kStunTransactionIdLength);
   return false;
-}
-
-bool StunMessage::SetTransactionID(const std::string& str) {
-  if (!IsValidTransactionId(str)) {
-    return false;
-  }
-  transaction_id_ = str;
-  reduced_transaction_id_ = ReduceTransactionId(transaction_id_);
-  return true;
 }
 
 static bool DesignatedExpertRange(int attr_type) {
@@ -442,6 +440,11 @@ bool StunMessage::ValidateFingerprint(const char* data, size_t size) {
           rtc::ComputeCrc32(data, size - fingerprint_attr_size));
 }
 
+// static
+std::string StunMessage::GenerateTransactionId() {
+  return rtc::CreateRandomString(kStunTransactionIdLength);
+}
+
 bool StunMessage::IsStunMethod(rtc::ArrayView<int> methods,
                                const char* data,
                                size_t size) {
@@ -589,6 +592,12 @@ void StunMessage::SetStunMagicCookie(uint32_t val) {
   stun_magic_cookie_ = val;
 }
 
+void StunMessage::SetTransactionIdForTesting(absl::string_view transaction_id) {
+  RTC_DCHECK(IsValidTransactionId(transaction_id));
+  transaction_id_ = std::string(transaction_id);
+  reduced_transaction_id_ = ReduceTransactionId(transaction_id_);
+}
+
 StunAttributeValueType StunMessage::GetAttributeValueType(int type) const {
   switch (type) {
     case STUN_ATTR_MAPPED_ADDRESS:
@@ -647,7 +656,7 @@ const StunAttribute* StunMessage::GetAttribute(int type) const {
   return NULL;
 }
 
-bool StunMessage::IsValidTransactionId(const std::string& transaction_id) {
+bool StunMessage::IsValidTransactionId(absl::string_view transaction_id) {
   return transaction_id.size() == kStunTransactionIdLength ||
          transaction_id.size() == kStunLegacyTransactionIdLength;
 }

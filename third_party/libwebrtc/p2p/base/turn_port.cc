@@ -1374,12 +1374,13 @@ void TurnPort::MaybeAddTurnLoggingId(StunMessage* msg) {
 }
 
 TurnAllocateRequest::TurnAllocateRequest(TurnPort* port)
-    : StunRequest(port->request_manager(), std::make_unique<TurnMessage>()),
+    : StunRequest(port->request_manager(),
+                  std::make_unique<TurnMessage>(TURN_ALLOCATE_REQUEST)),
       port_(port) {}
 
 void TurnAllocateRequest::Prepare(StunMessage* message) {
   // Create the request as indicated in RFC 5766, Section 6.1.
-  message->SetType(TURN_ALLOCATE_REQUEST);
+  RTC_DCHECK_EQ(message->type(), TURN_ALLOCATE_REQUEST);
   auto transport_attr =
       StunAttribute::CreateUInt32(STUN_ATTR_REQUESTED_TRANSPORT);
   transport_attr->SetValue(IPPROTO_UDP << 24);
@@ -1563,14 +1564,15 @@ void TurnAllocateRequest::OnTryAlternate(StunMessage* response, int code) {
 }
 
 TurnRefreshRequest::TurnRefreshRequest(TurnPort* port)
-    : StunRequest(port->request_manager(), std::make_unique<TurnMessage>()),
+    : StunRequest(port->request_manager(),
+                  std::make_unique<TurnMessage>(TURN_REFRESH_REQUEST)),
       port_(port),
       lifetime_(-1) {}
 
 void TurnRefreshRequest::Prepare(StunMessage* message) {
   // Create the request as indicated in RFC 5766, Section 7.1.
   // No attributes need to be included.
-  message->SetType(TURN_REFRESH_REQUEST);
+  RTC_DCHECK_EQ(message->type(), TURN_REFRESH_REQUEST);
   if (lifetime_ > -1) {
     message->AddAttribute(
         std::make_unique<StunUInt32Attribute>(STUN_ATTR_LIFETIME, lifetime_));
@@ -1646,7 +1648,9 @@ TurnCreatePermissionRequest::TurnCreatePermissionRequest(
     TurnEntry* entry,
     const rtc::SocketAddress& ext_addr,
     const std::string& remote_ufrag)
-    : StunRequest(port->request_manager(), std::make_unique<TurnMessage>()),
+    : StunRequest(
+          port->request_manager(),
+          std::make_unique<TurnMessage>(TURN_CREATE_PERMISSION_REQUEST)),
       port_(port),
       entry_(entry),
       ext_addr_(ext_addr),
@@ -1719,7 +1723,8 @@ TurnChannelBindRequest::TurnChannelBindRequest(
     TurnEntry* entry,
     int channel_id,
     const rtc::SocketAddress& ext_addr)
-    : StunRequest(port->request_manager(), std::make_unique<TurnMessage>()),
+    : StunRequest(port->request_manager(),
+                  std::make_unique<TurnMessage>(TURN_CHANNEL_BIND_REQUEST)),
       port_(port),
       entry_(entry),
       channel_id_(channel_id),
@@ -1730,7 +1735,7 @@ TurnChannelBindRequest::TurnChannelBindRequest(
 
 void TurnChannelBindRequest::Prepare(StunMessage* message) {
   // Create the request as indicated in RFC5766, Section 11.1.
-  message->SetType(TURN_CHANNEL_BIND_REQUEST);
+  RTC_DCHECK_EQ(message->type(), TURN_CHANNEL_BIND_REQUEST);
   message->AddAttribute(std::make_unique<StunUInt32Attribute>(
       STUN_ATTR_CHANNEL_NUMBER, channel_id_ << 16));
   message->AddAttribute(std::make_unique<StunXorAddressAttribute>(
@@ -1824,9 +1829,7 @@ int TurnEntry::Send(const void* data,
       !port_->TurnCustomizerAllowChannelData(data, size, payload)) {
     // If we haven't bound the channel yet, we have to use a Send Indication.
     // The turn_customizer_ can also make us use Send Indication.
-    TurnMessage msg;
-    msg.SetType(TURN_SEND_INDICATION);
-    msg.SetTransactionID(rtc::CreateRandomString(kStunTransactionIdLength));
+    TurnMessage msg(TURN_SEND_INDICATION);
     msg.AddAttribute(std::make_unique<StunXorAddressAttribute>(
         STUN_ATTR_XOR_PEER_ADDRESS, ext_addr_));
     msg.AddAttribute(

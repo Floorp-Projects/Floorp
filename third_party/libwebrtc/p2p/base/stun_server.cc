@@ -53,7 +53,7 @@ void StunServer::OnPacket(rtc::AsyncPacketSocket* socket,
 
 void StunServer::OnBindingRequest(StunMessage* msg,
                                   const rtc::SocketAddress& remote_addr) {
-  StunMessage response;
+  StunMessage response(STUN_BINDING_RESPONSE, msg->transaction_id());
   GetStunBindResponse(msg, remote_addr, &response);
   SendResponse(response, remote_addr);
 }
@@ -62,9 +62,8 @@ void StunServer::SendErrorResponse(const StunMessage& msg,
                                    const rtc::SocketAddress& addr,
                                    int error_code,
                                    const char* error_desc) {
-  StunMessage err_msg;
-  err_msg.SetType(GetStunErrorResponseType(msg.type()));
-  err_msg.SetTransactionID(msg.transaction_id());
+  StunMessage err_msg(GetStunErrorResponseType(msg.type()),
+                      msg.transaction_id());
 
   auto err_code = StunAttribute::CreateErrorCode();
   err_code->SetCode(error_code);
@@ -86,8 +85,8 @@ void StunServer::SendResponse(const StunMessage& msg,
 void StunServer::GetStunBindResponse(StunMessage* message,
                                      const rtc::SocketAddress& remote_addr,
                                      StunMessage* response) const {
-  response->SetType(STUN_BINDING_RESPONSE);
-  response->SetTransactionID(message->transaction_id());
+  RTC_DCHECK_EQ(response->type(), STUN_BINDING_RESPONSE);
+  RTC_DCHECK_EQ(response->transaction_id(), message->transaction_id());
 
   // Tell the user the address that we received their message from.
   std::unique_ptr<StunAddressAttribute> mapped_addr;
