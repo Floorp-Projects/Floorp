@@ -1363,7 +1363,7 @@ async function _fetchDocument(worker, source, pdfDataRangeTransport, docId) {
 
   const workerId = await worker.messageHandler.sendWithPromise("GetDocRequest", {
     docId,
-    apiVersion: '3.0.60',
+    apiVersion: '3.0.120',
     source: {
       data: source.data,
       url: source.url,
@@ -3387,9 +3387,9 @@ class InternalRenderTask {
 
 }
 
-const version = '3.0.60';
+const version = '3.0.120';
 exports.version = version;
-const build = '493bb6500';
+const build = '91bdcd8b2';
 exports.build = build;
 
 /***/ }),
@@ -4665,7 +4665,7 @@ class AnnotationEditorUIManager {
       return;
     }
 
-    if (this.#selectEditors.size === 0) {
+    if (this.#selectedEditors.size === 0) {
       return;
     }
 
@@ -15823,8 +15823,8 @@ var _svg = __w_pdfjs_require__(30);
 
 var _xfa_layer = __w_pdfjs_require__(28);
 
-const pdfjsVersion = '3.0.60';
-const pdfjsBuild = '493bb6500';
+const pdfjsVersion = '3.0.120';
+const pdfjsBuild = '91bdcd8b2';
 ;
 })();
 
