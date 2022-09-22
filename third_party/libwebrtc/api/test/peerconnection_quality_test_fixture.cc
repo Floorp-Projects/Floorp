@@ -41,6 +41,12 @@ bool PeerConnectionE2EQualityTestFixture::VideoResolution::operator==(
          fps_ == other.fps_ && spec_ == other.spec_;
 }
 
+bool PeerConnectionE2EQualityTestFixture::VideoSubscription::operator==(
+    const VideoSubscription& other) const {
+  return default_resolution_ == other.default_resolution_ &&
+         peers_resolution_ == other.peers_resolution_;
+}
+
 absl::optional<PeerConnectionE2EQualityTestFixture::VideoResolution>
 PeerConnectionE2EQualityTestFixture::VideoSubscription::GetMaxResolution(
     rtc::ArrayView<const VideoConfig> video_configs) {

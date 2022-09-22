@@ -377,6 +377,11 @@ class PeerConnectionE2EQualityTestFixture {
     static absl::optional<VideoResolution> GetMaxResolution(
         rtc::ArrayView<const VideoResolution> resolutions);
 
+    bool operator==(const VideoSubscription& other) const;
+    bool operator!=(const VideoSubscription& other) const {
+      return !(*this == other);
+    }
+
     // Subscribes receiver to all streams sent by the specified peer with
     // specified resolution. It will override any resolution that was used in
     // `SubscribeToAll` independently from methods call order.
