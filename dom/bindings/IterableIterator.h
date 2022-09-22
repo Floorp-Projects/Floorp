@@ -72,10 +72,11 @@ void ResolvePromiseWithKeyAndValue(Promise* aPromise, const Key& aKey,
 
 }  // namespace iterator_utils
 
-class IterableIteratorBase : public nsISupports {
+class IterableIteratorBase {
  public:
-  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_CLASS(IterableIteratorBase)
+  NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(IterableIteratorBase)
+  NS_DECL_CYCLE_COLLECTION_NATIVE_CLASS(IterableIteratorBase)
+
   typedef enum { Keys = 0, Values, Entries } IteratorType;
 
   IterableIteratorBase() = default;
@@ -236,8 +237,7 @@ class AsyncIterableIteratorBase : public IterableIteratorBase {
 };
 
 template <typename T>
-class AsyncIterableIterator : public AsyncIterableIteratorBase,
-                              public SupportsWeakPtr {
+class AsyncIterableIterator : public AsyncIterableIteratorBase {
  public:
   AsyncIterableIterator(T* aIterableObj, IteratorType aIteratorType)
       : AsyncIterableIteratorBase(aIteratorType), mIterableObj(aIterableObj) {
