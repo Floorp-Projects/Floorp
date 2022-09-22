@@ -701,6 +701,7 @@ rtc_source_set("network_emulation_manager_api") {
     ":time_controller",
     "../call:simulated_network",
     "../rtc_base",
+    "../rtc_base:checks",
     "../rtc_base:network_constants",
     "../rtc_base:threading",
     "test/network_emulation",
