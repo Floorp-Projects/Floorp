@@ -1,0 +1,27 @@
+{
+  "name": "exp2",
+  "manifest_version": 2,
+  "version": "1.0",
+  "applications": {
+    "gecko": {
+      "id": "exp2@search.mozilla.org"
+    }
+  },
+  "hidden": true,
+  "description": "A small test engine",
+  "icons": {
+    "16": "favicon.ico"
+  },
+  "chrome_settings_overrides": {
+    "search_provider": {
+      "name": "exp2",
+      "search_url": "https://2.example.com/searchexp",
+      "params": [
+        {
+          "name": "q",
+          "value": "{searchTerms}"
+        }
+      ]
+    }
+  }
+}
