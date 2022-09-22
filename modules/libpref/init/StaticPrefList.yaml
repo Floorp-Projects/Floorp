@@ -10926,6 +10926,13 @@
   value: false
   mirror: always
 
+# If all non-direct proxies have failed, we retry all of them in case they
+# are online now.
+- name: network.proxy.retry_failed_proxies
+  type: RelaxedAtomicBool
+  value: true
+  mirror: always
+
 # Some requests during a page load are marked as "tail", mainly trackers, but not only.
 # This pref controls whether such requests are put to the tail, behind other requests
 # emerging during page loading process.
