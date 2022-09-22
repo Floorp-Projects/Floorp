@@ -1393,12 +1393,8 @@ static inline bool ShouldStallAndRetry() {
   // on Windows mostly skips this in favor of directly calling ::VirtualAlloc(),
   // though, so it's probably not going to matter whether we stall here or not.)
   return true;
-#  elif 0 && defined(NIGHTLY_BUILD)
+#  elif defined(NIGHTLY_BUILD)
   // On Nightly, always stall, for experiment's sake (bug 1785162).
-  //
-  // This is temporarily disabled in order to confirm its effect on main-process
-  // OOMs, due to the possible confounding factor of bug 965392. (See discussion
-  // in bug 1785162 for more detail.)
   return true;
 #  else
   // In the main process, always stall.
