@@ -62,7 +62,9 @@ int16_t PCMFile::ChooseFile(std::string* file_name,
   int16_t n = 0;
 
   // Removing trailing spaces.
-  while ((isspace(tmp_name[n]) || iscntrl(tmp_name[n])) && (tmp_name[n] != 0) &&
+  while ((isspace(static_cast<unsigned char>(tmp_name[n])) ||
+          iscntrl(static_cast<unsigned char>(tmp_name[n]))) &&
+         (static_cast<unsigned char>(tmp_name[n]) != 0) &&
          (n < MAX_FILE_NAME_LENGTH_BYTE)) {
     n++;
   }
@@ -73,7 +75,9 @@ int16_t PCMFile::ChooseFile(std::string* file_name,
   // Removing trailing spaces.
   n = (int16_t)(strlen(tmp_name) - 1);
   if (n >= 0) {
-    while ((isspace(tmp_name[n]) || iscntrl(tmp_name[n])) && (n >= 0)) {
+    while ((isspace(static_cast<unsigned char>(tmp_name[n])) ||
+            iscntrl(static_cast<unsigned char>(tmp_name[n]))) &&
+           (n >= 0)) {
       n--;
     }
   }

@@ -10,7 +10,6 @@
 
 #include "pc/rtc_stats_collector.h"
 
-#include <ctype.h>
 #include <stddef.h>
 #include <stdint.h>
 

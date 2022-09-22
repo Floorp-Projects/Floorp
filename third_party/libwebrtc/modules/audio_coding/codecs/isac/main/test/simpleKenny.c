@@ -22,7 +22,6 @@
 #endif
 #endif
 
-#include <ctype.h>
 #include <math.h>
 
 /* include API */

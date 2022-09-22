@@ -92,7 +92,7 @@ static bool GetServiceTypeAndHostnameFromUri(const std::string& in_str,
 static bool ParsePort(const std::string& in_str, int* port) {
   // Make sure port only contains digits. FromString doesn't check this.
   for (const char& c : in_str) {
-    if (!std::isdigit(c)) {
+    if (!std::isdigit(static_cast<unsigned char>(c))) {
       return false;
     }
   }
