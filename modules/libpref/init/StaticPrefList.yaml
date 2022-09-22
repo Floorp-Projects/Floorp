@@ -12756,7 +12756,7 @@
 # 0 means never GREASE, 100 means always GREASE
 - name: security.tls.ech.grease_probability
   type: RelaxedAtomicUint32
-#ifdef IS_NIGHTLY_BUILD
+#ifdef NIGHTLY_BUILD
   value: 50
 #else
   value: 0
