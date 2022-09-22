@@ -1886,6 +1886,24 @@ export class SearchService {
       this.appDefaultEngine?.name
     );
 
+    // If we are leaving an experiment, and the default is the same as the
+    // application default, we reset the user's setting to blank, so that
+    // future changes of the application default engine may take effect.
+    if (
+      prevMetaData.experiment &&
+      !this._settings.getMetaDataAttribute("experiment")
+    ) {
+      if (this.defaultEngine == this.appDefaultEngine) {
+        this._settings.setVerifiedMetaDataAttribute("current", "");
+      }
+      if (
+        this.#separatePrivateDefault &&
+        this.defaultPrivateEngine == this.appPrivateDefaultEngine
+      ) {
+        this._settings.setVerifiedMetaDataAttribute("private", "");
+      }
+    }
+
     this.#dontSetUseSavedOrder = false;
     // Clear out the sorted engines settings, so that we re-sort it if necessary.
     this._cachedSortedEngines = null;
@@ -2757,11 +2775,18 @@ export class SearchService {
     // "app default" engine. So clear the user pref when the currentEngine is
     // set to the build's app default engine, so that the currentEngine getter
     // falls back to whatever the default is.
+    // However, we do not do this whilst we are running an experiment - an
+    // experiment must preseve the user's choice of default engine during it's
+    // runtime and when it ends. Once the experiment ends, we will reset the
+    // attribute elsewhere.
     let newName = newCurrentEngine.name;
     const appDefaultEngine = privateMode
       ? this.appPrivateDefaultEngine
       : this.appDefaultEngine;
-    if (newCurrentEngine == appDefaultEngine) {
+    if (
+      newCurrentEngine == appDefaultEngine &&
+      !lazy.NimbusFeatures.search.getVariable("experiment")
+    ) {
       newName = "";
     }
 
