@@ -15,9 +15,7 @@
 #include <utility>
 #include <vector>
 
-#include "absl/types/optional.h"
 #include "p2p/base/connection.h"
-#include "p2p/base/ice_switch_reason.h"
 #include "p2p/base/ice_transport_internal.h"
 
 namespace cricket {
@@ -25,7 +23,6 @@ namespace cricket {
 struct IceFieldTrials;  // Forward declaration to avoid circular dependency.
 
 struct IceControllerEvent {
-  // TODO(bugs.webrtc.org/14125) replace with IceSwitchReason.
   enum Type {
     REMOTE_CANDIDATE_GENERATION_CHANGE,
     NETWORK_PREFERENCE_CHANGE,
@@ -42,22 +39,10 @@ struct IceControllerEvent {
     ICE_CONTROLLER_RECHECK,
   };
 
-  IceControllerEvent(IceSwitchReason _reason, int _recheck_delay_ms)
-      : reason(_reason),
-        type(FromIceSwitchReason(_reason)),
-        recheck_delay_ms(_recheck_delay_ms) {}
-
-  [[deprecated("bugs.webrtc.org/14125")]] IceControllerEvent(
-      const Type& _type)  // NOLINT: runtime/explicit
-      : reason(FromType(_type)), type(_type) {}
-
-  static Type FromIceSwitchReason(IceSwitchReason reason);
-  static IceSwitchReason FromType(Type type);
-
+  IceControllerEvent(const Type& _type)  // NOLINT: runtime/explicit
+      : type(_type) {}
   std::string ToString() const;
 
-  IceSwitchReason reason;
-  // TODO(bugs.webrtc.org/14125) replace usage with IceSwitchReason.
   Type type;
   int recheck_delay_ms = 0;
 };
@@ -149,29 +134,13 @@ class IceControllerInterface {
   virtual void MarkConnectionPinged(const Connection* con) = 0;
 
   // Check if we should switch to `connection`.
-  // This method is called for IceSwitchReasons that can switch directly
+  // This method is called for IceControllerEvent's that can switch directly
   // i.e without resorting.
-  // TODO(bugs.webrtc.org/14125) change to pure virtual.
-  virtual SwitchResult ShouldSwitchConnection(IceSwitchReason reason,
-                                              const Connection* connection) {
-    return {absl::nullopt, absl::nullopt};
-  }
-  [[deprecated("bugs.webrtc.org/14125")]] virtual SwitchResult
-  ShouldSwitchConnection(IceControllerEvent reason,
-                         const Connection* connection) {
-    return ShouldSwitchConnection(IceControllerEvent::FromType(reason.type),
-                                  connection);
-  }
+  virtual SwitchResult ShouldSwitchConnection(IceControllerEvent reason,
+                                              const Connection* connection) = 0;
 
   // Sort connections and check if we should switch.
-  // TODO(bugs.webrtc.org/14125) change to pure virtual.
-  virtual SwitchResult SortAndSwitchConnection(IceSwitchReason reason) {
-    return {absl::nullopt, absl::nullopt};
-  }
-  [[deprecated("bugs.webrtc.org/14125")]] virtual SwitchResult
-  SortAndSwitchConnection(IceControllerEvent reason) {
-    return SortAndSwitchConnection(IceControllerEvent::FromType(reason.type));
-  }
+  virtual SwitchResult SortAndSwitchConnection(IceControllerEvent reason) = 0;
 
   // Prune connections.
   virtual std::vector<const Connection*> PruneConnections() = 0;

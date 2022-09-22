@@ -43,8 +43,6 @@ rtc_library("rtc_p2p") {
     "base/ice_controller_interface.h",
     "base/ice_credentials_iterator.cc",
     "base/ice_credentials_iterator.h",
-    "base/ice_switch_reason.cc",
-    "base/ice_switch_reason.h",
     "base/ice_transport_internal.cc",
     "base/ice_transport_internal.h",
     "base/p2p_constants.cc",

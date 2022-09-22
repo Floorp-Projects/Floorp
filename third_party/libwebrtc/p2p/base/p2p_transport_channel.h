@@ -49,7 +49,6 @@
 #include "p2p/base/connection.h"
 #include "p2p/base/ice_controller_factory_interface.h"
 #include "p2p/base/ice_controller_interface.h"
-#include "p2p/base/ice_switch_reason.h"
 #include "p2p/base/ice_transport_internal.h"
 #include "p2p/base/p2p_constants.h"
 #include "p2p/base/p2p_transport_channel_ice_field_trials.h"
@@ -258,16 +257,16 @@ class RTC_EXPORT P2PTransportChannel : public IceTransportInternal {
   bool ReadyToSend(const Connection* connection) const;
   bool PresumedWritable(const Connection* conn) const;
   void UpdateConnectionStates();
-  void RequestSortAndStateUpdate(IceSwitchReason reason_to_sort);
+  void RequestSortAndStateUpdate(IceControllerEvent reason_to_sort);
   // Start pinging if we haven't already started, and we now have a connection
   // that's pingable.
   void MaybeStartPinging();
 
-  void SortConnectionsAndUpdateState(IceSwitchReason reason_to_sort);
+  void SortConnectionsAndUpdateState(IceControllerEvent reason_to_sort);
   void SortConnections();
   void SortConnectionsIfNeeded();
   rtc::NetworkRoute ConfigureNetworkRoute(const Connection* conn);
-  void SwitchSelectedConnection(Connection* conn, IceSwitchReason reason);
+  void SwitchSelectedConnection(Connection* conn, IceControllerEvent reason);
   void UpdateState();
   void HandleAllTimedOut();
   void MaybeStopPortAllocatorSessions();
@@ -342,9 +341,9 @@ class RTC_EXPORT P2PTransportChannel : public IceTransportInternal {
 
   // Returns true if the new_connection is selected for transmission.
   bool MaybeSwitchSelectedConnection(Connection* new_connection,
-                                     IceSwitchReason reason);
+                                     IceControllerEvent reason);
   bool MaybeSwitchSelectedConnection(
-      IceSwitchReason reason,
+      IceControllerEvent reason,
       IceControllerInterface::SwitchResult result);
   void PruneConnections();
 
