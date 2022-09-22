@@ -4371,10 +4371,12 @@ void PresShell::DoFlushPendingNotifications(mozilla::ChangesToFlush aFlush) {
       if (mDocument->HasAnimationController()) {
         mDocument->GetAnimationController()->FlushResampleRequests();
       }
+    }
 
-      if (aFlush.mFlushAnimations && mPresContext->EffectCompositor()) {
-        mPresContext->EffectCompositor()->PostRestyleForThrottledAnimations();
-      }
+    // The FlushResampleRequests() above flushed style changes.
+    if (MOZ_LIKELY(!mIsDestroying) && aFlush.mFlushAnimations &&
+        mPresContext->EffectCompositor()) {
+      mPresContext->EffectCompositor()->PostRestyleForThrottledAnimations();
     }
 
     // The FlushResampleRequests() above flushed style changes.
