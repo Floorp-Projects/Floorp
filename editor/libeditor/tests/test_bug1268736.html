@@ -37,23 +37,25 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1268736
 
 function getEditor() {
   const Ci = SpecialPowers.Ci;
-  var editingSession = SpecialPowers.wrap(window).docShell.editingSession;
+  const editingSession = SpecialPowers.wrap(window).docShell.editingSession;
   return editingSession.getEditorForWindow(window).QueryInterface(Ci.nsITableEditor);
 }
 
-var table = document.getElementById("table");
-var tableHTML = table.innerHTML;
-var editor = getEditor();
+const table = document.getElementById("table");
+const tableHTML = table.innerHTML;
+const editor = getEditor();
 
-var cell = document.getElementById("cell_readonly");
-cell.focus();
-editor.deleteTableCellContents();
+const readOnlyCell = document.getElementById("cell_readonly");
+readOnlyCell.focus();
+try {
+  editor.deleteTableCellContents();
+} catch (e) {}
 is(table.innerHTML == tableHTML, true, "editor should not modify non-editable table cell" );
 
-cell = document.getElementById("cell_writable");
-cell.focus();
+const editableCell = document.getElementById("cell_writable");
+editableCell.focus();
 editor.deleteTableCellContents();
-is(cell.innerHTML == "<br>", true, "editor can modify editable table cells" );
+is(editableCell.innerHTML == "<br>", true, "editor can modify editable table cells" );
 
 </script>
 </body>

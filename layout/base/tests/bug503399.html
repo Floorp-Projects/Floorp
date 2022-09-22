@@ -28,9 +28,7 @@
       if (done)
         return;
       try {
-        var r = window.getSelection().getRangeAt(0);
-        r.setStart(p.childNodes[0],14);
-        r.setEnd(p.childNodes[0],14);
+        getSelection().collapse(p.childNodes[0], 14);
       } catch (e) {}
       document.documentElement.removeAttribute('class');
       done = true;

@@ -1,23 +1,60 @@
 <html>
-  <head>
-    <script>
-      try { o1 = document.createElement('style'); } catch(e) { }
-      try { o2 = document.createElement('output') } catch(e) { }
-      try { o3 = document.createElement('input') } catch(e) { }
-      try { o4 = document.createElement('script'); } catch(e) { }
-      try { o5 = o2.cloneNode(false); } catch(e) { }
-      try { document.documentElement.appendChild(o1) } catch(e) { }
-      try { o1.outerHTML = '<a contenteditable=\'true\'>'; } catch(e) { }
-      try { document.documentElement.appendChild(o3) } catch(e) { }
-      try { o7 = document.createTextNode(' '); } catch(e) { }
-      try { o4.appendChild(o7) } catch(e) { }
-      try { document.documentElement.appendChild(o4) } catch(e) { }
-      try { o6 = window.getSelection() } catch(e) { }
-      try { o3.select() } catch(e) { }
-      try { document.replaceChild(document.documentElement, document.documentElement); } catch(e) { }
-      try { o6.setBaseAndExtent(o7, 0, o5, 0) } catch(e) { }
-      try { document.designMode = 'on'; } catch(e) { }
-      try { document.execCommand('insertimage', false, 'http://localhost/') } catch(e) { }
-    </script>    
-  </head>
+<head>
+<script>
+try {
+  var style = document.createElement("style");
+} catch(e) {}
+try {
+  var output = document.createElement("output");
+} catch(e) {}
+try {
+  var input = document.createElement("input");
+} catch(e) {}
+try {
+  var script = document.createElement("script");
+} catch(e) {}
+try {
+  var clonedOutput = output.cloneNode(false);
+} catch(e) {}
+try {
+  document.documentElement.appendChild(style);
+} catch(e) {}
+try {
+  style.outerHTML = '<a contenteditable="true">';
+} catch(e) {}
+// For emulating the traditional behavior, collapse Selection to end of the
+// <body> which must be empty (<style> was added after the <body>).
+getSelection().collapse(document.body, document.body.childNodes.length);
+try {
+  document.documentElement.appendChild(input);
+} catch(e) {}
+try {
+  var text = document.createTextNode(" ");
+} catch(e) {}
+try {
+  script.appendChild(text);
+} catch(e) {}
+try {
+  document.documentElement.appendChild(script);
+} catch(e) {}
+try {
+  var selection = getSelection();
+} catch(e) {}
+try {
+  input.select();
+} catch(e) {}
+try {
+  document.replaceChild(document.documentElement, document.documentElement);
+} catch(e) {}
+try {
+  selection.setBaseAndExtent(text, 0, clonedOutput, 0);
+} catch(e) {}
+try {
+  document.designMode = "on";
+} catch(e) {}
+try {
+  document.execCommand("insertImage", false, "http://localhost/");
+} catch(e) {}
+</script>
+</head>
 </html>

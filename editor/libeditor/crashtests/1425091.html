@@ -1,15 +1,20 @@
 <script>
-function go() {
+function onLoad() {
+  // For emulating the traditional behavior, collapse Selection to end of the
+  // <body>, i.e., at the text node after the <meter>.
+  getSelection().collapse(document.body, document.body.childNodes.length);
   document.scrollingElement.addEventListener("DOMNodeInserted", () => {
-    document.execCommand("selectAll", false);
-    document.execCommand("insertOrderedList", false);
+    document.execCommand("selectAll");
+    document.execCommand("insertOrderedList");
   });
-  a.appendChild(document.createElement("e"));
+  document.querySelector("style").appendChild(
+    document.createElement("e")
+  );
 }
 </script>
-<body onload=go()>
-<meter contenteditable="true">
+<body onload="onLoad()">
+<meter contenteditable>
 <dialog>
-<style id="a"></style>
+<style></style>
 </dialog>
 </meter>

@@ -1,9 +1,13 @@
 <script>
-window.onload = () => {
-  a.addEventListener("DOMNodeRemoved", () => {
-    document.getSelection().collapse(document.getElementById(""))
-  })
-  document.execCommand("delete", false)
-}
+addEventListener("load", () => {
+  const editingHost = document.querySelector("div[contenteditable]");
+  // For emulating the traditional behavior, collapse Selection to end of the
+  // <div contenteditable> which is the last child of the <body>.
+  getSelection().collapse(editingHost, editingHost.childNodes.length);
+  editingHost.addEventListener("DOMNodeRemoved", () => {
+    getSelection().collapse(null);
+  });
+  document.execCommand("delete");
+});
 </script>
-<div id="a" contenteditable>x</link>
+<div contenteditable>x</link>

@@ -1,14 +1,19 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
 <script>
-
-function boom()
-{
-  try { document.execCommand("removeformat", false, null); } catch(e) { }
+function onLoad() {
+  // For emulating the traditional behavior, collapse Selection to end of the
+  // <td> which is the deepest last child of the <body>.
+  getSelection().collapse(
+    document.querySelector("td"),
+    document.querySelector("td").childNodes.length
+  );
+  try {
+    document.execCommand("removeformat");
+  } catch(e) {}
   document.adoptNode(document.documentElement);
 }
-
 </script>
 </head>
-<body onload="boom();"><td contenteditable="true" /></body>
+<body onload="onLoad();"><td contenteditable="true"/></body>
 </html>

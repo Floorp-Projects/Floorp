@@ -1,13 +1,17 @@
 <script>
-function go() {
-  document.getElementById("label1").addEventListener("DOMNodeRemoved", () => {
-    document.getElementById("a1").innerText = "";
+function onLoad() {
+  const label = document.querySelector("label");
+  // For emulating the traditional behavior, collapse Selection to end of the
+  // <label> which is the last child of the <body>, i.e., at the comment node.
+  getSelection().collapse(label, label.childNodes.length);
+  label.addEventListener("DOMNodeRemoved", () => {
+    document.querySelector("a").innerText = "";
   });
-  document.execCommand("indent", false);
+  document.execCommand("indent");
 }
 </script>
-<body onload=go()>
-<li contenteditable="">
-<a id="a1">
-<label id="label1"></br>
+<body onload="onLoad()">
+<li contenteditable>
+<a>
+<label></br>
 <!---

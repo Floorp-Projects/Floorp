@@ -1,17 +1,20 @@
 <html>
 <head>
-    <script>
-      document.addEventListener('DOMContentLoaded', () => {
-        const br = document.getElementById('id_29')
-        br.contentEditable = true
-        document.execCommand('indent', false, null)
-      })
-    </script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const code = document.querySelector("code[contenteditable=false]");
+  // For emulating the traditional behavior, collapse Selection to end of the
+  // <code> which is the last inline container of the <body>.
+  getSelection().collapse(code, code.childNodes.length);
+  code.querySelector("br").contentEditable = true;
+  document.execCommand("indent");
+});
+</script>
 <body>
-<b class='' contenteditable='true' hidden>
-    <script class=''></script>
-    <code class='' contenteditable='false'>
-        <br class='' id='id_29'>
+<b contenteditable hidden>
+    <script></script>
+    <code contenteditable="false">
+        <br>
 </body>
 </head>
 </html>

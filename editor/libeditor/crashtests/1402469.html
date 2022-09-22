@@ -1,15 +1,18 @@
 <html>
 <head>
-<script type="application/javascript">
-function do_test() {
-  document.execCommand("insertUnorderedList", false);
+<script>
+function onLoad() {
+  // For emulating the traditional behavior, collapse Selection to end of the
+  // <body>, i.e., at the text node after the <table>.
+  getSelection().collapse(document.body, document.body.childNodes.length);
+  document.execCommand("insertUnorderedList");
 }
 </script>
 </head>
-<body onload="do_test()">
+<body onload="onLoad()">
 <table>
-  <th contenteditable="true">
-    <ol contenteditable="false">
+  <th contenteditable>
+    <ol contenteditable>
   </th>
 </table>
 </body>

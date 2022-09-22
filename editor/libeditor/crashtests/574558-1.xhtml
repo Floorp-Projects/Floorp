@@ -1,15 +1,17 @@
 <html xmlns="http://www.w3.org/1999/xhtml"><head><script>
 <![CDATA[
-
-function boom()
-{
-  document.execCommand("selectAll", false, null);
-  document.execCommand("selectAll", false, null);
+function onLoad() {
+  // For emulating the traditional behavior, collapse Selection to end of the
+  // <textarea> which is the deepest last child of the <body>.
+  getSelection().collapse(
+    document.querySelector("textarea"),
+    document.querySelector("textarea").childNodes.length
+  );
+  document.execCommand("selectAll");
+  document.execCommand("selectAll");
   document.execCommand("inserthtml", false, "<span><div>");
-  var textarea = document.getElementById("textarea");
-  var span = document.createElementNS("http://www.w3.org/1999/xhtml", "span");
-  textarea.appendChild(span);
+  const span = document.createElementNS("http://www.w3.org/1999/xhtml", "span");
+  document.querySelector("textarea").appendChild(span);
 }
-
 ]]>
-</script></head><div contenteditable="true"></div><body onload="boom();"><textarea id="textarea">f</textarea></body></html>
+</script></head><div contenteditable="true"></div><body onload="onLoad();"><textarea>f</textarea></body></html>

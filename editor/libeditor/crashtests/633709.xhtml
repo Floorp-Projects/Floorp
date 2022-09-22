@@ -1,35 +1,67 @@
 <html xmlns="http://www.w3.org/1999/xhtml" class="reftest-wait">
 
-<body><div contenteditable="true"></div><div><input id="i"><div></div></input></div></body>
+<body><div contenteditable="true"></div><div><input><div></div></input></div></body>
 
-<script id="s">
+<script>
 <![CDATA[
+function onLoad() {
+  // For emulating the traditional behavior, collapse Selection to end of the
+  // parent <div> of the <input>.  In XHTML document, the <input> may have the
+  // <div> child.  Therefore, the deepest last child container element of the
+  // <body> is the parent of the <input>.
+  getSelection().collapse(
+    document.querySelector("input").parentElement,
+    document.querySelector("input").parentElement.childNodes.length
+  );
+  document.querySelector("input").focus();
 
-function boom()
-{
-  document.getElementById("i").focus();
+  try {
+    document.execCommand("stylewithcss", false, "true");
+  } catch(e) {}
+  try {
+    document.execCommand("inserthtml", false, "<x>X</x>");
+  } catch(e) {}
+  try {
+    document.execCommand("underline");
+  } catch(e) {}
+  try {
+    document.execCommand("justifyfull");
+  } catch(e) {}
+  try {
+    document.execCommand("underline");
+  } catch(e) {}
+  try {
+    document.execCommand("insertParagraph");
+  } catch(e) {}
+  try {
+    document.execCommand("delete");
+  } catch(e) {}
 
-  try { document.execCommand("stylewithcss", false, "true") } catch(e) { }
-  try { document.execCommand("inserthtml", false, "<x>X</x>"); } catch(e) { }
-  try { document.execCommand("underline", false, null); } catch(e) { }
-  try { document.execCommand("justifyfull", false, null); } catch(e) { }
-  try { document.execCommand("underline", false, null); } catch(e) { }
-  try { document.execCommand("insertParagraph", false, null); } catch(e) { }
-  try { document.execCommand("delete", false, null); } catch(e) { }
-
-  try { document.execCommand("stylewithcss", false, "false") } catch(e) { }
-  try { document.execCommand("inserthtml", false, "<x>X</x>"); } catch(e) { }
-  try { document.execCommand("underline", false, null); } catch(e) { }
-  try { document.execCommand("justifyfull", false, null); } catch(e) { }
-  try { document.execCommand("underline", false, null); } catch(e) { }
-  try { document.execCommand("insertParagraph", false, null); } catch(e) { }
-  try { document.execCommand("delete", false, null); } catch(e) { }
+  try {
+    document.execCommand("stylewithcss", false, "false");
+  } catch(e) {}
+  try {
+    document.execCommand("inserthtml", false, "<x>X</x>");
+  } catch(e) {}
+  try {
+    document.execCommand("underline");
+  } catch(e) {}
+  try {
+    document.execCommand("justifyfull");
+  } catch(e) {}
+  try {
+    document.execCommand("underline");
+  } catch(e) {}
+  try {
+    document.execCommand("insertParagraph");
+  } catch(e) {}
+  try {
+    document.execCommand("delete");
+  } catch(e) {}
 
   document.documentElement.removeAttribute("class");
 }
-
-setTimeout(boom, 10);
-
+addEventListener("load", onLoad);
 ]]>
 </script>
 

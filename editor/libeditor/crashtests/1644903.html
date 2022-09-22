@@ -1,14 +1,17 @@
 <script>
 window.onload = () => {
-  document.execCommand("undo", false)
+  document.execCommand("undo");
 }
-function go() {
-  var a = document.getElementById("a")
-  document.execCommand("delete", false)
-  b.contentDocument.adoptNode(a)
+function onToggle() {
+  // For emulating the traditional behavior, collapse Selection to end of the
+  // <body> (at the text node after the <iframe>).
+  getSelection().collapse(document.body, document.body.childNodes.length);
+  const link = document.querySelector("link");
+  document.execCommand("delete");
+  document.querySelector("iframe").contentDocument.adoptNode(link);
 }
 </script>
-<p contenteditable="true">
-<link id="a" item="">
-<details open="" ontoggle="go()">
-<iframe id="b"></iframe>
+<p contenteditable>
+<link item="">
+<details open ontoggle="onToggle()">
+<iframe></iframe>

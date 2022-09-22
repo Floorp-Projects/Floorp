@@ -1,20 +1,41 @@
 <script>
-function jsfuzzer() {
-  try { document.execCommand("insertUnorderedList", false); } catch(e) { }
-  try { document.execCommand("delete", false); } catch(e) { }
+function onLoad() {
+  try {
+    document.execCommand("insertUnorderedList");
+  } catch(e) {}
+  try {
+    document.execCommand("delete");
+  } catch(e) {}
 }
-function eventhandler1() {
-  try { window.getSelection().collapse(htmlvar00001,1); } catch(e) { }
+
+function onToggle1() {
+  try {
+    getSelection().collapse(
+      document.querySelector("font"),
+      1
+    );
+  } catch(e) {}
 }
-function eventhandler2() {
-  try { htmlvar00002.appendChild(htmlvar00001); } catch(e) { }
+
+function onToggle2() {
+  // For emulating the traditional behavior, collapse Selection to end of the
+  // <summary> which is the last child of the <body>.
+  getSelection().collapse(
+    document.querySelector("summary"),
+    document.querySelector("summary").childNodes.length
+  );
+  try {
+    document.querySelector("label").appendChild(
+      document.querySelector("font")
+    );
+  } catch(e) {}
 }
 </script>
-<body onload=jsfuzzer()>
-<label id="htmlvar00002" contenteditable="true">
-<details ontoggle="eventhandler2()" open="true">
+<body onload="onLoad()">
+<label contenteditable>
+<details ontoggle="onToggle2()" open>
 </details>
 </label>
-<details ontoggle="eventhandler1()" open="true">
-<font id="htmlvar00001" dir="rtl">
+<details ontoggle="onToggle1()" open>
+<font dir="rtl">
 <summary>

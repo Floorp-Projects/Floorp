@@ -2,9 +2,12 @@
 input:focus { counter-increment: c; }
 </style>
 <script>
-function go() {
-  a.select();
+function onLoad() {
+  // For emulating the traditional behavior, collapse Selection to end of the
+  // <body>, i.e., at the text node after the <input contenteditable>.
+  getSelection().collapse(document.body, document.body.childNodes.length);
+  document.querySelector("input[type=number][contenteditable]").select();
 }
 </script>
-<body onload=go()>
-<input id="a" type="number" contenteditable="true">
+<body onload="onLoad()">
+<input type="number" contenteditable>

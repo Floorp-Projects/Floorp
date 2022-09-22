@@ -85,10 +85,7 @@ SimpleTest.waitForFocus(() => {
   const otherEditor = document.getElementById("otherEditor");
 
   (function test_initial_state_on_load() {
-    // XXX if there is a contenteditable element, HTML editor sets dom selection
-    // to first editable node, but this makes inconsistency with normal document
-    // behavior.
-    todo_is(
+    is(
       getSelection().rangeCount,
       0,
       "There should be no selection range at start"

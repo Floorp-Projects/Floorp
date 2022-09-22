@@ -10,10 +10,14 @@
 </style>
 <script>
 window.onload = () => {
-  document.execCommand("selectAll", false)
-  document.execCommand("selectAll", false)
-  document.execCommand("backColor", false, "r")
-  document.execCommand("superscript", false)
+  getSelection().collapse(
+    document.querySelector("dl"),
+    document.querySelector("dl").childNodes.length
+  );
+  document.execCommand("selectAll");
+  document.execCommand("selectAll");
+  document.execCommand("backColor", false, "r");
+  document.execCommand("superscript");
 }
 </script>
 <dl style="columns:1px">

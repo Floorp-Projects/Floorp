@@ -1,14 +1,24 @@
 <script>
-function jsfuzzer() {
-  try { var var00007 = eventhandler5; } catch(e) { }
-  try { var var00006 = var00007; } catch(e) { }
-  try { htmlvar00007.addEventListener("DOMNodeInserted", var00006); } catch(e) { }
-  try { document.execCommand("justifyFull", false); } catch(e) { }
-}
-function eventhandler5() {
-  try { htmlvar00008.replaceWith("1"); } catch(e) { }
+function onLoad() {
+  const shadow = document.querySelector("shadow");
+  // For emulating the traditional behavior, collapse Selection to end of the
+  // <shadow> which is the deepest last child of the <body>.
+  getSelection().collapse(shadow, shadow.childNodes.length);
+  try {
+    document.querySelector("dd[contenteditable]").addEventListener(
+      "DOMNodeInserted",
+      () => {
+        try {
+          shadow.replaceWith("1");
+        } catch(e) {}
+      }
+    );
+  } catch(e) {}
+  try {
+    document.execCommand("justifyFull");
+  } catch(e) {}
 }
 </script>
-<body onload=jsfuzzer()>
-<dd id="htmlvar00007" contenteditable="true">
-<shadow id="htmlvar00008">
+<body onload="onLoad();">
+<dd contenteditable>
+<shadow>

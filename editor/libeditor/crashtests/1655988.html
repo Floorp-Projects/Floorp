@@ -1,21 +1,24 @@
 <html>
 <head>
-    <script>
-      document.addEventListener('DOMContentLoaded', () => {
-        const element_0 = document.getElementById('id_0')
-        const element_1 = document.getElementById('id_1')
-        element_1.after('foo')
-        element_0.addEventListener('DOMAttrModified', () => {
-          window.find('foo')
-          document.execCommand('insertImage', false, '#')
-        })
-        element_0.setAttribute('i', '')
-      })
-    </script>
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+  // For emulating the traditional behavior, collapse Selection to end of the
+  // <body> (at the text node after the <feDistantLight>).
+  getSelection().collapse(document.body, document.body.childNodes.length);
+  const feDistantLight = document.querySelector("feDistantLight");
+  const li = document.querySelector("li");
+  li.after('foo');
+  feDistantLight.addEventListener("DOMAttrModified", () => {
+    window.find("foo");
+    document.execCommand("insertImage", false, "#");
+  })
+  feDistantLight.setAttribute("i", "");
+});
+</script>
 </head>
 <body>
-<feDistantLight id="id_0" contenteditable="true">
-    <li id="id_1">A</li>
+<feDistantLight contenteditable>
+    <li>A</li>
     <!-- COMMENT -->
 </feDistantLight>
 </body>

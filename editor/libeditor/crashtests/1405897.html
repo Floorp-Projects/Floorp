@@ -2,15 +2,22 @@
 * { position: absolute; }
 </style>
 <script>
-function jsfuzzer() {
-  del1.addEventListener("DOMSubtreeModified", () => {
-    document.execCommand("italic", false);
-    document.execCommand("selectAll", false);
+function onLoad() {
+  // For emulating the traditional behavior, collapse Selection to end of the
+  // <iframe> which is the last child of the <body>.  Note that <iframe> is
+  // treated as a container in HTMLEditor.
+  getSelection().collapse(document.body, document.body.childNodes.length);
+  document.querySelector("del").addEventListener("DOMSubtreeModified", () => {
+    document.execCommand("italic");
+    document.execCommand("selectAll");
   });
-  a1.replaceChild(iframe1, a1.childNodes[0]);
+  document.querySelector("a[contenteditable]").replaceChild(
+    document.querySelector("iframe"),
+    document.querySelector("a[contenteditable]").childNodes[0]
+  );
 }
 </script>
-<body onload=jsfuzzer()>
-<a contenteditable="" id="a1">
-<del id="del1">
-<iframe id="iframe1">
+<body onload="onLoad()">
+<a contenteditable>
+<del>
+<iframe>
