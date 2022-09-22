@@ -25,6 +25,21 @@ namespace {
 constexpr TimeDelta kZeroPlayoutDelayDefaultMinPacing = TimeDelta::Millis(8);
 constexpr TimeDelta kLowLatencyRendererMaxPlayoutDelay = TimeDelta::Millis(500);
 
+void CheckDelaysValid(TimeDelta min_delay, TimeDelta max_delay) {
+  if (min_delay > max_delay) {
+    RTC_LOG(LS_ERROR)
+        << "Playout delays set incorrectly: min playout delay (" << min_delay
+        << ") > max playout delay (" << max_delay
+        << "). This is undefined behaviour. Application writers should "
+           "ensure that the min delay is always less than or equals max "
+           "delay. If trying to use the playout delay header extensions "
+           "described in "
+           "https://webrtc.googlesource.com/src/+/refs/heads/main/docs/"
+           "native-code/rtp-hdrext/playout-delay/, be careful that a playout "
+           "delay hint or A/V sync settings may have caused this conflict.";
+  }
+}
+
 }  // namespace
 
 VCMTiming::VCMTiming(Clock* clock, const FieldTrialsView& field_trials)
@@ -69,21 +84,16 @@ TimeDelta VCMTiming::min_playout_delay() const {
 
 void VCMTiming::set_min_playout_delay(TimeDelta min_playout_delay) {
   MutexLock lock(&mutex_);
-  min_playout_delay_ = min_playout_delay;
+  if (min_playout_delay_ != min_playout_delay) {
+    CheckDelaysValid(min_playout_delay, max_playout_delay_);
+    min_playout_delay_ = min_playout_delay;
+  }
 }
 
 void VCMTiming::set_max_playout_delay(TimeDelta max_playout_delay) {
   MutexLock lock(&mutex_);
   if (max_playout_delay_ != max_playout_delay) {
-    if (min_playout_delay_ > max_playout_delay) {
-      RTC_LOG(LS_ERROR)
-          << "Playout delays set incorrectly: min playout delay ("
-          << min_playout_delay_ << ") > max playout delay ("
-          << max_playout_delay
-          << "). This is undefined behaviour. Application writers should "
-             "ensure that the min delay is always less than or equals max "
-             "delay.";
-    }
+    CheckDelaysValid(min_playout_delay_, max_playout_delay);
     max_playout_delay_ = max_playout_delay;
   }
 }
