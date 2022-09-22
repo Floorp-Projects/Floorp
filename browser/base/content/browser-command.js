@@ -101,113 +101,39 @@ function setSidebarMode() {
     if(panelWidth !== "" || panelWidth !== undefined || panelWidth !== null){
       document.getElementById("sidebar2-box").setAttribute("width", panelWidth);
     }
-  
-    switch (modeValuePref) {
-      case -1:
-        sidebar2elem.setAttribute("src", "chrome://browser/content/places/places.xhtml");
-        changeBrowserManagerSidebarConfigShowBrowserManagers();
-        break;
-      case 0:
-        sidebar2elem.setAttribute("src", "chrome://browser/content/syncedtabs/sidebar.xhtml");
-        changeBrowserManagerSidebarConfigShowBrowserManagers();
-        break;
-      case 1:
-        sidebar2elem.setAttribute("src", "chrome://browser/content/places/bookmarksSidebar.xhtml");
-        changeBrowserManagerSidebarConfigShowBrowserManagers();
-        break;
-      case 2:
-        sidebar2elem.setAttribute("src", "chrome://browser/content/places/historySidebar.xhtml");
-        changeBrowserManagerSidebarConfigShowBrowserManagers();
-        break;
-      case 3:
-        sidebar2elem.setAttribute("src", "about:downloads");
-        changeBrowserManagerSidebarConfigShowBrowserManagers();
-        break;
-      case 4:
-        setTreeStyleTabURL();
-        changeBrowserManagerSidebarConfigShowWebpanels();
-        break;
-      case 5:
-        webpanel.setAttribute("src", Services.prefs.getStringPref("floorp.browser.sidebar2.customurl1", undefined));
-        changeBrowserManagerSidebarConfigShowWebpanels();
-        break;
-      case 6:
-        webpanel.setAttribute("src", Services.prefs.getStringPref("floorp.browser.sidebar2.customurl2", undefined));
-        changeBrowserManagerSidebarConfigShowWebpanels();
-        break;
-      case 7:
-        webpanel.setAttribute("src", Services.prefs.getStringPref("floorp.browser.sidebar2.customurl3", undefined));
-        changeBrowserManagerSidebarConfigShowWebpanels();
-        break;
-      case 8:
-        webpanel.setAttribute("src", Services.prefs.getStringPref("floorp.browser.sidebar2.customurl4", undefined));
-        changeBrowserManagerSidebarConfigShowWebpanels();
-        break;
-      case 9:
-        webpanel.setAttribute("src", Services.prefs.getStringPref("floorp.browser.sidebar2.customurl5", undefined));
-        changeBrowserManagerSidebarConfigShowWebpanels();
-        break;
-      case 10:
-        webpanel.setAttribute("src", Services.prefs.getStringPref("floorp.browser.sidebar2.customurl6", undefined));
-        changeBrowserManagerSidebarConfigShowWebpanels();
-        break;
-      case 11:
-        webpanel.setAttribute("src", Services.prefs.getStringPref("floorp.browser.sidebar2.customurl7", undefined));
-        changeBrowserManagerSidebarConfigShowWebpanels();
-        break;
-      case 12:
-        webpanel.setAttribute("src", Services.prefs.getStringPref("floorp.browser.sidebar2.customurl8", undefined));
-        changeBrowserManagerSidebarConfigShowWebpanels();
-        break;
-      case 13:
-        webpanel.setAttribute("src", Services.prefs.getStringPref("floorp.browser.sidebar2.customurl9", undefined));
-        changeBrowserManagerSidebarConfigShowWebpanels();
-        break;
-      case 14:
-        webpanel.setAttribute("src", Services.prefs.getStringPref("floorp.browser.sidebar2.customurl10", undefined));
-        changeBrowserManagerSidebarConfigShowWebpanels();
-        break;
-      case 15:
-        webpanel.setAttribute("src", Services.prefs.getStringPref("floorp.browser.sidebar2.customurl11", undefined));
-        changeBrowserManagerSidebarConfigShowWebpanels();
-        break; 
-      case 16:
-        webpanel.setAttribute("src", Services.prefs.getStringPref("floorp.browser.sidebar2.customurl12", undefined));
-        changeBrowserManagerSidebarConfigShowWebpanels();
-        break; 
-      case 17:
-        webpanel.setAttribute("src", Services.prefs.getStringPref("floorp.browser.sidebar2.customurl13", undefined));
-        changeBrowserManagerSidebarConfigShowWebpanels();
-        break; 
-      case 18:
-        webpanel.setAttribute("src", Services.prefs.getStringPref("floorp.browser.sidebar2.customurl14", undefined));
-        changeBrowserManagerSidebarConfigShowWebpanels();
-        break; 
-      case 19:
-        webpanel.setAttribute("src", Services.prefs.getStringPref("floorp.browser.sidebar2.customurl15", undefined));
-        changeBrowserManagerSidebarConfigShowWebpanels();
-        break; 
-      case 20:
-        webpanel.setAttribute("src", Services.prefs.getStringPref("floorp.browser.sidebar2.customurl16", undefined));
-        changeBrowserManagerSidebarConfigShowWebpanels();
-        break; 
-      case 21:
-        webpanel.setAttribute("src", Services.prefs.getStringPref("floorp.browser.sidebar2.customurl17", undefined));
-        changeBrowserManagerSidebarConfigShowWebpanels();
-        break;
-      case 22:
-        webpanel.setAttribute("src", Services.prefs.getStringPref("floorp.browser.sidebar2.customurl18", undefined));
-        changeBrowserManagerSidebarConfigShowWebpanels();
-        break; 
-      case 23:
-        webpanel.setAttribute("src", Services.prefs.getStringPref("floorp.browser.sidebar2.customurl19", undefined));
-        changeBrowserManagerSidebarConfigShowWebpanels();
-        break; 
-      case 24:
-        webpanel.setAttribute("src", Services.prefs.getStringPref("floorp.browser.sidebar2.customurl20", undefined));
-        changeBrowserManagerSidebarConfigShowWebpanels();
-        break;
-    }
+
+	/*
+	0 - 4: Browser Managers
+	5 - 24: Webpanels with custom URLs
+	 */
+    
+    if (modeValuePref == -1){
+		sidebar2elem.setAttribute("src", "chrome://browser/content/places/places.xhtml");
+		changeBrowserManagerPanelStatus("managers")
+		return
+    } else if (modeValuePref == 0){
+		sidebar2elem.setAttribute("src", "chrome://browser/content/syncedtabs/sidebar.xhtml");
+		changeBrowserManagerPanelStatus("managers")
+		return
+	} else if (modeValuePref == 1){
+		sidebar2elem.setAttribute("src", "chrome://browser/content/places/bookmarksSidebar.xhtml");
+		changeBrowserManagerPanelStatus("managers")
+		return
+	} else if (modeValuePref == 2){
+		sidebar2elem.setAttribute("src", "chrome://browser/content/places/historySidebar.xhtml");
+		changeBrowserManagerPanelStatus("managers")
+		return
+	} else if (modeValuePref == 3){
+		sidebar2elem.setAttribute("src", "about:downloads");
+		changeBrowserManagerPanelStatus("managers")
+		return
+	} else if (modeValuePref == 4){
+		setTreeStyleTabURL();
+	} else {
+        let customurl = (modeValuePref - 4) /* Getting webpanel id through substracting a numeric difference between a webpanel and manager pref */
+        webpanel.setAttribute("src", Services.prefs.getStringPref(`floorp.browser.sidebar2.customurl${customurl}`, undefined));
+	}
+    changeBrowserManagerPanelStatus("webpanels"); /* Hooking up function, because it's the most used in here */
   }
 }
 
@@ -441,18 +367,17 @@ function changeMuteStatus() {
   }
 }
 
-function changeBrowserManagerSidebarConfigShowWebpanels() {
-  if (document.getElementById("sidebar2style")){document.getElementById("sidebar2style").remove()}
-  var Tag = document.createElement("style");
-  Tag.innerText = `#sidebar2{max-height:0 !important;}`
-  document.getElementsByTagName("head")[0].insertAdjacentElement('beforeend', Tag);
-  Tag.setAttribute("id", "sidebar2style");
-}
-
-function changeBrowserManagerSidebarConfigShowBrowserManagers() {
-  if (document.getElementById("sidebar2style")){document.getElementById("sidebar2style").remove()}
-  var Tag = document.createElement("style");
-  Tag.innerText = `#webpanel{max-height:0 !important;}#sidebar2-reload,#sidebar2-forward,#sidebar2-back{display:none !important;}`
-  document.getElementsByTagName("head")[0].insertAdjacentElement('beforeend', Tag);
-  Tag.setAttribute("id", "sidebar2style");
+/* Sets the status of webpanel */
+function changeBrowserManagerPanelStatus(status){
+	if (document.getElementById("sidebar2style")){document.getElementById("sidebar2style").remove()}
+	var Tag = document.createElement("style");
+	if (status == "webpanels"){
+		Tag.innerText = `#sidebar2{max-height:0 !important;}`
+	} else if (status == "managers"){
+		Tag.innerText = `#webpanel{max-height:0 !important;}#sidebar2-reload,#sidebar2-forward,#sidebar2-back{display:none !important;}`
+	} else {
+		Tag.innerText = "Unknown status of the webpanel"
+	}
+	document.getElementsByTagName("head")[0].insertAdjacentElement('beforeend', Tag);
+	Tag.setAttribute("id", "sidebar2style");
 }
