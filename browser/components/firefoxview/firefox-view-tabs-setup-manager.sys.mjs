@@ -50,6 +50,8 @@ const SYNC_SERVICE_ERROR = "weave:service:sync:error";
 const FXA_ENABLED = "identity.fxaccounts.enabled";
 const SYNC_SERVICE_FINISHED = "weave:service:sync:finish";
 const PRIMARY_PASSWORD_UNLOCKED = "passwordmgr-crypto-login";
+const TAB_PICKUP_OPEN_STATE_PREF =
+  "browser.tabs.firefox-view.ui-state.tab-pickup.open";
 
 function openTabInWindow(window, url) {
   const {
@@ -358,6 +360,9 @@ export const TabsSetupFlowManager = new (class {
       this._waitingForTabs = false;
       return;
     }
+
+    // Set Tab pickup open state pref to true when signing in
+    Services.prefs.setBoolPref(TAB_PICKUP_OPEN_STATE_PREF, true);
 
     // Now we need to figure out if we have recently synced tabs to show
     // Or, if we are going to need to trigger a tab sync for them
