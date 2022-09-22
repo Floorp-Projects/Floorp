@@ -4357,9 +4357,6 @@ pref("dom.postMessage.sharedArrayBuffer.bypassCOOP_COEP.insecure.enabled", false
 pref("dom.postMessage.sharedArrayBuffer.bypassCOOP_COEP.insecure.enabled", false, locked);
 #endif
 
-// Whether to start the private browsing mode at application startup
-pref("browser.privatebrowsing.autostart", false);
-
 // Whether sites require the open-protocol-handler permission to open a
 //preferred external application for a protocol. If a site doesn't have
 // permission we will show a prompt.

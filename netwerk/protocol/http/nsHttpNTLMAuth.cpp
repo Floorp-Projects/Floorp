@@ -38,6 +38,7 @@
 #include "mozilla/net/HttpAuthUtils.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/net/DNS.h"
+#include "mozilla/StaticPrefs_browser.h"
 
 namespace mozilla {
 namespace net {
@@ -102,10 +103,7 @@ static bool CanUseDefaultCredentials(nsIHttpAuthenticableChannel* channel,
       return true;
     }
 
-    bool dontRememberHistory;
-    if (NS_SUCCEEDED(prefs->GetBoolPref("browser.privatebrowsing.autostart",
-                                        &dontRememberHistory)) &&
-        !dontRememberHistory) {
+    if (!StaticPrefs::browser_privatebrowsing_autostart()) {
       return false;
     }
   }

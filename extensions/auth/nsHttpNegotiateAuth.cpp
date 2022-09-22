@@ -41,6 +41,7 @@
 #include "mozilla/net/HttpAuthUtils.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/net/DNS.h"
+#include "mozilla/StaticPrefs_browser.h"
 
 using mozilla::Base64Decode;
 
@@ -91,10 +92,7 @@ static bool TestNotInPBMode(nsIHttpAuthenticableChannel* authChannel,
     // When the "Never remember history" option is set, all channels are
     // set PB mode flag, but here we want to make an exception, users
     // want their credentials go out.
-    bool dontRememberHistory;
-    if (NS_SUCCEEDED(prefs->GetBoolPref("browser.privatebrowsing.autostart",
-                                        &dontRememberHistory)) &&
-        dontRememberHistory) {
+    if (mozilla::StaticPrefs::browser_privatebrowsing_autostart()) {
       return true;
     }
   }
