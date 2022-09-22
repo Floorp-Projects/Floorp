@@ -96,6 +96,8 @@ class DcSctpSocket : public DcSctpSocketInterface {
   SocketState state() const override;
   const DcSctpOptions& options() const override { return options_; }
   void SetMaxMessageSize(size_t max_message_size) override;
+  void SetStreamPriority(StreamID stream_id, StreamPriority priority) override;
+  StreamPriority GetStreamPriority(StreamID stream_id) const override;
   size_t buffered_amount(StreamID stream_id) const override;
   size_t buffered_amount_low_threshold(StreamID stream_id) const override;
   void SetBufferedAmountLowThreshold(StreamID stream_id, size_t bytes) override;
