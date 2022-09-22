@@ -17,13 +17,13 @@
 #include <vector>
 
 #include "absl/algorithm/container.h"
+#include "absl/memory/memory.h"
 #include "api/peer_connection_interface.h"
 #include "api/rtp_parameters.h"
 #include "api/sequence_checker.h"
 #include "media/base/codec.h"
 #include "media/base/media_constants.h"
 #include "pc/channel.h"
-#include "pc/channel_manager.h"
 #include "pc/rtp_media_utils.h"
 #include "pc/session_description.h"
 #include "rtc_base/checks.h"
@@ -125,7 +125,6 @@ RtpTransceiver::RtpTransceiver(cricket::MediaType media_type,
       context_(context) {
   RTC_DCHECK(media_type == cricket::MEDIA_TYPE_AUDIO ||
              media_type == cricket::MEDIA_TYPE_VIDEO);
-  RTC_DCHECK(context_->channel_manager());
 }
 
 RtpTransceiver::RtpTransceiver(
@@ -144,7 +143,6 @@ RtpTransceiver::RtpTransceiver(
   RTC_DCHECK(media_type_ == cricket::MEDIA_TYPE_AUDIO ||
              media_type_ == cricket::MEDIA_TYPE_VIDEO);
   RTC_DCHECK_EQ(sender->media_type(), receiver->media_type());
-  RTC_DCHECK(context_->channel_manager());
   senders_.push_back(sender);
   receivers_.push_back(receiver);
 }
@@ -182,19 +180,62 @@ RTCError RtpTransceiver::CreateChannel(
     // TODO(bugs.webrtc.org/11992): CreateVideoChannel internally switches to
     // the worker thread. We shouldn't be using the `call_ptr_` hack here but
     // simply be on the worker thread and use `call_` (update upstream code).
-    new_channel = channel_manager()->CreateVoiceChannel(
-        call_ptr, media_config, mid, srtp_required, crypto_options,
-        audio_options);
+    RTC_DCHECK(call_ptr);
+    RTC_DCHECK(media_engine());
+    // TODO(bugs.webrtc.org/11992): Remove this workaround after updates in
+    // PeerConnection and add the expectation that we're already on the right
+    // thread.
+    new_channel =
+        context()
+            ->worker_thread()
+            ->Invoke<std::unique_ptr<cricket::VoiceChannel>>(
+                RTC_FROM_HERE, [&]() -> std::unique_ptr<cricket::VoiceChannel> {
+                  RTC_DCHECK_RUN_ON(context()->worker_thread());
 
+                  cricket::VoiceMediaChannel* media_channel =
+                      media_engine()->voice().CreateMediaChannel(
+                          call_ptr, media_config, audio_options,
+                          crypto_options);
+                  if (!media_channel) {
+                    return nullptr;
+                  }
+
+                  auto voice_channel = std::make_unique<cricket::VoiceChannel>(
+                      context()->worker_thread(), context()->network_thread(),
+                      context()->signaling_thread(),
+                      absl::WrapUnique(media_channel), mid, srtp_required,
+                      crypto_options, context()->ssrc_generator());
+
+                  return voice_channel;
+                });
   } else {
     RTC_DCHECK_EQ(cricket::MEDIA_TYPE_VIDEO, media_type());
 
     // TODO(bugs.webrtc.org/11992): CreateVideoChannel internally switches to
     // the worker thread. We shouldn't be using the `call_ptr_` hack here but
     // simply be on the worker thread and use `call_` (update upstream code).
-    new_channel = channel_manager()->CreateVideoChannel(
-        call_ptr, media_config, mid, srtp_required, crypto_options,
-        video_options, video_bitrate_allocator_factory);
+    new_channel =
+        context()
+            ->worker_thread()
+            ->Invoke<std::unique_ptr<cricket::VideoChannel>>(
+                RTC_FROM_HERE, [&]() -> std::unique_ptr<cricket::VideoChannel> {
+                  RTC_DCHECK_RUN_ON(context()->worker_thread());
+                  cricket::VideoMediaChannel* media_channel =
+                      media_engine()->video().CreateMediaChannel(
+                          call_ptr, media_config, video_options, crypto_options,
+                          video_bitrate_allocator_factory);
+                  if (!media_channel) {
+                    return nullptr;
+                  }
+
+                  auto video_channel = std::make_unique<cricket::VideoChannel>(
+                      context()->worker_thread(), context()->network_thread(),
+                      context()->signaling_thread(),
+                      absl::WrapUnique(media_channel), mid, srtp_required,
+                      crypto_options, context()->ssrc_generator());
+
+                  return video_channel;
+                });
   }
   if (!new_channel) {
     // TODO(hta): Must be a better way

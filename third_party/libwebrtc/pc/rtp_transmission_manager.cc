@@ -18,7 +18,6 @@
 #include "api/rtp_transceiver_direction.h"
 #include "pc/audio_rtp_receiver.h"
 #include "pc/channel_interface.h"
-#include "pc/channel_manager.h"
 #include "pc/stats_collector_interface.h"
 #include "pc/video_rtp_receiver.h"
 #include "rtc_base/checks.h"

@@ -303,9 +303,6 @@ class RtpTransceiver : public RtpTransceiverInterface,
   cricket::MediaEngineInterface* media_engine() const {
     return context_->media_engine();
   }
-  cricket::ChannelManager* channel_manager() const {
-    return context_->channel_manager();
-  }
   ConnectionContext* context() const { return context_; }
   void OnFirstPacketReceived();
   void StopSendingAndReceiving();

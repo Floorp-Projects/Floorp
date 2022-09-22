@@ -139,13 +139,6 @@ class PeerConnectionFactory : public PeerConnectionFactoryInterface {
 
   bool IsTrialEnabled(absl::string_view key) const;
 
-  cricket::ChannelManager* channel_manager() {
-    return context_->channel_manager();
-  }
-  const cricket::ChannelManager* channel_manager() const {
-    return context_->channel_manager();
-  }
-
   std::unique_ptr<RtcEventLog> CreateRtcEventLog_w();
   std::unique_ptr<Call> CreateCall_w(RtcEventLog* event_log,
                                      const FieldTrialsView& field_trials);

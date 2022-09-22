@@ -16,7 +16,6 @@
 #include "api/transport/field_trial_based_config.h"
 #include "media/base/media_engine.h"
 #include "media/sctp/sctp_transport_factory.h"
-#include "pc/channel_manager.h"
 #include "rtc_base/helpers.h"
 #include "rtc_base/internal/default_socket_server.h"
 #include "rtc_base/socket_server.h"
@@ -145,11 +144,6 @@ ConnectionContext::ConnectionContext(
   default_socket_factory_ =
       std::make_unique<rtc::BasicPacketSocketFactory>(socket_factory);
 
-  // TODO(bugs.webrtc.org/13931): Delete ChannelManager when functions gone.
-  channel_manager_ = cricket::ChannelManager::Create(
-      media_engine_.get(), &ssrc_generator_,
-      /*enable_rtx=*/true, worker_thread(), network_thread());
-
   // Set warning levels on the threads, to give warnings when response
   // may be slower than is expected of the thread.
   // Since some of the threads may be the same, start with the least
@@ -158,17 +152,22 @@ ConnectionContext::ConnectionContext(
   signaling_thread_->SetDispatchWarningMs(100);
   worker_thread_->SetDispatchWarningMs(30);
   network_thread_->SetDispatchWarningMs(10);
+
+  if (media_engine_) {
+    // TODO(tommi): Change VoiceEngine to do ctor time initialization so that
+    // this isn't necessary.
+    worker_thread_->Invoke<void>(RTC_FROM_HERE, [&] { media_engine_->Init(); });
+  }
 }
 
 ConnectionContext::~ConnectionContext() {
   RTC_DCHECK_RUN_ON(signaling_thread_);
-  channel_manager_.reset(nullptr);
   worker_thread_->Invoke<void>(RTC_FROM_HERE, [&] {
     RTC_DCHECK_RUN_ON(worker_thread());
-    // While `media_engine_` is const throughout the ChannelManager's lifetime,
-    // it requires destruction to happen on the worker thread. Instead of
-    // marking the pointer as non-const, we live with this const_cast<> in the
-    // destructor.
+    // While `media_engine_` is const throughout the ConnectionContext's
+    // lifetime, it requires destruction to happen on the worker thread. Instead
+    // of marking the pointer as non-const, we live with this const_cast<> in
+    // the destructor.
     const_cast<std::unique_ptr<cricket::MediaEngineInterface>&>(media_engine_)
         .reset();
   });
@@ -180,10 +179,6 @@ ConnectionContext::~ConnectionContext() {
 
   if (wraps_current_thread_)
     rtc::ThreadManager::Instance()->UnwrapCurrentThread();
-}
-
-cricket::ChannelManager* ConnectionContext::channel_manager() const {
-  return channel_manager_.get();
 }
 
 }  // namespace webrtc
