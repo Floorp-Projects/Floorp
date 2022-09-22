@@ -127,6 +127,11 @@ RenderedFrameId RenderCompositorEGL::EndFrame(
 #endif
 
   RenderedFrameId frameId = GetNextRenderFrameId();
+#ifdef MOZ_WAYLAND
+  if (mWidget->IsHidden()) {
+    return frameId;
+  }
+#endif
   if (mEGLSurface != EGL_NO_SURFACE && aDirtyRects.Length() > 0) {
     gfx::IntRegion bufferInvalid;
     const auto bufferSize = GetBufferSize();
