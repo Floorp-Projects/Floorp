@@ -375,6 +375,8 @@ button.close {
       "desc desc desc desc desc desc desc desc";
   list-style-type: none;
   padding-inline-start: 8px;
+  position: relative;
+  z-index: 1;
 }
 
 @media (prefers-contrast) {
