@@ -149,6 +149,10 @@ class PacingController {
   void SetIncludeOverhead();
 
   void SetTransportOverhead(DataSize overhead_per_packet);
+  // The pacer is allowed to send enqued packets in bursts and can build up a
+  // packet "debt" that correspond to approximately the send rate during
+  // 'burst_interval'.
+  void SetSendBurstInterval(TimeDelta burst_interval);
 
   // Returns the time when the oldest packet was queued.
   Timestamp OldestPacketEnqueueTime() const;
@@ -219,8 +223,8 @@ class PacingController {
   const TimeDelta padding_target_duration_;
 
   TimeDelta min_packet_limit_;
-
   DataSize transport_overhead_per_packet_;
+  TimeDelta send_burst_interval_;
 
   // TODO(webrtc:9716): Remove this when we are certain clocks are monotonic.
   // The last millisecond timestamp returned by `clock_`.

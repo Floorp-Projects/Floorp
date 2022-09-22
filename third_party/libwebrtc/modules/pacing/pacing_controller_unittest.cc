@@ -2001,5 +2001,67 @@ TEST_F(PacingControllerTest, HandlesSubMicrosecondPaddingInterval) {
   EXPECT_GT(pacer->NextSendTime(), clock_.CurrentTime());
 }
 
+TEST_F(PacingControllerTest, SendsPacketsInBurstImmediately) {
+  constexpr TimeDelta kMaxDelay = TimeDelta::Millis(20);
+  PacingController pacer(&clock_, &callback_, trials_);
+  pacer.SetSendBurstInterval(kMaxDelay);
+  pacer.SetPacingRates(DataRate::BytesPerSec(10000), DataRate::Zero());
+
+  // Max allowed send burst size is 100000*20/1000) = 200byte
+  pacer.EnqueuePacket(video_.BuildNextPacket(100));
+  pacer.EnqueuePacket(video_.BuildNextPacket(100));
+  pacer.EnqueuePacket(video_.BuildNextPacket(100));
+  pacer.ProcessPackets();
+  EXPECT_EQ(pacer.QueueSizePackets(), 1u);
+  EXPECT_EQ(pacer.NextSendTime(), clock_.CurrentTime() + kMaxDelay);
+
+  AdvanceTimeUntil(pacer.NextSendTime());
+  pacer.ProcessPackets();
+  EXPECT_EQ(pacer.QueueSizePackets(), 0u);
+}
+
+TEST_F(PacingControllerTest, SendsPacketsInBurstEvenIfNotEnqueedAtSameTime) {
+  constexpr TimeDelta kMaxDelay = TimeDelta::Millis(20);
+  PacingController pacer(&clock_, &callback_, trials_);
+  pacer.SetSendBurstInterval(kMaxDelay);
+  pacer.SetPacingRates(DataRate::BytesPerSec(10000), DataRate::Zero());
+  pacer.EnqueuePacket(video_.BuildNextPacket(200));
+  EXPECT_EQ(pacer.NextSendTime(), clock_.CurrentTime());
+  pacer.ProcessPackets();
+  clock_.AdvanceTime(TimeDelta::Millis(1));
+  pacer.EnqueuePacket(video_.BuildNextPacket(200));
+  EXPECT_EQ(pacer.NextSendTime(), clock_.CurrentTime());
+  pacer.ProcessPackets();
+  EXPECT_EQ(pacer.QueueSizePackets(), 0u);
+}
+
+TEST_F(PacingControllerTest, RespectsTargetRateWhenSendingPacketsInBursts) {
+  PacingController pacer(&clock_, &callback_, trials_);
+  pacer.SetSendBurstInterval(TimeDelta::Millis(20));
+  pacer.SetAccountForAudioPackets(true);
+  pacer.SetPacingRates(DataRate::KilobitsPerSec(1000), DataRate::Zero());
+  Timestamp start_time = clock_.CurrentTime();
+  // Inject 100 packets, with size 1000bytes over 100ms.
+  // Expect only 1Mbps / (8*1000) / 10 =  12 packets to be sent.
+  // Packets are sent in burst. Each burst is then 3 packets * 1000bytes at
+  // 1Mbits = 24ms long. Thus, expect 4 bursts.
+  EXPECT_CALL(callback_, SendPacket).Times(12);
+  int number_of_bursts = 0;
+  while (clock_.CurrentTime() < start_time + TimeDelta::Millis(100)) {
+    pacer.EnqueuePacket(video_.BuildNextPacket(1000));
+    pacer.EnqueuePacket(video_.BuildNextPacket(1000));
+    pacer.EnqueuePacket(video_.BuildNextPacket(1000));
+    pacer.EnqueuePacket(video_.BuildNextPacket(1000));
+    pacer.EnqueuePacket(video_.BuildNextPacket(1000));
+    if (pacer.NextSendTime() <= clock_.CurrentTime()) {
+      pacer.ProcessPackets();
+      ++number_of_bursts;
+    }
+    clock_.AdvanceTime(TimeDelta::Millis(5));
+  }
+  EXPECT_EQ(pacer.QueueSizePackets(), 88u);
+  EXPECT_EQ(number_of_bursts, 4);
+}
+
 }  // namespace
 }  // namespace webrtc
