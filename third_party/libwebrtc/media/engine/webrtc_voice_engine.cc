@@ -1180,8 +1180,8 @@ class WebRtcVoiceMediaChannel::WebRtcAudioReceiveStream {
 
   void SetUseTransportCc(bool use_transport_cc, bool use_nack) {
     RTC_DCHECK_RUN_ON(&worker_thread_checker_);
-    stream_->SetUseTransportCcAndNackHistory(use_transport_cc,
-                                             use_nack ? kNackRtpHistoryMs : 0);
+    stream_->SetTransportCc(use_transport_cc);
+    stream_->SetNackHistory(use_nack ? kNackRtpHistoryMs : 0);
   }
 
   void SetNonSenderRttMeasurement(bool enabled) {

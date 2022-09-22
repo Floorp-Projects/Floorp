@@ -1865,14 +1865,12 @@ TEST_P(WebRtcVoiceEngineTestFake, TransportCcCanBeEnabledAndDisabled) {
   EXPECT_TRUE(channel_->SetRecvParameters(recv_parameters));
   EXPECT_TRUE(AddRecvStream(kSsrcX));
   ASSERT_TRUE(call_.GetAudioReceiveStream(kSsrcX) != nullptr);
-  EXPECT_FALSE(
-      call_.GetAudioReceiveStream(kSsrcX)->GetConfig().rtp.transport_cc);
+  EXPECT_FALSE(call_.GetAudioReceiveStream(kSsrcX)->transport_cc());
 
   send_parameters.codecs = engine_->send_codecs();
   SetSendParameters(send_parameters);
   ASSERT_TRUE(call_.GetAudioReceiveStream(kSsrcX) != nullptr);
-  EXPECT_TRUE(
-      call_.GetAudioReceiveStream(kSsrcX)->GetConfig().rtp.transport_cc);
+  EXPECT_TRUE(call_.GetAudioReceiveStream(kSsrcX)->transport_cc());
 }
 
 // Test that we can switch back and forth between Opus and ISAC with CN.

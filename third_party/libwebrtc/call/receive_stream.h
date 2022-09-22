@@ -67,6 +67,8 @@ class ReceiveStreamInterface {
   // that the value is read on (i.e. packet delivery).
   virtual bool transport_cc() const = 0;
 
+  virtual void SetTransportCc(bool transport_cc) = 0;
+
  protected:
   virtual ~ReceiveStreamInterface() {}
 };

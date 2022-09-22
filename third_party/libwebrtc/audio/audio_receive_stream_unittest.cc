@@ -399,8 +399,8 @@ TEST(AudioReceiveStreamTest, ReconfigureWithUpdatedConfig) {
     recv_stream->SetDecoderMap(new_config.decoder_map);
 
     EXPECT_CALL(channel_receive, SetNACKStatus(true, 15 + 1)).Times(1);
-    recv_stream->SetUseTransportCcAndNackHistory(new_config.rtp.transport_cc,
-                                                 300 + 20);
+    recv_stream->SetTransportCc(new_config.rtp.transport_cc);
+    recv_stream->SetNackHistory(300 + 20);
 
     recv_stream->UnregisterFromTransport();
   }
