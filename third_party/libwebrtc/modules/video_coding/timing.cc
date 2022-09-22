@@ -30,7 +30,7 @@ VCMTiming::VCMTiming(Clock* clock, const FieldTrialsView& field_trials)
     : clock_(clock),
       ts_extrapolator_(
           std::make_unique<TimestampExtrapolator>(clock_->CurrentTime())),
-      codec_timer_(std::make_unique<VCMCodecTimer>()),
+      codec_timer_(std::make_unique<CodecTimer>()),
       render_delay_(kDefaultRenderDelay),
       min_playout_delay_(TimeDelta::Zero()),
       max_playout_delay_(TimeDelta::Seconds(10)),
@@ -48,7 +48,7 @@ VCMTiming::VCMTiming(Clock* clock, const FieldTrialsView& field_trials)
 void VCMTiming::Reset() {
   MutexLock lock(&mutex_);
   ts_extrapolator_->Reset(clock_->CurrentTime());
-  codec_timer_ = std::make_unique<VCMCodecTimer>();
+  codec_timer_ = std::make_unique<CodecTimer>();
   render_delay_ = kDefaultRenderDelay;
   min_playout_delay_ = TimeDelta::Zero();
   jitter_delay_ = TimeDelta::Zero();

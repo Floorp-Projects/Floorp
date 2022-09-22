@@ -17,7 +17,7 @@
 #include "api/field_trials_view.h"
 #include "api/units/time_delta.h"
 #include "api/video/video_timing.h"
-#include "modules/video_coding/codec_timer.h"
+#include "modules/video_coding/timing/codec_timer.h"
 #include "rtc_base/experiments/field_trial_parser.h"
 #include "rtc_base/synchronization/mutex.h"
 #include "rtc_base/thread_annotations.h"
@@ -126,7 +126,7 @@ class VCMTiming {
   Clock* const clock_;
   const std::unique_ptr<TimestampExtrapolator> ts_extrapolator_
       RTC_PT_GUARDED_BY(mutex_);
-  std::unique_ptr<VCMCodecTimer> codec_timer_ RTC_GUARDED_BY(mutex_)
+  std::unique_ptr<CodecTimer> codec_timer_ RTC_GUARDED_BY(mutex_)
       RTC_PT_GUARDED_BY(mutex_);
   TimeDelta render_delay_ RTC_GUARDED_BY(mutex_);
   // Best-effort playout delay range for frames from capture to render.

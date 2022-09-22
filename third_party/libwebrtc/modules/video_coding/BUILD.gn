@@ -164,8 +164,6 @@ rtc_library("frame_helpers") {
 
 rtc_library("timing") {
   sources = [
-    "codec_timer.cc",
-    "codec_timer.h",
     "timing.cc",
     "timing.h",
   ]
@@ -180,20 +178,9 @@ rtc_library("timing") {
     "../../rtc_base/synchronization:mutex",
     "../../rtc_base/time:timestamp_extrapolator",
     "../../system_wrappers",
+    "timing:codec_timer",
   ]
   absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
-}
-
-rtc_library("rtt_filter") {
-  sources = [
-    "rtt_filter.cc",
-    "rtt_filter.h",
-  ]
-  deps = [ "../../api/units:time_delta" ]
-  absl_deps = [
-    "//third_party/abseil-cpp/absl/algorithm:container",
-    "//third_party/abseil-cpp/absl/container:inlined_vector",
-  ]
 }
 
 rtc_library("jitter_estimator") {
@@ -202,7 +189,6 @@ rtc_library("jitter_estimator") {
     "jitter_estimator.h",
   ]
   deps = [
-    ":rtt_filter",
     "../../api:field_trials_view",
     "../../api/units:data_size",
     "../../api/units:frequency",
@@ -212,20 +198,7 @@ rtc_library("jitter_estimator") {
     "../../rtc_base:safe_conversions",
     "../../rtc_base/experiments:jitter_upper_bound_experiment",
     "../../system_wrappers",
-  ]
-  absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
-}
-
-rtc_library("inter_frame_delay") {
-  sources = [
-    "inter_frame_delay.cc",
-    "inter_frame_delay.h",
-  ]
-  deps = [
-    "..:module_api_public",
-    "../../api/units:frequency",
-    "../../api/units:time_delta",
-    "../../api/units:timestamp",
+    "timing:rtt_filter",
   ]
   absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
 }
@@ -279,9 +252,7 @@ rtc_library("video_coding") {
     ":codec_globals_headers",
     ":encoded_frame",
     ":frame_helpers",
-    ":inter_frame_delay",
     ":jitter_estimator",
-    ":rtt_filter",
     ":timing",
     ":video_codec_interface",
     ":video_coding_utility",
@@ -348,6 +319,8 @@ rtc_library("video_coding") {
     "../rtp_rtcp:rtp_video_header",
     "codecs/av1:av1_svc_config",
     "svc:scalability_mode_util",
+    "timing:inter_frame_delay",
+    "timing:rtt_filter",
   ]
   absl_deps = [
     "//third_party/abseil-cpp/absl/base:core_headers",
@@ -404,7 +377,6 @@ rtc_library("video_coding_legacy") {
   deps = [
     ":codec_globals_headers",
     ":encoded_frame",
-    ":inter_frame_delay",
     ":jitter_estimator",
     ":timing",
     ":video_codec_interface",
@@ -438,6 +410,7 @@ rtc_library("video_coding_legacy") {
     "../rtp_rtcp:rtp_rtcp_format",
     "../rtp_rtcp:rtp_video_header",
     "../utility",
+    "timing:inter_frame_delay",
   ]
   absl_deps = [
     "//third_party/abseil-cpp/absl/memory",
@@ -1181,7 +1154,6 @@ if (rtc_include_tests) {
       "h264_sprop_parameter_sets_unittest.cc",
       "h264_sps_pps_tracker_unittest.cc",
       "histogram_unittest.cc",
-      "inter_frame_delay_unittest.cc",
       "jitter_buffer_unittest.cc",
       "jitter_estimator_tests.cc",
       "loss_notification_controller_unittest.cc",
@@ -1192,7 +1164,6 @@ if (rtc_include_tests) {
       "rtp_frame_reference_finder_unittest.cc",
       "rtp_vp8_ref_finder_unittest.cc",
       "rtp_vp9_ref_finder_unittest.cc",
-      "rtt_filter_unittest.cc",
       "session_info_unittest.cc",
       "test/stream_generator.cc",
       "test/stream_generator.h",
@@ -1224,11 +1195,9 @@ if (rtc_include_tests) {
       ":encoded_frame",
       ":frame_dependencies_calculator",
       ":h264_packet_buffer",
-      ":inter_frame_delay",
       ":jitter_estimator",
       ":nack_requester",
       ":packet_buffer",
-      ":rtt_filter",
       ":simulcast_test_fixture_impl",
       ":timing",
       ":video_codec_interface",

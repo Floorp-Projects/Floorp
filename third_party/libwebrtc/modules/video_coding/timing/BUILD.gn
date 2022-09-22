@@ -1,0 +1,61 @@
+# Copyright (c) 2022 The WebRTC project authors. All Rights Reserved.
+#
+# Use of this source code is governed by a BSD-style license
+# that can be found in the LICENSE file in the root of the source
+# tree. An additional intellectual property rights grant can be found
+# in the file PATENTS.  All contributing project authors may
+# be found in the AUTHORS file in the root of the source tree.
+
+import("../../../webrtc.gni")
+
+rtc_library("codec_timer") {
+  sources = [
+    "codec_timer.cc",
+    "codec_timer.h",
+  ]
+  deps = [ "../../../rtc_base:rtc_numerics" ]
+}
+
+rtc_library("inter_frame_delay") {
+  sources = [
+    "inter_frame_delay.cc",
+    "inter_frame_delay.h",
+  ]
+  deps = [
+    "../..:module_api_public",
+    "../../../api/units:frequency",
+    "../../../api/units:time_delta",
+    "../../../api/units:timestamp",
+  ]
+  absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
+}
+
+rtc_library("rtt_filter") {
+  sources = [
+    "rtt_filter.cc",
+    "rtt_filter.h",
+  ]
+  deps = [ "../../../api/units:time_delta" ]
+  absl_deps = [
+    "//third_party/abseil-cpp/absl/algorithm:container",
+    "//third_party/abseil-cpp/absl/container:inlined_vector",
+  ]
+}
+
+rtc_library("timing_unittests") {
+  testonly = true
+  sources = [
+    "inter_frame_delay_unittest.cc",
+    "rtt_filter_unittest.cc",
+  ]
+  deps = [
+    ":inter_frame_delay",
+    ":rtt_filter",
+    "../../../api/units:frequency",
+    "../../../api/units:time_delta",
+    "../../../api/units:timestamp",
+    "../../../system_wrappers:system_wrappers",
+    "../../../test:test_support",
+  ]
+  absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
+}
