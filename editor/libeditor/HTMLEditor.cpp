@@ -4338,52 +4338,84 @@ nsresult HTMLEditor::SelectAllInternal() {
     return NS_ERROR_EDITOR_DESTROYED;
   }
 
-  // XXX Perhaps, we should check whether we still have focus since composition
-  //     event listener may have already moved focus to different editing
-  //     host or other element.  So, perhaps, we need to retrieve anchor node
-  //     before committing composition and check if selection is still in
-  //     same editing host.
-
-  nsINode* anchorNode = SelectionRef().GetAnchorNode();
-  if (NS_WARN_IF(!anchorNode) || NS_WARN_IF(!anchorNode->IsContent())) {
-    return NS_ERROR_FAILURE;
-  }
-
-  nsCOMPtr<nsIContent> anchorContent = anchorNode->AsContent();
-  nsCOMPtr<nsIContent> rootContent;
-  if (anchorContent->HasIndependentSelection()) {
-    SelectionRef().SetAncestorLimiter(nullptr);
-    rootContent = mRootElement;
-    if (NS_WARN_IF(!rootContent)) {
-      return NS_ERROR_UNEXPECTED;
+  auto GetBodyElementIfElementIsParentOfHTMLBody =
+      [](const Element& aElement) -> Element* {
+    if (!aElement.OwnerDoc()->IsHTMLDocument()) {
+      return const_cast<Element*>(&aElement);
     }
-  } else {
-    RefPtr<PresShell> presShell = GetPresShell();
-    rootContent = anchorContent->GetSelectionRootContent(presShell);
-    if (NS_WARN_IF(!rootContent)) {
-      return NS_ERROR_UNEXPECTED;
-    }
-    // If the document is HTML document (not XHTML document), we should
-    // select all children of the `<body>` element instead of `<html>`
-    // element.
-    if (Document* document = GetDocument()) {
-      if (document->IsHTMLDocument()) {
-        if (HTMLBodyElement* bodyElement = document->GetBodyElement()) {
-          if (nsContentUtils::ContentIsFlattenedTreeDescendantOf(bodyElement,
-                                                                 rootContent)) {
-            rootContent = bodyElement;
+    HTMLBodyElement* bodyElement = aElement.OwnerDoc()->GetBodyElement();
+    return bodyElement && nsContentUtils::ContentIsFlattenedTreeDescendantOf(
+                              bodyElement, &aElement)
+               ? bodyElement
+               : const_cast<Element*>(&aElement);
+  };
+
+  nsCOMPtr<nsIContent> selectionRootContent =
+      [&]() MOZ_CAN_RUN_SCRIPT -> nsIContent* {
+    RefPtr<Element> elementToBeSelected = [&]() -> Element* {
+      // If there is at least one selection range, we should compute the
+      // selection root from the anchor node.
+      if (SelectionRef().RangeCount()) {
+        if (nsIContent* content =
+                nsIContent::FromNodeOrNull(SelectionRef().GetAnchorNode())) {
+          if (content->IsElement()) {
+            return content->AsElement();
+          }
+          if (Element* parentElement =
+                  content->GetParentElementCrossingShadowRoot()) {
+            return parentElement;
           }
         }
       }
+      // If no element contains a selection range, we should select all children
+      // of the focused element at least.
+      if (Element* focusedElement = GetFocusedElement()) {
+        return focusedElement;
+      }
+      // of the body or document element.
+      Element* bodyOrDocumentElement = GetRoot();
+      NS_WARNING_ASSERTION(bodyOrDocumentElement,
+                           "There was no element in the document");
+      return bodyOrDocumentElement;
+    }();
+
+    // If the element to be selected is <input type="text"> or <textarea>,
+    // GetSelectionRootContent() returns its anonymous <div> element, but we
+    // want to select all of the document or selection limiter.  Therefore,
+    // we should use its parent to compute the selection root.
+    if (elementToBeSelected->HasIndependentSelection()) {
+      Element* parentElement = elementToBeSelected->GetParentElement();
+      if (MOZ_LIKELY(parentElement)) {
+        elementToBeSelected = parentElement;
+      }
     }
+
+    // Then, compute the selection root content to select all including
+    // elementToBeSelected.
+    RefPtr<PresShell> presShell = GetPresShell();
+    nsIContent* computedSelectionRootContent =
+        elementToBeSelected->GetSelectionRootContent(presShell);
+    if (NS_WARN_IF(!computedSelectionRootContent)) {
+      return nullptr;
+    }
+    if (MOZ_UNLIKELY(!computedSelectionRootContent->IsElement())) {
+      return computedSelectionRootContent;
+    }
+    return GetBodyElementIfElementIsParentOfHTMLBody(
+        *computedSelectionRootContent->AsElement());
+  }();
+  if (NS_WARN_IF(!selectionRootContent)) {
+    return NS_ERROR_FAILURE;
   }
 
   Maybe<Selection::AutoUserInitiated> userSelection;
-  if (!rootContent->IsEditable()) {
+  // XXX Do we need to mark it as "user initiated" for
+  //     `Document.execCommand("selectAll")`?
+  if (!selectionRootContent->IsEditable()) {
     userSelection.emplace(SelectionRef());
   }
   ErrorResult error;
-  SelectionRef().SelectAllChildren(*rootContent, error);
+  SelectionRef().SelectAllChildren(*selectionRootContent, error);
   NS_WARNING_ASSERTION(!error.Failed(),
                        "Selection::SelectAllChildren() failed");
   return error.StealNSResult();
