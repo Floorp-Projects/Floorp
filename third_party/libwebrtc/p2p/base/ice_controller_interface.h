@@ -42,8 +42,8 @@ struct IceControllerEvent {
     ICE_CONTROLLER_RECHECK,
   };
 
-  // TODO(bugs.webrtc.org/14125) remove.
-  IceControllerEvent(const Type& _type)  // NOLINT: runtime/explicit
+  [[deprecated("bugs.webrtc.org/14125")]] IceControllerEvent(
+      const Type& _type)  // NOLINT: runtime/explicit
       : type(_type), reason(FromType(_type)) {}
 
   IceControllerEvent(IceSwitchReason _reason, int _recheck_delay_ms)
@@ -151,20 +151,21 @@ class IceControllerInterface {
   // Check if we should switch to `connection`.
   // This method is called for IceSwitchReasons that can switch directly
   // i.e without resorting.
-  virtual SwitchResult ShouldSwitchConnection(IceControllerEvent reason,
-                                              const Connection* connection) = 0;
-  virtual SwitchResult ShouldSwitchConnection(IceSwitchReason reason,
-                                              const Connection* connection) {
-    return ShouldSwitchConnection(
-        IceControllerEvent::FromIceSwitchReason(reason), connection);
+  [[deprecated("bugs.webrtc.org/14125")]] virtual SwitchResult
+  ShouldSwitchConnection(IceControllerEvent reason,
+                         const Connection* connection) {
+    return ShouldSwitchConnection(IceControllerEvent::FromType(reason.type),
+                                  connection);
   }
+  virtual SwitchResult ShouldSwitchConnection(IceSwitchReason reason,
+                                              const Connection* connection) = 0;
 
   // Sort connections and check if we should switch.
-  virtual SwitchResult SortAndSwitchConnection(IceControllerEvent reason) = 0;
-  virtual SwitchResult SortAndSwitchConnection(IceSwitchReason reason) {
-    return SortAndSwitchConnection(
-        IceControllerEvent::FromIceSwitchReason(reason));
+  [[deprecated("bugs.webrtc.org/14125")]] virtual SwitchResult
+  SortAndSwitchConnection(IceControllerEvent reason) {
+    return SortAndSwitchConnection(IceControllerEvent::FromType(reason.type));
   }
+  virtual SwitchResult SortAndSwitchConnection(IceSwitchReason reason) = 0;
 
   // Prune connections.
   virtual std::vector<const Connection*> PruneConnections() = 0;
