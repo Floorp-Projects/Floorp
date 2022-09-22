@@ -1,7 +1,10 @@
 <!doctype html>
 <div contenteditable>abc<span></span><span></span></div>
 <script>
-let editor = document.querySelector("div[contenteditable]");
-getSelection().collapse(editor, 3);
-document.execCommand("inserttext", false, " ");
+  // For emulating the traditional behavior, collapse Selection to end of the
+  // <body>, i.e., at the text node after this <script>.
+getSelection().collapse(document.body, document.body.childNodes.length);
+const editingHost = document.querySelector("div[contenteditable]");
+getSelection().collapse(editingHost, 3);
+document.execCommand("insertText", false, " ");
 </script>

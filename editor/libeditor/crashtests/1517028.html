@@ -2,16 +2,21 @@
 abc
 <head>
 <script>
-  function start() {
-    document.execCommand('justifyleft', false, ) 
-    document.designMode = 'on' 
-    document.execCommand('insertparagraph', false, ) 
-  }
-  document.addEventListener('DOMContentLoaded', start)
-</script>  
+document.addEventListener('DOMContentLoaded', () => {
+  // For emulating the traditional behavior, collapse Selection to end of the
+  // <em> which is the deepest last child of the <body> (at the comment node).
+  getSelection().collapse(
+    document.querySelector("em[contenteditable]"),
+    document.querySelector("em[contenteditable]").childNodes.length
+  );
+  document.execCommand("justifyLeft");
+  document.designMode = 'on';
+  document.execCommand("insertParagraph");
+});
+</script>
 </head>
 <h4>
-<em contenteditable="">
+<em contenteditable>
 <big>
 <button autofocus formnovalidate formtarget="">
 </button>

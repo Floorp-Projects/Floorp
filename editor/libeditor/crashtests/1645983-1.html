@@ -1,8 +1,10 @@
 <div contenteditable>&nbsp;a</div>
 <script>
-let editor = document.querySelector("div[contenteditable]");
-editor.insertBefore(document.createTextNode(""), editor.firstChild);
-let selection = getSelection();
-selection.collapse(editor.firstChild.nextSibling, 2);
-document.execCommand("delete", false);
+// For emulating the traditional behavior, collapse Selection to end of the
+// <body>, i.e., at the text node after this <script>.
+getSelection().collapse(document.body, document.body.childNodes.length);
+const editingHost = document.querySelector("div[contenteditable]");
+editingHost.insertBefore(document.createTextNode(""), editingHost.firstChild);
+getSelection().collapse(editingHost.firstChild.nextSibling, 2);
+document.execCommand("delete");
 </script>

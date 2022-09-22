@@ -1,19 +1,28 @@
 <script>
-function func_a() {
-  a.appendChild(b)
-  document.execCommand("indent", false)
+function onError() {
+  document.querySelector("details").appendChild(
+    document.querySelector("p")
+  );
+  document.execCommand("indent");
 }
-function func_b() {
-  document.execCommand("delete", false)
-  a.contentEditable = "true"
-  c.select()
+
+function onLoadOfStyle() {
+  document.execCommand("delete");
+  document.querySelector("details").contentEditable = "true";
+  // For emulating the traditional behavior, collapse Selection to end of the
+  // <style>.
+  getSelection().collapse(
+    document.querySelector("style"),
+    document.querySelector("style").childNodes.length
+  );
+  document.querySelector("input").select();
 }
 </script>
 <video focus="false">
-<source onerror="func_a()">
+<source onerror="onError()">
 </video>
-<details id="a" open="tru">
-<p id="b">
-<input id="c" contenteditable="pla">
-<style onload="func_b()">
+<details open>
+<p>
+<input contenteditable="false">
+<style onload="onLoadOfStyle()">
 <!-- x -->

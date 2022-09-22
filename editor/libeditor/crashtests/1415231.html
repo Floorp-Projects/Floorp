@@ -1,17 +1,27 @@
 <script>
-function jsfuzzer() {
-  var var00043 = window.getSelection();
-  htmlvar00018.addEventListener("DOMNodeRemoved", eh1);
-  var00043.setPosition(htmlvar00016);
+function onLoad() {
+  // For emulating the traditional behavior, collapse Selection to end of the
+  // <option> which is the last child of the <body>.
+  getSelection().collapse(
+    document.querySelector("option"),
+    document.querySelector("option").childNodes.length
+  );
+  document.querySelector("ins").addEventListener(
+    "DOMNodeRemoved",
+    onDOMNodeRemoved
+  );
+  getSelection().setPosition(
+    document.querySelector("shadow")
+  );
   document.execCommand("insertText", false, "1");
 }
-function eh1() {
-  document.execCommand("insertHorizontalRule", false);
-  document.execCommand("justifyCenter", false);
+function onDOMNodeRemoved() {
+  document.execCommand("insertHorizontalRule");
+  document.execCommand("justifyCenter");
 }
 </script>
-<body onload=jsfuzzer()>
-<li contenteditable="true">
-<shadow id="htmlvar00016">
-<ins id="htmlvar00018">
+<body onload="onLoad()">
+<li contenteditable>
+<shadow>
+<ins>
 <option>

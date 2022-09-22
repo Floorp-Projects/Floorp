@@ -1,11 +1,14 @@
 <body>
-<table contenteditable="true"></table>
+<table contenteditable></table>
 </body>
 <script>
 window.onload = function() {
-  document.execCommand("useCSS", false, false);
-  document.designMode = 'on';
-  document.execCommand("insertunorderedlist", false);
-  document.execCommand("justifyfull", false);
+  // For emulating the traditional behavior, collapse Selection to end of the
+  // <body>, i.e., at the text node after the <table>.
+  getSelection().collapse(document.body, document.body.childNodes.length);
+  document.execCommand("styleWithCSS", false, false);
+  document.designMode = "on";
+  document.execCommand("insertUnorderedList");
+  document.execCommand("justifyFull");
 };
 </script>

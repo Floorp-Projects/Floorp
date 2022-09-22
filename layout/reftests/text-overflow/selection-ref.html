@@ -80,7 +80,11 @@ alert(e+'\n'+elm.id+'\n'+t)
 }
 }
 function selectText() {
- var divs = document.getElementsByTagName('div');
+  // For putting selection ranges to multiple editing hosts, we need to put
+  // a range outside all editable elements first, then, selection's ancestor
+  // limiter won't be set to an editing host.
+  getSelection().collapse(document.body, document.body.childNodes.length);
+  var divs = document.getElementsByTagName('div');
   for (i = 0; i < divs.length; ++i) {
     addRange(divs[i]);
   }

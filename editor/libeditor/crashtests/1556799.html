@@ -1,11 +1,19 @@
 <script>
-function go() {
-  document.getSelection().selectAllChildren(a)
-  document.execCommand("insertUnorderedList", false)
-  document.execCommand("enableObjectResizing", false)
+function onError() {
+  // For emulating the traditional behavior, collapse Selection to end of the
+  // <dl> which is the last deepest child of the <body>.
+  getSelection().collapse(
+    document.querySelector("dl"),
+    document.querySelector("dl").childNodes.length
+  );
+  getSelection().selectAllChildren(
+    document.querySelector("img")
+  );
+  document.execCommand("insertUnorderedList");
+  document.execCommand("enableObjectResizing");
 }
 </script>
 <dd contenteditable="true">
-<audio src="data:text/html,foo" onerror="go()">
-<img id="a"></img>
+<audio src="data:text/html,foo" onerror="onError()">
+<img></img>
 <dl>

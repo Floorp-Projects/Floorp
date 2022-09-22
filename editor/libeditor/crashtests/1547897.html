@@ -1,16 +1,21 @@
 <html>
 <head>
-    <script>
-      function start () {
-        const selection = window.getSelection()
-        selection.setPosition(hr, 0)
-        document.execCommand('delete', false)
-      }
-    </script>
-<body onload="start()">
-<p id="" hidden="">
-    <canvas id="" contenteditable="">
-        <hr id="hr" contenteditable="true">
+<script>
+function onLoad() {
+  // For emulating the traditional behavior, collapse Selection to end of the
+  // <body> (at the text node after the <p hidden>).
+  getSelection().collapse(document.body, document.body.childNodes.length);
+  getSelection().setPosition(
+    document.querySelector("hr"),
+    0
+  );
+  document.execCommand("delete");
+}
+</script>
+<body onload="onLoad()">
+<p hidden>
+    <canvas contenteditable>
+        <hr contenteditable>
         3uW4*</hr></canvas>
 </p>
 </body>

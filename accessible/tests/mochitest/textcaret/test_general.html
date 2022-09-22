@@ -63,7 +63,7 @@
       turnCaretBrowsing(true);
 
       // test caret offsets
-      testCaretOffset(document, 15);
+      testCaretOffset(document, 0);  // because of no selection ranges
       testCaretOffset("textbox", -1);
       testCaretOffset("textarea", -1);
       testCaretOffset("p", -1);

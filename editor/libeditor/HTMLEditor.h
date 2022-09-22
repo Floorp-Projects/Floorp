@@ -667,9 +667,16 @@ class HTMLEditor final : public EditorBase,
   }
 
   /**
-   * Retruns true if we're in designMode.
+   * Return true if we're in designMode.
    */
   bool IsInDesignMode() const;
+
+  /**
+   * Return true if entire the document is editable (although the document
+   * may have non-editable nodes, e.g.,
+   * <body contenteditable><div contenteditable="false"></div></body>
+   */
+  bool EntireDocumentIsEditable() const;
 
   /**
    * Basically, this always returns true if we're for `contenteditable` or

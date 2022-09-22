@@ -1,15 +1,24 @@
 <script>
-function go() {
-  svgvar00002.addEventListener("DOMNodeInserted", () => {
-    svg.appendChild(svgvar00008);
+function onLoad() {
+  const svg = document.querySelector("svg");
+  const feConvolveMatrix = document.querySelectorAll("feConvolveMatrix");
+  // For emulating the traditional behavior, collapse Selection to end of the
+  // last <svg> which is the deepest last child of the <body> (i.e., at the
+  // text node after the last <feConvolveMatrix>).
+  getSelection().collapse(svg, svg.childNodes.length);
+  feConvolveMatrix[0].addEventListener("DOMNodeInserted", () => {
+    svg.appendChild(feConvolveMatrix[1]);
     document.execCommand("insertOrderedList", false);
   });
-  svgvar00002.insertAdjacentHTML("afterBegin", table.outerHTML);
+  feConvolveMatrix[0].insertAdjacentHTML(
+    "afterBegin",
+    document.querySelector("table").outerHTML
+  );
 }
 </script>
-<body onload=go()>
-<table id="table"></table>
-<b contenteditable="true">
-<svg id="svg">
-<feConvolveMatrix id="svgvar00002"/>
-<feConvolveMatrix id="svgvar00008"/>
+<body onload="onLoad()">
+<table></table>
+<b contenteditable>
+<svg>
+<feConvolveMatrix/>
+<feConvolveMatrix/>

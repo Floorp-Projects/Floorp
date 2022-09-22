@@ -1,11 +1,19 @@
-<script id="a">
-function go() {
-  a.appendChild(b)
-  document.execCommand("indent", false)
-  document.execCommand("delete", false)
+<script>
+function onLoad() {
+  // For emulating the traditional behavior, collapse Selection to end of the
+  // <textarea> which is the last child of the <body>.
+  getSelection().collapse(
+    document.querySelector("textarea"),
+    document.querySelector("textarea").childNodes.length
+  );
+  document.querySelector("script").appendChild(
+    document.querySelector("li[contenteditable=false]")
+  );
+  document.execCommand("indent");
+  document.execCommand("delete");
 }
 </script>
-<body onload=go()>
-<ul contenteditable="true">
-<li id="b" contenteditable="false">
+<body onload="onLoad()">
+<ul contenteditable>
+<li contenteditable="false">
 <textarea autofocus>

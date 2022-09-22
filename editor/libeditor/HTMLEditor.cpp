@@ -733,6 +733,13 @@ bool HTMLEditor::IsInDesignMode() const {
   return document && document->IsInDesignMode();
 }
 
+bool HTMLEditor::EntireDocumentIsEditable() const {
+  Document* document = GetDocument();
+  return document && document->GetDocumentElement() &&
+         (document->GetDocumentElement()->IsEditable() ||
+          (document->GetBody() && document->GetBody()->IsEditable()));
+}
+
 void HTMLEditor::CreateEventListeners() {
   // Don't create the handler twice
   if (!mEventListener) {
@@ -806,6 +813,12 @@ NS_IMETHODIMP HTMLEditor::EndOfDocument() {
 
 nsresult HTMLEditor::CollapseSelectionToEndOfLastLeafNodeOfDocument() const {
   MOZ_ASSERT(IsEditActionDataAvailable());
+
+  // We should do nothing with the result of GetRoot() if only a part of the
+  // document is editable.
+  if (!EntireDocumentIsEditable()) {
+    return NS_OK;
+  }
 
   RefPtr<Element> bodyOrDocumentElement = GetRoot();
   if (NS_WARN_IF(!bodyOrDocumentElement)) {

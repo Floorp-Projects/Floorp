@@ -2,19 +2,20 @@
 <html>
 <head>
 <script>
-
-function boom()
-{
-  window.getSelection().removeAllRanges();
-  var r = document.createRange();
-  r.setStart(document.getElementById("x"), 1);
-  r.setEnd(document.getElementById("y"), 0);
-  window.getSelection().addRange(r);
-  document.execCommand("insertorderedlist", false, null);
+function onLoad() {
+  const editingHost = document.querySelectorAll("div[contenteditable]");
+  // For emulating the traditional behavior, collapse Selection to end of the
+  // last <div contenteditable> which is the deepest last child of the <body>.
+  getSelection().collapse(editingHost[1], editingHost[1].childNodes.length);
+  getSelection().removeAllRanges();
+  const r = document.createRange();
+  r.setStart(editingHost[0], 1);
+  r.setEnd(editingHost[1], 0);
+  getSelection().addRange(r);
+  document.execCommand("insertOrderedList");
 }
-
 </script>
 </head>
 
-<body onload="boom();"><div id="x" contenteditable="true">a</div><div id="y" contenteditable="true"></div></body>
+<body onload="onLoad();"><div contenteditable>a</div><div contenteditable></div></body>
 </html>

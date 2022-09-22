@@ -1,13 +1,21 @@
 <script>
 window.onload = () => {
-  b.style.setProperty("text-decoration", "overline underline line-through")
-  b.appendChild(a)
-  document.execCommand("selectAll", false)
-  window.getSelection().extend(b, 0)
-  document.execCommand("underline", false)
+  const font = document.querySelector("font");
+  // For emulating traditional behavior, collapse Selection to end of the
+  // <font>.
+  getSelection().collapse(font, font.childNodes.length);
+  const meta = document.querySelector("meta");
+  meta.style.setProperty(
+    "text-decoration",
+    "overline underline line-through"
+  );
+  meta.appendChild(font);
+  document.execCommand("selectAll");
+  getSelection().extend(meta, 0);
+  document.execCommand("underline");
 }
 </script>
-<ins contenteditable="true">
+<ins contenteditable>
 a
-<meta id="b"></meta>
-<font id="a">
+<meta></meta>
+<font>

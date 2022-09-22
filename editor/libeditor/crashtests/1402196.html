@@ -2,20 +2,28 @@
 <html class="reftest-wait">
 <head>
 <script>
-function load() {
-  document.getElementById("spacer").addEventListener("DOMNodeInserted", () => {
-    document.getElementById("style").appendChild(
-                                       document.getElementById("table"));
+function onLoad() {
+  // For emulating the traditional behavior, collapse Selection to end of the
+  // <p> which is the deepest last child of the <body> (<spacer> can contain
+  // <p>).
+  getSelection().collapse(
+    document.querySelector("p"),
+    document.querySelector("p").childNodes.length
+  );
+  document.querySelector("spacer").addEventListener("DOMNodeInserted", () => {
+    document.querySelector("style").appendChild(
+      document.querySelector("table")
+    );
     document.documentElement.classList.remove("reftest-wait");
   });
-  document.execCommand("insertOrderedList", false);
+  document.execCommand("insertOrderedList");
 }
 </script>
 </head>
-<body onload="load()">
-<table id="table"></table>
-<style id="style"></style>
-<spacer id="spacer" contenteditable="true">
-<p id="p"></p>
+<body onload="onLoad()">
+<table></table>
+<style></style>
+<spacer contenteditable>
+<p></p>
 </body>
 </html>

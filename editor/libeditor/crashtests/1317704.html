@@ -3,22 +3,25 @@
 <head>
 <meta charset="utf-8">
 <script>
-addEventListener('DOMContentLoaded', function(){
- document.documentElement.className = 'lizard';
- setTimeout(function(){
-  document.execCommand('selectAll', false, null);
-  document.designMode = 'on';
-  document.execCommand('removeformat', false, null);
- }, 0);
+addEventListener('DOMContentLoaded', () => {
+  // For emulating the traditional behavior, collapse Selection to end of the
+  // <body>, i.e., at the text node after the last invalid </span>.
+  getSelection().collapse(document.body, document.body.childNodes.length);
+  document.documentElement.className = 'lizard';
+  setTimeout(() => {
+    document.execCommand('selectAll');
+    document.designMode = 'on';
+    document.execCommand('removeformat');
+  }, 0);
 });
 </script>
 <style>
-.lizard{
- -webkit-user-select:all;
+.lizard {
+  -webkit-user-select: all;
 }
-*{
- position:fixed;
- display:table-column;
+* {
+  position: fixed;
+  display: table-column;
 }
 </style>
 </head>

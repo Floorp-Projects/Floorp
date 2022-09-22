@@ -1,13 +1,18 @@
 <script>
 window.onload = () => {
-  document.execCommand("insertHorizontalRule", false)
-  window.getSelection().collapse(b)
-  document.execCommand("forwardDelete", false)
+  // For emulating the traditional behavior, collapse Selection to end of the
+  // <body> (at the text node after the <input>).
+  getSelection().collapse(document.body, document.body.childNodes.length);
+  document.execCommand("insertHorizontalRule");
+  getSelection().collapse(
+    document.querySelector("b")
+  );
+  document.execCommand("forwardDelete");
 }
-function go() {
-  document.getSelection().setPosition(a)
+function onFocusChangeOfInput() {
+  document.getSelection().setPosition(document.querySelector("pre"));
 }
 </script>
-<pre id="a">
+<pre>
 <time contenteditable>a|</t>
-<input id="b" onfocus="go()" autofocus onblur="go()">
+<input onfocus="onFocusChangeOfInput()" autofocus onblur="onFocusChangeOfInput()">

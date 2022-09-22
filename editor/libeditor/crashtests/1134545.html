@@ -2,21 +2,22 @@
 <!-- saved from url=(0065)https://bug1134545.bugzilla.mozilla.org/attachment.cgi?id=8566418 -->
 <html><head><meta http-equiv="Content-Type" content="text/html; charset=windows-1252">
 <script>
-
-function boom()
-{
-    textNode = document.createTextNode(" ");
-    x.appendChild(textNode);
-    x.setAttribute('contenteditable', "true");
-    textNode.remove();
-    window.getSelection().selectAllChildren(textNode);
-    document.execCommand("increasefontsize", false, null);
+function onLoad() {
+  // For emulating the traditional behavior, collapse Selection to end of the
+  // <body>, i.e., at the text node after the <div contenteditable>.
+  getSelection().collapse(document.body, document.body.childNodes.length);
+  const textNode = document.createTextNode(" ");
+  const editingHost = document.querySelector("div[contenteditable]");
+  editingHost.appendChild(textNode);
+  editingHost.setAttribute('contenteditable', "true");
+  textNode.remove();
+  getSelection().selectAllChildren(textNode);
+  document.execCommand("increasefontsize");
 }
-
 </script>
 </head>
-<body onload="boom();">
-<div id="x" contenteditable="true"></div>
+<body onload="onLoad();">
+<div contenteditable></div>
 
 
 </body></html>

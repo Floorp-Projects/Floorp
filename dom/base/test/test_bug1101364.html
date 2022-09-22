@@ -26,42 +26,67 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1101364
 <pre id="test">
 <script class="testbody" type="text/javascript">
 
-async function test()
-{
-  var iframe1 = document.getElementById('test1');
-  iframe1.focus();
-  var docShell = SpecialPowers.wrap(iframe1.contentWindow).docShell;
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(async () => {
+  await (async () => {
+    const iframe = document.getElementById("test1");
+    iframe.focus();
+    const docShell = SpecialPowers.wrap(iframe.contentWindow).docShell;
 
-  // test1
-  docShell.doCommand("cmd_selectAll");
-  var withoutContenteditable = await snapshotWindow(iframe1.contentWindow);
+    docShell.doCommand("cmd_selectAll");
+    info(
+      "Waiting for getting screenshot of \"Select All\" without contenteditable..."
+    );
+    const withoutContenteditable = await snapshotWindow(iframe.contentWindow);
 
-  iframe1.contentDocument.getElementById('testDiv').setAttribute('contentEditable', true);
-  docShell.doCommand("cmd_selectAll");
-  var withContenteditable = await snapshotWindow(iframe1.contentWindow);
-  dump(withoutContenteditable.toDataURL());
-  dump(withContenteditable.toDataURL());
+    iframe.contentDocument
+      .getElementById("testDiv")
+      .setAttribute("contentEditable", true);
+    docShell.doCommand("cmd_selectAll");
+    info(
+      "Waiting for getting screenshot of \"Select All\" in contenteditable..."
+    );
+    const withContenteditable = await snapshotWindow(iframe.contentWindow);
+    const result =
+      compareSnapshots(withoutContenteditable, withContenteditable, true);
+    ok(
+      result[0],
+      `Select all should look identical\ngot: ${
+        result[2]
+      }\nexpected: ${result[1]}`
+    );
+  })();
 
-  ok(compareSnapshots(withoutContenteditable, withContenteditable, true)[0], 'Select all should look identical');
+  await (async () => {
+    const iframe = document.getElementById("test2");
+    iframe.focus();
+    iframe.contentDocument.querySelector("div[contenteditable]").focus();
+    const docShell = SpecialPowers.wrap(iframe.contentWindow).docShell;
+    const test2Inner = iframe.contentDocument.getElementById("test2Inner");
+    test2Inner.style.MozUserSelect = "text";
+    docShell.doCommand("cmd_selectAll");
+    info(
+      "Waiting for getting screenshot of \"Select All\" in contenteditable (use-select: text)..."
+    );
+    const withoutUserSelect = await snapshotWindow(iframe.contentWindow);
 
-  // test2
-  var iframe2 = document.getElementById('test2');
-  iframe2.focus();
-  var docShell = SpecialPowers.wrap(iframe2.contentWindow).docShell;
-  var test2Inner = iframe2.contentDocument.getElementById('test2Inner');
-  test2Inner.style.MozUserSelect = 'text';
-  docShell.doCommand("cmd_selectAll");
-  var withoutUserSelect = await snapshotWindow(iframe2.contentWindow);
-
-  test2Inner.style.MozUserSelect = 'none';
-  docShell.doCommand("cmd_selectAll");
-  var withUserSelect = await snapshotWindow(iframe2.contentWindow);
-  ok(compareSnapshots(withoutUserSelect, withUserSelect, true)[0], 'Editable fields should ignore user select style');
+    test2Inner.style.MozUserSelect = "none";
+    docShell.doCommand("cmd_selectAll");
+    info(
+      "Waiting for getting screenshot of \"Select All\" in contenteditable (use-select: none)..."
+    );
+    const withUserSelect = await snapshotWindow(iframe.contentWindow);
+    const result = compareSnapshots(withoutUserSelect, withUserSelect, true);
+    ok(
+      result[0],
+      `Editable fields should ignore user select style\ngot: ${
+        result[2]
+      }\nexpected: ${result[1]}`
+    );
+  })();
 
   SimpleTest.finish();
-}
-window.onload = function() { setTimeout(test, 0); };
-SimpleTest.waitForExplicitFinish();
+});
 </script>
 </pre>
 </body>

@@ -1,19 +1,40 @@
-<html id="a"><script type="text/javascript" id="__gaOptOutExtension">window["_gaUserPrefs"] = { ioo : function() { return true; } }</script><head>
-<meta http-equiv="content-type" content="text/html; charset=windows-1252"><script>
-function go() {
-  b.addEventListener("DOMCharacterDataModified", () => {
-    a.appendChild(b)
-  })
-  document.execCommand("delete", false)
+<html><script>
+window["_gaUserPrefs"] = { ioo : function() { return true; } }
+</script><head>
+<meta charset="windows-1252"><script>
+function onLoad() {
+  const form = document.querySelector("form");
+  form.addEventListener("DOMCharacterDataModified", () => {
+    document.documentElement.appendChild(form);
+  });
+  document.execCommand("delete");
 }
-function eh() {
-  b.reset()
+
+function onToggle() {
+  // For emulating the traditional behavior, collapse Selection to end of the
+  // <button> which is the deepest last child of the <body>.
+  getSelection().collapse(
+    document.querySelector("button"),
+    document.querySelector("button").childNodes.length
+  );
+  document.querySelector("form").reset();
 }
 </script>
-</head><body onload="go()">
-<details ontoggle="eh()" open="">
-<dt contenteditable="">
+</head><body onload="onLoad()">
+<details ontoggle="onToggle()" open>
+<dt contenteditable>
 </dt>
-</details><aside style="position: fixed; top: 0px; right: 0px; font-family: &quot;Lucida Console&quot;, monospace; background-color: rgb(242, 230, 217); padding: 3px; z-index: 10000; text-align: center; max-width: 120px; opacity: 0; transition: opacity 0.5s linear 0s;">1194 x 73</aside></body><form id="b"><keygen>
-<button autofocus="">
+</details><aside style="
+  position: fixed;
+  top: 0px;
+  right: 0px;
+  font-family: &quot;Lucida Console&quot;, monospace;
+  background-color: rgb(242, 230, 217);
+  padding: 3px;
+  z-index: 10000;
+  text-align: center;
+  max-width: 120px;
+  opacity: 0;
+  transition: opacity 0.5s linear 0s;">1194 x 73</aside></body><form id="b"><keygen>
+<button autofocus>
 </button></form></html>
