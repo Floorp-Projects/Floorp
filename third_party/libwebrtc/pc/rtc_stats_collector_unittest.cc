@@ -2156,6 +2156,7 @@ TEST_F(RTCStatsCollectorTest, CollectRTCInboundRTPStreamStats_Video) {
   video_media_info.receivers[0].estimated_playout_ntp_timestamp_ms =
       absl::nullopt;
   video_media_info.receivers[0].decoder_implementation_name = "";
+  video_media_info.receivers[0].min_playout_delay_ms = 50;
 
   RtpCodecParameters codec_parameters;
   codec_parameters.payload_type = 42;
@@ -2204,6 +2205,7 @@ TEST_F(RTCStatsCollectorTest, CollectRTCInboundRTPStreamStats_Video) {
   // `expected_video.last_packet_received_timestamp` should be undefined.
   // `expected_video.content_type` should be undefined.
   // `expected_video.decoder_implementation` should be undefined.
+  expected_video.min_playout_delay = 0.05;
 
   ASSERT_TRUE(report->Get(expected_video.id()));
   EXPECT_EQ(
