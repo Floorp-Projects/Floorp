@@ -34,6 +34,7 @@ class RTC_EXPORT SharedScreenCastStream
                              int fd,
                              uint32_t width = 0,
                              uint32_t height = 0);
+  void UpdateScreenCastStreamResolution(uint32_t width, uint32_t height);
   void StopScreenCastStream();
 
   // Below functions return the most recent information we get from a
