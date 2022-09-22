@@ -184,10 +184,7 @@ class PeerConnectionRampUpTest : public ::testing::Test {
     auto observer = std::make_unique<MockPeerConnectionObserver>();
     webrtc::PeerConnectionDependencies dependencies(observer.get());
     cricket::BasicPortAllocator* port_allocator =
-        new cricket::BasicPortAllocator(
-            fake_network_manager,
-            std::make_unique<rtc::BasicPacketSocketFactory>(
-                firewall_socket_server_.get()));
+        new cricket::BasicPortAllocator(fake_network_manager);
     port_allocator->set_step_delay(cricket::kDefaultStepDelay);
     dependencies.allocator =
         std::unique_ptr<cricket::BasicPortAllocator>(port_allocator);

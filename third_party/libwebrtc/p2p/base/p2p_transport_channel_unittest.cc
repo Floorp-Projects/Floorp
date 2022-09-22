@@ -157,7 +157,6 @@ cricket::Candidate CreateUdpCandidate(const std::string& type,
 
 cricket::BasicPortAllocator* CreateBasicPortAllocator(
     rtc::NetworkManager* network_manager,
-    rtc::SocketServer* socket_server,
     const cricket::ServerAddresses& stun_servers,
     const rtc::SocketAddress& turn_server_udp,
     const rtc::SocketAddress& turn_server_tcp) {
@@ -173,13 +172,11 @@ cricket::BasicPortAllocator* CreateBasicPortAllocator(
   }
   std::vector<cricket::RelayServerConfig> turn_servers(1, turn_server);
 
-  std::unique_ptr<cricket::BasicPortAllocator> allocator =
-      std::make_unique<cricket::BasicPortAllocator>(
-          network_manager,
-          std::make_unique<rtc::BasicPacketSocketFactory>(socket_server));
+  cricket::BasicPortAllocator* allocator =
+      new cricket::BasicPortAllocator(network_manager);
   allocator->Initialize();
   allocator->SetConfiguration(stun_servers, turn_servers, 0, webrtc::NO_PRUNE);
-  return allocator.release();
+  return allocator;
 }
 
 class MockIceControllerFactory : public cricket::IceControllerFactoryInterface {
@@ -283,12 +280,12 @@ class P2PTransportChannelTestBase : public ::testing::Test,
 
     ServerAddresses stun_servers;
     stun_servers.insert(kStunAddr);
-    ep1_.allocator_.reset(CreateBasicPortAllocator(
-        &ep1_.network_manager_, ss_.get(), stun_servers, kTurnUdpIntAddr,
-        rtc::SocketAddress()));
-    ep2_.allocator_.reset(CreateBasicPortAllocator(
-        &ep2_.network_manager_, ss_.get(), stun_servers, kTurnUdpIntAddr,
-        rtc::SocketAddress()));
+    ep1_.allocator_.reset(
+        CreateBasicPortAllocator(&ep1_.network_manager_, stun_servers,
+                                 kTurnUdpIntAddr, rtc::SocketAddress()));
+    ep2_.allocator_.reset(
+        CreateBasicPortAllocator(&ep2_.network_manager_, stun_servers,
+                                 kTurnUdpIntAddr, rtc::SocketAddress()));
     webrtc::metrics::Reset();
   }
 
@@ -4918,7 +4915,7 @@ class P2PTransportChannelMostLikelyToWorkFirstTest
                      kTurnUdpExtAddr) {
     network_manager_.AddInterface(kPublicAddrs[0]);
     allocator_.reset(
-        CreateBasicPortAllocator(&network_manager_, ss(), ServerAddresses(),
+        CreateBasicPortAllocator(&network_manager_, ServerAddresses(),
                                  kTurnUdpIntAddr, rtc::SocketAddress()));
     allocator_->set_flags(allocator_->flags() | PORTALLOCATOR_DISABLE_STUN |
                           PORTALLOCATOR_DISABLE_TCP);

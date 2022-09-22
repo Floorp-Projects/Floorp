@@ -90,40 +90,4 @@ TEST(AlwaysValidPointerTest, DefaultToLambda) {
   EXPECT_EQ(*ptr, "onkel skrue");
 }
 
-TEST(AlwaysValidPointerTest, NoDefaultObjectPassValidPointer) {
-  std::string str("foo");
-  AlwaysValidPointerNoDefault<std::string> ptr(&str);
-  EXPECT_EQ(*ptr, "foo");
-  EXPECT_EQ(ptr, &str);
-}
-
-TEST(AlwaysValidPointerTest, NoDefaultObjectWithTakeOverOwnership) {
-  std::unique_ptr<std::string> str = std::make_unique<std::string>("yum");
-  AlwaysValidPointerNoDefault<std::string> ptr(std::move(str));
-  EXPECT_EQ(*ptr, "yum");
-  std::unique_ptr<std::string> str2 = std::make_unique<std::string>("fun");
-  AlwaysValidPointerNoDefault<std::string> ptr2(std::move(str), str2.get());
-  EXPECT_EQ(*ptr2, "fun");
-  EXPECT_EQ(ptr2, str2.get());
-}
-
-#if GTEST_HAS_DEATH_TEST && !defined(WEBRTC_ANDROID)
-
-TEST(AlwaysValidPointerTest, NoDefaultObjectPassNullPointer) {
-  auto pass_null = []() {
-    AlwaysValidPointerNoDefault<std::string> ptr(nullptr);
-  };
-  EXPECT_DEATH(pass_null(), "");
-}
-
-TEST(AlwaysValidPointerTest, NoDefaultObjectPassNullUniquePointer) {
-  auto pass_null = []() {
-    std::unique_ptr<std::string> str;
-    AlwaysValidPointerNoDefault<std::string> ptr(std::move(str));
-  };
-  EXPECT_DEATH(pass_null(), "");
-}
-
-#endif
-
 }  // namespace webrtc
