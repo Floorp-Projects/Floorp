@@ -16,6 +16,7 @@
 
 #include "modules/audio_processing/aec3/aec3_common.h"
 #include "modules/audio_processing/aec3/aec3_fft.h"
+#include "modules/audio_processing/aec3/block.h"
 #include "modules/audio_processing/aec3/fft_data.h"
 
 namespace webrtc {
@@ -35,7 +36,7 @@ class SuppressionFilter {
                  const std::array<float, kFftLengthBy2Plus1>& suppression_gain,
                  float high_bands_gain,
                  rtc::ArrayView<const FftData> E_lowest_band,
-                 std::vector<std::vector<std::vector<float>>>* e);
+                 Block* e);
 
  private:
   const Aec3Optimization optimization_;

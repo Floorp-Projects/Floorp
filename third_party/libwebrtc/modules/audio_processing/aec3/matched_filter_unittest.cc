@@ -210,9 +210,7 @@ TEST(MatchedFilter, LagEstimation) {
   for (auto down_sampling_factor : kDownSamplingFactors) {
     const size_t sub_block_size = kBlockSize / down_sampling_factor;
 
-    std::vector<std::vector<std::vector<float>>> render(
-        kNumBands, std::vector<std::vector<float>>(
-                       kNumChannels, std::vector<float>(kBlockSize, 0.f)));
+    Block render(kNumBands, kNumChannels);
     std::vector<std::vector<float>> capture(
         1, std::vector<float>(kBlockSize, 0.f));
     ApmDataDumper data_dumper(0);
@@ -238,10 +236,12 @@ TEST(MatchedFilter, LagEstimation) {
       for (size_t k = 0; k < (600 + delay_samples / sub_block_size); ++k) {
         for (size_t band = 0; band < kNumBands; ++band) {
           for (size_t channel = 0; channel < kNumChannels; ++channel) {
-            RandomizeSampleVector(&random_generator, render[band][channel]);
+            RandomizeSampleVector(&random_generator,
+                                  render.View(band, channel));
           }
         }
-        signal_delay_buffer.Delay(render[0][0], capture[0]);
+        signal_delay_buffer.Delay(render.View(/*band=*/0, /*channel=*/0),
+                                  capture[0]);
         render_delay_buffer->Insert(render);
 
         if (k == 0) {
@@ -328,9 +328,7 @@ TEST(MatchedFilter, LagNotReliableForUncorrelatedRenderAndCapture) {
     config.delay.num_filters = kNumMatchedFilters;
     const size_t sub_block_size = kBlockSize / down_sampling_factor;
 
-    std::vector<std::vector<std::vector<float>>> render(
-        kNumBands, std::vector<std::vector<float>>(
-                       kNumChannels, std::vector<float>(kBlockSize, 0.f)));
+    Block render(kNumBands, kNumChannels);
     std::array<float, kBlockSize> capture_data;
     rtc::ArrayView<float> capture(capture_data.data(), sub_block_size);
     std::fill(capture.begin(), capture.end(), 0.f);
@@ -346,7 +344,8 @@ TEST(MatchedFilter, LagNotReliableForUncorrelatedRenderAndCapture) {
 
     // Analyze the correlation between render and capture.
     for (size_t k = 0; k < 100; ++k) {
-      RandomizeSampleVector(&random_generator, render[0][0]);
+      RandomizeSampleVector(&random_generator,
+                            render.View(/*band=*/0, /*channel=*/0));
       RandomizeSampleVector(&random_generator, capture);
       render_delay_buffer->Insert(render);
       filter.Update(render_delay_buffer->GetDownsampledRenderBuffer(), capture,

@@ -47,7 +47,7 @@ class RenderDelayControllerImpl final : public RenderDelayController {
   absl::optional<DelayEstimate> GetDelay(
       const DownsampledRenderBuffer& render_buffer,
       size_t render_delay_buffer_delay,
-      const std::vector<std::vector<float>>& capture) override;
+      const Block& capture) override;
   bool HasClockdrift() const override;
 
  private:
@@ -124,8 +124,7 @@ void RenderDelayControllerImpl::LogRenderCall() {}
 absl::optional<DelayEstimate> RenderDelayControllerImpl::GetDelay(
     const DownsampledRenderBuffer& render_buffer,
     size_t render_delay_buffer_delay,
-    const std::vector<std::vector<float>>& capture) {
-  RTC_DCHECK_EQ(kBlockSize, capture[0].size());
+    const Block& capture) {
   ++capture_call_counter_;
 
   auto delay_samples = delay_estimator_.EstimateDelay(render_buffer, capture);
