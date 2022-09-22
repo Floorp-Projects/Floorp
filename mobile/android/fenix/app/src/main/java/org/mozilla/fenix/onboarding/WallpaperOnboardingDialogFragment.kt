@@ -80,6 +80,7 @@ class WallpaperOnboardingDialogFragment : BottomSheetDialogFragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?,
     ): View = ComposeView(requireContext()).apply {
+        this@WallpaperOnboardingDialogFragment.dialog?.setCanceledOnTouchOutside(true)
         setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
 
         setContent {
