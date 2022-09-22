@@ -96,7 +96,7 @@ function setSidebarMode() {
     const modeValuePref = Services.prefs.getIntPref("floorp.browser.sidebar2.mode", undefined);
     const sidebar2elem = document.getElementById("sidebar2");
     const webpanel = document.getElementById("webpanel");
-    const panelWidth = Services.prefs.getIntPref("floorp.browser.sidebar2.width.mode"+ modeValuePref, undefined); 
+    const panelWidth = Services.prefs.getIntPref(`floorp.browser.sidebar2.width.mode${modeValuePref}`, undefined); 
   
     if(panelWidth !== "" || panelWidth !== undefined || panelWidth !== null){
       document.getElementById("sidebar2-box").setAttribute("width", panelWidth);
@@ -439,13 +439,13 @@ function setCustomSidebarMode20() {
 
 function setSidebarIconView() {
   for (let sbar_id = 1; sbar_id < 21; sbar_id++) {
-    document.getElementById("select-CustomURL" + sbar_id).hidden = (Services.prefs.getStringPref("floorp.browser.sidebar2.customurl" + sbar_id, undefined) != "") ? false : true;
+    document.getElementById(`select-CustomURL${sbar_id}`).hidden = (Services.prefs.getStringPref(`floorp.browser.sidebar2.customurl${sbar_id}`, undefined) != "") ? false : true;
   }
 }
 
 function keepSidebar2boxWidth() {
   const pref = Services.prefs.getIntPref("floorp.browser.sidebar2.mode");
-  Services.prefs.setIntPref("floorp.browser.sidebar2.width.mode" + pref, document.getElementById("sidebar2-box").width);
+  Services.prefs.setIntPref(`floorp.browser.sidebar2.width.mode${pref}`, document.getElementById("sidebar2-box").width);
 }
 
 /*---------------------------------------------------------------- design ----------------------------------------------------------------*/
@@ -590,7 +590,8 @@ function setTabbarMode() {
 
 function setAllfavicons() {
   for (let sbar_id = 1; sbar_id < 20; sbar_id++) {
-    document.getElementById("select-CustomURL" + sbar_id).style.listStyleImage = "url(" + "http://www.google.com/s2/favicons?domain=" + Services.prefs.getStringPref("floorp.browser.sidebar2.customurl" + sbar_id) + ")"
+    var sbar_favicon = Services.prefs.getStringPref(`floorp.browser.sidebar2.customurl${sbar_id}`)
+    document.getElementById(`select-CustomURL${sbar_id}`).style.listStyleImage = `url(http://www.google.com/s2/favicons?domain=${sbar_favicon}`;
   }
 }
 
@@ -607,7 +608,7 @@ function changeMuteStatus() {
 }
 
 function changeBrowserManagerSidebarConfigShowWebpanels() {
-  try{document.getElementById("sidebar2style").remove();}catch(e){}
+  if (document.getElementById("sidebar2style")){document.getElementById("sidebar2style").remove()}
   var Tag = document.createElement("style");
   Tag.innerText = `#sidebar2{max-height:0 !important;}`
   document.getElementsByTagName("head")[0].insertAdjacentElement('beforeend', Tag);
@@ -615,7 +616,7 @@ function changeBrowserManagerSidebarConfigShowWebpanels() {
 }
 
 function changeBrowserManagerSidebarConfigShowBrowserManagers() {
-  try{document.getElementById("sidebar2style").remove();}catch(e){}
+  if (document.getElementById("sidebar2style")){document.getElementById("sidebar2style").remove()}
   var Tag = document.createElement("style");
   Tag.innerText = `#webpanel{max-height:0 !important;}#sidebar2-reload,#sidebar2-forward,#sidebar2-back{display:none !important;}`
   document.getElementsByTagName("head")[0].insertAdjacentElement('beforeend', Tag);
