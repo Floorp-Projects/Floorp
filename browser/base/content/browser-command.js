@@ -236,86 +236,12 @@ function ViewBrowserManagerSidebar() {
     changeSidebarVisibility();
   }
 }
-function setCustomURL1Favicon() {
-  document.getElementById("select-CustomURL1").style.listStyleImage =
-    "url(" + "http://www.google.com/s2/favicons?domain=" + Services.prefs.getStringPref("floorp.browser.sidebar2.customurl1") + ")"
+
+function setCustomURLFavicon(sbar_id) {
+  let sbar_url = Services.prefs.getStringPref("floorp.browser.sidebar2.customurl1")
+  document.getElementById(`select-CustomURL${sbar_id}`).style.listStyleImage = `url(http://www.google.com/s2/favicons?domain=${sbar_url})`
 }
-function setCustomURL2Favicon() {
-  document.getElementById("select-CustomURL2").style.listStyleImage =
-    "url(" + "http://www.google.com/s2/favicons?domain=" + Services.prefs.getStringPref("floorp.browser.sidebar2.customurl2") + ")"
-}
-function setCustomURL3Favicon() {
-  document.getElementById("select-CustomURL3").style.listStyleImage =
-    "url(" + "http://www.google.com/s2/favicons?domain=" + Services.prefs.getStringPref("floorp.browser.sidebar2.customurl3") + ")"
-}
-function setCustomURL4Favicon() {
-  document.getElementById("select-CustomURL4").style.listStyleImage =
-    "url(" + "http://www.google.com/s2/favicons?domain=" + Services.prefs.getStringPref("floorp.browser.sidebar2.customurl4") + ")"
-}
-function setCustomURL5Favicon() {
-  document.getElementById("select-CustomURL5").style.listStyleImage =
-    "url(" + "http://www.google.com/s2/favicons?domain=" + Services.prefs.getStringPref("floorp.browser.sidebar2.customurl5") + ")"
-}
-function setCustomURL6Favicon() {
-  document.getElementById("select-CustomURL6").style.listStyleImage =
-    "url(" + "http://www.google.com/s2/favicons?domain=" + Services.prefs.getStringPref("floorp.browser.sidebar2.customurl6") + ")"
-}
-function setCustomURL7Favicon() {
-  document.getElementById("select-CustomURL7").style.listStyleImage =
-    "url(" + "http://www.google.com/s2/favicons?domain=" + Services.prefs.getStringPref("floorp.browser.sidebar2.customurl7") + ")"
-}
-function setCustomURL8Favicon() {
-  document.getElementById("select-CustomURL8").style.listStyleImage =
-    "url(" + "http://www.google.com/s2/favicons?domain=" + Services.prefs.getStringPref("floorp.browser.sidebar2.customurl8") + ")"
-}
-function setCustomURL9Favicon() {
-  document.getElementById("select-CustomURL9").style.listStyleImage =
-    "url(" + "http://www.google.com/s2/favicons?domain=" + Services.prefs.getStringPref("floorp.browser.sidebar2.customurl9") + ")"
-}
-function setCustomURL10Favicon() {
-  document.getElementById("select-CustomURL10").style.listStyleImage =
-    "url(" + "http://www.google.com/s2/favicons?domain=" + Services.prefs.getStringPref("floorp.browser.sidebar2.customurl10") + ")"
-}
-function setCustomURL11Favicon() {
-  document.getElementById("select-CustomURL11").style.listStyleImage =
-    "url(" + "http://www.google.com/s2/favicons?domain=" + Services.prefs.getStringPref("floorp.browser.sidebar2.customurl11") + ")"
-}
-function setCustomURL12Favicon() {
-  document.getElementById("select-CustomURL12").style.listStyleImage =
-    "url(" + "http://www.google.com/s2/favicons?domain=" + Services.prefs.getStringPref("floorp.browser.sidebar2.customurl12") + ")"
-}
-function setCustomURL13Favicon() {
-  document.getElementById("select-CustomURL13").style.listStyleImage =
-    "url(" + "http://www.google.com/s2/favicons?domain=" + Services.prefs.getStringPref("floorp.browser.sidebar2.customurl13") + ")"
-}
-function setCustomURL14Favicon() {
-  document.getElementById("select-CustomURL14").style.listStyleImage =
-    "url(" + "http://www.google.com/s2/favicons?domain=" + Services.prefs.getStringPref("floorp.browser.sidebar2.customurl14") + ")"
-}
-function setCustomURL15Favicon() {
-  document.getElementById("select-CustomURL15").style.listStyleImage =
-    "url(" + "http://www.google.com/s2/favicons?domain=" + Services.prefs.getStringPref("floorp.browser.sidebar2.customurl15") + ")"
-}
-function setCustomURL16Favicon() {
-  document.getElementById("select-CustomURL16").style.listStyleImage =
-    "url(" + "http://www.google.com/s2/favicons?domain=" + Services.prefs.getStringPref("floorp.browser.sidebar2.customurl16") + ")"
-}
-function setCustomURL17Favicon() {
-  document.getElementById("select-CustomURL17").style.listStyleImage =
-    "url(" + "http://www.google.com/s2/favicons?domain=" + Services.prefs.getStringPref("floorp.browser.sidebar2.customurl17") + ")"
-}
-function setCustomURL18Favicon() {
-  document.getElementById("select-CustomURL18").style.listStyleImage =
-    "url(" + "http://www.google.com/s2/favicons?domain=" + Services.prefs.getStringPref("floorp.browser.sidebar2.customurl18") + ")"
-}
-function setCustomURL19Favicon() {
-  document.getElementById("select-CustomURL19").style.listStyleImage =
-    "url(" + "http://www.google.com/s2/favicons?domain=" + Services.prefs.getStringPref("floorp.browser.sidebar2.customurl19") + ")"
-}
-function setCustomURL20Favicon() {
-  document.getElementById("select-CustomURL20").style.listStyleImage =
-    "url(" + "http://www.google.com/s2/favicons?domain=" + Services.prefs.getStringPref("floorp.browser.sidebar2.customurl20") + ")"
-}
+
 function backSidebarSite() {
   document.getElementById("webpanel").goBack();  //戻る
 }
