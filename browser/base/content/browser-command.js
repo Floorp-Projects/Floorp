@@ -164,7 +164,7 @@ function ViewBrowserManagerSidebar() {
 }
 
 function setCustomURLFavicon(sbar_id) {
-  let sbar_url = Services.prefs.getStringPref("floorp.browser.sidebar2.customurl1")
+  let sbar_url = Services.prefs.getStringPref(`floorp.browser.sidebar2.customurl${sbar_id}`)
   document.getElementById(`select-CustomURL${sbar_id}`).style.listStyleImage = `url(http://www.google.com/s2/favicons?domain=${sbar_url})`
 }
 
