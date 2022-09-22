@@ -1854,6 +1854,9 @@ class CGAbstractMethod(CGThing):
     arguments.
 
     canRunScript should be True to generate a MOZ_CAN_RUN_SCRIPT annotation.
+
+    signatureOnly should be True to only declare the signature (either in
+                  the header, or if static is True in the cpp file).
     """
 
     def __init__(
@@ -1867,6 +1870,7 @@ class CGAbstractMethod(CGThing):
         static=False,
         templateArgs=None,
         canRunScript=False,
+        signatureOnly=False,
     ):
         CGThing.__init__(self)
         self.descriptor = descriptor
@@ -1878,6 +1882,7 @@ class CGAbstractMethod(CGThing):
         self.static = static
         self.templateArgs = templateArgs
         self.canRunScript = canRunScript
+        self.signatureOnly = signatureOnly
 
     def _argstring(self, declare):
         return ", ".join([a.declare() if declare else a.define() for a in self.args])
@@ -1901,15 +1906,20 @@ class CGAbstractMethod(CGThing):
         maybeNewline = " " if self.inline else "\n"
         return " ".join(decorators) + maybeNewline
 
-    def declare(self):
-        if self.inline:
-            return self._define(True)
+    def signature(self):
         return "%s%s%s(%s);\n" % (
             self._template(),
             self._decorators(),
             self.name,
             self._argstring(True),
         )
+
+    def declare(self):
+        if self.static:
+            return ""
+        if self.inline:
+            return self._define(True)
+        return self.signature()
 
     def indent_body(self, body):
         """
@@ -1927,7 +1937,12 @@ class CGAbstractMethod(CGThing):
         )
 
     def define(self):
-        return "" if self.inline else self._define()
+        if self.signatureOnly:
+            if self.static:
+                # self.static makes us not output anything in the header, so output the signature here.
+                return self.signature()
+            return ""
+        return "" if (self.inline and not self.static) else self._define()
 
     def definition_prologue(self, fromDeclare):
         error_reporting_label = self.error_reporting_label()
@@ -2012,10 +2027,6 @@ class CGAbstractStaticMethod(CGAbstractMethod):
             canRunScript=canRunScript,
         )
 
-    def declare(self):
-        # We only have implementation
-        return ""
-
 
 class CGAbstractClassHook(CGAbstractStaticMethod):
     """
@@ -2037,14 +2048,6 @@ class CGAbstractClassHook(CGAbstractStaticMethod):
 
     def generate_code(self):
         assert False  # Override me!
-
-
-class CGGetJSClassMethod(CGAbstractMethod):
-    def __init__(self, descriptor):
-        CGAbstractMethod.__init__(self, descriptor, "GetJSClass", "const JSClass*", [])
-
-    def definition_body(self):
-        return "return sClass.ToJSClass();\n"
 
 
 class CGAddPropertyHook(CGAbstractClassHook):
@@ -3563,7 +3566,7 @@ class CGCreateInterfaceObjectsMethod(CGAbstractMethod):
     """
 
     def __init__(
-        self, descriptor, properties, haveUnscopables, haveLegacyWindowAliases
+        self, descriptor, properties, haveUnscopables, haveLegacyWindowAliases, static
     ):
         args = [
             Argument("JSContext*", "aCx"),
@@ -3572,7 +3575,7 @@ class CGCreateInterfaceObjectsMethod(CGAbstractMethod):
             Argument("bool", "aDefineOnGlobal"),
         ]
         CGAbstractMethod.__init__(
-            self, descriptor, "CreateInterfaceObjects", "void", args
+            self, descriptor, "CreateInterfaceObjects", "void", args, static=static
         )
         self.properties = properties
         self.haveUnscopables = haveUnscopables
@@ -3945,7 +3948,7 @@ class CGGetProtoObjectHandleMethod(CGAbstractMethod):
     A method for getting the interface prototype object.
     """
 
-    def __init__(self, descriptor):
+    def __init__(self, descriptor, static, signatureOnly=False):
         CGAbstractMethod.__init__(
             self,
             descriptor,
@@ -3953,6 +3956,8 @@ class CGGetProtoObjectHandleMethod(CGAbstractMethod):
             "JS::Handle<JSObject*>",
             [Argument("JSContext*", "aCx")],
             inline=True,
+            static=static,
+            signatureOnly=signatureOnly,
         )
 
     def definition_body(self):
@@ -4303,7 +4308,7 @@ class CGDeserializer(CGAbstractMethod):
         )
 
 
-def CreateBindingJSObject(descriptor, properties):
+def CreateBindingJSObject(descriptor):
     objDecl = "BindingJSObjectCreator<%s> creator(aCx);\n" % descriptor.nativeType
 
     # We don't always need to root obj, but there are a variety
@@ -4588,11 +4593,9 @@ def DeclareProto(descriptor, noGivenProto=False):
 class CGWrapWithCacheMethod(CGAbstractMethod):
     """
     Create a wrapper JSObject for a given native that implements nsWrapperCache.
-
-    properties should be a PropertyArrays instance.
     """
 
-    def __init__(self, descriptor, properties):
+    def __init__(self, descriptor):
         assert descriptor.interface.hasInterfacePrototypeObject()
         args = [
             Argument("JSContext*", "aCx"),
@@ -4602,7 +4605,6 @@ class CGWrapWithCacheMethod(CGAbstractMethod):
             Argument("JS::MutableHandle<JSObject*>", "aReflector"),
         ]
         CGAbstractMethod.__init__(self, descriptor, "Wrap", "bool", args)
-        self.properties = properties
 
     def definition_body(self):
         failureCode = dedent(
@@ -4686,7 +4688,7 @@ class CGWrapWithCacheMethod(CGAbstractMethod):
             nativeType=self.descriptor.nativeType,
             assertInheritance=AssertInheritanceChain(self.descriptor),
             declareProto=DeclareProto(self.descriptor),
-            createObject=CreateBindingJSObject(self.descriptor, self.properties),
+            createObject=CreateBindingJSObject(self.descriptor),
             unforgeable=CopyUnforgeablePropertiesToInstance(
                 self.descriptor, failureCode
             ),
@@ -4727,11 +4729,9 @@ class CGWrapNonWrapperCacheMethod(CGAbstractMethod):
     """
     Create a wrapper JSObject for a given native that does not implement
     nsWrapperCache.
-
-    properties should be a PropertyArrays instance.
     """
 
-    def __init__(self, descriptor, properties):
+    def __init__(self, descriptor, static=False, signatureOnly=False):
         # XXX can we wrap if we don't have an interface prototype object?
         assert descriptor.interface.hasInterfacePrototypeObject()
         self.noGivenProto = (
@@ -4745,8 +4745,15 @@ class CGWrapNonWrapperCacheMethod(CGAbstractMethod):
         if not self.noGivenProto:
             args.append(Argument("JS::Handle<JSObject*>", "aGivenProto"))
         args.append(Argument("JS::MutableHandle<JSObject*>", "aReflector"))
-        CGAbstractMethod.__init__(self, descriptor, "Wrap", "bool", args)
-        self.properties = properties
+        CGAbstractMethod.__init__(
+            self,
+            descriptor,
+            "Wrap",
+            "bool",
+            args,
+            static=static,
+            signatureOnly=signatureOnly,
+        )
 
     def definition_body(self):
         failureCode = "return false;\n"
@@ -4780,7 +4787,7 @@ class CGWrapNonWrapperCacheMethod(CGAbstractMethod):
             assertions=AssertInheritanceChain(self.descriptor),
             assertGivenProto=assertGivenProto,
             declareProto=declareProto,
-            createObject=CreateBindingJSObject(self.descriptor, self.properties),
+            createObject=CreateBindingJSObject(self.descriptor),
             unforgeable=CopyUnforgeablePropertiesToInstance(
                 self.descriptor, failureCode
             ),
@@ -16380,19 +16387,52 @@ class CGDescriptor(CGThing):
 
         self._deps = descriptor.interface.getDeps()
 
-        cgThings = []
-        cgThings.append(
-            CGGeneric(declare="typedef %s NativeType;\n" % descriptor.nativeType)
-        )
-        parent = descriptor.interface.parent
-        if parent:
-            cgThings.append(
-                CGGeneric(
-                    "static_assert(IsRefcounted<NativeType>::value == IsRefcounted<%s::NativeType>::value,\n"
-                    '              "Can\'t inherit from an interface with a different ownership model.");\n'
-                    % toBindingNamespace(descriptor.parentPrototypeName)
+        iteratorCGThings = None
+        if (
+            descriptor.interface.isIterable()
+            and descriptor.interface.maplikeOrSetlikeOrIterable.isPairIterator()
+        ) or descriptor.interface.isAsyncIterable():
+            # We need the Wrap function when using the [Async]IterableIterator type, so we want to declare it before we need it. We don't really want to expose it in the header file, so we make it static too.
+            iteratorCGThings = []
+            itr_iface = (
+                descriptor.interface.maplikeOrSetlikeOrIterable.iteratorType.inner
+            )
+            iteratorDescriptor = descriptor.getDescriptor(itr_iface.identifier.name)
+            iteratorCGThings.append(
+                CGWrapNonWrapperCacheMethod(
+                    iteratorDescriptor, static=True, signatureOnly=True
                 )
             )
+            iteratorCGThings = CGList(
+                (CGIndenter(t, declareOnly=True) for t in iteratorCGThings), "\n"
+            )
+            iteratorCGThings = CGWrapper(iteratorCGThings, pre="\n", post="\n")
+            iteratorCGThings = CGWrapper(
+                CGNamespace(
+                    toBindingNamespace(iteratorDescriptor.name), iteratorCGThings
+                ),
+                post="\n",
+            )
+
+        cgThings = []
+
+        isIteratorInterface = (
+            descriptor.interface.isIteratorInterface()
+            or descriptor.interface.isAsyncIteratorInterface()
+        )
+        if not isIteratorInterface:
+            cgThings.append(
+                CGGeneric(declare="typedef %s NativeType;\n" % descriptor.nativeType)
+            )
+            parent = descriptor.interface.parent
+            if parent:
+                cgThings.append(
+                    CGGeneric(
+                        "static_assert(IsRefcounted<NativeType>::value == IsRefcounted<%s::NativeType>::value,\n"
+                        '              "Can\'t inherit from an interface with a different ownership model.");\n'
+                        % toBindingNamespace(descriptor.parentPrototypeName)
+                    )
+                )
 
         defaultToJSONMethod = None
         needCrossOriginPropertyArrays = False
@@ -16595,12 +16635,19 @@ class CGDescriptor(CGThing):
                 cgThings.append(CGSerializer(descriptor))
                 cgThings.append(CGDeserializer(descriptor))
 
+            # CGDOMProxyJSClass/CGDOMJSClass need GetProtoObjectHandle, but we don't want to export it for the iterator interfaces, so declare it here.
+            if isIteratorInterface:
+                cgThings.append(
+                    CGGetProtoObjectHandleMethod(
+                        descriptor, static=True, signatureOnly=True
+                    )
+                )
+
             if descriptor.proxy:
                 cgThings.append(CGDOMJSProxyHandlerDefiner(handlerThing))
                 cgThings.append(CGDOMProxyJSClass(descriptor))
             else:
                 cgThings.append(CGDOMJSClass(descriptor))
-                cgThings.append(CGGetJSClassMethod(descriptor))
 
             if descriptor.interface.hasMembersInSlots():
                 cgThings.append(CGUpdateMemberSlotsMethod(descriptor))
@@ -16609,10 +16656,12 @@ class CGDescriptor(CGThing):
                 assert descriptor.wrapperCache
                 cgThings.append(CGWrapGlobalMethod(descriptor, properties))
             elif descriptor.wrapperCache:
-                cgThings.append(CGWrapWithCacheMethod(descriptor, properties))
+                cgThings.append(CGWrapWithCacheMethod(descriptor))
                 cgThings.append(CGWrapMethod(descriptor))
             else:
-                cgThings.append(CGWrapNonWrapperCacheMethod(descriptor, properties))
+                cgThings.append(
+                    CGWrapNonWrapperCacheMethod(descriptor, static=isIteratorInterface)
+                )
 
         # If we're not wrappercached, we don't know how to clear our
         # cached values, since we can't get at the JSObject.
@@ -16671,7 +16720,11 @@ class CGDescriptor(CGThing):
         # CGDOMJSClass and unscopables, if any.
         cgThings.append(
             CGCreateInterfaceObjectsMethod(
-                descriptor, properties, haveUnscopables, haveLegacyWindowAliases
+                descriptor,
+                properties,
+                haveUnscopables,
+                haveLegacyWindowAliases,
+                static=isIteratorInterface,
             )
         )
 
@@ -16681,8 +16734,11 @@ class CGDescriptor(CGThing):
             descriptor.interface.hasInterfacePrototypeObject()
             and not descriptor.hasOrdinaryObjectPrototype
         ):
-            cgThings.append(CGGetProtoObjectHandleMethod(descriptor))
+            cgThings.append(
+                CGGetProtoObjectHandleMethod(descriptor, static=isIteratorInterface)
+            )
             if descriptor.interface.hasChildInterfaces():
+                assert not isIteratorInterface
                 cgThings.append(CGGetProtoObjectMethod(descriptor))
         if descriptor.interface.hasInterfaceObject():
             cgThings.append(CGGetConstructorObjectHandleMethod(descriptor))
@@ -16694,9 +16750,10 @@ class CGDescriptor(CGThing):
 
         cgThings = CGList((CGIndenter(t, declareOnly=True) for t in cgThings), "\n")
         cgThings = CGWrapper(cgThings, pre="\n", post="\n")
-        self.cgRoot = CGWrapper(
+        cgThings = CGWrapper(
             CGNamespace(toBindingNamespace(descriptor.name), cgThings), post="\n"
         )
+        self.cgRoot = CGList([iteratorCGThings, cgThings], "\n")
 
     def declare(self):
         return self.cgRoot.declare()
@@ -18314,8 +18371,11 @@ class CGBindingRoot(CGThing):
         bindingDeclareHeaders["mozilla/dom/BindingUtils.h"] = any(
             d.isObject() for t in unionTypes for d in t.flatMemberTypes
         )
-        bindingDeclareHeaders["mozilla/dom/IterableIterator.h"] = any(
-            d.interface.isIteratorInterface()
+        bindingHeaders["mozilla/dom/IterableIterator.h"] = any(
+            (
+                d.interface.isIteratorInterface()
+                and d.interface.maplikeOrSetlikeOrIterable.isPairIterator()
+            )
             or d.interface.isAsyncIteratorInterface()
             or d.interface.isIterable()
             or d.interface.isAsyncIterable()

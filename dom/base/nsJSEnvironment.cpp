@@ -63,6 +63,7 @@
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/ErrorEvent.h"
 #include "mozilla/dom/FetchUtil.h"
+#include "mozilla/dom/RootedDictionary.h"
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/dom/SerializedStackHolder.h"
 #include "mozilla/CycleCollectedJSRuntime.h"

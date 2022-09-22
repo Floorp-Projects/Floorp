@@ -49,6 +49,7 @@
 #include "mozilla/dom/PromiseDebugging.h"
 #include "mozilla/dom/RemoteWorkerChild.h"
 #include "mozilla/dom/RemoteWorkerService.h"
+#include "mozilla/dom/RootedDictionary.h"
 #include "mozilla/dom/TimeoutHandler.h"
 #include "mozilla/dom/WorkerBinding.h"
 #include "mozilla/dom/WorkerScope.h"
