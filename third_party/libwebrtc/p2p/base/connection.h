@@ -115,6 +115,11 @@ class Connection : public CandidatePairInterface {
   bool writable() const;
   bool receiving() const;
 
+  const Port* port() const {
+    RTC_DCHECK_RUN_ON(network_thread_);
+    return port_.get();
+  }
+
   // Determines whether the connection has finished connecting.  This can only
   // be false for TCP connections.
   bool connected() const;
@@ -355,7 +360,6 @@ class Connection : public CandidatePairInterface {
 
   // The local port where this connection sends and receives packets.
   Port* port() { return port_.get(); }
-  const Port* port() const { return port_.get(); }
 
   // NOTE: A pointer to the network thread is held by `port_` so in theory we
   // shouldn't need to hold on to this pointer here, but rather defer to
@@ -464,9 +468,7 @@ class Connection : public CandidatePairInterface {
   rtc::EventBasedExponentialMovingAverage rtt_estimate_
       RTC_GUARDED_BY(network_thread_);
 
-  friend class Port;
   friend class ConnectionRequest;
-  friend class P2PTransportChannel;
 };
 
 // ProxyConnection defers all the interesting work to the port.
