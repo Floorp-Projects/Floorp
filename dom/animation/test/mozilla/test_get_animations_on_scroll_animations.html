@@ -6,9 +6,6 @@
 <script src="/resources/testharnessreport.js"></script>
 <script src="../testcommon.js"></script>
 <style>
-  @scroll-timeline test-timeline {
-    source: auto;
-  }
   @keyframes animWidth {
     from { width: 100px; }
     to { width: 200px }
@@ -33,7 +30,7 @@
 test(function(t) {
   const div = addDiv(t,
     { style: "width: 10px; height: 100px; " +
-             "animation: animWidth 100s test-timeline, animTop 200s;" });
+             "animation: animWidth 100s scroll(), animTop 200s;" });
 
   // Sanity check to make sure the scroll animation is there.
   addDiv(t, { class: "fill-vh" });
@@ -53,7 +50,7 @@ test(function(t) {
 test(function(t) {
   const div = addDiv(t,
     { style: "width: 10px; height: 100px; " +
-             "animation: animWidth 100s test-timeline, animTop 100s;" });
+             "animation: animWidth 100s scroll(), animTop 100s;" });
 
   // Sanity check to make sure the scroll animation is there.
   addDiv(t, { class: "fill-vh" });

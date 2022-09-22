@@ -70,46 +70,6 @@ already_AddRefed<ScrollTimeline> ScrollTimeline::GetOrCreateScrollTimeline(
   return timeline.forget();
 }
 
-static StyleScrollAxis ToStyleScrollAxis(
-    const StyleScrollDirection aDirection) {
-  switch (aDirection) {
-    // The spec defines auto, but there is a spec issue:
-    // "ISSUE 5 Define these values." in this section. The DOM interface removed
-    // auto and use block as default value, so we treat auto as block now.
-    // https://drafts.csswg.org/scroll-animations-1/#descdef-scroll-timeline-orientation
-    case StyleScrollDirection::Auto:
-    case StyleScrollDirection::Block:
-      return StyleScrollAxis::Block;
-    case StyleScrollDirection::Inline:
-      return StyleScrollAxis::Inline;
-    case StyleScrollDirection::Horizontal:
-      return StyleScrollAxis::Horizontal;
-    case StyleScrollDirection::Vertical:
-      return StyleScrollAxis::Vertical;
-  }
-
-  MOZ_ASSERT_UNREACHABLE("Unsupported StyleScrollDirection");
-  return StyleScrollAxis::Block;
-}
-
-/* static */
-already_AddRefed<ScrollTimeline> ScrollTimeline::FromRule(
-    const RawServoScrollTimelineRule& aRule, Document* aDocument,
-    const NonOwningAnimationTarget& aTarget) {
-  // Note: If the rules changes after we build the scroll-timeline rule, we
-  // rebuild all CSS animtions, and then try to look up the scroll-timeline by
-  // the new source and the new direction. If we cannot find a specific
-  // timeline, we create one, and the unused scroll-timeline object will be
-  // dropped automatically becuase no animation owns it and its ref-count
-  // becomes zero.
-
-  StyleScrollAxis axis =
-      ToStyleScrollAxis(Servo_ScrollTimelineRule_GetOrientation(&aRule));
-
-  auto autoScroller = Scroller::Root(aTarget.mElement->OwnerDoc());
-  return GetOrCreateScrollTimeline(aDocument, autoScroller, axis);
-}
-
 /* static */
 already_AddRefed<ScrollTimeline> ScrollTimeline::FromAnonymousScroll(
     Document* aDocument, const NonOwningAnimationTarget& aTarget,
