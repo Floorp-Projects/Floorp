@@ -2427,7 +2427,7 @@ TEST_F(WebRtcSdpTest, DeserializeSessionDescriptionWithoutRtpmap) {
       // Codec that doesn't appear in the m= line will be ignored.
       "a=rtpmap:104 ISAC/32000\r\n"
       // The rtpmap line for static payload codec is optional.
-      "a=rtpmap:18 G729/8000\r\n"
+      "a=rtpmap:18 G729/16000\r\n"
       "a=rtpmap:103 ISAC/16000\r\n";
 
   JsepSessionDescription jdesc(kDummyType);
@@ -2438,7 +2438,7 @@ TEST_F(WebRtcSdpTest, DeserializeSessionDescriptionWithoutRtpmap) {
   // The codecs in the AudioContentDescription should be in the same order as
   // the payload types (<fmt>s) on the m= line.
   ref_codecs.push_back(AudioCodec(0, "PCMU", 8000, 0, 1));
-  ref_codecs.push_back(AudioCodec(18, "G729", 8000, 0, 1));
+  ref_codecs.push_back(AudioCodec(18, "G729", 16000, 0, 1));
   ref_codecs.push_back(AudioCodec(103, "ISAC", 16000, 0, 1));
   EXPECT_EQ(ref_codecs, audio->codecs());
 }
@@ -4656,33 +4656,6 @@ TEST_F(WebRtcSdpTest, MaxChannels) {
       "a=rtpmap:108 ISAC/16000/512\r\n";
 
   ExpectParseFailure(sdp, "a=rtpmap:108 ISAC/16000/512");
-}
-
-TEST_F(WebRtcSdpTest, DuplicateAudioRtpmapWithConflict) {
-  std::string sdp =
-      "v=0\r\n"
-      "o=- 11 22 IN IP4 127.0.0.1\r\n"
-      "s=-\r\n"
-      "t=0 0\r\n"
-      "m=audio 49232 RTP/AVP 108\r\n"
-      // Same name but different payload type.
-      "a=rtpmap:108 ISAC/16000\r\n"
-      "a=rtpmap:108 ISAC/32000\r\n";
-
-  ExpectParseFailure(sdp, "a=rtpmap:108 ISAC/32000");
-}
-
-TEST_F(WebRtcSdpTest, DuplicateVideoRtpmapWithConflict) {
-  std::string sdp =
-      "v=0\r\n"
-      "o=- 11 22 IN IP4 127.0.0.1\r\n"
-      "s=-\r\n"
-      "t=0 0\r\n"
-      "m=video 49232 RTP/AVP 108\r\n"
-      "a=rtpmap:108 VP8/90000\r\n"
-      "a=rtpmap:108 VP9/90000\r\n";
-
-  ExpectParseFailure(sdp, "a=rtpmap:108 VP9/90000");
 }
 
 // This tests parsing of SDP with unknown ssrc-specific attributes.
