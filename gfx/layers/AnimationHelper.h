@@ -32,7 +32,22 @@ typedef nsTArray<layers::Animation> AnimationArray;
  */
 class AnimationHelper {
  public:
-  enum class SampleResult { None, Skipped, Sampled };
+  struct SampleResult {
+    enum class Type : uint8_t { None, Skipped, Sampled };
+    enum class Reason : uint8_t { None, ScrollToDelayPhase };
+    Type mType = Type::None;
+    Reason mReason = Reason::None;
+
+    SampleResult() = default;
+    SampleResult(Type aType, Reason aReason) : mType(aType), mReason(aReason) {}
+
+    static SampleResult Skipped() { return {Type::Skipped, Reason::None}; }
+    static SampleResult Sampled() { return {Type::Sampled, Reason::None}; }
+
+    bool IsNone() { return mType == Type::None; }
+    bool IsSkipped() { return mType == Type::Skipped; }
+    bool IsSampled() { return mType == Type::Sampled; }
+  };
 
   /**
    * Sample animations based on a given time stamp for a element(layer) with
@@ -48,6 +63,14 @@ class AnimationHelper {
    * SampleResult::Skipped if the animation output did not change since the last
    * call of this function,
    * SampleResult::Sampled if the animation output was updated.
+   *
+   * The only exception is the scroll-linked animation. When the user move the
+   * scrollbar to make the animations go from active phase to delay phase, this
+   * returns SampleResult::None but sets its |mReason| to
+   * Reason::ScrollToDelayPhase. The caller can check this flag so we can store
+   * the base style into the hash table to make sure we have the correct
+   * rendering result. The base style stays in the hash table until we sync with
+   * main thread.
    *
    * Using the same example from ExtractAnimations (below):
    *
@@ -113,6 +136,12 @@ class AnimationHelper {
    * In the process of grouping these animations, we also convert their values
    * from the rather compact representation we use for transferring across the
    * IPC boundary into something we can readily use for sampling.
+   *
+   * Note: the animation groups:
+   * 1. transform-like properties: transfrom, translate, rotate, scale,
+   *                               offset-*.
+   * 2. opacity property: opacity.
+   * 3. background color property: background-color.
    */
   static AnimationStorageData ExtractAnimations(
       const LayersId& aLayersId, const AnimationArray& aAnimations);

@@ -307,6 +307,8 @@ bool CompositorAnimationStorage::SampleAnimations(
         continue;
       }
 
+      const nsCSSPropertyID lastPropertyAnimationGroupProperty =
+          animationStorageData->mAnimation.LastElement().mProperty;
       isAnimating = true;
       AutoTArray<RefPtr<RawServoAnimationValue>, 1> animationValues;
       AnimatedValue* previousValue = GetAnimatedValue(iter.first);
@@ -316,16 +318,6 @@ bool CompositorAnimationStorage::SampleAnimations(
               aPreviousFrameTime, aCurrentFrameTime, previousValue,
               animationStorageData->mAnimation, animationValues);
 
-      if (sampleResult != AnimationHelper::SampleResult::Sampled) {
-        if (mNewAnimations.find(iter.first) != mNewAnimations.end()) {
-          mAnimatedValues.Remove(iter.first);
-        }
-        continue;
-      }
-
-      const nsCSSPropertyID lastPropertyAnimationGroupProperty =
-          animationStorageData->mAnimation.LastElement().mProperty;
-
       PROFILER_MARKER(
           "SampleAnimation", GRAPHICS,
           MarkerOptions(
@@ -334,7 +326,51 @@ bool CompositorAnimationStorage::SampleAnimations(
           CompositorAnimationMarker, iter.first,
           lastPropertyAnimationGroupProperty);
 
-      // Store the AnimatedValue
+      if (!sampleResult.IsSampled()) {
+        // Note: Checking new animations first. If new animations arrive and we
+        // scroll back to delay phase in the meantime for scroll-linked
+        // animations, removing the previous animated value is still the
+        // preferable way because the newly animation case would probably more
+        // often than the scroll timeline. Besides, we expect the display items
+        // get sync with main thread at this moment, so dropping the old
+        // animation sampled result is more suitable.
+        // FIXME: Bug 1791884: We might have to revisit this to make sure we
+        // respect animation composition order.
+        if (mNewAnimations.find(iter.first) != mNewAnimations.end()) {
+          mAnimatedValues.Remove(iter.first);
+        } else if (sampleResult.mReason ==
+                   AnimationHelper::SampleResult::Reason::ScrollToDelayPhase) {
+          // For the scroll-linked animations, its animation effect phases may
+          // be changed between the active phase and the before/after phase.
+          // Basically we don't produce any sampled animation value for
+          // before/after phase (if we don't have fills). In this case, we have
+          // to make sure the animations are not applied on the compositor.
+          // Removing the previous animated value is not enough because the
+          // display item in webrender may be out-of-date. Therefore, we should
+          // not just skip these animation values. Instead, storing their base
+          // styles (which are in |animationValues| already) to simulate these
+          // delayed animations.
+          //
+          // There are two possible situations:
+          // 1. If there is just a new animation arrived but there is no sampled
+          //    animation value when we go from active phase, we remove the
+          //    previous AnimatedValue. This is done in the above condition.
+          // 2. If |animation| is not replaced by a new arrived one, we detect
+          //    it in SampleAnimationForProperty(), which sets
+          //    ScrollToDelayPhase if it goes from the active phase to the
+          //    before/after phase.
+          //
+          // For the 2nd case, we store the base styles until we have some other
+          // new sampled results or the new animations arrived (i.e. case 1).
+          StoreAnimatedValue(lastPropertyAnimationGroupProperty, iter.first,
+                             animationStorageData, animationValues,
+                             aProofOfMapLock, apzSampler, previousValue,
+                             janked);
+        }
+        continue;
+      }
+
+      // Store the normal sampled result.
       StoreAnimatedValue(lastPropertyAnimationGroupProperty, iter.first,
                          animationStorageData, animationValues, aProofOfMapLock,
                          apzSampler, previousValue, janked);

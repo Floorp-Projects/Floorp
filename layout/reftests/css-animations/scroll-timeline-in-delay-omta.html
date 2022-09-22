@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html class="reftest-wait reftest-no-flush">
+<head>
+<title>Scroll the scroll-linked animation from the active phase to delay</title>
+<style>
+  @keyframes anim {
+    from { translate: 100px; }
+    to { translate: 200px; }
+  }
+  #scroller {
+    width: 100px;
+    height: 100px;
+    overflow: scroll;
+    scrollbar-width: none;
+    scroll-timeline: scroll_timeline;
+  }
+  #target {
+    width: 100px;
+    height: 100px;
+    background: green;
+    rotate: 45deg;
+    translate: 50px;
+    animation-name: anim;
+    animation-duration: 5s;
+    animation-timing-function: linear;
+    animation-delay: 5s;
+    animation-timeline: scroll_timeline;
+  }
+</style>
+<script>
+window.addEventListener("MozReftestInvalidate", async () => {
+  const scroller = document.getElementById("scroller");
+  scroller.scrollTop = 75;
+
+  // Wait for the MozAfterPaint to make the view id of |scroller| gets ready.
+  window.addEventListener('MozAfterPaint', async () => {
+    let utils = SpecialPowers.wrap(window).windowUtils;
+    utils.setAsyncScrollOffset(scroller, 0, -50);
+
+    await new Promise(function(resolve, reject) {
+      let repaintDone = function() {
+        SpecialPowers.Services.obs.removeObserver(
+          repaintDone,
+          "apz-repaints-flushed"
+        );
+        resolve();
+      };
+      SpecialPowers.Services.obs.addObserver(repaintDone,
+                                             "apz-repaints-flushed");
+      if (!utils.flushApzRepaints()) {
+        repaintDone();
+      }
+    });
+
+    // Wait for composition and then take the snapshot.
+    await new Promise(resolve => { requestAnimationFrame(resolve); });
+    await new Promise(resolve => { requestAnimationFrame(resolve); });
+
+    document.documentElement.classList.remove('reftest-wait');
+  }, {once: true});
+});
+
+</script>
+</head>
+<body>
+  <div id="scroller">
+    <div style="height: 100px; padding-bottom: 100px;"></div>
+  </div>
+  <div id="target"></div>
+</body>
+</html>

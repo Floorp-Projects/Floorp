@@ -243,11 +243,12 @@ void KeyframeEffect::SetKeyframes(JSContext* aContext,
   }
 
   RefPtr<const ComputedStyle> style = GetTargetComputedStyle(Flush::None);
-  SetKeyframes(std::move(keyframes), style);
+  SetKeyframes(std::move(keyframes), style, nullptr /* AnimationTimeline */);
 }
 
 void KeyframeEffect::SetKeyframes(nsTArray<Keyframe>&& aKeyframes,
-                                  const ComputedStyle* aStyle) {
+                                  const ComputedStyle* aStyle,
+                                  const AnimationTimeline* aTimeline) {
   if (KeyframesEqualIgnoringComputedOffsets(aKeyframes, mKeyframes)) {
     return;
   }
@@ -262,7 +263,7 @@ void KeyframeEffect::SetKeyframes(nsTArray<Keyframe>&& aKeyframes,
   // We need to call UpdateProperties() unless the target element doesn't have
   // style (e.g. the target element is not associated with any document).
   if (aStyle) {
-    UpdateProperties(aStyle);
+    UpdateProperties(aStyle, aTimeline);
   }
 }
 
@@ -429,7 +430,8 @@ static bool HasCurrentColor(
   }
   return false;
 }
-void KeyframeEffect::UpdateProperties(const ComputedStyle* aStyle) {
+void KeyframeEffect::UpdateProperties(const ComputedStyle* aStyle,
+                                      const AnimationTimeline* aTimeline) {
   MOZ_ASSERT(aStyle);
 
   nsTArray<AnimationProperty> properties = BuildProperties(aStyle);
@@ -439,7 +441,7 @@ void KeyframeEffect::UpdateProperties(const ComputedStyle* aStyle) {
   // We need to update base styles even if any properties are not changed at all
   // since base styles might have been changed due to parent style changes, etc.
   bool baseStylesChanged = false;
-  EnsureBaseStyles(aStyle, properties,
+  EnsureBaseStyles(aStyle, properties, aTimeline,
                    !propertiesChanged ? &baseStylesChanged : nullptr);
 
   if (!propertiesChanged) {
@@ -494,7 +496,8 @@ void KeyframeEffect::UpdateProperties(const ComputedStyle* aStyle) {
 
 void KeyframeEffect::EnsureBaseStyles(
     const ComputedStyle* aComputedValues,
-    const nsTArray<AnimationProperty>& aProperties, bool* aBaseStylesChanged) {
+    const nsTArray<AnimationProperty>& aProperties,
+    const AnimationTimeline* aTimeline, bool* aBaseStylesChanged) {
   if (aBaseStylesChanged != nullptr) {
     *aBaseStylesChanged = false;
   }
@@ -526,9 +529,17 @@ void KeyframeEffect::EnsureBaseStyles(
              " we should have also failed to calculate the computed values"
              " passed-in as aProperties");
 
+  if (!aTimeline) {
+    // If we pass a valid timeline, we use it (note: this happens when we create
+    // a new animation or replace the old one, for CSS Animations and CSS
+    // Transitions). Otherwise, we check the timeline from |mAnimation|.
+    aTimeline = mAnimation ? mAnimation->GetTimeline() : nullptr;
+  }
+
   RefPtr<const ComputedStyle> baseComputedStyle;
   for (const AnimationProperty& property : aProperties) {
-    EnsureBaseStyle(property, presContext, aComputedValues, baseComputedStyle);
+    EnsureBaseStyle(property, presContext, aComputedValues, aTimeline,
+                    baseComputedStyle);
   }
 
   if (aBaseStylesChanged != nullptr &&
@@ -543,18 +554,38 @@ void KeyframeEffect::EnsureBaseStyles(
 
 void KeyframeEffect::EnsureBaseStyle(
     const AnimationProperty& aProperty, nsPresContext* aPresContext,
-    const ComputedStyle* aComputedStyle,
+    const ComputedStyle* aComputedStyle, const AnimationTimeline* aTimeline,
     RefPtr<const ComputedStyle>& aBaseComputedStyle) {
-  bool hasAdditiveValues = false;
-
-  for (const AnimationPropertySegment& segment : aProperty.mSegments) {
-    if (!segment.HasReplaceableValues()) {
-      hasAdditiveValues = true;
-      break;
+  auto needBaseStyleForScrollTimeline =
+      [this](const AnimationProperty& aProperty,
+             const AnimationTimeline* aTimeline) {
+        static constexpr TimeDuration zeroDuration;
+        const TimingParams& timing = NormalizedTiming();
+        // For scroll-timeline with a positive delay, it's possible to scroll
+        // back and forth between delay phase and active phase, so we need to
+        // keep its base style and maybe use it to override the animations in
+        // delay on the compositor.
+        return aTimeline && aTimeline->IsScrollTimeline() &&
+               nsCSSPropertyIDSet::CompositorAnimatables().HasProperty(
+                   aProperty.mProperty) &&
+               (timing.Delay() > zeroDuration ||
+                timing.EndDelay() > zeroDuration);
+      };
+  auto hasAdditiveValues = [](const AnimationProperty& aProperty) {
+    for (const AnimationPropertySegment& segment : aProperty.mSegments) {
+      if (!segment.HasReplaceableValues()) {
+        return true;
+      }
     }
-  }
+    return false;
+  };
 
-  if (!hasAdditiveValues) {
+  // Note: Check base style for compositor (i.e. for scroll-linked animations)
+  // first because it is much cleaper.
+  const bool needBaseStyle =
+      needBaseStyleForScrollTimeline(aProperty, aTimeline) ||
+      hasAdditiveValues(aProperty);
+  if (!needBaseStyle) {
     return;
   }
 

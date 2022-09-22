@@ -456,7 +456,7 @@ bool nsTransitionManager::ConsiderInitiatingTransition(
   keyframeEffect->SetKeyframes(
       GetTransitionKeyframes(aProperty, std::move(startValue),
                              std::move(endValue)),
-      &aNewStyle);
+      &aNewStyle, timeline);
 
   if (NS_WARN_IF(MOZ_UNLIKELY(!keyframeEffect->IsValidTransition()))) {
     return false;

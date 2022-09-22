@@ -147,6 +147,10 @@ enum class CanSkipCompose {
   IfPossible,
   No,
 };
+// This function samples the animation for a specific property. We may have
+// multiple animations for a single property, and the later animations override
+// the eariler ones. This function returns the sampled animation value,
+// |aAnimationValue| for a single CSS property.
 static AnimationHelper::SampleResult SampleAnimationForProperty(
     const APZSampler* aAPZSampler, const LayersId& aLayersId,
     const MutexAutoLock& aProofOfMapLock, TimeStamp aPreviousFrameTime,
@@ -155,6 +159,8 @@ static AnimationHelper::SampleResult SampleAnimationForProperty(
     nsTArray<PropertyAnimation>& aPropertyAnimations,
     RefPtr<RawServoAnimationValue>& aAnimationValue) {
   MOZ_ASSERT(!aPropertyAnimations.IsEmpty(), "Should have animations");
+
+  auto reason = AnimationHelper::SampleResult::Reason::None;
   bool hasInEffectAnimations = false;
 #ifdef DEBUG
   // In cases where this function returns a SampleResult::Skipped, we actually
@@ -183,12 +189,30 @@ static AnimationHelper::SampleResult SampleAnimationForProperty(
         elapsedDuration, animation.mTiming, animation.mPlaybackRate,
         progressTimelinePosition);
 
-    // FIXME: Bug 1776077, for the scroll-linked animations, it's possible to
-    // let it go from the active phase to the before phase, and its progress
-    // becomes null. In this case, we shouldn't just skip this animation.
-    // Instead, we have to reset the sampled result to that without this
-    // animation.
     if (computedTiming.mProgress.IsNull()) {
+      // For the scroll-linked animations, it's possible to let it go between
+      // the active phase and the before/after phase, and so its progress
+      // becomes null. In this case, we shouldn't just skip this animation.
+      // Instead, we have to reset the previous sampled result. Basically, we
+      // use |mProgressOnLastCompose| to check if it goes from the active phase.
+      // If so, we set the returned |mReason| to ScrollToDelayPhase to let the
+      // caller know we need to use the base style for this property.
+      //
+      // If there are any other animations which need to be sampled together
+      // (in the same property animation group), this |reason| will be ignored.
+      if (animation.mScrollTimelineOptions &&
+          !animation.mProgressOnLastCompose.IsNull() &&
+          (computedTiming.mPhase == ComputedTiming::AnimationPhase::Before ||
+           computedTiming.mPhase == ComputedTiming::AnimationPhase::After)) {
+        // Appearally, we go back to delay, so need to reset the last
+        // composition meta data. This is necessary because
+        // 1. this animation is in delay so it shouldn't have any composition
+        //    meta data, and
+        // 2. we will not go into this condition multiple times during delay
+        //    phase because we rely on |mProgressOnLastCompose|.
+        animation.ResetLastCompositionValues();
+        reason = AnimationHelper::SampleResult::Reason::ScrollToDelayPhase;
+      }
       continue;
     }
 
@@ -211,7 +235,7 @@ static AnimationHelper::SampleResult SampleAnimationForProperty(
 #ifdef DEBUG
       shouldBeSkipped = true;
 #else
-      return AnimationHelper::SampleResult::Skipped;
+      return AnimationHelper::SampleResult::Skipped();
 #endif
     }
 
@@ -246,7 +270,7 @@ static AnimationHelper::SampleResult SampleAnimationForProperty(
 #ifdef DEBUG
       shouldBeSkipped = true;
 #else
-      return AnimationHelper::SampleResult::Skipped;
+      return AnimationHelper::SampleResult::Skipped();
 #endif
     }
 
@@ -268,7 +292,7 @@ static AnimationHelper::SampleResult SampleAnimationForProperty(
 
 #ifdef DEBUG
     if (shouldBeSkipped) {
-      return AnimationHelper::SampleResult::Skipped;
+      return AnimationHelper::SampleResult::Skipped();
     }
 #endif
 
@@ -279,10 +303,16 @@ static AnimationHelper::SampleResult SampleAnimationForProperty(
     animation.mPortionInSegmentOnLastCompose.SetValue(portion);
   }
 
-  return hasInEffectAnimations ? AnimationHelper::SampleResult::Sampled
-                               : AnimationHelper::SampleResult::None;
+  auto rv = hasInEffectAnimations ? AnimationHelper::SampleResult::Sampled()
+                                  : AnimationHelper::SampleResult();
+  rv.mReason = reason;
+  return rv;
 }
 
+// This function samples the animations for a group of CSS properties. We may
+// have multiple CSS properties in a group (e.g. transform-like properties).
+// So the returned animation array, |aAnimationValues|, include all the
+// animation values of these CSS properties.
 AnimationHelper::SampleResult AnimationHelper::SampleAnimationForEachNode(
     const APZSampler* aAPZSampler, const LayersId& aLayersId,
     const MutexAutoLock& aProofOfMapLock, TimeStamp aPreviousFrameTime,
@@ -294,6 +324,7 @@ AnimationHelper::SampleResult AnimationHelper::SampleAnimationForEachNode(
   MOZ_ASSERT(aAnimationValues.IsEmpty(),
              "Should be called with empty aAnimationValues");
 
+  nsTArray<RefPtr<RawServoAnimationValue>> baseStyleOfDelayAnimations;
   nsTArray<RefPtr<RawServoAnimationValue>> nonAnimatingValues;
   for (PropertyAnimationGroup& group : aPropertyAnimationGroups) {
     // Initialize animation value with base style.
@@ -328,14 +359,18 @@ AnimationHelper::SampleResult AnimationHelper::SampleAnimationForEachNode(
 
     // FIXME: Bug 1455476: Do optimization for multiple properties. For now,
     // the result is skipped only if the property count == 1.
-    if (result == SampleResult::Skipped) {
+    if (result.IsSkipped()) {
 #ifdef DEBUG
       aAnimationValues.AppendElement(std::move(currValue));
 #endif
-      return SampleResult::Skipped;
+      return result;
     }
 
-    if (result != SampleResult::Sampled) {
+    if (!result.IsSampled()) {
+      if (result.mReason == SampleResult::Reason::ScrollToDelayPhase) {
+        MOZ_ASSERT(currValue && currValue == group.mBaseStyle);
+        baseStyleOfDelayAnimations.AppendElement(std::move(currValue));
+      }
       continue;
     }
 
@@ -345,8 +380,17 @@ AnimationHelper::SampleResult AnimationHelper::SampleAnimationForEachNode(
   }
 
   SampleResult rv =
-      aAnimationValues.IsEmpty() ? SampleResult::None : SampleResult::Sampled;
-  if (rv == SampleResult::Sampled) {
+      aAnimationValues.IsEmpty() ? SampleResult() : SampleResult::Sampled();
+
+  // If there is no other sampled result, we may store these base styles
+  // (together with the non-animating values) to the webrenderer before it gets
+  // sync with the main thread.
+  if (rv.IsNone() && !baseStyleOfDelayAnimations.IsEmpty()) {
+    aAnimationValues.AppendElements(std::move(baseStyleOfDelayAnimations));
+    rv.mReason = SampleResult::Reason::ScrollToDelayPhase;
+  }
+
+  if (!aAnimationValues.IsEmpty()) {
     aAnimationValues.AppendElements(std::move(nonAnimatingValues));
   }
   return rv;
