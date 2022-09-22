@@ -10,7 +10,6 @@
 
 #include "modules/audio_coding/test/iSACTest.h"
 
-#include <ctype.h>
 #include <stdio.h>
 #include <string.h>
 

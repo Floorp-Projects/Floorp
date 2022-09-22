@@ -11,7 +11,6 @@
 #include "modules/desktop_capture/win/full_screen_win_application_handler.h"
 
 #include <algorithm>
-#include <cwctype>
 #include <memory>
 #include <string>
 #include <vector>

@@ -11,8 +11,6 @@
 #ifndef RTC_BASE_STRING_UTILS_H_
 #define RTC_BASE_STRING_UTILS_H_
 
-#include <ctype.h>
-#include <stdarg.h>
 #include <stdio.h>
 #include <string.h>
 
