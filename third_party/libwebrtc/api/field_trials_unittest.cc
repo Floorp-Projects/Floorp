@@ -70,4 +70,34 @@ TEST(FieldTrials, SequentialInstances) {
   { FieldTrials f("SomeOtherString/Enabled/"); }
 }
 
+TEST(FieldTrials, NoGlobals) {
+  auto f1 = FieldTrials::CreateNoGlobal("SomeString/Enabled/");
+  EXPECT_TRUE(f1);
+}
+
+TEST(FieldTrials, SeveralNoGlobals) {
+  auto f1 = FieldTrials::CreateNoGlobal("SomeString/Enabled/");
+  auto f2 = FieldTrials::CreateNoGlobal("SomeOtherString/Enabled/");
+  ASSERT_TRUE(f1);
+  ASSERT_TRUE(f2);
+
+  EXPECT_TRUE(f1->IsEnabled("SomeString"));
+  EXPECT_FALSE(f1->IsEnabled("SomeOtherString"));
+
+  EXPECT_FALSE(f2->IsEnabled("SomeString"));
+  EXPECT_TRUE(f2->IsEnabled("SomeOtherString"));
+}
+
+TEST(FieldTrials, GlobalAndNoGlobals) {
+  FieldTrials f0("SomeString/Enabled/");
+  auto f1 = FieldTrials::CreateNoGlobal("SomeOtherString/Enabled/");
+  ASSERT_TRUE(f1);
+
+  EXPECT_TRUE(f0.IsEnabled("SomeString"));
+  EXPECT_FALSE(f0.IsEnabled("SomeOtherString"));
+
+  EXPECT_FALSE(f1->IsEnabled("SomeString"));
+  EXPECT_TRUE(f1->IsEnabled("SomeOtherString"));
+}
+
 }  // namespace webrtc
