@@ -620,3 +620,7 @@ border-right: 1px solid var(--chrome-content-separator-color);
 #addons-icon{
   list-style-image: url("chrome://mozapps/skin/extensions/extension.svg");
 }
+
+:root[sizemode="fullscreen"] :is(#sidebar-select-box){
+  display: none;
+}
