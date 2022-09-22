@@ -718,7 +718,8 @@ WEBRTC_RTCSTATS_IMPL(
     &fir_count,
     &pli_count,
     &nack_count,
-    &qp_sum)
+    &qp_sum,
+    &min_playout_delay)
 // clang-format on
 
 RTCInboundRTPStreamStats::RTCInboundRTPStreamStats(const std::string& id,
@@ -777,7 +778,8 @@ RTCInboundRTPStreamStats::RTCInboundRTPStreamStats(std::string&& id,
       fir_count("firCount"),
       pli_count("pliCount"),
       nack_count("nackCount"),
-      qp_sum("qpSum") {}
+      qp_sum("qpSum"),
+      min_playout_delay("minPlayoutDelay") {}
 
 RTCInboundRTPStreamStats::RTCInboundRTPStreamStats(
     const RTCInboundRTPStreamStats& other)
@@ -832,7 +834,8 @@ RTCInboundRTPStreamStats::RTCInboundRTPStreamStats(
       fir_count(other.fir_count),
       pli_count(other.pli_count),
       nack_count(other.nack_count),
-      qp_sum(other.qp_sum) {}
+      qp_sum(other.qp_sum),
+      min_playout_delay(other.min_playout_delay) {}
 
 RTCInboundRTPStreamStats::~RTCInboundRTPStreamStats() {}
 

@@ -569,6 +569,9 @@ void SetInboundRTPStreamStatsFromVideoReceiverInfo(
       video_receiver_info.total_inter_frame_delay;
   inbound_video->total_squared_inter_frame_delay =
       video_receiver_info.total_squared_inter_frame_delay;
+  inbound_video->min_playout_delay =
+      static_cast<double>(video_receiver_info.min_playout_delay_ms) /
+      rtc::kNumMillisecsPerSec;
   if (video_receiver_info.last_packet_received_timestamp_ms) {
     inbound_video->last_packet_received_timestamp = static_cast<double>(
         *video_receiver_info.last_packet_received_timestamp_ms);

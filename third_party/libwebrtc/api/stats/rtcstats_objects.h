@@ -553,6 +553,9 @@ class RTC_EXPORT RTCInboundRTPStreamStats final
   RTCStatsMember<uint32_t> pli_count;
   RTCStatsMember<uint32_t> nack_count;
   RTCStatsMember<uint64_t> qp_sum;
+
+  // The former googMinPlayoutDelayMs (in seconds).
+  RTCNonStandardStatsMember<double> min_playout_delay;
 };
 
 // https://w3c.github.io/webrtc-stats/#outboundrtpstats-dict*
