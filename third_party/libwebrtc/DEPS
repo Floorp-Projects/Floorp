@@ -10,7 +10,7 @@ vars = {
   # chromium waterfalls. More info at: crbug.com/570091.
   'checkout_configuration': 'default',
   'checkout_instrumented_libraries': 'checkout_linux and checkout_configuration == "default"',
-  'chromium_revision': '97ecd0e93c33ba52a0363b776a5041a97f841ca6',
+  'chromium_revision': '1891773fa9f1e8b26fce9e65d33b44b112fc3de8',
 
   # Keep the Chromium default of generating location tags.
   'generate_location_tags': True,
@@ -23,30 +23,30 @@ deps = {
   # TODO(kjellander): Move this to be Android-only once the libevent dependency
   # in base/third_party/libevent is solved.
   'src/base':
-    'https://chromium.googlesource.com/chromium/src/base@84bbfd82bf9a7c369226ac867a6906b0d5ac0140',
+    'https://chromium.googlesource.com/chromium/src/base@f902b7a9a2c1298d48004230fc3d0c4b09a2cf89',
   'src/build':
     'https://chromium.googlesource.com/chromium/src/build@8682a2dc8565f68d22248726580f60e02db87315',
   'src/buildtools':
-    'https://chromium.googlesource.com/chromium/src/buildtools@c12bf52fc40fa0ab69d9389410107d1d5fbd46e5',
+    'https://chromium.googlesource.com/chromium/src/buildtools@8b16338d17cd71b04a6ba28da7322ab6739892c2',
   # Gradle 6.6.1. Used for testing Android Studio project generation for WebRTC.
   'src/examples/androidtests/third_party/gradle': {
     'url': 'https://chromium.googlesource.com/external/github.com/gradle/gradle.git@f2d1fb54a951d8b11d25748e4711bec8d128d7e3',
     'condition': 'checkout_android',
   },
   'src/ios': {
-    'url': 'https://chromium.googlesource.com/chromium/src/ios@1782819473a665c471d6a5d114a7a4c720d1723a',
+    'url': 'https://chromium.googlesource.com/chromium/src/ios@051b5c47a8b496cfa80ee14184cc19a2889f0730',
     'condition': 'checkout_ios',
   },
   'src/testing':
-    'https://chromium.googlesource.com/chromium/src/testing@917341f8be06238f277be13dfad30c4f49632b71',
+    'https://chromium.googlesource.com/chromium/src/testing@61885dc88b8f7ff03d6fd457e078fe5f1ea4e162',
   'src/third_party':
-    'https://chromium.googlesource.com/chromium/src/third_party@262b2b3c55193d06e203c308632fcbb9c105c0d7',
+    'https://chromium.googlesource.com/chromium/src/third_party@c940de3868c759d906e38222f9769d868d471ec2',
 
   'src/buildtools/linux64': {
     'packages': [
       {
         'package': 'gn/gn/linux-${{arch}}',
-        'version': 'git_revision:c547ca1497e3ff0dcbc0b2cb036b3d40380cbeeb',
+        'version': 'git_revision:37baefb026b199605affa7bcb24810d1724ce373',
       }
     ],
     'dep_type': 'cipd',
@@ -56,7 +56,7 @@ deps = {
     'packages': [
       {
         'package': 'gn/gn/mac-${{arch}}',
-        'version': 'git_revision:c547ca1497e3ff0dcbc0b2cb036b3d40380cbeeb',
+        'version': 'git_revision:37baefb026b199605affa7bcb24810d1724ce373',
       }
     ],
     'dep_type': 'cipd',
@@ -66,7 +66,7 @@ deps = {
     'packages': [
       {
         'package': 'gn/gn/windows-amd64',
-        'version': 'git_revision:c547ca1497e3ff0dcbc0b2cb036b3d40380cbeeb',
+        'version': 'git_revision:37baefb026b199605affa7bcb24810d1724ce373',
       }
     ],
     'dep_type': 'cipd',
@@ -245,7 +245,7 @@ deps = {
       'packages': [
           {
               'package': 'chromium/third_party/r8',
-              'version': 'ovozeRSDDfERnEFpDo_WS6OYOcEF7oT1JzGxCSf-g0kC',
+              'version': 'L2ZGhyJ-Hc8AnXHo5dhtNdI2F2bC_9yi2lqTbJ98sLcC',
           },
       ],
       'condition': 'checkout_android',
@@ -275,7 +275,7 @@ deps = {
     'condition': 'checkout_win',
   },
   'src/tools':
-    'https://chromium.googlesource.com/chromium/src/tools@aa7c757af33f2568d829a7e50234ce607aba9a5b',
+    'https://chromium.googlesource.com/chromium/src/tools@3bb820e5ed6396695379cb970e6ad3d65117c9f6',
 
   'src/third_party/accessibility_test_framework': {
       'packages': [
@@ -363,7 +363,7 @@ deps = {
     'packages': [
       {
           'package': 'chromium/third_party/androidx',
-          'version': 'rub6aXBz5r6WR9pBd1H-bRnRkT8jX123XYM5pQG_xhwC',
+          'version': 'aaLNF-LbuC3COrA7CxH-p6Kk9DXknyL3CJbRKKLARSoC',
       },
     ],
     'condition': 'checkout_android',
