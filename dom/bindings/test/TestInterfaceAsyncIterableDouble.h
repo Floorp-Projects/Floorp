@@ -47,8 +47,8 @@ class TestInterfaceAsyncIterableDouble final : public nsISupports,
   void InitAsyncIteratorData(IteratorData& aData, Iterator::IteratorType aType,
                              ErrorResult& aError) {}
 
-  already_AddRefed<Promise> GetNextPromise(Iterator* aIterator,
-                                           ErrorResult& aRv);
+  already_AddRefed<Promise> GetNextIterationResult(Iterator* aIterator,
+                                                   ErrorResult& aRv);
 
  private:
   virtual ~TestInterfaceAsyncIterableDouble() = default;

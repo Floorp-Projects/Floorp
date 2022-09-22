@@ -4501,9 +4501,17 @@ def CopyUnforgeablePropertiesToInstance(descriptor, failureCode):
 
 
 def AssertInheritanceChain(descriptor):
-    asserts = ""
+    # We can skip the reinterpret_cast check for the descriptor's nativeType
+    # if aObject is a pointer of that type.
+    asserts = fill(
+        """
+        static_assert(std::is_same_v<decltype(aObject), ${nativeType}*>);
+        """,
+        nativeType=descriptor.nativeType,
+    )
     iface = descriptor.interface
-    while iface:
+    while iface.parent:
+        iface = iface.parent
         desc = descriptor.getDescriptor(iface.identifier.name)
         asserts += (
             "MOZ_ASSERT(static_cast<%s*>(aObject) == \n"
@@ -4511,7 +4519,6 @@ def AssertInheritanceChain(descriptor):
             '           "Multiple inheritance for %s is broken.");\n'
             % (desc.nativeType, desc.nativeType, desc.nativeType)
         )
-        iface = iface.parent
     asserts += "MOZ_ASSERT(ToSupportsIsCorrect(aObject));\n"
     return asserts
 
@@ -9574,7 +9581,6 @@ class CGPerSignatureCall(CGThing):
                 cgThings.append(
                     CGIterableMethodGenerator(
                         descriptor,
-                        idlNode.maplikeOrSetlikeOrIterable,
                         idlNode.identifier.name,
                         self.getArgumentNames(),
                     )
@@ -22274,7 +22280,7 @@ class CGIterableMethodGenerator(CGGeneric):
     using CGCallGenerator.
     """
 
-    def __init__(self, descriptor, iterable, methodName, args):
+    def __init__(self, descriptor, methodName, args):
         if methodName == "forEach":
             assert len(args) == 2
 
@@ -22319,8 +22325,14 @@ class CGIterableMethodGenerator(CGGeneric):
             wrap = f"{descriptor.interface.identifier.name}Iterator_Binding::Wrap"
             iterClass = f"mozilla::dom::binding_detail::WrappableIterableIterator<{descriptor.nativeType}, &{wrap}>"
         else:
+            needReturnMethod = toStringBool(
+                descriptor.interface.maplikeOrSetlikeOrIterable.getExtendedAttribute(
+                    "GenerateReturnMethod"
+                )
+                is not None
+            )
             wrap = f"{descriptor.interface.identifier.name}AsyncIterator_Binding::Wrap"
-            iterClass = f"mozilla::dom::binding_detail::WrappableAsyncIterableIterator<{descriptor.nativeType}, &{wrap}>"
+            iterClass = f"mozilla::dom::binding_detail::WrappableAsyncIterableIterator<{descriptor.nativeType}, {needReturnMethod}, &{wrap}>"
 
         createIterator = fill(
             """
