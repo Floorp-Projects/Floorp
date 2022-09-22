@@ -40,7 +40,7 @@ class RenderBuffer {
   ~RenderBuffer();
 
   // Get a block.
-  const Block& Block(int buffer_offset_blocks) const {
+  const Block& GetBlock(int buffer_offset_blocks) const {
     int position =
         block_buffer_->OffsetIndex(block_buffer_->read, buffer_offset_blocks);
     return block_buffer_->buffer[position];
