@@ -82,6 +82,7 @@ is(typeof speechSynthesis.paused, "boolean", "speechSynthesis.paused is a boolea
 var voices1 = speechSynthesis.getVoices();
 var voices2 = speechSynthesis.getVoices();
 
+ok(!!voices1.length, "More than one voice found");
 ok(voices1.length == voices2.length, "Voice count matches");
 
 for (var i in voices1) {
