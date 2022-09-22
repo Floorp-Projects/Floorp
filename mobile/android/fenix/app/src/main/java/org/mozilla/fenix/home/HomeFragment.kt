@@ -39,6 +39,7 @@ import androidx.navigation.fragment.navArgs
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.LinearSmoothScroller
 import androidx.recyclerview.widget.RecyclerView.SmoothScroller
+import androidx.vectordrawable.graphics.drawable.VectorDrawableCompat
 import com.google.android.material.appbar.AppBarLayout
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.snackbar.Snackbar
@@ -993,7 +994,22 @@ class HomeFragment : Fragment() {
         }
 
         binding.wordmarkText.imageTintList = tintColor
-        binding.privateBrowsingButton.imageTintList = tintColor
+
+        // Need to preemptively apply the new theme to the private browsing button drawable
+        // See https://github.com/mozilla-mobile/fenix/issues/26644#issuecomment-1254961616
+        (activity as? HomeActivity)?.themeManager?.let { themeManager ->
+            with(binding.privateBrowsingButton) {
+                val drawable = VectorDrawableCompat.create(
+                    resources,
+                    R.drawable.private_browsing_button,
+                    resources.newTheme().apply {
+                        applyStyle(themeManager.currentThemeResource, true)
+                    },
+                )
+                setImageDrawable(drawable)
+                imageTintList = tintColor
+            }
+        }
     }
 
     private fun observeWallpaperUpdates() {
