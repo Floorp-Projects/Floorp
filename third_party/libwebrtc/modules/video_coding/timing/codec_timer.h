@@ -8,8 +8,8 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef MODULES_VIDEO_CODING_CODEC_TIMER_H_
-#define MODULES_VIDEO_CODING_CODEC_TIMER_H_
+#ifndef MODULES_VIDEO_CODING_TIMING_CODEC_TIMER_H_
+#define MODULES_VIDEO_CODING_TIMING_CODEC_TIMER_H_
 
 #include <queue>
 
@@ -17,10 +17,10 @@
 
 namespace webrtc {
 
-class VCMCodecTimer {
+class CodecTimer {
  public:
-  VCMCodecTimer();
-  ~VCMCodecTimer();
+  CodecTimer();
+  ~CodecTimer();
 
   // Add a new decode time to the filter.
   void AddTiming(int64_t new_decode_time_ms, int64_t now_ms);
@@ -47,4 +47,4 @@ class VCMCodecTimer {
 
 }  // namespace webrtc
 
-#endif  // MODULES_VIDEO_CODING_CODEC_TIMER_H_
+#endif  // MODULES_VIDEO_CODING_TIMING_CODEC_TIMER_H_

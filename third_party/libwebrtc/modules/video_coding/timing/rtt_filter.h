@@ -8,8 +8,8 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef MODULES_VIDEO_CODING_RTT_FILTER_H_
-#define MODULES_VIDEO_CODING_RTT_FILTER_H_
+#ifndef MODULES_VIDEO_CODING_TIMING_RTT_FILTER_H_
+#define MODULES_VIDEO_CODING_TIMING_RTT_FILTER_H_
 
 #include <stdint.h>
 
@@ -18,11 +18,11 @@
 
 namespace webrtc {
 
-class VCMRttFilter {
+class RttFilter {
  public:
-  VCMRttFilter();
-  VCMRttFilter(const VCMRttFilter&) = delete;
-  VCMRttFilter& operator=(const VCMRttFilter&) = delete;
+  RttFilter();
+  RttFilter(const RttFilter&) = delete;
+  RttFilter& operator=(const RttFilter&) = delete;
 
   // Resets the filter.
   void Reset();
@@ -66,4 +66,4 @@ class VCMRttFilter {
 
 }  // namespace webrtc
 
-#endif  // MODULES_VIDEO_CODING_RTT_FILTER_H_
+#endif  // MODULES_VIDEO_CODING_TIMING_RTT_FILTER_H_

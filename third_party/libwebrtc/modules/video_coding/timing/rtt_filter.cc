@@ -8,7 +8,7 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "modules/video_coding/rtt_filter.h"
+#include "modules/video_coding/timing/rtt_filter.h"
 
 #include <math.h>
 #include <stdlib.h>
@@ -31,7 +31,7 @@ constexpr double kDriftStdDev = 3.5;
 
 }  // namespace
 
-VCMRttFilter::VCMRttFilter()
+RttFilter::RttFilter()
     : avg_rtt_(TimeDelta::Zero()),
       var_rtt_(0),
       max_rtt_(TimeDelta::Zero()),
@@ -40,7 +40,7 @@ VCMRttFilter::VCMRttFilter()
   Reset();
 }
 
-void VCMRttFilter::Reset() {
+void RttFilter::Reset() {
   got_non_zero_update_ = false;
   avg_rtt_ = TimeDelta::Zero();
   var_rtt_ = 0;
@@ -50,7 +50,7 @@ void VCMRttFilter::Reset() {
   absl::c_fill(drift_buf_, TimeDelta::Zero());
 }
 
-void VCMRttFilter::Update(TimeDelta rtt) {
+void RttFilter::Update(TimeDelta rtt) {
   if (!got_non_zero_update_) {
     if (rtt.IsZero()) {
       return;
@@ -87,7 +87,7 @@ void VCMRttFilter::Update(TimeDelta rtt) {
   }
 }
 
-bool VCMRttFilter::JumpDetection(TimeDelta rtt) {
+bool RttFilter::JumpDetection(TimeDelta rtt) {
   TimeDelta diff_from_avg = avg_rtt_ - rtt;
   // Unit of var_rtt_ is ms^2.
   TimeDelta jump_threshold = TimeDelta::Millis(kJumpStddev * sqrt(var_rtt_));
@@ -121,7 +121,7 @@ bool VCMRttFilter::JumpDetection(TimeDelta rtt) {
   return true;
 }
 
-bool VCMRttFilter::DriftDetection(TimeDelta rtt) {
+bool RttFilter::DriftDetection(TimeDelta rtt) {
   // Unit of sqrt of var_rtt_ is ms.
   TimeDelta drift_threshold = TimeDelta::Millis(kDriftStdDev * sqrt(var_rtt_));
   if (max_rtt_ - avg_rtt_ > drift_threshold) {
@@ -141,7 +141,7 @@ bool VCMRttFilter::DriftDetection(TimeDelta rtt) {
   return true;
 }
 
-void VCMRttFilter::ShortRttFilter(const BufferList& buf) {
+void RttFilter::ShortRttFilter(const BufferList& buf) {
   RTC_DCHECK_EQ(buf.size(), kMaxDriftJumpCount);
   max_rtt_ = TimeDelta::Zero();
   avg_rtt_ = TimeDelta::Zero();
@@ -154,7 +154,7 @@ void VCMRttFilter::ShortRttFilter(const BufferList& buf) {
   avg_rtt_ = avg_rtt_ / static_cast<double>(buf.size());
 }
 
-TimeDelta VCMRttFilter::Rtt() const {
+TimeDelta RttFilter::Rtt() const {
   return max_rtt_;
 }
 

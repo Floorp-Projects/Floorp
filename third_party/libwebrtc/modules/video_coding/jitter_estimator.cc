@@ -22,7 +22,7 @@
 #include "api/units/frequency.h"
 #include "api/units/time_delta.h"
 #include "api/units/timestamp.h"
-#include "modules/video_coding/rtt_filter.h"
+#include "modules/video_coding/timing/rtt_filter.h"
 #include "rtc_base/experiments/jitter_upper_bound_experiment.h"
 #include "rtc_base/numerics/safe_conversions.h"
 #include "system_wrappers/include/clock.h"

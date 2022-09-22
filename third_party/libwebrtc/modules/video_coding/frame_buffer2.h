@@ -22,8 +22,8 @@
 #include "api/sequence_checker.h"
 #include "api/video/encoded_frame.h"
 #include "modules/video_coding/include/video_coding_defines.h"
-#include "modules/video_coding/inter_frame_delay.h"
 #include "modules/video_coding/jitter_estimator.h"
+#include "modules/video_coding/timing/inter_frame_delay.h"
 #include "modules/video_coding/utility/decoded_frames_history.h"
 #include "rtc_base/event.h"
 #include "rtc_base/experiments/field_trial_parser.h"
@@ -178,7 +178,7 @@ class FrameBuffer {
 
   VCMJitterEstimator jitter_estimator_ RTC_GUARDED_BY(mutex_);
   VCMTiming* const timing_ RTC_GUARDED_BY(mutex_);
-  VCMInterFrameDelay inter_frame_delay_ RTC_GUARDED_BY(mutex_);
+  InterFrameDelay inter_frame_delay_ RTC_GUARDED_BY(mutex_);
   absl::optional<int64_t> last_continuous_frame_ RTC_GUARDED_BY(mutex_);
   std::vector<FrameMap::iterator> frames_to_decode_ RTC_GUARDED_BY(mutex_);
   bool stopped_ RTC_GUARDED_BY(mutex_);

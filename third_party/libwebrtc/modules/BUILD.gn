@@ -223,6 +223,7 @@ if (rtc_include_tests && !build_with_chromium) {
       "rtp_rtcp:rtp_rtcp_unittests",
       "utility:utility_unittests",
       "video_coding:video_coding_unittests",
+      "video_coding/timing:timing_unittests",
       "video_processing:video_processing_unittests",
     ]
 

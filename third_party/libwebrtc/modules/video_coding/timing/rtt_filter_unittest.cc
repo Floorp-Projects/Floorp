@@ -8,7 +8,7 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "modules/video_coding/rtt_filter.h"
+#include "modules/video_coding/timing/rtt_filter.h"
 
 #include "api/units/time_delta.h"
 #include "test/gmock.h"
@@ -17,7 +17,7 @@
 namespace webrtc {
 
 TEST(RttFilterTest, RttIsCapped) {
-  VCMRttFilter rtt_filter;
+  RttFilter rtt_filter;
   rtt_filter.Update(TimeDelta::Seconds(500));
 
   EXPECT_EQ(rtt_filter.Rtt(), TimeDelta::Seconds(3));
@@ -27,7 +27,7 @@ TEST(RttFilterTest, RttIsCapped) {
 // then this is considered a jump. After more than 5 data points at the new
 // level, the RTT is reset to the new level.
 TEST(RttFilterTest, PositiveJumpDetection) {
-  VCMRttFilter rtt_filter;
+  RttFilter rtt_filter;
 
   rtt_filter.Update(TimeDelta::Millis(200));
   rtt_filter.Update(TimeDelta::Millis(200));
@@ -46,7 +46,7 @@ TEST(RttFilterTest, PositiveJumpDetection) {
 }
 
 TEST(RttFilterTest, NegativeJumpDetection) {
-  VCMRttFilter rtt_filter;
+  RttFilter rtt_filter;
 
   for (int i = 0; i < 10; ++i)
     rtt_filter.Update(TimeDelta::Millis(1500));
@@ -64,7 +64,7 @@ TEST(RttFilterTest, NegativeJumpDetection) {
 }
 
 TEST(RttFilterTest, JumpsResetByDirectionShift) {
-  VCMRttFilter rtt_filter;
+  RttFilter rtt_filter;
   for (int i = 0; i < 10; ++i)
     rtt_filter.Update(TimeDelta::Millis(1500));
 
@@ -85,7 +85,7 @@ TEST(RttFilterTest, JumpsResetByDirectionShift) {
 // then a drift is detected, and a short filter is applied to find a new max
 // rtt.
 TEST(RttFilterTest, DriftDetection) {
-  VCMRttFilter rtt_filter;
+  RttFilter rtt_filter;
 
   // Descend RTT by 30ms and settle at 700ms RTT. A drift is detected after rtt
   // of 700ms is reported around 50 times for these targets.

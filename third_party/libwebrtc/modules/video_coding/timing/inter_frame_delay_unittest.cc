@@ -8,7 +8,7 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "modules/video_coding/inter_frame_delay.h"
+#include "modules/video_coding/timing/inter_frame_delay.h"
 
 #include <limits>
 
@@ -37,7 +37,7 @@ using ::testing::Eq;
 using ::testing::Optional;
 
 TEST(InterFrameDelayTest, OldRtpTimestamp) {
-  VCMInterFrameDelay inter_frame_delay;
+  InterFrameDelay inter_frame_delay;
   EXPECT_THAT(inter_frame_delay.CalculateDelay(180000, kStartTime),
               Optional(TimeDelta::Zero()));
   EXPECT_THAT(inter_frame_delay.CalculateDelay(90000, kStartTime),
@@ -45,7 +45,7 @@ TEST(InterFrameDelayTest, OldRtpTimestamp) {
 }
 
 TEST(InterFrameDelayTest, NegativeWrapAroundIsSameAsOldRtpTimestamp) {
-  VCMInterFrameDelay inter_frame_delay;
+  InterFrameDelay inter_frame_delay;
   uint32_t rtp = 1500;
   EXPECT_THAT(inter_frame_delay.CalculateDelay(rtp, kStartTime),
               Optional(TimeDelta::Zero()));
@@ -56,7 +56,7 @@ TEST(InterFrameDelayTest, NegativeWrapAroundIsSameAsOldRtpTimestamp) {
 }
 
 TEST(InterFrameDelayTest, CorrectDelayForFrames) {
-  VCMInterFrameDelay inter_frame_delay;
+  InterFrameDelay inter_frame_delay;
   // Use a fake clock to simplify time keeping.
   SimulatedClock clock(kStartTime);
 
@@ -99,7 +99,7 @@ TEST(InterFrameDelayTest, CorrectDelayForFrames) {
 }
 
 TEST(InterFrameDelayTest, PositiveWrapAround) {
-  VCMInterFrameDelay inter_frame_delay;
+  InterFrameDelay inter_frame_delay;
   // Use a fake clock to simplify time keeping.
   SimulatedClock clock(kStartTime);
 
@@ -123,7 +123,7 @@ TEST(InterFrameDelayTest, MultipleWrapArounds) {
   constexpr uint32_t kHalfRtp = std::numeric_limits<uint32_t>::max() / 2;
   constexpr TimeDelta kWrapAroundDelay = kHalfRtp / k90Khz;
 
-  VCMInterFrameDelay inter_frame_delay;
+  InterFrameDelay inter_frame_delay;
   // Use a fake clock to simplify time keeping.
   SimulatedClock clock(kStartTime);
   uint32_t rtp = 0;
@@ -165,7 +165,7 @@ TEST(InterFrameDelayTest, MultipleWrapArounds) {
 }
 
 TEST(InterFrameDelayTest, NegativeWrapAroundAfterPositiveWrapAround) {
-  VCMInterFrameDelay inter_frame_delay;
+  InterFrameDelay inter_frame_delay;
   // Use a fake clock to simplify time keeping.
   SimulatedClock clock(kStartTime);
   uint32_t rtp = std::numeric_limits<uint32_t>::max() - 1500;
