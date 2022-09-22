@@ -89,7 +89,7 @@ class FileSystemManagerParent : public PFileSystemManagerParent {
  private:
   RefPtr<fs::data::FileSystemDataManager> mDataManager;
 
-  const EntryId mRootEntry;
+  FileSystemGetHandleResponse mRootResponse;
 
   FlippedOnce<false> mRequestedAllowToClose;
   FlippedOnce<false> mAllowedToClose;

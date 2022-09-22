@@ -518,23 +518,21 @@ FileSystemDatabaseManagerVersion001::GetDirectoryEntries(
 }
 
 nsresult FileSystemDatabaseManagerVersion001::GetFile(
-    const FileSystemEntryPair& aEndpoints, nsString& aType,
+    const EntryId& aEntryId, nsString& aType,
     TimeStamp& lastModifiedMilliSeconds, nsTArray<Name>& aPath,
     nsCOMPtr<nsIFile>& aFile) const {
-  MOZ_ASSERT(!aEndpoints.parentId().IsEmpty());
-  MOZ_ASSERT(!aEndpoints.childId().IsEmpty());
+  MOZ_ASSERT(!aEntryId.IsEmpty());
 
-  const auto& entryId = aEndpoints.childId();
+  QM_TRY_UNWRAP(aFile, mFileManager->GetOrCreateFile(aEntryId));
 
-  QM_TRY_UNWRAP(aFile, mFileManager->GetOrCreateFile(entryId));
-
-  QM_TRY(MOZ_TO_RESULT(GetFileAttributes(mConnection, entryId, aType)));
+  QM_TRY(MOZ_TO_RESULT(GetFileAttributes(mConnection, aEntryId, aType)));
 
   PRTime lastModTime = 0;
   QM_TRY(MOZ_TO_RESULT(aFile->GetLastModifiedTime(&lastModTime)));
   lastModifiedMilliSeconds = static_cast<TimeStamp>(lastModTime);
 
-  QM_TRY_UNWRAP(aPath, ResolveReversedPath(mConnection, aEndpoints));
+  FileSystemEntryPair endPoints(mRootEntry, aEntryId);
+  QM_TRY_UNWRAP(aPath, ResolveReversedPath(mConnection, endPoints));
   if (aPath.IsEmpty()) {
     return NS_ERROR_DOM_NOT_FOUND_ERR;
   }
