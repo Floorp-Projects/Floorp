@@ -53,8 +53,8 @@ class FileSystemDirectoryHandle final : public FileSystemHandle {
                              iterator_t::IteratorType aType,
                              ErrorResult& aError);
 
-  [[nodiscard]] already_AddRefed<Promise> GetNextPromise(iterator_t* aIterator,
-                                                         ErrorResult& aError);
+  [[nodiscard]] already_AddRefed<Promise> GetNextIterationResult(
+      iterator_t* aIterator, ErrorResult& aError);
 
   already_AddRefed<Promise> GetFileHandle(
       const nsAString& aName, const FileSystemGetFileOptions& aOptions,

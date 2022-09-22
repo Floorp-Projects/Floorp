@@ -66,12 +66,14 @@ void TestInterfaceAsyncIterableSingle::InitAsyncIteratorData(
   MOZ_ASSERT(aData.mMultiplier == 1);
 }
 
-already_AddRefed<Promise> TestInterfaceAsyncIterableSingle::GetNextPromise(
-    Iterator* aIterator, ErrorResult& aRv) {
-  return GetNextPromise(aIterator, aIterator->Data(), aRv);
+already_AddRefed<Promise>
+TestInterfaceAsyncIterableSingle::GetNextIterationResult(Iterator* aIterator,
+                                                         ErrorResult& aRv) {
+  return GetNextIterationResult(aIterator, aIterator->Data(), aRv);
 }
 
-already_AddRefed<Promise> TestInterfaceAsyncIterableSingle::GetNextPromise(
+already_AddRefed<Promise>
+TestInterfaceAsyncIterableSingle::GetNextIterationResult(
     IterableIteratorBase* aIterator, IteratorData& aData, ErrorResult& aRv) {
   RefPtr<Promise> promise = Promise::Create(mParent->AsGlobal(), aRv);
   if (NS_WARN_IF(aRv.Failed())) {
@@ -81,7 +83,7 @@ already_AddRefed<Promise> TestInterfaceAsyncIterableSingle::GetNextPromise(
   nsCOMPtr<nsIRunnable> callResolvePromise =
       NewRunnableMethod<RefPtr<IterableIteratorBase>, IteratorData&,
                         RefPtr<Promise>>(
-          "TestInterfaceAsyncIterableSingle::GetNextPromise", this,
+          "TestInterfaceAsyncIterableSingle::GetNextIterationResult", this,
           &TestInterfaceAsyncIterableSingle::ResolvePromise, aIterator, aData,
           promise);
   if (aData.mBlockingPromisesIndex < aData.mBlockingPromises.Length()) {

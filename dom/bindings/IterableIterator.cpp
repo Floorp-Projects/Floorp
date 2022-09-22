@@ -109,7 +109,7 @@ already_AddRefed<Promise> AsyncIterableNextImpl::NextSteps(
 
   // 4. Let nextPromise be the result of getting the next iteration result with
   //    object’s target and object.
-  RefPtr<Promise> nextPromise = GetNextPromise(aRv);
+  RefPtr<Promise> nextPromise = GetNextResult(aRv);
 
   // 5. Let fulfillSteps be the following steps, given next:
   auto fulfillSteps = [](JSContext* aCx, JS::Handle<JS::Value> aNext,
@@ -220,6 +220,102 @@ already_AddRefed<Promise> AsyncIterableNextImpl::Next(
 
   // 12. Return object’s ongoing promise.
   return do_AddRef(aObject->mOngoingPromise);
+}
+
+already_AddRefed<Promise> AsyncIterableReturnImpl::ReturnSteps(
+    JSContext* aCx, AsyncIterableIteratorBase* aObject,
+    nsIGlobalObject* aGlobalObject, JS::Handle<JS::Value> aValue,
+    ErrorResult& aRv) {
+  // 2. If object’s is finished is true, then:
+  if (aObject->mIsFinished) {
+    // 1. Let result be CreateIterResultObject(value, true).
+    JS::Rooted<JS::Value> dict(aCx);
+    iterator_utils::DictReturn(aCx, &dict, true, aValue, aRv);
+    if (aRv.Failed()) {
+      return Promise::CreateRejectedWithErrorResult(aGlobalObject, aRv);
+    }
+
+    // 2. Perform ! Call(returnPromiseCapability.[[Resolve]], undefined,
+    //    «result»).
+    // 3. Return returnPromiseCapability.[[Promise]].
+    return Promise::Resolve(aGlobalObject, aCx, dict, aRv);
+  }
+
+  // 3. Set object’s is finished to true.
+  aObject->mIsFinished = true;
+
+  // 4. Return the result of running the asynchronous iterator return algorithm
+  // for interface, given object’s target, object, and value.
+  return GetReturnPromise(aCx, aValue, aRv);
+}
+
+already_AddRefed<Promise> AsyncIterableReturnImpl::Return(
+    JSContext* aCx, AsyncIterableIteratorBase* aObject,
+    nsISupports* aGlobalObject, JS::Handle<JS::Value> aValue,
+    ErrorResult& aRv) {
+  nsCOMPtr<nsIGlobalObject> globalObject = do_QueryInterface(aGlobalObject);
+
+  // 3.7.10.2. Asynchronous iterator prototype object
+  // …
+  RefPtr<Promise> returnStepsPromise;
+  // 11. If ongoingPromise is not null, then:
+  if (aObject->mOngoingPromise) {
+    // 1. Let afterOngoingPromiseCapability be
+    //    ! NewPromiseCapability(%Promise%).
+    // 2. Let onSettled be CreateBuiltinFunction(returnSteps, « »).
+
+    // aObject is the same object as 'this', so it's fine to capture 'this'
+    // without taking a strong reference, because we already take a strong
+    // reference to it through aObject.
+    auto onSettled = [this](JSContext* aCx, JS::Handle<JS::Value> aValue,
+                            ErrorResult& aRv,
+                            const RefPtr<AsyncIterableIteratorBase>& aObject,
+                            const nsCOMPtr<nsIGlobalObject>& aGlobalObject,
+                            JS::Handle<JS::Value> aVal) {
+      return ReturnSteps(aCx, aObject, aGlobalObject, aVal, aRv);
+    };
+
+    // 3. Perform PerformPromiseThen(ongoingPromise, onSettled, onSettled,
+    //    afterOngoingPromiseCapability).
+    Result<RefPtr<Promise>, nsresult> afterOngoingPromise =
+        aObject->mOngoingPromise->ThenCatchWithCycleCollectedArgsJS(
+            onSettled, onSettled,
+            std::make_tuple(RefPtr{aObject}, nsCOMPtr{globalObject}),
+            std::make_tuple(aValue));
+    if (afterOngoingPromise.isErr()) {
+      aRv.Throw(afterOngoingPromise.unwrapErr());
+      return nullptr;
+    }
+
+    // 4. Set returnStepsPromise to afterOngoingPromiseCapability.[[Promise]].
+    returnStepsPromise = afterOngoingPromise.unwrap().forget();
+  } else {
+    // 12. Otherwise:
+    //   1. Set returnStepsPromise to the result of running returnSteps.
+    returnStepsPromise = ReturnSteps(aCx, aObject, globalObject, aValue, aRv);
+  }
+
+  // 13. Let fulfillSteps be the following steps:
+  auto onFullFilled = [](JSContext* aCx, JS::Handle<JS::Value>,
+                         ErrorResult& aRv,
+                         const nsCOMPtr<nsIGlobalObject>& aGlobalObject,
+                         JS::Handle<JS::Value> aVal) {
+    // 1. Return CreateIterResultObject(value, true).
+    JS::Rooted<JS::Value> dict(aCx);
+    iterator_utils::DictReturn(aCx, &dict, true, aVal, aRv);
+    return Promise::Resolve(aGlobalObject, aCx, dict, aRv);
+  };
+
+  // 14. Let onFulfilled be CreateBuiltinFunction(fulfillSteps, « »).
+  // 15. Perform PerformPromiseThen(returnStepsPromise, onFulfilled, undefined,
+  // returnPromiseCapability).
+  Result<RefPtr<Promise>, nsresult> returnPromise =
+      returnStepsPromise->ThenWithCycleCollectedArgsJS(
+          onFullFilled, std::make_tuple(std::move(globalObject)),
+          std::make_tuple(aValue));
+
+  // 16. Return returnPromiseCapability.[[Promise]].
+  return PromiseOrErr(std::move(returnPromise), aRv);
 }
 
 }  // namespace binding_detail
