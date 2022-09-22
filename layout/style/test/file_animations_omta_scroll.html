@@ -8,10 +8,6 @@
   <script src="/tests/gfx/layers/apz/test/mochitest/apz_test_utils.js"></script>
   <script type="application/javascript" src="animation_utils.js"></script>
   <style type="text/css">
-    @scroll-timeline scroll_timeline {
-      orientation: block;
-    }
-
     @keyframes transform_anim {
       from { transform: translate(50px) }
       to { transform: translate(150px) }
@@ -26,16 +22,23 @@
       to { width: 100px; }
     }
 
-    html {
-      min-height: 100%;
-      padding-bottom: 100px;
-    }
-
     .target {
       /* The animation target needs geometry in order to qualify for OMTA */
       width: 100px;
       height: 100px;
       background-color: green;
+    }
+
+    .scroller {
+      width: 100px;
+      height: 100px;
+      overflow: scroll;
+      scroll-timeline-name: scroll_timeline;
+    }
+
+    .content {
+      block-size: 100%;
+      padding-block-end: 100px;
     }
   </style>
 </head>
@@ -47,6 +50,7 @@
 "use strict";
 
 // Global state
+var gScroller = null;
 var gDiv = null;
 
 // Shortcut omta_is and friends by filling in the initial 'elem' argument
@@ -82,11 +86,30 @@ function finish() {
   o.SimpleTest.finish();
 }
 
+function new_scroller() {
+  gScroller = document.createElement('div');
+  gScroller.className = `scroller`;
+
+  let content = document.createElement('div');
+  content.className = 'content';
+
+  gScroller.appendChild(content);
+  document.getElementById("display").appendChild(gScroller);
+  return gScroller;
+}
+
+function done_scroller() {
+  gScroller.firstChild.remove();
+  gScroller.remove();
+  gScroller = null;
+}
+
 waitUntilApzStable().then(() => {
   runOMTATest(function() {
     var onAbort = function() {
       if (gDiv) {
         done_div();
+        done_scroller();
       }
     };
     runAllAsyncAnimTests(onAbort).then(finish);
@@ -102,6 +125,7 @@ waitUntilApzStable().then(() => {
 // The non-omta property with scroll-timeline together with an omta property
 // with document-timeline.
 addAsyncAnimTest(async function() {
+  new_scroller();
   new_div("animation: geometry 10s scroll_timeline, always_fifty 1s infinite;");
   await waitForPaintsFlushed();
 
@@ -111,22 +135,24 @@ addAsyncAnimTest(async function() {
           "transform animations should runs on compositor thread");
 
   done_div();
+  done_scroller();
 });
 
 // transform property with scroll-linked animations.
 addAsyncAnimTest(async function() {
+  let scroller = new_scroller();
   new_div("animation: transform_anim 1s linear scroll_timeline;");
   await waitForPaintsFlushed();
 
-  document.scrollingElement.scrollTop = 50;
+  scroller.scrollTop = 50;
   await waitForPaintsFlushed();
 
   omta_is_approx("transform", { tx: 100 }, 0.1, RunningOn.Compositor,
                  "scroll transform animations should runs on compositor " +
                  "thread");
 
-  document.scrollingElement.scrollTop = 0;
   done_div();
+  done_scroller();
 });
 
 addAsyncAnimTest(async function() {
@@ -138,11 +164,10 @@ addAsyncAnimTest(async function() {
     "<html style='min-height: 100%; padding-bottom: 100px;'>" +
     "<style>" +
     "@keyframes anim { from, to { transform: translate(50px) } }" +
-    "@scroll-timeline scroll_timeline { source: auto; }" +
     "</style>" +
     "<div id='target_in_iframe' " +
     "     style='width:50px; height:50px; background:green;" +
-    "            animation: anim 10s linear scroll_timeline;'>" +
+    "            animation: anim 10s linear scroll(root);'>" +
     "</div>" +
     "</html>";
 

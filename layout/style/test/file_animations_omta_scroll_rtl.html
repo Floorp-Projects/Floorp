@@ -10,10 +10,6 @@
   <script src="/tests/gfx/layers/apz/test/mochitest/apz_test_utils.js"></script>
   <script type="application/javascript" src="animation_utils.js"></script>
   <style type="text/css">
-    @scroll-timeline scroll_timeline {
-      orientation: horizontal;
-    }
-
     @keyframes transform_anim {
       from { transform: translateX(-100px) }
       to { transform: translateX(-200px) }
@@ -96,7 +92,7 @@ waitUntilApzStable().then(() => {
 // transform property with scroll-linked animations. The writing mode is from
 // right to left, so we have to use the negative scroll offset.
 addAsyncAnimTest(async function() {
-  new_div("animation: transform_anim 1s linear scroll_timeline;");
+  new_div("animation: transform_anim 1s linear scroll(horizontal root);");
   await waitForPaintsFlushed();
 
   const root = document.scrollingElement;
