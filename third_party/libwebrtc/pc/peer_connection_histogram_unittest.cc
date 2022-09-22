@@ -270,9 +270,7 @@ class PeerConnectionUsageHistogramTest : public ::testing::Test {
     fake_network->AddInterface(NextLocalAddress());
 
     std::unique_ptr<cricket::BasicPortAllocator> port_allocator(
-        new cricket::BasicPortAllocator(
-            fake_network,
-            std::make_unique<rtc::BasicPacketSocketFactory>(vss_.get())));
+        new cricket::BasicPortAllocator(fake_network));
 
     deps.async_resolver_factory = std::move(resolver_factory);
     deps.allocator = std::move(port_allocator);
@@ -294,9 +292,8 @@ class PeerConnectionUsageHistogramTest : public ::testing::Test {
     fake_network->AddInterface(NextLocalAddress());
     fake_network->AddInterface(kPrivateLocalAddress);
 
-    auto port_allocator = std::make_unique<cricket::BasicPortAllocator>(
-        fake_network,
-        std::make_unique<rtc::BasicPacketSocketFactory>(vss_.get()));
+    auto port_allocator =
+        std::make_unique<cricket::BasicPortAllocator>(fake_network);
     RTCConfiguration config;
     config.sdp_semantics = SdpSemantics::kUnifiedPlan;
     return CreatePeerConnection(config,
@@ -309,9 +306,8 @@ class PeerConnectionUsageHistogramTest : public ::testing::Test {
     fake_network->AddInterface(NextLocalAddress());
     fake_network->AddInterface(kPrivateIpv6LocalAddress);
 
-    auto port_allocator = std::make_unique<cricket::BasicPortAllocator>(
-        fake_network,
-        std::make_unique<rtc::BasicPacketSocketFactory>(vss_.get()));
+    auto port_allocator =
+        std::make_unique<cricket::BasicPortAllocator>(fake_network);
 
     RTCConfiguration config;
     config.sdp_semantics = SdpSemantics::kUnifiedPlan;
@@ -343,9 +339,8 @@ class PeerConnectionUsageHistogramTest : public ::testing::Test {
     if (!deps.allocator) {
       auto fake_network = NewFakeNetwork();
       fake_network->AddInterface(NextLocalAddress());
-      deps.allocator = std::make_unique<cricket::BasicPortAllocator>(
-          fake_network,
-          std::make_unique<rtc::BasicPacketSocketFactory>(vss_.get()));
+      deps.allocator =
+          std::make_unique<cricket::BasicPortAllocator>(fake_network);
     }
 
     auto observer = std::make_unique<ObserverForUsageHistogramTest>();
