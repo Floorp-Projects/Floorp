@@ -430,6 +430,8 @@ class PeerConnectionE2EQualityTestFixture {
       return subscribed_streams;
     }
 
+    std::string ToString() const;
+
    private:
     absl::optional<VideoResolution> default_resolution_ = absl::nullopt;
     std::map<std::string, VideoResolution> peers_resolution_;
