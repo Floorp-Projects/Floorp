@@ -16,7 +16,6 @@
 #include "mozilla/dom/PromiseNativeHandler.h"
 #include "mozilla/dom/Request.h"
 #include "mozilla/dom/Response.h"
-#include "mozilla/dom/RootedDictionary.h"
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/dom/ScriptLoader.h"
 #include "mozilla/dom/WorkletImpl.h"

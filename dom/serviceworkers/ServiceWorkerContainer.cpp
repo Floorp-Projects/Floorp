@@ -32,7 +32,6 @@
 #include "mozilla/dom/MessageEventBinding.h"
 #include "mozilla/dom/Navigator.h"
 #include "mozilla/dom/Promise.h"
-#include "mozilla/dom/RootedDictionary.h"
 #include "mozilla/dom/ServiceWorker.h"
 #include "mozilla/dom/ServiceWorkerContainerBinding.h"
 #include "mozilla/dom/ServiceWorkerManager.h"
