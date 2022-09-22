@@ -39,7 +39,6 @@
 #include "mozilla/dom/CSSKeyframeRule.h"
 #include "mozilla/dom/CSSNamespaceRule.h"
 #include "mozilla/dom/CSSPageRule.h"
-#include "mozilla/dom/CSSScrollTimelineRule.h"
 #include "mozilla/dom/CSSSupportsRule.h"
 #include "mozilla/dom/ChildIterator.h"
 #include "mozilla/dom/FontFaceSet.h"
@@ -954,7 +953,6 @@ void ServoStyleSet::RuleChangedInternal(StyleSheet& aSheet, css::Rule& aRule,
     CASE_FOR(Supports, Supports)
     CASE_FOR(LayerBlock, LayerBlock)
     CASE_FOR(LayerStatement, LayerStatement)
-    CASE_FOR(ScrollTimeline, ScrollTimeline)
     CASE_FOR(Container, Container)
     // @namespace can only be inserted / removed when there are only other
     // @namespace and @import rules, and can't be mutated.

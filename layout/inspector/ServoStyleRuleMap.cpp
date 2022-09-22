@@ -104,7 +104,6 @@ void ServoStyleRuleMap::RuleRemoved(StyleSheet& aStyleSheet,
     case StyleCssRuleType::CounterStyle:
     case StyleCssRuleType::FontFeatureValues:
     case StyleCssRuleType::Viewport:
-    case StyleCssRuleType::ScrollTimeline:
       break;
   }
 }
@@ -149,7 +148,6 @@ void ServoStyleRuleMap::FillTableFromRule(css::Rule& aRule) {
     case StyleCssRuleType::CounterStyle:
     case StyleCssRuleType::FontFeatureValues:
     case StyleCssRuleType::Viewport:
-    case StyleCssRuleType::ScrollTimeline:
       break;
   }
 }
