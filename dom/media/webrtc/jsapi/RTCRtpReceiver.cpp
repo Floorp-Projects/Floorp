@@ -281,7 +281,7 @@ nsTArray<RefPtr<RTCStatsPromise>> RTCRtpReceiver::GetStatsInternal() {
                 };
 
             asAudio.apply([&](auto& aConduit) {
-              Maybe<webrtc::AudioReceiveStream::Stats> audioStats =
+              Maybe<webrtc::AudioReceiveStreamInterface::Stats> audioStats =
                   aConduit->GetReceiverStats();
               if (audioStats.isNothing()) {
                 return;
@@ -376,7 +376,7 @@ nsTArray<RefPtr<RTCStatsPromise>> RTCRtpReceiver::GetStatsInternal() {
             });
 
             asVideo.apply([&](auto& aConduit) {
-              Maybe<webrtc::VideoReceiveStream::Stats> videoStats =
+              Maybe<webrtc::VideoReceiveStreamInterface::Stats> videoStats =
                   aConduit->GetReceiverStats();
               if (videoStats.isNothing()) {
                 return;
