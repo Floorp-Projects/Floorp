@@ -112,6 +112,11 @@ RtcpTransceiverImpl::~RtcpTransceiverImpl() = default;
 void RtcpTransceiverImpl::AddMediaReceiverRtcpObserver(
     uint32_t remote_ssrc,
     MediaReceiverRtcpObserver* observer) {
+  if (config_.receive_statistics == nullptr && remote_senders_.empty()) {
+    RTC_LOG(LS_WARNING) << config_.debug_id
+                        << "receive statistic is not set. RTCP report blocks "
+                           "will not be generated.";
+  }
   auto& stored = remote_senders_[remote_ssrc].observers;
   RTC_DCHECK(!absl::c_linear_search(stored, observer));
   stored.push_back(observer);

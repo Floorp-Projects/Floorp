@@ -23,13 +23,11 @@ RtcpTransceiverConfig& RtcpTransceiverConfig::operator=(
 RtcpTransceiverConfig::~RtcpTransceiverConfig() = default;
 
 bool RtcpTransceiverConfig::Validate() const {
-  if (feedback_ssrc == 0)
+  if (feedback_ssrc == 0) {
     RTC_LOG(LS_WARNING)
         << debug_id
         << "Ssrc 0 may be treated by some implementation as invalid.";
-  if (cname.empty())
-    RTC_LOG(LS_WARNING) << debug_id << "missing cname for ssrc "
-                        << feedback_ssrc;
+  }
   if (cname.size() > 255) {
     RTC_LOG(LS_ERROR) << debug_id << "cname can be maximum 255 characters.";
     return false;
@@ -71,16 +69,11 @@ bool RtcpTransceiverConfig::Validate() const {
     RTC_LOG(LS_ERROR) << debug_id << "unsupported rtcp mode";
     return false;
   }
-  if (non_sender_rtt_measurement && !network_link_observer)
+  if (non_sender_rtt_measurement && !network_link_observer) {
     RTC_LOG(LS_WARNING) << debug_id
                         << "Enabled special feature to calculate rtt, but no "
                            "rtt observer is provided.";
-  // TODO(danilchap): Remove or update the warning when RtcpTransceiver supports
-  // send-only sessions.
-  if (receive_statistics == nullptr)
-    RTC_LOG(LS_WARNING)
-        << debug_id
-        << "receive statistic should be set to generate rtcp report blocks.";
+  }
   return true;
 }
 
