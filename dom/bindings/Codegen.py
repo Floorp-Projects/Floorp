@@ -4532,16 +4532,26 @@ def InitMemberSlots(descriptor, failureCode):
     )
 
 
-def DeclareProto(descriptor):
+def DeclareProto(descriptor, noGivenProto=False):
     """
     Declare the canonicalProto and proto we have for our wrapping operation.
     """
-    preamble = dedent(
+    getCanonical = dedent(
         """
-        JS::Handle<JSObject*> canonicalProto = GetProtoObjectHandle(aCx);
-        if (!canonicalProto) {
+        JS::Handle<JSObject*> ${canonicalProto} = GetProtoObjectHandle(aCx);
+        if (!${canonicalProto}) {
           return false;
         }
+        """
+    )
+
+    if noGivenProto:
+        return fill(getCanonical, canonicalProto="proto")
+
+    getCanonical = fill(getCanonical, canonicalProto="canonicalProto")
+
+    preamble = getCanonical + dedent(
+        """
         JS::Rooted<JSObject*> proto(aCx);
         """
     )
@@ -4724,22 +4734,36 @@ class CGWrapNonWrapperCacheMethod(CGAbstractMethod):
     def __init__(self, descriptor, properties):
         # XXX can we wrap if we don't have an interface prototype object?
         assert descriptor.interface.hasInterfacePrototypeObject()
+        self.noGivenProto = (
+            descriptor.interface.isIteratorInterface()
+            or descriptor.interface.isAsyncIteratorInterface()
+        )
         args = [
             Argument("JSContext*", "aCx"),
             Argument(descriptor.nativeType + "*", "aObject"),
-            Argument("JS::Handle<JSObject*>", "aGivenProto"),
-            Argument("JS::MutableHandle<JSObject*>", "aReflector"),
         ]
+        if not self.noGivenProto:
+            args.append(Argument("JS::Handle<JSObject*>", "aGivenProto"))
+        args.append(Argument("JS::MutableHandle<JSObject*>", "aReflector"))
         CGAbstractMethod.__init__(self, descriptor, "Wrap", "bool", args)
         self.properties = properties
 
     def definition_body(self):
         failureCode = "return false;\n"
 
+        declareProto = DeclareProto(self.descriptor, noGivenProto=self.noGivenProto)
+        if self.noGivenProto:
+            assertGivenProto = ""
+        else:
+            assertGivenProto = dedent(
+                """
+                MOZ_ASSERT_IF(aGivenProto, js::IsObjectInContextCompartment(aGivenProto, aCx));
+                """
+            )
         return fill(
             """
             $*{assertions}
-            MOZ_ASSERT_IF(aGivenProto, js::IsObjectInContextCompartment(aGivenProto, aCx));
+            $*{assertGivenProto}
 
             JS::Rooted<JSObject*> global(aCx, JS::CurrentGlobalOrNull(aCx));
             $*{declareProto}
@@ -4754,7 +4778,8 @@ class CGWrapNonWrapperCacheMethod(CGAbstractMethod):
             return true;
             """,
             assertions=AssertInheritanceChain(self.descriptor),
-            declareProto=DeclareProto(self.descriptor),
+            assertGivenProto=assertGivenProto,
+            declareProto=declareProto,
             createObject=CreateBindingJSObject(self.descriptor, self.properties),
             unforgeable=CopyUnforgeablePropertiesToInstance(
                 self.descriptor, failureCode
