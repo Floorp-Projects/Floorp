@@ -14,11 +14,13 @@ add_task(async function init() {
   await SpecialPowers.pushPrefEnv({set: [["dom.expose_test_interfaces", true]]});
 });
 
+const singleValues = Array(10).fill(0).map((_, i) => i * 9 % 7);
+
 async function check_single_result_values(values, multiplier = 1) {
   dump(JSON.stringify(values));
   is(values.length, 10, `AsyncIterableSingle: should return 10 elements`);
   for (let i = 0; i < 10; i++) {
-    let expected = i * 9 % 7 * multiplier;
+    let expected = singleValues[i] * multiplier;
     is(values[i], expected,
       `AsyncIterableSingle: should be ${expected}, get ${values[i]}`);
   }
@@ -107,6 +109,60 @@ async function test_data_single() {
   }
 
   check_single_result_values(await Promise.all(values).then(v => v.map(w => w.value)));
+
+  // eslint-disable-next-line no-undef
+  itr = new TestInterfaceAsyncIterableSingleWithArgs();
+
+  let callCount = itr.returnCallCount;
+
+  let i = 0;
+  for await (let v of itr) {
+    if (++i > 1) {
+      break;
+    }
+    values.push(v);
+  }
+
+  is(itr.returnCallCount, callCount + 1,
+     `AsyncIterableSingle: breaking out of for-await-of loop should call "return"`);
+  is(itr.returnLastCalledWith, undefined,
+     `AsyncIterableSingleWithArgs: the asynchronous iterator return algorithm should be called with the argument that was passed in.`);
+
+  // eslint-disable-next-line no-undef
+  itr = new TestInterfaceAsyncIterableSingleWithArgs();
+
+  async function * yieldFromIterator () {
+    yield * itr
+  }
+
+  let yieldingIterator = yieldFromIterator();
+
+  let result = await yieldingIterator.next();
+  is(result.value, singleValues[0],
+     `AsyncIterableSingle: should be ${singleValues[0]}, get ${result.value}`);
+  result = await yieldingIterator.next();
+  is(result.value, singleValues[1],
+     `AsyncIterableSingle: should be ${singleValues[1]}, get ${result.value}`);
+
+  result = await yieldingIterator.return("abcd");
+  is(typeof result, "object",
+     `AsyncIterableSingleWithArgs: "return("abcd")" should return { done: true, value: "abcd" }`);
+  is(result.done, true,
+     `AsyncIterableSingleWithArgs: "return("abcd")" should return { done: true, value: "abcd" }`);
+  is(result.value, "abcd",
+     `AsyncIterableSingleWithArgs: "return("abcd")" should return { done: true, value: "abcd" }`);
+  is(itr.returnLastCalledWith, "abcd",
+     `AsyncIterableSingleWithArgs: the asynchronous iterator return algorithm should be called with the argument that was passed in.`);
+
+  result = await yieldingIterator.return("efgh");
+  is(typeof result, "object",
+     `AsyncIterableSingleWithArgs: "return("efgh")" should return { done: true, value: "efgh" }`);
+  is(result.done, true,
+     `AsyncIterableSingleWithArgs: "return("efgh")" should return { done: true, value: "efgh" }`);
+  is(result.value, "efgh",
+     `AsyncIterableSingleWithArgs: "return("efgh")" should return { done: true, value: "efgh" }`);
+  is(itr.returnLastCalledWith, "abcd",
+     `AsyncIterableSingleWithArgs: the asynchronous iterator return algorithm shouldn't be called if the iterator's 'is finished' flag is true already.`);
 }
 
 async function test_data_double() {

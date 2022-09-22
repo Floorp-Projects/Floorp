@@ -86,7 +86,8 @@ TEST_F(TestFileSystemDirectoryHandle, isNextPromiseReturned) {
   iterator->Data().mImpl = std::move(mockIter);
 
   IgnoredErrorResult rv;
-  RefPtr<Promise> promise = dirHandle->GetNextPromise(iterator.get(), rv);
+  RefPtr<Promise> promise =
+      dirHandle->GetNextIterationResult(iterator.get(), rv);
   ASSERT_TRUE(promise);
 }
 

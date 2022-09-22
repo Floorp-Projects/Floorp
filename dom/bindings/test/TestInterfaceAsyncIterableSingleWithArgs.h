@@ -18,6 +18,11 @@ struct TestInterfaceAsyncIteratorOptions;
 class TestInterfaceAsyncIterableSingleWithArgs final
     : public TestInterfaceAsyncIterableSingle {
  public:
+  NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(
+      TestInterfaceAsyncIterableSingleWithArgs,
+      TestInterfaceAsyncIterableSingle)
+
   using TestInterfaceAsyncIterableSingle::TestInterfaceAsyncIterableSingle;
   virtual JSObject* WrapObject(JSContext* aCx,
                                JS::Handle<JSObject*> aGivenProto) override;
@@ -31,8 +36,23 @@ class TestInterfaceAsyncIterableSingleWithArgs final
                              const TestInterfaceAsyncIteratorOptions& aOptions,
                              ErrorResult& aError);
 
-  already_AddRefed<Promise> GetNextPromise(Iterator* aIterator,
+  already_AddRefed<Promise> GetNextIterationResult(Iterator* aIterator,
+                                                   ErrorResult& aRv);
+  already_AddRefed<Promise> IteratorReturn(JSContext* aCx, Iterator* aIterator,
+                                           JS::Handle<JS::Value> aValue,
                                            ErrorResult& aRv);
+
+  uint32_t ReturnCallCount() { return mReturnCallCount; }
+  void GetReturnLastCalledWith(JSContext* aCx,
+                               JS::MutableHandle<JS::Value> aReturnCalledWith) {
+    aReturnCalledWith.set(mReturnLastCalledWith);
+  }
+
+ private:
+  ~TestInterfaceAsyncIterableSingleWithArgs() = default;
+
+  JS::Heap<JS::Value> mReturnLastCalledWith;
+  uint32_t mReturnCallCount = 0;
 };
 
 }  // namespace mozilla::dom
