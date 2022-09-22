@@ -1391,6 +1391,12 @@
   value: 3600
   mirror: always
 
+# Whether to start the private browsing mode at application startup
+- name: browser.privatebrowsing.autostart
+  type: bool
+  value: false
+  mirror: always
+
 # Force usage of in-memory (rather than file on disk) media cache for video streaming when private browsing
 - name: browser.privatebrowsing.forceMediaMemoryCache
   type: bool

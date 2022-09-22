@@ -32,6 +32,7 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/Services.h"
 #include "mozilla/StartupTimeline.h"
+#include "mozilla/StaticPrefs_browser.h"
 #include "mozilla/StaticPrefs_fission.h"
 #include "mozilla/intl/LocaleService.h"
 #include "mozilla/dom/BrowsingContext.h"
@@ -719,7 +720,7 @@ nsresult nsAppShellService::JustCreateTopWindow(
 
   // Enforce the Private Browsing autoStart pref first.
   bool isPrivateBrowsingWindow =
-      Preferences::GetBool("browser.privatebrowsing.autostart");
+      StaticPrefs::browser_privatebrowsing_autostart();
 
   if (aChromeMask & nsIWebBrowserChrome::CHROME_PRIVATE_WINDOW) {
     // Caller requested a private window
