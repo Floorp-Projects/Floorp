@@ -22,7 +22,7 @@
 namespace webrtc {
 
 VideoTrack::VideoTrack(
-    const std::string& label,
+    absl::string_view label,
     rtc::scoped_refptr<
         VideoTrackSourceProxyWithInternal<VideoTrackSourceInterface>> source,
     rtc::Thread* worker_thread)
@@ -131,7 +131,7 @@ void VideoTrack::OnChanged() {
 }
 
 rtc::scoped_refptr<VideoTrack> VideoTrack::Create(
-    const std::string& id,
+    absl::string_view id,
     rtc::scoped_refptr<VideoTrackSourceInterface> source,
     rtc::Thread* worker_thread) {
   rtc::scoped_refptr<
