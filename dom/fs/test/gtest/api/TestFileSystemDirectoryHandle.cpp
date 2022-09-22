@@ -30,12 +30,6 @@ class TestFileSystemDirectoryHandle : public ::testing::Test {
     mManager = MakeAndAddRef<FileSystemManager>(mGlobal, nullptr);
   }
 
-  FileSystemDirectoryHandle::iterator_t::WrapFunc GetWrapFunc() const {
-    return [](JSContext*, AsyncIterableIterator<FileSystemDirectoryHandle>*,
-              JS::Handle<JSObject*>,
-              JS::MutableHandle<JSObject*>) -> bool { return true; };
-  }
-
   nsIGlobalObject* mGlobal = GetGlobal();
   const IterableIteratorBase::IteratorType mIteratorType =
       IterableIteratorBase::IteratorType::Keys;
@@ -60,8 +54,7 @@ TEST_F(TestFileSystemDirectoryHandle, initAndDestroyIterator) {
   ASSERT_TRUE(dirHandle);
 
   RefPtr<FileSystemDirectoryHandle::iterator_t> iterator =
-      new FileSystemDirectoryHandle::iterator_t(dirHandle.get(), mIteratorType,
-                                                GetWrapFunc());
+      new FileSystemDirectoryHandle::iterator_t(dirHandle.get(), mIteratorType);
   IgnoredErrorResult rv;
   dirHandle->InitAsyncIterator(iterator, rv);
   ASSERT_TRUE(iterator->GetData());
@@ -97,13 +90,12 @@ TEST_F(TestFileSystemDirectoryHandle, isNextPromiseReturned) {
       .WillOnce(::testing::Return(Promise::Create(mGlobal, error)));
 
   RefPtr<FileSystemDirectoryHandle::iterator_t> iterator =
-      MakeAndAddRef<FileSystemDirectoryHandle::iterator_t>(
-          dirHandle.get(), mIteratorType, GetWrapFunc());
+      MakeAndAddRef<FileSystemDirectoryHandle::iterator_t>(dirHandle.get(),
+                                                           mIteratorType);
   iterator->SetData(static_cast<void*>(mockIter));
 
   IgnoredErrorResult rv;
-  RefPtr<Promise> promise =
-      dirHandle->GetNextPromise(nullptr, iterator.get(), rv);
+  RefPtr<Promise> promise = dirHandle->GetNextPromise(iterator.get(), rv);
   ASSERT_TRUE(promise);
 
   dirHandle->DestroyAsyncIterator(iterator.get());

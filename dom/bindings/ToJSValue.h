@@ -406,6 +406,34 @@ template <typename T>
   return true;
 }
 
+// Accept tuple of other things we accept. The result will be a JS array object.
+template <typename... Elements>
+[[nodiscard]] bool ToJSValue(JSContext* aCx,
+                             const Tuple<Elements...>& aArguments,
+                             JS::MutableHandle<JS::Value> aValue) {
+  // Make sure we're called in a compartment
+  MOZ_ASSERT(JS::CurrentGlobalOrNull(aCx));
+
+  JS::RootedVector<JS::Value> v(aCx);
+  if (!v.resize(sizeof...(Elements))) {
+    return false;
+  }
+  bool ok = true;
+  size_t i = 0;
+  ForEach(aArguments, [aCx, &ok, &v, &i](auto& aElem) {
+    ok = ok && ToJSValue(aCx, aElem, v[i++]);
+  });
+  if (!ok) {
+    return false;
+  }
+  JSObject* arrayObj = JS::NewArrayObject(aCx, v);
+  if (!arrayObj) {
+    return false;
+  }
+  aValue.setObject(*arrayObj);
+  return true;
+}
+
 // Accept records of other things we accept. N.B. This assumes that
 // keys are either UTF-8 or UTF-16-ish. See Bug 1706058.
 template <typename K, typename V>

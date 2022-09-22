@@ -43,33 +43,26 @@ class TestInterfaceAsyncIterableSingle : public nsISupports,
   using Iterator = AsyncIterableIterator<TestInterfaceAsyncIterableSingle>;
   void InitAsyncIterator(Iterator* aIterator, ErrorResult& aError);
   void DestroyAsyncIterator(Iterator* aIterator);
-  already_AddRefed<Promise> GetNextPromise(JSContext* aCx, Iterator* aIterator,
+  already_AddRefed<Promise> GetNextPromise(Iterator* aIterator,
                                            ErrorResult& aRv);
 
  protected:
   struct IteratorData {
-    IteratorData(int32_t aIndex, uint32_t aMultiplier)
-        : mIndex(aIndex), mMultiplier(aMultiplier) {}
-    ~IteratorData() {
-      if (mPromise) {
-        mPromise->MaybeReject(NS_ERROR_DOM_ABORT_ERR);
-        mPromise = nullptr;
-      }
-    }
-    RefPtr<Promise> mPromise;
-    uint32_t mIndex;
-    uint32_t mMultiplier;
+    uint32_t mIndex = 0;
+    uint32_t mMultiplier = 1;
+    Sequence<OwningNonNull<Promise>> mBlockingPromises;
+    size_t mBlockingPromisesIndex = 0;
   };
 
-  already_AddRefed<Promise> GetNextPromise(JSContext* aCx,
-                                           IterableIteratorBase* aIterator,
+  already_AddRefed<Promise> GetNextPromise(IterableIteratorBase* aIterator,
                                            IteratorData* aData,
                                            ErrorResult& aRv);
 
   virtual ~TestInterfaceAsyncIterableSingle() = default;
 
  private:
-  void ResolvePromise(IterableIteratorBase* aIterator, IteratorData* aData);
+  void ResolvePromise(IterableIteratorBase* aIterator, IteratorData* aData,
+                      Promise* aPromise);
 
   nsCOMPtr<nsPIDOMWindowInner> mParent;
   bool mFailToInit;

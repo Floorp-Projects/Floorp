@@ -31,7 +31,7 @@ class TestInterfaceAsyncIterableSingleWithArgs final
                          ErrorResult& aError);
   void DestroyAsyncIterator(Iterator* aIterator);
 
-  already_AddRefed<Promise> GetNextPromise(JSContext* aCx, Iterator* aIterator,
+  already_AddRefed<Promise> GetNextPromise(Iterator* aIterator,
                                            ErrorResult& aRv);
 };
 
