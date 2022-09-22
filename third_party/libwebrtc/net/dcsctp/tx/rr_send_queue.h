@@ -43,7 +43,6 @@ class RRSendQueue : public SendQueue {
  public:
   RRSendQueue(absl::string_view log_prefix,
               size_t buffer_size,
-              StreamPriority default_priority,
               std::function<void(StreamID)> on_buffered_amount_low,
               size_t total_buffered_amount_low_threshold,
               std::function<void()> on_total_buffered_amount_low);
@@ -80,8 +79,6 @@ class RRSendQueue : public SendQueue {
   size_t buffered_amount_low_threshold(StreamID stream_id) const override;
   void SetBufferedAmountLowThreshold(StreamID stream_id, size_t bytes) override;
 
-  void SetStreamPriority(StreamID stream_id, StreamPriority priority);
-  StreamPriority GetStreamPriority(StreamID stream_id) const;
   HandoverReadinessStatus GetHandoverReadiness() const;
   void AddHandoverState(DcSctpSocketHandoverState& state);
   void RestoreFromState(const DcSctpSocketHandoverState& state);
@@ -115,12 +112,10 @@ class RRSendQueue : public SendQueue {
    public:
     OutgoingStream(
         StreamID stream_id,
-        StreamPriority priority,
         std::function<void()> on_buffered_amount_low,
         ThresholdWatcher& total_buffered_amount,
         const DcSctpSocketHandoverState::OutgoingStream* state = nullptr)
         : stream_id_(stream_id),
-          priority_(priority),
           next_unordered_mid_(MID(state ? state->next_unordered_mid : 0)),
           next_ordered_mid_(MID(state ? state->next_ordered_mid : 0)),
           next_ssn_(SSN(state ? state->next_ssn : 0)),
@@ -170,9 +165,6 @@ class RRSendQueue : public SendQueue {
     // Indicates if the stream has data to send. It will also try to remove any
     // expired non-partially sent message.
     bool HasDataToSend(TimeMs now);
-
-    void set_priority(StreamPriority priority) { priority_ = priority; }
-    StreamPriority priority() const { return priority_; }
 
     void AddHandoverState(
         DcSctpSocketHandoverState::OutgoingStream& state) const;
@@ -226,7 +218,6 @@ class RRSendQueue : public SendQueue {
     bool IsConsistent() const;
 
     const StreamID stream_id_;
-    StreamPriority priority_;
     PauseState pause_state_ = PauseState::kNotPaused;
     // MIDs are different for unordered and ordered messages sent on a stream.
     MID next_unordered_mid_;
@@ -256,7 +247,6 @@ class RRSendQueue : public SendQueue {
 
   const std::string log_prefix_;
   const size_t buffer_size_;
-  const StreamPriority default_priority_;
 
   // Called when the buffered amount is below what has been set using
   // `SetBufferedAmountLowThreshold`.

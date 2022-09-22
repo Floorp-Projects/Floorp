@@ -48,7 +48,6 @@ struct DcSctpSocketHandoverState {
     uint32_t next_ssn = 0;
     uint32_t next_unordered_mid = 0;
     uint32_t next_ordered_mid = 0;
-    uint16_t priority = 0;
   };
   struct Transmission {
     uint32_t next_tsn = 0;

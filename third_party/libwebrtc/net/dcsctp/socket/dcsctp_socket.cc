@@ -189,7 +189,6 @@ DcSctpSocket::DcSctpSocket(absl::string_view log_prefix,
       send_queue_(
           log_prefix_,
           options_.max_send_buffer_size,
-          options_.default_stream_priority,
           [this](StreamID stream_id) {
             callbacks_.OnBufferedAmountLow(stream_id);
           },
@@ -419,14 +418,6 @@ void DcSctpSocket::InternalClose(ErrorKind error, absl::string_view message) {
   // This method's purpose is to abort/close and make it consistent by ensuring
   // that e.g. all timers really are stopped.
   RTC_DCHECK(IsConsistent());
-}
-
-void DcSctpSocket::SetStreamPriority(StreamID stream_id,
-                                     StreamPriority priority) {
-  send_queue_.SetStreamPriority(stream_id, priority);
-}
-StreamPriority DcSctpSocket::GetStreamPriority(StreamID stream_id) const {
-  return send_queue_.GetStreamPriority(stream_id);
 }
 
 SendStatus DcSctpSocket::Send(DcSctpMessage message,
