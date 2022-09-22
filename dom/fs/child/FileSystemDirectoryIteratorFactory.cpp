@@ -50,8 +50,7 @@ struct ValueResolver<IterableIteratorBase::Keys> {
       return NS_ERROR_INVALID_ARG;
     }
 
-    iterator_utils::ResolvePromiseWithKeyOrValue(cx, aPromise.get(), key,
-                                                 aError);
+    iterator_utils::ResolvePromiseWithKeyOrValue(cx, aPromise.get(), key);
 
     return NS_OK;
   }
@@ -81,8 +80,7 @@ struct ValueResolver<IterableIteratorBase::Values> {
       return NS_ERROR_INVALID_ARG;
     }
 
-    iterator_utils::ResolvePromiseWithKeyOrValue(cx, aPromise.get(), value,
-                                                 aError);
+    iterator_utils::ResolvePromiseWithKeyOrValue(cx, aPromise.get(), value);
 
     return NS_OK;
   }
@@ -118,7 +116,7 @@ struct ValueResolver<IterableIteratorBase::Entries> {
     }
 
     iterator_utils::ResolvePromiseWithKeyAndValue(cx, aPromise.get(), key,
-                                                  value, aError);
+                                                  value);
 
     return NS_OK;
   }
@@ -159,7 +157,7 @@ class DoubleBufferQueueImpl
     MOZ_ASSERT(aCx);
 
     if (!aValue) {
-      iterator_utils::ResolvePromiseForFinished(aCx, aPromise.get(), aError);
+      iterator_utils::ResolvePromiseForFinished(aCx, aPromise.get());
       return;
     }
 

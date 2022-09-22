@@ -90,34 +90,33 @@ void TestInterfaceAsyncIterableDouble::ResolvePromise(Iterator* aIterator) {
 
   AutoJSAPI jsapi;
   if (NS_WARN_IF(!jsapi.Init(mParent))) {
+    data->mPromise->MaybeRejectWithInvalidStateError(
+        "Couldn't get the global.");
     return;
   }
   JSContext* cx = jsapi.cx();
-  ErrorResult rv;
 
   // Test data: ['a', 'b'], ['c', 'd'], ['e', 'f']
   uint32_t idx = data->mIndex;
   if (idx >= mValues.Length()) {
-    iterator_utils::ResolvePromiseForFinished(cx, data->mPromise, rv);
+    iterator_utils::ResolvePromiseForFinished(cx, data->mPromise);
   } else {
     JS::Rooted<JS::Value> key(cx);
     JS::Rooted<JS::Value> value(cx);
     switch (aIterator->GetIteratorType()) {
       case IterableIteratorBase::IteratorType::Keys:
         Unused << ToJSValue(cx, mValues[idx].first, &key);
-        iterator_utils::ResolvePromiseWithKeyOrValue(cx, data->mPromise, key,
-                                                     rv);
+        iterator_utils::ResolvePromiseWithKeyOrValue(cx, data->mPromise, key);
         break;
       case IterableIteratorBase::IteratorType::Values:
         Unused << ToJSValue(cx, mValues[idx].second, &value);
-        iterator_utils::ResolvePromiseWithKeyOrValue(cx, data->mPromise, value,
-                                                     rv);
+        iterator_utils::ResolvePromiseWithKeyOrValue(cx, data->mPromise, value);
         break;
       case IterableIteratorBase::IteratorType::Entries:
         Unused << ToJSValue(cx, mValues[idx].first, &key);
         Unused << ToJSValue(cx, mValues[idx].second, &value);
         iterator_utils::ResolvePromiseWithKeyAndValue(cx, data->mPromise, key,
-                                                      value, rv);
+                                                      value);
         break;
     }
 
