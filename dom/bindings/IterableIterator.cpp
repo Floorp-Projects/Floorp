@@ -67,26 +67,28 @@ void KeyAndValueReturn(JSContext* aCx, JS::Handle<JS::Value> aKey,
   aResult.set(&dictValue.toObject());
 }
 
-void ResolvePromiseForFinished(JSContext* aCx, Promise* aPromise,
-                               ErrorResult& aRv) {
+void ResolvePromiseForFinished(JSContext* aCx, Promise* aPromise) {
   MOZ_ASSERT(aPromise);
 
+  ErrorResult error;
   JS::Rooted<JSObject*> dict(aCx);
-  DictReturn(aCx, &dict, true, JS::UndefinedHandleValue, aRv);
-  if (aRv.Failed()) {
+  DictReturn(aCx, &dict, true, JS::UndefinedHandleValue, error);
+  if (error.Failed()) {
+    aPromise->MaybeReject(std::move(error));
     return;
   }
   aPromise->MaybeResolve(dict);
 }
 
 void ResolvePromiseWithKeyOrValue(JSContext* aCx, Promise* aPromise,
-                                  JS::Handle<JS::Value> aKeyOrValue,
-                                  ErrorResult& aRv) {
+                                  JS::Handle<JS::Value> aKeyOrValue) {
   MOZ_ASSERT(aPromise);
 
+  ErrorResult error;
   JS::Rooted<JSObject*> dict(aCx);
-  DictReturn(aCx, &dict, false, aKeyOrValue, aRv);
-  if (aRv.Failed()) {
+  DictReturn(aCx, &dict, false, aKeyOrValue, error);
+  if (error.Failed()) {
+    aPromise->MaybeReject(std::move(error));
     return;
   }
   aPromise->MaybeResolve(dict);
@@ -94,13 +96,14 @@ void ResolvePromiseWithKeyOrValue(JSContext* aCx, Promise* aPromise,
 
 void ResolvePromiseWithKeyAndValue(JSContext* aCx, Promise* aPromise,
                                    JS::Handle<JS::Value> aKey,
-                                   JS::Handle<JS::Value> aValue,
-                                   ErrorResult& aRv) {
+                                   JS::Handle<JS::Value> aValue) {
   MOZ_ASSERT(aPromise);
 
+  ErrorResult error;
   JS::Rooted<JSObject*> dict(aCx);
-  KeyAndValueReturn(aCx, aKey, aValue, &dict, aRv);
-  if (aRv.Failed()) {
+  KeyAndValueReturn(aCx, aKey, aValue, &dict, error);
+  if (error.Failed()) {
+    aPromise->MaybeReject(std::move(error));
     return;
   }
   aPromise->MaybeResolve(dict);
