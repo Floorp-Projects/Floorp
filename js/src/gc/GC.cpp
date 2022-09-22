@@ -2942,13 +2942,10 @@ void GCRuntime::updateAllGCStartThresholds() {
 }
 
 void GCRuntime::updateAllocationRates() {
-  TimeStamp currentTime = ReallyNow();
-  MOZ_ASSERT(currentTime - lastAllocRateUpdateTime >=
-             collectorTimeSinceAllocRateUpdate.ref());
-
   // Calculate mutator time since the last update. This ignores the fact that
   // the zone could have been created since the last update.
 
+  TimeStamp currentTime = ReallyNow();
   TimeDuration totalTime = currentTime - lastAllocRateUpdateTime;
   if (collectorTimeSinceAllocRateUpdate >= totalTime) {
     // It shouldn't happen but occasionally we see collector time being larger
