@@ -68,8 +68,7 @@ void FileSystemDirectoryHandle::DestroyAsyncIterator(
 }
 
 already_AddRefed<Promise> FileSystemDirectoryHandle::GetNextPromise(
-    JSContext* /* aCx */, FileSystemDirectoryHandle::iterator_t* aIterator,
-    ErrorResult& aError) {
+    FileSystemDirectoryHandle::iterator_t* aIterator, ErrorResult& aError) {
   return static_cast<FileSystemDirectoryIterator::Impl*>(aIterator->GetData())
       ->Next(mGlobal, mManager, aError);
 }

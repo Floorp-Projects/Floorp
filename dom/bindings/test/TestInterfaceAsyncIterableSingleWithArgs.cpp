@@ -9,6 +9,7 @@
 #include "nsPIDOMWindow.h"
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/IterableIterator.h"
+#include "mozilla/dom/Promise-inl.h"
 
 namespace mozilla::dom {
 
@@ -37,7 +38,8 @@ JSObject* TestInterfaceAsyncIterableSingleWithArgs::WrapObject(
 void TestInterfaceAsyncIterableSingleWithArgs::InitAsyncIterator(
     Iterator* aIterator, const TestInterfaceAsyncIteratorOptions& aOptions,
     ErrorResult& aError) {
-  UniquePtr<IteratorData> data(new IteratorData(0, aOptions.mMultiplier));
+  UniquePtr<IteratorData> data(
+      new IteratorData{0, aOptions.mMultiplier, aOptions.mBlockingPromises});
   aIterator->SetData((void*)data.release());
 }
 
@@ -48,12 +50,10 @@ void TestInterfaceAsyncIterableSingleWithArgs::DestroyAsyncIterator(
 }
 
 already_AddRefed<Promise>
-TestInterfaceAsyncIterableSingleWithArgs::GetNextPromise(JSContext* aCx,
-                                                         Iterator* aIterator,
+TestInterfaceAsyncIterableSingleWithArgs::GetNextPromise(Iterator* aIterator,
                                                          ErrorResult& aRv) {
   return TestInterfaceAsyncIterableSingle::GetNextPromise(
-      aCx, aIterator, reinterpret_cast<IteratorData*>(aIterator->GetData()),
-      aRv);
+      aIterator, reinterpret_cast<IteratorData*>(aIterator->GetData()), aRv);
 }
 
 }  // namespace mozilla::dom

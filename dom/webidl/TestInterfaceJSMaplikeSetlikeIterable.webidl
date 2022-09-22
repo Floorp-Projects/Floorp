@@ -111,6 +111,7 @@ interface TestInterfaceAsyncIterableSingle {
 
 dictionary TestInterfaceAsyncIteratorOptions {
   unsigned long multiplier = 1;
+  sequence<Promise<any>> blockingPromises = [];
 };
 
 [Pref="dom.expose_test_interfaces",
