@@ -45,6 +45,7 @@ constexpr size_t kMinPayloadSizeBytes = 8 + 8 + 2;
 constexpr int kBaseScaleFactor =
     TransportFeedback::kDeltaScaleFactor * (1 << 8);
 constexpr int64_t kTimeWrapPeriodUs = (1ll << 24) * kBaseScaleFactor;
+constexpr TimeDelta kTimeWrapPeriod = TimeDelta::Micros(kTimeWrapPeriodUs);
 
 //    Message format
 //
@@ -374,28 +375,45 @@ uint16_t TransportFeedback::GetBaseSequence() const {
   return base_seq_no_;
 }
 
+Timestamp TransportFeedback::BaseTime() const {
+  return Timestamp::Zero() +
+         TimeDelta::Micros(int64_t{base_time_ticks_} * kBaseScaleFactor);
+}
+
 int64_t TransportFeedback::GetBaseTimeUs() const {
-  return static_cast<int64_t>(base_time_ticks_) * kBaseScaleFactor;
+  // Historically BaseTime was stored as signed integer and could be negative.
+  // However with new api it is not possible, but for compatibility with legacy
+  // tests return base time as negative when it used to be negative.
+  int64_t base_time_us = BaseTime().us() % kTimeWrapPeriodUs;
+  if (base_time_us >= kTimeWrapPeriodUs / 2) {
+    return base_time_us - kTimeWrapPeriodUs;
+  } else {
+    return base_time_us;
+  }
 }
 
-TimeDelta TransportFeedback::GetBaseTime() const {
-  return TimeDelta::Micros(GetBaseTimeUs());
-}
-
-int64_t TransportFeedback::GetBaseDeltaUs(int64_t prev_timestamp_us) const {
-  int64_t delta = GetBaseTimeUs() - prev_timestamp_us;
-
-  // Detect and compensate for wrap-arounds in base time.
-  if (std::abs(delta - kTimeWrapPeriodUs) < std::abs(delta)) {
-    delta -= kTimeWrapPeriodUs;  // Wrap backwards.
-  } else if (std::abs(delta + kTimeWrapPeriodUs) < std::abs(delta)) {
-    delta += kTimeWrapPeriodUs;  // Wrap forwards.
+namespace {
+TimeDelta CompensateForWrapAround(TimeDelta delta) {
+  if ((delta - kTimeWrapPeriod).Abs() < delta.Abs()) {
+    delta -= kTimeWrapPeriod;  // Wrap backwards.
+  } else if ((delta + kTimeWrapPeriod).Abs() < delta.Abs()) {
+    delta += kTimeWrapPeriod;  // Wrap forwards.
   }
   return delta;
 }
+}  // namespace
+
+int64_t TransportFeedback::GetBaseDeltaUs(int64_t prev_timestamp_us) const {
+  int64_t delta_us = GetBaseTimeUs() - prev_timestamp_us;
+  return CompensateForWrapAround(TimeDelta::Micros(delta_us)).us();
+}
 
 TimeDelta TransportFeedback::GetBaseDelta(TimeDelta prev_timestamp) const {
-  return TimeDelta::Micros(GetBaseDeltaUs(prev_timestamp.us()));
+  return CompensateForWrapAround(GetBaseTime() - prev_timestamp);
+}
+
+TimeDelta TransportFeedback::GetBaseDelta(Timestamp prev_timestamp) const {
+  return CompensateForWrapAround(BaseTime() - prev_timestamp);
 }
 
 // De-serialize packet.
@@ -417,7 +435,7 @@ bool TransportFeedback::Parse(const CommonHeader& packet) {
 
   base_seq_no_ = ByteReader<uint16_t>::ReadBigEndian(&payload[8]);
   uint16_t status_count = ByteReader<uint16_t>::ReadBigEndian(&payload[10]);
-  base_time_ticks_ = ByteReader<int32_t, 3>::ReadBigEndian(&payload[12]);
+  base_time_ticks_ = ByteReader<uint32_t, 3>::ReadBigEndian(&payload[12]);
   feedback_seq_ = payload[15];
   Clear();
   size_t index = 16;
@@ -627,7 +645,7 @@ bool TransportFeedback::Create(uint8_t* packet,
   ByteWriter<uint16_t>::WriteBigEndian(&packet[*position], num_seq_no_);
   *position += 2;
 
-  ByteWriter<int32_t, 3>::WriteBigEndian(&packet[*position], base_time_ticks_);
+  ByteWriter<uint32_t, 3>::WriteBigEndian(&packet[*position], base_time_ticks_);
   *position += 3;
 
   packet[(*position)++] = feedback_seq_;
