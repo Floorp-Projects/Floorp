@@ -239,15 +239,22 @@ bool Port::SharedSocket() const {
 }
 
 void Port::SetIceParameters(int component,
-                            const std::string& username_fragment,
-                            const std::string& password) {
+                            absl::string_view username_fragment,
+                            absl::string_view password) {
+  RTC_DCHECK_RUN_ON(thread_);
   component_ = component;
-  ice_username_fragment_ = username_fragment;
-  password_ = password;
+  ice_username_fragment_ = std::string(username_fragment);
+  password_ = std::string(password);
   for (Candidate& c : candidates_) {
     c.set_component(component);
     c.set_username(username_fragment);
     c.set_password(password);
+  }
+
+  // In case any connections exist make sure we update them too.
+  for (auto& [unused, connection] : connections_) {
+    connection->UpdateLocalIceParameters(component, username_fragment,
+                                         password);
   }
 }
 
@@ -274,6 +281,7 @@ void Port::AddAddress(const rtc::SocketAddress& address,
                       uint32_t relay_preference,
                       const std::string& url,
                       bool is_final) {
+  RTC_DCHECK_RUN_ON(thread_);
   if (protocol == TCP_PROTOCOL_NAME && type == LOCAL_PORT_TYPE) {
     RTC_DCHECK(!tcptype.empty());
   }
@@ -325,6 +333,7 @@ bool Port::MaybeObfuscateAddress(Candidate* c,
     copy.set_address(hostname_address);
     copy.set_related_address(rtc::SocketAddress());
     if (weak_ptr != nullptr) {
+      RTC_DCHECK_RUN_ON(weak_ptr->thread_);
       weak_ptr->set_mdns_name_registration_status(
           MdnsNameRegistrationStatus::kCompleted);
       weak_ptr->FinishAddingAddress(copy, is_final);
@@ -429,9 +438,9 @@ void Port::OnReadyToSend() {
   }
 }
 
-size_t Port::AddPrflxCandidate(const Candidate& local) {
+void Port::AddPrflxCandidate(const Candidate& local) {
+  RTC_DCHECK_RUN_ON(thread_);
   candidates_.push_back(local);
-  return (candidates_.size() - 1);
 }
 
 bool Port::GetStunMessage(const char* data,
@@ -891,6 +900,7 @@ std::string Port::ToString() const {
 
 // TODO(honghaiz): Make the network cost configurable from user setting.
 void Port::UpdateNetworkCost() {
+  RTC_DCHECK_RUN_ON(thread_);
   uint16_t new_cost = network_->GetCost(*field_trials_);
   if (network_cost_ == new_cost) {
     return;
@@ -901,16 +911,11 @@ void Port::UpdateNetworkCost() {
                    << ". Number of connections created: "
                    << connections_.size();
   network_cost_ = new_cost;
-  for (cricket::Candidate& candidate : candidates_) {
+  for (cricket::Candidate& candidate : candidates_)
     candidate.set_network_cost(network_cost_);
-  }
-  // Network cost change will affect the connection selection criteria.
-  // Signal the connection state change on each connection to force a
-  // re-sort in P2PTransportChannel.
-  for (const auto& kv : connections_) {
-    Connection* conn = kv.second;
-    conn->SignalStateChange(conn);
-  }
+
+  for (auto& [unused, connection] : connections_)
+    connection->SetLocalCandidateNetworkCost(network_cost_);
 }
 
 void Port::EnablePortPackets() {
