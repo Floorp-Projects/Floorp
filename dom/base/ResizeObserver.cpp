@@ -74,7 +74,8 @@ static nsSize GetContentRectSize(const nsIFrame& aFrame) {
  * https://www.w3.org/TR/resize-observer-1/#calculate-box-size
  */
 static AutoTArray<LogicalPixelSize, 1> CalculateBoxSize(
-    Element* aTarget, ResizeObserverBoxOptions aBox) {
+    Element* aTarget, ResizeObserverBoxOptions aBox,
+    const ResizeObserver& aObserver) {
   nsIFrame* frame = aTarget->GetPrimaryFrame();
 
   if (!frame) {
@@ -157,7 +158,8 @@ static AutoTArray<LogicalPixelSize, 1> CalculateBoxSize(
     }
     return CSSPixel::FromAppUnits(GetContentRectSize(*aFrame)).ToUnknownSize();
   };
-  if (!StaticPrefs::dom_resize_observer_support_fragments()) {
+  if (!StaticPrefs::dom_resize_observer_support_fragments() &&
+      !aObserver.HasNativeCallback()) {
     return {LogicalPixelSize(frame->GetWritingMode(), GetFrameSize(frame))};
   }
   AutoTArray<LogicalPixelSize, 1> size;
@@ -213,7 +215,8 @@ bool ResizeObservation::IsActive() const {
     return false;
   }
 
-  return mLastReportedSize != CalculateBoxSize(mTarget, mObservedBox);
+  return mLastReportedSize !=
+         CalculateBoxSize(mTarget, mObservedBox, *mObserver);
 }
 
 void ResizeObservation::UpdateLastReportedSize(
@@ -397,11 +400,11 @@ uint32_t ResizeObserver::BroadcastActiveObservations() {
     Element* target = observation->Target();
 
     auto borderBoxSize =
-        CalculateBoxSize(target, ResizeObserverBoxOptions::Border_box);
+        CalculateBoxSize(target, ResizeObserverBoxOptions::Border_box, *this);
     auto contentBoxSize =
-        CalculateBoxSize(target, ResizeObserverBoxOptions::Content_box);
+        CalculateBoxSize(target, ResizeObserverBoxOptions::Content_box, *this);
     auto devicePixelContentBoxSize = CalculateBoxSize(
-        target, ResizeObserverBoxOptions::Device_pixel_content_box);
+        target, ResizeObserverBoxOptions::Device_pixel_content_box, *this);
     RefPtr<ResizeObserverEntry> entry =
         new ResizeObserverEntry(mOwner, *target, borderBoxSize, contentBoxSize,
                                 devicePixelContentBoxSize);
