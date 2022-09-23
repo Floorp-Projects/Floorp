@@ -275,6 +275,8 @@
     <!-- Home onboarding dialog welcome screen title text. -->
     <string moz:RemovedIn="106" name="onboarding_home_welcome_title" tools:ignore="UnusedResources">ຍິນດີຕ້ອນຮັບສູ່ອິນເຕີເນັດທີບໍ່ມີຂອບຈຳກັດ</string>
 
+    <!-- Home onboarding dialog welcome screen title text. -->
+    <string name="onboarding_home_welcome_title_2">ຍິນດີຕ້ອນຮັບສູ່ອິນເຕີເນັດທີມີຄວາມເປັນສ່ວນຕົວສູງ</string>
     <!-- Home onboarding dialog welcome screen description text. -->
     <string name="onboarding_home_welcome_description">ສີເພີ່ມເຕີມ. ຄວາມເປັນສ່ວນຕົວທີ່ດີກວ່າ. ຄໍາຫມັ້ນສັນຍາດຽວກັນກັບປະຊາຊົນຫຼາຍກວ່າກໍາໄລ.</string>
     <!-- Home onboarding dialog sign into sync screen title text. -->
@@ -487,6 +489,8 @@
     <!-- Text for limited edition wallpapers title. -->
     <string name="wallpaper_limited_edition_title">ມີ​ຈໍາ​ນວນ​ຈໍາ​ກັດ</string>
 
+    <!-- Description text for the limited edition wallpapers. -->
+    <string name="wallpaper_limited_edition_description">ຄໍເລັກຊັນສຽງເອກະລາດໃໝ່.</string>
     <!-- Wallpaper onboarding dialog header text. -->
     <string name="wallpapers_onboarding_dialog_title_text">ລອງເລືອກສີສັນທີທ່ານມັກ</string>
     <!-- Wallpaper onboarding dialog body text. -->
@@ -1268,6 +1272,8 @@
 
     <!-- text for the tracking protection onboarding card header -->
     <string moz:removedIn="106" name="onboarding_tracking_protection_header_3" tools:ignore="UnusedResources">ຄວາມເປັນສ່ວນຕົວເປີດຕະຫຼອດ</string>
+    <!-- Text for the tracking protection onboarding card header -->
+    <string name="onboarding_tracking_protection_header">ການປົກປ້ອງຄວາມເປັນສ່ວນຕົວຖືກກຳນົດເປັນຄ່າເລີ່ມຕົ້ນ</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
     <string name="onboarding_tracking_protection_standard_button_2">ມາດຕະຖານ (ຄ່າພື້ນຖານ)</string>
 
@@ -1283,6 +1289,8 @@
     <!-- Text for the button to read the privacy notice -->
     <string name="onboarding_privacy_notice_read_button">ອ່ານນະໂຍບາຍຄວາມເປັນສ່ວນຕົວຂອງພວກເຮົາ</string>
 
+    <!-- Text for the conclusion onboarding message -->
+    <string name="onboarding_conclusion_header">ພ້ອມເປີດອິນເຕີເນັດທີ່ໜ້າອັດສະຈັນແລ້ວບໍ?</string>
     <!-- text for the button to finish onboarding -->
     <string name="onboarding_finish">ເລີ່ມການທ່ອງເວັບ</string>
 
@@ -1726,6 +1734,8 @@
     <string name="no_site_exceptions">ບໍ່ມີຂໍ້ຍົກເວັ້ນໃນເວັບໄຊທ໌</string>
     <!-- Browser menu button that adds a shortcut to the home fragment -->
     <string name="browser_menu_add_to_shortcuts">ເພີ່ມທາງລັດ</string>
+    <!-- Browser menu button that removes a shortcut from the home fragment -->
+    <string name="browser_menu_remove_from_shortcuts">ລຶບອອກຈາກທາງລັດ</string>
     <!-- text shown before the issuer name to indicate who its verified by, parameter is the name of
      the certificate authority that verified the ticket-->
     <string name="certificate_info_verified_by">ໄດ້ຮັບການຢັ້ງຢືນໂດຍ: %1$s</string>

@@ -1266,6 +1266,8 @@
     <string name="onboarding_account_sign_in_header">Kaldığınız yerden devam edin</string>
     <!-- Text for the button to learn more about signing in to your Firefox account. The first parameter is the name of the application.-->
     <string moz:removedIn="106" name="onboarding_manual_sign_in_description_2" tools:ignore="UnusedResources">Yer imlerinizi, geçmişinizi ve parolalarınız bu cihazdaki %1$s tarayıcınıza taşıyın.</string>
+    <!-- Text for the button to learn more about signing in to your Firefox account. -->
+    <string name="onboarding_manual_sign_in_description">Cihazlarınız arasında sorunsuz geçiş için sekmelerinizi ve parolalarınızı senkronize edin.</string>
     <!-- text for the button to manually sign into Firefox account. -->
     <string moz:removedIn="106" name="onboarding_firefox_account_sign_in_1" tools:ignore="UnusedResources">Kaydol</string>
     <!-- Text for the button to manually sign into Firefox account. -->
@@ -1278,6 +1280,8 @@
     <string name="onboarding_tracking_protection_header">Gizlilik koruması hep açık</string>
     <!-- text for the tracking protection card description. The first parameter is the name of the application.-->
     <string moz:removedIn="106" name="onboarding_tracking_protection_description_4" tools:ignore="UnusedResources">%1$s şirketlerin sizi web’de gizlice takip etmesini otomatik olarak engeller.</string>
+    <!-- Text for the tracking protection card description. -->
+    <string name="onboarding_tracking_protection_description">Komple çerez koruması, takip kodlarının sizi web’de takip etmek için çerezleri kullanmasını engeller.</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
     <string name="onboarding_tracking_protection_standard_button_2">Standart (varsayılan)</string>
     <!-- text for standard blocking option button description -->

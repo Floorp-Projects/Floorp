@@ -504,6 +504,10 @@
     <string name="wallpaper_classic_title">Klassinen %s</string>
     <!-- Text for limited edition wallpapers title. -->
     <string name="wallpaper_limited_edition_title">Rajoitettu erä</string>
+    <!-- Description text for the limited edition wallpapers with learn more link. The first parameter is the learn more string defined in wallpaper_learn_more-->
+    <string name="wallpaper_limited_edition_description_with_learn_more">Uusi Itsenäiset äänet -kokoelma. %s</string>
+    <!-- Description text for the limited edition wallpapers. -->
+    <string name="wallpaper_limited_edition_description">Uusi Itsenäiset äänet -kokoelma.</string>
     <!-- Wallpaper onboarding dialog header text. -->
     <string name="wallpapers_onboarding_dialog_title_text">Lisää ripaus väriä</string>
     <!-- Wallpaper onboarding dialog body text. -->

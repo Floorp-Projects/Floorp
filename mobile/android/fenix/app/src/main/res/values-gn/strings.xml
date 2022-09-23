@@ -282,8 +282,12 @@
 
     <!-- Home onboarding dialog welcome screen title text. -->
     <string moz:RemovedIn="106" name="onboarding_home_welcome_title" tools:ignore="UnusedResources">Eg̃uahẽporãite ñanduti ijeheguívape</string>
+    <!-- Home onboarding dialog welcome screen title text. -->
+    <string name="onboarding_home_welcome_title_2">Eg̃uahẽporãite ñanduti mba’eguáva</string>
     <!-- Home onboarding dialog sign into sync screen title text. -->
     <string moz:RemovedIn="106" name="onboarding_home_sync_title_2" tools:ignore="UnusedResources">Eva pumbyrýgui mohendahápe ha ambueháicha</string>
+    <!-- Home onboarding dialog sign into sync screen title text. -->
+    <string name="onboarding_home_sync_title_3">Mba’erechaha ñemoambue ndahasyiete</string>
     <!-- Text for the button to continue the onboarding on the home onboarding dialog. -->
     <string name="onboarding_home_get_started_button">Eñepyrũ</string>
     <!-- Text for the button to navigate to the sync sign in screen on the home onboarding dialog. -->
@@ -466,6 +470,8 @@
     <!-- Snackbar label for action to view selected wallpaper -->
     <string name="wallpaper_updated_snackbar_action">Hecha</string>
 
+    <!-- Snackbar message for when wallpaper couldn't be downloaded -->
+    <string name="wallpaper_download_error_snackbar_message">Noñemboguejykuaái mba’erechaha rugua</string>
     <!-- Snackbar label for action to retry downloading the wallpaper -->
     <string name="wallpaper_download_error_snackbar_action">Eha’ãjey</string>
     <!-- Snackbar message for when wallpaper couldn't be selected because of the disk error -->
@@ -485,6 +491,9 @@
     <string name="wallpaper_limited_edition_title">Ñemoheñói sa’íva</string>
     <!-- Wallpaper onboarding dialog header text. -->
     <string name="wallpapers_onboarding_dialog_title_text">Eipurukuaa sa’y sa’imi</string>
+
+    <!-- Wallpaper onboarding dialog body text. -->
+    <string name="wallpapers_onboarding_dialog_body_text">Eiporavo mba’erechaha rugua nde ehecharamóva.</string>
 
     <!-- Add-on Installation from AMO-->
     <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is not supported -->
