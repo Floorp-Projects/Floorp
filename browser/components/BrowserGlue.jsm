@@ -335,10 +335,10 @@ let JSWINDOWACTORS = {
 
   AboutReader: {
     parent: {
-      moduleURI: "resource:///actors/AboutReaderParent.jsm",
+      esModuleURI: "resource:///actors/AboutReaderParent.sys.mjs",
     },
     child: {
-      moduleURI: "resource:///actors/AboutReaderChild.jsm",
+      esModuleURI: "resource:///actors/AboutReaderChild.sys.mjs",
       events: {
         DOMContentLoaded: {},
         pageshow: { mozSystemGroup: true },

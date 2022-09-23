@@ -19,11 +19,9 @@ ChromeUtils.defineModuleGetter(
   "CustomizableUI",
   "resource:///modules/CustomizableUI.jsm"
 );
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "AboutReaderParent",
-  "resource:///actors/AboutReaderParent.jsm"
-);
+ChromeUtils.defineESModuleGetters(lazy, {
+  AboutReaderParent: "resource:///actors/AboutReaderParent.sys.mjs",
+});
 
 var EXPORTED_SYMBOLS = ["SaveToPocket"];
 

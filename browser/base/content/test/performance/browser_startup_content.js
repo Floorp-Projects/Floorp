@@ -32,7 +32,7 @@ const known_scripts = {
     "resource://gre/modules/Log.jsm",
 
     // Browser front-end
-    "resource:///actors/AboutReaderChild.jsm",
+    "resource:///actors/AboutReaderChild.sys.mjs",
     "resource:///actors/BrowserTabChild.sys.mjs",
     "resource:///actors/LinkHandlerChild.jsm",
     "resource:///actors/PageStyleChild.jsm",

@@ -5,8 +5,6 @@
 
 "use strict";
 
-var EXPORTED_SYMBOLS = ["AboutReaderParent"];
-
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
@@ -40,7 +38,7 @@ let gListeners = new Map();
 // parent while switching to it.
 let gCachedArticles = new Map();
 
-class AboutReaderParent extends JSWindowActorParent {
+export class AboutReaderParent extends JSWindowActorParent {
   didDestroy() {
     gAllActors.delete(this);
 
