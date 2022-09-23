@@ -10,6 +10,7 @@ import attr
 from taskgraph import filter_tasks
 from taskgraph.config import GraphConfig, load_graph_config
 from taskgraph.graph import Graph
+from taskgraph.morph import morph
 from taskgraph.optimize.base import optimize_task_graph
 from taskgraph.parameters import parameters_loader
 from taskgraph.task import Task
@@ -18,7 +19,6 @@ from taskgraph.transforms.base import TransformSequence, TransformConfig
 from taskgraph.util.python_path import find_object
 from taskgraph.util.yaml import load_yaml
 
-from .morph import morph
 from .util.verify import verifications
 
 logger = logging.getLogger(__name__)
@@ -408,11 +408,7 @@ class TaskGraphGenerator:
         )
 
         morphed_task_graph, label_to_taskid = morph(
-            optimized_task_graph,
-            label_to_taskid,
-            parameters,
-            graph_config,
-            self._decision_task_id,
+            optimized_task_graph, label_to_taskid, parameters, graph_config
         )
 
         yield "label_to_taskid", label_to_taskid
