@@ -204,6 +204,13 @@ function Editor(config) {
   // widely known.
   this.config.extraKeys[Editor.accel("U")] = false;
 
+  // Disable keys that trigger events with a null-string `which` property.
+  // It looks like some of those (e.g. the Function key), can trigger a poll
+  // which fails to see that there's a selection, which end up replacing the
+  // selected text with an empty string.
+  // TODO: We should investigate the root cause.
+  this.config.extraKeys["'\u0000'"] = false;
+
   // Overwrite default config with user-provided, if needed.
   Object.keys(config).forEach(k => {
     if (k != "extraKeys") {
