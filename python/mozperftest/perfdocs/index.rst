@@ -8,6 +8,7 @@ mozperftest
 .. toctree::
 
    running
+   tools
    writing
    developing
    vision
