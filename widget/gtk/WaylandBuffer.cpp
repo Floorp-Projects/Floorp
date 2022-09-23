@@ -117,6 +117,7 @@ RefPtr<WaylandShmPool> WaylandShmPool::Create(
     return nullptr;
   }
 
+  MOZ_DIAGNOSTIC_ASSERT(aWaylandDisplay->GetShm(), "Missing Shm!");
   shmPool->mShmPool =
       wl_shm_create_pool(aWaylandDisplay->GetShm(), shmPool->mShmPoolFd, aSize);
   if (!shmPool->mShmPool) {
