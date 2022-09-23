@@ -7,6 +7,7 @@ package org.mozilla.focus.searchwidget
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
+import android.speech.RecognizerIntent
 import androidx.annotation.VisibleForTesting
 import mozilla.components.feature.search.widget.AppSearchWidgetProvider
 import mozilla.components.feature.search.widget.BaseVoiceSearchActivity
@@ -57,7 +58,8 @@ class SearchWidgetProvider : AppSearchWidgetProvider() {
     }
 
     override fun shouldShowVoiceSearch(context: Context): Boolean {
-        return true
+        val intentSpeech = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH)
+        return intentSpeech.resolveActivity(context.packageManager) != null
     }
 
     override fun voiceSearchActivity(): Class<out BaseVoiceSearchActivity> {

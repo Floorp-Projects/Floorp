@@ -59,11 +59,6 @@ class SearchWidgetProviderTest {
     }
 
     @Test
-    fun `GIVEN search widget provider WHEN shouldShowVoiceSearch is called THEN true should be return`() {
-        assertEquals(searchWidgetProvider.shouldShowVoiceSearch(testContext), true)
-    }
-
-    @Test
     fun `GIVEN search widget provider WHEN voiceSearchActivity is called THEN VoiceSearchActivity should be return`() {
         assertEquals(searchWidgetProvider.voiceSearchActivity(), VoiceSearchActivity::class.java)
     }
