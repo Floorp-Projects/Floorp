@@ -92,6 +92,15 @@ $max-z-index: 2147483647;
           .dismiss-button {
             margin-block: 25px -45px;
             z-index: 1;
+
+            @media (prefers-contrast) {
+              background-color: var(--in-content-button-background);
+
+              &:hover {
+                background-color: var(--in-content-primary-button-background);
+                color: var(--in-content-primary-button-text-color);
+              }
+            }
           }
         }
       }
@@ -115,6 +124,16 @@ $max-z-index: 2147483647;
 
           &:hover {
             background-color: var(--in-content-button-background-hover);
+          }
+
+          @media (prefers-contrast) {
+            color: var(--in-content-button-text-color);
+            border: 1px solid var(--in-content-button-border-color);
+
+            &:hover {
+              background-color: var(--in-content-primary-button-background);
+              color: var(--in-content-primary-button-text-color);
+            }
           }
         }
 
