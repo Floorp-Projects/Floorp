@@ -16,7 +16,7 @@ with Files("Finder*.jsm"):
 with Files("KeyPressEventModelCheckerChild.jsm"):
     BUG_COMPONENT = ("Core", "DOM: Events")
 
-with Files("PictureInPictureChild.jsm"):
+with Files("PictureInPictureChild.sys.mjs"):
     BUG_COMPONENT = ("Toolkit", "Picture-in-Picture")
 
 SPHINX_TREES["actors"] = "docs"
@@ -61,7 +61,7 @@ FINAL_TARGET_FILES.actors += [
     "InlineSpellCheckerChild.jsm",
     "InlineSpellCheckerParent.jsm",
     "KeyPressEventModelCheckerChild.jsm",
-    "PictureInPictureChild.jsm",
+    "PictureInPictureChild.sys.mjs",
     "PopupBlockingChild.jsm",
     "PopupBlockingParent.jsm",
     "PrintingChild.jsm",

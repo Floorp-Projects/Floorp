@@ -27,10 +27,10 @@
       ChromeUtils.defineESModuleGetters(this, {
         UrlbarProviderOpenTabs:
           "resource:///modules/UrlbarProviderOpenTabs.sys.mjs",
+        PictureInPicture: "resource://gre/modules/PictureInPicture.sys.mjs",
       });
       XPCOMUtils.defineLazyModuleGetters(this, {
         E10SUtils: "resource://gre/modules/E10SUtils.jsm",
-        PictureInPicture: "resource://gre/modules/PictureInPicture.jsm",
       });
       XPCOMUtils.defineLazyServiceGetters(this, {
         MacSharingService: [

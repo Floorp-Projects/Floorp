@@ -5,11 +5,9 @@
 
 /* import-globals-from ../../../../../toolkit/components/pictureinpicture/tests/head.js */
 
-ChromeUtils.defineModuleGetter(
-  this,
-  "TOGGLE_POLICIES",
-  "resource://gre/modules/PictureInPictureControls.jsm"
-);
+ChromeUtils.defineESModuleGetters(this, {
+  TOGGLE_POLICIES: "resource://gre/modules/PictureInPictureControls.sys.mjs",
+});
 
 const TEST_URL =
   getRootDirectory(gTestPath).replace(

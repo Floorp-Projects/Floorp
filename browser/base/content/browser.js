@@ -17,6 +17,7 @@ ChromeUtils.defineESModuleGetters(this, {
   BrowserSearchTelemetry: "resource:///modules/BrowserSearchTelemetry.sys.mjs",
   FirefoxViewNotificationManager:
     "resource:///modules/firefox-view-notification-manager.sys.mjs",
+  PictureInPicture: "resource://gre/modules/PictureInPicture.sys.mjs",
   PlacesTransactions: "resource://gre/modules/PlacesTransactions.sys.mjs",
   PlacesUIUtils: "resource:///modules/PlacesUIUtils.sys.mjs",
   PlacesUtils: "resource://gre/modules/PlacesUtils.sys.mjs",
@@ -68,7 +69,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   PageThumbs: "resource://gre/modules/PageThumbs.jsm",
   PanelMultiView: "resource:///modules/PanelMultiView.jsm",
   PanelView: "resource:///modules/PanelMultiView.jsm",
-  PictureInPicture: "resource://gre/modules/PictureInPicture.jsm",
   PluralForm: "resource://gre/modules/PluralForm.jsm",
   Pocket: "chrome://pocket/content/Pocket.jsm",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.jsm",

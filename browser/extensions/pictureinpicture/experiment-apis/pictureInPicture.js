@@ -6,17 +6,10 @@
 
 /* global AppConstants, ChromeUtils, ExtensionAPI, Services */
 
-ChromeUtils.defineModuleGetter(
-  this,
-  "KEYBOARD_CONTROLS",
-  "resource://gre/modules/PictureInPictureControls.jsm"
-);
-
-ChromeUtils.defineModuleGetter(
-  this,
-  "TOGGLE_POLICIES",
-  "resource://gre/modules/PictureInPictureControls.jsm"
-);
+ChromeUtils.defineESModuleGetters(this, {
+  KEYBOARD_CONTROLS: "resource://gre/modules/PictureInPictureControls.sys.mjs",
+  TOGGLE_POLICIES: "resource://gre/modules/PictureInPictureControls.sys.mjs",
+});
 
 const TOGGLE_ENABLED_PREF =
   "media.videocontrols.picture-in-picture.video-toggle.enabled";
