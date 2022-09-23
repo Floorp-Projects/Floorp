@@ -15,8 +15,11 @@ const { AppConstants } = ChromeUtils.import(
 
 const lazy = {};
 
+ChromeUtils.defineESModuleGetters(lazy, {
+  AboutReaderParent: "resource:///actors/AboutReaderParent.sys.mjs",
+});
+
 XPCOMUtils.defineLazyModuleGetters(lazy, {
-  AboutReaderParent: "resource:///actors/AboutReaderParent.jsm",
   AddonManager: "resource://gre/modules/AddonManager.jsm",
   BrowserUsageTelemetry: "resource:///modules/BrowserUsageTelemetry.jsm",
   BuiltInThemes: "resource:///modules/BuiltInThemes.jsm",

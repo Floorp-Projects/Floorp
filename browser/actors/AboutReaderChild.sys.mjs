@@ -4,8 +4,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-var EXPORTED_SYMBOLS = ["AboutReaderChild"];
-
 const lazy = {};
 
 ChromeUtils.defineModuleGetter(
@@ -27,7 +25,7 @@ ChromeUtils.defineModuleGetter(
 var gUrlsToDocContentType = new Map();
 var gUrlsToDocTitle = new Map();
 
-class AboutReaderChild extends JSWindowActorChild {
+export class AboutReaderChild extends JSWindowActorChild {
   constructor() {
     super();
 
