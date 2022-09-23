@@ -19,71 +19,61 @@
 #include "vm/JSScript.h"
 
 namespace {
-struct AutoFileLock;
+struct AutoLockPerfSpewer;
 }
 
 namespace js {
 namespace jit {
 
+#ifdef JS_ION_PERF
+void CheckPerf();
+#else
+inline void CheckPerf() {}
+#endif
+
 class MBasicBlock;
 class MacroAssembler;
 
-#ifdef JS_ION_PERF
-void CheckPerf();
-bool PerfIREnabled();
-bool PerfSrcEnabled();
-bool PerfFuncEnabled();
-static inline bool PerfEnabled() {
-  return PerfSrcEnabled() || PerfIREnabled() || PerfFuncEnabled();
-}
-#else
-static inline void CheckPerf() {}
-static inline bool PerfSrcEnabled() { return false; }
-static inline bool PerfIREnabled() { return false; }
-static inline bool PerfFuncEnabled() { return false; }
-static inline bool PerfEnabled() { return false; }
-#endif
-
-#ifdef JS_ION_PERF
+bool PerfEnabled();
 
 class PerfSpewer {
  protected:
   struct OpcodeEntry {
     Label addr;
-    unsigned lineno;
+    unsigned opcode;
   };
   Vector<OpcodeEntry, 1, SystemAllocPolicy> opcodes_;
 
  public:
-  void writeJitDumpIRInfo(const char* filename, JitCode* code,
-                          AutoFileLock& lock);
-  static void WriteJitDumpEntry(const char* desc, JSScript* script,
-                                JitCode* code, AutoFileLock& lock);
-  static void WriteJitDumpLoadRecord(char* function_name, JitCode* code,
-                                     AutoFileLock& lock);
-  static void WriteJitDumpLoadRecord(char* function_name, void* code_addr,
-                                     uint64_t code_size, AutoFileLock& lock);
-  static void WriteJitDumpSourceInfo(const char* localfile, JSScript* script,
-                                     JitCode* code, AutoFileLock& lock);
-  static void WriteJitDumpDebugEntry(uint64_t addr, const char* filename,
-                                     uint32_t lineno, uint32_t colno,
-                                     AutoFileLock& lock);
+  PerfSpewer() = default;
+
+  void saveJitCodeIRInfo(const char* filename, JitCode* code,
+                         AutoLockPerfSpewer& lock);
+  static void SaveJitCodeSourceInfo(const char* localfile, JSScript* script,
+                                    JitCode* code, AutoLockPerfSpewer& lock);
+
+  static void CollectJitCodeInfo(const char* desc, JSScript* script,
+                                 JitCode* code, AutoLockPerfSpewer& lock);
+  static void CollectJitCodeInfo(UniqueChars& function_name, JitCode* code,
+                                 AutoLockPerfSpewer& lock);
+  static void CollectJitCodeInfo(UniqueChars& function_name, void* code_addr,
+                                 uint64_t code_size, AutoLockPerfSpewer& lock);
 };
 
-void writePerfSpewerJitCodeProfile(JitCode* code, const char* msg);
+void CollectPerfSpewerJitCodeProfile(JitCode* code, const char* msg);
 
-void writePerfSpewerWasmMap(uintptr_t base, uintptr_t size,
-                            const char* filename, const char* annotation);
-void writePerfSpewerWasmFunctionMap(uintptr_t base, uintptr_t size,
-                                    const char* filename, unsigned lineno,
-                                    const char* funcName);
+void CollectPerfSpewerWasmMap(uintptr_t base, uintptr_t size,
+                              const char* filename, const char* annotation);
+void CollectPerfSpewerWasmFunctionMap(uintptr_t base, uintptr_t size,
+                                      const char* filename, unsigned lineno,
+                                      const char* funcName);
 
 class IonPerfSpewer : public PerfSpewer {
   static UniqueChars lirFilename;
 
  public:
   void recordInstruction(MacroAssembler& masm, LNode::Opcode op);
-  void writeProfile(JSScript* script, JitCode* code);
+  void saveProfile(JSScript* script, JitCode* code);
 };
 
 class BaselinePerfSpewer : public PerfSpewer {
@@ -91,7 +81,7 @@ class BaselinePerfSpewer : public PerfSpewer {
 
  public:
   void recordInstruction(MacroAssembler& masm, JSOp op);
-  void writeProfile(JSScript* script, JitCode* code);
+  void saveProfile(JSScript* script, JitCode* code);
 };
 
 class InlineCachePerfSpewer : public PerfSpewer {
@@ -99,10 +89,8 @@ class InlineCachePerfSpewer : public PerfSpewer {
 
  public:
   void recordInstruction(MacroAssembler& masm, CacheOp op);
-  void writeProfile(JitCode* code, const char* name);
+  void saveProfile(JitCode* code, const char* name);
 };
-
-#endif  // JS_ION_PERF
 
 }  // namespace jit
 }  // namespace js

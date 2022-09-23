@@ -613,7 +613,6 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock> {
   // profiling.
   BytecodeSite* trackedSite_;
 
-#if defined(JS_ION_PERF) || defined(DEBUG)
   unsigned lineno_;
   unsigned columnIndex_;
 
@@ -622,7 +621,6 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock> {
   unsigned lineno() const { return lineno_; }
   void setColumnIndex(unsigned c) { columnIndex_ = c; }
   unsigned columnIndex() const { return columnIndex_; }
-#endif
 };
 
 using MBasicBlockIterator = InlineListIterator<MBasicBlock>;

@@ -9,10 +9,8 @@
 #include "jit/CalleeToken.h"
 #include "jit/JitFrames.h"
 #include "jit/JitRuntime.h"
-#ifdef JS_ION_PERF
-#  include "jit/PerfSpewer.h"
-#endif
 #include "jit/loong64/SharedICHelpers-loong64.h"
+#include "jit/PerfSpewer.h"
 #include "jit/VMFunctions.h"
 #include "vm/JitActivation.h"  // js::jit::JitActivation
 #include "vm/JSContext.h"

@@ -996,9 +996,8 @@ Handle<HeapObject> SMRegExpMacroAssembler::GetCode(Handle<String> source) {
                                        ImmPtr(nullptr));
   }
 
-#ifdef JS_ION_PERF
-  writePerfSpewerJitCodeProfile(code, "RegExp");
-#endif
+  CollectPerfSpewerJitCodeProfile(code, "RegExp");
+
 #ifdef MOZ_VTUNE
   js::vtune::MarkStub(code, "RegExp");
 #endif

@@ -2737,9 +2737,7 @@ AttachDecision GetPropIRGenerator::tryAttachProxyElement(HandleObject obj,
 }
 
 void GetPropIRGenerator::trackAttached(const char* name) {
-#ifdef JS_ION_PERF
   stubName_ = JS_smprintf("%s", name);
-#endif
 #ifdef JS_CACHEIR_SPEW
   if (const CacheIRSpewer::Guard& sp = CacheIRSpewer::Guard(*this, name)) {
     sp.valueProperty("base", val_);
@@ -3077,9 +3075,7 @@ AttachDecision GetNameIRGenerator::tryAttachEnvironmentName(ObjOperandId objId,
 }
 
 void GetNameIRGenerator::trackAttached(const char* name) {
-#ifdef JS_ION_PERF
   stubName_ = JS_smprintf("%s", name);
-#endif
 #ifdef JS_CACHEIR_SPEW
   if (const CacheIRSpewer::Guard& sp = CacheIRSpewer::Guard(*this, name)) {
     sp.valueProperty("base", ObjectValue(*env_));
@@ -3225,9 +3221,7 @@ AttachDecision BindNameIRGenerator::tryAttachEnvironmentName(ObjOperandId objId,
 }
 
 void BindNameIRGenerator::trackAttached(const char* name) {
-#ifdef JS_ION_PERF
   stubName_ = JS_smprintf("%s", name);
-#endif
 #ifdef JS_CACHEIR_SPEW
   if (const CacheIRSpewer::Guard& sp = CacheIRSpewer::Guard(*this, name)) {
     sp.valueProperty("base", ObjectValue(*env_));
@@ -3582,9 +3576,7 @@ AttachDecision HasPropIRGenerator::tryAttachStub() {
 }
 
 void HasPropIRGenerator::trackAttached(const char* name) {
-#ifdef JS_ION_PERF
   stubName_ = JS_smprintf("%s", name);
-#endif
 #ifdef JS_CACHEIR_SPEW
   if (const CacheIRSpewer::Guard& sp = CacheIRSpewer::Guard(*this, name)) {
     sp.valueProperty("base", val_);
@@ -3650,9 +3642,7 @@ AttachDecision CheckPrivateFieldIRGenerator::tryAttachNative(
 }
 
 void CheckPrivateFieldIRGenerator::trackAttached(const char* name) {
-#ifdef JS_ION_PERF
   stubName_ = JS_smprintf("%s", name);
-#endif
 #ifdef JS_CACHEIR_SPEW
   if (const CacheIRSpewer::Guard& sp = CacheIRSpewer::Guard(*this, name)) {
     sp.valueProperty("base", val_);
@@ -3914,9 +3904,7 @@ static bool ValueIsNumeric(Scalar::Type type, const Value& val) {
 }
 
 void SetPropIRGenerator::trackAttached(const char* name) {
-#ifdef JS_ION_PERF
   stubName_ = JS_smprintf("%s", name);
-#endif
 #ifdef JS_CACHEIR_SPEW
   if (const CacheIRSpewer::Guard& sp = CacheIRSpewer::Guard(*this, name)) {
     sp.opcodeProperty("op", JSOp(*pc_));
@@ -5040,9 +5028,7 @@ AttachDecision InstanceOfIRGenerator::tryAttachStub() {
 }
 
 void InstanceOfIRGenerator::trackAttached(const char* name) {
-#ifdef JS_ION_PERF
   stubName_ = JS_smprintf("%s", name);
-#endif
 #ifdef JS_CACHEIR_SPEW
   if (const CacheIRSpewer::Guard& sp = CacheIRSpewer::Guard(*this, name)) {
     sp.valueProperty("lhs", lhsVal_);
@@ -5060,9 +5046,7 @@ TypeOfIRGenerator::TypeOfIRGenerator(JSContext* cx, HandleScript script,
     : IRGenerator(cx, script, pc, CacheKind::TypeOf, state), val_(value) {}
 
 void TypeOfIRGenerator::trackAttached(const char* name) {
-#ifdef JS_ION_PERF
   stubName_ = JS_smprintf("%s", name);
-#endif
 #ifdef JS_CACHEIR_SPEW
   if (const CacheIRSpewer::Guard& sp = CacheIRSpewer::Guard(*this, name)) {
     sp.valueProperty("val", val_);
@@ -5217,9 +5201,7 @@ AttachDecision GetIteratorIRGenerator::tryAttachNullOrUndefined(
 }
 
 void GetIteratorIRGenerator::trackAttached(const char* name) {
-#ifdef JS_ION_PERF
   stubName_ = JS_smprintf("%s", name);
-#endif
 #ifdef JS_CACHEIR_SPEW
   if (const CacheIRSpewer::Guard& sp = CacheIRSpewer::Guard(*this, name)) {
     sp.valueProperty("val", val_);
@@ -5443,9 +5425,7 @@ AttachDecision OptimizeSpreadCallIRGenerator::tryAttachNotOptimizable() {
 }
 
 void OptimizeSpreadCallIRGenerator::trackAttached(const char* name) {
-#ifdef JS_ION_PERF
   stubName_ = JS_smprintf("%s", name);
-#endif
 #ifdef JS_CACHEIR_SPEW
   if (const CacheIRSpewer::Guard& sp = CacheIRSpewer::Guard(*this, name)) {
     sp.valueProperty("val", val_);
@@ -10365,9 +10345,7 @@ AttachDecision CallIRGenerator::tryAttachStub() {
 }
 
 void CallIRGenerator::trackAttached(const char* name) {
-#ifdef JS_ION_PERF
   stubName_ = JS_smprintf("%s", name);
-#endif
 #ifdef JS_CACHEIR_SPEW
   if (const CacheIRSpewer::Guard& sp = CacheIRSpewer::Guard(*this, name)) {
     sp.valueProperty("callee", callee_);
@@ -10943,9 +10921,7 @@ AttachDecision CompareIRGenerator::tryAttachStub() {
 }
 
 void CompareIRGenerator::trackAttached(const char* name) {
-#ifdef JS_ION_PERF
   stubName_ = JS_smprintf("%s", name);
-#endif
 #ifdef JS_CACHEIR_SPEW
   if (const CacheIRSpewer::Guard& sp = CacheIRSpewer::Guard(*this, name)) {
     sp.valueProperty("lhs", lhsVal_);
@@ -10961,9 +10937,7 @@ ToBoolIRGenerator::ToBoolIRGenerator(JSContext* cx, HandleScript script,
     : IRGenerator(cx, script, pc, CacheKind::ToBool, state), val_(val) {}
 
 void ToBoolIRGenerator::trackAttached(const char* name) {
-#ifdef JS_ION_PERF
   stubName_ = JS_smprintf("%s", name);
-#endif
 #ifdef JS_CACHEIR_SPEW
   if (const CacheIRSpewer::Guard& sp = CacheIRSpewer::Guard(*this, name)) {
     sp.valueProperty("val", val_);
@@ -11099,9 +11073,7 @@ GetIntrinsicIRGenerator::GetIntrinsicIRGenerator(JSContext* cx,
     : IRGenerator(cx, script, pc, CacheKind::GetIntrinsic, state), val_(val) {}
 
 void GetIntrinsicIRGenerator::trackAttached(const char* name) {
-#ifdef JS_ION_PERF
   stubName_ = JS_smprintf("%s", name);
-#endif
 #ifdef JS_CACHEIR_SPEW
   if (const CacheIRSpewer::Guard& sp = CacheIRSpewer::Guard(*this, name)) {
     sp.valueProperty("val", val_);
@@ -11127,9 +11099,7 @@ UnaryArithIRGenerator::UnaryArithIRGenerator(JSContext* cx, HandleScript script,
       res_(res) {}
 
 void UnaryArithIRGenerator::trackAttached(const char* name) {
-#ifdef JS_ION_PERF
   stubName_ = JS_smprintf("%s", name);
-#endif
 #ifdef JS_CACHEIR_SPEW
   if (const CacheIRSpewer::Guard& sp = CacheIRSpewer::Guard(*this, name)) {
     sp.valueProperty("val", val_);
@@ -11464,9 +11434,7 @@ ToPropertyKeyIRGenerator::ToPropertyKeyIRGenerator(JSContext* cx,
     : IRGenerator(cx, script, pc, CacheKind::ToPropertyKey, state), val_(val) {}
 
 void ToPropertyKeyIRGenerator::trackAttached(const char* name) {
-#ifdef JS_ION_PERF
   stubName_ = JS_smprintf("%s", name);
-#endif
 #ifdef JS_CACHEIR_SPEW
   if (const CacheIRSpewer::Guard& sp = CacheIRSpewer::Guard(*this, name)) {
     sp.valueProperty("val", val_);
@@ -11563,9 +11531,7 @@ BinaryArithIRGenerator::BinaryArithIRGenerator(JSContext* cx,
       res_(res) {}
 
 void BinaryArithIRGenerator::trackAttached(const char* name) {
-#ifdef JS_ION_PERF
   stubName_ = JS_smprintf("%s", name);
-#endif
 #ifdef JS_CACHEIR_SPEW
   if (const CacheIRSpewer::Guard& sp = CacheIRSpewer::Guard(*this, name)) {
     sp.opcodeProperty("op", op_);
@@ -12052,9 +12018,7 @@ NewArrayIRGenerator::NewArrayIRGenerator(JSContext* cx, HandleScript script,
 }
 
 void NewArrayIRGenerator::trackAttached(const char* name) {
-#ifdef JS_ION_PERF
   stubName_ = JS_smprintf("%s", name);
-#endif
 #ifdef JS_CACHEIR_SPEW
   if (const CacheIRSpewer::Guard& sp = CacheIRSpewer::Guard(*this, name)) {
     sp.opcodeProperty("op", op_);
@@ -12139,9 +12103,7 @@ NewObjectIRGenerator::NewObjectIRGenerator(JSContext* cx, HandleScript script,
 }
 
 void NewObjectIRGenerator::trackAttached(const char* name) {
-#ifdef JS_ION_PERF
   stubName_ = JS_smprintf("%s", name);
-#endif
 #ifdef JS_CACHEIR_SPEW
   if (const CacheIRSpewer::Guard& sp = CacheIRSpewer::Guard(*this, name)) {
     sp.opcodeProperty("op", op_);
