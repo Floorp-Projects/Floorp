@@ -312,20 +312,13 @@ async function testBrokenApp({
 }) {
   let extension = ExtensionTestUtils.loadExtension({
     background() {
-      browser.test.onMessage.addListener((appname, expectedError) => {
-        let port = browser.runtime.connectNative(appname);
-        port.onDisconnect.addListener(() => {
-          browser.test.assertEq(
-            expectedError,
-            port.error?.message,
-            "Expected connectNative() error"
-          );
-          browser.test.sendMessage("done");
-        });
-        port.onMessage.addListener(() => {
-          browser.test.fail("Unexpected onMessage from connectNative()");
-        });
-        port.postMessage({ test: "test" });
+      browser.test.onMessage.addListener(async (appname, expectedError) => {
+        await browser.test.assertRejects(
+          browser.runtime.sendNativeMessage(appname, "dummymsg"),
+          expectedError,
+          "Expected sendNativeMessage error"
+        );
+        browser.test.sendMessage("done");
       });
     },
     manifest: {
@@ -430,7 +423,7 @@ add_task(async function test_sendNativeMessage() {
     // Check error handling
     await browser.test.assertRejects(
       browser.runtime.sendNativeMessage("nonexistent", MSG),
-      /Attempt to postMessage on disconnected port/,
+      "No such native application nonexistent",
       "sendNativeMessage() to a nonexistent app failed"
     );
 
