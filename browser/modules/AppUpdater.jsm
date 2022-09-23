@@ -53,24 +53,6 @@ class AppUpdater {
   constructor() {
     try {
       this._listeners = new Set();
-      XPCOMUtils.defineLazyServiceGetter(
-        this,
-        "aus",
-        "@mozilla.org/updates/update-service;1",
-        "nsIApplicationUpdateService"
-      );
-      XPCOMUtils.defineLazyServiceGetter(
-        this,
-        "checker",
-        "@mozilla.org/updates/update-checker;1",
-        "nsIUpdateChecker"
-      );
-      XPCOMUtils.defineLazyServiceGetter(
-        this,
-        "um",
-        "@mozilla.org/updates/update-manager;1",
-        "nsIUpdateManager"
-      );
       this.QueryInterface = ChromeUtils.generateQI([
         "nsIObserver",
         "nsIProgressEventSink",
@@ -746,6 +728,25 @@ class AppUpdater {
     }
   }
 }
+
+XPCOMUtils.defineLazyServiceGetter(
+  AppUpdater.prototype,
+  "aus",
+  "@mozilla.org/updates/update-service;1",
+  "nsIApplicationUpdateService"
+);
+XPCOMUtils.defineLazyServiceGetter(
+  AppUpdater.prototype,
+  "checker",
+  "@mozilla.org/updates/update-checker;1",
+  "nsIUpdateChecker"
+);
+XPCOMUtils.defineLazyServiceGetter(
+  AppUpdater.prototype,
+  "um",
+  "@mozilla.org/updates/update-manager;1",
+  "nsIUpdateManager"
+);
 
 AppUpdater.STATUS = {
   // Updates are allowed and there's no downloaded or staged update, but the
