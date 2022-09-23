@@ -273,12 +273,12 @@ async def dump_module(
 
     if has_code:
         cmd = (
-            f"{dump_syms} {code_file} --code-id {code_id} --check-cfi "
+            f"{dump_syms} {code_file} --code-id {code_id} --check-cfi --inlines "
             f"--store {output} --symbol-server '{sym_srv}' --verbose error"
         )
     else:
         cmd = (
-            f"{dump_syms} {filename} --debug-id {debug_id} --check-cfi "
+            f"{dump_syms} {filename} --debug-id {debug_id} --check-cfi --inlines "
             f"--store {output} --symbol-server '{sym_srv}' --verbose error"
         )
 
