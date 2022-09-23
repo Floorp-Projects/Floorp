@@ -12,7 +12,7 @@ Opening the about:debugging page
 There are two ways to open ``about:debugging``:
 
 - Type ``about:debugging`` in the Firefox URL bar.
-- In the **Tools** > **Web Developer** menu, click **Remote Debugging**.
+- In the **Tools** > **Browser Tools** menu, click **Remote Debugging**.
 
 
 When about:debugging opens, on the left-hand side, you'll see a sidebar with two options and information about your remote debugging setup:

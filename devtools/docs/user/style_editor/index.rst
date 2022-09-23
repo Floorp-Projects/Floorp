@@ -15,7 +15,7 @@ The Style Editor enables you to:
   <br/>
   <br/>
 
-To open the Style Editor choose the "Style Editor" option from the "Web Developer" menu (which is a submenu in the "Tools" menu on the Mac). The :doc:`Toolbox <../tools_toolbox/index>` will appear at the bottom of the browser window, with the Style Editor activated:
+To open the Style Editor select the *Style Editor* panel in the Web Developer Tools, accessible from the Browser Tools submenu
 
 .. image:: style-editor.png
   :class: center

@@ -11,7 +11,7 @@ There are a few different ways to open the Network Monitor:
 
 - Press :kbd:`Ctrl` + :kbd:`Shift` + :kbd:`E` (:kbd:`Cmd` + :kbd:`Opt` + :kbd:`E` on a Mac).
 
-- Select "Network" from the Web Developer menu, (which is a submenu of the Tools menu on OS X and Linux).
+- Select the *Network* panel in the Web Developer Tools, accessible from the Browser Tools submenu
 
 - Click the wrench icon |image1|, which is in the main toolbar or under the Hamburger menu |image2|, then select "Network".
 

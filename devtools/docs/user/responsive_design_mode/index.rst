@@ -13,7 +13,7 @@ Toggling Responsive Design Mode
 There are three ways to toggle Responsive Design Mode:
 
 
-- From the Firefox menu: Select **Responsive Design Mode** from the **Web Developer** submenu in the Firefox Menu (or **Tools** menu if you display the menu bar or are on macOS).
+- From the Firefox menu: Select **Responsive Design Mode** from the **Browser Tools** submenu in the Firefox Menu (or **Tools** menu if you display the menu bar or are on macOS).
 - From the Developer Tools toolbox: Press the **Responsive Design Mode** button in the :ref:`Toolbox's toolbar <tools-toolbox-toolbar>`
 - From the keyboard: Press :kbd:`Ctrl` + :kbd:`Shift` + :kbd:`M` (or :kbd:`Cmd` + :kbd:`Opt` + :kbd:`M` on macOS).
 

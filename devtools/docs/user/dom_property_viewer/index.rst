@@ -21,7 +21,7 @@ The DOM Property Viewer is not enabled by default. To enable it, open the :ref:`
 Opening the DOM Property Viewer
 *******************************
 
-Once enabled, you can open the DOM Property Viewer by selecting "DOM" from the Web Developer submenu in the Firefox Menu Panel (or Tools menu if you display the menu bar or are on macOS), or by pressing its :kbd:`Ctrl` + :kbd:`Shift` + :kbd:`W` keyboard shortcut.
+Once enabled, you can select the *DOM* panel in the Web Developer Tools, accessible from the Browser Tools submenu
 
 The :doc:`Toolbox <../tools_toolbox/index>` will appear at the bottom of the browser window, with the DOM Property Viewer activated. It's just called "DOM" in the Toolbox.
 

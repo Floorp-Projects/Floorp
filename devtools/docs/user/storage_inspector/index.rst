@@ -22,7 +22,7 @@ For the time being, the Storage Inspector only gives you a read-only view of sto
 Opening the Storage Inspector
 *****************************
 
-You can open the Storage Inspector by selecting "Storage Inspector" from the Web Developer submenu in the Firefox Menu Panel (or Tools menu if you display the menu bar or are on macOS), or by pressing its :kbd:`Shift` + :kbd:`F9` keyboard shortcut.
+You can open the Storage Inspector by selecting the *Storage* panel in the Web Developer Tools, accessible from the Browser Tools submenu
 
 The :doc:`Toolbox <../tools_toolbox/index>` will appear at the bottom of the browser window, with the Storage Inspector activated. It's just called "Storage" in the Developer Toolbox.
 

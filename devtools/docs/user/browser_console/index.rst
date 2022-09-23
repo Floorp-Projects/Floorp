@@ -20,7 +20,7 @@ Opening the Browser Console
 
 You can open the Browser Console in one of two ways:
 
-1. from the menu: select "Browser Console" from the Web Developer submenu in the Firefox Menu (or Tools menu if you display the menu bar or are on macOS).
+1. from the menu: select "Browser Console" from the Browser Tools submenu in the Firefox Menu (or Tools menu if you display the menu bar or are on macOS).
 
 2. from the keyboard: press :kbd:`Ctrl` + :kbd:`Shift` + :kbd:`J` (or :kbd:`Cmd` + :kbd:`Shift` + :kbd:`J` on a Mac).
 

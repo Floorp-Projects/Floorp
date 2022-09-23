@@ -4,7 +4,7 @@ Open the Inspector
 
 There are two main ways to open the Inspector:
 
-- Choose *Tools > Web Developer > Inspector* from the Menu Bar or the equivalent :ref:`keyboard shortcut <keyboard-shortcuts-opening-and-closing-tools>`.
+- Select the *Inspector* panel in the Web Developer Tools, accessible from the Browser Tools submenu
 - Right-click an element on a web page and select *Inspect Element*.
 
 

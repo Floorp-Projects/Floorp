@@ -26,7 +26,7 @@ When you first open any of the other Developer Tools, the accessibility features
 The accessibility inspector is automatically enabled when you do one of the following(beforeFirefox 79, it had to be explicitly enabled):
 
 
-- Choose **Accessibility** in the **Tools > Web Developer** menu.
+- Choose **Accessibility** in the **Tools > Browser Tools** menu.
 - Select the **Accessibility** tab in the Developer Tools toolbox.
 - Right-click in the main browser window, and choose **Inspect Accessibility Properties** in the context menu.
 - Right-click an item in the HTML pane of the :doc:`Page Inspector <../page_inspector/index>`, and choose **Show Accessibility Properties** in the context menu.

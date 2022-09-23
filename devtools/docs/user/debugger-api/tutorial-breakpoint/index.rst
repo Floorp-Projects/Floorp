@@ -28,7 +28,7 @@ This tutorial was tested against Firefox 58 Beta and Nightly. It does not work i
 
 |br|
 
-3. Visit the HTML file in your browser, and open the Browser Content Toolbox by opening the Firefox menu, choosing “Web Developer”, and then “Browser Content Toolbox”. If that item doesn’t appear in the “Web Developer” menu, make sure you checked both boxes to enable the Browser Content Toolbox as explained in Step 1.
+3. Visit the HTML file in your browser, and open the Browser Content Toolbox by opening the Firefox menu, choosing “Browser Tools”, and then “Browser Content Toolbox”. If that item doesn’t appear in the “Web Developer” menu, make sure you checked both boxes to enable the Browser Content Toolbox as explained in Step 1.
 
 |br|
 
