@@ -352,7 +352,12 @@ var NativeApp = class extends EventEmitter {
     });
 
     let result = this.startupPromise.then(() => {
-      this.send(holder);
+      // Skip .send() if _cleanup() has been called already;
+      // otherwise the error passed to _cleanup/"disconnect" would be hidden by the
+      // "Attempt to postMessage on disconnected port" error from this.send().
+      if (!this.cleanupStarted) {
+        this.send(holder);
+      }
       return responsePromise;
     });
 
