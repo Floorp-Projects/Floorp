@@ -1316,9 +1316,6 @@ bool DcSctpSocket::HandleCookieEchoWithTCB(const CommonHeader& header,
     RTC_DLOG(LS_VERBOSE) << log_prefix()
                          << "Received COOKIE-ECHO indicating a restarted peer";
 
-    // If a message was partly sent, and the peer restarted, resend it in
-    // full by resetting the send queue.
-    send_queue_.Reset();
     tcb_ = nullptr;
     callbacks_.OnConnectionRestarted();
   } else if (header.verification_tag == tcb_->my_verification_tag() &&

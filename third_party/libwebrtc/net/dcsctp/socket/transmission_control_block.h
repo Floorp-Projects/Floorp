@@ -118,7 +118,17 @@ class TransmissionControlBlock : public Context {
                               &reassembly_queue_,
                               &retransmission_queue_,
                               handover_state),
-        heartbeat_handler_(log_prefix, options, this, &timer_manager_) {}
+        heartbeat_handler_(log_prefix, options, this, &timer_manager_) {
+    // If the connection is re-established (peer restarted, but re-used old
+    // connection), make sure that all message identifiers are reset and any
+    // partly sent message is re-sent in full. The same is true when the socket
+    // is closed and later re-opened, which never happens in WebRTC, but is a
+    // valid operation on the SCTP level. Note that in case of handover, the
+    // send queue is already re-configured, and shouldn't be reset.
+    if (handover_state == nullptr) {
+      send_queue.Reset();
+    }
+  }
 
   // Implementation of `Context`.
   bool is_connection_established() const override {
