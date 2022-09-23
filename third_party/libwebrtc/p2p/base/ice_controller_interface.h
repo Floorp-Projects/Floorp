@@ -25,45 +25,14 @@ namespace cricket {
 struct IceFieldTrials;  // Forward declaration to avoid circular dependency.
 
 struct IceRecheckEvent {
-  // TODO(bugs.webrtc.org/14125) replace with IceSwitchReason.
-  enum Type {
-    REMOTE_CANDIDATE_GENERATION_CHANGE,
-    NETWORK_PREFERENCE_CHANGE,
-    NEW_CONNECTION_FROM_LOCAL_CANDIDATE,
-    NEW_CONNECTION_FROM_REMOTE_CANDIDATE,
-    NEW_CONNECTION_FROM_UNKNOWN_REMOTE_ADDRESS,
-    NOMINATION_ON_CONTROLLED_SIDE,
-    DATA_RECEIVED,
-    CONNECT_STATE_CHANGE,
-    SELECTED_CONNECTION_DESTROYED,
-    // The ICE_CONTROLLER_RECHECK enum value lets an IceController request
-    // P2PTransportChannel to recheck a switch periodically without an event
-    // taking place.
-    ICE_CONTROLLER_RECHECK,
-  };
-
-  [[deprecated("bugs.webrtc.org/14125")]] IceRecheckEvent(
-      const Type& _type)  // NOLINT: runtime/explicit
-      : type(_type), reason(FromType(_type)) {}
-
   IceRecheckEvent(IceSwitchReason _reason, int _recheck_delay_ms)
-      : type(FromIceSwitchReason(_reason)),
-        reason(_reason),
-        recheck_delay_ms(_recheck_delay_ms) {}
-
-  static Type FromIceSwitchReason(IceSwitchReason reason);
-  static IceSwitchReason FromType(Type type);
+      : reason(_reason), recheck_delay_ms(_recheck_delay_ms) {}
 
   std::string ToString() const;
 
-  // TODO(bugs.webrtc.org/14125) replace usage with IceSwitchReason.
-  Type type;
   IceSwitchReason reason;
-  int recheck_delay_ms = 0;
+  int recheck_delay_ms;
 };
-
-// TODO(bugs.webrtc.org/14125): remove.
-using IceControllerEvent = IceRecheckEvent;
 
 // Defines the interface for a module that control
 // - which connection to ping
@@ -154,19 +123,10 @@ class IceControllerInterface {
   // Check if we should switch to `connection`.
   // This method is called for IceSwitchReasons that can switch directly
   // i.e without resorting.
-  [[deprecated("bugs.webrtc.org/14125")]] virtual SwitchResult
-  ShouldSwitchConnection(IceRecheckEvent reason, const Connection* connection) {
-    return ShouldSwitchConnection(IceRecheckEvent::FromType(reason.type),
-                                  connection);
-  }
   virtual SwitchResult ShouldSwitchConnection(IceSwitchReason reason,
                                               const Connection* connection) = 0;
 
   // Sort connections and check if we should switch.
-  [[deprecated("bugs.webrtc.org/14125")]] virtual SwitchResult
-  SortAndSwitchConnection(IceRecheckEvent reason) {
-    return SortAndSwitchConnection(IceRecheckEvent::FromType(reason.type));
-  }
   virtual SwitchResult SortAndSwitchConnection(IceSwitchReason reason) = 0;
 
   // Prune connections.
