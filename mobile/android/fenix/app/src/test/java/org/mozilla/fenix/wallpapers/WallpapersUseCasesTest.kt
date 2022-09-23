@@ -50,9 +50,7 @@ class WallpapersUseCasesTest {
     private val mockLegacyFileManager = mockk<LegacyWallpaperFileManager> {
         every { clean(any(), any()) } just runs
     }
-    private val mockMigrationHelper = mockk<LegacyWallpaperMigration> {
-        coEvery { migrateLegacyWallpaper(any()) } just runs
-    }
+    private val mockMigrationHelper = mockk<LegacyWallpaperMigration>(relaxed = true)
 
     private val mockMetadataFetcher = mockk<WallpaperMetadataFetcher>()
     private val mockDownloader = mockk<WallpaperDownloader> {

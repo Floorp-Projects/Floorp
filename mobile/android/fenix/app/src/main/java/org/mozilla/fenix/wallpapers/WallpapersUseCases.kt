@@ -50,6 +50,7 @@ class WallpapersUseCases(
             val migrationHelper = LegacyWallpaperMigration(
                 storageRootDirectory = storageRootDirectory,
                 settings = context.settings(),
+                selectWallpaper::invoke,
             )
             DefaultInitializeWallpaperUseCase(
                 store = store,
@@ -242,10 +243,14 @@ class WallpapersUseCases(
             Wallpaper.getCurrentWallpaperFromSettings(settings)?.let {
                 store.dispatch(AppAction.WallpaperAction.UpdateCurrentWallpaper(it))
             }
-            val currentWallpaperName = withContext(Dispatchers.IO) { settings.currentWallpaperName }
-            if (settings.shouldMigrateLegacyWallpaper) {
-                migrationHelper.migrateLegacyWallpaper(currentWallpaperName)
+            val currentWallpaperName = if (settings.shouldMigrateLegacyWallpaper) {
+                val migratedWallpaperName =
+                    migrationHelper.migrateLegacyWallpaper(settings.currentWallpaperName)
+                settings.currentWallpaperName = migratedWallpaperName
                 settings.shouldMigrateLegacyWallpaper = false
+                migratedWallpaperName
+            } else {
+                settings.currentWallpaperName
             }
             val possibleWallpapers = metadataFetcher.downloadWallpaperList().filter {
                 !it.isExpired() && it.isAvailableInLocale()

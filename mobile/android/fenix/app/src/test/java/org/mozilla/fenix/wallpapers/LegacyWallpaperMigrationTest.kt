@@ -3,6 +3,7 @@ package org.mozilla.fenix.wallpapers
 import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.coroutines.test.runTest
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -21,6 +22,7 @@ class LegacyWallpaperMigrationTest {
     val tempFolder = TemporaryFolder()
     private lateinit var settings: Settings
     private lateinit var wallpapersFolder: File
+    private lateinit var downloadWallpaper: (Wallpaper) -> Wallpaper.ImageFileState
     private lateinit var migrationHelper: LegacyWallpaperMigration
     private lateinit var portraitLightFolder: File
     private lateinit var portraitDarkFolder: File
@@ -31,9 +33,11 @@ class LegacyWallpaperMigrationTest {
     fun setup() {
         wallpapersFolder = File(tempFolder.root, "wallpapers")
         settings = mockk(relaxed = true)
+        downloadWallpaper = mockk(relaxed = true)
         migrationHelper = LegacyWallpaperMigration(
             storageRootDirectory = tempFolder.root,
             settings = settings,
+            downloadWallpaper,
         )
     }
 
@@ -143,6 +147,57 @@ class LegacyWallpaperMigrationTest {
             verify(exactly = 0) {
                 settings.currentWallpaperTextColor = TURNING_RED_WALLPAPER_TEXT_COLOR.toLong(radix = 16)
             }
+        }
+    }
+
+    @Test
+    fun `WHEN the beach-vibe legacy wallpaper is migrated THEN the legacy wallpapers destination is beach-vibes`() = runTest {
+        val wallpaperName = Wallpaper.beachVibeName
+
+        createAllLegacyFiles(wallpaperName)
+
+        val migratedWallpaperName = migrationHelper.migrateLegacyWallpaper(wallpaperName)
+
+        assertEquals("beach-vibes", migratedWallpaperName)
+        assertTrue(getAllFiles("beach-vibes").all { it.exists() })
+    }
+
+    @Test
+    fun `WHEN a drawable legacy wallpaper is migrated THEN the respective V2 wallpaper is downloaded`() = runTest {
+        var migratedWallpaperName = migrationHelper.migrateLegacyWallpaper(Wallpaper.ceruleanName)
+
+        assertEquals(Wallpaper.ceruleanName, migratedWallpaperName)
+        verify {
+            downloadWallpaper(
+                withArg {
+                    assertEquals(Wallpaper.ceruleanName, it.name)
+                    assertEquals(Wallpaper.ClassicFirefoxCollection, it.collection)
+                },
+            )
+        }
+
+        migratedWallpaperName = migrationHelper.migrateLegacyWallpaper(Wallpaper.sunriseName)
+
+        assertEquals(Wallpaper.sunriseName, migratedWallpaperName)
+        verify {
+            downloadWallpaper(
+                withArg {
+                    assertEquals(Wallpaper.sunriseName, it.name)
+                    assertEquals(Wallpaper.ClassicFirefoxCollection, it.collection)
+                },
+            )
+        }
+
+        migratedWallpaperName = migrationHelper.migrateLegacyWallpaper(Wallpaper.amethystName)
+
+        assertEquals(Wallpaper.amethystName, migratedWallpaperName)
+        verify {
+            downloadWallpaper(
+                withArg {
+                    assertEquals(Wallpaper.amethystName, it.name)
+                    assertEquals(Wallpaper.ClassicFirefoxCollection, it.collection)
+                },
+            )
         }
     }
 

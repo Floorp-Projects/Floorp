@@ -8,6 +8,10 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import mozilla.components.support.base.log.logger.Logger
 import org.mozilla.fenix.utils.Settings
+import org.mozilla.fenix.wallpapers.Wallpaper.Companion.amethystName
+import org.mozilla.fenix.wallpapers.Wallpaper.Companion.beachVibeName
+import org.mozilla.fenix.wallpapers.Wallpaper.Companion.ceruleanName
+import org.mozilla.fenix.wallpapers.Wallpaper.Companion.sunriseName
 import java.io.File
 import java.io.IOException
 
@@ -16,10 +20,12 @@ import java.io.IOException
  *
  * @property storageRootDirectory The top level app-local storage directory.
  * @property settings Used to update the color of the text shown above wallpapers.
+ * @property downloadWallpaper Function used to download assets for legacy drawable wallpapers.
  */
 class LegacyWallpaperMigration(
     private val storageRootDirectory: File,
     private val settings: Settings,
+    private val downloadWallpaper: suspend (Wallpaper) -> Wallpaper.ImageFileState,
 ) {
     /**
      * Migrate the legacy wallpaper to the new path and delete the remaining legacy files.
@@ -28,7 +34,22 @@ class LegacyWallpaperMigration(
      */
     suspend fun migrateLegacyWallpaper(
         wallpaperName: String,
-    ) = withContext(Dispatchers.IO) {
+    ): String = withContext(Dispatchers.IO) {
+        // For the legacy wallpapers previously stored as drawables,
+        // attempt to download them at startup.
+        when (wallpaperName) {
+            ceruleanName, sunriseName, amethystName -> {
+                downloadWallpaper(
+                    Wallpaper.Default.copy(
+                        name = wallpaperName,
+                        collection = Wallpaper.ClassicFirefoxCollection,
+                        thumbnailFileState = Wallpaper.ImageFileState.Unavailable,
+                        assetsFileState = Wallpaper.ImageFileState.Unavailable,
+                    ),
+                )
+                return@withContext wallpaperName
+            }
+        }
         val legacyPortraitFile =
             File(storageRootDirectory, "wallpapers/portrait/light/$wallpaperName.png")
         val legacyLandscapeFile =
@@ -36,10 +57,16 @@ class LegacyWallpaperMigration(
         // If any of portrait or landscape files of the wallpaper are missing, then we shouldn't
         // migrate it
         if (!legacyLandscapeFile.exists() || !legacyPortraitFile.exists()) {
-            return@withContext
+            return@withContext wallpaperName
+        }
+        // The V2 name for the "beach-vibe" wallpaper is "beach-vibes".
+        val migratedWallpaperName = if (wallpaperName == beachVibeName) {
+            "beach-vibes"
+        } else {
+            wallpaperName
         }
         // Directory where the legacy wallpaper files should be migrated
-        val targetDirectory = "wallpapers/${wallpaperName.lowercase()}"
+        val targetDirectory = "wallpapers/" + migratedWallpaperName.lowercase()
 
         try {
             // Use the portrait file as thumbnail
@@ -75,6 +102,8 @@ class LegacyWallpaperMigration(
         // Delete the remaining legacy files
         File(storageRootDirectory, "wallpapers/portrait").deleteRecursively()
         File(storageRootDirectory, "wallpapers/landscape").deleteRecursively()
+
+        return@withContext migratedWallpaperName
     }
 
     companion object {
