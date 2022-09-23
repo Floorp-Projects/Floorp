@@ -62,14 +62,14 @@ metrics_yamls = (
 # (Firefox Desktop, Firefox for Android, Focus for Android, etc.).
 # Order is lexicographical, enforced by t/c/glean/tests/pytest/test_yaml_indices.py
 gecko_pings = [
-    "toolkit/components/telemetry/pings.yaml",
+    "toolkit/components/glean/pings.yaml",
 ]
 
 # Pings that are sent by Firefox Desktop.
 # Order is lexicographical, enforced by t/c/glean/tests/pytest/test_yaml_indices.py
 firefox_desktop_pings = [
     "browser/components/newtab/pings.yaml",
-    "toolkit/components/glean/pings.yaml",
+    "toolkit/components/telemetry/pings.yaml",
 ]
 
 # Pings that are sent by the Firefox Desktop Background Update Task
