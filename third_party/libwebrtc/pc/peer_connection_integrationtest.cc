@@ -1787,25 +1787,14 @@ TEST_P(PeerConnectionIntegrationTest, IceStatesReachCompletion) {
                  callee()->ice_connection_state(), kDefaultTimeout);
 }
 
-#if !defined(THREAD_SANITIZER)
-// This test provokes TSAN errors. See bugs.webrtc.org/3608
-
 constexpr int kOnlyLocalPorts = cricket::PORTALLOCATOR_DISABLE_STUN |
                                 cricket::PORTALLOCATOR_DISABLE_RELAY |
                                 cricket::PORTALLOCATOR_DISABLE_TCP;
 
 // Use a mock resolver to resolve the hostname back to the original IP on both
 // sides and check that the ICE connection connects.
-// TODO(bugs.webrtc.org/12590): Flaky on Windows and on Linux MSAN.
-#if defined(WEBRTC_WIN)
-#define MAYBE_IceStatesReachCompletionWithRemoteHostname \
-  DISABLED_IceStatesReachCompletionWithRemoteHostname
-#else
-#define MAYBE_IceStatesReachCompletionWithRemoteHostname \
-  IceStatesReachCompletionWithRemoteHostname
-#endif
 TEST_P(PeerConnectionIntegrationTest,
-       MAYBE_IceStatesReachCompletionWithRemoteHostname) {
+       IceStatesReachCompletionWithRemoteHostname) {
   auto caller_resolver_factory =
       std::make_unique<NiceMock<webrtc::MockAsyncResolverFactory>>();
   auto callee_resolver_factory =
@@ -1858,8 +1847,6 @@ TEST_P(PeerConnectionIntegrationTest,
                           webrtc::kIceCandidatePairHostNameHostName));
   DestroyPeerConnections();
 }
-
-#endif  // !defined(THREAD_SANITIZER)
 
 // Test that firewalling the ICE connection causes the clients to identify the
 // disconnected state and then removing the firewall causes them to reconnect.
