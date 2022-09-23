@@ -443,6 +443,7 @@ details[open] > .page-section-header > .twisty {
 
 .page-section-header > .section-description {
   grid-area: desc;
+  margin-block: 4px 8px;
 }
 
 .card-body {
@@ -609,6 +610,7 @@ details[open] > .page-section-header > .twisty {
 
 .closed-tabs-list {
   padding-inline-start: 0;
+  margin-block-start: 8px;
   display: grid;
   grid-template-columns: min-content repeat(5, 1fr) min-content;
   column-gap: 8px;
@@ -714,6 +716,7 @@ details[open] > .page-section-header > .twisty {
 
 .synced-tabs-list {
   padding: 0;
+  margin-block-start: 8px;
   list-style: none;
   display: grid;
   grid-template-columns: 4fr 4fr;
