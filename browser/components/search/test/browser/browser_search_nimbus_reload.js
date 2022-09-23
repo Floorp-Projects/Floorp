@@ -30,7 +30,7 @@ add_task(async function test_engines_reloaded_nimbus() {
   );
   Assert.equal(
     getVariableSpy.callCount,
-    4,
+    2,
     "Called by update function to fetch engines and by ParamPreferenceCache"
   );
   Assert.ok(
