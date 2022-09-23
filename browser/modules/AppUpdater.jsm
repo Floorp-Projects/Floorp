@@ -51,35 +51,51 @@ const PREF_APP_UPDATE_ELEVATE_NEVER = "app.update.elevate.never";
  */
 class AppUpdater {
   constructor() {
-    this._listeners = new Set();
-    XPCOMUtils.defineLazyServiceGetter(
-      this,
-      "aus",
-      "@mozilla.org/updates/update-service;1",
-      "nsIApplicationUpdateService"
-    );
-    XPCOMUtils.defineLazyServiceGetter(
-      this,
-      "checker",
-      "@mozilla.org/updates/update-checker;1",
-      "nsIUpdateChecker"
-    );
-    XPCOMUtils.defineLazyServiceGetter(
-      this,
-      "um",
-      "@mozilla.org/updates/update-manager;1",
-      "nsIUpdateManager"
-    );
-    this.QueryInterface = ChromeUtils.generateQI([
-      "nsIObserver",
-      "nsIProgressEventSink",
-      "nsIRequestObserver",
-      "nsISupportsWeakReference",
-    ]);
-    Services.obs.addObserver(this, "update-swap", /* ownsWeak */ true);
+    try {
+      this._listeners = new Set();
+      XPCOMUtils.defineLazyServiceGetter(
+        this,
+        "aus",
+        "@mozilla.org/updates/update-service;1",
+        "nsIApplicationUpdateService"
+      );
+      XPCOMUtils.defineLazyServiceGetter(
+        this,
+        "checker",
+        "@mozilla.org/updates/update-checker;1",
+        "nsIUpdateChecker"
+      );
+      XPCOMUtils.defineLazyServiceGetter(
+        this,
+        "um",
+        "@mozilla.org/updates/update-manager;1",
+        "nsIUpdateManager"
+      );
+      this.QueryInterface = ChromeUtils.generateQI([
+        "nsIObserver",
+        "nsIProgressEventSink",
+        "nsIRequestObserver",
+        "nsISupportsWeakReference",
+      ]);
+      Services.obs.addObserver(this, "update-swap", /* ownsWeak */ true);
 
-    // This one call observes PREF_APP_UPDATE_LOG and PREF_APP_UPDATE_LOG_FILE
-    Services.prefs.addObserver(PREF_APP_UPDATE_LOG, this);
+      // This one call observes PREF_APP_UPDATE_LOG and PREF_APP_UPDATE_LOG_FILE
+      Services.prefs.addObserver(PREF_APP_UPDATE_LOG, this);
+    } catch (e) {
+      this.onException(e);
+    }
+  }
+
+  onException(exception) {
+    LOG(
+      "AppUpdater:onException - Exception caught. Setting status INTERNAL_ERROR"
+    );
+    console.error(exception);
+    try {
+      this._setStatus(AppUpdater.STATUS.INTERNAL_ERROR);
+    } catch (e) {
+      console.error(e);
+    }
   }
 
   /**
@@ -88,57 +104,61 @@ class AppUpdater {
    * listeners are called.
    */
   check() {
-    if (!AppConstants.MOZ_UPDATER || this.updateDisabledByPackage) {
-      LOG(
-        "AppUpdater:check -" +
-          "AppConstants.MOZ_UPDATER=" +
-          AppConstants.MOZ_UPDATER +
-          "this.updateDisabledByPackage: " +
-          this.updateDisabledByPackage
-      );
-      this._setStatus(AppUpdater.STATUS.NO_UPDATER);
-      return;
+    try {
+      if (!AppConstants.MOZ_UPDATER || this.updateDisabledByPackage) {
+        LOG(
+          "AppUpdater:check -" +
+            "AppConstants.MOZ_UPDATER=" +
+            AppConstants.MOZ_UPDATER +
+            "this.updateDisabledByPackage: " +
+            this.updateDisabledByPackage
+        );
+        this._setStatus(AppUpdater.STATUS.NO_UPDATER);
+        return;
+      }
+
+      if (this.updateDisabledByPolicy) {
+        LOG("AppUpdater:check - this.updateDisabledByPolicy");
+        this._setStatus(AppUpdater.STATUS.UPDATE_DISABLED_BY_POLICY);
+        return;
+      }
+
+      if (this.isReadyForRestart) {
+        LOG("AppUpdater:check - this.isReadyForRestart");
+        this._setStatus(AppUpdater.STATUS.READY_FOR_RESTART);
+        return;
+      }
+
+      if (this.aus.isOtherInstanceHandlingUpdates) {
+        LOG("AppUpdater:check - this.aus.isOtherInstanceHandlingUpdates");
+        this._setStatus(AppUpdater.STATUS.OTHER_INSTANCE_HANDLING_UPDATES);
+        return;
+      }
+
+      if (this.isDownloading) {
+        LOG("AppUpdater:check - this.isDownloading");
+        this.startDownload();
+        return;
+      }
+
+      if (this.isStaging) {
+        LOG("AppUpdater:check - this.isStaging");
+        this._waitForUpdateToStage();
+        return;
+      }
+
+      // We might need this value later, so start loading it from the disk now.
+      this.promiseAutoUpdateSetting = lazy.UpdateUtils.getAppUpdateAutoEnabled();
+
+      // That leaves the options
+      // "Check for updates, but let me choose whether to install them", and
+      // "Automatically install updates".
+      // In both cases, we check for updates without asking.
+      // In the "let me choose" case, we ask before downloading though, in onCheckComplete.
+      this.checkForUpdates();
+    } catch (e) {
+      this.onException(e);
     }
-
-    if (this.updateDisabledByPolicy) {
-      LOG("AppUpdater:check - this.updateDisabledByPolicy");
-      this._setStatus(AppUpdater.STATUS.UPDATE_DISABLED_BY_POLICY);
-      return;
-    }
-
-    if (this.isReadyForRestart) {
-      LOG("AppUpdater:check - this.isReadyForRestart");
-      this._setStatus(AppUpdater.STATUS.READY_FOR_RESTART);
-      return;
-    }
-
-    if (this.aus.isOtherInstanceHandlingUpdates) {
-      LOG("AppUpdater:check - this.aus.isOtherInstanceHandlingUpdates");
-      this._setStatus(AppUpdater.STATUS.OTHER_INSTANCE_HANDLING_UPDATES);
-      return;
-    }
-
-    if (this.isDownloading) {
-      LOG("AppUpdater:check - this.isDownloading");
-      this.startDownload();
-      return;
-    }
-
-    if (this.isStaging) {
-      LOG("AppUpdater:check - this.isStaging");
-      this._waitForUpdateToStage();
-      return;
-    }
-
-    // We might need this value later, so start loading it from the disk now.
-    this.promiseAutoUpdateSetting = lazy.UpdateUtils.getAppUpdateAutoEnabled();
-
-    // That leaves the options
-    // "Check for updates, but let me choose whether to install them", and
-    // "Automatically install updates".
-    // In both cases, we check for updates without asking.
-    // In the "let me choose" case, we ask before downloading though, in onCheckComplete.
-    this.checkForUpdates();
   }
 
   // true when there is an update ready to be applied on restart or staged.
