@@ -35,10 +35,11 @@ const int TaskQueuePacedSender::kNoPacketHoldback = -1;
 TaskQueuePacedSender::SlackedPacerFlags::SlackedPacerFlags(
     const FieldTrialsView& field_trials)
     : allow_low_precision("Enabled"),
-      max_low_precision_expected_queue_time("max_queue_time") {
-  ParseFieldTrial(
-      {&allow_low_precision, &max_low_precision_expected_queue_time},
-      field_trials.Lookup(kSlackedTaskQueuePacedSenderFieldTrial));
+      max_low_precision_expected_queue_time("max_queue_time"),
+      send_burst_interval("send_burst_interval") {
+  ParseFieldTrial({&allow_low_precision, &max_low_precision_expected_queue_time,
+                   &send_burst_interval},
+                  field_trials.Lookup(kSlackedTaskQueuePacedSenderFieldTrial));
 }
 
 TaskQueuePacedSender::TaskQueuePacedSender(
@@ -66,6 +67,11 @@ TaskQueuePacedSender::TaskQueuePacedSender(
           "TaskQueuePacedSender",
           TaskQueueFactory::Priority::NORMAL)) {
   RTC_DCHECK_GE(max_hold_back_window_, PacingController::kMinSleepTime);
+  if (slacked_pacer_flags_.allow_low_precision &&
+      slacked_pacer_flags_.send_burst_interval) {
+    pacing_controller_.SetSendBurstInterval(
+        slacked_pacer_flags_.send_burst_interval.Value());
+  }
 }
 
 TaskQueuePacedSender::~TaskQueuePacedSender() {

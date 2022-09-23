@@ -141,10 +141,14 @@ class TaskQueuePacedSender : public RtpPacketPacer, public RtpPacketSender {
     // implementation supports slack. When probing, high precision is used
     // regardless to ensure good bandwidth estimation.
     FieldTrialFlag allow_low_precision;
-    // Controlled via the "max_queue_time" experiment arm. If set, uses high
-    // precision scheduling of MaybeProcessPackets() whenever the expected queue
-    // time is greater than or equal to this value.
+    // Controlled via the "max_queue_time" experiment argument. If set, uses
+    // high precision scheduling of MaybeProcessPackets() whenever the expected
+    // queue time is greater than or equal to this value.
     FieldTrialOptional<TimeDelta> max_low_precision_expected_queue_time;
+    // Controlled via "send_burst_interval" experiment argument. If set, the
+    // pacer is allowed to build up a packet "debt" that correspond to
+    // approximately the send rate during the specified interval.
+    FieldTrialOptional<TimeDelta> send_burst_interval;
   };
   const SlackedPacerFlags slacked_pacer_flags_;
   // The holdback window prevents too frequent delayed MaybeProcessPackets()
