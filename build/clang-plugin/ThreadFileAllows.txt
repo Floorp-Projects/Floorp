@@ -1,18 +1,23 @@
 # This file is ingested by `ThreadAllows.py` to produce a list of files which
 # our clang plugin will allow to use `NS_NewNamedThread`.
 #
-# Note that this file contains a list of _files_, not _paths_.
+# Files may be specified with any number of slash-separated path-elements; all
+# provided path-elements must match. (Because we often move and/or symlink
+# header files, this means headers will usually have no path-elements.)
+#
+# Note that this file contains a list of _files_, not _paths_. The clang plugin
+# has no notion of $TOPSRCDIR.
 
 ######
 # Release files
 
 # declaration and definition of `NS_NewNamedThread`
 nsThreadUtils.h
-nsThreadUtils.cpp
+xpcom/threads/nsThreadUtils.cpp
 
 # Thread-pools are permitted to make dynamically many threads, using dynamic
 # thread names with explicit numbering.
-nsThreadPool.cpp
+xpcom/threads/nsThreadPool.cpp
 
 ######
 # Unsorted files
@@ -20,7 +25,8 @@ nsThreadPool.cpp
 # Files below this point are grandfathered in. Please do not add new files to
 # this list -- and please remove any that you can, whether by documenting and
 # moving them or by confirming that they are no longer required.
-ActorsParent.cpp
+dom/indexedDB/ActorsParent.cpp
+dom/quota/ActorsParent.cpp
 DecodePool.cpp
 GeckoChildProcessHost.cpp
 LazyIdleThread.cpp
