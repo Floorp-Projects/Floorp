@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:tools="http://schemas.android.com/tools">
     <!-- Description for privacy add-on permission. -->
-    <string name="mozac_feature_addons_permissions_privacy_description">රහස්‍යතා සැකසුම් කියවන්න හා සංශෝධනය</string>
+    <string name="mozac_feature_addons_permissions_privacy_description">රහස්‍යතා සැකසුම් කියවීම හා සංශෝධනය</string>
     <!-- Description for all_urls add-on permission. -->
     <string name="mozac_feature_addons_permissions_all_urls_description">සියළු අඩවි සඳහා ඔබගේ දත්ත වෙත ප්‍රවේශය</string>
     <!-- Description for giving an add-on access to users's data on one site. %1$s  will be replaced by the DNS host name for which a web extension is requesting access (e.g., www.mozilla.org). -->
@@ -25,7 +25,7 @@
     <!-- Description for tabs add-on permission. -->
     <string name="mozac_feature_addons_permissions_tabs_description">අතිරික්සුවේ පටිති වෙත ප්‍රවේශය</string>
     <!-- Description for unlimited_storage permission. -->
-    <string name="mozac_feature_addons_permissions_unlimited_storage_description">අනුග්‍රාහ-පාර්ශ්ව දත්ත අසීමිතව ගබඩා කිරීම</string>
+    <string name="mozac_feature_addons_permissions_unlimited_storage_description">අනුග්‍රාහක-පාර්ශ්ව දත්ත අසීමිතව ගබඩා කිරීම</string>
     <!-- Description for navigation permission. -->
     <string name="mozac_feature_addons_permissions_web_navigation_description">යාත්‍රණය අතරතුර අතිරික්සු ක්‍රියාකාරකම් වෙත ප්‍රවේශය</string>
     <!-- Description for bookmarks permission. -->
@@ -35,17 +35,17 @@
     <!-- Description for browser_data permission. -->
     <string name="mozac_feature_addons_permissions_browser_data_description">මෑත පිරික්සුම් ඉතිහාසය, දත්තකඩ හා ආශ්‍රිත දත්ත මැකීම</string>
     <!-- Description for clipboard_read permission. -->
-    <string name="mozac_feature_addons_permissions_clipboard_read_description">පසුරු පුවරුවෙන් දත්ත ගන්න</string>
+    <string name="mozac_feature_addons_permissions_clipboard_read_description">පසුරු පුවරුවෙන් දත්ත ගැනීම</string>
     <!-- Description for clipboard_write permission. -->
     <string name="mozac_feature_addons_permissions_clipboard_write_description">පසුරු පුවරුවට දත්ත ආදාන කරන්න</string>
     <!-- Description for declarativeNetRequest permission. -->
     <string name="mozac_feature_addons_permissions_declarative_net_request_description">ඕනෑම පිටුවක අන්තර්ගත අවහිරය</string>
     <!-- Description for downloads permission. -->
-    <string name="mozac_feature_addons_permissions_downloads_description">ගොනු බාගන්න සහ අතිරික්සුවේ බාගැනීම් ඉතිහාසය කියවන්න, වෙනස් කරන්න</string>
+    <string name="mozac_feature_addons_permissions_downloads_description">ගොනු බාගැනීම සහ අතිරික්සුවේ බාගැනීම් ඉතිහාසය කියවීම, වෙනස් කිරීම</string>
     <!-- Description for downloads_open permission. -->
-    <string name="mozac_feature_addons_permissions_downloads_open_description">ඔබගේ පරිගණකයට බාගත වූ ගොනු අරින්න</string>
+    <string name="mozac_feature_addons_permissions_downloads_open_description">ඔබගේ පරිගණකයට බාගත වූ ගොනු ඇරීම</string>
     <!-- Description for find permission. -->
-    <string name="mozac_feature_addons_permissions_find_description">සියළුම විවෘත පටිතිවල පෙළ කියවන්න</string>
+    <string name="mozac_feature_addons_permissions_find_description">සියළුම විවෘත පටිතිවල පෙළ කියවීම</string>
     <!-- Description for geolocation permission. -->
     <string name="mozac_feature_addons_permissions_geolocation_description">ඔබගේ ස්ථානයට ප්‍රවේශය</string>
     <!-- Description for history permission. -->
@@ -61,7 +61,7 @@
     <!-- Description for sessions permission. -->
     <string name="mozac_feature_addons_permissions_sessions_description">මෑත දී වසා දැමූ පටිති වෙත ප්‍රවේශය</string>
     <!-- Description for tab_hide permission. -->
-    <string name="mozac_feature_addons_permissions_tab_hide_description">අතිරික්සුවේ පටිති සඟවන්න හා පෙන්වන්න</string>
+    <string name="mozac_feature_addons_permissions_tab_hide_description">අතිරික්සුවේ පටිති සැඟවීම හා පෙන්වීම</string>
     <!-- Description for top_sites permission. -->
     <string name="mozac_feature_addons_permissions_top_sites_description">පිරික්සුම් ඉතිහාසයට ප්‍රවේශය</string>
     <!-- Description for devtools permission. -->
