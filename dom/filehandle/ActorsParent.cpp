@@ -1165,7 +1165,7 @@ already_AddRefed<nsISupports> BackgroundMutableFileParentBase::CreateStream(
     return stream.forget();
   }
 
-  nsCOMPtr<nsIFileStream> stream;
+  nsCOMPtr<nsIRandomAccessStream> stream;
   rv = NS_NewLocalFileStream(getter_AddRefs(stream), mFile, -1, -1,
                              nsIFileStream::DEFER_OPEN);
   if (NS_WARN_IF(NS_FAILED(rv))) {

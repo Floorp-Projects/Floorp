@@ -876,8 +876,29 @@ nsresult nsFileStream::Create(REFNSIID aIID, void** aResult) {
   return stream->QueryInterface(aIID, aResult);
 }
 
-NS_IMPL_ISUPPORTS_INHERITED(nsFileStream, nsFileStreamBase, nsIInputStream,
-                            nsIOutputStream, nsIFileStream)
+NS_IMPL_ISUPPORTS_INHERITED(nsFileStream, nsFileStreamBase,
+                            nsIRandomAccessStream, nsIFileStream,
+                            nsIInputStream, nsIOutputStream)
+
+NS_IMETHODIMP
+nsFileStream::GetInputStream(nsIInputStream** aInputStream) {
+  nsCOMPtr<nsIInputStream> inputStream(this);
+
+  inputStream.forget(aInputStream);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFileStream::GetOutputStream(nsIOutputStream** aOutputStream) {
+  nsCOMPtr<nsIOutputStream> outputStream(this);
+
+  outputStream.forget(aOutputStream);
+  return NS_OK;
+}
+
+nsIInputStream* nsFileStream::InputStream() { return this; }
+
+nsIOutputStream* nsFileStream::OutputStream() { return this; }
 
 NS_IMETHODIMP
 nsFileStream::Init(nsIFile* file, int32_t ioFlags, int32_t perm,

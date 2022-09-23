@@ -49,6 +49,7 @@ class nsIOutputStream;
 class nsIParentChannel;
 class nsIPersistentProperties;
 class nsIProxyInfo;
+class nsIRandomAccessStream;
 class nsIRequestObserver;
 class nsIStreamListener;
 class nsIStreamLoader;
@@ -513,13 +514,13 @@ nsresult NS_NewSafeLocalFileOutputStream(nsIOutputStream** result,
                                          int32_t perm = -1,
                                          int32_t behaviorFlags = 0);
 
-nsresult NS_NewLocalFileStream(nsIFileStream** result, nsIFile* file,
+nsresult NS_NewLocalFileStream(nsIRandomAccessStream** result, nsIFile* file,
                                int32_t ioFlags = -1, int32_t perm = -1,
                                int32_t behaviorFlags = 0);
 
-mozilla::Result<nsCOMPtr<nsIFileStream>, nsresult> NS_NewLocalFileStream(
-    nsIFile* file, int32_t ioFlags = -1, int32_t perm = -1,
-    int32_t behaviorFlags = 0);
+mozilla::Result<nsCOMPtr<nsIRandomAccessStream>, nsresult>
+NS_NewLocalFileStream(nsIFile* file, int32_t ioFlags = -1, int32_t perm = -1,
+                      int32_t behaviorFlags = 0);
 
 [[nodiscard]] nsresult NS_NewBufferedInputStream(
     nsIInputStream** aResult, already_AddRefed<nsIInputStream> aInputStream,

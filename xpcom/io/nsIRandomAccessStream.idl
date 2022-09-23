@@ -1,0 +1,48 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+#include "nsISeekableStream.idl"
+
+interface nsIInputStream;
+interface nsIOutputStream;
+
+/**
+ * nsIRandomAccessStream
+ *
+ * An interface which supports both reading and writing to a storage starting
+ * at the current offset. Both the input stream and the output stream share the
+ * offset in the stream. Read operations invoked on the input stream start at
+ * the offset and advance it past the bytes read. Write operations invoked on
+ * the output stream start the offset and advance it past the bytes written.
+ * The offset can be set to an arbitrary value prior reading or writting. Each
+ * call to getInputStream or getOutputStream always returns the same object,
+ * rather than creating a new stream. It's recommended for objects implementing
+ * this interface to also implement nsIInputStream and nsIOutputStream, so they
+ * can be easilly used with e.g. NS_AsyncCopy.
+ */
+[scriptable, builtinclass, uuid(9b5904a8-886a-420f-a1d8-847de8ffc133)]
+interface nsIRandomAccessStream : nsISeekableStream
+{
+  /**
+   * This method always returns the same object.
+   */
+  nsIInputStream getInputStream();
+
+  /**
+   * This method always returns the same object.
+   */
+  nsIOutputStream getOutputStream();
+
+  /**
+   * Like getInputStream but infallible.
+   */
+  [notxpcom, nostdcall] nsIInputStream inputStream();
+
+  /**
+   * Like getOutputStream but infallible.
+   */
+  [notxpcom, nostdcall] nsIOutputStream outputStream();
+};

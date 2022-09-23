@@ -12,6 +12,7 @@
 #include "nsICloneableInputStream.h"
 #include "nsIInputStream.h"
 #include "nsIOutputStream.h"
+#include "nsIRandomAccessStream.h"
 #include "nsISafeOutputStream.h"
 #include "nsISeekableStream.h"
 #include "nsILineInputStream.h"
@@ -251,13 +252,16 @@ class nsSafeFileOutputStream : public nsAtomicFileOutputStream {
 ////////////////////////////////////////////////////////////////////////////////
 
 class nsFileStream : public nsFileStreamBase,
+                     public nsIFileStream,
                      public nsIInputStream,
-                     public nsIOutputStream,
-                     public nsIFileStream {
+                     public nsIOutputStream {
  public:
   static nsresult Create(REFNSIID aIID, void** aResult);
 
   NS_DECL_ISUPPORTS_INHERITED
+  NS_FORWARD_NSITELLABLESTREAM(nsFileStreamBase::)
+  NS_FORWARD_NSISEEKABLESTREAM(nsFileStreamBase::)
+  NS_DECL_NSIRANDOMACCESSSTREAM
   NS_DECL_NSIFILESTREAM
   NS_FORWARD_NSIINPUTSTREAM(nsFileStreamBase::)
 
