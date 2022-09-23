@@ -9,6 +9,16 @@ REPO_PATH="/tmp/git/$REPO_NAME_TO_SYNC"
 REPO_BRANCH_NAME='firefox-android'
 TAG_PREFIX='components-'
 MONOREPO_URL='git@github.com:mozilla-mobile/firefox-android.git'
+MERGE_COMMIT_MESSAGE=$(cat <<EOF
+Merge https://github.com/mozilla-mobile/$REPO_NAME_TO_SYNC repository
+
+The history was slightly altered before merging it:
+  * All files from $REPO_NAME_TO_SYNC are now under its own subdirectory
+  * All commits messages were rewritten to link issues and pull requests to the former repository
+  * All commits messages were prefixed with [components]
+  * All tags were were prefixed with $TAG_PREFIX
+EOF
+)
 
 EXPRESSIONS_FILE_PATH="$SCRIPT_DIR/data/message-expressions.txt"
 
@@ -52,7 +62,7 @@ function _update_repo_numbers() {
 
 function _rewrite_git_history() {
     git filter-repo \
-        --to-subdirectory-filter 'android-components/' \
+        --to-subdirectory-filter "$REPO_NAME_TO_SYNC/" \
         --replace-message "$EXPRESSIONS_FILE_PATH" \
         --tag-rename '':"$TAG_PREFIX" \
         --force
@@ -67,7 +77,8 @@ function _remove_old_tags() {
 
 function _merge_histories() {
     cd "$SCRIPT_DIR"
-    git pull --tags --allow-unrelated-histories --no-rebase --force "$REPO_PATH"
+    git pull --no-edit --tags --allow-unrelated-histories --no-rebase --force "$REPO_PATH"
+    git commit --amend --message "$MERGE_COMMIT_MESSAGE"
 }
 
 function _clean_up_temporary_repo() {
