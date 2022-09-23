@@ -9,7 +9,7 @@ taskgraph/generator.py,sha256=ZfSb8dek6tQRxfpHbvQP2KMxXFzmhqwN821tOlNcvzo,15118
 taskgraph/graph.py,sha256=9tE3bSSBRHvRLgJzK4dTieGT3RrzQZdR1YbKizEhzlw,4667
 taskgraph/main.py,sha256=E7dC1q14L4psrNfUe-PMC8QH4cYjsIs91I-aVmzeBaI,23551
 taskgraph/morph.py,sha256=8qxYdruEQkbHGqv7dh3e1OWhH9Y5i6bFUKzDMs-Ctnw,9625
-taskgraph/parameters.py,sha256=Ke-07fA2Qcynzbp-wfmO-VnQ4BGF9inr0hsrC5iyL-8,11792
+taskgraph/parameters.py,sha256=8556WayG8J-3w_DZTjF--VKd7Czuaxng1Zl3Cvdz5eg,11644
 taskgraph/target_tasks.py,sha256=41BIVwiATy8DCQujPduTtnFmgHlKOfw6RPGL4b20WO8,3324
 taskgraph/task.py,sha256=QCrOzMaTsy5QHShKUo89XgjJVMl3cSZGZJPLuHCXItE,3132
 taskgraph/taskgraph.py,sha256=tfj0ZMqjuwEQDET0W57EcP-_KBEbqkxJci9Z6DkeOEQ,2397
@@ -66,9 +66,9 @@ taskgraph/util/vcs.py,sha256=i13idS8y9ooR216mnd1gksdjSgHBNlAZEdq7Xr-ROwE,18536
 taskgraph/util/verify.py,sha256=YETuZVkwnfYe57GRPx2x_vedstgqdGiH46HLWAdcks8,8827
 taskgraph/util/workertypes.py,sha256=5g2mgIbEKMzDpZNnmPMoMNyy7Wahi-jmWcV1amDAcPo,2341
 taskgraph/util/yaml.py,sha256=hfKI_D8Q7dimq4_VvO3WEh8CJsTrsIMwN6set7HIQbY,990
-taskcluster_taskgraph-3.2.0.dist-info/LICENSE,sha256=HyVuytGSiAUQ6ErWBHTqt1iSGHhLmlC8fO7jTCuR8dU,16725
-taskcluster_taskgraph-3.2.0.dist-info/METADATA,sha256=UDpk6d8wAiYmub9zhzF6H5uMIQ4JA91IeeLiZGQw0ls,1050
-taskcluster_taskgraph-3.2.0.dist-info/WHEEL,sha256=G16H4A3IeoQmnOrYV4ueZGKSjhipXx8zc8nu9FGlvMA,92
-taskcluster_taskgraph-3.2.0.dist-info/entry_points.txt,sha256=VoXNtZpN4LvyXYB1wq47AU9CO-DMYMJ0VktKxjugzbY,51
-taskcluster_taskgraph-3.2.0.dist-info/top_level.txt,sha256=3JNeYn_hNiNXC7DrdH_vcv-WYSE7QdgGjdvUYvSjVp0,10
-taskcluster_taskgraph-3.2.0.dist-info/RECORD,,
+taskcluster_taskgraph-3.2.1.dist-info/LICENSE,sha256=HyVuytGSiAUQ6ErWBHTqt1iSGHhLmlC8fO7jTCuR8dU,16725
+taskcluster_taskgraph-3.2.1.dist-info/METADATA,sha256=ahNDmBrUgn48sWk5gx2bq4WMRmnUlDkC_E-wXC6Yglg,1050
+taskcluster_taskgraph-3.2.1.dist-info/WHEEL,sha256=G16H4A3IeoQmnOrYV4ueZGKSjhipXx8zc8nu9FGlvMA,92
+taskcluster_taskgraph-3.2.1.dist-info/entry_points.txt,sha256=VoXNtZpN4LvyXYB1wq47AU9CO-DMYMJ0VktKxjugzbY,51
+taskcluster_taskgraph-3.2.1.dist-info/top_level.txt,sha256=3JNeYn_hNiNXC7DrdH_vcv-WYSE7QdgGjdvUYvSjVp0,10
+taskcluster_taskgraph-3.2.1.dist-info/RECORD,,
