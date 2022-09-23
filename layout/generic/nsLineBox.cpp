@@ -174,21 +174,14 @@ void nsLineBox::Cleanup() {
 
 #ifdef DEBUG_FRAME_DUMP
 static void ListFloats(FILE* out, const char* aPrefix,
-                       const nsFloatCacheList& aFloats) {
-  nsFloatCache* fc = aFloats.Head();
-  while (fc) {
+                       const nsTArray<nsIFrame*>& aFloats) {
+  for (nsIFrame* f : aFloats) {
     nsCString str(aPrefix);
-    nsIFrame* frame = fc->mFloat;
-    str += nsPrintfCString("floatframe@%p ", static_cast<void*>(frame));
-    if (frame) {
-      nsAutoString frameName;
-      frame->GetFrameName(frameName);
-      str += NS_ConvertUTF16toUTF8(frameName).get();
-    } else {
-      str += "\n###!!! NULL out-of-flow frame";
-    }
+    str += nsPrintfCString("floatframe@%p ", static_cast<void*>(f));
+    nsAutoString frameName;
+    f->GetFrameName(frameName);
+    str += NS_ConvertUTF16toUTF8(frameName).get();
     fprintf_stderr(out, "%s\n", str.get());
-    fc = fc->Next();
   }
 }
 
@@ -461,44 +454,36 @@ void nsLineBox::MaybeFreeData() {
   }
 }
 
-// XXX get rid of this???
-nsFloatCache* nsLineBox::GetFirstFloat() {
-  MOZ_ASSERT(IsInline(), "block line can't have floats");
-  return mInlineData ? mInlineData->mFloats.Head() : nullptr;
-}
-
-// XXX this might be too eager to free memory
-void nsLineBox::FreeFloats(nsFloatCacheFreeList& aFreeList) {
+void nsLineBox::ClearFloats() {
   MOZ_ASSERT(IsInline(), "block line can't have floats");
   if (IsInline() && mInlineData) {
-    if (mInlineData->mFloats.NotEmpty()) {
-      aFreeList.Append(mInlineData->mFloats);
-    }
+    mInlineData->mFloats.Clear();
     MaybeFreeData();
   }
 }
 
-void nsLineBox::AppendFloats(nsFloatCacheFreeList& aFreeList) {
+void nsLineBox::AppendFloats(nsTArray<nsIFrame*>&& aFloats) {
   MOZ_ASSERT(IsInline(), "block line can't have floats");
-  if (IsInline()) {
-    if (aFreeList.NotEmpty()) {
-      if (!mInlineData) {
-        mInlineData = new ExtraInlineData(GetPhysicalBounds());
-      }
-      mInlineData->mFloats.Append(aFreeList);
+  if (MOZ_UNLIKELY(!IsInline())) {
+    return;
+  }
+  if (!aFloats.IsEmpty()) {
+    if (mInlineData) {
+      mInlineData->mFloats.AppendElements(std::move(aFloats));
+    } else {
+      mInlineData = new ExtraInlineData(GetPhysicalBounds());
+      mInlineData->mFloats = std::move(aFloats);
     }
   }
 }
 
 bool nsLineBox::RemoveFloat(nsIFrame* aFrame) {
   MOZ_ASSERT(IsInline(), "block line can't have floats");
+  MOZ_ASSERT(aFrame);
   if (IsInline() && mInlineData) {
-    nsFloatCache* fc = mInlineData->mFloats.Find(aFrame);
-    if (fc) {
+    if (mInlineData->mFloats.RemoveElement(aFrame)) {
       // Note: the placeholder is part of the line's child list
       // and will be removed later.
-      mInlineData->mFloats.Remove(fc);
-      delete fc;
       MaybeFreeData();
       return true;
     }

@@ -394,11 +394,15 @@ class nsLineBox final : public nsLineLink {
 
   // mFloats
   bool HasFloats() const {
-    return (IsInline() && mInlineData) && mInlineData->mFloats.NotEmpty();
+    return (IsInline() && mInlineData) && !mInlineData->mFloats.IsEmpty();
   }
-  nsFloatCache* GetFirstFloat();
-  void FreeFloats(nsFloatCacheFreeList& aFreeList);
-  void AppendFloats(nsFloatCacheFreeList& aFreeList);
+  const nsTArray<nsIFrame*>& Floats() const {
+    MOZ_ASSERT(HasFloats());
+    return mInlineData->mFloats;
+  }
+  // Append aFloats to mFloat. aFloats will be empty.
+  void AppendFloats(nsTArray<nsIFrame*>&& aFloats);
+  void ClearFloats();
   bool RemoveFloat(nsIFrame* aFrame);
 
   // The ink overflow area should never be used for things that affect layout.
@@ -651,7 +655,7 @@ class nsLineBox final : public nsLineLink {
           mFloatEdgeIEnd(nscoord_MIN) {}
     nscoord mFloatEdgeIStart;
     nscoord mFloatEdgeIEnd;
-    nsFloatCacheList mFloats;
+    nsTArray<nsIFrame*> mFloats;
   };
 
   bool GetFloatEdges(nscoord* aStart, nscoord* aEnd) const {

@@ -447,9 +447,7 @@ void BlockReflowState::RecoverFloats(nsLineList::iterator aLine,
   if (aLine->HasFloats()) {
     // Place the floats into the float manager again. Also slide
     // them, just like the regular frames on the line.
-    nsFloatCache* fc = aLine->GetFirstFloat();
-    while (fc) {
-      nsIFrame* floatFrame = fc->mFloat;
+    for (nsIFrame* floatFrame : aLine->Floats()) {
       if (aDeltaBCoord != 0) {
         floatFrame->MovePositionBy(nsPoint(0, aDeltaBCoord));
         nsContainerFrame::PositionFrameView(floatFrame);
@@ -474,7 +472,6 @@ void BlockReflowState::RecoverFloats(nsLineList::iterator aLine,
           floatFrame,
           nsFloatManager::GetRegionFor(wm, floatFrame, ContainerSize()), wm,
           ContainerSize());
-      fc = fc->Next();
     }
   } else if (aLine->IsBlock()) {
     nsBlockFrame::RecoverFloatsFor(aLine->mFirstChild, *FloatManager(), wm,
@@ -599,7 +596,7 @@ bool BlockReflowState::AddFloat(nsLineLayout* aLineLayout, nsIFrame* aFloat,
                              floatAvailSpace.mRect.BSize(wm));
       aLineLayout->UpdateBand(wm, availSpace, aFloat);
       // Record this float in the current-line list
-      mCurrentLineFloats.Append(mFloatCacheFreeList.Alloc(aFloat));
+      mCurrentLineFloats.AppendElement(aFloat);
     } else if (result == PlaceFloatResult::ShouldPlaceInNextContinuation) {
       (*aLineLayout->GetLine())->SetHadFloatPushed();
     } else {
@@ -616,7 +613,7 @@ bool BlockReflowState::AddFloat(nsLineLayout* aLineLayout, nsIFrame* aFloat,
     placed = true;
     // This float will be placed after the line is done (it is a
     // below-current-line float).
-    mBelowCurrentLineFloats.Append(mFloatCacheFreeList.Alloc(aFloat));
+    mBelowCurrentLineFloats.AppendElement(aFloat);
   }
 
   // Restore coordinate system
@@ -1013,30 +1010,31 @@ void BlockReflowState::PushFloatPastBreak(nsIFrame* aFloat) {
  * Place below-current-line floats.
  */
 void BlockReflowState::PlaceBelowCurrentLineFloats(nsLineBox* aLine) {
-  MOZ_ASSERT(mBelowCurrentLineFloats.NotEmpty());
-  nsFloatCache* fc = mBelowCurrentLineFloats.Head();
-  while (fc) {
+  MOZ_ASSERT(!mBelowCurrentLineFloats.IsEmpty());
+  nsTArray<nsIFrame*> floatsPlacedInLine;
+  for (nsIFrame* f : mBelowCurrentLineFloats) {
 #ifdef DEBUG
     if (nsBlockFrame::gNoisyReflow) {
       nsIFrame::IndentBy(stdout, nsBlockFrame::gNoiseIndent);
       printf("placing bcl float: ");
-      fc->mFloat->ListTag(stdout);
+      f->ListTag(stdout);
       printf("\n");
     }
 #endif
     // Place the float
-    PlaceFloatResult result = FlowAndPlaceFloat(fc->mFloat);
+    PlaceFloatResult result = FlowAndPlaceFloat(f);
     MOZ_ASSERT(result != PlaceFloatResult::ShouldPlaceBelowCurrentLine,
                "We are already dealing with below current line floats!");
-    nsFloatCache* next = fc->Next();
-    if (result == PlaceFloatResult::ShouldPlaceInNextContinuation) {
-      mBelowCurrentLineFloats.Remove(fc);
-      delete fc;
-      aLine->SetHadFloatPushed();
+    if (result == PlaceFloatResult::Placed) {
+      floatsPlacedInLine.AppendElement(f);
     }
-    fc = next;
   }
-  aLine->AppendFloats(mBelowCurrentLineFloats);
+  if (floatsPlacedInLine.Length() != mBelowCurrentLineFloats.Length()) {
+    // We have some floats having ShouldPlaceInNextContinuation result.
+    aLine->SetHadFloatPushed();
+  }
+  aLine->AppendFloats(std::move(floatsPlacedInLine));
+  mBelowCurrentLineFloats.Clear();
 }
 
 std::tuple<nscoord, BlockReflowState::ClearFloatsResult>

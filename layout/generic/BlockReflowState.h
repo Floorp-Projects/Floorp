@@ -350,8 +350,6 @@ class BlockReflowState {
   // The overflow areas of all floats placed so far
   OverflowAreas mFloatOverflowAreas;
 
-  nsFloatCacheFreeList mFloatCacheFreeList;
-
   // Previous child. This is used when pulling up a frame to update
   // the sibling list.
   nsIFrame* mPrevChild;
@@ -373,13 +371,13 @@ class BlockReflowState {
   // The list of floats that are "current-line" floats. These are
   // added to the line after the line has been reflowed, to keep the
   // list fiddling from being N^2.
-  nsFloatCacheFreeList mCurrentLineFloats;
+  nsTArray<nsIFrame*> mCurrentLineFloats;
 
   // The list of floats which are "below current-line"
   // floats. These are reflowed/placed after the line is reflowed
   // and placed. Again, this is done to keep the list fiddling from
   // being N^2.
-  nsFloatCacheFreeList mBelowCurrentLineFloats;
+  nsTArray<nsIFrame*> mBelowCurrentLineFloats;
 
   // The list of floats that are waiting on a break opportunity in order to be
   // placed, since we're on a nowrap context.
