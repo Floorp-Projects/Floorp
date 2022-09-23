@@ -42,7 +42,7 @@ static uint32_t ToUnicodeCodePoint(const nsString& aOperator) {
   }
   if (aOperator.Length() == 2 &&
       NS_IS_SURROGATE_PAIR(aOperator[0], aOperator[1])) {
-    SURROGATE_TO_UCS4(aOperator[0], aOperator[1]);
+    return SURROGATE_TO_UCS4(aOperator[0], aOperator[1]);
   }
   return 0;
 }
@@ -323,14 +323,32 @@ bool nsMathMLOperators::LookupOperator(const nsString& aOperator,
     return false;
   }
 
-  // Ignore the combining "negation" suffix for 2-character strings.
-  // https://w3c.github.io/mathml-core/#dfn-algorithm-to-determine-the-category-of-an-operator
-  if (aOperator.Length() == 2 &&
-      (aOperator[1] == 0x0338 || aOperator[1] == 0x20D2)) {
-    nsAutoString newOperator;
-    newOperator.Append(aOperator[0]);
-    return LookupOperator(newOperator, aForm, aFlags, aLeadingSpace,
-                          aTrailingSpace);
+  if (aOperator.Length() == 2) {
+    // Try and handle Arabic operators.
+    // https://w3c.github.io/mathml-core/#dfn-algorithm-to-determine-the-category-of-an-operator
+    if (auto codePoint = ToUnicodeCodePoint(aOperator)) {
+      if (aForm == NS_MATHML_OPERATOR_FORM_POSTFIX &&
+          (codePoint == 0x1EEF0 || codePoint == 0x1EEF1)) {
+        // Use category I.
+        // https://w3c.github.io/mathml-core/#operator-dictionary-categories-values
+        *aFlags = NS_MATHML_OPERATOR_FORM_POSTFIX |
+                  NS_MATHML_OPERATOR_STRETCHY |
+                  NS_MATHML_OPERATOR_DIRECTION_HORIZONTAL;
+        *aLeadingSpace = 0;
+        *aTrailingSpace = 0;
+        return true;
+      }
+      return false;
+    }
+
+    // Ignore the combining "negation" suffix for 2-character strings.
+    // https://w3c.github.io/mathml-core/#dfn-algorithm-to-determine-the-category-of-an-operator
+    if (aOperator[1] == 0x0338 || aOperator[1] == 0x20D2) {
+      nsAutoString newOperator;
+      newOperator.Append(aOperator[0]);
+      return LookupOperator(newOperator, aForm, aFlags, aLeadingSpace,
+                            aTrailingSpace);
+    }
   }
 
   if (!gGlobalsInitialized) {

@@ -267,6 +267,12 @@ foreach my $entry ($doc->findnodes('/root/entry')) {
     $key = "operator.";
 
     $_ = $entry->getAttribute("unicode");
+
+    # Skip non-BMP Arabic characters that are handled specially.
+    if ($_ == "U1EEF0" || $_ == "U1EEF1") {
+        next;
+    }
+
     $_ = "$_-";
     while (m/^U?0(\w*)-(.*)$/) {
         # Concatenate .\uNNNN
