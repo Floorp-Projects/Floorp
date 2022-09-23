@@ -441,8 +441,20 @@ Maybe<nsRect> RemoteAccessibleBase<Derived>::RetrieveCachedBounds() const {
 template <class Derived>
 void RemoteAccessibleBase<Derived>::ApplyCrossProcOffset(
     nsRect& aBounds) const {
+  Accessible* parentAcc = Parent();
+  if (!parentAcc || !parentAcc->IsRemote() || !parentAcc->IsOuterDoc()) {
+    return;
+  }
+
+  if (!IsDoc() || !AsDoc()->IsOOPIframeDoc()) {
+    // We should only apply cross-proc offsets to OOP iframe documents. If we're
+    // anything else, return early here.
+    return;
+  }
+
   Maybe<const nsTArray<int32_t>&> maybeOffset =
-      mCachedFields->GetAttribute<nsTArray<int32_t>>(nsGkAtoms::crossorigin);
+      parentAcc->AsRemote()->mCachedFields->GetAttribute<nsTArray<int32_t>>(
+          nsGkAtoms::crossorigin);
   if (!maybeOffset) {
     return;
   }
@@ -463,12 +475,38 @@ bool RemoteAccessibleBase<Derived>::ApplyTransform(nsRect& aBounds) const {
   if (!maybeTransform) {
     return false;
   }
-  // The transform matrix we cache is meant to operate on rects
-  // within the coordinate space of the frame to which the
-  // transform is applied (self-relative rects). We cache bounds
-  // relative to some ancestor. Remove the relative offset before
-  // transforming. The transform matrix will add it back in.
-  aBounds.MoveTo(0, 0);
+
+  // Layout does not include translations in transform matricies for iframes.
+  // Because of that, we avoid making aBounds self-relative before transforming
+  // when working with a transform on an iframe. This is true for both in- and
+  // out-of-process iframes.
+  bool isIframe = false;
+  if (IsRemote() && IsOuterDoc()) {
+    Accessible* firstChild = FirstChild();
+    if (firstChild && firstChild->IsRemote() && firstChild->IsDoc()) {
+      const RemoteAccessible* firstChildRemote = firstChild->AsRemote();
+      if (!firstChildRemote->AsDoc()->IsTopLevel()) {
+        isIframe = true;
+      }
+    }
+  }
+
+  if (isIframe) {
+    // We want to maintain the effect of the cross-process offset on the
+    // bounds, but otherwise make the rect self-relative. To accomplish that,
+    // remove the influence of the cached bounds, if any.
+    if (Maybe<nsRect> maybeBounds = RetrieveCachedBounds()) {
+      aBounds.MoveBy(-maybeBounds.value().TopLeft());
+    }
+  } else {
+    // The transform matrix we cache is meant to operate on rects
+    // within the coordinate space of the frame to which the
+    // transform is applied (self-relative rects). We cache bounds
+    // relative to some ancestor. Remove the relative offset before
+    // transforming. The transform matrix will add it back in.
+    aBounds.MoveTo(0, 0);
+  }
+
   auto mtxInPixels = gfx::Matrix4x4Typed<CSSPixel, CSSPixel>::FromUnknownMatrix(
       *(*maybeTransform));
 
@@ -532,11 +570,12 @@ LayoutDeviceIntRect RemoteAccessibleBase<Derived>::BoundsWithOffset(
       bounds.SetRectY(bounds.y + internalRect.y, internalRect.height);
     }
 
+    ApplyCrossProcOffset(bounds);
+
     Unused << ApplyTransform(bounds);
 
     LayoutDeviceIntRect devPxBounds;
     const Accessible* acc = Parent();
-    const RemoteAccessibleBase<Derived>* recentAcc = this;
     while (acc && acc->IsRemote()) {
       RemoteAccessible* remoteAcc = const_cast<Accessible*>(acc)->AsRemote();
 
@@ -561,16 +600,12 @@ LayoutDeviceIntRect RemoteAccessibleBase<Derived>::BoundsWithOffset(
           topDoc = remoteAcc->AsDoc();
         }
 
-        if (remoteAcc->IsOuterDoc()) {
-          if (recentAcc && recentAcc->IsDoc() &&
-              !recentAcc->AsDoc()->IsTopLevel() &&
-              recentAcc->AsDoc()->IsTopLevelInContentProcess()) {
-            // We're unable to account for the document offset of remote,
-            // cross process iframes when computing parent-relative bounds.
-            // Instead we store this value separately and apply it here.
-            remoteAcc->ApplyCrossProcOffset(remoteBounds);
-          }
-        }
+        // We're unable to account for the document offset of remote,
+        // cross process iframes when computing parent-relative bounds.
+        // Instead we store this value separately and apply it here. This
+        // offset is cached on both in - and OOP iframes, but is only applied
+        // to OOP iframes.
+        remoteAcc->ApplyCrossProcOffset(remoteBounds);
 
         // Apply scroll offset, if applicable. Only the contents of an
         // element are affected by its scroll offset, which is why this call
@@ -584,7 +619,6 @@ LayoutDeviceIntRect RemoteAccessibleBase<Derived>::BoundsWithOffset(
         bounds.MoveBy(remoteBounds.X(), remoteBounds.Y());
         Unused << remoteAcc->ApplyTransform(bounds);
       }
-      recentAcc = remoteAcc;
       acc = acc->Parent();
     }
 
