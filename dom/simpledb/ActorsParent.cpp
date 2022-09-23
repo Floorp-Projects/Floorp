@@ -1415,11 +1415,8 @@ nsresult SeekOp::DoDatabaseWork(nsIFileStream* aFileStream) {
   AssertIsOnIOThread();
   MOZ_ASSERT(aFileStream);
 
-  nsCOMPtr<nsISeekableStream> seekableStream = do_QueryInterface(aFileStream);
-  MOZ_ASSERT(seekableStream);
-
   nsresult rv =
-      seekableStream->Seek(nsISeekableStream::NS_SEEK_SET, mParams.offset());
+      aFileStream->Seek(nsISeekableStream::NS_SEEK_SET, mParams.offset());
 
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;

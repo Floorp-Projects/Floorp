@@ -27,6 +27,7 @@ XPIDL_SOURCES += [
     "nsIObjectOutputStream.idl",
     "nsIOutputStream.idl",
     "nsIPipe.idl",
+    "nsIRandomAccessStream.idl",
     "nsISafeOutputStream.idl",
     "nsIScriptableBase64Encoder.idl",
     "nsIScriptableInputStream.idl",

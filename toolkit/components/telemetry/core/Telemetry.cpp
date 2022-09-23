@@ -1952,7 +1952,7 @@ void WriteFailedProfileLock(nsIFile* aProfileDir) {
   if (NS_FAILED(rv) && rv != NS_ERROR_FILE_NOT_FOUND) {
     return;
   }
-  nsCOMPtr<nsIFileStream> fileStream;
+  nsCOMPtr<nsIRandomAccessStream> fileStream;
   rv = NS_NewLocalFileStream(getter_AddRefs(fileStream), file,
                              PR_RDWR | PR_CREATE_FILE, 0640);
   NS_ENSURE_SUCCESS_VOID(rv);
@@ -1968,11 +1968,9 @@ void WriteFailedProfileLock(nsIFile* aProfileDir) {
   ++failedLockCount;
   nsAutoCString bufStr;
   bufStr.AppendInt(static_cast<int>(failedLockCount));
-  nsCOMPtr<nsISeekableStream> seekStream = do_QueryInterface(fileStream);
-  NS_ENSURE_TRUE_VOID(seekStream);
   // If we read in an existing failed lock count, we need to reset the file ptr
   if (fileSize > 0) {
-    rv = seekStream->Seek(nsISeekableStream::NS_SEEK_SET, 0);
+    rv = fileStream->Seek(nsISeekableStream::NS_SEEK_SET, 0);
     NS_ENSURE_SUCCESS_VOID(rv);
   }
   nsCOMPtr<nsIOutputStream> outStream = do_QueryInterface(fileStream);
@@ -1987,7 +1985,7 @@ void WriteFailedProfileLock(nsIFile* aProfileDir) {
     bytes += written;
     bytesLeft -= written;
   } while (bytesLeft > 0);
-  seekStream->SetEOF();
+  fileStream->SetEOF();
 }
 
 void InitIOReporting(nsIFile* aXreDir) {
