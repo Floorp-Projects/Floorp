@@ -71,7 +71,7 @@ def setupProject(name, path, description) {
 
 def yaml = new Yaml()
 def buildconfig = yaml.load(new File(rootDir, '.buildconfig.yml').newInputStream())
-def componentsVersion = new File(rootDir, 'version.txt').text.replaceAll('\\n', '')
+def componentsVersion = new File(rootDir, 'version.txt').text.stripTrailing()
 buildconfig.projects.each { project ->
     setupProject(project.key, project.value.path, project.value.description)
 }
