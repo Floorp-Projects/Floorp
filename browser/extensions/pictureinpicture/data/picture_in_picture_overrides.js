@@ -9,7 +9,7 @@
 let AVAILABLE_PIP_OVERRIDES;
 
 {
-  // See PictureInPictureControls.jsm for these values.
+  // See PictureInPictureControls.sys.mjs for these values.
   // eslint-disable-next-line no-unused-vars
   const TOGGLE_POLICIES = browser.pictureInPictureChild.getPolicies();
 

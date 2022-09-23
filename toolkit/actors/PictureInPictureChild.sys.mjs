@@ -4,12 +4,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-var EXPORTED_SYMBOLS = [
-  "PictureInPictureChild",
-  "PictureInPictureToggleChild",
-  "PictureInPictureLauncherChild",
-];
-
 const lazy = {};
 
 ChromeUtils.defineModuleGetter(
@@ -17,21 +11,12 @@ ChromeUtils.defineModuleGetter(
   "DeferredTask",
   "resource://gre/modules/DeferredTask.jsm"
 );
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "KEYBOARD_CONTROLS",
-  "resource://gre/modules/PictureInPictureControls.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "TOGGLE_POLICIES",
-  "resource://gre/modules/PictureInPictureControls.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "TOGGLE_POLICY_STRINGS",
-  "resource://gre/modules/PictureInPictureControls.jsm"
-);
+ChromeUtils.defineESModuleGetters(lazy, {
+  KEYBOARD_CONTROLS: "resource://gre/modules/PictureInPictureControls.sys.mjs",
+  TOGGLE_POLICIES: "resource://gre/modules/PictureInPictureControls.sys.mjs",
+  TOGGLE_POLICY_STRINGS:
+    "resource://gre/modules/PictureInPictureControls.sys.mjs",
+});
 ChromeUtils.defineModuleGetter(
   lazy,
   "Rect",
@@ -47,9 +32,7 @@ const { WebVTT } = ChromeUtils.import("resource://gre/modules/vtt.jsm");
 const { setTimeout, clearTimeout } = ChromeUtils.import(
   "resource://gre/modules/Timer.jsm"
 );
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   NimbusFeatures: "resource://nimbus/ExperimentAPI.jsm",
@@ -136,7 +119,7 @@ function applyWrapper(pipChild, originatingVideo) {
   );
 }
 
-class PictureInPictureLauncherChild extends JSWindowActorChild {
+export class PictureInPictureLauncherChild extends JSWindowActorChild {
   handleEvent(event) {
     switch (event.type) {
       case "MozTogglePictureInPicture": {
@@ -242,7 +225,7 @@ class PictureInPictureLauncherChild extends JSWindowActorChild {
  * Picture-in-Picture toggle over top of <video> elements that the mouse is
  * hovering.
  */
-class PictureInPictureToggleChild extends JSWindowActorChild {
+export class PictureInPictureToggleChild extends JSWindowActorChild {
   constructor() {
     super();
     // We need to maintain some state about various things related to the
@@ -1298,7 +1281,7 @@ class PictureInPictureToggleChild extends JSWindowActorChild {
   }
 }
 
-class PictureInPictureChild extends JSWindowActorChild {
+export class PictureInPictureChild extends JSWindowActorChild {
   #subtitlesEnabled = false;
   // A weak reference to this PiP window's video element
   weakVideo = null;

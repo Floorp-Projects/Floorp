@@ -3,8 +3,8 @@
 
 "use strict";
 
-const { TOGGLE_POLICIES } = ChromeUtils.import(
-  "resource://gre/modules/PictureInPictureControls.jsm"
+const { TOGGLE_POLICIES } = ChromeUtils.importESModule(
+  "resource://gre/modules/PictureInPictureControls.sys.mjs"
 );
 
 const TEST_ROOT = getRootDirectory(gTestPath).replace(
@@ -298,7 +298,7 @@ async function toggleOpacityReachesThreshold(
  * @param {String} videoID The ID of the video element that we expect the toggle
  * to appear on.
  * @param {Number} policy Optional argument. If policy is defined, then it should
- * be one of the values in the TOGGLE_POLICIES from PictureInPictureControls.jsm.
+ * be one of the values in the TOGGLE_POLICIES from PictureInPictureControls.sys.mjs.
  * If undefined, this function will ensure no policy attribute is set.
  *
  * @return Promise
@@ -325,8 +325,8 @@ async function assertTogglePolicy(
     }, "Waiting for the hovering state to be set on the video.");
 
     if (policy) {
-      const { TOGGLE_POLICY_STRINGS } = ChromeUtils.import(
-        "resource://gre/modules/PictureInPictureControls.jsm"
+      const { TOGGLE_POLICY_STRINGS } = ChromeUtils.importESModule(
+        "resource://gre/modules/PictureInPictureControls.sys.mjs"
       );
       let policyAttr = toggle.getAttribute("policy");
       Assert.equal(
@@ -434,8 +434,8 @@ async function prepareForToggleClick(browser, videoID) {
       // mousemove events. We don't exactly know when that IntersectionObserver
       // will fire, so we poll a special testing function that will tell us when
       // the video that we care about is being tracked.
-      let { PictureInPictureToggleChild } = ChromeUtils.import(
-        "resource://gre/actors/PictureInPictureChild.jsm"
+      let { PictureInPictureToggleChild } = ChromeUtils.importESModule(
+        "resource://gre/actors/PictureInPictureChild.sys.mjs"
       );
       await ContentTaskUtils.waitForCondition(
         () => {
@@ -533,7 +533,7 @@ async function getToggleClientRect(
  * in this region will not result in the window opening.
  *
  * If policy is defined, then it should be one of the values in the
- * TOGGLE_POLICIES from PictureInPictureControls.jsm.
+ * TOGGLE_POLICIES from PictureInPictureControls.sys.mjs.
  *
  * See the documentation for the DEFAULT_TOGGLE_STYLES object for a sense
  * of what styleRules is expected to be. If left undefined, styleRules will
@@ -585,7 +585,7 @@ async function testToggle(testURL, expectations, prepFn = async () => {}) {
  * @param {Boolean} canToggle True if we expect the toggle to be visible and
  * clickable by the mouse for the associated video.
  * @param {Number} policy Optional argument. If policy is defined, then it should
- * be one of the values in the TOGGLE_POLICIES from PictureInPictureControls.jsm.
+ * be one of the values in the TOGGLE_POLICIES from PictureInPictureControls.sys.mjs.
  * @param {Object} toggleStyles Optional argument. See the documentation for the
  * DEFAULT_TOGGLE_STYLES object for a sense of what styleRules is expected to be.
  *

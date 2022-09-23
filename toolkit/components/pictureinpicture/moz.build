@@ -12,8 +12,8 @@ SPHINX_TREES["pictureinpicture"] = "docs"
 JAR_MANIFESTS += ["jar.mn"]
 
 EXTRA_JS_MODULES += [
-    "PictureInPicture.jsm",
-    "PictureInPictureControls.jsm",
+    "PictureInPicture.sys.mjs",
+    "PictureInPictureControls.sys.mjs",
 ]
 
 BROWSER_CHROME_MANIFESTS += [

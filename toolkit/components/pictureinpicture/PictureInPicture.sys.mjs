@@ -4,20 +4,12 @@
 
 "use strict";
 
-var EXPORTED_SYMBOLS = [
-  "PictureInPicture",
-  "PictureInPictureParent",
-  "PictureInPictureToggleParent",
-  "PictureInPictureLauncherParent",
-];
-
 const { AppConstants } = ChromeUtils.import(
   "resource://gre/modules/AppConstants.jsm"
 );
 
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
+
 const lazy = {};
 XPCOMUtils.defineLazyServiceGetters(lazy, {
   WindowsUIUtils: ["@mozilla.org/windows-ui-utils;1", "nsIWindowsUIUtils"],
@@ -59,7 +51,7 @@ let gCurrentPlayerCount = 0;
  */
 let gNextWindowID = 0;
 
-class PictureInPictureLauncherParent extends JSWindowActorParent {
+export class PictureInPictureLauncherParent extends JSWindowActorParent {
   receiveMessage(aMessage) {
     switch (aMessage.name) {
       case "PictureInPicture:Request": {
@@ -71,7 +63,7 @@ class PictureInPictureLauncherParent extends JSWindowActorParent {
   }
 }
 
-class PictureInPictureToggleParent extends JSWindowActorParent {
+export class PictureInPictureToggleParent extends JSWindowActorParent {
   receiveMessage(aMessage) {
     let browsingContext = aMessage.target.browsingContext;
     let browser = browsingContext.top.embedderElement;
@@ -89,7 +81,7 @@ class PictureInPictureToggleParent extends JSWindowActorParent {
  * This module is responsible for creating a Picture in Picture window to host
  * a clone of a video element running in web content.
  */
-class PictureInPictureParent extends JSWindowActorParent {
+export class PictureInPictureParent extends JSWindowActorParent {
   receiveMessage(aMessage) {
     switch (aMessage.name) {
       case "PictureInPicture:Resize": {
@@ -155,7 +147,7 @@ class PictureInPictureParent extends JSWindowActorParent {
  * This module is responsible for creating a Picture in Picture window to host
  * a clone of a video element running in web content.
  */
-var PictureInPicture = {
+export var PictureInPicture = {
   // Maps PictureInPictureParent actors to their corresponding PiP player windows
   weakPipToWin: new WeakMap(),
 

@@ -5,14 +5,8 @@
 
 "use strict";
 
-var EXPORTED_SYMBOLS = [
-  "KEYBOARD_CONTROLS",
-  "TOGGLE_POLICIES",
-  "TOGGLE_POLICY_STRINGS",
-];
-
 // These denote which keyboard controls to show for a qualified video element.
-const KEYBOARD_CONTROLS = {
+export const KEYBOARD_CONTROLS = {
   NONE: 0,
   PLAY_PAUSE: 1 << 0,
   MUTE_UNMUTE: 1 << 1,
@@ -23,7 +17,7 @@ const KEYBOARD_CONTROLS = {
 
 // These are the possible toggle positions along the right side of
 // a qualified video element.
-const TOGGLE_POLICIES = {
+export const TOGGLE_POLICIES = {
   DEFAULT: 1,
   HIDDEN: 2,
   TOP: 3,
@@ -35,7 +29,7 @@ const TOGGLE_POLICIES = {
 // These strings are used in the videocontrols.css stylesheet as
 // toggle policy attribute values for setting rules on the position
 // of the toggle.
-const TOGGLE_POLICY_STRINGS = {
+export const TOGGLE_POLICY_STRINGS = {
   [TOGGLE_POLICIES.DEFAULT]: "default",
   [TOGGLE_POLICIES.HIDDEN]: "hidden",
   [TOGGLE_POLICIES.TOP]: "top",

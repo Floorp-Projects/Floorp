@@ -93,7 +93,7 @@ for the ``UAWidgetSetupOrChange`` event. This is considered being "registered".
 ``docState``
 ============
 
-``PictureInPictureChild.jsm`` contains a ``WeakMap`` mapping ``document``'s to various information
+``PictureInPictureChild.sys.mjs`` contains a ``WeakMap`` mapping ``document``'s to various information
 that ``PictureInPictureToggleChild`` wants to retain for the lifetime of that ``document``. For
 example, whether or not we're in the midst of handling the user clicking down on their pointer
 device. Any state that needs to be remembered should be added to the ``docState`` ``WeakMap``.
@@ -138,12 +138,12 @@ to a player window instance. It creates an always-on-top window, and sets up a n
 (which will be in the same process, and have its own ``PictureInPictureChild``). Creating this window also causes the new ``PictureInPictureChild`` to be created.
 This instance will monitor the originating ``<video>`` for changes, and to receive commands from the player window if the user wants to control the ``<video>``.
 
-PictureInPicture.jsm
-====================
+PictureInPicture.sys.mjs
+========================
 
-This module runs in the parent process, and is also the scope where all ``PictureInPictureParent`` instances reside. ``PictureInPicture.jsm``'s job is to send and receive messages from ``PictureInPictureChild`` instances, and to react appropriately.
+This module runs in the parent process, and is also the scope where all ``PictureInPictureParent`` instances reside. ``PictureInPicture.sys.mjs``'s job is to send and receive messages from ``PictureInPictureChild`` instances, and to react appropriately.
 
-Critically, ``PictureInPicture.jsm`` is responsible for opening up the always-on-top player window, and passing the relevant information about the ``<video>`` to be displayed to it.
+Critically, ``PictureInPicture.sys.mjs`` is responsible for opening up the always-on-top player window, and passing the relevant information about the ``<video>`` to be displayed to it.
 
 
 The Picture-in-Picture player window
@@ -200,7 +200,7 @@ A site-specific video wrapper allows for the creation of custom scripts that the
 
 ``PictureInPictureChildVideoWrapper`` and ``videoWrapperScriptPath``
 --------------------------------------------------------------------
-``PictureInPictureChildVideoWrapper`` is a special class that represents a video wrapper. It is defined in ``PictureInPictureChild.jsm`` and maps to a ``videoWrapperScriptPath``, which is the path of the custom wrapper script to use.
+``PictureInPictureChildVideoWrapper`` is a special class that represents a video wrapper. It is defined in ``PictureInPictureChild.sys.mjs`` and maps to a ``videoWrapperScriptPath``, which is the path of the custom wrapper script to use.
 ``videoWrapperScriptPath`` is defined in `browser/extensions/pictureinpicture/data/picture_in_picture_overrides.js <https://searchfox.org/mozilla-central/source/browser/extensions/pictureinpicture/data/picture_in_picture_overrides.js>`_ for a domain,
 and custom wrapper scripts are defined in `browser/extensions/pictureinpicture/video-wrappers <https://searchfox.org/mozilla-central/source/browser/extensions/pictureinpicture/video-wrappers>`_.
 
@@ -295,7 +295,7 @@ we can create a new one by calling ``#callWrapperMethod()``. Below is an example
 
 .. code-block:: js
 
-    // class PictureInPictureChildVideoWrapper in PictureInPictureChild.jsm
+    // class PictureInPictureChildVideoWrapper in PictureInPictureChild.sys.mjs
     setMuted(video, shouldMute) {
         return this.#callWrapperMethod({
             name: "setMuted",
@@ -323,13 +323,13 @@ The fallback function only executes if a wrapper script fails or if the method i
 
 Using the new video control method
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Once the new method is defined, it can be used throughout ``PictureInPictureChild.jsm``. In the current example, we call
+Once the new method is defined, it can be used throughout ``PictureInPictureChild.sys.mjs``. In the current example, we call
 ``PictureInPictureChildVideoWrapper.setMuted()`` to mute or unmute a video. ``this.videoWrapper`` is an instance of
 ``PictureInPictureChildVideoWrapper``:
 
 .. code-block:: js
 
-    // class PictureInPictureChild in PictureInPictureChild.jsm
+    // class PictureInPictureChild in PictureInPictureChild.sys.mjs
     mute() {
         let video = this.getWeakVideo();
         if (video && this.videoWrapper) {
@@ -380,6 +380,6 @@ API References
    picture-in-picture-api
    player-api
 
-``toolkit/actors/PictureInPictureChild.jsm``
+``toolkit/actors/PictureInPictureChild.sys.mjs``
 --------------------------------------------
 * :ref:`picture_in_picture_child_video_wrapper_api`
