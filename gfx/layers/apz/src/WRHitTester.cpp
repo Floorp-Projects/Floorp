@@ -221,7 +221,6 @@ IAPZHitTester::HitTestResult WRHitTester::GetAPZCAtPoint(
                                            positionedNode);
     }
 
-#if defined(MOZ_WIDGET_ANDROID)
     if (hit.mNode && hit.mNode->GetFixedPositionAnimationId().isSome()) {
       // If the hit element is a fixed position element, the side bits from
       // the hit-result item tag are used. For now just ensure that these
@@ -234,7 +233,6 @@ IAPZHitTester::HitTestResult WRHitTester::GetAPZCAtPoint(
       MOZ_ASSERT(sideBits == SideBits::eNone,
                  "Hit test results have side bits only for pos:fixed");
     }
-#endif
   }
 
   hit.mHitOverscrollGutter =
