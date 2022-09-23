@@ -194,17 +194,34 @@ AST_MATCHER(CallExpr, isInWhiteListForPrincipalGetUri) {
 /// code or names of existing threads that we would like to ignore.
 AST_MATCHER(CallExpr, isInAllowlistForThreads) {
 
-  // Get the source location of the call
+  // Get the source location of the call.
   SourceLocation Loc = Node.getRParenLoc();
   StringRef FileName =
       getFilename(Finder->getASTContext().getSourceManager(), Loc);
+
+  const auto rbegin = [](StringRef s) { return llvm::sys::path::rbegin(s); };
+  const auto rend = [](StringRef s) { return llvm::sys::path::rend(s); };
+
+  // Files in the allowlist are (definitionally) explicitly permitted to create
+  // new threads.
   for (auto thread_file : allow_thread_files) {
-    if (llvm::sys::path::rbegin(FileName)->equals(thread_file)) {
+    // All the provided path-elements must match.
+    const bool match = [&] {
+      auto it1 = rbegin(FileName), it2 = rbegin(thread_file),
+           end1 = rend(FileName), end2 = rend(thread_file);
+      for (; it2 != end2; ++it1, ++it2) {
+        if (it1 == end1 || !it1->equals(*it2)) {
+          return false;
+        }
+      }
+      return true;
+    }();
+    if (match) {
       return true;
     }
   }
 
-  // Now we get the first arg (the name of the thread) and we check it.
+  // Check the first arg (the name of the thread).
   const StringLiteral *nameArg =
       dyn_cast<StringLiteral>(Node.getArg(0)->IgnoreImplicit());
   if (nameArg) {
