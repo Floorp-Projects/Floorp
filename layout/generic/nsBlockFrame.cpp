@@ -2260,8 +2260,8 @@ void nsBlockFrame::UnionChildOverflow(OverflowAreas& aOverflowAreas) {
 
     // Consider the overflow areas of the floats attached to the line as well
     if (line.HasFloats()) {
-      for (nsFloatCache* fc = line.GetFirstFloat(); fc; fc = fc->Next()) {
-        ConsiderChildOverflow(lineAreas, fc->mFloat);
+      for (nsIFrame* f : line.Floats()) {
+        ConsiderChildOverflow(lineAreas, f);
       }
     }
 
@@ -3315,8 +3315,8 @@ void nsBlockFrame::MarkLineDirtyForInterrupt(nsLineBox* aLine) {
     }
     // And mark all the floats whose reflows we might be skipping dirty too.
     if (aLine->HasFloats()) {
-      for (nsFloatCache* fc = aLine->GetFirstFloat(); fc; fc = fc->Next()) {
-        fc->mFloat->MarkSubtreeDirty();
+      for (nsIFrame* f : aLine->Floats()) {
+        f->MarkSubtreeDirty();
       }
     }
   } else {
@@ -4426,9 +4426,9 @@ void nsBlockFrame::ReflowInlineFrames(BlockReflowState& aState,
           // restore the float manager state
           aState.FloatManager()->PopState(&floatManagerState);
           // Clear out float lists
-          aState.mCurrentLineFloats.DeleteAll();
+          aState.mCurrentLineFloats.Clear();
+          aState.mBelowCurrentLineFloats.Clear();
           aState.mNoWrapFloats.Clear();
-          aState.mBelowCurrentLineFloats.DeleteAll();
         }
 
         // Don't allow pullup on a subsequent LineReflowStatus::RedoNoPull pass
@@ -4452,7 +4452,7 @@ void nsBlockFrame::DoReflowInlineFrames(
     nsFloatManager::SavedState* aFloatStateBeforeLine, bool* aKeepReflowGoing,
     LineReflowStatus* aLineReflowStatus, bool aAllowPullUp) {
   // Forget all of the floats on the line
-  aLine->FreeFloats(aState.mFloatCacheFreeList);
+  aLine->ClearFloats();
   aState.mFloatOverflowAreas.Clear();
 
   // We need to set this flag on the line if any of our reflow passes
@@ -4896,24 +4896,16 @@ void nsBlockFrame::SplitFloat(BlockReflowState& aState, nsIFrame* aFloat,
   }
 }
 
-static nsFloatCache* GetLastFloat(nsLineBox* aLine) {
-  nsFloatCache* fc = aLine->GetFirstFloat();
-  while (fc && fc->Next()) {
-    fc = fc->Next();
-  }
-  return fc;
-}
-
 static bool CheckPlaceholderInLine(nsIFrame* aBlock, nsLineBox* aLine,
-                                   nsFloatCache* aFC) {
-  if (!aFC) {
+                                   nsIFrame* aFloat) {
+  if (!aFloat) {
     return true;
   }
-  NS_ASSERTION(!aFC->mFloat->GetPrevContinuation(),
+  NS_ASSERTION(!aFloat->GetPrevContinuation(),
                "float in a line should never be a continuation");
-  NS_ASSERTION(!aFC->mFloat->HasAnyStateBits(NS_FRAME_IS_PUSHED_FLOAT),
+  NS_ASSERTION(!aFloat->HasAnyStateBits(NS_FRAME_IS_PUSHED_FLOAT),
                "float in a line should never be a pushed float");
-  nsIFrame* ph = aFC->mFloat->FirstInFlow()->GetPlaceholderFrame();
+  nsIFrame* ph = aFloat->FirstInFlow()->GetPlaceholderFrame();
   for (nsIFrame* f = ph; f; f = f->GetParent()) {
     if (f->GetParent() == aBlock) {
       return aLine->Contains(f);
@@ -4983,9 +4975,12 @@ void nsBlockFrame::SplitLine(BlockReflowState& aState,
     // frames in the new line, because as a large paragraph is laid out the
     // we'd get O(N^2) performance. So instead we just check that the last
     // float and the last below-current-line float are still in aLine.
-    if (!CheckPlaceholderInLine(this, aLine, GetLastFloat(aLine)) ||
-        !CheckPlaceholderInLine(this, aLine,
-                                aState.mBelowCurrentLineFloats.Tail())) {
+    if (!CheckPlaceholderInLine(
+            this, aLine,
+            aLine->HasFloats() ? aLine->Floats().LastElement() : nullptr) ||
+        !CheckPlaceholderInLine(
+            this, aLine,
+            aState.mBelowCurrentLineFloats.SafeLastElement(nullptr))) {
       *aLineReflowStatus = LineReflowStatus::RedoNoPull;
     }
 
@@ -5196,7 +5191,7 @@ bool nsBlockFrame::PlaceLine(BlockReflowState& aState,
 
   if (!aState.mReflowStatus.IsFullyComplete() &&
       ShouldAvoidBreakInside(aState.mReflowInput)) {
-    aLine->AppendFloats(aState.mCurrentLineFloats);
+    aLine->AppendFloats(std::move(aState.mCurrentLineFloats));
     aState.mReflowStatus.SetInlineLineBreakBeforeAndReset();
     // Reflow the line again when we reflow at our new position.
     aLine->MarkDirty();
@@ -5228,10 +5223,10 @@ bool nsBlockFrame::PlaceLine(BlockReflowState& aState,
   aState.mBCoord = newBCoord;
 
   // Add the already placed current-line floats to the line
-  aLine->AppendFloats(aState.mCurrentLineFloats);
+  aLine->AppendFloats(std::move(aState.mCurrentLineFloats));
 
   // Any below current line floats to place?
-  if (aState.mBelowCurrentLineFloats.NotEmpty()) {
+  if (!aState.mBelowCurrentLineFloats.IsEmpty()) {
     // Reflow the below-current-line floats, which places on the line's
     // float list.
     aState.PlaceBelowCurrentLineFloats(aLine);
@@ -5332,7 +5327,7 @@ void nsBlockFrame::PushLines(BlockReflowState& aState,
         line->SetMovedFragments();
         line->SetBoundsEmpty();
         if (line->HasFloats()) {
-          line->FreeFloats(aState.mFloatCacheFreeList);
+          line->ClearFloats();
         }
       }
     }
@@ -7657,11 +7652,7 @@ void nsBlockFrame::CheckFloats(BlockReflowState& aState) {
   AutoTArray<nsIFrame*, 8> lineFloats;
   for (auto& line : Lines()) {
     if (line.HasFloats()) {
-      nsFloatCache* fc = line.GetFirstFloat();
-      while (fc) {
-        lineFloats.AppendElement(fc->mFloat);
-        fc = fc->Next();
-      }
+      lineFloats.AppendElements(line.Floats());
     }
     if (line.IsDirty()) {
       anyLineDirty = true;
