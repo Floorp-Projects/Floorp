@@ -179,7 +179,7 @@ class ResizeObserver final : public nsISupports, public nsWrapperCache {
   /**
    * Returns whether this is an internal ResizeObserver with a native callback.
    */
-  bool HasNativeCallback() { return mCallback.is<NativeCallback>(); }
+  bool HasNativeCallback() const { return mCallback.is<NativeCallback>(); }
 
   /**
    * Invoke the callback function in JavaScript for all active observations
