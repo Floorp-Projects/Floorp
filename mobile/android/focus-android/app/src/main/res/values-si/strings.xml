@@ -476,32 +476,63 @@
 
     <!-- Onboarding: Title -->
     <!-- %1$s will be replaced by the app name and build variant(e.g. Firefox Focus, Firefox Klar Nightly) -->
-    <string name="onboarding_title">%1$s වෙත පිළිගනිමු!</string>
+    <string moz:removedIn="106" name="onboarding_title">%1$s වෙත පිළිගනිමු!</string>
+
+    <!-- Content description (not visible, for screen readers etc.): This is the description for the close button from the new onboarding flow screen one and two -->
+    <string name="onboarding_close_button_content_description">වසන්න</string>
+
+    <!-- New Onboarding flow first screen title -->
+    <!-- %1$s will be replaced by the app name and build variant(e.g. Firefox Focus, Firefox Klar Nightly) -->
+    <string name="onboarding_first_screen_title">%1$s වෙත පිළිගනිමු</string>
+
+    <!-- New Onboarding flow first screen subtitle the one that appears under title -->
+    <string name="onboarding_first_screen_subtitle">වේගවත්. පෞද්ගලික. බාධා රහිත.</string>
+
+    <!-- New Onboarding flow first screen button label-->
+    <string name="onboarding_first_screen_button_text">පටන් ගන්න</string>
+
+    <!-- Onboarding second screen: Title -->
+    <!-- %1$s will be replaced by the app short name(Focus) -->
+    <string name="onboarding_second_screen_title">%1$s වෙනත් අතිරික්සු මෙන් නොවේ</string>
+
+    <!-- New Onboarding flow second screen subtitle the one that appears under title -->
+    <string name="onboarding_second_screen_subtitle_one">අතිරේක පෞද්ගලිකත්‍වයක් උදෙසා යෙදුම වසා දැමූ විට ඔබගේ ඉතිහාසය හිස් කෙරේ.</string>
+
+    <!-- New Onboarding flow second screen subtitle two the one that appears under subtitle one -->
+    <!-- %1$s will be replaced by the app short name(Focus) -->
+    <string name="onboarding_second_screen_subtitle_two">විවෘත වන සෑම සබැඳියක් සමඟ ඔබගේ දත්ත රැකවරණයට %1$s පෙරනිමි කරන්න.</string>
+
+    <!-- New Onboarding flow second screen make Focus default browser button label-->
+    <string name="onboarding_second_screen_default_browser_button_text">පෙරනිමි අතිරික්සුව කරන්න</string>
+
+    <!-- New Onboarding flow second screen skip onboarding button label-->
+    <string name="onboarding_second_screen_skip_button_text">මඟහරින්න</string>
+
 
     <!-- Onboarding: Description -->
-    <string name="onboarding_description">ඔබට අවශ්‍ය විට ඊළඟ මට්ටමේ පෞද්. පිරික්සුම</string>
+    <string moz:removedIn="106" name="onboarding_description">ඔබට අවශ්‍ය විට ඊළඟ මට්ටමේ පෞද්. පිරික්සුම</string>
 
     <!-- Onboarding: Incognito Title -->
-    <string name="onboarding_incognito_title">අප්‍රසිද්ධියට අදෘශ්‍යමානය හමුවන තැන</string>
+    <string moz:removedIn="106" name="onboarding_incognito_title">අප්‍රසිද්ධියට අදෘශ්‍යමානය හමුවන තැන</string>
 
     <!-- Onboarding: Incognito Description -->
     <!-- Text %s will be replaced with the name of the app (e.g. Focus, Klar) -->
-    <string name="onboarding_incognito_description">%s යනු තිළෑලි අති-ප්‍රබල ලුහුබැඳීම් හා දත්තකඩ රැකවරණය සහිත පෞද්ගලිකත්‍වය මූලික වූ අතිරික්සුවකි.</string>
+    <string moz:removedIn="106" name="onboarding_incognito_description">%s යනු තිළෑලි අති-ප්‍රබල ලුහුබැඳීම් හා දත්තකඩ රැකවරණය සහිත පෞද්ගලිකත්‍වය මූලික වූ අතිරික්සුවකි.</string>
 
     <!-- Onboarding: History Title -->
-    <string name="onboarding_history_title">සිදු නොවූ ලෙසින් පිරික්සන්න</string>
+    <string moz:removedIn="106" name="onboarding_history_title">සිදු නොවූ ලෙසින් පිරික්සන්න</string>
 
     <!-- Onboarding: History Description -->
-    <string name="onboarding_history_description2">එක් තට්ටුවකින් ඔබගේ පිරික්සුම් ඉතිහාසය හා දත්තකඩ මකා දමයි — සහ දැන්වීම් ඔබව ලුහුබැඳීම නවත්වයි.</string>
+    <string moz:removedIn="106" name="onboarding_history_description2">එක් තට්ටුවකින් ඔබගේ පිරික්සුම් ඉතිහාසය හා දත්තකඩ මකා දමයි — සහ දැන්වීම් ඔබව ලුහුබැඳීම නවත්වයි.</string>
 
     <!-- Onboarding: Protection Title -->
-    <string name="onboarding_protection_title">ඕනෑම තත්‍වයකට උචිත පෞද්ගලිකත්‍වය</string>
+    <string moz:removedIn="106" name="onboarding_protection_title">ඕනෑම තත්‍වයකට උචිත පෞද්ගලිකත්‍වය</string>
 
     <!-- Onboarding: Protection Description -->
-    <string name="onboarding_protection_description">ඔබගේ පිරික්සීම වෙනස් විය යුතු නම්, ඔබගේ පෞද්ගලිකත්‍ව සැකසුම් තුළින් සීරුමාරු කරන්න.</string>
+    <string moz:removedIn="106" name="onboarding_protection_description">ඔබගේ පිරික්සීම වෙනස් විය යුතු නම්, ඔබගේ පෞද්ගලිකත්‍ව සැකසුම් තුළින් සීරුමාරු කරන්න.</string>
 
     <!-- Onboarding: Start browsing -->
-    <string name="onboarding_start_browsing">පිරික්සුම අරඹන්න</string>
+    <string moz:removedIn="106" name="onboarding_start_browsing">පිරික්සුම අරඹන්න</string>
 
     <!-- First run tour (Default browser): Title -->
     <string name="firstrun_defaultbrowser_title">ඔබගේ පෞද්ගලිකත්‍වය බලගන්වන්න</string>
@@ -958,7 +989,9 @@ The new line here must be kept as the second half of the string is clickable for
 
     <!-- Contextual Feature Recommendation Popups -->
     <!-- CFR for Toolbar Shield Icon (Banner Info Message) -->
-    <string name="cfr_for_toolbar_shield_icon">මෙම අඩවිය ඔබව ලුහුබැඳීමට තැත් කරන බව පෙනේ. අඩවි සැකසුම් හා ලුහුබැඳීම් අවහිර කිරීමේ සංඛ්‍යාලේඛන සඳහා පලිහ ඔබන්න.</string>
+    <string moz:removedIn="104" name="cfr_for_toolbar_shield_icon">මෙම අඩවිය ඔබව ලුහුබැඳීමට තැත් කරන බව පෙනේ. අඩවි සැකසුම් හා ලුහුබැඳීම් අවහිර කිරීමේ සංඛ්‍යාලේඛන සඳහා පලිහ ඔබන්න.</string>
+    <string name="cfr_for_toolbar_shield_icon2">ඒවා ලැබුණා! අපි මෙම අඩවිය ඔබ ගැන ඔත්තු බැලීම නැවැත්තුවෙමු. අපි අවහිර කරන දෑ බැලීමට පලිහ මත තට්ටු කරන්න.</string>
+
     <!-- Content description (not visible, for screen readers etc.): Button that closes the CFR popup -->
     <string name="cfr_close_button_description">උත්පතනය වසන්න</string>
 
@@ -974,4 +1007,16 @@ The new line here must be kept as the second half of the string is clickable for
     <string moz:removedIn="105" name="cfr_for_toolbar_delete_icon" tools:ignore="UnusedResources">කුණු බඳුන මත තට්ටු කිරීමෙන් මෙම වාරයෙන් ඔබගේ පෞද්. දත්ත, පිරික්සුම් ඉතිහාසය සහ තවත් දෑ ඉවත් කළ හැකිය. උත්සාහ කර බලන්න!</string>
     <string name="cfr_for_toolbar_delete_icon2">ඉතිහාසය, දත්තකඩ, හා අනෙකුත් දෑ — සියල්ල කුණු කූඩයට දැමීමට මෙහි තට්ටු කරන්න — සහ නව පටිත්තකින් නැවුම්ව අරඹන්න.</string>
 
-</resources>
+    <!-- Promote SearchWidget Dialog -->
+
+    !-- Content description (not visible, for screen readers etc.): This is the description for the
+    close button from promote search widget dialog. --&gt;
+    <string name="promote_search_widget_dialog_content_description">වසන්න</string>
+
+    !-- Content description (not visible, for screen readers etc.): This is the description for
+    picture of search widget from promote search widget dialog. --&gt;
+    <string name="promote_search_widget_dialog_title">පිරික්සුම් ඉතිහාසය මැකිණි! 🎉</string>
+
+    !-- This is the subtitle of promote search widget dialog. %1$s will get replaced with the name
+    of the app (e.g. &quot;Focus&quot;) --&gt;
+    </resources>

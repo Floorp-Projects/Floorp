@@ -467,32 +467,63 @@
 
     <!-- Onboarding: Title -->
     <!-- %1$s will be replaced by the app name and build variant(e.g. Firefox Focus, Firefox Klar Nightly) -->
-    <string name="onboarding_title">Welcome to %1$s!</string>
+    <string moz:removedIn="106" name="onboarding_title">Welcome to %1$s!</string>
+
+    <!-- Content description (not visible, for screen readers etc.): This is the description for the close button from the new onboarding flow screen one and two -->
+    <string name="onboarding_close_button_content_description">Close</string>
+
+    <!-- New Onboarding flow first screen title -->
+    <!-- %1$s will be replaced by the app name and build variant(e.g. Firefox Focus, Firefox Klar Nightly) -->
+    <string name="onboarding_first_screen_title">Welcome to %1$s</string>
+
+    <!-- New Onboarding flow first screen subtitle the one that appears under title -->
+    <string name="onboarding_first_screen_subtitle">Fast. Private. No distractions.</string>
+
+    <!-- New Onboarding flow first screen button label-->
+    <string name="onboarding_first_screen_button_text">Get started</string>
+
+    <!-- Onboarding second screen: Title -->
+    <!-- %1$s will be replaced by the app short name(Focus) -->
+    <string name="onboarding_second_screen_title">%1$s isn’t like other browsers</string>
+
+    <!-- New Onboarding flow second screen subtitle the one that appears under title -->
+    <string name="onboarding_second_screen_subtitle_one">We clear your history when you close the app for extra privacy.</string>
+
+    <!-- New Onboarding flow second screen subtitle two the one that appears under subtitle one -->
+    <!-- %1$s will be replaced by the app short name(Focus) -->
+    <string name="onboarding_second_screen_subtitle_two">Make %1$s your default to protect your data with every link you open.</string>
+
+    <!-- New Onboarding flow second screen make Focus default browser button label-->
+    <string name="onboarding_second_screen_default_browser_button_text">Set as default browser</string>
+
+    <!-- New Onboarding flow second screen skip onboarding button label-->
+    <string name="onboarding_second_screen_skip_button_text">Skip</string>
+
 
     <!-- Onboarding: Description -->
-    <string name="onboarding_description">Next-level private browsing when you want it</string>
+    <string moz:removedIn="106" name="onboarding_description">Next-level private browsing when you want it</string>
 
     <!-- Onboarding: Incognito Title -->
-    <string name="onboarding_incognito_title">Where incognito meets invisible</string>
+    <string moz:removedIn="106" name="onboarding_incognito_title">Where incognito meets invisible</string>
 
     <!-- Onboarding: Incognito Description -->
     <!-- Text %s will be replaced with the name of the app (e.g. Focus, Klar) -->
-    <string name="onboarding_incognito_description">%s is a privacy-first browser with extra-strong tracking and cookie protection built in.</string>
+    <string moz:removedIn="106" name="onboarding_incognito_description">%s is a privacy-first browser with extra-strong tracking and cookie protection built in.</string>
 
     <!-- Onboarding: History Title -->
-    <string name="onboarding_history_title">Browse like it never happened</string>
+    <string moz:removedIn="106" name="onboarding_history_title">Browse like it never happened</string>
 
     <!-- Onboarding: History Description -->
-    <string name="onboarding_history_description2">One tap erases your browsing history and cookies — and stops ads from following you around.</string>
+    <string moz:removedIn="106" name="onboarding_history_description2">One tap erases your browsing history and cookies — and stops ads from following you around.</string>
 
     <!-- Onboarding: Protection Title -->
-    <string name="onboarding_protection_title">Privacy that fits any situation</string>
+    <string moz:removedIn="106" name="onboarding_protection_title">Privacy that fits any situation</string>
 
     <!-- Onboarding: Protection Description -->
-    <string name="onboarding_protection_description">If your browsing needs change, it’s easy to scale your privacy settings up or down.</string>
+    <string moz:removedIn="106" name="onboarding_protection_description">If your browsing needs change, it’s easy to scale your privacy settings up or down.</string>
 
     <!-- Onboarding: Start browsing -->
-    <string name="onboarding_start_browsing">Start browsing</string>
+    <string moz:removedIn="106" name="onboarding_start_browsing">Start browsing</string>
 
     <!-- First run tour (Default browser): Title -->
     <string name="firstrun_defaultbrowser_title">Power up your privacy</string>
@@ -949,7 +980,9 @@ The new line here must be kept as the second half of the string is clickable for
 
     <!-- Contextual Feature Recommendation Popups -->
     <!-- CFR for Toolbar Shield Icon (Banner Info Message) -->
-    <string name="cfr_for_toolbar_shield_icon">Looks like this site was trying to track you. Click the shield for site settings and tracker blocking stats.</string>
+    <string moz:removedIn="104" name="cfr_for_toolbar_shield_icon">Looks like this site was trying to track you. Click the shield for site settings and tracker blocking stats.</string>
+    <string name="cfr_for_toolbar_shield_icon2">Got ‘em! We stopped this site from spying on you. Tap the shield any time to see what we’re blocking.</string>
+
     <!-- Content description (not visible, for screen readers etc.): Button that closes the CFR popup -->
     <string name="cfr_close_button_description">Close popup</string>
 
@@ -965,4 +998,28 @@ The new line here must be kept as the second half of the string is clickable for
     <string moz:removedIn="105" name="cfr_for_toolbar_delete_icon" tools:ignore="UnusedResources">Get rid of your personal data, browsing history and more from this session by tapping the trash button. Give it a try!</string>
     <string name="cfr_for_toolbar_delete_icon2">Tap here to trash it all — history, cookies, everything — and start fresh on a new tab.</string>
 
+    <!-- Promote SearchWidget Dialog -->
+
+    !-- Content description (not visible, for screen readers etc.): This is the description for the
+    close button from promote search widget dialog. --&gt;
+    <string name="promote_search_widget_dialog_content_description">Close</string>
+
+    !-- Content description (not visible, for screen readers etc.): This is the description for
+    picture of search widget from promote search widget dialog. --&gt;
+    <string name="promote_search_widget_dialog_picture_content_description">Search widget</string>
+
+    !-- This is the title of promote search widget dialog. --&gt;
+    <string name="promote_search_widget_dialog_title">Browsing history cleared! 🎉</string>
+
+    !-- This is the subtitle of promote search widget dialog. %1$s will get replaced with the name
+    of the app (e.g. &quot;Focus&quot;) --&gt;
+    <string name="promote_search_widget_dialog_subtitle">We’ll leave you to your private browsing, but get a quicker start next time with the %1$s widget on your Home screen.</string>
+
+    !-- This is te text from add search widget to home screen button .The button is located on
+    promote search widget dialog. --&gt;
+    <string name="promote_search_widget_button_text">Add widget to home screen</string>
+
+    !-- This is te text of the snackbar that appears after the search widget was added successfully
+    to the home screen. --&gt;
+    <string name="promote_search_widget_snackbar_message">Widget added to home screen</string>
 </resources>

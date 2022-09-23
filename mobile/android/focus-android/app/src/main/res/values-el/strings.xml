@@ -497,32 +497,46 @@
 
   <!-- Onboarding: Title -->
     <!-- %1$s will be replaced by the app name and build variant(e.g. Firefox Focus, Firefox Klar Nightly) -->
-    <string name="onboarding_title">Καλώς ορίσατε στο %1$s!</string>
+    <string moz:removedIn="106" name="onboarding_title">Καλώς ορίσατε στο %1$s!</string>
+
+    <!-- Content description (not visible, for screen readers etc.): This is the description for the close button from the new onboarding flow screen one and two -->
+    <string name="onboarding_close_button_content_description">Κλείσιμο</string>
+
+    <!-- New Onboarding flow first screen title -->
+    <!-- %1$s will be replaced by the app name and build variant(e.g. Firefox Focus, Firefox Klar Nightly) -->
+    <string name="onboarding_first_screen_title">Καλώς ορίσατε στο %1$s</string>
+
+    <!-- New Onboarding flow first screen button label-->
+    <string name="onboarding_first_screen_button_text">Έναρξη</string>
+
+    <!-- New Onboarding flow second screen skip onboarding button label-->
+    <string name="onboarding_second_screen_skip_button_text">Παράλειψη</string>
+
 
     <!-- Onboarding: Description -->
-    <string name="onboarding_description">Προηγμένο επίπεδο ιδιωτικής περιήγησης όταν το θέλετε</string>
+    <string moz:removedIn="106" name="onboarding_description">Προηγμένο επίπεδο ιδιωτικής περιήγησης όταν το θέλετε</string>
 
     <!-- Onboarding: Incognito Title -->
-    <string name="onboarding_incognito_title">Πιο «αόρατο» και πιο ιδιωτικό</string>
+    <string moz:removedIn="106" name="onboarding_incognito_title">Πιο «αόρατο» και πιο ιδιωτικό</string>
 
     <!-- Onboarding: Incognito Description -->
     <!-- Text %s will be replaced with the name of the app (e.g. Focus, Klar) -->
-    <string name="onboarding_incognito_description">Το %s είναι ένα πρόγραμμα περιήγησης με έμφαση στο απόρρητο και πανίσχυρη προστασία από καταγραφή και cookies.</string>
+    <string moz:removedIn="106" name="onboarding_incognito_description">Το %s είναι ένα πρόγραμμα περιήγησης με έμφαση στο απόρρητο και πανίσχυρη προστασία από καταγραφή και cookies.</string>
 
     <!-- Onboarding: History Title -->
-    <string name="onboarding_history_title">Περιηγηθείτε σαν να μην συνέβη ποτέ</string>
+    <string moz:removedIn="106" name="onboarding_history_title">Περιηγηθείτε σαν να μην συνέβη ποτέ</string>
 
     <!-- Onboarding: History Description -->
-    <string name="onboarding_history_description2">Ένα πάτημα διαγράφει το ιστορικό περιήγησης και τα cookies σας — εμποδίζει την καταγραφή σας από διαφημίσεις.</string>
+    <string moz:removedIn="106" name="onboarding_history_description2">Ένα πάτημα διαγράφει το ιστορικό περιήγησης και τα cookies σας — εμποδίζει την καταγραφή σας από διαφημίσεις.</string>
 
     <!-- Onboarding: Protection Title -->
-    <string name="onboarding_protection_title">Απόρρητο σε κάθε περίσταση</string>
+    <string moz:removedIn="106" name="onboarding_protection_title">Απόρρητο σε κάθε περίσταση</string>
 
     <!-- Onboarding: Protection Description -->
-    <string name="onboarding_protection_description">Εάν αλλάξουν οι ανάγκες περιήγησής σας, μπορείτε εύκολα να επιλέξετε πιο αυστηρές ή πιο ελαστικές ρυθμίσεις απορρήτου.</string>
+    <string moz:removedIn="106" name="onboarding_protection_description">Εάν αλλάξουν οι ανάγκες περιήγησής σας, μπορείτε εύκολα να επιλέξετε πιο αυστηρές ή πιο ελαστικές ρυθμίσεις απορρήτου.</string>
 
     <!-- Onboarding: Start browsing -->
-    <string name="onboarding_start_browsing">Έναρξη περιήγησης</string>
+    <string moz:removedIn="106" name="onboarding_start_browsing">Έναρξη περιήγησης</string>
 
     <!-- First run tour (Default browser): Title -->
     <string name="firstrun_defaultbrowser_title">Ενισχύστε το απόρρητό σας</string>
@@ -987,7 +1001,8 @@ The new line here must be kept as the second half of the string is clickable for
 
     <!-- Contextual Feature Recommendation Popups -->
     <!-- CFR for Toolbar Shield Icon (Banner Info Message) -->
-    <string name="cfr_for_toolbar_shield_icon">Φαίνεται ότι αυτός ο ιστότοπος προσπαθούσε να σας καταγράψει. Πατήστε την ασπίδα για να δείτε τις ρυθμίσεις ιστοτόπου και τα στατιστικά αποκλεισμού καταγραφής.</string>
+    <string moz:removedIn="104" name="cfr_for_toolbar_shield_icon">Φαίνεται ότι αυτός ο ιστότοπος προσπαθούσε να σας καταγράψει. Πατήστε την ασπίδα για να δείτε τις ρυθμίσεις ιστοτόπου και τα στατιστικά αποκλεισμού καταγραφής.</string>
+
     <!-- Content description (not visible, for screen readers etc.): Button that closes the CFR popup -->
     <string name="cfr_close_button_description">Κλείσιμο παραθύρου</string>
 
@@ -1003,4 +1018,16 @@ The new line here must be kept as the second half of the string is clickable for
     <string moz:removedIn="105" name="cfr_for_toolbar_delete_icon" tools:ignore="UnusedResources">Απαλλαγείτε από τα προσωπικά σας δεδομένα, το ιστορικό περιήγησης και πολλά άλλα από αυτήν τη συνεδρία πατώντας το κουμπί απορριμμάτων. Δοκιμάστε το!</string>
     <string name="cfr_for_toolbar_delete_icon2">Πατήστε εδώ για να τα διαγράψετε όλα — ιστορικό, cookies, τα πάντα — και ξεκινήστε από την αρχή σε μια νέα καρτέλα.</string>
 
-</resources>
+    <!-- Promote SearchWidget Dialog -->
+
+    !-- Content description (not visible, for screen readers etc.): This is the description for the
+    close button from promote search widget dialog. --&gt;
+    <string name="promote_search_widget_dialog_content_description">Κλείσιμο</string>
+
+    !-- Content description (not visible, for screen readers etc.): This is the description for
+    picture of search widget from promote search widget dialog. --&gt;
+    <string name="promote_search_widget_dialog_title">Το ιστορικό περιήγησης διαγράφηκε! 🎉</string>
+
+    !-- This is the subtitle of promote search widget dialog. %1$s will get replaced with the name
+    of the app (e.g. &quot;Focus&quot;) --&gt;
+    </resources>

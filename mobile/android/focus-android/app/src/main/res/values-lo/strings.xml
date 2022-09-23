@@ -801,6 +801,10 @@
     <!-- Tip displayed on home view explaining how to add a custom autocomplete URL -->
     <string name="tip_disable_tips2">ປິດເຄັດລັບໃນໜ້າຈໍເລີ່ມຕົ້ນ</string>
 
+    <!-- Tip displayed on the home view about the changes in the new release.
+    %1$s is a placeholder for the app name -->
+    <string moz:removedIn="105" name="tip_fresh_look" tools:ignore="UnusedResources">ເປັນຫຍັງຄື, ພວກເຮົາມີຮູບຊົງໃໝ່ໃໝ່!\n ອ່ານເພີ່ມເຕີມກ່ຽວກັບເລື່ອງນີ້ ແລະອັບເດດອື່ນໆຕໍ່ກັບ %1$s.</string>
+
     <!-- Label for the snackbar when a user opens a new tab -->
     <string name="new_tab_opened_snackbar">ເປີດແທັບໃຫມ່ແລ້ວ</string>
 
@@ -872,6 +876,9 @@
     <string name="secure_connection">ການເຊື່ອມຕໍ່ແມ່ນປອດໄພ</string>
     <!-- Label that indicates a site is using a insecure connection -->
     <string name="insecure_connection">ການເຊື່ອມຕໍ່ບໍ່ປອດໄພ</string>
+
+    <!-- Title for the list of trackers enhanced tracking ptotection can block-->
+    <string name="trackers_and_scripts"> ຕົວຕິດຕາມແລະສະຄິບຈະຖືກບ໋ອກ</string>
 
     <!-- Content description (not visible, for screen readers etc.): Navigate back button description -->
     <string name="go_back">ກັບຄືນ</string>

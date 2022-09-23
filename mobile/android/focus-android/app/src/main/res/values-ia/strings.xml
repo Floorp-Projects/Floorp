@@ -495,32 +495,63 @@
 
   <!-- Onboarding: Title -->
     <!-- %1$s will be replaced by the app name and build variant(e.g. Firefox Focus, Firefox Klar Nightly) -->
-    <string name="onboarding_title">Benvenite a %1$s!</string>
+    <string moz:removedIn="106" name="onboarding_title">Benvenite a %1$s!</string>
+
+    <!-- Content description (not visible, for screen readers etc.): This is the description for the close button from the new onboarding flow screen one and two -->
+    <string name="onboarding_close_button_content_description">Clauder</string>
+
+    <!-- New Onboarding flow first screen title -->
+    <!-- %1$s will be replaced by the app name and build variant(e.g. Firefox Focus, Firefox Klar Nightly) -->
+    <string name="onboarding_first_screen_title">Benvenite a %1$s</string>
+
+    <!-- New Onboarding flow first screen subtitle the one that appears under title -->
+    <string name="onboarding_first_screen_subtitle">Rapide. Private. Nulle distractiones.</string>
+
+    <!-- New Onboarding flow first screen button label-->
+    <string name="onboarding_first_screen_button_text">Comenciar</string>
+
+    <!-- Onboarding second screen: Title -->
+    <!-- %1$s will be replaced by the app short name(Focus) -->
+    <string name="onboarding_second_screen_title">%1$s non es como altere navigatores</string>
+
+    <!-- New Onboarding flow second screen subtitle the one that appears under title -->
+    <string name="onboarding_second_screen_subtitle_one">Nos clara tu chronologia quando tu claude le app, pro un confidentialitate extra.</string>
+
+    <!-- New Onboarding flow second screen subtitle two the one that appears under subtitle one -->
+    <!-- %1$s will be replaced by the app short name(Focus) -->
+    <string name="onboarding_second_screen_subtitle_two">Rende %1$s tu predefinite pro proteger tu datos con cata ligamine tu aperi.</string>
+
+    <!-- New Onboarding flow second screen make Focus default browser button label-->
+    <string name="onboarding_second_screen_default_browser_button_text">Eliger como navigator predefinite</string>
+
+    <!-- New Onboarding flow second screen skip onboarding button label-->
+    <string name="onboarding_second_screen_skip_button_text">Saltar</string>
+
 
     <!-- Onboarding: Description -->
-    <string name="onboarding_description">Navigation anonyme de nivello superior quando tu lo vole illo</string>
+    <string moz:removedIn="106" name="onboarding_description">Navigation anonyme de nivello superior quando tu lo vole illo</string>
 
     <!-- Onboarding: Incognito Title -->
-    <string name="onboarding_incognito_title">Ubi le incognito incontra le invisibile</string>
+    <string moz:removedIn="106" name="onboarding_incognito_title">Ubi le incognito incontra le invisibile</string>
 
     <!-- Onboarding: Incognito Description -->
     <!-- Text %s will be replaced with the name of the app (e.g. Focus, Klar) -->
-    <string name="onboarding_incognito_description">%s es un navigator de maxime discretion con protection de traciamento e de cookies extra-forte, integrate.</string>
+    <string moz:removedIn="106" name="onboarding_incognito_description">%s es un navigator de maxime discretion con protection de traciamento e de cookies extra-forte, integrate.</string>
 
     <!-- Onboarding: History Title -->
-    <string name="onboarding_history_title">Naviga como il eveniva jammais</string>
+    <string moz:removedIn="106" name="onboarding_history_title">Naviga como il eveniva jammais</string>
 
     <!-- Onboarding: History Description -->
-    <string name="onboarding_history_description2">Un tocco cancella tu chronologia de navigation e le cookies, e impedi le avisos publicitari de sequer te.</string>
+    <string moz:removedIn="106" name="onboarding_history_description2">Un tocco cancella tu chronologia de navigation e le cookies, e impedi le avisos publicitari de sequer te.</string>
 
     <!-- Onboarding: Protection Title -->
-    <string name="onboarding_protection_title">Confidentialitate que vade ben pro ulle situation</string>
+    <string moz:removedIn="106" name="onboarding_protection_title">Confidentialitate que vade ben pro ulle situation</string>
 
     <!-- Onboarding: Protection Description -->
-    <string name="onboarding_protection_description">Si tu navigation besonia de cambios, illos es facile pro altiar o abassar tu parametros de confidentialitate.</string>
+    <string moz:removedIn="106" name="onboarding_protection_description">Si tu navigation besonia de cambios, illos es facile pro altiar o abassar tu parametros de confidentialitate.</string>
 
     <!-- Onboarding: Start browsing -->
-    <string name="onboarding_start_browsing">Comenciar a navigar</string>
+    <string moz:removedIn="106" name="onboarding_start_browsing">Comenciar a navigar</string>
 
     <!-- First run tour (Default browser): Title -->
     <string name="firstrun_defaultbrowser_title">Reinfortia tu confidentialitate</string>
@@ -980,7 +1011,9 @@ The new line here must be kept as the second half of the string is clickable for
 
     <!-- Contextual Feature Recommendation Popups -->
     <!-- CFR for Toolbar Shield Icon (Banner Info Message) -->
-    <string name="cfr_for_toolbar_shield_icon">Pare que iste sito ha tentate de traciar te. Clicca le escudo pro le statistica de parametros de sito e blocada del traciatores.</string>
+    <string moz:removedIn="104" name="cfr_for_toolbar_shield_icon">Pare que iste sito ha tentate de traciar te. Clicca le escudo pro le statistica de parametros de sito e blocada del traciatores.</string>
+    <string name="cfr_for_toolbar_shield_icon2">Sasite! Nos stoppava iste sito de spiar te. Quandocunque tocca le scuto pro vider lo que es blocate.</string>
+
     <!-- Content description (not visible, for screen readers etc.): Button that closes the CFR popup -->
     <string name="cfr_close_button_description">Clauder message emergente</string>
 
@@ -996,4 +1029,28 @@ The new line here must be kept as the second half of the string is clickable for
     <string moz:removedIn="105" name="cfr_for_toolbar_delete_icon" tools:ignore="UnusedResources">Libera te de tu datos personal, chronologia de navigation e altero ancora de iste session, toccante le button immunditia. Prova lo!</string>
     <string name="cfr_for_toolbar_delete_icon2">Tocca ci pro eliminar tote le datos, chronologia, cookies, toto, e recomenciar con un scheda tote nove.</string>
 
+    <!-- Promote SearchWidget Dialog -->
+
+    !-- Content description (not visible, for screen readers etc.): This is the description for the
+    close button from promote search widget dialog. --&gt;
+    <string name="promote_search_widget_dialog_content_description">Clauder</string>
+
+    !-- Content description (not visible, for screen readers etc.): This is the description for
+    picture of search widget from promote search widget dialog. --&gt;
+    <string name="promote_search_widget_dialog_picture_content_description">Cercar widget</string>
+
+    !-- This is the title of promote search widget dialog. --&gt;
+    <string name="promote_search_widget_dialog_title">Chronologia de navigation clarate! 🎉</string>
+
+    !-- This is the subtitle of promote search widget dialog. %1$s will get replaced with the name
+    of the app (e.g. &quot;Focus&quot;) --&gt;
+    <string name="promote_search_widget_dialog_subtitle">Nos te lassa a tu navigation private, ma memora le proxime vice que facilemente potera initiar con le widget %1$s sur tu Pagina initial.</string>
+
+    !-- This is te text from add search widget to home screen button .The button is located on
+    promote search widget dialog. --&gt;
+    <string name="promote_search_widget_button_text">Adder widget al pagina initial</string>
+
+    !-- This is te text of the snackbar that appears after the search widget was added successfully
+    to the home screen. --&gt;
+    <string name="promote_search_widget_snackbar_message">Widget addite al pagina initial</string>
 </resources>

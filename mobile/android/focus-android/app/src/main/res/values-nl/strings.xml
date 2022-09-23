@@ -496,32 +496,63 @@
 
   <!-- Onboarding: Title -->
     <!-- %1$s will be replaced by the app name and build variant(e.g. Firefox Focus, Firefox Klar Nightly) -->
-    <string name="onboarding_title">Welkom bij %1$s!</string>
+    <string moz:removedIn="106" name="onboarding_title">Welkom bij %1$s!</string>
+
+    <!-- Content description (not visible, for screen readers etc.): This is the description for the close button from the new onboarding flow screen one and two -->
+    <string name="onboarding_close_button_content_description">Sluiten</string>
+
+    <!-- New Onboarding flow first screen title -->
+    <!-- %1$s will be replaced by the app name and build variant(e.g. Firefox Focus, Firefox Klar Nightly) -->
+    <string name="onboarding_first_screen_title">Welkom bij %1$s</string>
+
+    <!-- New Onboarding flow first screen subtitle the one that appears under title -->
+    <string name="onboarding_first_screen_subtitle">Snel. Privé. Geen afleiding.</string>
+
+    <!-- New Onboarding flow first screen button label-->
+    <string name="onboarding_first_screen_button_text">Beginnen</string>
+
+    <!-- Onboarding second screen: Title -->
+    <!-- %1$s will be replaced by the app short name(Focus) -->
+    <string name="onboarding_second_screen_title">%1$s is niet zoals andere browsers</string>
+
+    <!-- New Onboarding flow second screen subtitle the one that appears under title -->
+    <string name="onboarding_second_screen_subtitle_one">Wanneer u de app sluit wissen we uw geschiedenis voor extra privacy.</string>
+
+    <!-- New Onboarding flow second screen subtitle two the one that appears under subtitle one -->
+    <!-- %1$s will be replaced by the app short name(Focus) -->
+    <string name="onboarding_second_screen_subtitle_two">Maak %1$s uw standaard om uw gegevens te beschermen bij elke koppeling die u opent.</string>
+
+    <!-- New Onboarding flow second screen make Focus default browser button label-->
+    <string name="onboarding_second_screen_default_browser_button_text">Als standaardbrowser instellen</string>
+
+    <!-- New Onboarding flow second screen skip onboarding button label-->
+    <string name="onboarding_second_screen_skip_button_text">Overslaan</string>
+
 
     <!-- Onboarding: Description -->
-    <string name="onboarding_description">Geavanceerde privénavigatie wanneer u dat wilt</string>
+    <string moz:removedIn="106" name="onboarding_description">Geavanceerde privénavigatie wanneer u dat wilt</string>
 
     <!-- Onboarding: Incognito Title -->
-    <string name="onboarding_incognito_title">Waar incognito onzichtbaar ontmoet</string>
+    <string moz:removedIn="106" name="onboarding_incognito_title">Waar incognito onzichtbaar ontmoet</string>
 
     <!-- Onboarding: Incognito Description -->
     <!-- Text %s will be replaced with the name of the app (e.g. Focus, Klar) -->
-    <string name="onboarding_incognito_description">%s is een browser die privacy voorop stelt, met ingebouwde extra sterke bescherming tegen volgen en cookies.</string>
+    <string moz:removedIn="106" name="onboarding_incognito_description">%s is een browser die privacy voorop stelt, met ingebouwde extra sterke bescherming tegen volgen en cookies.</string>
 
     <!-- Onboarding: History Title -->
-    <string name="onboarding_history_title">Surf alsof het nooit is gebeurd</string>
+    <string moz:removedIn="106" name="onboarding_history_title">Surf alsof het nooit is gebeurd</string>
 
     <!-- Onboarding: History Description -->
-    <string name="onboarding_history_description2">Met één tik worden uw navigatiegeschiedenis en cookies gewist en wordt voorkomen dat advertenties u volgen.</string>
+    <string moz:removedIn="106" name="onboarding_history_description2">Met één tik worden uw navigatiegeschiedenis en cookies gewist en wordt voorkomen dat advertenties u volgen.</string>
 
     <!-- Onboarding: Protection Title -->
-    <string name="onboarding_protection_title">Privacy voor elke situatie</string>
+    <string moz:removedIn="106" name="onboarding_protection_title">Privacy voor elke situatie</string>
 
     <!-- Onboarding: Protection Description -->
-    <string name="onboarding_protection_description">Als de manier waarop u surft moet worden gewijzigd, kunt u uw privacyinstellingen eenvoudig op- of afschalen.</string>
+    <string moz:removedIn="106" name="onboarding_protection_description">Als de manier waarop u surft moet worden gewijzigd, kunt u uw privacyinstellingen eenvoudig op- of afschalen.</string>
 
     <!-- Onboarding: Start browsing -->
-    <string name="onboarding_start_browsing">Beginnen met browsen</string>
+    <string moz:removedIn="106" name="onboarding_start_browsing">Beginnen met browsen</string>
 
     <!-- First run tour (Default browser): Title -->
     <string name="firstrun_defaultbrowser_title">Vergroot uw privacy</string>
@@ -981,7 +1012,9 @@ The new line here must be kept as the second half of the string is clickable for
 
     <!-- Contextual Feature Recommendation Popups -->
     <!-- CFR for Toolbar Shield Icon (Banner Info Message) -->
-    <string name="cfr_for_toolbar_shield_icon">Het lijkt erop dat deze website u probeerde te volgen. Klik op het schild voor website-instellingen en trackerblokkeringsstatistieken.</string>
+    <string moz:removedIn="104" name="cfr_for_toolbar_shield_icon">Het lijkt erop dat deze website u probeerde te volgen. Klik op het schild voor website-instellingen en trackerblokkeringsstatistieken.</string>
+    <string name="cfr_for_toolbar_shield_icon2">Hebbes! We hebben ervoor gezorgd dat deze website u niet meer bespioneert. Tik op elk moment op het schild om te bekijken wat we blokkeren.</string>
+
     <!-- Content description (not visible, for screen readers etc.): Button that closes the CFR popup -->
     <string name="cfr_close_button_description">Pop-up sluiten</string>
 
@@ -997,4 +1030,28 @@ The new line here must be kept as the second half of the string is clickable for
     <string moz:removedIn="105" name="cfr_for_toolbar_delete_icon" tools:ignore="UnusedResources">Verwijder uw persoonlijke gegevens, navigeergeschiedenis en meer uit deze sessie door op de prullenbakknop te tikken. Probeer het eens!</string>
     <string name="cfr_for_toolbar_delete_icon2">Tik hier om alles weg te gooien – geschiedenis, cookies, alles – en een verse start te maken op een nieuw tabblad.</string>
 
+    <!-- Promote SearchWidget Dialog -->
+
+    !-- Content description (not visible, for screen readers etc.): This is the description for the
+    close button from promote search widget dialog. --&gt;
+    <string name="promote_search_widget_dialog_content_description">Sluiten</string>
+
+    !-- Content description (not visible, for screen readers etc.): This is the description for
+    picture of search widget from promote search widget dialog. --&gt;
+    <string name="promote_search_widget_dialog_picture_content_description">Zoek-widget</string>
+
+    !-- This is the title of promote search widget dialog. --&gt;
+    <string name="promote_search_widget_dialog_title">Navigatiegeschiedenis gewist! 🎉</string>
+
+    !-- This is the subtitle of promote search widget dialog. %1$s will get replaced with the name
+    of the app (e.g. &quot;Focus&quot;) --&gt;
+    <string name="promote_search_widget_dialog_subtitle">We laten u nu verdergaan met uw privénavigatie, u kunt de volgende keer sneller van start gaan nu met de %1$s-widget op uw startscherm.</string>
+
+    !-- This is te text from add search widget to home screen button .The button is located on
+    promote search widget dialog. --&gt;
+    <string name="promote_search_widget_button_text">Widget aan startscherm toevoegen</string>
+
+    !-- This is te text of the snackbar that appears after the search widget was added successfully
+    to the home screen. --&gt;
+    <string name="promote_search_widget_snackbar_message">Widget aan startscherm toegevoegd</string>
 </resources>
