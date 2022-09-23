@@ -504,7 +504,7 @@ rtc_library("desktop_capture_generic") {
       "window_capturer_null.cc",
     ]
     deps += [
-      "../../rtc_base:divide_round",
+      "../../rtc_base:rtc_numerics",
       "//third_party/fuchsia-sdk/sdk/fidl/fuchsia.sysmem",
       "//third_party/fuchsia-sdk/sdk/fidl/fuchsia.ui.composition",
       "//third_party/fuchsia-sdk/sdk/fidl/fuchsia.ui.scenic",
