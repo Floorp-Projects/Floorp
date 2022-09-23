@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<meta charset=utf-8>
+<script type="application/javascript" src="../testharness.js"></script>
+<script type="application/javascript" src="../testharnessreport.js"></script>
+<script type="application/javascript" src="../testcommon.js"></script>
+<div id="log"></div>
+<script>
+
+promise_test(async t => {
+  // Set up a MutationObserver for animations.
+  const observer = new MutationObserver(() => {});
+  observer.observe(document.documentElement, {
+    animations: true,
+    subtree: true,
+  });
+
+  // Create a CSS transition in a shadow tree.
+  let s = document.createElement('shadow-test');
+  document.documentElement.appendChild(s);
+  s.attachShadow({mode:"open"});
+
+  let property = 'opacity';
+  let initial = '1';
+  let finalValue = '0';
+
+  let div = document.createElement('div');
+  div.style = `${property}:${initial};transition:${property} 2s;`
+
+  s.shadowRoot.appendChild(div);
+  div.offsetWidth;
+
+  div.style[property] = finalValue;
+
+  const eventWatcher = new EventWatcher(t, div, ['transitionstart']);
+
+  // Trigger a CSS transition.
+  getComputedStyle(div)[property];
+
+  // Wait for a transitionend event to make sure the transition has been started.
+  await eventWatcher.wait_for('transitionstart');
+
+  // Now remove the element to notify it to the observer
+  div.parentNode.removeChild(div);
+});
+</script>
