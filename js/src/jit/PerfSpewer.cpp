@@ -4,55 +4,70 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifdef JS_ION_PERF
+#include "mozilla/IntegerPrintfMacros.h"
+#include "mozilla/Printf.h"
 
-#  include "mozilla/IntegerPrintfMacros.h"
-#  include "mozilla/Printf.h"
+#ifdef XP_UNIX
+#  include <fcntl.h>
+#  include <sys/mman.h>
+#  include <sys/stat.h>
+#  include <unistd.h>
+#endif
 
-#  ifdef XP_UNIX
-#    include <fcntl.h>
-#    include <sys/mman.h>
-#    include <sys/stat.h>
-#    include <unistd.h>
-#  endif
+#if defined(XP_LINUX) && !defined(ANDROID) && defined(__GLIBC__)
+#  include <dlfcn.h>
+#  include <sys/syscall.h>
+#  include <sys/types.h>
+#  include <unistd.h>
+#  define gettid() static_cast<pid_t>(syscall(__NR_gettid))
+#endif
 
-#  if defined(XP_LINUX) && !defined(ANDROID) && defined(__GLIBC__)
-#    include <dlfcn.h>
-#    include <sys/syscall.h>
-#    include <sys/types.h>
-#    include <unistd.h>
-#    define gettid() static_cast<pid_t>(syscall(__NR_gettid))
-#  endif
-
-#  include "jit/PerfSpewer.h"
-#  include "jit/Jitdump.h"
-#  include "jit/JitSpewer.h"
-#  include "jit/LIR.h"
-#  include "jit/MIR.h"
-#  include "js/Printf.h"
-#  include "vm/MutexIDs.h"
+#include "jit/PerfSpewer.h"
+#include "jit/Jitdump.h"
+#include "jit/JitSpewer.h"
+#include "jit/LIR.h"
+#include "jit/MIR.h"
+#include "js/Printf.h"
+#include "vm/MutexIDs.h"
 
 using namespace js;
 using namespace js::jit;
 
-#  define PERF_MODE_NONE 1
-#  define PERF_MODE_FUNC 2
-#  define PERF_MODE_SRC 3
-#  define PERF_MODE_IR 4
+#define PERF_MODE_NONE 1
+#define PERF_MODE_FUNC 2
+#define PERF_MODE_SRC 3
+#define PERF_MODE_IR 4
 
 static uint32_t PerfMode = 0;
 
-static bool PerfChecked = false;
+static js::Mutex* PerfMutex = nullptr;
 
+#ifdef JS_ION_PERF
+static const char* spew_dir = ".";
 static FILE* JitDumpFilePtr = nullptr;
 static void* mmap_address = nullptr;
-static const char* spew_dir = ".";
+static bool IsPerfProfiling() { return JitDumpFilePtr != nullptr; }
+#endif
 
-static js::Mutex* PerfMutex;
+namespace {
+struct MOZ_RAII AutoLockPerfSpewer {
+  AutoLockPerfSpewer() { PerfMutex->lock(); }
+  ~AutoLockPerfSpewer() {
+#ifdef JS_ION_PERF
+    if (JitDumpFilePtr) {
+      fflush(JitDumpFilePtr);
+    }
+#endif
+    PerfMutex->unlock();
+  }
+};
+}  // namespace
 
 UniqueChars IonPerfSpewer::lirFilename;
 UniqueChars BaselinePerfSpewer::jsopFilename;
 UniqueChars InlineCachePerfSpewer::cacheopFilename;
+
+#ifdef JS_ION_PERF
 static uint64_t GetMonotonicTimestamp() {
   struct timespec ts = {};
   clock_gettime(CLOCK_MONOTONIC, &ts);
@@ -78,41 +93,32 @@ static uint32_t GetMachineEncoding() {
 #  endif
 }
 
-namespace {
-struct MOZ_RAII AutoFileLock {
-  AutoFileLock() {
-    if (!PerfEnabled()) {
-      return;
-    }
-    PerfMutex->lock();
-    MOZ_ASSERT(JitDumpFilePtr);
-  }
-  ~AutoFileLock() {
-    MOZ_ASSERT(JitDumpFilePtr);
-    fflush(JitDumpFilePtr);
-    PerfMutex->unlock();
-  }
-};
-}  // namespace
-
-static void DisablePerfSpewer() {
-  fprintf(stderr, "Warning: Disabling PerfSpewer.");
-
-  PerfMode = 0;
-  long page_size = sysconf(_SC_PAGESIZE);
-  munmap(mmap_address, page_size);
-  fclose(JitDumpFilePtr);
-  JitDumpFilePtr = nullptr;
-}
-
 static void WriteToJitDumpFile(const void* addr, uint32_t size,
-                               AutoFileLock& lock) {
+                               AutoLockPerfSpewer& lock) {
   MOZ_RELEASE_ASSERT(JitDumpFilePtr);
   size_t rv = fwrite(addr, 1, size, JitDumpFilePtr);
   MOZ_RELEASE_ASSERT(rv == size);
 }
 
-static void writeJitDumpHeader(AutoFileLock& lock) {
+static void WriteJitDumpDebugEntry(uint64_t addr, const char* filename,
+                                   uint32_t lineno, uint32_t colno,
+                                   AutoLockPerfSpewer& lock) {
+  JitDumpDebugEntry entry = {addr, lineno, colno};
+  WriteToJitDumpFile(&entry, sizeof(entry), lock);
+  WriteToJitDumpFile(filename, strlen(filename) + 1, lock);
+}
+
+static bool FileExists(const char* filename) {
+  // We don't currently dump external resources to disk.
+  if (strncmp(filename, "http", 4) == 0) {
+    return false;
+  }
+
+  struct stat buf = {};
+  return stat(filename, &buf) == 0;
+}
+
+static void writeJitDumpHeader(AutoLockPerfSpewer& lock) {
   JitDumpHeader header = {};
   header.magic = 0x4A695444;
   header.version = 1;
@@ -130,7 +136,7 @@ static bool openJitDump() {
   if (JitDumpFilePtr) {
     return true;
   }
-  AutoFileLock lock;
+  AutoLockPerfSpewer lock;
 
   const ssize_t bufferSize = 256;
   char filenameBuffer[bufferSize];
@@ -167,6 +173,8 @@ static bool openJitDump() {
 }
 
 void js::jit::CheckPerf() {
+  static bool PerfChecked = false;
+
   if (!PerfChecked) {
     const char* env = getenv("IONPERF");
     if (env == nullptr) {
@@ -208,30 +216,28 @@ void js::jit::CheckPerf() {
     PerfChecked = true;
   }
 }
+#endif
 
-bool js::jit::PerfSrcEnabled() {
-  MOZ_ASSERT(PerfMode);
-  return PerfMode == PERF_MODE_SRC;
+static void DisablePerfSpewer() {
+  fprintf(stderr, "Warning: Disabling PerfSpewer.");
+
+  PerfMode = 0;
+#ifdef JS_ION_PERF
+  long page_size = sysconf(_SC_PAGESIZE);
+  munmap(mmap_address, page_size);
+  fclose(JitDumpFilePtr);
+  JitDumpFilePtr = nullptr;
+#endif
 }
 
-bool js::jit::PerfIREnabled() {
-  MOZ_ASSERT(PerfMode);
-  return PerfMode == PERF_MODE_IR;
-}
+static bool PerfSrcEnabled() { return PerfMode == PERF_MODE_SRC; }
 
-bool js::jit::PerfFuncEnabled() {
-  MOZ_ASSERT(PerfMode);
-  return PerfMode == PERF_MODE_FUNC;
-}
+static bool PerfIREnabled() { return PerfMode == PERF_MODE_IR; }
 
-static bool FileExists(const char* filename) {
-  // We don't currently dump external resources to disk.
-  if (strncmp(filename, "http", 4) == 0) {
-    return false;
-  }
+static bool PerfFuncEnabled() { return PerfMode == PERF_MODE_FUNC; }
 
-  struct stat buf = {};
-  return stat(filename, &buf) == 0;
+bool js::jit::PerfEnabled() {
+  return PerfSrcEnabled() || PerfIREnabled() || PerfFuncEnabled();
 }
 
 void InlineCachePerfSpewer::recordInstruction(MacroAssembler& masm,
@@ -239,9 +245,10 @@ void InlineCachePerfSpewer::recordInstruction(MacroAssembler& masm,
   if (!PerfIREnabled()) {
     return;
   }
-  AutoFileLock lock;
+  AutoLockPerfSpewer lock;
 
-  if (!cacheopFilename) {
+#ifdef JS_ION_PERF
+  if (IsPerfProfiling() && !cacheopFilename) {
     cacheopFilename =
         JS_smprintf("%s/jitdump-cacheop-%u.txt", spew_dir, getpid());
 
@@ -252,9 +259,10 @@ void InlineCachePerfSpewer::recordInstruction(MacroAssembler& masm,
       fclose(opcodeFile);
     }
   }
+#endif
 
   OpcodeEntry entry;
-  entry.lineno = static_cast<unsigned>(op) + 1;
+  entry.opcode = static_cast<unsigned>(op);
   masm.bind(&entry.addr);
 
   if (!opcodes_.append(entry)) {
@@ -267,9 +275,10 @@ void IonPerfSpewer::recordInstruction(MacroAssembler& masm, LNode::Opcode op) {
   if (!PerfIREnabled()) {
     return;
   }
-  AutoFileLock lock;
+  AutoLockPerfSpewer lock;
 
-  if (!lirFilename) {
+#ifdef JS_ION_PERF
+  if (IsPerfProfiling() && !lirFilename) {
     lirFilename = JS_smprintf("%s/jitdump-lir-%u.txt", spew_dir, getpid());
 
     if (FILE* opcodeFile = fopen(lirFilename.get(), "w")) {
@@ -279,9 +288,10 @@ void IonPerfSpewer::recordInstruction(MacroAssembler& masm, LNode::Opcode op) {
       fclose(opcodeFile);
     }
   }
+#endif
 
   OpcodeEntry entry;
-  entry.lineno = static_cast<unsigned>(op) + 1;
+  entry.opcode = static_cast<unsigned>(op);
   masm.bind(&entry.addr);
 
   if (!opcodes_.append(entry)) {
@@ -294,9 +304,10 @@ void BaselinePerfSpewer::recordInstruction(MacroAssembler& masm, JSOp op) {
   if (!PerfIREnabled()) {
     return;
   }
-  AutoFileLock lock;
+  AutoLockPerfSpewer lock;
 
-  if (!jsopFilename) {
+#ifdef JS_ION_PERF
+  if (IsPerfProfiling() && !jsopFilename) {
     jsopFilename = JS_smprintf("%s/jitdump-jsop-%u.txt", spew_dir, getpid());
 
     if (FILE* opcodeFile = fopen(jsopFilename.get(), "w")) {
@@ -306,10 +317,11 @@ void BaselinePerfSpewer::recordInstruction(MacroAssembler& masm, JSOp op) {
       fclose(opcodeFile);
     }
   }
+#endif
 
   OpcodeEntry entry;
-  entry.lineno = static_cast<unsigned>(op) + 1;
   masm.bind(&entry.addr);
+  entry.opcode = static_cast<unsigned>(op);
 
   if (!opcodes_.append(entry)) {
     opcodes_.clear();
@@ -317,108 +329,122 @@ void BaselinePerfSpewer::recordInstruction(MacroAssembler& masm, JSOp op) {
   }
 }
 
-void PerfSpewer::WriteJitDumpLoadRecord(char* function_name, JitCode* code,
-                                        AutoFileLock& lock) {
-  WriteJitDumpLoadRecord(function_name, reinterpret_cast<void*>(code->raw()),
-                         code->instructionsSize(), lock);
+void PerfSpewer::CollectJitCodeInfo(UniqueChars& function_name, JitCode* code,
+                                    AutoLockPerfSpewer& lock) {
+  CollectJitCodeInfo(function_name, reinterpret_cast<void*>(code->raw()),
+                     code->instructionsSize(), lock);
 }
 
-void PerfSpewer::WriteJitDumpLoadRecord(char* function_name, void* code_addr,
-                                        uint64_t code_size,
-                                        AutoFileLock& lock) {
-  static uint64_t codeIndex = 1;
-
-  JitDumpLoadRecord record = {};
-
-  record.header.id = JIT_CODE_LOAD;
-  record.header.total_size =
-      sizeof(record) + strlen(function_name) + 1 + code_size;
-  record.header.timestamp = GetMonotonicTimestamp();
-  record.pid = getpid();
-  record.tid = gettid();
-  record.vma = uint64_t(code_addr);
-  record.code_addr = uint64_t(code_addr);
-  record.code_size = code_size;
-  record.code_index = codeIndex++;
-
-  WriteToJitDumpFile(&record, sizeof(record), lock);
-  WriteToJitDumpFile(function_name, strlen(function_name) + 1, lock);
-  WriteToJitDumpFile(code_addr, code_size, lock);
-}
-
-void PerfSpewer::WriteJitDumpEntry(const char* desc, JSScript* script,
-                                   JitCode* code, AutoFileLock& lock) {
-  if (PerfSrcEnabled()) {
+void PerfSpewer::CollectJitCodeInfo(const char* desc, JSScript* script,
+                                    JitCode* code, AutoLockPerfSpewer& lock) {
+#ifdef JS_ION_PERF
+  if (IsPerfProfiling() && PerfSrcEnabled()) {
     if (FileExists(script->filename())) {
-      WriteJitDumpSourceInfo(script->filename(), script, code, lock);
+      SaveJitCodeSourceInfo(script->filename(), script, code, lock);
     }
   }
+#endif
 
   UniqueChars function_name =
       JS_smprintf("%s %s:%u:%u", desc, script->filename(), script->lineno(),
                   script->column());
-  WriteJitDumpLoadRecord(function_name.get(), code, lock);
+  CollectJitCodeInfo(function_name, code, lock);
 }
 
-void PerfSpewer::WriteJitDumpDebugEntry(uint64_t addr, const char* filename,
-                                        uint32_t lineno, uint32_t colno,
-                                        AutoFileLock& lock) {
-  JitDumpDebugEntry entry = {addr, lineno, colno};
-  WriteToJitDumpFile(&entry, sizeof(entry), lock);
-  WriteToJitDumpFile(filename, strlen(filename) + 1, lock);
+void PerfSpewer::CollectJitCodeInfo(UniqueChars& function_name, void* code_addr,
+                                    uint64_t code_size,
+                                    AutoLockPerfSpewer& lock) {
+#ifdef JS_ION_PERF
+  static uint64_t codeIndex = 1;
+
+  if (IsPerfProfiling()) {
+    JitDumpLoadRecord record = {};
+
+    record.header.id = JIT_CODE_LOAD;
+    record.header.total_size =
+        sizeof(record) + strlen(function_name.get()) + 1 + code_size;
+    record.header.timestamp = GetMonotonicTimestamp();
+    record.pid = getpid();
+    record.tid = gettid();
+    record.vma = uint64_t(code_addr);
+    record.code_addr = uint64_t(code_addr);
+    record.code_size = code_size;
+    record.code_index = codeIndex++;
+
+    WriteToJitDumpFile(&record, sizeof(record), lock);
+    WriteToJitDumpFile(function_name.get(), strlen(function_name.get()) + 1,
+                       lock);
+    WriteToJitDumpFile(code_addr, code_size, lock);
+  }
+#endif
 }
 
-void PerfSpewer::writeJitDumpIRInfo(const char* filename, JitCode* code,
-                                    AutoFileLock& lock) {
-  JitDumpDebugRecord debug_record = {};
-  uint64_t n_records = opcodes_.length();
+void PerfSpewer::saveJitCodeIRInfo(const char* filename, JitCode* code,
+                                   AutoLockPerfSpewer& lock) {
+#ifdef JS_ION_PERF
+  if (IsPerfProfiling()) {
+    JitDumpDebugRecord debug_record = {};
+    uint64_t n_records = opcodes_.length();
 
-  debug_record.header.id = JIT_CODE_DEBUG_INFO;
-  debug_record.header.total_size =
-      sizeof(debug_record) +
-      n_records * (sizeof(JitDumpDebugEntry) + strlen(filename) + 1);
-  debug_record.header.timestamp = GetMonotonicTimestamp();
-  debug_record.code_addr = uint64_t(code->raw());
-  debug_record.nr_entry = n_records;
+    debug_record.header.id = JIT_CODE_DEBUG_INFO;
+    debug_record.header.total_size =
+        sizeof(debug_record) +
+        n_records * (sizeof(JitDumpDebugEntry) + strlen(filename) + 1);
+    debug_record.header.timestamp = GetMonotonicTimestamp();
+    debug_record.code_addr = uint64_t(code->raw());
+    debug_record.nr_entry = n_records;
 
-  WriteToJitDumpFile(&debug_record, sizeof(debug_record), lock);
+    WriteToJitDumpFile(&debug_record, sizeof(debug_record), lock);
+  }
+#endif
 
   for (OpcodeEntry& entry : opcodes_) {
-    uint64_t addr = uint64_t(code->raw()) + entry.addr.offset();
-    WriteJitDumpDebugEntry(addr, filename, entry.lineno, 0, lock);
+#ifdef JS_ION_PERF
+    if (IsPerfProfiling()) {
+      uint64_t addr = uint64_t(code->raw()) + entry.addr.offset();
+      WriteJitDumpDebugEntry(addr, filename, entry.opcode + 1, 0, lock);
+    }
+#endif
   }
   opcodes_.clear();
 }
 
-void PerfSpewer::WriteJitDumpSourceInfo(const char* localfile, JSScript* script,
-                                        JitCode* code, AutoFileLock& lock) {
-  JitDumpDebugRecord debug_record = {};
-  uint64_t n_records = 0;
+void PerfSpewer::SaveJitCodeSourceInfo(const char* localfile, JSScript* script,
+                                       JitCode* code,
+                                       AutoLockPerfSpewer& lock) {
+#ifdef JS_ION_PERF
+  // If we are using perf, we need to know the number of debug entries ahead of
+  // time for the header.
+  if (IsPerfProfiling()) {
+    JitDumpDebugRecord debug_record = {};
+    uint64_t n_records = 0;
 
-  for (SrcNoteIterator iter(script->notes()); !iter.atEnd(); ++iter) {
-    const auto* const sn = *iter;
-    switch (sn->type()) {
-      case SrcNoteType::SetLine:
-      case SrcNoteType::NewLine:
-        if (sn->delta() > 0) {
-          n_records++;
-        }
-        break;
-      default:
-        break;
+    for (SrcNoteIterator iter(script->notes()); !iter.atEnd(); ++iter) {
+      const auto* const sn = *iter;
+      switch (sn->type()) {
+        case SrcNoteType::SetLine:
+        case SrcNoteType::NewLine:
+          if (sn->delta() > 0) {
+            n_records++;
+          }
+          break;
+        default:
+          break;
+      }
     }
+
+    debug_record.header.id = JIT_CODE_DEBUG_INFO;
+    debug_record.header.total_size =
+        sizeof(debug_record) +
+        n_records * (sizeof(JitDumpDebugEntry) + strlen(localfile) + 1);
+
+    debug_record.header.timestamp = GetMonotonicTimestamp();
+    debug_record.code_addr = uint64_t(code->raw());
+    debug_record.nr_entry = n_records;
+
+    WriteToJitDumpFile(&debug_record, sizeof(debug_record), lock);
   }
-
-  debug_record.header.id = JIT_CODE_DEBUG_INFO;
-  debug_record.header.total_size =
-      sizeof(debug_record) +
-      n_records * (sizeof(JitDumpDebugEntry) + strlen(localfile) + 1);
-
-  debug_record.header.timestamp = GetMonotonicTimestamp();
-  debug_record.code_addr = uint64_t(code->raw());
-  debug_record.nr_entry = n_records;
-
-  WriteToJitDumpFile(&debug_record, sizeof(debug_record), lock);
+#endif
 
   uint32_t lineno = script->lineno();
   uint32_t colno = script->column();
@@ -446,91 +472,93 @@ void PerfSpewer::WriteJitDumpSourceInfo(const char* localfile, JSScript* script,
       continue;
     }
 
-    WriteJitDumpDebugEntry(uint64_t(code->raw()) + offset, localfile, lineno,
-                           colno, lock);
+#ifdef JS_ION_PERF
+    if (IsPerfProfiling()) {
+      WriteJitDumpDebugEntry(uint64_t(code->raw()) + offset, localfile, lineno,
+                             colno, lock);
+    }
+#endif
   }
 }
 
-void IonPerfSpewer::writeProfile(JSScript* script, JitCode* code) {
+void IonPerfSpewer::saveProfile(JSScript* script, JitCode* code) {
   if (!PerfEnabled()) {
     return;
   }
-  AutoFileLock lock;
+  AutoLockPerfSpewer lock;
 
   if (PerfIREnabled()) {
-    writeJitDumpIRInfo(lirFilename.get(), code, lock);
+    saveJitCodeIRInfo(lirFilename.get(), code, lock);
   }
 
-  WriteJitDumpEntry("Ion", script, code, lock);
+  CollectJitCodeInfo("Ion", script, code, lock);
 }
 
-void BaselinePerfSpewer::writeProfile(JSScript* script, JitCode* code) {
+void BaselinePerfSpewer::saveProfile(JSScript* script, JitCode* code) {
   if (!PerfEnabled()) {
     return;
   }
-  AutoFileLock lock;
+  AutoLockPerfSpewer lock;
 
   if (PerfIREnabled()) {
-    writeJitDumpIRInfo(jsopFilename.get(), code, lock);
+    saveJitCodeIRInfo(jsopFilename.get(), code, lock);
   }
 
-  WriteJitDumpEntry("Baseline", script, code, lock);
+  CollectJitCodeInfo("Baseline", script, code, lock);
 }
 
-void InlineCachePerfSpewer::writeProfile(JitCode* code, const char* name) {
+void InlineCachePerfSpewer::saveProfile(JitCode* code, const char* name) {
   if (!PerfEnabled()) {
     return;
   }
-  AutoFileLock lock;
+  AutoLockPerfSpewer lock;
 
   if (PerfIREnabled()) {
-    writeJitDumpIRInfo(cacheopFilename.get(), code, lock);
+    saveJitCodeIRInfo(cacheopFilename.get(), code, lock);
   }
 
-  auto desc = mozilla::Smprintf<js::SystemAllocPolicy>("IC: %s", name);
-  PerfSpewer::WriteJitDumpLoadRecord(desc.get(), code, lock);
+  UniqueChars desc = JS_smprintf("IC: %s", name);
+  PerfSpewer::CollectJitCodeInfo(desc, code, lock);
 }
 
-void js::jit::writePerfSpewerJitCodeProfile(JitCode* code, const char* msg) {
+void js::jit::CollectPerfSpewerJitCodeProfile(JitCode* code, const char* msg) {
   if (!code || !PerfEnabled()) {
     return;
   }
 
   size_t size = code->instructionsSize();
   if (size > 0) {
-    AutoFileLock lock;
+    AutoLockPerfSpewer lock;
 
     UniqueChars desc = JS_smprintf("%s", msg);
-    PerfSpewer::WriteJitDumpLoadRecord(desc.get(), code, lock);
+    PerfSpewer::CollectJitCodeInfo(desc, code, lock);
   }
 }
 
-void js::jit::writePerfSpewerWasmMap(uintptr_t base, uintptr_t size,
-                                     const char* filename,
-                                     const char* annotation) {
+void js::jit::CollectPerfSpewerWasmMap(uintptr_t base, uintptr_t size,
+                                       const char* filename,
+                                       const char* annotation) {
   if (size == 0U || !PerfEnabled()) {
     return;
   }
-  AutoFileLock lock;
+  AutoLockPerfSpewer lock;
 
   UniqueChars desc = JS_smprintf("%s: Function %s", filename, annotation);
-  PerfSpewer::WriteJitDumpLoadRecord(desc.get(), reinterpret_cast<void*>(base),
-                                     uint64_t(size), lock);
+  PerfSpewer::CollectJitCodeInfo(desc, reinterpret_cast<void*>(base),
+                                 uint64_t(size), lock);
 }
 
-void js::jit::writePerfSpewerWasmFunctionMap(uintptr_t base, uintptr_t size,
-                                             const char* filename,
-                                             unsigned lineno,
-                                             const char* funcName) {
+void js::jit::CollectPerfSpewerWasmFunctionMap(uintptr_t base, uintptr_t size,
+                                               const char* filename,
+                                               unsigned lineno,
+                                               const char* funcName) {
   if (size == 0U || !PerfEnabled()) {
     return;
   }
-  AutoFileLock lock;
+  AutoLockPerfSpewer lock;
 
   UniqueChars desc =
       JS_smprintf("%s:%u: Function %s", filename, lineno, funcName);
-  PerfSpewer::WriteJitDumpLoadRecord(desc.get(), reinterpret_cast<void*>(base),
-                                     uint64_t(size), lock);
+  PerfSpewer::CollectJitCodeInfo(desc, reinterpret_cast<void*>(base),
+                                 uint64_t(size), lock);
 }
-
-#endif  // defined (JS_ION_PERF)
