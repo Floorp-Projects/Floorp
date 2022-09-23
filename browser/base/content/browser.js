@@ -9073,6 +9073,11 @@ const SafeBrowsingNotificationBox = {
  * suppressed.
  */
 class TabDialogBox {
+  static _containerFor(browser) {
+    // Return the .browserContainer
+    return browser.parentNode.parentNode;
+  }
+
   constructor(browser) {
     this._weakBrowserRef = Cu.getWeakReference(browser);
 
@@ -9081,10 +9086,7 @@ class TabDialogBox {
     let dialogStack = template.content.cloneNode(true).firstElementChild;
     dialogStack.classList.add("tab-prompt-dialog");
 
-    this.browser.parentNode.insertBefore(
-      dialogStack,
-      this.browser.nextElementSibling
-    );
+    TabDialogBox._containerFor(browser).appendChild(dialogStack);
 
     // Initially the stack only contains the template
     let dialogTemplate = dialogStack.firstElementChild;
@@ -9216,10 +9218,9 @@ class TabDialogBox {
     contentDialogStack.classList.add("content-prompt-dialog");
 
     // Create a dialog manager for content prompts.
-    let tabPromptDialog = this.browser.parentNode.querySelector(
-      ".tab-prompt-dialog"
-    );
-    this.browser.parentNode.insertBefore(contentDialogStack, tabPromptDialog);
+    let browserContainer = TabDialogBox._containerFor(this.browser);
+    let tabPromptDialog = browserContainer.querySelector(".tab-prompt-dialog");
+    browserContainer.insertBefore(contentDialogStack, tabPromptDialog);
 
     let contentDialogTemplate = contentDialogStack.firstElementChild;
     this._contentDialogManager = new SubDialogManager({

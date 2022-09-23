@@ -1521,6 +1521,8 @@ toolbar[keyNav=true]:not([collapsed=true], [customizing=true]) toolbartabstop {
   /* Should outrank the z-index values of other UI elements, particularly the devtools
      splitter element. */
   z-index: 2;
+  position: absolute;
+  inset: 0;
 }
 
 .dialogStack.temporarilyHidden {
@@ -1684,7 +1686,7 @@ toolbar[keyNav=true]:not([collapsed=true], [customizing=true]) toolbartabstop {
 }
 
 /* Hide tab-modal dialogs when a window-modal one is up. */
-:root[window-modal-open] .browserStack > .dialogStack {
+:root[window-modal-open] .browserContainer > .dialogStack {
   visibility: hidden;
 }
 
