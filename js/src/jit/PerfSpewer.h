@@ -15,6 +15,7 @@
 #include "jit/Label.h"
 #include "jit/LIR.h"
 #include "js/AllocPolicy.h"
+#include "js/JitCodeAPI.h"
 #include "js/Vector.h"
 #include "vm/JSScript.h"
 
@@ -22,14 +23,16 @@ namespace {
 struct AutoLockPerfSpewer;
 }
 
-namespace js {
-namespace jit {
+namespace js::jit {
+
+using ProfilerJitCodeVector = Vector<JS::JitCodeRecord, 0, SystemAllocPolicy>;
 
 #ifdef JS_ION_PERF
 void CheckPerf();
 #else
 inline void CheckPerf() {}
 #endif
+void ResetPerfSpewer(bool enabled);
 
 class MBasicBlock;
 class MacroAssembler;
@@ -40,24 +43,34 @@ class PerfSpewer {
  protected:
   struct OpcodeEntry {
     Label addr;
-    unsigned opcode;
+    unsigned opcode = 0;
   };
-  Vector<OpcodeEntry, 1, SystemAllocPolicy> opcodes_;
+  Vector<OpcodeEntry, 0, SystemAllocPolicy> opcodes_;
+
+  uint32_t lir_opcode_length = 0;
+  uint32_t js_opcode_length = 0;
+
+  virtual JS::JitTier GetTier() { return JS::JitTier::Other; }
 
  public:
   PerfSpewer() = default;
 
   void saveJitCodeIRInfo(const char* filename, JitCode* code,
+                         JS::JitCodeRecord* profilerRecord,
                          AutoLockPerfSpewer& lock);
-  static void SaveJitCodeSourceInfo(const char* localfile, JSScript* script,
-                                    JitCode* code, AutoLockPerfSpewer& lock);
+  static void SaveJitCodeSourceInfo(JSScript* script, JitCode* code,
+                                    JS::JitCodeRecord* record,
+                                    AutoLockPerfSpewer& lock);
 
   static void CollectJitCodeInfo(const char* desc, JSScript* script,
-                                 JitCode* code, AutoLockPerfSpewer& lock);
-  static void CollectJitCodeInfo(UniqueChars& function_name, JitCode* code,
+                                 JitCode* code, JS::JitCodeRecord*,
                                  AutoLockPerfSpewer& lock);
+  static void CollectJitCodeInfo(UniqueChars& function_name, JitCode* code,
+                                 JS::JitCodeRecord*, AutoLockPerfSpewer& lock);
   static void CollectJitCodeInfo(UniqueChars& function_name, void* code_addr,
-                                 uint64_t code_size, AutoLockPerfSpewer& lock);
+                                 uint64_t code_size,
+                                 JS::JitCodeRecord* profilerRecord,
+                                 AutoLockPerfSpewer& lock);
 };
 
 void CollectPerfSpewerJitCodeProfile(JitCode* code, const char* msg);
@@ -71,6 +84,8 @@ void CollectPerfSpewerWasmFunctionMap(uintptr_t base, uintptr_t size,
 class IonPerfSpewer : public PerfSpewer {
   static UniqueChars lirFilename;
 
+  JS::JitTier GetTier() override { return JS::JitTier::Ion; }
+
  public:
   void recordInstruction(MacroAssembler& masm, LNode::Opcode op);
   void saveProfile(JSScript* script, JitCode* code);
@@ -78,6 +93,8 @@ class IonPerfSpewer : public PerfSpewer {
 
 class BaselinePerfSpewer : public PerfSpewer {
   static UniqueChars jsopFilename;
+
+  JS::JitTier GetTier() override { return JS::JitTier::Baseline; }
 
  public:
   void recordInstruction(MacroAssembler& masm, JSOp op);
@@ -87,12 +104,13 @@ class BaselinePerfSpewer : public PerfSpewer {
 class InlineCachePerfSpewer : public PerfSpewer {
   static UniqueChars cacheopFilename;
 
+  JS::JitTier GetTier() override { return JS::JitTier::IC; }
+
  public:
   void recordInstruction(MacroAssembler& masm, CacheOp op);
   void saveProfile(JitCode* code, const char* name);
 };
 
-}  // namespace jit
-}  // namespace js
+}  // namespace js::jit
 
 #endif /* jit_PerfSpewer_h */
