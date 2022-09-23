@@ -19,6 +19,7 @@ use crate::private::{
     Lifetime,
     MemoryUnit,
     TimeUnit,
+    Ping,
     LabeledMetric,
     {# No EventMetric for us yet because ExtraKeys are hard #}
 {% for metric_type_name in metric_types.keys() if metric_type_name != 'event' and not metric_type_name.startswith('labeled_') %}
@@ -29,10 +30,14 @@ use crate::private::traits::HistogramType;
 pub(crate) static DYNAMIC_METRIC_BIT: u32 = {{runtime_metric_bit}};
 // 2**DYNAMIC_METRIC_BIT + 1 (+1 because we reserve the 0 metric id)
 static NEXT_METRIC_ID: AtomicU32 = AtomicU32::new({{2**runtime_metric_bit + 1}});
+pub(crate) static DYNAMIC_PING_BIT: u32 = {{runtime_ping_bit}};
+// 2**DYNAMIC_PING_BIT + 1 (+1 because we reserve the 0 ping id)
+static NEXT_PING_ID: AtomicU32 = AtomicU32::new({{2**runtime_ping_bit + 1}});
 
 pub(crate) mod __jog_metric_maps {
     use crate::private::MetricId;
     use crate::private::{
+        Ping,
         LabeledMetric,
     {# No EventMetric for us yet because ExtraKeys are hard #}
     {% for metric_type_name in metric_types.keys() if metric_type_name != "event"%}
@@ -55,6 +60,8 @@ pub(crate) mod __jog_metric_maps {
         Lazy::new(|| Arc::new(RwLock::new(HashMap::new())));
 
 {% endfor %}
+    pub static PING_MAP: Lazy<Arc<RwLock<HashMap<u32, Ping>>>> =
+        Lazy::new(|| Arc::new(RwLock::new(HashMap::new())));
 }
 
 #[derive(Debug)]
@@ -119,4 +126,20 @@ map of argument name to argument type. I may regret this if I need it again. #}
         _ => return Err(Box::new(MetricTypeNotFoundError(metric_type.to_string())))
     };
     Ok(metric32)
+}
+
+/// Creates and registers a ping, returning its id.
+pub fn create_and_register_ping(
+    ping_name: String,
+    include_client_id: bool,
+    send_if_empty: bool,
+    reason_codes: Vec<String>,
+) -> Result<u32, Box<dyn std::error::Error>> {
+    let ping_id = NEXT_PING_ID.fetch_add(1, Ordering::SeqCst);
+    let ping = Ping::new(ping_name, include_client_id, send_if_empty, reason_codes);
+    assert!(
+        __jog_metric_maps::PING_MAP.write()?.insert(ping_id.into(), ping).is_none(),
+        "We should never insert a runtime ping with an already-used id."
+    );
+    Ok(ping_id)
 }
