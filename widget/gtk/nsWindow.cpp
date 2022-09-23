@@ -3429,9 +3429,11 @@ void* nsWindow::GetNativeData(uint32_t aDataType) {
 #endif
 #ifdef MOZ_WAYLAND
       if (GdkIsWaylandDisplay()) {
-        if (mCompositorWidgetDelegate) {
+        if (mCompositorWidgetDelegate &&
+            mCompositorWidgetDelegate->AsGtkCompositorWidget()) {
           MOZ_DIAGNOSTIC_ASSERT(
-              !mCompositorWidgetDelegate->AsGtkCompositorWidget()->IsHidden());
+              !mCompositorWidgetDelegate->AsGtkCompositorWidget()->IsHidden(),
+              "We're getting OpenGL window for hidden window!");
         }
         eglWindow = moz_container_wayland_get_egl_window(
             mContainer, FractionalScaleFactor());
@@ -6456,12 +6458,14 @@ void nsWindow::WaylandStartVsync() {
   LOG_VSYNC("nsWindow::WaylandStartVsync");
 
   MOZ_DIAGNOSTIC_ASSERT(mCompositorWidgetDelegate);
-  if (RefPtr<layers::NativeLayerRoot> nativeLayerRoot =
-          mCompositorWidgetDelegate->AsGtkCompositorWidget()
-              ->GetNativeLayerRoot()) {
+  if (mCompositorWidgetDelegate->AsGtkCompositorWidget() &&
+      mCompositorWidgetDelegate->AsGtkCompositorWidget()
+          ->GetNativeLayerRoot()) {
     LOG_VSYNC("  use source NativeLayerRootWayland");
     mWaylandVsyncSource->MaybeUpdateSource(
-        nativeLayerRoot->AsNativeLayerRootWayland());
+        mCompositorWidgetDelegate->AsGtkCompositorWidget()
+            ->GetNativeLayerRoot()
+            ->AsNativeLayerRootWayland());
   } else {
     LOG_VSYNC("  use source mContainer");
     mWaylandVsyncSource->MaybeUpdateSource(mContainer);
@@ -8767,7 +8771,6 @@ void nsWindow::SetCompositorWidgetDelegate(CompositorWidgetDelegate* delegate) {
     MOZ_ASSERT(mCompositorWidgetDelegate,
                "nsWindow::SetCompositorWidgetDelegate called with a "
                "non-PlatformCompositorWidgetDelegate");
-    MOZ_DIAGNOSTIC_ASSERT(mCompositorWidgetDelegate->AsGtkCompositorWidget());
     if (mIsMapped) {
       ConfigureCompositor();
     }
