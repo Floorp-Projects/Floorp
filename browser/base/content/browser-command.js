@@ -364,7 +364,7 @@ function setCustomSidebarMode20() {
 }
 
 function setSidebarIconView() {
-  for (let sbar_id = 1; sbar_id < 21; sbar_id++) {
+  for (let sbar_id = 1; sbar_id <= SIDEBAR_AMOUNT; sbar_id++) {
     document.getElementById("select-CustomURL" + sbar_id).hidden = (Services.prefs.getStringPref("floorp.browser.sidebar2.customurl" + sbar_id, undefined) != "") ? false : true;
   }
 }
