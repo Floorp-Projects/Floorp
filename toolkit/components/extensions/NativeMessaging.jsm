@@ -93,6 +93,8 @@ var NativeApp = class extends EventEmitter {
             lazy.OS.Path.dirname(hostInfo.path),
             command
           );
+          // Normalize in case the extension used / instead of \.
+          command = command.replaceAll("/", "\\");
         }
 
         let subprocessOpts = {
