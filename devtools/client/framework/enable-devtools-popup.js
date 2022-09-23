@@ -9,7 +9,7 @@
  * never been opened by the user.
  *
  * This popup should be anchored below the main hamburger menu of Firefox,
- * which contains the Web Developer menu.
+ * which contains the Browser Tools menu.
  *
  * This is part of the OFF12 experiment which tries to disable F12 by default to
  * reduce accidental usage of DevTools and increase retention of non DevTools

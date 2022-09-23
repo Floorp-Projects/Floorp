@@ -78,7 +78,7 @@ class ResponsiveUIManager {
    *        Other options associated with toggling.  Currently includes:
    *        - `trigger`: String denoting the UI entry point, such as:
    *          - `toolbox`:  Toolbox Button
-   *          - `menu`:     Web Developer menu item
+   *          - `menu`:     Browser Tools menu item
    *          - `shortcut`: Keyboard shortcut
    * @return Promise
    *         Resolved when the toggling has completed.  If the UI has opened,
@@ -110,7 +110,7 @@ class ResponsiveUIManager {
    *        Other options associated with opening.  Currently includes:
    *        - `trigger`: String denoting the UI entry point, such as:
    *          - `toolbox`:  Toolbox Button
-   *          - `menu`:     Web Developer menu item
+   *          - `menu`:     Browser Tools menu item
    *          - `shortcut`: Keyboard shortcut
    * @return Promise
    *         Resolved to the ResponsiveUI instance for this tab when opening is
@@ -182,7 +182,7 @@ class ResponsiveUIManager {
    *        Other options associated with closing.  Currently includes:
    *        - `trigger`: String denoting the UI entry point, such as:
    *          - `toolbox`:  Toolbox Button
-   *          - `menu`:     Web Developer menu item
+   *          - `menu`:     Browser Tools menu item
    *          - `shortcut`: Keyboard shortcut
    *        - `reason`: String detailing the specific cause for closing
    * @return Promise

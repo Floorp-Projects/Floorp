@@ -8,7 +8,7 @@ To enable it, you must first flip two preferences in the DevTools Options panel 
 - Enable browser chrome and add-on debugging toolboxes
 - Enable remote debugging
 
-You can either start it via a keyboard shortcut (CmdOrCtrl+Alt+Shift+I) or via the Tools > Web Developer > Browser Toolbox menu item.
+You can either start it via a keyboard shortcut (CmdOrCtrl+Alt+Shift+I) or via the Tools > Browser Tools > Browser Toolbox menu item.
 
 When describing the setup used by the Browser Toolbox, we will refer to those two distinct Firefox instances as:
 - the target Firefox: this is the current instance, that we want to debug

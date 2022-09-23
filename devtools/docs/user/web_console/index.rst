@@ -47,8 +47,7 @@ Opening the Web Console
 
 You open the Web Console from a menu or with a keyboard shortcut:
 
-
-- Choose **Web Console** from the **Web Developer** submenu in the **Firefox Menu** (or **Tools** menu if you display the menu bar or are on Mac OS X)
+- Select the *Web Console* panel in the Web Developer Tools, accessible from the Browser Tools submenu
 
 - Press the :kbd:`Ctrl` + :kbd:`Shift` + :kbd:`K` (:kbd:`Cmd` + :kbd:`Opt` + :kbd:`K` on OS X) keyboard shortcut.
 

@@ -6,7 +6,7 @@
 
 /**
  * This module defines the sorted list of menuitems inserted into the
- * "Web Developer" menu.
+ * "Browser Tools" menu.
  * It also defines the key shortcuts that relates to them.
  *
  * Various fields are necessary for historical compatiblity with XUL/addons:

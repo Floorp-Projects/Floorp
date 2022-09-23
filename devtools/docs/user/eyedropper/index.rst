@@ -16,7 +16,7 @@ Copying a color to the clipboard
 
 Open the Eyedropper in one of these two ways:
 
-- select "Eyedropper" under the "Web Developer" menu
+- select "Eyedropper" under the "Browser Tools" menu
 - open the :doc:`Page Inspector <../page_inspector/index>` tab and click the eyedropper button in its toolbar
 
 As you move the mouse around the page you'll see the current color value in the Eyedropper change. Clicking copies the current color value to the clipboard.
