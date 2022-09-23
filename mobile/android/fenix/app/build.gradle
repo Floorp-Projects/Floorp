@@ -235,7 +235,7 @@ android.applicationVariants.all { variant ->
 // Generate version codes for builds
 // -------------------------------------------------------------------------------------------------
 
-    def isDebug = variant.buildType.resValues['IS_DEBUG']?.value ?: false
+    def isDebug = variant.buildType.resValues['bool/IS_DEBUG']?.value ?: false
     def useReleaseVersioning = variant.buildType.buildConfigFields['USE_RELEASE_VERSIONING']?.value ?: false
 
     println("----------------------------------------------")
