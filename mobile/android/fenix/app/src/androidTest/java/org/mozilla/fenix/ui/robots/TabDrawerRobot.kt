@@ -33,6 +33,7 @@ import androidx.test.uiautomator.Until
 import androidx.test.uiautomator.Until.findObject
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import junit.framework.AssertionFailedError
+import junit.framework.TestCase.assertFalse
 import junit.framework.TestCase.assertTrue
 import org.hamcrest.CoreMatchers.allOf
 import org.hamcrest.CoreMatchers.anyOf
@@ -78,6 +79,7 @@ class TabDrawerRobot {
         assertSyncedTabsButtonIsSelected(isSelected)
 
     fun verifyExistingOpenTabs(vararg titles: String) = assertExistingOpenTabs(*titles)
+    fun verifyNoExistingOpenTabs(vararg titles: String) = assertNoExistingOpenTabs(*titles)
     fun verifyCloseTabsButton(title: String) = assertCloseTabsButton(title)
 
     fun verifyExistingTabList() = assertExistingTabList()
@@ -487,6 +489,14 @@ private fun assertExistingOpenTabs(vararg tabTitles: String) {
                 tabItem(title).waitForExists(waitingTimeLong),
             )
         }
+    }
+}
+
+private fun assertNoExistingOpenTabs(vararg tabTitles: String) {
+    for (title in tabTitles) {
+        assertFalse(
+            tabItem(title).waitForExists(waitingTimeLong),
+        )
     }
 }
 

@@ -261,6 +261,83 @@ class BookmarksTest {
     }
 
     @Test
+    fun openAllInTabsTest() {
+        val webPages = listOf(
+            TestAssetHelper.getGenericAsset(mockWebServer, 1),
+            TestAssetHelper.getGenericAsset(mockWebServer, 2),
+            TestAssetHelper.getGenericAsset(mockWebServer, 3),
+            TestAssetHelper.getGenericAsset(mockWebServer, 4),
+        )
+
+        homeScreen {
+        }.openThreeDotMenu {
+        }.openBookmarks {
+            createFolder("root")
+            createFolder("sub", "root")
+            createFolder("empty", "root")
+        }.closeMenu {
+        }
+
+        browserScreen {
+            createBookmark(webPages[0].url)
+            createBookmark(webPages[1].url, "root")
+            createBookmark(webPages[2].url, "root")
+            createBookmark(webPages[3].url, "sub")
+        }.openTabDrawer {
+            closeTab()
+        }
+
+        browserScreen {
+        }.openThreeDotMenu {
+        }.openBookmarks {
+        }.openThreeDotMenu("root") {
+        }.clickOpenAllInTabs {
+            verifyTabTrayIsOpened()
+            verifyNormalModeSelected()
+
+            verifyExistingOpenTabs("Test_Page_2", "Test_Page_3", "Test_Page_4")
+
+            // Bookmark that is not under the root folder should not be opened
+            verifyNoExistingOpenTabs("Test_Page_1")
+        }
+    }
+
+    @Test
+    fun openAllInPrivateTabsTest() {
+        val webPages = listOf(
+            TestAssetHelper.getGenericAsset(mockWebServer, 1),
+            TestAssetHelper.getGenericAsset(mockWebServer, 2),
+        )
+
+        homeScreen {
+        }.openThreeDotMenu {
+        }.openBookmarks {
+            createFolder("root")
+            createFolder("sub", "root")
+            createFolder("empty", "root")
+        }.closeMenu {
+        }
+
+        browserScreen {
+            createBookmark(webPages[0].url, "root")
+            createBookmark(webPages[1].url, "sub")
+        }.openTabDrawer {
+            closeTab()
+        }
+
+        browserScreen {
+        }.openThreeDotMenu {
+        }.openBookmarks {
+        }.openThreeDotMenu("root") {
+        }.clickOpenAllInPrivateTabs {
+            verifyTabTrayIsOpened()
+            verifyPrivateModeSelected()
+
+            verifyExistingOpenTabs("Test_Page_1", "Test_Page_2")
+        }
+    }
+
+    @Test
     fun openBookmarkInPrivateTabTest() {
         val defaultWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
 

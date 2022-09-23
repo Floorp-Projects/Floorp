@@ -6,6 +6,9 @@ package org.mozilla.fenix.library.bookmarks.viewholders
 
 import androidx.core.view.isVisible
 import androidx.recyclerview.widget.RecyclerView
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import mozilla.components.concept.storage.BookmarkNode
 import mozilla.components.concept.storage.BookmarkNodeType
 import org.mozilla.fenix.R
@@ -42,6 +45,8 @@ class BookmarkNodeViewHolder(
                 BookmarkItemMenu.Item.Share -> interactor.onSharePressed(item)
                 BookmarkItemMenu.Item.OpenInNewTab -> interactor.onOpenInNormalTab(item)
                 BookmarkItemMenu.Item.OpenInPrivateTab -> interactor.onOpenInPrivateTab(item)
+                BookmarkItemMenu.Item.OpenAllInNewTabs -> interactor.onOpenAllInNewTabs(item)
+                BookmarkItemMenu.Item.OpenAllInPrivateTabs -> interactor.onOpenAllInPrivateTabs(item)
                 BookmarkItemMenu.Item.Delete -> interactor.onDelete(setOf(item))
             }
         }
@@ -58,7 +63,10 @@ class BookmarkNodeViewHolder(
 
         containerView.urlView.isVisible = item.type == BookmarkNodeType.ITEM
         containerView.setSelectionInteractor(item, mode, interactor)
-        menu.updateMenu(item.type)
+
+        CoroutineScope(Dispatchers.Default).launch {
+            menu.updateMenu(item.type, item.guid)
+        }
 
         // Hide menu button if this item is a root folder or is selected
         if (item.type == BookmarkNodeType.FOLDER && item.inRoots()) {

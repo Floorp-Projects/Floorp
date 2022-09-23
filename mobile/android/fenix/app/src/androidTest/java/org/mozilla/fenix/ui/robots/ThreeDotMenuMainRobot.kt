@@ -207,6 +207,14 @@ class ThreeDotMenuMainRobot {
             return BrowserRobot.Transition()
         }
 
+        fun editBookmarkPage(interact: BookmarksRobot.() -> Unit): BookmarksRobot.Transition {
+            mDevice.waitNotNull(Until.findObject(By.text("Bookmarks")), waitingTime)
+            editBookmarkButton().click()
+
+            BookmarksRobot().interact()
+            return BookmarksRobot.Transition()
+        }
+
         fun openHelp(interact: BrowserRobot.() -> Unit): BrowserRobot.Transition {
             mDevice.waitNotNull(Until.findObject(By.text("Help")), waitingTime)
             helpButton().click()

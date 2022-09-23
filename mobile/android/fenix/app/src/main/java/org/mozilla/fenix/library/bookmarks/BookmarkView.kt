@@ -80,6 +80,20 @@ interface BookmarkViewInteractor : SelectionInteractor<BookmarkNode> {
     fun onOpenInPrivateTab(item: BookmarkNode)
 
     /**
+     * Opens all bookmark items in new tabs.
+     *
+     * @param folder the bookmark folder containing all items to open in new tabs
+     */
+    fun onOpenAllInNewTabs(folder: BookmarkNode)
+
+    /**
+     * Opens all bookmark items in new private tabs.
+     *
+     * @param folder the bookmark folder containing all items to open in new private tabs
+     */
+    fun onOpenAllInPrivateTabs(folder: BookmarkNode)
+
+    /**
      * Deletes a set of bookmark nodes.
      *
      * @param nodes the bookmark nodes to delete

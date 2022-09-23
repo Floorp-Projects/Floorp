@@ -140,6 +140,11 @@ class BookmarkFragmentInteractorTest {
         assertNull(BookmarksManagement.copied.testGetValue()!!.single().extra)
     }
 
+    @Test(expected = IllegalArgumentException::class)
+    fun `WHEN copying bookmark with folder THEN illegal argument exception is thrown`() {
+        interactor.onCopyPressed(tree)
+    }
+
     @Test
     fun `share a bookmark item`() {
         interactor.onSharePressed(item)
@@ -148,6 +153,11 @@ class BookmarkFragmentInteractorTest {
         assertNotNull(BookmarksManagement.shared.testGetValue())
         assertEquals(1, BookmarksManagement.shared.testGetValue()!!.size)
         assertNull(BookmarksManagement.shared.testGetValue()!!.single().extra)
+    }
+
+    @Test(expected = IllegalArgumentException::class)
+    fun `WHEN sharing bookmark with folder THEN illegal argument exception is thrown`() {
+        interactor.onSharePressed(tree)
     }
 
     @Test
@@ -160,6 +170,11 @@ class BookmarkFragmentInteractorTest {
         assertNull(BookmarksManagement.openInNewTab.testGetValue()!!.single().extra)
     }
 
+    @Test(expected = IllegalArgumentException::class)
+    fun `WHEN open bookmark with folder THEN illegal argument exception is thrown`() {
+        interactor.onOpenInNormalTab(tree)
+    }
+
     @Test
     fun `open a bookmark item in a private tab`() {
         interactor.onOpenInPrivateTab(item)
@@ -168,6 +183,39 @@ class BookmarkFragmentInteractorTest {
         assertNotNull(BookmarksManagement.openInPrivateTab.testGetValue())
         assertEquals(1, BookmarksManagement.openInPrivateTab.testGetValue()!!.size)
         assertNull(BookmarksManagement.openInPrivateTab.testGetValue()!!.single().extra)
+    }
+
+    @Test(expected = IllegalArgumentException::class)
+    fun `WHEN open bookmark in private with folder THEN illegal argument exception is thrown`() {
+        interactor.onOpenInPrivateTab(tree)
+    }
+
+    @Test
+    fun `WHEN open all bookmarks THEN call handle opening folder bookmarks`() {
+        interactor.onOpenAllInNewTabs(tree)
+
+        verify {
+            bookmarkController.handleOpeningFolderBookmarks(tree, BrowsingMode.Normal)
+        }
+    }
+
+    @Test(expected = IllegalArgumentException::class)
+    fun `WHEN open all bookmarks with single item THEN illegal argument exception is thrown`() {
+        interactor.onOpenAllInNewTabs(item)
+    }
+
+    @Test
+    fun `WHEN open all bookmarks in private tabs THEN call handle opening folder bookmarks with private mode`() {
+        interactor.onOpenAllInPrivateTabs(tree)
+
+        verify {
+            bookmarkController.handleOpeningFolderBookmarks(tree, BrowsingMode.Private)
+        }
+    }
+
+    @Test(expected = IllegalArgumentException::class)
+    fun `WHEN open all bookmarks in private with single item THEN illegal argument exception is thrown`() {
+        interactor.onOpenAllInPrivateTabs(item)
     }
 
     @Test

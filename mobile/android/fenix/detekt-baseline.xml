@@ -543,11 +543,11 @@
     <ID>UndocumentedPublicFunction:BookmarkController.kt$BookmarkController$fun handleBookmarkTapped(item: BookmarkNode)</ID>
     <ID>UndocumentedPublicFunction:BookmarkController.kt$BookmarkController$fun handleCopyUrl(item: BookmarkNode)</ID>
     <ID>UndocumentedPublicFunction:BookmarkController.kt$BookmarkController$fun handleOpeningBookmark(item: BookmarkNode, mode: BrowsingMode)</ID>
+    <ID>UndocumentedPublicFunction:BookmarkController.kt$BookmarkController$fun handleOpeningFolderBookmarks(folder: BookmarkNode, mode: BrowsingMode)</ID>
     <ID>UndocumentedPublicFunction:BookmarkController.kt$BookmarkController$fun handleRequestSync()</ID>
     <ID>UndocumentedPublicFunction:BookmarkController.kt$BookmarkController$fun handleSearch()</ID>
     <ID>UndocumentedPublicFunction:BookmarkController.kt$BookmarkController$fun handleSelectionModeSwitch()</ID>
     <ID>UndocumentedPublicFunction:BookmarkFragmentStore.kt$operator fun BookmarkNode.contains(item: BookmarkNode): Boolean</ID>
-    <ID>UndocumentedPublicFunction:BookmarkItemMenu.kt$BookmarkItemMenu$fun updateMenu(itemType: BookmarkNodeType)</ID>
     <ID>UndocumentedPublicFunction:BookmarkNodeViewHolder.kt$BookmarkNodeViewHolder$fun bind( item: BookmarkNode, mode: BookmarkFragmentState.Mode, payload: BookmarkPayload, )</ID>
     <ID>UndocumentedPublicFunction:BookmarkSearchController.kt$BookmarkSearchController$fun handleEditingCancelled()</ID>
     <ID>UndocumentedPublicFunction:BookmarkSearchController.kt$BookmarkSearchController$fun handleTextChanged(text: String)</ID>

@@ -13,6 +13,7 @@ import mozilla.components.concept.menu.candidate.TextStyle
 import mozilla.components.concept.storage.BookmarkNodeType
 import mozilla.components.support.ktx.android.content.getColorFromAttr
 import org.mozilla.fenix.R
+import org.mozilla.fenix.ext.bookmarkStorage
 
 class BookmarkItemMenu(
     private val context: Context,
@@ -25,6 +26,8 @@ class BookmarkItemMenu(
         Share,
         OpenInNewTab,
         OpenInPrivateTab,
+        OpenAllInNewTabs,
+        OpenAllInPrivateTabs,
         Delete,
         ;
     }
@@ -32,7 +35,10 @@ class BookmarkItemMenu(
     val menuController: MenuController by lazy { BrowserMenuController() }
 
     @VisibleForTesting
-    internal fun menuItems(itemType: BookmarkNodeType): List<TextMenuCandidate> {
+    @SuppressWarnings("LongMethod")
+    internal suspend fun menuItems(itemType: BookmarkNodeType, itemId: String): List<TextMenuCandidate> {
+        val hasAtLeastOneChild = !context.bookmarkStorage.getTree(itemId)?.children.isNullOrEmpty()
+
         return listOfNotNull(
             if (itemType != BookmarkNodeType.SEPARATOR) {
                 TextMenuCandidate(
@@ -79,6 +85,24 @@ class BookmarkItemMenu(
             } else {
                 null
             },
+            if (hasAtLeastOneChild && itemType == BookmarkNodeType.FOLDER) {
+                TextMenuCandidate(
+                    text = context.getString(R.string.bookmark_menu_open_all_in_tabs_button),
+                ) {
+                    onItemTapped.invoke(Item.OpenAllInNewTabs)
+                }
+            } else {
+                null
+            },
+            if (hasAtLeastOneChild && itemType == BookmarkNodeType.FOLDER) {
+                TextMenuCandidate(
+                    text = context.getString(R.string.bookmark_menu_open_all_in_private_tabs_button),
+                ) {
+                    onItemTapped.invoke(Item.OpenAllInPrivateTabs)
+                }
+            } else {
+                null
+            },
             TextMenuCandidate(
                 text = context.getString(R.string.bookmark_menu_delete_button),
                 textStyle = TextStyle(color = context.getColorFromAttr(R.attr.textWarning)),
@@ -88,7 +112,10 @@ class BookmarkItemMenu(
         )
     }
 
-    fun updateMenu(itemType: BookmarkNodeType) {
-        menuController.submitList(menuItems(itemType))
+    /**
+     * Update the menu items for the type of bookmark.
+     */
+    suspend fun updateMenu(itemType: BookmarkNodeType, itemId: String) {
+        menuController.submitList(menuItems(itemType, itemId))
     }
 }

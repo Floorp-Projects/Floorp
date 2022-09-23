@@ -106,6 +106,7 @@ class BookmarkFragment : LibraryPageFragment<BookmarkNode>(), UserInteractionHan
                 deleteBookmarkNodes = ::deleteMulti,
                 deleteBookmarkFolder = ::showRemoveFolderDialog,
                 showTabTray = ::showTabTray,
+                warnLargeOpenAll = ::warnLargeOpenAll,
                 settings = requireComponents.settings,
             ),
         )
@@ -272,11 +273,11 @@ class BookmarkFragment : LibraryPageFragment<BookmarkNode>(), UserInteractionHan
         return bookmarkView.onBackPressed()
     }
 
-    private suspend fun loadBookmarkNode(guid: String): BookmarkNode? = withContext(IO) {
+    private suspend fun loadBookmarkNode(guid: String, recursive: Boolean = false): BookmarkNode? = withContext(IO) {
         // Only runs if the fragment is attached same as [runIfFragmentIsAttached]
         context?.let {
             requireContext().bookmarkStorage
-                .getTree(guid, false)
+                .getTree(guid, recursive)
                 ?.let { desktopFolders.withOptionalDesktopFolders(it) }
         }
     }
@@ -291,6 +292,27 @@ class BookmarkFragment : LibraryPageFragment<BookmarkNode>(), UserInteractionHan
                 val rootNode = node - pendingBookmarksToDelete
                 bookmarkInteractor.onBookmarksChanged(rootNode)
             }
+    }
+
+    private fun warnLargeOpenAll(numberOfTabs: Int, function: () -> (Unit)) {
+        AlertDialog.Builder(requireContext()).apply {
+            setTitle(String.format(context.getString(R.string.open_all_warning_title), numberOfTabs))
+            setMessage(context.getString(R.string.open_all_warning_message, context.getString(R.string.app_name)))
+            setPositiveButton(
+                R.string.open_all_warning_confirm,
+            ) { dialog, _ ->
+                function()
+                dialog.dismiss()
+            }
+            setNegativeButton(
+                R.string.open_all_warning_cancel,
+            ) { dialog: DialogInterface, _ ->
+                dialog.dismiss()
+            }
+            setCancelable(false)
+            create()
+            show()
+        }
     }
 
     private fun deleteMulti(
