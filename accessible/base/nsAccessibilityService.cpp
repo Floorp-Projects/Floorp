@@ -1163,12 +1163,14 @@ LocalAccessible* nsAccessibilityService::CreateAccessible(
       newAcc = xulMap->new_func(content->AsElement(), aContext);
     }
 
-    // Any XUL box can be used as tabpanel, make sure we create a proper
+    // Any XUL/flex box can be used as tabpanel, make sure we create a proper
     // accessible for it.
     if (!newAcc && aContext->IsXULTabpanels() &&
         content->GetParent() == aContext->GetContent()) {
       LayoutFrameType frameType = frame->Type();
+      // FIXME(emilio): Why only these frame types?
       if (frameType == LayoutFrameType::Box ||
+          frameType == LayoutFrameType::FlexContainer ||
           frameType == LayoutFrameType::Scroll) {
         newAcc = new XULTabpanelAccessible(content, document);
       }
