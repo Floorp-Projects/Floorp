@@ -570,7 +570,7 @@
       <hbox id="manualUpdate" align="start">
         <image class="face-sad"/>
         <description flex="1" data-l10n-id="update-manual">
-          <label id="manualLink" data-l10n-name="manual-link" is="text-link"/>
+          <label class="manualLink" data-l10n-name="manual-link" is="text-link"/>
         </description>
         <spacer flex="1"/>
         <button data-l10n-id="update-checkForUpdatesButton"
@@ -590,6 +590,16 @@
         <image class="update-throbber"/><label data-l10n-id="update-restarting"></label>
         <spacer flex="1"/>
         <button data-l10n-id="update-updateButton"
+                is="highlightable-button"
+                disabled="true"/>
+      </hbox>
+      <hbox id="internalError" align="start">
+        <image class="face-sad"/>
+        <description flex="1" data-l10n-id="update-internal-error">
+          <label class="manualLink" data-l10n-name="manual-link" is="text-link"/>
+        </description>
+        <spacer flex="1"/>
+        <button data-l10n-id="update-checkForUpdatesButton"
                 is="highlightable-button"
                 disabled="true"/>
       </hbox>

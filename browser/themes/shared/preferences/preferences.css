@@ -361,7 +361,7 @@ checkbox {
   -moz-box-flex: 1;
 }
 
-#manualLink {
+.manualLink {
   margin-inline-start: 6px !important;
 }
 

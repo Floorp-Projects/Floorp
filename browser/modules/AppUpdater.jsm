@@ -773,6 +773,10 @@ AppUpdater.STATUS = {
   // An update is downloaded and staged and will be applied on restart.
   READY_FOR_RESTART: 12,
 
+  // Essential components of the updater are failing and preventing us from
+  // updating.
+  INTERNAL_ERROR: 13,
+
   /**
    * Is the given `status` a terminal state in the update state machine?
    *
