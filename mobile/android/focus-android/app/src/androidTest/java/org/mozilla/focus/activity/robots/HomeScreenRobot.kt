@@ -14,6 +14,7 @@ import androidx.test.uiautomator.By
 import androidx.test.uiautomator.UiSelector
 import org.junit.Assert.assertTrue
 import org.mozilla.focus.R
+import org.mozilla.focus.helpers.TestHelper.appName
 import org.mozilla.focus.helpers.TestHelper.getStringResource
 import org.mozilla.focus.helpers.TestHelper.mDevice
 import org.mozilla.focus.helpers.TestHelper.packageName
@@ -82,6 +83,30 @@ class HomeScreenRobot {
         }
     }
 
+    fun verifyFirstOnboardingScreenItems() {
+        assertTrue(onboardingCloseButton.waitForExists(waitingTime))
+        assertTrue(onboardingLogo.waitForExists(waitingTime))
+        assertTrue(onboardingFirstScreenTitle.waitForExists(waitingTime))
+        assertTrue(onboardingFirstScreenSubtitle.waitForExists(waitingTime))
+        assertTrue(onboardingGetStartedButton.waitForExists(waitingTime))
+    }
+
+    fun verifySecondOnboardingScreenItems() {
+        assertTrue(onboardingCloseButton.waitForExists(waitingTime))
+        assertTrue(onboardingLogo.waitForExists(waitingTime))
+        assertTrue(onboardingSecondScreenTitle.waitForExists(waitingTime))
+        assertTrue(onboardingSecondScreenFirstSubtitle.waitForExists(waitingTime))
+        assertTrue(onboardingSecondScreenSecondSubtitle.waitForExists(waitingTime))
+        assertTrue(onboardingSetAsDefaultBrowserButton.waitForExists(waitingTime))
+        assertTrue(onboardingSkipButton.waitForExists(waitingTime))
+    }
+
+    fun clickGetStartedButton() {
+        onboardingGetStartedButton
+            .also { it.waitForExists(waitingTime) }
+            .also { it.clickAndWaitForNewWindow(waitingTime) }
+    }
+
     class Transition {
         fun openMainMenu(interact: ThreeDotMainMenuRobot.() -> Unit): ThreeDotMainMenuRobot.Transition {
             editURLBar.waitForExists(waitingTime)
@@ -137,3 +162,69 @@ private val finishBtn = mDevice.findObject(
 )
 
 private val topSitesList = mDevice.findObject(UiSelector().resourceId("$packageName:id/topSites"))
+
+/** New onboarding elements **/
+
+private val onboardingCloseButton =
+    mDevice.findObject(
+        UiSelector()
+            .descriptionContains(getStringResource(R.string.onboarding_close_button_content_description)),
+    )
+
+private val onboardingLogo =
+    mDevice.findObject(
+        UiSelector()
+            .className("android.widget.ImageView")
+            .descriptionContains(appName),
+    )
+
+private val onboardingFirstScreenTitle =
+    mDevice.findObject(
+        UiSelector()
+            .textContains(getStringResource(R.string.onboarding_first_screen_title)),
+    )
+
+private val onboardingSecondScreenTitle =
+    mDevice.findObject(
+        UiSelector()
+            .textContains(getStringResource(R.string.onboarding_short_app_name) + " isn’t like other browsers"),
+    )
+
+private val onboardingFirstScreenSubtitle =
+    mDevice.findObject(
+        UiSelector()
+            .textContains(getStringResource(R.string.onboarding_first_screen_subtitle)),
+    )
+
+private val onboardingSecondScreenFirstSubtitle =
+    mDevice.findObject(
+        UiSelector()
+            .textContains(getStringResource(R.string.onboarding_second_screen_subtitle_one)),
+    )
+
+private val onboardingSecondScreenSecondSubtitle =
+    mDevice.findObject(
+        UiSelector()
+            .textContains(
+                "Make " + getStringResource(R.string.onboarding_short_app_name) +
+                    " your default to protect your data with every link you open.",
+            ),
+    )
+
+private val onboardingGetStartedButton =
+    mDevice.findObject(
+        UiSelector()
+            .textContains(getStringResource(R.string.onboarding_first_screen_button_text)),
+    )
+
+private val onboardingSetAsDefaultBrowserButton =
+    mDevice.findObject(
+        UiSelector()
+            .textContains(getStringResource(R.string.onboarding_second_screen_default_browser_button_text)),
+    )
+
+private val onboardingSkipButton =
+    mDevice.findObject(
+        UiSelector()
+            .textContains(getStringResource(R.string.onboarding_second_screen_skip_button_text)),
+    )

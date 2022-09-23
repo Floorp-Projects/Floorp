@@ -15,6 +15,8 @@ import org.mozilla.focus.activity.robots.homeScreen
 import org.mozilla.focus.helpers.FeatureSettingsHelper
 import org.mozilla.focus.helpers.MainActivityFirstrunTestRule
 import org.mozilla.focus.helpers.MockWebServerHelper
+import org.mozilla.focus.helpers.TestHelper.restartApp
+import org.mozilla.focus.testAnnotations.SmokeTest
 
 // Tests the First run onboarding screens
 @RunWith(AndroidJUnit4ClassRunner::class)
@@ -65,6 +67,20 @@ class FirstRunTest {
             verifyOnboardingSecondSlide()
             skipFirstRun()
             verifyEmptySearchBar()
+        }
+    }
+
+    @SmokeTest
+    @Test
+    fun onboardingScreensTest() {
+        homeScreen {
+            verifyFirstOnboardingScreenItems()
+            restartApp(mActivityTestRule)
+            verifyFirstOnboardingScreenItems()
+            clickGetStartedButton()
+            verifySecondOnboardingScreenItems()
+            restartApp(mActivityTestRule)
+            verifySecondOnboardingScreenItems()
         }
     }
 }
