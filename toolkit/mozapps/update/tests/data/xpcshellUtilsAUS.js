@@ -1907,7 +1907,6 @@ function logUpdateLog(aLogLeafName) {
   if (updateLog.exists()) {
     // xpcshell tests won't display the entire contents so log each line.
     let updateLogContents = readFileBytes(updateLog).replace(/\r\n/g, "\n");
-    updateLogContents = removeTimeStamps(updateLogContents);
     updateLogContents = replaceLogPaths(updateLogContents);
     let aryLogContents = updateLogContents.split("\n");
     logTestInfo("contents of " + updateLog.path + ":");
@@ -1926,7 +1925,6 @@ function logUpdateLog(aLogLeafName) {
     if (updateLog.exists()) {
       // xpcshell tests won't display the entire contents so log each line.
       let updateLogContents = readFileBytes(updateLog).replace(/\r\n/g, "\n");
-      updateLogContents = removeTimeStamps(updateLogContents);
       updateLogContents = replaceLogPaths(updateLogContents);
       let aryLogContents = updateLogContents.split("\n");
       logTestInfo("contents of " + updateLog.path + ":");
@@ -3348,20 +3346,6 @@ function replaceLogPaths(aLogContents) {
 }
 
 /**
- * Helper function that removes the timestamps in the update log
- *
- * @param   aLogContents
- *          The update log file's contents.
- * @return  the log contents without timestamps
- */
-function removeTimeStamps(aLogContents) {
-  return aLogContents.replace(
-    /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}[+-]\d{4}: /gm,
-    ""
-  );
-}
-
-/**
  * Helper function for updater binary tests for verifying the contents of the
  * update log after a successful update.
  *
@@ -3472,8 +3456,6 @@ function checkUpdateLogContents(
     updateLogContents = updateLogContents.replace(re, "");
   }
 
-  // Remove leading timestamps
-  updateLogContents = removeTimeStamps(updateLogContents);
   // Replace error codes since they are different on each platform.
   updateLogContents = updateLogContents.replace(/, err:.*\n/g, "\n");
   // Replace to make the log parsing happy.
@@ -3519,8 +3501,6 @@ function checkUpdateLogContents(
     compareLogContents = compareLogContents.replace(/.*distribution\/.*/g, "");
   }
 
-  // Remove leading timestamps
-  compareLogContents = removeTimeStamps(compareLogContents);
   // Remove leading and trailing newlines
   compareLogContents = compareLogContents.replace(/\n+/g, "\n");
   // Remove leading and trailing newlines
@@ -3547,9 +3527,8 @@ function checkUpdateLogContents(
           "the first incorrect line is line #" +
             i +
             " and the " +
-            "value is: '" +
-            aryLog[i] +
-            "'"
+            "value is: " +
+            aryLog[i]
         );
         Assert.equal(
           aryLog[i],
@@ -3572,16 +3551,11 @@ function checkUpdateLogContents(
 function checkUpdateLogContains(aCheckString) {
   let updateLog = getUpdateDirFile(FILE_LAST_UPDATE_LOG);
   let updateLogContents = readFileBytes(updateLog).replace(/\r\n/g, "\n");
-  updateLogContents = removeTimeStamps(updateLogContents);
   updateLogContents = replaceLogPaths(updateLogContents);
   Assert.notEqual(
     updateLogContents.indexOf(aCheckString),
     -1,
-    "the update log '" +
-      updateLog +
-      "' contents should contain value: '" +
-      aCheckString +
-      "'"
+    "the update log contents should contain value: " + aCheckString
   );
 }
 
