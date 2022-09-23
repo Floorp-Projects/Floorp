@@ -118,6 +118,41 @@ let SCRIPTS = [
     script: ECHO_BODY.replace(/^ {2}/gm, ""),
   },
   {
+    name: "relative.echo",
+    description: "a native app that echoes; relative path instead of absolute",
+    script: ECHO_BODY.replace(/^ {2}/gm, ""),
+    _hookModifyManifest(manifest) {
+      manifest.path = PathUtils.filename(manifest.path);
+    },
+  },
+  {
+    name: "renamed.echo",
+    description: "invalid manifest due to name mismatch",
+    script: ECHO_BODY.replace(/^ {2}/gm, ""),
+    _hookModifyManifest(manifest) {
+      manifest.name = "renamed_name_mismatch";
+    },
+  },
+  {
+    name: "nonstdio.echo",
+    description: "invalid manifest due to non-stdio type",
+    script: ECHO_BODY.replace(/^ {2}/gm, ""),
+    _hookModifyManifest(manifest) {
+      // schema only permits "stdio" or "pkcs11". Change from "stdio":
+      manifest.type = "pkcs11";
+    },
+  },
+  {
+    name: "forwardslash.echo",
+    description: "a native app that echos; with forward slash in path",
+    script: ECHO_BODY.replace(/^ {2}/gm, ""),
+    _hookModifyManifest(manifest) {
+      // On Linux/macOS, this doesn't change anything.
+      // On Windows, this turns C:\Program Files\... in C:/Program Files/...
+      manifest.path = manifest.path.replaceAll("\\", "/");
+    },
+  },
+  {
     name: "delayedecho",
     description:
       "a native app that echo messages received with a small artificial delay",
@@ -269,9 +304,78 @@ async function simpleTest(app) {
   await exitPromise;
 }
 
+async function testBrokenApp({
+  extensionId = ID,
+  appname,
+  expectedError,
+  expectedConsoleMessages,
+}) {
+  let extension = ExtensionTestUtils.loadExtension({
+    background() {
+      browser.test.onMessage.addListener((appname, expectedError) => {
+        let port = browser.runtime.connectNative(appname);
+        port.onDisconnect.addListener(() => {
+          browser.test.assertEq(
+            expectedError,
+            port.error?.message,
+            "Expected connectNative() error"
+          );
+          browser.test.sendMessage("done");
+        });
+        port.onMessage.addListener(() => {
+          browser.test.fail("Unexpected onMessage from connectNative()");
+        });
+        port.postMessage({ test: "test" });
+      });
+    },
+    manifest: {
+      applications: { gecko: { id: extensionId } },
+      permissions: ["nativeMessaging"],
+    },
+  });
+
+  await extension.startup();
+  let { messages } = await promiseConsoleOutput(async () => {
+    extension.sendMessage(appname, expectedError);
+    await extension.awaitMessage("done");
+  });
+  await extension.unload();
+
+  let procCount = await getSubprocessCount();
+  equal(procCount, 0, "No child process was started");
+
+  // Because we're using forbidUnexpected:true below, we have to account for
+  // all logged messages. RemoteSettings may try (and fail) to load remote
+  // settings - ignore the "NetworkError: Network request failed" error.
+  // To avoid having to update this filter all the time, select the specific
+  // modules relevant to native messaging from where we expect errors.
+  messages = messages.filter(m => {
+    return /NativeMessaging|NativeManifests|Subprocess/.test(m.message);
+  });
+
+  // On Linux/macOS, the setupHosts helper registers the same manifest file in
+  // multiple locations, which can result in the same error being printed
+  // multiple times. We de-duplicate that here.
+  let deduplicatedMessages = messages.filter(
+    (msg, i) => i === messages.findIndex(m => m.message === msg.message)
+  );
+
+  // Now check that all the log messages exist, in the expected order too.
+  AddonTestUtils.checkMessages(
+    deduplicatedMessages,
+    {
+      expected: expectedConsoleMessages.map(message => ({ message })),
+      forbidUnexpected: true,
+    },
+    "Expected messages in the console"
+  );
+}
+
 if (AppConstants.platform == "win") {
   // "relative.echo" has a relative path in the host manifest.
   add_task(function test_relative_path() {
+    // Note: relative paths only supported on Windows.
+    // For non-Windows, see test_relative_path_unsupported instead.
     return simpleTest("relative.echo");
   });
 
@@ -279,7 +383,44 @@ if (AppConstants.platform == "win") {
   add_task(function test_cmd_file() {
     return simpleTest("echocmd");
   });
+} else {
+  // On non-Windows, relative paths are not supported.
+  add_task(function test_relative_path_unsupported() {
+    return testBrokenApp({
+      appname: "relative.echo",
+      expectedError: "An unexpected error occurred",
+      expectedConsoleMessages: [
+        /File at path "relative\.echo\.py" does not exist, or is not executable/,
+      ],
+    });
+  });
 }
+
+add_task(async function test_error_name_mismatch() {
+  await testBrokenApp({
+    appname: "renamed.echo",
+    expectedError: "No such native application renamed.echo",
+    expectedConsoleMessages: [
+      /Native manifest .+ has name property renamed_name_mismatch \(expected renamed\.echo\)/,
+      /No such native application renamed\.echo/,
+    ],
+  });
+});
+
+add_task(async function test_invalid_manifest_type_not_stdio() {
+  await testBrokenApp({
+    appname: "nonstdio.echo",
+    expectedError: "No such native application nonstdio.echo",
+    expectedConsoleMessages: [
+      /Native manifest .+ has type property pkcs11 \(expected stdio\)/,
+      /No such native application nonstdio\.echo/,
+    ],
+  });
+});
+
+add_task(async function test_forward_slashes_in_path_works() {
+  await simpleTest("forwardslash.echo");
+});
 
 // Test sendNativeMessage()
 add_task(async function test_sendNativeMessage() {
@@ -531,46 +672,15 @@ add_task(async function test_ext_permission() {
 // Test that an extension that is not listed in allowed_extensions for
 // a native application cannot use that application.
 add_task(async function test_app_permission() {
-  function background() {
-    let port = browser.runtime.connectNative("echo");
-    port.onDisconnect.addListener(msgPort => {
-      browser.test.assertEq(
-        port,
-        msgPort,
-        "onDisconnect handler should receive the port as the first argument"
-      );
-      browser.test.assertEq(
-        "No such native application echo",
-        port.error && port.error.message
-      );
-      browser.test.sendMessage("result", "disconnected");
-    });
-    port.onMessage.addListener(msg => {
-      browser.test.sendMessage("result", "message");
-    });
-    port.postMessage({ test: "test" });
-  }
-
-  let extension = ExtensionTestUtils.loadExtension({
-    background,
-    manifest: {
-      permissions: ["nativeMessaging"],
-    },
+  await testBrokenApp({
+    extensionId: "@id-that-is-not-in-the-allowed_extensions-list",
+    appname: "echo",
+    expectedError: "No such native application echo",
+    expectedConsoleMessages: [
+      /This extension does not have permission to use native manifest .+echo\.json/,
+      /No such native application echo/,
+    ],
   });
-
-  await extension.startup();
-
-  let result = await extension.awaitMessage("result");
-  equal(
-    result,
-    "disconnected",
-    "connectNative() failed without native app permission"
-  );
-
-  await extension.unload();
-
-  let procCount = await getSubprocessCount();
-  equal(procCount, 0, "No child process was started");
 });
 
 // Test that the command-line arguments and working directory for the
