@@ -1098,6 +1098,9 @@ static JSObject* MemoryTypeToObject(JSContext* cx, bool shared,
 #  ifdef ENABLE_WASM_MEMORY64
   RootedString it(
       cx, JS_NewStringCopyZ(cx, indexType == IndexType::I32 ? "i32" : "i64"));
+  if (!it) {
+    return nullptr;
+  }
   if (!props.append(
           IdValuePair(NameToId(cx->names().index), StringValue(it)))) {
     ReportOutOfMemory(cx);

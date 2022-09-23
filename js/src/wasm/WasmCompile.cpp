@@ -151,7 +151,8 @@ SharedCompileArgs CompileArgs::build(JSContext* cx,
 
 SharedCompileArgs CompileArgs::buildAndReport(JSContext* cx,
                                               ScriptedCaller&& scriptedCaller,
-                                              const FeatureOptions& options) {
+                                              const FeatureOptions& options,
+                                              bool reportOOM) {
   CompileArgsError error;
   SharedCompileArgs args =
       CompileArgs::build(cx, std::move(scriptedCaller), options, &error);
@@ -168,7 +169,11 @@ SharedCompileArgs CompileArgs::buildAndReport(JSContext* cx,
       break;
     }
     case CompileArgsError::OutOfMemory: {
-      // Intentionally do not report the OOM, as callers expect this behavior
+      // Most callers are required to return 'false' without reporting an OOM,
+      // so we make reporting it optional here.
+      if (reportOOM) {
+        ReportOutOfMemory(cx);
+      }
       break;
     }
   }

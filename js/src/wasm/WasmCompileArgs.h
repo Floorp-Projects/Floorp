@@ -142,19 +142,22 @@ struct CompileArgs : ShareableBase<CompileArgs> {
 
   // CompileArgs has three constructors:
   //
-  // - two through a factory function `build`, which checks that flags are
-  // consistent with each other, and optionally reports any errors.
+  // - two through factory functions `build`/`buildAndReport`, which checks
+  //   that flags are consistent with each other, and optionally reports any
+  //   errors.
   // - one that gives complete access to underlying fields.
   //
-  // You should use the first one in general, unless you have a very good
-  // reason (i.e. no JSContext around and you know which flags have been used).
+  // You should use the factory functions in general, unless you have a very
+  // good reason (i.e. no JSContext around and you know which flags have been
+  // used).
 
   static SharedCompileArgs build(JSContext* cx, ScriptedCaller&& scriptedCaller,
                                  const FeatureOptions& options,
                                  CompileArgsError* error);
   static SharedCompileArgs buildAndReport(JSContext* cx,
                                           ScriptedCaller&& scriptedCaller,
-                                          const FeatureOptions& options);
+                                          const FeatureOptions& options,
+                                          bool reportOOM = false);
 
   explicit CompileArgs(ScriptedCaller&& scriptedCaller)
       : scriptedCaller(std::move(scriptedCaller)),
