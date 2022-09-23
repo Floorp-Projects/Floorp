@@ -48,10 +48,11 @@ function appUpdater(options = {}) {
       Services.urlFormatter.formatURLPref("app.update.url.manual")
     );
 
-    let manualLink = document.getElementById("manualLink");
-    // Strip hash and search parameters for display text.
-    manualLink.textContent = manualURL.origin + manualURL.pathname;
-    manualLink.href = manualURL.href;
+    for (const manualLink of document.getElementsByClassName("manualLink")) {
+      // Strip hash and search parameters for display text.
+      manualLink.textContent = manualURL.origin + manualURL.pathname;
+      manualLink.href = manualURL.href;
+    }
 
     document.getElementById("failedLink").href = manualURL.href;
   } catch (e) {
@@ -150,6 +151,9 @@ appUpdater.prototype = {
         break;
       case AppUpdater.STATUS.DOWNLOAD_FAILED:
         this.selectPanel("downloadFailed");
+        break;
+      case AppUpdater.STATUS.INTERNAL_ERROR:
+        this.selectPanel("internalError");
         break;
     }
   },

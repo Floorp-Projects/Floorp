@@ -34,6 +34,8 @@ update-unsupported = You can not perform further updates on this system. <label 
 
 update-restarting = Restarting…
 
+update-internal-error = Unable to check for updates due to internal error. Updates available at <label data-l10n-name="manual-link"/>
+
 channel-description = You are currently on the <label data-l10n-name="current-channel"></label> update channel.
 
 warningDesc-version = { -brand-short-name } is experimental and may be unstable.
