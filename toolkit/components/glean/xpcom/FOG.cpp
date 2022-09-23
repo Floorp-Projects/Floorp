@@ -346,6 +346,18 @@ FOG::TestRegisterRuntimeMetric(
   return NS_OK;
 }
 
+NS_IMETHODIMP
+FOG::TestRegisterRuntimePing(const nsACString& aName,
+                             const bool aIncludeClientId,
+                             const bool aSendIfEmpty,
+                             const nsTArray<nsCString>& aReasonCodes,
+                             uint32_t* aPingIdOut) {
+  *aPingIdOut = 0;
+  *aPingIdOut = glean::jog::jog_test_register_ping(&aName, aIncludeClientId,
+                                                   aSendIfEmpty, &aReasonCodes);
+  return NS_OK;
+}
+
 NS_IMPL_ISUPPORTS(FOG, nsIFOG, nsIObserver)
 
 }  //  namespace mozilla

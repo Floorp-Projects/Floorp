@@ -654,3 +654,15 @@ add_task(function test_jog_dotted_categories_work() {
   Glean.jogCatDotted.jogCounter.add(314);
   Assert.equal(314, Glean.jogCatDotted.jogCounter.testGetValue());
 });
+
+add_task(function test_jog_ping_works() {
+  const kReason = "reason-1";
+  Services.fog.testRegisterRuntimePing("my-ping", true, true, [kReason]);
+  let submitted = false;
+  GleanPings.myPing.testBeforeNextSubmit(reason => {
+    submitted = true;
+    Assert.equal(kReason, reason);
+  });
+  GleanPings.myPing.submit("reason-1");
+  Assert.ok(submitted, "Ping must have been submitted");
+});

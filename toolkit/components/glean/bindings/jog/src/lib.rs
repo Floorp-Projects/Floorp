@@ -90,9 +90,9 @@ pub extern "C" fn jog_test_register_metric(
     extern "C" {
         fn JOG_RegisterMetric(category: &nsACString, name: &nsACString, metric: u32);
     }
-    let metric = metric.unwrap();
-    // Safety: We're loaning to C++ the same nsCStrings they leant us.
+    let metric = metric.unwrap(); // allowed to panic in test-only method.
     unsafe {
+        // Safety: We're loaning to C++ the same nsCStrings they leant us.
         JOG_RegisterMetric(ns_category, ns_name, metric);
     }
     metric
@@ -103,9 +103,33 @@ pub extern "C" fn jog_test_register_metric(
 /// Registers a ping. Doesn't check to see if it's been registered before.
 /// Doesn't check that it would pass schema validation if it were a real ping.
 #[no_mangle]
-pub extern "C" fn jog_test_register_ping() {
-    // What information do we need for registration? See glean_parser.util.ping_args:
-    // include_client_id, send_if_empty, name, reason_codes
+pub extern "C" fn jog_test_register_ping(
+    name: &nsACString,
+    include_client_id: bool,
+    send_if_empty: bool,
+    reason_codes: &ThinVec<nsCString>,
+) -> u32 {
+    let ns_name = name;
+    let ping_name = name.to_string();
+    let reason_codes = reason_codes
+        .iter()
+        .map(|reason| reason.to_string())
+        .collect();
+    let ping_id = factory::create_and_register_ping(
+        ping_name,
+        include_client_id,
+        send_if_empty,
+        reason_codes,
+    );
+    extern "C" {
+        fn JOG_RegisterPing(name: &nsACString, ping_id: u32);
+    }
+    let ping_id = ping_id.unwrap(); // allowed to panic in test-only method.
+    unsafe {
+        // Safety: We're loaning to C++ the same nsCStrings they leant us.
+        JOG_RegisterPing(ns_name, ping_id);
+    }
+    ping_id
 }
 
 /// Test-only method.
