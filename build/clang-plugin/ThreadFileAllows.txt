@@ -1,40 +1,4 @@
-# This file is ingested by `ThreadAllows.py` to produce a list of files which
-# our clang plugin will allow to use `NS_NewNamedThread`.
-#
-# Files may be specified with any number of slash-separated path-elements; all
-# provided path-elements must match. (Because we often move and/or symlink
-# header files, this means headers will usually have no path-elements.)
-#
-# Note that this file contains a list of _files_, not _paths_. The clang plugin
-# has no notion of $TOPSRCDIR.
-
-######
-# Release files
-
-# declaration and definition of `NS_NewNamedThread`
-nsThreadUtils.h
-xpcom/threads/nsThreadUtils.cpp
-
-# Thread-pools are permitted to make dynamically many threads, using dynamic
-# thread names with explicit numbering.
-xpcom/threads/nsThreadPool.cpp
-
-######
-# Test files
-
-# Tests for XPCOM threads themselves.
-xpcom/tests/gtest/TestThreadManager.cpp
-xpcom/tests/gtest/TestThreads.cpp
-xpcom/tests/gtest/TestThreadUtils.cpp
-
-######
-# Unsorted release files
-#
-# Files below this point are grandfathered in. Please do not add new files to
-# this list -- and please remove any that you can, whether by documenting and
-# moving them or by confirming that they are no longer required.
-dom/indexedDB/ActorsParent.cpp
-dom/quota/ActorsParent.cpp
+ActorsParent.cpp
 DecodePool.cpp
 GeckoChildProcessHost.cpp
 LazyIdleThread.cpp
@@ -42,31 +6,6 @@ LazyIdleThread.h
 VRThread.cpp
 mozStorageConnection.cpp
 nr_socket_prsock.cpp
-
-######
-# Unsorted test files
-#
-# Files below this point are quasi-grandfathered in: these are test files which
-# create new threads whose names were formerly in ThreadAllows.txt (without
-# justification), and have been moved here (without justification).
-dom/media/doctor/test/gtest/TestMultiWriterQueue.cpp
-image/test/fuzzing/TestDecoders.cpp
-image/test/gtest/TestDecodeToSurface.cpp
-ipc/ipdl/test/gtest/IPDLUnitTest.cpp
-security/sandbox/common/test/SandboxTestingThread.h
-storage/test/gtest/test_interruptSynchronousConnection.cpp
-storage/test/gtest/test_unlock_notify.cpp
-toolkit/components/telemetry/geckoview/gtest/TestGeckoViewStreaming.cpp
-toolkit/components/telemetry/tests/gtest/TestScalars.cpp
-toolkit/components/url-classifier/tests/gtest/Common.cpp
-tools/fuzzing/ipc/IPCFuzzController.cpp
-tools/profiler/tests/gtest/GeckoProfiler.cpp
-xpcom/tests/gtest/TestAtoms.cpp
-xpcom/tests/gtest/TestAutoRefCnt.cpp
-xpcom/tests/gtest/TestDelayedRunnable.cpp
-xpcom/tests/gtest/TestLogging.cpp
-xpcom/tests/gtest/TestPipes.cpp
-xpcom/tests/gtest/TestRacingServiceManager.cpp
-xpcom/tests/gtest/TestRWLock.cpp
-xpcom/tests/gtest/TestThrottledEventQueue.cpp
-xpcom/tests/gtest/TestTimers.cpp
+nsThreadPool.cpp
+nsThreadUtils.cpp
+nsThreadUtils.h
