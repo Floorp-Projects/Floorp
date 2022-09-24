@@ -535,6 +535,8 @@ class XPCJSRuntime final : public mozilla::CycleCollectedJSRuntime {
   static void WeakPointerCompartmentCallback(JSTracer* trc,
                                              JS::Compartment* comp, void* data);
 
+  inline void AddSubjectToFinalizationWJS(nsXPCWrappedJS* wrappedJS);
+
   void DebugDump(int16_t depth);
 
   bool GCIsRunning() const { return mGCIsRunning; }
@@ -612,6 +614,7 @@ class XPCJSRuntime final : public mozilla::CycleCollectedJSRuntime {
   bool mGCIsRunning;
   nsTArray<nsISupports*> mNativesToReleaseArray;
   bool mDoingFinalization;
+  mozilla::LinkedList<nsXPCWrappedJS> mSubjectToFinalizationWJS;
   nsTArray<xpcGCCallback> extraGCCallbacks;
   JS::GCSliceCallback mPrevGCSliceCallback;
   JS::DoCycleCollectionCallback mPrevDoCycleCollectionCallback;
@@ -1566,7 +1569,8 @@ class XPCWrappedNative final : public nsIXPConnectWrappedNative {
 
 class nsXPCWrappedJS final : protected nsAutoXPTCStub,
                              public nsIXPConnectWrappedJSUnmarkGray,
-                             public nsSupportsWeakReference {
+                             public nsSupportsWeakReference,
+                             public mozilla::LinkedListElement<nsXPCWrappedJS> {
  public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_NSIXPCONNECTJSOBJECTHOLDER

@@ -723,6 +723,12 @@ void XPCJSRuntime::TraceAdditionalNativeGrayRoots(JSTracer* trc) {
 void XPCJSRuntime::TraverseAdditionalNativeRoots(
     nsCycleCollectionNoteRootCallback& cb) {
   XPCWrappedNativeScope::SuspectAllWrappers(cb);
+
+  auto* parti = NS_CYCLE_COLLECTION_PARTICIPANT(nsXPCWrappedJS);
+  for (auto* wjs : mSubjectToFinalizationWJS) {
+    MOZ_DIAGNOSTIC_ASSERT(wjs->IsSubjectToFinalization());
+    cb.NoteXPCOMRoot(ToSupports(wjs), parti);
+  }
 }
 
 void XPCJSRuntime::UnmarkSkippableJSHolders() {
@@ -1103,6 +1109,8 @@ void XPCJSRuntime::Shutdown(JSContext* cx) {
 
   // Prevent ~LinkedList assertion failures if we leaked things.
   mWrappedNativeScopes.clear();
+
+  mSubjectToFinalizationWJS.clear();
 
   CycleCollectedJSRuntime::Shutdown(cx);
 }

@@ -253,6 +253,11 @@ MozExternalRefCountType nsXPCWrappedJS::AddRef(void) {
 
   if (2 == cnt && IsValid()) {
     GetJSObject();  // Unmark gray JSObject.
+
+    // This WJS is no longer subject to finalization.
+    if (isInList()) {
+      remove();
+    }
   }
 
   return cnt;
@@ -285,6 +290,10 @@ MozExternalRefCountType nsXPCWrappedJS::Release(void) {
     // deleted.
     if (!HasWeakReferences()) {
       return Release();
+    }
+
+    if (IsValid()) {
+      XPCJSRuntime::Get()->AddSubjectToFinalizationWJS(this);
     }
 
     MOZ_ASSERT(IsRootWrapper(),
@@ -499,6 +508,9 @@ void nsXPCWrappedJS::Unlink() {
   }
 
   if (IsRootWrapper()) {
+    if (isInList()) {
+      remove();
+    }
     ClearWeakReferences();
   } else if (mRoot) {
     // unlink this wrapper
@@ -597,6 +609,9 @@ void nsXPCWrappedJS::SystemIsBeingShutDown() {
   // if we are not currently running an incremental GC.
   MOZ_ASSERT(!IsIncrementalGCInProgress(xpc_GetSafeJSContext()));
   *mJSObj.unsafeGet() = nullptr;
+  if (isInList()) {
+    remove();
+  }
 
   // Notify other wrappers in the chain.
   if (mNext) {
