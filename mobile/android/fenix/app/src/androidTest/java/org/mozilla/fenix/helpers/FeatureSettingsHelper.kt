@@ -4,72 +4,84 @@
 
 package org.mozilla.fenix.helpers
 
-import android.content.Context
 import androidx.test.platform.app.InstrumentationRegistry
 import org.mozilla.fenix.ext.settings
 
-class FeatureSettingsHelper {
-    private val context: Context = InstrumentationRegistry.getInstrumentation().targetContext
-    private val settings = context.settings()
+/**
+ * Helper for querying the status and modifying various features and settings in the application.
+ */
+interface FeatureSettingsHelper {
+    /**
+     * Whether the onboarding for existing users should be shown or not.
+     * It should appear only once on the first visit to homescreen.
+     */
+    var isHomeOnboardingDialogEnabled: Boolean
 
-    // saving default values of feature flags
-    private var isPocketEnabled: Boolean = settings.showPocketRecommendationsFeature
-    private var isJumpBackInCFREnabled: Boolean = settings.shouldShowJumpBackInCFR
-    private var isRecentTabsFeatureEnabled: Boolean = settings.showRecentTabsFeature
-    private var isRecentlyVisitedFeatureEnabled: Boolean = settings.historyMetadataUIFeature
-    private var isUserKnowsAboutPwasTrue: Boolean = settings.userKnowsAboutPwas
-    private var isTCPCFREnabled: Boolean = settings.shouldShowTotalCookieProtectionCFR
-    private var isWallpaperOnboardingEnabled: Boolean = settings.showWallpaperOnboarding
+    /**
+     * Whether the Pocket stories feature is enabled or not.
+     */
+    var isPocketEnabled: Boolean
 
-    fun setPocketEnabled(enabled: Boolean) {
-        settings.showPocketRecommendationsFeature = enabled
-    }
+    /**
+     * Whether the "Jump back in" CFR should be shown or not.
+     * It should appear on the first visit to homescreen given that there is a tab opened.
+     */
+    var isJumpBackInCFREnabled: Boolean
 
-    fun setJumpBackCFREnabled(enabled: Boolean) {
-        settings.shouldShowJumpBackInCFR = enabled
-    }
+    /**
+     * Whether the onboarding dialog for choosing wallpapers should be shown or not.
+     */
+    var isWallpaperOnboardingEnabled: Boolean
 
-    fun setShowWallpaperOnboarding(enabled: Boolean) {
-        settings.showWallpaperOnboarding = enabled
-    }
+    /**
+     * Whether the "Jump back in" homescreen section is enabled or not.
+     * It shows the last visited tab on this device and on other synced devices.
+     */
+    var isRecentTabsFeatureEnabled: Boolean
 
-    fun setRecentTabsFeatureEnabled(enabled: Boolean) {
-        settings.showRecentTabsFeature = enabled
-    }
+    /**
+     * Whether the "Recently visited" homescreen section is enabled or not.
+     * It can show up to 9 history highlights and history groups.
+     */
+    var isRecentlyVisitedFeatureEnabled: Boolean
 
-    fun setRecentlyVisitedFeatureEnabled(enabled: Boolean) {
-        settings.historyMetadataUIFeature = enabled
-    }
+    /**
+     * Whether the onboarding dialog for PWAs should be shown or not.
+     * It can show the first time a website that can be installed as a PWA is accessed.
+     */
+    var isPWAsPromptEnabled: Boolean
 
-    fun setStrictETPEnabled() {
-        settings.setStrictETP()
-    }
-
-    fun disablePwaCFR(disable: Boolean) {
-        settings.userKnowsAboutPwas = disable
-    }
-
-    fun deleteSitePermissions(delete: Boolean) {
-        settings.deleteSitePermissions = delete
-    }
+    /**
+     * Whether the "Site permissions" option is checked in the "Delete browsing data" screen or not.
+     */
+    var isDeleteSitePermissionsEnabled: Boolean
 
     /**
      * Enable or disable showing the TCP CFR when accessing a webpage for the first time.
      */
-    fun setTCPCFREnabled(shouldShowCFR: Boolean) {
-        settings.shouldShowTotalCookieProtectionCFR = shouldShowCFR
-    }
+    var isTCPCFREnabled: Boolean
 
-    // Important:
-    // Use this after each test if you have modified these feature settings
-    // to make sure the app goes back to the default state
-    fun resetAllFeatureFlags() {
-        settings.showPocketRecommendationsFeature = isPocketEnabled
-        settings.shouldShowJumpBackInCFR = isJumpBackInCFREnabled
-        settings.showRecentTabsFeature = isRecentTabsFeatureEnabled
-        settings.historyMetadataUIFeature = isRecentlyVisitedFeatureEnabled
-        settings.userKnowsAboutPwas = isUserKnowsAboutPwasTrue
-        settings.shouldShowTotalCookieProtectionCFR = isTCPCFREnabled
-        settings.showWallpaperOnboarding = isWallpaperOnboardingEnabled
+    /**
+     * The current "Enhanced Tracking Protection" policy.
+     * @see ETPPolicy
+     */
+    var etpPolicy: ETPPolicy
+
+    fun applyFlagUpdates()
+
+    fun resetAllFeatureFlags()
+
+    companion object {
+        val settings = InstrumentationRegistry.getInstrumentation().targetContext.settings()
     }
+}
+
+/**
+ * All "Enhanced Tracking Protection" modes.
+ */
+enum class ETPPolicy {
+    STANDARD,
+    STRICT,
+    CUSTOM,
+    ;
 }

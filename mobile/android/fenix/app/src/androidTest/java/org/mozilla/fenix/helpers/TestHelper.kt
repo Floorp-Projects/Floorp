@@ -95,6 +95,7 @@ object TestHelper {
 
     fun restartApp(activity: HomeActivityIntentTestRule) {
         with(activity) {
+            updateCachedSettings()
             finishActivity()
             mDevice.waitForIdle()
             launchActivity(null)
