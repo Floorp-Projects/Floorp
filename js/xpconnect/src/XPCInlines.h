@@ -15,6 +15,13 @@
 
 /***************************************************************************/
 
+inline void XPCJSRuntime::AddSubjectToFinalizationWJS(
+    nsXPCWrappedJS* wrappedJS) {
+  mSubjectToFinalizationWJS.insertBack(wrappedJS);
+}
+
+/***************************************************************************/
+
 inline bool XPCCallContext::IsValid() const { return mState != INIT_FAILED; }
 
 inline XPCJSContext* XPCCallContext::GetContext() const {
