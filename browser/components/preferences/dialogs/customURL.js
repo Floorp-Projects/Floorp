@@ -28,10 +28,10 @@
      for (let i = 0; i < box.length; i++) {
          var box_value = box[i].value
          box_value = box_value.replace(remove_whitespace, ""); /* Removing whitespace from the beginning of a line */
-         //   if(boxs[i].value == ""){
- 
-         //   }
-         if (!box_value.match(match_https)) { /* Checks if url in the sidebar contains https in the beginning of a line */
+         if (box_value == "") {
+
+         }
+         else if (!box_value.match(match_https)) { /* Checks if url in the sidebar contains https in the beginning of a line */
              if (!box_value.match(match_extension)) { /* Checks if given URL is an extension */
                  box_value = `https://${box_value}`;
              }
