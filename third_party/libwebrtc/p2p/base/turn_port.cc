@@ -1185,7 +1185,7 @@ bool TurnPort::UpdateNonce(StunMessage* response) {
                          "stale nonce error response.";
     return false;
   }
-  set_realm(realm_attr->GetString());
+  set_realm(realm_attr->string_view());
 
   const StunByteStringAttribute* nonce_attr =
       response->GetByteString(STUN_ATTR_NONCE);
@@ -1194,7 +1194,7 @@ bool TurnPort::UpdateNonce(StunMessage* response) {
                          "stale nonce error response.";
     return false;
   }
-  set_nonce(nonce_attr->GetString());
+  set_nonce(nonce_attr->string_view());
   return true;
 }
 
@@ -1499,7 +1499,7 @@ void TurnAllocateRequest::OnAuthChallenge(StunMessage* response, int code) {
                            "allocate unauthorized response.";
     return;
   }
-  port_->set_realm(realm_attr->GetString());
+  port_->set_realm(realm_attr->string_view());
 
   const StunByteStringAttribute* nonce_attr =
       response->GetByteString(STUN_ATTR_NONCE);
@@ -1509,7 +1509,7 @@ void TurnAllocateRequest::OnAuthChallenge(StunMessage* response, int code) {
                            "allocate unauthorized response.";
     return;
   }
-  port_->set_nonce(nonce_attr->GetString());
+  port_->set_nonce(nonce_attr->string_view());
 
   // Send another allocate request, with the received realm and nonce values.
   port_->SendRequest(new TurnAllocateRequest(port_), 0);
@@ -1544,7 +1544,7 @@ void TurnAllocateRequest::OnTryAlternate(StunMessage* response, int code) {
     RTC_LOG(LS_INFO) << port_->ToString()
                      << ": Applying STUN_ATTR_REALM attribute in "
                         "try alternate error response.";
-    port_->set_realm(realm_attr->GetString());
+    port_->set_realm(realm_attr->string_view());
   }
 
   const StunByteStringAttribute* nonce_attr =
@@ -1553,7 +1553,7 @@ void TurnAllocateRequest::OnTryAlternate(StunMessage* response, int code) {
     RTC_LOG(LS_INFO) << port_->ToString()
                      << ": Applying STUN_ATTR_NONCE attribute in "
                         "try alternate error response.";
-    port_->set_nonce(nonce_attr->GetString());
+    port_->set_nonce(nonce_attr->string_view());
   }
 
   // For TCP, we can't close the original Tcp socket during handling a 300 as

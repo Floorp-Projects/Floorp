@@ -34,12 +34,13 @@
 #include "rtc_base/strings/string_builder.h"
 #include "rtc_base/third_party/base64/base64.h"
 
+namespace cricket {
 namespace {
 
 // Determines whether we have seen at least the given maximum number of
 // pings fail to have a response.
 inline bool TooManyFailures(
-    const std::vector<cricket::Connection::SentPing>& pings_since_last_response,
+    const std::vector<Connection::SentPing>& pings_since_last_response,
     uint32_t maximum_failures,
     int rtt_estimate,
     int64_t now) {
@@ -56,7 +57,7 @@ inline bool TooManyFailures(
 
 // Determines whether we have gone too long without seeing any response.
 inline bool TooLongWithoutResponse(
-    const std::vector<cricket::Connection::SentPing>& pings_since_last_response,
+    const std::vector<Connection::SentPing>& pings_since_last_response,
     int64_t maximum_time,
     int64_t now) {
   if (pings_since_last_response.size() == 0)
@@ -69,13 +70,13 @@ inline bool TooLongWithoutResponse(
 // Helper methods for converting string values of log description fields to
 // enum.
 webrtc::IceCandidateType GetCandidateTypeByString(const std::string& type) {
-  if (type == cricket::LOCAL_PORT_TYPE) {
+  if (type == LOCAL_PORT_TYPE) {
     return webrtc::IceCandidateType::kLocal;
-  } else if (type == cricket::STUN_PORT_TYPE) {
+  } else if (type == STUN_PORT_TYPE) {
     return webrtc::IceCandidateType::kStun;
-  } else if (type == cricket::PRFLX_PORT_TYPE) {
+  } else if (type == PRFLX_PORT_TYPE) {
     return webrtc::IceCandidateType::kPrflx;
-  } else if (type == cricket::RELAY_PORT_TYPE) {
+  } else if (type == RELAY_PORT_TYPE) {
     return webrtc::IceCandidateType::kRelay;
   }
   return webrtc::IceCandidateType::kUnknown;
@@ -83,13 +84,13 @@ webrtc::IceCandidateType GetCandidateTypeByString(const std::string& type) {
 
 webrtc::IceCandidatePairProtocol GetProtocolByString(
     const std::string& protocol) {
-  if (protocol == cricket::UDP_PROTOCOL_NAME) {
+  if (protocol == UDP_PROTOCOL_NAME) {
     return webrtc::IceCandidatePairProtocol::kUdp;
-  } else if (protocol == cricket::TCP_PROTOCOL_NAME) {
+  } else if (protocol == TCP_PROTOCOL_NAME) {
     return webrtc::IceCandidatePairProtocol::kTcp;
-  } else if (protocol == cricket::SSLTCP_PROTOCOL_NAME) {
+  } else if (protocol == SSLTCP_PROTOCOL_NAME) {
     return webrtc::IceCandidatePairProtocol::kSsltcp;
-  } else if (protocol == cricket::TLS_PROTOCOL_NAME) {
+  } else if (protocol == TLS_PROTOCOL_NAME) {
     return webrtc::IceCandidatePairProtocol::kTls;
   }
   return webrtc::IceCandidatePairProtocol::kUnknown;
@@ -148,24 +149,22 @@ const int RTT_RATIO = 3;  // 3 : 1
 constexpr int64_t kMinExtraPingDelayMs = 100;
 
 // Default field trials.
-const cricket::IceFieldTrials kDefaultFieldTrials;
+const IceFieldTrials kDefaultFieldTrials;
 
-constexpr int kSupportGoogPingVersionRequestIndex =
-    static_cast<int>(cricket::IceGoogMiscInfoBindingRequestAttributeIndex::
-                         SUPPORT_GOOG_PING_VERSION);
+constexpr int kSupportGoogPingVersionRequestIndex = static_cast<int>(
+    IceGoogMiscInfoBindingRequestAttributeIndex::SUPPORT_GOOG_PING_VERSION);
 
-constexpr int kSupportGoogPingVersionResponseIndex =
-    static_cast<int>(cricket::IceGoogMiscInfoBindingResponseAttributeIndex::
-                         SUPPORT_GOOG_PING_VERSION);
+constexpr int kSupportGoogPingVersionResponseIndex = static_cast<int>(
+    IceGoogMiscInfoBindingResponseAttributeIndex::SUPPORT_GOOG_PING_VERSION);
 
 }  // namespace
 
-namespace cricket {
-
+// A ConnectionRequest is a STUN binding used to determine writability.
 class Connection::ConnectionRequest : public StunRequest {
  public:
-  ConnectionRequest(StunRequestManager& manager, Connection* connection);
-  void Prepare(StunMessage* message) override;
+  ConnectionRequest(StunRequestManager& manager,
+                    Connection* connection,
+                    std::unique_ptr<IceMessage> message);
   void OnResponse(StunMessage* response) override;
   void OnErrorResponse(StunMessage* response) override;
   void OnTimeout() override;
@@ -176,101 +175,11 @@ class Connection::ConnectionRequest : public StunRequest {
   Connection* const connection_;
 };
 
-// A ConnectionRequest is a STUN binding used to determine writability.
-Connection::ConnectionRequest::ConnectionRequest(StunRequestManager& manager,
-                                                 Connection* connection)
-    : StunRequest(manager, std::make_unique<IceMessage>(STUN_BINDING_REQUEST)),
-      connection_(connection) {}
-
-void Connection::ConnectionRequest::Prepare(StunMessage* message) {
-  RTC_DCHECK_RUN_ON(connection_->network_thread_);
-  RTC_DCHECK_EQ(message->type(), STUN_BINDING_REQUEST);
-  std::string username;
-  connection_->port()->CreateStunUsername(
-      connection_->remote_candidate().username(), &username);
-  // Note that the order of attributes does not impact the parsing on the
-  // receiver side. The attribute is retrieved then by iterating and matching
-  // over all parsed attributes. See StunMessage::GetAttribute.
-  message->AddAttribute(
-      std::make_unique<StunByteStringAttribute>(STUN_ATTR_USERNAME, username));
-
-  // connection_ already holds this ping, so subtract one from count.
-  if (connection_->port()->send_retransmit_count_attribute()) {
-    message->AddAttribute(std::make_unique<StunUInt32Attribute>(
-        STUN_ATTR_RETRANSMIT_COUNT,
-        static_cast<uint32_t>(connection_->pings_since_last_response_.size() -
-                              1)));
-  }
-  uint32_t network_info = connection_->port()->Network()->id();
-  network_info = (network_info << 16) | connection_->port()->network_cost();
-  message->AddAttribute(std::make_unique<StunUInt32Attribute>(
-      STUN_ATTR_GOOG_NETWORK_INFO, network_info));
-
-  if (connection_->field_trials_->piggyback_ice_check_acknowledgement &&
-      connection_->last_ping_id_received()) {
-    message->AddAttribute(std::make_unique<StunByteStringAttribute>(
-        STUN_ATTR_GOOG_LAST_ICE_CHECK_RECEIVED,
-        connection_->last_ping_id_received().value()));
-  }
-
-  // Adding ICE_CONTROLLED or ICE_CONTROLLING attribute based on the role.
-  if (connection_->port()->GetIceRole() == ICEROLE_CONTROLLING) {
-    message->AddAttribute(std::make_unique<StunUInt64Attribute>(
-        STUN_ATTR_ICE_CONTROLLING, connection_->port()->IceTiebreaker()));
-    // We should have either USE_CANDIDATE attribute or ICE_NOMINATION
-    // attribute but not both. That was enforced in p2ptransportchannel.
-    if (connection_->use_candidate_attr()) {
-      message->AddAttribute(
-          std::make_unique<StunByteStringAttribute>(STUN_ATTR_USE_CANDIDATE));
-    }
-    if (connection_->nomination_ &&
-        connection_->nomination_ != connection_->acked_nomination()) {
-      message->AddAttribute(std::make_unique<StunUInt32Attribute>(
-          STUN_ATTR_NOMINATION, connection_->nomination_));
-    }
-  } else if (connection_->port()->GetIceRole() == ICEROLE_CONTROLLED) {
-    message->AddAttribute(std::make_unique<StunUInt64Attribute>(
-        STUN_ATTR_ICE_CONTROLLED, connection_->port()->IceTiebreaker()));
-  } else {
-    RTC_DCHECK_NOTREACHED();
-  }
-
-  // Adding PRIORITY Attribute.
-  // Changing the type preference to Peer Reflexive and local preference
-  // and component id information is unchanged from the original priority.
-  // priority = (2^24)*(type preference) +
-  //           (2^8)*(local preference) +
-  //           (2^0)*(256 - component ID)
-  uint32_t type_preference =
-      (connection_->local_candidate().protocol() == TCP_PROTOCOL_NAME)
-          ? ICE_TYPE_PREFERENCE_PRFLX_TCP
-          : ICE_TYPE_PREFERENCE_PRFLX;
-  uint32_t prflx_priority =
-      type_preference << 24 |
-      (connection_->local_candidate().priority() & 0x00FFFFFF);
-  message->AddAttribute(std::make_unique<StunUInt32Attribute>(
-      STUN_ATTR_PRIORITY, prflx_priority));
-
-  if (connection_->field_trials_->enable_goog_ping &&
-      !connection_->remote_support_goog_ping_.has_value()) {
-    // Check if remote supports GOOG PING by announcing which version we
-    // support. This is sent on all STUN_BINDING_REQUEST until we get a
-    // STUN_BINDING_RESPONSE.
-    auto list =
-        StunAttribute::CreateUInt16ListAttribute(STUN_ATTR_GOOG_MISC_INFO);
-    list->AddTypeAtIndex(kSupportGoogPingVersionRequestIndex, kGoogPingVersion);
-    message->AddAttribute(std::move(list));
-  }
-
-  if (connection_->ShouldSendGoogPing(message)) {
-    message->SetType(GOOG_PING_REQUEST);
-    message->ClearAttributes();
-    message->AddMessageIntegrity32(connection_->remote_candidate().password());
-  } else {
-    message->AddMessageIntegrity(connection_->remote_candidate().password());
-    message->AddFingerprint();
-  }
-}
+Connection::ConnectionRequest::ConnectionRequest(
+    StunRequestManager& manager,
+    Connection* connection,
+    std::unique_ptr<IceMessage> message)
+    : StunRequest(manager, std::move(message)), connection_(connection) {}
 
 void Connection::ConnectionRequest::OnResponse(StunMessage* response) {
   RTC_DCHECK_RUN_ON(connection_->network_thread_);
@@ -997,7 +906,7 @@ int64_t Connection::last_ping_sent() const {
 void Connection::Ping(int64_t now) {
   RTC_DCHECK_RUN_ON(network_thread_);
   last_ping_sent_ = now;
-  ConnectionRequest* req = new ConnectionRequest(requests_, this);
+
   // If not using renomination, we use "1" to mean "nominated" and "0" to mean
   // "not nominated". If using renomination, values greater than 1 are used for
   // re-nominated pairs.
@@ -1005,13 +914,85 @@ void Connection::Ping(int64_t now) {
   if (nomination_ > 0) {
     nomination = nomination_;
   }
+
+  auto req =
+      std::make_unique<ConnectionRequest>(requests_, this, BuildPingRequest());
+
+  if (ShouldSendGoogPing(req->msg())) {
+    auto message = std::make_unique<IceMessage>(GOOG_PING_REQUEST, req->id());
+    message->AddMessageIntegrity32(remote_candidate_.password());
+    req.reset(new ConnectionRequest(requests_, this, std::move(message)));
+  }
+
   pings_since_last_response_.push_back(SentPing(req->id(), now, nomination));
   RTC_LOG(LS_VERBOSE) << ToString() << ": Sending STUN ping, id="
                       << rtc::hex_encode(req->id())
                       << ", nomination=" << nomination_;
-  requests_.Send(req);
+  requests_.Send(req.release());
   state_ = IceCandidatePairState::IN_PROGRESS;
   num_pings_sent_++;
+}
+
+std::unique_ptr<IceMessage> Connection::BuildPingRequest() {
+  auto message = std::make_unique<IceMessage>(STUN_BINDING_REQUEST);
+  // Note that the order of attributes does not impact the parsing on the
+  // receiver side. The attribute is retrieved then by iterating and matching
+  // over all parsed attributes. See StunMessage::GetAttribute.
+  message->AddAttribute(std::make_unique<StunByteStringAttribute>(
+      STUN_ATTR_USERNAME,
+      port()->CreateStunUsername(remote_candidate_.username())));
+  message->AddAttribute(std::make_unique<StunUInt32Attribute>(
+      STUN_ATTR_GOOG_NETWORK_INFO,
+      (port_->Network()->id() << 16) | port_->network_cost()));
+
+  if (field_trials_->piggyback_ice_check_acknowledgement &&
+      last_ping_id_received_) {
+    message->AddAttribute(std::make_unique<StunByteStringAttribute>(
+        STUN_ATTR_GOOG_LAST_ICE_CHECK_RECEIVED, *last_ping_id_received_));
+  }
+
+  // Adding ICE_CONTROLLED or ICE_CONTROLLING attribute based on the role.
+  IceRole ice_role = port_->GetIceRole();
+  RTC_DCHECK(ice_role == ICEROLE_CONTROLLING || ice_role == ICEROLE_CONTROLLED);
+  message->AddAttribute(std::make_unique<StunUInt64Attribute>(
+      ice_role == ICEROLE_CONTROLLING ? STUN_ATTR_ICE_CONTROLLING
+                                      : STUN_ATTR_ICE_CONTROLLED,
+      port_->IceTiebreaker()));
+
+  if (ice_role == ICEROLE_CONTROLLING) {
+    // We should have either USE_CANDIDATE attribute or ICE_NOMINATION
+    // attribute but not both. That was enforced in p2ptransportchannel.
+    if (use_candidate_attr()) {
+      message->AddAttribute(
+          std::make_unique<StunByteStringAttribute>(STUN_ATTR_USE_CANDIDATE));
+    }
+    if (nomination_ && nomination_ != acked_nomination()) {
+      message->AddAttribute(std::make_unique<StunUInt32Attribute>(
+          STUN_ATTR_NOMINATION, nomination_));
+    }
+  }
+
+  message->AddAttribute(std::make_unique<StunUInt32Attribute>(
+      STUN_ATTR_PRIORITY, prflx_priority()));
+
+  if (port()->send_retransmit_count_attribute()) {
+    message->AddAttribute(std::make_unique<StunUInt32Attribute>(
+        STUN_ATTR_RETRANSMIT_COUNT, pings_since_last_response_.size()));
+  }
+  if (field_trials_->enable_goog_ping &&
+      !remote_support_goog_ping_.has_value()) {
+    // Check if remote supports GOOG PING by announcing which version we
+    // support. This is sent on all STUN_BINDING_REQUEST until we get a
+    // STUN_BINDING_RESPONSE.
+    auto list =
+        StunAttribute::CreateUInt16ListAttribute(STUN_ATTR_GOOG_MISC_INFO);
+    list->AddTypeAtIndex(kSupportGoogPingVersionRequestIndex, kGoogPingVersion);
+    message->AddAttribute(std::move(list));
+  }
+  message->AddMessageIntegrity(remote_candidate_.password());
+  message->AddFingerprint();
+
+  return message;
 }
 
 int64_t Connection::last_ping_response_received() const {
@@ -1051,7 +1032,8 @@ void Connection::HandlePiggybackCheckAcknowledgementIfAny(StunMessage* msg) {
   const StunByteStringAttribute* last_ice_check_received_attr =
       msg->GetByteString(STUN_ATTR_GOOG_LAST_ICE_CHECK_RECEIVED);
   if (last_ice_check_received_attr) {
-    const std::string request_id = last_ice_check_received_attr->GetString();
+    const absl::string_view request_id =
+        last_ice_check_received_attr->string_view();
     auto iter = absl::c_find_if(
         pings_since_last_response_,
         [&request_id](const SentPing& ping) { return ping.id == request_id; });
@@ -1078,7 +1060,7 @@ int64_t Connection::last_data_received() const {
 
 void Connection::ReceivedPingResponse(
     int rtt,
-    const std::string& request_id,
+    absl::string_view request_id,
     const absl::optional<uint32_t>& nomination) {
   RTC_DCHECK_RUN_ON(network_thread_);
   RTC_DCHECK_GE(rtt, 0);
@@ -1485,6 +1467,21 @@ int64_t Connection::last_received() const {
 int64_t Connection::receiving_unchanged_since() const {
   RTC_DCHECK_RUN_ON(network_thread_);
   return receiving_unchanged_since_;
+}
+
+uint32_t Connection::prflx_priority() const {
+  RTC_DCHECK_RUN_ON(network_thread_);
+  // PRIORITY Attribute.
+  // Changing the type preference to Peer Reflexive and local preference
+  // and component id information is unchanged from the original priority.
+  // priority = (2^24)*(type preference) +
+  //           (2^8)*(local preference) +
+  //           (2^0)*(256 - component ID)
+  IcePriorityValue type_preference =
+      (local_candidate_.protocol() == TCP_PROTOCOL_NAME)
+          ? ICE_TYPE_PREFERENCE_PRFLX_TCP
+          : ICE_TYPE_PREFERENCE_PRFLX;
+  return type_preference << 24 | (local_candidate_.priority() & 0x00FFFFFF);
 }
 
 ConnectionInfo Connection::stats() {

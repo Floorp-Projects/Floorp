@@ -653,14 +653,14 @@ bool Port::ParseStunUsername(const StunMessage* stun_msg,
     return false;
 
   // RFRAG:LFRAG
-  const std::string username = username_attr->GetString();
+  const absl::string_view username = username_attr->string_view();
   size_t colon_pos = username.find(':');
-  if (colon_pos == std::string::npos) {
+  if (colon_pos == absl::string_view::npos) {
     return false;
   }
 
-  *local_ufrag = username.substr(0, colon_pos);
-  *remote_ufrag = username.substr(colon_pos + 1, username.size());
+  *local_ufrag = std::string(username.substr(0, colon_pos));
+  *remote_ufrag = std::string(username.substr(colon_pos + 1, username.size()));
   return true;
 }
 
@@ -725,12 +725,8 @@ bool Port::MaybeIceRoleConflict(const rtc::SocketAddress& addr,
   return ret;
 }
 
-void Port::CreateStunUsername(const std::string& remote_username,
-                              std::string* stun_username_attr_str) const {
-  stun_username_attr_str->clear();
-  *stun_username_attr_str = remote_username;
-  stun_username_attr_str->append(":");
-  stun_username_attr_str->append(username_fragment());
+std::string Port::CreateStunUsername(const std::string& remote_username) const {
+  return remote_username + ":" + username_fragment();
 }
 
 bool Port::HandleIncomingPacket(rtc::AsyncPacketSocket* socket,

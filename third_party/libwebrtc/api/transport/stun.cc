@@ -362,22 +362,19 @@ bool StunMessage::ValidateMessageIntegrityOfType(int mi_attr_type,
                 mi_attr_size) == 0;
 }
 
-bool StunMessage::AddMessageIntegrity(const std::string& password) {
+bool StunMessage::AddMessageIntegrity(absl::string_view password) {
   return AddMessageIntegrityOfType(STUN_ATTR_MESSAGE_INTEGRITY,
-                                   kStunMessageIntegritySize, password.c_str(),
-                                   password.size());
+                                   kStunMessageIntegritySize, password);
 }
 
 bool StunMessage::AddMessageIntegrity32(absl::string_view password) {
   return AddMessageIntegrityOfType(STUN_ATTR_GOOG_MESSAGE_INTEGRITY_32,
-                                   kStunMessageIntegrity32Size, password.data(),
-                                   password.length());
+                                   kStunMessageIntegrity32Size, password);
 }
 
 bool StunMessage::AddMessageIntegrityOfType(int attr_type,
                                             size_t attr_size,
-                                            const char* key,
-                                            size_t keylen) {
+                                            absl::string_view key) {
   // Add the attribute with a dummy value. Since this is a known attribute, it
   // can't fail.
   RTC_DCHECK(attr_size <= kStunMessageIntegritySize);
@@ -394,8 +391,9 @@ bool StunMessage::AddMessageIntegrityOfType(int attr_type,
   int msg_len_for_hmac = static_cast<int>(
       buf.Length() - kStunAttributeHeaderSize - msg_integrity_attr->length());
   char hmac[kStunMessageIntegritySize];
-  size_t ret = rtc::ComputeHmac(rtc::DIGEST_SHA_1, key, keylen, buf.Data(),
-                                msg_len_for_hmac, hmac, sizeof(hmac));
+  size_t ret =
+      rtc::ComputeHmac(rtc::DIGEST_SHA_1, key.data(), key.size(), buf.Data(),
+                       msg_len_for_hmac, hmac, sizeof(hmac));
   RTC_DCHECK(ret == sizeof(hmac));
   if (ret != sizeof(hmac)) {
     RTC_LOG(LS_ERROR) << "HMAC computation failed. Message-Integrity "
@@ -405,7 +403,7 @@ bool StunMessage::AddMessageIntegrityOfType(int attr_type,
 
   // Insert correct HMAC into the attribute.
   msg_integrity_attr->CopyBytes(hmac, attr_size);
-  password_.assign(key, keylen);
+  password_ = std::string(key);
   integrity_ = IntegrityStatus::kIntegrityOk;
   return true;
 }
@@ -1006,9 +1004,9 @@ StunByteStringAttribute::StunByteStringAttribute(uint16_t type)
     : StunAttribute(type, 0), bytes_(NULL) {}
 
 StunByteStringAttribute::StunByteStringAttribute(uint16_t type,
-                                                 const std::string& str)
+                                                 absl::string_view str)
     : StunAttribute(type, 0), bytes_(NULL) {
-  CopyBytes(str.c_str(), str.size());
+  CopyBytes(str);
 }
 
 StunByteStringAttribute::StunByteStringAttribute(uint16_t type,
@@ -1029,8 +1027,10 @@ StunAttributeValueType StunByteStringAttribute::value_type() const {
   return STUN_VALUE_BYTE_STRING;
 }
 
-void StunByteStringAttribute::CopyBytes(const char* bytes) {
-  CopyBytes(bytes, strlen(bytes));
+void StunByteStringAttribute::CopyBytes(absl::string_view bytes) {
+  char* new_bytes = new char[bytes.size()];
+  memcpy(new_bytes, bytes.data(), bytes.size());
+  SetBytes(new_bytes, bytes.size());
 }
 
 void StunByteStringAttribute::CopyBytes(const void* bytes, size_t length) {

@@ -233,7 +233,7 @@ class StunMessage {
   }
 
   // Adds a MESSAGE-INTEGRITY attribute that is valid for the current message.
-  bool AddMessageIntegrity(const std::string& password);
+  bool AddMessageIntegrity(absl::string_view password);
 
   // Adds a STUN_ATTR_GOOG_MESSAGE_INTEGRITY_32 attribute that is valid for the
   // current message.
@@ -316,8 +316,7 @@ class StunMessage {
   static bool IsValidTransactionId(absl::string_view transaction_id);
   bool AddMessageIntegrityOfType(int mi_attr_type,
                                  size_t mi_attr_size,
-                                 const char* key,
-                                 size_t keylen);
+                                 absl::string_view key);
   static bool ValidateMessageIntegrityOfType(int mi_attr_type,
                                              size_t mi_attr_size,
                                              const char* data,
@@ -507,7 +506,7 @@ class StunUInt64Attribute : public StunAttribute {
 class StunByteStringAttribute : public StunAttribute {
  public:
   explicit StunByteStringAttribute(uint16_t type);
-  StunByteStringAttribute(uint16_t type, const std::string& str);
+  StunByteStringAttribute(uint16_t type, absl::string_view str);
   StunByteStringAttribute(uint16_t type, const void* bytes, size_t length);
   StunByteStringAttribute(uint16_t type, uint16_t length);
   ~StunByteStringAttribute() override;
@@ -515,10 +514,16 @@ class StunByteStringAttribute : public StunAttribute {
   StunAttributeValueType value_type() const override;
 
   const char* bytes() const { return bytes_; }
-  std::string GetString() const { return std::string(bytes_, length()); }
+  absl::string_view string_view() const {
+    return absl::string_view(bytes_, length());
+  }
 
-  void CopyBytes(const char* bytes);  // uses strlen
+  [[deprecated]] std::string GetString() const {
+    return std::string(bytes_, length());
+  }
+
   void CopyBytes(const void* bytes, size_t length);
+  void CopyBytes(absl::string_view bytes);
 
   uint8_t GetByte(size_t index) const;
   void SetByte(size_t index, uint8_t value);

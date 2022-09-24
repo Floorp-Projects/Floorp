@@ -650,12 +650,12 @@ TEST_F(StunTest, ReadRfc5769RequestMessage) {
   const StunByteStringAttribute* software =
       msg.GetByteString(STUN_ATTR_SOFTWARE);
   ASSERT_TRUE(software != NULL);
-  EXPECT_EQ(kRfc5769SampleMsgClientSoftware, software->GetString());
+  EXPECT_EQ(kRfc5769SampleMsgClientSoftware, software->string_view());
 
   const StunByteStringAttribute* username =
       msg.GetByteString(STUN_ATTR_USERNAME);
   ASSERT_TRUE(username != NULL);
-  EXPECT_EQ(kRfc5769SampleMsgUsername, username->GetString());
+  EXPECT_EQ(kRfc5769SampleMsgUsername, username->string_view());
 
   // Actual M-I value checked in a later test.
   ASSERT_TRUE(msg.GetByteString(STUN_ATTR_MESSAGE_INTEGRITY) != NULL);
@@ -677,7 +677,7 @@ TEST_F(StunTest, ReadRfc5769ResponseMessage) {
   const StunByteStringAttribute* software =
       msg.GetByteString(STUN_ATTR_SOFTWARE);
   ASSERT_TRUE(software != NULL);
-  EXPECT_EQ(kRfc5769SampleMsgServerSoftware, software->GetString());
+  EXPECT_EQ(kRfc5769SampleMsgServerSoftware, software->string_view());
 
   const StunAddressAttribute* mapped_address =
       msg.GetAddress(STUN_ATTR_XOR_MAPPED_ADDRESS);
@@ -700,7 +700,7 @@ TEST_F(StunTest, ReadRfc5769ResponseMessageIPv6) {
   const StunByteStringAttribute* software =
       msg.GetByteString(STUN_ATTR_SOFTWARE);
   ASSERT_TRUE(software != NULL);
-  EXPECT_EQ(kRfc5769SampleMsgServerSoftware, software->GetString());
+  EXPECT_EQ(kRfc5769SampleMsgServerSoftware, software->string_view());
 
   const StunAddressAttribute* mapped_address =
       msg.GetAddress(STUN_ATTR_XOR_MAPPED_ADDRESS);
@@ -723,15 +723,15 @@ TEST_F(StunTest, ReadRfc5769RequestMessageLongTermAuth) {
   const StunByteStringAttribute* username =
       msg.GetByteString(STUN_ATTR_USERNAME);
   ASSERT_TRUE(username != NULL);
-  EXPECT_EQ(kRfc5769SampleMsgWithAuthUsername, username->GetString());
+  EXPECT_EQ(kRfc5769SampleMsgWithAuthUsername, username->string_view());
 
   const StunByteStringAttribute* nonce = msg.GetByteString(STUN_ATTR_NONCE);
   ASSERT_TRUE(nonce != NULL);
-  EXPECT_EQ(kRfc5769SampleMsgWithAuthNonce, nonce->GetString());
+  EXPECT_EQ(kRfc5769SampleMsgWithAuthNonce, nonce->string_view());
 
   const StunByteStringAttribute* realm = msg.GetByteString(STUN_ATTR_REALM);
   ASSERT_TRUE(realm != NULL);
-  EXPECT_EQ(kRfc5769SampleMsgWithAuthRealm, realm->GetString());
+  EXPECT_EQ(kRfc5769SampleMsgWithAuthRealm, realm->string_view());
 
   // No fingerprint, actual M-I checked in later tests.
   ASSERT_TRUE(msg.GetByteString(STUN_ATTR_MESSAGE_INTEGRITY) != NULL);
@@ -1013,7 +1013,7 @@ TEST_F(StunTest, ReadByteStringAttribute) {
   const StunByteStringAttribute* username =
       msg.GetByteString(STUN_ATTR_USERNAME);
   ASSERT_TRUE(username != NULL);
-  EXPECT_EQ(kTestUserName1, username->GetString());
+  EXPECT_EQ(kTestUserName1, username->string_view());
 }
 
 TEST_F(StunTest, ReadPaddedByteStringAttribute) {
@@ -1026,7 +1026,7 @@ TEST_F(StunTest, ReadPaddedByteStringAttribute) {
   const StunByteStringAttribute* username =
       msg.GetByteString(STUN_ATTR_USERNAME);
   ASSERT_TRUE(username != NULL);
-  EXPECT_EQ(kTestUserName2, username->GetString());
+  EXPECT_EQ(kTestUserName2, username->string_view());
 }
 
 TEST_F(StunTest, ReadErrorCodeAttribute) {
@@ -1073,7 +1073,7 @@ TEST_F(StunTest, ReadMessageWithAnUnknownAttribute) {
   const StunByteStringAttribute* username =
       msg.GetByteString(STUN_ATTR_USERNAME);
   ASSERT_TRUE(username != NULL);
-  EXPECT_EQ(kTestUserName2, username->GetString());
+  EXPECT_EQ(kTestUserName2, username->string_view());
 }
 
 TEST_F(StunTest, WriteMessageWithAnErrorCodeAttribute) {
@@ -1498,7 +1498,7 @@ TEST_F(StunTest, ReadRelayMessage) {
   const StunByteStringAttribute* bytes = msg.GetByteString(STUN_ATTR_USERNAME);
   ASSERT_TRUE(bytes != NULL);
   EXPECT_EQ(12U, bytes->length());
-  EXPECT_EQ("abcdefghijkl", bytes->GetString());
+  EXPECT_EQ("abcdefghijkl", bytes->string_view());
 
   auto bytes2 = StunAttribute::CreateByteString(STUN_ATTR_USERNAME);
   bytes2->CopyBytes("abcdefghijkl");
@@ -1556,7 +1556,7 @@ TEST_F(StunTest, ReadRelayMessage) {
   bytes = msg.GetByteString(STUN_ATTR_DATA);
   ASSERT_TRUE(bytes != NULL);
   EXPECT_EQ(7U, bytes->length());
-  EXPECT_EQ("abcdefg", bytes->GetString());
+  EXPECT_EQ("abcdefg", bytes->string_view());
 
   bytes2 = StunAttribute::CreateByteString(STUN_ATTR_DATA);
   bytes2->CopyBytes("abcdefg");
