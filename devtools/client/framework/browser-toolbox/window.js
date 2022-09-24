@@ -30,6 +30,10 @@ ChromeUtils.defineESModuleGetters(lazy, {
     "resource://devtools/client/framework/browser-toolbox/Launcher.sys.mjs",
 });
 
+const {
+  CommandsFactory,
+} = require("devtools/shared/commands/commands-factory");
+
 // Timeout to wait before we assume that a connect() timed out without an error.
 // In milliseconds. (With the Debugger pane open, this has been reported to last
 // more than 10 seconds!)
@@ -43,7 +47,7 @@ var Prefs = new PrefsHelper("devtools.debugger", {
   chromeDebuggingWebSocket: ["Bool", "chrome-debugging-websocket"],
 });
 
-var gToolbox, gClient, gShortcuts;
+var gCommands, gToolbox, gShortcuts;
 
 function appendStatusMessage(msg) {
   const statusMessage = document.getElementById("status-message");
@@ -105,13 +109,13 @@ var connect = async function() {
     port,
     webSocket,
   });
-  gClient = new DevToolsClient(transport);
+  const client = new DevToolsClient(transport);
   appendStatusMessage("Start protocol client for connection");
-  await gClient.connect();
+  await client.connect();
 
   appendStatusMessage("Get root form for toolbox");
-  const mainProcessDescriptor = await gClient.mainRoot.getMainProcess();
-  await openToolbox(mainProcessDescriptor);
+  gCommands = await CommandsFactory.forMainProcess({ client });
+  await openToolbox(gCommands);
 };
 
 // Certain options should be toggled since we can assume chrome debugging here
@@ -197,7 +201,8 @@ function onReloadBrowser() {
   gToolbox.commands.targetCommand.reloadTopLevelTarget();
 }
 
-async function openToolbox(descriptorFront) {
+async function openToolbox(commands) {
+  const { descriptorFront } = commands;
   const form = descriptorFront._form;
   appendStatusMessage(
     `Create toolbox for target descriptor: ${JSON.stringify({ form }, null, 2)}`
@@ -284,7 +289,7 @@ async function bindToolboxHandlers() {
 
   // If the remote connection drops, firefox was closed
   // In such case, force closing the browser toolbox
-  gClient.once("closed", quitApp);
+  gCommands.client.once("closed", quitApp);
 
   if (Services.appinfo.OS == "Darwin") {
     // Badge the dock icon to differentiate this process from the main application

@@ -13,8 +13,6 @@ ChromeUtils.defineModuleGetter(
   "resource://gre/modules/ExtensionParent.jsm"
 );
 
-const { startDebugger } = require("resource://test/webextension-helpers.js");
-
 const { createAppInfo, promiseStartupManager } = AddonTestUtils;
 
 AddonTestUtils.init(this);
@@ -77,15 +75,10 @@ add_task(
     await extension.startup();
     const bgPageURL = await extension.awaitMessage("background page ready");
 
-    const client = await startDebugger();
-
-    const addonDescriptor = await client.mainRoot.getAddon({
-      id: extension.id,
-    });
-    ok(addonDescriptor, "Got an RDP description");
+    const commands = await CommandsFactory.forAddon(extension.id);
 
     // Connect to the target addon actor and wait for the updated list of frames.
-    const addonTarget = await addonDescriptor.getTarget();
+    const addonTarget = await commands.descriptorFront.getTarget();
     ok(addonTarget, "Got an RDP target");
 
     const { frames } = await addonTarget.listFrames();
@@ -151,7 +144,7 @@ add_task(
       "Got the expected frame update when the addon background page was loaded back"
     );
 
-    await client.close();
+    await commands.destroy();
 
     // Check that if we close the debugging client without uninstalling the addon,
     // the webextension debugging actor should release the debug browser.

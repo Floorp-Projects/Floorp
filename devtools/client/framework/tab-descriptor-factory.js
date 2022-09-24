@@ -6,19 +6,13 @@
 
 loader.lazyRequireGetter(
   this,
-  "DevToolsServer",
-  "devtools/server/devtools-server",
-  true
-);
-loader.lazyRequireGetter(
-  this,
-  "DevToolsClient",
-  "devtools/client/devtools-client",
+  "CommandsFactory",
+  "devtools/shared/commands/commands-factory",
   true
 );
 
-// Map of existing TabDescriptors, keyed by XULTab.
-const descriptors = new WeakMap();
+// Map of existing Commands objects, keyed by XULTab.
+const commandsMap = new WeakMap();
 
 /**
  * Functions for creating (local) Tab Target Descriptors
@@ -42,49 +36,23 @@ exports.TabDescriptorFactory = {
    * @return {TabDescriptorFront} The tab descriptor for the provided tab.
    */
   async createDescriptorForTab(tab) {
-    let descriptor = descriptors.get(tab);
-    if (descriptor) {
-      return descriptor;
+    let commands = commandsMap.get(tab);
+    if (commands) {
+      commands = await commands;
+      return commands.descriptorFront;
     }
 
-    const promise = this._createDescriptorForTab(tab);
+    const promise = CommandsFactory.forTab(tab);
     // Immediately set the descriptor's promise in cache to prevent race
-    descriptors.set(tab, promise);
-    descriptor = await promise;
+    commandsMap.set(tab, promise);
+    commands = await promise;
     // Then replace the promise with the descriptor object
-    descriptors.set(tab, descriptor);
+    commandsMap.set(tab, commands);
 
-    descriptor.once("descriptor-destroyed", () => {
-      descriptors.delete(tab);
+    commands.descriptorFront.once("descriptor-destroyed", () => {
+      commandsMap.delete(tab);
     });
-    return descriptor;
-  },
-
-  async _createDescriptorForTab(tab) {
-    // Make sure the DevTools server is started.
-    this._ensureDevToolsServerInitialized();
-
-    // Create the client and connect it to the local server.
-    const client = new DevToolsClient(DevToolsServer.connectPipe());
-    await client.connect();
-
-    return client.mainRoot.getTab({ tab });
-  },
-
-  _ensureDevToolsServerInitialized() {
-    // Since a remote protocol connection will be made, let's start the
-    // DevToolsServer here, once and for all tools.
-    DevToolsServer.init();
-
-    // When connecting to a local tab, we only need the root actor.
-    // Then we are going to call frame-connector.js' connectToFrame and talk
-    // directly with actors living in the child process.
-    // We also need browser actors for actor registry which enabled addons
-    // to register custom actors.
-    // TODO: the comment and implementation are out of sync here. See Bug 1420134.
-    DevToolsServer.registerAllActors();
-    // Enable being able to get child process actors
-    DevToolsServer.allowChromeProcess = true;
+    return commands.descriptorFront;
   },
 
   /**
@@ -95,11 +63,11 @@ exports.TabDescriptorFactory = {
    *        The tab for which the descriptor should be retrieved
    */
   async getDescriptorForTab(tab) {
-    // descriptors.get(tab) can either return an initialized descriptor, a promise
-    // which will resolve a descriptor, or null if no descriptor was ever created
+    // commandsMap.get(tab) can either return initialized commands, a promise
+    // which will resolve a commands, or null if no commands was ever created
     // for this tab.
-    const descriptor = await descriptors.get(tab);
-    return descriptor;
+    const commands = await commandsMap.get(tab);
+    return commands?.descriptorFront;
   },
 
   /**
@@ -108,6 +76,6 @@ exports.TabDescriptorFactory = {
    * @return true/false
    */
   isKnownTab(tab) {
-    return descriptors.has(tab);
+    return commandsMap.has(tab);
   },
 };

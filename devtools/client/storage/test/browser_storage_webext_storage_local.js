@@ -6,34 +6,7 @@ http://creativecommons.org/publicdomain/zero/1.0/ */
 
 "use strict";
 
-loader.lazyRequireGetter(
-  this,
-  "DevToolsServer",
-  "devtools/server/devtools-server",
-  true
-);
-loader.lazyRequireGetter(
-  this,
-  "DevToolsClient",
-  "devtools/client/devtools-client",
-  true
-);
-
 const { Toolbox } = require("devtools/client/framework/toolbox");
-
-/**
- * Initialize and connect a DevToolsServer and DevToolsClient. Note: This test
- * does not use TabDescriptorFactory, so it has to set up the DevToolsServer and
- * DevToolsClient on its own.
- * @return {Promise} Resolves with an instance of the DevToolsClient class
- */
-async function setupLocalDevToolsServerAndClient() {
-  DevToolsServer.init();
-  DevToolsServer.registerAllActors();
-  const client = new DevToolsClient(DevToolsServer.connectPipe());
-  await client.connect();
-  return client;
-}
 
 /**
  * Set up and optionally open the `about:debugging` toolbox for a given extension.
@@ -44,8 +17,8 @@ async function setupLocalDevToolsServerAndClient() {
  *         toolbox and storage objects when the toolbox has been setup
  */
 async function setupExtensionDebuggingToolbox(id) {
-  const client = await setupLocalDevToolsServerAndClient();
-  const descriptor = await client.mainRoot.getAddon({ id });
+  const commands = await CommandsFactory.forAddon(id);
+  const descriptor = commands.descriptorFront;
   // As this mimic about:debugging toolbox, by default, the toolbox won't close
   // the client on shutdown. So request it to do that here, via the descriptor.
   descriptor.shouldCloseClient = true;

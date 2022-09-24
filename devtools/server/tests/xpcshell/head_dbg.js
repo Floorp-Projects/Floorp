@@ -45,6 +45,9 @@ const { DevToolsClient } = require("devtools/client/devtools-client");
 const { ObjectFront } = require("devtools/client/fronts/object");
 const { LongStringFront } = require("devtools/client/fronts/string");
 const { createCommandsDictionary } = require("devtools/shared/commands/index");
+const {
+  CommandsFactory,
+} = require("devtools/shared/commands/commands-factory");
 
 const { addDebuggerToGlobal } = ChromeUtils.import(
   "resource://gre/modules/jsdebugger.jsm"
@@ -96,15 +99,8 @@ async function createTargetForFakeTab(title) {
 }
 
 async function createTargetForMainProcess() {
-  DevToolsServer.init();
-  DevToolsServer.registerAllActors();
-  DevToolsServer.allowChromeProcess = true;
-
-  const client = new DevToolsClient(DevToolsServer.connectPipe());
-  await client.connect();
-
-  const mainProcessDescriptor = await client.mainRoot.getMainProcess();
-  return mainProcessDescriptor.getTarget();
+  const commands = await CommandsFactory.forMainProcess();
+  return commands.descriptorFront.getTarget();
 }
 
 /**

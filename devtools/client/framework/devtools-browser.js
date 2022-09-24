@@ -40,12 +40,6 @@ loader.lazyRequireGetter(
 );
 loader.lazyRequireGetter(
   this,
-  "DevToolsClient",
-  "devtools/client/devtools-client",
-  true
-);
-loader.lazyRequireGetter(
-  this,
   "BrowserMenus",
   "devtools/client/framework/browser-menus"
 );
@@ -64,6 +58,12 @@ loader.lazyRequireGetter(
   this,
   "toggleEnableDevToolsPopup",
   "devtools/client/framework/enable-devtools-popup",
+  true
+);
+loader.lazyRequireGetter(
+  this,
+  "CommandsFactory",
+  "devtools/shared/commands/commands-factory",
   true
 );
 
@@ -346,19 +346,6 @@ var gDevToolsBrowser = (exports.gDevToolsBrowser = {
     gBrowser.selectedTab = gBrowser.addTrustedTab(url);
   },
 
-  async _getContentProcessDescriptor(processId) {
-    // Create a DevToolsServer in order to connect locally to it
-    DevToolsServer.init();
-    DevToolsServer.registerAllActors();
-    DevToolsServer.allowChromeProcess = true;
-
-    const transport = DevToolsServer.connectPipe();
-    const client = new DevToolsClient(transport);
-
-    await client.connect();
-    return client.mainRoot.getProcess(processId);
-  },
-
   /**
    * Open the Browser Content Toolbox for the provided gBrowser instance.
    * Returns a promise that resolves with a toolbox instance. If no content process is
@@ -380,7 +367,8 @@ var gDevToolsBrowser = (exports.gDevToolsBrowser = {
     }
     if (processId) {
       try {
-        const descriptor = await this._getContentProcessDescriptor(processId);
+        const commands = await CommandsFactory.forProcess(processId);
+        const descriptor = commands.descriptorFront;
         // Display a new toolbox in a new window
         const toolbox = await gDevTools.showToolbox(descriptor, {
           hostType: Toolbox.HostType.WINDOW,
