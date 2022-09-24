@@ -50,6 +50,14 @@ async function switchExperiment(newExperiment) {
     if (name == "experiment") {
       return newExperiment;
     }
+    if (
+      [
+        "seperatePrivateDefaultUrlbarResultEnabled",
+        "seperatePrivateDefaultUIEnabled",
+      ].includes(name)
+    ) {
+      return true;
+    }
     return undefined;
   });
   for (let call of NimbusFeatures.search.onUpdate.getCalls()) {
