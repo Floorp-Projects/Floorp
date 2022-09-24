@@ -869,32 +869,38 @@ class XrandrSoftwareVsyncSource final
       Window root = gdk_x11_get_default_root_xwindow();
       XRRScreenResources* res = XRRGetScreenResourcesCurrent(dpy, root);
 
-      // We can't use refresh rates far below the default one (60Hz) because
-      // otherwise random CI tests start to fail. However, many users have
-      // screens just below the default rate, e.g. 59.95Hz. So slightly
-      // decrease the lower bound.
-      highestRefreshRate -= 1.0;
+      if (res) {
+        // We can't use refresh rates far below the default one (60Hz) because
+        // otherwise random CI tests start to fail. However, many users have
+        // screens just below the default rate, e.g. 59.95Hz. So slightly
+        // decrease the lower bound.
+        highestRefreshRate -= 1.0;
 
-      for (int i = 0; i < res->noutput; i++) {
-        XRROutputInfo* outputInfo = XRRGetOutputInfo(dpy, res, res->outputs[i]);
-        if (!outputInfo->crtc) {
-          XRRFreeOutputInfo(outputInfo);
-          continue;
-        }
+        for (int i = 0; i < res->noutput; i++) {
+          XRROutputInfo* outputInfo =
+              XRRGetOutputInfo(dpy, res, res->outputs[i]);
+          if (outputInfo) {
+            if (outputInfo->crtc) {
+              XRRCrtcInfo* crtcInfo =
+                  XRRGetCrtcInfo(dpy, res, outputInfo->crtc);
+              if (crtcInfo) {
+                for (int j = 0; j < res->nmode; j++) {
+                  if (res->modes[j].id == crtcInfo->mode) {
+                    double refreshRate = mode_refresh(&res->modes[j]);
+                    if (refreshRate > highestRefreshRate) {
+                      highestRefreshRate = refreshRate;
+                    }
+                    break;
+                  }
+                }
 
-        XRRCrtcInfo* crtcInfo = XRRGetCrtcInfo(dpy, res, outputInfo->crtc);
-        for (int j = 0; j < res->nmode; j++) {
-          if (res->modes[j].id == crtcInfo->mode) {
-            double refreshRate = mode_refresh(&res->modes[j]);
-            if (refreshRate > highestRefreshRate) {
-              highestRefreshRate = refreshRate;
+                XRRFreeCrtcInfo(crtcInfo);
+              }
             }
-            break;
+
+            XRRFreeOutputInfo(outputInfo);
           }
         }
-
-        XRRFreeCrtcInfo(crtcInfo);
-        XRRFreeOutputInfo(outputInfo);
       }
       XRRFreeScreenResources(res);
     }
