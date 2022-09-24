@@ -63,11 +63,9 @@ bool nsXPCWrappedJS::CanSkip() {
     return false;
   }
 
-  if (IsSubjectToFinalization()) {
-    return true;
-  }
-
   // If this wrapper holds a gray object, need to trace it.
+  // We can't skip it even if it is subject to finalization, because we want to
+  // be able to collect it if the JS object is gray.
   JSObject* obj = GetJSObjectPreserveColor();
   if (obj && JS::ObjectIsMarkedGray(obj)) {
     return false;
@@ -80,6 +78,10 @@ bool nsXPCWrappedJS::CanSkip() {
     NS_ENSURE_TRUE(mRoot, false);
     return mRoot->CanSkip();
   }
+
+  // At this point, the WJS must be a root wrapper with a black JS object, so
+  // if it is subject to finalization, the JS object will be holding it alive
+  // so it will be okay to skip it.
 
   // For the root wrapper, check if there is an aggregated
   // native object that will be added to the CC graph.
@@ -113,14 +115,15 @@ NS_CYCLE_COLLECTION_CLASSNAME(nsXPCWrappedJS)::TraverseNative(
     NS_IMPL_CYCLE_COLLECTION_DESCRIBE(nsXPCWrappedJS, refcnt)
   }
 
-  // A wrapper that is subject to finalization will only die when its JS object
-  // dies.
   if (tmp->IsSubjectToFinalization()) {
-    return NS_OK;
+    // If the WJS is subject to finalization, then it can be held alive by its
+    // JS object. We represent this edge by using NoteWeakMapping. The linked
+    // list of subject-to-finalization WJS acts like a known-black weak map.
+    cb.NoteWeakMapping(tmp->GetJSObjectPreserveColor(), s,
+                       NS_CYCLE_COLLECTION_PARTICIPANT(nsXPCWrappedJS));
   }
 
-  // Don't let the extra reference for nsSupportsWeakReference keep a wrapper
-  // that is not subject to finalization alive.
+  // Don't let the extra reference for nsSupportsWeakReference keep a WJS alive.
   NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "self");
   cb.NoteXPCOMChild(s);
 
@@ -151,8 +154,8 @@ NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(nsXPCWrappedJS)
   }
 NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
-// XPCJSContext keeps a table of WJS, so we can remove them from
-// the purple buffer in between CCs.
+// WJS are JS holders, so we'll always add them as roots in CCs and we can
+// remove them from the purple buffer in between CCs.
 NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_BEGIN(nsXPCWrappedJS)
   return true;
 NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_END
