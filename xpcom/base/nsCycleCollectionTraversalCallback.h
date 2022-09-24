@@ -12,6 +12,7 @@
 
 class nsCycleCollectionParticipant;
 class nsISupports;
+class JSObject;
 
 namespace JS {
 class GCCellPtr;
@@ -34,6 +35,10 @@ class NS_NO_VTABLE nsCycleCollectionTraversalCallback {
   NS_IMETHOD_(void) NoteJSChild(JS::GCCellPtr aThing) = 0;
   NS_IMETHOD_(void)
   NoteNativeChild(void* aChild, nsCycleCollectionParticipant* aHelper) = 0;
+
+  NS_IMETHOD_(void)
+  NoteWeakMapping(JSObject* aKey, nsISupports* aVal,
+                  nsCycleCollectionParticipant* aValParticipant) = 0;
 
   // Give a name to the edge associated with the next call to
   // NoteXPCOMChild, NoteJSObject, NoteJSScript, or NoteNativeChild.
