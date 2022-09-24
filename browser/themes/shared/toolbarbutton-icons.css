@@ -516,6 +516,17 @@ toolbarbutton.bookmark-item {
   scale: 1.0;
 }
 
+.sidepanel-browser-icon{
+  appearance: none;
+  -moz-context-properties: fill, fill-opacity;
+  border-radius: 4px;
+  color: inherit;
+  fill: currentColor;
+  margin: 1px 8px 5px 3px;
+  padding: 11px 5px 11px 10px;
+  scale: 1.0;
+}
+
 #sidebar-select-box{
   border-left: 1px solid var(--chrome-content-separator-color);
   border-right: 1px solid var(--chrome-content-separator-color);

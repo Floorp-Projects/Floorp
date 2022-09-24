@@ -20,14 +20,18 @@ if (Services.prefs.getBoolPref("floorp.browser.sidebar.enable", false)) {
     }
 }
 
-Services.prefs.addObserver("floorp.browser.sidebar2.mode", function(){
+/* This code does not work well. Two clicks are required. The cause is unknown.
+
+const target = document.getElementsByClassName("sidepanel-icon");
+for (let i = 0; i < target.length; i++) {
+ target[i].addEventListener("click", function() {
   let selectedMode = Services.prefs.getIntPref("floorp.browser.sidebar2.mode", undefined);
   let selectedNode = document.querySelector(".sidepanel-icon[panel= \"" +  selectedMode + "\"]");
 
   removeAttributeSelectedNode();
-  console.log(selectedNode);
   selectedNode.setAttribute("checked", "true");
-});
+}, false)}
+*/
 
 //startup functions
 setSidebarIconView();
