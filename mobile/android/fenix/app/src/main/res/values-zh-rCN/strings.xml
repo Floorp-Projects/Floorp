@@ -402,8 +402,6 @@
     <!-- Preference for settings related to visual options -->
     <string name="preferences_customize">定制</string>
     <!-- Preference description for banner about signing in -->
-    <string moz:RemovedIn="104" name="preferences_sign_in_description" tools:ignore="UnusedResources">使用您的 Firefox 账户同步书签、历史记录等数据</string>
-    <!-- Preference description for banner about signing in -->
     <string name="preferences_sign_in_description_2">登录后即可同步标签页、书签、密码等数据。</string>
     <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
     <string name="preferences_account_default_name">Firefox 账户</string>
@@ -486,7 +484,7 @@
     <!-- Content description for various wallpapers. The first parameter is the name of the wallpaper -->
     <string name="wallpapers_item_name_content_description">壁纸：%1$s</string>
     <!-- Snackbar message for when wallpaper is selected -->
-    <string name="wallpaper_updated_snackbar_message">已更换壁纸！</string>
+    <string name="wallpaper_updated_snackbar_message">壁纸已更换！</string>
     <!-- Snackbar label for action to view selected wallpaper -->
     <string name="wallpaper_updated_snackbar_action">查看</string>
 
@@ -516,7 +514,7 @@
     <!-- Wallpaper onboarding dialog header text. -->
     <string name="wallpapers_onboarding_dialog_title_text">试用新色彩</string>
     <!-- Wallpaper onboarding dialog body text. -->
-    <string name="wallpapers_onboarding_dialog_body_text">选择适合您的壁纸。</string>
+    <string name="wallpapers_onboarding_dialog_body_text">选择合您心意的壁纸。</string>
     <!-- Wallpaper onboarding dialog learn more button text. The button navigates to the wallpaper settings screen. -->
     <string name="wallpapers_onboarding_dialog_explore_more_button_text">探索更多壁纸</string>
 
@@ -604,9 +602,6 @@
     <string name="preference_experiments_summary_2">允许 Mozilla 安装和运行研究</string>
 
     <!-- Turn On Sync Preferences -->
-    <!-- Header of the Turn on Sync preference view -->
-    <string moz:RemovedIn="104" name="preferences_sync" tools:ignore="UnusedResources">开启同步</string>
-
     <!-- Header of the Sync and save your data preference view -->
     <string name="preferences_sync_2">同步并保存您的数据</string>
     <!-- Preference for reconnecting to FxA sync -->
@@ -827,9 +822,6 @@
     <string name="delete_from_history">删除历史记录</string>
     <!-- Postfix for private WebApp titles, placeholder is replaced with app name -->
     <string name="pwa_site_controls_title_private">%1$s（隐私模式）</string>
-
-    <!-- Title text for the normal tabs header in the tabs tray which are not part of any tab grouping. -->
-    <string moz:removedIn="104" name="tab_tray_header_title_1" tools:ignore="UnusedResources">其他标签页</string>
 
     <!-- History -->
     <!-- Text for the button to search all history -->
@@ -1261,8 +1253,6 @@
     <!-- Action item in menu for the Delete browsing data on quit feature -->
     <string name="delete_browsing_data_on_quit_action">退出</string>
 
-    <!-- Dialog message to the user asking to delete browsing data. -->
-    <string moz:removedIn="104" name="delete_browsing_data_prompt_message" tools:ignore="UnusedResources">这将删除所有浏览数据。</string>
     <!-- Title text of a delete browsing data dialog. -->
     <string name="delete_history_prompt_title">要删除的时间范围</string>
     <!-- Body text of a delete browsing data dialog. -->

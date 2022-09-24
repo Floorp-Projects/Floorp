@@ -65,10 +65,22 @@
     <!-- Text for the negative button -->
     <string name="cfr_neg_button_text">Kerak emas</string>
 
+    <!-- Open in App "contextual feature recommendation" (CFR) -->
+    <!-- Text for the info message. The first parameter is the name of the application.-->
+    <string name="open_in_app_cfr_info_message_2">%1$sni ilovalarda avtomatik ravishda ochadigan qilib sozlashingiz mumkin.</string>
     <!-- Text for the positive action button -->
     <string name="open_in_app_cfr_positive_button_text">Sozlamalarni ochish</string>
     <!-- Text for the negative action button -->
     <string name="open_in_app_cfr_negative_button_text">Rad etish</string>
+
+    <!-- Content description for close button used in "contextual feature recommendation" (CFR) popups -->
+    <string name="cfr_dismiss_button_default_content_description">Rad qilish</string>
+
+    <!-- Total cookie protection "contextual feature recommendation" (CFR) -->
+    <!-- Text for the message displayed in the contextual feature recommendation popup promoting the total cookie protection feature. -->
+    <string name="tcp_cfr_message">Bizning eng kuchli maxfiylik funksiyamiz saytlararo kuzatuvchilarni izolyatsiya qiladi.</string>
+    <!-- Text displayed that links to website containing documentation about the "Total cookie protection" feature. -->
+    <string name="tcp_cfr_learn_more">Umumiy Cookie himoyasi haqida batafsil</string>
 
     <!-- Text for the info dialog when camera permissions have been denied but user tries to access a camera feature. -->
     <string name="camera_permissions_needed_message">Kameradan foydalanish zarur. Android sozlamalariga oʻting, ruxsatnomalarga kiring va ruxsat berish tugmasini bosing.</string>
@@ -342,8 +354,6 @@
     <!-- Preference for settings related to visual options -->
     <string name="preferences_customize">Moslash</string>
     <!-- Preference description for banner about signing in -->
-    <string moz:RemovedIn="104" name="preferences_sign_in_description" tools:ignore="UnusedResources">Xatchoʻplar va tarix kabilarni Firefox hisobingiz bilan sinxronlang</string>
-    <!-- Preference description for banner about signing in -->
     <string name="preferences_sign_in_description_2">Varaq va xatchoʻplarni sinxronlash uchun hisobingizga kiring.</string>
     <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
     <string name="preferences_account_default_name">Firefox hisobi</string>
@@ -518,8 +528,6 @@
     <string name="preference_experiments_summary_2">Mozillaga tadqiqotlarni oʻrnatish va ishga tushirish imkonini beradi</string>
 
     <!-- Turn On Sync Preferences -->
-    <!-- Header of the Turn on Sync preference view -->
-    <string moz:RemovedIn="104" name="preferences_sync" tools:ignore="UnusedResources">Sinxronizatsiyani yoqish</string>
     <!-- Header of the Sync and save your data preference view -->
     <string name="preferences_sync_2">Maʼlumotlaringizni sinxronlang va saqlang</string>
     <!-- Preference for reconnecting to FxA sync -->

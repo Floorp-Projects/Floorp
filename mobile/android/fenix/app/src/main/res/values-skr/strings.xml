@@ -385,8 +385,6 @@
     <!-- Preference for settings related to visual options -->
     <string name="preferences_customize">تخصیص کرو</string>
     <!-- Preference description for banner about signing in -->
-    <string moz:RemovedIn="104" name="preferences_sign_in_description" tools:ignore="UnusedResources">آپݨے فائرفوکس کھاتے نال کتاب نشانیاں، تاریخ تے ٻیا ٻہوں کجھ ہم وقت کرو</string>
-    <!-- Preference description for banner about signing in -->
     <string name="preferences_sign_in_description_2">ٹیباں، نشانیاں، پاس ورڈ تے ٻیا ٻہوں کجھ ہم وقت کرݨ کیتے سائن ان تھیوو۔</string>
     <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
     <string name="preferences_account_default_name">فائرفوکس کھاتہ</string>
@@ -484,6 +482,8 @@
     able to tap on the app logo in the home screen and can switch to different wallpapers by tapping. -->
     <string moz:removedIn="105" name="wallpaper_logo_content_description" tools:ignore="UnusedResources">فائر فوکس لوگو ــ وال پیپر وٹاؤ، بٹݨ</string>
 
+    <!-- Text for classic wallpapers title. The first parameter is the Firefox name. -->
+    <string name="wallpaper_classic_title">کلاسیکل %s</string>
     <!-- Text for limited edition wallpapers title. -->
     <string name="wallpaper_limited_edition_title">محدود ایڈیشن</string>
 
@@ -569,8 +569,6 @@
     <string name="preference_experiments_summary_2">موزلّا کوں پڑھائی انسٹال کرݨ تے چلاوݨ دی اجازت ݙیندے</string>
 
     <!-- Turn On Sync Preferences -->
-    <!-- Header of the Turn on Sync preference view -->
-    <string moz:RemovedIn="104" name="preferences_sync" tools:ignore="UnusedResources">ہم وقت کرݨ چالو کرو</string>
     <!-- Header of the Sync and save your data preference view -->
     <string name="preferences_sync_2">آپݨا ڈیٹا ہم وقت کرو تے محفوظ کرو</string>
     <!-- Preference for reconnecting to FxA sync -->
@@ -791,8 +789,6 @@
     <string name="delete_from_history">تاریخ وچوں مٹاؤ</string>
     <!-- Postfix for private WebApp titles, placeholder is replaced with app name -->
     <string name="pwa_site_controls_title_private">%1$s (نجی موڈ)</string>
-    <!-- Title text for the normal tabs header in the tabs tray which are not part of any tab grouping. -->
-    <string moz:removedIn="104" name="tab_tray_header_title_1" tools:ignore="UnusedResources">ٻئے ٹیباں</string>
 
     <!-- History -->
     <!-- Text for the button to search all history -->
@@ -1201,8 +1197,6 @@
     <!-- Action item in menu for the Delete browsing data on quit feature -->
     <string name="delete_browsing_data_on_quit_action">نکل ون٘ڄو</string>
 
-    <!-- Dialog message to the user asking to delete browsing data. -->
-    <string moz:removedIn="104" name="delete_browsing_data_prompt_message" tools:ignore="UnusedResources">ایہ تہاݙا سارا براؤزنگ ڈیٹا مٹا ݙیسی۔</string>
     <!-- Title text of a delete browsing data dialog. -->
     <string name="delete_history_prompt_title">مٹاوݨ کیتے وقت دی حد</string>
     <!-- Body text of a delete browsing data dialog. -->

@@ -381,8 +381,6 @@
     <!-- Preference for settings related to visual options -->
     <string name="preferences_customize">ການປັບແຕ່ງ</string>
     <!-- Preference description for banner about signing in -->
-    <string moz:RemovedIn="104" name="preferences_sign_in_description" tools:ignore="UnusedResources">Sync ບຸກມາກ, ປະຫວັດ, ແລະ ອື່ນໆດ້ວຍບັນຊີ Firefox ຂອງທ່ານ</string>
-    <!-- Preference description for banner about signing in -->
     <string name="preferences_sign_in_description_2">Sync ແທັບ, ບຸກມາກ, ລະຫັດຜ່ານ ແລະ ອື່ນໆຂອງທ່ານ.</string>
     <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
     <string name="preferences_account_default_name">ບັນຊີ Firefox</string>
@@ -581,8 +579,6 @@
     <string name="preference_experiments_summary_2">ອະນຸຍາດໃຫ້ Mozilla ຕິດຕັ້ງ ແລະ ເປີດໃຊ້ການສຶກສາ</string>
 
     <!-- Turn On Sync Preferences -->
-    <!-- Header of the Turn on Sync preference view -->
-    <string moz:RemovedIn="104" name="preferences_sync" tools:ignore="UnusedResources">ເປີດ Sync</string>
     <!-- Header of the Sync and save your data preference view -->
     <string name="preferences_sync_2">ຊິງຄ໌ແລະບັນທຶກຂໍ້ມູນ</string>
     <!-- Preference for reconnecting to FxA sync -->
@@ -802,9 +798,6 @@
     <string name="delete_from_history">ລຶບອອກຈາກປະຫວັດການນຳໃຊ້</string>
     <!-- Postfix for private WebApp titles, placeholder is replaced with app name -->
     <string name="pwa_site_controls_title_private">%1$s (ໂຫມດສ່ວນຕົວ)</string>
-
-    <!-- Title text for the normal tabs header in the tabs tray which are not part of any tab grouping. -->
-    <string moz:removedIn="104" name="tab_tray_header_title_1" tools:ignore="UnusedResources">ແທັບອື່ນໆ</string>
 
     <!-- History -->
     <!-- Text for the button to search all history -->
@@ -1216,9 +1209,6 @@
     <!-- Action item in menu for the Delete browsing data on quit feature -->
     <string name="delete_browsing_data_on_quit_action">ອອກ</string>
 
-    <!-- Dialog message to the user asking to delete browsing data. -->
-    <string moz:removedIn="104" name="delete_browsing_data_prompt_message" tools:ignore="UnusedResources">ສິ່ງນີ້ຈະລຶບຂໍ້ມູນການທ່ອງເວັບທັງໝົດຂອງທ່ານ.</string>
-
     <!-- Title text of a delete browsing data dialog. -->
     <string name="delete_history_prompt_title">ຊ່ວງເວລາທີ່ຈະລຶບ</string>
     <!-- Body text of a delete browsing data dialog. -->
@@ -1259,6 +1249,8 @@
 
     <!-- Text for onboarding welcome header. -->
     <string name="onboarding_header_2">ຍິນດີຕ້ອນຮັບສູ່ອິນເຕີເນັດທີ່ດີກວ່າ</string>
+    <!-- Text for the onboarding welcome message. -->
+    <string name="onboarding_message">ອິນເຕີເນັດສຳລັບທຸກຄົນ, ບໍ່ແມ່ນເພືອຫວັງຜົນກຳໄລ</string>
     <!-- text for the Firefox account onboarding sign in card header. The word "Firefox" should not be translated -->
     <string moz:removedIn="106" name="onboarding_account_sign_in_header_1" tools:ignore="UnusedResources">Sync Firefox ລະຫວ່າງອຸປະກອນ</string>
     <!-- Text for the Firefox account onboarding sign in card header. -->
@@ -1852,6 +1844,8 @@
     <string name="pocket_stories_placeholder_text">ຄົ້ນຫາເພີ່ມເຕີມ</string>
     <!-- Title of an app feature. Smaller than a heading.-->
     <string name="pocket_stories_feature_title">ຂັບເຄື່ອນໂດຍ Pocket.</string>
+    <!-- Caption for describing a certain feature. The placeholder is for a clickable text (eg: Learn more) which will load an url in a new tab when clicked.  -->
+    <string name="pocket_stories_feature_caption">ສ່ວນຫນຶ່ງຂອງຄອບຄົວ Firefox. %s</string>
     <!-- Clickable text for opening an external link for more information about Pocket. -->
     <string name="pocket_stories_feature_learn_more">ຮຽນຮູ້ເພີ່ມເຕີມ</string>
     <!-- Text indicating that the Pocket story that also displays this text is a sponsored story by other 3rd party entity. -->

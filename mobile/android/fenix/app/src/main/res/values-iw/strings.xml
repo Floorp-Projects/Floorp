@@ -391,8 +391,6 @@
     <!-- Preference for settings related to visual options -->
     <string name="preferences_customize">התאמה אישית</string>
     <!-- Preference description for banner about signing in -->
-    <string moz:RemovedIn="104" name="preferences_sign_in_description" tools:ignore="UnusedResources">סנכרון סימניות, היסטוריה ועוד עם חשבון ה־Firefox שלך</string>
-    <!-- Preference description for banner about signing in -->
     <string name="preferences_sign_in_description_2">יש להתחבר כדי לסנכרן את הלשוניות, הסימניות הססמאות ועוד.</string>
     <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
     <string name="preferences_account_default_name">חשבון Firefox</string>
@@ -577,8 +575,6 @@
     <string name="preference_experiments_summary_2">מאפשר ל־Mozilla להתקין ולהריץ מחקרים</string>
 
     <!-- Turn On Sync Preferences -->
-    <!-- Header of the Turn on Sync preference view -->
-    <string moz:RemovedIn="104" name="preferences_sync" tools:ignore="UnusedResources">הפעלת Sync</string>
     <!-- Header of the Sync and save your data preference view -->
     <string name="preferences_sync_2">סנכרון ושמירת הנתונים שלך</string>
     <!-- Preference for reconnecting to FxA sync -->
@@ -794,9 +790,6 @@
     <string name="delete_from_history">מחיקה מההיסטוריה</string>
     <!-- Postfix for private WebApp titles, placeholder is replaced with app name -->
     <string name="pwa_site_controls_title_private">‏%1$s (מצב פרטי)</string>
-
-    <!-- Title text for the normal tabs header in the tabs tray which are not part of any tab grouping. -->
-    <string moz:removedIn="104" name="tab_tray_header_title_1" tools:ignore="UnusedResources">לשוניות אחרות</string>
 
     <!-- History -->
     <!-- Text for the button to search all history -->
@@ -1027,9 +1020,9 @@
     <!-- Button to add new collection for the "select collection" step of the collection creator -->
     <string name="create_collection_add_new_collection">הוספת אוסף חדש</string>
     <!-- Button to select all tabs in the "select tabs" step of the collection creator -->
-    <string name="create_collection_select_all">בחירת הכל</string>
+    <string name="create_collection_select_all">בחירת הכול</string>
     <!-- Button to deselect all tabs in the "select tabs" step of the collection creator -->
-    <string name="create_collection_deselect_all">ביטול בחירת הכל</string>
+    <string name="create_collection_deselect_all">ביטול בחירה מהכול</string>
     <!-- Text to prompt users to select the tabs to save in the "select tabs" step of the collection creator -->
     <string name="create_collection_save_to_collection_empty">בחירת לשוניות לשמירה</string>
     <!-- Text to show users how many tabs they have selected in the "select tabs" step of the collection creator.
@@ -1206,8 +1199,6 @@
     <!-- Action item in menu for the Delete browsing data on quit feature -->
     <string name="delete_browsing_data_on_quit_action">יציאה</string>
 
-    <!-- Dialog message to the user asking to delete browsing data. -->
-    <string moz:removedIn="104" name="delete_browsing_data_prompt_message" tools:ignore="UnusedResources">פעולה זו תמחק את כל נתוני הגלישה שלך.</string>
     <!-- Title text of a delete browsing data dialog. -->
     <string name="delete_history_prompt_title">טווח זמן למחיקה</string>
     <!-- Body text of a delete browsing data dialog. -->
