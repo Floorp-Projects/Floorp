@@ -28,6 +28,7 @@ let testActionCalled = 0;
 add_setup(async function setup() {
   await SpecialPowers.pushPrefEnv({
     set: [
+      ["browser.urlbar.quickactions.enabled", true],
       ["browser.urlbar.suggest.quickactions", true],
       ["browser.urlbar.shortcuts.quickactions", true],
       ["screenshots.browser.component.enabled", true],
@@ -305,6 +306,73 @@ add_task(async function test_other_search_mode() {
     EventUtils.synthesizeKey("KEY_Escape");
   });
   Services.search.setDefault(oldDefaultEngine);
+});
+
+add_task(async function test_no_quickactions_suggestions() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.urlbar.suggest.quickactions", false]],
+  });
+  await UrlbarTestUtils.promiseAutocompleteResultPopup({
+    window,
+    value: "screenshot",
+  });
+  Assert.ok(
+    !window.document.querySelector(
+      ".urlbarView-row[dynamicType=quickactions] .urlbarView-quickaction-row"
+    ),
+    "Screenshot button is not suggested"
+  );
+
+  await UrlbarTestUtils.promiseAutocompleteResultPopup({
+    window,
+    value: "> screenshot",
+  });
+  Assert.ok(
+    window.document.querySelector(
+      ".urlbarView-row[dynamicType=quickactions] .urlbarView-quickaction-row"
+    ),
+    "Screenshot button is suggested"
+  );
+
+  await UrlbarTestUtils.promisePopupClose(window);
+  EventUtils.synthesizeKey("KEY_Escape");
+
+  await SpecialPowers.popPrefEnv();
+});
+
+add_task(async function test_quickactions_disabled() {
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["browser.urlbar.quickactions.enabled", false],
+      ["browser.urlbar.suggest.quickactions", true],
+    ],
+  });
+  await UrlbarTestUtils.promiseAutocompleteResultPopup({
+    window,
+    value: "screenshot",
+  });
+  Assert.ok(
+    !window.document.querySelector(
+      ".urlbarView-row[dynamicType=quickactions] .urlbarView-quickaction-row"
+    ),
+    "Screenshot button is not suggested"
+  );
+
+  await UrlbarTestUtils.promiseAutocompleteResultPopup({
+    window,
+    value: "> screenshot",
+  });
+  Assert.ok(
+    !window.document.querySelector(
+      ".urlbarView-row[dynamicType=quickactions] .urlbarView-quickaction-row"
+    ),
+    "Screenshot button is not suggested"
+  );
+
+  await UrlbarTestUtils.promisePopupClose(window);
+  EventUtils.synthesizeKey("KEY_Escape");
+
+  await SpecialPowers.popPrefEnv();
 });
 
 let COMMANDS_TESTS = [
