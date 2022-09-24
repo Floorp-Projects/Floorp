@@ -21,7 +21,7 @@ if (Services.prefs.getBoolPref("floorp.browser.sidebar.enable", false)) {
 }
 
 Services.prefs.addObserver("floorp.browser.sidebar2.mode", function(){
-  let selectedMode = Services.prefs.getIntPref("floorp.browser.sidebar2.mode", undefined) + 1;
+  let selectedMode = Services.prefs.getIntPref("floorp.browser.sidebar2.mode", undefined);
   let selectedNode = document.querySelector(".sidepanel-icon[panel= \"" +  selectedMode + "\"]");
 
   removeAttributeSelectedNode();

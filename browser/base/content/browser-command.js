@@ -103,12 +103,8 @@ function setSidebarMode() {
     }
   
     switch (modeValuePref) {
-      case -1:
-        sidebar2elem.setAttribute("src", "chrome://browser/content/places/places.xhtml");
-        changeBrowserManagerSidebarConfigShowBrowserManagers();
-        break;
       case 0:
-        sidebar2elem.setAttribute("src", "chrome://browser/content/syncedtabs/sidebar.xhtml");
+        sidebar2elem.setAttribute("src", "chrome://browser/content/places/places.xhtml");
         changeBrowserManagerSidebarConfigShowBrowserManagers();
         break;
       case 1:
@@ -260,13 +256,10 @@ function unmuteSidebarSite() {
 }
 
 function setBrowserManagerSidebarMode() {
-  Services.prefs.setIntPref("floorp.browser.sidebar2.mode", -1);
-  ViewBrowserManagerSidebar();
-}
-function setSyncedtabSidebarMode() {
   Services.prefs.setIntPref("floorp.browser.sidebar2.mode", 0);
   ViewBrowserManagerSidebar();
 }
+
 function setBookmarksSidebarMode() {
   Services.prefs.setIntPref("floorp.browser.sidebar2.mode", 1);
   ViewBrowserManagerSidebar();
@@ -377,7 +370,7 @@ function keepSidebar2boxWidth() {
 }
 
 function getSelectedNode(){
-  let selectedMode = Services.prefs.getIntPref("floorp.browser.sidebar2.mode", undefined) + 1;
+  let selectedMode = Services.prefs.getIntPref("floorp.browser.sidebar2.mode", undefined);
   let selectedNode = document.querySelector(".sidepanel-icon[panel= \"" + selectedMode + "\"]");
   return selectedNode;
 }
