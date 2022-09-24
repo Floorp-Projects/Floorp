@@ -6,14 +6,12 @@
 
 /* exported attachConsole, attachConsoleToTab, attachConsoleToWorker,
    closeDebugger, checkConsoleAPICalls, checkRawHeaders, runTests, nextTest, Ci, Cc,
-   withActiveServiceWorker, Services, consoleAPICall, createCommandsForTab, FRACTIONAL_NUMBER_REGEX */
+   withActiveServiceWorker, Services, consoleAPICall, createCommandsForTab, FRACTIONAL_NUMBER_REGEX, DevToolsServer */
 
 const { require } = ChromeUtils.import(
   "resource://devtools/shared/loader/Loader.jsm"
 );
 const { DevToolsServer } = require("devtools/server/devtools-server");
-// eslint-disable-next-line mozilla/reject-some-requires
-const { DevToolsClient } = require("devtools/client/devtools-client");
 const {
   CommandsFactory,
 } = require("devtools/shared/commands/commands-factory");
@@ -22,27 +20,6 @@ const {
 // so we can't expect a precise number of decimals, or even if there would
 // be decimals at all.
 const FRACTIONAL_NUMBER_REGEX = /^\d+(\.\d{1,3})?$/;
-
-function initCommon() {
-  // Services.prefs.setBoolPref("devtools.debugger.log", true);
-}
-
-function initDevToolsServer() {
-  DevToolsServer.init();
-  DevToolsServer.registerAllActors();
-  DevToolsServer.allowChromeProcess = true;
-}
-
-async function connectToDebugger() {
-  initCommon();
-  initDevToolsServer();
-
-  const transport = DevToolsServer.connectPipe();
-  const client = new DevToolsClient(transport);
-
-  await client.connect();
-  return client;
-}
 
 function attachConsole(listeners) {
   return _attachConsole(listeners);
@@ -56,8 +33,6 @@ function attachConsoleToWorker(listeners) {
 
 var _attachConsole = async function(listeners, attachToTab, attachToWorker) {
   try {
-    const client = await connectToDebugger();
-
     function waitForMessage(target) {
       return new Promise(resolve => {
         target.addEventListener("message", resolve, { once: true });
@@ -66,21 +41,15 @@ var _attachConsole = async function(listeners, attachToTab, attachToWorker) {
 
     // Fetch the console actor out of the expected target
     // ParentProcessTarget / WorkerTarget / FrameTarget
-    let target, worker;
+    let commands, target, worker;
     if (!attachToTab) {
-      const targetDescriptor = await client.mainRoot.getMainProcess();
-      target = await targetDescriptor.getTarget();
+      commands = await CommandsFactory.forMainProcess();
+      target = await commands.descriptorFront.getTarget();
     } else {
-      const targetDescriptor = await client.mainRoot.getTab();
-      // As there is no real tab in mochitest chrome, we can use CommandsFactory
-      // and fallback to create the commands manually
-      const {
-        createCommandsDictionary,
-      } = require("devtools/shared/commands/index");
-      const commands = await createCommandsDictionary(targetDescriptor);
+      commands = await CommandsFactory.forCurrentTabInChromeMochitest();
       // Descriptor's getTarget will only work if the TargetCommand watches for the first top target
       await commands.targetCommand.startListening();
-      target = await targetDescriptor.getTarget();
+      target = await commands.descriptorFront.getTarget();
       if (attachToWorker) {
         const workerName = "console-test-worker.js#" + new Date().getTime();
         worker = new Worker(workerName);
@@ -110,7 +79,7 @@ var _attachConsole = async function(listeners, attachToTab, attachToWorker) {
     const response = await webConsoleFront.startListeners(listeners);
     return {
       state: {
-        dbgClient: client,
+        dbgClient: commands.client,
         webConsoleFront,
         actor: webConsoleFront.actor,
         // Keep a strong reference to the Worker to avoid it being

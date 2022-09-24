@@ -7,6 +7,9 @@
 const { runTest, testSetup, testTeardown } = require("../head");
 
 const { DevToolsClient } = require("devtools/client/devtools-client");
+const {
+  CommandsFactory,
+} = require("devtools/shared/commands/commands-factory");
 
 const TEST_URL =
   "data:text/html,browser-toolbox-test<script>console.log('test page message');</script>";
@@ -168,8 +171,8 @@ async function connectToBrowserToolbox() {
   const client = new DevToolsClient(transport);
   await client.connect();
 
-  const descriptorFront = await client.mainRoot.getMainProcess();
-  const target = await descriptorFront.getTarget();
+  const commands = await CommandsFactory.forMainProcess({ client });
+  const target = await commands.descriptorFront.getTarget();
   return target.getFront("console");
 }
 

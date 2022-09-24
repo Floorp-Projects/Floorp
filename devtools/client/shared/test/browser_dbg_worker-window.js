@@ -15,13 +15,11 @@ const WORKER_URL = "code_WorkerTargetActor.attachThread-worker.js";
 
 add_task(async function() {
   const tab = await addTab(TAB_URL);
-  const target = await createAndAttachTargetForTab(tab);
 
-  await listWorkers(target);
   await createWorkerInTab(tab, WORKER_URL);
 
-  const { workers } = await listWorkers(target);
-  const workerDescriptorFront = findWorker(workers, WORKER_URL);
+  const commands = CommandsFactory.forLocalTabWorker(tab, WORKER_URL);
+  const workerDescriptorFront = commands.descriptorFront;
 
   const toolbox = await gDevTools.showToolbox(workerDescriptorFront, {
     toolId: "jsdebugger",
@@ -56,7 +54,6 @@ add_task(async function() {
 
   terminateWorkerInTab(tab, WORKER_URL);
   await waitForWorkerClose(workerDescriptorFront);
-  await target.destroy();
 
   await toolbox.destroy();
 });
