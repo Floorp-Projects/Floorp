@@ -1472,7 +1472,7 @@ TEST_F(PortTest, TestLoopbackCall) {
   const StunByteStringAttribute* username_attr =
       msg->GetByteString(STUN_ATTR_USERNAME);
   modified_req->AddAttribute(std::make_unique<StunByteStringAttribute>(
-      STUN_ATTR_USERNAME, username_attr->GetString()));
+      STUN_ATTR_USERNAME, username_attr->string_view()));
   // To make sure we receive error response, adding tiebreaker less than
   // what's present in request.
   modified_req->AddAttribute(std::make_unique<StunUInt64Attribute>(
@@ -1792,7 +1792,7 @@ TEST_F(PortTest, TestSendStunMessage) {
   const StunUInt32Attribute* priority_attr = msg->GetUInt32(STUN_ATTR_PRIORITY);
   ASSERT_TRUE(priority_attr != NULL);
   EXPECT_EQ(kDefaultPrflxPriority, priority_attr->value());
-  EXPECT_EQ("rfrag:lfrag", username_attr->GetString());
+  EXPECT_EQ("rfrag:lfrag", username_attr->string_view());
   EXPECT_TRUE(msg->GetByteString(STUN_ATTR_MESSAGE_INTEGRITY) != NULL);
   EXPECT_EQ(StunMessage::IntegrityStatus::kIntegrityOk,
             msg->ValidateMessageIntegrity("rpass"));

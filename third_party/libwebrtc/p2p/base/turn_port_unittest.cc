@@ -876,7 +876,7 @@ class TurnLoggingIdValidator : public StunMessageObserver {
           msg->GetByteString(cricket::STUN_ATTR_TURN_LOGGING_ID);
       if (expect_val_) {
         ASSERT_NE(nullptr, attr);
-        ASSERT_EQ(expect_val_, attr->GetString());
+        ASSERT_EQ(expect_val_, attr->string_view());
       } else {
         EXPECT_EQ(nullptr, attr);
       }

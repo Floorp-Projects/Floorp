@@ -202,8 +202,9 @@ class Connection : public CandidatePairInterface {
   void Ping(int64_t now);
   void ReceivedPingResponse(
       int rtt,
-      const std::string& request_id,
+      absl::string_view request_id,
       const absl::optional<uint32_t>& nomination = absl::nullopt);
+  std::unique_ptr<IceMessage> BuildPingRequest() RTC_RUN_ON(network_thread_);
 
   int64_t last_ping_response_received() const;
   const absl::optional<std::string>& last_ping_id_received() const;
@@ -273,6 +274,10 @@ class Connection : public CandidatePairInterface {
   int64_t last_received() const;
   // Returns the last time when the connection changed its receiving state.
   int64_t receiving_unchanged_since() const;
+
+  // Constructs the prflx priority as described in
+  // https://datatracker.ietf.org/doc/html/rfc5245#section-4.1.2.1
+  uint32_t prflx_priority() const;
 
   bool stable(int64_t now) const;
 
