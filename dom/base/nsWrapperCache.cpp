@@ -89,6 +89,10 @@ class DebugWrapperTraversalCallback
   NoteNativeChild(void* aChild,
                   nsCycleCollectionParticipant* aHelper) override {}
 
+  NS_IMETHOD_(void)
+  NoteWeakMapping(JSObject* aKey, nsISupports* aVal,
+                  nsCycleCollectionParticipant* aValParticipant) override {}
+
   NS_IMETHOD_(void) NoteNextEdgeName(const char* aName) override {}
 
   bool mFound;
