@@ -493,32 +493,47 @@
 
   <!-- Onboarding: Title -->
     <!-- %1$s will be replaced by the app name and build variant(e.g. Firefox Focus, Firefox Klar Nightly) -->
-    <string name="onboarding_title">¡Te damos la bienvenida a %1$s!</string>
+    <string moz:removedIn="106" name="onboarding_title">¡Te damos la bienvenida a %1$s!</string>
+
+    <!-- Content description (not visible, for screen readers etc.): This is the description for the close button from the new onboarding flow screen one and two -->
+    <string name="onboarding_close_button_content_description">Cerrar</string>
+
+    <!-- Onboarding second screen: Title -->
+    <!-- %1$s will be replaced by the app short name(Focus) -->
+    <string name="onboarding_second_screen_title">%1$s no es como otros navegadores</string>
+
+    <!-- New Onboarding flow second screen make Focus default browser button label-->
+    <string name="onboarding_second_screen_default_browser_button_text">Establecer como navegador predeterminado</string>
+
+
+    <!-- New Onboarding flow second screen skip onboarding button label-->
+    <string name="onboarding_second_screen_skip_button_text">Saltar</string>
+
 
     <!-- Onboarding: Description -->
-    <string name="onboarding_description">Navegación privada de nivel superior cuando quieras</string>
+    <string moz:removedIn="106" name="onboarding_description">Navegación privada de nivel superior cuando quieras</string>
 
     <!-- Onboarding: Incognito Title -->
-    <string name="onboarding_incognito_title">Donde lo incógnito conoce a lo invisible</string>
+    <string moz:removedIn="106" name="onboarding_incognito_title">Donde lo incógnito conoce a lo invisible</string>
 
     <!-- Onboarding: Incognito Description -->
     <!-- Text %s will be replaced with the name of the app (e.g. Focus, Klar) -->
-    <string name="onboarding_incognito_description">%s es un navegador que pone como prioridad la privacidad, con protección integrada extra fuerte contra el rastreo y las cookies.</string>
+    <string moz:removedIn="106" name="onboarding_incognito_description">%s es un navegador que pone como prioridad la privacidad, con protección integrada extra fuerte contra el rastreo y las cookies.</string>
 
     <!-- Onboarding: History Title -->
-    <string name="onboarding_history_title">Navega como si nada pasara</string>
+    <string moz:removedIn="106" name="onboarding_history_title">Navega como si nada pasara</string>
 
     <!-- Onboarding: History Description -->
-    <string name="onboarding_history_description2">Un toque borra tu historial de navegación y cookies — y evita que los anuncios te sigan.</string>
+    <string moz:removedIn="106" name="onboarding_history_description2">Un toque borra tu historial de navegación y cookies — y evita que los anuncios te sigan.</string>
 
     <!-- Onboarding: Protection Title -->
-    <string name="onboarding_protection_title">Privacidad que se adapta a cualquier situación</string>
+    <string moz:removedIn="106" name="onboarding_protection_title">Privacidad que se adapta a cualquier situación</string>
 
     <!-- Onboarding: Protection Description -->
-    <string name="onboarding_protection_description">Si necesitas cambiar tu navegación, es fácil aumentar o reducir tu configuración de privacidad.</string>
+    <string moz:removedIn="106" name="onboarding_protection_description">Si necesitas cambiar tu navegación, es fácil aumentar o reducir tu configuración de privacidad.</string>
 
     <!-- Onboarding: Start browsing -->
-    <string name="onboarding_start_browsing">Comienza a navegar</string>
+    <string moz:removedIn="106" name="onboarding_start_browsing">Comienza a navegar</string>
 
     <!-- First run tour (Default browser): Title -->
     <string name="firstrun_defaultbrowser_title">Potencia tu privacidad</string>
@@ -975,7 +990,10 @@ The new line here must be kept as the second half of the string is clickable for
 
     <!-- Contextual Feature Recommendation Popups -->
     <!-- CFR for Toolbar Shield Icon (Banner Info Message) -->
-    <string name="cfr_for_toolbar_shield_icon">Parece que este sitio estaba tratando de rastrearte. Haz clic en el escudo para ver la configuración del sitio y las estadísticas de bloqueo del rastreador.</string>
+    <string moz:removedIn="104" name="cfr_for_toolbar_shield_icon">Parece que este sitio estaba tratando de rastrearte. Haz clic en el escudo para ver la configuración del sitio y las estadísticas de bloqueo del rastreador.</string>
+
+    <string name="cfr_for_toolbar_shield_icon2">¡Excelente! Evitamos que esta página web te espíe. Presiona el escudo para ver lo que estamos bloqueando.</string>
+
     <!-- Content description (not visible, for screen readers etc.): Button that closes the CFR popup -->
     <string name="cfr_close_button_description">Cerrar elemento emergente</string>
 
@@ -991,4 +1009,24 @@ The new line here must be kept as the second half of the string is clickable for
     <string moz:removedIn="105" name="cfr_for_toolbar_delete_icon" tools:ignore="UnusedResources">Deshazte de tus datos personales, historial de navegación y más de esta sesión tocando el botón de la papelera. ¡Dale una oportunidad!</string>
     <string name="cfr_for_toolbar_delete_icon2">Presiona aquí para eliminar todo — historial, cookies, y todo lo demás — e inicia en una nueva pestaña.</string>
 
+    <!-- Promote SearchWidget Dialog -->
+
+    !-- Content description (not visible, for screen readers etc.): This is the description for
+    picture of search widget from promote search widget dialog. --&gt;
+    <string name="promote_search_widget_dialog_content_description">Cerrar</string>
+
+    !-- Content description (not visible, for screen readers etc.): This is the description for
+    picture of search widget from promote search widget dialog. --&gt;
+    <string name="promote_search_widget_dialog_picture_content_description">Widget de búsqueda</string>
+
+    !-- This is the title of promote search widget dialog. --&gt;
+    <string name="promote_search_widget_dialog_title">¡Historial de navegación borrado! 🎉</string>
+
+    !-- This is the subtitle of promote search widget dialog. %1$s will get replaced with the name
+    of the app (e.g. &quot;Focus&quot;) --&gt;
+    <string name="promote_search_widget_button_text">Agregar widget a la pantalla de inicio</string>
+
+    !-- This is te text of the snackbar that appears after the search widget was added successfully
+    to the home screen. --&gt;
+    <string name="promote_search_widget_snackbar_message">Widget agregado a la pantalla de inicio</string>
 </resources>

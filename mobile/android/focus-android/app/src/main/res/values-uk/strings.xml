@@ -495,32 +495,63 @@
 
   <!-- Onboarding: Title -->
     <!-- %1$s will be replaced by the app name and build variant(e.g. Firefox Focus, Firefox Klar Nightly) -->
-    <string name="onboarding_title">Вітаємо в %1$s!</string>
+    <string moz:removedIn="106" name="onboarding_title">Вітаємо в %1$s!</string>
+
+    <!-- Content description (not visible, for screen readers etc.): This is the description for the close button from the new onboarding flow screen one and two -->
+    <string name="onboarding_close_button_content_description">Закрити</string>
+
+    <!-- New Onboarding flow first screen title -->
+    <!-- %1$s will be replaced by the app name and build variant(e.g. Firefox Focus, Firefox Klar Nightly) -->
+    <string name="onboarding_first_screen_title">Вітаємо в %1$s</string>
+
+    <!-- New Onboarding flow first screen subtitle the one that appears under title -->
+    <string name="onboarding_first_screen_subtitle">Швидкий. Приватний. Зосереджений.</string>
+
+    <!-- New Onboarding flow first screen button label-->
+    <string name="onboarding_first_screen_button_text">Розпочати</string>
+
+    <!-- Onboarding second screen: Title -->
+    <!-- %1$s will be replaced by the app short name(Focus) -->
+    <string name="onboarding_second_screen_title">%1$s не схожий на інші браузери</string>
+
+    <!-- New Onboarding flow second screen subtitle the one that appears under title -->
+    <string name="onboarding_second_screen_subtitle_one">Для кращої приватності ми очищаємо вашу історію, коли ви закриваєте програму.</string>
+
+    <!-- New Onboarding flow second screen subtitle two the one that appears under subtitle one -->
+    <!-- %1$s will be replaced by the app short name(Focus) -->
+    <string name="onboarding_second_screen_subtitle_two">Зробіть %1$s типовим, щоб захистити ваші дані під час відкриття кожного посилання.</string>
+
+    <!-- New Onboarding flow second screen make Focus default browser button label-->
+    <string name="onboarding_second_screen_default_browser_button_text">Установити типовим браузером</string>
+
+    <!-- New Onboarding flow second screen skip onboarding button label-->
+    <string name="onboarding_second_screen_skip_button_text">Пропустити</string>
+
 
     <!-- Onboarding: Description -->
-    <string name="onboarding_description">Приватний перегляд вищого рівня у будь-який час</string>
+    <string moz:removedIn="106" name="onboarding_description">Приватний перегляд вищого рівня у будь-який час</string>
 
     <!-- Onboarding: Incognito Title -->
-    <string name="onboarding_incognito_title">Де зустрічаються режими інкогніто з невидимим</string>
+    <string moz:removedIn="106" name="onboarding_incognito_title">Де зустрічаються режими інкогніто з невидимим</string>
 
     <!-- Onboarding: Incognito Description -->
     <!-- Text %s will be replaced with the name of the app (e.g. Focus, Klar) -->
-    <string name="onboarding_incognito_description">%s — це браузер, який насамперед забезпечує приватність із вбудованим надзвичайно надійним захистом від елементів стеження і кук.</string>
+    <string moz:removedIn="106" name="onboarding_incognito_description">%s — це браузер, який насамперед забезпечує приватність із вбудованим надзвичайно надійним захистом від елементів стеження і кук.</string>
 
     <!-- Onboarding: History Title -->
-    <string name="onboarding_history_title">Переглядайте інтернет як ніколи раніше</string>
+    <string moz:removedIn="106" name="onboarding_history_title">Переглядайте інтернет як ніколи раніше</string>
 
     <!-- Onboarding: History Description -->
-    <string name="onboarding_history_description2">Одне торкання видаляє вашу історію вебперегляду й куки та запобігає стеженню реклами за вами.</string>
+    <string moz:removedIn="106" name="onboarding_history_description2">Одне торкання видаляє вашу історію вебперегляду й куки та запобігає стеженню реклами за вами.</string>
 
     <!-- Onboarding: Protection Title -->
-    <string name="onboarding_protection_title">Приватність, яка підходить для будь-якої ситуації</string>
+    <string moz:removedIn="106" name="onboarding_protection_title">Приватність, яка підходить для будь-якої ситуації</string>
 
     <!-- Onboarding: Protection Description -->
-    <string name="onboarding_protection_description">Якщо потрібно змінити налаштування приватності перегляду, їх можна легко посилити або послабити.</string>
+    <string moz:removedIn="106" name="onboarding_protection_description">Якщо потрібно змінити налаштування приватності перегляду, їх можна легко посилити або послабити.</string>
 
     <!-- Onboarding: Start browsing -->
-    <string name="onboarding_start_browsing">Розпочати перегляд</string>
+    <string moz:removedIn="106" name="onboarding_start_browsing">Розпочати перегляд</string>
 
     <!-- First run tour (Default browser): Title -->
     <string name="firstrun_defaultbrowser_title">Прокачайте вашу приватність</string>
@@ -979,7 +1010,9 @@ The new line here must be kept as the second half of the string is clickable for
 
     <!-- Contextual Feature Recommendation Popups -->
     <!-- CFR for Toolbar Shield Icon (Banner Info Message) -->
-    <string name="cfr_for_toolbar_shield_icon">Схоже, що цей сайт намагався відстежити вас. Натисніть на щит, щоб переглянути налаштування сайту та статистику блокування елементів стеження.</string>
+    <string moz:removedIn="104" name="cfr_for_toolbar_shield_icon">Схоже, що цей сайт намагався відстежити вас. Натисніть на щит, щоб переглянути налаштування сайту та статистику блокування елементів стеження.</string>
+    <string name="cfr_for_toolbar_shield_icon2">Спіймався! Ми не дозволили цьому сайту стежити за вами. Торкніться щита, щоб побачити заблоковані елементи.</string>
+
     <!-- Content description (not visible, for screen readers etc.): Button that closes the CFR popup -->
     <string name="cfr_close_button_description">Закрити спливне вікно</string>
 
@@ -995,4 +1028,28 @@ The new line here must be kept as the second half of the string is clickable for
     <string moz:removedIn="105" name="cfr_for_toolbar_delete_icon" tools:ignore="UnusedResources">Позбавтеся від ваших особистих даних, історії вебперегляду тощо під час цього сеансу, натиснувши кнопку кошика. Спробуйте!</string>
     <string name="cfr_for_toolbar_delete_icon2">Торкніться тут, щоб стерти все — історію, куки й інші дані — та розпочніть начисто у новій вкладці.</string>
 
+    <!-- Promote SearchWidget Dialog -->
+
+    !-- Content description (not visible, for screen readers etc.): This is the description for the
+    close button from promote search widget dialog. --&gt;
+    <string name="promote_search_widget_dialog_content_description">Закрити</string>
+
+    !-- Content description (not visible, for screen readers etc.): This is the description for
+    picture of search widget from promote search widget dialog. --&gt;
+    <string name="promote_search_widget_dialog_picture_content_description">Віджет пошуку</string>
+
+    !-- This is the title of promote search widget dialog. --&gt;
+    <string name="promote_search_widget_dialog_title">Історію перегляду очищено! 🎉</string>
+
+    !-- This is the subtitle of promote search widget dialog. %1$s will get replaced with the name
+    of the app (e.g. &quot;Focus&quot;) --&gt;
+    <string name="promote_search_widget_dialog_subtitle">Ми залишимо вас у режимі приватного перегляду, але наступного разу розпочніть роботу швидше за допомогою віджета %1$s на головному екрані.</string>
+
+    !-- This is te text from add search widget to home screen button .The button is located on
+    promote search widget dialog. --&gt;
+    <string name="promote_search_widget_button_text">Додати віджет на головний екран</string>
+
+    !-- This is te text of the snackbar that appears after the search widget was added successfully
+    to the home screen. --&gt;
+    <string name="promote_search_widget_snackbar_message">Віджет додано на головний екран</string>
 </resources>

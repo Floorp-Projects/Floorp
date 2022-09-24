@@ -495,32 +495,63 @@
 
   <!-- Onboarding: Title -->
     <!-- %1$s will be replaced by the app name and build variant(e.g. Firefox Focus, Firefox Klar Nightly) -->
-    <string name="onboarding_title">歡迎使用 %1$s！</string>
+    <string moz:removedIn="106" name="onboarding_title">歡迎使用 %1$s！</string>
+
+    <!-- Content description (not visible, for screen readers etc.): This is the description for the close button from the new onboarding flow screen one and two -->
+    <string name="onboarding_close_button_content_description">關閉</string>
+
+    <!-- New Onboarding flow first screen title -->
+    <!-- %1$s will be replaced by the app name and build variant(e.g. Firefox Focus, Firefox Klar Nightly) -->
+    <string name="onboarding_first_screen_title">歡迎使用 %1$s</string>
+
+    <!-- New Onboarding flow first screen subtitle the one that appears under title -->
+    <string name="onboarding_first_screen_subtitle">快速、有隱私、不讓人分心。</string>
+
+    <!-- New Onboarding flow first screen button label-->
+    <string name="onboarding_first_screen_button_text">開始使用</string>
+
+    <!-- Onboarding second screen: Title -->
+    <!-- %1$s will be replaced by the app short name(Focus) -->
+    <string name="onboarding_second_screen_title">%1$s 與其他瀏覽器不同</string>
+
+    <!-- New Onboarding flow second screen subtitle the one that appears under title -->
+    <string name="onboarding_second_screen_subtitle_one">為了加強保護隱私，我們會在您關閉應用程式時，自動清除瀏覽紀錄。</string>
+
+    <!-- New Onboarding flow second screen subtitle two the one that appears under subtitle one -->
+    <!-- %1$s will be replaced by the app short name(Focus) -->
+    <string name="onboarding_second_screen_subtitle_two">將 %1$s 設為預設瀏覽器，保護您的資料。</string>
+
+    <!-- New Onboarding flow second screen make Focus default browser button label-->
+    <string name="onboarding_second_screen_default_browser_button_text">設為預設瀏覽器</string>
+
+    <!-- New Onboarding flow second screen skip onboarding button label-->
+    <string name="onboarding_second_screen_skip_button_text">略過</string>
+
 
     <!-- Onboarding: Description -->
-    <string name="onboarding_description">您會想要的下一代隱私瀏覽模式</string>
+    <string moz:removedIn="106" name="onboarding_description">您會想要的下一代隱私瀏覽模式</string>
 
     <!-- Onboarding: Incognito Title -->
-    <string name="onboarding_incognito_title">當無痕模式遇上隱形模式</string>
+    <string moz:removedIn="106" name="onboarding_incognito_title">當無痕模式遇上隱形模式</string>
 
     <!-- Onboarding: Incognito Description -->
     <!-- Text %s will be replaced with the name of the app (e.g. Focus, Klar) -->
-    <string name="onboarding_incognito_description">%s 是隱私優先的瀏覽器，當中內建了超強大的反追蹤與 Cookie 保護功能。</string>
+    <string moz:removedIn="106" name="onboarding_incognito_description">%s 是隱私優先的瀏覽器，當中內建了超強大的反追蹤與 Cookie 保護功能。</string>
 
     <!-- Onboarding: History Title -->
-    <string name="onboarding_history_title">讓瀏覽紀錄彷彿沒發生過</string>
+    <string moz:removedIn="106" name="onboarding_history_title">讓瀏覽紀錄彷彿沒發生過</string>
 
     <!-- Onboarding: History Description -->
-    <string name="onboarding_history_description2">只要點一下，即可清除您的上網紀錄與 Cookie，防止廣告四處追蹤。</string>
+    <string moz:removedIn="106" name="onboarding_history_description2">只要點一下，即可清除您的上網紀錄與 Cookie，防止廣告四處追蹤。</string>
 
     <!-- Onboarding: Protection Title -->
-    <string name="onboarding_protection_title">符合任何情境的隱私保護機制</string>
+    <string moz:removedIn="106" name="onboarding_protection_title">符合任何情境的隱私保護機制</string>
 
     <!-- Onboarding: Protection Description -->
-    <string name="onboarding_protection_description">若需要調整隱私保護，很簡單就能放鬆或者變嚴格。</string>
+    <string moz:removedIn="106" name="onboarding_protection_description">若需要調整隱私保護，很簡單就能放鬆或者變嚴格。</string>
 
     <!-- Onboarding: Start browsing -->
-    <string name="onboarding_start_browsing">開始上網</string>
+    <string moz:removedIn="106" name="onboarding_start_browsing">開始上網</string>
 
     <!-- First run tour (Default browser): Title -->
     <string name="firstrun_defaultbrowser_title">加強您的隱私</string>
@@ -986,7 +1017,9 @@ The new line here must be kept as the second half of the string is clickable for
 
     <!-- Contextual Feature Recommendation Popups -->
     <!-- CFR for Toolbar Shield Icon (Banner Info Message) -->
-    <string name="cfr_for_toolbar_shield_icon">看起來這個網站正在嘗試追蹤您，點擊盾牌即可開啟網站設定，檢視追蹤器封鎖統計資訊。</string>
+    <string moz:removedIn="104" name="cfr_for_toolbar_shield_icon">看起來這個網站正在嘗試追蹤您，點擊盾牌即可開啟網站設定，檢視追蹤器封鎖統計資訊。</string>
+    <string name="cfr_for_toolbar_shield_icon2">抓到了！我們已防止此網站追蹤您。隨時點擊盾牌即可了解我們封鎖了哪些內容。</string>
+
     <!-- Content description (not visible, for screen readers etc.): Button that closes the CFR popup -->
     <string name="cfr_close_button_description">關閉彈出視窗</string>
 
@@ -1002,4 +1035,28 @@ The new line here must be kept as the second half of the string is clickable for
     <string moz:removedIn="105" name="cfr_for_toolbar_delete_icon" tools:ignore="UnusedResources">只要點一下垃圾桶按鈕，馬上就能清除您的個人資料、上網紀錄與更多在這次瀏覽階段中產生的資料，快試試看！</string>
     <string name="cfr_for_toolbar_delete_icon2">點擊此處即可清除上網紀錄、Cookie 等所有資料，然後重新開啟一個乾乾淨淨的分頁。</string>
 
+    <!-- Promote SearchWidget Dialog -->
+
+    !-- Content description (not visible, for screen readers etc.): This is the description for the
+    close button from promote search widget dialog. --&gt;
+    <string name="promote_search_widget_dialog_content_description">關閉</string>
+
+    !-- Content description (not visible, for screen readers etc.): This is the description for
+    picture of search widget from promote search widget dialog. --&gt;
+    <string name="promote_search_widget_dialog_picture_content_description">搜尋小工具</string>
+
+    !-- This is the title of promote search widget dialog. --&gt;
+    <string name="promote_search_widget_dialog_title">已清除瀏覽紀錄！🎉</string>
+
+    !-- This is the subtitle of promote search widget dialog. %1$s will get replaced with the name
+    of the app (e.g. &quot;Focus&quot;) --&gt;
+    <string name="promote_search_widget_dialog_subtitle">接下來就交給您繼續進行隱私瀏覽了。未來想快速開始搜尋的話，可以把 %1$s 搜尋小工具放到主畫面。</string>
+
+    !-- This is te text from add search widget to home screen button .The button is located on
+    promote search widget dialog. --&gt;
+    <string name="promote_search_widget_button_text">將小工具新增至裝置主畫面</string>
+
+    !-- This is te text of the snackbar that appears after the search widget was added successfully
+    to the home screen. --&gt;
+    <string name="promote_search_widget_snackbar_message">已將小工具新增至裝置主畫面</string>
 </resources>

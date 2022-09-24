@@ -1038,7 +1038,7 @@ The new line here must be kept as the second half of the string is clickable for
 
     !-- Content description (not visible, for screen readers etc.): This is the description for
     picture of search widget from promote search widget dialog. --&gt;
-    <string name="promote_search_widget_dialog_picture_content_description">Zoek-widget</string>
+    <string name="promote_search_widget_dialog_picture_content_description">Zoekwidget</string>
 
     !-- This is the title of promote search widget dialog. --&gt;
     <string name="promote_search_widget_dialog_title">Navigatiegeschiedenis gewist! 🎉</string>

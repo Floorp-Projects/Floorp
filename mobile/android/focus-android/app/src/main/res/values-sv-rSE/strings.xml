@@ -495,32 +495,63 @@
 
   <!-- Onboarding: Title -->
     <!-- %1$s will be replaced by the app name and build variant(e.g. Firefox Focus, Firefox Klar Nightly) -->
-    <string name="onboarding_title">Välkommen till %1$s!</string>
+    <string moz:removedIn="106" name="onboarding_title">Välkommen till %1$s!</string>
+
+    <!-- Content description (not visible, for screen readers etc.): This is the description for the close button from the new onboarding flow screen one and two -->
+    <string name="onboarding_close_button_content_description">Stäng</string>
+
+    <!-- New Onboarding flow first screen title -->
+    <!-- %1$s will be replaced by the app name and build variant(e.g. Firefox Focus, Firefox Klar Nightly) -->
+    <string name="onboarding_first_screen_title">Välkommen till %1$s</string>
+
+    <!-- New Onboarding flow first screen subtitle the one that appears under title -->
+    <string name="onboarding_first_screen_subtitle">Snabb. Privat. Inga distraktioner.</string>
+
+    <!-- New Onboarding flow first screen button label-->
+    <string name="onboarding_first_screen_button_text">Kom igång</string>
+
+    <!-- Onboarding second screen: Title -->
+    <!-- %1$s will be replaced by the app short name(Focus) -->
+    <string name="onboarding_second_screen_title">%1$s är inte som andra webbläsare</string>
+
+    <!-- New Onboarding flow second screen subtitle the one that appears under title -->
+    <string name="onboarding_second_screen_subtitle_one">Vi rensar din historik när du stänger appen för extra sekretess.</string>
+
+    <!-- New Onboarding flow second screen subtitle two the one that appears under subtitle one -->
+    <!-- %1$s will be replaced by the app short name(Focus) -->
+    <string name="onboarding_second_screen_subtitle_two">Gör %1$s till din standard för att skydda dina data med varje länk du öppnar.</string>
+
+    <!-- New Onboarding flow second screen make Focus default browser button label-->
+    <string name="onboarding_second_screen_default_browser_button_text">Ange som standardwebbläsare</string>
+
+    <!-- New Onboarding flow second screen skip onboarding button label-->
+    <string name="onboarding_second_screen_skip_button_text">Hoppa över</string>
+
 
     <!-- Onboarding: Description -->
-    <string name="onboarding_description">Privat surfning på nästa nivå när du vill</string>
+    <string moz:removedIn="106" name="onboarding_description">Privat surfning på nästa nivå när du vill</string>
 
     <!-- Onboarding: Incognito Title -->
-    <string name="onboarding_incognito_title">Där inkognito möter osynligt</string>
+    <string moz:removedIn="106" name="onboarding_incognito_title">Där inkognito möter osynligt</string>
 
     <!-- Onboarding: Incognito Description -->
     <!-- Text %s will be replaced with the name of the app (e.g. Focus, Klar) -->
-    <string name="onboarding_incognito_description">%s är en webbläsare som prioriterar integriteten med extra starkt inbyggt skydd mot spårning och kakor.</string>
+    <string moz:removedIn="106" name="onboarding_incognito_description">%s är en webbläsare som prioriterar integriteten med extra starkt inbyggt skydd mot spårning och kakor.</string>
 
     <!-- Onboarding: History Title -->
-    <string name="onboarding_history_title">Surfa som om det aldrig hänt</string>
+    <string moz:removedIn="106" name="onboarding_history_title">Surfa som om det aldrig hänt</string>
 
     <!-- Onboarding: History Description -->
-    <string name="onboarding_history_description2">Ett tryck raderar din webbhistorik och kakor — och hindrar annonser från att följa dig.</string>
+    <string moz:removedIn="106" name="onboarding_history_description2">Ett tryck raderar din webbhistorik och kakor — och hindrar annonser från att följa dig.</string>
 
     <!-- Onboarding: Protection Title -->
-    <string name="onboarding_protection_title">Sekretess som passar alla situationer</string>
+    <string moz:removedIn="106" name="onboarding_protection_title">Sekretess som passar alla situationer</string>
 
     <!-- Onboarding: Protection Description -->
-    <string name="onboarding_protection_description">Om dina surfbehov ändras är det enkelt att skala upp eller ner dina sekretessinställningar.</string>
+    <string moz:removedIn="106" name="onboarding_protection_description">Om dina surfbehov ändras är det enkelt att skala upp eller ner dina sekretessinställningar.</string>
 
     <!-- Onboarding: Start browsing -->
-    <string name="onboarding_start_browsing">Börja surfa</string>
+    <string moz:removedIn="106" name="onboarding_start_browsing">Börja surfa</string>
 
     <!-- First run tour (Default browser): Title -->
     <string name="firstrun_defaultbrowser_title">Stärk din integritet</string>
@@ -981,7 +1012,9 @@ The new line here must be kept as the second half of the string is clickable for
 
     <!-- Contextual Feature Recommendation Popups -->
     <!-- CFR for Toolbar Shield Icon (Banner Info Message) -->
-    <string name="cfr_for_toolbar_shield_icon">Det verkar som att den här sidan försökte spåra dig. Klicka på skölden för webbplatsinställningar och statistik för spårningsblockering.</string>
+    <string moz:removedIn="104" name="cfr_for_toolbar_shield_icon">Det verkar som att den här sidan försökte spåra dig. Klicka på skölden för webbplatsinställningar och statistik för spårningsblockering.</string>
+    <string name="cfr_for_toolbar_shield_icon2">Fick dem! Vi stoppade den här sidan från att spionera på dig. Tryck på skölden när som helst för att se vad vi blockerar.</string>
+
     <!-- Content description (not visible, for screen readers etc.): Button that closes the CFR popup -->
     <string name="cfr_close_button_description">Stäng popup</string>
 
@@ -997,4 +1030,28 @@ The new line here must be kept as the second half of the string is clickable for
     <string moz:removedIn="105" name="cfr_for_toolbar_delete_icon" tools:ignore="UnusedResources">Bli av med dina personliga uppgifter, webbhistorik och mer från den här sessionen genom att trycka på papperskorgen. Ge det ett försök!</string>
     <string name="cfr_for_toolbar_delete_icon2">Tryck här för att kasta allt — historik, kakor, allt — och börja om på en ny flik.</string>
 
+    <!-- Promote SearchWidget Dialog -->
+
+    !-- Content description (not visible, for screen readers etc.): This is the description for the
+    close button from promote search widget dialog. --&gt;
+    <string name="promote_search_widget_dialog_content_description">Stäng</string>
+
+    !-- Content description (not visible, for screen readers etc.): This is the description for
+    picture of search widget from promote search widget dialog. --&gt;
+    <string name="promote_search_widget_dialog_picture_content_description">Sök-widget</string>
+
+    !-- This is the title of promote search widget dialog. --&gt;
+    <string name="promote_search_widget_dialog_title">Webbhistorik rensad! 🎉</string>
+
+    !-- This is the subtitle of promote search widget dialog. %1$s will get replaced with the name
+    of the app (e.g. &quot;Focus&quot;) --&gt;
+    <string name="promote_search_widget_dialog_subtitle">Vi lämnar dig till din privata surfning, men få en snabbare start nästa gång med %1$s-widgeten på din startskärm.</string>
+
+    !-- This is te text from add search widget to home screen button .The button is located on
+    promote search widget dialog. --&gt;
+    <string name="promote_search_widget_button_text">Lägg till widget på startskärmen</string>
+
+    !-- This is te text of the snackbar that appears after the search widget was added successfully
+    to the home screen. --&gt;
+    <string name="promote_search_widget_snackbar_message">Widget har lagts till på startskärmen</string>
 </resources>

@@ -495,32 +495,64 @@
 
   <!-- Onboarding: Title -->
     <!-- %1$s will be replaced by the app name and build variant(e.g. Firefox Focus, Firefox Klar Nightly) -->
-    <string name="onboarding_title">Üdvözli a %1$s!</string>
+    <string moz:removedIn="106" name="onboarding_title">Üdvözli a %1$s!</string>
+
+    <!-- Content description (not visible, for screen readers etc.): This is the description for the close button from the new onboarding flow screen one and two -->
+    <string name="onboarding_close_button_content_description">Bezárás</string>
+
+    <!-- New Onboarding flow first screen title -->
+    <!-- %1$s will be replaced by the app name and build variant(e.g. Firefox Focus, Firefox Klar Nightly) -->
+    <string name="onboarding_first_screen_title">Üdvözli a %1$s</string>
+
+    <!-- New Onboarding flow first screen subtitle the one that appears under title -->
+    <string name="onboarding_first_screen_subtitle">Gyors. Privát. Zavaró tényezők nélkül.</string>
+
+    <!-- New Onboarding flow first screen button label-->
+    <string name="onboarding_first_screen_button_text">Kezdő lépések</string>
+
+    <!-- Onboarding second screen: Title -->
+    <!-- %1$s will be replaced by the app short name(Focus) -->
+    <string name="onboarding_second_screen_title">A %1$s nem olyan, mint a többi böngésző</string>
+
+    <!-- New Onboarding flow second screen subtitle the one that appears under title -->
+    <string name="onboarding_second_screen_subtitle_one">A fokozott adatvédelem érdekében töröljük az előzményeket, amikor bezárja az alkalmazást.</string>
+
+    <!-- New Onboarding flow second screen subtitle two the one that appears under subtitle one -->
+    <!-- %1$s will be replaced by the app short name(Focus) -->
+    <string name="onboarding_second_screen_subtitle_two">Legyen a %1$s az alapértelmezett, hogy minden megnyitott hivatkozásnál megvédje az adatait.</string>
+
+
+    <!-- New Onboarding flow second screen make Focus default browser button label-->
+    <string name="onboarding_second_screen_default_browser_button_text">Beállítás alapértelmezett böngészőként</string>
+
+    <!-- New Onboarding flow second screen skip onboarding button label-->
+    <string name="onboarding_second_screen_skip_button_text">Kihagyás</string>
+
 
     <!-- Onboarding: Description -->
-    <string name="onboarding_description">Magasabb szintű privát böngészés, amikor csak akarja</string>
+    <string moz:removedIn="106" name="onboarding_description">Magasabb szintű privát böngészés, amikor csak akarja</string>
 
     <!-- Onboarding: Incognito Title -->
-    <string name="onboarding_incognito_title">Ahol az inkognitó találkozik a láthatatlannal</string>
+    <string moz:removedIn="106" name="onboarding_incognito_title">Ahol az inkognitó találkozik a láthatatlannal</string>
 
     <!-- Onboarding: Incognito Description -->
     <!-- Text %s will be replaced with the name of the app (e.g. Focus, Klar) -->
-    <string name="onboarding_incognito_description">A %s egy olyan böngésző, amely az adatvédelmet helyezi előtérbe, rendkívül erős beépített nyomkövetés elleni és sütivédelemmel.</string>
+    <string moz:removedIn="106" name="onboarding_incognito_description">A %s egy olyan böngésző, amely az adatvédelmet helyezi előtérbe, rendkívül erős beépített nyomkövetés elleni és sütivédelemmel.</string>
 
     <!-- Onboarding: History Title -->
-    <string name="onboarding_history_title">Böngésszen úgy, mintha meg sem történt volna</string>
+    <string moz:removedIn="106" name="onboarding_history_title">Böngésszen úgy, mintha meg sem történt volna</string>
 
     <!-- Onboarding: History Description -->
-    <string name="onboarding_history_description2">Egy koppintás törli a böngészési előzményeket és a sütiket – és megakadályozza, hogy a hirdetések kövessék.</string>
+    <string moz:removedIn="106" name="onboarding_history_description2">Egy koppintás törli a böngészési előzményeket és a sütiket – és megakadályozza, hogy a hirdetések kövessék.</string>
 
     <!-- Onboarding: Protection Title -->
-    <string name="onboarding_protection_title">Adatvédelem minden helyzethez</string>
+    <string moz:removedIn="106" name="onboarding_protection_title">Adatvédelem minden helyzethez</string>
 
     <!-- Onboarding: Protection Description -->
-    <string name="onboarding_protection_description">Ha a böngészési igényei megváltoznak, könnyen szigorúbbra vagy megengedőbbre állíthatja az adatvédelmi beállításait.</string>
+    <string moz:removedIn="106" name="onboarding_protection_description">Ha a böngészési igényei megváltoznak, könnyen szigorúbbra vagy megengedőbbre állíthatja az adatvédelmi beállításait.</string>
 
     <!-- Onboarding: Start browsing -->
-    <string name="onboarding_start_browsing">Böngészés megkezdése</string>
+    <string moz:removedIn="106" name="onboarding_start_browsing">Böngészés megkezdése</string>
 
     <!-- First run tour (Default browser): Title -->
     <string name="firstrun_defaultbrowser_title">Tuningolja fel az adatvédelmét</string>
@@ -980,7 +1012,10 @@ The new line here must be kept as the second half of the string is clickable for
 
     <!-- Contextual Feature Recommendation Popups -->
     <!-- CFR for Toolbar Shield Icon (Banner Info Message) -->
-    <string name="cfr_for_toolbar_shield_icon">Úgy tűnik, ez a webhely megpróbálta követni Önt. Kattintson a pajzsra a webhelybeállítások és a követőblokkolási statisztikák megtekintéséhez.</string>
+    <string moz:removedIn="104" name="cfr_for_toolbar_shield_icon">Úgy tűnik, ez a webhely megpróbálta követni Önt. Kattintson a pajzsra a webhelybeállítások és a követőblokkolási statisztikák megtekintéséhez.</string>
+
+    <string name="cfr_for_toolbar_shield_icon2">Megvannak! Megakadályoztuk, hogy ez a webhely kémkedjen Ön után. Koppintson a pajzsra, hogy megtudja mit blokkoltunk.</string>
+
     <!-- Content description (not visible, for screen readers etc.): Button that closes the CFR popup -->
     <string name="cfr_close_button_description">Felugró ablak bezárása</string>
 
@@ -996,4 +1031,28 @@ The new line here must be kept as the second half of the string is clickable for
     <string moz:removedIn="105" name="cfr_for_toolbar_delete_icon" tools:ignore="UnusedResources">Megszabadulhat személyes adataitól, böngészési előzményeitől és egyebektől ebből a munkamenetből a kuka gombra történő koppintással. Próbálja ki!</string>
     <string name="cfr_for_toolbar_delete_icon2">Koppintson ide, hogy mindent töröljön – az előzményeket, a sütiket, mindent –, és tiszta lappal induljon.</string>
 
+    <!-- Promote SearchWidget Dialog -->
+
+    !-- Content description (not visible, for screen readers etc.): This is the description for
+    picture of search widget from promote search widget dialog. --&gt;
+    <string name="promote_search_widget_dialog_content_description">Bezárás</string>
+
+    !-- Content description (not visible, for screen readers etc.): This is the description for
+    picture of search widget from promote search widget dialog. --&gt;
+    <string name="promote_search_widget_dialog_picture_content_description">Keresési modul</string>
+
+    !-- This is the title of promote search widget dialog. --&gt;
+    <string name="promote_search_widget_dialog_title">A böngészési előzmények törölve! 🎉</string>
+
+    !-- This is the subtitle of promote search widget dialog. %1$s will get replaced with the name
+    of the app (e.g. &quot;Focus&quot;) --&gt;
+    <string name="promote_search_widget_dialog_subtitle">Hagyjuk, hogy elkezdje a privát böngészést, de legközelebb gyorsabban nekiláthat a kezdőképernyőn található %1$s modullal.</string>
+
+    !-- This is te text from add search widget to home screen button .The button is located on
+    promote search widget dialog. --&gt;
+    <string name="promote_search_widget_button_text">Modul hozzáadása a kezdőképernyőhöz</string>
+
+    !-- This is te text of the snackbar that appears after the search widget was added successfully
+    to the home screen. --&gt;
+    <string name="promote_search_widget_snackbar_message">Modul hozzáadva a kezdőképernyőhöz</string>
 </resources>

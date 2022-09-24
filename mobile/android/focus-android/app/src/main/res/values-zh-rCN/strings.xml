@@ -495,32 +495,53 @@
 
   <!-- Onboarding: Title -->
     <!-- %1$s will be replaced by the app name and build variant(e.g. Firefox Focus, Firefox Klar Nightly) -->
-    <string name="onboarding_title">欢迎使用 %1$s！</string>
+    <string moz:removedIn="106" name="onboarding_title">欢迎使用 %1$s！</string>
+
+    <!-- Content description (not visible, for screen readers etc.): This is the description for the close button from the new onboarding flow screen one and two -->
+    <string name="onboarding_close_button_content_description">关闭</string>
+
+    <!-- New Onboarding flow first screen title -->
+    <!-- %1$s will be replaced by the app name and build variant(e.g. Firefox Focus, Firefox Klar Nightly) -->
+    <string name="onboarding_first_screen_title">欢迎使用 %1$s</string>
+
+    <!-- New Onboarding flow first screen button label-->
+    <string name="onboarding_first_screen_button_text">开始使用</string>
+
+    <!-- Onboarding second screen: Title -->
+    <!-- %1$s will be replaced by the app short name(Focus) -->
+    <string name="onboarding_second_screen_title">%1$s 与其他浏览器不同</string>
+
+    <!-- New Onboarding flow second screen make Focus default browser button label-->
+    <string name="onboarding_second_screen_default_browser_button_text">设为默认浏览器</string>
+
+    <!-- New Onboarding flow second screen skip onboarding button label-->
+    <string name="onboarding_second_screen_skip_button_text">跳过</string>
+
 
     <!-- Onboarding: Description -->
-    <string name="onboarding_description">符合您需求的下一代隐私浏览体验</string>
+    <string moz:removedIn="106" name="onboarding_description">符合您需求的下一代隐私浏览体验</string>
 
     <!-- Onboarding: Incognito Title -->
-    <string name="onboarding_incognito_title">无痕模式遇上隐形模式</string>
+    <string moz:removedIn="106" name="onboarding_incognito_title">无痕模式遇上隐形模式</string>
 
     <!-- Onboarding: Incognito Description -->
     <!-- Text %s will be replaced with the name of the app (e.g. Focus, Klar) -->
-    <string name="onboarding_incognito_description">%s 是一款隐私优先的浏览器，内置超强的跟踪和 Cookie 保护功能。</string>
+    <string moz:removedIn="106" name="onboarding_incognito_description">%s 是一款隐私优先的浏览器，内置超强的跟踪和 Cookie 保护功能。</string>
 
     <!-- Onboarding: History Title -->
-    <string name="onboarding_history_title">浏览无痕迹</string>
+    <string moz:removedIn="106" name="onboarding_history_title">浏览无痕迹</string>
 
     <!-- Onboarding: History Description -->
-    <string name="onboarding_history_description2">点一下即可清除浏览历史和 Cookie，防止被广告跟踪。</string>
+    <string moz:removedIn="106" name="onboarding_history_description2">点一下即可清除浏览历史和 Cookie，防止被广告跟踪。</string>
 
     <!-- Onboarding: Protection Title -->
-    <string name="onboarding_protection_title">适合任何场景的隐私保护机制</string>
+    <string moz:removedIn="106" name="onboarding_protection_title">适合任何场景的隐私保护机制</string>
 
     <!-- Onboarding: Protection Description -->
-    <string name="onboarding_protection_description">若您的浏览需求有变，也可很容易地收紧或放松隐私设置。</string>
+    <string moz:removedIn="106" name="onboarding_protection_description">若您的浏览需求有变，也可很容易地收紧或放松隐私设置。</string>
 
     <!-- Onboarding: Start browsing -->
-    <string name="onboarding_start_browsing">开始浏览</string>
+    <string moz:removedIn="106" name="onboarding_start_browsing">开始浏览</string>
 
     <!-- First run tour (Default browser): Title -->
     <string name="firstrun_defaultbrowser_title">强化您的隐私</string>
@@ -987,7 +1008,8 @@ The new line here must be kept as the second half of the string is clickable for
 
     <!-- Contextual Feature Recommendation Popups -->
     <!-- CFR for Toolbar Shield Icon (Banner Info Message) -->
-    <string name="cfr_for_toolbar_shield_icon">看起来这个网站正在试图跟踪您，点击盾牌即可查看网站设置和跟踪器拦截状态。</string>
+    <string moz:removedIn="104" name="cfr_for_toolbar_shield_icon">看起来这个网站正在试图跟踪您，点击盾牌即可查看网站设置和跟踪器拦截状态。</string>
+
     <!-- Content description (not visible, for screen readers etc.): Button that closes the CFR popup -->
     <string name="cfr_close_button_description">关闭弹窗</string>
 
@@ -1003,4 +1025,16 @@ The new line here must be kept as the second half of the string is clickable for
     <string moz:removedIn="105" name="cfr_for_toolbar_delete_icon" tools:ignore="UnusedResources">点击垃圾桶图标，即可删除该会话中的个人数据、浏览历史等。试试吧！</string>
     <string name="cfr_for_toolbar_delete_icon2">点按此处即可删除浏览记录、Cookie 等所有数据，并新建一个全新标签页。</string>
 
-</resources>
+    <!-- Promote SearchWidget Dialog -->
+
+    !-- Content description (not visible, for screen readers etc.): This is the description for the
+    close button from promote search widget dialog. --&gt;
+    <string name="promote_search_widget_dialog_content_description">关闭</string>
+
+    !-- Content description (not visible, for screen readers etc.): This is the description for
+    picture of search widget from promote search widget dialog. --&gt;
+    <string name="promote_search_widget_dialog_title">浏览历史已清除！🎉</string>
+
+    !-- This is the subtitle of promote search widget dialog. %1$s will get replaced with the name
+    of the app (e.g. &quot;Focus&quot;) --&gt;
+    </resources>

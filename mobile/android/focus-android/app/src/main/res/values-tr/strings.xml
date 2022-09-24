@@ -495,32 +495,63 @@
 
   <!-- Onboarding: Title -->
     <!-- %1$s will be replaced by the app name and build variant(e.g. Firefox Focus, Firefox Klar Nightly) -->
-    <string name="onboarding_title">%1$s’a hoş geldiniz!</string>
+    <string moz:removedIn="106" name="onboarding_title">%1$s’a hoş geldiniz!</string>
+
+    <!-- Content description (not visible, for screen readers etc.): This is the description for the close button from the new onboarding flow screen one and two -->
+    <string name="onboarding_close_button_content_description">Kapat</string>
+
+    <!-- New Onboarding flow first screen title -->
+    <!-- %1$s will be replaced by the app name and build variant(e.g. Firefox Focus, Firefox Klar Nightly) -->
+    <string name="onboarding_first_screen_title">%1$s tarayıcısına hoş geldiniz</string>
+
+    <!-- New Onboarding flow first screen subtitle the one that appears under title -->
+    <string name="onboarding_first_screen_subtitle">Hızlı. Gizli. Sade.</string>
+
+    <!-- New Onboarding flow first screen button label-->
+    <string name="onboarding_first_screen_button_text">Başlayın</string>
+
+    <!-- Onboarding second screen: Title -->
+    <!-- %1$s will be replaced by the app short name(Focus) -->
+    <string name="onboarding_second_screen_title">%1$s diğer tarayıcılara benzemez</string>
+
+    <!-- New Onboarding flow second screen subtitle the one that appears under title -->
+    <string name="onboarding_second_screen_subtitle_one">Daha fazla gizlilik için uygulamayı kapattığınızda geçmişinizi temizliyoruz.</string>
+
+    <!-- New Onboarding flow second screen subtitle two the one that appears under subtitle one -->
+    <!-- %1$s will be replaced by the app short name(Focus) -->
+    <string name="onboarding_second_screen_subtitle_two">Açtığınız her bağlantıda verilerinizi korumak için %1$s’u varsayılan tarayıcınız yapın.</string>
+
+    <!-- New Onboarding flow second screen make Focus default browser button label-->
+    <string name="onboarding_second_screen_default_browser_button_text">Varsayılan tarayıcı yap</string>
+
+    <!-- New Onboarding flow second screen skip onboarding button label-->
+    <string name="onboarding_second_screen_skip_button_text">Atla</string>
+
 
     <!-- Onboarding: Description -->
-    <string name="onboarding_description">İstediğiniz an gizli gezinti</string>
+    <string moz:removedIn="106" name="onboarding_description">İstediğiniz an gizli gezinti</string>
 
     <!-- Onboarding: Incognito Title -->
-    <string name="onboarding_incognito_title">Gizli gezinti görünmezlikle buluşuyor</string>
+    <string moz:removedIn="106" name="onboarding_incognito_title">Gizli gezinti görünmezlikle buluşuyor</string>
 
     <!-- Onboarding: Incognito Description -->
     <!-- Text %s will be replaced with the name of the app (e.g. Focus, Klar) -->
-    <string name="onboarding_incognito_description">%s, son derece güçlü izlenme ve çerez korumasına sahip, gizliliğe öncelik veren bir tarayıcıdır.</string>
+    <string moz:removedIn="106" name="onboarding_incognito_description">%s, son derece güçlü izlenme ve çerez korumasına sahip, gizliliğe öncelik veren bir tarayıcıdır.</string>
 
     <!-- Onboarding: History Title -->
-    <string name="onboarding_history_title">Hiç yaşanmamış gibi gezin</string>
+    <string moz:removedIn="106" name="onboarding_history_title">Hiç yaşanmamış gibi gezin</string>
 
     <!-- Onboarding: History Description -->
-    <string name="onboarding_history_description2">Tek dokunuşla gezinti geçmişinizi ve çerezlerinizi silebilirsiniz. Üstelik reklamlar sizi izleyemez.</string>
+    <string moz:removedIn="106" name="onboarding_history_description2">Tek dokunuşla gezinti geçmişinizi ve çerezlerinizi silebilirsiniz. Üstelik reklamlar sizi izleyemez.</string>
 
     <!-- Onboarding: Protection Title -->
-    <string name="onboarding_protection_title">Her duruma uygun gizlilik</string>
+    <string moz:removedIn="106" name="onboarding_protection_title">Her duruma uygun gizlilik</string>
 
     <!-- Onboarding: Protection Description -->
-    <string name="onboarding_protection_description">Gezinme ihtiyaçlarınız değişirse gizlilik ayarlarınızı kolayca artırıp azaltabilirsiniz.</string>
+    <string moz:removedIn="106" name="onboarding_protection_description">Gezinme ihtiyaçlarınız değişirse gizlilik ayarlarınızı kolayca artırıp azaltabilirsiniz.</string>
 
     <!-- Onboarding: Start browsing -->
-    <string name="onboarding_start_browsing">Gezinmeye başlayın</string>
+    <string moz:removedIn="106" name="onboarding_start_browsing">Gezinmeye başlayın</string>
 
     <!-- First run tour (Default browser): Title -->
     <string name="firstrun_defaultbrowser_title">Gizliliğini güçlendir</string>
@@ -980,7 +1011,9 @@ The new line here must be kept as the second half of the string is clickable for
 
     <!-- Contextual Feature Recommendation Popups -->
     <!-- CFR for Toolbar Shield Icon (Banner Info Message) -->
-    <string name="cfr_for_toolbar_shield_icon">Bu site sizi takip etmeye çalışıyordu. Site ayarlarını ve engelleme istatistiklerini görmek için kalkana dokunun.</string>
+    <string moz:removedIn="104" name="cfr_for_toolbar_shield_icon">Bu site sizi takip etmeye çalışıyordu. Site ayarlarını ve engelleme istatistiklerini görmek için kalkana dokunun.</string>
+    <string name="cfr_for_toolbar_shield_icon2">Bu sitenin sizi gözetlemesini engelledik. Engellediğimiz şeyleri görmek isterseniz kalkana dokunun.</string>
+
     <!-- Content description (not visible, for screen readers etc.): Button that closes the CFR popup -->
     <string name="cfr_close_button_description">Açılır pencereyi kapat</string>
 
@@ -996,4 +1029,28 @@ The new line here must be kept as the second half of the string is clickable for
     <string moz:removedIn="105" name="cfr_for_toolbar_delete_icon" tools:ignore="UnusedResources">Çöp kutusuna dokunarak bu oturumdaki kişisel verilerinizi, gezinti geçmişinizi ve diğer verilerinizi silebilirsiniz. Deneyin!</string>
     <string name="cfr_for_toolbar_delete_icon2">Geçmişi ve çerezleri temizleyip yeni bir sekmede yeni bir başlangıç yapmak için buraya dokunun.</string>
 
+    <!-- Promote SearchWidget Dialog -->
+
+    !-- Content description (not visible, for screen readers etc.): This is the description for the
+    close button from promote search widget dialog. --&gt;
+    <string name="promote_search_widget_dialog_content_description">Kapat</string>
+
+    !-- Content description (not visible, for screen readers etc.): This is the description for
+    picture of search widget from promote search widget dialog. --&gt;
+    <string name="promote_search_widget_dialog_picture_content_description">Arama widget’ı</string>
+
+    !-- This is the title of promote search widget dialog. --&gt;
+    <string name="promote_search_widget_dialog_title">Gezinti geçmişi temizlendi! 🎉</string>
+
+    !-- This is the subtitle of promote search widget dialog. %1$s will get replaced with the name
+    of the app (e.g. &quot;Focus&quot;) --&gt;
+    <string name="promote_search_widget_dialog_subtitle">%1$s widget’ını ana ekranınıza ekleyerek gizli gezintilerinize daha hızlı bir başlangıç yapabilirsiniz.</string>
+
+    !-- This is te text from add search widget to home screen button .The button is located on
+    promote search widget dialog. --&gt;
+    <string name="promote_search_widget_button_text">Widget’ı ana ekrana ekle</string>
+
+    !-- This is te text of the snackbar that appears after the search widget was added successfully
+    to the home screen. --&gt;
+    <string name="promote_search_widget_snackbar_message">Widget ana ekrana eklendi</string>
 </resources>

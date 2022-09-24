@@ -489,28 +489,45 @@
 
   <!-- Onboarding: Title -->
     <!-- %1$s will be replaced by the app name and build variant(e.g. Firefox Focus, Firefox Klar Nightly) -->
-    <string name="onboarding_title">ຍິນດີຕ້ອນຮັບສູ່ %s!</string>
+    <string moz:removedIn="106" name="onboarding_title">ຍິນດີຕ້ອນຮັບສູ່ %s!</string>
+
+    <!-- Content description (not visible, for screen readers etc.): This is the description for the close button from the new onboarding flow screen one and two -->
+    <string name="onboarding_close_button_content_description">ປິດ</string>
+
+    <!-- New Onboarding flow first screen title -->
+    <!-- %1$s will be replaced by the app name and build variant(e.g. Firefox Focus, Firefox Klar Nightly) -->
+    <string name="onboarding_first_screen_title">ຍິນດີຕ້ອນຮັບສູ່ %1$s</string>
+
+    <!-- New Onboarding flow first screen subtitle the one that appears under title -->
+    <string name="onboarding_first_screen_subtitle">ໄວ. ສ່ວນຕົວ. ບໍ່ມີສິ່ງລົບກວນ.</string>
+
+    <!-- New Onboarding flow first screen button label-->
+    <string name="onboarding_first_screen_button_text">ເລີ່ມຕົ້ນໃຊ້ງານ</string>
+
+    <!-- New Onboarding flow second screen skip onboarding button label-->
+    <string name="onboarding_second_screen_skip_button_text">ຂ້າມ</string>
+
 
     <!-- Onboarding: Description -->
-    <string name="onboarding_description">ການຊອກຫາສ່ວນຕົວລະດັບຕໍ່ໄປເມື່ອທ່ານຕ້ອງການ</string>
+    <string moz:removedIn="106" name="onboarding_description">ການຊອກຫາສ່ວນຕົວລະດັບຕໍ່ໄປເມື່ອທ່ານຕ້ອງການ</string>
 
     <!-- Onboarding: Incognito Title -->
-    <string name="onboarding_incognito_title">ບ່ອນທີ່ incognito ພົບກັບ invisible</string>
+    <string moz:removedIn="106" name="onboarding_incognito_title">ບ່ອນທີ່ incognito ພົບກັບ invisible</string>
 
     <!-- Onboarding: History Title -->
-    <string name="onboarding_history_title">ຊອກຫາແບບທີ່ບໍ່ເຄີຍເກີດຂຶ້ນ</string>
+    <string moz:removedIn="106" name="onboarding_history_title">ຊອກຫາແບບທີ່ບໍ່ເຄີຍເກີດຂຶ້ນ</string>
 
     <!-- Onboarding: History Description -->
-    <string name="onboarding_history_description2">ແຕະຄັ້ງດຽວຈະລຶບປະຫວັດການທ່ອງເວັບ ແລະຄຸກກີ້ຂອງເຈົ້າ — ແລະ ຈະຢຸດໂຄສະນາບໍ່ໃຫ້ຕິດຕາມເຈົ້າໄປນຳ.</string>
+    <string moz:removedIn="106" name="onboarding_history_description2">ແຕະຄັ້ງດຽວຈະລຶບປະຫວັດການທ່ອງເວັບ ແລະຄຸກກີ້ຂອງເຈົ້າ — ແລະ ຈະຢຸດໂຄສະນາບໍ່ໃຫ້ຕິດຕາມເຈົ້າໄປນຳ.</string>
 
     <!-- Onboarding: Protection Title -->
-    <string name="onboarding_protection_title">ຄວາມເປັນສ່ວນຕົວທີ່ເໝາະກັບທຸກສະຖານະການ</string>
+    <string moz:removedIn="106" name="onboarding_protection_title">ຄວາມເປັນສ່ວນຕົວທີ່ເໝາະກັບທຸກສະຖານະການ</string>
 
     <!-- Onboarding: Protection Description -->
-    <string name="onboarding_protection_description">ຖ້າການທ່ອງເວັບຂອງທ່ານຕ້ອງການປ່ຽນແປງ, ມັນງ່າຍທີ່ຈະປັບຂະໜາດການຕັ້ງຄ່າຄວາມເປັນສ່ວນຕົວຂອງທ່ານຕາມໃຈ</string>
+    <string moz:removedIn="106" name="onboarding_protection_description">ຖ້າການທ່ອງເວັບຂອງທ່ານຕ້ອງການປ່ຽນແປງ, ມັນງ່າຍທີ່ຈະປັບຂະໜາດການຕັ້ງຄ່າຄວາມເປັນສ່ວນຕົວຂອງທ່ານຕາມໃຈ</string>
 
     <!-- Onboarding: Start browsing -->
-    <string name="onboarding_start_browsing">ເລີ່ມການທ່ອງເວັບ</string>
+    <string moz:removedIn="106" name="onboarding_start_browsing">ເລີ່ມການທ່ອງເວັບ</string>
 
     <!-- First run tour (Default browser): Title -->
     <string name="firstrun_defaultbrowser_title">ເພີ່ມຄວາມເປັນສ່ວນໂຕຂອງທ່ານ</string>
@@ -922,4 +939,8 @@
     <!-- Tool Tip "X" button Content description (not visible, for screen readers etc.) :Button that closes the tool tip -->
     <string name="tool_tip_dismiss_button_content_description">ປິດ</string>
 
+    <!-- Promote SearchWidget Dialog -->
+
+    !-- Content description (not visible, for screen readers etc.): This is the description for
+    picture of search widget from promote search widget dialog. --&gt;
     </resources>

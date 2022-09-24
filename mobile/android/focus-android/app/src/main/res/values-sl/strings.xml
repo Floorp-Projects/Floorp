@@ -495,32 +495,58 @@
 
   <!-- Onboarding: Title -->
     <!-- %1$s will be replaced by the app name and build variant(e.g. Firefox Focus, Firefox Klar Nightly) -->
-    <string name="onboarding_title">Dobrodošli v %su!</string>
+    <string moz:removedIn="106" name="onboarding_title">Dobrodošli v %su!</string>
+
+    <!-- Content description (not visible, for screen readers etc.): This is the description for the close button from the new onboarding flow screen one and two -->
+    <string name="onboarding_close_button_content_description">Zapri</string>
+
+
+    <!-- New Onboarding flow first screen title -->
+    <!-- %1$s will be replaced by the app name and build variant(e.g. Firefox Focus, Firefox Klar Nightly) -->
+    <string name="onboarding_first_screen_title">Dobrodošli v %su</string>
+
+    <!-- New Onboarding flow first screen subtitle the one that appears under title -->
+    <string name="onboarding_first_screen_subtitle">Hitro. Zasebno. Brez motenj.</string>
+
+    <!-- New Onboarding flow first screen button label-->
+    <string name="onboarding_first_screen_button_text">Začnite</string>
+
+
+    <!-- Onboarding second screen: Title -->
+    <!-- %1$s will be replaced by the app short name(Focus) -->
+    <string name="onboarding_second_screen_title">%1$s ni kot drugi brskalniki</string>
+
+    <!-- New Onboarding flow second screen make Focus default browser button label-->
+    <string name="onboarding_second_screen_default_browser_button_text">Nastavi kot privzeti brskalnik</string>
+
+    <!-- New Onboarding flow second screen skip onboarding button label-->
+    <string name="onboarding_second_screen_skip_button_text">Preskoči</string>
+
 
     <!-- Onboarding: Description -->
-    <string name="onboarding_description">Zasebno brskanje na višjem nivoju, kadar ga želite</string>
+    <string moz:removedIn="106" name="onboarding_description">Zasebno brskanje na višjem nivoju, kadar ga želite</string>
 
     <!-- Onboarding: Incognito Title -->
-    <string name="onboarding_incognito_title">Kjer inkognito sreča nevidno</string>
+    <string moz:removedIn="106" name="onboarding_incognito_title">Kjer inkognito sreča nevidno</string>
 
     <!-- Onboarding: Incognito Description -->
     <!-- Text %s will be replaced with the name of the app (e.g. Focus, Klar) -->
-    <string name="onboarding_incognito_description">%s je brskalnik, ki zasebnost postavlja na prvo mesto. Izredno zmogljiva zaščita pred sledenjem in piškotki je vgrajena.</string>
+    <string moz:removedIn="106" name="onboarding_incognito_description">%s je brskalnik, ki zasebnost postavlja na prvo mesto. Izredno zmogljiva zaščita pred sledenjem in piškotki je vgrajena.</string>
 
     <!-- Onboarding: History Title -->
-    <string name="onboarding_history_title">Brskajte, kot da se nikoli ni zgodilo</string>
+    <string moz:removedIn="106" name="onboarding_history_title">Brskajte, kot da se nikoli ni zgodilo</string>
 
     <!-- Onboarding: History Description -->
-    <string name="onboarding_history_description2">Z enim dotikom izbrišete zgodovino brskanja in piškotke – ter preprečite, da bi vam oglasi sledili.</string>
+    <string moz:removedIn="106" name="onboarding_history_description2">Z enim dotikom izbrišete zgodovino brskanja in piškotke – ter preprečite, da bi vam oglasi sledili.</string>
 
     <!-- Onboarding: Protection Title -->
-    <string name="onboarding_protection_title">Zasebnost, ki ustreza vsaki situaciji</string>
+    <string moz:removedIn="106" name="onboarding_protection_title">Zasebnost, ki ustreza vsaki situaciji</string>
 
     <!-- Onboarding: Protection Description -->
-    <string name="onboarding_protection_description">Če želite spremeniti brskanje, lahko v nastavitvah zahtevate več ali manj zasebnosti.</string>
+    <string moz:removedIn="106" name="onboarding_protection_description">Če želite spremeniti brskanje, lahko v nastavitvah zahtevate več ali manj zasebnosti.</string>
 
     <!-- Onboarding: Start browsing -->
-    <string name="onboarding_start_browsing">Začnite z brskanjem</string>
+    <string moz:removedIn="106" name="onboarding_start_browsing">Začnite z brskanjem</string>
 
     <!-- First run tour (Default browser): Title -->
     <string name="firstrun_defaultbrowser_title">Okrepite svojo zasebnost</string>
@@ -981,7 +1007,10 @@ The new line here must be kept as the second half of the string is clickable for
 
     <!-- Contextual Feature Recommendation Popups -->
     <!-- CFR for Toolbar Shield Icon (Banner Info Message) -->
-    <string name="cfr_for_toolbar_shield_icon">Videti je, da vam je to spletno mesto poskušalo slediti. Kliknite ščit za nastavitve spletnega mesta in statistiko zavračanja sledilcev.</string>
+    <string moz:removedIn="104" name="cfr_for_toolbar_shield_icon">Videti je, da vam je to spletno mesto poskušalo slediti. Kliknite ščit za nastavitve spletnega mesta in statistiko zavračanja sledilcev.</string>
+
+    <string name="cfr_for_toolbar_shield_icon2">Imamo jih! Temu spletnemu mestu smo preprečili vohunjenje za vami. Če želite videti, kaj blokiramo, tapnite ščit.</string>
+
     <!-- Content description (not visible, for screen readers etc.): Button that closes the CFR popup -->
     <string name="cfr_close_button_description">Zapri pojavno okno</string>
 
@@ -997,4 +1026,19 @@ The new line here must be kept as the second half of the string is clickable for
     <string moz:removedIn="105" name="cfr_for_toolbar_delete_icon" tools:ignore="UnusedResources">Znebite se svojih osebnih podatkov, zgodovine brskanja in drugih podatkov te seje z dotikom gumba za smeti. Poskusite!</string>
     <string name="cfr_for_toolbar_delete_icon2">Tapnite tukaj, da vse vržete v smeti – zgodovino, piškotke, vse – in začnete na novo v novem zavihku.</string>
 
-</resources>
+    <!-- Promote SearchWidget Dialog -->
+
+    !-- Content description (not visible, for screen readers etc.): This is the description for
+    picture of search widget from promote search widget dialog. --&gt;
+    <string name="promote_search_widget_dialog_content_description">Zapri</string>
+
+    !-- Content description (not visible, for screen readers etc.): This is the description for
+    picture of search widget from promote search widget dialog. --&gt;
+    <string name="promote_search_widget_dialog_picture_content_description">Pripomoček za iskanje</string>
+
+    !-- This is the title of promote search widget dialog. --&gt;
+    <string name="promote_search_widget_dialog_title">Zgodovina brskanja izbrisana! 🎉</string>
+
+    !-- This is the subtitle of promote search widget dialog. %1$s will get replaced with the name
+    of the app (e.g. &quot;Focus&quot;) --&gt;
+    </resources>
