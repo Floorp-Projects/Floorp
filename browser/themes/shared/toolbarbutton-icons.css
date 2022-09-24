@@ -511,7 +511,7 @@ toolbarbutton.bookmark-item {
   border-radius: 4px;
   color: inherit;
   fill: currentColor;
-  margin: 5px 5px 5px 4px;
+  margin: 5px 5px 5px 3px;
   padding: 11px 7px 11px 10px;
   scale: 1.0;
 }
@@ -534,7 +534,6 @@ toolbarbutton.bookmark-item {
 
 @media not (prefers-contrast) {
   .sidebar2-icon:hover, #preferences-icon:hover, .sidepanel-icon:hover, .sidepanel-icon[checked="true"] {
-  background-color: var(--tab-selected-bgcolor, var(--toolbar-bgcolor));
   background-color: color-mix(in srgb, currentColor 20%, transparent) !important;
   box-shadow: 0 0 4px rgba(0,0,0,.4) !important;
   }

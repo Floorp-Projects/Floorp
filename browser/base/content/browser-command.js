@@ -228,6 +228,7 @@ function changeSidebarVisibility() {
     siderbar2header.style.display = "none";
     sidebarsplit2.setAttribute("hidden", "true");
     hideIcons();
+    removeAttributeSelectedNode();
   }
 }
 
@@ -373,6 +374,20 @@ function setSidebarIconView() {
 function keepSidebar2boxWidth() {
   const pref = Services.prefs.getIntPref("floorp.browser.sidebar2.mode");
   Services.prefs.setIntPref(`floorp.browser.sidebar2.width.mode${pref}`, document.getElementById("sidebar2-box").width);
+}
+
+function getSelectedNode(){
+  let selectedMode = Services.prefs.getIntPref("floorp.browser.sidebar2.mode", undefined) + 1;
+  let selectedNode = document.querySelector(".sidepanel-icon[panel= \"" + selectedMode + "\"]");
+  return selectedNode;
+}
+
+function removeAttributeSelectedNode(){
+  let Nodes = document.getElementsByClassName("sidepanel-icon");
+
+  for(let i = 0; i < Nodes.length; i++){
+    Nodes[i].setAttribute("checked", "false");
+  }
 }
 
 /*---------------------------------------------------------------- design ----------------------------------------------------------------*/
