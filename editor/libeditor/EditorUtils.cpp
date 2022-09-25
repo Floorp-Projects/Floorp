@@ -25,6 +25,7 @@
 #include "nsINode.h"                  // for nsINode
 #include "nsITransferable.h"          // for nsITransferable
 #include "nsRange.h"                  // for nsRange
+#include "nsStyleConsts.h"            // for StyleWhiteSpace
 #include "nsStyleStruct.h"            // for nsStyleText, etc
 
 namespace mozilla {
@@ -163,6 +164,22 @@ void EditorUtils::MaskString(nsString& aString, const Text& aTextNode,
       ++i;
     }
   }
+}
+
+// static
+Maybe<StyleWhiteSpace> EditorUtils::GetComputedWhiteSpaceStyle(
+    const nsIContent& aContent) {
+  if (MOZ_UNLIKELY(!aContent.IsElement() && !aContent.GetParentElement())) {
+    return Nothing();
+  }
+  RefPtr<const ComputedStyle> elementStyle =
+      nsComputedDOMStyle::GetComputedStyleNoFlush(
+          aContent.IsElement() ? aContent.AsElement()
+                               : aContent.GetParentElement());
+  if (NS_WARN_IF(!elementStyle)) {
+    return Nothing();
+  }
+  return Some(elementStyle->StyleText()->mWhiteSpace);
 }
 
 // static
