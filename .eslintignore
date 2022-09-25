@@ -136,7 +136,6 @@ dom/workers/test/threadErrors_worker1.js
 intl/l10n/
 
 # Exclude everything but self-hosted JS
-js/ductwork/
 js/examples/
 js/public/
 js/xpconnect/

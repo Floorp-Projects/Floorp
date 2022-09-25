@@ -54,6 +54,7 @@ const extraXpcshellTestPaths = [
   "intl/benchmarks/",
   "intl/l10n/test/",
   "ipc/testshell/tests/",
+  "js/ductwork/debugger/tests/",
   "memory/replace/dmd/test/",
   "netwerk/test/httpserver/test/",
   "testing/modules/tests/xpcshell/",

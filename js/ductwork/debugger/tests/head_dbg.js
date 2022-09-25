@@ -3,11 +3,12 @@
 
 "use strict";
 
-function testGlobal(aName) {
-  let systemPrincipal = Cc["@mozilla.org/systemprincipal;1"]
-    .createInstance(Ci.nsIPrincipal);
+function testGlobal(name) {
+  const systemPrincipal = Cc["@mozilla.org/systemprincipal;1"].createInstance(
+    Ci.nsIPrincipal
+  );
 
-  let sandbox = Cu.Sandbox(systemPrincipal);
-  Cu.evalInSandbox("this.__name = '" + aName + "'", sandbox);
+  const sandbox = Cu.Sandbox(systemPrincipal);
+  Cu.evalInSandbox("this.__name = '" + name + "'", sandbox);
   return sandbox;
 }

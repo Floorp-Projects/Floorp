@@ -3,7 +3,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-var EXPORTED_SYMBOLS = [ "addDebuggerToGlobal", "addSandboxedDebuggerToGlobal" ];
+"use strict";
+
+var EXPORTED_SYMBOLS = ["addDebuggerToGlobal", "addSandboxedDebuggerToGlobal"];
 
 /*
  * This is the js module for Debugger. Import it like so:
@@ -29,7 +31,7 @@ function addDebuggerToGlobal(global) {
 // Defines the Debugger in a sandbox global in a separate compartment. This
 // ensures the debugger and debuggee are in different compartments.
 function addSandboxedDebuggerToGlobal(global) {
-  var sb = Cu.Sandbox(global, {freshCompartment: true});
+  const sb = Cu.Sandbox(global, { freshCompartment: true });
   addDebuggerToGlobal(sb);
   global.Debugger = sb.Debugger;
 }
@@ -50,7 +52,7 @@ function initPromiseDebugging(global) {
   global.eval(polyfillSource);
 }
 
-let polyfillSource = `
+const polyfillSource = `
   Object.defineProperty(Debugger.Object.prototype, "promiseState", {
     get() {
       const state = this.PromiseDebugging.getState(this.unsafeDereference());
