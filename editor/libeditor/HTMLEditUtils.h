@@ -1507,11 +1507,11 @@ class HTMLEditUtils final {
   }
 
   /**
-   * GetMostDistantAnscestorEditableEmptyInlineElement() returns most distant
+   * GetMostDistantAncestorEditableEmptyInlineElement() returns most distant
    * ancestor which only has aEmptyContent or its ancestor, editable and
    * inline element.
    */
-  static Element* GetMostDistantAnscestorEditableEmptyInlineElement(
+  static Element* GetMostDistantAncestorEditableEmptyInlineElement(
       const nsIContent& aEmptyContent, const Element* aEditingHost = nullptr) {
     nsIContent* lastEmptyContent = const_cast<nsIContent*>(&aEmptyContent);
     for (Element* element = aEmptyContent.GetParentElement();
