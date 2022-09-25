@@ -5103,6 +5103,58 @@ MoveNodeResult HTMLEditor::MoveOneHardLineContentsWithTransaction(
     return moveContentsInLineResult;
   }
 
+  // If we didn't preserve white-space for backward compatibility and
+  // white-space becomes not preformatted, we need to clean it up the last text
+  // node if it ends with a preformatted line break.
+  if (preserveWhiteSpaceStyle == PreserveWhiteSpaceStyle::No) {
+    const RefPtr<Text> textNodeEndingWithUnnecessaryLineBreak = [&]() -> Text* {
+      Text* lastTextNode = Text::FromNodeOrNull(
+          movingToParentBlock ? HTMLEditUtils::GetPreviousContent(
+                                    *topmostSrcAncestorBlockInDestBlock,
+                                    {WalkTreeOption::StopAtBlockBoundary},
+                                    destInclusiveAncestorBlock)
+                              : HTMLEditUtils::GetLastLeafContent(
+                                    *destInclusiveAncestorBlock,
+                                    {LeafNodeType::LeafNodeOrNonEditableNode}));
+      if (!lastTextNode ||
+          !HTMLEditUtils::IsSimplyEditableNode(*lastTextNode)) {
+        return nullptr;
+      }
+      const nsTextFragment& textFragment = lastTextNode->TextFragment();
+      const char16_t lastCh =
+          textFragment.GetLength()
+              ? textFragment.CharAt(textFragment.GetLength() - 1u)
+              : 0;
+      return lastCh == HTMLEditUtils::kNewLine &&
+                     !EditorUtils::IsNewLinePreformatted(*lastTextNode)
+                 ? lastTextNode
+                 : nullptr;
+    }();
+    if (textNodeEndingWithUnnecessaryLineBreak) {
+      if (textNodeEndingWithUnnecessaryLineBreak->TextDataLength() == 1u) {
+        const RefPtr<Element> inlineElement =
+            HTMLEditUtils::GetMostDistantAncestorEditableEmptyInlineElement(
+                *textNodeEndingWithUnnecessaryLineBreak, &aEditingHost);
+        nsresult rv = DeleteNodeWithTransaction(
+            inlineElement ? static_cast<nsIContent&>(*inlineElement)
+                          : static_cast<nsIContent&>(
+                                *textNodeEndingWithUnnecessaryLineBreak));
+        if (NS_FAILED(rv)) {
+          NS_WARNING("EditorBase::DeleteNodeWithTransaction() failed");
+          return MoveNodeResult(rv);
+        }
+      } else {
+        nsresult rv = DeleteTextWithTransaction(
+            *textNodeEndingWithUnnecessaryLineBreak,
+            textNodeEndingWithUnnecessaryLineBreak->TextDataLength() - 1u, 1u);
+        if (NS_FAILED(rv)) {
+          NS_WARNING("HTMLEditor::DeleteTextWithTransaction() failed");
+          return MoveNodeResult(rv);
+        }
+      }
+    }
+  }
+
   nsCOMPtr<nsIContent> lastLineBreakContent =
       movingToParentBlock
           ? HTMLEditUtils::GetUnnecessaryLineBreakContent(
