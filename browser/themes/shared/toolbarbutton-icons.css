@@ -544,18 +544,18 @@ toolbarbutton.bookmark-item {
 }
 
 @media not (prefers-contrast) {
-  .sidepanel-icon:hover{
+  .sidepanel-icon:hover,.sidepanel-browser-icon:hover {
     box-shadow: 0 0 4px rgba(0,0,0,.4) ;
     background-color: var(--tab-selected-bgcolor, var(--toolbar-bgcolor));
   }
-  .sidebar2-icon:hover, #preferences-icon:hover, .sidepanel-icon[checked="true"] {
+  .sidepanel-icon[checked="true"]{
   background-color: color-mix(in srgb, currentColor 20%, transparent) ;
   box-shadow: 0 0 4px rgba(0,0,0,.4) ;
   }
 }
 
 @media (prefers-contrast) {
-  .sidebar2-icon:hover, .sidepanel-icon:hover {
+  .sidebar2-icon:hover, .sidepanel-icon:hover, .sidepanel-browser-icon:hover {
     outline: 1px solid currentColor;
   }
 }
