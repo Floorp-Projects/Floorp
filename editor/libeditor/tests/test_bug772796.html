@@ -267,8 +267,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=772796
 ],
 /* 55-03*/[
   "<div>test</div><div class=\"pre\"><b>foo</b>\nbar</div>",
-  "<div>test<b style=\"white-space: pre;\">foo</b>\n</div><div class=\"pre\">bar</div>", // expected
-  "<div>test<b style=\"white-space: pre;\">foo</b><span style=\"white-space: pre;\"></span></div><div class=\"pre\">bar</div>", // current result
+  "<div>test<b style=\"white-space: pre;\">foo</b></div><div class=\"pre\">bar</div>", // expected
 ],
 /* 56-04*/[
   "<div>test</div><div class=\"pre\"><b>foo\n</b>bar\nbaz</div>",

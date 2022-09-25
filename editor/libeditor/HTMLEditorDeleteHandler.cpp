@@ -5091,6 +5091,18 @@ MoveNodeResult HTMLEditor::MoveOneHardLineContentsWithTransaction(
   } else {
     MOZ_ASSERT(lastLineBreakContent->IsHTMLElement(nsGkAtoms::br));
   }
+  // If last line break content is the only content of its parent, we should
+  // remove the parent too.
+  if (const RefPtr<Element> inlineElement =
+          HTMLEditUtils::GetMostDistantAnscestorEditableEmptyInlineElement(
+              *lastLineBreakContent, &aEditingHost)) {
+    nsresult rv = DeleteNodeWithTransaction(*inlineElement);
+    if (NS_FAILED(rv)) {
+      NS_WARNING("EditorBase::DeleteNodeWithTransaction() failed");
+      return MoveNodeResult(rv);
+    }
+    return moveContentsInLineResult;
+  }
   // Or if the text node has only the preformatted line break or <br> element,
   // we should remove it.
   nsresult rv = DeleteNodeWithTransaction(*lastLineBreakContent);
