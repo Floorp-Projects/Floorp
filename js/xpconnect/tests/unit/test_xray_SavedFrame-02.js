@@ -2,7 +2,7 @@
 // un-privileged globals.
 
 const {addDebuggerToGlobal} = ChromeUtils.import("resource://gre/modules/jsdebugger.jsm");
-addDebuggerToGlobal(this);
+addDebuggerToGlobal(globalThis);
 
 const lowP = Services.scriptSecurityManager.createNullPrincipal({});
 const highP = Cc["@mozilla.org/systemprincipal;1"].createInstance(Ci.nsIPrincipal);

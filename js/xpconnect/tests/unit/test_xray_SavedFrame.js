@@ -2,7 +2,7 @@
 // that frame's principals.
 
 const {addDebuggerToGlobal} = ChromeUtils.import("resource://gre/modules/jsdebugger.jsm");
-addDebuggerToGlobal(this);
+addDebuggerToGlobal(globalThis);
 
 const lowP = Services.scriptSecurityManager.createNullPrincipal({});
 const midP = [lowP, "http://other.com"];

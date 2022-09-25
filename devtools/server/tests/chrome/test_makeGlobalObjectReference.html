@@ -18,7 +18,7 @@ Debugger.prototype.makeGlobalObjectReference should dereference WindowProxy
 "use strict";
 
 const {addSandboxedDebuggerToGlobal} = ChromeUtils.import("resource://gre/modules/jsdebugger.jsm");
-addSandboxedDebuggerToGlobal(this);
+addSandboxedDebuggerToGlobal(globalThis);
 
 window.onload = function() {
   SimpleTest.waitForExplicitFinish();

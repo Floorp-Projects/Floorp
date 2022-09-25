@@ -178,7 +178,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=533596
       Cu.evalInSandbox('checkExplicitVersions();', outerSB);
 
       const {addDebuggerToGlobal} = ChromeUtils.import("resource://gre/modules/jsdebugger.jsm");
-      addDebuggerToGlobal(this);
+      addDebuggerToGlobal(globalThis);
 
       try {
         let dbg = new Debugger();

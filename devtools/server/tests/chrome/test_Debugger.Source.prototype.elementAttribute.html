@@ -18,7 +18,7 @@ element to which code is attached (if any), and how.
 "use strict";
 
 const {addSandboxedDebuggerToGlobal} = ChromeUtils.import("resource://gre/modules/jsdebugger.jsm");
-addSandboxedDebuggerToGlobal(this);
+addSandboxedDebuggerToGlobal(globalThis);
 
 window.onload = function() {
   SimpleTest.waitForExplicitFinish();
