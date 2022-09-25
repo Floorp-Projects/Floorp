@@ -161,11 +161,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=772796
 ],
 /* 31-05*/[
   "test<pre>foobar<br>baz</pre>",
-  "testfoobar<br><pre>baz</pre>", // expected
+  "testfoobar<pre>baz</pre>", // expected
 ],
 /* 32-06*/[
   "test<pre><b>foobar<br>baz</b></pre>",
-  "test<b>foobar</b><br><pre><b>baz</b></pre>", // expected
+  "test<b>foobar</b><pre><b>baz</b></pre>", // expected
 ],
 /* 33-07*/[
   "test<pre><div>foobar</div>baz</pre>",

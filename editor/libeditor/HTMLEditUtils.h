@@ -1654,10 +1654,14 @@ class HTMLEditUtils final {
 
   /**
    * Return last <br> element or last text node ending with a preserved line
-   * break of aBlockElement.
+   * break of/before aBlockElement.
    */
+  enum ScanLineBreak {
+    AtEndOfBlock,
+    BeforeBlock,
+  };
   static nsIContent* GetUnnecessaryLineBreakContent(
-      const Element& aBlockElement);
+      const Element& aBlockElement, ScanLineBreak aScanLineBreak);
 
   /**
    * IsInTableCellSelectionMode() returns true when Gecko's editor thinks that

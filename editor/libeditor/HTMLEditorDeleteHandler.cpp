@@ -57,6 +57,7 @@ using namespace dom;
 using EmptyCheckOption = HTMLEditUtils::EmptyCheckOption;
 using InvisibleWhiteSpaces = HTMLEditUtils::InvisibleWhiteSpaces;
 using LeafNodeType = HTMLEditUtils::LeafNodeType;
+using ScanLineBreak = HTMLEditUtils::ScanLineBreak;
 using StyleDifference = HTMLEditUtils::StyleDifference;
 using TableBoundary = HTMLEditUtils::TableBoundary;
 using WalkTreeOption = HTMLEditUtils::WalkTreeOption;
@@ -4874,12 +4875,40 @@ MoveNodeResult HTMLEditor::MoveOneHardLineContentsWithTransaction(
     return MoveNodeResult(NS_ERROR_INVALID_ARG);
   }
 
+  const RefPtr<Element> srcInclusiveAncestorBlock =
+      aPointInHardLine.IsInContentNode()
+          ? HTMLEditUtils::GetInclusiveAncestorElement(
+                *aPointInHardLine.ContainerAs<nsIContent>(),
+                HTMLEditUtils::ClosestBlockElement)
+          : nullptr;
   const RefPtr<Element> destInclusiveAncestorBlock =
       aPointToInsert.IsInContentNode()
           ? HTMLEditUtils::GetInclusiveAncestorElement(
                 *aPointToInsert.ContainerAs<nsIContent>(),
                 HTMLEditUtils::ClosestBlockElement)
           : nullptr;
+  const bool movingToParentBlock =
+      destInclusiveAncestorBlock && srcInclusiveAncestorBlock &&
+      destInclusiveAncestorBlock != srcInclusiveAncestorBlock &&
+      srcInclusiveAncestorBlock->IsInclusiveDescendantOf(
+          destInclusiveAncestorBlock);
+  const RefPtr<Element> topmostSrcAncestorBlockInDestBlock = [&]() -> Element* {
+    if (!movingToParentBlock) {
+      return nullptr;
+    }
+    Element* lastBlockAncestor = srcInclusiveAncestorBlock;
+    for (Element* element :
+         srcInclusiveAncestorBlock->InclusiveAncestorsOfType<Element>()) {
+      if (element == destInclusiveAncestorBlock) {
+        return lastBlockAncestor;
+      }
+      if (HTMLEditUtils::IsBlockElement(*lastBlockAncestor)) {
+        lastBlockAncestor = element;
+      }
+    }
+    return nullptr;
+  }();
+  MOZ_ASSERT_IF(movingToParentBlock, topmostSrcAncestorBlockInDestBlock);
 
   // If we move content from or to <pre>, we don't need to preserve the
   // white-space style for compatibility with both our traditional behavior
@@ -5075,8 +5104,11 @@ MoveNodeResult HTMLEditor::MoveOneHardLineContentsWithTransaction(
   }
 
   nsCOMPtr<nsIContent> lastLineBreakContent =
-      HTMLEditUtils::GetUnnecessaryLineBreakContent(
-          *destInclusiveAncestorBlock);
+      movingToParentBlock
+          ? HTMLEditUtils::GetUnnecessaryLineBreakContent(
+                *topmostSrcAncestorBlockInDestBlock, ScanLineBreak::BeforeBlock)
+          : HTMLEditUtils::GetUnnecessaryLineBreakContent(
+                *destInclusiveAncestorBlock, ScanLineBreak::AtEndOfBlock);
   if (!lastLineBreakContent) {
     return moveContentsInLineResult;
   }
@@ -5107,8 +5139,8 @@ MoveNodeResult HTMLEditor::MoveOneHardLineContentsWithTransaction(
   } else {
     MOZ_ASSERT(lastLineBreakContent->IsHTMLElement(nsGkAtoms::br));
   }
-  // If last line break content is the only content of its parent, we should
-  // remove the parent too.
+  // If last line break content is the only content of its inline parent, we
+  // should remove the parent too.
   if (const RefPtr<Element> inlineElement =
           HTMLEditUtils::GetMostDistantAncestorEditableEmptyInlineElement(
               *lastLineBreakContent, &aEditingHost)) {
