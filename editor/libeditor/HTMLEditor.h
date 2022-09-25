@@ -1855,10 +1855,16 @@ class HTMLEditor final : public EditorBase,
    * @param aContent            Content which should be moved.
    * @param aPointToInsert      The point to be inserted aContent or its
    *                            descendants.
+   * @param aPreserveWhiteSpaceStyle
+   *                            If yes and if it's possible to keep white-space
+   *                            style, this method will set `style` attribute to
+   *                            moving node or creating new <span> element.
    */
+  enum class PreserveWhiteSpaceStyle { No, Yes };
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT MoveNodeResult
-  MoveNodeOrChildrenWithTransaction(nsIContent& aNode,
-                                    const EditorDOMPoint& aPointToInsert);
+  MoveNodeOrChildrenWithTransaction(
+      nsIContent& aContentToMove, const EditorDOMPoint& aPointToInsert,
+      PreserveWhiteSpaceStyle aPreserveWhiteSpaceStyle);
 
   /**
    * CanMoveNodeOrChildren() returns true if
@@ -1879,9 +1885,14 @@ class HTMLEditor final : public EditorBase,
    *                            moved.
    * @param aPointToInsert      The point to be inserted children of aElement
    *                            or its descendants.
+   * @param aPreserveWhiteSpaceStyle
+   *                            If yes and if it's possible to keep white-space
+   *                            style, this method will set `style` attribute to
+   *                            moving node or creating new <span> element.
    */
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT MoveNodeResult MoveChildrenWithTransaction(
-      Element& aElement, const EditorDOMPoint& aPointToInsert);
+      Element& aElement, const EditorDOMPoint& aPointToInsert,
+      PreserveWhiteSpaceStyle aPreserveWhiteSpaceStyle);
 
   /**
    * CanMoveChildren() returns true if `MoveChildrenWithTransaction()` can move

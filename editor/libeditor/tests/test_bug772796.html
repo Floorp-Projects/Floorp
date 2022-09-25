@@ -211,112 +211,113 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=772796
 //      join-different-white-space-style-left-paragraph-and-right-line.html
 /* 39-00*/[
   "<div>test</div><span class=\"pre\">foobar\nbaz</span>",
-  "<div>test<span class=\"pre\">foobar</span></div><span class=\"pre\">baz</span>", // expected
+  "<div>test<span class=\"pre\" style=\"white-space: pre;\">foobar</span></div><span class=\"pre\">baz</span>", // expected
 ],
 /* 40-01*/[
   "<div>test</div><span class=\"pre\"><b>foobar\nbaz</b></span>",
-  "<div>test<span class=\"pre\"><b>foobar</b></span></div><span class=\"pre\"><b>baz</b></span>", // expected
+  "<div>test<span class=\"pre\" style=\"white-space: pre;\"><b>foobar</b></span></div><span class=\"pre\"><b>baz</b></span>", // expected
 ],
 /* 41-02*/[
   "<div>test</div><span class=\"pre\"><b>foo</b>bar\nbaz</span>",
-  "<div>test<span class=\"pre\"><b>foo</b>bar</span></div><span class=\"pre\">baz</span>", // expected
+  "<div>test<span class=\"pre\" style=\"white-space: pre;\"><b>foo</b>bar</span></div><span class=\"pre\">baz</span>", // expected
 ],
 /* 42-03*/[
   "<div>test</div><span class=\"pre\"><b>foo</b>\nbar</span>",
-  "<div>test<span class=\"pre\"><b>foo</b></span></div><span class=\"pre\">bar</span>", // expected
+  "<div>test<span class=\"pre\" style=\"white-space: pre;\"><b>foo</b></span></div><span class=\"pre\">bar</span>", // expected
 ],
 /* 43-04*/[
   "<div>test</div><span class=\"pre\"><b>foo\n</b>bar\nbaz</span>",
-  "<div>test<span class=\"pre\"><b>foo</b></span></div><span class=\"pre\">bar\nbaz</span>", // expected
+  "<div>test<span class=\"pre\" style=\"white-space: pre;\"><b>foo</b></span></div><span class=\"pre\">bar\nbaz</span>", // expected
 ],
 /* 44-05*/[
   "<div>test</div><span class=\"pre\">foobar<br>baz</span>",
-  "<div>test<span class=\"pre\">foobar</span><span class=\"pre\"></span></div><span class=\"pre\">baz</span>", // expected
+  "<div>test<span class=\"pre\" style=\"white-space: pre;\">foobar</span></div><span class=\"pre\">baz</span>", // expected
+  "<div>test<span class=\"pre\" style=\"white-space: pre;\">foobar</span><span class=\"pre\" style=\"white-space: pre;\"></span></div><span class=\"pre\">baz</span>", // current result
 ],
 /* 45-06*/[
   "<div>test</div><span class=\"pre\"><b>foobar<br>baz</b></span>",
-  "<div>test<span class=\"pre\"><b>foobar</b></span><span class=\"pre\"></span></div><span class=\"pre\"><b>baz</b></span>", // expected
+  "<div>test<span class=\"pre\" style=\"white-space: pre;\"><b>foobar</b></span></div><span class=\"pre\"><b>baz</b></span>", // expected
+  "<div>test<span class=\"pre\" style=\"white-space: pre;\"><b>foobar</b></span><span class=\"pre\" style=\"white-space: pre;\"></span></div><span class=\"pre\"><b>baz</b></span>", // current result
 ],
 /* 46-07*/[
   "<div>test</div><span class=\"pre\"><div>foobar</div>baz</span>",
-  "<div>test<span class=\"pre\"><div>foobar</div></span></div><span class=\"pre\">baz</span>", // expected
+  "<div>test<span class=\"pre\" style=\"white-space: pre;\"><div>foobar</div></span></div><span class=\"pre\">baz</span>", // expected
 ],
 /* 47-08*/[
   "<div>test</div><span class=\"pre\">foobar<div>baz</div></span>",
-  "<div>test<span class=\"pre\">foobar</span></div><span class=\"pre\"><div>baz</div></span>", // expected
+  "<div>test<span class=\"pre\" style=\"white-space: pre;\">foobar</span></div><span class=\"pre\"><div>baz</div></span>", // expected
 ],
 /* 48-09*/[
   "<div>test</div><span class=\"pre\"><div>foobar</div>baz\nfred</span>",
-  "<div>test<span class=\"pre\"><div>foobar</div></span></div><span class=\"pre\">baz\nfred</span>", // expected
+  "<div>test<span class=\"pre\" style=\"white-space: pre;\"><div>foobar</div></span></div><span class=\"pre\">baz\nfred</span>", // expected
 ],
 /* 49-10*/[
   "<div>test</div><span class=\"pre\">foobar<div>baz</div>\nfred</span>",
-  "<div>test<span class=\"pre\">foobar</span></div><span class=\"pre\"><div>baz</div>\nfred</span>", // expected
+  "<div>test<span class=\"pre\" style=\"white-space: pre;\">foobar</span></div><span class=\"pre\"><div>baz</div>\nfred</span>", // expected
 ],
 /* 50-11*/[
   "<div>test</div><span class=\"pre\"><div>foo\nbar</div>baz\nfred</span>",
-  "<div>testfoo\n</div><span class=\"pre\"><div>bar</div>baz\nfred</span>", // expected
+  "<div>test<span style=\"white-space: pre;\">foo</span></div><span class=\"pre\"><div>bar</div>baz\nfred</span>", // expected
 ],
 /* 51-12*/[
   "<div>test</div><span class=\"pre\">foo<div>bar</div>baz\nfred</span>",
-  "<div>test<span class=\"pre\">foo</span></div><span class=\"pre\"><div>bar</div>baz\nfred</span>", // expected
+  "<div>test<span class=\"pre\" style=\"white-space: pre;\">foo</span></div><span class=\"pre\"><div>bar</div>baz\nfred</span>", // expected
 ],
 
 // Some tests with <div class="pre">.
 // FYI: Those tests were ported to join-different-white-space-style-paragraphs.html
 /* 52-00*/[
   "<div>test</div><div class=\"pre\">foobar\nbaz</div>",
-  "<div>testfoobar\n</div><div class=\"pre\">baz</div>", // expected
+  "<div>test<span style=\"white-space: pre;\">foobar</span></div><div class=\"pre\">baz</div>", // expected
 ],
 /* 53-01*/[
   "<div>test</div><div class=\"pre\"><b>foobar\nbaz</b></div>",
-  "<div>test<b>foobar</b></div><div class=\"pre\"><b>baz</b></div>", // expected
-  "<div>test<b>foobar\n</b></div><div class=\"pre\"><b>baz</b></div>", // current result
+  "<div>test<b style=\"white-space: pre;\">foobar</b></div><div class=\"pre\"><b>baz</b></div>", // expected
 ],
 /* 54-02*/[
   "<div>test</div><div class=\"pre\"><b>foo</b>bar\nbaz</div>",
-  "<div>test<b>foo</b>bar\n</div><div class=\"pre\">baz</div>", // expected
+  "<div>test<b style=\"white-space: pre;\">foo</b><span style=\"white-space: pre;\">bar</span></div><div class=\"pre\">baz</div>", // expected
 ],
 /* 55-03*/[
   "<div>test</div><div class=\"pre\"><b>foo</b>\nbar</div>",
-  "<div>test<b>foo</b>\n</div><div class=\"pre\">bar</div>", // expected
+  "<div>test<b style=\"white-space: pre;\">foo</b>\n</div><div class=\"pre\">bar</div>", // expected
+  "<div>test<b style=\"white-space: pre;\">foo</b><span style=\"white-space: pre;\"></span></div><div class=\"pre\">bar</div>", // current result
 ],
 /* 56-04*/[
   "<div>test</div><div class=\"pre\"><b>foo\n</b>bar\nbaz</div>",
-  "<div>test<b>foo</b></div><div class=\"pre\">bar\nbaz</div>", // expected
-  "<div>test<b>foo\n</b></div><div class=\"pre\">bar\nbaz</div>", // current result
+  "<div>test<b style=\"white-space: pre;\">foo</b></div><div class=\"pre\">bar\nbaz</div>", // expected
 ],
 /* 57-05*/[
   "<div>test</div><div class=\"pre\">foobar<br>baz</div>",
-  "<div>testfoobar</div><div class=\"pre\">baz</div>", // expected
+  "<div>test<span style=\"white-space: pre;\">foobar</span></div><div class=\"pre\">baz</div>", // expected
 ],
 /* 58-06*/[
   "<div>test</div><div class=\"pre\"><b>foobar<br>baz</b></div>",
-  "<div>test<b>foobar</b></div><div class=\"pre\"><b>baz</b></div>", // expected
+  "<div>test<b style=\"white-space: pre;\">foobar</b></div><div class=\"pre\"><b>baz</b></div>", // expected
 ],
 /* 59-07*/[
   "<div>test</div><div class=\"pre\"><div>foobar</div>baz</div>",
-  "<div>testfoobar</div><div class=\"pre\">baz</div>", // expected
+  "<div>test<span style=\"white-space: pre;\">foobar</span></div><div class=\"pre\">baz</div>", // expected
 ],
 /* 60-08*/[
   "<div>test</div><div class=\"pre\">foobar<div>baz</div></div>",
-  "<div>testfoobar</div><div class=\"pre\"><div>baz</div></div>", // expected
+  "<div>test<span style=\"white-space: pre;\">foobar</span></div><div class=\"pre\"><div>baz</div></div>", // expected
 ],
 /* 61-09*/[
   "<div>test</div><div class=\"pre\"><div>foobar</div>baz\nfred</div>",
-  "<div>testfoobar</div><div class=\"pre\">baz\nfred</div>", // expected
+  "<div>test<span style=\"white-space: pre;\">foobar</span></div><div class=\"pre\">baz\nfred</div>", // expected
 ],
 /* 62-10*/[
   "<div>test</div><div class=\"pre\">foobar<div>baz</div>\nfred</div>",
-  "<div>testfoobar</div><div class=\"pre\"><div>baz</div>\nfred</div>", // expected
+  "<div>test<span style=\"white-space: pre;\">foobar</span></div><div class=\"pre\"><div>baz</div>\nfred</div>", // expected
 ],
 /* 63-11*/[
   "<div>test</div><div class=\"pre\"><div>foo\nbar</div>baz\nfred</div>",
-  "<div>testfoo\n</div><div class=\"pre\"><div>bar</div>baz\nfred</div>", // expected
+  "<div>test<span style=\"white-space: pre;\">foo</span></div><div class=\"pre\"><div>bar</div>baz\nfred</div>", // expected
 ],
 /* 64-12*/[
   "<div>test</div><div class=\"pre\">foo<div>bar</div>baz\nfred</div>",
-  "<div>testfoo</div><div class=\"pre\"><div>bar</div>baz\nfred</div>", // expected
+  "<div>test<span style=\"white-space: pre;\">foo</span></div><div class=\"pre\"><div>bar</div>baz\nfred</div>", // expected
 ],
 
 // Some tests with lists. These exercise the MoveBlock "left in right".
@@ -377,9 +378,33 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=772796
         sel.collapse(theDiv, 0);
         synthesizeMouse(theDiv, 100, 2, {}); /* click behind and down */
 
+        function normalizeStyeAttributeValues(aElement) {
+          for (const element of Array.from(
+            aElement.querySelectorAll("[style]")
+          )) {
+            element.setAttribute(
+              "style",
+              element
+                .getAttribute("style")
+                // Random spacing differences
+                .replace(/$/, ";")
+                .replace(/;;$/, ";")
+                // Gecko likes "transparent"
+                .replace(/transparent/g, "rgba(0, 0, 0, 0)")
+                // WebKit likes to look overly precise
+                .replace(/, 0.496094\)/g, ", 0.5)")
+                // Gecko converts anything with full alpha to "transparent" which
+                // then becomes "rgba(0, 0, 0, 0)", so we have to make other
+                // browsers match
+                .replace(/rgba\([0-9]+, [0-9]+, [0-9]+, 0\)/g, "rgba(0, 0, 0, 0)")
+            );
+          }
+        }
+
         let todoCount = 0;
         /** First round: Forward delete. **/
         synthesizeKey("KEY_Delete");
+        normalizeStyeAttributeValues(theDiv);
         if (tests[i].length == 2 || theDiv.innerHTML == tests[i][1]) {
           is(theDiv.innerHTML, tests[i][1], "delete(collapsed): inner HTML for " + testName);
         } else {
@@ -398,6 +423,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=772796
         /** Second round: Backspace. **/
         synthesizeKey("KEY_ArrowRight");
         synthesizeKey("KEY_Backspace");
+        normalizeStyeAttributeValues(theDiv);
         if (tests[i].length == 2 || theDiv.innerHTML == tests[i][1]) {
           is(theDiv.innerHTML, tests[i][1], "backspace: inner HTML for " + testName);
         } else {
@@ -427,6 +453,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=772796
         synthesizeKey("KEY_ArrowRight", {shiftKey: true});
         synthesizeKey("KEY_ArrowRight", {shiftKey: true});
         synthesizeKey("KEY_Delete");
+        normalizeStyeAttributeValues(theDiv);
 
         /* We always expect to the delete the "tf" in "testfoo". */
         function makeNonCollapsedExpectation(aExpected) {
@@ -435,12 +462,20 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=772796
                      "tesoo")
             .replace("test<b>foo",
                      "tes<b>oo")
-            .replace("test<span class=\"pre\">foo",
-                     "tes<span class=\"pre\">oo")
-            .replace("test<span class=\"pre\"><b>foo",
-                     "tes<span class=\"pre\"><b>oo")
-            .replace("test<span class=\"pre\"><div>foo",
-                     "tes<span class=\"pre\"><div>oo");
+            .replace("test<b style=\"white-space: pre;\">foo",
+                     "tes<b style=\"white-space: pre;\">oo")
+            .replace("test<span style=\"white-space: pre;\">foo",
+                     "tes<span style=\"white-space: pre;\">oo")
+            .replace("test<span style=\"white-space: pre;\"><b>foo",
+                     "tes<span style=\"white-space: pre;\"><b>oo")
+            .replace("test<span style=\"white-space: pre;\"><div>foo",
+                     "tes<span style=\"white-space: pre;\"><div>oo")
+            .replace("test<span class=\"pre\" style=\"white-space: pre;\">foo",
+                     "tes<span class=\"pre\" style=\"white-space: pre;\">oo")
+            .replace("test<span class=\"pre\" style=\"white-space: pre;\"><b>foo",
+                     "tes<span class=\"pre\" style=\"white-space: pre;\"><b>oo")
+            .replace("test<span class=\"pre\" style=\"white-space: pre;\"><div>foo",
+                     "tes<span class=\"pre\" style=\"white-space: pre;\"><div>oo");
         }
         const expected = makeNonCollapsedExpectation(tests[i][1]);
         if (tests[i].length == 2 || theDiv.innerHTML == expected) {
