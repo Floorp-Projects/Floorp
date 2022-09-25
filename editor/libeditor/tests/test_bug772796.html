@@ -88,67 +88,54 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=772796
 /* 13-00*/[
   "<div>test</div>\n<pre>foobar\nbaz</pre>",
   "<div>testfoobar\n</div><pre>baz</pre>", // expected
-  "<div>test</div>foobar\n<pre>baz</pre>", // current result
 ],
 /* 14-01*/[
   "<div>test</div>\n<pre><b>foobar\nbaz</b></pre>",
   "<div>test<b>foobar\n</b></div><pre><b>baz</b></pre>", // expected
-  "<div>test</div><b>foobar\n</b><pre><b>baz</b></pre>", // current result
 ],
 /* 15-02*/[
   "<div>test</div>\n<pre><b>foo</b>bar\nbaz</pre>",
   "<div>test<b>foo</b>bar\n</div><pre>baz</pre>", // expected
-  "<div>test</div><b>foo</b>bar\n<pre>baz</pre>", // current result
 ],
 /* 16-03*/[
   "<div>test</div>\n<pre><b>foo</b>\nbar</pre>",
   "<div>test<b>foo</b>\n</div><pre>bar</pre>", // expected
-  "<div>test</div><b>foo</b>\n<pre>bar</pre>", // current result
 ],
 /* 17-04*/[
   "<div>test</div>\n<pre><b>foo\n</b>bar\nbaz</pre>",
   "<div>test<b>foo\n</b></div><pre>bar\nbaz</pre>", // expected
-  "<div>test</div><b>foo\n</b><pre>bar\nbaz</pre>", // current result
 ],
 /* 18-05*/[
   "<div>test</div>\n<pre>foobar<br>baz</pre>",
   "<div>testfoobar</div><pre>baz</pre>", // expected
-  "<div>test</div>foobar<br><pre>baz</pre>", // current result
 ],
 /* 19-06*/[
   "<div>test</div>\n<pre><b>foobar<br>baz</b></pre>",
   "<div>test<b>foobar</b></div><pre><b>baz</b></pre>", // expected
-  "<div>test</div><b>foobar</b><br><pre><b>baz</b></pre>", // current result
 ],
 /* 20-07*/[
   "<div>test</div>\n<pre><div>foobar</div>baz</pre>",
   "<div>testfoobar</div><pre>baz</pre>", // expected
-  "<div>test</div>foobar<pre>baz</pre>", // current result
 ],
 /* 21-08*/[
   "<div>test</div>\n<pre>foobar<div>baz</div></pre>",
   "<div>testfoobar</div><pre><div>baz</div></pre>", // expected
-  "<div>test</div>foobar<pre><div>baz</div></pre>", // current result
 ],
 /* 22-09*/[
   "<div>test</div>\n<pre><div>foobar</div>baz\nfred</pre>",
   "<div>testfoobar</div><pre>baz\nfred</pre>", // expected
-  "<div>test</div>foobar<pre>baz\nfred</pre>", // current result
 ],
 /* 23-10*/[
   "<div>test</div>\n<pre>foobar<div>baz</div>\nfred</pre>",
   "<div>testfoobar</div><pre><div>baz</div>\nfred</pre>", // expected
-  "<div>test</div>foobar<pre><div>baz</div>\nfred</pre>", // current result
 ],
 /* 24-11*/[
   "<div>test</div>\n<pre><div>foo\nbar</div>baz\nfred</pre>",
   "<div>testfoo\n</div><pre><div>bar</div>baz\nfred</pre>", // expected
-  "<div>test</div>foo\n<pre><div>bar</div>baz\nfred</pre>", // current result (only in the backspace case)
 ],
 /* 25-12*/[
   "<div>test</div>\n<pre>foo<div>bar</div>baz\nfred</pre>",
   "<div>testfoo</div><pre><div>bar</div>baz\nfred</pre>", // expected
-  "<div>test</div>foo<pre><div>bar</div>baz\nfred</pre>", // current result
 ],
 
 // Some tests without <div>. These exercise the MoveBlock "right in left"
