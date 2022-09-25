@@ -944,7 +944,8 @@ SplitRangeOffResult HTMLEditor::SplitAncestorStyledInlineElementsAtRangeEdges(
   SplitNodeResult resultAtStart = [&]() MOZ_CAN_RUN_SCRIPT {
     AutoTrackDOMRange tracker(RangeUpdaterRef(), &range);
     SplitNodeResult result = SplitAncestorStyledInlineElementsAt(
-        range.StartRef(), aProperty, aAttribute);
+        range.StartRef(), aProperty, aAttribute,
+        SplitAtEdges::eAllowToCreateEmptyContainer);
     if (result.isErr()) {
       NS_WARNING("HTMLEditor::SplitAncestorStyledInlineElementsAt() failed");
       return SplitNodeResult(result.unwrapErr());
@@ -971,7 +972,8 @@ SplitRangeOffResult HTMLEditor::SplitAncestorStyledInlineElementsAtRangeEdges(
   SplitNodeResult resultAtEnd = [&]() MOZ_CAN_RUN_SCRIPT {
     AutoTrackDOMRange tracker(RangeUpdaterRef(), &range);
     SplitNodeResult result = SplitAncestorStyledInlineElementsAt(
-        range.EndRef(), aProperty, aAttribute);
+        range.EndRef(), aProperty, aAttribute,
+        SplitAtEdges::eAllowToCreateEmptyContainer);
     if (result.isErr()) {
       NS_WARNING("HTMLEditor::SplitAncestorStyledInlineElementsAt() failed");
       return SplitNodeResult(result.unwrapErr());
@@ -1000,8 +1002,8 @@ SplitRangeOffResult HTMLEditor::SplitAncestorStyledInlineElementsAtRangeEdges(
 }
 
 SplitNodeResult HTMLEditor::SplitAncestorStyledInlineElementsAt(
-    const EditorDOMPoint& aPointToSplit, nsAtom* aProperty,
-    nsAtom* aAttribute) {
+    const EditorDOMPoint& aPointToSplit, nsAtom* aProperty, nsAtom* aAttribute,
+    SplitAtEdges aSplitAtEdges) {
   if (NS_WARN_IF(!aPointToSplit.IsInContentNode())) {
     return SplitNodeResult(NS_ERROR_INVALID_ARG);
   }
@@ -1086,7 +1088,7 @@ SplitNodeResult HTMLEditor::SplitAncestorStyledInlineElementsAt(
     AutoTrackDOMPoint trackPointToPutCaret(RangeUpdaterRef(), &pointToPutCaret);
     SplitNodeResult splitNodeResult = SplitNodeDeepWithTransaction(
         MOZ_KnownLive(content), result.AtSplitPoint<EditorDOMPoint>(),
-        SplitAtEdges::eAllowToCreateEmptyContainer);
+        aSplitAtEdges);
     if (splitNodeResult.isErr()) {
       NS_WARNING("HTMLEditor::SplitNodeDeepWithTransaction() failed");
       return splitNodeResult;
@@ -1129,8 +1131,9 @@ Result<EditorDOMPoint, nsresult> HTMLEditor::ClearStyleAt(
   // E.g., if aProperty is nsGkAtoms::b and `<p><b><i>a[]bc</i></b></p>`,
   //       we want to make it as `<p><b><i>a</i></b><b><i>bc</i></b></p>`.
   EditorDOMPoint pointToPutCaret(aPoint);
-  SplitNodeResult splitResult =
-      SplitAncestorStyledInlineElementsAt(aPoint, aProperty, aAttribute);
+  SplitNodeResult splitResult = SplitAncestorStyledInlineElementsAt(
+      aPoint, aProperty, aAttribute,
+      SplitAtEdges::eAllowToCreateEmptyContainer);
   if (splitResult.isErr()) {
     NS_WARNING("HTMLEditor::SplitAncestorStyledInlineElementsAt() failed");
     return Err(splitResult.unwrapErr());
@@ -1206,8 +1209,9 @@ Result<EditorDOMPoint, nsresult> HTMLEditor::ClearStyleAt(
     atStartOfNextNode.Set(atStartOfNextNode.GetContainerParent(), 0);
   }
   SplitNodeResult splitResultAtStartOfNextNode =
-      SplitAncestorStyledInlineElementsAt(atStartOfNextNode, aProperty,
-                                          aAttribute);
+      SplitAncestorStyledInlineElementsAt(
+          atStartOfNextNode, aProperty, aAttribute,
+          SplitAtEdges::eAllowToCreateEmptyContainer);
   if (splitResultAtStartOfNextNode.isErr()) {
     NS_WARNING("HTMLEditor::SplitAncestorStyledInlineElementsAt() failed");
     return Err(splitResultAtStartOfNextNode.unwrapErr());

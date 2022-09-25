@@ -888,6 +888,18 @@ class HTMLEditor final : public EditorBase,
   SetInlinePropertyOnNode(nsIContent& aContent, nsAtom& aProperty,
                           nsAtom* aAttribute, const nsAString& aValue);
 
+  enum class SplitAtEdges {
+    // SplitNodeDeepWithTransaction() won't split container element
+    // nodes at their edges.  I.e., when split point is start or end of
+    // container, it won't be split.
+    eDoNotCreateEmptyContainer,
+    // SplitNodeDeepWithTransaction() always splits containers even
+    // if the split point is at edge of a container.  E.g., if split point is
+    // start of an inline element, empty inline element is created as a new left
+    // node.
+    eAllowToCreateEmptyContainer,
+  };
+
   /**
    * SplitAncestorStyledInlineElementsAtRangeEdges() splits all ancestor inline
    * elements in the block at aRange if given style matches with some of them.
@@ -914,6 +926,8 @@ class HTMLEditor final : public EditorBase,
    *                            elements.
    * @param aAttribute          Attribute name if aProperty has some styles
    *                            like nsGkAtoms::font.
+   * @param aSplitAtEdges       Whether this should split elements at start or
+   *                            end of inline elements or not.
    * @return                    The result of SplitNodeDeepWithTransaction()
    *                            with topmost split element.  If this didn't
    *                            find inline elements to be split, Handled()
@@ -921,7 +935,8 @@ class HTMLEditor final : public EditorBase,
    */
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT SplitNodeResult
   SplitAncestorStyledInlineElementsAt(const EditorDOMPoint& aPointToSplit,
-                                      nsAtom* aProperty, nsAtom* aAttribute);
+                                      nsAtom* aProperty, nsAtom* aAttribute,
+                                      SplitAtEdges aSplitAtEdges);
 
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult GetInlinePropertyBase(
       nsStaticAtom& aHTMLProperty, nsAtom* aAttribute, const nsAString* aValue,
@@ -2008,18 +2023,6 @@ class HTMLEditor final : public EditorBase,
    */
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT SplitNodeResult
   SplitNodeWithTransaction(const EditorDOMPoint& aStartOfRightNode);
-
-  enum class SplitAtEdges {
-    // SplitNodeDeepWithTransaction() won't split container element
-    // nodes at their edges.  I.e., when split point is start or end of
-    // container, it won't be split.
-    eDoNotCreateEmptyContainer,
-    // SplitNodeDeepWithTransaction() always splits containers even
-    // if the split point is at edge of a container.  E.g., if split point is
-    // start of an inline element, empty inline element is created as a new left
-    // node.
-    eAllowToCreateEmptyContainer,
-  };
 
   /**
    * SplitNodeDeepWithTransaction() splits aMostAncestorToSplit deeply.
