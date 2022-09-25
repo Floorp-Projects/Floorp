@@ -7,7 +7,7 @@ function run_test()
     Services.prefs.clearUserPref("security.allow_eval_with_system_principal");
   });
 
-  addDebuggerToGlobal(this);
+  addDebuggerToGlobal(globalThis);
   var g = testGlobal("test1");
 
   var dbg = new Debugger();

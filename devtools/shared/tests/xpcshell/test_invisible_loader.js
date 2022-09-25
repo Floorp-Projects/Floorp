@@ -6,7 +6,7 @@
 const { addDebuggerToGlobal } = ChromeUtils.import(
   "resource://gre/modules/jsdebugger.jsm"
 );
-addDebuggerToGlobal(this);
+addDebuggerToGlobal(globalThis);
 
 /**
  * Ensure that sandboxes created via the Dev Tools loader respect the

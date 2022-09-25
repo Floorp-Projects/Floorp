@@ -9,7 +9,7 @@ const {
 const { addDebuggerToGlobal } = ChromeUtils.import(
   "resource://gre/modules/jsdebugger.jsm"
 );
-addDebuggerToGlobal(this);
+addDebuggerToGlobal(globalThis);
 
 function run_test() {
   Services.prefs.setBoolPref(

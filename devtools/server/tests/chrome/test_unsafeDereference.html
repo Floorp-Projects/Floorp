@@ -19,7 +19,7 @@ xray wrapper.
 "use strict";
 
 const {addDebuggerToGlobal} = ChromeUtils.import("resource://gre/modules/jsdebugger.jsm");
-addDebuggerToGlobal(this);
+addDebuggerToGlobal(globalThis);
 
 window.onload = function() {
   SimpleTest.waitForExplicitFinish();

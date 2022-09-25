@@ -7,7 +7,7 @@ if (typeof Debugger != "function") {
   const { addDebuggerToGlobal } = ChromeUtils.import(
     "resource://gre/modules/jsdebugger.jsm"
   );
-  addDebuggerToGlobal(this);
+  addDebuggerToGlobal(globalThis);
 }
 
 function run_test() {

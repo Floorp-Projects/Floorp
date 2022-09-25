@@ -19,7 +19,7 @@ JavaScrip appearing in an inline event handler attribute.
 "use strict";
 
 const {addSandboxedDebuggerToGlobal} = ChromeUtils.import("resource://gre/modules/jsdebugger.jsm");
-addSandboxedDebuggerToGlobal(this);
+addSandboxedDebuggerToGlobal(globalThis);
 
 let dbg;
 let iframeDO, doc;

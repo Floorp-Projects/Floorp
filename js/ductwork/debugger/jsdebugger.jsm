@@ -10,7 +10,7 @@ var EXPORTED_SYMBOLS = [ "addDebuggerToGlobal", "addSandboxedDebuggerToGlobal" ]
  *   const { addDebuggerToGlobal } = ChromeUtils.import(
  *     "resource://gre/modules/jsdebugger.jsm"
  *   );
- *   addDebuggerToGlobal(this);
+ *   addDebuggerToGlobal(globalThis);
  *
  * This will create a 'Debugger' object, which provides an interface to debug
  * JavaScript code running in other compartments in the same process, on the

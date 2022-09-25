@@ -7,7 +7,7 @@ function run_test() {
   const { addDebuggerToGlobal } = ChromeUtils.import(
     "resource://gre/modules/jsdebugger.jsm"
   );
-  addDebuggerToGlobal(this);
+  addDebuggerToGlobal(globalThis);
   const xpcInspector = Cc["@mozilla.org/jsinspector;1"].getService(
     Ci.nsIJSInspector
   );

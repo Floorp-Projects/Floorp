@@ -53,7 +53,7 @@ This tutorial was tested against Firefox 58 Beta and Nightly. It does not work i
 
     // This simply defines 'Debugger' in this Scratchpad;
     // it doesn't actually start debugging anything.
-    addDebuggerToGlobal(this);
+    addDebuggerToGlobal(globalThis);
 
     // Create a 'Debugger' instance.
     var dbg = new Debugger;
