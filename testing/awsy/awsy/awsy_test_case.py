@@ -73,7 +73,7 @@ class AwsyTestCase(MarionetteTestCase):
         # Cleanup our files from previous runs.
         for patt in (
             "memory-report-*.json.gz",
-            "perfherder_data.json",
+            "perfherder-data.json",
             "dmd-*.json.gz",
         ):
             for f in glob.glob(os.path.join(self._resultsDir, patt)):
@@ -112,7 +112,7 @@ class AwsyTestCase(MarionetteTestCase):
             )
             self.logger.info("PERFHERDER_DATA: %s" % json.dumps(perf_blob))
 
-            perf_file = os.path.join(self._resultsDir, "perfherder_data.json")
+            perf_file = os.path.join(self._resultsDir, "perfherder-data.json")
             with open(perf_file, "w") as fp:
                 json.dump(perf_blob, fp, indent=2)
             self.logger.info("Perfherder data written to %s" % perf_file)
