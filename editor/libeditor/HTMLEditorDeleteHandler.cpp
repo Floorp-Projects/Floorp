@@ -971,6 +971,10 @@ class MOZ_STACK_CLASS HTMLEditor::AutoDeleteRangesHandler final {
     nsCOMPtr<nsIContent> mLeftContent;
     nsCOMPtr<nsIContent> mRightContent;
     nsCOMPtr<nsIContent> mLeafContentInOtherBlock;
+    // mSkippedInvisibleContents stores all content nodes which are skipped at
+    // scanning mLeftContent and mRightContent.  The content nodes should be
+    // removed at deletion.
+    AutoTArray<OwningNonNull<nsIContent>, 8> mSkippedInvisibleContents;
     RefPtr<dom::HTMLBRElement> mBRElement;
     Mode mMode = Mode::NotInitialized;
   };  // HTMLEditor::AutoDeleteRangesHandler::AutoBlockElementsJoiner
@@ -2820,15 +2824,79 @@ bool HTMLEditor::AutoDeleteRangesHandler::AutoBlockElementsJoiner::
     return false;
   }
 
+  auto ScanJoinTarget = [&]() -> nsIContent* {
+    nsIContent* targetContent =
+        aDirectionAndAmount == nsIEditor::ePrevious
+            ? HTMLEditUtils::GetPreviousContent(
+                  aCurrentBlockElement, {WalkTreeOption::IgnoreNonEditableNode},
+                  editingHost)
+            : HTMLEditUtils::GetNextContent(
+                  aCurrentBlockElement, {WalkTreeOption::IgnoreNonEditableNode},
+                  editingHost);
+    // If found content is an invisible text node, let's scan visible things.
+    auto IsIgnorableDataNode = [](nsIContent* aContent) {
+      return aContent && HTMLEditUtils::IsRemovableNode(*aContent) &&
+             ((aContent->IsText() &&
+               aContent->AsText()->TextIsOnlyWhitespace() &&
+               !HTMLEditUtils::IsVisibleTextNode(*aContent->AsText())) ||
+              (aContent->IsCharacterData() && !aContent->IsText()));
+    };
+    if (!IsIgnorableDataNode(targetContent)) {
+      return targetContent;
+    }
+    MOZ_ASSERT(mSkippedInvisibleContents.IsEmpty());
+    for (nsIContent* adjacentContent =
+             aDirectionAndAmount == nsIEditor::ePrevious
+                 ? HTMLEditUtils::GetPreviousContent(
+                       *targetContent, {WalkTreeOption::StopAtBlockBoundary},
+                       editingHost)
+                 : HTMLEditUtils::GetNextContent(
+                       *targetContent, {WalkTreeOption::StopAtBlockBoundary},
+                       editingHost);
+         adjacentContent;
+         adjacentContent =
+             aDirectionAndAmount == nsIEditor::ePrevious
+                 ? HTMLEditUtils::GetPreviousContent(
+                       *adjacentContent, {WalkTreeOption::StopAtBlockBoundary},
+                       editingHost)
+                 : HTMLEditUtils::GetNextContent(
+                       *adjacentContent, {WalkTreeOption::StopAtBlockBoundary},
+                       editingHost)) {
+      // If non-editable element is found, we should not skip it to avoid
+      // joining too far nodes.
+      if (!HTMLEditUtils::IsSimplyEditableNode(*adjacentContent)) {
+        break;
+      }
+      // If block element is found, we should join last leaf content in it.
+      if (HTMLEditUtils::IsBlockElement(*adjacentContent)) {
+        nsIContent* leafContent =
+            aDirectionAndAmount == nsIEditor::ePrevious
+                ? HTMLEditUtils::GetLastLeafContent(
+                      *adjacentContent, {LeafNodeType::OnlyEditableLeafNode})
+                : HTMLEditUtils::GetFirstLeafContent(
+                      *adjacentContent, {LeafNodeType::OnlyEditableLeafNode});
+        mSkippedInvisibleContents.AppendElement(*targetContent);
+        return leafContent ? leafContent : adjacentContent;
+      }
+      // Only when the found node is an invisible text node or a non-text data
+      // node, we should keep scanning.
+      if (IsIgnorableDataNode(adjacentContent)) {
+        mSkippedInvisibleContents.AppendElement(*targetContent);
+        targetContent = adjacentContent;
+        continue;
+      }
+      // Otherwise, we find a visible things. We should join with last found
+      // invisible text node.
+      break;
+    }
+    return targetContent;
+  };
+
   if (aDirectionAndAmount == nsIEditor::ePrevious) {
-    mLeftContent = HTMLEditUtils::GetPreviousContent(
-        aCurrentBlockElement, {WalkTreeOption::IgnoreNonEditableNode},
-        editingHost);
+    mLeftContent = ScanJoinTarget();
     mRightContent = aCaretPoint.GetContainerAs<nsIContent>();
   } else {
-    mRightContent = HTMLEditUtils::GetNextContent(
-        aCurrentBlockElement, {WalkTreeOption::IgnoreNonEditableNode},
-        editingHost);
+    mRightContent = ScanJoinTarget();
     mLeftContent = aCaretPoint.GetContainerAs<nsIContent>();
   }
 
@@ -2922,6 +2990,18 @@ EditActionResult HTMLEditor::AutoDeleteRangesHandler::AutoBlockElementsJoiner::
                    "retruning handled, but returned ignored");
     }
 #endif  // #ifdef DEBUG
+
+    // Cleaning up invisible nodes which are skipped at scanning mLeftContent or
+    // mRightContent.
+    for (const OwningNonNull<nsIContent>& content : mSkippedInvisibleContents) {
+      nsresult rv =
+          aHTMLEditor.DeleteNodeWithTransaction(MOZ_KnownLive(content));
+      if (NS_FAILED(rv)) {
+        NS_WARNING("EditorBase::DeleteNodeWithTransaction() failed");
+        return EditActionResult(rv);
+      }
+    }
+    mSkippedInvisibleContents.Clear();
   }
   // This should claim that trying to join the block means that
   // this handles the action because the caller shouldn't do anything
