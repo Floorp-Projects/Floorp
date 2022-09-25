@@ -7,17 +7,27 @@
 XPCSHELL_TESTS_MANIFESTS += ["tests/xpcshell/xpcshell.ini"]
 
 XPIDL_SOURCES += [
+    "IJSDebugger.idl",
     "nsIJSInspector.idl",
 ]
 
-XPIDL_MODULE = "jsinspector"
+XPIDL_MODULE = "jsdevtools"
 
 SOURCES += [
+    "JSDebugger.cpp",
     "nsJSInspector.cpp",
 ]
 
 XPCOM_MANIFESTS += [
     "components.conf",
 ]
+
+EXTRA_JS_MODULES += [
+    "jsdebugger.jsm",
+]
+
+# The /devtools/moz.build opted in to treatment of devtools as a browser
+# component, but for this platform integration code it is simpler not too.
+DIST_SUBDIR = ""
 
 FINAL_LIBRARY = "xul"
