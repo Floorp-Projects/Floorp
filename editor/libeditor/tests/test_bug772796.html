@@ -219,12 +219,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=772796
 /* 44-05*/[
   "<div>test</div><span class=\"pre\">foobar<br>baz</span>",
   "<div>test<span class=\"pre\" style=\"white-space: pre;\">foobar</span></div><span class=\"pre\">baz</span>", // expected
-  "<div>test<span class=\"pre\" style=\"white-space: pre;\">foobar</span><span class=\"pre\" style=\"white-space: pre;\"></span></div><span class=\"pre\">baz</span>", // current result
 ],
 /* 45-06*/[
   "<div>test</div><span class=\"pre\"><b>foobar<br>baz</b></span>",
   "<div>test<span class=\"pre\" style=\"white-space: pre;\"><b>foobar</b></span></div><span class=\"pre\"><b>baz</b></span>", // expected
-  "<div>test<span class=\"pre\" style=\"white-space: pre;\"><b>foobar</b></span><span class=\"pre\" style=\"white-space: pre;\"></span></div><span class=\"pre\"><b>baz</b></span>", // current result
 ],
 /* 46-07*/[
   "<div>test</div><span class=\"pre\"><div>foobar</div>baz</span>",

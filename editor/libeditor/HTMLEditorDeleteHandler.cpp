@@ -2004,7 +2004,7 @@ HTMLEditor::AutoDeleteRangesHandler::HandleDeleteTextAroundCollapsedRanges(
   //      are removed by DeleteTextAndNormalizeSurroundingWhiteSpaces().
   //      So, if `getTargetRanges()` needs to include parent empty elements,
   //      we need to extend the range with
-  //      HTMLEditUtils::GetMostDistantAnscestorEditableEmptyInlineElement().
+  //      HTMLEditUtils::GetMostDistantAncestorEditableEmptyInlineElement().
   EditorRawDOMRange rangeToDelete(aRangesToDelete.FirstRangeRef());
   if (!rangeToDelete.IsInTextNodes()) {
     NS_WARNING("The extended range to delete character was not in text nodes");
@@ -4280,7 +4280,7 @@ nsresult HTMLEditor::DeleteTextAndTextNodesWithTransaction(
     if (aTreatEmptyTextNodes ==
         TreatEmptyTextNodes::RemoveAllEmptyInlineAncestors) {
       Element* emptyParentElementToRemove =
-          HTMLEditUtils::GetMostDistantAnscestorEditableEmptyInlineElement(
+          HTMLEditUtils::GetMostDistantAncestorEditableEmptyInlineElement(
               nodeToRemove, editingHost);
       if (emptyParentElementToRemove) {
         nodeToRemove = *emptyParentElementToRemove;
@@ -4987,7 +4987,7 @@ MoveNodeResult HTMLEditor::MoveOneHardLineContentsWithTransaction(
   if (aMoveToEndOfContainer == MoveToEndOfContainer::Yes) {
     pointToInsert.SetToEndOf(pointToInsert.GetContainer());
   }
-  for (auto& content : arrayOfContents) {
+  for (const OwningNonNull<nsIContent>& content : arrayOfContents) {
     {
       AutoEditorDOMRangeChildrenInvalidator lockOffsets(movedContentRange);
       // If the content is a block element, move all children of it to the
@@ -5001,9 +5001,8 @@ MoveNodeResult HTMLEditor::MoveOneHardLineContentsWithTransaction(
           return moveContentsInLineResult;
         }
         moveContentsInLineResult.MarkAsHandled();
-        // MOZ_KnownLive because 'arrayOfContents' is guaranteed to
-        // keep it alive.
-        nsresult rv = DeleteNodeWithTransaction(MOZ_KnownLive(*content));
+        // MOZ_KnownLive due to bug 1622253
+        nsresult rv = DeleteNodeWithTransaction(MOZ_KnownLive(content));
         if (MOZ_UNLIKELY(rv == NS_ERROR_EDITOR_DESTROYED)) {
           NS_WARNING("EditorBase::DeleteNodeWithTransaction() failed");
           moveContentsInLineResult.IgnoreCaretPointSuggestion();
@@ -5012,9 +5011,26 @@ MoveNodeResult HTMLEditor::MoveOneHardLineContentsWithTransaction(
         NS_WARNING_ASSERTION(
             NS_SUCCEEDED(rv),
             "EditorBase::DeleteNodeWithTransaction() failed, but ignored");
+      }
+      // If the moving content is empty inline node, we don't want it to appear
+      // in the dist paragraph.
+      else if (HTMLEditUtils::IsEmptyInlineContainer(
+                   content, {EmptyCheckOption::TreatSingleBRElementAsVisible,
+                             EmptyCheckOption::TreatListItemAsVisible,
+                             EmptyCheckOption::TreatTableCellAsVisible})) {
+        nsCOMPtr<nsIContent> emptyContent =
+            HTMLEditUtils::GetMostDistantAncestorEditableEmptyInlineElement(
+                content, &aEditingHost);
+        if (!emptyContent) {
+          emptyContent = content;
+        }
+        nsresult rv = DeleteNodeWithTransaction(*emptyContent);
+        if (NS_FAILED(rv)) {
+          NS_WARNING("EditorBase::DeleteNodeWithTransaction() failed");
+          return MoveNodeResult(rv);
+        }
       } else {
-        // MOZ_KnownLive because 'arrayOfContents' is guaranteed to
-        // keep it alive.
+        // MOZ_KnownLive due to bug 1622253
         moveContentsInLineResult |= MoveNodeOrChildrenWithTransaction(
             MOZ_KnownLive(content), pointToInsert, preserveWhiteSpaceStyle);
         if (moveContentsInLineResult.isErr()) {
@@ -5094,7 +5110,7 @@ MoveNodeResult HTMLEditor::MoveOneHardLineContentsWithTransaction(
   // If last line break content is the only content of its parent, we should
   // remove the parent too.
   if (const RefPtr<Element> inlineElement =
-          HTMLEditUtils::GetMostDistantAnscestorEditableEmptyInlineElement(
+          HTMLEditUtils::GetMostDistantAncestorEditableEmptyInlineElement(
               *lastLineBreakContent, &aEditingHost)) {
     nsresult rv = DeleteNodeWithTransaction(*inlineElement);
     if (NS_FAILED(rv)) {
