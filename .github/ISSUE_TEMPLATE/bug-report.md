@@ -7,6 +7,9 @@ assignees: ''
 
 ---
 
+<!-- Please make sure to adhere to the template below when posting an Issue to minimize work.
+The developer will have an easier time understanding the specifics of the bug if they adhere to the template. -->
+
 ## Describe the bug
 A clear and concise description of what the bug is.
 
