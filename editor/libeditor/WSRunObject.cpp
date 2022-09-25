@@ -320,7 +320,8 @@ EditActionResult WhiteSpaceVisibilityKeeper::
     afterRightBlockChild.Clear();
   }
 
-  if (!invisibleBRElementAtEndOfLeftBlockElement) {
+  if (!invisibleBRElementAtEndOfLeftBlockElement ||
+      !invisibleBRElementAtEndOfLeftBlockElement->IsInComposedDoc()) {
     return ret;
   }
 
@@ -587,7 +588,8 @@ EditActionResult WhiteSpaceVisibilityKeeper::
     ret |= moveNodeResult;
   }
 
-  if (!invisibleBRElementBeforeLeftBlockElement) {
+  if (!invisibleBRElementBeforeLeftBlockElement ||
+      !invisibleBRElementBeforeLeftBlockElement->IsInComposedDoc()) {
     return ret;
   }
 
@@ -706,7 +708,8 @@ EditActionResult WhiteSpaceVisibilityKeeper::
     ret |= moveNodeResult;
   }
 
-  if (!invisibleBRElementAtEndOfLeftBlockElement) {
+  if (!invisibleBRElementAtEndOfLeftBlockElement ||
+      !invisibleBRElementAtEndOfLeftBlockElement->IsInComposedDoc()) {
     return ret.MarkAsHandled();
   }
 

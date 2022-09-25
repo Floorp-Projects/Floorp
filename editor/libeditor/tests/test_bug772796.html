@@ -49,11 +49,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=772796
 // FYI: Those tests were ported to join-pre-and-other-block.html
 /* 05*/[
   "<div>test</div><pre>foobar<br>baz</pre>",
-  "<div>testfoobar<br></div><pre>baz</pre>", // expected
+  "<div>testfoobar</div><pre>baz</pre>", // expected
 ],
 /* 06*/[
   "<div>test</div><pre><b>foobar<br>baz</b></pre>",
-  "<div>test<b>foobar</b><br></div><pre><b>baz</b></pre>", // expected
+  "<div>test<b>foobar</b></div><pre><b>baz</b></pre>", // expected
 ],
 
 // Some tests with block elements.
@@ -113,12 +113,12 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=772796
 ],
 /* 18-05*/[
   "<div>test</div>\n<pre>foobar<br>baz</pre>",
-  "<div>testfoobar<br></div><pre>baz</pre>", // expected
+  "<div>testfoobar</div><pre>baz</pre>", // expected
   "<div>test</div>foobar<br><pre>baz</pre>", // current result
 ],
 /* 19-06*/[
   "<div>test</div>\n<pre><b>foobar<br>baz</b></pre>",
-  "<div>test<b>foobar</b><br></div><pre><b>baz</b></pre>", // expected
+  "<div>test<b>foobar</b></div><pre><b>baz</b></pre>", // expected
   "<div>test</div><b>foobar</b><br><pre><b>baz</b></pre>", // current result
 ],
 /* 20-07*/[
@@ -212,31 +212,31 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=772796
 //      join-different-white-space-style-left-paragraph-and-right-line.html
 /* 39-00*/[
   "<div>test</div><span class=\"pre\">foobar\nbaz</span>",
-  "<div>test<span class=\"pre\">foobar\n</span></div><span class=\"pre\">baz</span>", // expected
+  "<div>test<span class=\"pre\">foobar</span></div><span class=\"pre\">baz</span>", // expected
 ],
 /* 40-01*/[
   "<div>test</div><span class=\"pre\"><b>foobar\nbaz</b></span>",
-  "<div>test<span class=\"pre\"><b>foobar\n</b></span></div><span class=\"pre\"><b>baz</b></span>", // expected
+  "<div>test<span class=\"pre\"><b>foobar</b></span></div><span class=\"pre\"><b>baz</b></span>", // expected
 ],
 /* 41-02*/[
   "<div>test</div><span class=\"pre\"><b>foo</b>bar\nbaz</span>",
-  "<div>test<span class=\"pre\"><b>foo</b>bar\n</span></div><span class=\"pre\">baz</span>", // expected
+  "<div>test<span class=\"pre\"><b>foo</b>bar</span></div><span class=\"pre\">baz</span>", // expected
 ],
 /* 42-03*/[
   "<div>test</div><span class=\"pre\"><b>foo</b>\nbar</span>",
-  "<div>test<span class=\"pre\"><b>foo</b>\n</span></div><span class=\"pre\">bar</span>", // expected
+  "<div>test<span class=\"pre\"><b>foo</b></span></div><span class=\"pre\">bar</span>", // expected
 ],
 /* 43-04*/[
   "<div>test</div><span class=\"pre\"><b>foo\n</b>bar\nbaz</span>",
-  "<div>test<span class=\"pre\"><b>foo\n</b></span></div><span class=\"pre\">bar\nbaz</span>", // expected
+  "<div>test<span class=\"pre\"><b>foo</b></span></div><span class=\"pre\">bar\nbaz</span>", // expected
 ],
 /* 44-05*/[
   "<div>test</div><span class=\"pre\">foobar<br>baz</span>",
-  "<div>test<span class=\"pre\">foobar</span><br><span class=\"pre\"></span></div><span class=\"pre\">baz</span>", // expected
+  "<div>test<span class=\"pre\">foobar</span><span class=\"pre\"></span></div><span class=\"pre\">baz</span>", // expected
 ],
 /* 45-06*/[
   "<div>test</div><span class=\"pre\"><b>foobar<br>baz</b></span>",
-  "<div>test<span class=\"pre\"><b>foobar</b></span><br><span class=\"pre\"></span></div><span class=\"pre\"><b>baz</b></span>", // expected
+  "<div>test<span class=\"pre\"><b>foobar</b></span><span class=\"pre\"></span></div><span class=\"pre\"><b>baz</b></span>", // expected
 ],
 /* 46-07*/[
   "<div>test</div><span class=\"pre\"><div>foobar</div>baz</span>",
@@ -323,23 +323,23 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=772796
 // Some tests with lists. These exercise the MoveBlock "left in right".
 /* 65*/[
   "<ul><pre><li>test</li>foobar\nbaz</pre></ul>",
-  "<ul><pre><li>testfoobar\n</li>baz</pre></ul>", // expected
+  "<ul><pre><li>testfoobar</li>baz</pre></ul>", // expected
 ],
 /* 66*/[
   "<ul><pre><li>test</li><b>foobar\nbaz</b></pre></ul>",
-  "<ul><pre><li>test<b>foobar\n</b></li><b>baz</b></pre></ul>", // expected
+  "<ul><pre><li>test<b>foobar</b></li><b>baz</b></pre></ul>", // expected
 ],
 /* 67*/[
   "<ul><pre><li>test</li><b>foo</b>bar\nbaz</pre></ul>",
-  "<ul><pre><li>test<b>foo</b>bar\n</li>baz</pre></ul>", // expected
+  "<ul><pre><li>test<b>foo</b>bar</li>baz</pre></ul>", // expected
 ],
 /* 68*/[
   "<ul><pre><li>test</li><b>foo</b>\nbar</pre></ul>",
-  "<ul><pre><li>test<b>foo</b>\n</li>bar</pre></ul>", // expected
+  "<ul><pre><li>test<b>foo</b></li>bar</pre></ul>", // expected
 ],
 /* 69*/[
   "<ul><pre><li>test</li><b>foo\n</b>bar\nbaz</pre></ul>",
-  "<ul><pre><li>test<b>foo\n</b></li>bar\nbaz</pre></ul>", // expected
+  "<ul><pre><li>test<b>foo</b></li>bar\nbaz</pre></ul>", // expected
 ],
 
 // Last not least, some simple edge case tests.
