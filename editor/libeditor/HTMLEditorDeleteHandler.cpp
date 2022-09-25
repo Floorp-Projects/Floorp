@@ -19,18 +19,22 @@
 
 #include "mozilla/Assertions.h"
 #include "mozilla/CheckedInt.h"
+#include "mozilla/ComputedStyle.h"  // for ComputedStyle
 #include "mozilla/ContentIterator.h"
 #include "mozilla/EditorDOMPoint.h"
 #include "mozilla/InternalMutationEvent.h"
+#include "mozilla/Maybe.h"
 #include "mozilla/OwningNonNull.h"
 #include "mozilla/StaticPrefs_editor.h"  // for StaticPrefs::editor_*
 #include "mozilla/Unused.h"
+#include "mozilla/dom/AncestorIterator.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/HTMLBRElement.h"
 #include "mozilla/dom/Selection.h"
 #include "mozilla/mozalloc.h"
 #include "nsAString.h"
 #include "nsAtom.h"
+#include "nsComputedDOMStyle.h"  // for nsComputedDOMStyle
 #include "nsContentUtils.h"
 #include "nsDebug.h"
 #include "nsError.h"
@@ -41,6 +45,7 @@
 #include "nsRange.h"
 #include "nsString.h"
 #include "nsStringFwd.h"
+#include "nsStyleConsts.h"  // for StyleWhiteSpace
 #include "nsTArray.h"
 
 // NOTE: This file was split from:
@@ -4782,18 +4787,54 @@ MoveNodeResult HTMLEditor::MoveOneHardLineContentsWithTransaction(
     MoveToEndOfContainer
         aMoveToEndOfContainer /* = MoveToEndOfContainer::No */) {
   MOZ_ASSERT(IsEditActionDataAvailable());
+  MOZ_ASSERT(aPointInHardLine.IsInContentNode());
   MOZ_ASSERT(aPointToInsert.IsSetAndValid());
 
   if (NS_WARN_IF(aPointToInsert.IsInNativeAnonymousSubtree())) {
     return MoveNodeResult(NS_ERROR_INVALID_ARG);
   }
 
-  const RefPtr<Element> inclusiveAncestorBlock =
+  const RefPtr<Element> destInclusiveAncestorBlock =
       aPointToInsert.IsInContentNode()
           ? HTMLEditUtils::GetInclusiveAncestorElement(
                 *aPointToInsert.ContainerAs<nsIContent>(),
                 HTMLEditUtils::ClosestBlockElement)
           : nullptr;
+
+  // If we move content from or to <pre>, we don't need to preserve the
+  // white-space style for compatibility with both our traditional behavior
+  // and the other browsers.
+  const PreserveWhiteSpaceStyle preserveWhiteSpaceStyle = [&]() {
+    if (MOZ_UNLIKELY(!destInclusiveAncestorBlock)) {
+      return PreserveWhiteSpaceStyle::No;
+    }
+    // TODO: If `white-space` is specified by non-UA stylesheet, we should
+    // preserve it even if the right block is <pre> for compatibility with the
+    // other browsers.
+    const auto IsInclusiveDescendantOfPre = [](const nsIContent& aContent) {
+      // If the content has different `white-space` style from <pre>, we
+      // shouldn't treat it as a descendant of <pre> because web apps or
+      // the user intent to treat the white-spaces in aContent not as `pre`.
+      if (EditorUtils::GetComputedWhiteSpaceStyle(aContent).valueOr(
+              StyleWhiteSpace::Normal) != StyleWhiteSpace::Pre) {
+        return false;
+      }
+      for (const Element* element :
+           aContent.InclusiveAncestorsOfType<Element>()) {
+        if (element->IsHTMLElement(nsGkAtoms::pre)) {
+          return true;
+        }
+      }
+      return false;
+    };
+    if (IsInclusiveDescendantOfPre(*destInclusiveAncestorBlock) ||
+        MOZ_UNLIKELY(!aPointInHardLine.IsInContentNode()) ||
+        IsInclusiveDescendantOfPre(
+            *aPointInHardLine.ContainerAs<nsIContent>())) {
+      return PreserveWhiteSpaceStyle::No;
+    }
+    return PreserveWhiteSpaceStyle::Yes;
+  }();
 
   EditorDOMPoint pointToInsert(aPointToInsert);
   EditorDOMPoint pointToPutCaret;
@@ -4872,8 +4913,9 @@ MoveNodeResult HTMLEditor::MoveOneHardLineContentsWithTransaction(
       // If the content is a block element, move all children of it to the
       // new container, and then, remove the (probably) empty block element.
       if (HTMLEditUtils::IsBlockElement(content)) {
-        moveContentsInLineResult |= MoveChildrenWithTransaction(
-            MOZ_KnownLive(*content->AsElement()), pointToInsert);
+        moveContentsInLineResult |=
+            MoveChildrenWithTransaction(MOZ_KnownLive(*content->AsElement()),
+                                        pointToInsert, preserveWhiteSpaceStyle);
         if (moveContentsInLineResult.isErr()) {
           NS_WARNING("HTMLEditor::MoveChildrenWithTransaction() failed");
           return moveContentsInLineResult;
@@ -4894,7 +4936,7 @@ MoveNodeResult HTMLEditor::MoveOneHardLineContentsWithTransaction(
         // MOZ_KnownLive because 'arrayOfContents' is guaranteed to
         // keep it alive.
         moveContentsInLineResult |= MoveNodeOrChildrenWithTransaction(
-            MOZ_KnownLive(content), pointToInsert);
+            MOZ_KnownLive(content), pointToInsert, preserveWhiteSpaceStyle);
         if (moveContentsInLineResult.isErr()) {
           NS_WARNING("HTMLEditor::MoveNodeOrChildrenWithTransaction() failed");
           return moveContentsInLineResult;
@@ -4924,7 +4966,7 @@ MoveNodeResult HTMLEditor::MoveOneHardLineContentsWithTransaction(
   // Nothing has been moved, we don't need to clean up unnecessary <br> element.
   // And also if we're not moving content into a block, we can quit right now.
   if (moveContentsInLineResult.Ignored() ||
-      MOZ_UNLIKELY(!inclusiveAncestorBlock)) {
+      MOZ_UNLIKELY(!destInclusiveAncestorBlock)) {
     return moveContentsInLineResult;
   }
 
@@ -4937,7 +4979,8 @@ MoveNodeResult HTMLEditor::MoveOneHardLineContentsWithTransaction(
   }
 
   nsCOMPtr<nsIContent> lastLineBreakContent =
-      HTMLEditUtils::GetUnnecessaryLineBreakContent(*inclusiveAncestorBlock);
+      HTMLEditUtils::GetUnnecessaryLineBreakContent(
+          *destInclusiveAncestorBlock);
   if (!lastLineBreakContent) {
     return moveContentsInLineResult;
   }
@@ -4990,15 +5033,120 @@ Result<bool, nsresult> HTMLEditor::CanMoveNodeOrChildren(
 }
 
 MoveNodeResult HTMLEditor::MoveNodeOrChildrenWithTransaction(
-    nsIContent& aContentToMove, const EditorDOMPoint& aPointToInsert) {
+    nsIContent& aContentToMove, const EditorDOMPoint& aPointToInsert,
+    PreserveWhiteSpaceStyle aPreserveWhiteSpaceStyle) {
   MOZ_ASSERT(IsEditActionDataAvailable());
-  MOZ_ASSERT(aPointToInsert.IsSet());
+  MOZ_ASSERT(aPointToInsert.IsInContentNode());
+
+  const auto destWhiteSpaceStyle = [&]() -> Maybe<StyleWhiteSpace> {
+    if (aPreserveWhiteSpaceStyle == PreserveWhiteSpaceStyle::No ||
+        !aPointToInsert.IsInContentNode()) {
+      return Nothing();
+    }
+    auto style = EditorUtils::GetComputedWhiteSpaceStyle(
+        *aPointToInsert.ContainerAs<nsIContent>());
+    if (NS_WARN_IF(style.isSome() &&
+                   style.value() == StyleWhiteSpace::PreSpace)) {
+      return Nothing();
+    }
+    return style;
+  }();
+  const auto srcWhiteSpaceStyle = [&]() -> Maybe<StyleWhiteSpace> {
+    if (aPreserveWhiteSpaceStyle == PreserveWhiteSpaceStyle::No) {
+      return Nothing();
+    }
+    auto style = EditorUtils::GetComputedWhiteSpaceStyle(aContentToMove);
+    if (NS_WARN_IF(style.isSome() &&
+                   style.value() == StyleWhiteSpace::PreSpace)) {
+      return Nothing();
+    }
+    return style;
+  }();
+  const auto GetWhiteSpaceStyleValue = [](StyleWhiteSpace aStyleWhiteSpace) {
+    switch (aStyleWhiteSpace) {
+      case StyleWhiteSpace::Normal:
+        return u"normal"_ns;
+      case StyleWhiteSpace::Pre:
+        return u"pre"_ns;
+      case StyleWhiteSpace::Nowrap:
+        return u"nowrap"_ns;
+      case StyleWhiteSpace::PreWrap:
+        return u"pre-wrap"_ns;
+      case StyleWhiteSpace::PreLine:
+        return u"pre-line"_ns;
+      case StyleWhiteSpace::BreakSpaces:
+        return u"break-spaces"_ns;
+      case StyleWhiteSpace::PreSpace:
+        MOZ_ASSERT_UNREACHABLE("Don't handle -moz-pre-space");
+        return u""_ns;
+      default:
+        MOZ_ASSERT_UNREACHABLE("Handle the new white-space value");
+        return u""_ns;
+    }
+  };
 
   // Check if this node can go into the destination node
   if (HTMLEditUtils::CanNodeContain(*aPointToInsert.GetContainer(),
                                     aContentToMove)) {
-    // If it can, move it there.
     EditorDOMPoint pointToInsert(aPointToInsert);
+    // Preserve white-space in the new position with using `style` attribute.
+    // This is additional path from point of view of our traditional behavior.
+    // Therefore, ignore errors especially if we got unexpected DOM tree.
+    if (destWhiteSpaceStyle.isSome() && srcWhiteSpaceStyle.isSome() &&
+        destWhiteSpaceStyle.value() != srcWhiteSpaceStyle.value()) {
+      // Set `white-space` with `style` attribute if it's nsStyledElement.
+      if (nsStyledElement* styledElement =
+              nsStyledElement::FromNode(&aContentToMove)) {
+        DebugOnly<nsresult> rvIgnored =
+            CSSEditUtils::SetCSSPropertyWithTransaction(
+                *this, MOZ_KnownLive(*styledElement), *nsGkAtoms::white_space,
+                GetWhiteSpaceStyleValue(srcWhiteSpaceStyle.value()));
+        if (NS_WARN_IF(Destroyed())) {
+          return MoveNodeResult(NS_ERROR_EDITOR_DESTROYED);
+        }
+        NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored),
+                             "CSSEditUtils::SetCSSPropertyWithTransaction("
+                             "nsGkAtoms::white_space) failed, but ignored");
+      }
+      // Otherwise, if the dest container can have <span> element and <span>
+      // element can have the moving content node, we should insert it.
+      else if (HTMLEditUtils::CanNodeContain(*aPointToInsert.GetContainer(),
+                                             *nsGkAtoms::span) &&
+               HTMLEditUtils::CanNodeContain(*nsGkAtoms::span,
+                                             aContentToMove)) {
+        RefPtr<Element> newSpanElement = CreateHTMLContent(nsGkAtoms::span);
+        if (NS_WARN_IF(!newSpanElement)) {
+          return MoveNodeResult(NS_ERROR_FAILURE);
+        }
+        nsAutoString styleAttrValue(u"white-space: "_ns);
+        styleAttrValue.Append(
+            GetWhiteSpaceStyleValue(srcWhiteSpaceStyle.value()));
+        IgnoredErrorResult error;
+        newSpanElement->SetAttr(nsGkAtoms::style, styleAttrValue, error);
+        NS_WARNING_ASSERTION(!error.Failed(),
+                             "Element::SetAttr(nsGkAtoms::span) failed");
+        if (MOZ_LIKELY(!error.Failed())) {
+          CreateElementResult insertSpanElementResult =
+              InsertNodeWithTransaction<Element>(*newSpanElement,
+                                                 aPointToInsert);
+          if (NS_WARN_IF(insertSpanElementResult.EditorDestroyed())) {
+            return MoveNodeResult(NS_ERROR_EDITOR_DESTROYED);
+          }
+          NS_WARNING_ASSERTION(
+              insertSpanElementResult.isOk(),
+              "HTMLEditor::InsertNodeWithTransaction() failed, but ignored");
+          if (MOZ_LIKELY(insertSpanElementResult.isOk())) {
+            // We should move the node into the new <span> to preserve the
+            // style.
+            pointToInsert.Set(newSpanElement, 0u);
+            // We should put caret after aContentToMove after moving it so that
+            // we do not need the suggested caret point here.
+            insertSpanElementResult.IgnoreCaretPointSuggestion();
+          }
+        }
+      }
+    }
+    // If it can, move it there.
     MoveNodeResult moveNodeResult =
         MoveNodeWithTransaction(aContentToMove, pointToInsert);
     NS_WARNING_ASSERTION(moveNodeResult.isOk(),
@@ -5015,8 +5163,9 @@ MoveNodeResult HTMLEditor::MoveNodeOrChildrenWithTransaction(
     if (!aContentToMove.IsElement()) {
       return MoveNodeHandled(aPointToInsert);
     }
-    MoveNodeResult moveChildrenResult = MoveChildrenWithTransaction(
-        MOZ_KnownLive(*aContentToMove.AsElement()), aPointToInsert);
+    MoveNodeResult moveChildrenResult =
+        MoveChildrenWithTransaction(MOZ_KnownLive(*aContentToMove.AsElement()),
+                                    aPointToInsert, aPreserveWhiteSpaceStyle);
     NS_WARNING_ASSERTION(moveChildrenResult.isOk(),
                          "HTMLEditor::MoveChildrenWithTransaction() failed");
     return moveChildrenResult;
@@ -5062,7 +5211,8 @@ Result<bool, nsresult> HTMLEditor::CanMoveChildren(
 }
 
 MoveNodeResult HTMLEditor::MoveChildrenWithTransaction(
-    Element& aElement, const EditorDOMPoint& aPointToInsert) {
+    Element& aElement, const EditorDOMPoint& aPointToInsert,
+    PreserveWhiteSpaceStyle aPreserveWhiteSpaceStyle) {
   MOZ_ASSERT(aPointToInsert.IsSet());
 
   if (NS_WARN_IF(&aElement == aPointToInsert.GetContainer())) {
@@ -5073,7 +5223,7 @@ MoveNodeResult HTMLEditor::MoveChildrenWithTransaction(
   while (aElement.GetFirstChild()) {
     moveChildrenResult |= MoveNodeOrChildrenWithTransaction(
         MOZ_KnownLive(*aElement.GetFirstChild()),
-        moveChildrenResult.NextInsertionPoint());
+        moveChildrenResult.NextInsertionPoint(), aPreserveWhiteSpaceStyle);
     if (moveChildrenResult.isErr()) {
       NS_WARNING("HTMLEditor::MoveNodeOrChildrenWithTransaction() failed");
       return moveChildrenResult;

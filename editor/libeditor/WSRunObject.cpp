@@ -456,9 +456,12 @@ EditActionResult WhiteSpaceVisibilityKeeper::
     Result<bool, nsresult> rightBlockHasContent =
         aHTMLEditor.CanMoveChildren(aRightBlockElement, aLeftBlockElement);
 #endif  // #ifdef DEBUG
+    // TODO: Stop using HTMLEditor::PreserveWhiteSpaceStyle::No due to no tests.
     MoveNodeResult moveNodeResult = aHTMLEditor.MoveChildrenWithTransaction(
-        aRightBlockElement, EditorDOMPoint(atLeftBlockChild.GetContainer(),
-                                           atLeftBlockChild.Offset()));
+        aRightBlockElement,
+        EditorDOMPoint(atLeftBlockChild.GetContainer(),
+                       atLeftBlockChild.Offset()),
+        HTMLEditor::PreserveWhiteSpaceStyle::No);
     if (NS_WARN_IF(moveNodeResult.EditorDestroyed())) {
       return EditActionResult(NS_ERROR_EDITOR_DESTROYED);
     }
