@@ -596,15 +596,34 @@ Element* HTMLEditUtils::GetElementOfImmediateBlockBoundary(
 }
 
 nsIContent* HTMLEditUtils::GetUnnecessaryLineBreakContent(
-    const Element& aBlockElement) {
+    const Element& aBlockElement, ScanLineBreak aScanLineBreak) {
   auto* lastLineBreakContent = [&]() -> nsIContent* {
     const LeafNodeTypes leafNodeOrNonEditableNode{
         LeafNodeType::LeafNodeOrNonEditableNode};
-    for (nsIContent* content = HTMLEditUtils::GetLastLeafContent(
-             aBlockElement, leafNodeOrNonEditableNode);
+    const WalkTreeOptions onlyPrecedingLine{
+        WalkTreeOption::StopAtBlockBoundary};
+    for (nsIContent* content =
+             aScanLineBreak == ScanLineBreak::AtEndOfBlock
+                 ? HTMLEditUtils::GetLastLeafContent(aBlockElement,
+                                                     leafNodeOrNonEditableNode)
+                 : HTMLEditUtils::GetPreviousContent(
+                       aBlockElement, onlyPrecedingLine,
+                       aBlockElement.GetParentElement());
          content;
-         content = HTMLEditUtils::GetPreviousLeafContentOrPreviousBlockElement(
-             *content, aBlockElement, leafNodeOrNonEditableNode)) {
+         content =
+             aScanLineBreak == ScanLineBreak::AtEndOfBlock
+                 ? HTMLEditUtils::GetPreviousLeafContentOrPreviousBlockElement(
+                       *content, aBlockElement, leafNodeOrNonEditableNode)
+                 : HTMLEditUtils::GetPreviousContent(
+                       *content, onlyPrecedingLine,
+                       aBlockElement.GetParentElement())) {
+      // If we're scanning preceding <br> element of aBlockElement, we don't
+      // need to look for a line break in another block because the caller
+      // needs to handle only preceding <br> element of aBlockElement.
+      if (aScanLineBreak == ScanLineBreak::BeforeBlock &&
+          HTMLEditUtils::IsBlockElement(*content)) {
+        return nullptr;
+      }
       if (Text* textNode = Text::FromNode(content)) {
         if (!textNode->TextLength()) {
           continue;  // ignore empty text node
