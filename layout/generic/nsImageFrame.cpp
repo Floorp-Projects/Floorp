@@ -2629,8 +2629,7 @@ void nsImageFrame::List(FILE* out, const char* aPrefix,
 
   // output the img src url
   if (nsCOMPtr<imgIRequest> currentRequest = GetCurrentRequest()) {
-    nsCOMPtr<nsIURI> uri;
-    currentRequest->GetURI(getter_AddRefs(uri));
+    nsCOMPtr<nsIURI> uri = currentRequest->GetURI();
     nsAutoCString uristr;
     uri->GetAsciiSpec(uristr);
     str += nsPrintfCString(" [src=%s]", uristr.get());
