@@ -518,6 +518,10 @@
     <!-- New Onboarding flow second screen subtitle the one that appears under title -->
     <string name="onboarding_second_screen_subtitle_one">Borramos tu historial cuando cerrás la aplicación para mayor privacidad.</string>
 
+    <!-- New Onboarding flow second screen subtitle two the one that appears under subtitle one -->
+    <!-- %1$s will be replaced by the app short name(Focus) -->
+    <string name="onboarding_second_screen_subtitle_two">Poné a %1$s como predeterminado para proteger tus datos con cada enlace que abrás.</string>
+
     <!-- New Onboarding flow second screen make Focus default browser button label-->
     <string name="onboarding_second_screen_default_browser_button_text">Establecer como navegador predeterminado</string>
 
@@ -1043,6 +1047,10 @@ The new line here must be kept as the second half of the string is clickable for
 
     !-- This is the subtitle of promote search widget dialog. %1$s will get replaced with the name
     of the app (e.g. &quot;Focus&quot;) --&gt;
+    <string name="promote_search_widget_dialog_subtitle">Te dejaremos con tu navegación privada, pero podés conseguir un inicio más rápido la próxima vez con el widget de %1$s en la pantalla de inicio.</string>
+
+    !-- This is te text from add search widget to home screen button .The button is located on
+    promote search widget dialog. --&gt;
     <string name="promote_search_widget_button_text">Agregar widget a la pantalla de inicio</string>
 
     !-- This is te text of the snackbar that appears after the search widget was added successfully

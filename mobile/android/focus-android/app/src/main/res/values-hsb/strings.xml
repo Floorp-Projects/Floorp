@@ -495,32 +495,56 @@
 
   <!-- Onboarding: Title -->
     <!-- %1$s will be replaced by the app name and build variant(e.g. Firefox Focus, Firefox Klar Nightly) -->
-    <string name="onboarding_title">Witajće k %1$s!</string>
+    <string moz:removedIn="106" name="onboarding_title">Witajće k %1$s!</string>
+
+    <!-- Content description (not visible, for screen readers etc.): This is the description for the close button from the new onboarding flow screen one and two -->
+    <string name="onboarding_close_button_content_description">Začinić</string>
+
+    <!-- New Onboarding flow first screen title -->
+    <!-- %1$s will be replaced by the app name and build variant(e.g. Firefox Focus, Firefox Klar Nightly) -->
+    <string name="onboarding_first_screen_title">Witajće k %1$s</string>
+
+    <!-- New Onboarding flow first screen subtitle the one that appears under title -->
+    <string name="onboarding_first_screen_subtitle">Spěšny. Priwatny. Žane wotwjedźenja.</string>
+
+    <!-- New Onboarding flow first screen button label-->
+    <string name="onboarding_first_screen_button_text">Prěnje kroki</string>
+
+    <!-- Onboarding second screen: Title -->
+    <!-- %1$s will be replaced by the app short name(Focus) -->
+    <string name="onboarding_second_screen_title">%1$s kaž druhe wobhladowaki njeje</string>
+
+    <!-- New Onboarding flow second screen make Focus default browser button label-->
+    <string name="onboarding_second_screen_default_browser_button_text">Jako standardny wobhladowak nastajić</string>
+
+    <!-- New Onboarding flow second screen skip onboarding button label-->
+    <string name="onboarding_second_screen_skip_button_text">Přeskočić</string>
+
 
     <!-- Onboarding: Description -->
-    <string name="onboarding_description">Priwatne přehladowanje na přichodnej runinje, hdyžkuli to chceće</string>
+    <string moz:removedIn="106" name="onboarding_description">Priwatne přehladowanje na přichodnej runinje, hdyžkuli to chceće</string>
 
     <!-- Onboarding: Incognito Title -->
-    <string name="onboarding_incognito_title">Hdźež inkognito na njewidźomne zetkawa</string>
+    <string moz:removedIn="106" name="onboarding_incognito_title">Hdźež inkognito na njewidźomne zetkawa</string>
 
     <!-- Onboarding: Incognito Description -->
     <!-- Text %s will be replaced with the name of the app (e.g. Focus, Klar) -->
-    <string name="onboarding_incognito_description">%s je wobhladowak z wosebitym dźiwanjom na ekstramócne slědowanje a zatwarjeny škit před plackami.</string>
+    <string moz:removedIn="106" name="onboarding_incognito_description">%s je wobhladowak z wosebitym dźiwanjom na ekstramócne slědowanje a zatwarjeny škit před plackami.</string>
 
     <!-- Onboarding: History Title -->
-    <string name="onboarding_history_title">Přehladować, kaž njeby so ženje stało</string>
+    <string moz:removedIn="106" name="onboarding_history_title">Přehladować, kaž njeby so ženje stało</string>
 
     <!-- Onboarding: History Description -->
-    <string name="onboarding_history_description2">Jedyn podótk wašu přehladowansku historiju a waše placki zhaša – a blokuje wabjenje, kotrež wam slěduje.</string>
+    <string moz:removedIn="106" name="onboarding_history_description2">Jedyn podótk wašu přehladowansku historiju a waše placki zhaša – a blokuje wabjenje, kotrež wam slěduje.</string>
 
     <!-- Onboarding: Protection Title -->
-    <string name="onboarding_protection_title">Priwatnosć, kotraž so ke kóždej situaciji hodźi</string>
+    <string moz:removedIn="106" name="onboarding_protection_title">Priwatnosć, kotraž so ke kóždej situaciji hodźi</string>
 
     <!-- Onboarding: Protection Description -->
-    <string name="onboarding_protection_description">Jeli sej waše přehladowanje změnu wužaduje, je lochko, waše nastajenja priwatnosće horje abo dele přiměrić.</string>
+    <string moz:removedIn="106" name="onboarding_protection_description">Jeli sej waše přehladowanje změnu wužaduje, je lochko, waše nastajenja priwatnosće horje abo dele přiměrić.</string>
 
     <!-- Onboarding: Start browsing -->
-    <string name="onboarding_start_browsing">Přehladowanje započeć</string>
+    <string moz:removedIn="106" name="onboarding_start_browsing">Přehladowanje započeć</string>
 
     <!-- First run tour (Default browser): Title -->
     <string name="firstrun_defaultbrowser_title">Zesylńće swoju priwatnosć</string>
@@ -981,7 +1005,9 @@ The new line here must be kept as the second half of the string is clickable for
 
     <!-- Contextual Feature Recommendation Popups -->
     <!-- CFR for Toolbar Shield Icon (Banner Info Message) -->
-    <string name="cfr_for_toolbar_shield_icon">Zda so, zo tute sydło pospytuje wam slědować. Klikńće na tarč za sydłowe nastajenja a blokowansku statistiku přesćěhowakow.</string>
+    <string moz:removedIn="104" name="cfr_for_toolbar_shield_icon">Zda so, zo tute sydło pospytuje wam slědować. Klikńće na tarč za sydłowe nastajenja a blokowansku statistiku přesćěhowakow.</string>
+    <string name="cfr_for_toolbar_shield_icon2">Lepjene! Smy sydło při tym haćili was wuskušować. Podótkńće so kóždy čas tarča, zo byšće widźał, štož my blokujemy.</string>
+
     <!-- Content description (not visible, for screen readers etc.): Button that closes the CFR popup -->
     <string name="cfr_close_button_description">Wuskakowace wokno začinić</string>
 
@@ -997,4 +1023,24 @@ The new line here must be kept as the second half of the string is clickable for
     <string moz:removedIn="105" name="cfr_for_toolbar_delete_icon" tools:ignore="UnusedResources">Podótkńće so tłóčatka papjernika, zo byšće swoje wosobinske daty, přehladowansku historiju a wjace z tutoho posedźenja zhašał. Spytajće!</string>
     <string name="cfr_for_toolbar_delete_icon2">Podótkńće so tu, zo byšće wšitko do papjernika přesunył – historiju, placki, wšitko – a startujće znowa na nowym rajtarku.</string>
 
+    <!-- Promote SearchWidget Dialog -->
+
+    !-- Content description (not visible, for screen readers etc.): This is the description for the
+    close button from promote search widget dialog. --&gt;
+    <string name="promote_search_widget_dialog_content_description">Začinić</string>
+
+    !-- Content description (not visible, for screen readers etc.): This is the description for
+    picture of search widget from promote search widget dialog. --&gt;
+    <string name="promote_search_widget_dialog_picture_content_description">Pytanski asistent</string>
+
+    !-- This is the title of promote search widget dialog. --&gt;
+    <string name="promote_search_widget_dialog_title">Přehladowanska historija je so zhašała! 🎉</string>
+
+    !-- This is the subtitle of promote search widget dialog. %1$s will get replaced with the name
+    of the app (e.g. &quot;Focus&quot;) --&gt;
+    <string name="promote_search_widget_button_text">Asistent startowej wobrazowce přidać</string>
+
+    !-- This is te text of the snackbar that appears after the search widget was added successfully
+    to the home screen. --&gt;
+    <string name="promote_search_widget_snackbar_message">Asistent je so startowej wobrazowce přidał</string>
 </resources>

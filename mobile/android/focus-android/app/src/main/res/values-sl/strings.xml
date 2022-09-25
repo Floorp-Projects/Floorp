@@ -1041,4 +1041,9 @@ The new line here must be kept as the second half of the string is clickable for
 
     !-- This is the subtitle of promote search widget dialog. %1$s will get replaced with the name
     of the app (e.g. &quot;Focus&quot;) --&gt;
-    </resources>
+    <string name="promote_search_widget_button_text">Dodaj pripomoček na začetni zaslon</string>
+
+    !-- This is te text of the snackbar that appears after the search widget was added successfully
+    to the home screen. --&gt;
+    <string name="promote_search_widget_snackbar_message">Pripomoček dodan na začetni zaslon</string>
+</resources>
