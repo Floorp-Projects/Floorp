@@ -105,16 +105,14 @@ class MOZ_STACK_CLASS gfxOTSContext : public ots::OTSContext {
   }
 
   virtual ots::TableAction GetTableAction(uint32_t aTag) override {
-    // Preserve Graphite, color glyph and SVG tables,
+    // Preserve Graphite and SVG tables,
     // and possibly OTL and Variation tables (depending on prefs)
     if ((!mCheckOTLTables && (aTag == TRUETYPE_TAG('G', 'D', 'E', 'F') ||
                               aTag == TRUETYPE_TAG('G', 'P', 'O', 'S') ||
                               aTag == TRUETYPE_TAG('G', 'S', 'U', 'B')))) {
       return ots::TABLE_ACTION_PASSTHRU;
     }
-    if (aTag == TRUETYPE_TAG('S', 'V', 'G', ' ') ||
-        aTag == TRUETYPE_TAG('C', 'O', 'L', 'R') ||
-        aTag == TRUETYPE_TAG('C', 'P', 'A', 'L')) {
+    if (aTag == TRUETYPE_TAG('S', 'V', 'G', ' ')) {
       return ots::TABLE_ACTION_PASSTHRU;
     }
     if (mKeepColorBitmaps && (aTag == TRUETYPE_TAG('C', 'B', 'D', 'T') ||
