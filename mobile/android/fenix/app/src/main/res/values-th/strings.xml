@@ -282,11 +282,11 @@
     <!-- Onboarding home screen popup dialog, shown on top of the Jump back in section. -->
     <string name="onboarding_home_screen_jump_back_contextual_hint_2">พบกับโฮมเพจส่วนบุคคลของคุณ แท็บล่าสุด ที่คั่นหน้า และผลการค้นหาจะปรากฏที่นี่</string>
     <!-- Home onboarding dialog welcome screen title text. -->
-    <string name="onboarding_home_welcome_title">ยินดีต้อนรับสู่อินเทอร์เน็ตที่เป็นอิสระ</string>
+    <string moz:RemovedIn="106" name="onboarding_home_welcome_title" tools:ignore="UnusedResources">ยินดีต้อนรับสู่อินเทอร์เน็ตที่เป็นอิสระ</string>
     <!-- Home onboarding dialog welcome screen description text. -->
     <string name="onboarding_home_welcome_description">สีสันที่มากขึ้น ความเป็นส่วนตัวที่ดีขึ้น ให้ความมุ่งมั่นกับผู้คนมากกว่าผลกำไร</string>
     <!-- Home onboarding dialog sign into sync screen title text. -->
-    <string name="onboarding_home_sync_title_2">สับเปลี่ยนไปมาระหว่างโทรศัพท์กับแล็ปท็อป</string>
+    <string moz:RemovedIn="106" name="onboarding_home_sync_title_2" tools:ignore="UnusedResources">สับเปลี่ยนไปมาระหว่างโทรศัพท์กับแล็ปท็อป</string>
     <!-- Home onboarding dialog sign into sync screen description text. -->
     <string name="onboarding_home_sync_description">เรียกดูต่อจากที่คุณค้างไว้ด้วยแท็บจากอุปกรณ์อื่นๆ บนหน้าแรกของคุณได้แล้วตอนนี้</string>
 
@@ -388,8 +388,6 @@
     <!-- Preference for settings related to visual options -->
     <string name="preferences_customize">ปรับแต่ง</string>
     <!-- Preference description for banner about signing in -->
-    <string moz:RemovedIn="104" name="preferences_sign_in_description" tools:ignore="UnusedResources">ซิงค์ที่คั่นหน้า, ประวัติ, และอื่น ๆ ด้วยบัญชี Firefox ของคุณ</string>
-    <!-- Preference description for banner about signing in -->
     <string name="preferences_sign_in_description_2">ลงชื่อเข้าเพื่อซิงค์แท็บ ที่คั่นหน้า รหัสผ่าน และอื่น ๆ ของคุณ</string>
     <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
     <string name="preferences_account_default_name">บัญชี Firefox</string>
@@ -475,11 +473,18 @@
     <!-- Snackbar label for action to view selected wallpaper -->
     <string name="wallpaper_updated_snackbar_action">ดู</string>
 
+    <!-- Snackbar label for action to retry downloading the wallpaper -->
+    <string name="wallpaper_download_error_snackbar_action">ลองอีกครั้ง</string>
+    <!-- Text displayed that links to website containing documentation about the "Limited Edition" wallpapers. -->
+    <string name="wallpaper_learn_more">เรียนรู้เพิ่มเติม</string>
     <!-- Label for switch which toggles the "tap-to-switch" behavior on home screen logo -->
     <string moz:removedIn="105" name="wallpaper_tap_to_change_switch_label_1" tools:ignore="UnusedResources">เปลี่ยนวอลเปเปอร์โดยแตะโลโก้หน้าแรกของ Firefox</string>
     <!-- This is the accessibility content description for the wallpapers functionality. Users are
     able to tap on the app logo in the home screen and can switch to different wallpapers by tapping. -->
     <string moz:removedIn="105" name="wallpaper_logo_content_description" tools:ignore="UnusedResources">โลโก้ Firefox - เปลี่ยนวอลเปเปอร์, ปุ่ม</string>
+
+    <!-- Text for limited edition wallpapers title. -->
+    <string name="wallpaper_limited_edition_title">เวลาจำกัด</string>
 
     <!-- Add-on Installation from AMO-->
     <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is not supported -->
@@ -561,8 +566,6 @@
     <string name="preference_experiments_summary_2">อนุญาตให้ Mozilla ติดตั้งและเรียกใช้การศึกษา</string>
 
     <!-- Turn On Sync Preferences -->
-    <!-- Header of the Turn on Sync preference view -->
-    <string moz:RemovedIn="104" name="preferences_sync" tools:ignore="UnusedResources">เปิด Sync</string>
     <!-- Header of the Sync and save your data preference view -->
     <string name="preferences_sync_2">ซิงค์และบันทึกข้อมูลของคุณ</string>
     <!-- Preference for reconnecting to FxA sync -->
@@ -779,9 +782,6 @@
     <string name="delete_from_history">ลบออกจากประวัติ</string>
     <!-- Postfix for private WebApp titles, placeholder is replaced with app name -->
     <string name="pwa_site_controls_title_private">%1$s (โหมดส่วนตัว)</string>
-
-    <!-- Title text for the normal tabs header in the tabs tray which are not part of any tab grouping. -->
-    <string moz:removedIn="104" name="tab_tray_header_title_1" tools:ignore="UnusedResources">แท็บอื่น ๆ</string>
 
     <!-- History -->
     <!-- Text for the button to search all history -->
@@ -1186,8 +1186,6 @@
     <!-- Action item in menu for the Delete browsing data on quit feature -->
     <string name="delete_browsing_data_on_quit_action">ออก</string>
 
-    <!-- Dialog message to the user asking to delete browsing data. -->
-    <string moz:removedIn="104" name="delete_browsing_data_prompt_message" tools:ignore="UnusedResources">การดำเนินการนี้จะเป็นการลบข้อมูลการเรียกดูทั้งหมดของคุณ</string>
     <!-- Title text of a delete browsing data dialog. -->
     <string name="delete_history_prompt_title">ช่วงเวลาที่จะลบ</string>
     <!-- Body text of a delete browsing data dialog. -->
@@ -1224,19 +1222,23 @@
     <!-- Onboarding -->
     <!-- Text for onboarding welcome message
     The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_header">ยินดีต้อนรับสู่ %s!</string>
+    <string moz:RemovedIn="106" name="onboarding_header" tools:ignore="UnusedResources">ยินดีต้อนรับสู่ %s!</string>
     <!-- text for the Firefox account onboarding sign in card header. The word "Firefox" should not be translated -->
-    <string name="onboarding_account_sign_in_header_1">ซิงค์ Firefox ระหว่างอุปกรณ์</string>
+    <string moz:removedIn="106" name="onboarding_account_sign_in_header_1" tools:ignore="UnusedResources">ซิงค์ Firefox ระหว่างอุปกรณ์</string>
     <!-- Text for the button to learn more about signing in to your Firefox account. The first parameter is the name of the application.-->
-    <string name="onboarding_manual_sign_in_description_2">นำที่คั่นหน้า ประวัติ และรหัสผ่านไปยัง %1$s บนอุปกรณ์นี้</string>
+    <string moz:removedIn="106" name="onboarding_manual_sign_in_description_2" tools:ignore="UnusedResources">นำที่คั่นหน้า ประวัติ และรหัสผ่านไปยัง %1$s บนอุปกรณ์นี้</string>
     <!-- text for the button to manually sign into Firefox account. -->
-    <string name="onboarding_firefox_account_sign_in_1">ลงทะเบียน</string>
+    <string moz:removedIn="106" name="onboarding_firefox_account_sign_in_1" tools:ignore="UnusedResources">ลงทะเบียน</string>
+    <!-- Text for the button to manually sign into Firefox account. -->
+    <string name="onboarding_firefox_account_sign_in">เข้าสู่ระบบ</string>
     <!-- text to display in the snackbar once account is signed-in -->
     <string name="onboarding_firefox_account_sync_is_on">Sync เปิดอยู่</string>
     <!-- text for the tracking protection onboarding card header -->
-    <string name="onboarding_tracking_protection_header_3">ความเป็นส่วนตัวตลอดเวลา</string>
+    <string moz:removedIn="106" name="onboarding_tracking_protection_header_3" tools:ignore="UnusedResources">ความเป็นส่วนตัวตลอดเวลา</string>
+    <!-- Text for the tracking protection onboarding card header -->
+    <string name="onboarding_tracking_protection_header">การปกป้องความเป็นส่วนตัวตามค่าเริ่มต้น</string>
     <!-- text for the tracking protection card description. The first parameter is the name of the application.-->
-    <string name="onboarding_tracking_protection_description_4">%1$s จะหยุดบริษัทต่าง ๆ ไม่ให้ติดตามคุณอย่างลับ ๆ ขณะที่คุณท่องเว็บโดยอัตโนมัติ</string>
+    <string moz:removedIn="106" name="onboarding_tracking_protection_description_4" tools:ignore="UnusedResources">%1$s จะหยุดบริษัทต่าง ๆ ไม่ให้ติดตามคุณอย่างลับ ๆ ขณะที่คุณท่องเว็บโดยอัตโนมัติ</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
     <string name="onboarding_tracking_protection_standard_button_2">มาตรฐาน (ค่าเริ่มต้น)</string>
     <!-- text for standard blocking option button description -->
@@ -1248,12 +1250,14 @@
     <!-- text for the toolbar position card header  -->
     <string name="onboarding_toolbar_placement_header_1">เลือกตำแหน่งแถบเครื่องมือของคุณ</string>
     <!-- text for the toolbar position card description -->
-    <string name="onboarding_toolbar_placement_description_1">วางแถบเครื่องมือไว้ใกล้ ๆ เก็บไว้ที่ด้านล่างหรือย้ายไปด้านบน</string>
+    <string moz:removedIn="106" name="onboarding_toolbar_placement_description_1" tools:ignore="UnusedResources">วางแถบเครื่องมือไว้ใกล้ ๆ เก็บไว้ที่ด้านล่างหรือย้ายไปด้านบน</string>
     <!-- text for the privacy notice onboarding card header -->
-    <string name="onboarding_privacy_notice_header">ความเป็นส่วนตัวของคุณ</string>
+    <string moz:removedIn="106" name="onboarding_privacy_notice_header" tools:ignore="UnusedResources">ความเป็นส่วนตัวของคุณ</string>
+    <!-- Text for the privacy notice onboarding card header -->
+    <string name="onboarding_privacy_notice_header_1">คุณควบคุมข้อมูลของคุณ</string>
     <!-- text for the privacy notice onboarding card description
     The first parameter is the name of the app (e.g. Firefox Preview) Substitute %s for long browser name. -->
-    <string name="onboarding_privacy_notice_description2">เราได้ออกแบบ %s เพื่อให้คุณสามารถควบคุมสิ่งที่คุณต้องการแบ่งปันออนไลน์และสิ่งที่คุณต้องการแบ่งปันกับเราได้</string>
+    <string moz:removedIn="106" name="onboarding_privacy_notice_description2" tools:ignore="UnusedResources">เราได้ออกแบบ %s เพื่อให้คุณสามารถควบคุมสิ่งที่คุณต้องการแบ่งปันออนไลน์และสิ่งที่คุณต้องการแบ่งปันกับเราได้</string>
     <!-- Text for the button to read the privacy notice -->
     <string name="onboarding_privacy_notice_read_button">อ่านประกาศความเป็นส่วนตัวของเรา</string>
 

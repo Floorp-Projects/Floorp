@@ -1397,6 +1397,10 @@
     <!-- Category of trackers (tracking content) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_tracking_content_title">ຕົວຕິດຕາມເນື້ອຫາ</string>
 
+    <!-- Enhanced Tracking Protection message that protection is currently on for this site -->
+    <string name="etp_panel_on">ການປົກປ້ອງແມ່ນເປີດຢູ່ສຳລັບເວັບໄຊນີ້</string>
+    <!-- Enhanced Tracking Protection message that protection is currently off for this site -->
+    <string name="etp_panel_off">ການປົກປ້ອງຖືກປິດໄວ້ສຳລັບເວັບໄຊນີ້</string>
     <!-- Header for exceptions list for which sites enhanced tracking protection is always off -->
     <string name="enhanced_tracking_protection_exceptions">ເວັບໄຊທ</string>
     <!-- Content description (not visible, for screen readers etc.): Navigate
@@ -1432,6 +1436,8 @@
     <!-- Toast shown to the user when they are activating the secret dev menu
         The first parameter is number of long clicks left to enable the menu -->
     <string name="about_debug_menu_toast_progress">ເມນູດີບັກ: ຄຣິກດ້ານຊ້າຍ %1$d ເພື່ອເປີດໃຊ້ງານ</string>
+
+    <string name="about_debug_menu_toast_done">ເປີດໃຊ້ເມນູດີບັກແລ້ວ</string>
 
     <!-- Browser long press popup menu -->
     <!-- Copy the current url -->
@@ -1786,6 +1792,9 @@
     <!-- The text displayed when a synced device has no tabs to show in the list of Synced Tabs. -->
     <string name="synced_tabs_no_open_tabs">ບໍ່ມີແທັບທີ່ເປີດຢູ່</string>
 
+    <!-- Top Sites -->
+    <!-- Title text displayed in the dialog when shortcuts limit is reached. -->
+    <string name="shortcut_max_limit_title">ຮອດຂີດຈຳກັດທາງລັດແລ້ວ</string>
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">ໂອເຄ, ເຂົ້າໃຈແລ້ວ</string>
     <!-- Label for the preference to show the shortcuts for the most visited top sites on the homepage -->
@@ -1838,6 +1847,9 @@
     <!-- Content description for privacy content close button -->
     <string name="privacy_content_close_button_content_description">ປິດ</string>
 
+    <!-- Pocket recommended stories -->
+    <!-- Header text for a section on the home screen. -->
+    <string name="pocket_stories_header_1">ເລື່ອງທີ່ກະຕຸ້ນຄວາມຄິດ</string>
     <!-- Header text for a section on the home screen. -->
     <string name="pocket_stories_categories_header">ເລື່ອງຕາມຫົວຂໍ້</string>
     <!-- Text of a button allowing users to access an external url for more Pocket recommendations. -->

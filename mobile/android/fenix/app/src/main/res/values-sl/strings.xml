@@ -394,8 +394,6 @@
     <!-- Preference for settings related to visual options -->
     <string name="preferences_customize">Prilagodi</string>
     <!-- Preference description for banner about signing in -->
-    <string moz:RemovedIn="104" name="preferences_sign_in_description" tools:ignore="UnusedResources">Sinhronizirajte zaznamke, gesla in ostalo s Firefox Računom</string>
-    <!-- Preference description for banner about signing in -->
     <string name="preferences_sign_in_description_2">Prijavite se in sinhronizirajte zavihke, zaznamke, gesla in še kaj.</string>
     <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
     <string name="preferences_account_default_name">Firefox Račun</string>
@@ -496,6 +494,8 @@
     able to tap on the app logo in the home screen and can switch to different wallpapers by tapping. -->
     <string moz:removedIn="105" name="wallpaper_logo_content_description" tools:ignore="UnusedResources">Logtip Firefoxa – spremeni ozadje, gumb</string>
 
+    <!-- Text for classic wallpapers title. The first parameter is the Firefox name. -->
+    <string name="wallpaper_classic_title">Klasični %s</string>
     <!-- Text for limited edition wallpapers title. -->
     <string name="wallpaper_limited_edition_title">Omejena izdaja</string>
     <!-- Description text for the limited edition wallpapers with learn more link. The first parameter is the learn more string defined in wallpaper_learn_more-->
@@ -591,9 +591,6 @@
     <string name="preference_experiments_summary_2">Dovoli Mozilli namestitev in izvajanje raziskav</string>
 
     <!-- Turn On Sync Preferences -->
-    <!-- Header of the Turn on Sync preference view -->
-    <string moz:RemovedIn="104" name="preferences_sync" tools:ignore="UnusedResources">Vklopi Sync</string>
-
     <!-- Header of the Sync and save your data preference view -->
     <string name="preferences_sync_2">Sinhronizirajte in shranite podatke</string>
     <!-- Preference for reconnecting to FxA sync -->
@@ -814,9 +811,6 @@
     <string name="delete_from_history">Izbriši iz zgodovine</string>
     <!-- Postfix for private WebApp titles, placeholder is replaced with app name -->
     <string name="pwa_site_controls_title_private">%1$s (zasebni način)</string>
-
-    <!-- Title text for the normal tabs header in the tabs tray which are not part of any tab grouping. -->
-    <string moz:removedIn="104" name="tab_tray_header_title_1" tools:ignore="UnusedResources">Ostali zavihki</string>
 
     <!-- History -->
     <!-- Text for the button to search all history -->
@@ -1227,8 +1221,6 @@
     <!-- Action item in menu for the Delete browsing data on quit feature -->
     <string name="delete_browsing_data_on_quit_action">Izhod</string>
 
-    <!-- Dialog message to the user asking to delete browsing data. -->
-    <string moz:removedIn="104" name="delete_browsing_data_prompt_message" tools:ignore="UnusedResources">S tem boste izbrisali vse podatke brskanja.</string>
     <!-- Title text of a delete browsing data dialog. -->
     <string name="delete_history_prompt_title">Časovni obseg brisanja</string>
     <!-- Body text of a delete browsing data dialog. -->
@@ -1265,6 +1257,8 @@
     <!-- Text for onboarding welcome message
     The first parameter is the name of the app (e.g. Firefox Preview) -->
     <string moz:RemovedIn="106" name="onboarding_header" tools:ignore="UnusedResources">Dobrodošli v %s!</string>
+    <!-- Text for onboarding welcome header. -->
+    <string name="onboarding_header_2">Dobrodošli v boljšem internetu</string>
     <!-- Text for the onboarding welcome message. -->
     <string name="onboarding_message">Brskalnik, razvit za ljudi, ne za dobiček.</string>
     <!-- text for the Firefox account onboarding sign in card header. The word "Firefox" should not be translated -->
@@ -1275,6 +1269,8 @@
     <string moz:removedIn="106" name="onboarding_manual_sign_in_description_2" tools:ignore="UnusedResources">Prinesite zaznamke, zgodovino in gesla v %1$s na tej napravi.</string>
     <!-- text for the button to manually sign into Firefox account. -->
     <string moz:removedIn="106" name="onboarding_firefox_account_sign_in_1" tools:ignore="UnusedResources">Prijava</string>
+    <!-- Text for the button to manually sign into Firefox account. -->
+    <string name="onboarding_firefox_account_sign_in">Prijava</string>
     <!-- text to display in the snackbar once account is signed-in -->
     <string name="onboarding_firefox_account_sync_is_on">Sync je vklopljen</string>
     <!-- text for the tracking protection onboarding card header -->
@@ -1295,6 +1291,8 @@
     <string name="onboarding_toolbar_placement_header_1">Izberite postavitev orodne vrstice</string>
     <!-- text for the toolbar position card description -->
     <string moz:removedIn="106" name="onboarding_toolbar_placement_description_1" tools:ignore="UnusedResources">Postavite si orodno vrstico na doseg roke. Naj bo na dnu ali pa jo premaknite na vrh.</string>
+    <!-- Text for the toolbar position card description -->
+    <string name="onboarding_toolbar_placement_description">Naj bo na dnu ali pa jo premaknite na vrh.</string>
     <!-- text for the privacy notice onboarding card header -->
     <string moz:removedIn="106" name="onboarding_privacy_notice_header" tools:ignore="UnusedResources">Vaša zasebnost</string>
 

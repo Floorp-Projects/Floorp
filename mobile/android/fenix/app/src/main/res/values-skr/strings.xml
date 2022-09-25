@@ -279,6 +279,8 @@
     <string name="onboarding_home_screen_jump_back_contextual_hint_2">آپݨے ذاتی تھئے مکھ پنّے نال ملو۔ حالیہ ٹیباں، نشانیاں تے ڳولݨ نتیجے اتھ ظاہر تھیسن۔</string>
     <!-- Home onboarding dialog welcome screen title text. -->
     <string moz:RemovedIn="106" name="onboarding_home_welcome_title" tools:ignore="UnusedResources">آزاد انٹرنیٹ وچ ست بسم اللہ</string>
+    <!-- Home onboarding dialog welcome screen title text. -->
+    <string name="onboarding_home_welcome_title_2">ٻئے ذاتی انٹرنیٹ وچ ست بسم اللہ</string>
     <!-- Home onboarding dialog welcome screen description text. -->
     <string name="onboarding_home_welcome_description">ٻئے رنگ۔ چنگی رازداری۔ نفعے کنوں ودھ لوکاں نال پریت پالݨ۔</string>
     <!-- Home onboarding dialog sign into sync screen title text. -->
@@ -472,8 +474,12 @@
     <!-- Snackbar label for action to view selected wallpaper -->
     <string name="wallpaper_updated_snackbar_action">نظارہ</string>
 
+    <!-- Snackbar message for when wallpaper couldn't be downloaded -->
+    <string name="wallpaper_download_error_snackbar_message">وال پیپر ڈاؤن لوڈ کائنی سڳا</string>
     <!-- Snackbar label for action to retry downloading the wallpaper -->
     <string name="wallpaper_download_error_snackbar_action">ولدا کوشش کرو</string>
+    <!-- Snackbar message for when wallpaper couldn't be selected because of the disk error -->
+    <string name="wallpaper_select_error_snackbar_message">وال پیپر کائنی وٹا سڳا</string>
     <!-- Text displayed that links to website containing documentation about the "Limited Edition" wallpapers. -->
     <string name="wallpaper_learn_more">ٻیا سِکھو</string>
     <!-- Label for switch which toggles the "tap-to-switch" behavior on home screen logo -->
@@ -486,6 +492,11 @@
     <string name="wallpaper_classic_title">کلاسیکل %s</string>
     <!-- Text for limited edition wallpapers title. -->
     <string name="wallpaper_limited_edition_title">محدود ایڈیشن</string>
+
+    <!-- Description text for the limited edition wallpapers with learn more link. The first parameter is the learn more string defined in wallpaper_learn_more-->
+    <string name="wallpaper_limited_edition_description_with_learn_more">آزاد آوازاں دا  نواں مجموعہ۔ %s</string>
+    <!-- Description text for the limited edition wallpapers. -->
+    <string name="wallpaper_limited_edition_description">آزاد آوازاں دا نواں مجموعہ۔</string>
 
     <!-- Add-on Installation from AMO-->
     <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is not supported -->
