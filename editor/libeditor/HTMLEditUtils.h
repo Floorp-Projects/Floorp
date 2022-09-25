@@ -167,6 +167,13 @@ class HTMLEditUtils final {
     return !IsBlockElement(aContent);
   }
 
+  /**
+   * IsVisibleElementEvenIfLeafNode() returns true if aContent is an empty block
+   * element, a visible replaced element such as a form control.  This does not
+   * check the layout information.
+   */
+  static bool IsVisibleElementEvenIfLeafNode(const nsIContent& aContent);
+
   static bool IsInlineStyle(nsINode* aNode);
 
   /**
@@ -848,7 +855,7 @@ class HTMLEditUtils final {
   };
   using LeafNodeTypes = EnumSet<LeafNodeType>;
   static nsIContent* GetLastLeafContent(
-      nsINode& aNode, const LeafNodeTypes& aLeafNodeTypes,
+      const nsINode& aNode, const LeafNodeTypes& aLeafNodeTypes,
       const Element* aAncestorLimiter = nullptr) {
     MOZ_ASSERT_IF(
         aLeafNodeTypes.contains(LeafNodeType::OnlyEditableLeafNode),
@@ -1644,6 +1651,13 @@ class HTMLEditUtils final {
     }
     return nullptr;
   }
+
+  /**
+   * Return last <br> element or last text node ending with a preserved line
+   * break of aBlockElement.
+   */
+  static nsIContent* GetUnnecessaryLineBreakContent(
+      const Element& aBlockElement);
 
   /**
    * IsInTableCellSelectionMode() returns true when Gecko's editor thinks that

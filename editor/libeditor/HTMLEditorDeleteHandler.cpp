@@ -20,6 +20,7 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/CheckedInt.h"
 #include "mozilla/ContentIterator.h"
+#include "mozilla/EditorDOMPoint.h"
 #include "mozilla/InternalMutationEvent.h"
 #include "mozilla/OwningNonNull.h"
 #include "mozilla/StaticPrefs_editor.h"  // for StaticPrefs::editor_*
@@ -4787,6 +4788,13 @@ MoveNodeResult HTMLEditor::MoveOneHardLineContentsWithTransaction(
     return MoveNodeResult(NS_ERROR_INVALID_ARG);
   }
 
+  const RefPtr<Element> inclusiveAncestorBlock =
+      aPointToInsert.IsInContentNode()
+          ? HTMLEditUtils::GetInclusiveAncestorElement(
+                *aPointToInsert.ContainerAs<nsIContent>(),
+                HTMLEditUtils::ClosestBlockElement)
+          : nullptr;
+
   EditorDOMPoint pointToInsert(aPointToInsert);
   EditorDOMPoint pointToPutCaret;
   AutoTArray<OwningNonNull<nsIContent>, 64> arrayOfContents;
@@ -4852,8 +4860,47 @@ MoveNodeResult HTMLEditor::MoveOneHardLineContentsWithTransaction(
     return MoveNodeIgnored(std::move(pointToInsert));
   }
 
+  // Track the range which contains the moved contents.
+  EditorDOMRange movedContentRange(pointToInsert);
   MoveNodeResult moveContentsInLineResult = MoveNodeIgnored(pointToInsert);
+  if (aMoveToEndOfContainer == MoveToEndOfContainer::Yes) {
+    pointToInsert.SetToEndOf(pointToInsert.GetContainer());
+  }
   for (auto& content : arrayOfContents) {
+    {
+      AutoEditorDOMRangeChildrenInvalidator lockOffsets(movedContentRange);
+      // If the content is a block element, move all children of it to the
+      // new container, and then, remove the (probably) empty block element.
+      if (HTMLEditUtils::IsBlockElement(content)) {
+        moveContentsInLineResult |= MoveChildrenWithTransaction(
+            MOZ_KnownLive(*content->AsElement()), pointToInsert);
+        if (moveContentsInLineResult.isErr()) {
+          NS_WARNING("HTMLEditor::MoveChildrenWithTransaction() failed");
+          return moveContentsInLineResult;
+        }
+        moveContentsInLineResult.MarkAsHandled();
+        // MOZ_KnownLive because 'arrayOfContents' is guaranteed to
+        // keep it alive.
+        nsresult rv = DeleteNodeWithTransaction(MOZ_KnownLive(*content));
+        if (MOZ_UNLIKELY(rv == NS_ERROR_EDITOR_DESTROYED)) {
+          NS_WARNING("EditorBase::DeleteNodeWithTransaction() failed");
+          moveContentsInLineResult.IgnoreCaretPointSuggestion();
+          return MoveNodeResult(NS_ERROR_EDITOR_DESTROYED);
+        }
+        NS_WARNING_ASSERTION(
+            NS_SUCCEEDED(rv),
+            "EditorBase::DeleteNodeWithTransaction() failed, but ignored");
+      } else {
+        // MOZ_KnownLive because 'arrayOfContents' is guaranteed to
+        // keep it alive.
+        moveContentsInLineResult |= MoveNodeOrChildrenWithTransaction(
+            MOZ_KnownLive(content), pointToInsert);
+        if (moveContentsInLineResult.isErr()) {
+          NS_WARNING("HTMLEditor::MoveNodeOrChildrenWithTransaction() failed");
+          return moveContentsInLineResult;
+        }
+      }
+    }
     // For backward compatibility, we should move contents to end of the
     // container if this is called with MoveToEndOfContainer::Yes.
     // And also if pointToInsert has been made invalid with removing preceding
@@ -4868,37 +4915,65 @@ MoveNodeResult HTMLEditor::MoveOneHardLineContentsWithTransaction(
           moveContentsInLineResult.NextInsertionPointRef().IsSet());
       pointToInsert = moveContentsInLineResult.NextInsertionPointRef();
     }
-    // If the content is a block element, move all children of it to the
-    // new container, and then, remove the (probably) empty block element.
-    if (HTMLEditUtils::IsBlockElement(content)) {
-      moveContentsInLineResult |= MoveChildrenWithTransaction(
-          MOZ_KnownLive(*content->AsElement()), pointToInsert);
-      if (moveContentsInLineResult.isErr()) {
-        NS_WARNING("HTMLEditor::MoveChildrenWithTransaction() failed");
-        return moveContentsInLineResult;
-      }
-      moveContentsInLineResult.MarkAsHandled();
-      // MOZ_KnownLive because 'arrayOfContents' is guaranteed to
-      // keep it alive.
-      nsresult rv = DeleteNodeWithTransaction(MOZ_KnownLive(*content));
-      if (MOZ_UNLIKELY(rv == NS_ERROR_EDITOR_DESTROYED)) {
-        NS_WARNING("EditorBase::DeleteNodeWithTransaction() failed");
-        moveContentsInLineResult.IgnoreCaretPointSuggestion();
-        return MoveNodeResult(NS_ERROR_EDITOR_DESTROYED);
-      }
-      NS_WARNING_ASSERTION(
-          NS_SUCCEEDED(rv),
-          "EditorBase::DeleteNodeWithTransaction() failed, but ignored");
-      continue;
+    if (!MayHaveMutationEventListeners() ||
+        movedContentRange.EndRef().IsBefore(pointToInsert)) {
+      movedContentRange.SetEnd(pointToInsert);
     }
-    // MOZ_KnownLive because 'arrayOfContents' is guaranteed to
-    // keep it alive.
-    moveContentsInLineResult |= MoveNodeOrChildrenWithTransaction(
-        MOZ_KnownLive(content), pointToInsert);
-    if (moveContentsInLineResult.isErr()) {
-      NS_WARNING("HTMLEditor::MoveNodeOrChildrenWithTransaction() failed");
+  }
+
+  // Nothing has been moved, we don't need to clean up unnecessary <br> element.
+  // And also if we're not moving content into a block, we can quit right now.
+  if (moveContentsInLineResult.Ignored() ||
+      MOZ_UNLIKELY(!inclusiveAncestorBlock)) {
+    return moveContentsInLineResult;
+  }
+
+  // If we couldn't track the range to clean up, we should just stop cleaning up
+  // because returning error from here may change the behavior of web apps using
+  // mutation event listeners.
+  if (MOZ_UNLIKELY(!movedContentRange.IsPositioned() ||
+                   movedContentRange.Collapsed())) {
+    return moveContentsInLineResult;
+  }
+
+  nsCOMPtr<nsIContent> lastLineBreakContent =
+      HTMLEditUtils::GetUnnecessaryLineBreakContent(*inclusiveAncestorBlock);
+  if (!lastLineBreakContent) {
+    return moveContentsInLineResult;
+  }
+  EditorRawDOMPoint atUnnecessaryLineBreak(lastLineBreakContent);
+  if (NS_WARN_IF(!atUnnecessaryLineBreak.IsSet())) {
+    return MoveNodeResult(NS_ERROR_FAILURE);
+  }
+  // If the found unnecessary line break is not what we moved above, we
+  // shouldn't remove it.  E.g., the web app may have inserted it intentionally.
+  if (!movedContentRange.Contains(atUnnecessaryLineBreak)) {
+    return moveContentsInLineResult;
+  }
+
+  AutoTransactionsConserveSelection dontChangeMySelection(*this);
+  // If it's a text node and ending with a preformatted line break, we should
+  // delete it.
+  if (Text* textNode = Text::FromNode(lastLineBreakContent)) {
+    MOZ_ASSERT(EditorUtils::IsNewLinePreformatted(*textNode));
+    if (textNode->TextDataLength() > 1) {
+      nsresult rv = DeleteTextWithTransaction(
+          MOZ_KnownLive(*textNode), textNode->TextDataLength() - 1u, 1u);
+      if (NS_FAILED(rv)) {
+        NS_WARNING("HTMLEditor::DeleteTextWithTransaction() failed");
+        return MoveNodeResult(rv);
+      }
       return moveContentsInLineResult;
     }
+  } else {
+    MOZ_ASSERT(lastLineBreakContent->IsHTMLElement(nsGkAtoms::br));
+  }
+  // Or if the text node has only the preformatted line break or <br> element,
+  // we should remove it.
+  nsresult rv = DeleteNodeWithTransaction(*lastLineBreakContent);
+  if (NS_FAILED(rv)) {
+    NS_WARNING("EditorBase::DeleteNodeWithTransaction() failed");
+    return MoveNodeResult(rv);
   }
   return moveContentsInLineResult;
 }
