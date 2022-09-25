@@ -1854,7 +1854,7 @@
   "resource://gre/modules/handlers/HandlerList.jsm":
     "uriloader/exthandler/HandlerList.jsm",
   "resource://gre/modules/jsdebugger.jsm":
-    "js/ductwork/debugger/jsdebugger.jsm",
+    "devtools/platform/jsdebugger.jsm",
   "resource://gre/modules/kvstore.jsm":
     "toolkit/components/kvstore/kvstore.jsm",
   "resource://gre/modules/lz4.js": "toolkit/components/lz4/lz4.js",

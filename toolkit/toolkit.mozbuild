@@ -140,7 +140,6 @@ DIRS += [
     '/toolkit/library',
     '/services',
     '/startupcache',
-    '/js/ductwork/debugger',
     '/other-licenses/snappy',
 ]
 
