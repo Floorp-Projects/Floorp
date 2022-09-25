@@ -643,8 +643,14 @@ EditActionResult WhiteSpaceVisibilityKeeper::
       "The preceding invisible BR element computation was different");
   EditActionResult ret(NS_OK);
   if (aListElementTagName.isSome() ||
-      aLeftBlockElement.NodeInfo()->NameAtom() ==
-          aRightBlockElement.NodeInfo()->NameAtom()) {
+      // TODO: We should stop merging entire blocks even if they have same
+      // white-space style because Chrome behave so.  However, it's risky to
+      // change our behavior in the major cases so that we should do it in
+      // a bug to manage only the change.
+      (aLeftBlockElement.NodeInfo()->NameAtom() ==
+           aRightBlockElement.NodeInfo()->NameAtom() &&
+       EditorUtils::GetComputedWhiteSpaceStyle(aLeftBlockElement) ==
+           EditorUtils::GetComputedWhiteSpaceStyle(aRightBlockElement))) {
     // Nodes are same type.  merge them.
     EditorDOMPoint atFirstChildOfRightNode;
     nsresult rv = aHTMLEditor.JoinNearestEditableNodesWithTransaction(

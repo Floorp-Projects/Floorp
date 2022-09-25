@@ -57,7 +57,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=772796
 ],
 
 // Some tests with block elements.
-// Test 11 is a pain: <div>foo\bar</div> is be joined to "test", losing the visible line break.
 // FYI: Those tests were ported to join-pre-and-other-block.html
 /* 07*/[
   "<div>test</div><pre><div>foobar</div>baz</pre>",
@@ -77,7 +76,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=772796
 ],
 /* 11*/[
   "<div>test</div><pre><div>foo\nbar</div>baz\nfred</pre>",
-  "<div>testfoo\nbar</div><pre>baz\nfred</pre>", // BAD
+  "<div>testfoo\n</div><pre><div>bar</div>baz\nfred</pre>", // expected
 ],
 /* 12*/[
   "<div>test</div><pre>foo<div>bar</div>baz\nfred</pre>",
@@ -143,8 +142,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=772796
 ],
 /* 24-11*/[
   "<div>test</div>\n<pre><div>foo\nbar</div>baz\nfred</pre>",
-  "<div>testfoo\nbar</div><pre>baz\nfred</pre>", // BAD
-  "<div>test</div>foo\n<pre><div>bar</div>baz\nfred</pre>" // actual result
+  "<div>testfoo\n</div><pre><div>bar</div>baz\nfred</pre>", // expected
+  "<div>test</div>foo\n<pre><div>bar</div>baz\nfred</pre>", // current result (only in the backspace case)
 ],
 /* 25-12*/[
   "<div>test</div>\n<pre>foo<div>bar</div>baz\nfred</pre>",
@@ -240,7 +239,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=772796
 ],
 /* 46-07*/[
   "<div>test</div><span class=\"pre\"><div>foobar</div>baz</span>",
-  "<div>testfoobar</div><span class=\"pre\">baz</span>", // expected
+  "<div>test<span class=\"pre\"><div>foobar</div></span></div><span class=\"pre\">baz</span>", // expected
 ],
 /* 47-08*/[
   "<div>test</div><span class=\"pre\">foobar<div>baz</div></span>",
@@ -248,7 +247,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=772796
 ],
 /* 48-09*/[
   "<div>test</div><span class=\"pre\"><div>foobar</div>baz\nfred</span>",
-  "<div>testfoobar</div><span class=\"pre\">baz\nfred</span>", // expected
+  "<div>test<span class=\"pre\"><div>foobar</div></span></div><span class=\"pre\">baz\nfred</span>", // expected
 ],
 /* 49-10*/[
   "<div>test</div><span class=\"pre\">foobar<div>baz</div>\nfred</span>",
@@ -256,7 +255,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=772796
 ],
 /* 50-11*/[
   "<div>test</div><span class=\"pre\"><div>foo\nbar</div>baz\nfred</span>",
-  "<div>testfoo\nbar</div><span class=\"pre\">baz\nfred</span>", // BAD
+  "<div>testfoo\n</div><span class=\"pre\"><div>bar</div>baz\nfred</span>", // expected
 ],
 /* 51-12*/[
   "<div>test</div><span class=\"pre\">foo<div>bar</div>baz\nfred</span>",
@@ -264,36 +263,36 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=772796
 ],
 
 // Some tests with <div class="pre">.
-// The results are pretty ugly, since joining two <divs> sadly carrys the properties of the right to the left,
-// Here we merely document the ugly behaviour. See bug 1191875 for more information.
 // FYI: Those tests were ported to join-different-white-space-style-paragraphs.html
 /* 52-00*/[
   "<div>test</div><div class=\"pre\">foobar\nbaz</div>",
-  "<div class=\"pre\">testfoobar\nbaz</div>", // expected
+  "<div>testfoobar\n</div><div class=\"pre\">baz</div>", // expected
 ],
 /* 53-01*/[
   "<div>test</div><div class=\"pre\"><b>foobar\nbaz</b></div>",
-  "<div class=\"pre\">test<b>foobar\nbaz</b></div>", // expected
+  "<div>test<b>foobar</b></div><div class=\"pre\"><b>baz</b></div>", // expected
+  "<div>test<b>foobar\n</b></div><div class=\"pre\"><b>baz</b></div>", // current result
 ],
 /* 54-02*/[
   "<div>test</div><div class=\"pre\"><b>foo</b>bar\nbaz</div>",
-  "<div class=\"pre\">test<b>foo</b>bar\nbaz</div>", // expected
+  "<div>test<b>foo</b>bar\n</div><div class=\"pre\">baz</div>", // expected
 ],
 /* 55-03*/[
   "<div>test</div><div class=\"pre\"><b>foo</b>\nbar</div>",
-  "<div class=\"pre\">test<b>foo</b>\nbar</div>", // expected
+  "<div>test<b>foo</b>\n</div><div class=\"pre\">bar</div>", // expected
 ],
 /* 56-04*/[
   "<div>test</div><div class=\"pre\"><b>foo\n</b>bar\nbaz</div>",
-  "<div class=\"pre\">test<b>foo\n</b>bar\nbaz</div>", // expected
+  "<div>test<b>foo</b></div><div class=\"pre\">bar\nbaz</div>", // expected
+  "<div>test<b>foo\n</b></div><div class=\"pre\">bar\nbaz</div>", // current result
 ],
 /* 57-05*/[
   "<div>test</div><div class=\"pre\">foobar<br>baz</div>",
-  "<div class=\"pre\">testfoobar<br>baz</div>", // expected
+  "<div>testfoobar</div><div class=\"pre\">baz</div>", // expected
 ],
 /* 58-06*/[
   "<div>test</div><div class=\"pre\"><b>foobar<br>baz</b></div>",
-  "<div class=\"pre\">test<b>foobar<br>baz</b></div>", // expected
+  "<div>test<b>foobar</b></div><div class=\"pre\"><b>baz</b></div>", // expected
 ],
 /* 59-07*/[
   "<div>test</div><div class=\"pre\"><div>foobar</div>baz</div>",
@@ -301,7 +300,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=772796
 ],
 /* 60-08*/[
   "<div>test</div><div class=\"pre\">foobar<div>baz</div></div>",
-  "<div class=\"pre\">testfoobar<div>baz</div></div>", // expected
+  "<div>testfoobar</div><div class=\"pre\"><div>baz</div></div>", // expected
 ],
 /* 61-09*/[
   "<div>test</div><div class=\"pre\"><div>foobar</div>baz\nfred</div>",
@@ -309,15 +308,15 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=772796
 ],
 /* 62-10*/[
   "<div>test</div><div class=\"pre\">foobar<div>baz</div>\nfred</div>",
-  "<div class=\"pre\">testfoobar<div>baz</div>\nfred</div>", // expected
+  "<div>testfoobar</div><div class=\"pre\"><div>baz</div>\nfred</div>", // expected
 ],
 /* 63-11*/[
   "<div>test</div><div class=\"pre\"><div>foo\nbar</div>baz\nfred</div>",
-  "<div>testfoo\nbar</div><div class=\"pre\">baz\nfred</div>", // BAD
+  "<div>testfoo\n</div><div class=\"pre\"><div>bar</div>baz\nfred</div>", // expected
 ],
 /* 64-12*/[
   "<div>test</div><div class=\"pre\">foo<div>bar</div>baz\nfred</div>",
-  "<div class=\"pre\">testfoo<div>bar</div>baz\nfred</div>", // expected
+  "<div>testfoo</div><div class=\"pre\"><div>bar</div>baz\nfred</div>", // expected
 ],
 
 // Some tests with lists. These exercise the MoveBlock "left in right".
@@ -378,9 +377,16 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=772796
         sel.collapse(theDiv, 0);
         synthesizeMouse(theDiv, 100, 2, {}); /* click behind and down */
 
+        let todoCount = 0;
         /** First round: Forward delete. **/
         synthesizeKey("KEY_Delete");
-        is(theDiv.innerHTML, tests[i][1], "delete(collapsed): inner HTML for " + testName);
+        if (tests[i].length == 2 || theDiv.innerHTML == tests[i][1]) {
+          is(theDiv.innerHTML, tests[i][1], "delete(collapsed): inner HTML for " + testName);
+        } else {
+          todoCount++;
+          todo_is(theDiv.innerHTML, tests[i][1], "delete(should be): inner HTML for " + testName);
+          is(theDiv.innerHTML, tests[i][2], "delete(currently is): inner HTML for " + testName);
+        }
 
         /* Set up the selection. */
         theEdit.innerHTML = "<div id=\"" + testName + "\">" + tests[i][0] + "</div>";
@@ -392,9 +398,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=772796
         /** Second round: Backspace. **/
         synthesizeKey("KEY_ArrowRight");
         synthesizeKey("KEY_Backspace");
-        if (tests[i].length == 2) {
+        if (tests[i].length == 2 || theDiv.innerHTML == tests[i][1]) {
           is(theDiv.innerHTML, tests[i][1], "backspace: inner HTML for " + testName);
         } else {
+          todoCount++;
           todo_is(theDiv.innerHTML, tests[i][1], "backspace(should be): inner HTML for " + testName);
           is(theDiv.innerHTML, tests[i][2], "backspace(currently is): inner HTML for " + testName);
         }
@@ -408,6 +415,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=772796
 
         /** Third round: Delete with non-collapsed selection. **/
         if (i == 72) {
+          if (tests[i].length == 3) {
+            ok(!!todoCount, `All tests unexpectedly passed in ${testName}`);
+          }
           // This test doesn't work, since we can't select only one newline using the right arrow key.
           continue;
         }
@@ -419,11 +429,34 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=772796
         synthesizeKey("KEY_Delete");
 
         /* We always expect to the delete the "tf" in "testfoo". */
-        var expected = tests[i][1].replace("testfoo", "tesoo")
-                                  .replace("test<b>foo", "tes<b>oo")
-                                  .replace("test<span class=\"pre\">foo", "tes<span class=\"pre\">oo")
-                                  .replace("test<span class=\"pre\"><b>foo", "tes<span class=\"pre\"><b>oo");
-        is(theDiv.innerHTML, expected, "delete(non-collapsed): inner HTML for " + testName);
+        function makeNonCollapsedExpectation(aExpected) {
+          return aExpected
+            .replace("testfoo",
+                     "tesoo")
+            .replace("test<b>foo",
+                     "tes<b>oo")
+            .replace("test<span class=\"pre\">foo",
+                     "tes<span class=\"pre\">oo")
+            .replace("test<span class=\"pre\"><b>foo",
+                     "tes<span class=\"pre\"><b>oo")
+            .replace("test<span class=\"pre\"><div>foo",
+                     "tes<span class=\"pre\"><div>oo");
+        }
+        const expected = makeNonCollapsedExpectation(tests[i][1]);
+        if (tests[i].length == 2 || theDiv.innerHTML == expected) {
+          is(theDiv.innerHTML, expected, "delete(non-collapsed): inner HTML for " + testName);
+        } else {
+          todoCount++;
+          todo_is(theDiv.innerHTML, expected, "delete(non-collapsed, should be): inner HTML for " + testName);
+          is(
+            theDiv.innerHTML,
+            makeNonCollapsedExpectation(tests[i][2]),
+            "delete(non-collapsed, currently is): inner HTML for " + testName
+          );
+        }
+        if (tests[i].length == 3) {
+            ok(!!todoCount, `All tests unexpectedly passed in ${testName}`);
+        }
       }
 
       SimpleTest.finish();
