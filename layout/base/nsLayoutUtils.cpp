@@ -7232,11 +7232,14 @@ SurfaceFromElementResult nsLayoutUtils::SurfaceFromElement(
 
   nsCOMPtr<nsIContent> content = do_QueryInterface(aElement);
 
-  // Ensure that the image is oriented the same way as it's displayed.
-  auto orientation = StyleImageOrientation::FromImage;
-  if (nsIFrame* f = content->GetPrimaryFrame()) {
-    orientation = f->StyleVisibility()->mImageOrientation;
-  }
+  // Ensure that the image is oriented the same way as it's displayed
+  // if the image request is of the same origin.
+  auto orientation =
+      content->GetPrimaryFrame()
+          ? content->GetPrimaryFrame()->StyleVisibility()->UsedImageOrientation(
+                imgRequest)
+          : nsStyleVisibility::UsedImageOrientation(
+                imgRequest, StyleImageOrientation::FromImage);
   imgContainer = OrientImage(imgContainer, orientation);
 
   const bool noRasterize = aSurfaceFlags & SFE_NO_RASTERIZING_VECTORS;
