@@ -26,23 +26,23 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=772796
 // FYI: Those tests were ported to join-pre-and-other-block.html
 /* 00*/[
   "<div>test</div><pre>foobar\nbaz</pre>",
-  "<div>testfoobar\n</div><pre>baz</pre>", // expected
+  "<div>testfoobar</div><pre>baz</pre>", // expected
 ],
 /* 01*/[
   "<div>test</div><pre><b>foobar\nbaz</b></pre>",
-  "<div>test<b>foobar\n</b></div><pre><b>baz</b></pre>", // expected
+  "<div>test<b>foobar</b></div><pre><b>baz</b></pre>", // expected
 ],
 /* 02*/[
   "<div>test</div><pre><b>foo</b>bar\nbaz</pre>",
-  "<div>test<b>foo</b>bar\n</div><pre>baz</pre>", // expected
+  "<div>test<b>foo</b>bar</div><pre>baz</pre>", // expected
 ],
 /* 03*/[
   "<div>test</div><pre><b>foo</b>\nbar</pre>",
-  "<div>test<b>foo</b>\n</div><pre>bar</pre>", // expected
+  "<div>test<b>foo</b></div><pre>bar</pre>", // expected
 ],
 /* 04*/[
   "<div>test</div><pre><b>foo\n</b>bar\nbaz</pre>",
-  "<div>test<b>foo\n</b></div><pre>bar\nbaz</pre>", // expected
+  "<div>test<b>foo</b></div><pre>bar\nbaz</pre>", // expected
 ],
 
 // The <br> after the foobar is unfortunate but is behaviour that hasn't changed in bug 772796.
@@ -76,7 +76,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=772796
 ],
 /* 11*/[
   "<div>test</div><pre><div>foo\nbar</div>baz\nfred</pre>",
-  "<div>testfoo\n</div><pre><div>bar</div>baz\nfred</pre>", // expected
+  "<div>testfoo</div><pre><div>bar</div>baz\nfred</pre>", // expected
 ],
 /* 12*/[
   "<div>test</div><pre>foo<div>bar</div>baz\nfred</pre>",
@@ -87,23 +87,23 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=772796
 // We know that backspace doesn't work (bug 1190161). Third argument shows the current outcome.
 /* 13-00*/[
   "<div>test</div>\n<pre>foobar\nbaz</pre>",
-  "<div>testfoobar\n</div><pre>baz</pre>", // expected
+  "<div>testfoobar</div><pre>baz</pre>", // expected
 ],
 /* 14-01*/[
   "<div>test</div>\n<pre><b>foobar\nbaz</b></pre>",
-  "<div>test<b>foobar\n</b></div><pre><b>baz</b></pre>", // expected
+  "<div>test<b>foobar</b></div><pre><b>baz</b></pre>", // expected
 ],
 /* 15-02*/[
   "<div>test</div>\n<pre><b>foo</b>bar\nbaz</pre>",
-  "<div>test<b>foo</b>bar\n</div><pre>baz</pre>", // expected
+  "<div>test<b>foo</b>bar</div><pre>baz</pre>", // expected
 ],
 /* 16-03*/[
   "<div>test</div>\n<pre><b>foo</b>\nbar</pre>",
-  "<div>test<b>foo</b>\n</div><pre>bar</pre>", // expected
+  "<div>test<b>foo</b></div><pre>bar</pre>", // expected
 ],
 /* 17-04*/[
   "<div>test</div>\n<pre><b>foo\n</b>bar\nbaz</pre>",
-  "<div>test<b>foo\n</b></div><pre>bar\nbaz</pre>", // expected
+  "<div>test<b>foo</b></div><pre>bar\nbaz</pre>", // expected
 ],
 /* 18-05*/[
   "<div>test</div>\n<pre>foobar<br>baz</pre>",
@@ -131,7 +131,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=772796
 ],
 /* 24-11*/[
   "<div>test</div>\n<pre><div>foo\nbar</div>baz\nfred</pre>",
-  "<div>testfoo\n</div><pre><div>bar</div>baz\nfred</pre>", // expected
+  "<div>testfoo</div><pre><div>bar</div>baz\nfred</pre>", // expected
 ],
 /* 25-12*/[
   "<div>test</div>\n<pre>foo<div>bar</div>baz\nfred</pre>",
@@ -141,23 +141,23 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=772796
 // Some tests without <div>. These exercise the MoveBlock "right in left"
 /* 26-00*/[
   "test<pre>foobar\nbaz</pre>",
-  "testfoobar\n<pre>baz</pre>", // expected
+  "testfoobar<pre>baz</pre>", // expected
 ],
 /* 27-01*/[
   "test<pre><b>foobar\nbaz</b></pre>",
-  "test<b>foobar\n</b><pre><b>baz</b></pre>", // expected
+  "test<b>foobar</b><pre><b>baz</b></pre>", // expected
 ],
 /* 28-02*/[
   "test<pre><b>foo</b>bar\nbaz</pre>",
-  "test<b>foo</b>bar\n<pre>baz</pre>", // expected
+  "test<b>foo</b>bar<pre>baz</pre>", // expected
 ],
 /* 29-03*/[
   "test<pre><b>foo</b>\nbar</pre>",
-  "test<b>foo</b>\n<pre>bar</pre>", // expected
+  "test<b>foo</b><pre>bar</pre>", // expected
 ],
 /* 30-04*/[
   "test<pre><b>foo\n</b>bar\nbaz</pre>",
-  "test<b>foo\n</b><pre>bar\nbaz</pre>", // expected
+  "test<b>foo</b><pre>bar\nbaz</pre>", // expected
 ],
 /* 31-05*/[
   "test<pre>foobar<br>baz</pre>",
@@ -185,7 +185,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=772796
 ],
 /* 37-11*/[
   "test<pre><div>foo\nbar</div>baz\nfred</pre>",
-  "testfoo\n<pre><div>bar</div>baz\nfred</pre>", // expected
+  "testfoo<pre><div>bar</div>baz\nfred</pre>", // expected
 ],
 /* 38-12*/[
   "test<pre>foo<div>bar</div>baz\nfred</pre>",
@@ -330,16 +330,15 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=772796
 // FYI: Those tests were ported to join-pre-and-other-block.html
 /* 70*/[
   "<div>test</div><pre>foobar\n</pre>baz",
-  "<div>testfoobar\n</div>baz", // expected
+  "<div>testfoobar</div>baz", // expected
 ],
 /* 71*/[
   "<div>test</div><pre>\nfoo\nbar</pre>",
-  "<div>testfoo\n</div><pre>bar</pre>", // expected
+  "<div>testfoo</div><pre>bar</pre>", // expected
 ],
 /* 72*/[
   "<div>test</div><pre>\n\nfoo\nbar</pre>",
   "<div>test</div><pre>foo\nbar</pre>", // expected
-  "<div>test\n</div><pre>foo\nbar</pre>", // current result
 ],
 ];
 
