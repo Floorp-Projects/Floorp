@@ -1309,6 +1309,14 @@ export class SearchService {
     );
 
     lazy.logConsole.debug("Completed #init");
+
+    // It is possible that Nimbus could have called onUpdate before
+    // we started listening, so do a check on startup.
+    Services.tm.dispatchToMainThread(async () => {
+      await lazy.NimbusFeatures.search.ready();
+      this.#checkNimbusPrefs();
+    });
+
     return this.#initRV;
   }
 
@@ -3024,6 +3032,41 @@ export class SearchService {
     return policy;
   }
 
+  #nimbusSearchUpdatedFun = null;
+
+  async #nimbusSearchUpdated() {
+    this.#checkNimbusPrefs();
+    Services.search.wrappedJSObject._maybeReloadEngines();
+  }
+
+  #checkNimbusPrefs() {
+    let nimbusPrivateDefaultUIEnabled = lazy.NimbusFeatures.search.getVariable(
+      "seperatePrivateDefaultUIEnabled"
+    );
+    let nimbusPrivateDefaultUrlbarResultEnabled = lazy.NimbusFeatures.search.getVariable(
+      "seperatePrivateDefaultUrlbarResultEnabled"
+    );
+
+    if (
+      this._separatePrivateDefaultEnabledPrefValue !=
+      nimbusPrivateDefaultUIEnabled
+    ) {
+      Services.prefs.setBoolPref(
+        `${lazy.SearchUtils.BROWSER_SEARCH_PREF}separatePrivateDefault.ui.enabled`,
+        nimbusPrivateDefaultUIEnabled
+      );
+    }
+    if (
+      this.separatePrivateDefaultUrlbarResultEnabled !=
+      nimbusPrivateDefaultUrlbarResultEnabled
+    ) {
+      Services.prefs.setBoolPref(
+        `${lazy.SearchUtils.BROWSER_SEARCH_PREF}separatePrivateDefaultUrlbarResultEnabled`,
+        nimbusPrivateDefaultUrlbarResultEnabled
+      );
+    }
+  }
+
   #addObservers() {
     if (this.#observersAdded) {
       // There might be a race between synchronous and asynchronous
@@ -3032,9 +3075,8 @@ export class SearchService {
     }
     this.#observersAdded = true;
 
-    lazy.NimbusFeatures.search.onUpdate(() =>
-      Services.search.wrappedJSObject._maybeReloadEngines()
-    );
+    this.#nimbusSearchUpdatedFun = this.#nimbusSearchUpdated.bind(this);
+    lazy.NimbusFeatures.search.onUpdate(this.#nimbusSearchUpdatedFun);
 
     Services.obs.addObserver(this, lazy.SearchUtils.TOPIC_ENGINE_MODIFIED);
     Services.obs.addObserver(this, QUIT_APPLICATION_TOPIC);
@@ -3097,9 +3139,7 @@ export class SearchService {
 
     this._settings.removeObservers();
 
-    lazy.NimbusFeatures.search.off(() =>
-      Services.search.wrappedJSObject._maybeReloadEngines()
-    );
+    lazy.NimbusFeatures.search.off(this.#nimbusSearchUpdatedFun);
 
     Services.obs.removeObserver(this, lazy.SearchUtils.TOPIC_ENGINE_MODIFIED);
     Services.obs.removeObserver(this, QUIT_APPLICATION_TOPIC);
