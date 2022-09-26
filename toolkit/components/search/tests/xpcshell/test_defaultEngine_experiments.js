@@ -14,6 +14,16 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 
 let getVariableStub;
 
+let defaultGetVariable = name => {
+  if (name == "seperatePrivateDefaultUIEnabled") {
+    return true;
+  }
+  if (name == "seperatePrivateDefaultUrlbarResultEnabled") {
+    return false;
+  }
+  return undefined;
+};
+
 add_setup(async () => {
   Services.prefs.setBoolPref(
     SearchUtils.BROWSER_SEARCH_PREF + "separatePrivateDefault.ui.enabled",
@@ -27,6 +37,8 @@ add_setup(async () => {
   sinon.spy(NimbusFeatures.search, "onUpdate");
   sinon.stub(NimbusFeatures.search, "ready").resolves();
   getVariableStub = sinon.stub(NimbusFeatures.search, "getVariable");
+  getVariableStub.callsFake(defaultGetVariable);
+
   do_get_profile();
   Services.fog.initializeFOG();
 
@@ -50,7 +62,7 @@ async function switchExperiment(newExperiment) {
     if (name == "experiment") {
       return newExperiment;
     }
-    return undefined;
+    return defaultGetVariable(name);
   });
   for (let call of NimbusFeatures.search.onUpdate.getCalls()) {
     call.args[0]();

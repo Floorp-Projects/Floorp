@@ -42,6 +42,12 @@ search:
     extraParams:
       type: json
       description: Query parameters values for search engine configurations.
+    seperatePrivateDefaultUIEnabled:
+      type: boolean
+      description: Whether the UI for the separate private default feature is enabled.
+    seperatePrivateDefaultUrlbarResultEnabled:
+      type: boolean
+      description: Whether the urlbar result for the separate private default is shown.
 urlbar:
   description: The Address Bar
   owner: search-and-suggest-program@mozilla.com
