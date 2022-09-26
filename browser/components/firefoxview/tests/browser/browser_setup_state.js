@@ -626,3 +626,79 @@ add_task(async function test_mobile_promo_windows() {
   });
   await tearDown(sandbox);
 });
+
+add_task(async function test_keyboard_focus_after_tab_pickup_opened() {
+  // Reset various things touched by other tests in this file so that
+  // we have a sufficiently clean environment.
+
+  TabsSetupFlowManager.resetInternalState();
+
+  // Ensure that the tab-pickup section doesn't need to be opened.
+  Services.prefs.clearUserPref(
+    "browser.tabs.firefox-view.ui-state.tab-pickup.open"
+  );
+
+  // make sure the feature tour doesn't get in the way
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      [
+        "browser.firefox-view.feature-tour",
+        JSON.stringify({
+          message: "FIREFOX_VIEW_FEATURE_TOUR",
+          screen: `FEATURE_CALLOUT_1`,
+          complete: true,
+        }),
+      ],
+    ],
+  });
+
+  // Let's be deterministic about the basic UI state!
+  const sandbox = setupMocks({
+    state: UIState.STATUS_NOT_CONFIGURED,
+    syncEnabled: false,
+  });
+
+  await BrowserTestUtils.withNewTab(
+    {
+      gBrowser,
+      url: "about:firefoxview",
+    },
+    async browser => {
+      const { document } = browser.contentWindow;
+
+      is(
+        document.activeElement.localName,
+        "body",
+        "document body element is initially focused"
+      );
+
+      const tab = () => {
+        info("Tab keypress synthesized");
+        EventUtils.synthesizeKey("KEY_Tab");
+      };
+
+      tab();
+
+      let tabPickupContainer = document.querySelector(
+        "#tab-pickup-container summary.page-section-header"
+      );
+      is(
+        document.activeElement,
+        tabPickupContainer,
+        "tab pickup container header has focus"
+      );
+
+      tab();
+
+      is(
+        document.activeElement.id,
+        "firefoxview-tabpickup-step-signin-primarybutton",
+        "tab pickup primary button has focus"
+      );
+    }
+  );
+
+  // cleanup time
+  await tearDown(sandbox);
+  await SpecialPowers.popPrefEnv();
+});
