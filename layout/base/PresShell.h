@@ -205,12 +205,21 @@ class PresShell final : public nsStubDocumentObserver,
 
   static void ClearMouseCaptureOnView(nsView* aView);
 
-  // If a frame in the subtree rooted at aFrame is capturing the mouse then
-  // clears that capture.
-  static void ClearMouseCapture(nsIFrame* aFrame);
-
   // Clear the capture content if it exists in this process.
   static void ClearMouseCapture();
+
+  // If a frame in the subtree rooted at aFrame is capturing the mouse then
+  // clears that capture.
+  //
+  // NOTE(emilio): This is needed only so that mouse events captured by a remote
+  // frame don't remain being captured by the frame while hidden, see
+  // dom/events/test/browser_mouse_enterleave_switch_tab.js, which is the only
+  // test that meaningfully exercises this code path.
+  //
+  // We could consider maybe removing this, since the capturing content gets
+  // reset on mouse/pointerdown? Or maybe exposing an API so that the front-end
+  // does this.
+  static void ClearMouseCapture(nsIFrame* aFrame);
 
 #ifdef ACCESSIBILITY
   /**
