@@ -1,5 +1,3 @@
-"use strict";
-
 const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
   PlacesUtils: "resource://gre/modules/PlacesUtils.sys.mjs",

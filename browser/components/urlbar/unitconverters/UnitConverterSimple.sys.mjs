@@ -2,8 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
-
 // NOTE: This units table need to be localized upon supporting multi locales
 //       since it supports en-US only.
 //       e.g. Should support plugada or funty as well for pound.

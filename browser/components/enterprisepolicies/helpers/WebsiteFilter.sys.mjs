@@ -2,8 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
-
 /*
  * This module implements the policy to block websites from being visited,
  * or to only allow certain websites to be visited.
