@@ -10,6 +10,8 @@
  * eagerly loaded at startup.
  */
 
+"use strict";
+
 /* globals WebExtensionPolicy */
 
 import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
