@@ -94,6 +94,7 @@ async function setTreeStyleTabURL() {
 function setSidebarMode() {
   if (Services.prefs.getBoolPref("floorp.browser.sidebar.enable", false)) {
     const modeValuePref = Services.prefs.getIntPref("floorp.browser.sidebar2.mode", undefined);
+    const stringWebpanelNum = String(modeValuePref - 4);
     const sidebar2elem = document.getElementById("sidebar2");
     const webpanel = document.getElementById("webpanel");
     const panelWidth = Services.prefs.getIntPref(`floorp.browser.sidebar2.width.mode${modeValuePref}`, undefined);
@@ -123,84 +124,8 @@ function setSidebarMode() {
         setTreeStyleTabURL();
         changeBrowserManagerSidebarConfigShowWebpanels();
         break;
-      case 5:
-        webpanel.setAttribute("src", Services.prefs.getStringPref("floorp.browser.sidebar2.customurl1", undefined));
-        changeBrowserManagerSidebarConfigShowWebpanels();
-        break;
-      case 6:
-        webpanel.setAttribute("src", Services.prefs.getStringPref("floorp.browser.sidebar2.customurl2", undefined));
-        changeBrowserManagerSidebarConfigShowWebpanels();
-        break;
-      case 7:
-        webpanel.setAttribute("src", Services.prefs.getStringPref("floorp.browser.sidebar2.customurl3", undefined));
-        changeBrowserManagerSidebarConfigShowWebpanels();
-        break;
-      case 8:
-        webpanel.setAttribute("src", Services.prefs.getStringPref("floorp.browser.sidebar2.customurl4", undefined));
-        changeBrowserManagerSidebarConfigShowWebpanels();
-        break;
-      case 9:
-        webpanel.setAttribute("src", Services.prefs.getStringPref("floorp.browser.sidebar2.customurl5", undefined));
-        changeBrowserManagerSidebarConfigShowWebpanels();
-        break;
-      case 10:
-        webpanel.setAttribute("src", Services.prefs.getStringPref("floorp.browser.sidebar2.customurl6", undefined));
-        changeBrowserManagerSidebarConfigShowWebpanels();
-        break;
-      case 11:
-        webpanel.setAttribute("src", Services.prefs.getStringPref("floorp.browser.sidebar2.customurl7", undefined));
-        changeBrowserManagerSidebarConfigShowWebpanels();
-        break;
-      case 12:
-        webpanel.setAttribute("src", Services.prefs.getStringPref("floorp.browser.sidebar2.customurl8", undefined));
-        changeBrowserManagerSidebarConfigShowWebpanels();
-        break;
-      case 13:
-        webpanel.setAttribute("src", Services.prefs.getStringPref("floorp.browser.sidebar2.customurl9", undefined));
-        changeBrowserManagerSidebarConfigShowWebpanels();
-        break;
-      case 14:
-        webpanel.setAttribute("src", Services.prefs.getStringPref("floorp.browser.sidebar2.customurl10", undefined));
-        changeBrowserManagerSidebarConfigShowWebpanels();
-        break;
-      case 15:
-        webpanel.setAttribute("src", Services.prefs.getStringPref("floorp.browser.sidebar2.customurl11", undefined));
-        changeBrowserManagerSidebarConfigShowWebpanels();
-        break; 
-      case 16:
-        webpanel.setAttribute("src", Services.prefs.getStringPref("floorp.browser.sidebar2.customurl12", undefined));
-        changeBrowserManagerSidebarConfigShowWebpanels();
-        break; 
-      case 17:
-        webpanel.setAttribute("src", Services.prefs.getStringPref("floorp.browser.sidebar2.customurl13", undefined));
-        changeBrowserManagerSidebarConfigShowWebpanels();
-        break; 
-      case 18:
-        webpanel.setAttribute("src", Services.prefs.getStringPref("floorp.browser.sidebar2.customurl14", undefined));
-        changeBrowserManagerSidebarConfigShowWebpanels();
-        break; 
-      case 19:
-        webpanel.setAttribute("src", Services.prefs.getStringPref("floorp.browser.sidebar2.customurl15", undefined));
-        changeBrowserManagerSidebarConfigShowWebpanels();
-        break; 
-      case 20:
-        webpanel.setAttribute("src", Services.prefs.getStringPref("floorp.browser.sidebar2.customurl16", undefined));
-        changeBrowserManagerSidebarConfigShowWebpanels();
-        break; 
-      case 21:
-        webpanel.setAttribute("src", Services.prefs.getStringPref("floorp.browser.sidebar2.customurl17", undefined));
-        changeBrowserManagerSidebarConfigShowWebpanels();
-        break;
-      case 22:
-        webpanel.setAttribute("src", Services.prefs.getStringPref("floorp.browser.sidebar2.customurl18", undefined));
-        changeBrowserManagerSidebarConfigShowWebpanels();
-        break; 
-      case 23:
-        webpanel.setAttribute("src", Services.prefs.getStringPref("floorp.browser.sidebar2.customurl19", undefined));
-        changeBrowserManagerSidebarConfigShowWebpanels();
-        break; 
-      case 24:
-        webpanel.setAttribute("src", Services.prefs.getStringPref("floorp.browser.sidebar2.customurl20", undefined));
+      default:
+        webpanel.setAttribute("src", Services.prefs.getStringPref("floorp.browser.sidebar2.customurl" + stringWebpanelNum , undefined));
         changeBrowserManagerSidebarConfigShowWebpanels();
         break;
     }
