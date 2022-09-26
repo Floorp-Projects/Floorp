@@ -593,13 +593,16 @@ SplitRangeOffFromNodeResult HTMLEditor::SetInlinePropertyOnTextNode(
       }
       if (result.inspect()) {
         // Previous sib is already right kind of inline node; slide this over
-        MoveNodeResult moveTextNodeResult = MoveNodeToEndWithTransaction(
-            MOZ_KnownLive(*middleTextNode), element);
-        if (moveTextNodeResult.isErr()) {
+        Result<MoveNodeResult, nsresult> moveTextNodeResult =
+            MoveNodeToEndWithTransaction(MOZ_KnownLive(*middleTextNode),
+                                         element);
+        if (MOZ_UNLIKELY(moveTextNodeResult.isErr())) {
           NS_WARNING("HTMLEditor::MoveNodeToEndWithTransaction() failed");
           return SplitRangeOffFromNodeResult(moveTextNodeResult.unwrapErr());
         }
-        moveTextNodeResult.MoveCaretPointTo(
+        MoveNodeResult unwrappedMoveTextNodeResult =
+            moveTextNodeResult.unwrap();
+        unwrappedMoveTextNodeResult.MoveCaretPointTo(
             pointToPutCaret, {SuggestCaret::OnlyIfHasSuggestion});
         return SplitRangeOffFromNodeResult(leftTextNode, middleTextNode,
                                            rightTextNode,
@@ -618,13 +621,16 @@ SplitRangeOffFromNodeResult HTMLEditor::SetInlinePropertyOnTextNode(
       }
       if (result.inspect()) {
         // Following sib is already right kind of inline node; slide this over
-        MoveNodeResult moveTextNodeResult = MoveNodeWithTransaction(
-            MOZ_KnownLive(*middleTextNode), EditorDOMPoint(sibling, 0u));
-        if (moveTextNodeResult.isErr()) {
+        Result<MoveNodeResult, nsresult> moveTextNodeResult =
+            MoveNodeWithTransaction(MOZ_KnownLive(*middleTextNode),
+                                    EditorDOMPoint(sibling, 0u));
+        if (MOZ_UNLIKELY(moveTextNodeResult.isErr())) {
           NS_WARNING("HTMLEditor::MoveNodeWithTransaction() failed");
           return SplitRangeOffFromNodeResult(moveTextNodeResult.unwrapErr());
         }
-        moveTextNodeResult.MoveCaretPointTo(
+        MoveNodeResult unwrappedMoveTextNodeResult =
+            moveTextNodeResult.unwrap();
+        unwrappedMoveTextNodeResult.MoveCaretPointTo(
             pointToPutCaret, {SuggestCaret::OnlyIfHasSuggestion});
         return SplitRangeOffFromNodeResult(leftTextNode, middleTextNode,
                                            rightTextNode,
@@ -699,14 +705,15 @@ Result<EditorDOMPoint, nsresult> HTMLEditor::SetInlinePropertyOnNodeImpl(
       return canMoveIntoPreviousSibling.propagateErr();
     }
     if (canMoveIntoPreviousSibling.inspect()) {
-      MoveNodeResult moveNodeResult =
+      Result<MoveNodeResult, nsresult> moveNodeResult =
           MoveNodeToEndWithTransaction(aContent, *previousSibling);
-      if (moveNodeResult.isErr()) {
+      if (MOZ_UNLIKELY(moveNodeResult.isErr())) {
         NS_WARNING("HTMLEditor::MoveNodeToEndWithTransaction() failed");
-        return Err(moveNodeResult.unwrapErr());
+        return moveNodeResult.propagateErr();
       }
+      MoveNodeResult unwrappedMoveNodeResult = moveNodeResult.unwrap();
       if (!nextSibling || !nextSibling->IsElement()) {
-        return moveNodeResult.UnwrapCaretPoint();
+        return unwrappedMoveNodeResult.UnwrapCaretPoint();
       }
       OwningNonNull<Element> nextElement(*nextSibling->AsElement());
       Result<bool, nsresult> canMoveIntoNextSibling =
@@ -714,13 +721,13 @@ Result<EditorDOMPoint, nsresult> HTMLEditor::SetInlinePropertyOnNodeImpl(
                                             &aValue);
       if (canMoveIntoNextSibling.isErr()) {
         NS_WARNING("HTMLEditor::ElementIsGoodContainerForTheStyle() failed");
-        moveNodeResult.IgnoreCaretPointSuggestion();
+        unwrappedMoveNodeResult.IgnoreCaretPointSuggestion();
         return canMoveIntoNextSibling.propagateErr();
       }
       if (!canMoveIntoNextSibling.inspect()) {
-        return moveNodeResult.UnwrapCaretPoint();
+        return unwrappedMoveNodeResult.UnwrapCaretPoint();
       }
-      moveNodeResult.IgnoreCaretPointSuggestion();
+      unwrappedMoveNodeResult.IgnoreCaretPointSuggestion();
 
       // JoinNodesWithTransaction (DoJoinNodes) tries to collapse selection to
       // the joined point and we want to skip updating `Selection` here.
@@ -746,13 +753,13 @@ Result<EditorDOMPoint, nsresult> HTMLEditor::SetInlinePropertyOnNodeImpl(
       return canMoveIntoNextSibling.propagateErr();
     }
     if (canMoveIntoNextSibling.inspect()) {
-      MoveNodeResult moveNodeResult =
+      Result<MoveNodeResult, nsresult> moveNodeResult =
           MoveNodeWithTransaction(aContent, EditorDOMPoint(nextElement, 0u));
-      if (moveNodeResult.isErr()) {
+      if (MOZ_UNLIKELY(moveNodeResult.isErr())) {
         NS_WARNING("HTMLEditor::MoveNodeWithTransaction() failed");
-        return Err(moveNodeResult.unwrapErr());
+        return moveNodeResult.propagateErr();
       }
-      return moveNodeResult.UnwrapCaretPoint();
+      return moveNodeResult.unwrap().UnwrapCaretPoint();
     }
   }
 
@@ -1284,16 +1291,20 @@ Result<EditorDOMPoint, nsresult> HTMLEditor::ClearStyleAt(
   // the left node left node.  This is so we you don't revert back to the
   // previous style if you happen to click at the end of a line.
   if (brElement) {
-    MoveNodeResult moveBRElementResult =
-        MoveNodeWithTransaction(*brElement, pointToPutCaret);
-    if (moveBRElementResult.isErr()) {
-      NS_WARNING("HTMLEditor::MoveNodeWithTransaction() failed");
-      return Err(moveBRElementResult.unwrapErr());
+    {
+      Result<MoveNodeResult, nsresult> moveBRElementResult =
+          MoveNodeWithTransaction(*brElement, pointToPutCaret);
+      if (MOZ_UNLIKELY(moveBRElementResult.isErr())) {
+        NS_WARNING("HTMLEditor::MoveNodeWithTransaction() failed");
+        return moveBRElementResult.propagateErr();
+      }
+      MoveNodeResult unwrappedMoveBRElementResult =
+          moveBRElementResult.unwrap();
+      unwrappedMoveBRElementResult.MoveCaretPointTo(
+          pointToPutCaret, *this,
+          {SuggestCaret::OnlyIfHasSuggestion,
+           SuggestCaret::OnlyIfTransactionsAllowedToDoIt});
     }
-    moveBRElementResult.MoveCaretPointTo(
-        pointToPutCaret, *this,
-        {SuggestCaret::OnlyIfHasSuggestion,
-         SuggestCaret::OnlyIfTransactionsAllowedToDoIt});
 
     if (splitResultAtStartOfNextNode.GetNextContent() &&
         splitResultAtStartOfNextNode.GetNextContent()->IsInComposedDoc()) {
@@ -2880,14 +2891,15 @@ CreateElementResult HTMLEditor::SetFontSizeOnTextNode(
       *textNodeForTheRange, {WalkTreeOption::IgnoreNonEditableNode});
   if (sibling && sibling->IsHTMLElement(bigOrSmallTagName)) {
     // Previous sib is already right kind of inline node; slide this over
-    MoveNodeResult moveTextNodeResult =
+    Result<MoveNodeResult, nsresult> moveTextNodeResult =
         MoveNodeToEndWithTransaction(*textNodeForTheRange, *sibling);
-    if (moveTextNodeResult.isErr()) {
+    if (MOZ_UNLIKELY(moveTextNodeResult.isErr())) {
       NS_WARNING("HTMLEditor::MoveNodeToEndWithTransaction() failed");
       return CreateElementResult(moveTextNodeResult.unwrapErr());
     }
-    moveTextNodeResult.MoveCaretPointTo(pointToPutCaret, *this,
-                                        {SuggestCaret::OnlyIfHasSuggestion});
+    MoveNodeResult unwrappedMoveTextNodeResult = moveTextNodeResult.unwrap();
+    unwrappedMoveTextNodeResult.MoveCaretPointTo(
+        pointToPutCaret, *this, {SuggestCaret::OnlyIfHasSuggestion});
     // XXX Should we return the new container?
     return CreateElementResult::NotHandled(std::move(pointToPutCaret));
   }
@@ -2895,14 +2907,16 @@ CreateElementResult HTMLEditor::SetFontSizeOnTextNode(
       *textNodeForTheRange, {WalkTreeOption::IgnoreNonEditableNode});
   if (sibling && sibling->IsHTMLElement(bigOrSmallTagName)) {
     // Following sib is already right kind of inline node; slide this over
-    MoveNodeResult moveTextNodeResult = MoveNodeWithTransaction(
-        *textNodeForTheRange, EditorDOMPoint(sibling, 0u));
-    if (moveTextNodeResult.isErr()) {
+    Result<MoveNodeResult, nsresult> moveTextNodeResult =
+        MoveNodeWithTransaction(*textNodeForTheRange,
+                                EditorDOMPoint(sibling, 0u));
+    if (MOZ_UNLIKELY(moveTextNodeResult.isErr())) {
       NS_WARNING("HTMLEditor::MoveNodeWithTransaction() failed");
       return CreateElementResult(moveTextNodeResult.unwrapErr());
     }
-    moveTextNodeResult.MoveCaretPointTo(pointToPutCaret, *this,
-                                        {SuggestCaret::OnlyIfHasSuggestion});
+    MoveNodeResult unwrappedMoveTextNodeResult = moveTextNodeResult.unwrap();
+    unwrappedMoveTextNodeResult.MoveCaretPointTo(
+        pointToPutCaret, *this, {SuggestCaret::OnlyIfHasSuggestion});
     // XXX Should we return the new container?
     return CreateElementResult::NotHandled(std::move(pointToPutCaret));
   }
@@ -3024,28 +3038,30 @@ Result<EditorDOMPoint, nsresult> HTMLEditor::SetFontSizeWithBigOrSmallElement(
     nsCOMPtr<nsIContent> sibling = HTMLEditUtils::GetPreviousSibling(
         aContent, {WalkTreeOption::IgnoreNonEditableNode});
     if (sibling && sibling->IsHTMLElement(bigOrSmallTagName)) {
-      MoveNodeResult moveNodeResult =
+      Result<MoveNodeResult, nsresult> moveNodeResult =
           MoveNodeToEndWithTransaction(aContent, *sibling);
-      if (moveNodeResult.isErr()) {
+      if (MOZ_UNLIKELY(moveNodeResult.isErr())) {
         NS_WARNING("HTMLEditor::MoveNodeToEndWithTransaction() failed");
-        return Err(moveNodeResult.unwrapErr());
+        return moveNodeResult.propagateErr();
       }
-      moveNodeResult.MoveCaretPointTo(pointToPutCaret,
-                                      {SuggestCaret::OnlyIfHasSuggestion});
+      MoveNodeResult unwrappedMoveNodeResult = moveNodeResult.unwrap();
+      unwrappedMoveNodeResult.MoveCaretPointTo(
+          pointToPutCaret, {SuggestCaret::OnlyIfHasSuggestion});
       return pointToPutCaret;
     }
 
     sibling = HTMLEditUtils::GetNextSibling(
         aContent, {WalkTreeOption::IgnoreNonEditableNode});
     if (sibling && sibling->IsHTMLElement(bigOrSmallTagName)) {
-      MoveNodeResult moveNodeResult =
+      Result<MoveNodeResult, nsresult> moveNodeResult =
           MoveNodeWithTransaction(aContent, EditorDOMPoint(sibling, 0u));
-      if (moveNodeResult.isErr()) {
+      if (MOZ_UNLIKELY(moveNodeResult.isErr())) {
         NS_WARNING("HTMLEditor::MoveNodeWithTransaction() failed");
-        return Err(moveNodeResult.unwrapErr());
+        return moveNodeResult.propagateErr();
       }
-      moveNodeResult.MoveCaretPointTo(pointToPutCaret,
-                                      {SuggestCaret::OnlyIfHasSuggestion});
+      MoveNodeResult unwrappedMoveNodeResult = moveNodeResult.unwrap();
+      unwrappedMoveNodeResult.MoveCaretPointTo(
+          pointToPutCaret, {SuggestCaret::OnlyIfHasSuggestion});
       return pointToPutCaret;
     }
 

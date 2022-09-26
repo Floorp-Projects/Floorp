@@ -88,7 +88,8 @@ class MOZ_STACK_CLASS EditActionResult final {
     return *this;
   }
 
-  EditActionResult& operator|=(const MoveNodeResult& aMoveNodeResult);
+  EditActionResult& operator|=(
+      const Result<MoveNodeResult, nsresult>& aMoveNodeResult);
 
  private:
   nsresult mRv;

@@ -1845,8 +1845,9 @@ class HTMLEditor final : public EditorBase,
    * @param aContentToMove  The node to be moved.
    * @param aPointToInsert  The point where aContentToMove will be inserted.
    */
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT MoveNodeResult MoveNodeWithTransaction(
-      nsIContent& aContentToMove, const EditorDOMPoint& aPointToInsert);
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT Result<MoveNodeResult, nsresult>
+  MoveNodeWithTransaction(nsIContent& aContentToMove,
+                          const EditorDOMPoint& aPointToInsert);
 
   /**
    * MoveNodeToEndWithTransaction() moves aContentToMove to end of
@@ -1856,8 +1857,9 @@ class HTMLEditor final : public EditorBase,
    * @param aNewContainer   The new container which will contain aContentToMove
    *                        as its last child.
    */
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT MoveNodeResult MoveNodeToEndWithTransaction(
-      nsIContent& aContentToMove, nsINode& aNewContainer) {
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT Result<MoveNodeResult, nsresult>
+  MoveNodeToEndWithTransaction(nsIContent& aContentToMove,
+                               nsINode& aNewContainer) {
     return MoveNodeWithTransaction(aContentToMove,
                                    EditorDOMPoint::AtEndOf(aNewContainer));
   }
@@ -1876,7 +1878,7 @@ class HTMLEditor final : public EditorBase,
    *                            moving node or creating new <span> element.
    */
   enum class PreserveWhiteSpaceStyle { No, Yes };
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT MoveNodeResult
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT Result<MoveNodeResult, nsresult>
   MoveNodeOrChildrenWithTransaction(
       nsIContent& aContentToMove, const EditorDOMPoint& aPointToInsert,
       PreserveWhiteSpaceStyle aPreserveWhiteSpaceStyle);
@@ -1905,9 +1907,10 @@ class HTMLEditor final : public EditorBase,
    *                            style, this method will set `style` attribute to
    *                            moving node or creating new <span> element.
    */
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT MoveNodeResult MoveChildrenWithTransaction(
-      Element& aElement, const EditorDOMPoint& aPointToInsert,
-      PreserveWhiteSpaceStyle aPreserveWhiteSpaceStyle);
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT Result<MoveNodeResult, nsresult>
+  MoveChildrenWithTransaction(Element& aElement,
+                              const EditorDOMPoint& aPointToInsert,
+                              PreserveWhiteSpaceStyle aPreserveWhiteSpaceStyle);
 
   /**
    * CanMoveChildren() returns true if `MoveChildrenWithTransaction()` can move
@@ -1992,7 +1995,7 @@ class HTMLEditor final : public EditorBase,
    *                                    container while we're moving nodes.
    */
   enum class MoveToEndOfContainer { Yes, No };
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT MoveNodeResult
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT Result<MoveNodeResult, nsresult>
   MoveOneHardLineContentsWithTransaction(
       const EditorDOMPoint& aPointInHardLine,
       const EditorDOMPoint& aPointToInsert, const Element& aEditingHost,
