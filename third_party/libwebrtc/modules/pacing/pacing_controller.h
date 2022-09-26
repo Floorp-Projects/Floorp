@@ -14,6 +14,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#include <array>
 #include <atomic>
 #include <memory>
 #include <vector>
@@ -67,6 +68,11 @@ class PacingController {
     virtual int SizeInPackets() const = 0;
     bool Empty() const { return SizeInPackets() == 0; }
     virtual DataSize SizeInPayloadBytes() const = 0;
+
+    // Total packets in the queue per media type (RtpPacketMediaType values are
+    // used as lookup index).
+    virtual const std::array<int, kNumMediaTypes>&
+    SizeInPacketsPerRtpPacketMediaType() const = 0;
 
     // If the next packet, that would be returned by Pop() if called
     // now, is an audio packet this method returns the enqueue time
@@ -159,6 +165,10 @@ class PacingController {
 
   // Number of packets in the pacer queue.
   size_t QueueSizePackets() const;
+  // Number of packets in the pacer queue per media type (RtpPacketMediaType
+  // values are used as lookup index).
+  const std::array<int, kNumMediaTypes>& SizeInPacketsPerRtpPacketMediaType()
+      const;
   // Totals size of packets in the pacer queue.
   DataSize QueueSizeData() const;
 
