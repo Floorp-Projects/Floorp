@@ -218,6 +218,7 @@ rtc_library("libjingle_peerconnection_api") {
     "video:video_bitrate_allocator_factory",
     "video:video_frame",
     "video:video_rtp_headers",
+    "video_codecs:video_codecs_api",
 
     # Basically, don't add stuff here. You might break sensitive downstream
     # targets like pnacl. API should not depend on anything outside of this
@@ -975,6 +976,17 @@ if (rtc_include_tests) {
       ":libjingle_peerconnection_api",
       "../test:test_support",
       "crypto:frame_decryptor_interface",
+    ]
+  }
+
+  rtc_library("mock_encoder_selector") {
+    visibility = [ "*" ]
+    testonly = true
+    sources = [ "test/mock_encoder_selector.h" ]
+    deps = [
+      ":libjingle_peerconnection_api",
+      "../api/video_codecs:video_codecs_api",
+      "../test:test_support",
     ]
   }
 

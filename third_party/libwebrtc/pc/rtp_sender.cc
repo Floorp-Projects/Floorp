@@ -132,6 +132,23 @@ void RtpSenderBase::SetFrameEncryptor(
   }
 }
 
+void RtpSenderBase::SetEncoderSelector(
+    std::unique_ptr<VideoEncoderFactory::EncoderSelectorInterface>
+        encoder_selector) {
+  RTC_DCHECK_RUN_ON(signaling_thread_);
+  encoder_selector_ = std::move(encoder_selector);
+  SetEncoderSelectorOnChannel();
+}
+
+void RtpSenderBase::SetEncoderSelectorOnChannel() {
+  RTC_DCHECK_RUN_ON(signaling_thread_);
+  if (media_channel_ && ssrc_ && !stopped_) {
+    worker_thread_->Invoke<void>(RTC_FROM_HERE, [&] {
+      media_channel_->SetEncoderSelector(ssrc_, encoder_selector_.get());
+    });
+  }
+}
+
 void RtpSenderBase::SetMediaChannel(cricket::MediaChannel* media_channel) {
   RTC_DCHECK(media_channel == nullptr ||
              media_channel->media_type() == media_type());
@@ -320,6 +337,9 @@ void RtpSenderBase::SetSsrc(uint32_t ssrc) {
   }
   if (frame_transformer_) {
     SetEncoderToPacketizerFrameTransformer(frame_transformer_);
+  }
+  if (encoder_selector_) {
+    SetEncoderSelectorOnChannel();
   }
 }
 

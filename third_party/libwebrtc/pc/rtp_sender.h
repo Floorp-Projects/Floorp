@@ -185,6 +185,12 @@ class RtpSenderBase : public RtpSenderInternal, public ObserverInterface {
   void SetEncoderToPacketizerFrameTransformer(
       rtc::scoped_refptr<FrameTransformerInterface> frame_transformer) override;
 
+  void SetEncoderSelector(
+      std::unique_ptr<VideoEncoderFactory::EncoderSelectorInterface>
+          encoder_selector) override;
+
+  void SetEncoderSelectorOnChannel();
+
   void SetTransceiverAsStopped() override {
     RTC_DCHECK_RUN_ON(signaling_thread_);
     is_transceiver_stopped_ = true;
@@ -247,6 +253,8 @@ class RtpSenderBase : public RtpSenderInternal, public ObserverInterface {
   SetStreamsObserver* set_streams_observer_ = nullptr;
 
   rtc::scoped_refptr<FrameTransformerInterface> frame_transformer_;
+  std::unique_ptr<VideoEncoderFactory::EncoderSelectorInterface>
+      encoder_selector_;
 };
 
 // LocalAudioSinkAdapter receives data callback as a sink to the local

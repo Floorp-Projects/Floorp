@@ -23,6 +23,7 @@
 #include "api/rtc_event_log/rtc_event_log.h"
 #include "api/rtp_parameters.h"
 #include "api/task_queue/default_task_queue_factory.h"
+#include "api/test/mock_encoder_selector.h"
 #include "api/test/mock_video_bitrate_allocator.h"
 #include "api/test/mock_video_bitrate_allocator_factory.h"
 #include "api/test/mock_video_decoder_factory.h"
@@ -8981,6 +8982,31 @@ TEST_F(WebRtcVideoChannelTest, SetsRidsOnSendStream) {
   ASSERT_NE(stream, nullptr);
   const auto& config = stream->GetConfig();
   EXPECT_THAT(config.rtp.rids, ElementsAreArray(rids));
+}
+
+TEST_F(WebRtcVideoChannelBaseTest, EncoderSelectorSwitchCodec) {
+  VideoCodec vp9 = GetEngineCodec("VP9");
+
+  cricket::VideoSendParameters parameters;
+  parameters.codecs.push_back(GetEngineCodec("VP8"));
+  parameters.codecs.push_back(vp9);
+  EXPECT_TRUE(channel_->SetSendParameters(parameters));
+  channel_->SetSend(true);
+
+  VideoCodec codec;
+  ASSERT_TRUE(channel_->GetSendCodec(&codec));
+  EXPECT_EQ("VP8", codec.name);
+
+  webrtc::MockEncoderSelector encoder_selector;
+  EXPECT_CALL(encoder_selector, OnAvailableBitrate)
+      .WillRepeatedly(Return(webrtc::SdpVideoFormat("VP9")));
+
+  channel_->SetEncoderSelector(kSsrc, &encoder_selector);
+
+  rtc::Thread::Current()->ProcessMessages(30);
+
+  ASSERT_TRUE(channel_->GetSendCodec(&codec));
+  EXPECT_EQ("VP9", codec.name);
 }
 
 }  // namespace cricket

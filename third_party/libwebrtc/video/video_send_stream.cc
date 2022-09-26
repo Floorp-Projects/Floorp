@@ -115,7 +115,8 @@ std::unique_ptr<VideoStreamEncoder> CreateVideoStreamEncoder(
     const VideoStreamEncoderSettings& encoder_settings,
     VideoStreamEncoder::BitrateAllocationCallbackType
         bitrate_allocation_callback_type,
-    const FieldTrialsView& field_trials) {
+    const FieldTrialsView& field_trials,
+    webrtc::VideoEncoderFactory::EncoderSelectorInterface* encoder_selector) {
   std::unique_ptr<TaskQueueBase, TaskQueueDeleter> encoder_queue =
       task_queue_factory->CreateTaskQueue("EncoderQueue",
                                           TaskQueueFactory::Priority::NORMAL);
@@ -125,7 +126,8 @@ std::unique_ptr<VideoStreamEncoder> CreateVideoStreamEncoder(
       std::make_unique<OveruseFrameDetector>(stats_proxy, field_trials),
       FrameCadenceAdapterInterface::Create(clock, encoder_queue_ptr,
                                            field_trials),
-      std::move(encoder_queue), bitrate_allocation_callback_type, field_trials);
+      std::move(encoder_queue), bitrate_allocation_callback_type, field_trials,
+      encoder_selector);
 }
 
 }  // namespace
@@ -160,7 +162,8 @@ VideoSendStream::VideoSendStream(
           &stats_proxy_,
           config_.encoder_settings,
           GetBitrateAllocationCallbackType(config_, field_trials),
-          field_trials)),
+          field_trials,
+          config_.encoder_selector)),
       encoder_feedback_(
           clock,
           config_.rtp.ssrcs,

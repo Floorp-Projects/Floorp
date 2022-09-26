@@ -1942,6 +1942,18 @@ void WebRtcVideoChannel::SetFrameEncryptor(
   }
 }
 
+void WebRtcVideoChannel::SetEncoderSelector(
+    uint32_t ssrc,
+    webrtc::VideoEncoderFactory::EncoderSelectorInterface* encoder_selector) {
+  RTC_DCHECK_RUN_ON(&thread_checker_);
+  auto matching_stream = send_streams_.find(ssrc);
+  if (matching_stream != send_streams_.end()) {
+    matching_stream->second->SetEncoderSelector(encoder_selector);
+  } else {
+    RTC_LOG(LS_ERROR) << "No stream found to attach encoder selector";
+  }
+}
+
 void WebRtcVideoChannel::SetVideoCodecSwitchingEnabled(bool enabled) {
   RTC_DCHECK_RUN_ON(&thread_checker_);
   allow_codec_switching_ = enabled;
@@ -2383,6 +2395,18 @@ void WebRtcVideoChannel::WebRtcVideoSendStream::SetFrameEncryptor(
   if (stream_) {
     RTC_LOG(LS_INFO)
         << "RecreateWebRtcStream (send) because of SetFrameEncryptor, ssrc="
+        << parameters_.config.rtp.ssrcs[0];
+    RecreateWebRtcStream();
+  }
+}
+
+void WebRtcVideoChannel::WebRtcVideoSendStream::SetEncoderSelector(
+    webrtc::VideoEncoderFactory::EncoderSelectorInterface* encoder_selector) {
+  RTC_DCHECK_RUN_ON(&thread_checker_);
+  parameters_.config.encoder_selector = encoder_selector;
+  if (stream_) {
+    RTC_LOG(LS_INFO)
+        << "RecreateWebRtcStream (send) because of SetEncoderSelector, ssrc="
         << parameters_.config.rtp.ssrcs[0];
     RecreateWebRtcStream();
   }

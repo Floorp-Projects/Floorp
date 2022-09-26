@@ -49,6 +49,7 @@
 #include "api/stats/rtc_stats.h"
 #include "api/stats/rtc_stats_report.h"
 #include "api/stats/rtcstats_objects.h"
+#include "api/test/mock_encoder_selector.h"
 #include "api/transport/rtp/rtp_source.h"
 #include "api/uma_metrics.h"
 #include "api/units/time_delta.h"
@@ -3591,6 +3592,35 @@ TEST_F(PeerConnectionIntegrationTestUnifiedPlan,
   ASSERT_TRUE_WAIT(SignalingStateStable(), kDefaultTimeout);
   EXPECT_EQ(MediaStreamTrackInterface::TrackState::kEnded,
             callee_track->state());
+}
+
+TEST_P(PeerConnectionIntegrationTest, EndToEndRtpSenderVideoEncoderSelector) {
+  ASSERT_TRUE(
+      CreateOneDirectionalPeerConnectionWrappers(/*caller_to_callee=*/true));
+  ConnectFakeSignaling();
+  // Add one-directional video, from caller to callee.
+  rtc::scoped_refptr<webrtc::VideoTrackInterface> caller_track =
+      caller()->CreateLocalVideoTrack();
+  auto sender = caller()->AddTrack(caller_track);
+  PeerConnectionInterface::RTCOfferAnswerOptions options;
+  options.offer_to_receive_video = 0;
+  caller()->SetOfferAnswerOptions(options);
+  caller()->CreateAndSetAndSignalOffer();
+  ASSERT_TRUE_WAIT(SignalingStateStable(), kDefaultTimeout);
+  ASSERT_EQ(callee()->pc()->GetReceivers().size(), 1u);
+
+  std::unique_ptr<MockEncoderSelector> encoder_selector =
+      std::make_unique<MockEncoderSelector>();
+  EXPECT_CALL(*encoder_selector, OnCurrentEncoder);
+
+  sender->SetEncoderSelector(std::move(encoder_selector));
+
+  // Expect video to be received in one direction.
+  MediaExpectations media_expectations;
+  media_expectations.CallerExpectsNoVideo();
+  media_expectations.CalleeExpectsSomeVideo();
+
+  EXPECT_TRUE(ExpectNewFrames(media_expectations));
 }
 
 }  // namespace
