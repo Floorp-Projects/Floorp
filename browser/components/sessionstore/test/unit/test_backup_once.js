@@ -25,7 +25,7 @@ updateAppInfo({
   platformVersion: "",
 });
 
-add_task(async function init() {
+add_setup(async function() {
   let source = do_get_file("data/sessionstore_valid.js");
   source.copyTo(profd, "sessionstore.js");
   await writeCompressedFile(Paths.clean.replace("jsonlz4", "js"), Paths.clean);

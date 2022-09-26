@@ -216,7 +216,7 @@ const tests = [
   },
 ];
 
-add_task(async function init() {
+add_setup(async function() {
   await PlacesUtils.history.clear();
 
   // Create a new search engine and mark it as default

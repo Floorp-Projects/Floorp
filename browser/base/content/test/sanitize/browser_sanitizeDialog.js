@@ -50,7 +50,7 @@ async function promiseHistoryClearedState(aURIs, aShouldBeCleared) {
   }
 }
 
-add_task(async function init() {
+add_setup(async function() {
   requestLongerTimeout(3);
   await blankSlate();
   registerCleanupFunction(async function() {

@@ -28,7 +28,7 @@ async function searchAndOpenPopup(value) {
   );
 }
 
-add_task(async function init() {
+add_setup(async function() {
   // Add a search suggestion engine and move it to the front so that it appears
   // as the first one-off.
   engine = await SearchTestUtils.promiseNewSearchEngine(

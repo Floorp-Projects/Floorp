@@ -24,7 +24,7 @@ const POLICY_PREF = "suggest.quicksuggest.nonsponsored";
 let gDefaultBranch = Services.prefs.getDefaultBranch("browser.urlbar.");
 let gUserBranch = Services.prefs.getBranch("browser.urlbar.");
 
-add_task(async function init() {
+add_setup(async function() {
   await QuickSuggestTestUtils.ensureQuickSuggestInit();
 });
 

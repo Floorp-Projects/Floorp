@@ -8,7 +8,7 @@
 const ALIAS = "@enginealias";
 let aliasEngine;
 
-add_task(async function init() {
+add_setup(async function() {
   // Run this in a new tab, to ensure all the locationchange notifications have
   // fired.
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser);

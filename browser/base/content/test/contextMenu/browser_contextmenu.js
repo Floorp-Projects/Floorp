@@ -59,7 +59,7 @@ function getThisFrameSubMenu(base_menu) {
   return base_menu;
 }
 
-add_task(async function init() {
+add_setup(async function() {
   await SpecialPowers.pushPrefEnv({
     set: [
       ["browser.search.separatePrivateDefault.ui.enabled", true],

@@ -16,7 +16,7 @@ if (AppConstants.platform == "macosx") {
   requestLongerTimeout(3);
 }
 
-add_task(async function init() {
+add_setup(async function() {
   // Clear history and bookmarks to make sure the URLs we add below are truly
   // the top sites. If any existing history or bookmarks were the top sites,
   // which is likely but not guaranteed, one or more "newtab-top-sites-changed"

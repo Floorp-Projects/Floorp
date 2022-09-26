@@ -46,7 +46,7 @@ function performAccessKey(aKey) {
                      	  { altKey : true, shiftKey: true });
 }
 
-add_task(async function init() {
+add_setup(async function() {
   // A workaround for bug 1726811.
   await SpecialPowers.pushPrefEnv({ set: [[ "accessibility.tabfocus", 7 ]] });
 });

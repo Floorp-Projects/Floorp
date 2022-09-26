@@ -8,7 +8,7 @@
 const TIP_URL = "http://example.com/tip";
 const HELP_URL = "http://example.com/help";
 
-add_task(async function init() {
+add_setup(async function() {
   window.windowUtils.disableNonTestMouseEvents(true);
   registerCleanupFunction(() => {
     window.windowUtils.disableNonTestMouseEvents(false);

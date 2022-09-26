@@ -239,7 +239,7 @@ async function assertState(
   }
 }
 
-add_task(async function init() {
+add_setup(async function() {
   let oldDefaultEngine = await Services.search.getDefault();
   await SearchTestUtils.installSearchExtension({
     name: TEST_DEFAULT_ENGINE_NAME,

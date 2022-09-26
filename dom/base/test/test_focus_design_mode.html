@@ -45,7 +45,7 @@ async function getLog() {
   return log;
 }
 
-add_task(async function init() {
+add_setup(async function() {
   await SpecialPowers.pushPrefEnv({ set: [["dom.disable_window_flip", true]] });
 });
 

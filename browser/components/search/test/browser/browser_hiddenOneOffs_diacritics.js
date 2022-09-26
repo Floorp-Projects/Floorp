@@ -13,7 +13,7 @@ var { Preferences } = ChromeUtils.import(
 
 let searchIcon;
 
-add_task(async function init() {
+add_setup(async function() {
   let searchbar = await gCUITestUtils.addSearchBar();
   registerCleanupFunction(() => {
     gCUITestUtils.removeSearchBar();

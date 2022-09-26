@@ -1131,7 +1131,7 @@ const tests = [
   },
 ];
 
-add_task(async function init() {
+add_setup(async function() {
   await PlacesUtils.history.clear();
   await PlacesUtils.bookmarks.eraseEverything();
 

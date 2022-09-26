@@ -10,7 +10,7 @@ const MAX_RESULTS = UrlbarPrefs.get("maxRichResults");
 const RESULT_URL = "http://example.com/test";
 const RESULT_HELP_URL = "http://example.com/help";
 
-add_task(async function init() {
+add_setup(async function() {
   // Add enough results to fill up the view.
   await PlacesUtils.history.clear();
   for (let i = 0; i < MAX_RESULTS; i++) {

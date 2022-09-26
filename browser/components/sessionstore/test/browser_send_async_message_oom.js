@@ -9,7 +9,7 @@ const HISTOGRAM_NAME = "FX_SESSION_RESTORE_SEND_UPDATE_CAUSED_OOM";
  * to Telemetry.
  */
 
-add_task(async function init() {
+add_setup(async function() {
   Services.telemetry.canRecordExtended = true;
 });
 

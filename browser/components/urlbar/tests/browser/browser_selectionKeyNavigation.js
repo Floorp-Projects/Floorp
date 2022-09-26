@@ -9,7 +9,7 @@
 
 const MAX_RESULTS = UrlbarPrefs.get("maxRichResults");
 
-add_task(async function init() {
+add_setup(async function() {
   for (let i = 0; i < MAX_RESULTS; i++) {
     await PlacesTestUtils.addVisits("http://example.com/" + i);
   }

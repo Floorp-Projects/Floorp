@@ -17,7 +17,7 @@ Services.scriptloader.loadSubScript(
 // error.
 SimpleTest.ignoreAllUncaughtExceptions(true);
 
-add_task(async function init() {
+add_setup(async function() {
   await pushPrefs(
     ["full-screen-api.transition-duration.enter", "0 0"],
     ["full-screen-api.transition-duration.leave", "0 0"],

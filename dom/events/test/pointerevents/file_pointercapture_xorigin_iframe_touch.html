@@ -32,7 +32,7 @@ iframe {
 /**
  * Test for Bug 1671849
  */
-add_task(async function init() {
+add_setup(async function() {
   await SpecialPowers.pushPrefEnv({
     set: [["dom.w3c_pointer_events.implicit_capture", true]],
   });

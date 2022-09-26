@@ -43,7 +43,7 @@ const TEST_DATA = [
   },
 ];
 
-add_task(async function init() {
+add_setup(async function() {
   // This test intermittently times out on Mac TV WebRender.
   if (AppConstants.platform == "macosx") {
     requestLongerTimeout(3);

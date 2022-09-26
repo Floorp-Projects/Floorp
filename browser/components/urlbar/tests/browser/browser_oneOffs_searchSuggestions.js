@@ -19,7 +19,7 @@ const serverInfo = {
 var gEngine;
 var gEngine2;
 
-add_task(async function init() {
+add_setup(async function() {
   await PlacesUtils.history.clear();
   await UrlbarTestUtils.formHistory.clear();
   await SpecialPowers.pushPrefEnv({
