@@ -2,6 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+"use strict";
+
 /**
  * This module exports the TabsSetupFlowManager singleton, which manages the state and
  * diverse inputs which drive the Firefox View synced tabs setup flow

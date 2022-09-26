@@ -2,6 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+"use strict";
+
 /**
  * This module exports a provider that might show a tip when the user opens
  * the newtab or starts an organic search with their default search engine.

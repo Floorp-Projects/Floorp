@@ -6,6 +6,8 @@
  * Chrome side handling of form validation popup.
  */
 
+"use strict";
+
 const lazy = {};
 
 ChromeUtils.defineModuleGetter(
