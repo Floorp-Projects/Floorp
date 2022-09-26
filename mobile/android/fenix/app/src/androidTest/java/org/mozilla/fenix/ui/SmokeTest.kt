@@ -188,13 +188,13 @@ class SmokeTest {
     }
 
     // Verifies the list of items in a tab's 3 dot menu
-    @Ignore("Failing, see: https://github.com/mozilla-mobile/fenix/issues/26711")
     @Test
     fun verifyPageMainMenuItemsTest() {
         val defaultWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
 
         navigationToolbar {
         }.enterURLAndEnterToBrowser(defaultWebPage.url) {
+            waitForPageToLoad()
         }.openThreeDotMenu {
             verifyPageThreeDotMainMenuItems()
         }
