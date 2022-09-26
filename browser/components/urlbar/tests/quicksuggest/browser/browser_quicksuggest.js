@@ -31,7 +31,7 @@ const TEST_DATA = [
   },
 ];
 
-add_task(async function init() {
+add_setup(async function() {
   await PlacesUtils.history.clear();
   await PlacesUtils.bookmarks.eraseEverything();
   await UrlbarTestUtils.formHistory.clear();

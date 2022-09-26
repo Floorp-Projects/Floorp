@@ -22,7 +22,7 @@ async function reInitSessionFile() {
   await SessionFile.read();
 }
 
-add_task(async function init() {
+add_setup(async function() {
   // Make sure that we are not racing with SessionSaver's time based
   // saves.
   Services.prefs.setIntPref(PREF_SS_INTERVAL, 10000000);

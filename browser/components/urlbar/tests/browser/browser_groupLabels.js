@@ -28,7 +28,7 @@ if (AppConstants.platform == "macosx") {
   requestLongerTimeout(3);
 }
 
-add_task(async function init() {
+add_setup(async function() {
   Assert.ok(
     UrlbarPrefs.get("showSearchSuggestionsFirst"),
     "Precondition: Search suggestions shown first by default"

@@ -36,7 +36,7 @@ async function getUpgradeBackups() {
   return children.filter(path => path.startsWith(Paths.upgradeBackupPrefix));
 }
 
-add_task(async function init() {
+add_setup(async function() {
   // Wait until initialization is complete
   await SessionStore.promiseInitialized;
 });

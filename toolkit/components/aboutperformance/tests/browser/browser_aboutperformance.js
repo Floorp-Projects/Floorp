@@ -7,7 +7,7 @@ const URL =
   "http://example.com/browser/toolkit/components/aboutperformance/tests/browser/browser_compartments.html?test=" +
   Math.random();
 
-add_task(async function init() {
+add_task(async function() {
   info("Setting up about:performance");
   let tabAboutPerformance = (gBrowser.selectedTab = BrowserTestUtils.addTab(
     gBrowser,

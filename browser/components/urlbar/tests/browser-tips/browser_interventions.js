@@ -8,7 +8,7 @@ ChromeUtils.defineESModuleGetters(this, {
     "resource:///modules/UrlbarProviderInterventions.sys.mjs",
 });
 
-add_task(async function init() {
+add_setup(async function() {
   makeProfileResettable();
 });
 

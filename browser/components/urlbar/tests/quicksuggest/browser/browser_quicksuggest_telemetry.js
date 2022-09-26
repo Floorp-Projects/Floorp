@@ -46,7 +46,7 @@ let spy;
 // on slower CI machines in verify mode, so request a longer timeout.
 requestLongerTimeout(5);
 
-add_task(async function init() {
+add_setup(async function() {
   ({ spy } = QuickSuggestTestUtils.createTelemetryPingSpy());
 
   await PlacesUtils.history.clear();

@@ -18,7 +18,7 @@ const TEST_ENGINE_SUGGESTIONS_TIMEOUT = 3000;
 // The number of suggestions returned by the test engine.
 const TEST_ENGINE_NUM_EXPECTED_RESULTS = 2;
 
-add_task(async function init() {
+add_setup(async function() {
   await PlacesUtils.history.clear();
   await SpecialPowers.pushPrefEnv({
     set: [["browser.urlbar.suggest.searches", true]],

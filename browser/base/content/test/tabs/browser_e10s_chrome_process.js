@@ -56,7 +56,7 @@ const CHROME = "chrome://mochitests" + PATH;
 const CANREMOTE = "chrome://mochitests-any" + PATH;
 const MUSTREMOTE = "chrome://mochitests-content" + PATH;
 
-add_task(async function init() {
+add_setup(async function() {
   gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, "about:blank", {
     forceNotRemote: true,
   });

@@ -40,7 +40,7 @@ function promiseMutatedReadResultFromContentElement(aBrowser) {
   return promiseMutatedTextContentFromContentElement(aBrowser, "readResultId");
 }
 
-add_task(async function init() {
+add_setup(async function() {
   await SpecialPowers.pushPrefEnv({
     set: [
       ["dom.events.asyncClipboard.clipboardItem", true],

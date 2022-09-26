@@ -67,7 +67,7 @@ var AboutModuleFactory = {
   QueryInterface: ChromeUtils.generateQI(["nsIFactory"]),
 };
 
-add_task(async function init() {
+add_setup(async function() {
   SpecialPowers.setBoolPref(
     "browser.tabs.remote.separatePrivilegedMozillaWebContentProcess",
     true

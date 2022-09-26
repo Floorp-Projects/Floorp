@@ -21,7 +21,7 @@ if (AppConstants.platform == "macosx") {
   requestLongerTimeout(5);
 }
 
-add_task(async function init() {
+add_setup(async function() {
   // Add a default engine with suggestions, to avoid hitting the network when
   // fetching them.
   let defaultEngine = await SearchTestUtils.promiseNewSearchEngine(

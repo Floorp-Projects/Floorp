@@ -144,7 +144,7 @@ function checkShortenedFilename(actual, expected) {
   return false;
 }
 
-add_task(async function init() {
+add_setup(async function() {
   const { HttpServer } = ChromeUtils.import(
     "resource://testing-common/httpd.js"
   );

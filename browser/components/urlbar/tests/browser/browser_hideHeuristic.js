@@ -16,7 +16,7 @@ if (AppConstants.platform == "macosx") {
   requestLongerTimeout(3);
 }
 
-add_task(async function init() {
+add_setup(async function() {
   await SpecialPowers.pushPrefEnv({
     set: [
       ["browser.urlbar.experimental.hideHeuristic", true],

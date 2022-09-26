@@ -43,7 +43,7 @@ function checkBlockOpenPopup(e) {
   }
 }
 
-add_task(async function init() {
+add_setup(async function() {
   const DENY_ACTION = SpecialPowers.Ci.nsIPermissionManager.DENY_ACTION;
   let xorigin = SimpleTest.getTestFileURL("").replace(location.hostname, 'mochi.xorigin-test');
   await SpecialPowers.pushPermissions([

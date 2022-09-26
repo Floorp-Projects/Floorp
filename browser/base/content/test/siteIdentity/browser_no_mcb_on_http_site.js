@@ -38,7 +38,7 @@ function cleanUpAfterTests() {
   window.focus();
 }
 
-add_task(async function init() {
+add_setup(async function() {
   await SpecialPowers.pushPrefEnv({
     set: [
       [PREF_ACTIVE, true],

@@ -14,7 +14,7 @@ ChromeUtils.defineESModuleGetters(this, {
 
 let gTree;
 
-add_task(async function init() {
+add_setup(async function() {
   let prefs = await openPreferencesViaOpenPreferencesAPI("search", {
     leaveOpen: true,
   });

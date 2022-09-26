@@ -38,7 +38,7 @@ const MERINO_RESPONSE = {
 
 let gMerinoHandler;
 
-add_task(async function init() {
+add_setup(async function() {
   await SpecialPowers.pushPrefEnv({
     set: [
       ["browser.urlbar.merino.enabled", true],
