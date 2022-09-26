@@ -7,40 +7,6 @@
 // This is loaded into chrome windows with the subscript loader. Wrap in
 // a block to prevent accidentally leaking globals onto `window`.
 {
-  class MozDeck extends MozXULElement {
-    set selectedIndex(val) {
-      if (this.selectedIndex == val) {
-        return;
-      }
-      this.setAttribute("selectedIndex", val);
-      var event = document.createEvent("Events");
-      event.initEvent("select", true, true);
-      this.dispatchEvent(event);
-    }
-
-    get selectedIndex() {
-      return this.getAttribute("selectedIndex") || "0";
-    }
-
-    set selectedPanel(val) {
-      var selectedIndex = -1;
-      for (
-        var panel = val;
-        panel != null;
-        panel = panel.previousElementSibling
-      ) {
-        ++selectedIndex;
-      }
-      this.selectedIndex = selectedIndex;
-    }
-
-    get selectedPanel() {
-      return this.children[this.selectedIndex];
-    }
-  }
-
-  customElements.define("deck", MozDeck);
-
   class MozDropmarker extends MozXULElement {
     constructor() {
       super();

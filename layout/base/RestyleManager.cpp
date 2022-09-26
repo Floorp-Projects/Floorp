@@ -2624,7 +2624,7 @@ MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(ServoPostTraversalFlags)
 // flags for kids.
 static ServoPostTraversalFlags SendA11yNotifications(
     nsPresContext* aPresContext, Element* aElement,
-    ComputedStyle* aOldComputedStyle, ComputedStyle* aNewComputedStyle,
+    const ComputedStyle& aOldStyle, const ComputedStyle& aNewStyle,
     ServoPostTraversalFlags aFlags) {
   using Flags = ServoPostTraversalFlags;
   MOZ_ASSERT(!(aFlags & Flags::SkipA11yNotifications) ||
@@ -2638,13 +2638,24 @@ static ServoPostTraversalFlags SendA11yNotifications(
     // enabled. Just skip everything.
     return Flags::Empty;
   }
+
+  if (aNewStyle.StyleUIReset()->mMozSubtreeHiddenOnlyVisually !=
+      aOldStyle.StyleUIReset()->mMozSubtreeHiddenOnlyVisually) {
+    if (aElement->GetParent() &&
+        aElement->GetParent()->IsXULElement(nsGkAtoms::tabpanels)) {
+      accService->NotifyOfTabPanelVisibilityChange(
+          aPresContext->PresShell(), aElement,
+          aNewStyle.StyleUIReset()->mMozSubtreeHiddenOnlyVisually);
+    }
+  }
+
   if (aFlags & Flags::SkipA11yNotifications) {
-    // Propogate the skipping flag to descendants.
+    // Propagate the skipping flag to descendants.
     return Flags::SkipA11yNotifications;
   }
 
   bool needsNotify = false;
-  bool isVisible = aNewComputedStyle->StyleVisibility()->IsVisible();
+  bool isVisible = aNewStyle.StyleVisibility()->IsVisible();
   if (aFlags & Flags::SendA11yNotificationsIfShown) {
     if (!isVisible) {
       // Propagate the sending-if-shown flag to descendants.
@@ -2657,7 +2668,7 @@ static ServoPostTraversalFlags SendA11yNotifications(
   } else {
     // If we shouldn't skip in any case, we need to check whether our
     // own visibility has changed.
-    bool wasVisible = aOldComputedStyle->StyleVisibility()->IsVisible();
+    bool wasVisible = aOldStyle.StyleVisibility()->IsVisible();
     needsNotify = wasVisible != isVisible;
   }
 
@@ -2887,9 +2898,9 @@ bool RestyleManager::ProcessPostTraversal(Element* aElement,
     AddLayerChangesForAnimation(styleFrame, primaryFrame, aElement, changeHint,
                                 aRestyleState.ChangeList());
 
-    childrenFlags |=
-        SendA11yNotifications(mPresContext, aElement, oldOrDisplayContentsStyle,
-                              upToDateStyle, aFlags);
+    childrenFlags |= SendA11yNotifications(mPresContext, aElement,
+                                           *oldOrDisplayContentsStyle,
+                                           *upToDateStyle, aFlags);
   }
 
   const bool traverseElementChildren =
