@@ -143,10 +143,12 @@ export default function update(state = initialSourcesTreeState(), action) {
         addThread(state, action.mainThread);
       }
       return state;
+
     case "INSERT_THREAD":
       state = { ...state };
       addThread(state, action.newThread);
       return state;
+
     case "REMOVE_THREAD": {
       const index = state.threadItems.findIndex(item => {
         return item.threadActorID == action.threadActorID;
@@ -197,7 +199,9 @@ function addThread(state, thread) {
   }
   // Inject the reducer thread object on Thread Tree Items
   // (this is handy shortcut to have access to from React components)
+  // (this is also used by sortThreadItems to sort the thread as a Tree in the Browser Toolbox)
   threadItem.thread = thread;
+  state.threadItems.sort(sortThreadItems);
 }
 
 function updateExpanded(state, action) {
@@ -255,6 +259,7 @@ function addSource(threadItems, thread, source) {
     // Note that threadItems will be cloned once to force a state update
     // by the callsite of `addSourceActor`
     threadItems.push(threadItem);
+    threadItems.sort(sortThreadItems);
   }
 
   // Then ensure creating or fetching the related Group Item
@@ -312,6 +317,63 @@ function sortItems(a, b) {
       b.source.displayURL.filename
     );
   }
+  return 0;
+}
+
+function sortThreadItems(a, b) {
+  // Jest tests aren't emitting the necessary actions to populate the thread attributes.
+  // Ignore sorting for them.
+  if (!a.thread || !b.thread) {
+    return 0;
+  }
+
+  // Top level target is always listed first
+  if (a.thread.isTopLevel) {
+    return -1;
+  } else if (b.thread.isTopLevel) {
+    return 1;
+  }
+
+  // Process targets should come next and after that frame targets
+  if (a.thread.targetType == "process" && b.thread.targetType == "frame") {
+    return -1;
+  } else if (
+    a.thread.targetType == "frame" &&
+    b.thread.targetType == "process"
+  ) {
+    return 1;
+  }
+
+  // And we display the worker targets last.
+  if (
+    a.thread.targetType.endsWith("worker") &&
+    !b.thread.targetType.endsWith("worker")
+  ) {
+    return 1;
+  } else if (
+    !a.thread.targetType.endsWith("worker") &&
+    b.thread.targetType.endsWith("worker")
+  ) {
+    return -1;
+  }
+
+  // Order the process targets by their process ids
+  if (a.thread.processID > b.thread.processID) {
+    return 1;
+  } else if (a.thread.processID < b.thread.processID) {
+    return 0;
+  }
+
+  // Order the frame targets and the worker targets by their target name
+  if (a.thread.targetType == "frame" && b.thread.targetType == "frame") {
+    return a.thread.name.localeCompare(b.thread.name);
+  } else if (
+    a.thread.targetType.endsWith("worker") &&
+    b.thread.targetType.endsWith("worker")
+  ) {
+    return a.thread.name.localeCompare(b.thread.name);
+  }
+
   return 0;
 }
 
