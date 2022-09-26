@@ -44,8 +44,9 @@ loader.lazyRequireGetter(
   "devtools/server/actors/process",
   true
 );
-loader.lazyImporter(
-  this,
+const lazy = {};
+ChromeUtils.defineModuleGetter(
+  lazy,
   "AddonManager",
   "resource://gre/modules/AddonManager.jsm"
 );
@@ -672,7 +673,7 @@ function BrowserAddonList(connection) {
 }
 
 BrowserAddonList.prototype.getList = async function() {
-  const addons = await AddonManager.getAllAddons();
+  const addons = await lazy.AddonManager.getAllAddons();
   for (const addon of addons) {
     let actor = this._actorByAddonId.get(addon.id);
     if (!actor) {
@@ -759,11 +760,11 @@ BrowserAddonList.prototype._adjustListener = function() {
   if (this._onListChanged) {
     // As long as the callback exists, we need to listen for changes
     // so we can notify about add-on changes.
-    AddonManager.addAddonListener(this);
+    lazy.AddonManager.addAddonListener(this);
   } else if (this._actorByAddonId.size === 0) {
     // When the callback does not exist, we only need to keep listening
     // if the actor cache will need adjusting when add-ons change.
-    AddonManager.removeAddonListener(this);
+    lazy.AddonManager.removeAddonListener(this);
   }
 };
 

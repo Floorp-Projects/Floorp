@@ -23,13 +23,14 @@ const {
   createWebExtensionSessionContext,
 } = require("devtools/server/actors/watcher/session-context");
 
-loader.lazyImporter(
-  this,
+const lazy = {};
+ChromeUtils.defineModuleGetter(
+  lazy,
   "AddonManager",
   "resource://gre/modules/AddonManager.jsm"
 );
-loader.lazyImporter(
-  this,
+ChromeUtils.defineModuleGetter(
+  lazy,
   "ExtensionParent",
   "resource://gre/modules/ExtensionParent.jsm"
 );
@@ -75,13 +76,13 @@ const WebExtensionDescriptorActor = protocol.ActorClassWithSpec(
 
       this._onChildExit = this._onChildExit.bind(this);
       this.destroy = this.destroy.bind(this);
-      AddonManager.addAddonListener(this);
+      lazy.AddonManager.addAddonListener(this);
     },
 
     form() {
       const { addonId } = this;
-      const policy = ExtensionParent.WebExtensionPolicy.getByID(addonId);
-      const persistentBackgroundScript = ExtensionParent.DebugUtils.hasPersistentBackgroundScript(
+      const policy = lazy.ExtensionParent.WebExtensionPolicy.getByID(addonId);
+      const persistentBackgroundScript = lazy.ExtensionParent.DebugUtils.hasPersistentBackgroundScript(
         addonId
       );
       const backgroundScriptStatus = this._getBackgroundScriptStatus();
@@ -110,7 +111,7 @@ const WebExtensionDescriptorActor = protocol.ActorClassWithSpec(
           watcher: true,
         },
         url: this.addon.sourceURI ? this.addon.sourceURI.spec : undefined,
-        warnings: ExtensionParent.DebugUtils.getExtensionManifestWarnings(
+        warnings: lazy.ExtensionParent.DebugUtils.getExtensionManifestWarnings(
           this.addonId
         ),
       };
@@ -161,11 +162,13 @@ const WebExtensionDescriptorActor = protocol.ActorClassWithSpec(
         return this._form;
       }
 
-      this._browser = await ExtensionParent.DebugUtils.getExtensionProcessBrowser(
+      this._browser = await lazy.ExtensionParent.DebugUtils.getExtensionProcessBrowser(
         this
       );
 
-      const policy = ExtensionParent.WebExtensionPolicy.getByID(this.addonId);
+      const policy = lazy.ExtensionParent.WebExtensionPolicy.getByID(
+        this.addonId
+      );
       this._form = await connectToFrame(
         this.conn,
         this._browser,
@@ -215,7 +218,9 @@ const WebExtensionDescriptorActor = protocol.ActorClassWithSpec(
     },
 
     async terminateBackgroundScript() {
-      await ExtensionParent.DebugUtils.terminateBackgroundScript(this.addonId);
+      await lazy.ExtensionParent.DebugUtils.terminateBackgroundScript(
+        this.addonId
+      );
     },
 
     // This function will be called from RootActor in case that the devtools client
@@ -259,7 +264,7 @@ const WebExtensionDescriptorActor = protocol.ActorClassWithSpec(
 
     // Private Methods
     _getBackgroundScriptStatus() {
-      const isRunning = ExtensionParent.DebugUtils.isBackgroundScriptRunning(
+      const isRunning = lazy.ExtensionParent.DebugUtils.isBackgroundScriptRunning(
         this.addonId
       );
       // The background script status doesn't apply to this addon (e.g. the addon
@@ -310,7 +315,7 @@ const WebExtensionDescriptorActor = protocol.ActorClassWithSpec(
     },
 
     destroy() {
-      AddonManager.removeAddonListener(this);
+      lazy.AddonManager.removeAddonListener(this);
 
       this.addon = null;
       if (this._mm) {
@@ -323,7 +328,7 @@ const WebExtensionDescriptorActor = protocol.ActorClassWithSpec(
           actor: this._childActorID,
         });
 
-        ExtensionParent.DebugUtils.releaseExtensionProcessBrowser(this);
+        lazy.ExtensionParent.DebugUtils.releaseExtensionProcessBrowser(this);
       }
 
       this._browser = null;

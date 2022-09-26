@@ -53,7 +53,13 @@ const SAFE_HOSTS_PREFIXES_REGEX = /^(about\+|https?\+|file\+|moz-extension\+)/;
 // devtools/server/tests/browser/head.js
 const SEPARATOR_GUID = "{9d414cc5-8319-0a04-0586-c0a6ae01670a}";
 
-loader.lazyImporter(this, "Sqlite", "resource://gre/modules/Sqlite.jsm");
+const lazy = {};
+
+ChromeUtils.defineModuleGetter(
+  lazy,
+  "Sqlite",
+  "resource://gre/modules/Sqlite.jsm"
+);
 
 // We give this a funny name to avoid confusion with the global
 // indexedDB.
@@ -3187,7 +3193,7 @@ var indexedDBHelpers = {
     // will throw. Thus we retry for some time to see if lock is removed.
     while (!connection && retryCount++ < 25) {
       try {
-        connection = await Sqlite.openConnection({ path });
+        connection = await lazy.Sqlite.openConnection({ path });
       } catch (ex) {
         // Continuously retrying is overkill. Waiting for 100ms before next try
         await sleep(100);

@@ -4,8 +4,10 @@
 
 "use strict";
 
-loader.lazyImporter(
-  this,
+const lazy = {};
+
+ChromeUtils.defineModuleGetter(
+  lazy,
   "AddonManager",
   "resource://gre/modules/AddonManager.jsm"
 );
@@ -23,7 +25,7 @@ const { PREFERENCES } = require("devtools/client/aboutdebugging/src/constants");
  * Resolves when the addon shutdown has completed.
  */
 exports.uninstallAddon = async function(addonID) {
-  const addon = await AddonManager.getAddonByID(addonID);
+  const addon = await lazy.AddonManager.getAddonByID(addonID);
   return addon && addon.uninstall();
 };
 

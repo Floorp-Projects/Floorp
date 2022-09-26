@@ -6,10 +6,20 @@
 
 const { LocalizationHelper } = require("devtools/shared/l10n");
 
-loader.lazyImporter(this, "Downloads", "resource://gre/modules/Downloads.jsm");
-loader.lazyImporter(this, "FileUtils", "resource://gre/modules/FileUtils.jsm");
-loader.lazyImporter(
-  this,
+const lazy = {};
+
+ChromeUtils.defineModuleGetter(
+  lazy,
+  "Downloads",
+  "resource://gre/modules/Downloads.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  lazy,
+  "FileUtils",
+  "resource://gre/modules/FileUtils.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  lazy,
   "PrivateBrowsingUtils",
   "resource://gre/modules/PrivateBrowsingUtils.jsm"
 );
@@ -355,7 +365,7 @@ async function saveToFile(window, image) {
     filename += ".png";
   }
 
-  const downloadsDir = await Downloads.getPreferredDownloadsDirectory();
+  const downloadsDir = await lazy.Downloads.getPreferredDownloadsDirectory();
   const downloadsDirExists = await IOUtils.exists(downloadsDir);
   if (downloadsDirExists) {
     // If filename is absolute, it will override the downloads directory and
@@ -365,25 +375,25 @@ async function saveToFile(window, image) {
       : PathUtils.joinRelative(downloadsDir, filename);
   }
 
-  const targetFile = new FileUtils.File(filename);
+  const targetFile = new lazy.FileUtils.File(filename);
 
   // Create download and track its progress.
   try {
-    const download = await Downloads.createDownload({
+    const download = await lazy.Downloads.createDownload({
       source: {
         url: image.data,
         // Here we want to know if the window in which the screenshot is taken is private.
         // We have a ChromeWindow when this is called from Browser Console (:screenshot) and
         // RDM (screenshot button).
         isPrivate: window.isChromeWindow
-          ? PrivateBrowsingUtils.isWindowPrivate(window)
-          : PrivateBrowsingUtils.isBrowserPrivate(
+          ? lazy.PrivateBrowsingUtils.isWindowPrivate(window)
+          : lazy.PrivateBrowsingUtils.isBrowserPrivate(
               window.browsingContext.embedderElement
             ),
       },
       target: targetFile,
     });
-    const list = await Downloads.getList(Downloads.ALL);
+    const list = await lazy.Downloads.getList(lazy.Downloads.ALL);
     // add the download to the download list in the Downloads list in the Browser UI
     list.add(download);
     // Await successful completion of the save via the download manager

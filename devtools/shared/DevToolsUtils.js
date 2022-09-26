@@ -468,27 +468,6 @@ Object.defineProperty(exports, "assert", {
       : exports.noop,
 });
 
-/**
- * Defines a getter on a specified object for a module.  The module will not
- * be imported until first use.
- *
- * @param object
- *        The object to define the lazy getter on.
- * @param name
- *        The name of the getter to define on object for the module.
- * @param resource
- *        The URL used to obtain the module.
- * @param symbol
- *        The name of the symbol exported by the module.
- *        This parameter is optional and defaults to name.
- */
-exports.defineLazyModuleGetter = function(object, name, resource, symbol) {
-  this.defineLazyGetter(object, name, function() {
-    const temp = ChromeUtils.import(resource);
-    return temp[symbol || name];
-  });
-};
-
 DevToolsUtils.defineLazyGetter(this, "NetUtil", () => {
   return require("resource://gre/modules/NetUtil.jsm").NetUtil;
 });

@@ -172,7 +172,6 @@ function DevToolsLoader({
   // let { loader } = ChromeUtils.import("resource://devtools/shared/loader/Loader.jsm");
   // loader.lazyGetter(...);
   this.lazyGetter = globals.loader.lazyGetter;
-  this.lazyImporter = globals.loader.lazyImporter;
   this.lazyServiceGetter = globals.loader.lazyServiceGetter;
   this.lazyRequireGetter = globals.loader.lazyRequireGetter;
 }

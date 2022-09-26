@@ -7,8 +7,10 @@
 const { Actor, ActorClassWithSpec } = require("devtools/shared/protocol");
 const { manifestSpec } = require("devtools/shared/specs/manifest");
 
-loader.lazyImporter(
-  this,
+const lazy = {};
+
+ChromeUtils.defineModuleGetter(
+  lazy,
   "ManifestObtainer",
   "resource://gre/modules/ManifestObtainer.jsm"
 );
@@ -24,7 +26,7 @@ const ManifestActor = ActorClassWithSpec(manifestSpec, {
 
   async fetchCanonicalManifest() {
     try {
-      const manifest = await ManifestObtainer.contentObtainManifest(
+      const manifest = await lazy.ManifestObtainer.contentObtainManifest(
         this.targetActor.window,
         { checkConformance: true }
       );

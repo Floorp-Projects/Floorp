@@ -96,28 +96,6 @@ function defineLazyServiceGetter(object, name, contract, interfaceName) {
 }
 
 /**
- * Defines a getter on a specified object for a module.  The module will not
- * be imported until first use.
- *
- * @param object
- *        The object to define the lazy getter on.
- * @param name
- *        The name of the getter to define on object for the module.
- * @param resource
- *        The URL used to obtain the module.
- */
-function defineLazyModuleGetter(object, name, resource) {
-  defineLazyGetter(object, name, function() {
-    try {
-      return ChromeUtils.import(resource)[name];
-    } catch (ex) {
-      Cu.reportError("Failed to load module " + resource + ".");
-      throw ex;
-    }
-  });
-}
-
-/**
  * Define a getter property on the given object that requires the given
  * module. This enables delaying importing modules until the module is
  * actually used.
@@ -226,7 +204,6 @@ exports.globals = {
   L10nRegistry,
   loader: {
     lazyGetter: defineLazyGetter,
-    lazyImporter: defineLazyModuleGetter,
     lazyServiceGetter: defineLazyServiceGetter,
     lazyRequireGetter,
     // Defined by Loader.jsm

@@ -335,9 +335,6 @@ var loader = {
       enumerable: true,
     });
   },
-  lazyImporter() {
-    throw new Error("Can't import JSM from worker thread!");
-  },
   lazyServiceGetter() {
     throw new Error("Can't import XPCOM service from worker thread!");
   },
