@@ -835,7 +835,8 @@ int32_t AudioDeviceMac::PlayoutDeviceName(uint16_t index,
     memset(guid, 0, kAdmMaxGuidSize);
   }
 
-  return GetDeviceName(kAudioDevicePropertyScopeOutput, index, name);
+  return GetDeviceName(kAudioDevicePropertyScopeOutput, index,
+                       rtc::ArrayView<char>(name, kAdmMaxDeviceNameSize));
 }
 
 int32_t AudioDeviceMac::RecordingDeviceName(uint16_t index,
@@ -853,7 +854,8 @@ int32_t AudioDeviceMac::RecordingDeviceName(uint16_t index,
     memset(guid, 0, kAdmMaxGuidSize);
   }
 
-  return GetDeviceName(kAudioDevicePropertyScopeInput, index, name);
+  return GetDeviceName(kAudioDevicePropertyScopeInput, index,
+                       rtc::ArrayView<char>(name, kAdmMaxDeviceNameSize));
 }
 
 int16_t AudioDeviceMac::RecordingDevices() {
@@ -1646,9 +1648,8 @@ int32_t AudioDeviceMac::GetNumberDevices(const AudioObjectPropertyScope scope,
 
 int32_t AudioDeviceMac::GetDeviceName(const AudioObjectPropertyScope scope,
                                       const uint16_t index,
-                                      char* name) {
+                                      rtc::ArrayView<char> name) {
   OSStatus err = noErr;
-  UInt32 len = kAdmMaxDeviceNameSize;
   AudioDeviceID deviceIds[MaxNumberDevices];
 
   int numberDevices = GetNumberDevices(scope, deviceIds, MaxNumberDevices);
@@ -1689,21 +1690,24 @@ int32_t AudioDeviceMac::GetDeviceName(const AudioObjectPropertyScope scope,
                                                 scope, 0};
 
   if (isDefaultDevice) {
-    char devName[len];
+    std::array<char, kAdmMaxDeviceNameSize> devName;
+    UInt32 len = devName.size();
 
-    WEBRTC_CA_RETURN_ON_ERR(AudioObjectGetPropertyData(usedID, &propertyAddress,
-                                                       0, NULL, &len, devName));
+    WEBRTC_CA_RETURN_ON_ERR(AudioObjectGetPropertyData(
+        usedID, &propertyAddress, 0, NULL, &len, devName.data()));
 
-    sprintf(name, "default (%s)", devName);
+    rtc::SimpleStringBuilder ss(name);
+    ss.AppendFormat("default (%s)", devName.data());
   } else {
     if (index < numberDevices) {
       usedID = deviceIds[index];
     } else {
       usedID = index;
     }
+    UInt32 len = name.size();
 
-    WEBRTC_CA_RETURN_ON_ERR(AudioObjectGetPropertyData(usedID, &propertyAddress,
-                                                       0, NULL, &len, name));
+    WEBRTC_CA_RETURN_ON_ERR(AudioObjectGetPropertyData(
+        usedID, &propertyAddress, 0, NULL, &len, name.data()));
   }
 
   return 0;

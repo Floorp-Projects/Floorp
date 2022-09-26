@@ -12,6 +12,7 @@
 
 #include <iostream>
 
+#include "rtc_base/strings/string_builder.h"
 #include "rtc_base/time_utils.h"
 
 namespace webrtc {
@@ -217,9 +218,9 @@ Channel::Channel(int16_t chID)
   }
   if (chID >= 0) {
     _saveBitStream = true;
-    char bitStreamFileName[500];
-    sprintf(bitStreamFileName, "bitStream_%d.dat", chID);
-    _bitStreamFile = fopen(bitStreamFileName, "wb");
+    rtc::StringBuilder ss;
+    ss.AppendFormat("bitStream_%d.dat", chID);
+    _bitStreamFile = fopen(ss.str().c_str(), "wb");
   } else {
     _saveBitStream = false;
   }

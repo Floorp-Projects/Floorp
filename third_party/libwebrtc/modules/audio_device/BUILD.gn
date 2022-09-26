@@ -208,7 +208,10 @@ rtc_library("audio_device_impl") {
     "../../system_wrappers:metrics",
     "../utility",
   ]
-  absl_deps = [ "//third_party/abseil-cpp/absl/base:core_headers" ]
+  absl_deps = [
+    "//third_party/abseil-cpp/absl/base:core_headers",
+    "//third_party/abseil-cpp/absl/strings:strings",
+  ]
   if (rtc_include_internal_audio_device && is_ios) {
     deps += [ "../../sdk:audio_device" ]
   }

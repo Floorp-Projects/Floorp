@@ -18,6 +18,7 @@
 #include <atomic>
 #include <memory>
 
+#include "absl/strings/string_view.h"
 #include "modules/audio_device/audio_device_generic.h"
 #include "modules/audio_device/mac/audio_mixer_manager_mac.h"
 #include "rtc_base/event.h"
@@ -179,7 +180,7 @@ class AudioDeviceMac : public AudioDeviceGeneric {
 
   int32_t GetDeviceName(AudioObjectPropertyScope scope,
                         uint16_t index,
-                        char* name);
+                        rtc::ArrayView<char> name);
 
   int32_t InitDevice(uint16_t userDeviceIndex,
                      AudioDeviceID& deviceId,
