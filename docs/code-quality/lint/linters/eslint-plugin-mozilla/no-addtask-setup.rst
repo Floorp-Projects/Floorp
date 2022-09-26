@@ -16,6 +16,7 @@ Examples of incorrect code for this rule:
 
     add_task(async function setup() { ... });
     add_task(function setup() { ... });
+    add_task(function init() { ... });
 
 Examples of correct code for this rule:
 ---------------------------------------

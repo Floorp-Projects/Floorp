@@ -10,7 +10,7 @@
 "use strict";
 
 function isNamedLikeSetup(name) {
-  return name.toLowerCase() === "setup";
+  return /^(init|setup)$/i.test(name);
 }
 
 module.exports = {
