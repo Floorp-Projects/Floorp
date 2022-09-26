@@ -83,7 +83,7 @@ We are also posting questions that we have received in the past on our [support 
 
 Floorp is a rapid release browser, like Firefox, in order to maximize security and privacy protection. However, the release phase is roughly the same as Firefox.
 
-The Floorp development process follows the following phases:
+The Floorp development process follows these stages :
 
 * Floorp developers are creating patches for the next version of Firefox in a beta branch before the next version of Firefox is released. The beta version is released with a patch applied. This is done for two and a half weeks to create Floorp features and keep up with the newest version of Firefox.
 
