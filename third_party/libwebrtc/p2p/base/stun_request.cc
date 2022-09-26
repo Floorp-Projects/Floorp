@@ -57,7 +57,6 @@ void StunRequestManager::Send(StunRequest* request) {
 void StunRequestManager::SendDelayed(StunRequest* request, int delay) {
   RTC_DCHECK_RUN_ON(thread_);
   RTC_DCHECK_EQ(this, request->manager());
-  request->Construct();
   auto [iter, was_inserted] =
       requests_.emplace(request->id(), absl::WrapUnique(request));
   RTC_DCHECK(was_inserted);
@@ -210,18 +209,6 @@ StunRequest::StunRequest(StunRequestManager& manager,
 
 StunRequest::~StunRequest() {
   manager_.network_thread()->Clear(this);
-}
-
-void StunRequest::Construct() {
-  // TODO(tommi): The implementation assumes that Construct() is only called
-  // once (see `StunRequestManager::SendDelayed` below). However, these steps to
-  // construct a request object are odd to have at this level (virtual method
-  // called from the parent class, _after_ construction) and also triggered
-  // from a different class... via a "Send" method.
-  // Remove `Prepare`, `Construct` and make construction of the message objects
-  // separate from the StunRequest and StunRequestManager classes.
-  Prepare(msg_.get());
-  RTC_DCHECK_NE(msg_->type(), 0);
 }
 
 int StunRequest::type() {
