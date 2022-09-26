@@ -6,8 +6,6 @@
  * Various utilities for search related UI.
  */
 
-"use strict";
-
 import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 const lazy = {};
