@@ -234,7 +234,6 @@ exports.globals = {
   },
   Localization,
   PathUtils,
-  reportError: Cu.reportError,
   StructuredCloneHolder,
 };
 // DevTools loader copy globals property descriptors on each module global

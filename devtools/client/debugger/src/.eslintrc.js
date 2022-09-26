@@ -18,7 +18,6 @@ module.exports = {
     EventEmitter: true,
     isWorker: true,
     loader: true,
-    reportError: true,
     Services: true,
     Task: true,
     XPCNativeWrapper: true,

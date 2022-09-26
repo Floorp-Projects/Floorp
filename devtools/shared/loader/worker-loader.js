@@ -376,7 +376,6 @@ var {
   dump,
   rpc,
   loadSubScript,
-  reportError,
   setImmediate,
   xpcInspector,
 } = function() {
@@ -424,8 +423,6 @@ addDebuggerToGlobal(globalThis);
       subScriptLoader.loadSubScript(url, sandbox);
     };
 
-    const reportError = Cu.reportError;
-
     const Timer = ChromeUtils.import("resource://gre/modules/Timer.jsm");
 
     const setImmediate = function(callback) {
@@ -447,7 +444,6 @@ addDebuggerToGlobal(globalThis);
       dump: this.dump,
       rpc,
       loadSubScript,
-      reportError,
       setImmediate,
       xpcInspector,
     };
@@ -486,7 +482,6 @@ addDebuggerToGlobal(globalThis);
     dump: this.dump,
     rpc: this.rpc,
     loadSubScript: this.loadSubScript,
-    reportError: this.reportError,
     setImmediate: this.setImmediate,
     xpcInspector,
   };
@@ -502,7 +497,6 @@ this.worker = new WorkerDebuggerLoader({
     isWorker: true,
     dump,
     loader,
-    reportError,
     rpc,
     URL,
     setImmediate,

@@ -630,7 +630,6 @@ const SourceActor = ActorClassWithSpec(sourceSpec, {
         contentType,
       };
     } catch (error) {
-      reportError(error, "Got an exception during SA_onSource: ");
       throw new Error(
         "Could not load the source for " +
           this.url +
