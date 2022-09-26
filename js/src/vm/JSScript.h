@@ -995,14 +995,12 @@ class ScriptSource {
   }
   [[nodiscard]] bool setFilename(JSContext* cx, ErrorContext* ec,
                                  const char* filename);
-  [[nodiscard]] bool setFilename(JSContext* cx, UniqueChars&& filename);
   [[nodiscard]] bool setFilename(JSContext* cx, ErrorContext* ec,
                                  UniqueChars&& filename);
 
   const char* introducerFilename() const {
     return introducerFilename_ ? introducerFilename_.chars() : filename();
   }
-  [[nodiscard]] bool setIntroducerFilename(JSContext* cx, const char* filename);
   [[nodiscard]] bool setIntroducerFilename(JSContext* cx, ErrorContext* ec,
                                            const char* filename);
   [[nodiscard]] bool setIntroducerFilename(JSContext* cx, ErrorContext* ec,
@@ -1019,7 +1017,6 @@ class ScriptSource {
   // Display URLs
   [[nodiscard]] bool setDisplayURL(JSContext* cx, ErrorContext* ec,
                                    const char16_t* url);
-  [[nodiscard]] bool setDisplayURL(JSContext* cx, UniqueTwoByteChars&& url);
   [[nodiscard]] bool setDisplayURL(JSContext* cx, ErrorContext* ec,
                                    UniqueTwoByteChars&& url);
   bool hasDisplayURL() const { return bool(displayURL_); }
@@ -1028,7 +1025,6 @@ class ScriptSource {
   // Source maps
   [[nodiscard]] bool setSourceMapURL(JSContext* cx, ErrorContext* ec,
                                      const char16_t* url);
-  [[nodiscard]] bool setSourceMapURL(JSContext* cx, UniqueTwoByteChars&& url);
   [[nodiscard]] bool setSourceMapURL(JSContext* cx, ErrorContext* ec,
                                      UniqueTwoByteChars&& url);
   bool hasSourceMapURL() const { return bool(sourceMapURL_); }
