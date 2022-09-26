@@ -2324,7 +2324,7 @@ std::vector<LoggedPacketInfo> ParsedRtcEventLog::GetPacketInfos(
   };
 
   Timestamp feedback_base_time = Timestamp::MinusInfinity();
-  absl::optional<int64_t> last_feedback_base_time_us;
+  Timestamp last_feedback_base_time = Timestamp::MinusInfinity();
 
   auto feedback_handler =
       [&](const LoggedRtcpPacketTransportFeedback& logged_rtcp) {
@@ -2334,13 +2334,12 @@ std::vector<LoggedPacketInfo> ParsedRtcEventLog::GetPacketInfos(
         // Add timestamp deltas to a local time base selected on first packet
         // arrival. This won't be the true time base, but makes it easier to
         // manually inspect time stamps.
-        if (!last_feedback_base_time_us) {
+        if (!last_feedback_base_time.IsFinite()) {
           feedback_base_time = log_feedback_time;
         } else {
-          feedback_base_time += TimeDelta::Micros(
-              feedback.GetBaseDeltaUs(*last_feedback_base_time_us));
+          feedback_base_time += feedback.GetBaseDelta(last_feedback_base_time);
         }
-        last_feedback_base_time_us = feedback.GetBaseTimeUs();
+        last_feedback_base_time = feedback.BaseTime();
 
         std::vector<LoggedPacketInfo*> packet_feedbacks;
         packet_feedbacks.reserve(feedback.GetAllPackets().size());
@@ -2362,7 +2361,7 @@ std::vector<LoggedPacketInfo> ParsedRtcEventLog::GetPacketInfos(
             continue;
           }
           if (packet.received()) {
-            receive_timestamp += TimeDelta::Micros(packet.delta_us());
+            receive_timestamp += packet.delta();
             if (sent->reported_recv_time.IsInfinite()) {
               sent->reported_recv_time = receive_timestamp;
               sent->log_feedback_time = log_feedback_time;

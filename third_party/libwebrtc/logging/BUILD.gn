@@ -505,6 +505,8 @@ if (rtc_enable_protobuf) {
         "../api/rtc_event_log",
         "../api/rtc_event_log:rtc_event_log_factory",
         "../api/task_queue:default_task_queue_factory",
+        "../api/units:time_delta",
+        "../api/units:timestamp",
         "../call",
         "../call:call_interfaces",
         "../modules/audio_coding:audio_network_adaptor",
