@@ -40,7 +40,7 @@
     ・
     <a href="https://blog.ablaze.one">Blog & Release Notes</a>
     ・
-    <a href="https://support.ablaze.one">Official Support Site & Send feedback</a>
+    <a href="https://support.ablaze.one">Official Support Site & Feedback</a>
   </p>
 </div>
 
@@ -48,9 +48,9 @@
 
 ### Repository Overview
 
-This repository contains source code for the Floorp browser from version 10.0.0 and later.　Although there is a copyright notation in the license, the contribution of the developer's code is very small for signature. Please forgive me.
+This repository contains source code for the Floorp browser from version 10.0.0 and later. Although there is a copyright notation in the license, the contribution of the developer's code is very small for signature. Please forgive me.
 
-For a list of contributors to Floorp, see about:contributors on Floorp
+For a list of contributors to Floorp, see [about:contributors](browser/components/aboutcontributor/contributor.html) on Floorp.
 
 Branches ```master```, ```release```, ``beta``, and ``ESR102`` exist.
 
@@ -64,7 +64,7 @@ Feel free to use ``issues`` as long as they are Floorp related. If you are famil
 
 A `pull request` can be made if the user is able to fix the bug discussed in the `issue`. However, you may also submit translations or fixes to code you are interested in without regard to the `issue`. However, please provide the code in as clear a form as possible. Also, we would appreciate it if you could submit your code to the `beta` branch instead of the `release` branch if at all possible. However, we cannot guarantee that 100% of the code you submit will be used.
 
-If it is used, we will include your name in the release notes with a link to your GitHub profile and site/Twitter account.
+If submitted code is used, we will include your name in the release notes with a link to your GitHub profile and site/Twitter.
 
 ---
 
@@ -76,17 +76,17 @@ Floorp is currently being developed completely on a non-profit basis, so the man
 
 ### Available official support
 
-Floorp is available on Twitter, our support site, and GitHub. Support Site
-We are also posting questions that we have received in the past on our support site.
+Floorp is available on [Twitter](https://twitter.com/floorp_browser), our [website](https://floorp.ablaze.one/), and [GitHub](https://github.com/orgs/Floorp-Projects).
+We are also posting questions that we have received in the past on our [support site](https://support.ablaze.one/).
 
 ### Floorp's Release Structure
 
 Floorp is a rapid release browser, like Firefox, in order to maximize security and privacy protection. However, the release phase is roughly the same as Firefox.
 
-Specifically, the release phases are as follows
+The Floorp development process follows these stages :
 
-Create a patch for the next version of Firefox on the beta branch before the next version of Firefox is released. The beta version is released with the patch applied. Do this for two and a half weeks to create Floorp features and keep up with the latest version of Firefox.
+* Floorp developers are creating patches for the next version of Firefox in a beta branch before the next version of Firefox is released. The beta version is released with a patch applied. This is done for two and a half weeks to create Floorp features and keep up with the newest version of Firefox.
 
-The source code for the release version of the next version of Firefox will be made available one week before. This source code is relatively stable because it has gone through a beta version. However, it is not complete source code. However, waiting for this will delay security fixes, so Floorp developers will start building Floorp four days after the source code is released. This strikes a balance between keeping the latest version and fixing security issues.
+* The source code for the release version of the next version of Firefox will be available a week before release. This source code is relatively stable because it went through a beta. However, it is not the complete source code. Waiting for it will delay security fixes, so Floorp developers will start building Floorp four days after the release of a source code. This strikes a balance between keeping the latest version and fixing security issues.
 
-The exception to this is that if additional critical vulnerabilities or other fixes are introduced into Firefox, Floorp developers may build with additional patches on a case-by-case basis to release new features earlier. In the case of minor updates, Floorp may ignore them. This is the Floorp release method.
+* The exception to this is when additional critical vulnerabilities or other fixes appear in Firefox. Floorp developers may create builds with additional fixes on a case-by-case basis to release new features earlier. In the case of minor updates, Floorp can ignore them. This is Floorp's release method.
