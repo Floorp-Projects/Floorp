@@ -36,10 +36,9 @@ loader.lazyRequireGetter(
   true
 );
 
-const {
-  getString,
-  showFilePicker,
-} = require("resource://devtools/client/styleeditor/StyleEditorUtil.jsm");
+const { getString, showFilePicker } = ChromeUtils.import(
+  "resource://devtools/client/styleeditor/StyleEditorUtil.jsm"
+);
 
 const LOAD_ERROR = "error-load";
 const SAVE_ERROR = "error-save";

@@ -8,7 +8,7 @@
 
 const EventEmitter = require("devtools/shared/event-emitter");
 const { dumpn } = require("devtools/shared/DevToolsUtils");
-const { setTimeout } = require("resource://gre/modules/Timer.jsm");
+const { setTimeout } = ChromeUtils.import("resource://gre/modules/Timer.jsm");
 
 const {
   adbProcess,

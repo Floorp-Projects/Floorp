@@ -3,7 +3,9 @@
 
 "use strict";
 
-const { AddonManager } = require("resource://gre/modules/AddonManager.jsm");
+const { AddonManager } = ChromeUtils.import(
+  "resource://gre/modules/AddonManager.jsm"
+);
 
 function promiseAddonEvent(event) {
   return new Promise(resolve => {

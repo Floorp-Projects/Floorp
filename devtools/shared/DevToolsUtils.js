@@ -421,7 +421,8 @@ DevToolsUtils.defineLazyGetter(this, "AppConstants", () => {
   if (isWorker) {
     return {};
   }
-  return require("resource://gre/modules/AppConstants.jsm").AppConstants;
+  return ChromeUtils.import("resource://gre/modules/AppConstants.jsm")
+    .AppConstants;
 });
 
 /**
@@ -469,7 +470,7 @@ Object.defineProperty(exports, "assert", {
 });
 
 DevToolsUtils.defineLazyGetter(this, "NetUtil", () => {
-  return require("resource://gre/modules/NetUtil.jsm").NetUtil;
+  return ChromeUtils.import("resource://gre/modules/NetUtil.jsm").NetUtil;
 });
 
 DevToolsUtils.defineLazyGetter(this, "NetworkHelper", () => {

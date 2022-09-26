@@ -11,9 +11,9 @@ const {
   CommandsFactory,
 } = require("devtools/shared/commands/commands-factory");
 const { DevToolsServer } = require("devtools/server/devtools-server");
-const {
-  BrowserTestUtils,
-} = require("resource://testing-common/BrowserTestUtils.jsm");
+const { BrowserTestUtils } = ChromeUtils.import(
+  "resource://testing-common/BrowserTestUtils.jsm"
+);
 const {
   DocumentWalker: _documentWalker,
 } = require("devtools/server/actors/inspector/document-walker");

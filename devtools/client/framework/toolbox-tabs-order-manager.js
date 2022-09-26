@@ -4,7 +4,9 @@
 
 "use strict";
 
-const { AddonManager } = require("resource://gre/modules/AddonManager.jsm");
+const { AddonManager } = ChromeUtils.import(
+  "resource://gre/modules/AddonManager.jsm"
+);
 const { gDevTools } = require("devtools/client/framework/devtools");
 const Telemetry = require("devtools/client/shared/telemetry");
 const TABS_REORDERED_SCALAR = "devtools.toolbox.tabs_reordered";

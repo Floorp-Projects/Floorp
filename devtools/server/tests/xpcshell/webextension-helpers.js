@@ -9,10 +9,13 @@
  * Test helpers shared by the devtools server xpcshell tests related to webextensions.
  */
 
-const { FileUtils } = require("resource://gre/modules/FileUtils.jsm");
-const {
-  ExtensionTestUtils,
-} = require("resource://testing-common/ExtensionXPCShellUtils.jsm");
+const { FileUtils } = ChromeUtils.import(
+  "resource://gre/modules/FileUtils.jsm"
+);
+const { ExtensionTestUtils } = ChromeUtils.import(
+  "resource://testing-common/ExtensionXPCShellUtils.jsm"
+);
+
 const {
   CommandsFactory,
 } = require("devtools/shared/commands/commands-factory");

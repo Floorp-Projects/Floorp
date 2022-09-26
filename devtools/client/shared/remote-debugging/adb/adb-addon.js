@@ -4,7 +4,9 @@
 
 "use strict";
 
-const { AddonManager } = require("resource://gre/modules/AddonManager.jsm");
+const { AddonManager } = ChromeUtils.import(
+  "resource://gre/modules/AddonManager.jsm"
+);
 const EventEmitter = require("devtools/shared/event-emitter");
 
 const PREF_ADB_EXTENSION_URL = "devtools.remote.adb.extensionURL";

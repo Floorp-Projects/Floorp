@@ -11,11 +11,11 @@ const { isWindowIncluded } = require("devtools/shared/layout/utils");
 const specs = require("devtools/shared/specs/storage");
 const { parseItemValue } = require("devtools/shared/storage/utils");
 loader.lazyGetter(this, "ExtensionProcessScript", () => {
-  return require("resource://gre/modules/ExtensionProcessScript.jsm")
+  return ChromeUtils.import("resource://gre/modules/ExtensionProcessScript.jsm")
     .ExtensionProcessScript;
 });
 loader.lazyGetter(this, "ExtensionStorageIDB", () => {
-  return require("resource://gre/modules/ExtensionStorageIDB.jsm")
+  return ChromeUtils.import("resource://gre/modules/ExtensionStorageIDB.jsm")
     .ExtensionStorageIDB;
 });
 loader.lazyRequireGetter(

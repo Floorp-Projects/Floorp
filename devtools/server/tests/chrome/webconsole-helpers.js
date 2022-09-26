@@ -43,9 +43,9 @@ async function addTabAndCreateCommands(url) {
  */
 async function addTab(url) {
   const { gBrowser } = Services.wm.getMostRecentWindow("navigator:browser");
-  const {
-    BrowserTestUtils,
-  } = require("resource://testing-common/BrowserTestUtils.jsm");
+  const { BrowserTestUtils } = ChromeUtils.import(
+    "resource://testing-common/BrowserTestUtils.jsm"
+  );
   const tab = (gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, url));
   await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
   return tab;

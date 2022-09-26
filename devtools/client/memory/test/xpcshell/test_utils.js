@@ -14,7 +14,9 @@ const {
   snapshotState: states,
   viewState,
 } = require("devtools/client/memory/constants");
-const { Preferences } = require("resource://gre/modules/Preferences.jsm");
+const { Preferences } = ChromeUtils.import(
+  "resource://gre/modules/Preferences.jsm"
+);
 
 add_task(async function() {
   const s1 = utils.createSnapshot({ view: { state: viewState.CENSUS } });

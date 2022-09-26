@@ -4,7 +4,9 @@
 
 "use strict";
 
-const { AddonManager } = require("resource://gre/modules/AddonManager.jsm");
+const { AddonManager } = ChromeUtils.import(
+  "resource://gre/modules/AddonManager.jsm"
+);
 const {
   remoteClientManager,
 } = require("devtools/client/shared/remote-debugging/remote-client-manager");

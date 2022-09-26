@@ -23,7 +23,9 @@ ChromeUtils.defineModuleGetter(
 );
 const { ActorClassWithSpec, Actor } = require("devtools/shared/protocol");
 const { tabDescriptorSpec } = require("devtools/shared/specs/descriptors/tab");
-const { AppConstants } = require("resource://gre/modules/AppConstants.jsm");
+const { AppConstants } = ChromeUtils.import(
+  "resource://gre/modules/AppConstants.jsm"
+);
 const {
   createBrowserElementSessionContext,
 } = require("devtools/server/actors/watcher/session-context");

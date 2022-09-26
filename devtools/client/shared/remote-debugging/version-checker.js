@@ -4,7 +4,9 @@
 
 "use strict";
 
-const { AppConstants } = require("resource://gre/modules/AppConstants.jsm");
+const { AppConstants } = ChromeUtils.import(
+  "resource://gre/modules/AppConstants.jsm"
+);
 
 const MS_PER_DAY = 1000 * 60 * 60 * 24;
 
