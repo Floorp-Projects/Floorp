@@ -42,6 +42,30 @@ rtc_library("rr_send_queue") {
   ]
 }
 
+rtc_library("stream_scheduler") {
+  deps = [
+    ":send_queue",
+    "../../../api:array_view",
+    "../../../rtc_base:checks",
+    "../../../rtc_base:logging",
+    "../../../rtc_base:strong_alias",
+    "../../../rtc_base/containers:flat_set",
+    "../common:str_join",
+    "../packet:data",
+    "../public:socket",
+    "../public:types",
+  ]
+  sources = [
+    "stream_scheduler.cc",
+    "stream_scheduler.h",
+  ]
+  absl_deps = [
+    "//third_party/abseil-cpp/absl/algorithm:container",
+    "//third_party/abseil-cpp/absl/strings",
+    "//third_party/abseil-cpp/absl/types:optional",
+  ]
+}
+
 rtc_library("retransmission_error_counter") {
   deps = [
     "../../../rtc_base:checks",
@@ -145,6 +169,7 @@ if (rtc_include_tests) {
       ":retransmission_timeout",
       ":rr_send_queue",
       ":send_queue",
+      ":stream_scheduler",
       "../../../api:array_view",
       "../../../api/task_queue:task_queue",
       "../../../rtc_base:checks",
@@ -168,6 +193,7 @@ if (rtc_include_tests) {
       "retransmission_queue_test.cc",
       "retransmission_timeout_test.cc",
       "rr_send_queue_test.cc",
+      "stream_scheduler_test.cc",
     ]
   }
 }
