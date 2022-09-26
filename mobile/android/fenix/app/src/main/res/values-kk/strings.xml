@@ -77,6 +77,9 @@
     <!-- Content description for close button used in "contextual feature recommendation" (CFR) popups -->
     <string name="cfr_dismiss_button_default_content_description">Елемеу</string>
 
+    <!-- Total cookie protection "contextual feature recommendation" (CFR) -->
+    <!-- Text for the message displayed in the contextual feature recommendation popup promoting the total cookie protection feature. -->
+    <string name="tcp_cfr_message">Біздің ең қуатты жекелік мүмкіндігіміз сайтаралық трекерлерді оқшаулайды.</string>
     <!-- Text displayed that links to website containing documentation about the "Total cookie protection" feature. -->
     <string name="tcp_cfr_learn_more">Cookie файлдарынан Толық қорғаныс туралы білу</string>
 
@@ -273,6 +276,8 @@
     <!-- Onboarding home screen popup dialog, shown on top of the Jump back in section. Firefox is intentionally hardcoded. -->
     <string moz:RemovedIn="106" name="onboarding_home_screen_jump_back_contextual_hint" tools:ignore="UnusedResources">Сіздің жекелендірілген Firefox үй беті енді тоқтаған жерден жалғастыруды жеңілдетеді. Соңғы беттерді, бетбелгілерді және іздеу нәтижелерін табыңыз.</string>
 
+    <!-- Onboarding home screen popup dialog, shown on top of the Jump back in section. -->
+    <string name="onboarding_home_screen_jump_back_contextual_hint_2">Жекелендірілген басты бетпен танысыңыз. Мұнда соңғы беттер, бетбелгілер және іздеу нәтижелері көрсетілетін болады.</string>
     <!-- Home onboarding dialog welcome screen title text. -->
     <string moz:RemovedIn="106" name="onboarding_home_welcome_title" tools:ignore="UnusedResources">Тәуелсіз интернетке қош келдіңіз</string>
     <!-- Home onboarding dialog welcome screen title text. -->
@@ -283,12 +288,17 @@
     <string moz:RemovedIn="106" name="onboarding_home_sync_title_2" tools:ignore="UnusedResources">Телефоннан ноутбукке және кері өтіңіз</string>
     <!-- Home onboarding dialog sign into sync screen title text. -->
     <string name="onboarding_home_sync_title_3">Экрандарды ауыстыру бұрынғыдан оңайырақ</string>
+    <!-- Home onboarding dialog sign into sync screen description text. -->
+    <string name="onboarding_home_sync_description">Енді басты бетте орналасқан басқа құрылғылардың беттері арқылы тоқтаған жерден жалғастырыңыз.</string>
     <!-- Text for the button to continue the onboarding on the home onboarding dialog. -->
     <string name="onboarding_home_get_started_button">Бастау</string>
     <!-- Text for the button to navigate to the sync sign in screen on the home onboarding dialog. -->
     <string name="onboarding_home_sign_in_button">Кіру</string>
     <!-- Text for the button to skip the onboarding on the home onboarding dialog. -->
     <string name="onboarding_home_skip_button">Аттап кету</string>
+
+    <!-- Onboarding home screen sync popup dialog message, shown on top of Recent Synced Tabs in the Jump back in section. -->
+    <string name="sync_cfr_message">Сіздің беттеріңіз синхрондалуда! Осында басқа құрылғыда тоқтаған жерден жалғастырыңыз.</string>
 
     <!-- Search Widget -->
     <!-- Content description for searching with a widget. The first parameter is the name of the application.-->
@@ -1233,6 +1243,8 @@
     <string name="onboarding_account_sign_in_header">Жұмысты қалдырған жерінен жалғастырыңыз</string>
     <!-- Text for the button to learn more about signing in to your Firefox account. The first parameter is the name of the application.-->
     <string moz:removedIn="106" name="onboarding_manual_sign_in_description_2" tools:ignore="UnusedResources">Осы құрылғыдағы %1$s ішіне бетбелгілер, шолу тарихын және парольдерді әкелу.</string>
+    <!-- Text for the button to learn more about signing in to your Firefox account. -->
+    <string name="onboarding_manual_sign_in_description">Экранды оңай ауыстыру үшін беттер мен парольдерді құрылғылар арасында синхрондаңыз.</string>
     <!-- text for the button to manually sign into Firefox account. -->
     <string moz:removedIn="106" name="onboarding_firefox_account_sign_in_1" tools:ignore="UnusedResources">Тіркелу</string>
     <!-- Text for the button to manually sign into Firefox account. -->

@@ -487,6 +487,8 @@
     <!-- Text for limited edition wallpapers title. -->
     <string name="wallpaper_limited_edition_title">ມີ​ຈໍາ​ນວນ​ຈໍາ​ກັດ</string>
 
+    <!-- Description text for the limited edition wallpapers with learn more link. The first parameter is the learn more string defined in wallpaper_learn_more-->
+    <string name="wallpaper_limited_edition_description_with_learn_more">ຄໍເລັກຊັນສຽງເອກະລາດໃໝ່. %s</string>
     <!-- Description text for the limited edition wallpapers. -->
     <string name="wallpaper_limited_edition_description">ຄໍເລັກຊັນສຽງເອກະລາດໃໝ່.</string>
     <!-- Wallpaper onboarding dialog header text. -->
@@ -1351,6 +1353,8 @@
     <!-- Preference description for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_custom_description_2">ເລືອກຕົວຕິດຕາມ ແລະ ສະຄິບທີ່ຈະບັອກ.</string>
 
+    <!--  Accessibility text for the Strict protection information icon  -->
+    <string name="preference_enhanced_tracking_protection_custom_info_button">ສິ່ງທີ່ຖືກບລັອກໂດຍການປົກປ້ອງການຕິດຕາມແບບກຳນົດເອງ</string>
     <!-- Header for categories that are being blocked by current Enhanced Tracking Protection settings -->
     <!-- Preference for enhanced tracking protection for the custom protection settings for cookies-->
     <string name="preference_enhanced_tracking_protection_custom_cookies">ຄຸກກີ້</string>
@@ -1359,6 +1363,8 @@
     <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
     <string name="preference_enhanced_tracking_protection_custom_cookies_2">ຄຸກກີ້ຈາກເວັບໄຊທທີ່ບໍ່ເຄີຍເຂົ້າໄປ</string>
 
+    <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
+    <string name="preference_enhanced_tracking_protection_custom_cookies_3">ຄຸກກີ້ນອກທັງໝົດ(ອາດເຮັດໃຫ້ເວັບໄຊມີບັນຫາ)</string>
     <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
     <string name="preference_enhanced_tracking_protection_custom_cookies_4">ຄຸກກີ້ທັງຫມົດ (ຈະສົ່ງຜົນໃຫ້ເວັບໄຊທບໍ່ສົມບູນ)</string>
 
@@ -1573,6 +1579,9 @@
     <string name="preferences_addresses_manage_addresses">ຈັດການທີ່ຢູ່</string>
     <!-- Preference for saving and autofilling addresses -->
     <string name="preferences_addresses_save_and_autofill_addresses">ບັນທຶກ ແລະຕື່ມທີ່ຢູ່ອັດຕະໂນມັດ</string>
+
+    <!-- Preference summary for saving and autofilling address data -->
+    <string name="preferences_addresses_save_and_autofill_addresses_summary">ລວມເອົາຂໍ້ມູນເຊັ່ນ: ຕົວເລກ, ອີເມວ ແລະທີ່ຢູ່ຈັດສົ່ງ</string>
 
     <!-- Title of the "Add card" screen -->
     <string name="credit_cards_add_card">ເພີ່ມບັດ</string>
@@ -1829,6 +1838,8 @@
     <!-- Inactive tabs auto-close message in the tabs tray -->
     <!-- The header text of the auto-close message when the user is asked if they want to turn on the auto-closing of inactive tabs. -->
     <string name="inactive_tabs_auto_close_message_header" tools:ignore="UnusedResources">ປິດອັດຕະໂນມັດຫຼັງຈາກຫນຶ່ງເດືອນບໍ?</string>
+    <!-- A description below the header to notify the user what the inactive tabs auto-close feature is. -->
+    <string name="inactive_tabs_auto_close_message_description" tools:ignore="UnusedResources">Firefox ສາມາດປິດແຖບທີ່ທ່ານບໍ່ໄດ້ເບິ່ງໃນເດືອນທີ່ຜ່ານມາ.</string>
     <!-- A call to action below the description to allow the user to turn on the auto closing of inactive tabs. -->
     <string name="inactive_tabs_auto_close_message_action" tools:ignore="UnusedResources">ເປີດປິດອັດຕະໂນມັດ</string>
 

@@ -292,11 +292,15 @@
     <!-- Onboarding home screen popup dialog, shown on top of the Jump back in section. -->
     <string name="onboarding_home_screen_jump_back_contextual_hint_2">Познакомьтесь с настраиваемой домашней страницей. Здесь будут отображаться последние вкладки, закладки и результаты поиска.</string>
     <!-- Home onboarding dialog welcome screen title text. -->
-    <string name="onboarding_home_welcome_title">Добро пожаловать в независимый интернет</string>
+    <string moz:RemovedIn="106" name="onboarding_home_welcome_title" tools:ignore="UnusedResources">Добро пожаловать в независимый интернет</string>
+    <!-- Home onboarding dialog welcome screen title text. -->
+    <string name="onboarding_home_welcome_title_2">Добро пожаловать в более личный Интернет</string>
     <!-- Home onboarding dialog welcome screen description text. -->
     <string name="onboarding_home_welcome_description">Больше красок. Лучшая приватность. Обязательство перед людьми, а не погоня за прибылью.</string>
     <!-- Home onboarding dialog sign into sync screen title text. -->
-    <string name="onboarding_home_sync_title_2">Переходите с телефона на ноутбук и обратно</string>
+    <string moz:RemovedIn="106" name="onboarding_home_sync_title_2" tools:ignore="UnusedResources">Переходите с телефона на ноутбук и обратно</string>
+    <!-- Home onboarding dialog sign into sync screen title text. -->
+    <string name="onboarding_home_sync_title_3">Переключение экранов стало проще, чем когда-либо</string>
     <!-- Home onboarding dialog sign into sync screen description text. -->
     <string name="onboarding_home_sync_description">Продолжайте с того места, где вы остановились, с вкладками с других устройств, которые теперь находятся на вашей домашней странице.</string>
     <!-- Text for the button to continue the onboarding on the home onboarding dialog. -->
@@ -398,8 +402,6 @@
     <!-- Preference for settings related to visual options -->
     <string name="preferences_customize">Персонализация</string>
     <!-- Preference description for banner about signing in -->
-    <string moz:RemovedIn="104" name="preferences_sign_in_description" tools:ignore="UnusedResources">Синхронизируйте закладки, историю и многое другое с вашим Аккаунтом Firefox</string>
-    <!-- Preference description for banner about signing in -->
     <string name="preferences_sign_in_description_2">Входить для синхронизации вкладок, закладок, паролей и многого другого.</string>
     <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
     <string name="preferences_account_default_name">Аккаунт Firefox</string>
@@ -484,11 +486,34 @@
     <string name="wallpaper_updated_snackbar_message">Обои обновлены!</string>
     <!-- Snackbar label for action to view selected wallpaper -->
     <string name="wallpaper_updated_snackbar_action">Просмотр</string>
+    <!-- Snackbar message for when wallpaper couldn't be downloaded -->
+    <string name="wallpaper_download_error_snackbar_message">Не удалось загрузить обои</string>
+    <!-- Snackbar label for action to retry downloading the wallpaper -->
+    <string name="wallpaper_download_error_snackbar_action">Попробовать снова</string>
+    <!-- Snackbar message for when wallpaper couldn't be selected because of the disk error -->
+    <string name="wallpaper_select_error_snackbar_message">Не удалось сменить обои</string>
+    <!-- Text displayed that links to website containing documentation about the "Limited Edition" wallpapers. -->
+    <string name="wallpaper_learn_more">Подробнее</string>
     <!-- Label for switch which toggles the "tap-to-switch" behavior on home screen logo -->
     <string moz:removedIn="105" name="wallpaper_tap_to_change_switch_label_1" tools:ignore="UnusedResources">Меняйте обои, коснувшись логотипа домашней страницы Firefox</string>
     <!-- This is the accessibility content description for the wallpapers functionality. Users are
     able to tap on the app logo in the home screen and can switch to different wallpapers by tapping. -->
     <string moz:removedIn="105" name="wallpaper_logo_content_description" tools:ignore="UnusedResources">Логотип Firefox - сменить обои, кнопка</string>
+
+    <!-- Text for classic wallpapers title. The first parameter is the Firefox name. -->
+    <string name="wallpaper_classic_title">Классический %s</string>
+    <!-- Text for limited edition wallpapers title. -->
+    <string name="wallpaper_limited_edition_title">Ограниченный выпуск</string>
+    <!-- Description text for the limited edition wallpapers with learn more link. The first parameter is the learn more string defined in wallpaper_learn_more-->
+    <string name="wallpaper_limited_edition_description_with_learn_more">Новая подборка «Независимые голоса». %s</string>
+    <!-- Description text for the limited edition wallpapers. -->
+    <string name="wallpaper_limited_edition_description">Новая подборка «Независимые голоса».</string>
+    <!-- Wallpaper onboarding dialog header text. -->
+    <string name="wallpapers_onboarding_dialog_title_text">Попробуйте всплеск цвета</string>
+    <!-- Wallpaper onboarding dialog body text. -->
+    <string name="wallpapers_onboarding_dialog_body_text">Выберите обои по своему вкусу.</string>
+    <!-- Wallpaper onboarding dialog learn more button text. The button navigates to the wallpaper settings screen. -->
+    <string name="wallpapers_onboarding_dialog_explore_more_button_text">Просмотреть больше обоев</string>
 
     <!-- Add-on Installation from AMO-->
     <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is not supported -->
@@ -572,9 +597,6 @@
     <string name="preference_experiments_summary_2">Разрешить Mozilla устанавливать и запускать исследования</string>
 
     <!-- Turn On Sync Preferences -->
-    <!-- Header of the Turn on Sync preference view -->
-    <string moz:RemovedIn="104" name="preferences_sync" tools:ignore="UnusedResources">Включить синхронизацию</string>
-
     <!-- Header of the Sync and save your data preference view -->
     <string name="preferences_sync_2">Синхронизация и сохранение данных</string>
     <!-- Preference for reconnecting to FxA sync -->
@@ -790,9 +812,6 @@
     <string name="delete_from_history">Удалить из истории</string>
     <!-- Postfix for private WebApp titles, placeholder is replaced with app name -->
     <string name="pwa_site_controls_title_private">%1$s (Приватный просмотр)</string>
-
-    <!-- Title text for the normal tabs header in the tabs tray which are not part of any tab grouping. -->
-    <string moz:removedIn="104" name="tab_tray_header_title_1" tools:ignore="UnusedResources">Другие вкладки</string>
 
     <!-- History -->
     <!-- Text for the button to search all history -->
@@ -1220,8 +1239,6 @@
     <!-- Action item in menu for the Delete browsing data on quit feature -->
     <string name="delete_browsing_data_on_quit_action">Выйти</string>
 
-    <!-- Dialog message to the user asking to delete browsing data. -->
-    <string moz:removedIn="104" name="delete_browsing_data_prompt_message" tools:ignore="UnusedResources">Это действие удалит все данные вашего веб-сёрфинга.</string>
     <!-- Title text of a delete browsing data dialog. -->
     <string name="delete_history_prompt_title">Диапазон времени для удаления</string>
     <!-- Body text of a delete browsing data dialog. -->
@@ -1257,19 +1274,33 @@
     <!-- Onboarding -->
     <!-- Text for onboarding welcome message
     The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_header">Добро пожаловать в %s!</string>
+    <string moz:RemovedIn="106" name="onboarding_header" tools:ignore="UnusedResources">Добро пожаловать в %s!</string>
+    <!-- Text for onboarding welcome header. -->
+    <string name="onboarding_header_2">Добро пожаловать в лучший Интернет</string>
+    <!-- Text for the onboarding welcome message. -->
+    <string name="onboarding_message">Браузер, созданный для людей, а не для прибыли.</string>
     <!-- text for the Firefox account onboarding sign in card header. The word "Firefox" should not be translated -->
-    <string name="onboarding_account_sign_in_header_1">Синхронизация Firefox между устройствами</string>
+    <string moz:removedIn="106" name="onboarding_account_sign_in_header_1" tools:ignore="UnusedResources">Синхронизация Firefox между устройствами</string>
+    <!-- Text for the Firefox account onboarding sign in card header. -->
+    <string name="onboarding_account_sign_in_header">Начните с того места, на котором остановились</string>
     <!-- Text for the button to learn more about signing in to your Firefox account. The first parameter is the name of the application.-->
-    <string name="onboarding_manual_sign_in_description_2">Перенесите закладки, историю и пароли в %1$s на этом устройстве.</string>
+    <string moz:removedIn="106" name="onboarding_manual_sign_in_description_2" tools:ignore="UnusedResources">Перенесите закладки, историю и пароли в %1$s на этом устройстве.</string>
+    <!-- Text for the button to learn more about signing in to your Firefox account. -->
+    <string name="onboarding_manual_sign_in_description">Синхронизируйте вкладки и пароли между устройствами для бесшовного перехода между экранами.</string>
     <!-- text for the button to manually sign into Firefox account. -->
-    <string name="onboarding_firefox_account_sign_in_1">Зарегистрироваться</string>
+    <string moz:removedIn="106" name="onboarding_firefox_account_sign_in_1" tools:ignore="UnusedResources">Зарегистрироваться</string>
+    <!-- Text for the button to manually sign into Firefox account. -->
+    <string name="onboarding_firefox_account_sign_in">Войти</string>
     <!-- text to display in the snackbar once account is signed-in -->
     <string name="onboarding_firefox_account_sync_is_on">Началась синхронизация</string>
     <!-- text for the tracking protection onboarding card header -->
-    <string name="onboarding_tracking_protection_header_3">Постоянная приватность</string>
+    <string moz:removedIn="106" name="onboarding_tracking_protection_header_3" tools:ignore="UnusedResources">Постоянная приватность</string>
+    <!-- Text for the tracking protection onboarding card header -->
+    <string name="onboarding_tracking_protection_header">Защита приватности по умолчанию</string>
     <!-- text for the tracking protection card description. The first parameter is the name of the application.-->
-    <string name="onboarding_tracking_protection_description_4">%1$s автоматически блокирует тайную слежку компаний за вами в Интернете.</string>
+    <string moz:removedIn="106" name="onboarding_tracking_protection_description_4" tools:ignore="UnusedResources">%1$s автоматически блокирует тайную слежку компаний за вами в Интернете.</string>
+    <!-- Text for the tracking protection card description. -->
+    <string name="onboarding_tracking_protection_description">Представляем полную защиту от кук, не позволяющую трекерам использовать куки для отслеживания вас на разных сайтах.</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
     <string name="onboarding_tracking_protection_standard_button_2">Стандартная (по умолчанию)</string>
     <!-- text for standard blocking option button description -->
@@ -1281,16 +1312,24 @@
     <!-- text for the toolbar position card header  -->
     <string name="onboarding_toolbar_placement_header_1">Выберите размещение панели инструментов</string>
     <!-- text for the toolbar position card description -->
-    <string name="onboarding_toolbar_placement_description_1">Обеспечьте удобный доступ к панели инструментов. Оставьте её внизу или переместите вверх.</string>
+    <string moz:removedIn="106" name="onboarding_toolbar_placement_description_1" tools:ignore="UnusedResources">Обеспечьте удобный доступ к панели инструментов. Оставьте её внизу или переместите вверх.</string>
+    <!-- Text for the toolbar position card description -->
+    <string name="onboarding_toolbar_placement_description">Оставьте её внизу или переместите наверх.</string>
     <!-- text for the privacy notice onboarding card header -->
-    <string name="onboarding_privacy_notice_header">Ваша приватность</string>
+    <string moz:removedIn="106" name="onboarding_privacy_notice_header" tools:ignore="UnusedResources">Ваша приватность</string>
 
+    <!-- Text for the privacy notice onboarding card header -->
+    <string name="onboarding_privacy_notice_header_1">Вы контролируете свои данные</string>
     <!-- text for the privacy notice onboarding card description
     The first parameter is the name of the app (e.g. Firefox Preview) Substitute %s for long browser name. -->
-    <string name="onboarding_privacy_notice_description2">Мы создали %s, чтобы предоставить вам контроль над тем, чем вы делитесь — как в Интернете, так и с нами.</string>
+    <string moz:removedIn="106" name="onboarding_privacy_notice_description2" tools:ignore="UnusedResources">Мы создали %s, чтобы предоставить вам контроль над тем, чем вы делитесь — как в Интернете, так и с нами.</string>
+    <!-- Text for the privacy notice onboarding card description. -->
+    <string name="onboarding_privacy_notice_description">Firefox даёт вам контроль над тем, чем вы делитесь — как в Интернете, так и с нами.</string>
     <!-- Text for the button to read the privacy notice -->
     <string name="onboarding_privacy_notice_read_button">Уведомление о конфиденциальности</string>
 
+    <!-- Text for the conclusion onboarding message -->
+    <string name="onboarding_conclusion_header">Готовы открыть для себя удивительный Интернет?</string>
     <!-- text for the button to finish onboarding -->
     <string name="onboarding_finish">Начать веб-сёрфинг</string>
 

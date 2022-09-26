@@ -397,8 +397,6 @@
     <!-- Preference for settings related to visual options -->
     <string name="preferences_customize">Prispôsobenie</string>
     <!-- Preference description for banner about signing in -->
-    <string moz:RemovedIn="104" name="preferences_sign_in_description" tools:ignore="UnusedResources">S účtom Firefox môžete synchronizovať záložky, históriu prehliadania a omnoho viac</string>
-    <!-- Preference description for banner about signing in -->
     <string name="preferences_sign_in_description_2">Prihláste sa a synchronizujte karty, záložky, heslá a ďalšie položky.</string>
     <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
     <string name="preferences_account_default_name">Účet Firefox</string>
@@ -597,8 +595,6 @@
     <string name="preference_experiments_summary_2">Umožní Mozille inštalovať a spúšťať štúdie</string>
 
     <!-- Turn On Sync Preferences -->
-    <!-- Header of the Turn on Sync preference view -->
-    <string moz:RemovedIn="104" name="preferences_sync" tools:ignore="UnusedResources">Zapnúť synchronizáciu</string>
     <!-- Header of the Sync and save your data preference view -->
     <string name="preferences_sync_2">Synchronizácia a ukladanie údajov</string>
     <!-- Preference for reconnecting to FxA sync -->
@@ -708,7 +704,7 @@
 
     <!-- Opening screen -->
     <!-- Title of a preference that allows a user to choose what screen to show after opening the app -->
-    <string name="preferences_opening_screen">Otváracia obrazovka</string>
+    <string name="preferences_opening_screen">Úvodná obrazovka</string>
     <!-- Option for always opening the homepage when re-opening the app -->
     <string name="opening_screen_homepage">Domovská stránka</string>
     <!-- Option for always opening the user's last-open tab when re-opening the app -->
@@ -814,9 +810,6 @@
     <string name="delete_from_history">Odstrániť z histórie</string>
     <!-- Postfix for private WebApp titles, placeholder is replaced with app name -->
     <string name="pwa_site_controls_title_private">%1$s (súkromné prehliadanie)</string>
-
-    <!-- Title text for the normal tabs header in the tabs tray which are not part of any tab grouping. -->
-    <string moz:removedIn="104" name="tab_tray_header_title_1" tools:ignore="UnusedResources">Ostatné karty</string>
 
     <!-- History -->
     <!-- Text for the button to search all history -->
@@ -1225,8 +1218,6 @@
     <!-- Action item in menu for the Delete browsing data on quit feature -->
     <string name="delete_browsing_data_on_quit_action">Ukončiť</string>
 
-    <!-- Dialog message to the user asking to delete browsing data. -->
-    <string moz:removedIn="104" name="delete_browsing_data_prompt_message" tools:ignore="UnusedResources">Vaše údaje o prehliadaní budú odstránené.</string>
     <!-- Title text of a delete browsing data dialog. -->
     <string name="delete_history_prompt_title">Obdobie, za ktoré vymazať údaje</string>
     <!-- Body text of a delete browsing data dialog. -->
