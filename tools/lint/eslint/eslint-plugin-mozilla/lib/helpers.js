@@ -20,7 +20,6 @@ var directoryManifests = new Map();
 
 const callExpressionDefinitions = [
   /^loader\.lazyGetter\((?:globalThis|this), "(\w+)"/,
-  /^loader\.lazyImporter\((?:globalThis|this), "(\w+)"/,
   /^loader\.lazyServiceGetter\((?:globalThis|this), "(\w+)"/,
   /^loader\.lazyRequireGetter\((?:globalThis|this), "(\w+)"/,
   /^XPCOMUtils\.defineLazyGetter\((?:globalThis|this), "(\w+)"/,
@@ -962,8 +961,7 @@ module.exports = {
     } else if (
       node.callee.type == "MemberExpression" &&
       node.callee.property.type == "Identifier" &&
-      (node.callee.property.name == "lazyRequireGetter" ||
-        node.callee.property.name == "lazyImporter") &&
+      node.callee.property.name == "lazyRequireGetter" &&
       node.arguments.length >= 3 &&
       node.arguments[2].type == "Literal"
     ) {

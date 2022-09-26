@@ -10,7 +10,6 @@ const helpers = require("../helpers");
 
 const callExpressionDefinitions = [
   /^loader\.lazyGetter\((?:globalThis|window), "(\w+)"/,
-  /^loader\.lazyImporter\((?:globalThis|window), "(\w+)"/,
   /^loader\.lazyServiceGetter\((?:globalThis|window), "(\w+)"/,
   /^loader\.lazyRequireGetter\((?:globalThis|window), "(\w+)"/,
   /^XPCOMUtils\.defineLazyGetter\((?:globalThis|window), "(\w+)"/,
