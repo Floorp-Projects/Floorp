@@ -312,12 +312,6 @@ class NetEq {
   virtual std::vector<uint16_t> GetNackList(
       int64_t round_trip_time_ms) const = 0;
 
-  // Returns a vector containing the timestamps of the packets that were decoded
-  // in the last GetAudio call. If no packets were decoded in the last call, the
-  // vector is empty.
-  // Mainly intended for testing.
-  virtual std::vector<uint32_t> LastDecodedTimestamps() const = 0;
-
   // Returns the length of the audio yet to play in the sync buffer.
   // Mainly intended for testing.
   virtual int SyncBufferSizeMs() const = 0;

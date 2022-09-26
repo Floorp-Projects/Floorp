@@ -102,12 +102,8 @@ void NetEqDelayAnalyzer::AfterGetAudio(int64_t time_now_ms,
                                        bool /*muted*/,
                                        NetEq* neteq) {
   get_audio_time_ms_.push_back(time_now_ms);
-  // Check what timestamps were decoded in the last GetAudio call.
-  std::vector<uint32_t> dec_ts = neteq->LastDecodedTimestamps();
-  // Find those timestamps in data_, insert their decoding time and sync
-  // delay.
-  for (uint32_t ts : dec_ts) {
-    auto it = data_.find(ts);
+  for (const RtpPacketInfo& info : audio_frame.packet_infos_) {
+    auto it = data_.find(info.rtp_timestamp());
     if (it == data_.end()) {
       // This is a packet that was split out from another packet. Skip it.
       continue;

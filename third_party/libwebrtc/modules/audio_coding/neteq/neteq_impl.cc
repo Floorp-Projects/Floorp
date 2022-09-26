@@ -476,11 +476,6 @@ std::vector<uint16_t> NetEqImpl::GetNackList(int64_t round_trip_time_ms) const {
   return nack_->GetNackList(round_trip_time_ms);
 }
 
-std::vector<uint32_t> NetEqImpl::LastDecodedTimestamps() const {
-  MutexLock lock(&mutex_);
-  return last_decoded_timestamps_;
-}
-
 int NetEqImpl::SyncBufferSizeMs() const {
   MutexLock lock(&mutex_);
   return rtc::dchecked_cast<int>(sync_buffer_->FutureLength() /
@@ -779,7 +774,6 @@ int NetEqImpl::GetAudioInternal(AudioFrame* audio_frame,
   Operation operation;
   bool play_dtmf;
   *muted = false;
-  last_decoded_timestamps_.clear();
   last_decoded_packet_infos_.clear();
   tick_timer_->Increment();
   stats_->IncreaseCounter(output_size_samples_, fs_hz_);
@@ -1464,7 +1458,6 @@ int NetEqImpl::DecodeLoop(PacketList* packet_list,
                           AudioDecoder* decoder,
                           int* decoded_length,
                           AudioDecoder::SpeechType* speech_type) {
-  RTC_DCHECK(last_decoded_timestamps_.empty());
   RTC_DCHECK(last_decoded_packet_infos_.empty());
 
   // Do decoding.
@@ -1484,7 +1477,6 @@ int NetEqImpl::DecodeLoop(PacketList* packet_list,
     auto opt_result = packet_list->front().frame->Decode(
         rtc::ArrayView<int16_t>(&decoded_buffer_[*decoded_length],
                                 decoded_buffer_length_ - *decoded_length));
-    last_decoded_timestamps_.push_back(packet_list->front().timestamp);
     last_decoded_packet_infos_.push_back(
         std::move(packet_list->front().packet_info));
     packet_list->pop_front();
