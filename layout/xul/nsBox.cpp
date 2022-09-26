@@ -308,7 +308,8 @@ nsresult nsIFrame::SyncXULLayout(nsBoxLayoutState& aBoxLayoutState) {
 nsresult nsIFrame::XULRedraw(nsBoxLayoutState& aState) {
   if (aState.PaintingDisabled()) return NS_OK;
 
-  // Unclear whether we could get away with just InvalidateFrame().
+  // nsStackLayout, at least, expects us to repaint descendants even
+  // if a damage rect is provided
   InvalidateFrameSubtree();
 
   return NS_OK;

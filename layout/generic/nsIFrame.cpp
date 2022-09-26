@@ -100,6 +100,7 @@
 #include "nsBlockFrame.h"
 #include "nsDisplayList.h"
 #include "nsChangeHint.h"
+#include "nsDeckFrame.h"
 #include "nsSubDocumentFrame.h"
 #include "RetainedDisplayListBuilder.h"
 
@@ -374,19 +375,17 @@ bool nsIFrame::IsVisibleConsideringAncestors(uint32_t aFlags) const {
   const nsIFrame* frame = this;
   while (frame) {
     nsView* view = frame->GetView();
-    if (view && view->GetVisibility() == nsViewVisibility_kHide) {
-      return false;
+    if (view && view->GetVisibility() == nsViewVisibility_kHide) return false;
+
+    if (this != frame && frame->HidesContent()) return false;
+
+    nsIFrame* parent = frame->GetParent();
+    nsDeckFrame* deck = do_QueryFrame(parent);
+    if (deck) {
+      if (deck->GetSelectedBox() != frame) return false;
     }
 
-    if (frame->StyleUIReset()->mMozSubtreeHiddenOnlyVisually) {
-      return false;
-    }
-
-    if (this != frame && frame->HidesContent()) {
-      return false;
-    }
-
-    if (nsIFrame* parent = frame->GetParent()) {
+    if (parent) {
       frame = parent;
     } else {
       parent = nsLayoutUtils::GetCrossDocParentFrameInProcess(frame);
@@ -1286,10 +1285,6 @@ void nsIFrame::DidSetComputedStyle(ComputedStyle* aOldComputedStyle) {
               PresShell()->GetRootScrollFrameAsScrollable()) {
         scrollableFrame->PostPendingResnap();
       }
-    }
-    if (StyleUIReset()->mMozSubtreeHiddenOnlyVisually &&
-        !aOldComputedStyle->StyleUIReset()->mMozSubtreeHiddenOnlyVisually) {
-      PresShell::ClearMouseCapture(this);
     }
   } else {  // !aOldComputedStyle
     handleStickyChange = disp->mPosition == StylePositionProperty::Sticky;
@@ -3988,21 +3983,22 @@ static bool ShouldSkipFrame(nsDisplayListBuilder* aBuilder,
   if (aBuilder->IsBackgroundOnly()) {
     return true;
   }
+
   if (aBuilder->IsForGenerateGlyphMask() &&
       (!aFrame->IsTextFrame() && aFrame->IsLeaf())) {
     return true;
   }
+
   // The placeholder frame should have the same content as the OOF frame.
   if (aBuilder->GetSelectedFramesOnly() &&
       (aFrame->IsLeaf() && !aFrame->IsSelected())) {
     return true;
   }
+
   static const nsFrameState skipFlags =
       (NS_FRAME_TOO_DEEP_IN_FRAME_TREE | NS_FRAME_IS_NONDISPLAY);
-  if (aFrame->HasAnyStateBits(skipFlags)) {
-    return true;
-  }
-  return aFrame->StyleUIReset()->mMozSubtreeHiddenOnlyVisually;
+
+  return aFrame->HasAnyStateBits(skipFlags);
 }
 
 void nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder* aBuilder,

@@ -15,6 +15,7 @@
 #include "nsStyleConsts.h"
 #include "nsGkAtoms.h"
 #include "nsBoxFrame.h"
+#include "nsStackLayout.h"
 #include "nsIAnonymousContentCreator.h"
 #include "nsNodeInfoManager.h"
 #include "nsContentCreatorFunctions.h"

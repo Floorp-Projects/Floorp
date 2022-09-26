@@ -215,6 +215,8 @@ nsContainerFrame* NS_NewRootBoxFrame(PresShell* aPresShell,
 nsContainerFrame* NS_NewDocElementBoxFrame(PresShell* aPresShell,
                                            ComputedStyle* aStyle);
 
+nsIFrame* NS_NewDeckFrame(PresShell* aPresShell, ComputedStyle* aStyle);
+
 nsIFrame* NS_NewLeafBoxFrame(PresShell* aPresShell, ComputedStyle* aStyle);
 
 nsIFrame* NS_NewRangeFrame(PresShell* aPresShell, ComputedStyle* aStyle);
@@ -4545,6 +4547,11 @@ nsCSSFrameConstructor::FindDisplayData(const nsStyleDisplay& aDisplay,
       static constexpr FrameConstructionData data(
           ToCreationFunc(NS_NewRubyTextContainerFrame),
           FCDATA_DESIRED_PARENT_TYPE_TO_BITS(eTypeRuby));
+      return &data;
+    }
+    case StyleDisplayInside::MozDeck: {
+      static constexpr FrameConstructionData data =
+          SIMPLE_XUL_FCDATA(NS_NewDeckFrame);
       return &data;
     }
     case StyleDisplayInside::MozPopup: {

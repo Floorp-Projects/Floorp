@@ -397,11 +397,9 @@ moz-input-box > menupopup .context-menu-add-engine > .menu-iconic-left {
 }
 
 #tabbrowser-tabs {
-  /* overriding tabbox.css */
   -moz-box-align: stretch;
   margin-bottom: 0;
   position: static;
-  z-index: auto;
 }
 
 /* Bookmark drag and drop styles */

@@ -14,6 +14,7 @@
 #include "nsAccCache.h"
 #include "nsAccessiblePivot.h"
 #include "nsAccUtils.h"
+#include "nsDeckFrame.h"
 #include "nsEventShell.h"
 #include "nsLayoutUtils.h"
 #include "nsTextEquivUtils.h"
@@ -1049,6 +1050,21 @@ LocalAccessible* DocAccessible::GetAccessibleOrContainer(
     if (aNoContainerIfPruned && currNode->IsElement() &&
         aria::HasDefinedARIAHidden(currNode->AsElement())) {
       return nullptr;
+    }
+
+    // Check if node is in an unselected deck panel
+    if (aNoContainerIfPruned && currNode->IsXULElement()) {
+      if (nsIFrame* frame = currNode->AsContent()->GetPrimaryFrame()) {
+        nsDeckFrame* deckFrame = do_QueryFrame(frame->GetParent());
+        if (deckFrame && deckFrame->GetSelectedBox() != frame) {
+          // If deck is not a <tabpanels>, return null
+          nsIContent* parentFrameContent = deckFrame->GetContent();
+          if (!parentFrameContent ||
+              !parentFrameContent->IsXULElement(nsGkAtoms::tabpanels)) {
+            return nullptr;
+          }
+        }
+      }
     }
 
     // Check if node is in zero-sized map

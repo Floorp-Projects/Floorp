@@ -487,7 +487,7 @@ class Longhand(Property):
                 "LineBreak",
                 "LineClamp",
                 "MasonryAutoFlow",
-                "BoolInteger",
+                "MozForceBrokenImageIcon",
                 "text::MozControlCharacterVisibility",
                 "MathDepth",
                 "MozScriptMinSize",
