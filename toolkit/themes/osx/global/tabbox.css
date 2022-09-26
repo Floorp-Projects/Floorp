@@ -26,9 +26,6 @@ tabs {
   padding: 0 10px;
   margin-bottom: -12px;
   position: relative;
-  /* Needs to sort on top of the tabbox, which is a grid container (and thus
-   * causes pseudo stacking contexts to be created) */
-  z-index: 1;
 }
 
 tab {

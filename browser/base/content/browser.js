@@ -2171,23 +2171,23 @@ var gBrowserInit = {
         return;
       }
 
-      // If the initial browser is remote, in order to optimize for first paint,
-      // we'll defer switching focus to that browser until it has painted.
-      // Otherwise use a regular promise to guarantee that mutationobserver
-      // microtasks that could affect focusability have run.
-      let promise = gBrowser.selectedBrowser.isRemoteBrowser
-        ? this._firstContentWindowPaintDeferred.promise
-        : Promise.resolve();
-
-      promise.then(() => {
-        // If focus didn't move while we were waiting, we're okay to move to
-        // the browser.
-        if (
-          document.commandDispatcher.focusedElement == initiallyFocusedElement
-        ) {
-          gBrowser.selectedBrowser.focus();
-        }
-      });
+      if (gBrowser.selectedBrowser.isRemoteBrowser) {
+        // If the initial browser is remote, in order to optimize for first paint,
+        // we'll defer switching focus to that browser until it has painted.
+        this._firstContentWindowPaintDeferred.promise.then(() => {
+          // If focus didn't move while we were waiting for first paint, we're okay
+          // to move to the browser.
+          if (
+            document.commandDispatcher.focusedElement == initiallyFocusedElement
+          ) {
+            gBrowser.selectedBrowser.focus();
+          }
+        });
+      } else {
+        // If the initial browser is not remote, we can focus the browser
+        // immediately with no paint performance impact.
+        gBrowser.selectedBrowser.focus();
+      }
     });
 
     // Delay removing the attribute using requestAnimationFrame to avoid

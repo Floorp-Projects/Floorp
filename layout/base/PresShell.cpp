@@ -3961,24 +3961,38 @@ void PresShell::ClearMouseCaptureOnView(nsView* aView) {
 }
 
 void PresShell::ClearMouseCapture() {
+  nsIContent* capturingContent = GetCapturingContent();
+  if (!capturingContent) {
+    AllowMouseCapture(false);
+    return;
+  }
+
   ReleaseCapturingContent();
   AllowMouseCapture(false);
 }
 
 void PresShell::ClearMouseCapture(nsIFrame* aFrame) {
-  MOZ_ASSERT(aFrame);
+  MOZ_ASSERT(
+      aFrame && aFrame->GetParent() &&
+          aFrame->GetParent()->Type() == LayoutFrameType::Deck,
+      "This function should only be called with a child frame of <deck>");
 
   nsIContent* capturingContent = GetCapturingContent();
   if (!capturingContent) {
+    AllowMouseCapture(false);
     return;
   }
 
   nsIFrame* capturingFrame = capturingContent->GetPrimaryFrame();
-  const bool shouldClear =
-      !capturingFrame ||
-      nsLayoutUtils::IsAncestorFrameCrossDocInProcess(aFrame, capturingFrame);
-  if (shouldClear) {
-    ClearMouseCapture();
+  if (!capturingFrame) {
+    ReleaseCapturingContent();
+    AllowMouseCapture(false);
+    return;
+  }
+
+  if (nsLayoutUtils::IsAncestorFrameCrossDocInProcess(aFrame, capturingFrame)) {
+    ReleaseCapturingContent();
+    AllowMouseCapture(false);
   }
 }
 

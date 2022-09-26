@@ -158,107 +158,14 @@
 
   customElements.define("tabbox", MozTabbox);
 
-  class MozDeck extends MozXULElement {
-    get isAsync() {
-      return this.getAttribute("async") == "true";
-    }
-
+  class MozTabpanels extends MozXULElement {
     connectedCallback() {
       if (this.delayConnectedCallback()) {
         return;
       }
-      this._selectedPanel = null;
-      this._inAsyncOperation = false;
 
-      let selectCurrentIndex = () => {
-        // Try to select the new node if any.
-        let index = this.selectedIndex;
-        let oldPanel = this._selectedPanel;
-        this._selectedPanel = this.children.item(index) || null;
-        this.updateSelectedIndex(index, oldPanel);
-      };
-
-      this._mutationObserver = new MutationObserver(records => {
-        let anyRemovals = records.some(record => !!record.removedNodes.length);
-        if (anyRemovals) {
-          // Try to keep the current selected panel in-place first.
-          let index = Array.from(this.children).indexOf(this._selectedPanel);
-          if (index != -1) {
-            // Try to keep the same node selected.
-            this.setAttribute("selectedIndex", index);
-          }
-        }
-        // Select the current index if needed in case mutations have made that
-        // available where it wasn't before.
-        if (!this._inAsyncOperation) {
-          selectCurrentIndex();
-        }
-      });
-
-      this._mutationObserver.observe(this, {
-        childList: true,
-      });
-
-      selectCurrentIndex();
-    }
-
-    disconnectedCallback() {
-      this._mutationObserver?.disconnect();
-      this._mutationObserver = null;
-    }
-
-    updateSelectedIndex(
-      val,
-      oldPanel = this.querySelector(":scope > .deck-selected")
-    ) {
-      this._inAsyncOperation = false;
-      if (oldPanel != this._selectedPanel) {
-        oldPanel?.classList.remove("deck-selected");
-        this._selectedPanel?.classList.add("deck-selected");
-      }
-      this.setAttribute("selectedIndex", val);
-    }
-
-    set selectedIndex(val) {
-      if (val < 0 || val >= this.children.length) {
-        return;
-      }
-
-      let oldPanel = this._selectedPanel;
-      this._selectedPanel = this.children[val];
-
-      this._inAsyncOperation = this.isAsync;
-      if (!this._inAsyncOperation) {
-        this.updateSelectedIndex(val, oldPanel);
-      }
-
-      if (this._selectedPanel != oldPanel) {
-        let event = document.createEvent("Events");
-        event.initEvent("select", true, true);
-        this.dispatchEvent(event);
-      }
-    }
-
-    get selectedIndex() {
-      let indexStr = this.getAttribute("selectedIndex");
-      return indexStr ? parseInt(indexStr) : 0;
-    }
-
-    set selectedPanel(val) {
-      this.selectedIndex = Array.from(this.children).indexOf(val);
-    }
-
-    get selectedPanel() {
-      return this._selectedPanel;
-    }
-  }
-
-  customElements.define("deck", MozDeck);
-
-  class MozTabpanels extends MozDeck {
-    constructor() {
-      super();
       this._tabbox = null;
+      this._selectedPanel = this.children.item(this.selectedIndex);
     }
 
     get tabbox() {
@@ -277,6 +184,46 @@
       }
 
       return (this._tabbox = parent);
+    }
+
+    set selectedIndex(val) {
+      if (val < 0 || val >= this.children.length) {
+        return;
+      }
+
+      let panel = this._selectedPanel;
+      this._selectedPanel = this.children[val];
+
+      if (this.getAttribute("async") != "true") {
+        this.setAttribute("selectedIndex", val);
+      }
+
+      if (this._selectedPanel != panel) {
+        let event = document.createEvent("Events");
+        event.initEvent("select", true, true);
+        this.dispatchEvent(event);
+      }
+    }
+
+    get selectedIndex() {
+      let indexStr = this.getAttribute("selectedIndex");
+      return indexStr ? parseInt(indexStr) : -1;
+    }
+
+    set selectedPanel(val) {
+      let selectedIndex = -1;
+      for (
+        let panel = val;
+        panel != null;
+        panel = panel.previousElementSibling
+      ) {
+        ++selectedIndex;
+      }
+      this.selectedIndex = selectedIndex;
+    }
+
+    get selectedPanel() {
+      return this._selectedPanel;
     }
 
     /**
@@ -580,25 +527,24 @@
 
     set selectedIndex(val) {
       var tab = this.getItemAtIndex(val);
-      if (!tab) {
-        return;
-      }
-      for (let otherTab of this.allTabs) {
-        if (otherTab != tab && otherTab.selected) {
-          otherTab._selected = false;
+      if (tab) {
+        for (let otherTab of this.allTabs) {
+          if (otherTab != tab && otherTab.selected) {
+            otherTab._selected = false;
+          }
         }
-      }
-      tab._selected = true;
+        tab._selected = true;
 
-      this.setAttribute("value", tab.value);
+        this.setAttribute("value", tab.value);
 
-      let linkedPanel = this.getRelatedElement(tab);
-      if (linkedPanel) {
-        this.tabbox.setAttribute("selectedIndex", val);
+        let linkedPanel = this.getRelatedElement(tab);
+        if (linkedPanel) {
+          this.tabbox.setAttribute("selectedIndex", val);
 
-        // This will cause an onselect event to fire for the tabpanel
-        // element.
-        this.tabbox.tabpanels.selectedPanel = linkedPanel;
+          // This will cause an onselect event to fire for the tabpanel
+          // element.
+          this.tabbox.tabpanels.selectedPanel = linkedPanel;
+        }
       }
     }
 

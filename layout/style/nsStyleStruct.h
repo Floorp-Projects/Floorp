@@ -1863,8 +1863,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleUIReset {
     return mAnimations[aIndex % mAnimationTimelineCount].GetTimeline();
   }
 
-  mozilla::StyleBoolInteger mMozForceBrokenImageIcon;
-  mozilla::StyleBoolInteger mMozSubtreeHiddenOnlyVisually;
+  uint8_t mMozForceBrokenImageIcon;  // (0 if not forcing, otherwise forcing)
   mozilla::StyleImeMode mIMEMode;
   mozilla::StyleWindowDragging mWindowDragging;
   mozilla::StyleWindowShadow mWindowShadow;

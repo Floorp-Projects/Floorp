@@ -3213,8 +3213,7 @@ nsChangeHint nsStyleUI::CalcDifference(const nsStyleUI& aNewData) const {
 nsStyleUIReset::nsStyleUIReset(const Document& aDocument)
     : mUserSelect(StyleUserSelect::Auto),
       mScrollbarWidth(StyleScrollbarWidth::Auto),
-      mMozForceBrokenImageIcon(false),
-      mMozSubtreeHiddenOnlyVisually(false),
+      mMozForceBrokenImageIcon(0),
       mIMEMode(StyleImeMode::Auto),
       mWindowDragging(StyleWindowDragging::Default),
       mWindowShadow(StyleWindowShadow::Default),
@@ -3251,7 +3250,6 @@ nsStyleUIReset::nsStyleUIReset(const nsStyleUIReset& aSource)
     : mUserSelect(aSource.mUserSelect),
       mScrollbarWidth(aSource.mScrollbarWidth),
       mMozForceBrokenImageIcon(aSource.mMozForceBrokenImageIcon),
-      mMozSubtreeHiddenOnlyVisually(aSource.mMozSubtreeHiddenOnlyVisually),
       mIMEMode(aSource.mIMEMode),
       mWindowDragging(aSource.mWindowDragging),
       mWindowShadow(aSource.mWindowShadow),
@@ -3288,9 +3286,6 @@ nsChangeHint nsStyleUIReset::CalcDifference(
 
   if (mMozForceBrokenImageIcon != aNewData.mMozForceBrokenImageIcon) {
     hint |= nsChangeHint_ReconstructFrame;
-  }
-  if (mMozSubtreeHiddenOnlyVisually != aNewData.mMozSubtreeHiddenOnlyVisually) {
-    hint |= nsChangeHint_RepaintFrame;
   }
   if (mScrollbarWidth != aNewData.mScrollbarWidth) {
     // For scrollbar-width change, we need some special handling similar

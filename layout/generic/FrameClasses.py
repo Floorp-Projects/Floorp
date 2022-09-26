@@ -22,6 +22,7 @@ FRAME_CLASSES = [
     Frame("nsComboboxDisplayFrame", "ComboboxDisplay", NOT_LEAF),
     Frame("nsContinuingTextFrame", "Text", LEAF),
     Frame("nsDateTimeControlFrame", "DateTimeControl", NOT_LEAF),
+    Frame("nsDeckFrame", "Deck", NOT_LEAF),
     Frame("nsDocElementBoxFrame", "DocElementBox", NOT_LEAF),
     Frame("nsFieldSetFrame", "FieldSet", NOT_LEAF),
     Frame("nsFileControlFrame", "Block", LEAF),
