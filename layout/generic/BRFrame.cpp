@@ -38,39 +38,39 @@ class BRFrame final : public nsIFrame {
   ContentOffsets CalcContentOffsetsFromFramePoint(
       const nsPoint& aPoint) override;
 
-  virtual FrameSearchResult PeekOffsetNoAmount(bool aForward,
-                                               int32_t* aOffset) override;
-  virtual FrameSearchResult PeekOffsetCharacter(
+  FrameSearchResult PeekOffsetNoAmount(bool aForward,
+                                       int32_t* aOffset) override;
+  FrameSearchResult PeekOffsetCharacter(
       bool aForward, int32_t* aOffset,
       PeekOffsetCharacterOptions aOptions =
           PeekOffsetCharacterOptions()) override;
-  virtual FrameSearchResult PeekOffsetWord(
-      bool aForward, bool aWordSelectEatSpace, bool aIsKeyboardSelect,
-      int32_t* aOffset, PeekWordState* aState, bool aTrimSpaces) override;
+  FrameSearchResult PeekOffsetWord(bool aForward, bool aWordSelectEatSpace,
+                                   bool aIsKeyboardSelect, int32_t* aOffset,
+                                   PeekWordState* aState,
+                                   bool aTrimSpaces) override;
 
-  virtual void Reflow(nsPresContext* aPresContext, ReflowOutput& aDesiredSize,
-                      const ReflowInput& aReflowInput,
-                      nsReflowStatus& aStatus) override;
-  virtual void AddInlineMinISize(gfxContext* aRenderingContext,
-                                 InlineMinISizeData* aData) override;
-  virtual void AddInlinePrefISize(gfxContext* aRenderingContext,
-                                  InlinePrefISizeData* aData) override;
-  virtual nscoord GetMinISize(gfxContext* aRenderingContext) override;
-  virtual nscoord GetPrefISize(gfxContext* aRenderingContext) override;
-  virtual nscoord GetLogicalBaseline(
-      mozilla::WritingMode aWritingMode) const override;
+  void Reflow(nsPresContext* aPresContext, ReflowOutput& aMetrics,
+              const ReflowInput& aReflowInput,
+              nsReflowStatus& aStatus) override;
+  void AddInlineMinISize(gfxContext* aRenderingContext,
+                         InlineMinISizeData* aData) override;
+  void AddInlinePrefISize(gfxContext* aRenderingContext,
+                          InlinePrefISizeData* aData) override;
+  nscoord GetMinISize(gfxContext* aRenderingContext) override;
+  nscoord GetPrefISize(gfxContext* aRenderingContext) override;
+  nscoord GetLogicalBaseline(mozilla::WritingMode aWritingMode) const override;
 
-  virtual bool IsFrameOfType(uint32_t aFlags) const override {
+  bool IsFrameOfType(uint32_t aFlags) const override {
     return nsIFrame::IsFrameOfType(
         aFlags & ~(nsIFrame::eReplaced | nsIFrame::eLineParticipant));
   }
 
 #ifdef ACCESSIBILITY
-  virtual mozilla::a11y::AccType AccessibleType() override;
+  mozilla::a11y::AccType AccessibleType() override;
 #endif
 
  protected:
-  explicit BRFrame(ComputedStyle* aStyle, nsPresContext* aPresContext)
+  BRFrame(ComputedStyle* aStyle, nsPresContext* aPresContext)
       : nsIFrame(aStyle, aPresContext, kClassID),
         mAscent(NS_INTRINSIC_ISIZE_UNKNOWN) {}
 
