@@ -4,7 +4,7 @@
 
 const ERROR_LINE_NUMBERS = {
   jsm: 31,
-  "sys.mjs": 29,
+  "sys.mjs": 28,
 };
 const EXCEPTION_LINE_NUMBERS = {
   jsm: ERROR_LINE_NUMBERS.jsm + 3,

@@ -3,8 +3,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
-
 // These denote which keyboard controls to show for a qualified video element.
 export const KEYBOARD_CONTROLS = {
   NONE: 0,

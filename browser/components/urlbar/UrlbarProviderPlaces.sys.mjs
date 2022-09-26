@@ -5,8 +5,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 /* eslint complexity: ["error", 53] */
 
-"use strict";
-
 /**
  * This module exports a provider that provides results from the Places
  * database, including history, bookmarks, and open tabs.

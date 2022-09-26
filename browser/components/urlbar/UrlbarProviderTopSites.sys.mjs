@@ -6,8 +6,6 @@
  * This module exports a provider returning the user's newtab Top Sites.
  */
 
-"use strict";
-
 import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 import {
