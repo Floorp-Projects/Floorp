@@ -41,8 +41,8 @@ class TransportFeedback : public Rtpfb {
     uint16_t sequence_number() const { return sequence_number_; }
     int16_t delta_ticks() const { return delta_ticks_; }
     // ABSL_DEPRECATED("Use delta() that returns TimeDelta")
-    int32_t delta_us() const { return delta_ticks_ * kDeltaScaleFactor; }
-    TimeDelta delta() const { return TimeDelta::Micros(delta_us()); }
+    int32_t delta_us() const { return delta().us(); }
+    TimeDelta delta() const { return delta_ticks_ * kDeltaTick; }
     bool received() const { return received_; }
 
    private:
@@ -71,20 +71,20 @@ class TransportFeedback : public Rtpfb {
   ~TransportFeedback() override;
 
   // ABSL_DEPRECATED("Use version that takes Timestamp")
-  void SetBase(uint16_t base_sequence,     // Seq# of first packet in this msg.
-               int64_t ref_timestamp_us);  // Reference timestamp for this msg.
-  void SetBase(uint16_t base_sequence,     // Seq# of first packet in this msg.
-               Timestamp ref_timestamp) {  // Reference timestamp for this msg.
-    SetBase(base_sequence, ref_timestamp.us());
+  void SetBase(uint16_t base_sequence,      // Seq# of first packet in this msg.
+               int64_t ref_timestamp_us) {  // Reference timestamp for this msg.
+    SetBase(base_sequence, Timestamp::Micros(ref_timestamp_us));
   }
+  void SetBase(uint16_t base_sequence,    // Seq# of first packet in this msg.
+               Timestamp ref_timestamp);  // Reference timestamp for this msg.
 
   void SetFeedbackSequenceNumber(uint8_t feedback_sequence);
   // NOTE: This method requires increasing sequence numbers (excepting wraps).
   // ABSL_DEPRECATED("Use version that takes Timestamp")
-  bool AddReceivedPacket(uint16_t sequence_number, int64_t timestamp_us);
-  bool AddReceivedPacket(uint16_t sequence_number, Timestamp timestamp) {
-    return AddReceivedPacket(sequence_number, timestamp.us());
+  bool AddReceivedPacket(uint16_t sequence_number, int64_t timestamp_us) {
+    return AddReceivedPacket(sequence_number, Timestamp::Micros(timestamp_us));
   }
+  bool AddReceivedPacket(uint16_t sequence_number, Timestamp timestamp);
   const std::vector<ReceivedPacket>& GetReceivedPackets() const;
   const std::vector<ReceivedPacket>& GetAllPackets() const;
 
@@ -189,7 +189,7 @@ class TransportFeedback : public Rtpfb {
   uint8_t feedback_seq_;
   bool include_timestamps_;
 
-  int64_t last_timestamp_us_;
+  Timestamp last_timestamp_;
   std::vector<ReceivedPacket> received_packets_;
   std::vector<ReceivedPacket> all_packets_;
   // All but last encoded packet chunks.
