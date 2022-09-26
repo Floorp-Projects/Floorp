@@ -12,6 +12,8 @@
  * No high-level processing logic is applied here.
  */
 
+"use strict";
+
 // To update this list of known alternate domains, just cut-and-paste from
 // https://www.google.com/supported_domains
 const gGoogleDomainsSource =

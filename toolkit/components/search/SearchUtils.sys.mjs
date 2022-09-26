@@ -4,6 +4,8 @@
 
 /* eslint no-shadow: error, mozilla/no-aArgs: error */
 
+"use strict";
+
 import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 const lazy = {};
