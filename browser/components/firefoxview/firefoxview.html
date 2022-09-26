@@ -35,7 +35,7 @@
     </div>
     <main>
       <template id="sync-setup-template">
-        <named-deck class="sync-setup-container" role="region" aria-labelledby="collapsible-synced-tabs-header" data-prefix="id:" tabIndex="-1">
+        <named-deck class="sync-setup-container" role="region" aria-labelledby="collapsible-synced-tabs-header" data-prefix="id:">
           <div name="sync-setup-view0" data-prefix="id:-view0" class="card card-no-hover error-state" data-prefix="aria-labelledby:-view0-header">
             <icon class="icon info primary"></icon><h3 data-prefix="id:-view0-header" class="card-header"></h3>
             <section>
@@ -49,7 +49,7 @@
             <h2 data-prefix="id:-view1-header" data-l10n-id="firefoxview-tabpickup-step-signin-header" class="card-header"></h2>
             <section class="card-body">
               <p class="step-content" data-l10n-id="firefoxview-tabpickup-step-signin-description"></p>
-              <button class="primary" data-action="view1-primary-action" data-l10n-id="firefoxview-tabpickup-step-signin-primarybutton"></button>
+              <button id="firefoxview-tabpickup-step-signin-primarybutton" class="primary" data-action="view1-primary-action" data-l10n-id="firefoxview-tabpickup-step-signin-primarybutton"></button>
             </section>
             <footer>
               <progress data-prefix="id:-view1-progress" class="step-progress" max="100" value="11"></progress>
@@ -115,7 +115,7 @@
 
       <details class="content-container" is="tab-pickup-container" id="tab-pickup-container" open>
         <summary class="page-section-header">
-          <h1 id="collapsible-synced-tabs-header" data-l10n-id="firefoxview-tabpickup-header" tabIndex="-1"></h1>
+          <h1 id="collapsible-synced-tabs-header" data-l10n-id="firefoxview-tabpickup-header"></h1>
           <span class="twisty icon" data-l10n-id="firefoxview-collapse-button-hide" aria-role="presentation"></span>
           <p class="section-description" data-l10n-id="firefoxview-tabpickup-description"></p>
         </summary>
@@ -152,7 +152,7 @@
             <img id="colorways-collection-figure" role="presentation">
           </figure>
           <header>
-            <h1 id="colorways-collection-title" tabIndex="-1"></h1>
+            <h1 id="colorways-collection-title"></h1>
             <div id="colorways-collection-expiry-date"><span></span></div>
           </header>
           <div id="colorways-collection-description"></div>
@@ -163,7 +163,7 @@
 
       <details class="content-container" is="recently-closed-tabs-container" id="recently-closed-tabs-container" open>
         <summary id="recently-closed-tabs-header-section" class="page-section-header" data-l10n-id="firefoxview-collapse-button-hide">
-          <h1 id="recently-closed-tabs-header" tabIndex="-1" data-l10n-id="firefoxview-closed-tabs-title"></h1>
+          <h1 id="recently-closed-tabs-header" data-l10n-id="firefoxview-closed-tabs-title"></h1>
           <span class="twisty icon" aria-role="presentation"></span>
           <p class="section-description" data-l10n-id="firefoxview-closed-tabs-description2"></p>
         </summary>
