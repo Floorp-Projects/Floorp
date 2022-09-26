@@ -68,6 +68,10 @@
          doesn't work correctly with blocked content. -->
     <string name="menu_trackers_blocked_title">Majel ve\'t ivatz unq\'a jitin tetze\'</string>
 
+    <!-- Menu item: This is the subtitle for the Trackers blocked menu entry that shows how many
+    trackers have been blocked for the currently loaded website.  -->
+    <string name="menu_trackers_blocked_subtitle">La q´alpu u vaa´ tan la txakoni ti´ ib´anax tuchaj kam tulaj u atinb´ala´</string>
+
     <!-- Menu item: This is the label for turning off content blocking for the current website. -->
     <string name="menu_content_blocking">Imajpu ivatz aq´on</string>
     <!-- This is the subtitle content blocking toggle -->
@@ -135,6 +139,9 @@
     <!-- %1$s will be replaced by the app name (e.g. Firefox Focus) -->
     <string name="preference_mozilla_summary">Tokeb\'al %1$s, lochb\'al</string>
 
+    <!-- Preference category for ad blocking and enhanced tracking protection settings -->
+    <string name="preference_category_tracking_protection3">Ilochpu ikach´ub´al aq´al uva´ ye´ la pich´uli</string>
+
     <!-- Preference category for settings related to controlling web content -->
     <string name="preference_category_web_content">Tuuleb\'al u web</string>
 
@@ -143,6 +150,9 @@
 
     <!-- Preference category for General Settings -->
     <string name="preference_category_general">Kaajayil</string>
+
+    <!-- Preference summary for General Settings category; the two things users can find in this category -->
+    <string name="preference_general_summary2">La aaq´kan uva´ a´ chite´ la b´anb´e, yolb´al unpajte</string>
 
     <!-- Preference category for settings about sending usage data -->
     <string name="preference_category_data_collection_use">Imolpu tachul as ib\'anb\'ele\'</string>
@@ -158,6 +168,9 @@
     <!-- This label is shown below the name of the default search engine in settings -->
     <string name="preference_search_engine_default">B\'ek\'</string>
 
+    <!-- This label is shown above the currently selected search engine in settings -->
+    <string name="preference_search_engine_label">Chukb´al tetz</string>
+
     <!-- Text that is shown below a "switch" preference that is enabled. -->
     <string name="preference_state_on">Oypisa\'m</string>
 
@@ -166,6 +179,18 @@
 
     <!-- Item in settings that will open a new preference screen for configuring the URL autocomplete behavior. -->
     <string name="preference_subitem_autocomplete">Ankuxhe\' la tz\'ajsan u URL</string>
+
+    <!-- Title of "switch" preference that enables/disables autocomplete for the default list -->
+    <string name="preference_switch_autocomplete_topsites">Unq´a atinb´ale´ uve´ pal chit asa´ata´</string>
+
+    <!-- Title of "switch" preference that enables/disables autocomplete for the user-defined list -->
+    <string name="preference_switch_autocomplete_user_list">Tetz unq´a atinb´ale´ uve´ tuk aaq´ku´</string>
+
+    <!-- Preference category: Manage (user-defined) sites -->
+    <string name="preference_category_autocomplete_manage_sites">Tilpu isuuchil unq´a atinb´ale´</string>
+
+    <!-- Item in autocomplete settings that will open a new preference screen for adding and removing URLs to the user-defined list-->
+    <string name="preference_autocomplete_subitem_manage_sites">Tilpu isuuchil unq´a atinb´ale´</string>
 
     <!-- Action at the bottom of the list of custom autocomplete URLs that will open a new screen to add a new URL to the list. -->
     <string name="preference_autocomplete_action_add">+ Aq\' ve\'t unq\'a URL uve\' b\'anel ve\'t tuche\'</string>

@@ -1010,6 +1010,8 @@ The new line here must be kept as the second half of the string is clickable for
     <!-- CFR for Toolbar Shield Icon (Banner Info Message) -->
     <string moz:removedIn="104" name="cfr_for_toolbar_shield_icon">看起来这个网站正在试图跟踪您，点击盾牌即可查看网站设置和跟踪器拦截状态。</string>
 
+    <string name="cfr_for_toolbar_shield_icon2">抓到了！我们已阻止此网站的跟踪，您可随时点按盾牌了解已拦截哪些内容。</string>
+
     <!-- Content description (not visible, for screen readers etc.): Button that closes the CFR popup -->
     <string name="cfr_close_button_description">关闭弹窗</string>
 

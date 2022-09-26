@@ -73,6 +73,7 @@ class EnhancedTrackingProtectionSettingsTest {
         }
     }
 
+    @Ignore
     @SmokeTest
     @Test
     fun blockAdTrackersTest() {
@@ -162,6 +163,7 @@ class EnhancedTrackingProtectionSettingsTest {
         }
     }
 
+    @Ignore
     @SmokeTest
     @Test
     fun blockSocialTrackersTest() {
@@ -225,6 +227,7 @@ class EnhancedTrackingProtectionSettingsTest {
         }
     }
 
+    @Ignore
     @SmokeTest
     @Test
     fun blockOtherContentTrackersTest() {
