@@ -292,12 +292,6 @@ RtpState ModuleRtpRtcpImpl::GetRtxState() const {
   return state;
 }
 
-void ModuleRtpRtcpImpl::SetRid(absl::string_view rid) {
-  if (rtp_sender_) {
-    rtp_sender_->packet_generator.SetRid(rid);
-  }
-}
-
 void ModuleRtpRtcpImpl::SetMid(absl::string_view mid) {
   if (rtp_sender_) {
     rtp_sender_->packet_generator.SetMid(mid);
