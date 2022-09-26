@@ -821,14 +821,14 @@ toolbar:not(#TabsToolbar) > #personal-bookmarks {
 }
 @media (max-width: 550px) {
   #urlbar-container {
-    min-width: calc(176px + 2 * (24px + 2 * var(--toolbarbutton-inner-padding)));
+    min-width: calc(168px + 2 * (24px + 2 * var(--toolbarbutton-inner-padding)));
   }
   #nav-bar[downloadsbuttonshown] #urlbar-container,
   #nav-bar[unifiedextensionsbuttonshown] #urlbar-container {
-    min-width: calc(176px + 24px + 2 * var(--toolbarbutton-inner-padding));
+    min-width: calc(168px + 24px + 2 * var(--toolbarbutton-inner-padding));
   }
   #nav-bar[downloadsbuttonshown][unifiedextensionsbuttonshown] #urlbar-container {
-    min-width: 176px;
+    min-width: 168px;
   }
   #identity-icon-box {
     max-width: 70px;
