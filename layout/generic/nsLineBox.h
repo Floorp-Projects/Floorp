@@ -259,19 +259,19 @@ class nsLineBox final : public nsLineLink {
   }
 
   bool HasBreakAfter() const {
-    return !IsBlock() && StyleClear::None != BreakType();
+    return IsInline() && StyleClear::None != BreakType();
   }
   void SetBreakTypeAfter(StyleClear aBreakType) {
-    MOZ_ASSERT(!IsBlock(), "Only inlines have break-after");
+    MOZ_ASSERT(IsInline(), "Only inlines have break-after");
     mFlags.mBreakType = aBreakType;
   }
   bool HasFloatBreakAfter() const {
-    return !IsBlock() && (StyleClear::Left == BreakType() ||
+    return IsInline() && (StyleClear::Left == BreakType() ||
                           StyleClear::Right == BreakType() ||
                           StyleClear::Both == BreakType());
   }
   StyleClear GetBreakTypeAfter() const {
-    return !IsBlock() ? BreakType() : StyleClear::None;
+    return IsInline() ? BreakType() : StyleClear::None;
   }
 
   // mCarriedOutBEndMargin value
