@@ -139,3 +139,26 @@ add_task(async function test_firefoxview_view_count() {
 
   BrowserTestUtils.removeTab(tab);
 });
+
+add_task(async function test_add_ons_cant_unhide_fx_view() {
+  // Test that add-ons can't unhide the Firefox View tab by calling
+  // browser.tabs.show(). See bug 1791770 for details.
+  let win = await BrowserTestUtils.openNewBrowserWindow();
+  let tab = await BrowserTestUtils.openNewForegroundTab(
+    win.gBrowser,
+    "about:about"
+  );
+  let viewTab = await openFirefoxViewTab(win);
+  win.gBrowser.hideTab(tab);
+
+  ok(tab.hidden, "Regular tab is hidden");
+  ok(viewTab.hidden, "Firefox View tab is hidden");
+
+  win.gBrowser.showTab(tab);
+  win.gBrowser.showTab(viewTab);
+
+  ok(!tab.hidden, "Add-on showed regular hidden tab");
+  ok(viewTab.hidden, "Add-on did not show Firefox View tab");
+
+  await BrowserTestUtils.closeWindow(win);
+});
