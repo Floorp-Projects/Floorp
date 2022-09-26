@@ -15,7 +15,9 @@ add_task(async function() {
 
   let width = ele => ele.getBoundingClientRect().width;
 
-  let tabCountForOverflow = Math.ceil(width(arrowScrollbox) / tabMinWidth);
+  let tabCountForOverflow = Math.ceil(
+    (width(arrowScrollbox) / tabMinWidth) * 1.1
+  );
 
   let newTab1 = (gBrowser.selectedTab = BrowserTestUtils.addTab(
     gBrowser,
@@ -33,9 +35,7 @@ add_task(async function() {
     { skipAnimation: true }
   ));
 
-  while (gBrowser.tabs.length < tabCountForOverflow) {
-    BrowserTestUtils.addTab(gBrowser, "about:blank", { skipAnimation: true });
-  }
+  await BrowserTestUtils.overflowTabs(registerCleanupFunction, window, false);
 
   registerCleanupFunction(function() {
     while (gBrowser.tabs.length > initialTabsLength) {

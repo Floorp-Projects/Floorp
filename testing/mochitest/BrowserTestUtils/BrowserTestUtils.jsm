@@ -1836,8 +1836,12 @@ var BrowserTestUtils = {
    *    function, allowing us to clean up after you if necessary.
    * @param win {Window}
    *    The window where the tabs need to be overflowed.
+   * @param overflowAtStart {boolean}
+   *    Determines whether the new tabs are added at the beginning of the
+   *    URL bar or at the end of it.
    */
-  async overflowTabs(registerCleanupFunction, win) {
+  async overflowTabs(registerCleanupFunction, win, overflowAtStart = true) {
+    let index = overflowAtStart ? 0 : undefined;
     let { gBrowser } = win;
     let arrowScrollbox = gBrowser.tabContainer.arrowScrollbox;
     const originalSmoothScroll = arrowScrollbox.smoothScroll;
@@ -1856,14 +1860,9 @@ var BrowserTestUtils = {
     while (gBrowser.tabs.length < tabCountForOverflow) {
       BrowserTestUtils.addTab(gBrowser, "about:blank", {
         skipAnimation: true,
-        index: 0,
+        index,
       });
     }
-
-    // Make sure scrolling finished.
-    await new Promise(resolve => {
-      arrowScrollbox.addEventListener("scrollend", resolve, { once: true });
-    });
   },
 
   /**
