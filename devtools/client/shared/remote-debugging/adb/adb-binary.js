@@ -6,8 +6,10 @@
 
 const { dumpn } = require("devtools/shared/DevToolsUtils");
 
-loader.lazyImporter(
-  this,
+const lazy = {};
+
+ChromeUtils.defineModuleGetter(
+  lazy,
   "ExtensionParent",
   "resource://gre/modules/ExtensionParent.jsm"
 );
@@ -74,7 +76,7 @@ async function readFromExtension(fileUri) {
  *        The path name of the file in the extension.
  */
 async function unpackFile(file) {
-  const policy = ExtensionParent.WebExtensionPolicy.getByID(EXTENSION_ID);
+  const policy = lazy.ExtensionParent.WebExtensionPolicy.getByID(EXTENSION_ID);
   if (!policy) {
     return;
   }
@@ -111,7 +113,7 @@ async function unpackFile(file) {
  * if it fails.
  */
 async function extractFiles() {
-  const policy = ExtensionParent.WebExtensionPolicy.getByID(EXTENSION_ID);
+  const policy = lazy.ExtensionParent.WebExtensionPolicy.getByID(EXTENSION_ID);
   if (!policy) {
     return false;
   }
@@ -170,7 +172,7 @@ async function extractFiles() {
  * Uses NetUtil since data is packed inside the extension, not a local file.
  */
 async function getManifestFromExtension() {
-  const policy = ExtensionParent.WebExtensionPolicy.getByID(EXTENSION_ID);
+  const policy = lazy.ExtensionParent.WebExtensionPolicy.getByID(EXTENSION_ID);
   if (!policy) {
     return null;
   }

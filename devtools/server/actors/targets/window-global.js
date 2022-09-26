@@ -62,7 +62,8 @@ loader.lazyRequireGetter(
   "devtools/server/actors/worker/worker-descriptor-actor-list",
   true
 );
-loader.lazyImporter(this, "ExtensionContent", EXTENSION_CONTENT_JSM);
+const lazy = {};
+ChromeUtils.defineModuleGetter(lazy, "ExtensionContent", EXTENSION_CONTENT_JSM);
 
 loader.lazyRequireGetter(
   this,
@@ -451,7 +452,7 @@ const windowGlobalTargetPrototype = {
     // has been already loaded (which is true if the WebExtensions internals have already
     // been loaded in the same content process).
     if (Cu.isModuleLoaded(EXTENSION_CONTENT_JSM)) {
-      return ExtensionContent.getContentScriptGlobals(this.window);
+      return lazy.ExtensionContent.getContentScriptGlobals(this.window);
     }
 
     return [];

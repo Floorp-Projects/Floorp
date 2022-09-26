@@ -15,7 +15,13 @@ loader.lazyRequireGetter(
   "devtools/shared/platform/cache-entry",
   true
 );
-loader.lazyImporter(this, "NetUtil", "resource://gre/modules/NetUtil.jsm");
+
+const lazy = {};
+ChromeUtils.defineModuleGetter(
+  lazy,
+  "NetUtil",
+  "resource://gre/modules/NetUtil.jsm"
+);
 
 // Network logging
 
@@ -187,7 +193,7 @@ NetworkResponseListener.prototype = {
    */
   onDataAvailable(request, inputStream, offset, count) {
     this._findOpenResponse();
-    const data = NetUtil.readInputStreamToString(inputStream, count);
+    const data = lazy.NetUtil.readInputStreamToString(inputStream, count);
 
     this.bodySize += count;
 

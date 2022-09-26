@@ -30,8 +30,9 @@ loader.lazyRequireGetter(
   true
 );
 loader.lazyRequireGetter(this, "debounce", "devtools/shared/debounce", true);
-loader.lazyImporter(
-  this,
+const lazy = {};
+ChromeUtils.defineModuleGetter(
+  lazy,
   "VariablesView",
   "resource://devtools/client/storage/VariablesView.jsm"
 );
@@ -155,7 +156,7 @@ class StorageUI {
 
     this.sidebar = this._panelDoc.getElementById("storage-sidebar");
     this.sidebar.style.width = "300px";
-    this.view = new VariablesView(this.sidebar.firstChild, {
+    this.view = new lazy.VariablesView(this.sidebar.firstChild, {
       lazyEmpty: true,
       // ms
       lazyEmptyDelay: 10,

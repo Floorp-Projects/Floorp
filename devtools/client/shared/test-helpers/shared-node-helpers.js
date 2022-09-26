@@ -53,7 +53,6 @@ function setMocksInGlobal() {
         });
       }
     },
-    lazyImporter: () => {},
   };
 
   global.define = function() {};

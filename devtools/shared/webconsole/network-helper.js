@@ -62,7 +62,12 @@
 
 "use strict";
 
-loader.lazyImporter(this, "NetUtil", "resource://gre/modules/NetUtil.jsm");
+const lazy = {};
+ChromeUtils.defineModuleGetter(
+  lazy,
+  "NetUtil",
+  "resource://gre/modules/NetUtil.jsm"
+);
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 
 loader.lazyGetter(this, "certDecoder", () => {
@@ -145,7 +150,7 @@ var NetworkHelper = {
   readAndConvertFromStream(stream, charset) {
     let text = null;
     try {
-      text = NetUtil.readInputStreamToString(stream, stream.available());
+      text = lazy.NetUtil.readInputStreamToString(stream, stream.available());
       return this.convertToUnicode(text, charset);
     } catch (err) {
       return text;
@@ -324,7 +329,7 @@ var NetworkHelper = {
    *        or null if something failed while getting the cached content.
    */
   loadFromCache(url, charset, callback) {
-    const channel = NetUtil.newChannel({
+    const channel = lazy.NetUtil.newChannel({
       uri: url,
       loadUsingSystemPrincipal: true,
     });
@@ -335,7 +340,7 @@ var NetworkHelper = {
       Ci.nsICachingChannel.LOAD_ONLY_FROM_CACHE |
       Ci.nsICachingChannel.LOAD_BYPASS_LOCAL_CACHE_IF_BUSY;
 
-    NetUtil.asyncFetch(channel, (inputStream, statusCode, request) => {
+    lazy.NetUtil.asyncFetch(channel, (inputStream, statusCode, request) => {
       if (!Components.isSuccessCode(statusCode)) {
         callback(null);
         return;
