@@ -1096,9 +1096,7 @@
 
       this._selectedBrowser = newBrowser;
       this._selectedTab = newTab;
-      if (newTab != FirefoxViewHandler.tab) {
-        this.showTab(newTab);
-      }
+      this.showTab(newTab);
 
       this._appendStatusPanel();
 
@@ -4667,6 +4665,9 @@
     },
 
     showTab(aTab) {
+      if (aTab == FirefoxViewHandler.tab) {
+        return;
+      }
       if (aTab.hidden) {
         aTab.removeAttribute("hidden");
         this._invalidateCachedTabs();
