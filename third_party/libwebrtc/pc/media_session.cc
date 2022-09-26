@@ -863,10 +863,10 @@ static bool FindMatchingCodec(const std::vector<C>& codecs1,
           // Mixed reference codecs (i.e. 111/112) are not supported.
           // Different levels of redundancy between offer and answer are
           // since RED is considered to be declarative.
-          std::vector<std::string> redundant_payloads_1;
-          std::vector<std::string> redundant_payloads_2;
-          rtc::split(red_parameters_1->second, '/', &redundant_payloads_1);
-          rtc::split(red_parameters_2->second, '/', &redundant_payloads_2);
+          std::vector<absl::string_view> redundant_payloads_1 =
+              rtc::split(red_parameters_1->second, '/');
+          std::vector<absl::string_view> redundant_payloads_2 =
+              rtc::split(red_parameters_2->second, '/');
           if (redundant_payloads_1.size() > 0 &&
               redundant_payloads_2.size() > 0) {
             bool consistent = true;
@@ -951,13 +951,12 @@ static const C* GetAssociatedCodecForRed(const std::vector<C>& codec_list,
     return nullptr;
   }
 
-  std::vector<std::string> redundant_payloads;
-  rtc::split(fmtp, '/', &redundant_payloads);
+  std::vector<absl::string_view> redundant_payloads = rtc::split(fmtp, '/');
   if (redundant_payloads.size() < 2) {
     return nullptr;
   }
 
-  std::string associated_pt_str = redundant_payloads[0];
+  absl::string_view associated_pt_str = redundant_payloads[0];
   int associated_pt;
   if (!rtc::FromString(associated_pt_str, &associated_pt)) {
     RTC_LOG(LS_WARNING) << "Couldn't convert first payload type "
@@ -1107,8 +1106,8 @@ static Codecs MatchCodecPreference(
               const auto fmtp =
                   codec.params.find(cricket::kCodecParamNotInNameValueFormat);
               if (fmtp != codec.params.end()) {
-                std::vector<std::string> redundant_payloads;
-                rtc::split(fmtp->second, '/', &redundant_payloads);
+                std::vector<absl::string_view> redundant_payloads =
+                    rtc::split(fmtp->second, '/');
                 if (redundant_payloads.size() > 0 &&
                     redundant_payloads[0] == id) {
                   if (std::find(filtered_codecs.begin(), filtered_codecs.end(),

@@ -97,7 +97,8 @@ extern const char CONNECTIONROLE_HOLDCONN_STR[];
 constexpr auto* ICE_OPTION_TRICKLE = "trickle";
 constexpr auto* ICE_OPTION_RENOMINATION = "renomination";
 
-bool StringToConnectionRole(const std::string& role_str, ConnectionRole* role);
+absl::optional<ConnectionRole> StringToConnectionRole(
+    absl::string_view role_str);
 bool ConnectionRoleToString(const ConnectionRole& role, std::string* role_str);
 
 struct TransportDescription {

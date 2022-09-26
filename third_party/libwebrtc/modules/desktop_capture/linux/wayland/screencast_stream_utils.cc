@@ -37,8 +37,7 @@ PipeWireThreadLoopLock::~PipeWireThreadLoopLock() {
 }
 
 PipeWireVersion PipeWireVersion::Parse(const absl::string_view& version) {
-  std::vector<std::string> parsed_version;
-  rtc::split(version, '.', &parsed_version);
+  std::vector<absl::string_view> parsed_version = rtc::split(version, '.');
 
   if (parsed_version.size() != 3) {
     return {};

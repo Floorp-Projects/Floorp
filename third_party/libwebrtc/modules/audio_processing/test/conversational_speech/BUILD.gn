@@ -52,6 +52,7 @@ rtc_library("lib") {
     "../../../../rtc_base:stringutils",
     "../../../../test:fileutils",
   ]
+  absl_deps = [ "//third_party/abseil-cpp/absl/strings" ]
   visibility = [ ":*" ]  # Only targets in this file can depend on this.
 }
 

@@ -65,17 +65,17 @@ const std::string* ContentGroup::FirstContentName() const {
   return (!content_names_.empty()) ? &(*content_names_.begin()) : NULL;
 }
 
-bool ContentGroup::HasContentName(const std::string& content_name) const {
+bool ContentGroup::HasContentName(absl::string_view content_name) const {
   return absl::c_linear_search(content_names_, content_name);
 }
 
-void ContentGroup::AddContentName(const std::string& content_name) {
+void ContentGroup::AddContentName(absl::string_view content_name) {
   if (!HasContentName(content_name)) {
-    content_names_.push_back(content_name);
+    content_names_.emplace_back(content_name);
   }
 }
 
-bool ContentGroup::RemoveContentName(const std::string& content_name) {
+bool ContentGroup::RemoveContentName(absl::string_view content_name) {
   ContentNames::iterator iter = absl::c_find(content_names_, content_name);
   if (iter == content_names_.end()) {
     return false;

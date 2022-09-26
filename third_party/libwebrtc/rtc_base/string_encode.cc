@@ -187,17 +187,6 @@ std::vector<absl::string_view> split(absl::string_view source, char delimiter) {
   return fields;
 }
 
-size_t split(absl::string_view source,
-             char delimiter,
-             std::vector<std::string>* fields) {
-  RTC_DCHECK(fields);
-  fields->clear();
-  for (const absl::string_view field_view : split(source, delimiter)) {
-    fields->emplace_back(field_view);
-  }
-  return fields->size();
-}
-
 std::string ToString(const bool b) {
   return b ? "true" : "false";
 }
