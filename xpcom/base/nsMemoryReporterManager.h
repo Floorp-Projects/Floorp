@@ -186,6 +186,11 @@ class nsMemoryReporterManager final : public nsIMemoryReporterManager,
   static int64_t ResidentUnique(pid_t aPid = 0);
 #endif  // XP_{WIN, MACOSX, LINUX, *}
 
+#ifdef XP_MACOSX
+  // Retrive the "phys_footprint" memory statistic on MacOS.
+  static int64_t PhysicalFootprint(mach_port_t aPort = 0);
+#endif
+
   // Functions that measure per-tab memory consumption.
   struct SizeOfTabFns {
     mozilla::JSSizeOfTabFn mJS = nullptr;
