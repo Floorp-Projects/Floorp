@@ -6,7 +6,7 @@
 
 const {
   SessionDataHelpers,
-} = require("devtools/server/actors/watcher/SessionDataHelpers.jsm");
+} = require("resource://devtools/server/actors/watcher/SessionDataHelpers.jsm");
 const { SUPPORTED_DATA } = SessionDataHelpers;
 
 const SessionDataProcessors = {};

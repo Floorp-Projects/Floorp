@@ -10,7 +10,7 @@ const {
 } = require("devtools/shared/specs/thread-configuration");
 const {
   SessionDataHelpers,
-} = require("devtools/server/actors/watcher/SessionDataHelpers.jsm");
+} = require("resource://devtools/server/actors/watcher/SessionDataHelpers.jsm");
 const {
   SUPPORTED_DATA: { THREAD_CONFIGURATION },
 } = SessionDataHelpers;

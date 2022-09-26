@@ -6,7 +6,7 @@
 const asyncStoreHelper = require("devtools/client/shared/async-store-helper");
 const {
   validateBreakpointLocation,
-} = require("devtools/shared/validate-breakpoint.jsm");
+} = require("resource://devtools/shared/validate-breakpoint.jsm");
 
 const asyncStore = asyncStoreHelper("debugger", {
   pendingBreakpoints: ["pending-breakpoints", {}],

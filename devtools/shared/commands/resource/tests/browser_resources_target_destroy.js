@@ -36,7 +36,7 @@ add_task(async function() {
     );
     const {
       TargetActorRegistry,
-    } = require("devtools/server/actors/targets/target-actor-registry.jsm");
+    } = require("resource://devtools/server/actors/targets/target-actor-registry.jsm");
     const {
       getResourceWatcher,
       TYPES,
