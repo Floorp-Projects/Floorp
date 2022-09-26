@@ -9,7 +9,9 @@ const protocol = require("devtools/shared/protocol");
 const { DevToolsServer } = require("devtools/server/devtools-server");
 const { getSystemInfo } = require("devtools/shared/system");
 const { deviceSpec } = require("devtools/shared/specs/device");
-const { AppConstants } = require("resource://gre/modules/AppConstants.jsm");
+const { AppConstants } = ChromeUtils.import(
+  "resource://gre/modules/AppConstants.jsm"
+);
 
 exports.DeviceActor = protocol.ActorClassWithSpec(deviceSpec, {
   initialize(conn) {

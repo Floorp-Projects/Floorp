@@ -34,9 +34,9 @@ add_task(async function() {
     const { require } = ChromeUtils.import(
       "resource://devtools/shared/loader/Loader.jsm"
     );
-    const {
-      TargetActorRegistry,
-    } = require("resource://devtools/server/actors/targets/target-actor-registry.jsm");
+    const { TargetActorRegistry } = ChromeUtils.import(
+      "resource://devtools/server/actors/targets/target-actor-registry.jsm"
+    );
     const {
       getResourceWatcher,
       TYPES,

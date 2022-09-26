@@ -183,7 +183,9 @@ DevTools.prototype = {
       toolId = tool;
       tool = this._tools.get(tool);
     } else {
-      const { Deprecated } = require("resource://gre/modules/Deprecated.jsm");
+      const { Deprecated } = ChromeUtils.import(
+        "resource://gre/modules/Deprecated.jsm"
+      );
       Deprecated.warning(
         "Deprecation WARNING: gDevTools.unregisterTool(tool) is " +
           "deprecated. You should unregister a tool using its toolId: " +

@@ -6,15 +6,18 @@ const { loader, require } = ChromeUtils.import(
   "resource://devtools/shared/loader/Loader.jsm"
 );
 const EventEmitter = require("devtools/shared/event-emitter");
+
 const {
   getString,
   text,
   showFilePicker,
   optionsPopupMenu,
-} = require("resource://devtools/client/styleeditor/StyleEditorUtil.jsm");
-const {
-  StyleSheetEditor,
-} = require("resource://devtools/client/styleeditor/StyleSheetEditor.jsm");
+} = ChromeUtils.import(
+  "resource://devtools/client/styleeditor/StyleEditorUtil.jsm"
+);
+const { StyleSheetEditor } = ChromeUtils.import(
+  "resource://devtools/client/styleeditor/StyleSheetEditor.jsm"
+);
 const { PluralForm } = require("devtools/shared/plural-form");
 const { PrefObserver } = require("devtools/client/shared/prefs");
 

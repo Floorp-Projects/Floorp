@@ -21,7 +21,7 @@ loader.lazyServiceGetter(
   "nsIHttpActivityDistributor"
 );
 
-const { setTimeout } = require("resource://gre/modules/Timer.jsm");
+const { setTimeout } = ChromeUtils.import("resource://gre/modules/Timer.jsm");
 
 /**
  * Construct a new nsIStreamListener that buffers data and provides a

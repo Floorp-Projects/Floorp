@@ -3,7 +3,9 @@
 "use strict";
 
 // Testing navigation between nodes in search results
-const { AppConstants } = require("resource://gre/modules/AppConstants.jsm");
+const { AppConstants } = ChromeUtils.import(
+  "resource://gre/modules/AppConstants.jsm"
+);
 
 const TEST_URL = URL_ROOT + "doc_inspector_search.html";
 

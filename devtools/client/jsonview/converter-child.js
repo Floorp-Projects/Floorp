@@ -10,7 +10,9 @@ loader.lazyRequireGetter(
   "devtools/shared/webconsole/network-helper"
 );
 loader.lazyGetter(this, "debugJsModules", function() {
-  const { AppConstants } = require("resource://gre/modules/AppConstants.jsm");
+  const { AppConstants } = ChromeUtils.import(
+    "resource://gre/modules/AppConstants.jsm"
+  );
   return !!AppConstants.DEBUG_JS_MODULES;
 });
 

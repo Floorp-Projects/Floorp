@@ -15,7 +15,9 @@
 /* eslint-disable no-throw-literal */
 
 const { DevToolsServer } = require("devtools/server/devtools-server");
-const { XPCOMUtils } = require("resource://gre/modules/XPCOMUtils.sys.mjs");
+const { XPCOMUtils } = ChromeUtils.importESModule(
+  "resource://gre/modules/XPCOMUtils.sys.mjs"
+);
 const protocol = require("devtools/shared/protocol");
 const {
   workerDescriptorSpec,

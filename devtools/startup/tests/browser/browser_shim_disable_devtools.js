@@ -11,7 +11,9 @@ const { require } = ChromeUtils.import(
 const { CustomizableUI } = ChromeUtils.import(
   "resource:///modules/CustomizableUI.jsm"
 );
-const { AppConstants } = require("resource://gre/modules/AppConstants.jsm");
+const { AppConstants } = ChromeUtils.import(
+  "resource://gre/modules/AppConstants.jsm"
+);
 const { gDevTools } = require("devtools/client/framework/devtools");
 
 async function simulateMenuOpen(menu) {

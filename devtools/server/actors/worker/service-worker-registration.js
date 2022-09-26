@@ -4,7 +4,9 @@
 
 "use strict";
 
-const { XPCOMUtils } = require("resource://gre/modules/XPCOMUtils.sys.mjs");
+const { XPCOMUtils } = ChromeUtils.importESModule(
+  "resource://gre/modules/XPCOMUtils.sys.mjs"
+);
 const protocol = require("devtools/shared/protocol");
 const {
   serviceWorkerRegistrationSpec,

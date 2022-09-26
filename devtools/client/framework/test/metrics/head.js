@@ -143,7 +143,9 @@ function getDuplicatedModules(loaders) {
  *        duplicated modules.
  */
 function runDuplicatedModulesTest(loaders, allowedDupes) {
-  const { AppConstants } = require("resource://gre/modules/AppConstants.jsm");
+  const { AppConstants } = ChromeUtils.import(
+    "resource://gre/modules/AppConstants.jsm"
+  );
   if (AppConstants.DEBUG_JS_MODULES) {
     // DevTools load different modules when DEBUG_JS_MODULES is true, which
     // makes the hardcoded allowedDupes incorrect. Fail the test early and return.

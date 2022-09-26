@@ -4,7 +4,9 @@
 
 "use strict";
 
-const { ComponentUtils } = require("resource://gre/modules/ComponentUtils.jsm");
+const { ComponentUtils } = ChromeUtils.import(
+  "resource://gre/modules/ComponentUtils.jsm"
+);
 
 /**
  * This is a nsIChannelEventSink implementation that monitors channel redirects and

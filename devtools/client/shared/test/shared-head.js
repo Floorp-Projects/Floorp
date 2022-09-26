@@ -1519,7 +1519,9 @@ let allDownloads = [];
  *                  screenshot appears in the private window, not the non-private one (See Bug 1783373)
  */
 async function waitUntilScreenshot({ isWindowPrivate = false } = {}) {
-  const { Downloads } = require("resource://gre/modules/Downloads.jsm");
+  const { Downloads } = ChromeUtils.import(
+    "resource://gre/modules/Downloads.jsm"
+  );
   const list = await Downloads.getList(Downloads.ALL);
 
   return new Promise(function(resolve) {
@@ -1553,7 +1555,9 @@ async function waitUntilScreenshot({ isWindowPrivate = false } = {}) {
  */
 async function resetDownloads() {
   info("Reset downloads");
-  const { Downloads } = require("resource://gre/modules/Downloads.jsm");
+  const { Downloads } = ChromeUtils.import(
+    "resource://gre/modules/Downloads.jsm"
+  );
   const downloadList = await Downloads.getList(Downloads.ALL);
   const downloads = await downloadList.getAll();
   for (const download of downloads) {

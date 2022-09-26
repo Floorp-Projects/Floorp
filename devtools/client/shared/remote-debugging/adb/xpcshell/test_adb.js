@@ -6,7 +6,7 @@
 const { ExtensionTestUtils } = ChromeUtils.import(
   "resource://testing-common/ExtensionXPCShellUtils.jsm"
 );
-const { NetUtil } = require("resource://gre/modules/NetUtil.jsm");
+const { NetUtil } = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 const {
   getFileForBinary,
 } = require("devtools/client/shared/remote-debugging/adb/adb-binary");

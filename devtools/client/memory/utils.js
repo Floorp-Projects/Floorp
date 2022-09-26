@@ -9,7 +9,9 @@ const STRINGS_URI = "devtools/client/locales/memory.properties";
 const L10N = (exports.L10N = new LocalizationHelper(STRINGS_URI));
 
 const { assert } = require("devtools/shared/DevToolsUtils");
-const { Preferences } = require("resource://gre/modules/Preferences.jsm");
+const { Preferences } = ChromeUtils.import(
+  "resource://gre/modules/Preferences.jsm"
+);
 const CUSTOM_CENSUS_DISPLAY_PREF = "devtools.memory.custom-census-displays";
 const CUSTOM_LABEL_DISPLAY_PREF = "devtools.memory.custom-label-displays";
 const CUSTOM_TREE_MAP_DISPLAY_PREF = "devtools.memory.custom-tree-map-displays";

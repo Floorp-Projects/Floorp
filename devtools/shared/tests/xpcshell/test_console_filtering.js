@@ -3,7 +3,9 @@
 
 "use strict";
 
-const { console, ConsoleAPI } = require("resource://gre/modules/Console.jsm");
+const { console, ConsoleAPI } = ChromeUtils.import(
+  "resource://gre/modules/Console.jsm"
+);
 const {
   ConsoleAPIListener,
 } = require("devtools/server/actors/webconsole/listeners/console-api");

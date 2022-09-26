@@ -13,7 +13,9 @@ const {
   registerStoreObserver,
 } = require("devtools/client/shared/redux/subscriber");
 
-const { AppConstants } = require("resource://gre/modules/AppConstants.jsm");
+const { AppConstants } = ChromeUtils.import(
+  "resource://gre/modules/AppConstants.jsm"
+);
 
 import * as search from "../workers/search";
 import * as prettyPrint from "../workers/pretty-print";
