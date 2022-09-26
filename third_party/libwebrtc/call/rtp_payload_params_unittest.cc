@@ -587,7 +587,8 @@ TEST(RtpPayloadParamsVp9ToGenericTest, NoScalability) {
   EXPECT_EQ(header.generic->decode_target_indications[0],
             DecodeTargetIndication::kSwitch);
   EXPECT_THAT(header.generic->dependencies, IsEmpty());
-  EXPECT_THAT(header.generic->chain_diffs, ElementsAre(0));
+  ASSERT_THAT(header.generic->chain_diffs, Not(IsEmpty()));
+  EXPECT_EQ(header.generic->chain_diffs[0], 0);
 
   // Delta frame.
   encoded_image._frameType = VideoFrameType::kVideoFrameDelta;
@@ -605,8 +606,9 @@ TEST(RtpPayloadParamsVp9ToGenericTest, NoScalability) {
   EXPECT_EQ(header.generic->decode_target_indications[0],
             DecodeTargetIndication::kSwitch);
   EXPECT_THAT(header.generic->dependencies, ElementsAre(1));
+  ASSERT_THAT(header.generic->chain_diffs, Not(IsEmpty()));
   // previous frame in the chain was frame#1,
-  EXPECT_THAT(header.generic->chain_diffs, ElementsAre(3 - 1));
+  EXPECT_EQ(header.generic->chain_diffs[0], 3 - 1);
 }
 
 TEST(RtpPayloadParamsVp9ToGenericTest, TemporalScalabilityWith2Layers) {
@@ -670,7 +672,9 @@ TEST(RtpPayloadParamsVp9ToGenericTest, TemporalScalabilityWith2Layers) {
 
   ASSERT_TRUE(headers[0].generic);
   int num_decode_targets = headers[0].generic->decode_target_indications.size();
+  int num_chains = headers[0].generic->chain_diffs.size();
   ASSERT_GE(num_decode_targets, 2);
+  ASSERT_GE(num_chains, 1);
 
   for (int frame_idx = 0; frame_idx < 6; ++frame_idx) {
     const RTPVideoHeader& header = headers[frame_idx];
@@ -680,6 +684,7 @@ TEST(RtpPayloadParamsVp9ToGenericTest, TemporalScalabilityWith2Layers) {
     EXPECT_EQ(header.generic->frame_id, 1 + 2 * frame_idx);
     ASSERT_THAT(header.generic->decode_target_indications,
                 SizeIs(num_decode_targets));
+    ASSERT_THAT(header.generic->chain_diffs, SizeIs(num_chains));
     // Expect only T0 frames are needed for the 1st decode target.
     if (header.generic->temporal_index == 0) {
       EXPECT_NE(header.generic->decode_target_indications[0],
@@ -694,10 +699,14 @@ TEST(RtpPayloadParamsVp9ToGenericTest, TemporalScalabilityWith2Layers) {
   }
 
   // Expect switch at every beginning of the pattern.
-  EXPECT_THAT(headers[0].generic->decode_target_indications,
-              Each(DecodeTargetIndication::kSwitch));
-  EXPECT_THAT(headers[4].generic->decode_target_indications,
-              Each(DecodeTargetIndication::kSwitch));
+  EXPECT_THAT(headers[0].generic->decode_target_indications[0],
+              DecodeTargetIndication::kSwitch);
+  EXPECT_THAT(headers[0].generic->decode_target_indications[1],
+              DecodeTargetIndication::kSwitch);
+  EXPECT_THAT(headers[4].generic->decode_target_indications[0],
+              DecodeTargetIndication::kSwitch);
+  EXPECT_THAT(headers[4].generic->decode_target_indications[1],
+              DecodeTargetIndication::kSwitch);
 
   EXPECT_THAT(headers[0].generic->dependencies, IsEmpty());          // T0, 1
   EXPECT_THAT(headers[1].generic->dependencies, ElementsAre(1));     // T1, 3
@@ -706,12 +715,12 @@ TEST(RtpPayloadParamsVp9ToGenericTest, TemporalScalabilityWith2Layers) {
   EXPECT_THAT(headers[4].generic->dependencies, ElementsAre(5));     // T0, 9
   EXPECT_THAT(headers[5].generic->dependencies, ElementsAre(9));     // T1, 11
 
-  EXPECT_THAT(headers[0].generic->chain_diffs, ElementsAre(0));
-  EXPECT_THAT(headers[1].generic->chain_diffs, ElementsAre(2));
-  EXPECT_THAT(headers[2].generic->chain_diffs, ElementsAre(4));
-  EXPECT_THAT(headers[3].generic->chain_diffs, ElementsAre(2));
-  EXPECT_THAT(headers[4].generic->chain_diffs, ElementsAre(4));
-  EXPECT_THAT(headers[5].generic->chain_diffs, ElementsAre(2));
+  EXPECT_THAT(headers[0].generic->chain_diffs[0], Eq(0));
+  EXPECT_THAT(headers[1].generic->chain_diffs[0], Eq(2));
+  EXPECT_THAT(headers[2].generic->chain_diffs[0], Eq(4));
+  EXPECT_THAT(headers[3].generic->chain_diffs[0], Eq(2));
+  EXPECT_THAT(headers[4].generic->chain_diffs[0], Eq(4));
+  EXPECT_THAT(headers[5].generic->chain_diffs[0], Eq(2));
 }
 
 TEST(RtpPayloadParamsVp9ToGenericTest, TemporalScalabilityWith3Layers) {
@@ -792,7 +801,9 @@ TEST(RtpPayloadParamsVp9ToGenericTest, TemporalScalabilityWith3Layers) {
 
   ASSERT_TRUE(headers[0].generic);
   int num_decode_targets = headers[0].generic->decode_target_indications.size();
+  int num_chains = headers[0].generic->chain_diffs.size();
   ASSERT_GE(num_decode_targets, 3);
+  ASSERT_GE(num_chains, 1);
 
   for (int frame_idx = 0; frame_idx < 9; ++frame_idx) {
     const RTPVideoHeader& header = headers[frame_idx];
@@ -801,6 +812,7 @@ TEST(RtpPayloadParamsVp9ToGenericTest, TemporalScalabilityWith3Layers) {
     EXPECT_EQ(header.generic->frame_id, 1 + 2 * frame_idx);
     ASSERT_THAT(header.generic->decode_target_indications,
                 SizeIs(num_decode_targets));
+    ASSERT_THAT(header.generic->chain_diffs, SizeIs(num_chains));
     // Expect only T0 frames are needed for the 1st decode target.
     if (header.generic->temporal_index == 0) {
       EXPECT_NE(header.generic->decode_target_indications[0],
@@ -835,8 +847,12 @@ TEST(RtpPayloadParamsVp9ToGenericTest, TemporalScalabilityWith3Layers) {
   // Expect switch at every beginning of the pattern.
   EXPECT_THAT(headers[0].generic->decode_target_indications,
               Each(DecodeTargetIndication::kSwitch));
-  EXPECT_THAT(headers[8].generic->decode_target_indications,
-              Each(DecodeTargetIndication::kSwitch));
+  EXPECT_THAT(headers[8].generic->decode_target_indications[0],
+              DecodeTargetIndication::kSwitch);
+  EXPECT_THAT(headers[8].generic->decode_target_indications[1],
+              DecodeTargetIndication::kSwitch);
+  EXPECT_THAT(headers[8].generic->decode_target_indications[2],
+              DecodeTargetIndication::kSwitch);
 
   EXPECT_THAT(headers[0].generic->dependencies, IsEmpty());          // T0, 1
   EXPECT_THAT(headers[1].generic->dependencies, ElementsAre(1));     // T2, 3
@@ -848,15 +864,15 @@ TEST(RtpPayloadParamsVp9ToGenericTest, TemporalScalabilityWith3Layers) {
   EXPECT_THAT(headers[7].generic->dependencies, ElementsAre(13));    // T2, 15
   EXPECT_THAT(headers[8].generic->dependencies, ElementsAre(9));     // T0, 17
 
-  EXPECT_THAT(headers[0].generic->chain_diffs, ElementsAre(0));
-  EXPECT_THAT(headers[1].generic->chain_diffs, ElementsAre(2));
-  EXPECT_THAT(headers[2].generic->chain_diffs, ElementsAre(4));
-  EXPECT_THAT(headers[3].generic->chain_diffs, ElementsAre(6));
-  EXPECT_THAT(headers[4].generic->chain_diffs, ElementsAre(8));
-  EXPECT_THAT(headers[5].generic->chain_diffs, ElementsAre(2));
-  EXPECT_THAT(headers[6].generic->chain_diffs, ElementsAre(4));
-  EXPECT_THAT(headers[7].generic->chain_diffs, ElementsAre(6));
-  EXPECT_THAT(headers[8].generic->chain_diffs, ElementsAre(8));
+  EXPECT_THAT(headers[0].generic->chain_diffs[0], Eq(0));
+  EXPECT_THAT(headers[1].generic->chain_diffs[0], Eq(2));
+  EXPECT_THAT(headers[2].generic->chain_diffs[0], Eq(4));
+  EXPECT_THAT(headers[3].generic->chain_diffs[0], Eq(6));
+  EXPECT_THAT(headers[4].generic->chain_diffs[0], Eq(8));
+  EXPECT_THAT(headers[5].generic->chain_diffs[0], Eq(2));
+  EXPECT_THAT(headers[6].generic->chain_diffs[0], Eq(4));
+  EXPECT_THAT(headers[7].generic->chain_diffs[0], Eq(6));
+  EXPECT_THAT(headers[8].generic->chain_diffs[0], Eq(8));
 }
 
 TEST(RtpPayloadParamsVp9ToGenericTest, SpatialScalabilityKSvc) {
@@ -916,7 +932,9 @@ TEST(RtpPayloadParamsVp9ToGenericTest, SpatialScalabilityKSvc) {
   // Rely on implementation detail there are always kMaxTemporalStreams temporal
   // layers assumed, in particular assume Decode Target#0 matches layer S0T0,
   // and Decode Target#kMaxTemporalStreams matches layer S1T0.
-  ASSERT_EQ(num_decode_targets, kMaxTemporalStreams * 2);
+  ASSERT_GE(num_decode_targets, kMaxTemporalStreams * 2);
+  int num_chains = headers[0].generic->chain_diffs.size();
+  ASSERT_GE(num_chains, 2);
 
   for (int frame_idx = 0; frame_idx < 4; ++frame_idx) {
     const RTPVideoHeader& header = headers[frame_idx];
@@ -926,6 +944,7 @@ TEST(RtpPayloadParamsVp9ToGenericTest, SpatialScalabilityKSvc) {
     EXPECT_EQ(header.generic->frame_id, 1 + 2 * frame_idx);
     ASSERT_THAT(header.generic->decode_target_indications,
                 SizeIs(num_decode_targets));
+    ASSERT_THAT(header.generic->chain_diffs, SizeIs(num_chains));
   }
 
   // Expect S0 key frame is switch for both Decode Targets.
@@ -953,10 +972,114 @@ TEST(RtpPayloadParamsVp9ToGenericTest, SpatialScalabilityKSvc) {
   EXPECT_THAT(headers[2].generic->dependencies, ElementsAre(1));  // S0, 5
   EXPECT_THAT(headers[3].generic->dependencies, ElementsAre(3));  // S1, 7
 
-  EXPECT_THAT(headers[0].generic->chain_diffs, ElementsAre(0, 0));
-  EXPECT_THAT(headers[1].generic->chain_diffs, ElementsAre(2, 2));
-  EXPECT_THAT(headers[2].generic->chain_diffs, ElementsAre(4, 2));
-  EXPECT_THAT(headers[3].generic->chain_diffs, ElementsAre(2, 4));
+  EXPECT_THAT(headers[0].generic->chain_diffs[0], Eq(0));
+  EXPECT_THAT(headers[0].generic->chain_diffs[1], Eq(0));
+  EXPECT_THAT(headers[1].generic->chain_diffs[0], Eq(2));
+  EXPECT_THAT(headers[1].generic->chain_diffs[1], Eq(2));
+  EXPECT_THAT(headers[2].generic->chain_diffs[0], Eq(4));
+  EXPECT_THAT(headers[2].generic->chain_diffs[1], Eq(2));
+  EXPECT_THAT(headers[3].generic->chain_diffs[0], Eq(2));
+  EXPECT_THAT(headers[3].generic->chain_diffs[1], Eq(4));
+}
+
+TEST(RtpPayloadParamsVp9ToGenericTest,
+     IncreaseNumberOfSpatialLayersOnDeltaFrame) {
+  // S1     5--
+  //        | ...
+  // S0 1---3--
+  RtpPayloadState state;
+  RtpPayloadParams params(/*ssrc=*/123, &state, FieldTrialBasedConfig());
+
+  EncodedImage image;
+  CodecSpecificInfo info;
+  info.codecType = kVideoCodecVP9;
+  info.codecSpecific.VP9.num_spatial_layers = 1;
+  info.codecSpecific.VP9.first_frame_in_picture = true;
+
+  RTPVideoHeader headers[3];
+  // Key frame.
+  image._frameType = VideoFrameType::kVideoFrameKey;
+  image.SetSpatialIndex(0);
+  info.codecSpecific.VP9.inter_pic_predicted = false;
+  info.codecSpecific.VP9.inter_layer_predicted = false;
+  info.codecSpecific.VP9.non_ref_for_inter_layer_pred = true;
+  info.codecSpecific.VP9.num_ref_pics = 0;
+  info.codecSpecific.VP9.first_frame_in_picture = true;
+  info.end_of_picture = true;
+  headers[0] = params.GetRtpVideoHeader(image, &info, /*shared_frame_id=*/1);
+
+  // S0 delta frame.
+  image._frameType = VideoFrameType::kVideoFrameDelta;
+  info.codecSpecific.VP9.num_spatial_layers = 2;
+  info.codecSpecific.VP9.non_ref_for_inter_layer_pred = false;
+  info.codecSpecific.VP9.first_frame_in_picture = true;
+  info.codecSpecific.VP9.inter_pic_predicted = true;
+  info.codecSpecific.VP9.num_ref_pics = 1;
+  info.codecSpecific.VP9.p_diff[0] = 1;
+  info.end_of_picture = false;
+  headers[1] = params.GetRtpVideoHeader(image, &info, /*shared_frame_id=*/3);
+
+  // S1 delta frame.
+  image.SetSpatialIndex(1);
+  info.codecSpecific.VP9.inter_layer_predicted = true;
+  info.codecSpecific.VP9.non_ref_for_inter_layer_pred = true;
+  info.codecSpecific.VP9.first_frame_in_picture = false;
+  info.codecSpecific.VP9.inter_pic_predicted = false;
+  info.end_of_picture = true;
+  headers[2] = params.GetRtpVideoHeader(image, &info, /*shared_frame_id=*/5);
+
+  ASSERT_TRUE(headers[0].generic);
+  int num_decode_targets = headers[0].generic->decode_target_indications.size();
+  int num_chains = headers[0].generic->chain_diffs.size();
+  // Rely on implementation detail there are always kMaxTemporalStreams temporal
+  // layers. In particular assume Decode Target#0 matches layer S0T0, and
+  // Decode Target#kMaxTemporalStreams matches layer S1T0.
+  static constexpr int kS0T0 = 0;
+  static constexpr int kS1T0 = kMaxTemporalStreams;
+  ASSERT_GE(num_decode_targets, 2);
+  ASSERT_GE(num_chains, 2);
+
+  for (int frame_idx = 0; frame_idx < 3; ++frame_idx) {
+    const RTPVideoHeader& header = headers[frame_idx];
+    ASSERT_TRUE(header.generic);
+    EXPECT_EQ(header.generic->temporal_index, 0);
+    EXPECT_EQ(header.generic->frame_id, 1 + 2 * frame_idx);
+    ASSERT_THAT(header.generic->decode_target_indications,
+                SizeIs(num_decode_targets));
+    ASSERT_THAT(header.generic->chain_diffs, SizeIs(num_chains));
+  }
+
+  EXPECT_TRUE(headers[0].generic->active_decode_targets[kS0T0]);
+  EXPECT_FALSE(headers[0].generic->active_decode_targets[kS1T0]);
+
+  EXPECT_TRUE(headers[1].generic->active_decode_targets[kS0T0]);
+  EXPECT_TRUE(headers[1].generic->active_decode_targets[kS1T0]);
+
+  EXPECT_TRUE(headers[2].generic->active_decode_targets[kS0T0]);
+  EXPECT_TRUE(headers[2].generic->active_decode_targets[kS1T0]);
+
+  EXPECT_EQ(headers[0].generic->decode_target_indications[kS0T0],
+            DecodeTargetIndication::kSwitch);
+
+  EXPECT_EQ(headers[1].generic->decode_target_indications[kS0T0],
+            DecodeTargetIndication::kSwitch);
+
+  EXPECT_EQ(headers[2].generic->decode_target_indications[kS0T0],
+            DecodeTargetIndication::kNotPresent);
+  EXPECT_EQ(headers[2].generic->decode_target_indications[kS1T0],
+            DecodeTargetIndication::kSwitch);
+
+  EXPECT_THAT(headers[0].generic->dependencies, IsEmpty());       // S0, 1
+  EXPECT_THAT(headers[1].generic->dependencies, ElementsAre(1));  // S0, 3
+  EXPECT_THAT(headers[2].generic->dependencies, ElementsAre(3));  // S1, 5
+
+  EXPECT_EQ(headers[0].generic->chain_diffs[0], 0);
+
+  EXPECT_EQ(headers[1].generic->chain_diffs[0], 2);
+  EXPECT_EQ(headers[1].generic->chain_diffs[1], 0);
+
+  EXPECT_EQ(headers[2].generic->chain_diffs[0], 2);
+  EXPECT_EQ(headers[2].generic->chain_diffs[1], 2);
 }
 
 class RtpPayloadParamsH264ToGenericTest : public ::testing::Test {

@@ -378,9 +378,6 @@ RtpVideoSender::RtpVideoSender(
           field_trials_.Lookup("WebRTC-Video-UseFrameRateForOverhead"),
           "Enabled")),
       has_packet_feedback_(TransportSeqNumExtensionConfigured(rtp_config)),
-      simulate_generic_structure_(absl::StartsWith(
-          field_trials_.Lookup("WebRTC-GenericCodecDependencyDescriptor"),
-          "Enabled")),
       active_(false),
       fec_controller_(std::move(fec_controller)),
       fec_allowed_(true),
@@ -603,32 +600,10 @@ EncodedImageCallback::Result RtpVideoSender::OnEncodedImage(
     RTPSenderVideo& sender_video = *rtp_streams_[stream_index].sender_video;
     if (codec_specific_info && codec_specific_info->template_structure) {
       sender_video.SetVideoStructure(&*codec_specific_info->template_structure);
-    } else if (codec_specific_info &&
-               codec_specific_info->codecType == kVideoCodecVP8) {
-      FrameDependencyStructure structure =
-          RtpPayloadParams::MinimalisticStructure(/*num_spatial_layers=*/1,
-                                                  kMaxTemporalStreams);
-      sender_video.SetVideoStructure(&structure);
-    } else if (codec_specific_info &&
-               codec_specific_info->codecType == kVideoCodecVP9) {
-      const CodecSpecificInfoVP9& vp9 = codec_specific_info->codecSpecific.VP9;
-
-      FrameDependencyStructure structure =
-          RtpPayloadParams::MinimalisticStructure(vp9.num_spatial_layers,
-                                                  kMaxTemporalStreams);
-      if (vp9.ss_data_available && vp9.spatial_layer_resolution_present) {
-        for (size_t i = 0; i < vp9.num_spatial_layers; ++i) {
-          structure.resolutions.emplace_back(vp9.width[i], vp9.height[i]);
-        }
-      }
-      sender_video.SetVideoStructure(&structure);
-    } else if (simulate_generic_structure_ && codec_specific_info &&
-               codec_specific_info->codecType == kVideoCodecGeneric) {
-      FrameDependencyStructure structure =
-          RtpPayloadParams::MinimalisticStructure(
-              /*num_spatial_layers=*/1,
-              /*num_temporal_layers=*/1);
-      sender_video.SetVideoStructure(&structure);
+    } else if (absl::optional<FrameDependencyStructure> structure =
+                   params_[stream_index].GenericStructure(
+                       codec_specific_info)) {
+      sender_video.SetVideoStructure(&*structure);
     } else {
       sender_video.SetVideoStructure(nullptr);
     }
