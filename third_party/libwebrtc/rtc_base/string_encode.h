@@ -48,10 +48,6 @@ size_t hex_decode_with_delimiter(ArrayView<char> buffer,
 // single, empty, field.
 std::vector<absl::string_view> split(absl::string_view source, char delimiter);
 
-size_t split(absl::string_view source,
-             char delimiter,
-             std::vector<std::string>* fields);
-
 // Splits the source string into multiple fields separated by delimiter,
 // with duplicates of delimiter ignored.  Trailing delimiter ignored.
 size_t tokenize(absl::string_view source,
