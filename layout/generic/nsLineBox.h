@@ -413,7 +413,6 @@ class nsLineBox final : public nsLineLink {
 
 #ifdef DEBUG_FRAME_DUMP
   static const char* BreakTypeToString(StyleClear aBreakType);
-  char* StateToString(char* aBuf, int32_t aBufSize) const;
 
   void List(FILE* out, int32_t aIndent,
             nsIFrame::ListFlags aFlags = nsIFrame::ListFlags()) const;
