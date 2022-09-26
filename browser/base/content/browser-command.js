@@ -183,127 +183,127 @@ function unmuteSidebarSite() {
 function setBrowserManagerSidebarMode() {
   Services.prefs.setIntPref("floorp.browser.sidebar2.mode", 0);
   ViewBrowserManagerSidebar();
-  setSelectedpanel();
+  setSelectedPanel();
 }
 function setBookmarksSidebarMode() {
   Services.prefs.setIntPref("floorp.browser.sidebar2.mode", 1);
   ViewBrowserManagerSidebar();
-  setSelectedpanel();
+  setSelectedPanel();
 }
 function setHistorySidebarMode() {
   Services.prefs.setIntPref("floorp.browser.sidebar2.mode", 2);
   ViewBrowserManagerSidebar();
-  setSelectedpanel();
+  setSelectedPanel();
 }
 function setDownloadsSidebarMode() {
   Services.prefs.setIntPref("floorp.browser.sidebar2.mode", 3);
   ViewBrowserManagerSidebar();
-  setSelectedpanel();
+  setSelectedPanel();
 }
 function setTreeStyleTabSidebarMode() {
   Services.prefs.setIntPref("floorp.browser.sidebar2.mode", 4);
   ViewBrowserManagerSidebar();
-  setSelectedpanel();
+  setSelectedPanel();
 }
 function setCustomSidebarMode1() {
   Services.prefs.setIntPref("floorp.browser.sidebar2.mode", 5);
   ViewBrowserManagerSidebar();
-  setSelectedpanel();
+  setSelectedPanel();
 }
 function setCustomSidebarMode2() {
   Services.prefs.setIntPref("floorp.browser.sidebar2.mode", 6);
   ViewBrowserManagerSidebar();
-  setSelectedpanel();
+  setSelectedPanel();
 }
 function setCustomSidebarMode3() {
   Services.prefs.setIntPref("floorp.browser.sidebar2.mode", 7);
   ViewBrowserManagerSidebar();
-  setSelectedpanel();
+  setSelectedPanel();
 }
 function setCustomSidebarMode4() {
   Services.prefs.setIntPref("floorp.browser.sidebar2.mode", 8);
   ViewBrowserManagerSidebar();
-  setSelectedpanel();
+  setSelectedPanel();
 }
 function setCustomSidebarMode5() {
   Services.prefs.setIntPref("floorp.browser.sidebar2.mode", 9);
   ViewBrowserManagerSidebar();
-  setSelectedpanel();
+  setSelectedPanel();
 }
 function setCustomSidebarMode6() {
   Services.prefs.setIntPref("floorp.browser.sidebar2.mode", 10);
   ViewBrowserManagerSidebar();
-  setSelectedpanel();
+  setSelectedPanel();
 }
 function setCustomSidebarMode7() {
   Services.prefs.setIntPref("floorp.browser.sidebar2.mode", 11);
   ViewBrowserManagerSidebar();
-  setSelectedpanel();
+  setSelectedPanel();
 }
 function setCustomSidebarMode8() {
   Services.prefs.setIntPref("floorp.browser.sidebar2.mode", 12);
   ViewBrowserManagerSidebar();
-  setSelectedpanel();
+  setSelectedPanel();
 }
 function setCustomSidebarMode9() {
   Services.prefs.setIntPref("floorp.browser.sidebar2.mode", 13);
   ViewBrowserManagerSidebar();
-  setSelectedpanel();
+  setSelectedPanel();
 }
 function setCustomSidebarMode10() {
   Services.prefs.setIntPref("floorp.browser.sidebar2.mode", 14);
   ViewBrowserManagerSidebar();
-  setSelectedpanel();
+  setSelectedPanel();
 }
 function setCustomSidebarMode11() {
   Services.prefs.setIntPref("floorp.browser.sidebar2.mode", 15);
   ViewBrowserManagerSidebar();
-  setSelectedpanel();
+  setSelectedPanel();
 }
 function setCustomSidebarMode12() {
   Services.prefs.setIntPref("floorp.browser.sidebar2.mode", 16);
   ViewBrowserManagerSidebar();
-  setSelectedpanel();
+  setSelectedPanel();
 }
 function setCustomSidebarMode13() {
   Services.prefs.setIntPref("floorp.browser.sidebar2.mode", 17);
   ViewBrowserManagerSidebar();
-  setSelectedpanel();
+  setSelectedPanel();
 }
 function setCustomSidebarMode14() {
   Services.prefs.setIntPref("floorp.browser.sidebar2.mode", 18);
   ViewBrowserManagerSidebar();
-  setSelectedpanel();
+  setSelectedPanel();
 }
 function setCustomSidebarMode15() {
   Services.prefs.setIntPref("floorp.browser.sidebar2.mode", 19);
   ViewBrowserManagerSidebar();
-  setSelectedpanel();
+  setSelectedPanel();
 }
 function setCustomSidebarMode16() {
   Services.prefs.setIntPref("floorp.browser.sidebar2.mode", 20);
   ViewBrowserManagerSidebar();
-  setSelectedpanel();
+  setSelectedPanel();
 }
 function setCustomSidebarMode17() {
   Services.prefs.setIntPref("floorp.browser.sidebar2.mode", 21);
   ViewBrowserManagerSidebar();
-  setSelectedpanel();
+  setSelectedPanel();
 }
 function setCustomSidebarMode18() {
   Services.prefs.setIntPref("floorp.browser.sidebar2.mode", 22);
   ViewBrowserManagerSidebar();
-  setSelectedpanel();
+  setSelectedPanel();
 }
 function setCustomSidebarMode19() {
   Services.prefs.setIntPref("floorp.browser.sidebar2.mode", 23);
   ViewBrowserManagerSidebar();
-  setSelectedpanel();
+  setSelectedPanel();
 }
 function setCustomSidebarMode20() {
   Services.prefs.setIntPref("floorp.browser.sidebar2.mode", 24);
   ViewBrowserManagerSidebar();
-  setSelectedpanel();
+  setSelectedPanel();
 }
 
 function setSidebarIconView() {
@@ -479,7 +479,7 @@ function setAllfavicons() {
   }
 }
 
-function setSelectedpanel() {
+function setSelectedPanel() {
     let selectedMode = Services.prefs.getIntPref("floorp.browser.sidebar2.mode", undefined);
     let selectedNode = document.querySelector(`.sidepanel-icon[panel="${selectedMode}"]`);
     removeAttributeSelectedNode();
