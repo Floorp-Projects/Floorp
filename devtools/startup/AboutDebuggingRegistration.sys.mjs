@@ -2,14 +2,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
-
 // Register the about:debugging URL, that allows to debug tabs, extensions, workers on
 // the current instance of Firefox or on a remote Firefox.
 
 const { nsIAboutModule } = Ci;
 
-function AboutDebugging() {}
+export function AboutDebugging() {}
 
 AboutDebugging.prototype = {
   classDescription: "about:debugging",
@@ -37,5 +35,3 @@ AboutDebugging.prototype = {
     );
   },
 };
-
-var EXPORTED_SYMBOLS = ["AboutDebugging"];

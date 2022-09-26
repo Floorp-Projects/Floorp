@@ -10,6 +10,8 @@
 requestLongerTimeout(2);
 
 ChromeUtils.defineESModuleGetters(this, {
+  DevToolsShim: "chrome://devtools-startup/content/DevToolsShim.sys.mjs",
+
   UrlbarProviderQuickActions:
     "resource:///modules/UrlbarProviderQuickActions.sys.mjs",
 });
@@ -17,7 +19,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   AppConstants: "resource://gre/modules/AppConstants.jsm",
   AppUpdater: "resource:///modules/AppUpdater.jsm",
   BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.jsm",
-  DevToolsShim: "chrome://devtools-startup/content/DevToolsShim.jsm",
 });
 
 const DUMMY_PAGE =

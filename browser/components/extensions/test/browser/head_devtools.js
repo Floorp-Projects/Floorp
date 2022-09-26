@@ -21,11 +21,9 @@ XPCOMUtils.defineLazyGetter(this, "gDevTools", () => {
   return gDevTools;
 });
 
-ChromeUtils.defineModuleGetter(
-  this,
-  "DevToolsShim",
-  "chrome://devtools-startup/content/DevToolsShim.jsm"
-);
+ChromeUtils.defineESModuleGetters(this, {
+  DevToolsShim: "chrome://devtools-startup/content/DevToolsShim.sys.mjs",
+});
 
 const TOOLBOX_BLANK_PANEL_ID = "testBlankPanel";
 

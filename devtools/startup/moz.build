@@ -9,9 +9,9 @@ JAR_MANIFESTS += ["jar.mn"]
 # Register the startup components only for 'all' builds.
 if CONFIG["MOZ_DEVTOOLS"] == "all":
     EXTRA_JS_MODULES += [
-        "AboutDebuggingRegistration.jsm",
-        "AboutDevToolsToolboxRegistration.jsm",
-        "DevToolsStartup.jsm",
+        "AboutDebuggingRegistration.sys.mjs",
+        "AboutDevToolsToolboxRegistration.sys.mjs",
+        "DevToolsStartup.sys.mjs",
     ]
 
     DIRS += [

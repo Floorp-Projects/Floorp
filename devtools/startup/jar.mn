@@ -5,4 +5,4 @@
 devtools-startup.jar:
 %   content devtools-startup %content/
 
-    content/DevToolsShim.jsm  (DevToolsShim.jsm)
+    content/DevToolsShim.sys.mjs  (DevToolsShim.sys.mjs)

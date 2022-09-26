@@ -4,9 +4,9 @@
 
 "use strict";
 
-const {
-  DevToolsShim,
-} = require("chrome://devtools-startup/content/DevToolsShim.jsm");
+const { DevToolsShim } = ChromeUtils.importESModule(
+  "chrome://devtools-startup/content/DevToolsShim.sys.mjs"
+);
 
 const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
@@ -581,7 +581,7 @@ DevTools.prototype = {
    * arguments description.
    *
    * Also used by 3rd party tools (eg wptrunner) and exposed by
-   * DevToolsShim.jsm.
+   * DevToolsShim.sys.mjs.
    *
    * @param {XULTab} tab
    *        The tab the toolbox will debug

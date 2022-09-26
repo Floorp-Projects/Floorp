@@ -2,11 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
 const lazy = {};
 XPCOMUtils.defineLazyGetter(lazy, "DevToolsStartup", () => {
   return Cc["@mozilla.org/devtools/startup-clh;1"].getService(
@@ -28,8 +25,6 @@ XPCOMUtils.defineLazyGetter(lazy, "Telemetry", function() {
 
 const DEVTOOLS_POLICY_DISABLED_PREF = "devtools.policy.disabled";
 
-const EXPORTED_SYMBOLS = ["DevToolsShim"];
-
 function removeItem(array, callback) {
   const index = array.findIndex(callback);
   if (index >= 0) {
@@ -45,7 +40,7 @@ function removeItem(array, callback) {
  * as DevTools are ready, the DevToolsShim will forward all the requests received until
  * then to the real DevTools instance.
  */
-const DevToolsShim = {
+export const DevToolsShim = {
   _gDevTools: null,
   listeners: [],
 
