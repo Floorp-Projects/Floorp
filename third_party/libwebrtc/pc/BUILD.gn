@@ -2343,6 +2343,7 @@ if (rtc_include_tests && !build_with_chromium) {
       "../api:libjingle_logging_api",
       "../api:libjingle_peerconnection_api",
       "../api:media_stream_interface",
+      "../api:mock_encoder_selector",
       "../api:mock_video_track",
       "../api:packet_socket_factory",
       "../api:priority",

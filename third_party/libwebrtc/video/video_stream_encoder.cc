@@ -615,7 +615,8 @@ VideoStreamEncoder::VideoStreamEncoder(
     std::unique_ptr<webrtc::TaskQueueBase, webrtc::TaskQueueDeleter>
         encoder_queue,
     BitrateAllocationCallbackType allocation_cb_type,
-    const FieldTrialsView& field_trials)
+    const FieldTrialsView& field_trials,
+    webrtc::VideoEncoderFactory::EncoderSelectorInterface* encoder_selector)
     : field_trials_(field_trials),
       worker_queue_(TaskQueueBase::Current()),
       number_of_cores_(number_of_cores),
@@ -623,7 +624,14 @@ VideoStreamEncoder::VideoStreamEncoder(
       settings_(settings),
       allocation_cb_type_(allocation_cb_type),
       rate_control_settings_(RateControlSettings::ParseFromFieldTrials()),
-      encoder_selector_(settings.encoder_factory->GetEncoderSelector()),
+      encoder_selector_from_constructor_(encoder_selector),
+      encoder_selector_from_factory_(
+          encoder_selector_from_constructor_
+              ? nullptr
+              : settings.encoder_factory->GetEncoderSelector()),
+      encoder_selector_(encoder_selector_from_constructor_
+                            ? encoder_selector_from_constructor_
+                            : encoder_selector_from_factory_.get()),
       encoder_stats_observer_(encoder_stats_observer),
       cadence_callback_(*this),
       frame_cadence_adapter_(std::move(frame_cadence_adapter)),

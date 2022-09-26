@@ -589,6 +589,7 @@ if (rtc_include_tests) {
         ":rtc_simulcast_encoder_adapter",
         "../api:create_simulcast_test_fixture_api",
         "../api:libjingle_peerconnection_api",
+        "../api:mock_encoder_selector",
         "../api:mock_video_bitrate_allocator",
         "../api:mock_video_bitrate_allocator_factory",
         "../api:mock_video_codec_factory",
