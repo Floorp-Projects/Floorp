@@ -1279,7 +1279,7 @@ static nsresult PinCurrentAppToTaskbarWin7(bool aCheckOnly,
 
   RefPtr<FolderItem> folderItem;
   hr = folder->ParseName(bstrLinkName.get(), getter_AddRefs(folderItem));
-  if (FAILED(hr)) return NS_ERROR_FAILURE;
+  if (FAILED(hr) || !folderItem) return NS_ERROR_FAILURE;
 
   RefPtr<FolderItemVerbs> verbs;
   hr = folderItem->Verbs(getter_AddRefs(verbs));
