@@ -7,10 +7,14 @@
 var { ExtensionParent } = ChromeUtils.import(
   "resource://gre/modules/ExtensionParent.jsm"
 );
+
+ChromeUtils.defineESModuleGetters(this, {
+  DevToolsShim: "chrome://devtools-startup/content/DevToolsShim.sys.mjs",
+});
+
 XPCOMUtils.defineLazyModuleGetters(this, {
   AddonManager: "resource://gre/modules/AddonManager.jsm",
   AddonManagerPrivate: "resource://gre/modules/AddonManager.jsm",
-  DevToolsShim: "chrome://devtools-startup/content/DevToolsShim.jsm",
 });
 
 XPCOMUtils.defineLazyPreferenceGetter(

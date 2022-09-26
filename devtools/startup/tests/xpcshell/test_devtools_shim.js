@@ -3,8 +3,8 @@
 
 "use strict";
 
-const { DevToolsShim } = ChromeUtils.import(
-  "chrome://devtools-startup/content/DevToolsShim.jsm"
+const { DevToolsShim } = ChromeUtils.importESModule(
+  "chrome://devtools-startup/content/DevToolsShim.sys.mjs"
 );
 
 // Test the DevToolsShim

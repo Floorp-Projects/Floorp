@@ -2,14 +2,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
-
 // Register about:devtools-toolbox which allows to open a devtools toolbox
 // in a Firefox tab or a custom html iframe in browser.html
 
 const { nsIAboutModule } = Ci;
 
-function AboutDevtoolsToolbox() {}
+export function AboutDevtoolsToolbox() {}
 
 AboutDevtoolsToolbox.prototype = {
   uri: Services.io.newURI("chrome://devtools/content/framework/toolbox.xhtml"),
@@ -37,5 +35,3 @@ AboutDevtoolsToolbox.prototype = {
     return this.uri;
   },
 };
-
-var EXPORTED_SYMBOLS = ["AboutDevtoolsToolbox"];

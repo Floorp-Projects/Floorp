@@ -20,8 +20,6 @@
  * and ensure setting up tools.
  **/
 
-"use strict";
-
 const kDebuggerPrefs = [
   "devtools.debugger.remote-enabled",
   "devtools.chrome.enabled",
@@ -31,9 +29,8 @@ const DEVTOOLS_F12_DISABLED_PREF = "devtools.experiment.f12.shortcut_disabled";
 
 const DEVTOOLS_POLICY_DISABLED_PREF = "devtools.policy.disabled";
 
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
+
 const { AppConstants } = ChromeUtils.import(
   "resource://gre/modules/AppConstants.jsm"
 );
@@ -258,7 +255,7 @@ function getProfilerKeyShortcuts() {
  * @param {string} targetUrl
  * @returns {string}
  */
-function validateProfilerWebChannelUrl(targetUrl) {
+export function validateProfilerWebChannelUrl(targetUrl) {
   const frontEndUrl = "https://profiler.firefox.com";
 
   if (targetUrl !== frontEndUrl) {
@@ -304,7 +301,7 @@ XPCOMUtils.defineLazyGetter(lazy, "ProfilerPopupBackground", function() {
   );
 });
 
-function DevToolsStartup() {
+export function DevToolsStartup() {
   this.onWindowReady = this.onWindowReady.bind(this);
   this.addDevToolsItemsToSubview = this.addDevToolsItemsToSubview.bind(this);
   this.onMoreToolsViewShowing = this.onMoreToolsViewShowing.bind(this);
@@ -842,6 +839,7 @@ DevToolsStartup.prototype = {
     );
     // Ensure loading main devtools module that hooks up into browser UI
     // and initialize all devtools machinery.
+    // eslint-disable-next-line import/no-unassigned-import
     require("devtools/client/framework/devtools-browser");
     return require;
   },
@@ -1296,5 +1294,3 @@ const JsonView = {
     }
   },
 };
-
-var EXPORTED_SYMBOLS = ["DevToolsStartup", "validateProfilerWebChannelUrl"];

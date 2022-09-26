@@ -24,12 +24,15 @@ const { AppConstants } = ChromeUtils.import(
 
 const lazy = {};
 
+ChromeUtils.defineESModuleGetters(lazy, {
+  DevToolsShim: "chrome://devtools-startup/content/DevToolsShim.sys.mjs",
+});
+
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   AddonManager: "resource://gre/modules/AddonManager.jsm",
   AsyncShutdown: "resource://gre/modules/AsyncShutdown.jsm",
   BroadcastConduit: "resource://gre/modules/ConduitsParent.jsm",
   DeferredTask: "resource://gre/modules/DeferredTask.jsm",
-  DevToolsShim: "chrome://devtools-startup/content/DevToolsShim.jsm",
   ExtensionData: "resource://gre/modules/Extension.jsm",
   ExtensionActivityLog: "resource://gre/modules/ExtensionActivityLog.jsm",
   GeckoViewConnection: "resource://gre/modules/GeckoViewWebExtension.jsm",
