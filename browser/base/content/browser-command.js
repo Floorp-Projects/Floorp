@@ -94,9 +94,9 @@ async function setTreeStyleTabURL() {
 function setSidebarMode() {
   if (Services.prefs.getBoolPref("floorp.browser.sidebar.enable", false)) {
     const modeValuePref = Services.prefs.getIntPref("floorp.browser.sidebar2.mode", undefined);
-    const stringWebpanelNum = String(modeValuePref - 4);
-    const sidebar2elem = document.getElementById("sidebar2");
     const webpanel = document.getElementById("webpanel");
+    const webpanel_id = modeValuePref - 4
+    const sidebar2elem = document.getElementById("sidebar2");
     const panelWidth = Services.prefs.getIntPref(`floorp.browser.sidebar2.width.mode${modeValuePref}`, undefined);
   
     if(panelWidth !== "" || panelWidth !== undefined || panelWidth !== null){
@@ -106,27 +106,27 @@ function setSidebarMode() {
     switch (modeValuePref) {
       case 0:
         sidebar2elem.setAttribute("src", "chrome://browser/content/places/places.xhtml");
-        changeBrowserManagerSidebarConfigShowBrowserManagers();
+        showSidebarNodes(0);
         break;
       case 1:
         sidebar2elem.setAttribute("src", "chrome://browser/content/places/bookmarksSidebar.xhtml");
-        changeBrowserManagerSidebarConfigShowBrowserManagers();
+        showSidebarNodes(0);
         break;
       case 2:
         sidebar2elem.setAttribute("src", "chrome://browser/content/places/historySidebar.xhtml");
-        changeBrowserManagerSidebarConfigShowBrowserManagers();
+        showSidebarNodes(0);
         break;
       case 3:
         sidebar2elem.setAttribute("src", "about:downloads");
-        changeBrowserManagerSidebarConfigShowBrowserManagers();
+        showSidebarNodes(0);
         break;
       case 4:
         setTreeStyleTabURL();
-        changeBrowserManagerSidebarConfigShowWebpanels();
+        showSidebarNodes(1);
         break;
       default:
-        webpanel.setAttribute("src", Services.prefs.getStringPref("floorp.browser.sidebar2.customurl" + stringWebpanelNum , undefined));
-        changeBrowserManagerSidebarConfigShowWebpanels();
+        webpanel.setAttribute("src", Services.prefs.getStringPref(`floorp.browser.sidebar2.customurl${webpanel_id}`, undefined));
+        showSidebarNodes(1);
         break;
     }
   }
@@ -320,7 +320,7 @@ function keepSidebar2boxWidth() {
 
 function getSelectedNode(){
   let selectedMode = Services.prefs.getIntPref("floorp.browser.sidebar2.mode", undefined);
-  let selectedNode = document.querySelector(".sidepanel-icon[panel= \"" + selectedMode + "\"]");
+  let selectedNode = document.querySelector(`.sidepanel-icon[panel="${selectedMode}"]`);
   return selectedNode;
 }
 
@@ -480,13 +480,11 @@ function setAllfavicons() {
 }
 
 function setSelectedpanel() {
-  let selectedMode = Services.prefs.getIntPref("floorp.browser.sidebar2.mode", undefined);
-  let selectedNode = document.querySelector(".sidepanel-icon[panel= \"" +  selectedMode + "\"]");
-
-  removeAttributeSelectedNode();
-  selectedNode.setAttribute("checked", "true");
+    let selectedMode = Services.prefs.getIntPref("floorp.browser.sidebar2.mode", undefined);
+    let selectedNode = document.querySelector(`.sidepanel-icon[panel="${selectedMode}"]`);
+    removeAttributeSelectedNode();
+    selectedNode.setAttribute("checked", "true");
 }
-
 
 function changeMuteStatus() {
   let webpanel = document.getElementById("webpanel");
@@ -500,18 +498,16 @@ function changeMuteStatus() {
   }
 }
 
-function changeBrowserManagerSidebarConfigShowWebpanels() {
-  if (document.getElementById("sidebar2style")){document.getElementById("sidebar2style").remove()}
-  var Tag = document.createElement("style");
-  Tag.innerText = `#sidebar2{max-height:0 !important;}`
-  document.getElementsByTagName("head")[0].insertAdjacentElement('beforeend', Tag);
-  Tag.setAttribute("id", "sidebar2style");
-}
-
-function changeBrowserManagerSidebarConfigShowBrowserManagers() {
-  if (document.getElementById("sidebar2style")){document.getElementById("sidebar2style").remove()}
-  var Tag = document.createElement("style");
-  Tag.innerText = `#webpanel{max-height:0 !important;}#sidebar2-reload,#sidebar2-forward,#sidebar2-back{display:none !important;}`
-  document.getElementsByTagName("head")[0].insertAdjacentElement('beforeend', Tag);
-  Tag.setAttribute("id", "sidebar2style");
+function showSidebarNodes(sidebar_mode) { /* Managers - 0; Webpanels - 1 */
+    var sbar_css = ""
+    if (document.getElementById("sidebar2style")){document.getElementById("sidebar2style").remove()}
+    var Tag = document.createElement("style")
+    if (sidebar_mode == 0) { 
+        sbar_css = "#webpanel{max-height:0 !important;}#sidebar2-reload,#sidebar2-forward,#sidebar2-back{display:none !important;}"
+    }else{
+        sbar_css = "#sidebar2{max-height:0 !important;}"
+    }
+    Tag.innerText = sbar_css
+    document.getElementsByTagName("head")[0].insertAdjacentElement("beforeend", Tag);
+    Tag.setAttribute("id", "sidebar2style");
 }
