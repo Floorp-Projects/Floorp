@@ -179,6 +179,8 @@ class nsMemoryReporterManager final : public nsIMemoryReporterManager,
 #ifdef XP_WIN
   static int64_t ResidentUnique(HANDLE aProcess = nullptr);
 #elif XP_MACOSX
+  // On MacOS this can sometimes be significantly slow. It should not be used
+  // except in debugging or at the request of a user (eg about:memory).
   static int64_t ResidentUnique(mach_port_t aPort = 0);
 #else
   static int64_t ResidentUnique(pid_t aPid = 0);
