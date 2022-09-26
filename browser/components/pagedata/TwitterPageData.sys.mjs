@@ -2,8 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
-
 /**
  * Collects Twitter card (https://developer.twitter.com/en/docs/twitter-for-websites/)
  * related data from a page.
