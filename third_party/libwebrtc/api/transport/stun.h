@@ -178,7 +178,7 @@ class StunMessage {
   // is determined by the lengths of the transaction ID.
   bool IsLegacy() const;
 
-  void SetType(int type) { type_ = static_cast<uint16_t>(type); }
+  [[deprecated]] void SetType(int type) { type_ = static_cast<uint16_t>(type); }
   [[deprecated]] bool SetTransactionID(absl::string_view transaction_id) {
     if (!IsValidTransactionId(transaction_id))
       return false;

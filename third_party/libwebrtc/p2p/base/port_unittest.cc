@@ -3409,8 +3409,7 @@ TEST_F(PortTest, TestErrorResponseMakesGoogPingFallBackToStunBinding) {
   ASSERT_EQ(response2->type(), GOOG_PING_RESPONSE);
 
   // But rather than the RESPONSE...feedback an error.
-  StunMessage error_response;
-  error_response.SetType(GOOG_PING_ERROR_RESPONSE);
+  StunMessage error_response(GOOG_PING_ERROR_RESPONSE);
   error_response.SetTransactionIdForTesting(response2->transaction_id());
   error_response.AddMessageIntegrity32("rpass");
   rtc::ByteBufferWriter buf;
