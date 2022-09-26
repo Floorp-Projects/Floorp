@@ -2815,12 +2815,6 @@ SharedDataContainer::~SharedDataContainer() {
   }
 }
 
-bool SharedDataContainer::initVector(JSContext* cx) {
-  // TODO bug 1783951 - remove in favor of the ErrorContext version
-  MainThreadErrorContext ec(cx);
-  return initVector(&ec);
-}
-
 bool SharedDataContainer::initVector(ErrorContext* ec) {
   MOZ_ASSERT(isEmpty());
 
@@ -2831,12 +2825,6 @@ bool SharedDataContainer::initVector(ErrorContext* ec) {
   }
   data_ = uintptr_t(vec) | VectorTag;
   return true;
-}
-
-bool SharedDataContainer::initMap(JSContext* cx) {
-  // TODO bug 1783951 - remove in favor of the ErrorContext version
-  MainThreadErrorContext ec(cx);
-  return initMap(&ec);
 }
 
 bool SharedDataContainer::initMap(ErrorContext* ec) {
@@ -4840,13 +4828,6 @@ bool CompilationStencilMerger::buildAtomIndexMap(
 }
 
 bool CompilationStencilMerger::setInitial(
-    JSContext* cx, UniquePtr<ExtensibleCompilationStencil>&& initial) {
-  // TODO bug 1783951 - remove in favor of the ErrorContext version
-  MainThreadErrorContext ec(cx);
-  return setInitial(&ec, std::move(initial));
-}
-
-bool CompilationStencilMerger::setInitial(
     ErrorContext* ec, UniquePtr<ExtensibleCompilationStencil>&& initial) {
   MOZ_ASSERT(!initial_);
 
@@ -4929,13 +4910,6 @@ static void MergeScriptStencil(ScriptStencil& dest, const ScriptStencil& src,
   if (src.hasSharedData()) {
     dest.setHasSharedData();
   }
-}
-
-bool CompilationStencilMerger::addDelazification(
-    JSContext* cx, const CompilationStencil& delazification) {
-  // TODO bug 1783951 - remove in favor of the ErrorContext version
-  MainThreadErrorContext ec(cx);
-  return addDelazification(&ec, delazification);
 }
 
 bool CompilationStencilMerger::addDelazification(

@@ -516,14 +516,6 @@ class alignas(uint32_t) ImmutableScriptData final : public TrailingArray {
 
  public:
   static js::UniquePtr<ImmutableScriptData> new_(
-      JSContext* cx, uint32_t mainOffset, uint32_t nfixed, uint32_t nslots,
-      GCThingIndex bodyScopeIndex, uint32_t numICEntries, bool isFunction,
-      uint16_t funLength, mozilla::Span<const jsbytecode> code,
-      mozilla::Span<const SrcNote> notes,
-      mozilla::Span<const uint32_t> resumeOffsets,
-      mozilla::Span<const ScopeNote> scopeNotes,
-      mozilla::Span<const TryNote> tryNotes);
-  static js::UniquePtr<ImmutableScriptData> new_(
       ErrorContext* ec, uint32_t mainOffset, uint32_t nfixed, uint32_t nslots,
       GCThingIndex bodyScopeIndex, uint32_t numICEntries, bool isFunction,
       uint16_t funLength, mozilla::Span<const jsbytecode> code,
@@ -532,9 +524,6 @@ class alignas(uint32_t) ImmutableScriptData final : public TrailingArray {
       mozilla::Span<const ScopeNote> scopeNotes,
       mozilla::Span<const TryNote> tryNotes);
 
-  static js::UniquePtr<ImmutableScriptData> new_(
-      JSContext* cx, uint32_t codeLength, uint32_t noteLength,
-      uint32_t numResumeOffsets, uint32_t numScopeNotes, uint32_t numTryNotes);
   static js::UniquePtr<ImmutableScriptData> new_(
       ErrorContext* ec, uint32_t codeLength, uint32_t noteLength,
       uint32_t numResumeOffsets, uint32_t numScopeNotes, uint32_t numTryNotes);
@@ -710,8 +699,6 @@ class SharedImmutableScriptData {
   SharedImmutableScriptData& operator=(const SharedImmutableScriptData&) =
       delete;
 
-  static bool shareScriptData(JSContext* cx,
-                              RefPtr<SharedImmutableScriptData>& sisd);
   static bool shareScriptData(JSContext* cx, ErrorContext* ec,
                               RefPtr<SharedImmutableScriptData>& sisd);
 
