@@ -261,13 +261,6 @@ class RtpRtcpInterface : public RtcpFeedbackSenderInterface {
   // Returns SSRC.
   virtual uint32_t SSRC() const = 0;
 
-  // Sets the value for sending in the RID (and Repaired) RTP header extension.
-  // RIDs are used to identify an RTP stream if SSRCs are not negotiated.
-  // If the RID and Repaired RID extensions are not registered, the RID will
-  // not be sent.
-  [[deprecated("Use the rid member of config struct instead'")]] virtual void
-  SetRid(absl::string_view rid) = 0;
-
   // Sets the value for sending in the MID RTP header extension.
   // The MID RTP header extension should be registered for this to do anything.
   // Once set, this value can not be changed or removed.
