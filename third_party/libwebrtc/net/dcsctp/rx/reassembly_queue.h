@@ -72,6 +72,7 @@ class ReassemblyQueue {
   ReassemblyQueue(absl::string_view log_prefix,
                   TSN peer_initial_tsn,
                   size_t max_size_bytes,
+                  bool use_message_interleaving = false,
                   const DcSctpSocketHandoverState* handover_state = nullptr);
 
   // Adds a data chunk to the queue, with a `tsn` and other parameters in
