@@ -1,0 +1,19 @@
+{
+  "name": "private",
+  "manifest_version": 2,
+  "version": "1.0",
+  "description": "A test private engine",
+  "applications": {
+    "gecko": {
+      "id": "private@search.mozilla.org"
+    }
+  },
+  "hidden": true,
+  "chrome_settings_overrides": {
+    "search_provider": {
+      "name": "private",
+      "search_url": "https://example.com",
+      "suggest_url": "https://example.com?search={searchTerms}"
+    }
+  }
+}
