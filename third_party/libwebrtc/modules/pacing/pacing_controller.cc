@@ -259,6 +259,11 @@ size_t PacingController::QueueSizePackets() const {
   return rtc::checked_cast<size_t>(packet_queue_->SizeInPackets());
 }
 
+const std::array<int, kNumMediaTypes>&
+PacingController::SizeInPacketsPerRtpPacketMediaType() const {
+  return packet_queue_->SizeInPacketsPerRtpPacketMediaType();
+}
+
 DataSize PacingController::QueueSizeData() const {
   DataSize size = packet_queue_->SizeInPayloadBytes();
   if (include_overhead_) {

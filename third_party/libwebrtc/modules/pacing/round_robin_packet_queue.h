@@ -42,6 +42,8 @@ class RoundRobinPacketQueue : public PacingController::PacketQueue {
 
   int SizeInPackets() const override;
   DataSize SizeInPayloadBytes() const override;
+  const std::array<int, kNumMediaTypes>& SizeInPacketsPerRtpPacketMediaType()
+      const override;
   Timestamp LeadingAudioPacketEnqueueTime() const override;
   Timestamp OldestEnqueueTime() const override;
   TimeDelta AverageQueueTime() const override;
@@ -142,6 +144,7 @@ class RoundRobinPacketQueue : public PacingController::PacketQueue {
 
   bool paused_;
   int size_packets_;
+  std::array<int, kNumMediaTypes> size_packets_per_media_type_;
   DataSize size_;
   DataSize max_size_;
   TimeDelta queue_time_sum_;

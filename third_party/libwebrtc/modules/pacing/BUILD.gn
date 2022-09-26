@@ -94,6 +94,7 @@ if (rtc_include_tests) {
       "pacing_controller_unittest.cc",
       "packet_router_unittest.cc",
       "prioritized_packet_queue_unittest.cc",
+      "round_robin_packet_queue_unittest.cc",
       "task_queue_paced_sender_unittest.cc",
     ]
     deps = [
@@ -103,6 +104,7 @@ if (rtc_include_tests) {
       "../../api/transport:network_control",
       "../../api/units:data_rate",
       "../../api/units:time_delta",
+      "../../api/units:timestamp",
       "../../modules/utility:mock_process_thread",
       "../../rtc_base:checks",
       "../../rtc_base:rtc_base_tests_utils",
