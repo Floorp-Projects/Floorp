@@ -288,7 +288,7 @@ EditActionResult WhiteSpaceVisibilityKeeper::
             EditorDOMPoint(rightBlockElement, afterRightBlockChild.Offset()),
             aEditingHost);
 #endif  // #ifdef DEBUG
-    MoveNodeResult moveNodeResult =
+    Result<MoveNodeResult, nsresult> moveNodeResult =
         aHTMLEditor.MoveOneHardLineContentsWithTransaction(
             EditorDOMPoint(rightBlockElement, afterRightBlockChild.Offset()),
             EditorDOMPoint(&aLeftBlockElement, 0u), aEditingHost,
@@ -303,17 +303,17 @@ EditActionResult WhiteSpaceVisibilityKeeper::
 #ifdef DEBUG
     MOZ_ASSERT(!firstLineHasContent.isErr());
     if (firstLineHasContent.inspect()) {
-      NS_ASSERTION(moveNodeResult.Handled(),
+      NS_ASSERTION(moveNodeResult.inspect().Handled(),
                    "Failed to consider whether moving or not something");
     } else {
-      NS_ASSERTION(moveNodeResult.Ignored(),
+      NS_ASSERTION(moveNodeResult.inspect().Ignored(),
                    "Failed to consider whether moving or not something");
     }
 #endif  // #ifdef DEBUG
 
     // We don't need to update selection here because of dontChangeMySelection
     // above.
-    moveNodeResult.IgnoreCaretPointSuggestion();
+    moveNodeResult.inspect().IgnoreCaretPointSuggestion();
     ret |= moveNodeResult;
     // Now, all children of rightBlockElement were moved to leftBlockElement.
     // So, afterRightBlockChild is now invalid.
@@ -457,30 +457,32 @@ EditActionResult WhiteSpaceVisibilityKeeper::
         aHTMLEditor.CanMoveChildren(aRightBlockElement, aLeftBlockElement);
 #endif  // #ifdef DEBUG
     // TODO: Stop using HTMLEditor::PreserveWhiteSpaceStyle::No due to no tests.
-    MoveNodeResult moveNodeResult = aHTMLEditor.MoveChildrenWithTransaction(
-        aRightBlockElement,
-        EditorDOMPoint(atLeftBlockChild.GetContainer(),
-                       atLeftBlockChild.Offset()),
-        HTMLEditor::PreserveWhiteSpaceStyle::No);
-    if (NS_WARN_IF(moveNodeResult.EditorDestroyed())) {
-      return EditActionResult(NS_ERROR_EDITOR_DESTROYED);
-    }
-    NS_WARNING_ASSERTION(
-        moveNodeResult.isOk(),
-        "HTMLEditor::MoveChildrenWithTransaction() failed, but ignored");
-    if (moveNodeResult.isOk()) {
+    Result<MoveNodeResult, nsresult> moveNodeResult =
+        aHTMLEditor.MoveChildrenWithTransaction(
+            aRightBlockElement,
+            EditorDOMPoint(atLeftBlockChild.GetContainer(),
+                           atLeftBlockChild.Offset()),
+            HTMLEditor::PreserveWhiteSpaceStyle::No);
+    if (MOZ_UNLIKELY(moveNodeResult.isErr())) {
+      if (NS_WARN_IF(moveNodeResult.inspectErr() ==
+                     NS_ERROR_EDITOR_DESTROYED)) {
+        return EditActionResult(moveNodeResult.unwrapErr());
+      }
+      NS_WARNING(
+          "HTMLEditor::MoveChildrenWithTransaction() failed, but ignored");
+    } else {
       // We don't need to update selection here because of dontChangeMySelection
       // above.
-      moveNodeResult.IgnoreCaretPointSuggestion();
+      moveNodeResult.inspect().IgnoreCaretPointSuggestion();
       ret |= moveNodeResult;
 
 #ifdef DEBUG
       MOZ_ASSERT(!rightBlockHasContent.isErr());
       if (rightBlockHasContent.inspect()) {
-        NS_ASSERTION(moveNodeResult.Handled(),
+        NS_ASSERTION(moveNodeResult.inspect().Handled(),
                      "Failed to consider whether moving or not children");
       } else {
-        NS_ASSERTION(moveNodeResult.Ignored(),
+        NS_ASSERTION(moveNodeResult.inspect().Ignored(),
                      "Failed to consider whether moving or not children");
       }
 #endif  // #ifdef DEBUG
@@ -576,7 +578,7 @@ EditActionResult WhiteSpaceVisibilityKeeper::
       MOZ_DIAGNOSTIC_ASSERT(pointToMoveFirstLineContent.IsSetAndValid());
     }
 
-    MoveNodeResult moveNodeResult =
+    Result<MoveNodeResult, nsresult> moveNodeResult =
         aHTMLEditor.MoveOneHardLineContentsWithTransaction(
             EditorDOMPoint(&aRightBlockElement, 0u),
             pointToMoveFirstLineContent, aEditingHost);
@@ -588,17 +590,17 @@ EditActionResult WhiteSpaceVisibilityKeeper::
 #ifdef DEBUG
     MOZ_ASSERT(!firstLineHasContent.isErr());
     if (firstLineHasContent.inspect()) {
-      NS_ASSERTION(moveNodeResult.Handled(),
+      NS_ASSERTION(moveNodeResult.inspect().Handled(),
                    "Failed to consider whether moving or not something");
     } else {
-      NS_ASSERTION(moveNodeResult.Ignored(),
+      NS_ASSERTION(moveNodeResult.inspect().Ignored(),
                    "Failed to consider whether moving or not something");
     }
 #endif  // #ifdef DEBUG
 
     // We don't need to update selection here because of dontChangeMySelection
     // above.
-    moveNodeResult.IgnoreCaretPointSuggestion();
+    moveNodeResult.inspect().IgnoreCaretPointSuggestion();
     ret |= moveNodeResult;
   }
 
@@ -699,12 +701,12 @@ EditActionResult WhiteSpaceVisibilityKeeper::
 #endif  // #ifdef DEBUG
 
     // Nodes are dissimilar types.
-    MoveNodeResult moveNodeResult =
+    Result<MoveNodeResult, nsresult> moveNodeResult =
         aHTMLEditor.MoveOneHardLineContentsWithTransaction(
             EditorDOMPoint(&aRightBlockElement, 0u),
             EditorDOMPoint(&aLeftBlockElement, 0u), aEditingHost,
             HTMLEditor::MoveToEndOfContainer::Yes);
-    if (moveNodeResult.isErr()) {
+    if (MOZ_UNLIKELY(moveNodeResult.isErr())) {
       NS_WARNING(
           "HTMLEditor::MoveOneHardLineContentsWithTransaction("
           "MoveToEndOfContainer::Yes) failed");
@@ -714,17 +716,17 @@ EditActionResult WhiteSpaceVisibilityKeeper::
 #ifdef DEBUG
     MOZ_ASSERT(!firstLineHasContent.isErr());
     if (firstLineHasContent.inspect()) {
-      NS_ASSERTION(moveNodeResult.Handled(),
+      NS_ASSERTION(moveNodeResult.inspect().Handled(),
                    "Failed to consider whether moving or not something");
     } else {
-      NS_ASSERTION(moveNodeResult.Ignored(),
+      NS_ASSERTION(moveNodeResult.inspect().Ignored(),
                    "Failed to consider whether moving or not something");
     }
 #endif  // #ifdef DEBUG
 
     // We don't need to update selection here because of dontChangeMySelection
     // above.
-    moveNodeResult.IgnoreCaretPointSuggestion();
+    moveNodeResult.inspect().IgnoreCaretPointSuggestion();
     ret |= moveNodeResult;
   }
 

@@ -4023,16 +4023,16 @@ CreateElementResult HTMLEditor::ReplaceContainerWithTransactionInternal(
     // For making all MoveNodeTransactions have a referenc node in the current
     // parent, move nodes from last one to preceding ones.
     for (const OwningNonNull<nsIContent>& child : Reversed(arrayOfChildren)) {
-      MoveNodeResult moveChildResult =
+      Result<MoveNodeResult, nsresult> moveChildResult =
           MoveNodeWithTransaction(MOZ_KnownLive(child),  // due to bug 1622253.
                                   EditorDOMPoint(newContainer, 0u));
-      if (moveChildResult.isErr()) {
+      if (MOZ_UNLIKELY(moveChildResult.isErr())) {
         NS_WARNING("HTMLEditor::MoveNodeWithTransaction() failed");
         return CreateElementResult(moveChildResult.unwrapErr());
       }
       // We'll suggest new caret point which is suggested by new container
       // element insertion result.  Therefore, we need to do nothing here.
-      moveChildResult.IgnoreCaretPointSuggestion();
+      moveChildResult.inspect().IgnoreCaretPointSuggestion();
     }
   }
 
@@ -4088,13 +4088,13 @@ Result<EditorDOMPoint, nsresult> HTMLEditor::RemoveContainerWithTransaction(
   // For making all MoveNodeTransactions have a referenc node in the current
   // parent, move nodes from last one to preceding ones.
   for (const OwningNonNull<nsIContent>& child : Reversed(arrayOfChildren)) {
-    MoveNodeResult moveChildResult = MoveNodeWithTransaction(
+    Result<MoveNodeResult, nsresult> moveChildResult = MoveNodeWithTransaction(
         MOZ_KnownLive(child),  // due to bug 1622253.
         previousChild ? EditorDOMPoint::After(previousChild)
                       : EditorDOMPoint(parentNode, 0u));
-    if (moveChildResult.isErr()) {
+    if (MOZ_UNLIKELY(moveChildResult.isErr())) {
       NS_WARNING("HTMLEditor::MoveNodeWithTransaction() failed");
-      return Err(moveChildResult.unwrapErr());
+      return moveChildResult.propagateErr();
     }
     // If the reference node was moved to different container, try to recover
     // the original position.
@@ -4104,14 +4104,14 @@ Result<EditorDOMPoint, nsresult> HTMLEditor::RemoveContainerWithTransaction(
         NS_WARNING(
             "Neither the reference (previous) sibling nor the moved child was "
             "in the expected parent node");
-        moveChildResult.IgnoreCaretPointSuggestion();
+        moveChildResult.inspect().IgnoreCaretPointSuggestion();
         return Err(NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE);
       }
       previousChild = child->GetPreviousSibling();
     }
     // We'll need to put caret at next sibling of aElement if nobody moves
     // content nodes under the parent node except us.
-    moveChildResult.IgnoreCaretPointSuggestion();
+    moveChildResult.inspect().IgnoreCaretPointSuggestion();
   }
 
   if (aElement.GetParentNode() && aElement.GetParentNode() != parentNode) {
@@ -5326,32 +5326,32 @@ nsresult HTMLEditor::DoJoinNodes(nsIContent& aContentToKeep,
   return NS_OK;
 }
 
-MoveNodeResult HTMLEditor::MoveNodeWithTransaction(
+Result<MoveNodeResult, nsresult> HTMLEditor::MoveNodeWithTransaction(
     nsIContent& aContentToMove, const EditorDOMPoint& aPointToInsert) {
   MOZ_ASSERT(aPointToInsert.IsSetAndValid());
 
   EditorDOMPoint oldPoint(&aContentToMove);
   if (NS_WARN_IF(!oldPoint.IsSet())) {
-    return MoveNodeResult(NS_ERROR_FAILURE);
+    return Err(NS_ERROR_FAILURE);
   }
 
   // Don't do anything if it's already in right place.
   if (aPointToInsert == oldPoint) {
-    return MoveNodeIgnored(aPointToInsert.NextPoint());
+    return MoveNodeResult::IgnoredResult(aPointToInsert.NextPoint());
   }
 
   RefPtr<MoveNodeTransaction> moveNodeTransaction =
       MoveNodeTransaction::MaybeCreate(*this, aContentToMove, aPointToInsert);
   if (MOZ_UNLIKELY(!moveNodeTransaction)) {
     NS_WARNING("MoveNodeTransaction::MaybeCreate() failed");
-    return MoveNodeResult(NS_ERROR_FAILURE);
+    return Err(NS_ERROR_FAILURE);
   }
 
   IgnoredErrorResult ignoredError;
   AutoEditSubActionNotifier startToHandleEditSubAction(
       *this, EditSubAction::eMoveNode, nsIEditor::eNext, ignoredError);
   if (NS_WARN_IF(ignoredError.ErrorCodeIs(NS_ERROR_EDITOR_DESTROYED))) {
-    return MoveNodeResult(ignoredError.StealNSResult());
+    return Err(ignoredError.StealNSResult());
   }
   NS_WARNING_ASSERTION(
       !ignoredError.Failed(),
@@ -5381,17 +5381,17 @@ MoveNodeResult HTMLEditor::MoveNodeWithTransaction(
   if (MOZ_UNLIKELY(Destroyed())) {
     NS_WARNING(
         "MoveNodeTransaction::DoTransaction() caused destroying the editor");
-    return MoveNodeResult(NS_ERROR_EDITOR_DESTROYED);
+    return Err(NS_ERROR_EDITOR_DESTROYED);
   }
 
   if (NS_FAILED(rv)) {
     NS_WARNING("MoveNodeTransaction::DoTransaction() failed");
-    return MoveNodeResult(rv);
+    return Err(rv);
   }
 
   TopLevelEditSubActionDataRef().DidInsertContent(*this, aContentToMove);
 
-  return MoveNodeHandled(
+  return MoveNodeResult::HandledResult(
       moveNodeTransaction->SuggestNextInsertionPoint<EditorDOMPoint>(),
       moveNodeTransaction->SuggestPointToPutCaret<EditorDOMPoint>());
 }

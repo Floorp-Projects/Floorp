@@ -24,6 +24,9 @@ class RefPtr;
 
 namespace mozilla {
 
+template <typename V, typename E>
+class Result;
+
 template <typename T>
 class OwningNonNull;
 
